@@ -4189,9 +4189,13 @@ and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int 
            ((S.bv_to_name bv, U.aqual_of_binder b) :: spine) (b' :: poly) (cls :: polycs)
   in
   let spine, poly, polycs, c = go 0 bs cs [] [] [] [] in
-  (* Section 79. *)
+  (* Section 79.  These are [specialize]'s own numbers and stop at [cut]: a
+     definition whose body is a lambda past it keeps those binders too, and
+     for a top-level partial application ([cut] = 0) that is all of them.  So
+     section 81 prints the count that is actually emitted, from
+     {!extract_letbinding}, where the two are joined. *)
   if Options.custard_dump_specializations () then
-    BU.print3 "  emitted %s parameters of which %s dropped, %s in the spine\n"
+    BU.print3 "  abstracted %s parameters of which %s dropped, %s in the spine\n"
       (show (List.length poly))
       (show (List.length (List.filter Dropped? polycs)))
       (show (List.length spine));
@@ -4269,11 +4273,40 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
       | c :: cs -> if i <= 0 then Dropped? c else go cs (i - 1)
     in
     go polycs i in
-  (* Binders past [polycs] come from the body's own lambdas and are filtered by
-     the same predicate the call sites use. *)
+  (* Binders past [polycs] come from the body's own lambdas, and have to be
+     filtered by the predicate the *call sites* use.
+
+     Section 81.  That predicate is the classification, and it was
+     [is_erased_binder] here -- which is [classify]'s rule 1 minus its
+     unit-shaped half.  The two agree on everything except a unit binder, so
+     nothing showed until a definition had one that was not last, and no
+     definition does until [cut] is 0: with [cut] positive the binders in
+     question are the ones [specialize] abstracted, and those come from
+     [polycs].  [cut] is 0 for a top-level *partial application* -- section
+     25.3 declines to eta-expand one, because its body is not free to
+     re-evaluate -- so every binder is filtered here, the non-final unit one
+     was kept, and the definition was emitted with a parameter no caller
+     passes.
+
+     So the classification is consulted wherever it reaches.  Its index is
+     [i - n_holes]: [polycs] is the [n_holes] abstracted [Mono] values
+     followed by the [cut] classified binders, so binder [i] of [bs] is
+     binder [i - n_holes] of [cs], and [n_holes] is 0 in all but the
+     specializing case.  Past the end of the classification -- a definition
+     with more lambdas than its type has arrows, section 19.4 --
+     [is_erased_binder] is still the answer, and is the same one
+     [Mono.classify]'s own extension gives. *)
   let n_poly = List.length polycs in
+  let n_cs = List.length cs in
+  let cs_class (i:int) : ML (option bclass) =
+    let j = i - n_holes in
+    if j >= 0 && j < n_cs then Some (List.nth cs j) else None in
   let flags = bs |> List.mapi (fun i b ->
-                nth_class i || (i >= n_poly && Mono.is_erased_binder (tcenv st) b)) in
+                nth_class i ||
+                (i >= n_poly &&
+                 (match cs_class i with
+                  | Some c -> Dropped? c
+                  | None -> Mono.is_erased_binder (tcenv st) b))) in
   (* [abs_formals] sees through nested lambdas, so a definition written
      [let f x = fun y -> e] has more binders than its type has arrows.  Each
      such extra binder consumes one arrow of the result type -- and its
@@ -4311,6 +4344,13 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
     { b_name = name_of_bv b.binder_bv;
       b_ty = if Mono.is_erased_binder (tcenv st) b then TUnit
              else ty_of_typ st b.binder_bv.sort }) in
+  (* Section 81.  The arity a caller has to meet, which is the one the
+     diagnostics count and is not [specialize]'s "abstracted" number whenever
+     the body's own lambdas outlive [cut]. *)
+  if Options.custard_dump_specializations () then
+    BU.print2 "  emitted %s parameters (%s lambdas past the classification)\n"
+      (show (List.length binders))
+      (show (let n = List.length bs - n_cs + n_holes in if n > 0 then n else 0));
   (* The effect is the one of the *codomain*: [lbeff] is the effect of
      evaluating the lambda, which is always Tot.
 

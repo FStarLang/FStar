@@ -2027,6 +2027,18 @@ CGREP_ArrowFieldPure += "bool (*ArrowFieldPure_mk(void))(bool, bool)"
 CGREP_ArrowFieldPure += "return ArrowFieldPure_mk__lam;"
 CGREP_ArrowFieldPure += "ArrowFieldPure_call_it(ArrowFieldPure_mk(), true)"
 
+# Section 81.  A top-level partial application whose remaining binders include
+# a unit-shaped one that is not last.  Section 25.3 declines to eta-expand a
+# partial application, so [cut] is 0, so every binder is filtered on the
+# definition side by the rule for binders past the classification -- which was
+# [is_erased_binder], and that is [classify]'s rule 1 minus its unit-shaped
+# half.  The definition kept the unit parameter and every call site dropped it.
+# The run pins the answer, so the arity is right and not merely consistent.
+C_TESTS += DropRun
+FLAGS_DropRun = --custard_entry_module DropRun
+CGREP_DropRun += "uint32_t DropRun_g(uint32_t b, uint32_t c)"
+CNOGREP_DropRun += "DropRun_g(uint32_t b, void"
+
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
                   $(C_TESTS) $(CXX_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \
                   $(RUSTSPLIT_TESTS) \

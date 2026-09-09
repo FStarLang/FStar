@@ -16558,7 +16558,8 @@ per lid (§3.7).  It now also prints, for each one:
 ```
 Custard: arity of MonoAbbrev.mk@uint_to_t_4: folded=1 unfolded=3 cut=2 eta_safe=true
   classes=[Poly; Mono; Poly] mono_args=[1]
-  emitted 1 parameters of which 0 dropped, 2 in the spine
+  abstracted 1 parameters of which 0 dropped, 2 in the spine
+  emitted 2 parameters (0 lambdas past the classification)
 ```
 
 Every number that participates:
@@ -16571,12 +16572,24 @@ Every number that participates:
 * `eta_safe` --- which of `cut`'s two bases applied;
 * `classes` --- the classification, so an index in `mono_args` can be read
   against it;
-* `emitted` / `dropped` / `spine` --- what came out.
+* `abstracted` / `dropped` / `spine` --- what `specialize` itself produced,
+  which stops at `cut`;
+* `emitted` --- the arity a caller actually has to meet, counted where the
+  definition is finally built, together with how many of its binders came
+  from lambdas past the end of the classification.
+
+The last of these was added by §81, after a reporter observed that
+`specialize`'s own counts read `0` for a definition the compiler then emitted
+with seven parameters, and said they would have drawn the wrong conclusion
+from them alone.  They were right: `specialize` stops at `cut`, and a
+definition whose body is a lambda past it keeps those binders too.  The two
+lines now bracket that, and for a top-level partial application --- where
+`cut` is 0 by design --- the second is the only one that means anything.
 
 The `mk@uint_to_t_4` line above is §74 and §78 in one place, and reading it
 in that order is the whole story: the type spells one binder, unfolding
 exposes three, `mono_args` names index 1 --- which only *exists* because of
-the unfolding --- so `cut` is 2 and not 1, and one parameter is emitted
+the unfolding --- so `cut` is 2 and not 1, and one parameter is abstracted
 because the `Mono` one was substituted.  §74 is the step from `folded` to
 `unfolded`; §78 is the step from `unfolded` to `cut`.
 
@@ -16770,6 +16783,166 @@ that is right, both fixes are needed and neither subsumes the other.
 `ArrowAb` pins §80.1 on both the C and Rust legs, and `ArrowFieldPure` pins
 §80.4 on C.  Both were run against the unfixed compiler first, and produce the
 two diagnostics quoted above verbatim.
+
+## 81. A unit binder is dropped by one rule and kept by another
+
+The instrument of §79 paid for itself on its first use, and not in the way it
+was built for: the reporter used the `classes` line to bisect their own
+failure down to a twenty-line module, and then found that the *other* line
+was lying to them.  Both halves of that are dealt with here.
+
+### 81.1 The reporter's reduction
+
+Their partition of §79 came back as the third bucket.  With both roots in one
+command, and with each root alone, the stanza for the failing definition is
+byte-identical --- so the classification is not path-dependent and neither is
+`cut`.  Yet rooting it directly succeeds and reaching it through its
+dispatcher fails.
+
+From there they bisected on `classes` alone, one binder at a time, and landed
+on a boundary:
+
+| `classes` | result |
+| --- | --- |
+| `[Poly; Dropped; Poly]` | OK |
+| `[Poly; Dropped; Poly; Dropped]` | OK |
+| `[Poly; Dropped; Dropped; Poly]` | Error 368 |
+
+which they read as a run of two or more dropped arguments between two kept
+ones.  Reproduced in-tree, the boundary is one step sharper than that, and
+the extra step is the diagnosis.
+
+Their two dropped binders are not the same kind.  One is a `squash`, which is
+*unit-shaped*; the other is a `perm`, which is erased.  Replace both by erased
+binders and the module extracts; keep a single `squash` and delete the `perm`
+entirely --- so that `classes` is the `[Poly; Dropped; Poly]` row they had
+recorded as passing --- and it fails.  The trigger is not a run.  It is one
+unit-shaped binder that is not the last one, and their matrix walked past it
+because the row that would have shown it had an erased binder in that
+position rather than a unit-shaped one.
+
+`DropRun` is the whole of it:
+
+```fstar
+inline_for_extraction
+let gen (et: Type0) (bm: U32.t) (b: U32.t)
+        (#p: squash (b == b)) (#f: G.erased nat) (c: U32.t) : U32.t =
+  U32.logxor b c
+
+let g = gen U32.t 32ul
+
+let dispatch (b: U32.t) (#p: squash (b == b))
+             (#f: G.erased nat) (c: U32.t) : U32.t =
+  g b #p #f c
+```
+
+### 81.2 Two rules for one question
+
+The IR says it in two lines:
+
+```
+let DropRun.g (b: u32) (p: unit) (c: u32) : u32 [Pure] = `^u32`(b, c)
+
+let DropRun.dispatch (b: u32) (eta: u32) : u32 [Pure] = DropRun.g b eta
+```
+
+`g` has three parameters and its only call site passes two.
+
+Custard decides "does this binder survive into the emitted signature" in two
+places, and they are not the same predicate:
+
+* `Mono.classify`'s **rule 1** deletes a binder that is erased **or**
+  unit-shaped, then `keep_thunk` puts the last one back if deleting it would
+  turn the definition into a value or silence a thunk.
+* `Mono.is_erased_binder` deletes only the erased kind.
+
+Every call site uses the first, through `split_mono_args` and
+`call_unit_flags`.  So does a definition's own signature --- for the binders
+`specialize` abstracted, which come back as `polycs`.  But
+`Extract.extract_letbinding` filters the binders *past* `polycs` with
+`is_erased_binder`, on the stated grounds that it is "the same predicate the
+call sites use".  It is not; it is that predicate minus its unit-shaped half.
+
+### 81.3 Why nothing saw it until now
+
+Because the two rules differ only on a unit binder, and a definition only has
+one to differ about here if `cut` is 0.
+
+With `cut` positive, the binders in question were abstracted by `specialize`
+and are classified; `polycs` answers for them and the fallback never runs.
+`cut` is 0 exactly for a top-level **partial application** --- §25.3 declines
+to eta-expand one, because unlike a lambda its body is not free to
+re-evaluate --- and then *every* binder is a binder past `polycs`, so the
+fallback answers for all of them.
+
+`let g = gen U32.t 32ul` is that shape, and so is every specialization
+Kuiper's dispatcher reaches: `g_spmm_f32_32x64x8` is `folded=20 cut=0`.
+
+### 81.4 The fix
+
+The classification is consulted wherever it reaches.  Its index is
+`i - n_holes`: `polycs` is the `n_holes` abstracted `Mono` values followed by
+the `cut` classified binders, so binder `i` of the definition is binder
+`i - n_holes` of `cs`, and `n_holes` is zero in all but the specializing case.
+
+Past the end of the classification --- a definition with more lambdas than its
+type has arrows, §19.4 --- `is_erased_binder` remains the answer, and is the
+same one `Mono.classify`'s own extension gives there, so the two still agree.
+
+`keep_thunk` comes along for free: it ran inside `classify`, so a genuine
+`unit -> ML a` thunk is already un-dropped in `cs` and stays a function.
+
+The one line of `DropRun`'s C that matters:
+
+```c
+uint32_t DropRun_g(uint32_t b, uint32_t c);
+```
+
+Three other rules were considered and rejected.  Widening `is_erased_binder`
+itself would change what a *lambda* is, and a lambda's own callers filter
+their spine with it, so the two would move together and nothing would be
+gained.  Widening `ty_of_typ`'s arrow, which uses `erased_binders`, was tried
+and changes nothing here --- the binders come from the definition, not from
+its type --- and would have made an arrow type disagree with the lambdas it
+types.  Bounding `Simplify.absorb` was tried too and is not the mechanism:
+disabling it entirely leaves the three parameters exactly where they were.
+
+### 81.5 What the instrument was saying, and what it says now
+
+The reporter's second finding was that `cut=0` and `emitted 0 parameters`
+disagreed with both `classes`, which showed seven `Poly`, and with the C the
+same run emitted, which had seven parameters.
+
+They are right, and the reason is §81.3: `specialize`'s counts stop at `cut`,
+and everything past it is added later.  For a partial application that is the
+entire signature, so the number printed was zero for a definition with seven
+parameters --- the one number in the stanza that could send a reader in the
+wrong direction, in exactly the case the stanza exists for.
+
+`specialize`'s line now says `abstracted`, which is what it counts, and
+`extract_letbinding` prints the arity that is actually emitted next to it:
+
+```
+Custard: arity of DropRun.g: folded=4 unfolded=4 cut=0 eta_safe=false
+  classes=[Poly; Dropped; Dropped; Poly] mono_args=[]
+  abstracted 0 parameters of which 0 dropped, 0 in the spine
+  emitted 2 parameters (0 lambdas past the classification)
+```
+
+The `emitted` line is the one a reader should compare against "applied to *n*
+of its *m* arguments", and against the callers' own stanzas: here `g` and
+`dispatch` both say two, which before the fix they did not.
+
+### 81.6 Scope
+
+This is the Kuiper 368 and, on the evidence, only that.  The reporter's own
+§70.4 separates it from the 390: that definition's classification is nine
+`Poly` followed by eight `Dropped`, all trailing, with no interleaved unit
+binder --- a shape two of the passing rows above share.  Their suspicion there
+is `mono_args=[]` on a definition passed a literal `16sz` that is used as a
+non-type template argument, with the control that `mono_args` is populated for
+37 of the 44 stanzas in the same run.  That is a classification question, not
+an arity one, and is not touched here.
 
 | M | Deliverable | Notes |
 | --- | --- | --- |
@@ -17073,3 +17246,4 @@ two diagnostics quoted above verbatim.
 | M10ηΧ | Unfolding a spine is not eta-expanding it (§78.2) | Done, and a regression of my own making --- §74 bisected to by the reporter.  §74 rightly made `Extract.specialize` walk the *unfolded* arrow spine, since `cs` and `margs` are indexed against `Mono.classify_def`, which unfolds.  But the same list also feeds `cut`, which is how far the definition is eta-expanded, so unfolding silently changed the emitted arity of every definition whose codomain abbreviates an arrow --- and arity is interface.  EverParse's CDDL iterator accessors return an `impl_typ`, which unfolds to `(c: ty) -> (#p: perm) -> ...`, so on the C leg they took two parameters where every caller supplied one, and on the Rust leg `cut` reached past `c` into the erased `#p`, whose binder is deleted from the signature while the body still names it --- the reported unbound variable.  `cut`'s base is now the folded spine again, extended only as far as `margs` actually names, which is exactly the §74 case and nothing else.  `ProjAbbrev` pins it; `MonoAbbrev` and `TmplAbbrev` pin the half that must not regress |
 | M10ηΨ | Arity, printed (§79.1) | Done.  §74 and §78 were the same defect twice --- the definition and its callers disagreeing about arity --- and both arrived as a downstream error naming a definition in a tree I cannot build; §78 took four attempts to reproduce and was cracked by reading a binder's *name* in the reporter's dependency.  `--custard_dump_specializations` now also prints, per specialization, every number that decides the emitted arity: `folded` (what the type spells), `unfolded` (what `cs` and `margs` are indexed against), `cut` (how far the definition is eta-expanded), `eta_safe`, the classification, and the emitted, dropped and spine counts.  One line now shows §74 as the step from `folded` to `unfolded` and §78 as the step from `unfolded` to `cut`.  For the reporters, not for me |
 | M10ηΩ | An erased argument is not only a type (§80.1) | Done.  A record field whose type is an arrow of arity two or more, and the projector for it: F\* stores such a projector eta-expanded to the field arrow's own arity, so its body applies the projected value to the field's *erased* binders too --- and those are exactly the binders Custard deletes from the projector's own signature.  The spine filter for a head no declaration describes asked `is_type_term`, which is half of what a callee's `is_erased_binder` decides; the proof-irrelevant half was kept and reached the backend as a free variable on Rust and as an arity the callers cannot meet on C.  `Mono.is_erased_term` is the missing half, written as the argument-level counterpart of `is_erased_binder`; with it `eta_reduce` fires, the projector becomes the identity and is inlined away.  §80.4 is the same miscount from the constructor side, where `absorb` raised a definition's arity past what its one call site supplied; bounded by `use_arity` like the expansion beside it, the returned lambda stays put and `lift_lambdas` gives C the function pointer it wanted.  Reported with a standalone MWE, a five-row reduction matrix, and the F\* `--codegen krml` control run before writing |
+| M10ηΑ | A unit binder is dropped by one rule and kept by another (§81.1) | Done.  Custard answers "does this binder survive into the emitted signature" in two places: `Mono.classify`'s rule 1, which deletes a binder that is erased *or* unit-shaped, and `Mono.is_erased_binder`, which deletes only the first kind.  Every call site uses the first; `extract_letbinding` used the second for the binders past `polycs`, on the stated grounds that it was the same predicate.  The two differ only on a unit binder, and a definition only has one to differ about when `cut` is 0 --- which is a top-level partial application, §25.3 declining to eta-expand one, and is every specialization a dispatcher reaches.  The classification is consulted wherever it reaches now, at index `i - n_holes`, with `is_erased_binder` past its end as before.  Reduced by the reporter with §79's own `classes` line to a twenty-line module; the trigger is one non-final unit-shaped binder, one step sharper than the run of two they recorded, and their matrix walked past it.  §81.5 is their second finding: `specialize`'s counts stop at `cut`, so they read `0` for a definition emitted with seven parameters --- that line says `abstracted` now, and the emitted arity is printed beside it |
