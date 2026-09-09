@@ -466,6 +466,10 @@ let lemma_map_blocks_multi_vec_equiv_pre_k #a w blocksize n hi_f f f_v i b_v pre
   //assert (lp == Seq.append acc_v (f_v i b_v));
 
   Math.Lemmas.lemma_mult_le_right w (i + 1) n;
+  // w * i + w == (i + 1) * w <= n * w == w * n <= hi_f; spell the steps out,
+  // the nonlinear chain is not found reliably otherwise
+  Math.Lemmas.distributivity_add_left i 1 w;
+  Math.Lemmas.swap_mul n w;
   // length acc_v == i * (w * blocksize); the calc below needs it as w * i * blocksize
   Math.Lemmas.swap_mul w i;
   Math.Lemmas.paren_mul_right i w blocksize;
@@ -521,6 +525,12 @@ let lemma_map_blocks_multi_vec_equiv_pre #a w blocksize n hi_f f f_v pre i b_v a
   Math.Lemmas.cancel_mul_div w blocksize;
   Math.Lemmas.cancel_mul_mod w blocksize;
   Math.Lemmas.lemma_mult_le_right w (i + 1) n;
+  // w * i + w == (i + 1) * w <= n * w == w * n <= hi_f
+  Math.Lemmas.distributivity_add_left i 1 w;
+  Math.Lemmas.swap_mul n w;
+  // length acc_v == i * (w * blocksize), needed here as w * i * blocksize
+  Math.Lemmas.swap_mul w i;
+  Math.Lemmas.paren_mul_right i w blocksize;
   map_blocks_multi_acc_is_repeat_gen_blocks_multi blocksize (w * i) hi_f w b_v f acc_v
 
 let lemma_map_blocks_multi_vec #a w blocksize n inp f f_v =
