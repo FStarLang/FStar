@@ -104,6 +104,16 @@ val is_erased_binder (env:TcEnv.env) (b:binder) : ML bool
     a variable carries its sort; see section 80. *)
 val is_erased_term (env:TcEnv.env) (t:term) : ML bool
 
+(** [classes_to_string env bs cs] renders a classification for the
+    [--custard_dump_specializations] dump.  [Dropped] alone is ambiguous ---
+    it is what {!classify}'s rule 1 says of a type binder, of a
+    proof-irrelevant one and of a unit-shaped one alike, and section 81 was a
+    disagreement between two rules that differ *only* on the last of those.  A
+    reporter bisecting on this line therefore could not see the distinction
+    their own failure turned on, so each [Dropped] is annotated with which
+    half of the rule dropped it.  See section 83. *)
+val classes_to_string (env:TcEnv.env) (bs:binders) (cs:list bclass) : ML string
+
 (** [keep_thunk env bs c flags] is [flags] with its last entry cleared when
     dropping every binder would turn the definition into a value, or when the
     last binder is unit-shaped in front of an impure codomain and so may be a

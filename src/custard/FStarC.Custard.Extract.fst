@@ -4156,7 +4156,7 @@ and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int 
       (string_of_name !st.cur) (show folded) (show (List.length bs))
       (show cut) (show (eta_safe def));
     BU.print2 "  classes=[%s] mono_args=[%s]\n"
-      (String.concat "; " (List.map Mono.bclass_to_string cs))
+      (Mono.classes_to_string (tcenv st) bs cs)
       (String.concat "; " (List.map (fun (j, _) -> show j) margs))
   end;
   let rec go (i:int) (bs:binders) (cs:list bclass) (subst:list subst_elt)

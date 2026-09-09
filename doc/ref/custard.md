@@ -17069,6 +17069,62 @@ on anyone else; the assertion should still go, because the next producer that
 erases a singleton will hit it again, and it belongs in the same upstream
 karamel report as §77's.
 
+## 83. Which half of the rule dropped it
+
+§79 built the specialization dump so that someone running a tree I cannot
+build could tell me *why* an arity came out the way it did, and §81 is the
+case it paid for: a reporter bisected their own failure on the `classes` line
+down to a twenty-line module.
+
+They then had to correct themselves, and the correction is a defect in the
+instrument rather than in their reading of it.
+
+### 83.1 What the line could not say
+
+Their bisection produced a boundary --- `[Poly; Dropped; Poly]` passing,
+`[Poly; Dropped; Dropped; Poly]` failing --- and they drew from it "a run of
+two or more dropped arguments between two kept ones".  That is not the
+trigger.  A single non-final **unit-shaped** binder is enough, and their
+passing row had an *erased* binder in that slot.
+
+`classify`'s rule 1 prints `Dropped` for a type binder, for a
+proof-irrelevant one and for a unit-shaped one alike --- and §81 was a
+disagreement between two rules that differ on *exactly* the last of those.
+So the one column anyone outside this tree can read could not carry the one
+distinction the failure turned on.  Their conclusion followed correctly from
+what the line showed; the line was showing too little.  In their words: they
+found a sufficient shape, not the actual trigger.
+
+That is worth fixing rather than leaving as thread lore, because the next
+reporter will bisect on the same column.
+
+### 83.2 The annotation
+
+Each `Dropped` now names the half of the rule that dropped it:
+
+```
+Custard: arity of DropRun.g: folded=4 unfolded=4 cut=0 eta_safe=false
+  classes=[Poly; Dropped:unit; Dropped:erased; Poly] mono_args=[]
+```
+
+`type`, `unit` and `erased` are the three tests rule 1 applies, in the order
+it applies them.  Reading that against §81's boundary, the two rows are
+visibly different classifications and not the same one twice.
+
+`Mono.classes_to_string` takes the binders alongside the classes, because the
+reason is a property of the binder and `bclass` does not record it --- and
+deliberately does not require the two lists to be the same length.  `cs` is
+short when the definition has more lambdas than its type has arrows (§19.4)
+and long when the type unfolds to more arrows than the term abstracts.  A
+binder past the end of the classification prints as `<unit>`, `<erased>` or
+`<type>` in angle brackets, and a class past the end of the binders prints
+unannotated.  Neither is silently dropped: a length disagreement between the
+two is one of the things this line exists to expose --- §81 was one --- and
+padding it away would hide the next.
+
+Nothing else changed.  A `Mono` or `Poly` entry prints as before, so the §79
+sample is still current, and the flag still costs nothing when it is off.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -17373,3 +17429,4 @@ karamel report as §77's.
 | M10ηΩ | An erased argument is not only a type (§80.1) | Done.  A record field whose type is an arrow of arity two or more, and the projector for it: F\* stores such a projector eta-expanded to the field arrow's own arity, so its body applies the projected value to the field's *erased* binders too --- and those are exactly the binders Custard deletes from the projector's own signature.  The spine filter for a head no declaration describes asked `is_type_term`, which is half of what a callee's `is_erased_binder` decides; the proof-irrelevant half was kept and reached the backend as a free variable on Rust and as an arity the callers cannot meet on C.  `Mono.is_erased_term` is the missing half, written as the argument-level counterpart of `is_erased_binder`; with it `eta_reduce` fires, the projector becomes the identity and is inlined away.  §80.4 is the same miscount from the constructor side, where `absorb` raised a definition's arity past what its one call site supplied; bounded by `use_arity` like the expansion beside it, the returned lambda stays put and `lift_lambdas` gives C the function pointer it wanted.  Reported with a standalone MWE, a five-row reduction matrix, and the F\* `--codegen krml` control run before writing |
 | M10ηΑ | A unit binder is dropped by one rule and kept by another (§81.1) | Done.  Custard answers "does this binder survive into the emitted signature" in two places: `Mono.classify`'s rule 1, which deletes a binder that is erased *or* unit-shaped, and `Mono.is_erased_binder`, which deletes only the first kind.  Every call site uses the first; `extract_letbinding` used the second for the binders past `polycs`, on the stated grounds that it was the same predicate.  The two differ only on a unit binder, and a definition only has one to differ about when `cut` is 0 --- which is a top-level partial application, §25.3 declining to eta-expand one, and is every specialization a dispatcher reaches.  The classification is consulted wherever it reaches now, at index `i - n_holes`, with `is_erased_binder` past its end as before.  Reduced by the reporter with §79's own `classes` line to a twenty-line module; the trigger is one non-final unit-shaped binder, one step sharper than the run of two they recorded, and their matrix walked past it.  §81.5 is their second finding: `specialize`'s counts stop at `cut`, so they read `0` for a definition emitted with seven parameters --- that line says `abstracted` now, and the emitted arity is printed beside it |
 | M10ηΒ | A unit argument is passed as the literal (§82.1) | Done.  karamel's Rust backend reads a call whose entire argument list is one `TUnit` as a call to a nullary function, drops the argument, and asserts it was the literal `()`.  The assertion holds for F\*'s own extraction, which keeps a one-nullary-constructor datatype as a one-variant enum; Custard erases it to `unit` (§5.5), so a let-bound value of it reaches the call as a unit-typed *variable* and the assertion fires.  Neither side is wrong and there is nothing to trade off --- a value of type `unit` *is* `()` --- so `Simplify.unit_args` writes the literal, which Custard already did wherever the source had.  An impure argument is hoisted into a `let` first, because karamel drops the argument expression and a call that was there to be performed would go with it; an `EAbort` is left alone.  Runs after `coerce`, which is the only pass below that would put the variable back, and only for the karamel backends.  This was the single remaining blocker on EverParse's COSE Rust leg; the C leg is finished, at full API parity with the shipped tree |
+| M10ηΓ | Which half of the rule dropped it (§83.1) | Done.  `classify`'s rule 1 prints `Dropped` for a type binder, a proof-irrelevant one and a unit-shaped one alike, and §81 was a disagreement between two rules differing on exactly the last of those --- so the one column a reporter outside this tree can read could not carry the distinction their failure turned on.  They bisected on it, concluded "a run of two or more dropped arguments", and had to correct themselves: a single non-final unit-shaped binder is enough, and their passing row had an erased binder in that slot.  Each `Dropped` now names which of the three tests dropped it.  `Mono.classes_to_string` takes the binders alongside the classes, since the reason is a property of the binder, and does not require the two lists to agree in length --- a binder past the end of the classification prints in angle brackets and a class past the end of the binders prints unannotated, because a length disagreement is one of the things this line exists to expose |

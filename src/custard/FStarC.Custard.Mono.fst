@@ -319,6 +319,37 @@ let is_erased_term (env:TcEnv.env) (t:term) : ML bool =
    | Tm_name bv -> is_dropped_binder env (S.mk_binder bv)
    | _ -> false)
 
+(* Section 83.  [Dropped] is what rule 1 says of a type binder, of a
+   proof-irrelevant one and of a unit-shaped one alike, and section 81 was a
+   disagreement between two rules that differ only on the last of those.  A
+   reporter bisecting their own failure on this line could not see the
+   distinction it turned on, and reported a sufficient shape rather than the
+   trigger; the line is the only view of the classification anyone outside
+   this tree has, so it should carry the distinction.
+
+   [bs] and [cs] need not be the same length: [cs] is short when the
+   definition has more lambdas than its type has arrows (section 19.4), and
+   long when the type unfolds to more arrows than the term abstracts.  A
+   binder with no class and a class with no binder are both printed, the
+   second unannotated, rather than either being silently dropped -- a length
+   disagreement between the two is itself worth seeing here. *)
+let classes_to_string (env:TcEnv.env) (bs:binders) (cs:list bclass) : ML string =
+  let why (b:binder) : ML string =
+    if is_type_binder env b then "type"
+    else if is_unit_binder b then "unit"
+    else if is_dropped_binder env b then "erased"
+    else "?" in
+  let rec go (bs:binders) (cs:list bclass) : ML (list string) =
+    match bs, cs with
+    | [], [] -> []
+    | b :: bs, [] -> ("<" ^ why b ^ ">") :: go bs []
+    | [], c :: cs -> bclass_to_string c :: go [] cs
+    | b :: bs, c :: cs ->
+      (match c with
+       | Dropped -> "Dropped:" ^ why b
+       | c -> bclass_to_string c) :: go bs cs in
+  String.concat "; " (go bs cs)
+
 (* The guard that makes deleting a binder from a *definition* safe.  Two things
    can go wrong.  Deleting every binder turns the definition into a value, so
    its body runs at module initialization instead of when it is called, and any
