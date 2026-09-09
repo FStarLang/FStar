@@ -2064,6 +2064,11 @@ CGREP_TmplMono += "TmplMono_g_gemm__uint_to_t_16(wm::frag<16> f"
 # runtime -- that is the whole of why the section 32.5 rule can be relaxed.
 CNOGREP_TmplMono += "g_gemm__uint_to_t_16(size_t tm"
 
+CXX_TESTS += TmplMonoV
+FLAGS_TmplMonoV = --custard_backend C --custard_entry_module TmplMonoV
+CGREP_TmplMonoV += "wm::frag<16> f = wm::mk16(rows)"
+CGREP_TmplMonoV += "TmplMonoV_g_gemm__uint_to_t_16(wm::frag<16> f"
+
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
                   $(C_TESTS) $(CXX_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \
                   $(RUSTSPLIT_TESTS) \

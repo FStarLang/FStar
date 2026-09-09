@@ -2081,7 +2081,13 @@ and extern_template (st:state) (l:Ident.lident) : ML (option (list tmpl_piece)) 
    spelled by its value, and the parameter's declared type is the template's
    business, not the argument's. *)
 and const_of_arg (st:state) (t:term) : ML (option constant) =
-  let t = U.unmeta (U.unascribe t) in
+  (* Section 86.  [unlazy_emb] for the reason {!expr_of_term} gives: a closed
+     arithmetic expression comes back from the normalizer as an *embedding*
+     rather than as a constant, so the reduct of [SZ.v (uint_to_t 16)] is a
+     [Tm_lazy] and not a [Tm_constant].  Without this the recogniser says
+     there is no constant while [show] -- which forces the thunk -- prints
+     [16], and the diagnostic contradicts itself. *)
+  let t = U.unmeta (U.unascribe (U.unlazy_emb t)) in
   let h, args = U.head_and_args_full t in
   match (SS.compress h).n with
   | Tm_constant c -> constant_of_sconst c
@@ -2101,6 +2107,10 @@ and template_arg (st:state) (l:Ident.lident) (i:int) (a:term) : ML cty =
     let a' = match norm_optional st compile_time_steps a with
              | Some t -> t
              | None -> a in
+    (* Also here, and not only inside [const_of_arg]: the error below prints
+       [a'], and the printer and the recogniser have to be shown the same
+       term or the message describes a term nobody rejected. *)
+    let a' = U.unlazy_emb a' in
     match const_of_arg st a' with
     | Some c -> TConst c
     | None ->

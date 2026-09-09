@@ -17259,6 +17259,85 @@ function emits the placeholder text literally.  A function template whose
 argument the target can deduce --- as C++ deduces `fill`'s from its argument
 --- needs no spelling, which is why this has not bitten anything yet.
 
+## 86. The printer and the recogniser disagree about a constant
+
+§85 made a template index a monomorphization demand, and it works for an
+index that *is* the binder.  It did not fix the case the report came from,
+and the reason is a second defect that §85's own MWE was one step too simple
+to expose.
+
+The report is worth quoting, because the diagnostic gave the answer away:
+
+```
+  - Custard: argument 0 of the external type frag is a value, and it
+    does not reduce to a constant.
+  - What it reduced to was: 16
+```
+
+`16` is the constant.  An error that prints the thing it says is absent is
+not reporting a program's problem; it is reporting its own.
+
+### 86.1.  What the index looked like
+
+§85's `TmplMono` indexes `frag` by a `size_t` and passes the binder directly,
+so after specialization `ty_of_typ` meets `uint_to_t 16` and peels it to a
+literal.
+
+An index written over a `nat` --- which is how the reporter's `wmma_fragment`
+is written, and the natural spelling when the index is a mathematical size
+rather than a machine word --- is passed `SZ.v tm` by a caller whose own
+parameter is a `size_t`.  After specialization that is `SZ.v (uint_to_t 16)`,
+which is not a literal but does *evaluate* to one.  The compile-time
+reduction of §26 evaluates it.
+
+### 86.2.  Where the reduct went
+
+The normalizer does not always return a `Tm_constant` for a closed arithmetic
+expression.  It returns the value as an *embedding* --- a `Tm_lazy` carrying
+the computed result --- which is a term in good standing and a form
+`const_of_arg` did not recognise.
+
+`show` on a `Tm_lazy` forces the thunk, so the message printed `16` while the
+test that produced the message had seen something with no `Tm_constant`
+anywhere in it.  The two were reading the same term through different
+instruments.
+
+This is not a new discovery in this tree.  `expr_of_term` calls `unlazy_emb`
+before anything else and its comment says exactly why: "reducing a closed
+arithmetic expression leaves the result as an embedding rather than as a
+constant, so `-1` arrives as a `Tm_lazy`".  The knowledge was written down;
+`const_of_arg`, added later and on a different path, did not get it.
+
+`unlazy_emb` and not `unlazy`: only a `Lazy_embedding` is a term that was
+deferred and can be unfolded back.  The other lazy kinds are not terms and
+forcing them is not the same operation.
+
+### 86.3.  Twice, on purpose
+
+The call is added in `const_of_arg`, so that it applies again at each wrapper
+it peels --- a `uint_to_t` whose own argument is an embedding is the same
+situation one level down.
+
+It is also added in `template_arg`, to the term the error message prints.
+That is not redundant.  A diagnostic that describes a term other than the one
+the check rejected is worse than no diagnostic, because it sends the reader
+after the wrong thing; the reporter had to reason past it to get to the real
+account, and got there anyway.  Showing the recogniser's own view costs one
+line.
+
+### 86.4.  What this says about §85's test
+
+`TmplMono` passes, passed before this fix, and is not weakened by it.  It
+tests rule 4d, which is a different mechanism and a real one.
+
+But it was written from the report's *description* rather than from the
+reporter's code, and the description said "a size index passed a literal".
+That was true and was not enough: the index's *shape* --- binder versus
+application-over-binder --- was the part that mattered, and nothing in the
+description distinguished them.  `TmplMonoV` is the reporter's own reduction,
+and it is in the tree now.  The lesson is the ordinary one about a
+regression test derived from a summary: it tests the summary.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -17566,3 +17645,4 @@ argument the target can deduce --- as C++ deduces `fill`'s from its argument
 | M10θΓ | Which half of the rule dropped it (§83.1) | Done.  `classify`'s rule 1 prints `Dropped` for a type binder, a proof-irrelevant one and a unit-shaped one alike, and §81 was a disagreement between two rules differing on exactly the last of those --- so the one column a reporter outside this tree can read could not carry the distinction their failure turned on.  They bisected on it, concluded "a run of two or more dropped arguments", and had to correct themselves: a single non-final unit-shaped binder is enough, and their passing row had an erased binder in that slot.  Each `Dropped` now names which of the three tests dropped it.  `Mono.classes_to_string` takes the binders alongside the classes, since the reason is a property of the binder, and does not require the two lists to agree in length --- a binder past the end of the classification prints in angle brackets and a class past the end of the binders prints unannotated, because a length disagreement is one of the things this line exists to expose |
 | M10θΖ | A milestone key is checked for uniqueness (§84) | Done.  Sections refer to milestone rows by key, so a duplicate silently makes one of the two unreachable.  Three were introduced in a row: the series had wrapped and the next free key was guessed from the last one used rather than looked up, which is the right thing to do --- the alternative is scanning a 17,000-line file before adding a row --- so the guess gets a gate rather than a discipline.  `check-doc` refuses a table with two rows under one key and runs in `tests/custard`'s default target.  It found two more predating all of this the moment it was written.  The key with a live reference in the prose keeps it; where neither is referenced the earlier row keeps it |
 | M10θΗ | A template index is a monomorphization demand (§85.1) | Done.  §69 diagnoses a runtime parameter that reaches a template-id with error 390 but nothing arranged for it not to be there: no `classify_demand` rule made a template index `Mono`, since its type is `size_t` and the application it feeds is an ordinary extern, so neither rule 4b nor 4c applied.  Rule 4d demands every argument at a position the spelling mentions, scanning the definition's binder sorts, its body --- `let f = mk tm` hides the application in the `let`'s recorded type --- and, for an `assume val`, its codomain, which previously received no demand at all.  Only *mentioned* positions: a type extern's whole spine has to be constant, but a function extern passes its unmentioned arguments at run time, and demanding those trades 390 for 364.  Error 376's exemption for a `Mono` type binder is extended to a demanded index, which is the same case it already grants --- `wm::frag<16>` does say 16.  Where the demand would claim every runtime binder in front of an impure codomain it is withheld instead, leaving 390 as the diagnosis rather than turning it into 376; the all-`Mono` thunk gap `keep_thunk` records is unchanged |
+| M10θΘ | The printer and the recogniser disagree about a constant (§86.2) | Done.  §85 fixed a template index that *is* the binder; an index written over one --- `frag (SZ.v tm)`, which is how a `nat`-indexed template is passed a `size_t` parameter --- still failed 390.  After specialization the argument is `SZ.v (uint_to_t 16)`, which the compile-time reduction evaluates, and the normalizer returns a closed arithmetic result as a `Tm_lazy` embedding rather than a `Tm_constant`.  `show` forces the thunk, so the error printed `16` while the recogniser that produced the error had seen no constant at all --- a diagnostic contradicting itself, which is how the reporter found it.  `expr_of_term` already called `unlazy_emb` for precisely this reason and said so in a comment; `const_of_arg`, on a different path, did not.  Added in `const_of_arg` so it applies at each wrapper it peels, and again in `template_arg` so the message and the check describe the same term.  `TmplMonoV` is the reporter's reduction: §85's own test was written from the report's description, and the description did not distinguish an index that is a binder from one that is an application over it |
