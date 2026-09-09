@@ -4142,6 +4142,21 @@ and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int 
     in
     margs |> List.fold_left (fun n (j, _) -> if j + 1 > n then j + 1 else n) base
   in
+  (* Section 79.  The three numbers that decide a specialization's arity, and
+     the classification the indices are read against.  Arity is interface, so
+     when a definition and its call sites disagree about it -- section 74 and
+     section 78 were both that disagreement -- this is the line that says
+     which of them is wrong, and it is the only way to see it in a tree the
+     compiler's author cannot build. *)
+  if Options.custard_dump_specializations () then begin
+    let folded = List.length (fst (U.arrow_formals_comp ty)) in
+    BU.print5 "Custard: arity of %s: folded=%s unfolded=%s cut=%s eta_safe=%s\n"
+      (string_of_name !st.cur) (show folded) (show (List.length bs))
+      (show cut) (show (eta_safe def));
+    BU.print2 "  classes=[%s] mono_args=[%s]\n"
+      (String.concat "; " (List.map Mono.bclass_to_string cs))
+      (String.concat "; " (List.map (fun (j, _) -> show j) margs))
+  end;
   let rec go (i:int) (bs:binders) (cs:list bclass) (subst:list subst_elt)
              (spine:args) (poly:binders) (polycs:list bclass)
     : ML (args & binders & list bclass & comp) =
@@ -4172,6 +4187,12 @@ and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int 
            ((S.bv_to_name bv, U.aqual_of_binder b) :: spine) (b' :: poly) (cls :: polycs)
   in
   let spine, poly, polycs, c = go 0 bs cs [] [] [] [] in
+  (* Section 79. *)
+  if Options.custard_dump_specializations () then
+    BU.print3 "  emitted %s parameters of which %s dropped, %s in the spine\n"
+      (show (List.length poly))
+      (show (List.length (List.filter Dropped? polycs)))
+      (show (List.length spine));
   (* Before the [Poly] binders: see the call site in {!app_of_fv'}. *)
   let poly = hbs @ poly in
   let polycs = List.map (fun _ -> Poly) hbs @ polycs in

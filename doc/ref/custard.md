@@ -1007,7 +1007,8 @@ syntactically equal.  Keys are compared up to α-equivalence and hash-consed
 
 A useful diagnostic while tuning: `--custard_dump_specializations` listing
 `lid ↦ number of specializations`, which makes both failure modes (bloat, and
-fuel exhaustion) immediately visible.
+fuel exhaustion) immediately visible.  It also prints, per specialization,
+the numbers that decide the emitted arity (§79).
 
 #### The key is not what gets substituted
 
@@ -16530,6 +16531,65 @@ prints the offending *name* (§69.4) is what made that possible, and the
 reporter says the same in their §77.3: the message named the definition
 before they had finished reading the log.
 
+## Section 79. Arity, printed
+
+### 79.1 Why
+
+Two of the last three rounds were the same defect.  §74: a call site removed
+an argument the definition still expected.  §78: a definition grew a
+parameter no call site supplied.  Both are one disagreement --- *the
+definition and its callers do not agree on the arity* --- and in both cases
+the report was a downstream error message naming a definition, in a tree I
+cannot build.
+
+§78 took four attempts to reproduce.  Three source shapes that looked right
+did not reach the code path at all, and what finally worked was reading
+EverParse's `impl_typ` and noticing its second binder is called `p`.  That
+is not a repeatable method.
+
+The numbers that decide the answer are all in `Extract.specialize` and none
+of them were visible.
+
+### 79.2 What is printed
+
+`--custard_dump_specializations` already existed and counted specializations
+per lid (§3.7).  It now also prints, for each one:
+
+```
+Custard: arity of MonoAbbrev.mk@uint_to_t_4: folded=1 unfolded=3 cut=2 eta_safe=true
+  classes=[Poly; Mono; Poly] mono_args=[1]
+  emitted 1 parameters of which 0 dropped, 2 in the spine
+```
+
+Every number that participates:
+
+* `folded` --- the length of the arrow the *type* spells, `U.arrow_formals_comp`;
+* `unfolded` --- the length after `Mono.arrow_formals_unfold`, which is what
+  `cs` and `mono_args` are indexed against;
+* `cut` --- how far the definition is eta-expanded, which is the emitted
+  arity before erased and dropped binders are removed;
+* `eta_safe` --- which of `cut`'s two bases applied;
+* `classes` --- the classification, so an index in `mono_args` can be read
+  against it;
+* `emitted` / `dropped` / `spine` --- what came out.
+
+The `mk@uint_to_t_4` line above is §74 and §78 in one place, and reading it
+in that order is the whole story: the type spells one binder, unfolding
+exposes three, `mono_args` names index 1 --- which only *exists* because of
+the unfolding --- so `cut` is 2 and not 1, and one parameter is emitted
+because the `Mono` one was substituted.  §74 is the step from `folded` to
+`unfolded`; §78 is the step from `unfolded` to `cut`.
+
+### 79.3 What it is for
+
+Not for me.  Every defect of this shape so far has been found by someone
+running a tree I do not have, who could tell me the error and the definition
+it named and nothing else about how the arity was computed.  This turns
+"applied to 6 of its 7 arguments" into the reason.
+
+It costs nothing when the flag is off, and the flag was already the one a
+reader reaches for when a specialization surprises them.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -16830,3 +16890,4 @@ before they had finished reading the log.
 | M10ηΥ | A type class costs a run-time initializer (§76.2) | Done.  A class with a value method specializes to a parameterless definition per instance, and every definition that reads the method is another one, so a chain of them becomes a chain of globals each naming the one before --- and a reference to a global is a reference to a *variable*, which C does not accept where an object with static storage duration is initialized.  The whole chain was assigned at startup in `custard_init_globals`, which is not only work but interface: a program embedding the unit has to call it.  Two halves to the fix.  `Simplify.const_globals` substitutes a constant global's value into *another global's* initializer, before `dce` so the declaration it made unreachable goes with it, and never through a `[@@ CMacro ]`, whose name is the point (§68).  `PrintC.static_init` then accepts arithmetic over constants, printed by `c_expr` so that `truncate` and §59.3's casts decide the width exactly as they do for the assignment being replaced.  `TcConst` pins a three-deep chain and a narrow-width wraparound, and asserts the initializer is not generated at all |
 | M10ηΦ | A dead abbreviation is not inert (§77.2) | Done.  A single unused `let ugly = S.slice U8.t` broke every unrelated function in the program that takes a slice.  karamel's monomorphization reads an abbreviation of an *applied* type as the name chosen for that instance and registers it by declaration rather than by use, so every later occurrence of the instance is rewritten to it; that is right for every head except the ones karamel's Rust backend also translates structurally, where `TApp (slice, [u8])` goes to `&[u8]` by an arm that never consults the type environment while `TQualified` goes to `Name` by one that is nothing else, and the two answers meet in `possibly_convert`.  C was never affected, a `typedef` being structurally transparent.  Custard has no use of an abbreviation to emit --- `Layout.resolve` unfolds them all --- so `PrintKrml` now drops one whose body applies a modelled head and which nothing refers to, on `KrmlRust` only, leaving §70.1's published `iter_t` alone.  `UglyAlias` pins both columns, the Rust one asserting the alias is gone and the C one asserting it is still there.  Reported twice, and reduced by the reporter, who ran the control that showed the machinery is karamel's |
 | M10ηΧ | Unfolding a spine is not eta-expanding it (§78.2) | Done, and a regression of my own making --- §74 bisected to by the reporter.  §74 rightly made `Extract.specialize` walk the *unfolded* arrow spine, since `cs` and `margs` are indexed against `Mono.classify_def`, which unfolds.  But the same list also feeds `cut`, which is how far the definition is eta-expanded, so unfolding silently changed the emitted arity of every definition whose codomain abbreviates an arrow --- and arity is interface.  EverParse's CDDL iterator accessors return an `impl_typ`, which unfolds to `(c: ty) -> (#p: perm) -> ...`, so on the C leg they took two parameters where every caller supplied one, and on the Rust leg `cut` reached past `c` into the erased `#p`, whose binder is deleted from the signature while the body still names it --- the reported unbound variable.  `cut`'s base is now the folded spine again, extended only as far as `margs` actually names, which is exactly the §74 case and nothing else.  `ProjAbbrev` pins it; `MonoAbbrev` and `TmplAbbrev` pin the half that must not regress |
+| M10ηΨ | Arity, printed (§79.1) | Done.  §74 and §78 were the same defect twice --- the definition and its callers disagreeing about arity --- and both arrived as a downstream error naming a definition in a tree I cannot build; §78 took four attempts to reproduce and was cracked by reading a binder's *name* in the reporter's dependency.  `--custard_dump_specializations` now also prints, per specialization, every number that decides the emitted arity: `folded` (what the type spells), `unfolded` (what `cs` and `margs` are indexed against), `cut` (how far the definition is eta-expanded), `eta_safe`, the classification, and the emitted, dropped and spine counts.  One line now shows §74 as the step from `folded` to `unfolded` and §78 as the step from `unfolded` to `cut`.  For the reporters, not for me |
