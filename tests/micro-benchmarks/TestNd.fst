@@ -61,3 +61,20 @@ let ghost_into_nd () : Nd int = gh ()
    unlike Dv, whose arrows are all in Type0 since they are
    proof-irrelevant). *)
 let _ : Type u#1 = unit -> Nd (Type u#0)
+
+(* A top-level Nd binding is masked: it denotes *some* value of its type, but
+   not a function of its definition. Two identical definitions must therefore
+   not be provably equal, or a nondeterministic allocator used to define two
+   globals would identify them. See issue #4534. *)
+let nd_global1 = f ()
+let nd_global2 = f ()
+
+[@@expect_failure [19]]
+let _ = assert (nd_global1 == nd_global2)
+
+(* ...but a global is equal to itself, and its type is still known. *)
+let _ = assert (nd_global1 == nd_global1)
+let _ : int = nd_global1
+
+(* The definition is also not unfolded by the normalizer. *)
+let _ = assert_norm (nd_global1 == nd_global1)
