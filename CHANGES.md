@@ -35,6 +35,23 @@ Guidelines for the changelog:
     silently: no warning 272 (*top-level let-bindings must be total*) and no
     `Prims.nonempty` proof obligation. `Dv` at the top level is unchanged.
 
+    The effect is still *masked*, exactly as for `Dv`: the binding gets no
+    defining equation in the SMT encoding and is not delta-unfolded. So two
+    globals defined by the same nondeterministic expression are not provably
+    equal, which is what makes `Nd` usable for allocating global state.
+
+    ```fstar
+    assume val f : unit -> Nd int
+    let g1 = f ()
+    let g2 = f ()
+    let _ = assert (g1 == g2)  // fails, as it must
+    ```
+
+  * **`Pulse.Lib.GlobalVar.mk_gvar` is now `Nd`** (issue #4534). It used to be
+    a pure total function, so two global variables declared with the same
+    initializer were provably equal, while extraction gives each `let` its own
+    call to the initializer — enough to prove `False` about extracted code.
+
   * **`FStar.Sealed` is now an interface to nondivergent values.**
     `FStar.Sealed.unseal : sealed a -> Nd a` has been added: unsealing is
     total, but nondeterministic, which is exactly what keeps it compatible
