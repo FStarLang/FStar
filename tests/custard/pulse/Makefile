@@ -134,6 +134,16 @@ C_TESTS += CborBoundarySlice
 # returning a function pointer, and its callers must stay saturated.
 C_TESTS += PulseFnPtrRet
 
+# Section 78.  An accessor whose *codomain* abbreviates an arrow.  Section 74
+# taught the specializer to walk the unfolded spine so that a [@@monomorphize]
+# binder hiding behind such a codomain could be reached; it walked too far and
+# eta-expanded every accessor of this shape, giving it one more parameter than
+# its signature says and than any caller supplies.  EverParse's CDDL iterators
+# are exactly this -- [cddl_map_iterator_impl_validate1] returns an
+# [impl_typ], whose first hidden binder is the [#p: perm] that showed up as an
+# unbound variable on the Rust leg.
+C_TESTS += ProjAbbrev
+
 # Sections 33.1-33.3.  [@@@monomorphize] on the binder of a Pulse [fn]: the
 # annotation is on the lambda and not on the elaborated arrow type, and the
 # [fn] itself arrives eta-contracted.  Both had to be fixed for the

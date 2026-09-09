@@ -4122,13 +4122,25 @@ and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int 
      absorb.  A [Mono] argument past that point has to be substituted all the
      same -- there is no other way to specialize on it -- and the definition's
      prefix is then re-evaluated per call; that has not come up, and rejecting
-     it would rule out eta-short definitions that are pure in practice. *)
+     it would rule out eta-short definitions that are pure in practice.
+
+     Section 78.  "The whole arrow" is the arrow the *type* spells, not the
+     one unfolding exposes.  Unfolding is here to line the spine up with
+     [cs] and [margs] and for nothing else: a definition whose codomain
+     abbreviates an arrow is emitted, and called, as a function of the
+     binders its signature shows, returning a function.  Cutting at the
+     unfolded length instead eta-expanded every such definition, which
+     changed its arity without changing any call site's.  So the base is the
+     length of the *folded* spine, extended only as far as a [Mono] argument
+     actually reaches -- which is exactly, and only, the section 74 case. *)
   let cut =
-    if eta_safe def then List.length bs
-    else
-      let dbs, _, _ = U.abs_formals def in
-      let n_lams = List.length dbs in
-      margs |> List.fold_left (fun n (j, _) -> if j + 1 > n then j + 1 else n) n_lams
+    let base =
+      if eta_safe def then List.length (fst (U.arrow_formals_comp ty))
+      else
+        let dbs, _, _ = U.abs_formals def in
+        List.length dbs
+    in
+    margs |> List.fold_left (fun n (j, _) -> if j + 1 > n then j + 1 else n) base
   in
   let rec go (i:int) (bs:binders) (cs:list bclass) (subst:list subst_elt)
              (spine:args) (poly:binders) (polycs:list bclass)

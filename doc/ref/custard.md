@@ -16367,6 +16367,169 @@ dead abbreviation reaches a backend at all and is the situation the report
 came from.  Against the unfixed compiler the Rust leg fails with three
 errors, naming `first` and `main` --- neither of which mentions `ugly`.
 
+## Section 78. Unfolding a spine is not eta-expanding it
+
+### 78.1 Intake
+
+A regression, and mine: `9bc688690e`, which is §74.  The reporter bisected
+it and handed me the result.
+
+| revision | five-line CDDL spec, KrmlRust |
+| --- | --- |
+| `991c09e03a` | OK |
+| `9bc688690e` (§74) | **unbound variable `p`** |
+| `05817f756f` (§75) | inherited |
+
+Full COSE had been rc=0 on *both* backends at `991c09e03a` (§74.1), with the
+C leg at full API parity --- 82/82, 41/41, 41/41, 9/9.  After §74 both legs
+fail, and they fail differently:
+
+```
+* Error 368: Custard: the unbound variable p reached the karamel backend, in
+  CDDL.Pulse.Parse.MapGroup.__proj__Mkmap_iterator_t__item__cddl_map_iterator_impl_validate1.
+```
+
+```
+* Error 368: Custard: the partial application of
+  CDDL.Pulse.Parse.ArrayGroup.__proj__Mkarray_iterator_t__item__cddl_array_iterator_impl_validate@...
+  has no C representation, in COSE.Format.serialize_header_map.
+  It is applied to 1 of its 2 arguments.
+```
+
+Two symptoms, one cause, and the second states it outright: a definition is
+emitted taking two arguments and every caller supplies one.
+
+### 78.2 Why it happened
+
+§74 changed one line in `Extract.specialize`:
+
+```fstar
+- let bs, c = U.arrow_formals_comp ty in
++ let bs, c = Mono.arrow_formals_unfold (tcenv st) ty in
+```
+
+That was right for the reason §74 gives --- `cs` and `margs` are indexed
+against `Mono.classify_def`, which unfolds, so the spine walked here has to
+unfold too or the indices do not denote the same binders.  But `bs` is used
+for a *second* purpose a few lines down:
+
+```fstar
+let cut = if eta_safe def then List.length bs else ...
+```
+
+`cut` is how far the definition is eta-expanded.  Every binder before it
+becomes a parameter of the emitted definition; the rest stay in the result
+type, and the definition is emitted as a function returning a function.
+Lengthening `bs` therefore silently lengthened `cut` --- and *arity is
+interface*.  Unfolding is a statement about how to read the type; eta-
+expansion is a change to what every call site must look like.  §74 conflated
+them.
+
+So any definition whose codomain abbreviates an arrow gained a parameter.
+EverParse's CDDL iterators are precisely that shape.  The record
+
+```fstar
+type map_iterator_t ... = {
+  cddl_map_iterator_impl_validate1: impl_typ vmatch t1;
+  ...
+}
+```
+
+has fields typed by an abbreviation, and each accessor returns one:
+
+```fstar
+let cddl_map_iterator_impl_validate1 ... (i: map_iterator_t ...)
+  : impl_typ vmatch t1
+= i.cddl_map_iterator_impl_validate1
+```
+
+An accessor's body is a lambda, so `eta_safe` holds and `cut` took the whole
+unfolded spine.  Unfolding `impl_typ` gives
+
+```fstar
+(c: ty) -> (#p: perm) -> (#v: Ghost.erased cbor) -> stt bool ...
+```
+
+which is where both symptoms come from.  On the C leg the accessor is
+emitted with two parameters and `serialize_header_map` applies one.  On the
+Rust leg `cut` reached *past* `c` into `#p` --- and `p` is a `perm`, which is
+erased, so the binder is deleted from the emitted signature (§3.2) while the
+body it was substituted into still names it.  That is the unbound variable,
+and it is named `p` because that is what EverParse called it.
+
+### 78.3 The fix
+
+`cut`'s base goes back to the length of the *folded* spine, and the
+unfolded spine is kept for what §74 actually needed:
+
+```fstar
+let cut =
+  let base =
+    if eta_safe def then List.length (fst (U.arrow_formals_comp ty))
+    else let dbs, _, _ = U.abs_formals def in List.length dbs
+  in
+  margs |> List.fold_left (fun n (j, _) -> if j + 1 > n then j + 1 else n) base
+```
+
+The fold over `margs` was already there on the other branch and is now on
+both.  It is what makes this a fix and not a revert: a `Mono` argument
+*must* be substituted, because there is no other way to specialize on it, so
+`cut` still runs out to any index `margs` names --- which is exactly, and
+only, the §74 case.  A definition with no `Mono` binder behind its codomain
+gets the arity its signature spells, as it did before §74.
+
+Put the other way round: unfolding decides *which binder an index means*,
+and `margs` decides *how far the spine must run*.  §74 let the first answer
+the second.
+
+### 78.4 The test
+
+`tests/custard/pulse/ProjAbbrev.fst` is the shape reduced to a Pulse
+accessor:
+
+```fstar
+let validator (a : Type0) =
+  (r: R.ref a) -> (#p: perm) -> (#v: erased a) ->
+  stt bool (R.pts_to r #p v) (fun _ -> R.pts_to r #p v)
+
+noeq type box (a : Type0) = { v : validator a; tag : U32.t }
+
+let getv (#a : Type0) (b : box a) : validator a = b.v
+```
+
+`validator`'s hidden second binder is a `#p: perm`, for the same reason
+`impl_typ`'s is.  Against the unfixed compiler:
+
+```
+* Error 368: Custard: the partial application of
+  ProjAbbrev.__proj__Mkbox__item__v@t has no C representation, in
+  ProjAbbrev.getv@t.
+  It is applied to 1 of its 2 arguments.
+```
+
+which is the reporter's C error with the names changed.  It runs, rather
+than only building, since the accessor's arity is the whole question and a
+program that calls through it either gets its own answer or does not.
+
+`MonoAbbrev` and `TmplAbbrev` are the other half and still pass: they have a
+`[@@monomorphize]` binder behind the codomain, so `margs` names an index
+past the folded spine and `cut` still reaches it.
+
+### 78.5 A note on how this was found
+
+Three source shapes reproduced nothing before the fourth did, and the three
+failures were informative.  A plain `f : box -> validator` in ordinary F*
+does not reach the path at all --- `arrow_formals_unfold` does not unfold
+there --- and neither does making the abbreviation parametric.  The shape
+has to be *Pulse*, because what makes the codomain unfold to a longer arrow
+is the elaborated `stt` type.
+
+The thing that turned guessing into a reproduction was reading `impl_typ` in
+EverParse and noticing its second binder is called `p`.  A diagnostic that
+prints the offending *name* (§69.4) is what made that possible, and the
+reporter says the same in their §77.3: the message named the definition
+before they had finished reading the log.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -16666,3 +16829,4 @@ errors, naming `first` and `main` --- neither of which mentions `ugly`.
 | M10ηΤ | A module that emits nothing still has to exist (§75.2) | Done.  EverParse's Rust crate layout names `CBOR.Pulse.Raw.Slice` in a karamel `-bundle` clause; the module is `.fsti`-only, so no declaration carries its name, and Custard dropped it in two independent places --- `Split.run` skipped a chunk with no declarations and `PrintKrml.print_split` skipped a file whose declarations all translated to nothing.  karamel's own input keeps the module, because F*'s ML extraction writes one file per module it extracted, and a `-bundle` clause naming a module karamel was not given is fatal rather than an empty selection, so the whole flag set was refused.  Both places now keep it; the empties come from `Dep.topological_order`, excluding realized modules and names an upstream unit owns, and only on the karamel backends, since an empty `.ml` named after a realized module is a collision and not parity.  `RustSplitIface.fsti` pins it, with the clause spelled the way EverParse spells it --- module on the left of the `=`, which is the form that is fatal |
 | M10ηΥ | A type class costs a run-time initializer (§76.2) | Done.  A class with a value method specializes to a parameterless definition per instance, and every definition that reads the method is another one, so a chain of them becomes a chain of globals each naming the one before --- and a reference to a global is a reference to a *variable*, which C does not accept where an object with static storage duration is initialized.  The whole chain was assigned at startup in `custard_init_globals`, which is not only work but interface: a program embedding the unit has to call it.  Two halves to the fix.  `Simplify.const_globals` substitutes a constant global's value into *another global's* initializer, before `dce` so the declaration it made unreachable goes with it, and never through a `[@@ CMacro ]`, whose name is the point (§68).  `PrintC.static_init` then accepts arithmetic over constants, printed by `c_expr` so that `truncate` and §59.3's casts decide the width exactly as they do for the assignment being replaced.  `TcConst` pins a three-deep chain and a narrow-width wraparound, and asserts the initializer is not generated at all |
 | M10ηΦ | A dead abbreviation is not inert (§77.2) | Done.  A single unused `let ugly = S.slice U8.t` broke every unrelated function in the program that takes a slice.  karamel's monomorphization reads an abbreviation of an *applied* type as the name chosen for that instance and registers it by declaration rather than by use, so every later occurrence of the instance is rewritten to it; that is right for every head except the ones karamel's Rust backend also translates structurally, where `TApp (slice, [u8])` goes to `&[u8]` by an arm that never consults the type environment while `TQualified` goes to `Name` by one that is nothing else, and the two answers meet in `possibly_convert`.  C was never affected, a `typedef` being structurally transparent.  Custard has no use of an abbreviation to emit --- `Layout.resolve` unfolds them all --- so `PrintKrml` now drops one whose body applies a modelled head and which nothing refers to, on `KrmlRust` only, leaving §70.1's published `iter_t` alone.  `UglyAlias` pins both columns, the Rust one asserting the alias is gone and the C one asserting it is still there.  Reported twice, and reduced by the reporter, who ran the control that showed the machinery is karamel's |
+| M10ηΧ | Unfolding a spine is not eta-expanding it (§78.2) | Done, and a regression of my own making --- §74 bisected to by the reporter.  §74 rightly made `Extract.specialize` walk the *unfolded* arrow spine, since `cs` and `margs` are indexed against `Mono.classify_def`, which unfolds.  But the same list also feeds `cut`, which is how far the definition is eta-expanded, so unfolding silently changed the emitted arity of every definition whose codomain abbreviates an arrow --- and arity is interface.  EverParse's CDDL iterator accessors return an `impl_typ`, which unfolds to `(c: ty) -> (#p: perm) -> ...`, so on the C leg they took two parameters where every caller supplied one, and on the Rust leg `cut` reached past `c` into the erased `#p`, whose binder is deleted from the signature while the body still names it --- the reported unbound variable.  `cut`'s base is now the folded spine again, extended only as far as `margs` actually names, which is exactly the §74 case and nothing else.  `ProjAbbrev` pins it; `MonoAbbrev` and `TmplAbbrev` pin the half that must not regress |
