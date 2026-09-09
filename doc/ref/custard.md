@@ -16944,6 +16944,131 @@ non-type template argument, with the control that `mono_args` is populated for
 37 of the 44 stanzas in the same run.  That is a classification question, not
 an arity one, and is not touched here.
 
+## 82. A unit argument is passed as the literal
+
+The C leg of EverParse's COSE is finished --- both artifacts extract at rc=0
+with full API parity against the shipped tree, 82 validators, 41 parsers, 41
+serializers, 9 EverCrypt entry points, nothing missing.  The Rust leg got all
+the way through karamel's bundling and monomorphization and then stopped on
+**one function**:
+
+```
+ERROR translating COSE.Format.parse_null:
+  File "lib/AstToMiniRust.ml", line 965: Assertion failed
+```
+
+### 82.1 The assumption
+
+`AstToMiniRust.ml`, translating an application:
+
+```ocaml
+| EApp (e0, es) ->
+    let es, ts =
+      match es with
+      | [ { typ = TUnit; node; _ } ] -> assert (node = EUnit); [], []
+```
+
+A call whose entire argument list is one `TUnit` is read as a call to a
+*nullary* function, the argument is dropped, and the assertion records that
+karamel has only ever seen the literal `()` in that position.
+
+It has only ever seen the literal because the producer has always been F\*'s
+own extraction, which never builds a unit-typed *variable*.  `nil = #7.22` is
+a datatype with one nullary constructor; karamel-native extraction keeps it
+as a one-variant enum:
+
+```rust
+#[derive(PartialEq, Clone, Copy)] pub enum nil { Mknil0 }
+fn evercddl_null_right(x1: nil) -> nil { x1 }
+```
+
+Custard erases it (§5.5) --- the same erasure that makes the 50 `uu___is_Mk*0`
+discriminators vacuous --- so a value of it is a value of `unit`, and one the
+source let-bound arrives at the call as an `EVar`:
+
+```
+let res1: () = COSE.Format.parse_nil c in
+COSE.Format.evercddl_null_right res1
+```
+
+The reporter's control is what makes this a divergence rather than a shared
+limitation: they regenerated EverParse's karamel-native Rust from the same
+spec, same karamel, same bundles, and all four shipped files came out
+byte-identical --- and that baseline contains `parse_null`.
+
+Their MWE is three lines of CDDL with no postlude:
+
+```cddl
+test1 = null
+nil = #7.22
+null = nil
+```
+
+### 82.2 Which side is wrong
+
+Neither, and that is why this is easy.
+
+Custard's erasure is the better representation and I do not want to give it
+up; karamel's assumption is false only for a producer that has one.  But
+there is nothing to trade off, because a value of type `unit` **is** `()`.
+Passing the literal is not a concession to the backend, it is the same term
+written in the form that carries no variable, and Custard already writes it
+that way wherever the source did --- `nil_right ()` appears in the very same
+dump.  §82 makes it uniform.
+
+The in-tree reduction is `tests/custard/NullArg.fst`, with no CDDL anywhere
+in it:
+
+```fstar
+type nil = | Mknil0
+let nil_right (x1: nil) : nil = match x1 with | Mknil0 -> Mknil0
+let parse_nil (c: U.t) : nil = if U.gt c 3ul then Mknil0 else Mknil0
+let parse_null (c: U.t) : nil = let res1 = parse_nil c in nil_right res1
+```
+
+The bodies are written to be un-inlinable on purpose: the thing under test is
+a call that survives to the backend, and a one-line body does not.
+
+### 82.3 The pass
+
+`Simplify.unit_args` rewrites every argument of type `unit` to `EConst CUnit`.
+Two are left alone:
+
+* an **impure** one, which is hoisted into a `let` first --- karamel drops the
+  argument expression on the floor, so a call that was there to be performed
+  would vanish with it;
+* an `EAbort`, which does not return, and whose type being `unit` says
+  nothing about what replacing it would cost.
+
+The hoist is why this is a pass over the IR, which has names, rather than a
+patch in `PrintKrml`, whose expressions are already de Bruijn.  It is also
+what lets the rewrite be unconditional instead of a value-shaped special
+case; a special case would have covered the reporter's `res1` and left the
+next shape to be reported.
+
+It runs **last**, after `coerce`, because `coerce` is the only pass below it
+that rewrites an argument and a coercion wrapped around the variable would
+put it back.  It runs only for `KrmlC` and `KrmlRust`: the direct backends
+have no such assumption, and reading the variable is marginally clearer in
+the C they emit.
+
+The emitted Rust, which karamel now writes as a statement sequence because
+the `let` is still there:
+
+```rust
+pub fn parse_null(c: u32) { parse_nil(c); nil_right() }
+```
+
+### 82.4 The other half of it
+
+The reporter offered karamel as the alternative site, on the grounds that the
+assertion is unsound for any producer that erases singletons, and said they
+did not think it was their call which.  Both are true and the two are not
+exclusive.  §82 is the half that unblocks them today, and it does not depend
+on anyone else; the assertion should still go, because the next producer that
+erases a singleton will hit it again, and it belongs in the same upstream
+karamel report as §77's.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -17247,3 +17372,4 @@ an arity one, and is not touched here.
 | M10ηΨ | Arity, printed (§79.1) | Done.  §74 and §78 were the same defect twice --- the definition and its callers disagreeing about arity --- and both arrived as a downstream error naming a definition in a tree I cannot build; §78 took four attempts to reproduce and was cracked by reading a binder's *name* in the reporter's dependency.  `--custard_dump_specializations` now also prints, per specialization, every number that decides the emitted arity: `folded` (what the type spells), `unfolded` (what `cs` and `margs` are indexed against), `cut` (how far the definition is eta-expanded), `eta_safe`, the classification, and the emitted, dropped and spine counts.  One line now shows §74 as the step from `folded` to `unfolded` and §78 as the step from `unfolded` to `cut`.  For the reporters, not for me |
 | M10ηΩ | An erased argument is not only a type (§80.1) | Done.  A record field whose type is an arrow of arity two or more, and the projector for it: F\* stores such a projector eta-expanded to the field arrow's own arity, so its body applies the projected value to the field's *erased* binders too --- and those are exactly the binders Custard deletes from the projector's own signature.  The spine filter for a head no declaration describes asked `is_type_term`, which is half of what a callee's `is_erased_binder` decides; the proof-irrelevant half was kept and reached the backend as a free variable on Rust and as an arity the callers cannot meet on C.  `Mono.is_erased_term` is the missing half, written as the argument-level counterpart of `is_erased_binder`; with it `eta_reduce` fires, the projector becomes the identity and is inlined away.  §80.4 is the same miscount from the constructor side, where `absorb` raised a definition's arity past what its one call site supplied; bounded by `use_arity` like the expansion beside it, the returned lambda stays put and `lift_lambdas` gives C the function pointer it wanted.  Reported with a standalone MWE, a five-row reduction matrix, and the F\* `--codegen krml` control run before writing |
 | M10ηΑ | A unit binder is dropped by one rule and kept by another (§81.1) | Done.  Custard answers "does this binder survive into the emitted signature" in two places: `Mono.classify`'s rule 1, which deletes a binder that is erased *or* unit-shaped, and `Mono.is_erased_binder`, which deletes only the first kind.  Every call site uses the first; `extract_letbinding` used the second for the binders past `polycs`, on the stated grounds that it was the same predicate.  The two differ only on a unit binder, and a definition only has one to differ about when `cut` is 0 --- which is a top-level partial application, §25.3 declining to eta-expand one, and is every specialization a dispatcher reaches.  The classification is consulted wherever it reaches now, at index `i - n_holes`, with `is_erased_binder` past its end as before.  Reduced by the reporter with §79's own `classes` line to a twenty-line module; the trigger is one non-final unit-shaped binder, one step sharper than the run of two they recorded, and their matrix walked past it.  §81.5 is their second finding: `specialize`'s counts stop at `cut`, so they read `0` for a definition emitted with seven parameters --- that line says `abstracted` now, and the emitted arity is printed beside it |
+| M10ηΒ | A unit argument is passed as the literal (§82.1) | Done.  karamel's Rust backend reads a call whose entire argument list is one `TUnit` as a call to a nullary function, drops the argument, and asserts it was the literal `()`.  The assertion holds for F\*'s own extraction, which keeps a one-nullary-constructor datatype as a one-variant enum; Custard erases it to `unit` (§5.5), so a let-bound value of it reaches the call as a unit-typed *variable* and the assertion fires.  Neither side is wrong and there is nothing to trade off --- a value of type `unit` *is* `()` --- so `Simplify.unit_args` writes the literal, which Custard already did wherever the source had.  An impure argument is hoisted into a `let` first, because karamel drops the argument expression and a call that was there to be performed would go with it; an `EAbort` is left alone.  Runs after `coerce`, which is the only pass below that would put the variable back, and only for the karamel backends.  This was the single remaining blocker on EverParse's COSE Rust leg; the C leg is finished, at full API parity with the shipped tree |

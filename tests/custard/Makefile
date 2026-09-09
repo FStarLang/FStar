@@ -2039,6 +2039,17 @@ FLAGS_DropRun = --custard_entry_module DropRun
 CGREP_DropRun += "uint32_t DropRun_g(uint32_t b, uint32_t c)"
 CNOGREP_DropRun += "DropRun_g(uint32_t b, void"
 
+# Section 82.  A single-constructor nullary datatype is erased to unit, so a
+# value of it reaches a call as a unit-typed *variable*.  karamel's Rust
+# backend reads a call whose whole argument list is one unit as a call to a
+# nullary function and asserts the argument was the literal (), which F*'s own
+# extraction never violates because it keeps the type as a one-variant enum.
+# The pass passes () instead.  The grep pins the call, not the assertion:
+# before the fix karamel aborted here, so any emitted Rust at all is the test.
+RUST_TESTS += NullArg
+FLAGS_NullArg = --custard_entry_module NullArg
+RSGREP_NullArg += "nil_right()"
+
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
                   $(C_TESTS) $(CXX_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \
                   $(RUSTSPLIT_TESTS) \

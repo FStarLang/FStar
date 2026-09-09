@@ -2352,6 +2352,103 @@ let split_any_decls (prog:program) : ML program =
     | DLet dl -> DLet { dl with dl_body = split_any_expr infos dl.dl_body }
     | d -> d)
 
+(* {1 A unit argument is passed as the literal [()] (section 82)}
+
+   karamel's Rust backend reads a call whose entire argument list is one
+   [TUnit] as a call to a *nullary* function, drops the argument, and asserts
+   the argument was the literal [()]:
+
+     | [ { typ = TUnit; node; _ } ] -> assert (node = EUnit); [], []
+
+   The assertion holds for everything karamel has fed itself, because F*'s own
+   extraction never produces a unit-typed *variable*: a type with one nullary
+   constructor stays a one-variant enum there.  Custard erases it (section
+   5.5), so a value of that type becomes a value of [unit], and a let-bound
+   one reaches the call as an [EVar].  The reporter's case, reduced:
+
+     let res1: unit = COSE.Format.parse_nil c in
+     COSE.Format.evercddl_null_right res1
+
+   That is not a shape either side is wrong about.  Custard's erasure is the
+   better representation, and karamel's assumption is only false for a
+   producer that has one.  But there is nothing to disagree about either: a
+   value of type [unit] *is* [()], so passing the literal is not a
+   concession, it is the same term written in the form that carries no
+   variable.  Custard already writes it that way where the source did
+   ([nil_right ()] in the same dump), and this makes it uniform.
+
+   The pass runs only for the karamel backends.  The direct backends have no
+   such assumption and reading the variable is marginally clearer in the
+   emitted C.
+
+   Two arguments are left alone:
+
+   * an impure one, which is hoisted into a [let] first, because karamel drops
+     the argument expression on the floor and a call that was there to be
+     performed would vanish with it;
+   * an [EAbort], which does not return, and whose type being [unit] says
+     nothing about what replacing it would cost.
+
+   The hoist is what makes the rewrite unconditional rather than a
+   value-shaped special case, and it is the reason this is a pass over the IR
+   -- which has names -- rather than a patch in [PrintKrml], whose expressions
+   are already de Bruijn. *)
+
+let rec unit_args_expr (x:expr) : ML expr =
+  let g = unit_args_expr in
+  let br (b0:branch) : ML branch =
+    let p, gd, b = b0 in
+    (p, (match gd with Some gd -> Some (g gd) | None -> None), g b) in
+  (* [acc] collects the hoisted bindings, in the order the arguments were
+     evaluated, which is the order the [let]s have to be rebuilt in. *)
+  let arg (acc:ref (list (string & cty & expr))) (e:expr) : ML expr =
+    let e = g e in
+    if not (TUnit? e.ty) then e
+    else match e.e with
+         | EConst CUnit -> e
+         | EAbort _ -> e
+         | _ ->
+           if is_pure e.eff then { e with e = EConst CUnit }
+           else begin
+             let v = uniq "tmp" (GenSym.next_id ()) in
+             acc := (v, e.ty, e) :: !acc;
+             { e with e = EConst CUnit; eff = E_Pure }
+           end in
+  let with_hoists (k : ref (list (string & cty & expr)) -> ML expr) : ML expr =
+    let acc = mk_ref [] in
+    let body = k acc in
+    !acc |> List.fold_left (fun body (v, t, e) ->
+      { body with e = ELet (v, t, e, body) }) body in
+  match x.e with
+  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
+  | ELet (v, ty, a, b) -> { x with e = ELet (v, ty, g a, g b) }
+  | ESeq (a, b) -> { x with e = ESeq (g a, g b) }
+  | EWhile (a, b) -> { x with e = EWhile (g a, g b) }
+  | EApp (h, es) ->
+    with_hoists (fun acc ->
+      let h = g h in
+      let es = es |> List.map (arg acc) in
+      { x with e = EApp (h, es) })
+  | EFun (bs, b) -> { x with e = EFun (bs, g b) }
+  | EIf (c, a, b) -> { x with e = EIf (g c, g a, g b) }
+  | EMatch (s, brs) -> { x with e = EMatch (g s, brs |> List.map br) }
+  | ETry (s, brs) -> { x with e = ETry (g s, brs |> List.map br) }
+  | ETuple es -> { x with e = ETuple (es |> List.map g) }
+  | EOp (o, es) -> { x with e = EOp (o, es |> List.map g) }
+  | ERaise e1 -> { x with e = ERaise (g e1) }
+  | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map g) }
+  | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, g e))) }
+  | EProj (e1, n, f) -> { x with e = EProj (g e1, n, f) }
+  | EDiscrim (e1, n) -> { x with e = EDiscrim (g e1, n) }
+  | ECast (e1, c) -> { x with e = ECast (g e1, c) }
+  | ECoerce (e1, c) -> { x with e = ECoerce (g e1, c) }
+
+let unit_args (prog:program) : ML program =
+  prog |> List.map (fun d ->
+    match d with
+    | DLet dl -> DLet { dl with dl_body = unit_args_expr dl.dl_body }
+    | d -> d)
+
 (* {1 Coercions at the [TAny] boundary (section 5.4)}
 
    [TAny] is what is left when Custard cannot name a value's representation.
@@ -3196,4 +3293,10 @@ let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
      this rewrites. *)
   let prog = pass "narrow_rets" narrow_rets prog in
   let prog = pass "split_any" split_any_decls prog in
-  pass "coerce" coerce_prog prog
+  let prog = pass "coerce" coerce_prog prog in
+  (* Section 82.  Last, because [coerce] is the only pass below that rewrites
+     an argument, and a coercion wrapped around the variable this replaces
+     would put it back.  karamel-only: the direct backends have no assumption
+     to satisfy here. *)
+  if List.mem (Options.custard_backend ()) ["KrmlC"; "KrmlRust"]
+  then pass "unit_args" unit_args prog else prog
