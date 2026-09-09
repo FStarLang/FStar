@@ -2050,6 +2050,20 @@ RUST_TESTS += NullArg
 FLAGS_NullArg = --custard_entry_module NullArg
 RSGREP_NullArg += "nil_right()"
 
+# Section 85.  A size index consumed as a non-type template argument has to be
+# a constant, and no rule was making it one -- so it stayed a runtime parameter
+# and error 390 fired on a definition whose every call site passes a literal.
+# Rule 4d demands it, from the definition's binder sorts and body and from an
+# [assume val]'s codomain, which has no body for rule 4c to read.  C++ because
+# the target spelling is a class template.
+CXX_TESTS += TmplMono
+FLAGS_TmplMono = --custard_backend C --custard_entry_module TmplMono
+CGREP_TmplMono += "wm::frag<16> f = wm::mk16(rows)"
+CGREP_TmplMono += "TmplMono_g_gemm__uint_to_t_16(wm::frag<16> f"
+# The index reaches the target through the type, and is not also passed at
+# runtime -- that is the whole of why the section 32.5 rule can be relaxed.
+CNOGREP_TmplMono += "g_gemm__uint_to_t_16(size_t tm"
+
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
                   $(C_TESTS) $(CXX_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \
                   $(RUSTSPLIT_TESTS) \

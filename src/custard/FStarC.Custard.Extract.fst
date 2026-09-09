@@ -1567,9 +1567,16 @@ and binder_classes (st:state) (l:Ident.lident) : ML (list bclass) =
                  abbreviation in the codomain; the lambda does not. *)
               Mono.classify_def (tcenv st) (se.sigattrs @ lb.lbattrs)
                                 lb.lbtyp (Some lb.lbdef)
-                                (compile_time_demanded st lb.lbdef)
+                                (compile_time_demanded st lb.lbdef @
+                                 template_demanded st lb.lbtyp (Some lb.lbdef))
             | None -> [])
-         | Sig_declare_typ {t} -> classify (tcenv st) se.sigattrs t
+         (* Section 85.  An [assume val] has no body, so rule 4c has nothing
+            to say about it and this used to be plain [classify].  Rule 4d
+            does have something to say: an external function's codomain can
+            write its own parameter into a template-id. *)
+         | Sig_declare_typ {t} ->
+           Mono.classify_def (tcenv st) se.sigattrs t None
+                             (template_demanded st t None)
          | _ -> [])
       | None -> []
     in
@@ -1922,6 +1929,124 @@ and is_realized_type (st:state) (l:Ident.lident) : ML bool =
    its arguments are invisible to the target and are dropped, which is what an
    external type with a fixed C spelling wants and what every existing one
    relies on. *)
+(* Section 85's rule 4d: the binders that an external *template* needs to be
+   known, computed the same way and for the same reason as rule 4c.
+
+   A template's non-type argument is written into a template-id, so it has to
+   be a constant expression, and [template_arg] says so with error 390 when it
+   is not.  But nothing was making it one.  [@@@monomorphize] on the binder
+   would, and rule 4b ends that treadmill for a type-carrying binder; a size
+   index consumed by a template is the same situation and had no rule.
+
+   The demand is over-approximated in the two ways rule 4c is, and the
+   trade-off is the same -- a demand met by a binder that did not need it
+   costs a specialization, one that is missed costs the extraction:
+
+   - the free names of the argument are demanded, since they are exactly what
+     stops it from reducing.
+
+   Only the positions the target string *mentions* are demanded, though.  An
+   argument no placeholder names is not written into the template-id, so
+   nothing requires it to be a constant, and demanding it anyway trades error
+   390 for error 364 -- specializing on a runtime value is not a fix.
+
+   The scan covers the definition's binder sorts and its body, and the body
+   matters more than it looks: the application is very often nowhere in the
+   term the author wrote.  [let f = mk tm in ...] mentions [tm] under [mk],
+   not under [frag], and it is the *type* [frag tm] recorded on the let that
+   the extractor will later meet.  [Visit.visit_term] descends into [lbtyp]
+   and into binder sorts, which is what makes those visible here. *)
+and template_index_names (st:state) (ts:list term) : ML (list bv) =
+  let acc : ref (list bv) = mk_ref [] in
+  ts |> List.iter (fun t ->
+    let _ = Visit.visit_term false (fun t ->
+      (match (SS.compress t).n with
+       | Tm_app _ ->
+         let hd, args = U.head_and_args_full t in
+         (match (U.un_uinst (SS.compress hd)).n with
+          | Tm_fvar fv ->
+            let l = S.lid_of_fv fv in
+            ensure_lid_available st l;
+            (match extern_template st l with
+             | Some ps ->
+               (* Only the positions the target string actually mentions.  An
+                  argument the template does not name is not written into the
+                  template-id, so nothing requires it to be a constant, and
+                  demanding it anyway would specialize on a runtime value --
+                  which is error 364 rather than a fix. *)
+               let mentioned (i:int) : ML bool =
+                 ps |> List.existsb (fun p -> match p with
+                                              | TP_arg j -> j = i
+                                              | TP_lit _ -> false) in
+               args |> List.iteri (fun i (a, _) ->
+                 if mentioned i && not (Mono.is_type_term (tcenv st) a)
+                 then acc := FlatSet.elems (Free.names a) @ !acc)
+             | None -> ())
+          | _ -> ())
+       | _ -> ());
+      t) t in
+    ());
+  !acc
+
+and template_demanded (st:state) (t:typ) (def:option term) : ML (list int) =
+  (* With a definition the binders are the lambda's, as rule 4c has them, and
+     the second thing to scan is the body.  Without one -- an [assume val],
+     which is how an external function arrives -- they are the arrow's, and
+     the second thing is the codomain.  It has to be the same spine the caller
+     will classify, or the positions this returns name the wrong binders.
+
+     The [assume val] case is not a corner: an external function that returns
+     a template writes its own parameter into the template-id, as in
+     [mk (tm: SZ.t) : ML (frag tm)].  There is no body to demand from, the
+     codomain is the only place [tm] occurs, and unless that parameter is
+     [Mono] the *declaration* cannot be extracted at all -- the caller's
+     specialization does not help, because the callee still has the index as a
+     runtime parameter of its own. *)
+  let bs, second =
+    match def with
+    | Some d -> let bs, body, _ = U.abs_formals d in (bs, body)
+    | None ->
+      let bs, comp = Mono.arrow_formals_unfold (tcenv st) t in
+      (bs, U.comp_result comp) in
+  let names = template_index_names st
+                ((bs |> List.map (fun (b:S.binder) -> b.binder_bv.sort))
+                 @ [second]) in
+  (* Positions, not names, for the reason rule 4c gives: the caller classifies
+     the binders of the arrow, which are opened separately from the lambda's
+     and so are different [bv]s for the same parameter. *)
+  let demanded =
+    bs |> List.mapi (fun i (b:S.binder) ->
+            if names |> List.existsb (fun v -> bv_eq v b.binder_bv)
+            then [i] else [])
+       |> List.flatten in
+  (* One case where the demand is withheld: an external whose *every* runtime
+     binder it would claim, in front of an impure codomain.  Such a
+     declaration has no parameter left, so it is emitted as an object rather
+     than a call -- [wm::frag<16> f = wm::mk;] -- which is the section 32.5
+     miscompilation, and [Mono.keep_thunk] cannot recover a thunk here because
+     a template index has to be substituted and so cannot also be retained.
+     That gap is the one [keep_thunk]'s comment already records.
+
+     Withholding the demand rather than declining the exemption later is what
+     keeps the *diagnosis* right.  With the demand withheld the index stays a
+     runtime parameter, [ty_of_typ] meets it, and error 390 says what is
+     actually wrong -- the argument does not reduce to a constant -- which is
+     both true and actionable.  Declining later would instead report 376, an
+     error about monomorphizing an external, on a program whose author never
+     asked for that. *)
+  match def with
+  | Some _ -> demanded
+  | None ->
+    let leaves_runtime_param =
+      bs |> List.mapi (fun i (b:S.binder) ->
+              not (List.mem i demanded) &&
+              not (Mono.is_erased_binder (tcenv st) b))
+         |> List.existsb (fun x -> x) in
+    let _, comp = Mono.arrow_formals_unfold (tcenv st) t in
+    if Cons? demanded && not leaves_runtime_param &&
+       not (U.is_pure_or_ghost_comp comp)
+    then [] else demanded
+
 and extern_template (st:state) (l:Ident.lident) : ML (option (list tmpl_piece)) =
   (* Both routes, as everywhere a rule is wanted: the attribute on the
      declaration itself, and the built-in table for the names ulib does not
@@ -3712,6 +3837,41 @@ and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
   | Some ((_, ty), _) ->
     let cs = binder_classes st l in
     let bs, c = U.arrow_formals_comp ty in
+    (* Section 85.  The names this signature writes into a template-id.  A
+       [Mono] value binder among them is exempt from the rule just below, and
+       for the reason that rule already gives for a type argument: it is
+       substituted into the *signature*, so nothing is discarded and the
+       realization does learn what it was -- [wm::frag<16>] says 16.  Decided
+       by name rather than by position, because the positions of
+       {!template_demanded} are indexed against
+       [Mono.arrow_formals_unfold]'s spine and these against
+       [U.arrow_formals_comp]'s, and the two differ exactly when an
+       abbreviation stands in the codomain (section 74). *)
+    let tmpl_names = template_index_names st
+                       ((bs |> List.map (fun (b:S.binder) -> b.binder_bv.sort))
+                        @ [U.comp_result c]) in
+    (* ... but not when exempting it would leave the external with no runtime
+       parameter at all in front of an impure codomain.  [Mono.keep_thunk]
+       recovers a thunk by *un*-dropping the last binder, which is not
+       available here: the whole point of a template index is that it is
+       substituted, so it cannot also be retained, and a thunk would have to be
+       synthesized rather than recovered.  That is the gap [keep_thunk]'s
+       comment already records for a definition all of whose binders are
+       [Mono].  Until it is closed, the honest answer is the error that was
+       being raised anyway -- [wm::frag<16> f = wm::mk;] is the object-instead-
+       of-call miscompilation §32.5 refuses, and reaching it by a new route is
+       not a reason to start tolerating it. *)
+    let rec has_runtime (bs:binders) (cs:list bclass) : ML bool =
+      match bs, cs with
+      | [], _ -> false
+      | b :: bs, [] ->
+        not (Mono.is_erased_binder (tcenv st) b) || has_runtime bs []
+      | b :: bs, c :: cs -> Poly? c || has_runtime bs cs in
+    let has_runtime_param = has_runtime bs cs in
+    let would_be_value = not has_runtime_param && not (U.is_pure_or_ghost_comp c) in
+    let is_tmpl_index (b:S.binder) : ML bool =
+      not would_be_value &&
+      tmpl_names |> List.existsb (fun v -> bv_eq v b.binder_bv) in
     (* A [Mono] binder the call site did not supply is a call that could not be
        specialized; its type variable is not a parameter the caller will
        instantiate, so it becomes [any] here just as it did before, rather
@@ -3727,7 +3887,8 @@ and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
         let sort = SS.subst subst b.binder_bv.sort in
         let b' = { b with binder_bv = { b.binder_bv with sort = sort } } in
         (match cls, margs |> List.tryFind (fun (j, _) -> j = i) with
-         | Mono, Some (_, a) when not (is_type_binder (tcenv st) b) ->
+         | Mono, Some (_, a) when not (is_type_binder (tcenv st) b) &&
+                                  not (is_tmpl_index b) ->
            (* Section 32.5.  Specialization works by substituting the argument
               into a *body*.  An external has none, so a [Mono] value argument
               is substituted into nothing: the signature loses the binder, the

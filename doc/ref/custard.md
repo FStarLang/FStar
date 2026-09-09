@@ -17160,6 +17160,105 @@ nothing indexes it externally, so renumbering is free --- but only as long as
 something checks that the renumbered key is itself unused, which is now the
 same gate.
 
+## 85. A template index is a monomorphization demand
+
+A template extern names a target type whose spelling has a hole in it ---
+`"wm::frag<{0}>"` --- and §69 established that a non-type argument filling
+such a hole has to reduce to a constant, because a template-id is a piece of
+target-language syntax and `wm::frag<rows>` is not one the target's compiler
+will accept.  Error 390 says so.
+
+What §69 did not do is arrange for the argument to *be* a constant.  It
+diagnoses a program that reaches the printer with a runtime parameter in that
+position; it does not ask what would have had to happen earlier for the
+parameter not to be there.  The answer is monomorphization, and no rule was
+demanding it.
+
+### 85.1.  Rule 4d
+
+`classify_demand`'s rules (§32) each name a position whose argument must be
+known at extraction time.  Rule 4b covers a binder whose *type* mentions
+another binder, because a type argument is substituted into a signature.  Rule
+4c covers an argument of a `@@custard_compile_time` application.  A template
+index is neither: its type is `nat` or `size_t`, and the application it feeds
+is an ordinary extern.
+
+Rule 4d closes that.  `template_demanded` scans for an application whose head
+is an extern with a template spelling, and demands every argument at a
+position the spelling *mentions*.
+
+Three places are scanned, and each is load-bearing:
+
+  * the binder sorts of the definition --- `f : frag tm -> _` mentions `tm`
+    under `frag`;
+  * the body --- because `let f = mk tm in ...` hides the application in a
+    place the sorts do not reach, and it is the recorded type on that `let`
+    which the extractor later meets;
+  * for an `assume val`, its codomain --- `mk (tm : size_t) : frag tm` names
+    its own parameter, and this branch previously received no demand at all,
+    which is why the first attempt at rule 4d still failed.
+
+That last one required generalizing the demand to a definition that has no
+body.  `binder_classes`' `Sig_declare_typ` branch called plain `classify`;
+it now calls `classify_def` with the demand, taking its binders from
+`arrow_formals_unfold` of the declared type instead of from `U.abs_formals`
+of a definition it does not have.
+
+### 85.2.  Only the mentioned positions
+
+The scan demands an argument only at a position some `TP_arg i` placeholder
+mentions, and the restriction is not an optimization.
+
+For a *type*, `ty_of_typ` runs `template_arg` over the whole spine, so every
+argument has to be a constant and demanding all of them would be right.  For a
+*function* extern only the mentioned placeholders are pasted into the emitted
+text; the rest are ordinary arguments passed at run time.  Demanding those too
+trades error 390 for error 364 --- "the argument passed to the monomorphized
+binder is the runtime parameter `rows`" --- on a program in which passing
+`rows` there was always correct.
+
+### 85.3.  The 376 guard
+
+Error 376 refuses a `Mono` *value* binder on an external, and the reason it
+gives is sound: specialization substitutes into a body, and an external has
+none.  The same error's text already grants an exception for a `Mono` *type*
+binder, "because it is substituted into the signature".
+
+A template index is in exactly that position.  `wm::frag<16>` does say 16; the
+index is substituted into the signature in the most literal sense available,
+by being printed into it.  So the guard is relaxed for a binder rule 4d
+demanded, which is the same case it already grants and not a new one.
+
+### 85.4.  What is not fixed
+
+An external all of whose runtime binders rule 4d would claim, in front of an
+impure codomain, has no parameter left after substitution.  It is then emitted
+as an object rather than a call --- `wm::frag<16> f = wm::mk;` --- which is the
+§32.5 miscompilation.  `Mono.keep_thunk` recovers a thunk elsewhere by
+*un-dropping* the last binder; that is unavailable here, because a template
+index has to be substituted and so cannot also be retained.  A thunk would
+have to be synthesized, which is the gap `keep_thunk`'s own comment records.
+
+Rule 4d therefore withholds the demand in that case rather than emitting the
+object, and the choice of *where* to withhold it is what keeps the diagnosis
+right.  Declining the 376 exemption later would report an error about
+monomorphizing an external on a program whose author never asked for that.
+Withholding the demand leaves the index a runtime parameter, `ty_of_typ` meets
+it, and error 390 says the thing that is actually wrong --- the argument does
+not reduce to a constant --- which is both true and actionable.  §69's
+`TemplateBad` is that program, and it still reports 390.
+
+The exemption keeps its own guard regardless, for the case rule 4d is not
+involved in: an author who writes `[@@@monomorphize]` on such a binder by hand
+gets 376, which for a hand-written annotation is the right answer.
+
+Separately, and not addressed here: a template spelling on an `assume val`
+*function* is not substituted at all.  `extern_template` is consumed by
+`ty_of_typ`, which handles types, so `[@@custard_extern "wm::mk<{0}>"]` on a
+function emits the placeholder text literally.  A function template whose
+argument the target can deduce --- as C++ deduces `fill`'s from its argument
+--- needs no spelling, which is why this has not bitten anything yet.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -17466,3 +17565,4 @@ same gate.
 | M10θΒ | A unit argument is passed as the literal (§82.1) | Done.  karamel's Rust backend reads a call whose entire argument list is one `TUnit` as a call to a nullary function, drops the argument, and asserts it was the literal `()`.  The assertion holds for F\*'s own extraction, which keeps a one-nullary-constructor datatype as a one-variant enum; Custard erases it to `unit` (§5.5), so a let-bound value of it reaches the call as a unit-typed *variable* and the assertion fires.  Neither side is wrong and there is nothing to trade off --- a value of type `unit` *is* `()` --- so `Simplify.unit_args` writes the literal, which Custard already did wherever the source had.  An impure argument is hoisted into a `let` first, because karamel drops the argument expression and a call that was there to be performed would go with it; an `EAbort` is left alone.  Runs after `coerce`, which is the only pass below that would put the variable back, and only for the karamel backends.  This was the single remaining blocker on EverParse's COSE Rust leg; the C leg is finished, at full API parity with the shipped tree |
 | M10θΓ | Which half of the rule dropped it (§83.1) | Done.  `classify`'s rule 1 prints `Dropped` for a type binder, a proof-irrelevant one and a unit-shaped one alike, and §81 was a disagreement between two rules differing on exactly the last of those --- so the one column a reporter outside this tree can read could not carry the distinction their failure turned on.  They bisected on it, concluded "a run of two or more dropped arguments", and had to correct themselves: a single non-final unit-shaped binder is enough, and their passing row had an erased binder in that slot.  Each `Dropped` now names which of the three tests dropped it.  `Mono.classes_to_string` takes the binders alongside the classes, since the reason is a property of the binder, and does not require the two lists to agree in length --- a binder past the end of the classification prints in angle brackets and a class past the end of the binders prints unannotated, because a length disagreement is one of the things this line exists to expose |
 | M10θΖ | A milestone key is checked for uniqueness (§84) | Done.  Sections refer to milestone rows by key, so a duplicate silently makes one of the two unreachable.  Three were introduced in a row: the series had wrapped and the next free key was guessed from the last one used rather than looked up, which is the right thing to do --- the alternative is scanning a 17,000-line file before adding a row --- so the guess gets a gate rather than a discipline.  `check-doc` refuses a table with two rows under one key and runs in `tests/custard`'s default target.  It found two more predating all of this the moment it was written.  The key with a live reference in the prose keeps it; where neither is referenced the earlier row keeps it |
+| M10θΗ | A template index is a monomorphization demand (§85.1) | Done.  §69 diagnoses a runtime parameter that reaches a template-id with error 390 but nothing arranged for it not to be there: no `classify_demand` rule made a template index `Mono`, since its type is `size_t` and the application it feeds is an ordinary extern, so neither rule 4b nor 4c applied.  Rule 4d demands every argument at a position the spelling mentions, scanning the definition's binder sorts, its body --- `let f = mk tm` hides the application in the `let`'s recorded type --- and, for an `assume val`, its codomain, which previously received no demand at all.  Only *mentioned* positions: a type extern's whole spine has to be constant, but a function extern passes its unmentioned arguments at run time, and demanding those trades 390 for 364.  Error 376's exemption for a `Mono` type binder is extended to a demanded index, which is the same case it already grants --- `wm::frag<16>` does say 16.  Where the demand would claim every runtime binder in front of an impure codomain it is withheld instead, leaving 390 as the diagnosis rather than turning it into 376; the all-`Mono` thunk gap `keep_thunk` records is unchanged |
