@@ -911,11 +911,23 @@ let eta_expand_decl (tbl : SMap.t int) (uses : SMap.t int) (l:dlet) : ML dlet =
      rather than compiling as the second parameter it is.  Nothing else in
      the pipeline does it: [eta_reduce] runs in the other direction, and the
      expansion below cannot, because it works by *applying* the body and a
-     lambda applied to a fresh variable is a redex, not a parameter. *)
-  let rec absorb (bs:list binder) (body:expr) (ret:cty) (ef:eff)
+     lambda applied to a fresh variable is a redex, not a parameter.
+
+     Section 80.2.  Syntactic identity for the definition is not identity for
+     the *program*: absorbing a binder raises the arity every call site has to
+     meet, and a site that supplies fewer is a partial application the C
+     backend rejects.  So this is bounded by the callers exactly as the
+     expansion below is.  [use_arity] records the *smallest* spine any site
+     supplies, so the bound is what every site can meet; a definition no site
+     calls is unbounded.  When the bound stops the lambda from moving, it stays
+     a lambda -- and a lambda in return position is what [lift_lambdas] is for,
+     which is the representation C wants anyway: a pointer to a top-level
+     function.  The fixpoint below re-reads [uses] each round, so a caller that
+     grows first lets this run afterwards. *)
+  let rec absorb (n:int) (bs:list binder) (body:expr) (ret:cty) (ef:eff)
     : ML (list binder & expr & cty & eff) =
     match body.e with
-    | EFun (lbs, lbody) when Cons? lbs ->
+    | EFun (lbs, lbody) when Cons? lbs && List.length lbs <= n ->
       (* The declared codomain, peeled, and not [lbody.ty].  The two can
          disagree -- a reified [Tac] body is a match whose arms have the
          concrete type and whose declaration has [TAny] -- and that
@@ -928,11 +940,16 @@ let eta_expand_decl (tbl : SMap.t int) (uses : SMap.t int) (l:dlet) : ML dlet =
              | TArrow (_, e', b) -> peel (n - 1) b e'
              | _ -> None in
       (match peel (List.length lbs) ret ef with
-       | Some (ret', ef') -> absorb (bs @ lbs) lbody ret' ef'
+       | Some (ret', ef') ->
+         absorb (n - List.length lbs) (bs @ lbs) lbody ret' ef'
        | None -> (bs, body, ret, ef))
     | _ -> (bs, body, ret, ef) in
+  let absorb_room =
+    match SMap.try_find uses (string_of_name l.dl_name) with
+    | Some k -> let r = k - List.length l.dl_binders in if r < 0 then 0 else r
+    | None -> arrow_arity l.dl_ret in
   let abs_bs, abs_body, abs_ret, abs_ef =
-    absorb l.dl_binders l.dl_body l.dl_ret l.dl_eff in
+    absorb absorb_room l.dl_binders l.dl_body l.dl_ret l.dl_eff in
   let l = { l with dl_binders = abs_bs; dl_body = abs_body;
                    dl_ret = abs_ret; dl_eff = abs_ef } in
   (* Only a head this program declares, and only a *pure* body: expansion

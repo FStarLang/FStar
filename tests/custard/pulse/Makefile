@@ -144,6 +144,18 @@ C_TESTS += PulseFnPtrRet
 # unbound variable on the Rust leg.
 C_TESTS += ProjAbbrev
 
+# Section 80.1.  The same miscount as ProjAbbrev, reached without any
+# abbreviation at all: the field's type is an arrow of arity 3 written
+# inline, and F* stores the projector for it eta-expanded to that arity.  Its
+# body is then [projectee c p v], where [#p: perm] and [#v: erased bool] are
+# binders Custard itself deletes -- so the spine filter for an untyped head
+# has to drop them too, which it only did for *types*.  Left in, [p] reached
+# the Rust backend as an unbound variable, and the C backend saw a projector
+# of arity 3 that [call_it] applies to 2.  Dropped, [eta_reduce] shortens the
+# projector back to the identity and it disappears entirely.
+C_TESTS += ArrowAb
+RUST_TESTS += ArrowAb
+
 # Sections 33.1-33.3.  [@@@monomorphize] on the binder of a Pulse [fn]: the
 # annotation is on the lambda and not on the elaborated arrow type, and the
 # [fn] itself arrives eta-contracted.  Both had to be fixed for the

@@ -16590,6 +16590,187 @@ it named and nothing else about how the arity was computed.  This turns
 It costs nothing when the flag is off, and the flag was already the one a
 reader reaches for when a specialization surprises them.
 
+## 80. An erased argument is not only a type
+
+Reported with a standalone MWE, reduced by the reporter to a five-row matrix,
+and older than the two rounds that surrounded it: the same defect had been
+sitting under both COSE legs the whole time, and §74 merely started routing
+EverParse into it.
+
+### 80.1 A record field whose type is an arrow
+
+The whole of it:
+
+```fstar
+noeq
+type rec_t = {
+  fld: (r: ref bool) -> (c: bool) -> (#p: perm) -> (#v: Ghost.erased bool) ->
+       stt bool (pts_to r #p v) (fun _ -> pts_to r #p v);
+}
+```
+
+`t.fld` in a caller, and nothing else, is enough.  On the Rust leg:
+
+```
+Custard: the unbound variable p reached the karamel backend, in
+ArrowAb.__proj__Mkrec_t__item__fld.
+```
+
+and on the C leg, from the same event seen from the other side:
+
+```
+Custard: the partial application of ArrowAb.__proj__Mkrec_t__item__fld has no
+C representation, in ArrowAb.call_it.
+It is applied to 1 of its 3 arguments.
+```
+
+F\* `--codegen krml` compiles the identical module.  The reporter ran that
+control before writing, and it is what makes this a divergence rather than a
+shared limitation.
+
+The reporter's matrix narrowed it further, and mostly by exclusion.  It is not
+about abbreviations: an arrow written inline in the field, with no abbreviation
+anywhere, fails identically.  It is not about implicits or erasure at the
+surface: making the binders explicit and non-erased fails too.  What it is
+about is the *arity* of the field's arrow.  Arity 1 is clean; arity 2 and above
+is not.
+
+### 80.2 F\* stores such a projector eta-expanded
+
+That is the ingredient the matrix was circling.  F\* does not store
+`__proj__Mkrec_t__item__fld` as `fun projectee -> match projectee with ... ->
+fld`; it stores it applied out to the field arrow's own arity:
+
+```
+fun projectee r c p v -> (match projectee with Mkrec_t fld -> fld) r c p v
+```
+
+`Simplify.eta_reduce` exists to undo exactly this, and for exactly this reason
+--- the note above it names the shape.  With arity 1 it fires, the extra binder
+goes, and the projector reduces to the identity.  With arity 2 or more it does
+not, and the reason it does not is the second ingredient.
+
+Custard deletes `#p` and `#v` from the projector's signature: `perm` is
+proof-irrelevant and `Ghost.erased bool` is erased, so neither is a parameter
+of anything.  But the *body* still applies the projected value to them.  What
+reaches the IR is
+
+```
+let ArrowAb.__proj__Mkrec_t__item__fld
+  (projectee: ...) (r: ...) (c: bool) : bool [Impure] =
+projectee r c p v
+```
+
+with `p` and `v` free.  `eta_reduce` cannot fire, because the last binder `c`
+is no longer the last argument.  The Rust backend then reports `p`; the C
+backend counts a definition of arity 3 that `call_it` applies to 1.  Two
+diagnostics, one event.
+
+### 80.3 The hole
+
+A call spine is filtered by its head's binders.  When the head is a term no
+declaration describes --- a `match`, a lambda left over from beta-reducing a
+specialized definition --- there are no binders to consult, and
+`Extract.expr_of_term` falls back to deciding each argument on its own.  That
+fallback asked `Mono.is_type_term`.
+
+Which is half the question.  A callee deletes a binder when
+`Mono.is_erased_binder` holds of it, and that is two rules: the binder is a
+type, or it is proof-irrelevant.  Filtering by `is_type_term` alone keeps the
+second kind and hands it to a head whose emitted arrow has no place for it.
+
+The surplus argument is not merely surplus.  It is what the eta-expansion of
+§25 introduced, so it names a binder the *enclosing* definition has itself
+deleted --- which is why it arrives at the backend as a free variable rather
+than as a wrong-but-bound one.
+
+`Mono.is_erased_term` is the missing half, and it is written as the argument-
+level counterpart of `is_erased_binder` exactly as `is_type_term` is of
+`is_type_binder`: a type, or a variable whose sort `is_dropped_binder`
+accepts.  Only a variable is decided, because only a variable carries its own
+sort --- and that is also the only shape eta-expansion produces, so the rule is
+as wide as the problem and no wider.  An argument that had to be computed was
+written by the user, and a user's call is answered by the callee's binders.
+
+With it, the projector's body is `projectee r c`, `eta_reduce` fires, the
+projector becomes the identity and is inlined away entirely.  Neither backend
+sees it at all.
+
+### 80.4 The same miscount from the constructor side
+
+The reporter filed a second row of the matrix separately, as an observation
+rather than a diagnosis.  Plain F\*, no Pulse:
+
+```fstar
+noeq type rec_t = { fld: bool -> bool -> bool }
+let mk () : rec_t = { fld = (fun a b -> a && b) }
+let call_it (t: rec_t) (x: bool) : bool = t.fld x x
+let main () : bool = call_it (mk ()) true
+```
+
+```
+Custard: the partial application of ArrowFieldPure.mk has no C representation,
+in ArrowFieldPure.main.
+It is applied to 0 of its 2 arguments.
+```
+
+`mk` takes one argument and is given one.  Arity 2 is only reachable by
+counting *through* the record into the arrow in its field, which is the same
+miscount as §80.1 reached from the other end --- and the reporter's instinct
+that it might be the same fix was half right: it is the same *cause*, an arity
+raised past what a call site supplies, but a different place.
+
+`rec_t` has one field, so §30's newtype collapse makes `rec_t` *be*
+`bool -> bool -> bool`; `mk` genuinely returns a function.  `absorb`, inside
+`Simplify.eta_expand_decl`, then moves the returned lambda's binders into
+`mk`'s parameter list.  §33.1 justifies that as a syntactic identity, and for
+the definition it is: `let f x = fun y -> e` and `let f x y = e` denote the
+same function.
+
+For the *program* it is not.  Absorbing a binder raises the arity every call
+site has to meet, and `mk ()` supplies one.  The eta-expansion further down the
+same function has always been bounded by the callers for precisely this
+reason; `absorb` was not, only because it was thought not to need to be.
+
+It is bounded now, by the same `use_arity` table --- which records the
+*smallest* spine any site supplies, so the bound is what every site can meet,
+and a definition no site calls is unbounded as before.  The fixpoint re-reads
+the table each round, so a caller that grows first still lets `absorb` run
+afterwards.
+
+When the bound stops the lambda from moving, it stays a lambda --- and a
+lambda in return position is what `lift_lambdas` is for, and is the
+representation C wanted all along:
+
+```c
+static bool ArrowFieldPure_mk__lam(bool a, bool b) {
+  return (a && b);
+}
+
+bool (*ArrowFieldPure_mk(void))(bool, bool) {
+  return ArrowFieldPure_mk__lam;
+}
+
+bool ArrowFieldPure_main(void) {
+  return ArrowFieldPure_call_it(ArrowFieldPure_mk(), true);
+}
+```
+
+### 80.5 What this does and does not close
+
+It closes the hole.  It does not, by itself, close the regression the reporter
+bisected to §74: that was §78, and the two are independent.  §80.1 is
+long-standing --- the reporter rebuilt three rows of the matrix at the
+pre-§74 revision and got the same verdicts and the same error text --- while
+the tree that now falls into it did not use to.  Their hypothesis for why is
+that `cddl_map_iterator_impl_validate1` is `inline_for_extraction`, so its
+projector was normally inlined away before anything could eta-expand it.  If
+that is right, both fixes are needed and neither subsumes the other.
+
+`ArrowAb` pins §80.1 on both the C and Rust legs, and `ArrowFieldPure` pins
+§80.4 on C.  Both were run against the unfixed compiler first, and produce the
+two diagnostics quoted above verbatim.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -16891,3 +17072,4 @@ reader reaches for when a specialization surprises them.
 | M10ηΦ | A dead abbreviation is not inert (§77.2) | Done.  A single unused `let ugly = S.slice U8.t` broke every unrelated function in the program that takes a slice.  karamel's monomorphization reads an abbreviation of an *applied* type as the name chosen for that instance and registers it by declaration rather than by use, so every later occurrence of the instance is rewritten to it; that is right for every head except the ones karamel's Rust backend also translates structurally, where `TApp (slice, [u8])` goes to `&[u8]` by an arm that never consults the type environment while `TQualified` goes to `Name` by one that is nothing else, and the two answers meet in `possibly_convert`.  C was never affected, a `typedef` being structurally transparent.  Custard has no use of an abbreviation to emit --- `Layout.resolve` unfolds them all --- so `PrintKrml` now drops one whose body applies a modelled head and which nothing refers to, on `KrmlRust` only, leaving §70.1's published `iter_t` alone.  `UglyAlias` pins both columns, the Rust one asserting the alias is gone and the C one asserting it is still there.  Reported twice, and reduced by the reporter, who ran the control that showed the machinery is karamel's |
 | M10ηΧ | Unfolding a spine is not eta-expanding it (§78.2) | Done, and a regression of my own making --- §74 bisected to by the reporter.  §74 rightly made `Extract.specialize` walk the *unfolded* arrow spine, since `cs` and `margs` are indexed against `Mono.classify_def`, which unfolds.  But the same list also feeds `cut`, which is how far the definition is eta-expanded, so unfolding silently changed the emitted arity of every definition whose codomain abbreviates an arrow --- and arity is interface.  EverParse's CDDL iterator accessors return an `impl_typ`, which unfolds to `(c: ty) -> (#p: perm) -> ...`, so on the C leg they took two parameters where every caller supplied one, and on the Rust leg `cut` reached past `c` into the erased `#p`, whose binder is deleted from the signature while the body still names it --- the reported unbound variable.  `cut`'s base is now the folded spine again, extended only as far as `margs` actually names, which is exactly the §74 case and nothing else.  `ProjAbbrev` pins it; `MonoAbbrev` and `TmplAbbrev` pin the half that must not regress |
 | M10ηΨ | Arity, printed (§79.1) | Done.  §74 and §78 were the same defect twice --- the definition and its callers disagreeing about arity --- and both arrived as a downstream error naming a definition in a tree I cannot build; §78 took four attempts to reproduce and was cracked by reading a binder's *name* in the reporter's dependency.  `--custard_dump_specializations` now also prints, per specialization, every number that decides the emitted arity: `folded` (what the type spells), `unfolded` (what `cs` and `margs` are indexed against), `cut` (how far the definition is eta-expanded), `eta_safe`, the classification, and the emitted, dropped and spine counts.  One line now shows §74 as the step from `folded` to `unfolded` and §78 as the step from `unfolded` to `cut`.  For the reporters, not for me |
+| M10ηΩ | An erased argument is not only a type (§80.1) | Done.  A record field whose type is an arrow of arity two or more, and the projector for it: F\* stores such a projector eta-expanded to the field arrow's own arity, so its body applies the projected value to the field's *erased* binders too --- and those are exactly the binders Custard deletes from the projector's own signature.  The spine filter for a head no declaration describes asked `is_type_term`, which is half of what a callee's `is_erased_binder` decides; the proof-irrelevant half was kept and reached the backend as a free variable on Rust and as an arity the callers cannot meet on C.  `Mono.is_erased_term` is the missing half, written as the argument-level counterpart of `is_erased_binder`; with it `eta_reduce` fires, the projector becomes the identity and is inlined away.  §80.4 is the same miscount from the constructor side, where `absorb` raised a definition's arity past what its one call site supplied; bounded by `use_arity` like the expansion beside it, the returned lambda stays put and `lift_lambdas` gives C the function pointer it wanted.  Reported with a standalone MWE, a five-row reduction matrix, and the F\* `--codegen krml` control run before writing |

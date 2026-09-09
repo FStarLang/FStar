@@ -298,6 +298,27 @@ let rec is_type_term (env:TcEnv.env) (t:term) : ML bool =
 let is_erased_binder (env:TcEnv.env) (b:binder) : ML bool =
   is_type_binder env b || is_dropped_binder env b
 
+(* Section 80.  [is_type_term] answers only half the question a spine with an
+   untyped head has to ask.  A callee deletes a binder when [is_erased_binder]
+   holds of it, and that is two rules, not one: the binder is a type, or it is
+   proof-irrelevant.  Filtering such a spine by [is_type_term] alone keeps the
+   second kind -- a [#p: perm], a [#v: Ghost.erased a] -- and hands it to a
+   head whose emitted arrow no longer has a place for it.
+
+   The extra argument is not merely surplus.  It is what the eta-expansion of
+   section 25 introduced, so it names a binder that the *enclosing* definition
+   has itself deleted, and it reaches the backend as a free variable.
+
+   Only a variable is decided here, because only a variable carries its own
+   type.  That is also the only shape eta-expansion produces, so the rule is
+   as wide as the problem and no wider: an argument that had to be computed
+   was written by the user and is answered by the callee's own binders. *)
+let is_erased_term (env:TcEnv.env) (t:term) : ML bool =
+  is_type_term env t ||
+  (match (SS.compress (U.unascribe t)).n with
+   | Tm_name bv -> is_dropped_binder env (S.mk_binder bv)
+   | _ -> false)
+
 (* The guard that makes deleting a binder from a *definition* safe.  Two things
    can go wrong.  Deleting every binder turns the definition into a value, so
    its body runs at module initialization instead of when it is called, and any

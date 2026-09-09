@@ -97,6 +97,13 @@ val is_type_term (env:TcEnv.env) (t:term) : ML bool
 
 val is_erased_binder (env:TcEnv.env) (b:binder) : ML bool
 
+(** [is_erased_term env t] is the argument-level counterpart of
+    {!is_erased_binder}, as {!is_type_term} is of [is_type_binder]: it holds of
+    an argument the callee has no binder for, either because it is a type or
+    because it is proof-irrelevant.  Only a variable can be decided, since only
+    a variable carries its sort; see section 80. *)
+val is_erased_term (env:TcEnv.env) (t:term) : ML bool
+
 (** [keep_thunk env bs c flags] is [flags] with its last entry cleared when
     dropping every binder would turn the definition into a value, or when the
     last binder is unit-shaped in front of an impure codomain and so may be a

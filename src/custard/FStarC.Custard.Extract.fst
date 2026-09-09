@@ -2209,11 +2209,13 @@ and expr_of_term (st:state) (t:term) : ML expr =
                    | _ -> [] in
        (* A head with no type to consult -- a [match], a lambda left over from
           beta-reducing a specialized definition -- still must not be given
-          its type arguments: they are erased, and one left behind is emitted
-          as an unbound term variable. *)
+          the arguments its callee has no binder for.  That is
+          [is_erased_term] and not just [is_type_term]: a proof-irrelevant
+          argument is deleted by exactly the same rule as a type, and one left
+          behind is emitted as an unbound term variable.  Section 80. *)
        let args = drop_flagged flags args
                   |> List.filter (fun (a, _) ->
-                       not (Mono.is_type_term (tcenv st) a)) in
+                       not (Mono.is_erased_term (tcenv st) a)) in
        let args = args |> List.map fst |> List.map (expr_of_term st) in
        (match args with
         | [] -> hd

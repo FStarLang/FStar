@@ -2014,6 +2014,19 @@ CNOGREP_TcConst += "custard_init_globals"
 # the pass runs before dce.
 CNOGREP_TcConst += "TcConst_start"
 
+# Section 80.2.  A single-field record whose field is an arrow of arity 2:
+# section 30's newtype collapse makes [rec_t] *be* that arrow, so [mk] returns
+# a function.  [absorb] used to move the returned lambda's binders into [mk]'s
+# parameter list unconditionally, raising [mk]'s arity to 2 while its only
+# call site, [mk ()], supplied one -- a partial application C cannot express.
+# Bounded by the callers, the lambda stays put, [lift_lambdas] gives it a name,
+# and [mk] returns a pointer to it, which is what C wanted all along.
+C_TESTS += ArrowFieldPure
+FLAGS_ArrowFieldPure = --custard_entry_module ArrowFieldPure
+CGREP_ArrowFieldPure += "bool (*ArrowFieldPure_mk(void))(bool, bool)"
+CGREP_ArrowFieldPure += "return ArrowFieldPure_mk__lam;"
+CGREP_ArrowFieldPure += "ArrowFieldPure_call_it(ArrowFieldPure_mk(), true)"
+
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
                   $(C_TESTS) $(CXX_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \
                   $(RUSTSPLIT_TESTS) \
