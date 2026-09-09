@@ -29,6 +29,8 @@ module CE = FStar.Algebra.CommMonoid.Equiv
 open FStar.IntegerIntervals
 open FStar.Matrix 
   
+#push-options "--z3rlimit_factor 4"
+
 (* Auxiliary utility that casts (matrix c m n) to seq of length (m*n) *)
 let matrix_seq #c #m #r (generator: matrix_generator c m r) = 
   seq_of_matrix (Matrix.init generator)
@@ -90,3 +92,4 @@ let double_fold_transpose_lemma #c #eq
   matrix_fold_equals_func_double_fold cm (transposed_matrix_gen gen); 
   assert_norm (double_fold cm (transpose_generator offset_gen) == rhs);
   eq.transitivity (FStar.Seq.Permutation.foldm_snoc cm matrix_mn) lhs rhs
+#pop-options

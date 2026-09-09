@@ -277,6 +277,9 @@ let effect_Ghost_lid = pconst "Ghost"
 let effect_DIV_lid   = psconst "DIV"
 let effect_Div_lid   = psconst "Div"
 let effect_Dv_lid    = psconst "Dv"
+let effect_NDET_lid  = psconst "NDET"
+let effect_Ndet_lid  = psconst "Ndet"
+let effect_Nd_lid    = psconst "Nd"
 
 (* The "All" monad and its associated symbols. *)
 
@@ -528,7 +531,7 @@ let fext_on_dom_g_lid = fext_lid "on_dom_g"
 
 let sealed_lid      = p2l ["FStar"; "Sealed"; "sealed"]
 let seal_lid        = p2l ["FStar"; "Sealed"; "seal"]
-let unseal_lid      = p2l ["FStar"; "Stubs"; "Tactics"; "Unseal"; "unseal"] (* In a separate module due to the mention of TAC *)
+let unseal_lid      = p2l ["FStar"; "Sealed"; "unseal"]
 let map_seal_lid    = p2l ["FStar"; "Sealed"; "map_seal"]
 let bind_seal_lid   = p2l ["FStar"; "Sealed"; "bind_seal"]
 let tref_lid        = p2l ["FStar"; "Stubs"; "Tactics"; "Types"; "tref"]

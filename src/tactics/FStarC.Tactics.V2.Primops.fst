@@ -51,18 +51,6 @@ let solve (#a:Type) {| ev : a |} : Tot a = ev
 
 instance _ = RE.e_term (* REMOVE ME *)
 
-(* Takes a `sealed a`, but that's just a userspace abstraction. *)
-let unseal (_typ:_) (x:Sealed.sealed 'a) : ML (tac 'a) = return (Sealed.unseal x)
-let unseal_step =
-  (* Unseal is not in builtins. *)
-  let s =
-    mk_tac_step_2 1 "unseal"
-      #e_any      #(e_sealed      e_any)      #e_any
-      #NBET.e_any #(NBET.e_sealed NBET.e_any) #NBET.e_any
-      unseal unseal
-  in
-  { s with name = PC.unseal_lid }
-
 let e_ret_t #a (d : embedding a) : embedding (option a & issues) = solve
 let nbe_e_ret_t #a (d : NBET.embedding a) : NBET.embedding (option a & issues) = solve
 
@@ -83,8 +71,6 @@ let ops = [
 
   (* Tactic builtin steps *)
 
-  unseal_step;
-  
   mk_tac_step_1 0 "get" (fun () -> get) (fun () -> get);
 
   mk_tac_step_1 0 "fixup_range" fixup_range fixup_range;

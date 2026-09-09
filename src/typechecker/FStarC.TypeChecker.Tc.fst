@@ -642,6 +642,56 @@ let process_pragma (env:Env.env) (p:pragma) (r:Range.range) : ML unit =
 
   | _ -> ()
 
+(* Does this assumed declaration declare a type constructor, i.e. is the result
+   of its type a sort?  We have to normalize to see this: `Prims.int` is
+   declared at type `eqtype`, which unfolds to `a:Type0{hasEq a}`.
+
+   This used to be read off the `New` qualifier, written by the user.  But
+   `new` could be written on *any* `assume val`, including one whose result
+   type is not a sort, and it made the SMT encoder assert a fresh
+   `Term_constr_id` for the symbol.  Combined with the inversion axioms of the
+   primitive types, that made `assume new type b : int -> bool` prove `False`
+   (issue #4521).
+
+   So the shape of the declaration now decides two things on its own -- whether
+   the symbol is rigid rather than SMT-equatable, and whether it may head a
+   match scrutinee's type -- and it is additionally required, on top of `new`,
+   for the SMT encoder to assert that the type is distinct from all others.
+   `new` itself cannot be inferred: see the comment in `Encode.encode_free_var`.
+
+   The result is recorded in `sigmeta`, not in `sigquals`: a qualifier here
+   would be inherited by a definition that has none of its own (both in
+   ToSyntax and in `check_quals_eq`), which then trips the "definitions cannot
+   be marked assume" check and makes extraction treat the type as abstract
+   inside the very module that defines it. *)
+let declares_type_constructor env (uvs:univ_names) (t:typ) : ML bool =
+  let _, t = SS.open_univ_vars uvs t in
+  let bs, c = U.arrow_formals_comp t in
+  let res = U.comp_result c in
+  Tm_type? (SS.compress res).n
+  || (let env = Env.push_binders env bs in
+      Tm_type? (SS.compress (U.unrefine (N.unfold_whnf env res))).n)
+
+let set_type_constructor_meta env (se:sigelt) (uvs:univ_names) (t:typ) : ML sigelt =
+  (* Projectors and discriminators are declared with `Assumption` but are not
+     opaque: they are reduced primitively by Normalize.reduce_disc_proj.  A
+     record field of type `Type` would otherwise look just like an abstract
+     type constructor here, and matching on `r.field` would stop unfolding. *)
+  if se.sigquals |> BU.for_some Assumption?
+  && not (se.sigquals |> BU.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
+  then
+    if declares_type_constructor env uvs t
+    then { se with sigmeta = { se.sigmeta with sigmeta_type_constructor = true } }
+    else (
+      if se.sigquals |> List.contains New then
+        log_issue se Errors.Warning_IgnoredNewQualifier [
+          text "This 'new' qualifier is ignored: it only means something on a declaration that introduces a type constructor, i.e. one whose result type is a sort.";
+          text "It used to make the SMT encoder assert that the declared symbol is distinct from every other type constant. On a declaration like 'assume new type b : int -> bool' that was unsound, since the primitive types are inverted through the very same mechanism, so it proved False (issue #4521)."
+        ];
+      se
+    )
+  else se
+
 let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
   let env = env0 in
   let se = match se.sigel with
@@ -825,7 +875,8 @@ let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
     in
 
     let uvs, t = tc_declare_typ env (uvs, t) se.sigrng in
-    [ { se with sigel = Sig_declare_typ {lid; us=uvs; t} }], [], env0
+    let se = { se with sigel = Sig_declare_typ {lid; us=uvs; t} } in
+    [ set_type_constructor_meta env se uvs t ], [], env0
 
   | Sig_assume {lid; us=uvs; phi=t} ->
     if not (List.contains S.InternalAssumption se.sigquals) then

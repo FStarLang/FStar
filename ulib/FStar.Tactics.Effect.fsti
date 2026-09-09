@@ -66,10 +66,18 @@ val lift_div_tac_interleave_begin : unit
 inline_for_extraction
 let lift_div_tac (a:Type) (f:unit -> Dv a) : tac_repr a
   = fun _ -> f ()
+inline_for_extraction
+let lift_ndet_tac (a:Type) (f:unit -> Nd a) : tac_repr a
+  = fun _ -> f ()
 #pop-options
 val lift_div_tac_interleave_end : unit
 
 sub_effect DIV ~> TAC = lift_div_tac
+
+(* [NDET] reaches [TAC] through [DIV] already, but we give the lift
+   explicitly so that reification (hence extraction of metaprograms) does
+   not have to go through [DIV]'s (nonexistent) representation. *)
+sub_effect NDET ~> TAC = lift_ndet_tac
 
 /// assert p by t
 

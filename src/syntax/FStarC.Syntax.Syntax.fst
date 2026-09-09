@@ -204,7 +204,8 @@ let default_sigmeta = {
     sigmeta_extension_decl=false;
     sigmeta_admit=false;
     sigmeta_already_checked=false;
-    sigmeta_extension_data=[]
+    sigmeta_extension_data=[];
+    sigmeta_type_constructor=false
 }
 let mk_sigelt (e: sigelt') = { 
     sigel = e;

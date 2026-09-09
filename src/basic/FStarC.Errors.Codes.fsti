@@ -388,6 +388,7 @@ type error_code =
   | Error_CannotResolveRecord
   | Error_MissingPopOptions
   | Error_AmbiguousName
+  | Warning_IgnoredNewQualifier
 
 type error_setting = error_code & error_flag & int
 

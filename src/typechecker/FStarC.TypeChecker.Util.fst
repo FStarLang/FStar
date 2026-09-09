@@ -2257,6 +2257,10 @@ let check_top_level env g lc : ML (bool & comp) =
       raise_error env Errors.Fatal_UnexpectedEffect [
         text "Effect" ^/^ pp lc.eff_name ^/^ text "cannot be used as a top-level effect"
       ]
+    (* [NDET] computations always terminate, so masking the effect at the top
+       level is harmless: the definition really does denote a value of its
+       result type. E.g. `let global = f ()` for `f : unit -> Nd t`. *)
+    else if U.is_ndet_effect (Env.norm_eff_name env lc.eff_name) then true
     (* Otherwise: warn, and mask the effect. *)
     else false in
   let g = Rel.solve_deferred_constraints env g in

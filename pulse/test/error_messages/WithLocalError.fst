@@ -3,7 +3,7 @@ module WithLocalError
 open Pulse.Lib.Pervasives
 
 // Error within a with_local block
-[@@expect_failure [189]]
+[@@expect_failure [54]]
 fn with_local_err ()
   requires emp
   ensures emp
