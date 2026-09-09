@@ -2086,6 +2086,24 @@ CUSTARD_SRC := $(wildcard $(CURDIR)/../../src/custard/*.fst) \
 check-sources:
 	$(Q)! grep -n "supported by the C backend" $(CUSTARD_SRC) 	  || { echo "ERROR: a diagnostic names 'the C backend' from the sources"; 	       echo "Custard has more than one C backend; name the one that is"; 	       echo "refusing, and say what the other one does (section 46.3)."; 	       exit 1; }
 
+# Section 84.  Every row of the milestone table is keyed by an identifier that
+# sections refer to, so a duplicate silently makes one of the two unreachable.
+# Three were introduced in a row before anyone noticed, because the series had
+# wrapped and the next free key was guessed rather than checked.  Guessing is
+# the right thing to do -- the alternative is reading a 17,000-line file -- so
+# the guess needs a gate rather than a discipline.
+CUSTARD_DOC := $(CURDIR)/../../doc/ref/custard.md
+
+.PHONY: check-doc
+check-doc:
+	$(Q)dups=`grep -oE '^\| M[^ |]+ ' $(CUSTARD_DOC) | sort | uniq -d`; \
+	  test -z "$$dups" || { \
+	    echo "ERROR: duplicate milestone key(s) in doc/ref/custard.md:"; \
+	    echo "$$dups"; \
+	    echo "A section refers to a row by its key, so a duplicate makes one"; \
+	    echo "of the two unreachable.  Pick a key no row already uses."; \
+	    exit 1; }
+
 .PHONY: check-settings
 check-settings:
 	$(Q)test -z "$(ORPHAN_SETTINGS)" || { \
@@ -2101,7 +2119,7 @@ check-settings:
 $(addprefix $(OUTPUT_DIR)/, $(addsuffix .ml,   $(CUSTARD_TESTS))): $(FSTAR_EXE)
 $(addprefix $(OUTPUT_DIR)/, $(addsuffix .krml, $(KRML_TESTS))):    $(FSTAR_EXE)
 
-all: check-settings check-sources
+all: check-settings check-sources check-doc
 
 # Section 49.1.  Nothing in the build catches an inexhaustive match in
 # Custard's own sources: the compiler is checked with --lax, so F* does not
