@@ -1968,6 +1968,13 @@ CODE_TmplRun = 390
 FLAGS_TmplRun = --custard_backend C --custard_entry TmplRun.main
 EGREP_TmplRun += "It is reached while extracting"
 EGREP_TmplRun += "extracting TmplRun.helper"
+# Section 89.  And which declaration to change, which is not that one.  [n] is
+# [make]'s own parameter, not [helper]'s: rule 4d withheld the demand on the
+# external (section 85), so its codomain still mentions it and no caller's
+# specialization can substitute it.  Saying "the index is a runtime value" and
+# leaving the reader to work out whose was worth four failed reductions.
+EGREP_TmplRun += "which is not a parameter of TmplRun.helper"
+EGREP_TmplRun += "has to have that parameter demanded on its own declaration"
 
 # Section 73.  A prettified alias of a unit-typed rule: both wrapper layers
 # collapse, and [evercddl_null_left]'s pattern went with them while its body

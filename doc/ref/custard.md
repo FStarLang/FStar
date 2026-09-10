@@ -17523,6 +17523,100 @@ because the correction is the useful part --- a control chosen for being
 that says which control was wrong is worth more than one that just says the
 signal was.
 
+## 89. The message does not say whose parameter it is
+
+§85, §86 and §88 each fixed a distinct cause of error 390, and after all
+three, Kuiper's 390 was still there, byte-identical.  Between them those
+rounds cost six reductions --- four theirs, two mine, including a Pulse one
+written specifically to test the hypothesis that the scan could not see
+inside a `fn`'s continuation lambdas --- and every one of them passed.
+
+That is not a run of bad luck.  It is the message.
+
+### 89.1.  Two opposite defects with one spelling
+
+The message said what the argument reduced to and, since §72.3, which
+declaration it was reached from:
+
+```
+What it reduced to was: FStar.SizeT.v tm
+It is reached while extracting Klas.GEMM.TensorCore2D.To.gemm, ...
+```
+
+A free variable in the reduct means *some* declaration still has the index as
+a runtime parameter.  Which one it is decides everything:
+
+- it is a parameter of the declaration named, and rule 4d did not demand it.
+  The occurrence is in a shape the scan does not recognise.  This is a gap in
+  Custard, and §88 was one instance of it.
+- it is a parameter of the declaration named, and rule 4d *did* demand it.
+  Then this declaration is monomorphic in it and the value arrived
+  non-constant from a caller.  The program is what has to change.
+- it is not a parameter of the declaration named at all.  Then it belongs to
+  the external whose type is being compiled here --- its own codomain writes
+  its own parameter into the template-id --- and no caller's specialization
+  can substitute it, because there is nothing at the call site to substitute
+  it with.  §85's withholding rule produces exactly this shape on purpose.
+
+Three different declarations to go and edit, and the message distinguished
+none of them.  Reducing a report that could be any of the three is guesswork,
+and six reductions of guesswork is the expected cost, not bad luck.
+
+### 89.2.  Running the rule again to say which
+
+The error path can afford what the classification path cannot: the program is
+about to stop.  So rule 4d's scan is simply run a second time, on the
+declaration `st.cur` names, and asked two questions it never had to answer
+before --- which applications did you see, and which parameters did you
+demand?
+
+Three pieces make that possible:
+
+- `template_scan_terms` is split out of `template_demanded`.  A report about
+  what the scan saw is only worth reading if it is a report about the *same*
+  scan, on the same binders and the same terms, and the way to guarantee that
+  is not to write it twice.
+- `template_index_scan` is `template_index_names` with a second output: a
+  description of every template application it recognised.  Nothing in the
+  classification wants it; the message does.
+- `st.cur_lid` is added beside `st.cur`.  A `name` is a *target* name --- it
+  has been mangled with a specialization key, and for a lifted local it names
+  an enclosing definition rather than any declaration at all --- so it cannot
+  be looked up.  `None` for a lifted local, which is itself worth saying out
+  loud rather than reporting a scan of the wrong thing.
+
+On `TmplRun`, the in-tree 390 test that has been in the suite since §72.3,
+the third case is what comes out, and nobody had noticed:
+
+```
+The index mentions n, which is not a parameter of TmplRun.helper.  It is a
+parameter of the declaration whose type is being compiled here -- the first
+one named under "Reached through" below -- and that declaration still has
+it as a runtime parameter.
+
+So the index was never substituted, and the caller's specialization cannot
+help: an external that writes its own parameter into a template-id has to
+have that parameter demanded on its own declaration.
+```
+
+`n` is `make`'s parameter, not `helper`'s.  The test had pinned the sentence
+naming `helper` as the declaration to look at, and `helper` is not the
+declaration to change.  Both sentences are now pinned.
+
+### 89.3.  What this is not
+
+It is not a fix for Kuiper's 390, and it is not offered as one.  Six
+reductions have failed to reproduce that defect, which is strong evidence
+that the shape it needs is somewhere in the difference between their module
+and every reduction of it --- and the fastest way to find that difference is
+to bisect from their side, which they offered two rounds ago.
+
+What this changes is that the next run of their build says which of the three
+cases it is, and therefore whether the bisection is looking for a scan gap in
+Custard, a non-constant argument in their program, or an external of theirs
+whose own parameter was never demanded.  One of those needs no bisection at
+all.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -17833,3 +17927,4 @@ signal was.
 | M10θΘ | The printer and the recogniser disagree about a constant (§86.2) | Done.  §85 fixed a template index that *is* the binder; an index written over one --- `frag (SZ.v tm)`, which is how a `nat`-indexed template is passed a `size_t` parameter --- still failed 390.  After specialization the argument is `SZ.v (uint_to_t 16)`, which the compile-time reduction evaluates, and the normalizer returns a closed arithmetic result as a `Tm_lazy` embedding rather than a `Tm_constant`.  `show` forces the thunk, so the error printed `16` while the recogniser that produced the error had seen no constant at all --- a diagnostic contradicting itself, which is how the reporter found it.  `expr_of_term` already called `unlazy_emb` for precisely this reason and said so in a comment; `const_of_arg`, on a different path, did not.  Added in `const_of_arg` so it applies at each wrapper it peels, and again in `template_arg` so the message and the check describe the same term.  `TmplMonoV` is the reporter's reduction: §85's own test was written from the report's description, and the description did not distinguish an index that is a binder from one that is an application over it |
 | M10θΙ | A head question is answered by a whole normal form (§87.1) | Done.  `is_type_sig` asks whether a signature's result is a `Type`, a refinement of one, or `prop`, and reads nothing below the head --- but answered it by fully normalizing the result type.  `U.comp_result` of a Pulse computation is an application of the *opaque* `stt`, so the head does not move and full normalization reduces the arguments instead: separation-logic propositions over a whole heap invariant, computed and discarded.  This is §19.14 one level up, in a place `Mono.strip` cannot reach.  On EverParse's COSE it was 99.5% of extraction --- 874 ms per call over 518 calls on a *three-line* spec.  `Weak; HNF` takes that counter to 8 ms, full COSE from 33 minutes to 37 seconds on the C leg and 31 minutes to 20 on the Rust leg with byte-identical output, and the local Pulse suite from 66 seconds to 30.  It also closes an error 365 open since §74 and never explained: that was this normalization exhausting the default budget, and `--custard_norm_budget 10^9` had been hiding it rather than fixing it.  `is_type` normalizes a refinement's sort itself, which is not optional --- `HNF` does not descend into binder types, the normalizer's weak path only normalizes a sort when its environment and stack are empty, and a refinement reached under a substitution otherwise classifies a type as a value and emits C naming a `typedef` that was never written |
 | M10θΚ | The head the scan looks for is not in the term (§88.1) | Done.  Third cause of error 390, distinguished from §86's by the reduct the message prints: `FStar.SizeT.v tm` with `tm` still free, meaning no specialization happened and rule 4d made no demand at all.  Rule 4d's scan is syntactic and a type abbreviation removes the head it recognises --- Kuiper reaches the template through `array (fragment et FragAcc tm tn tk FragLAcc)`, an `inline_for_extraction` alias, so the template's own head appears nowhere in the term.  The nesting under `array` was never the issue; `Visit.visit_term` always descended into arguments.  An fvar that is not itself a template is now unfolded and rescanned, attempted only on a subterm that is a *type* so no value application is entered, and with `UnfoldOnly [l]` rather than delta so a chain through a second alias reaches the case again for that name --- the same choice `ty_of_typ` makes for a type-level function.  Fuel rather than a visited-set, since an abbreviation may be applied to different arguments at each level.  Guarded by `CheckLN.is_ln`: `Visit.visit_term` does not open binders, so a subterm under a lambda carries loose de Bruijn indices and normalizing one fails outright rather than answering badly --- what the scan is given is opened at the top, so binder sorts and codomains, which is where an abbreviated index occurs, always qualify.  In-tree Pulse suite unchanged at 30 s |
+| M10θΛ | The message does not say whose parameter it is (§89.1) | Done.  Error 390 reports a free variable in a template index, which means some declaration still has that index as a runtime parameter --- but three opposite defects produce that, and the message spelled all three the same way: rule 4d did not demand a parameter of the named declaration (a scan gap in Custard, §88's case), rule 4d did demand it and a caller supplied a non-constant value (the program's case), or the variable is not a parameter of the named declaration at all but of the external whose type is being compiled, whose own codomain writes it into the template-id (§85's withholding, which no caller's specialization can undo).  Six reductions across §85--§88 --- four Kuiper's, two mine, one of them a Pulse `fn` written to test whether the scan could see under a bind's continuation lambda, all six passing --- is the expected cost of reducing a report that could be any of the three, not bad luck.  The scan is now run a second time on the error path, where the program is about to stop and the cost does not matter: `template_scan_terms` split out of `template_demanded` so the report describes the same scan on the same binders, `template_index_scan` returning the applications it recognised alongside the names it demands, and `st.cur_lid` beside `st.cur` because a target name is mangled with a specialization key and cannot be looked up.  On `TmplRun`, in the suite since §72.3, the answer is the third case and had gone unnoticed: `n` is `make`'s parameter, not `helper`'s, and the test had pinned the sentence naming the wrong declaration to change.  Not a fix for Kuiper's 390 and not offered as one --- it is what makes the Kuiper-side bisection they offered look for the right thing.  In-tree Pulse suite unchanged at 30 s |

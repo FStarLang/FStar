@@ -366,6 +366,14 @@ type state = {
   (* The declaration currently being extracted, which is what a lifted local
      function is named after. *)
   cur:     ref name;
+  (* Section 89.  The source lid of that declaration, when it has one.  [name]
+     is the *target* name, and a target name cannot be looked up: it has been
+     mangled with a specialization key and, for a lifted local function, it
+     names an enclosing definition rather than any declaration at all.  Error
+     390 needs the lid, because the only way to say why a parameter was not
+     demanded is to run rule 4d's scan again on the declaration it belongs
+     to.  [None] for a lifted local, where there is nothing to look up. *)
+  cur_lid: ref (option Ident.lident);
   (* The definition of every pure local [let] the extractor is currently
      inside, keyed by its bound variable's index.  Section 3.2b consults it so
      that a [Mono] argument named by a local variable is judged by the value
@@ -456,6 +464,7 @@ let init (deps:Dep.deps) (env:TcEnv.env) : ML state =
   chain   = mk_ref [];
   lifted  = SMap.create 20;
   cur     = mk_ref ({ ns = []; id = "custard"; spec = None });
+  cur_lid = mk_ref None;
   letdefs = SMap.create 100;
   effletdefs = SMap.create 100;
   defbinders = SMap.create 100;
@@ -1957,7 +1966,20 @@ and is_realized_type (st:state) (l:Ident.lident) : ML bool =
    the extractor will later meet.  [Visit.visit_term] descends into [lbtyp]
    and into binder sorts, which is what makes those visible here. *)
 and template_index_names (st:state) (ts:list term) : ML (list bv) =
+  fst (template_index_scan st ts)
+
+(* Section 89.  The same scan, and additionally a description of every
+   template application it recognised.  Nothing in the classification wants
+   that; error 390 does.  When a template index is still a runtime value, the
+   only two explanations are that the scan never saw the application -- so no
+   demand was made -- or that it saw it, demanded the parameter, and the
+   value came in non-constant from the caller anyway.  Those call for
+   opposite fixes, and the reader cannot tell them apart from the outside.
+   Four reductions of a reported 390 failed to reproduce it precisely because
+   the report could not say which of the two it was. *)
+and template_index_scan (st:state) (ts:list term) : ML (list bv & list string) =
   let acc : ref (list bv) = mk_ref [] in
+  let seen : ref (list string) = mk_ref [] in
   (* Section 88.  The scan is syntactic, and a type abbreviation is exactly
      what makes the syntax it is looking for absent.  [fragment] is an
      [inline_for_extraction] alias for an application of the template, so the
@@ -1996,7 +2018,11 @@ and template_index_names (st:state) (ts:list term) : ML (list bv) =
                                               | TP_lit _ -> false) in
                args |> List.iteri (fun i (a, _) ->
                  if mentioned i && not (Mono.is_type_term (tcenv st) a)
-                 then acc := FlatSet.elems (Free.names a) @ !acc)
+                 then begin
+                   seen := (Ident.string_of_lid l ^ " argument " ^ show i ^
+                            " = " ^ show a) :: !seen;
+                   acc := FlatSet.elems (Free.names a) @ !acc
+                 end)
              | None ->
                (* [is_ln] first, and it is not a cheap habit but a
                   correctness condition.  [Visit.visit_term] does not open
@@ -2022,7 +2048,22 @@ and template_index_names (st:state) (ts:list term) : ML (list bv) =
       t) t in
     () in
   ts |> List.iter (scan 10);
-  !acc
+  (!acc, List.rev !seen)
+
+(* The binders rule 4d classifies, and the terms it scans for them.  Split out
+   of {!template_demanded} because error 390 (section 89) has to reproduce
+   exactly this, on a declaration it is given by lid rather than by sigelt: a
+   report about what the scan saw is only worth reading if it is a report
+   about the same scan. *)
+and template_scan_terms (st:state) (t:typ) (def:option term)
+  : ML (binders & list term) =
+  let bs, second =
+    match def with
+    | Some d -> let bs, body, _ = U.abs_formals d in (bs, body)
+    | None ->
+      let bs, comp = Mono.arrow_formals_unfold (tcenv st) t in
+      (bs, U.comp_result comp) in
+  (bs, (bs |> List.map (fun (b:S.binder) -> b.binder_bv.sort)) @ [second])
 
 and template_demanded (st:state) (t:typ) (def:option term) : ML (list int) =
   (* With a definition the binders are the lambda's, as rule 4c has them, and
@@ -2038,15 +2079,8 @@ and template_demanded (st:state) (t:typ) (def:option term) : ML (list int) =
      [Mono] the *declaration* cannot be extracted at all -- the caller's
      specialization does not help, because the callee still has the index as a
      runtime parameter of its own. *)
-  let bs, second =
-    match def with
-    | Some d -> let bs, body, _ = U.abs_formals d in (bs, body)
-    | None ->
-      let bs, comp = Mono.arrow_formals_unfold (tcenv st) t in
-      (bs, U.comp_result comp) in
-  let names = template_index_names st
-                ((bs |> List.map (fun (b:S.binder) -> b.binder_bv.sort))
-                 @ [second]) in
+  let bs, ts = template_scan_terms st t def in
+  let names = template_index_names st ts in
   (* Positions, not names, for the reason rule 4c gives: the caller classifies
      the binders of the arrow, which are opened separately from the lambda's
      and so are different [bv]s for the same parameter. *)
@@ -2082,6 +2116,38 @@ and template_demanded (st:state) (t:typ) (def:option term) : ML (list int) =
     if Cons? demanded && not leaves_runtime_param &&
        not (U.is_pure_or_ghost_comp comp)
     then [] else demanded
+
+(* Section 89.  Rule 4d, run again on a named declaration, for the report.
+   Returns the parameter names it would demand and the applications it saw.
+   [None] when there is no declaration to scan, which is the lifted-local case
+   and one more thing worth saying out loud rather than guessing at. *)
+and template_scan_report (st:state) (l:Ident.lident)
+  : ML (option (list string & list string & list string)) =
+  match TcEnv.lookup_sigelt (tcenv st) l
+        |> Option.map (fun se -> fixup_extract_as (fixup_normalize_for_extraction st se)) with
+  | Some se ->
+    let tdef =
+      match se.sigel with
+      | Sig_let {lbs=(_, lbs)} ->
+        (match lbs |> List.tryFind (fun lb ->
+                 match lb.lbname with
+                 | Inr fv -> Ident.lid_equals (S.lid_of_fv fv) l
+                 | Inl _ -> false) with
+         | Some lb -> Some (lb.lbtyp, Some lb.lbdef)
+         | None -> None)
+      | Sig_declare_typ {t} -> Some (t, None)
+      | _ -> None in
+    (match tdef with
+     | None -> None
+     | Some (t, def) ->
+       let bs, ts = template_scan_terms st t def in
+       let names, apps = template_index_scan st ts in
+       let params = bs |> List.map (fun (b:S.binder) ->
+                             Ident.string_of_id b.binder_bv.ppname) in
+       Some (params,
+             names |> List.map (fun (v:bv) -> Ident.string_of_id v.ppname),
+             apps))
+  | None -> None
 
 and extern_template (st:state) (l:Ident.lident) : ML (option (list tmpl_piece)) =
   (* Both routes, as everywhere a rule is wanted: the attribute on the
@@ -2137,6 +2203,78 @@ and const_of_arg (st:state) (t:term) : ML (option constant) =
      | _ -> None)
   | _ -> None
 
+(* Section 89.  The part of error 390 that says *why* the index is still a
+   runtime value.
+
+   The message already said what the argument reduced to and which
+   declaration it was reached from, and that was enough to establish that
+   something was wrong and not enough to establish what.  A free variable in
+   the reduct means the declaration has the index as a runtime parameter, and
+   there are exactly two ways for that to happen: rule 4d never saw an
+   application of the template in the declaration, so it demanded nothing; or
+   it saw one, demanded the parameter, and the caller supplied a value that
+   is not constant.  The first is a gap in the scan and is fixed here; the
+   second is a fact about the program and is fixed there.  Reporting the two
+   the same way is what turned one defect into four failed reductions.
+
+   The scan is run a second time to say this, which is affordable because
+   this is the error path and the program is about to stop. *)
+and template_scan_diagnosis (st:state) (a:term) : ML (list Pprint.document) =
+  let free = FlatSet.elems (Free.names a)
+             |> List.map (fun (v:bv) -> Ident.string_of_id v.ppname) in
+  if Nil? free then [] else
+  let names = String.concat ", " free in
+  match !st.cur_lid with
+  | None ->
+    [text ("The index mentions " ^ names ^ ", and it is reached from a \
+           lifted local function, which rule 4d does not classify: only a \
+           top-level declaration's parameters can be demanded.")]
+  | Some l ->
+    match template_scan_report st l with
+    | None -> []
+    | Some (params, demanded, apps) ->
+      let foreign = free |> List.filter (fun n -> not (List.mem n params)) in
+      let missing = free |> List.filter (fun n ->
+                              List.mem n params && not (List.mem n demanded)) in
+      let dedup (xs:list string) : ML (list string) =
+        List.fold_left (fun acc x -> if List.mem x acc then acc else acc @ [x])
+                       [] xs in
+      let where =
+        if Nil? apps
+        then "found no application of an external template at all"
+        else "found " ^ String.concat "; " (dedup apps) in
+      (* The three cases are three different declarations to go and look at,
+         which is the whole reason for saying any of this. *)
+      if Cons? foreign
+      then
+        [text ("The index mentions " ^ String.concat ", " (dedup foreign) ^
+               ", which is not a parameter of " ^ Ident.string_of_lid l ^
+               ".  It is a parameter of the declaration whose type is being \
+               compiled here -- the first one named under \"Reached \
+               through\" below -- and that declaration still has it as a \
+               runtime parameter.");
+         text "So the index was never substituted, and the caller's \
+               specialization cannot help: an external that writes its own \
+               parameter into a template-id has to have that parameter \
+               demanded on its own declaration."]
+      else if Nil? missing
+      then
+        [text ("The index mentions " ^ names ^ ", which rule 4d did demand \
+               as compile-time known in " ^ Ident.string_of_lid l ^ ": the \
+               scan " ^ where ^ ".");
+         text "So this declaration is monomorphic in it, and the value that \
+               is not constant was supplied by a caller rather than left \
+               behind here.  The request chain below is where to look."]
+      else
+        [text ("The index mentions " ^ String.concat ", " (dedup missing) ^
+               ", which rule 4d did not demand as compile-time known in " ^
+               Ident.string_of_lid l ^ ": the scan " ^ where ^ ".");
+         text "Rule 4d demands a parameter when an application of the \
+               template is visible in that declaration's type or body.  A \
+               parameter it did not demand is one whose occurrence the scan \
+               did not recognise, which is a gap in Custard and not \
+               something the program can be rewritten around."]
+
 and template_arg (st:state) (l:Ident.lident) (i:int) (a:term) : ML cty =
   if Mono.is_type_term (tcenv st) a then ty_of_typ st a
   else
@@ -2150,7 +2288,7 @@ and template_arg (st:state) (l:Ident.lident) (i:int) (a:term) : ML cty =
     match const_of_arg st a' with
     | Some c -> TConst c
     | None ->
-      custard_error st E.Error_CustardBadTemplateArg [
+      custard_error st E.Error_CustardBadTemplateArg ([
         text ("Custard: argument " ^ show i ^ " of the external type " ^
               Ident.string_of_lid l ^
               " is a value, and it does not reduce to a constant.");
@@ -2167,9 +2305,10 @@ and template_arg (st:state) (l:Ident.lident) (i:int) (a:term) : ML cty =
            line to say so. *)
         text ("It is reached while extracting " ^ string_of_name !st.cur ^
               ", which is where the index is still a runtime value.");
+      ] @ template_scan_diagnosis st a' @ [
         text "Either make the argument compile-time known, or drop the \
               placeholder for it from the [@@custard_extern] string, which \
-              makes the argument invisible to the target." ];
+              makes the argument invisible to the target." ]);
       TAny
 
 (* Type constructors are compiled uniformly in their parameters (section 5.0),
@@ -2675,7 +2814,9 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
          an enclosing local contributes another indistinguishable numbered
          copy of the same inner name. *)
       let saved_cur = !st.cur in
+      let saved_cur_lid = !st.cur_lid in
       st.cur := nm;
+      st.cur_lid := None;
       let d = DLet {
         dl_name    = nm;
         dl_typars  = typars @ own_typars;
@@ -2691,6 +2832,7 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
          gets a key of its own, which nothing will ever request. *)
       let key = local_key nm in
       st.cur := saved_cur;
+      st.cur_lid := saved_cur_lid;
       SMap.add st.emitted key d;
       st.order := key :: !st.order);
     expr_of_term st body
@@ -4473,7 +4615,9 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
                   | None -> []) in
   (* Lifted local functions are named after whatever encloses them. *)
   let saved_cur = !st.cur in
+  let saved_cur_lid = !st.cur_lid in
   st.cur := nm;
+  st.cur_lid := Some l;
   let def, c, polycs, poly = Prof.timed "specialize"
     (fun () -> specialize st lb.lbtyp lb.lbdef cs margs n_holes) in
   let bs, body, rc = U.abs_formals def in
@@ -4684,6 +4828,7 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
     | [] -> () in
   let dl_body = expr_of_term st body in
   st.cur := saved_cur;
+  st.cur_lid := saved_cur_lid;
   DLet {
     dl_name    = nm;
     dl_typars  = typars;
