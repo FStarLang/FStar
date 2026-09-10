@@ -1802,6 +1802,11 @@ deterministically, and the `--retry 10` and `#restart-solver` are no longer
 needed. The file now takes **7.6s on this branch and 7.7s on master**, against
 14.4s for master before the change.
 
+Re-measured locally after the `NDET` merge, `Bug3800.fst` is unchanged: 0.28s
+and 86.0 MB peak RSS on this branch against 0.48s and 94.2 MB on `master`
+(best of three each, same machine). `NDET`'s added declarations in
+`FStar.Pervasives` did not erode the margin.
+
 ## Merging master's `NDET` effect
 
 While this branch was in review, master landed `NDET`: a primitive effect that is
