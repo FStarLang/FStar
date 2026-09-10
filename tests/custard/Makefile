@@ -1974,7 +1974,9 @@ EGREP_TmplRun += "extracting TmplRun.helper"
 # specialization can substitute it.  Saying "the index is a runtime value" and
 # leaving the reader to work out whose was worth four failed reductions.
 EGREP_TmplRun += "which is not a parameter of TmplRun.helper"
-EGREP_TmplRun += "has to have that parameter demanded on its own declaration"
+# Not the whole sentence: the message is wrapped, and a pinned string that
+# crosses a wrap point pins the wrapping rather than the wording.
+EGREP_TmplRun += "have that parameter demanded on its own declaration"
 
 # Section 73.  A prettified alias of a unit-typed rule: both wrapper layers
 # collapse, and [evercddl_null_left]'s pattern went with them while its body

@@ -2392,7 +2392,35 @@ let split_any_decls (prog:program) : ML program =
    The hoist is what makes the rewrite unconditional rather than a
    value-shaped special case, and it is the reason this is a pass over the IR
    -- which has names -- rather than a patch in [PrintKrml], whose expressions
-   are already de Bruijn. *)
+   are already de Bruijn.
+
+   {2 Section 90: every value position, not only an argument}
+
+   Section 82 scoped the rewrite to call arguments, because a call argument
+   was the position the report named.  It is not the only one.  The same
+   erasure puts the same unit-typed variable into a tuple, a constructor's
+   field and a record's field, and EverParse's Rust leg fails on the tuple:
+
+     let x: () = parse_null(rl);
+     Some { v: (x, rem) }
+
+   karamel's Rust printer deletes a unit-typed [let] and records the binder as
+   gone, so the later [x] is unprintable -- eight functions in COSE, three of
+   which are then missing symbols and the crate does not build.  A rewrite
+   scoped to arguments does not reach a tuple component.
+
+   The argument for doing it in argument position was never an argument about
+   argument position: a value of type [unit] is [()] wherever it stands.  So
+   the rewrite now applies at every position that holds a *value* --
+   arguments, tuple components, constructor arguments, record fields and
+   operator operands -- with the same two exceptions and the same hoist.
+
+   Statement positions are deliberately not included.  The branches of an
+   [EIf], the sides of an [ESeq] and the right-hand side of an [ELet] are
+   where a unit-typed expression is there to be *performed*, and replacing one
+   with [()] would delete the computation rather than rewrite it.  That is the
+   distinction the pass draws: it rewrites where the value is consumed, and
+   leaves alone where it is executed. *)
 
 let rec unit_args_expr (x:expr) : ML expr =
   let g = unit_args_expr in
@@ -2433,11 +2461,18 @@ let rec unit_args_expr (x:expr) : ML expr =
   | EIf (c, a, b) -> { x with e = EIf (g c, g a, g b) }
   | EMatch (s, brs) -> { x with e = EMatch (g s, brs |> List.map br) }
   | ETry (s, brs) -> { x with e = ETry (g s, brs |> List.map br) }
-  | ETuple es -> { x with e = ETuple (es |> List.map g) }
-  | EOp (o, es) -> { x with e = EOp (o, es |> List.map g) }
+  (* Section 90.  A value position, exactly like a call argument: the hoist
+     is what makes it safe, and it is the same hoist. *)
+  | ETuple es ->
+    with_hoists (fun acc -> { x with e = ETuple (es |> List.map (arg acc)) })
+  | EOp (o, es) ->
+    with_hoists (fun acc -> { x with e = EOp (o, es |> List.map (arg acc)) })
   | ERaise e1 -> { x with e = ERaise (g e1) }
-  | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map g) }
-  | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, g e))) }
+  | ECtor (n, es) ->
+    with_hoists (fun acc -> { x with e = ECtor (n, es |> List.map (arg acc)) })
+  | ERecord (n, fs) ->
+    with_hoists (fun acc ->
+      { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, arg acc e))) })
   | EProj (e1, n, f) -> { x with e = EProj (g e1, n, f) }
   | EDiscrim (e1, n) -> { x with e = EDiscrim (g e1, n) }
   | ECast (e1, c) -> { x with e = ECast (g e1, c) }

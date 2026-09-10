@@ -17617,6 +17617,94 @@ Custard, a non-constant argument in their program, or an external of theirs
 whose own parameter was never demanded.  One of those needs no bisection at
 all.
 
+## 90. A unit is a value wherever it stands
+
+§82 replaced a unit-typed *argument* with the literal `()`.  EverParse's Rust
+leg, re-run at `904ef4dadb` on a pristine tree, reports the same defect one
+position over, and this time the crate does not build.
+
+### 90.1.  The same erasure, a different position
+
+`nil` has one nullary constructor, so Custard erases it to `unit` (§5.5).  A
+parser for it still returns something, and its caller pairs that something
+with the rest of the input:
+
+```rust
+let x: () = parse_null(rl);
+Some { v: (x, rem) }
+```
+
+`PrintMiniRust` deletes a unit-typed `let` unconditionally and records the
+binder as `GoneUnit`; a later *use* of that binder is then unprintable.  The
+assumption --- that a unit-typed binding is never referenced --- holds for
+F\*'s own extraction, which keeps `nil` as a one-variant enum, and fails under
+the erasure.  That is §82 exactly.  What is different is that `x` is a tuple
+component rather than a call argument, and §82's rewrite is scoped to call
+arguments.
+
+The cost is eight functions that print nothing, three of them then missing
+symbols, and `could not compile evercosign (lib)`.
+
+### 90.2.  The fix is to drop the scoping
+
+The argument for rewriting in argument position was never an argument about
+argument position.  A value of type `unit` *is* `()`; it can be written that
+way wherever it stands.  §82 said so and then applied it in one place.
+
+So the rewrite now runs at every position that holds a value: call arguments,
+tuple components, constructor arguments, record fields and operator operands.
+The two exceptions are unchanged --- an `EAbort`, which does not return, and
+an impure expression, which is hoisted into a `let` first so that a call that
+was there to be performed does not vanish with the argument.  The hoist is
+what makes this a uniform rewrite rather than a value-shaped special case, and
+it is why the same three lines work in all five positions.
+
+What is deliberately *not* included is statement position.  The branches of an
+`EIf`, the sides of an `ESeq` and the right-hand side of an `ELet` are where a
+unit-typed expression is there to be performed, and replacing one with `()`
+would delete the computation rather than rewrite it.  The distinction the pass
+draws is that one: rewrite where the value is consumed, leave alone where it
+is executed.
+
+### 90.3.  The test is EverParse's shape, not its size
+
+`UnitSlice` is a Pulse `fn` over a `Pulse.Lib.Slice.slice` --- the same
+representation EverParse's parsers take --- with a `nil` that erases to unit,
+a parser that reads the slice, and a caller that pairs the result with a
+length.  It reproduced the reporter's failure verbatim:
+
+```
+ERROR printing custard::parse_null:
+  Failure("unexpected: unit-returning computation was let-bound and used")
+```
+
+The read of the slice is the load-bearing part.  A pure producer is inlined by
+the simplifier, the variable never appears, and the test passes without the
+fix --- which is what a first attempt at this reduction did.  What survives to
+the backend is a binding whose right-hand side has an effect.
+
+After the fix:
+
+```rust
+option__······size_t·::FStar_Pervasives_Native_Some { v: ((),1usize) }
+```
+
+and the crate links and runs.  The grep pins the literal; that `rustc` links
+at all is the rest of the test, since before the fix the function was absent.
+
+### 90.4.  Discriminators are not missing, they are dead
+
+The same report notes 69 `uu___is_*` discriminator functions in the shipped
+crate that Custard does not emit --- 50 in `coseformat`, 10 in `cbordetver`,
+9 in `cbordetveraux` --- and asks whether that is a defect.
+
+It is not.  Nothing in the crate calls them, and Custard extracts a whole
+program from its entry points: a `pub fn` that no reachable code calls is
+dead, and not emitting it is the pipeline working.  §8.1's reachability is the
+whole reason the C leg is the size it is.  A library that wants them exported
+says so by having an entry point that uses them, which is the same answer §7.2
+gives for every other symbol a whole-program extraction drops.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -17928,3 +18016,4 @@ all.
 | M10θΙ | A head question is answered by a whole normal form (§87.1) | Done.  `is_type_sig` asks whether a signature's result is a `Type`, a refinement of one, or `prop`, and reads nothing below the head --- but answered it by fully normalizing the result type.  `U.comp_result` of a Pulse computation is an application of the *opaque* `stt`, so the head does not move and full normalization reduces the arguments instead: separation-logic propositions over a whole heap invariant, computed and discarded.  This is §19.14 one level up, in a place `Mono.strip` cannot reach.  On EverParse's COSE it was 99.5% of extraction --- 874 ms per call over 518 calls on a *three-line* spec.  `Weak; HNF` takes that counter to 8 ms, full COSE from 33 minutes to 37 seconds on the C leg and 31 minutes to 20 on the Rust leg with byte-identical output, and the local Pulse suite from 66 seconds to 30.  It also closes an error 365 open since §74 and never explained: that was this normalization exhausting the default budget, and `--custard_norm_budget 10^9` had been hiding it rather than fixing it.  `is_type` normalizes a refinement's sort itself, which is not optional --- `HNF` does not descend into binder types, the normalizer's weak path only normalizes a sort when its environment and stack are empty, and a refinement reached under a substitution otherwise classifies a type as a value and emits C naming a `typedef` that was never written |
 | M10θΚ | The head the scan looks for is not in the term (§88.1) | Done.  Third cause of error 390, distinguished from §86's by the reduct the message prints: `FStar.SizeT.v tm` with `tm` still free, meaning no specialization happened and rule 4d made no demand at all.  Rule 4d's scan is syntactic and a type abbreviation removes the head it recognises --- Kuiper reaches the template through `array (fragment et FragAcc tm tn tk FragLAcc)`, an `inline_for_extraction` alias, so the template's own head appears nowhere in the term.  The nesting under `array` was never the issue; `Visit.visit_term` always descended into arguments.  An fvar that is not itself a template is now unfolded and rescanned, attempted only on a subterm that is a *type* so no value application is entered, and with `UnfoldOnly [l]` rather than delta so a chain through a second alias reaches the case again for that name --- the same choice `ty_of_typ` makes for a type-level function.  Fuel rather than a visited-set, since an abbreviation may be applied to different arguments at each level.  Guarded by `CheckLN.is_ln`: `Visit.visit_term` does not open binders, so a subterm under a lambda carries loose de Bruijn indices and normalizing one fails outright rather than answering badly --- what the scan is given is opened at the top, so binder sorts and codomains, which is where an abbreviated index occurs, always qualify.  In-tree Pulse suite unchanged at 30 s |
 | M10θΛ | The message does not say whose parameter it is (§89.1) | Done.  Error 390 reports a free variable in a template index, which means some declaration still has that index as a runtime parameter --- but three opposite defects produce that, and the message spelled all three the same way: rule 4d did not demand a parameter of the named declaration (a scan gap in Custard, §88's case), rule 4d did demand it and a caller supplied a non-constant value (the program's case), or the variable is not a parameter of the named declaration at all but of the external whose type is being compiled, whose own codomain writes it into the template-id (§85's withholding, which no caller's specialization can undo).  Six reductions across §85--§88 --- four Kuiper's, two mine, one of them a Pulse `fn` written to test whether the scan could see under a bind's continuation lambda, all six passing --- is the expected cost of reducing a report that could be any of the three, not bad luck.  The scan is now run a second time on the error path, where the program is about to stop and the cost does not matter: `template_scan_terms` split out of `template_demanded` so the report describes the same scan on the same binders, `template_index_scan` returning the applications it recognised alongside the names it demands, and `st.cur_lid` beside `st.cur` because a target name is mangled with a specialization key and cannot be looked up.  On `TmplRun`, in the suite since §72.3, the answer is the third case and had gone unnoticed: `n` is `make`'s parameter, not `helper`'s, and the test had pinned the sentence naming the wrong declaration to change.  Not a fix for Kuiper's 390 and not offered as one --- it is what makes the Kuiper-side bisection they offered look for the right thing.  In-tree Pulse suite unchanged at 30 s |
+| M10θΜ | A unit is a value wherever it stands (§90.2) | Done.  §82 replaced a unit-typed *argument* with `()`, because a call argument was the position that report named; EverParse's Rust leg fails one position over, on a tuple component, and there the crate does not build --- 8 functions print nothing, 3 become missing symbols, `could not compile evercosign (lib)`.  Same cause throughout: `nil` erases to `unit` (§5.5), so a parser's result reaches its caller as a unit-typed *variable*, `PrintMiniRust` deletes a unit-typed `let` and records the binder as `GoneUnit`, and a later use of it is unprintable --- an assumption that holds for F*'s own extraction, which keeps `nil` as a one-variant enum.  The scoping was the mistake and not the position: a value of type `unit` *is* `()` wherever it stands, so the rewrite now runs at every value position --- call arguments, tuple components, constructor arguments, record fields, operator operands --- with the same two exceptions (`EAbort`, and an impure expression hoisted into a `let` first so a call that was there to be performed does not vanish) and the same hoist, which is what makes one rewrite serve all five.  Statement positions are excluded deliberately: an `EIf` branch, an `ESeq` side and an `ELet` right-hand side are where a unit-typed expression is there to be *performed*.  `UnitSlice` is EverParse's shape rather than its size --- a Pulse `fn` over a `Pulse.Lib.Slice.slice`, erased `nil`, a slice read, a tuple --- and reproduced the printer failure verbatim; the slice read is load-bearing, since a pure producer is inlined and the variable never appears.  Also answered the report's second item: the 69 unemitted `uu___is_*` discriminators are dead code correctly dropped, not missing output.  In-tree Pulse suite unchanged at 30 s |

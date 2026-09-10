@@ -114,6 +114,19 @@ KRML_FLAGS_UglyAlias += --custard_monomorphize_types true
 # -- see CborBoundarySlice.mutants.py, which reproduces the numbers.
 RUST_TESTS += CborBoundarySlice
 
+# Section 90.  [nil] erases to unit (section 5.5), so the value its parser
+# returns reaches the caller as a unit-typed *variable* and is paired with the
+# rest of the input: a tuple component, which section 82's argument-scoped
+# rewrite did not reach.  karamel's Rust printer deletes a unit-typed [let]
+# and then cannot print the use of the binder it deleted -- eight functions in
+# EverParse's COSE, three of them then missing symbols, and the crate does not
+# build.  The read of the slice is what keeps the binding alive: a pure
+# producer is inlined and the variable never appears.  The grep pins the
+# literal in the tuple; before the fix karamel printed nothing for this
+# function at all, so that rustc links is itself the test.
+RUST_TESTS += UnitSlice
+RSGREP_UnitSlice += "v: ((),1usize)"
+
 # Same modules again, through the direct-to-C backend: no krml, no krmllib,
 # just a C11 compiler with the warnings turned on, and then run.  PulseHashTable is the
 # demanding one -- arrays, a struct-valued cell, and a hash function stored in
