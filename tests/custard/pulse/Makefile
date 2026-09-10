@@ -137,6 +137,15 @@ CGREP_MonoAttr += "MonoAttr_f__uint_to_t_16(size_t *r)"
 CGREP_MonoAttr += "MonoAttr_f__uint_to_t_32(size_t *r)"
 CNOGREP_MonoAttr += "MonoAttr_f(size_t n"
 
+# Section 92.  The same measurement with the definition behind an interface,
+# which is the one structural difference between MonoAttr and the declaration
+# Kuiper annotated.  The attribute survives the merge.
+C_TESTS += MonoAttrI
+FLAGS_MonoAttrI = --custard_backend C --custard_entry_module MonoAttrI
+CGREP_MonoAttrI += "MonoAttrI_f__uint_to_t_16"
+CGREP_MonoAttrI += "MonoAttrI_f__uint_to_t_32"
+CNOGREP_MonoAttrI += "MonoAttrI_f(size_t n"
+
 C_TESTS += PulseBasic
 # Section 58: the pure condition is spelled in the loop header.
 CGREP_PulseBasic += "while (i < n)"

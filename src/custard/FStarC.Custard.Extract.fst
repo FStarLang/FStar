@@ -2201,6 +2201,24 @@ and const_of_arg (st:state) (t:term) : ML (option constant) =
      [16], and the diagnostic contradicts itself. *)
   let t = U.unmeta (U.unascribe (U.unlazy_emb t)) in
   let h, args = U.head_and_args_full t in
+  (* Section 92.  [X.v] is the inverse of [X.uint_to_t], and after a local
+     [let] is delta-reduced the constant comes back spelled as the pair
+     rather than as the lazy embedding above: [FStar.SizeT.v
+     (FStar.SizeT.uint_to_t 16)].  Recognising the *pair* rather than [v]
+     alone is what makes this sound -- [v] applied to anything else is a
+     projection out of a value and not a constant, and a bare integer
+     literal is not an inhabitant of the machine-integer type [v] takes. *)
+  let inverse_pair (a:term) : ML bool =
+    let ih, _ = U.head_and_args_full
+                  (U.unmeta (U.unascribe (U.unlazy_emb a))) in
+    match (SS.compress ih).n with
+    | Tm_fvar ifv ->
+      let inm = Ident.string_of_lid (S.lid_of_fv ifv) in
+      FStarC.Util.ends_with inm ".uint_to_t" ||
+      FStarC.Util.ends_with inm ".int_to_t" ||
+      FStarC.Util.ends_with inm ".__uint_to_t" ||
+      FStarC.Util.ends_with inm ".__int_to_t"
+    | _ -> false in
   match (SS.compress h).n with
   | Tm_constant c -> constant_of_sconst c
   | Tm_fvar fv ->
@@ -2209,6 +2227,10 @@ and const_of_arg (st:state) (t:term) : ML (option constant) =
      | (a, _) :: _ when nm = "FStar.Ghost.hide" || nm = "FStar.Ghost.reveal" ||
                      FStarC.Util.ends_with nm ".uint_to_t" || FStarC.Util.ends_with nm ".int_to_t" ||
                      FStarC.Util.ends_with nm ".__uint_to_t" || FStarC.Util.ends_with nm ".__int_to_t" ->
+       const_of_arg st a
+     | (a, _) :: _ when (FStarC.Util.ends_with nm ".v" ||
+                         FStarC.Util.ends_with nm ".__v") &&
+                        inverse_pair a ->
        const_of_arg st a
      | _ -> None)
   | _ -> None
@@ -2386,6 +2408,22 @@ and template_arg (st:state) (l:Ident.lident) (i:int) (a:term) : ML cty =
        [a'], and the printer and the recogniser have to be shown the same
        term or the message describes a term nobody rejected. *)
     let a' = U.unlazy_emb a' in
+    (* Section 92.  A local [let] is not a runtime parameter, it is a name for
+       a value section 3.2b can already see through -- but [unfold_lets] was
+       only ever run on a monomorphization argument, and a template index took
+       a different path here.  So an index bound to a constant one line above
+       its use reduced to a free variable and was rejected as unknown, while
+       the message built for it resolved the very same binding to report where
+       the name came from.  Tried second, and only if the argument is not
+       already constant, so nothing that used to work pays for it. *)
+    let a' = match const_of_arg st a' with
+             | Some _ -> a'
+             | None ->
+               let u = unfold_lets st 100 a' in
+               if U.term_eq u a' then a'
+               else (match norm_optional st compile_time_steps u with
+                     | Some t -> U.unlazy_emb t
+                     | None -> U.unlazy_emb u) in
     match const_of_arg st a' with
     | Some c -> TConst c
     | None ->

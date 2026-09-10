@@ -21,6 +21,16 @@ template <size_t N> static inline void fill(frag<N> f, size_t v) {
 
 static inline frag<16> mk16(size_t seed) { frag<16> f; f.v = seed; return f; }
 
+/* The section 92 shapes: a [nat]-indexed template, and a factory with a
+   template-id of its own since C++ deduces nothing from a return type. */
+template <size_t N> struct nfrag { size_t v; };
+
+static inline nfrag<16> nmk16(size_t seed) { nfrag<16> f; f.v = seed; return f; }
+
+template <size_t N> static inline void nfill(nfrag<N> f, size_t v) {
+  (void) f; (void) v;
+}
+
 }
 
 #endif

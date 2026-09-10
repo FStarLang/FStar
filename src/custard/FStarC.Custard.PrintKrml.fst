@@ -320,6 +320,25 @@ let is_tuple_ctor_name (n:name) : ML bool =
   FStarC.Util.starts_with n.id "Mktuple" &&
   Options.custard_backend () = "KrmlRust"
 
+(* Section 92.  A constructor's name inside a variant, without the namespace
+   the mangled name carries.  A variant's arms are scoped to the variant --
+   there is no way to name [Some] outside the [option] it belongs to, in C
+   where karamel builds the tag out of the type's lident and the arm's name,
+   or in Rust where it prints as [option__uint8_t::Some].  So the namespace
+   adds nothing but length, and it is the difference between a generated
+   [enum] that a hand-written consumer can name and one it cannot: karamel's
+   own extraction writes [None], and a snapshot consumer pattern-matching on
+   it does not build against [FStar_Pervasives_Native_None].
+
+   The specialization hint stays, because that part is not redundant: two
+   monomorphizations of one constructor are two different arms.  Only the
+   *emitted* name changes; the arity table stays keyed on the mangled name,
+   since that one is global and two unrelated types may each have an [A]. *)
+let ctor_name (n:name) : ML string =
+  match n.spec with
+  | None -> n.id
+  | Some s -> n.id ^ "__" ^ s
+
 (* Section 38.  karamel's [width] carries the two float formats itself, so
    this is a rename and nothing more. *)
 let krml_fwidth (fw:fwidth) : ML K.width =
@@ -656,7 +675,7 @@ let rec krml_pat (env:kenv) (p:pat) : ML (kenv & K.pattern) =
 
   | PCtor (n, ps) ->
     let env, ps = krml_pats env ps in
-    (env, K.PCons (mangled_name n, ps))
+    (env, K.PCons (ctor_name n, ps))
   | PRecord (_, fs) ->
     let env, ps = krml_pats env (fs |> List.map snd) in
     (env, K.PRecord (List.zip (fs |> List.map fst) ps))
@@ -750,7 +769,7 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
     K.ETuple (args |> List.map (krml_expr env))
 
   | ECtor (n, args) ->
-    K.ECons (krml_typ env e.ty, mangled_name n, args |> List.map (krml_expr env))
+    K.ECons (krml_typ env e.ty, ctor_name n, args |> List.map (krml_expr env))
 
   | ETuple es -> K.ETuple (es |> List.map (krml_expr env))
 
@@ -768,7 +787,7 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
                 | None -> 0 in
     let wilds = List.map (fun _ -> K.PVar (dummy_binder "_")) (repeat_unit arity) in
     K.EMatch (krml_expr env e1,
-              [ (K.PCons (mangled_name n, wilds), K.EBool true);
+              [ (K.PCons (ctor_name n, wilds), K.EBool true);
                 (K.PVar (dummy_binder "_"), K.EBool false) ])
 
   (* Karamel has the one node; the distinction has already done its work in
@@ -1012,7 +1031,7 @@ let krml_decl (env:kenv) (d:decl) : ML (option K.decl) =
      | TVariant cs ->
        Some (K.DTypeVariant (lid, flags, n_t,
                cs |> List.map (fun (cn, fs) ->
-                 (mangled_name cn,
+                 (ctor_name cn,
                   fs |> List.map (fun (f, c) -> (f, (krml_typ env c, false)))))))
      | TAbstract ->
        (* An external type is declared by a header karamel does not know

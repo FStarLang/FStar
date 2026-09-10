@@ -2076,6 +2076,18 @@ CGREP_TmplMono += "TmplMono_g_gemm__uint_to_t_16(wm::frag<16> f"
 # runtime -- that is the whole of why the section 32.5 rule can be relaxed.
 CNOGREP_TmplMono += "g_gemm__uint_to_t_16(size_t tm"
 
+CXX_TESTS += TmplLet
+FLAGS_TmplLet = --custard_backend C --custard_entry_module TmplLet
+CGREP_TmplLet += "wm::nfrag<16> f = wm::nmk16(seed)"
+
+CXX_TESTS += TmplLet2
+FLAGS_TmplLet2 = --custard_backend C --custard_entry_module TmplLet2
+CGREP_TmplLet2 += "wm::nfrag<16> f = wm::nmk16(seed)"
+
+CXX_TESTS += TmplLet3
+FLAGS_TmplLet3 = --custard_backend C --custard_entry_module TmplLet3
+CGREP_TmplLet3 += "wm::nfrag<16> f = wm::nmk16(seed)"
+
 CXX_TESTS += TmplMonoV
 FLAGS_TmplMonoV = --custard_backend C --custard_entry_module TmplMonoV
 CGREP_TmplMonoV += "wm::frag<16> f = wm::mk16(rows)"

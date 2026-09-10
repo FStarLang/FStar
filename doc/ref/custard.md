@@ -17819,6 +17819,149 @@ than the reports read.  That is the reason the effort went into the message
 rather than into a tenth reduction: the provenance line names the definition
 `tm` actually comes from, on the machine that has the program, in one run.
 
+## 92. A local name for a constant
+
+### 92.1.  The reproduction, at last
+
+§91's provenance line did what it was built for on the first run.  Kuiper's
+error 390 came back as the fourth case, with
+
+```
+tm (a local let, bound to: FStar.SizeT.uint_to_t 16)
+```
+
+--- the message reporting the constant in the same breath as saying the index
+does not reduce to one.  From that they wrote the reduction that nine earlier
+attempts had missed, and it is ten lines: the index is a **local `let`**, not
+a parameter substituted by beta.
+
+```fstar
+let go (seed: SZ.t) : FStar.All.ML unit =
+  let tm = 16sz in
+  let f : frag (SZ.v tm) = mk (SZ.v tm) seed in
+  fill f seed
+```
+
+`TmplLet` is that file and `TmplLet2` is the same file with `16sz` written
+where `tm` stood.  `TmplLet2` passed throughout; `TmplLet` produced
+
+```
+What it reduced to was: FStar.SizeT.v (FStar.SizeT.uint_to_t 16)
+```
+
+`TmplLet3` is a third shape --- the index bound to a name of its own and used
+twice, with no ascription --- and failed the same way.  All three are in the
+suite as `CXX_TESTS`, compiled and run, so the fix is pinned from both sides.
+
+### 92.2.  Two spellings of one constant
+
+The reduct is the whole story.  The `let` *was* delta-reduced, and delta
+re-spelled the constant as an **application of `uint_to_t` to an integer
+literal** rather than as the lazy embedding §86 taught `const_of_arg` to
+force.  `const_of_arg` already saw through `uint_to_t`; what it did not see
+through was the `v` wrapped around it, which has no delta rule that computes
+on a reconstructed argument.
+
+So `const_of_arg` now recognises the inverse *pair*:
+
+```
+  X.v (Y.uint_to_t k)   ⟶   k
+```
+
+Recognising the pair rather than `v` alone is what makes this sound.  `v`
+applied to anything else is a projection out of a runtime value and is not a
+constant, and a bare integer literal is not an inhabitant of the
+machine-integer type `v` takes, so there is no term this accepts that §86's
+recogniser would have been right to reject.
+
+### 92.3.  A local `let` is not a runtime parameter
+
+The reporter also flagged a discrepancy they did not want papered over:
+Kuiper's reduct stops one step *earlier* than `TmplLet`'s.  Kuiper says
+`FStar.SizeT.v tm` with `tm` still free, so there the `let` was not
+delta-reduced at all --- the extractor had already descended past the binder
+and the name arrived as a free variable rather than inside a `let` the
+normalizer could inline.  Fixing the spelling alone would have left that
+unmoved, which is exactly the outcome they wrote the paragraph to prevent.
+
+Custard already has the machinery: §3.2b's `unfold_lets` resolves a local
+`let` on the way to a monomorphization key, precisely because *a local `let`
+is not a runtime parameter, it is a name for a value*.  A template index took
+a different path and never saw it.  So a template argument that does not
+reduce to a constant is now put through `unfold_lets` and re-normalized before
+it is rejected --- tried second, and only when the argument is not already
+constant, so nothing that used to work pays for it.
+
+That is also the answer to §91's fourth case in general.  The case exists and
+the classification is right --- the name is a parameter of neither declaration
+--- but *"rule 4d cannot demand it"* is only half of it.  Rule 4d does not
+have to: the name is a local `let`, its value is in `st.letdefs`, and the
+right move is to look it up rather than to demand anything.
+
+### 92.4.  The interface is not the difference either
+
+The reporter answered §91's question about `Inst.spec`: a signature in an
+`.fsti` with the definition in the `.fst`, and neither of the other two
+shapes.  That leaves the interface/implementation merge as the only structural
+difference against §91's `MonoAttr`, so `MonoAttrI` measures it --- the same
+Pulse `fn` with `[@@@FStar.Attributes.monomorphize]` on an `SZ.t` binder,
+declared in an interface and defined in the implementation.  It specializes:
+`MonoAttrI_f__uint_to_t_16` and `MonoAttrI_f__uint_to_t_32`.
+
+So the merge does not drop the attribute, and their own second explanation is
+the right one: the attribute was correctly registered and *irrelevant*,
+because `tm` was not a parameter of anything by the time the index was
+compiled.  There was nothing for a demand to attach to.  §92.3 is why that no
+longer matters --- the index does not need to be demanded, it needs to be
+looked up.
+
+One thing the interface does change, and it is worth writing down: an
+attribute on a binder of the *implementation* does not reach the interface's
+type.  Writing `fn f' (...) ... let f = f'` fails to typecheck against a
+`val` that carries the attribute, because the alias's type does not.  The
+attribute has to be on the declaration that is exported.
+
+### 92.5.  A variant's arms are scoped to the variant
+
+A separate item in the same round, from EverParse rather than Kuiper, and the
+one place their generated crate was not drop-in.  Custard named a Rust enum's
+arms by the constructor's fully mangled name:
+
+```rust
+pub enum option__..._uint8_t <'a> {
+    FStar_Pervasives_Native_None,
+    FStar_Pervasives_Native_Some { v: &'a [u8] }
+}
+```
+
+where karamel's own extraction writes `None` and `Some`.  Same type, same
+layout, different spelling --- and since EverParse snapshots the generated
+`.rs` into its repository and hand-written Rust pattern-matches on these, the
+difference is the difference between a crate that works and a crate that
+drops in.
+
+The namespace was never carrying information there.  A variant's arms are
+scoped to the variant: there is no way to name `Some` outside the `option` it
+belongs to, in Rust where it prints as `option__uint8_t::Some`, or in the C
+karamel generates from the same node, where the tag is built out of the
+*type's* lident and the arm's name.  So `ctor_name` emits the short name,
+keeping the specialization hint --- two monomorphizations of one constructor
+are two different arms, and that part is not redundant.
+
+Two things stay on the mangled name deliberately.  The arity table
+`krml_expr` consults for `EDiscrim` is global and two unrelated types may each
+have an `A`, so it stays keyed as it was.  And the direct-to-C backend still
+writes the full name, because in C an `enum` constant is *not* scoped to its
+type --- it is an identifier in the enclosing scope, and there the namespace
+is doing exactly the work it is not doing in Rust.
+
+The other two divergences the same report lists are not defects and are not
+being changed.  A monomorphized instance landing in a different bundle is a
+consequence of where Custard first demands it, and a CDDL abbreviation
+appearing unfolded in a generated type name is a consequence of
+monomorphizing on unfolded types (§5.0.1): `bstr` and its expansion are the
+same type, and the name follows the shape rather than the source spelling.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -18132,3 +18275,4 @@ rather than into a tenth reduction: the provenance line names the definition
 | M10θΛ | The message does not say whose parameter it is (§89.1) | Done.  Error 390 reports a free variable in a template index, which means some declaration still has that index as a runtime parameter --- but three opposite defects produce that, and the message spelled all three the same way: rule 4d did not demand a parameter of the named declaration (a scan gap in Custard, §88's case), rule 4d did demand it and a caller supplied a non-constant value (the program's case), or the variable is not a parameter of the named declaration at all but of the external whose type is being compiled, whose own codomain writes it into the template-id (§85's withholding, which no caller's specialization can undo).  Six reductions across §85--§88 --- four Kuiper's, two mine, one of them a Pulse `fn` written to test whether the scan could see under a bind's continuation lambda, all six passing --- is the expected cost of reducing a report that could be any of the three, not bad luck.  The scan is now run a second time on the error path, where the program is about to stop and the cost does not matter: `template_scan_terms` split out of `template_demanded` so the report describes the same scan on the same binders, `template_index_scan` returning the applications it recognised alongside the names it demands, and `st.cur_lid` beside `st.cur` because a target name is mangled with a specialization key and cannot be looked up.  On `TmplRun`, in the suite since §72.3, the answer is the third case and had gone unnoticed: `n` is `make`'s parameter, not `helper`'s, and the test had pinned the sentence naming the wrong declaration to change.  Not a fix for Kuiper's 390 and not offered as one --- it is what makes the Kuiper-side bisection they offered look for the right thing.  In-tree Pulse suite unchanged at 30 s |
 | M10θΜ | A unit is a value wherever it stands (§90.2) | Done.  §82 replaced a unit-typed *argument* with `()`, because a call argument was the position that report named; EverParse's Rust leg fails one position over, on a tuple component, and there the crate does not build --- 8 functions print nothing, 3 become missing symbols, `could not compile evercosign (lib)`.  Same cause throughout: `nil` erases to `unit` (§5.5), so a parser's result reaches its caller as a unit-typed *variable*, `PrintMiniRust` deletes a unit-typed `let` and records the binder as `GoneUnit`, and a later use of it is unprintable --- an assumption that holds for F*'s own extraction, which keeps `nil` as a one-variant enum.  The scoping was the mistake and not the position: a value of type `unit` *is* `()` wherever it stands, so the rewrite now runs at every value position --- call arguments, tuple components, constructor arguments, record fields, operator operands --- with the same two exceptions (`EAbort`, and an impure expression hoisted into a `let` first so a call that was there to be performed does not vanish) and the same hoist, which is what makes one rewrite serve all five.  Statement positions are excluded deliberately: an `EIf` branch, an `ESeq` side and an `ELet` right-hand side are where a unit-typed expression is there to be *performed*.  `UnitSlice` is EverParse's shape rather than its size --- a Pulse `fn` over a `Pulse.Lib.Slice.slice`, erased `nil`, a slice read, a tuple --- and reproduced the printer failure verbatim; the slice read is load-bearing, since a pure producer is inlined and the variable never appears.  Also answered the report's second item: the 69 unemitted `uu___is_*` discriminators are dead code correctly dropped, not missing output.  In-tree Pulse suite unchanged at 30 s |
 | M10θΝ | Absence is not evidence (§91.1) | Done.  §89's classifier read `foreign = free \ params`, so absence from the enclosing declaration's parameters counted as positive evidence that the *external* had the name --- and a nullary root, which is how a Kuiper entry point is written, then made every 390 come out as the external's fault by construction.  The reporter found the three consequences together: the answer is false (`wmma_fragment`'s parameters are `use m n k t l`), the message contradicts itself (case 3 points at the first *Reached through* entry, which is the declaration it has just said the name is not a parameter of), and the inference is invalid.  Membership is now positive on both sides: `extern_binder_names` reads the external's `Sig_declare_typ` binders and `compiled_decl` takes the request chain's head rather than the template type's lid --- `ppname` string comparison is only sound against the right declaration, and `TmplRun.frag (n: nat)` and `TmplRun.make (n: nat)` both have a binder called `n`.  That leaves a fourth case no branch described: a name that is a parameter of neither declaration, which rule 4d structurally cannot demand, and which can only have come from a definition inlined into this one whose binder outlived the inlining --- `name_provenance` reports it from `defbinders`/`letdefs`/`effletdefs`, which the extractor already keeps.  `scan_line` is printed in all four branches; it used to be withheld in exactly the branch that was misclassified, which is how *the scan found no application of an external template at all* --- a scan gap in substance --- cost a local probe to recover.  Their eta-expansion to seven real parameters still 390ing is what makes `params = []` a symptom rather than the cause.  `MonoAttr` measures the remaining question rather than arguing it: `[@@@monomorphize]` on a Pulse `fn` binder does specialize, to `MonoAttr_f__uint_to_t_16` and `_32`.  Nine local reductions of this 390 now pass.  In-tree Pulse suite unchanged at 30 s |
+| M10θΞ | A local name for a constant (§92.2) | Done.  §91's provenance line reproduced the standing error 390 on its first run --- `tm (a local let, bound to: FStar.SizeT.uint_to_t 16)`, the message reporting the constant in the same breath as saying the index does not reduce to one --- and the ten-line reduction it produced is the shape nine earlier attempts had missed: the index is a **local `let`**, not a parameter substituted by beta.  Two independent halves.  First, the reduct: delta re-spells the constant as `FStar.SizeT.v (FStar.SizeT.uint_to_t 16)`, and §86's recogniser saw through `uint_to_t` but not the `v` around it, which has no delta rule that computes on a reconstructed argument; `const_of_arg` now recognises the inverse *pair*, which is what makes it sound --- `v` of anything else is a projection out of a runtime value, and a bare literal is not an inhabitant of the type `v` takes.  Second, and the reason the reporter flagged the discrepancy rather than let it pass: their reduct stops one step earlier, `FStar.SizeT.v tm` with the `let` not reduced at all, so the spelling fix alone would have left them unmoved for the fifth time.  §3.2b's `unfold_lets` already resolves a local `let` on the way to a monomorphization key --- a local `let` is not a runtime parameter, it is a name for a value --- and a template index simply took a different path; it is now put through it and re-normalized before being rejected, second and only when the argument is not already constant.  That is also the general answer to §91's fourth case: rule 4d cannot demand such a name and does not have to, since the value is in `st.letdefs`.  `TmplLet`, `TmplLet2` and `TmplLet3` pin all three shapes, compiled and run.  `MonoAttrI` settles the remaining question: the attribute survives an interface/implementation merge, so it was registered and *irrelevant*, which was their own second explanation.  Also §92.5, from EverParse: a Rust enum's arms are named by the constructor's short name now, as karamel's own extraction writes them, since a variant's arms are scoped to the variant --- the one place their generated crate was not drop-in.  In-tree Pulse suite unchanged at 30 s |
