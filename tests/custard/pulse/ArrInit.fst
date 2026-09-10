@@ -53,6 +53,18 @@ fn varlen (n: SZ.t)
   v
 }
 
+(* Section 94.4.  A zero-length array: [{ }] is not an initializer C99 accepts
+   and [uint8_t a[0]] is not a declaration it accepts either, so this one is
+   the reason both guards are written the way they are. *)
+fn empty ()
+  returns r: U8.t
+{
+  let a = A.alloc 0uy 0sz;
+  A.pts_to_len a;
+  A.free a;
+  3uy
+}
+
 fn main ()
   returns x: FStar.Int32.t
 {
@@ -60,5 +72,10 @@ fn main ()
   let b = sevens ();
   let c = varfill 5uy;
   let d = varlen 9sz;
-  if (U8.eq a 0uy && U8.eq b 7uy && U8.eq c 5uy && U8.eq d 0uy) { 0l } else { 1l }
+  let e = empty ();
+  if (U8.eq a 0uy && U8.eq b 7uy && U8.eq c 5uy && U8.eq d 0uy && U8.eq e 3uy) {
+    0l
+  } else {
+    1l
+  }
 }

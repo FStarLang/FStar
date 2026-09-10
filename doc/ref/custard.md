@@ -18138,6 +18138,7 @@ here is where the change *stops*:
 | `A.alloc 7uy 4sz` | `uint8_t _cbuf1[4] = { 7, 7, 7, 7 };` |
 | `A.alloc x 4sz` | `uint8_t _cbuf1[4];` and the loop |
 | `A.alloc 0uy n` | `uint8_t _cbuf1[n];` and the loop |
+| `A.alloc 0uy 0sz` | `uint8_t _cbuf1[1] = { 0 };` (§94.4) |
 
 All four are reachable from `main`, which reads a cell out of each and
 returns `0l` only if every answer is the one the fill promised, so the
@@ -18145,6 +18146,35 @@ initializer is checked for having actually run and not merely for having been
 printed.  The two loop rows are asserted by the *absence* of an initializer
 on the declaration line, which is the only difference the two paths leave in
 the output.
+
+### 94.4.  Zero is not a length C has
+
+`{ }` is not an initializer C99 accepts, so the guard reads `n > 0` and a
+zero-length allocation would have fallen to the loop.  Except that the loop
+did not work either, and never had:
+
+```c
+uint8_t _cbuf1[0];          /* error: ISO C forbids zero-size array */
+```
+
+Pulse will allocate `A.alloc 0uy 0sz` quite happily; C has no such object.
+`t a[0]` is a GNU extension, and `gcc -std=c99 -pedantic-errors` rejects it.
+This was not introduced by §94.1 --- it is as old as `emit_alloc` --- but it
+is the first question the initializer raises, so it is answered here.
+
+A single cell is the smallest conforming declaration, and it is safe for the
+same reason the fill does not matter: with a length of zero **no index is in
+bounds**, so nothing can read the cell and nothing can tell it is there.  So
+a constant zero length declares one cell, and takes `{ 0 }` whatever the fill
+was --- which is why the initializer guard admits `n = 0` without asking
+about the fill at all.  A heap allocation of a constant zero length rounds
+the same way, which also keeps it clear of `malloc(0)` being allowed to
+return `NULL` and trip the `abort()`.
+
+The residual case is a *runtime* length that happens to be zero.  On the
+stack that is a variable-length array, where the same rule applies and the
+compiler cannot check it; on the heap it is `malloc(0)`.  Neither is
+reachable by constant folding and neither is addressed here.
 
 Elsewhere in the suite the change is visible without being asked for:
 `CborBoundarySlice`'s thirty-byte scratch buffer and `PulseBlit`'s
@@ -18468,3 +18498,4 @@ Pulse suite is unchanged at 30 s.
 | M10θΞ | A local name for a constant (§92.2) | Done.  §91's provenance line reproduced the standing error 390 on its first run --- `tm (a local let, bound to: FStar.SizeT.uint_to_t 16)`, the message reporting the constant in the same breath as saying the index does not reduce to one --- and the ten-line reduction it produced is the shape nine earlier attempts had missed: the index is a **local `let`**, not a parameter substituted by beta.  Two independent halves.  First, the reduct: delta re-spells the constant as `FStar.SizeT.v (FStar.SizeT.uint_to_t 16)`, and §86's recogniser saw through `uint_to_t` but not the `v` around it, which has no delta rule that computes on a reconstructed argument; `const_of_arg` now recognises the inverse *pair*, which is what makes it sound --- `v` of anything else is a projection out of a runtime value, and a bare literal is not an inhabitant of the type `v` takes.  Second, and the reason the reporter flagged the discrepancy rather than let it pass: their reduct stops one step earlier, `FStar.SizeT.v tm` with the `let` not reduced at all, so the spelling fix alone would have left them unmoved for the fifth time.  §3.2b's `unfold_lets` already resolves a local `let` on the way to a monomorphization key --- a local `let` is not a runtime parameter, it is a name for a value --- and a template index simply took a different path; it is now put through it and re-normalized before being rejected, second and only when the argument is not already constant.  That is also the general answer to §91's fourth case: rule 4d cannot demand such a name and does not have to, since the value is in `st.letdefs`.  `TmplLet`, `TmplLet2` and `TmplLet3` pin all three shapes, compiled and run.  `MonoAttrI` settles the remaining question: the attribute survives an interface/implementation merge, so it was registered and *irrelevant*, which was their own second explanation.  Also §92.5, from EverParse: a Rust enum's arms are named by the constructor's short name now, as karamel's own extraction writes them, since a variant's arms are scoped to the variant --- the one place their generated crate was not drop-in.  In-tree Pulse suite unchanged at 30 s |
 | M10θΟ | A representation rule is a floor (§93.3) | Done.  §92 cleared the error 390 that had blocked one Kuiper module for six rounds; it now stops further along on an error 368, and the twelve-line reduction mentions nothing of Kuiper's.  A Pulse array in *binder* position is a pointer, because the built-in table (§8.3) maps `Pulse.Lib.Array.Core.array` to `TBuf` and the rule is read off the head fvar.  As a *tuple component* read out by `fst` it has no representation at all: `array` is a delta-constant that unfolds to the record `array'`, whose `core_pcm_ref` is abstract, and both monomorphization reductions (§3.7) carry `UnfoldUntil delta_constant` --- so by the time the type argument reached the emitter the name was gone and `ty_of_typ` requested a record C cannot lay out.  A binder's sort is compiled from the term the programmer wrote; a monomorphization argument is compiled from a normal form, and the normal form has less in it than the term it came from.  So a representation rule is now a **floor**: `has_builtin_type_rule` asks whether a head fvar has a `Rule_type`, and a type argument that had one before the reduction and not after keeps the written form, for the key and the substitution alike.  A *loss* test rather than a ban on unfolding a ruled name --- §3.7's real work routinely ends at a ruled head having started elsewhere, and only the step that walks off the table is refused.  Replacing `fst p` with a pattern match passed throughout, which is what localised it to the projection rather than the tuple or the array.  Both repairs the reporter offered as alternatives are recorded as rejected: `array'` takes no parameter, so ruling it directly gives `void *`.  `ArrTup` covers `fst`, `snd` and `snd (snd p)`, compiled and run.  In-tree Pulse suite unchanged at 30 s |
 | M10θΠ | An initializer where C has one (§94.1) | Done.  A local array with a constant length and a constant fill is what C's initializer syntax is for, and `emit_alloc` wrote a loop for every one of them --- eight lines of object code, a scratch index in scope, and a reader's obligation to check the bound against the declared length, in place of a declaration that cannot get any of it wrong.  It now writes `uint8_t _cbuf1[8] = { 0 };` and `uint8_t _cbuf1[4] = { 7, 7, 7, 7 };`, under three conditions none of which is stylistic: the length must be constant because a **variable-length array may not be initialized at all** (C99 6.7.8p3); the element type must be scalar because `{ 0 }` on an aggregate initializes only the first member explicitly and the rest are reported under `-Wmissing-braces`, which matters when the output is compiled with warnings as errors; and the fill must be constant because C has no way to repeat a runtime value --- and no repetition form for a constant either, so a non-zero fill is written once per cell and capped at 64, above which the loop is the smaller code.  Zero is exempt from the cap, covering any length in three characters.  Heap allocations keep `malloc` and the loop, and the branch is refused if either operand hoisted a statement, which would land before the declaration it belongs to.  `ArrInit` pins the **boundary** rather than the good case: four shapes, the two that take an initializer and the two that must not, all reachable from `main`, which reads a cell out of each so the initializer is checked for having run and not merely for having been printed.  `CborBoundarySlice` and `PulseBlit` picked the change up unasked; `PulseHashTable`'s variable-length array did not.  In-tree Pulse suite unchanged at 30 s |
+| M10θΡ | Zero is not a length C has (§94.4) | Done.  The first question §94.1 raises: `{ }` is not an initializer C99 accepts, so the guard read `n > 0` and a zero-length allocation fell to the loop --- where it had never worked either, since `uint8_t a[0]` is a GNU extension and `gcc -std=c99 -pedantic-errors` rejects it outright as a zero-size array.  Pulse will write `A.alloc 0uy 0sz` quite happily and C has no such object.  Older than §94 by every release, but found by asking the obvious question of the new code.  A constant zero length now declares **one** cell and takes `{ 0 }` whatever the fill was, which is sound for the same reason the fill is irrelevant: with a length of zero no index is in bounds, so nothing can read the cell and nothing can tell it is there.  A heap allocation rounds the same way, which incidentally keeps it clear of `malloc(0)` being permitted to return `NULL` and trip the `abort()` on the next line.  The residual case --- a *runtime* length that happens to be zero, a variable-length array on the stack and `malloc(0)` on the heap --- is not reachable by constant folding and is recorded as not addressed.  `ArrInit` grew a fifth shape and two `CNOGREP`s, on `[0]` and on `= { };`, so neither non-form can come back unnoticed.  In-tree Pulse suite unchanged at 30 s |

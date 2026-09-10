@@ -162,6 +162,9 @@ CGREP_ArrInit += "uint8_t _cbuf1[4] = { 7, 7, 7, 7 };"
 CGREP_ArrInit += "uint8_t _cbuf1[4];"
 CGREP_ArrInit += "uint8_t _cbuf1[n];"
 CNOGREP_ArrInit += "_cbuf1[n] = {"
+CGREP_ArrInit += "uint8_t _cbuf1[1] = { 0 };"
+CNOGREP_ArrInit += "[0]"
+CNOGREP_ArrInit += "= { };"
 
 C_TESTS += PulseBasic
 # Section 58: the pure condition is spelled in the loop header.

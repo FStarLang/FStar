@@ -2105,8 +2105,13 @@ and emit_alloc (ind:string) (d:dest) (lt:lifetime) (t:cty) (init:expr) (len:expr
     | _ -> false in
   let const_len =
     match len.e with
-    | EConst (CInt (n, _, _)) when n > 0 -> Some n
+    | EConst (CInt (n, _, _)) when n >= 0 -> Some n
     | _ -> None in
+  (* Section 94.4.  Pulse will allocate a zero-length array and C has no such
+     thing -- [t a[0]] is a GNU extension, not C (6.7.6.2p1).  One cell is the
+     smallest conforming declaration and nothing can read it, since no index
+     is in bounds of a length of zero. *)
+  let dlv = if const_len = Some 0 then "1" else lv in
   (* A null pointer is a zero fill: [{ 0 }] gives a null pointer, whatever the
      implementation's null happens to be spelled as. *)
   let zero_init =
@@ -2122,18 +2127,22 @@ and emit_alloc (ind:string) (d:dest) (lt:lifetime) (t:cty) (init:expr) (len:expr
   (* [!out] has to be empty: a hoisted statement means the fill or the length
      was not the constant it has to be for any of this to apply, and prefixing
      it to a declaration would put it before the declaration it belongs to. *)
+  (* A length of zero needs no fill written out and admits none: [{ }] is not
+     an initializer C99 accepts either, and the cell it initializes cannot be
+     read.  So it takes [{ 0 }] whatever the fill was. *)
   | LStack, Some n when scalar_elt && !out = "" &&
-                        (zero_init ||
+                        (n = 0 || zero_init ||
                          (const_init && n <= init_list_max)) ->
-    ind ^ decl_of elt_of (arr ^ "[" ^ lv ^ "]") ^ " = { " ^
-    (if zero_init then "0" else String.concat ", " (repeat n [])) ^ " };\n" ^
+    ind ^ decl_of elt_of (arr ^ "[" ^ dlv ^ "]") ^ " = { " ^
+    (if n = 0 || zero_init then "0"
+     else String.concat ", " (repeat n [])) ^ " };\n" ^
     finish ind d arr
   | _ ->
   let alloc =
     match lt with
-    | LStack -> ind ^ decl_of elt_of (arr ^ "[" ^ lv ^ "]") ^ ";\n"
+    | LStack -> ind ^ decl_of elt_of (arr ^ "[" ^ dlv ^ "]") ^ ";\n"
     | LHeap ->
-      ind ^ elt ^ " *" ^ arr ^ " = (" ^ elt ^ " *)malloc(" ^ group lv ^
+      ind ^ elt ^ " *" ^ arr ^ " = (" ^ elt ^ " *)malloc(" ^ group dlv ^
       " * sizeof(" ^ elt ^ "));\n" ^
       ind ^ "if (" ^ arr ^ " == NULL) { abort(); }\n" in
   !out ^ alloc ^
