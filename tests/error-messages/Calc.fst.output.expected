@@ -5,6 +5,16 @@
   - Failed to prove: Calc.eta Prims.op_Greater_Equals x y
   - In context:
       uu___: Prims.unit
+      forall (_: Prims.unit).
+        (* - Could not prove post-condition *)
+        (forall (_: Prims.unit).
+            (* - Could not prove post-condition *)
+            forall (_: Prims.unit).
+              (* - Could not prove post-condition *)
+              Calc.eta Prims.op_Greater_Equals 10 9) /\
+        (forall (_: Prims.unit).
+            (* - Could not prove post-condition *)
+            Calc.eta Prims.op_Less_Equals 9 11)
       x: Prims.int
       y: Prims.int
       exists (w: Prims.int).

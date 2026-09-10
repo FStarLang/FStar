@@ -51,7 +51,7 @@ let size_sub
 
 #restart-solver
 
-#push-options "--z3rlimit_factor 12"
+#push-options "--z3rlimit_factor 24"
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 

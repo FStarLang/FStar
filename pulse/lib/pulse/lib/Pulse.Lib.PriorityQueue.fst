@@ -635,7 +635,7 @@ let sift_up_swap_lemma #t {| total_order t |}
 // Helper for sift_up: After swapping idx with parent, establish the grandparent->children property
 // for the recursive call. The recursive call has new idx = parent, new sequence = swap_seq.
 // The invariant requires: swap_seq[gp] <=? swap_seq[children of parent].
-#push-options "--fuel 1 --ifuel 1"
+#push-options "--fuel 1 --ifuel 1 --z3rlimit_factor 4"
 let grandparent_up_after_swap #t {| total_order t |} 
   (s:Seq.seq t) (child:nat{child > 0 /\ child < Seq.length s})
   : Lemma (requires almost_heap_sift_up s child /\
@@ -685,6 +685,7 @@ let grandparent_up_after_swap #t {| total_order t |}
       )
     )
 #pop-options
+#push-options "--z3rlimit_factor 4"
 
 //
 // The is_pqueue predicate - includes capacity
@@ -891,6 +892,7 @@ let sift_down_swap_heap_up_at_parent #t {| total_order t |}
 
 // Helper for sift_down_swap_heap_up_at: case parent_idx i = parent
 // In this case, i is a sibling of child (the other child of parent)
+#pop-options
 #push-options "--fuel 1 --ifuel 1"
 let sift_down_swap_heap_up_at_gchild #t {| total_order t |}
   (s:Seq.seq t) (parent:nat{parent < Seq.length s}) (child:nat{child < Seq.length s /\ parent <> child})
@@ -1090,7 +1092,7 @@ let grandparent_after_swap #t {| total_order t |}
     // heap_down_at s child means: s[child] <=? s[left_idx child] and s[child] <=? s[right_idx child]
     ()
 
-#push-options "--fuel 1 --ifuel 1 --z3rlimit_factor 4"
+#push-options "--fuel 1 --ifuel 1 --z3rlimit_factor 12"
 fn rec sift_down (#t:eqtype) {| total_order t |} (pq:rvec t) (idx:SZ.t) (len:SZ.t)
   (#s:erased (Seq.seq t){SZ.v idx < Seq.length s /\ SZ.v len == Seq.length s /\ 
                           SZ.fits (2 * Seq.length s + 2)})
