@@ -65,11 +65,11 @@ F*, i.e., the parts that allow it to interface with an SMT solver.
 
    .. code-block:: fstar
 
-      p /\ q   //conjunction
-      p \/ q   //disjunction
-      ~p       //negation
-      p ==> q  //implication
-      p <==> q //bi-implication
+      p /\ q   //conjunction (∧)
+      p \/ q   //disjunction (∨)
+      ~p       //negation (¬)
+      p ==> q  //implication (⇒)
+      p <==> q //bi-implication (⇔)
 
    For example, one can say (as shown below) that for all natural
    numbers ``x`` and ``y``, if the modulus ``x % y`` is ``0``, then
@@ -143,8 +143,9 @@ quantifiers.
 Quantifiers
 ...........
 
-A universal quantifier is constructed using the ``forall`` keyword. Its
-syntax has the following shape.
+A universal quantifier is constructed using the ``forall`` keyword
+(or, equivalently, the Unicode character ``∀``). Its syntax has the
+following shape.
 
 .. code-block:: fstar
                 
@@ -155,8 +156,8 @@ which one the proposition ``p`` is quantified. That is, ``forall
 (x:t). p`` is valid when for all ``v : t`` the proposition ``p[v/x]``
 is valid.
 
-And existential quantifier has similar syntax, using the ``exists``
-keyword.
+An existential quantifier has similar syntax, using the ``exists``
+keyword (or its Unicode equivalent ``∃``).
 
 .. code-block:: fstar
                 
@@ -208,31 +209,31 @@ decreasing order of precedence.
 
 **Negation**
 
-The proposition ``~p`` is valid if the negation of ``p`` is
-valid. This is similar to the boolean operator ``not``, but applies to
-propositions rather than just booleans.
+The proposition ``~p`` (or ``¬p``) is valid if the negation of ``p``
+is valid. This is similar to the boolean operator ``not``, but applies
+to propositions rather than just booleans.
 
 **Conjunction**
 
-The proposition ``p /\ q`` is valid if both ``p`` and ``q`` are
-valid. This is similar to the boolean operator ``&&``, but applies to
-propositions rather than just booleans.
+The proposition ``p /\ q`` (or ``p ∧ q``) is valid if both ``p`` and
+``q`` are valid. This is similar to the boolean operator ``&&``, but
+applies to propositions rather than just booleans.
 
 **Disjunction**
 
-The proposition ``p \/ q`` is valid if at least one of ``p`` and ``q``
-are valid. This is similar to the boolean operator ``||``, but applies
-to propositions rather than just booleans.
+The proposition ``p \/ q`` (or ``p ∨ q``) is valid if at least one of
+``p`` and ``q`` are valid. This is similar to the boolean operator
+``||``, but applies to propositions rather than just booleans.
 
 **Implication**
 
-The proposition ``p ==> q`` is valid if whenever ``p`` is valid, ``q``
-is also valid.
+The proposition ``p ==> q`` (or ``p ⇒ q``) is valid if whenever ``p``
+is valid, ``q`` is also valid.
 
 **Double Implication**
 
-The proposition ``p <==> q`` is valid if ``p`` and ``q`` are
-equivalent.
+The proposition ``p <==> q`` (or ``p ⇔ q``) is valid if ``p`` and
+``q`` are equivalent.
 
 .. note::
 
@@ -252,12 +253,12 @@ propositions themselves?
 Falsehood
 .........
 
-The proposition ``False`` is always invalid.
+The proposition ``False`` (``⊥``) is always invalid.
 
 Truth
 .....
 
-The proposition ``True`` is always valid.
+The proposition ``True`` (``⊤``) is always valid.
 
 .. _Part1_ch2_propositional_equality:
 
