@@ -151,6 +151,18 @@ CGREP_ArrTup += "static uint32_t *ArrTup_get_arr(FStar_Pervasives_Native_tuple2_
 CGREP_ArrTup += "static uint32_t *ArrTup_three(FStar_Pervasives_Native_tuple2__uint32_ptr_tuple2_uint32_ptr_uint32_ptr p)"
 CGREP_ArrTup += "static uint32_t *ArrTup_get_snd(FStar_Pervasives_Native_tuple2__unit_uint32_ptr p)"
 
+# Section 94.  An initializer where C has one, and the loop where it does not:
+# a runtime fill cannot be repeated and a variable-length array may not be
+# initialized at all, so both of those keep the loop.
+C_TESTS += ArrInit
+CGREP_ArrInit += "uint8_t _cbuf1[8] = { 0 };"
+CGREP_ArrInit += "uint8_t _cbuf1[4] = { 7, 7, 7, 7 };"
+# The loop cases assert the *absence* of an initializer: a bare declaration
+# is what the loop path emits, and this directory has no CPAIR.
+CGREP_ArrInit += "uint8_t _cbuf1[4];"
+CGREP_ArrInit += "uint8_t _cbuf1[n];"
+CNOGREP_ArrInit += "_cbuf1[n] = {"
+
 C_TESTS += PulseBasic
 # Section 58: the pure condition is spelled in the loop header.
 CGREP_PulseBasic += "while (i < n)"

@@ -1458,6 +1458,13 @@ let rec drop_writes (x:string) (e:expr) : ML expr =
   { e with e = e' }
 
 (* A [BufCreate] of exactly one cell: what Pulse emits for [let mut]. *)
+(* Section 94.  The number of cells past which a repeated non-zero fill is
+   written as a loop rather than as an initializer list.  A round number and
+   not a measured one: the list is one token per cell, so the point is only to
+   keep a large array from turning into a large amount of text, and anything
+   in this neighbourhood does that. *)
+let init_list_max : int = 64
+
 let is_one (e:expr) : bool =
   match e.e with EConst (CInt (1, _, _)) -> true | _ -> false
 
@@ -2039,7 +2046,36 @@ and unit_result (ind:string) (d:dest) : ML string =
    allocation is a local array -- a variable-length one when the length is not
    a constant, which C99 has and both target compilers implement -- and a heap
    allocation is [malloc].  Either way the run has to be filled, since C
-   initializes neither. *)
+   initializes neither.
+
+   {2 Section 94: an initializer where C has one}
+
+   Filling it with a loop is the general answer and it was the only one.  But
+   an array whose length is a constant and whose fill is a constant is exactly
+   what C's initializer syntax is for, and the two are not equivalent to a
+   reader or to a compiler: [uint32_t buf[64] = { 0 };] is one line and lands
+   in [.bss], where the loop is three lines that a compiler has to prove it
+   may turn back into that.  So a stack allocation takes an initializer when
+   it can, and the loop stays for everything else.
+
+   Three conditions, each of them load-bearing.
+
+   The length has to be a literal, because a variable-length array *may not*
+   be initialized -- that is not a stylistic restriction, C forbids it -- and
+   because [{ 0 }] says nothing about how long the array is.
+
+   The element type has to be a scalar.  [{ 0 }] initializes an aggregate
+   correctly, but only the first member is written explicitly and the rest are
+   zeroed by the standard's own rule, which older compilers report under
+   [-Wmissing-braces]; the generated code is compiled with warnings as errors
+   often enough that this is not worth the argument.
+
+   And the fill has to be a constant.  For zero that is all that is needed:
+   [{ 0 }] zero-initializes the *whole* array however long it is, and the
+   length never enters the text.  For any other value C has no repetition
+   syntax, so the value is written out once per cell and the length is capped
+   -- past the cap the loop is both shorter and clearer, and a thousand copies
+   of a literal is not an improvement on three lines. *)
 and emit_alloc (ind:string) (d:dest) (lt:lifetime) (t:cty) (init:expr) (len:expr) : ML string =
   let out = mk_ref "" in
   let iv = c_rvalue out ind init.ty init in
@@ -2060,6 +2096,39 @@ and emit_alloc (ind:string) (d:dest) (lt:lifetime) (t:cty) (init:expr) (len:expr
     !out ^ ind ^ decl_of elt_of arr ^ " = " ^ iv ^ ";\n" ^
     finish ind d ("&" ^ arr)
   else
+  (* Section 94.  A scalar is what [{ 0 }] initializes without
+     [-Wmissing-braces] having anything to say about it. *)
+  let scalar_elt =
+    match elt_of with
+    | TInt _ | TFloat _ | TBuf _ | TRef _ -> true
+    | TApp (n, []) -> Some "bool" = builtin_type n
+    | _ -> false in
+  let const_len =
+    match len.e with
+    | EConst (CInt (n, _, _)) when n > 0 -> Some n
+    | _ -> None in
+  (* A null pointer is a zero fill: [{ 0 }] gives a null pointer, whatever the
+     implementation's null happens to be spelled as. *)
+  let zero_init =
+    match init.e with
+    | EConst (CInt (0, _, _)) -> true
+    | EConst (CBool false) -> true
+    | EOp ({ po_op = BufNull }, []) -> true
+    | _ -> false in
+  let const_init = EConst? init.e in
+  let rec repeat (n:int) (acc:list string) : list string =
+    if n <= 0 then acc else repeat (n - 1) (iv :: acc) in
+  match lt, const_len with
+  (* [!out] has to be empty: a hoisted statement means the fill or the length
+     was not the constant it has to be for any of this to apply, and prefixing
+     it to a declaration would put it before the declaration it belongs to. *)
+  | LStack, Some n when scalar_elt && !out = "" &&
+                        (zero_init ||
+                         (const_init && n <= init_list_max)) ->
+    ind ^ decl_of elt_of (arr ^ "[" ^ lv ^ "]") ^ " = { " ^
+    (if zero_init then "0" else String.concat ", " (repeat n [])) ^ " };\n" ^
+    finish ind d arr
+  | _ ->
   let alloc =
     match lt with
     | LStack -> ind ^ decl_of elt_of (arr ^ "[" ^ lv ^ "]") ^ ";\n"

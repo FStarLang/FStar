@@ -18066,6 +18066,92 @@ Erasing `array'`'s ghost fields before keys are built is a bigger hammer than
 the defect needs and would still leave the `core_pcm_ref`, which is not ghost.
 Keeping the name is the repair that matches the cause.
 
+## 94. An initializer where C has one
+
+### 94.1.  A loop for a constant
+
+Every local array Custard emitted was filled by a loop, whatever it was
+filled with:
+
+```c
+uint8_t _cbuf1[8];
+for (size_t _ci2 = (size_t)0U; _ci2 < (size_t)8U; _ci2++)
+  _cbuf1[_ci2] = 0;
+```
+
+That is correct and it is what `emit_alloc` had always written, because the
+one shape it could rely on --- a length and a fill that are both arbitrary
+expressions --- admits nothing else.  But the common case in the Pulse
+sources is neither arbitrary: `A.alloc 0uy 8sz` has a literal for both, and C
+has had syntax for exactly that since it had arrays.  The loop is then eight
+lines of object code, a scratch index in scope, and a reader's obligation to
+check that the bound matches the declared length, in place of a declaration
+that cannot get any of it wrong.
+
+`emit_alloc` now writes the initializer when it can:
+
+```c
+uint8_t _cbuf1[8] = { 0 };
+uint8_t _cbuf1[4] = { 7, 7, 7, 7 };
+```
+
+### 94.2.  Three conditions, none of them stylistic
+
+The initializer is taken only when all three hold, and each rules out a case
+where the loop is not merely tidier but the only legal code.
+
+**The length is a constant.**  A variable-length array *may not be
+initialized* --- C99 6.7.8p3, and every compiler enforces it.  `varlen n`
+below declares `uint8_t _cbuf1[n]` and there is no initializer to give it at
+any size.
+
+**The element type is scalar.**  `{ 0 }` on an aggregate is legal and zeroes
+the whole object, but it initializes only the first member *explicitly*, and
+compilers report the rest under `-Wmissing-braces`.  Custard's output is
+compiled with warnings as errors often enough that this is not a risk worth
+running for a struct array, so the test is `TInt`, `TFloat`, `TBuf`, `TRef`,
+or the `TApp (n, [])` that is how `bool` is spelled --- Custard has no
+`TBool`.
+
+**The fill is a constant.**  A runtime value cannot be repeated by C's
+initializer syntax, so `varfill x` keeps the loop.  A constant one can, but
+only by writing it once per cell, since C has no repetition form either;
+`init_list_max` caps that at 64 cells, above which the loop is smaller than
+the initializer that would replace it.  Zero is exempt from the cap: `{ 0 }`
+covers any length in three characters, and it is the fill that a zeroed
+buffer of any size asks for.
+
+Two further guards fall out of the surrounding code.  A **heap** allocation
+keeps its `malloc` and its loop untouched; there is no declaration to attach
+an initializer to.  And the branch is refused if the length or the fill
+hoisted a statement, since prefixing it would put that statement before the
+declaration it belongs to.
+
+### 94.3.  Pinning the boundary
+
+`ArrInit` has four shapes rather than one, because what is worth pinning
+here is where the change *stops*:
+
+| Shape | Emits |
+| --- | --- |
+| `A.alloc 0uy 8sz` | `uint8_t _cbuf1[8] = { 0 };` |
+| `A.alloc 7uy 4sz` | `uint8_t _cbuf1[4] = { 7, 7, 7, 7 };` |
+| `A.alloc x 4sz` | `uint8_t _cbuf1[4];` and the loop |
+| `A.alloc 0uy n` | `uint8_t _cbuf1[n];` and the loop |
+
+All four are reachable from `main`, which reads a cell out of each and
+returns `0l` only if every answer is the one the fill promised, so the
+initializer is checked for having actually run and not merely for having been
+printed.  The two loop rows are asserted by the *absence* of an initializer
+on the declaration line, which is the only difference the two paths leave in
+the output.
+
+Elsewhere in the suite the change is visible without being asked for:
+`CborBoundarySlice`'s thirty-byte scratch buffer and `PulseBlit`'s
+two-cell one both became declarations, while `PulseHashTable`'s
+variable-length array and the three heap allocations kept the loop.  The
+Pulse suite is unchanged at 30 s.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -18381,3 +18467,4 @@ Keeping the name is the repair that matches the cause.
 | M10θΝ | Absence is not evidence (§91.1) | Done.  §89's classifier read `foreign = free \ params`, so absence from the enclosing declaration's parameters counted as positive evidence that the *external* had the name --- and a nullary root, which is how a Kuiper entry point is written, then made every 390 come out as the external's fault by construction.  The reporter found the three consequences together: the answer is false (`wmma_fragment`'s parameters are `use m n k t l`), the message contradicts itself (case 3 points at the first *Reached through* entry, which is the declaration it has just said the name is not a parameter of), and the inference is invalid.  Membership is now positive on both sides: `extern_binder_names` reads the external's `Sig_declare_typ` binders and `compiled_decl` takes the request chain's head rather than the template type's lid --- `ppname` string comparison is only sound against the right declaration, and `TmplRun.frag (n: nat)` and `TmplRun.make (n: nat)` both have a binder called `n`.  That leaves a fourth case no branch described: a name that is a parameter of neither declaration, which rule 4d structurally cannot demand, and which can only have come from a definition inlined into this one whose binder outlived the inlining --- `name_provenance` reports it from `defbinders`/`letdefs`/`effletdefs`, which the extractor already keeps.  `scan_line` is printed in all four branches; it used to be withheld in exactly the branch that was misclassified, which is how *the scan found no application of an external template at all* --- a scan gap in substance --- cost a local probe to recover.  Their eta-expansion to seven real parameters still 390ing is what makes `params = []` a symptom rather than the cause.  `MonoAttr` measures the remaining question rather than arguing it: `[@@@monomorphize]` on a Pulse `fn` binder does specialize, to `MonoAttr_f__uint_to_t_16` and `_32`.  Nine local reductions of this 390 now pass.  In-tree Pulse suite unchanged at 30 s |
 | M10θΞ | A local name for a constant (§92.2) | Done.  §91's provenance line reproduced the standing error 390 on its first run --- `tm (a local let, bound to: FStar.SizeT.uint_to_t 16)`, the message reporting the constant in the same breath as saying the index does not reduce to one --- and the ten-line reduction it produced is the shape nine earlier attempts had missed: the index is a **local `let`**, not a parameter substituted by beta.  Two independent halves.  First, the reduct: delta re-spells the constant as `FStar.SizeT.v (FStar.SizeT.uint_to_t 16)`, and §86's recogniser saw through `uint_to_t` but not the `v` around it, which has no delta rule that computes on a reconstructed argument; `const_of_arg` now recognises the inverse *pair*, which is what makes it sound --- `v` of anything else is a projection out of a runtime value, and a bare literal is not an inhabitant of the type `v` takes.  Second, and the reason the reporter flagged the discrepancy rather than let it pass: their reduct stops one step earlier, `FStar.SizeT.v tm` with the `let` not reduced at all, so the spelling fix alone would have left them unmoved for the fifth time.  §3.2b's `unfold_lets` already resolves a local `let` on the way to a monomorphization key --- a local `let` is not a runtime parameter, it is a name for a value --- and a template index simply took a different path; it is now put through it and re-normalized before being rejected, second and only when the argument is not already constant.  That is also the general answer to §91's fourth case: rule 4d cannot demand such a name and does not have to, since the value is in `st.letdefs`.  `TmplLet`, `TmplLet2` and `TmplLet3` pin all three shapes, compiled and run.  `MonoAttrI` settles the remaining question: the attribute survives an interface/implementation merge, so it was registered and *irrelevant*, which was their own second explanation.  Also §92.5, from EverParse: a Rust enum's arms are named by the constructor's short name now, as karamel's own extraction writes them, since a variant's arms are scoped to the variant --- the one place their generated crate was not drop-in.  In-tree Pulse suite unchanged at 30 s |
 | M10θΟ | A representation rule is a floor (§93.3) | Done.  §92 cleared the error 390 that had blocked one Kuiper module for six rounds; it now stops further along on an error 368, and the twelve-line reduction mentions nothing of Kuiper's.  A Pulse array in *binder* position is a pointer, because the built-in table (§8.3) maps `Pulse.Lib.Array.Core.array` to `TBuf` and the rule is read off the head fvar.  As a *tuple component* read out by `fst` it has no representation at all: `array` is a delta-constant that unfolds to the record `array'`, whose `core_pcm_ref` is abstract, and both monomorphization reductions (§3.7) carry `UnfoldUntil delta_constant` --- so by the time the type argument reached the emitter the name was gone and `ty_of_typ` requested a record C cannot lay out.  A binder's sort is compiled from the term the programmer wrote; a monomorphization argument is compiled from a normal form, and the normal form has less in it than the term it came from.  So a representation rule is now a **floor**: `has_builtin_type_rule` asks whether a head fvar has a `Rule_type`, and a type argument that had one before the reduction and not after keeps the written form, for the key and the substitution alike.  A *loss* test rather than a ban on unfolding a ruled name --- §3.7's real work routinely ends at a ruled head having started elsewhere, and only the step that walks off the table is refused.  Replacing `fst p` with a pattern match passed throughout, which is what localised it to the projection rather than the tuple or the array.  Both repairs the reporter offered as alternatives are recorded as rejected: `array'` takes no parameter, so ruling it directly gives `void *`.  `ArrTup` covers `fst`, `snd` and `snd (snd p)`, compiled and run.  In-tree Pulse suite unchanged at 30 s |
+| M10θΠ | An initializer where C has one (§94.1) | Done.  A local array with a constant length and a constant fill is what C's initializer syntax is for, and `emit_alloc` wrote a loop for every one of them --- eight lines of object code, a scratch index in scope, and a reader's obligation to check the bound against the declared length, in place of a declaration that cannot get any of it wrong.  It now writes `uint8_t _cbuf1[8] = { 0 };` and `uint8_t _cbuf1[4] = { 7, 7, 7, 7 };`, under three conditions none of which is stylistic: the length must be constant because a **variable-length array may not be initialized at all** (C99 6.7.8p3); the element type must be scalar because `{ 0 }` on an aggregate initializes only the first member explicitly and the rest are reported under `-Wmissing-braces`, which matters when the output is compiled with warnings as errors; and the fill must be constant because C has no way to repeat a runtime value --- and no repetition form for a constant either, so a non-zero fill is written once per cell and capped at 64, above which the loop is the smaller code.  Zero is exempt from the cap, covering any length in three characters.  Heap allocations keep `malloc` and the loop, and the branch is refused if either operand hoisted a statement, which would land before the declaration it belongs to.  `ArrInit` pins the **boundary** rather than the good case: four shapes, the two that take an initializer and the two that must not, all reachable from `main`, which reads a cell out of each so the initializer is checked for having run and not merely for having been printed.  `CborBoundarySlice` and `PulseBlit` picked the change up unasked; `PulseHashTable`'s variable-length array did not.  In-tree Pulse suite unchanged at 30 s |
