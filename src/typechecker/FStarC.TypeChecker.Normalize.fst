@@ -404,6 +404,8 @@ type closure =
   | Dummy                                          //Dummy is a placeholder for a binder when doing strong reduction
 and env = list (option binder & closure & memo subst_t)
 
+type closure_memo = cfg_memo (env & term)
+
 instance showable_memo (a:Type) (_ : showable a) : Tot (showable (memo a)) = {
   show = (fun m -> match !m with
                    | None -> "no_memo"
@@ -420,6 +422,7 @@ type stack_elt =
  | Arg      of closure & aqual & Range.t
  | UnivArgs of list universe & Range.t // NB: universes must be values already, no bvars allowed
  | MemoLazy of cfg_memo (env & term)
+ | Projector of cfg & env & term & args & int & Ident.lident & bool & option int & Range.t
  | Match    of env & option match_returns_ascription & branches & option residual_comp & cfg & Range.t
  | Abs      of env & binders & env & option residual_comp & Range.t //the second env is the first one extended with the binders, for reducing the option lcomp
  | App      of env & term & aqual & Range.t
@@ -427,6 +430,33 @@ type stack_elt =
  | Meta     of env & S.metadata & Range.t
  | Let      of env & binders & letbinding & Range.t
 type stack = list stack_elt
+
+let push_args_env (cfg:cfg) (r:Range.t)
+                  (args:list (arg & env)) (st:stack) : ML stack =
+  List.fold_right
+    (fun ((a, aq), env) stack ->
+      let a =
+        if ((Cfg.cfg_env cfg).erase_erasable_args ||
+            cfg.steps.for_extraction ||
+            cfg.debug.erase_erasable_args)
+           && U.aqual_is_erasable aq
+        then U.exp_unit
+        else a
+      in
+      let env =
+        match (Subst.compress a).n with
+        | Tm_name _
+        | Tm_constant _
+        | Tm_lazy _
+        | Tm_fvar _ -> empty_env
+        | _ -> env
+      in
+      Arg (Clos (env, a, fresh_cfg_memo (), false), aq, r) :: stack)
+    args st
+
+let push_args (cfg:cfg) (r:Range.t) (env:env)
+              (args:args) (st:stack) : ML stack =
+  push_args_env cfg r (args |> List.map (fun a -> (a, env))) st
 
 let head_of t = let hd, _ = U.head_and_args_full t in hd
 
@@ -514,6 +544,7 @@ instance showable_stack_elt : showable stack_elt = {
   show = (function
           | Arg (c, _, _) -> Format.fmt1 "Arg %s" (show c)
           | MemoLazy _ -> "MemoLazy"
+          | Projector _ -> "Projector"
           | Abs (_, bs, _, _, _) -> Format.fmt1 "Abs %s" (show <| List.length bs)
           | UnivArgs us -> "UnivArgs " ^ show us
           | Match   _ -> "Match"
@@ -1351,7 +1382,9 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
                    then match read_memo cfg r with
                         | Some (env, t') ->
                             log cfg  (fun () -> Format.print2 "Lazy hit: %s cached to %s\n" (show t) (show t'));
-                            if maybe_weakly_reduced t'
+                            if Cons? env
+                            then norm cfg env stack t'
+                            else if maybe_weakly_reduced t'
                             then match stack with
                                  | [] when cfg.steps.weak || cfg.steps.compress_uvars ->
                                    rebuild cfg env stack t'
@@ -1449,6 +1482,7 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
                | None -> fallback ()
                | Some stack -> norm cfg env stack t)
             | Match _::_
+            | Projector _::_
             | Let _ :: _
             | App _ :: _
             | CBVApp _ :: _
@@ -1464,34 +1498,9 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
             (* Each argument is pushed together with the environment it lives
                in: they are usually all under [env], but a scrutinee that we
                have already reduced (see below) is closed. *)
-            let push_args_env args stack =
-              List.fold_right
-                (fun ((a, aq), env) stack ->
-                  let a =
-                    if ((Cfg.cfg_env cfg).erase_erasable_args ||
-                        cfg.steps.for_extraction ||
-                        cfg.debug.erase_erasable_args) //just for experimentation
-                    && U.aqual_is_erasable aq //If we're extracting, then erase erasable arguments eagerly
-                    then U.exp_unit
-                    else a
-                  in
-                  // !! Optimization: if the argument we are pushing is an obvious
-                  // value/closed term, then drop the environment. This can save
-                  // a ton of memory, particularly when running tactics in tight loop.
-                  let env =
-                    match (Subst.compress a).n with
-                    | Tm_name _
-                    | Tm_constant _
-                    | Tm_lazy _
-                    | Tm_fvar _ -> empty_env
-                    | _ -> env
-                  in
-                  Arg (Clos(env, a, fresh_cfg_memo (), false),aq,t.pos)::stack)
-                args
-                stack
-            in
+            let push_args_env = push_args_env cfg t.pos in
             let push_args env args stack =
-              push_args_env (args |> List.map (fun a -> (a, env))) stack
+              push_args cfg t.pos env args stack
             in
             let fallback args =
               let stack = push_args_env args stack in
@@ -1544,26 +1553,33 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
              | Some (d, is_disc, n_indexed, idx) when List.length args > n_indexed ->
                let scrutinee0, aq = List.nth args n_indexed in
                let cfg' = whnf_cfg cfg in
-               (* The reduced scrutinee is closed, hence the empty environments
-                  below. *)
-               let scrutinee = norm cfg' env [] scrutinee0 in
-               (match reduce_disc_proj cfg d is_disc idx scrutinee with
-                | None ->
-                  (* Stuck: keep the weak head normal form we just computed
-                     rather than making the enclosing pass recompute it. *)
-                  let args =
-                    args |> List.mapi (fun i a ->
-                      if i = n_indexed then ((scrutinee, aq), empty_env) else (a, env))
-                  in
-                  unfold_fallback args
-                | Some field ->
-                  log cfg (fun () -> Format.print2 "Reduced projector/discriminator %s to %s\n"
-                                                   (show t) (show field));
-                  (* A projector may be over-applied (e.g. [QProc?.wp qc k s0]);
-                     the extra arguments are re-applied to the selected field. *)
-                  let _, rest = BU.first_N (n_indexed + 1) args in
-                  let stack = push_args env rest stack in
-                  norm cfg empty_env stack field)
+               if not cfg.steps.for_extraction
+               then
+                 (* Keep the scrutinee inside the abstract machine.  When it
+                    exposes a constructor, [rebuild] can select the constructor
+                    argument closure itself instead of first closing every
+                    argument with [closure_as_term]. *)
+                 norm cfg' env
+                   (Projector (cfg, env, head, args, n_indexed,
+                               d, is_disc, idx, t.pos) :: stack)
+                   scrutinee0
+               else
+                 (* Extraction may have to unfold a stuck declaration-only
+                    projector into executable code, so retain its old fallback. *)
+                 let scrutinee = norm cfg' env [] scrutinee0 in
+                 (match reduce_disc_proj cfg d is_disc idx scrutinee with
+                  | None ->
+                    let args =
+                      args |> List.mapi (fun i a ->
+                        if i = n_indexed then ((scrutinee, aq), empty_env) else (a, env))
+                    in
+                    unfold_fallback args
+                  | Some field ->
+                    log cfg (fun () -> Format.print2 "Reduced projector/discriminator %s to %s\n"
+                                                     (show t) (show field));
+                    let _, rest = BU.first_N (n_indexed + 1) args in
+                    let stack = push_args env rest stack in
+                    norm cfg empty_env stack field)
              | _ -> fallback (args |> List.map (fun a -> (a, env))))
 
           | Tm_refine {b=x}
@@ -2583,6 +2599,82 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
                                (show bvs);
            failwith "DIE!");
 
+  (* If weak-head evaluation of a projector scrutinee has exposed a
+     constructor, its arguments are still closures on the stack.  Select the
+     requested closure here, before [do_rebuild] turns those arguments into
+     closed terms and loses their environments and memo cells.  [MemoLazy]
+    frames introduced while exposing the projectee are filled with an open
+    constructor over the same argument closures, retaining call-by-need
+    sharing for subsequent projections. *)
+  let rec resume_projector (rev_cargs:list (closure & aqual & Range.t))
+                           (projectee_memos:list closure_memo)
+                           (st:list stack_elt) : ML (option term) =
+    match st with
+    | Arg (c, aq, r) :: st ->
+      resume_projector ((c, aq, r)::rev_cargs) projectee_memos st
+    | MemoLazy memo :: st ->
+      (* Once constructor arguments have appeared, these are thunks whose
+         evaluation exposed the whole projectee (rather than just its head). *)
+      let projectee_memos =
+        if Nil? rev_cargs then projectee_memos else memo :: projectee_memos
+      in
+      resume_projector rev_cargs projectee_memos st
+    | Projector (cfg0, projectee_env, _, args, n_indexed,
+                 d, is_disc, idx, r) :: st ->
+      (match (U.un_uinst t).n with
+       | Tm_fvar c when Env.is_datacon cfg0.tcenv c.fv_name ->
+         let same = Ident.lid_equals c.fv_name d in
+         let cargs = List.rev rev_cargs in
+         let result : option (either term closure) =
+           if is_disc
+           then Some (Inl (if same then U.exp_true_bool else U.exp_false_bool))
+           else if not same
+           then None
+           else match idx with
+                | Some i when List.length cargs > i ->
+                  Some (Inr (let c, _, _ = List.nth cargs i in c))
+                | _ -> None
+         in
+         (match result with
+          | None -> None
+          | Some result ->
+            (* Keep call-by-need sharing for other projections of the same
+               projectee.  Closing the constructor here would again erase the
+               argument closures; instead cache an open constructor whose
+               de Bruijn arguments point into an environment containing those
+               very closures. *)
+            let memo_env =
+              cargs |> List.map (fun (c, _, _) -> (None, c, fresh_memo ()))
+            in
+            let memo_args =
+              cargs |> List.mapi (fun i (_, aq, r) ->
+                let x = S.new_bv (Some r) S.tun in
+                (S.bv_to_tm ({x with index=i}), aq))
+            in
+            let memo_term = U.mk_app t memo_args in
+            projectee_memos |> List.iter (fun memo ->
+              set_memo cfg memo (memo_env, memo_term));
+            let _, rest = BU.first_N (n_indexed + 1) args in
+            let stack = push_args cfg0 r projectee_env rest st in
+            let resume_closure = function
+              | Univ _
+              | Dummy -> failwith "Impossible: projector selected a non-term closure"
+              | Clos (env, tm, memo, fix) ->
+                if not fix || cfg0.steps.zeta || cfg0.steps.zeta_full
+                then match read_memo cfg0 memo with
+                     | Some (env, tm) -> norm cfg0 env stack tm
+                     | None -> norm cfg0 env (MemoLazy memo :: stack) tm
+                else norm cfg0 env stack tm
+            in
+            Some (match result with
+                  | Inl tm -> norm cfg0 empty_env stack tm
+                  | Inr c -> resume_closure c))
+       | _ -> None)
+    | _ -> None
+  in
+  match resume_projector [] [] stack with
+  | Some t -> t
+  | None ->
   let f_opt = is_fext_on_domain t in
   if f_opt |> Some? && (match stack with | Arg _::_ -> true | _ -> false)  //AR: it is crucial to check that (on_domain a #b) is actually applied, else it would be unsound to reduce it to f
   then f_opt |> Option.must |> norm cfg env stack
@@ -2679,6 +2771,26 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
         set_memo cfg r (env, t);
         log cfg  (fun () -> Format.print1 "\tSet memo %s\n" (show t));
         rebuild cfg env stack t
+
+      | Projector (cfg0, projectee_env, head, args, n_indexed,
+                   d, is_disc, idx, r) :: stack ->
+        (match reduce_disc_proj cfg0 d is_disc idx t with
+         | Some field ->
+           let _, rest = BU.first_N (n_indexed + 1) args in
+           let stack = push_args cfg0 r projectee_env rest stack in
+           norm cfg0 empty_env stack field
+         | None ->
+           (* Stuck: retain the WHNF already computed for the projectee, just
+              as the pre-continuation implementation did, so nested stuck
+              projectors remain linear. *)
+           let aq = snd (List.nth args n_indexed) in
+           let args =
+             args |> List.mapi (fun i a ->
+               if i = n_indexed then ((t, aq), empty_env)
+               else (a, projectee_env))
+           in
+           let stack = push_args_env cfg0 r args stack in
+           norm cfg0 projectee_env stack head)
 
       | Let(env', bs, lb, r)::stack ->
         let body = SS.close bs t in
