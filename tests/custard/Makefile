@@ -2069,6 +2069,11 @@ FLAGS_TmplMonoV = --custard_backend C --custard_entry_module TmplMonoV
 CGREP_TmplMonoV += "wm::frag<16> f = wm::mk16(rows)"
 CGREP_TmplMonoV += "TmplMonoV_g_gemm__uint_to_t_16(wm::frag<16> f"
 
+CXX_TESTS += TmplMonoW
+FLAGS_TmplMonoW = --custard_backend C --custard_entry_module TmplMonoW
+CGREP_TmplMonoW += "wm::frag<16> f = wm::mk16(rows)"
+CGREP_TmplMonoW += "TmplMonoW_g_gemm__uint_to_t_16(wm::frag<16> f"
+
 C_TESTS += HnfSig
 FLAGS_HnfSig = --custard_backend C --custard_entry_module HnfSig --custard_norm_budget 200000
 CGREP_HnfSig += "typedef uint32_t HnfSig_t1;"

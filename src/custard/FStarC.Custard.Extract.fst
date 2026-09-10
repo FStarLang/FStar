@@ -1958,7 +1958,23 @@ and is_realized_type (st:state) (l:Ident.lident) : ML bool =
    and into binder sorts, which is what makes those visible here. *)
 and template_index_names (st:state) (ts:list term) : ML (list bv) =
   let acc : ref (list bv) = mk_ref [] in
-  ts |> List.iter (fun t ->
+  (* Section 88.  The scan is syntactic, and a type abbreviation is exactly
+     what makes the syntax it is looking for absent.  [fragment] is an
+     [inline_for_extraction] alias for an application of the template, so the
+     term says [array (fragment et FragAcc tm tn tk FragLAcc)] and the head
+     this is trying to recognise never appears in it.  So an fvar that is not
+     itself a template is unfolded and rescanned.
+
+     Two things keep that from being expensive.  It is attempted only on a
+     subterm that is a *type*, so no value application is entered -- a
+     definition body is mostly value applications, and unfolding those would
+     be extraction all over again.  And [UnfoldOnly [l]] unfolds the one name
+     in hand rather than everything under it; a chain through a second
+     abbreviation reaches this case again for that name, which is what the
+     fuel is for.  Fuel rather than a visited-set because a type abbreviation
+     may be applied to different arguments at each level, so the name is not
+     a sound key. *)
+  let rec scan (fuel:int) (t:term) : ML unit =
     let _ = Visit.visit_term false (fun t ->
       (match (SS.compress t).n with
        | Tm_app _ ->
@@ -1981,11 +1997,31 @@ and template_index_names (st:state) (ts:list term) : ML (list bv) =
                args |> List.iteri (fun i (a, _) ->
                  if mentioned i && not (Mono.is_type_term (tcenv st) a)
                  then acc := FlatSet.elems (Free.names a) @ !acc)
-             | None -> ())
+             | None ->
+               (* [is_ln] first, and it is not a cheap habit but a
+                  correctness condition.  [Visit.visit_term] does not open
+                  binders --- its own source says [FIXME: push binder] --- so
+                  a subterm under a lambda in the body carries loose de
+                  Bruijn indices, and normalizing one fails outright with
+                  [Failed to find r, Env is []].  The terms this is given are
+                  opened at the top, so a binder sort and a codomain always
+                  qualify, which is where an abbreviated template index
+                  actually occurs; an occurrence under an inner binder is
+                  simply not reached, which leaves it exactly where it was
+                  before section 88 rather than anywhere worse. *)
+               if fuel > 0 && FStarC.Syntax.CheckLN.is_ln t &&
+                  Mono.is_type_term (tcenv st) t
+               then match norm_optional st
+                            [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
+                             TcEnv.Beta; TcEnv.Iota;
+                             TcEnv.UnfoldOnly [l]] t with
+                    | Some t' -> if not (U.term_eq t' t) then scan (fuel - 1) t'
+                    | None -> ())
           | _ -> ())
        | _ -> ());
       t) t in
-    ());
+    () in
+  ts |> List.iter (scan 10);
   !acc
 
 and template_demanded (st:state) (t:typ) (def:option term) : ML (list int) =

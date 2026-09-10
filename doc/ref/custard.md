@@ -17426,6 +17426,103 @@ exercise it, because all three of its shapes are reached with an empty
 environment.  Suggesting a guard whose necessity your own test cannot show is
 a better contribution than the test.
 
+## 88. The head the scan looks for is not in the term
+
+Rule 4d (§85) finds a template application by recognising its head.  §86 fixed
+the case where the argument reduced to a value the recogniser could not see.
+This is the third cause of the same error 390, and it is the one where the
+demand is never made at all.
+
+The two are told apart by the reduct the message prints:
+
+```
+§86:  What it reduced to was: 16                  <- reduced, not recognised
+§88:  What it reduced to was: FStar.SizeT.v tm    <- never reduced: tm is free
+```
+
+A free `tm` at the point of the check means no specialization happened on it,
+which means it was classified `Poly`, which means rule 4d made no demand.
+
+### 88.1.  Why no demand was made
+
+The scan is syntactic, and a type abbreviation is exactly what removes from
+the term the head it is looking for.
+
+Kuiper reaches the template through
+`array (fragment et FragAcc tm tn tk FragLAcc)`, where `fragment` is an
+`inline_for_extraction` alias for an application of `wmma_fragment`.  The
+visitor sees `array` and `fragment`; the template's own head appears nowhere.
+So nothing matched, no position was demanded, `tm` stayed a runtime parameter,
+and 390 fired --- with the index still a variable, because nothing had
+substituted anything.
+
+The nesting under `array` was never the difficulty: `Visit.visit_term`
+descends into arguments, and always did.  It was the alias.
+
+### 88.2.  Unfolding, and keeping it cheap
+
+An fvar that is not itself a template is now unfolded and rescanned.  Two
+things keep that from being a second extraction:
+
+  * it is attempted only on a subterm that is a **type**.  A definition body
+    is mostly value applications, and entering those would be unbounded work
+    for a question that only types can answer;
+  * `UnfoldOnly [l]` unfolds the one name in hand rather than everything under
+    it --- the same choice `ty_of_typ` makes for a type-level function, and
+    for the same reason.  A chain through a second alias reaches this case
+    again for that name.
+
+Fuel rather than a visited-set, because a type abbreviation may be applied to
+different arguments at each level, so the name alone is not a sound key.  The
+in-tree Pulse suite is unchanged at 30 seconds.
+
+### 88.3.  The subterm has to be closed first
+
+`Visit.visit_term` does not open binders --- its own source says
+`FIXME: push binder` --- so a subterm under a lambda arrives carrying loose de
+Bruijn indices.  Normalizing one of those does not give a worse answer; it
+fails outright, with `Failure("Failed to find r\nEnv is []")`, which is
+neither a Custard error nor a message anyone can act on.  The first version of
+this took out five Pulse tests that way.
+
+So the unfolding is guarded by `CheckLN.is_ln`.  What the scan is given is
+opened at the top, so a binder sort and a codomain always qualify --- and that
+is where an abbreviated template index occurs, since it is a *type*.  An
+occurrence under an inner binder is not reached, which leaves it where it was
+before this section rather than anywhere worse.
+
+The guard runs before `is_type_term` and not after, because the safety
+condition has to hold before anything else looks at the term.
+
+### 88.4.  Three causes, one error code
+
+Error 390 has now been three different defects: an index that was never
+monomorphized because no rule demanded it (§85), one that was monomorphized
+and whose reduct the recogniser did not recognise (§86), and one whose demand
+was never made because the head had been abbreviated away (§88).
+
+That is not a criticism of the error.  390 is a *check*, and a check fires on
+every path that reaches it wrong; the number of ways to reach it is a property
+of the machinery in front, not of the check.  What is worth keeping is that
+the message distinguished all three without being designed to --- `16` versus
+`FStar.SizeT.v tm` is the whole diagnosis in both cases, and it was the
+reporter reading that line, not the error code, that separated them each time.
+
+### 88.5.  A retracted signal
+
+The reporter withdrew their earlier lead --- that `mono_args=[]` on the
+failing definition was the thing to chase --- on finding that the *working*
+sibling has `mono_args=[]` too, with every binder `Poly` or `Dropped` and
+`cut=0`.  Their original control had been the other 43 definitions in the
+module rather than the one that differed by the least.
+
+The lead was wrong and the work it prompted was not: §85 and §86 are real
+mechanisms with real tests, and both were on the path to this.  Recording it
+because the correction is the useful part --- a control chosen for being
+*near* the failure is worth more than a population average, and a retraction
+that says which control was wrong is worth more than one that just says the
+signal was.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -17735,3 +17832,4 @@ a better contribution than the test.
 | M10θΗ | A template index is a monomorphization demand (§85.1) | Done.  §69 diagnoses a runtime parameter that reaches a template-id with error 390 but nothing arranged for it not to be there: no `classify_demand` rule made a template index `Mono`, since its type is `size_t` and the application it feeds is an ordinary extern, so neither rule 4b nor 4c applied.  Rule 4d demands every argument at a position the spelling mentions, scanning the definition's binder sorts, its body --- `let f = mk tm` hides the application in the `let`'s recorded type --- and, for an `assume val`, its codomain, which previously received no demand at all.  Only *mentioned* positions: a type extern's whole spine has to be constant, but a function extern passes its unmentioned arguments at run time, and demanding those trades 390 for 364.  Error 376's exemption for a `Mono` type binder is extended to a demanded index, which is the same case it already grants --- `wm::frag<16>` does say 16.  Where the demand would claim every runtime binder in front of an impure codomain it is withheld instead, leaving 390 as the diagnosis rather than turning it into 376; the all-`Mono` thunk gap `keep_thunk` records is unchanged |
 | M10θΘ | The printer and the recogniser disagree about a constant (§86.2) | Done.  §85 fixed a template index that *is* the binder; an index written over one --- `frag (SZ.v tm)`, which is how a `nat`-indexed template is passed a `size_t` parameter --- still failed 390.  After specialization the argument is `SZ.v (uint_to_t 16)`, which the compile-time reduction evaluates, and the normalizer returns a closed arithmetic result as a `Tm_lazy` embedding rather than a `Tm_constant`.  `show` forces the thunk, so the error printed `16` while the recogniser that produced the error had seen no constant at all --- a diagnostic contradicting itself, which is how the reporter found it.  `expr_of_term` already called `unlazy_emb` for precisely this reason and said so in a comment; `const_of_arg`, on a different path, did not.  Added in `const_of_arg` so it applies at each wrapper it peels, and again in `template_arg` so the message and the check describe the same term.  `TmplMonoV` is the reporter's reduction: §85's own test was written from the report's description, and the description did not distinguish an index that is a binder from one that is an application over it |
 | M10θΙ | A head question is answered by a whole normal form (§87.1) | Done.  `is_type_sig` asks whether a signature's result is a `Type`, a refinement of one, or `prop`, and reads nothing below the head --- but answered it by fully normalizing the result type.  `U.comp_result` of a Pulse computation is an application of the *opaque* `stt`, so the head does not move and full normalization reduces the arguments instead: separation-logic propositions over a whole heap invariant, computed and discarded.  This is §19.14 one level up, in a place `Mono.strip` cannot reach.  On EverParse's COSE it was 99.5% of extraction --- 874 ms per call over 518 calls on a *three-line* spec.  `Weak; HNF` takes that counter to 8 ms, full COSE from 33 minutes to 37 seconds on the C leg and 31 minutes to 20 on the Rust leg with byte-identical output, and the local Pulse suite from 66 seconds to 30.  It also closes an error 365 open since §74 and never explained: that was this normalization exhausting the default budget, and `--custard_norm_budget 10^9` had been hiding it rather than fixing it.  `is_type` normalizes a refinement's sort itself, which is not optional --- `HNF` does not descend into binder types, the normalizer's weak path only normalizes a sort when its environment and stack are empty, and a refinement reached under a substitution otherwise classifies a type as a value and emits C naming a `typedef` that was never written |
+| M10θΚ | The head the scan looks for is not in the term (§88.1) | Done.  Third cause of error 390, distinguished from §86's by the reduct the message prints: `FStar.SizeT.v tm` with `tm` still free, meaning no specialization happened and rule 4d made no demand at all.  Rule 4d's scan is syntactic and a type abbreviation removes the head it recognises --- Kuiper reaches the template through `array (fragment et FragAcc tm tn tk FragLAcc)`, an `inline_for_extraction` alias, so the template's own head appears nowhere in the term.  The nesting under `array` was never the issue; `Visit.visit_term` always descended into arguments.  An fvar that is not itself a template is now unfolded and rescanned, attempted only on a subterm that is a *type* so no value application is entered, and with `UnfoldOnly [l]` rather than delta so a chain through a second alias reaches the case again for that name --- the same choice `ty_of_typ` makes for a type-level function.  Fuel rather than a visited-set, since an abbreviation may be applied to different arguments at each level.  Guarded by `CheckLN.is_ln`: `Visit.visit_term` does not open binders, so a subterm under a lambda carries loose de Bruijn indices and normalizing one fails outright rather than answering badly --- what the scan is given is opened at the top, so binder sorts and codomains, which is where an abbreviated index occurs, always qualify.  In-tree Pulse suite unchanged at 30 s |
