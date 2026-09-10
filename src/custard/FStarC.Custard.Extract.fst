@@ -374,6 +374,12 @@ type state = {
      demanded is to run rule 4d's scan again on the declaration it belongs
      to.  [None] for a lifted local, where there is nothing to look up. *)
   cur_lid: ref (option Ident.lident);
+  (* Section 91.  The same declarations as [chain], as lids rather than as
+     printed keys.  Error 390's third case has to ask whether a name is a
+     binder of the declaration whose *type* is being compiled, which is the
+     innermost request and not the enclosing definition; parsing that back out
+     of a mangled key string is not something to build a diagnosis on. *)
+  chainlids: ref (list Ident.lident);
   (* The definition of every pure local [let] the extractor is currently
      inside, keyed by its bound variable's index.  Section 3.2b consults it so
      that a [Mono] argument named by a local variable is judged by the value
@@ -465,6 +471,7 @@ let init (deps:Dep.deps) (env:TcEnv.env) : ML state =
   lifted  = SMap.create 20;
   cur     = mk_ref ({ ns = []; id = "custard"; spec = None });
   cur_lid = mk_ref None;
+  chainlids = mk_ref [];
   letdefs = SMap.create 100;
   effletdefs = SMap.create 100;
   defbinders = SMap.create 100;
@@ -1433,7 +1440,9 @@ let rec request (st:state) (k:spec_key) : ML name =
       nm
     | None ->
       let saved = !st.chain in
+      let saved_lids = !st.chainlids in
       st.chain := key :: saved;
+      st.chainlids := l :: saved_lids;
       (* The chain in [st] is what Custard's own errors report; [with_ctx] is
          what an *internal* failure -- a [failwith] from the normalizer, say --
          reports, and without it such a failure names no definition at all. *)
@@ -1441,6 +1450,7 @@ let rec request (st:state) (k:spec_key) : ML name =
                 Prof.timed "extract_lid"
                   (fun () -> extract_lid st l nm k.sk_subst k.sk_holes)) in
       st.chain := saved;
+      st.chainlids := saved_lids;
       SMap.add st.emitted key d;
       note_abbrev st d;
       st.order := key :: !st.order;
@@ -2203,72 +2213,163 @@ and const_of_arg (st:state) (t:term) : ML (option constant) =
      | _ -> None)
   | _ -> None
 
-(* Section 89.  The part of error 390 that says *why* the index is still a
-   runtime value.
+(* Section 89, as corrected by section 91.  The part of error 390 that says
+   *why* the index is still a runtime value.
 
    The message already said what the argument reduced to and which
    declaration it was reached from, and that was enough to establish that
    something was wrong and not enough to establish what.  A free variable in
-   the reduct means the declaration has the index as a runtime parameter, and
-   there are exactly two ways for that to happen: rule 4d never saw an
-   application of the template in the declaration, so it demanded nothing; or
-   it saw one, demanded the parameter, and the caller supplied a value that
-   is not constant.  The first is a gap in the scan and is fixed here; the
-   second is a fact about the program and is fixed there.  Reporting the two
-   the same way is what turned one defect into four failed reductions.
+   the reduct means some declaration has the index as a runtime parameter, and
+   there are four ways for that to happen.  Three concern a declaration's
+   parameters -- the enclosing one's, demanded or not, and the external's own
+   -- and the fourth is a name that is a parameter of neither, left behind by
+   a definition that was inlined into this one.
 
-   The scan is run a second time to say this, which is affordable because
+   §89 had only the first three and decided between them by *absence*: a name
+   not among the enclosing declaration's parameters was taken to be the
+   external's.  That is not evidence.  A nullary root -- which is how a
+   whole-program entry point is often written -- has no parameters at all, so
+   every 390 raised under one came out as the external's fault by
+   construction.  The external's binders are now looked up and the membership
+   is positive, which is what makes the fourth case visible rather than
+   silently absorbed into the third.
+
+   The scan is run a second time to say all this, which is affordable because
    this is the error path and the program is about to stop. *)
-and template_scan_diagnosis (st:state) (a:term) : ML (list Pprint.document) =
-  let free = FlatSet.elems (Free.names a)
-             |> List.map (fun (v:bv) -> Ident.string_of_id v.ppname) in
+and extern_binder_names (st:state) (l:Ident.lident) : ML (list string) =
+  match TcEnv.lookup_sigelt (tcenv st) l with
+  | Some ({ sigel = Sig_declare_typ {t} }) ->
+    let bs, _ = Mono.arrow_formals_unfold (tcenv st) t in
+    bs |> List.map (fun (b:S.binder) -> Ident.string_of_id b.binder_bv.ppname)
+  | _ -> []
+
+(* The declaration whose *type* is being compiled where the error was raised:
+   the innermost request, which is not in general the definition being
+   extracted.  It is the one whose codomain can carry the template, and so the
+   only one whose binders it is meaningful to ask about.  [None] when it *is*
+   the enclosing definition, in which case there is no second declaration and
+   the third case cannot apply. *)
+and compiled_decl (st:state) : ML (option Ident.lident) =
+  match !st.chainlids with
+  | h :: _ ->
+    (match !st.cur_lid with
+     | Some c when Ident.lid_equals c h -> None
+     | _ -> Some h)
+  | [] -> None
+
+(* What Custard already knows about a name it could not reduce away.  A free
+   variable is not an opaque thing: the extractor is standing inside the
+   definition that binds it, and the three maps it keeps while it walks say
+   which kind of binding it is.  Saying so costs nothing and is the difference
+   between "somewhere" and a place to look. *)
+and name_provenance (st:state) (v:bv) : ML string =
+  let key = show v.index in
+  if Some? (SMap.try_find st.defbinders key)
+  then " (a binder of the definition being extracted)"
+  else match SMap.try_find st.letdefs key with
+       | Some d -> " (a local let, bound to: " ^ show d ^ ")"
+       | None ->
+         if Some? (SMap.try_find st.effletdefs key)
+         then " (a local let bound to an effectful computation)"
+         else " (not a binder of this definition, not a local let: it comes \
+               from a definition that was inlined away)"
+
+and template_scan_diagnosis (st:state) (l:Ident.lident) (a:term)
+  : ML (list Pprint.document) =
+  let freev = FlatSet.elems (Free.names a) in
+  let free = freev |> List.map (fun (v:bv) -> Ident.string_of_id v.ppname) in
   if Nil? free then [] else
-  let names = String.concat ", " free in
+  let dedup (xs:list string) : ML (list string) =
+    List.fold_left (fun acc x -> if List.mem x acc then acc else acc @ [x])
+                   [] xs in
+  let names = String.concat ", " (dedup free) in
+  (* Section 91.  What the scan saw is the most useful line in the message and
+     it does not depend on which case this is, so it is said in all of them.
+     It used to be withheld in exactly the case that turned out to be
+     misclassified, which cost the reporter a rebuild to recover it. *)
+  let scan_line (who:string) (apps:list string) : ML Pprint.document =
+    if Nil? apps
+    then text ("Rule 4d's scan of " ^ who ^ " found no application of an \
+                external template at all, so it had nothing to demand from.")
+    else text ("Rule 4d's scan of " ^ who ^ " found: " ^
+               String.concat "; " (dedup apps) ^ ".") in
+  let provenance : list Pprint.document =
+    freev |> List.map (fun (v:bv) ->
+      text ("  " ^ Ident.string_of_id v.ppname ^ name_provenance st v)) in
   match !st.cur_lid with
   | None ->
     [text ("The index mentions " ^ names ^ ", and it is reached from a \
            lifted local function, which rule 4d does not classify: only a \
            top-level declaration's parameters can be demanded.")]
-  | Some l ->
-    match template_scan_report st l with
+  | Some cur ->
+    match template_scan_report st cur with
     | None -> []
     | Some (params, demanded, apps) ->
-      let foreign = free |> List.filter (fun n -> not (List.mem n params)) in
-      let missing = free |> List.filter (fun n ->
-                              List.mem n params && not (List.mem n demanded)) in
-      let dedup (xs:list string) : ML (list string) =
-        List.fold_left (fun acc x -> if List.mem x acc then acc else acc @ [x])
-                       [] xs in
-      let where =
-        if Nil? apps
-        then "found no application of an external template at all"
-        else "found " ^ String.concat "; " (dedup apps) in
-      (* The three cases are three different declarations to go and look at,
-         which is the whole reason for saying any of this. *)
-      if Cons? foreign
+      (* Section 91.  Absence from the enclosing declaration's parameters is
+         not evidence that the *external* has the name.  It used to be read
+         that way, and a declaration with no parameters at all --- a nullary
+         root, which is how Kuiper's entry points are written --- then made
+         every 390 come out as the external's fault by construction.  So the
+         external's own binders are looked up and the membership is
+         positive. *)
+      let dl = compiled_decl st in
+      let ext = match dl with
+                | Some d -> extern_binder_names st d
+                | None -> [] in
+      let owned  = free |> List.filter (fun n -> List.mem n params) in
+      let inext  = free |> List.filter (fun n -> not (List.mem n params) &&
+                                                 List.mem n ext) in
+      let orphan = free |> List.filter (fun n -> not (List.mem n params) &&
+                                                 not (List.mem n ext)) in
+      let missing = owned |> List.filter (fun n -> not (List.mem n demanded)) in
+      if Cons? orphan
       then
-        [text ("The index mentions " ^ String.concat ", " (dedup foreign) ^
-               ", which is not a parameter of " ^ Ident.string_of_lid l ^
-               ".  It is a parameter of the declaration whose type is being \
-               compiled here -- the first one named under \"Reached \
-               through\" below -- and that declaration still has it as a \
-               runtime parameter.");
+        (* The fourth case, and the one no branch used to describe.  The name
+           belongs to neither declaration, which leaves only one place it can
+           have come from: a definition that was inlined into this one, whose
+           binder survived the inlining as a free variable here.  Rule 4d
+           cannot demand it, because demanding is a property of a
+           declaration's parameters and this is not one. *)
+        [text ("The index mentions " ^ String.concat ", " (dedup orphan) ^
+               ", which is a parameter of neither " ^
+               Ident.string_of_lid cur ^ " nor " ^
+               (match dl with
+                | Some d -> "the declaration whose type is being compiled, " ^
+                            Ident.string_of_lid d
+                | None -> "any other declaration: nothing else is being \
+                           compiled here") ^ ".");
+         text "So it came from a definition that was inlined into this one \
+               and whose binder outlived the inlining.  Rule 4d demands \
+               parameters of a declaration, and this is not one of either, \
+               so no demand it could have made would have reached it.";
+         text "What Custard knows about the name:"]
+        @ provenance
+        @ [scan_line (Ident.string_of_lid cur) apps]
+      else if Cons? inext
+      then
+        [text ("The index mentions " ^ String.concat ", " (dedup inext) ^
+               ", which is a parameter of " ^
+               (match dl with Some d -> Ident.string_of_lid d | None -> "?") ^
+               ", the declaration whose type is being compiled here: its own \
+               codomain writes its own parameter into the template-id.");
          text "So the index was never substituted, and the caller's \
                specialization cannot help: an external that writes its own \
                parameter into a template-id has to have that parameter \
-               demanded on its own declaration."]
+               demanded on its own declaration.";
+         scan_line (Ident.string_of_lid cur) apps]
       else if Nil? missing
       then
         [text ("The index mentions " ^ names ^ ", which rule 4d did demand \
-               as compile-time known in " ^ Ident.string_of_lid l ^ ": the \
-               scan " ^ where ^ ".");
+               as compile-time known in " ^ Ident.string_of_lid cur ^ ".");
+         scan_line (Ident.string_of_lid cur) apps;
          text "So this declaration is monomorphic in it, and the value that \
                is not constant was supplied by a caller rather than left \
                behind here.  The request chain below is where to look."]
       else
         [text ("The index mentions " ^ String.concat ", " (dedup missing) ^
                ", which rule 4d did not demand as compile-time known in " ^
-               Ident.string_of_lid l ^ ": the scan " ^ where ^ ".");
+               Ident.string_of_lid cur ^ ".");
+         scan_line (Ident.string_of_lid cur) apps;
          text "Rule 4d demands a parameter when an application of the \
                template is visible in that declaration's type or body.  A \
                parameter it did not demand is one whose occurrence the scan \
@@ -2305,7 +2406,7 @@ and template_arg (st:state) (l:Ident.lident) (i:int) (a:term) : ML cty =
            line to say so. *)
         text ("It is reached while extracting " ^ string_of_name !st.cur ^
               ", which is where the index is still a runtime value.");
-      ] @ template_scan_diagnosis st a' @ [
+      ] @ template_scan_diagnosis st l a' @ [
         text "Either make the argument compile-time known, or drop the \
               placeholder for it from the [@@custard_extern] string, which \
               makes the argument invisible to the target." ]);

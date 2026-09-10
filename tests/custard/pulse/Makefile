@@ -131,6 +131,12 @@ RSGREP_UnitSlice += "v: ((),1usize)"
 # just a C11 compiler with the warnings turned on, and then run.  PulseHashTable is the
 # demanding one -- arrays, a struct-valued cell, and a hash function stored in
 # a record, which becomes a C function pointer.
+C_TESTS += MonoAttr
+FLAGS_MonoAttr = --custard_backend C --custard_entry_module MonoAttr
+CGREP_MonoAttr += "MonoAttr_f__uint_to_t_16(size_t *r)"
+CGREP_MonoAttr += "MonoAttr_f__uint_to_t_32(size_t *r)"
+CNOGREP_MonoAttr += "MonoAttr_f(size_t n"
+
 C_TESTS += PulseBasic
 # Section 58: the pure condition is spelled in the loop header.
 CGREP_PulseBasic += "while (i < n)"

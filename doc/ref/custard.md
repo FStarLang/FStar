@@ -17705,6 +17705,120 @@ whole reason the C leg is the size it is.  A library that wants them exported
 says so by having an entry point that uses them, which is the same answer §7.2
 gives for every other symbol a whole-program extraction drops.
 
+## 91. Absence is not evidence
+
+### 91.1.  A nullary root made every 390 the external's fault
+
+§89 taught error 390 to say *whose* parameter the index is, and Kuiper ran it
+on the 390 they have been reporting since §85.  The answer it gave was the
+third case: `tm` is not a parameter of the enclosing declaration but of the
+external whose type is being compiled, `wmma_fragment`.  Three things were
+wrong with that at once, and the reporter found all three.
+
+The answer is false: `wmma_fragment`'s parameters are `use m n k t l` and
+there is no `tm` among them.  The message also contradicts itself, because
+the third case points the reader at the first entry under *Reached through*,
+and that entry *is* the declaration the same sentence has just said `tm` is
+not a parameter of.  And the classification was reached by
+
+```
+  foreign = free \ params
+```
+
+which reads *absence from the enclosing declaration's parameters* as positive
+evidence that the external has the name.  It is not evidence of anything.  A
+declaration with `params = []` --- a nullary root, which is exactly how a
+Kuiper entry point is written --- makes every free name foreign by
+construction, so every 390 raised under one came out as case 3 whatever the
+truth was.
+
+The fix is to ask the external.  `extern_binder_names` looks up the
+`Sig_declare_typ` and takes its binders' `ppname`s, `compiled_decl` says which
+declaration that is, and the three-way split is now by *positive* membership:
+
+```
+  owned  = free ∩ params
+  inext  = free ∩ ext \ params
+  orphan = free \ params \ ext
+```
+
+`compiled_decl` reads the head of `st.chainlids`, the request chain, rather
+than the template type's own lid, and returns `None` when that head is the
+enclosing definition itself --- in which case there is no second declaration
+and case 3 cannot arise.  Comparing binder identity by `ppname` *string* is
+only sound against the right declaration: `TmplRun.frag (n: nat)` and
+`TmplRun.make (n: nat)` both have a binder spelled `n`, and until the lookup
+was moved to the chain head that coincidence produced a confident and wrong
+case-3 attribution on the one 390 test in the suite.
+
+### 91.2.  The fourth case: a parameter of neither
+
+Making the membership positive immediately leaves a residue that no branch
+described.  If a name is a parameter of neither declaration, then it is not
+something rule 4d could ever have demanded: demanding is a property of a
+*declaration's parameters*, and this is none.  There is only one place such a
+name can come from --- a definition that was inlined into the one being
+extracted, whose binder outlived the inlining as a free variable in the term.
+
+That is the fourth case, and it now says so, with a provenance line per name.
+`name_provenance` asks the three maps the extractor already keeps while it
+walks: `defbinders` (a binder of the definition being extracted), `letdefs` (a
+local `let`, and it prints what it is bound to), `effletdefs` (a local `let`
+bound to an effectful computation), and otherwise the inlining case.  This
+costs nothing --- the maps are there --- and is the difference between
+"somewhere" and a place to look.
+
+The reporter's own bisection is what makes this the right thing to build.  It
+ruled out the two hypotheses that would have been chased next: the third
+element type is not the trigger, and the nullary root is not the trigger
+either, since eta-expanding the root to seven real parameters still 390s.
+That last result is decisive.  It says `params = []` was a *symptom* of the
+misclassification and not the cause of the error, and it says the name is not
+becoming a parameter of anything however the root is written --- which is the
+fourth case exactly.
+
+`scan_line` is also now printed in **all four** branches.  It used to be
+withheld in precisely the branch that turned out to be the misclassified one,
+so recovering "the scan found no application of an external template at all"
+--- the single most useful sentence in the report, and a scan gap in substance
+--- cost the reporter a local probe and a rebuild.
+
+### 91.3.  `[@@@monomorphize]` does work through a Pulse `fn`
+
+The same report asks whether there is a user-side lever, and observes that
+putting `[@@@monomorphize]` on the index binders produced a byte-identical
+message.  Whether the attribute is *seen* at all through Pulse is a question
+that should not be answered from the code, so `tests/custard/pulse/MonoAttr.fst`
+measures it: a Pulse `fn` with `[@@@FStar.Attributes.monomorphize]` on an
+`SZ.t` binder, called at `16sz` and at `32sz`.  It extracts to
+`MonoAttr_f__uint_to_t_16` and `MonoAttr_f__uint_to_t_32`, and the C test
+greps for both names and for the *absence* of an unspecialized
+`MonoAttr_f(size_t n`.
+
+So the mechanism is sound end to end, which §33.3 predicts: `classify_demand`
+unions arrow-binder and lambda-binder attributes positionally, precisely
+because Pulse's `tm_arrow` does not carry them, and rule 3 is checked before
+`is_unspecializable_binder` so the attribute wins wherever it is seen.  A
+failure to specialize is therefore a property of how the *declaration* in
+question is written, not of Pulse binders, and §30.4 already records the shape
+where the advice cannot be followed: a binder that is a record field of a class
+instance has no source position to attach an attribute to.
+
+`MonoAttr` stays in the suite as a control, so that the next report of this
+kind starts from a measurement rather than from an argument.
+
+### 91.4.  Nine reductions
+
+Counting §85 through §91 there are now nine local reductions written to
+reproduce this 390 and nine that pass: the abbreviation chain, the Pulse
+continuation lambda, an `inline_for_extraction` helper holding the only
+template application, a nullary partial-application root over an
+`inline_for_extraction` spec, a local `let`-bound index, and a local function
+applied at two constants, among them.  Custard is more robust on this shape
+than the reports read.  That is the reason the effort went into the message
+rather than into a tenth reduction: the provenance line names the definition
+`tm` actually comes from, on the machine that has the program, in one run.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -18017,3 +18131,4 @@ gives for every other symbol a whole-program extraction drops.
 | M10θΚ | The head the scan looks for is not in the term (§88.1) | Done.  Third cause of error 390, distinguished from §86's by the reduct the message prints: `FStar.SizeT.v tm` with `tm` still free, meaning no specialization happened and rule 4d made no demand at all.  Rule 4d's scan is syntactic and a type abbreviation removes the head it recognises --- Kuiper reaches the template through `array (fragment et FragAcc tm tn tk FragLAcc)`, an `inline_for_extraction` alias, so the template's own head appears nowhere in the term.  The nesting under `array` was never the issue; `Visit.visit_term` always descended into arguments.  An fvar that is not itself a template is now unfolded and rescanned, attempted only on a subterm that is a *type* so no value application is entered, and with `UnfoldOnly [l]` rather than delta so a chain through a second alias reaches the case again for that name --- the same choice `ty_of_typ` makes for a type-level function.  Fuel rather than a visited-set, since an abbreviation may be applied to different arguments at each level.  Guarded by `CheckLN.is_ln`: `Visit.visit_term` does not open binders, so a subterm under a lambda carries loose de Bruijn indices and normalizing one fails outright rather than answering badly --- what the scan is given is opened at the top, so binder sorts and codomains, which is where an abbreviated index occurs, always qualify.  In-tree Pulse suite unchanged at 30 s |
 | M10θΛ | The message does not say whose parameter it is (§89.1) | Done.  Error 390 reports a free variable in a template index, which means some declaration still has that index as a runtime parameter --- but three opposite defects produce that, and the message spelled all three the same way: rule 4d did not demand a parameter of the named declaration (a scan gap in Custard, §88's case), rule 4d did demand it and a caller supplied a non-constant value (the program's case), or the variable is not a parameter of the named declaration at all but of the external whose type is being compiled, whose own codomain writes it into the template-id (§85's withholding, which no caller's specialization can undo).  Six reductions across §85--§88 --- four Kuiper's, two mine, one of them a Pulse `fn` written to test whether the scan could see under a bind's continuation lambda, all six passing --- is the expected cost of reducing a report that could be any of the three, not bad luck.  The scan is now run a second time on the error path, where the program is about to stop and the cost does not matter: `template_scan_terms` split out of `template_demanded` so the report describes the same scan on the same binders, `template_index_scan` returning the applications it recognised alongside the names it demands, and `st.cur_lid` beside `st.cur` because a target name is mangled with a specialization key and cannot be looked up.  On `TmplRun`, in the suite since §72.3, the answer is the third case and had gone unnoticed: `n` is `make`'s parameter, not `helper`'s, and the test had pinned the sentence naming the wrong declaration to change.  Not a fix for Kuiper's 390 and not offered as one --- it is what makes the Kuiper-side bisection they offered look for the right thing.  In-tree Pulse suite unchanged at 30 s |
 | M10θΜ | A unit is a value wherever it stands (§90.2) | Done.  §82 replaced a unit-typed *argument* with `()`, because a call argument was the position that report named; EverParse's Rust leg fails one position over, on a tuple component, and there the crate does not build --- 8 functions print nothing, 3 become missing symbols, `could not compile evercosign (lib)`.  Same cause throughout: `nil` erases to `unit` (§5.5), so a parser's result reaches its caller as a unit-typed *variable*, `PrintMiniRust` deletes a unit-typed `let` and records the binder as `GoneUnit`, and a later use of it is unprintable --- an assumption that holds for F*'s own extraction, which keeps `nil` as a one-variant enum.  The scoping was the mistake and not the position: a value of type `unit` *is* `()` wherever it stands, so the rewrite now runs at every value position --- call arguments, tuple components, constructor arguments, record fields, operator operands --- with the same two exceptions (`EAbort`, and an impure expression hoisted into a `let` first so a call that was there to be performed does not vanish) and the same hoist, which is what makes one rewrite serve all five.  Statement positions are excluded deliberately: an `EIf` branch, an `ESeq` side and an `ELet` right-hand side are where a unit-typed expression is there to be *performed*.  `UnitSlice` is EverParse's shape rather than its size --- a Pulse `fn` over a `Pulse.Lib.Slice.slice`, erased `nil`, a slice read, a tuple --- and reproduced the printer failure verbatim; the slice read is load-bearing, since a pure producer is inlined and the variable never appears.  Also answered the report's second item: the 69 unemitted `uu___is_*` discriminators are dead code correctly dropped, not missing output.  In-tree Pulse suite unchanged at 30 s |
+| M10θΝ | Absence is not evidence (§91.1) | Done.  §89's classifier read `foreign = free \ params`, so absence from the enclosing declaration's parameters counted as positive evidence that the *external* had the name --- and a nullary root, which is how a Kuiper entry point is written, then made every 390 come out as the external's fault by construction.  The reporter found the three consequences together: the answer is false (`wmma_fragment`'s parameters are `use m n k t l`), the message contradicts itself (case 3 points at the first *Reached through* entry, which is the declaration it has just said the name is not a parameter of), and the inference is invalid.  Membership is now positive on both sides: `extern_binder_names` reads the external's `Sig_declare_typ` binders and `compiled_decl` takes the request chain's head rather than the template type's lid --- `ppname` string comparison is only sound against the right declaration, and `TmplRun.frag (n: nat)` and `TmplRun.make (n: nat)` both have a binder called `n`.  That leaves a fourth case no branch described: a name that is a parameter of neither declaration, which rule 4d structurally cannot demand, and which can only have come from a definition inlined into this one whose binder outlived the inlining --- `name_provenance` reports it from `defbinders`/`letdefs`/`effletdefs`, which the extractor already keeps.  `scan_line` is printed in all four branches; it used to be withheld in exactly the branch that was misclassified, which is how *the scan found no application of an external template at all* --- a scan gap in substance --- cost a local probe to recover.  Their eta-expansion to seven real parameters still 390ing is what makes `params = []` a symptom rather than the cause.  `MonoAttr` measures the remaining question rather than arguing it: `[@@@monomorphize]` on a Pulse `fn` binder does specialize, to `MonoAttr_f__uint_to_t_16` and `_32`.  Nine local reductions of this 390 now pass.  In-tree Pulse suite unchanged at 30 s |

@@ -1973,10 +1973,13 @@ EGREP_TmplRun += "extracting TmplRun.helper"
 # external (section 85), so its codomain still mentions it and no caller's
 # specialization can substitute it.  Saying "the index is a runtime value" and
 # leaving the reader to work out whose was worth four failed reductions.
-EGREP_TmplRun += "which is not a parameter of TmplRun.helper"
+EGREP_TmplRun += "which is a parameter of TmplRun.make"
 # Not the whole sentence: the message is wrapped, and a pinned string that
 # crosses a wrap point pins the wrapping rather than the wording.
 EGREP_TmplRun += "have that parameter demanded on its own declaration"
+# Section 91.  And what the scan saw, which is the most useful line in the
+# message and used to be withheld in exactly this branch.
+EGREP_TmplRun += "Rule 4d's scan of TmplRun.helper found: TmplRun.frag"
 
 # Section 73.  A prettified alias of a unit-typed rule: both wrapper layers
 # collapse, and [evercddl_null_left]'s pattern went with them while its body
