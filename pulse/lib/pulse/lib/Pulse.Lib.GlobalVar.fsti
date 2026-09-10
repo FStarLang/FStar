@@ -24,12 +24,18 @@ open Pulse.Lib.Trade
 
 val gvar (#a:Type0) (p:a -> slprop) : Type0
 
+(* Nondeterministic: each application of [mk_gvar] denotes a *distinct*
+   global, since extraction gives every top-level [let] its own call to
+   [init]. If this were a pure function, two syntactically equal
+   applications would be provably equal, while at runtime they are two
+   different objects (issue #4534). [Nd] terminates, so a [gvar] may still
+   be defined at the top level. *)
 val mk_gvar
       (#a:Type0)
       (#p:a -> slprop) 
       {| (x:a -> duplicable (p x)) |}
       (init:unit -> stt a emp (fun x -> p x))
-: gvar p
+: Nd (gvar p)
 
 val read_gvar_ghost (#a:Type0) (#p:a -> slprop) (x:gvar p) : GTot a
 

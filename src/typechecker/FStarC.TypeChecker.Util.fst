@@ -2732,23 +2732,30 @@ let check_has_type_maybe_coerce env (e:term) (lc:comp) (t2:typ) use_eq : ML (ter
   e, lc, (Env.conj_guard g g_c)
 
 /////////////////////////////////////////////////////////////////////////////////
-let check_top_level env g lc : ML (bool & comp) =
+let check_top_level env g lc : ML (top_level_effect_action & comp) =
  Errors.with_ctx "While checking for top-level effects" (fun () ->
   if Debug.medium () then
     Format.print1 "check_top_level, lc = %s\n" (show lc);
   let discharge g =
     force_trivial_guard env g;
-    if U.is_pure_comp lc then true
+    if U.is_pure_comp lc then Keep_effect
     (* An effect marked [@@top_level_effect] may appear at the top level. *)
-    else if Some? (Env.get_top_level_effect env (U.comp_effect_name lc)) then true
+    else if Some? (Env.get_top_level_effect env (U.comp_effect_name lc)) then Keep_effect
     (* An effect with a representation is a value of that representation;
        running it at the top level is meaningless. *)
     else if Env.is_reifiable_effect env (U.comp_effect_name lc) then
       raise_error env Errors.Fatal_UnexpectedEffect [
         text "Effect" ^/^ pp (U.comp_effect_name lc) ^/^ text "cannot be used as a top-level effect"
       ]
+    (* [NDET] computations always terminate, so the definition really does
+       denote a value of its result type and there is nothing to warn about.
+       The effect is still masked: an [NDET] computation is not a function of
+       its definition, so the binding must not be given a defining equation.
+       E.g. `let g1 = f ()` and `let g2 = f ()` for `f : unit -> Nd t` must
+       not be provably equal. *)
+    else if U.is_ndet_effect (U.comp_effect_name lc) then Mask_effect_silently
     (* Otherwise: warn, and mask the effect. *)
-    else false in
+    else Mask_effect_and_warn in
   let g = Rel.solve_deferred_constraints env g in
   let c, g_c = lc, Env.trivial_guard in
   if U.is_total_comp lc

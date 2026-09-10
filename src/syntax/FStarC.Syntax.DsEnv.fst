@@ -1268,9 +1268,8 @@ let try_lookup_record_by_field_name_many env (fieldnames:list lident) : ML _ =
 
 let try_lookup_record_type env (typename:lident) : ML (option record_or_dc) =
   let find_in_cache (name:lident) : ML (option record_or_dc) =
-    let ns, id = ns_of_lid name, ident_of_lid name in
     BU.find_map (peek_record_cache()) (fun record ->
-      if ident_equals (ident_of_lid record.typename) id
+      if lid_equals record.typename name
       then Some record
       else None
     )

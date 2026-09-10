@@ -140,6 +140,9 @@ val is_pure_comp (c:comp) : ML bool
 
 val is_ghost_effect (l:lident) : bool
 val is_div_effect (l:lident) : bool
+
+(* [NDET]/[Ndet]/[Nd]: nondeterministic, but terminating. *)
+val is_ndet_effect (l:lident) : bool
 val is_pure_or_ghost_comp (c:comp) : ML bool
 val is_pure_or_ghost_effect (l:lident) : bool
 val is_pure_or_ghost_function (t:typ) : ML bool

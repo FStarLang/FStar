@@ -176,7 +176,20 @@ val maybe_instantiate : env -> term -> typ -> ML (term & typ & guard_t)
 val check_has_type : env -> term -> t:typ -> t':typ -> use_eq:bool -> ML guard_t
 val check_has_type_maybe_coerce : env -> term -> comp -> typ -> bool -> ML (term & comp & guard_t)
 
-val check_top_level: env -> guard_t -> comp -> ML (bool & comp)
+(* What to do with the effect of a top-level let binding. *)
+type top_level_effect_action =
+  (* The computation is pure, or its effect is explicitly allowed at the top
+     level: keep it as-is. *)
+  | Keep_effect
+  (* The computation always terminates, so it really does denote a value of
+     its result type, but it is not a function of its definition: mask the
+     effect, but do not warn and do not demand that the type be inhabited. *)
+  | Mask_effect_silently
+  (* The computation may diverge: mask the effect, warn, and demand a proof
+     that the result type is inhabited. *)
+  | Mask_effect_and_warn
+
+val check_top_level: env -> guard_t -> comp -> ML (top_level_effect_action & comp)
 
 val short_circuit: term -> args -> ML guard_formula
 val short_circuit_head: term -> ML bool

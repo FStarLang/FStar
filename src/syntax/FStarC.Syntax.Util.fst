@@ -355,6 +355,8 @@ let is_ghost_effect l = PC.is_ghost_effect_lid l
 
 let is_div_effect l = PC.is_div_effect_lid l
 
+let is_ndet_effect l = PC.is_ndet_effect_lid l
+
 let is_pure_or_ghost_comp c = is_pure_comp c || is_ghost_effect (comp_effect_name c)
 
 let is_pure_or_ghost_effect l = is_pure_effect l || is_ghost_effect l

@@ -277,10 +277,13 @@ let effect_Ghost_lid = pconst "Ghost"
 let effect_DIV_lid   = psconst "DIV"
 let effect_Div_lid   = psconst "Div"
 let effect_Dv_lid    = psconst "Dv"
+let effect_NDET_lid  = psconst "NDET"
+let effect_Ndet_lid  = psconst "Ndet"
+let effect_Nd_lid    = psconst "Nd"
 
 (* Canonical classification of the primitive effects.
 
-   Each of the three primitive effects has several spellings: the
+   Each of the four primitive effects has several spellings: the
    effect itself, and abbreviations of it.  Which one of them is the
    *primitive* one is a property of Prims, not of the compiler, so every
    place that needs to ask "is this the pure effect?" must go through
@@ -289,10 +292,10 @@ let effect_Dv_lid    = psconst "Dv"
    usual entry points.
 
    A computation type carries no specification any more, so these classes are
-   purely about the effect: [Pure]/[Ghost]/[Dv] are front-end abbreviations that
-   ToSyntax unfolds to [Tot]/[GTot]/[Div].  A test that really means "is this
-   literally a [Tot]?" is a different question, and has its own predicates
-   ([is_tot_lid] and friends) just below. *)
+   purely about the effect: [Pure]/[Ghost]/[Dv]/[Nd] are front-end
+   abbreviations that ToSyntax unfolds to [Tot]/[GTot]/[Div]/[NDET].  A test
+   that really means "is this literally a [Tot]?" is a different question, and
+   has its own predicates ([is_tot_lid] and friends) just below. *)
 let is_pure_effect_lid (l:lident) : bool =
      lid_equals l effect_Tot_lid
   || lid_equals l effect_PURE_lid
@@ -308,15 +311,27 @@ let is_div_effect_lid (l:lident) : bool =
   || lid_equals l effect_Div_lid
   || lid_equals l effect_Dv_lid
 
-(* The *primitive* spelling of each of the three built-in effects, i.e. the
-   one Prims actually declares (the others being abbreviations of it).
+(* [NDET] is nondeterministic but *terminating*, so it sits strictly between
+   the pure and the divergent class: [Tot ~> NDET ~> Div].  It is therefore
+   both a lift source and a lift target, and cannot be folded into either
+   neighbouring class -- a site that accepts "pure or ndet" and a site that
+   accepts "ndet or div" are asking different questions and both occur. *)
+let is_ndet_effect_lid (l:lident) : bool =
+     lid_equals l effect_NDET_lid
+  || lid_equals l effect_Ndet_lid
+  || lid_equals l effect_Nd_lid
+
+(* The *primitive* spelling of each of the four built-in effects, i.e. the
+   one Prims (or FStar.Pervasives, for [NDET]) actually declares (the others
+   being abbreviations of it).
 
    Code that *constructs* a computation type must use these rather than
    naming a spelling directly, so that changing which spelling is primitive
-   is a change to these three definitions alone. *)
+   is a change to these definitions alone. *)
 let primitive_pure_lid  = effect_Tot_lid
 let primitive_ghost_lid = effect_GTot_lid
 let primitive_div_lid   = effect_Div_lid
+let primitive_ndet_lid  = effect_NDET_lid
 
 (* Is [l] the name of the pure (resp. ghost) *computation type*, i.e. exactly
    [Tot] (resp. [GTot])?
@@ -585,7 +600,7 @@ let fext_on_dom_g_lid = fext_lid "on_dom_g"
 
 let sealed_lid      = p2l ["FStar"; "Sealed"; "sealed"]
 let seal_lid        = p2l ["FStar"; "Sealed"; "seal"]
-let unseal_lid      = p2l ["FStar"; "Stubs"; "Tactics"; "Unseal"; "unseal"] (* In a separate module due to the mention of TAC *)
+let unseal_lid      = p2l ["FStar"; "Sealed"; "unseal"]
 let map_seal_lid    = p2l ["FStar"; "Sealed"; "map_seal"]
 let bind_seal_lid   = p2l ["FStar"; "Sealed"; "bind_seal"]
 let tref_lid        = p2l ["FStar"; "Stubs"; "Tactics"; "Types"; "tref"]

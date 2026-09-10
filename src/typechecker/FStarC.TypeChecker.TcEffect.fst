@@ -195,11 +195,13 @@ let tc_lift env (sub:S.sub_eff) (r:Range.t) : ML S.sub_eff =
       if Some? ed_tgt.combinators
       && not (U.is_pure_effect sub.source ||
               U.is_div_effect sub.source ||
+              U.is_ndet_effect sub.source ||
               U.is_ghost_effect sub.source)
       then raise_error r Errors.Fatal_UnexpectedEffect
              (Format.fmt2 "Effect %s has a representation, so the lift from %s must be \
-                           given explicitly: only a pure, ghost or divergent computation \
-                           can be lifted with the target's return combinator"
+                           given explicitly: only a pure, ghost, nondeterministic or \
+                           divergent computation can be lifted with the target's return \
+                           combinator"
                 (string_of_lid sub.target) (string_of_lid sub.source));
       None
     | Some ts ->

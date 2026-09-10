@@ -4438,17 +4438,14 @@ and check_top_level_let env e : ML _ =
          (* Check that it doesn't have a top-level effect; warn if it does.
             Do not warn in phase1 to avoid double errors.*)
          let e2, c1 =
-           let ok, c1 = TcUtil.check_top_level (Env.push_univ_vars env univ_vars) g1 c1 in //check that it has no effect and a trivial pre-condition
-           if ok
-           then e2, c1
-           else (
-             (* The effect is about to be masked: a possibly-divergent
-                computation of type [t] becomes a value of type [t].  A
-                refinement inferred for [t] is the computation's postcondition,
-                and under partial correctness that only holds if the
-                computation returned -- so it cannot be claimed of a value.
-                Drop it, unless the user wrote the type down, in which case it
-                is their claim to make (and to justify below). *)
+           let action, c1 = TcUtil.check_top_level (Env.push_univ_vars env univ_vars) g1 c1 in //check that it has no effect and a trivial pre-condition
+           match action with
+           | TcUtil.Keep_effect -> e2, c1
+           | TcUtil.Mask_effect_silently
+           | TcUtil.Mask_effect_and_warn ->
+             (* The effect is about to be masked: a computation of type [t]
+                becomes a value of type [t], and [c1]'s result type is what the
+                rest of the module will see. *)
              let c1 =
                match topt with
                | Some t when not env.generalize ->
@@ -4463,17 +4460,37 @@ and check_top_level_let env e : ML _ =
                     claim to make -- keep it, so the inhabitation check below
                     is about the type they wrote. *)
                  c1
-               | None -> U.set_result_typ c1 (U.unrefine (U.comp_result c1)) in
-             if not env.phase1 then (
+               | None ->
+                 if TcUtil.Mask_effect_silently? action
+                 then
+                   (* A terminating effect returns, so its postcondition really
+                      does hold of the value and may be published.  This cannot
+                      leak a *defining* equation [_ == e1] and so cannot identify
+                      two calls of a nondeterministic computation: such an
+                      equation is only ever introduced by
+                      [maybe_assume_result_eq_pure_term], which [should_return]
+                      gates on the computation being pure or ghost. *)
+                   c1
+                 else
+                   (* A refinement inferred for [t] is the computation's
+                      postcondition, and under partial correctness that only
+                      holds if the computation returned -- so it cannot be
+                      claimed of a value.  Drop it. *)
+                   U.set_result_typ c1 (U.unrefine (U.comp_result c1)) in
+             if TcUtil.Mask_effect_and_warn? action && not env.phase1 then (
                Err.warn_top_level_effect (Env.get_range env); // maybe warn
                (* The effect of e1 is about to be masked, i.e., we are turning a
                   possibly-divergent computation of type t into a value of type t.
                   That is only sound if t is actually inhabited, so we demand a
-                  proof of it. See issue #4401. *)
+                  proof of it. See issue #4401. A terminating effect needs no
+                  such proof: the computation itself witnesses the type. *)
                check_nonempty_result (Env.push_univ_vars env univ_vars) (U.comp_result c1)
              );
-             mk (Tm_meta {tm=e2; meta=Meta_desugared Masked_effect}) e2.pos, c1 //and tag it as masking an effect
-           )
+             (* Tag it as masking an effect. This suppresses the defining
+                equation in the SMT encoding and blocks delta-unfolding, which
+                is what makes two syntactically equal definitions of a
+                nondeterministic (or divergent) computation distinguishable. *)
+             mk (Tm_meta {tm=e2; meta=Meta_desugared Masked_effect}) e2.pos, c1
          in
 
          (* Unfold all @tcnorm subterms in the binding *)

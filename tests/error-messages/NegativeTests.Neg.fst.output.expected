@@ -69,7 +69,7 @@
   - The SMT solver could not prove the query.
   - Failed to prove: V? ri
   - In context: ri: FStar.Pervasives.result Prims.int
-  - See also FStar.Pervasives.fsti(221,4-221,5)
+  - See also FStar.Pervasives.fsti(255,4-255,5)
 
 * Info at NegativeTests.Neg.fst(55,25-55,26):
   - Expected failure:
