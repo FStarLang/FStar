@@ -132,7 +132,6 @@ RSGREP_UnitSlice += "v: ((),1usize)"
 # demanding one -- arrays, a struct-valued cell, and a hash function stored in
 # a record, which becomes a C function pointer.
 C_TESTS += MonoAttr
-FLAGS_MonoAttr = --custard_backend C --custard_entry_module MonoAttr
 CGREP_MonoAttr += "MonoAttr_f__uint_to_t_16(size_t *r)"
 CGREP_MonoAttr += "MonoAttr_f__uint_to_t_32(size_t *r)"
 CNOGREP_MonoAttr += "MonoAttr_f(size_t n"
@@ -141,10 +140,16 @@ CNOGREP_MonoAttr += "MonoAttr_f(size_t n"
 # which is the one structural difference between MonoAttr and the declaration
 # Kuiper annotated.  The attribute survives the merge.
 C_TESTS += MonoAttrI
-FLAGS_MonoAttrI = --custard_backend C --custard_entry_module MonoAttrI
 CGREP_MonoAttrI += "MonoAttrI_f__uint_to_t_16"
 CGREP_MonoAttrI += "MonoAttrI_f__uint_to_t_32"
 CNOGREP_MonoAttrI += "MonoAttrI_f(size_t n"
+
+# Section 93.  An array is a pointer wherever it stands: as a parameter, and
+# as a component of a tuple a monomorphized projection reads out of.
+C_TESTS += ArrTup
+CGREP_ArrTup += "static uint32_t *ArrTup_get_arr(FStar_Pervasives_Native_tuple2__uint32_ptr_unit p)"
+CGREP_ArrTup += "static uint32_t *ArrTup_three(FStar_Pervasives_Native_tuple2__uint32_ptr_tuple2_uint32_ptr_uint32_ptr p)"
+CGREP_ArrTup += "static uint32_t *ArrTup_get_snd(FStar_Pervasives_Native_tuple2__unit_uint32_ptr p)"
 
 C_TESTS += PulseBasic
 # Section 58: the pure condition is spelled in the loop header.

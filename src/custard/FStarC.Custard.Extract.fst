@@ -1940,6 +1940,23 @@ and is_realized_type (st:state) (l:Ident.lident) : ML bool =
   | Some Builtins.Rule_realized -> true
   | _ -> false
 
+(* Section 93.  Whether the head of a type has a built-in *representation*
+   rule -- the table that says [Pulse.Lib.Array.Core.array t] is a pointer and
+   not the record it is defined as.
+
+   Such a rule is read off the head fvar, so it survives exactly as long as
+   the name does.  That makes it a floor for any reduction whose result
+   Custard is going to compile: unfolding past it does not reveal more of the
+   type, it destroys the only thing that says how the type is represented. *)
+and has_builtin_type_rule (st:state) (t:term) : ML bool =
+  let hd, _ = U.head_and_args_full (U.unmeta (U.unascribe t)) in
+  match (U.un_uinst hd).n with
+  | Tm_fvar fv ->
+    (match Builtins.lookup_rule (S.lid_of_fv fv) with
+     | Some (Builtins.Rule_type _) -> true
+     | _ -> false)
+  | _ -> false
+
 (* Section 69.  The target spelling of an external type, split into pieces,
    when that spelling is a *template* -- that is, when it mentions any of the
    type's arguments.
@@ -3469,6 +3486,21 @@ and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
            leaves behind ([fst (x, 1)]); if that happens the two disagree
            about what is a hole, so use the reduced one for both. *)
         let w = if subset (Free.names w) (Free.names t) then w else t in
+        (* Section 93.  A built-in representation rule is a floor.  Both
+           reductions unfold delta-constants, and [Pulse.Lib.Array.Core.array]
+           is one: it unfolds to the record [array'], whose fields are ghost
+           and whose [core_pcm_ref] has no C representation at all.  In binder
+           position the rule fires on the name and the type is a pointer; as a
+           monomorphization argument the name was gone before anything asked,
+           and the same array was rejected by error 368 for being a record
+           Custard cannot lay out.  So a type argument that had a rule before
+           the reduction and does not have one after keeps the form the
+           programmer wrote, for the key and for the substitution alike -- the
+           two must agree, and the written form is the one that still says how
+           the type is represented. *)
+        let t, w =
+          if has_builtin_type_rule st a0 && not (has_builtin_type_rule st t)
+          then a0, a0 else t, w in
         go (i + 1) cs sp ((i, t) :: margs) ((i, w) :: msubst) rest
       | Mono :: _, [] ->
         (* Section 3.2(a): partial application of a specializing definition. *)

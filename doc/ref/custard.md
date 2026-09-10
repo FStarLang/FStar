@@ -17962,6 +17962,110 @@ appearing unfolded in a generated type name is a consequence of
 monomorphizing on unfolded types (§5.0.1): `bstr` and its expansion are the
 same type, and the name follows the shape rather than the source spelling.
 
+## 93. A representation rule is a floor
+
+### 93.1.  The same array, two positions
+
+§92 cleared the error 390 that had blocked one Kuiper module for six rounds.
+The module now gets past it and stops further along, on an error 368 raised
+while compiling the lifted kernel body:
+
+```
+Custard: the abstract type Pulse.Lib.Core.Refs.core_pcm_ref has no C
+representation, in Pulse.Lib.Array.Core.array'.
+```
+
+The reduction is twelve lines and mentions nothing of Kuiper's:
+
+```fstar
+let id_arr (a : A.array U32.t) : A.array U32.t = a          (* passes *)
+let get_arr (p : A.array U32.t & unit) : A.array U32.t = fst p   (* 368 *)
+```
+
+Same array type, same run, same flags.  In **binder** position it is a
+pointer, `uint32_t *`, which is how all sixty-one working modules emit it.  As
+a **tuple component** read out by `fst` it has no representation at all.
+
+Replacing `fst p` with `match p with (a, _) -> a` passes, which localises it
+exactly: the defect is not the tuple and not the array, it is the
+*monomorphization of the projection*.
+
+### 93.2.  What the reduction destroys
+
+`Pulse.Lib.Array.Core.array` is a built-in representation rule (§8.3): the
+table maps the name to `TBuf`, and that is why an array parameter is a
+pointer.  The rule is read off the head fvar, so it lasts exactly as long as
+the name does.
+
+`array` is also a delta-constant.  In the Pulse implementation it is
+
+```fstar
+type array' : Type0 = { ... core_pcm_ref ... }
+let array elt = array'
+```
+
+so unfolding it yields a record whose fields are ghost and whose
+`core_pcm_ref` is abstract.  Both of Custard's monomorphization reductions
+(§3.7) carry `UnfoldUntil delta_constant`, so by the time `fst`'s type
+argument reached the emitter the name was gone --- the key was `array'` and
+the substituted type was `array'` --- and `ty_of_typ` did the only thing left
+to it, which was to request a record it cannot lay out.
+
+That is what makes the two positions differ.  A binder's sort is compiled
+from the term the programmer wrote and the rule fires.  A monomorphization
+argument is compiled from a normal form, and the normal form has less
+information in it than the term it came from.
+
+### 93.3.  A rule is a floor, not a preference
+
+The fix is to say that outright: a built-in representation rule is a **floor**
+for any reduction whose result Custard is going to compile.  Unfolding past it
+does not reveal more of the type; it destroys the only thing that says how the
+type is represented.
+
+`has_builtin_type_rule` asks whether a term's head fvar has a `Rule_type`, and
+in `split_mono_args` a type argument that had a rule before the reduction and
+does not have one after keeps the form the programmer wrote --- for the key
+and for the substitution alike.  The two must agree, and the written form is
+the one that still says how the type is represented.
+
+The condition is deliberately a *loss* test rather than a blanket ban on
+unfolding a ruled name.  A reduction that starts at a ruled head and ends at
+one has lost nothing, and the reductions §3.7 exists to perform --- collapsing
+a dictionary, folding a type-level `match` down to a concrete type ---
+routinely end at a ruled head having started somewhere else entirely.  Only
+the step that walks *off* the table is refused.
+
+The cost is the same one §3.7's budget fallback already pays: two spellings of
+one type may key differently and be compiled twice.  That is the direction to
+err in, since the alternative is not compiling at all.
+
+### 93.4.  Why this had to be fixed rather than worked around
+
+Kuiper's shared-memory descriptors are a type-level fold,
+
+```fstar
+let rec c_shmems (d : list shmem_desc) : Type0 =
+  match d with
+  | [] -> unit
+  | d :: ds -> c_shmem d & c_shmems ds
+```
+
+so a nested tuple of arrays is what the type *is*, not an incidental
+encoding.  `ArrTup` covers that shape at the depth their epilogue reads it:
+`fst`, `snd`, and `snd (snd p)` on a two-deep nest, all four compiled and run.
+`id_arr` is the control, though it is an identity and is inlined away, so what
+actually pins the binder position is `get_arr`'s *result* type --- the same
+array reaching the same emitter as `uint32_t *`.
+
+The two repairs the reporter offered as alternatives are worth recording as
+rejected.  Applying the pointer representation to `array'` directly cannot
+work: `array'` takes no parameter --- `let array elt = array'` drops it --- so
+the element type is not recoverable from it and the answer would be `void *`.
+Erasing `array'`'s ghost fields before keys are built is a bigger hammer than
+the defect needs and would still leave the `core_pcm_ref`, which is not ghost.
+Keeping the name is the repair that matches the cause.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -18276,3 +18380,4 @@ same type, and the name follows the shape rather than the source spelling.
 | M10θΜ | A unit is a value wherever it stands (§90.2) | Done.  §82 replaced a unit-typed *argument* with `()`, because a call argument was the position that report named; EverParse's Rust leg fails one position over, on a tuple component, and there the crate does not build --- 8 functions print nothing, 3 become missing symbols, `could not compile evercosign (lib)`.  Same cause throughout: `nil` erases to `unit` (§5.5), so a parser's result reaches its caller as a unit-typed *variable*, `PrintMiniRust` deletes a unit-typed `let` and records the binder as `GoneUnit`, and a later use of it is unprintable --- an assumption that holds for F*'s own extraction, which keeps `nil` as a one-variant enum.  The scoping was the mistake and not the position: a value of type `unit` *is* `()` wherever it stands, so the rewrite now runs at every value position --- call arguments, tuple components, constructor arguments, record fields, operator operands --- with the same two exceptions (`EAbort`, and an impure expression hoisted into a `let` first so a call that was there to be performed does not vanish) and the same hoist, which is what makes one rewrite serve all five.  Statement positions are excluded deliberately: an `EIf` branch, an `ESeq` side and an `ELet` right-hand side are where a unit-typed expression is there to be *performed*.  `UnitSlice` is EverParse's shape rather than its size --- a Pulse `fn` over a `Pulse.Lib.Slice.slice`, erased `nil`, a slice read, a tuple --- and reproduced the printer failure verbatim; the slice read is load-bearing, since a pure producer is inlined and the variable never appears.  Also answered the report's second item: the 69 unemitted `uu___is_*` discriminators are dead code correctly dropped, not missing output.  In-tree Pulse suite unchanged at 30 s |
 | M10θΝ | Absence is not evidence (§91.1) | Done.  §89's classifier read `foreign = free \ params`, so absence from the enclosing declaration's parameters counted as positive evidence that the *external* had the name --- and a nullary root, which is how a Kuiper entry point is written, then made every 390 come out as the external's fault by construction.  The reporter found the three consequences together: the answer is false (`wmma_fragment`'s parameters are `use m n k t l`), the message contradicts itself (case 3 points at the first *Reached through* entry, which is the declaration it has just said the name is not a parameter of), and the inference is invalid.  Membership is now positive on both sides: `extern_binder_names` reads the external's `Sig_declare_typ` binders and `compiled_decl` takes the request chain's head rather than the template type's lid --- `ppname` string comparison is only sound against the right declaration, and `TmplRun.frag (n: nat)` and `TmplRun.make (n: nat)` both have a binder called `n`.  That leaves a fourth case no branch described: a name that is a parameter of neither declaration, which rule 4d structurally cannot demand, and which can only have come from a definition inlined into this one whose binder outlived the inlining --- `name_provenance` reports it from `defbinders`/`letdefs`/`effletdefs`, which the extractor already keeps.  `scan_line` is printed in all four branches; it used to be withheld in exactly the branch that was misclassified, which is how *the scan found no application of an external template at all* --- a scan gap in substance --- cost a local probe to recover.  Their eta-expansion to seven real parameters still 390ing is what makes `params = []` a symptom rather than the cause.  `MonoAttr` measures the remaining question rather than arguing it: `[@@@monomorphize]` on a Pulse `fn` binder does specialize, to `MonoAttr_f__uint_to_t_16` and `_32`.  Nine local reductions of this 390 now pass.  In-tree Pulse suite unchanged at 30 s |
 | M10θΞ | A local name for a constant (§92.2) | Done.  §91's provenance line reproduced the standing error 390 on its first run --- `tm (a local let, bound to: FStar.SizeT.uint_to_t 16)`, the message reporting the constant in the same breath as saying the index does not reduce to one --- and the ten-line reduction it produced is the shape nine earlier attempts had missed: the index is a **local `let`**, not a parameter substituted by beta.  Two independent halves.  First, the reduct: delta re-spells the constant as `FStar.SizeT.v (FStar.SizeT.uint_to_t 16)`, and §86's recogniser saw through `uint_to_t` but not the `v` around it, which has no delta rule that computes on a reconstructed argument; `const_of_arg` now recognises the inverse *pair*, which is what makes it sound --- `v` of anything else is a projection out of a runtime value, and a bare literal is not an inhabitant of the type `v` takes.  Second, and the reason the reporter flagged the discrepancy rather than let it pass: their reduct stops one step earlier, `FStar.SizeT.v tm` with the `let` not reduced at all, so the spelling fix alone would have left them unmoved for the fifth time.  §3.2b's `unfold_lets` already resolves a local `let` on the way to a monomorphization key --- a local `let` is not a runtime parameter, it is a name for a value --- and a template index simply took a different path; it is now put through it and re-normalized before being rejected, second and only when the argument is not already constant.  That is also the general answer to §91's fourth case: rule 4d cannot demand such a name and does not have to, since the value is in `st.letdefs`.  `TmplLet`, `TmplLet2` and `TmplLet3` pin all three shapes, compiled and run.  `MonoAttrI` settles the remaining question: the attribute survives an interface/implementation merge, so it was registered and *irrelevant*, which was their own second explanation.  Also §92.5, from EverParse: a Rust enum's arms are named by the constructor's short name now, as karamel's own extraction writes them, since a variant's arms are scoped to the variant --- the one place their generated crate was not drop-in.  In-tree Pulse suite unchanged at 30 s |
+| M10θΟ | A representation rule is a floor (§93.3) | Done.  §92 cleared the error 390 that had blocked one Kuiper module for six rounds; it now stops further along on an error 368, and the twelve-line reduction mentions nothing of Kuiper's.  A Pulse array in *binder* position is a pointer, because the built-in table (§8.3) maps `Pulse.Lib.Array.Core.array` to `TBuf` and the rule is read off the head fvar.  As a *tuple component* read out by `fst` it has no representation at all: `array` is a delta-constant that unfolds to the record `array'`, whose `core_pcm_ref` is abstract, and both monomorphization reductions (§3.7) carry `UnfoldUntil delta_constant` --- so by the time the type argument reached the emitter the name was gone and `ty_of_typ` requested a record C cannot lay out.  A binder's sort is compiled from the term the programmer wrote; a monomorphization argument is compiled from a normal form, and the normal form has less in it than the term it came from.  So a representation rule is now a **floor**: `has_builtin_type_rule` asks whether a head fvar has a `Rule_type`, and a type argument that had one before the reduction and not after keeps the written form, for the key and the substitution alike.  A *loss* test rather than a ban on unfolding a ruled name --- §3.7's real work routinely ends at a ruled head having started elsewhere, and only the step that walks off the table is refused.  Replacing `fst p` with a pattern match passed throughout, which is what localised it to the projection rather than the tuple or the array.  Both repairs the reporter offered as alternatives are recorded as rejected: `array'` takes no parameter, so ruling it directly gives `void *`.  `ArrTup` covers `fst`, `snd` and `snd (snd p)`, compiled and run.  In-tree Pulse suite unchanged at 30 s |
