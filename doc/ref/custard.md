@@ -17338,6 +17338,94 @@ description distinguished them.  `TmplMonoV` is the reporter's own reduction,
 and it is in the tree now.  The lesson is the ordinary one about a
 regression test derived from a summary: it tests the summary.
 
+## 87. A head question is answered by a whole normal form
+
+`is_type_sig` asks one thing: is the result of this signature a `Type`, a
+refinement of one, or `prop`?  It answered it by fully normalizing the result
+type.
+
+On EverParse's COSE that was 99.5% of extraction.  A profile of a *three-line*
+CDDL spec, with the counters split per call site:
+
+```
+452819 ms	norm:a type signature	(518 calls)     <-- 874 ms each
+   209 ms	norm:a definition body	(214 calls)
+     8 ms	norm:a monomorphized argument
+```
+
+Everything Custard does other than answering this one question summed to about
+two seconds.
+
+### 87.1.  Why it cost that much
+
+`U.comp_result` of a Pulse computation is an application of an *opaque* type
+constructor --- `stt a pre post`.  Nothing unfolds `stt`, so the head does not
+move; full normalization goes on to reduce the arguments instead, which are
+separation-logic propositions over an entire heap invariant.  They are
+computed in full and then discarded, because `is_type` looks at the head fvar
+and at nothing else.
+
+This is §19.14 one level up.  That section describes exactly this waste for a
+refinement, and `Mono.strip` fixes it syntactically by peeling the refinement
+before the normalizer sees it.  A computation type's arguments are the same
+waste in a place `Mono.strip` cannot reach.
+
+### 87.2.  The fix
+
+`Weak; HNF` in front of the step list: ask for the head normal form that is
+the only thing read.  The counter above went from 452,819 ms to 8 ms on the
+same 518 calls, and full COSE from 33 minutes to 37 seconds on the C leg and from
+31 minutes to 20 seconds on the Rust leg, with the emitted `.c`, `.h` and
+`.krml` byte-identical in every case.  Locally the Pulse suite halves, 66
+seconds to 30.
+
+It also closes an error 365 that had been open since §74 and never explained:
+budget exhausted, "while normalizing a type signature", on that same
+three-line spec at the *default* budget.  Every harness downstream has carried
+`--custard_norm_budget 1000000000` since to get past it.  The budget was never
+the problem; it was hiding this.  A normalization 56,000 times larger than the
+question it answers will exhaust any budget eventually, and raising the budget
+only moves the point at which it does.
+
+### 87.3.  The refinement sort, which is not optional
+
+`HNF` is documented as not descending into function arguments *or into binder
+types*, and `is_type` recurses into a refinement's sort.  So a refinement over
+an abbreviation --- `a: u0 { hasEq a }` where `u0 = Type0` --- is the one
+shape a head normal form could answer differently, by leaving `u0` unreduced
+where `is_type` needs a `Tm_type`.
+
+The normalizer's weak path does normalize a refinement's sort, but only when
+its environment and stack are both empty; the code says so and marks the rest
+`TODO: Make this work in general!`.  A bare `eqtype` therefore survives, and
+`eqtype`, `myeq` and `u0` all still classify as types with `Weak; HNF` alone.
+
+A refinement reached *under a substitution* does not.  `type paramrefine
+(dummy: u0) = a: u0 { hasEq a }` is reached with a non-empty environment, the
+weak path falls through to `closure_as_term`, and the sort comes back
+unreduced.  `let t4 : paramrefine bool = FStar.UInt16.t` is then classified as
+a value: no `typedef` is emitted for it, and every use of `t4` in the
+generated C names a type that does not exist.  That is a miscompilation, not a
+diagnostic --- the C compiler catches it, and only because something happened
+to use the abbreviation.
+
+So `is_type` normalizes the sort itself before recursing.  It is on the rare
+path --- a refinement in the head position of a signature --- and what it
+normalizes is a type rather than the proposition §19.14 is about, so it costs
+nothing measurable.  `HnfSig`'s `t4` is that case, and it fails to compile
+without this line.
+
+### 87.4.  On the report
+
+The measurement, the localization, the fix and three independent controls ---
+byte-identical output, a classification MWE, and full COSE on both legs ---
+arrived together.  The one thing offered as optional, "re-normalizing
+`b.sort` on the refinement path closes the residual risk entirely", is the
+part that turned out to be load-bearing: the reporter's own `HnfSig` did not
+exercise it, because all three of its shapes are reached with an empty
+environment.  Suggesting a guard whose necessity your own test cannot show is
+a better contribution than the test.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -17646,3 +17734,4 @@ regression test derived from a summary: it tests the summary.
 | M10θΖ | A milestone key is checked for uniqueness (§84) | Done.  Sections refer to milestone rows by key, so a duplicate silently makes one of the two unreachable.  Three were introduced in a row: the series had wrapped and the next free key was guessed from the last one used rather than looked up, which is the right thing to do --- the alternative is scanning a 17,000-line file before adding a row --- so the guess gets a gate rather than a discipline.  `check-doc` refuses a table with two rows under one key and runs in `tests/custard`'s default target.  It found two more predating all of this the moment it was written.  The key with a live reference in the prose keeps it; where neither is referenced the earlier row keeps it |
 | M10θΗ | A template index is a monomorphization demand (§85.1) | Done.  §69 diagnoses a runtime parameter that reaches a template-id with error 390 but nothing arranged for it not to be there: no `classify_demand` rule made a template index `Mono`, since its type is `size_t` and the application it feeds is an ordinary extern, so neither rule 4b nor 4c applied.  Rule 4d demands every argument at a position the spelling mentions, scanning the definition's binder sorts, its body --- `let f = mk tm` hides the application in the `let`'s recorded type --- and, for an `assume val`, its codomain, which previously received no demand at all.  Only *mentioned* positions: a type extern's whole spine has to be constant, but a function extern passes its unmentioned arguments at run time, and demanding those trades 390 for 364.  Error 376's exemption for a `Mono` type binder is extended to a demanded index, which is the same case it already grants --- `wm::frag<16>` does say 16.  Where the demand would claim every runtime binder in front of an impure codomain it is withheld instead, leaving 390 as the diagnosis rather than turning it into 376; the all-`Mono` thunk gap `keep_thunk` records is unchanged |
 | M10θΘ | The printer and the recogniser disagree about a constant (§86.2) | Done.  §85 fixed a template index that *is* the binder; an index written over one --- `frag (SZ.v tm)`, which is how a `nat`-indexed template is passed a `size_t` parameter --- still failed 390.  After specialization the argument is `SZ.v (uint_to_t 16)`, which the compile-time reduction evaluates, and the normalizer returns a closed arithmetic result as a `Tm_lazy` embedding rather than a `Tm_constant`.  `show` forces the thunk, so the error printed `16` while the recogniser that produced the error had seen no constant at all --- a diagnostic contradicting itself, which is how the reporter found it.  `expr_of_term` already called `unlazy_emb` for precisely this reason and said so in a comment; `const_of_arg`, on a different path, did not.  Added in `const_of_arg` so it applies at each wrapper it peels, and again in `template_arg` so the message and the check describe the same term.  `TmplMonoV` is the reporter's reduction: §85's own test was written from the report's description, and the description did not distinguish an index that is a binder from one that is an application over it |
+| M10θΙ | A head question is answered by a whole normal form (§87.1) | Done.  `is_type_sig` asks whether a signature's result is a `Type`, a refinement of one, or `prop`, and reads nothing below the head --- but answered it by fully normalizing the result type.  `U.comp_result` of a Pulse computation is an application of the *opaque* `stt`, so the head does not move and full normalization reduces the arguments instead: separation-logic propositions over a whole heap invariant, computed and discarded.  This is §19.14 one level up, in a place `Mono.strip` cannot reach.  On EverParse's COSE it was 99.5% of extraction --- 874 ms per call over 518 calls on a *three-line* spec.  `Weak; HNF` takes that counter to 8 ms, full COSE from 33 minutes to 37 seconds on the C leg and 31 minutes to 20 on the Rust leg with byte-identical output, and the local Pulse suite from 66 seconds to 30.  It also closes an error 365 open since §74 and never explained: that was this normalization exhausting the default budget, and `--custard_norm_budget 10^9` had been hiding it rather than fixing it.  `is_type` normalizes a refinement's sort itself, which is not optional --- `HNF` does not descend into binder types, the normalizer's weak path only normalizes a sort when its environment and stack are empty, and a refinement reached under a substitution otherwise classifies a type as a value and emits C naming a `typedef` that was never written |

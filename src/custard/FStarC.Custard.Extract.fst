@@ -4160,19 +4160,7 @@ and with_erased_flag (d:decl) : ML decl =
    before we can tell a type declaration from a value declaration. *)
 and is_type_sig (st:state) (t:typ) : ML bool =
   let _, c = U.arrow_formals_comp t in
-  (* Section 19.14.  Strip *before* normalizing, not only after.  A refinement
-     is a proposition, and whether a declaration is a type does not depend on
-     one; handing the whole [x: t{p}] to the normalizer reduces [p] in full
-     and then discards it.  On EverParse's CDDL layer that is a hard stop
-     rather than a cost: [env9 : bundle_env ... { bundle_env_included ... /\
-     ... == wf_ast_env_extend_typ_with_weak ... }] exhausts a budget of 10^9
-     steps in a proof that has no bearing on the answer.  [Mono.strip] is
-     syntactic and costs nothing. *)
-  let res = norm_bounded st "a type signature"
-                         [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
-                          TcEnv.Beta; TcEnv.Iota;
-                          TcEnv.UnfoldUntil delta_constant]
-                         (Mono.strip (U.comp_result c)) in
+  let res = sig_head_norm st (Mono.strip (U.comp_result c)) in
   (* [eqtype] is a refinement of [Type0], so peel refinements too.  [prop] is
      [assume val prop : Type0], i.e. opaque, so the normalizer cannot reduce it
      to a [Tm_type]; but a [prop]-valued definition such as [eq2] or [l_and] is
@@ -4180,11 +4168,45 @@ and is_type_sig (st:state) (t:typ) : ML bool =
   let rec is_type (t:typ) : ML bool =
     match (SS.compress t).n with
     | Tm_type _ -> true
-    | Tm_refine {b} -> is_type b.sort
+    (* Section 87.  [HNF] is documented not to descend into binder types, so
+       the sort of a refinement arrives exactly as it was written.  A
+       refinement over an *abbreviation* -- [a: u0 { hasEq a }] where
+       [u0 = Type0] -- would then be read as a non-type, which is the one way
+       a head normal form can give a different answer here.  Normalizing the
+       sort restores it, and only on this path: a refinement in the head
+       position of a signature is rare, and its sort is a type rather than
+       the proposition section 19.14 is about. *)
+    | Tm_refine {b} -> is_type (sig_head_norm st b.sort)
     | Tm_fvar fv -> S.fv_eq_lid fv PC.prop_lid
     | _ -> false
   in
   is_type res
+
+(* Section 87.  What [is_type_sig] and [is_prop_sig] ask is a question about a
+   *head*: is the result of this signature a [Type], a refinement of one, or
+   [prop]?  Nothing below the head is read.
+
+   Reducing the whole term to answer it is the same waste section 19.14
+   describes for refinements, one level up and out of [Mono.strip]'s reach.
+   [U.comp_result] of a Pulse computation is an application of an *opaque*
+   type constructor -- [stt a pre post] -- so the head does not reduce and
+   full normalization goes on to reduce the arguments instead: separation
+   logic propositions over an entire heap invariant, computed in full and
+   then discarded when [is_type] looks at the fvar.
+
+   [Weak; HNF] asks for what is actually needed.  On EverParse's COSE this
+   was 99.5% of extraction: a full C leg went from 33 minutes to 37 seconds,
+   the Rust leg from 31 to 20, with the emitted output byte-identical in both
+   cases.  It also removes the error 365 that a three-line CDDL spec hit at
+   the *default* budget, which had been worked around with
+   [--custard_norm_budget 10^9] and was never a budget problem. *)
+and sig_head_norm (st:state) (t:typ) : ML typ =
+  norm_bounded st "a type signature"
+               [TcEnv.Weak; TcEnv.HNF;
+                TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
+                TcEnv.Beta; TcEnv.Iota;
+                TcEnv.UnfoldUntil delta_constant]
+               t
 
 (* A [prop]-valued type constructor is by definition non-informative, so we can
    tell the layout analysis so directly instead of waiting for the structural
@@ -4194,11 +4216,7 @@ and is_prop_sig (st:state) (t:typ) : ML bool =
   (* Section 19.14, exactly as in [is_type_sig]: the result is already stripped
      below, so stripping first only moves the same peel to the cheap side of
      the normalization. *)
-  let res = norm_bounded st "a type signature"
-                         [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
-                          TcEnv.Beta; TcEnv.Iota;
-                          TcEnv.UnfoldUntil delta_constant]
-                         (Mono.strip (U.comp_result c)) in
+  let res = sig_head_norm st (Mono.strip (U.comp_result c)) in
   match (Mono.strip res).n with
   | Tm_fvar fv -> S.fv_eq_lid fv PC.prop_lid
   | _ -> false
