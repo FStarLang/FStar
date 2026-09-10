@@ -5,8 +5,8 @@ through the typechecker). That approach kept the Hoare specification inside a
 `comp_typ` and worked around the consequences; this one removes it from
 `comp_typ` altogether, so the consequences do not arise.
 
-114 commits, 326 files, `+9491 / −4146`. Of that, **323 files and
-`+6497 / −4146` are code and tests**; the remainder is this document,
+116 commits, 331 files, `+10014 / −4170`. Of that, **328 files and
+`+6966 / −4170` are code and tests**; the remainder is this document,
 `regression_questions.md` (two accepted regressions worked out in detail) and
 `revise_primitive_effects.md` (the original design brief, kept for the record —
 where it and this document disagree, this document is what was built).
@@ -1801,6 +1801,60 @@ in scope and makes the instantiation immediate — makes the goal go through
 deterministically, and the `--retry 10` and `#restart-solver` are no longer
 needed. The file now takes **7.6s on this branch and 7.7s on master**, against
 14.4s for master before the change.
+
+## Merging master's `NDET` effect
+
+While this branch was in review, master landed `NDET`: a primitive effect that is
+*nondeterministic but terminating*, so the lattice becomes
+`PURE ~> NDET ~> DIV` with an explicit `NDET ~> TAC` lift. That is the same
+territory this branch rewrites, so the merge is worth describing.
+
+Most of the nine conflicts were mechanical. Master extended hardwired lists like
+`src = PURE || src = NDET` at exactly the sites where this branch had introduced
+the class predicates of "An effect abbreviation is a bare alias". `NDET` is both
+a lift source and a lift target, so it cannot be folded into either neighbouring
+class; it gets its own `PC.is_ndet_effect_lid` — covering `NDET`, `Ndet` and `Nd`
+— with `PC.primitive_ndet_lid` and `U.is_ndet_effect` routed through it, exactly
+as the other three classes are, and each site becomes a disjunction of two class
+predicates. Two of master's hunks call `Env.norm_eff_name`, which this branch
+deleted: `ToSyntax` resolves abbreviations now, so `lbeff` and `comp_effect_name`
+already name a root effect and there is nothing to normalize.
+
+`FStar.Pervasives.fsti` needed a fix that was *not* in a conflict hunk, and so
+merged silently into something the compiler rejects. Master writes
+`sub_effect PURE ~> NDET` and `NDET ~> DIV`, but on this branch `PURE` and `DIV`
+are abbreviations and a lift must name the effect itself. These become
+`Tot ~> NDET` and `NDET ~> Div`, and the direct `Tot ~> Div` edge is dropped:
+`Env.update_effect_lattice` closes the lattice transitively as each edge is
+added, so composing the two gives it back.
+
+The one real decision is at the top level. Master replaced `check_top_level`'s
+`bool` result with a three-way action so that a *terminating* effect is masked
+silently — no warning 272, no `nonempty` obligation — while this branch had
+independently changed the same function from `lcomp` to `comp`. Both apply. But
+this branch also **drops the refinement it infers for the result type** when an
+effect is masked, on the grounds that a postcondition under partial correctness
+only holds if the computation returned. `Mask_effect_silently` is precisely the
+case where it does return, so the refinement is *kept* there and dropped only for
+`Mask_effect_and_warn`.
+
+That is safe because it cannot leak a defining equation `_ == e`, which is what
+would let the solver identify two separate calls of a nondeterministic
+computation. Such an equation is only ever introduced by
+`maybe_assume_result_eq_pure_term`, and `should_return` gates it on the
+computation being pure or ghost — which `NDET` is not. Checked rather than
+argued: with `assume val f : unit -> Nd (x:int{x > 0})` and `let g1 = f ()`,
+`assert (g1 > 0)` proves, while `assert (g1 == g2)` and `assert (g1 == f ())`
+both fail as they must. Master's own `TestNd.fst` passes unchanged, including
+its universe test — `NDET` is `total` with no representation, so the rule of
+"A total effect's universe comes from its representation" answers `u_res` and
+`unit -> Nd (Type u#0)` is still `Type u#1`.
+
+One inconsistency is left deliberately. Master makes `NDET` the primitive
+spelling with `Ndet`/`Nd` as abbreviations, which is the opposite of the
+convention here, where the short name is primitive (`Tot`/`GTot`/`Div`) and the
+all-caps name is the abbreviation (`PURE`/`GHOST`/`DIV`). Renaming a feature that
+has just landed is churn that belongs in its own change, not in a merge.
 
 ## User-visible changes
 
