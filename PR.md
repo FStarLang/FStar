@@ -2059,7 +2059,7 @@ green from a clean tree, against a baseline of 396 green modules built with the
 F* fork kuiper pins; **27 files, +354/-48 lines** of downstream difference,
 catalogued above, of which a good part is the comment on each change explaining
 why it is there. Both downstream trees were re-verified from scratch against the
-final compiler, after the last typechecker fix and after the merge with
+final compiler, after the last typechecker fix and after the earlier merge with
 `origin/master`, not against the compiler each regression was found on. The
 final numbers are EverParse 417 `.checked` and kuiper 396 `.checked`, both at
 exit 0, matching their baselines exactly.
@@ -2086,3 +2086,13 @@ compiler that includes the two benchmark fixes: EverParse **417 `.checked`,
 exit 0**; kuiper **396 `.checked`, exit 0**; pulse-verified-gc **exit 0 on both
 the main build and `spot`**. Those are the same counts as their respective
 baselines.
+
+Those three numbers were taken at `5209ef174b`, immediately before master's
+`NDET` effect was merged in. After that merge, `make ci -j48 -k` is again exit 0
+from a fully wiped tree, and **EverParse was re-verified end to end against the
+merged compiler — verification and extraction to C, Rust and OCaml, exit 0 with
+no F\* errors, at the same 417 `.checked` as its baseline**. Since
+`FStar.Pervasives` changed, every downstream `.checked` file was invalidated by
+dependency hash, so that run re-checked the tree rather than replaying a cache.
+Kuiper and pulse-verified-gc were not re-run against the merged compiler; their
+numbers stand as of `5209ef174b`.
