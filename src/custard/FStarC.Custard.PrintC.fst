@@ -399,10 +399,18 @@ let is_enum (d:dtype) : ML bool =
 (* Types                                                                *)
 (* -------------------------------------------------------------------- *)
 
-let int_type (sw : signedness & width) : string =
+(* Section 95.  [FStar.SizeT.t] is the target's own [size_t] unless
+   [--custard_sizet_width 32] says otherwise, in which case it is
+   [uint32_t] everywhere -- the type, the literal suffixes, and every cast,
+   since a cast prints its target through this function.  Narrowing is
+   correct exactly when the program assumes [FStar.SizeT.fits_u32]; F\* does
+   not check that and neither does this. *)
+let sizet_narrow () : ML bool = Options.custard_sizet_32 ()
+
+let int_type (sw : signedness & width) : ML string =
   let s, w = sw in
   match w with
-  | Sizet -> "size_t"
+  | Sizet -> if sizet_narrow () then "uint32_t" else "size_t"
   | _ ->
     (match s with Unsigned -> "uint" | Signed -> "int") ^
     (match w with Int8 -> "8" | Int16 -> "16" | Int32 -> "32"
@@ -663,9 +671,10 @@ let unit_value : string = "((custard_unit)0)"
    bits, since a value that fits in [uint32_t] fits in [long] anyway on every
    target F\* supports; at 64 bits there is no wider standard type, so the
    suffix is the only thing that gives the literal a type. *)
-let int_suffix (sw : signedness & width) : string =
+let int_suffix (sw : signedness & width) : ML string =
   let s, w = sw in
-  let wide = (match w with Int64 -> true | Sizet -> true | _ -> false) in
+  let wide = (match w with Int64 -> true
+                         | Sizet -> not (sizet_narrow ()) | _ -> false) in
   match s with
   | Unsigned -> if wide then "ULL" else "U"
   | Signed -> if wide then "LL" else ""
@@ -676,7 +685,8 @@ let int_suffix (sw : signedness & width) : string =
    to fall back on -- so it is written the way [<stdint.h>] writes [INT64_MIN]. *)
 let int_literal (sw : signedness & width) (v:int) (b:int_base) : ML string =
   let sg, w = sw in
-  let wide = (match w with Int64 -> true | Sizet -> true | _ -> false) in
+  let wide = (match w with Int64 -> true
+                         | Sizet -> not (sizet_narrow ()) | _ -> false) in
   if Signed? sg && wide && v = -9223372036854775808
   then "(-9223372036854775807LL - 1)"
   else c_int_lit_to_string v b ^ int_suffix sw
@@ -2150,7 +2160,11 @@ and emit_alloc (ind:string) (d:dest) (lt:lifetime) (t:cty) (init:expr) (len:expr
      against it, so the cast is there for a length of some other integer
      type; when the length already *is* a [size_t] it says nothing. *)
   ind ^ "for (size_t " ^ i ^ " = 0; " ^ i ^ " < " ^
-  (if len.ty = TInt (Unsigned, Sizet) then group lv else "(size_t)" ^ group lv) ^
+  (* Section 95.  Under [--custard_sizet_width 32] a [FStar.SizeT.t] length is
+     a [uint32_t] and the counter is still a [size_t], so it needs the cast
+     that a native-width length does not. *)
+  (if len.ty = TInt (Unsigned, Sizet) && not (sizet_narrow ())
+   then group lv else "(size_t)" ^ group lv) ^
   "; " ^ i ^ "++) {\n" ^
   ind ^ "  " ^ arr ^ "[" ^ i ^ "] = " ^ iv ^ ";\n" ^
   ind ^ "}\n" ^

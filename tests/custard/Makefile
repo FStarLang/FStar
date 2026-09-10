@@ -2105,6 +2105,26 @@ CGREP_HnfSig += "typedef bool HnfSig_t2;"
 CGREP_HnfSig += "typedef uint8_t HnfSig_t3;"
 CGREP_HnfSig += "typedef uint16_t HnfSig_t4;"
 
+# Section 95.  The same program twice, once at each width.  SzWidth is the
+# control: it pins that the default has not moved.
+C_TESTS += SzWidth
+FLAGS_SzWidth = --custard_backend C --custard_entry_module SzWidth
+CGREP_SzWidth += "size_t len;"
+CGREP_SzWidth += "uint64_t SzWidth_widen(size_t n)"
+CGREP_SzWidth += "size_t SzWidth_of_u32(uint32_t n) {"
+CGREP_SzWidth += "return (size_t)n;"
+CNOGREP_SzWidth += "uint32_t len;"
+
+C_TESTS += SzWidth32
+FLAGS_SzWidth32 = --custard_backend C --custard_entry_module SzWidth32 \
+                  --custard_sizet_width 32
+CGREP_SzWidth32 += "uint32_t len;"
+CGREP_SzWidth32 += "uint64_t SzWidth_widen(uint32_t n)"
+CGREP_SzWidth32 += "uint32_t SzWidth_of_u32(uint32_t n) {"
+CGREP_SzWidth32 += "return (uint32_t)n;"
+# The narrowed run must not mention size_t anywhere, in either file.
+CNOGREP_SzWidth32 += "size_t"
+
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
                   $(C_TESTS) $(CXX_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \
                   $(RUSTSPLIT_TESTS) \

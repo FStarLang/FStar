@@ -166,6 +166,17 @@ CGREP_ArrInit += "uint8_t _cbuf1[1] = { 0 };"
 CNOGREP_ArrInit += "[0]"
 CNOGREP_ArrInit += "= { };"
 
+# Section 95.  The same module at a narrowed index width.  [varlen] is the
+# reason this is pinned here rather than in tests/custard: its loop counter
+# is a size_t and its length is now a uint32_t, so the comparison needs a
+# cast that a native-width length does not.
+C_TESTS += ArrInit32
+EXTRA_ArrInit32 = --custard_sizet_width 32
+CGREP_ArrInit32 += "static uint8_t ArrInit_varlen(uint32_t n)"
+CGREP_ArrInit32 += "for (size_t _ci2 = 0; _ci2 < (size_t)(n); _ci2++)"
+CGREP_ArrInit32 += "uint8_t _cbuf1[1] = { 0 };"
+CNOGREP_ArrInit32 += "ArrInit_varlen(size_t"
+
 C_TESTS += PulseBasic
 # Section 58: the pure condition is spelled in the loop header.
 CGREP_PulseBasic += "while (i < n)"
@@ -403,7 +414,8 @@ $(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-C", $(basename $(notdir $@)))
 	$(Q)mkdir -p $(OUTPUT_DIR)
 	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
-	  --custard_monomorphize_types true --custard_main $*.main $*.fst -o $@
+	  --custard_monomorphize_types true --custard_main $*.main \
+	  $(EXTRA_$*) $*.fst -o $@
 	@# Section 35.3.  These were set here for two rounds and consulted by
 	@# nothing, which is M10-phi-phi's bug in a second directory: an
 	@# assertion nobody runs is worse than no assertion, because it reads

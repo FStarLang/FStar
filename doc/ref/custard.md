@@ -18182,6 +18182,127 @@ two-cell one both became declarations, while `PulseHashTable`'s
 variable-length array and the three heap allocations kept the loop.  The
 Pulse suite is unchanged at 30 s.
 
+## 95. A width the program assumes
+
+### 95.1.  The one measured difference
+
+Kuiper's build no longer contains karamel.  One `fstar.exe --codegen Custard
+--custard_backend C` per entry module, the CUDA drops straight out, and the
+`.krml` rule, the bundling flags and the `sed` script that used to rewrite
+`threadIdx_x` into `threadIdx.x` are all deleted.  Sixty-four modules extract
+and every one of them compiles.
+
+That leaves exactly one behavioural difference between the two pipelines that
+costs anything, and it is measurable.  Kuiper indexes with `FStar.SizeT.t`;
+Custard is faithful and emits `size_t`; their karamel fork narrowed it to
+`uint32_t` deliberately, because a 64-bit index costs a register and a GPU
+kernel pays for registers in occupancy.  Over 571 kernels the reporter
+measured **+11.9%** total registers against the karamel build, and rewriting
+Custard's own output with `sed 's/\bsize_t\b/uint32_t/g'` recovered
+essentially all of it --- 105% of the gap across the modules they could
+isolate, so Custard with 32-bit indices was very slightly *better* than
+karamel had been.
+
+Two of those numbers turned out to be one phenomenon rather than two.  A
+single module, `Klas.GEMM.BlockTiling2D`, resisted the rewrite and was
+reported separately as undiagnosed; it was their own `custard_f16` override
+routing every operation through `float`, and once the device path used the
+native `__nv_bfloat16` operators its spill traffic matched karamel's exactly.
+Worth recording because the override hook worked as designed --- the
+`#ifndef CUSTARD_FLOAT16_DEFINED` guard around the generated support block is
+what let them replace it at all --- and the portable softfloat remains the
+right default.
+
+### 95.2.  Why this is a flag and not a decision
+
+Narrowing `size_t` is **not sound in general**.  It is sound exactly when the
+program assumes `FStar.SizeT.fits_u32`, which Kuiper does, in one line with a
+comment saying why:
+
+```fstar
+assume SizeTFitsU32 : SZ.fits_u32
+```
+
+F\* does not check that assumption --- it is an `assume` --- and Custard does
+not read it either.  It could not usefully: the assumption is a `prop` about
+a refinement, and a program can perfectly well state it and then be linked
+against a caller that does not.  So the flag does not pretend to derive its
+own licence.  It takes one, from the user, in the one place a user can give
+it:
+
+```
+--custard_sizet_width 32
+```
+
+The default is `native` and stays there.  This is the shape the reporter
+asked for and it is the right one: a correctness-affecting choice that only
+the program's author can make is a flag, not an inference.
+
+### 95.3.  Four sites, and one that is not obvious
+
+`Sizet` is its own `width` constructor rather than an alias for `Int64`,
+which is what makes this small.  Three of the four sites are mechanical:
+
+- `int_type` spells `Sizet` as `uint32_t`, which also covers **every cast**,
+  since a cast prints its target through the same function;
+- `int_suffix` and `int_literal` stop treating `Sizet` as wide, so a literal
+  gets `U` rather than `ULL`.
+
+The fourth is the one that does not follow from "spell it differently".
+`emit_alloc`'s fill loop declares its counter as a `size_t` --- it indexes an
+array, and that is the type for it whatever the length's type is.  Natively
+the length is a `size_t` too and the comparison needs no cast, which is why
+the code read:
+
+```
+if len.ty = TInt (Unsigned, Sizet) then group lv else "(size_t)" ^ group lv
+```
+
+Under the flag that test is still true and the cast is still omitted, but the
+length is now a `uint32_t` and the comparison is between two different types.
+So the condition gains `&& not (sizet_narrow ())`, and a narrowed run emits
+`_ci2 < (size_t)(n)` where a native one emits `_ci2 < n`.  A signed/unsigned
+promotion would not have been caught by any of the pins, which is why it is
+called out rather than merely fixed.
+
+### 95.4.  What the flag refuses to do quietly
+
+Only the direct-to-C printer reads this.  On any other backend it would be
+silently ignored, and a flag whose entire purpose is to change the width of
+every index in the program is not one to ignore quietly, so
+`--custard_sizet_width 32` with a non-C backend is an error rather than a
+no-op.  karamel decides this for itself, and the OCaml backend has no say in
+it at all.
+
+It is also recorded in a unit's `layout_options` (§42).  Strictly it changes
+no *IR* layout --- the IR still says `Sizet` either way --- but it changes
+the C layout of every struct with a `size_t` field, and a unit is compiled
+separately.  Two units that disagreed would link, and be wrong.
+
+### 95.5.  Pinning both widths
+
+`SzWidth` and `SzWidth32` are the same program twice, differing only in the
+flag: a struct field, a binder, both directions of the `FStar.SizeT`
+conversions, and a value past `2^16` that has to be built with a conversion
+rather than written as a literal.  `SzWidth` is the control and pins that the
+default has not moved; `SzWidth32`'s `CNOGREP` is simply `size_t`, over the
+source and the header both --- a narrowed run must not mention it anywhere.
+Both compile and run.
+
+The loop counter is pinned in the Pulse directory instead, because that is
+where a *runtime* length can be written: `ArrInit32` is `ArrInit`'s program
+under the flag, and it pins `for (size_t _ci2 = 0; _ci2 < (size_t)(n); ...)`
+against `ArrInit`'s uncast form.  That directory's `.dc` rule grew an
+`EXTRA_$*` hook to make it possible --- previously it took no per-test flags
+at all, which is the same gap §35.3 named in the other direction.
+
+Also from this round, and not a Custard defect: `Kuiper.Kernel.Base.sync_device`
+had no rule and came out as a declaration with no definition, failing at
+*link* time.  Warning 381 named the arity discrepancy exactly --- "declares
+arity 2, but the declaration retains only 1 binder(s) after erasure" --- and
+the reporter's guess of 2 came from the source signature, forgetting the
+ghost binders Custard had already dropped.  §84's warning did its job.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -18499,3 +18620,4 @@ Pulse suite is unchanged at 30 s.
 | M10θΟ | A representation rule is a floor (§93.3) | Done.  §92 cleared the error 390 that had blocked one Kuiper module for six rounds; it now stops further along on an error 368, and the twelve-line reduction mentions nothing of Kuiper's.  A Pulse array in *binder* position is a pointer, because the built-in table (§8.3) maps `Pulse.Lib.Array.Core.array` to `TBuf` and the rule is read off the head fvar.  As a *tuple component* read out by `fst` it has no representation at all: `array` is a delta-constant that unfolds to the record `array'`, whose `core_pcm_ref` is abstract, and both monomorphization reductions (§3.7) carry `UnfoldUntil delta_constant` --- so by the time the type argument reached the emitter the name was gone and `ty_of_typ` requested a record C cannot lay out.  A binder's sort is compiled from the term the programmer wrote; a monomorphization argument is compiled from a normal form, and the normal form has less in it than the term it came from.  So a representation rule is now a **floor**: `has_builtin_type_rule` asks whether a head fvar has a `Rule_type`, and a type argument that had one before the reduction and not after keeps the written form, for the key and the substitution alike.  A *loss* test rather than a ban on unfolding a ruled name --- §3.7's real work routinely ends at a ruled head having started elsewhere, and only the step that walks off the table is refused.  Replacing `fst p` with a pattern match passed throughout, which is what localised it to the projection rather than the tuple or the array.  Both repairs the reporter offered as alternatives are recorded as rejected: `array'` takes no parameter, so ruling it directly gives `void *`.  `ArrTup` covers `fst`, `snd` and `snd (snd p)`, compiled and run.  In-tree Pulse suite unchanged at 30 s |
 | M10θΠ | An initializer where C has one (§94.1) | Done.  A local array with a constant length and a constant fill is what C's initializer syntax is for, and `emit_alloc` wrote a loop for every one of them --- eight lines of object code, a scratch index in scope, and a reader's obligation to check the bound against the declared length, in place of a declaration that cannot get any of it wrong.  It now writes `uint8_t _cbuf1[8] = { 0 };` and `uint8_t _cbuf1[4] = { 7, 7, 7, 7 };`, under three conditions none of which is stylistic: the length must be constant because a **variable-length array may not be initialized at all** (C99 6.7.8p3); the element type must be scalar because `{ 0 }` on an aggregate initializes only the first member explicitly and the rest are reported under `-Wmissing-braces`, which matters when the output is compiled with warnings as errors; and the fill must be constant because C has no way to repeat a runtime value --- and no repetition form for a constant either, so a non-zero fill is written once per cell and capped at 64, above which the loop is the smaller code.  Zero is exempt from the cap, covering any length in three characters.  Heap allocations keep `malloc` and the loop, and the branch is refused if either operand hoisted a statement, which would land before the declaration it belongs to.  `ArrInit` pins the **boundary** rather than the good case: four shapes, the two that take an initializer and the two that must not, all reachable from `main`, which reads a cell out of each so the initializer is checked for having run and not merely for having been printed.  `CborBoundarySlice` and `PulseBlit` picked the change up unasked; `PulseHashTable`'s variable-length array did not.  In-tree Pulse suite unchanged at 30 s |
 | M10θΡ | Zero is not a length C has (§94.4) | Done.  The first question §94.1 raises: `{ }` is not an initializer C99 accepts, so the guard read `n > 0` and a zero-length allocation fell to the loop --- where it had never worked either, since `uint8_t a[0]` is a GNU extension and `gcc -std=c99 -pedantic-errors` rejects it outright as a zero-size array.  Pulse will write `A.alloc 0uy 0sz` quite happily and C has no such object.  Older than §94 by every release, but found by asking the obvious question of the new code.  A constant zero length now declares **one** cell and takes `{ 0 }` whatever the fill was, which is sound for the same reason the fill is irrelevant: with a length of zero no index is in bounds, so nothing can read the cell and nothing can tell it is there.  A heap allocation rounds the same way, which incidentally keeps it clear of `malloc(0)` being permitted to return `NULL` and trip the `abort()` on the next line.  The residual case --- a *runtime* length that happens to be zero, a variable-length array on the stack and `malloc(0)` on the heap --- is not reachable by constant folding and is recorded as not addressed.  `ArrInit` grew a fifth shape and two `CNOGREP`s, on `[0]` and on `= { };`, so neither non-form can come back unnoticed.  In-tree Pulse suite unchanged at 30 s |
+| M10θΣ | A width the program assumes (§95.2) | Done.  Kuiper's build no longer contains karamel: one `fstar.exe --codegen Custard --custard_backend C` per entry module, the CUDA straight out, and the `.krml` rule, the bundling flags and the `sed` script that rewrote `threadIdx_x` all deleted.  Sixty-four modules extract and compile.  That leaves one measured behavioural difference: Kuiper indexes with `FStar.SizeT.t`, Custard is faithful and emits `size_t`, and their karamel fork narrowed it to `uint32_t` deliberately because a 64-bit index costs a register and a GPU kernel pays for registers in occupancy --- **+11.9%** total registers over 571 kernels, essentially all of it recovered by rewriting Custard's own output.  So `--custard_sizet_width 32`, default `native`.  Narrowing is **not sound in general**: it is correct exactly when the program assumes `FStar.SizeT.fits_u32`, which F\* does not check and Custard cannot usefully read --- so the flag takes its licence from the user rather than pretending to derive one.  `Sizet` being its own `width` constructor is what makes it small: `int_type` covers the type and every cast, and the literal suffix stops being `ULL`.  The fourth site does not follow from spelling: `emit_alloc`'s fill loop counter is a `size_t` whatever the length is, so a narrowed length needs the cast a native one does not, and `_ci2 < (size_t)(n)` is a promotion no pin would have caught.  It is an error rather than a no-op on a non-C backend, and it is recorded in a unit's `layout_options` --- no IR layout changes, but every struct with a `size_t` field does, and two units that disagreed would link and be wrong.  `SzWidth`/`SzWidth32` pin the same program at both widths, the narrowed one by a `CNOGREP` on `size_t` over source and header both; `ArrInit32` pins the loop cast, for which the Pulse `.dc` rule grew the `EXTRA_$*` hook it had never had.  Their `sync_device` link failure was diagnosed by §84's warning 381 naming the post-erasure arity exactly.  In-tree Pulse suite unchanged at 30 s |

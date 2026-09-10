@@ -45,7 +45,12 @@ let layout_options () : ML (list (string & string)) =
      --custard_dump_ir settings still agree about layout, and refusing to link
      them would be gratuitous. *)
   [ "custard_backend",            O.custard_backend ();
-    "custard_monomorphize_types", string_of_bool (O.custard_monomorphize_types ()) ]
+    "custard_monomorphize_types", string_of_bool (O.custard_monomorphize_types ());
+    (* Section 95.  This one changes no IR layout at all -- the IR still says
+       [Sizet] -- but it changes the C every struct containing a [size_t] field
+       is laid out with, and a unit is compiled separately.  Two units that
+       disagree would link and be wrong. *)
+    "custard_sizet_width",        (if O.custard_sizet_32 () then "32" else "native") ]
 
 let write_iface (fn:string) (i:iface) : ML unit =
   U.save_value_to_file fn i

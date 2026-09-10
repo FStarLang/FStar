@@ -209,6 +209,7 @@ let defaults = [
   ("custard_norm_budget"                       , Int 10000000);
   ("custard_monomorphize_types"                , Bool false);
   ("custard_backend"                           , String "OCaml");
+  ("custard_sizet_width"                       , String "native");
   ("custard_split"                             , Bool false);
   ("custard_unit"                              , Unset);
   ("custard_link"                              , List []);
@@ -487,6 +488,7 @@ let get_custard_max_specializations () = lookup_opt "custard_max_specializations
 let get_custard_norm_budget     ()      = lookup_opt "custard_norm_budget"      as_int
 let get_custard_monomorphize_types () = lookup_opt "custard_monomorphize_types" as_bool
 let get_custard_backend         ()      = lookup_opt "custard_backend"          as_string
+let get_custard_sizet_width     ()      = lookup_opt "custard_sizet_width"      as_string
 let get_custard_split           ()      = lookup_opt "custard_split"           as_bool
 let get_custard_unit            ()      = lookup_opt "custard_unit"            (as_option as_string)
 let get_custard_link            ()      = lookup_opt "custard_link"            (as_list as_string)
@@ -994,6 +996,16 @@ compilation to C or to Rust, or self-contained C11 source (default OCaml). \
 KrmlC and KrmlRust share a printer but not a program: karamel models some \
 modules on the Rust path only, so a .krml built for one target cannot be \
 compiled for the other (section 20)");
+
+  ( noshort,
+    "custard_sizet_width",
+    EnumStr ["native"; "32"],
+    text "Width the direct-to-C backend gives FStar.SizeT.t: the target's own \
+size_t (default), or uint32_t.  Narrowing is *not* sound in general -- it is \
+correct exactly when the program assumes FStar.SizeT.fits_u32, which F* does \
+not check and this flag does not either -- but on a target where a 64-bit \
+index costs a register it is worth a measurable amount (section 95). Only the \
+C backend has it; karamel decides this for itself");
 
   ( noshort,
     "custard_split",
@@ -2176,6 +2188,7 @@ let custard_max_specializations  () = get_custard_max_specializations ()
 let custard_norm_budget          () = get_custard_norm_budget ()
 let custard_monomorphize_types   () = get_custard_monomorphize_types ()
 let custard_backend              () = get_custard_backend ()
+let custard_sizet_32             () = get_custard_sizet_width () = "32"
 let custard_backend_krml         () = let b = get_custard_backend () in
                                       b = "KrmlC" || b = "KrmlRust"
 let custard_split                () = get_custard_split ()
