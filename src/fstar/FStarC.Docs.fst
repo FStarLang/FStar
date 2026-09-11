@@ -99,27 +99,135 @@ let doc_of_sigelt (se : S.sigelt) : ML doc_status =
   | _ -> doc_of_attrs se.sigattrs
 
 let docs_schema_name = "fstar-module-docs"
-let docs_schema_version = 2
+let docs_schema_version = 3
 
-(* The name, kind and printed signature of a top-level declaration, when
-   it is one we export. Returns None for everything else: pragmas,
-   effect declarations, splices, bundles (which are recursed into by the
+(* A declaration we export: its kind, name, elaborated type, and -- for a
+   constructor -- the type it constructs. *)
+type decl_info = {
+  di_kind   : string;
+  di_lid    : Ident.lident;
+  di_typ    : S.term;
+  di_parent : option Ident.lident;
+}
+
+(* The exported view of a top-level declaration, when it is one we
+   export. Returns None for everything else: pragmas, effect
+   declarations, splices, bundles (which are recursed into by the
    caller), and mutually recursive lets, whose single attribute list
    cannot be attributed to one of the names. *)
-let decl_info (se : S.sigelt) : ML (option (string & Ident.lident & string)) =
+let decl_info_of (se : S.sigelt) : ML (option decl_info) =
+  let mk k lid t p = Some { di_kind = k; di_lid = lid; di_typ = t; di_parent = p } in
   match se.sigel with
-  | Sig_declare_typ {lid; t} ->
-    Some ("val", lid, show t)
+  | Sig_declare_typ {lid; t} -> mk "val" lid t None
   | Sig_let {lbs=(_, [lb])} -> (
     match lb.lbname with
-    | Inr fv -> Some ("let", fv.fv_name, show lb.lbtyp)
+    | Inr fv -> mk "let" fv.fv_name lb.lbtyp None
     | Inl _ -> None
   )
   | Sig_inductive_typ {lid; params; t} ->
     let sigt = if Nil? params then t else U.arrow params (S.mk_Total t) in
-    Some ("type", lid, show sigt)
-  | Sig_assume {lid; phi} ->
-    Some ("assume", lid, show phi)
+    mk "type" lid sigt None
+  | Sig_datacon {lid; t; ty_lid} -> mk "constructor" lid t (Some ty_lid)
+  | Sig_assume {lid; phi} -> mk "assume" lid phi None
+  | _ -> None
+
+(* The elaborated type of a declaration as a tree, so that a consumer can
+   index and link it without re-parsing printed text. Every name is fully
+   qualified, and binders are opened so that bound occurrences carry the
+   binder's name. Nothing here interprets F*: an effect is just its name
+   and its arguments, whether it is Tot, Lemma, or Pulse's stt. Terms of
+   a shape a type rarely has are given as printed text. *)
+let str_of_id (i : Ident.ident) : string = Ident.string_of_id i
+
+let json_of_bqual (q : S.bqual) : json =
+  match q with
+  | None -> JsonStr "explicit"
+  | Some (Implicit _) -> JsonStr "implicit"
+  | Some (Meta _) -> JsonStr "meta"
+  | Some Equality -> JsonStr "equality"
+
+let rec json_of_term (t : S.term) : ML json =
+  let t = SS.compress (U.unascribe (U.unmeta (SS.compress t))) in
+  match t.n with
+  | Tm_fvar fv ->
+    JsonAssoc [("k", JsonStr "fv"); ("n", JsonStr (Ident.string_of_lid fv.fv_name))]
+  | Tm_uinst (hd, _) -> json_of_term hd
+  | Tm_name bv
+  | Tm_bvar bv ->
+    JsonAssoc [("k", JsonStr "var"); ("n", JsonStr (str_of_id bv.ppname))]
+  | Tm_type _ -> JsonAssoc [("k", JsonStr "type")]
+  | Tm_constant _ -> JsonAssoc [("k", JsonStr "const"); ("v", JsonStr (show t))]
+  | Tm_app {hd; args} ->
+    JsonAssoc [
+      ("k", JsonStr "app");
+      ("f", json_of_term hd);
+      ("args", JsonList (args |> List.map (fun (a, q) ->
+                  JsonAssoc [("t", json_of_term a);
+                             ("imp", JsonBool (S.is_aqual_implicit q))])));
+    ]
+  | Tm_arrow {bs; comp} ->
+    let bs, c = SS.open_comp bs comp in
+    JsonAssoc [
+      ("k", JsonStr "arrow");
+      ("bs", JsonList (List.map json_of_binder bs));
+      ("c", json_of_comp c);
+    ]
+  | Tm_refine {b; phi} ->
+    let bs, phi = SS.open_term [S.mk_binder b] phi in
+    let b = (List.hd bs).binder_bv in
+    JsonAssoc [
+      ("k", JsonStr "refine");
+      ("x", JsonStr (str_of_id b.ppname));
+      ("t", json_of_term b.sort);
+      ("phi", json_of_term phi);
+    ]
+  | Tm_abs {bs; body} ->
+    let bs, body = SS.open_term bs body in
+    JsonAssoc [
+      ("k", JsonStr "abs");
+      ("bs", JsonList (List.map json_of_binder bs));
+      ("body", json_of_term body);
+    ]
+  | _ -> JsonAssoc [("k", JsonStr "other"); ("s", JsonStr (show t))]
+
+and json_of_binder (b : S.binder) : ML json =
+  JsonAssoc [
+    ("x", JsonStr (str_of_id b.binder_bv.ppname));
+    ("q", json_of_bqual b.binder_qual);
+    ("t", json_of_term b.binder_bv.sort);
+  ]
+
+and json_of_comp (c : S.comp) : ML json =
+  let eff, res, args =
+    match c.n with
+    | Total t -> "Prims.Tot", t, []
+    | GTotal t -> "Prims.GTot", t, []
+    | Comp ct ->
+      Ident.string_of_lid ct.effect_name, ct.result_typ, List.map fst ct.effect_args
+  in
+  JsonAssoc [
+    ("eff", JsonStr eff);
+    ("res", json_of_term res);
+    ("args", JsonList (List.map json_of_term args));
+  ]
+
+(* The fully qualified names a term mentions, for linking. *)
+let refs_of (ts : list S.term) : ML (list string) =
+  ts
+  |> List.collect (fun t -> FStarC.Class.Setlike.elems (FStarC.Syntax.Free.fvars t))
+  |> List.map Ident.string_of_lid
+  |> BU.remove_dups (fun a b -> a = b)
+
+(* The definition of a transparent let, when its body is part of what
+   the declaration means to a reader: a specification such as `sorted`
+   is its body. Lemma proofs are not, and are left out. *)
+let definition_of (se : S.sigelt) : ML (option S.term) =
+  match se.sigel with
+  | Sig_let {lbs=(_, [lb])} ->
+    if U.is_lemma lb.lbtyp
+    || se.sigquals |> List.existsb (function Irreducible -> true | _ -> false)
+    then None
+    else Some lb.lbdef
   | _ -> None
 
 (* Whether a declaration is part of what the module exports, and was
@@ -159,39 +267,123 @@ let json_of_range (r : Range.range) : ML json =
       ("end_col",    JsonInt (col_of_pos e));
     ]
 
-let rec json_of_sigelt (se : S.sigelt) : ML (list json) =
+let doc_lines_of (se : S.sigelt) : ML (option (list string)) =
+  match doc_of_sigelt se with
+  | Doc_absent -> None
+  | Doc_unsupported payload ->
+    Errors.log_issue se.sigrng Errors.Warning_UnrecognizedAttribute [
+      Errors.Msg.text "Ignoring a 'doc' attribute whose payload is not a literal list of string literals.";
+      Errors.Msg.text (Format.fmt1 "Payload: %s" payload);
+    ];
+    None
+  | Doc_text lines -> Some lines
+
+(* The text of [r] in a source file given as its lines. Ranges count
+   lines from 1 and columns from 0. *)
+let snippet (lines : list string) (r : Range.range) : ML (option string) =
+  let s = start_of_range r in
+  let e = end_of_range r in
+  let l0 = line_of_pos s in
+  let l1 = line_of_pos e in
+  if l0 < 1 || l1 < l0 || l1 > List.length lines then None
+  else
+    let rec take (i : int) (ls : list string) : ML (list string) =
+      match ls with
+      | [] -> []
+      | l :: ls ->
+        if i > l1 then []
+        else if i < l0 then take (i + 1) ls
+        else
+          let l = if i = l1 && col_of_pos e <= String.length l
+                  then String.substring l 0 (col_of_pos e) else l in
+          let l = if i = l0 && col_of_pos s <= String.length l
+                  then String.substring l (col_of_pos s) (String.length l - col_of_pos s) else l in
+          l :: take (i + 1) ls
+    in
+    Some (String.concat "\n" (take 1 lines))
+
+let opt (#a:Type) (f : a -> ML json) (o : option a) : ML json =
+  match o with Some x -> f x | None -> JsonNull
+
+(* Every exported declaration is reported, documented or not: a reader
+   needs to see the whole public surface, and an undocumented entry is
+   also what a coverage report counts. A `val` and the `let` that
+   defines it are one declaration: the `val` gives the signature the
+   author wrote, and its documentation if it has any; the `let` supplies
+   the definition. *)
+let rec json_of_sigelt (src : option (list string))
+                       (find_let : Ident.lident -> ML (option S.sigelt))
+                       (has_val : Ident.lident -> ML bool)
+                       (se : S.sigelt) : ML (list json) =
   match se.sigel with
   (* A bundle is not itself a declaration; its members are. *)
-  | Sig_bundle {ses} -> List.collect json_of_sigelt ses
+  | Sig_bundle {ses} -> List.collect (json_of_sigelt src find_let has_val) ses
   | _ ->
     if not (is_exported se) then []
     else
-      match doc_of_sigelt se, decl_info se with
-      | Doc_absent, _ -> []
-      | Doc_unsupported payload, _ ->
-        Errors.log_issue se.sigrng Errors.Warning_UnrecognizedAttribute [
-          Errors.Msg.text "Ignoring a 'doc' attribute whose payload is not a literal list of string literals.";
-          Errors.Msg.text (Format.fmt1 "Payload: %s" payload);
-        ];
-        []
-      | Doc_text _, None -> []
-      | Doc_text lines, Some (kind, lid, sigstr) ->
+      match decl_info_of se with
+      | None -> []
+      | Some di when di.di_kind = "let" && has_val di.di_lid -> []
+      | Some di ->
+        let defn_se = if di.di_kind = "val" then find_let di.di_lid else Some se in
+        let doc =
+          match doc_lines_of se, defn_se with
+          | Some lines, _ -> Some lines
+          | None, Some lse when di.di_kind = "val" -> doc_lines_of lse
+          | None, _ -> None
+        in
+        let defn = match defn_se with Some lse -> definition_of lse | None -> None in
         [JsonAssoc [
-          ("name",      JsonStr (Ident.string_of_lid lid));
-          ("kind",      JsonStr kind);
-          ("signature", JsonStr sigstr);
-          ("range",     json_of_range se.sigrng);
-          ("doc",       JsonList (List.map JsonStr lines));
+          ("name",       JsonStr (Ident.string_of_lid di.di_lid));
+          ("kind",       JsonStr di.di_kind);
+          ("parent",     opt (fun l -> JsonStr (Ident.string_of_lid l)) di.di_parent);
+          ("signature",  JsonStr (show di.di_typ));
+          ("type",       json_of_term di.di_typ);
+          ("definition", opt (fun d -> JsonStr (show d)) defn);
+          ("refs",       JsonList (List.map JsonStr
+                           (refs_of (di.di_typ :: (match defn with Some d -> [d] | None -> [])))));
+          ("range",      json_of_range se.sigrng);
+          (* The declaration and its definition as written, when the
+             source file is at hand and is the one that was checked. *)
+          ("source",     opt JsonStr (match src with
+                                      | Some ls -> snippet ls se.sigrng
+                                      | None -> None));
+          ("definition_source",
+                         opt JsonStr (match src, defn, defn_se with
+                                      | Some ls, Some _, Some lse -> snippet ls lse.sigrng
+                                      | _ -> None));
+          ("doc",        opt (fun lines -> JsonList (List.map JsonStr lines)) doc);
         ]]
 
-let json_of_modul (m : S.modul) : ML json =
+let json_of_modul_with_source (src : option (list string)) (m : S.modul) : ML json =
+  let rec flatten (ses : list S.sigelt) : ML (list S.sigelt) =
+    ses |> List.collect (fun se ->
+      match se.sigel with
+      | Sig_bundle {ses} -> flatten ses
+      | _ -> [se]) in
+  let ses = flatten m.declarations in
+  let find_let (l : Ident.lident) : ML (option S.sigelt) =
+    BU.find_map ses (fun se ->
+      match se.sigel with
+      | Sig_let {lbs=(_, [lb])} ->
+        (match lb.lbname with
+         | Inr fv when Ident.lid_equals fv.fv_name l -> Some se
+         | _ -> None)
+      | _ -> None) in
+  let has_val (l : Ident.lident) : ML bool =
+    ses |> List.existsb (fun se ->
+      match se.sigel with
+      | Sig_declare_typ {lid} -> Ident.lid_equals lid l
+      | _ -> false) in
   JsonAssoc [
     ("schema",       JsonStr docs_schema_name);
     ("version",      JsonInt docs_schema_version);
     ("module",       JsonStr (Ident.string_of_lid m.name));
     ("interface",    JsonBool m.is_interface);
-    ("declarations", JsonList (List.collect json_of_sigelt m.declarations));
+    ("declarations", JsonList (List.collect (json_of_sigelt src find_let has_val) m.declarations));
   ]
+
+let json_of_modul (m : S.modul) : ML json = json_of_modul_with_source None m
 
 let interface_path (path : string) : ML (option string) =
   let suf = ".fst.checked" in
@@ -207,8 +399,17 @@ let fail_missing_interface (path : string) : ML unit =
     doc_of_string path;
   ]
 
-let print_module (m : S.modul) : ML unit =
-  Format.print1 "%s\n" (string_of_json (json_of_modul m))
+(* The lines of the source file [m] was checked from, found on the
+   include path, provided its digest is the one recorded in the checked
+   file: a snippet of any other file could misquote the declaration. *)
+let source_lines (m : S.modul) (digest : string) : ML (option (list string)) =
+  let base = Ident.string_of_lid m.name ^ (if m.is_interface then ".fsti" else ".fst") in
+  match Find.find_file base with
+  | Some fn when BU.digest_of_file fn = digest -> Some (BU.file_get_lines fn)
+  | _ -> None
+
+let print_module (m : S.modul) (digest : string) : ML unit =
+  Format.print1 "%s\n" (string_of_json (json_of_modul_with_source (source_lines m digest) m))
 
 let recorded_interface_digest (deps : list (string & string)) : ML (option string) =
   match deps with
@@ -222,20 +423,20 @@ let export_docs (path : string) : ML unit =
     Errors.raise_error0 Errors.Fatal_ModuleOrFileNotFound [
       Errors.Msg.text "Could not read checked file:" ^/^ doc_of_string path
     ]
-  | Some (_source_digest, deps, tcr) ->
+  | Some (source_digest, deps, tcr) ->
     let m = tcr.CF.checked_module in
     if m.is_interface || not (tcr.CF.has_interface)
-    then print_module m
+    then print_module m source_digest
     else
       match interface_path path, recorded_interface_digest deps with
       | Some iface, Some expected_digest ->
         (match CF.load_tc_result_with_digest iface with
-         | Some (actual_digest, _, iface_tcr) ->
+         | Some (iface_digest, _, iface_tcr) ->
            let iface_m = iface_tcr.CF.checked_module in
-           if actual_digest = expected_digest
+           if iface_digest = expected_digest
               && iface_m.is_interface
               && Ident.lid_equals iface_m.name m.name
-           then print_module iface_m
+           then print_module iface_m iface_digest
            else fail_missing_interface iface
          | None -> fail_missing_interface iface)
       | _ -> fail_missing_interface path

@@ -29,8 +29,8 @@ let double (x:int) : int = x + x
     interpreting it. *)
 let triple (x:int) : int = 3 * x
 
-(** An ordinary comment, not documentation. `quadruple` must not appear
-    in the exported index at all. *)
+(** An ordinary comment, not documentation. `quadruple` is exported, but
+    with a null `doc`: this text must not become its documentation. *)
 let quadruple (x:int) : int = 4 * x
 
 (*************** A banner. Also an ordinary comment. ***************)

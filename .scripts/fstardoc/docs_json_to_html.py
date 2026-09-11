@@ -16,7 +16,8 @@ untrusted as far as this renderer is concerned. All of it is HTML
 escaped; in particular the documentation payload is a list of opaque
 strings -- one per line, joined here and nowhere else -- emitted as
 text, never as markup. There is intentionally no markdown, no linking
-and no search.
+and no search: fstardoc_site.py, next to this file, is the demonstration
+of those, and this one stays the minimal consumer the tests exercise.
 """
 
 import html
@@ -24,7 +25,7 @@ import json
 import sys
 
 SCHEMA = "fstar-module-docs"
-VERSION = 2
+VERSION = 3
 
 STYLE = """\
 body { font-family: sans-serif; margin: 2em auto; max-width: 50em; }
@@ -60,7 +61,11 @@ def render_decl(decl):
         '<span class="kind">%s</span></div>' % esc(decl["kind"]),
         '<div class="sig">%s</div>' % esc(decl["signature"]),
         render_range(decl.get("range")),
-        '<div class="doc">%s</div>' % esc("\n".join(decl["doc"])),
+        # Since schema 3 every exported declaration is listed, and one
+        # without documentation has a null `doc`.
+        ('<div class="doc">%s</div>' % esc("\n".join(decl["doc"]))
+         if decl.get("doc") is not None
+         else '<div class="doc empty">No documentation.</div>'),
         "</div>",
     ])
 
@@ -90,7 +95,7 @@ def render(index):
     if decls:
         body.extend(render_decl(d) for d in decls)
     else:
-        body.append('<p class="empty">No documented declarations.</p>')
+        body.append('<p class="empty">No exported declarations.</p>')
     body.append("</body></html>")
     return "\n".join(body) + "\n"
 

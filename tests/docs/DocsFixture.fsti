@@ -22,9 +22,9 @@ module DocsFixture
         "<unsafe> & \"quoted\"."]]
 val incr (x:int) : int
 
-(* No [doc] attribute. This declaration must not appear in the exported
-   documentation at all, and an IDE lookup asking for documentation must
-   answer null rather than fail. *)
+(* No [doc] attribute. This declaration is exported with a null doc, and
+   an IDE lookup asking for documentation must answer null rather than
+   fail; the implementation's documentation must not fill the gap. *)
 val decr (x:int) : int
 
 [@@doc ["A tiny colour.";

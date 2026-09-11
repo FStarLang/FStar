@@ -247,19 +247,25 @@ Guidelines for the changelog:
     name with no documentation still answers `null`, as before.
 
     `fstar.exe --export_docs Mod.fst.checked` emits, on standard output, a
-    versioned JSON index of the documentation of that module's public
-    top-level declarations, with a schema name and version, fully qualified
-    names, declaration kinds, printed signatures, and source ranges. When the
-    interface's checked file is available next to the implementation's, the
-    interface is used. This JSON is the supported way to consume F*
-    documentation: the checked file format remains private.
+    versioned JSON index (schema 3) of that module's public top-level
+    declarations, documented or not: fully qualified names, declaration
+    kinds, printed signatures, source ranges, the documentation (or `null`),
+    each elaborated type as a tree of fully qualified names, the names each
+    declaration refers to, and the definitions of transparent non-lemma
+    `let`s. With `--include` pointing at the sources, it also quotes each
+    declaration as written, but only from a file whose digest is the one
+    recorded in the checked file. When the interface's checked file is
+    available next to the implementation's, the interface is used. This JSON
+    is the supported way to consume F* documentation: the checked file format
+    remains private.
 
     `.scripts/fstardoc/docs_json_to_html.py` is a tiny experimental renderer
     that turns that JSON, and nothing else, into a static HTML page. See
     `tests/docs` for the end-to-end fixture.
 
     Known limitations: documentation is read only off top-level `val`, `let`,
-    `type` and `assume` declarations. Data constructors, projectors,
+    `type` and `assume` declarations. Data constructors are listed, but
+    without documentation of their own. Projectors,
     discriminators, record fields, binders and effect declarations are out of
     scope; in particular, a type's attributes are copied by the typechecker
     onto its constructors and generated projectors, and that inherited text is
@@ -267,7 +273,7 @@ Guidelines for the changelog:
     before being recorded, so the payload must be a *literal* list of
     *literal* strings: `[@@doc [a ^ b]]` and `[@@doc some_list]` are
     well-typed but record unevaluated terms, which `--export_docs` reports
-    with warning 278 and skips. `[@@doc []]` is documentation that says
+    with warning 278, exporting the declaration as undocumented. `[@@doc []]` is documentation that says
     nothing, and is reported as such rather than treated as absent.
 
 ## Pulse
