@@ -636,7 +636,7 @@ let run (prog:program) : ML program =
     | TVar _ | TInt _ | TFloat _ | TUnit | TExn | TAny | TConst _ -> () in
   prog |> List.iter (fun d ->
     match d with
-    | DExternal x -> freeze 100 x.dx_ty
+    | DExternal x when freeze_realized () -> freeze 100 x.dx_ty
     | DExn e -> e.de_args |> List.iter (freeze 100)
     | DType t when t.dt_flags |> List.existsb (function
                      | Modelled -> true | _ -> false) ->

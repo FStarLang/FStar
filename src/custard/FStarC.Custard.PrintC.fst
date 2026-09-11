@@ -81,11 +81,17 @@ let current : ref string = mk_ref "<toplevel>"
    so that the chain it yields is a shortest one. *)
 let parents : SMap.t string = SMap.create 50
 
-(* Section 31.3.  For a type declaration that was left polymorphic, the
-   external whose signature mentions it -- which is *why* it was left
-   polymorphic, by §5.0.1 rule 4.  Naming it is the difference between "the
-   pass did not reach this, please report a bug" and "this declaration is
-   realized outside the program, so the pass was not allowed to clone it". *)
+(* Section 31.3.  An external whose signature mentions this type.  On the
+   OCaml path that is *why* the type was left polymorphic, by §5.0.1 rule 4,
+   and naming it is the difference between "the pass did not reach this,
+   please report a bug" and "this declaration is realized outside the program,
+   so the pass was not allowed to clone it".
+
+   Section 100: on a C backend rule 4 no longer fires, so the table no longer
+   explains a *freeze* there -- but it still names the declaration that put an
+   unrepresentable type in front of the backend, which is the thing a reader
+   has to go and change.  The name is kept because the OCaml path still uses
+   it in the original sense. *)
 let frozen_by : SMap.t string = SMap.create 20
 (* Section 32.5.  Whether the external that froze a type is a [custard_extern]
    -- a C symbol the program named -- or a hand-written OCaml realization.
@@ -437,7 +443,12 @@ let mono_advice_for (n:option name) : ML (list string) =
   then ["The direct-to-C backend requires --custard_monomorphize_types true \
          (section 5.0.1)."]
   else
+    (* Section 100.  Rule 4 freezes only on the OCaml path now, so this
+       explanation is true only there.  On a C backend a type that is still
+       polymorphic was not held back by an external, and saying so would send
+       a reader to change a signature that is not the problem. *)
     match (match n with
+           | _ when Options.custard_backend () <> "OCaml" -> None
            | None -> None
            | Some n -> SMap.try_find frozen_by (string_of_name n)) with
     | Some ext ->
@@ -2247,9 +2258,23 @@ and body_occurs (target:string) (fuel:int) (b:tydef) : ML bool =
 let check_finite (d:dtype) : ML unit =
   if body_occurs (string_of_name d.dt_name) 100 d.dt_body then
     reject ("the recursive datatype " ^ string_of_name d.dt_name)
-      ["A C struct cannot contain itself by value.";
-       "Use an explicit pointer (a Pulse ref, array or box) for the \
-        recursive field."]
+      (["A C struct cannot contain itself by value.";
+        "Use an explicit pointer (a Pulse ref, array or box) for the \
+         recursive field."]
+       @
+       (* Section 100.  When the type arrived through an external, the
+          recursive field is not something the program can be asked to
+          change -- [Prims.list] is a cons list and stays one -- so the
+          declaration that put it in front of the backend is named instead.
+          Before section 100 this case was reported as a frozen type, which
+          named the external but not the obstruction; now both are said. *)
+       (match SMap.try_find frozen_by (string_of_name d.dt_name) with
+        | Some ext ->
+          ["It reaches the backend through " ^ ext ^ ", whose signature \
+            mentions it.  That declaration is realized outside this program, \
+            so there is no definition of it to compile and nothing here can \
+            change the shape of the type it names."]
+        | None -> []))
 
 (* Every struct Custard emits carries a *tag*, and every one is
    forward-declared before any of them is defined.

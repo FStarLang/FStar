@@ -655,6 +655,20 @@ CNOGREP_Export += "Export_wkind"
 CGREP_Export += "static uint32_t Export_helper("
 CGREP_Export += "static uint32_t Export_countdown__"
 
+# Section 100.  The other side of ListC: an external whose signature names a
+# specialization Custard can perfectly well emit, which is the shape a C
+# boundary in a real program has.  The link is the assertion -- the stub is
+# written against the generated struct, so a change to its layout or to the
+# name breaks the build rather than passing quietly.
+C_TESTS += ExternOpt
+CEXTRA_ExternOpt = ExternOpt_stubs.c
+CGREP_ExternOpt += "struct FStar_Pervasives_Native_option__listener_s {"
+CGREP_ExternOpt += "externopt_listener_t v;"
+CGREP_ExternOpt += "extern FStar_Pervasives_Native_option__listener ExternOpt_listen(uint32_t);"
+CGREP_ExternOpt += "extern uint32_t ExternOpt_close(FStar_Pervasives_Native_option__listener);"
+# The external type itself is still the target's: no definition, no clone.
+CNOGREP_ExternOpt += "ExternOpt_listener"
+
 REJECT_TESTS += MonoExtern
 CODE_MonoExtern = 376
 FLAGS_MonoExtern += --custard_backend C --custard_monomorphize_types true
@@ -745,9 +759,18 @@ EGREP_WideChain += "chars)"
 REJECT_TESTS += ListC
 CODE_ListC = 368
 FLAGS_ListC = --custard_backend C --custard_monomorphize_types true
+# Section 100.  The rejection used to be the frozen-type one: [isEmpty] is
+# realized, so rule 4 held [list] polymorphic and the backend never saw it.
+# Now the type is cloned like any other and rejected for the honest reason,
+# which is that a cons list is a recursive datatype.  The last two greps are
+# the part that had to be added back: "use a pointer for the recursive field"
+# is not advice anyone can act on for [Prims.list], so the rejection also
+# names the declaration that put it in front of the backend.
+EGREP_ListC += "recursive datatype Prims.list"
+EGREP_ListC += "FStar.List.Tot.Base.isEmpty"
 EGREP_ListC += "is realized outside this program"
 EGREP_ListC += "Reached through:"
-EGREP_ListC += "ListC.f"
+EGREP_ListC += "ListC.main"
 REJECT_TESTS += CNoInt
 REJECT_TESTS += CNoClosure
 REJECT_TESTS += CLamField

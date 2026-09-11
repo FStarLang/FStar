@@ -1525,10 +1525,12 @@ Four things make it work.
    flag delivers a completely monomorphic program there and only a mostly
    monomorphic one under the OCaml backend.
 
-   Not quite empty, as §31.3 records: a module realized by hand *in OCaml* is
-   realized in C too as far as this pass is concerned, so `Prims.list` is
-   frozen under the C backend by `FStar.List.Tot.Base`.  Error 368 now names
-   the external that froze the type rather than claiming the pass missed it.
+   Empty *literally*, as of §100: the freeze on an external's signature is
+   applied only under the OCaml backend, because it exists to protect a
+   hand-written OCaml realization and there is no such thing to protect
+   anywhere else.  §31.3 recorded the older behaviour, where a module
+   realized by hand in OCaml was treated as realized in C too, and `Prims.list`
+   was frozen under the C backend by `FStar.List.Tot.Base`; §100 removes it.
 
    A `Realized` or `Imported` *type declaration* is frozen for the same
    reason, and more directly.  Its representation is fixed outside this
@@ -9235,6 +9237,11 @@ and would then be rejected for the honest reason, that a cons list is a
 recursive datatype and a C struct cannot contain itself.  That is a larger
 change than a diagnostic, it touches every C and krml test, and it is not
 what round 35 asked for; it is written down here as the next thing.
+
+*Round 74 did it.*  §100 guards the freeze on the OCaml backend, and
+`ListC` is now rejected for exactly the reason predicted here.  The table
+this section fills survives the change and the new message uses it, so the
+external is still named -- see §100.2.
 
 ## 32 After the attribute
 
@@ -18625,6 +18632,152 @@ that: `Simplify` runs before every backend, so the OCaml and krml outputs
 lose the same dead reads, and `Simplify` running before the printer is what
 lets §19.8's `cell_dead` see a cell whose last reader has just gone.
 
+## 100 A boundary that speaks in `option`
+
+A third downstream project, building straight to C, reported that an external
+returning `option listener` cannot be extracted:
+
+> `Error 368: the polymorphic type FStar.Pervasives.Native.option has no C
+> representation, in ExternOption.listen`
+
+with two controls that both worked: a function *taking* a `listener` and
+returning one, and a function returning `option listener` that Custard itself
+defines.  Only returning it from an `assume val` failed.  The question asked
+was "is there an intended way to describe this C external boundary without
+changing the F\* signature?"
+
+There was not, and there should have been.  §31.3 had written this down as
+the next thing three rounds after it first came up, and the reason it was
+still here is that the fix was expected to be larger than it turned out to
+be.
+
+### 100.1.  A rule protecting something that is not there
+
+§5.0.1 rule 4 freezes every type mentioned in an external's signature,
+transitively.  The reason is sound and is about **OCaml**: `FStar.String.concat`
+is realized by hand in `ulib/ml/` at `'a list`, and if the monomorphizer
+cloned `list` into `list__string` then the generated call would name a
+declaration `FStar_String.ml` does not define.  A hand-written realization
+fixes a representation, so the pass must not invent another one.
+
+Nothing in that argument survives the trip to C.  A C external is a symbol
+the linker resolves; its signature is a *prototype Custard writes*, and the
+realization is written after the fact against the header Custard generated.
+There is no pre-existing hand-written definition whose idea of `option` the
+pass must not contradict, because on this path Custard is the one who decides
+what `option listener` looks like and says so in the header.  The rule was
+protecting a file that does not exist.
+
+So the driver is guarded:
+
+```fstar
+| DExternal x when freeze_realized () -> freeze 100 x.dx_ty
+```
+
+`freeze_realized ()` is `Options.custard_backend () = "OCaml"`, and it was
+already the guard on the neighbouring `Realized`/`Imported` *type* freeze.
+The external-signature freeze is now the third thing it governs, which is
+the shape the code should have had from the start: one predicate for "a
+hand-written realization exists and fixes a representation".
+
+The `Modelled` freeze stays unconditional, because it is not this at all --
+karamel matches a slice as an *application* of its lid, so a clone would
+defeat the matching in a backend that is still going to look for the pattern.
+
+What the reporter gets is the `option` specialization emitted like any other,
+declared in the generated header, with the external's prototype above it:
+
+```c
+struct FStar_Pervasives_Native_option__listener_s {
+  enum FStar_Pervasives_Native_option__listener_tags tag;
+  union { struct { listener v; } FStar_Pervasives_Native_Some__listener; } val;
+};
+extern FStar_Pervasives_Native_option__listener ExternOption_listen(void);
+```
+
+and §72's warning 377 fires on top of it, unprompted, to say that the name is
+a specialization hint built from the monomorphizer's input and that a
+consumer who has to spell it should typedef it once in his own header.  That
+warning was written for a different round and it is exactly the advice this
+boundary needs, so the answer to "is there an intended way" is now "yes, and
+the compiler tells you what it is".
+
+`tests/custard/ExternOpt.fst` is the reported shape plus the mirror of it, an
+external *taking* the specialization, which goes through the same signature
+walk.  Its realization lives in `ExternOpt_stubs.c` and includes the
+generated header, which is what makes the test an assertion rather than a
+grep: a change to the layout or to the name breaks the link.
+
+### 100.2.  What `Prims.list` costs
+
+One test changed, and it is the one §31.3 predicted.  `ListC` calls
+`FStar.List.Tot.Base.isEmpty`, which is realized in OCaml, and it used to be
+rejected because rule 4 froze `Prims.list`.  Now `list` is cloned like any
+other type and rejected for the honest reason:
+
+> the recursive datatype `Prims.list@uint32` has no C representation
+
+This is a better error and a worse message.  Better, because it is *true*:
+the obstruction really is that a cons list cannot be a C struct, and the old
+message named a decision rather than an obstacle.  Worse, because the advice
+under it -- "use an explicit pointer (a Pulse ref, array or box) for the
+recursive field" -- is addressed to someone who owns the datatype, and
+nobody owns `Prims.list`.  A reader following it would go looking for a
+declaration he cannot edit.
+
+The information that was lost is still on hand.  `record_parents` fills
+`frozen_by` -- type ↦ an external whose signature mentions it -- by walking
+the *program*, not the freeze, so the table is populated whether or not the
+freeze ran.  The recursive-datatype rejection now consults it and appends a
+sentence, and the two halves together say the whole thing:
+
+> the recursive datatype `Prims.list@uint32` has no C representation
+> - A C struct cannot contain itself by value.
+> - Use an explicit pointer (a Pulse ref, array or box) for the recursive field.
+> - It reaches the backend through `FStar.List.Tot.Base.isEmpty@t`, whose
+>   signature mentions it.  That declaration is realized outside this program,
+>   so there is no definition of it to compile and nothing here can change
+>   the shape of the type it names.
+
+The obstruction, and the declaration that put it in front of the backend.
+Neither sentence alone is actionable; both of them are.
+
+In the other direction, `mono_advice_for` had to *lose* a sentence.  It reads
+the same table to explain a polymorphic type as frozen by rule 4, and on a C
+backend rule 4 no longer fires, so a type that is still polymorphic there was
+held back by something else.  Saying "an external froze this" would send a
+reader to change a signature that is not the problem, so that branch is now
+guarded on the backend that actually freezes.  A diagnostic that explains a
+mechanism has to be turned off with the mechanism; this one was one grep away
+from outliving it.
+
+### 100.3.  What moves from extraction to link
+
+The honest cost of the change is that an OCaml-realized external whose
+signature happens to be representable now **extracts** under the C backend
+and fails at link instead.  `isEmpty` is not such a case -- its argument
+stops it earlier -- but `FStar.List.Tot.Base.length` at a representable
+element type would be, and so would anything else in a `realized_modules`
+module with a first-order signature.
+
+This is not a new failure mode.  It is today's behaviour for every realized
+external that is not polymorphic: `FStar.String.strlen` extracts under the C
+backend, emits an `extern` prototype, and fails at link because nothing
+defines `FStar_String_strlen`.  §100 does not introduce that, it makes it
+reachable by more programs -- and it is the right trade, because the
+alternative is an extraction-time rejection whose explanation is about a
+realization in a language the program is not being compiled to.  A program
+that calls `FStar.List.Tot` from C has to supply a C `FStar.List.Tot` either
+way; the question is only whether it is told so by the extractor or by the
+linker, and the linker's answer is the one that is still correct when the
+program supplies it.
+
+`Imported` types (§42) were checked and are unaffected: their freeze is
+separate and was already `freeze_realized ()`-guarded, so nothing about them
+changes.  The full suite -- `tests/custard`, `tests/custard/pulse`,
+`tests/extraction/backends`, the smoke and plugin gates -- is green, with
+`ListC`'s pins rewritten and `ExternOpt` added.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -18947,3 +19100,4 @@ lets §19.8's `cell_dead` see a cell whose last reader has just gone.
 | M10θΥ | A variable an array does not need (§97.2) | Done.  A Pulse `let mut` of an array declared a pointer, declared the storage under an invented name, and assigned one to the other --- three lines for one object, the first of them a constant the compiler folds away and the reader does not.  §94 had just made the middle line read like C; the line above it undid that.  Neither half was wrong: `ELet` declares a variable and emits into it, `emit_alloc` invents a name and delivers it, and composing two correct jobs is what produced the spare.  They are the same job, because in C the declaration of an array **is** the declaration of its address --- `uint8_t a[5];` says "five bytes" and "`a` names where they start" at once, which is precisely what the two lines said between them.  So `emit_alloc` takes an optional name and a dedicated `ELet`-over-`BufCreate` case hands it the binding's, declaring the storage under it and finishing with nothing to deliver since the destination has already been written.  Heap is in scope for a different reason and the same symptom: the array identity does not apply to a `malloc`, but the spare pointer in front of it did, and `uint32_t *v = (uint32_t *)malloc(...)` is the line a C programmer writes.  Deliberately **excluded** is the one-cell stack allocation, which Custard collapses into a plain variable whose uses take an address --- its branch finishes with `&arr`, and naming it would declare the cell and lose the `&`.  An array and a collapsed cell look alike in the IR and are opposite in C.  Binding before allocating is safe because IR names are unique per definition and `bind_var` subscripts against what the function has already taken, and the scope is saved and restored around the allocation so a variable-length array's length is still read outside the binding.  `ArrInit`'s pins now name the variable and gained a `CNOGREP` on the declaration that is gone; `PulseBasic` pins the heap form.  In-tree Pulse suite unchanged at 31 s |
 | M10θΦ | An implementation nobody linked (§98.2) | Done.  §66 shipped a portable softfloat for binary16 and bfloat16 --- convert to `float`, operate, round back, which is defined everywhere and rounds exactly once --- so that a program using these widths ran on a machine that had never heard of them rather than linking against stubs that did not exist.  Sound reasoning, wrong premise: these widths exist because a target has them in **hardware**, which is why anyone declares one, and the only consumer has never called a line of it.  `custard_f16` is CUDA's `__half` in Kuiper's build and has been since §66 shipped the override hook, because `wmma::fragment` is a template over `__half` and a two-byte struct is not a type any `wmma` overload accepts.  Two hundred lines of correctly-rounded arithmetic inside an `#ifndef` that is never false.  It was the *quiet* path too: a consumer who meant to reach native instructions and misspelled the guard got working code at a tenth of the speed and no diagnostic, which is the failure mode §38 and §66 exist to prevent at the other widths.  So the implementation is gone and the block is a **contract** --- it names the vocabulary, says where to put it, and `#error`s if it is not there.  Three things deliberately unchanged: the sentinel is still `CUSTARD_FLOAT16_DEFINED` and the names are still §66's, so every existing consumer builds identically and has nothing to do; the `[@@custard_c_header]` includes still precede the block, now because the `#error` fires below it rather than a redefinition being diagnosed, so cc still checks the ordering; and the literal encoder stays in F\*, since Custard emits a narrow literal as its correctly-rounded bit pattern precisely so that building one needs no arithmetic, which is what keeps a static initializer a constant expression.  A link-time failure became a compile-time one, in the header, at the point of use, quoting what to do.  The portable implementation moved verbatim to `tests/custard/Narrow_stubs.h` as a fixture --- `Narrow` checks the formats' rounding and so has to run --- and `Narrow`/`NarrowG` now reach it through a real `[@@custard_c_header]`, which exercises the whole arrangement end to end where before the generated block quietly satisfied them.  In-tree Pulse suite unchanged at 31 s |
 | M10θΧ | A question about deletion (§99.1) | Done.  A read whose value nothing wants survived as `(void)(a[0]);` --- Kuiper's GEMM epilogue exactly, where the combiner is `alpha*C + beta*acc` in general and degenerates to `fun _ v -> v` for the overwrite instantiation, so every thread did a redundant global load.  `Simplify` deletes an unused binding when `is_pure` holds, and `is_pure` means "may be dropped, duplicated **and** reordered".  A read is not all three: it may not be reordered, since a later write to the same cell changes it, so `E_Impure` is the only honest effect for it --- and the dead binding became an `ESeq`, which prints as a `(void)` of itself.  The effect lattice was answering a question about *motion* to a caller asking about *deletion*.  PrintC already knew the difference and had said so in §19.8; `is_droppable` was just in the wrong file.  It moved to `Syntax`, and the three sites that **discard** a term --- the unused binding, the sequenced term, and the condition of a branch `prune` has proved dead --- ask it instead.  Substituting one predicate for the other was wrong and the suite caught it in one test: `TmplLet3` stopped extracting, §46 naming `FStar.SizeT.v`, a *pure call* bound to a name dead after the template index resolved, which `is_pure` deleted and `is_droppable` did not.  The two are **incomparable**, not ordered --- an effect is a property of a node, so a pure call is deletable and the structural test cannot see it, `EApp` being opaque; a read is deletable and no effect says so --- so `is_droppable` is `is_pure e.eff ||` the structural test, a union, and the recursion picks that up at every subterm.  Worth stating plainly, because "dropping is weaker than moving" is the intuition and it is wrong in the direction that silently loses code.  The soundness line is the one the report named: a volatile or atomic read is itself the observable event and may not go, and Custard has no such node --- those arrive through `[@@custard_extern]`, an `EApp`, which is never droppable.  A discarded call is untouched; `PulseHashTable`'s four `(void)` casts are discarded calls and are all that survives in the in-tree Pulse output.  Free elsewhere too: `Simplify` runs before every backend, so OCaml and krml lose the same dead reads, and running before the printer is what lets §19.8's `cell_dead` see a cell whose last reader has just gone.  In-tree Pulse suite unchanged at 31 s |
+| M10θΨ | A boundary that speaks in `option` (§100.1) | Done.  A third downstream project, building straight to C, could not extract an external returning `option listener`: error 368, the polymorphic type has no C representation.  Both controls worked --- a function taking and returning a `listener`, and a Custard-defined function returning `option listener` --- so the only failing shape was the one a C boundary actually has.  §5.0.1 rule 4 freezes every type in an external's signature, and the reason is sound and is about **OCaml**: `FStar.String.concat` is realized by hand at `'a list`, so a `list__string` clone would name a declaration `FStar_String.ml` does not define.  A hand-written realization fixes a representation and the pass must not contradict it.  None of that survives the trip to C, where the "realization" is written *after* the fact against the header Custard generated --- there is no pre-existing definition whose idea of `option` to protect, because on this path Custard is the one who decides what `option listener` looks like and says so.  The rule was guarding a file that does not exist.  So the driver is guarded by `freeze_realized ()`, already the guard on the neighbouring `Realized`/`Imported` type freeze and now the third thing that one predicate governs; `Modelled` stays unconditional because it is not this at all, karamel matching a slice as an application of its lid.  The reporter gets the specialization declared in the generated header with the prototype above it, and §72's warning 377 fires unprompted to say the name is a hint and to typedef it once --- written for a different round and exactly the advice this boundary needs.  §31.3 predicted the one test that changes: `ListC` is now rejected for the honest reason, that a cons list is a recursive datatype, which is a better error and a worse message, since "use a pointer for the recursive field" is addressed to someone who owns the datatype and nobody owns `Prims.list`.  `record_parents` fills its table by walking the program rather than the freeze, so it survived; the rejection consults it and names the external too.  In the other direction `mono_advice_for` had to *lose* a sentence --- it explains a polymorphic type as frozen by rule 4, which on C no longer happens --- so that branch is guarded on the backend that freezes.  A diagnostic explaining a mechanism has to be turned off with it.  The honest cost: a realized external with a representable signature now fails at *link* rather than at extraction, which is already today's behaviour for every non-polymorphic one, and is the right trade --- a program calling `FStar.List.Tot` from C must supply a C `FStar.List.Tot` either way.  `tests/custard/ExternOpt.fst` pins both directions with a stub written against the generated header, so the link is the assertion.  In-tree Pulse suite unchanged at 31 s |
