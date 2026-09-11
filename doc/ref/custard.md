@@ -18838,6 +18838,164 @@ the declaration standing alone and a `CNOGREP` of `< 0;` --- not of `_ci`,
 since `varfill` and `varlen` in the same file keep their loops and are the
 reason the boundary is worth pinning at all.
 
+## 102 A pair that is taken apart and put back together
+
+EverParse's COSE parser has **352** `_letpattern` declarations in
+`COSE_Format.c`, and **181** of them are a record rebuilt out of the
+projections of the one above it:
+
+```c
+tuple2 s_         = Pulse_Lib_Slice_split__t(input, offset1);
+tuple2 _letpattern  = (tuple2){ ._1 = s_._1,          ._2 = s_._2 };
+tuple2 _letpattern1 = Pulse_Lib_Slice_split__t(_letpattern._2, consumed);
+tuple2 _letpattern2 = (tuple2){ ._1 = _letpattern1._1, ._2 = _letpattern1._2 };
+tuple2 _letpattern3 = (tuple2){ ._1 = _letpattern2._1, ._2 = _letpattern2._2 };
+input_ = _letpattern3._1;
+```
+
+The reporter traced it to the source and was explicit that it is not a
+regression --- karamel emits 193 of the same construct over the same program,
+calling them `scrut`, and splices some of them into the use site on top.  It
+costs nothing at run time either: the three-deep chain and the hand-collapsed
+version compile to byte-identical machine code at `-O3`, because SROA
+flattens it.  It is 181 lines of noise in the middle of the parsing core.
+
+### 102.1.  The constructor's eta law
+
+Pulse has no multiple return, so a two-result `fn` returns a tuple, and every
+`inline_for_extraction` wrapper that names the two components and hands them
+back writes
+
+```fstar
+fn peek … returns res: (slice byte & slice byte)
+{ let s1, s2 = split input consumed;  …  (s1, s2) }
+```
+
+One destructure-and-rebuild per wrapper, and the chain above is `split_trade`
+then `peek` then `peek_trade`, each contributing one.  There are 25 such
+sites across `LowParse.Pulse.*`.
+
+In the IR it is not a pair of projections at all --- that shape appears only
+after PrintC compiles a pattern.  It is
+
+```
+let _letpattern1 = match _letpattern with Mktuple2(a, b) -> Mktuple2(a, b) in
+```
+
+which is the **constructor's eta law** written out: destructuring a value and
+rebuilding it from its parts is the value.  So that is the rewrite, stated
+once:
+
+> `match s with C(x₁,…,xₙ) -> C(x₁,…,xₙ)` is `s`.
+
+What makes it sound without consulting a table of constructors is that the
+match has **one** branch and no guard.  A match on a single constructor
+pattern is exhaustive only if that constructor is the type's only one, so the
+pattern cannot fail and the scrutinee cannot be anything else.  `s` is
+evaluated once either way, so its effect does not enter into it.  The same
+law is applied to a record pattern rebuilt field by field, which is what a
+*named* two-result type is written as.
+
+The rewrite alone leaves `let p₁ = p in let p₂ = p₁ in p₂._1` --- the same
+three lines with the constructors taken out --- so it is paired with copy
+propagation: `let v = w in e` is `e` with `w` for `v`.  Reading a variable is
+pure and free, so this neither moves work nor duplicates it.  Together they
+give the reporter's stated target on his MWE:
+
+```c
+static size_t TupBind_top(size_t x) {
+  tuple2 _letpattern = TupBind_prim(x);
+  return _letpattern._1;
+}
+```
+
+The one temporary that cannot go is the result of an actual call, since C has
+no multiple return.
+
+The reporter kept a *second* peephole in reserve --- `C x.f₁ … x.fₙ ⇝ x`
+--- for the wrapper left standalone, where the tuple is the return value
+and the collapse has no caller to happen in.  It is not needed.  That shape
+is the projection form, which exists only after printing; the IR says
+`match prim x with C(a,b) -> C(a,b)`, the eta law rewrites it to `prim x`
+outright, and the wrapper becomes a tail call:
+
+```c
+static tuple2 TupBind_standalone(size_t x) { return TupBind_prim(x); }
+```
+
+`tests/custard/pulse/TupBind.fst` is the reporter's MWE plus that standalone
+wrapper.
+
+### 102.2.  What the rewrite cost, and what it found
+
+Copy propagation was written first as a substitution, through `sub`, because
+that is the substitution the file already had.  It broke Custard's extraction
+of the F\* compiler itself: `FStarC_Syntax_DsEnv.ml` came out with
+
+```ocaml
+| (tmp3, tmp4, used_marker) -> (((used_marker).(0) <- true); …)
+```
+
+> `Error: The value "used_marker" has type "bool ref" but an expression was
+> expected of type "'a array"`
+
+`sub` replaces each *use node* with the definiens node, so every use takes
+the definiens' recorded type.  For an inliner that is right --- the argument
+is the thing being moved.  For a renaming it is wrong, and the difference is
+not academic: the two types are the same type spelled two ways, one of them
+`any`, and an `any` prints as an OCaml array rather than as a `ref`.
+
+So copy propagation is a *renaming* and does not go through `sub`: it changes
+the string and leaves every node, and in particular every recorded type,
+exactly as it was.  This is the third time the same trap has been paid for
+--- `reduce`'s comment on beta records it, and §100's `mono_advice_for` is
+the diagnostic half of it --- and it is worth naming: **a rewrite that
+replaces a node inherits that node's type, and the IR carries two spellings
+of most types.**  The eta law was fixed in the same direction at the same
+time; it had been giving the scrutinee the match node's type, for no reason
+beyond symmetry with `reduce`'s forwarder case, and it now keeps its own.
+
+The substitution machinery moved above the simplifier to make this possible,
+which is where it should have been: it is not inlining-specific.
+
+### 102.3.  `--custard_c_no_prefix` and an `assume val`
+
+The reporter's standing item, unrelated to the above.  `Abort.abort` comes
+out as `Abort_abort`, and EverParse's consumers define that symbol
+themselves.  The attribute that would fix it, `[@@custard_extern "abort"]`,
+exists only on this branch, so writing it stops `Abort.fst` typechecking with
+a released F\* --- which broke EverParse's CI until it was backed out.  He
+asked for a command-line counterpart, or for `--custard_c_no_prefix` to cover
+`assume val`s.
+
+The second, because it is not an extension of the option so much as a
+correction to it.  An external's name is the symbol the linker goes looking
+for, so it is part of this unit's interface in the only sense
+`--custard_c_no_prefix` cares about --- *more* so than a definition's, since
+nothing in the unit defines it and the whole file is a demand on the outside.
+`build_renames` already renamed types whether or not they had linkage, on the
+same reasoning: the header is the unit's interface and a consumer that cannot
+spell what it just called does not have an API.  An external was the case
+that was missed, not the case that was decided against.
+
+`[@@custard_extern "…"]` wins where it is written.  That name is the target's
+own spelling, taken verbatim (§45.1), and an option about *prefixes* has
+nothing to say about a name that was never prefixed.
+
+One ordering bug fell out.  `build_renames` ran *after* the declaration
+tables were filled, and the external table stores a **resolved** C name ---
+an external is the one declaration whose name may come from somewhere other
+than its lid, so resolving it once is what keeps the prototype and every call
+site agreeing.  Filling that table first and renaming afterwards left it
+holding the name the option had just replaced.  `build_renames` reads no
+table, so it simply moved up.
+
+`tests/custard/NoPrefixX.fst` pins both halves, with the realization in a
+separate translation unit so that the link is the assertion: `ticket` takes
+its name from the option, `noprefixx_fixed` keeps the one its attribute
+gives it, and the entry point --- which is the generated `main`'s callee and
+not something the unit exports --- keeps its prefix.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -19162,3 +19320,5 @@ reason the boundary is worth pinning at all.
 | M10θΧ | A question about deletion (§99.1) | Done.  A read whose value nothing wants survived as `(void)(a[0]);` --- Kuiper's GEMM epilogue exactly, where the combiner is `alpha*C + beta*acc` in general and degenerates to `fun _ v -> v` for the overwrite instantiation, so every thread did a redundant global load.  `Simplify` deletes an unused binding when `is_pure` holds, and `is_pure` means "may be dropped, duplicated **and** reordered".  A read is not all three: it may not be reordered, since a later write to the same cell changes it, so `E_Impure` is the only honest effect for it --- and the dead binding became an `ESeq`, which prints as a `(void)` of itself.  The effect lattice was answering a question about *motion* to a caller asking about *deletion*.  PrintC already knew the difference and had said so in §19.8; `is_droppable` was just in the wrong file.  It moved to `Syntax`, and the three sites that **discard** a term --- the unused binding, the sequenced term, and the condition of a branch `prune` has proved dead --- ask it instead.  Substituting one predicate for the other was wrong and the suite caught it in one test: `TmplLet3` stopped extracting, §46 naming `FStar.SizeT.v`, a *pure call* bound to a name dead after the template index resolved, which `is_pure` deleted and `is_droppable` did not.  The two are **incomparable**, not ordered --- an effect is a property of a node, so a pure call is deletable and the structural test cannot see it, `EApp` being opaque; a read is deletable and no effect says so --- so `is_droppable` is `is_pure e.eff ||` the structural test, a union, and the recursion picks that up at every subterm.  Worth stating plainly, because "dropping is weaker than moving" is the intuition and it is wrong in the direction that silently loses code.  The soundness line is the one the report named: a volatile or atomic read is itself the observable event and may not go, and Custard has no such node --- those arrive through `[@@custard_extern]`, an `EApp`, which is never droppable.  A discarded call is untouched; `PulseHashTable`'s four `(void)` casts are discarded calls and are all that survives in the in-tree Pulse output.  Free elsewhere too: `Simplify` runs before every backend, so OCaml and krml lose the same dead reads, and running before the printer is what lets §19.8's `cell_dead` see a cell whose last reader has just gone.  In-tree Pulse suite unchanged at 31 s |
 | M10θΨ | A boundary that speaks in `option` (§100.1) | Done.  A third downstream project, building straight to C, could not extract an external returning `option listener`: error 368, the polymorphic type has no C representation.  Both controls worked --- a function taking and returning a `listener`, and a Custard-defined function returning `option listener` --- so the only failing shape was the one a C boundary actually has.  §5.0.1 rule 4 freezes every type in an external's signature, and the reason is sound and is about **OCaml**: `FStar.String.concat` is realized by hand at `'a list`, so a `list__string` clone would name a declaration `FStar_String.ml` does not define.  A hand-written realization fixes a representation and the pass must not contradict it.  None of that survives the trip to C, where the "realization" is written *after* the fact against the header Custard generated --- there is no pre-existing definition whose idea of `option` to protect, because on this path Custard is the one who decides what `option listener` looks like and says so.  The rule was guarding a file that does not exist.  So the driver is guarded by `freeze_realized ()`, already the guard on the neighbouring `Realized`/`Imported` type freeze and now the third thing that one predicate governs; `Modelled` stays unconditional because it is not this at all, karamel matching a slice as an application of its lid.  The reporter gets the specialization declared in the generated header with the prototype above it, and §72's warning 377 fires unprompted to say the name is a hint and to typedef it once --- written for a different round and exactly the advice this boundary needs.  §31.3 predicted the one test that changes: `ListC` is now rejected for the honest reason, that a cons list is a recursive datatype, which is a better error and a worse message, since "use a pointer for the recursive field" is addressed to someone who owns the datatype and nobody owns `Prims.list`.  `record_parents` fills its table by walking the program rather than the freeze, so it survived; the rejection consults it and names the external too.  In the other direction `mono_advice_for` had to *lose* a sentence --- it explains a polymorphic type as frozen by rule 4, which on C no longer happens --- so that branch is guarded on the backend that freezes.  A diagnostic explaining a mechanism has to be turned off with it.  The honest cost: a realized external with a representable signature now fails at *link* rather than at extraction, which is already today's behaviour for every non-polymorphic one, and is the right trade --- a program calling `FStar.List.Tot` from C must supply a C `FStar.List.Tot` either way.  `tests/custard/ExternOpt.fst` pins both directions with a stub written against the generated header, so the link is the assertion.  In-tree Pulse suite unchanged at 31 s |
 | M10θΩ | A loop that runs no times (§101) | Done.  §94.4 rounded a zero-length array's *declaration* up to one cell, because `t a[0]` is a GNU extension and not C, and left its *fill* alone --- so at an element type with no initializer list the output was a one-cell declaration followed by `for (size_t _ci1 = 0; _ci1 < 0; _ci1++)`, a loop whose condition is false on entry, filling a cell no index can reach.  The scalar path had already got this right and had written down why: a length of zero "needs no fill written out and admits none", since `{ }` is not an initializer C99 accepts and the cell it would initialize cannot be read.  Every clause of that is about the **length**; it happened to be written inside the branch that requires a scalar element because that is the branch that needed it.  So the general path takes the same fact and emits no fill when the length is a literal zero, leaving `ArrInit_cell _cbuf1[1];` and §94.4's `(void)` cast --- which is not new, and had been carrying exactly this job for the scalar case since §94 shipped.  Both allocation kinds, because the argument is about the length and not about where the storage came from: a heap zero-length array keeps its `malloc` and its null check, the pointer being a value the program goes on to `free`, and only the fill goes.  Dropping the fill expression is safe for the reason the scalar `{ 0 }` already was --- anything effectful in it was hoisted into the statements emitted before the declaration and is still emitted, and what is dropped is a pure expression the loop would have evaluated zero times.  `ArrInit` gains `emptyr`, the same shape at a two-field record so the scalar branch cannot catch it; the pins are the declaration standing alone and a `CNOGREP` of `< 0;` rather than of `_ci`, since the variable-length cases in the same file keep their loops and are the reason the boundary is worth pinning.  In-tree Pulse suite unchanged at 31 s |
+| M10ιΑ | A pair that is taken apart and put back together (§102.1) | Done.  181 of the 352 `_letpattern` declarations in EverParse's `COSE_Format.c` were a record rebuilt out of the projections of the one above it.  Not a regression --- karamel emits 193 of the same construct and splices some into the use site besides --- and not a cost: the chain and the hand-collapsed version compile to byte-identical machine code at `-O3`.  It is 181 lines of noise in the parsing core.  Pulse has no multiple return, so a two-result `fn` returns a tuple and every wrapper that names the components and hands them back writes `let a, b = f () in (a, b)`, one layer per inlined wrapper.  In the IR that is not a pair of projections at all --- that shape appears only after PrintC compiles a pattern --- but `match s with C(a,b) -> C(a,b)`, which is the **constructor's eta law** written out.  So that is the rewrite, and what makes it sound without a table of constructors is that the match has *one* branch and no guard: a single constructor pattern is exhaustive only if that constructor is the type's only one, so the pattern cannot fail and the scrutinee cannot be anything else.  Paired with copy propagation, since the law alone leaves the same three lines with the constructors taken out.  The reporter held a second peephole in reserve, `C x.f₁ … x.fₙ ⇝ x`, for the standalone wrapper where the tuple really is the return value; it is not needed, because that is the *printed* shape and the IR form the eta law already rewrites to a tail call.  The rewrite cost one regression and it is the interesting part: written first as a substitution through `sub`, it stopped Custard extracting the F\* compiler, `used_marker : bool ref` printing as an OCaml array.  `sub` replaces each use *node* with the definiens node, so every use takes the definiens' recorded type --- right for an inliner, wrong for a renaming, and the two types here were the same type spelled two ways, one of them `any`.  So copy propagation changes the string and leaves every node alone.  Third time this trap has been paid for, and worth naming: a rewrite that replaces a node inherits that node's type, and the IR carries two spellings of most types.  The eta law was corrected the same way at the same time.  In-tree Pulse suite unchanged at 31 s |
+| M10ιΒ | `--custard_c_no_prefix` and an `assume val` (§102.3) | Done.  The reporter's standing item: `Abort.abort` comes out as `Abort_abort`, and the attribute that would fix it exists only on this branch, so writing it stops `Abort.fst` typechecking with a released F\* --- which broke EverParse's CI until it was backed out.  He asked for a command-line counterpart or for the option to cover `assume val`s.  The second, because it is less an extension of the option than a correction to it: an external's name is the symbol the linker goes looking for, so it is this unit's interface in the only sense the option cares about --- *more* so than a definition's, since nothing here defines it and the whole file is a demand on the outside.  `build_renames` already renamed types whether or not they had linkage, on exactly that reasoning, so an external was the case that was missed rather than the case that was decided against.  `[@@custard_extern "…"]` wins where written: that is the target's own spelling, taken verbatim, and an option about *prefixes* has nothing to say about a name that was never prefixed.  One ordering bug fell out --- `build_renames` ran after the declaration tables were filled, and the external table stores a **resolved** C name, since an external is the one declaration whose name may come from somewhere other than its lid and resolving it once is what keeps the prototype and the call sites agreeing.  Filling it first left it holding the name the option had just replaced; `build_renames` reads no table, so it moved up.  `NoPrefixX` pins both halves with the realization in a separate translation unit, so the link is the assertion |

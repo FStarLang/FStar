@@ -281,65 +281,14 @@ let rec float_lets (x:expr) (e1:expr) (k : expr -> ML expr) : ML expr =
   | ESeq (a, b) -> { x with e = ESeq (a, float_lets x b k) }
   | _ -> k e1
 
-let rec simpl (x:expr) : ML expr =
-  match x.e with
-  | ELet (v, ty, e1, e2) ->
-    let e1 = simpl e1 in
-    let e2 = simpl e2 in
-    float_lets x e1 (fun e1 ->
-    (* [let x = e in x] is just [e], whatever [e]'s effect: nothing moves. *)
-    if (match e2.e with EVar w -> w = v | _ -> false) then e1
-    else if occurs v e2 then { x with e = ELet (v, ty, e1, e2) }
-    (* Section 7.3: an unused binding may only be deleted if evaluating it is
-       unobservable; otherwise it becomes a statement, which keeps its effect
-       and its position.  Section 99: the question here is deletion and not
-       motion, so the test is [is_droppable] and not [is_pure] -- a read whose
-       value nothing wants goes, rather than becoming a [(void)] of itself. *)
-    else if is_droppable e1 then e2
-    else { x with e = ESeq (e1, e2) })
-
-  | ESeq (e1, e2) ->
-    let e1 = simpl e1 in
-    let e2 = simpl e2 in
-    float_lets x e1 (fun e1 ->
-      (* Section 99.  The same question, and the same answer: a sequenced term
-         is there for its effect, and a read has none worth a statement. *)
-      if is_droppable e1 then e2 else { x with e = ESeq (e1, e2) })
-
-  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
-  | EApp (h, es) -> { x with e = EApp (simpl h, es |> List.map simpl) }
-  | EFun (bs, b) -> { x with e = EFun (bs, simpl b) }
-  | EMatch (s, brs) ->
-    let s = simpl s in
-    let brs = brs |> List.map simpl_branch in
-    (match as_if brs with
-     | Some (t, f) -> { x with e = EIf (s, t, f) }
-     | None -> { x with e = EMatch (s, brs) })
-  | EIf (c, a, b) -> { x with e = EIf (simpl c, simpl a, simpl b) }
-  | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map simpl) }
-  | ETuple es -> { x with e = ETuple (es |> List.map simpl) }
-  | EOp (o, es) -> { x with e = EOp (o, es |> List.map simpl) }
-  | ERaise e1 -> { x with e = ERaise (simpl e1) }
-  | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, simpl e))) }
-  | EProj (e1, n, f) -> { x with e = EProj (simpl e1, n, f) }
-  | EDiscrim (e1, n) -> { x with e = EDiscrim (simpl e1, n) }
-  | ECast (e1, c) -> { x with e = ECast (simpl e1, c) }
-  | ECoerce (e1, c) -> { x with e = ECoerce (simpl e1, c) }
-  | EWhile (a, b) -> { x with e = EWhile (simpl a, simpl b) }
-  | ETry (a, brs) -> { x with e = ETry (simpl a, brs |> List.map simpl_branch) }
-
-and simpl_branch (br:branch) : ML branch =
-  let p, g, b = br in
-  (p, (match g with None -> None | Some g -> Some (simpl g)), simpl b)
-
-(* -------------------------------------------------------------------- *)
-(* Inlining                                                             *)
-(* -------------------------------------------------------------------- *)
-
 (* A substitution of expressions for variables, plus the renaming that keeps
    the copy's own bound variables distinct from the ones at the call site.
    Both are string maps because Custard variable names are already unique per
-   definition; only *copying* a definition can break that. *)
+   definition; only *copying* a definition can break that.
+
+   Above the simplifier rather than with the inliner it was written for:
+   section 102's copy propagation is a substitution too, and the smallest one
+   there is. *)
 let subst = SMap.t expr
 
 let rename (x:string) : ML string = uniq (base_name x) (GenSym.next_id ())
@@ -398,6 +347,157 @@ and sub_pat (sm:subst) (p:pat) : ML pat =
   | PRecord (n, fs) -> PRecord (n, fs |> List.map (fun (f, q) -> (f, sub_pat sm q)))
   | PTuple ps -> PTuple (ps |> List.map (sub_pat sm))
   | POr ps -> POr (ps |> List.map (sub_pat sm))
+
+(* Section 102.  [w] for [v], leaving every node otherwise alone -- in
+   particular its recorded type, which is what separates this from [sub].
+   Names are unique within a definition, so nothing below can rebind [v] and
+   there is no binder to avoid. *)
+let rec rename_var (v w : string) (x:expr) : ML expr =
+  let g = rename_var v w in
+  let gb (br:branch) : ML branch =
+    let p, gd, b = br in
+    (p, (match gd with None -> None | Some e -> Some (g e)), g b) in
+  let e' =
+    match x.e with
+    | EVar u -> if u = v then EVar w else x.e
+    | EConst _ | EQual _ | EAny | EAbort _ -> x.e
+    | ELet (u, t, a, b) -> ELet (u, t, g a, g b)
+    | ESeq (a, b) -> ESeq (g a, g b)
+    | EWhile (a, b) -> EWhile (g a, g b)
+    | EApp (h, es) -> EApp (g h, es |> List.map g)
+    | EFun (bs, b) -> EFun (bs, g b)
+    | EIf (c, a, b) -> EIf (g c, g a, g b)
+    | EMatch (sc, brs) -> EMatch (g sc, brs |> List.map gb)
+    | ETry (sc, brs) -> ETry (g sc, brs |> List.map gb)
+    | ECtor (n, es) -> ECtor (n, es |> List.map g)
+    | ETuple es -> ETuple (es |> List.map g)
+    | EOp (o, es) -> EOp (o, es |> List.map g)
+    | ERaise a -> ERaise (g a)
+    | ERecord (n, fs) -> ERecord (n, fs |> List.map (fun (f, e) -> (f, g e)))
+    | EProj (a, n, f) -> EProj (g a, n, f)
+    | EDiscrim (a, n) -> EDiscrim (g a, n)
+    | ECast (a, c) -> ECast (g a, c)
+    | ECoerce (a, c) -> ECoerce (g a, c) in
+  { x with e = e' }
+
+(* Section 102.  [match s with C(x1,...,xn) -> C(x1,...,xn)] is [s]: the
+   constructor's eta law, for the one shape where the IR states it and then
+   does not use it.  Pulse has no multiple return, so a two-result [fn]
+   returns a tuple, and every wrapper that names the two components and hands
+   them back writes [let a, b = f () in (a, b)] -- which extracts to exactly
+   this, one layer per wrapper.
+
+   *One* branch and no guard is what makes the rewrite sound without a table
+   of constructors: a match with a single constructor pattern is exhaustive
+   only if that constructor is the type's only one, so the pattern cannot
+   fail and the scrutinee cannot be anything else.  [s] is evaluated once
+   either way, so its effect does not enter into it.
+
+   The scrutinee keeps its *own* type and is not given the match node's,
+   which is the trap [reduce]'s comment on beta already records: the node
+   being replaced does not always carry the more precise type, and on the
+   OCaml path a [ref] that lost its type became an [any], which prints as an
+   array.  Here the two denote the same type and the scrutinee's is the one
+   the rest of the program was built against. *)
+let same_vars (ps : list pat) (es : list expr) : ML bool =
+  List.length ps = List.length es &&
+  List.zip ps es |> List.for_all (fun (q, (e:expr)) ->
+    match q, e.e with
+    | PVar a, EVar b -> a = b
+    | _ -> false)
+
+let rebuild_id (s:expr) (brs:list branch) : ML (option expr) =
+  match brs with
+  | [(p, None, body)] ->
+    (match p, body.e with
+     | PCtor (cn, ps), ECtor (dn, es)
+       when string_of_name cn = string_of_name dn && same_vars ps es ->
+       Some s
+     (* The same law for a record, which is what a named two-result type is
+        written as and reaches the IR as. *)
+     | PRecord (tn, fps), ERecord (rn, fes)
+       when string_of_name tn = string_of_name rn
+         && List.length fps = List.length fes
+         && List.zip fps fes |> List.for_all (fun ((f, _), (g, _)) -> f = g)
+         && same_vars (fps |> List.map snd) (fes |> List.map snd) ->
+       Some s
+     | _ -> None)
+  | _ -> None
+
+let rec simpl (x:expr) : ML expr =
+  match x.e with
+  | ELet (v, ty, e1, e2) ->
+    let e1 = simpl e1 in
+    let e2 = simpl e2 in
+    float_lets x e1 (fun e1 ->
+    (* [let x = e in x] is just [e], whatever [e]'s effect: nothing moves. *)
+    if (match e2.e with EVar w -> w = v | _ -> false) then e1
+    (* Section 102.  Copy propagation: [let v = w in e] is [e] with [w] for
+       [v].  Reading a variable is pure and free, so this neither moves work
+       nor duplicates it, and it is what turns a collapsed chain of wrappers
+       back into a single name.  Without it the rewrite above leaves
+       [let p1 = p in let p2 = p1 in p2._1], which is the same three lines
+       with the constructors taken out.
+
+       A *renaming* and not a substitution, which is why it does not go
+       through [sub].  Substituting replaces each use node with the definiens
+       node, so every use takes the definiens' recorded type; renaming leaves
+       each use node exactly as it was and changes only the string.  The two
+       differ whenever the two types are spelled differently for the same
+       thing, and that difference is not academic: it printed a [bool ref] as
+       an OCaml array and stopped Custard from extracting the F\* compiler. *)
+    else if (match e1.e with EVar w -> w <> v | _ -> false) then
+      let w = (match e1.e with EVar w -> w | _ -> v) in
+      rename_var v w e2
+    else if occurs v e2 then { x with e = ELet (v, ty, e1, e2) }
+    (* Section 7.3: an unused binding may only be deleted if evaluating it is
+       unobservable; otherwise it becomes a statement, which keeps its effect
+       and its position.  Section 99: the question here is deletion and not
+       motion, so the test is [is_droppable] and not [is_pure] -- a read whose
+       value nothing wants goes, rather than becoming a [(void)] of itself. *)
+    else if is_droppable e1 then e2
+    else { x with e = ESeq (e1, e2) })
+
+  | ESeq (e1, e2) ->
+    let e1 = simpl e1 in
+    let e2 = simpl e2 in
+    float_lets x e1 (fun e1 ->
+      (* Section 99.  The same question, and the same answer: a sequenced term
+         is there for its effect, and a read has none worth a statement. *)
+      if is_droppable e1 then e2 else { x with e = ESeq (e1, e2) })
+
+  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
+  | EApp (h, es) -> { x with e = EApp (simpl h, es |> List.map simpl) }
+  | EFun (bs, b) -> { x with e = EFun (bs, simpl b) }
+  | EMatch (s, brs) ->
+    let s = simpl s in
+    let brs = brs |> List.map simpl_branch in
+    (match rebuild_id s brs with
+     | Some r -> r
+     | None ->
+    match as_if brs with
+     | Some (t, f) -> { x with e = EIf (s, t, f) }
+     | None -> { x with e = EMatch (s, brs) })
+  | EIf (c, a, b) -> { x with e = EIf (simpl c, simpl a, simpl b) }
+  | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map simpl) }
+  | ETuple es -> { x with e = ETuple (es |> List.map simpl) }
+  | EOp (o, es) -> { x with e = EOp (o, es |> List.map simpl) }
+  | ERaise e1 -> { x with e = ERaise (simpl e1) }
+  | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, simpl e))) }
+  | EProj (e1, n, f) -> { x with e = EProj (simpl e1, n, f) }
+  | EDiscrim (e1, n) -> { x with e = EDiscrim (simpl e1, n) }
+  | ECast (e1, c) -> { x with e = ECast (simpl e1, c) }
+  | ECoerce (e1, c) -> { x with e = ECoerce (simpl e1, c) }
+  | EWhile (a, b) -> { x with e = EWhile (simpl a, simpl b) }
+  | ETry (a, brs) -> { x with e = ETry (simpl a, brs |> List.map simpl_branch) }
+
+and simpl_branch (br:branch) : ML branch =
+  let p, g, b = br in
+  (p, (match g with None -> None | Some g -> Some (simpl g)), simpl b)
+
+(* -------------------------------------------------------------------- *)
+(* Inlining                                                             *)
+(* -------------------------------------------------------------------- *)
 
 let imax (a b : int) : int = if a >= b then a else b
 let imin (a b : int) : int = if a <= b then a else b

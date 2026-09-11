@@ -2907,10 +2907,23 @@ let build_renames (p:program) : ML unit =
        constructors, whose enum tags are equally part of what the header
        exports.  [struct_tag] derives from [c_name], so the struct tags
        follow.  A specialization is excluded here as everywhere. *)
+    (* Section 102.2.  An [assume val] too.  The symbol it names is resolved
+       by the linker against code this program does not contain, so the name
+       is part of the unit's interface in the only sense that matters here --
+       more so than a definition's, since nothing in the unit defines it and
+       the whole file is a demand on the outside.  [@@custard_extern "..."]
+       already says the name outright and wins: it is the target's spelling,
+       taken verbatim (section 45.1), and an option about *prefixes* has
+       nothing to say about a name that was never prefixed.  This is what
+       lets a program whose realization is called [abort] keep an [Abort.fst]
+       that a released F* can still typecheck. *)
     let renamable (d:decl) : ML (option name) =
       match d with
       | DLet l -> if is_public l then Some l.dl_name else None
       | DType t -> Some t.dt_name
+      | DExternal x -> (match x.dx_target with
+                        | Some "" | None -> Some x.dx_name
+                        | Some _ -> None)
       | _ -> None in
     let ctors_of (d:decl) : ML (list name) =
       match d with
@@ -2955,9 +2968,10 @@ module."; ]
       if None? (SMap.try_find used_mod m) then
         E.log_issue0 E.Warning_CustardNoPublicDefinitions [
           text ("Custard: --custard_c_no_prefix " ^ m ^ " renamed nothing.");
-          text "The option applies to definitions with external linkage. \
-Name the module with --custard_entry_module, or its definitions with \
---custard_entry, so that they are part of this unit's interface."; ])
+          text "The option applies to types, to assume vals, and to \
+definitions with external linkage.  Name the module with \
+--custard_entry_module, or its definitions with --custard_entry, so that \
+they are part of this unit's interface."; ])
   end
 
 (* Section 35.1.  A public definition whose signature mentions a
@@ -3196,6 +3210,14 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
      declaration of our own for it is what section 14.10 is the record of. *)
   let init_name = init_name cu in
   record_parents p;
+  (* Section 102.2.  Before the tables, not after them.  The external table
+     below stores a *resolved* C name -- an external is the one declaration
+     whose name may come from somewhere other than its lid, so resolving it
+     once is what keeps the prototype and every call site agreeing -- and it
+     resolves through [c_name], which reads {!renames}.  Filling it first and
+     renaming afterwards left the table holding the name the option had just
+     replaced.  Nothing in here reads a table, so the move costs nothing. *)
+  build_renames p;
   let tt = SMap.create 50 in
   let ct = SMap.create 50 in
   let xt = SMap.create 20 in
@@ -3282,7 +3304,6 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
         (if Cons? l.dl_binders then n else List.length (arg_ctys l.dl_ret))
     | _ -> ());
   types := tt; ctors := ct; externs := xt; keeps := kt; void_fns := vt;
-  build_renames p;
   build_macros p;
   check_interface_names p;
   check_reference_copies p;

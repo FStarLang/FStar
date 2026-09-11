@@ -167,6 +167,22 @@ CNOGREP_DeadRead += "(void)(a["
 CGREP_DeadRead += "DeadRead_bump(r);"
 CGREP_DeadRead += "uint32_t v1 = a[1];"
 
+# Section 102.  Pulse has no multiple return, so a two-result fn returns a
+# tuple, and every wrapper that names the two components and hands them back
+# writes [let a, b = f () in (a, b)] -- one destructure-and-rebuild per
+# inlined layer, which is 181 of them in EverParse's COSE parser.  The
+# constructor's eta law removes all of them; the one temporary that cannot go
+# is the result of the actual call, since C has no multiple return.
+C_TESTS += TupBind
+CGREP_TupBind += "_letpattern = TupBind_prim(x);"
+CGREP_TupBind += "return _letpattern._1;"
+# The standalone wrapper -- not inline_for_extraction, so the tuple really is
+# its return value.  The reporter expected this one to need a second peephole
+# and it does not: the eta law fires on the body directly and leaves a call.
+CGREP_TupBind += "return TupBind_prim(x);"
+CNOGREP_TupBind += "_letpattern1"
+CNOGREP_TupBind += "._1 = _letpattern"
+
 C_TESTS += ArrInit
 CGREP_ArrInit += "uint8_t a[8] = { 0 };"
 CGREP_ArrInit += "uint8_t a[4] = { 7, 7, 7, 7 };"

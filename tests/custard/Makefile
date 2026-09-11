@@ -669,6 +669,21 @@ CGREP_ExternOpt += "extern uint32_t ExternOpt_close(FStar_Pervasives_Native_opti
 # The external type itself is still the target's: no definition, no clone.
 CNOGREP_ExternOpt += "ExternOpt_listener"
 
+# Section 102.2.  --custard_c_no_prefix now covers assume vals: an external's
+# name is the symbol the linker resolves, which is this unit's interface in
+# the only sense the option cares about.  A [@@custard_extern] name wins, and
+# the greps are both halves of that -- the renamed one and the untouched one.
+C_TESTS += NoPrefixX
+FLAGS_NoPrefixX += --custard_c_no_prefix NoPrefixX
+CEXTRA_NoPrefixX = NoPrefixX_stubs.c
+CGREP_NoPrefixX += "extern uint32_t ticket(uint32_t);"
+CGREP_NoPrefixX += "extern uint32_t noprefixx_fixed(uint32_t);"
+CNOGREP_NoPrefixX += "NoPrefixX_ticket"
+CNOGREP_NoPrefixX += "NoPrefixX_fixed"
+# The entry point is not renamed: it is the generated [main]'s callee, not a
+# definition the unit exports, which is what keeps the option off it.
+CGREP_NoPrefixX += "NoPrefixX_main(void)"
+
 REJECT_TESTS += MonoExtern
 CODE_MonoExtern = 376
 FLAGS_MonoExtern += --custard_backend C --custard_monomorphize_types true
