@@ -196,9 +196,9 @@ let tc_term_phase1 (g:TcEnv.env) (e:S.term) (instantiate_imp:bool) =
     let g = TcEnv.set_range g e.pos in
     let g = {g with phase1=true; admit=true; instantiate_imp} in
     let e, c, guard = FStarC_TypeChecker_TcTerm.tc_tot_or_gtot_term g e in
-    let t = c.res_typ in
-    let c = FStarC_TypeChecker_Normalize.maybe_ghost_to_pure_lcomp g c in
-    let eff = if FStarC_TypeChecker_Common.is_total_lcomp c then FStarC_TypeChecker_Core.E_Total else FStarC_TypeChecker_Core.E_Ghost in
+    let t = FStarC_Syntax_Util.comp_result c in
+    let c = FStarC_TypeChecker_Normalize.maybe_ghost_to_pure g c in
+    let eff = if FStarC_Syntax_Util.is_total_comp c then FStarC_TypeChecker_Core.E_Total else FStarC_TypeChecker_Core.E_Ghost in
     let guard = FStarC_TypeChecker_Rel.solve_deferred_constraints g guard in
     let guard = FStarC_TypeChecker_Rel.resolve_implicits g guard in
     e, t, eff) in

@@ -293,7 +293,9 @@ let is_seq_literal  = __is_list_literal C.seq_cons_lid C.seq_empty_lid
 let can_resugar_machine_integer (hd : S.term) (args : S.args) : ML (option (fv & int & int_base)) =
   match (SS.compress hd).n with
   | Tm_fvar fv when can_resugar_machine_integer_fv fv -> (
-    match args with
+    (* [FStar.SizeT.uint_to_t] has a precondition, hence a trailing implicit
+       proof argument; match on the explicit arguments only. *)
+    match no_imp_args args with
     | [(a, None)] -> (
       match (SS.compress a).n with
       | Tm_constant (Const_int (i, b)) ->
@@ -437,8 +439,21 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
       (* Flatten the arrow *)
       let xs, body = U.arrow_formals_comp_ln_strict t in
       let xs, body = SS.open_comp xs body in
+      (* A precondition is desugared into a trailing implicit [squash] binder.
+         Recover it, so that a [Lemma] still reads [Lemma (requires p) (ensures q)]
+         rather than losing its precondition to [filter_imp_bs] below. *)
+      let xs, pre =
+        match List.rev xs with
+        | b :: rest when is_imp_bqual b.binder_qual
+                      && U.is_lemma_comp body
+                      && not (mem b.binder_bv (FStarC.Syntax.Free.names_comp body)) ->
+          (match U.un_squash b.binder_bv.sort with
+           | Some p -> List.rev rest, Some p
+           | None -> xs, None)
+        | _ -> xs, None
+      in
       let xs = filter_imp_bs xs in
-      let body = resugar_comp' env body in
+      let body = resugar_comp_with_pre env pre body in
       let xs = xs |> map (fun b -> resugar_binder' env b t.pos) |> List.rev in
       let rec aux body = function
         | [] -> body
@@ -1017,12 +1032,14 @@ and resugar_calc (env:DsEnv.env) (t0:S.term) : ML (option A.term) =
   let resugar_calc_finish (t:S.term) : ML (option (S.term & S.term)) =
     let hd, args = U.head_and_args_full t in
     match (SS.compress (U.un_uinst hd)).n, args with
-    | Tm_fvar fv, [(_, Some { aqual_implicit = true }); // type
-                   (rel, None);                         // top relation
-                   (_, Some { aqual_implicit = true }); // x
-                   (_, Some { aqual_implicit = true }); // y
-                   (_, Some { aqual_implicit = true }); // rs
-                   (pf, None)]                          // pf : unit -> Tot (calc_pack rs x y)
+    | Tm_fvar fv, (_, Some { aqual_implicit = true }) :: // type
+                  (rel, None) ::                         // top relation
+                  (_, Some { aqual_implicit = true }) :: // x
+                  (_, Some { aqual_implicit = true }) :: // y
+                  (_, Some { aqual_implicit = true }) :: // rs
+                  (pf, None) ::                          // pf : unit -> Tot (calc_pack rs x y)
+                  _ (* [calc_finish] is a [Lemma] with a precondition, so it also
+                       takes a trailing implicit proof argument. *)
         when S.fv_eq_lid fv C.calc_finish_lid ->
         let pf = U.unthunk pf in
         Some (rel, pf)
@@ -1160,35 +1177,33 @@ and resugar_match_returns env scrutinee r asc_opt : ML _ =
 
 
 and resugar_comp' (env: DsEnv.env) (c:S.comp) : ML A.term =
+  resugar_comp_with_pre env None c
+
+and resugar_comp_with_pre (env: DsEnv.env) (pre: option S.term) (c:S.comp) : ML A.term =
   let mk (a:A.term') : A.term =
         //augment `a` with its source position
         //and an Unknown level (the level is unimportant ... we should maybe remove it altogether)
         A.mk_term a c.pos A.Un
   in
   match (c.n) with
-  | Total typ ->
-    let t = resugar_term' env typ in
-    (* If --print_implicits, we print the Tot *)
-    if Options.print_implicits()
-    then mk (A.Construct(C.effect_Tot_lid, [(t, A.Nothing)]))
-    else t
+  (* A pure or ghost computation is just a [Tot]/[GTot]; print it as such,
+     and elide a [Tot] altogether unless --print_implicits.
 
-  | GTotal typ ->
-    let t = resugar_term' env typ in
-    mk (A.Construct(C.effect_GTot_lid, [(t, A.Nothing)]))
-
-  (* [PURE t (requires True) (ensures True)] is just [Tot t]; print it as such. *)
-  | Comp c when U.has_trivial_spec (S.mk (S.Comp c) Range.dummyRange)
-             && not (Options.print_implicits ())
-             && not (c.flags |> BU.for_some (function
+     Everything here is presentation, so it is [source_effect_name] -- the name
+     the user wrote -- that decides, not the root [effect_name] the desugarer
+     resolved it to.  Otherwise every [Lemma] would print as its [squash]ed
+     result type, since [Lemma] abbreviates [Tot]. *)
+  | Comp c when not (c.flags |> BU.for_some (function
                      | DECREASES _ | SMTPAT _ -> true
                      | _ -> false))
-             && (lid_equals c.effect_name C.effect_PURE_lid ||
-                 lid_equals c.effect_name C.effect_GHOST_lid) ->
-    resugar_comp' env
-      (if lid_equals c.effect_name C.effect_PURE_lid
-       then S.mk_Total c.result_typ
-       else S.mk_GTotal c.result_typ)
+             && (U.is_pure_effect c.source_effect_name ||
+                 U.is_ghost_effect c.source_effect_name) ->
+    let t = resugar_term' env c.result_typ in
+    if U.is_ghost_effect c.source_effect_name
+    then mk (A.Construct(C.effect_GTot_lid, [(t, A.Nothing)]))
+    else if Options.print_implicits()
+    then mk (A.Construct(C.effect_Tot_lid, [(t, A.Nothing)]))
+    else t
 
   | Comp c ->
     let result = (resugar_term' env c.result_typ, A.Nothing) in
@@ -1217,31 +1232,32 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : ML A.term =
       | Some pats when not (U.is_fvar C.nil_lid (U.head_of pats)) -> [pats]
       | _ -> []
     in
-    (* Both clauses are optional, so we only print the non-trivial ones. *)
-    let triv_pre = U.is_fvar C.true_lid c.comp_pre in
-    if lid_equals c.effect_name C.effect_Lemma_lid then
-      let post = U.unthunk_lemma_post c.comp_post in
-      (* [Lemma] with no arguments at all is not valid syntax, so we keep the
-         postcondition when there is nothing else to print. *)
-      let triv_post = U.is_t_true post && not triv_pre in
-      let pre = if triv_pre then [] else [mk (Requires (resugar_term' env c.comp_pre))] in
-      let post = if triv_post then [] else [mk (Ensures (resugar_term' env post))] in
+    if lid_equals c.source_effect_name C.effect_Lemma_lid then
+      (* A computation type stores no specification any more: a [Lemma]'s
+         postcondition is a [squash] in its result type.  Recover it, so error
+         messages and hovers still read [Lemma (ensures q)] rather than the bare
+         [Lemma], which is not even valid syntax. *)
+      let post =
+        match U.un_squash c.result_typ with
+        | Some q -> [mk (Ensures (resugar_term' env q))]
+        | None -> []
+      in
+      let pre =
+        match pre with
+        | Some p -> [mk (Requires (resugar_term' env p))]
+        | None -> []
+      in
       let pats = List.map (resugar_term' env) smt_pats in
       let decrease = mk_decreases c.flags in
 
-      mk (A.Construct(maybe_shorten_lid env c.effect_name, List.map (fun t -> (t, A.Nothing)) (pre@post@decrease@pats)))
+      mk (A.Construct(maybe_shorten_lid env c.source_effect_name, List.map (fun t -> (t, A.Nothing)) (pre@post@decrease@pats)))
 
     else if (Options.print_effect_args()) then
-      let pre = if triv_pre then [] else [mk (Requires (resugar_term' env c.comp_pre)), A.Nothing] in
-      let post =
-        if U.is_trivial_post c.comp_post then []
-        else [mk (Ensures (resugar_term' env c.comp_post)), A.Nothing]
-      in
       let decrease = List.map (fun t -> (t, A.Nothing)) (mk_decreases c.flags) in
-      mk (A.Construct(maybe_shorten_lid env c.effect_name,
-                      result::decrease@pre@post))
+      mk (A.Construct(maybe_shorten_lid env c.source_effect_name,
+                      result::decrease))
     else
-      mk (A.Construct(maybe_shorten_lid env c.effect_name, [result]))
+      mk (A.Construct(maybe_shorten_lid env c.source_effect_name, [result]))
 
 and resugar_binder' env (b:S.binder) r : ML A.binder =
   let imp = resugar_bqual env b.binder_qual in
@@ -1499,8 +1515,8 @@ let resugar_eff_decl' env ed =
   let r = Range.dummyRange in
   let q = [] in
   let eff_name = ident_of_lid ed.mname in
-  let eff_binders = filter_imp_bs ed.binders in
-  let eff_binders = eff_binders |> map (fun b -> resugar_binder' env b r) |> List.rev in
+  (* An effect is just a name: it has no binders. *)
+  let eff_binders = [] in
   match ed.combinators with
   | None ->
     (* An effect without a representation is always an assumption. *)
@@ -1533,7 +1549,10 @@ let resugar_sigelt' env se : ML (option A.decl) =
     begin match leftover_datacons with
       | [] -> //true
         (* TODO : documentation should be retrieved from the desugaring environment at some point *)
-        Some (decl'_to_decl se (Tycon (false, false, tycons)))
+        (* Annotated: the inferred type would otherwise have to absorb the
+           [==] fact for the declaration, which mentions [tycons]. *)
+        let d : A.decl = decl'_to_decl se (Tycon (false, false, tycons)) in
+        Some d
       | [se] ->
         //assert (se.sigquals |> BU.for_some (function | ExceptionConstructor -> true | _ -> false));
         (* Exception constructor declaration case *)
@@ -1590,11 +1609,10 @@ let resugar_sigelt' env se : ML (option A.decl) =
     Some (decl'_to_decl se (A.SubEffect({msource=e.source; mdest=e.target;
                                          lift_op=e.lift |> Option.map (fun ts -> resugar_term' env (snd ts))})))
 
-  | Sig_effect_abbrev {lid; us=vs; bs; comp=c; cflags=flags} ->
-    let bs, c = SS.open_comp bs c in
-    let bs = filter_imp_bs bs in
-    let bs = bs |> map (fun b -> resugar_binder' env b se.sigrng) in
-    Some (decl'_to_decl se (A.Tycon(false, false, [A.TyconAbbrev(ident_of_lid lid, bs, None, resugar_comp' env c)])))
+  (* [effect M = N] *)
+  | Sig_effect_abbrev {lid; root} ->
+    let rhs = A.mk_term (A.Name root) se.sigrng A.Un in
+    Some (decl'_to_decl se (A.Tycon(false, false, [A.TyconAbbrev(ident_of_lid lid, [], None, rhs)])))
 
   | Sig_pragma p ->
     Some (decl'_to_decl se (A.Pragma (resugar_pragma env p)))

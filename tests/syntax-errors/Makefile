@@ -1,7 +1,8 @@
 FSTAR_ROOT ?= ../..
 
-# The files in this directory fail to parse, so we cannot run a dependency
-# analysis on them, nor verify them. We only check the error F* reports.
+# The files in this directory fail to parse or to desugar, so we cannot run a
+# dependency analysis on them, nor verify them. We only check the error F*
+# reports.
 NODEPEND=1
 NOVERIFY=1
 

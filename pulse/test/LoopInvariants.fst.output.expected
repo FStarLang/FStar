@@ -11,8 +11,8 @@
       r: Pulse.Lib.Reference.ref Prims.int
       s: Pulse.Lib.Reference.ref Prims.int
       meas: Prims.unit
-      __: Prims.squash (meas == ())
-      __: Prims.squash Prims.l_True
+      meas == ()
+      Prims.l_True
       __: Prims.unit
   - See also LoopInvariants.fst(65,4-65,10)
 
@@ -29,8 +29,8 @@
       r: Pulse.Lib.Reference.ref Prims.int
       s: Pulse.Lib.Reference.ref Prims.int
       meas: Prims.unit
-      __: Prims.squash (meas == ())
-      __: Prims.squash Prims.l_True
+      meas == ()
+      Prims.l_True
       __: Prims.unit
   - See also LoopInvariants.fst(76,4-76,10)
 

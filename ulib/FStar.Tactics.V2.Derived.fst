@@ -564,6 +564,24 @@ let pose (t:term) : Tac binding =
     exact t;
     intro ()
 
+(** As [pose], but [t] is *applied* rather than used exactly.  The difference
+matters for a term with leftover implicit arguments -- a lemma's precondition is
+one, now that it is a trailing implicit binder rather than part of a computation
+type: [apply] turns such an argument into a goal, where [exact] would leave it as
+an unsolved unification variable.  Any goal so introduced is moved behind the
+main one. *)
+let pose_apply (t:term) : Tac binding =
+    apply (`__cut);
+    flip ();
+    let n_before = ngoals () in
+    apply t;
+    let gs = goals () in
+    let n_introduced = ngoals () - (n_before - 1) in
+    let n_introduced = if n_introduced < 0 then 0 else n_introduced in
+    let introduced, rest = List.Tot.Base.splitAt n_introduced gs in
+    set_goals (rest @ introduced);
+    intro ()
+
 let intro_as (s:string) : Tac binding =
     let b = intro () in
     rename_to b s
@@ -719,15 +737,14 @@ let admit_dump_t () : Tac unit =
   dump "Admitting";
   apply (`admit)
 
-val admit_dump : #a:Type -> (#[admit_dump_t ()] x : (unit -> Admit a)) -> unit -> Admit a
+val admit_dump : #a:Type -> (#[admit_dump_t ()] x : (unit -> Tot (_:a{False}))) -> unit -> Tot (_:a{False})
 let admit_dump #a #x () = x ()
 
 private
 let magic_dump_t () : Tac unit =
   dump "Admitting";
-  apply (`magic);
-  exact (`());
-  ()
+  (* [apply] fills in [magic]'s anonymous [unit] argument itself *)
+  apply (`magic)
 
 val magic_dump : #a:Type -> (#[magic_dump_t ()] x : a) -> unit -> Tot a
 let magic_dump #a #x () = x
@@ -780,13 +797,16 @@ let add_elem (t : unit -> Tac 'a) : Tac 'a = focus (fun () ->
 let specialize (#a:Type) (f:a) (l:list string) :unit -> Tac unit
   = fun () -> solve_then (fun () -> exact (quote f)) (fun () -> norm [delta_only l; iota; zeta])
 
-let tlabel (l:string) =
+(* The [Tac unit] annotations here are not redundant: [fail] returns a refined
+   [unit] now, so without them the inferred result type carries the [goals ()]
+   match's postcondition as a refinement. *)
+let tlabel (l:string) : Tac unit =
     match goals () with
     | [] -> fail "tlabel: no goals"
     | h::t ->
         set_goals (set_label l h :: t)
 
-let tlabel' (l:string) =
+let tlabel' (l:string) : Tac unit =
     match goals () with
     | [] -> fail "tlabel': no goals"
     | h::t ->

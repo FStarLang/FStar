@@ -202,6 +202,12 @@ let _simpl_hide_reveal (t:thua_t) : T.Tac (option term) =
     end
   | None -> None
 
+(* A precondition is a trailing implicit [squash] argument now, so an
+   application of a partial operation such as [FStar.SizeT.add] carries one
+   more argument than the source writes.  Match on the explicit ones. *)
+let explicit_args (args : list argv) : list argv =
+  FStar.List.Tot.filter (fun (_, q) -> Q_Explicit? q) args
+
 let is_size_t_v (t:thua_t) : T.Tac (option term) =
   match hua t with
   | Some (h, us, args) ->
@@ -221,7 +227,7 @@ let _simpl_sizet_literal (t:thua_t) : T.Tac (option term) =
     | Some (h, us, args) ->
       if implode_qn (T.inspect_fv h) = `%FStar.SizeT.uint_to_t
       then
-        match args with
+        match explicit_args args with
         | [(t, Q_Explicit)] -> Some t
         | _ -> None
       else
@@ -257,7 +263,7 @@ let math_opfv (o : op) : string =
 let is_size_t_applied_op (t:thua_t) : T.Tac (option (op & term & term)) =
   match hua t with
   | Some (h, us, args) -> (
-    match is_size_t_op h, args with
+    match is_size_t_op h, explicit_args args with
     | Some op, [(l, Q_Explicit); (r, Q_Explicit)] ->
       Some (op, l, r)
     | _ -> None

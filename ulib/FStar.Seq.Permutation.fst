@@ -491,12 +491,12 @@ let rec foldm_snoc_perm #a #eq m s0 s1 p
 let cm_associativity #c #eq (cm: CE.cm c eq)
   : Lemma (forall (x y z:c). {:pattern (x `cm.mult` y `cm.mult` z)}
               (x `cm.mult` y `cm.mult` z) `eq.eq` (x `cm.mult` (y `cm.mult` z)))
-  = Classical.forall_intro_3 (Classical.move_requires_3 cm.associativity)
+  = Classical.forall_intro_3 cm.associativity
 
 let cm_commutativity #c #eq (cm: CE.cm c eq)
   : Lemma (forall (x y:c). {:pattern (x `cm.mult` y)}
               (x `cm.mult` y) `eq.eq` (y `cm.mult` x))
-  = Classical.forall_intro_2 (Classical.move_requires_2 cm.commutativity)
+  = Classical.forall_intro_2 cm.commutativity
 
 (* A utility to introduce the equivalence relation laws into the context.
    FStar.Algebra.CommutativeMonoid provides something similar, but this

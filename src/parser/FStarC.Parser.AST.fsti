@@ -89,7 +89,6 @@ type term' =
   | Decreases of term
   | Labeled   of term & string & bool
   | Discrim   of lid   (* Some?  (formerly is_Some) *)
-  | Attributes of list term   (* attributes decorating a term *)
   | Antiquote of term  (* Antiquotation within a quoted term *)
   | Quote     of term & quote_kind
   | VQuote    of term        (* Quoting an lid, this gets removed by the desugarer *)
@@ -286,8 +285,6 @@ and effect_decl =
      with a monadic representation, used for reification/extraction only.
      The [list decl] holds the combinator definitions. *)
   | DefineEffect   of ident & list binder & list decl
-  (* [effect M a p q = N a p' q']: an effect abbreviation. *)
-  | RedefineEffect of ident & list binder & term
 
 instance val hasRange_decl : hasRange decl
 

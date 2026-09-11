@@ -1031,9 +1031,6 @@ let collect_module_or_decls (filename:string) (m:either modul (list decl)) : ML 
     | DefineEffect (_, binders, decls) ->
         collect_binders binders;
         List.iter (fun d -> collect_decl d.d) decls
-    | RedefineEffect (_, binders, t) ->
-        collect_binders binders;
-        collect_term t
 
   and collect_binders (binders: list binder) : ML unit =
     List.iter collect_binder binders
@@ -1195,8 +1192,6 @@ let collect_module_or_decls (filename:string) (m:either modul (list decl)) : ML 
     | Antiquote t
     | VQuote t ->
         collect_term t
-    | Attributes cattributes  ->
-        List.iter collect_term cattributes
     | CalcProof (rel, init, steps) ->
         add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Calc")));
         begin
@@ -2128,8 +2123,10 @@ let collect (all_cmd_line_files: list file_name)
   in
   if !dbg
   then Format.print1 "Interfaces needing inlining: %s\n" (String.concat ", " inlining_ifaces);
-  all_files,
-  mk_deps dep_graph file_system_map valid_namespaces all_cmd_line_files (RBSet.from_list all_files) inlining_ifaces parse_results
+  (* Annotated: this function's type is inferred, and the [==] fact for the
+     [deps] record mentions the local [dep_graph] and friends. *)
+  let d : deps = mk_deps dep_graph file_system_map valid_namespaces all_cmd_line_files (RBSet.from_list all_files) inlining_ifaces parse_results in
+  all_files, d
 
 (* In public interface *)
 let parsing_data_of_modul deps filename modul_opt =

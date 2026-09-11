@@ -174,33 +174,6 @@ val conj_guards   : list guard_t -> ML guard_t
 val split_guard   : guard_t -> guard_t & guard_t
 
 val weaken_guard_formula: guard_t -> typ -> ML guard_t
-type lcomp = { //a lazy computation
-    eff_name: lident;
-    res_typ: typ;
-    cflags: list cflag;
-    comp_thunk: ref (either (unit -> ML (comp & guard_t)) comp)
-}
-
-val mk_lcomp:
-    eff_name: lident ->
-    res_typ: typ ->
-    cflags: list cflag ->
-    comp_thunk: (unit -> ML (comp & guard_t)) -> ML lcomp
-
-val lcomp_comp: lcomp -> ML (comp & guard_t)
-val apply_lcomp : (comp -> ML comp) -> (guard_t -> ML guard_t) -> lcomp -> ML lcomp
-val lcomp_to_string : lcomp -> ML string (* CAUTION! can have side effects of forcing the lcomp *)
-val lcomp_set_flags : lcomp -> list S.cflag -> ML lcomp
-val is_total_lcomp : lcomp -> ML bool
-val is_tot_or_gtot_lcomp : lcomp -> ML bool
-val is_lcomp_partial_return : lcomp -> ML bool
-val is_pure_lcomp : lcomp -> ML bool
-val is_pure_or_ghost_lcomp : lcomp -> ML bool
-val set_result_typ_lc : lcomp -> typ -> ML lcomp
-val residual_comp_of_lcomp : lcomp -> residual_comp
-val lcomp_of_comp_guard : comp -> guard_t -> ML lcomp
-//lcomp_of_comp_guard with trivial guard
-val lcomp_of_comp : comp -> ML lcomp
 
 val check_positivity_qual (subtyping:bool) (p0 p1:option positivity_qualifier)
   : bool

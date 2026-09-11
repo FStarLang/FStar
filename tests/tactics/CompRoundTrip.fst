@@ -3,7 +3,8 @@
    normalizer steps, so any view that is not in the image of `inspect_comp` lets
    the normalizer contradict the axiom and prove False.  This test checks the
    round trip by computation for the views the axiom covers, and pins down what
-   happens to the one it does not (a `C_Eff` naming `FStar.Pervasives.Lemma`). *)
+   happens to the two it does not: a `C_Eff` naming `FStar.Pervasives.Lemma`,
+   and a `C_Eff` carrying universes. *)
 module CompRoundTrip
 
 open FStar.Tactics.V2
@@ -59,3 +60,17 @@ let eff_lemma_does_not_round_trip ()
 [@@expect_failure [19]]
 let eff_lemma_inv_rejected () : Lemma (inspect_comp (pack_comp cv_eff_lemma) == cv_eff_lemma) =
   inspect_pack_comp_inv cv_eff_lemma
+
+(* A second view outside the image of `inspect_comp`: a computation type stores
+   no universes -- an effect is applied to its result type alone, so its
+   universe is that type's -- and `pack_comp` drops them. *)
+
+let cv_eff_us : comp_view = C_Eff [pack_universe Uv_Zero] ["CompRoundTrip"; "M"] res tt tt []
+
+let eff_us_does_not_round_trip ()
+  : Lemma (inspect_comp (pack_comp cv_eff_us) == cv_eff)
+  = assert (inspect_comp (pack_comp cv_eff_us) == cv_eff) by check ()
+
+[@@expect_failure [19]]
+let eff_us_inv_rejected () : Lemma (inspect_comp (pack_comp cv_eff_us) == cv_eff_us) =
+  inspect_pack_comp_inv cv_eff_us

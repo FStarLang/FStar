@@ -49,7 +49,6 @@ val non_info_norm: Env.env -> term -> ML bool
  * else the input comp is returned as is
  *)
 val maybe_ghost_to_pure:        Env.env -> comp -> ML comp
-val maybe_ghost_to_pure_lcomp:  Env.env -> lcomp -> ML lcomp
 
 (*
  * The two input computations are to be composed or related by subcomp
@@ -58,7 +57,6 @@ val maybe_ghost_to_pure_lcomp:  Env.env -> lcomp -> ML lcomp
  *   the GHOST one is promoted to PURE, see their implementation for more details
  *)
 val ghost_to_pure2 : Env.env -> (comp & comp) -> ML (comp & comp)
-val ghost_to_pure_lcomp2 : Env.env -> (lcomp & lcomp) -> ML (lcomp & lcomp)
 
 val term_to_doc:     Env.env -> term -> ML Pprint.document
 val term_to_string:  Env.env -> term -> ML string
@@ -83,6 +81,13 @@ val unfold_head_once: Env.env -> term -> ML (option term)
 computation type. Only grabs up to [n] binders, and normalizes only as
 needed to discover the shape of the arrow. The binders are opened. *)
 val get_n_binders : Env.env -> int -> term -> ML (list binder & comp)
+
+(* Same, but it does not look for binders underneath a refinement of an arrow
+   type: [get_n_binders] does, and in doing so it silently drops the
+   refinement's predicate. Callers that intend to rebuild the type from the
+   result must use this one. If [n] binders cannot be found this way, it falls
+   back to [get_n_binders], so it never reports fewer binders than that does. *)
+val get_n_binders_no_unrefine : Env.env -> int -> term -> ML (list binder & comp)
 
 val maybe_unfold_head : Env.env -> term -> ML (option term)
 

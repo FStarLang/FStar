@@ -588,7 +588,6 @@ and tc_one_file_no_frame
                     FStarC.ToSyntax.ToSyntax.add_modul_to_env
                         tcmod
                         tc_result.mii
-                        (FStarC.TypeChecker.Normalize.erase_universes tcenv)
             in
             let env = FStarC.TypeChecker.Tc.load_checked_module tcenv tcmod in
             restore_opts ();

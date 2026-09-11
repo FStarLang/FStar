@@ -530,7 +530,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
              arity,
              true)
           end
-          else if Ident.lid_equals (FStarC.TypeChecker.Env.norm_eff_name tcenv (U.comp_effect_name c))
+          else if Ident.lid_equals (U.comp_effect_name c)
                                     PC.effect_TAC_lid
           then begin
             let h = mk_tactic_interpretation loc non_tvar_arity in

@@ -86,6 +86,7 @@ val try_lookup_effect_name: env -> lident -> ML (option lident)
 val try_lookup_effect_name_and_attributes: env -> lident -> ML (option (lident & list cflag))
 val try_lookup_effect_defn: env -> lident -> ML (option eff_decl)
 val is_effect_name: env -> lident -> ML bool
+
 (* [try_lookup_root_effect_name] is the same as
 [try_lookup_effect_name], but also traverses effect abbrevs. TODO:
 once indexed effects are in, also track how indices and other

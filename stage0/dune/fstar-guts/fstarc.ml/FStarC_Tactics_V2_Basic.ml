@@ -786,6 +786,8 @@ let tc_unifier_solved_implicits (env1 : FStarC_TypeChecker_Env.env)
                    (env1.FStarC_TypeChecker_Env.modules);
                  FStarC_TypeChecker_Env.expected_typ =
                    (env1.FStarC_TypeChecker_Env.expected_typ);
+                 FStarC_TypeChecker_Env.expected_post =
+                   (env1.FStarC_TypeChecker_Env.expected_post);
                  FStarC_TypeChecker_Env.sigtab =
                    (env1.FStarC_TypeChecker_Env.sigtab);
                  FStarC_TypeChecker_Env.attrtab =
@@ -1714,6 +1716,8 @@ let __tc_ghost (uu___1 : env) (uu___ : FStarC_Syntax_Syntax.term) :
                                  (e.FStarC_TypeChecker_Env.modules);
                                FStarC_TypeChecker_Env.expected_typ =
                                  (e.FStarC_TypeChecker_Env.expected_typ);
+                               FStarC_TypeChecker_Env.expected_post =
+                                 (e.FStarC_TypeChecker_Env.expected_post);
                                FStarC_TypeChecker_Env.sigtab =
                                  (e.FStarC_TypeChecker_Env.sigtab);
                                FStarC_TypeChecker_Env.attrtab =
@@ -1870,6 +1874,8 @@ let __tc_lax (uu___1 : env) (uu___ : FStarC_Syntax_Syntax.term) :
                                  (e.FStarC_TypeChecker_Env.modules);
                                FStarC_TypeChecker_Env.expected_typ =
                                  (e.FStarC_TypeChecker_Env.expected_typ);
+                               FStarC_TypeChecker_Env.expected_post =
+                                 (e.FStarC_TypeChecker_Env.expected_post);
                                FStarC_TypeChecker_Env.sigtab =
                                  (e.FStarC_TypeChecker_Env.sigtab);
                                FStarC_TypeChecker_Env.attrtab =
@@ -1985,6 +1991,8 @@ let __tc_lax (uu___1 : env) (uu___ : FStarC_Syntax_Syntax.term) :
                                  (e1.FStarC_TypeChecker_Env.modules);
                                FStarC_TypeChecker_Env.expected_typ =
                                  (e1.FStarC_TypeChecker_Env.expected_typ);
+                               FStarC_TypeChecker_Env.expected_post =
+                                 (e1.FStarC_TypeChecker_Env.expected_post);
                                FStarC_TypeChecker_Env.sigtab =
                                  (e1.FStarC_TypeChecker_Env.sigtab);
                                FStarC_TypeChecker_Env.attrtab =
@@ -2866,6 +2874,8 @@ let __exact_now (set_expected_typ : Prims.bool)
                 (env1.FStarC_TypeChecker_Env.modules);
               FStarC_TypeChecker_Env.expected_typ =
                 (env1.FStarC_TypeChecker_Env.expected_typ);
+              FStarC_TypeChecker_Env.expected_post =
+                (env1.FStarC_TypeChecker_Env.expected_post);
               FStarC_TypeChecker_Env.sigtab =
                 (env1.FStarC_TypeChecker_Env.sigtab);
               FStarC_TypeChecker_Env.attrtab =
@@ -3267,21 +3277,37 @@ let try_unify_by_application
                               Obj.repr
                                 (let uu___2 =
                                    let uu___3 =
+                                     FStarC_Syntax_Subst.compress ty11 in
+                                   uu___3.FStarC_Syntax_Syntax.n in
+                                 match uu___2 with
+                                 | FStarC_Syntax_Syntax.Tm_refine uu___3 ->
                                      let uu___4 =
-                                       let uu___5 = ttd e ty11 in
-                                       FStar_Pprint.prefix (Prims.of_int 2)
-                                         Prims.int_one
-                                         (FStarC_Errors_Msg.text
-                                            "Could not instantiate") uu___5 in
-                                     let uu___5 =
-                                       let uu___6 = ttd e ty2 in
-                                       FStar_Pprint.prefix (Prims.of_int 2)
-                                         Prims.int_one
-                                         (FStarC_Errors_Msg.text "to") uu___6 in
-                                     FStar_Pprint.op_Hat_Slash_Hat uu___4
-                                       uu___5 in
-                                   [uu___3] in
-                                 FStarC_Tactics_Monad.fail_doc uu___2)
+                                       FStarC_Syntax_Util.unrefine ty11 in
+                                     aux acc typedness_deps uu___4
+                                 | FStarC_Syntax_Syntax.Tm_ascribed uu___3 ->
+                                     let uu___4 =
+                                       FStarC_Syntax_Util.unrefine ty11 in
+                                     aux acc typedness_deps uu___4
+                                 | uu___3 ->
+                                     let uu___4 =
+                                       let uu___5 =
+                                         let uu___6 =
+                                           let uu___7 = ttd e ty11 in
+                                           FStar_Pprint.prefix
+                                             (Prims.of_int 2) Prims.int_one
+                                             (FStarC_Errors_Msg.text
+                                                "Could not instantiate")
+                                             uu___7 in
+                                         let uu___7 =
+                                           let uu___8 = ttd e ty2 in
+                                           FStar_Pprint.prefix
+                                             (Prims.of_int 2) Prims.int_one
+                                             (FStarC_Errors_Msg.text "to")
+                                             uu___8 in
+                                         FStar_Pprint.op_Hat_Slash_Hat uu___6
+                                           uu___7 in
+                                       [uu___5] in
+                                     FStarC_Tactics_Monad.fail_doc uu___4)
                           | FStar_Pervasives_Native.Some (b, c) ->
                               Obj.repr
                                 (let uu___2 =
@@ -3843,6 +3869,9 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                            FStarC_TypeChecker_Env.expected_typ
                                              =
                                              (env1.FStarC_TypeChecker_Env.expected_typ);
+                                           FStarC_TypeChecker_Env.expected_post
+                                             =
+                                             (env1.FStarC_TypeChecker_Env.expected_post);
                                            FStarC_TypeChecker_Env.sigtab =
                                              (env1.FStarC_TypeChecker_Env.sigtab);
                                            FStarC_TypeChecker_Env.attrtab =
@@ -5536,6 +5565,8 @@ let _t_trefl (allow_guards : Prims.bool) (l : FStarC_Syntax_Syntax.term)
                                 (uu___9.FStarC_TypeChecker_Env.modules);
                               FStarC_TypeChecker_Env.expected_typ =
                                 (uu___9.FStarC_TypeChecker_Env.expected_typ);
+                              FStarC_TypeChecker_Env.expected_post =
+                                (uu___9.FStarC_TypeChecker_Env.expected_post);
                               FStarC_TypeChecker_Env.sigtab =
                                 (uu___9.FStarC_TypeChecker_Env.sigtab);
                               FStarC_TypeChecker_Env.attrtab =
@@ -5997,6 +6028,8 @@ let join_goals (uu___1 : FStarC_Tactics_Types.goal)
                                 (uu___3.FStarC_TypeChecker_Env.modules);
                               FStarC_TypeChecker_Env.expected_typ =
                                 (uu___3.FStarC_TypeChecker_Env.expected_typ);
+                              FStarC_TypeChecker_Env.expected_post =
+                                (uu___3.FStarC_TypeChecker_Env.expected_post);
                               FStarC_TypeChecker_Env.sigtab =
                                 (uu___3.FStarC_TypeChecker_Env.sigtab);
                               FStarC_TypeChecker_Env.attrtab =
@@ -6594,6 +6627,8 @@ let unshelve (t : FStarC_Syntax_Syntax.term) : unit FStarC_Tactics_Monad.tac=
                       (env1.FStarC_TypeChecker_Env.modules);
                     FStarC_TypeChecker_Env.expected_typ =
                       (env1.FStarC_TypeChecker_Env.expected_typ);
+                    FStarC_TypeChecker_Env.expected_post =
+                      (env1.FStarC_TypeChecker_Env.expected_post);
                     FStarC_TypeChecker_Env.sigtab =
                       (env1.FStarC_TypeChecker_Env.sigtab);
                     FStarC_TypeChecker_Env.attrtab =
@@ -7962,6 +7997,9 @@ let t_destruct (s_tm : FStarC_Syntax_Syntax.term) :
                                                                     FStarC_TypeChecker_Env.expected_typ
                                                                     =
                                                                     (env1.FStarC_TypeChecker_Env.expected_typ);
+                                                                    FStarC_TypeChecker_Env.expected_post
+                                                                    =
+                                                                    (env1.FStarC_TypeChecker_Env.expected_post);
                                                                     FStarC_TypeChecker_Env.sigtab
                                                                     =
                                                                     (env1.FStarC_TypeChecker_Env.sigtab);
@@ -8662,6 +8700,8 @@ let push_bv_dsenv (uu___1 : FStarC_TypeChecker_Env.env)
                 (e.FStarC_TypeChecker_Env.modules);
               FStarC_TypeChecker_Env.expected_typ =
                 (e.FStarC_TypeChecker_Env.expected_typ);
+              FStarC_TypeChecker_Env.expected_post =
+                (e.FStarC_TypeChecker_Env.expected_post);
               FStarC_TypeChecker_Env.sigtab =
                 (e.FStarC_TypeChecker_Env.sigtab);
               FStarC_TypeChecker_Env.attrtab =
@@ -9910,6 +9950,8 @@ let refl_tc_term (uu___1 : FStarC_TypeChecker_Env.env)
                          (g1.FStarC_TypeChecker_Env.modules);
                        FStarC_TypeChecker_Env.expected_typ =
                          (g1.FStarC_TypeChecker_Env.expected_typ);
+                       FStarC_TypeChecker_Env.expected_post =
+                         (g1.FStarC_TypeChecker_Env.expected_post);
                        FStarC_TypeChecker_Env.sigtab =
                          (g1.FStarC_TypeChecker_Env.sigtab);
                        FStarC_TypeChecker_Env.attrtab =
@@ -10024,6 +10066,8 @@ let refl_tc_term (uu___1 : FStarC_TypeChecker_Env.env)
                            (g2.FStarC_TypeChecker_Env.modules);
                          FStarC_TypeChecker_Env.expected_typ =
                            (g2.FStarC_TypeChecker_Env.expected_typ);
+                         FStarC_TypeChecker_Env.expected_post =
+                           (g2.FStarC_TypeChecker_Env.expected_post);
                          FStarC_TypeChecker_Env.sigtab =
                            (g2.FStarC_TypeChecker_Env.sigtab);
                          FStarC_TypeChecker_Env.attrtab =
@@ -10457,6 +10501,8 @@ let refl_instantiate_implicits (uu___3 : FStarC_TypeChecker_Env.env)
                          (g2.FStarC_TypeChecker_Env.modules);
                        FStarC_TypeChecker_Env.expected_typ =
                          (g2.FStarC_TypeChecker_Env.expected_typ);
+                       FStarC_TypeChecker_Env.expected_post =
+                         (g2.FStarC_TypeChecker_Env.expected_post);
                        FStarC_TypeChecker_Env.sigtab =
                          (g2.FStarC_TypeChecker_Env.sigtab);
                        FStarC_TypeChecker_Env.attrtab =
@@ -10848,6 +10894,8 @@ let refl_try_unify (uu___3 : FStarC_TypeChecker_Env.env)
                                   (g1.FStarC_TypeChecker_Env.modules);
                                 FStarC_TypeChecker_Env.expected_typ =
                                   (g1.FStarC_TypeChecker_Env.expected_typ);
+                                FStarC_TypeChecker_Env.expected_post =
+                                  (g1.FStarC_TypeChecker_Env.expected_post);
                                 FStarC_TypeChecker_Env.sigtab =
                                   (g1.FStarC_TypeChecker_Env.sigtab);
                                 FStarC_TypeChecker_Env.attrtab =
@@ -11189,6 +11237,8 @@ let push_open_namespace (uu___1 : FStarC_TypeChecker_Env.env)
          FStarC_TypeChecker_Env.modules = (e.FStarC_TypeChecker_Env.modules);
          FStarC_TypeChecker_Env.expected_typ =
            (e.FStarC_TypeChecker_Env.expected_typ);
+         FStarC_TypeChecker_Env.expected_post =
+           (e.FStarC_TypeChecker_Env.expected_post);
          FStarC_TypeChecker_Env.sigtab = (e.FStarC_TypeChecker_Env.sigtab);
          FStarC_TypeChecker_Env.attrtab = (e.FStarC_TypeChecker_Env.attrtab);
          FStarC_TypeChecker_Env.instantiate_imp =
@@ -11300,6 +11350,8 @@ let push_module_abbrev (uu___2 : FStarC_TypeChecker_Env.env)
          FStarC_TypeChecker_Env.modules = (e.FStarC_TypeChecker_Env.modules);
          FStarC_TypeChecker_Env.expected_typ =
            (e.FStarC_TypeChecker_Env.expected_typ);
+         FStarC_TypeChecker_Env.expected_post =
+           (e.FStarC_TypeChecker_Env.expected_post);
          FStarC_TypeChecker_Env.sigtab = (e.FStarC_TypeChecker_Env.sigtab);
          FStarC_TypeChecker_Env.attrtab = (e.FStarC_TypeChecker_Env.attrtab);
          FStarC_TypeChecker_Env.instantiate_imp =
@@ -11448,6 +11500,8 @@ let tac_env (env1 : FStarC_TypeChecker_Env.env) : FStarC_TypeChecker_Env.env=
             (env2.FStarC_TypeChecker_Env.modules);
           FStarC_TypeChecker_Env.expected_typ =
             (env2.FStarC_TypeChecker_Env.expected_typ);
+          FStarC_TypeChecker_Env.expected_post =
+            (env2.FStarC_TypeChecker_Env.expected_post);
           FStarC_TypeChecker_Env.sigtab =
             (env2.FStarC_TypeChecker_Env.sigtab);
           FStarC_TypeChecker_Env.attrtab =
@@ -11555,6 +11609,8 @@ let tac_env (env1 : FStarC_TypeChecker_Env.env) : FStarC_TypeChecker_Env.env=
             (env3.FStarC_TypeChecker_Env.modules);
           FStarC_TypeChecker_Env.expected_typ =
             (env3.FStarC_TypeChecker_Env.expected_typ);
+          FStarC_TypeChecker_Env.expected_post =
+            (env3.FStarC_TypeChecker_Env.expected_post);
           FStarC_TypeChecker_Env.sigtab =
             (env3.FStarC_TypeChecker_Env.sigtab);
           FStarC_TypeChecker_Env.attrtab =
@@ -11662,6 +11718,8 @@ let tac_env (env1 : FStarC_TypeChecker_Env.env) : FStarC_TypeChecker_Env.env=
             (env4.FStarC_TypeChecker_Env.modules);
           FStarC_TypeChecker_Env.expected_typ =
             (env4.FStarC_TypeChecker_Env.expected_typ);
+          FStarC_TypeChecker_Env.expected_post =
+            (env4.FStarC_TypeChecker_Env.expected_post);
           FStarC_TypeChecker_Env.sigtab =
             (env4.FStarC_TypeChecker_Env.sigtab);
           FStarC_TypeChecker_Env.attrtab =
@@ -11799,6 +11857,8 @@ let proofstate_of_goal_ty (rng : FStarC_Range_Type.t)
       FStarC_TypeChecker_Env.modules = (env1.FStarC_TypeChecker_Env.modules);
       FStarC_TypeChecker_Env.expected_typ =
         (env1.FStarC_TypeChecker_Env.expected_typ);
+      FStarC_TypeChecker_Env.expected_post =
+        (env1.FStarC_TypeChecker_Env.expected_post);
       FStarC_TypeChecker_Env.sigtab = (env1.FStarC_TypeChecker_Env.sigtab);
       FStarC_TypeChecker_Env.attrtab = (env1.FStarC_TypeChecker_Env.attrtab);
       FStarC_TypeChecker_Env.instantiate_imp =

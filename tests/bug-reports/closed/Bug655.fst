@@ -21,7 +21,13 @@ let ghost_one () : GTot int = 1
 
 assume val g: (u:unit) -> St unit
 
-[@@expect_failure [12;53]]
+(* Only the subtyping error is reported now.  [weaken_result_typ] used to
+   record the expected type on the [lcomp]'s [res_typ] field alone, leaving the
+   computation type it wrapped with the *rejected* result type; composing that
+   inconsistent computation with [g ()] then produced a second, spurious
+   "GTot and STATE cannot be composed".  Recovery now updates the computation
+   type itself, so only the real error is reported. *)
+[@@expect_failure [12]]
 let test (u:unit) : St unit
   = ghost_one (); //rightfully complains about int </: unit
     g(); // (used to crash extraction)

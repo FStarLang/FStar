@@ -94,11 +94,13 @@ val pack_inspect_binder (t:R.binder)
    : Lemma (ensures (R.pack_binder (R.inspect_binder t) == t))
            [SMTPat (R.pack_binder (R.inspect_binder t))]
   
-(* See R.inspect_pack_comp_inv: a C_Eff view naming FStar.Pervasives.Lemma is not in the
-image of R.inspect_comp, which always produces a C_Lemma for that effect. *)
+(* See R.inspect_pack_comp_inv: a C_Eff view is not in the image of R.inspect_comp
+   if it names FStar.Pervasives.Lemma (which always comes back as a C_Lemma) or if
+   it carries universes (which a comp does not store, so they come back as []). *)
 val inspect_pack_comp (t:R.comp_view)
   : Lemma (requires (match t with
-                     | R.C_Eff _ eff_name _ _ _ _ -> eff_name <> ["FStar"; "Pervasives"; "Lemma"]
+                     | R.C_Eff us eff_name _ _ _ _ ->
+                       Nil? us /\ eff_name <> ["FStar"; "Pervasives"; "Lemma"]
                      | _ -> True))
           (ensures (R.inspect_comp (R.pack_comp t) == t))
           [SMTPat (R.inspect_comp (R.pack_comp t))]

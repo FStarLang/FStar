@@ -5,7 +5,7 @@
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
   - In context: uu___0: Prims.unit
-  - Also see: Prims.fst(478,18-478,24)
+  - Also see: Prims.fst(477,18-477,24)
 
 * Info at Bug94.fst(16,16-16,17):
   - Expected failure:
@@ -22,6 +22,6 @@
       hundred:
       b: FStar.Ghost.erased Prims.int {b <> 0}
           -> Prims.GTot (FStar.Ghost.erased Prims.int)
-      __: Prims.squash (hundred == Bug94.divide 100)
+      hundred == Bug94.divide 100
       __: Prims.unit
 

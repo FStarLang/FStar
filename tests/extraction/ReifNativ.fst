@@ -19,7 +19,7 @@ effect { EE with { repr; return; bind } }
 let lift (a:Type) (f : unit -> a) : repr a =
   fun _ -> f ()
 
-sub_effect PURE ~> EE = lift
+sub_effect Tot ~> EE = lift
 
 let test () : EE bool =
   true

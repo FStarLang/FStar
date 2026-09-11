@@ -113,7 +113,6 @@ let mk_LexTop = Term.mk_LexTop
  *)
 
 let is_smt_reifiable_effect (en:TcEnv.env) (l:lident) : ML bool =
-  let l = TcEnv.norm_eff_name en l in
   TcEnv.is_reifiable_effect en l
 
 let is_smt_reifiable_comp (en:TcEnv.env) (c:S.comp) : ML bool =

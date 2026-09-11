@@ -9,7 +9,7 @@ assume effect FOO2
 
 (* Likewise, a sub-effect with no lift is an assumption. *)
 [@@expect_failure [162]]
-sub_effect PURE ~> FOO2
+sub_effect Tot ~> FOO2
 
 let id_repr (a:Type) : Type = a
 let id_return (a:Type) (x:a) : id_repr a = x
@@ -28,7 +28,7 @@ let lift_pure_foo4 (a:Type) (f:unit -> PURE a (requires True) (ensures fun _ -> 
 
 (* And the lift of a sub-effect is checked, so it cannot be marked [assume]. *)
 [@@expect_failure [162]]
-assume sub_effect PURE ~> FOO4 = lift_pure_foo4
+assume sub_effect Tot ~> FOO4 = lift_pure_foo4
 
 (* FOO4 has a representation, so a lift from FOO2 into it cannot be
    synthesized out of FOO4's return combinator. *)

@@ -777,7 +777,11 @@ let elab_open_b2t (e:src_exp) (x:var)
     denote_pack_var (R.pack_namedv (RT.make_namedv x));
     elab_open_commute' 0 e (EVar x)
 
-#push-options "--fuel 2 --ifuel 2"
+// --z3rlimit_factor 2: `soundness`'s T_App case (the `RT.T_App` at the end of
+// the case below) sits at ~2x the default budget since prop-valued definitions
+// stopped emitting a term equation (FStarLang/FStar#4519). The proof is
+// unchanged; only the number of E-matching steps to reach it went up.
+#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 2"
 let rec soundness (#f:fstar_top_env)
                   (#sg:src_env { src_env_ok sg } ) 
                   (#se:src_exp)

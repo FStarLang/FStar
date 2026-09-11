@@ -98,8 +98,8 @@ effect {
 }
 
 let lift_PURE_MPURE (a:Type) (f:unit -> a) : repr a = f ()
-sub_effect PURE ~> MPURE = lift_PURE_MPURE
-sub_effect PURE ~> MGHOST = lift_PURE_MPURE
+sub_effect Tot ~> MPURE = lift_PURE_MPURE
+sub_effect Tot ~> MGHOST = lift_PURE_MPURE
 
 effect MPure (a:Type) = MPURE a
 effect MGhost (a:Type) = MGHOST a
@@ -194,8 +194,8 @@ effect {
   M2 with {repr; return; bind}
 }
 
-sub_effect PURE ~> M1 = lift_PURE_MPURE
-sub_effect PURE ~> M2 = lift_PURE_MPURE
+sub_effect Tot ~> M1 = lift_PURE_MPURE
+sub_effect Tot ~> M2 = lift_PURE_MPURE
 
 assume val f_m1 : unit -> M1 int
 assume val f_m2_info : unit -> M2 int

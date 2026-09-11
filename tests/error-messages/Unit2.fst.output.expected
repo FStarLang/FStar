@@ -1,4 +1,4 @@
-* Info at Unit2.fst(37,21-38,60):
+* Info at Unit2.fst(37,14-37,20):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
@@ -8,4 +8,5 @@
   - In context:
       uu___: Type
       uu___: _
+  - See also Unit2.fst(37,21-38,60)
 

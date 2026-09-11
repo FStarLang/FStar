@@ -174,17 +174,13 @@ and t = {
 }
 
 and comp =
-  | Tot of t
-  | GTot of t
   | Comp of comp_typ
 
 and comp_typ = {
-  comp_univs:universes;
   effect_name:lident;
   result_typ:t;
-  comp_pre:t;
-  comp_post:t;
-  flags:list cflag
+  flags:list cflag;
+  source_effect_name:lident
 }
 
 and residual_comp = {
@@ -194,9 +190,6 @@ and residual_comp = {
 }
 
 and cflag =
-  | TOTAL
-  | MLEFFECT
-  | LEMMA
   | SMTPAT of t
   | DECREASES_lex of list t
   | DECREASES_wf of (t & t)

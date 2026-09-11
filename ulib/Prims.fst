@@ -154,20 +154,20 @@ assume val l_False : prop
     computation type is [M t (requires pre) (ensures post)], where
     [pre] is a proposition and [post] is a predicate on the result. *)
 
-total assume effect PURE
-total assume effect GHOST
+total assume effect Tot
+total assume effect GTot
 
-(** [PURE] computations can be lifted to [GHOST] (but not vice versa),
+(** [Tot] computations can be lifted to [GTot] (but not vice versa),
     *)
-assume sub_effect PURE ~> GHOST
+assume sub_effect Tot ~> GTot
 
-(** Hoare-style abbreviations.  Effect abbreviations are parameterized
-    by the result type only; any pre/postcondition written at the use
-    site is conjoined with the one in the abbreviation. *)
-effect Pure  (a: Type) = PURE a
-effect Tot   (a: Type) = PURE a
-effect Ghost (a: Type) = GHOST a
-effect GTot  (a: Type) = GHOST a
+(** Hoare-style abbreviations.  [requires]/[ensures] are syntax of a computation
+    type, not of an effect: the desugarer partitions them out (post becomes a result
+    refinement, pre an implicit [squash] binder) before applying the abbreviation. *)
+effect Pure  (a: Type) = Tot a
+effect PURE  (a: Type) = Tot a
+effect Ghost (a: Type) = GTot a
+effect GHOST (a: Type) = GTot a
 
 
 (** The type of provable equalities, defined as the usual inductive
@@ -293,9 +293,6 @@ let subtype_of (p1 p2: Type) = forall (x: p1). has_type x p2
 #pop-options
 
 (**** Escape hatches *)
-
-(** [Admit] discards the verification condition of its continuation *)
-effect Admit (a: Type) = PURE a (ensures (fun _ -> l_False))
 
 (***** End trusted primitives *****)
 
@@ -425,10 +422,12 @@ assume
 val _assume (p: prop) : Pure unit (requires (True)) (ensures (fun x -> p))
 
 (** [admit] is another escape hatch: It discards the continuation and
-    returns a value of any type *)
+    returns a value of any type.  Discarding the continuation is what the
+    [l_False] in its result type does: everything after a call to [admit] is
+    checked under a false hypothesis. *)
 [@@ warn_on_use "Uses an axiom"]
 assume
-val admit: #a: Type -> unit -> Admit a
+val admit: #a: Type -> unit -> Tot (_: a{False})
 
 (** [magic] is another escape hatch: It retains the continuation but
     returns a value of any type *)

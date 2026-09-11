@@ -4553,56 +4553,18 @@ and desugar_comp (r : FStarC_Range_Type.range)
                            (is_empty cattributes))
                           && (is_empty universes1) in
                       if
-                        (FStarC_Ident.lid_equals eff
-                           FStarC_Parser_Const.effect_Tot_lid)
-                          ||
-                          (FStarC_Ident.lid_equals eff
-                             FStarC_Parser_Const.effect_GTot_lid)
+                        no_additional_args &&
+                          ((FStarC_Ident.lid_equals eff
+                              FStarC_Parser_Const.effect_Tot_lid)
+                             ||
+                             (FStarC_Ident.lid_equals eff
+                                FStarC_Parser_Const.effect_GTot_lid))
                       then
                         (if
-                           Prims.not
-                             (match rest2 with | [] -> true | uu___6 -> false)
-                         then
-                           (let uu___6 =
-                              let uu___7 =
-                                FStarC_Class_Show.show
-                                  FStarC_Ident.showable_lident eff in
-                              FStarC_Format.fmt1
-                                "Effect %s does not take a requires or ensures clause"
-                                uu___7 in
-                            fail
-                              FStarC_Errors_Codes.Fatal_NotEnoughArgsToEffect
-                              uu___6)
-                         else ();
-                         if no_additional_args
-                         then
-                           (if
-                              FStarC_Ident.lid_equals eff
-                                FStarC_Parser_Const.effect_Tot_lid
-                            then FStarC_Syntax_Syntax.mk_Total result_typ
-                            else FStarC_Syntax_Syntax.mk_GTotal result_typ)
-                         else
-                           (let uu___6 =
-                              let uu___7 =
-                                FStarC_Syntax_Syntax.trivial_post result_typ in
-                              {
-                                FStarC_Syntax_Syntax.comp_univs = universes1;
-                                FStarC_Syntax_Syntax.effect_name = eff;
-                                FStarC_Syntax_Syntax.result_typ = result_typ;
-                                FStarC_Syntax_Syntax.comp_pre =
-                                  FStarC_Syntax_Syntax.trivial_pre;
-                                FStarC_Syntax_Syntax.comp_post = uu___7;
-                                FStarC_Syntax_Syntax.flags =
-                                  (FStarC_List.op_At
-                                     (if
-                                        FStarC_Ident.lid_equals eff
-                                          FStarC_Parser_Const.effect_Tot_lid
-                                      then [FStarC_Syntax_Syntax.TOTAL]
-                                      else [])
-                                     (FStarC_List.op_At cattributes
-                                        decreases_clause))
-                              } in
-                            FStarC_Syntax_Syntax.mk_Comp uu___6))
+                           FStarC_Ident.lid_equals eff
+                             FStarC_Parser_Const.effect_Tot_lid
+                         then FStarC_Syntax_Syntax.mk_Total result_typ
+                         else FStarC_Syntax_Syntax.mk_GTotal result_typ)
                       else
                         (let flags =
                            if
@@ -4766,6 +4728,21 @@ and desugar_comp (r : FStarC_Range_Type.range)
                                      | FStar_Pervasives_Native.None -> []
                                      | FStar_Pervasives_Native.Some p ->
                                          [FStarC_Syntax_Syntax.SMTPAT p])) in
+                             let flags3 =
+                               let uu___6 =
+                                 let uu___7 =
+                                   FStarC_Syntax_Util.is_t_true pre in
+                                 if uu___7
+                                 then FStarC_Syntax_Util.is_trivial_post post
+                                 else false in
+                               if uu___6
+                               then flags2
+                               else
+                                 FStarC_List.filter
+                                   (fun uu___7 ->
+                                      match uu___7 with
+                                      | FStarC_Syntax_Syntax.TOTAL -> false
+                                      | uu___8 -> true) flags2 in
                              FStarC_Syntax_Syntax.mk_Comp
                                {
                                  FStarC_Syntax_Syntax.comp_univs = universes1;
@@ -4773,7 +4750,7 @@ and desugar_comp (r : FStarC_Range_Type.range)
                                  FStarC_Syntax_Syntax.result_typ = result_typ;
                                  FStarC_Syntax_Syntax.comp_pre = pre;
                                  FStarC_Syntax_Syntax.comp_post = post;
-                                 FStarC_Syntax_Syntax.flags = flags2
+                                 FStarC_Syntax_Syntax.flags = flags3
                                })))))
 and desugar_formula (env : FStarC_Syntax_DsEnv.env)
   (f : FStarC_Parser_AST.term) : FStarC_Syntax_Syntax.term=

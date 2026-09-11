@@ -24,6 +24,7 @@ open FStarC.Syntax.Syntax
 open FStarC.Syntax.Subst
 open FStarC.Syntax.Util
 open FStarC.Syntax.Hash {}
+open FStarC.Syntax.Print {}
 open FStarC.SMap
 open FStarC.Ident
 open FStarC.Range
@@ -287,13 +288,13 @@ let initial_env deps
     gamma_cache=new_gamma_cache();
     modules= [];
     expected_typ=None;
-    expected_post=None;
     sigtab=new_sigtab();
     attrtab=new_sigtab();
     instantiate_imp=true;
     effects={decls=[]; order=[]; joins=[]; lifts=[]};
     generalize=true;
     letrecs=[];
+    rec_names=[];
     top_level=false;
     check_uvars=false;
     use_eq_strict=false;
@@ -319,7 +320,6 @@ let initial_env deps
     teq_nosmt_force=teq_nosmt_force;
     subtype_nosmt_force=subtype_nosmt_force;
     qtbl_name_and_index=None, SMap.create 10;
-    normalized_eff_names=SMap.create 20;  //20?
     fv_delta_depths = SMap.create 50;
     proof_ns = Options.using_facts_from ();
     synth_hook = (fun e g tau rng -> failwith "no synthesizer available");
@@ -379,7 +379,6 @@ let push_stack env : ML _ =
               gamma_cache=SMap.copy (gamma_cache env);
               identifier_info=mk_ref !env.identifier_info;
               qtbl_name_and_index=env.qtbl_name_and_index |> fst, SMap.copy (env.qtbl_name_and_index |> snd);
-              normalized_eff_names=SMap.copy env.normalized_eff_names;
               fv_delta_depths=SMap.copy env.fv_delta_depths;
               strict_args_tab=SMap.copy env.strict_args_tab;
               erasable_types_tab=SMap.copy env.erasable_types_tab }
@@ -499,18 +498,8 @@ let inst_tscheme_with_range (r:range) (t:tscheme) : ML _ =
     let us, t = inst_tscheme t in
     us, Subst.set_use_range r t
 
-let check_effect_is_not_a_template (ed:eff_decl) (rng:Range.t) : ML unit =
-  if List.length ed.univs <> 0 || List.length ed.binders <> 0
-  then
-    let msg = Format.fmt2
-      "Effect template %s should be applied to arguments for its binders (%s) before it can be used at an effect position"
-      (show ed.mname)
-      (String.concat "," <| List.map Print.binder_to_string_with_type ed.binders) in
-    raise_error rng Errors.Fatal_NotEnoughArgumentsForEffect msg
-
 let inst_effect_fun_with (insts:universes) (env:env) (ed:eff_decl) (p:tscheme) : ML _ =
   let (us, t) = p in
-  check_effect_is_not_a_template ed env.range;
   if List.length insts <> List.length us
   then failwith (Format.fmt4 "Expected %s instantiations; got %s; failed universe instantiation in effect %s\n\t%s\n"
                    (show <| List.length us) (show <| List.length insts)
@@ -697,14 +686,12 @@ let effect_signature (us_opt:option universes) (se:sigelt) rng : ML (option ((un
     | Some us -> inst_tscheme_with ts us
   in
   match se.sigel with
-  | Sig_new_effect ne ->
-    check_effect_is_not_a_template ne rng;
-    (* An effect is now just a name; its signature is uniformly [a:Type -> Effect]. *)
+  (* An effect, and hence an abbreviation of one, is now just a name; its
+     signature is uniformly [a:Type -> Effect]. *)
+  | Sig_new_effect _
+  | Sig_effect_abbrev _ ->
     let a = S.new_bv None (fst (U.type_u ())) in
-    Some (inst_ts us_opt (ne.univs, U.arrow [S.mk_binder a] (mk_Total teff)), se.sigrng)
-
-  | Sig_effect_abbrev {lid; us; bs=binders} ->
-    Some (inst_ts us_opt (us, U.arrow binders (mk_Total teff)), se.sigrng)
+    Some (inst_ts us_opt ([], U.arrow [S.mk_binder a] (mk_Total teff)), se.sigrng)
 
   | _ -> None
 
@@ -771,8 +758,6 @@ let try_lookup_lid_aux us_opt env lid : ML _ =
 //        val lookup_attrs_of_lid    : env -> lid -> option list attribute
 //        val try_lookup_effect_lid  : env -> lident -> option term
 //        val lookup_effect_lid      : env -> lident -> term
-//        val lookup_effect_abbrev   : env -> universes -> lident -> option (binders * comp)
-//        val norm_eff_name          : (env -> lident -> lident)
 //        val lookup_effect_quals    : env -> lident -> list qualifier
 //        val lookup_projector       : env -> lident -> int -> lident
 //        val current_module         : env -> lident
@@ -897,7 +882,8 @@ let type_hypothesis env (t:typ) (v:term) : ML term =
   let hd, _ = U.head_and_args_full base in
   match (U.un_uinst hd).n with
   | Tm_fvar fv when fst (datacons_of_typ env fv.fv_name) ->
-    U.mk_conj_simp (U.mk_has_type base v base) phi
+    let u = env.universe_of env base in
+    U.mk_conj_simp (U.mk_has_type [u; u] base v base) phi
   | _ -> phi
 
 let typ_of_datacon env lid : ML _ =
@@ -1223,58 +1209,12 @@ let lookup_effect_lid env (ftv:lident) : ML (typ) =
     | None -> name_not_found env ftv
     | Some k -> k
 
-let lookup_effect_abbrev env (univ_insts:universes) lid0 : ML _ =
-  match lookup_qname env lid0 with
-    | Some (Inr ({ sigel = Sig_effect_abbrev {lid; us=univs; bs=binders; comp=c}; sigquals = quals }, None), _) ->
-      let lid = Ident.set_lid_range lid (Range.set_use_range (Ident.range_of_lid lid) (Range.use_range (Ident.range_of_lid lid0))) in
-      if quals |> BU.for_some (function Irreducible -> true | _ -> false)
-      then None
-      else let insts = if List.length univ_insts = List.length univs
-                       then univ_insts
-                       else failwith (Format.fmt3 "(%s) Unexpected instantiation of effect %s with %s universes"
-                                            (Range.string_of_range (get_range env))
-                                            (show lid)
-                                            (List.length univ_insts |> show)) in
-           begin match binders, univs with
-             | [], _ -> failwith "Unexpected effect abbreviation with no arguments"
-             | _, _::_::_ ->
-                failwith (Format.fmt2 "Unexpected effect abbreviation %s; polymorphic in %s universes"
-                           (show lid) (show <| List.length univs))
-             | _ -> let _, t = inst_tscheme_with (univs, U.arrow binders c) insts in
-                    let t = Subst.set_use_range (range_of_lid lid) t in
-                    let binders, c = U.arrow_formals_comp_ln_strict t in
-                    if Nil? binders
-                    then failwith "Impossible"
-                    else Some (binders, c)
-          end
-    | _ -> None
-
-let norm_eff_name =
-   fun env (l:lident) ->
-       let rec find l : ML _ =
-           match lookup_effect_abbrev env [U_unknown] l with //universe doesn't matter here; we're just normalizing the name
-            | None -> None
-            | Some (_, c) ->
-                let l = U.comp_effect_name c in
-                match find l with
-                    | None -> Some l
-                    | Some l' -> Some l' in
-       let res = match SMap.try_find env.normalized_eff_names (string_of_lid l) with
-            | Some l -> l
-            | None ->
-              begin match find l with
-                        | None -> l
-                        | Some m -> SMap.add env.normalized_eff_names (string_of_lid l) m;
-                                    m
-              end in
-       Ident.set_lid_range res (range_of_lid l)
-
 let is_erasable_effect env l : ML _ =
-  l
-  |> norm_eff_name env
-  |> (fun l -> lid_equals l Const.effect_GHOST_lid ||
-           S.lid_as_fv l None
-           |> fv_has_erasable_attr env)
+  (* Test the whole ghost class, not just [GHOST]: which spelling a computation
+     type lands on depends on which of them Prims declares as primitive, so
+     pinning one here silently disables erasure if that changes. *)
+  U.is_ghost_effect l ||
+  (S.lid_as_fv l None |> fv_has_erasable_attr env)
 
 let rec non_informative env t : ML _ =
     match (U.unrefine t).n with
@@ -1309,7 +1249,6 @@ let num_effect_indices env name r =
       (Format.fmt2 "Signature for %s not an arrow (%s)" (show name) (show sig_t))
 
 let lookup_effect_quals env l : ML _ =
-    let l = norm_eff_name env l in
     match lookup_qname env l with
     | Some (Inr ({ sigel = Sig_new_effect _; sigquals=q}, _), _) ->
       q
@@ -1438,7 +1377,7 @@ let get_lid_valued_effect_attr env
   (default_if_attr_has_no_arg:option lident)
   : ML (option lident)
   = let attr_args =
-      eff_lid |> norm_eff_name env
+      eff_lid
               |> lookup_attrs_of_lid env
               |> Option.dflt []
               |> U.get_attribute attr_name_lid in
@@ -1458,18 +1397,15 @@ let get_lid_valued_effect_attr env
                      (show eff_lid)
                      (show t)))
 
-let get_default_effect env lid : ML _ =
-  get_lid_valued_effect_attr env lid Const.default_effect_attr None
-
 let get_top_level_effect env lid : ML _ =
   get_lid_valued_effect_attr env lid Const.top_level_effect_attr (Some lid)
 
 let join_opt env (l1:lident) (l2:lident) : ML (option lident) =
   if lid_equals l1 l2
   then Some l1
-  else if lid_equals l1 Const.effect_GTot_lid && lid_equals l2 Const.effect_Tot_lid
-       || lid_equals l2 Const.effect_GTot_lid && lid_equals l1 Const.effect_Tot_lid
-  then Some Const.effect_GTot_lid
+  else if Const.is_gtot_lid l1 && Const.is_tot_lid l2
+       || Const.is_gtot_lid l2 && Const.is_tot_lid l1
+  then Some Const.primitive_ghost_lid
   else match env.effects.joins |> Option.find (fun (m1, m2, _) -> lid_equals l1 m1 && lid_equals l2 m2) with
         | None -> None
         | Some (_, _, m3) -> Some m3
@@ -1483,7 +1419,7 @@ let join env l1 l2 : ML lident =
 
 let monad_leq env l1 l2 : ML (option edge) =
   if lid_equals l1 l2
-  || (lid_equals l1 Const.effect_Tot_lid && lid_equals l2 Const.effect_GTot_lid)
+  || (Const.is_tot_lid l1 && Const.is_gtot_lid l2)
   then Some ({msource=l1; mtarget=l2; mpath=[]})
   else env.effects.order |> Option.find (fun e -> lid_equals l1 e.msource && lid_equals l2 e.mtarget)
 
@@ -1501,14 +1437,6 @@ instance hasBinders_env : hasBinders env = {
   boundNames = (fun e -> FlatSet.from_list (bound_vars e) );
 }
 
-instance hasNames_lcomp : hasNames lcomp = {
-  freeNames = (fun lc -> freeNames (fst (lcomp_comp lc)));
-}
-
-instance pretty_lcomp : pretty lcomp = {
-  pp = (fun lc -> let open FStarC.Pprint in empty);
-}
-
 instance hasNames_guard : hasNames guard_t = {
   freeNames = (fun g -> match g.guard_f with
                         | Trivial -> FlatSet.empty ()
@@ -1522,62 +1450,24 @@ instance pretty_guard : pretty guard_t = {
                  | NonTrivial f -> doc_of_string "NonTrivial" ^/^ pp f);
 }
 
-let comp_to_comp_typ (env:env) c : ML comp_typ =
-  def_check_scoped c.pos "comp_to_comp_typ" env c;
-  match c.n with
-  | Comp ct -> ct
-  | _ ->
-    let effect_name, result_typ =
-      match c.n with
-      | Total t -> Const.effect_Tot_lid, t
-      | GTotal t -> Const.effect_GTot_lid, t in
-    {comp_univs = [env.universe_of env result_typ];
-     effect_name;
-     result_typ;
-     comp_pre = S.trivial_pre;
-     comp_post = S.trivial_post result_typ;
-     flags = U.comp_flags c}
-
 let comp_set_flags env c f : ML _ =
     def_check_scoped c.pos "comp_set_flags.IN" env c;
-    let r = {c with n=Comp ({comp_to_comp_typ env c with flags=f})} in
+    let r = {c with n=Comp ({U.comp_to_comp_typ c with flags=f})} in
     def_check_scoped c.pos "comp_set_flags.OUT" env r;
     r
-
-let rec unfold_effect_abbrev env comp : ML _ =
-  def_check_scoped comp.pos "unfold_effect_abbrev" env comp;
-  let c = comp_to_comp_typ env comp in
-  match lookup_effect_abbrev env c.comp_univs c.effect_name with
-    | None -> c
-    | Some (binders, cdef) ->
-      let binders, cdef = Subst.open_comp binders cdef in
-      (* An effect abbreviation is now parameterized by the result type only. *)
-      if List.length binders <> 1 then
-        raise_error comp Errors.Fatal_ConstructorArgLengthMismatch
-          (Format.fmt2 "Effect abbreviation should take exactly one (result type) argument, got %s, i.e., %s"
-                         (show (List.length binders))
-                         (show (S.mk_Comp c)));
-      let inst = [NT((List.hd binders).binder_bv, c.result_typ)] in
-      let c1 = Subst.subst_comp inst cdef in
-      let ct1 = comp_to_comp_typ env c1 in
-      let c =
-        {ct1 with comp_pre = U.mk_conj_simp ct1.comp_pre c.comp_pre;
-                  comp_post = U.mk_conj_post ct1.result_typ ct1.comp_post c.comp_post;
-                  flags = c.flags} |> mk_Comp in
-      unfold_effect_abbrev env c
 
 (* The monadic representation of a computation type, if the effect has one.
    Effect representations play no role in typechecking: they only give the
    effect an executable meaning, used by reification (extraction, tactics). *)
 let effect_repr_aux only_reifiable env c u_res : ML (option term) =
-  let effect_name = norm_eff_name env (U.comp_effect_name c) in
+  let effect_name = U.comp_effect_name c in
   match effect_decl_opt env effect_name with
   | None -> None
   | Some (ed, _) ->
     match ed |> U.get_eff_repr with
     | None -> None
     | Some ts ->
-      let c = unfold_effect_abbrev env c in
+      let c = U.comp_to_comp_typ c in
       let repr = inst_effect_fun_with [u_res] env ed ts in
       Some (S.mk_Tm_app repr [c.result_typ |> S.as_arg] (get_range env))
 
@@ -1591,24 +1481,56 @@ let effect_repr env c u_res : ML (option term) = effect_repr_aux false env c u_r
 (* is reifiable but not user-reifiable.) *)
 
 let is_user_reifiable_effect (env:env) (effect_lid:lident) : ML (bool) =
-    let effect_lid = norm_eff_name env effect_lid in
     let quals = lookup_effect_quals env effect_lid in
     List.contains Reifiable quals
 
 let is_user_reflectable_effect (env:env) (effect_lid:lident) : ML (bool) =
-    let effect_lid = norm_eff_name env effect_lid in
     let quals = lookup_effect_quals env effect_lid in
     quals |> List.existsb (function Reflectable _ -> true | _ -> false)
 
 let is_total_effect (env:env) (effect_lid:lident) : ML (bool) =
-    let effect_lid = norm_eff_name env effect_lid in
     let quals = lookup_effect_quals env effect_lid in
     List.contains TotalEffect quals
+
+(*
+ * The universe of the computation type [M t], given the universe [u_res] of
+ * its result type [t].
+ *
+ *  - [M] partial: a computation in [M] need not return, so [t1 -> M t] is
+ *    not a type of values and is placed in [Type u#0]; this is what makes
+ *    e.g. [unit -> Dv t : Type0] for any [t].
+ *
+ *  - [M] total with a representation: [M t] is inhabited by [repr t], so it
+ *    lives wherever [repr t] does.  This is *not* [u_res] in general: for
+ *    [repr (a:Type u#a) : Type u#(max a 1) = (b:Type u#0 & a)], [M t] is one
+ *    universe above [t].  Reporting [u_res] here would let [unit -> M bool]
+ *    pass as [Type u#0] while really containing a [Type u#1] value.
+ *
+ *  - [M] total without a representation: [Tot], [GTot], and anything else
+ *    introduced by [total assume effect M].  There is no representation to
+ *    consult, so we take the assumption at its word and answer [u_res].
+ *)
+let effect_universe (env:env) (eff:lident) (u_res:universe) : ML universe =
+  if U.is_pure_or_ghost_effect eff then u_res
+  else if not (is_total_effect env eff) then U_zero
+  else match effect_decl_opt env eff with
+       | None -> u_res
+       | Some (ed, _) ->
+         match ed |> U.get_repr_universe with
+         | None -> u_res
+         | Some ts ->
+           let _, t = inst_tscheme_with ts [u_res] in
+           match (SS.compress t).n with
+           | Tm_type u -> u
+           | _ ->
+             failwith (Format.fmt2
+               "Effect %s has no computed representation universe (got %s); \
+                its declaration was not typechecked"
+               (string_of_lid eff) (show t))
 
 (* An effect is reifiable exactly when it was given a representation with an
    [effect { M with { repr = ...; return = ...; bind = ... } }] block. *)
 let is_reifiable_effect (env:env) (effect_lid:lident) : ML (bool) =
-    let effect_lid = norm_eff_name env effect_lid in
     match effect_decl_opt env effect_lid with
     | None -> false
     | Some (ed, _) -> Some? ed.combinators
@@ -1784,7 +1706,7 @@ let update_effect_lattice env src tgt : ML _ =
   let order = new_edges@env.effects.order in
 
   order |> List.iter (fun edge ->
-    if Ident.lid_equals edge.msource Const.effect_DIV_lid
+    if Const.is_div_effect_lid edge.msource
     && lookup_effect_quals env edge.mtarget |> List.contains TotalEffect
     then
       raise_error env Errors.Fatal_DivergentComputationCannotBeIncludedInTotal
@@ -1867,22 +1789,17 @@ let open_universes_in env uvs terms : ML _ =
 
 let set_expected_typ env t =
   //false bit says that use subtyping
-  {env with expected_typ = Some (t, false); expected_post = None}
+  {env with expected_typ = Some (t, false)}
 
 let set_expected_typ_maybe_eq env t use_eq =
-  {env with expected_typ = Some (t, use_eq); expected_post = None}
-
-let set_expected_typ_and_post env t use_eq post =
-  {env with expected_typ = Some (t, use_eq); expected_post = Some post}
+  {env with expected_typ = Some (t, use_eq)}
 
 let expected_typ env = match env.expected_typ with
   | None -> None
   | Some t -> Some t
 
-let expected_post env = env.expected_post
-
 let clear_expected_typ (env_: env): env & option (typ & bool) =
-    {env_ with expected_typ=None; expected_post=None}, expected_typ env_
+    {env_ with expected_typ=None}, expected_typ env_
 
 let finish_module =
     let empty_lid = lid_of_ids [id_of_text ""] in
@@ -2222,6 +2139,13 @@ let get_letrec_arity (env:env) (lbname:lbname) : ML (option int) =
                     env.letrecs with
   | Some (_, arity, _, _) -> Some arity
   | None -> None
+
+let mentions_rec_name env t =
+  match env.rec_names with
+  | [] -> false
+  | rec_names ->
+    let ns = freeNames t in
+    rec_names |> BU.for_some (fun x -> mem x ns)
 
 let fvar_of_nonqual_lid env lid : ML _ =
     let qn = lookup_qname env lid in

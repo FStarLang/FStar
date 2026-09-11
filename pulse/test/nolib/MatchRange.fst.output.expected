@@ -11,7 +11,7 @@
       __: Prims.unit
       __: Prims.unit
       _letpattern: Prims.list Prims.int
-      __: Prims.squash (_letpattern == x)
+      _letpattern == x
       ~(Cons? _letpattern)
   - Also see: MatchRange.fst(13,6-13,12)
 

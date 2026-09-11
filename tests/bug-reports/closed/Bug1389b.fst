@@ -15,9 +15,7 @@
 *)
 module Bug1389b
 
-#push-options "--admit_smt_queries true"
-effect MyTot (a:Type) = PURE a (requires True) (ensures fun _ -> True)
-#pop-options
+effect MyTot (a:Type) = PURE a
 
 assume val or_else : (#a:Type) -> (f : (unit -> MyTot a)) -> (g : (unit -> MyTot a)) -> MyTot a
 assume val fail : (#a:Type) -> string -> MyTot a

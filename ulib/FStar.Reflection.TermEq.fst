@@ -827,7 +827,12 @@ and pat_cmp p1 p2 =
     co (const_cmp x1 x2) ()
 
   | Pat_Dot_Term x1, Pat_Dot_Term x2 ->
-    co (opt_dec_cmp' p1 p2 term_cmp x1 x2) (bridge_opt_term x1 x2)
+    (* [co]'s [#rb #xb #yb] must be pinned to [peq], [p1] and [p2].  A lemma's
+       statement is now its result type rather than a postcondition, so the
+       second argument's type is what the unifier reaches first: it solves
+       [#xb := denote_opt_term x1], and since [denote_opt_term] is [GTot] the
+       whole application becomes [GTot]. *)
+    co #_ #_ #_ #peq #_ #_ #p1 #p2 (opt_dec_cmp' p1 p2 term_cmp x1 x2) (bridge_opt_term x1 x2)
 
   | Pat_Cons head1 us1 subpats1, Pat_Cons head2 us2 subpats2 ->
     co (fv_cmp head1 head2

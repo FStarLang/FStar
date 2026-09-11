@@ -279,92 +279,12 @@ let split_guard g =
  {trivial_guard with guard_f = g.guard_f}
 
 let weaken_guard_formula g fml : ML guard_t =
+  if U.is_t_true fml then g else
   match g.guard_f with
   | Trivial -> g
   | NonTrivial f ->
     { g with guard_f = check_trivial (U.mk_imp fml f) }
 
-
-let mk_lcomp eff_name res_typ cflags comp_thunk
-  : ML lcomp =
-    { eff_name = eff_name;
-      res_typ = res_typ;
-      cflags = cflags;
-      comp_thunk = mk_ref (Inl comp_thunk) }
-
-let lcomp_comp lc
-  : ML (comp & guard_t) =
-    match !(lc.comp_thunk) with
-    | Inl thunk ->
-      let c, g = thunk () in
-      lc.comp_thunk := Inr c;
-      c, g
-    | Inr c -> c, trivial_guard
-
-let apply_lcomp fc fg lc
-  : ML lcomp =
-  mk_lcomp
-    lc.eff_name lc.res_typ lc.cflags
-    (fun () ->
-     let (c, g) = lcomp_comp lc in
-     fc c, fg g)
-
-let lcomp_to_string lc
-  : ML string =
-    if Options.print_effect_args () then
-        show (lc |> lcomp_comp |> fst)
-    else
-        Format.fmt2 "%s %s" (show lc.eff_name) (show lc.res_typ)
-
-let lcomp_set_flags lc fs
-  : ML lcomp =
-    let comp_typ_set_flags (c:comp) =
-        match c.n with
-        | Total _
-        | GTotal _ -> c
-        | Comp ct ->
-          let ct = {ct with flags=fs} in
-          {c with n=Comp ct}
-    in
-    mk_lcomp lc.eff_name
-             lc.res_typ
-             fs
-             (fun () -> lc |> lcomp_comp |> (fun (c, g) -> comp_typ_set_flags c, g))
-
-let is_total_lcomp c : ML bool = lid_equals c.eff_name PC.effect_Tot_lid || c.cflags |> BU.for_some (function TOTAL -> true | _ -> false)
-
-let is_tot_or_gtot_lcomp c : ML bool = lid_equals c.eff_name PC.effect_Tot_lid
-                             || lid_equals c.eff_name PC.effect_GTot_lid
-                             || c.cflags |> BU.for_some (function TOTAL -> true | _ -> false)
-
-let is_lcomp_partial_return c : ML bool = false
-
-let is_pure_lcomp lc : ML bool =
-    is_total_lcomp lc
-    || U.is_pure_effect lc.eff_name
-    || lc.cflags |> BU.for_some (function LEMMA -> true | _ -> false)
-
-let is_pure_or_ghost_lcomp lc : ML bool =
-    is_pure_lcomp lc || U.is_ghost_effect lc.eff_name
-
-let set_result_typ_lc lc t : ML lcomp =
-  mk_lcomp lc.eff_name t lc.cflags (fun () -> lc |> lcomp_comp |> (fun (c, g) -> U.set_result_typ c t, g))
-
-let residual_comp_of_lcomp lc = {
-    residual_effect=lc.eff_name;
-    residual_typ=Some (lc.res_typ);
-    residual_flags=lc.cflags
-  }
-
-let lcomp_of_comp_guard c0 g : ML lcomp =
-    let eff_name, flags =
-        match c0.n with
-        | Total _ -> PC.effect_Tot_lid, [TOTAL]
-        | GTotal _ -> PC.effect_GTot_lid, []
-        | Comp c -> c.effect_name, c.flags in
-    mk_lcomp eff_name (U.comp_result c0) flags (fun () -> c0, g)
-
-let lcomp_of_comp c0 : ML lcomp = lcomp_of_comp_guard c0 trivial_guard
 
 let check_positivity_qual subtyping p0 p1
   = if p0 = p1 then true

@@ -282,19 +282,13 @@ and eq_args env (a1:args) (a2:args) : ML eq_result =
 
 and eq_comp env (c1 c2:comp) : ML eq_result =
   match c1.n, c2.n with
-  | Total t1, Total t2
-  | GTotal t1, GTotal t2 ->
-    eq_tm env t1 t2
   | Comp ct1, Comp ct2 ->
-    eq_and (equal_if (eq_univs_list ct1.comp_univs ct2.comp_univs))
+    eq_and (equal_if (Ident.lid_equals ct1.effect_name ct2.effect_name))
            (fun _ ->
-             eq_and (equal_if (Ident.lid_equals ct1.effect_name ct2.effect_name))
+             eq_and (eq_tm env ct1.result_typ ct2.result_typ)
                     (fun _ ->
-                      eq_and (eq_tm env ct1.result_typ ct2.result_typ)
-                             (fun _ ->
-                               eq_and (eq_tm env ct1.comp_pre ct2.comp_pre)
-                                      (fun _ -> eq_tm env ct1.comp_post ct2.comp_post))))
-                             //ignoring cflags
+                      Equal))
+                    //ignoring cflags
   | _ -> NotEqual
 
 let eq_tm_bool e t1 t2 : ML bool = eq_tm e t1 t2 = Equal

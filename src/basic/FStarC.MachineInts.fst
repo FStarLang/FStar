@@ -83,6 +83,19 @@ let __int_to_t_for (k:machint_kind) : ML S.term =
   let lid = __int_to_t_lid_for k in
   S.fvar lid None
 
+(* [FStar.SizeT.uint_to_t] is the only injection with a precondition
+   ([fits x]).  A precondition is a trailing implicit [squash] binder, so an
+   application of it carries one more argument than the others do. *)
+let int_to_t_proof_args (k:machint_kind) : list S.arg =
+  match k with
+  | SizeT -> [S.iarg S.unit_const]
+  | _ -> []
+
+(* Keep only the explicit arguments of an application of [int_to_t]: the
+   proof arguments above are implicit and carry no information. *)
+let explicit_args (#a:Type) (args : list (a & S.aqual)) : ML (list (a & S.aqual)) =
+  FStarC.List.filter (fun (_, q) -> not (S.is_aqual_implicit q)) args
+
 (* just a newtype really, no checks or conditions here *)
 type machint (k : machint_kind) = | Mk : int -> option S.meta_source_info -> machint k
 
@@ -109,7 +122,8 @@ instance e_machint (k : machint_kind) : Tot (EMB.embedding (machint k)) =
     let Mk i m = x in
     let it = EMB.embed i rng None cb in
     let int_to_t = int_to_t_for k in
-    let t = S.mk_Tm_app int_to_t [S.as_arg it] rng in
+    let proofs = int_to_t_proof_args k in
+    let t = S.mk_Tm_app int_to_t (S.as_arg it :: proofs) rng in
     with_meta_ds rng t m
   in
   let un (t:term) cb : ML (option (machint k)) =
@@ -120,11 +134,15 @@ instance e_machint (k : machint_kind) : Tot (EMB.embedding (machint k)) =
     in
     let t = U.unmeta_safe t in
     match U.head_and_args_full t with
-    | hd, [(a,_)] when U.is_fvar (int_to_t_lid_for k) hd
-                    || U.is_fvar (__int_to_t_lid_for k) hd ->
-      let a = U.unlazy_emb a in
-      let! a : int = EMB.try_unembed a cb in
-      Some (Mk a m)
+    | hd, args when U.is_fvar (int_to_t_lid_for k) hd
+                 || U.is_fvar (__int_to_t_lid_for k) hd -> (
+      match explicit_args args with
+      | [(a,_)] ->
+        let a = U.unlazy_emb a in
+        let! a : int = EMB.try_unembed a cb in
+        Some (Mk a m)
+      | _ -> None
+    )
     | _ ->
       None
   in
@@ -157,11 +175,15 @@ instance nbe_machint (k : machint_kind) : Tot (NBE.embedding (machint k)) =
        | _ -> (a, None))
     in
     match a.nbe_t with
-    | FV (fv1, [], [(a, _)])
+    | FV (fv1, [], args)
       when Ident.lid_equals (fv1.fv_name) (int_to_t_lid_for k)
-      || Ident.lid_equals (fv1.fv_name) (__int_to_t_lid_for k) ->
-      let! a : int = unembed e_int cbs a in
-      Some (Mk a m)
+      || Ident.lid_equals (fv1.fv_name) (__int_to_t_lid_for k) -> (
+      match explicit_args args with
+      | [(a, _)] ->
+        let! a : int = unembed e_int cbs a in
+        Some (Mk a m)
+      | _ -> None
+    )
     | _ -> None
   in
   mk_emb em un

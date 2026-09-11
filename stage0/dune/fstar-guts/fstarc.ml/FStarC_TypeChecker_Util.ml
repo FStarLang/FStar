@@ -922,17 +922,16 @@ let lift_comps (env : FStarC_TypeChecker_Env.env)
       (l, c11, c21, uu___1)
 let is_pure_effect (env : FStarC_TypeChecker_Env.env)
   (l : FStarC_Ident.lident) : Prims.bool=
-  let l1 = FStarC_TypeChecker_Env.norm_eff_name env l in
-  FStarC_Ident.lid_equals l1 FStarC_Parser_Const.effect_PURE_lid
+  let uu___ = FStarC_TypeChecker_Env.norm_eff_name env l in
+  FStarC_Syntax_Util.is_pure_effect uu___
 let is_ghost_effect (env : FStarC_TypeChecker_Env.env)
   (l : FStarC_Ident.lident) : Prims.bool=
-  let l1 = FStarC_TypeChecker_Env.norm_eff_name env l in
-  FStarC_Ident.lid_equals l1 FStarC_Parser_Const.effect_GHOST_lid
+  let uu___ = FStarC_TypeChecker_Env.norm_eff_name env l in
+  FStarC_Syntax_Util.is_ghost_effect uu___
 let is_pure_or_ghost_effect (env : FStarC_TypeChecker_Env.env)
   (l : FStarC_Ident.lident) : Prims.bool=
-  let l1 = FStarC_TypeChecker_Env.norm_eff_name env l in
-  (FStarC_Ident.lid_equals l1 FStarC_Parser_Const.effect_PURE_lid) ||
-    (FStarC_Ident.lid_equals l1 FStarC_Parser_Const.effect_GHOST_lid)
+  let uu___ = FStarC_TypeChecker_Env.norm_eff_name env l in
+  FStarC_Syntax_Util.is_pure_or_ghost_effect uu___
 let close_wp_comp (env : FStarC_TypeChecker_Env.env)
   (bvs : FStarC_Syntax_Syntax.bv Prims.list) (c : FStarC_Syntax_Syntax.comp)
   : FStarC_Syntax_Syntax.comp=
@@ -1199,7 +1198,7 @@ let strengthen_comp (env : FStarC_TypeChecker_Env.env)
      let assert_c =
        let uu___ =
          FStarC_Syntax_Syntax.trivial_post FStarC_Syntax_Syntax.t_unit in
-       mk_comp_l FStarC_Parser_Const.effect_PURE_lid
+       mk_comp_l FStarC_Parser_Const.primitive_pure_lid
          FStarC_Syntax_Syntax.U_zero FStarC_Syntax_Syntax.t_unit f1 uu___ [] in
      mk_bind env assert_c FStar_Pervasives_Native.None c flags r)
 let return_value (env : FStarC_TypeChecker_Env.env)
@@ -1247,7 +1246,7 @@ let weaken_comp (env : FStarC_TypeChecker_Env.env)
            [uu___3] in
          FStarC_Syntax_Util.abs uu___2 formula
            (FStar_Pervasives_Native.Some FStarC_Syntax_Syntax.post_rc) in
-       mk_comp_l FStarC_Parser_Const.effect_PURE_lid
+       mk_comp_l FStarC_Parser_Const.primitive_pure_lid
          FStarC_Syntax_Syntax.U_zero FStarC_Syntax_Syntax.t_unit
          FStarC_Syntax_Syntax.trivial_pre uu___1 [] in
      let uu___1 = weaken_flags (FStarC_Syntax_Util.comp_flags c) in
@@ -1862,7 +1861,7 @@ let assume_result_eq_pure_term_in_m (env : FStarC_TypeChecker_Env.env)
       then true
       else is_ghost_effect env lc.FStarC_TypeChecker_Common.eff_name in
     if uu___
-    then FStarC_Parser_Const.effect_PURE_lid
+    then FStarC_Parser_Const.primitive_pure_lid
     else FStarC_Option.must m_opt in
   let flags = lc.FStarC_TypeChecker_Common.cflags in
   let refine uu___ =
@@ -1896,7 +1895,7 @@ let assume_result_eq_pure_term_in_m (env : FStarC_TypeChecker_Env.env)
                      FStarC_Syntax_Syntax.comp_univs =
                        (retc1.FStarC_Syntax_Syntax.comp_univs);
                      FStarC_Syntax_Syntax.effect_name =
-                       FStarC_Parser_Const.effect_GHOST_lid;
+                       FStarC_Parser_Const.primitive_ghost_lid;
                      FStarC_Syntax_Syntax.result_typ =
                        (retc1.FStarC_Syntax_Syntax.result_typ);
                      FStarC_Syntax_Syntax.comp_pre =
@@ -2014,9 +2013,7 @@ let maybe_return_e2_and_bind (r : FStarC_Range_Type.t)
                FStarC_TypeChecker_Env.norm_eff_name env
                  lc21.FStarC_TypeChecker_Common.eff_name in
              let uu___2 =
-               if
-                 FStarC_Ident.lid_equals eff2
-                   FStarC_Parser_Const.effect_PURE_lid
+               if FStarC_Syntax_Util.is_pure_effect eff2
                then
                  let uu___3 = FStarC_TypeChecker_Env.join_opt env eff1 eff2 in
                  match uu___3 with
@@ -2051,7 +2048,7 @@ let comp_false (env : FStarC_TypeChecker_Env.env)
   FStarC_Syntax_Syntax.comp=
   let uu___ = fvar_env env FStarC_Parser_Const.false_lid in
   let uu___1 = FStarC_Syntax_Syntax.trivial_post t in
-  mk_comp_l FStarC_Parser_Const.effect_PURE_lid u t uu___ uu___1 []
+  mk_comp_l FStarC_Parser_Const.primitive_pure_lid u t uu___ uu___1 []
 let mk_conjunction (env : 'uuuuu) (u_a : FStarC_Syntax_Syntax.universe)
   (a : FStarC_Syntax_Syntax.term) (p : FStarC_Syntax_Syntax.typ)
   (ct1 : FStarC_Syntax_Syntax.comp_typ) (ct2 : FStarC_Syntax_Syntax.comp_typ)
@@ -2132,7 +2129,7 @@ let bind_cases (env0 : FStarC_TypeChecker_Env.env)
          match uu___ with
          | (uu___1, eff_label, uu___2, uu___3) ->
              join_effects env eff1 eff_label)
-      FStarC_Parser_Const.effect_PURE_lid lcases in
+      FStarC_Parser_Const.primitive_pure_lid lcases in
   let bind_cases_flags = [] in
   let bind_cases1 uu___ =
     let u_res_t = env.FStarC_TypeChecker_Env.universe_of env res_t in
@@ -2382,11 +2379,11 @@ let maybe_lift (env : FStarC_TypeChecker_Env.env)
   FStarC_Syntax_Syntax.term=
   let norm_eff l =
     let l1 = FStarC_TypeChecker_Env.norm_eff_name env l in
-    if FStarC_Ident.lid_equals l1 FStarC_Parser_Const.effect_Tot_lid
-    then FStarC_Parser_Const.effect_PURE_lid
+    if FStarC_Syntax_Util.is_pure_effect l1
+    then FStarC_Parser_Const.primitive_pure_lid
     else
-      if FStarC_Ident.lid_equals l1 FStarC_Parser_Const.effect_GTot_lid
-      then FStarC_Parser_Const.effect_GHOST_lid
+      if FStarC_Syntax_Util.is_ghost_effect l1
+      then FStarC_Parser_Const.primitive_ghost_lid
       else l1 in
   let m1 = norm_eff c1 in
   let m2 = norm_eff c2 in
@@ -2410,15 +2407,7 @@ let maybe_monadic (env : FStarC_TypeChecker_Env.env)
   (e : FStarC_Syntax_Syntax.term) (c : FStarC_Ident.lident)
   (t : FStarC_Syntax_Syntax.typ) : FStarC_Syntax_Syntax.term=
   let m = FStarC_TypeChecker_Env.norm_eff_name env c in
-  let uu___ =
-    let uu___1 =
-      let uu___2 = is_pure_or_ghost_effect env m in
-      if uu___2
-      then true
-      else FStarC_Ident.lid_equals m FStarC_Parser_Const.effect_Tot_lid in
-    if uu___1
-    then true
-    else FStarC_Ident.lid_equals m FStarC_Parser_Const.effect_GTot_lid in
+  let uu___ = is_pure_or_ghost_effect env m in
   if uu___
   then e
   else
@@ -2926,6 +2915,9 @@ let find_coercion (env : FStarC_TypeChecker_Env.env)
                                                                     (FStar_Pervasives_Native.Some
                                                                     (exp_t1,
                                                                     false));
+                                                                    FStarC_TypeChecker_Env.expected_post
+                                                                    =
+                                                                    (env.FStarC_TypeChecker_Env.expected_post);
                                                                     FStarC_TypeChecker_Env.sigtab
                                                                     =
                                                                     (env.FStarC_TypeChecker_Env.sigtab);
@@ -4314,6 +4306,8 @@ let update_env_sub_eff (env : FStarC_TypeChecker_Env.env)
         FStarC_TypeChecker_Env.modules = (env.FStarC_TypeChecker_Env.modules);
         FStarC_TypeChecker_Env.expected_typ =
           (env.FStarC_TypeChecker_Env.expected_typ);
+        FStarC_TypeChecker_Env.expected_post =
+          (env.FStarC_TypeChecker_Env.expected_post);
         FStarC_TypeChecker_Env.sigtab = (env.FStarC_TypeChecker_Env.sigtab);
         FStarC_TypeChecker_Env.attrtab = (env.FStarC_TypeChecker_Env.attrtab);
         FStarC_TypeChecker_Env.instantiate_imp =
@@ -4418,6 +4412,8 @@ let update_env_sub_eff (env : FStarC_TypeChecker_Env.env)
     FStarC_TypeChecker_Env.modules = (env2.FStarC_TypeChecker_Env.modules);
     FStarC_TypeChecker_Env.expected_typ =
       (env2.FStarC_TypeChecker_Env.expected_typ);
+    FStarC_TypeChecker_Env.expected_post =
+      (env2.FStarC_TypeChecker_Env.expected_post);
     FStarC_TypeChecker_Env.sigtab = (env2.FStarC_TypeChecker_Env.sigtab);
     FStarC_TypeChecker_Env.attrtab = (env2.FStarC_TypeChecker_Env.attrtab);
     FStarC_TypeChecker_Env.instantiate_imp =

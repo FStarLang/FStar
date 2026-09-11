@@ -4,10 +4,10 @@
   - An effect declaration with no representation is an assumption; write `assume
     effect`.
 
-* Info at EffectDeclChecks.fst(12,0-12,23):
+* Info at EffectDeclChecks.fst(12,0-12,22):
   - Expected failure:
   - Invalid qualifiers for declaration
-      ‘sub_effect Prims.PURE ~> EffectDeclChecks.FOO2’
+      ‘sub_effect Prims.Tot ~> EffectDeclChecks.FOO2’
   - A sub-effect with no lift is an assumption; write `assume sub_effect`.
 
 * Info at EffectDeclChecks.fst(21,7-21,82):
@@ -16,10 +16,10 @@
   - The combinators of an effect definition are checked, so it cannot be marked
     `assume`.
 
-* Info at EffectDeclChecks.fst(31,7-31,47):
+* Info at EffectDeclChecks.fst(31,7-31,46):
   - Expected failure:
   - Invalid qualifiers for declaration
-      ‘assume sub_effect Prims.PURE ~> EffectDeclChecks.FOO4’
+      ‘assume sub_effect Prims.Tot ~> EffectDeclChecks.FOO4’
   - The lift of a sub-effect is checked, so it cannot be marked `assume`.
 
 * Info at EffectDeclChecks.fst(36,7-36,30):
@@ -28,5 +28,5 @@
 
 * Info at EffectDeclChecks.fst(45,9-45,13):
   - Expected failure:
-  - Effect EffectDeclChecks.FOO5 is marked total, but its representation is a function into FStar.Pervasives.Dv
+  - Effect EffectDeclChecks.FOO5 is marked total, but its representation is a function into FStar.Pervasives.Div
 

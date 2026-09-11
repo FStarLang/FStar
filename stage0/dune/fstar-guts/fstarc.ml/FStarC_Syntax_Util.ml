@@ -372,13 +372,6 @@ let comp_post (c : FStarC_Syntax_Syntax.comp) : FStarC_Syntax_Syntax.term=
   | FStarC_Syntax_Syntax.Total t -> FStarC_Syntax_Syntax.trivial_post t
   | FStarC_Syntax_Syntax.GTotal t -> FStarC_Syntax_Syntax.trivial_post t
   | FStarC_Syntax_Syntax.Comp ct -> ct.FStarC_Syntax_Syntax.comp_post
-let is_named_tot (c : FStarC_Syntax_Syntax.comp) : Prims.bool=
-  match c.FStarC_Syntax_Syntax.n with
-  | FStarC_Syntax_Syntax.Comp c1 ->
-      FStarC_Ident.lid_equals c1.FStarC_Syntax_Syntax.effect_name
-        FStarC_Parser_Const.effect_Tot_lid
-  | FStarC_Syntax_Syntax.Total uu___ -> true
-  | FStarC_Syntax_Syntax.GTotal uu___ -> false
 let un_uinst (t : FStarC_Syntax_Syntax.term) : FStarC_Syntax_Syntax.term=
   let t1 = FStarC_Syntax_Subst.compress t in
   match t1.FStarC_Syntax_Syntax.n with
@@ -419,18 +412,17 @@ let has_trivial_spec (c : FStarC_Syntax_Syntax.comp) : Prims.bool=
       if uu___
       then is_trivial_post ct.FStarC_Syntax_Syntax.comp_post
       else false
+let is_named_tot (c : FStarC_Syntax_Syntax.comp) : Prims.bool=
+  if
+    FStarC_Ident.lid_equals (comp_effect_name c)
+      FStarC_Parser_Const.effect_Tot_lid
+  then has_trivial_spec c
+  else false
 let is_total_comp (c : FStarC_Syntax_Syntax.comp) : Prims.bool=
   let uu___ =
-    if
-      FStarC_Ident.lid_equals (comp_effect_name c)
-        FStarC_Parser_Const.effect_Tot_lid
-    then true
-    else
-      if
-        FStarC_Ident.lid_equals (comp_effect_name c)
-          FStarC_Parser_Const.effect_PURE_lid
-      then has_trivial_spec c
-      else false in
+    if FStarC_Parser_Const.is_pure_effect_lid (comp_effect_name c)
+    then has_trivial_spec c
+    else false in
   if uu___
   then true
   else
@@ -440,25 +432,15 @@ let is_total_comp (c : FStarC_Syntax_Syntax.comp) : Prims.bool=
          | FStarC_Syntax_Syntax.TOTAL -> true
          | uu___2 -> false) (comp_flags c)
 let is_tot_or_gtot_comp (c : FStarC_Syntax_Syntax.comp) : Prims.bool=
-  let uu___ =
-    let uu___1 = is_total_comp c in
-    if uu___1
-    then true
-    else
-      FStarC_Ident.lid_equals FStarC_Parser_Const.effect_GTot_lid
-        (comp_effect_name c) in
+  let uu___ = is_total_comp c in
   if uu___
   then true
   else
-    if
-      FStarC_Ident.lid_equals FStarC_Parser_Const.effect_GHOST_lid
-        (comp_effect_name c)
+    if FStarC_Parser_Const.is_ghost_effect_lid (comp_effect_name c)
     then has_trivial_spec c
     else false
 let is_pure_effect (l : FStarC_Ident.lident) : Prims.bool=
-  ((FStarC_Ident.lid_equals l FStarC_Parser_Const.effect_Tot_lid) ||
-     (FStarC_Ident.lid_equals l FStarC_Parser_Const.effect_PURE_lid))
-    || (FStarC_Ident.lid_equals l FStarC_Parser_Const.effect_Pure_lid)
+  FStarC_Parser_Const.is_pure_effect_lid l
 let is_pure_comp (c : FStarC_Syntax_Syntax.comp) : Prims.bool=
   match c.FStarC_Syntax_Syntax.n with
   | FStarC_Syntax_Syntax.Total uu___ -> true
@@ -478,13 +460,9 @@ let is_pure_comp (c : FStarC_Syntax_Syntax.comp) : Prims.bool=
              | FStarC_Syntax_Syntax.LEMMA -> true
              | uu___2 -> false) ct.FStarC_Syntax_Syntax.flags
 let is_ghost_effect (l : FStarC_Ident.lident) : Prims.bool=
-  ((FStarC_Ident.lid_equals FStarC_Parser_Const.effect_GTot_lid l) ||
-     (FStarC_Ident.lid_equals FStarC_Parser_Const.effect_GHOST_lid l))
-    || (FStarC_Ident.lid_equals FStarC_Parser_Const.effect_Ghost_lid l)
+  FStarC_Parser_Const.is_ghost_effect_lid l
 let is_div_effect (l : FStarC_Ident.lident) : Prims.bool=
-  ((FStarC_Ident.lid_equals l FStarC_Parser_Const.effect_DIV_lid) ||
-     (FStarC_Ident.lid_equals l FStarC_Parser_Const.effect_Div_lid))
-    || (FStarC_Ident.lid_equals l FStarC_Parser_Const.effect_Dv_lid)
+  FStarC_Parser_Const.is_div_effect_lid l
 let is_pure_or_ghost_comp (c : FStarC_Syntax_Syntax.comp) : Prims.bool=
   let uu___ = is_pure_comp c in
   if uu___ then true else is_ghost_effect (comp_effect_name c)

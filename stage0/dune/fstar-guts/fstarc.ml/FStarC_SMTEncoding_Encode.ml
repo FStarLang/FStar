@@ -1695,6 +1695,8 @@ let encode_free_var (uninterpreted : Prims.bool)
                                 (tcenv_comp.FStarC_TypeChecker_Env.modules);
                               FStarC_TypeChecker_Env.expected_typ =
                                 (tcenv_comp.FStarC_TypeChecker_Env.expected_typ);
+                              FStarC_TypeChecker_Env.expected_post =
+                                (tcenv_comp.FStarC_TypeChecker_Env.expected_post);
                               FStarC_TypeChecker_Env.sigtab =
                                 (tcenv_comp.FStarC_TypeChecker_Env.sigtab);
                               FStarC_TypeChecker_Env.attrtab =
@@ -2613,6 +2615,8 @@ let encode_top_level_let (env : FStarC_SMTEncoding_Env.env_t)
               (uu___1.FStarC_TypeChecker_Env.modules);
             FStarC_TypeChecker_Env.expected_typ =
               (uu___1.FStarC_TypeChecker_Env.expected_typ);
+            FStarC_TypeChecker_Env.expected_post =
+              (uu___1.FStarC_TypeChecker_Env.expected_post);
             FStarC_TypeChecker_Env.sigtab =
               (uu___1.FStarC_TypeChecker_Env.sigtab);
             FStarC_TypeChecker_Env.attrtab =

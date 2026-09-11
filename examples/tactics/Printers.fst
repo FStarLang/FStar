@@ -98,7 +98,9 @@ let mk_printer_fun (dom : term) : Tac term =
 
         // Wrap it in a let rec; basically:
         // let rec ff = fun t -> match t with { .... } in ff x
-        let ff_bnd : binder = { namedv_to_simple_binder ff with sort = ffty } in
+        (* Must be [simple_binder], not [binder]: the ascription no longer
+           lets the refinement be recovered where this binder is used. *)
+        let ff_bnd : simple_binder = { namedv_to_simple_binder ff with sort = ffty } in
         let xtm = pack (Tv_Var (binder_to_namedv x)) in
         let b = pack (Tv_Let true [] ff_bnd f (mk_e_app fftm [xtm])) in
         (* print ("b = " ^ term_to_string b); *)

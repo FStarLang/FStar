@@ -235,7 +235,7 @@ let qualifier_compat g r (q:option qualifier) (q':T.aqualv) : T.Tac unit =
 let check_qual g (q:qualifier) : T.Tac qualifier =
   match q with
   | Meta t ->
-    let ty = (`(unit -> T.Tac u#0 unit)) in
+    let ty = (`(unit -> T.Tac unit)) in
     // let t = T.pack (T.Tv_AscribedT t ty None false) in
     let t =
       (* This makes sure to elaborate the meta qualifier so it
@@ -552,7 +552,9 @@ let rec check_abs_core
 
       let ppname_ret = mk_ppname_no_range "_fret" in
       let r  = check g' pre_opened post ppname_ret body_opened  in
-      let (| post, r |) : (ph:post_hint_opt g' & checker_result_t g' pre_opened ph) =
+      (* The [PostHint? ph] refinement has to be stated: the join of the match
+         below no longer records what both branches establish. *)
+      let (| post, r |) : (ph:post_hint_opt g' { PostHint? ph } & checker_result_t g' pre_opened ph) =
         match post with
         | PostHint _ -> (| post, r |)
         | _ ->

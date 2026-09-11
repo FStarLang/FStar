@@ -106,10 +106,12 @@ type eqtype_u = a:Type{hasEq a}
 
      Lemma post    (== Lemma (ensures post))
 
-   the squash argument on the postcondition allows to assume the
-   precondition for the *well-formedness* of the postcondition.
+   [Lemma (requires pre) (ensures post)] desugars to an arrow taking a
+   trailing implicit [squash pre] argument -- which is what lets [pre] be
+   assumed for the *well-formedness* of [post] -- and returning
+   [Tot (squash post)].
 *)
-effect Lemma (a: eqtype_u) = PURE a
+effect Lemma (a: Type) = Tot a
 
 (** IN the default mode of operation, all proofs in a verification
     condition are bundled into a single SMT query. Sub-terms marked
@@ -198,10 +200,14 @@ let reveal_opaque (s: string) = norm_spec [delta_once [s]]
     proof that the result type is inhabited) if [f] were in [DIV]. *)
 total assume effect NDET
 
-(** [PURE] computations can be silently promoted for use in an [NDET]
-    context. As for [DIV] below, there is deliberately no
-    [GHOST ~> NDET] edge. *)
-assume sub_effect PURE ~> NDET
+(** [Tot] computations can be silently promoted for use in an [NDET]
+    context. As for [Div] below, there is deliberately no
+    [GTot ~> NDET] edge.
+
+    A lift is an edge of the effect lattice, so it names the effect
+    itself, not one of its abbreviations: [PURE] is an abbreviation of
+    [Tot]. *)
+assume sub_effect Tot ~> NDET
 
 (** [Ndet] is the Hoare-style counterpart of [NDET] *)
 effect Ndet (a: Type) = NDET a
@@ -215,23 +221,24 @@ effect Nd (a: Type) = NDET a
     identical to PURE, however the specs are given a partial
     correctness interpretation. Computations with the [DIV] effect may
     not terminate. *)
-assume effect DIV
+assume effect Div
 
-(** [NDET] computations can be silently promoted for use in a [DIV]
-    context; composed with [PURE ~> NDET] above this also gives the
-    [PURE ~> DIV] edge.  Note that there is deliberately no
-    [GHOST ~> DIV] edge: [DIV] is not erasable, so admitting one would
-    let a ghost value of an informative type flow into extracted code.
-    A [GHOST] computation whose result type is non-informative is
-    promoted to [PURE] first (see [Normalize.maybe_ghost_to_pure]) and
-    reaches [DIV] that way. *)
-assume sub_effect NDET ~> DIV
+(** [NDET] computations can be silently promoted for use in a [Div]
+    context; composed with [Tot ~> NDET] above this also gives the
+    [Tot ~> Div] edge, since the lattice is closed transitively when an
+    edge is added (see [Env.update_effect_lattice]).  Note that there is
+    deliberately no [GTot ~> Div] edge: [Div] is not erasable, so
+    admitting one would let a ghost value of an informative type flow
+    into extracted code.  A [GTot] computation whose result type is
+    non-informative is promoted to [Tot] first (see
+    [Normalize.maybe_ghost_to_pure]) and reaches [Div] that way. *)
+assume sub_effect NDET ~> Div
 
 (** [Div] is the Hoare-style counterpart of [DIV] *)
-effect Div (a: Type) = DIV a
+effect DIV (a: Type) = Div a
 
 (** [Dv] is the instance of [DIV] with trivial pre- and postconditions *)
-effect Dv (a: Type) = DIV a
+effect Dv (a: Type) = Div a
 
 
 (** We use the [EXT] effect to underspecify external system calls
@@ -258,7 +265,7 @@ type result (a: Type) =
 assume effect EXN
 
 (** We include divergence in exceptions. *)
-assume sub_effect DIV ~> EXN
+assume sub_effect Div ~> EXN
 
 (** A Hoare-style abbreviation for [EXN] *)
 effect Exn (a: Type) = EXN a

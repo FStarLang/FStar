@@ -19,7 +19,7 @@ effect {
 
 let lift_pure_nd (a:Type) (f:unit -> a) : repr a = [f ()]
 
-sub_effect PURE ~> ND = lift_pure_nd
+sub_effect Tot ~> ND = lift_pure_nd
 
 let g (x:int) : option int = Some x
 

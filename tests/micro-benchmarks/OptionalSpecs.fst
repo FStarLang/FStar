@@ -66,6 +66,16 @@ let lemma_two_pres (x:nat) : Lemma (requires x > 0) (requires x > 1) = ()
 [@@expect_failure [103]]
 let lemma_two_posts (x:nat) : Lemma (ensures x >= 0) (x >= 0) = ()
 
-(* Tot and GTot take no specification at all. *)
-[@@expect_failure [146]]
+(* [Tot] and [GTot] are just the pure and ghost effects with an empty
+   specification, so they accept [requires] and [ensures] clauses exactly as
+   [Pure] and [Ghost] do. *)
 let tot_pre (x:nat) : Tot nat (requires x > 0) = x
+let tot_post (x:nat) : Tot nat (ensures fun y -> y >= 0) = x
+let gtot_pre (x:nat) : GTot nat (requires x > 0) = x
+let gtot_post (x:nat) : GTot nat (ensures fun y -> y >= 0) = x
+
+let _ = assert (tot_pre 1 >= 0)
+
+(* And such a postcondition is checked, not ignored. *)
+[@@expect_failure [19]]
+let tot_bad_post (x:nat) : Tot nat (ensures fun y -> y > x) = x

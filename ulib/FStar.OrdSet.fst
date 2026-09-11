@@ -63,13 +63,19 @@ let last_eq #a #f (s: ordset a f{s <> empty})
 
 let last #a #f s = last_eq s; last_lib s
 
+(* The result type states [l <> empty] alongside [head s = head l], as
+   [FStar.OrdSet.liat] does in the interface: it is what makes [head l]
+   well-formed here without an appeal to the first conjunct. *)
 let rec liat_direct #a #f (s: ordset a f{s <> empty}) : (l:ordset a f{
     (forall x. mem x l = (mem x s && (x <> last s))) /\
-    (if tail s <> empty then head s = head l else true)
+    (if tail s <> empty then (l <> empty) && (head s = head l) else true)
   }) =  
   match s with
   | [x] -> []
-  | h::g::t -> h::(liat_direct #a #f (g::t))
+  | h::g::t -> let l = liat_direct #a #f (g::t) in
+               // [h] is below every element of [l], so [h::l] is sorted
+               assert (Cons? l ==> f h (Cons?.hd l));
+               h::l
 
 let liat_lib #a #f (s: ordset a f{s <> empty}) = fst (List.Tot.Base.unsnoc s)
 
