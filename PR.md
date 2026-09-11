@@ -1827,11 +1827,13 @@ Heads match: ... Adding subproblems for arguments
 ```
 
 Those last two lines are the point. `Rel.equal`, reached because the head is an
-interpreted symbol under an `EQ` relation, normalized both sides with
-`UnfoldUntil delta_constant` — and then `rigid_rigid_delta` matched the heads and
-decomposed the arguments, settling the problem immediately. The 10.9s bought
-nothing. `FStar.UInt.logand` unfolds to `from_vec (logand_vec (to_vec a)
-(to_vec b))`, and `to_vec` on a symbolic 64-bit argument builds an enormous term.
+interpreted symbol under an `EQ` relation, normalizes both sides with
+`UnfoldUntil delta_constant`, fails to decide the equation, and then
+`rigid_rigid_delta` decomposes the arguments and fails too. `FStar.UInt.logand`
+unfolds to `from_vec (logand_vec (to_vec a) (to_vec b))`, and `to_vec` on a
+symbolic 64-bit argument builds an enormous term — so the 10.9s is spent
+establishing nothing. Only six problems in the module take this path, at roughly
+2s each.
 
 Why this branch and not master: the same 41 interpreted-head problems arise on
 both, but on master every one of them still has a unification variable on the
@@ -1839,26 +1841,81 @@ right, so the `no_free_uvars t1 && no_free_uvars t2` gate is false and `equal` i
 never called. Here the variables are already solved by that point, the gate
 passes, and the landmine — which is master's code, unchanged — goes off.
 
+### The fix that was tried, and why it was withdrawn
+
 The delta step is there for two reasons: to relate *different* heads, the
 `(+ x1 x2) =?= (- y1 y2)` of its own comment, and to evaluate an interpreted head
 on ground arguments, which is the only way to see that `logand 3 5` and
-`logand 5 3` are both 1. Neither applies when the heads are the same symbol and
-an argument still mentions a free variable: nothing computes, both sides unfold
-in lockstep, and only the arguments can decide the equation. So that one step is
-skipped in exactly that case.
+`logand 5 3` are both 1. Neither seemed to apply when the heads are the same
+symbol and an argument still mentions a free variable, so `e042bd26a6` skipped
+the step in exactly that case. `TestBV.fst` went back to 0.92s and `make ci` was
+green.
 
-Both halves of the condition are load-bearing, which a first attempt established
-the hard way. Gating on groundness alone — which is what the gate's own comment,
-"neither term has any free variables", claims `no_free_uvars` checks, though it
-only looks at unification variables — broke `Bug3207b` (`l =?= [] @ l`) and
-`Bug2002`, two `--no_smt` tests whose heads *differ* and which genuinely need the
-unfolding. Requiring a head match as well leaves them untouched.
+It is wrong, and `1164a86c7f` reverts it. Two things were missed.
 
-`TestBV.fst` is now **0.92s against master's 0.99s**, at 175 MB against master's
-174 MB, and its `Rel` trace is unchanged: the same 41 interpreted-head problems
-arrive and the same 40 head-matches decompose. The fix is in `Rel.equal` rather
-than at the `no_free_uvars` gate, so no problem is rerouted into a different
-branch.
+First, `Env.is_interpreted` is far wider than the `(+ x1 x2) =?= (- y1 y2)` of
+the guard's comment suggests. It answers true for every fvar whose delta depth is
+`Delta_equational_at_level`, which is to say for *every ordinary
+let-definition* — so the skip applied to a broad class of equations rather than
+to primitive operators.
+
+Second, "both sides unfold in lockstep so only the arguments can decide it" is
+false whenever the definition is a wrapper that returns one of its own arguments.
+Kuiper has exactly that, an identity coercion:
+
+```fstar
+let natlt_coerce #m #n (i: natlt n { i < m }) : natlt m = i
+```
+
+and `Kuiper.Kernel.Sync` asks Pulse's prover, with `smt_ok=false` and under a
+binder, to relate
+
+```
+natlt_coerce (natlt_coerce i)  =?=  natlt_coerce i
+```
+
+Unfolding reduces both sides to `i` and settles it at once. Decomposing the
+arguments does not: it leaves `natlt_coerce i =?= i`, which `rigid_rigid_delta`
+fails on. `Kuiper.Kernel.Sync` and `Kuiper.IArray` both stopped verifying — two
+modules that this branch does not otherwise touch.
+
+A reordering was tried next — decompose first, fall back to `equal` only when
+decomposition fails, which loses no completeness because the enclosing guard
+establishes that neither side has unification variables, so the attempt can only
+succeed or fail and never commits a solution. That is worse, not better:
+`TestBV` went to **17.4s**, because `1528` decomposes into `1530` and `1541` and
+the expensive normalization then runs at every level before anything fails.
+
+There is no cheap syntactic discriminator between the two cases. Both are a
+fully-matching head applied to non-ground, reducible arguments. What actually
+separates them is whether the normalization pays off, which is only knowable by
+running it. The `TestBV` problems are
+
+```
+logand (v x) (v y)  =?=  logand (v y) (v x)
+```
+
+i.e. commutativity — a semantic law that neither unfolding nor decomposition can
+establish, so the work is genuinely wasted there. But it is wasted for a reason
+that is invisible in the term's shape, and that same shape is essential in
+kuiper.
+
+### Where this leaves `TestBV`
+
+`TestBV.fst` stays slow on this branch: **12.1s against master's 0.93s**. The
+cause is understood and is not in the code above, which is now identical to
+master's. On master these problems still carry unification variables at this
+point, so `no_free_uvars` is false and `equal` is never reached; this branch has
+solved them by then, which is an improvement everywhere else and a pessimisation
+here. Note also that the gate's comment claims `no_free_uvars` means "neither
+term has any free variables", while it only inspects unification variables and
+universes — the implementation does not match its stated intent.
+
+Two directions look plausible for a real fix, neither attempted here: give the
+normalizer a step budget in this call so a hopeless unfolding can be abandoned
+cheaply, or recognise that the two argument lists are a permutation of one
+another, in which case only a semantic law could close the equation. Both are
+larger changes than a benchmark number justifies in this PR.
 
 ## Merging master's `NDET` effect
 
@@ -2095,12 +2152,15 @@ stage 3, with Pulse), plus `boot-diff`, `test-2-bare`, `stage2-unit-tests` and
 `ci` already runs stage 3, `examples` and `doc` via `_test`, so it needed no
 change.
 
-Every benchmark outlier reported by the PR's benchmarking bot is fixed and the
-fixes are in that run: `Bug3800.fst` is 0.31s / 84MB against `master`'s 0.47s /
-94MB, and `Quicksort.Base.fst` is 7.6s against `master`'s 7.7s (`master` was
-14.4s before the same change was applied to it). See "Two benchmark outliers".
-A later run flagged a third, `TestBV.fst` at +1215% time and +23% memory; it is
-now 0.92s against `master`'s 0.99s at equal peak RSS. See "A third outlier".
+Two of the three benchmark outliers reported by the PR's benchmarking bot are
+fixed, and the fixes are in that run: `Bug3800.fst` is 0.31s / 84MB against
+`master`'s 0.47s / 94MB, and `Quicksort.Base.fst` is 7.6s against `master`'s
+7.7s (`master` was 14.4s before the same change was applied to it). See "Two
+benchmark outliers". A later run flagged a third, `TestBV.fst` at +1215% time
+and +23% memory. That one is **diagnosed but not fixed**: it stands at 12.1s
+against `master`'s 0.93s. The attempted fix broke two kuiper modules and was
+reverted; see "A third outlier" for the root cause and for why the obvious
+narrowings do not work.
 
 Beyond `ci`, EverParse's `fstar2` branch verifies and extracts end to end
 against this compiler, from a clean tree, after the downstream edits catalogued
@@ -2141,18 +2201,19 @@ build stops at ~176 `.checked` when an early spec module fails, so error counts
 between runs are not comparable. Every fix reported here was confirmed by a
 clean rebuild, not by a probe.
 
-All three downstream trees were rebuilt one final time, from clean, against the
-compiler that includes the two benchmark fixes: EverParse **417 `.checked`,
-exit 0**; kuiper **396 `.checked`, exit 0**; pulse-verified-gc **exit 0 on both
-the main build and `spot`**. Those are the same counts as their respective
-baselines.
+All three downstream trees have been rebuilt from clean against the final
+compiler — that is, after master's `NDET` merge and after the `Rel` revert —
+and all three match their baselines exactly: EverParse **417 `.checked`,
+exit 0**, verification and extraction to C, Rust and OCaml, with no F\* errors;
+kuiper **396 `.checked`, exit 0**; pulse-verified-gc **241 `.checked`, exit 0**
+(190 from the main build plus 51 from the `spot` sub-build, which is a separate
+`make -C spot` invocation and is easy to leave out of the count). `make ci -j24
+-k` is exit 0 from a fully wiped tree. Every one of these runs deleted all
+`.checked` files first, so they are genuine clean builds rather than cache
+replays.
 
-Those three numbers were taken at `5209ef174b`, immediately before master's
-`NDET` effect was merged in. After that merge, and again after the `Rel.equal`
-fix for `TestBV`, `make ci -j48 -k` is exit 0 from a fully wiped tree and
-**EverParse was re-verified end to end — verification and extraction to C, Rust
-and OCaml, exit 0 with no F\* errors, at the same 417 `.checked` as its
-baseline**. The `Rel` run deleted every `.checked` in the tree first, so it is a
-genuine clean build rather than a cache replay; a change to unification is worth
-that. Kuiper and pulse-verified-gc were not re-run against either change; their
-numbers stand as of `5209ef174b`.
+The kuiper run is what caught the bad `Rel` optimization described above, and it
+caught it only because the tree was emptied first: `Kuiper.Kernel.Sync` and
+`Kuiper.IArray` had been verified by an earlier compiler and an incremental
+build would have replayed them from cache. That is the argument for wiping
+`.checked` before trusting a downstream number, not just `_output`.
