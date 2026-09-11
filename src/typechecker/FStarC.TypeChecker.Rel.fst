@@ -4633,12 +4633,38 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
            | TEQ.Equal -> true
            | TEQ.NotEqual -> false
            | TEQ.Unknown ->
+             (* [UnfoldUntil delta_constant] is here to decide problems between
+                *different* heads -- the "(+ x1 x2) =?= (- y1 y2)" of the guard
+                below -- and to evaluate an interpreted head applied to ground
+                arguments, as in [logand 3 5 =?= logand 5 3], where the two sides
+                become equal only after both compute to 1.
+
+                It is useless in exactly one case: the heads are already the same
+                symbol and some argument still mentions a free variable. Then
+                there is nothing to compute, both sides unfold in lockstep, and
+                the equality can only come from the arguments -- which is what
+                [rigid_rigid_delta] goes on to do by decomposing them.
+
+                Useless, and not cheap. [FStar.UInt.logand] unfolds to
+                [from_vec (logand_vec (to_vec a) (to_vec b))], and [to_vec] on a
+                symbolic 64-bit argument builds an enormous term: TestBV spent
+                11s of a 12s module on one such problem that decomposition then
+                settled at once. *)
+             let ground t = Setlike.is_empty (Free.names t) in
+             let pointless_to_unfold =
+               head_matches env head1 head2 = FullMatch
+               && not (ground t1 && ground t2)
+             in
              let steps = [
-               Env.UnfoldUntil delta_constant;
                Env.Primops;
                Env.Beta;
                Env.Eager_unfolding;
                Env.Iota ] in
+             let steps =
+               if pointless_to_unfold
+               then steps
+               else Env.UnfoldUntil delta_constant :: steps
+             in
              let t1 = norm_with_steps "FStarC.TypeChecker.Rel.norm_with_steps.2" steps env t1 in
              let t2 = norm_with_steps "FStarC.TypeChecker.Rel.norm_with_steps.3" steps env t2 in
              TEQ.eq_tm env t1 t2 = TEQ.Equal
