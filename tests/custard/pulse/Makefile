@@ -155,14 +155,18 @@ CGREP_ArrTup += "static uint32_t *ArrTup_get_snd(FStar_Pervasives_Native_tuple2_
 # a runtime fill cannot be repeated and a variable-length array may not be
 # initialized at all, so both of those keep the loop.
 C_TESTS += ArrInit
-CGREP_ArrInit += "uint8_t _cbuf1[8] = { 0 };"
-CGREP_ArrInit += "uint8_t _cbuf1[4] = { 7, 7, 7, 7 };"
+CGREP_ArrInit += "uint8_t a[8] = { 0 };"
+CGREP_ArrInit += "uint8_t a[4] = { 7, 7, 7, 7 };"
+# The zero-length one reads nothing, so its binding never gets a name.
+CGREP_ArrInit += "uint8_t _cbuf1[1] = { 0 };"
+CGREP_ArrInit += "uint8_t a[4];"
+CGREP_ArrInit += "uint8_t a[n];"
+CNOGREP_ArrInit += "a[n] = {"
+# Section 97: the binding and the storage are one declaration, so no pointer
+# is declared to hold the array and nothing is assigned to one.
+CNOGREP_ArrInit += "uint8_t *a;"
 # The loop cases assert the *absence* of an initializer: a bare declaration
 # is what the loop path emits, and this directory has no CPAIR.
-CGREP_ArrInit += "uint8_t _cbuf1[4];"
-CGREP_ArrInit += "uint8_t _cbuf1[n];"
-CNOGREP_ArrInit += "_cbuf1[n] = {"
-CGREP_ArrInit += "uint8_t _cbuf1[1] = { 0 };"
 CNOGREP_ArrInit += "[0]"
 CNOGREP_ArrInit += "= { };"
 
@@ -172,9 +176,8 @@ CNOGREP_ArrInit += "= { };"
 # cast that a native-width length does not.
 C_TESTS += ArrInit32
 EXTRA_ArrInit32 = --custard_sizet_width 32
+CGREP_ArrInit32 += "for (size_t _ci1 = 0; _ci1 < (size_t)(n); _ci1++)"
 CGREP_ArrInit32 += "static uint8_t ArrInit_varlen(uint32_t n)"
-CGREP_ArrInit32 += "for (size_t _ci2 = 0; _ci2 < (size_t)(n); _ci2++)"
-CGREP_ArrInit32 += "uint8_t _cbuf1[1] = { 0 };"
 CNOGREP_ArrInit32 += "ArrInit_varlen(size_t"
 
 # Section 96.  A wrapper's invented binders take the callee's names, and a
@@ -188,6 +191,10 @@ C_TESTS += PulseBasic
 # Section 58: the pure condition is spelled in the loop header.
 CGREP_PulseBasic += "while (i < n)"
 CNOGREP_PulseBasic += "while (true)"
+# Section 97: the heap allocation is the declaration of the variable that
+# names it; nothing declares a spare pointer in front of it.
+CGREP_PulseBasic += "uint32_t *v = (uint32_t *)malloc("
+CNOGREP_PulseBasic += "uint32_t *v;"
 C_TESTS += PulseHashTable
 # Section 58, the other half of that pair, and the reason it is worth a grep:
 # these two conditions genuinely need statements (a [_break] flag is tested

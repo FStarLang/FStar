@@ -1896,6 +1896,35 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     scope := saved;
     !out ^ ind ^ decl_of t nm ^ " = " ^ iv ^ ";\n" ^ s2
 
+  (* Section 97.  [let mut a = alloc v n] used to declare a pointer, allocate
+     into a second name, and assign one to the other.  The second name is not
+     worth a variable: an array *is* an address, so the binding and the
+     storage are one declaration and [a] can name the storage directly.
+     Every use decays, which is what [a] was being assigned to a pointer for
+     in the first place.
+
+     The one-cell [LStack] cases above have already run, and this must not
+     take them: their binding is a *cell* and a use of it takes an address,
+     which is a different thing from an array that is one.  A heap allocation
+     is in scope, though -- it declares its own pointer and had the same
+     spare variable in front of it. *)
+  | ELet (x, TBuf t, { e = EOp ({ po_op = BufCreate lt }, [init; len]) }, e2)
+      when not (LStack? lt && is_one len) ->
+    let saved = !scope in
+    (* Bound before the allocation is emitted, so that the name is chosen
+       against the names already used; emitted under the *outer* scope, since
+       the IR scopes [x] over [e2] only and [init] or [len] may mention a
+       different variable that C spells the same way. *)
+    let nm = bind_var x in
+    let s1 =
+      let saved' = !scope in
+      scope := saved;
+      let s = emit_alloc ind D_Ignore (Some nm) lt (TBuf t) init len in
+      scope := saved'; s in
+    let s2 = emit ind d e2 in
+    scope := saved;
+    s1 ^ s2
+
   (* A binding nothing reads.  A pattern match that names no field it uses
      leaves one behind -- [let _letpattern = x in ...] -- and C, told
      [-Werror=unused-variable], refuses the file over it.  [vars_of]
@@ -1998,7 +2027,7 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
   | EAbort s -> ind ^ "/* " ^ escape s ^ " */\n" ^ ind ^ "abort();\n"
 
   | EOp ({ po_op = BufCreate lt }, [init; len]) ->
-    emit_alloc ind d lt e.ty init len
+    emit_alloc ind d None lt e.ty init len
 
   | EOp ({ po_op = BufWrite }, [b; i; v]) ->
     let out = mk_ref "" in
@@ -2086,7 +2115,8 @@ and unit_result (ind:string) (d:dest) : ML string =
    syntax, so the value is written out once per cell and the length is capped
    -- past the cap the loop is both shorter and clearer, and a thousand copies
    of a literal is not an improvement on three lines. *)
-and emit_alloc (ind:string) (d:dest) (lt:lifetime) (t:cty) (init:expr) (len:expr) : ML string =
+and emit_alloc (ind:string) (d:dest) (nm:option string)
+               (lt:lifetime) (t:cty) (init:expr) (len:expr) : ML string =
   let out = mk_ref "" in
   let iv = c_rvalue out ind init.ty init in
   (* Section 59.  The bound is compared against a [size_t] counter this
@@ -2096,7 +2126,13 @@ and emit_alloc (ind:string) (d:dest) (lt:lifetime) (t:cty) (init:expr) (len:expr
   let elt = match t with
             | TBuf e | TRef e -> ty e
             | _ -> reject "an allocation whose result is not a pointer" [] in
-  let arr = fresh "buf" in
+  (* Section 97.  [nm] is the name the binding this allocation initializes is
+     about to get.  Using it as the array's own name is what removes the
+     pointer that would otherwise be declared to hold it: an array *is* an
+     address, so the variable and the storage can be one declaration. *)
+  let arr = match nm with Some x -> x | None -> fresh "buf" in
+  let done_ (s:string) : ML string =
+    match nm with Some _ -> "" | None -> finish ind d s in
   let i = fresh "i" in
   let elt_of = match t with TBuf e | TRef e -> e | _ -> t in
   (* Same collapse as the [ELet] case above, for a one-cell stack allocation
@@ -2104,7 +2140,7 @@ and emit_alloc (ind:string) (d:dest) (lt:lifetime) (t:cty) (init:expr) (len:expr
      of the variable. *)
   if LStack? lt && is_one len then
     !out ^ ind ^ decl_of elt_of arr ^ " = " ^ iv ^ ";\n" ^
-    finish ind d ("&" ^ arr)
+    done_ ("&" ^ arr)
   else
   (* Section 94.  A scalar is what [{ 0 }] initializes without
      [-Wmissing-braces] having anything to say about it. *)
@@ -2146,7 +2182,7 @@ and emit_alloc (ind:string) (d:dest) (lt:lifetime) (t:cty) (init:expr) (len:expr
     ind ^ decl_of elt_of (arr ^ "[" ^ dlv ^ "]") ^ " = { " ^
     (if n = 0 || zero_init then "0"
      else String.concat ", " (repeat n [])) ^ " };\n" ^
-    finish ind d arr
+    done_ arr
   | _ ->
   let alloc =
     match lt with
@@ -2168,7 +2204,7 @@ and emit_alloc (ind:string) (d:dest) (lt:lifetime) (t:cty) (init:expr) (len:expr
   "; " ^ i ^ "++) {\n" ^
   ind ^ "  " ^ arr ^ "[" ^ i ^ "] = " ^ iv ^ ";\n" ^
   ind ^ "}\n" ^
-  finish ind d arr
+  done_ arr
 
 (* -------------------------------------------------------------------- *)
 (* Matching                                                             *)

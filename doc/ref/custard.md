@@ -18384,6 +18384,86 @@ both were documenting the defect: `PulseMono_add_k`'s second parameter is `r`
 rather than `eta`, and `CInitTrap_wrapped`'s two are `a` and `b` rather than
 `eta` and `eta1`.
 
+## 97. A variable an array does not need
+
+### 97.1.  The spare pointer
+
+A Pulse `let mut` of an array came out with two objects where the program
+asked for one:
+
+```c
+static bool CborBoundarySlice_v47(void) {
+  uint8_t *a;
+  uint8_t _cbuf1[5] = { 0 };
+  a = _cbuf1;
+  ...
+```
+
+`a` is the name the source wrote.  `_cbuf1` is the storage.  Nothing ever
+assigns to `a` again, so the pointer is a constant that a compiler will fold
+away --- but it is in the source, it is in every debugger view of the frame,
+and it is the first thing a reader of the output has to talk themselves out
+of.  §94 had just made the declaration on the middle line look like C a
+person would write; the line above it undid that.
+
+The shape came from the emitter treating the two halves separately.  `ELet
+(x, ...)` binds a variable, and the generic case declares it and then emits
+whatever computes it into that destination; `BufCreate` allocates, and
+`emit_alloc` invents `_cbuf1`, declares it, fills it, and finishes by
+delivering `_cbuf1` to whatever destination it was handed.  Compose the two
+and each does its own job correctly.  Nothing was wrong; the two jobs were
+simply the same job.
+
+### 97.2.  An array is an address
+
+They are the same job because in C the declaration of an array *is* the
+declaration of its address.  `uint8_t a[5];` says both "five bytes" and "`a`
+names where they start", which is exactly what the two lines were saying
+between them.  So `emit_alloc` now takes an optional name, and a dedicated
+`ELet` case over a `BufCreate` right-hand side passes the name the binding
+was going to use.  When it has one it declares the storage under that name
+and finishes with nothing to deliver --- the destination has already been
+written, by the declaration.  The output is the one line:
+
+```c
+uint8_t a[5] = { 0 };
+```
+
+Heap allocation is in scope for the same reason and gets the same treatment.
+It was never the array-vs-pointer identity there --- `malloc` returns a
+pointer and the variable is a pointer --- but it had the identical spare
+variable in front of it for the identical reason, and `uint32_t *v =
+(uint32_t *)malloc(4 * sizeof(uint32_t));` is what a C programmer writes.
+
+What is deliberately **excluded** is the one-cell stack allocation.  Custard
+already collapses `A.alloc x 1sz` into a plain variable and rewrites its uses
+to take an address, which is why `emit_alloc`'s one-cell branch finishes with
+`"&" ^ arr` rather than with `arr`.  There the binding does not name the
+storage --- it names a *cell*, and the address is computed at each use.
+Handing that branch a name would declare the cell under it and then finish
+with nothing, losing the `&`, so the new case is guarded to leave it alone.
+An array and a collapsed cell look alike in the IR and are opposite in C.
+
+### 97.3.  Binding before allocating
+
+The new case binds the variable and *then* emits the allocation, which is the
+reverse of the usual order and worth saying why it is safe.  Custard IR names
+are unique within a definition and `bind_var` subscripts against the names the
+enclosing function has already taken, so the name is settled before anything
+that could want it exists; the allocation's own fresh names (the fill loop
+counter) are drawn afterwards and cannot collide.  The scope is saved and
+restored around the allocation exactly as the generic `ELet` statement branch
+does it, so the length and fill expressions are still read in the scope
+outside the binding --- which matters, because a variable-length array's
+length is an expression and reading it in the wrong scope would be a use
+before the declaration that introduces it.
+
+Not addressed, because it does not arise: whether such a variable needs to be
+an assignable lvalue.  An array name is not assignable in C, and a pointer
+declared with its `malloc` is, but the IR is functional and nothing rebinds a
+`let mut` buffer to different storage --- the mutation is through it, not of
+it.  Should that ever change the guard is one condition.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -18703,3 +18783,4 @@ rather than `eta`, and `CInitTrap_wrapped`'s two are `a` and `b` rather than
 | M10θΡ | Zero is not a length C has (§94.4) | Done.  The first question §94.1 raises: `{ }` is not an initializer C99 accepts, so the guard read `n > 0` and a zero-length allocation fell to the loop --- where it had never worked either, since `uint8_t a[0]` is a GNU extension and `gcc -std=c99 -pedantic-errors` rejects it outright as a zero-size array.  Pulse will write `A.alloc 0uy 0sz` quite happily and C has no such object.  Older than §94 by every release, but found by asking the obvious question of the new code.  A constant zero length now declares **one** cell and takes `{ 0 }` whatever the fill was, which is sound for the same reason the fill is irrelevant: with a length of zero no index is in bounds, so nothing can read the cell and nothing can tell it is there.  A heap allocation rounds the same way, which incidentally keeps it clear of `malloc(0)` being permitted to return `NULL` and trip the `abort()` on the next line.  The residual case --- a *runtime* length that happens to be zero, a variable-length array on the stack and `malloc(0)` on the heap --- is not reachable by constant folding and is recorded as not addressed.  `ArrInit` grew a fifth shape and two `CNOGREP`s, on `[0]` and on `= { };`, so neither non-form can come back unnoticed.  In-tree Pulse suite unchanged at 30 s |
 | M10θΣ | A width the program assumes (§95.2) | Done.  Kuiper's build no longer contains karamel: one `fstar.exe --codegen Custard --custard_backend C` per entry module, the CUDA straight out, and the `.krml` rule, the bundling flags and the `sed` script that rewrote `threadIdx_x` all deleted.  Sixty-four modules extract and compile.  That leaves one measured behavioural difference: Kuiper indexes with `FStar.SizeT.t`, Custard is faithful and emits `size_t`, and their karamel fork narrowed it to `uint32_t` deliberately because a 64-bit index costs a register and a GPU kernel pays for registers in occupancy --- **+11.9%** total registers over 571 kernels, essentially all of it recovered by rewriting Custard's own output.  So `--custard_sizet_width 32`, default `native`.  Narrowing is **not sound in general**: it is correct exactly when the program assumes `FStar.SizeT.fits_u32`, which F\* does not check and Custard cannot usefully read --- so the flag takes its licence from the user rather than pretending to derive one.  `Sizet` being its own `width` constructor is what makes it small: `int_type` covers the type and every cast, and the literal suffix stops being `ULL`.  The fourth site does not follow from spelling: `emit_alloc`'s fill loop counter is a `size_t` whatever the length is, so a narrowed length needs the cast a native one does not, and `_ci2 < (size_t)(n)` is a promotion no pin would have caught.  It is an error rather than a no-op on a non-C backend, and it is recorded in a unit's `layout_options` --- no IR layout changes, but every struct with a `size_t` field does, and two units that disagreed would link and be wrong.  `SzWidth`/`SzWidth32` pin the same program at both widths, the narrowed one by a `CNOGREP` on `size_t` over source and header both; `ArrInit32` pins the loop cast, for which the Pulse `.dc` rule grew the `EXTRA_$*` hook it had never had.  Their `sync_device` link failure was diagnosed by §84's warning 381 naming the post-erasure arity exactly.  In-tree Pulse suite unchanged at 30 s |
 | M10θΤ | A name the callee already has (§96.2) | Done.  A Pulse `fn` that forwards to another `fn` extracted as `decrypt(uint8_t key, uint8_t eta, uint32_t eta1)`: `eta_reduce` shortens the spine, `eta_expand` puts the binders back, and it reads their types off a `TArrow` --- which is `cty & eff & cty` and carries no name, so there was nothing to call them.  `key` surviving because it was never reduced away is what made the result look arbitrary rather than merely anonymous.  The names are on the **callee**, which is where a wrapper's parameters got their meaning in the first place, so a binder is renamed exactly when it is passed *straight through*, at a known position, to a head this program declares --- narrow on purpose, since the point is that the argument at that position **is** this binder and nothing else, not that the callee happens to have a name for it.  Clashes were never a hazard: `Rename.pick` counts, so a wrapper that already has a `ctr` and inherits one gets `ctr`, `nonce`, `ctr1`.  Done as its own pass rather than inside the expansion, which the suite justified: `CInitTrap`'s `use a b = wrapped a b` grows in the same round `wrapped` does, so it would read `wrapped`'s names before `wrapped` had any and never look again, the expansion fixpoint having stopped when nothing grew.  Its own fixpoint on the count of anonymous binders propagates along a chain instead --- `CLamDef` is two links.  `Mono.retained_names` does the same for `Extract`'s eta-expansion of an under-applied primitive, filtered by the same predicate in the same order as `retained_sorts` so the lists are index-compatible by construction.  Explicitly **not** inlining the wrapper: that would answer the names question by deleting the function and cost a duplicated body per wrapper, when a forwarding wrapper should compile to a forwarding call.  `EtaName` pins the inherited and the clashing case, `CNOGREP` `eta`; two existing pins changed and both were documenting the defect.  In-tree Pulse suite unchanged at 31 s |
+| M10θΥ | A variable an array does not need (§97.2) | Done.  A Pulse `let mut` of an array declared a pointer, declared the storage under an invented name, and assigned one to the other --- three lines for one object, the first of them a constant the compiler folds away and the reader does not.  §94 had just made the middle line read like C; the line above it undid that.  Neither half was wrong: `ELet` declares a variable and emits into it, `emit_alloc` invents a name and delivers it, and composing two correct jobs is what produced the spare.  They are the same job, because in C the declaration of an array **is** the declaration of its address --- `uint8_t a[5];` says "five bytes" and "`a` names where they start" at once, which is precisely what the two lines said between them.  So `emit_alloc` takes an optional name and a dedicated `ELet`-over-`BufCreate` case hands it the binding's, declaring the storage under it and finishing with nothing to deliver since the destination has already been written.  Heap is in scope for a different reason and the same symptom: the array identity does not apply to a `malloc`, but the spare pointer in front of it did, and `uint32_t *v = (uint32_t *)malloc(...)` is the line a C programmer writes.  Deliberately **excluded** is the one-cell stack allocation, which Custard collapses into a plain variable whose uses take an address --- its branch finishes with `&arr`, and naming it would declare the cell and lose the `&`.  An array and a collapsed cell look alike in the IR and are opposite in C.  Binding before allocating is safe because IR names are unique per definition and `bind_var` subscripts against what the function has already taken, and the scope is saved and restored around the allocation so a variable-length array's length is still read outside the binding.  `ArrInit`'s pins now name the variable and gained a `CNOGREP` on the declaration that is gone; `PulseBasic` pins the heap form.  In-tree Pulse suite unchanged at 31 s |
