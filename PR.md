@@ -5,8 +5,8 @@ through the typechecker). That approach kept the Hoare specification inside a
 `comp_typ` and worked around the consequences; this one removes it from
 `comp_typ` altogether, so the consequences do not arise.
 
-120 commits, 331 files, `+10029 / −4170`. Of that, **328 files and
-`+6966 / −4170` are code and tests**; the remainder is this document,
+123 commits, 331 files, `+10111 / −4171`. Of that, **328 files and
+`+6993 / −4171` are code and tests**; the remainder is this document,
 `regression_questions.md` (two accepted regressions worked out in detail) and
 `revise_primitive_effects.md` (the original design brief, kept for the record —
 where it and this document disagree, this document is what was built).
