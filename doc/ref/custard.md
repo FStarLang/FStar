@@ -18464,6 +18464,88 @@ declared with its `malloc` is, but the IR is functional and nothing rebinds a
 `let mut` buffer to different storage --- the mutation is through it, not of
 it.  Should that ever change the guard is one condition.
 
+## 98. An implementation nobody linked
+
+### 98.1.  Two ways to be portable
+
+§66 gave the two 16-bit floating-point formats an opaque two-byte struct and
+an implementation to go with it: convert to `float`, operate, round back.
+That is *defined* everywhere C is, it rounds exactly once --- binary32 holds
+every binary16 and every bfloat16 exactly, and has the precision to make the
+intermediate exact for add, sub, mul and div --- and it meant a program using
+these widths compiled and ran on a machine that had never heard of them,
+rather than linking against a set of stubs that did not exist.
+
+The reasoning was sound and the premise was wrong.  These widths exist
+because a target has them in *hardware*; that is why anyone declares one.
+The only consumer of them is Kuiper, and Kuiper has never called a line of
+the portable implementation --- `custard_f16` is CUDA's `__half` in their
+build, and has been since §66 shipped the override hook, because
+`wmma::fragment` is a template over `__half` and a two-byte struct is not a
+type any `wmma` overload accepts.  So what Custard emitted was two hundred
+lines of correctly-rounded arithmetic inside an `#ifndef` that was never
+false for the one program that reads it.
+
+The portable path was also the *quiet* one.  A consumer who meant to reach
+native instructions and misspelled the guard got working code at a tenth of
+the speed and no diagnostic, which is the same failure mode §38 and §66
+were written to prevent at the other widths.
+
+### 98.2.  The contract, and nothing else
+
+So the implementation is gone and the block that carried it is now a check.
+It names the vocabulary --- the two types, the four literal macros, the four
+conversions, the four arithmetic operations and the six comparisons, and the
+same ten for `bf16` --- says where to put them, and stops the compile if they
+are not there:
+
+```c
+#ifndef CUSTARD_FLOAT16_DEFINED
+#error "Custard: this program uses binary16 or bfloat16, which Custard does
+        not implement.  Supply custard_f16/custard_bf16 and their operations
+        in a @@custard_c_header, and define CUSTARD_FLOAT16_DEFINED. ..."
+#endif
+```
+
+Three things are deliberately unchanged.  The sentinel is still
+`CUSTARD_FLOAT16_DEFINED` and the names are still the ones §66 chose, so a
+consumer that already supplies them --- which is all of them --- builds
+identically across this change and has nothing to do.  The includes named by
+`[@@custard_c_header]` are still emitted *above* the block, for the reason
+§66 gave and with more force: below it the `#error` fires rather than a
+redefinition being diagnosed, so the ordering is still checked by the C
+compiler and not by a grep.  And the *literal* encoder stays in F\*.  It is
+not part of the implementation that left: Custard emits a narrow literal as
+its correctly-rounded bit pattern precisely so that it does not need
+arithmetic to build one, which is what keeps a static initializer a constant
+expression (§66) and what makes the macros take a `uint16_t`.
+
+What replaces a link-time failure is a *compile*-time one, in the header, at
+the point of use, quoting what to do.  That is a better diagnostic than the
+implementation was a fallback.
+
+### 98.3.  Where the reference implementation went
+
+The suite still needs an implementation --- a test machine has no `__half`,
+and `Narrow` checks the formats' rounding rather than merely the shape of
+the emitted call, so it has to *run*.  The portable one moved verbatim to
+`tests/custard/Narrow_stubs.h`, where it is a test fixture and a serviceable
+starting point for a consumer that genuinely has no native type, and where
+nobody can mistake it for something Custard ships.
+
+`Narrow` and `NarrowG` reach it the way a real consumer reaches its own: an
+extern declaration carrying `[@@custard_c_header]`, since that attribute
+configures `[@@custard_extern]` and means nothing alone.  This is worth more
+than the include it buys --- a narrow-float test now exercises the whole
+arrangement end to end, where before the generated block quietly satisfied
+them and only `NarrowOverride` ever went through the hook.
+
+`NarrowOverride` keeps its job and states it more strongly.  Its stub names
+the member `ovr` rather than `bits`, so it could never accidentally agree
+with the definition it displaced; the new `CNOGREP` on `uint16_t bits;` says
+that Custard emits no competing definition at all, which is now a property of
+every output rather than of this test's ordering.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -18784,3 +18866,4 @@ it.  Should that ever change the guard is one condition.
 | M10θΣ | A width the program assumes (§95.2) | Done.  Kuiper's build no longer contains karamel: one `fstar.exe --codegen Custard --custard_backend C` per entry module, the CUDA straight out, and the `.krml` rule, the bundling flags and the `sed` script that rewrote `threadIdx_x` all deleted.  Sixty-four modules extract and compile.  That leaves one measured behavioural difference: Kuiper indexes with `FStar.SizeT.t`, Custard is faithful and emits `size_t`, and their karamel fork narrowed it to `uint32_t` deliberately because a 64-bit index costs a register and a GPU kernel pays for registers in occupancy --- **+11.9%** total registers over 571 kernels, essentially all of it recovered by rewriting Custard's own output.  So `--custard_sizet_width 32`, default `native`.  Narrowing is **not sound in general**: it is correct exactly when the program assumes `FStar.SizeT.fits_u32`, which F\* does not check and Custard cannot usefully read --- so the flag takes its licence from the user rather than pretending to derive one.  `Sizet` being its own `width` constructor is what makes it small: `int_type` covers the type and every cast, and the literal suffix stops being `ULL`.  The fourth site does not follow from spelling: `emit_alloc`'s fill loop counter is a `size_t` whatever the length is, so a narrowed length needs the cast a native one does not, and `_ci2 < (size_t)(n)` is a promotion no pin would have caught.  It is an error rather than a no-op on a non-C backend, and it is recorded in a unit's `layout_options` --- no IR layout changes, but every struct with a `size_t` field does, and two units that disagreed would link and be wrong.  `SzWidth`/`SzWidth32` pin the same program at both widths, the narrowed one by a `CNOGREP` on `size_t` over source and header both; `ArrInit32` pins the loop cast, for which the Pulse `.dc` rule grew the `EXTRA_$*` hook it had never had.  Their `sync_device` link failure was diagnosed by §84's warning 381 naming the post-erasure arity exactly.  In-tree Pulse suite unchanged at 30 s |
 | M10θΤ | A name the callee already has (§96.2) | Done.  A Pulse `fn` that forwards to another `fn` extracted as `decrypt(uint8_t key, uint8_t eta, uint32_t eta1)`: `eta_reduce` shortens the spine, `eta_expand` puts the binders back, and it reads their types off a `TArrow` --- which is `cty & eff & cty` and carries no name, so there was nothing to call them.  `key` surviving because it was never reduced away is what made the result look arbitrary rather than merely anonymous.  The names are on the **callee**, which is where a wrapper's parameters got their meaning in the first place, so a binder is renamed exactly when it is passed *straight through*, at a known position, to a head this program declares --- narrow on purpose, since the point is that the argument at that position **is** this binder and nothing else, not that the callee happens to have a name for it.  Clashes were never a hazard: `Rename.pick` counts, so a wrapper that already has a `ctr` and inherits one gets `ctr`, `nonce`, `ctr1`.  Done as its own pass rather than inside the expansion, which the suite justified: `CInitTrap`'s `use a b = wrapped a b` grows in the same round `wrapped` does, so it would read `wrapped`'s names before `wrapped` had any and never look again, the expansion fixpoint having stopped when nothing grew.  Its own fixpoint on the count of anonymous binders propagates along a chain instead --- `CLamDef` is two links.  `Mono.retained_names` does the same for `Extract`'s eta-expansion of an under-applied primitive, filtered by the same predicate in the same order as `retained_sorts` so the lists are index-compatible by construction.  Explicitly **not** inlining the wrapper: that would answer the names question by deleting the function and cost a duplicated body per wrapper, when a forwarding wrapper should compile to a forwarding call.  `EtaName` pins the inherited and the clashing case, `CNOGREP` `eta`; two existing pins changed and both were documenting the defect.  In-tree Pulse suite unchanged at 31 s |
 | M10θΥ | A variable an array does not need (§97.2) | Done.  A Pulse `let mut` of an array declared a pointer, declared the storage under an invented name, and assigned one to the other --- three lines for one object, the first of them a constant the compiler folds away and the reader does not.  §94 had just made the middle line read like C; the line above it undid that.  Neither half was wrong: `ELet` declares a variable and emits into it, `emit_alloc` invents a name and delivers it, and composing two correct jobs is what produced the spare.  They are the same job, because in C the declaration of an array **is** the declaration of its address --- `uint8_t a[5];` says "five bytes" and "`a` names where they start" at once, which is precisely what the two lines said between them.  So `emit_alloc` takes an optional name and a dedicated `ELet`-over-`BufCreate` case hands it the binding's, declaring the storage under it and finishing with nothing to deliver since the destination has already been written.  Heap is in scope for a different reason and the same symptom: the array identity does not apply to a `malloc`, but the spare pointer in front of it did, and `uint32_t *v = (uint32_t *)malloc(...)` is the line a C programmer writes.  Deliberately **excluded** is the one-cell stack allocation, which Custard collapses into a plain variable whose uses take an address --- its branch finishes with `&arr`, and naming it would declare the cell and lose the `&`.  An array and a collapsed cell look alike in the IR and are opposite in C.  Binding before allocating is safe because IR names are unique per definition and `bind_var` subscripts against what the function has already taken, and the scope is saved and restored around the allocation so a variable-length array's length is still read outside the binding.  `ArrInit`'s pins now name the variable and gained a `CNOGREP` on the declaration that is gone; `PulseBasic` pins the heap form.  In-tree Pulse suite unchanged at 31 s |
+| M10θΦ | An implementation nobody linked (§98.2) | Done.  §66 shipped a portable softfloat for binary16 and bfloat16 --- convert to `float`, operate, round back, which is defined everywhere and rounds exactly once --- so that a program using these widths ran on a machine that had never heard of them rather than linking against stubs that did not exist.  Sound reasoning, wrong premise: these widths exist because a target has them in **hardware**, which is why anyone declares one, and the only consumer has never called a line of it.  `custard_f16` is CUDA's `__half` in Kuiper's build and has been since §66 shipped the override hook, because `wmma::fragment` is a template over `__half` and a two-byte struct is not a type any `wmma` overload accepts.  Two hundred lines of correctly-rounded arithmetic inside an `#ifndef` that is never false.  It was the *quiet* path too: a consumer who meant to reach native instructions and misspelled the guard got working code at a tenth of the speed and no diagnostic, which is the failure mode §38 and §66 exist to prevent at the other widths.  So the implementation is gone and the block is a **contract** --- it names the vocabulary, says where to put it, and `#error`s if it is not there.  Three things deliberately unchanged: the sentinel is still `CUSTARD_FLOAT16_DEFINED` and the names are still §66's, so every existing consumer builds identically and has nothing to do; the `[@@custard_c_header]` includes still precede the block, now because the `#error` fires below it rather than a redefinition being diagnosed, so cc still checks the ordering; and the literal encoder stays in F\*, since Custard emits a narrow literal as its correctly-rounded bit pattern precisely so that building one needs no arithmetic, which is what keeps a static initializer a constant expression.  A link-time failure became a compile-time one, in the header, at the point of use, quoting what to do.  The portable implementation moved verbatim to `tests/custard/Narrow_stubs.h` as a fixture --- `Narrow` checks the formats' rounding and so has to run --- and `Narrow`/`NarrowG` now reach it through a real `[@@custard_c_header]`, which exercises the whole arrangement end to end where before the generated block quietly satisfied them.  In-tree Pulse suite unchanged at 31 s |

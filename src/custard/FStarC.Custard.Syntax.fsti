@@ -106,12 +106,12 @@ val is_pure : eff -> bool
 type fwidth =
   | Float32
   | Float64
-  (** Section 66.  The two 16-bit formats.  Unlike the wider two these have no
-      portable C spelling: [_Float16] is C23 and its availability varies by
-      target, [__bf16] more so.  So they are emitted as *opaque two-byte
-      structs* with the arithmetic in the support header, where a target that
-      does have native instructions can be given them without the code
-      generator changing.  Which is also why they are separate constructors
+  (** Sections 66 and 98.  The two 16-bit formats.  Unlike the wider two these
+      have no portable C spelling: [_Float16] is C23 and its availability
+      varies by target, [__bf16] more so.  So the type and the operations are
+      the *consumer's*, named by Custard and supplied by the program -- which
+      on a target that has the formats in hardware is where they were going to
+      come from anyway.  Which is also why they are separate constructors
       rather than a width field: at these two, an operator is a call. *)
   | Float16
   (** IEEE 754 binary16. *)

@@ -569,10 +569,10 @@ and base_ty (t:cty) : ML string =
   | TInt sw -> int_type sw
   | TFloat Float32 -> "float"
   | TFloat Float64 -> "double"
-  (* Section 66.  Not [_Float16]/[__bf16]: those are not portable C, and the
-     whole point of the struct is that the generated file compiles wherever C
-     does.  The support header is what maps them onto native types or device
-     intrinsics where those exist. *)
+  (* Sections 66 and 98.  Not [_Float16]/[__bf16]: those are not portable C.
+     The name is the consumer's to define -- on a target with the formats in
+     hardware it is a native type or a device intrinsic, and Custard emits the
+     name either way. *)
   | TFloat Float16 -> uses_narrow := true; "custard_f16"
   | TFloat BFloat16 -> uses_narrow := true; "custard_bf16"
   (* Section 69.  A non-type template argument, spelled by its value.  As with
@@ -795,208 +795,47 @@ let narrow_float_init (fw:fwidth) (v:float_lit) : ML string =
 let narrow_support : string =
   String.concat "\n" [
     "";
-    "/* Section 66: the two 16-bit floating-point formats.";
+    "/* Section 98: the two 16-bit floating-point formats are the consumer's.";
     "";
-    "   Opaque two-byte structs rather than _Float16 and __bf16, because those are";
-    "   not portable: _Float16 is C23 and its availability varies by target, and";
-    "   __bf16 more so.  The struct has the storage the format actually has, every";
-    "   C compiler has one, and the arithmetic below is *defined* -- it converts to";
-    "   float, operates, and rounds back -- so this is a working implementation";
-    "   anywhere, not a set of link-time stubs that would make a host-side build";
-    "   silently stop existing.";
+    "   Custard emits *calls* into the vocabulary below and does not implement it.";
+    "   Not _Float16 and __bf16 either, because those are not portable: _Float16 is";
+    "   C23 and its availability varies by target, and __bf16 more so.  Every";
+    "   consumer of these widths so far reaches a target that has the formats in";
+    "   hardware -- CUDA's __half and __nv_bfloat16 -- and a portable fallback is";
+    "   both slower than that and not what anyone links against.";
     "";
-    "   Going through float rounds once, which is what IEEE specifies: binary32";
-    "   holds every binary16 and every bfloat16 exactly, and has enough precision";
-    "   (24 bits, against 2*11+2 and 2*8+2) that the intermediate is exact for";
-    "   add, sub, mul and div.  So the only rounding is the final encode.";
+    "   So supply the type and the operations in a header named by";
+    "   [@@custard_c_header] on one of your declarations -- those includes are";
+    "   emitted above this block for exactly this reason -- and define";
+    "   CUSTARD_FLOAT16_DEFINED to say you have.  Under nvcc give the functions";
+    "   [static __host__ __device__ inline]: a plain [static inline] is a __host__";
+    "   function and calling one from a kernel is an error, not a warning.";
     "";
-    "   Literals do not appear here: Custard emits their bit patterns directly, so";
-    "   that a static initializer stays a constant expression.";
+    "   The whole vocabulary, which is all Custard can emit:";
     "";
-    "   Override by defining CUSTARD_FLOAT16_DEFINED and supplying the type and";
-    "   the operations first -- that is how a target with native instructions, or";
-    "   CUDA's __half and __nv_bfloat16 (C++-only, hence not emitted here), gets";
-    "   used instead.  The representation is the format's own bit pattern, so an";
-    "   override is layout-compatible with this by construction. */";
+    "     custard_f16, custard_bf16          the two types";
+    "     CUSTARD_F16_LIT(bits)              a literal, as an *expression*";
+    "     CUSTARD_BF16_LIT(bits)";
+    "     CUSTARD_F16_INIT(bits)             a literal, in *initializer* position";
+    "     CUSTARD_BF16_INIT(bits)";
+    "     custard_f16_of_f32(float)          conversions in";
+    "     custard_f16_of_f64(double)";
+    "     custard_f16_of_i64(int64_t)";
+    "     custard_f16_to_f32(custard_f16)    conversion out, to float";
+    "     custard_f16_add/sub/mul/div        arithmetic, both operands the type";
+    "     custard_f16_eq/neq/lt/lte/gt/gte   comparison, returning bool";
+    "";
+    "   and the same ten operations spelled custard_bf16_.  Custard emits a";
+    "   literal as its *bit pattern* in the format's own encoding, correctly";
+    "   rounded at extraction time, so the macros take a uint16_t and never a";
+    "   decimal number.  Two macros rather than one because a compound literal";
+    "   has automatic storage duration inside a function and cannot initialize an";
+    "   object with static storage duration, while a braced initializer can and";
+    "   is never an expression.  Only the LIT pair needs the __cplusplus";
+    "   spelling: generated CUDA is compiled as C++, where a compound literal is";
+    "   a GNU extension and [T{ ... }] is the portable form. */";
     "#ifndef CUSTARD_FLOAT16_DEFINED";
-    "#define CUSTARD_FLOAT16_DEFINED";
-    "typedef struct { uint16_t bits; } custard_f16;";
-    "typedef struct { uint16_t bits; } custard_bf16;";
-    "";
-    "/* Linkage.  Under nvcc these have to be callable from a __global__ or";
-    "   __device__ function as well as from the host: a plain [static inline]";
-    "   is a __host__ function, and calling one from device code is an error,";
-    "   not a warning.  A kernel doing 16-bit arithmetic is the main reason";
-    "   this width exists, so that case is the normal one and not a corner. */";
-    "#if defined(__CUDACC__)";
-    "#define CUSTARD_FN static __host__ __device__ inline";
-    "#else";
-    "#define CUSTARD_FN static inline";
-    "#endif";
-    "";
-    "/* A literal.  Custard emits the bit pattern, so this must stay a";
-    "   constant expression: it is what initializes an object with static";
-    "   storage duration.  Two spellings because a compound literal is C and";
-    "   a GNU extension in C++, while the braced form is C++ and not C --";
-    "   generated CUDA is compiled as C++, so getting only one of them right";
-    "   would cost -pedantic on one of the two targets. */";
-    "#ifdef __cplusplus";
-    "#define CUSTARD_F16_LIT(b)  (custard_f16{ (uint16_t)(b) })";
-    "#define CUSTARD_BF16_LIT(b) (custard_bf16{ (uint16_t)(b) })";
-    "#else";
-    "#define CUSTARD_F16_LIT(b)  ((custard_f16){ (uint16_t)(b) })";
-    "#define CUSTARD_BF16_LIT(b) ((custard_bf16){ (uint16_t)(b) })";
-    "#endif";
-    "";
-    "/* And in *initializer* position, where the above will not do: a compound";
-    "   literal has automatic storage duration inside a function and is not a";
-    "   constant expression, so it cannot initialize an object with static";
-    "   storage duration.  A braced initializer can, and is spelled the same";
-    "   in C and C++ -- but it is only an initializer, never an expression,";
-    "   which is why there are two macros and not one. */";
-    "#define CUSTARD_F16_INIT(b)  { (uint16_t)(b) }";
-    "#define CUSTARD_BF16_INIT(b) { (uint16_t)(b) }";
-    "";
-    "CUSTARD_FN float custard__f32_of_bits(uint32_t u) {";
-    "  float f; memcpy(&f, &u, sizeof f); return f;";
-    "}";
-    "CUSTARD_FN uint32_t custard__bits_of_f32(float f) {";
-    "  uint32_t u; memcpy(&u, &f, sizeof u); return u;";
-    "}";
-    "";
-    "/* binary16 -> binary32.  Exact. */";
-    "CUSTARD_FN float custard_f16_to_f32(custard_f16 h) {";
-    "  uint32_t s = (uint32_t)(h.bits >> 15) & 1u;";
-    "  uint32_t e = (uint32_t)(h.bits >> 10) & 0x1Fu;";
-    "  uint32_t m = (uint32_t)h.bits & 0x3FFu;";
-    "  uint32_t out;";
-    "  if (e == 0u) {";
-    "    if (m == 0u) { out = s << 31; }";
-    "    else {";
-    "      /* Subnormal: normalize, one exponent step per shift from -14. */";
-    "      int k = 0;";
-    "      while ((m & 0x400u) == 0u) { m <<= 1; k++; }";
-    "      m &= 0x3FFu;";
-    "      out = (s << 31) | ((uint32_t)(113 - k) << 23) | (m << 13);";
-    "    }";
-    "  } else if (e == 0x1Fu) {";
-    "    out = (s << 31) | 0x7F800000u | (m << 13);";
-    "  } else {";
-    "    out = (s << 31) | ((e + 112u) << 23) | (m << 13);";
-    "  }";
-    "  return custard__f32_of_bits(out);";
-    "}";
-    "";
-    "/* binary32 -> binary16, round-to-nearest-even. */";
-    "CUSTARD_FN custard_f16 custard_f16_of_f32(float f) {";
-    "  uint32_t u = custard__bits_of_f32(f);";
-    "  uint32_t s = (u >> 31) & 1u;";
-    "  int32_t  e = (int32_t)((u >> 23) & 0xFFu);";
-    "  uint32_t m = u & 0x7FFFFFu;";
-    "  custard_f16 h;";
-    "  if (e == 0xFF) {                       /* inf, or a NaN that stays one */";
-    "    h.bits = (uint16_t)((s << 15) | 0x7C00u | (m ? (0x0200u | (m >> 13)) : 0u));";
-    "    return h;";
-    "  }";
-    "  if ((u & 0x7FFFFFFFu) == 0u) { h.bits = (uint16_t)(s << 15); return h; }";
-    "  {";
-    "    uint32_t sig = m | ((e != 0) ? 0x800000u : 0u);";
-    "    int ue = (e != 0) ? (e - 127) : -126;";
-    "    int shift = 13;";
-    "    if (ue < -14) {                      /* gradual underflow */";
-    "      shift = 13 + (-14 - ue);";
-    "      if (shift > 24) { h.bits = (uint16_t)(s << 15); return h; }";
-    "      ue = -14;";
-    "    }";
-    "    {";
-    "      uint32_t keep = sig >> shift;";
-    "      uint32_t rest = sig & ((1u << shift) - 1u);";
-    "      uint32_t half = 1u << (shift - 1);";
-    "      uint32_t exp16;";
-    "      if (rest > half || (rest == half && (keep & 1u))) keep++;";
-    "      if (keep >> 11) { keep >>= 1; ue++; }";
-    "      if ((keep >> 10) == 0u) { exp16 = 0u; }";
-    "      else {";
-    "        exp16 = (uint32_t)(ue + 15);";
-    "        if (exp16 >= 0x1Fu) {";
-    "          h.bits = (uint16_t)((s << 15) | 0x7C00u); return h;";
-    "        }";
-    "      }";
-    "      h.bits = (uint16_t)((s << 15) | (exp16 << 10) | (keep & 0x3FFu));";
-    "      return h;";
-    "    }";
-    "  }";
-    "}";
-    "";
-    "/* bfloat16 is binary32 with the low 16 fraction bits dropped. */";
-    "CUSTARD_FN float custard_bf16_to_f32(custard_bf16 h) {";
-    "  return custard__f32_of_bits((uint32_t)h.bits << 16);";
-    "}";
-    "CUSTARD_FN custard_bf16 custard_bf16_of_f32(float f) {";
-    "  uint32_t u = custard__bits_of_f32(f);";
-    "  custard_bf16 h;";
-    "  if (((u >> 23) & 0xFFu) == 0xFFu && (u & 0x7FFFFFu) != 0u) {";
-    "    h.bits = (uint16_t)((u >> 16) | 0x0040u); return h;";
-    "  }";
-    "  { uint32_t lsb = (u >> 16) & 1u;";
-    "    h.bits = (uint16_t)((u + 0x7FFFu + lsb) >> 16); }";
-    "  return h;";
-    "}";
-    "";
-    "/* double converts in one step: binary64 holds both formats exactly and has";
-    "   the precision to make the intermediate exact, so rounding once here is the";
-    "   correctly-rounded answer where going via float would round twice. */";
-    "CUSTARD_FN custard_f16 custard_f16_of_f64(double d) {";
-    "  return custard_f16_of_f32((float)d);";
-    "}";
-    "CUSTARD_FN custard_bf16 custard_bf16_of_f64(double d) {";
-    "  return custard_bf16_of_f32((float)d);";
-    "}";
-    "CUSTARD_FN custard_f16 custard_f16_of_i64(int64_t x) {";
-    "  return custard_f16_of_f32((float)x);";
-    "}";
-    "CUSTARD_FN custard_bf16 custard_bf16_of_i64(int64_t x) {";
-    "  return custard_bf16_of_f32((float)x);";
-    "}";
-    "";
-    "#define CUSTARD__F16_BIN(nm, op)                                         \\";
-    "  CUSTARD_FN custard_f16 custard_f16_##nm(custard_f16 a,              \\";
-    "                                             custard_f16 b) {            \\";
-    "    return custard_f16_of_f32(custard_f16_to_f32(a) op                   \\";
-    "                              custard_f16_to_f32(b)); }";
-    "#define CUSTARD__F16_CMP(nm, op)                                         \\";
-    "  CUSTARD_FN bool custard_f16_##nm(custard_f16 a, custard_f16 b) {    \\";
-    "    return custard_f16_to_f32(a) op custard_f16_to_f32(b); }";
-    "#define CUSTARD__BF16_BIN(nm, op)                                        \\";
-    "  CUSTARD_FN custard_bf16 custard_bf16_##nm(custard_bf16 a,           \\";
-    "                                               custard_bf16 b) {         \\";
-    "    return custard_bf16_of_f32(custard_bf16_to_f32(a) op                 \\";
-    "                               custard_bf16_to_f32(b)); }";
-    "#define CUSTARD__BF16_CMP(nm, op)                                        \\";
-    "  CUSTARD_FN bool custard_bf16_##nm(custard_bf16 a, custard_bf16 b) { \\";
-    "    return custard_bf16_to_f32(a) op custard_bf16_to_f32(b); }";
-    "";
-    "CUSTARD__F16_BIN(add, +)";
-    "CUSTARD__F16_BIN(sub, -)";
-    "CUSTARD__F16_BIN(mul, *)";
-    "CUSTARD__F16_BIN(div, /)";
-    "CUSTARD__F16_CMP(eq,  ==)";
-    "CUSTARD__F16_CMP(neq, !=)";
-    "CUSTARD__F16_CMP(lt,  <)";
-    "CUSTARD__F16_CMP(lte, <=)";
-    "CUSTARD__F16_CMP(gt,  >)";
-    "CUSTARD__F16_CMP(gte, >=)";
-    "";
-    "CUSTARD__BF16_BIN(add, +)";
-    "CUSTARD__BF16_BIN(sub, -)";
-    "CUSTARD__BF16_BIN(mul, *)";
-    "CUSTARD__BF16_BIN(div, /)";
-    "CUSTARD__BF16_CMP(eq,  ==)";
-    "CUSTARD__BF16_CMP(neq, !=)";
-    "CUSTARD__BF16_CMP(lt,  <)";
-    "CUSTARD__BF16_CMP(lte, <=)";
-    "CUSTARD__BF16_CMP(gt,  >)";
-    "CUSTARD__BF16_CMP(gte, >=)";
+    "#error \"Custard: this program uses binary16 or bfloat16, which Custard does not implement.  Supply custard_f16/custard_bf16 and their operations in a @@custard_c_header, and define CUSTARD_FLOAT16_DEFINED.  See the comment above this line for the vocabulary.\"";
     "#endif";
     "";
   ]
@@ -3667,16 +3506,16 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   let hdr =
     header ^
   (match includes with [] -> "" | _ -> String.concat "\n" includes ^ "\n\n") ^
-    (* Section 66.  After the [custard_c_header] includes, not before them.
-       The support block is overridable by defining CUSTARD_FLOAT16_DEFINED
-       and supplying the type and the operations first -- which is how a CUDA
-       consumer reaches __half, the only 16-bit type wmma::fragment is a
-       template over.  Emitted above the includes, that override could not be
-       written in the program at all: the header carrying it is named by an
-       attribute on an F* declaration, so it arrives here and nowhere
-       earlier, and -include on the compiler command line was the only way
-       in.  [narrow_support] needs only <stdint.h> and <string.h>, both in
-       [header] above, so it has no reason to precede anything else. *)
+    (* Sections 66 and 98.  After the [custard_c_header] includes, not before
+       them.  The block is now a *check* rather than an implementation, and it
+       is satisfied by defining CUSTARD_FLOAT16_DEFINED and supplying the type
+       and the operations first -- which is how a CUDA consumer reaches
+       __half, the only 16-bit type wmma::fragment is a template over.
+       Emitted above the includes, that could not be written in the program at
+       all: the header carrying it is named by an attribute on an F*
+       declaration, so it arrives here and nowhere earlier, and -include on
+       the compiler command line was the only way in.  The block itself needs
+       no include, so it has no reason to precede anything else. *)
     (if !uses_narrow then narrow_support ^ "\n" else "") ^
   cpp_open ^
   String.concat "" fwds ^ (match fwds with [] -> "" | _ -> "\n") ^

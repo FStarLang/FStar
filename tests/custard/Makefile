@@ -1396,15 +1396,17 @@ EGREP_FloatHole += "silently compute at double precision"
 # It must name the way out, since Float64 really does work on this backend.
 EGREP_FloatHole += "custard_backend C"
 
-# Section 66.  The two 16-bit formats.  Narrow.fst declares binary16 with
-# [@@custard_float 16], BF16Lib.fst declares bfloat16 with the separate
+# Sections 66 and 98.  The two 16-bit formats.  Narrow.fst declares binary16
+# with [@@custard_float 16], BF16Lib.fst declares bfloat16 with the separate
 # [@@custard_bfloat16] -- separate because [custard_float]'s contract is IEEE
 # 754 by width and bfloat16 is not an IEEE 754 format.
 #
-# Both extract to an opaque two-byte struct with the arithmetic in the support
-# header, so what is checked is that an operator became a *call* and that a
-# literal became a *bit pattern*: 1.5 is 0x3E00 = 15872 at binary16.  The
-# program checks its own answers and exits nonzero if any is wrong, so the
+# Custard does not implement either format: it emits calls into a vocabulary
+# the program supplies, so what is checked is that an operator became a *call*
+# and that a literal became a *bit pattern*: 1.5 is 0x3E00 = 15872 at
+# binary16.  Narrow_stubs.h is the suite's portable reference implementation,
+# reached through [@@custard_c_header] the way a consumer reaches its own.
+# The program checks its own answers and exits nonzero if any is wrong, so the
 # rounding is under test too -- 2049 is not representable at binary16 and
 # ties-to-even sends it to 2048, which going through a double would not do.
 C_TESTS += Narrow
@@ -1413,11 +1415,16 @@ CGREP_Narrow += "custard_f16_add(a, b)"
 CGREP_Narrow += "custard_f16_lt(custard_f16_sub(a, b)"
 CGREP_Narrow += "custard_f16_of_i64((int64_t)2049)"
 CGREP_Narrow += "custard_bf16_add(CUSTARD_BF16_LIT(16320U)"
-CGREP_Narrow += "typedef struct { uint16_t bits; } custard_f16;"
-# The operators must not have survived as C operators on a struct.  That the
-# native spellings are unused is asserted by the [typedef] above rather than
-# by their absence: the support header names them in the comment explaining
-# why it does not use them.
+# Section 98.  The generated header carries the contract and no implementation:
+# it names what the program must supply and stops the compile if it did not.
+CGREP_Narrow += "\#ifndef CUSTARD_FLOAT16_DEFINED"
+CGREP_Narrow += "\#error"
+CGREP_Narrow += "which Custard does not implement"
+CNOGREP_Narrow += "\#define CUSTARD_FLOAT16_DEFINED"
+CNOGREP_Narrow += "typedef struct { uint16_t bits; } custard_f16;"
+CNOGREP_Narrow += "custard__bits_of_f32"
+CNOGREP_Narrow += "CUSTARD__F16_BIN"
+# The operators must not have survived as C operators on a struct.
 CNOGREP_Narrow += "a + b"
 
 # Section 45.1.  A [@@custard_extern] target is emitted verbatim, and that
@@ -1430,16 +1437,18 @@ C_TESTS += ExternKw
 CGREP_ExternKw += "KW_SIZEOF(float)"
 CNOGREP_ExternKw += "float_"
 
-# Section 66.  The support block is overridable, and the override reaches it
-# through [@@custard_c_header] -- so those includes have to be emitted above
-# the block.  NarrowOverride_stubs.h defines CUSTARD_FLOAT16_DEFINED and its
-# own custard_f16; below the block that is a redefinition and the compile
-# fails, so the ordering is checked by cc and not by a grep.  This is the
-# arrangement Kuiper needs, where custard_f16 has to become CUDA's __half for
-# wmma::fragment to accept it.
+# Sections 66 and 98.  The 16-bit vocabulary reaches the generated header
+# through [@@custard_c_header], so those includes have to be emitted above the
+# contract block: below it, the #error fires and the compile stops, so the
+# ordering is checked by cc and not by a grep.  This is the arrangement Kuiper
+# needs, where custard_f16 has to become CUDA's __half for wmma::fragment to
+# accept it.  NarrowOverride_stubs.h names its member [ovr] rather than
+# [bits], so nothing here can accidentally agree with a definition Custard
+# emitted -- which is now the stronger statement, since Custard emits none.
 C_TESTS += NarrowOverride
 CGREP_NarrowOverride += "NarrowOverride_stubs.h"
 CGREP_NarrowOverride += "CUSTARD_F16_LIT(15872U)"
+CNOGREP_NarrowOverride += "uint16_t bits;"
 
 # Section 66.  A global at a narrow width takes the *initializer* spelling,
 # not the expression one: a compound literal has automatic storage duration

@@ -3,6 +3,7 @@ module Narrow
 open FStar.All
 
 module B = BF16Lib
+module U16 = FStar.UInt16
 module U32 = FStar.UInt32
 
 (* Section 66.  binary16 declared here, bfloat16 in [BF16Lib], so one test
@@ -27,10 +28,21 @@ assume val of_literal : string -> t
 assume val zero : t
 assume val one : t
 
+(* Section 98.  Custard does not implement the 16-bit formats; it emits calls
+   into a vocabulary the program supplies, in a header named by
+   [@@custard_c_header].  [Narrow_stubs.h] is the suite's portable reference
+   implementation.  Without it this file would stop at the [#error] the
+   generated header carries, which is the point of that guard. *)
+[@@FStar.Attributes.custard_extern "narrow_stub_bits";
+   FStar.Attributes.custard_c_header "Narrow_stubs.h"]
+assume val bits : t -> U16.t
+
 let main () : ML U32.t =
   (* binary16, exactly representable values. *)
   let a = of_literal "1.5" in
   let b = of_literal "2.25" in
+  (* 1.5 at binary16 is 0x3E00 = 15872, and Custard emits that bit pattern. *)
+  let ok0 = bits a = 15872us in
   let ok1 = ieee_eq (add a b) (of_literal "3.75") in
   let ok2 = ieee_eq (mul a b) (of_literal "3.375") in
   let ok3 = lt (sub a b) zero in
@@ -54,6 +66,6 @@ let main () : ML U32.t =
   let ok12 = B.lt (B.of_literal "70000.0") (B.of_literal "80000.0") in
   let ok13 = B.ieee_eq (B.add B.zero B.one) B.one in
 
-  if ok1 && ok2 && ok3 && ok4 && ok5 && ok6 && ok7 && ok8
+  if ok0 && ok1 && ok2 && ok3 && ok4 && ok5 && ok6 && ok7 && ok8
      && ok9 && ok10 && ok11 && ok12 && ok13
   then 0ul else 1ul
