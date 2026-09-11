@@ -18546,6 +18546,85 @@ with the definition it displaced; the new `CNOGREP` on `uint16_t bits;` says
 that Custard emits no competing definition at all, which is now a property of
 every output rather than of this test's ordering.
 
+## 99. A question about deletion
+
+### 99.1.  The wrong predicate
+
+A read whose value nothing wants survived as a statement:
+
+```c
+void DeadRead_demo_dead_load(uint32_t *a) {
+  (void)(a[0]);
+  uint32_t v1 = a[1];
+  a[0] = v1;
+}
+```
+
+The combiner ignores its first argument, so after inlining `v0` is dead ---
+and the load stayed.  Kuiper's GEMM epilogue is exactly this shape: read the
+destination cell, combine it with the accumulator, write back, where the
+combiner is `alpha*C + beta*acc` in general and degenerates to `fun _ v -> v`
+for the plain overwrite instantiation.  A redundant global load in the
+epilogue of every thread.
+
+`Simplify` deletes an unused binding when `is_pure` holds of it, and
+`is_pure` is documented as "may be dropped, duplicated **and** reordered".
+A read is none of those three at once: it may not be reordered, because a
+later write to the same cell changes it, so `E_Impure` is the only honest
+effect for it --- and `Simplify` then turns the dead binding into an `ESeq`,
+which the C backend prints as a `(void)` of itself.  The effect lattice was
+answering a question about *motion* to a caller asking about *deletion*.
+
+PrintC already knew the difference and had said so, in §19.8: `is_droppable`,
+"a read whose result nothing wants can always go, because reading a cell that
+Pulse has established is live does nothing observable".  It was just in the
+wrong file.  The predicate moved to `Syntax`, where `Simplify` can reach it,
+and the three places that *discard* a term --- the unused binding, the
+sequenced term, and the condition of a branch `prune` has proved dead --- ask
+it instead of `is_pure`.
+
+### 99.2.  Not a weakening
+
+The first attempt simply substituted one for the other, and the suite caught
+it in one test: `TmplLet3` stopped extracting, with §46's abstract-type
+rejection naming `FStar.SizeT.v` --- a *pure call*, bound to a name that was
+dead after the template index had been resolved, which `is_pure` deleted and
+`is_droppable` did not.
+
+The two predicates are **incomparable**, not ordered.  An effect is a
+property of a node, so a pure call is deletable and the structural test
+cannot see it: `EApp` is opaque, and answering `false` is the only safe thing
+it can do on its own.  A read is deletable and no effect says so.  So
+`is_droppable` is `is_pure e.eff ||` the structural test, a genuine union,
+and the recursion picks that up at every subterm.  Worth stating plainly
+because "dropping is weaker than moving" is the intuition, and it is wrong in
+exactly the direction that silently loses code.
+
+### 99.3.  What stays
+
+The distinction that matters for soundness is the one the report named: a
+read that is *itself* the observable event.  A volatile or an atomic access
+may not be elided, because the access is the point.  Custard has no such
+node --- those reach a program through `[@@custard_extern]`, which is an
+`EApp`, whose effect is `E_Impure` and which the structural test refuses
+anyway.  The IR keeps the distinction visible, which is what makes this safe
+rather than lucky.
+
+A discarded *call* is untouched, and `DeadRead`'s second function pins that:
+`bump r` in a statement position is still there, and `PulseHashTable`'s four
+`(void)` casts --- all of them discarded calls --- are all that is left in
+the in-tree Pulse output.  So is the `(void)` in §94.4's zero-length case,
+which is not this at all: it is a declared array nothing indexes, and the
+cast is what tells C the declaration was deliberate.
+
+The reporter measured that this costs nothing today --- deleting all 264
+`(void)` statements from the generated `BlockTiling1D` and recompiling gives
+byte-identical PTX, because `nvcc` eliminates the dead loads, global ones
+included --- and asked for it as readability.  It is worth slightly more than
+that: `Simplify` runs before every backend, so the OCaml and krml outputs
+lose the same dead reads, and `Simplify` running before the printer is what
+lets §19.8's `cell_dead` see a cell whose last reader has just gone.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -18867,3 +18946,4 @@ every output rather than of this test's ordering.
 | M10θΤ | A name the callee already has (§96.2) | Done.  A Pulse `fn` that forwards to another `fn` extracted as `decrypt(uint8_t key, uint8_t eta, uint32_t eta1)`: `eta_reduce` shortens the spine, `eta_expand` puts the binders back, and it reads their types off a `TArrow` --- which is `cty & eff & cty` and carries no name, so there was nothing to call them.  `key` surviving because it was never reduced away is what made the result look arbitrary rather than merely anonymous.  The names are on the **callee**, which is where a wrapper's parameters got their meaning in the first place, so a binder is renamed exactly when it is passed *straight through*, at a known position, to a head this program declares --- narrow on purpose, since the point is that the argument at that position **is** this binder and nothing else, not that the callee happens to have a name for it.  Clashes were never a hazard: `Rename.pick` counts, so a wrapper that already has a `ctr` and inherits one gets `ctr`, `nonce`, `ctr1`.  Done as its own pass rather than inside the expansion, which the suite justified: `CInitTrap`'s `use a b = wrapped a b` grows in the same round `wrapped` does, so it would read `wrapped`'s names before `wrapped` had any and never look again, the expansion fixpoint having stopped when nothing grew.  Its own fixpoint on the count of anonymous binders propagates along a chain instead --- `CLamDef` is two links.  `Mono.retained_names` does the same for `Extract`'s eta-expansion of an under-applied primitive, filtered by the same predicate in the same order as `retained_sorts` so the lists are index-compatible by construction.  Explicitly **not** inlining the wrapper: that would answer the names question by deleting the function and cost a duplicated body per wrapper, when a forwarding wrapper should compile to a forwarding call.  `EtaName` pins the inherited and the clashing case, `CNOGREP` `eta`; two existing pins changed and both were documenting the defect.  In-tree Pulse suite unchanged at 31 s |
 | M10θΥ | A variable an array does not need (§97.2) | Done.  A Pulse `let mut` of an array declared a pointer, declared the storage under an invented name, and assigned one to the other --- three lines for one object, the first of them a constant the compiler folds away and the reader does not.  §94 had just made the middle line read like C; the line above it undid that.  Neither half was wrong: `ELet` declares a variable and emits into it, `emit_alloc` invents a name and delivers it, and composing two correct jobs is what produced the spare.  They are the same job, because in C the declaration of an array **is** the declaration of its address --- `uint8_t a[5];` says "five bytes" and "`a` names where they start" at once, which is precisely what the two lines said between them.  So `emit_alloc` takes an optional name and a dedicated `ELet`-over-`BufCreate` case hands it the binding's, declaring the storage under it and finishing with nothing to deliver since the destination has already been written.  Heap is in scope for a different reason and the same symptom: the array identity does not apply to a `malloc`, but the spare pointer in front of it did, and `uint32_t *v = (uint32_t *)malloc(...)` is the line a C programmer writes.  Deliberately **excluded** is the one-cell stack allocation, which Custard collapses into a plain variable whose uses take an address --- its branch finishes with `&arr`, and naming it would declare the cell and lose the `&`.  An array and a collapsed cell look alike in the IR and are opposite in C.  Binding before allocating is safe because IR names are unique per definition and `bind_var` subscripts against what the function has already taken, and the scope is saved and restored around the allocation so a variable-length array's length is still read outside the binding.  `ArrInit`'s pins now name the variable and gained a `CNOGREP` on the declaration that is gone; `PulseBasic` pins the heap form.  In-tree Pulse suite unchanged at 31 s |
 | M10θΦ | An implementation nobody linked (§98.2) | Done.  §66 shipped a portable softfloat for binary16 and bfloat16 --- convert to `float`, operate, round back, which is defined everywhere and rounds exactly once --- so that a program using these widths ran on a machine that had never heard of them rather than linking against stubs that did not exist.  Sound reasoning, wrong premise: these widths exist because a target has them in **hardware**, which is why anyone declares one, and the only consumer has never called a line of it.  `custard_f16` is CUDA's `__half` in Kuiper's build and has been since §66 shipped the override hook, because `wmma::fragment` is a template over `__half` and a two-byte struct is not a type any `wmma` overload accepts.  Two hundred lines of correctly-rounded arithmetic inside an `#ifndef` that is never false.  It was the *quiet* path too: a consumer who meant to reach native instructions and misspelled the guard got working code at a tenth of the speed and no diagnostic, which is the failure mode §38 and §66 exist to prevent at the other widths.  So the implementation is gone and the block is a **contract** --- it names the vocabulary, says where to put it, and `#error`s if it is not there.  Three things deliberately unchanged: the sentinel is still `CUSTARD_FLOAT16_DEFINED` and the names are still §66's, so every existing consumer builds identically and has nothing to do; the `[@@custard_c_header]` includes still precede the block, now because the `#error` fires below it rather than a redefinition being diagnosed, so cc still checks the ordering; and the literal encoder stays in F\*, since Custard emits a narrow literal as its correctly-rounded bit pattern precisely so that building one needs no arithmetic, which is what keeps a static initializer a constant expression.  A link-time failure became a compile-time one, in the header, at the point of use, quoting what to do.  The portable implementation moved verbatim to `tests/custard/Narrow_stubs.h` as a fixture --- `Narrow` checks the formats' rounding and so has to run --- and `Narrow`/`NarrowG` now reach it through a real `[@@custard_c_header]`, which exercises the whole arrangement end to end where before the generated block quietly satisfied them.  In-tree Pulse suite unchanged at 31 s |
+| M10θΧ | A question about deletion (§99.1) | Done.  A read whose value nothing wants survived as `(void)(a[0]);` --- Kuiper's GEMM epilogue exactly, where the combiner is `alpha*C + beta*acc` in general and degenerates to `fun _ v -> v` for the overwrite instantiation, so every thread did a redundant global load.  `Simplify` deletes an unused binding when `is_pure` holds, and `is_pure` means "may be dropped, duplicated **and** reordered".  A read is not all three: it may not be reordered, since a later write to the same cell changes it, so `E_Impure` is the only honest effect for it --- and the dead binding became an `ESeq`, which prints as a `(void)` of itself.  The effect lattice was answering a question about *motion* to a caller asking about *deletion*.  PrintC already knew the difference and had said so in §19.8; `is_droppable` was just in the wrong file.  It moved to `Syntax`, and the three sites that **discard** a term --- the unused binding, the sequenced term, and the condition of a branch `prune` has proved dead --- ask it instead.  Substituting one predicate for the other was wrong and the suite caught it in one test: `TmplLet3` stopped extracting, §46 naming `FStar.SizeT.v`, a *pure call* bound to a name dead after the template index resolved, which `is_pure` deleted and `is_droppable` did not.  The two are **incomparable**, not ordered --- an effect is a property of a node, so a pure call is deletable and the structural test cannot see it, `EApp` being opaque; a read is deletable and no effect says so --- so `is_droppable` is `is_pure e.eff ||` the structural test, a union, and the recursion picks that up at every subterm.  Worth stating plainly, because "dropping is weaker than moving" is the intuition and it is wrong in the direction that silently loses code.  The soundness line is the one the report named: a volatile or atomic read is itself the observable event and may not go, and Custard has no such node --- those arrive through `[@@custard_extern]`, an `EApp`, which is never droppable.  A discarded call is untouched; `PulseHashTable`'s four `(void)` casts are discarded calls and are all that survives in the in-tree Pulse output.  Free elsewhere too: `Simplify` runs before every backend, so OCaml and krml lose the same dead reads, and running before the printer is what lets §19.8's `cell_dead` see a cell whose last reader has just gone.  In-tree Pulse suite unchanged at 31 s |

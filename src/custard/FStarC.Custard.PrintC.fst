@@ -1213,33 +1213,6 @@ and is_pure_branch (br:branch) : ML bool =
   let _, g, b = br in
   (match g with Some g -> is_pure g | None -> true) && is_pure b
 
-(* [is_pure] answers "may this be *moved*"; this answers "may this be
-   *deleted*", and the second is weaker.  The only difference is a read: a
-   read of a collapsed cell cannot move across a write to it, and it can
-   always go when nothing wants its value, because reading a cell Pulse has
-   established is live does nothing observable.  Nothing else changes -- a
-   call, a write, an allocation, a loop and an abort are as undeletable as
-   they are unmovable. *)
-let rec is_droppable (e:expr) : ML bool =
-  let all (es:list expr) : ML bool = List.for_all is_droppable es in
-  match e.e with
-  | EConst _ | EVar _ | EQual _ | EAny -> true
-  | EApp _ | EFun _ | EWhile _ | EAbort _ | ERaise _ | ETry _ -> false
-  | EOp ({ po_op = BufRead }, es) -> all es
-  | EOp ({ po_op = BufCreate _ }, _) | EOp ({ po_op = BufWrite }, _)
-  | EOp ({ po_op = BufFree }, _) | EOp ({ po_op = BufBlit }, _) -> false
-  | EOp (_, es) | ECtor (_, es) | ETuple es -> all es
-  | ELet (_, _, a, b) | ESeq (a, b) -> is_droppable a && is_droppable b
-  | EIf (a, b, c) -> is_droppable a && is_droppable b && is_droppable c
-  | EMatch (sc, brs) -> is_droppable sc && List.for_all is_droppable_branch brs
-  | ERecord (_, fs) -> List.for_all (fun (_, e) -> is_droppable e) fs
-  | EProj (a, _, _) | EDiscrim (a, _) | ECast (a, _)
-  | ECoerce (a, _) -> is_droppable a
-
-and is_droppable_branch (br:branch) : ML bool =
-  let _, g, b = br in
-  (match g with Some g -> is_droppable g | None -> true) && is_droppable b
-
 (* Section 19.8.  A cell that is written and never read.  Pulse's loop measure
    is one: [fn while] carries a decreasing value the checker needs and the
    program does not, so it arrives as a [let mut] whose type has erased to

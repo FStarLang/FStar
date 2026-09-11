@@ -154,6 +154,19 @@ CGREP_ArrTup += "static uint32_t *ArrTup_get_snd(FStar_Pervasives_Native_tuple2_
 # Section 94.  An initializer where C has one, and the loop where it does not:
 # a runtime fill cannot be repeated and a variable-length array may not be
 # initialized at all, so both of those keep the loop.
+# Section 99.  A read whose value nothing wants is deleted rather than kept as
+# a [(void)] of itself: Simplify was asking [is_pure], which answers "may this
+# be moved" and is too strong for a question about deletion.  [dead_load] is
+# the reported shape -- the first argument of an inlined combiner is dropped,
+# so the load becomes dead only after inlining -- and [kept] is the boundary:
+# a discarded *call* has an effect the program depends on and must stay.
+C_TESTS += DeadRead
+CGREP_DeadRead += "static void DeadRead_dead_load(uint32_t *a) {"
+CNOGREP_DeadRead += "(void)(a[0])"
+CNOGREP_DeadRead += "(void)(a["
+CGREP_DeadRead += "DeadRead_bump(r);"
+CGREP_DeadRead += "uint32_t v1 = a[1];"
+
 C_TESTS += ArrInit
 CGREP_ArrInit += "uint8_t a[8] = { 0 };"
 CGREP_ArrInit += "uint8_t a[4] = { 7, 7, 7, 7 };"

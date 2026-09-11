@@ -292,15 +292,19 @@ let rec simpl (x:expr) : ML expr =
     else if occurs v e2 then { x with e = ELet (v, ty, e1, e2) }
     (* Section 7.3: an unused binding may only be deleted if evaluating it is
        unobservable; otherwise it becomes a statement, which keeps its effect
-       and its position. *)
-    else if is_pure e1.eff then e2
+       and its position.  Section 99: the question here is deletion and not
+       motion, so the test is [is_droppable] and not [is_pure] -- a read whose
+       value nothing wants goes, rather than becoming a [(void)] of itself. *)
+    else if is_droppable e1 then e2
     else { x with e = ESeq (e1, e2) })
 
   | ESeq (e1, e2) ->
     let e1 = simpl e1 in
     let e2 = simpl e2 in
     float_lets x e1 (fun e1 ->
-      if is_pure e1.eff then e2 else { x with e = ESeq (e1, e2) })
+      (* Section 99.  The same question, and the same answer: a sequenced term
+         is there for its effect, and a read has none worth a statement. *)
+      if is_droppable e1 then e2 else { x with e = ESeq (e1, e2) })
 
   | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
   | EApp (h, es) -> { x with e = EApp (simpl h, es |> List.map simpl) }
@@ -1606,7 +1610,8 @@ let take (x:expr) (c:expr) (r:expr) : ML expr =
   (* [x] supplies the type and effect: both are over-approximations of [r]'s,
    which is the safe direction -- an effect that is too high only stops a
    later pass from moving something. *)
-  if is_pure c.eff then { x with e = r.e } else { x with e = ESeq (c, r) }
+  (* Section 99.  [c] is discarded, not moved, so a read in it can go. *)
+  if is_droppable c then { x with e = r.e } else { x with e = ESeq (c, r) }
 
 let rec prune (x:expr) : ML expr =
   let g = prune in

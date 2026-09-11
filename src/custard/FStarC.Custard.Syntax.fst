@@ -294,6 +294,31 @@ let imported_unit (d : decl) : ML (option string) =
 let imported_home (d : decl) : ML (option string) =
   decl_flags d |> List.tryPick (function Imported (_, h) -> h | _ -> None)
 
+(* Section 99.  See the comment on the declaration in the interface. *)
+let rec is_droppable (e:expr) : ML bool =
+  let all (es:list expr) : ML bool = List.for_all is_droppable es in
+  (* The two predicates are not ordered, so this is genuinely a union.  An
+     effect is a property of the *node*, and a pure call is deletable while
+     the structural test below cannot see that -- [EApp] is opaque to it. *)
+  is_pure e.eff ||
+  (match e.e with
+  | EConst _ | EVar _ | EQual _ | EAny -> true
+  | EApp _ | EFun _ | EWhile _ | EAbort _ | ERaise _ | ETry _ -> false
+  | EOp ({ po_op = BufRead }, es) -> all es
+  | EOp ({ po_op = BufCreate _ }, _) | EOp ({ po_op = BufWrite }, _)
+  | EOp ({ po_op = BufFree }, _) | EOp ({ po_op = BufBlit }, _) -> false
+  | EOp (_, es) | ECtor (_, es) | ETuple es -> all es
+  | ELet (_, _, a, b) | ESeq (a, b) -> is_droppable a && is_droppable b
+  | EIf (a, b, c) -> is_droppable a && is_droppable b && is_droppable c
+  | EMatch (sc, brs) -> is_droppable sc && List.for_all is_droppable_branch brs
+  | ERecord (_, fs) -> List.for_all (fun (_, e) -> is_droppable e) fs
+  | EProj (a, _, _) | EDiscrim (a, _) | ECast (a, _)
+  | ECoerce (a, _) -> is_droppable a)
+
+and is_droppable_branch (br:branch) : ML bool =
+  let _, g, b = br in
+  (match g with Some g -> is_droppable g | None -> true) && is_droppable b
+
 (* -------------------------------------------------------------------- *)
 (* Printing                                                             *)
 (*                                                                      *)

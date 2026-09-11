@@ -770,6 +770,21 @@ val imported_unit : decl -> ML (option string)
     its output; [None] for a local declaration or a whole-program upstream. *)
 val imported_home : decl -> ML (option string)
 
+(** Section 99.  [is_pure] answers "may this be *moved*"; this answers "may
+    this be *deleted*".  Neither implies the other, so this is a union and not
+    a weakening: an effect is a property of a node, so a pure call is
+    deletable and the structural test cannot see it, while a read is deletable
+    and no effect says so.  A read cannot move across a write to the same
+    cell, and it can always go when nothing wants its value, because reading a
+    cell that Pulse has established is live does nothing observable.  Nothing
+    else changes -- an impure call, a write, an allocation, a loop and an
+    abort are as undeletable as they are unmovable.
+
+    Not sound for a read that is *itself* the observable event, a volatile or
+    atomic one.  Custard has no such node: those reach a program through
+    [@@custard_extern], which is an [EApp] and is never droppable. *)
+val is_droppable : expr -> ML bool
+
 (** {1 Printing} *)
 
 val program_to_doc : program -> ML FStarC.Pprint.document
