@@ -173,6 +173,23 @@ CGREP_DeadRead += "uint32_t v1 = a[1];"
 # inlined layer, which is 181 of them in EverParse's COSE parser.  The
 # constructor's eta law removes all of them; the one temporary that cannot go
 # is the result of the actual call, since C has no multiple return.
+# Section 103.  A fully saturated wrapper became a partial application.
+# [eta_reduce] shortens [wrapper b c = callee A b c] to [wrapper b = callee A
+# b] and the expansion has to put the argument back; it refused, because the
+# body it was asked to re-evaluate contained a *constructor application* and
+# [cheap_expr] had no case for one.  [forward] is the control: the same
+# wrapper with the constructor passed in as a parameter, which is all
+# variables and always worked.
+C_TESTS += PulsePartial
+CGREP_PulsePartial += "PulsePartial_wrapper(uint32_t b, uint32_t c)"
+CGREP_PulsePartial += "return PulsePartial_callee(PULSEPARTIAL_A, b, c);"
+CGREP_PulsePartial += "return PulsePartial_callee(a, b, c);"
+# A record built at the call site is the same rule at the shape the nullary
+# constructor does not exercise: this one really does build something.
+CGREP_PulsePartial += ".c_k = PULSEPARTIAL_A, .c_n = 10 }, b, c)"
+# No lambda survived into a return type, which is what the refusal left.
+CNOGREP_PulsePartial += "eta"
+
 C_TESTS += TupBind
 CGREP_TupBind += "_letpattern = TupBind_prim(x);"
 CGREP_TupBind += "return _letpattern._1;"

@@ -18996,6 +18996,72 @@ its name from the option, `noprefixx_fixed` keeps the one its attribute
 gives it, and the entry point --- which is the generated `main`'s callee and
 not something the unit exports --- keeps its prefix.
 
+## 103 A wrapper that supplied every argument
+
+A fourth report, and the smallest yet: a Pulse `fn` that calls another with
+all three of its arguments is rejected as a partial application.
+
+```fstar
+type kind = | A | B
+
+fn callee (a:kind) (b c:U.t) … { if A? a { U.add_mod b c } else { 0ul } }
+
+fn forward (a:kind) (b c:U.t) … { callee a b c }   (* works *)
+fn wrapper       (b c:U.t) … { callee A b c }     (* error 368 *)
+```
+
+> the partial application of `PulsePartial.callee` has no C representation,
+> in `PulsePartial.wrapper`.  It is applied to 2 of its 3 arguments.
+
+The reporter had the diagnosis in his last paragraph: the arity the
+specialization dump prints is right --- `emitted 2 parameters` for a
+two-parameter wrapper --- and the final IR has one binder and an arrow
+result.  Something between the two took a parameter off and did not put it
+back.  He also isolated it to the one variable that matters: `forward`
+passes the constructor through as a *parameter* and works; `wrapper` writes
+the constructor at the call site and does not.
+
+### 103.1.  A value that is built
+
+§25 is an eta-reduction followed by an eta-expansion.  `eta_reduce`
+shortens `wrapper b c = callee A b c` to `wrapper b = callee A b`, which is
+what lets a chain of forwarders resolve; `eta_expand_decl` puts the arguments
+back once it knows every caller can supply them.  The expansion is guarded:
+
+> Only a head this program declares, and only a *pure* body: expansion
+> re-evaluates the body on every call, and an under-applied call allocates a
+> closure and runs nothing, which is why it qualifies.
+
+`cheap_expr` is that guard, and it had no case for a constructor
+application, so `callee A b` fell to its default and the expansion was
+refused.  `forward`'s body is `callee a b`, all variables, and passed.  One
+missing case, and the difference between the two programs is exactly the one
+the reporter named.
+
+Building a value is the same class of work as the `EOp` beside it in that
+function: bounded by its operands, and no more expensive to repeat than they
+are.  In C a constructor application is a compound literal, which for the
+nullary case this was found on is nothing at all; in OCaml a nullary
+constructor is an immediate.  And the comparison that actually settles it is
+not against zero but against *what the refusal leaves standing*: an
+under-applied call, which allocates a closure over the very arguments in
+question.  Re-evaluating `A` at each call is cheaper than allocating a
+closure at each call, so the guard was refusing the cheaper program.
+
+So `ECtor`, `ETuple` and `ERecord` are cheap when their operands are, and
+`EDiscrim` joins the `EProj` above it --- reading a tag is reading a field.
+
+Deliberately still excluded: `ELet`, `EMatch`, `EIf` and the other statement
+forms.  The question §25.3 asks is whether a body may be re-evaluated at
+every call, and those are where a body has a cost that is not read off its
+operands.
+
+`tests/custard/pulse/PulsePartial.fst` is the reporter's module with his
+`forward` control kept as the control, plus `wrap_record`, which builds a
+record at the call site.  The nullary constructor is the easy case to argue
+about --- it is free everywhere --- so the test carries the shape that
+really does build something.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -19322,3 +19388,4 @@ not something the unit exports --- keeps its prefix.
 | M10θΩ | A loop that runs no times (§101) | Done.  §94.4 rounded a zero-length array's *declaration* up to one cell, because `t a[0]` is a GNU extension and not C, and left its *fill* alone --- so at an element type with no initializer list the output was a one-cell declaration followed by `for (size_t _ci1 = 0; _ci1 < 0; _ci1++)`, a loop whose condition is false on entry, filling a cell no index can reach.  The scalar path had already got this right and had written down why: a length of zero "needs no fill written out and admits none", since `{ }` is not an initializer C99 accepts and the cell it would initialize cannot be read.  Every clause of that is about the **length**; it happened to be written inside the branch that requires a scalar element because that is the branch that needed it.  So the general path takes the same fact and emits no fill when the length is a literal zero, leaving `ArrInit_cell _cbuf1[1];` and §94.4's `(void)` cast --- which is not new, and had been carrying exactly this job for the scalar case since §94 shipped.  Both allocation kinds, because the argument is about the length and not about where the storage came from: a heap zero-length array keeps its `malloc` and its null check, the pointer being a value the program goes on to `free`, and only the fill goes.  Dropping the fill expression is safe for the reason the scalar `{ 0 }` already was --- anything effectful in it was hoisted into the statements emitted before the declaration and is still emitted, and what is dropped is a pure expression the loop would have evaluated zero times.  `ArrInit` gains `emptyr`, the same shape at a two-field record so the scalar branch cannot catch it; the pins are the declaration standing alone and a `CNOGREP` of `< 0;` rather than of `_ci`, since the variable-length cases in the same file keep their loops and are the reason the boundary is worth pinning.  In-tree Pulse suite unchanged at 31 s |
 | M10ιΑ | A pair that is taken apart and put back together (§102.1) | Done.  181 of the 352 `_letpattern` declarations in EverParse's `COSE_Format.c` were a record rebuilt out of the projections of the one above it.  Not a regression --- karamel emits 193 of the same construct and splices some into the use site besides --- and not a cost: the chain and the hand-collapsed version compile to byte-identical machine code at `-O3`.  It is 181 lines of noise in the parsing core.  Pulse has no multiple return, so a two-result `fn` returns a tuple and every wrapper that names the components and hands them back writes `let a, b = f () in (a, b)`, one layer per inlined wrapper.  In the IR that is not a pair of projections at all --- that shape appears only after PrintC compiles a pattern --- but `match s with C(a,b) -> C(a,b)`, which is the **constructor's eta law** written out.  So that is the rewrite, and what makes it sound without a table of constructors is that the match has *one* branch and no guard: a single constructor pattern is exhaustive only if that constructor is the type's only one, so the pattern cannot fail and the scrutinee cannot be anything else.  Paired with copy propagation, since the law alone leaves the same three lines with the constructors taken out.  The reporter held a second peephole in reserve, `C x.f₁ … x.fₙ ⇝ x`, for the standalone wrapper where the tuple really is the return value; it is not needed, because that is the *printed* shape and the IR form the eta law already rewrites to a tail call.  The rewrite cost one regression and it is the interesting part: written first as a substitution through `sub`, it stopped Custard extracting the F\* compiler, `used_marker : bool ref` printing as an OCaml array.  `sub` replaces each use *node* with the definiens node, so every use takes the definiens' recorded type --- right for an inliner, wrong for a renaming, and the two types here were the same type spelled two ways, one of them `any`.  So copy propagation changes the string and leaves every node alone.  Third time this trap has been paid for, and worth naming: a rewrite that replaces a node inherits that node's type, and the IR carries two spellings of most types.  The eta law was corrected the same way at the same time.  In-tree Pulse suite unchanged at 31 s |
 | M10ιΒ | `--custard_c_no_prefix` and an `assume val` (§102.3) | Done.  The reporter's standing item: `Abort.abort` comes out as `Abort_abort`, and the attribute that would fix it exists only on this branch, so writing it stops `Abort.fst` typechecking with a released F\* --- which broke EverParse's CI until it was backed out.  He asked for a command-line counterpart or for the option to cover `assume val`s.  The second, because it is less an extension of the option than a correction to it: an external's name is the symbol the linker goes looking for, so it is this unit's interface in the only sense the option cares about --- *more* so than a definition's, since nothing here defines it and the whole file is a demand on the outside.  `build_renames` already renamed types whether or not they had linkage, on exactly that reasoning, so an external was the case that was missed rather than the case that was decided against.  `[@@custard_extern "…"]` wins where written: that is the target's own spelling, taken verbatim, and an option about *prefixes* has nothing to say about a name that was never prefixed.  One ordering bug fell out --- `build_renames` ran after the declaration tables were filled, and the external table stores a **resolved** C name, since an external is the one declaration whose name may come from somewhere other than its lid and resolving it once is what keeps the prototype and the call sites agreeing.  Filling it first left it holding the name the option had just replaced; `build_renames` reads no table, so it moved up.  `NoPrefixX` pins both halves with the realization in a separate translation unit, so the link is the assertion |
+| M10ιΓ | A wrapper that supplied every argument (§103.1) | Done.  A Pulse `fn` calling another with all three of its arguments was rejected as a partial application of two.  §25 is an eta-reduction followed by an eta-expansion: `eta_reduce` shortens `wrapper b c = callee A b c` to `wrapper b = callee A b`, which is what lets a chain of forwarders resolve, and `eta_expand_decl` puts the argument back once it knows every caller can supply it.  The expansion is guarded by `cheap_expr`, because expanding re-evaluates the body at every call, and `cheap_expr` had no case for a **constructor application** --- so `callee A b` fell to its default and the expansion was refused.  The reporter had already isolated it to the one variable that matters: his `forward` control passes the constructor through as a parameter, is all variables, and always worked.  Building a value is the same class of work as the `EOp` beside it: bounded by its operands and no more expensive to repeat than they are --- a compound literal in C, nothing at all for the nullary case this was found on, an immediate in OCaml.  The comparison that settles it is not against zero but against **what the refusal leaves standing**, an under-applied call that allocates a closure over the very arguments in question; re-evaluating `A` at each call is cheaper than allocating a closure at each call, so the guard was refusing the cheaper of the two programs.  `ECtor`, `ETuple` and `ERecord` are now cheap when their operands are, and `EDiscrim` joins the `EProj` above it, reading a tag being reading a field.  Still excluded on purpose are `ELet`, `EMatch`, `EIf` and the other statement forms: §25.3 asks whether a body may be re-evaluated at every call, and those are where a body has a cost that is not read off its operands.  The test is the reporter's module with his control kept as the control, plus a record built at the call site --- a nullary constructor is free everywhere and so the easy case to argue, and the rule has to be right about the shape that really does build something.  In-tree Pulse suite unchanged at 31 s |

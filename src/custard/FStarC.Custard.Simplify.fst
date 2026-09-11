@@ -911,6 +911,22 @@ let rec cheap_expr (x:expr) : ML bool =
       effect test above rather than by the shape, which is where that
       distinction belongs. *)
    | EOp (_, es) -> List.for_all cheap_expr es
+   (* Section 103.  Building a value is the same class of work again.  A
+      constructor application is bounded by its arguments, allocates in C
+      exactly what a compound literal allocates -- nothing, for the nullary
+      case this was found on -- and is *already* cheaper than what it
+      replaces: the under-applied call this pass exists to remove allocates
+      a closure over the very arguments in question.  A nullary constructor
+      in OCaml is an immediate, so there it is free outright.
+
+      Left out deliberately: [ELet], [EMatch], [EIf] and the rest of the
+      statement forms.  The question section 25.3 asks is whether the body
+      may be re-evaluated at every call, and those are where a body has a
+      cost that is not read off its operands. *)
+   | ECtor (_, es) | ETuple es -> List.for_all cheap_expr es
+   | ERecord (_, fs) -> List.for_all (fun (_, e) -> cheap_expr e) fs
+   (* Reading a tag, in the class of the [EProj] above it. *)
+   | EDiscrim (e, _) -> cheap_expr e
    | _ -> false)
 
 let rec arrow_arity (c:cty) : ML int =
