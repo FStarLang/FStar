@@ -148,6 +148,11 @@ val erased_binders_unfold (env:TcEnv.env) (t:typ) : ML (list bool)
     binders introduced when a primitive has to be eta-expanded. *)
 val retained_sorts (env:TcEnv.env) (t:typ) : ML (list typ)
 
+(** [retained_names env t] is those same binders' [ppname]s, in the same
+    order, so an eta-expanded primitive can name its parameters after the
+    declaration rather than [eta], [eta1] (section 96). *)
+val retained_names (env:TcEnv.env) (t:typ) : ML (list string)
+
 (** [unit_binders env t] marks the binders of [t] whose type is unit-shaped
     ([unit], [squash p], [_:unit{p}]).  They are kept -- a unit binder is how
     F* writes a thunk -- but carry no value, so a call site passes [()]. *)

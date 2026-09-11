@@ -839,6 +839,24 @@ let decl_arity (prog:program) : ML (SMap.t int) =
     | _ -> ());
   tbl
 
+(* Section 96.  The binder *names* a definition has, in order.  Eta-expansion
+   invents binders, and a name it invents is a name the reader has to carry:
+   the arrow it reads the type off has no name in it -- [TArrow] is
+   [cty & eff & cty] -- so [eta], [eta1] was all it could say.  The names are
+   not lost, though, they are on the *callee*, one position further along the
+   spine, which is where a wrapper's parameters got their meaning in the first
+   place.  [base_name] because a declaration's binders carry extraction's
+   uniquifying suffix and [rename] would otherwise stack a second one. *)
+let decl_binder_names (prog:program) : ML (SMap.t (list string)) =
+  let tbl : SMap.t (list string) = SMap.create 100 in
+  prog |> List.iter (fun d ->
+    match d with
+    | DLet l ->
+      SMap.add tbl (string_of_name l.dl_name)
+        (l.dl_binders |> List.map (fun (b:binder) -> base_name b.b_name))
+    | _ -> ());
+  tbl
+
 (* The fewest arguments any use of a name supplies.  Expansion raises a
    definition's arity, but it rewrites only the definition; every call site is
    left as it was.  That is fine when the callers were already asking for more
@@ -995,6 +1013,9 @@ let eta_expand_decl (tbl : SMap.t int) (uses : SMap.t int) (l:dlet) : ML dlet =
     : ML (list binder & expr & cty & eff) =
     if n <= 0 then (bs, body, ret, ef)
     else match ret with
+         (* Section 96.  [TArrow] is [cty & eff & cty] and carries no name, so
+            there is nothing better to invent here; [eta_rename_decls] puts the
+            callee's names on afterwards, when every callee has its own. *)
          | TArrow (a, e, b) ->
            let v = rename "eta" in
            let arg = mk (EVar v) a E_Pure in
@@ -1028,6 +1049,77 @@ let eta_expand_decls (prog:program) : ML program =
       | DLet l -> DLet (eta_expand_decl tbl uses l)
       | d -> d) in
     if fuel <= 0 || width p' = width p then p' else go (fuel - 1) p' in
+  go (List.length prog) prog
+
+(* Section 96.  Eta-expansion invents binders and calls them [eta], [eta1],
+   because the arrow it reads their types off carries no name: [TArrow] is
+   [cty & eff & cty].  The names are not gone, though -- they are on the
+   *callee*, which is where a wrapper's parameters got their meaning in the
+   first place.  A Pulse [fn] that forwards to another [fn] is eta-reduced to
+   the bare head and expanded back, and came out as
+   [decrypt(key, eta, eta1)]: the first binder survived because it was never
+   reduced away, which is what made the result look arbitrary rather than
+   merely anonymous.
+
+   A binder is renamed only when it is passed *straight through*, at a known
+   position, to a head this program declares.  That is a narrow condition and
+   deliberately so: it is the only case where the callee's name is known to
+   describe this value, since the argument at that position **is** this
+   binder and nothing else.
+
+   Separate from the expansion, and after it, because the expansion runs to a
+   fixpoint and a wrapper of a wrapper would otherwise read its callee's names
+   before the callee had any -- [use a b = wrapped a b] grows in the same round
+   [wrapped] does, and never looks again.  Here the same fixpoint is run over
+   naming alone, so the names propagate along a chain however long it is. *)
+let eta_rename_decl (bnames : SMap.t (list string)) (l:dlet) : ML dlet =
+  match l.dl_body.e with
+  | EApp ({ e = EQual (n, _) }, args) ->
+    (match SMap.try_find bnames (string_of_name n) with
+     | None -> l
+     | Some ns ->
+       let sm : subst = SMap.create 10 in
+       let pairs : ref (list (string & string)) = mk_ref [] in
+       let bound (v:string) : ML bool =
+         List.existsb (fun (b:binder) -> b.b_name = v) l.dl_binders in
+       args |> List.iteri (fun j (a:expr) ->
+         match a.e with
+         | EVar v when base_name v = "eta" && bound v
+                    && None? (SMap.try_find sm v) ->
+           if j < List.length ns then
+             let nm = List.nth ns j in
+             if nm <> "" && base_name nm <> "eta" then
+               let nv = rename nm in
+               SMap.add sm v (mk (EVar nv) a.ty a.eff);
+               pairs := (v, nv) :: !pairs
+         | _ -> ());
+       if Nil? !pairs then l
+       else
+         let rn (v:string) : ML string =
+           match List.tryFind (fun (a, _) -> a = v) !pairs with
+           | Some (_, nv) -> nv
+           | None -> v in
+         { l with
+           dl_binders = l.dl_binders |> List.map
+             (fun (b:binder) -> { b with b_name = rn b.b_name });
+           dl_body = sub sm l.dl_body })
+  | _ -> l
+
+let eta_rename_decls (prog:program) : ML program =
+  let anon (p:program) : ML int =
+    List.fold_left (fun n d ->
+      match d with
+      | DLet l -> List.fold_left
+                    (fun n (b:binder) -> if base_name b.b_name = "eta"
+                                         then n + 1 else n) n l.dl_binders
+      | _ -> n) 0 p in
+  let rec go (fuel:int) (p:program) : ML program =
+    let bnames = decl_binder_names p in
+    let p' = p |> List.map (fun d ->
+      match d with
+      | DLet l -> DLet (eta_rename_decl bnames l)
+      | d -> d) in
+    if fuel <= 0 || anon p' = anon p then p' else go (fuel - 1) p' in
   go (List.length prog) prog
 
 let eta_reduce_decls (prog:program) : ML program =
@@ -3301,6 +3393,7 @@ let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
   (* After every pass that can leave a definition eta-short, and before [dce],
      which reads the final call graph. *)
   let prog = pass "eta_expand" eta_expand_decls prog in
+  let prog = pass "eta_rename" eta_rename_decls prog in
   (* Before [dce], which reads the final call graph and would otherwise drop
      every lifted function as unreachable, and before [scc], which orders
      them. *)

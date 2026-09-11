@@ -3185,10 +3185,21 @@ and prim_app (st:state) (l:Ident.lident) (n:int)
     let sorts = match decl_ty with
                 | Some ty -> Mono.retained_sorts (tcenv st) ty
                 | None -> [] in
+    (* Section 96.  And their names, for the same reason and from the same
+       place: a binder the rule invents is one the reader has to carry, and
+       the declaration already says what it is called. *)
+    let bnames = match decl_ty with
+                 | Some ty -> Mono.retained_names (tcenv st) ty
+                 | None -> [] in
     let nth_sort (i:int) : ML cty =
       let j = List.length given + i in
       if j < List.length sorts then ty_of_typ st (List.nth sorts j) else TAny in
-    let bs = List.mapi (fun i _ -> { b_name = uniq "eta" (GenSym.next_id ());
+    let nth_name (i:int) : ML string =
+      let j = List.length given + i in
+      if j < List.length bnames
+      then (let n = List.nth bnames j in if n = "" then "eta" else n)
+      else "eta" in
+    let bs = List.mapi (fun i _ -> { b_name = uniq (nth_name i) (GenSym.next_id ());
                                      b_ty = nth_sort i })
                        (repeat_unit missing) in
     let vs = bs |> List.map (fun b -> mk (EVar b.b_name) b.b_ty E_Pure) in

@@ -400,8 +400,10 @@ CNOGREP_CAbbrevArity = "(*CAbbrevArity_mk_eq_test__bool"
 # point: no pointer, no initializer, and no indirect call at the use site.
 C_TESTS += CInitTrap
 FLAGS_CInitTrap = --custard_entry CInitTrap.use --custard_entry CInitTrap.direct
-CGREP_CInitTrap = "CInitTrap_wrapped(bool eta, bool eta1)" \
-                  "return CInitTrap_band(eta, eta1);" \
+# Section 96: the two invented binders take [band]'s own names, since after
+# [id_fn] is inlined [band] is the head the spine stops at.
+CGREP_CInitTrap = "CInitTrap_wrapped(bool a, bool b)" \
+                  "return CInitTrap_band(a, b);" \
                   "CInitTrap_picked(bool"
 # `FStar.Pervasives.false_elim` becomes EAbort, like magic and admit: an
 # abort() rather than the loop it is defined as, which on C was a hard 368.
@@ -680,7 +682,9 @@ CNOGREP_StoredType += "StoredType_desc"
 # rejected as a captured closure -- and its callers stay saturated.
 C_TESTS += CLamDef
 CGREP_CLamDef += "static uint32_t CLamDef_go(uint32_t k, uint32_t x)"
-CGREP_CLamDef += "static uint32_t CLamDef_go2(uint32_t k, uint32_t eta"
+# Section 96: [go2] is one link further along the chain and takes [go]'s name
+# for the binder it invents, which [go] in turn took from [ap]'s lambda.
+CGREP_CLamDef += "static uint32_t CLamDef_go2(uint32_t k, uint32_t x)"
 CNOGREP_CLamDef += "CLamDef_go(uint32_t k)"
 
 # Section 33.4.  The existential reached through a field rather than through

@@ -177,6 +177,13 @@ CGREP_ArrInit32 += "for (size_t _ci2 = 0; _ci2 < (size_t)(n); _ci2++)"
 CGREP_ArrInit32 += "uint8_t _cbuf1[1] = { 0 };"
 CNOGREP_ArrInit32 += "ArrInit_varlen(size_t"
 
+# Section 96.  A wrapper's invented binders take the callee's names, and a
+# clash with a name the wrapper already has is settled by counting.
+C_TESTS += EtaName
+CGREP_EtaName += "static uint8_t EtaName_decrypt(uint8_t key, uint8_t nonce, uint32_t ctr)"
+CGREP_EtaName += "static uint8_t EtaName_clash(uint8_t ctr, uint8_t nonce, uint32_t ctr1)"
+CNOGREP_EtaName += "eta"
+
 C_TESTS += PulseBasic
 # Section 58: the pure condition is spelled in the loop header.
 CGREP_PulseBasic += "while (i < n)"
@@ -223,7 +230,9 @@ RUST_TESTS += ArrowAb
 # answer when it runs.
 C_TESTS += PulseMono
 CGREP_PulseMono += "PulseMono_apply_twice__add_mod"
-CGREP_PulseMono += "static void PulseMono_add_k(uint32_t k, uint32_t *eta)"
+# Section 96.  This binder was [eta] until the expansion started reading the
+# callee's names; [r] is what both the source and [apply_twice] call it.
+CGREP_PulseMono += "static void PulseMono_add_k(uint32_t k, uint32_t *r)"
 CNOGREP_PulseMono += "(*f)"
 
 # Section 34.3.  A Pulse [fn] block argument that captures a [ref] and a value

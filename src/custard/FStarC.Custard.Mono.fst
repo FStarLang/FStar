@@ -460,6 +460,16 @@ let retained_sorts (env:TcEnv.env) (t:typ) : ML (list typ) =
   bs |> List.filter (fun b -> not (is_erased_binder env b))
      |> List.map (fun b -> b.binder_bv.sort)
 
+(* Section 96.  The same binders' [ppname]s, so that an eta-expanded primitive
+   says what the declaration said rather than [eta], [eta1].  Filtered by the
+   same predicate and in the same order, so the two lists are index-compatible
+   by construction; a binder the programmer wrote as [_] comes back as the
+   [uu____NNN] F\* invented, which {!Rename.preferred} already collapses. *)
+let retained_names (env:TcEnv.env) (t:typ) : ML (list string) =
+  let bs, _ = U.arrow_formals_comp t in
+  bs |> List.filter (fun b -> not (is_erased_binder env b))
+     |> List.map (fun b -> Ident.string_of_id b.binder_bv.ppname)
+
 (* The binders of [t] that are kept but carry no value, so a call site may --
    and should -- pass [()] rather than whatever the source supplies.
 

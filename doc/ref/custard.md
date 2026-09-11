@@ -18303,6 +18303,87 @@ arity 2, but the declaration retains only 1 binder(s) after erasure" --- and
 the reporter's guess of 2 came from the source signature, forgetting the
 ghost binders Custard had already dropped.  §84's warning did its job.
 
+## 96. A name the callee already has
+
+### 96.1.  Where `eta1` comes from
+
+A Pulse `fn` whose body is just a call to another `fn` came out like this:
+
+```c
+static uint8_t EtaName_decrypt(uint8_t key, uint8_t eta, uint32_t eta1) {
+  return EtaName_encrypt(key, eta, eta1);
+}
+```
+
+The source calls them `key`, `nonce` and `ctr`, and so does the callee.  What
+happened to the last two is that `eta_reduce` shortened
+`fun key nonce ctr -> encrypt key nonce ctr` to a shorter spine, and
+`eta_expand` (§25, §33.1) put the binders back --- reading their *types* off
+the declared result, which is a `TArrow`, which is `cty & eff & cty` and
+carries no name at all.  There was nothing to call them, so they were called
+`eta`.
+
+`key` surviving is what makes the result look arbitrary rather than merely
+anonymous: the first binder was never reduced away, so one real name sits in
+front of two invented ones and the reader cannot tell which is which.
+
+### 96.2.  The names are on the callee
+
+An arrow has no names, but the *callee* does, and that is where a wrapper's
+parameters got their meaning in the first place: `decrypt`'s second argument
+means what `encrypt`'s second parameter means, because it **is** what is
+passed there.
+
+So a binder is renamed exactly when it is passed straight through, at a known
+position, to a head this program declares.  That condition is narrow on
+purpose.  It is not "name it after whatever the callee calls that position"
+--- it is "the argument at that position is this binder and nothing else", so
+the callee's name is known to describe this value rather than merely to sit
+near it.  A computed argument, a head this program does not declare (an
+external's type is an arrow, and an arrow has no names), or a position past
+the end of the callee's list all leave the binder as it was.
+
+Clashes are not a hazard, because `Rename.pick` already settles them by
+counting.  A wrapper whose own binder is called `ctr` and which inherits
+`ctr` for a later position gets `ctr`, `nonce`, `ctr1` --- distinct names for
+distinct values, which is all that was ever required.
+
+### 96.3.  Why it is a pass and not part of the expansion
+
+The obvious place to do this is inside `eta_expand_decl`, where the binder is
+invented.  That is the wrong place, and the suite said so: `CInitTrap`'s
+`use a b = wrapped a b` is expanded in the *same round* as `wrapped` itself,
+so it would read `wrapped`'s names before `wrapped` had any, get nothing, and
+never look again --- the expansion fixpoint stops when no definition grows,
+and a definition that is merely badly named has stopped growing.
+
+`eta_rename_decls` is therefore its own pass, after the expansion, run to its
+own fixpoint on the count of still-anonymous binders.  Names then propagate
+along a chain however long it is.  `CLamDef` is two links: `go` takes `x`
+from `ap`'s lambda binder, and `go2` takes `x` from `go`.
+
+The same fix applies at the other end of the pipeline.  `Extract`'s
+eta-expansion of an under-applied *primitive* invents binders too, and there
+the declaration's own binders are right there: `Mono.retained_names` is
+`retained_sorts` filtered by the same predicate in the same order, so the two
+lists are index-compatible by construction.
+
+### 96.4.  What this is not
+
+It does not inline the wrapper.  Replacing `decrypt` with a copy of
+`encrypt`'s body would make the names question moot by deleting the function,
+and it would cost a duplicated body for every wrapper --- which is the
+opposite of what a reader of the generated C wants when the two are meant to
+be visibly the same routine.  A wrapper that forwards should compile to a
+call that forwards.  It now does so under the names the source used.
+
+`EtaName` pins both halves: `decrypt`, whose three names are inherited
+wholesale, and `clash`, whose inherited `ctr` collides with a binder it
+already has.  Its `CNOGREP` is simply `eta`.  Two existing pins changed and
+both were documenting the defect: `PulseMono_add_k`'s second parameter is `r`
+rather than `eta`, and `CInitTrap_wrapped`'s two are `a` and `b` rather than
+`eta` and `eta1`.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -18621,3 +18702,4 @@ ghost binders Custard had already dropped.  §84's warning did its job.
 | M10θΠ | An initializer where C has one (§94.1) | Done.  A local array with a constant length and a constant fill is what C's initializer syntax is for, and `emit_alloc` wrote a loop for every one of them --- eight lines of object code, a scratch index in scope, and a reader's obligation to check the bound against the declared length, in place of a declaration that cannot get any of it wrong.  It now writes `uint8_t _cbuf1[8] = { 0 };` and `uint8_t _cbuf1[4] = { 7, 7, 7, 7 };`, under three conditions none of which is stylistic: the length must be constant because a **variable-length array may not be initialized at all** (C99 6.7.8p3); the element type must be scalar because `{ 0 }` on an aggregate initializes only the first member explicitly and the rest are reported under `-Wmissing-braces`, which matters when the output is compiled with warnings as errors; and the fill must be constant because C has no way to repeat a runtime value --- and no repetition form for a constant either, so a non-zero fill is written once per cell and capped at 64, above which the loop is the smaller code.  Zero is exempt from the cap, covering any length in three characters.  Heap allocations keep `malloc` and the loop, and the branch is refused if either operand hoisted a statement, which would land before the declaration it belongs to.  `ArrInit` pins the **boundary** rather than the good case: four shapes, the two that take an initializer and the two that must not, all reachable from `main`, which reads a cell out of each so the initializer is checked for having run and not merely for having been printed.  `CborBoundarySlice` and `PulseBlit` picked the change up unasked; `PulseHashTable`'s variable-length array did not.  In-tree Pulse suite unchanged at 30 s |
 | M10θΡ | Zero is not a length C has (§94.4) | Done.  The first question §94.1 raises: `{ }` is not an initializer C99 accepts, so the guard read `n > 0` and a zero-length allocation fell to the loop --- where it had never worked either, since `uint8_t a[0]` is a GNU extension and `gcc -std=c99 -pedantic-errors` rejects it outright as a zero-size array.  Pulse will write `A.alloc 0uy 0sz` quite happily and C has no such object.  Older than §94 by every release, but found by asking the obvious question of the new code.  A constant zero length now declares **one** cell and takes `{ 0 }` whatever the fill was, which is sound for the same reason the fill is irrelevant: with a length of zero no index is in bounds, so nothing can read the cell and nothing can tell it is there.  A heap allocation rounds the same way, which incidentally keeps it clear of `malloc(0)` being permitted to return `NULL` and trip the `abort()` on the next line.  The residual case --- a *runtime* length that happens to be zero, a variable-length array on the stack and `malloc(0)` on the heap --- is not reachable by constant folding and is recorded as not addressed.  `ArrInit` grew a fifth shape and two `CNOGREP`s, on `[0]` and on `= { };`, so neither non-form can come back unnoticed.  In-tree Pulse suite unchanged at 30 s |
 | M10θΣ | A width the program assumes (§95.2) | Done.  Kuiper's build no longer contains karamel: one `fstar.exe --codegen Custard --custard_backend C` per entry module, the CUDA straight out, and the `.krml` rule, the bundling flags and the `sed` script that rewrote `threadIdx_x` all deleted.  Sixty-four modules extract and compile.  That leaves one measured behavioural difference: Kuiper indexes with `FStar.SizeT.t`, Custard is faithful and emits `size_t`, and their karamel fork narrowed it to `uint32_t` deliberately because a 64-bit index costs a register and a GPU kernel pays for registers in occupancy --- **+11.9%** total registers over 571 kernels, essentially all of it recovered by rewriting Custard's own output.  So `--custard_sizet_width 32`, default `native`.  Narrowing is **not sound in general**: it is correct exactly when the program assumes `FStar.SizeT.fits_u32`, which F\* does not check and Custard cannot usefully read --- so the flag takes its licence from the user rather than pretending to derive one.  `Sizet` being its own `width` constructor is what makes it small: `int_type` covers the type and every cast, and the literal suffix stops being `ULL`.  The fourth site does not follow from spelling: `emit_alloc`'s fill loop counter is a `size_t` whatever the length is, so a narrowed length needs the cast a native one does not, and `_ci2 < (size_t)(n)` is a promotion no pin would have caught.  It is an error rather than a no-op on a non-C backend, and it is recorded in a unit's `layout_options` --- no IR layout changes, but every struct with a `size_t` field does, and two units that disagreed would link and be wrong.  `SzWidth`/`SzWidth32` pin the same program at both widths, the narrowed one by a `CNOGREP` on `size_t` over source and header both; `ArrInit32` pins the loop cast, for which the Pulse `.dc` rule grew the `EXTRA_$*` hook it had never had.  Their `sync_device` link failure was diagnosed by §84's warning 381 naming the post-erasure arity exactly.  In-tree Pulse suite unchanged at 30 s |
+| M10θΤ | A name the callee already has (§96.2) | Done.  A Pulse `fn` that forwards to another `fn` extracted as `decrypt(uint8_t key, uint8_t eta, uint32_t eta1)`: `eta_reduce` shortens the spine, `eta_expand` puts the binders back, and it reads their types off a `TArrow` --- which is `cty & eff & cty` and carries no name, so there was nothing to call them.  `key` surviving because it was never reduced away is what made the result look arbitrary rather than merely anonymous.  The names are on the **callee**, which is where a wrapper's parameters got their meaning in the first place, so a binder is renamed exactly when it is passed *straight through*, at a known position, to a head this program declares --- narrow on purpose, since the point is that the argument at that position **is** this binder and nothing else, not that the callee happens to have a name for it.  Clashes were never a hazard: `Rename.pick` counts, so a wrapper that already has a `ctr` and inherits one gets `ctr`, `nonce`, `ctr1`.  Done as its own pass rather than inside the expansion, which the suite justified: `CInitTrap`'s `use a b = wrapped a b` grows in the same round `wrapped` does, so it would read `wrapped`'s names before `wrapped` had any and never look again, the expansion fixpoint having stopped when nothing grew.  Its own fixpoint on the count of anonymous binders propagates along a chain instead --- `CLamDef` is two links.  `Mono.retained_names` does the same for `Extract`'s eta-expansion of an under-applied primitive, filtered by the same predicate in the same order as `retained_sorts` so the lists are index-compatible by construction.  Explicitly **not** inlining the wrapper: that would answer the names question by deleting the function and cost a duplicated body per wrapper, when a forwarding wrapper should compile to a forwarding call.  `EtaName` pins the inherited and the clashing case, `CNOGREP` `eta`; two existing pins changed and both were documenting the defect.  In-tree Pulse suite unchanged at 31 s |
