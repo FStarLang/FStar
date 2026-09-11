@@ -18778,6 +18778,66 @@ changes.  The full suite -- `tests/custard`, `tests/custard/pulse`,
 `tests/extraction/backends`, the smoke and plugin gates -- is green, with
 `ListC`'s pins rewritten and `ExternOpt` added.
 
+## 101 A loop that runs no times
+
+§94 gave a local array an initializer list, and §94.4 dealt with the length
+C has no declaration for:
+
+> Pulse will allocate a zero-length array and C has no such thing --
+> `t a[0]` is a GNU extension, not C (6.7.6.2p1).  One cell is the smallest
+> conforming declaration and nothing can read it, since no index is in bounds
+> of a length of zero.
+
+That reasoning was applied in one place and not the other.  The declaration
+was rounded up to one cell; the *fill* was left alone, and at an element type
+with no initializer list it is a loop:
+
+```c
+FStar_Pervasives_Native_tuple2__evercddl_label_values phdrauxbuf[1];
+for (size_t _ci1 = 0; _ci1 < 0; _ci1++) {
+  phdrauxbuf[_ci1] = mv;
+}
+```
+
+The condition is false on entry.  Three lines, two of which the compiler
+deletes and the reader does not.
+
+The scalar path had already got this right, and said so in a comment: "a
+length of zero needs no fill written out and admits none -- `{ }` is not an
+initializer C99 accepts either, and the cell it initializes cannot be read.
+So it takes `{ 0 }` whatever the fill was."  Every clause of that is about
+the *length*, not about the element type; it was written inside the branch
+that requires a scalar element because that is the branch it was needed in.
+So the general path takes it too, and the fill is `""` when the length is a
+literal zero:
+
+```c
+ArrInit_cell _cbuf1[1];
+(void)(_cbuf1);
+```
+
+The `(void)` is §94.4's and is not new: the array is declared and nothing
+indexes it, and the cast is what tells C the declaration was deliberate.  It
+was already carrying that job for the scalar case, where the fill had been
+gone since §94 shipped; removing the loop just puts the two cases in the
+same shape.
+
+Both allocation kinds are covered, because the argument is about the length
+and not about where the storage came from: a heap zero-length array still
+gets its `malloc` and its null check, since the pointer is a value the
+program goes on to use (and to `free`), and only the fill goes.
+
+Dropping the fill expression is safe for the same reason the scalar path's
+`{ 0 }` was.  Anything effectful in it was hoisted into the statements
+emitted *before* the declaration and is still emitted; what is dropped is a
+pure expression that the loop would have evaluated zero times.
+
+`tests/custard/pulse/ArrInit.fst` gains `emptyr`, which is `empty` at a
+two-field record so that the scalar branch cannot catch it.  The pins are
+the declaration standing alone and a `CNOGREP` of `< 0;` --- not of `_ci`,
+since `varfill` and `varlen` in the same file keep their loops and are the
+reason the boundary is worth pinning at all.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -19101,3 +19161,4 @@ changes.  The full suite -- `tests/custard`, `tests/custard/pulse`,
 | M10θΦ | An implementation nobody linked (§98.2) | Done.  §66 shipped a portable softfloat for binary16 and bfloat16 --- convert to `float`, operate, round back, which is defined everywhere and rounds exactly once --- so that a program using these widths ran on a machine that had never heard of them rather than linking against stubs that did not exist.  Sound reasoning, wrong premise: these widths exist because a target has them in **hardware**, which is why anyone declares one, and the only consumer has never called a line of it.  `custard_f16` is CUDA's `__half` in Kuiper's build and has been since §66 shipped the override hook, because `wmma::fragment` is a template over `__half` and a two-byte struct is not a type any `wmma` overload accepts.  Two hundred lines of correctly-rounded arithmetic inside an `#ifndef` that is never false.  It was the *quiet* path too: a consumer who meant to reach native instructions and misspelled the guard got working code at a tenth of the speed and no diagnostic, which is the failure mode §38 and §66 exist to prevent at the other widths.  So the implementation is gone and the block is a **contract** --- it names the vocabulary, says where to put it, and `#error`s if it is not there.  Three things deliberately unchanged: the sentinel is still `CUSTARD_FLOAT16_DEFINED` and the names are still §66's, so every existing consumer builds identically and has nothing to do; the `[@@custard_c_header]` includes still precede the block, now because the `#error` fires below it rather than a redefinition being diagnosed, so cc still checks the ordering; and the literal encoder stays in F\*, since Custard emits a narrow literal as its correctly-rounded bit pattern precisely so that building one needs no arithmetic, which is what keeps a static initializer a constant expression.  A link-time failure became a compile-time one, in the header, at the point of use, quoting what to do.  The portable implementation moved verbatim to `tests/custard/Narrow_stubs.h` as a fixture --- `Narrow` checks the formats' rounding and so has to run --- and `Narrow`/`NarrowG` now reach it through a real `[@@custard_c_header]`, which exercises the whole arrangement end to end where before the generated block quietly satisfied them.  In-tree Pulse suite unchanged at 31 s |
 | M10θΧ | A question about deletion (§99.1) | Done.  A read whose value nothing wants survived as `(void)(a[0]);` --- Kuiper's GEMM epilogue exactly, where the combiner is `alpha*C + beta*acc` in general and degenerates to `fun _ v -> v` for the overwrite instantiation, so every thread did a redundant global load.  `Simplify` deletes an unused binding when `is_pure` holds, and `is_pure` means "may be dropped, duplicated **and** reordered".  A read is not all three: it may not be reordered, since a later write to the same cell changes it, so `E_Impure` is the only honest effect for it --- and the dead binding became an `ESeq`, which prints as a `(void)` of itself.  The effect lattice was answering a question about *motion* to a caller asking about *deletion*.  PrintC already knew the difference and had said so in §19.8; `is_droppable` was just in the wrong file.  It moved to `Syntax`, and the three sites that **discard** a term --- the unused binding, the sequenced term, and the condition of a branch `prune` has proved dead --- ask it instead.  Substituting one predicate for the other was wrong and the suite caught it in one test: `TmplLet3` stopped extracting, §46 naming `FStar.SizeT.v`, a *pure call* bound to a name dead after the template index resolved, which `is_pure` deleted and `is_droppable` did not.  The two are **incomparable**, not ordered --- an effect is a property of a node, so a pure call is deletable and the structural test cannot see it, `EApp` being opaque; a read is deletable and no effect says so --- so `is_droppable` is `is_pure e.eff ||` the structural test, a union, and the recursion picks that up at every subterm.  Worth stating plainly, because "dropping is weaker than moving" is the intuition and it is wrong in the direction that silently loses code.  The soundness line is the one the report named: a volatile or atomic read is itself the observable event and may not go, and Custard has no such node --- those arrive through `[@@custard_extern]`, an `EApp`, which is never droppable.  A discarded call is untouched; `PulseHashTable`'s four `(void)` casts are discarded calls and are all that survives in the in-tree Pulse output.  Free elsewhere too: `Simplify` runs before every backend, so OCaml and krml lose the same dead reads, and running before the printer is what lets §19.8's `cell_dead` see a cell whose last reader has just gone.  In-tree Pulse suite unchanged at 31 s |
 | M10θΨ | A boundary that speaks in `option` (§100.1) | Done.  A third downstream project, building straight to C, could not extract an external returning `option listener`: error 368, the polymorphic type has no C representation.  Both controls worked --- a function taking and returning a `listener`, and a Custard-defined function returning `option listener` --- so the only failing shape was the one a C boundary actually has.  §5.0.1 rule 4 freezes every type in an external's signature, and the reason is sound and is about **OCaml**: `FStar.String.concat` is realized by hand at `'a list`, so a `list__string` clone would name a declaration `FStar_String.ml` does not define.  A hand-written realization fixes a representation and the pass must not contradict it.  None of that survives the trip to C, where the "realization" is written *after* the fact against the header Custard generated --- there is no pre-existing definition whose idea of `option` to protect, because on this path Custard is the one who decides what `option listener` looks like and says so.  The rule was guarding a file that does not exist.  So the driver is guarded by `freeze_realized ()`, already the guard on the neighbouring `Realized`/`Imported` type freeze and now the third thing that one predicate governs; `Modelled` stays unconditional because it is not this at all, karamel matching a slice as an application of its lid.  The reporter gets the specialization declared in the generated header with the prototype above it, and §72's warning 377 fires unprompted to say the name is a hint and to typedef it once --- written for a different round and exactly the advice this boundary needs.  §31.3 predicted the one test that changes: `ListC` is now rejected for the honest reason, that a cons list is a recursive datatype, which is a better error and a worse message, since "use a pointer for the recursive field" is addressed to someone who owns the datatype and nobody owns `Prims.list`.  `record_parents` fills its table by walking the program rather than the freeze, so it survived; the rejection consults it and names the external too.  In the other direction `mono_advice_for` had to *lose* a sentence --- it explains a polymorphic type as frozen by rule 4, which on C no longer happens --- so that branch is guarded on the backend that freezes.  A diagnostic explaining a mechanism has to be turned off with it.  The honest cost: a realized external with a representable signature now fails at *link* rather than at extraction, which is already today's behaviour for every non-polymorphic one, and is the right trade --- a program calling `FStar.List.Tot` from C must supply a C `FStar.List.Tot` either way.  `tests/custard/ExternOpt.fst` pins both directions with a stub written against the generated header, so the link is the assertion.  In-tree Pulse suite unchanged at 31 s |
+| M10θΩ | A loop that runs no times (§101) | Done.  §94.4 rounded a zero-length array's *declaration* up to one cell, because `t a[0]` is a GNU extension and not C, and left its *fill* alone --- so at an element type with no initializer list the output was a one-cell declaration followed by `for (size_t _ci1 = 0; _ci1 < 0; _ci1++)`, a loop whose condition is false on entry, filling a cell no index can reach.  The scalar path had already got this right and had written down why: a length of zero "needs no fill written out and admits none", since `{ }` is not an initializer C99 accepts and the cell it would initialize cannot be read.  Every clause of that is about the **length**; it happened to be written inside the branch that requires a scalar element because that is the branch that needed it.  So the general path takes the same fact and emits no fill when the length is a literal zero, leaving `ArrInit_cell _cbuf1[1];` and §94.4's `(void)` cast --- which is not new, and had been carrying exactly this job for the scalar case since §94 shipped.  Both allocation kinds, because the argument is about the length and not about where the storage came from: a heap zero-length array keeps its `malloc` and its null check, the pointer being a value the program goes on to `free`, and only the fill goes.  Dropping the fill expression is safe for the reason the scalar `{ 0 }` already was --- anything effectful in it was hoisted into the statements emitted before the declaration and is still emitted, and what is dropped is a pure expression the loop would have evaluated zero times.  `ArrInit` gains `emptyr`, the same shape at a two-field record so the scalar branch cannot catch it; the pins are the declaration standing alone and a `CNOGREP` of `< 0;` rather than of `_ci`, since the variable-length cases in the same file keep their loops and are the reason the boundary is worth pinning.  In-tree Pulse suite unchanged at 31 s |

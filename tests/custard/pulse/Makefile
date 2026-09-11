@@ -182,6 +182,13 @@ CNOGREP_ArrInit += "uint8_t *a;"
 # is what the loop path emits, and this directory has no CPAIR.
 CNOGREP_ArrInit += "[0]"
 CNOGREP_ArrInit += "= { };"
+# Section 101.  The zero-length array at a struct element type, which has no
+# initializer list to fall into: the declaration is still rounded up to one
+# cell and the fill is gone, so what is pinned is the declaration standing
+# alone.  The [< 0] grep is the loop that used to follow it; [_ci] would not
+# do, since the two variable-length cases above keep their loops.
+CGREP_ArrInit += "ArrInit_cell _cbuf1[1];"
+CNOGREP_ArrInit += "< 0;"
 
 # Section 95.  The same module at a narrowed index width.  [varlen] is the
 # reason this is pinned here rather than in tests/custard: its loop counter

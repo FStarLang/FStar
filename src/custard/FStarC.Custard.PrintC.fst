@@ -2014,7 +2014,14 @@ and emit_alloc (ind:string) (d:dest) (nm:option string)
       ind ^ elt ^ " *" ^ arr ^ " = (" ^ elt ^ " *)malloc(" ^ group dlv ^
       " * sizeof(" ^ elt ^ "));\n" ^
       ind ^ "if (" ^ arr ^ " == NULL) { abort(); }\n" in
-  !out ^ alloc ^
+  (* Section 101.  A length of zero admits no fill: the loop's condition is
+     [_ci < 0], which is false on entry, and the cell the declaration had to
+     round up to (section 94.4) cannot be indexed because no index is in
+     bounds of a length of zero.  The scalar path above already dropped the
+     fill for this case by writing [{ 0 }]; this is the same fact stated for
+     an element type that has no initializer list. *)
+  let fill =
+    if const_len = Some 0 then "" else
   (* Section 59.  The counter is a [size_t] and the length is compared
      against it, so the cast is there for a length of some other integer
      type; when the length already *is* a [size_t] it says nothing. *)
@@ -2026,7 +2033,8 @@ and emit_alloc (ind:string) (d:dest) (nm:option string)
    then group lv else "(size_t)" ^ group lv) ^
   "; " ^ i ^ "++) {\n" ^
   ind ^ "  " ^ arr ^ "[" ^ i ^ "] = " ^ iv ^ ";\n" ^
-  ind ^ "}\n" ^
+  ind ^ "}\n" in
+  !out ^ alloc ^ fill ^
   done_ arr
 
 (* -------------------------------------------------------------------- *)

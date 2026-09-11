@@ -65,6 +65,22 @@ fn empty ()
   3uy
 }
 
+(* Section 101.  The same zero length at an element type that has no
+   initializer list: [emptyr] took the loop path, and wrote
+   [for (size_t _ci1 = 0; _ci1 < 0; _ci1++)] over the one cell section 94.4
+   had to round the declaration up to.  A condition that is false on entry,
+   filling a cell no index reaches. *)
+noeq type cell = { c_a : U8.t; c_b : U8.t }
+
+fn emptyr ()
+  returns r: U8.t
+{
+  let a = A.alloc ({ c_a = 1uy; c_b = 2uy }) 0sz;
+  A.pts_to_len a;
+  A.free a;
+  4uy
+}
+
 fn main ()
   returns x: FStar.Int32.t
 {
@@ -73,7 +89,9 @@ fn main ()
   let c = varfill 5uy;
   let d = varlen 9sz;
   let e = empty ();
-  if (U8.eq a 0uy && U8.eq b 7uy && U8.eq c 5uy && U8.eq d 0uy && U8.eq e 3uy) {
+  let f = emptyr ();
+  if (U8.eq a 0uy && U8.eq b 7uy && U8.eq c 5uy && U8.eq d 0uy && U8.eq e 3uy
+      && U8.eq f 4uy) {
     0l
   } else {
     1l
