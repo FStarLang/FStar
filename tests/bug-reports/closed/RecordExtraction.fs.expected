@@ -5,13 +5,13 @@ type lens<'a, 'b> = {get : 'a  ->  'b; put : 'b  ->  'a  ->  'a}
 let __proj__Mklens__item__get = (fun ( projectee  :  lens<'a, 'b> ) -> (match (projectee) with
 | {get = get; put = put} -> begin
      get
-     end))
+end))
 
 
 let __proj__Mklens__item__put = (fun ( projectee  :  lens<'a, 'b> ) -> (match (projectee) with
 | {get = get; put = put} -> begin
      put
-     end))
+end))
 
 
 
