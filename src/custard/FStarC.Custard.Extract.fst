@@ -1965,17 +1965,57 @@ and has_builtin_type_rule (st:state) (t:term) : ML bool =
 
    A rule is destroyed by reduction wherever it sits, so the floor has to be
    read wherever it sits. *)
+(* Section 109.  And not only where the *written* syntax shows it.  A type
+   abbreviation is exactly what makes the name absent: [type pack a = option
+   (array a)] mentions no rule at either endpoint of the reduction, the rule
+   having been introduced by unfolding [pack] and erased by unfolding [array]
+   within the same normalization, so a before/after comparison of what is
+   written sees nothing on either side.
+
+   So the walk unfolds as it goes, and stops where a rule is: at a
+   rule-carrying head the rule is recorded and the arguments are walked, and
+   at any other name the name is unfolded and the result walked instead.
+   [UnfoldOnly [l]] unfolds the one name in hand, as section 88 does for the
+   same reason, so a chain through a second abbreviation reaches this case
+   again for that name -- which is what the fuel is for.  An fvar that does
+   not unfold, an inductive being the usual case, falls through to its
+   arguments exactly as before.
+
+   This is the partially normalized form the programmer could have written by
+   hand, which is why spelling [option (array element)] out was the
+   reporter's working control: the walk now reaches the same place from the
+   abbreviation. *)
 and builtin_type_rules (st:state) (t:term) : ML (list string) =
-  let hd, args = U.head_and_args_full (U.unmeta (U.unascribe t)) in
-  let here =
-    match (U.un_uinst hd).n with
+  builtin_rules_at st 10 t
+
+and builtin_rules_at (st:state) (fuel:int) (t:term) : ML (list string) =
+  let t0 = U.unmeta (U.unascribe t) in
+  let sub (args : list (term & S.aqual)) : ML (list string) =
+    args |> List.collect (fun (a, _) -> builtin_rules_at st fuel a) in
+  match (SS.compress t0).n with
+  (* A refinement says nothing about representation and its subject says all
+     of it: [(a: array t { live a })] is an array. *)
+  | Tm_refine {b} -> builtin_rules_at st fuel b.sort
+  | _ ->
+    let hd, args = U.head_and_args_full t0 in
+    match (U.un_uinst (SS.compress hd)).n with
     | Tm_fvar fv ->
       let l = S.lid_of_fv fv in
       (match Builtins.lookup_rule l with
-       | Some (Builtins.Rule_type _) -> [Ident.string_of_lid l]
-       | _ -> [])
-    | _ -> [] in
-  here @ (args |> List.collect (fun (a, _) -> builtin_type_rules st a))
+       | Some (Builtins.Rule_type _) -> Ident.string_of_lid l :: sub args
+       | _ ->
+         let unfolded =
+           if fuel > 0 && FStarC.Syntax.CheckLN.is_ln t0
+           then match norm_optional st
+                        [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
+                         TcEnv.Beta; TcEnv.Iota; TcEnv.UnfoldOnly [l]] t0 with
+                | Some t' -> if U.term_eq t' t0 then None else Some t'
+                | None -> None
+           else None in
+         match unfolded with
+         | Some t' -> builtin_rules_at st (fuel - 1) t'
+         | None -> sub args)
+    | _ -> sub args
 
 (* Section 69.  The target spelling of an external type, split into pieces,
    when that spelling is a *template* -- that is, when it mentions any of the

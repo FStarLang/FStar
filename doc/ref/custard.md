@@ -19436,6 +19436,62 @@ refinement-carrying one that is EverParse's, and one whose payload is a
 record of the same module, so the abbreviation names a name.  A two-field
 record nothing reaches is the guard, and is still absent.
 
+## 109.  A rule an abbreviation hides
+
+§106 reads the built-in representation rules named before a reduction and
+those named after it, and keeps the written form when one has gone
+missing.  That finds a rule reduction destroyed --- so long as the written
+form names it.
+
+A type abbreviation is exactly what makes it absent.
+
+```fstar
+type pack (a:Type0) = option (A.array a)
+```
+
+`pack element` names no rule: its head is `pack`, its argument is
+`element`, and `array` appears nowhere in it.  The reduced form names none
+either, `array` having been unfolded to `array'` on the way.  The rule is
+introduced *and* erased inside the one normalization, so both endpoints
+agree that there is nothing to preserve, both keys come out `option
+array'`, and one `fst` specialization is emitted for two incompatible
+tuple types --- §106's symptom exactly, reached by a road §106 does not
+watch.
+
+That is also why spelling the abbreviation out was the reporter's working
+control: `option (array element)` names the rule at the first endpoint,
+and the comparison then has something to compare.
+
+So the walk unfolds as it goes, and stops where a rule is.  At a
+rule-carrying head the rule is recorded and the arguments are walked; at
+any other name the name is unfolded and the *result* is walked instead;
+an fvar that does not unfold --- an inductive, which is the usual case ---
+falls through to its arguments as before.  `UnfoldOnly [l]` unfolds the
+one name in hand, as §88 does and for the same reason, so a chain through
+a second abbreviation reaches this case again for that name, which is what
+the fuel is for.  A refinement is walked through to its subject:
+`(a: array t { live a })` is an array, the refinement saying nothing about
+representation and its subject saying all of it.
+
+The form this arrives at is the one the programmer could have written by
+hand --- it is the control --- so nothing else had to change: the guard
+still keeps the type as written, and the written type still tells the two
+specializations apart.
+
+One bounded cost is worth naming.  The key remains the argument **as
+written**, which is §93's choice and not a new one, so a program that
+spells the same type both ways --- `pack element` in one place and `option
+(array element)` in another --- gets two specializations of the same
+function, identical but for their names.  They are equal and both correct;
+only the duplicate is regrettable, and removing it would mean keying on a
+partially normalized form that the reduction does not otherwise produce.
+Consistent use of an abbreviation, which is the reason to have one, pays
+nothing.
+
+`TupAlias` is the reported module: the abbreviation in first and second
+position, the spelled-out control beside it, and a chain of two
+abbreviations for the fuel.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -19768,3 +19824,4 @@ record nothing reaches is the guard, and is still absent.
 | M10ιΖ | A rule one level down (§106) | Done.  §93's floor under normalization read the **head** of a monomorphization argument, which was the whole of it for as long as the type carrying the built-in rule was the argument itself.  It is not: `option (array uint32)` and `option (array bool)` have `option` for a head, carrying no rule, and an `array` one level down carrying the only difference between them --- so neither fired the guard, both reduced to `option array'`, both keyed the same, and one `fst` specialization was emitted for two incompatible tuple types.  Seventeen C errors in a full TLS extraction, and visible in the IR dump, so not a collision of printed names.  The reporter had localized it to the line.  A rule is destroyed by reduction wherever it sits, so the floor is read wherever it sits: every rule mentioned anywhere in the type, head and arguments recursively, and the written form is kept when reduction has **lost** one of them.  Stating it as a loss rather than as a presence is what keeps it from firing where it should not --- an abbreviation that *introduces* a rule loses nothing and rightly keeps its reduced form, which is the more informative of the two, and a wrapper the reduction merely peels names the rule on both sides and is left alone.  The old head test is the depth-zero case and is subsumed exactly.  `NestArr` is the reported shape with a parameterized record in the same position as the control |
 | M10ιΗ | Equality at a type C cannot compare (§107) | Done.  C's `==` is defined on arithmetic types and on pointers; F\*'s is defined at every type with decidable equality, which is every inductive one.  `Known = x` on a two-constructor datatype came out as a struct compared with `==` and was rejected, and it is not a narrow shape --- a record, a tuple and an `option` are all structs here and all four spellings were broken.  The representation was never in question: the pattern-match form of the same test compiled.  So the comparison is generated rather than refused, there being nothing to discover --- a datatype's equality *is* structural and the structure is the layout this backend just chose.  One `static bool T__eq(T, T)` per type compared: a conjunction over a record's fields, tags first and then the payload of that tag for a tagged union, `true` under a nullary constructor.  Aggregate fields recurse, and `check_finite` has already ruled out a struct containing itself by value, so the recursion terminates on the grounds the declarations already stand on.  Two types keep `==` on purpose: an **enum** *is* a scalar in the representation it was given, and an **external** has no body to read and a target that may well be a scalar typedef or a class with an `operator==` of its own.  A field behind a pointer compares as a pointer, which is what F\* means there too, such a type carrying no `hasEq` and so never being the argument of a `=`; `Prims.string` keeps §44.2's `strcmp` inside the generated comparisons as well as outside them.  Collected while the bodies are printed, which is when the set of types compared is complete, and emitted above them behind prototypes.  `VariantEq` pins all four broken spellings and the enum that must not acquire a helper, and runs the answers |
 | M10ιΘ | A collapsed newtype is an unfolding too (§108) | Done.  Custard over EverParse's **CBOR** corpus, four independent legs, and the declaration sets match karamel's exactly --- the two C legs name for name, and the Rust legs by exactly ten functions per crate, all of them `uu___is_`-prefixed discriminators for one inductive that no consumer uses and that neither backend emits on the C side, so the difference is karamel leaking F\* internal names into a published Rust API rather than a gap here.  Every consumer passes with no source changes: 363/363 round-trip tests against det and again against nondet, 29 and 1 cargo tests, and --- checked because it was not believed --- two *karamel-driven* verification tests that generate their own re-declaration of the same 46 functions and link against Custard's object file, so the two backends' output is header- and link-compatible at that scale and not merely each correct.  One bug, and small: a one-field record whose collapse is §5.2 leaves no abbreviation behind.  §70.1 roots a type *abbreviation* in an entry module because Custard unfolds one and nothing then refers to the name; inductives were excluded for having a definition that cannot be unfolded away, which is true of every inductive but this one.  The collapse **is** an unfolding, and it leaves the declaration in exactly the position an abbreviation's was, so `dce` removes it --- the whole divergence from karamel being one `typedef`, every signature byte-identical.  The name is the interface: `cbor_det_array` is a newtype over a refinement, EverParse's hand-written Rust wrapper names it, and without it `cargo build` stops with E0425 four times.  Same answer, same place, one root; the machinery `collapsed_abbrev` needed was already written.  Narrowly on purpose --- rooting every inductive in an entry module would emit types nothing uses and could turn a working extraction into a *rejection*, a type no live signature mentions never having been asked whether C can represent it, while a collapsed one has been asked and its payload is representable by construction.  `Newtype` pins the plain form, the refinement-carrying form that is the reported one, and a payload that is itself a record, with an unreached two-field record as the guard |
+| M10ιΙ | A rule an abbreviation hides (§109) | Done.  The full TLS rerun clears all 430 struct-equality errors of §107 and the explicit nested-array shape of §106, and keeps all 17 incompatible tuple arguments --- because an abbreviation names the rule at *neither* endpoint of the reduction.  `type pack a = option (array a)` mentions no `array` as written and none after reducing either: the rule is introduced by unfolding `pack` and erased by unfolding `array` inside the one normalization, so §106's before/after comparison sees nothing on either side, both keys come out `option array'`, and one `fst` serves two incompatible tuple types.  The reporter's control is the diagnosis --- spelling `option (array element)` out makes the rule visible at the first endpoint, which is the only difference between the two --- and he tied it to the real shape, EverParse's `vclist_lowtype = option (SZ.t & vec el)`, without claiming it accounts for all seventeen.  So the walk unfolds as it goes and stops where a rule is: record and descend at a rule-carrying head, unfold and re-walk at any other name, fall through to the arguments when an fvar does not unfold, which is every inductive.  `UnfoldOnly [l]` one name at a time, as §88 does, so a chain of abbreviations reaches the case again for the next name --- what the fuel is for --- and a refinement is walked through to its subject, `(a: array t { live a })` being an array.  The form reached is the one the control writes by hand, so nothing downstream changed.  One bounded cost, named rather than hidden: the key is still the argument as written, §93's choice, so a program spelling the same type both ways gets two identical specializations; consistent use of the abbreviation, which is the point of having one, pays nothing.  `TupAlias` is the reported module with the control kept and a two-deep chain added.  In-tree Pulse suite 30.6 s, unchanged with the test added |
