@@ -11,12 +11,16 @@ module DocsNoIface
         "no interface."]]
 let double (x:int) : int = x + x
 
-(* The empty list is documentation that says nothing. It is still a 'doc'
-   attribute, so the declaration appears in the index, with no lines --
-   which is different from having no attribute at all, like 'greeting'
-   below. *)
+(* The empty list is documentation that says nothing, which is the same
+   fact as carrying no documentation at all: 'silent' appears in the
+   index, as every public declaration does, with a null 'doc' -- just
+   like 'greeting' below, which has no attribute. A payload of blank
+   lines is the same case, and must not be reported as text either. *)
 [@@doc []]
 let silent (x:int) : int = x
+
+[@@doc [""; "   "]]
+let blank (x:int) : int = x
 
 (* Documented, but private: not part of what the module exports, so not
    part of what is exported as documentation either. *)

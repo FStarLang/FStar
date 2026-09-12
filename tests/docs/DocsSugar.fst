@@ -51,6 +51,18 @@ let nested (x:int) : int = x
 let empty_comment_still_works (x:int) : int =
   (**) x + 1
 
+(* An empty doc comment, and one holding only blank lines: a `doc`
+   attribute that says nothing. Both export with a null `doc`, the same
+   as a declaration carrying no attribute at all, so that no consumer
+   has to tell "documented with nothing" from "undocumented". *)
+(*| *)
+let says_nothing (x:int) : int = x
+
+(*|
+
+    *)
+let says_nothing_at_length (x:int) : int = x
+
 (*| A tiny type. As for a hand-written attribute, this documents
     `flag` and neither `On` nor `Off`. *)
 type flag =

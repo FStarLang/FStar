@@ -273,8 +273,15 @@ Guidelines for the changelog:
     before being recorded, so the payload must be a *literal* list of
     *literal* strings: `[@@doc [a ^ b]]` and `[@@doc some_list]` are
     well-typed but record unevaluated terms, which `--export_docs` reports
-    with warning 278, exporting the declaration as undocumented. `[@@doc []]` is documentation that says
-    nothing, and is reported as such rather than treated as absent.
+    with warning 278, exporting the declaration as undocumented.
+
+    A `doc` attribute with no non-blank line -- `[@@doc []]`,
+    `[@@doc [""]]`, or an empty `(*| *)` comment -- is reported as
+    undocumented. Documentation that says nothing and no documentation at
+    all are the same fact about a declaration, so both answer `null`, in
+    the JSON and in `lookup` alike, and no consumer has to tell them
+    apart to avoid presenting an empty string as the author's text. Blank
+    lines *inside* a doc are preserved: those separate paragraphs.
 
 ## Pulse
 

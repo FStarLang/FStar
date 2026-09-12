@@ -40,9 +40,9 @@ type doc_status =
   (** No [doc] attribute on this declaration. *)
   | Doc_absent
   (** A [doc] attribute whose payload is a literal list of string
-      literals, given here one line per element. The list may be empty:
-      that is documentation which says nothing, and is still distinct
-      from [Doc_absent]. *)
+      literals, given here one line per element. At least one of those
+      lines has non-blank text; see [doc_of_attrs] for why a payload
+      with none answers [Doc_absent] instead. *)
   | Doc_text of list string
   (** A [doc] attribute whose payload is *not* a literal list of string
       literals, e.g. [doc [a ^ b]], [doc (l1 @ l2)] or
@@ -58,7 +58,18 @@ type doc_status =
     That tie-break is what makes an interface authoritative. When a
     module has one, the attributes of the interface's declaration and of
     the implementation's are concatenated, interface first, so a
-    declaration documented in both reports the interface's text. *)
+    declaration documented in both reports the interface's text.
+
+    A payload with no non-blank line -- [doc []], [doc [""]] -- answers
+    [Doc_absent]. Documentation that says nothing and no documentation
+    at all are the same fact about a declaration, so they get one
+    representation: otherwise every consumer needs the same defensive
+    check to avoid presenting an empty string as text the author wrote.
+    Blank lines inside a doc are kept, since they separate paragraphs.
+
+    This interacts with the tie-break above: a blank [doc] on an
+    interface declaration no longer shadows the implementation's text,
+    it falls through to it. *)
 val doc_of_attrs (attrs : list S.attribute) : ML doc_status
 
 (** Read the [doc] attribute of a top-level declaration.

@@ -65,12 +65,27 @@ let rec doc_lines (e : S.term) : ML (option (list string)) =
   )
   | _ -> None
 
+(* Documentation that says nothing and no documentation at all are the
+   same fact about a declaration: no author writes a doc attribute
+   meaning "the text here is empty". A consumer forced to tell the two
+   apart gets it wrong in a way that matters -- the IDE answering
+   [Some ""] to a lookup, and a generator rendering an empty
+   documentation block, are the same mistake -- and worse, an agent
+   handed an empty string reads the slot as filled and describes the
+   declaration in the author's voice. So a blank payload is normalized
+   here, once, rather than defended against in each consumer.
+
+   Blank lines *within* a doc are untouched: those separate paragraphs,
+   and only arise where there is text to separate. *)
+let is_blank (lines : list string) : ML bool =
+  lines |> for_all (fun l -> BU.trim_string l = "")
+
 let doc_of_attrs (attrs : list S.attribute) : ML doc_status =
   match U.get_attribute PC.doc_attr attrs with
   | None -> Doc_absent
   | Some [(payload, _)] -> (
     match doc_lines payload with
-    | Some lines -> Doc_text lines
+    | Some lines -> if is_blank lines then Doc_absent else Doc_text lines
     | None -> Doc_unsupported (show payload)
   )
   | Some args ->
