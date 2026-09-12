@@ -380,6 +380,41 @@ let rec rename_var (v w : string) (x:expr) : ML expr =
     | ECoerce (a, c) -> ECoerce (g a, c) in
   { x with e = e' }
 
+(* Two tables about a type's constructors, filled by [run] and read by the
+   rewrites below.  Both are empty until then, which makes a rewrite that
+   consults one a no-op rather than a wrong answer.
+
+   [one_ctor]: a constructor or type name -> its fields in declaration order,
+   for the single-constructor types only.  Section 104 needs the names
+   because the term does not carry them yet.
+
+   [ctor_family]: a constructor name -> every constructor of its type, in
+   declaration order.  Section 105 needs it to ask whether a set of branches
+   covers a type, which is the multiple-constructor form of the single
+   constructor that carried section 102's argument. *)
+let one_ctor : SMap.t (list string) = SMap.create 100
+let ctor_family : SMap.t (list string) = SMap.create 100
+
+let record_ctor_tables (prog:program) : ML unit =
+  prog |> List.iter (fun d ->
+    match d with
+    | DType t ->
+      let put (n:name) (fs : list (string & cty)) : ML unit =
+        SMap.add one_ctor (string_of_name n) (fs |> List.map fst) in
+      (match t.dt_body with
+       | TRecord fs -> put t.dt_name fs
+       | TVariant cs ->
+         let all = cs |> List.map (fun (cn, _) -> string_of_name cn) in
+         cs |> List.iter (fun (cn, _) -> SMap.add ctor_family (string_of_name cn) all);
+         (match cs with
+          | [(cn, fs)] -> put t.dt_name fs; put cn fs
+          | _ -> ())
+       | _ -> ())
+    | _ -> ())
+
+let fields_of (n:name) : ML (option (list string)) =
+  SMap.try_find one_ctor (string_of_name n)
+
 (* Section 102.  [match s with C(x1,...,xn) -> C(x1,...,xn)] is [s]: the
    constructor's eta law, for the one shape where the IR states it and then
    does not use it.  Pulse has no multiple return, so a two-result [fn]
@@ -406,13 +441,22 @@ let same_vars (ps : list pat) (es : list expr) : ML bool =
     | PVar a, EVar b -> a = b
     | _ -> false)
 
-let rebuild_id (s:expr) (brs:list branch) : ML (option expr) =
-  match brs with
-  | [(p, None, body)] ->
+(* Does this branch hand the scrutinee back unchanged?  Either by rebuilding
+   the constructor it just took apart, or -- section 105 -- by being the
+   catch-all that names the scrutinee outright, which is how the identity is
+   spelled for the constructors the earlier branches did not mention.  The
+   answer is [None] for "not an identity" and [Some c] for "an identity, and
+   it accounted for constructor [c]"; the catch-all accounts for all of them
+   and so answers [Some ""]. *)
+let id_branch (s:expr) (br:branch) : ML (option string) =
+  let scrut_var (w:string) : ML bool =
+    match s.e with EVar v -> v = w | _ -> false in
+  match br with
+  | (p, None, body) ->
     (match p, body.e with
      | PCtor (cn, ps), ECtor (dn, es)
        when string_of_name cn = string_of_name dn && same_vars ps es ->
-       Some s
+       Some (string_of_name cn)
      (* The same law for a record, which is what a named two-result type is
         written as and reaches the IR as. *)
      | PRecord (tn, fps), ERecord (rn, fes)
@@ -420,9 +464,45 @@ let rebuild_id (s:expr) (brs:list branch) : ML (option expr) =
          && List.length fps = List.length fes
          && List.zip fps fes |> List.for_all (fun ((f, _), (g, _)) -> f = g)
          && same_vars (fps |> List.map snd) (fes |> List.map snd) ->
-       Some s
+       Some (string_of_name tn)
+     (* [| _ -> c], and [| x -> x], which are the same branch written two
+        ways.  The first needs the scrutinee to be a variable, because that
+        is the only way the body can name it; the second does not, the
+        pattern having bound it. *)
+     | PWild, EVar w when scrut_var w -> Some ""
+     | PVar u, EVar w when u = w || scrut_var w -> Some ""
      | _ -> None)
   | _ -> None
+
+(* Section 105.  Do these branches, between them, account for every
+   constructor of the type?  A catch-all does on its own.  Otherwise the
+   named ones have to cover the family -- which is the general form of
+   section 102's argument, where a lone constructor pattern was exhaustive
+   because the type had no other constructor to be. *)
+let covers_type (cs : list string) : ML bool =
+  List.existsb (fun c -> c = "") cs ||
+  (match cs with
+   | [] -> false
+   | c0 :: _ ->
+     (match SMap.try_find ctor_family c0 with
+      | Some all -> all |> List.for_all (fun c -> List.existsb (fun d -> d = c) cs)
+      (* Not a variant, so section 102's case: one constructor, and a single
+         branch naming it is exhaustive.  Kept as its own answer rather than
+         folded into the table, so a type the table happens not to hold is
+         still rewritten exactly as it was before section 105. *)
+      | None -> List.length cs = 1))
+
+let rebuild_id (s:expr) (brs:list branch) : ML (option expr) =
+  let rec go (bs : list branch) (acc : list string) : ML (option (list string)) =
+    match bs with
+    | [] -> Some acc
+    | b :: rest ->
+      (match id_branch s b with
+       | Some c -> go rest (c :: acc)
+       | None -> None) in
+  match go brs [] with
+  | Some cs -> if covers_type cs then Some s else None
+  | None -> None
 
 (* Section 104.  The same law in its *projection* form: a value taken apart
    field by field and put straight back together is the value.
@@ -454,26 +534,6 @@ let rebuild_id (s:expr) (brs:list branch) : ML (option expr) =
    fieldless constructor is excluded for the same reason it has to be --
    there is nothing left to read [s] from, so no evidence the value was ever
    there. *)
-
-(* Constructor or type name -> its fields, in declaration order, for the
-   single-constructor types only.  Filled by [run]; empty until then, which
-   makes the rewrite below a no-op rather than a wrong answer. *)
-let one_ctor : SMap.t (list string) = SMap.create 100
-
-let record_one_ctors (prog:program) : ML unit =
-  prog |> List.iter (fun d ->
-    match d with
-    | DType t ->
-      let put (n:name) (fs : list (string & cty)) : ML unit =
-        SMap.add one_ctor (string_of_name n) (fs |> List.map fst) in
-      (match t.dt_body with
-       | TRecord fs -> put t.dt_name fs
-       | TVariant [(cn, fs)] -> put t.dt_name fs; put cn fs
-       | _ -> ())
-    | _ -> ())
-
-let fields_of (n:name) : ML (option (list string)) =
-  SMap.try_find one_ctor (string_of_name n)
 
 (* [es] are the components of a value of the type [n] names, in field order
    [fs].  Are they that value's own fields, read back out of one variable? *)
@@ -1434,13 +1494,58 @@ let decl_deps (d:decl) : ML (list string) =
    not depend on hash order, with [visiting] breaking cycles exactly where the
    old sweep did --- the first member of a cycle inlines nothing of the rest,
    and they stay. *)
+(* Section 105.1.  A function whose body is one of its own parameters is
+   worth inlining whether or not anyone asked, and it is the only shape of
+   which that can be said unconditionally.  Inlining ordinarily trades size
+   for speed and the flag is where the programmer settles that trade; here
+   there is nothing to trade, because the body is a single use of a single
+   variable, so the argument is substituted for it and no work is duplicated
+   and none is moved.  The call goes and nothing takes its place.
+
+   *One* binder, and not merely a body that is one of several.  [fun a b ->
+   a] is safe to inline for the same reason and is not the same claim: it
+   also **deletes** the argument in [b]'s position, which is a question about
+   whether evaluating that argument is observable and is answered elsewhere
+   (section 99).  With one binder the call site is replaced by its own
+   argument and there is nothing left to decide, which is what makes this the
+   one shape that needs no flag.  It is also the shape section 104 leaves:
+   [{c with f = e}] has one non-ghost parameter once [f] is ghost.
+
+   It is section 104 that makes this worth having.  That rewrite turns a
+   record update whose field was ghost into the identity, but the five it
+   found in EverParse are plain [let]s and so stay functions, and their
+   caller -- a seven-branch dispatcher rebuilding each constructor around a
+   *call* -- cannot be recognized as the identity while the calls are there.
+   One rewrite produced the shape the other needs.
+
+   The declaration itself is left alone; [dce] removes it if the last call
+   site was the only thing keeping it.  An exported one therefore keeps its
+   definition and loses only its internal call sites, which is right: what
+   is outside the program has nothing to inline into.
+
+   A definition that returns a *function* is excluded, and the reason is
+   [EtaVar].  [consume i u = i u] applies a parameter, so [eta_reduce]
+   shortens it to [consume i = i], which has this shape and is not this
+   thing: it is a definition in the middle of section 25's eta pair, whose
+   arity [eta_expand_decl] is about to restore.  Inlining it would settle
+   that question by removing the definition, and the test exists because
+   getting the arity wrong there was Error 368.  So the test is on the
+   return type, which says the same thing without depending on when it is
+   asked -- an identity on a function type is excluded too, which costs
+   nothing and needs no argument about pass order. *)
+let is_identity (dl:dlet) : ML bool =
+  arrow_arity dl.dl_ret = 0 &&
+  (match dl.dl_binders, dl.dl_body.e with
+   | [b], EVar v -> b.b_name = v
+   | _ -> false)
+
 let inline_decls (prog:program) : ML program =
   let tbl : SMap.t (list binder & expr) = SMap.create 50 in
   let used : SMap.t bool = SMap.create 50 in
   let inl : SMap.t dlet = SMap.create 50 in
   prog |> List.iter (fun d ->
     match d with
-    | DLet dl when dl.dl_flags |> List.existsb Inline? ->
+    | DLet dl when dl.dl_flags |> List.existsb Inline? || is_identity dl ->
       SMap.add inl (string_of_name dl.dl_name) dl
     | _ -> ());
   let visiting : SMap.t bool = SMap.create 50 in
@@ -1458,7 +1563,7 @@ let inline_decls (prog:program) : ML program =
     end in
   prog |> List.iter (fun d ->
     match d with
-    | DLet dl when dl.dl_flags |> List.existsb Inline? ->
+    | DLet dl when dl.dl_flags |> List.existsb Inline? || is_identity dl ->
       fill (string_of_name dl.dl_name)
     | _ -> ());
   let prog = prog |> List.map (fun d ->
@@ -3585,7 +3690,7 @@ let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
     Prof.timed ("s." ^ n) (fun () -> f p) in
   imported_types := imports;
   (* Section 104.  Before everything, because [simpl] reads it. *)
-  record_one_ctors (with_imports prog);
+  record_ctor_tables (with_imports prog);
   (* First, because every pass below reads a constructor's arity. *)
   let prog = pass "eta_ctors" (eta_ctors vd) prog in
   let prog = pass "eta_reduce" eta_reduce_decls prog in
@@ -3607,10 +3712,30 @@ let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
      constructor holding the field, which is exactly what [records] removes. *)
   let prog = pass "inline_fields" (inline_fields vd) prog in
   let prog = pass "unbuild" unbuild_decls prog in
-  let prog = pass "simpl" (fun prog -> prog |> List.map (fun d ->
+  let simpl_all (prog:program) : ML program = prog |> List.map (fun d ->
     match d with
     | DLet dl -> DLet { dl with dl_body = simpl dl.dl_body }
-    | d -> d)) prog in
+    | d -> d) in
+  let prog = pass "simpl" simpl_all prog in
+  (* Section 105.1.  An identity function is only recognizable once [simpl]
+     has run, because section 104 is what makes one out of a record update
+     whose field was ghost -- so the pass that would have inlined it has
+     already gone by.  Rather than move [inline], which every other rewrite
+     between here and there is positioned against, run it again: it is the
+     same pass over a program in which more declarations qualify.
+
+     Then [simpl] again, because the point of removing those calls is the
+     match sitting above them, which becomes the identity only once its
+     branches rebuild from their own pattern variables.  Both are skipped
+     outright when nothing qualifies, which is the ordinary case -- an
+     identity function is not something anyone writes on purpose. *)
+  let prog =
+    if prog |> List.existsb (fun d -> match d with
+                                      | DLet dl -> is_identity dl
+                                      | _ -> false)
+    then let prog = pass "inline_ids" inline_decls prog in
+         pass "simpl_ids" simpl_all prog
+    else prog in
   (* After every pass that can leave a definition eta-short, and before [dce],
      which reads the final call graph. *)
   let prog = pass "eta_expand" eta_expand_decls prog in

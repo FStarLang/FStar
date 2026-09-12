@@ -19169,6 +19169,122 @@ field it writes is not ghost and so one component is not a projection.  The
 two that must not fire are the point of the test: getting either wrong would
 be silent.
 
+## 105 A dispatcher over five identities
+
+§104 verified on the whole of EverParse: all five collapse, and the two
+guards hold --- the permutation and the partial update are both untouched,
+and the C suites still round-trip against pycose in both directions, which
+is the check that would catch a `swap` turned into an identity, a
+permutation of two same-typed fields being invisible to every static test
+there is.
+
+The prediction that the dispatcher would thin out with them was wrong, and
+the reporter measured rather than asserting.  `cbor_raw_reset_perm_tot` is
+seven branches each rebuilding its own constructor, plus `| _ -> c`, and at
+`-O3` clang keeps the whole thing --- a seven-way jump table, because it
+will not reason that storing `.tag = X` and `.val.X = c.val.X` when
+`c.tag == X` reproduces `c`.  Replacing that one body with `return c;` by
+hand takes 1828 bytes off the unit's `.text`, 1.25% of the whole translation
+unit from one eight-line function, and more than the function itself because
+it inlines into its callers.
+
+That is a different kind of finding from the two laws it follows from.
+§102's tuple chains moved the same unit by 32 bytes.
+
+Two things stood between the dispatcher and collapsing, and only the second
+was about the law.
+
+### 105.1 A function whose body is a parameter
+
+Each branch rebuilds from a **call** --- `CBOR_Case_String
+(cbor_string_reset_perm v)` --- and not from its pattern variable.  §104
+made those calls the identity but they are still calls: the five are plain
+`let`s, so nothing inlines them.
+
+A function whose body is one of its own parameters is worth inlining whether
+or not anyone asked for it, and it is the only shape of which that can be
+said unconditionally.  Inlining ordinarily trades size for speed, and
+`inline_for_extraction` is where the programmer settles that trade; here
+there is nothing to trade.  The body is a single use of a single variable,
+so the argument is substituted for it: no work is duplicated, none is moved,
+the call goes and nothing takes its place.
+
+*One* binder, and not merely a body that happens to be one of several.
+`fun a b -> a` is safe to inline for the same reason and is not the same
+claim --- it also **deletes** the argument in `b`'s position, which is a
+question about whether evaluating that argument is observable, and §99 is
+where that is answered.  With one binder the call site is replaced by its
+own argument and nothing is left to decide.  It is also exactly the shape
+§104 leaves, `{c with f = e}` having one non-ghost parameter once `f` is
+ghost.
+
+One exclusion, and it is `EtaVar` (§30.16) that asks for it.  `consume i u =
+i u` applies a parameter, so `eta_reduce` shortens it to `consume i = i`,
+which has this shape and is not this thing: it is a definition in the middle
+of §25's eta pair, whose arity `eta_expand_decl` is about to restore.
+Inlining it would settle that question by deleting the definition, and
+getting the arity wrong there was Error 368.  So the test is on the **return
+type** --- a definition that returns a function is not an identity in the
+sense that matters --- which says the same thing without depending on when
+it is asked.
+
+The declaration itself is left alone and `dce` removes it if the last call
+site was the only thing keeping it, so an *exported* identity function keeps
+its definition and loses only its internal calls.  That is right: what is
+outside the program has nothing to inline into.
+
+### 105.2 The law with more than one branch
+
+With the calls gone, each branch rebuilds its own constructor from its own
+pattern variables, and the residue is §102's shape with the single-branch
+restriction removed:
+
+> `match c with C₁ x̄₁ -> C₁ x̄₁ | … | Cₙ x̄ₙ -> Cₙ x̄ₙ`
+> is `c`.
+
+§102's side conditions survive one for one.  Each branch must rebuild *its
+own* constructor with its own pattern variables in their own positions,
+which is `RecUpd`'s `swap` one level up and the reason the check reads
+constructor names rather than counting branches.  No guards.  And the match
+must be **exhaustive**, which is the interesting one: that is precisely what
+§102 was buying with "a single constructor pattern is exhaustive only if the
+type has no other constructor".  The single-branch law is the *n* = 1 case,
+and the generalization is to ask a table instead of relying on the
+arithmetic of one.
+
+A catch-all answers it on its own, and `| _ -> c` is a branch that is
+literally the identity, so the reporter's dispatcher is a match in which
+every branch is the identity written two different ways.  Otherwise the
+named constructors have to cover the family.  A type the table does not hold
+falls back to §102's rule exactly --- one branch, accepted --- so nothing
+that was rewritten before is refused now.
+
+### 105.3 Where the passes sit
+
+An identity function is only recognizable once `simpl` has run, because §104
+is what makes one out of a record update; by then `inline` has long gone by.
+Rather than move `inline`, against which every rewrite between the two is
+positioned, `run` goes round once more: `inline` again over a program in
+which more declarations qualify, then `simpl` again, because the point of
+removing those calls is the match above them.  Both are skipped outright
+when no declaration qualifies, which is the ordinary case --- an identity
+function is not something anyone writes on purpose.
+
+`tests/custard/RecDisp.fst` is the dispatcher at three constructors, in both
+exhaustive forms: `reset` with a catch-all and `reset_all` covering the
+family.  Both become `return c;`.  `swap2` is the permutation that shares
+their shape, and `bump_int` has one branch that is not a rebuild; neither
+may collapse, and both would fail silently.
+
+Three existing tests pinned a function that is now inlined away, which is
+§105.1 working and worth recording, since between them they say what the
+rule reaches.  `KindStar`'s `get` and `StoredType`'s `dlen` read the field
+of a one-field record, and §8 collapsing that record to its field is what
+makes each of them the identity; in both, a caller that is not an identity
+now carries the same assertion.  `RecUpd`'s two are §104's own output, so
+they are named as entries instead --- an entry is the one declaration whose
+body survives having no call sites left.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -19497,3 +19613,4 @@ be silent.
 | M10ιΒ | `--custard_c_no_prefix` and an `assume val` (§102.3) | Done.  The reporter's standing item: `Abort.abort` comes out as `Abort_abort`, and the attribute that would fix it exists only on this branch, so writing it stops `Abort.fst` typechecking with a released F\* --- which broke EverParse's CI until it was backed out.  He asked for a command-line counterpart or for the option to cover `assume val`s.  The second, because it is less an extension of the option than a correction to it: an external's name is the symbol the linker goes looking for, so it is this unit's interface in the only sense the option cares about --- *more* so than a definition's, since nothing here defines it and the whole file is a demand on the outside.  `build_renames` already renamed types whether or not they had linkage, on exactly that reasoning, so an external was the case that was missed rather than the case that was decided against.  `[@@custard_extern "…"]` wins where written: that is the target's own spelling, taken verbatim, and an option about *prefixes* has nothing to say about a name that was never prefixed.  One ordering bug fell out --- `build_renames` ran after the declaration tables were filled, and the external table stores a **resolved** C name, since an external is the one declaration whose name may come from somewhere other than its lid and resolving it once is what keeps the prototype and the call sites agreeing.  Filling it first left it holding the name the option had just replaced; `build_renames` reads no table, so it moved up.  `NoPrefixX` pins both halves with the realization in a separate translation unit, so the link is the assertion |
 | M10ιΓ | A wrapper that supplied every argument (§103.1) | Done.  A Pulse `fn` calling another with all three of its arguments was rejected as a partial application of two.  §25 is an eta-reduction followed by an eta-expansion: `eta_reduce` shortens `wrapper b c = callee A b c` to `wrapper b = callee A b`, which is what lets a chain of forwarders resolve, and `eta_expand_decl` puts the argument back once it knows every caller can supply it.  The expansion is guarded by `cheap_expr`, because expanding re-evaluates the body at every call, and `cheap_expr` had no case for a **constructor application** --- so `callee A b` fell to its default and the expansion was refused.  The reporter had already isolated it to the one variable that matters: his `forward` control passes the constructor through as a parameter, is all variables, and always worked.  Building a value is the same class of work as the `EOp` beside it: bounded by its operands and no more expensive to repeat than they are --- a compound literal in C, nothing at all for the nullary case this was found on, an immediate in OCaml.  The comparison that settles it is not against zero but against **what the refusal leaves standing**, an under-applied call that allocates a closure over the very arguments in question; re-evaluating `A` at each call is cheaper than allocating a closure at each call, so the guard was refusing the cheaper of the two programs.  `ECtor`, `ETuple` and `ERecord` are now cheap when their operands are, and `EDiscrim` joins the `EProj` above it, reading a tag being reading a field.  Still excluded on purpose are `ELet`, `EMatch`, `EIf` and the other statement forms: §25.3 asks whether a body may be re-evaluated at every call, and those are where a body has a cost that is not read off its operands.  The test is the reporter's module with his control kept as the control, plus a record built at the call site --- a nullary constructor is free everywhere and so the easy case to argue, and the rule has to be right about the shape that really does build something.  In-tree Pulse suite unchanged at 31 s |
 | M10ιΔ | A record rebuilt out of its own fields (§104) | Done.  §102 held up on the whole of EverParse --- the real `split` call sites are identical in number across the change, 255 before and after, which is the check that matters, and `validate_header` goes from five declarations to the two splits it performs.  Five functions survive, all the identity written out field by field, and the reporter had reserved exactly the right peephole for them and expected to need it somewhere else.  The source is a **record update**.  `{c with f = e}` is not partial in the elaborated term --- it is a full construction in which every other field is a projection of `c`, which is what "with" means once the surface syntax is gone --- and here the one field that is not a projection is ghost, so §5.3 deletes it and a partial update has become a total one.  That is why §102 could not see it: that law is stated over a `match` because a destructuring `let` is a match, and here there is no pattern anywhere and never was, the programmer having written no destructure.  So it is not a second law.  A value taken apart field by field and put straight back together is the value, and whether the taking apart is spelled as a pattern or as a projection is a fact about the syntax that produced the term rather than about the term.  What the pattern carries there, the field names carry here: each component must be the projection of the field it is stored under, which is what makes this an identity and not a permutation --- `{p_a = c.p_b; p_b = c.p_a}` has the same shape and is a swap --- and every projection must name the thing being built.  Soundness is §102's argument in §102's place, and the field table carries it: only a single-constructor type is entered, so a variant is not rejected by the rewrite but invisible to it.  The scrutinee must be a variable, since the rewrite turns *n* reads into one, and a fieldless constructor is excluded because with no fields there is nothing left to read the value out of.  It fires on `ECtor` rather than `ERecord`, the `records` pass running after `simpl`, which is why the names must come from the declaration; the tuple form falls out of the same code and is reached by the *other* road, `depat` having turned the pattern into projections before either law is asked --- the two forms are one law arrived at from opposite directions.  `RecUpd` pins the two that fire and, more to the point, the two that must not |
+| M10ιΕ | A dispatcher over five identities (§105) | Done.  §104 held on EverParse --- all five collapse, both guards hold, and the pycose round-trip is what would have caught a `swap` turned into an identity, a permutation of two same-typed fields being invisible to every static check there is.  The dispatcher over them did *not* thin out, and the reporter measured rather than assuming: `cbor_raw_reset_perm_tot` is seven branches each rebuilding its own constructor plus `| _ -> c`, and at `-O3` clang keeps the whole thing as a seven-way jump table, because it will not reason that storing `.tag = X` and `.val.X = c.val.X` when `c.tag == X` reproduces `c`.  Hand-collapsing that one body takes **1828 bytes** off the unit's `.text`, 1.25% of the translation unit from one eight-line function, and more than the function because it inlines into its callers --- against 32 bytes for the whole of §102.  Two things stood in the way.  Each branch rebuilds from a **call**, §104 having made those calls the identity but left them calls.  A function whose body is one of its own parameters is worth inlining whether or not anyone asked, and is the only shape of which that can be said unconditionally: inlining trades size for speed and the flag is where a programmer settles that trade, but here there is nothing to trade, the body being a single use of a single variable, so the argument is substituted for it and the call goes.  *One* binder, though, and not a body that is merely one of several --- `fun a b -> a` is safe for the same reason and is not the same claim, since it also **deletes** the argument in `b`'s position, which is §99's question and not this one.  One exclusion, which `EtaVar` asked for: `consume i u = i u` is eta-*reduced* to `consume i = i`, which has this shape and is a definition in the middle of §25's eta pair whose arity `eta_expand_decl` is about to restore, so the test is on the return type and a definition returning a function is not an identity in the sense that matters.  Then §102 with its single-branch restriction lifted, every side condition surviving one for one: each branch rebuilds *its own* constructor with its own variables in their own positions --- `RecUpd`'s `swap` one level up --- no guards, and the match exhaustive, which is exactly what the single-constructor condition was buying, the old law being the *n* = 1 case.  A catch-all answers exhaustiveness alone, and `| _ -> c` is already literally the identity, so the dispatcher is a match in which every branch is the identity written two ways.  Ordering: an identity function is recognizable only after `simpl`, since §104 is what makes one, so `run` goes round once more rather than move `inline` --- skipped outright when nothing qualifies.  `RecDisp` pins both exhaustive forms and both guards; `KindStar`, `StoredType` and `RecUpd` each pinned a function the rule now removes, and between them they say what it reaches |

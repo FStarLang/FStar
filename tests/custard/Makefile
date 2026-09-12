@@ -361,7 +361,7 @@ CNOGREP_KindAbbrev = "void *"
 # the entire suite passing.  It needs a *type* parameterized by a kind
 # abbreviation, since a function's binders are decided by is_arity first.
 C_TESTS += KindStar
-CGREP_KindStar = "KindStar_get__t(uint32_t b)"
+CGREP_KindStar = "KindStar_sum(uint32_t b)"
 CNOGREP_KindStar = "void *"
 
 # Section 61.1.  Both directions: the shift keeps its cast, and the
@@ -675,7 +675,12 @@ CNOGREP_ExternOpt += "ExternOpt_listener"
 # collapse to the identity.  [swap] is the permutation that shares their shape
 # and must *not* collapse, and [bump] is the partial update that stays partial
 # because the field it writes survives erasure.
+# [reset_perm] and [tagged_reset] are named as entries so that section 105.1,
+# which inlines an identity function away, leaves their definitions standing
+# -- what section 104 made of them is the thing under test, and an entry is
+# the one declaration whose body has to survive having no call sites left.
 C_TESTS += RecUpd
+FLAGS_RecUpd += --custard_entry RecUpd.reset_perm --custard_entry RecUpd.tagged_reset
 CGREP_RecUpd += "return c;"
 CGREP_RecUpd += ".p_a = c.p_b"
 CGREP_RecUpd += ".p_b = (c.p_b + 1)"
@@ -684,6 +689,21 @@ CNOGREP_RecUpd += ".t_tag = c.t_tag"
 # [retuple] is the tuple form, reached by the other road: [depat] turns the
 # pattern into projections before [simpl] ever sees it.
 CNOGREP_RecUpd += "._1 = c._1"
+
+# Section 105.  The dispatcher over section 104's identity functions.
+# [reset] is the catch-all form and [reset_all] the exhaustive-by-coverage
+# one; both are the identity.  [swap2] is the same shape one level up and is
+# a permutation, and [bump_int] has one branch that is not a rebuild --
+# neither may collapse, and both would fail silently.
+C_TESTS += RecDisp
+CPAIR_RecDisp += "RecDisp_reset(RecDisp_raw c) {@  return c;"
+CPAIR_RecDisp += "RecDisp_reset_all(RecDisp_raw c) {@  return c;"
+# Section 105.1 removed the calls, and [dce] then removed the functions.
+CNOGREP_RecDisp += "RecDisp_str_reset"
+CNOGREP_RecDisp += "RecDisp_arr_reset"
+# The two that must survive, and would fail silently if they did not.
+CGREP_RecDisp += ".tag = RECDISP_R, .val = { .RecDisp_R = { ._0 = c.val.RecDisp_L._0 } }"
+CGREP_RecDisp += ".RecDisp_Int = { ._0 = (c.val.RecDisp_Int._0 + 1) }"
 
 # Section 102.2.  --custard_c_no_prefix now covers assume vals: an external's
 # name is the symbol the linker resolves, which is this unit's interface in
@@ -719,7 +739,7 @@ EGREP_ExistAdvice += "no annotation changes that"
 
 C_TESTS += StoredType
 # The stored Type0 is erased and the record collapses to its one field.
-CGREP_StoredType += "static uint32_t StoredType_dlen(uint32_t d)"
+CGREP_StoredType += "static uint32_t StoredType_go(uint32_t d)"
 CNOGREP_StoredType += "StoredType_desc"
 
 # Section 33.1.  A definition whose body is a lambda is the same function as

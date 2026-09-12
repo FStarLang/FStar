@@ -35,6 +35,12 @@ noeq type box (a : k2) = { v : a }
 let mk (a : k2) (x : a) : box a = { v = x }
 let get (a : k2) (b : box a) : a = b.v
 
+(* [box] collapsing to its field makes [mk] and [get] both the identity, and
+   section 105.1 inlines those away, so the assertion is carried by a caller
+   that is not one.  What it pins is the same thing: a [box U32.t] in a
+   signature, printed as the [uint32_t] the collapse made of it. *)
+let sum (b : box U32.t) : U32.t = U32.add_mod (get U32.t b) 1ul
+
 let main () : ML I32.t =
   let b = mk U32.t 7ul in
-  if U32.eq (get U32.t b) 7ul then 0l else 1l
+  if U32.eq (sum b) 8ul then 0l else 1l
