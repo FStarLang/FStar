@@ -1,9 +1,9 @@
 /* krml header omitted for test repeatability */
 
 
-#include "ANF.h"
+#include "Custard.h"
 
-extern krml_checked_int_t Prims_op_Addition(krml_checked_int_t x, krml_checked_int_t y);
+#include "internal/Prims.h"
 
 void ANF_test(void)
 {

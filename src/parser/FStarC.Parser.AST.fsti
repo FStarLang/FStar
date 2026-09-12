@@ -324,6 +324,12 @@ val un_function : pattern -> term -> option (pattern & term)
 val consPat : range -> pattern -> pattern -> pattern'
 val consTerm : range -> term -> term -> term
 
+(* For the hand-written grammar, which cannot spell [CalcStep] out: it is a
+   one-argument constructor, so Custard's extraction collapses [calc_step] into
+   the tuple and the name does not survive.  Reaching it through a function
+   works under either extraction. *)
+val mkCalcStep : term -> term -> term -> calc_step
+
 val unit_const : range -> term
 val unit_type  : range -> ML term
 val ml_comp : term -> ML term

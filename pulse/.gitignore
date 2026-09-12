@@ -20,6 +20,7 @@ BUILDLOG
 out
 _output
 _cache
+_custard
 
 # For package building
 FStar

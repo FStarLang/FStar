@@ -1,0 +1,2432 @@
+FSTAR_ROOT ?= ../..
+
+# Each of these modules is extracted with --codegen Custard, starting from its
+# 'main' entry point, then compiled and run; the output is compared against
+# the corresponding .out.expected file.
+CUSTARD_TESTS += Hello
+CUSTARD_TESTS += Recursion
+CUSTARD_TESTS += Datatypes
+CUSTARD_TESTS += Typeclass
+CUSTARD_TESTS += Unroll
+CUSTARD_TESTS += Layouts
+CUSTARD_TESTS += Effects
+CUSTARD_TESTS += Curried
+CUSTARD_TESTS += Implicits
+CUSTARD_TESTS += MachineInts
+CUSTARD_TESTS += Externs
+CUSTARD_TESTS += Combinators
+CUSTARD_TESTS += Mutual
+CUSTARD_TESTS += Anf
+CUSTARD_TESTS += Phantom
+CUSTARD_TESTS += PolyVal
+CUSTARD_TESTS += TypeEntry
+CUSTARD_TESTS += ShortCircuit
+CUSTARD_TESTS += MonoTypes
+CUSTARD_TESTS += MonoState
+CUSTARD_TESTS += InlineFields
+CUSTARD_TESTS += KeyNames
+CUSTARD_TESTS += Refs
+CUSTARD_TESTS += Thunk
+CUSTARD_TESTS += Exceptions
+CUSTARD_TESTS += LocalRec
+CUSTARD_TESTS += RecEffect
+CUSTARD_TESTS += NewtypeInline
+CUSTARD_TESTS += SortBy
+CUSTARD_TESTS += LocalPoly
+CUSTARD_TESTS += MonoHoles
+CUSTARD_TESTS += DepParams
+CUSTARD_TESTS += MonoDyn
+CUSTARD_TESTS += MatchGuard
+CUSTARD_TESTS += Magic
+CUSTARD_TESTS += HigherKind
+CUSTARD_TESTS += Literals
+CUSTARD_TESTS += RetArity
+CUSTARD_TESTS += Realized
+CUSTARD_TESTS += Patlift
+CUSTARD_TESTS += EraseAbbrev
+GREP_EraseAbbrev = "let eraseAbbrev_add4 (n : Prims.int) (x : Prims.int) (y : Prims.int) : Prims.int"
+# The failure this guards against is [add4] keeping its abbreviated codomain
+# as an arrow instead of taking its binders: [let add4 (n : Prims.int) : ...].
+# Naming [add4] is what makes it specific -- a plain arrow is a perfectly
+# good type for a parameter, and [twice] takes one.
+NOGREP_EraseAbbrev = "let eraseAbbrev_add4 (n : Prims.int) :"
+# Section 31.  [@@normalize_for_extraction] must be honoured, and must be
+# honoured *exactly*: [eval]/[eval_list]/[prog] are in the whitelist and have
+# to vanish, and [step] is not and has to survive as a call.  Extracting the
+# interpreter as written would emit the [ast] datatype, so the NOGREPs are
+# what say the reduction happened at all.
+CUSTARD_TESTS += NormForExtraction
+GREP_NormForExtraction += "normForExtraction_step"
+NOGREP_NormForExtraction += "normForExtraction_eval"
+NOGREP_NormForExtraction += "normForExtraction_prog"
+NOGREP_NormForExtraction += "type normForExtraction_ast"
+CUSTARD_TESTS += Mymon
+CUSTARD_TESTS += Reify
+CUSTARD_TESTS += AssumedProj
+CUSTARD_TESTS += LetShare
+# Section 30.17.  The budget is set low enough that neither the full nor the
+# weak reduction of [b12] fits, so the argument is keyed as written.  Running
+# it is the point: the answer must be the one the exponential normal form
+# would have given.  The GREP is what says the sharing survived -- a chain of
+# 12 [ext] calls, not a term that doubles at every level.
+FLAGS_LetShare = --custard_norm_budget 100000
+GREP_LetShare = "(letShare_ext letShare_b11)"
+# Section 5.0: [let mymon = writer (list int)] is an abbreviation of kind
+# [Type -> Type] that binds *no* binders.  The IR has no partial application
+# of a type constructor, so the abbreviation is eta-expanded from the binders
+# of its own type; left as is, its use as a monad loses an argument.
+GREP_Mymon += "let rec mymon_iterM__writer_list_int (f : ('a -> ((Prims.int) list \* unit))) (l : ('a) list)"
+# Section 5.6: a local [let rec] is lambda-lifted, and its binders and its body
+# must come from *one* opening of the definiens -- [abs_formals] invents fresh
+# names every time, so opening twice gives the body variables that no binder
+# binds.  Here both binders are the same [uu___], so the two occurrences
+# collapsed into one and the second argument was silently dropped.
+GREP_Patlift += "match (tmp, tmp1) with"
+# Section 5.1: a negative literal is a *reduced* application, and the
+# normalizer hands the result back as an embedding rather than as a constant.
+# Left lazy it looks like a term with no runtime meaning and is erased to
+# [()], which typechecks nowhere and is silently wrong where it does.
+GREP_Literals += "(Prims.parse_int \"-1\")"
+# Section 5.0: [m : Type -> Type] is a type binder, so it is erased like any
+# other -- and so is a type argument in a spine whose head is a [match], which
+# is what a method call on a [dyn] dictionary compiles to.  Either one left
+# behind is an unbound variable in the emitted OCaml, which is what compiling
+# and running this test checks.  --warn_error -367 for the same reason as
+# Magic: a class over a type constructor has Obj.t fields.
+FLAGS_HigherKind    = --warn_error -367
+NOGREP_HigherKind  += ") a "
+# Section 5.4: a class over a type constructor used to be the one thing
+# neither the IR nor OCaml could name.  It no longer is: [m : Type -> Type] is
+# a type binder like any other, so a call whose instance is known specializes
+# on it, and this module comes out entirely at [option] with no coercion at
+# all.  That is what is pinned here -- see HigherKind for the case that does
+# still need [Obj.t], where the dictionary is only known at run time.
+GREP_Magic   += "(magic_twice__option (Some ((Prims.parse_int \"21\"))))"
+GREP_Magic   += "let magic_ret__option (tmp : 'a) : ('a) option ="
+# Section 8.5: a projector or discriminator that [@@no_auto_projectors] left
+# as a bare [val] must be *derived* from the type declaration, not treated as
+# an external.  Left external it prints as a qualified call to a realization
+# that does not exist.
+NOGREP_AssumedProj += "AssumedProj\.u___proj"
+GREP_AssumedProj += "here = (Prims.parse_int \"7\")"
+
+NOGREP_Magic += "Obj.magic"
+NOGREP_Magic += "Obj.t"
+# One shared specialization taking the dictionary at run time (the identity
+# skeleton), one fully specialized version for the static call site, and no
+# trace of the [dyn] marker itself.
+GREP_MonoDyn += "monoDyn_render__int_dyn_printable (tmp : (Prims.int -> string)) : (Prims.int -> string)"
+GREP_MonoDyn += "monoDyn_render__int (x : Prims.int) : string"
+# The marker itself must be gone; it survives only inside the *name* of the
+# specialization that asked for it, which is exactly what it means.
+NOGREP_MonoDyn += "Custard_dyn"
+
+# FLAGS_<name> are extra options for that test's extraction.
+FLAGS_MonoTypes = --custard_monomorphize_types true
+# Section 7.4: [Tac] is a reifiable effect, so it is compiled through its
+# representation type -- [tac_repr a wp = ref_proofstate -> Dv a] -- and not by
+# erasing the effect.  What is pinned is that the proofstate argument is there
+# and that the definition returning it is *pure*: applying a metaprogram to its
+# own arguments builds a closure and runs nothing.  [twice] is not reachable
+# from [main], so it is named as an entry point of its own.
+FLAGS_Reify = --custard_entry Reify.twice --custard_entry Reify.after_letrec
+# Section 33.1: the representation type's arrow is a *parameter*, not a
+# returned closure.  Reification produces [let reify_add x = fun ps -> ...],
+# and a definition whose body is a lambda is the same function as one that
+# names the lambda's binder itself -- so the proofstate is the second
+# parameter and no closure is built to hold it.
+GREP_Reify += "let reify_add (x : Prims.int) (tmp : fStarC_Tactics_Types_ref_proofstate) : Prims.int ="
+NOGREP_Reify += ": (fStarC_Tactics_Types_ref_proofstate -> Prims.int) ="
+# The bind is fully reduced: what is left is the proofstate threaded through
+# two calls in sequence, which is what the representation type means.
+GREP_Reify += "(let x1 = (reify_add x ps) in"
+GREP_Reify += "(reify_add x1 ps))"
+# Section 8.3: ulib's [FStar.Stubs.Tactics.Types] is a stub for the compiler's
+# own [FStarC.Tactics.Types], and the two have to be one name.
+NOGREP_Reify += "FStar_Stubs"
+# Section 7.5: the [let] after the local [let rec] has to be reified too; left
+# unreified it compiles as if [add] returned an integer -- and, since a call
+# that returns a value looks pure, is deleted outright.
+GREP_Reify += "(let x = (reify_add (reify_after_letrec__sum l) ps) in"
+# Section 12.3: --ugly is what made the old key printer collapse the two
+# 'tweak's into one key, so the test runs with it on.  A specialization key
+# must not depend on a printing option at all.
+FLAGS_KeyNames = --ugly
+
+# Section 5.0: with type monomorphization on, nothing polymorphic may survive
+# -- no type variable anywhere in the file -- and each instantiation must be
+# its own declaration, including the nested one and the two that are only
+# spelled differently ('pair_of_ints' is 'both int', and 'nat' is 'int').
+# The record recovery of section 5.5 also shows up here: 'both' arrives from
+# extraction as a one-constructor variant and has to come out as a record, with
+# its field reads as projections rather than as a match.
+GREP_MonoTypes   = "type monoTypes_both__int" "type monoTypes_both__bool" \
+                   "monoTypes_tree__int" "monoTypes_tree__string" \
+                   "type prims_list__int" "type prims_list__list_int" \
+                   "monoTypes_via_abbrev (p : monoTypes_both__int)" \
+                   "type monoTypes_both__int = {" "fst : Prims.int;" "snd : Prims.int;" \
+                   "{ fst = ((p : monoTypes_both__int)).snd;"
+NOGREP_MonoTypes = "'" "Mkboth" "match p with"
+# Section 5.0.1: a type of a realized module is frozen, so it is neither
+# cloned nor emitted, and prints in OCaml's own syntax.  A clone of it would
+# name a member the realization does not define -- which is what every one of
+# these used to be.
+NOGREP_MonoTypes += "fStar_Pervasives_Native"
+GREP_MonoTypes   += "(o : (Prims.int) option)"
+GREP_MonoTypes   += "(q : (prims_list__int \* Prims.int))"
+# Frozen affects the name only: the list inside the tuple is still cloned, and
+# the pattern under it still renamed against that clone.
+GREP_MonoTypes   += "| Prims_Nil__int ->"
+
+# Section 12.3: the two 'tweak's must get separate specializations, which they
+# only do if the key printer distinguishes them.  The run itself is the real
+# assertion (the output is "abAB", not "abab"); this checks the shape.
+GREP_KeyNames = "keyNames_apply__tweak" "keyNames_apply__tweak_1" \
+                "FStar_String.lowercase" "FStar_String.uppercase"
+
+# Section 8.4: a garbage-collected reference is an OCaml 'ref', not a
+# one-element array, and it is never freed.
+GREP_Refs   = "(Prims.int ref)" "(ref (Prims.parse_int \"0\"))" "(!(r))" "(r) := "
+NOGREP_Refs = "Array.make" "free"
+
+# Section 8.5: each exception constructor is its own declaration, raising is
+# a control-flow node rather than a call, and try_with becomes a real
+# 'try ... with' whose single branch hands the value to the handler.
+GREP_Exceptions   = "exception Exceptions_Empty" "exception Exceptions_Bad of" \
+                    "raise Exceptions_Empty" "(try " "with" "Exceptions_Empty ->"
+NOGREP_Exceptions = "FStar_All.try_with" "FStar_All.raise" "Prims.exn"
+
+# Local [let rec]s are lambda-lifted to top-level declarations (section 5.10).
+GREP_LocalRec     = "let rec localRec_rev1__aux" "let rec localRec_sum_upto__go" \
+                    "let rec localRec_parity__even" "and localRec_parity__odd" \
+                    "localRec_sum_upto__go n"
+NOGREP_LocalRec   = "let rec aux" "let rec go"
+
+# Section 7.3 only deletes a *pure* discarded subterm, so the effect of a call
+# into a recursion still being extracted has to be assumed impure: the callee
+# is not in [st.emitted] yet, and read pure the first of two recursive calls
+# in [walk l; walk r] is silently deleted.  Deleting it is not a compile error
+# anywhere -- it is a traversal that stops visiting half of its argument.
+GREP_RecEffect = "recEffect_walk l" "recEffect_walk_r l" "recEffect_walk_local__go l"
+
+# The collapsed newtype is the pair itself, and no [inline] marker escapes.
+GREP_NewtypeInline   = "(bool \* string)"
+NOGREP_NewtypeInline = "newtypeInline_step" "inline"
+
+# The dictionary built behind a local [let] is specialized away entirely, so
+# each of the two orderings gets its own copy of [sort] and no [ord] record is
+# ever built at run time.
+GREP_SortBy     = "sortBy_sort_by__int" "sortBy_sort_desc__int" "sortBy_cmp__int_1"
+NOGREP_SortBy   = "sortBy_Mkord" "type .*sortBy_ord"
+
+# The local polymorphic helper is substituted at its uses, so the specializing
+# function it calls gets one copy per type and no dictionary survives.
+GREP_LocalPoly     = "localPoly_try_unembed__int" "localPoly_try_unembed__bool" \
+                     "localPoly_un__int" "localPoly_un__bool"
+NOGREP_LocalPoly   = "localPoly_Mkemb" "localPoly_e_int" "localPoly_e_bool"
+# ... but a *monomorphic* local helper is left alone.  Inlining it would buy
+# nothing (it has no type argument to make concrete) and cost 2^n on the
+# nested, twice-used helpers in [nested].
+GREP_LocalPoly    += "let a = (fun y" "let b = (fun y" "let c = (fun y"
+
+# A dependent inductive parameter list ({| printable a |} after a:Type) has to
+# be opened before its sorts are looked at.
+GREP_DepParams     = "type .a depParams_labelled = {" "tag : string;" "value : .a;"
+NOGREP_DepParams   = "p_int"
+
+# Section 5.0: a higher-kinded Mono argument arrives as a *lambda*, so
+# substituting it leaves a beta-redex in type position -- [m a] becomes
+# [(fun a -> ctxt -> ML (a & ctxt)) a].  Read as [any] that made the whole of
+# a state monad's plumbing Obj.t; the compiler's own output had 528 Obj.magic
+# and has 80.  So the assertion is that the state type is written down, and
+# that nothing here is an Obj at all -- which --custard_warn_any, on by
+# default for these tests, independently checks.
+GREP_MonoState     = "(monoState_ctxt -> ('a \* monoState_ctxt))" \
+                     "let rec monoState_walk (l : (Prims.int) list) : (monoState_ctxt -> (unit \* monoState_ctxt))"
+NOGREP_MonoState   = "Obj"
+
+# Section 3.2c: a Mono argument that mentions a runtime value is specialized
+# on its *shape*, with the runtime parts passed as extra parameters.  The
+# dictionary's code is static (p_int's printer is called directly, and the
+# record never appears at runtime) and its data is not (the tag arrives as an
+# argument).  The closure case is the same mechanism and leaves no closure at
+# all.
+GREP_MonoHoles     = "monoHoles_render__int" "monoHoles_twice__op_Plus"
+NOGREP_MonoHoles   = "set_tag" "fun y"
+
+# Issue #4382: a tuple field lives in the constructor, not behind a pointer to
+# a pair; [@@@custard_inline_field] asks for the same on a named record.
+GREP_InlineFields   = "InlineFields_Bar of bool \* string" \
+                      "InlineFields_W of bool \* string" \
+                      "InlineFields_W (pa, pb)) -> (if pa then pb else " \
+                      "type inlineFields_keep = {" "p : inlineFields_pair;"
+NOGREP_InlineFields = "tuple2" "Mktuple2" "let p = {"
+
+# GREP_<name>/NOGREP_<name> additionally assert on the generated .ml.  For
+# Combinators (section 3.9) the *shape* of the output is the point: one
+# function per (combinator, method) pair, and no record built at runtime, so
+# neither the bundle type nor its projectors survive.
+GREP_Combinators   = combinators_parse__t combinators_parse__tuple2 \
+                     combinators_serialize__t combinators_serialize__tuple2
+NOGREP_Combinators = parser_combinator __proj__
+
+# The connectives must come out infix, so that the emitted file says what it
+# means; 'logand' is the bitwise one and must stay a call.  F* has already
+# turned the effectful ones into an 'if', so no EOp survives for those.
+GREP_ShortCircuit   = ") && (" ") || (" "FStar_UInt32.logand"
+NOGREP_ShortCircuit = "(&&)" "(||)"
+
+# The SCC pass must group each cycle and must *not* mark anything else 'rec'.
+GREP_Mutual   = "and mutual_tree" "and mutual_size_t" "and mutual_a"
+NOGREP_Mutual = "let rec mutual_main"
+
+# Pass 1 must fix the order of the two impure siblings in 'sum', which F*
+# leaves nested because it classifies them as Tot (section 7.2).  Left nested,
+# OCaml would evaluate them right to left and print "ba".
+GREP_Anf = "let tmp1 = (anf_tick \"a\"" "let tmp2 = (anf_tick \"b\""
+
+# Rule 1 deletes a unit-shaped proof binder from the signature and from every
+# call site -- except where the type cannot distinguish it from a thunk.
+GREP_Implicits   = "implicits_clamp (x : Prims.int) : Prims.int" \
+                   "implicits_clampi (x : Prims.int) : Prims.int" \
+                   "implicits_only_proof (tmp : unit)" \
+                   "implicits_thunk (x : Prims.int) (tmp : unit)"
+NOGREP_Implicits = "implicits_clamp (Prims.parse_int \"3\") ()"
+
+# A phantom type parameter is carried rather than eliminated: a type's layout
+# is a function of the type, and dropping a parameter is a function of the
+# whole program.  The parameter is free in OCaml and gone by the time the C
+# backend sees anything, since monomorphization has run.  What this checks is
+# that it survives *uniformly* -- every declaration keeps both parameters, so
+# no use site disagrees with a declaration about the arity.
+# The retained binder is a placeholder, so it is typed 'unit' and passed '()':
+# typing it by its sort would make it 'any' and put an Obj.magic at every call.
+# The abbreviation is emitted only because it is named as an entry point.
+FLAGS_TypeEntry  = --custard_entry TypeEntry.t
+GREP_TypeEntry   = "type typeEntry_t ="
+
+GREP_PolyVal   = "let polyVal_box_empty (tmp : unit)" "(polyVal_box_empty ())"
+NOGREP_PolyVal = "Obj.magic"
+
+GREP_Phantom   = "type ('a, 'ph) phantom_tagged" "and ('a, 'ph) phantom_even_t" \
+                 "type ('a, 'ph) phantom_odd_t"
+
+# Each of these is extracted with --custard_backend KrmlC, run through karamel
+# to produce C, compiled and run; the program must exit 0.  Skipped when
+# karamel is not installed.
+KRML_TESTS += KrmlBasic
+
+# Section 65.1.  [Prims.list] and [Prims.dtuple2], which karamel defines
+# itself and Custard also compiles.  On the KrmlC leg rather than the Rust
+# one because a recursive datatype does not survive karamel's Rust backend
+# even in the stock pipeline (section 65.2), so the list half is only
+# testable here.
+KRML_TESTS += KrmlPrims
+
+# Each of these is extracted with --custard_backend C, then compiled by a C11
+# compiler with the warnings on and run; the program must exit 0.  The direct
+# backend has no polymorphism to fall back on, so it always runs with type
+# monomorphization (section 5.0.1).
+C_TESTS += KrmlBasic CExtern CRecType IndexedSquash CByValue CDeadLet CFunPtr
+C_TESTS += RefStrip
+# Section 25: the eta-expansion chain.  The greps pin the two shapes the
+# fix is about -- a source-parameterless arrow-typed definition becomes a
+# real C function, and its callers keep all their arguments.
+C_TESTS += CEtaChain
+CGREP_CEtaChain = "CEtaChain_g(bool" "CEtaChain_call_g(bool" "CEtaChain_h(bool"
+CNOGREP_CEtaChain = "(*CEtaChain_g)" "(*CEtaChain_call_g("
+
+# Section 57.1: an extern returning a pointer.  A C macro over untyped memory
+# hands back [void *], which C converts silently and C++ rejects, so the
+# call site has to carry the cast.  The load-bearing check is the CXX step
+# of the [%.dc] rule below, not the grep; the grep just pins the shape.
+C_TESTS += ExtPtr
+CGREP_ExtPtr = "(uint8_t *)extptr_base"
+
+# Section 60.3.  A reviewer's probe for section 57.2's [Weak; HNF].  All
+# three binders are arities whose head is *not* immediately present -- an
+# abbreviation chain, a refinement, and a type-level function returning a
+# kind -- and [is_arity_aux] gets exactly one normalization pass to find it.
+# The assertion is that none of them survives into the signature: an arity
+# missed here is kept as a runtime parameter and miscompiles rather than
+# being rejected.  See KindAbbrev.fst for why the functions are recursive.
+C_TESTS += KindAbbrev
+CGREP_KindAbbrev = "KindAbbrev_hold_k__t(uint32_t x, uint32_t n)" \
+                   "KindAbbrev_hold_e__t(uint32_t x, uint32_t n)" \
+                   "KindAbbrev_hold_f__t(uint32_t x, uint32_t n)"
+CNOGREP_KindAbbrev = "void *"
+
+# Section 60.4.  The is_star_aux half, which nothing reached until this
+# file: deleting [UnfoldUntil delta_constant] from that one step list left
+# the entire suite passing.  It needs a *type* parameterized by a kind
+# abbreviation, since a function's binders are decided by is_arity first.
+C_TESTS += KindStar
+CGREP_KindStar = "KindStar_sum(uint32_t b)"
+CNOGREP_KindStar = "void *"
+
+# Section 61.1.  Both directions: the shift keeps its cast, and the
+# addition must still have lost its own -- a fix that restored the cast for
+# every operator would pass a test that only checked the shift.  main
+# checks its own answers, so .dcran is the real assertion; before the fix
+# this program returned 1 with no compiler diagnostic at all.
+C_TESTS += ShiftLit
+CGREP_ShiftLit = "((uint64_t)40ULL) << n" "return (40 + n);"
+CNOGREP_ShiftLit = "return (40 << n);"
+
+# Section 61.2.  Two negation sites, broken for two different reasons.
+# EXT_FLAG is "0 || 1", so an unparenthesized !EXT_FLAG is silently true.
+C_TESTS += ExtFlag
+CGREP_ExtFlag = "if (!(EXT_FLAG)) return 0;" "if (!(EXT_FLAG)) r[0] = 0;"
+CNOGREP_ExtFlag = "!EXT_FLAG"
+# Section 26.  CVarArity's callee is an arrow-typed global *variable* -- the
+# lowering section 25.3 keeps deliberately -- so the grep asserts that the
+# variable is still a variable and that its caller nonetheless takes both
+# arguments.  call_e is also a root, which is the shape that has no
+# over-application downstream to catch it.
+C_TESTS += CVarArity
+FLAGS_CVarArity = --custard_entry CVarArity.call_e
+CGREP_CVarArity = "(*CVarArity_e)(bool, bool);" "CVarArity_call_e(bool a, bool eta)" \
+                  "return CVarArity_e(a, eta);"
+CNOGREP_CVarArity = "CVarArity_e(a);"
+# CAbbrevArity's return type sits behind two abbreviations; the whole bug is
+# the leftover arrow in the declared result, so the greps are on the
+# signature.
+C_TESTS += CAbbrevArity
+CGREP_CAbbrevArity = "bool CAbbrevArity_mk_eq_test__bool(bool x, bool x1)"
+CNOGREP_CAbbrevArity = "(*CAbbrevArity_mk_eq_test__bool"
+# Section 27.4: a saturated call to a forwarder is the identity on one of its
+# arguments, so the definition becomes a real function instead of a mutable
+# function pointer assigned in custard_init_globals.  The NOGREPs are the
+# point: no pointer, no initializer, and no indirect call at the use site.
+C_TESTS += CInitTrap
+FLAGS_CInitTrap = --custard_entry CInitTrap.use --custard_entry CInitTrap.direct
+# Section 96: the two invented binders take [band]'s own names, since after
+# [id_fn] is inlined [band] is the head the spine stops at.
+CGREP_CInitTrap = "CInitTrap_wrapped(bool a, bool b)" \
+                  "return CInitTrap_band(a, b);" \
+                  "CInitTrap_picked(bool"
+# `FStar.Pervasives.false_elim` becomes EAbort, like magic and admit: an
+# abort() rather than the loop it is defined as, which on C was a hard 368.
+C_TESTS += CFalseElim
+CGREP_CFalseElim = "FStar.Pervasives.false_elim" "abort();"
+CNOGREP_CFalseElim = "FStar_Pervasives_false_elim"
+CNOGREP_CInitTrap = "(*CInitTrap_wrapped)" "(*CInitTrap_picked)" \
+                    "custard_init_globals" "CInitTrap_id_fn" "CInitTrap_snd_fn"
+# Section 30.5.  A Type0 *field* projected in a type position, inside a
+# function specialized on the record that holds it.  The projection is stuck
+# -- a projector is not a type constructor -- and used to reach `ty_of_fv` and
+# come back `any`; the two specializations must instead be over the ground
+# types the record was built with.  The NOGREPs are the point: no void*, and
+# no reinterpretation at the call sites.
+# Section 30.10.  The [list char] must not reach C at all: the attribute's
+# whole effect is that the string length is a constant by the time the backend
+# sees it.
+# Section 30.11.  No annotation anywhere in the file: rule 4c has to find the
+# demand itself, and both string instantiations have to survive as distinct
+# constants.
+C_TESTS += LitStr
+# Section 59: the globals are [= 3] and [= 5] now; a literal is still a
+# constant expression, which is what the static-initializer list selects for.
+CGREP_LitStr  = "_lit__LStr = 3;" "_lit__LStr_1 = 5;"
+CNOGREP_LitStr = "list" "char *"
+
+# Section 30.15.  Nine nested tuple2s spelled out in one identifier is what an
+# unbounded instantiation hint produces at this depth.
+C_TESTS += NameWidth
+CGREP_NameWidth  = "uint32_t NameWidth_main(void)"
+CNOGREP_NameWidth = "tuple2_tuple2_tuple2_tuple2_tuple2_tuple2_tuple2_tuple2_tuple2"
+
+# Section 30.16.  The parameter must come back: [consume] takes two arguments,
+# not one, and calls its first through a function pointer.
+C_TESTS += EtaVar
+CGREP_EtaVar = "EtaVar_consume(uint32_t (*i)(uint32_t), uint32_t eta)"
+
+# Section 30.14.  [impl] must appear once, not once per distinct dead argument,
+# and no [list] may reach C.
+C_TESTS += DeadMono
+FLAGS_DeadMono  = --custard_norm_budget 100000
+CGREP_DeadMono  = "uint32_t DeadMono_main(void)"
+CNOGREP_DeadMono = "list"
+
+C_TESTS += CompileTime
+CGREP_CompileTime  = "uint32_t CompileTime_main(void)"
+CNOGREP_CompileTime = "list" "char *"
+
+C_TESTS += RecTyAcc
+CGREP_RecTyAcc = "uint8_t RecTyAcc_by_match__ANode(uint8_t x)" \
+                 "uint32_t RecTyAcc_by_match__ANode_1(uint8_t x)"
+CNOGREP_RecTyAcc = "void *" "__proj__"
+
+C_TESTS += RecTyField
+CGREP_RecTyField = "uint8_t RecTyField_use_rec__ANode(uint8_t x)" \
+                   "uint32_t RecTyField_use_rec__ANode_1(uint8_t x)"
+CNOGREP_RecTyField = "void *" "__proj__"
+
+C_TESTS += CTypeField
+CGREP_CTypeField = "CTypeField_pick__Mkspec(bool c, uint8_t x, uint8_t y)" \
+                   "CTypeField_pick__Mkspec_1(bool c, uint32_t x, uint32_t y)"
+CNOGREP_CTypeField = "void *" "__proj__"
+
+# Section 56.  A type-level function applied to a value.  The three
+# assertions are one per shape, and the middle one is the load-bearing one:
+# the bug reduced such an application exactly once, so a three-level
+# descriptor list is what distinguishes a fix from a deeper version of the
+# same mistake -- the name has to nest all the way to the [int32] base case.
+# [chain] has no recursion anywhere in it and goes through a *second* name.
+# WARN_ANY makes the whole file an assertion too: before the fix these
+# binders were [any], which is warning 367 and an error here.
+C_TESTS += TyFun
+CGREP_TyFun = "uint32_t TyFun_one(FStar_Pervasives_Native_tuple2__uint32_int32 c)" \
+              "uint32_t TyFun_three(FStar_Pervasives_Native_tuple2__uint32_tuple2_uint32_tuple2_uint32_int32 c)" \
+              "uint32_t TyFun_chain(FStar_Pervasives_Native_tuple2__uint32_uint32 c)"
+CNOGREP_TyFun = "void *"
+
+# A reduced deterministic-CBOR checker.  Unlike the tests above it is not
+# aimed at one backend feature: it is a differential regression test, run
+# over a curated corpus of inputs whose expected results are computed by an
+# independent model (CborBoundary.model.py).  CborBoundary.md documents the
+# corpus, and pulse/CborBoundarySlice.fst is the same checker over a slice,
+# which this directory cannot host because stage1 and stage2 have no Pulse.
+C_TESTS += CborBoundary
+
+# Section 14.5 and 14.6: a type the target declares, said both ways, and a
+# global whose initializer is a computation -- against one that is a constant
+# expression, which is declared with its value and stays out of
+# custard_init_globals so that the linker can put it in .rodata.
+FLAGS_CExtern   = --custard_extern_type 'CExtern.tag=cextern_tag_t@CExtern_stubs.h'
+CGREP_CExtern   = "include \"CExtern_stubs.h" \
+                  "cextern_handle_t b_h;" \
+                  "void custard_init_globals(void)" \
+                  "CExtern_gt = cextern_mk_tag();" \
+                  "if (c.tag == CEXTERN_BUMP) cextern_bump(" \
+                  "uint32_t CExtern_base = 7;" \
+                  "uint8_t CExtern_low = (uint8_t)300;" \
+                  "cextern_make(((uint32_t)41U))"
+# Section 59.5: the last of those is the *exception* to the cast removal, and
+# it is here rather than with the other section 59 tests because this is the
+# file that has an extern taking an argument.  Custard writes no prototype
+# for cextern_make -- its declaration is in a header Custard does not own,
+# and it may be a macro, where nothing is converted because nothing is
+# passed -- so the argument keeps its cast.  Asserting the exception is what
+# keeps the rule from quietly widening.
+#
+# No definition is emitted for either external type, and neither is declared
+# as an abstract struct the way a Custard-owned opaque type would be.
+CNOGREP_CExtern = "typedef cextern_handle_t" "CExtern_handle" "CExtern_tag" \
+                  "  CExtern_base =" "  CExtern_low ="
+
+# Section 18.2: an inductive indexed by a value that occurs only under [squash].
+# The index is dropped from [payload], as it should be, but [dtuple2]'s second
+# parameter is an arity over that index -- and dropping *that* left the second
+# field typed by a name no parameter bound, so it was [any] and had no C
+# representation at all.  This is EverParse's whole parse/serialize idiom.
+CGREP_IndexedSquash   = "IndexedSquash_payload _2;"
+CNOGREP_IndexedSquash = "void *"
+
+# Section 17.3: recursion through a pointer.  Every struct is tagged and every
+# tag is forward-declared, so a field may name a type that is defined later --
+# which a self-referential type always does.
+CGREP_CRecType   = "typedef struct CRecType_tree_s CRecType_tree;" \
+                   "typedef struct CRecType_node_s CRecType_node;" \
+                   "struct CRecType_node_s {" \
+                   "CRecType_tree *left;"
+# No struct typedef is anonymous any more, and the recursive types are not
+# rejected as infinite: the recursion goes through a pointer.
+CNOGREP_CRecType = "typedef struct {" "} CRecType_tree;" "} CRecType_node;"
+
+# Section 18.4: a field held by value needs a complete type, so the struct
+# definitions are topologically sorted over the by-value edges -- which are
+# acyclic even when the group as a whole is cyclic through a pointer.  The
+# real assertion is that this compiles: without the sort, [arr] holds a
+# [slice__raw] that is still incomplete at that point, which is an error.
+CGREP_CByValue   = "CByValue_slice__raw a_ptr;" "CByValue_raw *s_base;"
+CNOGREP_CByValue = "typedef struct {"
+
+# Section 19.5: a pattern that names fields the body never reads leaves a
+# declaration with an initializer and no use, which -Werror=unused-variable
+# refuses.  The real assertion is that this file compiles at all; the greps
+# only pin down that the *live* binding is still there and the dead ones are
+# not declared under any name.
+CGREP_CDeadLet   = "return dflt;" "return s.val.CDeadLet_Rect._1;"
+CNOGREP_CDeadLet = " = p;" "_letpattern"
+
+# Section 19.14: the refinement on [table] costs 2^40 steps to normalize and
+# has no bearing on any question Custard asks about the declaration.  The
+# budget is what makes this a test: it is far below what normalizing the
+# proposition would take, so extracting at all is the assertion.
+FLAGS_RefStrip   = --custard_norm_budget 20000
+CGREP_RefStrip   = "uint32_t RefStrip_table = 7;"
+CNOGREP_RefStrip = "q40"
+
+# Section 19.12: a closed lambda is lifted to a top-level function and the
+# record stores its address, which is the same C the named version produces.
+# The two greps are the two halves: a lifted function exists, and no lambda
+# survived anywhere (a surviving one would not have compiled, so this pins
+# down that the fix was lifting and not something else).
+CGREP_CFunPtr   = "bool CFunPtr_mk_lambda__lam(uint64_t" \
+                  ".impl_validate = CFunPtr_mk_lambda__lam" \
+                  ".impl_validate = CFunPtr_is_even" \
+                  "CFunPtr_quarter__lam"
+CNOGREP_CFunPtr = "(*)("
+
+# CGREP_<name>/CNOGREP_<name> assert on the generated .c.  These are the
+# output-quality invariants of section 6: a unit parameter is a thunk, which C
+# does not need; a pattern binding is an alias, not a copy; and the last arm
+# of an exhaustive match is not guarded.
+# Section 59: [n == 0], not [n == ((uint32_t)0U)] -- [n] carries the type,
+# so the literal's cast was saying what the other operand already said.
+CGREP_KrmlBasic   = "int32_t KrmlBasic_main(void)" \
+                    "if (s.tag == KRMLBASIC_SQUARE) return (s.val.KrmlBasic_Square._0" \
+                    "if (n == 0) return acc;"
+CNOGREP_KrmlBasic = "custard_unit tmp" "(void)(((custard_unit)0))" "abort"
+
+# Each of these is extracted with --custard_entry and *no* --custard_main, as a
+# library would be: the generated .ml must contain every GREP_<name> pattern
+# and none of the NOGREP_<name> ones.
+ROOT_TESTS += Library
+ROOTS_Library  = scale
+GREP_Library   = library_scale library_double
+NOGREP_Library = library_unused "let _ ="
+
+# Extraction of each of these must fail with the given error code: they are
+# the diagnostics of sections 3.2 and 3.6.
+REJECT_TESTS += MonoPoly
+REJECT_TESTS += MonoEffect
+CODE_MonoEffect = 364
+REJECT_TESTS += MonoPartial
+REJECT_TESTS += MonoFuel
+# Section 30.17: no longer an error.  Custard cannot decide whether reducing
+# an argument terminates, and the budget was always a guess about that; what
+# it can do is decline to reduce.  [spin 0] is keyed and substituted as
+# written, warning 373 says so, and the extracted program diverges at run
+# time -- which is what the F* program says.
+REJECT_TESTS += NormBudget
+EGREP_NormBudget = "the argument as written"
+# PR #4494: the legacy backends OOM on a type computed by a recursive
+# definition that makes no progress when unfolded.  Section 3.6's budget is
+# the broader fix that report asks for, so this must be error 365 and not a
+# hang.
+REJECT_TESTS += TypeDiverge
+CODE_TypeDiverge = 365
+FLAGS_TypeDiverge = --custard_entry TypeDiverge.f
+# Section 57.2: the sibling of TypeDiverge, and the pair is the point.  This
+# one has a head after one step, so the arity question is cheap and only the
+# full reduction runs away -- which is the graceful path section 56 promised
+# and 58.1 found unreachable.  The NOEGREP is the whole test: 365 here would
+# mean the fatal wrapper is running first again.  The code is 367 rather
+# than the 368 of section 57.2 because WARN_ANY escalates the warning, so
+# the suite stops one diagnostic earlier than a plain run does.
+REJECT_TESTS += TyFun4
+CODE_TyFun4 = 367
+FLAGS_TyFun4 = --custard_entry TyFun4.f --admit_smt_queries true
+EGREP_TyFun4 = "the binder 'c' has type any"
+NOEGREP_TyFun4 = "Error 365"
+# WarnAny is higher-kinded (#f:Type0 -> Type0), which has no counterpart in the
+# target type language: it lands on TAny, which --custard_warn_any reports and
+# WARN_ANY escalates.  This is the positive test for section 5.6.
+REJECT_TESTS += WarnAny
+# Section 6: the direct-to-C backend has no representation for an unbounded
+# Prims.int, and none for a closure.  Both must be diagnosed, not mistranslated.
+# Sections 31.2 and 31.3.  Round 35 twice reported error 368 as unactionable:
+# it named a declaration and nothing else.  [Prims.list] here is left
+# polymorphic because [FStar.List.Tot.Base] is realized by hand in OCaml, so
+# rule 4 of section 5.0.1 froze it -- which is a decision with a culprit, not
+# the bug the old message claimed.  The chain is what says which use of it
+# survived; on a 100 s CDDL run that is the whole difference.
+C_TESTS += Export
+FLAGS_Export += --custard_entry Export.widget_add
+FLAGS_Export += --custard_entry Export.widget_double
+FLAGS_Export += --custard_entry Export.widget_id
+FLAGS_Export += --custard_entry Export.widget_kind
+FLAGS_Export += --custard_entry Export.widget_make
+FLAGS_Export += --custard_c_no_prefix Export
+# The three roots are emitted unqualified, and declared in the header.
+CGREP_Export += "uint32_t widget_add("
+CGREP_Export += "uint32_t widget_double("
+CGREP_Export += "uint32_t widget_id("
+CGREP_Export += "extern \"C\" {"
+# The qualified spellings are gone, the unnamed helper keeps its own and
+# stays static, and the specialization keeps its section 30.15 hint: the
+# option renames the public surface and nothing else.
+CGREP_Export += "typedef struct widget_s"
+CGREP_Export += "WLARGE"
+CNOGREP_Export += "Export_widget_add"
+CNOGREP_Export += "Export_wkind"
+CGREP_Export += "static uint32_t Export_helper("
+CGREP_Export += "static uint32_t Export_countdown__"
+
+# Section 100.  The other side of ListC: an external whose signature names a
+# specialization Custard can perfectly well emit, which is the shape a C
+# boundary in a real program has.  The link is the assertion -- the stub is
+# written against the generated struct, so a change to its layout or to the
+# name breaks the build rather than passing quietly.
+C_TESTS += ExternOpt
+CEXTRA_ExternOpt = ExternOpt_stubs.c
+CGREP_ExternOpt += "struct FStar_Pervasives_Native_option__listener_s {"
+CGREP_ExternOpt += "externopt_listener_t v;"
+CGREP_ExternOpt += "extern FStar_Pervasives_Native_option__listener ExternOpt_listen(uint32_t);"
+CGREP_ExternOpt += "extern uint32_t ExternOpt_close(FStar_Pervasives_Native_option__listener);"
+# The external type itself is still the target's: no definition, no clone.
+CNOGREP_ExternOpt += "ExternOpt_listener"
+
+# Section 104.  The projection form of the eta law.  [reset_perm] and
+# [tagged_reset] are record updates whose written field is ghost, so erasure
+# leaves a record built entirely out of its own argument's fields; both must
+# collapse to the identity.  [swap] is the permutation that shares their shape
+# and must *not* collapse, and [bump] is the partial update that stays partial
+# because the field it writes survives erasure.
+# [reset_perm] and [tagged_reset] are named as entries so that section 105.1,
+# which inlines an identity function away, leaves their definitions standing
+# -- what section 104 made of them is the thing under test, and an entry is
+# the one declaration whose body has to survive having no call sites left.
+C_TESTS += RecUpd
+FLAGS_RecUpd += --custard_entry RecUpd.reset_perm --custard_entry RecUpd.tagged_reset
+CGREP_RecUpd += "return c;"
+CGREP_RecUpd += ".p_a = c.p_b"
+CGREP_RecUpd += ".p_b = (c.p_b + 1)"
+CNOGREP_RecUpd += ".s_type = c.s_type"
+CNOGREP_RecUpd += ".t_tag = c.t_tag"
+# [retuple] is the tuple form, reached by the other road: [depat] turns the
+# pattern into projections before [simpl] ever sees it.
+CNOGREP_RecUpd += "._1 = c._1"
+
+# Section 105.  The dispatcher over section 104's identity functions.
+# [reset] is the catch-all form and [reset_all] the exhaustive-by-coverage
+# one; both are the identity.  [swap2] is the same shape one level up and is
+# a permutation, and [bump_int] has one branch that is not a rebuild --
+# neither may collapse, and both would fail silently.
+C_TESTS += RecDisp
+CPAIR_RecDisp += "RecDisp_reset(RecDisp_raw c) {@  return c;"
+CPAIR_RecDisp += "RecDisp_reset_all(RecDisp_raw c) {@  return c;"
+# Section 105.1 removed the calls, and [dce] then removed the functions.
+CNOGREP_RecDisp += "RecDisp_str_reset"
+CNOGREP_RecDisp += "RecDisp_arr_reset"
+# The two that must survive, and would fail silently if they did not.
+CGREP_RecDisp += ".tag = RECDISP_R, .val = { .RecDisp_R = { ._0 = c.val.RecDisp_L._0 } }"
+CGREP_RecDisp += ".RecDisp_Int = { ._0 = (c.val.RecDisp_Int._0 + 1) }"
+
+# Section 107.  C's [==] is defined on scalars and pointers; F*'s equality is
+# defined at every inductive.  One generated comparison per type compared,
+# tag first and then the payload of that tag.
+C_TESTS += VariantEq
+CGREP_VariantEq += "static bool VariantEq_kind__eq(VariantEq_kind a, VariantEq_kind b) {"
+CPAIR_VariantEq += "  if (a.tag != b.tag) return false;@  switch (a.tag) {"
+CGREP_VariantEq += "    case VARIANTEQ_UNKNOWN: return (a.val.VariantEq_Unknown._0 == b.val.VariantEq_Unknown._0);"
+CGREP_VariantEq += "  return (a.p_a == b.p_a) && (a.p_b == b.p_b);"
+CGREP_VariantEq += "  return (a._1 == b._1) && (a._2 == b._2);"
+CGREP_VariantEq += "  return (VariantEq_kind__eq((VariantEq_kind){ .tag = VARIANTEQ_KNOWN }, x));"
+# The enum stays a scalar, and its comparison stays [==].
+CNOGREP_VariantEq += "VariantEq_flag__eq"
+CGREP_VariantEq += "  return (x == y);"
+
+# Section 102.2.  --custard_c_no_prefix now covers assume vals: an external's
+# name is the symbol the linker resolves, which is this unit's interface in
+# the only sense the option cares about.  A [@@custard_extern] name wins, and
+# the greps are both halves of that -- the renamed one and the untouched one.
+C_TESTS += NoPrefixX
+FLAGS_NoPrefixX += --custard_c_no_prefix NoPrefixX
+CEXTRA_NoPrefixX = NoPrefixX_stubs.c
+CGREP_NoPrefixX += "extern uint32_t ticket(uint32_t);"
+CGREP_NoPrefixX += "extern uint32_t noprefixx_fixed(uint32_t);"
+CNOGREP_NoPrefixX += "NoPrefixX_ticket"
+CNOGREP_NoPrefixX += "NoPrefixX_fixed"
+# The entry point is not renamed: it is the generated [main]'s callee, not a
+# definition the unit exports, which is what keeps the option off it.
+CGREP_NoPrefixX += "NoPrefixX_main(void)"
+
+REJECT_TESTS += MonoExtern
+CODE_MonoExtern = 376
+FLAGS_MonoExtern += --custard_backend C --custard_monomorphize_types true
+FLAGS_MonoExtern += --custard_entry MonoExtern.go
+EGREP_MonoExtern += "is monomorphized, but"
+EGREP_MonoExtern += "external has no body, so the argument would be discarded"
+
+REJECT_TESTS += ExistAdvice
+CODE_ExistAdvice = 364
+FLAGS_ExistAdvice += --custard_backend C --custard_monomorphize_types true
+FLAGS_ExistAdvice += --custard_entry ExistAdvice.go
+# The advice names the field and says no annotation helps -- it does not tell
+# the reader to write one, which is what it used to do.
+EGREP_ExistAdvice += "There is no annotation on binder 0 to drop"
+EGREP_ExistAdvice += "type stores a Type0 in the field ty of"
+EGREP_ExistAdvice += "no annotation changes that"
+
+C_TESTS += StoredType
+# The stored Type0 is erased and the record collapses to its one field.
+CGREP_StoredType += "static uint32_t StoredType_go(uint32_t d)"
+CNOGREP_StoredType += "StoredType_desc"
+
+# Section 33.1.  A definition whose body is a lambda is the same function as
+# one that names the lambda's binder itself, so it compiles rather than being
+# rejected as a captured closure -- and its callers stay saturated.
+C_TESTS += CLamDef
+CGREP_CLamDef += "static uint32_t CLamDef_go(uint32_t k, uint32_t x)"
+# Section 96: [go2] is one link further along the chain and takes [go]'s name
+# for the binder it invents, which [go] in turn took from [ap]'s lambda.
+CGREP_CLamDef += "static uint32_t CLamDef_go2(uint32_t k, uint32_t x)"
+CNOGREP_CLamDef += "CLamDef_go(uint32_t k)"
+
+# Section 33.4.  The existential reached through a field rather than through
+# a monomorphized binder: error 368, and it now names the cause instead of
+# asking for a bug report about a correct rejection.
+REJECT_TESTS += ExistChain
+CODE_ExistChain = 368
+FLAGS_ExistChain += --custard_backend C --custard_monomorphize_types true
+EGREP_ExistChain += "is an existential package, not an instance of a"
+EGREP_ExistChain += "stores the type ty"
+EGREP_ExistChain += "it is not a Custard"
+# The advice this replaces: a correctly rejected type must not be reported as
+# a compiler bug.
+NOEGREP_ExistChain += "please report it"
+
+# Section 34.2: a recognized attribute in an unrecognized position.  Each of
+# these four is an attribute Custard does read -- just never where it is
+# written -- so without the report the author has configured nothing and has
+# no way to tell.  The test is the diagnostic; the program itself is fine.
+REJECT_TESTS += AttrPos
+CODE_AttrPos = 371
+FLAGS_AttrPos += --custard_backend C --custard_monomorphize_types true
+EGREP_AttrPos += "custard_opaque\] on the field contents of AttrPos.Box"
+EGREP_AttrPos += "custard_compile_time\] on the parameter k of AttrPos.scale"
+EGREP_AttrPos += "custard_inline_field\] on the declaration AttrPos.width"
+EGREP_AttrPos += "custard_c_header\] on the declaration AttrPos.height"
+EGREP_AttrPos += "never off a binder, so"
+EGREP_AttrPos += "has no .@@custard_extern"
+
+# Section 35.1: a public definition whose signature names a specialization.
+# The extraction succeeds and the C is correct; what is wrong without the
+# report is that the consumer cannot tell which of the names in the header
+# they may depend on.
+REJECT_TESTS += ExportGen
+CODE_ExportGen = 377
+FLAGS_ExportGen += --custard_backend C --custard_monomorphize_types true
+FLAGS_ExportGen += --custard_entry ExportGen.mk --custard_entry ExportGen.get
+FLAGS_ExportGen += --custard_c_no_prefix ExportGen
+EGREP_ExportGen += "ExportGen_cell__uint32. is part of this unit's interface"
+EGREP_ExportGen += "ExportGen.get has it in its signature"
+EGREP_ExportGen += "custard_c_no_prefix does not rename specializations"
+EGREP_ExportGen += "typedef it once, in"
+
+REJECT_TESTS += ColB
+CODE_ColB = 374
+FLAGS_ColB += --custard_backend C --custard_monomorphize_types true
+FLAGS_ColB += --custard_entry ColA.f --custard_entry ColB.f
+FLAGS_ColB += --custard_c_no_prefix ColA --custard_c_no_prefix ColB
+EGREP_ColB += "would name both"
+EGREP_ColB += "cannot share one external name"
+
+REJECT_TESTS += WideChain
+CODE_WideChain = 364
+# The clip marker: the chain printed a bounded prefix and said how much it
+# dropped, rather than the whole key.  The blanket size cap below is the
+# other half, and is what would have caught round 37's 6 MB block.
+EGREP_WideChain += "chars)"
+REJECT_TESTS += ListC
+CODE_ListC = 368
+FLAGS_ListC = --custard_backend C --custard_monomorphize_types true
+# Section 100.  The rejection used to be the frozen-type one: [isEmpty] is
+# realized, so rule 4 held [list] polymorphic and the backend never saw it.
+# Now the type is cloned like any other and rejected for the honest reason,
+# which is that a cons list is a recursive datatype.  The last two greps are
+# the part that had to be added back: "use a pointer for the recursive field"
+# is not advice anyone can act on for [Prims.list], so the rejection also
+# names the declaration that put it in front of the backend.
+EGREP_ListC += "recursive datatype Prims.list"
+EGREP_ListC += "FStar.List.Tot.Base.isEmpty"
+EGREP_ListC += "is realized outside this program"
+EGREP_ListC += "Reached through:"
+EGREP_ListC += "ListC.main"
+REJECT_TESTS += CNoInt
+REJECT_TESTS += CNoClosure
+REJECT_TESTS += CLamField
+REJECT_TESTS += CPartialCall
+FLAGS_CNoInt     = --custard_backend C --custard_monomorphize_types true
+FLAGS_CNoClosure = --custard_backend C --custard_monomorphize_types true
+FLAGS_CLamField  = --custard_backend C --custard_monomorphize_types true
+FLAGS_CPartialCall = --custard_backend C --custard_monomorphize_types true
+CODE_CNoInt      = 368
+CODE_CNoClosure  = 368
+CODE_CLamField   = 368
+CODE_CPartialCall = 368
+CODE_MonoPoly    = 364
+CODE_MonoPartial = 364
+CODE_MonoFuel    = 365
+CODE_NormBudget  = 373
+CODE_WarnAny     = 367
+# Section 30.4: [@@monomorphize] on a constructor field is read by nothing, and
+# saying so is the whole point -- error 364's advice sends readers here.  The
+# 368 is section 30.3's existential record, which is what makes anyone try it.
+# Section 30.10.  An unkept [@@custard_compile_time] promise names the
+# definition and the offending argument, rather than falling back to compiling
+# a [list char] into C.
+REJECT_TESTS += CompileTimeBad
+FLAGS_CompileTimeBad = --custard_backend C --custard_entry CompileTimeBad.use
+CODE_CompileTimeBad  = 372
+EGREP_CompileTimeBad = "depends on a runtime value"
+
+REJECT_TESTS += FieldAttr
+# The program itself extracts (rule 4b of section 30.9 makes the bundle binder
+# Mono, so nothing is left over); the warning is the whole test, so it is
+# promoted to an error rather than looked for in passing output.
+FLAGS_FieldAttr = --custard_backend C --custard_monomorphize_types true \
+                  --warn_error @371
+CODE_FieldAttr  = 371
+EGREP_FieldAttr = "on the field pimpl_type"
+
+include $(FSTAR_ROOT)/mk/test.mk
+
+# Section 62.1.  Finding karamel by name on the PATH is what a dev tree
+# happens to allow and what CI does not: CI never installs krml onto the
+# PATH, it passes KRML_EXE= on the command line.  The recipes below used a
+# bare `krml`, so the karamel legs skipped silently in CI while passing
+# here -- and the Rust leg, gated on rustc alone, ran anyway and died with
+# "krml: not found".  Discovery is now by path first and PATH last, the
+# same order tests/extraction/backends already used, and every recipe and
+# every guard goes through the result rather than through the name.
+KRML_CANDIDATES := $(KRML_EXE) $(dir $(FSTAR_EXE))krml $(FSTAR_ROOT)/karamel/out/bin/krml
+KRML_FOUND      := $(firstword $(wildcard $(KRML_CANDIDATES)) $(shell command -v krml 2>/dev/null))
+ifneq ($(KRML_FOUND),)
+  override KRML_EXE := $(KRML_FOUND)
+endif
+
+# --custard_warn_any escalated to an error (section 5.6): no declaration in the
+# corpus may lose the representation of a value.  This is what keeps the "no
+# surviving ECast, no surviving TAny" measurement of section 5.4 true.
+WARN_ANY = --custard_warn_any --warn_error @367
+
+# Section 49.6.  Every rule below that runs $(FSTAR) also depends on the
+# binary.  Without it, `make` here after rebuilding the compiler re-uses
+# yesterday's _output/ and reports on a compiler that no longer exists -- a
+# reviewer "reproduced" a bug this way against a build that had already fixed
+# it.  A checked file is protected by F*'s own cache versioning; a generated
+# .c or .krml is not protected by anything.
+
+# Override the default OCaml extraction rule from test.mk: we drive the Custard
+# pipeline instead, which is whole-program and hence keyed on an entry point.
+$(OUTPUT_DIR)/%.ml:
+	$(call msg, "CUSTARD", $(basename $(notdir $@)))
+	$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) --custard_main $*.main $< -o $@
+	$(Q)for p in $(GREP_$*); do \
+	  grep -q -- "$$p" $@ \
+	    || { echo "ERROR: $* output is missing $$p"; exit 1; }; done
+	$(Q)for p in $(NOGREP_$*); do \
+	  grep -q -- "$$p" $@ \
+	    && { echo "ERROR: $* output should not contain $$p"; exit 1; }; done; true
+
+$(OUTPUT_DIR)/%.rejected: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
+	$(call msg, "REJECT", $(basename $(notdir $@)))
+	@mkdir -p $(OUTPUT_DIR)
+	$(Q)$(FSTAR) --message_format human --codegen Custard $(WARN_ANY) $(FLAGS_$*) \
+	  --custard_main $*.main $< >$(OUTPUT_DIR)/$*.err 2>&1 || true
+	@# Section 30.17: a few of these are warnings rather than errors -- the
+	@# product is the diagnostic either way, and which one it is is exactly
+	@# what the test is pinning.
+	$(Q)grep -qE "(Error|Warning) $(CODE_$*)" $(OUTPUT_DIR)/$*.err \
+	  || { echo "ERROR: expected diagnostic $(CODE_$*) from $*"; cat $(OUTPUT_DIR)/$*.err; false; }
+	@# A diagnostic is the product here, so a test may also pin what it says.
+	$(Q)for p in $(EGREP_$*); do \
+	  grep -q -- "$$p" $(OUTPUT_DIR)/$*.err \
+	    || { echo "ERROR: $* diagnostic is missing $$p"; \
+	         cat $(OUTPUT_DIR)/$*.err; exit 1; }; done
+	@# Section 33.4.  And what it must *not* say.  A wrong explanation is
+	@# worse than none -- "please report a Custard bug" about a correct
+	@# rejection sends a reader to write an issue instead of a fix -- so a
+	@# replaced sentence has to be pinned as absent, or nothing notices it
+	@# coming back.
+	$(Q)for p in $(NOEGREP_$*); do \
+	  grep -q -- "$$p" $(OUTPUT_DIR)/$*.err \
+	    && { echo "ERROR: $* diagnostic should not contain $$p"; \
+	         cat $(OUTPUT_DIR)/$*.err; exit 1; }; done; true
+	@# Section 32.1.  No diagnostic has a reason to be large.  A chain entry
+	@# is a specialization key and a key is a term, so an unbounded one is
+	@# always one term away; round 37 met a 6,426,280-byte error block.
+	$(Q)test `wc -c < $(OUTPUT_DIR)/$*.err` -lt 100000 \
+	  || { echo "ERROR: $* diagnostic is `wc -c < $(OUTPUT_DIR)/$*.err` bytes"; exit 1; }
+	$(Q)touch $@
+
+$(OUTPUT_DIR)/%.roots: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
+	$(call msg, "ROOTS", $(basename $(notdir $@)))
+	@mkdir -p $(OUTPUT_DIR)
+	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) \
+	  $(foreach r,$(ROOTS_$*),--custard_entry $*.$(r)) \
+	  $(patsubst %,%.fst,$*) -o $(OUTPUT_DIR)/$*.ml
+	$(Q)for p in $(GREP_$*); do \
+	  grep -q -- "$$p" $(OUTPUT_DIR)/$*.ml \
+	    || { echo "ERROR: $* output is missing $$p"; exit 1; }; done
+	$(Q)for p in $(NOGREP_$*); do \
+	  grep -q -- "$$p" $(OUTPUT_DIR)/$*.ml \
+	    && { echo "ERROR: $* output should not contain $$p"; exit 1; }; done; true
+	$(Q)touch $@
+
+$(OUTPUT_DIR)/%.krml:
+	$(call msg, "CUSTARD-KRML", $(basename $(notdir $@)))
+	$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) --custard_backend KrmlC \
+	  --custard_main $*.main $< -o $@
+
+# Section 50.2.  A construct that karamel holds but karamel's *Rust* backend
+# cannot emit has to be refused by Custard, because karamel does not refuse
+# it -- it crashes, mid-translation, with no output file and a message naming
+# a krmllib symbol.  So this leg pins a diagnostic and not an artifact.
+$(OUTPUT_DIR)/%.rustrejected: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
+	$(call msg, "REJECT-RUST", $(basename $(notdir $@)))
+	@mkdir -p $(OUTPUT_DIR)
+	$(Q)$(FSTAR) --message_format human --codegen Custard $(WARN_ANY) \
+	  $(FLAGS_$*) --custard_backend KrmlRust --custard_main $*.main $< \
+	  -o $(OUTPUT_DIR)/$*.rs >$(OUTPUT_DIR)/$*.rerr 2>&1 || true
+	$(Q)grep -qE "(Error|Warning) $(CODE_$*)" $(OUTPUT_DIR)/$*.rerr \
+	  || { echo "ERROR: expected diagnostic $(CODE_$*) from $* on KrmlRust"; \
+	       cat $(OUTPUT_DIR)/$*.rerr; false; }
+	$(Q)for p in $(EGREP_$*); do \
+	  grep -q -- "$$p" $(OUTPUT_DIR)/$*.rerr \
+	    || { echo "ERROR: $* diagnostic is missing $$p"; \
+	         cat $(OUTPUT_DIR)/$*.rerr; exit 1; }; done
+	$(Q)for p in $(NOEGREP_$*); do \
+	  grep -q -- "$$p" $(OUTPUT_DIR)/$*.rerr \
+	    && { echo "ERROR: $* diagnostic should not contain $$p"; \
+	         cat $(OUTPUT_DIR)/$*.rerr; exit 1; }; done; true
+	@# Custard refused, so karamel was never handed the module and no .rs
+	@# may exist.  A crash produced none either, which is why the file's
+	@# absence is not on its own the property being checked.
+	$(Q)test ! -e $(OUTPUT_DIR)/$*.rs \
+	  || { echo "ERROR: $* wrote a .rs despite being refused"; exit 1; }
+	$(Q)touch $@
+
+# Section 54.1.  The Rust *output* leg, which this directory did not have.
+#
+# Before this, [KrmlRust] occurred in exactly one rule -- [%.rustrejected] --
+# which asserts a diagnostic code.  Nothing produced or checked Rust output,
+# so the KrmlRust leg could observe only refusals: a coverage region section
+# 52.2 did not name, below the backend split with two targets and one of them
+# write-only.  Three [PrintKrml] behaviours sat there, each with a KrmlC test
+# and nothing on the other side.
+#
+# Two things this rule has to do that the C one does not.
+#
+#  * [krml -backend rust] exits 0 after printing "N total errors" and still
+#    writes a .rs, so the exit status says nothing.  A declaration can fail to
+#    translate, be omitted from the crate, and still be *used* by code that
+#    did translate.  The log is grepped, and that is what makes the leg
+#    trustworthy rather than decorative.
+#  * [C._zero_for_deref] is a karamel-internal name its Rust backend cannot
+#    translate, and it appears whatever the input, so every run would report
+#    one error without [-drop C].  The flag is deprecated and the replacement
+#    ([-bundle] plus reachability) does not eliminate it, so the warning is
+#    filtered rather than avoided.
+#
+# Rust's [main] may not return [i32], so the crate is compiled as a module
+# under a two-line driver.  Running it is the point: section 43.1's octal bug
+# was karamel reading [017] back as seventeen, which no grep for a spelling
+# would have caught, and the same is true here.
+# karamel dispatches on the file extension, so the Rust intermediate has to
+# be a .krml too; it goes in its own directory rather than being spelled
+# differently, since two pattern rules for one suffix in one directory is
+# the collision section 49.6 spent a round on.
+$(OUTPUT_DIR)/rust/%.krml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
+	$(call msg, "CUSTARD-RUST", $(basename $(notdir $@)))
+	@mkdir -p $(OUTPUT_DIR)/rust
+	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) \
+	  --custard_backend KrmlRust --custard_main $*.main $< -o $@
+
+$(OUTPUT_DIR)/%.rsran: $(OUTPUT_DIR)/rust/%.krml
+	$(call msg, "KRML-RUST", $(basename $(notdir $@)))
+	$(Q)rm -rf $(OUTPUT_DIR)/$*_rs && mkdir -p $(OUTPUT_DIR)/$*_rs
+	$(Q)$(KRML_EXE) -silent -backend rust -skip-linking -no-prefix $* -drop C \
+	  $(KRMLRS_$*) -tmpdir $(OUTPUT_DIR)/$*_rs $< \
+	  > $(OUTPUT_DIR)/$*.rslog 2>&1 || true
+	@# The exit status is 0 either way, so this is the only report there is.
+	$(Q)grep -q "total errors" $(OUTPUT_DIR)/$*.rslog \
+	  && { echo "ERROR: krml reported a translation error for $* on Rust"; \
+	       cat $(OUTPUT_DIR)/$*.rslog; exit 1; }; true
+	$(Q)test -e $(OUTPUT_DIR)/$*_rs/custard.rs \
+	  || { echo "ERROR: krml wrote no Rust for $*"; \
+	       cat $(OUTPUT_DIR)/$*.rslog; exit 1; }
+	$(Q)for p in $(RSGREP_$*); do \
+	  grep -qF -- "$$p" $(OUTPUT_DIR)/$*_rs/*.rs \
+	    || { echo "ERROR: $* Rust output is missing $$p"; exit 1; }; done
+	$(Q)for p in $(RSNOGREP_$*); do \
+	  grep -qF -- "$$p" $(OUTPUT_DIR)/$*_rs/*.rs \
+	    && { echo "ERROR: $* Rust output should not contain $$p"; exit 1; }; done; true
+	$(call msg, "RUSTC", $(basename $(notdir $@)))
+	$(Q)printf '#[path = "custard.rs"] mod custard;\nfn main() { std::process::exit(custard::main()); }\n' \
+	  > $(OUTPUT_DIR)/$*_rs/driver.rs
+	@# MAKEFLAGS is cleared because rustc reads it and warns that it cannot
+	@# reach make's jobserver, which is noise and not a finding.
+	$(Q)cd $(OUTPUT_DIR)/$*_rs && MAKEFLAGS= rustc -O -o $*.rsexe driver.rs
+	$(call msg, "RUN", $(basename $(notdir $@)))
+	$(Q)$(OUTPUT_DIR)/$*_rs/$*.rsexe
+	$(Q)touch $@
+
+# Section 65.  The same leg with [--custard_split] and per-module bundles.
+#
+# Separate from [.rsran] rather than a flag on it, because what it checks is
+# not the same thing.  [.rsran] pins how one declaration is spelled; this pins
+# that karamel's *module-level* flags have something to select on, which is a
+# property of the file list and not of any declaration in it.  The bundles are
+# written the way EverParse writes theirs -- an api module, a pattern, and a
+# [rename=] -- because "does -bundle work" and "does -bundle work the way the
+# consumer spells it" turned out to be different questions.
+#
+# Every one of the three failure modes below was reported as, or found while
+# fixing, EverParse's round 62:
+#
+#  * a bundle naming a module that does not exist is *fatal*, and was the
+#    original report;
+#  * a [rename=] that puts karamel's checker on a path where it re-checks the
+#    program is not fatal -- it prints "Cannot re-check", drops the
+#    declaration, and exits 0 -- so the log is the only report there is;
+#  * and a crate whose modules are all empty would satisfy both of the above.
+#
+# Hence three separate assertions and then a run.
+$(OUTPUT_DIR)/rustsplit/%.krml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
+	$(call msg, "CUSTARD-RUST-SPLIT", $(basename $(notdir $@)))
+	@mkdir -p $(OUTPUT_DIR)/rustsplit
+	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) --custard_split \
+	  --custard_backend KrmlRust --custard_main $*.main $< -o $@
+
+$(OUTPUT_DIR)/%.rssplit: $(OUTPUT_DIR)/rustsplit/%.krml
+	$(call msg, "KRML-RUST-SPLIT", $(basename $(notdir $@)))
+	$(Q)rm -rf $(OUTPUT_DIR)/$*_rss && mkdir -p $(OUTPUT_DIR)/$*_rss
+	$(Q)$(KRML_EXE) -silent -backend rust -skip-linking -drop C \
+	  $(KRMLSPLIT_$*) -tmpdir $(OUTPUT_DIR)/$*_rss $< \
+	  > $(OUTPUT_DIR)/$*.rsslog 2>&1 || true
+	@# Fatal on a bundle naming a module that does not exist, which is what
+	@# a single flattened [Custard] module produced for every clause.
+	$(Q)grep -q "doesn't exist" $(OUTPUT_DIR)/$*.rsslog \
+	  && { echo "ERROR: krml could not find a bundled module for $*"; \
+	       cat $(OUTPUT_DIR)/$*.rsslog; exit 1; }; true
+	@# Not fatal: krml prints this, drops the declaration and exits 0.
+	$(Q)grep -q "Cannot re-check\|total errors" $(OUTPUT_DIR)/$*.rsslog \
+	  && { echo "ERROR: krml rejected a declaration for $* on Rust"; \
+	       cat $(OUTPUT_DIR)/$*.rsslog; exit 1; }; true
+	$(Q)for p in $(RSSGREP_$*); do \
+	  grep -qF -- "$$p" $(OUTPUT_DIR)/$*_rss/*.rs \
+	    || { echo "ERROR: $* split Rust output is missing $$p"; exit 1; }; done
+	$(call msg, "RUSTC", $(basename $(notdir $@)))
+	$(Q)printf '$(RSSDRIVER_$*)' > $(OUTPUT_DIR)/$*_rss/driver.rs
+	$(Q)cd $(OUTPUT_DIR)/$*_rss && MAKEFLAGS= rustc -O -o $*.rsexe driver.rs
+	$(call msg, "RUN", $(basename $(notdir $@)))
+	$(Q)$(OUTPUT_DIR)/$*_rss/$*.rsexe
+	$(Q)touch $@
+
+# karamel emits its own compile_flags.txt, which is the only portable way to
+# learn where krmllib's headers live.
+$(OUTPUT_DIR)/%.cexe: $(OUTPUT_DIR)/%.krml
+	$(call msg, "KRML", $(basename $(notdir $@)))
+	@# Section 45.3.  The test directory is on the include path because a
+	@# [@@custard_c_header] now reaches karamel's output as an #include.
+	$(Q)$(KRML_EXE) -silent -skip-linking -no-prefix $* -ccopts "-I$(CURDIR)" \
+	  -tmpdir $(OUTPUT_DIR)/$*_c $<
+	$(call msg, "CC", $(basename $(notdir $@)))
+	$(Q)$(CC) $$(tr '\n' ' ' < $(OUTPUT_DIR)/$*_c/compile_flags.txt) \
+	  -I$(CURDIR) $(OUTPUT_DIR)/$*_c/Custard.c -o $@
+
+# The direct-to-C backend (section 6): no krmllib, no krml, just a C11
+# compiler.  -Werror is part of the test -- an unused variable or a missing
+# cast is a bug in the backend, not a style question.
+CHECKGROUP := $(CURDIR)/checkgroup.py
+
+$(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
+	$(call msg, "CUSTARD-C", $(basename $(notdir $@)))
+	@mkdir -p $(OUTPUT_DIR)
+	$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) --custard_backend C \
+	  --custard_monomorphize_types true --custard_main $*.main $*.fst -o $@
+	@# The unit is a header and a source (section 24), so the assertions are
+	@# over both: a type declaration lives in the header now, and an
+	@# assertion that something is *absent* means absent from the unit.
+	$(Q)for p in $(CGREP_$*); do \
+	  grep -qF -- "$$p" $@ $(basename $@).h \
+	    || { echo "ERROR: $* C output is missing $$p"; exit 1; }; done
+	$(Q)for p in $(CNOGREP_$*); do \
+	  grep -qF -- "$$p" $@ $(basename $@).h \
+	    && { echo "ERROR: $* C output should not contain $$p"; exit 1; }; done; true
+	@# Section 51.3.  A prologue is emitted on the line before the thing it
+	@# decorates, so an assertion about *which* declaration carries one is
+	@# an assertion about a pair of adjacent lines.
+	$(Q)for p in $(CPAIR_$*); do \
+	  a=$${p%%@*}; b=$${p#*@}; \
+	  grep -F -A1 -- "$$a" $@ $(basename $@).h | grep -qF -- "$$b" \
+	    || { echo "ERROR: $* has no '$$a' immediately before '$$b'"; \
+	         exit 1; }; done
+	$(Q)for p in $(CNOPAIR_$*); do \
+	  a=$${p%%@*}; b=$${p#*@}; \
+	  grep -F -A1 -- "$$a" $@ $(basename $@).h | grep -qF -- "$$b" \
+	    && { echo "ERROR: $* has a '$$a' immediately before '$$b'"; \
+	         exit 1; }; done; true
+	@# A [void] function whose body collapsed to nothing is the one empty
+	@# block that is not a defect: a root of type [unit -> unit] (section
+	@# 73) has no statements left to emit and still has to exist.  The
+	@# opening line has to start at column zero to be a definition rather
+	@# than a nested block.
+	$(Q)awk '/\{$$/ { open = NR; \
+	                  void_fn = (/^(static )?void [A-Za-z_]/); next } \
+	         /^[ \t]*\}/ && open == NR - 1 && !void_fn { print NR; found = 1 } \
+	         { open = 0 } END { exit found }' $@ \
+	  || { echo "ERROR: $* C output has an empty block, at the lines above"; \
+	       exit 1; }
+	@# Section 35.2.  A redundant parenthesis group is a property of the
+	@# text and does not need a compiler to see it; clang's own warning is
+	@# shape sensitive and misses the ones around a call-comparison.
+	$(Q)python3 $(CHECKGROUP) $@ $(basename $@).h
+
+# Second expansion so that [CEXTRA_$*] -- which needs the stem, and so is not
+# known when the rule is read -- can be a prerequisite and not just a
+# command-line argument: editing the hand-written half must rebuild.  It is
+# harmless for the rules below, whose prerequisites contain no [$].
+.SECONDEXPANSION:
+
+# [CEXTRA_Name] names hand-written C to link beside the generated unit.
+# Every other test that reaches C from outside F* does it with a header of
+# [static inline] definitions, which works when the target is a type or a
+# function whose name the test itself chose.  It does not work for a
+# polymorphic external (section 63.3): the symbols are one per instantiation
+# and Custard mangles their names, so there is nothing for an attribute to
+# point at, and the realization is what it says it is -- a separate
+# translation unit.
+$(OUTPUT_DIR)/%.dcexe: $(OUTPUT_DIR)/%.dc $(OUTPUT_DIR)/%.dcxx $$(CEXTRA_$$*)
+	$(call msg, "CC", $(basename $(notdir $@)))
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(CURDIR) -I$(OUTPUT_DIR) -x c $< $(CEXTRA_$*) -o $@
+
+# Section 47.1.  Every generated unit is also compiled as C++.
+#
+# Not because Custard targets C++, but because CUDA is C++ and a generated
+# header is meant to be included by a consumer.  The two languages disagree
+# about a construct Custard emitted everywhere: enumerators of an enum nested
+# in a struct have *file* scope in C and *class* scope in C++, so every tagged
+# union compiled clean as C11 and was unusable from nvcc.  Nothing in a C-only
+# test suite could see that, and clang's `-Weverything' over the same files
+# reported nothing, because as C the code was correct.
+#
+# -fsyntax-only: the object file is the C compiler's job above.  What this leg
+# is for is the front end -- scope, name lookup, and the implicit conversions
+# C++ does not have.
+$(OUTPUT_DIR)/%.dcxx: $(OUTPUT_DIR)/%.dc
+	$(call msg, "CXX", $(basename $(notdir $@)))
+	$(Q)$(CXX) -std=c++17 -Wall -Werror -I$(CURDIR) -fsyntax-only -x c++ $<
+	$(Q)touch $@
+
+# Section 70.2.  A reference binding is C++, not C, so a test whose whole
+# point is one cannot go through the C leg above.  [CXX_TESTS] runs the same
+# generated .c through the C++ compiler and then runs it; the .dc rule and
+# all of its greps are shared, so only the compile-and-link half differs.
+$(OUTPUT_DIR)/%.dcxxexe: $(OUTPUT_DIR)/%.dc $$(CEXTRA_$$*)
+	$(call msg, "CXX", $(basename $(notdir $@)))
+	$(Q)$(CXX) -std=c++17 -Wall -Wextra -Werror -I$(CURDIR) -I$(OUTPUT_DIR) -x c++ $< $(CEXTRA_$*) -o $@
+
+$(OUTPUT_DIR)/%.dcxxran: $(OUTPUT_DIR)/%.dcxxexe
+	$(call msg, "RUN-CXX", $(basename $(notdir $@)))
+	$(Q)$<
+	$(Q)touch $@
+
+$(OUTPUT_DIR)/%.dcran: $(OUTPUT_DIR)/%.dcexe
+	$(call msg, "RUN-C", $(basename $(notdir $@)))
+	$(Q)$<
+	$(Q)touch $@
+
+$(OUTPUT_DIR)/%.cran: $(OUTPUT_DIR)/%.cexe
+	$(call msg, "RUN-C", $(basename $(notdir $@)))
+	$(Q)$<
+	$(Q)touch $@
+
+# Section 12: separate compilation.  SepLib is compiled once, on its own, as a
+# named unit; SepApp links against the .cui it left behind.  What is being
+# tested is not that the two agree at run time -- that is the easy half -- but
+# that SepApp *did not compile any of SepLib again*: the NOGREPs below are the
+# actual assertion, and the run only confirms that the references it emitted
+# instead denote what they should.
+# Section 32.4.  --custard_c_no_prefix and the extern "C" guard.  The unit is
+# built with a main so that it can also be run on its own, and separately
+# linked against a hand-written C++ consumer: the C++ half is the assertion,
+# because those calls only resolve if the header guards its declarations.
+# Extracted a second time without --custard_main: the consumer supplies main,
+# which is what a library unit is.  The .dc above keeps its own main so that
+# the same code is also run standalone.
+$(OUTPUT_DIR)/ExportLib.c: $(CACHE_DIR)/Export.fst.checked $(FSTAR_EXE)
+	$(call msg, "CUSTARD-C", ExportLib)
+	@mkdir -p $(OUTPUT_DIR)
+	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
+	  --custard_monomorphize_types true $(FLAGS_Export) Export.fst -o $@
+
+$(OUTPUT_DIR)/Export.dcpp: $(OUTPUT_DIR)/ExportLib.c ExportUser.cpp
+	$(call msg, "CXX", ExportUser)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(CURDIR) -c -x c $< \
+	  -o $(OUTPUT_DIR)/Export.o
+	$(Q)g++ -std=c++11 -Wall -Wextra -Werror -I$(OUTPUT_DIR) -I$(CURDIR) \
+	  -c ExportUser.cpp -o $(OUTPUT_DIR)/ExportUser.o
+	$(Q)g++ $(OUTPUT_DIR)/ExportUser.o $(OUTPUT_DIR)/Export.o \
+	  -o $(OUTPUT_DIR)/ExportUser.exe
+	$(Q)$(OUTPUT_DIR)/ExportUser.exe | grep -qx ok \
+	  || { echo "ERROR: ExportUser did not print ok"; exit 1; }
+	@# The renamed definitions carry external linkage under the bare name,
+	@# and the unnamed helper does not appear in the symbol table at all.
+	$(Q)nm -g --defined-only $(OUTPUT_DIR)/Export.o | grep -qw widget_add \
+	  || { echo "ERROR: widget_add is not an exported symbol"; exit 1; }
+	$(Q)nm -g --defined-only $(OUTPUT_DIR)/Export.o | grep -q helper \
+	  && { echo "ERROR: helper escaped into the symbol table"; exit 1; }; true
+	$(Q)touch $@
+
+all: $(OUTPUT_DIR)/Export.dcpp
+
+$(OUTPUT_DIR)/SepLib.cui: $(CACHE_DIR)/SepLib.fst.checked $(FSTAR_EXE)
+	$(call msg, "CUSTARD-UNIT", SepLib)
+	@mkdir -p $(OUTPUT_DIR)
+	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_unit SepLib \
+	  --custard_entry SepLib.sum_areas --custard_entry SepLib.area \
+	  --custard_entry SepLib.bump --custard_entry SepLib.describe \
+	  --odir $(OUTPUT_DIR) SepLib.fst
+
+$(OUTPUT_DIR)/SepLib.ml: $(OUTPUT_DIR)/SepLib.cui
+	$(Q)test -f $@
+
+$(OUTPUT_DIR)/SepApp.ml: $(CACHE_DIR)/SepApp.fst.checked $(OUTPUT_DIR)/SepLib.cui $(FSTAR_EXE)
+	$(call msg, "CUSTARD-LINK", SepApp)
+	$(FSTAR) --codegen Custard $(WARN_ANY) \
+	  --custard_link $(OUTPUT_DIR)/SepLib.cui \
+	  --custard_main SepApp.main SepApp.fst -o $@
+	$(Q)for p in $(GREP_SepApp); do \
+	  grep -q -- "$$p" $@ \
+	    || { echo "ERROR: SepApp output is missing $$p"; exit 1; }; done
+	$(Q)for p in $(NOGREP_SepApp); do \
+	  grep -q -- "$$p" $@ \
+	    && { echo "ERROR: SepApp output should not contain $$p"; exit 1; }; done; true
+
+# The imported function is called through its unit's module, and the imported
+# type, constructor and record field are all spelled with that qualification.
+GREP_SepApp  += "SepLib.sepLib_sum_areas"
+GREP_SepApp  += "SepLib.SepLib_Circle"
+# Not one line of SepLib was compiled again -- not its functions, not its types.
+NOGREP_SepApp += "let sepLib_sum_areas"
+NOGREP_SepApp += "let sepLib_area"
+NOGREP_SepApp += "type sepLib_shape"
+NOGREP_SepApp += "type sepLib_named"
+GREP_SepApp  += "SepLib.sepLib_describe"
+GREP_SepApp  += "SepLib.SepLib_Rect"
+
+# Section 42: separate compilation for C.  The same shape as SepLib/SepApp
+# above and a different set of assertions, because C is where the questions
+# were: what a unit offers (42.1), what a downstream unit may not define twice
+# (42.2), and who initializes the globals (42.3).
+$(OUTPUT_DIR)/SepLibC.cui: $(CACHE_DIR)/SepLibC.fst.checked $(FSTAR_EXE)
+	$(call msg, "CUSTARD-UNIT-C", SepLibC)
+	@mkdir -p $(OUTPUT_DIR)
+	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
+	  --custard_monomorphize_types true --custard_unit SepLibC \
+	  --custard_entry SepLibC.scale --custard_entry SepLibC.manhattan \
+	  --custard_entry SepLibC.origin --odir $(OUTPUT_DIR) SepLibC.fst
+
+$(OUTPUT_DIR)/SepLibC.c: $(OUTPUT_DIR)/SepLibC.cui $(FSTAR_EXE)
+	$(Q)test -f $@
+
+$(OUTPUT_DIR)/SepAppC.c: $(CACHE_DIR)/SepAppC.fst.checked $(OUTPUT_DIR)/SepLibC.cui $(FSTAR_EXE)
+	$(call msg, "CUSTARD-LINK-C", SepAppC)
+	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
+	  --custard_monomorphize_types true \
+	  --custard_link $(OUTPUT_DIR)/SepLibC.cui \
+	  --custard_main SepAppC.main SepAppC.fst -o $@
+	$(Q)for p in $(CGREP_SepAppC); do \
+	  grep -qF -- "$$p" $@ $(basename $@).h \
+	    || { echo "ERROR: SepAppC output is missing $$p"; exit 1; }; done
+	$(Q)for p in $(CNOGREP_SepAppC); do \
+	  grep -qF -- "$$p" $@ $(basename $@).h \
+	    && { echo "ERROR: SepAppC output should not contain $$p"; exit 1; }; done; true
+
+# It reaches the library through the library's header, and defines nothing the
+# library defined -- not the struct, not either exported function, not the
+# global.  The one thing it *does* compile again is the static helper, which
+# was not on offer: that is what section 42.1 costs, and it is asserted rather
+# than tolerated so that a change of mind about it shows up here.
+CGREP_SepAppC   += "include \"SepLibC.h\""
+CGREP_SepAppC   += "SepLibC_init_globals();"
+CGREP_SepAppC   += "SepLibC_scale("
+CGREP_SepAppC   += "static uint32_t SepLibC_double_it"
+CNOGREP_SepAppC += "struct SepLibC_point_s {"
+CNOGREP_SepAppC += "SepLibC_point SepLibC_scale(SepLibC_point p) {"
+CNOGREP_SepAppC += "uint32_t SepLibC_manhattan(SepLibC_point p) {"
+CNOGREP_SepAppC += "SepLibC_point SepLibC_origin;"
+# This unit has no globals of its own, so it has no initializer to declare.
+CNOGREP_SepAppC += "SepAppC_init_globals"
+
+$(OUTPUT_DIR)/SepAppC.ran: $(OUTPUT_DIR)/SepLibC.c $(OUTPUT_DIR)/SepAppC.c
+	$(call msg, "CC", SepAppC)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(OUTPUT_DIR) -c -x c \
+	  $(OUTPUT_DIR)/SepLibC.c -o $(OUTPUT_DIR)/SepLibC.o
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(OUTPUT_DIR) -c -x c \
+	  $(OUTPUT_DIR)/SepAppC.c -o $(OUTPUT_DIR)/SepAppC.o
+	$(Q)$(CC) $(OUTPUT_DIR)/SepLibC.o $(OUTPUT_DIR)/SepAppC.o \
+	  -o $(OUTPUT_DIR)/SepAppC.exe
+	$(call msg, "RUN-C", SepAppC)
+	$(Q)$(OUTPUT_DIR)/SepAppC.exe
+	@# What the C compiler cannot check, and what the greps above can only
+	@# check textually: the linkage each definition actually came out with.
+	$(Q)nm -g --defined-only $(OUTPUT_DIR)/SepLibC.o | grep -qw SepLibC_scale \
+	  || { echo "ERROR: SepLibC_scale is not an exported symbol"; exit 1; }
+	$(Q)nm -g --defined-only $(OUTPUT_DIR)/SepLibC.o | grep -q double_it \
+	  && { echo "ERROR: SepLibC_double_it escaped into the symbol table"; \
+	       exit 1; }; true
+	@# The downstream unit defines none of the library, which is the only
+	@# direct evidence that it reused rather than recompiled.
+	$(Q)nm -g --defined-only $(OUTPUT_DIR)/SepAppC.o | grep -q SepLibC_ \
+	  && { echo "ERROR: SepAppC defines part of SepLibC"; exit 1; }; true
+	@# ... except the static helper, which it does have, privately.
+	$(Q)nm --defined-only $(OUTPUT_DIR)/SepAppC.o | grep -q SepLibC_double_it \
+	  || { echo "ERROR: SepAppC has no copy of SepLibC_double_it"; exit 1; }
+	$(Q)touch $@
+
+all: $(OUTPUT_DIR)/SepAppC.ran
+
+$(OUTPUT_DIR)/SepApp.exe: $(OUTPUT_DIR)/SepLib.ml $(OUTPUT_DIR)/SepApp.ml
+	$(call msg, "OCAMLOPT", SepApp)
+	$(FSTAR_EXE) --ocamlopt -I $(OUTPUT_DIR) $(OUTPUT_DIR)/SepLib.ml $(OUTPUT_DIR)/SepApp.ml -o $@
+
+all: $(OUTPUT_DIR)/SepApp.out.diff
+
+# Section 12.9: output splitting.  SplitLo is Custard-compiled, SplitMid.ml is
+# hand written and calls SplitLo, SplitHi is Custard-compiled and calls
+# SplitMid -- the alternation F*'s own realizations create, and the one a
+# single output file cannot express because OCaml compilation units must form
+# a DAG.  What is tested is that the split puts each declaration in the file
+# its own module names, under the plain identifier the hand-written code
+# spells, in an order ocamlopt accepts.
+#
+# SplitLo.add_one is a root, because only the hand-written OCaml calls it and
+# dead-code elimination cannot see that.  That is the general rule for a
+# realization's callees, and the same --custard_entry idiom section 4.4 asks
+# of a library.
+$(OUTPUT_DIR)/SplitHi.ml: $(CACHE_DIR)/SplitHi.fst.checked $(FSTAR_EXE)
+	$(call msg, "CUSTARD-SPLIT", SplitHi)
+	@mkdir -p $(OUTPUT_DIR)
+	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_split \
+	  --custard_main SplitHi.main --custard_entry SplitLo.add_one \
+	  --odir $(OUTPUT_DIR) SplitHi.fst
+	$(Q)test -f $(OUTPUT_DIR)/SplitLo.ml
+	$(Q)for p in $(GREP_SplitLo); do \
+	  grep -q -- "$$p" $(OUTPUT_DIR)/SplitLo.ml \
+	    || { echo "ERROR: SplitLo output is missing $$p"; exit 1; }; done
+	$(Q)for p in $(GREP_SplitHi); do \
+	  grep -q -- "$$p" $@ \
+	    || { echo "ERROR: SplitHi output is missing $$p"; exit 1; }; done; true
+
+# A declaration in the file its own module names is emitted under its plain
+# identifier, constructors included; that is what SplitMid.ml refers to.
+GREP_SplitLo += "^type color ="
+GREP_SplitLo += "| Red"
+GREP_SplitLo += "let flip (c : color) : color"
+GREP_SplitLo += "let add_one"
+# A cross-file reference is qualified by the module, and never by an [open].
+GREP_SplitHi += "SplitMid.name"
+GREP_SplitHi += "SplitLo.flip"
+GREP_SplitHi += "SplitLo.Red"
+GREP_SplitHi += "let _ = main ()"
+
+$(OUTPUT_DIR)/SplitHi.exe: $(OUTPUT_DIR)/SplitHi.ml SplitMid.ml
+	$(call msg, "OCAMLOPT", SplitHi)
+	$(FSTAR_EXE) --ocamlopt -I $(OUTPUT_DIR) \
+	  $(OUTPUT_DIR)/SplitLo.ml SplitMid.ml $(OUTPUT_DIR)/SplitHi.ml -o $@
+
+all: $(OUTPUT_DIR)/SplitHi.out.diff
+
+# These have hand-written targets with their own [all:] lines rather than a
+# list entry, and each consults its own settings in its own recipe.
+# Section 38.  Floating point.  The C test checks its own answers and returns
+# a nonzero exit status if any is wrong; what the greps add is that the
+# arithmetic is C arithmetic at the right *width* -- a Float32 literal without
+# the suffix would be a double, computed at double precision and rounded once.
+C_TESTS += Floats
+CGREP_Floats += "static double Floats_area(double r)"
+CGREP_Floats += "3.14159"
+CGREP_Floats += "-0.0015"
+CGREP_Floats += "1.5f"
+CGREP_Floats += "static float Floats_sum32(float a, float b)"
+CNOGREP_Floats += "FStar_Float64"
+CNOGREP_Floats += "FStar_Float32"
+
+# Section 63.  A floating-point library that is not FStar.Float32, opted in
+# with [@@custard_float 32] on its type.  FloatLib.fst is the library and is
+# not a test of its own; the cross-module lookup is the point, since that is
+# the arrangement Kuiper and EverParse have and the one that makes the probe
+# do work -- FloatOptIn mentions FloatLib.add, and the width has to be found
+# from FloatLib.t in another module.
+#
+# The runnable half is the real assertion.  A grep for an operator cannot
+# tell the operands apart, so [sub] and [div] -- which do not commute -- are
+# checked by the program at run time instead: an operand swap exits 1.
+C_TESTS += FloatOptIn
+CGREP_FloatOptIn += "double a = 1.5;"
+CGREP_FloatOptIn += "bool ok2 = ((a - b) < 0.0);"
+CGREP_FloatOptIn += "bool ok3 = ((a / b) <= 0.61);"
+# The other width, from the other module, and the [f] suffixes that keep it
+# single precision (section 38): without them the sum would be computed at
+# double and rounded once instead of twice.
+CGREP_FloatOptIn += "float x = 1.5f;"
+CGREP_FloatOptIn += "bool ok5 = ((x * y) == 3.375f);"
+# [of_int] is a conversion, so it is a cast and not a coercion.
+CGREP_FloatOptIn += "bool ok6 = ((float)3 == 3.0f);"
+# Section 64.1.  [zero]/[one] are constants, not calls: an abstract [val zero]
+# in a float library used to become an extern and a link error.  And
+# [largest], which has [@@custard_extern], stays one -- a rule from a
+# definition's own attributes beats the builtin table.
+CGREP_FloatOptIn += "((0.0f + 1.0f) == 1.0f)"
+CGREP_FloatOptIn += "\#include \"float.h\""
+CGREP_FloatOptIn += "(1.0f < FLT_MAX)"
+# The whole point: the library's names do not survive as calls.  Before the
+# attribute existed every one of these was an undefined FloatLib_* symbol.
+CNOGREP_FloatOptIn += "FloatLib"
+
+# Section 38.1.  The OCaml backend refuses a width it cannot represent -- at
+# the value, not only at the type.  [ty] is reached only when the type is in
+# a signature, so a program whose floats are all local to one function slipped
+# past it and computed at binary64: the two backends returned different
+# answers for this source, quietly.  A wrong answer with no diagnostic is
+# worse than a refusal, so the check is at the literal and the operator too.
+REJECT_TESTS += FloatHole
+CODE_FloatHole = 368
+EGREP_FloatHole += "FStar.Float32 has no OCaml representation"
+EGREP_FloatHole += "silently compute at double precision"
+# It must name the way out, since Float64 really does work on this backend.
+EGREP_FloatHole += "custard_backend C"
+
+# Sections 66 and 98.  The two 16-bit formats.  Narrow.fst declares binary16
+# with [@@custard_float 16], BF16Lib.fst declares bfloat16 with the separate
+# [@@custard_bfloat16] -- separate because [custard_float]'s contract is IEEE
+# 754 by width and bfloat16 is not an IEEE 754 format.
+#
+# Custard does not implement either format: it emits calls into a vocabulary
+# the program supplies, so what is checked is that an operator became a *call*
+# and that a literal became a *bit pattern*: 1.5 is 0x3E00 = 15872 at
+# binary16.  Narrow_stubs.h is the suite's portable reference implementation,
+# reached through [@@custard_c_header] the way a consumer reaches its own.
+# The program checks its own answers and exits nonzero if any is wrong, so the
+# rounding is under test too -- 2049 is not representable at binary16 and
+# ties-to-even sends it to 2048, which going through a double would not do.
+C_TESTS += Narrow
+CGREP_Narrow += "custard_f16 a = CUSTARD_F16_LIT(15872U);"
+CGREP_Narrow += "custard_f16_add(a, b)"
+CGREP_Narrow += "custard_f16_lt(custard_f16_sub(a, b)"
+CGREP_Narrow += "custard_f16_of_i64((int64_t)2049)"
+CGREP_Narrow += "custard_bf16_add(CUSTARD_BF16_LIT(16320U)"
+# Section 98.  The generated header carries the contract and no implementation:
+# it names what the program must supply and stops the compile if it did not.
+CGREP_Narrow += "\#ifndef CUSTARD_FLOAT16_DEFINED"
+CGREP_Narrow += "\#error"
+CGREP_Narrow += "which Custard does not implement"
+CNOGREP_Narrow += "\#define CUSTARD_FLOAT16_DEFINED"
+CNOGREP_Narrow += "typedef struct { uint16_t bits; } custard_f16;"
+CNOGREP_Narrow += "custard__bits_of_f32"
+CNOGREP_Narrow += "CUSTARD__F16_BIN"
+# The operators must not have survived as C operators on a struct.
+CNOGREP_Narrow += "a + b"
+
+# Section 45.1.  A [@@custard_extern] target is emitted verbatim, and that
+# includes a C keyword: the operand of a type-taking macro or of a C++
+# template argument list often *is* one.  Kuiper's accumulator fragment is
+# wmma::fragment<..., float> and there is no other spelling of float.  The
+# external type path was already verbatim -- that is what lets Kuiper spell a
+# fragment type as auto -- and this pins that the value path agrees.
+C_TESTS += ExternKw
+CGREP_ExternKw += "KW_SIZEOF(float)"
+CNOGREP_ExternKw += "float_"
+
+# Sections 66 and 98.  The 16-bit vocabulary reaches the generated header
+# through [@@custard_c_header], so those includes have to be emitted above the
+# contract block: below it, the #error fires and the compile stops, so the
+# ordering is checked by cc and not by a grep.  This is the arrangement Kuiper
+# needs, where custard_f16 has to become CUDA's __half for wmma::fragment to
+# accept it.  NarrowOverride_stubs.h names its member [ovr] rather than
+# [bits], so nothing here can accidentally agree with a definition Custard
+# emitted -- which is now the stronger statement, since Custard emits none.
+C_TESTS += NarrowOverride
+CGREP_NarrowOverride += "NarrowOverride_stubs.h"
+CGREP_NarrowOverride += "CUSTARD_F16_LIT(15872U)"
+CNOGREP_NarrowOverride += "uint16_t bits;"
+
+# Section 66.  A global at a narrow width takes the *initializer* spelling,
+# not the expression one: a compound literal has automatic storage duration
+# and cannot initialize an object with static storage duration.
+C_TESTS += NarrowG
+CGREP_NarrowG += "static custard_f16 NarrowG_g = CUSTARD_F16_INIT(15872U);"
+CNOGREP_NarrowG += "NarrowG_g = CUSTARD_F16_LIT"
+
+# Section 69.  An external type whose target is a *template*: the arguments
+# go into placeholders instead of being dropped.  Three things are checked --
+# that a type argument reaches the target as its own C spelling, that a value
+# argument reaches it as a value, and that two instantiations of the same
+# external type are two different C types.  Template_stubs.h gives the shape
+# a C11 meaning so that the harness can run it; in CUDA the same output is a
+# real template-id.
+C_TESTS += Template
+CGREP_Template += "tpl_fragment(tpl_matrix_a, 16, 16, 16, uint32_t, tpl_row_major)"
+CGREP_Template += "tpl_fragment(tpl_matrix_b, 16, 16, 16, uint32_t, tpl_row_major)"
+CGREP_Template += "tpl_bitset(64)"
+# The value argument is spelled as a value, not with the width suffix Custard
+# gives an ordinary literal: a non-type template parameter has a declared type
+# and the argument is converted to it.
+CNOGREP_Template += "tpl_bitset(64ULL)"
+CNOGREP_Template += "tpl_bitset((size_t)64)"
+
+# ... and a value argument that is not compile-time known is refused, rather
+# than being pasted into a template-id the C++ compiler would reject.
+REJECT_TESTS += TemplateBad
+CODE_TemplateBad = 390
+FLAGS_TemplateBad = --custard_backend C
+EGREP_TemplateBad += "does not reduce to a constant"
+EGREP_TemplateBad += "argument has to be a constant"
+
+# ... and a template-id has no OCaml counterpart, so the OCaml backend says so
+# rather than dropping the arguments.
+REJECT_TESTS += TemplateML
+CODE_TemplateML = 390
+FLAGS_TemplateML = --custard_backend OCaml
+EGREP_TemplateML += "templates reached the OCaml backend"
+EGREP_TemplateML += "custard_backend C"
+
+# Section 70.1.  A type abbreviation is a library's published C type surface,
+# and Custard unfolds abbreviations -- so nothing in the extracted code refers
+# to the name, and it is dead by construction.  --custard_entry_module now
+# roots one, which is where a library's interface is actually named.  The
+# [iter_t] row is the one that made this a blocker: its body is a
+# monomorphized instance, so without the typedef a consumer writes down the
+# mangled name of an internal encoding (EverParse's section 65.4).
+C_TESTS += TypeAbbrev
+FLAGS_TypeAbbrev = --custard_entry_module TypeAbbrev --custard_monomorphize_types true
+CGREP_TypeAbbrev += "typedef TypeAbbrev_point TypeAbbrev_handle_t;"
+CGREP_TypeAbbrev += "typedef uint32_t TypeAbbrev_count_t;"
+CGREP_TypeAbbrev += "typedef TypeAbbrev_cell__point TypeAbbrev_iter_t;"
+# A proof-level abbreviation is erased, not emitted.
+CNOGREP_TypeAbbrev += "TypeAbbrev_spec_t"
+
+# Section 108.  The collapse of a one-field record is an unfolding too, so
+# the name is left in the same position an abbreviation's is: referred to by
+# nothing, and kept only by being a root.
+C_TESTS += Newtype
+FLAGS_Newtype = --custard_entry_module Newtype --custard_monomorphize_types true
+CGREP_Newtype += "typedef uint64_t Newtype_wrapper;"
+CGREP_Newtype += "typedef uint32_t Newtype_positive;"
+CGREP_Newtype += "typedef Newtype_point Newtype_boxed;"
+# Monomorphized first, so there is no parameter left to be unconstrained.
+CGREP_Newtype += "typedef uint32_t Newtype_phantom__bool;"
+# Rooting is for the collapsed case only.
+CNOGREP_Newtype += "Newtype_unused"
+CNOGREP_Newtype += "Newtype_spect"
+
+# Section 70.2.  An external type whose F* values are handles: a binding of
+# one has to alias, or a write through it is lost.  Kuiper's section 62 --
+# [auto acc = accFrags[i]; mma_sync(acc, ...)] wrote a copy that died at the
+# end of the iteration, the accumulator chain folded away, and the kernel
+# wrote zeros with no diagnostic anywhere.  A reference binding is C++, so
+# this test runs through the C++ leg.
+CXX_TESTS += RefBind
+FLAGS_RefBind = --custard_backend C
+CGREP_RefBind += "rb_cell &"
+CGREP_RefBind += "rb_get(rb_slot)"
+# A fresh value is a copy of nothing, so that binding is not a reference.
+CNOPAIR_RefBind += "rb_cell &@rb_make"
+
+# ... and the attribute means nothing without a target, so it is refused on a
+# type Custard compiles itself.
+REJECT_TESTS += RefBindBad
+CODE_RefBindBad = 392
+FLAGS_RefBindBad = --custard_backend C
+EGREP_RefBindBad += "is on RefBindBad.cell, which is not an"
+
+# ... and a reference binding is C++, so the OCaml backend says so rather than
+# emitting a copy that compiles and is wrong.
+REJECT_TESTS += RefBindML
+CODE_RefBindML = 392
+FLAGS_RefBindML = --custard_backend OCaml
+EGREP_RefBindML += "reached the OCaml backend"
+EGREP_RefBindML += "custard_backend C"
+
+# ... and the one place a copy can still lose a write -- a parameter of a
+# function Custard compiles itself -- is reported rather than left silent.
+REJECT_TESTS += RefBindCopy
+CODE_RefBindCopy = 391
+FLAGS_RefBindCopy = --custard_backend C
+EGREP_RefBindCopy += "a parameter is a copy"
+EGREP_RefBindCopy += "make the callee external"
+
+# Section 68.  A protocol constant is part of a C API in a way a variable
+# cannot be: a [#define] is a constant expression, so it can be a [case]
+# label, can initialize an object with static storage duration, and is
+# visible to [#if].  karamel has always emitted these as macros, uppercased,
+# and consumers write C against that spelling, so Custard matches it exactly.
+C_TESTS += Macro
+# The constants are the API; without an entry module nothing reaches them
+# from [main] and whole-program reachability drops them (section 64.4).
+FLAGS_Macro = --custard_entry_module Macro
+CGREP_Macro += "\#define MACRO_MAJOR_TYPE_UINT64 (0U)"
+CGREP_Macro += "\#define MACRO_MAX_SIMPLE_VALUE (23U)"
+CGREP_Macro += "\#define MACRO_INTERNAL_LIMIT (65535U)"
+# No cast in the body: a cast is not usable in [#if], which is one of the
+# three reasons to want the macro at all.
+CNOGREP_Macro += "\#define MACRO_MAJOR_TYPE_UINT64 ((uint8_t)0U)"
+# A macro has no linkage, so an [extern] declaration beside it would declare
+# a different object -- and the macro would then rewrite that declaration.
+CNOGREP_Macro += "extern uint8_t MACRO_MAJOR_TYPE_UINT64"
+CNOGREP_Macro += "Macro_major_type_uint64"
+# A reference to a macro is a reference to its body, so it is itself a
+# constant expression and a global initialized from one needs no startup
+# assignment.
+CGREP_Macro += "uint8_t Macro_table = MACRO_MAX_SIMPLE_VALUE;"
+CNOGREP_Macro += "custard_init_globals"
+# EverParse's section 65.1.  The three uses, compiled rather than grepped, in
+# a separate translation unit that sees only the generated header -- which is
+# what a consumer is.  The [#if] probe is deliberately written against a
+# *non-zero* constant: with the macro absent the preprocessor reads
+# [MACRO_MAJOR_TYPE_UINT64 == 0] as [0 == 0], so a zero-valued constant tests
+# as passing either way and the failure is invisible to the natural test for
+# it.
+CEXTRA_Macro = Macro_probe.c
+
+# ... and one whose body C cannot evaluate is refused, rather than being
+# emitted as something the preprocessor would paste in unevaluated.
+REJECT_TESTS += MacroBad
+CODE_MacroBad = 389
+FLAGS_MacroBad = --custard_backend C --custard_entry_module MacroBad
+EGREP_MacroBad += "but its value is not a constant"
+EGREP_MacroBad += "Drop the attribute"
+
+# Section 63.1.  A width Custard does not implement is refused at the
+# attribute, not at the first use of the type: 386 names the mistake, where
+# 368 would name the type and point at another module.
+REJECT_TESTS += FloatWidth
+CODE_FloatWidth = 386
+EGREP_FloatWidth = "The accepted widths are 16, 32 and 64"
+
+# Section 63.2.  An unrecognized name in a float module becomes an external
+# on purpose -- bit_eq and to_string are meant to be -- so a misspelling of
+# the vocabulary is silent until the linker sees it.  [eq] is the one name
+# worth catching, because [ieee_eq] is spelled that way to say which
+# equality is meant.  The diagnostic is the product.
+REJECT_TESTS += FloatEq
+CODE_FloatEq = 387
+EGREP_FloatEq = "Did you mean to name it \[ieee_eq\]"
+
+# Section 63.3.  A polymorphic [assume val] is realized once per
+# instantiation.  This was error 368 -- and the message told the reader to
+# report a compiler bug -- because the declaration path read its own type raw
+# instead of going through [external_ty] as the other two ways of reaching an
+# external already did.
+#
+# Both greps together are the assertion.  Either name alone would still be
+# there if the two instantiations had collapsed into one symbol; what says
+# they did not is that there are two, differing in the type they mangle.
+# PolyExtern_stubs.c would not compile against a collapsed signature either,
+# so the link is a check and not just a formality.
+C_TESTS += PolyExtern
+CEXTRA_PolyExtern = PolyExtern_stubs.c
+CGREP_PolyExtern += "extern uint32_t PolyExtern_identity__t(uint32_t);"
+CGREP_PolyExtern += "extern PolyExtern_pair PolyExtern_identity__pair(PolyExtern_pair);"
+CGREP_PolyExtern += "uint32_t x = PolyExtern_identity__t("
+# No leftover type parameter: the variable was substituted away, not passed.
+CNOGREP_PolyExtern += "void *"
+
+# Section 38.6.  Not Floats: karamel's constant folder reads a float constant
+# with Z.of_string.  Every operand in FloatsKrml is a variable.
+# Section 40.  Half and bfloat16 with no compiler change: an extern type
+# and extern functions, in the shape of nvcc's <cuda_fp16.h>.  What is pinned
+# is that no definition is emitted for either type, that the C names in the
+# attributes are the ones used, and that the types survive monomorphization
+# and the layout analysis like any other.
+C_TESTS += Half
+CGREP_Half += "include \"Half_stubs.h"
+CGREP_Half += "__half p_h;"
+CGREP_Half += "__nv_bfloat16 p_b;"
+CGREP_Half += "Half_twice__half(__hadd, p.p_h)"
+CGREP_Half += "Half_twice__bfloat16(__hadd_bf, p.p_b)"
+CGREP_Half += "static __half Half_twice__half(__half"
+CNOGREP_Half += "Half_half"
+CNOGREP_Half += "Half_bfloat16"
+
+# Section 39.  A literal is a value and the base it was written in, and the
+# generated code shows the reader the base he wrote.  0xff and 255 are the
+# same number, so a pattern in one base matches a scrutinee in the other, and
+# -0.0 keeps its sign because a float has one.
+C_TESTS += LitBase
+# Section 59: the base survives the cast removal, which is the whole point
+# of this test -- and the patterns are anchored now, because a bare "0xff"
+# would also be matched by the tail of the 64-bit literal below.  That one
+# keeps its suffix: its value is past what C guarantees an int holds, so
+# without the suffix it would have no type at all.
+CGREP_LitBase += "== 0xff)"
+CGREP_LitBase += "== 255)"
+CGREP_LitBase += "0xffffffffffffffffULL"
+CGREP_LitBase += "= -0.0;"
+CGREP_LitBase += "0.0015"
+CNOGREP_LitBase += "1.5e-3"
+
+# Section 43.1-43.2.  Every base F* can write, on two backends that cannot
+# necessarily write it back.  LitBase covered only hex and decimal -- the two
+# bases whose F* and C spellings coincide -- so it could not see either bug.
+#
+# The assertions that matter are inside the program: main checks each value and
+# returns which one was wrong.  Both bugs were silent, and one of them (karamel
+# reading a leading-zero octal back as decimal) produces a spelling a grep
+# would have accepted.
+C_TESTS += LitOct
+KRML_TESTS += LitOct
+# Section 59: bases survive the cast removal; anchored for the same reason.
+CGREP_LitOct += "== 017)"
+CGREP_LitOct += "= 0xf;"
+CNOGREP_LitOct += "0o17"
+CNOGREP_LitOct += "0b1010"
+
+# Section 43.3.  A binary32 literal that reaches the C compiler without its
+# suffix is a binary64 literal with a cast in front of it, and the two do not
+# always name the same float.  Run on both backends: the direct one has always
+# written the suffix, and this pins that it keeps doing so.
+C_TESTS += LitF32
+KRML_TESTS += LitF32
+CGREP_LitF32 += "7038531f"
+
+# Section 44.2.  F*'s equality on strings is equality of contents; C's [==] on
+# a [const char *] is equality of addresses.  Both the match and the operator
+# emitted the latter.
+#
+# main compares strings that came off the heap, and that is the whole test: a
+# program whose strings are all literals exits 0 either way, because the C
+# compiler pools literals and the two addresses then agree by accident.
+C_TESTS += PatStr
+CGREP_PatStr += "strcmp(s, \"a\") == 0"
+CGREP_PatStr += "strcmp(a, b) == 0"
+CGREP_PatStr += "strcmp(a, b) != 0"
+CNOGREP_PatStr += "s == \"a\""
+
+# Section 44.1.  The same match through karamel, which has no pattern node for
+# a string constant and used to substitute one that matches everything.
+# Section 48.3.  The negative control for the desugaring above: a string
+# constant nested inside another pattern is not a flat string match, so it
+# still reaches krml_pat and is still refused.  The NOEGREP pins the other
+# half: krml_pat's message must keep pointing at the direct C backend, which
+# does accept a nested string pattern.
+REJECT_TESTS += PatStrNest
+FLAGS_PatStrNest += --custard_backend KrmlC
+CODE_PatStrNest := 368
+EGREP_PatStrNest += "a string pattern has no karamel representation"
+NOEGREP_PatStrNest += "if-chain"
+
+# Section 48.3.  Was a reject test for two rounds; the krml backend now
+# desugars a string match into an if-chain over __eq__Prims_string, so it
+# runs.  It gets its strings from a malloc-ing extern for the same reason
+# PatStr does: a program whose strings are all literals cannot see a
+# comparison that is wrong (section 44.2).
+KRML_TESTS += PatStrKrml
+
+# Section 45.1-45.2.  A TensorCore-shaped program: nothing but externals, whose
+# C names are not F* identifiers, plus the source-level decorations a CUDA
+# kernel is made of.
+#
+# A value target used to be run through [sanitize], which turns Kuiper's
+# wmma::mma_sync into wmma__mma_sync -- a name that does not exist.  The type
+# path had always been verbatim, which is why the type beside the call worked.
+C_TESTS += TensorC
+CGREP_TensorC += "tc_auto_ref a = TC_NS(mk_a)()"
+CGREP_TensorC += "return TC_NS(sum)(a, c);"
+CNOGREP_TensorC += "TC_NS_"
+CNOGREP_TensorC += "tc_auto_ref_"
+# The decoration goes on the definition *and* on the prototype, and exactly
+# once on each: F* records an attribute on the sigelt and on the letbinding,
+# and two __global__s is a syntax error rather than a redeclaration.
+CGREP_TensorC += "/* __global__ */"
+CGREP_TensorC += "/* end kernel */"
+CGREP_TensorC += "/* A kernel, decorated from source. */"
+
+# Section 45.3.  An external through karamel.  The declaration used to carry
+# the custard_extern target and the call site the F* name, so the TU declared
+# one symbol and called another, and the custard_c_header include was absent
+# besides.  Linking is the assertion.
+KRML_TESTS += KrmlExt
+
+KRML_TESTS += FloatsKrml
+
+# The same arithmetic on the OCaml backend, where a Float64 is OCaml's float.
+CUSTARD_TESTS += FloatsML
+GREP_FloatsML += "( +\. )"
+NOGREP_FloatsML += "FStar_Float64"
+
+# Section 38.  OCaml's float is binary64 and there is no binary32 to round to,
+# so a single-precision program is refused rather than computed at the wrong
+# precision.
+REJECT_TESTS += FloatSingle
+CODE_FloatSingle = 368
+EGREP_FloatSingle += "no OCaml representation"
+EGREP_FloatSingle += "binary32"
+
+# of_literal's argument becomes a constant in the generated code, so it is
+# checked against a grammar rather than pasted through.
+REJECT_TESTS += FloatLit
+CODE_FloatLit = 380
+EGREP_FloatLit += "is not a floating-point literal"
+
+# Section 46.1/46.2.  FStar.Char.char is uint32_t on both C paths.  Both tests
+# check their own answer rather than grepping for a spelling (section 43.2):
+# ChrLit computes 97 from the constant 'a', ChrTy from a char parameter.
+C_TESTS    += ChrLit
+KRML_TESTS += ChrLit
+# Section 59: the constant no longer carries a cast in a converting
+# position, so what pins "char is uint32_t" here is the signature -- which
+# says it once for the whole function rather than once per literal, and is
+# the stronger assertion.  That 97 is the right *value* is checked by the
+# program, as the comment above says.
+CGREP_ChrLit += "static uint32_t ChrLit_letter(void)"
+CGREP_ChrLit += "return 97;"
+
+# Section 46.2.  No character constant anywhere -- a char in argument position
+# alone used to produce a header that would not compile.  The absent typedef
+# is pinned because its presence was the bug.
+C_TESTS    += ChrTy
+KRML_TESTS += ChrTy
+CNOGREP_ChrTy += "FStar_Char_char_s"
+
+# Section 46.3.  A [try] whose body never raises.  The krml backend used to
+# translate it to a bare abort, discarding the protected call; it is now
+# refused, so this is a reject test on that backend.  The NOEGREP pins the
+# other half of 46.3: the direct C backend refuses an exception handler too,
+# so the diagnostic must not send the reader there.
+REJECT_TESTS += TryOk
+FLAGS_TryOk += --custard_backend KrmlC
+CODE_TryOk := 368
+EGREP_TryOk += "an exception handler has no karamel representation"
+NOEGREP_TryOk += "does accept it"
+
+# Section 49.3.  Erasure silently changes an external's arity.  A *pure*
+# [unit -> unit] parameter computes nothing, so Custard drops it, and the
+# emitted call no longer matches the C prototype that Custard cannot see.
+# Warning 382 is the only place that can be noticed.  The same test pins the
+# carve-out: the [erased] parameter of [run_g] is erasure the author asked
+# for, and naming it here would make section 47.2's idiom unusable, so the
+# NOEGREP requires the diagnostic to name [cb] and not [w].
+REJECT_TESTS += ExternErase
+CODE_ExternErase := 382
+EGREP_ExternErase += "external ExternErase.run: cb"
+NOEGREP_ExternErase += "ExternErase.run_g"
+
+# Section 47.2.  An indexed custard_extern type, with the configuration
+# chosen by a typeclass whose indices are all erased -- the shape the
+# TensorCore fragment API has.  Checks its own answer: 0 + 2*3 = 6.
+C_TESTS    += FragCfg
+CGREP_FragCfg += "fc_mma("
+CNOGREP_FragCfg += "FragCfg_frag"
+
+# Section 51.3.  A prologue that follows the call graph.  Three callees, one
+# per reachability class: [only] is kernel-only and gets the exclusive
+# string, [both] is reached from the kernel and from host code and gets the
+# shared one, [host_only] is reached from neither and must be untouched.  The
+# strings are not CUDA's on purpose -- Custard does not read them, and a test
+# spelling __device__ would be checking a spelling.
+C_TESTS += DevClosure
+CGREP_DevClosure += "/*ENTRY*/" "/*EXCL*/" "/*SHARED*/"
+# Which function got which prologue is the whole test, and a prologue sits on
+# the line before the definition it decorates, so the assertions are on pairs
+# of lines rather than on lines.  CPAIR_<t> is `A@B', asserting that some A is
+# immediately followed by a B; CNOPAIR_<t> asserts that none is.
+CPAIR_DevClosure   += "/*EXCL*/@DevClosure_only" \
+                      "/*SHARED*/@DevClosure_both" \
+                      "/*ENTRY*/@DevClosure_kernel"
+CNOPAIR_DevClosure += "/*SHARED*/@DevClosure_only" \
+                      "/*EXCL*/@DevClosure_both" \
+                      "/*EXCL*/@DevClosure_host_only" \
+                      "/*SHARED*/@DevClosure_host_only" \
+                      "/*EXCL*/@static uint32_t DevClosure_host_g"
+# Section 53.2.  The fourth node type: a *global* in the device closure.  The
+# closure covers functions, and a global reached from device code used to get
+# nothing -- one node type over from the case that was tested.
+CPAIR_DevClosure   += "/*EXCL*/@static uint32_t DevClosure_gk"
+
+# Section 53.2.  The other half, which cannot be marked at all: a global that
+# device *and* host code read.  The shared string describes a function, and
+# applying it to a variable on CUDA compiles with a warning and is wrong at
+# runtime, so Custard refuses instead of guessing.
+REJECT_TESTS += DevGShare
+CODE_DevGShare := 383
+FLAGS_DevGShare := --custard_backend C --custard_monomorphize_types true
+EGREP_DevGShare += "the global DevGShare.g is reached from device code"
+EGREP_DevGShare += "__managed__"
+NOEGREP_DevGShare += "please report"
+
+# Section 53.3.  One C symbol, two prototypes.  Warning 367's own advice used
+# to end here, and following it alone gives a file that does not compile; the
+# fix is [@@custard_c_header], which is also the answer for a variadic macro.
+REJECT_TESTS += ExtDup
+CODE_ExtDup := 384
+FLAGS_ExtDup := --custard_backend C --custard_monomorphize_types true
+EGREP_ExtDup += "the external target \`KCALL2' is declared twice"
+EGREP_ExtDup += "custard_c_header"
+NOEGREP_ExtDup += "has no C representation"
+
+# Section 53.1.  A unit-returning function passed as a value.  The suite
+# compiles with -Werror, so the mismatch between the pointer type and the
+# definition is a build failure and needs no grep -- but one is pinned anyway,
+# because "compiles" would also be satisfied by dropping the parameter from
+# both ends for the wrong reason.
+C_TESTS += UnitPtr
+CGREP_UnitPtr += "void (*f)(uint32_t)"
+CNOGREP_UnitPtr += "custard_unit (*"
+
+# Section 50.1.  A source variable named [scrut], which is the name section
+# 48.3's desugaring invented for its scrutinee binder without freshening it.
+# Checks its own answers, so the capture is a nonzero exit and not a grep.
+KRML_TESTS += ScrutCap
+
+# Section 50.2.  The KrmlRust leg, which this directory did not have: every
+# string test above runs on exactly one of the two backends the code under
+# test is shared by.  [PatStrR] is section 48.3's desugaring, which is C-only
+# because [__eq__Prims_string] is; [StrEqK] is the older half, a plain [=] on
+# strings, which crashed karamel's Rust backend before there was a
+# desugaring to blame.  Both must now refuse rather than crash.
+RUSTREJECT_TESTS += PatStrR
+CODE_PatStrR := 368
+EGREP_PatStrR += "a string pattern has no representation in karamel's Rust"
+EGREP_PatStrR += "--custard_backend KrmlC"
+NOEGREP_PatStrR += "has no karamel representation"
+
+RUSTREJECT_TESTS += StrEqK
+CODE_StrEqK := 368
+EGREP_StrEqK += "__eq__Prims_string"
+EGREP_StrEqK += "--custard_backend KrmlC"
+
+
+# Section 54.1.  The three PrintKrml behaviours that differ between the two
+# karamel targets and had a test on one side only.  Each is *correct*; what
+# was missing was a leg that could observe it, since KrmlRust appeared in one
+# rule and that rule asserts refusals.
+#
+# LitOct and LitF32 already run on C and KrmlC; adding them here is the whole
+# fix for two of the three, and costs one line each.
+RUST_TESTS += LitOct
+RSGREP_LitOct += "0o17u32"
+RSGREP_LitOct += "0b1010u32"
+RSGREP_LitOct += "0xfu32"
+# The C spellings, which must not survive the trip: Rust has its own and
+# section 43.1's bug was karamel reading one back as another.
+RSNOGREP_LitOct += "017U"
+
+# Custard writes the binary32 literal *without* a suffix on the krml path and
+# karamel's Rust printer adds [f32] itself -- so the C-only [f] suffix must be
+# absent here, and the Rust one present.  Both halves are pinned, because
+# "absent" alone would also be satisfied by losing the literal.
+RUST_TESTS += LitF32
+RSGREP_LitF32 += "7038531f32"
+RSNOGREP_LitF32 += "7038531f;"
+
+RUST_TESTS += RustTup
+KRMLRS_RustTup := -fkeep-tuples
+RSGREP_RustTup += "pub fn swap(p: (u32, u32)) -> (u32, u32)"
+# The monomorphized *struct*, which is the KrmlC spelling.  Not the bare name:
+# karamel keeps it for the projector functions, which are names and not types,
+# and asserting its total absence would be pinning a naming scheme rather than
+# the representation this test is about.
+RSNOGREP_RustTup += "pub struct __uint32_t_uint32_t"
+
+# Section 65.  Two F* modules, two karamel files, two [rename=] bundles, and a
+# reference across the boundary.  The bundles are spelled the way EverParse
+# spells theirs: an api module on the left of the [=], a pattern on the right.
+RUSTSPLIT_TESTS += RustSplit
+# The [*] goes on the *lower* bundle, which is EverParse's own arrangement
+# read the other way up: the shared declarations -- [Custard.Prims], the
+# specializations Custard makes of library functions -- have to end up in a
+# file both halves may refer to, and putting them above the module that uses
+# them is what makes the two files circular.  karamel says so, in as many
+# words, and the round spent a while learning to read it.
+#
+# Section 75.4.  The third clause names RustSplitIface, which is .fsti-only
+# and inlined away, so no declaration carries its name.  karamel treats a
+# bundle naming a module it was not given as fatal, so this clause is the
+# assertion: Custard has to emit the empty module the way F*'s own extraction
+# does.  It was EverParse's [CBOR.Pulse.Raw.Slice].
+KRMLSPLIT_RustSplit := -fkeep-tuples \
+  -bundle 'RustSplit=[rename=Upper]' \
+  -bundle 'RustSplitIface=[rename=Iface]' \
+  -bundle 'RustSplitLib=*[rename=Lower]'
+# The point of the leg: the call across the module boundary is a [crate::]
+# path, which is what a consumer's hand-written modules are reached by and
+# what a single flattened file cannot produce.
+RSSGREP_RustSplit += "crate::lower::"
+# Section 65.1.  Custard's own [dtuple2] survives with F*'s field names.
+# karamel's builtin [Prims] spells them [fst] and [snd] and used to win, so
+# this is the declaration EverParse saw rejected.
+RSSGREP_RustSplit += "pub _1: u32"
+RSSGREP_RustSplit += "pub _2: u32"
+RSSDRIVER_RustSplit := \#[path = "lower.rs"] mod lower;\n\#[path = "upper.rs"] mod upper;\nfn main() { std::process::exit(upper::main()); }\n
+
+# Section 72.1.  A root has no call site, so a polymorphic definition cannot
+# be one: specialization takes its type argument from a caller.
+# --custard_entry_module therefore does not root [pick], on the same footing
+# as [spec], and what comes out is the concrete instance [use_it] calls.
+# Before this the whole module was refused with error 368, naming a helper the
+# user never asked to compile -- six of Kuiper's modules, in section 72.0's
+# sweep.
+C_TESTS += PolyRoot
+FLAGS_PolyRoot = --custard_entry_module PolyRoot
+CGREP_PolyRoot += "PolyRoot_use_it"
+# The instance is emitted; the uninstantiated helper is not a declaration at
+# all.
+CNOGREP_PolyRoot += "PolyRoot_pick("
+CNOGREP_PolyRoot += "PolyRoot_spec"
+
+# ... and the other half: --custard_entry names one definition, so it is taken
+# at its word and still refused.  What changed is only the advice.  The
+# NOEGREP is the point of the test: this refusal is correct, and telling the
+# reader to report it as a Custard bug is what sent it to the issue tracker.
+REJECT_TESTS += PolyRootEntry
+CODE_PolyRootEntry = 368
+FLAGS_PolyRootEntry = --custard_backend C --custard_monomorphize_types true \
+                      --custard_entry PolyRootEntry.pick
+EGREP_PolyRootEntry += "This declaration is a root, and a root has no call site"
+EGREP_PolyRootEntry += "Root a concrete caller of it instead"
+NOEGREP_PolyRootEntry += "please report it"
+
+# Section 72.3.  Error 390 names the declaration in which the template
+# argument is still a runtime value.  The request chain it already printed
+# names specializations, and on a run rooted at [main] that is [main] -- which
+# is not where the reader has to make a change.
+REJECT_TESTS += TmplRun
+CODE_TmplRun = 390
+FLAGS_TmplRun = --custard_backend C --custard_entry TmplRun.main
+EGREP_TmplRun += "It is reached while extracting"
+EGREP_TmplRun += "extracting TmplRun.helper"
+# Section 89.  And which declaration to change, which is not that one.  [n] is
+# [make]'s own parameter, not [helper]'s: rule 4d withheld the demand on the
+# external (section 85), so its codomain still mentions it and no caller's
+# specialization can substitute it.  Saying "the index is a runtime value" and
+# leaving the reader to work out whose was worth four failed reductions.
+EGREP_TmplRun += "which is a parameter of TmplRun.make"
+# Not the whole sentence: the message is wrapped, and a pinned string that
+# crosses a wrap point pins the wrapping rather than the wording.
+EGREP_TmplRun += "have that parameter demanded on its own declaration"
+# Section 91.  And what the scan saw, which is the most useful line in the
+# message and used to be withheld in exactly this branch.
+EGREP_TmplRun += "Rule 4d's scan of TmplRun.helper found: TmplRun.frag"
+
+# Section 73.  A prettified alias of a unit-typed rule: both wrapper layers
+# collapse, and [evercddl_null_left]'s pattern went with them while its body
+# kept the variable the pattern bound.
+C_TESTS += PrettyUnit
+FLAGS_PrettyUnit = --custard_entry_module PrettyUnit
+CGREP_PrettyUnit += "void PrettyUnit_evercddl_null_left(void)"
+CGREP_PrettyUnit += "PrettyUnit_round_trip"
+
+# The reporter hit this on both COSE legs, so both are pinned: the karamel
+# route died with a bare OCaml failure where the direct C route raised error
+# 368 (section 69.4).
+KRML_TESTS += PrettyUnit
+
+# Section 74.  A [@@monomorphize] binder hiding behind an abbreviation in the
+# codomain: classified, so the call dropped its argument, but not substituted,
+# so the definition kept its parameter.
+C_TESTS += MonoAbbrev
+CGREP_MonoAbbrev += "MonoAbbrev_mk"
+CNOGREP_MonoAbbrev += "tile"
+
+# The same defect seen as error 390: the unsubstituted [Mono] binder was also
+# a template argument, so it reduced to a variable and not to a constant.
+C_TESTS += TmplAbbrev
+CGREP_TmplAbbrev += "tpl_bitset(64) b"
+CNOGREP_TmplAbbrev += "tpl_bitset(n)"
+
+# Section 76.  A type class with a value method.  Each instance and each
+# reader of the method is a parameterless definition, so a reference to one
+# from another is a reference to a *variable* -- which C does not accept where
+# an object with static storage duration is initialized, so the whole chain
+# used to be assigned at startup in custard_init_globals.  Reported from the
+# field.
+#
+# The assertion is the absence of the initializer, not the presence of a
+# spelling: with nothing left to set there is no function, the header does not
+# declare it and main does not call it.  The run pins that the folded values
+# are the ones the assignments would have computed.
+C_TESTS += TcConst
+CGREP_TcConst += "TcConst_twice__t = "
+CNOGREP_TcConst += "custard_init_globals"
+# The substituted-from definitions are unreachable afterwards and have to go:
+# an unreferenced static is a -Werror=unused-variable failure, which is why
+# the pass runs before dce.
+CNOGREP_TcConst += "TcConst_start"
+
+# Section 80.2.  A single-field record whose field is an arrow of arity 2:
+# section 30's newtype collapse makes [rec_t] *be* that arrow, so [mk] returns
+# a function.  [absorb] used to move the returned lambda's binders into [mk]'s
+# parameter list unconditionally, raising [mk]'s arity to 2 while its only
+# call site, [mk ()], supplied one -- a partial application C cannot express.
+# Bounded by the callers, the lambda stays put, [lift_lambdas] gives it a name,
+# and [mk] returns a pointer to it, which is what C wanted all along.
+C_TESTS += ArrowFieldPure
+FLAGS_ArrowFieldPure = --custard_entry_module ArrowFieldPure
+CGREP_ArrowFieldPure += "bool (*ArrowFieldPure_mk(void))(bool, bool)"
+CGREP_ArrowFieldPure += "return ArrowFieldPure_mk__lam;"
+CGREP_ArrowFieldPure += "ArrowFieldPure_call_it(ArrowFieldPure_mk(), true)"
+
+# Section 81.  A top-level partial application whose remaining binders include
+# a unit-shaped one that is not last.  Section 25.3 declines to eta-expand a
+# partial application, so [cut] is 0, so every binder is filtered on the
+# definition side by the rule for binders past the classification -- which was
+# [is_erased_binder], and that is [classify]'s rule 1 minus its unit-shaped
+# half.  The definition kept the unit parameter and every call site dropped it.
+# The run pins the answer, so the arity is right and not merely consistent.
+C_TESTS += DropRun
+FLAGS_DropRun = --custard_entry_module DropRun
+CGREP_DropRun += "uint32_t DropRun_g(uint32_t b, uint32_t c)"
+CNOGREP_DropRun += "DropRun_g(uint32_t b, void"
+
+# Section 82.  A single-constructor nullary datatype is erased to unit, so a
+# value of it reaches a call as a unit-typed *variable*.  karamel's Rust
+# backend reads a call whose whole argument list is one unit as a call to a
+# nullary function and asserts the argument was the literal (), which F*'s own
+# extraction never violates because it keeps the type as a one-variant enum.
+# The pass passes () instead.  The grep pins the call, not the assertion:
+# before the fix karamel aborted here, so any emitted Rust at all is the test.
+RUST_TESTS += NullArg
+FLAGS_NullArg = --custard_entry_module NullArg
+RSGREP_NullArg += "nil_right()"
+
+# Section 85.  A size index consumed as a non-type template argument has to be
+# a constant, and no rule was making it one -- so it stayed a runtime parameter
+# and error 390 fired on a definition whose every call site passes a literal.
+# Rule 4d demands it, from the definition's binder sorts and body and from an
+# [assume val]'s codomain, which has no body for rule 4c to read.  C++ because
+# the target spelling is a class template.
+CXX_TESTS += TmplMono
+FLAGS_TmplMono = --custard_backend C --custard_entry_module TmplMono
+CGREP_TmplMono += "wm::frag<16> f = wm::mk16(rows)"
+CGREP_TmplMono += "TmplMono_g_gemm__uint_to_t_16(wm::frag<16> f"
+# The index reaches the target through the type, and is not also passed at
+# runtime -- that is the whole of why the section 32.5 rule can be relaxed.
+CNOGREP_TmplMono += "g_gemm__uint_to_t_16(size_t tm"
+
+CXX_TESTS += TmplLet
+FLAGS_TmplLet = --custard_backend C --custard_entry_module TmplLet
+CGREP_TmplLet += "wm::nfrag<16> f = wm::nmk16(seed)"
+
+CXX_TESTS += TmplLet2
+FLAGS_TmplLet2 = --custard_backend C --custard_entry_module TmplLet2
+CGREP_TmplLet2 += "wm::nfrag<16> f = wm::nmk16(seed)"
+
+CXX_TESTS += TmplLet3
+FLAGS_TmplLet3 = --custard_backend C --custard_entry_module TmplLet3
+CGREP_TmplLet3 += "wm::nfrag<16> f = wm::nmk16(seed)"
+
+CXX_TESTS += TmplMonoV
+FLAGS_TmplMonoV = --custard_backend C --custard_entry_module TmplMonoV
+CGREP_TmplMonoV += "wm::frag<16> f = wm::mk16(rows)"
+CGREP_TmplMonoV += "TmplMonoV_g_gemm__uint_to_t_16(wm::frag<16> f"
+
+CXX_TESTS += TmplMonoW
+FLAGS_TmplMonoW = --custard_backend C --custard_entry_module TmplMonoW
+CGREP_TmplMonoW += "wm::frag<16> f = wm::mk16(rows)"
+CGREP_TmplMonoW += "TmplMonoW_g_gemm__uint_to_t_16(wm::frag<16> f"
+
+C_TESTS += HnfSig
+FLAGS_HnfSig = --custard_backend C --custard_entry_module HnfSig --custard_norm_budget 200000
+CGREP_HnfSig += "typedef uint32_t HnfSig_t1;"
+CGREP_HnfSig += "typedef bool HnfSig_t2;"
+CGREP_HnfSig += "typedef uint8_t HnfSig_t3;"
+CGREP_HnfSig += "typedef uint16_t HnfSig_t4;"
+
+# Section 95.  The same program twice, once at each width.  SzWidth is the
+# control: it pins that the default has not moved.
+C_TESTS += SzWidth
+FLAGS_SzWidth = --custard_backend C --custard_entry_module SzWidth
+CGREP_SzWidth += "size_t len;"
+CGREP_SzWidth += "uint64_t SzWidth_widen(size_t n)"
+CGREP_SzWidth += "size_t SzWidth_of_u32(uint32_t n) {"
+CGREP_SzWidth += "return (size_t)n;"
+CNOGREP_SzWidth += "uint32_t len;"
+
+C_TESTS += SzWidth32
+FLAGS_SzWidth32 = --custard_backend C --custard_entry_module SzWidth32 \
+                  --custard_sizet_width 32
+CGREP_SzWidth32 += "uint32_t len;"
+CGREP_SzWidth32 += "uint64_t SzWidth_widen(uint32_t n)"
+CGREP_SzWidth32 += "uint32_t SzWidth_of_u32(uint32_t n) {"
+CGREP_SzWidth32 += "return (uint32_t)n;"
+# The narrowed run must not mention size_t anywhere, in either file.
+CNOGREP_SzWidth32 += "size_t"
+
+ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
+                  $(C_TESTS) $(CXX_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \
+                  $(RUSTSPLIT_TESTS) \
+                  SepApp SepAppC SplitHi SplitLo
+
+# Section 35.3.  A setting whose name matches no registered test.
+#
+# [CGREP_PulseForCapture] was set in pulse/Makefile for two rounds and read by
+# no recipe, and M10-phi-phi was the same bug from the other side: a test with
+# settings but no registration.  Both are silent, and both read like coverage
+# that does not exist.  Any name here that is not in a test list is one or the
+# other.  Recursively expanded, so that [.VARIABLES] is complete by the time a
+# recipe asks.
+SETTING_PREFIXES := FLAGS GREP NOGREP EGREP NOEGREP CGREP CNOGREP CODE \
+                    RSGREP RSNOGREP KRMLRS RSSGREP KRMLSPLIT RSSDRIVER
+ORPHAN_SETTINGS = $(strip $(foreach p,$(SETTING_PREFIXES),\
+  $(foreach v,$(filter $(p)_%,$(.VARIABLES)),\
+    $(if $(filter $(patsubst $(p)_%,%,$(v)),$(ALL_TEST_NAMES) TESTS),,$(v)))))
+
+# Section 46.4.  A NOEGREP says a phrase is absent from *one test's* output.
+# That is not the question worth asking about a phrase that names the wrong
+# component: what matters is whether the compiler can still emit it, from any
+# site, reached by any program.  Round 46 found two live sites of "not
+# supported by the C backend" that a passing NOEGREP had said nothing about,
+# one of which put the sentence in a Rust binary.  A grep over the sources is
+# the check that would have caught them, and it costs a second.
+# The interfaces too.  No .fsti carries diagnostic text today, so this is
+# latent rather than live -- which is the argument for widening it now, while
+# it costs four characters and cannot break.
+CUSTARD_SRC := $(wildcard $(CURDIR)/../../src/custard/*.fst) \
+               $(wildcard $(CURDIR)/../../src/custard/*.fsti)
+
+.PHONY: check-sources
+check-sources:
+	$(Q)! grep -n "supported by the C backend" $(CUSTARD_SRC) 	  || { echo "ERROR: a diagnostic names 'the C backend' from the sources"; 	       echo "Custard has more than one C backend; name the one that is"; 	       echo "refusing, and say what the other one does (section 46.3)."; 	       exit 1; }
+
+# Section 84.  Every row of the milestone table is keyed by an identifier that
+# sections refer to, so a duplicate silently makes one of the two unreachable.
+# Three were introduced in a row before anyone noticed, because the series had
+# wrapped and the next free key was guessed rather than checked.  Guessing is
+# the right thing to do -- the alternative is reading a 17,000-line file -- so
+# the guess needs a gate rather than a discipline.
+CUSTARD_DOC := $(CURDIR)/../../doc/ref/custard.md
+
+.PHONY: check-doc
+check-doc:
+	$(Q)dups=`grep -oE '^\| M[^ |]+ ' $(CUSTARD_DOC) | sort | uniq -d`; \
+	  test -z "$$dups" || { \
+	    echo "ERROR: duplicate milestone key(s) in doc/ref/custard.md:"; \
+	    echo "$$dups"; \
+	    echo "A section refers to a row by its key, so a duplicate makes one"; \
+	    echo "of the two unreachable.  Pick a key no row already uses."; \
+	    exit 1; }
+
+.PHONY: check-settings
+check-settings:
+	$(Q)test -z "$(ORPHAN_SETTINGS)" || { \
+	  echo "ERROR: setting(s) for no registered test: $(ORPHAN_SETTINGS)"; \
+	  echo "Either register the test, or delete the setting."; exit 1; }
+
+# Section 49.6.  The two pattern rules above that *override* a rule of the same
+# name in mk/test.mk ($(OUTPUT_DIR)/%.ml and %.krml) must keep the overridden
+# rule's exact prerequisite list, or make stops treating them as replacements
+# and silently runs test.mk's plain --codegen OCaml recipe instead.  So those
+# two get the binary as an explicit prerequisite of each concrete target
+# rather than as part of the pattern.
+$(addprefix $(OUTPUT_DIR)/, $(addsuffix .ml,   $(CUSTARD_TESTS))): $(FSTAR_EXE)
+$(addprefix $(OUTPUT_DIR)/, $(addsuffix .krml, $(KRML_TESTS))):    $(FSTAR_EXE)
+
+all: check-settings check-sources check-doc
+
+# Section 49.1.  Nothing in the build catches an inexhaustive match in
+# Custard's own sources: the compiler is checked with --lax, so F* does not
+# prove exhaustiveness, and the extracted OCaml is compiled with -w -A, so
+# OCaml does not report it.  A missing case therefore reaches a user as an
+# OCaml Match_failure naming a line in generated code.  Round 49 reported one
+# (flag_to_doc, missing Prologue); the sweep found nine.  ocamlfind is not
+# guaranteed present and neither is a dune build tree, so the script skips
+# rather than failing when it cannot run.
+.PHONY: check-partial
+check-partial:
+	$(Q)python3 $(CURDIR)/checkpartial.py
+
+all: check-partial
+
+# Section 67.  A stale checked file, under --codegen with cross-module
+# inlining, used to produce error 317 and nothing else: "module M was not
+# checked", where M is the module on the command line and the file that
+# actually went stale is a dependence several steps away.  The reason was
+# computed and then discarded, because the warning that carries it is
+# suppressed for a module the user named on the command line -- and under
+# fly_deps the command-line module is not even the one whose load failed.
+#
+# This is what EverParse hit in round 63 after ulib/FStar.Attributes.fsti
+# gained an attribute: every checked file downstream of it was legitimately
+# stale, and nothing said so.  Rebuilt in a scratch directory rather than
+# against the suite's own checked files, since the point is to make one go
+# stale on purpose.
+.PHONY: check-stale
+check-stale:
+	$(Q)rm -rf $(OUTPUT_DIR)/stale && mkdir -p $(OUTPUT_DIR)/stale
+	$(Q)cd $(OUTPUT_DIR)/stale && \
+	  printf 'module StaleLib\nval double : FStar.UInt32.t -> FStar.UInt32.t\n' > StaleLib.fsti && \
+	  printf 'module StaleLib\nlet double x = FStar.UInt32.add_mod x x\n' > StaleLib.fst && \
+	  printf 'module StaleMain\nopen FStar.All\nlet main () : ML FStar.UInt32.t =\n  if StaleLib.double 21ul = 42ul then 0ul else 1ul\n' > StaleMain.fst && \
+	  $(FSTAR_EXE) --cache_checked_modules StaleLib.fsti > /dev/null && \
+	  $(FSTAR_EXE) --cache_checked_modules StaleLib.fst > /dev/null && \
+	  $(FSTAR_EXE) --cache_checked_modules StaleMain.fst > /dev/null && \
+	  $(FSTAR_EXE) --codegen Custard --custard_backend C \
+	    --custard_entry StaleMain.main StaleMain.fst --odir . > /dev/null && \
+	  printf '\n(* touched *)\n' >> StaleLib.fsti && \
+	  ! $(FSTAR_EXE) --codegen Custard --custard_backend C \
+	    --custard_entry StaleMain.main StaleMain.fst --odir . > stale.out 2>&1 && \
+	  grep -q "Error 317" stale.out && \
+	  grep -q "StaleLib.fsti.checked" stale.out && \
+	  grep -q "last checked file that could not be loaded" stale.out
+
+all: check-stale
+
+# Section 37.1: the gate has its own gate.  A matcher that silently stops
+# recognizing one of the three shapes it was written for reads like coverage
+# that is not there, so the distinguishing cases run with the suite.
+.PHONY: check-checkgroup
+check-checkgroup:
+	$(Q)python3 $(CHECKGROUP) --self-test
+
+all: check-checkgroup
+
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .out.diff, $(CUSTARD_TESTS)))
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rejected, $(REJECT_TESTS)))
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .roots, $(ROOT_TESTS)))
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcran, $(C_TESTS)))
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcxxran, $(CXX_TESTS)))
+
+# Section 57.4.  Same treatment as krml just below: extraction to Rust is
+# always testable, but *compiling* the result needs a toolchain, and a
+# consumer who has not got one should see these skip rather than fail.  The
+# reject tests go under the guard too even though several of them never
+# reach rustc -- splitting the list by whether it happens to shell out
+# would be a rule nobody could keep, and a half-run suite is worse than a
+# skipped one.
+#
+# The probe is a variable so that the skip branch is reachable in a test
+# (RUSTC=) on a machine that has rustc, and so that a consumer whose
+# toolchain is installed under another name can say so.
+RUSTC ?= rustc
+ifneq ($(shell command -v $(RUSTC) 2>/dev/null),)
+# Section 62.1.  [.rsran] runs krml before it runs rustc, so rustc alone is
+# not enough of a guard: on a machine with rustc and no karamel this list
+# used to be built and every target died with "krml: not found".  That is
+# exactly CI, which passes KRML_EXE= rather than installing krml on the
+# PATH.  [.rustrejected] stays outside the krml guard because it shells out
+# to nothing but fstar.exe.
+ifneq ($(KRML_FOUND),)
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rsran, $(RUST_TESTS)))
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rssplit, $(RUSTSPLIT_TESTS)))
+else
+$(warning krml not found: skipping the Rust run tests)
+endif
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rustrejected, $(RUSTREJECT_TESTS)))
+else
+$(warning rustc not found: skipping the Rust tests)
+endif
+
+# Only when karamel is available: the OCaml backend is always testable, the
+# C one needs a toolchain.  Found by path and not by name -- see 62.1.
+ifneq ($(KRML_FOUND),)
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .cran, $(KRML_TESTS)))
+else
+$(warning krml not found: skipping the karamel C tests)
+endif
+
+# The result type is peeled down to the last arrow, through both abbreviations.
+GREP_RetArity += ") : Prims.int ="
+
+# Section 8.2: a realized type's OCaml shape is the hand-written one.
+# [FStar.Pervasives.dtuple3] is a one-constructor *variant* there, so there is
+# no record to recover and no field to project.  Its second and third
+# parameters are arities -- [a -> Type] and [a -> b a -> Type] -- and section
+# 18.2 is what lets them be written honestly: every argument they take is a
+# value, so each denotes one target type and [bool] and [string] are it.  They
+# used to be [Obj.t].
+FLAGS_Realized    = --warn_error -367
+GREP_Realized     = "FStar_Pervasives.Mkdtuple3" \
+                    "(Prims.int, bool, string) FStar_Pervasives.dtuple3" \
+                    "match d with"
+# No record recovery, no projection, and the erased GTot call is gone.
+# No record recovery, no projection, no erased GTot call -- and no [Obj.t].
+NOGREP_Realized   = "u__1" "gmagic" "Obj.t"
+

@@ -445,6 +445,14 @@ let load_parsing_data_from_cache file_name : ML (option Parser.Dep.parsing_data)
     | _, Inr data -> Some data
   )
 
+(* The reason the most recent load failed, kept whether or not it was
+   reported.  {!load_module_from_cache_internal} suppresses the warning for a
+   module the user named on the command line, on the grounds that rechecking
+   it is what was asked for --- but the caller under [--codegen] with
+   cross-module inlining does not recheck, it raises, and the reason is then
+   the only thing that identifies which dependence went stale. *)
+let last_failure : ref (option string) = mk_ref None
+
 let load_module_from_cache_internal =
   //this is only used for supressing more than one cache invalid warnings
   let already_failed = mk_ref false in
@@ -452,6 +460,11 @@ let load_module_from_cache_internal =
     let load_it fn () =
       let cache_file = Dep.cache_file_name fn in
       let fail msg cache_file =
+        (* Remembered whether or not it is reported: the caller that raises
+           rather than rechecking has no other way to say what went stale.
+           See {!last_load_failure}. *)
+        last_failure := Some (Format.fmt2 "%s is not usable since %s"
+                                cache_file msg);
         //Don't feel too bad if fn is the file on the command line
         //Also suppress the warning if already given to avoid a deluge
         let suppress_warning = try_load || Options.should_check (Dep.module_name_of_file fn) || !already_failed in
@@ -537,6 +550,9 @@ let scan_deps_and_check_cache_validity fn : ML (option (list string & Dep.deps))
  
 let load_module_from_cache env fn : ML (option tc_result) =
   load_module_from_cache_internal false (TcEnv.dep_graph env) fn
+
+let last_load_failure () : ML (option string) = !last_failure
+
 (*
  * Just to make sure data has the right type
  *)

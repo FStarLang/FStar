@@ -60,6 +60,7 @@ let rec eq_step s1 s2 : ML bool =
   | Weak, Weak
   | HNF, HNF
   | Primops, Primops
+  | SafePrimops, SafePrimops
   | Eager_unfolding, Eager_unfolding
   | Inlining, Inlining
   | DoNotUnfoldPureLets, DoNotUnfoldPureLets -> true
@@ -104,6 +105,7 @@ let rec step_to_string (s:step) : ML string =
   | Weak -> "Weak"
   | HNF -> "HNF"
   | Primops -> "Primops"
+  | SafePrimops -> "SafePrimops"
   | Eager_unfolding -> "Eager_unfolding"
   | Inlining -> "Inlining"
   | DoNotUnfoldPureLets -> "DoNotUnfoldPureLets"

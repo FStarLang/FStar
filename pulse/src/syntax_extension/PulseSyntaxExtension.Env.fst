@@ -31,6 +31,7 @@ open FStarC.Ident
 open FStar.List.Tot
 open PulseSyntaxExtension.Err
 open FStarC.Syntax.Print {} // instances
+open FStarC.Syntax.Free {} // the ord instances for uvars
 
 let r_ = FStarC.Range.dummyRange
 #push-options "--warn_error -272" //intentional top-level effects
@@ -194,3 +195,17 @@ let pat_vars (p:A.pattern)
 
     | _ ->
       fail "invalid pattern" r
+
+(* Set unions at the two instances Pulse_RuntimeUtils.ml needs.
+
+   That file cannot call FStarC.FlatSet.union itself under Custard, whose
+   whole-program extraction compiles only what its roots reach: a typeclass
+   dictionary is a monomorphized binder, specialized at each *call site*, and
+   a root named in pulse/src/custard-entrypoints.txt has no call site (see
+   doc/ref/custard.md section 12.13).  These are call sites, in F* source that
+   Custard does extract, and the ML pipeline compiles them to the same thing. *)
+let union_ctx_uvars (s1 s2 : FlatSet.t S.ctx_uvar) : ML (FlatSet.t S.ctx_uvar) =
+  FStarC.FlatSet.union s1 s2
+
+let union_univ_uvars (s1 s2 : FlatSet.t S.universe_uvar) : ML (FlatSet.t S.universe_uvar) =
+  FStarC.FlatSet.union s1 s2

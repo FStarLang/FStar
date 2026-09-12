@@ -171,6 +171,8 @@ let un_function p tm = match p.pat, tm.tm with
 let consPat r hd tl = PatApp(mk_pattern (PatName C.cons_lid) r, [hd;tl])
 let consTerm r hd tl = mk_term (Construct(C.cons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
 
+let mkCalcStep rel just next = CalcStep (rel, just, next)
+
 let unit_const r = mk_term(Const Const_unit) r Expr
 let unit_type  r = mk_term (Var (Ident.lid_of_str (`%unit))) r Expr
 
@@ -1001,7 +1003,13 @@ instance pretty_quote_kind : pretty quote_kind = {
 let ctor (n: string) (args: list document) : ML document =
   nest 2 (group (parens (flow (break_ 1) (doc_of_string n :: args))))
 
-let pp_list' (#a:Type) (f: a -> ML document) (xs: list a) : ML document =
+(* [f] is [@@@monomorphize] for Custard (doc/ref/custard.md 3.2), for the same
+   reason as [FStarC.Class.Ord.sort_by]: this builds a [pretty a] dictionary
+   out of [f] and hands it to [pp_list], whose instance binder is
+   monomorphized, so [f] has to be known at specialization time -- and marking
+   [f] promotes [a] with it (rule 5), which is what [pp_list]'s own type
+   parameter needs. *)
+let pp_list' (#a:Type) ([@@@monomorphize] f: a -> ML document) (xs: list a) : ML document =
   (pp_list a { pp = f }).pp xs // hack
 
 instance showable_arg_qualifier : showable arg_qualifier = {

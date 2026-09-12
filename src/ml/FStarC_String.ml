@@ -62,6 +62,13 @@ let index_of s c =
     let c = BatUChar.chr c in
     try let _ = BatUTF8.iteri (fun c' i -> if c = c' then raise (Found i) else ()) s in Z.of_int (-1)
     with Found i -> Z.of_int i
-let list_of_string s = BatList.init (BatUTF8.length s) (fun i -> BatUChar.code (BatUTF8.get s i))
-let string_of_list l = BatUTF8.init (BatList.length l) (fun i -> BatUChar.chr (BatList.at l i))
+(* [BatUTF8.get s i] walks from the start of [s], so indexing in a loop is
+   quadratic in the length of the string.  Both of these fold instead.
+   Custard prints mangled names through [String.list_of_string], and a
+   specialization name can be long; see doc/ref/custard.md section 30.15. *)
+let list_of_string s = BatList.rev (BatUTF8.fold (fun acc c -> BatUChar.code c :: acc) [] s)
+let string_of_list l =
+  let b = BatUTF8.Buf.create 16 in
+  BatList.iter (fun c -> BatUTF8.Buf.add_char b (BatUChar.chr c)) l;
+  BatUTF8.Buf.contents b
 let string_of_char (c:char) = BatString.of_char (Char.chr c)

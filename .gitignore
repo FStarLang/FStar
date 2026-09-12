@@ -1,6 +1,7 @@
 /stage1/out
 /stage2/out
 /stage3/out
+/stagec
 /out
 /*.tar
 /*.tar.gz

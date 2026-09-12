@@ -1,0 +1,54 @@
+# Entry points for the syntax_extension unit itself.
+#
+# Unlike pulse/src/custard-entrypoints.txt, which lists *compiler* symbols and
+# is passed to the compiler's build, this file is passed to this unit's own
+# extraction with --custard_entrypoints.
+#
+# Everything here is called from hand-written OCaml under pulse/src/ml -- the
+# menhir grammars pulseparser.mly and FStarC_Parser_Parse.mly, and the driver
+# PulseSyntaxExtension_Parser.ml.  A grammar's semantic actions are OCaml the
+# extractor never sees, so nothing reaches these constructors and they would
+# be dropped.  See doc/ref/custard.md section 12.11.
+#
+# Blank lines and lines starting with `#' are ignored.
+
+# pulseparser.mly
+PulseSyntaxExtension.Sugar.add_decorations
+PulseSyntaxExtension.Sugar.mk_array_assignment
+PulseSyntaxExtension.Sugar.mk_block
+PulseSyntaxExtension.Sugar.mk_break
+PulseSyntaxExtension.Sugar.mk_comp
+PulseSyntaxExtension.Sugar.mk_continue
+PulseSyntaxExtension.Sugar.mk_defer
+PulseSyntaxExtension.Sugar.mk_expr
+PulseSyntaxExtension.Sugar.mk_fn_defn
+PulseSyntaxExtension.Sugar.mk_fn_decl
+PulseSyntaxExtension.Sugar.mk_forward_jump_label
+PulseSyntaxExtension.Sugar.mk_goto
+PulseSyntaxExtension.Sugar.mk_if
+PulseSyntaxExtension.Sugar.mk_intro
+PulseSyntaxExtension.Sugar.mk_lambda
+PulseSyntaxExtension.Sugar.mk_let_binding
+PulseSyntaxExtension.Sugar.mk_match
+PulseSyntaxExtension.Sugar.mk_open
+PulseSyntaxExtension.Sugar.mk_pragma_set_options
+PulseSyntaxExtension.Sugar.mk_proof_hint_with_binders
+PulseSyntaxExtension.Sugar.mk_return
+PulseSyntaxExtension.Sugar.mk_sequence
+PulseSyntaxExtension.Sugar.mk_slprop_defn
+PulseSyntaxExtension.Sugar.mk_stmt
+PulseSyntaxExtension.Sugar.mk_unit
+PulseSyntaxExtension.Sugar.mk_while
+PulseSyntaxExtension.Sugar.range_of_decl
+
+# Pulse.Main, in the *checker* unit, calls these; src/checker's own copy of
+# PulseSyntaxExtension.ASTBuilder.fsti declares them and has no .fst, so that
+# unit compiles them to external references this one has to define.  Nothing
+# inside this unit calls them, so without an entry here they are dropped.
+PulseSyntaxExtension.ASTBuilder.desugar_pulse
+PulseSyntaxExtension.ASTBuilder.parse_pulse
+
+# Pulse_RuntimeUtils.ml.  These two exist only to give FStarC.FlatSet.union a
+# call site; see pulse/src/custard-entrypoints.txt and section 12.13.
+PulseSyntaxExtension.Env.union_ctx_uvars
+PulseSyntaxExtension.Env.union_univ_uvars

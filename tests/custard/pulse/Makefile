@@ -1,0 +1,645 @@
+FSTAR_ROOT ?= ../../..
+PULSE_ROOT ?= $(FSTAR_ROOT)/pulse
+
+# Pulse programs can only be *parsed* by a compiler with the Pulse syntax
+# extension linked in, which is stage3.  So, unlike ../Makefile, these tests
+# run against the installed stage3 compiler, and are not part of the default
+# `make test` of tests/custard: they are reached from the root Makefile's
+# _test_pulse instead, which only test-3 runs.
+STAGE3 ?= 1
+FSTAR_EXE ?= $(FSTAR_ROOT)/stage3/out/bin/fstar.exe
+
+include $(PULSE_ROOT)/mk/test.mk
+
+# Section 62.1.  Same discovery as tests/custard and for the same reason:
+# CI passes KRML_EXE= and never puts krml on the PATH, so a `command -v
+# krml` guard silently skipped both karamel legs of this suite.
+KRML_CANDIDATES := $(KRML_EXE) $(dir $(FSTAR_EXE))krml $(FSTAR_ROOT)/karamel/out/bin/krml
+KRML_FOUND      := $(firstword $(wildcard $(KRML_CANDIDATES)) $(shell command -v krml 2>/dev/null))
+ifneq ($(KRML_FOUND),)
+  override KRML_EXE := $(KRML_FOUND)
+endif
+
+# Each of these is extracted with --codegen Custard from its 'main'; the
+# generated OCaml must contain every GREP_<name> pattern and none of the
+# NOGREP_<name> ones.  We check the shape of the output rather than running
+# it: Pulse has no I/O library, so a Pulse program cannot print anything.
+GREP_TESTS += PulseBasic
+GREP_PulseBasic += "while"
+GREP_PulseBasic += "FStar_SizeT.lt"
+GREP_PulseBasic += "FStar_SizeT.add"
+GREP_PulseBasic += "Array.make 4"
+NOGREP_PulseBasic += "Pulse_Lib"
+NOGREP_PulseBasic += "PulseCore"
+NOGREP_PulseBasic += "Obj.magic"
+# Section 8.4: 'let mut' is an OCaml ref, not a one-element array.
+GREP_PulseBasic += "(ref (FStar_SizeT.uint_to_t"
+GREP_PulseBasic += "(!(i))"
+NOGREP_PulseBasic += "Array.make 1"
+
+# The hash table is polymorphic, stores a closure in a runtime record, and is
+# loaded from another module's implementation through its interface.  It stays
+# polymorphic all the way into karamel, which monomorphizes it itself.
+GREP_TESTS += PulseHashTable
+GREP_PulseHashTable += "pulse_Lib_HashTable_alloc"
+GREP_PulseHashTable += "pulse_Lib_HashTable_insert"
+GREP_PulseHashTable += "pulse_Lib_HashTable_lookup"
+GREP_PulseHashTable += "while"
+GREP_PulseHashTable += "Array.make"
+NOGREP_PulseHashTable += "Obj.magic"
+NOGREP_PulseHashTable += "PulseCore"
+NOGREP_PulseHashTable += "prims_unit"
+# Section 5.5: 'ht_t' comes back as a record rather than a one-constructor
+# variant, and the two 'unreachable' branches are gone.
+GREP_PulseHashTable += "pulse_Lib_HashTable_Type_ht_t = {"
+GREP_PulseHashTable += "  sz : FStar_SizeT.t;"
+GREP_PulseHashTable += "(ht).sz"
+NOGREP_PulseHashTable += "Mkht_t"
+NOGREP_PulseHashTable += "failwith"
+GREP_PulseHashTable += "(ref false)"
+GREP_PulseHashTable += "(u__break) := true"
+NOGREP_PulseHashTable += "Array.make 1"
+
+# The generated OCaml must also type-check: these programs are large enough
+# that a grep test alone would miss most of what can go wrong in a signature.
+OCAML_TESTS += PulseBasic
+OCAML_TESTS += PulseHashTable
+OCAML_TESTS += PulseFnPtrRet
+
+# Same modules, through the karamel backend: krml must accept the output and
+# the C compiler must build it.
+KRML_TESTS += PulseBasic
+KRML_TESTS += PulseHashTable
+KRML_TESTS += PulseSlice
+# PulseSlice needs one extra flag on the C column.  Pulse.Lib.Slice.split is
+# polymorphic and returns a tuple, so with types compiled uniformly (section
+# 6) the .krml holds 'tuple2<slice<'t>, slice<'t>>' -- a type application whose
+# arguments are not ground.  karamel's own monomorphizer only instantiates
+# closed applications, so its checker then reports tuple2 as an undefined
+# type.  Asking Custard to monomorphize the types too sidesteps it.  This is
+# not specific to slices and not new in section 20; PulseSlice is simply the
+# first test in this suite to return a tuple from a polymorphic function.
+KRML_FLAGS_PulseSlice += --custard_monomorphize_types true
+
+# Section 20.  The Rust column, which exists for one reason: karamel compiles
+# Pulse.Lib.Slice to Rust's own borrowed slice, and only if Custard leaves the
+# type alone for it to recognize.  Compiled *and run*, because the bug this
+# closes was a miscompilation and not a build failure -- with the borrows
+# silenced the generated code wrote through a temporary and read back zeroes
+# (section 19.15), which a program that checks its own answers catches and a
+# program that merely builds does not.
+RUST_TESTS += PulseSlice
+RUST_TESTS += PulseSliceRec
+# Section 77.  A dead abbreviation for a slice.  karamel reads an abbreviation
+# of an applied type as the chosen name for that instance and rewrites every
+# occurrence of the instance to it, which its Rust backend's native slice arm
+# then disagrees with -- so before the fix this program did not build at all,
+# even though nothing refers to the alias.  Run as well as built, since the
+# alias is equal to its body and dropping it must not change any behaviour.
+RUST_TESTS += UglyAlias
+KRML_TESTS += UglyAlias
+# Rooted, because that is the only way a dead abbreviation reaches the backend
+# at all: Custard unfolds every use, so nothing refers to the name and dead
+# code elimination would otherwise drop it.  Section 70.1 roots one on purpose
+# -- an abbreviation is a library's published type surface -- which is exactly
+# the situation the report came from.
+RUST_FLAGS_UglyAlias += --custard_entry_module UglyAlias
+KRML_FLAGS_UglyAlias += --custard_entry_module UglyAlias
+KRML_FLAGS_UglyAlias += --custard_monomorphize_types true
+# A reduced CBOR well-formedness checker over a slice, run against a curated
+# corpus of 48 boundary vectors.  Unlike the tests above it does not merely
+# build: it writes each vector through the slice and checks its own answer,
+# so a borrow compiled as an owning Box (section 19.15) fails it rather than
+# passing silently.  The corpus is mutation-adequate against the extracted C
+# -- see CborBoundarySlice.mutants.py, which reproduces the numbers.
+RUST_TESTS += CborBoundarySlice
+
+# Section 90.  [nil] erases to unit (section 5.5), so the value its parser
+# returns reaches the caller as a unit-typed *variable* and is paired with the
+# rest of the input: a tuple component, which section 82's argument-scoped
+# rewrite did not reach.  karamel's Rust printer deletes a unit-typed [let]
+# and then cannot print the use of the binder it deleted -- eight functions in
+# EverParse's COSE, three of them then missing symbols, and the crate does not
+# build.  The read of the slice is what keeps the binding alive: a pure
+# producer is inlined and the variable never appears.  The grep pins the
+# literal in the tuple; before the fix karamel printed nothing for this
+# function at all, so that rustc links is itself the test.
+RUST_TESTS += UnitSlice
+RSGREP_UnitSlice += "v: ((),1usize)"
+
+# Same modules again, through the direct-to-C backend: no krml, no krmllib,
+# just a C11 compiler with the warnings turned on, and then run.  PulseHashTable is the
+# demanding one -- arrays, a struct-valued cell, and a hash function stored in
+# a record, which becomes a C function pointer.
+C_TESTS += MonoAttr
+CGREP_MonoAttr += "MonoAttr_f__uint_to_t_16(size_t *r)"
+CGREP_MonoAttr += "MonoAttr_f__uint_to_t_32(size_t *r)"
+CNOGREP_MonoAttr += "MonoAttr_f(size_t n"
+
+# Section 92.  The same measurement with the definition behind an interface,
+# which is the one structural difference between MonoAttr and the declaration
+# Kuiper annotated.  The attribute survives the merge.
+C_TESTS += MonoAttrI
+CGREP_MonoAttrI += "MonoAttrI_f__uint_to_t_16"
+CGREP_MonoAttrI += "MonoAttrI_f__uint_to_t_32"
+CNOGREP_MonoAttrI += "MonoAttrI_f(size_t n"
+
+# Section 93.  An array is a pointer wherever it stands: as a parameter, and
+# as a component of a tuple a monomorphized projection reads out of.
+C_TESTS += ArrTup
+CGREP_ArrTup += "static uint32_t *ArrTup_get_arr(FStar_Pervasives_Native_tuple2__uint32_ptr_unit p)"
+CGREP_ArrTup += "static uint32_t *ArrTup_three(FStar_Pervasives_Native_tuple2__uint32_ptr_tuple2_uint32_ptr_uint32_ptr p)"
+CGREP_ArrTup += "static uint32_t *ArrTup_get_snd(FStar_Pervasives_Native_tuple2__unit_uint32_ptr p)"
+
+# Section 106.  The rule one level down: two tuples whose only difference is
+# the element type of an array nested inside an [option] must not share one
+# projection.  The two [fst] specializations are named apart; the control's
+# single one shows the guard has not widened to types carrying no rule.
+C_TESTS += NestArr
+CGREP_NestArr += "static uint32_t FStar_Pervasives_Native_fst__t_option_array_t(FStar_Pervasives_Native_tuple2__uint32_option_uint32_ptr x) {"
+CGREP_NestArr += "static uint32_t FStar_Pervasives_Native_fst__t_option_array_bool(FStar_Pervasives_Native_tuple2__uint32_option_bool_ptr x) {"
+CGREP_NestArr += "static uint32_t FStar_Pervasives_Native_fst__t_option_box_t(FStar_Pervasives_Native_tuple2__uint32_option_box_uint32 x) {"
+
+# Section 109.  The rule can be hidden by a type abbreviation, which names it
+# at neither endpoint of the reduction: [pack a = option (array a)] mentions
+# no rule as written, and the reduced form has unfolded past it.
+C_TESTS += TupAlias
+CGREP_TupAlias += "static uint32_t FStar_Pervasives_Native_fst__t_pack_element(FStar_Pervasives_Native_tuple2__uint32_option_element_ptr x) {"
+CGREP_TupAlias += "static uint32_t FStar_Pervasives_Native_fst__t_pack_bool(FStar_Pervasives_Native_tuple2__uint32_option_bool_ptr x) {"
+CGREP_TupAlias += "static uint32_t FStar_Pervasives_Native_snd__pack_element_t(FStar_Pervasives_Native_tuple2__option_element_ptr_uint32 x) {"
+CGREP_TupAlias += "static uint32_t FStar_Pervasives_Native_snd__pack_bool_t(FStar_Pervasives_Native_tuple2__option_bool_ptr_uint32 x) {"
+# The spelled-out control, and the two-deep chain the fuel is for.
+CGREP_TupAlias += "static uint32_t FStar_Pervasives_Native_fst__t_option_array_element(FStar_Pervasives_Native_tuple2__uint32_option_element_ptr x) {"
+CGREP_TupAlias += "static uint32_t FStar_Pervasives_Native_fst__t_packed_element(FStar_Pervasives_Native_tuple2__uint32_option_element_ptr x) {"
+CGREP_TupAlias += "static uint32_t FStar_Pervasives_Native_fst__t_packed_bool(FStar_Pervasives_Native_tuple2__uint32_option_bool_ptr x) {"
+
+# Section 94.  An initializer where C has one, and the loop where it does not:
+# a runtime fill cannot be repeated and a variable-length array may not be
+# initialized at all, so both of those keep the loop.
+# Section 99.  A read whose value nothing wants is deleted rather than kept as
+# a [(void)] of itself: Simplify was asking [is_pure], which answers "may this
+# be moved" and is too strong for a question about deletion.  [dead_load] is
+# the reported shape -- the first argument of an inlined combiner is dropped,
+# so the load becomes dead only after inlining -- and [kept] is the boundary:
+# a discarded *call* has an effect the program depends on and must stay.
+C_TESTS += DeadRead
+CGREP_DeadRead += "static void DeadRead_dead_load(uint32_t *a) {"
+CNOGREP_DeadRead += "(void)(a[0])"
+CNOGREP_DeadRead += "(void)(a["
+CGREP_DeadRead += "DeadRead_bump(r);"
+CGREP_DeadRead += "uint32_t v1 = a[1];"
+
+# Section 102.  Pulse has no multiple return, so a two-result fn returns a
+# tuple, and every wrapper that names the two components and hands them back
+# writes [let a, b = f () in (a, b)] -- one destructure-and-rebuild per
+# inlined layer, which is 181 of them in EverParse's COSE parser.  The
+# constructor's eta law removes all of them; the one temporary that cannot go
+# is the result of the actual call, since C has no multiple return.
+# Section 103.  A fully saturated wrapper became a partial application.
+# [eta_reduce] shortens [wrapper b c = callee A b c] to [wrapper b = callee A
+# b] and the expansion has to put the argument back; it refused, because the
+# body it was asked to re-evaluate contained a *constructor application* and
+# [cheap_expr] had no case for one.  [forward] is the control: the same
+# wrapper with the constructor passed in as a parameter, which is all
+# variables and always worked.
+C_TESTS += PulsePartial
+CGREP_PulsePartial += "PulsePartial_wrapper(uint32_t b, uint32_t c)"
+CGREP_PulsePartial += "return PulsePartial_callee(PULSEPARTIAL_A, b, c);"
+CGREP_PulsePartial += "return PulsePartial_callee(a, b, c);"
+# A record built at the call site is the same rule at the shape the nullary
+# constructor does not exercise: this one really does build something.
+CGREP_PulsePartial += ".c_k = PULSEPARTIAL_A, .c_n = 10 }, b, c)"
+# No lambda survived into a return type, which is what the refusal left.
+CNOGREP_PulsePartial += "eta"
+
+C_TESTS += TupBind
+CGREP_TupBind += "_letpattern = TupBind_prim(x);"
+CGREP_TupBind += "return _letpattern._1;"
+# The standalone wrapper -- not inline_for_extraction, so the tuple really is
+# its return value.  The reporter expected this one to need a second peephole
+# and it does not: the eta law fires on the body directly and leaves a call.
+CGREP_TupBind += "return TupBind_prim(x);"
+CNOGREP_TupBind += "_letpattern1"
+CNOGREP_TupBind += "._1 = _letpattern"
+
+C_TESTS += ArrInit
+CGREP_ArrInit += "uint8_t a[8] = { 0 };"
+CGREP_ArrInit += "uint8_t a[4] = { 7, 7, 7, 7 };"
+# The zero-length one reads nothing, so its binding never gets a name.
+CGREP_ArrInit += "uint8_t _cbuf1[1] = { 0 };"
+CGREP_ArrInit += "uint8_t a[4];"
+CGREP_ArrInit += "uint8_t a[n];"
+CNOGREP_ArrInit += "a[n] = {"
+# Section 97: the binding and the storage are one declaration, so no pointer
+# is declared to hold the array and nothing is assigned to one.
+CNOGREP_ArrInit += "uint8_t *a;"
+# The loop cases assert the *absence* of an initializer: a bare declaration
+# is what the loop path emits, and this directory has no CPAIR.
+CNOGREP_ArrInit += "[0]"
+CNOGREP_ArrInit += "= { };"
+# Section 101.  The zero-length array at a struct element type, which has no
+# initializer list to fall into: the declaration is still rounded up to one
+# cell and the fill is gone, so what is pinned is the declaration standing
+# alone.  The [< 0] grep is the loop that used to follow it; [_ci] would not
+# do, since the two variable-length cases above keep their loops.
+CGREP_ArrInit += "ArrInit_cell _cbuf1[1];"
+CNOGREP_ArrInit += "< 0;"
+
+# Section 95.  The same module at a narrowed index width.  [varlen] is the
+# reason this is pinned here rather than in tests/custard: its loop counter
+# is a size_t and its length is now a uint32_t, so the comparison needs a
+# cast that a native-width length does not.
+C_TESTS += ArrInit32
+EXTRA_ArrInit32 = --custard_sizet_width 32
+CGREP_ArrInit32 += "for (size_t _ci1 = 0; _ci1 < (size_t)(n); _ci1++)"
+CGREP_ArrInit32 += "static uint8_t ArrInit_varlen(uint32_t n)"
+CNOGREP_ArrInit32 += "ArrInit_varlen(size_t"
+
+# Section 96.  A wrapper's invented binders take the callee's names, and a
+# clash with a name the wrapper already has is settled by counting.
+C_TESTS += EtaName
+CGREP_EtaName += "static uint8_t EtaName_decrypt(uint8_t key, uint8_t nonce, uint32_t ctr)"
+CGREP_EtaName += "static uint8_t EtaName_clash(uint8_t ctr, uint8_t nonce, uint32_t ctr1)"
+CNOGREP_EtaName += "eta"
+
+C_TESTS += PulseBasic
+# Section 58: the pure condition is spelled in the loop header.
+CGREP_PulseBasic += "while (i < n)"
+CNOGREP_PulseBasic += "while (true)"
+# Section 97: the heap allocation is the declaration of the variable that
+# names it; nothing declares a spare pointer in front of it.
+CGREP_PulseBasic += "uint32_t *v = (uint32_t *)malloc("
+CNOGREP_PulseBasic += "uint32_t *v;"
+C_TESTS += PulseHashTable
+# Section 58, the other half of that pair, and the reason it is worth a grep:
+# these two conditions genuinely need statements (a [_break] flag is tested
+# to produce the condition value), so they must *keep* [while (true)] with
+# the leading break.  Asserting only the rewritten form would leave a
+# rewrite that fired too eagerly undetected.
+CGREP_PulseHashTable += "while (true)"
+C_TESTS += CborBoundarySlice
+# Section 30: a maker that returns a one-field record collapses to a function
+# returning a function pointer, and its callers must stay saturated.
+C_TESTS += PulseFnPtrRet
+
+# Section 78.  An accessor whose *codomain* abbreviates an arrow.  Section 74
+# taught the specializer to walk the unfolded spine so that a [@@monomorphize]
+# binder hiding behind such a codomain could be reached; it walked too far and
+# eta-expanded every accessor of this shape, giving it one more parameter than
+# its signature says and than any caller supplies.  EverParse's CDDL iterators
+# are exactly this -- [cddl_map_iterator_impl_validate1] returns an
+# [impl_typ], whose first hidden binder is the [#p: perm] that showed up as an
+# unbound variable on the Rust leg.
+C_TESTS += ProjAbbrev
+
+# Section 80.1.  The same miscount as ProjAbbrev, reached without any
+# abbreviation at all: the field's type is an arrow of arity 3 written
+# inline, and F* stores the projector for it eta-expanded to that arity.  Its
+# body is then [projectee c p v], where [#p: perm] and [#v: erased bool] are
+# binders Custard itself deletes -- so the spine filter for an untyped head
+# has to drop them too, which it only did for *types*.  Left in, [p] reached
+# the Rust backend as an unbound variable, and the C backend saw a projector
+# of arity 3 that [call_it] applies to 2.  Dropped, [eta_reduce] shortens the
+# projector back to the identity and it disappears entirely.
+C_TESTS += ArrowAb
+RUST_TESTS += ArrowAb
+
+# Sections 33.1-33.3.  [@@@monomorphize] on the binder of a Pulse [fn]: the
+# annotation is on the lambda and not on the elaborated arrow type, and the
+# [fn] itself arrives eta-contracted.  Both had to be fixed for the
+# specialization to happen at all, so the assertion is that it did -- there is
+# a specialized name, no function pointer, and the program checks its own
+# answer when it runs.
+C_TESTS += PulseMono
+CGREP_PulseMono += "PulseMono_apply_twice__add_mod"
+# Section 96.  This binder was [eta] until the expansion started reading the
+# callee's names; [r] is what both the source and [apply_twice] call it.
+CGREP_PulseMono += "static void PulseMono_add_k(uint32_t k, uint32_t *r)"
+CNOGREP_PulseMono += "(*f)"
+
+# Section 34.3.  A Pulse [fn] block argument that captures a [ref] and a value
+# from the caller's frame, driven by a loop combinator.  The specialized loop
+# must take both captures as parameters -- there is no closure in the output --
+# and the [slprop] invariant must not survive at all.  The program checks its
+# own answer, so a capture from the wrong frame is a nonzero exit.
+C_TESTS += PulseForCapture
+CGREP_PulseForCapture += "PulseForCapture_for_upto__0(uint32_t *"
+CGREP_PulseForCapture += "PulseForCapture_for_upto__0(r, k,"
+# Section 58: the loop is here, and its condition is pure, so it is spelled
+# as a C programmer would spell it rather than as [while (true)] with a
+# leading [break].  A stronger assertion than the old "while (true)": that
+# one held whatever the condition did.
+CGREP_PulseForCapture += "while (i < n)"
+CNOGREP_PulseForCapture += "while (true)"
+CNOGREP_PulseForCapture += "slprop"
+CNOGREP_PulseForCapture += "(*body)"
+
+# Section 41.1.  Pulse.Lib.ArrayPtr.memcpy is the only rule that produces a
+# BufBlit, and until this file no test reached it, so the printer case had
+# never printed anything.  The length position is where a redundant pair
+# appears, and only when the length is already a group, which a literal is.
+#
+# Section 59: the length is now a bare [2] -- the [sizeof] it multiplies is
+# a [size_t], so the other operand fixes the type -- and section 59.3's
+# [is_atom] keeps [group] from putting the pair back.  The CNOGREP is kept
+# in both spellings, since 41.1's hazard is the pair and not the cast.
+C_TESTS += ExtBuf
+# Section 60.2.  The cast is the assertion, and the C++ leg added above is
+# what enforces it: extbuf_base is a macro yielding void *, which C converts
+# implicitly and C++ refuses.  Removing the cast from PrintC leaves this
+# file compiling clean under gcc and failing under g++.
+CGREP_ExtBuf = "(uint8_t *)extbuf_base"
+# The returned pointer must be *bound* to a typed variable.  Discarding it
+# would emit a (void) cast, which C++ accepts with or without the fix.
+CGREP_ExtBuf += "uint8_t *"
+
+# Section 71.  A table baked into the program image.
+C_TESTS += PulseGlobalArray
+# The whole point: an array *object* with a braced initializer, not a pointer
+# variable assigned at startup.  const, so it can go in .rodata and so that a
+# write that slipped past Pulse's permissions is a compile error.
+CGREP_PulseGlobalArray += "static const uint8_t PulseGlobalArray_primes[7] = { 2, 3, 5, 7, 11, 13, 17 };"
+# The list was not written out -- [squares 5] is a recursive function of a
+# literal -- and Custard reduced it before extraction (section 71.2).
+CGREP_PulseGlobalArray += "static const uint32_t PulseGlobalArray_sq[5] = { 0, 1, 4, 9, 16 };"
+# Neither the builder nor Prims.list survives it.
+CNOGREP_PulseGlobalArray += "squares"
+CNOGREP_PulseGlobalArray += "Prims_list"
+# There is nothing to run before main: a static array is initialized where it
+# is declared, so it must not be pushed into the startup pass.
+CNOGREP_PulseGlobalArray += "custard_init_globals"
+# Section 71.3.  Reading it goes through the pointer conversion, which is
+# where const is cast away.
+CGREP_PulseGlobalArray += "(uint8_t *)PulseGlobalArray_primes"
+CGREP_PulseGlobalArray += "(uint32_t *)PulseGlobalArray_sq"
+
+# The same program through the other three backends, because "compile-time
+# data" is a claim about every one of them: OCaml has an array literal,
+# karamel has EBufCreateL, and neither has anything to say about const.
+GREP_TESTS += PulseGlobalArray
+GREP_PulseGlobalArray += "let pulseGlobalArray_primes : (FStar_UInt8.t array)"
+GREP_PulseGlobalArray += "FStar_UInt8.uint_to_t (Prims.parse_int \"2\")"
+NOGREP_PulseGlobalArray += "squares"
+KRML_TESTS += PulseGlobalArray
+
+# Section 72.2.  A [ghost fn] parameter is erased, and the one binder
+# [keep_thunk] puts back is there for the arity alone.  The failure was in the
+# C compiler, not in Custard, so compiling is the test.
+C_TESTS += PulseGhostFn
+CGREP_PulseGhostFn += "PulseGhostFn_with_justif(void)"
+# No function-typed local, no unit standing in for one, and no call through it.
+CNOGREP_PulseGhostFn += "*justif"
+CNOGREP_PulseGhostFn += "(justif()"
+
+# Section 71.4.  The three ways a static array is not one, and what each says.
+# A run whose contents are a run-time value is a contradiction in terms, so it
+# is refused rather than built at startup behind the programmer's back.
+REJECT_TESTS += PulseGlobalArrayOpaque
+CODE_PulseGlobalArrayOpaque = 393
+FLAGS_PulseGlobalArrayOpaque = --custard_backend C --custard_entry PulseGlobalArrayOpaque.tbl
+EGREP_PulseGlobalArrayOpaque += "known at compile time"
+# The message names the shape it got, since a rule has no request chain to
+# print and the shape is what identifies the culprit.
+EGREP_PulseGlobalArrayOpaque += "reference to PulseGlobalArrayOpaque.opaque_list"
+# An array object with no elements is a constraint violation in C, and there
+# would be no address to hand out either.
+REJECT_TESTS += PulseGlobalArrayEmpty
+CODE_PulseGlobalArrayEmpty = 393
+FLAGS_PulseGlobalArrayEmpty = --custard_backend C --custard_entry PulseGlobalArrayEmpty.tbl
+EGREP_PulseGlobalArrayEmpty += "is an empty static array"
+# A braced initializer is not an expression in C.  The other two backends
+# accept this same program, which is why the refusal is in PrintC and not in
+# the rule.
+REJECT_TESTS += PulseGlobalArrayLocal
+CODE_PulseGlobalArrayLocal = 393
+FLAGS_PulseGlobalArrayLocal = --custard_backend C
+EGREP_PulseGlobalArrayLocal += "uses a static array where C needs an"
+EGREP_PulseGlobalArrayLocal += "Bind it to a top-level definition"
+
+C_TESTS += PulseBlit
+CGREP_PulseBlit += "memmove("
+CGREP_PulseBlit += "2 * sizeof(uint8_t)"
+CNOGREP_PulseBlit += "(((size_t)2ULL))"
+CNOGREP_PulseBlit += "(2) * sizeof"
+
+# Section 5.6, escalated: neither of these -- and PulseHashTable in particular,
+# which is the repr-over-erased-index style section 5.4 is about -- may lose
+# the representation of a value.
+WARN_ANY = --custard_warn_any --warn_error @367
+
+# Section 49.6.  As in ../Makefile: every rule that runs $(FSTAR) depends on
+# the binary, so that a rebuilt compiler invalidates the generated output
+# rather than leaving yesterday's beside a today's binary.
+
+$(OUTPUT_DIR)/%.custard.ml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
+	$(call msg, "CUSTARD", $(basename $(notdir $@)))
+	$(Q)mkdir -p $(OUTPUT_DIR)
+	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_main $*.main $*.fst -o $@
+
+$(OUTPUT_DIR)/%.grepped: $(OUTPUT_DIR)/%.custard.ml
+	$(call msg, "GREP", $(basename $(notdir $@)))
+	$(Q)for p in $(GREP_$*); do \
+	  grep -q -- "$$p" $< \
+	    || { echo "ERROR: $* output is missing $$p"; exit 1; }; done
+	$(Q)for p in $(NOGREP_$*); do \
+	  grep -q -- "$$p" $< \
+	    && { echo "ERROR: $* output should not contain $$p"; exit 1; }; done; true
+	$(Q)touch $@
+
+$(OUTPUT_DIR)/%.mlchecked: $(OUTPUT_DIR)/%.custard.ml
+	$(call msg, "OCAMLOPT", $(basename $(notdir $@)))
+	$(Q)mkdir -p $(OUTPUT_DIR)/$*_ml
+	$(Q)cp $< $(OUTPUT_DIR)/$*_ml/$*.ml
+	$(Q)cd $(OUTPUT_DIR)/$*_ml && $(abspath $(FSTAR_EXE)) --ocamlopt $*.ml -o $*.exe
+	$(Q)touch $@
+
+$(OUTPUT_DIR)/%.custard.krml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
+	$(call msg, "CUSTARD-KRML", $(basename $(notdir $@)))
+	$(Q)mkdir -p $(OUTPUT_DIR)
+	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend KrmlC $(KRML_FLAGS_$*) \
+	  --custard_main $*.main $*.fst -o $@
+
+# Section 20.  KrmlRust is a different backend and not a flag on this one: it
+# models Pulse.Lib.Slice away, so this .krml does not hold the program the C
+# column needs and the C column's does not hold the one Rust needs.
+$(OUTPUT_DIR)/%.custard.rust.krml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
+	$(call msg, "CUSTARD-KRML-RUST", $(basename $(notdir $@)))
+	$(Q)mkdir -p $(OUTPUT_DIR)
+	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend KrmlRust --custard_main $*.main \
+	  $(RUST_FLAGS_$*) $*.fst -o $@
+
+# -fkeep-tuples is not optional here and is part of what section 20 documents:
+# karamel's split_at hook destructures a real tuple, and without the flag the
+# tuple has already become a struct by the time the Rust backend sees it.
+#
+# -fno-box is section 20.6.  karamel sorts a struct holding pointers into one
+# of two disjoint sets: returned by value, so it owns its pointees and they
+# become Box; or not returned, so it borrows them and the struct gains a
+# lifetime.  A slice fits neither -- it is a borrow by construction and cannot
+# be owned -- so a *returned* struct with a slice field comes out as
+# `struct view { bytes: &[u8] }`, a borrow in a type that binds no lifetime,
+# which is E0106.  -fno-box empties the returned set and every such struct
+# gets its lifetime.  A karamel-side bug, and this is the workaround.
+$(OUTPUT_DIR)/%.rs: $(OUTPUT_DIR)/%.custard.rust.krml
+	$(call msg, "KRML-RUST", $(basename $(notdir $@)))
+	$(Q)rm -rf $(OUTPUT_DIR)/$*_rs
+	$(Q)$(KRML_EXE) -silent -fkeep-tuples -fno-box -skip-linking -backend rust \
+	  -tmpdir $(OUTPUT_DIR)/$*_rs $<
+	$(Q)sed 's/^pub fn main()/pub fn krml_main()/' $(OUTPUT_DIR)/$*_rs/*.rs > $@
+	$(Q)grep -q '^pub fn krml_main()' $@ || \
+	  { echo "ERROR: $*: krml did not emit 'main' in the generated crate"; exit 1; }
+	@# The whole point of the exercise: a slice must be a borrow, not an
+	@# owning Box, or every write through it lands in a temporary.
+	$(Q)grep -q 'Box<' $@ \
+	  && { echo "ERROR: $*: a slice was compiled to an owning Box"; exit 1; }; true
+	$(Q)echo 'fn main() { std::process::exit(krml_main() as i32) }' >> $@
+
+$(OUTPUT_DIR)/%.rsran: $(OUTPUT_DIR)/%.rs
+	$(call msg, "RUSTC", $(basename $(notdir $@)))
+	$(Q)rustc --edition 2021 -A warnings -o $(OUTPUT_DIR)/$*.rsexe $<
+	$(call msg, "RUN-RUST", $(basename $(notdir $@)))
+	$(Q)$(OUTPUT_DIR)/$*.rsexe
+	$(Q)touch $@
+
+$(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
+	$(call msg, "CUSTARD-C", $(basename $(notdir $@)))
+	$(Q)mkdir -p $(OUTPUT_DIR)
+	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
+	  --custard_monomorphize_types true --custard_main $*.main \
+	  $(EXTRA_$*) $*.fst -o $@
+	@# Section 35.3.  These were set here for two rounds and consulted by
+	@# nothing, which is M10-phi-phi's bug in a second directory: an
+	@# assertion nobody runs is worse than no assertion, because it reads
+	@# like one.  Over the header as well as the source, as in tests/custard.
+	$(Q)for p in $(CGREP_$*); do \
+	  grep -qF -- "$$p" $@ $(basename $@).h \
+	    || { echo "ERROR: $* C output is missing $$p"; exit 1; }; done
+	$(Q)for p in $(CNOGREP_$*); do \
+	  grep -qF -- "$$p" $@ $(basename $@).h \
+	    && { echo "ERROR: $* C output should not contain $$p"; exit 1; }; done; true
+	$(Q)python3 $(CURDIR)/../checkgroup.py $@ $(basename $@).h
+
+$(OUTPUT_DIR)/%.dcexe: $(OUTPUT_DIR)/%.dc $(OUTPUT_DIR)/%.dcxx
+	$(call msg, "CC", $(basename $(notdir $@)))
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(CURDIR) -x c $< -o $@
+
+# Section 60.1.  The C++ leg of section 47.1, which existed only in
+# tests/custard and so had never been run over any of the output in this
+# directory -- which is the output that matters more for it.  A C++
+# disagreement is about declarations, scope and implicit conversions, and
+# this is where the tagged unions, the nested structs, the function
+# pointers and the pointer-returning externs are.  The every-push suite
+# next door is mostly scalars.
+#
+# It found nothing: all seven units compiled clean as C++ the first time.
+# That is the right outcome and not a reason to leave the leg out --- 47.1's
+# bug (an enum nested in a struct scopes its enumerators differently in the
+# two languages) was invisible to a C-only suite for the same reason it
+# would be invisible here, and Kuiper consumes this backend through nvcc,
+# which is C++.
+$(OUTPUT_DIR)/%.dcxx: $(OUTPUT_DIR)/%.dc
+	$(call msg, "CXX", $(basename $(notdir $@)))
+	$(Q)$(CXX) -std=c++17 -Wall -Werror -I$(CURDIR) -fsyntax-only -x c++ $<
+	$(Q)touch $@
+
+# Each of these programs' [main] checks its own answers and exits 0 if they
+# are right, so running it is a test of the generated code and not only of the
+# C compiler's willingness to accept it.
+$(OUTPUT_DIR)/%.dcran: $(OUTPUT_DIR)/%.dcexe
+	$(call msg, "RUN-C", $(basename $(notdir $@)))
+	$(Q)$<
+	$(Q)touch $@
+
+$(OUTPUT_DIR)/%.cexe: $(OUTPUT_DIR)/%.custard.krml
+	$(call msg, "KRML", $(basename $(notdir $@)))
+	$(Q)$(KRML_EXE) -silent -skip-linking -tmpdir $(OUTPUT_DIR)/$*_c $<
+	$(call msg, "CC", $(basename $(notdir $@)))
+	$(Q)$(CC) $$(tr '\n' ' ' < $(OUTPUT_DIR)/$*_c/compile_flags.txt) \
+	  -c $(OUTPUT_DIR)/$*_c/Custard.c -o $@
+
+# Section 19.11.  A specification named as an explicit entry point.  Two
+# assertions, and the negative one is the point: '--custard_entry' on an
+# slprop-valued 'val' must say that it is a specification, not reject the
+# recursive datatype that only ever indexes it.  This is the suite's one
+# negative test, so it is a rule of its own rather than a GREP_TESTS entry.
+$(OUTPUT_DIR)/PulseSpecRoot.specroot: $(CACHE_DIR)/PulseSpecRoot.fst.checked $(FSTAR_EXE)
+	$(call msg, "CUSTARD-C", PulseSpecRoot)
+	$(Q)mkdir -p $(OUTPUT_DIR)
+	$(Q)$(FSTAR) --codegen Custard --custard_backend C \
+	  --custard_entry_module PulseSpecRoot PulseSpecRoot.fst \
+	  -o $(OUTPUT_DIR)/PulseSpecRoot.c
+	$(Q)grep -q 'PulseSpecRoot_size' $(OUTPUT_DIR)/PulseSpecRoot.c \
+	  || { echo "ERROR: PulseSpecRoot.c is missing PulseSpecRoot_size"; exit 1; }
+	$(Q)grep -q 'tree' $(OUTPUT_DIR)/PulseSpecRoot.c \
+	  && { echo "ERROR: PulseSpecRoot.c should not mention tree"; exit 1; }; true
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -c -x c \
+	  $(OUTPUT_DIR)/PulseSpecRoot.c -o $(OUTPUT_DIR)/PulseSpecRoot.o
+	$(Q)for e in rep rep_abs; do \
+	  $(FSTAR) --codegen Custard --custard_backend C \
+	    --custard_entry PulseSpecRoot.$$e PulseSpecRoot.fst \
+	    -o $(OUTPUT_DIR)/PulseSpecRoot_$$e.c > $(OUTPUT_DIR)/$$e.out 2>&1; \
+	  grep -q 'is a specification, not code' $(OUTPUT_DIR)/$$e.out \
+	    || { echo "ERROR: --custard_entry PulseSpecRoot.'$$e' did not report a \
+specification:"; cat $(OUTPUT_DIR)/$$e.out; exit 1; }; done
+	$(Q)touch $@
+
+# Section 71.4.  A program Custard must refuse, and what it must say about it.
+# Ported from ../Makefile rather than shared, because these tests need Pulse
+# in scope and ../Makefile cannot resolve a Pulse module at all.
+$(OUTPUT_DIR)/%.rejected: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
+	$(call msg, "REJECT", $(basename $(notdir $@)))
+	@mkdir -p $(OUTPUT_DIR)
+	$(Q)$(FSTAR) --message_format human --codegen Custard $(WARN_ANY) \
+	  $(FLAGS_$*) --custard_main $*.main $*.fst \
+	  >$(OUTPUT_DIR)/$*.err 2>&1 || true
+	$(Q)grep -qE "(Error|Warning) $(CODE_$*)" $(OUTPUT_DIR)/$*.err \
+	  || { echo "ERROR: expected diagnostic $(CODE_$*) from $*"; \
+	       cat $(OUTPUT_DIR)/$*.err; false; }
+	@# A pinned phrase must not span one of the formatter's line breaks.
+	$(Q)for p in $(EGREP_$*); do \
+	  grep -q -- "$$p" $(OUTPUT_DIR)/$*.err \
+	    || { echo "ERROR: $* diagnostic is missing $$p"; \
+	         cat $(OUTPUT_DIR)/$*.err; exit 1; }; done
+	$(Q)for p in $(NOEGREP_$*); do \
+	  grep -q -- "$$p" $(OUTPUT_DIR)/$*.err \
+	    && { echo "ERROR: $* diagnostic should not contain $$p"; \
+	         cat $(OUTPUT_DIR)/$*.err; exit 1; }; done; true
+	$(Q)touch $@
+
+ALL_TEST_NAMES := $(GREP_TESTS) $(OCAML_TESTS) $(C_TESTS) \
+                  $(KRML_TESTS) $(RUST_TESTS) $(REJECT_TESTS)
+
+# Section 35.3.  A setting whose name matches no registered test.
+#
+# [CGREP_PulseForCapture] was set in pulse/Makefile for two rounds and read by
+# no recipe, and M10-phi-phi was the same bug from the other side: a test with
+# settings but no registration.  Both are silent, and both read like coverage
+# that does not exist.  Any name here that is not in a test list is one or the
+# other.  Recursively expanded, so that [.VARIABLES] is complete by the time a
+# recipe asks.
+SETTING_PREFIXES := FLAGS GREP NOGREP EGREP NOEGREP CGREP CNOGREP CODE
+ORPHAN_SETTINGS = $(strip $(foreach p,$(SETTING_PREFIXES),\
+  $(foreach v,$(filter $(p)_%,$(.VARIABLES)),\
+    $(if $(filter $(patsubst $(p)_%,%,$(v)),$(ALL_TEST_NAMES) TESTS),,$(v)))))
+
+.PHONY: check-settings
+check-settings:
+	$(Q)test -z "$(ORPHAN_SETTINGS)" || { \
+	  echo "ERROR: setting(s) for no registered test: $(ORPHAN_SETTINGS)"; \
+	  echo "Either register the test, or delete the setting."; exit 1; }
+
+all: check-settings
+
+all: $(OUTPUT_DIR)/PulseSpecRoot.specroot
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .grepped, $(GREP_TESTS)))
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .mlchecked, $(OCAML_TESTS)))
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcran, $(C_TESTS)))
+
+ifneq ($(KRML_FOUND),)
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .cexe, $(KRML_TESTS)))
+ifneq ($(shell command -v rustc 2>/dev/null),)
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rsran, $(RUST_TESTS)))
+
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rejected, $(REJECT_TESTS)))
+endif
+endif
