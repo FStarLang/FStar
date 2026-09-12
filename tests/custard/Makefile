@@ -669,6 +669,22 @@ CGREP_ExternOpt += "extern uint32_t ExternOpt_close(FStar_Pervasives_Native_opti
 # The external type itself is still the target's: no definition, no clone.
 CNOGREP_ExternOpt += "ExternOpt_listener"
 
+# Section 104.  The projection form of the eta law.  [reset_perm] and
+# [tagged_reset] are record updates whose written field is ghost, so erasure
+# leaves a record built entirely out of its own argument's fields; both must
+# collapse to the identity.  [swap] is the permutation that shares their shape
+# and must *not* collapse, and [bump] is the partial update that stays partial
+# because the field it writes survives erasure.
+C_TESTS += RecUpd
+CGREP_RecUpd += "return c;"
+CGREP_RecUpd += ".p_a = c.p_b"
+CGREP_RecUpd += ".p_b = (c.p_b + 1)"
+CNOGREP_RecUpd += ".s_type = c.s_type"
+CNOGREP_RecUpd += ".t_tag = c.t_tag"
+# [retuple] is the tuple form, reached by the other road: [depat] turns the
+# pattern into projections before [simpl] ever sees it.
+CNOGREP_RecUpd += "._1 = c._1"
+
 # Section 102.2.  --custard_c_no_prefix now covers assume vals: an external's
 # name is the symbol the linker resolves, which is this unit's interface in
 # the only sense the option cares about.  A [@@custard_extern] name wins, and

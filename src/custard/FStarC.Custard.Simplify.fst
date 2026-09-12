@@ -424,6 +424,98 @@ let rebuild_id (s:expr) (brs:list branch) : ML (option expr) =
      | _ -> None)
   | _ -> None
 
+(* Section 104.  The same law in its *projection* form: a value taken apart
+   field by field and put straight back together is the value.
+
+   It is not a second law and not a peephole.  The shape above is the one a
+   programmer writes as a destructuring [let]; this is the one nobody writes
+   at all.  [{c with f = e}] elaborates to a *full* construction in which
+   every field other than [f] is a projection of [c], so when [f] is ghost,
+   section 5.3 deletes it and what is left is a record built entirely out of
+   its own argument's fields.  A partial update has become a total one, and
+   the residue has no pattern in it anywhere -- there never was a destructure
+   to match on, which is why the law above cannot see it.  EverParse's
+   [cbor_string_reset_perm] and its four neighbours are this and nothing else.
+
+   The field names do here what the pattern does there.  Each component must
+   be the projection of the field it is being stored under, which is what
+   makes the rewrite an identity rather than a permutation -- [{p_a = c.p_b;
+   p_b = c.p_a}] has the same shape and is a swap -- and every projection
+   must name the thing being built, which is what stops two types that happen
+   to share a field name from being confused.
+
+   Soundness is the same argument in the same place, and it is [one_ctor]
+   that carries it: only a type with a single constructor is entered in the
+   table, so a match on the whole value could not have gone anywhere else.
+
+   [s] must be a variable.  The rewrite turns [n] reads of [s] into one,
+   which is a change unless reading it is free, and it is the only form the
+   elaboration produces: [{c with ...}] evaluates [c] once and binds it.  A
+   fieldless constructor is excluded for the same reason it has to be --
+   there is nothing left to read [s] from, so no evidence the value was ever
+   there. *)
+
+(* Constructor or type name -> its fields, in declaration order, for the
+   single-constructor types only.  Filled by [run]; empty until then, which
+   makes the rewrite below a no-op rather than a wrong answer. *)
+let one_ctor : SMap.t (list string) = SMap.create 100
+
+let record_one_ctors (prog:program) : ML unit =
+  prog |> List.iter (fun d ->
+    match d with
+    | DType t ->
+      let put (n:name) (fs : list (string & cty)) : ML unit =
+        SMap.add one_ctor (string_of_name n) (fs |> List.map fst) in
+      (match t.dt_body with
+       | TRecord fs -> put t.dt_name fs
+       | TVariant [(cn, fs)] -> put t.dt_name fs; put cn fs
+       | _ -> ())
+    | _ -> ())
+
+let fields_of (n:name) : ML (option (list string)) =
+  SMap.try_find one_ctor (string_of_name n)
+
+(* [es] are the components of a value of the type [n] names, in field order
+   [fs].  Are they that value's own fields, read back out of one variable? *)
+let proj_spine (n:name) (fs : list string) (es : list expr) : ML (option expr) =
+  if Nil? fs || List.length fs <> List.length es then None else
+  let base : ref (option expr) = mk_ref None in
+  let ok = List.zip fs es |> List.for_all (fun (f, (e:expr)) ->
+    match e.e with
+    | EProj (s, pn, g) ->
+      g = f && string_of_name pn = string_of_name n &&
+      (match s.e, !base with
+       | EVar v, None -> base := Some s; true
+       | EVar v, Some b -> (match b.e with EVar w -> v = w | _ -> false)
+       | _ -> false)
+    | _ -> false) in
+  if ok then !base else None
+
+let rebuild_proj_id (x:expr) : ML (option expr) =
+  match x.e with
+  (* Before the [records] pass a single-constructor value is still an
+     [ECtor], which is the form this actually fires on; after it, an
+     [ERecord].  Both are here because both reach [simpl] -- the layout
+     analysis builds the second directly (section 5.7). *)
+  | ECtor (n, es) ->
+    (match fields_of n with
+     | Some fs -> proj_spine n fs es
+     | None -> None)
+  | ERecord (n, fs) ->
+    (* A record expression names its own labels, so the declaration order is
+       the one written here and no table is needed. *)
+    proj_spine n (fs |> List.map fst) (fs |> List.map snd)
+  (* A tuple component's field name is its position. *)
+  | ETuple es ->
+    (match es with
+     | [] -> None
+     | e0 :: _ ->
+       (match e0.e with
+        | EProj (_, n, _) ->
+          proj_spine n (es |> List.mapi (fun i _ -> "_" ^ string_of_int (i + 1))) es
+        | _ -> None))
+  | _ -> None
+
 let rec simpl (x:expr) : ML expr =
   match x.e with
   | ELet (v, ty, e1, e2) ->
@@ -479,11 +571,17 @@ let rec simpl (x:expr) : ML expr =
      | Some (t, f) -> { x with e = EIf (s, t, f) }
      | None -> { x with e = EMatch (s, brs) })
   | EIf (c, a, b) -> { x with e = EIf (simpl c, simpl a, simpl b) }
-  | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map simpl) }
-  | ETuple es -> { x with e = ETuple (es |> List.map simpl) }
+  | ECtor (n, es) ->
+    let r = { x with e = ECtor (n, es |> List.map simpl) } in
+    (match rebuild_proj_id r with Some s -> s | None -> r)
+  | ETuple es ->
+    let r = { x with e = ETuple (es |> List.map simpl) } in
+    (match rebuild_proj_id r with Some s -> s | None -> r)
   | EOp (o, es) -> { x with e = EOp (o, es |> List.map simpl) }
   | ERaise e1 -> { x with e = ERaise (simpl e1) }
-  | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, simpl e))) }
+  | ERecord (n, fs) ->
+    let r = { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, simpl e))) } in
+    (match rebuild_proj_id r with Some s -> s | None -> r)
   | EProj (e1, n, f) -> { x with e = EProj (simpl e1, n, f) }
   | EDiscrim (e1, n) -> { x with e = EDiscrim (simpl e1, n) }
   | ECast (e1, c) -> { x with e = ECast (simpl e1, c) }
@@ -3486,6 +3584,8 @@ let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
   let pass (n:string) (f : program -> ML program) (p:program) : ML program =
     Prof.timed ("s." ^ n) (fun () -> f p) in
   imported_types := imports;
+  (* Section 104.  Before everything, because [simpl] reads it. *)
+  record_one_ctors (with_imports prog);
   (* First, because every pass below reads a constructor's arity. *)
   let prog = pass "eta_ctors" (eta_ctors vd) prog in
   let prog = pass "eta_reduce" eta_reduce_decls prog in

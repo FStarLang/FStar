@@ -19062,6 +19062,113 @@ record at the call site.  The nullary constructor is the easy case to argue
 about --- it is free everywhere --- so the test carries the shape that
 really does build something.
 
+## 104 A record rebuilt out of its own fields
+
+§102 removed 181 of EverParse's 352 `_letpattern` declarations, and the
+reporter re-verified the result on the whole corpus: the count of real
+`Pulse_Lib_Slice_split__*` call sites is *identical* across the change, 255
+before and after, which is the check that matters --- the law removed
+rebuilds and nothing else.  `validate_header`, the site he traced, goes from
+five declarations to two, and the two that remain are the two splits the
+function performs.
+
+One shape survives, and it is not the one either of us predicted.  Five
+functions, all of this form:
+
+```c
+static cbor_string cbor_string_reset_perm(cbor_string c) {
+  return (cbor_string){ .cbor_string_type = c.cbor_string_type,
+                        .cbor_string_size = c.cbor_string_size,
+                        .cbor_string_ptr  = c.cbor_string_ptr };
+}
+```
+
+`cbor_string` has exactly those three fields, so this is the identity
+function written out.  They are reachable --- `cbor_raw_reset_perm_tot`
+dispatches to all five and is exported --- so they cannot be dropped, and
+karamel emits the same five field for field, so this is a tidiness matter
+and not a regression.
+
+### 104.1 Where it comes from
+
+The source is a **record update**:
+
+```fstar
+let cbor_string_reset_perm (p: perm) (c: cbor_string) : cbor_string =
+  { c with cbor_string_perm = p `perm_mul` c.cbor_string_perm }
+```
+
+`{c with f = e}` is not a partial construction in the elaborated term.  It is
+a *full* one, in which every field other than `f` is filled with a projection
+of `c` --- that is what "with" means, and there is no other way to say it
+once the surface syntax is gone.  Here the one field that is not a projection
+is `perm`, which is ghost, so §5.3 deletes it, and a partial update has
+become a total one: a record built entirely out of its own argument's fields.
+
+This is why §102 cannot see it.  That law is stated over a `match`, because
+the shape it was written for is a destructuring `let` and a destructuring
+`let` is a match; here there is no pattern anywhere, and there never was one,
+because the programmer never wrote a destructure.  The reporter had reserved
+`C x.f₁ … x.fₙ ⇝ x` as a second peephole for the standalone wrapper, where
+it turned out not to be needed.  It is needed for this, and neither of us
+guessed the reason --- it is erasure turning a partial update into a total
+one.
+
+### 104.2 The same law by its other name
+
+So it is not a second law.  A value taken apart field by field and put
+straight back together is the value, and whether the taking apart is spelled
+as a pattern or as a projection is a question about the surface syntax that
+produced it, not about the term.  §102 is the form a programmer writes;
+§104 is the form nobody writes at all.
+
+What the pattern carries there, the field names carry here.  Each component
+must be the projection of the field it is being stored under --- that is what
+makes the rewrite an identity rather than a permutation, since `{p_a = c.p_b;
+p_b = c.p_a}` has precisely the same shape and is a swap --- and every
+projection must name the thing being built, which is what stops two types
+that happen to share a field name from being confused.
+
+Soundness is §102's argument in §102's place, and the table is what carries
+it.  Only a **single-constructor** type is entered in `one_ctor`, so a
+multiple-constructor variant is not merely rejected by the rewrite but
+invisible to it: there is no other value the fields could have come from,
+because there is no other constructor for the value to have been.  A record
+type qualifies by construction.
+
+Two side conditions.  The scrutinee must be a **variable**, because the
+rewrite turns *n* reads of it into one, which is a change unless reading it
+is free --- and it is the only form the elaboration produces, `{c with …}`
+evaluating `c` once and binding it.  And a fieldless constructor is excluded,
+for the reason it has to be: with no fields there is nothing left to read the
+value out of, so no evidence it was ever there.
+
+### 104.3 Where the rewrite sits
+
+The law fires on `ECtor` and not, in practice, on `ERecord`: the `records`
+pass runs *after* `simpl`, so when the rewrite is asked, a single-constructor
+value is still a constructor application and its components are positional.
+That is what makes the field table necessary --- the names have to come from
+the declaration, since the term does not carry them yet.  `ERecord` is
+handled too, because the layout analysis (§5.7) builds that node directly and
+it does reach `simpl`; there the labels are written in the term and no table
+is consulted.
+
+The tuple form falls out of the same code, with a component's position
+standing in for its field name, and it is reached by the *other* road:
+`depat` runs before `simpl`, so a destructuring `let` on a tuple has already
+become two projections by the time either law is asked.  §102's form and this
+one are the same law arrived at from opposite directions, which is the
+clearest evidence available that it was one law all along.
+
+`tests/custard/RecUpd.fst` pins all four.  `reset_perm` and `tagged_reset`
+are the reporter's shape at three fields and at two; both collapse to `return
+c;`.  `swap` is the permutation that shares their shape and must survive
+untouched, and `bump` is the partial update that stays partial, because the
+field it writes is not ghost and so one component is not a projection.  The
+two that must not fire are the point of the test: getting either wrong would
+be silent.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -19389,3 +19496,4 @@ really does build something.
 | M10ιΑ | A pair that is taken apart and put back together (§102.1) | Done.  181 of the 352 `_letpattern` declarations in EverParse's `COSE_Format.c` were a record rebuilt out of the projections of the one above it.  Not a regression --- karamel emits 193 of the same construct and splices some into the use site besides --- and not a cost: the chain and the hand-collapsed version compile to byte-identical machine code at `-O3`.  It is 181 lines of noise in the parsing core.  Pulse has no multiple return, so a two-result `fn` returns a tuple and every wrapper that names the components and hands them back writes `let a, b = f () in (a, b)`, one layer per inlined wrapper.  In the IR that is not a pair of projections at all --- that shape appears only after PrintC compiles a pattern --- but `match s with C(a,b) -> C(a,b)`, which is the **constructor's eta law** written out.  So that is the rewrite, and what makes it sound without a table of constructors is that the match has *one* branch and no guard: a single constructor pattern is exhaustive only if that constructor is the type's only one, so the pattern cannot fail and the scrutinee cannot be anything else.  Paired with copy propagation, since the law alone leaves the same three lines with the constructors taken out.  The reporter held a second peephole in reserve, `C x.f₁ … x.fₙ ⇝ x`, for the standalone wrapper where the tuple really is the return value; it is not needed, because that is the *printed* shape and the IR form the eta law already rewrites to a tail call.  The rewrite cost one regression and it is the interesting part: written first as a substitution through `sub`, it stopped Custard extracting the F\* compiler, `used_marker : bool ref` printing as an OCaml array.  `sub` replaces each use *node* with the definiens node, so every use takes the definiens' recorded type --- right for an inliner, wrong for a renaming, and the two types here were the same type spelled two ways, one of them `any`.  So copy propagation changes the string and leaves every node alone.  Third time this trap has been paid for, and worth naming: a rewrite that replaces a node inherits that node's type, and the IR carries two spellings of most types.  The eta law was corrected the same way at the same time.  In-tree Pulse suite unchanged at 31 s |
 | M10ιΒ | `--custard_c_no_prefix` and an `assume val` (§102.3) | Done.  The reporter's standing item: `Abort.abort` comes out as `Abort_abort`, and the attribute that would fix it exists only on this branch, so writing it stops `Abort.fst` typechecking with a released F\* --- which broke EverParse's CI until it was backed out.  He asked for a command-line counterpart or for the option to cover `assume val`s.  The second, because it is less an extension of the option than a correction to it: an external's name is the symbol the linker goes looking for, so it is this unit's interface in the only sense the option cares about --- *more* so than a definition's, since nothing here defines it and the whole file is a demand on the outside.  `build_renames` already renamed types whether or not they had linkage, on exactly that reasoning, so an external was the case that was missed rather than the case that was decided against.  `[@@custard_extern "…"]` wins where written: that is the target's own spelling, taken verbatim, and an option about *prefixes* has nothing to say about a name that was never prefixed.  One ordering bug fell out --- `build_renames` ran after the declaration tables were filled, and the external table stores a **resolved** C name, since an external is the one declaration whose name may come from somewhere other than its lid and resolving it once is what keeps the prototype and the call sites agreeing.  Filling it first left it holding the name the option had just replaced; `build_renames` reads no table, so it moved up.  `NoPrefixX` pins both halves with the realization in a separate translation unit, so the link is the assertion |
 | M10ιΓ | A wrapper that supplied every argument (§103.1) | Done.  A Pulse `fn` calling another with all three of its arguments was rejected as a partial application of two.  §25 is an eta-reduction followed by an eta-expansion: `eta_reduce` shortens `wrapper b c = callee A b c` to `wrapper b = callee A b`, which is what lets a chain of forwarders resolve, and `eta_expand_decl` puts the argument back once it knows every caller can supply it.  The expansion is guarded by `cheap_expr`, because expanding re-evaluates the body at every call, and `cheap_expr` had no case for a **constructor application** --- so `callee A b` fell to its default and the expansion was refused.  The reporter had already isolated it to the one variable that matters: his `forward` control passes the constructor through as a parameter, is all variables, and always worked.  Building a value is the same class of work as the `EOp` beside it: bounded by its operands and no more expensive to repeat than they are --- a compound literal in C, nothing at all for the nullary case this was found on, an immediate in OCaml.  The comparison that settles it is not against zero but against **what the refusal leaves standing**, an under-applied call that allocates a closure over the very arguments in question; re-evaluating `A` at each call is cheaper than allocating a closure at each call, so the guard was refusing the cheaper of the two programs.  `ECtor`, `ETuple` and `ERecord` are now cheap when their operands are, and `EDiscrim` joins the `EProj` above it, reading a tag being reading a field.  Still excluded on purpose are `ELet`, `EMatch`, `EIf` and the other statement forms: §25.3 asks whether a body may be re-evaluated at every call, and those are where a body has a cost that is not read off its operands.  The test is the reporter's module with his control kept as the control, plus a record built at the call site --- a nullary constructor is free everywhere and so the easy case to argue, and the rule has to be right about the shape that really does build something.  In-tree Pulse suite unchanged at 31 s |
+| M10ιΔ | A record rebuilt out of its own fields (§104) | Done.  §102 held up on the whole of EverParse --- the real `split` call sites are identical in number across the change, 255 before and after, which is the check that matters, and `validate_header` goes from five declarations to the two splits it performs.  Five functions survive, all the identity written out field by field, and the reporter had reserved exactly the right peephole for them and expected to need it somewhere else.  The source is a **record update**.  `{c with f = e}` is not partial in the elaborated term --- it is a full construction in which every other field is a projection of `c`, which is what "with" means once the surface syntax is gone --- and here the one field that is not a projection is ghost, so §5.3 deletes it and a partial update has become a total one.  That is why §102 could not see it: that law is stated over a `match` because a destructuring `let` is a match, and here there is no pattern anywhere and never was, the programmer having written no destructure.  So it is not a second law.  A value taken apart field by field and put straight back together is the value, and whether the taking apart is spelled as a pattern or as a projection is a fact about the syntax that produced the term rather than about the term.  What the pattern carries there, the field names carry here: each component must be the projection of the field it is stored under, which is what makes this an identity and not a permutation --- `{p_a = c.p_b; p_b = c.p_a}` has the same shape and is a swap --- and every projection must name the thing being built.  Soundness is §102's argument in §102's place, and the field table carries it: only a single-constructor type is entered, so a variant is not rejected by the rewrite but invisible to it.  The scrutinee must be a variable, since the rewrite turns *n* reads into one, and a fieldless constructor is excluded because with no fields there is nothing left to read the value out of.  It fires on `ECtor` rather than `ERecord`, the `records` pass running after `simpl`, which is why the names must come from the declaration; the tuple form falls out of the same code and is reached by the *other* road, `depat` having turned the pattern into projections before either law is asked --- the two forms are one law arrived at from opposite directions.  `RecUpd` pins the two that fire and, more to the point, the two that must not |
