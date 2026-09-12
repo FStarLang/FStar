@@ -247,12 +247,17 @@ Guidelines for the changelog:
     name with no documentation still answers `null`, as before.
 
     `fstar.exe --export_docs Mod.fst.checked` emits, on standard output, a
-    versioned JSON index (schema 3) of that module's public top-level
+    versioned JSON index (schema 4) of that module's public top-level
     declarations, documented or not: fully qualified names, declaration
     kinds, printed signatures, source ranges, the documentation (or `null`),
     each elaborated type as a tree of fully qualified names, the names each
     declaration refers to, and the definitions of transparent non-lemma
-    `let`s. With `--include` pointing at the sources, it also quotes each
+    `let`s. A computation in that tree reports its effect, its result, and
+    its precondition and postcondition as the effect stores them: `pre` is
+    a proposition and `post` is abstracted over the result, so no effect
+    has to be recognised by name for a consumer to find its contract.
+    `Tot` and `GTot` report both as `null`. With `--include` pointing at
+    the sources, it also quotes each
     declaration as written, but only from a file whose digest is the one
     recorded in the checked file. When the interface's checked file is
     available next to the implementation's, the interface is used. This JSON

@@ -114,7 +114,7 @@ let doc_of_sigelt (se : S.sigelt) : ML doc_status =
   | _ -> doc_of_attrs se.sigattrs
 
 let docs_schema_name = "fstar-module-docs"
-let docs_schema_version = 3
+let docs_schema_version = 4
 
 (* A declaration we export: its kind, name, elaborated type, and -- for a
    constructor -- the type it constructs. *)
@@ -161,6 +161,38 @@ let json_of_bqual (q : S.bqual) : json =
   | Some (Meta _) -> JsonStr "meta"
   | Some Equality -> JsonStr "equality"
 
+(* Arrows and abstractions are represented one binder at a time, so a
+   type a reader thinks of as `x:a -> y:b -> Lemma p` is a spine of
+   nested nodes. The exported tree keeps them n-ary, as a reader reads
+   them, so the spines are collected here. Binders accumulate closed and
+   are opened once by the caller, which is how the rest of the compiler
+   does it.
+
+   [Syntax.Util.arrow_formals_comp] does this already, and is
+   deliberately not used: on reaching a refinement it descends into the
+   refinement's sort looking for an arrow, which drops the predicate.
+   For documentation the predicate is the specification, so a refined
+   function type must stay a refinement. The guard on a total comp
+   without a decreases clause is taken from that function, and for the
+   same reason: neither an effect nor a decreases clause may be
+   flattened away. *)
+let rec arrow_spine (t : S.term) : ML (list S.binder & S.comp) =
+  match (SS.compress t).n with
+  | Tm_arrow {b; comp} ->
+    if U.is_total_comp comp && not (U.has_decreases comp)
+    then
+      let bs, c = arrow_spine (U.comp_result comp) in
+      b :: bs, c
+    else [b], comp
+  | _ -> [], S.mk_Total t
+
+let rec abs_spine (t : S.term) : ML (list S.binder & S.term) =
+  match (SS.compress t).n with
+  | Tm_abs {b; body} ->
+    let bs, body = abs_spine body in
+    b :: bs, body
+  | _ -> [], t
+
 let rec json_of_term (t : S.term) : ML json =
   let t = SS.compress (U.unascribe (U.unmeta (SS.compress t))) in
   match t.n with
@@ -172,7 +204,8 @@ let rec json_of_term (t : S.term) : ML json =
     JsonAssoc [("k", JsonStr "var"); ("n", JsonStr (str_of_id bv.ppname))]
   | Tm_type _ -> JsonAssoc [("k", JsonStr "type")]
   | Tm_constant _ -> JsonAssoc [("k", JsonStr "const"); ("v", JsonStr (show t))]
-  | Tm_app {hd; args} ->
+  | Tm_app _ ->
+    let hd, args = U.head_and_args_full t in
     JsonAssoc [
       ("k", JsonStr "app");
       ("f", json_of_term hd);
@@ -180,8 +213,9 @@ let rec json_of_term (t : S.term) : ML json =
                   JsonAssoc [("t", json_of_term a);
                              ("imp", JsonBool (S.is_aqual_implicit q))])));
     ]
-  | Tm_arrow {bs; comp} ->
-    let bs, c = SS.open_comp bs comp in
+  | Tm_arrow _ ->
+    let bs, c = arrow_spine t in
+    let bs, c = SS.open_comp bs c in
     JsonAssoc [
       ("k", JsonStr "arrow");
       ("bs", JsonList (List.map json_of_binder bs));
@@ -196,7 +230,8 @@ let rec json_of_term (t : S.term) : ML json =
       ("t", json_of_term b.sort);
       ("phi", json_of_term phi);
     ]
-  | Tm_abs {bs; body} ->
+  | Tm_abs _ ->
+    let bs, body = abs_spine t in
     let bs, body = SS.open_term bs body in
     JsonAssoc [
       ("k", JsonStr "abs");
@@ -212,18 +247,33 @@ and json_of_binder (b : S.binder) : ML json =
     ("t", json_of_term b.binder_bv.sort);
   ]
 
+(* A computation is an effect name, a result, and -- for an effect that
+   has them -- a precondition and a postcondition. Both are reported as
+   they are stored: [pre] is a proposition, and [post] is abstracted
+   over the result, so it arrives as an `abs` node whose single binder
+   names the result the postcondition speaks about. That name is worth
+   keeping: it is the one a reader sees in `ensures`.
+
+   [Tot] and [GTot] report a null [pre] and [post] rather than the
+   trivial formulas [Syntax.Util.comp_pre] and [comp_post] would
+   synthesize for them. Reporting `True` on every total function would
+   put a contract on declarations that do not have one, and deciding
+   that `True` means "no contract" is the consumer's business, not the
+   compiler's. *)
 and json_of_comp (c : S.comp) : ML json =
-  let eff, res, args =
+  let eff, res, pre, post =
     match c.n with
-    | Total t -> "Prims.Tot", t, []
-    | GTotal t -> "Prims.GTot", t, []
+    | Total t -> "Prims.Tot", t, None, None
+    | GTotal t -> "Prims.GTot", t, None, None
     | Comp ct ->
-      Ident.string_of_lid ct.effect_name, ct.result_typ, List.map fst ct.effect_args
+      Ident.string_of_lid ct.effect_name, ct.result_typ,
+      Some ct.comp_pre, Some ct.comp_post
   in
   JsonAssoc [
-    ("eff", JsonStr eff);
-    ("res", json_of_term res);
-    ("args", JsonList (List.map json_of_term args));
+    ("eff",  JsonStr eff);
+    ("res",  json_of_term res);
+    ("pre",  (match pre  with Some t -> json_of_term t | None -> JsonNull));
+    ("post", (match post with Some t -> json_of_term t | None -> JsonNull));
   ]
 
 (* The fully qualified names a term mentions, for linking. *)

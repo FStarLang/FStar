@@ -13,3 +13,7 @@ let decr (x:int) : int = x - 1
    it into the public documentation index. *)
 [@@doc ["Implementation-only documentation must remain private."]]
 let helper (x:int) : int = x
+
+let incr_grows x k = ()
+
+let double_nat n = 2 * n

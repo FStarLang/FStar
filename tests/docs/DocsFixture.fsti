@@ -34,3 +34,23 @@ val decr (x:int) : int
 type colour =
   | Red
   | Blue
+
+(* A computation that has a contract, which the exported type reports as
+   the effect stores it: 'pre' is the requires, and 'post' is abstracted
+   over the result, so the ensures is the body of a one-binder 'abs'. The
+   binder's own type restates the requires -- that is how a Lemma's post
+   is built -- which a consumer reading the contract should expect.
+
+   'incr' and 'decr' above are 'Tot', and report a null 'pre' and 'post'.
+   Without this declaration nothing in the suite exercises an effect that
+   has a contract at all. *)
+[@@doc ["Adding a positive number gives a larger one."]]
+val incr_grows (x:int) (k:int) : Lemma
+  (requires k > 0)
+  (ensures  x + k > x)
+
+(* A total function whose result is refined: the specification is in the
+   result type rather than in a contract, so 'post' stays null and the
+   refinement travels inside 'res'. *)
+[@@doc ["Doubles a natural number, which cannot shrink it."]]
+val double_nat (n:nat) : m:nat{m >= n}

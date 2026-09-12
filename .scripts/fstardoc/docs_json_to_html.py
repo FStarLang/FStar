@@ -25,7 +25,7 @@ import json
 import sys
 
 SCHEMA = "fstar-module-docs"
-VERSION = 3
+VERSION = 4
 
 STYLE = """\
 body { font-family: sans-serif; margin: 2em auto; max-width: 50em; }

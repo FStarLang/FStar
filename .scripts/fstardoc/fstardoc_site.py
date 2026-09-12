@@ -2,7 +2,7 @@
 """Build a static documentation site from `fstar.exe --export_docs`.
 
 This is an EXPERIMENTAL consumer of the versioned JSON export (schema
-"fstar-module-docs", version 3). It lives outside the compiler, as the
+"fstar-module-docs", version 4). It lives outside the compiler, as the
 whitepaper's D4 recommends: it runs `--export_docs` on checked files and
 never looks inside them.
 
@@ -38,7 +38,7 @@ import sys
 
 from markdown_it import MarkdownIt
 
-SCHEMA, VERSION = "fstar-module-docs", 3
+SCHEMA, VERSION = "fstar-module-docs", 4
 
 MD = MarkdownIt("commonmark", {"html": False, "linkify": False, "typographer": False})
 
@@ -152,8 +152,9 @@ def names(t, out):
         for b in t["bs"]:
             names(b["t"], out)
         names(t["c"]["res"], out)
-        for a in t["c"]["args"]:
-            names(a, out)
+        for side in ("pre", "post"):
+            if t["c"].get(side):
+                names(t["c"][side], out)
     elif k == "refine":
         names(t["t"], out)
         names(t["phi"], out)
@@ -162,6 +163,17 @@ def names(t, out):
             names(b["t"], out)
         names(t["body"], out)
     return out
+
+
+def post_body(t):
+    """A postcondition is abstracted over the result, so the `ensures`
+    formula is the body of a one-binder `abs`.
+
+    Take only the body. The binder's own type restates the precondition --
+    a Lemma's post arrives as `fun (_: unit{requires}) -> ensures` --
+    so reading the whole term would file the requires under the
+    postcondition as well."""
+    return t["body"] if t["k"] == "abs" else t
 
 
 def analyse(t):
@@ -181,12 +193,17 @@ def analyse(t):
     res = c["res"]
     eff = c["eff"]
     h = head(res)
+    # Any effect that carries a contract reports it by name, so this is
+    # uniform: no effect needs to be recognised to find its pre and post.
+    # Pulse's `stt` is still read positionally below, because there the
+    # contract is part of an applied result type rather than the comp.
+    if c.get("pre"):
+        names(c["pre"], info["pre"])
+    if c.get("post"):
+        names(post_body(c["post"]), info["post"])
     if eff == "FStar.Pervasives.Lemma":
         info["eff"] = "Lemma"
         info["res"] = ["unit"]
-        if len(c["args"]) >= 2:
-            names(c["args"][0], info["pre"])
-            names(c["args"][1], info["post"])
     elif h and h.startswith(STT_HEADS):
         info["eff"] = short(h)
         ex = [a["t"] for a in peel(res)["args"] if not a["imp"]]
