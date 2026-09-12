@@ -494,10 +494,11 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : ML
 
     | MLE_If (cond, e1, None) ->
         let cond = doc_of_expr currentModule  (min_op_prec, NonAssoc) cond in
+        let line_prefix = if Util.codegen_fsharp() then [text "    "] else [] in
         let doc  =
             combine hardline [
                 reduce1 [text "if"; cond; text "then"; text "begin"];
-                doc_of_expr currentModule  (min_op_prec, NonAssoc) e1;
+                reduce1 (line_prefix @ [doc_of_expr currentModule  (min_op_prec, NonAssoc) e1]);
                 text "end"
             ]
 
@@ -510,9 +511,9 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : ML
             combine hardline ((if Util.codegen_fsharp() then [break1] else []) @ [
                 reduce1 [text "if"; cond; text "then"; text "begin"];
                 reduce1 (line_prefix @ [doc_of_expr currentModule  (min_op_prec, NonAssoc) e1 ]);
-                reduce1 (line_prefix @ [reduce1 [text "end"; text "else"; text "begin"] ]);
+                reduce1 [reduce1 [text "end"; text "else"; text "begin"]];
                 reduce1 (line_prefix @ [doc_of_expr currentModule  (min_op_prec, NonAssoc) e2 ]);
-                reduce1 (line_prefix @ [text "end" ])
+                reduce1 [text "end" ]
             ])
 
         in maybe_paren outer e_bin_prio_if doc
@@ -610,7 +611,7 @@ and doc_of_branch (currentModule : mlsymbol) (br : mlbranch) : ML doc =
     combine hardline [
         reduce1 [case; text "->"; text "begin"];
         reduce1 [if Util.codegen_fsharp() then text "    " else empty; doc_of_expr currentModule  (min_op_prec, NonAssoc) e];
-        reduce1 [if Util.codegen_fsharp() then text "    " else empty; text "end"]
+        text "end"
     ]
 
 (* -------------------------------------------------------------------- *)
