@@ -91,6 +91,29 @@ def short(fqn):
     return parts[-1]
 
 
+# Names the typechecker generated, which appear in contracts even though
+# nobody wrote them: `Cons? l` in a refinement elaborates to an
+# application of `Prims.uu___is_Cons`, and a record projection to
+# `uu___proj__Mkt__item__f`. Indexing those spellings is useless -- no one
+# searches for `uu___is_Cons` -- so they are reported under the name they
+# came from, `Cons` and `f`.
+#
+# The export is right to name them: `refs` says what the type actually
+# mentions, and which of those a reader cares about is the consumer's
+# business, the same division as for visibility.
+GENERATED = [re.compile(r"^uu___is_(\w+)$"),
+             re.compile(r"^uu___proj__\w+?__item__(\w+)$")]
+
+
+def ungenerated(fqn):
+    mod, _, last = fqn.rpartition(".")
+    for pat in GENERATED:
+        m = pat.match(last)
+        if m:
+            return (mod + "." if mod else "") + m.group(1)
+    return fqn
+
+
 def peel(t):
     """The type a reader would name: refinements, erasure and ghost
     wrappers removed."""
@@ -142,8 +165,9 @@ def tokens(t, depth=0):
 def names(t, out):
     k = t["k"]
     if k == "fv":
-        if not BORING.search(t["n"]):
-            out.add(t["n"])
+        n = ungenerated(t["n"])
+        if not BORING.search(n):
+            out.add(n)
     elif k == "app":
         names(t["f"], out)
         for a in t["args"]:
