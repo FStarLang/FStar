@@ -19381,6 +19381,61 @@ comparison is an implementation detail of the unit that needed one.
 stay a scalar comparison, and runs the results, a comparison being the one
 kind of output whose *answer* is worth checking rather than its shape.
 
+## 108.  A collapsed newtype is an unfolding too
+
+§70.1 roots a type **abbreviation** declared in an entry module.  The
+argument there was that Custard unfolds an abbreviation, so nothing in the
+emitted program refers to the name, and the declaration is dead by
+construction: only being a root keeps it.  Inductives were excluded in the
+same breath, on the grounds that one has a definition of its own and
+cannot be unfolded away.
+
+That is true of every inductive except one.  §5.2 collapses a one-field
+record to its field --- the representation of `type wrapper = { contents:
+U64.t }` is `uint64_t`, and every mention of `wrapper` resolves to it ---
+which is an unfolding by any other name, and leaves the declaration in
+exactly the position an abbreviation's was: referred to by nothing, and so
+removed by `dce`.  karamel emits `typedef uint64_t Alias_wrapper;`;
+Custard emitted nothing, and the *entire* divergence between the two
+outputs was that one line, every function signature being byte-identical.
+
+It is not cosmetic.  The name is the interface.  EverParse's
+`CBOR.Pulse.API.Det.Rust` declares
+
+```fstar
+type cbor_det_array =
+  { array: (array: cbordet { CaseArray? (cbor_det_case array) }) }
+```
+
+--- a newtype whose field carries a refinement, which is what a published
+abstract type looks like when the abstraction is a proof obligation.  The
+hand-written safe Rust wrapper names `cbor_det_array` in a struct field,
+so with the name gone `cargo build` stops with `E0425: cannot find type`,
+four times across the two crates.  A consumer can work around it with a
+local alias, and that alias is sound precisely because the signatures
+already agree --- which is the argument for emitting it rather than
+against.
+
+So the same answer as §70.1, for the same reason and in the same place: a
+collapsed type declared in an entry module is rooted, and the
+abbreviation `collapsed_abbrev` already builds survives `dce`.  The
+machinery was all there; what was missing was a root.
+
+Narrowly on purpose.  Rooting *every* inductive in an entry module would
+emit types nothing uses, and worse than noise, it could turn a working
+extraction into a rejection: a type no live signature mentions has never
+been asked whether C can represent it, and a recursive one is refused by
+`check_finite`.  A collapsed type has already been asked --- its payload
+is a representable type, the collapse having just computed it --- so the
+line costs one `typedef` and can fail in no new way.  `Private` is
+honoured, and so is an existing `Root`, which is what `--custard_entry` on
+a type already writes.
+
+`Newtype` pins the three forms that now carry a name: the plain one, the
+refinement-carrying one that is EverParse's, and one whose payload is a
+record of the same module, so the abbreviation names a name.  A two-field
+record nothing reaches is the guard, and is still absent.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -19712,3 +19767,4 @@ kind of output whose *answer* is worth checking rather than its shape.
 | M10ιΕ | A dispatcher over five identities (§105) | Done.  §104 held on EverParse --- all five collapse, both guards hold, and the pycose round-trip is what would have caught a `swap` turned into an identity, a permutation of two same-typed fields being invisible to every static check there is.  The dispatcher over them did *not* thin out, and the reporter measured rather than assuming: `cbor_raw_reset_perm_tot` is seven branches each rebuilding its own constructor plus `| _ -> c`, and at `-O3` clang keeps the whole thing as a seven-way jump table, because it will not reason that storing `.tag = X` and `.val.X = c.val.X` when `c.tag == X` reproduces `c`.  Hand-collapsing that one body takes **1828 bytes** off the unit's `.text`, 1.25% of the translation unit from one eight-line function, and more than the function because it inlines into its callers --- against 32 bytes for the whole of §102.  Two things stood in the way.  Each branch rebuilds from a **call**, §104 having made those calls the identity but left them calls.  A function whose body is one of its own parameters is worth inlining whether or not anyone asked, and is the only shape of which that can be said unconditionally: inlining trades size for speed and the flag is where a programmer settles that trade, but here there is nothing to trade, the body being a single use of a single variable, so the argument is substituted for it and the call goes.  *One* binder, though, and not a body that is merely one of several --- `fun a b -> a` is safe for the same reason and is not the same claim, since it also **deletes** the argument in `b`'s position, which is §99's question and not this one.  One exclusion, which `EtaVar` asked for: `consume i u = i u` is eta-*reduced* to `consume i = i`, which has this shape and is a definition in the middle of §25's eta pair whose arity `eta_expand_decl` is about to restore, so the test is on the return type and a definition returning a function is not an identity in the sense that matters.  Then §102 with its single-branch restriction lifted, every side condition surviving one for one: each branch rebuilds *its own* constructor with its own variables in their own positions --- `RecUpd`'s `swap` one level up --- no guards, and the match exhaustive, which is exactly what the single-constructor condition was buying, the old law being the *n* = 1 case.  A catch-all answers exhaustiveness alone, and `| _ -> c` is already literally the identity, so the dispatcher is a match in which every branch is the identity written two ways.  Ordering: an identity function is recognizable only after `simpl`, since §104 is what makes one, so `run` goes round once more rather than move `inline` --- skipped outright when nothing qualifies.  `RecDisp` pins both exhaustive forms and both guards; `KindStar`, `StoredType` and `RecUpd` each pinned a function the rule now removes, and between them they say what it reaches |
 | M10ιΖ | A rule one level down (§106) | Done.  §93's floor under normalization read the **head** of a monomorphization argument, which was the whole of it for as long as the type carrying the built-in rule was the argument itself.  It is not: `option (array uint32)` and `option (array bool)` have `option` for a head, carrying no rule, and an `array` one level down carrying the only difference between them --- so neither fired the guard, both reduced to `option array'`, both keyed the same, and one `fst` specialization was emitted for two incompatible tuple types.  Seventeen C errors in a full TLS extraction, and visible in the IR dump, so not a collision of printed names.  The reporter had localized it to the line.  A rule is destroyed by reduction wherever it sits, so the floor is read wherever it sits: every rule mentioned anywhere in the type, head and arguments recursively, and the written form is kept when reduction has **lost** one of them.  Stating it as a loss rather than as a presence is what keeps it from firing where it should not --- an abbreviation that *introduces* a rule loses nothing and rightly keeps its reduced form, which is the more informative of the two, and a wrapper the reduction merely peels names the rule on both sides and is left alone.  The old head test is the depth-zero case and is subsumed exactly.  `NestArr` is the reported shape with a parameterized record in the same position as the control |
 | M10ιΗ | Equality at a type C cannot compare (§107) | Done.  C's `==` is defined on arithmetic types and on pointers; F\*'s is defined at every type with decidable equality, which is every inductive one.  `Known = x` on a two-constructor datatype came out as a struct compared with `==` and was rejected, and it is not a narrow shape --- a record, a tuple and an `option` are all structs here and all four spellings were broken.  The representation was never in question: the pattern-match form of the same test compiled.  So the comparison is generated rather than refused, there being nothing to discover --- a datatype's equality *is* structural and the structure is the layout this backend just chose.  One `static bool T__eq(T, T)` per type compared: a conjunction over a record's fields, tags first and then the payload of that tag for a tagged union, `true` under a nullary constructor.  Aggregate fields recurse, and `check_finite` has already ruled out a struct containing itself by value, so the recursion terminates on the grounds the declarations already stand on.  Two types keep `==` on purpose: an **enum** *is* a scalar in the representation it was given, and an **external** has no body to read and a target that may well be a scalar typedef or a class with an `operator==` of its own.  A field behind a pointer compares as a pointer, which is what F\* means there too, such a type carrying no `hasEq` and so never being the argument of a `=`; `Prims.string` keeps §44.2's `strcmp` inside the generated comparisons as well as outside them.  Collected while the bodies are printed, which is when the set of types compared is complete, and emitted above them behind prototypes.  `VariantEq` pins all four broken spellings and the enum that must not acquire a helper, and runs the answers |
+| M10ιΘ | A collapsed newtype is an unfolding too (§108) | Done.  Custard over EverParse's **CBOR** corpus, four independent legs, and the declaration sets match karamel's exactly --- the two C legs name for name, and the Rust legs by exactly ten functions per crate, all of them `uu___is_`-prefixed discriminators for one inductive that no consumer uses and that neither backend emits on the C side, so the difference is karamel leaking F\* internal names into a published Rust API rather than a gap here.  Every consumer passes with no source changes: 363/363 round-trip tests against det and again against nondet, 29 and 1 cargo tests, and --- checked because it was not believed --- two *karamel-driven* verification tests that generate their own re-declaration of the same 46 functions and link against Custard's object file, so the two backends' output is header- and link-compatible at that scale and not merely each correct.  One bug, and small: a one-field record whose collapse is §5.2 leaves no abbreviation behind.  §70.1 roots a type *abbreviation* in an entry module because Custard unfolds one and nothing then refers to the name; inductives were excluded for having a definition that cannot be unfolded away, which is true of every inductive but this one.  The collapse **is** an unfolding, and it leaves the declaration in exactly the position an abbreviation's was, so `dce` removes it --- the whole divergence from karamel being one `typedef`, every signature byte-identical.  The name is the interface: `cbor_det_array` is a newtype over a refinement, EverParse's hand-written Rust wrapper names it, and without it `cargo build` stops with E0425 four times.  Same answer, same place, one root; the machinery `collapsed_abbrev` needed was already written.  Narrowly on purpose --- rooting every inductive in an entry module would emit types nothing uses and could turn a working extraction into a *rejection*, a type no live signature mentions never having been asked whether C can represent it, while a collapsed one has been asked and its payload is representable by construction.  `Newtype` pins the plain form, the refinement-carrying form that is the reported one, and a payload that is itself a record, with an unreached two-field record as the guard |

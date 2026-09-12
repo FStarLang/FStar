@@ -1593,6 +1593,19 @@ CGREP_TypeAbbrev += "typedef TypeAbbrev_cell__point TypeAbbrev_iter_t;"
 # A proof-level abbreviation is erased, not emitted.
 CNOGREP_TypeAbbrev += "TypeAbbrev_spec_t"
 
+# Section 108.  The collapse of a one-field record is an unfolding too, so
+# the name is left in the same position an abbreviation's is: referred to by
+# nothing, and kept only by being a root.
+C_TESTS += Newtype
+FLAGS_Newtype = --custard_entry_module Newtype --custard_monomorphize_types true
+CGREP_Newtype += "typedef uint64_t Newtype_wrapper;"
+CGREP_Newtype += "typedef uint32_t Newtype_positive;"
+CGREP_Newtype += "typedef Newtype_point Newtype_boxed;"
+# Monomorphized first, so there is no parameter left to be unconstrained.
+CGREP_Newtype += "typedef uint32_t Newtype_phantom__bool;"
+# Rooting is for the collapsed case only.
+CNOGREP_Newtype += "Newtype_unused"
+
 # Section 70.2.  An external type whose F* values are handles: a binding of
 # one has to alias, or a write through it is lost.  Kuiper's section 62 --
 # [auto acc = accFrags[i]; mma_sync(acc, ...)] wrote a copy that died at the

@@ -572,11 +572,40 @@ let rec cty_names (c:cty) : ML (list string) =
    for the payload, which says exactly what the collapse decided and changes
    no representation.  Not when a parameter would be left unconstrained --
    OCaml rejects [type 'a t = int] -- in which case there is nothing to say. *)
+(* Section 108.  And the name does not survive on its own.  §65.4 roots a
+   type *abbreviation* declared in an entry module, on the reasoning that
+   Custard unfolds it, so nothing in the emitted program refers to the name
+   and it is dead by construction --- only being a root keeps it.  Inductives
+   were excluded there for having a definition of their own and so being
+   unfoldable by nobody, which is true of every inductive except this one:
+   the collapse above is exactly an unfolding, and it leaves the name in the
+   same position an abbreviation's is, referred to by nothing.
+
+   So the same answer, for the same reason and in the same place: a collapsed
+   type declared in an entry module is rooted, and the abbreviation survives
+   [dce].  Narrowly on purpose.  Rooting every inductive in an entry module
+   would emit types nothing uses, and worse, could turn a working extraction
+   into a rejection --- a type that no live signature mentions has never been
+   asked whether C can represent it.  A collapsed one has: its payload is a
+   representable type, the collapse having just computed it, so the line
+   costs exactly one [typedef] and can fail in no new way.
+
+   [Private] is honoured; so is an existing [Root], which is what
+   [--custard_entry] on a type already writes. *)
+let entry_module (n:name) : ML bool =
+  let m = String.concat "." n.ns in
+  Options.custard_entry_modules () |> List.existsb (fun e -> e = m)
+
 let collapsed_abbrev (dt:dtype) (payload:cty) : ML (option decl) =
   let vars = cty_vars payload in
   if dt.dt_params |> List.for_all (fun p -> List.mem p vars)
      && not (List.mem (key dt.dt_name) (cty_names payload))
-  then Some (DType { dt with dt_body = TAbbrev payload })
+  then
+    let fs = dt.dt_flags in
+    let fs = if entry_module dt.dt_name &&
+                not (has_flag fs Private) && not (has_flag fs Root)
+             then Root :: fs else fs in
+    Some (DType { dt with dt_body = TAbbrev payload; dt_flags = fs })
   else None
 
 let rw_decl (t:tbl) (d:decl) : ML (list decl) =
