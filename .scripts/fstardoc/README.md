@@ -12,7 +12,7 @@ python3 fstardoc.py {path to fst/fsti file}
 
 # Consumers of `--export_docs`
 
-`fstardoc.py` above reads F* source directly. The three scripts below
+`fstardoc.py` above reads F* source directly. The four scripts below
 instead read the versioned JSON that `fstar.exe --export_docs` emits from
 a checked file, and never open a checked file themselves — the boundary
 the whitepaper's D4 argues for. All of them expect schema version 4.
