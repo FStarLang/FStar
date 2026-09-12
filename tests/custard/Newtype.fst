@@ -45,9 +45,23 @@ let unphantom (p : phantom bool) : U32.t = p.pc
 /// signature mentions never having been asked whether C can represent it.
 type unused = { ua : U32.t; ub : U64.t }
 
+/// Section 110.  The collapse computes the payload's *layout*; it does not
+/// establish that the payload has a C representation, and those are not the
+/// same question.  [spect] is laid out because a monomorphization key asks
+/// for it, and is emitted nowhere because every position holding one is
+/// erased -- COSE's shape exactly.  Its payload is a [Prims.list], which C
+/// cannot represent at all, so naming it by value is an error 368 about a
+/// type the program never mentions.  The abbreviation is revived only when
+/// every type its payload names is already live, which this one's is not.
+type spect = { st : list U32.t }
+
+let keyed (#t : Type0) (g : FStar.Ghost.erased t) (x : U32.t) : U32.t = x
+
 let main () : FStar.All.ML FStar.Int32.t =
   let w = make 7uL in
   let b = { bp = { px = 3ul; py = 4ul } } in
-  if U64.eq (get w) 7uL && U32.eq (pval one) 1ul &&
+  let k = keyed #spect (FStar.Ghost.hide ({ st = [] })) 9ul in
+  if U32.eq k 9ul &&
+     U64.eq (get w) 7uL && U32.eq (pval one) 1ul &&
      U32.eq (unbox b) 3ul && U32.eq (unphantom { pc = 5ul }) 5ul
   then 0l else 1l

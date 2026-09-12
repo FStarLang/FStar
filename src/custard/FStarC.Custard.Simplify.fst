@@ -1611,6 +1611,82 @@ let ctor_owners (prog:program) : ML (SMap.t string) =
     | _ -> ());
   m
 
+(* Section 110.  The name of a collapsed type, when the live program has a
+   use for it.
+
+   Section 108 rooted it outright, on the argument that a collapsed type's
+   payload is representable because the collapse had just computed it.  That
+   is wrong, and COSE is the counterexample: the collapse computes a
+   *layout*, [check_finite] decides *representability*, and they are not the
+   same predicate.  [COSE.Format.spect_tstr] is a proof-level type spliced in
+   by the CDDL bundle machinery; it collapses to [seq uint8], which has a
+   layout and is a refinement of [Prims.list], which has no C representation
+   at all.  Emitting a by-value [typedef] for it asks the finiteness question
+   for the first time, and the answer is no --- so a module that had
+   extracted for six rounds stopped, and stopped because of a name nothing in
+   its output had ever mentioned.  That is exactly the failure section 108
+   predicted for the *broad* reading of the rule, arriving in the narrow one.
+
+   The repair is not a finiteness test bolted on beside the rooting; that
+   would mirror one backend's predicate in a pass that has no business
+   knowing it, and would answer only the one rejection out of several.  It is
+   to ask what the name is *for*.  An abbreviation for a type the emitted
+   program does not use has no consumer: there is no signature it helps
+   anybody read.  And the converse is the safety argument section 108 was
+   reaching for and did not have: if every type the payload names is already
+   live, then the payload is already emitted, so the [typedef] introduces no
+   type and can be rejected for nothing a live declaration is not rejected
+   for first.
+
+   The two cases separate cleanly on that test.  [cbor_det_array] collapses
+   to [cbor_raw], which the published functions traffic in, so the name is
+   revived; [spect_tstr] collapses to a sequence nothing live has, so it is
+   not.  A payload of no type at all --- [uint64_t], the reported shape ---
+   passes vacuously, as it should: a machine integer is representable
+   everywhere.
+
+   Only a type declared in an *entry module* is eligible, which is where a
+   library's interface is named; [Private] is honoured; a type already live
+   is left alone, [--custard_entry] on a type being a root in the full sense.
+   To a fixpoint, since one revived abbreviation may be what makes another
+   one's payload live. *)
+let entry_module (n:name) : ML bool =
+  let m = String.concat "." n.ns in
+  Options.custard_entry_modules () |> List.existsb (fun e -> e = m)
+
+(* A payload naming no type is safe only if it needs none.  [TAny] and [TExn]
+   name nothing and are representable nowhere, so they are asked for by name. *)
+let rec spellable (c:cty) : ML bool =
+  match c with
+  | TAny | TExn -> false
+  | TApp (_, args) | TTuple args -> args |> List.for_all spellable
+  | TArrow (a, _, b) -> spellable a && spellable b
+  | TBuf c | TRef c | TInline c -> spellable c
+  | _ -> true
+
+let revive_abbrevs (prog:program) (live : SMap.t bool) : ML unit =
+  let cands = prog |> List.collect (fun d ->
+    match d with
+    | DType dt ->
+      (match dt.dt_body with
+       | TAbbrev c
+         when entry_module dt.dt_name &&
+              not (has_flag dt.dt_flags Private) &&
+              spellable c &&
+              None? (SMap.try_find live (string_of_name dt.dt_name)) ->
+         [(string_of_name dt.dt_name, cty_deps c)]
+       | _ -> [])
+    | _ -> []) in
+  let rec go (fuel:int) : ML unit =
+    if fuel <= 0 then () else
+    let added = cands |> List.existsb (fun (n, deps) ->
+      if None? (SMap.try_find live n) &&
+         deps |> List.for_all (fun d -> Some? (SMap.try_find live d))
+      then (SMap.add live n true; true)
+      else false) in
+    if added then go (fuel - 1) in
+  go (List.length cands + 1)
+
 let dce (prog:program) : ML program =
   let own = ctor_owners prog in
   let resolve (n:string) : ML string =
@@ -1629,6 +1705,7 @@ let dce (prog:program) : ML program =
   prog |> List.iter (fun d ->
     if decl_flags d |> List.existsb (fun f -> Root? f || Entrypoint? f)
     then visit (string_of_name (name_of_decl d)));
+  revive_abbrevs prog live;
   prog |> List.filter (fun d ->
     Some? (SMap.try_find live (string_of_name (name_of_decl d))))
 

@@ -19492,6 +19492,113 @@ nothing.
 position, the spelled-out control beside it, and a chain of two
 abbreviations for the fuel.
 
+## 110. A name for a type the program does not emit
+
+Section 108 gave a collapsed newtype back its name. A one-field record is
+replaced by its field, and the name that the record had disappears with it;
+§70.1 already restored such a name when the collapse was written as a type
+abbreviation, and §108 observed that a collapsed record is in the same
+position for the same reason -- the collapse *is* an unfolding -- and rooted
+it too.
+
+That was right about what the name is worth and wrong about what it costs.
+EverParse's COSE stopped extracting:
+
+```
+Error 368: the recursive datatype Prims.list@uint8 has no C representation
+  Reached through: COSE.Format.spect_tstr
+```
+
+and the report isolated the change precisely: `--custard_entry_module
+COSE.Format` fails, naming the two entry points by hand extracts clean, and
+`--custard_dump_layouts` prints the identical collapse in both runs. The only
+difference between the two is §108's root.
+
+### 110.1. Layout is not representability
+
+The argument §108 gave for its safety was that the collapse had just computed
+the payload's layout, so the payload must be representable. It is not the
+same predicate. The collapse asks what a value of the type *is*; `check_finite`
+asks whether C can hold one by value. `FStar.Seq.Base.seq` has a layout and is
+a refinement of `Prims.list`, which C cannot represent at all, so a type can
+pass the first question and fail the second.
+
+`COSE.Format.spect_tstr` is a proof-level type spliced in by the CDDL bundle
+machinery. It is laid out because a monomorphization key asks for it, and it
+is emitted nowhere because every position holding one is erased. Before §108
+that combination was harmless; after it, the by-value `typedef` asked the
+finiteness question for the first time, about a name that appears in neither
+the C nor the Rust output, and a module that had extracted for six rounds
+stopped.
+
+### 110.2. Reviving the name only where it has a reader
+
+The obvious repair is to test `check_finite` beside the rooting. Custard does
+not do that. It mirrors one backend's predicate into a pass that has no
+business knowing it, and it answers one rejection out of several: an
+abbreviation for an unrepresentable type is only the first way a name for a
+type the program does not emit can go wrong.
+
+The question worth asking is what the name is *for*. An abbreviation naming a
+type the emitted program does not use has no reader -- there is no signature
+it helps anybody follow, which is the whole of §70.1's case for restoring it.
+And the converse is the safety argument §108 was reaching for and did not
+have: **if every type the payload names is already live, the payload is
+already emitted, so the abbreviation introduces no type and can be rejected
+for nothing a live declaration is not rejected for first.** Not "cannot fail
+for this reason" but "cannot fail in any new way", which is the property that
+was actually wanted.
+
+The test is exactly right because of what collapsing does. If `wrapper`
+collapses to payload `P`, then every live use of `wrapper` has *become* a use
+of `P`. So `P` is live precisely when `wrapper` was used somewhere live --
+payload-liveness is not a proxy for "this type is used", it is that
+condition, spelled in the vocabulary the program has after the collapse.
+
+The two cases separate cleanly. `cbor_det_array` collapses to `cbor_raw`,
+which the published functions traffic in, so the name comes back;
+`spect_tstr` collapses to a sequence nothing live holds, so it does not. A
+payload naming no type at all -- `uint64_t`, the shape the CBOR report was
+about -- passes vacuously, as a machine integer should.
+
+### 110.3. Where the decision lives
+
+Liveness is known only in `dce`, so the decision moved there from `Layout`,
+and the root §108 added is gone. `Simplify.revive_abbrevs` runs after the
+reachability walk and before the filter: for each `DType` whose body is a
+`TAbbrev`, declared in an entry module, not `Private`, not already live, and
+all of whose payload's `cty_deps` are live, it is marked live. To a fixpoint,
+since one revived abbreviation can be what makes another's payload live.
+
+`TAny` and `TExn` are excluded by name. They have no dependencies, so they
+would be admitted vacuously, and `base_ty` rejects both -- the one case where
+"names nothing" does not mean "needs nothing".
+
+§70.1's own abbreviations pass through the same pass unchanged: they carry a
+root already and are already live, so it does not reach them. Only §108's
+addition is governed by liveness.
+
+### 110.4. The test
+
+`tests/custard/Newtype.fst` carries both directions. The positive ones are
+§108's, unchanged. The negative one is COSE's shape reduced: a type laid out
+because a monomorphization key demands it and emitted nowhere because every
+position holding one is erased.
+
+```fstar
+type spect = { st : list U32.t }
+let keyed (#t : Type0) (g : FStar.Ghost.erased t) (x : U32.t) : U32.t = x
+```
+
+Instantiating `keyed` at `spect` is what puts `spect` in the layout table;
+the erasure is what keeps it out of the output. The reduction took some
+finding -- the report documented eleven attempts that failed, all for the
+same reason, that a type wholly unreferenced never reaches layout while every
+ordinary ghost position erases it outright. An implicit type index is the
+position that does both: monomorphization must know the type, and nothing
+holds a value of it. Under §108 this module fails with the same error 368 as
+COSE; the test pins the absence of `Newtype_spect` in the output.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -19825,3 +19932,4 @@ abbreviations for the fuel.
 | M10ιΗ | Equality at a type C cannot compare (§107) | Done.  C's `==` is defined on arithmetic types and on pointers; F\*'s is defined at every type with decidable equality, which is every inductive one.  `Known = x` on a two-constructor datatype came out as a struct compared with `==` and was rejected, and it is not a narrow shape --- a record, a tuple and an `option` are all structs here and all four spellings were broken.  The representation was never in question: the pattern-match form of the same test compiled.  So the comparison is generated rather than refused, there being nothing to discover --- a datatype's equality *is* structural and the structure is the layout this backend just chose.  One `static bool T__eq(T, T)` per type compared: a conjunction over a record's fields, tags first and then the payload of that tag for a tagged union, `true` under a nullary constructor.  Aggregate fields recurse, and `check_finite` has already ruled out a struct containing itself by value, so the recursion terminates on the grounds the declarations already stand on.  Two types keep `==` on purpose: an **enum** *is* a scalar in the representation it was given, and an **external** has no body to read and a target that may well be a scalar typedef or a class with an `operator==` of its own.  A field behind a pointer compares as a pointer, which is what F\* means there too, such a type carrying no `hasEq` and so never being the argument of a `=`; `Prims.string` keeps §44.2's `strcmp` inside the generated comparisons as well as outside them.  Collected while the bodies are printed, which is when the set of types compared is complete, and emitted above them behind prototypes.  `VariantEq` pins all four broken spellings and the enum that must not acquire a helper, and runs the answers |
 | M10ιΘ | A collapsed newtype is an unfolding too (§108) | Done.  Custard over EverParse's **CBOR** corpus, four independent legs, and the declaration sets match karamel's exactly --- the two C legs name for name, and the Rust legs by exactly ten functions per crate, all of them `uu___is_`-prefixed discriminators for one inductive that no consumer uses and that neither backend emits on the C side, so the difference is karamel leaking F\* internal names into a published Rust API rather than a gap here.  Every consumer passes with no source changes: 363/363 round-trip tests against det and again against nondet, 29 and 1 cargo tests, and --- checked because it was not believed --- two *karamel-driven* verification tests that generate their own re-declaration of the same 46 functions and link against Custard's object file, so the two backends' output is header- and link-compatible at that scale and not merely each correct.  One bug, and small: a one-field record whose collapse is §5.2 leaves no abbreviation behind.  §70.1 roots a type *abbreviation* in an entry module because Custard unfolds one and nothing then refers to the name; inductives were excluded for having a definition that cannot be unfolded away, which is true of every inductive but this one.  The collapse **is** an unfolding, and it leaves the declaration in exactly the position an abbreviation's was, so `dce` removes it --- the whole divergence from karamel being one `typedef`, every signature byte-identical.  The name is the interface: `cbor_det_array` is a newtype over a refinement, EverParse's hand-written Rust wrapper names it, and without it `cargo build` stops with E0425 four times.  Same answer, same place, one root; the machinery `collapsed_abbrev` needed was already written.  Narrowly on purpose --- rooting every inductive in an entry module would emit types nothing uses and could turn a working extraction into a *rejection*, a type no live signature mentions never having been asked whether C can represent it, while a collapsed one has been asked and its payload is representable by construction.  `Newtype` pins the plain form, the refinement-carrying form that is the reported one, and a payload that is itself a record, with an unreached two-field record as the guard |
 | M10ιΙ | A rule an abbreviation hides (§109) | Done.  The full TLS rerun clears all 430 struct-equality errors of §107 and the explicit nested-array shape of §106, and keeps all 17 incompatible tuple arguments --- because an abbreviation names the rule at *neither* endpoint of the reduction.  `type pack a = option (array a)` mentions no `array` as written and none after reducing either: the rule is introduced by unfolding `pack` and erased by unfolding `array` inside the one normalization, so §106's before/after comparison sees nothing on either side, both keys come out `option array'`, and one `fst` serves two incompatible tuple types.  The reporter's control is the diagnosis --- spelling `option (array element)` out makes the rule visible at the first endpoint, which is the only difference between the two --- and he tied it to the real shape, EverParse's `vclist_lowtype = option (SZ.t & vec el)`, without claiming it accounts for all seventeen.  So the walk unfolds as it goes and stops where a rule is: record and descend at a rule-carrying head, unfold and re-walk at any other name, fall through to the arguments when an fvar does not unfold, which is every inductive.  `UnfoldOnly [l]` one name at a time, as §88 does, so a chain of abbreviations reaches the case again for the next name --- what the fuel is for --- and a refinement is walked through to its subject, `(a: array t { live a })` being an array.  The form reached is the one the control writes by hand, so nothing downstream changed.  One bounded cost, named rather than hidden: the key is still the argument as written, §93's choice, so a program spelling the same type both ways gets two identical specializations; consistent use of the abbreviation, which is the point of having one, pays nothing.  `TupAlias` is the reported module with the control kept and a two-deep chain added.  In-tree Pulse suite 30.6 s, unchanged with the test added |
+| M10ιΚ | A name for a type the program does not emit | §108 rooted a collapsed newtype on the argument that the collapse had proved its payload representable; it had only computed its layout, and COSE's `spect_tstr` collapses to a `Prims.list` that C cannot hold. The root moves to `dce` and is granted only when every type the payload names is already live, so the abbreviation introduces nothing and can fail in no new way. §110 |
