@@ -705,6 +705,20 @@ CNOGREP_RecDisp += "RecDisp_arr_reset"
 CGREP_RecDisp += ".tag = RECDISP_R, .val = { .RecDisp_R = { ._0 = c.val.RecDisp_L._0 } }"
 CGREP_RecDisp += ".RecDisp_Int = { ._0 = (c.val.RecDisp_Int._0 + 1) }"
 
+# Section 107.  C's [==] is defined on scalars and pointers; F*'s equality is
+# defined at every inductive.  One generated comparison per type compared,
+# tag first and then the payload of that tag.
+C_TESTS += VariantEq
+CGREP_VariantEq += "static bool VariantEq_kind__eq(VariantEq_kind a, VariantEq_kind b) {"
+CPAIR_VariantEq += "  if (a.tag != b.tag) return false;@  switch (a.tag) {"
+CGREP_VariantEq += "    case VARIANTEQ_UNKNOWN: return (a.val.VariantEq_Unknown._0 == b.val.VariantEq_Unknown._0);"
+CGREP_VariantEq += "  return (a.p_a == b.p_a) && (a.p_b == b.p_b);"
+CGREP_VariantEq += "  return (a._1 == b._1) && (a._2 == b._2);"
+CGREP_VariantEq += "  return (VariantEq_kind__eq((VariantEq_kind){ .tag = VARIANTEQ_KNOWN }, x));"
+# The enum stays a scalar, and its comparison stays [==].
+CNOGREP_VariantEq += "VariantEq_flag__eq"
+CGREP_VariantEq += "  return (x == y);"
+
 # Section 102.2.  --custard_c_no_prefix now covers assume vals: an external's
 # name is the symbol the linker resolves, which is this unit's interface in
 # the only sense the option cares about.  A [@@custard_extern] name wins, and

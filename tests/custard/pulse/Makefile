@@ -151,6 +151,15 @@ CGREP_ArrTup += "static uint32_t *ArrTup_get_arr(FStar_Pervasives_Native_tuple2_
 CGREP_ArrTup += "static uint32_t *ArrTup_three(FStar_Pervasives_Native_tuple2__uint32_ptr_tuple2_uint32_ptr_uint32_ptr p)"
 CGREP_ArrTup += "static uint32_t *ArrTup_get_snd(FStar_Pervasives_Native_tuple2__unit_uint32_ptr p)"
 
+# Section 106.  The rule one level down: two tuples whose only difference is
+# the element type of an array nested inside an [option] must not share one
+# projection.  The two [fst] specializations are named apart; the control's
+# single one shows the guard has not widened to types carrying no rule.
+C_TESTS += NestArr
+CGREP_NestArr += "static uint32_t FStar_Pervasives_Native_fst__t_option_array_t(FStar_Pervasives_Native_tuple2__uint32_option_uint32_ptr x) {"
+CGREP_NestArr += "static uint32_t FStar_Pervasives_Native_fst__t_option_array_bool(FStar_Pervasives_Native_tuple2__uint32_option_bool_ptr x) {"
+CGREP_NestArr += "static uint32_t FStar_Pervasives_Native_fst__t_option_box_t(FStar_Pervasives_Native_tuple2__uint32_option_box_uint32 x) {"
+
 # Section 94.  An initializer where C has one, and the loop where it does not:
 # a runtime fill cannot be repeated and a variable-length array may not be
 # initialized at all, so both of those keep the loop.

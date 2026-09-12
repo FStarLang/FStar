@@ -671,6 +671,120 @@ and base_ty (t:cty) : ML string =
 let ty (t:cty) : ML string = decl_of t ""
 
 (* -------------------------------------------------------------------- *)
+(* Structural equality (section 107)                                    *)
+(* -------------------------------------------------------------------- *)
+
+(* C's [==] is defined on arithmetic types and on pointers, and on nothing
+   else.  F*'s is defined at every type with decidable equality, which
+   includes every inductive one -- so [Known = x] on a two-constructor
+   datatype, which is an ordinary thing to write, reached the C compiler as
+   [(VariantEq_kind){ .tag = VARIANTEQ_KNOWN } == x] and was rejected.  It is
+   not a rare shape: a record, a tuple and an [option] are all struct types
+   here, and all four spellings were emitted.
+
+   A datatype's equality *is* structural, and the structure is known -- the
+   layout is the one this file just chose -- so the comparison is generated
+   rather than refused: one [static bool T__eq(T, T)] per type compared, tag
+   first and then the payload of that tag, recursing into fields that are
+   themselves aggregates.  [check_finite] has already established that no
+   struct contains itself by value, so the recursion terminates; a field
+   reached through a pointer compares as a pointer, which is what F* means by
+   equality there as well, since such a type carries no [hasEq] and cannot be
+   the argument of a [=] in the first place.
+
+   An external type is left with [==]: it has no body to read, and its target
+   may well be a scalar typedef or a C++ class with an [operator==] of its
+   own.  An enum is left with [==] too, that being the representation it got.
+
+   The functions are collected while the bodies are printed and emitted
+   afterwards, above them, behind prototypes -- the same arrangement the
+   program's own definitions use, and for the same reason. *)
+let eq_queue : ref (list (string & dtype)) = mk_ref []
+let eq_seen : ref (SMap.t bool) = mk_ref (SMap.create 20)
+
+let rec eq_target (t:cty) : ML (option dtype) =
+  match t with
+  | TApp (n, []) when None? (builtin_type n) ->
+    (match find_type n with
+     | Some d when List.existsb Extern? d.dt_flags -> None
+     | Some d ->
+       (match d.dt_body with
+        | TAbbrev u -> eq_target u
+        | TRecord _ -> Some d
+        | TVariant _ -> if is_enum d then None else Some d
+        | TAbstract -> None)
+     | None -> None)
+  | _ -> None
+
+(* The helper for [t], registering it to be emitted the first time it is
+   asked for. *)
+let eq_fn_of (t:cty) : ML (option string) =
+  match eq_target t with
+  | None -> None
+  | Some d ->
+    let f = c_name d.dt_name ^ "__eq" in
+    (if None? (SMap.try_find !eq_seen f) then
+       (SMap.add !eq_seen f true;
+        eq_queue := !eq_queue @ [(f, d)]));
+    Some f
+
+let eq_proto (f:string) (d:dtype) : ML string =
+  let n = c_name d.dt_name in
+  "static bool " ^ f ^ "(" ^ n ^ " a, " ^ n ^ " b);\n"
+
+let eq_def (f:string) (d:dtype) : ML string =
+  let n = c_name d.dt_name in
+  let hd = "static bool " ^ f ^ "(" ^ n ^ " a, " ^ n ^ " b) {\n" in
+  (* Section 44.2 again: [const char *] compares by contents. *)
+  let cmp (a:string) (b:string) (t:cty) : ML string =
+    if is_string_ty t then "strcmp(" ^ a ^ ", " ^ b ^ ") == 0"
+    else match eq_fn_of t with
+         | Some g -> g ^ "(" ^ a ^ ", " ^ b ^ ")"
+         | None -> "(" ^ a ^ " == " ^ b ^ ")" in
+  let all (pa:string) (pb:string) (fs : list (string & cty)) : ML string =
+    match fs with
+    | [] -> "true"
+    | _ -> String.concat " && " (fs |> List.map (fun (g, t) ->
+             cmp (pa ^ "." ^ c_var g) (pb ^ "." ^ c_var g) t)) in
+  (* Nothing to read: the parameters are named, so they have to be used. *)
+  let trivial = "  (void)a; (void)b;\n  return true;\n}\n" in
+  let direct (fs : list (string & cty)) : ML string =
+    if Nil? fs then hd ^ trivial
+    else hd ^ "  return " ^ all "a" "b" fs ^ ";\n}\n" in
+  match d.dt_body with
+  | TRecord fs -> direct fs
+  | TVariant cs when single_ctor d -> direct (snd (List.hd cs))
+  | TVariant cs ->
+    hd ^ "  if (a.tag != b.tag) return false;\n" ^
+    "  switch (a.tag) {\n" ^
+    String.concat "" (cs |> List.map (fun (cn, fs) ->
+      "    case " ^ c_tag cn ^ ": return " ^
+      (if Nil? fs then "true"
+       else all ("a.val." ^ c_var (mangled_name cn))
+                ("b.val." ^ c_var (mangled_name cn)) fs) ^ ";\n")) ^
+    (* Every tag is a case, so this is unreachable -- and C still wants a
+       [return] on the path that falls out of the switch. *)
+    "  }\n  return true;\n}\n"
+  | _ -> hd ^ trivial
+
+(* Drain the queue, which grows while it is drained: a generated comparison
+   may be the first thing to ask for the one on a field's type. *)
+let eq_decls () : ML (list string & list string) =
+  let protos : ref (list string) = mk_ref [] in
+  let defs : ref (list string) = mk_ref [] in
+  let rec go (fuel:int) : ML unit =
+    if fuel <= 0 then failwith "Custard: generated equalities do not settle"
+    else match !eq_queue with
+    | [] -> ()
+    | (f, d) :: rest ->
+      eq_queue := rest;
+      protos := !protos @ [eq_proto f d];
+      defs := !defs @ [eq_def f d];
+      go (fuel - 1) in
+  go 10000;
+  (!protos, !defs)
+
+(* -------------------------------------------------------------------- *)
 (* Constants                                                            *)
 (* -------------------------------------------------------------------- *)
 
@@ -1482,6 +1596,13 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
   | EOp (o, [a; b]) when (Eq? o.po_op || Neq? o.po_op) && is_string_ty a.ty ->
     "(strcmp(" ^ c_expr out ind a ^ ", " ^ c_expr out ind b ^ ") " ^
     (if Eq? o.po_op then "==" else "!=") ^ " 0)"
+  (* Section 107.  The same question at every other type C cannot compare
+     with [==]: a struct, which is what a record, a tuple and every inductive
+     with a payload are here. *)
+  | EOp (o, [a; b]) when (Eq? o.po_op || Neq? o.po_op) && Some? (eq_fn_of a.ty) ->
+    let g = (match eq_fn_of a.ty with Some g -> g | None -> "") in
+    "(" ^ (if Neq? o.po_op then "!" else "") ^
+    g ^ "(" ^ c_expr out ind a ^ ", " ^ c_expr out ind b ^ "))"
   (* Section 59.3.  A binary operator's two operands have the same IR type,
      so a literal operand's cast is telling C what the *other* operand
      already says: if that type outranks [int] the literal converts to it
@@ -3209,6 +3330,8 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
      compiled it has a header, and that header is included instead.  Writing a
      declaration of our own for it is what section 14.10 is the record of. *)
   let init_name = init_name cu in
+  (* Section 107.  One unit's generated comparisons are that unit's. *)
+  eq_queue := []; eq_seen := SMap.create 20;
   record_parents p;
   (* Section 102.2.  Before the tables, not after them.  The external table
      below stores a *resolved* C name -- an external is the one declaration
@@ -3515,6 +3638,10 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
        | _ -> [pre ^ "  (void)" ^ call ^ ";\n  return 0;\n}\n"])
     | _ -> []) in
 
+  (* Section 107.  After every body has been rendered, which is when the set
+     of types actually compared is complete. *)
+  let eq_protos, eq_defs = eq_decls () in
+
   (* The header carries the unit's whole type language rather than only the
      types a public signature mentions.  A [struct] or a [typedef] has no
      linkage, so there is nothing to collide and nothing to hide from the
@@ -3559,6 +3686,8 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
     "#include \"" ^ base ^ ".h\"\n\n" ^
   String.concat "" exts ^ (match exts with [] -> "" | _ -> "\n") ^
   String.concat "" protos ^ (match protos with [] -> "" | _ -> "\n") ^
+  String.concat "" eq_protos ^ (match eq_protos with [] -> "" | _ -> "\n") ^
+  String.concat "\n" eq_defs ^ (match eq_defs with [] -> "" | _ -> "\n") ^
   String.concat "\n" defs ^ "\n" ^ (match inits with [] -> "" | _ -> init_fn) ^
     (match mains with [] -> "" | _ -> "\n" ^ String.concat "\n" mains) in
   hdr, body

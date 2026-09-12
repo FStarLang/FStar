@@ -19285,6 +19285,102 @@ now carries the same assertion.  `RecUpd`'s two are §104's own output, so
 they are named as entries instead --- an entry is the one declaration whose
 body survives having no call sites left.
 
+## 106.  A rule one level down
+
+§93 gave Pulse's `array` a floor under normalization.  A monomorphization
+key is a normalized type, and `array` unfolds --- `Pulse.Lib.Array.Core`
+defines a non-parameterized `array'` and then `let array elt = array'`, so
+reduction erases the element type and with it the only thing telling two
+specializations apart.  The guard put the type back: if the argument as
+written carries a built-in representation rule and the reduced form does
+not, the written form is the key.
+
+It read the **head** of the argument, and that was the whole of it for as
+long as the type carrying the rule was the argument itself.  It is not.
+`option (array uint32)` and `option (array bool)` have `option` for a head,
+which carries no rule, and an `array` one level down which carries the
+only difference between them.  Read at the head the guard did not fire,
+both reduced to `option array'`, both produced the same key --- and one
+`FStar_Pervasives_Native_fst` specialization was emitted for two
+incompatible tuple types, whose parameter could only be one of them.  In a
+full TLS extraction that is seventeen C errors, and the conflation is
+already visible in the IR dump, so it is not a printer-level collision of
+names.
+
+A rule is destroyed by reduction wherever it sits, so the floor has to be
+read wherever it sits.  `builtin_type_rules` collects every rule mentioned
+anywhere in a type --- head and arguments, recursively --- and the guard
+keeps the written form when reduction has **lost** one of them: when some
+rule named before the reduction is named nowhere after it.  The head test
+is the depth-zero case of that and is subsumed exactly.
+
+Stating it as a loss rather than as a presence is what keeps it from
+firing where it should not.  An abbreviation that *introduces* a rule ---
+`let arru = array uint32`, whose written form names nothing and whose
+reduced form names `array` --- loses nothing, so the reduced form wins, as
+it should: it is the more informative of the two.  A wrapper the reduction
+merely peels, `id (array t)`, names `array` on both sides and is likewise
+left alone.  Only the case where the written type knew something the
+reduced one no longer does is corrected.
+
+`NestArr` is the reported shape: one definition projecting out of both
+tuples, so that a shared specialization is a C error rather than a
+coincidence of naming, and the two `fst`s come out named apart with their
+own parameter types.  A parameterized record in the same position is the
+control --- it carries no rule, its element type survives normalization on
+its own, and it compiled before and still does.
+
+## 107.  Equality at a type C cannot compare
+
+C's `==` is defined on arithmetic types and on pointers.  F\*'s is defined
+at every type carrying decidable equality, which is every inductive one
+--- so `Known = x` on a two-constructor datatype, which is an ordinary
+thing to write, reached the C compiler as
+
+```c
+return ((VariantEq_kind){ .tag = VARIANTEQ_KNOWN } == x);
+```
+
+and was rejected outright.  The datatype's own representation was fine;
+the pattern-match spelling of the same test compiled.  It was only the
+comparison, and it is not a narrow shape: a record, a tuple and an
+`option` are all struct types here, and all of them emitted the same
+invalid C.
+
+The comparison is generated rather than refused.  A datatype's equality
+*is* structural, and the structure is not in doubt --- the layout is the
+one this backend has just chosen --- so there is nothing to discover and
+nothing to ask the programmer for.  One `static bool T__eq(T, T)` per type
+actually compared: for a record, the conjunction over its fields; for a
+tagged union, the tags first and then the payload of that tag, each
+constructor a `case`; for a nullary constructor, `true`, there being
+nothing under it.  Fields that are themselves aggregates recurse into
+their own helper, and `check_finite` has already established that no
+struct contains itself by value, so the recursion terminates on the same
+grounds the type declarations do.
+
+Two types are left with `==` deliberately.  An **enum** --- a variant no
+constructor of which carries a field --- *is* a scalar in the
+representation it was given, and comparing it is C's own operator doing
+exactly the right thing.  An **external** type has no body to read, and
+its target may well be a scalar typedef or a C++ class with an
+`operator==` of its own; generating a structural comparison for it would
+require knowing a layout that is by construction someone else's.  A field
+reached through a pointer compares as a pointer, which is also what F\*
+means there, such a type carrying no `hasEq` and so being unable to be the
+argument of a `=` at all.  `Prims.string` keeps §44.2's `strcmp`, in the
+generated comparisons as well as at the top level.
+
+The helpers are collected while the bodies are printed --- which is when
+the set of types actually compared is complete, and not before --- and
+emitted above them behind prototypes, the same arrangement the program's
+own definitions use and for the same reason.  They are `static`: a
+comparison is an implementation detail of the unit that needed one.
+
+`VariantEq` pins all four spellings that were broken, the enum that must
+stay a scalar comparison, and runs the results, a comparison being the one
+kind of output whose *answer* is worth checking rather than its shape.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -19614,3 +19710,5 @@ body survives having no call sites left.
 | M10ιΓ | A wrapper that supplied every argument (§103.1) | Done.  A Pulse `fn` calling another with all three of its arguments was rejected as a partial application of two.  §25 is an eta-reduction followed by an eta-expansion: `eta_reduce` shortens `wrapper b c = callee A b c` to `wrapper b = callee A b`, which is what lets a chain of forwarders resolve, and `eta_expand_decl` puts the argument back once it knows every caller can supply it.  The expansion is guarded by `cheap_expr`, because expanding re-evaluates the body at every call, and `cheap_expr` had no case for a **constructor application** --- so `callee A b` fell to its default and the expansion was refused.  The reporter had already isolated it to the one variable that matters: his `forward` control passes the constructor through as a parameter, is all variables, and always worked.  Building a value is the same class of work as the `EOp` beside it: bounded by its operands and no more expensive to repeat than they are --- a compound literal in C, nothing at all for the nullary case this was found on, an immediate in OCaml.  The comparison that settles it is not against zero but against **what the refusal leaves standing**, an under-applied call that allocates a closure over the very arguments in question; re-evaluating `A` at each call is cheaper than allocating a closure at each call, so the guard was refusing the cheaper of the two programs.  `ECtor`, `ETuple` and `ERecord` are now cheap when their operands are, and `EDiscrim` joins the `EProj` above it, reading a tag being reading a field.  Still excluded on purpose are `ELet`, `EMatch`, `EIf` and the other statement forms: §25.3 asks whether a body may be re-evaluated at every call, and those are where a body has a cost that is not read off its operands.  The test is the reporter's module with his control kept as the control, plus a record built at the call site --- a nullary constructor is free everywhere and so the easy case to argue, and the rule has to be right about the shape that really does build something.  In-tree Pulse suite unchanged at 31 s |
 | M10ιΔ | A record rebuilt out of its own fields (§104) | Done.  §102 held up on the whole of EverParse --- the real `split` call sites are identical in number across the change, 255 before and after, which is the check that matters, and `validate_header` goes from five declarations to the two splits it performs.  Five functions survive, all the identity written out field by field, and the reporter had reserved exactly the right peephole for them and expected to need it somewhere else.  The source is a **record update**.  `{c with f = e}` is not partial in the elaborated term --- it is a full construction in which every other field is a projection of `c`, which is what "with" means once the surface syntax is gone --- and here the one field that is not a projection is ghost, so §5.3 deletes it and a partial update has become a total one.  That is why §102 could not see it: that law is stated over a `match` because a destructuring `let` is a match, and here there is no pattern anywhere and never was, the programmer having written no destructure.  So it is not a second law.  A value taken apart field by field and put straight back together is the value, and whether the taking apart is spelled as a pattern or as a projection is a fact about the syntax that produced the term rather than about the term.  What the pattern carries there, the field names carry here: each component must be the projection of the field it is stored under, which is what makes this an identity and not a permutation --- `{p_a = c.p_b; p_b = c.p_a}` has the same shape and is a swap --- and every projection must name the thing being built.  Soundness is §102's argument in §102's place, and the field table carries it: only a single-constructor type is entered, so a variant is not rejected by the rewrite but invisible to it.  The scrutinee must be a variable, since the rewrite turns *n* reads into one, and a fieldless constructor is excluded because with no fields there is nothing left to read the value out of.  It fires on `ECtor` rather than `ERecord`, the `records` pass running after `simpl`, which is why the names must come from the declaration; the tuple form falls out of the same code and is reached by the *other* road, `depat` having turned the pattern into projections before either law is asked --- the two forms are one law arrived at from opposite directions.  `RecUpd` pins the two that fire and, more to the point, the two that must not |
 | M10ιΕ | A dispatcher over five identities (§105) | Done.  §104 held on EverParse --- all five collapse, both guards hold, and the pycose round-trip is what would have caught a `swap` turned into an identity, a permutation of two same-typed fields being invisible to every static check there is.  The dispatcher over them did *not* thin out, and the reporter measured rather than assuming: `cbor_raw_reset_perm_tot` is seven branches each rebuilding its own constructor plus `| _ -> c`, and at `-O3` clang keeps the whole thing as a seven-way jump table, because it will not reason that storing `.tag = X` and `.val.X = c.val.X` when `c.tag == X` reproduces `c`.  Hand-collapsing that one body takes **1828 bytes** off the unit's `.text`, 1.25% of the translation unit from one eight-line function, and more than the function because it inlines into its callers --- against 32 bytes for the whole of §102.  Two things stood in the way.  Each branch rebuilds from a **call**, §104 having made those calls the identity but left them calls.  A function whose body is one of its own parameters is worth inlining whether or not anyone asked, and is the only shape of which that can be said unconditionally: inlining trades size for speed and the flag is where a programmer settles that trade, but here there is nothing to trade, the body being a single use of a single variable, so the argument is substituted for it and the call goes.  *One* binder, though, and not a body that is merely one of several --- `fun a b -> a` is safe for the same reason and is not the same claim, since it also **deletes** the argument in `b`'s position, which is §99's question and not this one.  One exclusion, which `EtaVar` asked for: `consume i u = i u` is eta-*reduced* to `consume i = i`, which has this shape and is a definition in the middle of §25's eta pair whose arity `eta_expand_decl` is about to restore, so the test is on the return type and a definition returning a function is not an identity in the sense that matters.  Then §102 with its single-branch restriction lifted, every side condition surviving one for one: each branch rebuilds *its own* constructor with its own variables in their own positions --- `RecUpd`'s `swap` one level up --- no guards, and the match exhaustive, which is exactly what the single-constructor condition was buying, the old law being the *n* = 1 case.  A catch-all answers exhaustiveness alone, and `| _ -> c` is already literally the identity, so the dispatcher is a match in which every branch is the identity written two ways.  Ordering: an identity function is recognizable only after `simpl`, since §104 is what makes one, so `run` goes round once more rather than move `inline` --- skipped outright when nothing qualifies.  `RecDisp` pins both exhaustive forms and both guards; `KindStar`, `StoredType` and `RecUpd` each pinned a function the rule now removes, and between them they say what it reaches |
+| M10ιΖ | A rule one level down (§106) | Done.  §93's floor under normalization read the **head** of a monomorphization argument, which was the whole of it for as long as the type carrying the built-in rule was the argument itself.  It is not: `option (array uint32)` and `option (array bool)` have `option` for a head, carrying no rule, and an `array` one level down carrying the only difference between them --- so neither fired the guard, both reduced to `option array'`, both keyed the same, and one `fst` specialization was emitted for two incompatible tuple types.  Seventeen C errors in a full TLS extraction, and visible in the IR dump, so not a collision of printed names.  The reporter had localized it to the line.  A rule is destroyed by reduction wherever it sits, so the floor is read wherever it sits: every rule mentioned anywhere in the type, head and arguments recursively, and the written form is kept when reduction has **lost** one of them.  Stating it as a loss rather than as a presence is what keeps it from firing where it should not --- an abbreviation that *introduces* a rule loses nothing and rightly keeps its reduced form, which is the more informative of the two, and a wrapper the reduction merely peels names the rule on both sides and is left alone.  The old head test is the depth-zero case and is subsumed exactly.  `NestArr` is the reported shape with a parameterized record in the same position as the control |
+| M10ιΗ | Equality at a type C cannot compare (§107) | Done.  C's `==` is defined on arithmetic types and on pointers; F\*'s is defined at every type with decidable equality, which is every inductive one.  `Known = x` on a two-constructor datatype came out as a struct compared with `==` and was rejected, and it is not a narrow shape --- a record, a tuple and an `option` are all structs here and all four spellings were broken.  The representation was never in question: the pattern-match form of the same test compiled.  So the comparison is generated rather than refused, there being nothing to discover --- a datatype's equality *is* structural and the structure is the layout this backend just chose.  One `static bool T__eq(T, T)` per type compared: a conjunction over a record's fields, tags first and then the payload of that tag for a tagged union, `true` under a nullary constructor.  Aggregate fields recurse, and `check_finite` has already ruled out a struct containing itself by value, so the recursion terminates on the grounds the declarations already stand on.  Two types keep `==` on purpose: an **enum** *is* a scalar in the representation it was given, and an **external** has no body to read and a target that may well be a scalar typedef or a class with an `operator==` of its own.  A field behind a pointer compares as a pointer, which is what F\* means there too, such a type carrying no `hasEq` and so never being the argument of a `=`; `Prims.string` keeps §44.2's `strcmp` inside the generated comparisons as well as outside them.  Collected while the bodies are printed, which is when the set of types compared is complete, and emitted above them behind prototypes.  `VariantEq` pins all four broken spellings and the enum that must not acquire a helper, and runs the answers |

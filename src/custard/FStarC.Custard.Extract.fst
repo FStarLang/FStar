@@ -1949,13 +1949,33 @@ and is_realized_type (st:state) (l:Ident.lident) : ML bool =
    Custard is going to compile: unfolding past it does not reveal more of the
    type, it destroys the only thing that says how the type is represented. *)
 and has_builtin_type_rule (st:state) (t:term) : ML bool =
-  let hd, _ = U.head_and_args_full (U.unmeta (U.unascribe t)) in
-  match (U.un_uinst hd).n with
-  | Tm_fvar fv ->
-    (match Builtins.lookup_rule (S.lid_of_fv fv) with
-     | Some (Builtins.Rule_type _) -> true
-     | _ -> false)
-  | _ -> false
+  Cons? (builtin_type_rules st t)
+
+(* Section 106.  Every such rule mentioned *anywhere* in a type, and not only
+   at its head.
+
+   The head was the whole of it for as long as the type carrying the rule was
+   the argument itself.  It is not: [option (array uint32)] has [option] for a
+   head, no rule, and an [array] one level down whose element type is the only
+   thing telling the two specializations apart.  Read at the head, the guard
+   below did not fire, the reduced form [option array'] became the key for
+   both, and [option (array uint32)] and [option (array bool)] shared one
+   projection -- which C then refused to call on the second, the two structs
+   being different types.
+
+   A rule is destroyed by reduction wherever it sits, so the floor has to be
+   read wherever it sits. *)
+and builtin_type_rules (st:state) (t:term) : ML (list string) =
+  let hd, args = U.head_and_args_full (U.unmeta (U.unascribe t)) in
+  let here =
+    match (U.un_uinst hd).n with
+    | Tm_fvar fv ->
+      let l = S.lid_of_fv fv in
+      (match Builtins.lookup_rule l with
+       | Some (Builtins.Rule_type _) -> [Ident.string_of_lid l]
+       | _ -> [])
+    | _ -> [] in
+  here @ (args |> List.collect (fun (a, _) -> builtin_type_rules st a))
 
 (* Section 69.  The target spelling of an external type, split into pieces,
    when that spelling is a *template* -- that is, when it mentions any of the
@@ -3510,7 +3530,10 @@ and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
            two must agree, and the written form is the one that still says how
            the type is represented. *)
         let t, w =
-          if has_builtin_type_rule st a0 && not (has_builtin_type_rule st t)
+          let before = builtin_type_rules st a0 in
+          let after = builtin_type_rules st t in
+          if before |> List.existsb (fun r ->
+               not (after |> List.existsb (fun s -> s = r)))
           then a0, a0 else t, w in
         go (i + 1) cs sp ((i, t) :: margs) ((i, w) :: msubst) rest
       | Mono :: _, [] ->
