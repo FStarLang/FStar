@@ -773,9 +773,12 @@ SCRIPT = r"""
     for (var i = 0; i < qt.length; i++) if (!tokEq(qt[i], dt[i], loose)) return false;
     return true;
   }
+  // Returns [score, wasLoose]. Which pass matched is part of the answer:
+  // a search for `nat -> nat` that reports `int -> int` without saying it
+  // relaxed nat to int has told the reader something untrue by omission.
   function shapeScore(parts, d) {
     var res = parts[parts.length - 1], args = parts.slice(0, -1);
-    var best = -1;
+    var best = -1, wasLoose = false;
     [false, true].forEach(function (loose) {
       if (best >= 0) return;
       if (!partMatch(res, d.r, loose)) return;
@@ -786,8 +789,9 @@ SCRIPT = r"""
       });
       if (!ok) return;
       best = 100 - 10 * (d.a.length - args.length) - (loose ? 5 : 0) - (d.lib ? 3 : 0);
+      wasLoose = loose;
     });
-    return best;
+    return [best, wasLoose];
   }
   function hit(d) {
     return '<a class="hit" href="' + esc(d.h) + '"><span class="l1"><span class="nm">' + esc(d.s) +
@@ -805,12 +809,29 @@ SCRIPT = r"""
     if (!s) return '';
     if (s.indexOf('->') >= 0) {
       var parts = s.split('->').map(function (p) { return words(p); });
-      var scored = IDX.map(function (d) { return [shapeScore(parts, d), d]; })
-        .filter(function (x) { return x[0] >= 0; })
-        .sort(function (a, b) { return b[0] - a[0] || a[1].s.localeCompare(b[1].s); })
-        .map(function (x) { return x[1]; });
-      return group('Type shape', 'explicit arguments in any order; nat and pos also match int', scored) ||
-        '<p class="empty">No declaration has a type of that shape. Try fewer arguments, or a letter such as a for any type.</p>';
+      var exact = [], close = [];
+      IDX.forEach(function (d) {
+        var r = shapeScore(parts, d);
+        if (r[0] < 0) return;
+        (r[1] ? close : exact).push([r[0], d]);
+      });
+      function ranked(xs) {
+        return xs.sort(function (a, b) {
+          return b[0] - a[0] || a[1].s.localeCompare(b[1].s); })
+          .map(function (x) { return x[1]; });
+      }
+      exact = ranked(exact); close = ranked(close);
+      var html = group('Type shape', 'explicit arguments in any order', exact);
+      // An approximate answer is offered as one, never mixed in with the
+      // exact ones. When there are no exact ones the heading says so,
+      // because otherwise a reader reasonably concludes that what they
+      // asked for is what they got.
+      if (close.length) {
+        html += group(exact.length ? 'Close matches' : 'Nothing of exactly that shape; close matches',
+                      'treating nat and pos as int', close);
+      }
+      return html ||
+        '<p class="empty">No declaration has a type of that shape, even treating nat and pos as int. Try fewer arguments, or a letter such as a for any type.</p>';
     }
     var w = s.toLowerCase();
     var byName = IDX.filter(function (d) { return d.s.toLowerCase().indexOf(w) >= 0; })

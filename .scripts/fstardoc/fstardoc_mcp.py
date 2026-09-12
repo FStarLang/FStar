@@ -193,6 +193,13 @@ def part_match(qt, dt, loose):
 
 
 def shape_score(parts, d):
+    """Returns (score, was_loose), or (-1, False) for no match.
+
+    Which pass matched is part of the answer. A caller that asked for
+    `nat -> nat` and is handed `int -> int` without being told that nat was
+    relaxed to int has been misinformed by omission -- and an agent, unlike
+    a reader, will not stop to wonder why the answer looks wrong.
+    """
     res, args = parts[-1], parts[:-1]
     for loose in (False, True):
         if not part_match(res, d["res"], loose):
@@ -207,8 +214,9 @@ def shape_score(parts, d):
                 break
             used[j] = True
         if ok:
-            return 100 - 10 * (len(d["args"]) - len(args)) - (5 if loose else 0)
-    return -1
+            return (100 - 10 * (len(d["args"]) - len(args)) - (5 if loose else 0),
+                    loose)
+    return -1, False
 
 
 # ------------------------------------------------------------- answers --
@@ -296,19 +304,45 @@ def tool_find_by_type(idx, args):
     if "->" not in shape:
         return {"error": "shape must contain '->', e.g. 'seq a -> nat -> a'"}
     parts = [words(p) for p in shape.split("->")]
-    scored = []
+    exact, close = [], []
     for d in idx.decls:
-        s = shape_score(parts, d)
+        s, loose = shape_score(parts, d)
         if s >= 0:
-            scored.append((s, d))
-    scored.sort(key=lambda x: (-x[0], x[1]["name"]))
-    return {
+            (close if loose else exact).append((s, d))
+    exact.sort(key=lambda x: (-x[0], x[1]["name"]))
+    close.sort(key=lambda x: (-x[0], x[1]["name"]))
+
+    # Exact matches first, and each declaration says which it is. An
+    # approximate match is reported as approximate rather than blended in:
+    # a caller acting on `int -> int` while believing it asked for
+    # `nat -> nat` will write a proof against the wrong thing.
+    def tag(items, kind):
+        out = []
+        for _, d in items:
+            r = brief(d)
+            r["match"] = kind
+            out.append(r)
+        return out
+
+    room = max(0, limit - len(exact))
+    result = {
         "query": shape,
-        "total": len(scored),
-        "shown": min(len(scored), limit),
-        "note": "Explicit arguments match in any order; nat and pos also match int.",
-        "declarations": [brief(d) for _, d in scored[:limit]],
+        "exact": len(exact),
+        "approximate": len(close),
+        "note": "Explicit arguments match in any order. An approximate match "
+                "is one found only by treating nat and pos as int.",
+        "declarations": tag(exact[:limit], "exact") + tag(close[:room], "approximate"),
     }
+    if not exact and close:
+        result["warning"] = (
+            "Nothing has exactly that shape. Every declaration below matched "
+            "only after nat and pos were treated as int, so none of them is "
+            "what was asked for.")
+    elif not exact and not close:
+        result["note"] = ("No declaration has a type of that shape, even "
+                          "treating nat and pos as int. Try fewer arguments, "
+                          "or a lower-case letter for any type.")
+    return result
 
 
 def tool_lookup(idx, args):
