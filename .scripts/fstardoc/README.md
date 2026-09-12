@@ -22,6 +22,7 @@ the whitepaper's D4 argues for. All of them expect schema version 4.
 | `docs_json_to_html.py` | one HTML page from one module's JSON | nothing |
 | `fstardoc_md.py` | a Markdown tree for mkdocs or mdBook | nothing |
 | `fstardoc_site.py` | a standalone site with structural search | `markdown-it-py` |
+| `fstardoc_mcp.py` | the same index, served to an agent over MCP | nothing to serve |
 
 `fstardoc_md.py` and `fstardoc_site.py` make deliberately different
 arguments. The site generator shows what the export makes *possible*:
@@ -98,6 +99,80 @@ output to the script's own rules; only this one can catch a rule that is
 wrong. It found five bad anchors the first time it ran, where two F*
 names differing only in an apostrophe — `rev'_append` and `rev_append` —
 slugged alike, and mkdocs and mdBook disambiguated them differently.
+
+## `fstardoc_mcp.py`: the same index, for an agent
+
+A reader gets the structural index behind a search box. An agent gets it
+over MCP. The question is the same one — *which lemma guarantees
+something about `slice`?* — and it is a question no text search can
+express, which is why `grep -rn` over `ulib` is the wrong tool for it.
+
+Build the index once, then serve it:
+
+```sh
+python3 .scripts/fstardoc/fstardoc_mcp.py index \
+  --fstar stage3/out/bin/fstar.exe \
+  --out ulib.index.json \
+  --cache stage2/ulib.checked \
+  --include ulib \
+  --modules-from ulib-slice.txt
+
+python3 .scripts/fstardoc/fstardoc_mcp.py serve --index ulib.index.json
+```
+
+`serve` speaks line-delimited JSON-RPC on stdin and stdout, and uses the
+standard library only, so it runs wherever an agent runs with nothing to
+install. `index` borrows the contract and type-shape analysis from
+`fstardoc_site.py`, so it needs `markdown-it-py`; the import is deferred,
+and it is a build step run once.
+
+| Tool | Answers |
+|---|---|
+| `find_by_contract` | which declarations assume or guarantee something about a name |
+| `find_by_type` | which have a type of a given shape, e.g. `seq a -> nat -> a` |
+| `lookup` | one declaration in full |
+| `used_by` | which declarations mention this one — worked uses of a lemma |
+| `list_module` | a module's public surface |
+| `modules` | what the index holds, with documented counts |
+
+To register it with Claude Code, add it as a stdio server:
+
+```json
+{ "mcpServers": {
+    "fstardoc": { "command": "python3",
+                  "args": [".scripts/fstardoc/fstardoc_mcp.py", "serve",
+                           "--index", "ulib.index.json"] } } }
+```
+
+Or drive it by hand, which is how it was tested:
+
+```sh
+{ echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18"}}'
+  echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"find_by_contract","arguments":{"name":"slice"}}}'
+} | python3 .scripts/fstardoc/fstardoc_mcp.py serve --index ulib.index.json
+```
+
+### What it does not do, on purpose
+
+- **Only a module's public surface**, because that is what the export
+  reports. This is the right scope, not a shortfall: an agent working
+  inside a module already has the file open, and across modules only the
+  public surface is referenceable.
+- **No guessing.** A short name matching several declarations is reported
+  as ambiguous, with the candidates. Silently choosing one would send a
+  proof after the wrong lemma.
+- **No empty documentation.** An undocumented declaration reports
+  `documented: false` and says so, rather than an empty string an agent
+  would read as filled and describe in the author's voice. Its type is
+  checked, so the signature and contract are what to rely on.
+- **Definitions are truncated** unless `include_definition` is passed. A
+  proof term can be long enough to fill a context window.
+
+This is not a replacement for FStarLang/fstar-mcp and does not overlap it.
+That server is session-oriented — create a session, typecheck a buffer,
+`lookup_symbol` at a file, line and column — and answers "what is this
+thing I am pointing at". Every tool here answers "what should I be
+pointing at", over a library, with no session.
 
 ## `docs_json_to_html.py`: one page, no dependencies
 
