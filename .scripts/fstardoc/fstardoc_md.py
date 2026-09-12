@@ -129,10 +129,12 @@ def short_text(s):
 # heading that is a single F* identifier the two agree, and the rule
 # below is the intersection: it is what both produce.
 #
-# The one place they could differ is a character F* allows in a name and
-# neither backend keeps -- an apostrophe, as in `lemma'`. Both drop it,
-# so `lemma'` and `lemma` would collide; `anchors_for` resolves any
-# collision explicitly rather than letting one heading shadow another.
+# Where they differ is in what they do about a *collision*, and F* makes
+# collisions ordinary: an apostrophe is legal in a name and neither
+# backend keeps it, so `lemma` and `lemma'` slug alike. mkdocs then
+# appends `_1` and mdBook `-1`, which no single Markdown tree can link to
+# at once. `layout_for` therefore makes the heading text itself unique, so
+# neither backend has anything left to disambiguate.
 def slug(text):
     s = text.lower()
     s = re.sub(r"[^\w\s-]", "", s, flags=re.UNICODE)
@@ -140,19 +142,47 @@ def slug(text):
     return s.strip("-")
 
 
-def anchors_for(decls):
-    """A stable anchor per declaration, disambiguating any collision.
+def layout_for(decls):
+    """The heading text and anchor for each declaration.
 
-    Returns {fully qualified name: anchor}. Collisions are real: `lemma`
-    and `lemma'` slug alike, and so do a type `t` and anything else
-    whose name differs only in case.
+    Returns {fully qualified name: (heading, anchor)}.
+
+    Collisions are real and common: `rev_append` and `rev_append'` slug
+    alike, because both backends drop the apostrophe, and `ulib` is full
+    of primed variants.
+
+    A colliding heading is made unique *in its text*, so that neither
+    backend has to disambiguate it. That matters because they disambiguate
+    differently -- mkdocs appends `_1`, mdBook appends `-1` -- and one
+    Markdown tree has to link correctly under both. The heading
+    `rev_append (2)` makes both produce `rev_append-2`, since each strips
+    the parentheses and turns the remaining space into a hyphen. Verified
+    against the HTML both backends generate, not assumed.
+
+    Two further rules make the result worth linking to:
+
+    *Every* member of a colliding group is numbered, so none silently owns
+    the bare `#rev_append`. `FStar.List.Tot.Properties` really does declare
+    both `rev'_append` and `rev_append`, and letting whichever comes first
+    answer `#rev_append` would send a reader to the other one.
+
+    The numbering follows the sorted names, not the order of declaration,
+    so an anchor does not change when someone moves a declaration within
+    its module. Documentation anchors end up in other people's links.
     """
-    out, used = {}, {}
+    names = {}
     for x in decls:
         base = slug(short(x["name"])) or "decl"
-        n = used.get(base, 0)
-        used[base] = n + 1
-        out[x["name"]] = base if n == 0 else "%s-%d" % (base, n + 1)
+        names.setdefault(base, []).append(x["name"])
+
+    out = {}
+    for base, group in names.items():
+        if len(group) == 1:
+            out[group[0]] = (short(group[0]), base)
+            continue
+        for i, fqn in enumerate(sorted(group), 1):
+            heading = "%s (%d)" % (short(fqn), i)
+            out[fqn] = (heading, slug(heading))
     return out
 
 
@@ -194,12 +224,12 @@ class Book:
         self.modules = modules
         self.backend = backend
         self.note = note
-        self.anchors = {m: anchors_for(d["declarations"]) for m, d in modules.items()}
+        self.layout = {m: layout_for(d["declarations"]) for m, d in modules.items()}
         # Fully qualified name -> (module, anchor), for resolving refs.
         self.index = {}
         for m, d in modules.items():
             for x in d["declarations"]:
-                self.index[x["name"]] = (m, self.anchors[m][x["name"]])
+                self.index[x["name"]] = (m, self.layout[m][x["name"]][1])
 
     def page(self, module):
         return module + ".md"
@@ -240,9 +270,11 @@ def render_module(book, module):
 
 def render_decl(book, module, x):
     # The heading text is what both backends turn into this declaration's
-    # anchor; `Book.anchors` predicts the same slug so that links from
-    # other pages land here. `check_anchors` verifies the two agree.
-    out = ["## %s" % short(x["name"]), ""]
+    # anchor; `Book.layout` chose text whose slug both produce, so links
+    # from other pages land here. `check_anchors` verifies that, and
+    # `--verify-html` checks it against what the backends really emit.
+    heading, _ = book.layout[module][x["name"]]
+    out = ["## %s" % heading, ""]
 
     # The kind, the effect's name when there is one, and the type a
     # constructor belongs to: a short paragraph rather than a table,
@@ -331,7 +363,7 @@ def check_anchors(out_dir, book):
         if not name.endswith(".md"):
             continue
         text = open(os.path.join(out_dir, name), encoding="utf-8").read()
-        seen, anchors = {}, set()
+        anchors = set()
         in_fence = False
         for line in text.splitlines():
             # A `##` inside a fenced block is not a heading.
@@ -340,10 +372,7 @@ def check_anchors(out_dir, book):
                 continue
             if in_fence or not line.startswith("## "):
                 continue
-            base = slug(line[3:].strip()) or "decl"
-            n = seen.get(base, 0)
-            seen[base] = n + 1
-            anchors.add(base if n == 0 else "%s-%d" % (base, n + 1))
+            anchors.add(slug(line[3:].strip()) or "decl")
         heads[name] = anchors
 
     for name in sorted(heads):
@@ -416,6 +445,42 @@ def check_subset(out_dir):
     return bad
 
 
+H2_ID = re.compile(r"<h2[^>]*\bid=\"([^\"]+)\"")
+
+
+def verify_html(out_dir, book, built):
+    """Compare the anchors we predicted with the ones a backend emitted.
+
+    `check_anchors` only proves the generated links agree with our own
+    slug rule. That is self-consistency: if the rule is wrong, every link
+    is wrong together and nothing notices. This reads the HTML a backend
+    actually produced and compares heading ids against the prediction,
+    which is the only check that can catch a wrong rule.
+
+    [built] maps a backend name to its output directory. Backends that
+    were not built are skipped.
+    """
+    problems = []
+    for backend, root in sorted(built.items()):
+        if not os.path.isdir(root):
+            continue
+        for m in sorted(book.modules):
+            path = os.path.join(root, book.page(m)[:-3] + ".html")
+            if not os.path.exists(path):
+                problems.append("%s: %s not built" % (backend, m))
+                continue
+            actual = H2_ID.findall(open(path, encoding="utf-8", errors="replace").read())
+            expect = [a for _, a in
+                      (book.layout[m][x["name"]] for x in book.modules[m]["declarations"])]
+            if len(actual) != len(expect):
+                problems.append("%s: %s has %d headings, expected %d"
+                                % (backend, m, len(actual), len(expect)))
+            for e, a in zip(expect, actual):
+                if e != a:
+                    problems.append("%s: %s: predicted %r, emitted %r" % (backend, m, e, a))
+    return problems
+
+
 # ------------------------------------------------------------- backends --
 
 # Only the navigation file differs between backends. mkdocs reads YAML;
@@ -423,13 +488,20 @@ def check_subset(out_dir):
 # subset.
 
 
-def write_mkdocs(out_dir, book):
+def write_mkdocs(out_dir, book, theme="mkdocs"):
+    # `mkdocs` and `readthedocs` ship with mkdocs itself, so the generated
+    # configuration builds with no theme to install. The subset uses no
+    # extensions, hence the empty list rather than a default set.
     lines = ["site_name: %s" % json.dumps(book.title),
-             "docs_dir: .",
-             "site_dir: ../_site_mkdocs",
+             "docs_dir: docs",
+             "site_dir: site",
+             "use_directory_urls: false",
              "theme:",
-             "  name: material",
+             "  name: %s" % theme,
              "markdown_extensions: []",
+             # SUMMARY.md is mdBook's navigation; mkdocs should ignore it.
+             "exclude_docs: |",
+             "  SUMMARY.md",
              "nav:",
              "  - Index: index.md"]
     for m in sorted(book.modules):
@@ -442,10 +514,10 @@ def write_mdbook(out_dir, book):
     lines = ["# Summary", "", "- " + link("Index", "index.md")]
     for m in sorted(book.modules):
         lines.append("- " + link(code(m), book.page(m)))
-    with open(os.path.join(out_dir, "SUMMARY.md"), "w", encoding="utf-8") as f:
+    with open(os.path.join(out_dir, "docs", "SUMMARY.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
     toml = ['[book]', 'title = %s' % json.dumps(book.title),
-            'src = "."', '', '[output.html]', '']
+            'src = "docs"', '', '[output.html]', '']
     with open(os.path.join(out_dir, "book.toml"), "w", encoding="utf-8") as f:
         f.write("\n".join(toml) + "\n")
 
@@ -463,6 +535,12 @@ def main(argv):
                     help="directory holding checked files; repeatable")
     ap.add_argument("--include", action="append", default=[])
     ap.add_argument("--backend", choices=["mkdocs", "mdbook", "both"], default="both")
+    ap.add_argument("--verify-html", action="store_true",
+                    help="after generating, compare predicted anchors with the "
+                         "HTML each backend emitted in site/ and book/")
+    ap.add_argument("--mkdocs-theme", default="mkdocs",
+                    help="theme named in the generated mkdocs.yml; "
+                         "mkdocs and readthedocs need no install")
     ap.add_argument("--strict-subset", action="store_true",
                     help="fail when any generated line leaves the subset")
     ap.add_argument("--note",
@@ -492,15 +570,16 @@ def main(argv):
         sys.exit("nothing exported")
 
     book = Book(args.title, modules, args.backend, args.note)
-    os.makedirs(args.out, exist_ok=True)
+    docs = os.path.join(args.out, "docs")
+    os.makedirs(docs, exist_ok=True)
     for m in modules:
-        with open(os.path.join(args.out, book.page(m)), "w", encoding="utf-8") as f:
+        with open(os.path.join(docs, book.page(m)), "w", encoding="utf-8") as f:
             f.write(render_module(book, m))
-    with open(os.path.join(args.out, "index.md"), "w", encoding="utf-8") as f:
+    with open(os.path.join(docs, "index.md"), "w", encoding="utf-8") as f:
         f.write(render_index(book))
 
     if args.backend in ("mkdocs", "both"):
-        write_mkdocs(args.out, book)
+        write_mkdocs(args.out, book, args.mkdocs_theme)
     if args.backend in ("mdbook", "both"):
         write_mdbook(args.out, book)
 
@@ -508,7 +587,7 @@ def main(argv):
         len(modules), sum(len(d["declarations"]) for d in modules.values()), args.out))
 
     rc = 0
-    bad = check_anchors(args.out, book)
+    bad = check_anchors(docs, book)
     if bad:
         sys.stderr.write("broken links (%d):\n" % len(bad))
         for b in bad[:20]:
@@ -517,7 +596,7 @@ def main(argv):
     else:
         sys.stderr.write("all links resolve\n")
 
-    out_of = check_subset(args.out)
+    out_of = check_subset(docs)
     if out_of:
         sys.stderr.write("outside the Markdown subset (%d):\n" % len(out_of))
         for b in out_of[:20]:
@@ -526,6 +605,23 @@ def main(argv):
             rc = 1
     else:
         sys.stderr.write("every line is inside the Markdown subset\n")
+
+    if args.verify_html:
+        built = {"mkdocs": os.path.join(args.out, "site"),
+                 "mdbook": os.path.join(args.out, "book")}
+        found = {k: v for k, v in built.items() if os.path.isdir(v)}
+        if not found:
+            sys.stderr.write("no built HTML to verify; run mkdocs/mdbook first\n")
+        else:
+            problems = verify_html(args.out, book, found)
+            if problems:
+                sys.stderr.write("anchor predictions wrong (%d):\n" % len(problems))
+                for b in problems[:20]:
+                    sys.stderr.write("  %s\n" % b)
+                rc = 1
+            else:
+                sys.stderr.write("anchors match the emitted HTML in %s\n"
+                                 % ", ".join(sorted(found)))
     return rc
 
 
