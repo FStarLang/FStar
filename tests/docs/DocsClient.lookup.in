@@ -1,0 +1,8 @@
+{"query-id": "1", "query": "push", "args": {"kind": "lax", "code": "module DocsClient\nopen DocsFixture\nopen DocsNoIface\n", "line": 1, "column": 0}}
+{"query-id": "2", "query": "lookup", "args": {"context": "code", "symbol": "DocsFixture.incr", "requested-info": ["type", "defined-at", "documentation"]}}
+{"query-id": "3", "query": "lookup", "args": {"context": "code", "symbol": "DocsFixture.decr", "requested-info": ["type", "defined-at", "documentation"]}}
+{"query-id": "4", "query": "lookup", "args": {"context": "code", "symbol": "DocsFixture.colour", "requested-info": ["type", "documentation"]}}
+{"query-id": "5", "query": "lookup", "args": {"context": "code", "symbol": "DocsFixture.Red", "requested-info": ["type", "documentation"]}}
+{"query-id": "6", "query": "lookup", "args": {"context": "code", "symbol": "DocsNoIface.double", "requested-info": ["type", "documentation"]}}
+{"query-id": "7", "query": "lookup", "args": {"context": "code", "symbol": "DocsNoIface.shout", "requested-info": ["type", "documentation"]}}
+{"query-id": "8", "query": "lookup", "args": {"context": "code", "symbol": "DocsFixture.uu___is_Red", "requested-info": ["type", "documentation"]}}

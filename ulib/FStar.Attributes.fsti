@@ -422,3 +422,47 @@ val desugar_of_variant_record (type_name: string): unit
 
 (** Tag for implicits that are to be solved by a tactic. *)
 val defer_to (#a:Type) (tag : a) : unit
+
+(** [doc [...]] attaches documentation to a top-level declaration.
+
+    It may be written out as an ordinary attribute on an ordinary
+    top-level declaration:
+
+     {[
+        [@@doc ["Adds one to [x]."]]
+        val incr (x:int) : int
+     ]}
+
+    or, equivalently, as a documentation comment -- a comment opened with
+    a paren, star and bar -- which desugars to exactly the above, one
+    list element per line. (The delimiters cannot be shown here: comments
+    nest, so writing one inside this comment would end it.) Neither form
+    is privileged; the compiler sees the same attribute either way.
+
+    The payload is a list of opaque strings, one per line of
+    documentation. F* attaches no meaning to their contents, does not
+    parse them, and does not join them: it stores the lines as written
+    and hands them back unchanged. Whether they are Markdown, or
+    anything else, is a question for whatever renders them, and is
+    deliberately not a question for the compiler. Ordinary attribute
+    typechecking still enforces that [doc] receives exactly one
+    argument, of type [list string].
+
+    Note that the payload must be a *literal list of string literals*.
+    Attributes are typechecked but not normalized before being recorded
+    in a checked module, so [doc [msg ^ "!"]] and [doc (l1 @ l2)] are
+    well-typed but record unevaluated terms. [--export_docs] reports
+    such a payload as an unrecognized attribute payload and skips the
+    declaration; the IDE protocol has no per-field diagnostic channel,
+    so its [documentation] field is [null].
+
+    An empty list is documentation that says nothing, and is reported as
+    such; it is not the same as having no [doc] attribute at all.
+
+    This attribute is only read off top-level declarations. In
+    particular, an attribute on an inductive type definition is copied
+    by the typechecker onto each of its data constructors; the
+    documentation readers deliberately ignore data constructors so that
+    such inherited text is never reported as the constructor's own
+    documentation. *)
+val doc (text: list string) : Tot unit

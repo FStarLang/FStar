@@ -1,6 +1,7 @@
 SUBDIRS += bug-reports
 SUBDIRS += semiring
 SUBDIRS += coercions
+SUBDIRS += docs
 SUBDIRS += error-messages
 SUBDIRS += syntax-errors
 SUBDIRS += interfaces

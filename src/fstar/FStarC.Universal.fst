@@ -513,9 +513,15 @@ and tc_one_file_no_frame
 
           in
           let mii = FStarC.Syntax.DsEnv.inclusion_info (tcenv_of_uenv env).dsenv mname in
+          let has_interface =
+            not (tcmod.is_interface)
+            && ((tcenv_of_uenv env).modules |> List.existsb (fun m ->
+                  m.is_interface && lid_equals m.name tcmod.name))
+          in
           pd,
           {
             checked_module=tcmod;
+            has_interface=has_interface;
             tc_time=tc_time;
             smt_encoding=smt_decls;
 

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<title>DocsFixture</title>
+<style>body { font-family: sans-serif; margin: 2em auto; max-width: 50em; }
+h1 { font-size: 1.4em; }
+.decl { border-top: 1px solid #ddd; padding: 0.6em 0; }
+.name { font-family: monospace; font-weight: bold; }
+.kind { color: #666; font-size: 0.85em; margin-left: 0.5em; }
+.sig { font-family: monospace; white-space: pre-wrap; color: #333; }
+.where { color: #888; font-size: 0.8em; }
+.doc { margin-top: 0.4em; white-space: pre-wrap; }
+.empty { color: #888; font-style: italic; }
+</style>
+</head><body>
+<h1>DocsFixture</h1>
+<p class="where">interface, schema fstar-module-docs version 4</p>
+<div class="decl"><div><span class="name">DocsFixture.incr</span><span class="kind">val</span></div><div class="sig">x: Prims.int -&gt; Prims.int</div><div class="where">DocsFixture.fsti(23,0-23,22)</div><div class="doc">Increments &#x27;x&#x27;.
+
+This text is written in the interface, which is what clients of
+this module see. Opaque text is escaped by the HTML renderer:
+&lt;unsafe&gt; &amp; &quot;quoted&quot;.</div></div>
+<div class="decl"><div><span class="name">DocsFixture.decr</span><span class="kind">val</span></div><div class="sig">x: Prims.int -&gt; Prims.int</div><div class="where">DocsFixture.fsti(28,0-28,22)</div><div class="doc empty">No documentation.</div></div>
+<div class="decl"><div><span class="name">DocsFixture.colour</span><span class="kind">type</span></div><div class="sig">Type0</div><div class="where">DocsFixture.fsti(34,5-34,11)</div><div class="doc">A tiny colour.
+The typechecker copies the attributes of a type definition onto each
+of its data constructors, so this text must be reported for &#x27;colour&#x27;
+and for neither &#x27;Red&#x27; nor &#x27;Blue&#x27;.</div></div>
+<div class="decl"><div><span class="name">DocsFixture.Red</span><span class="kind">constructor</span></div><div class="sig">DocsFixture.colour</div><div class="where">DocsFixture.fsti(35,4-35,7)</div><div class="doc empty">No documentation.</div></div>
+<div class="decl"><div><span class="name">DocsFixture.Blue</span><span class="kind">constructor</span></div><div class="sig">DocsFixture.colour</div><div class="where">DocsFixture.fsti(36,4-36,8)</div><div class="doc empty">No documentation.</div></div>
+<div class="decl"><div><span class="name">DocsFixture.incr_grows</span><span class="kind">val</span></div><div class="sig">x: Prims.int -&gt; k: Prims.int -&gt; FStar.Pervasives.Lemma (requires k &gt; 0) (ensures x + k &gt; x)</div><div class="where">DocsFixture.fsti(48,0-50,22)</div><div class="doc">Adding a positive number gives a larger one.</div></div>
+<div class="decl"><div><span class="name">DocsFixture.double_nat</span><span class="kind">val</span></div><div class="sig">n: Prims.nat -&gt; m: Prims.nat{m &gt;= n}</div><div class="where">DocsFixture.fsti(56,0-56,38)</div><div class="doc">Doubles a natural number, which cannot shrink it.</div></div>
+</body></html>

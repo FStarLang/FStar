@@ -189,6 +189,105 @@ Guidelines for the changelog:
     concrete definition instead; overloading resolves a name by type but is not
     parametric polymorphism.
 
+## Documentation attributes (experimental)
+
+  * **A top-level declaration may now carry documentation, written
+    explicitly as an ordinary attribute.** `FStar.Attributes.doc` takes a
+    list of strings, one per line, which F* stores verbatim and never
+    interprets: it does not parse them, does not join them, and does not
+    render them. There is no comment syntax and no markdown in the
+    compiler; keeping the payload uninterpreted is what lets the surface
+    format be chosen elsewhere, and changed later.
+
+    ```fstar
+    [@@doc ["Increments 'x'.";
+            "Allocates nothing."]]
+    val incr (x:int) : int
+    ```
+
+  * **Documentation may be written as a comment.** A comment opened with
+    a paren, star and bar is a *documentation comment*: it is sugar for
+    the `doc` attribute above, one list element per line, and is
+    otherwise an ordinary attribute that nothing downstream can
+    distinguish from a hand-written one.
+
+    ```fstar
+    (*| Increments 'x'.
+        Allocates nothing. *)
+    val incr (x:int) : int
+    ```
+
+    The marker is new, so **no existing comment changes meaning**: two-star
+    comments, three-star banners and the empty-comment idiom all lex
+    exactly as before, in every position they appear in today. Nothing in
+    the tree needs migrating, and nothing that is not migrated stops
+    working.
+
+    The payload stays opaque. Only layout that is an artifact of where the
+    delimiters sit is undone: the first line is taken from after the
+    opener, continuation lines are dedented by their common indentation,
+    trailing whitespace goes, and blank lines at either end go. A leading
+    `*` on a continuation line is *not* stripped -- deciding what it meant
+    would be interpreting the text.
+
+    A documentation comment may appear anywhere among a declaration's
+    qualifiers and attributes. As a consequence `add_decorations` now
+    concatenates attribute sets instead of rejecting more than one, so
+    `[@@ a] [@@ b] val f : ...` is accepted and means `[@@ a; b]` where it
+    used to be an error.
+
+    Note that a comment delimiter cannot be written inside a comment: F*
+    comments nest, so a delimiter mentioned in one opens a comment or
+    closes it early. This is not new, but it is easy to trip over when
+    documenting documentation.
+
+    The text is preserved in the checked module, and is reported in two
+    places. The interactive `lookup` request returns it in the
+    `documentation` field when `"documentation"` is in `requested-info`; a
+    name with no documentation still answers `null`, as before.
+
+    `fstar.exe --export_docs Mod.fst.checked` emits, on standard output, a
+    versioned JSON index (schema 4) of that module's public top-level
+    declarations, documented or not: fully qualified names, declaration
+    kinds, printed signatures, source ranges, the documentation (or `null`),
+    each elaborated type as a tree of fully qualified names, the names each
+    declaration refers to, and the definitions of transparent non-lemma
+    `let`s. A computation in that tree reports its effect, its result, and
+    its precondition and postcondition as the effect stores them: `pre` is
+    a proposition and `post` is abstracted over the result, so no effect
+    has to be recognised by name for a consumer to find its contract.
+    `Tot` and `GTot` report both as `null`. With `--include` pointing at
+    the sources, it also quotes each
+    declaration as written, but only from a file whose digest is the one
+    recorded in the checked file. When the interface's checked file is
+    available next to the implementation's, the interface is used. This JSON
+    is the supported way to consume F* documentation: the checked file format
+    remains private.
+
+    `.scripts/fstardoc/docs_json_to_html.py` is a tiny experimental renderer
+    that turns that JSON, and nothing else, into a static HTML page. See
+    `tests/docs` for the end-to-end fixture.
+
+    Known limitations: documentation is read only off top-level `val`, `let`,
+    `type` and `assume` declarations. Data constructors are listed, but
+    without documentation of their own. Projectors,
+    discriminators, record fields, binders and effect declarations are out of
+    scope; in particular, a type's attributes are copied by the typechecker
+    onto its constructors and generated projectors, and that inherited text is
+    deliberately not reported. Attributes are typechecked but not normalized
+    before being recorded, so the payload must be a *literal* list of
+    *literal* strings: `[@@doc [a ^ b]]` and `[@@doc some_list]` are
+    well-typed but record unevaluated terms, which `--export_docs` reports
+    with warning 278, exporting the declaration as undocumented.
+
+    A `doc` attribute with no non-blank line -- `[@@doc []]`,
+    `[@@doc [""]]`, or an empty `(*| *)` comment -- is reported as
+    undocumented. Documentation that says nothing and no documentation at
+    all are the same fact about a declaration, so both answer `null`, in
+    the JSON and in `lookup` alike, and no consumer has to tell them
+    apart to avoid presenting an empty string as the author's text. Blank
+    lines *inside* a doc are preserved: those separate paragraphs.
+
 ## Pulse
 
   * A Pulse conditional whose postcondition is annotated may now also carry a

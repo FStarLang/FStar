@@ -209,6 +209,7 @@ let defaults = [
   ("error_contexts"                            , Bool false);
   ("expand_include"                            , Unset);
   ("expose_interfaces"                         , Bool false);
+  ("export_docs"                               , Unset);
   ("extract_all"                               , Bool false);
   ("extract_module"                            , List []);
   ("extract_namespace"                         , List []);
@@ -510,6 +511,7 @@ let get_quake_hi                ()      = lookup_opt "quake_hi"                 
 let get_quake_keep              ()      = lookup_opt "quake_keep"               as_bool
 let get_query_cache             ()      = lookup_opt "query_cache"              as_bool
 let get_query_stats             ()      = lookup_opt "query_stats"              as_bool
+let get_export_docs             ()      = lookup_opt "export_docs"              (as_option as_string)
 let get_read_checked_file       ()      = lookup_opt "read_checked_file"        (as_option as_string)
 let get_read_krml_file          ()      = lookup_opt "read_krml_file"           (as_option as_string)
 let get_list_plugins            ()      = lookup_opt "list_plugins"             as_bool
@@ -1257,6 +1259,16 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
     "query_stats",
     Const (Bool true),
     text "Print SMT query statistics");
+
+  ( noshort,
+    "export_docs",
+    PathStr "path",
+    text "Read a checked file and emit, on standard output, a versioned JSON \
+          index of the documentation attached with the 'doc' attribute to the \
+          public top-level declarations of that module. If the path names the \
+          checked file of an implementation whose interface has also been \
+          checked, the interface is used. This JSON is the supported way to \
+          consume F* documentation; the checked file format is not.");
 
   ( noshort,
     "read_checked_file",
@@ -2059,6 +2071,7 @@ let quake_hi                     () = get_quake_hi                    ()
 let quake_keep                   () = get_quake_keep                  ()
 let query_cache                  () = get_query_cache                 ()
 let query_stats                  () = get_query_stats                 ()
+let export_docs                  () = get_export_docs                 ()
 let read_checked_file            () = get_read_checked_file           ()
 let list_plugins                 () = get_list_plugins                ()
 let expand_include               () = get_expand_include              ()

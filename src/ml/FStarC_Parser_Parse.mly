@@ -31,6 +31,17 @@ open FStarC_Ident
 let rr = FStarC_Parser_Util.translate_range
 let rr2 = FStarC_Parser_Util.translate_range2
 
+(* A documentation comment is sugar for the `doc` attribute, and nothing
+   more: its lines become a list literal and the whole thing an ordinary
+   attribute term, indistinguishable downstream from a hand-written
+   `[@@doc [...]]`. Documentation is therefore not a new kind of node in
+   the surface AST -- which is the property the 2019 `fsdoc` field did
+   not have, and what its removal in 2020 cost. See FStarC.Docs. *)
+let mk_doc_attribute (lines: string list) (r: range) =
+  let str s = mk_term (Const (Const_string (s, r))) r Expr in
+  let payload = mkListLit r (List.map str lines) in
+  mkApp (mk_term (Var doc_attr) r Un) [(payload, Nothing)] r
+
 let logic_qualifier_deprecation_warning =
   "logic qualifier is deprecated, please remove it from the source program. In case your program verifies with the qualifier annotated but not without it, please try to minimize the example and file a github issue."
 
@@ -216,6 +227,10 @@ let rec pat_names (bs : pattern list) : ident list =
 %token<string>  OP_MIXFIX_ASSIGNMENT OP_MIXFIX_ACCESS
 %token<string * string * Lexing.position * FStarC_Sedlexing.snap>  BLOB
 %token<string * string * Lexing.position * FStarC_Sedlexing.snap>  USE_LANG_BLOB
+(* A documentation comment: one string per line, plus the range of the
+   whole comment. The token fires on the closing delimiter, so its own
+   lexeme range would cover only that. *)
+%token<string list * FStarC_Range_Type.range>  DOC
 
 /* These are artificial */
 %token EOF
@@ -292,7 +307,8 @@ startOfNextDeclToken:
  | EOF    { None }
  | pragmaStartToken { None }
  | LBRACK_AT { None } (* Attribute start *)
- | LBRACK_AT_AT { None } (* Attribute start *) 
+ | LBRACK_AT_AT { None } (* Attribute start *)
+ | DOC { None } (* A documentation comment starts a declaration *) 
  | qualifier { None }
  | CLASS { None }
  | INSTANCE { None }
@@ -367,6 +383,8 @@ decoration:
       { DeclAttributes x }
   | x=qualifier
       { Qualifier x }
+  | d=DOC
+      { let lines, r = d in DeclAttributes [mk_doc_attribute lines r] }
 
 %public
 decl:
