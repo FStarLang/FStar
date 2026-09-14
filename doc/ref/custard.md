@@ -19610,17 +19610,147 @@ layout table at all, so the collapse is never computed for it and there is no
 abbreviation to root. The assertion held for a reason having nothing to do
 with the bug.
 
-That is worth stating as a general hazard rather than a one-off. A test that
-pins the *absence* of a name passes both when the fix works and when the
-input never got far enough to be at risk, and the two are indistinguishable
-from the output. The only way to tell them apart is to run the case against
-the compiler it was written to catch, which is now the standing requirement
-for any `CNOGREP` pin defending a rule: build the prior behaviour, confirm
-the test fails, and say in the section that it was confirmed.
+That is worth stating as a general hazard rather than a one-off, and stating
+more broadly than the negative pin it arrived as. The fault is not that the
+assertion was negative. It is that **the observable the test reads is
+produced identically by "the rule fired" and by "the rule was never asked",
+and only one of those is the property**. A `CGREP` can do it too: §108's
+`typedef uint64_t Newtype_wrapper;` would pass unchanged if `wrapper` were
+reached by some path that had always emitted it and the abbreviation logic
+never ran. It is rarer only because a positive pin usually names something
+that nothing but the rule produces.
+
+So the standing requirement for a pin defending a rule is to run the case
+against the behaviour it was written to catch, confirm it fails, and say in
+the section that it was confirmed.
+
+That discipline has a hole worth naming, because this bug went through it.
+It fires once, when the case is written. What made `Newtype.fst` vacuous was
+not a skipped control -- it was the case sharing a module with a test whose
+flags were set for a different purpose, and no later reader would see that,
+because the test still passes. Where the distinguishing evidence is available
+*upstream* of the output, asserting on it directly is worth more than the
+one-time control: `--custard_dump_layouts` prints "absent from the output"
+and "absent from the table" differently, where C prints them the same.
 
 `Newtype.fst` keeps §108's positive cases unchanged, and `NewtypeDead.fst`
 carries a live one-field record of its own so that both directions are
 exercised under the flags that make the negative one real.
+
+## 113. The shape of a tagged union
+
+Two changes to the C surface of a tagged union, neither of which alters a
+name a consumer is supposed to rely on, and both of which shorten the path
+through the commonest shape in generated parser output.
+
+A variant with more than one constructor prints as a tag and a union. The
+union was a struct per constructor:
+
+```c
+struct Un_opt_s {
+  enum Un_opt_tags tag;
+  union {
+    struct { uint32_t v; } Un_Some_;
+  } val;
+};
+```
+
+so a read was `o.val.Un_Some_.v`, against karamel's `o.v`.
+
+### 113.1. A constructor with one field is the member
+
+The anonymous struct around a single payload never disambiguated anything.
+Inside `union { ... } val` the arm is already unique, so wrapping its one
+field adds a level that cannot be needed, and it also obliged the consumer to
+know the F\* field name -- `v`, `l`, `_0` -- to get through it.
+
+It costs more than a level in the abstract, because of which types have the
+shape. `option` is one, and in EverParse's largest generated public header,
+`COSE_Format.h`, 53 of 74 tagged unions have exactly one arm: every optional
+CDDL field is one. A constructor with two or more fields keeps the struct,
+which is what a struct is for.
+
+### 113.2. What was not done
+
+karamel goes further: when exactly one constructor carries a payload it drops
+the union and hoists the field to the top level, so `option` reads `o.v`.
+Custard does not, and the reason is the stability §114 is about.
+
+With the union kept, `o.val.Some` survives the type gaining a second
+payload-carrying constructor. With the field hoisted, every existing access
+changes shape when that happens -- an edit to one arm of an F\* datatype
+silently rewrites the C path to a *different* arm. Making the surface of one
+constructor depend on a global property of the type is a poor trade for one
+token, in a backend whose consumers are hand-written C.
+
+The `case_<Ctor>` member names are likewise not adopted. Warning 377 already
+tells consumers that specialization names are unstable; using the constructor
+name is consistent with the rest of Custard's naming, and consistency with
+itself is worth more here than matching karamel.
+
+## 114. A union member a consumer can spell
+
+The member of a tagged union was named after the fully qualified constructor,
+which after monomorphization carries the specialization suffix. Reading an
+`either` out of an EverParse parser meant writing
+
+```c
+m._x0.val.FStar_Pervasives_Inl__slice_tuple2_evercddl_uint_evercddl_ui.v
+```
+
+and warning 377 says of that suffix:
+
+> It is a specialization, so the name carries a hint built from the
+> monomorphizer's input and may change when that input does. A consumer that
+> must spell it should typedef it once, in its own header, rather than depend
+> on this name throughout.
+
+The advice is right and does not apply. A `typedef` names a *type*; C has no
+construct that abstracts a *member* name. The only insulation available was a
+macro per constructor per specialization, hand-written and hand-maintained --
+which is the "depend on this name throughout" the warning asks consumers to
+avoid, moved into one file. By the warning's own standard the surface was
+unusable.
+
+The suffix is also disambiguating against a namespace the member is not in.
+A union member is scoped by its union, and the only names in scope there are
+the arms of one variant, whose constructors are distinct by construction.
+`Inl` cannot collide with anything. So the member is now the bare constructor
+name, and nothing is lost: it cannot be referenced except through a value
+whose *type* name still carries the full specialization.
+
+The names were also truncated mid-word -- `..._map_ite` is a clipped
+`map_iterator` -- which made the identifier not merely generated but
+generated-then-clipped, and so liable to shift when something unrelated in
+the mono key changed length. That is gone with the suffix.
+
+### 114.1. Together
+
+Both changes are local to the layout printer, `arm_name` and `arm_flat` in
+`PrintC`, and the four places that spell a path through a union go through
+`arm_sel`: the projector, the pattern, the constructor application, and
+§107's generated equality.
+
+```c
+struct Un_ei_s {
+  enum Un_ei_tags tag;
+  union {
+    uint32_t L;
+    uint64_t R;
+  } val;
+};
+```
+
+`o.val.FStar_Pervasives_Native_Some__evercddl_uint.v` becomes `o.val.Some`;
+`m._x0.val.FStar_Pervasives_Inl__...ui.v` becomes `m._x0.val.Inl`; a
+two-field constructor keeps `t.val.A.x`. Three tokens, none of which a
+consumer has to track.
+
+`tests/custard/Union.fst` pins all of it, including the library `option` and
+the interaction with §107. Five existing pins and one hand-written C stub,
+`ExternOpt_stubs.c`, had to be updated -- a small instance of exactly the
+consumer churn this section is about, and the reason the change is worth
+making once rather than leaving to every consumer.
 
 | M | Deliverable | Notes |
 | --- | --- | --- |
@@ -19957,3 +20087,5 @@ exercised under the flags that make the negative one real.
 | M10ιΙ | A rule an abbreviation hides (§109) | Done.  The full TLS rerun clears all 430 struct-equality errors of §107 and the explicit nested-array shape of §106, and keeps all 17 incompatible tuple arguments --- because an abbreviation names the rule at *neither* endpoint of the reduction.  `type pack a = option (array a)` mentions no `array` as written and none after reducing either: the rule is introduced by unfolding `pack` and erased by unfolding `array` inside the one normalization, so §106's before/after comparison sees nothing on either side, both keys come out `option array'`, and one `fst` serves two incompatible tuple types.  The reporter's control is the diagnosis --- spelling `option (array element)` out makes the rule visible at the first endpoint, which is the only difference between the two --- and he tied it to the real shape, EverParse's `vclist_lowtype = option (SZ.t & vec el)`, without claiming it accounts for all seventeen.  So the walk unfolds as it goes and stops where a rule is: record and descend at a rule-carrying head, unfold and re-walk at any other name, fall through to the arguments when an fvar does not unfold, which is every inductive.  `UnfoldOnly [l]` one name at a time, as §88 does, so a chain of abbreviations reaches the case again for the next name --- what the fuel is for --- and a refinement is walked through to its subject, `(a: array t { live a })` being an array.  The form reached is the one the control writes by hand, so nothing downstream changed.  One bounded cost, named rather than hidden: the key is still the argument as written, §93's choice, so a program spelling the same type both ways gets two identical specializations; consistent use of the abbreviation, which is the point of having one, pays nothing.  `TupAlias` is the reported module with the control kept and a two-deep chain added.  In-tree Pulse suite 30.6 s, unchanged with the test added |
 | M10ιΚ | A name for a type the program does not emit | §108 rooted a collapsed newtype on the argument that the collapse had proved its payload representable; it had only computed its layout, and COSE's `spect_tstr` collapses to a `Prims.list` that C cannot hold. The root moves to `dce` and is granted only when every type the payload names is already live, so the abbreviation introduces nothing and can fail in no new way. §110 |
 | M10ιΛ | A vacuous absence, and the flag behind it | The §110 test passed against a §108 compiler: under `--custard_monomorphize_types` the type never reaches the layout table, so the name it pins the absence of was never at risk. Split into `NewtypeDead.fst` without the flag, and confirmed failing under §108. A `CNOGREP` defending a rule must be run against the behaviour it catches. §110.4 |
+| M10ιΜ | The shape of a tagged union | A constructor carrying one field is the union member itself rather than an anonymous struct around it, which is the shape of `option` and of 53 of 74 tagged unions in one generated EverParse header. karamel's further hoist of a sole payload to top level is declined: it makes one arm's access path depend on whether another arm exists. §113 |
+| M10ιΝ | A union member a consumer can spell | The member carried the monomorphizer's specialization suffix, which warning 377 says not to depend on while offering an escape -- `typedef` -- that exists for types and not for members. The member is scoped by its union, whose arms are distinct by construction, so it is now the bare constructor name. §114 |

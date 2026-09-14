@@ -311,6 +311,49 @@ let c_name (n:name) : ML string =
   | None -> escape_kw (sanitize (mangled_name n))
 let c_var (x:string) : ML string = escape_kw (sanitize x)
 
+(* Section 114.  The member of a tagged union, and the path through it.
+
+   A member was named after the fully qualified constructor, which after
+   monomorphization carries the specialization suffix: a consumer reading an
+   [either] out of a parser wrote
+
+     m._x0.val.FStar_Pervasives_Inl__slice_tuple2_evercddl_uint_evercddl_ui.v
+
+   and warning 377 tells that same consumer the suffix may change when the
+   monomorphizer's input does.  The advice the warning gives -- name it once
+   in a [typedef] -- works for a type and not for a *member*, which no C
+   construct can abstract over.  So the name had to be one a consumer can
+   depend on, or the surface was unusable by the warning's own standard.
+
+   It can be the bare constructor name, because the member is already scoped
+   by the union: the only names in scope are the arms of this one variant,
+   whose constructors are distinct by construction.  The suffix was
+   disambiguating against a namespace the member is not in.  Nothing is lost,
+   since the member cannot be referenced except through a value whose *type*
+   name still carries the full specialization.
+
+   Section 113.  A constructor carrying exactly one field is the member
+   itself, with no anonymous struct around it.  The wrapper never
+   disambiguated anything either -- inside the union the arm is already
+   unique -- and it cost a level on the single most common shape in generated
+   parser output, [option], of which one public EverParse header has 53 in
+   74.  A constructor with two or more fields keeps the struct, which is what
+   a struct is for.
+
+   Together these turn [o.val.FStar_Pervasives_Native_Some__evercddl_uint.v]
+   into [o.val.Some]. *)
+let arm_name (cn:name) : ML string = c_var cn.id
+
+let arm_flat (fs : list (string & cty)) : bool =
+  match fs with
+  | [_] -> true
+  | _ -> false
+
+(* The selector reaching field [f] of constructor [cn], whose fields are [fs],
+   from a value of the variant. *)
+let arm_sel (cn:name) (fs : list (string & cty)) (f:string) : ML string =
+  ".val." ^ arm_name cn ^ (if arm_flat fs then "" else "." ^ c_var f)
+
 (* An enum tag.  Uppercased so that it cannot collide with a value or a type
    name derived from the same lid. *)
 (* Through {!renames}, so that a constructor of a --custard_c_no_prefix module
@@ -760,8 +803,11 @@ let eq_def (f:string) (d:dtype) : ML string =
     String.concat "" (cs |> List.map (fun (cn, fs) ->
       "    case " ^ c_tag cn ^ ": return " ^
       (if Nil? fs then "true"
-       else all ("a.val." ^ c_var (mangled_name cn))
-                ("b.val." ^ c_var (mangled_name cn)) fs) ^ ";\n")) ^
+       else if arm_flat fs
+       then cmp ("a.val." ^ arm_name cn) ("b.val." ^ arm_name cn)
+                (snd (List.hd fs))
+       else all ("a.val." ^ arm_name cn)
+                ("b.val." ^ arm_name cn) fs) ^ ";\n")) ^
     (* Every tag is a case, so this is unreachable -- and C still wants a
        [return] on the path that falls out of the switch. *)
     "  }\n  return true;\n}\n"
@@ -1707,7 +1753,7 @@ and proj (v:string) (t:cty) (f:string) : ML string =
         | TVariant cs ->
           (match cs |> List.tryFind (fun (_, fs) ->
                          fs |> List.existsb (fun (g, _) -> g = f)) with
-           | Some (cn, _) -> v ^ ".val." ^ c_var (mangled_name cn) ^ "." ^ c_var f
+           | Some (cn, cfs) -> v ^ arm_sel cn cfs f
            | None -> reject ("the field " ^ f) ["No constructor declares it."])
         | _ -> reject ("the field " ^ f) [])
      | None -> reject ("a projection out of " ^ string_of_name n)
@@ -1747,9 +1793,12 @@ and ctor_lit (out:ref string) (ind:string) (t:cty) (cn:name) (args:list expr) : 
       "(" ^ c_name d.dt_name ^ "){ .tag = " ^ c_tag cn ^ " }"
     else
       "(" ^ c_name d.dt_name ^ "){ .tag = " ^ c_tag cn ^ ", .val = { ." ^
-      c_var (mangled_name cn) ^ " = { " ^
-      String.concat ", " (named |> List.map (fun (f, v) -> "." ^ c_var f ^ " = " ^ v)) ^
-      " } } }"
+      arm_name cn ^ " = " ^
+      (if arm_flat fields then snd (List.hd named)
+       else "{ " ^
+            String.concat ", " (named |> List.map (fun (f, v) ->
+              "." ^ c_var f ^ " = " ^ v)) ^ " }") ^
+      " } }"
 
 (* -------------------------------------------------------------------- *)
 (* Statements                                                           *)
@@ -2212,7 +2261,7 @@ and pat_tests (path:string) (t:cty) (p:pat)
                    else [tag_of path d ^ " == " ^ c_tag cn] in
        let sub (f:string) : ML string =
          if single_ctor d then path ^ "." ^ c_var f
-         else path ^ ".val." ^ c_var (mangled_name cn) ^ "." ^ c_var f in
+         else path ^ arm_sel cn fields f in
        let rec go (fs : list (string & cty)) (ps : list pat)
                 : ML (list string & list (string & string)) =
          match fs, ps with
@@ -2538,10 +2587,9 @@ let type_decl (d:dtype) : ML (option string) =
               "  " ^ decl_of c (c_var f) ^ ";\n")) ^
             "};\n")
     else
-      (* A tagged union.  The per-constructor structs are anonymous members of
-         one union, named after the constructor, so that a use site can name a
-         field knowing only the constructor -- which after monomorphization it
-         always does. *)
+      (* A tagged union.  The members are named after the constructor alone
+         (section 114), and a constructor carrying one field is the member
+         itself (section 113). *)
       let nonempty = cs |> List.filter (fun (_, fs) -> Cons? fs) in
       Some ("enum " ^ enum_tag n ^ " {\n" ^
             String.concat ",\n" (cs |> List.map (fun (c, _) -> "  " ^ c_tag c)) ^
@@ -2553,10 +2601,13 @@ let type_decl (d:dtype) : ML (option string) =
              | _ ->
                "  union {\n" ^
                String.concat "" (nonempty |> List.map (fun (c, fs) ->
-                 "    struct {\n" ^
-                 String.concat "" (fs |> List.map (fun (f, t) ->
-                   "      " ^ decl_of t (c_var f) ^ ";\n")) ^
-                 "    } " ^ c_var (mangled_name c) ^ ";\n")) ^
+                 if arm_flat fs
+                 then "    " ^ decl_of (snd (List.hd fs)) (arm_name c) ^ ";\n"
+                 else
+                   "    struct {\n" ^
+                   String.concat "" (fs |> List.map (fun (f, t) ->
+                     "      " ^ decl_of t (c_var f) ^ ";\n")) ^
+                   "    } " ^ arm_name c ^ ";\n")) ^
                "  } val;\n") ^
             "};\n")
 

@@ -547,7 +547,7 @@ CNOGREP_CByValue = "typedef struct {"
 # refuses.  The real assertion is that this file compiles at all; the greps
 # only pin down that the *live* binding is still there and the dead ones are
 # not declared under any name.
-CGREP_CDeadLet   = "return dflt;" "return s.val.CDeadLet_Rect._1;"
+CGREP_CDeadLet   = "return dflt;" "return s.val.Rect._1;"
 CNOGREP_CDeadLet = " = p;" "_letpattern"
 
 # Section 19.14: the refinement on [table] costs 2^40 steps to normalize and
@@ -576,7 +576,7 @@ CNOGREP_CFunPtr = "(*)("
 # Section 59: [n == 0], not [n == ((uint32_t)0U)] -- [n] carries the type,
 # so the literal's cast was saying what the other operand already said.
 CGREP_KrmlBasic   = "int32_t KrmlBasic_main(void)" \
-                    "if (s.tag == KRMLBASIC_SQUARE) return (s.val.KrmlBasic_Square._0" \
+                    "if (s.tag == KRMLBASIC_SQUARE) return (s.val.Square" \
                     "if (n == 0) return acc;"
 CNOGREP_KrmlBasic = "custard_unit tmp" "(void)(((custard_unit)0))" "abort"
 
@@ -663,7 +663,7 @@ CGREP_Export += "static uint32_t Export_countdown__"
 C_TESTS += ExternOpt
 CEXTRA_ExternOpt = ExternOpt_stubs.c
 CGREP_ExternOpt += "struct FStar_Pervasives_Native_option__listener_s {"
-CGREP_ExternOpt += "externopt_listener_t v;"
+CGREP_ExternOpt += "externopt_listener_t Some;"
 CGREP_ExternOpt += "extern FStar_Pervasives_Native_option__listener ExternOpt_listen(uint32_t);"
 CGREP_ExternOpt += "extern uint32_t ExternOpt_close(FStar_Pervasives_Native_option__listener);"
 # The external type itself is still the target's: no definition, no clone.
@@ -702,8 +702,8 @@ CPAIR_RecDisp += "RecDisp_reset_all(RecDisp_raw c) {@  return c;"
 CNOGREP_RecDisp += "RecDisp_str_reset"
 CNOGREP_RecDisp += "RecDisp_arr_reset"
 # The two that must survive, and would fail silently if they did not.
-CGREP_RecDisp += ".tag = RECDISP_R, .val = { .RecDisp_R = { ._0 = c.val.RecDisp_L._0 } }"
-CGREP_RecDisp += ".RecDisp_Int = { ._0 = (c.val.RecDisp_Int._0 + 1) }"
+CGREP_RecDisp += ".tag = RECDISP_R, .val = { .R = c.val.L } }"
+CGREP_RecDisp += ".Int = (c.val.Int + 1) }"
 
 # Section 107.  C's [==] is defined on scalars and pointers; F*'s equality is
 # defined at every inductive.  One generated comparison per type compared,
@@ -711,7 +711,7 @@ CGREP_RecDisp += ".RecDisp_Int = { ._0 = (c.val.RecDisp_Int._0 + 1) }"
 C_TESTS += VariantEq
 CGREP_VariantEq += "static bool VariantEq_kind__eq(VariantEq_kind a, VariantEq_kind b) {"
 CPAIR_VariantEq += "  if (a.tag != b.tag) return false;@  switch (a.tag) {"
-CGREP_VariantEq += "    case VARIANTEQ_UNKNOWN: return (a.val.VariantEq_Unknown._0 == b.val.VariantEq_Unknown._0);"
+CGREP_VariantEq += "    case VARIANTEQ_UNKNOWN: return (a.val.Unknown == b.val.Unknown);"
 CGREP_VariantEq += "  return (a.p_a == b.p_a) && (a.p_b == b.p_b);"
 CGREP_VariantEq += "  return (a._1 == b._1) && (a._2 == b._2);"
 CGREP_VariantEq += "  return (VariantEq_kind__eq((VariantEq_kind){ .tag = VARIANTEQ_KNOWN }, x));"
@@ -1610,6 +1610,19 @@ C_TESTS += NewtypeDead
 FLAGS_NewtypeDead = --custard_entry_module NewtypeDead
 CGREP_NewtypeDead += "typedef uint64_t NewtypeDead_live;"
 CNOGREP_NewtypeDead += "NewtypeDead_spect"
+
+C_TESTS += Union
+FLAGS_Union = --custard_entry_module Union
+# Section 113: one field is the member itself; two keep the struct.
+CPAIR_Union += "  union {@    uint32_t L;"
+CPAIR_Union += "    uint32_t L;@    uint64_t R;"
+CPAIR_Union += "      uint32_t y;@    } A;"
+CGREP_Union += "    uint32_t B;"
+# Section 114: the member is the bare constructor name, suffix and all gone.
+CGREP_Union += ".val.Just"
+CGREP_Union += ".val.Some"
+CNOGREP_Union += ".val.FStar_Pervasives_Native_Some"
+CNOGREP_Union += "} FStar_Pervasives_Native_Some"
 
 # Section 70.2.  An external type whose F* values are handles: a binding of
 # one has to alias, or a write through it is lost.  Kuiper's section 62 --

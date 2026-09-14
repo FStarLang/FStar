@@ -16,11 +16,11 @@ opt_listener ExternOpt_listen(uint32_t n) {
     return r;
   }
   r.tag = FSTAR_PERVASIVES_NATIVE_SOME__LISTENER;
-  r.val.FStar_Pervasives_Native_Some__listener.v.port = n;
+  r.val.Some.port = n;
   return r;
 }
 
 uint32_t ExternOpt_close(opt_listener o) {
   if (o.tag == FSTAR_PERVASIVES_NATIVE_NONE__LISTENER) return (uint32_t)0;
-  return o.val.FStar_Pervasives_Native_Some__listener.v.port;
+  return o.val.Some.port;
 }
