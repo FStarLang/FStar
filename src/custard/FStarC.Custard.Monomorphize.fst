@@ -274,6 +274,14 @@ let rec unfold_cty (st:state) (fuel:int) (c:cty) : ML cty =
   else match c with
   | TApp (n, args) ->
     (match SMap.try_find st.types (string_of_name n) with
+     (* Section 115.  Not a *realized* abbreviation.  [FStar.Dyn.dyn] is a
+        name for an F* model of a type whose OCaml implementation is
+        hand-written; unfolding it puts the model in the emitted signature and
+        the program no longer refers to the type it actually has.  A
+        realization is precisely the statement that the name, not the body, is
+        what the target knows. *)
+     | Some ({ dt_body = TAbbrev _; dt_flags = fl })
+       when has_flag fl Realized -> c
      | Some ({ dt_body = TAbbrev b; dt_params = ps }) ->
        (* An eta-contracted abbreviation -- [type t = flat_set], which binds
           nothing and stands for a type constructor -- takes more arguments

@@ -350,6 +350,7 @@ type prim_op = {
     integer result may need truncating; neither question is about floats. *)
 val at_int_width : prim_op -> bool
 
+
 (** Every expression node carries its type and effect: monomorphization means
     both are always known, and the simplification passes need the effect at
     every node to decide what they may move. *)
@@ -742,6 +743,7 @@ type verdicts = {
    signature to a particular call site. *)
 val subst_cty : list (string & cty) -> cty -> ML cty
 
+
 val mk : expr' -> cty -> eff -> expr
 val unit_expr : expr
 val name_of_decl : decl -> name
@@ -786,6 +788,12 @@ val imported_home : decl -> ML (option string)
 val is_droppable : expr -> ML bool
 
 (** {1 Printing} *)
+
+(** A string with its quotes, backslashes and control characters escaped, so
+    that the result is an injective function of its input.  Section 115: a
+    specialization key embeds constants, so a string able to write the key's
+    own framing could make two distinct argument lists share one key. *)
+val escape_string : string -> ML string
 
 val program_to_doc : program -> ML FStarC.Pprint.document
 val program_to_string : program -> ML string

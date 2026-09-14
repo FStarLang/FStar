@@ -62,6 +62,12 @@ type header = {
   uh_backend: string;
   uh_options: list (string & string);
   uh_digests: list (string & string);
+  (** Section 115.  The `--custard_c_no_prefix` modules this unit was built
+      with.  Not an entry in [uh_options], because it is not a setting the
+      consumer has to *match*: it is a record of how the producer spelled the
+      names in its header, and a consumer that includes that header has to
+      spell them the same way whether or not it passes the option itself. *)
+  uh_no_prefix: list string;
   (** The header file this unit emitted, for a downstream unit to `#include`
       (section 42.2).  Recorded rather than derived from [uh_name] because
       [-o] is what names it.  [None] for a backend with no header file. *)
@@ -125,3 +131,9 @@ val link_headers : links -> ML (list string)
     `--custard_link` order.  The unit holding the entry point calls these
     before its own (section 42.3). *)
 val link_inits : links -> ML (list string)
+
+(** Section 115.  Every linked unit's `--custard_c_no_prefix` modules.  The C
+    backend adds these to its own when it computes the C spelling of an
+    imported declaration, so that a call goes out under the name the header
+    it is compiled against declares. *)
+val link_no_prefix : links -> ML (list string)

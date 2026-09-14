@@ -2772,16 +2772,74 @@ let unbuild_decls (prog:program) : ML program =
    there becomes a [match] on a coercion of it -- which is exactly the same
    test, run one step later, where a coercion is allowed.  A branch with a
    guard is left alone: the guard is evaluated where the outer pattern binds,
-   and the variables would no longer be in scope there. *)
-let rec split_any (infos:SMap.t ctor_info) (p:pat) (body:expr) : ML (pat & expr) =
+   and the variables would no longer be in scope there.
+
+   Section 115.  Running the test one step later moves it *inside* a branch
+   that has already been chosen, and a test inside a branch has nowhere to
+   fail to.  Where the sub-pattern is refutable the inner match therefore
+   needs the rest of the outer match behind it, or
+
+     match p with
+     | P true false -> 1
+     | _ -> 2
+
+   raises on [P true true]: the outer branch is entered on [b = true], and the
+   inner [false] no longer has the wildcard behind it.  [fb] is the remaining
+   branches, re-matched on the scrutinee -- which is why the caller binds the
+   scrutinee to a variable, the fallback being a second use of it.  An
+   irrefutable sub-pattern cannot fail, so it keeps the single-branch form and
+   costs nothing. *)
+let rec refutable (infos:SMap.t ctor_info) (p:pat) : ML bool =
+  match p with
+  | PVar _ | PWild -> false
+  | PConst _ | POr _ -> true
+  | PTuple ps -> ps |> List.existsb (refutable infos)
+  | PRecord (_, fps) -> fps |> List.existsb (fun (_, q) -> refutable infos q)
+  | PCtor (cn, ps) ->
+    (match SMap.try_find infos (string_of_name cn) with
+     | Some ci when ci.ci_count = 1 -> ps |> List.existsb (refutable infos)
+     | _ -> true)
+
+(* Whether [split_any] on this pattern will produce an inner match that can
+   fail -- which is exactly when the branch needs the rest behind it. *)
+let rec splits_refutably (infos:SMap.t ctor_info) (p:pat) : ML bool =
+  let simple (q:pat) : bool = PVar? q || PWild? q in
+  let field (t:cty) (q:pat) : ML bool =
+    (TAny? t && not (simple q) && refutable infos q) || splits_refutably infos q in
+  let many (ts:list cty) (ps:list pat) : ML bool =
+    List.zip ts ps |> List.existsb (fun (t, q) -> field t q) in
+  match p with
+  | PCtor (cn, ps) ->
+    (match SMap.try_find infos (string_of_name cn) with
+     | Some ci when List.length ci.ci_fields = List.length ps ->
+       many (ci.ci_fields |> List.map snd) ps
+     | _ -> false)
+  | PRecord (tn, fps) ->
+    (match SMap.try_find infos (string_of_name tn) with
+     | Some ci ->
+       fps |> List.existsb (fun (f, q) ->
+         match ci.ci_fields |> List.tryFind (fun (g, _) -> g = f) with
+         | Some (_, t) -> field t q
+         | None -> field (TVar "?") q)
+     | None -> false)
+  | PTuple ps -> ps |> List.existsb (splits_refutably infos)
+  | POr _ | PVar _ | PWild | PConst _ -> false
+
+let rec split_any (infos:SMap.t ctor_info) (fb:option expr) (p:pat) (body:expr)
+  : ML (pat & expr) =
   let simple (p:pat) : bool = PVar? p || PWild? p in
   let field (t:cty) (p:pat) (body:expr) : ML (pat & expr) =
     if TAny? t && not (simple p)
     then let v = rename "any" in
          let sc = mk (ECoerce (mk (EVar v) TAny E_Pure, TAny)) TAny E_Pure in
-         let p, body = split_any infos p body in
-         (PVar v, { body with e = EMatch (sc, [(p, None, body)]) })
-    else split_any infos p body in
+         let need = refutable infos p in
+         let p, body = split_any infos fb p body in
+         let brs = (p, None, body) ::
+                   (match fb with
+                    | Some e when need -> [(PWild, None, e)]
+                    | _ -> []) in
+         (PVar v, { body with e = EMatch (sc, brs) })
+    else split_any infos fb p body in
   let many (ts:list cty) (ps:list pat) (body:expr) : ML (list pat & expr) =
     List.fold_right (fun (t, p) (ps, body) ->
       let p, body = field t p body in
@@ -2805,19 +2863,43 @@ let rec split_any (infos:SMap.t ctor_info) (p:pat) (body:expr) : ML (pat & expr)
      | None -> (p, body))
   | PTuple ps ->
     let ps, body = List.fold_right (fun p (ps, body) ->
-      let p, body = split_any infos p body in
+      let p, body = split_any infos fb p body in
       (p :: ps, body)) ps ([], body) in
     (PTuple ps, body)
   | POr _ | PVar _ | PWild | PConst _ -> (p, body)
 
 let rec split_any_expr (infos:SMap.t ctor_info) (x:expr) : ML expr =
   let g = split_any_expr infos in
-  let br (b0:branch) : ML branch =
+  let br (fb:option expr) (b0:branch) : ML branch =
     let p, gd, b = b0 in
     let b = g b in
     match gd with
     | Some gd -> (p, Some (g gd), b)
-    | None -> let p, b = split_any infos p b in (p, None, b) in
+    | None -> let p, b = split_any infos fb p b in (p, None, b) in
+  (* Section 115.  Bottom-up, so that a branch's fallback is the rest of the
+     match as it will actually be compiled.  Only a branch whose split can
+     fail is given one, and the scrutinee is bound to a variable only when
+     some branch needed it -- so a match with no refutable [any] under it is
+     left exactly as it was. *)
+  let branches (sc:expr) (x:expr) (brs:list branch) : ML expr =
+    let needed = brs |> List.existsb (fun (p, gd, _) ->
+                   None? gd && splits_refutably infos p) in
+    if not needed
+    then { x with e = EMatch (sc, brs |> List.map (br None)) }
+    else
+      let v = rename "sc" in
+      let sv () : ML expr = mk (EVar v) sc.ty E_Pure in
+      let rec go (bs:list branch) : ML (list branch) =
+        match bs with
+        | [] -> []
+        | b0 :: rest ->
+          let rest = go rest in
+          let fb = match rest with
+                   | [] -> None
+                   | _ -> Some (mk (EMatch (sv (), rest)) x.ty x.eff) in
+          br fb b0 :: rest in
+      let brs = go brs in
+      { x with e = ELet (v, sc.ty, sc, mk (EMatch (sv (), brs)) x.ty x.eff) } in
   match x.e with
   | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
   | ELet (v, ty, a, b) -> { x with e = ELet (v, ty, g a, g b) }
@@ -2826,8 +2908,8 @@ let rec split_any_expr (infos:SMap.t ctor_info) (x:expr) : ML expr =
   | EApp (h, es) -> { x with e = EApp (g h, es |> List.map g) }
   | EFun (bs, b) -> { x with e = EFun (bs, g b) }
   | EIf (c, a, b) -> { x with e = EIf (g c, g a, g b) }
-  | EMatch (s, brs) -> { x with e = EMatch (g s, brs |> List.map br) }
-  | ETry (s, brs) -> { x with e = ETry (g s, brs |> List.map br) }
+  | EMatch (s, brs) -> branches (g s) x brs
+  | ETry (s, brs) -> { x with e = ETry (g s, brs |> List.map (br None)) }
   | ETuple es -> { x with e = ETuple (es |> List.map g) }
   | EOp (o, es) -> { x with e = EOp (o, es |> List.map g) }
   | ERaise e1 -> { x with e = ERaise (g e1) }

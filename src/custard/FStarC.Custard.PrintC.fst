@@ -1190,6 +1190,35 @@ let truncate (o:prim_op) (s:string) : ML string =
     if modular && narrow then "((" ^ int_type sw ^ ")" ^ s ^ ")" else s
   | Some (PFloat _) | None -> s
 
+(* Section 115.  The cast {!truncate} adds is applied to the *result*, and at
+   a width narrower than [int] that is too late.  Both operands of
+   [U16.mul_mod] promote to [int] under 6.3.1.1, the multiplication is a
+   *signed* one, and 65535 * 65535 overflows it -- undefined behaviour, which
+   the cast that follows never sees.  A UBSan build says so; an optimizing
+   one is entitled to assume it cannot happen.
+
+   The fix is to do the arithmetic somewhere it is defined.  [unsigned int]
+   is its own promotion, so casting the operands to it makes the operation
+   unsigned, and unsigned arithmetic wraps by definition (6.2.5); the
+   truncation back to the declared width then computes the same value modulo
+   2^w that the F* operator does.
+
+   Only the wrapping operators, and only where the promoted type is signed --
+   an unsigned width at or above [int]'s is already unsigned, and a *signed*
+   narrow width cannot overflow [int] at all (127 * 127 and 32767 * 32767
+   both fit), so neither has anything to gain.  A shift is included: the left
+   operand is the one whose promoted type the result takes, and casting the
+   count as well is harmless. *)
+let widen_operands (o:prim_op) : ML (option string) =
+  let wrapping =
+    match o.po_op with
+    | AddW | SubW | MultW | BShiftL -> true
+    | _ -> false in
+  match o.po_ty with
+  | Some (PInt (Unsigned, w)) when wrapping ->
+    (match w with Int8 | Int16 -> Some "(unsigned int)" | _ -> None)
+  | _ -> None
+
 (* -------------------------------------------------------------------- *)
 (* Expressions                                                          *)
 (* -------------------------------------------------------------------- *)
@@ -1666,6 +1695,40 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
   | EOp (o, [a; b]) when Some? (narrow_call o) ->
     Some?.v (narrow_call o) ^ "(" ^ c_rvalue out ind a.ty a ^ ", " ^
                                     c_rvalue out ind b.ty b ^ ")"
+  (* Section 115.  [&&] and [||] do not evaluate their right operand unless
+     the left one fails to decide, and that is not a convenience: F* code
+     relies on it, as [x <> 0 && 100 / x > 5] does.  Every other operand
+     position may have its statements hoisted ahead of the expression,
+     because every other operand is evaluated -- but hoisting *this* one
+     evaluates it unconditionally, and the division whose guard was just
+     written runs anyway.  The IR is no help: by the time it arrives the
+     guard is an [EIf], and an [EIf] in an operand is exactly what {!hoist}
+     is for.
+
+     So the right operand is printed into a buffer of its own.  If nothing
+     lands there, the operand is an expression and the plain infix form is
+     both correct and what a reader expects.  If something does, the operator
+     becomes what it always meant: a temporary holding the left operand, and
+     a branch that overwrites it with the right one only on the path where C
+     would have evaluated it.
+
+     Bitwise [And]/[Or] at a width ({!at_int_width}) are a different
+     operator, evaluate both operands, and fall through to the case below. *)
+  | EOp (o, [a; b]) when (And? o.po_op || Or? o.po_op) && not (at_int_width o) ->
+    let av = c_expr out ind a in
+    let bout = mk_ref "" in
+    let bv = c_expr bout (ind ^ "  ") b in
+    if !bout = "" then
+      "(" ^ av ^ " " ^ Some?.v (infix_op o) ^ " " ^ bv ^ ")"
+    else begin
+      let x = fresh "sc" in
+      out := !out ^ ind ^ decl_of e.ty x ^ " = " ^ av ^ ";\n" ^
+             ind ^ "if (" ^ (if Or? o.po_op then "!" else "") ^ x ^ ") {\n" ^
+             !bout ^
+             ind ^ "  " ^ x ^ " = " ^ bv ^ ";\n" ^
+             ind ^ "}\n";
+      x
+    end
   | EOp (o, [a; b]) when Some? (infix_op o) ->
     (* Section 61.1.  A shift is the exception, and it is the one binary
        operator whose operands genuinely do *not* share an IR type --
@@ -1687,7 +1750,14 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
              else c_rvalue out ind a.ty a in
     let bv = if (not shift) && EConst? a.e then c_expr out ind b
              else c_rvalue out ind b.ty b in
-    truncate o ("(" ^ av ^ " " ^ Some?.v (infix_op o) ^ " " ^ bv ^ ")")
+    (* Section 115.  After the two operands are printed and before they meet
+       the operator, so that the operation itself happens at a type it is
+       defined at. *)
+    let wrap (s:string) : ML string =
+      match widen_operands o with
+      | Some c -> c ^ group s
+      | None -> s in
+    truncate o ("(" ^ wrap av ^ " " ^ Some?.v (infix_op o) ^ " " ^ wrap bv ^ ")")
   (* Section 61.2.  Through {!group}, like the [!] of a condition: this site
      printed its operand bare, so a macro extern was unparenthesized here
      whatever {!is_atom} said.  That half is older than section 59 -- the two
@@ -2968,7 +3038,8 @@ let trim_nl (s:string) : ML string =
    it, so nothing else can keep it alive -- but a lifted function is usually
    an implementation detail of the call the rule emitted, not an export.  A
    rule that wants it [static] passes [Private] and gets it. *)
-let no_unit : unit_info = { cu_name = None; cu_headers = []; cu_inits = [] }
+let no_unit : unit_info =
+  { cu_name = None; cu_headers = []; cu_inits = []; cu_no_prefix = [] }
 
 (* Section 42.3.  One fixed name per unit is a duplicate symbol the moment two
    units are linked, so [--custard_unit] namespaces it.  With no unit name the
@@ -3054,8 +3125,16 @@ let comment_of (l:dlet) : ML string =
    a silent suffix: the whole point of the option is that the caller writes
    the name, so producing a name the caller did not ask for is worse than
    refusing. *)
-let build_renames (p:program) : ML unit =
-  let mods = Options.custard_c_no_prefix () in
+(* Section 115.  [extra] is what the linked units were built with.  A
+   consumer computes the C spelling of an imported declaration the same way
+   the producer did -- from the declaration, by this function -- so with the
+   producer's option absent it recomputed a *different* spelling and emitted
+   a call to a symbol the header it includes does not declare.  Taking the
+   producer's modules from the `.cui` makes the two agree by construction,
+   and does so without asking the consumer to repeat a flag that describes
+   somebody else's output. *)
+let build_renames (extra:list string) (p:program) : ML unit =
+  let mods = Options.custard_c_no_prefix () @ extra in
   renames := SMap.create 0;
   if Nil? mods then () else begin
     (* Every C name in the unit as it stands, so that a rename cannot land on
@@ -3391,7 +3470,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
      resolves through [c_name], which reads {!renames}.  Filling it first and
      renaming afterwards left the table holding the name the option had just
      replaced.  Nothing in here reads a table, so the move costs nothing. *)
-  build_renames p;
+  build_renames cu.cu_no_prefix p;
   let tt = SMap.create 50 in
   let ct = SMap.create 50 in
   let xt = SMap.create 20 in
@@ -3474,8 +3553,15 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
          [call_e] reach a C compiler: both the expansion and this check record
          definitions, and a variable of arrow type was neither. *)
       let n = List.length (List.filter (fun b -> b) flags) in
+      (* Section 115.  Counting the *kept* arguments, for the same reason the
+         flags above exist: the pointer this variable is emitted as drops its
+         unit parameters (section 53.1), and so does every call through it,
+         so an arity taken from the arrow unfiltered rejects the very calls
+         the type it came from describes. *)
       SMap.add at (string_of_name l.dl_name)
-        (if Cons? l.dl_binders then n else List.length (arg_ctys l.dl_ret))
+        (if Cons? l.dl_binders then n
+         else List.length (arg_ctys l.dl_ret |> List.filter
+                             (fun (a:cty) -> not (TUnit? a))))
     | _ -> ());
   types := tt; ctors := ct; externs := xt; keeps := kt; void_fns := vt;
   build_macros p;

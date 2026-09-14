@@ -1345,6 +1345,48 @@ CNOGREP_SepAppC += "SepLibC_point SepLibC_origin;"
 # This unit has no globals of its own, so it has no initializer to declare.
 CNOGREP_SepAppC += "SepAppC_init_globals"
 
+# Section 115.  The same shape again, for the one thing SepLibC does not
+# exercise: a producer built with --custard_c_no_prefix.  The consumer passes
+# no naming option at all, which is the point -- it has no business knowing
+# how somebody else's unit spells its exports, and before the fix it computed
+# the prefixed spelling and called a symbol the header does not declare.  GCC
+# caught it; the greps below say which name each side settled on.
+$(OUTPUT_DIR)/NoPrefLib.cui: $(CACHE_DIR)/NoPrefLib.fst.checked $(FSTAR_EXE)
+	$(call msg, "CUSTARD-UNIT-C", NoPrefLib)
+	@mkdir -p $(OUTPUT_DIR)
+	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
+	  --custard_monomorphize_types true --custard_unit NoPrefLib \
+	  --custard_c_no_prefix NoPrefLib \
+	  --custard_entry NoPrefLib.add1 --odir $(OUTPUT_DIR) NoPrefLib.fst
+	$(Q)grep -qF -- "uint32_t add1(uint32_t" $(OUTPUT_DIR)/NoPrefLib.h \
+	  || { echo "ERROR: NoPrefLib did not publish add1 unprefixed"; exit 1; }
+
+$(OUTPUT_DIR)/NoPrefLib.c: $(OUTPUT_DIR)/NoPrefLib.cui $(FSTAR_EXE)
+	$(Q)test -f $@
+
+$(OUTPUT_DIR)/NoPrefApp.c: $(CACHE_DIR)/NoPrefApp.fst.checked \
+                           $(OUTPUT_DIR)/NoPrefLib.cui $(FSTAR_EXE)
+	$(call msg, "CUSTARD-LINK-C", NoPrefApp)
+	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
+	  --custard_monomorphize_types true \
+	  --custard_link $(OUTPUT_DIR)/NoPrefLib.cui \
+	  --custard_main NoPrefApp.main NoPrefApp.fst -o $@
+	$(Q)grep -qF -- "add1(41)" $@ \
+	  || { echo "ERROR: NoPrefApp did not call add1 unprefixed"; exit 1; }
+	$(Q)grep -qF -- "NoPrefLib_add1" $@ \
+	  && { echo "ERROR: NoPrefApp recomputed the prefixed name"; exit 1; }; true
+
+$(OUTPUT_DIR)/NoPrefApp.ran: $(OUTPUT_DIR)/NoPrefLib.c $(OUTPUT_DIR)/NoPrefApp.c
+	$(call msg, "CC", NoPrefApp)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(OUTPUT_DIR) -x c \
+	  $(OUTPUT_DIR)/NoPrefLib.c $(OUTPUT_DIR)/NoPrefApp.c \
+	  -o $(OUTPUT_DIR)/NoPrefApp.exe
+	$(call msg, "RUN-C", NoPrefApp)
+	$(Q)$(OUTPUT_DIR)/NoPrefApp.exe
+	$(Q)touch $@
+
+all: $(OUTPUT_DIR)/NoPrefApp.ran
+
 $(OUTPUT_DIR)/SepAppC.ran: $(OUTPUT_DIR)/SepLibC.c $(OUTPUT_DIR)/SepAppC.c
 	$(call msg, "CC", SepAppC)
 	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(OUTPUT_DIR) -c -x c \
@@ -1610,6 +1652,42 @@ C_TESTS += NewtypeDead
 FLAGS_NewtypeDead = --custard_entry_module NewtypeDead
 CGREP_NewtypeDead += "typedef uint64_t NewtypeDead_live;"
 CNOGREP_NewtypeDead += "NewtypeDead_spect"
+
+# Section 115.  The fourteen findings of round 45's validation report.  The
+# OCaml-backend cases assert their answers by printing them, because every one
+# of them was a *wrong answer* rather than a failure: the collision, the
+# capture and the lost fallthrough all produce output, just not the output the
+# source says.
+CUSTARD_TESTS += KeyCollision SuffixCollision LocalErase
+CUSTARD_TESTS += SplitAny NestedInline RealizedField OcamlEscape
+# Both of these are *about* a value whose representation is [any]: the field
+# behind a refutable split, and a realized abbreviation.  WARN_ANY escalating
+# that to an error would make the cases unwritable.
+FLAGS_SplitAny = --warn_error -367
+FLAGS_RealizedField = --warn_error -367
+
+# Section 115.  Short-circuit evaluation: [safe 0ul true] divides by zero if
+# the delayed operand is evaluated, so the run is the assertion.
+C_TESTS += CShortCircuit
+FLAGS_CShortCircuit = --custard_backend C
+# The temporary and its branch, rather than a hoisted one.
+CGREP_CShortCircuit += "  if (!"
+
+# Section 115.  Narrow modular arithmetic.  The run checks the value; the
+# grep checks that it was computed somewhere the standard defines, which a
+# non-sanitizing build cannot tell apart from the version that was wrong.
+C_TESTS += UInt16Mul
+FLAGS_UInt16Mul = --custard_backend C
+CGREP_UInt16Mul += "(unsigned int)"
+
+# Section 115.  An arrow-valued global is a function pointer, and its arity
+# has to be the pointer's, not the arrow's.  Extraction succeeding is half of
+# this test; the [assume val] that keeps it a pointer is realized by the stub.
+C_TESTS += ArrowUnitGlobal
+FLAGS_ArrowUnitGlobal = --custard_backend C
+CEXTRA_ArrowUnitGlobal = ArrowUnitGlobal_stubs.c
+CGREP_ArrowUnitGlobal += "bool (*ArrowUnitGlobal_selected)(bool);"
+CGREP_ArrowUnitGlobal += "ArrowUnitGlobal_selected(a)"
 
 C_TESTS += Union
 FLAGS_Union = --custard_entry_module Union

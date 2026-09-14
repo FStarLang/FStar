@@ -162,22 +162,27 @@ let check_strict_projector (cfg : Cfg.cfg) (hua : fv & universes & args) : ML bo
    exactly that -- spends a measurable fraction of extraction in it; round 31
    sampled it as one of three hot spots.
 
-   The answer depends only on the name.  A projector's arity and field index
-   come from the constructor's declaration, which does not change once the
-   module defining it is loaded, and a name is never bound to two different
-   declarations in one run.  So the cache is global and never invalidated,
-   like the other name-keyed caches in this file. *)
-let disc_proj_info_cache : SMap.t (option (qualifier & int & option int)) =
-  SMap.create 100
+   The answer depends only on the name -- but only for as long as the name
+   means one thing.  Custard section 115: this cache was a *global* one, and a
+   global one outlives the environment it was computed against.  An IDE pops
+   [type r = { x:int; y:int }] and pushes [type r = { y:int; x:int }], and the
+   entry recorded for [Mkr?.x] still says "field 0": the projection computes
+   to 2 where a fresh process gives 1, silently and in ordinary F*
+   normalization, with no extraction involved.
 
+   So it lives in the environment instead, as [env.disc_proj_tab], next to the
+   two name-keyed caches that already do.  [push_stack] copies it, [rollback]
+   restores that copy, and [add_sigelt] flushes the names a new declaration
+   binds -- which for a record includes its projectors.  The hit rate is
+   unchanged within a module, which is where it was measured. *)
 let disc_proj_info_cached env (l:Ident.lident)
   : ML (option (qualifier & int & option int)) =
   let k = Ident.string_of_lid l in
-  match SMap.try_find disc_proj_info_cache k with
+  match SMap.try_find env.disc_proj_tab k with
   | Some r -> r
   | None ->
     let r = Env.disc_proj_info env l in
-    SMap.add disc_proj_info_cache k r;
+    SMap.add env.disc_proj_tab k r;
     r
 
 (* Is [head] a projector or discriminator whose reduction is currently enabled?

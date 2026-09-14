@@ -210,8 +210,21 @@ let uppercase_first (s:string) : ML string =
     let tl = String.substring s 1 (String.length s - 1) in
     if is_alpha i then hd ^ tl else "U" ^ s
 
+(* Section 115.  Appending an underscore is only an escape if it lands
+   somewhere nothing else does, and [method] and [method_] both come out
+   [method_] -- so the second silently captures every use of the first, in
+   OCaml that compiles.  The [_]s are stripped before the test instead: a
+   name is escaped when what is left of it after them is a keyword, so the
+   whole family [method], [method_], [method__] shifts by one and stays
+   distinct.  A name that is not a keyword with underscores after it is
+   untouched, which is very nearly all of them. *)
 let escape_keyword (s:string) : ML string =
-  if List.existsb (fun k -> k = s) ocaml_keywords then s ^ "_" else s
+  let rec strip (t:string) : ML string =
+    let n = String.length t in
+    if n > 0 && String.substring t (n - 1) 1 = "_"
+    then strip (String.substring t 0 (n - 1))
+    else t in
+  if List.existsb (fun k -> k = strip s) ocaml_keywords then s ^ "_" else s
 
 let ocaml_value_name (n:name) : ML string =
   if is_at_home n then escape_keyword (lowercase_first (sanitize n.id)) else
@@ -234,8 +247,7 @@ let ocaml_ctor_name (n:name) (c:string) : ML string =
 let module_name_of_unit (u:string) : ML string = uppercase_first (sanitize u)
 
 let ocaml_var (x:string) : ML string =
-  let s = lowercase_first (sanitize x) in
-  if List.existsb (fun k -> k = s) ocaml_keywords then s ^ "_" else s
+  escape_keyword (lowercase_first (sanitize x))
 
 (* Section 30.13.  The names of the top-level values this run will emit, filled
    in by [build_tables] before anything is printed.

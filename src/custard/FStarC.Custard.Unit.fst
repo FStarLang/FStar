@@ -29,7 +29,7 @@ module E   = FStarC.Errors
 module O   = FStarC.Options
 module SMap = FStarC.SMap
 
-let current_version = 11
+let current_version = 12
 
 (* The IR is plain first-order data -- no references, no closures, no
    hashconsing -- so the same mechanism that stores checked files stores a
@@ -90,6 +90,24 @@ let read_iface (fn:string) : ML iface =
       ]
     | None ->
       bad fn [text (BU.fmt1 "It records no value for --%s." k)]);
+  (* Section 115.  The unit's IR was extracted from these checked files, and
+     nothing so far has looked at them again.  A `.cui` that outlived an edit
+     to its own source therefore links silently, and the program gets the old
+     implementation compiled against the new source's assumptions -- a
+     miscompilation whose only symptom is the wrong answer at run time.
+
+     The digest is the same one the checked-file machinery uses, so this
+     costs a hash of files this run is about to read anyway.  A file that is
+     no longer *there* is not an error: a unit may legitimately be shipped
+     without the sources it was built from, and this run is then linking
+     against a binary artifact and has nothing to compare.  It is only when
+     the file is present and has changed that the interface is known stale. *)
+  h.uh_digests |> List.iter (fun (f, d) ->
+    if FStarC.Filepath.file_exists f && U.digest_of_file f <> d then
+      bad fn [
+        text (BU.fmt1 "It was built from a different version of %s." f);
+        text "Rebuild the unit."
+      ]);
   i
 
 (** {1 Dumping} *)
@@ -141,6 +159,7 @@ type unit_ref = {
   ur_name:   string;
   ur_header: option string;
   ur_init:   option string;
+  ur_no_prefix: list string;
 }
 
 (* [string & entry]: the unit an entry came from, kept alongside it so a
@@ -176,7 +195,8 @@ let load_links (fns:list string) : ML links =
       | _ -> SMap.add tbl e.ue_key (u, e));
     { ur_name   = u;
       ur_header = i.ui_header.uh_header;
-      ur_init   = i.ui_header.uh_init }) in
+      ur_init   = i.ui_header.uh_init;
+      ur_no_prefix = i.ui_header.uh_no_prefix }) in
   if O.custard_dump_cui () && fns <> [] then
     BU.print1 "Custard: linked %s specializations.\n" (show (List.length (SMap.keys tbl)));
   { lk_tbl = tbl; lk_units = units }
@@ -202,3 +222,6 @@ let link_headers (l:links) : ML (list string) =
 let link_inits (l:links) : ML (list string) =
   l.lk_units |> List.collect (fun u ->
     match u.ur_init with Some i -> [i] | None -> [])
+
+let link_no_prefix (l:links) : ML (list string) =
+  l.lk_units |> List.collect (fun u -> u.ur_no_prefix)

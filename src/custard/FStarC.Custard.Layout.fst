@@ -679,39 +679,77 @@ let record_body (look:name -> ML (option dtype)) (n:name)
 
    [ex_ctor] names R's constructor, because the rewriting runs before the
    record conversion above is applied and so still sees R as a variant. *)
+let strip_inline (c:cty) : cty =
+  match c with TInline c -> c | c -> c
+
+(* Section 115.  [ex_src] is the middle record's field list *as the rewriting
+   will leave it*, not as it was declared, because a middle record may have an
+   inlined field of its own.
+
+   The two sides of the rewrite disagreed otherwise.  Patterns expand
+   innermost-first, so [O (M (I a b) c) d] had already become a four-argument
+   [M]-free pattern by the time the outer plan was applied, while the outer
+   declaration was built from [middle]'s two declared fields -- "expects 3
+   fields, matched 4", an internal failure on a program F* had accepted.
+
+   Expanding the middle record first makes every consumer agree: the outer
+   declaration gets the same fields the pattern splices, [ex_take] sees a
+   constructor application of the arity [ex_src] describes, and [EProj] names
+   fields that are really there.  The recursion reuses this same function, so
+   a chain of any depth is expanded by the rule that handles one link, and
+   fuel bounds a malformed cycle. *)
+let rec ctor_plan (look:name -> ML (option dtype)) (fuel:int)
+                  (fs : list (string & cty)) : ML fplan =
+  let allpos = fs |> List.for_all (fun (f, _) -> positional f) in
+  let next : SMap.t int = SMap.create 1 in
+  let fresh (f:string) (g:string) : ML string =
+    if allpos
+    then begin
+      let i = (match SMap.try_find next "n" with Some i -> i | None -> 0) in
+      SMap.add next "n" (i + 1);
+      "_" ^ string_of_int i
+    end
+    else if g = "" then f else f ^ "_" ^ g in
+  fs |> List.map (fun (f, c) ->
+    match c with
+    | TInline (TApp (rn, args)) when fuel > 0 ->
+      (match expanded_body look (fuel - 1) rn args with
+       | Some (rc, src) ->
+         let dst = src |> List.map (fun (g, gt) -> (fresh f g, gt)) in
+         (f, f, Some { ex_ty = TApp (rn, args); ex_type = rn; ex_ctor = rc;
+                       ex_src = src; ex_dst = dst })
+       | None -> (f, fresh f "", None))
+    | _ -> (f, fresh f "", None))
+
+(* [rn]'s constructor and its fields after [rn]'s own inlining has been
+   applied -- exactly the field list its declaration will be rewritten to. *)
+and expanded_body (look:name -> ML (option dtype)) (fuel:int) (rn:name)
+                  (args:list cty)
+  : ML (option (option name & list (string & cty))) =
+  match record_body look rn with
+  | Some (ps, rc, rfs) ->
+    if List.length ps <> List.length args then None
+    else begin
+      let sm = List.zip ps args in
+      let rfs = rfs |> List.map (fun (g, gt) -> (g, subst_cty sm gt)) in
+      if not (rfs |> List.existsb (fun (_, c) -> TInline? c))
+      then Some (rc, rfs)
+      else
+        let pl = ctor_plan look fuel rfs in
+        Some (rc, List.zip rfs pl |> List.collect (fun ((_, c), (_, g', ex)) ->
+                    match ex with
+                    | Some ex -> ex.ex_dst
+                    | None -> [(g', strip_inline c)]))
+    end
+  | None -> None
+
 let ctor_plans (look:name -> ML (option dtype)) (dt:dtype) : ML (list (name & fplan)) =
   if has_flag dt.dt_flags Realized then [] else
   match dt.dt_body with
   | TVariant cs ->
     cs |> List.collect (fun (cn, fs) ->
-      if not (fs |> List.existsb (fun (_, c) -> TInline? c)) then [] else begin
-        let allpos = fs |> List.for_all (fun (f, _) -> positional f) in
-        let next : SMap.t int = SMap.create 1 in
-        let fresh (f:string) (g:string) : ML string =
-          if allpos
-          then begin
-            let i = (match SMap.try_find next "n" with Some i -> i | None -> 0) in
-            SMap.add next "n" (i + 1);
-            "_" ^ string_of_int i
-          end
-          else if g = "" then f else f ^ "_" ^ g in
-        let plan = fs |> List.map (fun (f, c) ->
-          match c with
-          | TInline (TApp (rn, args)) ->
-            (match record_body look rn with
-             | Some (ps, rc, rfs) ->
-               if List.length ps <> List.length args then (f, fresh f "", None)
-               else begin
-                 let sm = List.zip ps args in
-                 let src = rfs |> List.map (fun (g, gt) -> (g, subst_cty sm gt)) in
-                 let dst = src |> List.map (fun (g, gt) -> (fresh f g, gt)) in
-                 (f, f, Some { ex_ty = TApp (rn, args); ex_type = rn; ex_ctor = rc;
-                               ex_src = src; ex_dst = dst })
-               end
-             | None -> (f, fresh f "", None))
-          | _ -> (f, fresh f "", None)) in
-        [(cn, plan)]
-      end)
+      if not (fs |> List.existsb (fun (_, c) -> TInline? c)) then []
+      else [(cn, ctor_plan look 10 fs)])
   | _ -> []
 
 (* A field whose type mentions a type variable the declaration does not bind

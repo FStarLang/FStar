@@ -233,7 +233,8 @@ let consume_iface_todo (e:env) (consumed:list sigelt) (remaining:list sigelt) : 
   lids |> List.iter (fun l ->
     let s = string_of_lid l in
     SMap.remove e.fv_delta_depths s;
-    SMap.remove e.strict_args_tab s);
+    SMap.remove e.strict_args_tab s;
+    SMap.remove e.disc_proj_tab s);
   let hidden = lids |> List.fold_left (fun s l -> remove l s) e.iface_hidden in
   { e with iface_todo = remaining; iface_hidden = hidden }
 
@@ -334,6 +335,7 @@ let initial_env deps
     dsenv = FStarC.Syntax.DsEnv.(set_current_module (empty_env deps) module_lid);
     nbe = nbe;
     strict_args_tab = SMap.create 20;
+    disc_proj_tab = SMap.create 50;
     erasable_types_tab = SMap.create 20;
     enable_defer_to_tac=true;
     unif_allow_ref_guards=false;
@@ -384,6 +386,7 @@ let push_stack env : ML _ =
               normalized_eff_names=SMap.copy env.normalized_eff_names;
               fv_delta_depths=SMap.copy env.fv_delta_depths;
               strict_args_tab=SMap.copy env.strict_args_tab;
+              disc_proj_tab=SMap.copy env.disc_proj_tab;
               erasable_types_tab=SMap.copy env.erasable_types_tab }
 
 let pop_stack () : ML _ =
@@ -652,7 +655,8 @@ let rec add_sigelt force env se : ML _ = match se.sigel with
              if BU.starts_with k ns then SMap.remove env.fv_delta_depths k)
          | _ -> ());
         SMap.remove env.fv_delta_depths s;
-        SMap.remove env.strict_args_tab s);
+        SMap.remove env.strict_args_tab s;
+        SMap.remove env.disc_proj_tab s);
       add_se_to_attrtab env se
 
 and add_sigelts force env ses : ML _ =

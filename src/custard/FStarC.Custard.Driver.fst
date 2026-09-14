@@ -335,7 +335,14 @@ let write_unit_iface (st:Extract.state) (homes:SMap.t string)
         Unit.uh_name    = u;
         Unit.uh_backend = Options.custard_backend ();
         Unit.uh_options = Unit.layout_options ();
-        Unit.uh_digests = Extract.loaded_digests st;
+        (* Section 115.  The files this unit's IR was extracted from.
+           {!Extract.loaded_digests} covers what the loader pulled in on
+           demand; the run's own command-line sources are not among them --
+           they were type-checked by the ordinary pipeline in this very run --
+           and they are exactly the ones an edit is most likely to touch. *)
+        Unit.uh_digests = Extract.loaded_digests st @
+          (Options.file_list () |> List.map (fun f -> (f, BU.digest_of_file f)));
+        Unit.uh_no_prefix = Options.custard_c_no_prefix ();
         Unit.uh_header  = hdr_file;
         Unit.uh_init    = init;
       };
@@ -487,7 +494,28 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
     if backend <> "C" then C.no_unit
     else { C.cu_name    = Options.custard_unit ();
            C.cu_headers = Extract.link_headers st;
-           C.cu_inits   = Extract.link_inits st } in
+           C.cu_inits   = Extract.link_inits st;
+           C.cu_no_prefix = Extract.link_no_prefix st } in
+  (* Section 115.  An OCaml unit's compilation unit is named by the file it
+     is written to, and a consumer qualifies an imported name by the unit
+     name in the `.cui` -- so if [-o] and --custard_unit disagree, the
+     consumer emits [NamedUnit.f] against a module called [Other] and the
+     failure surfaces as an unbound module in *generated* code, at a place
+     with nothing to say about the flag that caused it.  Nothing here can
+     choose between the two spellings on the user's behalf: either is a
+     plausible intent.  So it is refused, at the producer, naming both. *)
+  (if backend = "OCaml" then
+     match Options.custard_unit () with
+     | Some u when OCaml.module_name_of_unit u <> OCaml.module_name_of_unit stem ->
+       E.raise_error0 E.Fatal_OptionsNotCompatible [
+         text ("Custard: --custard_unit " ^ u ^ " names the OCaml module " ^
+               OCaml.module_name_of_unit u ^ ", but the output file " ^ ofile ^
+               " defines the module " ^ OCaml.module_name_of_unit stem ^ ".");
+         text "A unit that links against this one qualifies its imports by \
+               the unit name, so the two have to agree.";
+         text ("Write it to " ^ OCaml.module_name_of_unit u ^ ".ml, or pass \
+               --custard_unit " ^ stem ^ ".") ]
+     | _ -> ());
   (* After [Rename], because the names a `.cui` exports are the names the
      generated source actually spells. *)
   phase "iface" (fun () ->

@@ -31,6 +31,11 @@ type unit_info = {
   (** The global initializer of each linked unit, in link order.  The unit
       holding the entry point calls these before its own (section 42.3). *)
   cu_inits:   list string;
+  (** Section 115.  The `--custard_c_no_prefix` modules of each linked unit.
+      A name imported from one of them is spelled the way that unit's header
+      declares it, which is a function of the *producer's* setting and not of
+      this run's. *)
+  cu_no_prefix: list string;
 }
 
 val no_unit : unit_info

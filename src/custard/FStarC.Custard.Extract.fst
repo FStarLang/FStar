@@ -185,7 +185,12 @@ let key_of_const (c:sconst) : ML string =
   | Const_bool b        -> if b then "true" else "false"
   | Const_real r        -> Real.to_string r ^ "R"
   | Const_char c        -> "'" ^ show (FStarC.Util.int_of_char c) ^ "'"
-  | Const_string (s, _) -> "\"" ^ s ^ "\""
+  (* Section 115.  Escaped, because the key is a string and the constant goes
+     into it verbatim: [combine "a" "b\"#1=\"c"] and [combine "a\"#1=\"b" "c"]
+     both wrote [combine#0="a"#1="b"#1="c"], so two specializations that must
+     differ shared one definition and the first argument list's body answered
+     for both calls.  Escaping makes the embedding injective. *)
+  | Const_string (s, _) -> "\"" ^ escape_string s ^ "\""
   (* The *base* an integer was written in is not part of its meaning --
      [FStarC.Const.eq_const] ignores it -- so it must not reach a key, or
      [f 16] and [f 0x10] would specialize twice and produce two identical
@@ -1295,10 +1300,20 @@ let spec_suffix (st:state) (lstr:string) (args:list (int & term)) (n:int)
       let key = lstr ^ "__" ^ s in
       if Some? (SMap.try_find st.suffixes key) then false
       else (SMap.add st.suffixes key true; true) in
+    (* Section 115.  The fallback is claimed too.  Reserving only the
+       *preferred* hint left the fallback spelling free, so a later
+       specialization whose preferred hint happened to be that spelling
+       claimed it and the two shared a name -- one body survived and answered
+       for both calls.  A suffix is a name, so every suffix handed out has to
+       be taken out of circulation, whichever branch produced it. *)
+    let rec fresh (s:string) (k:int) : ML string =
+      if k > 1000 then s
+      else if claim s then s
+      else fresh (s ^ "_" ^ show k) (k + 1) in
     match hint_of_args st args with
     | Some h when claim h -> Some h
-    | Some h -> Some (h ^ "_" ^ show n)
-    | None -> Some (show n)
+    | Some h -> Some (fresh (h ^ "_" ^ show n) 1)
+    | None -> Some (fresh (show n) 1)
 
 (* -------------------------------------------------------------------- *)
 (* Effects                                                              *)
@@ -2998,6 +3013,15 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
          runtime value (section 5.0) and no call site passes them, so they
          belong in the declaration's type parameters, not its binders. *)
       let tybs, valbs = List.partition (fun (b:S.binder) -> is_type_bv st b.binder_bv) xs in
+      (* Section 115.  And erased *value* binders go too.  Dropping only the
+         type binders left a lifted local recursion declaring a parameter that
+         no call passes: the call spine is filtered by [is_erased_term], which
+         deletes a proof-irrelevant argument by exactly the rule that deletes
+         a type, so a [Ghost.erased] parameter made the declaration and every
+         one of its calls disagree on arity.  This is that predicate, read on
+         the binder. *)
+      let valbs = valbs |> List.filter (fun (b:S.binder) ->
+                    not (Mono.is_erased_binder (tcenv st) b)) in
       let own_typars = tybs |> List.map (fun (b:S.binder) -> name_of_bv b.binder_bv) in
       let arg_binders = valbs |> List.map (fun (b:S.binder) ->
                           { b_name = name_of_bv b.binder_bv;
@@ -5499,6 +5523,8 @@ let imports (st:state) : ML (list (decl & option type_info)) = List.rev !st.impo
 let link_homes (st:state) : ML (list string) = Unit.link_homes st.links
 
 let link_headers (st:state) : ML (list string) = Unit.link_headers st.links
+
+let link_no_prefix (st:state) : ML (list string) = Unit.link_no_prefix st.links
 
 let link_inits (st:state) : ML (list string) = Unit.link_inits st.links
 

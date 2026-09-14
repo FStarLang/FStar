@@ -19752,6 +19752,210 @@ the interaction with §107. Five existing pins and one hand-written C stub,
 consumer churn this section is about, and the reason the change is worth
 making once rather than leaving to every consumer.
 
+## 115. Fourteen findings, and what they had in common
+
+Round 45 arrived as a single validation report: fourteen findings, each with a
+complete minimal working example, the exact commands, and observed output set
+against expected. Eight of them were silent miscompilations --- programs that
+extract, compile and run, and give a different answer than the F\* source says.
+Two of the fourteen corrected predictions the reporter had made himself in an
+earlier static pass, which is worth recording: the value of running the case is
+that it tells you what actually happens.
+
+They are not one bug. But most of them are one *kind* of bug, and it is worth
+naming: **a piece of information was recomputed somewhere it could not be
+recomputed the same way.** A key derived from a string that was not escaped.
+A name derived from a keyword list that was not injective. An arity derived
+from a type that the emitter had already narrowed. A C spelling derived from an
+option the producer held and the consumer did not. A cached field index derived
+from a declaration that had since been replaced. In each case two sites had to
+agree about something and only one of them knew all of it.
+
+### 115.1 The keys and names that were not injective
+
+**A specialization key with an unescaped string (R1).** A `string` argument
+marked `[@@@monomorphize]` puts its value into the specialization key, and the
+key is text. `combine "a" "b\"#1=\"c"` and `combine "a\"#1=\"b" "c"` therefore
+produced the same key, the second request hit the first one's cache entry, and
+one call got the other's implementation. `key_of_const` escapes the constant
+now. `KeyCollision.fst` prints both, and they have to differ.
+
+**A specialization suffix claimed on one path only (R2).** `spec_suffix`
+prefers a spelling derived from the arguments and falls back to a counter. Only
+the preferred spelling was recorded as taken, so a later request whose preferred
+hint equalled an earlier request's fallback got a name already in use and the
+two specializations collapsed. The rule is now the obvious one: every suffix
+handed out is taken out of circulation, whichever branch produced it.
+`SuffixCollision.fst` is three specializations that must print three lines.
+
+**OCaml keyword escaping that was not injective (R8).** Appending an underscore
+is an escape only if it lands where nothing else does, and `method` and
+`method_` both came out `method_` --- so the second binder captured every use of
+the first, in OCaml that compiles without a warning. The underscores are
+stripped before the keyword test, which shifts the whole family `method`,
+`method_`, `method__` by one and keeps it injective; a name that is not a
+keyword with underscores after it is untouched, which is very nearly all of
+them. `ocaml_var` had the same test written out a second time and now calls the
+one function. `OcamlEscape.fst`.
+
+### 115.2 The two undefined behaviours
+
+Both are in the C backend's operator printer, and neither is visible without a
+sanitizer --- which is why the reporter ran one.
+
+**A short-circuit operand that was evaluated anyway (R4).** `&&` and `||` do not
+evaluate their right operand unless the left one fails to decide, and F\* code
+relies on it: `x <> 0ul && 100ul / x > 5ul`. Every operand position may have its
+statements hoisted ahead of the expression, because every other operand is
+evaluated --- but hoisting *this* one evaluates it unconditionally, and the
+division whose guard was just written runs anyway. The IR is no help: by the
+time it arrives the guard is an `EIf`, and an `EIf` in an operand is exactly
+what `hoist` is for.
+
+The right operand is printed into a buffer of its own. If nothing lands there,
+the plain infix form is correct and is what a reader expects, so nothing changes
+for the programs that did not have the bug. If something does, the operator
+becomes what it always meant:
+
+```c
+bool _csc2 = (x == 0);
+if (!_csc2) {
+  bool _ct1;
+  if (b) _ct1 = ((100 / x) > 5);
+  else _ct1 = false;
+  _csc2 = _ct1;
+}
+return _csc2;
+```
+
+Bitwise `And`/`Or` at a width are a different operator, evaluate both operands,
+and are untouched. `CShortCircuit.fst` asserts by running: the guarded division
+traps if the operand is evaluated.
+
+**Narrow modular arithmetic done at `int` (R5).** `truncate` casts the *result*,
+and at a width narrower than `int` that is too late. Both operands of
+`U16.mul_mod` promote to `int`, the multiplication is a signed one, and
+`65535 * 65535` overflows it; the cast that follows is applied to a value the
+program was never entitled to compute. `widen_operands` casts the operands to
+`unsigned int` first --- which is its own promotion, so the operation is
+unsigned and wrapping is defined --- and the truncation then computes the same
+value modulo 2^w that the F\* operator does. Only the wrapping operators, and
+only where the promoted type would be signed: an unsigned width at or above
+`int`'s is already unsigned, and a signed narrow width cannot overflow `int` at
+all. `UInt16Mul.fst` checks the value, and pins the cast, because a
+non-sanitizing build cannot tell the two versions apart.
+
+### 115.3 The shapes that were expanded in the wrong order
+
+**A refutable pattern behind an `any` split (R3).** A field whose type is `TAny`
+is matched by splitting the branch: the outer pattern drops the field, and an
+inner match on it takes over. That moves a test *inside* a branch that has
+already been chosen, and a test inside a branch has nowhere to fail to --- so a
+value matching the outer pattern but not the inner one fell out of the match
+entirely instead of reaching the branches below.
+
+The fallback is the remaining branches, re-matched on the scrutinee, so the
+scrutinee has to be let-bound; the branch list is walked bottom-up so that a
+branch's fallback is the rest *as compiled*. A branch whose sub-pattern is
+irrefutable keeps the one-branch form, so again nothing changes for the programs
+that did not have the bug. `ETry` passes no fallback: exception fallthrough is
+not this. `SplitAny.fst` states the expected answer as a lemma, so the source
+and the generated code have to agree.
+
+**Inline fields expanded innermost-first (R9).** `O (M (I a b) c) d` was already
+a four-argument, `M`-free pattern by the time the outer constructor's plan ---
+built from `middle`'s two *declared* fields --- was applied to it, and layout
+rejected it as a constructor expecting three fields that had matched four.
+`ctor_plans` splits into `ctor_plan` and `expanded_body`, which returns a
+constructor together with its own post-inlining field list, so the declaration,
+the constructor application and the projection all count the same way.
+`NestedInline.fst`.
+
+**An unfolding that ignored a realization (R10).** A realization is precisely
+the statement that the *name*, not the body, is what the target knows.
+`unfold_cty` unfolded a `Realized` abbreviation anyway, so a field of type
+`FStar.Dyn.dyn` was laid out as whatever the abbreviation expands to and no
+longer agreed with the hand-written code that reads it. It now stops there.
+`RealizedField.fst`.
+
+**A lifted local `let rec` that kept an erased binder (R11).** The caller erases
+and the lifted definition did not, so the two disagreed about arity.
+`LocalErase.fst`.
+
+**An arrow-valued global whose arity was the arrow's (R12).** A parameterless
+definition of arrow type is lowered to a variable of function-pointer type, and
+that pointer --- like every other arrow in the C backend --- drops its `unit`
+parameters. Its recorded arity did not, so `selected a ()`, which supplies every
+argument the source has, looked like a partial application and was refused with
+error 368. The reporter's control is the diagnosis: extracting only `selected`
+gives a perfectly good `bool (*)(bool)`, so the type and the arity taken from it
+already disagreed. `ArrowUnitGlobal.fst`.
+
+### 115.4 The three that cross a boundary
+
+A `.cui` is the only thing two Custard runs share, and each of these is
+something one run knew and did not write down.
+
+**A stale interface (R7).** `uh_digests` was recorded and never read. A `.cui`
+that outlived an edit to its own source linked silently, and the program got the
+old implementation compiled against the new source's assumptions. `read_iface`
+compares them now. Two details matter: the digests have to include the run's own
+command-line sources, which are *not* among the loader's on-demand files --- they
+were type-checked by the ordinary pipeline in that very run, and they are exactly
+the ones an edit is most likely to touch --- and a file that is no longer present
+is not an error, because a unit may legitimately ship without its sources.
+
+**A naming option that did not travel (R13).** A unit built with
+`--custard_c_no_prefix` publishes its names unprefixed and its header declares
+them that way. The consumer recomputed the C spelling of an imported name from
+*its* settings, which have no business mentioning somebody else's module, and
+called a symbol the header does not declare. The producer's module list is
+recorded in the `.cui` and added to the consumer's when imports are named. It is
+deliberately not a `layout_options` entry: it is not a setting the consumer has
+to match, it is a record of how the producer spelled things.
+`NoPrefLib`/`NoPrefApp` is the `SepLibC` shape with the consumer passing no
+naming option at all, which is the point.
+
+**An output filename that outranked the unit name (R14).** An OCaml compilation
+unit is named by the file it is written to, and a consumer qualifies an imported
+name by the unit name in the `.cui`, so `-o out/Other.ml` with
+`--custard_unit NamedUnit` produced `NamedUnit.f` against a module called
+`Other` --- an unbound module in *generated* code, at a place with nothing to say
+about the flag that caused it. Nothing can choose between the two spellings on
+the user's behalf, so it is refused at the producer, naming both and both ways
+out.
+
+### 115.5 The one that was not Custard's, and was
+
+**A projector cache that outlived its declaration (R6).** `disc_proj_info` does
+four uncached `lookup_qname`s and the normalizer consults it on every attempted
+projector reduction; §31 sampled it as a hot spot and added a cache. The comment
+that cache carried said the answer depends only on the name, "and a name is
+never bound to two different declarations in one run". In batch mode that is
+true. In an IDE it is not: `pop` a `type r = { x:int; y:int }` and `push` a
+`type r = { y:int; x:int }`, and the entry recorded for the projector still says
+field 0. `({ x = 1; y = 2 }).x` then computes to `2`, in ordinary F\*
+normalization, with no extraction anywhere in sight --- and to `1` in a fresh
+process given the same declaration.
+
+So this is Custard's bug in a file that is not Custard's, which is the most
+useful thing about it. The fix is to stop having a global: the cache is
+`env.disc_proj_tab` now, alongside `fv_delta_depths` and `strict_args_tab`,
+which are name-keyed caches of exactly this kind and already have the
+machinery. `push_stack` copies it, `rollback` restores the copy, and
+`add_sigelt` flushes the names a new declaration binds --- which for a record
+includes its projectors. Within a module, which is where the speedup was
+measured, the hit rate is unchanged.
+
+### 115.6 What the report was worth
+
+Every finding came with a runnable case, so none of them needed a round trip to
+establish what was actually happening, and the two self-corrections meant the
+two hardest ones arrived already diagnosed. That is the difference between a
+report and a bug list. The eight silent ones in particular are cases no amount
+of staring at generated output would have produced: they compile, they run, and
+they are wrong.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -20089,3 +20293,4 @@ making once rather than leaving to every consumer.
 | M10ιΛ | A vacuous absence, and the flag behind it | The §110 test passed against a §108 compiler: under `--custard_monomorphize_types` the type never reaches the layout table, so the name it pins the absence of was never at risk. Split into `NewtypeDead.fst` without the flag, and confirmed failing under §108. A `CNOGREP` defending a rule must be run against the behaviour it catches. §110.4 |
 | M10ιΜ | The shape of a tagged union | A constructor carrying one field is the union member itself rather than an anonymous struct around it, which is the shape of `option` and of 53 of 74 tagged unions in one generated EverParse header. karamel's further hoist of a sole payload to top level is declined: it makes one arm's access path depend on whether another arm exists. §113 |
 | M10ιΝ | A union member a consumer can spell | The member carried the monomorphizer's specialization suffix, which warning 377 says not to depend on while offering an escape -- `typedef` -- that exists for types and not for members. The member is scoped by its union, whose arms are distinct by construction, so it is now the bare constructor name. §114 |
+| M10ιΞ | Fourteen findings of a validation report | All fourteen fixed. Three keys or names that were not injective (an unescaped string in a specialization key, a suffix claimed on one branch only, OCaml keyword escaping that mapped `method` and `method_` together); two undefined behaviours the C backend emitted and no non-sanitizing build can see (a short-circuit operand hoisted out of the branch that guards it, and narrow modular arithmetic done at signed `int`); five shapes expanded in an order that made two sites disagree (a refutable pattern behind an `any` split losing its fallthrough, inline fields expanded innermost-first, an unfolding that ignored a realization, a lifted local `let rec` keeping an erased binder, an arrow-valued global whose arity was the arrow's rather than the emitted pointer's); three things a `.cui` did not carry across the boundary (digests recorded and never validated, a `--custard_c_no_prefix` the consumer could not know, and an `-o` filename that outranked `--custard_unit`); and one that was Custard's bug in a file that is not Custard's --- a global projector-index cache added for extraction performance that an IDE `pop`/`push` makes stale, so that reordering a record's fields silently changes which field a projection selects, in ordinary F\* normalization. It moves into `env` beside the two name-keyed caches that already do this. Eleven regression tests. §115 |
