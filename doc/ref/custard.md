@@ -19578,26 +19578,49 @@ would be admitted vacuously, and `base_ty` rejects both -- the one case where
 root already and are already live, so it does not reach them. Only §108's
 addition is governed by liveness.
 
-### 110.4. The test
+### 110.4. The test, and the flag that made the first one vacuous
 
-`tests/custard/Newtype.fst` carries both directions. The positive ones are
-§108's, unchanged. The negative one is COSE's shape reduced: a type laid out
-because a monomorphization key demands it and emitted nowhere because every
-position holding one is erased.
+The negative direction is in `tests/custard/NewtypeDead.fst`, which is COSE's
+shape reduced: a type laid out because a monomorphization key demands it and
+emitted nowhere because the one position holding a value of it is erased.
 
 ```fstar
 type spect = { st : list U32.t }
-let keyed (#t : Type0) (g : FStar.Ghost.erased t) (x : U32.t) : U32.t = x
+let keyed (#t : Type0) (g : G.erased t) (x : U32.t) : U32.t = x
 ```
 
-Instantiating `keyed` at `spect` is what puts `spect` in the layout table;
-the erasure is what keeps it out of the output. The reduction took some
-finding -- the report documented eleven attempts that failed, all for the
-same reason, that a type wholly unreferenced never reaches layout while every
-ordinary ghost position erases it outright. An implicit type index is the
-position that does both: monomorphization must know the type, and nothing
-holds a value of it. Under §108 this module fails with the same error 368 as
-COSE; the test pins the absence of `Newtype_spect` in the output.
+Instantiating `keyed` at `spect` is what puts `spect` in the layout table --
+the instantiation of an implicit type index has to be known before the clone
+can be named -- and the erasure is what keeps it out of the output. Under
+§108 the module fails with COSE's diagnostic verbatim, `Prims.list` having no
+C representation, reached through a type appearing nowhere in the program.
+
+The reduction took some finding. A type nothing refers to never reaches
+layout; every ordinary ghost position -- an erased field, an erased argument
+of a concrete type, a `GTot` function, a refinement -- erases the type
+outright, so nothing asks for its layout either. An implicit type index is
+the position that does both at once.
+
+**It is in its own module because `--custard_monomorphize_types` makes the
+case vacuous.** The first version of this test was written into
+`Newtype.fst`, which runs with type monomorphization on for the sake of
+§108's `phantom` case, and it passed against a §108 compiler. With type
+monomorphization on, `spect` is not merely unemitted, it does not reach the
+layout table at all, so the collapse is never computed for it and there is no
+abbreviation to root. The assertion held for a reason having nothing to do
+with the bug.
+
+That is worth stating as a general hazard rather than a one-off. A test that
+pins the *absence* of a name passes both when the fix works and when the
+input never got far enough to be at risk, and the two are indistinguishable
+from the output. The only way to tell them apart is to run the case against
+the compiler it was written to catch, which is now the standing requirement
+for any `CNOGREP` pin defending a rule: build the prior behaviour, confirm
+the test fails, and say in the section that it was confirmed.
+
+`Newtype.fst` keeps §108's positive cases unchanged, and `NewtypeDead.fst`
+carries a live one-field record of its own so that both directions are
+exercised under the flags that make the negative one real.
 
 | M | Deliverable | Notes |
 | --- | --- | --- |
@@ -19933,3 +19956,4 @@ COSE; the test pins the absence of `Newtype_spect` in the output.
 | M10ιΘ | A collapsed newtype is an unfolding too (§108) | Done.  Custard over EverParse's **CBOR** corpus, four independent legs, and the declaration sets match karamel's exactly --- the two C legs name for name, and the Rust legs by exactly ten functions per crate, all of them `uu___is_`-prefixed discriminators for one inductive that no consumer uses and that neither backend emits on the C side, so the difference is karamel leaking F\* internal names into a published Rust API rather than a gap here.  Every consumer passes with no source changes: 363/363 round-trip tests against det and again against nondet, 29 and 1 cargo tests, and --- checked because it was not believed --- two *karamel-driven* verification tests that generate their own re-declaration of the same 46 functions and link against Custard's object file, so the two backends' output is header- and link-compatible at that scale and not merely each correct.  One bug, and small: a one-field record whose collapse is §5.2 leaves no abbreviation behind.  §70.1 roots a type *abbreviation* in an entry module because Custard unfolds one and nothing then refers to the name; inductives were excluded for having a definition that cannot be unfolded away, which is true of every inductive but this one.  The collapse **is** an unfolding, and it leaves the declaration in exactly the position an abbreviation's was, so `dce` removes it --- the whole divergence from karamel being one `typedef`, every signature byte-identical.  The name is the interface: `cbor_det_array` is a newtype over a refinement, EverParse's hand-written Rust wrapper names it, and without it `cargo build` stops with E0425 four times.  Same answer, same place, one root; the machinery `collapsed_abbrev` needed was already written.  Narrowly on purpose --- rooting every inductive in an entry module would emit types nothing uses and could turn a working extraction into a *rejection*, a type no live signature mentions never having been asked whether C can represent it, while a collapsed one has been asked and its payload is representable by construction.  `Newtype` pins the plain form, the refinement-carrying form that is the reported one, and a payload that is itself a record, with an unreached two-field record as the guard |
 | M10ιΙ | A rule an abbreviation hides (§109) | Done.  The full TLS rerun clears all 430 struct-equality errors of §107 and the explicit nested-array shape of §106, and keeps all 17 incompatible tuple arguments --- because an abbreviation names the rule at *neither* endpoint of the reduction.  `type pack a = option (array a)` mentions no `array` as written and none after reducing either: the rule is introduced by unfolding `pack` and erased by unfolding `array` inside the one normalization, so §106's before/after comparison sees nothing on either side, both keys come out `option array'`, and one `fst` serves two incompatible tuple types.  The reporter's control is the diagnosis --- spelling `option (array element)` out makes the rule visible at the first endpoint, which is the only difference between the two --- and he tied it to the real shape, EverParse's `vclist_lowtype = option (SZ.t & vec el)`, without claiming it accounts for all seventeen.  So the walk unfolds as it goes and stops where a rule is: record and descend at a rule-carrying head, unfold and re-walk at any other name, fall through to the arguments when an fvar does not unfold, which is every inductive.  `UnfoldOnly [l]` one name at a time, as §88 does, so a chain of abbreviations reaches the case again for the next name --- what the fuel is for --- and a refinement is walked through to its subject, `(a: array t { live a })` being an array.  The form reached is the one the control writes by hand, so nothing downstream changed.  One bounded cost, named rather than hidden: the key is still the argument as written, §93's choice, so a program spelling the same type both ways gets two identical specializations; consistent use of the abbreviation, which is the point of having one, pays nothing.  `TupAlias` is the reported module with the control kept and a two-deep chain added.  In-tree Pulse suite 30.6 s, unchanged with the test added |
 | M10ιΚ | A name for a type the program does not emit | §108 rooted a collapsed newtype on the argument that the collapse had proved its payload representable; it had only computed its layout, and COSE's `spect_tstr` collapses to a `Prims.list` that C cannot hold. The root moves to `dce` and is granted only when every type the payload names is already live, so the abbreviation introduces nothing and can fail in no new way. §110 |
+| M10ιΛ | A vacuous absence, and the flag behind it | The §110 test passed against a §108 compiler: under `--custard_monomorphize_types` the type never reaches the layout table, so the name it pins the absence of was never at risk. Split into `NewtypeDead.fst` without the flag, and confirmed failing under §108. A `CNOGREP` defending a rule must be run against the behaviour it catches. §110.4 |

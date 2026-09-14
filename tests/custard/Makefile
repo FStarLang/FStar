@@ -1605,7 +1605,11 @@ CGREP_Newtype += "typedef Newtype_point Newtype_boxed;"
 CGREP_Newtype += "typedef uint32_t Newtype_phantom__bool;"
 # Rooting is for the collapsed case only.
 CNOGREP_Newtype += "Newtype_unused"
-CNOGREP_Newtype += "Newtype_spect"
+
+C_TESTS += NewtypeDead
+FLAGS_NewtypeDead = --custard_entry_module NewtypeDead
+CGREP_NewtypeDead += "typedef uint64_t NewtypeDead_live;"
+CNOGREP_NewtypeDead += "NewtypeDead_spect"
 
 # Section 70.2.  An external type whose F* values are handles: a binding of
 # one has to alias, or a write through it is lost.  Kuiper's section 62 --
