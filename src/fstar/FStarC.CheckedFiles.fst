@@ -38,7 +38,7 @@ let debug (f:unit -> ML unit) : ML unit = if !dbg then f () else ()
  * We write this version number to the cache files, and
  * detect when loading the cache that the version number is same
  *)
-let cache_version_number = 97
+let cache_version_number = 98
 
 (*
  * Abbreviation for what we store in the checked files (stages as described below)
@@ -63,6 +63,7 @@ type tc_result_stored =
 {
   stored_checked_module: Syntax.modul;
   stored_mii: DsEnv.module_inclusion_info;
+  stored_has_interface: bool;
   stored_smt_index: list FStarC.SMTEncoding.Pruning.elt_summary;
   stored_smt_fvbs: list FStarC.SMTEncoding.Env.fvar_binding
 }
@@ -274,19 +275,27 @@ let smt_decls_thunk (checked_fn:string) : ML (unit -> ML decls_t) =
 let tc_result_of_stored (checked_fn:string) (s:tc_result_stored) : ML tc_result =
   { checked_module = s.stored_checked_module;
     mii = s.stored_mii;
+    has_interface = s.stored_has_interface;
     smt_encoding = { me_index = s.stored_smt_index;
                      me_fvbs = s.stored_smt_fvbs;
                      me_decls = smt_decls_thunk checked_fn };
     tc_time = 0;
     extraction_time = 0 }
 
-let load_tc_result (checked_fn:string) : ML (option (list (string & string) & tc_result)) =
+let load_tc_result_with_digest (checked_fn:string)
+  : ML (option (string & list (string & string) & tc_result))
+  =
   let entry : option (string & checked_file_entry_stage1 & checked_file_entry_stage2) =
     BU.load_2values_from_file3 checked_fn
   in
   match entry with
-  | Some ((_,_,s2)) -> Some (s2.deps_dig, tc_result_of_stored checked_fn s2.tc_res)
+  | Some ((_, s1, s2)) when s1.version = cache_version_number ->
+    Some (s1.digest, s2.deps_dig, tc_result_of_stored checked_fn s2.tc_res)
   | _ -> None
+
+let load_tc_result (checked_fn:string) : ML (option (list (string & string) & tc_result)) =
+  load_tc_result_with_digest checked_fn
+  |> Option.map (fun (_, deps, tcr) -> deps, tcr)
 
 (*
  * Second step for loading checked files, validates the tc data
@@ -611,6 +620,7 @@ let store_module_to_cache env fn parsing_data_and_direct_deps tc_result : ML uni
       let stage1 = {version=cache_version_number; digest=(BU.digest_of_file fn); parsing_data=parsing_data} in
       let stored = {stored_checked_module=tc_result.checked_module;
                     stored_mii=tc_result.mii;
+                    stored_has_interface=tc_result.has_interface;
                     stored_smt_index=tc_result.smt_encoding.me_index;
                     stored_smt_fvbs=tc_result.smt_encoding.me_fvbs} in
       let stage2 = {deps_dig=hashes; tc_res=stored} in

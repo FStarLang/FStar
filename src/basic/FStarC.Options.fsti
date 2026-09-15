@@ -338,6 +338,7 @@ val query_cache                 : unit    -> ML bool
 
 val query_stats                 : unit    -> ML bool
 
+val export_docs                 : unit    -> ML (option string)
 val read_checked_file           : unit    -> ML (option string)
 
 val list_plugins                : unit    -> ML bool
