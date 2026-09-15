@@ -292,27 +292,36 @@ let inspect_comp (c : comp) : ML comp_view =
         | _ -> failwith "Impossible!"
     in
     match c.n with
-    | Total t -> C_Total t
-    | GTotal t -> C_GTotal t
-    | Comp ct -> begin
-        let uopt =
-          if List.length ct.comp_univs = 0
-          then U_unknown
-          else ct.comp_univs |> List.hd in
-        if Ident.lid_equals ct.effect_name PC.effect_Lemma_lid then
+    (* [Lemma] is an abbreviation of [Tot], so [effect_name] is [Tot] here; the
+       view is keyed off the name the user *wrote*, and this case must come
+       before the [Tot] case below. *)
+    | Comp ct when Ident.lid_equals ct.source_effect_name PC.effect_Lemma_lid ->
             let pats =
               match U.comp_smt_pats (S.mk_Comp ct) with
               | Some p -> p
               | None -> U.mk_list (S.fvar_with_dd PC.pattern_lid None) Range.dummyRange [] in
-            C_Lemma (ct.comp_pre, ct.comp_post, pats)
-        else
-            C_Eff (ct.comp_univs,
-                   Ident.path_of_lid ct.effect_name,
-                   ct.result_typ,
-                   ct.comp_pre,
-                   ct.comp_post,
-                   get_dec ct.flags)
-      end
+            (* A computation type carries no *precondition* any more: that is
+               an implicit [squash] binder on the arrow, out of reach here, so
+               the view reports [True].  The postcondition, on the other hand,
+               is a refinement of the result type and can be recovered. *)
+            C_Lemma (S.trivial_pre, U.post_of_result_typ ct.result_typ, pats)
+    | Comp ct when PC.is_tot_lid ct.effect_name
+                && not (ct.flags |> BU.for_some (function DECREASES _ -> true | _ -> false)) ->
+      C_Total ct.result_typ
+    | Comp ct when PC.is_gtot_lid ct.effect_name
+                && not (ct.flags |> BU.for_some (function DECREASES _ -> true | _ -> false)) ->
+      C_GTotal ct.result_typ
+    | Comp ct ->
+      (* A [comp_typ] no longer caches the effect's universe -- it is just that
+         of the result type -- and [inspect_comp] has no environment to recover
+         it with, so the view reports [].  This is why [inspect_pack_comp_inv]
+         requires [Nil? us]. *)
+      C_Eff ([],
+             Ident.path_of_lid ct.effect_name,
+             ct.result_typ,
+             S.trivial_pre,
+             U.post_of_result_typ ct.result_typ,
+             get_dec ct.flags)
 
 let pack_comp (cv : comp_view) : ML comp =
     let urefl_to_univs u =
@@ -326,26 +335,26 @@ let pack_comp (cv : comp_view) : ML comp =
     match cv with
     | C_Total t -> mk_Total t
     | C_GTotal t -> mk_GTotal t
-    | C_Lemma (pre, post, pats) ->
-        let ct = { comp_univs  = []
-                 ; effect_name = PC.effect_Lemma_lid
-                 ; result_typ  = S.t_unit
-                 ; comp_pre    = pre
-                 ; comp_post   = post
-                 ; flags       = [LEMMA; SMTPAT pats] } in
+    (* A computation type has no room for a precondition, so [pre] is dropped;
+       the postcondition becomes a refinement of the result type. *)
+    | C_Lemma (_pre, post, pats) ->
+        let ct = { effect_name = PC.primitive_pure_lid
+                 ; result_typ  = U.refine_with_post S.t_unit post
+                 ; flags       = [SMTPAT pats]
+                 ; source_effect_name = PC.effect_Lemma_lid } in
         S.mk_Comp ct
 
-    | C_Eff (us, ef, res, pre, post, decrs) ->
+    (* [us] is dropped: a [comp_typ] has no universe list. *)
+    | C_Eff (_us, ef, res, _pre, _post, decrs) ->
         let flags =
           if Nil? decrs
           then []
           else [DECREASES (Decreases_lex decrs)] in
-        let ct = { comp_univs  = us
-                 ; effect_name = Ident.lid_of_path ef Range.dummyRange
+        let eff = Ident.lid_of_path ef Range.dummyRange in
+        let ct = { effect_name = eff
                  ; result_typ  = res
-                 ; comp_pre    = pre
-                 ; comp_post   = post
-                 ; flags       = flags } in
+                 ; flags       = flags
+                 ; source_effect_name = eff } in
         S.mk_Comp ct
 
 let pack_const (c:vconst) : ML sconst =

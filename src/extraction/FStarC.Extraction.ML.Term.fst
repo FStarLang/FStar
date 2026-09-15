@@ -105,26 +105,16 @@ let err_cannot_extract_effect (l:lident) (r:Range.t) (reason:string) (ctxt:strin
   ]
 
 let get_extraction_mode env (m:Ident.lident) =
-  let norm_m = Env.norm_eff_name env m in
-  (Env.get_effect_decl env norm_m).extraction_mode
+  (Env.get_effect_decl env m).extraction_mode
 
 (***********************************************************************)
 (* Translating an effect lid to an e_tag = {E_PURE, E_ERASABLE, E_IMPURE} *)
 (***********************************************************************)
+(* [l] is always a root effect name: effect abbreviations are resolved away by
+   the desugarer, so there is nothing to normalize here. *)
 let effect_as_etag =
-    let cache = SMap.create 20 in
-    let rec delta_norm_eff g (l:lident) : ML lident =
-        match SMap.try_find cache (string_of_lid l) with
-            | Some l -> l
-            | None ->
-                let res = match TypeChecker.Env.lookup_effect_abbrev (tcenv_of_uenv g) [S.U_zero] l with
-                | None -> l
-                | Some (_, c) -> delta_norm_eff g (U.comp_effect_name c) in
-                SMap.add cache (string_of_lid l) res;
-                res in
     fun g l ->
-    let l = delta_norm_eff g l in
-    if lid_equals l PC.effect_PURE_lid
+    if U.is_pure_effect l
     then E_PURE
     else if TcEnv.is_erasable_effect (tcenv_of_uenv g) l
     then E_ERASABLE
@@ -301,6 +291,73 @@ let is_type env t =
     b
 
 let is_type_binder env x = is_arity env x.binder_bv.sort
+
+(* A precondition is desugared into a trailing implicit binder of type
+   [squash P] (see ToSyntax.desugar_term, the [Product] case).  Such a binder
+   is pure specification: it carries no computational content, and keeping it
+   would change the ABI of every function with a [requires] clause.  So we
+   drop it entirely -- both the binder (in [binders_as_ml_binders]) and the
+   corresponding argument (in the [Tm_app] case of [term_as_mlexpr']).  The
+   two must stay in agreement. *)
+let is_spec_binder (b:binder) : ML bool =
+    S.is_bqual_implicit b.binder_qual &&
+    (let hd, _ = U.head_and_args_full (U.unmeta b.binder_bv.sort) in
+     match (SS.compress (U.un_uinst hd)).n with
+     | Tm_fvar fv -> S.fv_eq_lid fv PC.squash_lid
+     | _ -> false)
+
+(* Drop the arguments of [args] that correspond to a spec binder in the type
+   of [head]. If we cannot determine the type of the head, we leave the
+   arguments alone; a head with a spec binder whose type we cannot see is
+   only reachable through a local higher-order binding, which extraction
+   would already have had to type. *)
+let drop_spec_args (env:UEnv.uenv) (head:term) (args0:args) : ML args =
+    let head_typ =
+      match (SS.compress (U.un_uinst head)).n with
+      | Tm_fvar fv ->
+        (match TypeChecker.Env.try_lookup_lid (tcenv_of_uenv env) (S.lid_of_fv fv) with
+         | Some ((_, t), _) -> Some t
+         | None -> None)
+      | Tm_name bv -> Some bv.sort
+      | _ -> None
+    in
+    match head_typ with
+    | None -> args0
+    | Some t ->
+      (* The head's type may be a type abbreviation -- Pulse's [bind_t], say,
+         or a named arrow type whose *result* is another abbreviation -- in
+         which case not all of the binders that the arguments correspond to
+         are visible at once. Unfold as far as needed, but only as far as
+         needed, so the common case stays cheap.
+         [AllowUnboundUniverses] and [EraseUniverses]: the looked-up type may
+         not be universe-instantiated, and we are only counting binders, so
+         unfolding a universe-polymorphic abbreviation in it must not depend on
+         the missing instantiation. *)
+      let unfold_steps = [Env.AllowUnboundUniverses; Env.EraseUniverses] in
+      let n_args = List.length args0 in
+      let rec formals_of (fuel:int) (t:typ) : ML binders =
+        let formals, c = U.arrow_formals_comp t in
+        let n = List.length formals in
+        if n >= n_args || fuel <= 0 || not (U.is_total_comp c) then formals
+        else
+          let res = U.comp_result c in
+          let res' = N.unfold_whnf' unfold_steps (tcenv_of_uenv env) res in
+          if U.term_eq res res' then formals
+          else formals @ formals_of (fuel - 1) res'
+      in
+      let formals = formals_of 10 t in
+      if not (formals |> List.existsb is_spec_binder) then args0
+      else
+        let rec aux formals (acc:args) : ML args =
+          match formals, acc with
+          | [], _ -> acc
+          | _, [] -> []
+          | f::formals, a::rest ->
+            if is_spec_binder f
+            then aux formals rest
+            else a :: aux formals rest
+        in
+        aux formals args0
 
 let is_constructor t = match (SS.compress t).n with
     | Tm_fvar ({fv_qual=Some Data_ctor})
@@ -826,7 +883,12 @@ let rec translate_term_to_mlty' (g:uenv) (t0:term) : ML mlty =
 
 and binders_as_ml_binders (g:uenv) (bs:binders) : ML (list (mlident & mlty) & uenv) =
     let ml_bs, env = bs |> List.fold_left (fun (ml_bs, env) b ->
-            if is_type_binder g b
+            if is_spec_binder b
+            then //a precondition proof: no computational content, drop it
+                 let b = b.binder_bv in
+                 let env, _, _ = extend_bv env b ([], ml_unit_ty) false true in
+                 ml_bs, env
+            else if is_type_binder g b
             then //no first-class polymorphism; so type-binders get wiped out
                  let b = b.binder_bv in
                  let env = extend_ty env b true in
@@ -1503,8 +1565,19 @@ and term_as_mlexpr'
           begin match t.n with
             | Tm_let {lbs=(false, [lb]); body} when Inl? lb.lbname ->
               let tcenv = tcenv_of_uenv g in
-              let m = TypeChecker.Env.norm_eff_name tcenv m in
-              let ed, qualifiers = Option.must (TypeChecker.Env.effect_decl_opt tcenv m) in
+              (* [m] is a root effect name -- abbreviations are resolved by the
+                 desugarer -- so it must be declared.  Syntax built by hand
+                 rather than desugared can get this wrong, hence the message. *)
+              let ed, qualifiers =
+                match TypeChecker.Env.effect_decl_opt tcenv m with
+                | Some ed_quals -> ed_quals
+                | None ->
+                  failwith
+                    (Format.fmt1
+                       "Extraction: no declaration found for effect %s \
+                        (is it an abbreviation?)"
+                       (string_of_lid m))
+              in
               if TcUtil.effect_extraction_mode tcenv ed.mname = S.Extract_primitive
               then term_as_mlexpr g t
               else
@@ -1535,7 +1608,9 @@ and term_as_mlexpr'
              (* Should we check if hd here is [__][u]int_to_t? *)
             | Tm_app _ ->
               (match U.head_and_args_full t with
-               | _, [x, _] ->
+               (* Trailing implicit arguments may be present: [FStar.SizeT.uint_to_t]
+                  has a [fits] precondition, hence a proof argument. *)
+               | _, (x, _) :: _ ->
                  let x = SS.compress x in
                  let x = U.unascribe x in
                  (match x.n with
@@ -1613,6 +1688,9 @@ and term_as_mlexpr'
         | Tm_abs {b;body;rc_opt=rcopt} (* the annotated computation type of the body *) ->
           let bs, body = SS.open_term [b] body in
           let ml_bs, env = binders_as_ml_binders g bs in
+          (* a spec binder is dropped by [binders_as_ml_binders]; keep [bs] in
+             step with [ml_bs] before zipping them *)
+          let bs = bs |> List.filter (fun b -> not (is_spec_binder b)) in
           let ml_bs = List.map2 (fun (x,t) b -> {
             mlbinder_name=x;
             mlbinder_ty=t;
@@ -1624,6 +1702,9 @@ and term_as_mlexpr'
               maybe_reify_term (tcenv_of_uenv env) body rc.residual_effect
             | None -> debug g (fun () -> Format.print1 "No computation type for: %s\n" (show body)); body in
           let ml_body, f, t = term_as_mlexpr env body in
+          if Nil? ml_bs
+          then ml_body, f, t //all binders were dropped; the abstraction disappears
+          else
           let f, tfun = List.fold_right
             (fun {mlbinder_ty=targ} (f, t) -> E_PURE, MLTY_Fun (targ, f, t))
             ml_bs (f, t) in
@@ -1633,9 +1714,13 @@ and term_as_mlexpr'
            dispatch on the whole application instead of a single Tm_app node. *)
         | Tm_app _ ->
           let head, args = U.head_and_args_full t in
+          let args = drop_spec_args g head args in
+          if Nil? args then term_as_mlexpr g head else
           let is_total rc =
-              Ident.lid_equals rc.residual_effect PC.effect_Tot_lid
-              || rc.residual_flags |> List.existsb (function TOTAL -> true | _ -> false)
+              (* A [residual_comp] carries no specification, so this must test
+                 the spec-free spellings [Tot]/[GTot] rather than the whole
+                 pure/ghost class. *)
+              PC.is_tot_or_gtot_lid rc.residual_effect
           in
           begin match head.n, args with
           (* Extract `range_of x` to a literal range. *)

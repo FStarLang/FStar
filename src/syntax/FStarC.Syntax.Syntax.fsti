@@ -277,26 +277,30 @@ and quoteinfo = {
 
 *************************************************************************)
 }
-(* A computation type is nothing more than an effect name together with a
-   precondition and a postcondition. There are no weakest-precondition
-   transformers, and no effect indices.
-
-   [comp_pre] is a [prop].
-   [comp_post] is abstracted over the result: it has type [result_typ -> prop],
-   i.e. it is a [Tm_abs] with a single binder. Use [U.comp_post_as_formula] to
-   apply it to a concrete result. *)
+(* A computation type is nothing more than an effect name, a result type and
+   some flags.  It carries no logical content: a precondition is an implicit
+   [squash] binder on the arrow, and a postcondition is a refinement of the
+   result type.  There are no weakest-precondition transformers, and no effect
+   indices. *)
 and comp_typ = {
-  comp_univs:universes;
   effect_name:lident;
   result_typ:typ;
-  comp_pre:typ;
-  comp_post:typ;
-  flags:list cflag
+  flags:list cflag;
+  (* The effect name as it was *written*.  An effect abbreviation is a bare
+     alias of one effect name for another ([effect Lemma = Tot]), and the
+     desugarer resolves it away: [effect_name] is always the *root* effect, so
+     the typechecker never has to unfold anything.  The name the user wrote is
+     kept here so that error messages, IDE hovers, [Syntax.Resugar] and
+     [Reflection.V2.Builtins.inspect_comp] can still say [Lemma], [Tac] or [St]
+     rather than [Tot], [TAC] and [STATE].
+
+     It is presentation only -- no typing rule may consult it -- except that
+     [inspect_comp] reports [C_Lemma] exactly when it is [Lemma].  It equals
+     [effect_name] whenever no abbreviation was used. *)
+  source_effect_name:lident
 }
 and comp' =
-  | Total  of typ
-  | GTotal of typ
-  | Comp   of comp_typ
+  | Comp of comp_typ
 and term = syntax term'
 and typ = term                                                   (* sometimes we use typ to emphasize that a term is a type *)
 and pat = withinfo_t pat'
@@ -314,9 +318,6 @@ and decreases_order =
   | Decreases_lex of list term  (* a decreases clause may either specify a lexicographic ordered list of terms, *)
   | Decreases_wf of term & term  (* or a well-founded relation and a term *)
 and cflag =                                                      (* flags applicable to computation types, usually for optimizations *)
-  | TOTAL                                                          (* computation has no real effect, can be reduced safely *)
-  | MLEFFECT                                                       (* the effect is ML    (Parser.Const.effect_ML_lid) *)
-  | LEMMA                                                          (* the effect is Lemma (Parser.Const.effect_Lemma_lid) *)
   | SMTPAT of term                                                 (* the SMT patterns of a Lemma, as a list literal. Used
                                                                       to be the third effect argument of the Lemma comp. *)
   | DECREASES of decreases_order
@@ -531,19 +532,29 @@ instance val tagged_eff_extraction_mode : tagged eff_extraction_mode
 (*
  * The monadic representation of an effect.
  *
- * These combinators play *no role in typechecking*: the meaning of a
- * computation type is fixed by the generic pre/postcondition rules.  They
- * only give the effect an executable meaning, which is what reification
- * (and hence extraction and the tactic engine) needs.
+ * The combinators give the effect an executable meaning, which is what
+ * reification (and hence extraction and the tactic engine) needs.  They do
+ * not otherwise enter typechecking: the meaning of a computation type is
+ * fixed by the generic pre/postcondition rules.
  *
  *   repr   : a:Type u#a -> Type u#b
  *   return : a:Type u#a -> x:a -> repr a
  *   bind   : a:Type u#a -> b:Type u#b -> repr a -> (a -> repr b) -> repr b
+ *
+ * The one exception is [repr_universe]: for a *total* effect, [M t] is
+ * inhabited by [repr t], so it is [repr] that decides which universe [M t]
+ * lives in.  See [FStarC.TypeChecker.Env.effect_universe].
  *)
 type eff_combinators = {
   repr        : tscheme;
   return_repr : tscheme;
   bind_repr   : tscheme;
+
+  (* [u_a]. Type u#r  where  [repr u#u_a a : Type u#r] --- i.e. the universe
+     of the representation as a function of the universe of the result type,
+     packaged as a universe-polymorphic type so that [inst_tscheme_with] can
+     apply it.  Filled in by [TcEffect.tc_eff_decl]; [Tm_unknown] until then. *)
+  repr_universe : tscheme;
 }
 
 (*
@@ -561,9 +572,6 @@ type eff_decl = {
   mname           : lident;
 
   cattributes     : list cflag;
-
-  univs           : univ_names;
-  binders         : binders;
 
   combinators     : option eff_combinators;
 
@@ -660,12 +668,15 @@ type sigelt' =
     }
   | Sig_new_effect      of eff_decl
   | Sig_sub_effect      of sub_eff
+  (* [effect M = N]: an effect abbreviation is a bare alias of one effect name
+     for another, and nothing more.  The desugarer resolves it away, so the
+     typechecker does nothing with this node; it exists only so that a module
+     reading this one from a [.checked] file can rebuild its [DsEnv] and know
+     that [lid] names an effect.  [root] is already fully resolved: a chain of
+     abbreviations is flattened when the node is built. *)
   | Sig_effect_abbrev   {
       lid:lident;
-      us:univ_names;
-      bs:binders;
-      comp:comp;
-      cflags:list cflag;
+      root:lident;
     }
   | Sig_pragma          of pragma
   | Sig_splice          {
@@ -740,9 +751,9 @@ val mk_Tm_uinst:    term -> universes -> ML term
 val extend_app_n:   term -> args -> range -> ML term
 val extend_app:     term -> arg -> range -> ML term
 val mk_Tm_delayed:  (term & subst_ts) -> range -> ML term
+val mk_Comp:        comp_typ -> ML comp
 val mk_Total:       typ -> ML comp
 val mk_GTotal:      typ -> ML comp
-val mk_Comp:        comp_typ -> ML comp
 
 val order_bv:        bv -> bv -> int
 val bv_eq:           bv -> bv -> bool
@@ -812,8 +823,6 @@ val trivial_pre :   term
 val post_rc :       residual_comp
 (* [fun (_:t) -> True], the trivial postcondition at result type [t] *)
 val trivial_post :  typ -> ML term
-(* A computation with a trivial specification: [mk_triv_comp us eff t flags] *)
-val mk_triv_comp :  universes -> lident -> typ -> list cflag -> ML comp
 val mk_Tac :        typ -> ML comp
 val fv_eq            : fv -> fv -> bool
 val fv_eq_lid        : fv -> lident -> bool

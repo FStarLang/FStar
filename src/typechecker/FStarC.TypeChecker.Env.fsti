@@ -140,14 +140,13 @@ and env = {
   modules        :list modul;                  (* already fully type checked modules *)
   expected_typ   :option (typ & bool);         (* type expected by the context *)
                                                 (* a true bool will check for type equality (else subtyping) *)
-  expected_post  :option typ;                   (* postcondition expected by the context, an abstraction over
-                                                   the expected type. See set_expected_typ_and_post. *)
   sigtab         :SMap.t sigelt;              (* a dictionary of long-names to sigelts *)
   attrtab        :SMap.t (list sigelt);        (* a dictionary of attribute( name)s to sigelts, mostly in support of typeclasses *)
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
   effects        :effects;                      (* monad lattice *)
   generalize     :bool;                         (* should we generalize let bindings? *)
   letrecs        :list (lbname & int & typ & univ_names);  (* mutually recursive names, with recursion arity and their types (for termination checking), adding universes, see the note in TcTerm.fs:build_let_rec_env about usage of this field *)
+  rec_names      :list bv;                      (* names bound by a [let rec] whose body is being checked; they go out of scope with the [let rec], so no type may mention one *)
   top_level      :bool;                         (* is this a top-level term? if so, then discharge guards *)
   check_uvars    :bool;                         (* paranoid: re-typecheck unification variables *)
   use_eq_strict  :bool;                         (* this flag runs the typechecker in non-subtyping mode *)
@@ -161,7 +160,7 @@ and env = {
   intactics      :bool;                         (* we are currently running a tactic *)
   nocoerce       :bool;                         (* do not apply any coercions *)
 
-  tc_term :env -> term -> ML (term & lcomp & guard_t); (* typechecker callback; G |- e : C <== g *)
+  tc_term :env -> term -> ML (term & comp & guard_t); (* typechecker callback; G |- e : C <== g *)
   typeof_tot_or_gtot_term :env -> term -> must_tot -> ML (term & typ & guard_t); (* typechecker callback; G |- e : (G)Tot t <== g *)
   universe_of :env -> term -> ML universe; (* typechecker callback; G |- e : Tot (Type u) *)
   typeof_well_typed_tot_or_gtot_term :env -> term -> must_tot -> ML (typ & guard_t); (* typechecker callback, uses fast path, with a fallback on the slow path *)
@@ -170,7 +169,6 @@ and env = {
   qtbl_name_and_index: option (lident & typ & int) & SMap.t int;
      (* ^ the top-level term we're currently processing, its type, and the query counter for it,
        in addition we maintain a counter for query index per lid *)
-  normalized_eff_names:SMap.t lident;           (* cache for normalized effect name, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
   fv_delta_depths:SMap.t delta_depth;           (* cache for fv delta depths, its preferable to use Env.delta_depth_of_fv, soon fv.delta_depth should be removed *)
   proof_ns       :proof_namespace;                (* the current names that will be encoded to SMT (a.k.a. hint db) *)
   synth_hook          :env -> typ -> term -> Range.t -> ML term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
@@ -320,7 +318,7 @@ type qninfo = option ((either (universes & typ) (sigelt & option universes)) & R
 val should_verify   : env -> ML (bool)
 
 val initial_env : FStarC.Parser.Dep.deps ->
-                  (env -> term -> ML (term & lcomp & guard_t)) ->
+                  (env -> term -> ML (term & comp & guard_t)) ->
                   (env -> term -> must_tot -> ML (term & typ & guard_t)) ->
                   (env -> term -> must_tot -> ML (option typ)) ->
                   (env -> term -> ML universe) ->
@@ -478,10 +476,6 @@ val try_lookup_effect_lid  : env -> lident -> ML (option term)
 
 val lookup_effect_lid      : env -> lident -> ML (term)
 
-val lookup_effect_abbrev   : env -> universes -> lident -> ML (option (binders & comp))
-
-val norm_eff_name          : (env -> lident -> ML (lident))
-
 val is_erasable_effect     : env -> lident -> ML (bool)
 
 (* [is_reifiable_* env x] returns true if the effect name/computational effect (of *)
@@ -521,8 +515,6 @@ val effect_decl_opt        : env -> lident -> ML (option (eff_decl & list qualif
 
 val get_effect_decl        : env -> lident -> ML (eff_decl)
 
-val get_default_effect     : env -> lident -> ML (option lident)
-
 val get_top_level_effect   : env -> lident -> ML (option lident)
 
 val join_opt               : env -> lident -> lident -> ML (option lident)
@@ -541,19 +533,12 @@ val bound_vars   : env -> ML (list bv)
 
 instance val hasBinders_env   : hasBinders env
 
-instance val hasNames_lcomp   : hasNames lcomp
-
-instance val pretty_lcomp     : FStarC.Class.PP.pretty lcomp
-
 instance val hasNames_guard   : hasNames guard_t
 
 instance val pretty_guard     : FStarC.Class.PP.pretty guard_t
 
-val comp_to_comp_typ       : env -> comp -> ML (comp_typ)
 
 val comp_set_flags         : env -> comp -> list S.cflag -> ML (comp)
-
-val unfold_effect_abbrev   : env -> comp -> ML (comp_typ)
 
 val effect_repr            : env -> comp -> universe -> ML (option term)
 
@@ -564,6 +549,9 @@ val is_user_reflectable_effect : env -> lident -> ML (bool)
 (* Is this effect marked `total`? *)
 
 val is_total_effect : env -> lident -> ML (bool)
+
+(* The universe of [M t], given the universe of [t]. *)
+val effect_universe : env -> lident -> universe -> ML universe
 
 (* A coercion *)
 
@@ -617,26 +605,9 @@ val set_expected_typ      : env -> typ -> env
 val set_expected_typ_maybe_eq
                           : env -> typ -> bool -> env  //boolean true will check for type equality
 
-(* [set_expected_typ_and_post env t use_eq post] sets the expected type to [t] and
-   additionally records [post] (an abstraction over [t]) as a postcondition that the
-   context expects the term to satisfy.
-
-   Note: the postcondition is deliberately *not* folded into [t] as a refinement.
-   Doing so would let it be picked up as the solution of a unification variable
-   standing for an inferred type (e.g. the result type of an unannotated inner
-   let-binding), which relocates the proof obligation to the definition site,
-   before the facts that discharge it are in scope. Keeping the two separate means
-   the postcondition only ever produces a proof obligation, never a type. *)
-val set_expected_typ_and_post
-                          : env -> typ -> bool -> typ -> env
-
 //the returns boolean true means check for type equality
 
 val expected_typ          : env -> option (typ & bool)
-
-(* The postcondition expected by the context, if any; an abstraction over the
-   expected type. Only ever set by set_expected_typ_and_post. *)
-val expected_post         : env -> option typ
 
 val clear_expected_typ    : env -> env&option (typ & bool)
 
@@ -763,6 +734,14 @@ for either not a recursive let, or one that does not need the totality
 check. *)
 
 val get_letrec_arity : env -> lbname -> ML (option int)
+
+(* Does [t] mention a name bound by the [let rec] currently being checked?
+   Such a name disappears with the [let rec], so a type that mentions one
+   cannot outlive it -- and quantifying over one to get it back in scope says
+   nothing, since [exists (f: a -> b). _ == f x] is witnessed by any constant
+   function.  The only useful thing to do with such a fact is to never state
+   it, so this guards every point that would put a term in a type. *)
+val mentions_rec_name : env -> term -> ML bool
 
 (* Construct a Tm_fvar with the delta_depth metadata populated
    -- Note, the delta_qual is not populated, so don't use this with

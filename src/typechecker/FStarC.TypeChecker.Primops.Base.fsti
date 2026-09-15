@@ -39,6 +39,13 @@ val as_primitive_step_nbecbs
     (* (l, arity, u_arity, f, f_nbe) *)
      : (Ident.lident & int & int & interp_t & nbe_interp_t) -> primitive_step
 
+(* Add [n] trailing arguments that the step's interpretation ignores.  Use it
+   when the F* function a step implements has a precondition: that desugars to
+   a trailing implicit binder of squash type, and a step whose arity does not
+   account for it fires early, leaving the leftover proof applied to the step's
+   own result. *)
+val with_extra_args (n:int) (s:primitive_step) : primitive_step
+
 (* Some helpers for the NBE. Does not really belong in this module. *)
 val embed_simple: {| EMB.embedding 'a |} -> Range.t -> 'a -> ML term
 val try_unembed_simple: {| EMB.embedding 'a |} -> term -> ML (option 'a)

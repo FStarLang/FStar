@@ -726,7 +726,8 @@ let check_typeclass_instance_attribute (env : FStarC_TypeChecker_Env.env)
               (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
               (Obj.magic uu___4)
           else ());
-         (let t = FStarC_Syntax_Util.comp_result res in
+         (let t =
+            FStarC_Syntax_Util.unrefine (FStarC_Syntax_Util.comp_result res) in
           let uu___3 = FStarC_Syntax_Util.head_and_args_full t in
           match uu___3 with
           | (head, uu___4) ->
@@ -744,7 +745,7 @@ let check_typeclass_instance_attribute (env : FStarC_TypeChecker_Env.env)
                         (FStarC_Errors_Msg.text "Type") uu___9 in
                     [uu___8] in
                   (FStarC_Errors_Msg.text
-                     "Instances must define instances of `class` types.")
+                     "Instances must define instances of \226\128\152class\226\128\153 types.")
                     :: uu___7 in
                 FStarC_Errors.log_issue FStarC_Class_HasRange.hasRange_range
                   rng FStarC_Errors_Codes.Error_UnexpectedTypeclassInstance

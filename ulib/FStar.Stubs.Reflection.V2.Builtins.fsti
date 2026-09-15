@@ -84,14 +84,19 @@ val inspect_pack_inv : (tv:term_view) -> Lemma (inspect_ln (pack_ln tv) == tv)
 
 val pack_inspect_comp_inv : (c:comp) -> Lemma (pack_comp (inspect_comp c) == c)
 
-(* A computation whose effect is [FStar.Pervasives.Lemma] is always inspected as a
-   [C_Lemma], so a [C_Eff] view naming that effect is not in the image of
-   [inspect_comp] and the round trip below does not hold for it.  (Asserting it
-   unconditionally was unsound: both functions are primitive normalizer steps,
-   so the normalizer refutes the very instance the lemma provides.) *)
+(* Two [C_Eff] views are outside the image of [inspect_comp], and the round trip
+   below does not hold for either.  (Asserting it unconditionally was unsound:
+   both functions are primitive normalizer steps, so the normalizer refutes the
+   very instance the lemma provides.)
+
+   - A view naming [FStar.Pervasives.Lemma] is always inspected as a [C_Lemma].
+   - A view carrying universes: a computation type does not store any -- an
+     effect is applied to its result type alone, so its universe is that type's
+     -- and [pack_comp] drops them, so they always come back as []. *)
 val inspect_pack_comp_inv (cv:comp_view)
   : Lemma (requires (match cv with
-                     | C_Eff _ eff_name _ _ _ _ -> eff_name <> ["FStar"; "Pervasives"; "Lemma"]
+                     | C_Eff us eff_name _ _ _ _ ->
+                       Nil? us /\ eff_name <> ["FStar"; "Pervasives"; "Lemma"]
                      | _ -> True))
           (ensures inspect_comp (pack_comp cv) == cv)
 

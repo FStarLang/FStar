@@ -20,7 +20,10 @@ let _ = assert False
 
 #push-options "--admit_smt_queries true"
 
-let _ = assert False
+(* Annotated: without it this definition has type [squash False], and an
+   admitted definition of that type is a proof of [False] for everything that
+   follows -- which would defeat the point of the check below. *)
+let _ : unit = assert False
 
 #pop-options
 

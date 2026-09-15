@@ -442,6 +442,10 @@ let ex6' = ex5'_l +^ ex5'_r
 let test56 = assert_norm (rewrite_distr () ex6 == ex6')
 //SNIPPET_END: rewrite_test$
 
+(* The `Add` branch's obligation sits just above this file's default budget
+   (it needs ~24 rlimit units of the 20 that `--z3rlimit_factor 4` buys).
+   Kept outside the snippet markers so the book text is unaffected. *)
+#push-options "--z3rlimit_factor 8"
 //SNIPPET_START: rewrite_soundness$
 let rec rewrite_soundness 
     (x:expr (value ++ add ++ mul))
@@ -460,6 +464,7 @@ let rec rewrite_soundness
       rewrite_soundness a l; rewrite_soundness b l;
       l.soundness()
 //SNIPPET_END: rewrite_soundness$
+#pop-options
 
 //SNIPPET_START: rewrite_distr_soundness$
 let rewrite_distr_soundness 

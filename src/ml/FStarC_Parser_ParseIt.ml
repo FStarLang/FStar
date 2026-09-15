@@ -354,7 +354,6 @@ let string_of_token =
   | ASSUME -> "ASSUME"
   | NEW -> "NEW"
   | LOGIC -> "LOGIC"
-  | ATTRIBUTES -> "ATTRIBUTES"
   | IRREDUCIBLE -> "IRREDUCIBLE"
   | UNFOLDABLE -> "UNFOLDABLE"
   | INLINE -> "INLINE"

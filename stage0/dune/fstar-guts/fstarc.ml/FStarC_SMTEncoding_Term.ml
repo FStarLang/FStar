@@ -643,7 +643,8 @@ let rec freevars (t : term) : fv Prims.list=
   | FreeV fv1 when fv_force fv1 -> []
   | FreeV fv1 -> [fv1]
   | App (uu___, tms, uu___1) -> FStarC_List.collect freevars tms
-  | Quant (uu___, uu___1, uu___2, uu___3, t1, uu___4) -> freevars t1
+  | Quant (uu___, pats, uu___1, uu___2, t1, uu___3) ->
+      FStarC_List.collect freevars (t1 :: (FStarC_List.flatten pats))
   | Labeled (t1, uu___, uu___1) -> freevars t1
   | Let (es, body) -> FStarC_List.collect freevars (body :: es)
 let free_variables (t : term) : fvs=

@@ -665,8 +665,7 @@ let load_partial_checked_file (env: TcEnv.env) (filename: string) (until_lid: st
   let found_decl, m = trunc_modul tc_result.checked_module pred in
   if not found_decl then failwith ("did not find declaration with lident " ^ until_lid) else
   let _, env = with_dsenv_of_tcenv env <|
-      FStarC.ToSyntax.ToSyntax.add_partial_modul_to_env m tc_result.mii
-        (FStarC.TypeChecker.Normalize.erase_universes env) in
+      FStarC.ToSyntax.ToSyntax.add_partial_modul_to_env m tc_result.mii in
   let env = FStarC.TypeChecker.Tc.load_partial_checked_module env m in
   let _, env = with_dsenv_of_tcenv env (fun ds -> (), DsEnv.set_current_module ds m.name) in
   let env = FStarC.TypeChecker.Env.set_current_module env m.name in

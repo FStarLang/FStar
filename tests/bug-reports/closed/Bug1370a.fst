@@ -18,12 +18,17 @@ module Bug1370a
 open FStar.Pervasives
 open FStar.Exn
 
-// The point of this test is that the parameters of an effect abbreviation
-// must be ordered as written: Raises : a:Type0 -> ex:exn -> Effect.
-// (Which exception is raised is no longer tracked by the effect system, so
-// the negative part of the original test is gone.)
+// The point of this test used to be that the parameters of an effect
+// abbreviation are ordered as written: Raises : a:Type0 -> ex:exn -> Effect.
+// An abbreviation is now just another name for an effect, so there are no
+// parameters to order and nowhere to put a specification: the declaration
+// below is rejected, and that refusal is what this test now pins down.
+// (Which exception is raised is not tracked by the effect system either.)
+[@@expect_failure [316]]
 effect Raises (a:Type) (ex:exn) =
     Exn a (requires True) (ensures fun _ -> ex == ex)
+
+effect Raises (a:Type) = Exn a
 
 exception Bad
 

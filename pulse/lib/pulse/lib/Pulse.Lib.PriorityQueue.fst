@@ -230,18 +230,16 @@ let almost_up_implies_heap_down #t {| total_order t |}
 let almost_to_full_heap #t {| total_order t |} (s:Seq.seq t) (bad:nat{bad < Seq.length s})
   : Lemma (requires almost_heap_sift_up s bad /\ heap_up_at s bad)
           (ensures is_heap s)
-  = // Call the helper for all valid indices
-    let rec aux (n:nat) 
-      : Lemma (requires n <= Seq.length s /\ almost_heap_sift_up s bad /\ heap_up_at s bad)
-              (ensures forall (i:nat). i < n ==> heap_down_at s i)
-              (decreases n) =
-      if n = 0 then ()
-      else (
-        aux (n - 1);
-        almost_up_implies_heap_down s bad (n - 1)
-      )
+  = // `almost_up_implies_heap_down` already establishes `heap_down_at s i` for
+    // every index, so no induction on the length is needed here.  The previous
+    // formulation recursed and asked Z3 to glue the inductive hypothesis at
+    // `n-1` to the new fact at `n-1`; that step was unstable, flipping between
+    // `unsat` and `canceled` merely under renamings of the gensym'd universe
+    // variables in the SMT encoding.
+    let aux (i:nat) : Lemma (i < Seq.length s ==> heap_down_at s i) =
+      if i < Seq.length s then almost_up_implies_heap_down s bad i
     in
-    aux (Seq.length s)
+    FStar.Classical.forall_intro aux
 #pop-options
 
 // Lemma: is_heap is equivalent to is_heap_alt
@@ -619,7 +617,7 @@ let sift_up_swap_lemma #t {| total_order t |}
     let aux1 (i:nat{i < Seq.length s' /\ i <> p}) : Lemma (heap_up_at s' i)
       = sift_up_swap_heap_up_at s child i
     in
-    FStar.Classical.forall_intro (FStar.Classical.move_requires aux1);
+    FStar.Classical.forall_intro aux1;
     
     // Part 2: parent-child ordering except at p
     let aux2 (i:nat{i < Seq.length s'})
@@ -732,7 +730,7 @@ fn size (#t:Type0) {| total_order t |} (pq:pqueue t) (#cap:erased nat)
 fn get_capacity (#t:Type0) {| total_order t |} (pq:pqueue t) (#s0:erased (Seq.seq t)) (#cap:erased nat)
   preserves is_pqueue pq s0 cap
   returns n:SZ.t
-  ensures pure (SZ.v n == cap)
+  ensures pure ((SZ.v n <: nat) == cap)
 {
   unfold (is_pqueue pq s0 cap);
   let n = RV.get_capacity pq;
@@ -1065,14 +1063,14 @@ let sift_down_swap_lemma #t {| total_order t |}
       : Lemma (heap_up_at s' i)
       = sift_down_swap_heap_up_at s parent child i
     in
-    FStar.Classical.forall_intro (FStar.Classical.move_requires aux1);
+    FStar.Classical.forall_intro aux1;
     
     // Prove part 2: heap_down_at for all i where i <> child
     let aux2 (i:nat{i < Seq.length s' /\ i <> child})
       : Lemma (heap_down_at s' i)
       = sift_down_swap_heap_down_at s parent child i
     in
-    FStar.Classical.forall_intro (FStar.Classical.move_requires aux2)
+    FStar.Classical.forall_intro aux2
 
 // Helper: grandparent property after swap
 // After swapping parent with child, the value at new grandparent (=parent) is s[child].
