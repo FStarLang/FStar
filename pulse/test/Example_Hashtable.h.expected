@@ -16,7 +16,6 @@ so two spellings of it are the same spelling. */
 #define CUSTARD_UNIT_DEFINED
 typedef uint8_t custard_unit;
 #endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -44,7 +43,7 @@ struct Pulse_Lib_HashTable_Spec_cell__uintsize_data_s {
     struct {
       size_t k;
       Example_Hashtable_data v;
-    } Pulse_Lib_HashTable_Spec_Used__uintsize_data;
+    } Used;
   } val;
 };
 struct Pulse_Lib_HashTable_Type_ht_t__uintsize_data_s {
@@ -59,9 +58,7 @@ enum FStar_Pervasives_Native_option__uintsize_tags {
 struct FStar_Pervasives_Native_option__uintsize_s {
   enum FStar_Pervasives_Native_option__uintsize_tags tag;
   union {
-    struct {
-      size_t v;
-    } FStar_Pervasives_Native_Some__uintsize;
+    size_t Some;
   } val;
 };
 struct FStar_Pervasives_Native_tuple2__ht_t_uintsize_data_option_uintsize_s {

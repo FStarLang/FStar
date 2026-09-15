@@ -2,64 +2,40 @@
 #include "InlineArrayLen.h"
 
 int32_t InlineArrayLen_basic(void) {
-  int32_t *arr;
-  int32_t _cbuf1[2];
-  for (size_t _ci2 = 0; _ci2 < 2; _ci2++) {
-    _cbuf1[_ci2] = 123;
-  }
-  arr = _cbuf1;
+  int32_t arr[2] = { 123, 123 };
   return arr[0];
 }
 
 int32_t InlineArrayLen_use(void) {
-  int32_t *arr;
-  int32_t _cbuf1[2];
-  for (size_t _ci2 = 0; _ci2 < 2; _ci2++) {
-    _cbuf1[_ci2] = 123;
-  }
-  arr = _cbuf1;
+  int32_t arr[2] = { 123, 123 };
   return arr[0];
 }
 
 int32_t InlineArrayLen_use_gen_init(void) {
-  int32_t *arr;
-  int32_t _cbuf1[2];
-  for (size_t _ci2 = 0; _ci2 < 2; _ci2++) {
-    _cbuf1[_ci2] = 123;
-  }
-  arr = _cbuf1;
+  int32_t arr[2] = { 123, 123 };
   return arr[0];
 }
 
 int32_t InlineArrayLen_use_gen_init_st(void) {
   int32_t __anf0 = 123;
-  int32_t *arr;
-  int32_t _cbuf1[2];
-  for (size_t _ci2 = 0; _ci2 < 2; _ci2++) {
-    _cbuf1[_ci2] = __anf0;
+  int32_t arr[2];
+  for (size_t _ci1 = 0; _ci1 < 2; _ci1++) {
+    arr[_ci1] = __anf0;
   }
-  arr = _cbuf1;
   return arr[0];
 }
 
 int32_t InlineArrayLen_use_gen_len(void) {
-  int32_t *arr;
-  int32_t _cbuf1[2];
-  for (size_t _ci2 = 0; _ci2 < 2; _ci2++) {
-    _cbuf1[_ci2] = 123;
-  }
-  arr = _cbuf1;
+  int32_t arr[2] = { 123, 123 };
   return arr[0];
 }
 
 int32_t InlineArrayLen_use_gen_len_st(void) {
   size_t __anf0 = 42;
-  int32_t *arr;
-  int32_t _cbuf1[__anf0];
-  for (size_t _ci2 = 0; _ci2 < (__anf0); _ci2++) {
-    _cbuf1[_ci2] = 123;
+  int32_t arr[__anf0];
+  for (size_t _ci1 = 0; _ci1 < (__anf0); _ci1++) {
+    arr[_ci1] = 123;
   }
-  arr = _cbuf1;
   return arr[0];
 }
 

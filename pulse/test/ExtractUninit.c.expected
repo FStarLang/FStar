@@ -8,12 +8,10 @@ uint32_t ExtractUninit_uninit_ref(void) {
 }
 
 uint32_t ExtractUninit_uninit_array(void) {
-  uint32_t *arr;
-  uint32_t _cbuf1[5];
-  for (size_t _ci2 = 0; _ci2 < 5; _ci2++) {
-    _cbuf1[_ci2] = (uint32_t){0};
+  uint32_t arr[5];
+  for (size_t _ci1 = 0; _ci1 < 5; _ci1++) {
+    arr[_ci1] = (uint32_t){0};
   }
-  arr = _cbuf1;
   arr[1] = 2;
   arr[3] = 4;
   uint32_t __anf1 = arr[1];

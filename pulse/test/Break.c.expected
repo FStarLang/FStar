@@ -48,7 +48,6 @@ size_t Break_find_zero_with_break(int32_t *a, size_t sz) {
     if (_break) _ct1 = false;
     else _ct1 = (i < sz);
     if (!(_ct1)) { break; }
-    (void)(i);
     size_t __anf0 = i;
     int32_t __anf1 = a[__anf0];
     if (__anf1 == 0) _break = true;

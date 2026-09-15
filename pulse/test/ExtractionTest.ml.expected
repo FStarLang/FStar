@@ -57,8 +57,8 @@ let extractionTest_my_safe_add (x : FStar_SizeT.t) (y : FStar_SizeT.t) : (FStar_
 let extractionTest_testbi (x : FStar_SizeT.t) (y : FStar_SizeT.t) : FStar_SizeT.t =
   (FStar_SizeT.rem x y)
 
-let extractionTest_testbi2 (x : FStar_SizeT.t) (eta : FStar_SizeT.t) : (FStar_SizeT.t) extractionTest_opt =
-  (extractionTest_my_safe_add x eta)
+let extractionTest_testbi2 (x : FStar_SizeT.t) (y : FStar_SizeT.t) : (FStar_SizeT.t) extractionTest_opt =
+  (extractionTest_my_safe_add x y)
 
 let extractionTest_extract_match (x : (bool) extractionTest_opt) : bool =
   (match x with

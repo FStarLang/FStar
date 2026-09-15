@@ -2,7 +2,7 @@
 #include "Example_Unreachable.h"
 
 bool Example_Unreachable_test(FStar_Pervasives_Native_option__bool x) {
-  return x.val.FStar_Pervasives_Native_Some__bool.v;
+  return x.val.Some;
 }
 
 

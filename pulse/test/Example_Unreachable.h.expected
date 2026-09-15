@@ -16,7 +16,6 @@ so two spellings of it are the same spelling. */
 #define CUSTARD_UNIT_DEFINED
 typedef uint8_t custard_unit;
 #endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -30,9 +29,7 @@ enum FStar_Pervasives_Native_option__bool_tags {
 struct FStar_Pervasives_Native_option__bool_s {
   enum FStar_Pervasives_Native_option__bool_tags tag;
   union {
-    struct {
-      bool v;
-    } FStar_Pervasives_Native_Some__bool;
+    bool Some;
   } val;
 };
 
