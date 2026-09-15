@@ -51,7 +51,29 @@ val encode_binders : fuel_opt:option term
                   -> env:env_t
                   -> ML (list fv & list term & env_t & decls_t & list bv)
 
+(* [unit_refinements env t] returns [Some fs] when [t] is (a nest of
+   refinements over) the unit type, where [fs] are the refinement formulas
+   instantiated at the unit constant. In that case a binder of type [t] need
+   not be encoded as an SMT variable at all: it can be replaced by the unit
+   constant, with [fs] as its only remaining content. *)
+val unit_refinements : env:env_t -> t:typ -> ML (option (list Syntax.term))
+
+(* Encodes the conjunction of the formulas returned by [unit_refinements]. *)
+val encode_unit_refinements : env:env_t -> fs:list Syntax.term -> ML (term & decls_t)
+
 val encode_term_pred: fuel_opt:option term
+                    -> t:typ
+                    -> env:env_t
+                    -> e:term
+                    -> ML (term & decls_t)
+
+(* As [encode_term_pred], but inlines a refinement type [x:b{phi}] as
+   [HasTypeFuel fuel e b /\ phi[e/x]] rather than introducing a [Tm_refine_...]
+   type constructor and relying on its interpretation axiom. Only appropriate
+   where the resulting predicate is used as a guard/hypothesis or goal, not
+   where the type itself is needed as a first-class term. *)
+val encode_term_pred_inline_refinements
+                    : fuel_opt:option term
                     -> t:typ
                     -> env:env_t
                     -> e:term

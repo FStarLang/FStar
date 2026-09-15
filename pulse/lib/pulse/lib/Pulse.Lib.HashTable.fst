@@ -26,6 +26,14 @@ module PHT = Pulse.Lib.HashTable.Spec
 open Pulse.Lib.HashTable.Spec
 open Pulse.Lib.HashTable.Type
 
+(* Deriving [SZ.v x < SZ.v y] from [x <> y] needs two [size_v_inj] instances plus
+   a congruence step; doing that inside the [delete] loop body makes the query
+   time out, so we discharge it here in a small context. *)
+let sz_lt_of_ne (x y : SZ.t)
+  : Lemma (requires ~(x == y) /\ SZ.v x <= SZ.v y)
+          (ensures  SZ.v x < SZ.v y)
+  = SZ.size_v_inj x; SZ.size_v_inj y
+
 let mk_used_cell
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] a:eqtype)
   (#[@@@ Rust_generics_bounds ["Clone"]] b:Type)
@@ -466,7 +474,7 @@ fn insert_if_not_full
 }
 
 #restart-solver
-#push-options "--z3rlimit_factor 6"
+#push-options "--z3rlimit_factor 24"
 fn delete
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
   (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
@@ -536,6 +544,9 @@ fn delete
       }
       Zombie ->
       {
+        sz_lt_of_ne voff ht.sz;
+        assert (pure (SZ.v (SZ.add voff 1sz) == SZ.v voff + 1));
+        aunb_extend pht.repr (SZ.v cidx) (SZ.v voff) k;
         off := voff + 1sz;
       }
     }
