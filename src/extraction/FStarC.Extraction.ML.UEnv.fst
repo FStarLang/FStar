@@ -349,6 +349,7 @@ let initial_mlident_map =
                 ocamlkeywords
               | Some Options.Krml -> krml_keywords
               | Some Options.Extension -> []  // TODO
+              | Some Options.Custard -> []    // Custard does its own name mangling
               | None -> [])
           (PSMap.empty())
         in

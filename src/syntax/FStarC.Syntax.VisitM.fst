@@ -2,6 +2,7 @@ module FStarC.Syntax.VisitM
 
 open FStarC
 open FStarC.Effect
+open FStar.Custard
 open FStarC.List
 
 open FStarC.Class.Monad
@@ -406,15 +407,21 @@ let tie_bu (#m : Type -> Type) {| md : monad m |} (d : lvm m) : ML (lvm m) =
   let r : ref (lvm m) = mk_ref (novfs #m #md) in // FIXME implicits
   r :=
     {
-      lvm_monad       = (!r).lvm_monad;
+      lvm_monad       = md;
 
-      f_term          = (fun x -> f_term          #_ #d <<| on_sub_term          #_ #!r x);
-      f_binding_bv    = (fun x -> f_binding_bv    #_ #d <<| on_sub_binding_bv    #_ #!r x);
-      f_binder        = (fun x -> f_binder        #_ #d <<| on_sub_binder        #_ #!r x);
-      f_br            = (fun x -> f_br            #_ #d <<| on_sub_br            #_ #!r x);
-      f_comp          = (fun x -> f_comp          #_ #d <<| on_sub_comp          #_ #!r x);
-      f_residual_comp = (fun x -> f_residual_comp #_ #d <<| on_sub_residual_comp #_ #!r x);
-      f_univ          = (fun x -> f_univ          #_ #d <<| on_sub_univ          #_ #!r x);
+      (* The [dyn]s are the Custard opt-in of doc/ref/custard.md 3.2c1: this
+         dictionary is tied through a [ref], so it is the result of a
+         computation and no restructuring of the source can make it known at
+         specialization time.  [dyn] asks for it to be passed at run time
+         instead of specialized on, at these call sites only.  It is the
+         identity, and it compiles to nothing. *)
+      f_term          = (fun x -> let e = !r in f_term          #_ #d <<| on_sub_term          #_ #(dyn e) x);
+      f_binding_bv    = (fun x -> let e = !r in f_binding_bv    #_ #d <<| on_sub_binding_bv    #_ #(dyn e) x);
+      f_binder        = (fun x -> let e = !r in f_binder        #_ #d <<| on_sub_binder        #_ #(dyn e) x);
+      f_br            = (fun x -> let e = !r in f_br            #_ #d <<| on_sub_br            #_ #(dyn e) x);
+      f_comp          = (fun x -> let e = !r in f_comp          #_ #d <<| on_sub_comp          #_ #(dyn e) x);
+      f_residual_comp = (fun x -> let e = !r in f_residual_comp #_ #d <<| on_sub_residual_comp #_ #(dyn e) x);
+      f_univ          = (fun x -> let e = !r in f_univ          #_ #d <<| on_sub_univ          #_ #(dyn e) x);
 
       proc_quotes     = d.proc_quotes;
     };
@@ -424,7 +431,10 @@ let visitM_term_univs #m {| md : monad m |} (proc_quotes : bool) vt vu (tm : ter
   let dict : lvm m =
     tie_bu #m #md { novfs #m #md with f_term = vt; f_univ = vu; proc_quotes = proc_quotes }
   in
-  f_term #_ #dict tm
+  (* [dyn] for the same reason as in [tie_bu]: this dictionary is the result
+     of an ML computation, so it is passed at run time rather than specialized
+     on.  See doc/ref/custard.md 3.2c1. *)
+  f_term #_ #(dyn dict) tm
 
 let visitM_term #m {| md : monad m |} (proc_quotes : bool) vt (tm : term) : ML (m term) =
   visitM_term_univs true vt return tm
@@ -433,7 +443,7 @@ let visitM_sigelt #m {| md : monad m |} (proc_quotes : bool) vt vu (tm : sigelt)
   let dict : lvm m =
     tie_bu #m #md { novfs #m #md with f_term = vt; f_univ = vu; proc_quotes = proc_quotes }
   in
-  on_sub_sigelt #_ #dict tm
+  on_sub_sigelt #_ #(dyn dict) tm
 
 
 (* Example: compute all lidents appearing in a sigelt:

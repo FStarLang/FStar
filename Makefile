@@ -531,13 +531,21 @@ unit-tests: _unit-tests
 # NB: FSTAR_EXE, KRML_EXE and STAGE3 are set by the pulse test
 # makefiles themselves (via the exported FSTAR_ROOT), so we don't pass
 # them here.
-_test_pulse: _test_pulse_test _test_pulse_examples
+_test_pulse: _test_pulse_test _test_pulse_examples _test_pulse_custard
 
 _test_pulse_test: karamel
 	$(MAKE) -C pulse/test/
 
 _test_pulse_examples: karamel
 	$(MAKE) -C pulse/share/pulse/examples/
+
+# The Custard tests that need Pulse. They live under tests/custard rather
+# than under pulse/, but they can only be parsed by a compiler with the
+# Pulse syntax extension linked in, so they are reached from here (test-3)
+# and not from _test, which test-1 and test-2 also run. Their own Makefile
+# gates the krml and rustc columns on those tools being present.
+_test_pulse_custard: karamel
+	$(MAKE) -C tests/custard/pulse/
 
 accept_pulse_test:
 	$(MAKE) -C pulse/test/ accept
@@ -547,7 +555,7 @@ accept_pulse_examples:
 
 accept_pulse: accept_pulse_test accept_pulse_examples
 
-.PHONY: _test_pulse_test _test_pulse_examples accept_pulse_test accept_pulse_examples accept_pulse
+.PHONY: _test_pulse_test _test_pulse_examples _test_pulse_custard accept_pulse_test accept_pulse_examples accept_pulse
 
 # Use directly only at your own risk.
 _test: FSTAR_EXE ?= $(abspath out/bin/fstar.exe)
@@ -646,6 +654,49 @@ watch:
 	done
 
 
+### CUSTARD
+#
+# An F* compiler extracted by Custard instead of by the ML extraction
+# (doc/ref/custard.md section 12.10).  Needs a stage2 compiler, for the
+# extraction itself and for its checked files.
+
+.PHONY: custard custard-smoke custard-plugin custard-pulse-plugin clean-custard
+
+custard: 2.full
+	$(call bold_msg, "CUSTARD", "FSTAR")
+	+env \
+	  FSTAR_EXE=$(abspath $(INSTALLED_FSTAR2_FULL_EXE)) \
+	  ULIB_CHECKED=stage2/ulib.checked \
+	  FSTARC_CHECKED=stage2/fstarc.checked \
+	  $(MAKE) -f mk/custard.mk all
+
+custard-smoke: 2.full
+	+env \
+	  FSTAR_EXE=$(abspath $(INSTALLED_FSTAR2_FULL_EXE)) \
+	  ULIB_CHECKED=stage2/ulib.checked \
+	  FSTARC_CHECKED=stage2/fstarc.checked \
+	  $(MAKE) -f mk/custard.mk smoke
+
+# Section 12.13: Pulse's three units, compiled by Custard, linked into one
+# .cmxs and loaded into the Custard-built compiler.  Needs pulse/build/*.checked,
+# which `make 3.full' (or `make pulse') writes.
+custard-pulse-plugin: 2.full
+	+env \
+	  FSTAR_EXE=$(abspath $(INSTALLED_FSTAR2_FULL_EXE)) \
+	  ULIB_CHECKED=stage2/ulib.checked \
+	  FSTARC_CHECKED=stage2/fstarc.checked \
+	  $(MAKE) -f mk/custard.mk pulse-plugin
+
+custard-plugin: 2.full
+	+env \
+	  FSTAR_EXE=$(abspath $(INSTALLED_FSTAR2_FULL_EXE)) \
+	  ULIB_CHECKED=stage2/ulib.checked \
+	  FSTARC_CHECKED=stage2/fstarc.checked \
+	  $(MAKE) -f mk/custard.mk plugin
+
+clean-custard: .force
+	rm -rf stagec
+
 ### CLEAN
 
 clean-depend: .force
@@ -741,6 +792,10 @@ help:
 	echo "  package-src-2      create an OCaml source distribution for the stage 2 build"
 	echo "  package-src-3      create an OCaml source distribution for the stage 3 build (= package-src)"
 	echo "  all-packages       build the four previous rules"
+	echo "  custard            build an fstar.exe extracted by Custard (into stagec/)"
+	echo "  custard-smoke      build it and check a ulib module with it"
+	echo "  custard-plugin     build it and load a Custard-compiled plugin into it"
+	echo "  custard-pulse-plugin  ... and the Pulse plugin, which is the real one"
 	echo "  clean-depend       remove all .depend files, useful when files change name"
 	echo "  trim               clean some buildfiles, but retain any installed F* in out"
 	echo "  distclean          remove every generated file"

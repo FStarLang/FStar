@@ -83,7 +83,7 @@ val catch : #a:Type -> (unit -> Tac a) -> TacS (either exn a)
 val raise_core (e:exn) : TacH unit (requires True) (ensures fun _ -> False)
 inline_for_extraction
 let raise #a (e:exn) : TacH a (requires True) (ensures fun _ -> False) =
-    raise_core e; ()
+    raise_core e; magic ()
 
 (** [norm steps] will call the normalizer on the current goal's
 type and witness, with its reduction behaviour parameterized

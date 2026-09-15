@@ -24,6 +24,11 @@ open FStarC.TypeChecker.Common
 open FStarC.TypeChecker.Env
 open FStarC.TypeChecker.Cfg
 
+(* Raised by [with_budget] below; declared here so that the reduction
+   machine's internals, which are defined earlier than [with_budget] is, can
+   raise it. *)
+exception Budget_exceeded
+
 (* Rebuild the definition of a declaration-only projector or discriminator
    (see FStarC.TypeChecker.TcInductive.mk_discriminator_and_indexed_projectors):
    an abstraction over the inductive's parameters, indices and the scrutinee
@@ -34,6 +39,25 @@ val disc_proj_lb (tcenv:Env.env) (lid:Ident.lident) (us:univ_names) (t:typ) (q:q
   : ML (option letbinding)
 
 val unembed_binder_knot : ref (option (FStarC.Syntax.Embeddings.embedding binder))
+
+(* A step budget for normalization.
+
+   Normalization is not guaranteed to terminate: with [zeta] on (which is the
+   default -- see [Cfg.default_steps], so leaving [Zeta] out of a step list
+   does not disable it) a recursive definition may be unfolded without bound,
+   and a caller reducing terms it did not write has no way to rule that out in
+   advance.  Without a budget such a caller does not get a bad answer, it
+   hangs, with no indication of which term was responsible.
+
+   [with_budget n f] runs [f] with a limit of [n] reduction steps, raising
+   [Budget_exceeded] if it is reached.  The budget is a *step count* rather
+   than a time limit deliberately: a compiler that fails should fail the same
+   way on every machine and every run.
+
+   Budgets nest by saving and restoring, and a budget of a negative number
+   means unbounded, which is the default and what every existing caller
+   continues to get. *)
+val with_budget : int -> (unit -> ML 'a) -> ML 'a
 
 val reflection_env_hook : ref (option Env.env)
 

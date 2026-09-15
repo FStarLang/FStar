@@ -36,6 +36,10 @@ type step =
   | Weak            //Do not descend into binders
   | HNF             //Only produce a head normal form: Do not descend into function arguments or into binder types
   | Primops         //reduce primitive operators like +, -, *, /, etc.
+  (* Like [Primops], but skips the steps that may answer with a value having no
+     term representation.  This is what a client that compiles the reduct, as
+     opposed to merely inspecting it, should ask for. *)
+  | SafePrimops
   | Eager_unfolding
   | Inlining
   | DoNotUnfoldPureLets
@@ -183,6 +187,15 @@ and env = {
   dsenv          : FStarC.Syntax.DsEnv.env;        (* The desugaring environment from the front-end *)
   nbe            : list step -> env -> term -> ML term;  (* Callback to the NBE function *)
   strict_args_tab:SMap.t (option (list int));  (* a dictionary of fv names to strict arguments *)
+  (* Custard section 115.  A cache of {!disc_proj_info}, which the normalizer
+     consults on every attempted projector or discriminator reduction and which
+     does four uncached [lookup_qname]s.  Here rather than in the normalizer
+     because a *global* cache outlives the declaration it describes: an IDE
+     pops a definition and pushes a different one under the same name, and the
+     stale entry then selects the wrong field.  As a field it is copied by
+     [push_stack] and restored by [rollback], and flushed by [add_sigelt] --
+     which is exactly the treatment the two tables around it get. *)
+  disc_proj_tab:SMap.t (option (qualifier & int & option int));
   erasable_types_tab:SMap.t bool;              (* a dictionary of type names to erasable types *)
   enable_defer_to_tac: bool;                     (* Set by default; unset when running within a tactic itself, since we do not allow
                                                     a tactic to defer problems to another tactic via the attribute mechanism *)
