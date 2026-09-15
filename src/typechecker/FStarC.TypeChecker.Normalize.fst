@@ -426,6 +426,9 @@ type stack_elt =
  | CBVApp   of env & term & aqual & Range.t
  | Meta     of env & S.metadata & Range.t
  | Let      of env & binders & letbinding & Range.t
+ (* A terminal continuation requesting a WHNF closure, rather than a closed
+    term. In particular, constructor fields must retain their shared env. *)
+ | Closure  of (env -> term -> ML term)
 type stack = list stack_elt
 
 let head_of t = let hd, _ = U.head_and_args_full t in hd
@@ -514,6 +517,7 @@ instance showable_stack_elt : showable stack_elt = {
   show = (function
           | Arg (c, _, _) -> Format.fmt1 "Arg %s" (show c)
           | MemoLazy _ -> "MemoLazy"
+          | Closure _ -> "Closure"
           | Abs (_, bs, _, _, _) -> Format.fmt1 "Abs %s" (show <| List.length bs)
           | UnivArgs us -> "UnivArgs " ^ show us
           | Match   _ -> "Match"
@@ -526,6 +530,22 @@ instance showable_stack_elt : showable stack_elt = {
 let is_empty = function
     | [] -> true
     | _ -> false
+
+(* Only memo frames may precede a closure continuation: arguments, matches,
+   etc. still have to be reduced before the constructor is a result. *)
+let rec wants_closure (stack:stack) : bool =
+  match stack with
+  | MemoLazy _ :: stack -> wants_closure stack
+  | [Closure _] -> true
+  | _ -> false
+
+let rec return_closure cfg env stack t : ML term =
+  match stack with
+  | MemoLazy r :: stack ->
+    set_memo cfg r (env, t);
+    return_closure cfg env stack t
+  | [Closure k] -> k env t
+  | _ -> failwith "return_closure: unexpected stack"
 
 let lookup_bvar (env : env) x =
     try (List.nth env x.index)._2
@@ -1351,7 +1371,10 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
                    then match read_memo cfg r with
                         | Some (env, t') ->
                             log cfg  (fun () -> Format.print2 "Lazy hit: %s cached to %s\n" (show t) (show t'));
-                            if maybe_weakly_reduced t'
+                            (* A WHNF constructor, like an abstraction, may be
+                               memoized with its environment still attached. *)
+                            if Cons? env then norm cfg env stack t'
+                            else if maybe_weakly_reduced t'
                             then match stack with
                                  | [] when cfg.steps.weak || cfg.steps.compress_uvars ->
                                    rebuild cfg env stack t'
@@ -1453,6 +1476,7 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
             | App _ :: _
             | CBVApp _ :: _
             | Abs _ :: _
+            | Closure _ :: _
             | [] ->
               fallback ()
             end
@@ -1463,7 +1487,7 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
             let head, args = U.head_and_args_full t in
             (* Each argument is pushed together with the environment it lives
                in: they are usually all under [env], but a scrutinee that we
-               have already reduced (see below) is closed. *)
+               have already reduced (see below) may have its own environment. *)
             let push_args_env args stack =
               List.fold_right
                 (fun ((a, aq), env) stack ->
@@ -1493,6 +1517,35 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
             let push_args env args stack =
               push_args_env (args |> List.map (fun a -> (a, env))) stack
             in
+            (* Do not close a constructor just to project one of its fields.
+               Give each argument a closure of its own before memoizing the
+               constructor, so repeated selections share the field's memo too
+               (not merely the environments of its subterms). See #4537. *)
+            if cfg.steps.hnf && wants_closure stack &&
+               (match (U.un_uinst head).n with
+                | Tm_fvar fv -> Env.is_datacon cfg.tcenv fv.fv_name
+                | _ -> false)
+            then
+              let cenv, cargs =
+                push_args env args [] |> List.mapi (fun i arg ->
+                  match arg with
+                  | Arg (c, aq, _) ->
+                    let bv = { ppname = Ident.mk_ident ("_", t.pos);
+                               index = i; sort = S.tun } in
+                    ((None, c, fresh_memo ()), (S.bv_to_tm bv, aq))
+                  | _ -> failwith "push_args: expected Arg")
+                |> List.unzip
+              in
+              (* The head's universe variables refer to [env], not [cenv]. *)
+              let head =
+                match head.n with
+                | Tm_uinst (h, us) ->
+                  if cfg.steps.erase_universes then h
+                  else S.mk_Tm_uinst h (List.map (norm_universe cfg env) us)
+                | _ -> head
+              in
+              return_closure cfg cenv stack (S.mk_Tm_app head cargs t.pos)
+            else
             let fallback args =
               let stack = push_args_env args stack in
               log cfg (fun () -> Format.print1 "\tPushed %s arguments\n" (show <| List.length args));
@@ -1544,16 +1597,14 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
              | Some (d, is_disc, n_indexed, idx) when List.length args > n_indexed ->
                let scrutinee0, aq = List.nth args n_indexed in
                let cfg' = whnf_cfg cfg in
-               (* The reduced scrutinee is closed, hence the empty environments
-                  below. *)
-               let scrutinee = norm cfg' env [] scrutinee0 in
-               (match reduce_disc_proj cfg d is_disc idx scrutinee with
+               let project scrutinee_env scrutinee =
+                match reduce_disc_proj cfg d is_disc idx scrutinee with
                 | None ->
                   (* Stuck: keep the weak head normal form we just computed
                      rather than making the enclosing pass recompute it. *)
                   let args =
                     args |> List.mapi (fun i a ->
-                      if i = n_indexed then ((scrutinee, aq), empty_env) else (a, env))
+                      if i = n_indexed then ((scrutinee, aq), scrutinee_env) else (a, env))
                   in
                   unfold_fallback args
                 | Some field ->
@@ -1563,7 +1614,9 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
                      the extra arguments are re-applied to the selected field. *)
                   let _, rest = BU.first_N (n_indexed + 1) args in
                   let stack = push_args env rest stack in
-                  norm cfg empty_env stack field)
+                  norm cfg scrutinee_env stack field
+               in
+               norm cfg' env [Closure project] scrutinee0
              | _ -> fallback (args |> List.map (fun a -> (a, env))))
 
           | Tm_refine {b=x}
@@ -1610,6 +1663,7 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
               form of t1? *)
               match s with
               | Match _ :: _
+              | Closure _ :: _
               | Arg _ :: _
               | App (_, {n=Tm_constant (FC.Const_reify _)}, _, _) :: _
               | MemoLazy _ :: _ when cfg.steps.beta ->
@@ -2658,6 +2712,10 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
 and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
       match stack with
       | [] -> t
+      (* [rebuild] receives a closed term. Constructor applications can bypass
+         it via [return_closure], retaining their original environment. *)
+      | [Closure k] -> k empty_env t
+      | Closure _ :: _ -> failwith "Closure continuation must be terminal"
 
       | Meta(_, m, r)::stack ->
         let t =
@@ -2676,7 +2734,10 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
         rebuild cfg env stack t
 
       | MemoLazy r::stack ->
-        set_memo cfg r (env, t);
+        (* Unlike the closures memoized by [norm], [t] is already closed.
+           Dropping [env] also lets cache hits distinguish these results from
+           constructor/abstraction closures that must re-enter [norm]. *)
+        set_memo cfg r (empty_env, t);
         log cfg  (fun () -> Format.print1 "\tSet memo %s\n" (show t));
         rebuild cfg env stack t
 
@@ -2714,9 +2775,12 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
         ) else (
           (* If the argument was already normalized+memoized, reuse it. *)
           match read_memo cfg m with
-          | Some (_, a) ->
-            let t = S.extend_app t (a, aq) r in
-            rebuild cfg env_arg stack t
+          | Some (memo_env, a) ->
+            if Cons? memo_env then
+              norm cfg memo_env (App(env, t, aq, r)::stack) a
+            else
+              let t = S.extend_app t (a, aq) r in
+              rebuild cfg env_arg stack t
 
           | None when not cfg.steps.iota ->
             (* If we are not doing iota, do not memoize the partial solution.
