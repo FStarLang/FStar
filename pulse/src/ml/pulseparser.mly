@@ -294,6 +294,10 @@ optional_norewrite:
   | NOREWRITE { true }
   | { false }
 
+optional_rw:
+  | REWRITE { true }
+  | { false }
+
 while_invariant1:
   | INVARIANT v=pulseSLProp
     { PulseSyntaxExtension_Sugar.LoopInvariant v }
@@ -320,8 +324,8 @@ pulseStmtNoSeq:
     }
   | tm=tmEq args=list(termPulseLambda)
     { PulseSyntaxExtension_Sugar.mk_expr tm args }
-  | norw=optional_norewrite LET q=option(mutOrRefQualifier) p=pulsePattern typOpt=option(preceded(COLON, appTerm)) init=letMutInit
-    { PulseSyntaxExtension_Sugar.mk_let_binding norw q p typOpt init }
+  | norw=optional_norewrite LET rw=optional_rw q=option(mutOrRefQualifier) p=pulsePattern typOpt=option(preceded(COLON, appTerm)) init=letMutInit
+    { PulseSyntaxExtension_Sugar.mk_let_binding norw rw q p typOpt init }
   | s=pulseBindableTerm
     { s }
   | WHILE LPAREN tm=pulseStmt RPAREN inv=while_invariant LBRACE body=pulseStmt RBRACE
@@ -361,7 +365,7 @@ pulseStmtNoSeq:
     {
       let id, fndefn = f in
       let pat = mk_pattern (PatVar (id, None, [])) (rr $loc) in
-      PulseSyntaxExtension_Sugar.mk_let_binding false None pat None (Lambda_initializer fndefn)
+      PulseSyntaxExtension_Sugar.mk_let_binding false false None pat None (Lambda_initializer fndefn)
     }
   | LBRACE s=pulseStmt RBRACE
     { PulseSyntaxExtension_Sugar.mk_block s }
