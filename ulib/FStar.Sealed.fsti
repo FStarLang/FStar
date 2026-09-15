@@ -36,9 +36,9 @@ new type sealed ([@@@strictly_positive] a : Type u#aa) : Type u#0
 (* The main axiom provided by this module:
 
    Two sealed values of the same type are equal.
-   
-   Their seal can be broken only at the meta level, by incurring a Tac effect.
-   See FStar.Tactics.unseal
+
+   Their seal can be broken only by incurring a nondeterministic effect.
+   See [unseal] below.
 *)
 val sealed_singl (#a:Type) (x y : sealed a)
   : Lemma (x == y)
@@ -46,6 +46,18 @@ val sealed_singl (#a:Type) (x y : sealed a)
 (* Sealing a value hides it from the logical fragment of F* *)
 val seal (#a : Type u#aa) (x:a) : Tot (sealed a)
 
-val map_seal (#a : Type u#aa) (#b : Type u#bb) (s : sealed a) (f : a -> Tot b) : Tot (sealed b)
+(* Observe a sealed value.
 
-val bind_seal (#a : Type u#aa) (#b : Type u#bb) (s : sealed a) (f : a -> Tot (sealed b)) : Tot (sealed b)
+   This is the elimination form for [sealed]. It is not a function: it
+   has the [Nd] effect, so nothing is known about its result and, in
+   particular, [sealed_singl] above cannot be used to derive that any
+   two values of type [a] are equal. Note that [Nd] is a total effect,
+   so unsealing is allowed in (terminating) programs, and, since [Nd] is
+   a subeffect of [Tac], in metaprograms too. *)
+val unseal (#a : Type u#aa) (s : sealed a) : Nd a
+
+(* Mapping and binding a sealed value. Since the seal is broken to
+   apply [f], these too take an [Nd] function. *)
+val map_seal (#a : Type u#aa) (#b : Type u#bb) (s : sealed a) (f : a -> Nd b) : Tot (sealed b)
+
+val bind_seal (#a : Type u#aa) (#b : Type u#bb) (s : sealed a) (f : a -> Nd (sealed b)) : Tot (sealed b)

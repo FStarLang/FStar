@@ -24,7 +24,7 @@
 
 * Info at EffectDeclChecks.fst(36,7-36,30):
   - Expected failure:
-  - Effect EffectDeclChecks.FOO4 has a representation, so the lift from EffectDeclChecks.FOO2 must be given explicitly: only a pure, ghost or divergent computation can be lifted with the target's return combinator
+  - Effect EffectDeclChecks.FOO4 has a representation, so the lift from EffectDeclChecks.FOO2 must be given explicitly: only a pure, ghost, nondeterministic or divergent computation can be lifted with the target's return combinator
 
 * Info at EffectDeclChecks.fst(45,9-45,13):
   - Expected failure:

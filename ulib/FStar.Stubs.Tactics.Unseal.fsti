@@ -14,12 +14,16 @@
    limitations under the License.
 *)
 (**
-The [unseal] primitive to observe sealed values.
+Observing sealed values from metaprograms.
 *)
 module FStar.Stubs.Tactics.Unseal
 
 open FStar.Sealed
 open FStar.Tactics.Effect
 
-(** Observe a sealed value. See Sealed.seal too. *)
-val unseal : #a:Type -> sealed a -> Tac a
+(** Observe a sealed value. See Sealed.seal too.
+
+    This is just [FStar.Sealed.unseal], which has the [Nd] effect,
+    coerced into [Tac]: it is kept here so that [unseal] remains in
+    scope for the (many) clients that only open [FStar.Tactics]. *)
+let unseal (#a:Type) (s : sealed a) : Tac a = FStar.Sealed.unseal s

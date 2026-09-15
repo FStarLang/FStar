@@ -534,9 +534,10 @@ let nonempty_tag (#a: Type) (x: a) : prop = True
 
     This is a lang item: the typechecker requires a proof of
     [nonempty t] for every top-level definition [let x : t = e] where
-    [e] has a potentially divergent effect (i.e., any effect other than
-    [Tot] or [GTot]). Without this obligation, a divergent term could
-    be used to inhabit any type, including [False].
+    [e] has a potentially divergent effect (i.e., any effect that is
+    neither pure nor marked [total]; e.g. [Dv], but not [Tot], [GTot]
+    or [Nd]). Without this obligation, a divergent term could be used
+    to inhabit any type, including [False].
 
     It is stated as [nonempty a] rather than [exists (x:a). True] so
     that libraries can register SMT patterns for it. *)

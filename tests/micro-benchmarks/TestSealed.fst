@@ -103,3 +103,44 @@ let _ = assert True by begin
     fail "not equal";
   ()
 end
+
+(* [unseal] lives in [Nd], which is a subeffect of [Tac] (used above),
+   but is also usable on its own, in total code. *)
+let unseal_nd (#a:Type) (s : sealed a) : Nd a = FStar.Sealed.unseal s
+
+(* It reveals nothing: [Nd] is nondeterministic, so [sealed_singl]
+   cannot be used to equate arbitrary values. *)
+[@@expect_failure [19]]
+let unseal_no_spec (x:int) : Nd unit =
+  let v = FStar.Sealed.unseal (seal x) in
+  assert (v == x)
+
+[@@expect_failure [19]]
+let unseal_not_a_function (x:int) : Nd unit =
+  let a = FStar.Sealed.unseal (seal x) in
+  let b = FStar.Sealed.unseal (seal x) in
+  assert (a == b)
+
+[@@expect_failure [19]]
+let unseal_no_contradiction () : Nd unit =
+  sealed_singl (seal 0) (seal 1);
+  let a = FStar.Sealed.unseal (seal 0) in
+  let b = FStar.Sealed.unseal (seal 1) in
+  assert (a == b)
+
+(* map_seal/bind_seal accept Nd functions, in particular ones that
+   themselves unseal. *)
+let map_seal_nd (s : sealed (sealed int)) : sealed int =
+  map_seal s (fun s' -> FStar.Sealed.unseal s')
+
+let bind_seal_nd (s : sealed (sealed int)) : sealed int =
+  bind_seal s (fun s' -> seal (FStar.Sealed.unseal s'))
+
+(* And it reduces at the meta level. *)
+let _ = assert True by begin
+  let t = `(FStar.Sealed.unseal #int (seal 1)) in
+  let t = norm_term [primops] t in
+  if not (term_eq t (`1)) then
+    fail "unseal did not reduce";
+  ()
+end

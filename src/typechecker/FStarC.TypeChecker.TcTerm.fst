@@ -4308,20 +4308,25 @@ and check_top_level_let env e : ML _ =
          (* Check that it doesn't have a top-level effect; warn if it does.
             Do not warn in phase1 to avoid double errors.*)
          let e2, c1 =
-           let ok, c1 = TcUtil.check_top_level (Env.push_univ_vars env univ_vars) g1 c1 in //check that it has no effect and a trivial pre-condition
-           if ok
-           then e2, c1
-           else (
-             if not env.phase1 then (
+           let action, c1 = TcUtil.check_top_level (Env.push_univ_vars env univ_vars) g1 c1 in //check that it has no effect and a trivial pre-condition
+           match action with
+           | TcUtil.Keep_effect -> e2, c1
+           | TcUtil.Mask_effect_silently
+           | TcUtil.Mask_effect_and_warn ->
+             if TcUtil.Mask_effect_and_warn? action && not env.phase1 then (
                Err.warn_top_level_effect (Env.get_range env); // maybe warn
                (* The effect of e1 is about to be masked, i.e., we are turning a
                   possibly-divergent computation of type t into a value of type t.
                   That is only sound if t is actually inhabited, so we demand a
-                  proof of it. See issue #4401. *)
+                  proof of it. See issue #4401. A terminating effect needs no
+                  such proof: the computation itself witnesses the type. *)
                check_nonempty_result (Env.push_univ_vars env univ_vars) (U.comp_result c1)
              );
-             mk (Tm_meta {tm=e2; meta=Meta_desugared Masked_effect}) e2.pos, c1 //and tag it as masking an effect
-           )
+             (* Tag it as masking an effect. This suppresses the defining
+                equation in the SMT encoding and blocks delta-unfolding, which
+                is what makes two syntactically equal definitions of a
+                nondeterministic (or divergent) computation distinguishable. *)
+             mk (Tm_meta {tm=e2; meta=Meta_desugared Masked_effect}) e2.pos, c1
          in
 
          (* Unfold all @tcnorm subterms in the binding *)

@@ -160,7 +160,7 @@ let mk_emb_full em un typ printe emb_typ : Tot _ = {
 //          we strip those meta nodes
 //        In case the term inside is not a result, unembedding would
 //          anyway fail
-//        And we strip down only DIV
+//        And we strip down only DIV and NDET
 //        Can we get any other effect? Not today, since from the client
 //          code, we enforce terms to be normalized to be PURE
 //
@@ -169,13 +169,16 @@ let rec unmeta_div_results t =
   let open FStarC.Ident in
   match (SS.compress t).n with
   | Tm_meta {tm=t'; meta=Meta_monadic_lift (src, dst, _)} ->
-    if lid_equals src PC.effect_PURE_lid &&
-       lid_equals dst PC.effect_DIV_lid
+    if (lid_equals src PC.effect_PURE_lid ||
+        lid_equals src PC.effect_NDET_lid) &&
+       (lid_equals dst PC.effect_DIV_lid ||
+        lid_equals dst PC.effect_NDET_lid)
     then unmeta_div_results t'
     else t
 
   | Tm_meta {tm=t'; meta=Meta_monadic (m, _)} ->
-    if lid_equals m PC.effect_DIV_lid
+    if lid_equals m PC.effect_DIV_lid ||
+       lid_equals m PC.effect_NDET_lid
     then unmeta_div_results t'
     else t
 

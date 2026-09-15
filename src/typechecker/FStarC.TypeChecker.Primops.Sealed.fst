@@ -19,6 +19,42 @@ let bogus_cbs = {
 
 let ops =
   List.map (fun p -> { as_primitive_step_nbecbs true p with renorm_after = true}) [
+    (* [unseal] is total (it is in the [Nd] effect), and simply projects out
+       the sealed term. This is only observable in a nondeterministic context,
+       so it cannot be used to break [sealed_singl]. *)
+    (PC.unseal_lid, 2, 1,
+      (fun psc univs cbs args ->
+        match args with
+        | [(ta, _); (s, _)] ->
+          begin
+          let open EMB in
+          let try_unembed (#a:Type) (e:embedding a) (x:term) : ML (option a) =
+              try_unembed x id_norm_cb
+          in
+          match try_unembed e_any ta,
+                try_unembed (e_sealed e_any) s with
+          | Some ta, Some s ->
+            Some (embed_simple #_ #e_any psc.psc_range (Sealed.unseal s))
+          | _ -> None
+          end
+        | _ -> None),
+      (fun cb univs args ->
+        match args with
+        | [(ta, _); (s, _)] ->
+          begin
+          let open FStarC.TypeChecker.NBETerm in
+          let try_unembed (#a:Type) (e:embedding a) (x:NBETerm.t) : ML (option a) =
+              unembed e bogus_cbs x
+          in
+          match try_unembed e_any ta,
+                try_unembed (e_sealed e_any) s with
+          | Some ta, Some s ->
+            let emb = set_type ta e_any in
+            Some (embed emb cb (Sealed.unseal s))
+          | _ -> None
+          end
+        | _ -> None
+        ));
     (PC.map_seal_lid, 4, 2,
       (fun psc univs cbs args ->
         match args with
