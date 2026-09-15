@@ -313,6 +313,22 @@ let unit_entries (keys:list (string & string)) (homes:SMap.t string)
       | DLet dl -> DLet { dl with dl_body = unit_expr }, None
       | DType dt -> d, info_of dt.dt_name
       | _ -> d, None in
+    (* Section 116.  A type needs no request to have an identity.  The clones
+       [Monomorphize] makes are created long after extraction, so no request
+       key names them -- and the rule below dropped them from the interface
+       while exporting the public functions whose signatures mention them.  A
+       consumer then had every reason to build its own [duo__uint32] and every
+       right to be surprised that the header it had just included already
+       defined that [struct].
+
+       A monomorphized type's *name* is its identity: it is derived from the
+       polymorphic declaration and the type vector, by a rule both units run.
+       So a type with no request key is exported under its name, in a
+       namespace of its own so that it cannot be mistaken for one. *)
+    let key_of (n:name) : ML (option string) =
+      match key_of n, d with
+      | None, DType _ -> Some (Unit.type_key n)
+      | k, _ -> k in
     match key_of (name_of_decl d) with
     (* A declaration no request created -- a lambda-lifted local function, say
        -- has no key for a downstream unit to recognize it by, and so cannot be
@@ -340,8 +356,17 @@ let write_unit_iface (st:Extract.state) (homes:SMap.t string)
            demand; the run's own command-line sources are not among them --
            they were type-checked by the ordinary pipeline in this very run --
            and they are exactly the ones an edit is most likely to touch. *)
-        Unit.uh_digests = Extract.loaded_digests st @
-          (Options.file_list () |> List.map (fun f -> (f, BU.digest_of_file f)));
+        (* Section 116.  Recorded as *absolute* paths.  They were recorded as
+           the producer spelled them, which is a path relative to the
+           producer's working directory; the consumer resolves it against its
+           own, does not find a file there, and takes the "shipped without its
+           sources" branch -- so the check passed by not running, precisely in
+           the separate-directory arrangement it exists for.  A path is only
+           meaningful with the directory it was written in, and an absolute
+           one carries that with it. *)
+        Unit.uh_digests = (Extract.loaded_digests st @
+          (Options.file_list () |> List.map (fun f -> (f, BU.digest_of_file f))))
+          |> List.map (fun (f, d) -> (FStarC.Filepath.normalize_file_path f, d));
         Unit.uh_no_prefix = Options.custard_c_no_prefix ();
         Unit.uh_header  = hdr_file;
         Unit.uh_init    = init;
@@ -410,6 +435,9 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
   let prog = if Options.custard_monomorphize_types ()
              then phase "monomorphize" (fun () -> Monomorphize.run prog)
              else prog in
+  (* Section 116.  After the clones exist and before anything reads them. *)
+  let prog = phase "adopt" (fun () -> Extract.adopt_type_clones st prog) in
+  let imports = Extract.imports st in
   (* Phase 3/4: erasure, newtype collapse and cast elimination (section 5). *)
   let prog, infos, vd =
     phase "layout" (fun () -> Layout.run (imported_type_infos imports) prog) in

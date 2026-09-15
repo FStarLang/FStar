@@ -19956,6 +19956,188 @@ report and a bug list. The eight silent ones in particular are cases no amount
 of staring at generated output would have produced: they compile, they run, and
 they are wrong.
 
+## 116 Ten more findings of a validation report
+
+The round after §115, reproduced against the commit that shipped it. Eight new
+defects and two residual cases of fixes made there, each with a runnable case
+and a control that isolates it. Two of the ten are silent at run time and one
+is a memory-safety regression against the backend Custard is replacing.
+
+The shape they share is different from §115's. There, the recurring fault was a
+piece of information recomputed somewhere it could not be recomputed the same
+way. Here it is narrower: **a decision that depended on something it had no
+business depending on** --- the order a list was accumulated in, the directory
+a command was run from, how deep a recursion had got when it arrived, whether a
+name happened to be free. Each of the ten is a rule that was right in the
+situation it was written for and silently wrong in one that was a
+reparametrization of it.
+
+### 116.1 Order that came out backwards
+
+`--custard_link` was declared `Accumulated`, which prepends, so the list the
+generated `main` calls the linked units' initializers from was the reverse of
+what the flags said and of what the option documents. With three units where
+the middle one's global is computed from the first one's, `InitMiddle_stored`
+was assigned from an `InitBase_origin` that had not been initialized yet, and
+the program read a zero: no diagnostic anywhere, and the reporter's control ---
+reversing only the two flags --- worked.
+
+It is now `ReverseAccumulated`, which is what that spec exists for and which a
+handful of other order-sensitive options already use. Order is part of what
+`--custard_link` *means*, which is the whole reason the option is not a set.
+
+### 116.2 A type with no request to name it
+
+A `.cui` exported the declarations whose final name the extractor had a key
+for. The clones `Monomorphize` makes are created after extraction and no
+request names them --- while the public functions whose signatures mention them
+*are* exported. The consumer therefore had every reason to build its own
+`PolyLib_duo__uint32` and every right to be surprised that the header it had
+just included already defined that `struct`.
+
+A monomorphized type needs no request to have an identity: its name is derived
+from the polymorphic declaration and the type vector by a rule both units run.
+So a type declaration with no key is exported under `Unit.type_key`, a
+namespace of its own so that it cannot be mistaken for a specialization key ---
+a duplicate of one is an error, a duplicate of the other is two units that
+monomorphized the same type the same way, which is not a conflict at all and is
+now allowed through.
+
+The consumer's half is `Extract.adopt_type_clones`, run straight after
+`Monomorphize` and before anything reads its output. It asks the same question
+of the same table that `import` asks --- is this already compiled? --- and a
+hit becomes an ordinary import: out of the program, into `st.imports`, with the
+upstream unit's declaration and its layout verdict. By the time anything
+downstream looks at it there is no difference between a type imported this way
+and one imported by key.
+
+### 116.3 A path without the directory it was written in
+
+§115 recorded the digests of the sources a unit was built from, and recorded
+them as the producer spelled them --- which is a path relative to the
+producer's working directory. The consumer resolved it against its own, did not
+find a file, and took the "shipped without its sources" branch. So the check
+passed by not running, precisely in the separate-directory arrangement it
+exists for; the reporter's same-directory control correctly rejected the stale
+unit.
+
+The paths are now normalized to absolute before they are recorded. A path is
+only meaningful together with the directory it was written in, and an absolute
+one carries that with it.
+
+### 116.4 An escape that was not injective
+
+§115 made the OCaml keyword escape injective by stripping trailing underscores
+before the keyword test. The same argument applies verbatim to C and the fix
+did not reach it: a record with fields `switch` and `switch_` declared two
+members named `switch_`. Appending an underscore is an escape only if it lands
+where nothing else does.
+
+`escape_kw` now does what `escape_keyword` does, and every C name in the
+backend goes through it --- `c_name` for a definition, `c_var` for a field, a
+local and a union member --- so a declaration and a use agree by construction
+rather than by both being written the same way.
+
+### 116.5 A generated name that was assumed free
+
+§107's generated structural comparison is `<ctype>__eq`, which is a perfectly
+ordinary F\* identifier: a program with its own `pair__eq` got two definitions
+of that symbol with different types. The helper is now *allocated* against
+`taken_names`, every C name the program defines as the file will spell it,
+filled after `build_renames` since a rename changes what that spelling is. The
+memo moved from the name to the type, because an allocator hands out a
+different answer each time it is asked and asking twice for one type has to
+give the first answer.
+
+### 116.6 A product that wraps
+
+`BufCreate` at `LHeap` emitted `malloc(len * sizeof(elt))` and checked the
+result for `NULL`. The product is computed in `size_t` and wraps silently, and
+when it wraps `malloc` succeeds with a small block that the fill loop
+immediately writes `len` elements into --- so the null check cannot see it, the
+allocation did not fail. Nothing in the F\* signature prevents it either:
+`Pulse.Lib.Vec.alloc` bounds no length, so a fully verified program reaches it.
+
+karamel emits `KRML_CHECK_SIZE` here, which makes this a memory-safety
+regression against the existing pipeline rather than a cost of going direct. A
+`len > SIZE_MAX / sizeof(elt)` test now shares the `abort ()` the null check
+already had. A constant length gets none: the product is a constant expression
+the C compiler folds, and a comparison it can decide is one `-Wall` would
+rather not see.
+
+### 116.7 An arity decided twice
+
+`Mono.erased_binders_unfold` filters a *call spine*; `Mono.classify` and
+`Extract.ty_of_typ` filter the callee's binders. The first did not apply
+`keep_thunk` and the other two did, so for a callback of type
+`erased bool -> ML int` --- whose extracted type is `unit -> int`, one
+parameter, because that is what `keep_thunk` said when the type was translated
+--- the call `f (hide true)` lost its whole argument list, and an application
+with no arguments left is not an application: the result was the closure itself
+where an `int` was wanted. Deciding an arity twice from one type is only safe
+if both decisions are the same decision.
+
+### 116.8 A capture that had nothing to capture
+
+`lift_letrec` partitions a lifted local recursion's free variables into types
+and values, and a `squash` or a `Ghost.erased` local is a value by that test.
+It became a parameter of the lifted function and an argument at every reference
+to it --- while the enclosing declaration had already deleted the binder that
+would have supplied it. The reference then named a variable nothing bound.
+
+This is not §115's case, which was the recursive function's own erased
+*binder*; this is one it inherited from its enclosing scope. The two lists are
+now filtered by the same predicate, because they are filled from the same rule.
+
+### 116.9 A constructor the table did not have
+
+`Prims.exn` is extensible and so has no `DType` to walk, which is why
+`ctor_infos` had no entry for an exception constructor. But a table with no
+entry is not the same as a constructor with no fields: every traversal keyed on
+it --- §115's `any`-splitting among them --- stopped at the pattern, and the
+payload's nested `any` field never got the coercion its use needed. The payload
+of `Box (P true false)` is as ordinary as any other constructor's, and the
+reporter's ordinary-pair version is the passing control.
+
+`DExn` is now registered like any other constructor, with positional field
+names and a constructor count of 2 --- an exception match is refutable however
+many constructors are declared, because `exn` is open, so no pattern over it is
+exhaustive. `ci_exn` says the owner is `TExn` rather than a type application,
+which is the one place the difference is visible.
+
+### 116.10 Fuel that ran out at a different depth for each asker
+
+§115's inline-field plan carried a fuel budget of 10, which made the expansion
+of a type depend on *who asked*. With eleven links, the outermost plan
+described `t10` with the budget eleven levels of nesting had left, while
+`t10`'s own declaration was rewritten from a fresh budget and kept one more
+field --- "expects 12 fields, matched 13", an internal failure on a program F\*
+had accepted. Ten links worked and eleven crashed.
+
+The budget is replaced by the chain of types currently being expanded. A chain
+has no bound to run out of: the expansion of a type is the same however deep
+the request that reached it, because the only thing the chain can stop is a
+type reaching *itself* --- which is the case the fuel was really there for, and
+which `check_finite` has already rejected, a record inlined into itself having
+no finite size.
+
+### 116.11 What the report was worth
+
+The five that a compiler or a test would eventually have caught are the cheap
+half. The other five --- an initializer order that produces a zero, a stale
+check that skips itself, a `malloc` that wraps, an arity that disagrees with
+itself, a capture with nothing behind it --- are all cases where everything
+succeeds and the answer is wrong, and three of them only appear in the
+separate-compilation arrangement that no in-tree test had covered at that
+shape. The reporter was also explicit about which findings were residuals of
+§115's fixes rather than fresh, and supplied the control that made each
+distinction, which is what made them quick to place.
+
+Eleven regression tests: four programs that run under the OCaml backend, three
+under C, two multi-unit C links whose runs are the assertion, one Pulse
+allocation, and one that changes a source between the producer and the consumer
+and demands the rejection.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -20294,3 +20476,4 @@ they are wrong.
 | M10ιΜ | The shape of a tagged union | A constructor carrying one field is the union member itself rather than an anonymous struct around it, which is the shape of `option` and of 53 of 74 tagged unions in one generated EverParse header. karamel's further hoist of a sole payload to top level is declined: it makes one arm's access path depend on whether another arm exists. §113 |
 | M10ιΝ | A union member a consumer can spell | The member carried the monomorphizer's specialization suffix, which warning 377 says not to depend on while offering an escape -- `typedef` -- that exists for types and not for members. The member is scoped by its union, whose arms are distinct by construction, so it is now the bare constructor name. §114 |
 | M10ιΞ | Fourteen findings of a validation report | All fourteen fixed. Three keys or names that were not injective (an unescaped string in a specialization key, a suffix claimed on one branch only, OCaml keyword escaping that mapped `method` and `method_` together); two undefined behaviours the C backend emitted and no non-sanitizing build can see (a short-circuit operand hoisted out of the branch that guards it, and narrow modular arithmetic done at signed `int`); five shapes expanded in an order that made two sites disagree (a refutable pattern behind an `any` split losing its fallthrough, inline fields expanded innermost-first, an unfolding that ignored a realization, a lifted local `let rec` keeping an erased binder, an arrow-valued global whose arity was the arrow's rather than the emitted pointer's); three things a `.cui` did not carry across the boundary (digests recorded and never validated, a `--custard_c_no_prefix` the consumer could not know, and an `-o` filename that outranked `--custard_unit`); and one that was Custard's bug in a file that is not Custard's --- a global projector-index cache added for extraction performance that an IDE `pop`/`push` makes stale, so that reordering a record's fields silently changes which field a projection selects, in ordinary F\* normalization. It moves into `env` beside the two name-keyed caches that already do this. Eleven regression tests. §115 |
+| M10ιΟ | Ten more findings of a validation report | All ten fixed. Four decisions that depended on something they had no business depending on: the order `--custard_link` accumulated in (so a linked unit's globals were initialized after the unit computed from them, reading a zero), the directory the consumer was run from (so §115's stale-source check skipped itself in exactly the separate-directory arrangement it exists for), how deep an inline-field expansion had got when it arrived (so eleven links crashed where ten worked), and whether a generated `T__eq` name happened to be free. Two arities decided twice from one type and disagreeing: a call spine that did not apply `keep_thunk` where the callee's type did, and a lifted local recursion capturing a proof-irrelevant variable its enclosing declaration had deleted. Two tables with a hole in them: a `.cui` that exported no post-monomorphization type clone, so the consumer redefined the producer's `struct`, and `ctor_infos` with no entry for an exception constructor, so an `any` field under one never got its coercion. One C escape that was not injective, `switch` and `switch_` becoming one member. And one memory-safety regression against karamel: `malloc(len * sizeof(elt))` with no overflow check, where the product wraps, the allocation succeeds small, and the fill loop writes past it. Eleven regression tests. §116 |

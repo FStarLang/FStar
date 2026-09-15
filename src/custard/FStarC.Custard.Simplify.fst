@@ -2097,6 +2097,7 @@ type ctor_info = {
   ci_params: list string;        (* that type's parameters, in order *)
   ci_fields: list (string & cty);
   ci_realized: bool;             (* realized, and a variant there (section 8.2) *)
+  ci_exn: bool;                  (* a [DExn] constructor: its type is [exn] *)
 }
 
 (* The declarations this run links against rather than compiles, as the units
@@ -2134,14 +2135,35 @@ let ctor_infos (prog:program) : ML (SMap.t ctor_info) =
         let fs = fs |> List.map (fun (f, c) -> (f, (match c with TInline c -> c | c -> c))) in
         SMap.add m (string_of_name cn)
           { ci_owner = tn; ci_count = n; ci_params = ps; ci_fields = fs;
-            ci_realized = has_flag fl Realized && not (has_flag fl SourceRecord) })
+            ci_realized = has_flag fl Realized && not (has_flag fl SourceRecord);
+            ci_exn = false })
     (* A record is keyed on its type, which is what [ERecord], [EProj] and
        [PRecord] all name.  It has one "constructor" by construction. *)
     | DType ({ dt_name = tn; dt_params = ps; dt_body = TRecord fs; dt_flags = fl }) ->
       let fs = fs |> List.map (fun (f, c) -> (f, (match c with TInline c -> c | c -> c))) in
       SMap.add m (string_of_name tn)
         { ci_owner = tn; ci_count = 1; ci_params = ps; ci_fields = fs;
-          ci_realized = has_flag fl Realized && not (has_flag fl SourceRecord) }
+          ci_realized = has_flag fl Realized && not (has_flag fl SourceRecord);
+          ci_exn = false }
+    (* Section 116.  An exception constructor belongs here too.  [Prims.exn]
+       is extensible and so has no [DType] to walk, which is why this table
+       used to have no entry for one -- and a table with no entry is not the
+       same as a constructor with no fields: every traversal keyed on it, the
+       [any]-splitting of section 115 among them, stopped at the pattern and
+       left a nested [any] field without the coercion its use needed.  The
+       payload of [E (x, 3)] is as ordinary as any other constructor's.
+
+       [ci_count] is 2 because an exception match is refutable however many
+       constructors happen to be declared: [exn] is open, so no pattern over
+       it is exhaustive.  The fields are positional, as a variant's unnamed
+       arguments are; [ci_params] is empty because [exn] takes none. *)
+    | DExn de ->
+      SMap.add m (string_of_name de.de_name)
+        { ci_owner = de.de_name; ci_count = 2; ci_params = [];
+          ci_fields = de.de_args |> List.mapi (fun i c ->
+                        ("_" ^ string_of_int i,
+                         (match c with TInline c -> c | c -> c)));
+          ci_realized = false; ci_exn = true }
     | _ -> ());
   m
 
@@ -3185,7 +3207,9 @@ let coerce_prog (prog:program) : ML program =
   let owner_of (key:string) : ML (option cty) =
     match SMap.try_find infos key with
     | None -> None
-    | Some ci -> Some (TApp (ci.ci_owner, params_of ci.ci_owner |> List.map (fun _ -> TAny))) in
+    | Some ci ->
+      if ci.ci_exn then Some TExn
+      else Some (TApp (ci.ci_owner, params_of ci.ci_owner |> List.map (fun _ -> TAny))) in
   (* The declared field types of [key], seen through a value of type [owner],
      which is where their type arguments come from.  When [owner] does not say,
      the declared types come back unsubstituted; their [TVar]s then agree with

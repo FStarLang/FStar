@@ -152,3 +152,9 @@ val exported_keys : state -> ML (list (string & string))
 
 (** See {!FStarC.Custard.Loader.loaded_digests}. *)
 val loaded_digests : state -> ML (list (string & string))
+
+(** Section 116.  Replace each type declaration a linked unit already compiled
+    by an import of it.  Run after [Monomorphize], which is where the
+    declarations in question are created; before that there is nothing to
+    adopt.  Extends what {!imports} answers, so read that again afterwards. *)
+val adopt_type_clones : state -> program -> ML program

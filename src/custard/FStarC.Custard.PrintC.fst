@@ -284,8 +284,24 @@ let group (s:string) : ML string =
 let negate (s:string) : ML string =
   "!" ^ group s
 
+(* Section 116.  The same escape the OCaml printer makes injective in section
+   115, and for the same reason: appending an underscore is an escape only if
+   it lands where nothing else does, and a record with fields [switch] and
+   [switch_] declared two members called [switch_].  The trailing underscores
+   are stripped before the keyword test, which shifts the whole family by one
+   and keeps it distinct; a name that is not a keyword with underscores after
+   it is untouched, which is very nearly all of them.
+
+   Every C name in this backend goes through here -- {!c_name} for a
+   definition, {!c_var} for a field, a local and a union member -- so the
+   declaration and the use agree by construction. *)
 let escape_kw (s:string) : ML string =
-  if List.existsb (fun k -> k = s) c_keywords then s ^ "_" else s
+  let rec strip (t:string) : ML string =
+    let n = String.length t in
+    if n > 0 && String.substring t (n - 1) 1 = "_"
+    then strip (String.substring t 0 (n - 1))
+    else t in
+  if List.existsb (fun k -> k = strip s) c_keywords then s ^ "_" else s
 
 (* Section 32.4.  [--custard_c_no_prefix] renames a public definition to its
    unqualified identifier.  The map is keyed by {!string_of_name} and is
@@ -743,7 +759,26 @@ let ty (t:cty) : ML string = decl_of t ""
    afterwards, above them, behind prototypes -- the same arrangement the
    program's own definitions use, and for the same reason. *)
 let eq_queue : ref (list (string & dtype)) = mk_ref []
-let eq_seen : ref (SMap.t bool) = mk_ref (SMap.create 20)
+let eq_seen : ref (SMap.t string) = mk_ref (SMap.create 20)
+
+(* Section 116.  Every C name the program itself defines, as the file will
+   spell it -- filled after {!build_renames}, since a rename changes what that
+   spelling is.  A generated name is *allocated* against this rather than
+   assumed free: [T__eq] is a perfectly ordinary F* identifier, and a program
+   with its own [pair__eq] got two definitions of it, one of them with the
+   wrong type.  The two sides could not both be right by construction, because
+   only one of them knew the whole set of names in the file. *)
+let taken_names : ref (SMap.t bool) = mk_ref (SMap.create 50)
+
+(* [base], or the first [base_1], [base_2], ... that nothing else has taken.
+   Registered on the way out, so two generated names cannot collide either. *)
+let alloc_name (base:string) : ML string =
+  let rec go (cand:string) (n:int) : ML string =
+    if None? (SMap.try_find !taken_names cand) then cand
+    else go (base ^ "_" ^ string_of_int n) (n + 1) in
+  let f = go base 1 in
+  SMap.add !taken_names f true;
+  f
 
 let rec eq_target (t:cty) : ML (option dtype) =
   match t with
@@ -765,11 +800,17 @@ let eq_fn_of (t:cty) : ML (option string) =
   match eq_target t with
   | None -> None
   | Some d ->
-    let f = c_name d.dt_name ^ "__eq" in
-    (if None? (SMap.try_find !eq_seen f) then
-       (SMap.add !eq_seen f true;
-        eq_queue := !eq_queue @ [(f, d)]));
-    Some f
+    (* Section 116.  Memoized on the *type*, not on the name it settled on:
+       the allocation above hands out a different name each time it is asked,
+       so asking twice for the same type has to return the first answer. *)
+    let k = string_of_name d.dt_name in
+    (match SMap.try_find !eq_seen k with
+     | Some f -> Some f
+     | None ->
+       let f = alloc_name (c_name d.dt_name ^ "__eq") in
+       SMap.add !eq_seen k f;
+       eq_queue := !eq_queue @ [(f, d)];
+       Some f)
 
 let eq_proto (f:string) (d:dtype) : ML string =
   let n = c_name d.dt_name in
@@ -2251,6 +2292,23 @@ and emit_alloc (ind:string) (d:dest) (nm:option string)
     match lt with
     | LStack -> ind ^ decl_of elt_of (arr ^ "[" ^ dlv ^ "]") ^ ";\n"
     | LHeap ->
+      (* Section 116.  [len * sizeof(elt)] is computed in [size_t] and wraps
+         silently, and when it wraps [malloc] succeeds with a small block that
+         the fill loop immediately writes [len] elements into.  The [NULL]
+         check below cannot see it: the allocation did not fail.  Nothing in
+         the F* signature prevents it either -- [Pulse.Lib.Vec.alloc] bounds
+         no length -- so a fully verified program reaches it, and the result
+         is heap corruption that is silent without a sanitizer.
+
+         karamel emits [KRML_CHECK_SIZE] here, so this was a memory-safety
+         regression against the backend Custard is replacing rather than a
+         cost of going direct.  The test shares the [abort ()] the null check
+         already has.  A constant length needs none: the product is a constant
+         expression the C compiler folds, and a comparison it can decide is
+         one [-Wall] would rather not see. *)
+      (if Some? const_len then ""
+       else ind ^ "if (" ^ group dlv ^ " > SIZE_MAX / sizeof(" ^ elt ^
+            ")) { abort(); }\n") ^
       ind ^ elt ^ " *" ^ arr ^ " = (" ^ elt ^ " *)malloc(" ^ group dlv ^
       " * sizeof(" ^ elt ^ "));\n" ^
       ind ^ "if (" ^ arr ^ " == NULL) { abort(); }\n" in
@@ -3471,6 +3529,10 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
      renaming afterwards left the table holding the name the option had just
      replaced.  Nothing in here reads a table, so the move costs nothing. *)
   build_renames cu.cu_no_prefix p;
+  (* Section 116.  After the renames and before anything is printed, because
+     the first generated name may be allocated as early as the first body. *)
+  taken_names := SMap.create 50;
+  p |> List.iter (fun d -> SMap.add !taken_names (c_name (name_of_decl d)) true);
   let tt = SMap.create 50 in
   let ct = SMap.create 50 in
   let xt = SMap.create 20 in

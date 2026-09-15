@@ -52,6 +52,11 @@ let layout_options () : ML (list (string & string)) =
        disagree would link and be wrong. *)
     "custard_sizet_width",        (if O.custard_sizet_32 () then "32" else "native") ]
 
+let type_key (n:name) : ML string = "<type>" ^ string_of_name n
+
+let is_type_key (k:string) : ML bool =
+  String.length k >= 6 && String.substring k 0 6 = "<type>"
+
 let write_iface (fn:string) (i:iface) : ML unit =
   U.save_value_to_file fn i
 
@@ -180,6 +185,15 @@ let load_links (fns:list string) : ML links =
     let u = i.ui_header.uh_name in
     i.ui_entries |> List.iter (fun e ->
       match SMap.try_find tbl e.ue_key with
+      (* Section 116.  Two units that both monomorphized [duo] at [uint32]
+         agree by construction -- the name is computed from the declaration
+         and the type vector, and the layouts were settled under the same
+         [layout_options], which {!read_iface} has already checked.  So a
+         second copy is not a conflict; the first one wins and the second
+         unit's header defines the same [struct] under the same name, which
+         is what an include guard is for.  The error below is about a
+         *specialization*, where the two copies may genuinely differ. *)
+      | Some _ when is_type_key e.ue_key -> ()
       | Some (u', _) when u' <> u ->
         (* Which unit a request resolves to would otherwise depend on the
            order of the --custard_link flags, and the two copies may well have

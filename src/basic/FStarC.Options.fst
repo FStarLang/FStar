@@ -1029,7 +1029,14 @@ self-contained whole program.");
 
   ( noshort,
     "custard_link",
-    Accumulated (PathStr "file.cui"),
+    (* Custard section 116.  [ReverseAccumulated], because this is one of the
+       few list options whose *order* is part of what it means: the generated
+       [main] calls the linked units' global initializers in it, and a unit
+       whose globals are computed from another's has to be initialized second.
+       [Accumulated] prepends, so the order was the reverse of what the option
+       documents and of what a user writing the flags in dependency order
+       would expect. *)
+    ReverseAccumulated (PathStr "file.cui"),
     text "Link against an already-compiled Custard unit. May be repeated. A \
 definition exported by a linked unit is called rather than recompiled, and \
 its layout decisions are adopted rather than re-derived.");

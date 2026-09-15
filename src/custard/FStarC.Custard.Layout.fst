@@ -697,8 +697,23 @@ let strip_inline (c:cty) : cty =
    constructor application of the arity [ex_src] describes, and [EProj] names
    fields that are really there.  The recursion reuses this same function, so
    a chain of any depth is expanded by the rule that handles one link, and
-   fuel bounds a malformed cycle. *)
-let rec ctor_plan (look:name -> ML (option dtype)) (fuel:int)
+   [seen] bounds a malformed cycle.
+
+   Section 116.  [seen] is the chain of types currently being expanded, and it
+   replaces a fuel counter that this used to carry.  Fuel made the expansion
+   of a type depend on *who asked*: the plan for the outermost of eleven
+   inlined records described the tenth with the budget eleven levels of
+   nesting had left, while the tenth's own declaration was rewritten from a
+   fresh budget and so kept one more field.  Declaration and pattern then
+   disagreed -- "expects 12 fields, matched 13", an internal failure on a
+   program F* had accepted, and one that appeared only past the tenth link.
+
+   A chain has no such bound to run out of.  The expansion of a type is the
+   same however deep the request that reached it, because the only thing
+   [seen] can stop is a type reaching *itself*, which is the case fuel was
+   really there for and which [check_finite] has already rejected: a record
+   inlined into itself has no finite size. *)
+let rec ctor_plan (look:name -> ML (option dtype)) (seen:list string)
                   (fs : list (string & cty)) : ML fplan =
   let allpos = fs |> List.for_all (fun (f, _) -> positional f) in
   let next : SMap.t int = SMap.create 1 in
@@ -712,8 +727,9 @@ let rec ctor_plan (look:name -> ML (option dtype)) (fuel:int)
     else if g = "" then f else f ^ "_" ^ g in
   fs |> List.map (fun (f, c) ->
     match c with
-    | TInline (TApp (rn, args)) when fuel > 0 ->
-      (match expanded_body look (fuel - 1) rn args with
+    | TInline (TApp (rn, args))
+        when not (seen |> List.existsb (fun k -> k = key rn)) ->
+      (match expanded_body look (key rn :: seen) rn args with
        | Some (rc, src) ->
          let dst = src |> List.map (fun (g, gt) -> (fresh f g, gt)) in
          (f, f, Some { ex_ty = TApp (rn, args); ex_type = rn; ex_ctor = rc;
@@ -723,7 +739,7 @@ let rec ctor_plan (look:name -> ML (option dtype)) (fuel:int)
 
 (* [rn]'s constructor and its fields after [rn]'s own inlining has been
    applied -- exactly the field list its declaration will be rewritten to. *)
-and expanded_body (look:name -> ML (option dtype)) (fuel:int) (rn:name)
+and expanded_body (look:name -> ML (option dtype)) (seen:list string) (rn:name)
                   (args:list cty)
   : ML (option (option name & list (string & cty))) =
   match record_body look rn with
@@ -735,7 +751,7 @@ and expanded_body (look:name -> ML (option dtype)) (fuel:int) (rn:name)
       if not (rfs |> List.existsb (fun (_, c) -> TInline? c))
       then Some (rc, rfs)
       else
-        let pl = ctor_plan look fuel rfs in
+        let pl = ctor_plan look seen rfs in
         Some (rc, List.zip rfs pl |> List.collect (fun ((_, c), (_, g', ex)) ->
                     match ex with
                     | Some ex -> ex.ex_dst
@@ -749,7 +765,7 @@ let ctor_plans (look:name -> ML (option dtype)) (dt:dtype) : ML (list (name & fp
   | TVariant cs ->
     cs |> List.collect (fun (cn, fs) ->
       if not (fs |> List.existsb (fun (_, c) -> TInline? c)) then []
-      else [(cn, ctor_plan look 10 fs)])
+      else [(cn, ctor_plan look [key dt.dt_name] fs)])
   | _ -> []
 
 (* A field whose type mentions a type variable the declaration does not bind

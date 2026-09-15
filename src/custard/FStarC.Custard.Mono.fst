@@ -447,10 +447,21 @@ let arrow_formals_unfold (env:TcEnv.env) (t:typ) : ML (binders & comp) =
    ones went out at runtime -- as a [()] where the callee had deleted the
    parameter, so the whole spine shifted by one.  A [fn rec] hands its own
    recursive call to the body as a closure, which is exactly a local of
-   abbreviated arrow type; section 18.1. *)
+   abbreviated arrow type; section 18.1.
+
+   Section 116.  [keep_thunk], for the same reason {!classify} and
+   [Extract.ty_of_typ] apply it: this list is what a *call site* deletes, and
+   the callee's type kept its last erased binder as a thunk.  Without it a
+   callback of type [erased bool -> ML int] -- whose extracted type is
+   [unit -> int], one parameter, because that is what [keep_thunk] said when
+   the type was translated -- lost the whole of [f (hide true)]'s argument
+   list, and an application with no arguments left is not an application at
+   all: the [[] -> hd] case handed back the closure itself where an [int] was
+   wanted.  Deciding the arity twice from the same type is only safe if both
+   decisions are the same decision. *)
 let erased_binders_unfold (env:TcEnv.env) (t:typ) : ML (list bool) =
-  let bs, _ = arrow_formals_unfold env t in
-  bs |> List.map (is_erased_binder env)
+  let bs, c = arrow_formals_unfold env t in
+  keep_thunk env bs c (bs |> List.map (is_erased_binder env))
 
 (* The sorts of the binders [erased_binders] retains, in order: exactly what a
    caller still has to supply.  Used to type the binders introduced when a

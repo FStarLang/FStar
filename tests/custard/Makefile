@@ -1387,6 +1387,132 @@ $(OUTPUT_DIR)/NoPrefApp.ran: $(OUTPUT_DIR)/NoPrefLib.c $(OUTPUT_DIR)/NoPrefApp.c
 
 all: $(OUTPUT_DIR)/NoPrefApp.ran
 
+# Section 116.  Three units, the middle one's global computed from the first
+# one's.  The generated [main] has to call the initializers in --custard_link
+# order, and the run is what says so: with the order reversed InitMiddle_stored
+# reads a zero-initialized InitBase_origin, the executable exits 1, and nothing
+# else about the program is wrong.
+$(OUTPUT_DIR)/InitBase.cui: $(CACHE_DIR)/InitBase.fst.checked $(FSTAR_EXE)
+	$(call msg, "CUSTARD-UNIT-C", InitBase)
+	@mkdir -p $(OUTPUT_DIR)
+	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
+	  --custard_monomorphize_types true --custard_unit InitBase \
+	  --custard_entry InitBase.sum --odir $(OUTPUT_DIR) InitBase.fst
+
+$(OUTPUT_DIR)/InitMiddle.cui: $(CACHE_DIR)/InitMiddle.fst.checked \
+                              $(OUTPUT_DIR)/InitBase.cui $(FSTAR_EXE)
+	$(call msg, "CUSTARD-UNIT-C", InitMiddle)
+	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
+	  --custard_monomorphize_types true --custard_unit InitMiddle \
+	  --custard_link $(OUTPUT_DIR)/InitBase.cui \
+	  --custard_entry InitMiddle.read --odir $(OUTPUT_DIR) InitMiddle.fst
+
+$(OUTPUT_DIR)/InitApp.c: $(CACHE_DIR)/InitApp.fst.checked \
+                         $(OUTPUT_DIR)/InitMiddle.cui $(FSTAR_EXE)
+	$(call msg, "CUSTARD-LINK-C", InitApp)
+	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
+	  --custard_monomorphize_types true \
+	  --custard_link $(OUTPUT_DIR)/InitBase.cui \
+	  --custard_link $(OUTPUT_DIR)/InitMiddle.cui \
+	  --custard_main InitApp.main InitApp.fst -o $@
+	@# The textual half, so that a failure says which of the two it was.
+	$(Q)awk '/InitBase_init_globals/{b=NR} /InitMiddle_init_globals/{m=NR} \
+	         END{ if (b==0 || m==0 || b>m) exit 1 }' $@ \
+	  || { echo "ERROR: InitApp calls the initializers out of link order"; \
+	       exit 1; }
+
+$(OUTPUT_DIR)/InitApp.ran: $(OUTPUT_DIR)/InitApp.c
+	$(call msg, "CC", InitApp)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(OUTPUT_DIR) -x c \
+	  $(OUTPUT_DIR)/InitBase.c $(OUTPUT_DIR)/InitMiddle.c \
+	  $(OUTPUT_DIR)/InitApp.c -o $(OUTPUT_DIR)/InitApp.exe
+	$(call msg, "RUN-C", InitApp)
+	$(Q)$(OUTPUT_DIR)/InitApp.exe
+	$(Q)touch $@
+
+all: $(OUTPUT_DIR)/InitApp.ran
+
+# Section 116.  A monomorphized type crossing a unit boundary.  The consumer
+# used to emit its own [struct PolyLib_duo__uint32_s] after including the
+# header that already defined one, which the C compiler rejects outright.
+$(OUTPUT_DIR)/PolyLib.cui: $(CACHE_DIR)/PolyLib.fst.checked $(FSTAR_EXE)
+	$(call msg, "CUSTARD-UNIT-C", PolyLib)
+	@mkdir -p $(OUTPUT_DIR)
+	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
+	  --custard_monomorphize_types true --custard_unit PolyLib \
+	  --custard_entry PolyLib.swap --odir $(OUTPUT_DIR) PolyLib.fst
+	$(Q)grep -qF -- "struct PolyLib_duo__uint32_s" $(OUTPUT_DIR)/PolyLib.h \
+	  || { echo "ERROR: PolyLib did not emit the monomorphized struct"; exit 1; }
+
+$(OUTPUT_DIR)/PolyApp.c: $(CACHE_DIR)/PolyApp.fst.checked \
+                         $(OUTPUT_DIR)/PolyLib.cui $(FSTAR_EXE)
+	$(call msg, "CUSTARD-LINK-C", PolyApp)
+	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
+	  --custard_monomorphize_types true \
+	  --custard_link $(OUTPUT_DIR)/PolyLib.cui \
+	  --custard_main PolyApp.main PolyApp.fst -o $@
+	$(Q)grep -qF -- "struct PolyLib_duo__uint32_s" $(OUTPUT_DIR)/PolyApp.h \
+	  && { echo "ERROR: PolyApp redefined the producer's struct"; exit 1; }; true
+	$(Q)grep -qF -- "PolyLib_duo__uint32 p" $@ \
+	  || { echo "ERROR: PolyApp did not use the producer's type"; exit 1; }
+
+$(OUTPUT_DIR)/PolyApp.ran: $(OUTPUT_DIR)/PolyApp.c
+	$(call msg, "CC", PolyApp)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(OUTPUT_DIR) -x c \
+	  $(OUTPUT_DIR)/PolyLib.c $(OUTPUT_DIR)/PolyApp.c \
+	  -o $(OUTPUT_DIR)/PolyApp.exe
+	$(call msg, "RUN-C", PolyApp)
+	$(Q)$(OUTPUT_DIR)/PolyApp.exe
+	$(Q)touch $@
+
+all: $(OUTPUT_DIR)/PolyApp.ran
+
+# Section 116.  The stale-source check has to survive a change of directory.
+# The whole thing runs inside $(OUTPUT_DIR)/path, sources and all, because the
+# point of the test is that the producer and the consumer are run from two
+# different working directories -- which is the ordinary arrangement and the
+# one the check used to skip itself in.
+$(OUTPUT_DIR)/PathApp.checked: $(FSTAR_EXE)
+	$(call msg, "CUSTARD-PATH", PathApp)
+	$(Q)rm -rf $(OUTPUT_DIR)/path
+	$(Q)mkdir -p $(OUTPUT_DIR)/path/cache $(OUTPUT_DIR)/path/gen \
+	            $(OUTPUT_DIR)/path/consumer/cache
+	$(Q)printf 'module PathLib\nlet value (_:unit) : FStar.UInt32.t = 1ul\n' \
+	  > $(OUTPUT_DIR)/path/PathLib.fst
+	$(Q)printf 'module PathApp\nlet main () : FStar.UInt32.t =\n  if PathLib.value () = 2ul then 0ul else 1ul\n' \
+	  > $(OUTPUT_DIR)/path/PathApp.fst
+	$(Q)cd $(OUTPUT_DIR)/path && $(FSTAR_EXE) --cache_dir cache --odir gen \
+	  --cache_checked_modules PathLib.fst > /dev/null
+	$(Q)cd $(OUTPUT_DIR)/path && $(FSTAR_EXE) --cache_dir cache --odir gen \
+	  --codegen Custard --custard_backend C --custard_monomorphize_types true \
+	  --custard_unit PathLib --custard_entry PathLib.value PathLib.fst > /dev/null
+	@# The very same source, changed.  The unit is now stale.
+	$(Q)printf 'module PathLib\nlet value (_:unit) : FStar.UInt32.t = 2ul\n' \
+	  > $(OUTPUT_DIR)/path/PathLib.fst
+	$(Q)cd $(OUTPUT_DIR)/path && $(FSTAR_EXE) --cache_dir cache --odir gen \
+	  --cache_checked_modules PathLib.fst > /dev/null
+	$(Q)cd $(OUTPUT_DIR)/path && $(FSTAR_EXE) --cache_dir cache --odir gen \
+	  --cache_checked_modules PathApp.fst > /dev/null
+	@# From another directory, reaching the sources by an absolute --include.
+	$(Q)cd $(OUTPUT_DIR)/path/consumer && \
+	  ! $(FSTAR_EXE) --cache_dir cache --warn_error -321 \
+	      --include .. --include ../cache \
+	      --codegen Custard --custard_backend C \
+	      --custard_monomorphize_types true \
+	      --custard_link ../gen/PathLib.cui --custard_main PathApp.main \
+	      -o gen.c ../PathApp.fst > out.txt 2>&1 \
+	  || { echo "ERROR: PathApp linked a stale unit from another directory"; \
+	       cat out.txt; exit 1; }
+	$(Q)grep -qF -- "Error 369" $(OUTPUT_DIR)/path/consumer/out.txt \
+	  || { echo "ERROR: PathApp did not report error 369"; \
+	       cat $(OUTPUT_DIR)/path/consumer/out.txt; exit 1; }
+	$(Q)grep -qF -- "It was built from a different version of" \
+	      $(OUTPUT_DIR)/path/consumer/out.txt \
+	  || { echo "ERROR: PathApp did not name the changed source"; exit 1; }
+	$(Q)touch $@
+
+all: $(OUTPUT_DIR)/PathApp.checked
+
 $(OUTPUT_DIR)/SepAppC.ran: $(OUTPUT_DIR)/SepLibC.c $(OUTPUT_DIR)/SepAppC.c
 	$(call msg, "CC", SepAppC)
 	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(OUTPUT_DIR) -c -x c \
@@ -1660,11 +1786,19 @@ CNOGREP_NewtypeDead += "NewtypeDead_spect"
 # source says.
 CUSTARD_TESTS += KeyCollision SuffixCollision LocalErase
 CUSTARD_TESTS += SplitAny NestedInline RealizedField OcamlEscape
+
+# Section 116.  The erased thunk at a higher-order call site, the erased
+# capture of a lifted local recursion, the [any] under an exception
+# constructor, and eleven inline links.
+CUSTARD_TESTS += ErasedThunk CaptureErase AnyException InlineDepth
 # Both of these are *about* a value whose representation is [any]: the field
 # behind a refutable split, and a realized abbreviation.  WARN_ANY escalating
 # that to an error would make the cases unwritable.
 FLAGS_SplitAny = --warn_error -367
 FLAGS_RealizedField = --warn_error -367
+# Section 116.  The exception payload's dependent field is the [any] under
+# test; escalating it would make the case unwritable.
+FLAGS_AnyException = --warn_error -367
 
 # Section 115.  Short-circuit evaluation: [safe 0ul true] divides by zero if
 # the delayed operand is evaluated, so the run is the assertion.
@@ -1688,6 +1822,21 @@ FLAGS_ArrowUnitGlobal = --custard_backend C
 CEXTRA_ArrowUnitGlobal = ArrowUnitGlobal_stubs.c
 CGREP_ArrowUnitGlobal += "bool (*ArrowUnitGlobal_selected)(bool);"
 CGREP_ArrowUnitGlobal += "ArrowUnitGlobal_selected(a)"
+
+# Section 116.  Two fields that escape to one name.  The run checks the
+# values; the grep checks that the two members are distinct, which the
+# compiler would have said too -- "duplicate member" -- before the fix.
+C_TESTS += CFields
+FLAGS_CFields = --custard_backend C
+CGREP_CFields += "uint32_t switch_;"
+CGREP_CFields += "uint32_t switch__;"
+
+# Section 116.  A generated equality helper against a source function of the
+# name it would have taken.
+C_TESTS += EqHelper
+FLAGS_EqHelper = --custard_backend C --custard_entry EqHelper.pair__eq
+CGREP_EqHelper += "uint32_t EqHelper_pair__eq(uint32_t x);"
+CGREP_EqHelper += "static bool EqHelper_pair__eq_1(EqHelper_pair a, EqHelper_pair b)"
 
 C_TESTS += Union
 FLAGS_Union = --custard_entry_module Union

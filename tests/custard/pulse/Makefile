@@ -353,6 +353,20 @@ CGREP_ExtBuf = "(uint8_t *)extbuf_base"
 # would emit a (void) cast, which C++ accepts with or without the fix.
 CGREP_ExtBuf += "uint8_t *"
 
+# Section 116.  [len * sizeof(elt)] is computed in size_t and wraps; the
+# guard is what stops malloc from succeeding with a block too small for the
+# fill loop that follows it.  A constant length needs none -- [main] allocates
+# nothing -- so the pin is on the run-time one.
+C_TESTS += AllocOverflow
+# [run] is an entry of its own, so its length stays a parameter: [main] calls
+# it at a literal, which is a constant product the C compiler folds and which
+# needs no test.
+EXTRA_AllocOverflow = --custard_entry AllocOverflow.run
+CGREP_AllocOverflow += "if ((n) > SIZE_MAX / sizeof(uint32_t)) { abort(); }"
+CGREP_AllocOverflow += "malloc((n) * sizeof(uint32_t))"
+# The constant-length call needs no test of its own.
+CNOGREP_AllocOverflow += "4 > SIZE_MAX"
+
 # Section 71.  A table baked into the program image.
 C_TESTS += PulseGlobalArray
 # The whole point: an array *object* with a braced initializer, not a pointer

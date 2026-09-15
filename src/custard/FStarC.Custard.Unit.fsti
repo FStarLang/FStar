@@ -91,6 +91,16 @@ val current_version : int
     on link. *)
 val layout_options : unit -> ML (list (string & string))
 
+(** Section 116.  The key a type declaration is exported under when no
+    request created it -- a [Monomorphize] clone.  A namespace of its own,
+    because this is a name and not a specialization key, and the two must not
+    be confused: a duplicate of one is an error, a duplicate of the other is
+    two units that monomorphized the same type the same way. *)
+val type_key : name -> ML string
+
+(** Whether [k] is one of those. *)
+val is_type_key : string -> ML bool
+
 val write_iface : string -> iface -> ML unit
 
 (** Read and validate.  Raises a Custard error naming the file if the version,

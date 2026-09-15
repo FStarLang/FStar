@@ -2956,6 +2956,20 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
     let free = expand 100 free in
     let free = dedup free |> List.sortWith (fun (x:S.bv) (y:S.bv) -> x.index - y.index) in
     let tyvars, valvars = List.partition (is_type_bv st) free in
+    (* Section 116.  A proof-irrelevant capture is not a capture.  The
+       partition above separates types from values, and a [squash] or a
+       [Ghost.erased] local is a *value* by that test, so it became a
+       parameter of the lifted function and an argument at every reference to
+       it -- while the enclosing declaration had already deleted the binder
+       that would have supplied it, by exactly the rule below.  The reference
+       then named a variable nothing bound.
+
+       This is not section 115's case, which was the recursive function's own
+       erased *binder*; this is a variable it inherited from its enclosing
+       scope.  The two lists have to be filtered by the same predicate because
+       they are filled from the same rule. *)
+    let valvars = valvars |> List.filter (fun (v:S.bv) ->
+                    not (Mono.is_erased_binder (tcenv st) (S.mk_binder v))) in
     (* A higher-kinded one is erased with the rest but is not a parameter the
        target can bind ({!Mono.is_type_param}). *)
     let typars = tyvars |> List.filter (fun (v:S.bv) ->
@@ -5532,3 +5546,33 @@ let exported_keys (st:state) : ML (list (string & string)) =
   SMap.fold st.names (fun key nm acc -> (string_of_name nm, key) :: acc) []
 
 let loaded_digests (_:state) : ML (list (string & string)) = Loader.loaded_digests ()
+
+(* Section 116.  The other half of the type-clone export.  [Monomorphize] runs
+   after extraction, so its clones cannot go through {!import}: the request
+   that would have found one was answered long before the clone existed.  This
+   runs straight after it instead, and asks the same question of the same
+   table -- is this type already compiled? -- for a type whose identity is its
+   name rather than a specialization key.
+
+   A hit becomes an ordinary import: out of the program, into [st.imports],
+   with the upstream unit's declaration and its layout verdict.  Everything
+   downstream then treats it exactly as it treats a type that *was* imported
+   by key, because by the time it is looked at there is no difference. *)
+let adopt_type_clones (st:state) (prog:program) : ML program =
+  prog |> List.collect (fun d ->
+    match d with
+    | DType dt when None? (imported_unit d) ->
+      (match Unit.lookup st.links (Unit.type_key dt.dt_name) with
+       | Some (u, e) ->
+         (match e.ue_decl with
+          | DType dt' ->
+            let d' = DType { dt' with
+                             dt_flags = Imported (u, e.ue_home) :: dt'.dt_flags } in
+            st.imports := (d', e.ue_type) :: !st.imports;
+            if Options.custard_dump_specializations () then
+              BU.print2 "Custard: the type %s comes from unit %s\n"
+                        (string_of_name dt.dt_name) u;
+            []
+          | _ -> [d])
+       | None -> [d])
+    | _ -> [d])
