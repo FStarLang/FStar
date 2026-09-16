@@ -312,27 +312,34 @@ let int_module_stem (s:signedness) : string =
    support modules, and every operator we emit has a same-named function
    there, so a machine type and a machine operation are both just a qualified
    name. *)
-let int_module (sw : signedness & width) : string =
+let int_module (sw : signedness & iwidth) : ML string =
   let s, w = sw in
   match w with
-  | Sizet -> "FStar_SizeT"
+  | WSizet -> "FStar_SizeT"
+  (* Section 119.  OCaml has no 128-bit machine integer and ulib has no
+     realization of [FStar.UInt128], which is why the rule that makes one is
+     gated on the direct C backend.  Unreachable. *)
+  | W128 ->
+    failwith "Custard: a 128-bit machine integer reached the OCaml backend"
   | _ ->
     "FStar_" ^ int_module_stem s ^
     (match w with
-     | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64"
-     | Sizet -> "SizeT")
+     | W8 -> "8" | W16 -> "16" | W32 -> "32" | W64 -> "64"
+     | W128 | WSizet -> "SizeT")
 
 (* A width as [FStar.Int.Cast] spells it: [uint32], [int8]. *)
-let int_cast_stem (sw : signedness & width) : ML string =
+let int_cast_stem (sw : signedness & iwidth) : ML string =
   let s, w = sw in
   (match s with Unsigned -> "uint" | Signed -> "int") ^
   (match w with
-   | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64"
-   | Sizet -> failwith "Custard: FStar.SizeT has no FStar.Int.Cast conversion")
+   | W8 -> "8" | W16 -> "16" | W32 -> "32" | W64 -> "64"
+   | W128 ->
+     failwith "Custard: a 128-bit machine integer reached the OCaml backend"
+   | WSizet -> failwith "Custard: FStar.SizeT has no FStar.Int.Cast conversion")
 
 (* The realization's injection from [Prims.int]: [uint_to_t] at an unsigned
    width, [int_to_t] at a signed one. *)
-let int_inj (sw : signedness & width) : string =
+let int_inj (sw : signedness & iwidth) : ML string =
   let sgn, _ = sw in
   int_module sw ^ (match sgn with Unsigned -> ".uint_to_t" | Signed -> ".int_to_t")
 
@@ -638,11 +645,11 @@ let line_width : int = 80
 (* Whether a width conversion can change the mathematical value.  Signed to
    unsigned always can, because of the negatives; otherwise it is a question
    of range.  [FStar.SizeT] is 64 bits at every target F* supports. *)
-let width_bits (w:width) : int =
+let width_bits (w:iwidth) : int =
   match w with
-  | Int8 -> 8 | Int16 -> 16 | Int32 -> 32 | Int64 -> 64 | Sizet -> 64
+  | W8 -> 8 | W16 -> 16 | W32 -> 32 | W64 -> 64 | W128 -> 128 | WSizet -> 64
 
-let value_preserving (a b : signedness & width) : bool =
+let value_preserving (a b : signedness & iwidth) : bool =
   let sa, wa = a in
   let sb, wb = b in
   match sa, sb with
@@ -753,7 +760,7 @@ let rec term (ind:string) (e:expr) : ML string =
      | TInt sw1, TFloat _ ->
        "(Z.to_float (" ^ int_module sw1 ^ ".v " ^ term ind e1 ^ "))"
      | TFloat _, TFloat _ -> term ind e1
-     | TInt sw1, TInt sw2 when snd sw1 <> Sizet && snd sw2 <> Sizet ->
+     | TInt sw1, TInt sw2 when snd sw1 <> WSizet && snd sw2 <> WSizet ->
        "(FStar_Int_Cast." ^ int_cast_stem sw1 ^ "_to_" ^ int_cast_stem sw2 ^
        " " ^ term ind e1 ^ ")"
      | TInt sw1, TInt sw2 ->

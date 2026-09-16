@@ -386,18 +386,23 @@ let krml_float_lit (fw:fwidth) (v:float_lit) : ML string =
   let s = float_lit_to_string v in
   if Float32? fw && Options.custard_backend () = "KrmlC" then s ^ "f" else s
 
-let krml_width (sw : signedness & width) : K.width =
+let krml_width (sw : signedness & iwidth) : ML K.width =
   match sw with
-  | (Signed, Int8) -> K.Int8
-  | (Signed, Int16) -> K.Int16
-  | (Signed, Int32) -> K.Int32
-  | (Signed, Int64) -> K.Int64
-  | (Signed, Sizet) -> K.PtrdiffT
-  | (Unsigned, Int8) -> K.UInt8
-  | (Unsigned, Int16) -> K.UInt16
-  | (Unsigned, Int32) -> K.UInt32
-  | (Unsigned, Int64) -> K.UInt64
-  | (Unsigned, Sizet) -> K.SizeT
+  | (Signed, W8) -> K.Int8
+  | (Signed, W16) -> K.Int16
+  | (Signed, W32) -> K.Int32
+  | (Signed, W64) -> K.Int64
+  | (Signed, WSizet) -> K.PtrdiffT
+  | (Unsigned, W8) -> K.UInt8
+  | (Unsigned, W16) -> K.UInt16
+  | (Unsigned, W32) -> K.UInt32
+  | (Unsigned, W64) -> K.UInt64
+  | (Unsigned, WSizet) -> K.SizeT
+  (* Section 119.  karamel has no 128-bit width, which is why the rule that
+     makes one is gated on the direct C backend.  Unreachable, and a
+     [failwith] rather than a diagnostic for that reason. *)
+  | (_, W128) ->
+    failwith "Custard: a 128-bit machine integer reached the krml backend"
 
 let krml_op (o:op) : ML K.op =
   match o with

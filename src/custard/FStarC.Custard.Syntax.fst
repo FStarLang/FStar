@@ -90,6 +90,10 @@ let rec strip_zeros (m:int) (e:int) : int & int =
 
 (* Section 69.  Hand-rolled rather than a regexp: the grammar is three
    productions and the module has no regexp dependency. *)
+let iwidth_of_width (w:width) : iwidth =
+  match w with
+  | Int8 -> W8 | Int16 -> W16 | Int32 -> W32 | Int64 -> W64 | Sizet -> WSizet
+
 let template_of_string (s:string) : ML (list tmpl_piece) =
   let cs = String.list_of_string s in
   let flush (acc : list char) (out : list tmpl_piece) : list tmpl_piece =
@@ -370,12 +374,14 @@ let eff_to_string (e:eff) : string =
 let eff_to_doc (e:eff) : ML document = text (eff_to_string e)
 
 
-let width_to_string (sw:signedness & width) : string =
+let iwidth_to_string (w:iwidth) : string =
+  match w with
+  | W8 -> "8" | W16 -> "16" | W32 -> "32" | W64 -> "64" | W128 -> "128"
+  | WSizet -> "size"
+
+let width_to_string (sw:signedness & iwidth) : string =
   let s, w = sw in
-  (match s with Unsigned -> "u" | Signed -> "i") ^
-  (match w with
-   | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64"
-   | Sizet -> "size")
+  (match s with Unsigned -> "u" | Signed -> "i") ^ iwidth_to_string w
 
 let op_to_string (o:prim_op) : string =
   (match o.po_op with
@@ -415,9 +421,7 @@ let constant_to_doc (c:constant) : ML document =
   | CInt (v, b, Some (sg, w)) ->
     text (int_lit_to_string v b ^ "<" ^
           (match sg with Unsigned -> "u" | Signed -> "i") ^
-          (match w with
-           | Int8 -> "8" | Int16 -> "16" | Int32 -> "32"
-           | Int64 -> "64" | Sizet -> "size") ^ ">")
+          iwidth_to_string w ^ ">")
   | CFloat (v, fw) ->
     text (float_lit_to_string v ^ "<" ^ fwidth_to_string fw ^ ">")
   | CChar c -> text ("'" ^ escape_char c ^ "'")

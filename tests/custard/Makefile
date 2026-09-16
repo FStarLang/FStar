@@ -1906,6 +1906,26 @@ CEXTRA_ExtEq = ExtEq_stubs.c
 CGREP_ExtEq += "extern int32_t ExtEq_pair__eq(int32_t);"
 CGREP_ExtEq += "static bool ExtEq_pair__eq_1(ExtEq_pair a, ExtEq_pair b);"
 
+# Section 119.  FStar.UInt128 and FStar.Int128 as C's __int128.  The program
+# checks its own answers, because a grep can see the type but not whether
+# [gte_mask] has its operands the right way round or whether an arithmetic
+# shift is arithmetic.  The pins below are for the things only the emitted
+# text can show: the spelling of a type <stdint.h> does not have, and the
+# assembly of a constant C has no literal for.
+C_TESTS += Wide128
+CGREP_Wide128 += "static unsigned __int128 Wide128_big = (((unsigned __int128)0x123456789abcdef0ULL << 64) | (unsigned __int128)0xfedcba9876543210ULL);"
+CGREP_Wide128 += "__int128 m1 = (~((__int128)0ULL));"
+# The widening multiplication widens *first*: a 64-bit product cast afterwards
+# would be the wrong number, and is the one a pair of uint64_t would give.
+CGREP_Wide128 += "unsigned __int128 b = ((unsigned __int128)0x100000000ULL * (unsigned __int128)0x100000000ULL);"
+# The masks are the rule's own at this width -- at 8 through 64 they are
+# [let]s in the interface and compile like anything else.
+CGREP_Wide128 += "custard_mask_d = (custard_mask_x ^ custard_mask_y);"
+# And nothing is left of the F* representation: before section 119 this was a
+# struct of two uint64_t with a page of long-hand arithmetic over it.
+CNOGREP_Wide128 += "FStar_UInt128_uint128"
+CNOGREP_Wide128 += "uint64_t low;"
+
 C_TESTS += Union
 FLAGS_Union = --custard_entry_module Union
 # Section 113: one field is the member itself; two keep the struct.

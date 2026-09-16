@@ -472,14 +472,18 @@ let is_enum (d:dtype) : ML bool =
    not check that and neither does this. *)
 let sizet_narrow () : ML bool = Options.custard_sizet_32 ()
 
-let int_type (sw : signedness & width) : ML string =
+let int_type (sw : signedness & iwidth) : ML string =
   let s, w = sw in
   match w with
-  | Sizet -> if sizet_narrow () then "uint32_t" else "size_t"
+  | WSizet -> if sizet_narrow () then "uint32_t" else "size_t"
+  (* Section 119.  [<stdint.h>] has no [uint128_t]: [__int128] is a GCC/Clang
+     extension, and its own spelling is the only one there is. *)
+  | W128 ->
+    (match s with Unsigned -> "unsigned __int128" | Signed -> "__int128")
   | _ ->
     (match s with Unsigned -> "uint" | Signed -> "int") ^
-    (match w with Int8 -> "8" | Int16 -> "16" | Int32 -> "32"
-                | Int64 -> "64" | Sizet -> "") ^ "_t"
+    (match w with W8 -> "8" | W16 -> "16" | W32 -> "32"
+                | W64 -> "64" | W128 | WSizet -> "") ^ "_t"
 
 (* The types the standard library already realizes.  [Prims.int] is
    deliberately *not* among them: it is unbounded, and silently truncating it
@@ -883,10 +887,10 @@ let unit_value : string = "((custard_unit)0)"
    bits, since a value that fits in [uint32_t] fits in [long] anyway on every
    target F\* supports; at 64 bits there is no wider standard type, so the
    suffix is the only thing that gives the literal a type. *)
-let int_suffix (sw : signedness & width) : ML string =
+let int_suffix (sw : signedness & iwidth) : ML string =
   let s, w = sw in
-  let wide = (match w with Int64 -> true
-                         | Sizet -> not (sizet_narrow ()) | _ -> false) in
+  let wide = (match w with W64 | W128 -> true
+                         | WSizet -> not (sizet_narrow ()) | _ -> false) in
   match s with
   | Unsigned -> if wide then "ULL" else "U"
   | Signed -> if wide then "LL" else ""
@@ -895,10 +899,39 @@ let int_suffix (sw : signedness & width) : ML string =
    [9223372036854775808LL], whose magnitude is one past [LLONG_MAX].  Every
    signed width has this one value, and only at 64 bits is there no wider type
    to fall back on -- so it is written the way [<stdint.h>] writes [INT64_MIN]. *)
-let int_literal (sw : signedness & width) (v:int) (b:int_base) : ML string =
+let int_literal (sw : signedness & iwidth) (v:int) (b:int_base) : ML string =
   let sg, w = sw in
-  let wide = (match w with Int64 -> true
-                         | Sizet -> not (sizet_narrow ()) | _ -> false) in
+  let wide = (match w with W64 -> true
+                         | WSizet -> not (sizet_narrow ()) | _ -> false) in
+  (* Section 119.  C has no 128-bit literal and no suffix that produces one,
+     so a 128-bit constant is built: the low 64 bits as a literal, and as many
+     high ones as it has shifted in above them.  Written out rather than
+     computed from the halves at run time because an initializer needs a
+     constant expression, and this is one.
+
+     Always assembled at [unsigned __int128], even for a signed width, and
+     cast afterwards.  Two reasons, and they are the reasons the [LLONG_MIN]
+     case below exists: the most negative value has no positive counterpart,
+     so a magnitude built at the signed type would overflow it for exactly
+     the value that needs it most; and a magnitude that has bit 127 set is
+     not a signed value at all.  Negation at an unsigned type wraps by
+     definition (6.2.5), which is the computation wanted. *)
+  if w = W128 then
+    let neg = v < 0 in
+    let a = if neg then -v else v in
+    let lo = a % 18446744073709551616 in
+    let hi = a / 18446744073709551616 in
+    let u = "(unsigned __int128)" in
+    if hi = 0 && not neg
+    then "((" ^ int_type sw ^ ")" ^ c_int_lit_to_string lo b ^ "ULL)"
+    else
+      let mag =
+        if hi = 0 then "(" ^ u ^ c_int_lit_to_string lo b ^ "ULL)"
+        else "((" ^ u ^ c_int_lit_to_string hi b ^ "ULL << 64) | " ^
+             u ^ c_int_lit_to_string lo b ^ "ULL)" in
+      let e = if neg then "(-" ^ mag ^ ")" else mag in
+      (if Signed? sg then "((" ^ int_type sw ^ ")" ^ e ^ ")" else e)
+  else
   if Signed? sg && wide && v = -9223372036854775808
   then "(-9223372036854775807LL - 1)"
   else c_int_lit_to_string v b ^ int_suffix sw
@@ -1063,8 +1096,13 @@ let constant (c:constant) : ML string =
        literal the first *signed* type it fits in (6.4.4.1), so
        [18446744073709551615] has no type at all and a conforming compiler
        must diagnose it.  So a literal that needs more than an [int] carries
-       the suffix of the width it is meant to have, and the cast only narrows. *)
-    "((" ^ int_type sw ^ ")" ^ int_literal sw v b ^ ")"
+       the suffix of the width it is meant to have, and the cast only narrows.
+
+       Section 119's 128-bit literal is the exception: it is not a literal but
+       an expression assembled out of two of them, and it carries its own
+       casts because it has to -- so a cast here would only be a second one. *)
+    if snd sw = W128 then int_literal sw v b
+    else "((" ^ int_type sw ^ ")" ^ int_literal sw v b ^ ")"
   | CInt (v, b, None) ->
     reject ("the unbounded integer literal " ^ int_lit_to_string v b)
       ["Prims.int has no C representation; use a machine integer type."]
@@ -1227,7 +1265,7 @@ let truncate (o:prim_op) (s:string) : ML string =
   match o.po_ty with
   | Some (PInt sw) ->
     let _, w = sw in
-    let narrow = (match w with Int8 -> true | Int16 -> true | _ -> false) in
+    let narrow = (match w with W8 -> true | W16 -> true | _ -> false) in
     if modular && narrow then "((" ^ int_type sw ^ ")" ^ s ^ ")" else s
   | Some (PFloat _) | None -> s
 
@@ -1257,7 +1295,7 @@ let widen_operands (o:prim_op) : ML (option string) =
     | _ -> false in
   match o.po_ty with
   | Some (PInt (Unsigned, w)) when wrapping ->
-    (match w with Int8 | Int16 -> Some "(unsigned int)" | _ -> None)
+    (match w with W8 | W16 -> Some "(unsigned int)" | _ -> None)
   | _ -> None
 
 (* -------------------------------------------------------------------- *)
@@ -2327,7 +2365,7 @@ and emit_alloc (ind:string) (d:dest) (nm:option string)
   (* Section 95.  Under [--custard_sizet_width 32] a [FStar.SizeT.t] length is
      a [uint32_t] and the counter is still a [size_t], so it needs the cast
      that a native-width length does not. *)
-  (if len.ty = TInt (Unsigned, Sizet) && not (sizet_narrow ())
+  (if len.ty = TInt (Unsigned, WSizet) && not (sizet_narrow ())
    then group lv else "(size_t)" ^ group lv) ^
   "; " ^ i ^ "++) {\n" ^
   ind ^ "  " ^ arr ^ "[" ^ i ^ "] = " ^ iv ^ ";\n" ^

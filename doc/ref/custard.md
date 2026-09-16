@@ -20328,6 +20328,128 @@ a variable on purpose, because karamel's constant folder cannot read a float
 constant --- had a division of two `of_int`s that was two variables until this
 change and is now a parameter.
 
+## 119 Native 128-bit machine integers
+
+`FStar.UInt128` and `FStar.Int128` are, unlike every other machine-integer
+module, ordinary F\* modules with ordinary F\* implementations: a record of
+two `UInt64.t`s and the long-hand arithmetic over it. So Custard has always
+compiled them, and compiled them correctly. What it has not done is use the
+target's own 128-bit integer, which on every compiler Custard's C output is
+built with is `unsigned __int128` and `__int128`.
+
+That is the whole of this section: `FStar.UInt128.t` becomes
+`unsigned __int128`, `FStar.Int128.t` becomes `__int128`, and the vocabulary
+becomes C operators.
+
+### 119.1 A width of the IR's own
+
+`FStarC.Const.width` --- `Int8`, `Int16`, `Int32`, `Int64`, `Sizet` --- is
+not the type to add a case to. It enumerates the widths F\* has *literal
+syntax* for: `0uy`, `0ul`, `0uL`, `0sz`. There is no 128-bit literal, so a
+`Const_machine_int` at 128 bits is a term no F\* program can produce, and the
+constructor would have to be given a meaning by the parser, the resugarer,
+`ToDocument` and `TcTerm` anyway --- as well as by
+`FStar.Stubs.Reflection.V2.Data`, where it would be a new case in a
+user-visible reflection type, breaking every exhaustive match a tactic writes
+over it. All of that to describe something none of them can reach.
+
+What the IR needs is a different question with a different answer: the widths
+the *target* has. So `FStarC.Custard.Syntax` gains its own,
+
+```
+type iwidth = | W8 | W16 | W32 | W64 | W128 | WSizet
+```
+
+and `TInt`, `CInt` and `PInt` are at `iwidth`. `iwidth_of_width` converts at
+the one boundary where an F\* literal enters, in `Extract`. `WSizet` is a
+constructor rather than a number for the reason it always was --- `size_t`'s
+width is the target's business --- and it is unchanged.
+
+### 119.2 Only where the type exists
+
+`unsigned __int128` is a GCC/Clang extension, not C11. It does not exist
+under MSVC, and it does not exist on a 32-bit target. Neither the OCaml
+backend nor karamel's Rust path has a 128-bit machine integer at all.
+
+So the rule is gated: it fires under `--custard_backend C`, and
+`--custard_int128 false` turns it off there. Off, `FStar.UInt128` compiles
+from its F\* definition, which is what the other backends do today and what
+Custard did before this section --- the fallback is not something that had to
+be written, it is the behaviour that was already there. (It needs
+`--custard_monomorphize_types`, because `mul_wide`'s implementation returns a
+tuple; that too is unchanged.)
+
+`--custard_int128` joins `layout_options` in the `.cui`. With it
+`FStar.UInt128.t` is a 128-bit scalar and without it a two-field struct, and
+two separately compiled units that disagreed would link and be wrong.
+
+`PrintKrml` and `PrintOCaml` `failwith` on `W128` rather than diagnose it:
+the gate means they cannot be reached, and a diagnostic would be describing a
+program the user cannot write.
+
+### 119.3 The operations that are not the vocabulary's
+
+At 8, 16, 32 and 64 bits `eq_mask` and `gte_mask` are `let`s in the
+interface, written in terms of `logxor`, `shift_right` and `sub_mod`, so they
+compile like any other F\* definition and always have. At 128 they are
+`val`s, and their implementations are *about* the record of two halves ---
+which is exactly the representation the rule replaces. The same is true of
+`mul32`, `mul_wide`, `uint64_to_uint128`, `uint128_to_uint64` and
+`FStar.Int128.shift_arithmetic_right`. So each of those needs a rule, and
+each gets one, inline:
+
+- `uint64_to_uint128` and `uint128_to_uint64` are width changes and nothing
+  else, exactly as `FStar.SizeT`'s conversions are, and saying so is what
+  keeps them out of the emitted program.
+- `mul_wide` and `mul32` widen *first*: `(unsigned __int128)x * y`, not a
+  64-bit product cast afterwards. The cast is part of the rule rather than a
+  coercion left for someone else, because "afterwards" is the wrong answer
+  and is the one a pair of `uint64_t`s would give.
+- `shift_arithmetic_right` is `>>` at a signed width, which in C is the
+  arithmetic shift. Only at 128: at the narrower signed widths the F\*
+  definition is still what compiles, and those widths reach the OCaml
+  backend, whose `shift_right` is logical on the representation.
+- `eq_mask` and `gte_mask` are `FStar.UInt64`'s branch-free expressions
+  transcribed at 128 bits. Both read an argument several times, and a rule is
+  handed expressions rather than values, so both bind their arguments first.
+
+### 119.4 A constant C cannot spell
+
+C has no 128-bit literal and no suffix that produces one, so a 128-bit
+constant is assembled: the low 64 bits as a literal, and as many high ones as
+it has, shifted in above them. Written out rather than computed at run time
+because an initializer needs a constant expression, and this is one.
+
+Always assembled at `unsigned __int128`, even for a signed width, and cast
+afterwards --- for the reason the `LLONG_MIN` case beside it exists. The most
+negative value has no positive counterpart, so a magnitude built at the
+signed type would overflow it for exactly the value that needs it most; and a
+magnitude with bit 127 set is not a signed value at all. Negation at an
+unsigned type wraps by definition, which is the computation wanted.
+
+Where the value fits in the low half and is not negative the assembly
+collapses to a cast of a single `ULL` literal, which is the common case:
+`zero`, `one`, and anything a program is likely to write.
+
+### 119.5 What is not here
+
+`FStar.UInt128` has no `mul`, `div` or `rem` --- the interface deliberately
+offers only the widening multiplications --- so neither does this. Nothing
+stops a 128-bit multiply or divide from being emitted if ulib ever declares
+one; the generic vocabulary already covers the names.
+
+Nor is there a `printf` story. `to_string` and `of_string` stay externs, as
+they are at every other width, because there is no length modifier for
+`__int128` in any C standard and the program that wants one has a better idea
+of what it wants than Custard does.
+
+One regression test, `Wide128`, which checks its own answers: a grep can see
+that the type came out as `unsigned __int128`, but not that `gte_mask` has
+its operands the right way round or that an arithmetic shift is arithmetic.
+The cases that matter most are the ones a 64-bit answer would also satisfy
+--- a widening multiply whose product needs 65 bits and up, a shift across
+the halfway line --- because those are what say the width is real.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -20669,3 +20791,4 @@ change and is now a parameter.
 | M10ιΟ | Ten more findings of a validation report | All ten fixed. Four decisions that depended on something they had no business depending on: the order `--custard_link` accumulated in (so a linked unit's globals were initialized after the unit computed from them, reading a zero), the directory the consumer was run from (so §115's stale-source check skipped itself in exactly the separate-directory arrangement it exists for), how deep an inline-field expansion had got when it arrived (so eleven links crashed where ten worked), and whether a generated `T__eq` name happened to be free. Two arities decided twice from one type and disagreeing: a call spine that did not apply `keep_thunk` where the callee's type did, and a lifted local recursion capturing a proof-irrelevant variable its enclosing declaration had deleted. Two tables with a hole in them: a `.cui` that exported no post-monomorphization type clone, so the consumer redefined the producer's `struct`, and `ctor_infos` with no entry for an exception constructor, so an `any` field under one never got its coercion. One C escape that was not injective, `switch` and `switch_` becoming one member. And one memory-safety regression against karamel: `malloc(len * sizeof(elt))` with no overflow check, where the product wraps, the allocation succeeds small, and the fill loop writes past it. Eleven regression tests. §116 |
 | M10ιΠ | Four more findings of a validation report | All four fixed. One expression position the coercion traversal visited with no expected type --- an `if` or `while` condition, whose type is `bool` at every such node in every program, so it is the one place the pass always knows what is wanted and was throwing it away; an `any`-laid-out field tested there reached the OCaml backend as an `Obj.t`. Two halves of one thing about C names: the tables that `alloc_name` and `--custard_c_no_prefix` allocate against were built by spelling each declaration with `c_name`, which is not how an `[@@custard_extern]` declaration is emitted, so they recorded a name the file does not contain and left the one it does contain free --- and, for the names nothing renames, a definition landing on an external's target gave a file that *defines* a symbol the program had declared foreign, with no complaint from the C compiler and none from the linker, running the wrong body. And one that made §115's stale-source check skip itself again: §116 recorded the producer's absolute path, so a `.cui` copied out of its build tree --- which is what a `.cui` is for --- resolved to nothing and took the "shipped without its sources" branch, even against a genuinely different version of that source. A source this run does have under its own name is now found on the include path and compared. Six regression tests. §117 |
 | M10ιΡ | Float constants on the path ulib takes | `FStar.Float32.zero` is an `inline_for_extraction let` over `of_int 0L`, so it inlines away before §64.1's name rule can see it and what survives is an `ECast` --- which is not an `EConst`, so the constant was spelled `(float) 0` and an array filled with it was not a constant fill and lost its brace initializer to a loop, 599 times across the reporter's tree. An integer literal converted to a float is now folded to a float literal in `Simplify`, which fixes the spelling and the initializers together and catches the literal that only becomes one after specialization. `of_int` rounds, so the fold is refused unless the format holds the integer exactly --- decided on its odd part, so `2^30` folds and `2^24+1` does not --- and the cast then stands. §118 |
+| M10ιΣ | `FStar.UInt128` and `FStar.Int128` as `__int128` | Both were compiled from their F\* implementations --- a record of two `UInt64.t`s and the long-hand arithmetic over it --- which was correct and was not the target's own 128-bit integer. The IR gains a width of its own, `iwidth`, rather than a case in `FStarC.Const.width`: that type enumerates the widths F\* has literal syntax for, 128 is not one of them, and a case there would have to be given a meaning by the parser, the resugarer and a user-visible reflection type, all to describe a term no program can produce. `unsigned __int128` is a GCC/Clang extension rather than C11, so the rule fires only under `--custard_backend C` and `--custard_int128 false` turns it off --- off being what the other backends, which have no 128-bit integer at all, already do. The operations that are `val`s at this width and `let`s at the narrower ones --- `eq_mask`, `gte_mask`, `mul32`, `mul_wide`, the two 64-bit conversions, `shift_arithmetic_right` --- get inline rules, because their F\* implementations are about the representation the rule replaces. And C has no 128-bit literal, so a constant is assembled from its halves, at `unsigned __int128` and cast afterwards so that the most negative value, which has no positive counterpart, is still a constant expression. §119 |

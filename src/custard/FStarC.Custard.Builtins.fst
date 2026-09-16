@@ -49,37 +49,57 @@ let register_rule (l:Ident.lident) (r:rule) : ML unit =
    [FStarC.Extraction.Krml.mk_width] and [mk_op]: karamel is the backend that
    has to give these a C meaning, and a discrepancy would show up as a
    miscompilation rather than as an error. *)
-let machine_int_of_module (ns : list string) : option (signedness & width) =
+(* Section 119.  Unlike every other width here, [FStar.UInt128] and
+   [FStar.Int128] are ordinary F* modules with ordinary F* implementations --
+   a record of two [UInt64.t]s and the long-hand arithmetic over it -- so
+   doing nothing is already correct, and what the rule buys is the target's
+   own instruction rather than the ability to compile at all.
+
+   Hence the gate.  [unsigned __int128] is a GCC/Clang extension rather than
+   C11: it does not exist under MSVC or on a 32-bit target.  And neither the
+   OCaml backend nor karamel's Rust path has a 128-bit machine integer at
+   all.  So off, the F* implementation is what gets compiled -- which is not
+   a fallback anyone has to write, it is the behaviour those backends have
+   today.  [--custard_int128 false] asks for it on the C path too. *)
+let int128_enabled () : ML bool =
+  Options.custard_backend () = "C" && Options.custard_int128 ()
+
+let machine_int_of_module (ns : list string) : ML (option (signedness & iwidth)) =
   match ns with
   | ["FStar"; m] ->
     (match m with
-     | "UInt8"  -> Some (Unsigned, Int8)
-     | "UInt16" -> Some (Unsigned, Int16)
-     | "UInt32" -> Some (Unsigned, Int32)
-     | "UInt64" -> Some (Unsigned, Int64)
-     | "Int8"   -> Some (Signed, Int8)
-     | "Int16"  -> Some (Signed, Int16)
-     | "Int32"  -> Some (Signed, Int32)
-     | "Int64"  -> Some (Signed, Int64)
+     | "UInt8"  -> Some (Unsigned, W8)
+     | "UInt16" -> Some (Unsigned, W16)
+     | "UInt32" -> Some (Unsigned, W32)
+     | "UInt64" -> Some (Unsigned, W64)
+     | "Int8"   -> Some (Signed, W8)
+     | "Int16"  -> Some (Signed, W16)
+     | "Int32"  -> Some (Signed, W32)
+     | "Int64"  -> Some (Signed, W64)
+     | "UInt128" -> if int128_enabled () then Some (Unsigned, W128) else None
+     | "Int128"  -> if int128_enabled () then Some (Signed, W128) else None
      (* [FStar.SizeT.t] is *defined* as [UInt64.t], so without this rule
         Custard would see through it and emit a 64-bit integer even where the
         C backend must emit [size_t]. *)
-     | "SizeT"  -> Some (Unsigned, Sizet)
+     | "SizeT"  -> Some (Unsigned, WSizet)
      | _ -> None)
   | _ -> None
 
 (* The same mapping, keyed on the lowercase spelling that [FStar.Int.Cast]'s
-   conversion names use ([uint32_to_uint8]). *)
-let machine_int_of_name (s:string) : option (signedness & width) =
+   conversion names use ([uint32_to_uint8]).  The 128-bit pair lives in
+   [FStar.Int.Cast.Full], which is otherwise the same module. *)
+let machine_int_of_name (s:string) : ML (option (signedness & iwidth)) =
   match s with
-  | "uint8"  -> Some (Unsigned, Int8)
-  | "uint16" -> Some (Unsigned, Int16)
-  | "uint32" -> Some (Unsigned, Int32)
-  | "uint64" -> Some (Unsigned, Int64)
-  | "int8"   -> Some (Signed, Int8)
-  | "int16"  -> Some (Signed, Int16)
-  | "int32"  -> Some (Signed, Int32)
-  | "int64"  -> Some (Signed, Int64)
+  | "uint8"  -> Some (Unsigned, W8)
+  | "uint16" -> Some (Unsigned, W16)
+  | "uint32" -> Some (Unsigned, W32)
+  | "uint64" -> Some (Unsigned, W64)
+  | "int8"   -> Some (Signed, W8)
+  | "int16"  -> Some (Signed, W16)
+  | "int32"  -> Some (Signed, W32)
+  | "int64"  -> Some (Signed, W64)
+  | "uint128" -> if int128_enabled () then Some (Unsigned, W128) else None
+  | "int128"  -> if int128_enabled () then Some (Signed, W128) else None
   | _ -> None
 
 (* [Some (op, arity)].  Note [add] and [add_mod] differ: the former is only
@@ -113,10 +133,60 @@ let int_op (id:string) : option (op & int) =
    always is; the backends recognize [Prims.bool] by name. *)
 let bool_name : name = { ns = ["Prims"]; id = "bool"; spec = None }
 
-let int_lit (sw : signedness & width) (v:int) : expr =
+let int_lit (sw : signedness & iwidth) (v:int) : expr =
   mk (EConst (CInt (v, Dec, Some sw))) (TInt sw) E_Pure
 
-let machine_int_rule (sw : signedness & width) (id:string) : ML (option rule) =
+(* Section 119.  The operations [FStar.UInt128] and [FStar.Int128] have that
+   no narrower width does, built inline out of the vocabulary the width
+   already has.
+
+   They need rules and the narrower widths do not for one reason: at 8, 16,
+   32 and 64 bits these are *derived* -- [eq_mask] is a [let] in the
+   interface, written in terms of [logxor] and [shift_right], so it compiles
+   like any other F* definition.  At 128 they are [val]s, and their
+   implementations are about the record of two halves, which is precisely the
+   representation this rule replaces.  So there is nothing left to compile
+   and the operation has to be said here. *)
+let i128_op (sw : signedness & iwidth) (o:op) (args:list expr) : ML expr =
+  mk (EOp ({ po_op = o; po_ty = Some (PInt sw) }, args)) (TInt sw)
+     (List.fold_left (fun a (e:expr) -> join_eff a e.eff) E_Pure args)
+
+(* The shift count is a [UInt32.t], as it is at every width. *)
+let i128_shift_count (n:int) : expr =
+  mk (EConst (CInt (n, Dec, Some (Unsigned, W32)))) (TInt (Unsigned, W32)) E_Pure
+
+(* [FStar.UInt64]'s [eq_mask] and [gte_mask], transcribed at 128 bits.  Both
+   read their arguments several times, so both bind them first: a rule is
+   handed expressions, not values, and an argument that allocates would
+   otherwise allocate once per occurrence. *)
+let i128_masks (sw : signedness & iwidth) (which:string) : ML rule =
+  let ty = TInt sw in
+  let bind (nm:string) (e:expr) (k:expr) : expr =
+    mk (ELet (nm, ty, e, k)) k.ty (join_eff e.eff k.eff) in
+  let v (nm:string) : expr = mk (EVar nm) ty E_Pure in
+  let op (o:op) (args:list expr) : ML expr = i128_op sw o args in
+  let x = v "custard_mask_x" in
+  let y = v "custard_mask_y" in
+  let one = int_lit sw 1 in
+  let top = i128_shift_count 127 in
+  let body =
+    if which = "eq_mask"
+    then
+      (* d = x ^ y;  c = ((d | -d) >> 127) - 1 *)
+      bind "custard_mask_d" (op BXor [x; y])
+        (let d = v "custard_mask_d" in
+         let minus_d = op AddW [op BNot [d]; one] in
+         op SubW [op BShiftR [op BOr [d; minus_d]; top]; one])
+    else
+      (* q = (x ^ y) | ((x -%^ y) ^ y);  c = ((x ^ q) >> 127) - 1 *)
+      let q = op BOr [op BXor [x; y]; op BXor [op SubW [x; y]; y]] in
+      op SubW [op BShiftR [op BXor [x; q]; top]; one] in
+  Rule_prim (2, fun _ args ->
+    match args with
+    | [a; b] -> bind "custard_mask_x" a (bind "custard_mask_y" b body)
+    | _ -> failwith "Custard: mask applied to the wrong arity")
+
+let machine_int_rule (sw : signedness & iwidth) (id:string) : ML (option rule) =
   match int_op id with
   | Some (o, arity) ->
     let po = { po_op = o; po_ty = Some (PInt sw) } in
@@ -150,19 +220,61 @@ let machine_int_rule (sw : signedness & width) (id:string) : ML (option rule) =
        saying so keeps them out of the emitted program: the alternative is a
        call into a support library that C does not have. *)
     | "uint16_to_sizet" | "uint32_to_sizet" | "uint64_to_sizet"
-    | "of_u32" | "of_u64" when snd sw = Sizet ->
+    | "of_u32" | "of_u64" when snd sw = WSizet ->
       Some (Rule_prim (1, fun _ args ->
         match args with
         | [a] -> mk (ECast (a, TInt sw)) (TInt sw) a.eff
         | _ -> failwith "Custard: SizeT conversion applied to the wrong arity"))
 
-    | "sizet_to_uint32" | "sizet_to_uint64" when snd sw = Sizet ->
-      let target = if id = "sizet_to_uint32" then (Unsigned, Int32)
-                                             else (Unsigned, Int64) in
+    | "sizet_to_uint32" | "sizet_to_uint64" when snd sw = WSizet ->
+      let target = if id = "sizet_to_uint32" then (Unsigned, W32)
+                                             else (Unsigned, W64) in
       Some (Rule_prim (1, fun _ args ->
         match args with
         | [a] -> mk (ECast (a, TInt target)) (TInt target) a.eff
         | _ -> failwith "Custard: SizeT conversion applied to the wrong arity"))
+
+    (* Section 119.  [FStar.UInt128]'s own conversions to and from 64 bits.
+       Like [FStar.SizeT]'s above they are width changes and nothing else, and
+       saying so is what keeps them out of the emitted program. *)
+    | "uint64_to_uint128" when snd sw = W128 ->
+      Some (Rule_prim (1, fun _ args ->
+        match args with
+        | [a] -> mk (ECast (a, TInt sw)) (TInt sw) a.eff
+        | _ -> failwith "Custard: 128-bit conversion applied to the wrong arity"))
+
+    | "uint128_to_uint64" when snd sw = W128 ->
+      let target = (Unsigned, W64) in
+      Some (Rule_prim (1, fun _ args ->
+        match args with
+        | [a] -> mk (ECast (a, TInt target)) (TInt target) a.eff
+        | _ -> failwith "Custard: 128-bit conversion applied to the wrong arity"))
+
+    (* The widening multiplications: both operands are 64 bits (or, for
+       [mul32], 64 and 32), and the product is the 128-bit one that cannot
+       overflow.  Widening first is what makes that true in C as well --
+       [(unsigned __int128)x * y] rather than a 64-bit multiply cast after
+       the fact -- so the cast is part of the rule, not a coercion left for
+       someone else to insert. *)
+    | "mul_wide" | "mul32" when snd sw = W128 ->
+      Some (Rule_prim (2, fun _ args ->
+        match args with
+        | [a; b] ->
+          let wide (e:expr) : expr = mk (ECast (e, TInt sw)) (TInt sw) e.eff in
+          i128_op sw Mult [wide a; wide b]
+        | _ -> failwith "Custard: mul_wide applied to the wrong arity"))
+
+    (* [FStar.Int128.shift_arithmetic_right].  In C a right shift of a signed
+       value is the arithmetic one, so this is [>>] at a signed width -- the
+       same operator [shift_right] gets, at a type that gives it the other
+       meaning.  Only at 128: at the narrower signed widths the F* definition
+       is still what compiles, and the OCaml backend, which reaches those,
+       has a [shift_right] that is logical on the representation. *)
+    | "shift_arithmetic_right" when snd sw = W128 && Signed? (fst sw) ->
+      Some (Rule_prim (2, fun _ args -> i128_op sw BShiftR args))
+
+    | "eq_mask" | "gte_mask" when snd sw = W128 ->
+      Some (i128_masks sw id)
 
     | _ -> None
 
@@ -430,7 +542,8 @@ let prims_rule (id:string) : ML (option rule) =
    dictionaries) are already gone.  *)
 
 let size_lit (n:int) : expr =
-  mk (EConst (CInt (n, Dec, Some (Unsigned, Sizet)))) (TInt (Unsigned, Sizet)) E_Pure
+  mk (EConst (CInt (n, Dec, Some (Unsigned, WSizet)))) (TInt (Unsigned, WSizet))
+     E_Pure
 
 let elt_of (tys : list cty) : cty =
   match tys with
@@ -1228,7 +1341,12 @@ let builtin_rule (l:Ident.lident) : ML rule =
               friends -- still has to reach [is_realized_module] below. *)
            else if ns = ["FStar"; "Pervasives"] && Some? (pervasives_rule id)
            then pervasives_rule id
-           else if ns = ["FStar"; "Int"; "Cast"] then int_cast_rule id
+           (* Section 119.  [FStar.Int.Cast.Full] is [FStar.Int.Cast] with
+              the conversions that mention 128 bits; the names are spelled
+              the same way and [int_cast_rule] reads them the same way. *)
+           else if ns = ["FStar"; "Int"; "Cast"] ||
+                   ns = ["FStar"; "Int"; "Cast"; "Full"]
+           then int_cast_rule id
            else if ns = ["FStar"; "All"] || ns = ["FStarC"; "Effect"]
            then (match ref_rule id with
                  | Some r -> Some r

@@ -50,7 +50,11 @@ let layout_options () : ML (list (string & string)) =
        [Sizet] -- but it changes the C every struct containing a [size_t] field
        is laid out with, and a unit is compiled separately.  Two units that
        disagree would link and be wrong. *)
-    "custard_sizet_width",        (if O.custard_sizet_32 () then "32" else "native") ]
+    "custard_sizet_width",        (if O.custard_sizet_32 () then "32" else "native");
+    (* Section 119.  With it, [FStar.UInt128.t] is [unsigned __int128]; without
+       it, the record of two [UInt64.t]s the F* implementation defines.  Two
+       units that disagree would link and be wrong. *)
+    "custard_int128",             string_of_bool (O.custard_int128 ()) ]
 
 let type_key (n:name) : ML string = "<type>" ^ string_of_name n
 

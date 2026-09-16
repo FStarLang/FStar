@@ -230,6 +230,7 @@ val custard_fuel                : unit    -> ML int
 val custard_max_specializations : unit    -> ML int
 val custard_norm_budget         : unit    -> ML int
 val custard_monomorphize_types  : unit    -> ML bool
+val custard_int128              : unit    -> ML bool
 val custard_backend             : unit    -> ML string
 val custard_sizet_32            : unit    -> ML bool
 val custard_backend_krml        : unit    -> ML bool

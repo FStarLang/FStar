@@ -89,8 +89,8 @@ let rec hint_of_cty (fuel:int) (c:cty) : ML string =
   | TInt (s, w) ->
     (match s with Signed -> "int" | Unsigned -> "uint") ^
     (match w with
-     | Int8 -> "8" | Int16 -> "16" | Int32 -> "32"
-     | Int64 -> "64" | Sizet -> "size")
+     | W8 -> "8" | W16 -> "16" | W32 -> "32"
+     | W64 -> "64" | W128 -> "128" | WSizet -> "size")
   | TFloat Float32 -> "float32"
   | TFloat Float64 -> "float64"
   | TFloat Float16 -> "float16"

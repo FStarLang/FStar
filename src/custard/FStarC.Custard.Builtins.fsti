@@ -82,8 +82,9 @@ type rule =
 val register_rule : Ident.lident -> rule -> ML unit
 
 (** The machine-integer type a module name denotes, if any: ["FStar.UInt32"]
-    is [(Unsigned, Int32)]. *)
-val machine_int_of_module : list string -> option (signedness & width)
+    is [(Unsigned, W32)].  In [ML] because section 119's 128-bit pair is
+    answered only under the backend and the option that have it. *)
+val machine_int_of_module : list string -> ML (option (signedness & iwidth))
 
 (** Section 63.1.  Install the callback that decides whether a namespace
     declares a [@@custard_float] type.  {!builtin_rule} dispatches on a

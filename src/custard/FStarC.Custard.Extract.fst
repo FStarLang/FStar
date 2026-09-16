@@ -2567,7 +2567,8 @@ and constant_of_sconst (c:sconst) : ML (option constant) =
      come out [0xFF] in the generated C.  It is not part of the value, which
      is why [Const_int] and [CInt] both carry the two separately. *)
   | Const_int (v, b) -> Some (CInt (v, b, None))
-  | Const_machine_int (v, b, sg, w) -> Some (CInt (v, b, Some (sg, w)))
+  | Const_machine_int (v, b, sg, w) ->
+    Some (CInt (v, b, Some (sg, iwidth_of_width w)))
   | Const_char c -> Some (CChar c)
   | Const_string (s, _) -> Some (CString s)
   | _ -> None

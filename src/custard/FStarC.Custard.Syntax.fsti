@@ -100,6 +100,32 @@ val is_pure : eff -> bool
 
 (** {1 Types} *)
 
+(** Section 119.  The integer widths the IR can name.  Deliberately *not*
+    [FStarC.Const.width]: that type enumerates the widths F* has literal
+    syntax for -- [0uy], [0ul], [0sz] -- and 128 is not one of them, so
+    adding a case there would add a constructor to a reflection type that
+    no F* program can ever produce.  What the IR needs is a width the
+    *target* has, which is a different question with a different answer.
+
+    [WSizet] is [size_t], whose width is the target's business; it is a
+    constructor rather than a width because that is exactly what C says. *)
+type iwidth =
+  | W8
+  | W16
+  | W32
+  | W64
+  | W128
+  (** Section 119.  [FStar.UInt128] and [FStar.Int128], compiled to C's
+      [unsigned __int128]/[__int128].  Only the C backend has these: the
+      type is a GCC/Clang extension rather than C11, neither OCaml nor
+      karamel's Rust path has a 128-bit machine integer, and where it is
+      unavailable the F* implementation is still there to fall back on. *)
+  | WSizet
+
+(** The [FStarC.Const.width] a machine-integer literal was written at, as an
+    IR width.  Total, because every width F* can write is one the IR has. *)
+val iwidth_of_width : width -> iwidth
+
 (** The floating-point formats, section 38.  Named after the source modules
     [FStar.Float32] and [FStar.Float64], and matching karamel's [width] so
     that the krml backend can hand them straight over. *)
@@ -139,7 +165,7 @@ type float_lit = {
 type constant =
   | CUnit
   | CBool   of bool
-  | CInt    of int & int_base & option (signedness & width)
+  | CInt    of int & int_base & option (signedness & iwidth)
   (** An integer literal, section 39: the mathematical integer it denotes,
       and the base it was written in.  The base has no bearing on the value
       and is carried for the reader of the generated code, who wrote [0xff]
@@ -150,7 +176,7 @@ type constant =
 
 type cty =
   | TVar   of string
-  | TInt   of signedness & width
+  | TInt   of signedness & iwidth
   (** A machine integer.  Installed by a builtin rule (section 8): the source
       [FStar.UInt32.t] is a record wrapping a refined [nat], which Custard must
       not look inside. *)
@@ -336,7 +362,7 @@ type op =
 
 (** The machine type a primitive operation works at. *)
 type prim_ty =
-  | PInt   of signedness & width
+  | PInt   of signedness & iwidth
   | PFloat of fwidth
 
 (** A primitive operation, together with the machine type it operates at.

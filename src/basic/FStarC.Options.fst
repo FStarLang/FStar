@@ -208,6 +208,7 @@ let defaults = [
   ("custard_max_specializations"               , Int 1000);
   ("custard_norm_budget"                       , Int 10000000);
   ("custard_monomorphize_types"                , Bool false);
+  ("custard_int128"                            , Bool true);
   ("custard_backend"                           , String "OCaml");
   ("custard_sizet_width"                       , String "native");
   ("custard_split"                             , Bool false);
@@ -487,6 +488,7 @@ let get_custard_fuel            ()      = lookup_opt "custard_fuel"             
 let get_custard_max_specializations () = lookup_opt "custard_max_specializations" as_int
 let get_custard_norm_budget     ()      = lookup_opt "custard_norm_budget"      as_int
 let get_custard_monomorphize_types () = lookup_opt "custard_monomorphize_types" as_bool
+let get_custard_int128          ()      = lookup_opt "custard_int128"           as_bool
 let get_custard_backend         ()      = lookup_opt "custard_backend"          as_string
 let get_custard_sizet_width     ()      = lookup_opt "custard_sizet_width"      as_string
 let get_custard_split           ()      = lookup_opt "custard_split"           as_bool
@@ -987,6 +989,15 @@ reduction: building a closure's term is charged for every node it copies \
     BoolStr,
     text "Monomorphize type binders too, not just type-class dictionaries and \
 binders explicitly marked [@@monomorphize] (default false)");
+
+  ( noshort,
+    "custard_int128",
+    BoolStr,
+    text "Compile FStar.UInt128 and FStar.Int128 to C's unsigned __int128 \
+and __int128 rather than to their F* implementations (default true). Only \
+--custard_backend C is affected; the other backends have no 128-bit machine \
+integer. Set to false for a target whose compiler lacks the extension, such \
+as MSVC or any 32-bit target.");
 
   ( noshort,
     "custard_backend",
@@ -2194,6 +2205,7 @@ let custard_fuel                 () = get_custard_fuel ()
 let custard_max_specializations  () = get_custard_max_specializations ()
 let custard_norm_budget          () = get_custard_norm_budget ()
 let custard_monomorphize_types   () = get_custard_monomorphize_types ()
+let custard_int128               () = get_custard_int128 ()
 let custard_backend              () = get_custard_backend ()
 let custard_sizet_32             () = get_custard_sizet_width () = "32"
 let custard_backend_krml         () = let b = get_custard_backend () in
