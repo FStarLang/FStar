@@ -16,6 +16,8 @@ open FStarC.Class.Show
 
 open FStarC.Extraction.Krml
 
+module BU = FStarC.Util
+
 let flatten_app e =
   let rec aux args e =
     match e.expr with
