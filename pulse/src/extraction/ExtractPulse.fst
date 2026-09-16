@@ -270,6 +270,31 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
     when string_of_mlpath p = "DPE.run_stt" ->
     cb body
 
+  (* Pulse.Lib.Comment, the Pulse counterpart of LowStar.Comment *)
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ { expr = ebefore }; body; { expr = eafter } ])
+    when string_of_mlpath p = "Pulse.Lib.Comment.comment_gen" ->
+    begin match ebefore, eafter with
+    | MLE_Const (MLC_String sbefore), MLE_Const (MLC_String safter) ->
+      if BU.contains sbefore "*/"
+      then failwith "Before Comment contains end-of-comment marker";
+      if BU.contains safter "*/"
+      then failwith "After Comment contains end-of-comment marker";
+      EComment (sbefore, cb body, safter)
+    | _ ->
+      failwith "Cannot extract comment_gen applied to a non-literal"
+    end
+
+  | MLE_App ({ expr = MLE_Name p }, [ { expr = e } ])
+    when string_of_mlpath p = "Pulse.Lib.Comment.comment" ->
+    begin match e with
+    | MLE_Const (MLC_String s) ->
+      if BU.contains s "*/"
+      then failwith "Standalone Comment contains end-of-comment marker";
+      EStandaloneComment s
+    | _ ->
+      failwith "Cannot extract comment applied to a non-literal"
+    end
+
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ { expr = MLE_Var lbl }; arg ])
     when string_of_mlpath p = "Pulse.Lib.Dv.goto" ->
     (match lookup_goto lbl with
