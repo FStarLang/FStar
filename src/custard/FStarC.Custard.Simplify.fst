@@ -3361,6 +3361,10 @@ let coerce_prog (prog:program) : ML program =
     | None -> infer env e1 in
   let first (a b : option cty) : option cty =
     match a with Some _ -> a | None -> b in
+  (* Section 117.1.  A condition is not a branch: whatever its subject is, what
+     is asked of it is that it be a [bool], and that is an expectation the
+     traversal has at every one of these nodes and had been throwing away. *)
+  let cond_ty : option cty = Some (TApp ({ ns = ["Prims"]; id = "bool"; spec = None }, [])) in
   (* Rewrite [x] so that every boundary inside it agrees, then coerce [x]
      itself if what it is meets what is expected of it. *)
   (* The nodes whose [go] hands the expectation straight to whatever produces
@@ -3407,7 +3411,7 @@ let coerce_prog (prog:program) : ML program =
            | _ -> e) ts es))
        | _ -> same (EOp (o, es)))
     | EOp (o, es) -> same (EOp (o, es |> List.map (go env None)))
-    | EWhile (c, b) -> same (EWhile (go env None c, go env None b))
+    | EWhile (c, b) -> same (EWhile (check env cond_ty c, go env None b))
     | ERaise e1 -> same (ERaise (check env (Some TExn) e1))
     | ESeq (a, b) -> same (ESeq (go env None a, check env exp b))
     | ELet (v, t, e1, e2) ->
@@ -3427,7 +3431,7 @@ let coerce_prog (prog:program) : ML program =
       (* One expectation for both branches, so that a coercion goes on the one
          that needs it rather than on the [if]. *)
       let exp = first exp (first (infer env a) (infer env b)) in
-      same (EIf (go env None c, check env exp a, check env exp b))
+      same (EIf (check env cond_ty c, check env exp a, check env exp b))
     | ETuple es ->
       let ts = (match exp with
                 | Some (TTuple ts) when List.length ts = List.length es -> ts |> List.map Some

@@ -3191,6 +3191,19 @@ let comment_of (l:dlet) : ML string =
    producer's modules from the `.cui` makes the two agree by construction,
    and does so without asking the consumer to repeat a flag that describes
    somebody else's output. *)
+(* Section 117.2.  The one declaration whose emitted C symbol is not spelled
+   from its F* name.  An [@@custard_extern "..."] target is taken verbatim
+   (section 45.1), so a table built by walking the program and spelling each
+   declaration with [c_name] records, for an external, a name the generated
+   file does not contain -- and leaves the name it *does* contain free for
+   whatever allocates into that table next. *)
+let extern_target (d:decl) : ML (option string) =
+  match d with
+  | DExternal x -> (match x.dx_target with
+                    | Some "" | None -> None
+                    | Some t -> Some t)
+  | _ -> None
+
 let build_renames (extra:list string) (p:program) : ML unit =
   let mods = Options.custard_c_no_prefix () @ extra in
   renames := SMap.create 0;
@@ -3202,7 +3215,9 @@ let build_renames (extra:list string) (p:program) : ML unit =
     let taken : SMap.t string = SMap.create 50 in
     p |> List.iter (fun d ->
       let n = name_of_decl d in
-      SMap.add taken (escape_kw (sanitize (mangled_name n)))
+      SMap.add taken (match extern_target d with
+                      | Some t -> t
+                      | None -> escape_kw (sanitize (mangled_name n)))
                      (string_of_name n));
     let claimed : SMap.t string = SMap.create 20 in
     let used_mod : SMap.t bool = SMap.create 5 in
@@ -3451,6 +3466,53 @@ let check_interface_names (p:program) : ML unit =
         end)
     | _ -> ())
 
+(* Section 117.3.  Two declarations that the generated file spells the same
+   way.
+
+   The backend mints C names in several places -- [c_name] from an F* lid, an
+   [@@custard_extern] target taken verbatim, a [--custard_c_no_prefix] rename,
+   the [<unit>_init_globals] initializer -- and until section 117 each of them
+   decided on its own whether the name it wanted was free.  {!alloc_name} and
+   {!build_renames} now consult one table, which is what keeps the *generated*
+   names out of each other's way; this is the other half, and it is about the
+   names the program itself supplies.  Nothing renames those, so the only
+   thing to do with a collision is to say so.
+
+   Worth an error rather than leaving it to the C compiler because C does not
+   always catch it.  A definition with external linkage that lands on an
+   external's target produces a file that *defines* a symbol the program had
+   declared foreign: gcc -Wall -Wextra says nothing, the link succeeds, the
+   archive member is never pulled in, and the program silently runs the wrong
+   body.  That is the whole point of the attribute inverted -- naming a symbol
+   the program does not own -- so it is caught here instead. *)
+let check_emitted_names (init_name:string) (p:program) : ML unit =
+  let seen : SMap.t (string & bool) = SMap.create 50 in
+  let claim (nm:string) (who:string) (ext:bool) : ML unit =
+    match SMap.try_find seen nm with
+    (* Two externals reaching one target is not this check's business: it is
+       legitimate when the two agree, and section 53.3's own check below --
+       which has both prototypes to compare and better advice to give -- owns
+       the case where they do not. *)
+    | Some (other, ext') when other <> who && not (ext && ext') ->
+      E.raise_error0 E.Error_CustardExportCollision (
+        [ text ("Custard: " ^ other ^ " and " ^ who ^ " are both named `" ^
+                nm ^ "' in the generated C.");
+          text "Two declarations cannot share one C name." ] @
+        (if ext || ext' then
+           [ text "A name given by [@@custard_extern] is taken verbatim and names a symbol outside this program, so a definition that lands on it would take that symbol over -- with no diagnostic from the C compiler and no link error, because the definition simply wins." ]
+         else []))
+    | _ -> SMap.add seen nm (who, ext) in
+  (* Only when there is one: the initializer is emitted only for a unit that
+     has a global to set up, and a name nothing prints cannot collide. *)
+  if Cons? (global_inits_of p) then
+    claim init_name "the generated initializer" false;
+  p |> List.iter (fun d ->
+    if not (local d) then () else
+    let n = name_of_decl d in
+    match extern_target d with
+    | Some t -> claim t (string_of_name n) true
+    | None -> claim (c_name n) (string_of_name n) false)
+
 (* [base] is the stem of the output file: the source includes [base.h], and
    the include guard is derived from it.  Returns the header and the source,
    in that order. *)
@@ -3532,7 +3594,15 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   (* Section 116.  After the renames and before anything is printed, because
      the first generated name may be allocated as early as the first body. *)
   taken_names := SMap.create 50;
-  p |> List.iter (fun d -> SMap.add !taken_names (c_name (name_of_decl d)) true);
+  (* Section 117.2.  Under the spelling that is emitted, which for an external
+     is its target and not its F* name. *)
+  p |> List.iter (fun d ->
+    SMap.add !taken_names (match extern_target d with
+                           | Some t -> t
+                           | None -> c_name (name_of_decl d)) true);
+  (* And the initializer, which is minted from the unit name and was the one
+     generated name nothing recorded at all (section 117.3). *)
+  SMap.add !taken_names init_name true;
   let tt = SMap.create 50 in
   let ct = SMap.create 50 in
   let xt = SMap.create 20 in
@@ -3628,6 +3698,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   types := tt; ctors := ct; externs := xt; keeps := kt; void_fns := vt;
   build_macros p;
   check_interface_names p;
+  check_emitted_names init_name p;
   check_reference_copies p;
   arities := at;
   uses_narrow := false;

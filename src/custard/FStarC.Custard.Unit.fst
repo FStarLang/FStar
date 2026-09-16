@@ -107,12 +107,32 @@ let read_iface (fn:string) : ML iface =
      without the sources it was built from, and this run is then linking
      against a binary artifact and has nothing to compare.  It is only when
      the file is present and has changed that the interface is known stale. *)
+  (* Section 117.4.  The recorded path is the producer's, and is absolute
+     (section 116.3) so that it means the same thing from any directory on
+     the machine that wrote it.  On another machine, or in another checkout,
+     or once the `.cui' has been copied out of the build tree it was made in
+     -- which is what a `.cui' is *for* -- it resolves to nothing, and the
+     "shipped without its sources" branch takes itself, even when the
+     consumer is compiling against a genuinely different version of that very
+     source.  Absence was standing in for "this run has no copy of the file",
+     and a path that has moved is not absent.
+
+     So when the recorded path is gone, the file is looked for again under
+     its own name on this run's include path, which is where the consumer's
+     copy of a module it also builds from source will be.  Only a name that
+     resolves to nothing anywhere is treated as shipped. *)
   h.uh_digests |> List.iter (fun (f, d) ->
-    if FStarC.Filepath.file_exists f && U.digest_of_file f <> d then
+    let found =
+      if FStarC.Filepath.file_exists f then Some f
+      else FStarC.Find.find_file (FStarC.Filepath.basename f) in
+    match found with
+    | Some g when U.digest_of_file g <> d ->
       bad fn [
-        text (BU.fmt1 "It was built from a different version of %s." f);
+        text (BU.fmt1 "It was built from a different version of %s."
+                (if g = f then f else BU.fmt2 "%s (found here as %s)" f g));
         text "Rebuild the unit."
-      ]);
+      ]
+    | _ -> ());
   i
 
 (** {1 Dumping} *)

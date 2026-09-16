@@ -20138,6 +20138,133 @@ under C, two multi-unit C links whose runs are the assertion, one Pulse
 allocation, and one that changes a source between the producer and the consumer
 and demands the rejection.
 
+## 117 Four more findings of a validation report
+
+Round 47 of the same review, against the ten-fix commit. The ten fixes of §116
+were re-run and all ten hold, with their controls; four new findings follow,
+and three of them are one sentence apart.
+
+### 117.1 The one expression position with no expectation
+
+`coerce_prog` walks a declaration in two modes. `check env exp e` knows what
+type `e` is expected to have, and inserts an `ECoerce` when what it finds is
+`TAny`; `go env None e` does not, and a value whose representation was erased
+passes through it uncoerced. Which mode a node's children are visited in is
+the whole of what the pass does.
+
+An `if`'s *branches* are visited with the expectation, and deliberately: one
+expectation for both, so that the coercion goes on the branch that needs it
+rather than around the `if`. Its *condition* was visited with `None`. The
+comment above the line says "one expectation for both branches", which is
+true, and the condition was reached by the same line without being the thing
+the sentence was about.
+
+A condition is not a branch. Its type is not the `if`'s type --- it is
+`bool`, at every `EIf` and every `EWhile` in every program --- so it is the
+one position where the traversal *always* has an expectation and had been
+throwing it away. The source route to it is ordinary: a constructor field
+whose type depends on an earlier field is laid out as `any`, and a branch that
+binds it and tests it is what a tagged union looks like in F\*.
+
+```fstar
+noeq type pkt = | Pk : b:bool -> data:(if b then int else bool) -> pkt
+let get (p:pkt) : ML int =
+  match p with
+  | Pk true n  -> n + 100
+  | Pk false c -> if c then 1 else 0
+```
+
+The OCaml backend emitted the `int` branch's coercion and not the condition's,
+in one expression:
+
+```ocaml
+| { b = false; data = c; _ } -> (if c then (Prims.parse_int "1") else ...)
+```
+
+which is an `Obj.t` where the language requires a `bool`. The same field
+*returned* from the same branch was coerced correctly, which is what says the
+defect is the position and not the field. Both `EIf` and `EWhile` now pass
+`Some bool` to their condition. Only the OCaml backend could reach it: C
+rejects an `any`-laid-out value earlier, with error 368.
+
+### 117.2 A name the tables did not know the file contained
+
+§116 fixed a generated `T__eq` helper landing on a source function by
+allocating it against a table of the program's C names, and §32.9 checks a
+`--custard_c_no_prefix` rename against a table built the same way. Both tables
+are built by walking the declarations and spelling each one with `c_name`.
+
+An `[@@custard_extern "..."]` declaration is not emitted under `c_name` of its
+F\* name. Its C symbol is the attribute's string, taken verbatim (§45.1) ---
+that is the whole point of the attribute, since the symbol belongs to someone
+else's language and not to F\*'s. So both tables recorded, for every external,
+a name the generated file does not contain, and left the name it *does*
+contain free for whatever allocated into the table next. An external's target
+is an arbitrary string chosen by the programmer, so it can be exactly the name
+the backend is about to mint.
+
+Both tables are now seeded with the spelling that is emitted: the `!externs`
+target for an external, `c_name` for everything else. That is enough for the
+generated helper, which then steps around the external and is allocated as
+`ExtEq_pair__eq_1`, and for the rename, which is rejected with §32.9's
+existing message.
+
+### 117.3 And the names nothing renames
+
+Seeding the tables settles the *generated* names, because a generated name has
+somewhere else to go. It does nothing for the names the program itself
+supplies, which nothing renames: a definition whose `c_name` is exactly an
+external's target, or a definition spelled like the `<unit>_init_globals` the
+backend mints from the unit name --- which was the one generated name that
+appeared in no table at all.
+
+Left alone, the first of these is worse than an ordinary clash. A definition
+with external linkage that lands on an external's target produces a file that
+*defines* a symbol the program had declared foreign. `gcc -Wall -Wextra` says
+nothing, the link succeeds, the archive member holding the real implementation
+is never pulled in, and the program runs the wrong body --- the attribute's
+purpose exactly inverted. The reporter's case returned `6` where `203` was
+right, with no diagnostic from any tool in the chain.
+
+So `check_emitted_names` walks the program under its emitted spellings, adds
+the initializer when the unit has one to emit, and rejects a duplicate with
+error 374. Two *externals* reaching one target are not its business: that is
+legitimate when they agree, and §53.3's check --- which has both prototypes
+and better advice --- owns the case where they do not.
+
+The shape of all three is the same. A backend that mints C names in several
+places has to have one table, holding every name the file will really contain,
+that every minting site consults; and where nothing can be minted, the
+collision has to be said out loud.
+
+### 117.4 Absence is not relocation
+
+§115 gave a unit the digests of the sources it was extracted from, so that a
+`.cui` that outlived an edit to its own source is rejected rather than linked.
+A file that is no longer *there* was deliberately not an error: a unit may be
+shipped without the sources it was built from, and this run then has nothing
+to compare. §116 made the recorded paths absolute, so that the check means the
+same thing from any directory.
+
+The two branches --- reject when present and changed, skip when absent --- were
+then selected by whether the producer's build tree still exists at its original
+absolute location in the consumer's environment. That is false for every
+shipped unit, which is what a `.cui` is *for*. Copy it to another checkout, and
+the recorded path resolves to nothing, the guard skips itself, and a genuinely
+stale unit links silently against a different version of its own source.
+
+Absence was standing in for "this run has no copy of the file", and a path that
+has moved is not absent. When the recorded path is gone the file is now looked
+for again under its own name on this run's include path, which is where a
+consumer's copy of a module it also builds from source will be; only a name
+that resolves nowhere is treated as shipped. The diagnostic names both paths,
+since the one the unit recorded is a build machine's and the one that was
+compared is this run's.
+
+Six regression tests: one OCaml program that runs, one C program with a
+hand-written stub beside it, three rejections, and one that ships a unit out of
+a build tree it then removes and demands the rejection.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -20477,3 +20604,4 @@ and demands the rejection.
 | M10ιΝ | A union member a consumer can spell | The member carried the monomorphizer's specialization suffix, which warning 377 says not to depend on while offering an escape -- `typedef` -- that exists for types and not for members. The member is scoped by its union, whose arms are distinct by construction, so it is now the bare constructor name. §114 |
 | M10ιΞ | Fourteen findings of a validation report | All fourteen fixed. Three keys or names that were not injective (an unescaped string in a specialization key, a suffix claimed on one branch only, OCaml keyword escaping that mapped `method` and `method_` together); two undefined behaviours the C backend emitted and no non-sanitizing build can see (a short-circuit operand hoisted out of the branch that guards it, and narrow modular arithmetic done at signed `int`); five shapes expanded in an order that made two sites disagree (a refutable pattern behind an `any` split losing its fallthrough, inline fields expanded innermost-first, an unfolding that ignored a realization, a lifted local `let rec` keeping an erased binder, an arrow-valued global whose arity was the arrow's rather than the emitted pointer's); three things a `.cui` did not carry across the boundary (digests recorded and never validated, a `--custard_c_no_prefix` the consumer could not know, and an `-o` filename that outranked `--custard_unit`); and one that was Custard's bug in a file that is not Custard's --- a global projector-index cache added for extraction performance that an IDE `pop`/`push` makes stale, so that reordering a record's fields silently changes which field a projection selects, in ordinary F\* normalization. It moves into `env` beside the two name-keyed caches that already do this. Eleven regression tests. §115 |
 | M10ιΟ | Ten more findings of a validation report | All ten fixed. Four decisions that depended on something they had no business depending on: the order `--custard_link` accumulated in (so a linked unit's globals were initialized after the unit computed from them, reading a zero), the directory the consumer was run from (so §115's stale-source check skipped itself in exactly the separate-directory arrangement it exists for), how deep an inline-field expansion had got when it arrived (so eleven links crashed where ten worked), and whether a generated `T__eq` name happened to be free. Two arities decided twice from one type and disagreeing: a call spine that did not apply `keep_thunk` where the callee's type did, and a lifted local recursion capturing a proof-irrelevant variable its enclosing declaration had deleted. Two tables with a hole in them: a `.cui` that exported no post-monomorphization type clone, so the consumer redefined the producer's `struct`, and `ctor_infos` with no entry for an exception constructor, so an `any` field under one never got its coercion. One C escape that was not injective, `switch` and `switch_` becoming one member. And one memory-safety regression against karamel: `malloc(len * sizeof(elt))` with no overflow check, where the product wraps, the allocation succeeds small, and the fill loop writes past it. Eleven regression tests. §116 |
+| M10ιΠ | Four more findings of a validation report | All four fixed. One expression position the coercion traversal visited with no expected type --- an `if` or `while` condition, whose type is `bool` at every such node in every program, so it is the one place the pass always knows what is wanted and was throwing it away; an `any`-laid-out field tested there reached the OCaml backend as an `Obj.t`. Two halves of one thing about C names: the tables that `alloc_name` and `--custard_c_no_prefix` allocate against were built by spelling each declaration with `c_name`, which is not how an `[@@custard_extern]` declaration is emitted, so they recorded a name the file does not contain and left the one it does contain free --- and, for the names nothing renames, a definition landing on an external's target gave a file that *defines* a symbol the program had declared foreign, with no complaint from the C compiler and none from the linker, running the wrong body. And one that made §115's stale-source check skip itself again: §116 recorded the producer's absolute path, so a `.cui` copied out of its build tree --- which is what a `.cui` is for --- resolved to nothing and took the "shipped without its sources" branch, even against a genuinely different version of that source. A source this run does have under its own name is now found on the include path and compared. Six regression tests. §117 |
