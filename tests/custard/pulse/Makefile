@@ -249,6 +249,13 @@ CNOGREP_ArrInit += "< 0;"
 # reason this is pinned here rather than in tests/custard: its loop counter
 # is a size_t and its length is now a uint32_t, so the comparison needs a
 # cast that a native-width length does not.
+# Section 118.  The same, filled with a float constant that ulib derives
+# through [of_int] rather than declaring.
+C_TESTS += ArrFloat
+CGREP_ArrFloat += "float a[4] = { 0.0f, 0.0f, 0.0f, 0.0f };"
+CGREP_ArrFloat += "a[1] = 1.0f;"
+CNOGREP_ArrFloat += "(float)0"
+
 C_TESTS += ArrInit32
 EXTRA_ArrInit32 = --custard_sizet_width 32
 CGREP_ArrInit32 += "for (size_t _ci1 = 0; _ci1 < (size_t)(n); _ci1++)"

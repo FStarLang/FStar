@@ -644,7 +644,29 @@ let rec simpl (x:expr) : ML expr =
     (match rebuild_proj_id r with Some s -> s | None -> r)
   | EProj (e1, n, f) -> { x with e = EProj (simpl e1, n, f) }
   | EDiscrim (e1, n) -> { x with e = EDiscrim (simpl e1, n) }
-  | ECast (e1, c) -> { x with e = ECast (simpl e1, c) }
+  (* Section 118.  An integer literal converted to a float is a float literal.
+
+     [FStar.Float32.of_int] is the derived path to a float constant, and it is
+     the only one ulib has: [zero] and [one] are [inline_for_extraction let]s
+     over it, so they inline away before the vocabulary can recognize the
+     names, and section 64.1's rule for them fires only for a library that
+     declares them abstract instead.  What survived was an [ECast], which is
+     not an [EConst] -- so the constant was spelled [(float)0] rather than
+     [0.0f], and, worse, an array filled with it was not a constant fill and
+     lost its brace initializer to a loop.
+
+     Folding here rather than in the [of_int] rule catches the literal that
+     only becomes one after specialization and inlining, which the rule
+     cannot see.  [of_int] rounds, so the fold is refused for an [n] the
+     format does not hold exactly; the cast then stands and says so. *)
+  | ECast (e1, c) ->
+    let e1 = simpl e1 in
+    (match e1.e, c with
+     | EConst (CInt (n, _, _)), TFloat fw ->
+       (match float_lit_of_int fw n with
+        | Some f -> { x with e = EConst (CFloat (f, fw)) }
+        | None -> { x with e = ECast (e1, c) })
+     | _ -> { x with e = ECast (e1, c) })
   | ECoerce (e1, c) -> { x with e = ECoerce (simpl e1, c) }
   | EWhile (a, b) -> { x with e = EWhile (simpl a, simpl b) }
   | ETry (a, brs) -> { x with e = ETry (simpl a, brs |> List.map simpl_branch) }

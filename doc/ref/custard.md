@@ -20265,6 +20265,69 @@ Six regression tests: one OCaml program that runs, one C program with a
 hand-written stub beside it, three rejections, and one that ships a unit out of
 a build tree it then removes and demands the rejection.
 
+## 118 An integer literal converted to a float is a float literal
+
+Kuiper's float modules moved off their own `[@@custard_float 32]` abstract
+types and onto `FStar.Float32` and `FStar.Float64` directly. The arithmetic
+came out the same; every float *constant* changed spelling, from `0.0f` to
+`(float) 0`, and 599 arrays across 68 units lost a brace initializer to a
+fill loop.
+
+### 118.1 A rule that could not fire where it was aimed
+
+§64.1 added `zero` and `one` to the float vocabulary, because a library that
+declares them abstract --- the natural thing to do when the axioms are what
+you care about --- otherwise got an extern and a silent link error. That is
+still true and the rule still fixes it. But the vocabulary is a *name*
+lookup, and the two modules the paragraph names do not declare those names:
+
+```fstar
+inline_for_extraction let zero = of_int 0L
+```
+
+`zero` inlines away long before anything can recognize it, and what survives
+is `of_int 0L`, whose rule produces an `ECast`. So for `FStar.Float32` and
+`FStar.Float64` --- the modules §64.1's own comment is about --- the derived
+path always won and the rule was dead.
+
+### 118.2 And a cast is not a constant
+
+The spelling alone would be cosmetic. `ECast` is not `EConst`, and the C
+backend's array initializer is gated on the fill being one: a constant fill of
+constant length is what C's initializer syntax is for, and anything else takes
+a loop. So an array of floats filled with `zero` was not a constant fill.
+`float rchProd[64] = {0.0f, ...}` became a declaration and a loop over it.
+
+The reporter measured the consequence and reports there is not one at the PTX
+level --- 660 kernels, byte-identical stack frames, `ptxas -O3` folds the
+loops --- which is worth recording, because it says this is about the emitted
+C and not about speed. It is still 599 of them, and anything compiling the
+output at `-O0`, or wanting its arrays statically initialized, sees all 599.
+
+### 118.3 The fold
+
+`ECast (EConst (CInt n), TFloat fw)` now folds to `EConst (CFloat ...)` in
+`Simplify`, which fixes both halves at once and is more general than a name
+rule: it catches the literal that only becomes one after specialization and
+inlining, which no rule keyed on a name can see.
+
+`of_int` is a conversion and not a coercion --- it rounds above 2^24 at
+binary32 and 2^53 at binary64 --- so the fold is refused unless the format
+holds `n` exactly, which is decided on `n`'s odd part rather than on `n`, so
+that `2^30` folds and `2^24+1` does not. When it is refused the cast stands,
+which is the honest thing for it to say. For `0` and `1`, which is what this
+is really about, neither is in question.
+
+§64.1's rule stays. It is now the path for a library that *declares* the
+names, and the fold is the path for one that derives them; the two agree on
+the answer, which is what the original report was about.
+
+Two regression tests, and two existing ones changed: `FloatOptIn` pins both
+sides of the exactness boundary, and `FloatsKrml` --- whose every operand is
+a variable on purpose, because karamel's constant folder cannot read a float
+constant --- had a division of two `of_int`s that was two variables until this
+change and is now a parameter.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -20605,3 +20668,4 @@ a build tree it then removes and demands the rejection.
 | M10ιΞ | Fourteen findings of a validation report | All fourteen fixed. Three keys or names that were not injective (an unescaped string in a specialization key, a suffix claimed on one branch only, OCaml keyword escaping that mapped `method` and `method_` together); two undefined behaviours the C backend emitted and no non-sanitizing build can see (a short-circuit operand hoisted out of the branch that guards it, and narrow modular arithmetic done at signed `int`); five shapes expanded in an order that made two sites disagree (a refutable pattern behind an `any` split losing its fallthrough, inline fields expanded innermost-first, an unfolding that ignored a realization, a lifted local `let rec` keeping an erased binder, an arrow-valued global whose arity was the arrow's rather than the emitted pointer's); three things a `.cui` did not carry across the boundary (digests recorded and never validated, a `--custard_c_no_prefix` the consumer could not know, and an `-o` filename that outranked `--custard_unit`); and one that was Custard's bug in a file that is not Custard's --- a global projector-index cache added for extraction performance that an IDE `pop`/`push` makes stale, so that reordering a record's fields silently changes which field a projection selects, in ordinary F\* normalization. It moves into `env` beside the two name-keyed caches that already do this. Eleven regression tests. §115 |
 | M10ιΟ | Ten more findings of a validation report | All ten fixed. Four decisions that depended on something they had no business depending on: the order `--custard_link` accumulated in (so a linked unit's globals were initialized after the unit computed from them, reading a zero), the directory the consumer was run from (so §115's stale-source check skipped itself in exactly the separate-directory arrangement it exists for), how deep an inline-field expansion had got when it arrived (so eleven links crashed where ten worked), and whether a generated `T__eq` name happened to be free. Two arities decided twice from one type and disagreeing: a call spine that did not apply `keep_thunk` where the callee's type did, and a lifted local recursion capturing a proof-irrelevant variable its enclosing declaration had deleted. Two tables with a hole in them: a `.cui` that exported no post-monomorphization type clone, so the consumer redefined the producer's `struct`, and `ctor_infos` with no entry for an exception constructor, so an `any` field under one never got its coercion. One C escape that was not injective, `switch` and `switch_` becoming one member. And one memory-safety regression against karamel: `malloc(len * sizeof(elt))` with no overflow check, where the product wraps, the allocation succeeds small, and the fill loop writes past it. Eleven regression tests. §116 |
 | M10ιΠ | Four more findings of a validation report | All four fixed. One expression position the coercion traversal visited with no expected type --- an `if` or `while` condition, whose type is `bool` at every such node in every program, so it is the one place the pass always knows what is wanted and was throwing it away; an `any`-laid-out field tested there reached the OCaml backend as an `Obj.t`. Two halves of one thing about C names: the tables that `alloc_name` and `--custard_c_no_prefix` allocate against were built by spelling each declaration with `c_name`, which is not how an `[@@custard_extern]` declaration is emitted, so they recorded a name the file does not contain and left the one it does contain free --- and, for the names nothing renames, a definition landing on an external's target gave a file that *defines* a symbol the program had declared foreign, with no complaint from the C compiler and none from the linker, running the wrong body. And one that made §115's stale-source check skip itself again: §116 recorded the producer's absolute path, so a `.cui` copied out of its build tree --- which is what a `.cui` is for --- resolved to nothing and took the "shipped without its sources" branch, even against a genuinely different version of that source. A source this run does have under its own name is now found on the include path and compared. Six regression tests. §117 |
+| M10ιΡ | Float constants on the path ulib takes | `FStar.Float32.zero` is an `inline_for_extraction let` over `of_int 0L`, so it inlines away before §64.1's name rule can see it and what survives is an `ECast` --- which is not an `EConst`, so the constant was spelled `(float) 0` and an array filled with it was not a constant fill and lost its brace initializer to a loop, 599 times across the reporter's tree. An integer literal converted to a float is now folded to a float literal in `Simplify`, which fixes the spelling and the initializers together and catches the literal that only becomes one after specialization. `of_int` rounds, so the fold is refused unless the format holds the integer exactly --- decided on its odd part, so `2^30` folds and `2^24+1` does not --- and the cast then stands. §118 |

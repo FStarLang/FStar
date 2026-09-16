@@ -298,7 +298,14 @@ let float_rule (fw:fwidth) (id:string) : ML (option rule) =
        derives, and every float library has the two names.  A library that
        really does want them realized in C can still say so: a rule from a
        definition's own attributes beats the builtin table, so
-       [@@custard_extern "MY_ZERO"] wins over this. *)
+       [@@custard_extern "MY_ZERO"] wins over this.
+
+       Section 118.  Which means this rule never fires for the two modules
+       the paragraph above names: their [zero] inlines away to [of_int 0L]
+       long before a name is looked up here, and what survived was a cast.
+       The fold in [Simplify] is what gives *them* their spelling, and the
+       two paths now agree on it.  This one stays for the library that
+       declares the names, which is the case it was written for. *)
     | "zero" | "one" ->
       let s = if id = "zero" then "0" else "1" in
       (match float_lit_of_string s with

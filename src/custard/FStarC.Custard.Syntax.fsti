@@ -239,6 +239,14 @@ val float_lit_to_string : float_lit -> string
     Section 39.2. *)
 val float_lit_of_string : string -> option float_lit
 
+(** Section 118.  The integer [n] as a literal of format [fw], or [None] when
+    [fw] cannot hold it exactly.  [FStar.Float32.of_int] is a *conversion*: it
+    rounds above 2^24, and 2^53 at [Float64], so folding it is only sound for
+    an [n] the format represents.  What this is really for -- [0] and [1],
+    which is what ulib derives [zero] and [one] from -- is never in question.
+*)
+val float_lit_of_int : fwidth -> int -> option float_lit
+
 (** The literal as it is spelled in generated code, in the base it was
     written in.  Never carries a suffix or a cast: those are a backend's.
 

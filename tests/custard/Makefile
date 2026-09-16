@@ -1677,8 +1677,11 @@ CGREP_FloatOptIn += "bool ok3 = ((a / b) <= 0.61);"
 # double and rounded once instead of twice.
 CGREP_FloatOptIn += "float x = 1.5f;"
 CGREP_FloatOptIn += "bool ok5 = ((x * y) == 3.375f);"
-# [of_int] is a conversion, so it is a cast and not a coercion.
-CGREP_FloatOptIn += "bool ok6 = ((float)3 == 3.0f);"
+# Section 118.  [of_int] is a conversion, but at an argument the format holds
+# exactly it folds to the literal -- which is the path ulib's derived [zero]
+# and [one] take.  At 2^24+1 binary32 would round, so the cast stands.
+CGREP_FloatOptIn += "bool ok6 = (3.0f == 3.0f);"
+CGREP_FloatOptIn += "bool ok10 = ((float)16777217LL < 1000000000.0f);"
 # Section 64.1.  [zero]/[one] are constants, not calls: an abstract [val zero]
 # in a float library used to become an extern and a link error.  And
 # [largest], which has [@@custard_extern], stays one -- a rule from a

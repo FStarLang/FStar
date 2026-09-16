@@ -193,6 +193,30 @@ let float_lit_of_string (s:string) : option float_lit =
     Some { fl_neg = neg; fl_mag = Real.mk m (expo - List.length fpart) }
   | _ -> None
 
+(* Section 118.  The significand of [fw], in bits, counting the implicit
+   leading one: a binary format holds an integer exactly when the integer's
+   odd part fits in that many bits. *)
+let significand_bits (fw:fwidth) : int =
+  match fw with
+  | Float32  -> 24
+  | Float64  -> 53
+  | Float16  -> 11
+  | BFloat16 -> 8
+
+let rec fits_in_bits (n:nat) (bits:nat) : Tot bool (decreases bits) =
+  if n = 0 then true
+  else if bits = 0 then false
+  else fits_in_bits (n / 2) (bits - 1)
+
+let rec odd_part (n:nat) : Tot nat (decreases n) =
+  if n = 0 || n % 2 = 1 then n else odd_part (n / 2)
+
+let float_lit_of_int (fw:fwidth) (n:int) : option float_lit =
+  let a : nat = if n < 0 then -n else n in
+  if fits_in_bits (odd_part a) (significand_bits fw)
+  then Some { fl_neg = n < 0; fl_mag = Real.mk a 0 }
+  else None
+
 let int_lit_to_string (v:int) (b:int_base) : string = string_of_int_literal v b
 
 let rec oct_digits (n:int) (acc:string) : Tot string (decreases n) =
