@@ -314,8 +314,11 @@ let inspect_comp (c : comp) : ML comp_view =
     | Comp ct ->
       (* A [comp_typ] no longer caches the effect's universe -- it is just that
          of the result type -- and [inspect_comp] has no environment to recover
-         it with, so the view reports [].  This is why [inspect_pack_comp_inv]
-         requires [Nil? us]. *)
+         it with, so the view reports [].  Nor does it carry a precondition, so
+         the view reports [True] for that too, and the postcondition is only
+         the one recoverable from the result type.  Together with the
+         [Tot]/[GTot]/[Lemma] constructor canonicalization above, this is why
+         [inspect_pack_comp_inv] is restricted to [C_Total] and [C_GTotal]. *)
       C_Eff ([],
              Ident.path_of_lid ct.effect_name,
              ct.result_typ,

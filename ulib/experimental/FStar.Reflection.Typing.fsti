@@ -94,14 +94,13 @@ val pack_inspect_binder (t:R.binder)
    : Lemma (ensures (R.pack_binder (R.inspect_binder t) == t))
            [SMTPat (R.pack_binder (R.inspect_binder t))]
   
-(* See R.inspect_pack_comp_inv: a C_Eff view is not in the image of R.inspect_comp
-   if it names FStar.Pervasives.Lemma (which always comes back as a C_Lemma) or if
-   it carries universes (which a comp does not store, so they come back as []). *)
+(* See R.inspect_pack_comp_inv: [pack_comp] is lossy on every view but
+   [C_Total] and [C_GTotal] -- a [comp_typ] stores no precondition, no
+   universes, and no postcondition other than the one on its result type, and
+   [inspect_comp] canonicalizes the [Tot]/[GTot]/[Lemma] constructors -- so the
+   round trip holds only for those two. *)
 val inspect_pack_comp (t:R.comp_view)
-  : Lemma (requires (match t with
-                     | R.C_Eff us eff_name _ _ _ _ ->
-                       Nil? us /\ eff_name <> ["FStar"; "Pervasives"; "Lemma"]
-                     | _ -> True))
+  : Lemma (requires R.C_Total? t \/ R.C_GTotal? t)
           (ensures (R.inspect_comp (R.pack_comp t) == t))
           [SMTPat (R.inspect_comp (R.pack_comp t))]
 

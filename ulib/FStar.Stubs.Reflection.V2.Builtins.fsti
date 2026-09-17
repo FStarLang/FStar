@@ -84,20 +84,33 @@ val inspect_pack_inv : (tv:term_view) -> Lemma (inspect_ln (pack_ln tv) == tv)
 
 val pack_inspect_comp_inv : (c:comp) -> Lemma (pack_comp (inspect_comp c) == c)
 
-(* Two [C_Eff] views are outside the image of [inspect_comp], and the round trip
-   below does not hold for either.  (Asserting it unconditionally was unsound:
-   both functions are primitive normalizer steps, so the normalizer refutes the
-   very instance the lemma provides.)
+(* [comp_view] is strictly richer than [comp], so [pack_comp] is lossy and this
+   round trip only holds on the image of [inspect_comp].  Asserting it anywhere
+   else is *unsound*: both functions are primitive normalizer steps, so the
+   normalizer refutes the very instance the lemma provides.
 
-   - A view naming [FStar.Pervasives.Lemma] is always inspected as a [C_Lemma].
-   - A view carrying universes: a computation type does not store any -- an
-     effect is applied to its result type alone, so its universe is that type's
-     -- and [pack_comp] drops them, so they always come back as []. *)
+   A [C_Total]/[C_GTotal] view carries nothing but the result type, which
+   [pack_comp] stores verbatim, so those two always round trip.  Every other
+   view discards something:
+
+   - a [comp_typ] has no room for a precondition -- that is an implicit
+     [squash] binder on the arrow, out of reach of a [comp] -- so the [pre] of
+     a [C_Eff] or [C_Lemma] is dropped and comes back as [True];
+   - a [C_Eff]'s [post] is dropped too, and comes back as the postcondition
+     read off the result type;
+   - a [C_Eff] carrying universes: a computation type does not store any -- an
+     effect is applied to its result type alone, so its universe is that
+     type's -- and they come back as [];
+   - a [C_Eff] naming [Prims.Tot] or [Prims.GTot] (with no decreases clause) is
+     inspected as a [C_Total] or [C_GTotal], and one naming
+     [FStar.Pervasives.Lemma] as a [C_Lemma]: [inspect_comp] canonicalizes the
+     constructor, so the view's own constructor is not preserved.
+
+   Restricting the round trip to [C_Total] and [C_GTotal] covers all of these
+   at once.  Use [pack_inspect_comp_inv] above, which holds unconditionally,
+   whenever the starting point is a [comp]. *)
 val inspect_pack_comp_inv (cv:comp_view)
-  : Lemma (requires (match cv with
-                     | C_Eff us eff_name _ _ _ _ ->
-                       Nil? us /\ eff_name <> ["FStar"; "Pervasives"; "Lemma"]
-                     | _ -> True))
+  : Lemma (requires C_Total? cv \/ C_GTotal? cv)
           (ensures inspect_comp (pack_comp cv) == cv)
 
 val inspect_pack_namedv (xv:namedv_view) : Lemma (inspect_namedv (pack_namedv xv) == xv)
