@@ -2125,9 +2125,11 @@ has just landed is churn that belongs in its own change, not in a merge.
 - **Reflection.** `comp_view` keeps its constructors; `C_Lemma`/`C_Eff` report
   `pre = True`, since a precondition is now a binder on the arrow and out of the
   view's reach. The postcondition *is* recovered from the result-type
-  refinement, and `inspect_comp`/`pack_comp` round-trip. Giving the view an
-  honest precondition means changing the view type, which needs its own stage0
-  bump and is deliberately left to a follow-up.
+  refinement. `inspect_comp`/`pack_comp` round-trip **only at `C_Total` and
+  `C_GTotal`**, and `inspect_pack_comp_inv` is restricted to say exactly that —
+  see "Seven review findings" below. Giving the view an honest precondition
+  means changing the view type, which needs its own stage0 bump and is
+  deliberately left to a follow-up.
 
 ## A documented limitation
 
@@ -2139,7 +2141,171 @@ arrow types no congruence, since each arrow is encoded as its own constant. This
 is unprovable on the pre-refactor compiler too. Every parameterized form of the
 same type-level match verifies.
 
-## Validation
+## Seven review findings
+
+A review of the branch at `fa6b4dd` reported one soundness blocker and six
+smaller defects. All seven are reproduced, fixed and pinned below. Each has a
+regression test: `tests/tactics/CompRoundTrip.fst` (1),
+`tests/extraction/InstantiatedSpecArgs.fst` (2),
+`tests/tactics/ExactObligation.fst` (3),
+`tests/micro-benchmarks/PostconditionDomain.fst` (4),
+`tests/micro-benchmarks/NamedSquashBinder.fst` (5),
+`tests/micro-benchmarks/QualifiedPrecondition.fst` (6) and
+`tests/micro-benchmarks/ImplicitArrowDefensive.fst` (7, checked with
+`--defensive error`).
+
+### 1. `inspect_pack_comp_inv` proved `False` (P0)
+
+The axiom in `FStar.Stubs.Reflection.V2.Builtins` read
+
+```fstar
+val inspect_pack_comp_inv (cv:comp_view)
+  : Lemma (requires (match cv with
+                     | C_Eff us eff_name _ _ _ _ -> Nil? us /\ eff_name <> Lemma
+                     | _ -> True))
+          (ensures inspect_comp (pack_comp cv) == cv)
+```
+
+but `pack_comp` is *lossy* in more ways than that precondition rules out. It
+drops a `C_Eff`'s `pre` and `post` entirely — the arrow's specification is no
+longer in the comp — and `inspect_comp` canonicalises effect names, so
+`Prims.Tot`, `Prims.GTot` and `FStar.Pervasives.Lemma` come back as `C_Total`,
+`C_GTotal` and `C_Lemma`. Both functions are primitive normalizer steps, so the
+normalizer refutes the axiom directly:
+
+```fstar
+let bad () : Lemma False =
+  let cv = C_Eff [] ["Prims"; "Tot"] (`int) (`l_True) (`(fun _ -> l_True)) [] in
+  inspect_pack_comp_inv cv   (* inspect_comp (pack_comp cv) reduces to C_Total (`int) *)
+```
+
+Only `C_Total` and `C_GTotal` genuinely round-trip: `mk_Total`/`mk_GTotal`
+store the result type verbatim with no flags, and `inspect_comp` reads it back.
+The axiom now says so, with a comment enumerating each way `pack_comp` loses
+information, and `FStar.Reflection.Typing`'s mirror of it (which carries an
+`SMTPat`, and is what Pulse uses) is restricted the same way. Every in-repo
+client — `FStar.Reflection.V2.Derived.Lemmas`, `Pulse.Reflection.Util`,
+`FStar.Reflection.Typing.mk_total_tm` — only ever instantiates it at `C_Total`
+or `C_GTotal`, so nothing needed to change at a call site.
+
+`tests/tactics/CompRoundTrip.fst` is rewritten to match: it checks the two
+round trips *by computation*, and pins the five families that do not round trip
+(`C_Eff` at `Prims.Tot`, at `Prims.GTot`, at `Lemma`, with a non-empty universe
+list, and with a non-canonical pre/post, plus `C_Lemma`) with
+`[@@expect_failure [19]]`. The old test asserted the `C_Eff` round trip and
+passed, which is worth recording: it proved its goal with `trefl`, and `trefl`
+will equate two syntactically different quoted terms. That is pre-existing
+upstream behaviour — it reproduces on `master` and on a released 2026.03
+binary — so it is left alone here, but it is why a false test looked green.
+
+### 2. Extraction dropped a proof argument it should have kept (P2)
+
+`drop_spec_args` walked the *declared* type of the head to collect binders, so
+for
+
+```fstar
+let caller () = identity #(x:int -> Pure int (requires x >= 0) (ensures fun _ -> True)) f 1 ()
+```
+
+it saw `identity`'s own `[#a; x]` and never the `#(squash (x >= 0))` binder that
+only appears once `a` is instantiated. ML type translation erases that binder
+regardless, so the extra argument survived into the ML application and
+extraction died with Error 76, "Ill-typed application ... remaining args are
+`[((), #)]`". `formals_of` now substitutes the arguments it has already consumed
+into the result type before unfolding it, so the instantiated arrow is what gets
+walked.
+
+### 3. `exact` dropped the proof obligation it had just created (P2)
+
+`proof_obligation_implicits_as_goals` added the new obligation with `add_goals`,
+which *prepends*. `solve` is `dismiss;! remove_solved_goals`, and `dismiss`
+keeps `List.tl ps.goals` — so the goal it dropped was the obligation added a
+moment earlier, and the tactic finished with an uninstantiated `squash (1 >= 0)`
+uvar and Error 217. It uses `push_goals` now, so the obligation is appended and
+survives the `dismiss`. That matches `proc_guard_formula`, which already
+appended the guard formula's goal: a goal derived from a guard must never sit at
+the head, because the head is what every other tactic treats as "the current
+goal".
+
+`pose_apply` had to follow. It counted the goals `apply` introduced and assumed
+they were all in front, which is no longer true — a proof obligation now lands at
+the back while `apply`'s own implicit arguments still land at the front, and
+counting cannot tell the two apart. It runs `apply` under `focus` now, which
+collects everything the call produced in front of the goals that were already
+there, so the count is meaningful again. Without this, `tests/tactics/PoseLemma`
+failed with "`intro` failed: goal is not an arrow (`squash (x < 0)`)".
+
+### 4. A postcondition's binder annotation was never checked (P2)
+
+`ToSyntax.desugar_comp` builds the result refinement with `U.refine_with_post`,
+which ran before typechecking and *erased* the annotation: `is_trivial_post`
+discarded `fun (y:bool) -> True` whole, and `apply_post` beta-reduced the
+annotation away in every other case. A post supplied *by name* stayed an
+application and was checked, so the two spellings disagreed.
+`refine_with_post` now keeps the application unreduced, and skips the
+trivial-post shortcut, exactly when the post is a lambda whose binder carries an
+annotation that is not `term_eq` to the result type — which is never the case
+for the posts the desugarer generates itself (`AST.thunk` leaves the binder
+unannotated and `U.trivial_post` annotates it with the result type), so nothing
+else changes shape. `Pure int (ensures fun (y:bool) -> True)` is now rejected.
+
+One gap remains, and it is not this branch's: F* does not raise a subtyping
+obligation for the argument of a *literal* beta-redex, so
+`Pure int (ensures fun (y:pos) -> True)` is still accepted. A hand-written
+`(fun (y:pos) -> y > 0) (x:int)` is accepted on `master` too; the annotation is
+now checked to exactly the extent F* checks any annotated lambda in application
+position.
+
+`term_eq` needs care here. It deliberately gives up when it meets a
+`Tm_unknown` — two holes need not elaborate to the same term — and
+`refine_with_post` runs on *unelaborated* syntax, where holes are everywhere.
+A result type such as `ML (m _)` is therefore not `term_eq` even to itself, and
+a first cut at this check read that as a narrowing annotation and left a
+beta-redex in the type. That is not a soundness problem, but it defeats the
+syntactic matching typeclass resolution performs: bootstrapping stage 2 failed
+with `Could not solve typeclass constraint ‘monad (fun _ -> _: m (*?u*)_ {(fun
+_ -> l_True) _})’` on `FStarC.Syntax.VisitM`. Both sides are now required to be
+comparable — `term_eq t t` — before any difference between them is believed.
+
+That is also what moved `tests/error-messages/Bug3102`: the stray refinements,
+not finding 7. With this in place its expected output is unchanged from the
+branch point.
+
+### 5. `split_squash_binders` ate a user's named binder (P2)
+
+It treated *any* trailing implicit `squash` binder as the anonymous
+precondition binder the desugarer lifts out of a `requires`. A user-written
+`(#h:squash True)` mentioned in an `ensures` or in an SMT pattern was therefore
+removed from the binder list while its name was still live, and the lemma
+crashed the checker with `Bound term variable not found h`. It now takes the
+terms that must stay well-scoped and only drops the binder when its name is free
+in none of them; `destruct_lemma_with_smt_patterns` passes the result type and
+the patterns, and `TcTerm.check_smt_pat` does the same.
+
+### 6. `comp_requires` compared spelling, not meaning (P2)
+
+Its triviality test matched the *unqualified* identifier against `"True"` or
+`"l_True"`, so a module defining its own `l_True = False` and writing
+`requires MWE.l_True` had its precondition silently treated as trivial and left
+in place, while `desugar_comp`'s resolved `U.is_t_true` test disagreed and
+demanded it be discharged inside the body — Error 19 on a program that should
+verify. It now resolves the name through the environment
+(`DsEnv.resolve_to_fully_qualified_name`) and compares against `Prims.l_True`,
+keeping the surface `True` special case that `desugar_term` itself applies.
+
+### 7. `try_solve_single_valued_implicits` normalized in the wrong scope (P2)
+
+`U.arrow_formals_comp` *opens* the binders it returns, and the code then
+normalized `U.comp_result c` in the unopened environment, so `--defensive error`
+reported Error 290 on any implicit of arrow type. The opened binders are pushed
+first now.
+
+This one has a visible consequence: with the normalization happening in the
+right scope, `try_solve_single_valued_implicits` now recognises and solves
+implicits it used to walk past, so `resolve_implicits'` takes another round.
+No expected output changes, though — see the note at the end of finding 4.
+
+
 
 `make ci -j48 -k` from a fully wiped tree — `stage{1,2}/{ulib,fstarc}.checked`,
 `pulse/build/lib.pulse.checked`, and every `_output` and `_cache` directory under
@@ -2148,6 +2314,14 @@ same type-level match verifies.
 stage 3, with Pulse), plus `boot-diff`, `test-2-bare`, `stage2-unit-tests` and
 `fsharp-all`. Note that test `.checked` files live in `_cache` as well as
 `_output`; wiping only the latter is what let several failures hide.
+
+One more thing worth wiping: a stale `stage1/out/bin/fstar.exe`. `.checked`
+files do not depend on the compiler binary, so if stage 1 is not rebuilt, stage
+2's `fstarc.checked` is never regenerated and the new compiler never gets to
+typecheck the compiler's own sources — `ulib` and the test suite do exercise it,
+but `src/` does not. That is precisely how the `VisitM` failure in finding 4
+reached CI. Confirm with `find stage2/fstarc.checked ! -newermt <start of the
+run>`, which should come back empty.
 
 `ci` already runs stage 3, `examples` and `doc` via `_test`, so it needed no
 change.
