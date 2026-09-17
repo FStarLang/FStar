@@ -1859,17 +1859,24 @@ let rec list_elements (e:term) : ML (option (list term)) =
   | _ ->
       None
 
-(* [split_squash_binders bs] splits [bs] into its real binders and the
+(* [split_squash_binders used bs] splits [bs] into its real binders and the
    precondition carried by a trailing implicit binder of squash type, if any.
    This is the inverse of the desugaring of an arrow codomain's [requires]
-   clause (see [ToSyntax.desugar_comp]).  The squash binder is nameless and
-   nothing may refer to it, so dropping it needs no substitution. *)
-let split_squash_binders (bs:binders) : ML (binders & term) =
+   clause (see [ToSyntax.desugar_comp]).
+
+   That binder is anonymous and nothing may refer to it, so dropping it needs
+   no substitution.  A user may nonetheless write a trailing implicit binder of
+   squash type *by hand*, name it, and mention it in the postcondition or in an
+   SMT pattern; [used] lists the terms in which such a reference would appear,
+   and the binder is kept when it occurs in any of them -- dropping it there
+   would leave those names unbound. *)
+let split_squash_binders (used:list term) (bs:binders) : ML (binders & term) =
   match List.rev bs with
   | b :: rev_rest when (match b.binder_qual with Some (Implicit _) -> true | _ -> false) ->
     (match un_squash b.binder_bv.sort with
-     | Some p -> List.rev rev_rest, p
-     | None -> bs, t_true)
+     | Some p when not (used |> List.existsb (fun t -> mem b.binder_bv (Free.names t))) ->
+       List.rev rev_rest, p
+     | _ -> bs, t_true)
   | _ -> bs, t_true
 
 let destruct_lemma_with_smt_patterns (t:term)
@@ -1930,7 +1937,7 @@ let destruct_lemma_with_smt_patterns (t:term)
           postcondition is the argument of the [squash] in the result type.
           The [SMTPAT] flag is what identifies this arrow as the image of a
           source lemma, and it carries the patterns. *)
-       let bs, pre = split_squash_binders bs in
+       let bs, pre = split_squash_binders [ct.result_typ; pats] bs in
        let post =
          match un_squash ct.result_typ with
          | Some q -> q

@@ -482,12 +482,16 @@ let check_smt_pat env t : ML unit =
     // Check patterns cover the bound vars
     if U.is_smt_lemma t then
       let bs, c = U.arrow_formals_comp t in
-      (* A lemma's precondition is a trailing implicit binder of [squash] type
-         (see [ToSyntax.desugar_comp]); it is proof-irrelevant, nothing may
-         refer to it, and the encoding drops it, so a pattern need not -- and
-         cannot -- mention it. *)
-      let bs, _pre = U.split_squash_binders bs in
-      match U.comp_smt_pats c with
+      let pats_opt = U.comp_smt_pats c in
+      (* The precondition binder desugaring adds for a [requires] clause is a
+         trailing implicit binder of [squash] type (see
+         [ToSyntax.desugar_comp]); it is proof-irrelevant, nothing may refer to
+         it, and the encoding drops it, so a pattern need not -- and cannot --
+         mention it.  A binder the *user* wrote in that position is kept, since
+         the specification may well refer to it. *)
+      let used = U.comp_result c :: (match pats_opt with Some p -> [p] | None -> []) in
+      let bs, _pre = U.split_squash_binders used bs in
+      match pats_opt with
       | Some pats ->
           check_pat_fvs t.pos env pats bs;
           check_no_smt_theory_symbols env pats

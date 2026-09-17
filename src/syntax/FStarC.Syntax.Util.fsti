@@ -604,9 +604,10 @@ val is_smt_lemma (t:term) : ML bool
 
 val list_elements (e:term) : ML (option (list term))
 
-(* [split_squash_binders bs] splits [bs] into its real binders and the
-   precondition carried by a trailing implicit binder of squash type, if any. *)
-val split_squash_binders (bs:binders) : ML (binders & term)
+(* [split_squash_binders used bs] splits [bs] into its real binders and the
+   precondition carried by a trailing implicit binder of squash type, if any.
+   The binder is kept if it occurs free in any of the terms [used]. *)
+val split_squash_binders (used:list term) (bs:binders) : ML (binders & term)
 
 val destruct_lemma_with_smt_patterns (t:term)
 : ML (option (binders & term & term & list (list arg)))
