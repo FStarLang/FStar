@@ -756,19 +756,29 @@ let sort_comp_args (is_lemma:bool) (args:list (AST.term & AST.imp))
                 ca_universes = universes })
     | _ -> None
 
-(* [comp_requires t] is the [requires] clause of the AST computation type [t],
-   if it has one and it is not trivially [True], paired with [t] with that
+(* [comp_requires env t] is the [requires] clause of the AST computation type
+   [t], if it has one and it is not trivially [True], paired with [t] with that
    clause weakened to [True].  The latter is used once the clause has become a
    binder, so that it is not also re-checked as an assertion.
 
    [t] is rebuilt with its arguments in sorted order and the precondition
    tagged, which is a form [desugar_comp] classifies identically. *)
-let comp_requires (t:AST.term) : ML (option (AST.term & AST.term)) =
+let comp_requires (env:env_t) (t:AST.term) : ML (option (AST.term & AST.term)) =
   let is_true (t:AST.term) =
     match (unparen t).tm with
+    (* [True] with no qualification is the primitive [Prims.l_True]: that is
+       what [desugar_term] turns it into, before any name resolution. *)
+    | Name l when string_of_lid l = "True" -> true
     | Name l | Var l ->
-      let s = string_of_id (ident_of_lid l) in
-      s = "True" || s = "l_True"
+      (* Anything else has to be *resolved* before it can be compared: a name
+         whose last component happens to be [True] or [l_True] need not be
+         [Prims.l_True] at all.  [desugar_comp] tests the desugared
+         precondition with [U.is_t_true], and the two must agree -- if they did
+         not, a definition would acquire an assertion in its body for a
+         precondition that its type says is the caller's obligation. *)
+      (match Env.resolve_to_fully_qualified_name env l with
+       | Some l -> Ident.lid_equals l C.true_lid
+       | None -> false)
     | _ -> false
   in
   let head, args = head_and_args_full t in
@@ -1653,7 +1663,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
             let args, result_t =
               match result_t with
               | Some (t, tacopt) when Cons? args && is_comp_type env t ->
-                (match comp_requires t with
+                (match comp_requires env t with
                  | Some (p, t') ->
                    let r = p.range in
                    let sq = mkApp (mk_term (Var C.squash_lid) r Expr) [(p, Nothing)] r in
