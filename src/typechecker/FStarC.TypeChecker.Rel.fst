@@ -5553,8 +5553,11 @@ let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : ML (Env.
            over them, so its type is [bs -> squash phi] rather than
            [squash phi].  Eta-expand the unit solution. *)
         let bs, c = U.arrow_formals_comp t_norm in
+        (* [arrow_formals_comp] opens [bs], and the codomain may mention them,
+           so anything looked at below must be looked at in their scope. *)
+        let env_bs = Env.push_binders env bs in
         let is_unit_like t =
-          match (SS.compress (N.normalize N.whnf_steps env t)).n with
+          match (SS.compress (N.normalize N.whnf_steps env_bs t)).n with
           | Tm_fvar fv -> S.fv_eq_lid fv PC.unit_lid
           | Tm_refine {b} -> U.is_unit b.sort
           | _ -> false
