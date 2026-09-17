@@ -1,0 +1,16 @@
+/* krml header omitted for test repeatability */
+
+
+#include "CommentTest.h"
+
+uint32_t CommentTest_test(uint32_t x)
+{
+  /* this is a standalone comment */
+  uint32_t r = /* before the initial value */ x /* after the initial value */;
+  uint32_t v = r;
+  r = v;
+  /* this is another standalone comment */
+  /* before the result */
+  return /* before the result */ 42U /* after the result */;
+}
+
