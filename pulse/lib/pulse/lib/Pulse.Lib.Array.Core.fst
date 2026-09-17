@@ -209,6 +209,17 @@ ghost fn mask_mext u#a (#t: Type u#a) (arr: array t) #f #v #mask (mask': nat -> 
   fold pts_to_mask arr #f v mask';
 }
 
+ghost fn mask_empty_perm u#a (#t: Type u#a) (arr: array t) #f #v #mask (f': perm)
+  requires pts_to_mask arr #f v mask
+  requires pure (forall (i: nat). i < Seq.length v ==> ~(mask i))
+  ensures pts_to_mask arr #f' v mask
+{
+  unfold pts_to_mask arr #f v mask;
+  with l. assert loc l;
+  assert pure (mk_carrier' arr f v mask (arr.vis l) `Map.equal` mk_carrier' arr f' v mask (arr.vis l));
+  fold pts_to_mask arr #f' v mask;
+}
+
 ghost fn mask_ext u#a (#t: Type u#a) (arr: array t) #f #v #mask v' (mask': nat -> prop)
   requires pts_to_mask arr #f v mask
   requires pure (forall (i: nat). i < Seq.length v ==> (mask i <==> mask' i))
