@@ -334,18 +334,26 @@ let drop_spec_args (env:UEnv.uenv) (head:term) (args0:args) : ML args =
          unfolding a universe-polymorphic abbreviation in it must not depend on
          the missing instantiation. *)
       let unfold_steps = [Env.AllowUnboundUniverses; Env.EraseUniverses] in
-      let n_args = List.length args0 in
-      let rec formals_of (fuel:int) (t:typ) : ML binders =
+      let rec formals_of (fuel:int) (t:typ) (args:args) : ML binders =
         let formals, c = U.arrow_formals_comp t in
         let n = List.length formals in
-        if n >= n_args || fuel <= 0 || not (U.is_total_comp c) then formals
+        if n >= List.length args || fuel <= 0 || not (U.is_total_comp c) then formals
         else
-          let res = U.comp_result c in
+          (* There are more arguments than [t] has binders, so the extra ones
+             apply to its result.  Instantiate the binders with the arguments
+             they receive before looking at that result: it may *be* one of
+             them -- a polymorphic function applied at a function type, say --
+             in which case the remaining binders only become visible after the
+             substitution. *)
+          let used, rest = List.splitAt n args in
+          let s = List.map2 (fun (b:binder) ((a, _):arg) -> NT (b.binder_bv, a)) formals used in
+          let res = SS.subst s (U.comp_result c) in
           let res' = N.unfold_whnf' unfold_steps (tcenv_of_uenv env) res in
-          if U.term_eq res res' then formals
-          else formals @ formals_of (fuel - 1) res'
+          if U.term_eq res res' && not (Tm_arrow? (SS.compress res).n)
+          then formals
+          else formals @ formals_of (fuel - 1) res' rest
       in
-      let formals = formals_of 10 t in
+      let formals = formals_of 10 t args0 in
       if not (formals |> List.existsb is_spec_binder) then args0
       else
         let rec aux formals (acc:args) : ML args =
