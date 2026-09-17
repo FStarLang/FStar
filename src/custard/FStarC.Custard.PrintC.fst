@@ -327,6 +327,41 @@ let c_name (n:name) : ML string =
   | None -> escape_kw (sanitize (mangled_name n))
 let c_var (x:string) : ML string = escape_kw (sanitize x)
 
+(* Section 117.2.  The one declaration whose emitted C symbol is not spelled
+   from its F* name.  An [@@custard_extern "..."] target is taken verbatim
+   (section 45.1), so a table built by walking the program and spelling each
+   declaration with [c_name] records, for an external, a name the generated
+   file does not contain -- and leaves the name it *does* contain free for
+   whatever allocates into that table next. *)
+let extern_target (d:decl) : ML (option string) =
+  match d with
+  | DExternal x -> (match x.dx_target with
+                    | Some "" | None -> None
+                    | Some t -> Some t)
+  | _ -> None
+
+(* Section 121.3.  How a declaration is spelled in the generated C, as one
+   total function.
+
+   Three defects in a row -- sections 117.2 and 117.3 -- were the same shape:
+   a name allocated against a set that did not contain everything the file
+   would really contain.  Each fix added another case to a seeding loop that
+   derived the spelling independently of the code that prints it, which is
+   correct only for as long as someone remembers to add the next one.  So the
+   seeding, the collision check and the external's own prototype all read this
+   function instead, and a new kind of spelling has one place to change.
+
+   [build_renames] is deliberately not one of its callers: it runs *before*
+   {!renames} exists and needs the name as it stands, which is what its own
+   [escape_kw (sanitize (mangled_name n))] says.  The one name this cannot
+   answer for is the generated initializer, which is minted from the unit and
+   not from any declaration; [init_name] is its single source in the same
+   sense, and both seeding sites pass it explicitly. *)
+let emitted_name (d:decl) : ML string =
+  match extern_target d with
+  | Some t -> t
+  | None -> c_name (name_of_decl d)
+
 (* Section 114.  The member of a tagged union, and the path through it.
 
    A member was named after the fully qualified constructor, which after
@@ -1351,7 +1386,7 @@ let bind_cell (x:string) : ML string = bind_gen x true
 let bind_alias (x:string) (path:string) : ML unit =
   scope := (x, (path, false)) :: !scope
 
-(* Section 18.4.  A name that no binder in the enclosing function introduced
+(* Section 19.3.  A name that no binder in the enclosing function introduced
    is a defect in the IR, not something to print and hope for.  The karamel
    backend catches it because its terms are De Bruijn and the conversion has
    to find an index; this backend prints names as names, and so used to emit
@@ -1384,6 +1419,47 @@ let fresh (stem:string) : ML string =
   let nm = "_c" ^ stem ^ show !ctr in
   SMap.add !declared nm true;
   nm
+
+(* Section 121.2.  Everything in this module that outlives a single call and
+   does not outlive a program, written down once.
+
+   This backend keeps its tables in process-global mutable variables, which is
+   fine as long as one process prints one program -- [Driver.run] is called
+   once per process and calls [print_program] once.  What was not fine was
+   that [print_program] reset thirteen of the twenty-two by hand and left nine
+   alone, so "what is per-program" was an ad-hoc subset spelled out in the
+   prologue of a 390-line function and nowhere else.  Being able to *read* the
+   answer is the point; making a second program in one process work is a
+   consequence.
+
+   A table filled by a builder ([renames], [macros], [types] and friends) is
+   assigned wholesale later in [print_program], so clearing it here is
+   redundant -- and listed anyway, because the value of this function is that
+   it is exhaustive.  The per-definition state at the end is reset again per
+   definition, for the same reason. *)
+let reset_program_state () : ML unit =
+  current := "<toplevel>";
+  SMap.clear parents;
+  SMap.clear frozen_by;
+  SMap.clear frozen_by_target;
+  SMap.clear existentials;
+  SMap.clear root_decls;
+  renames := SMap.create 0;
+  macros := SMap.create 0;
+  types := SMap.create 0;
+  ctors := SMap.create 0;
+  externs := SMap.create 0;
+  keeps := SMap.create 0;
+  void_fns := SMap.create 0;
+  arities := SMap.create 0;
+  void_ret := false;
+  uses_narrow := false;
+  eq_queue := [];
+  eq_seen := SMap.create 20;
+  taken_names := SMap.create 50;
+  scope := [];
+  declared := SMap.create 0;
+  ctr := 0
 
 (* Statement-shaped: a form that C has no expression for.  These are the
    forms [c_expr] has to hoist and [emit] compiles directly. *)
@@ -3093,9 +3169,7 @@ let extern_decl (x:dexternal) : ML (option string) =
                ["It is not a C identifier, so Custard cannot declare it, and                  no [@@custard_c_header] says which header does.";
                 "Add [@@custard_c_header \"...\"] beside the                  [@@custard_extern] naming the header that declares it."]
            | _ -> () in
-  let nm = match SMap.try_find !externs (string_of_name x.dx_name) with
-           | Some t -> t
-           | None -> c_name x.dx_name in
+  let nm = emitted_name (DExternal x) in
   current := string_of_name x.dx_name;
   let rec spine (t:cty) (acc:list cty) : ML (option (list cty & cty)) =
     match t with
@@ -3255,19 +3329,6 @@ let comment_of (l:dlet) : ML string =
    producer's modules from the `.cui` makes the two agree by construction,
    and does so without asking the consumer to repeat a flag that describes
    somebody else's output. *)
-(* Section 117.2.  The one declaration whose emitted C symbol is not spelled
-   from its F* name.  An [@@custard_extern "..."] target is taken verbatim
-   (section 45.1), so a table built by walking the program and spelling each
-   declaration with [c_name] records, for an external, a name the generated
-   file does not contain -- and leaves the name it *does* contain free for
-   whatever allocates into that table next. *)
-let extern_target (d:decl) : ML (option string) =
-  match d with
-  | DExternal x -> (match x.dx_target with
-                    | Some "" | None -> None
-                    | Some t -> Some t)
-  | _ -> None
-
 let build_renames (extra:list string) (p:program) : ML unit =
   let mods = Options.custard_c_no_prefix () @ extra in
   renames := SMap.create 0;
@@ -3573,9 +3634,7 @@ let check_emitted_names (init_name:string) (p:program) : ML unit =
   p |> List.iter (fun d ->
     if not (local d) then () else
     let n = name_of_decl d in
-    match extern_target d with
-    | Some t -> claim t (string_of_name n) true
-    | None -> claim (c_name n) (string_of_name n) false)
+    claim (emitted_name d) (string_of_name n) (Some? (extern_target d)))
 
 (* [base] is the stem of the output file: the source includes [base.h], and
    the include guard is derived from it.  Returns the header and the source,
@@ -3644,8 +3703,9 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
      compiled it has a header, and that header is included instead.  Writing a
      declaration of our own for it is what section 14.10 is the record of. *)
   let init_name = init_name cu in
-  (* Section 107.  One unit's generated comparisons are that unit's. *)
-  eq_queue := []; eq_seen := SMap.create 20;
+  (* Section 121.2.  Every per-program variable this module has, including
+     the generated comparisons of section 107, which are one unit's. *)
+  reset_program_state ();
   record_parents p;
   (* Section 102.2.  Before the tables, not after them.  The external table
      below stores a *resolved* C name -- an external is the one declaration
@@ -3656,16 +3716,12 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
      replaced.  Nothing in here reads a table, so the move costs nothing. *)
   build_renames cu.cu_no_prefix p;
   (* Section 116.  After the renames and before anything is printed, because
-     the first generated name may be allocated as early as the first body. *)
-  taken_names := SMap.create 50;
-  (* Section 117.2.  Under the spelling that is emitted, which for an external
-     is its target and not its F* name. *)
-  p |> List.iter (fun d ->
-    SMap.add !taken_names (match extern_target d with
-                           | Some t -> t
-                           | None -> c_name (name_of_decl d)) true);
-  (* And the initializer, which is minted from the unit name and was the one
-     generated name nothing recorded at all (section 117.3). *)
+     the first generated name may be allocated as early as the first body.
+     [reset_program_state] emptied the table; this seeds it, under the
+     spelling that is actually emitted -- section 121.3, which is why there
+     is nothing to spell out here.  The initializer is the one name no
+     declaration stands behind (section 117.3). *)
+  p |> List.iter (fun d -> SMap.add !taken_names (emitted_name d) true);
   SMap.add !taken_names init_name true;
   let tt = SMap.create 50 in
   let ct = SMap.create 50 in
@@ -3690,7 +3746,10 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
     | DExternal x ->
       SMap.add xt (string_of_name x.dx_name)
         (match x.dx_target with
-         | Some "" | None -> c_name x.dx_name
+         (* Section 121.3.  [emitted_name] answers exactly this; the case
+            split is kept here only for the note below, which is about what
+            a target spelling is and has nowhere else to live. *)
+         | Some "" | None -> emitted_name (DExternal x)
          (* Section 45.1.  Verbatim, like the external *type* path a few
             hundred lines up already is.  [sanitize] exists to turn an F*
             name into a legal C identifier, and this is not an F* name: it is
@@ -3815,9 +3874,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
     | DExternal x ->
       (match extern_decl x with
        | Some s ->
-         let nm = match SMap.try_find !externs (string_of_name x.dx_name) with
-                  | Some t -> t
-                  | None -> c_name x.dx_name in
+         let nm = emitted_name (DExternal x) in
          [(nm, string_of_name x.dx_name, s)]
        | None -> [])
     | DExn _ ->

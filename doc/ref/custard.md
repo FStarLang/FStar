@@ -20559,6 +20559,165 @@ as where a reader wants them; and `PulseCommentEnd` and `PulseCommentDyn`
 for the two refusals.
 
 
+## 121 Twenty-five traversals and one default
+
+Round 4 of the external review asked a different question from the three
+before it: not "what is broken" but "what should be refactored".  It reported
+no defects.  What it reported instead was a measurement --- that the two
+mechanisms which had produced essentially every defect found so far were
+*hand-written traversals* and *process-global state with convention-gated
+name minting* --- and the recommendation that those be addressed structurally
+rather than one case at a time.  That correlation is the argument, and it is
+a good one, so all of it is done here except the one item the reporter itself
+held weakly.
+
+### 121.1 A pass should only write the cases it has an opinion about
+
+`Simplify` contained twenty-five separate recursive walks over `expr`,
+together listing 490 constructor arms, of which the reporter counted 210 as
+mechanical one-liners that rebuild the same node over mapped children.  Eight
+of the `EIf` arms were character-for-character identical.  There was no
+generic traversal anywhere in the package: every walk was written from
+scratch.
+
+This is not merely repetitive, it is the direct structural cause of the §117
+`EWhile`/`EIf` defect.  In `coerce_prog` the condition of an `if` was visited
+as `go env None c` where every analogous position used `check env exp`.  Each
+traversal re-lists all twenty-two constructors by hand, so an
+intentional-looking deviation in one arm of one 400-line function is
+invisible --- there is nothing to diff it against.  The fix was a single
+expression; finding it took a reproducer.
+
+`Syntax` now exposes two hand-written traversals, and only two:
+
+```
+val children     : expr -> ML (list expr)
+val map_children : (expr -> ML expr) -> expr -> ML expr
+```
+
+with `iter_children`, `fold_children`, `exists_child` and `for_all_children`
+derived from `children` by the corresponding list combinator.  A child is an
+immediate sub-expression, in the order it is written; a *binder* is not a
+child, since `ELet`'s name, `EFun`'s binders and a branch's pattern are not
+expressions.  That is deliberate, and it is what makes the default safe: a
+pass that has something to say about a binding form has to say it, and every
+other case falls through.
+
+So `occurs` is now
+
+```
+let rec occurs (v:string) (x:expr) : ML bool =
+  match x.e with
+  | EVar w -> w = v
+  | _ -> exists_child (occurs v) x
+```
+
+and `rename_var`, `psub`, `depat`, `unbuild`, `prune`, `inline_expr`,
+`reduce`, `only_projected`, `called_only`, `expr_uses`, `expr_deps`, the
+`quals` of `check_resolved`, `unit_args_expr`, `split_any`, `fvs`, the two
+field-plan rewrites, `lift_lambdas`'s lifter and `RegEmb.subst_expr` are all
+the same shape: the interesting cases, then a fall-through.  `Simplify` loses
+334 lines.
+
+Three passes are *not* converted, and the reason is the same in each case:
+they rewrite a node's recorded **type** as well as its children, which
+`map_children` deliberately does not touch.  `Layout.rw_expr`,
+`Monomorphize.mono_expr` and `Rename.rn_expr` stay written out.  `coerce_prog`
+stays too, for the opposite reason --- every one of its arms has an opinion,
+which is the whole content of §30.7 --- but it is now the *exception* rather
+than indistinguishable from the boilerplate around it, which is precisely
+what the reporter asked for.
+
+Two details worth recording.  `map_children` is written in the same
+applicative style the hand-written arms used, `EIf (g c, g a, g b)` rather
+than a sequence of `let`s, so that a converted pass keeps the order in which
+its side effects happen; a pass that mints gensym names during traversal
+would otherwise renumber every temporary in the output, and a refactor that
+changes the output is not one.  And `is_droppable`, which is in `Syntax`
+itself, now answers its structural half with `for_all_children`, leaving only
+the `EOp` cases --- the ones that are genuinely about what an operation does
+--- written out.
+
+### 121.2 What is per-program, written down once
+
+`PrintC` keeps its tables in twenty-two process-global mutable variables.
+`Driver.run` is called once per process and calls `print_program` once, so
+nothing today runs two programs in one process and this is latent rather than
+live.  The signal is not the risk, it is the *inconsistency*: `print_program`
+opened by resetting thirteen of the twenty-two by hand and left nine alone
+(`parents`, `frozen_by`, `frozen_by_target`, `existentials`, `root_decls`,
+`void_ret`, `scope`, `declared`, `ctr`).  Someone reasoned about per-program
+lifetime thirteen times and not the other nine, and there was no single place
+that said what the per-program state is.
+
+There is now one `reset_program_state ()`, listing all twenty-two, called
+once at the top of `print_program`.  A table that a builder assigns wholesale
+later --- `renames`, `macros`, `types` and friends --- is cleared there
+anyway, redundantly, because the value of the function is that it is
+exhaustive; the same goes for the per-definition state at the end, which is
+also reset per definition.  Threading a record instead would be the thorough
+fix and is not obviously worth the churn; being able to *read* the answer is
+most of the benefit, and that is what this buys.
+
+### 121.3 One function says how a declaration is spelled
+
+`PrintC` mints C names in several independent places, and only `alloc_name`
+consults a table --- which is *seeded* by a loop that had to spell each
+declaration the way it would actually be emitted.  §117.2 and §117.3 were
+both the same shape: a name allocated against a set that did not contain
+everything the file would really contain.  Each fix added another case to the
+seeding loop, which is correct today and is still "remember to add the next
+one", because the seeding and the emission derived the same spelling
+independently.
+
+`emitted_name : decl -> ML string` is now that spelling --- an
+`[@@custard_extern]` target if there is one, otherwise `c_name`, which is
+where the renames and the macro table already live --- and the `taken_names`
+seeding, the export-collision check, the `externs` table and an external's
+own prototype all read it.  The seeding loop is one line.
+
+`build_renames` is deliberately *not* a caller: it runs before `renames`
+exists and wants the name as it stands, which is a different question and is
+spelled as one.  The generated initializer is the one emitted name no
+declaration stands behind; `init_name` is its single source in the same
+sense, and the two sites that need it pass it explicitly.
+
+### 121.4 What is not done
+
+`Extract.fst` is 5579 lines, divided by banner comments into nineteen
+concerns, four of which (`Declarations`, `Types`, `Call sites`, `Driving`)
+are 340 to 1284 lines each.  Splitting along those banners would be
+mechanical, since the boundaries are already drawn and the `.fsti` is only
+160 lines.  The reporter held this one weakly and so do we: the file is well
+organized internally, the benefit is navigability rather than correctness,
+and the churn would land in the middle of an active review.  Left alone, on
+the record, rather than forgotten.
+
+The three printers are not deduplicated either.  Only `is_alpha` is a true
+duplicate; `sanitize` and `escape` look alike and differ for real target
+reasons --- C forbids a leading digit and uses octal string escapes, OCaml
+permits `'` in identifiers and uses decimal --- so merging them behind a flag
+would hide a genuine difference rather than remove a redundancy.
+
+### 121.5 A citation that does not resolve
+
+The sources carry 922 `Section N` citations into this document, naming a
+hundred distinct sections, and they are load-bearing: the doc is where a
+decision is written down and the citation is the only link from the code to
+it.  All but one resolved.  The one that did not was `Section 18.4`, cited from
+`Extract.fst` and `PrintC.fst`, where §18 stops at 18.3 --- the material had
+gone into §19.2 and §19.3, which is what those two now cite.
+
+A wrong number looks exactly as plausible as a right one, so this is not
+something a reader can check.  `tests/custard/checkrefs.py`, run by
+`make check-refs` with the rest of the suite, parses the headings out of the
+document and every `Section N(.M)*` out of `src/custard/*.fst*` and reports
+any that does not resolve.  A citation resolves if its number is a heading or
+an ancestor of one: several sections are numbered only at the subsection
+level (`## 66.0`, `## 66.1`, with no bare `## 66`), and `section 66` is then
+a citation of the group rather than a mistake.  `18.4` is neither, which is
+the case that had to be caught.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -20902,3 +21061,4 @@ for the two refusals.
 | M10ιΡ | Float constants on the path ulib takes | `FStar.Float32.zero` is an `inline_for_extraction let` over `of_int 0L`, so it inlines away before §64.1's name rule can see it and what survives is an `ECast` --- which is not an `EConst`, so the constant was spelled `(float) 0` and an array filled with it was not a constant fill and lost its brace initializer to a loop, 599 times across the reporter's tree. An integer literal converted to a float is now folded to a float literal in `Simplify`, which fixes the spelling and the initializers together and catches the literal that only becomes one after specialization. `of_int` rounds, so the fold is refused unless the format holds the integer exactly --- decided on its odd part, so `2^30` folds and `2^24+1` does not --- and the cast then stands. §118 |
 | M10ιΣ | `FStar.UInt128` and `FStar.Int128` as `__int128` | Both were compiled from their F\* implementations --- a record of two `UInt64.t`s and the long-hand arithmetic over it --- which was correct and was not the target's own 128-bit integer. The IR gains a width of its own, `iwidth`, rather than a case in `FStarC.Const.width`: that type enumerates the widths F\* has literal syntax for, 128 is not one of them, and a case there would have to be given a meaning by the parser, the resugarer and a user-visible reflection type, all to describe a term no program can produce. `unsigned __int128` is a GCC/Clang extension rather than C11, so the rule fires only under `--custard_backend C` and `--custard_int128 false` turns it off --- off being what the other backends, which have no 128-bit integer at all, already do. The operations that are `val`s at this width and `let`s at the narrower ones --- `eq_mask`, `gte_mask`, `mul32`, `mul_wide`, the two 64-bit conversions, `shift_arithmetic_right` --- get inline rules, because their F\* implementations are about the representation the rule replaces. And C has no 128-bit literal, so a constant is assembled from its halves, at `unsigned __int128` and cast afterwards so that the most negative value, which has no positive counterpart, is still a constant expression. §119 |
 | M10ιΤ | `Pulse.Lib.Comment` | Master gave Pulse `LowStar.Comment`'s two functions and a karamel extension to realize them. Custard had no equivalent and compiled them from their F\* bodies, which threw the text away and left a call to an emitted no-op. The IR gains `Commented (before, after)` as a one-operand `op` rather than a node of `expr'`, so that the thirty-odd exhaustive matches on `expr'` carry it through without a case apiece; the standalone form is the same node with a unit operand. What stops it being deleted is `is_droppable`, not the effect: an `E_Impure` comment cannot sit inside an operation's argument, so the binding the feature exists for gained a temporary whose only purpose was to hold a comment. `comment_gen` takes its operand's effect and travels with the value; `comment` stays impure because it is a statement. Text that is not a literal, or that contains `*/`, is refused at the rule as error 394. Four regression tests. §120 |
+| M10ιΥ | Round 4's structural review: a traversal combinator, per-program state, one emitted name (§121) | Done.  An advisory round rather than a defect report: no bugs, but a measurement that the two mechanisms behind essentially every defect found so far were hand-written traversals and process-global state with convention-gated name minting.  `Syntax` gains `children` and `map_children` --- the only two exhaustive walks in the package now --- with `iter_children`, `fold_children`, `exists_child` and `for_all_children` derived from the first; a binder is deliberately not a child, so a pass with an opinion about a binding form has to say so against a default.  Twenty-three walks in `Simplify` and one in `RegEmb` are now their interesting cases plus a fall-through, and `Simplify` loses 334 lines.  `Layout.rw_expr`, `Monomorphize.mono_expr` and `Rename.rn_expr` stay written out because they rewrite types as well as children, and `coerce_prog` stays because every arm of it has an opinion --- which is now visible as an exception rather than lost in boilerplate, and that was the §117 `EIf`-condition defect's root cause.  `PrintC.reset_program_state` lists all twenty-two per-program variables in one place, where `print_program` used to reset thirteen by hand and leave nine.  `PrintC.emitted_name` is the single spelling of a declaration, read by the `taken_names` seeding, the collision check, the `externs` table and an external's prototype --- §117.2 and §117.3 were both a name allocated against a set that did not contain everything the file would contain.  `Section 18.4`, cited twice and never written, becomes §19.2 and §19.3, and `tests/custard/checkrefs.py` (`make check-refs`) now holds all 922 citations.  Splitting `Extract.fst` along its banners is declined on the record: weakly held by the reporter, navigability only, and churn during an active review |

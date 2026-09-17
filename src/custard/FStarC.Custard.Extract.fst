@@ -1614,7 +1614,7 @@ and binder_classes (st:state) (l:Ident.lident) : ML (list bclass) =
          | _ -> [])
       | None -> []
     in
-    (* Section 18.4.  An empty classification is not "everything is [Poly]":
+    (* Section 19.2.  An empty classification is not "everything is [Poly]":
        [split_mono_args] short-circuits on it and hands the *whole* spine
        through unfiltered, so an erased argument is passed at runtime to a
        callee that deleted the parameter -- the section 18.1 failure, reached

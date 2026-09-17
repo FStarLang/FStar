@@ -37,28 +37,7 @@ module Options = FStarC.Options
 let rec occurs (v:string) (x:expr) : ML bool =
   match x.e with
   | EVar w -> w = v
-  | EConst _ | EQual _ -> false
-  | ELet (_, _, e1, e2) -> occurs v e1 || occurs v e2
-  | EApp (h, es) -> occurs v h || occurs_list v es
-  | EFun (_, b) -> occurs v b
-  | EMatch (s, brs) -> occurs v s || occurs_branches v brs
-  | EIf (c, a, b) -> occurs v c || occurs v a || occurs v b
-  | EAny | EAbort _ -> false
-  | ESeq (a, b) -> occurs v a || occurs v b
-  | ECtor (_, es) | ETuple es | EOp (_, es) -> occurs_list v es
-  | ERaise e1 -> occurs v e1
-  | ERecord (_, fs) -> occurs_list v (fs |> List.map snd)
-  | EProj (e1, _, _) | EDiscrim (e1, _) | ECast (e1, _)
-  | ECoerce (e1, _) -> occurs v e1
-  | EWhile (a, b) -> occurs v a || occurs v b
-  | ETry (a, brs) -> occurs v a || occurs_branches v brs
-
-and occurs_list (v:string) (es:list expr) : ML bool =
-  es |> List.existsb (occurs v)
-
-and occurs_branches (v:string) (brs:list branch) : ML bool =
-  brs |> List.existsb (fun (_, g, b) ->
-    (match g with None -> false | Some g -> occurs v g) || occurs v b)
+  | _ -> exists_child (occurs v) x
 
 (* -------------------------------------------------------------------- *)
 (* ANF                                                                  *)
@@ -307,27 +286,19 @@ let rec sub (sm:subst) (x:expr) : ML expr =
     SMap.add sm v { x with e = EVar v'; ty; eff = E_Pure };
     let e2 = sub sm e2 in
     { x with e = ELet (v', ty, e1, e2) }
-  | EApp (h, es) -> { x with e = EApp (g h, es |> List.map g) }
   | EFun (bs, b) ->
     let bs = bs |> List.map (fun b ->
       let n = rename b.b_name in
       SMap.add sm b.b_name { e = EVar n; ty = b.b_ty; eff = E_Pure };
       { b with b_name = n }) in
     { x with e = EFun (bs, sub sm b) }
+  (* The four binding forms are written out because they rebind, and
+     [map_children] deliberately does not look at binders: [ELet] and [EFun]
+     above rename theirs, and a branch's pattern is renamed by
+     [sub_branch].  Everything else is the identity traversal. *)
   | EMatch (s, brs) -> { x with e = EMatch (g s, brs |> List.map (sub_branch sm)) }
-  | EIf (c, a, b) -> { x with e = EIf (g c, g a, g b) }
-  | ESeq (a, b) -> { x with e = ESeq (g a, g b) }
-  | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map g) }
-  | ETuple es -> { x with e = ETuple (es |> List.map g) }
-  | EOp (o, es) -> { x with e = EOp (o, es |> List.map g) }
-  | ERaise e1 -> { x with e = ERaise (g e1) }
-  | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, g e))) }
-  | EProj (e1, n, f) -> { x with e = EProj (g e1, n, f) }
-  | EDiscrim (e1, n) -> { x with e = EDiscrim (g e1, n) }
-  | ECast (e1, c) -> { x with e = ECast (g e1, c) }
-  | ECoerce (e1, c) -> { x with e = ECoerce (g e1, c) }
-  | EWhile (a, b) -> { x with e = EWhile (g a, g b) }
   | ETry (a, brs) -> { x with e = ETry (g a, brs |> List.map (sub_branch sm)) }
+  | _ -> map_children g x
 
 and sub_branch (sm:subst) (br:branch) : ML branch =
   let p, guard, b = br in
@@ -353,32 +324,9 @@ and sub_pat (sm:subst) (p:pat) : ML pat =
    Names are unique within a definition, so nothing below can rebind [v] and
    there is no binder to avoid. *)
 let rec rename_var (v w : string) (x:expr) : ML expr =
-  let g = rename_var v w in
-  let gb (br:branch) : ML branch =
-    let p, gd, b = br in
-    (p, (match gd with None -> None | Some e -> Some (g e)), g b) in
-  let e' =
-    match x.e with
-    | EVar u -> if u = v then EVar w else x.e
-    | EConst _ | EQual _ | EAny | EAbort _ -> x.e
-    | ELet (u, t, a, b) -> ELet (u, t, g a, g b)
-    | ESeq (a, b) -> ESeq (g a, g b)
-    | EWhile (a, b) -> EWhile (g a, g b)
-    | EApp (h, es) -> EApp (g h, es |> List.map g)
-    | EFun (bs, b) -> EFun (bs, g b)
-    | EIf (c, a, b) -> EIf (g c, g a, g b)
-    | EMatch (sc, brs) -> EMatch (g sc, brs |> List.map gb)
-    | ETry (sc, brs) -> ETry (g sc, brs |> List.map gb)
-    | ECtor (n, es) -> ECtor (n, es |> List.map g)
-    | ETuple es -> ETuple (es |> List.map g)
-    | EOp (o, es) -> EOp (o, es |> List.map g)
-    | ERaise a -> ERaise (g a)
-    | ERecord (n, fs) -> ERecord (n, fs |> List.map (fun (f, e) -> (f, g e)))
-    | EProj (a, n, f) -> EProj (g a, n, f)
-    | EDiscrim (a, n) -> EDiscrim (g a, n)
-    | ECast (a, c) -> ECast (g a, c)
-    | ECoerce (a, c) -> ECoerce (g a, c) in
-  { x with e = e' }
+  match x.e with
+  | EVar u -> if u = v then { x with e = EVar w } else x
+  | _ -> map_children (rename_var v w) x
 
 (* Two tables about a type's constructors, filled by [run] and read by the
    rewrites below.  Both are empty until then, which makes a rewrite that
@@ -618,9 +566,6 @@ let rec simpl (x:expr) : ML expr =
          is there for its effect, and a read has none worth a statement. *)
       if is_droppable e1 then e2 else { x with e = ESeq (e1, e2) })
 
-  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
-  | EApp (h, es) -> { x with e = EApp (simpl h, es |> List.map simpl) }
-  | EFun (bs, b) -> { x with e = EFun (bs, simpl b) }
   | EMatch (s, brs) ->
     let s = simpl s in
     let brs = brs |> List.map simpl_branch in
@@ -630,20 +575,15 @@ let rec simpl (x:expr) : ML expr =
     match as_if brs with
      | Some (t, f) -> { x with e = EIf (s, t, f) }
      | None -> { x with e = EMatch (s, brs) })
-  | EIf (c, a, b) -> { x with e = EIf (simpl c, simpl a, simpl b) }
   | ECtor (n, es) ->
     let r = { x with e = ECtor (n, es |> List.map simpl) } in
     (match rebuild_proj_id r with Some s -> s | None -> r)
   | ETuple es ->
     let r = { x with e = ETuple (es |> List.map simpl) } in
     (match rebuild_proj_id r with Some s -> s | None -> r)
-  | EOp (o, es) -> { x with e = EOp (o, es |> List.map simpl) }
-  | ERaise e1 -> { x with e = ERaise (simpl e1) }
   | ERecord (n, fs) ->
     let r = { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, simpl e))) } in
     (match rebuild_proj_id r with Some s -> s | None -> r)
-  | EProj (e1, n, f) -> { x with e = EProj (simpl e1, n, f) }
-  | EDiscrim (e1, n) -> { x with e = EDiscrim (simpl e1, n) }
   (* Section 118.  An integer literal converted to a float is a float literal.
 
      [FStar.Float32.of_int] is the derived path to a float constant, and it is
@@ -667,9 +607,7 @@ let rec simpl (x:expr) : ML expr =
         | Some f -> { x with e = EConst (CFloat (f, fw)) }
         | None -> { x with e = ECast (e1, c) })
      | _ -> { x with e = ECast (e1, c) })
-  | ECoerce (e1, c) -> { x with e = ECoerce (simpl e1, c) }
-  | EWhile (a, b) -> { x with e = EWhile (simpl a, simpl b) }
-  | ETry (a, brs) -> { x with e = ETry (simpl a, brs |> List.map simpl_branch) }
+  | _ -> map_children simpl x
 
 and simpl_branch (br:branch) : ML branch =
   let p, g, b = br in
@@ -687,29 +625,17 @@ let imin (a b : int) : int = if a <= b then a else b
 let rec count (v:string) (x:expr) : ML int =
   if occurs v x then (match x.e with
     | EVar _ -> 1
-    | ELet (_, _, e1, e2) -> imin 2 (count v e1 + count v e2)
-    | EApp (h, es) -> imin 2 (count v h + count_list v es)
-    | EFun (_, b) -> count v b
     | EMatch (s, brs) ->
       (* The branches are alternatives, so the worst one is the count. *)
       imin 2 (count v s + (brs |> List.fold_left (fun acc (_, g, b) ->
                imax acc (count v b + (match g with None -> 0 | Some g -> count v g))) 0))
     | EIf (c, a, b) -> imin 2 (count v c + imax (count v a) (count v b))
-    | EAny | EAbort _ -> 0
-    | ESeq (a, b) -> imin 2 (count v a + count v b)
-    | ECtor (_, es) | ETuple es | EOp (_, es) -> count_list v es
-    | ERaise e1 -> count v e1
-    | ERecord (_, fs) -> count_list v (fs |> List.map snd)
-    | EProj (e1, _, _) | EDiscrim (e1, _) | ECast (e1, _)
-    | ECoerce (e1, _) -> count v e1
-    | EWhile (a, b) -> imin 2 (count v a + count v b)
     | ETry (a, brs) -> imin 2 (count v a + (brs |> List.fold_left (fun acc (_, _, b) ->
                                 imax acc (count v b)) 0))
-    | _ -> 1)
+    (* Everywhere else the children are all evaluated, so the count is their
+       sum; only the three nodes above have alternatives. *)
+    | _ -> fold_children (fun acc e -> imin 2 (acc + count v e)) 0 x)
   else 0
-
-and count_list (v:string) (es:list expr) : ML int =
-  es |> List.fold_left (fun acc e -> imin 2 (acc + count v e)) 0
 
 (* Duplicating an argument is only sound when evaluating it is unobservable,
    and only desirable when it is trivial; otherwise it gets a [let], which the
@@ -813,29 +739,16 @@ let rec called_only (v:string) (x:expr) : ML bool =
   if not (occurs v x) then true
   else match x.e with
   | EVar _ -> false
-  | EConst _ | EQual _ | EAny | EAbort _ -> true
   | EApp (h, es) ->
     (match h.e with
      | EVar w -> w = v && called_only_list v es
      | _ -> called_only v h && called_only_list v es)
-  | ELet (_, _, e1, e2) -> called_only v e1 && called_only v e2
-  | EFun (_, b) -> called_only v b
-  | EMatch (s, brs) -> called_only v s && called_only_branches v brs
-  | EIf (c, a, b) -> called_only v c && called_only v a && called_only v b
-  | ESeq (a, b) | EWhile (a, b) -> called_only v a && called_only v b
-  | ECtor (_, es) | ETuple es | EOp (_, es) -> called_only_list v es
-  | ERaise e1 -> called_only v e1
-  | ERecord (_, fs) -> called_only_list v (fs |> List.map snd)
-  | EProj (e1, _, _) | EDiscrim (e1, _) | ECast (e1, _)
-  | ECoerce (e1, _) -> called_only v e1
-  | ETry (a, brs) -> called_only v a && called_only_branches v brs
+  (* Every other node is transparent to the question: it holds of the node
+     exactly when it holds of each of its children. *)
+  | _ -> for_all_children (called_only v) x
 
 and called_only_list (v:string) (es:list expr) : ML bool =
   es |> List.for_all (called_only v)
-
-and called_only_branches (v:string) (brs:list branch) : ML bool =
-  brs |> List.for_all (fun (_, g, b) ->
-    (match g with None -> true | Some g -> called_only v g) && called_only v b)
 
 (* A *forwarder* is a pure, non-recursive definition whose body is exactly one
    of its own binders -- [let id_fn phi = phi], and, in EverParse's CDDL
@@ -933,20 +846,7 @@ let rec reduce (x:expr) : ML expr =
       SMap.add sm v e1;
       reduce (sub sm e2)
     else { x with e = ELet (v, ty, e1, reduce e2) }
-  | EFun (bs, b) -> { x with e = EFun (bs, reduce b) }
-  | EIf (c, a, b) -> { x with e = EIf (reduce c, reduce a, reduce b) }
-  | ESeq (a, b) -> { x with e = ESeq (reduce a, reduce b) }
-  | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map reduce) }
-  | ETuple es -> { x with e = ETuple (es |> List.map reduce) }
-  | EOp (o, es) -> { x with e = EOp (o, es |> List.map reduce) }
-  | ERaise e1 -> { x with e = ERaise (reduce e1) }
-  | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, reduce e))) }
-  | EProj (e1, n, f) -> { x with e = EProj (reduce e1, n, f) }
-  | EDiscrim (e1, n) -> { x with e = EDiscrim (reduce e1, n) }
-  | ECast (e1, c) -> { x with e = ECast (reduce e1, c) }
-  | ECoerce (e1, c) -> { x with e = ECoerce (reduce e1, c) }
-  | EWhile (a, b) -> { x with e = EWhile (reduce a, reduce b) }
-  | ETry (a, brs) -> { x with e = ETry (reduce a, brs |> List.map reduce_branch) }
+  | _ -> map_children reduce x
 
 and reduce_branch (br:branch) : ML branch =
   let p, g, b = br in
@@ -986,30 +886,7 @@ let rec inline_expr (tbl : SMap.t (list binder & expr)) (used : SMap.t bool) (x:
     (match SMap.try_find tbl (string_of_name n) with
      | Some ([], body) -> inline_call [] body [] x
      | _ -> SMap.add used (string_of_name n) true; x)
-  | EConst _ | EVar _ | EAny | EAbort _ -> x
-  | ELet (v, ty, e1, e2) -> { x with e = ELet (v, ty, g e1, g e2) }
-  | EApp (h, es) -> { x with e = EApp (g h, es |> List.map g) }
-  | EFun (bs, b) -> { x with e = EFun (bs, g b) }
-  | EMatch (s, brs) -> { x with e = EMatch (g s, brs |> List.map (inline_branch tbl used)) }
-  | EIf (c, a, b) -> { x with e = EIf (g c, g a, g b) }
-  | ESeq (a, b) -> { x with e = ESeq (g a, g b) }
-  | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map g) }
-  | ETuple es -> { x with e = ETuple (es |> List.map g) }
-  | EOp (o, es) -> { x with e = EOp (o, es |> List.map g) }
-  | ERaise e1 -> { x with e = ERaise (g e1) }
-  | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, g e))) }
-  | EProj (e1, n, f) -> { x with e = EProj (g e1, n, f) }
-  | EDiscrim (e1, n) -> { x with e = EDiscrim (g e1, n) }
-  | ECast (e1, c) -> { x with e = ECast (g e1, c) }
-  | ECoerce (e1, c) -> { x with e = ECoerce (g e1, c) }
-  | EWhile (a, b) -> { x with e = EWhile (g a, g b) }
-  | ETry (a, brs) -> { x with e = ETry (g a, brs |> List.map (inline_branch tbl used)) }
-
-and inline_branch (tbl : SMap.t (list binder & expr)) (used : SMap.t bool) (br:branch)
-  : ML branch =
-  let p, guard, b = br in
-  (p, (match guard with None -> None | Some e -> Some (inline_expr tbl used e)),
-   inline_expr tbl used b)
+  | _ -> map_children g x
 
 (* -------------------------------------------------------------------- *)
 (* Eta reduction                                                        *)
@@ -1187,19 +1064,9 @@ let rec expr_uses (acc : SMap.t int) (x:expr) : ML unit =
   match x.e with
   | EApp ({ e = EQual (n, _) }, es) -> note n (List.length es); sub es
   | EQual (n, _) -> note n 0
-  | EConst _ | EVar _ | EAny | EAbort _ -> ()
-  | ERaise e1 | EDiscrim (e1, _) | EProj (e1, _, _)
-  | ECast (e1, _) | ECoerce (e1, _) -> expr_uses acc e1
-  | ECtor (_, es) | ETuple es | EOp (_, es) -> sub es
-  | ERecord (_, fs) -> sub (List.map snd fs)
-  | ELet (_, _, e1, e2) | ESeq (e1, e2) | EWhile (e1, e2) -> sub [e1; e2]
-  | EApp (h, es) -> sub (h :: es)
-  | EFun (_, b) -> expr_uses acc b
-  | EIf (c, a, b) -> sub [c; a; b]
-  | EMatch (sc, brs) | ETry (sc, brs) ->
-    expr_uses acc sc;
-    brs |> List.iter (fun (_, g, b) ->
-      (match g with Some g -> expr_uses acc g | None -> ()); expr_uses acc b)
+  (* Every other use is final, so nothing below the first two cases needs to
+     be distinguished -- only visited. *)
+  | _ -> iter_children (expr_uses acc) x
 
 let use_arity (prog:program) : ML (SMap.t int) =
   let tbl : SMap.t int = SMap.create 100 in
@@ -1465,21 +1332,16 @@ let rec expr_deps (x:expr) : ML (list string) =
         | ERecord (n, fs) -> string_of_name n :: sub (List.map snd fs)
         | EDiscrim (e, n) -> string_of_name n :: expr_deps e
         | EProj (e, n, _) -> string_of_name n :: expr_deps e
-        | EConst _ | EVar _ | EAny | EAbort _ -> []
         | ELet (_, t, e1, e2) -> cty_deps t @ sub [e1; e2]
-        | EApp (h, es) -> sub (h :: es)
         | EFun (bs, b) -> List.collect (fun (b:binder) -> cty_deps b.b_ty) bs @ expr_deps b
-        | EMatch (sc, brs) ->
+        | ECast (e, t) | ECoerce (e, t) -> cty_deps t @ expr_deps e
+        (* The cases above are the ones that mention a type or a name of
+           their own; a branch's pattern is one such, which is why both
+           matching forms are here and not below. *)
+        | EMatch (sc, brs) | ETry (sc, brs) ->
           expr_deps sc @ (brs |> List.collect (fun (p, g, b) ->
             pat_deps p @ (match g with Some g -> expr_deps g | None -> []) @ expr_deps b))
-        | EIf (c, a, b) -> sub [c; a; b]
-        | ESeq (a, b) -> sub [a; b]
-        | ETuple es | EOp (_, es) -> sub es
-        | ECast (e, t) | ECoerce (e, t) -> cty_deps t @ expr_deps e
-        | EWhile (c, b) -> sub [c; b]
-        | ETry (e, brs) ->
-          expr_deps e @ (brs |> List.collect (fun (p, g, b) ->
-            pat_deps p @ (match g with Some g -> expr_deps g | None -> []) @ expr_deps b)))
+        | _ -> sub (children x))
 
 let decl_deps (d:decl) : ML (list string) =
   match d with
@@ -1880,20 +1742,7 @@ let check_resolved (prog:program) : ML program =
     let sub (es:list expr) : ML (list name) = List.collect quals es in
     match x.e with
     | EQual (n, _) -> [n]
-    | EConst _ | EVar _ | EAny | EAbort _ -> []
-    | ECtor (_, es) | ETuple es | EOp (_, es) -> sub es
-    | ERecord (_, fs) -> sub (List.map snd fs)
-    | ERaise e1 | EDiscrim (e1, _) | EProj (e1, _, _)
-    | ECast (e1, _) | ECoerce (e1, _) -> quals e1
-    | ELet (_, _, e1, e2) -> sub [e1; e2]
-    | EApp (h, es) -> sub (h :: es)
-    | EFun (_, b) -> quals b
-    | EMatch (sc, brs) -> quals sc @ List.collect (fun (_, g, b) ->
-        (match g with Some g -> quals g | None -> []) @ quals b) brs
-    | ETry (a, brs) -> quals a @ List.collect (fun (_, g, b) ->
-        (match g with Some g -> quals g | None -> []) @ quals b) brs
-    | EIf (c, a, b) -> sub [c; a; b]
-    | ESeq (a, b) | EWhile (a, b) -> sub [a; b] in
+    | _ -> sub (children x) in
   prog |> List.iter (fun d ->
     match d with
     | DLet l ->
@@ -2068,22 +1917,7 @@ let rec prune (x:expr) : ML expr =
     else if EAbort? a.e && not (EAbort? b.e) then take x c b
     else { x with e = EIf (c, a, b) }
 
-  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
-  | ELet (v, ty, a, b) -> { x with e = ELet (v, ty, g a, g b) }
-  | ESeq (a, b) -> { x with e = ESeq (g a, g b) }
-  | EWhile (a, b) -> { x with e = EWhile (g a, g b) }
-  | EApp (h, es) -> { x with e = EApp (g h, es |> List.map g) }
-  | EFun (bs, b) -> { x with e = EFun (bs, g b) }
-  | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map g) }
-  | ETuple es -> { x with e = ETuple (es |> List.map g) }
-  | EOp (o, es) -> { x with e = EOp (o, es |> List.map g) }
-  | ERaise e1 -> { x with e = ERaise (g e1) }
-  | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, g e))) }
-  | EProj (e1, n, f) -> { x with e = EProj (g e1, n, f) }
-  | EDiscrim (e1, n) -> { x with e = EDiscrim (g e1, n) }
-  | ECast (e1, c) -> { x with e = ECast (g e1, c) }
-  | ECoerce (e1, c) -> { x with e = ECoerce (g e1, c) }
-  | ETry (a, brs) -> { x with e = ETry (g a, brs |> List.map prune_branch) }
+  | _ -> map_children g x
 
 and prune_branch (br:branch) : ML branch =
   let p, guard, b = br in
@@ -2211,28 +2045,7 @@ let rec psub (sm:subst) (x:expr) : ML expr =
   let g = psub sm in
   match x.e with
   | EVar v -> (match SMap.try_find sm v with Some e -> e | None -> x)
-  | EConst _ | EQual _ | EAny | EAbort _ -> x
-  | ELet (v, ty, e1, e2) -> { x with e = ELet (v, ty, g e1, g e2) }
-  | EApp (h, es) -> { x with e = EApp (g h, es |> List.map g) }
-  | EFun (bs, b) -> { x with e = EFun (bs, g b) }
-  | EMatch (s, brs) -> { x with e = EMatch (g s, brs |> List.map (psub_branch sm)) }
-  | EIf (c, a, b) -> { x with e = EIf (g c, g a, g b) }
-  | ESeq (a, b) -> { x with e = ESeq (g a, g b) }
-  | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map g) }
-  | ETuple es -> { x with e = ETuple (es |> List.map g) }
-  | EOp (o, es) -> { x with e = EOp (o, es |> List.map g) }
-  | ERaise e1 -> { x with e = ERaise (g e1) }
-  | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, g e))) }
-  | EProj (e1, n, f) -> { x with e = EProj (g e1, n, f) }
-  | EDiscrim (e1, n) -> { x with e = EDiscrim (g e1, n) }
-  | ECast (e1, c) -> { x with e = ECast (g e1, c) }
-  | ECoerce (e1, c) -> { x with e = ECoerce (g e1, c) }
-  | EWhile (a, b) -> { x with e = EWhile (g a, g b) }
-  | ETry (a, brs) -> { x with e = ETry (g a, brs |> List.map (psub_branch sm)) }
-
-and psub_branch (sm:subst) (br:branch) : ML branch =
-  let p, guard, b = br in
-  (p, (match guard with None -> None | Some e -> Some (psub sm e)), psub sm b)
+  | _ -> map_children g x
 
 (* A binding whose pattern cannot fail: one constructor, and no nested test.
    The result names the key an [EProj] on the scrutinee has to carry -- the
@@ -2311,28 +2124,7 @@ let rec depat (tbl:SMap.t ctor_info) (x:expr) : ML expr =
      | Some _ when is_pure e1.eff -> { x with e = EConst (CBool true) }
      | _ -> { x with e = EDiscrim (e1, cn) })
 
-  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
-  | ELet (v, ty, e1, e2) -> { x with e = ELet (v, ty, g e1, g e2) }
-  | EApp (h, es) -> { x with e = EApp (g h, es |> List.map g) }
-  | EFun (bs, b) -> { x with e = EFun (bs, g b) }
-  | EMatch (s, brs) -> { x with e = EMatch (g s, brs |> List.map (depat_branch tbl)) }
-  | EIf (c, a, b) -> { x with e = EIf (g c, g a, g b) }
-  | ESeq (a, b) -> { x with e = ESeq (g a, g b) }
-  | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map g) }
-  | ETuple es -> { x with e = ETuple (es |> List.map g) }
-  | EOp (o, es) -> { x with e = EOp (o, es |> List.map g) }
-  | ERaise e1 -> { x with e = ERaise (g e1) }
-  | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, g e))) }
-  | EProj (e1, n, f) -> { x with e = EProj (g e1, n, f) }
-  | ECast (e1, c) -> { x with e = ECast (g e1, c) }
-  | ECoerce (e1, c) -> { x with e = ECoerce (g e1, c) }
-  | EWhile (a, b) -> { x with e = EWhile (g a, g b) }
-  | ETry (a, brs) -> { x with e = ETry (g a, brs |> List.map (depat_branch tbl)) }
-
-and depat_branch (tbl:SMap.t ctor_info) (br:branch) : ML branch =
-  let p, guard, b = br in
-  (p, (match guard with None -> None | Some e -> Some (depat tbl e)),
-   depat tbl b)
+  | _ -> map_children g x
 
 let depat_decls (prog:program) : ML program =
   let tbl = ctor_infos (with_imports prog) in
@@ -2406,26 +2198,7 @@ let eta_ctors (vd:verdicts) (prog:program) : ML program =
            mk (EFun (bs, { alt with e = ECtor (cn, es @ args) })) res E_Pure
          end
        | None -> alt)
-    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
-    | ELet (v, ty, a, b) -> { x with e = ELet (v, ty, g a, g b) }
-    | ESeq (a, b) -> { x with e = ESeq (g a, g b) }
-    | EWhile (a, b) -> { x with e = EWhile (g a, g b) }
-    | EApp (h, es) -> { x with e = EApp (g h, es |> List.map g) }
-    | EFun (bs, b) -> { x with e = EFun (bs, g b) }
-    | EIf (c, a, b) -> { x with e = EIf (g c, g a, g b) }
-    | EMatch (s, brs) -> { x with e = EMatch (g s, brs |> List.map go_branch) }
-    | ETry (s, brs) -> { x with e = ETry (g s, brs |> List.map go_branch) }
-    | ETuple es -> { x with e = ETuple (es |> List.map g) }
-    | EOp (o, es) -> { x with e = EOp (o, es |> List.map g) }
-    | ERaise e1 -> { x with e = ERaise (g e1) }
-    | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, g e))) }
-    | EProj (e1, n, f) -> { x with e = EProj (g e1, n, f) }
-    | EDiscrim (e1, n) -> { x with e = EDiscrim (g e1, n) }
-    | ECast (e1, c) -> { x with e = ECast (g e1, c) }
-    | ECoerce (e1, c) -> { x with e = ECoerce (g e1, c) }
-  and go_branch (br:branch) : ML branch =
-    let p, gd, b = br in
-    (p, (match gd with None -> None | Some e -> Some (go e)), go b) in
+    | _ -> map_children g x in
   prog |> List.map (fun d ->
     match d with
     | DLet dl -> DLet { dl with dl_body = go dl.dl_body }
@@ -2469,22 +2242,11 @@ let records (vd:verdicts) (prog:program) : ML program =
     | EProj (e1, n, f) ->
       let e1 = go e1 in
       { x with e = EProj (e1, (match as_record n with Some (tn, _) -> tn | None -> n), f) }
-    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
-    | ELet (v, ty, a, b) -> { x with e = ELet (v, ty, go a, go b) }
-    | ESeq (a, b) -> { x with e = ESeq (go a, go b) }
-    | EWhile (a, b) -> { x with e = EWhile (go a, go b) }
-    | EApp (h, es) -> { x with e = EApp (go h, es |> List.map go) }
-    | EFun (bs, b) -> { x with e = EFun (bs, go b) }
-    | EIf (c, a, b) -> { x with e = EIf (go c, go a, go b) }
+    (* Both matching forms stay written out because [go_branch] rewrites the
+       *pattern* too, which [map_children] deliberately does not touch. *)
     | EMatch (s, brs) -> { x with e = EMatch (go s, brs |> List.map go_branch) }
     | ETry (s, brs) -> { x with e = ETry (go s, brs |> List.map go_branch) }
-    | ETuple es -> { x with e = ETuple (es |> List.map go) }
-    | EOp (o, es) -> { x with e = EOp (o, es |> List.map go) }
-    | ERaise e1 -> { x with e = ERaise (go e1) }
-    | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, go e))) }
-    | EDiscrim (e1, n) -> { x with e = EDiscrim (go e1, n) }
-    | ECast (e1, c) -> { x with e = ECast (go e1, c) }
-    | ECoerce (e1, c) -> { x with e = ECoerce (go e1, c) }
+    | _ -> map_children go x
   (* A constructor pattern becomes a record pattern.  This is what the verdict
      used to have to be a whole-program decision for: without [PRecord] there
      was nothing to rewrite such a match to, so any surviving one disqualified
@@ -2596,27 +2358,7 @@ let rec unbuild (infos:SMap.t ctor_info) (x:expr) : ML expr =
                 | None -> alt)
         | None -> alt)
      | _ -> alt)
-  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
-  | ELet (v, ty, a, b) -> { x with e = ELet (v, ty, g a, g b) }
-  | ESeq (a, b) -> { x with e = ESeq (g a, g b) }
-  | EWhile (a, b) -> { x with e = EWhile (g a, g b) }
-  | EApp (h, es) -> { x with e = EApp (g h, es |> List.map g) }
-  | EFun (bs, b) -> { x with e = EFun (bs, g b) }
-  | EIf (c, a, b) -> { x with e = EIf (g c, g a, g b) }
-  | EMatch (s, brs) -> { x with e = EMatch (g s, brs |> List.map (unbuild_branch infos)) }
-  | ETry (s, brs) -> { x with e = ETry (g s, brs |> List.map (unbuild_branch infos)) }
-  | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map g) }
-  | ETuple es -> { x with e = ETuple (es |> List.map g) }
-  | EOp (o, es) -> { x with e = EOp (o, es |> List.map g) }
-  | ERaise e1 -> { x with e = ERaise (g e1) }
-  | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, g e))) }
-  | EDiscrim (e1, n) -> { x with e = EDiscrim (g e1, n) }
-  | ECast (e1, c) -> { x with e = ECast (g e1, c) }
-  | ECoerce (e1, c) -> { x with e = ECoerce (g e1, c) }
-
-and unbuild_branch (infos:SMap.t ctor_info) (br:branch) : ML branch =
-  let p, gd, b = br in
-  (p, (match gd with None -> None | Some e -> Some (unbuild infos e)), unbuild infos b)
+  | _ -> map_children g x
 
 (* Is every occurrence of [v] the target of a projection?  Then a record built
    out of pieces can be substituted for it however many times it is used:
@@ -2626,18 +2368,7 @@ let rec only_projected (v:string) (x:expr) : ML bool =
   match x.e with
   | EVar w -> w <> v
   | EProj (e1, _, _) -> (match e1.e with EVar w -> w = v || g e1 | _ -> g e1)
-  | EConst _ | EQual _ | EAny | EAbort _ -> true
-  | ELet (_, _, a, b) | ESeq (a, b) | EWhile (a, b) -> g a && g b
-  | EApp (h, es) -> g h && es |> List.for_all g
-  | EFun (_, b) -> g b
-  | EIf (c, a, b) -> g c && g a && g b
-  | EMatch (s, brs) | ETry (s, brs) ->
-    g s && brs |> List.for_all (fun (_, gd, b) ->
-      (match gd with None -> true | Some e -> g e) && g b)
-  | ECtor (_, es) | ETuple es | EOp (_, es) -> es |> List.for_all g
-  | ERaise e1 -> g e1
-  | ERecord (_, fs) -> fs |> List.for_all (fun (_, e) -> g e)
-  | EDiscrim (e1, _) | ECast (e1, _) | ECoerce (e1, _) -> g e1
+  | _ -> for_all_children g x
 
 let inline_fields (vd:verdicts) (prog:program) : ML program =
   if SMap.keys vd.vd_plans = [] then prog else begin
@@ -2698,22 +2429,11 @@ let inline_fields (vd:verdicts) (prog:program) : ML program =
           | None -> alt)
        | None -> alt)
 
-    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
-    | ELet (v, ty, a, b) -> { x with e = ELet (v, ty, go a, go b) }
-    | ESeq (a, b) -> { x with e = ESeq (go a, go b) }
-    | EWhile (a, b) -> { x with e = EWhile (go a, go b) }
-    | EApp (h, es) -> { x with e = EApp (go h, es |> List.map go) }
-    | EFun (bs, b) -> { x with e = EFun (bs, go b) }
-    | EIf (c, a, b) -> { x with e = EIf (go c, go a, go b) }
+    (* Both matching forms stay written out because [go_branch] rewrites the
+       *pattern* too, which [map_children] deliberately does not touch. *)
     | EMatch (s, brs) -> { x with e = EMatch (go s, brs |> List.map go_branch) }
     | ETry (s, brs) -> { x with e = ETry (go s, brs |> List.map go_branch) }
-    | ETuple es -> { x with e = ETuple (es |> List.map go) }
-    | EOp (o, es) -> { x with e = EOp (o, es |> List.map go) }
-    | ERaise e1 -> { x with e = ERaise (go e1) }
-    | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, go e))) }
-    | EDiscrim (e1, n) -> { x with e = EDiscrim (go e1, n) }
-    | ECast (e1, c) -> { x with e = ECast (go e1, c) }
-    | ECoerce (e1, c) -> { x with e = ECoerce (go e1, c) }
+    | _ -> map_children go x
 
   (* A branch is rewritten pattern first, and *every* constructor pattern in
      it, not just the outermost: a plan applies wherever its constructor
@@ -2945,24 +2665,10 @@ let rec split_any_expr (infos:SMap.t ctor_info) (x:expr) : ML expr =
       let brs = go brs in
       { x with e = ELet (v, sc.ty, sc, mk (EMatch (sv (), brs)) x.ty x.eff) } in
   match x.e with
-  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
-  | ELet (v, ty, a, b) -> { x with e = ELet (v, ty, g a, g b) }
-  | ESeq (a, b) -> { x with e = ESeq (g a, g b) }
-  | EWhile (a, b) -> { x with e = EWhile (g a, g b) }
-  | EApp (h, es) -> { x with e = EApp (g h, es |> List.map g) }
-  | EFun (bs, b) -> { x with e = EFun (bs, g b) }
-  | EIf (c, a, b) -> { x with e = EIf (g c, g a, g b) }
+  (* [br] rewrites the pattern, so both matching forms stay written out. *)
   | EMatch (s, brs) -> branches (g s) x brs
   | ETry (s, brs) -> { x with e = ETry (g s, brs |> List.map (br None)) }
-  | ETuple es -> { x with e = ETuple (es |> List.map g) }
-  | EOp (o, es) -> { x with e = EOp (o, es |> List.map g) }
-  | ERaise e1 -> { x with e = ERaise (g e1) }
-  | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map g) }
-  | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, g e))) }
-  | EProj (e1, n, f) -> { x with e = EProj (g e1, n, f) }
-  | EDiscrim (e1, n) -> { x with e = EDiscrim (g e1, n) }
-  | ECast (e1, c) -> { x with e = ECast (g e1, c) }
-  | ECoerce (e1, c) -> { x with e = ECoerce (g e1, c) }
+  | _ -> map_children g x
 
 let split_any_decls (prog:program) : ML program =
   let infos = ctor_infos (with_imports prog) in
@@ -3043,9 +2749,6 @@ let split_any_decls (prog:program) : ML program =
 
 let rec unit_args_expr (x:expr) : ML expr =
   let g = unit_args_expr in
-  let br (b0:branch) : ML branch =
-    let p, gd, b = b0 in
-    (p, (match gd with Some gd -> Some (g gd) | None -> None), g b) in
   (* [acc] collects the hoisted bindings, in the order the arguments were
      evaluated, which is the order the [let]s have to be rebuilt in. *)
   let arg (acc:ref (list (string & cty & expr))) (e:expr) : ML expr =
@@ -3067,35 +2770,24 @@ let rec unit_args_expr (x:expr) : ML expr =
     !acc |> List.fold_left (fun body (v, t, e) ->
       { body with e = ELet (v, t, e, body) }) body in
   match x.e with
-  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
-  | ELet (v, ty, a, b) -> { x with e = ELet (v, ty, g a, g b) }
-  | ESeq (a, b) -> { x with e = ESeq (g a, g b) }
-  | EWhile (a, b) -> { x with e = EWhile (g a, g b) }
   | EApp (h, es) ->
     with_hoists (fun acc ->
       let h = g h in
       let es = es |> List.map (arg acc) in
       { x with e = EApp (h, es) })
-  | EFun (bs, b) -> { x with e = EFun (bs, g b) }
-  | EIf (c, a, b) -> { x with e = EIf (g c, g a, g b) }
-  | EMatch (s, brs) -> { x with e = EMatch (g s, brs |> List.map br) }
-  | ETry (s, brs) -> { x with e = ETry (g s, brs |> List.map br) }
   (* Section 90.  A value position, exactly like a call argument: the hoist
      is what makes it safe, and it is the same hoist. *)
   | ETuple es ->
     with_hoists (fun acc -> { x with e = ETuple (es |> List.map (arg acc)) })
   | EOp (o, es) ->
     with_hoists (fun acc -> { x with e = EOp (o, es |> List.map (arg acc)) })
-  | ERaise e1 -> { x with e = ERaise (g e1) }
   | ECtor (n, es) ->
     with_hoists (fun acc -> { x with e = ECtor (n, es |> List.map (arg acc)) })
   | ERecord (n, fs) ->
     with_hoists (fun acc ->
       { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, arg acc e))) })
-  | EProj (e1, n, f) -> { x with e = EProj (g e1, n, f) }
-  | EDiscrim (e1, n) -> { x with e = EDiscrim (g e1, n) }
-  | ECast (e1, c) -> { x with e = ECast (g e1, c) }
-  | ECoerce (e1, c) -> { x with e = ECoerce (g e1, c) }
+  (* Nothing else has an argument position, so nothing else hoists. *)
+  | _ -> map_children g x
 
 let unit_args (prog:program) : ML program =
   prog |> List.map (fun d ->
@@ -3607,19 +3299,12 @@ let lift_lambdas (prog:program) : ML program =
     let l (es:list expr) : ML (list string) = List.collect (fvs bound) es in
     match x.e with
     | EVar v -> if List.mem v bound then [] else [v]
-    | EConst _ | EQual _ | EAny | EAbort _ -> []
+    (* The four binding forms, and then everything that binds nothing. *)
     | ELet (v, _, e1, e2) -> fvs bound e1 @ fvs (v :: bound) e2
-    | EApp (h, es) -> fvs bound h @ l es
     | EFun (bs, b) -> fvs (List.map (fun (b:binder) -> b.b_name) bs @ bound) b
     | EMatch (sc, brs) -> fvs bound sc @ List.collect (fvs_branch bound) brs
     | ETry (a, brs) -> fvs bound a @ List.collect (fvs_branch bound) brs
-    | EIf (a, b, c) -> l [a; b; c]
-    | ESeq (a, b) | EWhile (a, b) -> l [a; b]
-    | ECtor (_, es) | ETuple es | EOp (_, es) -> l es
-    | ERaise e1 -> fvs bound e1
-    | ERecord (_, fs) -> l (List.map snd fs)
-    | EProj (a, _, _) | EDiscrim (a, _) | ECast (a, _)
-    | ECoerce (a, _) -> fvs bound a
+    | _ -> l (children x)
   and fvs_branch (bound:list string) (br:branch) : ML (list string) =
     let p, g, b = br in
     let bound = pat_vars p @ bound in
@@ -3674,26 +3359,7 @@ let lift_lambdas (prog:program) : ML program =
                            dl_eff = body.eff; dl_body = body;
                            dl_flags = [] } :: !lifted;
           { x with e = EQual (nm, dl.dl_typars |> List.map (fun v -> TVar v)) }
-      | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
-      | ELet (v, t, e1, e2) -> same (ELet (v, t, go e1, go e2))
-      | EApp (h, es) -> same (EApp (go h, List.map go es))
-      | EMatch (sc, brs) -> same (EMatch (go sc, List.map go_branch brs))
-      | ETry (a, brs) -> same (ETry (go a, List.map go_branch brs))
-      | EIf (a, b, c) -> same (EIf (go a, go b, go c))
-      | ESeq (a, b) -> same (ESeq (go a, go b))
-      | EWhile (a, b) -> same (EWhile (go a, go b))
-      | ECtor (nm, es) -> same (ECtor (nm, List.map go es))
-      | ETuple es -> same (ETuple (List.map go es))
-      | EOp (o, es) -> same (EOp (o, List.map go es))
-      | ERaise e1 -> same (ERaise (go e1))
-      | ERecord (nm, fs) -> same (ERecord (nm, fs |> List.map (fun (f, e) -> (f, go e))))
-      | EProj (a, nm, f) -> same (EProj (go a, nm, f))
-      | EDiscrim (a, nm) -> same (EDiscrim (go a, nm))
-      | ECast (a, t) -> same (ECast (go a, t))
-      | ECoerce (a, t) -> same (ECoerce (go a, t))
-    and go_branch (br:branch) : ML branch =
-      let p, g, b = br in
-      (p, (match g with Some g -> Some (go g) | None -> None), go b) in
+      | _ -> map_children go x in
     { dl with dl_body = go dl.dl_body } in
   (* A lifted function is emitted *before* the definition that refers to it,
      which is what the C backend's forward declarations expect and what keeps

@@ -323,6 +323,77 @@ let imported_home (d : decl) : ML (option string) =
   decl_flags d |> List.tryPick (function Imported (_, h) -> h | _ -> None)
 
 (* Section 99.  See the comment on the declaration in the interface. *)
+(* Section 121.  The two hand-written traversals that all the others are
+   written against.  Everything else in this package that walks an expression
+   -- and there were twenty-five such walks in [Simplify] alone -- now writes
+   only the cases it has an opinion about and falls through to one of these.
+
+   [children] and [map_children] must agree about what a child is and about
+   the order they are in, so they are kept adjacent and are the only two
+   places in the package that list every constructor for the sake of
+   listing it. *)
+let branch_children (br:branch) : ML (list expr) =
+  let _, g, b = br in
+  (match g with Some g -> [g] | None -> []) @ [b]
+
+let children (x:expr) : ML (list expr) =
+  match x.e with
+  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> []
+  | ELet (_, _, e1, e2) -> [e1; e2]
+  | EApp (h, es) -> h :: es
+  | EFun (_, b) -> [b]
+  | EMatch (s, brs) -> s :: List.collect branch_children brs
+  | EIf (c, a, b) -> [c; a; b]
+  | ESeq (a, b) -> [a; b]
+  | ECtor (_, es) | ETuple es | EOp (_, es) -> es
+  | ERecord (_, fs) -> List.map snd fs
+  | EProj (e1, _, _) | EDiscrim (e1, _)
+  | ECoerce (e1, _) | ECast (e1, _) | ERaise e1 -> [e1]
+  | EWhile (a, b) -> [a; b]
+  | ETry (a, brs) -> a :: List.collect branch_children brs
+
+(* Written in the same applicative style the hand-written traversals used,
+   rather than with explicit [let]s, so that a pass converted to it keeps the
+   order in which its side effects -- a [GenSym.next_id], say -- used to
+   happen.  A converted pass has to be a no-op on the output, and a gensym
+   that renumbers is not one. *)
+let map_branch (g : expr -> ML expr) (br:branch) : ML branch =
+  let p, guard, b = br in
+  (p, (match guard with None -> None | Some e -> Some (g e)), g b)
+
+let map_children (g : expr -> ML expr) (x:expr) : ML expr =
+  match x.e with
+  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
+  | ELet (v, ty, e1, e2) -> { x with e = ELet (v, ty, g e1, g e2) }
+  | EApp (h, es) -> { x with e = EApp (g h, es |> List.map g) }
+  | EFun (bs, b) -> { x with e = EFun (bs, g b) }
+  | EMatch (s, brs) -> { x with e = EMatch (g s, brs |> List.map (map_branch g)) }
+  | EIf (c, a, b) -> { x with e = EIf (g c, g a, g b) }
+  | ESeq (a, b) -> { x with e = ESeq (g a, g b) }
+  | ECtor (n, es) -> { x with e = ECtor (n, es |> List.map g) }
+  | ETuple es -> { x with e = ETuple (es |> List.map g) }
+  | EOp (o, es) -> { x with e = EOp (o, es |> List.map g) }
+  | ERecord (n, fs) -> { x with e = ERecord (n, fs |> List.map (fun (f, e) -> (f, g e))) }
+  | EProj (e1, n, f) -> { x with e = EProj (g e1, n, f) }
+  | EDiscrim (e1, n) -> { x with e = EDiscrim (g e1, n) }
+  | ECoerce (e1, c) -> { x with e = ECoerce (g e1, c) }
+  | ECast (e1, c) -> { x with e = ECast (g e1, c) }
+  | ERaise e1 -> { x with e = ERaise (g e1) }
+  | EWhile (a, b) -> { x with e = EWhile (g a, g b) }
+  | ETry (a, brs) -> { x with e = ETry (g a, brs |> List.map (map_branch g)) }
+
+let iter_children (f : expr -> ML unit) (x:expr) : ML unit =
+  List.iter f (children x)
+
+let fold_children (#a:Type) (f : a -> expr -> ML a) (init:a) (x:expr) : ML a =
+  List.fold_left f init (children x)
+
+let exists_child (f : expr -> ML bool) (x:expr) : ML bool =
+  List.existsb f (children x)
+
+let for_all_children (f : expr -> ML bool) (x:expr) : ML bool =
+  List.for_all f (children x)
+
 let rec is_droppable (e:expr) : ML bool =
   let all (es:list expr) : ML bool = List.for_all is_droppable es in
   (* Section 120.  Ahead of both tests below, because it overrides both.  A
@@ -340,17 +411,13 @@ let rec is_droppable (e:expr) : ML bool =
   | EOp ({ po_op = BufRead }, es) -> all es
   | EOp ({ po_op = BufCreate _ }, _) | EOp ({ po_op = BufWrite }, _)
   | EOp ({ po_op = BufFree }, _) | EOp ({ po_op = BufBlit }, _) -> false
-  | EOp (_, es) | ECtor (_, es) | ETuple es -> all es
-  | ELet (_, _, a, b) | ESeq (a, b) -> is_droppable a && is_droppable b
-  | EIf (a, b, c) -> is_droppable a && is_droppable b && is_droppable c
-  | EMatch (sc, brs) -> is_droppable sc && List.for_all is_droppable_branch brs
-  | ERecord (_, fs) -> List.for_all (fun (_, e) -> is_droppable e) fs
-  | EProj (a, _, _) | EDiscrim (a, _) | ECast (a, _)
-  | ECoerce (a, _) -> is_droppable a)
-
-and is_droppable_branch (br:branch) : ML bool =
-  let _, g, b = br in
-  (match g with Some g -> is_droppable g | None -> true) && is_droppable b
+  | EOp (_, es) -> all es
+  (* Everything else is deletable exactly when all of it is.  A branch's
+     guard and body are children, and its pattern binds nothing that
+     survives the deletion of the whole node. *)
+  | ECtor _ | ETuple _ | ELet _ | ESeq _ | EIf _ | EMatch _
+  | ERecord _ | EProj _ | EDiscrim _ | ECast _
+  | ECoerce _ -> for_all_children is_droppable e)
 
 (* -------------------------------------------------------------------- *)
 (* Printing                                                             *)

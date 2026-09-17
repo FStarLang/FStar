@@ -823,6 +823,41 @@ val imported_unit : decl -> ML (option string)
     its output; [None] for a local declaration or a whole-program upstream. *)
 val imported_home : decl -> ML (option string)
 
+(** {1 Traversal} *)
+
+(** Section 121.  The immediate sub-expressions of a node, in the order they
+    are written: the head of an application before its arguments, a
+    scrutinee before its branches, a guard before its branch's body.  Binders
+    are not children -- [ELet]'s name, [EFun]'s binders and a branch's
+    pattern are not expressions -- so a pass that cares about scope has to
+    write those cases itself.  That is the point: a pass that treats a
+    sub-position specially now has to say so against a default, instead of
+    saying it by being one arm out of twenty-two that nothing can be diffed
+    against. *)
+val children : expr -> ML (list expr)
+
+(** Rebuild a node with [g] applied to each of its immediate
+    sub-expressions -- the children of {!children}, in that order -- and
+    everything else, including the node's type and effect, left alone.  A
+    branch keeps its pattern and has its guard and body mapped.
+
+    This is the identity traversal that twenty-five passes used to spell out
+    by hand; a pass now writes only the cases it has an opinion about and
+    falls through to [map_children g x].  Adding an IR constructor is
+    therefore one edit rather than twenty-five, and the compiler still checks
+    exhaustiveness here. *)
+val map_children : (expr -> ML expr) -> expr -> ML expr
+
+(** Visit each of {!children} in order, for effect. *)
+val iter_children : (expr -> ML unit) -> expr -> ML unit
+
+(** A left fold over {!children}, in order. *)
+val fold_children : #a:Type -> (a -> expr -> ML a) -> a -> expr -> ML a
+
+(** Short-circuiting tests over {!children}. *)
+val exists_child : (expr -> ML bool) -> expr -> ML bool
+val for_all_children : (expr -> ML bool) -> expr -> ML bool
+
 (** Section 99.  [is_pure] answers "may this be *moved*"; this answers "may
     this be *deleted*".  Neither implies the other, so this is a union and not
     a weakening: an effect is a property of a node, so a pure call is

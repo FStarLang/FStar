@@ -2650,6 +2650,15 @@ check-doc:
 	    echo "of the two unreachable.  Pick a key no row already uses."; \
 	    exit 1; }
 
+# Section 121.5.  Nine hundred `Section N' citations point from the sources
+# into doc/ref/custard.md, and they are the only link the code has to the
+# decision each one records.  Round 4 found one that did not resolve; a
+# number that looks plausible is not something a reader can check, so the
+# script checks it.
+.PHONY: check-refs
+check-refs:
+	$(Q)python3 $(CURDIR)/checkrefs.py
+
 .PHONY: check-settings
 check-settings:
 	$(Q)test -z "$(ORPHAN_SETTINGS)" || { \
@@ -2665,7 +2674,7 @@ check-settings:
 $(addprefix $(OUTPUT_DIR)/, $(addsuffix .ml,   $(CUSTARD_TESTS))): $(FSTAR_EXE)
 $(addprefix $(OUTPUT_DIR)/, $(addsuffix .krml, $(KRML_TESTS))):    $(FSTAR_EXE)
 
-all: check-settings check-sources check-doc
+all: check-settings check-sources check-doc check-refs
 
 # Section 49.1.  Nothing in the build catches an inexhaustive match in
 # Custard's own sources: the compiler is checked with --lax, so F* does not

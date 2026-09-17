@@ -186,33 +186,18 @@ let embedding_typ (t:typ) : ML typ =
    the expression put in its place mentions only top-level declarations. *)
 let rec subst_expr (x:string) (v:expr) (e:expr) : ML expr =
   let go = subst_expr x v in
-  let go_br (br:CSyn.branch) : ML CSyn.branch =
-    let (p, g, b) = br in (p, Option.map go g, go b) in
   match e.e with
   | EVar y when y = x -> v
-  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> e
   | ELet (y, t, e1, e2) ->
     (* A binder of the same name shadows the placeholder in its scope. *)
     { e with e = ELet (y, t, go e1, (if y = x then e2 else go e2)) }
-  | EApp (h, args) -> { e with e = EApp (go h, List.map go args) }
   | EFun (bs, b) ->
     let shadows = List.existsb (fun (b:CSyn.binder) -> b.b_name = x) bs in
     { e with e = EFun (bs, (if shadows then b else go b)) }
-  | EMatch (sc, brs) -> { e with e = EMatch (go sc, List.map go_br brs) }
-  | EIf (c, a, b) -> { e with e = EIf (go c, go a, go b) }
-  | ESeq (a, b) -> { e with e = ESeq (go a, go b) }
-  | ECtor (n, es) -> { e with e = ECtor (n, List.map go es) }
-  | ETuple es -> { e with e = ETuple (List.map go es) }
-  | ERecord (n, fs) ->
-    { e with e = ERecord (n, fs |> List.map (fun (f, a) -> (f, go a))) }
-  | EProj (a, n, f) -> { e with e = EProj (go a, n, f) }
-  | EDiscrim (a, n) -> { e with e = EDiscrim (go a, n) }
-  | ECast (a, t) -> { e with e = ECast (go a, t) }
-  | ECoerce (a, t) -> { e with e = ECoerce (go a, t) }
-  | EOp (o, es) -> { e with e = EOp (o, List.map go es) }
-  | EWhile (c, b) -> { e with e = EWhile (go c, go b) }
-  | ERaise a -> { e with e = ERaise (go a) }
-  | ETry (a, brs) -> { e with e = ETry (go a, List.map go_br brs) }
+  (* Section 121.  Only the two binding forms that can shadow the placeholder
+     have anything to say; a branch's pattern binds names the generator never
+     writes, so the rest is the identity traversal. *)
+  | _ -> CSyn.map_children go e
 
 (* Translate a generated term, resolving its placeholders.  With none of them
    this is just {!Extract.expr_of_term}; with some, each placeholder is
