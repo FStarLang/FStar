@@ -1259,38 +1259,6 @@ let is_squash t =
         Some t
     | _ -> None
 
-(* Represent a postcondition as a property of the result type: [t] together
-   with [fun x -> Q x] becomes [x:t{Q x}].  In the very common case where the
-   result is [unit] and [Q] does not mention it -- every [Lemma], in
-   particular -- we emit [squash Q] instead, which is the same type
-   (Prims.squash p = _:unit{p}) but reads and encodes better.  [un_squash]
-   recognises both forms. *)
-let refine_with_post (t:typ) (p:term) : ML typ =
-  if is_trivial_post p then t
-  else
-    let x = new_bv (Some t.pos) t in
-    let body = apply_post p (bv_to_name x) in
-    let t_is_unit =
-      match (Subst.compress t).n with
-      | Tm_fvar fv -> fv_eq_lid fv PC.unit_lid
-      | _ -> false
-    in
-    if t_is_unit && not (mem x (Free.names body))
-    then mk_squash body
-    else refine x body
-
-(* The partial inverse of [refine_with_post]. *)
-let post_of_result_typ (t:typ) : ML term =
-  match is_squash t with
-  | Some phi -> abs [null_binder t_unit] phi None
-  | None ->
-    match (Subst.compress t).n with
-    | Tm_refine {b=x; phi} ->
-      let bs, phi = Subst.open_term [mk_binder x] phi in
-      abs bs phi None
-    | _ -> trivial_post t
-
-
 let mk_b2t t = mk_app (fvar_with_dd PC.b2t_lid None) [as_arg t]
 let mk_t2b t = mk_app (fvar_with_dd PC.t2b_lid None) [as_arg t]
 
@@ -1583,6 +1551,70 @@ let term_eq t1 t2 =
     let r = term_eq_dbg !debug_term_eq t1 t2 in
     debug_term_eq := false;
     r
+
+(* A postcondition given by name, [ensures q], is checked: it stays an
+   application [q x] in the refinement below, so the typechecker has to show
+   that [q] accepts the computation's result.  A postcondition written as an
+   abstraction, [ensures fun (y:ty) -> phi], would not be: [apply_post]
+   beta-reduces it and the trivial-post shortcut drops it whole, so [ty] would
+   never be looked at.  Detect that case -- an explicitly annotated binder that
+   is not syntactically the result type -- and keep the application unreduced,
+   so that the two are checked alike. *)
+let post_domain_needs_check (t:typ) (p:term) : ML bool =
+  (* [term_eq] deliberately gives up when it meets a [Tm_unknown]: two holes
+     need not elaborate to the same term.  So a type that still has a hole in
+     it is not even equal to itself, and its difference from anything else
+     means nothing.  This runs on unelaborated syntax -- the result type of
+     [ML (m _)] is such a type -- so ask that before reading anything into a
+     difference.  Getting this wrong is not a soundness problem, but it leaves
+     a beta-redex in a type that would otherwise be in normal form, which
+     breaks the syntactic matching that typeclass resolution does. *)
+  let comparable (t:typ) : ML bool = term_eq t t in
+  match (Subst.compress p).n with
+  | Tm_abs {b} ->
+    (match (Subst.compress b.binder_bv.sort).n with
+     | Tm_unknown -> false           (* no annotation: nothing to check *)
+     | _ ->
+       not (term_eq b.binder_bv.sort t) &&
+       comparable b.binder_bv.sort &&
+       comparable t)
+  | _ -> false
+
+(* Represent a postcondition as a property of the result type: [t] together
+   with [fun x -> Q x] becomes [x:t{Q x}].  In the very common case where the
+   result is [unit] and [Q] does not mention it -- every [Lemma], in
+   particular -- we emit [squash Q] instead, which is the same type
+   (Prims.squash p = _:unit{p}) but reads and encodes better.  [un_squash]
+   recognises both forms. *)
+let refine_with_post (t:typ) (p:term) : ML typ =
+  let keep_app = post_domain_needs_check t p in
+  if is_trivial_post p && not keep_app then t
+  else
+    let x = new_bv (Some t.pos) t in
+    let body =
+      if keep_app
+      then mk_Tm_app p [as_arg (bv_to_name x)] p.pos
+      else apply_post p (bv_to_name x)
+    in
+    let t_is_unit =
+      match (Subst.compress t).n with
+      | Tm_fvar fv -> fv_eq_lid fv PC.unit_lid
+      | _ -> false
+    in
+    if t_is_unit && not (mem x (Free.names body))
+    then mk_squash body
+    else refine x body
+
+(* The partial inverse of [refine_with_post]. *)
+let post_of_result_typ (t:typ) : ML term =
+  match is_squash t with
+  | Some phi -> abs [null_binder t_unit] phi None
+  | None ->
+    match (Subst.compress t).n with
+    | Tm_refine {b=x; phi} ->
+      let bs, phi = Subst.open_term [mk_binder x] phi in
+      abs bs phi None
+    | _ -> trivial_post t
 
 (* See the comment on the declaration in the interface. *)
 let bqual_compat (b1 b2 : bqual) : bool =

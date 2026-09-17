@@ -490,17 +490,6 @@ val un_squash (t:term) : ML (option term)
 
 val is_squash (t:term) : ML (option term)
 
-(* [refine_with_post t p] represents the postcondition [p] as a property of
-   the result type [t]: it returns [x:t{p x}], or [squash (p ())] when [t] is
-   [unit] and [p] does not mention its argument.  This is how a source-level
-   [ensures] clause is represented from desugaring onwards. *)
-val refine_with_post (t:typ) (p:term) : ML typ
-
-(* [post_of_result_typ t] is the partial inverse of [refine_with_post]: it
-   recovers the postcondition [fun x -> Q x] from a result type [x:t{Q x}] or
-   [squash Q], and returns the trivial postcondition otherwise. *)
-val post_of_result_typ (t:typ) : ML term
-
 val mk_b2t (t: term) : ML term
 val mk_t2b (t: term) : ML term
 
@@ -549,6 +538,17 @@ val term_eq_dbg (dbg : bool) (t1 t2 : term) : ML bool
 val eq_aqual (a1 a2 : aqual) : ML bool
 val eq_bqual (b1 b2 : bqual) : ML bool
 val term_eq (t1 t2 : term) : ML bool
+
+(* [refine_with_post t p] represents the postcondition [p] as a property of
+   the result type [t]: it returns [x:t{p x}], or [squash (p ())] when [t] is
+   [unit] and [p] does not mention its argument.  This is how a source-level
+   [ensures] clause is represented from desugaring onwards. *)
+val refine_with_post (t:typ) (p:term) : ML typ
+
+(* [post_of_result_typ t] is the partial inverse of [refine_with_post]: it
+   recovers the postcondition [fun x -> Q x] from a result type [x:t{Q x}] or
+   [squash Q], and returns the trivial postcondition otherwise. *)
+val post_of_result_typ (t:typ) : ML term
 
 (* Are these two binder qualifiers compatible, i.e., can two arrows that
    differ only by these qualifiers denote the same type?
