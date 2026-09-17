@@ -31,18 +31,15 @@ void Break_break_continue_and_return(uint8_t which)
     bool _continue = false;
     if (which == 0U)
       _break = true;
-    bool _break1 = _break;
-    if (!_break1)
+    if (!_break)
     {
       if (which == 1U)
         _continue = true;
-      bool _continue1 = _continue;
-      if (!_continue1)
+      if (!_continue)
       {
         if (which == 2U)
           _return = true;
-        bool _return1 = _return;
-        if (!_return1)
+        if (!_return)
         {
           uint32_t __anf0 = i;
           i = __anf0 + 1U;
@@ -81,8 +78,7 @@ size_t Break_find_zero_with_break(int32_t *a, size_t sz)
     int32_t __anf1 = a[__anf01];
     if (__anf1 == 0)
       _break = true;
-    bool _break1 = _break;
-    if (!_break1)
+    if (!_break)
     {
       size_t __anf02 = i;
       i = __anf02 + (size_t)1U;

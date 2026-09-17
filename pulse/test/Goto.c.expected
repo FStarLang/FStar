@@ -35,8 +35,7 @@ size_t Goto_find_zero(int32_t *a, size_t sz)
       _return = __anf02;
       _return1 = true;
     }
-    bool _return2 = _return1;
-    if (!_return2)
+    if (!_return1)
     {
       size_t __anf02 = i;
       i = __anf02 + (size_t)1U;
@@ -51,8 +50,7 @@ size_t Goto_find_zero(int32_t *a, size_t sz)
     }
     cond = ite;
   }
-  bool _return2 = _return1;
-  if (!_return2)
+  if (!_return1)
     _return = i;
   return _return;
 }
@@ -67,11 +65,9 @@ void Goto_test2_alt(int32_t *r)
     *r = 42;
     _return = true;
   }
-  bool _return1 = _return;
-  if (!_return1)
+  if (!_return)
     fail = true;
-  bool _return10 = _return;
-  if (!_return10)
+  if (!_return)
     *r = 17;
 }
 
