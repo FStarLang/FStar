@@ -569,14 +569,19 @@ matters for a term with leftover implicit arguments -- a lemma's precondition is
 one, now that it is a trailing implicit binder rather than part of a computation
 type: [apply] turns such an argument into a goal, where [exact] would leave it as
 an unsolved unification variable.  Any goal so introduced is moved behind the
-main one. *)
+main one.
+
+[apply] is run under [focus] so that the goals it introduces are collected in
+front of the ones that were already there, whether it prepends them (its own
+implicit arguments) or appends them (a proof obligation coming out of its
+guard).  Counting alone cannot tell the two apart. *)
 let pose_apply (t:term) : Tac binding =
     apply (`__cut);
     flip ();
-    let n_before = ngoals () in
-    apply t;
+    let n_rest = ngoals () - 1 in
+    focus (fun () -> apply t);
     let gs = goals () in
-    let n_introduced = ngoals () - (n_before - 1) in
+    let n_introduced = ngoals () - n_rest in
     let n_introduced = if n_introduced < 0 then 0 else n_introduced in
     let introduced, rest = List.Tot.Base.splitAt n_introduced gs in
     set_goals (rest @ introduced);

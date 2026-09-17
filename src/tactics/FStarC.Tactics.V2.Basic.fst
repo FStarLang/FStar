@@ -327,7 +327,13 @@ let proof_obligation_implicits_as_goals (e : env) (imps : list Env.implicit) : M
   match List.filter is_proof_obligation imps with
   | [] -> return ()
   | imps ->
-    add_goals (imps |> List.map (fun imp ->
+    (* [push_goals], not [add_goals]: these obligations must go *after* the
+       goals that are already active.  A caller such as [__exact_now] holds on
+       to the goal it was working on and finishes with [solve], which dismisses
+       the head of the goal list; prepending here would make it dismiss the
+       obligation we have just created instead, leaving the implicit unsolved
+       and unreachable. *)
+    push_goals (imps |> List.map (fun imp ->
       bnorm_goal (mk_goal e imp.imp_uvar (FStarC.Options.peek ()) true
                           "goal for an unsolved proof obligation")))
 
