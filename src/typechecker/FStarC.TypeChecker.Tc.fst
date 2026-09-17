@@ -774,6 +774,12 @@ let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
 
   | Sig_bundle {ses; lids} ->
     let env = Env.set_range env r in
+    let was_spliced = se.sigmeta.sigmeta_spliced in
+    let mark_spliced (se:sigelt) : sigelt =
+      if was_spliced
+      then { se with sigmeta = { se.sigmeta with sigmeta_spliced = true } }
+      else se
+    in
     let ses =
       if do_two_phases env then run_phase1 (fun _ ->
         //we generate extra sigelts even in the first phase and then throw them away
@@ -789,8 +795,14 @@ let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
       else ses
     in
     let sigbndle, projectors_ses = tc_inductive env ses se.sigquals se.sigattrs lids in
-    let sigbndle = { sigbndle with sigattrs = se.sigattrs } in (* keep the attributes *)
-    [ sigbndle ], projectors_ses, env0
+    let sigbndle = { sigbndle with sigattrs = se.sigattrs; sigmeta = se.sigmeta } in
+    let sigbndle =
+      match sigbndle.sigel with
+      | Sig_bundle {ses; lids} ->
+        { sigbndle with sigel = Sig_bundle {ses=List.map mark_spliced ses; lids} }
+      | _ -> sigbndle
+    in
+    [ sigbndle ], List.map mark_spliced projectors_ses, env0
 
   | Sig_pragma p ->  //no need for two-phase here
     process_pragma env p r;

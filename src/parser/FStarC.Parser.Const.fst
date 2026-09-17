@@ -358,6 +358,10 @@ let fail_attr      = attr "expect_failure"
 let fail_lax_attr  = attr "expect_lax_failure"
 let unification_tag_lid = attr "defer_to"
 
+(* [@@doc "..."]: documentation attached to a top-level declaration.
+   See ulib/FStar.Attributes.fsti and FStarC.Docs. *)
+let doc_attr = attr "doc"
+
 let comment_attr = attr "Comment"
 let c_inline_attr = attr "CInline"
 let attr_substitute_lid =  attr "Substitute"
