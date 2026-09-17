@@ -606,6 +606,37 @@ let rec list_literal (x:expr) : ML (option (list expr)) =
      | None -> None)
   | _ -> None
 
+(* Section 120.  The text of a [Pulse.Lib.Comment] comment.  [which] names the
+   function and [role] the parameter, so that a program with several of them
+   gets an error saying which one it is about.
+
+   Two things are refused.  A non-literal, because the string becomes a
+   comment in the generated code and a comment has no way to be computed; and
+   a literal containing [*/], because that would close the comment early and
+   leave its tail to be compiled as code. *)
+let comment_text (which:string) (role:string) (x:expr) : ML string =
+  let what = "Pulse.Lib.Comment." ^ which ^
+             (if role = "" then "" else "'s " ^ role ^ " argument") in
+  match x.e with
+  | EConst (CString s) ->
+    if BU.contains s "*/"
+    then
+      FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardBadComment [
+        FStarC.Errors.Msg.text
+          ("Custard: the text given to " ^ what ^ " contains */, which would \
+            end the comment it is emitted into.");
+        FStarC.Errors.Msg.text
+          ("The text is: " ^ s)]
+    else s
+  | _ ->
+    FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardBadComment [
+      FStarC.Errors.Msg.text
+        ("Custard: " ^ what ^ " has to be a string literal, and after \
+          reduction this one is " ^ describe_shape x ^ ".");
+      FStarC.Errors.Msg.text
+        "It becomes a comment in the generated code, so there is nowhere to \
+         evaluate it."]
+
 let pulse_rule (ns : list string) (id : string) : ML (option rule) =
   let buf tys (_ : list expr) : ML cty = TBuf (elt_of tys) in
   let rf tys (_ : list expr) : ML cty = TRef (elt_of tys) in
@@ -825,6 +856,43 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
         mk (EApp (init, [unit_expr])) ret E_Impure
       | [] -> unit_expr))
   | ["Pulse"; "Lib"; "GlobalVar"], "read_gvar" -> Some (identity_rule 1)
+
+  (* Section 120.  [Pulse.Lib.Comment], the Pulse counterpart of
+     [LowStar.Comment].  Both take their text as a [string] parameter that the
+     author is required to supply as a literal, and both mean nothing at run
+     time: what they are for is the comment in the generated C.
+
+     The [*/] check is in {!comment_text} rather than in a backend because
+     this is the last point at which the string is still known to be the
+     literal the author wrote.  A comment carrying one would end early and the
+     rest of it would be compiled as code. *)
+  | ["Pulse"; "Lib"; "Comment"], "comment_gen" ->
+    Some (Rule_prim (3, fun _ args ->
+      match args with
+      | [before; body; after] ->
+        let b = comment_text "comment_gen" "before" before in
+        let a = comment_text "comment_gen" "after" after in
+        (* The operand's own effect, not [E_Impure]: a comment computes
+           nothing, and claiming otherwise would pin a pure value in place
+           and cost it a variable of its own.  What keeps the node from
+           being deleted along with the value is {!is_droppable}, which
+           refuses to drop a comment whatever its effect. *)
+        mk (EOp ({ po_op = Commented (b, a); po_ty = None }, [body]))
+           body.ty body.eff
+      | _ ->
+        failwith "Custard: Pulse.Lib.Comment.comment_gen applied to other \
+                  than three arguments"))
+
+  | ["Pulse"; "Lib"; "Comment"], "comment" ->
+    Some (Rule_prim (1, fun _ args ->
+      match args with
+      | [s] ->
+        let t = comment_text "comment" "" s in
+        mk (EOp ({ po_op = Commented (t, ""); po_ty = None }, [unit_expr]))
+           TUnit E_Impure
+      | _ ->
+        failwith "Custard: Pulse.Lib.Comment.comment applied to other than \
+                  one argument"))
 
   | _ -> None
 

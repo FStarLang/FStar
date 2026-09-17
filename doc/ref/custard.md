@@ -20450,6 +20450,115 @@ The cases that matter most are the ones a 64-bit answer would also satisfy
 --- a widening multiply whose product needs 65 bits and up, a shift across
 the halfway line --- because those are what say the width is real.
 
+## 120 A comment is not a computation
+
+`LowStar.Comment` lets a Low\* program put a comment into the C it extracts
+to, and master has now given Pulse the same thing: `Pulse.Lib.Comment`, with
+`comment_gen before body after` for a comment on either side of a value and
+`comment s` for one standing on its own. Both are realized by a karamel
+extension that turns them into karamel's `EComment` and `EStandaloneComment`
+nodes. Custard has no such extension, so it compiled the two functions from
+their F\* bodies: `comment_gen` is the identity and vanished with the text,
+and `comment` is a `fn` returning unit, which came out as a call to an
+emitted no-op taking a `const char *` it did not read.
+
+Both of those are the wrong answer in the same way. The text is the *point*
+of the call, and the program that made it is not asking for anything to
+happen at run time.
+
+### 120.1 One node for both halves
+
+Custard's IR already has a `Comment` flag on a declaration, which is where a
+doc comment goes. This is a different question --- a comment inside a body,
+attached to an expression --- and the IR had nowhere for one.
+
+It is an `op` rather than a node of `expr'`: `Commented (before, after)`
+applied to a single operand. That is not a matter of taste. A new `expr'`
+constructor has to be given a case in every pass that matches on one
+exhaustively, which here is thirty-odd sites across `Simplify` alone, and
+every one of those cases would say the same thing --- recurse into the
+operand and rebuild. A one-operand `EOp` already says that, in code that is
+already written, and the passes carry the node through without any of them
+having to know what it is.
+
+The standalone form is the same node with a unit operand and an empty
+`after`. That is not a second encoding: a comment with nothing to be a
+comment *on* is exactly a comment whose operand is the one value that says
+nothing, and the two backends that distinguish the cases match on that shape
+and emit their standalone form.
+
+### 120.2 What keeps it
+
+An operation that computes nothing is an operation the IR is entitled to
+delete, and `is_droppable` deleted this one twice over: through its effect,
+because a pure node whose value is unused goes, and structurally, because
+`EOp (_, es)` is droppable when its operands are and a unit constant is.
+
+So `is_droppable` answers `false` for a comment ahead of both of its tests.
+That is the whole of what pins the node down, and it is worth being clear
+that it is not the effect. The first version of this made the node
+`E_Impure`, reasoning that an impure node cannot be dropped. It cannot, but
+the price is everything *else* impurity means: the node could no longer sit
+inside an operation's argument, so `let mut r = comment_gen "b" x "a"` ---
+the shape the feature exists for --- was hoisted into a temporary of its own,
+and the generated C gained a variable whose only purpose was to hold a
+comment.
+
+`comment_gen` therefore takes the effect of its operand, and a comment on a
+pure value is pure. It can be moved, and it moves with the value it is a
+comment on, which is where the author put it. What it cannot be is deleted.
+`comment` keeps `E_Impure`, because its operand is a unit constant and there
+is no value for it to travel with: what holds it in place is that it is a
+statement.
+
+### 120.3 Where the comments go
+
+In expression position the C backend writes the operand between the two
+comments, which is what `comment_gen` asks for and what karamel does. In
+statement position it has only the standalone form, and deliberately: a
+comment emitted *after* the statements its operand becomes is, when those
+statements are a `return`, a comment after the return. So a comment on
+anything that is an expression goes inline with it, and the cost is that an
+operand too large to be an expression is hoisted --- which is the same thing
+that happens to any other large operand and leaves the comment attached to
+the value.
+
+There is one case that is neither: a comment on a value nothing reads. The
+value goes, but the text does not, and what is left is two comments and no
+statement to hang them on. Writing that as `(void)(/* a */ 0 /* b */);` is
+§99's complaint restated --- a cast to void that computes nothing says
+nothing either --- so the comments are emitted as lines of their own.
+
+The OCaml backend spells the same node with `(* *)`, which costs nothing and
+is better than dropping the text; the krml backend hands both forms to
+karamel's own nodes.
+
+### 120.4 The text has to be a literal
+
+Two things are refused, both at the rule, with error 394.
+
+A non-literal, because the string becomes a comment and a comment cannot be
+computed. And a literal containing `*/`, because the comment would end at it
+and the rest would be compiled as code --- which is the interesting one,
+since the failure is not at the F\* level at all and the C compiler's
+complaint would be about a line the author never wrote.
+
+The check is at the rule rather than in a backend because that is the last
+point at which the string is known to be the literal the author wrote;
+further down it is just a string that came from somewhere.
+
+### 120.5 Tests
+
+`pulse/test`'s `CommentTest`, which master added, now goes through Custard
+like the rest of that suite and its golden records what Custard emits. Three
+more in `tests/custard/pulse`: `PulseComment`, which puts comments in the
+places the golden does not reach --- inside a loop body, around a call
+result, nested one inside another, and on a value nothing reads --- and
+runs, so the comments have to land where a C compiler accepts them as well
+as where a reader wants them; and `PulseCommentEnd` and `PulseCommentDyn`
+for the two refusals.
+
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -20792,3 +20901,4 @@ the halfway line --- because those are what say the width is real.
 | M10ιΠ | Four more findings of a validation report | All four fixed. One expression position the coercion traversal visited with no expected type --- an `if` or `while` condition, whose type is `bool` at every such node in every program, so it is the one place the pass always knows what is wanted and was throwing it away; an `any`-laid-out field tested there reached the OCaml backend as an `Obj.t`. Two halves of one thing about C names: the tables that `alloc_name` and `--custard_c_no_prefix` allocate against were built by spelling each declaration with `c_name`, which is not how an `[@@custard_extern]` declaration is emitted, so they recorded a name the file does not contain and left the one it does contain free --- and, for the names nothing renames, a definition landing on an external's target gave a file that *defines* a symbol the program had declared foreign, with no complaint from the C compiler and none from the linker, running the wrong body. And one that made §115's stale-source check skip itself again: §116 recorded the producer's absolute path, so a `.cui` copied out of its build tree --- which is what a `.cui` is for --- resolved to nothing and took the "shipped without its sources" branch, even against a genuinely different version of that source. A source this run does have under its own name is now found on the include path and compared. Six regression tests. §117 |
 | M10ιΡ | Float constants on the path ulib takes | `FStar.Float32.zero` is an `inline_for_extraction let` over `of_int 0L`, so it inlines away before §64.1's name rule can see it and what survives is an `ECast` --- which is not an `EConst`, so the constant was spelled `(float) 0` and an array filled with it was not a constant fill and lost its brace initializer to a loop, 599 times across the reporter's tree. An integer literal converted to a float is now folded to a float literal in `Simplify`, which fixes the spelling and the initializers together and catches the literal that only becomes one after specialization. `of_int` rounds, so the fold is refused unless the format holds the integer exactly --- decided on its odd part, so `2^30` folds and `2^24+1` does not --- and the cast then stands. §118 |
 | M10ιΣ | `FStar.UInt128` and `FStar.Int128` as `__int128` | Both were compiled from their F\* implementations --- a record of two `UInt64.t`s and the long-hand arithmetic over it --- which was correct and was not the target's own 128-bit integer. The IR gains a width of its own, `iwidth`, rather than a case in `FStarC.Const.width`: that type enumerates the widths F\* has literal syntax for, 128 is not one of them, and a case there would have to be given a meaning by the parser, the resugarer and a user-visible reflection type, all to describe a term no program can produce. `unsigned __int128` is a GCC/Clang extension rather than C11, so the rule fires only under `--custard_backend C` and `--custard_int128 false` turns it off --- off being what the other backends, which have no 128-bit integer at all, already do. The operations that are `val`s at this width and `let`s at the narrower ones --- `eq_mask`, `gte_mask`, `mul32`, `mul_wide`, the two 64-bit conversions, `shift_arithmetic_right` --- get inline rules, because their F\* implementations are about the representation the rule replaces. And C has no 128-bit literal, so a constant is assembled from its halves, at `unsigned __int128` and cast afterwards so that the most negative value, which has no positive counterpart, is still a constant expression. §119 |
+| M10ιΤ | `Pulse.Lib.Comment` | Master gave Pulse `LowStar.Comment`'s two functions and a karamel extension to realize them. Custard had no equivalent and compiled them from their F\* bodies, which threw the text away and left a call to an emitted no-op. The IR gains `Commented (before, after)` as a one-operand `op` rather than a node of `expr'`, so that the thirty-odd exhaustive matches on `expr'` carry it through without a case apiece; the standalone form is the same node with a unit operand. What stops it being deleted is `is_droppable`, not the effect: an `E_Impure` comment cannot sit inside an operation's argument, so the binding the feature exists for gained a temporary whose only purpose was to hold a comment. `comment_gen` takes its operand's effect and travels with the value; `comment` stays impure because it is a statement. Text that is not a literal, or that contains `*/`, is refused at the rule as error 394. Four regression tests. §120 |

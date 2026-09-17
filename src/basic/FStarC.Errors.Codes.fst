@@ -409,4 +409,5 @@ let default_settings : list error_setting =
     Warning_CustardReferenceCopied                     , CWarning, 391;
     Error_CustardBadReference                          , CAlwaysError, 392;
     Error_CustardBadStaticArray                        , CAlwaysError, 393;
+    Error_CustardBadComment                            , CAlwaysError, 394;
     ]

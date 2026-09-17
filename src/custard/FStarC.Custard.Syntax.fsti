@@ -359,6 +359,23 @@ type op =
       and differ only in a qualifier the IR does not model.  It is an
       operation so that it survives to the printer. *)
   | BufUnconst             (** [buf] *)
+  (** Section 120.  [Commented (before, after)] applied to one operand is that
+      operand with a comment on either side of it: [Pulse.Lib.Comment]'s
+      [comment_gen], and -- with a unit operand and an empty [after] --
+      its [comment].
+
+      It is an operation rather than a node of its own because it has to
+      survive every pass without any of them having to know what it is, and a
+      one-operand [EOp] already does that.  Its effect is [E_Impure]: the
+      operand of a [comment_gen] may well be pure, but a pure unit expression
+      is deleted, and deleting the comment is the one thing this must not do.
+      That also pins it in place, so the comment cannot drift away from what
+      it is a comment on.
+
+      The two strings are emitted verbatim.  {!Builtins} is where they are
+      checked for a [*/], because that is where they are still known to have
+      come from a literal the author wrote. *)
+  | Commented of string & string
 
 (** The machine type a primitive operation works at. *)
 type prim_ty =

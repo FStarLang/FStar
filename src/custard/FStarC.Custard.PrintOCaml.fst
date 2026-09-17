@@ -520,7 +520,11 @@ let op_name (o:prim_op) : ML string =
         expressions, so none of them reaches an operator name. *)
      | BufRead | BufWrite | BufSub | BufFree | BufNull | BufIsNull
      | BufBlit | BufCreate _ | BufLit | BufUnconst ->
-       failwith "Custard: a buffer operation is not an OCaml operator")
+       failwith "Custard: a buffer operation is not an OCaml operator"
+     (* Section 120.  Handled at the [EOp] site, as a comment around the
+        operand. *)
+     | Commented _ ->
+       failwith "Custard: a comment is not an OCaml operator")
   | None ->
     (match o.po_op with
      | Add -> "Prims.op_Plus" | AddW -> "Prims.op_Plus"
@@ -536,7 +540,11 @@ let op_name (o:prim_op) : ML string =
      (* Section 49.1.  See the [PInt] case above. *)
      | BufRead | BufWrite | BufSub | BufFree | BufNull | BufIsNull
      | BufBlit | BufCreate _ | BufLit | BufUnconst ->
-       failwith "Custard: a buffer operation is not an OCaml operator")
+       failwith "Custard: a buffer operation is not an OCaml operator"
+     (* Section 120.  Handled at the [EOp] site, as a comment around the
+        operand. *)
+     | Commented _ ->
+       failwith "Custard: a comment is not an OCaml operator")
 
 (* OCaml has no integer pattern that means what the IR's [PConst (CInt _)]
    means: [Prims.int] is a [Z.t], whose literals are calls to
@@ -812,6 +820,15 @@ let rec term (ind:string) (e:expr) : ML string =
      it; what keeps the array read-only here is the same thing that keeps it
      read-only there, namely that Pulse never hands out a full permission. *)
   | EOp ({ po_op = BufUnconst }, [b]) -> term ind b
+  (* Section 120.  [Pulse.Lib.Comment] is aimed at the C output, but nothing
+     about it is C-specific and OCaml spells a comment too.  The standalone
+     form -- an empty [after] on a unit operand -- would be a comment in
+     statement position, and OCaml has no statements, so it is the whole
+     expression with the unit behind it. *)
+  | EOp ({ po_op = Commented (before, "") }, [{ e = EConst CUnit }]) ->
+    "((* " ^ before ^ " *) ())"
+  | EOp ({ po_op = Commented (before, after) }, [b]) ->
+    "((* " ^ before ^ " *) " ^ term ind b ^ " (* " ^ after ^ " *))"
   (* Infix, not [((&&) a b)].  OCaml's [&&] and [||] are the [%sequand] and
      [%sequor] primitives, which the compiler does short-circuit even when
      they are written prefix and fully applied -- but nothing in the emitted

@@ -437,6 +437,38 @@ FLAGS_PulseGlobalArrayLocal = --custard_backend C
 EGREP_PulseGlobalArrayLocal += "uses a static array where C needs an"
 EGREP_PulseGlobalArrayLocal += "Bind it to a top-level definition"
 
+# Section 120.  Pulse.Lib.Comment, in the shapes pulse/test's CommentTest
+# does not reach.  The test runs, so the comments have to be in places a C
+# compiler accepts as well as places a reader wants them.
+C_TESTS += PulseComment
+CGREP_PulseComment += "/* doubling */"
+CGREP_PulseComment += "/* the running total */"
+CGREP_PulseComment += "/* one step */"
+# Around an expression, both sides of it.
+CGREP_PulseComment += "/* accumulate */"
+CGREP_PulseComment += "/* accumulated */"
+# Nested, outermost first.
+CGREP_PulseComment += "/* outer before */ /* inner before */"
+CGREP_PulseComment += "/* inner after */ /* outer after */"
+# A comment on a value nothing reads is still a comment.
+CGREP_PulseComment += "/* kept */"
+CGREP_PulseComment += "/* even unread */"
+# No trace of the library the two functions come from: both are rules.
+CNOGREP_PulseComment += "Pulse_Lib_Comment"
+
+# Section 120.  The two ways the text is not usable as a comment.
+REJECT_TESTS += PulseCommentEnd
+CODE_PulseCommentEnd = 394
+FLAGS_PulseCommentEnd = --custard_backend C
+EGREP_PulseCommentEnd += "the text given to Pulse.Lib.Comment.comment contains"
+EGREP_PulseCommentEnd += "would end the comment it is emitted into"
+
+REJECT_TESTS += PulseCommentDyn
+CODE_PulseCommentDyn = 394
+FLAGS_PulseCommentDyn = --custard_backend C
+EGREP_PulseCommentDyn += "has to be a string literal, and after"
+EGREP_PulseCommentDyn += "there is nowhere to evaluate"
+
 C_TESTS += PulseBlit
 CGREP_PulseBlit += "memmove("
 CGREP_PulseBlit += "2 * sizeof(uint8_t)"

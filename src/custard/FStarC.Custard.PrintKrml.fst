@@ -428,6 +428,10 @@ let krml_op (o:op) : ML K.op =
   | BufRead | BufWrite | BufSub | BufFree | BufNull | BufIsNull
   | BufBlit | BufCreate _ | BufLit | BufUnconst ->
     failwith "Custard: a buffer operation is not a karamel operator"
+  (* Section 120.  Karamel has nodes of its own for both halves of this, so
+     it never reaches the operator table. *)
+  | Commented _ ->
+    failwith "Custard: a comment is not a karamel operator"
 
 (* -------------------------------------------------------------------- *)
 (* Types                                                                *)
@@ -836,6 +840,17 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
   (* Section 71.  Nothing to say: karamel tracks constness itself, from the
      lifetime, and adding a cast here would only get in its way. *)
   | EOp ({ po_op = BufUnconst }, [b]) -> krml_expr env b
+
+  (* Section 120.  Karamel distinguishes a comment wrapped around an
+     expression from a standalone one, and Custard's single node covers both:
+     an empty [after] on a unit operand is the standalone form, which is how
+     [Pulse.Lib.Comment.comment] is built.  Emitting the wrapped form for it
+     would put the comment around a [()] karamel then has to find a place
+     for. *)
+  | EOp ({ po_op = Commented (before, "") }, [{ e = EConst CUnit }]) ->
+    K.EStandaloneComment before
+  | EOp ({ po_op = Commented (before, after) }, [b]) ->
+    K.EComment (before, krml_expr env b, after)
 
   (* Decidable equality at no particular width is *polymorphic*: karamel types
      it only through an explicit type application naming the operand type

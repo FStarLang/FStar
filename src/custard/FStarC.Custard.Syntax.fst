@@ -325,6 +325,11 @@ let imported_home (d : decl) : ML (option string) =
 (* Section 99.  See the comment on the declaration in the interface. *)
 let rec is_droppable (e:expr) : ML bool =
   let all (es:list expr) : ML bool = List.for_all is_droppable es in
+  (* Section 120.  Ahead of both tests below, because it overrides both.  A
+     comment is not a computation and its effect says so, but the text is the
+     point of the node and deleting it loses what the author wrote. *)
+  if (match e.e with EOp ({ po_op = Commented _ }, _) -> true | _ -> false)
+  then false else
   (* The two predicates are not ordered, so this is genuinely a union.  An
      effect is a property of the *node*, and a pure call is deletable while
      the structural test below cannot see that -- [EApp] is opaque to it. *)
@@ -395,7 +400,8 @@ let op_to_string (o:prim_op) : string =
    | BufRead -> "read" | BufWrite -> "write" | BufSub -> "sub"
    | BufFree -> "free" | BufNull -> "null" | BufIsNull -> "is_null"
    | BufBlit -> "blit"
-   | BufLit -> "lit" | BufUnconst -> "unconst") ^
+   | BufLit -> "lit" | BufUnconst -> "unconst"
+   | Commented _ -> "comment") ^
   (match o.po_ty with
    | None -> ""
    | Some (PInt sw) -> width_to_string sw

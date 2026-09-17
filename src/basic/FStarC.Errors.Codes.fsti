@@ -419,6 +419,7 @@ type error_code =
   | Warning_CustardReferenceCopied
   | Error_CustardBadReference
   | Error_CustardBadStaticArray
+  | Error_CustardBadComment
 
 type error_setting = error_code & error_flag & int
 

@@ -1733,6 +1733,15 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
      that a hard error. *)
   | EOp ({ po_op = BufUnconst }, [b]) ->
     "(" ^ ty e.ty ^ ")" ^ c_expr out ind b
+  (* Section 120.  A comment around an expression.  The standalone form has
+     no expression to wrap, and a [()] is not one either: it is emitted for
+     its effect into [out] and the value is the unit constant, exactly as an
+     impure unit-typed node in an expression position is anywhere else. *)
+  | EOp ({ po_op = Commented (before, "") }, [{ e = EConst CUnit }]) ->
+    out := !out ^ ind ^ "/* " ^ before ^ " */\n";
+    unit_value
+  | EOp ({ po_op = Commented (before, after) }, [b]) ->
+    "/* " ^ before ^ " */ " ^ c_rvalue out ind e.ty b ^ " /* " ^ after ^ " */"
   (* Section 71.  A braced initializer is not an expression in C: it may only
      appear where an object is being declared, which for Custard means the
      body of a global.  {!global_decl} takes it there, so reaching here means
@@ -2168,6 +2177,23 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
      has to follow it even in a value position. *)
   | EAbort s -> ind ^ "/* " ^ escape s ^ " */\n" ^ ind ^ "abort();\n"
 
+  (* Section 120.  A comment in statement position.  The standalone form --
+     an empty [after] on a unit operand, which is what
+     [Pulse.Lib.Comment.comment] builds -- is a line of its own; the general
+     form has no case here at all: it falls through to the expression path,
+     which puts the comments around the operand inline -- and has to, because
+     a comment after the statements of a [return] would be after the return.
+     (What that costs is that a large operand is hoisted; what it buys is
+     that the comment stays attached to the value it is about.) *)
+  | EOp ({ po_op = Commented (before, "") }, [{ e = EConst CUnit }]) ->
+    ind ^ "/* " ^ before ^ " */\n" ^ unit_result ind d
+  (* And a comment on a value nothing reads.  The value goes -- that is what
+     [D_Ignore] means -- but the comment does not, and [(void)(/* a */ 0 /* b
+     */);] is a statement written to hold two comments.  Section 99's point
+     exactly: a cast to void that computes nothing says nothing either. *)
+  | EOp ({ po_op = Commented (before, after) }, [b])
+      when D_Ignore? d && is_droppable b ->
+    ind ^ "/* " ^ before ^ " */\n" ^ ind ^ "/* " ^ after ^ " */\n"
   | EOp ({ po_op = BufCreate lt }, [init; len]) ->
     emit_alloc ind d None lt e.ty init len
 
