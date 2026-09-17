@@ -1,0 +1,49 @@
+/* krml header omitted for test repeatability */
+
+
+#include "RenameLet.h"
+
+uint32_t RenameLet_test_pure(uint32_t x)
+{
+  uint32_t pureName = x + 1U;
+  return pureName + pureName;
+}
+
+uint32_t RenameLet_test_mut(uint32_t x)
+{
+  uint32_t mutName = x;
+  uint32_t v = mutName;
+  mutName = v + 1U;
+  return mutName;
+}
+
+uint32_t RenameLet_test_stateful(uint32_t x)
+{
+  uint32_t r = x;
+  uint32_t statefulName = r;
+  r = statefulName;
+  return statefulName + statefulName;
+}
+
+uint32_t RenameLet_test_dup(uint32_t x)
+{
+  uint32_t dupName = x + 1U;
+  uint32_t dupName1 = dupName + dupName;
+  return dupName + dupName1;
+}
+
+uint32_t RenameLet_test_computed(uint32_t x)
+{
+  uint32_t computed_name = x + 1U;
+  return computed_name + computed_name;
+}
+
+uint32_t RenameLet_test_array(uint32_t x)
+{
+  uint32_t arrayName[2U];
+  for (uint32_t _i = 0U; _i < (size_t)2U; ++_i)
+    arrayName[_i] = x;
+  arrayName[0U] = x + 1U;
+  return arrayName[0U];
+}
+
