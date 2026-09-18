@@ -201,9 +201,10 @@ type cflag =
    In particular a computation type carries no logical content.  A precondition
    is an implicit [squash] binder on the arrow, so it is not part of a [comp] at
    all; a postcondition is a refinement of [result_typ].  There are no
-   weakest-precondition transformers and no effect indices.  Use
-   [FStar.Reflection.V2.Derived.comp_precondition] and [comp_postcondition] to
-   read a specification back in the shape a user wrote it. *)
+   weakest-precondition transformers and no effect indices.  A client that
+   wants to read a specification back in the shape a user wrote it must
+   inspect the arrow's binders for the trailing implicit [squash] one, and
+   [result_typ] for its refinement.  See doc/ref/simplified_effect_system.md. *)
 noeq
 type comp_view = {
   effect_name : name;
