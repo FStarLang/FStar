@@ -21686,6 +21686,67 @@ definition reached from a root is extracted whatever it is marked.  That
 is a real gap and the §4.3 text now says so rather than describing it as
 done.
 
+### 126.4 The Makefiles that are documentation
+
+`tests/simple_hello`, `tests/dune_hello`, `examples/dependencies` and
+`examples/data_structures` are not really tests.  They are the answer to
+"how do I build an F\* program", written as the smallest Makefile that
+does it, and `examples/dependencies` says so in its first line: *"meant
+as an example for new projects, and intentionally does not import any
+other Makefile in this repo"*.  What they demonstrate is the thing this
+migration changes, so leaving them on the old pipeline would have left
+the documentation pointing at it.
+
+`examples/dependencies` is the one that actually gets shorter.  It had
+four steps --- dependency graph, verify, extract each module, compile and
+link the `.cmx` files in dependency order --- and the last two collapse
+into one run and one `ocamlopt`, because Custard compiles a *program* and
+emits one file.  The `.depend` is still needed, for the same reason it
+always was: every module has to be checked before anything is extracted.
+Its prerequisite list is `ALL_CHECKED_FILES` rather than
+`ALL_ML_FILES`, since there are no per-module `.ml` files to name.
+
+`examples/data_structures` shows the other half.  It used to build its
+program by *appending* `let _ = test()` to the extracted module, which
+works when extraction is per-module and the module is a compilation unit.
+Under a whole-program compiler `test` is not reachable from anything and
+is dead code, so the program is built by naming it: `--custard_main
+RBTreeIntrinsic.test`.  That is the same request, made to the compiler
+rather than to the output file.
+
+Neither `hello` has a `main` at all --- each is a module whose top-level
+effect prints --- and that is what `--custard_entry_module` is for.
+
+`examples/layeredeffects/extraction` needed one thing the others did not:
+a checking pass of its own.  `--codegen OCaml` would check and extract in
+a single run; Custard reads the *implementation* of every module it
+reaches, so everything must be checked first.  Its `--no_cmi` went away
+at the same time, since §4.2 means Custard reads through an interface
+whether or not it is asked to.
+
+### 126.5 What is still on the old pipeline, and why
+
+Three groups.
+
+**The plugin tests** --- `tests/tactics`, `tests/semiring`,
+`examples/native_tactics` --- compile F\* code with `--codegen Plugin`
+and load the result into `fstar.exe`.  A plugin's OCaml has to link
+against the compiler's own OCaml, under the names that compiler was built
+with, and Custard learns those names from a `.cui` (§12.8) that only a
+Custard-built compiler produces.  So these cannot move until the
+bootstrap does; `mk/custard.mk`'s `plugin` target is what they will look
+like when it does, and it works today against the Custard-built compiler.
+
+**`tests/extraction/backends`'s legacy legs**, for the reason in §126.2:
+they exist to be compared against.
+
+**The remaining Pulse dirs** --- `pulse/test/pool/{pulse_task,domainslib}`
+and `pulse/share/pulse/examples/dice/cbor` --- are multi-module builds
+with hand-written OCaml or C alongside, linked by a `dune` project or a
+`Makefile` that names the per-module outputs.  Each is a separate piece of
+work, and `pulse/test` itself already runs on Custard
+(`pulse/mk/custard-test.mk`).
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -22041,3 +22102,4 @@ done.
 | M10κΕ | An erasable effect returns nothing (§125.10) | `[@@erasable]` on an *effect* says a computation in it has no runtime content, which is `GHOST` declared by a program rather than by `Prims`.  Custard erased the body of such a definition to `()` and left its declared result type alone, so `tests/micro-benchmarks/Erasable.fst` extracted `let eff_test2 (tmp : unit) : Prims.int = ()` --- a declaration disagreeing with its own body, which is worse than either being wrong alone, since §111's `narrow_rets` and every call site believe the signature and only the backend reads the body.  Three places had to agree: `Effects.of_lid` answers `E_Ghost`, `Effects.result_typ` answers `unit`, and `extract_letbinding` asks the erasable question *before* the reifiable one --- an effect defined with a `repr` is reifiable, and reifying `MGhost int` yields `int repr`, which is `int`, the representation of a value that does not exist.  The ordering is the whole fix.  This is not the §5.1 case, where the attribute sits on the definition being extracted and is found on the sigelt; here it sits one level away on the effect and the definition looks ordinary.  `tests/custard/ErasableEff.fst` declares two effects differing in nothing but the attribute, and pins a `unit` result for every definition in the erasable one --- including one whose F\* result type is a function type, since what is erased is the computation and not just a value. §125.10 |
 | M10κΖ | The generic extraction rule runs Custard (§126) | `mk/test.mk`'s one inherited `$(OUTPUT_DIR)/%.ml` rule was the reason the legacy pipeline still had coverage across twenty-odd test directories; it and the `%.fs` rule beside it now run `--codegen Custard`, with `--custard_entry_module` rather than `--custard_main` because these are golden-file tests of what a module extracts to and most have no `main`.  Seven goldens went empty (§126.1): a module holding only an abbreviation, a record or a polymorphic function has nothing for a whole-program monomorphizer to emit, and an empty golden still asserts that extraction succeeded.  `tests/extraction/backends` keeps its legacy legs (§126.2), since deleting them would delete the side-by-side comparison they exist for; the `ml` leg needed a *static pattern rule* to win, because `mk/test.mk` is included at the top of that Makefile and an implicit rule seen first beats a more specific implicit rule seen later.  Six cells of that table retired themselves when §125's rotates and arithmetic shifts landed. §126 |
 | M10κΗ | `noextract_to` names a backend (§126.3) | Custard did not know the attribute existed.  The string it carries is a codegen name, and in the wild it means "this one has a hand-written C implementation" --- `FStar.UInt128`, `FStar.SizeT` and `FStar.Endianness` all use it that way.  `noextract_to_this_backend` recognises `Custard` (every Custard backend), the `--custard_backend` value itself, and `krml` for the three backends producing C or Rust, since Custard's C backend reaches those definitions by the route karamel did.  It is not the ML extraction's special case: there `krml` meant "extract a stub and let karamel drop the body" (`karamel_fixup_qual`) because a second pipeline followed; Custard has none, so the definition is simply not a root.  `tests/custard/NoExtractTo.fst` carries one definition per attribute and is extracted twice, each leg checking that its own is gone and the other's survived.  The *reaching* half remains a gap: §4.3 claimed reaching a `noextract` definition is an error with the request chain, which it is not, on either qualifier or attribute; §4.3 now says so.  `tests/extraction`'s four hand-written `--codegen krml` rules move over at the same time --- three asked their question of the legacy extractor's debug output and now ask it of the generated program, and the fourth's `of_literal` injection warning is a Custard error (380). §126.3 |
+| M10κΘ | The Makefiles that are documentation (§126.4) | `tests/simple_hello`, `tests/dune_hello`, `examples/dependencies` and `examples/data_structures` are the answer to "how do I build an F\* program", written as the smallest Makefile that does it; leaving them on the old pipeline would have left the documentation pointing at it.  `examples/dependencies` gets shorter: its four steps --- dependency graph, verify, extract per module, compile and link the `.cmx` files in dependency order --- collapse to one extraction run and one `ocamlopt`, with `ALL_CHECKED_FILES` as the prerequisite since there are no per-module `.ml` files to name.  `examples/data_structures` shows the other half: it built its program by *appending* `let _ = test()` to the extracted module, which works when a module is a compilation unit; under a whole-program compiler `test` is dead code, so the program is built by naming it, `--custard_main RBTreeIntrinsic.test`.  Neither `hello` has a `main`, which is what `--custard_entry_module` is for.  `examples/layeredeffects/extraction` needed a checking pass of its own, since `--codegen OCaml` checked and extracted in one run and Custard reads implementations; its `--no_cmi` went with it (§4.2).  §126.5 records what stays: the `--codegen Plugin` tests, which need a `.cui` only a Custard-built compiler produces and so wait on the bootstrap; `tests/extraction/backends`'s comparison legs; and the multi-module Pulse dirs that link hand-written OCaml or C. §126.4 |
