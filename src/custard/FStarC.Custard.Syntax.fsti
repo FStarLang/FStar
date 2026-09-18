@@ -126,6 +126,13 @@ type iwidth =
     IR width.  Total, because every width F* can write is one the IR has. *)
 val iwidth_of_width : width -> iwidth
 
+(** How many bits a width has.  [WSizet] answers 64, which is a statement
+    about the targets this compiler supports rather than about C: the
+    question is only ever asked by a rule that needs a rotate distance or a
+    representable-range test, and on every target Custard emits for,
+    [size_t] is 64 bits. *)
+val width_bits : iwidth -> int
+
 (** The floating-point formats, section 38.  Named after the source modules
     [FStar.Float32] and [FStar.Float64], and matching karamel's [width] so
     that the krml backend can hand them straight over. *)

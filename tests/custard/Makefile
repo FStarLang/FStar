@@ -13,6 +13,13 @@ CUSTARD_TESTS += Effects
 CUSTARD_TESTS += Curried
 CUSTARD_TESTS += Implicits
 CUSTARD_TESTS += MachineInts
+# Section 125.  The rotates and the arithmetic right shift: operations with
+# no operator in the IR, so each is a rule that expands to something else.
+# Registered on four backends because the expansion is where they can
+# disagree -- C's [>>] at a signed type and OCaml's [shift_right] at an
+# unsigned one are different operations, and a rotate has to pick the right
+# one at both.
+CUSTARD_TESTS += Rotate
 CUSTARD_TESTS += Externs
 CUSTARD_TESTS += Combinators
 CUSTARD_TESTS += Mutual
@@ -336,7 +343,7 @@ KRML_TESTS += KrmlPrims
 # 122.3.1, 122.6.1 and 122.14) surfaced the day this leg ran.
 FS_TESTS += KrmlBasic Hello Literals LitBase LitStr Floats Exceptions Refs
 FS_TESTS += Recursion Mymon AnyCond AnyException UnitPtr Typeclass
-FS_TESTS += MachineInts Unroll ShortCircuit Union Wide128
+FS_TESTS += MachineInts Unroll ShortCircuit Union Wide128 Rotate
 
 # Section 122.14.  The unit-argument rule, from the side that only a typed
 # target can see: [j] takes a [unit] and a [UInt32.t], the IR drops the first
@@ -379,6 +386,22 @@ EGREP_FSPun = "which .NET cannot express"
 # backend has no polymorphism to fall back on, so it always runs with type
 # monomorphization (section 5.0.1).
 C_TESTS += KrmlBasic CExtern CRecType IndexedSquash CByValue CDeadLet CFunPtr
+C_TESTS += Rotate
+KRML_TESTS += Rotate
+# The mask is the whole point of the rule, so the C is pinned as well as run:
+# a shift by the width itself is undefined, and a compiler that constant-folds
+# the undefined case into something plausible would let the run pass.
+CGREP_Rotate += "(x >> ((32 - s) & 31))"
+# A signed rotate goes through the unsigned width of the same size, because
+# that is where the right shift is the logical one.
+CGREP_Rotate += "uint32_t custard_rot_a = (uint32_t)x;"
+# And the arithmetic right shift is C's [>>] at a signed type, with nothing
+# around it.
+CGREP_Rotate += "static int8_t Rotate_sar8(int8_t x, uint32_t s) {"
+# Falling back to the F* definition is the defect this rule replaced: it
+# builds a bit-vector list, so [to_vec] appearing at all means the rule did
+# not fire.
+CNOGREP_Rotate += "to_vec"
 C_TESTS += RefStrip
 # Section 25: the eta-expansion chain.  The greps pin the two shapes the
 # fix is about -- a source-parameterless arrow-typed definition becomes a

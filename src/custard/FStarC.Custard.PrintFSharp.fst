@@ -562,11 +562,8 @@ let w128_unop (sw : signedness & iwidth) (o:op) : ML (option string) =
 
 let is_shift (o:op) : bool = BShiftL? o || BShiftR? o
 
-(* Whether a width conversion can change the mathematical value. *)
-let width_bits (w:iwidth) : int =
-  match w with
-  | W8 -> 8 | W16 -> 16 | W32 -> 32 | W64 -> 64 | W128 -> 128 | WSizet -> 64
-
+(* Whether a width conversion can change the mathematical value.
+   [width_bits] is [Syntax]'s. *)
 let value_preserving (a b : signedness & iwidth) : bool =
   let sa, wa = a in
   let sb, wb = b in

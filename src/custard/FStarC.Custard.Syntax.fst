@@ -88,12 +88,20 @@ let is_pure (e:eff) : bool =
 let rec strip_zeros (m:int) (e:int) : int & int =
   if m <> 0 && m % 10 = 0 then strip_zeros (m / 10) (e + 1) else (m, e)
 
-(* Section 69.  Hand-rolled rather than a regexp: the grammar is three
-   productions and the module has no regexp dependency. *)
 let iwidth_of_width (w:width) : iwidth =
   match w with
   | Int8 -> W8 | Int16 -> W16 | Int32 -> W32 | Int64 -> W64 | Sizet -> WSizet
 
+(* Section 125.4.  Shared rather than copied: [PrintOCaml], [PrintFSharp] and
+   [Builtins] all want it, and a fourth copy would have been the one that
+   disagreed.  [WSizet] answers 64 because that is the default; a caller that
+   cannot tolerate --custard_sizet_width 32 making it false has to say so. *)
+let width_bits (w:iwidth) : int =
+  match w with
+  | W8 -> 8 | W16 -> 16 | W32 -> 32 | W64 -> 64 | W128 -> 128 | WSizet -> 64
+
+(* Section 69.  Hand-rolled rather than a regexp: the grammar is three
+   productions and the module has no regexp dependency. *)
 let template_of_string (s:string) : ML (list tmpl_piece) =
   let cs = String.list_of_string s in
   let flush (acc : list char) (out : list tmpl_piece) : list tmpl_piece =

@@ -193,6 +193,64 @@ let i128_masks (sw : signedness & iwidth) (which:string) : ML rule =
     | [a; b] -> bind "custard_mask_x" a (bind "custard_mask_y" b body)
     | _ -> failwith "Custard: mask applied to the wrong arity")
 
+(* Section 125.2.  [rotate_left] and [rotate_right], at every width that has
+   them.  Neither C nor karamel has a rotate operator -- [op] follows karamel's vocabulary,
+   section 5 -- so the rule is the shift pair, and the interesting part is
+   the distance.
+
+   Writing it as [a << s | a >> (n - s)] is what the OCaml realization does
+   and it is wrong in C: at [s = 0] the second shift is by [n], which is
+   undefined.  [(n - s) & (n - 1)] is [0] there and [n - s] everywhere else,
+   so the pair is right at every [s] the precondition [v s < n] allows, with
+   no branch.  It relies on [n] being a power of two, which every machine
+   width is.
+
+   A rotate is about the bit pattern, so at a signed width the right shift
+   has to be the logical one and [>>] is not: the rule rotates at the
+   unsigned width of the same size and casts back.  The OCaml realization
+   does not do this, and its signed rotates smear the sign bit; nothing in
+   ulib calls them, which is presumably why nobody noticed.
+
+   [WSizet] is excluded along with [W128], and for a better reason than that
+   [FStar.SizeT] declares no rotate: [width_bits] answers 64 for it, which
+   --custard_sizet_width 32 makes false, and a rotate is the one place where
+   that would be a wrong answer rather than a conservative one.
+
+   Both [a] and [s] are read twice, so both are bound first: a rule is handed
+   expressions, not values (compare [i128_masks]). *)
+let rotate_rule (sw : signedness & iwidth) (left:bool) : ML rule =
+  let n = width_bits (snd sw) in
+  let uw = (Unsigned, snd sw) in
+  let cnt = (Unsigned, W32) in
+  let cnt_ty = TInt cnt in
+  let ua = mk (EVar "custard_rot_a") (TInt uw) E_Pure in
+  let us = mk (EVar "custard_rot_s") cnt_ty E_Pure in
+  let ucount (e:expr) : expr =
+    mk (EOp ({ po_op = BAnd; po_ty = Some (PInt cnt) },
+             [e; int_lit cnt (n - 1)])) cnt_ty E_Pure in
+  let far =
+    ucount (mk (EOp ({ po_op = SubW; po_ty = Some (PInt cnt) },
+                     [int_lit cnt n; us])) cnt_ty E_Pure) in
+  let shift (o:op) (d:expr) : expr =
+    mk (EOp ({ po_op = o; po_ty = Some (PInt uw) }, [ua; d])) (TInt uw) E_Pure in
+  let near_op, far_op = if left then BShiftL, BShiftR else BShiftR, BShiftL in
+  let body =
+    mk (EOp ({ po_op = BOr; po_ty = Some (PInt uw) },
+             [shift near_op us; shift far_op far])) (TInt uw) E_Pure in
+  let result =
+    if Unsigned? (fst sw) then body
+    else mk (ECast (body, TInt sw)) (TInt sw) body.eff in
+  Rule_prim (2, fun _ args ->
+    match args with
+    | [a; s] ->
+      let a = if Unsigned? (fst sw) then a
+              else mk (ECast (a, TInt uw)) (TInt uw) a.eff in
+      mk (ELet ("custard_rot_a", TInt uw, a,
+           mk (ELet ("custard_rot_s", cnt_ty, s, result))
+              result.ty (join_eff s.eff result.eff)))
+         result.ty (join_eff a.eff (join_eff s.eff result.eff))
+    | _ -> failwith "Custard: rotate applied to the wrong arity")
+
 let machine_int_rule (sw : signedness & iwidth) (id:string) : ML (option rule) =
   match int_op id with
   | Some (o, arity) ->
@@ -271,14 +329,30 @@ let machine_int_rule (sw : signedness & iwidth) (id:string) : ML (option rule) =
           i128_op sw Mult [wide a; wide b]
         | _ -> failwith "Custard: mul_wide applied to the wrong arity"))
 
-    (* [FStar.Int128.shift_arithmetic_right].  In C a right shift of a signed
-       value is the arithmetic one, so this is [>>] at a signed width -- the
-       same operator [shift_right] gets, at a type that gives it the other
-       meaning.  Only at 128: at the narrower signed widths the F* definition
-       is still what compiles, and the OCaml backend, which reaches those,
-       has a [shift_right] that is logical on the representation. *)
-    | "shift_arithmetic_right" when snd sw = W128 && Signed? (fst sw) ->
-      Some (Rule_prim (2, fun _ args -> i128_op sw BShiftR args))
+    (* Section 125.3.  [shift_arithmetic_right], at every signed width.  In C a
+       right shift of a signed value is the arithmetic one, so this is [>>]
+       at a signed width -- the same operator [shift_right] gets, at a type
+       that gives it the other meaning.  The same holds of the OCaml backend, whose
+       [shift_right] at a signed width is [Stdint.IntN.shift_right] (the
+       realization itself defines [shift_arithmetic_right] to be it), and of
+       F#, whose [>>>] on a signed integer is arithmetic.
+
+       This used to be restricted to 128 bits on the grounds that the F*
+       definition compiled at the narrower ones.  It does not: the definition
+       is in terms of bit vectors and [FStar.Int32.t]'s constructor, which is
+       erased as a newtype while the type stays realized, so the OCaml does
+       not type-check.  tests/machine_integers/TestShift is the case. *)
+    | "shift_arithmetic_right" when Signed? (fst sw) ->
+      Some (Rule_prim (2, fun _ args ->
+        mk (EOp ({ po_op = BShiftR; po_ty = Some (PInt sw) }, args)) (TInt sw)
+           (List.fold_left (fun a (e:expr) -> join_eff a e.eff) E_Pure args)))
+
+    (* Likewise the rotates, which have no operator anywhere and expand to a
+       shift pair.  The F* definition builds a bit-vector list, so falling
+       back to it was never going to produce code anyone wanted even where it
+       type-checked.  [FStar.UInt128] declares no rotate. *)
+    | "rotate_left" | "rotate_right" when snd sw <> W128 && snd sw <> WSizet ->
+      Some (rotate_rule sw (id = "rotate_left"))
 
     | "eq_mask" | "gte_mask" when snd sw = W128 ->
       Some (i128_masks sw id)

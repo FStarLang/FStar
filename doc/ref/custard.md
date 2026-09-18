@@ -21194,6 +21194,112 @@ the property that the SDK CI uses is the one the channel names.  A cache
 hit on the image is not worth an environment that cannot be reproduced,
 and this is the failure mode that argument predicts.
 
+## 125 Rotates, and an arithmetic shift at every width
+
+`tests/machine_integers` is one of the older test directories in the
+repository and it is not a Custard test: it is eight programs that
+exercise `FStar.UInt8` through `FStar.Int64` and diff their output.
+Pointing it at Custard failed six of the eight, and both causes were the
+same shape --- a machine-integer operation with no
+builtin rule, falling back to the F\* definition.
+
+### 125.1 What the fallback does
+
+`FStar.UInt32.rotate_left` is
+
+```fstar
+let rotate_left (a:t) (s:t{0 < v s /\ v s < n}) : Tot t =
+  U.logor (shift_left a s) (shift_right a (sub (uint_to_t n) s))
+```
+
+against a `t` that is `{ v : uint_t n }`, and `shift_left` on that `t` is
+in terms of `FStar.UInt.shift_left`, which is in terms of `to_vec` and
+`from_vec` --- bit vectors, as `seq bool`.  Custard does not stop there,
+because nothing tells it to: it inlines through the whole stack and emits
+the bit-vector construction, which is correct and is also several hundred
+machine instructions where one was wanted.
+
+That is the benign half.  The other half does not compile.  `t` is a
+one-field record, so §26's newtype rule erases `Mk`; but `FStar.UInt32.t`
+is *realized* --- `--custard_realize` maps it to OCaml's
+`FStar_UInt32.t` --- so the type does not disappear with its constructor,
+and the emitted `let rotate_left a s = ...` builds an `int` where a
+`FStar_UInt32.t` is expected.  Realization and newtype erasure are two
+answers to the same question and the extractor was applying both.  A
+builtin for the operation is not a fix for that inconsistency, but it is
+what removes the only way anybody was reaching it: every other function
+in those modules already has one.
+
+### 125.2 The rules
+
+`rotate_left`/`rotate_right` at width `n` become
+
+```
+let a = <arg1> and s = <arg2> in (a << s) | (a >> ((n - s) & (n - 1)))
+```
+
+and the mirror image.  The mask is the point.  A rotate by zero is legal
+in F\* --- the refinement on `s` is `0 < v s`, but the caller can and does
+reach the rule through a `v s` the extractor cannot see --- and the naive
+complement `n - s` is then `n`, which is a shift by the width, which is
+undefined behaviour in C and is a rotate-by-zero returning zero on most
+of the machines that do define it.  `(n - s) & (n - 1)` is `0` when `s`
+is `0` and `n - s` otherwise, with no branch, and relies only on `n`
+being a power of two.
+
+`a` and `s` are both read twice, so both are bound; §114's `cheap_expr`
+removes the binding again whenever the argument is a variable or a
+literal, which in practice is nearly always, so the emitted C is the
+expression above with the names substituted.
+
+At a *signed* width the rule casts to the unsigned width of the same
+size, rotates, and casts back, because a rotate is a statement about the
+bit pattern and the right shift it needs is the logical one.  `W128` has
+no rotate to key on --- `FStar.UInt128` declares none --- and `WSizet` is
+excluded for a better reason: `width_bits` answers 64 for it, which
+`--custard_sizet_width 32` makes false, and a rotate is the one place in
+the package where that would produce a wrong answer rather than a
+conservative one.
+
+### 125.3 `shift_arithmetic_right`
+
+§119 gave `shift_arithmetic_right` a rule at `Int128` only, with a
+comment claiming the narrower widths did not need one because the OCaml
+backend's `>>` was already arithmetic there.  Half of that is true.
+`ulib/ml/app/ints/FStar_Ints.ml.body` does say
+`let shift_arithmetic_right = shift_right` over a signed `Stdint.IntN`,
+whose `shift_right` is arithmetic --- but the claim was about a fallback
+that never runs, since without a rule the extractor inlines the F\*
+definition rather than calling the realization.  And it was only ever
+about OCaml; the C, C++, Rust and F# backends were getting the bit-vector
+expansion.  The guard is now `Signed?` at any width, emitting `BShiftR`
+at the signed `PInt`, which every backend already renders as its own
+arithmetic shift.
+
+The realization's `rotate_left` and `rotate_right` for signed widths are,
+incidentally, wrong: they use the arithmetic `M.shift_right` and smear
+the sign bit into the result.  Nothing in `ulib` calls them, and after
+this section neither does Custard.  It is recorded here rather than
+fixed, because fixing it would change the behaviour of the legacy
+extraction pipeline and this branch is not the place.
+
+### 125.4 `width_bits`
+
+Three copies of the width-to-bit-count function existed, in `PrintOCaml`,
+in `PrintFSharp`, and now wanted in `Builtins`.  It is `Syntax`'s, beside
+`iwidth_of_width`, and the two backends read it from there.  A fourth
+copy would have been the one that disagreed.
+
+`tests/custard/Rotate.fst` is 31 numbered checks --- rotate by zero, by
+one and by `n-1` at 8, 16, 32 and 64 bits, a signed rotate over a
+negative value, and `shift_arithmetic_right` at all four signed widths
+--- reporting through its exit code, because §100's direct-to-C output
+has no `FStar.IO` to print with.  It runs on the OCaml, karamel-C,
+direct-C, C++ and F# legs, with the constants computed independently.
+The C is pinned as well as run: a rotate by the width is undefined, and a
+compiler that folds the undefined case into something plausible would let
+a run-only test pass.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -21542,3 +21648,4 @@ and this is the failure mode that argument predicts.
 | M10ιΧ | The repository moves to the .NET 10 SDK | §122 targets .NET 10, so the devcontainer, `.github/actions/setup-fstar-deps` and the three `.docker/` images install it --- through Microsoft's `dotnet-install.sh` and tarball rather than apt, since Ubuntu's archive carries whichever SDK was current when the release was cut --- and `DOTNET_ROOT` is exported alongside the `PATH` entry, without which a published apphost looks for its runtime under the system install.  One SDK rather than two means the legacy F# path comes along: the two `global.json`s and the `net8.0` target frameworks under `fsharp/tests` and `examples`.  It builds, after one fix: `ulibfs` failed to compile at `-c Release` with FS2014, "duplicate entry `get_x@10` in method table".  The F# 10 optimizer names an inlined closure after its parameter and the *line* it came from and not the file, `FStar_UInt32.uint_to_t` and `FStar_UInt64.uint_to_t` were both `x` on line 10, and `FStar_UInt128` inlines both.  A compiler defect, visible only under `--optimize+`; the parameter of one of them is renamed with a comment, rather than the optimizer turned off, so that the defect stays visible. §122.16 |
 | M10ιΨ | Two support blocks leave the C header | A generated header is a file a person reads, and every one of them carried eleven lines of `custard_unit` typedef plus, for any program touching a 16-bit float, forty lines of §98 reference material.  Both are now emitted only into a file that mentions the names, which for `custard_unit` is usually neither file: the type is still reachable --- a `ref unit` is a `custard_unit *` and a `noeq` record can hold one --- but the layout pass erases unit fields, a unit-returning function is `void`, and §32.6 drops unit arguments, so the token appeared in the whole 160-program corpus exactly as often as the typedef was emitted and not once more.  The float16 block keeps its `#error` and loses the comment, which is reference material and belongs in the reference; the message names the macro, the attribute and §98.  In the header the check still comes after the `@@custard_c_header` includes, since that is what makes it satisfiable.  Placement is decided by asking whether a rendered file mentions the names, which replaces the `uses_narrow` flag --- set in five places, reset in two --- and is strictly better, because a flag can say that a unit uses a narrow float but not which of its two files does.  `CHGREP_X`/`CHNOGREP_X` pin the header alone, since `CGREP` is over the pair and the whole claim is about which file.  Four new tests, on both sides of each decision. §123 |
 | M10ιΩ | Two F# flags that no longer exist | §122.16's SDK bump left the two legacy projects under `fsharp/tests` passing `--mlcompatibility --langversion:5.0`, which the F# 10 compiler removed and stopped supporting respectively.  Neither was load-bearing: the first is for OCaml-shaped source and these projects compile generated F# against `ulibfs`, and the second was buying the non-conforming indentation that `--strict-indentation-` still gives.  Both projects now carry `ulibfs`'s flags, which is what a project compiling against it should say.  The more useful half is why `make fsharp-all` passed locally and failed in CI: `setup-fstar-deps` skipped the install whenever the image already reported an SDK with the requested major version, so both machines said ".NET 10" and ran different compilers.  The channel is now installed unconditionally and the step echoes the version. §124 |
+| M10κΑ | Rotates, and an arithmetic shift at every width | `tests/machine_integers` failed six of eight programs under Custard, both causes being a machine-integer operation with no builtin rule.  Without one the extractor inlines the F\* definition, which for `rotate_left` is in terms of `FStar.UInt.to_vec` --- bit vectors as `seq bool`, correct and several hundred instructions where one was wanted.  Worse, it does not compile: `FStar.UInt32.t` is a one-field record, so §26 erases its constructor, but the type is *realized*, so it does not erase with it and the result builds an `int` where an `FStar_UInt32.t` is expected.  The new rule is `(a << s) | (a >> ((n - s) & (n - 1)))`; the mask is the whole point, since a rotate by zero is reachable and the naive complement is then a shift by the width, which is undefined in C.  At a signed width it rotates at the unsigned width of the same size and casts back, because the right shift a rotate needs is the logical one.  `WSizet` is excluded because `width_bits` answers 64 for it and `--custard_sizet_width 32` makes that false.  §119's `shift_arithmetic_right` rule is lifted from `Int128` to every signed width; its comment claimed the narrower ones already got an arithmetic `>>` from the OCaml realization, which was a claim about a fallback that never runs, and was never true of the other four backends at all.  `width_bits` had three copies and is now `Syntax`'s.  `tests/custard/Rotate.fst` is 31 checks across five backends, reporting through its exit code, with the C pinned as well as run. §125 |

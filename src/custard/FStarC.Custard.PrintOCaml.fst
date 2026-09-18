@@ -652,11 +652,7 @@ let line_width : int = 80
 
 (* Whether a width conversion can change the mathematical value.  Signed to
    unsigned always can, because of the negatives; otherwise it is a question
-   of range.  [FStar.SizeT] is 64 bits at every target F* supports. *)
-let width_bits (w:iwidth) : int =
-  match w with
-  | W8 -> 8 | W16 -> 16 | W32 -> 32 | W64 -> 64 | W128 -> 128 | WSizet -> 64
-
+   of range.  [width_bits] is [Syntax]'s. *)
 let value_preserving (a b : signedness & iwidth) : bool =
   let sa, wa = a in
   let sb, wb = b in
