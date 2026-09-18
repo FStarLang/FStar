@@ -2564,32 +2564,60 @@ let rec refutable (infos:SMap.t ctor_info) (p:pat) : ML bool =
      | Some ci when ci.ci_count = 1 -> ps |> List.existsb (refutable infos)
      | _ -> true)
 
+(* Section 125.9.  A constructor's field types as seen through the scrutinee's
+   *own* type rather than as declared.  [Prims.dtuple2]'s second field is
+   declared [TVar "b"], which is not [TAny] and never will be; what carries
+   the answer is the scrutinee, whose type is [(bool, any) dtuple2].  Without
+   this substitution [split_any] walked straight past a tuple pattern sitting
+   on an [Obj.t] field and the backend emitted it as one.
+
+   [None], or an arity that does not line up, leaves the declaration alone:
+   that is what the pass did everywhere before, and it is conservative in the
+   direction of splitting nothing. *)
+let inst_fields (ci:ctor_info) (sc:option cty) : ML (list (string & cty)) =
+  match sc with
+  | Some (TApp (_, args)) when List.length args = List.length ci.ci_params ->
+    let sub = List.zip ci.ci_params args in
+    ci.ci_fields |> List.map (fun (f, t) -> (f, subst_cty sub t))
+  | _ -> ci.ci_fields
+
+(* The component types a tuple pattern's sub-patterns sit at.  [TVar "?"]
+   stands for "not known to be [any]", which is what every position was
+   treated as before. *)
+let tuple_fields (sc:option cty) (ps:list pat) : ML (list cty) =
+  match sc with
+  | Some (TTuple ts) when List.length ts = List.length ps -> ts
+  | _ -> ps |> List.map (fun _ -> TVar "?")
+
 (* Whether [split_any] on this pattern will produce an inner match that can
    fail -- which is exactly when the branch needs the rest behind it. *)
-let rec splits_refutably (infos:SMap.t ctor_info) (p:pat) : ML bool =
+let rec splits_refutably (infos:SMap.t ctor_info) (sc:option cty) (p:pat) : ML bool =
   let simple (q:pat) : bool = PVar? q || PWild? q in
   let field (t:cty) (q:pat) : ML bool =
-    (TAny? t && not (simple q) && refutable infos q) || splits_refutably infos q in
+    (TAny? t && not (simple q) && refutable infos q) ||
+    splits_refutably infos (Some t) q in
   let many (ts:list cty) (ps:list pat) : ML bool =
     List.zip ts ps |> List.existsb (fun (t, q) -> field t q) in
   match p with
   | PCtor (cn, ps) ->
     (match SMap.try_find infos (string_of_name cn) with
      | Some ci when List.length ci.ci_fields = List.length ps ->
-       many (ci.ci_fields |> List.map snd) ps
+       many (inst_fields ci sc |> List.map snd) ps
      | _ -> false)
   | PRecord (tn, fps) ->
     (match SMap.try_find infos (string_of_name tn) with
      | Some ci ->
+       let fs = inst_fields ci sc in
        fps |> List.existsb (fun (f, q) ->
-         match ci.ci_fields |> List.tryFind (fun (g, _) -> g = f) with
+         match fs |> List.tryFind (fun (g, _) -> g = f) with
          | Some (_, t) -> field t q
          | None -> field (TVar "?") q)
      | None -> false)
-  | PTuple ps -> ps |> List.existsb (splits_refutably infos)
+  | PTuple ps -> many (tuple_fields sc ps) ps
   | POr _ | PVar _ | PWild | PConst _ -> false
 
-let rec split_any (infos:SMap.t ctor_info) (fb:option expr) (p:pat) (body:expr)
+let rec split_any (infos:SMap.t ctor_info) (fb:option expr) (sc:option cty)
+                  (p:pat) (body:expr)
   : ML (pat & expr) =
   let simple (p:pat) : bool = PVar? p || PWild? p in
   let field (t:cty) (p:pat) (body:expr) : ML (pat & expr) =
@@ -2597,13 +2625,13 @@ let rec split_any (infos:SMap.t ctor_info) (fb:option expr) (p:pat) (body:expr)
     then let v = rename "any" in
          let sc = mk (ECoerce (mk (EVar v) TAny E_Pure, TAny)) TAny E_Pure in
          let need = refutable infos p in
-         let p, body = split_any infos fb p body in
+         let p, body = split_any infos fb (Some TAny) p body in
          let brs = (p, None, body) ::
                    (match fb with
                     | Some e when need -> [(PWild, None, e)]
                     | _ -> []) in
          (PVar v, { body with e = EMatch (sc, brs) })
-    else split_any infos fb p body in
+    else split_any infos fb (Some t) p body in
   let many (ts:list cty) (ps:list pat) (body:expr) : ML (list pat & expr) =
     List.fold_right (fun (t, p) (ps, body) ->
       let p, body = field t p body in
@@ -2612,44 +2640,44 @@ let rec split_any (infos:SMap.t ctor_info) (fb:option expr) (p:pat) (body:expr)
   | PCtor (cn, ps) ->
     (match SMap.try_find infos (string_of_name cn) with
      | Some ci when List.length ci.ci_fields = List.length ps ->
-       let ps, body = many (ci.ci_fields |> List.map snd) ps body in
+       let ps, body = many (inst_fields ci sc |> List.map snd) ps body in
        (PCtor (cn, ps), body)
      | _ -> (p, body))
   | PRecord (tn, fps) ->
     (match SMap.try_find infos (string_of_name tn) with
      | Some ci ->
+       let fs = inst_fields ci sc in
        let ts = fps |> List.map (fun (f, _) ->
-         match ci.ci_fields |> List.tryFind (fun (g, _) -> g = f) with
+         match fs |> List.tryFind (fun (g, _) -> g = f) with
          | Some (_, t) -> t
          | None -> TVar "?") in
        let ps, body = many ts (fps |> List.map snd) body in
        (PRecord (tn, List.zip (fps |> List.map fst) ps), body)
      | None -> (p, body))
   | PTuple ps ->
-    let ps, body = List.fold_right (fun p (ps, body) ->
-      let p, body = split_any infos fb p body in
-      (p :: ps, body)) ps ([], body) in
+    let ps, body = many (tuple_fields sc ps) ps body in
     (PTuple ps, body)
   | POr _ | PVar _ | PWild | PConst _ -> (p, body)
 
 let rec split_any_expr (infos:SMap.t ctor_info) (x:expr) : ML expr =
   let g = split_any_expr infos in
-  let br (fb:option expr) (b0:branch) : ML branch =
+  let br (sc:option cty) (fb:option expr) (b0:branch) : ML branch =
     let p, gd, b = b0 in
     let b = g b in
     match gd with
     | Some gd -> (p, Some (g gd), b)
-    | None -> let p, b = split_any infos fb p b in (p, None, b) in
+    | None -> let p, b = split_any infos fb sc p b in (p, None, b) in
   (* Section 115.  Bottom-up, so that a branch's fallback is the rest of the
      match as it will actually be compiled.  Only a branch whose split can
      fail is given one, and the scrutinee is bound to a variable only when
      some branch needed it -- so a match with no refutable [any] under it is
      left exactly as it was. *)
   let branches (sc:expr) (x:expr) (brs:list branch) : ML expr =
+    let scty = Some sc.ty in
     let needed = brs |> List.existsb (fun (p, gd, _) ->
-                   None? gd && splits_refutably infos p) in
+                   None? gd && splits_refutably infos scty p) in
     if not needed
-    then { x with e = EMatch (sc, brs |> List.map (br None)) }
+    then { x with e = EMatch (sc, brs |> List.map (br scty None)) }
     else
       let v = rename "sc" in
       let sv () : ML expr = mk (EVar v) sc.ty E_Pure in
@@ -2661,13 +2689,13 @@ let rec split_any_expr (infos:SMap.t ctor_info) (x:expr) : ML expr =
           let fb = match rest with
                    | [] -> None
                    | _ -> Some (mk (EMatch (sv (), rest)) x.ty x.eff) in
-          br fb b0 :: rest in
+          br scty fb b0 :: rest in
       let brs = go brs in
       { x with e = ELet (v, sc.ty, sc, mk (EMatch (sv (), brs)) x.ty x.eff) } in
   match x.e with
   (* [br] rewrites the pattern, so both matching forms stay written out. *)
   | EMatch (s, brs) -> branches (g s) x brs
-  | ETry (s, brs) -> { x with e = ETry (g s, brs |> List.map (br None)) }
+  | ETry (s, brs) -> { x with e = ETry (g s, brs |> List.map (br (Some TExn) None)) }
   | _ -> map_children g x
 
 let split_any_decls (prog:program) : ML program =
@@ -2945,12 +2973,28 @@ let coerce_prog (prog:program) : ML program =
   (* What a set of branches says its scrutinee is.  A constant or tuple pattern
      names no declaration, so it contributes nothing; in practice a scrutinee
      of unknown type is always matched against constructors. *)
+  (* Section 125.8.  A constant pattern says what the scrutinee is just as
+     firmly as a constructor pattern does, and it is the only thing that says
+     so: there is no declaration behind a literal to look the owner up in.
+     Without this a [dec a] result matched against [0] and [2] reached the
+     backend as an [Obj.t] scrutinee compared with [Prims.parse_int]. *)
+  let prims (id:string) : cty = TApp ({ ns = ["Prims"]; id = id; spec = None }, []) in
+  let ty_of_const (c:constant) : cty =
+    match c with
+    | CUnit -> TUnit
+    | CBool _ -> prims "bool"
+    | CInt (_, _, None) -> prims "int"
+    | CInt (_, _, Some sw) -> TInt sw
+    | CFloat (_, fw) -> TFloat fw
+    | CChar _ -> prims "char"
+    | CString _ -> prims "string" in
   let rec scrutinee_of (brs:list branch) : ML (option cty) =
     match brs with
     | [] -> None
     | (p, _, _) :: brs ->
       (match p with
        | PCtor (n, _) | PRecord (n, _) -> owner_of (string_of_name n)
+       | PConst c -> Some (ty_of_const c)
        | _ -> scrutinee_of brs) in
   (* A node's own type, when it is worth believing: when it mentions no [TAny]
      at all.  [Extract] falls back to [TAny] and never invents a type it does
@@ -3090,12 +3134,23 @@ let coerce_prog (prog:program) : ML program =
     match x.e with
     | ELet _ | ESeq _ | EIf _ | EMatch _ | ETry _ -> true
     | _ -> false in
+  (* Section 125.9.  A coercion computes nothing, so two in a row are one:
+     [magic (magic e)] is [magic e] at every backend, a reinterpretation in C
+     just as much as an [Obj.magic] in OCaml.  This pass is the last one to
+     run, so nothing after it would fuse them -- and it meets its own output
+     often enough to matter, since section 115 hands it a scrutinee that is
+     already a coercion to [any].  An [ECast] is left alone: that one does
+     compute. *)
+  let coerce (x:expr) (t:cty) : expr =
+    match x.e with
+    | ECoerce (e1, _) -> mk (ECoerce (e1, t)) t x.eff
+    | _ -> mk (ECoerce (x, t)) t x.eff in
   let rec check (env:cenv) (exp:option cty) (x:expr) : ML expr =
     let x = go env exp x in
     if Some? exp && pushes_down x then x else
     match exp, infer env x with
-    | Some e, Some t -> if cty_mismatch t e then mk (ECoerce (x, e)) e x.eff else x
-    | Some TAny, None -> if concrete_shape x then mk (ECoerce (x, TAny)) TAny x.eff else x
+    | Some e, Some t -> if cty_mismatch t e then coerce x e else x
+    | Some TAny, None -> if concrete_shape x then coerce x TAny else x
     | _ -> x
   and go (env:cenv) (exp:option cty) (x:expr) : ML expr =
     let same (e':expr') : expr = { x with e = e' } in
@@ -3121,7 +3176,7 @@ let coerce_prog (prog:program) : ML program =
        | Some (Some c) ->
          same (EOp (o, List.map2 (fun t (e:expr) ->
            match t with
-           | Some TAny -> mk (ECoerce (e, c)) c e.eff
+           | Some TAny -> coerce e c
            | _ -> e) ts es))
        | _ -> same (EOp (o, es)))
     | EOp (o, es) -> same (EOp (o, es |> List.map (go env None)))
@@ -3192,7 +3247,7 @@ let coerce_prog (prog:program) : ML program =
                   whose parameters Custard cannot name (section 5.4). *)
                let h = go env None h in
                (match infer env h with
-                | Some TAny -> same (EApp (mk (ECoerce (h, TAny)) TAny h.eff, es))
+                | Some TAny -> same (EApp (coerce h TAny, es))
                 | _ -> same (EApp (h, es)))))
        (* The head's own type is not worked out well enough to retype the
           call, but a parameter it declares [TAny] is a boundary all the same:
@@ -3232,17 +3287,17 @@ let coerce_prog (prog:program) : ML program =
     | EProj (e1, n, f) ->
       let e1 = go env None e1 in
       (match infer env e1, owner_of (string_of_name n) with
-       | Some TAny, Some t -> same (EProj (mk (ECoerce (e1, t)) t e1.eff, n, f))
+       | Some TAny, Some t -> same (EProj (coerce e1 t, n, f))
        | _ -> same (EProj (e1, n, f)))
     | EDiscrim (e1, n) ->
       let e1 = go env None e1 in
       (match infer env e1, owner_of (string_of_name n) with
-       | Some TAny, Some t -> same (EDiscrim (mk (ECoerce (e1, t)) t e1.eff, n))
+       | Some TAny, Some t -> same (EDiscrim (coerce e1 t, n))
        | _ -> same (EDiscrim (e1, n)))
     | EMatch (sc, brs) ->
       let sc = go env None sc in
       let sc = (match infer env sc, scrutinee_of brs with
-                | Some TAny, Some t -> mk (ECoerce (sc, t)) t sc.eff
+                | Some TAny, Some t -> coerce sc t
                 | _ -> sc) in
       let st = infer env sc in
       let exp = first exp (branches_ty env brs) in

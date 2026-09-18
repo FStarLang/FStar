@@ -2819,7 +2819,17 @@ and expr_of_term (st:state) (t:term) : ML expr =
     let e = List.fold_left (fun e (_, g, b) ->
               join_eff e (join_eff b.eff (match g with None -> E_Pure | Some g -> g.eff)))
               scrut.eff brs in
-    let ty = match brs with [] -> TAny | (_, _, b) :: _ -> b.ty in
+    (* Section 125.8.  The first branch's type is the whole match's only when
+       the branches agree.  When they do not, the match really does return a
+       value of no common representation, and saying otherwise is a claim the
+       rest of the pipeline believes: [narrow_rets] reads a body's type
+       straight off this node, so a [d:dir -> arg_type d] whose first branch
+       is a [bool] came out declared [bool]. *)
+    let ty =
+      match brs |> List.map (fun (_, _, (b:expr)) -> b.ty)
+                |> List.filter (fun t -> not (TAny? t)) with
+      | [] -> TAny
+      | t :: ts -> if ts |> List.for_all (fun u -> u = t) then t else TAny in
     mk (EMatch (scrut, brs)) ty e
 
   | Tm_ascribed {tm} -> expr_of_term st tm

@@ -21421,6 +21421,117 @@ and mangled anyway.  The assertion is the printed output, with greps on
 the declarations besides, since a wrong declaration and a wrong reference
 would agree with each other and still run.
 
+### 125.8 A match that does not know its own type
+
+`tests/bug-reports/closed/Bug734.fst` is the oldest of the three, and the
+shortest:
+
+```fstar
+let arg_type (d:dir) : Tot Type0 =
+  match d with
+  | Bool -> bool
+  | Int -> int
+  | Fun -> int -> Tot int
+
+let def_value (d:dir) : Tot (arg_type d) =
+  match d with
+  | Bool -> true
+  | Int -> 42
+  | Fun -> (fun (x:int) -> x)
+
+let example_fails = def_value Fun 42
+```
+
+`def_value`'s return type is `arg_type d`, which is `any`: it is a
+different type in each branch and Custard has no dependent types to say
+so with.  That is fine, and §14's whole point --- the value crosses out
+through a coercion at each use.  What was not fine is that the emitted
+signature said `bool`, so `def_value Fun` was applied to an argument its
+own declaration said was not there, and the OCaml did not compile.
+
+`Extract`'s `Tm_match` case gave the match node the type of the *first*
+branch.  For a match whose branches agree that is right and costs
+nothing; for one whose branches do not it is a claim that happens to be
+about whichever branch F\* wrote down first.  Nothing read that claim
+until §111's `narrow_rets`, which is a fixpoint that replaces an `any`
+return type with a ground one read off the body --- and a body that is a
+match is read straight off the node.  So a lie told in one pass was
+promoted to a declared signature by another, three passes later.
+
+The rule is now the honest one: drop the branches whose type is `any`,
+and if what is left is one type, that is the match's type; otherwise
+`any`.  Dropping the `any` branches first matters, because a branch that
+lost its type should not be able to make the whole match lose its own ---
+`match b with true -> 1 | false -> (the any one)` is an `int`, and saying
+`any` there would cost a coercion at every use.  Disagreement between two
+*ground* branch types is the case that has to answer `any`, and now does.
+
+### 125.9 Two more ways an `any` reaches a pattern
+
+The other two are §14 coercions that were not inserted, and both are
+about a pattern rather than an expression.
+
+`tests/extraction/Eta_expand.fst` matches on integer literals:
+
+```fstar
+let choose : a:t -> dec a -> int -> dec a = function
+  | A -> fun_a
+  | B -> fun_b
+
+let _ = match choose A 0 2 with
+        | 0 -> ()
+        | 2 -> failwith "Failure of eta-expansion"
+        | _ -> failwith "Unknown failure"
+```
+
+`choose A` returns `any`, so the scrutinee is an `any` and the coercion
+pass has to put a `magic` on it.  It decides what to coerce *to* by
+reading the branches: `scrutinee_of` walks them looking for a pattern
+that names a type.  It consulted constructor and record patterns only, so
+a match whose patterns are all constants found nothing, no coercion went
+in, and the OCaml compared an `Obj.t` against an `int`.  A constant
+pattern names a type exactly as precisely as a constructor pattern does
+--- `0` is a `Prims.int` --- and now says so.
+
+`tests/bug-reports/closed/Bug2595.fst` is the harder one:
+
+```fstar
+let test_buggy2 (x:(b:bool & (if b then (nat & nat) else (string & string))))
+  : sum_type2
+  = match x with
+    | (|false, (y, z)|) -> SumType2_1 y z
+    | (|true, (y, z)|) -> SumType2_2 y z
+```
+
+The second component of the pair is `any`, and the pattern destructures
+it.  A coercion cannot be inserted inside a pattern --- there is nowhere
+to put an expression --- which is exactly what §115 already exists for:
+it replaces such a sub-pattern with a fresh variable and re-matches it
+under a coercion in the branch body.  It did not fire here.
+
+The reason is that §115 asked the *declaration* what the field's type is.
+For `Prims.dtuple2` the second field is declared `'b`, a type variable,
+which is not `any` and never will be at any instantiation the declaration
+can see.  What carries the answer is the scrutinee's own type, which here
+is `(bool, any) dtuple2`.  The pass now substitutes the scrutinee's type
+arguments into the constructor's field types before asking, and threads
+the resolved type down as it descends --- a tuple pattern's components
+come from a `TTuple`, a field's from the instantiated field list, and a
+position under an `any` is itself `any`.  Where the scrutinee's type is
+not a matching application the declaration is used unchanged, which is
+what every position saw before.
+
+`test_ok2` in the same file, whose field type is concrete, is the control:
+no split, no inner match, no coercion, before or after.
+
+One incidental cleanup fell out of it.  §115 hands the coercion pass a
+scrutinee that is *already* a coercion to `any`, and the coercion pass
+then put its own around it, so the output read `Obj.magic (Obj.magic
+any)`.  A coercion computes nothing, so two in a row are one; the
+coercion pass, which is the last one to run and therefore the last chance
+to notice, now fuses them.  An `ECast` is left alone, because that one
+does compute.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -21772,3 +21883,4 @@ would agree with each other and still run.
 | M10κΑ | Rotates, and an arithmetic shift at every width (§125.1--125.4) | `tests/machine_integers` failed six of eight programs under Custard, both causes being a machine-integer operation with no builtin rule.  Without one the extractor inlines the F\* definition, which for `rotate_left` is in terms of `FStar.UInt.to_vec` --- bit vectors as `seq bool`, correct and several hundred instructions where one was wanted.  Worse, it does not compile: `FStar.UInt32.t` is a one-field record, so §26 erases its constructor, but the type is *realized*, so it does not erase with it and the result builds an `int` where an `FStar_UInt32.t` is expected.  The new rule is `(a << s) | (a >> ((n - s) & (n - 1)))`; the mask is the whole point, since a rotate by zero is reachable and the naive complement is then a shift by the width, which is undefined in C.  At a signed width it rotates at the unsigned width of the same size and casts back, because the right shift a rotate needs is the logical one.  `WSizet` is excluded because `width_bits` answers 64 for it and `--custard_sizet_width 32` makes that false.  §119's `shift_arithmetic_right` rule is lifted from `Int128` to every signed width; its comment claimed the narrower ones already got an arithmetic `>>` from the OCaml realization, which was a claim about a fallback that never runs, and was never true of the other four backends at all.  `width_bits` had three copies and is now `Syntax`'s.  `tests/custard/Rotate.fst` is 31 checks across five backends, reporting through its exit code, with the C pinned as well as run. §125 |
 | M10κΒ | `nan` and `inf` become literals | §39.2 wrote down that what a `float_lit` cannot denote --- an infinity, a NaN --- is what `of_literal` does not accept either, on the grounds that those are what an argument reaching C by accident would look like.  `tests/floats/Test01.fst` disagrees: an accident does not spell itself `nan` in an F\* source file, and a program that wants a NaN has no other way to write one, since `FStar.Float64` exposes no operation that builds one from finite arguments.  A refusal is worth having only when there is something else to write.  `float_lit` stops being a record and becomes `FLNum | FLNan | FLInf`, cases rather than magnitudes because `FStarC.Real.real` is a rational and neither value is one; a NaN carries no sign, since nothing F\* exposes can observe one.  Each backend then answers for itself: OCaml and F# have identifiers (`Stdlib.nan`, qualified because `nan` is a plausible name for a program to bind); C has no constant syntax at all and borrows `<math.h>`'s `NAN` and `INFINITY` through `CUSTARD_NAN`/`CUSTARD_INF`, macro names rather than bare because §123 decides placement by asking whether a file *mentions* them and `NAN` is short enough to occur inside a generated identifier; binary16 and bfloat16 encode the patterns by hand, as §66 already does for every other literal at those widths; and karamel cannot, because its `EConstant` carries the literal as text and its grammar is the decimal one, so the crossing is refused the §46.3 way, naming the backend that does accept it.  `FloatSpecial.fst` is seventeen checks of the two observable properties, seven of them routing a literal through the arithmetic so that what is tested is the value the hardware produces. §125.5--125.6 |
 | M10κΓ | The one mangled name a program can read | `FStar.Exception.string_of_exn` is `Printexc.to_string`, which prints the *constructor*, so an exception's emitted OCaml name is the single place where §12.7's mangling is observable from inside the extracted program: `StringOfExn.A` came out as `StringOfExn.StringOfExn_A`.  Mangling exists to keep one flat file collision-free, so it is now applied where there is a collision and not otherwise.  An exception keeps its plain identifier when no other constructor in the file wants that spelling, no other exception wants it either, and it is not one of OCaml's own --- an `exception Not_found` of ours would shadow `Stdlib.Not_found` for the rest of the file, where a hand-written realization that is not generated and does not know may still mean the original.  Two exceptions that want the same short name both stay mangled: giving it to whichever was declared first would make which of them is readable depend on declaration order.  Variant constructors are deliberately left alone --- nothing observes their spelling, and changing it would churn every OCaml golden in the repository for no gain.  `ExnName.fst` has all three cases in one program. §125.7 |
+| M10κΔ | Three ways an `any` fails to be coerced (§125.8--125.9) | Three legacy bug reports, all producing OCaml that did not compile, all one value of type `any` reaching a position that needed a real type.  `Bug734`: `Extract` gave a match node the type of its *first* branch, which for `arg_type d` --- a different type per branch --- was a claim about whichever branch F\* wrote down first, and §111's `narrow_rets` promoted it to a declared signature three passes later, so `def_value Fun` was applied to an argument its own declaration said was not there.  The rule is now to drop the `any` branches and take what is left if it agrees, `any` otherwise; dropping first matters, since one branch that lost its type should not cost a coercion at every use of the match.  `Eta_expand`: the coercion pass reads a scrutinee's type off the branch patterns and consulted constructor and record patterns only, so a match on integer literals found nothing to coerce to and compared an `Obj.t` against an `int`; a constant pattern names a type as precisely as a constructor does.  `Bug2595`: §115 splits a destructuring sub-pattern out from under an `any` field, and asked the *declaration* for the field's type --- `'b` for `dtuple2`, never `any` at any instantiation it can see --- when the answer is in the scrutinee's type, `(bool, any) dtuple2`; the type arguments are now substituted in and the resolved type threaded down through tuples, fields and `any` positions alike.  The coercion pass also fuses a coercion onto a coercion, which §115's output made common.  `tests/custard/AnyPat.fst` is all three in one program. §125.8--125.9 |

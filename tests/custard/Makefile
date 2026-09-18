@@ -2381,6 +2381,20 @@ GREP_ExnName += "exception ExnName_Not_found"
 NOGREP_ExnName += "exception A"
 NOGREP_ExnName += "exception Not_found"
 
+# Sections 125.8 and 125.9.  Three legacy bug reports, each a value of type
+# [any] reaching a position that needs a real type, each of which used to
+# produce OCaml that did not compile.  The .out.expected is the assertion:
+# every line is a value that had to survive a coercion.  The greps pin the
+# two shapes that are invisible in the output -- the inner match section 115
+# splits out of a tuple pattern under an [any] field, and the absence of one
+# where the field's type is concrete.
+CUSTARD_TESTS += AnyPat
+FLAGS_AnyPat = --warn_error -367
+GREP_AnyPat += "| (y, z) -> (AnyPat_PStrings"
+GREP_AnyPat += "| { u__0 = s; u__1 = z; _ } -> (AnyPat_BString"
+GREP_AnyPat += "u__2 = (z, tmp); _ } -> (AnyPat_PNats (z, z))"
+NOGREP_AnyPat += "Obj.magic (Obj.magic"
+
 # Section 125.5.  [nan] and [inf] are of_literal's two non-decimal spellings.
 # Seventeen checks of the two IEEE 754 properties a program can actually
 # observe -- a NaN is unordered with everything including itself, an infinity
