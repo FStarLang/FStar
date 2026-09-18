@@ -55,6 +55,7 @@ type fsteps = {
      dont_unfold_attr : option (list I.lid);
      pure_subterms_within_computations : bool;
      simplify : bool;
+     unit_binders : bool;
      erase_universes : bool;
      allow_unbound_universes : bool;
      reify_ : bool; // 'reify' is reserved

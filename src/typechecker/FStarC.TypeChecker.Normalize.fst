@@ -2389,7 +2389,70 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : ML (term & 
             || (Ident.lid_equals l PC.exn_lid)
         | _ -> false
     in
+    (* Does [t] mention a label? Labels carry the message and range that error
+       reporting uses to localize a failure; if a refinement carries one, turning
+       it into a hypothesis would move the label out of goal position and we
+       would report a coarser enclosing label instead. Bounded, like the rest of
+       the simplifier. *)
+    let has_label (t:term) : ML bool =
+        let budget = mk_ref 100 in
+        let rec aux (t:term) : ML bool =
+          if !budget <= 0 then true
+          else begin
+            budget := !budget - 1;
+            match (SS.compress t).n with
+            | Tm_meta {meta=Meta_labeled _} -> true
+            | Tm_meta {tm} -> aux tm
+            | Tm_ascribed {tm} -> aux tm
+            | Tm_app _ ->
+              let hd, args = U.head_and_args_full t in
+              (match (U.un_uinst hd).n with
+               | Tm_fvar fv when S.fv_eq_lid fv PC.labeled_lid -> true
+               | _ -> aux hd || args |> List.existsb (fun (a, _) -> aux a))
+            | Tm_abs {body} -> aux body
+            | Tm_refine {b=x; phi} -> aux x.sort || aux phi
+            | _ -> false
+          end
+        in
+        aux t
+    in
+    (* [unit_refinements ty] checks whether [ty] is (a nest of refinements over)
+       the unit type, e.g. [u:unit{p}] or [squash p]. If so, it returns the
+       refinement formulas, already instantiated at the unit constant.
+
+       Since unit is a singleton, [forall (x:ty). q] is then equivalent to
+       [p1 /\ ... /\ pn ==> q[()/x]], which is both smaller and easier to read
+       in an error message than a quantifier over a refinement type. *)
+    let unit_refinements (ty:typ) : ML (option (list term)) =
+        let is_prims_unit (t:typ) : ML bool =
+          match (SS.compress t).n with
+          | Tm_fvar fv -> S.fv_eq_lid fv PC.unit_lid
+          | _ -> false
+        in
+        let rec aux (t:typ) (out:list term) : ML (option (list term)) =
+          let t = U.unmeta (U.unascribe t) in
+          match (SS.compress t).n with
+          | Tm_refine {b=x; phi} ->
+            let bs, phi = SS.open_term [S.mk_binder x] phi in
+            let x = (List.hd bs).binder_bv in
+            aux x.sort (SS.subst [NT (x, U.exp_unit)] phi :: out)
+          | _ ->
+            (* NB: not U.is_unit, which also holds of `squash p` and would
+               hence silently drop the refinement `p`. *)
+            match U.is_squash t with
+            | Some p -> Some (p::out)
+            | None -> if is_prims_unit t then Some out else None
+        in
+        aux ty []
+    in
     let simplify arg = (simp_t (fst arg), arg) in
+    (* [arg] is known to be [False] up to metas. Returning it unchanged rather
+       than a fresh [t_false] keeps any Meta_labeled node on it, which is what
+       error reporting uses to say *which* sub-goal failed. Semantically the
+       two are the same formula. *)
+    let keep_false (arg:term) : ML term =
+        if has_label arg then arg else w U.t_false
+    in
     match is_forall_const cfg tm with
     (* We need to recurse, and maybe reduce further! *)
     | Some tm' ->
@@ -2412,8 +2475,8 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : ML (term & 
         then match args |> List.map simplify with
              | [(Some true, _); (_, (arg, _))]
              | [(_, (arg, _)); (Some true, _)] -> arg, false
-             | [(Some false, _); _]
-             | [_; (Some false, _)] -> w U.t_false, false
+             | [(Some false, (arg, _)); _]
+             | [_; (Some false, (arg, _))] -> keep_false arg, false
              | _ -> tm, false
         else if S.fv_eq_lid fv PC.or_lid
         then match args |> List.map simplify with
@@ -2470,7 +2533,32 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : ML (term & 
                        (match simp_t body with
                        | Some true -> w U.t_true, false
                        | Some false when clearly_inhabited ty -> w U.t_false, false
-                       | _ -> tm, false)
+                       | _ ->
+                         (* Since unit is a singleton, ∀(x:unit{p}). q is just
+                            p ==> q[()/x].
+
+                            This is deliberately *not* part of Simplify: it
+                            destroys the `forall x y. p x y` shape that the
+                            WP-extensionality rule (is_forall_const) matches on.
+                            It is only enabled for VCs on their way to the SMT
+                            solver, where it also makes the printed proof state
+                            match what we actually send. *)
+                         if not cfg.steps.unit_binders
+                            || Options.Ext.enabled "compat:vc_unit_binders"
+                         then tm, false else
+                         match unit_refinements ty with
+                         | Some fs when not (List.existsb has_label fs) ->
+                           (* Substitute directly rather than applying [t] to ()
+                              and letting a renorm pass beta-reduce it: that is
+                              simpler, and avoids renormalizing the body. *)
+                           let bs, body, rc = U.abs_formals_maybe_unascribe_body false t in
+                           (match bs with
+                            | b::bs' ->
+                              let body = if Nil? bs' then body else U.abs bs' body rc in
+                              let body = SS.subst [NT (b.binder_bv, U.exp_unit)] body in
+                              w (U.mk_imp (U.mk_conj_l fs) body), false
+                            | [] -> tm, false)
+                         | _ -> tm, false)
                      | _ -> tm, false
                end
              | _ -> tm, false

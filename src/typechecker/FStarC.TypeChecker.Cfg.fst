@@ -51,6 +51,7 @@ let steps_to_string f : ML string =
     dont_unfold_attr = %s;\n\
     pure_subterms_within_computations = %s;\n\
     simplify = %s;\n\
+    unit_binders = %s;\n\
     erase_universes = %s;\n\
     allow_unbound_universes = %s;\n\
     reify_ = %s;\n\
@@ -85,6 +86,7 @@ let steps_to_string f : ML string =
     f.dont_unfold_attr |> show;
     f.pure_subterms_within_computations |> show;
     f.simplify |> show;
+    f.unit_binders |> show;
     f.erase_universes |> show;
     f.allow_unbound_universes |> show;
     f.reify_ |> show;
@@ -121,6 +123,7 @@ instance deq_fsteps : deq fsteps = {
             f1.dont_unfold_attr =? f2.dont_unfold_attr &&
             f1.pure_subterms_within_computations =? f2.pure_subterms_within_computations &&
             f1.simplify =? f2.simplify &&
+            f1.unit_binders =? f2.unit_binders &&
             f1.erase_universes =? f2.erase_universes &&
             f1.allow_unbound_universes =? f2.allow_unbound_universes &&
             f1.reify_ =? f2.reify_ &&
@@ -159,6 +162,7 @@ let default_steps : fsteps = {
     dont_unfold_attr = None;
     pure_subterms_within_computations = false;
     simplify = false;
+    unit_binders = false;
     erase_universes = false;
     allow_unbound_universes = false;
     reify_ = false;
@@ -210,6 +214,7 @@ let fstep_add_one s fs : ML fsteps =
          Some (List.map (fun s -> (Ident.path_of_text s, true)) strs, false) }
     | PureSubtermsWithinComputations ->  { fs with pure_subterms_within_computations = true }
     | Simplify ->  { fs with simplify = true }
+    | UnitBinders ->  { fs with unit_binders = true }
     | EraseUniverses ->  { fs with erase_universes = true }
     | AllowUnboundUniverses ->  { fs with allow_unbound_universes = true }
     | Reify ->  { fs with reify_ = true }
