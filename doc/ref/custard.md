@@ -21020,6 +21020,38 @@ for the version and not for the command because an older SDK does read a
 from anything a reader of this suite would recognize.  The two rejection
 tests, `FSNoReal` and `FSPun`, need no SDK and always run.
 
+### 122.16 The toolchain
+
+Targeting .NET 10 means the repository has to install it, and Ubuntu's
+archive carries whichever SDK was current when the release was cut.  So
+the devcontainer and `.github/actions/setup-fstar-deps` both go through
+Microsoft's `dotnet-install.sh` --- channel `10.0` --- rather than apt,
+and the three images under `.docker/` take the matching tarball.
+`DOTNET_ROOT` is exported alongside the `PATH` entry, because without it
+a published apphost looks for its runtime under the system install and
+does not find one.
+
+Moving the whole repository to one SDK rather than installing two meant
+bringing the legacy F# path along: `fsharp/global.json` and its
+counterpart under `fsharp/VS`, and the `net8.0` target frameworks in
+`fsharp/tests` and the three `.fsproj`s under `examples`.  That is the
+unmaintained backend this section opened by declining to build on, and
+it does still build --- after one fix.
+
+`dotnet build -c Release` of `ulibfs` failed with FS2014, "duplicate
+entry `get_x@10` in method table", in the type `FStar_UInt128`.  The
+cause is worth recording because nothing about the message says it: the
+F# 10 optimizer names a closure it inlines after the parameter and the
+*line* it came from, with no reference to the file it came from.
+`FStar_UInt32.uint_to_t` and `FStar_UInt64.uint_to_t` were both `x` on
+line 10, `FStar_UInt128` converts at both widths, and inlining both put
+two classes called `x@10` into one type.  It is a compiler defect, it
+only appears under `--optimize+`, and the alternative fix --- turning
+the optimizer off for the library --- would have hidden it.  The
+parameter of the `FStar.UInt32` one is renamed, with a comment saying
+why, since a future edit that renames it back would fail three files
+away from the change.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -21365,3 +21397,4 @@ tests, `FSNoReal` and `FSPun`, need no SDK and always run.
 | M10ιΤ | `Pulse.Lib.Comment` | Master gave Pulse `LowStar.Comment`'s two functions and a karamel extension to realize them. Custard had no equivalent and compiled them from their F\* bodies, which threw the text away and left a call to an emitted no-op. The IR gains `Commented (before, after)` as a one-operand `op` rather than a node of `expr'`, so that the thirty-odd exhaustive matches on `expr'` carry it through without a case apiece; the standalone form is the same node with a unit operand. What stops it being deleted is `is_droppable`, not the effect: an `E_Impure` comment cannot sit inside an operation's argument, so the binding the feature exists for gained a temporary whose only purpose was to hold a comment. `comment_gen` takes its operand's effect and travels with the value; `comment` stays impure because it is a statement. Text that is not a literal, or that contains `*/`, is refused at the rule as error 394. Four regression tests. §120 |
 | M10ιΥ | Round 4's structural review: a traversal combinator, per-program state, one emitted name (§121) | Done.  An advisory round rather than a defect report: no bugs, but a measurement that the two mechanisms behind essentially every defect found so far were hand-written traversals and process-global state with convention-gated name minting.  `Syntax` gains `children` and `map_children` --- the only two exhaustive walks in the package now --- with `iter_children`, `fold_children`, `exists_child` and `for_all_children` derived from the first; a binder is deliberately not a child, so a pass with an opinion about a binding form has to say so against a default.  Twenty-three walks in `Simplify` and one in `RegEmb` are now their interesting cases plus a fall-through, and `Simplify` loses 334 lines.  `Layout.rw_expr`, `Monomorphize.mono_expr` and `Rename.rn_expr` stay written out because they rewrite types as well as children, and `coerce_prog` stays because every arm of it has an opinion --- which is now visible as an exception rather than lost in boilerplate, and that was the §117 `EIf`-condition defect's root cause.  `PrintC.reset_program_state` lists all twenty-two per-program variables in one place, where `print_program` used to reset thirteen by hand and leave nine.  `PrintC.emitted_name` is the single spelling of a declaration, read by the `taken_names` seeding, the collision check, the `externs` table and an external's prototype --- §117.2 and §117.3 were both a name allocated against a set that did not contain everything the file would contain.  `Section 18.4`, cited twice and never written, becomes §19.2 and §19.3, and `tests/custard/checkrefs.py` (`make check-refs`) now holds all 922 citations.  Splitting `Extract.fst` along its banners is declined on the record: weakly held by the reporter, navigability only, and churn during an active review |
 | M10ιΦ | An F# backend, targeting .NET 10 | F\* has had an F# backend since long before Custard and it has been unmaintained long enough that its output no longer compiles: what it emits is indentation a current F# compiler refuses.  So `FStarC.Custard.PrintFSharp` is new code against the IR rather than a port.  The output is a *project* --- the module, an embedded support library, and an `.fsproj` naming `net10.0` --- so that `dotnet build` in the directory Custard wrote is the whole build story.  Indentation is the difficulty: `after`/`col_after` render every subterm at its true column, and `col_after` must scan backwards to the last newline or the printer is super-linear (the first version had not finished `LetShare` after half an hour; it now takes 21s).  Keyword escaping is F#'s backtick quote, which is injective by construction and so avoids §115's `method`/`method_` problem; type variables cannot be quoted and use a doubling escape instead, since `t'` would otherwise print as a character literal.  `TAny` is `obj` and `Obj.magic` has no counterpart --- .NET has no uniform representation --- so a scrutinee typed `obj` is unboxed before matching against constant patterns, and a coercion between two instantiations of one type constructor is refused as error 395 rather than emitted as an `unbox` that throws.  `System.UInt128`/`Int128` give §119 a second target; they have no literal and no `~~~`.  `--custard_split` and `--custard_unit` are refused.  21 programs are extracted, compiled and run in CI when a .NET 10 SDK is present, plus two rejection tests that always run; that leg found five defects in the backend and one latent one in the OCaml backend (a dropped unit binder whose arrow type kept its domain --- `UnitPtr`'s OCaml output does not compile, and nothing in the suite had compiled it). §122 |
+| M10ιΧ | The repository moves to the .NET 10 SDK | §122 targets .NET 10, so the devcontainer, `.github/actions/setup-fstar-deps` and the three `.docker/` images install it --- through Microsoft's `dotnet-install.sh` and tarball rather than apt, since Ubuntu's archive carries whichever SDK was current when the release was cut --- and `DOTNET_ROOT` is exported alongside the `PATH` entry, without which a published apphost looks for its runtime under the system install.  One SDK rather than two means the legacy F# path comes along: the two `global.json`s and the `net8.0` target frameworks under `fsharp/tests` and `examples`.  It builds, after one fix: `ulibfs` failed to compile at `-c Release` with FS2014, "duplicate entry `get_x@10` in method table".  The F# 10 optimizer names an inlined closure after its parameter and the *line* it came from and not the file, `FStar_UInt32.uint_to_t` and `FStar_UInt64.uint_to_t` were both `x` on line 10, and `FStar_UInt128` inlines both.  A compiler defect, visible only under `--optimize+`; the parameter of one of them is renamed with a comment, rather than the optimizer turned off, so that the defect stays visible. §122.16 |

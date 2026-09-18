@@ -14,9 +14,13 @@ inputs:
     required: false
     default: 'domainslib'
   dotnet:
-    description: 'Install a .NET 8 SDK (needed for the F# library and its tests).'
+    description: 'Install a .NET SDK (needed for the F# library and its tests).'
     required: false
     default: 'false'
+  dotnet-channel:
+    description: 'Channel passed to dotnet-install.sh. F* targets the latest LTS.'
+    required: false
+    default: '10.0'
 
 runs:
   using: composite
@@ -43,16 +47,30 @@ runs:
           unzip \
           wget
 
-    - name: Install .NET 8 SDK
+    # The runner image and Ubuntu's archive both carry whichever SDK was
+    # current when they were cut, which is not necessarily the one F* targets,
+    # so this goes through Microsoft's installer.  DOTNET_ROOT has to be
+    # exported as well as the PATH: without it a published apphost looks for
+    # its runtime under the system install and does not find one.
+    - name: Install .NET SDK
       if: inputs.dotnet == 'true'
       shell: bash
       run: |
         set -eu
-        if dotnet --list-sdks 2>/dev/null | grep -q '^8\.'; then
-          echo ">>> .NET 8 SDK already present"
-        else
-          sudo apt-get install -y -qq dotnet-sdk-8.0
+        major=${{ inputs.dotnet-channel }}
+        major=${major%%.*}
+        if dotnet --list-sdks 2>/dev/null | grep -q "^$major\."; then
+          echo ">>> .NET $major SDK already present"
+          exit 0
         fi
+        curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh
+        bash /tmp/dotnet-install.sh \
+          --channel '${{ inputs.dotnet-channel }}' \
+          --install-dir "$HOME/.dotnet"
+        echo "$HOME/.dotnet" >> "$GITHUB_PATH"
+        echo "DOTNET_ROOT=$HOME/.dotnet" >> "$GITHUB_ENV"
+        echo "DOTNET_CLI_TELEMETRY_OPTOUT=1" >> "$GITHUB_ENV"
+        echo "DOTNET_NOLOGO=1" >> "$GITHUB_ENV"
 
     - name: Compute cache keys
       id: keys
