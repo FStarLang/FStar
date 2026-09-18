@@ -21157,6 +21157,43 @@ in one file and not the other, and a pin over the pair cannot state it.
 `CHGREP_X` and `CHNOGREP_X` are the same two pins scoped to the header,
 and the four new tests use them on both sides of each decision.
 
+## 124 Two F# flags that no longer exist
+
+§122.16 moved the repository to the .NET 10 SDK and `make fsharp-all`
+passed, so the two legacy F# test projects under `fsharp/tests` were
+assumed to have come along with everything else.  CI disagreed: both
+failed to compile, with `FS0243: Unrecognized option: '--mlcompatibility'`
+and `FS3880: Language version '5.0' is out of support`.
+
+### 124.1 The flags
+
+`Hello.fsproj` and `Test00.fsproj` --- and nothing else in the repository
+--- passed `--mlcompatibility --langversion:5.0`.  Neither is load-bearing
+here.  `--mlcompatibility` exists for OCaml-shaped source and these two
+projects compile a *generated* F# module plus `ulibfs`, which does not
+ask for it.  `--langversion:5.0` was buying exactly one thing, the
+non-conforming indentation that `ulibfs.fsproj` obtains from
+`--strict-indentation-`, which is still supported.  So both projects now
+carry `ulibfs`'s own flags, which is what they should have said in the
+first place: they compile against it.  Doing so is a strict improvement
+independently of the SDK, because a test project and the library it links
+disagreeing about the language version is not a property anyone wanted.
+
+### 124.2 Why it did not reproduce
+
+The interesting half is that this was a CI-only failure of a change that
+had been built and run locally.  `setup-fstar-deps` skipped the install
+whenever `dotnet --list-sdks` already reported an SDK with the requested
+major version, which on a GitHub runner it does.  Both machines therefore
+reported ".NET 10" and ran different compilers, and the difference was
+large enough to contain two removed flags.
+
+The skip is gone; the channel is installed unconditionally and the step
+echoes the resulting version, which costs about half a minute and buys
+the property that the SDK CI uses is the one the channel names.  A cache
+hit on the image is not worth an environment that cannot be reproduced,
+and this is the failure mode that argument predicts.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -21504,3 +21541,4 @@ and the four new tests use them on both sides of each decision.
 | M10ιΦ | An F# backend, targeting .NET 10 | F\* has had an F# backend since long before Custard and it has been unmaintained long enough that its output no longer compiles: what it emits is indentation a current F# compiler refuses.  So `FStarC.Custard.PrintFSharp` is new code against the IR rather than a port.  The output is a *project* --- the module, an embedded support library, and an `.fsproj` naming `net10.0` --- so that `dotnet build` in the directory Custard wrote is the whole build story.  Indentation is the difficulty: `after`/`col_after` render every subterm at its true column, and `col_after` must scan backwards to the last newline or the printer is super-linear (the first version had not finished `LetShare` after half an hour; it now takes 21s).  Keyword escaping is F#'s backtick quote, which is injective by construction and so avoids §115's `method`/`method_` problem; type variables cannot be quoted and use a doubling escape instead, since `t'` would otherwise print as a character literal.  `TAny` is `obj` and `Obj.magic` has no counterpart --- .NET has no uniform representation --- so a scrutinee typed `obj` is unboxed before matching against constant patterns, and a coercion between two instantiations of one type constructor is refused as error 395 rather than emitted as an `unbox` that throws.  `System.UInt128`/`Int128` give §119 a second target; they have no literal and no `~~~`.  `--custard_split` and `--custard_unit` are refused.  21 programs are extracted, compiled and run in CI when a .NET 10 SDK is present, plus two rejection tests that always run; that leg found five defects in the backend and one latent one in the OCaml backend (a dropped unit binder whose arrow type kept its domain --- `UnitPtr`'s OCaml output does not compile, and nothing in the suite had compiled it). §122 |
 | M10ιΧ | The repository moves to the .NET 10 SDK | §122 targets .NET 10, so the devcontainer, `.github/actions/setup-fstar-deps` and the three `.docker/` images install it --- through Microsoft's `dotnet-install.sh` and tarball rather than apt, since Ubuntu's archive carries whichever SDK was current when the release was cut --- and `DOTNET_ROOT` is exported alongside the `PATH` entry, without which a published apphost looks for its runtime under the system install.  One SDK rather than two means the legacy F# path comes along: the two `global.json`s and the `net8.0` target frameworks under `fsharp/tests` and `examples`.  It builds, after one fix: `ulibfs` failed to compile at `-c Release` with FS2014, "duplicate entry `get_x@10` in method table".  The F# 10 optimizer names an inlined closure after its parameter and the *line* it came from and not the file, `FStar_UInt32.uint_to_t` and `FStar_UInt64.uint_to_t` were both `x` on line 10, and `FStar_UInt128` inlines both.  A compiler defect, visible only under `--optimize+`; the parameter of one of them is renamed with a comment, rather than the optimizer turned off, so that the defect stays visible. §122.16 |
 | M10ιΨ | Two support blocks leave the C header | A generated header is a file a person reads, and every one of them carried eleven lines of `custard_unit` typedef plus, for any program touching a 16-bit float, forty lines of §98 reference material.  Both are now emitted only into a file that mentions the names, which for `custard_unit` is usually neither file: the type is still reachable --- a `ref unit` is a `custard_unit *` and a `noeq` record can hold one --- but the layout pass erases unit fields, a unit-returning function is `void`, and §32.6 drops unit arguments, so the token appeared in the whole 160-program corpus exactly as often as the typedef was emitted and not once more.  The float16 block keeps its `#error` and loses the comment, which is reference material and belongs in the reference; the message names the macro, the attribute and §98.  In the header the check still comes after the `@@custard_c_header` includes, since that is what makes it satisfiable.  Placement is decided by asking whether a rendered file mentions the names, which replaces the `uses_narrow` flag --- set in five places, reset in two --- and is strictly better, because a flag can say that a unit uses a narrow float but not which of its two files does.  `CHGREP_X`/`CHNOGREP_X` pin the header alone, since `CGREP` is over the pair and the whole claim is about which file.  Four new tests, on both sides of each decision. §123 |
+| M10ιΩ | Two F# flags that no longer exist | §122.16's SDK bump left the two legacy projects under `fsharp/tests` passing `--mlcompatibility --langversion:5.0`, which the F# 10 compiler removed and stopped supporting respectively.  Neither was load-bearing: the first is for OCaml-shaped source and these projects compile generated F# against `ulibfs`, and the second was buying the non-conforming indentation that `--strict-indentation-` still gives.  Both projects now carry `ulibfs`'s flags, which is what a project compiling against it should say.  The more useful half is why `make fsharp-all` passed locally and failed in CI: `setup-fstar-deps` skipped the install whenever the image already reported an SDK with the requested major version, so both machines said ".NET 10" and ran different compilers.  The channel is now installed unconditionally and the step echoes the version. §124 |

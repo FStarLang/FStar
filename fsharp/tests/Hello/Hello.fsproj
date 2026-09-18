@@ -2,7 +2,12 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>Exe</OutputType>
-    <OtherFlags>--mlcompatibility --langversion:5.0</OtherFlags>
+    <!-- These match ulibfs.fsproj, which is what this project compiles
+         against.  They used to be the mlcompatibility and langversion:5.0
+         flags; the F# 10 compiler removed the first outright and dropped
+         support for the second, and the only thing either was still buying
+         was the non-conforming indentation that strict-indentation- allows. -->
+    <OtherFlags>--nowarn:0086 --nowarn:58 --strict-indentation- --nologo</OtherFlags>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="_output/Hello.fs" />

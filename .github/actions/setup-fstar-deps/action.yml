@@ -52,17 +52,19 @@ runs:
     # so this goes through Microsoft's installer.  DOTNET_ROOT has to be
     # exported as well as the PATH: without it a published apphost looks for
     # its runtime under the system install and does not find one.
+    #
+    # The channel is installed unconditionally rather than skipped when the
+    # image happens to carry an SDK with the same major version.  Skipping is
+    # what makes CI disagree with a developer's machine about which compiler
+    # is being used while both report the same major version, and that
+    # disagreement is not theoretical: it is how two F# flags that this
+    # repository had been passing for years were found to have been removed,
+    # by a CI failure that did not reproduce locally.
     - name: Install .NET SDK
       if: inputs.dotnet == 'true'
       shell: bash
       run: |
         set -eu
-        major=${{ inputs.dotnet-channel }}
-        major=${major%%.*}
-        if dotnet --list-sdks 2>/dev/null | grep -q "^$major\."; then
-          echo ">>> .NET $major SDK already present"
-          exit 0
-        fi
         curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh
         bash /tmp/dotnet-install.sh \
           --channel '${{ inputs.dotnet-channel }}' \
@@ -71,6 +73,7 @@ runs:
         echo "DOTNET_ROOT=$HOME/.dotnet" >> "$GITHUB_ENV"
         echo "DOTNET_CLI_TELEMETRY_OPTOUT=1" >> "$GITHUB_ENV"
         echo "DOTNET_NOLOGO=1" >> "$GITHUB_ENV"
+        "$HOME/.dotnet/dotnet" --version
 
     - name: Compute cache keys
       id: keys
