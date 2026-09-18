@@ -21743,9 +21743,35 @@ they exist to be compared against.
 **The remaining Pulse dirs** --- `pulse/test/pool/{pulse_task,domainslib}`
 and `pulse/share/pulse/examples/dice/cbor` --- are multi-module builds
 with hand-written OCaml or C alongside, linked by a `dune` project or a
-`Makefile` that names the per-module outputs.  Each is a separate piece of
-work, and `pulse/test` itself already runs on Custard
-(`pulse/mk/custard-test.mk`).
+`Makefile` that names the per-module outputs.  `pulse/test` itself
+already runs on Custard (`pulse/mk/custard-test.mk`).
+
+`pulse/test/pool` is blocked on something more interesting than build
+plumbing, and the attempt is worth recording.  Custard compiles
+`Quicksort.Task` happily --- the whole task pool, `Pulse.Lib.Task`
+included, comes out as one 9.7 kB file, and `quicksort` loses the three
+erased arguments the hand-written driver has to pass today.  But
+`Pulse.Lib.Task.spawn_worker` comes out wrong:
+
+```ocaml
+let f = (fun tmp -> (pulse_Lib_Task_worker_thread p)) in
+let tmp = (f ()) in
+(Pulse_Lib_Core.fork_core tmp)
+```
+
+`fork_core`'s argument is
+`f : loc_id -> stt_div unit (loc l' ** on l pre) (fun _ -> emp)`.  The
+`loc_id` is proof-level and erased, which leaves `f` a function of no
+arguments whose result is an `stt_div` --- and an `stt_div` is a
+*suspended* computation under `extract_as_impure_effect` (§7), not a
+value.  Custard applied it, so the worker loop runs inline, in the
+spawning thread, forever.  Warning 382 fired --- "Custard erased 1
+parameter(s) of the external `Pulse.Lib.Core.hide_div`" --- so the
+pipeline noticed; what it did next was wrong.  What has to happen is that
+erasing every parameter of a function whose result is an impure-effect
+computation leaves a `unit` parameter behind rather than forcing it.
+That is Pulse effect handling, not test plumbing, and it belongs with the
+bootstrap.
 
 | M | Deliverable | Notes |
 | --- | --- | --- |
