@@ -2471,9 +2471,21 @@ and emit_alloc (ind:string) (d:dest) (nm:option string)
          already has.  A constant length needs none: the product is a constant
          expression the C compiler folds, and a comparison it can decide is
          one [-Wall] would rather not see. *)
+      (* Section 128.1.  Through a [size_t] temporary, rather than comparing
+         the length expression itself.  A length whose C type is narrower
+         than [size_t] -- a [uint32_t], which most of them are -- makes the
+         comparison decidable on a 64-bit target, and [-Wextra] reports a
+         decidable comparison as [-Wtype-limits]: the DICE example is built
+         with [-Werror] and its [uint8_t] buffers stopped compiling.  The
+         check is not pointless, because [size_t] is 32 bits wide on a
+         32-bit target and the product does overflow there; it is the *type*
+         of the operand that the warning reads, and a [size_t] variable has
+         the full range whatever the value assigned to it. *)
       (if Some? const_len then ""
-       else ind ^ "if (" ^ group dlv ^ " > SIZE_MAX / sizeof(" ^ elt ^
-            ")) { abort(); }\n") ^
+       else let n = fresh "sz" in
+            ind ^ "{ size_t " ^ n ^ " = (size_t)" ^ group dlv ^ ";\n" ^
+            ind ^ "  if (" ^ n ^ " > SIZE_MAX / sizeof(" ^ elt ^
+            ")) { abort(); } }\n") ^
       ind ^ elt ^ " *" ^ arr ^ " = (" ^ elt ^ " *)malloc(" ^ group dlv ^
       " * sizeof(" ^ elt ^ "));\n" ^
       ind ^ "if (" ^ arr ^ " == NULL) { abort(); }\n" in

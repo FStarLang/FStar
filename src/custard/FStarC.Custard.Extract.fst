@@ -1419,6 +1419,17 @@ let compile_time_steps : list TcEnv.step = [
 ]
 
 
+(* Section 128.2.  The backends that emit C, or C through karamel; the Rust
+   one is included because it reaches the same declarations by the same
+   route, and a module realized outside F* is realized there too. *)
+let is_c_backend () : ML bool =
+  let b = Options.custard_backend () in
+  b = "C" || b = "KrmlC" || b = "KrmlRust"
+
+let c_realized_header (l:Ident.lident) : ML (option string) =
+  Builtins.c_realization_header
+    (Builtins.no_fstar_stubs (Ident.ns_of_lid l |> List.map Ident.string_of_id))
+
 let rec request (st:state) (k:spec_key) : ML name =
   Prof.timed "request" (fun () ->
   let k = { k with sk_lid = unstub_lid st k.sk_lid } in
@@ -4091,7 +4102,7 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
          below. *)
     let typars, ty = external_ty st l margs in
     DExternal { dx_name = nm; dx_typars = typars; dx_ty = ty; dx_target = None;
-                dx_header = None;
+                dx_header = (if is_c_backend () then c_realized_header l else None);
                 dx_flags = if is_modelled_lid l then [Modelled] else [] }
   | Some se ->
     let d = Prof.timed "extract_sigelt"
@@ -4110,7 +4121,10 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
     let inlined = se.sigquals |> List.existsb (fun q ->
                     q = S.Inline_for_extraction ||
                     q = S.Unfold_for_unification_and_vcgen) in
-    let d = if is_realized && not inlined then with_realized d else d in
+    let d = if not (is_realized && not inlined) then d
+            else (match (if is_c_backend () then c_realized_header l else None) with
+                  | Some h -> with_c_realized h d
+                  | None -> with_realized d) in
     let d = if is_modelled_lid l && not inlined then with_modelled d else d in
     if is_inlinable se && not (is_root st l)
     then with_inline d else d
@@ -4327,6 +4341,24 @@ and with_realized (d:decl) : ML decl =
   | DType t -> DType { t with dt_flags = Realized :: t.dt_flags }
   | d -> d
 
+(* Section 128.2.  On a C backend, a module realized in C as well has no F*
+   shape to keep: the header's declaration is the type, and the F* one is the
+   model that was compiled away.  So the declaration becomes abstract and
+   carries the header, which is exactly what an [@@custard_extern] type gets.
+   [Realized] is deliberately *not* added on top -- it means "hand-written
+   OCaml", and here the answer comes from the C side. *)
+and with_c_realized (h:string) (d:decl) : ML decl =
+  match d with
+  | DType t ->
+    (* The target name is written down rather than left to the printer's own
+       spelling of [dt_name]: on the karamel path a type Custard does not emit
+       is still a lident in Custard's namespace, and only an [Extern] carrying
+       a name reaches the rename table that strips it. *)
+    DType { t with dt_body = TAbstract;
+            dt_flags = Extern (Some (mangled_name t.dt_name), Some h)
+                       :: NoNewtype :: t.dt_flags }
+  | d -> d
+
 (* Section 20.  Unlike {!with_realized} this marks values too: a model's
    operations are karamel's to translate, at their use sites, so Custard must
    emit no declaration for them either.  Everything else about the declaration
@@ -4487,7 +4519,15 @@ and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
        them. *)
     let res = ty_of_typ st (Effects.result_typ (tcenv st) c) in
     let e = eff_of_comp st c in
-    let vs = drop_flagged (Mono.erased_binders (tcenv st) (U.arrow keep c)) keep in
+    (* Section 128.  [keep_thunk], as a definition's own binders get: an
+       external whose every binder is erased in front of an impure codomain
+       would otherwise be declared as a *value*, and every call site -- which
+       computes its spine from the same F* type and therefore does apply the
+       thunk -- would be applying something the declaration says is not a
+       function.  Pulse's [new_lock (v:slprop)] is exactly that. *)
+    let flags = Mono.keep_thunk (tcenv st) keep c
+                  (Mono.erased_binders (tcenv st) (U.arrow keep c)) in
+    let vs = drop_flagged flags keep in
     (* Section 49.3.  Erasure is Custard's own business everywhere except here.
        An external's prototype is fixed outside F*, in a header Custard cannot
        see, so dropping a binder changes the emitted call's arity against a
@@ -4525,7 +4565,7 @@ and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
       match (SS.compress t).n with
       | Tm_arrow _ -> false
       | _ -> TcEnv.non_informative (tcenv st) t in
-    let dropped = List.zip keep (Mono.erased_binders (tcenv st) (U.arrow keep c))
+    let dropped = List.zip keep flags
                   |> List.collect (fun (b, e) ->
                        if e && not (is_type_binder (tcenv st) b)
                           && not (declared_erased b)
@@ -4545,11 +4585,17 @@ and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
               [erased t], which says so and silences this."];
 
 
+    (* A binder the rule above put back carries nothing -- its argument is
+       [()], as [Mono.unit_binders] tells the call site -- so [unit] is its
+       type and not whatever its sort says (section 72.2). *)
+    let bty (b:S.binder) : ML cty =
+      if Mono.is_erased_binder (tcenv st) b then TUnit
+      else ty_of_typ st b.binder_bv.sort in
     let rec build (bs:binders) : ML cty =
       match bs with
       | [] -> res
-      | [b] -> TArrow (ty_of_typ st b.binder_bv.sort, e, res)
-      | b :: bs -> TArrow (ty_of_typ st b.binder_bv.sort, E_Pure, build bs) in
+      | [b] -> TArrow (bty b, e, res)
+      | b :: bs -> TArrow (bty b, E_Pure, build bs) in
     (typars, subst_cty (anys |> List.map (fun a -> (a, TAny))) (build vs))
 
 and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))

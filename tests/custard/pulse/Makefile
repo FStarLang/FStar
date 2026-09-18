@@ -369,7 +369,10 @@ C_TESTS += AllocOverflow
 # it at a literal, which is a constant product the C compiler folds and which
 # needs no test.
 EXTRA_AllocOverflow = --custard_entry AllocOverflow.run
-CGREP_AllocOverflow += "if ((n) > SIZE_MAX / sizeof(uint32_t)) { abort(); }"
+# Section 128.3.  Through a size_t temporary, whose name is generated; the
+# two halves are tested separately for that reason.
+CGREP_AllocOverflow += "= (size_t)(n);"
+CGREP_AllocOverflow += "> SIZE_MAX / sizeof(uint32_t)) { abort(); }"
 CGREP_AllocOverflow += "malloc((n) * sizeof(uint32_t))"
 # The constant-length call needs no test of its own.
 CNOGREP_AllocOverflow += "4 > SIZE_MAX"
