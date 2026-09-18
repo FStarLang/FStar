@@ -21746,32 +21746,30 @@ with hand-written OCaml or C alongside, linked by a `dune` project or a
 `Makefile` that names the per-module outputs.  `pulse/test` itself
 already runs on Custard (`pulse/mk/custard-test.mk`).
 
-`pulse/test/pool` is blocked on something more interesting than build
-plumbing, and the attempt is worth recording.  Custard compiles
-`Quicksort.Task` happily --- the whole task pool, `Pulse.Lib.Task`
-included, comes out as one 9.7 kB file, and `quicksort` loses the three
-erased arguments the hand-written driver has to pass today.  But
-`Pulse.Lib.Task.spawn_worker` comes out wrong:
+`pulse/test/pool` was blocked on something more interesting than build
+plumbing.  Custard compiles `Quicksort.Task` happily --- the whole task
+pool, `Pulse.Lib.Task` included, comes out as one 9.7 kB file, and
+`quicksort` loses the three erased arguments the hand-written driver has
+to pass today --- but `Pulse.Lib.Task.spawn_worker` came out wrong: the
+worker loop ran inline, in the spawning thread, forever, instead of being
+forked.  §127 is that defect and its fix; the first diagnosis written
+here, that Custard had erased the thunk's only parameter and then forced
+it, was wrong, and §127.1 says what the shape really was.
 
-```ocaml
-let f = (fun tmp -> (pulse_Lib_Task_worker_thread p)) in
-let tmp = (f ()) in
-(Pulse_Lib_Core.fork_core tmp)
-```
-
-`fork_core`'s argument is
-`f : loc_id -> stt_div unit (loc l' ** on l pre) (fun _ -> emp)`.  The
-`loc_id` is proof-level and erased, which leaves `f` a function of no
-arguments whose result is an `stt_div` --- and an `stt_div` is a
-*suspended* computation under `extract_as_impure_effect` (§7), not a
-value.  Custard applied it, so the worker loop runs inline, in the
-spawning thread, forever.  Warning 382 fired --- "Custard erased 1
-parameter(s) of the external `Pulse.Lib.Core.hide_div`" --- so the
-pipeline noticed; what it did next was wrong.  What has to happen is that
-erasing every parameter of a function whose result is an impure-effect
-computation leaves a `unit` parameter behind rather than forcing it.
-That is Pulse effect handling, not test plumbing, and it belongs with the
-bootstrap.
+What still keeps the directory on the old pipeline is smaller and quite
+separate.  `Pulse.Lib.Task` locks its run queue with
+`Pulse.Lib.SpinLock`, whose `cas` is a *specification* --- a read
+followed by a write, correct in Pulse's atomic semantics and not atomic
+at all once compiled --- and the legacy pipeline never compiles it: the
+Pulse OCaml extraction plugin rewrites `lock`, `new_lock`, `acquire` and
+`release` to OCaml's `Mutex`.  Custard compiles `Pulse.Lib.SpinLock` from
+its Pulse source like anything else (§14.12), which is right for the
+single-threaded C examples and wrong here: the extracted quicksort races
+and reports its output unsorted.  Substituting a `Mutex` for the three
+functions by hand in the generated file makes it print `OK!`, so nothing
+else about the extraction is wrong.  Giving Custard an OCaml realization
+for Pulse's lock primitives is the remaining work, and it is a library
+question rather than a pipeline one.
 
 ### 126.6 A lambda binder of no representation
 
@@ -21847,6 +21845,140 @@ emits an `Exe` exactly when the program has an entry point --- so
 nothing, correctly and silently.  That is a real asymmetry between the two
 backends and it is left standing: Custard compiles standalone programs
 (§4.4), and a standalone program names its entry point.
+
+## 127 A partial application that became a saturated one
+
+`pulse/test/pool` could not move to Custard (§126.5), and the reason was
+not build plumbing.  `Pulse.Lib.Task.spawn_worker` came out as
+
+```ocaml
+let f = (fun tmp -> (pulse_Lib_Task_worker_thread p)) in
+let tmp = (f ()) in
+(Pulse_Lib_Core.fork_core tmp)
+```
+
+`fork_core` takes a *thunk* --- the worker loop, to be run on another
+thread.  What it is given here is the result of running that loop, in the
+spawning thread, forever.
+
+### 127.1 What the shape really was
+
+The first reading was that Custard had erased the thunk's only parameter
+and then forced it.  That is not what happened, and the difference is the
+whole fix.  `fork'` is `inline_for_extraction`, so by the time Custard
+sees it the two lambdas --- its own `f : unit -> stt_div unit ...` and the
+`fn _ { ...; f (); }` block it passes to `fork_core` --- have been
+contracted by the normalizer into one:
+
+```
+let f1 : unit -> l':loc_id{...} -> stt_div unit ...
+       = fun u l' -> worker_thread p in
+fork_core pre l (f1 ())
+```
+
+`f1 ()` is a **partial** application: it supplies the first binder and
+yields the arrow over the second, which is the thunk `fork_core` wants.
+Custard erased `l'`, correctly --- a `loc_id` is proof-level --- and `f1`
+became a function of one argument.  The call site did not change, because
+nothing about it is wrong: it still passes one argument.  It is now
+saturated.
+
+The legacy OCaml backend has the same term and does not have the bug,
+because it keeps every erased parameter as a `unit`:
+`Pulse_Lib_Core.fork_core () () (f1 ())` over
+`let f1 uu___ uu___1 = ...`.  Custard deletes them, which is the point,
+and deleting a *trailing* one changes an arity that a partial application
+was counting on.
+
+It reproduces in nine lines with no Pulse at all:
+
+```fstar
+assume val ext : (G.erased int -> ML unit) -> ML unit
+let spawn (p:int) : ML unit =
+  let f1 (u:unit) (e:G.erased int) : ML unit = work p in
+  ext (f1 ())
+```
+
+### 127.2 The guard was already there, and was too narrow
+
+`Mono.keep_thunk` is exactly the rule for this, and its comment already
+named the hazard --- "any partial application of it at a call site
+silently becomes a saturated one".  It fired in two cases: when *every*
+binder is dropped, and when the last binder is dropped, is **unit-shaped**
+and the codomain is impure.
+
+The unit-shape test was the mistake.  It was there because `unit -> ML a`
+is certainly a thunk and `squash p -> ML a` only might be --- but what
+matters is not what the binder was written as, it is that a caller may
+have been holding the arrow in front of it.  A `G.erased int` binder, or
+an erased `#f:perm` at the end of a Pulse `fn`, is the same hazard
+exactly.  So the second clause is now: the codomain is impure.
+
+Impure in **Custard's** sense, which is why `Mono.impure_codomain` exists.
+A Pulse `fn f () : stt unit` is a `Tot` function returning an `stt`
+value, so `U.is_pure_or_ghost_comp` calls it pure; §7.2's
+`extract_as_impure_effect` attribute on the result's head is what makes
+the arrow impure, and both tests have to be asked.  `keep_thunk`'s first
+clause already declined to test purity at all for this reason; the second
+now tests the right notion of it rather than none.
+
+The lambda case in `Extract`'s `Tm_abs` carries the same guard written out
+--- it has no comp to hand, only a body --- and gained the same second
+clause, reading the purity off `body.eff`, which is Custard's answer
+arrived at by having already translated the body.
+
+With one restriction, which `tests/custard/pulse/ArrowAb` supplied
+immediately: the last binder has to be **explicit**.  F\* instantiates an
+implicit at every application, so no partial application can stop in front
+of one --- the arrow a caller can be holding always ends at the last
+explicit binder, and keeping an implicit past it buys nothing.  It costs
+something, though.  §80.1's record field is
+
+```fstar
+fld: (r: ref bool) -> (c: bool) -> (#p: perm) -> (#v: erased bool) ->
+     stt bool (pts_to r #p v) (fun _ -> pts_to r #p v)
+```
+
+and keeping its `#v` gives the field type a third parameter that the
+projector F\* derives for it has no argument to fill: the projector's body
+applies a value of the *record* type, whose sort is not an arrow, so the
+spine filter there has no binder list to consult and deletes the erased
+arguments outright.  The two answers disagreed and the C backend reported
+the projector as a partial application.  Requiring the binder to be
+explicit makes the case not arise, and is the true statement anyway.
+
+### 127.3 A call through a variable supplies the `()` too
+
+`Extract`'s application path for a head that is not an `fvar` filters the
+spine from the head's own sort, and `Mono.erased_binders_unfold` applies
+`keep_thunk` to it --- so a binder the rule puts back already survives that
+filter.  What came after it did not know: a second pass deleted every
+argument whose *term* is erased, which is exactly the argument for the
+binder just retained.  The call then came out one argument short of the
+arity its callee had been given, which is the same miscount as the defect
+above with the two sides exchanged.
+
+So that path now supplies `()` for such a position, as `Extract.value_args`
+has always done for a call through a name, and deletes only what no binder
+speaks for.  The flags are narrowed alongside the spine as erased arguments
+go, or the `()` lands at the wrong index.
+
+### 127.4 What it costs
+
+A binder `keep_thunk` puts back is emitted as a `unit` and every call site
+passes `()`, which `Mono.unit_binders` and `Extract.value_args` already
+arranged for the clauses that existed.  So the cost is a `unit` parameter
+on any definition whose last binder is erased and whose codomain is
+impure --- which in Pulse code is common, `fork_core`'s callback and the
+Pulse `fn` that implements it being the shape that found it.
+`spawn_worker` gains one.
+
+That is the same parameter the legacy backend keeps, and it is the price
+of an arity that does not depend on whether a call happens to be
+saturated.  Buying it back would mean knowing, for each definition,
+whether any partial application of it survives --- a whole-program
+question that `Simplify`'s `eta_expand_decls` asks for a different reason
+and that is worth revisiting only if the `unit`s show up in a profile.
 
 | M | Deliverable | Notes |
 | --- | --- | --- |
@@ -22205,3 +22337,4 @@ backends and it is left standing: Custard compiles standalone programs
 | M10κΗ | `noextract_to` names a backend (§126.3) | Custard did not know the attribute existed.  The string it carries is a codegen name, and in the wild it means "this one has a hand-written C implementation" --- `FStar.UInt128`, `FStar.SizeT` and `FStar.Endianness` all use it that way.  `noextract_to_this_backend` recognises `Custard` (every Custard backend), the `--custard_backend` value itself, and `krml` for the three backends producing C or Rust, since Custard's C backend reaches those definitions by the route karamel did.  It is not the ML extraction's special case: there `krml` meant "extract a stub and let karamel drop the body" (`karamel_fixup_qual`) because a second pipeline followed; Custard has none, so the definition is simply not a root.  `tests/custard/NoExtractTo.fst` carries one definition per attribute and is extracted twice, each leg checking that its own is gone and the other's survived.  The *reaching* half remains a gap: §4.3 claimed reaching a `noextract` definition is an error with the request chain, which it is not, on either qualifier or attribute; §4.3 now says so.  `tests/extraction`'s four hand-written `--codegen krml` rules move over at the same time --- three asked their question of the legacy extractor's debug output and now ask it of the generated program, and the fourth's `of_literal` injection warning is a Custard error (380). §126.3 |
 | M10κΘ | The Makefiles that are documentation (§126.4) | `tests/simple_hello`, `tests/dune_hello`, `examples/dependencies` and `examples/data_structures` are the answer to "how do I build an F\* program", written as the smallest Makefile that does it; leaving them on the old pipeline would have left the documentation pointing at it.  `examples/dependencies` gets shorter: its four steps --- dependency graph, verify, extract per module, compile and link the `.cmx` files in dependency order --- collapse to one extraction run and one `ocamlopt`, with `ALL_CHECKED_FILES` as the prerequisite since there are no per-module `.ml` files to name.  `examples/data_structures` shows the other half: it built its program by *appending* `let _ = test()` to the extracted module, which works when a module is a compilation unit; under a whole-program compiler `test` is dead code, so the program is built by naming it, `--custard_main RBTreeIntrinsic.test`.  Neither `hello` has a `main`, which is what `--custard_entry_module` is for.  `examples/layeredeffects/extraction` needed a checking pass of its own, since `--codegen OCaml` checked and extracted in one run and Custard reads implementations; its `--no_cmi` went with it (§4.2).  §126.5 records what stays: the `--codegen Plugin` tests, which need a `.cui` only a Custard-built compiler produces and so wait on the bootstrap; `tests/extraction/backends`'s comparison legs; and the multi-module Pulse dirs that link hand-written OCaml or C. §126.4 |
 | M10κΙ | **Three test suites the migration broke** (§126.6–§126.8) | Done.  CI ran what the local gate had not.  `examples/printf` was two coercion bugs in one program: a lambda binder whose type is exactly `TAny` bound nothing, so no use of it was coerced and OCaml inferred a type from the first `match` branch that the second contradicted; and a call that over-applies a head returning `TAny` was coerced only when the expected type was known, so the same call `let`-bound went out with three arguments to a two-argument function.  `tests/floats/Test01` loses its `Float32` half, which Custard refuses on OCaml by design (§66.4) and the legacy backend emulated; the coverage moves to `FloatExtract` and `tests/custard/Floats.fst`.  `fsharp/tests/{Hello,Test00}` drop their hand-written projects for the one Custard generates, and grow a `main`: .NET has no load-time execution, so a module whose top-level effect prints is a program on OCaml and a library that does nothing on F# |
+| M10κΚ | **A partial application that became a saturated one** (§127) | Done.  The defect that kept `pulse/test/pool` on the old pipeline.  `fork_core (f1 ())` passes a thunk, `f1` having two binders and the call supplying one; erasing the second --- a proof-level `loc_id` --- made the call saturated, so the worker loop ran inline in the spawning thread instead of being forked.  `Mono.keep_thunk` is the rule for exactly this and its comment already named the hazard, but its second clause asked whether the last binder was *unit-shaped* rather than whether the codomain was impure.  It now asks the second, in Custard's sense of impure rather than F*'s (`Mono.impure_codomain`, since a Pulse `fn` is a `Tot` function returning an `stt`), and `Extract`'s `Tm_abs` guard gained the same clause off `body.eff`.  Restricted to an *explicit* last binder, because F* instantiates an implicit at every application, so no partial application stops in front of one --- and keeping one gave §80.1's record field an arity its derived projector could not meet.  The mirror miscount is fixed alongside: a call through a *variable* deleted the argument for the binder `keep_thunk` had just put back, and now passes `()` for it as a call through a name always did.  The cost is a `unit` parameter on a definition whose last binder is erased in front of an impure codomain, which is what the legacy backend keeps anyway |

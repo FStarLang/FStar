@@ -2689,19 +2689,29 @@ and expr_of_term (st:state) (t:term) : ML expr =
     let body = expr_of_term st body in
     let bs =
       let flags = bs |> List.map (Mono.is_erased_binder (tcenv st)) in
-      (* Same guard as [Mono.keep_thunk], and unconditional for the same reason
-         its own first clause is: a lambda whose binders all vanish stops being
-         a lambda.  Its effects then run where it is built rather than where it
-         is applied -- and, even when there are none, whatever it is passed to
-         is still expecting a function.  A reified [let] whose bound variable
-         is a proof is exactly that: the continuation [fun (tok:squash p) -> k]
-         is [tac_bind]'s second argument, and [tac_bind] is polymorphic, so
-         nothing there drops an argument to match. *)
-      let flags = if Cons? flags && List.for_all (fun b -> b) flags
-                  then (match List.rev flags with
-                        | _ :: r -> List.rev (false :: r)
-                        | [] -> flags)
-                  else flags in
+      (* Same guard as [Mono.keep_thunk], and both of its clauses.  A lambda
+         whose binders all vanish stops being a lambda: its effects then run
+         where it is built rather than where it is applied -- and, even when
+         there are none, whatever it is passed to is still expecting a
+         function.  A reified [let] whose bound variable is a proof is exactly
+         that: the continuation [fun (tok:squash p) -> k] is [tac_bind]'s
+         second argument, and [tac_bind] is polymorphic, so nothing there
+         drops an argument to match.
+
+         Section 127.  And a lambda that loses its *last* binder in front of
+         an impure body stops being the arrow a partial application of it was
+         holding.  The purity read here is the body's own, which is Custard's
+         answer and not F*'s -- the same distinction [Mono.impure_codomain]
+         makes on a comp, arrived at by having already translated the body. *)
+      let flags =
+        let all_erased = Cons? flags && List.for_all (fun b -> b) flags in
+        let last_erased = (match List.rev flags with
+                           | f :: _ -> f | [] -> false) in
+        if last_erased && (all_erased || not (is_pure body.eff))
+        then (match List.rev flags with
+              | _ :: r -> List.rev (false :: r)
+              | [] -> flags)
+        else flags in
       drop_flagged flags bs in
     (* Section 72.2, as in [extract_letbinding]: a binder the guard above put
        back is there for the arity and carries nothing, so [unit] is its type
@@ -2746,19 +2756,51 @@ and expr_of_term (st:state) (t:term) : ML expr =
        (* Unfolding, not the plain [erased_binders]: this filters a *call
           spine*, and a call runs straight through an abbreviation that the
           local's sort stops at.  Section 18.1. *)
-       let flags = match (SS.compress hd_term).n with
-                   | Tm_name bv -> Mono.erased_binders_unfold (tcenv st) bv.sort
-                   | _ -> [] in
+       let sort = match (SS.compress hd_term).n with
+                  | Tm_name bv -> Some bv.sort
+                  | _ -> None in
+       let flags = match sort with
+                   | Some t -> Mono.erased_binders_unfold (tcenv st) t
+                   | None -> [] in
+       (* Section 127.  A binder [keep_thunk] put back is still a binder, and
+          the argument for it is [()] -- exactly as [value_args] supplies one
+          for a top-level call.  Dropping it instead would make a *saturated*
+          call partial, which is the mirror image of the miscompilation that
+          rule exists to prevent, and the C backend reports it as a partial
+          application with no representation. *)
+       let ufs = match sort with
+                 | Some t -> drop_flagged flags (Mono.unit_binders (tcenv st) t)
+                 | None -> [] in
        (* A head with no type to consult -- a [match], a lambda left over from
           beta-reducing a specialized definition -- still must not be given
           the arguments its callee has no binder for.  That is
           [is_erased_term] and not just [is_type_term]: a proof-irrelevant
           argument is deleted by exactly the same rule as a type, and one left
-          behind is emitted as an unbound term variable.  Section 80. *)
-       let args = drop_flagged flags args
-                  |> List.filter (fun (a, _) ->
-                       not (Mono.is_erased_term (tcenv st) a)) in
-       let args = args |> List.map fst |> List.map (expr_of_term st) in
+          behind is emitted as an unbound term variable.  Section 80.  A
+          position [ufs] speaks for is exempt: it is kept deliberately, and
+          the term the source wrote for it is not consulted. *)
+       let rec keep (ufs:list bool) (sp0:S.args) : ML S.args =
+         match ufs, sp0 with
+         | true :: ufs, a :: sp -> a :: keep ufs sp
+         | _ :: ufs, a :: sp ->
+           if Mono.is_erased_term (tcenv st) (fst a)
+           then keep ufs sp else a :: keep ufs sp
+         | [], a :: sp ->
+           if Mono.is_erased_term (tcenv st) (fst a)
+           then keep [] sp else a :: keep [] sp
+         | _, [] -> [] in
+       (* [ufs] has to be narrowed with the spine, or the [()] would land at
+          the wrong index once an erased argument before it has gone. *)
+       let rec narrow (ufs:list bool) (sp0:S.args) : ML (list bool) =
+         match ufs, sp0 with
+         | u :: ufs', a :: sp ->
+           if not u && Mono.is_erased_term (tcenv st) (fst a)
+           then narrow ufs' sp else u :: narrow ufs' sp
+         | _ -> [] in
+       let args0 = drop_flagged flags args in
+       let ufs = narrow ufs args0 in
+       let args = keep ufs args0 in
+       let args = value_args st ufs args in
        (match args with
         | [] -> hd
         | _ ->

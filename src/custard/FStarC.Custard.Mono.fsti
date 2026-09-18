@@ -116,9 +116,9 @@ val classes_to_string (env:TcEnv.env) (bs:binders) (cs:list bclass) : ML string
 
 (** [keep_thunk env bs c flags] is [flags] with its last entry cleared when
     dropping every binder would turn the definition into a value, or when the
-    last binder is unit-shaped in front of an impure codomain and so may be a
-    thunk.  Applied both to a definition's own binders and to its type, so
-    that the two agree on the arity. *)
+    codomain is impure and so a partial application of it would silently
+    become a saturated one (section 127).  Applied both to a definition's own
+    binders and to its type, so that the two agree on the arity. *)
 val keep_thunk (env:TcEnv.env) (bs:binders) (c:comp) (flags:list bool) : ML (list bool)
 
 (** [erased_binders env t] applies [is_erased_binder] to each binder of [t]'s
