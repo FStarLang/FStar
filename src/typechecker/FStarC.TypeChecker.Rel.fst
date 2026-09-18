@@ -149,6 +149,9 @@ type worklist = {
     defer_ok:     defer_ok_t;                   //whether or not carrying constraints is ok---at the top-level, this flag is NoDefer
     smt_ok:       bool;                         //whether or not falling back to the SMT solver is permitted
     umax_heuristic_ok: bool;                    //whether or not it's ok to apply a structural match on umax us = umax us'
+    eq_norm_heuristic_ok: bool;                 //whether or not it's ok, when deciding an equation between two
+                                                //interpreted heads, to normalize both sides and compare the results;
+                                                //see [equal] in solve_t'_aux
     tcenv:        Env.env;                      //the top-level environment on which Rel was called
     wl_implicits: implicits_t;                  //additional uvars introduced
     repr_subcomp_allowed:bool;                  //whether subtyping of effectful computations
@@ -432,6 +435,7 @@ let empty_worklist env  = {
     defer_ok=DeferAny;
     smt_ok=true;
     umax_heuristic_ok=true;
+    eq_norm_heuristic_ok=true;
     wl_implicits=empty;
     repr_subcomp_allowed=false;
     typeclass_variables = Setlike.empty ();
@@ -2406,7 +2410,7 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                   | Some (t1, t2) -> SS.compress t1, SS.compress t2
                   | None -> SS.compress t1, SS.compress t2
               in
-              let try_eq t1 t2 wl =
+              let try_eq_ex eq_norm_heuristic_ok t1 t2 wl =
                   let t1_hd, t1_args = U.head_and_args_full t1 in
                   let t2_hd, t2_args = U.head_and_args_full t2 in
                   if List.length t1_args <> List.length t2_args then None else
@@ -2423,6 +2427,7 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                   in
                   let wl' = {wl with defer_ok=NoDefer;
                                      smt_ok=false;
+                                     eq_norm_heuristic_ok;
                                      attempting=probs;
                                      wl_deferred=empty;
                                      wl_implicits=empty} in
@@ -2436,6 +2441,7 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                     UF.rollback tx;
                     None
               in
+              let try_eq t1 t2 wl = try_eq_ex true t1 t2 wl in
               let combine (t1 t2 : term) wl : ML (term & list prob & worklist) =
                   let env = p_env wl (TProb tp) in
                   let t1_base, p1_opt = base_and_refinement_maybe_delta false env t1 in
@@ -2453,10 +2459,19 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                      occurrence.  Fall back to unifying the two formulas, which
                      equates the universes rather than comparing them; this
                      runs with [smt_ok=false], so it cannot succeed for two
-                     formulas that are merely provably equivalent. *)
+                     formulas that are merely provably equivalent.
+
+                     It also runs with [eq_norm_heuristic_ok=false].  We are
+                     asking a syntactic question -- are these the same formula,
+                     modulo universes? -- and we already have an answer for the
+                     case where they are not: join them, or widen to the base.
+                     Letting the unifier normalize in pursuit of a "yes" is
+                     both unnecessary and, for a formula mentioning
+                     [FStar.UInt.logand] at width 64, ruinously expensive; see
+                     [equal] in [solve_t'_aux] and tests/tactics/TestBV.fst. *)
                   let same_formula phi1 phi2 wl : ML (bool & worklist) =
                     if U.term_eq phi1 phi2 then true, wl
-                    else match try_eq phi1 phi2 wl with
+                    else match try_eq_ex false phi1 phi2 wl with
                          | Some wl -> true, wl
                          | None -> false, wl
                   in
@@ -4633,6 +4648,18 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
            | TEQ.Equal -> true
            | TEQ.NotEqual -> false
            | TEQ.Unknown ->
+             (* Normalizing both sides is a heuristic, and an unbounded one:
+                it is the only place in the unifier where a single equation can
+                cost seconds.  Reducing [FStar.UInt.logand] at width 64 unfolds
+                [to_vec] on a symbolic argument, which takes ~1.5s per side and
+                cannot succeed.  It is worth running anyway when the caller has
+                no better answer than an SMT obligation, which is the usual
+                case; [eq_norm_heuristic_ok] marks the callers that do.
+
+                See tests/tactics/TestBV.fst, and the note above [same_formula]
+                in [meet_or_join]. *)
+             if not wl.eq_norm_heuristic_ok then false
+             else
              let steps = [
                Env.UnfoldUntil delta_constant;
                Env.Primops;

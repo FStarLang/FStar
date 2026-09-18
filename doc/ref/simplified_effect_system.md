@@ -1244,10 +1244,14 @@ arrow types no congruence, since each arrow is encoded as its own constant. This
 is unprovable on the pre-refactor compiler too. Every parameterized form of the
 same type-level match verifies.
 
-### 13.6 `TestBV.fst`
+### 13.6 `TestBV.fst`, and normalisation inside `Rel.equal` (fixed)
 
-`tests/tactics/TestBV.fst` is slow: **12.7s against 0.93s** before. The cause is
-understood and is not new code.
+`tests/tactics/TestBV.fst` verified in **12.7s against 0.93s** before. The cause
+was not new code, but it was provoked by new code, and the story is worth
+keeping: it is the sharpest example of how moving a specification into a
+refinement changes what the unifier is asked to do.
+
+#### Symptom
 
 Measured from a clean slate (`rm -f _cache/TestBV.fst.checked`, then the single
 `fstar.exe -c TestBV.fst -o _cache/TestBV.fst.checked` the test Makefile runs,
@@ -1256,21 +1260,24 @@ three times each):
 | tree | runs | peak RSS |
 |---|---|---|
 | master `9981a990a7` (the commit this branch merged) | 0.96s / 0.91s / 0.92s | 172 MB |
-| this branch | 12.78s / 12.62s / 12.72s | 200 MB |
+| this branch, before the fix | 12.78s / 12.62s / 12.72s | 200 MB |
+| this branch, after the fix | 0.90s / 0.91s / 0.92s | 176 MB |
 
-That is **13.5×**, and none of it is upstream drift: `9981a990a7` is the exact
-master this branch merged, so the whole delta belongs to this work.
+That was **13.5×**, and none of it was upstream drift: `9981a990a7` is the exact
+master this branch merged, so the whole delta belonged to this work.
 
-Do not be misled by the benchmarking bot. Its run on this PR shows no `TestBV`
+Do not be misled by the benchmarking bot. Its run on this PR showed no `TestBV`
 entry at all, because the commit it benchmarked (`ece1b507a7`) still contained
 `e042bd26a6`, "Rel: don't unfold to decide an equation whose heads already
 agree", and did not yet contain `1164a86c7f`, the revert of it. That
-optimization is the first of the two withdrawn fixes listed below; while it was
-live `TestBV` was back to 0.92s. A bot run is only evidence about the commit it
+optimisation is the first of the two withdrawn fixes below; while it was live
+`TestBV` was back to 0.92s. A bot run is only evidence about the commit it
 names.
 
-`--profile TestBV --profile_component '*' --profile_group_by_decl` attributes
-all of it to two declarations, and within each to phase 1 rather than the
+#### Diagnosis
+
+`--profile TestBV --profile_component '*' --profile_group_by_decl` attributed
+all of it to two declarations, and within each to phase 1 rather than to the
 solver:
 
 ```
@@ -1284,24 +1291,53 @@ TestBV.test7      Rel.norm_with_steps.2              3135 ms
 TestBV.test7      Rel.norm_with_steps.3              3151 ms
 ```
 
-`norm_with_steps.2` and `.3` are the two normalization calls inside `Rel.equal`
-(`FStarC.TypeChecker.Rel.fst:4642-4643`). Aggregate Z3 time across the whole
-module is 37 ms: this is entirely compile time, not solver time.
+`norm_with_steps.2` and `.3` are the two normalisation calls inside the local
+`equal` helper of `solve_t'_aux`. Aggregate Z3 time across the whole module is
+37 ms: this was entirely compile time, not solver time.
 
-`Rel.equal`, reached because the head is an interpreted symbol under an `EQ`
-relation, normalizes both sides with `UnfoldUntil delta_constant`.
-`FStar.UInt.logand` unfolds to `from_vec (logand_vec (to_vec a) (to_vec b))`,
-and `to_vec` on a symbolic 64-bit argument builds an enormous term. The six
-problems that take this path cost ~2s each and establish nothing: they are
-`logand (v x) (v y) =?= logand (v y) (v x)`, i.e. commutativity — a semantic law
-neither unfolding nor decomposition can establish.
+The full chain, which took a while to establish, is:
+
+1. `FStar.UInt64.logand` is declared `Pure t (requires True) (ensures fun z -> v x `logand` v y = v z)`
+   (`ulib/FStar.UInt64.fsti:185`). On this branch that postcondition **is the
+   result type**: `U64.logand x y : _:U64.t{FStar.UInt.logand (v x) (v y) = v _}`.
+2. `assert (U64.logand x y == U64.logand y x)` elaborates to `eq2 #?a`, and `?a`
+   acquires **two refined lower bounds** — one from each side.
+3. `Rel.meet_or_join` joins them. Its `combine_refinements` asks `same_formula
+   phi1 phi2`, which falls back to `try_eq` — a nested `solve` with
+   `smt_ok=false`.
+4. That reaches the interpreted-head `EQ` case of `solve_t'_aux` with
+   `logand (v x) (v y) =?= logand (v y) (v x)`: ground on both sides, so the
+   `no_free_uvars` gate passes and `equal` runs.
+5. `equal` normalises both sides with `UnfoldUntil delta_constant`.
+   `FStar.UInt.logand` unfolds to `from_vec (logand_vec (to_vec a) (to_vec b))`,
+   and `to_vec` on a symbolic 64-bit argument builds an enormous term.
+
+Two details worth recording, because both cost time to establish:
+
+* **The cost really is inside `norm`.** Splitting the timing in
+  `normalize_with_primitive_steps` shows `config'` at 0 ms and `norm c [] [] t`
+  at 1479 ms. Within that, the reduction builds only **24 581 syntax nodes** and
+  takes roughly 30 000 reduction steps — about **60 µs per node**, against
+  ~0.4 µs per node for the most expensive legitimate normalisation anywhere in
+  `tests/tactics`. So neither a reduction-step budget nor an allocation budget
+  separates this case from honest work: both were implemented and measured, and
+  both were rejected. The term is a heavily shared DAG whose tree expansion is
+  enormous, and the work is not proportional to what gets allocated.
+* **The answer was thrown away.** When `same_formula` says "not equal",
+  `combine_refinements` widens to the base type and discards both refinements.
+  Three seconds to decide something that is then dropped.
+* **What is being asked is commutativity.** No amount of unfolding or
+  decomposition can establish it, so the reduction could never have paid off.
 
 Upstream, the same 41 interpreted-head problems arise, but every one still has a
-unification variable on the right, so the `no_free_uvars t1 && no_free_uvars t2`
-gate is false and `equal` is never called. Here the variables are solved by that
-point — an improvement everywhere else and a pessimisation here.
+unification variable on the right, so `no_free_uvars` is false and `equal` is
+never called. Here the variables are solved by that point — an improvement
+everywhere else and a pessimisation here.
 
-**Two attempted fixes were withdrawn**, and the reasons generalise:
+#### Two fixes that were withdrawn
+
+Both reasons generalise, and both are worth knowing before attempting this
+again.
 
 * *Skip the delta step when the heads are the same symbol and an argument still
   mentions a free variable.* Wrong twice over. `Env.is_interpreted` answers true
@@ -1315,26 +1351,52 @@ point — an improvement everywhere else and a pessimisation here.
   `rigid_rigid_delta` fails on. Two kuiper modules stopped verifying.
 * *Decompose first, fall back to `equal` only on failure.* Worse: `TestBV` went
   to **17.4s**, because a problem decomposes into subproblems and the expensive
-  normalization then runs at every level before anything fails.
+  normalisation then runs at every level before anything fails.
 
-There is no cheap syntactic discriminator: both cases are a fully-matching head
-applied to non-ground, reducible arguments, and what separates them is whether
-the normalization pays off, which is only knowable by running it. Two plausible
-real fixes, neither attempted: give the normalizer a step budget in this call,
-or recognise that the two argument lists are a permutation of one another.
+A third, tried and rejected here: *skip the normalisation whenever
+`wl.smt_ok` is false*. The reasoning was that the only caller reached with
+`smt_ok=false` falls through to `rigid_rigid_delta`, which unfolds the heads
+itself. That is true of the `combine_refinements` caller, but `smt_ok=false` is
+also how the `unify` **tactic** reaches the unifier, and there `equal`'s
+normalisation is load-bearing: `tests/micro-benchmarks/UnifyMatch.fst` asks
+`unify (nat2unary 10) (S (nat2unary 9))`, which only `equal` settles —
+`head_matches_delta` will not drive the `if`/`match` inside `nat2unary` far
+enough. The test caught it.
 
-(Note also that the gate's comment claims `no_free_uvars` means "neither term
-has any free variables", while it only inspects unification variables and
-universes.)
+#### The fix
 
-### 13.7 Unbounded normalisation in `Rel.equal`
+Make the permission explicit rather than inferring it from `smt_ok`. A new
+worklist field, alongside the existing `umax_heuristic_ok`:
 
-`Env.step` has no fuel constructor, so bounding the normalisation inside
-`Rel`'s local `equal` helper is not a one-line change. It is the more
-fundamental problem behind both §13.6 and the 32 GB divergence described in
-[§6.5](#65-other-typechecker-fixes-carried-by-this-work).
+```fstar
+eq_norm_heuristic_ok: bool;   //whether or not it's ok, when deciding an equation between two
+                              //interpreted heads, to normalize both sides and compare the results
+```
 
----
+It defaults to `true` in `empty_worklist`, so every existing caller — the
+tactics, `sub_comp`, `teq`, ordinary unification — is unchanged. `try_eq` grows
+a variant `try_eq_ex` that sets it on the nested worklist, and `same_formula`
+(and only `same_formula`) calls `try_eq_ex false`. `equal` returns `false`
+immediately when the flag is off.
+
+This is safe by construction at that one call site, in a way that the withdrawn
+fixes were not. `same_formula` is asking a *syntactic* question — are these the
+same formula, modulo universes? — and both answers are already handled:
+"different" means join the two refinements, or widen to the base. Unlike the
+withdrawn fixes, a conservative "no" here can never turn into a failed SMT
+obligation, so it cannot reproduce the `natlt_coerce` breakage.
+
+`try_eq`'s other caller, the one that relates the two *bases* of a join, keeps
+the heuristic.
+
+#### What remains
+
+The normalisation is still unbounded for every caller that leaves the flag set,
+and `Env.step` has no fuel constructor, so bounding it is not a one-line change.
+It is the more fundamental problem behind the 32 GB divergence described in
+[§6.5](#65-other-typechecker-fixes-carried-by-this-work). Note also that the
+`no_free_uvars` gate's comment claims it means "neither term has any free
+variables", while it only inspects unification variables and universes.
 
 ## 14. Notes for compiler developers
 
@@ -1490,8 +1552,10 @@ both the symptom and, on the first attempt, the fix.
   out to be unnecessary and were removed.
 * **Benchmark outliers.** `Bug3800.fst` is faster than before (0.31s/84MB vs
   0.47s/94MB); `Quicksort.Base.fst` is 7.6s vs 7.7s (and was 14.4s before the
-  same source fix was applied to both); `TestBV.fst` is the one unfixed
-  regression ([§13.6](#136-testbvfst)).
+  same source fix was applied to both); `TestBV.fst` regressed 13.5x and was
+  brought back to parity — 0.91s against master's 0.92s — by scoping `Rel`'s
+  equation-deciding normalisation
+  ([§13.6](#136-testbvfst-and-normalisation-inside-relequal-fixed)).
 * **Downstream diff.** EverParse: 32 files, +246/−102. kuiper: 27 files,
   +354/−48. pulse-verified-gc: 8 commits. All three are explicit implicit
   arguments, type ascriptions, `assert`s restating a fact the solver used to be
@@ -1523,3 +1587,5 @@ both the symptom and, on the first attempt, the fix.
 | `tests/bug-reports/closed/Bug3213b.fst` | `dedup_vc`'s one visible cost (two obligations, one message) |
 | `pulse/test/LetInLemmaBinder.fst` | `TypeChecker.Core` tolerates an unannotated `let` inside a type |
 | `tests/tactics/Makefile` (`BQual`, `Parsing`) | the incremental and non-incremental `tc_one_file` paths agree |
+| `tests/tactics/TestBV.fst` | `same_formula` does not normalize to decide an equation (13.5x if it does) |
+| `tests/micro-benchmarks/UnifyMatch.fst` | the `unify` tactic still does (`nat2unary 10` vs `S (nat2unary 9)`) |
