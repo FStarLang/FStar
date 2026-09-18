@@ -199,8 +199,11 @@ NOGREP_Refs = "Array.make" "free"
 # Section 8.5: each exception constructor is its own declaration, raising is
 # a control-flow node rather than a call, and try_with becomes a real
 # 'try ... with' whose single branch hands the value to the handler.
-GREP_Exceptions   = "exception Exceptions_Empty" "exception Exceptions_Bad of" \
-                    "raise Exceptions_Empty" "(try " "with" "Exceptions_Empty ->"
+# Section 125.7 took the mangling off the two names: neither collides with
+# anything else this program emits, so both keep their plain identifier.
+GREP_Exceptions   = "exception Empty" "exception Bad of" \
+                    "raise Empty" "(try " "with" "Empty ->"
+NOGREP_Exceptions += "Exceptions_Empty"
 NOGREP_Exceptions = "FStar_All.try_with" "FStar_All.raise" "Prims.exn"
 
 # Local [let rec]s are lambda-lifted to top-level declarations (section 5.10).
@@ -2361,6 +2364,22 @@ EGREP_FloatSingle += "binary32"
 REJECT_TESTS += FloatLit
 CODE_FloatLit = 380
 EGREP_FloatLit += "is not a floating-point literal"
+
+# Section 125.7.  string_of_exn is Printexc.to_string, so the OCaml name
+# Custard picks for an exception is observable -- the only mangled name that
+# is.  Three cases in one program: [B] is unambiguous and keeps its plain
+# identifier, [A] collides with ExnNameLib's and both stay mangled, and
+# [Not_found] is unambiguous among the program's own exceptions and still
+# stays mangled because it is one of OCaml's.  The .out.expected is the whole
+# assertion; the greps pin the declarations, since a wrong declaration and a
+# wrong reference would agree with each other and still run.
+CUSTARD_TESTS += ExnName
+GREP_ExnName += "exception B"
+GREP_ExnName += "exception ExnName_A"
+GREP_ExnName += "exception ExnNameLib_A"
+GREP_ExnName += "exception ExnName_Not_found"
+NOGREP_ExnName += "exception A"
+NOGREP_ExnName += "exception Not_found"
 
 # Section 125.5.  [nan] and [inf] are of_literal's two non-decimal spellings.
 # Seventeen checks of the two IEEE 754 properties a program can actually

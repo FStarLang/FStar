@@ -21381,6 +21381,46 @@ them route a literal through the arithmetic --- `inf - inf` is a NaN,
 value the hardware produces and not merely a value that compares unequal
 to itself.
 
+### 125.7 The one mangled name a program can read
+
+`tests/micro-benchmarks/StringOfExn.fst` raises `exception A`, catches
+it, and prints `FStar.Exception.string_of_exn e`.  The expected output is
+`StringOfExn.A`.  Custard produced `StringOfExn.StringOfExn_A`.
+
+`string_of_exn` is realized as `Printexc.to_string`, which prints the
+*constructor*, and Custard mangles every constructor it emits --- §12.7,
+because one flat file holds every module's declarations and two modules
+may name the same thing.  So this is the single place where the mangling
+is observable from inside the extracted program.  Everywhere else the
+mangled name is read only by a compiler, or by a person reading generated
+code, and §10 already settled that the mangled names are readable enough
+on their own.
+
+The fix is to apply the mangling where there is a collision and not
+otherwise.  An exception keeps its plain identifier when no other
+constructor in the file wants that spelling, no *other exception* wants
+it either, and it is not one of OCaml's own --- `exception Not_found`
+would be legal and would shadow `Stdlib.Not_found` for the rest of the
+file, where a hand-written realization that is not generated and does not
+know may still mean the original.  A collision with the language is a
+collision.
+
+Two exceptions that want the same short name both stay mangled.  Giving
+it to whichever was declared first would make which of them is readable
+depend on declaration order, which is a worse property than neither of
+them being readable.
+
+Variant constructors could have the same treatment and do not.  Nothing
+observes their spelling --- there is no `Printexc` for a variant --- and
+changing it would churn every OCaml golden in the repository for no gain.
+
+`ExnName.fst` has all three cases in one program: `B`, unambiguous and
+emitted plain; `A`, colliding with `ExnNameLib.A` so that both stay
+mangled; and `Not_found`, unambiguous among the program's own exceptions
+and mangled anyway.  The assertion is the printed output, with greps on
+the declarations besides, since a wrong declaration and a wrong reference
+would agree with each other and still run.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -21731,3 +21771,4 @@ to itself.
 | M10ιΩ | Two F# flags that no longer exist | §122.16's SDK bump left the two legacy projects under `fsharp/tests` passing `--mlcompatibility --langversion:5.0`, which the F# 10 compiler removed and stopped supporting respectively.  Neither was load-bearing: the first is for OCaml-shaped source and these projects compile generated F# against `ulibfs`, and the second was buying the non-conforming indentation that `--strict-indentation-` still gives.  Both projects now carry `ulibfs`'s flags, which is what a project compiling against it should say.  The more useful half is why `make fsharp-all` passed locally and failed in CI: `setup-fstar-deps` skipped the install whenever the image already reported an SDK with the requested major version, so both machines said ".NET 10" and ran different compilers.  The channel is now installed unconditionally and the step echoes the version. §124 |
 | M10κΑ | Rotates, and an arithmetic shift at every width (§125.1--125.4) | `tests/machine_integers` failed six of eight programs under Custard, both causes being a machine-integer operation with no builtin rule.  Without one the extractor inlines the F\* definition, which for `rotate_left` is in terms of `FStar.UInt.to_vec` --- bit vectors as `seq bool`, correct and several hundred instructions where one was wanted.  Worse, it does not compile: `FStar.UInt32.t` is a one-field record, so §26 erases its constructor, but the type is *realized*, so it does not erase with it and the result builds an `int` where an `FStar_UInt32.t` is expected.  The new rule is `(a << s) | (a >> ((n - s) & (n - 1)))`; the mask is the whole point, since a rotate by zero is reachable and the naive complement is then a shift by the width, which is undefined in C.  At a signed width it rotates at the unsigned width of the same size and casts back, because the right shift a rotate needs is the logical one.  `WSizet` is excluded because `width_bits` answers 64 for it and `--custard_sizet_width 32` makes that false.  §119's `shift_arithmetic_right` rule is lifted from `Int128` to every signed width; its comment claimed the narrower ones already got an arithmetic `>>` from the OCaml realization, which was a claim about a fallback that never runs, and was never true of the other four backends at all.  `width_bits` had three copies and is now `Syntax`'s.  `tests/custard/Rotate.fst` is 31 checks across five backends, reporting through its exit code, with the C pinned as well as run. §125 |
 | M10κΒ | `nan` and `inf` become literals | §39.2 wrote down that what a `float_lit` cannot denote --- an infinity, a NaN --- is what `of_literal` does not accept either, on the grounds that those are what an argument reaching C by accident would look like.  `tests/floats/Test01.fst` disagrees: an accident does not spell itself `nan` in an F\* source file, and a program that wants a NaN has no other way to write one, since `FStar.Float64` exposes no operation that builds one from finite arguments.  A refusal is worth having only when there is something else to write.  `float_lit` stops being a record and becomes `FLNum | FLNan | FLInf`, cases rather than magnitudes because `FStarC.Real.real` is a rational and neither value is one; a NaN carries no sign, since nothing F\* exposes can observe one.  Each backend then answers for itself: OCaml and F# have identifiers (`Stdlib.nan`, qualified because `nan` is a plausible name for a program to bind); C has no constant syntax at all and borrows `<math.h>`'s `NAN` and `INFINITY` through `CUSTARD_NAN`/`CUSTARD_INF`, macro names rather than bare because §123 decides placement by asking whether a file *mentions* them and `NAN` is short enough to occur inside a generated identifier; binary16 and bfloat16 encode the patterns by hand, as §66 already does for every other literal at those widths; and karamel cannot, because its `EConstant` carries the literal as text and its grammar is the decimal one, so the crossing is refused the §46.3 way, naming the backend that does accept it.  `FloatSpecial.fst` is seventeen checks of the two observable properties, seven of them routing a literal through the arithmetic so that what is tested is the value the hardware produces. §125.5--125.6 |
+| M10κΓ | The one mangled name a program can read | `FStar.Exception.string_of_exn` is `Printexc.to_string`, which prints the *constructor*, so an exception's emitted OCaml name is the single place where §12.7's mangling is observable from inside the extracted program: `StringOfExn.A` came out as `StringOfExn.StringOfExn_A`.  Mangling exists to keep one flat file collision-free, so it is now applied where there is a collision and not otherwise.  An exception keeps its plain identifier when no other constructor in the file wants that spelling, no other exception wants it either, and it is not one of OCaml's own --- an `exception Not_found` of ours would shadow `Stdlib.Not_found` for the rest of the file, where a hand-written realization that is not generated and does not know may still mean the original.  Two exceptions that want the same short name both stay mangled: giving it to whichever was declared first would make which of them is readable depend on declaration order.  Variant constructors are deliberately left alone --- nothing observes their spelling, and changing it would churn every OCaml golden in the repository for no gain.  `ExnName.fst` has all three cases in one program. §125.7 |
