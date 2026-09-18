@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/base:ubuntu24.04
+FROM mcr.microsoft.com/devcontainers/base:ubuntu26.04
 
 # Base dependencies: opam
 # CI dependencies: jq (to identify F* branch)
