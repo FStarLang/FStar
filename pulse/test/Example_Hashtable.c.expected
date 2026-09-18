@@ -128,8 +128,7 @@ lookup__size_t_Example_Hashtable_data(ht_t__size_t_Example_Hashtable_data ht, si
     size_t voff = off;
     if (voff == ht.sz)
       _break = true;
-    bool _break1 = _break;
-    if (!_break1)
+    if (!_break)
     {
       size_t sum = cidx + voff;
       size_t idx = size_t_mod(sum, ht.sz);
