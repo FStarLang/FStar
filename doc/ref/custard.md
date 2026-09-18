@@ -21194,7 +21194,7 @@ the property that the SDK CI uses is the one the channel names.  A cache
 hit on the image is not worth an environment that cannot be reproduced,
 and this is the failure mode that argument predicts.
 
-## 125 Rotates, and an arithmetic shift at every width
+## 125 Four gaps the legacy test suites found
 
 `tests/machine_integers` is one of the older test directories in the
 repository and it is not a Custard test: it is eight programs that
@@ -21299,6 +21299,87 @@ direct-C, C++ and F# legs, with the constants computed independently.
 The C is pinned as well as run: a rotate by the width is undefined, and a
 compiler that folds the undefined case into something plausible would let
 a run-only test pass.
+
+### 125.5 `nan` and `inf`
+
+`tests/floats/Test01.fst` asks for `Float64.of_literal "nan"` and Custard
+answered with error 380, "nan is not a floating-point literal".  That was
+deliberate: §39.2 took its grammar from
+`FStarC.Extraction.Krml.valid_float_literal` and wrote down that what a
+`float_lit` cannot denote --- an infinity, a NaN --- is what `of_literal`
+does not accept either, on the grounds that those are what an argument
+that reached C by accident would look like.
+
+The grounds do not survive contact with the test.  An accident does not
+spell itself `nan` in an F\* source file; and a program that wants a NaN
+has no other way to write one, because `FStar.Float64` exposes no
+operation that builds one from finite arguments and the constant folder
+will not divide zero by zero on its behalf.  A refusal is only worth
+having if there is something else to write instead.
+
+So `float_lit` stops being a record and becomes
+
+```fstar
+type float_lit =
+  | FLNum of bool & Real.real
+  | FLNan
+  | FLInf of bool
+```
+
+--- cases rather than magnitudes, because `FStarC.Real.real` is a
+rational and neither special value is one.  A NaN has no sign here.  IEEE
+754 gives it one, but nothing `FStar.Float64` exposes can observe it, and
+a literal that can be written two ways and compared equal neither way is
+worse than one that cannot be written two ways.  The accepted spellings
+are `nan`, `inf` and `infinity`, the last two signed; `float_lit_to_string`
+writes back the shortest, so the round-trip §39.2 requires still holds.
+
+### 125.6 Five backends, five answers
+
+Each backend spells these for itself, and one of them cannot.
+
+**OCaml** and **F#** have them as identifiers rather than literals:
+`Stdlib.nan`, `Stdlib.infinity`, `Stdlib.neg_infinity`, and F#'s `nan`,
+`infinity` with the `f`-suffixed forms at binary32.  Qualifying the OCaml
+ones matters, because `nan` is a plausible name for a program to bind.
+
+**C** has no floating-point constant syntax for either --- there is no
+text a C compiler reads as a NaN, and `0.0/0.0` is not a constant
+expression.  `<math.h>`'s `NAN` and `INFINITY` are the portable spelling,
+and both are of type `float`, which converts to `double` exactly, so one
+spelling serves both widths.  They arrive through `CUSTARD_NAN` and
+`CUSTARD_INF` rather than bare, for §123's reason: placement of the
+support block is decided by asking whether a rendered file *mentions* the
+names, and `NAN` is a token short and ordinary enough that a generated
+identifier could contain it, where `CUSTARD_NAN` cannot be anything but
+this.  The block carries the `#include <math.h>` with it and goes only
+into the file that needs it, which for a program with no public floats is
+the source and not the header.
+
+At **binary16 and bfloat16** there is nothing to borrow: §66 emits those
+as bit patterns because the type is a struct, so the special values are
+encoded by hand as well --- a saturated exponent, with a zero significand
+for an infinity and the leading fraction bit set, a quiet NaN, for a NaN.
+`Narrow.fst` reads the patterns back through its `bits` extern, which
+checks the encoder rather than the stub library's arithmetic, and pins
+that the 70000 which already overflowed binary16 lands on exactly the
+infinity pattern.
+
+**karamel** cannot.  `K.EConstant` carries a floating-point literal as
+*text* and karamel's own `valid_float_literal` is the decimal grammar
+alone, so there is no string to hand it: karamel would emit the
+characters and the C compiler would not read them back.  This is
+§46.3-shaped --- the direct C backend does accept it --- so it is a
+`krml_reject_c_ok`, and the four rejection helpers move up the file to
+sit above their first use, which is now this one.
+
+`FloatSpecial.fst` is seventeen checks of the two properties a program
+can actually observe: a NaN is unordered with everything, itself
+included, and an infinity is ordered above every finite value.  Seven of
+them route a literal through the arithmetic --- `inf - inf` is a NaN,
+`inf + 1` is `inf` --- so what is under test is that the literal is the
+value the hardware produces and not merely a value that compares unequal
+to itself.
 
 | M | Deliverable | Notes |
 | --- | --- | --- |
@@ -21648,4 +21729,5 @@ a run-only test pass.
 | M10ιΧ | The repository moves to the .NET 10 SDK | §122 targets .NET 10, so the devcontainer, `.github/actions/setup-fstar-deps` and the three `.docker/` images install it --- through Microsoft's `dotnet-install.sh` and tarball rather than apt, since Ubuntu's archive carries whichever SDK was current when the release was cut --- and `DOTNET_ROOT` is exported alongside the `PATH` entry, without which a published apphost looks for its runtime under the system install.  One SDK rather than two means the legacy F# path comes along: the two `global.json`s and the `net8.0` target frameworks under `fsharp/tests` and `examples`.  It builds, after one fix: `ulibfs` failed to compile at `-c Release` with FS2014, "duplicate entry `get_x@10` in method table".  The F# 10 optimizer names an inlined closure after its parameter and the *line* it came from and not the file, `FStar_UInt32.uint_to_t` and `FStar_UInt64.uint_to_t` were both `x` on line 10, and `FStar_UInt128` inlines both.  A compiler defect, visible only under `--optimize+`; the parameter of one of them is renamed with a comment, rather than the optimizer turned off, so that the defect stays visible. §122.16 |
 | M10ιΨ | Two support blocks leave the C header | A generated header is a file a person reads, and every one of them carried eleven lines of `custard_unit` typedef plus, for any program touching a 16-bit float, forty lines of §98 reference material.  Both are now emitted only into a file that mentions the names, which for `custard_unit` is usually neither file: the type is still reachable --- a `ref unit` is a `custard_unit *` and a `noeq` record can hold one --- but the layout pass erases unit fields, a unit-returning function is `void`, and §32.6 drops unit arguments, so the token appeared in the whole 160-program corpus exactly as often as the typedef was emitted and not once more.  The float16 block keeps its `#error` and loses the comment, which is reference material and belongs in the reference; the message names the macro, the attribute and §98.  In the header the check still comes after the `@@custard_c_header` includes, since that is what makes it satisfiable.  Placement is decided by asking whether a rendered file mentions the names, which replaces the `uses_narrow` flag --- set in five places, reset in two --- and is strictly better, because a flag can say that a unit uses a narrow float but not which of its two files does.  `CHGREP_X`/`CHNOGREP_X` pin the header alone, since `CGREP` is over the pair and the whole claim is about which file.  Four new tests, on both sides of each decision. §123 |
 | M10ιΩ | Two F# flags that no longer exist | §122.16's SDK bump left the two legacy projects under `fsharp/tests` passing `--mlcompatibility --langversion:5.0`, which the F# 10 compiler removed and stopped supporting respectively.  Neither was load-bearing: the first is for OCaml-shaped source and these projects compile generated F# against `ulibfs`, and the second was buying the non-conforming indentation that `--strict-indentation-` still gives.  Both projects now carry `ulibfs`'s flags, which is what a project compiling against it should say.  The more useful half is why `make fsharp-all` passed locally and failed in CI: `setup-fstar-deps` skipped the install whenever the image already reported an SDK with the requested major version, so both machines said ".NET 10" and ran different compilers.  The channel is now installed unconditionally and the step echoes the version. §124 |
-| M10κΑ | Rotates, and an arithmetic shift at every width | `tests/machine_integers` failed six of eight programs under Custard, both causes being a machine-integer operation with no builtin rule.  Without one the extractor inlines the F\* definition, which for `rotate_left` is in terms of `FStar.UInt.to_vec` --- bit vectors as `seq bool`, correct and several hundred instructions where one was wanted.  Worse, it does not compile: `FStar.UInt32.t` is a one-field record, so §26 erases its constructor, but the type is *realized*, so it does not erase with it and the result builds an `int` where an `FStar_UInt32.t` is expected.  The new rule is `(a << s) | (a >> ((n - s) & (n - 1)))`; the mask is the whole point, since a rotate by zero is reachable and the naive complement is then a shift by the width, which is undefined in C.  At a signed width it rotates at the unsigned width of the same size and casts back, because the right shift a rotate needs is the logical one.  `WSizet` is excluded because `width_bits` answers 64 for it and `--custard_sizet_width 32` makes that false.  §119's `shift_arithmetic_right` rule is lifted from `Int128` to every signed width; its comment claimed the narrower ones already got an arithmetic `>>` from the OCaml realization, which was a claim about a fallback that never runs, and was never true of the other four backends at all.  `width_bits` had three copies and is now `Syntax`'s.  `tests/custard/Rotate.fst` is 31 checks across five backends, reporting through its exit code, with the C pinned as well as run. §125 |
+| M10κΑ | Rotates, and an arithmetic shift at every width (§125.1--125.4) | `tests/machine_integers` failed six of eight programs under Custard, both causes being a machine-integer operation with no builtin rule.  Without one the extractor inlines the F\* definition, which for `rotate_left` is in terms of `FStar.UInt.to_vec` --- bit vectors as `seq bool`, correct and several hundred instructions where one was wanted.  Worse, it does not compile: `FStar.UInt32.t` is a one-field record, so §26 erases its constructor, but the type is *realized*, so it does not erase with it and the result builds an `int` where an `FStar_UInt32.t` is expected.  The new rule is `(a << s) | (a >> ((n - s) & (n - 1)))`; the mask is the whole point, since a rotate by zero is reachable and the naive complement is then a shift by the width, which is undefined in C.  At a signed width it rotates at the unsigned width of the same size and casts back, because the right shift a rotate needs is the logical one.  `WSizet` is excluded because `width_bits` answers 64 for it and `--custard_sizet_width 32` makes that false.  §119's `shift_arithmetic_right` rule is lifted from `Int128` to every signed width; its comment claimed the narrower ones already got an arithmetic `>>` from the OCaml realization, which was a claim about a fallback that never runs, and was never true of the other four backends at all.  `width_bits` had three copies and is now `Syntax`'s.  `tests/custard/Rotate.fst` is 31 checks across five backends, reporting through its exit code, with the C pinned as well as run. §125 |
+| M10κΒ | `nan` and `inf` become literals | §39.2 wrote down that what a `float_lit` cannot denote --- an infinity, a NaN --- is what `of_literal` does not accept either, on the grounds that those are what an argument reaching C by accident would look like.  `tests/floats/Test01.fst` disagrees: an accident does not spell itself `nan` in an F\* source file, and a program that wants a NaN has no other way to write one, since `FStar.Float64` exposes no operation that builds one from finite arguments.  A refusal is worth having only when there is something else to write.  `float_lit` stops being a record and becomes `FLNum | FLNan | FLInf`, cases rather than magnitudes because `FStarC.Real.real` is a rational and neither value is one; a NaN carries no sign, since nothing F\* exposes can observe one.  Each backend then answers for itself: OCaml and F# have identifiers (`Stdlib.nan`, qualified because `nan` is a plausible name for a program to bind); C has no constant syntax at all and borrows `<math.h>`'s `NAN` and `INFINITY` through `CUSTARD_NAN`/`CUSTARD_INF`, macro names rather than bare because §123 decides placement by asking whether a file *mentions* them and `NAN` is short enough to occur inside a generated identifier; binary16 and bfloat16 encode the patterns by hand, as §66 already does for every other literal at those widths; and karamel cannot, because its `EConstant` carries the literal as text and its grammar is the decimal one, so the crossing is refused the §46.3 way, naming the backend that does accept it.  `FloatSpecial.fst` is seventeen checks of the two observable properties, seven of them routing a literal through the arithmetic so that what is tested is the value the hardware produces. §125.5--125.6 |

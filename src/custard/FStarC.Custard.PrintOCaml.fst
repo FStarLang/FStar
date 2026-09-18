@@ -470,7 +470,12 @@ let constant (c:constant) : ML string =
   | CUnit -> "()"
   | CBool b -> if b then "true" else "false"
   (* Section 39.  OCaml's lexer accepts the same grammar section 39.2 does,
-     so no suffix and no reformatting. *)
+     so no suffix and no reformatting -- except for section 125.5's two
+     special values, which OCaml spells as identifiers from [Stdlib]. *)
+  | CFloat (FLNan, fw) -> reject_fwidth fw; "(Stdlib.nan)"
+  | CFloat (FLInf neg, fw) ->
+    reject_fwidth fw;
+    if neg then "(Stdlib.neg_infinity)" else "(Stdlib.infinity)"
   | CFloat (v, fw) -> reject_fwidth fw; "(" ^ float_lit_to_string v ^ ")"
   (* Prims.int is arbitrary precision in the OCaml runtime, exactly as in the
      ML extraction. *)

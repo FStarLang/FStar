@@ -372,6 +372,53 @@ let krml_int_lit (v:int) (b:int_base) : ML string =
        | Hex -> int_lit_to_string v Hex
        | _   -> int_lit_to_string v Dec
 
+(* Rejection, hoisted above its first use: section 125.5's special float
+   values are refused here, and that is the earliest refusal in the file. *)
+
+(* Section 44.1.  A construct karamel's AST cannot hold has to stop the
+   extraction, and it has to say so the way the C backend says it: a numbered
+   diagnostic naming the construct, not a [failwith].  The three sites that
+   used one also said "the C backend" from a file that is not it, which sends
+   a reader looking in the wrong printer.
+
+   Section 46.3.  Whether the *other* backend accepts the construct is a fact
+   about each site, not about the karamel backend, so each site says it.  The
+   shared sentence used to hedge with "may", and the hedge was wrong at four
+   of the six sites: only a string and a float pattern survive the crossing.
+   Sending a reader to a backend that will refuse them too is a worse answer
+   than saying there is nowhere to go. *)
+let krml_reject_with (#a:Type) (what:string) (where:string) : ML a =
+  E.raise_error0 E.Error_CustardNoCRepresentation
+    [text ("Custard: " ^ what ^ " has no karamel representation.");
+     text ("The karamel backend's AST has no node for it, so there is no \
+            translation to give.  " ^ where)]
+
+(* The construct is karamel's limitation alone. *)
+let krml_reject_c_ok (#a:Type) (what:string) : ML a =
+  krml_reject_with what
+    "The direct C backend (--custard_backend C) does accept it."
+
+(* No backend has it; the program has to change. *)
+let krml_reject (#a:Type) (what:string) : ML a =
+  krml_reject_with what
+    "The direct C backend (--custard_backend C) has no representation for \
+     it either."
+
+(* Section 50.2.  A third scope, which the two above cannot express.  karamel
+   *does* have the construct -- its own AST holds it and its C backend emits
+   it -- and what is missing is one of karamel's *targets*.  Saying "no
+   karamel representation" here would send a reader to look for a node that
+   is there.  Refusing per backend is §46.3 at one more level of resolution:
+   which backend accepts a construct is a fact about the site, and so is
+   which of karamel's own targets does. *)
+let krml_reject_rust (#a:Type) (what:string) (why:string) : ML a =
+  E.raise_error0 E.Error_CustardNoCRepresentation
+    [text ("Custard: " ^ what ^ " has no representation in karamel's Rust \
+            backend.");
+     text why;
+     text "Both C routes accept it: --custard_backend KrmlC and \
+           --custard_backend C."]
+
 (* Section 43.3.  karamel's C printer has no suffix for [Float32]
    (karamel/lib/PrintC.ml:245 falls through to [empty]), so a binary32 constant
    goes out bare -- which is a [double] -- and the [(float)] karamel then
@@ -383,6 +430,14 @@ let krml_int_lit (v:int) (b:int_base) : ML string =
    Not on the Rust path, where the suffix is [f32] and karamel writes it, and
    not at [Float64], where bare is already [double]. *)
 let krml_float_lit (fw:fwidth) (v:float_lit) : ML string =
+  (* Section 125.5.  karamel's [EConstant] carries the literal as *text* and
+     its own [valid_float_literal] is the decimal grammar alone, so there is
+     no spelling of a NaN or an infinity to hand it: karamel would emit the
+     characters and the C compiler would not read them back. *)
+  (match v with
+   | FLNan -> krml_reject_c_ok "a NaN literal"
+   | FLInf _ -> krml_reject_c_ok "an infinity literal"
+   | FLNum _ -> ());
   let s = float_lit_to_string v in
   if Float32? fw && Options.custard_backend () = "KrmlC" then s ^ "f" else s
 
@@ -581,50 +636,6 @@ let krml_const (c:constant) : ML K.expr =
      compiled a *Rust* program that panicked at run time, and the direct C
      backend it named is precisely the one that has always handled this. *)
   | CChar c -> K.EConstant (K.UInt32, show (FStar.Char.int_of_char c))
-
-(* Section 44.1.  A construct karamel's AST cannot hold has to stop the
-   extraction, and it has to say so the way the C backend says it: a numbered
-   diagnostic naming the construct, not a [failwith].  The three sites that
-   used one also said "the C backend" from a file that is not it, which sends
-   a reader looking in the wrong printer.
-
-   Section 46.3.  Whether the *other* backend accepts the construct is a fact
-   about each site, not about the karamel backend, so each site says it.  The
-   shared sentence used to hedge with "may", and the hedge was wrong at four
-   of the six sites: only a string and a float pattern survive the crossing.
-   Sending a reader to a backend that will refuse them too is a worse answer
-   than saying there is nowhere to go. *)
-let krml_reject_with (#a:Type) (what:string) (where:string) : ML a =
-  E.raise_error0 E.Error_CustardNoCRepresentation
-    [text ("Custard: " ^ what ^ " has no karamel representation.");
-     text ("The karamel backend's AST has no node for it, so there is no \
-            translation to give.  " ^ where)]
-
-(* The construct is karamel's limitation alone. *)
-let krml_reject_c_ok (#a:Type) (what:string) : ML a =
-  krml_reject_with what
-    "The direct C backend (--custard_backend C) does accept it."
-
-(* No backend has it; the program has to change. *)
-let krml_reject (#a:Type) (what:string) : ML a =
-  krml_reject_with what
-    "The direct C backend (--custard_backend C) has no representation for \
-     it either."
-
-(* Section 50.2.  A third scope, which the two above cannot express.  karamel
-   *does* have the construct -- its own AST holds it and its C backend emits
-   it -- and what is missing is one of karamel's *targets*.  Saying "no
-   karamel representation" here would send a reader to look for a node that
-   is there.  Refusing per backend is §46.3 at one more level of resolution:
-   which backend accepts a construct is a fact about the site, and so is
-   which of karamel's own targets does. *)
-let krml_reject_rust (#a:Type) (what:string) (why:string) : ML a =
-  E.raise_error0 E.Error_CustardNoCRepresentation
-    [text ("Custard: " ^ what ^ " has no representation in karamel's Rust \
-            backend.");
-     text why;
-     text "Both C routes accept it: --custard_backend KrmlC and \
-           --custard_backend C."]
 
 (* -------------------------------------------------------------------- *)
 (* Patterns                                                             *)

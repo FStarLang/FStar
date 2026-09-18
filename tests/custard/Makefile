@@ -1864,6 +1864,10 @@ CGREP_Narrow += "custard_f16_add(a, b)"
 CGREP_Narrow += "custard_f16_lt(custard_f16_sub(a, b)"
 CGREP_Narrow += "custard_f16_of_i64((int64_t)2049)"
 CGREP_Narrow += "custard_bf16_add(CUSTARD_BF16_LIT(16320U)"
+# Section 125.5.  The special values are bit patterns at these widths too,
+# and no <math.h> is involved: the struct has no NAN to borrow.
+CGREP_Narrow += "CUSTARD_F16_LIT(32256U)"
+CNOGREP_Narrow += "CUSTARD_NAN"
 # Section 98.  The generated header carries the contract and no implementation:
 # it names what the program must supply and stops the compile if it did not.
 CGREP_Narrow += "\#ifndef CUSTARD_FLOAT16_DEFINED"
@@ -2357,6 +2361,39 @@ EGREP_FloatSingle += "binary32"
 REJECT_TESTS += FloatLit
 CODE_FloatLit = 380
 EGREP_FloatLit += "is not a floating-point literal"
+
+# Section 125.5.  [nan] and [inf] are of_literal's two non-decimal spellings.
+# Seventeen checks of the two IEEE 754 properties a program can actually
+# observe -- a NaN is unordered with everything including itself, an infinity
+# is ordered above every finite value -- run on every backend that has a
+# binary64, and reported through the exit code because direct-to-C has no
+# FStar.IO.  The C pins are on the *macros*: emitting NAN and INFINITY bare
+# would compile identically, and the whole point of the macro names is that
+# [mentions_float_special] can find them without matching a generated
+# identifier.
+CUSTARD_TESTS += FloatSpecial
+C_TESTS       += FloatSpecial
+FS_TESTS      += FloatSpecial
+CGREP_FloatSpecial   += "\#define CUSTARD_NAN NAN"
+CGREP_FloatSpecial   += "\#define CUSTARD_INF INFINITY"
+CGREP_FloatSpecial   += "\#include <math.h>"
+CGREP_FloatSpecial   += "(-CUSTARD_INF)"
+# The support block goes only into the file that mentions the names, and
+# nothing in this program is public, so that file is the source and not the
+# header.
+CHNOGREP_FloatSpecial += "CUSTARD_NAN"
+NOGREP_FloatSpecial  += "nan_"
+GREP_FloatSpecial    += "Stdlib.nan"
+GREP_FloatSpecial    += "Stdlib.neg_infinity"
+
+# The other half: karamel carries the literal as text and has no spelling for
+# either value, so the crossing is refused -- naming the backend that does
+# accept it, which section 46.3 says is a fact about the site.
+REJECT_TESTS += FloatSpecialKrml
+FLAGS_FloatSpecialKrml += --custard_backend KrmlC
+CODE_FloatSpecialKrml := 368
+EGREP_FloatSpecialKrml += "a NaN literal has no karamel representation"
+EGREP_FloatSpecialKrml += "does accept it"
 
 # Section 46.1/46.2.  FStar.Char.char is uint32_t on both C paths.  Both tests
 # check their own answer rather than grepping for a spelling (section 43.2):
