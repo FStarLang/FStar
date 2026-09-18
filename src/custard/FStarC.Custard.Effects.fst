@@ -34,8 +34,14 @@ module U      = FStarC.Syntax.Util
 
 let of_lid (env:TcEnv.env) (l:Ident.lident) : ML eff =
   let l = TcEnv.norm_eff_name env l in
+  (* Section 125.10.  An effect carrying [@@erasable] is [GHOST] by another
+     name: a computation in it has no runtime content whatever its result
+     type says, so it drops, duplicates and reorders exactly as a ghost one
+     does.  [GHOST] itself is spelled out above rather than looked up because
+     it is the one whose lid is known. *)
   if Ident.lid_equals l PC.effect_GHOST_lid
   || Ident.lid_equals l PC.effect_Ghost_lid
+  || TcEnv.is_erasable_effect env l
   then E_Ghost
   else if Ident.lid_equals l PC.effect_PURE_lid
        || Ident.lid_equals l PC.effect_Pure_lid
@@ -76,7 +82,18 @@ let impure_effect_result (env:TcEnv.env) (t:typ) : ML (option typ) =
      | [] -> None)
   | _ -> None
 
+let is_erasable (env:TcEnv.env) (c:comp) : ML bool =
+  TcEnv.is_erasable_effect env (U.comp_effect_name c)
+
+(* Section 125.10.  What a computation *returns*, as a type.  An erasable
+   effect returns nothing: [MGhost int] is an [int] the program cannot hold,
+   so the type that describes the value a caller gets back is [unit].  Saying
+   [int] there is not conservative, it is wrong --- the body extracts to [()],
+   and a declaration that disagrees with its own body does not compile.  This
+   is the same answer {!Extract.is_erasable} gives for a definition carrying
+   the attribute itself; the difference is only where the attribute sits. *)
 let result_typ (env:TcEnv.env) (c:comp) : ML typ =
+  if is_erasable env c then S.t_unit else
   let r = U.comp_result c in
   match impure_effect_result env r with
   | Some a -> a

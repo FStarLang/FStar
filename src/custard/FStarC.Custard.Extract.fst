@@ -3126,10 +3126,12 @@ and local_result (st:state) (ty:typ) (xs:binders) : ML (cty & eff) =
      returns is now the closure the representation describes. *)
   let n_extra = List.length xs - List.length bs in
   let eff, ret =
-    if Effects.is_reifiable (tcenv st) (U.comp_effect_name c)
+    if Effects.is_erasable (tcenv st) c then (E_Ghost, TUnit)
+    else if Effects.is_reifiable (tcenv st) (U.comp_effect_name c)
     then peel n_extra E_Pure
               (ty_of_typ st (Effects.reify_comp (env_for_comp (tcenv st) c) c))
-    else peel n_extra (eff_of_comp st c) (ty_of_typ st (U.comp_result c)) in
+    else peel n_extra (eff_of_comp st c)
+              (ty_of_typ st (Effects.result_typ (tcenv st) c)) in
   (ret, eff)
 
 (* Delete the entries flagged [true].  A flag list shorter than the list being
@@ -5072,9 +5074,15 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
         (* Section 7.5, exactly as below: the binders run out on a reifiable
            comp, so what is left is the representation and the definition is
            pure. *)
+        (* Section 125.10, and before the reification below: an erasable
+           effect is usually defined with a [repr], so it is reifiable too,
+           and reifying it produces the representation of a value that does
+           not exist.  [MGhost int] reifies to [int repr], which is [int]. *)
+        else if k = n && Effects.is_erasable (tcenv st) c'
+        then (E_Ghost, TUnit)
         else if k = n && Effects.is_reifiable (tcenv st) (U.comp_effect_name c')
         then (E_Pure, ty_of_typ st (Effects.reify_comp (env_for_comp benv c') c'))
-        else peel_typ (n - k) (eff_of_comp st c') (U.comp_result c')
+        else peel_typ (n - k) (eff_of_comp st c') (Effects.result_typ (tcenv st) c')
       (* Not an arrow that the term level can see, so what is left is handed
          to the [cty]-level peel -- through {!head_ty}, because the arrows may
          still be behind an abbreviation *there*.  [FStar.Set.set a =
@@ -5083,12 +5091,16 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
          is a perfectly ordinary [TApp] of a two-parameter abbreviation whose
          body is an arrow -- and a [TApp] is not a [TArrow]. *)
       | _ -> peel n e (head_ty st (ty_of_typ st t) 10) in
-  let res_typ = U.comp_result c in
+  let res_typ = Effects.result_typ (tcenv st) c in
   (* Section 7.5: a reifiable result type is replaced by its representation,
      and the definition itself becomes pure -- what it now returns is the
      closure the representation describes. *)
   let eff, ret =
-    if Effects.is_reifiable (tcenv st) (U.comp_effect_name c)
+    (* Section 125.10, before the reification for the same reason as in
+       [peel_typ]: an erasable effect has a [repr] to reify through, and the
+       representation describes a value the program does not hold. *)
+    if Effects.is_erasable (tcenv st) c then (E_Ghost, TUnit)
+    else if Effects.is_reifiable (tcenv st) (U.comp_effect_name c)
     then peel n_extra E_Pure
               (ty_of_typ st (Effects.reify_comp (env_for_comp benv c) c))
     else peel_typ n_extra (eff_of_comp st c) res_typ in

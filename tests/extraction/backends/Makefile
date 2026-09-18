@@ -171,19 +171,20 @@ NO_CUSTARD_KRML_C := ExtBoolHigherOrder
 # FINDINGS.md #18: FStar.{U,}Int{8,16,32,64} are not realized modules for
 # Custard the way FStar.UInt8 is, and only the operations with a primitive
 # rule (arithmetic, comparison, the bitwise pair) are recognized. Everything
-# else -- `ne`, `lognot`, `shift_arithmetic_right`, the rotates, the masks --
-# is compiled from its F* *model*, which is a fold over a bit vector of
-# Prims.int. That does not even typecheck on the OCaml backend, and on the C
-# ones it reaches Prims.int and is rejected.
-XFAIL_CUSTARD_OCAML     += ExtIntNe ExtIntShiftArith ExtUIntRotate
-XFAIL_CUSTARD_C         += ExtIntShiftArith ExtUIntRotate
-XFAIL_CUSTARD_KRML_C    += ExtIntShiftArith ExtUIntRotate ExtUIntMask
-XFAIL_CUSTARD_KRML_RUST += ExtIntShiftArith ExtUIntRotate
+# else -- `ne`, `lognot`, the masks -- is compiled from its F* *model*, which
+# is a fold over a bit vector of Prims.int. That does not even typecheck on
+# the OCaml backend, and on the C ones it reaches Prims.int and is rejected.
 #
-# On the direct C column these are XFAIL rather than NO, even though they too
-# stop at error 368: the diagnosis is right about the *program it was given*
+# Section 125.1--125.4 gave `shift_arithmetic_right` and the two rotates
+# primitive rules, which is why ExtIntShiftArith and ExtUIntRotate are no
+# longer here on any of the four columns.
+XFAIL_CUSTARD_OCAML     += ExtIntNe
+XFAIL_CUSTARD_KRML_C    += ExtUIntMask
+#
+# ExtUIntMask is XFAIL on the krml C column rather than NO even though it too
+# stops at error 368: the diagnosis is right about the *program it was given*
 # (a bit-vector fold really has no C representation) but wrong about the
-# program that was written, which is a rotate. The bug is in Builtins, not in
+# program that was written, which is a mask. The bug is in Builtins, not in
 # the C backend, so the cell records a defect rather than a boundary.
 
 # FINDINGS.md #3: `FStar.UInt8` *is* a realized module for Custard, so its
@@ -327,11 +328,23 @@ endif
 # OCaml       #
 ###############
 
-# Append a driver to the extracted module itself: it is in scope of `main`, so
-# no separate compilation unit (and no module resolution) is needed.
-$(OUTPUT_DIR)/ml/%.ml: $(OUTPUT_DIR)/%.ml
+# This column is the *legacy* extractor, and it extracts here rather than
+# through mk/test.mk's $(OUTPUT_DIR)/%.ml, which now runs Custard: the whole
+# point of this directory is that the ml and cml columns are two different
+# pipelines compiling the same program, and sharing a rule would make them one
+# column reported twice.  It stays until the legacy pipeline is deleted.
+# A static pattern rule rather than an implicit one, because
+# $(OUTPUT_DIR)/ml/%.ml also matches mk/test.mk's $(OUTPUT_DIR)/%.ml and an
+# implicit rule does not reliably win against another implicit rule.  A static
+# pattern rule is an explicit rule for each of its targets, so it does.
+#
+# The driver is appended to the extracted module itself: it is in scope of
+# `main`, so no separate compilation unit (and no module resolution) is
+# needed.
+$(patsubst %,$(OUTPUT_DIR)/ml/%.ml,$(TESTS)): $(OUTPUT_DIR)/ml/%.ml: $(CACHE_DIR)/%.fst.checked
+	$(call msg, "EXTRACT ml", $*)
 	$(Q)mkdir -p $(dir $@)
-	$(Q)cp $< $@
+	$(Q)$(FSTAR) --codegen OCaml $< -o $@
 	$(Q)echo 'let _ = Stdlib.exit (Stdint.Int32.to_int (main ()))' >> $@
 
 $(OUTPUT_DIR)/ml/%.exe: $(OUTPUT_DIR)/ml/%.ml

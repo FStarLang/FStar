@@ -2388,6 +2388,27 @@ NOGREP_ExnName += "exception Not_found"
 # two shapes that are invisible in the output -- the inner match section 115
 # splits out of a tuple pattern under an [any] field, and the absence of one
 # where the field's type is concrete.
+# Section 125.10.  An effect carrying [@@erasable] makes every computation in
+# it proof-level whatever its result type says, and such an effect is usually
+# defined with a representation, so it is reifiable too -- reifying it built
+# the representation of a value that does not exist and the definition was
+# emitted as `() : int`, which does not compile.  The greps are the whole
+# assertion: the three Spec definitions have unit results and empty bodies,
+# the Plain one keeps its int, and no reference to the assumed spec_int
+# survives.  The run is there because a program that does not compile cannot
+# reach its own output.
+CUSTARD_TESTS += ErasableEff
+# --custard_main alone would root only what [main] reaches, and what this test
+# is about is precisely the definitions that reach nothing because they were
+# erased.
+FLAGS_ErasableEff = --custard_entry_module ErasableEff
+GREP_ErasableEff += "let erasableEff_use_spec (tmp : unit) : unit"
+GREP_ErasableEff += "let erasableEff_use_spec_arg (n : Prims.int) : unit"
+GREP_ErasableEff += "let erasableEff_spec_int (tmp : unit) : unit"
+GREP_ErasableEff += "let erasableEff_use_plain (tmp : unit) : Prims.int"
+GREP_ErasableEff += "let erasableEff_plain_int (tmp : unit) : Prims.int"
+NOGREP_ErasableEff += "use_ghost"
+
 CUSTARD_TESTS += AnyPat
 FLAGS_AnyPat = --warn_error -367
 GREP_AnyPat += "| (y, z) -> (AnyPat_PStrings"

@@ -21194,7 +21194,7 @@ the property that the SDK CI uses is the one the channel names.  A cache
 hit on the image is not worth an environment that cannot be reproduced,
 and this is the failure mode that argument predicts.
 
-## 125 Four gaps the legacy test suites found
+## 125 Five gaps the legacy test suites found
 
 `tests/machine_integers` is one of the older test directories in the
 repository and it is not a Custard test: it is eight programs that
@@ -21531,6 +21531,113 @@ any)`.  A coercion computes nothing, so two in a row are one; the
 coercion pass, which is the last one to run and therefore the last chance
 to notice, now fuses them.  An `ECast` is left alone, because that one
 does compute.
+
+### 125.10 An erasable effect returns nothing
+
+`tests/micro-benchmarks/Erasable.fst` defines an effect and marks it:
+
+```fstar
+[@@erasable]
+total
+effect { MGHOST with {repr; return; bind} }
+
+let eff_test2 () : MGhost int = f_ghost_info () + 2
+```
+
+`[@@erasable]` on an effect says that a computation in it has no runtime
+content --- it is `GHOST` under another name, declared by the program
+rather than by `Prims`.  Custard erased the *body*, correctly, to `()`.
+It did not erase the declared result type, so what came out was
+
+```ocaml
+let erasable_eff_test2 (tmp : unit) : Prims.int = ()
+```
+
+which is not a program.  A declaration that disagrees with its own body
+is worse than either being wrong on its own, because the two are read by
+different things: `narrow_rets` and every call site believe the
+signature, and the backend prints the body.
+
+Three places had to agree.  `Effects.of_lid` now answers `E_Ghost` for an
+erasable effect, which is what its drop/duplicate/reorder behaviour
+actually is.  `Effects.result_typ` answers `unit`, which makes the
+*types* `unit -> MGhost int` and `unit -> unit` the same type, as they
+are.  And `extract_letbinding` asks the erasable question **before** the
+reifiable one --- an effect defined with a `repr` is reifiable, so
+reifying `MGhost int` produced `int repr`, which is `int`, the
+representation of a value that does not exist.  That ordering is the
+whole fix; without it the other two never get a turn.
+
+The distinction is not the same as the `[@@erasable]` on a *definition*
+that §5.1 already handled: there the attribute sits on the thing being
+extracted and `is_erasable` finds it on the sigelt.  Here it sits on the
+effect, one level away, and the definition carrying it looks perfectly
+ordinary.
+
+`tests/custard/ErasableEff.fst` declares two effects that differ in
+nothing but the attribute, and pins that every definition in the erasable
+one has a `unit` result --- including one whose F\* result type is a
+function type, since what the effect erases is the whole computation and
+not just a value.  `GTot`, which is F\*'s own erasable effect, is dropped
+outright, as it always was.
+
+## 126 The generic extraction rule runs Custard
+
+Every test directory under `tests/` that extracts OCaml gets the rule
+from `mk/test.mk`:
+
+```make
+$(OUTPUT_DIR)/%.ml: $(CACHE_DIR)/%.fst.checked
+	$(FSTAR) --codegen OCaml $< -o $@
+```
+
+One line, inherited by twenty-odd directories, and the reason the legacy
+pipeline still had coverage at all.  It now reads
+
+```make
+	$(FSTAR) --codegen Custard \
+	  --custard_entry_module $(subst .fst.checked,,$(notdir $<)) $< -o $@
+```
+
+and the `%.fs` rule alongside it gained `--custard_backend FSharp`.
+`--custard_entry_module` rather than `--custard_main`: these tests are
+golden-file tests of *what a module extracts to*, not programs, and most
+have no `main`.  §70.1's entry-module rooting is exactly the "extract
+this module" request they were making of the old pipeline.
+
+### 126.1 Seven goldens became empty
+
+A whole-program monomorphizer has nothing to say about a module holding
+only a type abbreviation, only a record declaration, or only a
+polymorphic function.  An abbreviation is unfolded at its uses; a
+polymorphic function is compiled once per instantiation and there are no
+instantiations.  §70.1 roots abbreviations named by the entry module but
+deliberately not inductives or records --- "an inductive is still rooted
+by its uses" --- so `RecordExtraction`, the four `RemoveUnusedTypars`
+modules, `Bug2912b` and `Bug3865b` now extract to nothing.
+
+The goldens are kept, empty, with a comment saying why.  An empty golden
+still asserts that extraction *succeeded*, which is what six of these
+seven regression tests were originally about; the seventh,
+`RecordExtraction`, was about F#'s record printing, and `KrmlBasic` and
+`AnyCond` print records on the F# leg of `tests/custard` (§122).
+
+### 126.2 The comparison suite keeps its legacy legs
+
+`tests/extraction/backends` exists to run the same module through every
+backend side by side, legacy and Custard, and report the differences in
+`FINDINGS.md`.  Migrating its `ml` leg would have deleted the comparison.
+Because `mk/test.mk` is included at the *top* of that Makefile, its
+implicit `%.ml` rule wins over any later implicit rule, however specific;
+the leg got a **static pattern rule** instead, which make treats as an
+explicit rule for each of its targets and therefore prefers.  Those legs
+should outlive this migration and die with the legacy pipeline itself.
+
+Six cells in that table went from XFAIL to passing without anyone
+touching them: §125.1--125.3's rotates and arithmetic shifts retired
+`ExtIntShiftArith` and `ExtUIntRotate` on all four Custard columns.  What
+remains is `ExtIntNe` on custard-ocaml and `ExtUIntMask` on
+custard-krml-c.
 
 | M | Deliverable | Notes |
 | --- | --- | --- |
@@ -21884,3 +21991,5 @@ does compute.
 | M10κΒ | `nan` and `inf` become literals | §39.2 wrote down that what a `float_lit` cannot denote --- an infinity, a NaN --- is what `of_literal` does not accept either, on the grounds that those are what an argument reaching C by accident would look like.  `tests/floats/Test01.fst` disagrees: an accident does not spell itself `nan` in an F\* source file, and a program that wants a NaN has no other way to write one, since `FStar.Float64` exposes no operation that builds one from finite arguments.  A refusal is worth having only when there is something else to write.  `float_lit` stops being a record and becomes `FLNum | FLNan | FLInf`, cases rather than magnitudes because `FStarC.Real.real` is a rational and neither value is one; a NaN carries no sign, since nothing F\* exposes can observe one.  Each backend then answers for itself: OCaml and F# have identifiers (`Stdlib.nan`, qualified because `nan` is a plausible name for a program to bind); C has no constant syntax at all and borrows `<math.h>`'s `NAN` and `INFINITY` through `CUSTARD_NAN`/`CUSTARD_INF`, macro names rather than bare because §123 decides placement by asking whether a file *mentions* them and `NAN` is short enough to occur inside a generated identifier; binary16 and bfloat16 encode the patterns by hand, as §66 already does for every other literal at those widths; and karamel cannot, because its `EConstant` carries the literal as text and its grammar is the decimal one, so the crossing is refused the §46.3 way, naming the backend that does accept it.  `FloatSpecial.fst` is seventeen checks of the two observable properties, seven of them routing a literal through the arithmetic so that what is tested is the value the hardware produces. §125.5--125.6 |
 | M10κΓ | The one mangled name a program can read | `FStar.Exception.string_of_exn` is `Printexc.to_string`, which prints the *constructor*, so an exception's emitted OCaml name is the single place where §12.7's mangling is observable from inside the extracted program: `StringOfExn.A` came out as `StringOfExn.StringOfExn_A`.  Mangling exists to keep one flat file collision-free, so it is now applied where there is a collision and not otherwise.  An exception keeps its plain identifier when no other constructor in the file wants that spelling, no other exception wants it either, and it is not one of OCaml's own --- an `exception Not_found` of ours would shadow `Stdlib.Not_found` for the rest of the file, where a hand-written realization that is not generated and does not know may still mean the original.  Two exceptions that want the same short name both stay mangled: giving it to whichever was declared first would make which of them is readable depend on declaration order.  Variant constructors are deliberately left alone --- nothing observes their spelling, and changing it would churn every OCaml golden in the repository for no gain.  `ExnName.fst` has all three cases in one program. §125.7 |
 | M10κΔ | Three ways an `any` fails to be coerced (§125.8--125.9) | Three legacy bug reports, all producing OCaml that did not compile, all one value of type `any` reaching a position that needed a real type.  `Bug734`: `Extract` gave a match node the type of its *first* branch, which for `arg_type d` --- a different type per branch --- was a claim about whichever branch F\* wrote down first, and §111's `narrow_rets` promoted it to a declared signature three passes later, so `def_value Fun` was applied to an argument its own declaration said was not there.  The rule is now to drop the `any` branches and take what is left if it agrees, `any` otherwise; dropping first matters, since one branch that lost its type should not cost a coercion at every use of the match.  `Eta_expand`: the coercion pass reads a scrutinee's type off the branch patterns and consulted constructor and record patterns only, so a match on integer literals found nothing to coerce to and compared an `Obj.t` against an `int`; a constant pattern names a type as precisely as a constructor does.  `Bug2595`: §115 splits a destructuring sub-pattern out from under an `any` field, and asked the *declaration* for the field's type --- `'b` for `dtuple2`, never `any` at any instantiation it can see --- when the answer is in the scrutinee's type, `(bool, any) dtuple2`; the type arguments are now substituted in and the resolved type threaded down through tuples, fields and `any` positions alike.  The coercion pass also fuses a coercion onto a coercion, which §115's output made common.  `tests/custard/AnyPat.fst` is all three in one program. §125.8--125.9 |
+| M10κΕ | An erasable effect returns nothing (§125.10) | `[@@erasable]` on an *effect* says a computation in it has no runtime content, which is `GHOST` declared by a program rather than by `Prims`.  Custard erased the body of such a definition to `()` and left its declared result type alone, so `tests/micro-benchmarks/Erasable.fst` extracted `let eff_test2 (tmp : unit) : Prims.int = ()` --- a declaration disagreeing with its own body, which is worse than either being wrong alone, since §111's `narrow_rets` and every call site believe the signature and only the backend reads the body.  Three places had to agree: `Effects.of_lid` answers `E_Ghost`, `Effects.result_typ` answers `unit`, and `extract_letbinding` asks the erasable question *before* the reifiable one --- an effect defined with a `repr` is reifiable, and reifying `MGhost int` yields `int repr`, which is `int`, the representation of a value that does not exist.  The ordering is the whole fix.  This is not the §5.1 case, where the attribute sits on the definition being extracted and is found on the sigelt; here it sits one level away on the effect and the definition looks ordinary.  `tests/custard/ErasableEff.fst` declares two effects differing in nothing but the attribute, and pins a `unit` result for every definition in the erasable one --- including one whose F\* result type is a function type, since what is erased is the computation and not just a value. §125.10 |
+| M10κΖ | The generic extraction rule runs Custard (§126) | `mk/test.mk`'s one inherited `$(OUTPUT_DIR)/%.ml` rule was the reason the legacy pipeline still had coverage across twenty-odd test directories; it and the `%.fs` rule beside it now run `--codegen Custard`, with `--custard_entry_module` rather than `--custard_main` because these are golden-file tests of what a module extracts to and most have no `main`.  Seven goldens went empty (§126.1): a module holding only an abbreviation, a record or a polymorphic function has nothing for a whole-program monomorphizer to emit, and an empty golden still asserts that extraction succeeded.  `tests/extraction/backends` keeps its legacy legs (§126.2), since deleting them would delete the side-by-side comparison they exist for; the `ml` leg needed a *static pattern rule* to win, because `mk/test.mk` is included at the top of that Makefile and an implicit rule seen first beats a more specific implicit rule seen later.  Six cells of that table retired themselves when §125's rotates and arithmetic shifts landed. §126 |

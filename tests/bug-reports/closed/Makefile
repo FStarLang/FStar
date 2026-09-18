@@ -28,6 +28,18 @@ RUN += Bug1714.fst
 # so the diff rule triggers automatically, even without these lines.
 # EXTRACT += RemoveUnusedTypars_B.fst
 # EXTRACT += RemoveUnusedTyparsIFace_B.fst
+#
+# Those four .fs goldens, and RecordExtraction's, are now empty, and so are
+# Bug2912b's and Bug3865b's. They were written for a per-module extractor and
+# each is a module that holds nothing but a type or a polymorphic function:
+# `let t (a:Type) (b:Type) = list a`, `let f a b (x:A.t a b) = x`, a record
+# declaration. Custard compiles a whole program, so a type abbreviation is
+# unfolded at its uses and a polymorphic function is compiled once per
+# instantiation -- and a module with no uses in it has neither. The goldens
+# are kept rather than deleted because an empty one still asserts that
+# extraction succeeds, which is what these bug reports were about; the
+# question they used to ask about type parameters cannot be put to an
+# extractor that monomorphizes them away.
 
 FSTAR_ROOT ?= ../../..
 include $(FSTAR_ROOT)/mk/test.mk
