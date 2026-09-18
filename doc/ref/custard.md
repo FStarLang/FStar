@@ -21052,6 +21052,111 @@ parameter of the `FStar.UInt32` one is renamed, with a comment saying
 why, since a future edit that renames it back would fail three files
 away from the change.
 
+
+
+## 123 Two support blocks leave the header
+
+A generated header is a file a person reads.  It is the one artefact of
+this pipeline that a consumer opens deliberately, to find out what the
+program exports and what its types are, and everything above the first
+declaration is a cost that reader pays.  Two blocks were being paid for
+in every header and used in almost none.
+
+### 123.1 `custard_unit`
+
+Every header carried the same eleven lines: a comment explaining §5.1's
+sole inhabited erased value, a `CUSTARD_UNIT_DEFINED` guard, and
+`typedef uint8_t custard_unit;`.  The obvious question is whether the
+type is still needed at all, and the answer turns out to be yes and
+almost never.
+
+It is still reachable.  A `ref unit` is a `custard_unit *`, and the
+layout pass has no reason to erase a reference whose cell happens to be
+erased --- the reference is a real object with a real address.  A field
+of a `noeq` record can have that type, and then the *struct* has it, and
+the struct is in the header.
+
+But it is reachable nowhere in a normal program.  The layout pass erases
+a unit field, a unit-returning function is `void` (§26.1), and §32.6
+drops the unit arguments of a call and the unit domains of an arrow.  So
+across the whole of `tests/custard` --- 160-odd programs, every one of
+which compiled --- the token `custard_unit` appeared exactly as many
+times as the typedef was emitted and not once more.
+
+The block is now emitted only into a file that mentions it, which for
+almost every program means neither file.  `tests/custard/CUnitTy.fst`
+has the record, so the typedef is in its header; `CUnitRef.fst` has only
+a private function over a `ref unit`, so the typedef is in its source
+and its header does not mention it.
+
+### 123.2 The 16-bit float contract
+
+§98's block was forty lines of comment --- the rationale for not using
+`_Float16`, the note about `__host__ __device__` under nvcc, and a table
+of the twelve names Custard can emit --- followed by an `#ifndef` and an
+`#error` that repeated the instruction a third time.
+
+All of that is reference material, and this document is the reference.
+What is left in the generated file is the check and one sentence:
+
+```
+#ifndef CUSTARD_FLOAT16_DEFINED
+#error "Custard: this program uses binary16 or bfloat16, which Custard
+does not implement.  Supply custard_f16/custard_bf16 and their
+operations in a @@custard_c_header and define CUSTARD_FLOAT16_DEFINED;
+section 98 of doc/ref/custard.md lists the vocabulary."
+#endif
+```
+
+(one line in the output; wrapped here).  The message names the macro to
+define, the attribute that carries the definitions, and where the list
+is, which is everything a reader who hits the `#error` needs in order to
+act.
+
+Placement follows the same rule as §123.1, and for this block the rule
+has teeth: a program whose narrow floats are all internal --- which is
+the common case, since the vocabulary is usually reached through
+`@@custard_extern` wrappers --- now has a header that says nothing about
+16-bit floats at all.  `Narrow` and `NarrowG` are that case and
+`NarrowHdr`, whose record has two `custard_f16` fields, is the other.
+
+The one ordering constraint survives.  In the header the check goes
+*after* the `@@custard_c_header` includes and never before them: it is
+satisfied by supplying the type and the operations first, and the header
+that supplies them is named by an attribute on an F\* declaration, so it
+arrives at the printer and nowhere earlier.  In the source the same
+holds for free, since the unit's own header is the first line.
+
+### 123.3 Deciding by text
+
+Both blocks are placed by asking whether the rendered text of a file
+mentions the names in question.  That is a textual test, and it is worth
+saying why it is the right one rather than a flag set while rendering.
+
+There was such a flag --- `uses_narrow`, set in five places and reset in
+two --- and it could answer "does this unit use a narrow float" but not
+"which of the two files does", which is the question that matters once
+the block can go in either.  The text can answer both, and it is exact
+rather than conservative: every route to these formats spells one of
+`custard_f16`, `custard_bf16`, `CUSTARD_F16_` or `CUSTARD_BF16_`, and
+the only way to write `custard_unit` is to emit the type.  A narrow
+float in a local variable and nowhere in any signature --- the case the
+flag existed for --- is a mention in the source and not in the header,
+which is exactly the answer wanted.
+
+So the flag is gone, which is two fewer entries in
+`reset_program_state` (§121.3) and five fewer assignments in code whose
+job is to render.
+
+### 123.4 Pinning a file rather than a unit
+
+`CGREP_X` and `CNOGREP_X` search the header and the source together,
+because §24 made a unit two files and most assertions do not care which
+one a line is in.  These do: the entire claim here is that something is
+in one file and not the other, and a pin over the pair cannot state it.
+`CHGREP_X` and `CHNOGREP_X` are the same two pins scoped to the header,
+and the four new tests use them on both sides of each decision.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -21398,3 +21503,4 @@ away from the change.
 | M10ιΥ | Round 4's structural review: a traversal combinator, per-program state, one emitted name (§121) | Done.  An advisory round rather than a defect report: no bugs, but a measurement that the two mechanisms behind essentially every defect found so far were hand-written traversals and process-global state with convention-gated name minting.  `Syntax` gains `children` and `map_children` --- the only two exhaustive walks in the package now --- with `iter_children`, `fold_children`, `exists_child` and `for_all_children` derived from the first; a binder is deliberately not a child, so a pass with an opinion about a binding form has to say so against a default.  Twenty-three walks in `Simplify` and one in `RegEmb` are now their interesting cases plus a fall-through, and `Simplify` loses 334 lines.  `Layout.rw_expr`, `Monomorphize.mono_expr` and `Rename.rn_expr` stay written out because they rewrite types as well as children, and `coerce_prog` stays because every arm of it has an opinion --- which is now visible as an exception rather than lost in boilerplate, and that was the §117 `EIf`-condition defect's root cause.  `PrintC.reset_program_state` lists all twenty-two per-program variables in one place, where `print_program` used to reset thirteen by hand and leave nine.  `PrintC.emitted_name` is the single spelling of a declaration, read by the `taken_names` seeding, the collision check, the `externs` table and an external's prototype --- §117.2 and §117.3 were both a name allocated against a set that did not contain everything the file would contain.  `Section 18.4`, cited twice and never written, becomes §19.2 and §19.3, and `tests/custard/checkrefs.py` (`make check-refs`) now holds all 922 citations.  Splitting `Extract.fst` along its banners is declined on the record: weakly held by the reporter, navigability only, and churn during an active review |
 | M10ιΦ | An F# backend, targeting .NET 10 | F\* has had an F# backend since long before Custard and it has been unmaintained long enough that its output no longer compiles: what it emits is indentation a current F# compiler refuses.  So `FStarC.Custard.PrintFSharp` is new code against the IR rather than a port.  The output is a *project* --- the module, an embedded support library, and an `.fsproj` naming `net10.0` --- so that `dotnet build` in the directory Custard wrote is the whole build story.  Indentation is the difficulty: `after`/`col_after` render every subterm at its true column, and `col_after` must scan backwards to the last newline or the printer is super-linear (the first version had not finished `LetShare` after half an hour; it now takes 21s).  Keyword escaping is F#'s backtick quote, which is injective by construction and so avoids §115's `method`/`method_` problem; type variables cannot be quoted and use a doubling escape instead, since `t'` would otherwise print as a character literal.  `TAny` is `obj` and `Obj.magic` has no counterpart --- .NET has no uniform representation --- so a scrutinee typed `obj` is unboxed before matching against constant patterns, and a coercion between two instantiations of one type constructor is refused as error 395 rather than emitted as an `unbox` that throws.  `System.UInt128`/`Int128` give §119 a second target; they have no literal and no `~~~`.  `--custard_split` and `--custard_unit` are refused.  21 programs are extracted, compiled and run in CI when a .NET 10 SDK is present, plus two rejection tests that always run; that leg found five defects in the backend and one latent one in the OCaml backend (a dropped unit binder whose arrow type kept its domain --- `UnitPtr`'s OCaml output does not compile, and nothing in the suite had compiled it). §122 |
 | M10ιΧ | The repository moves to the .NET 10 SDK | §122 targets .NET 10, so the devcontainer, `.github/actions/setup-fstar-deps` and the three `.docker/` images install it --- through Microsoft's `dotnet-install.sh` and tarball rather than apt, since Ubuntu's archive carries whichever SDK was current when the release was cut --- and `DOTNET_ROOT` is exported alongside the `PATH` entry, without which a published apphost looks for its runtime under the system install.  One SDK rather than two means the legacy F# path comes along: the two `global.json`s and the `net8.0` target frameworks under `fsharp/tests` and `examples`.  It builds, after one fix: `ulibfs` failed to compile at `-c Release` with FS2014, "duplicate entry `get_x@10` in method table".  The F# 10 optimizer names an inlined closure after its parameter and the *line* it came from and not the file, `FStar_UInt32.uint_to_t` and `FStar_UInt64.uint_to_t` were both `x` on line 10, and `FStar_UInt128` inlines both.  A compiler defect, visible only under `--optimize+`; the parameter of one of them is renamed with a comment, rather than the optimizer turned off, so that the defect stays visible. §122.16 |
+| M10ιΨ | Two support blocks leave the C header | A generated header is a file a person reads, and every one of them carried eleven lines of `custard_unit` typedef plus, for any program touching a 16-bit float, forty lines of §98 reference material.  Both are now emitted only into a file that mentions the names, which for `custard_unit` is usually neither file: the type is still reachable --- a `ref unit` is a `custard_unit *` and a `noeq` record can hold one --- but the layout pass erases unit fields, a unit-returning function is `void`, and §32.6 drops unit arguments, so the token appeared in the whole 160-program corpus exactly as often as the typedef was emitted and not once more.  The float16 block keeps its `#error` and loses the comment, which is reference material and belongs in the reference; the message names the macro, the attribute and §98.  In the header the check still comes after the `@@custard_c_header` includes, since that is what makes it satisfiable.  Placement is decided by asking whether a rendered file mentions the names, which replaces the `uses_narrow` flag --- set in five places, reset in two --- and is strictly better, because a flag can say that a unit uses a narrow float but not which of its two files does.  `CHGREP_X`/`CHNOGREP_X` pin the header alone, since `CGREP` is over the pair and the whole claim is about which file.  Four new tests, on both sides of each decision. §123 |

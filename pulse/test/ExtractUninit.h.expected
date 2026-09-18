@@ -7,15 +7,6 @@
 #include <stdbool.h>
 #include <string.h>
 
-/* The sole inhabited erased value (section 5.1).  A distinct typedef rather
-than void, so that it can be stored in a variable and returned like any
-other value.  Guarded because two generated headers may meet in one
-translation unit (section 42.2): this is a fixed name for a fixed type,
-so two spellings of it are the same spelling. */
-#ifndef CUSTARD_UNIT_DEFINED
-#define CUSTARD_UNIT_DEFINED
-typedef uint8_t custard_unit;
-#endif
 #ifdef __cplusplus
 extern "C" {
 #endif

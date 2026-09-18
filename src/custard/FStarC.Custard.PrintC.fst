@@ -631,13 +631,6 @@ let is_string_ty (t:cty) : ML bool =
    literal wants.  Building the two together is what lets a returned pointer
    ([uint32_t *f(void)]) and a stored function ([size_t ( *hashf)(size_t)]) come
    out right without special cases at each use. *)
-(* Section 66.  Whether this unit mentions a 16-bit float anywhere, so that
-   the support types are emitted into the header only when they are used.
-   Set while the *bodies* are rendered, which happens before the header is
-   assembled -- a narrow float can appear in a local variable and nowhere in
-   any signature, so the decl types alone are not enough to decide. *)
-let uses_narrow : ref bool = mk_ref false
-
 let rec decl_of (t:cty) (x:string) : ML string =
   match t with
   | TBuf e | TRef e -> decl_of e ("*" ^ x)
@@ -682,8 +675,8 @@ and base_ty (t:cty) : ML string =
      The name is the consumer's to define -- on a target with the formats in
      hardware it is a native type or a device intrinsic, and Custard emits the
      name either way. *)
-  | TFloat Float16 -> uses_narrow := true; "custard_f16"
-  | TFloat BFloat16 -> uses_narrow := true; "custard_bf16"
+  | TFloat Float16 -> "custard_f16"
+  | TFloat BFloat16 -> "custard_bf16"
   (* Section 69.  A non-type template argument, spelled by its value.  As with
      a [#define] (section 68) the integer form is bare: a template-id is a
      constant expression already, and the cast Custard adds elsewhere would
@@ -1061,7 +1054,6 @@ let narrow_float_bits (fw:fwidth) (v:float_lit) : ML int =
 (* A compound literal, which at file scope has static storage duration and is
    a valid initializer -- see the comment at {!constant}. *)
 let narrow_float_lit' (fw:fwidth) (v:float_lit) (sfx:string) : ML string =
-  uses_narrow := true;
   let b = narrow_float_bits fw v in
   "CUSTARD_" ^ (if Float16? fw then "F16" else "BF16") ^ sfx ^ "(" ^ show b ^ "U)"
 
@@ -1072,53 +1064,51 @@ let narrow_float_lit (fw:fwidth) (v:float_lit) : ML string =
 let narrow_float_init (fw:fwidth) (v:float_lit) : ML string =
   narrow_float_lit' fw v "_INIT"
 
+(* Section 98.  The two 16-bit floating-point formats are the consumer's:
+   Custard emits calls into a vocabulary it does not implement, and the
+   header naming that vocabulary arrives here through [@@custard_c_header].
+   The block used to carry the whole vocabulary as a comment, which put forty
+   lines of reference material in every file that touched a narrow float.
+   The reference belongs in the reference manual, so what is left is the
+   check and a pointer to it.  Emitted into whichever of the two files
+   mentions a narrow float, and into the header only if the header does. *)
 let narrow_support : string =
   String.concat "\n" [
     "";
-    "/* Section 98: the two 16-bit floating-point formats are the consumer's.";
-    "";
-    "   Custard emits *calls* into the vocabulary below and does not implement it.";
-    "   Not _Float16 and __bf16 either, because those are not portable: _Float16 is";
-    "   C23 and its availability varies by target, and __bf16 more so.  Every";
-    "   consumer of these widths so far reaches a target that has the formats in";
-    "   hardware -- CUDA's __half and __nv_bfloat16 -- and a portable fallback is";
-    "   both slower than that and not what anyone links against.";
-    "";
-    "   So supply the type and the operations in a header named by";
-    "   [@@custard_c_header] on one of your declarations -- those includes are";
-    "   emitted above this block for exactly this reason -- and define";
-    "   CUSTARD_FLOAT16_DEFINED to say you have.  Under nvcc give the functions";
-    "   [static __host__ __device__ inline]: a plain [static inline] is a __host__";
-    "   function and calling one from a kernel is an error, not a warning.";
-    "";
-    "   The whole vocabulary, which is all Custard can emit:";
-    "";
-    "     custard_f16, custard_bf16          the two types";
-    "     CUSTARD_F16_LIT(bits)              a literal, as an *expression*";
-    "     CUSTARD_BF16_LIT(bits)";
-    "     CUSTARD_F16_INIT(bits)             a literal, in *initializer* position";
-    "     CUSTARD_BF16_INIT(bits)";
-    "     custard_f16_of_f32(float)          conversions in";
-    "     custard_f16_of_f64(double)";
-    "     custard_f16_of_i64(int64_t)";
-    "     custard_f16_to_f32(custard_f16)    conversion out, to float";
-    "     custard_f16_add/sub/mul/div        arithmetic, both operands the type";
-    "     custard_f16_eq/neq/lt/lte/gt/gte   comparison, returning bool";
-    "";
-    "   and the same ten operations spelled custard_bf16_.  Custard emits a";
-    "   literal as its *bit pattern* in the format's own encoding, correctly";
-    "   rounded at extraction time, so the macros take a uint16_t and never a";
-    "   decimal number.  Two macros rather than one because a compound literal";
-    "   has automatic storage duration inside a function and cannot initialize an";
-    "   object with static storage duration, while a braced initializer can and";
-    "   is never an expression.  Only the LIT pair needs the __cplusplus";
-    "   spelling: generated CUDA is compiled as C++, where a compound literal is";
-    "   a GNU extension and [T{ ... }] is the portable form. */";
     "#ifndef CUSTARD_FLOAT16_DEFINED";
-    "#error \"Custard: this program uses binary16 or bfloat16, which Custard does not implement.  Supply custard_f16/custard_bf16 and their operations in a @@custard_c_header, and define CUSTARD_FLOAT16_DEFINED.  See the comment above this line for the vocabulary.\"";
+    "#error \"Custard: this program uses binary16 or bfloat16, which Custard \
+     does not implement.  Supply custard_f16/custard_bf16 and their \
+     operations in a @@custard_c_header and define CUSTARD_FLOAT16_DEFINED; \
+     section 98 of doc/ref/custard.md lists the vocabulary.\"";
     "#endif";
     "";
   ]
+
+(* Whether a rendered file mentions the narrow-float vocabulary.  A textual
+   test rather than a flag set while rendering, because the question is about
+   one of the two files and a flag cannot say which -- and because every way
+   of reaching those formats spells one of these four prefixes, so the test
+   is exact rather than approximate. *)
+let mentions_narrow (s:string) : bool =
+  BU.contains s "custard_f16" || BU.contains s "custard_bf16" ||
+  BU.contains s "CUSTARD_F16_" || BU.contains s "CUSTARD_BF16_"
+
+(* Section 5.1.  The sole inhabited erased value: a distinct typedef rather
+   than void, so that it can be stored in a variable and returned like any
+   other value.  Guarded because two generated headers may meet in one
+   translation unit (section 42.2): this is a fixed name for a fixed type, so
+   two spellings of it are the same spelling.  Emitted only where it is used,
+   which for a whole program is usually nowhere -- the layout pass erases
+   unit fields, a unit-returning function is [void], and the unit arguments
+   of section 32.6 are dropped -- so the typedef was boilerplate in every
+   header and a use in none of them. *)
+let unit_support : string =
+  "#ifndef CUSTARD_UNIT_DEFINED\n\
+   #define CUSTARD_UNIT_DEFINED\n\
+   typedef uint8_t custard_unit;\n\
+   #endif\n"
+
+let mentions_unit (s:string) : bool = BU.contains s "custard_unit"
 
 let constant (c:constant) : ML string =
   match c with
@@ -1251,7 +1241,6 @@ let prefix_op (o:prim_op) : ML (option string) =
 let narrow_ty (fw:fwidth) : bool = Float16? fw || BFloat16? fw
 
 let narrow_pfx (fw:fwidth) : ML string =
-  uses_narrow := true;
   if Float16? fw then "custard_f16_" else "custard_bf16_"
 
 let narrow_fw (o:prim_op) : option fwidth =
@@ -1264,7 +1253,6 @@ let narrow_call (o:prim_op) : ML (option string) =
   match narrow_fw o with
   | None -> None
   | Some fw ->
-    uses_narrow := true;
     let pfx = if Float16? fw then "custard_f16_" else "custard_bf16_" in
     (match o.po_op with
      | Add | AddW   -> Some (pfx ^ "add")
@@ -1453,7 +1441,6 @@ let reset_program_state () : ML unit =
   void_fns := SMap.create 0;
   arities := SMap.create 0;
   void_ret := false;
-  uses_narrow := false;
   eq_queue := [];
   eq_seen := SMap.create 20;
   taken_names := SMap.create 50;
@@ -3824,7 +3811,6 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   check_emitted_names init_name p;
   check_reference_copies p;
   arities := at;
-  uses_narrow := false;
 
   (* Only the standard library, and only the parts that are used unavoidably:
      fixed-width integers, malloc/free/abort, memmove, and bool. *)
@@ -3838,20 +3824,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
      #include <stdint.h>\n\
      #include <stdlib.h>\n\
      #include <stdbool.h>\n\
-     #include <string.h>\n\
-     \n\
-     /* The sole inhabited erased value (section 5.1).  A distinct typedef \
-     rather\n\
-        than void, so that it can be stored in a variable and returned like \
-     any\n\
-        other value.  Guarded because two generated headers may meet in one\n\
-        translation unit (section 42.2): this is a fixed name for a fixed \
-     type,\n\
-        so two spellings of it are the same spelling. */\n\
-     #ifndef CUSTARD_UNIT_DEFINED\n\
-     #define CUSTARD_UNIT_DEFINED\n\
-     typedef uint8_t custard_unit;\n\
-     #endif\n" in
+     #include <string.h>\n" in
 
   let includes =
     (* Section 42.2: the linked units' headers, first, since this unit's
@@ -4048,37 +4021,52 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   let cpp_close =
     "\n#ifdef __cplusplus\n}\n#endif\n" in
 
-  let hdr =
-    header ^
-  (match includes with [] -> "" | _ -> String.concat "\n" includes ^ "\n\n") ^
-    (* Sections 66 and 98.  After the [custard_c_header] includes, not before
-       them.  The block is now a *check* rather than an implementation, and it
-       is satisfied by defining CUSTARD_FLOAT16_DEFINED and supplying the type
-       and the operations first -- which is how a CUDA consumer reaches
-       __half, the only 16-bit type wmma::fragment is a template over.
-       Emitted above the includes, that could not be written in the program at
-       all: the header carrying it is named by an attribute on an F*
-       declaration, so it arrives here and nowhere earlier, and -include on
-       the compiler command line was the only way in.  The block itself needs
-       no include, so it has no reason to precede anything else. *)
-    (if !uses_narrow then narrow_support ^ "\n" else "") ^
+  let hdr_body =
   cpp_open ^
   String.concat "" fwds ^ (match fwds with [] -> "" | _ -> "\n") ^
   String.concat "" tys ^ (match tys with [] -> "" | _ -> "\n") ^
   String.concat "" pub_decls ^ (match pub_decls with [] -> "" | _ -> "\n") ^
   init_proto ^ (match inits with [] -> "" | _ -> "\n") ^
-  cpp_close ^
-  "#endif\n" in
+  cpp_close in
 
-  (* The source includes its own header, so the header is *checked* against
-     the definitions rather than merely shipped alongside them. *)
-  let body =
-    banner ^
-    "#include \"" ^ base ^ ".h\"\n\n" ^
+  let src_body =
   String.concat "" exts ^ (match exts with [] -> "" | _ -> "\n") ^
   String.concat "" protos ^ (match protos with [] -> "" | _ -> "\n") ^
   String.concat "" eq_protos ^ (match eq_protos with [] -> "" | _ -> "\n") ^
   String.concat "\n" eq_defs ^ (match eq_defs with [] -> "" | _ -> "\n") ^
   String.concat "\n" defs ^ "\n" ^ (match inits with [] -> "" | _ -> init_fn) ^
     (match mains with [] -> "" | _ -> "\n" ^ String.concat "\n" mains) in
+
+  (* Sections 5.1, 66 and 98.  Each of the two support blocks goes into the
+     header if the header needs it, otherwise into the source if the source
+     does, otherwise nowhere.  A header is a file a person reads, and a block
+     that every reader has to skip past to reach the declarations is a cost
+     paid by every consumer for a feature almost none of them use.
+
+     The narrow-float check goes after the [custard_c_header] includes and
+     never before them: it is satisfied by supplying the type and the
+     operations first, and the header that supplies them is named by an
+     attribute on an F* declaration, so it arrives here and nowhere earlier.
+     In the source the includes come in through the unit's own header, which
+     is the first line, so the same rule holds there. *)
+  let hdr_narrow = mentions_narrow hdr_body in
+  let hdr_unit   = mentions_unit hdr_body in
+  let hdr =
+    header ^
+  (match includes with [] -> "" | _ -> "\n" ^ String.concat "\n" includes ^ "\n") ^
+    (if hdr_unit then "\n" ^ unit_support else "") ^
+    (if hdr_narrow then narrow_support else "") ^
+    "\n" ^ hdr_body ^
+  "#endif\n" in
+
+  (* The source includes its own header, so the header is *checked* against
+     the definitions rather than merely shipped alongside them. *)
+  let body =
+    banner ^
+    "#include \"" ^ base ^ ".h\"\n" ^
+    (if not hdr_unit && mentions_unit src_body
+     then "\n" ^ unit_support else "") ^
+    (if not hdr_narrow && mentions_narrow src_body
+     then narrow_support else "") ^
+    "\n" ^ src_body in
   hdr, body

@@ -1243,6 +1243,18 @@ $(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(Q)for p in $(CNOGREP_$*); do \
 	  grep -qF -- "$$p" $@ $(basename $@).h \
 	    && { echo "ERROR: $* C output should not contain $$p"; exit 1; }; done; true
+	@# Section 123.  The two pins above are over the unit, which cannot say
+	@# which of the two files something is in -- and for the support blocks
+	@# that is the whole question, since the point of emitting one into the
+	@# source is that it is not in the header.  These two are the header
+	@# alone.
+	$(Q)for p in $(CHGREP_$*); do \
+	  grep -qF -- "$$p" $(basename $@).h \
+	    || { echo "ERROR: $* C header is missing $$p"; exit 1; }; done
+	$(Q)for p in $(CHNOGREP_$*); do \
+	  grep -qF -- "$$p" $(basename $@).h \
+	    && { echo "ERROR: $* C header should not contain $$p"; exit 1; }; \
+	  done; true
 	@# Section 51.3.  A prologue is emitted on the line before the thing it
 	@# decorates, so an assertion about *which* declaration carries one is
 	@# an assertion about a pair of adjacent lines.
@@ -1870,6 +1882,37 @@ CNOGREP_NarrowOverride += "uint16_t bits;"
 C_TESTS += NarrowG
 CGREP_NarrowG += "static custard_f16 NarrowG_g = CUSTARD_F16_INIT(15872U);"
 CNOGREP_NarrowG += "NarrowG_g = CUSTARD_F16_LIT"
+
+# Section 123.  The counterpart of [Narrow]: a type mentioning a narrow float
+# reaches the header whether or not any signature is public, so the header is
+# the file that carries the contract -- and it still comes after the
+# [@@custard_c_header] include, which is what makes the contract satisfiable.
+# The two pins are file-scoped on purpose; [CGREP] is over the unit and could
+# not tell the two arrangements apart.
+C_TESTS += NarrowHdr
+CHGREP_NarrowHdr += "\#ifndef CUSTARD_FLOAT16_DEFINED"
+CHGREP_NarrowHdr += "custard_f16 lo;"
+
+# Section 123.  Nothing public mentions a narrow float here, so the contract
+# is in the source and a consumer who reads the header never sees it.
+CHNOGREP_Narrow += "CUSTARD_FLOAT16_DEFINED"
+CGREP_Narrow += "\#ifndef CUSTARD_FLOAT16_DEFINED"
+CHNOGREP_NarrowG += "CUSTARD_FLOAT16_DEFINED"
+
+# Section 123.  [custard_unit] is emitted where it is used and nowhere else.
+# It is genuinely still reachable -- a [ref unit] is a [custard_unit *] --
+# but for a whole program it is usually reachable nowhere, which is why it
+# was boilerplate in every header and a use in none of them.
+C_TESTS += CUnitTy CUnitRef
+CHGREP_CUnitTy += "typedef uint8_t custard_unit;"
+CGREP_CUnitTy += "custard_unit *cell;"
+CHNOGREP_CUnitRef += "custard_unit"
+CGREP_CUnitRef += "typedef uint8_t custard_unit;"
+CGREP_CUnitRef += "CUnitRef_get(custard_unit *r)"
+
+# Section 123.  And the ordinary case: a program that uses neither gets
+# neither, which is every program in this suite bar the three above.
+CHNOGREP_KrmlBasic += "custard_unit" "CUSTARD_FLOAT16_DEFINED"
 
 # Section 69.  An external type whose target is a *template*: the arguments
 # go into placeholders instead of being dropped.  Three things are checked --
