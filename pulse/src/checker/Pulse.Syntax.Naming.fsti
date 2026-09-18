@@ -366,15 +366,18 @@ let rec freevars_st (t:st_term)
       freevars term
     | Tm_Abs { b; ascription; body } ->
       freevars b.binder_ty ++
+      freevars_list b.binder_attrs ++
       freevars_st body ++
       freevars_ascription ascription
     | Tm_ST { t; args } -> freevars t ++ freevars_terms args
     | Tm_Bind { binder; head; body } ->
       freevars binder.binder_ty ++
+      freevars_list binder.binder_attrs ++
       freevars_st head ++
       freevars_st body
     | Tm_TotBind { binder; head; body } ->
       freevars binder.binder_ty ++
+      freevars_list binder.binder_attrs ++
       freevars head ++
       freevars_st body
     | Tm_If { b; then_; else_; pre; post } ->
@@ -402,11 +405,13 @@ let rec freevars_st (t:st_term)
 
     | Tm_WithLocal { binder; initializer; body } ->
       freevars binder.binder_ty ++
+      freevars_list binder.binder_attrs ++
       freevars_term_opt initializer ++
       freevars_st body
 
     | Tm_WithLocalArray { binder; initializer; length; body } ->
       freevars binder.binder_ty ++
+      freevars_list binder.binder_attrs ++
       freevars_term_opt initializer ++
       freevars length ++
       freevars_st body
@@ -716,12 +721,11 @@ let open_term_list' (t:list term) (v:term) (i:index)
 (* Binder attributes may mention variables bound further out (e.g.
    [@@@rename_let ("positionAfter" ^ name)], where [name] is a parameter of the
    enclosing [fn]), so they must be substituted just like the binder type.
-   Substituting under the seal is harmless for proofs: by [Sealed.sealed_singl]
-   any two [sealed] values of the same type are provably equal. *)
-let subst_binder_attrs (attrs:FStar.Sealed.Inhabited.sealed #(list term) [])
-                       (ss:subst)
-  : Tot (FStar.Sealed.Inhabited.sealed #(list term) [])
-  = FStar.Sealed.map_seal attrs (fun (l:list term) -> subst_term_list l ss)
+   NB: unlike in the standalone Pulse repo, [binder_attrs] is a plain [list term]
+   here, so this is just [subst_term_list]; no sealing is involved. *)
+let subst_binder_attrs (attrs:list term) (ss:subst)
+  : Tot (list term)
+  = subst_term_list attrs ss
 
 let subst_binder b ss = 
   {b with binder_ty=subst_term b.binder_ty ss;

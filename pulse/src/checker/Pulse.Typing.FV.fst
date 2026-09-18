@@ -137,6 +137,7 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
     
     | Tm_Abs { b; ascription=c; body } ->
       freevars_close_term' b.binder_ty x i;
+      freevars_close_term_list' b.binder_attrs x i;
       (
         match c.annotated with
         | None -> ()
@@ -153,11 +154,13 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
     
     | Tm_Bind { binder; head; body } ->
       freevars_close_term' binder.binder_ty x i;
+      freevars_close_term_list' binder.binder_attrs x i;
       freevars_close_st_term' head x i;
       freevars_close_st_term' body x (i + 1)
     
     | Tm_TotBind { binder; head; body } ->
       freevars_close_term' binder.binder_ty x i;
+      freevars_close_term_list' binder.binder_attrs x i;
       freevars_close_term' head x i;
       freevars_close_st_term' body x (i + 1)
 
@@ -193,11 +196,13 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
 
     | Tm_WithLocal { binder; initializer; body } ->
       freevars_close_term' binder.binder_ty x i;
+      freevars_close_term_list' binder.binder_attrs x i;
       freevars_close_term_opt' initializer x i;
       freevars_close_st_term' body x (i + 1)
 
     | Tm_WithLocalArray { binder; initializer; length; body } ->
       freevars_close_term' binder.binder_ty x i;
+      freevars_close_term_list' binder.binder_attrs x i;
       freevars_close_term_opt' initializer x i;
       freevars_close_term' length x i;
       freevars_close_st_term' body x (i + 1)
