@@ -1246,8 +1246,47 @@ same type-level match verifies.
 
 ### 13.6 `TestBV.fst`
 
-`tests/tactics/TestBV.fst` is slow: **12.1s against 0.93s** before. The cause is
+`tests/tactics/TestBV.fst` is slow: **12.7s against 0.93s** before. The cause is
 understood and is not new code.
+
+Measured from a clean slate (`rm -f _cache/TestBV.fst.checked`, then the single
+`fstar.exe -c TestBV.fst -o _cache/TestBV.fst.checked` the test Makefile runs,
+three times each):
+
+| tree | runs | peak RSS |
+|---|---|---|
+| master `9981a990a7` (the commit this branch merged) | 0.96s / 0.91s / 0.92s | 172 MB |
+| this branch | 12.78s / 12.62s / 12.72s | 200 MB |
+
+That is **13.5×**, and none of it is upstream drift: `9981a990a7` is the exact
+master this branch merged, so the whole delta belongs to this work.
+
+Do not be misled by the benchmarking bot. Its run on this PR shows no `TestBV`
+entry at all, because the commit it benchmarked (`ece1b507a7`) still contained
+`e042bd26a6`, "Rel: don't unfold to decide an equation whose heads already
+agree", and did not yet contain `1164a86c7f`, the revert of it. That
+optimization is the first of the two withdrawn fixes listed below; while it was
+live `TestBV` was back to 0.92s. A bot run is only evidence about the commit it
+names.
+
+`--profile TestBV --profile_component '*' --profile_group_by_decl` attributes
+all of it to two declarations, and within each to phase 1 rather than the
+solver:
+
+```
+TestBV.test6  Tc.tc_sig_let-tc-phase1                6243 ms
+TestBV.test6    Rel.try_solve_deferred_constraints   6242 ms
+TestBV.test6      Rel.norm_with_steps.2              3093 ms
+TestBV.test6      Rel.norm_with_steps.3              3144 ms
+TestBV.test7  Tc.tc_sig_let-tc-phase1                6294 ms
+TestBV.test7    Rel.try_solve_deferred_constraints   6290 ms
+TestBV.test7      Rel.norm_with_steps.2              3135 ms
+TestBV.test7      Rel.norm_with_steps.3              3151 ms
+```
+
+`norm_with_steps.2` and `.3` are the two normalization calls inside `Rel.equal`
+(`FStarC.TypeChecker.Rel.fst:4642-4643`). Aggregate Z3 time across the whole
+module is 37 ms: this is entirely compile time, not solver time.
 
 `Rel.equal`, reached because the head is an interpreted symbol under an `EQ`
 relation, normalizes both sides with `UnfoldUntil delta_constant`.
