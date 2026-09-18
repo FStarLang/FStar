@@ -278,87 +278,52 @@ let rec inspect_ln (t:term) : ML term_view =
         Err.log_issue t Err.Warning_CantInspect (Format.fmt2 "inspect_ln: outside of expected syntax (%s, %s)" (tag_of t) (show t));
         Tv_Unsupp
 
+(* [comp_view] mirrors [comp_typ] field for field, so inspecting and packing a
+   computation type is nothing but a change of representation for the two effect
+   names: a [comp_typ] holds [lident]s, a view holds [name]s.  Nothing is
+   dropped, nothing is canonicalized, and both round trips hold unconditionally
+   -- see [inspect_pack_comp_inv] and [pack_inspect_comp_inv]. *)
+(* [cflag] and [decreases_order] are declared twice -- once in
+   [FStarC.Syntax.Syntax] and once in [FStarC.Reflection.V2.Data], which is what
+   [FStar.Stubs.Reflection.V2.Data] extracts to -- so the two have to be
+   converted here.  The two declarations are identical, so this is a pure change
+   of representation, like the effect names below. *)
+let inspect_decreases_order (d : S.decreases_order) : RD.decreases_order =
+    match d with
+    | S.Decreases_lex ts -> RD.Decreases_lex ts
+    | S.Decreases_wf (rel, e) -> RD.Decreases_wf rel e
+
+let pack_decreases_order (d : RD.decreases_order) : S.decreases_order =
+    match d with
+    | RD.Decreases_lex ts -> S.Decreases_lex ts
+    | RD.Decreases_wf rel e -> S.Decreases_wf (rel, e)
+
+let inspect_cflag (f : S.cflag) : RD.cflag =
+    match f with
+    | S.SMTPAT t -> RD.SMTPAT t
+    | S.DECREASES d -> RD.DECREASES (inspect_decreases_order d)
+
+let pack_cflag (f : RD.cflag) : S.cflag =
+    match f with
+    | RD.SMTPAT t -> S.SMTPAT t
+    | RD.DECREASES d -> S.DECREASES (pack_decreases_order d)
+
 let inspect_comp (c : comp) : ML comp_view =
-    let get_dec (flags : list cflag) : ML (list term) =
-        match List.tryFind (function DECREASES _ -> true | _ -> false) flags with
-        | None -> []
-        | Some (DECREASES (Decreases_lex ts)) -> ts
-        | Some (DECREASES (Decreases_wf _)) ->
-          Err.log_issue c Err.Warning_CantInspect
-            (Format.fmt1 "inspect_comp: inspecting comp with wf decreases clause is not yet supported: %s \
-              skipping the decreases clause"
-              (show c));
-          []
-        | _ -> failwith "Impossible!"
-    in
     match c.n with
-    (* [Lemma] is an abbreviation of [Tot], so [effect_name] is [Tot] here; the
-       view is keyed off the name the user *wrote*, and this case must come
-       before the [Tot] case below. *)
-    | Comp ct when Ident.lid_equals ct.source_effect_name PC.effect_Lemma_lid ->
-            let pats =
-              match U.comp_smt_pats (S.mk_Comp ct) with
-              | Some p -> p
-              | None -> U.mk_list (S.fvar_with_dd PC.pattern_lid None) Range.dummyRange [] in
-            (* A computation type carries no *precondition* any more: that is
-               an implicit [squash] binder on the arrow, out of reach here, so
-               the view reports [True].  The postcondition, on the other hand,
-               is a refinement of the result type and can be recovered. *)
-            C_Lemma (S.trivial_pre, U.post_of_result_typ ct.result_typ, pats)
-    | Comp ct when PC.is_tot_lid ct.effect_name
-                && not (ct.flags |> BU.for_some (function DECREASES _ -> true | _ -> false)) ->
-      C_Total ct.result_typ
-    | Comp ct when PC.is_gtot_lid ct.effect_name
-                && not (ct.flags |> BU.for_some (function DECREASES _ -> true | _ -> false)) ->
-      C_GTotal ct.result_typ
     | Comp ct ->
-      (* A [comp_typ] no longer caches the effect's universe -- it is just that
-         of the result type -- and [inspect_comp] has no environment to recover
-         it with, so the view reports [].  Nor does it carry a precondition, so
-         the view reports [True] for that too, and the postcondition is only
-         the one recoverable from the result type.  Together with the
-         [Tot]/[GTot]/[Lemma] constructor canonicalization above, this is why
-         [inspect_pack_comp_inv] is restricted to [C_Total] and [C_GTotal]. *)
-      C_Eff ([],
-             Ident.path_of_lid ct.effect_name,
-             ct.result_typ,
-             S.trivial_pre,
-             U.post_of_result_typ ct.result_typ,
-             get_dec ct.flags)
+      let cv : comp_view =
+        { effect_name = Ident.path_of_lid ct.effect_name
+        ; result_typ  = ct.result_typ
+        ; flags       = List.map inspect_cflag ct.flags
+        ; source_effect_name = Ident.path_of_lid ct.source_effect_name }
+      in
+      cv
 
 let pack_comp (cv : comp_view) : ML comp =
-    let urefl_to_univs u =
-      if u = U_unknown
-      then []
-      else [u] in
-    let urefl_to_univ_opt u =
-      if u = U_unknown
-      then None
-      else Some u in
-    match cv with
-    | C_Total t -> mk_Total t
-    | C_GTotal t -> mk_GTotal t
-    (* A computation type has no room for a precondition, so [pre] is dropped;
-       the postcondition becomes a refinement of the result type. *)
-    | C_Lemma (_pre, post, pats) ->
-        let ct = { effect_name = PC.primitive_pure_lid
-                 ; result_typ  = U.refine_with_post S.t_unit post
-                 ; flags       = [SMTPAT pats]
-                 ; source_effect_name = PC.effect_Lemma_lid } in
-        S.mk_Comp ct
-
-    (* [us] is dropped: a [comp_typ] has no universe list. *)
-    | C_Eff (_us, ef, res, _pre, _post, decrs) ->
-        let flags =
-          if Nil? decrs
-          then []
-          else [DECREASES (Decreases_lex decrs)] in
-        let eff = Ident.lid_of_path ef Range.dummyRange in
-        let ct = { effect_name = eff
-                 ; result_typ  = res
-                 ; flags       = flags
-                 ; source_effect_name = eff } in
-        S.mk_Comp ct
+    S.mk_Comp ({ effect_name = Ident.lid_of_path cv.RD.effect_name Range.dummyRange
+               ; result_typ  = cv.RD.result_typ
+               ; flags       = List.map pack_cflag cv.RD.flags
+               ; source_effect_name = Ident.lid_of_path cv.RD.source_effect_name Range.dummyRange })
 
 let pack_const (c:vconst) : ML sconst =
     match c with
@@ -887,25 +852,27 @@ and bv_eq (bv1 : bv) (bv2 : bv) : ML bool =
    *)
   bv1.index = bv2.index
 
+and decreases_order_eq (d1 : RD.decreases_order) (d2 : RD.decreases_order) : ML bool =
+  match d1, d2 with
+  | RD.Decreases_lex ts1, RD.Decreases_lex ts2 -> eqlist term_eq ts1 ts2
+  | RD.Decreases_wf rel1 e1, RD.Decreases_wf rel2 e2 -> term_eq rel1 rel2 && term_eq e1 e2
+  | _ -> false
+
+and cflag_eq (f1 : RD.cflag) (f2 : RD.cflag) : ML bool =
+  match f1, f2 with
+  | RD.SMTPAT t1, RD.SMTPAT t2 -> term_eq t1 t2
+  | RD.DECREASES d1, RD.DECREASES d2 -> decreases_order_eq d1 d2
+  | _ -> false
+
 and comp_eq (c1 : comp) (c2 : comp) : ML bool =
-  match inspect_comp c1, inspect_comp c2 with
-  | C_Total t1, C_Total t2
-  | C_GTotal t1, C_GTotal t2 ->
-    term_eq t1 t2
-
-  | C_Lemma (pre1, post1, pats1), C_Lemma (pre2, post2, pats2) ->
-    term_eq pre1 pre2 && term_eq post1 post2 && term_eq pats1 pats2
-
-  | C_Eff (us1, name1, t1, pre1, post1, decrs1), C_Eff (us2, name2, t2, pre2, post2, decrs2) ->
-    univs_eq us1 us2&&
-    name1 = name2&&
-    term_eq t1 t2&&
-    term_eq pre1 pre2&&
-    term_eq post1 post2&&
-    eqlist term_eq decrs1 decrs2
-
-  | _ ->
-    false
+  let cv1 = inspect_comp c1 in
+  let cv2 = inspect_comp c2 in
+  (* [source_effect_name] is presentation only -- it records the abbreviation
+     the user wrote -- so two computation types that differ only there are the
+     same computation type. *)
+  cv1.RD.effect_name = cv2.RD.effect_name&&
+    term_eq cv1.RD.result_typ cv2.RD.result_typ&&
+    eqlist cflag_eq cv1.RD.flags cv2.RD.flags
 
 and match_ret_asc_eq (a1 : match_returns_ascription) (a2 : match_returns_ascription) : ML bool =
   eqprod binder_eq ascription_eq a1 a2

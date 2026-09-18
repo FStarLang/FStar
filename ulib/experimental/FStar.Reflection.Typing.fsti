@@ -94,14 +94,8 @@ val pack_inspect_binder (t:R.binder)
    : Lemma (ensures (R.pack_binder (R.inspect_binder t) == t))
            [SMTPat (R.pack_binder (R.inspect_binder t))]
   
-(* See R.inspect_pack_comp_inv: [pack_comp] is lossy on every view but
-   [C_Total] and [C_GTotal] -- a [comp_typ] stores no precondition, no
-   universes, and no postcondition other than the one on its result type, and
-   [inspect_comp] canonicalizes the [Tot]/[GTot]/[Lemma] constructors -- so the
-   round trip holds only for those two. *)
 val inspect_pack_comp (t:R.comp_view)
-  : Lemma (requires R.C_Total? t \/ R.C_GTotal? t)
-          (ensures (R.inspect_comp (R.pack_comp t) == t))
+  : Lemma (ensures (R.inspect_comp (R.pack_comp t) == t))
           [SMTPat (R.inspect_comp (R.pack_comp t))]
 
 val pack_inspect_comp (t:R.comp)
@@ -314,8 +308,8 @@ let binder_of_t_q t q = mk_binder pp_name_default t q
 
 (* spec-level smart constructors (return [term_spec]/[comp_spec]) *)
 let mk_abs (ty:term_spec) (qual:aqualv_spec) (t:term_spec) : term_spec = Ts_Abs (Bs ty qual) t
-let mk_total (t:term_spec) : comp_spec = Cs_Total t
-let mk_ghost (t:term_spec) : comp_spec = Cs_GTotal t
+let mk_total (t:term_spec) : comp_spec = Cs tot_effect_name t []
+let mk_ghost (t:term_spec) : comp_spec = Cs gtot_effect_name t []
 let mk_arrow (ty:term_spec) (qual:aqualv_spec) (t:term_spec) : term_spec =
   Ts_Arrow (Bs ty qual) (mk_total t)
 let mk_ghost_arrow (ty:term_spec) (qual:aqualv_spec) (t:term_spec) : term_spec =
@@ -325,7 +319,7 @@ let mk_let (e1 t1 e2:term_spec) : term_spec =
   Ts_Let false [] t1 e1 e2
 
 (* concrete comp builder, kept for the (concrete) env/token/sigelt layer *)
-let mk_total_tm (t:R.term) : R.comp = pack_comp (C_Total t)
+let mk_total_tm (t:R.term) : R.comp = pack_comp (mk_tot_comp t)
 
 let open_with_var_elt (x:var) (i:nat) : subst_elt =
   DT i (pack_ln (Tv_Var (var_as_namedv x)))

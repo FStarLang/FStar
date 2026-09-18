@@ -97,12 +97,8 @@ and branch_to_ast_string (b:branch) : Tac string =
   paren ("_pat, " ^ term_to_ast_string e)
 
 and comp_to_ast_string (c:comp) : Tac string =
-  match inspect_comp c with
-  | C_Total t -> "Tot " ^ term_to_ast_string t
-  | C_GTotal t -> "GTot " ^ term_to_ast_string t
-  | C_Lemma pre post _ -> "Lemma " ^ term_to_ast_string pre ^ " " ^ term_to_ast_string post
-  | C_Eff us eff res _ _ _ ->
-    "Effect" ^ "<" ^ universes_to_ast_string us ^ "> " ^ paren (implode_qn eff ^ ", " ^ term_to_ast_string res)
+  let cv = inspect_comp c in
+  "Effect " ^ paren (implode_qn cv.effect_name ^ ", " ^ term_to_ast_string cv.result_typ)
 
 and const_to_ast_string (c:vconst) : Tac string =
   match c with

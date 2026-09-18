@@ -776,56 +776,72 @@ let e_binder_view =
     in
     mk_emb' embed_binder_view unembed_binder_view fstar_refl_binder_view_fv
 
+(* NB: [FStarC.TypeChecker.NBETerm] has its own [cflag] whose constructors
+   shadow the ones from [FStarC.Syntax.Syntax], hence the [S.] prefixes. *)
+let e_decreases_order =
+    let ee cb (d : RD.decreases_order) : ML t =
+        match d with
+        | RD.Decreases_lex ts ->
+            mkConstruct ref_Decreases_lex.fv [] [as_arg (embed (e_list e_term) cb ts)]
+        | RD.Decreases_wf rel e ->
+            mkConstruct ref_Decreases_wf.fv [] [as_arg (embed e_term cb rel); as_arg (embed e_term cb e)]
+    in
+    let uu cb (t : t) : ML (option RD.decreases_order) =
+        match t.nbe_t with
+        | Construct (fv, _, [(ts, _)]) when S.fv_eq_lid fv ref_Decreases_lex.lid ->
+            Option.bind (unembed (e_list e_term) cb ts) (fun ts ->
+            Some <| RD.Decreases_lex ts)
+
+        | Construct (fv, _, [(e, _); (rel, _)]) when S.fv_eq_lid fv ref_Decreases_wf.lid ->
+            Option.bind (unembed e_term cb rel) (fun rel ->
+            Option.bind (unembed e_term cb e) (fun e ->
+            Some <| RD.Decreases_wf rel e))
+
+        | _ ->
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded decreases_order: %s" (t_to_string t));
+            None
+    in
+    mk_emb' ee uu fstar_refl_decreases_order_fv
+
+let e_cflag =
+    let ee cb (f : RD.cflag) : ML t =
+        match f with
+        | RD.SMTPAT tm -> mkConstruct ref_SMTPAT.fv [] [as_arg (embed e_term cb tm)]
+        | RD.DECREASES d -> mkConstruct ref_DECREASES.fv [] [as_arg (embed e_decreases_order cb d)]
+    in
+    let uu cb (t : t) : ML (option RD.cflag) =
+        match t.nbe_t with
+        | Construct (fv, _, [(tm, _)]) when S.fv_eq_lid fv ref_SMTPAT.lid ->
+            Option.bind (unembed e_term cb tm) (fun tm -> Some <| RD.SMTPAT tm)
+
+        | Construct (fv, _, [(d, _)]) when S.fv_eq_lid fv ref_DECREASES.lid ->
+            Option.bind (unembed e_decreases_order cb d) (fun d -> Some <| RD.DECREASES d)
+
+        | _ ->
+            Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded cflag: %s" (t_to_string t));
+            None
+    in
+    mk_emb' ee uu fstar_refl_cflag_fv
+
 let e_comp_view =
     let embed_comp_view cb (cv : comp_view) : ML t =
-        match cv with
-        | C_Total t ->
-            mkConstruct ref_C_Total.fv [] [
-              as_arg (embed e_term cb t)]
-
-        | C_GTotal t ->
-            mkConstruct ref_C_GTotal.fv [] [
-              as_arg (embed e_term cb t)]
-
-        | C_Lemma (pre, post, pats) ->
-            mkConstruct ref_C_Lemma.fv [] [as_arg (embed e_term cb pre); as_arg (embed e_term cb post); as_arg (embed e_term cb pats)]
-
-        | C_Eff (us, eff, res, pre, post, decrs) ->
-            mkConstruct ref_C_Eff.fv []
-                [ as_arg (embed (e_list e_universe) cb us)
-                ; as_arg (embed e_string_list cb eff)
-                ; as_arg (embed e_term cb res)
-                ; as_arg (embed e_term cb pre)
-                ; as_arg (embed e_term cb post)
-                ; as_arg (embed (e_list e_term) cb decrs)]
+        mkConstruct ref_Mk_comp_view.fv []
+            [ as_arg (embed e_string_list cb cv.effect_name)
+            ; as_arg (embed e_term cb cv.result_typ)
+            ; as_arg (embed (e_list e_cflag) cb cv.flags)
+            ; as_arg (embed e_string_list cb cv.source_effect_name)]
     in
     let unembed_comp_view cb (t : t) : ML (option comp_view) =
         match t.nbe_t with
-        | Construct (fv, _, [(t, _)])
-          when S.fv_eq_lid fv ref_C_Total.lid ->
-            Option.bind (unembed e_term cb t) (fun t ->
-            Some <| C_Total t)
-
-        | Construct (fv, _, [(t, _)])
-          when S.fv_eq_lid fv ref_C_GTotal.lid ->
-            Option.bind (unembed e_term cb t) (fun t ->
-            Some <| C_GTotal t)
-
-        | Construct (fv, _, [(post, _); (pre, _); (pats, _)]) when S.fv_eq_lid fv ref_C_Lemma.lid ->
-            Option.bind (unembed e_term cb pre) (fun pre ->
-            Option.bind (unembed e_term cb post) (fun post ->
-            Option.bind (unembed e_term cb pats) (fun pats ->
-            Some <| C_Lemma (pre, post, pats))))
-
-        | Construct (fv, _, [(decrs, _); (post, _); (pre, _); (res, _); (eff, _); (us, _)])
-          when S.fv_eq_lid fv ref_C_Eff.lid ->
-            Option.bind (unembed (e_list e_universe) cb us) (fun us ->
-            Option.bind (unembed e_string_list cb eff) (fun eff ->
-            Option.bind (unembed e_term cb res) (fun res->
-            Option.bind (unembed e_term cb pre) (fun pre ->
-            Option.bind (unembed e_term cb post) (fun post ->
-            Option.bind (unembed (e_list e_term) cb decrs) (fun decrs ->
-            Some <| C_Eff (us, eff, res, pre, post, decrs)))))))
+        | Construct (fv, _, [(src, _); (flags, _); (res, _); (eff, _)])
+          when S.fv_eq_lid fv ref_Mk_comp_view.lid ->
+            Option.bind (unembed e_string_list cb eff) (fun effect_name ->
+            Option.bind (unembed e_term cb res) (fun result_typ ->
+            Option.bind (unembed (e_list e_cflag) cb flags) (fun flags ->
+            Option.bind (unembed e_string_list cb src) (fun source_effect_name ->
+            (* NB: the annotation disambiguates these fields from [comp_typ]'s. *)
+            let r : comp_view = { effect_name; result_typ; flags; source_effect_name } in
+            Some r))))
 
         | _ ->
             Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded comp_view: %s" (t_to_string t));

@@ -37,8 +37,9 @@ let no_leaked_rec_name (nm: string) (#a: Type) (x: a) : Tac unit =
   let t = tc (top_env ()) (quote x) in
   match inspect t with
   | Tv_Arrow _ c ->
-    (match inspect_comp c with
-     | C_Total r ->
+    (let cv = inspect_comp c in
+     if not (is_tot_comp cv) then () else
+     let r = cv.result_typ in
        (match inspect r with
         | Tv_Refine _ phi ->
           let hd, _ = collect_app phi in
@@ -54,8 +55,7 @@ let no_leaked_rec_name (nm: string) (#a: Type) (x: a) : Tac unit =
                      " existentially closes a let rec-bound name: " ^
                      term_to_string t)
           else ()
-        | _ -> ())
-     | _ -> fail ("expected " ^ nm ^ " to have a Tot comp"))
+        | _ -> ()))
   | _ -> fail ("expected " ^ nm ^ " to be an arrow")
 
 (* The body is an application of the recursive function. *)

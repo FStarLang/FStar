@@ -88,10 +88,7 @@ let rec free_named_vars (t:term) : T.Tac (list var) =
   | R.Tv_Refine b ref -> free_named_vars (R.inspect_binder b).sort ++ free_named_vars ref
   | R.Tv_Arrow b c ->
     free_named_vars (R.inspect_binder b).sort ++
-    (match R.inspect_comp c with
-     | R.C_Total ret | R.C_GTotal ret -> free_named_vars ret
-     | R.C_Lemma pre post pats -> free_named_vars pre ++ free_named_vars post ++ free_named_vars pats
-     | R.C_Eff _ _ ret _ _ _ -> free_named_vars ret)
+    free_named_vars (R.inspect_comp c).R.result_typ
   | R.Tv_Let _ _ _ def body -> free_named_vars def ++ free_named_vars body
   | R.Tv_Match sc _ brs ->
     TU.fold_left (fun (acc:list var) (br:R.branch) -> List.Tot.append acc (free_named_vars (snd br)))

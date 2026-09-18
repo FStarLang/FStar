@@ -566,7 +566,9 @@ let rec open_n_binders_from_arrow (bs : binders) (t : term) : Tac term =
   | [] -> t
   | b::bs ->
     match inspect t with
-    | Tv_Arrow b' (RD.C_Total t') ->
+    | Tv_Arrow b' c ->
+      if not (RD.is_tot_comp c) then raise NotEnoughBinders else
+      let t' = c.RD.result_typ in
       let t' = R.subst_term [NT (r_binder_to_namedv b') (pack (Tv_Var (R.inspect_namedv (r_binder_to_namedv b))))] t' in
       open_n_binders_from_arrow bs t'
     | _ -> raise NotEnoughBinders
@@ -617,7 +619,7 @@ let rec mk_arr (args : list binder) (t : term) : Tac term =
   match args with
   | [] -> t
   | a :: args' ->
-    let t' = RD.C_Total (mk_arr args' t) in
+    let t' = RD.mk_tot_comp (mk_arr args' t) in
     pack (Tv_Arrow a t')
 
 private

@@ -2122,14 +2122,20 @@ has just landed is churn that belongs in its own change, not in a merge.
   the 14m58 recorded for the previous design. The baseline's measurement
   conditions are not documented, so read this as "no regression" rather than as
   a precise speedup.
-- **Reflection.** `comp_view` keeps its constructors; `C_Lemma`/`C_Eff` report
-  `pre = True`, since a precondition is now a binder on the arrow and out of the
-  view's reach. The postcondition *is* recovered from the result-type
-  refinement. `inspect_comp`/`pack_comp` round-trip **only at `C_Total` and
-  `C_GTotal`**, and `inspect_pack_comp_inv` is restricted to say exactly that —
-  see "Seven review findings" below. Giving the view an honest precondition
-  means changing the view type, which needs its own stage0 bump and is
-  deliberately left to a follow-up.
+- **Reflection.** `comp_view` is now a *record* mirroring `comp_typ` field for
+  field — `effect_name`, `result_typ`, `flags`, `source_effect_name` — instead
+  of the old `C_Total`/`C_GTotal`/`C_Lemma`/`C_Eff` inductive. That inductive
+  exposed structure a computation type no longer has: a precondition (now an
+  implicit `squash` binder on the arrow, out of the view's reach) and a
+  universe list (an effect is applied to its result type alone). It also forced
+  `inspect_comp` to canonicalise effect names, which is what made the view
+  non-injective and broke the round-trip axiom. With the record,
+  `inspect_comp`/`pack_comp` are inverse *unconditionally*, `cflag` and
+  `decreases_order` are reflected faithfully, and both round-trip lemmas lose
+  their preconditions. Clients that matched on `C_Total`/`C_GTotal` use the new
+  `is_tot_comp`/`is_gtot_comp`/`is_tot_or_gtot_comp` predicates and
+  `mk_tot_comp`/`mk_gtot_comp`/`mk_comp_view` constructors. This is a breaking
+  change to the reflection API.
 
 ## A documented limitation
 
@@ -2179,24 +2185,55 @@ let bad () : Lemma False =
   inspect_pack_comp_inv cv   (* inspect_comp (pack_comp cv) reduces to C_Total (`int) *)
 ```
 
-Only `C_Total` and `C_GTotal` genuinely round-trip: `mk_Total`/`mk_GTotal`
-store the result type verbatim with no flags, and `inspect_comp` reads it back.
-The axiom now says so, with a comment enumerating each way `pack_comp` loses
-information, and `FStar.Reflection.Typing`'s mirror of it (which carries an
-`SMTPat`, and is what Pulse uses) is restricted the same way. Every in-repo
-client — `FStar.Reflection.V2.Derived.Lemmas`, `Pulse.Reflection.Util`,
-`FStar.Reflection.Typing.mk_total_tm` — only ever instantiates it at `C_Total`
-or `C_GTotal`, so nothing needed to change at a call site.
+The root cause is the view type, not the axiom: `comp_view` described a
+computation type that no longer exists. So rather than restrict the axiom, the
+fix realigns the view with `FStarC.Syntax.Syntax.comp_typ`. `comp_view` is now
 
-`tests/tactics/CompRoundTrip.fst` is rewritten to match: it checks the two
-round trips *by computation*, and pins the five families that do not round trip
-(`C_Eff` at `Prims.Tot`, at `Prims.GTot`, at `Lemma`, with a non-empty universe
-list, and with a non-canonical pre/post, plus `C_Lemma`) with
-`[@@expect_failure [19]]`. The old test asserted the `C_Eff` round trip and
-passed, which is worth recording: it proved its goal with `trefl`, and `trefl`
-will equate two syntactically different quoted terms. That is pre-existing
-upstream behaviour — it reproduces on `master` and on a released 2026.03
-binary — so it is left alone here, but it is why a false test looked green.
+```fstar
+noeq type comp_view = {
+  effect_name : name;
+  result_typ  : typ;
+  flags       : list cflag;
+  source_effect_name : name;
+}
+```
+
+with `cflag` (`SMTPAT`, `DECREASES`) and `decreases_order` (`Decreases_lex`,
+`Decreases_wf`) reflected alongside it. `inspect_comp` is now a projection and
+`pack_comp` an injection — no canonicalisation, nothing invented, nothing
+dropped — so both
+
+```fstar
+val inspect_pack_comp_inv (cv:comp_view) : Lemma (inspect_comp (pack_comp cv) == cv)
+val pack_inspect_comp_inv (c:comp)      : Lemma (pack_comp (inspect_comp c) == c)
+```
+
+hold with **no** precondition, and `FStar.Reflection.Typing`'s `SMTPat`-carrying
+mirror (which is what Pulse uses) is likewise unrestricted. The footguns the old
+view created go with it: there is no longer a `pre` field that silently reads
+back as `True`, no universe list that `pack_comp` silently discards, and no
+constructor that `inspect_comp` silently rewrites. `source_effect_name` — the
+abbreviation the user wrote, e.g. `Lemma` for `Tot` — is carried through
+verbatim, and is ignored by `comp_eq`, `__compare_comp` and `denote_comp`, all
+of which are about the comp's meaning.
+
+Clients get `mk_comp_view`, `mk_tot_comp`, `mk_gtot_comp`, `is_tot_comp`,
+`is_gtot_comp` and `is_tot_or_gtot_comp` in
+`FStar.Stubs.Reflection.V2.Data` (mirrored in `FStarC.Reflection.V2.Data`,
+which is what plugin extraction resolves `FStar.Stubs.*` to). Note that
+`is_tot_comp` keys off the effect name only, so a `Tot` carrying a `decreases`
+is now total — the old `inspect_comp` reported `C_Eff` for it.
+
+`tests/tactics/CompRoundTrip.fst` is rewritten to match: it checks *by
+computation* that `inspect_comp (pack_comp cv) == cv` for `Tot`, `GTot`, an
+arbitrary effect, a comp whose `source_effect_name` differs from its
+`effect_name`, and a comp carrying `SMTPAT`, `Decreases_lex` and `Decreases_wf`
+flags, and it instantiates both axioms at arbitrary arguments. The old test
+asserted the `C_Eff` round trip and passed, which is worth recording: it proved
+its goal with `trefl`, and `trefl` will equate two syntactically different
+quoted terms. That is pre-existing upstream behaviour — it reproduces on
+`master` and on a released 2026.03 binary — so it is left alone here, but it is
+why a false test looked green.
 
 ### 2. Extraction dropped a proof argument it should have kept (P2)
 

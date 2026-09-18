@@ -111,27 +111,15 @@ and visit_pat (ff : term -> Tac term) (p:pattern) : Tac pattern =
 
 and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =
   let cv = inspect_comp c in
-  let cv' =
-    match cv with
-    | C_Total ret ->
-        let ret = visit_tm ff ret in
-        C_Total ret
-
-    | C_GTotal ret ->
-        let ret = visit_tm ff ret in
-        C_GTotal ret
-
-    | C_Lemma pre post pats ->
-        let pre = visit_tm ff pre in
-        let post = visit_tm ff post in
-        let pats = visit_tm ff pats in
-        C_Lemma pre post pats
-
-    | C_Eff us eff res pre post decrs ->
-        let res = visit_tm ff res in
-        let pre = visit_tm ff pre in
-        let post = visit_tm ff post in
-        let decrs = map (visit_tm ff) decrs in
-        C_Eff us eff res pre post decrs
-  in
+  let cv' = { cv with result_typ = visit_tm ff cv.result_typ
+                    ; flags = map (visit_flag ff) cv.flags } in
   pack_comp cv'
+
+and visit_flag (ff : term -> Tac term) (f : cflag) : Tac cflag =
+  match f with
+  | SMTPAT t -> SMTPAT (visit_tm ff t)
+  | DECREASES (Decreases_lex ts) -> DECREASES (Decreases_lex (map (visit_tm ff) ts))
+  | DECREASES (Decreases_wf rel e) ->
+      let rel = visit_tm ff rel in
+      let e = visit_tm ff e in
+      DECREASES (Decreases_wf rel e)

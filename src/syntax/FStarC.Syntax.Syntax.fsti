@@ -294,9 +294,11 @@ and comp_typ = {
      [Reflection.V2.Builtins.inspect_comp] can still say [Lemma], [Tac] or [St]
      rather than [Tot], [TAC] and [STATE].
 
-     It is presentation only -- no typing rule may consult it -- except that
-     [inspect_comp] reports [C_Lemma] exactly when it is [Lemma].  It equals
-     [effect_name] whenever no abbreviation was used. *)
+     It is otherwise presentation only -- the syntactic equality checks all
+     ignore it -- except that [is_lemma_comp]/[is_smt_lemma] read it to decide
+     whether a [val] becomes an SMT axiom, since that too is a property of what
+     the user wrote.  It equals [effect_name] whenever no abbreviation was
+     used. *)
   source_effect_name:lident
 }
 and comp' =

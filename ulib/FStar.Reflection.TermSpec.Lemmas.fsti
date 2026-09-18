@@ -98,20 +98,21 @@ and freevars_opt_spec (o:option term_spec)
 
 and freevars_comp_spec (c:comp_spec)
   : GTot (Set.set var) (decreases c)
-  = match c with
-    | Cs_Total t
-    | Cs_GTotal t -> freevars_spec t
+  = let Cs _ res flags = c in
+    freevars_spec res `Set.union` freevars_flags_spec flags
 
-    | Cs_Lemma pre post pats ->
-      freevars_spec pre `Set.union`
-      freevars_spec post `Set.union`
-      freevars_spec pats
+and freevars_flags_spec (fs:list cflag_spec)
+  : GTot (Set.set var) (decreases fs)
+  = match fs with
+    | [] -> Set.empty
+    | f::fs -> freevars_flag_spec f `Set.union` freevars_flags_spec fs
 
-    | Cs_Eff _ _ res pre post decrs ->
-      freevars_spec res `Set.union`
-      freevars_spec pre `Set.union`
-      freevars_spec post `Set.union`
-      freevars_terms_spec decrs
+and freevars_flag_spec (f:cflag_spec)
+  : GTot (Set.set var) (decreases f)
+  = match f with
+    | Fs_SMTPAT t -> freevars_spec t
+    | Fs_DECREASES (Ds_lex ts) -> freevars_terms_spec ts
+    | Fs_DECREASES (Ds_wf rel e) -> freevars_spec rel `Set.union` freevars_spec e
 
 and freevars_args_spec (ts:list (term_spec & aqualv_spec))
   : GTot (Set.set var) (decreases ts)
@@ -233,20 +234,21 @@ and ln_spec'_opt (o:option term_spec) (n:int)
 
 and ln_spec'_comp (c:comp_spec) (i:int)
   : GTot bool (decreases c)
-  = match c with
-    | Cs_Total t
-    | Cs_GTotal t -> ln_spec' t i
+  = let Cs _ res flags = c in
+    ln_spec' res i && ln_spec'_flags flags i
 
-    | Cs_Lemma pre post pats ->
-      ln_spec' pre i &&
-      ln_spec' post i &&
-      ln_spec' pats i
+and ln_spec'_flags (fs:list cflag_spec) (i:int)
+  : GTot bool (decreases fs)
+  = match fs with
+    | [] -> true
+    | f::fs -> ln_spec'_flag f i && ln_spec'_flags fs i
 
-    | Cs_Eff _ _ res pre post decrs ->
-      ln_spec' res i &&
-      ln_spec' pre i &&
-      ln_spec' post i &&
-      ln_spec'_terms decrs i
+and ln_spec'_flag (f:cflag_spec) (i:int)
+  : GTot bool (decreases f)
+  = match f with
+    | Fs_SMTPAT t -> ln_spec' t i
+    | Fs_DECREASES (Ds_lex ts) -> ln_spec'_terms ts i
+    | Fs_DECREASES (Ds_wf rel e) -> ln_spec' rel i && ln_spec' e i
 
 and ln_spec'_args (ts:list (term_spec & aqualv_spec)) (i:int)
   : GTot bool (decreases ts)
