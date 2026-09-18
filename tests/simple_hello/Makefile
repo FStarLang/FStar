@@ -24,7 +24,7 @@ Hello.%.test: Hello.%
 	$(FSTAR_EXE) $< --cache_checked_modules
 
 %.ml: %.fst.checked
-	$(FSTAR_EXE) --codegen OCaml $<
+	$(FSTAR_EXE) --codegen Custard --custard_entry_module $* $< -o $@
 
 %.exe: %.ml
 	$(FSTAR_EXE) --ocamlopt $< -o $@

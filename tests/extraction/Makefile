@@ -27,30 +27,74 @@ RUN += ParseTest.fst
 
 include $(FSTAR_ROOT)/mk/test.mk
 
-all: $(OUTPUT_DIR)/FloatLiteralExtraction.krml
+all: $(OUTPUT_DIR)/FloatLiteralExtraction.test
 all: $(OUTPUT_DIR)/FloatLiteralInjection.rejected
 all: $(OUTPUT_DIR)/NoExtractNorm.test
 all: $(OUTPUT_DIR)/NoExtractNormPerf.test
 
+# These four used to drive --codegen krml directly.  Three of them asked a
+# question the legacy extractor answered in its *debug output*, and Custard
+# answers in the generated program instead; the fourth asked for a diagnostic
+# that Custard raises as an error rather than a warning.
+
+# A [noextract] definition must not be normalized -- the legacy pipeline
+# normalized every top-level let before deciding whether to keep it, and
+# NoExtractNormPerf below is what that costs.  Custard never reaches such a
+# definition at all: it is not a root, so there is nothing to normalize and
+# nothing to emit.  That is visible in the output, which is a stronger
+# statement than the debug line the old test grepped for, so the debug channel
+# is no longer involved.
+#
+# [dropped_to_krml] carries [@@noextract_to "krml"], which names a backend
+# other than this one, so it survives here.  The other direction -- the same
+# attribute dropping a definition on the C backend -- is
+# tests/custard/NoExtractTo, because this module computes on [nat] and C has
+# no unbounded integer to compute it with.
 $(OUTPUT_DIR)/NoExtractNorm.test: $(CACHE_DIR)/NoExtractNorm.fst.checked $(FSTAR_EXE)
 	@mkdir -p $(OUTPUT_DIR)
-	@$(FSTAR) $< --codegen krml --extract_module NoExtractNorm --debug ExtractionNorm >$(OUTPUT_DIR)/NoExtractNorm.out 2>&1
-	@grep -q "Starting to normalize top-level let Inr kept" $(OUTPUT_DIR)/NoExtractNorm.out
-	@if grep -q "Starting to normalize top-level let Inr dropped" $(OUTPUT_DIR)/NoExtractNorm.out; then \
-	  echo "ERROR: normalized a noextract definition"; false; \
+	$(Q)$(FSTAR) $< --codegen Custard --custard_entry_module NoExtractNorm \
+	  -o $(OUTPUT_DIR)/NoExtractNorm.nx.ml
+	@grep -q "noExtractNorm_kept" $(OUTPUT_DIR)/NoExtractNorm.nx.ml
+	@grep -q "noExtractNorm_dropped_to_krml" $(OUTPUT_DIR)/NoExtractNorm.nx.ml
+	@if grep -q "noExtractNorm_dropped " $(OUTPUT_DIR)/NoExtractNorm.nx.ml; then \
+	  echo "ERROR: extracted a noextract definition"; false; \
 	fi
 	@touch $@
 
+# Eighteen levels of [inline_for_extraction noextract], each doubling the
+# one below it: unfolding them all is a quarter of a million applications of
+# useless work, and the whole module is dropped afterwards.  Custard roots
+# nothing here, so this finishes in a tenth of a second; the timeout is what
+# makes the test a test.
 $(OUTPUT_DIR)/NoExtractNormPerf.test: $(CACHE_DIR)/NoExtractNormPerf.fst.checked $(FSTAR_EXE)
 	@mkdir -p $(OUTPUT_DIR)
-	@$(FSTAR) $< --codegen krml --extract_module NoExtractNormPerf
+	$(Q)timeout 60 $(FSTAR) $< --codegen Custard \
+	  --custard_entry_module NoExtractNormPerf -o $(OUTPUT_DIR)/NoExtractNormPerf.ml
 	@touch $@
 
+# [of_literal] turns its argument into a constant in the generated program,
+# which is exactly the shape of a code-injection bug if the argument is not
+# checked.  The legacy pipeline warned and emitted the string anyway; Custard
+# refuses (error 380, section 39.2), so there is no output to inspect.
 $(OUTPUT_DIR)/FloatLiteralInjection.rejected: $(CACHE_DIR)/FloatLiteralInjection.fst.checked $(FSTAR_EXE)
 	@mkdir -p $(OUTPUT_DIR)
-	@$(FSTAR) $< --codegen krml --extract_module FloatLiteralInjection >$(OUTPUT_DIR)/FloatLiteralInjection.out 2>&1 || true
-	@grep -q "Warning 242" $(OUTPUT_DIR)/FloatLiteralInjection.out
-	@grep -q "Refusing to extract invalid Float64.of_literal argument" $(OUTPUT_DIR)/FloatLiteralInjection.out
+	@$(FSTAR) $< --codegen Custard --custard_backend C \
+	  --custard_entry_module FloatLiteralInjection \
+	  -o $(OUTPUT_DIR)/FloatLiteralInjection.c \
+	  >$(OUTPUT_DIR)/FloatLiteralInjection.out 2>&1 || true
+	@grep -q "Error 380" $(OUTPUT_DIR)/FloatLiteralInjection.out
+	@grep -q "is not a floating-point literal" $(OUTPUT_DIR)/FloatLiteralInjection.out
+	@touch $@
+
+# And the literals that are well-formed.  The C backend, because the module
+# uses FStar.Float32 and OCaml has no binary32 (error 368, section 38).
+$(OUTPUT_DIR)/FloatLiteralExtraction.test: $(CACHE_DIR)/FloatLiteralExtraction.fst.checked $(FSTAR_EXE)
+	@mkdir -p $(OUTPUT_DIR)
+	$(Q)$(FSTAR) $< --codegen Custard --custard_backend C \
+	  --custard_entry_module FloatLiteralExtraction \
+	  -o $(OUTPUT_DIR)/FloatLiteralExtraction.c
+	@grep -q -- "-1250.0" $(OUTPUT_DIR)/FloatLiteralExtraction.c
+	@grep -q -- "0.5f" $(OUTPUT_DIR)/FloatLiteralExtraction.c
 	@touch $@
 
 # Overriding the default rule for this one. We need to wrap this in a timeout.

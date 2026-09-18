@@ -47,7 +47,10 @@ val id_norm_cb : norm_cb
 exception Embedding_failure
 exception Unembedding_failure
 
-[@@Tactics.Typeclasses.tcclass]
+(* [custard_no_monomorphize]: an embedding is a runtime value.  The class is
+   only how F* finds one; [e_list e_sigelt] is computed, and Custard must pass
+   it rather than specialize on it. *)
+[@@Tactics.Typeclasses.tcclass; FStar.Attributes.custard_no_monomorphize]
 val embedding (a:Type0) : Type0
 
 // FIXME: unit to trigger instantiation

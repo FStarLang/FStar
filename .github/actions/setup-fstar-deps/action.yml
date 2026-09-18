@@ -13,10 +13,6 @@ inputs:
     description: 'Extra opam packages to install, space separated.'
     required: false
     default: 'domainslib'
-  dotnet:
-    description: 'Install a .NET 8 SDK (needed for the F# library and its tests).'
-    required: false
-    default: 'false'
 
 runs:
   using: composite
@@ -41,18 +37,8 @@ runs:
           python-is-python3 \
           time \
           unzip \
+          dotnet-sdk-10.0 \
           wget
-
-    - name: Install .NET 8 SDK
-      if: inputs.dotnet == 'true'
-      shell: bash
-      run: |
-        set -eu
-        if dotnet --list-sdks 2>/dev/null | grep -q '^8\.'; then
-          echo ">>> .NET 8 SDK already present"
-        else
-          sudo apt-get install -y -qq dotnet-sdk-8.0
-        fi
 
     - name: Compute cache keys
       id: keys
