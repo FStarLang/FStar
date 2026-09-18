@@ -33,6 +33,9 @@ module E     = FStarC.Tactics.Embedding
 module NBET    = FStarC.TypeChecker.NBETerm
 module PO    = FStarC.TypeChecker.Primops
 
+(* Inlined for extraction: see the note on the copy in
+   FStarC.TypeChecker.Primops.Base. *)
+inline_for_extraction
 let solve (#a:Type) {| ev : a |} : Tot a = ev
 
 (* This module does not use typeclasses *)

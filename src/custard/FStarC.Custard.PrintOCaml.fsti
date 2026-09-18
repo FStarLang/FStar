@@ -1,0 +1,46 @@
+(*
+   Copyright 2008-2026 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
+(** The OCaml backend for Custard.
+
+    Custard produces a *whole program*, so unlike the ML extraction this emits
+    a single flat OCaml module in which every definition has a mangled global
+    name.  Symbols with no F* definition ([DExternal]) are bound to the
+    corresponding value of the existing F* OCaml support library, so that the
+    hand-written realizations in [ulib/ml] keep working. *)
+module FStarC.Custard.PrintOCaml
+
+open FStarC
+open FStarC.Effect
+open FStarC.Custard.Syntax
+
+(** The OCaml identifier a Custard name is emitted under. *)
+val ocaml_value_name : name -> ML string
+val ocaml_type_name  : name -> ML string
+
+(** The OCaml module a Custard unit compiles to, which is both the name of the
+    file it is written to and the namespace downstream units qualify its
+    exports with. *)
+val module_name_of_unit : string -> ML string
+
+val print_program : program -> ML string
+
+(** Section 12.9: the whole program cut into one file per F\* source module,
+    as [(module name, source)] pairs in link order.  The input is the
+    partition {!FStarC.Custard.Split.run} computed; the module name is the F\*
+    module's, and the OCaml module -- which is also the file's base name -- is
+    {!module_name_of_unit} of it. *)
+val print_split : list (string & program) -> ML (list (string & string))

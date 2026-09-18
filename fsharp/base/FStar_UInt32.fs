@@ -7,7 +7,14 @@ type uint32 = System.UInt32
 type t = System.UInt32
 let n = Prims.of_int 32
 
-let uint_to_t x = System.UInt32.Parse((string x))
+(* The parameter is deliberately not called [x], and this is not cosmetic.
+   The F# 10 optimizer names a closure it inlines after the parameter and the
+   *line* it came from, with no reference to the file: this definition and
+   FStar_UInt64.uint_to_t were both [x] on line 10, and inlining both into
+   FStar_UInt128 -- which converts at both widths -- produced two closure
+   classes called [x@10] in one type and failed the build with FS2014,
+   "duplicate entry 'get_x@10' in method table". *)
+let uint_to_t i = System.UInt32.Parse((string i))
 let __uint_to_t = uint_to_t
 
 let v (x:t) : Prims.int = Prims.parse_int (string x)

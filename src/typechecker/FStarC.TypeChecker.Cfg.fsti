@@ -44,6 +44,7 @@ type fsteps = {
      weak : bool;
      hnf  : bool;
      primops : bool;
+     unrepresentable_primops : bool;
      do_not_unfold_pure_lets : bool;
      unfold_until : option S.delta_depth;
      unfold_only  : option (list I.lid);
