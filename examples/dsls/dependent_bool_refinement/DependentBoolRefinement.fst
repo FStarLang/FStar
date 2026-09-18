@@ -265,7 +265,7 @@ and elab_ty (t:src_ty)
       R.pack_ln 
         (R.Tv_Arrow 
           (RT.mk_simple_binder RT.pp_name_default t1)
-          (RT.mk_total_tm t2)) //(R.pack_comp (C_Total t2 [])))
+          (RT.mk_total_tm t2)) //(R.pack_comp (mk_tot_comp t2)))
           
     | TRefineBool e ->
       let e = elab_exp e in
