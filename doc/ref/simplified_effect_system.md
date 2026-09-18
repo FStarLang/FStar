@@ -1266,14 +1266,6 @@ three times each):
 That was **13.5×**, and none of it was upstream drift: `9981a990a7` is the exact
 master this branch merged, so the whole delta belonged to this work.
 
-Do not be misled by the benchmarking bot. Its run on this PR showed no `TestBV`
-entry at all, because the commit it benchmarked (`ece1b507a7`) still contained
-`e042bd26a6`, "Rel: don't unfold to decide an equation whose heads already
-agree", and did not yet contain `1164a86c7f`, the revert of it. That
-optimisation is the first of the two withdrawn fixes below; while it was live
-`TestBV` was back to 0.92s. A bot run is only evidence about the commit it
-names.
-
 #### Diagnosis
 
 `--profile TestBV --profile_component '*' --profile_group_by_decl` attributed
@@ -1388,6 +1380,62 @@ obligation, so it cannot reproduce the `natlt_coerce` breakage.
 
 `try_eq`'s other caller, the one that relates the two *bases* of a join, keeps
 the heuristic.
+
+#### Why not just delete the `try_eq` fallback?
+
+The obvious simplification is to make `same_formula` purely syntactic —
+`U.term_eq phi1 phi2, wl` — which is what it was before
+`425ac058b1` added the fallback. That reaches `equal` not at all, so it
+also removes the blow-up, and `eq_norm_heuristic_ok` becomes dead code. It was
+built and measured:
+
+| check | purely syntactic `same_formula` |
+|---|---|
+| `TestBV.fst` | 1.00s — blow-up gone |
+| `make ci -j$(nproc)` | exit 0 |
+| kuiper, `obj/` wiped, 396 modules | 396/396, 0 errors, 25m58s |
+
+A second instrumented build, printing whenever `term_eq` says "different" and
+`try_eq` then says "same", shows why: the fallback fires **zero** times across
+the whole of ulib (329 modules, fully re-verified), `tests/tactics`,
+`tests/micro-benchmarks` and `tests/bug-reports`. Making it fire at all took a
+hand-built probe —
+
+```fstar
+assume val g (#a:Type) (x:a) : Pure a (requires True) (ensures fun y -> y == x)
+let mk (b:bool) (f:(int -> int)) = if b then g f else g f
+```
+
+— and even then both compilers accept the program.
+
+The reason it is so hard to observe is worth writing down. When two formulas
+differ only in their universe uvars, `eq12 = false` does not discard anything:
+it builds `phi1 \/ phi2` for a join, or `phi1 /\ phi2` for a meet, and both
+sides *are* the same proposition, so the result is redundant but logically
+equivalent and the solver is unaffected. The genuinely lossy path is narrower —
+`may_widen && not flip`, which drops **both** refinements and widens to the
+base — and reaching it needs the two bases to be syntactically identical *and*
+the combination to differ from both.
+
+So the fallback was kept, on these grounds:
+
+* It now costs nothing. With `eq_norm_heuristic_ok=false` it is a bounded
+  structural unification.
+* Green is weak evidence here. `425ac058b1` was written against an *observed*
+  failure that no test pins, and the census shows the suites cannot see the
+  difference at all — so a regression would land silently, in a tree nobody is
+  running today.
+* What is lost is not nothing: a postcondition disappearing on the `may_widen`
+  path surfaces as a failure far from its cause; redundant `\/`/`/\` defeats
+  the syntactic matching `apply` and friends do against the type the user wrote;
+  and `try_eq` *solves* the universe uvars as a side effect, which is why
+  `combine_refinements` threads the worklist at all.
+
+If the simplification is wanted later, the right shape is neither of these two:
+the motivating case is *only* about universes, so a `term_eq` that ignores
+universe uvars would capture it without a nested `solve`, without the side
+effect of solving unrelated uvars, and without needing
+`eq_norm_heuristic_ok` at all.
 
 #### What remains
 
