@@ -87,6 +87,10 @@ val collect_deps_of_decl
     (get_parsing_data_from_cache:string -> ML (option parsing_data))
 : ML (list string) //filenames
 val collect: list string -> (string -> ML (option parsing_data)) -> ML (list string & deps)
+(** Every module the dependency graph knows about, lowercased, in dependency
+    order -- the order the build links in.  [all_files] is a set, so its own
+    order is alphabetical and says nothing. *)
+val topological_order: deps -> (module_name -> ML module_name) -> ML (list module_name)
 val parsing_data_of_modul: deps -> filename:string -> option AST.modul -> ML (parsing_data & list string)
 val deps_of : deps -> string -> ML (list string)
 val deps_of_modul : deps -> module_name -> ML (list module_name)  // list of modules that this module depends on

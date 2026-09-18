@@ -30,7 +30,7 @@ Backends: **ml** = OCaml, **c** = C via Karamel, **rs** = Rust via Karamel.
 | 3 | `UInt8.lognot` is not truncated in OCaml | **2** | ✗ | ✓ | ✓ | `ExtUInt8Lognot` |
 | 4 | narrowing casts dropped inside comparisons | **2** | ✓ | ✗ | ✓ | `ExtIntCast` |
 | 5 | `Prims.int` `/` and `%` truncate instead of Euclidean in C | **2** | ✓ | ✗ | – | `ExtPrimsIntDiv` |
-| 6 | `Prims_op_Star` is never defined in krmllib | 4 | ✓ | ✗ | – | `ExtPrimsIntMul` |
+| 6 | `Prims_op_Star` is never defined in krmllib — **fixed** | 4 | – | – | – | `ExtPrimsIntMul` |
 | 7 | `Prims_int` is `int32_t`; literals silently truncate | **2** | ✓ | ✗ | – | `ExtPrimsIntBignum` |
 | 8 | recursive inductives emit uncompilable C, undiagnosed | 4 | ✓ | ✗ | ✗ | `ExtDatatypesRec`, `ExtDatatypesMutual` |
 | 9 | krml does not terminate on two recursive datatypes (C *and* Rust) | 4 | ✓ | ✗ | ✗ | `ExtDatatypesRec` |
@@ -45,6 +45,38 @@ Backends: **ml** = OCaml, **c** = C via Karamel, **rs** = Rust via Karamel.
 
 `–` means "not applicable": the backend rejects the feature by design (closures
 are not Low\*; the Rust backend refuses mathematical integers outright).
+
+### Custard
+
+Custard (`doc/ref/custard.md`) is a second, independent extractor, with three
+backends of its own; its Krml backend feeds both of karamel's, so it
+contributes four more columns: **cml** = Custard OCaml, **cc** = Custard
+direct C, **ckc** = Custard + karamel C, **ckr** = Custard + karamel Rust.
+
+| # | Issue | cml | cc | ckc | ckr | Test |
+|---|-------|-----|----|-----|-----|------|
+| 1 | `IntN.ne` has no Krml opcode | ✗ | ✓ | ✓ | ✓ | `ExtIntNe` |
+| 2 | `shift_arithmetic_right` | ✗ | ✗ | ✗ | ✗ | `ExtIntShiftArith` |
+| 3 | `UInt8.lognot` untruncated in OCaml | ✗ | ✓ | ✓ | ✓ | `ExtUInt8Lognot` |
+| 4 | narrowing casts dropped in comparisons | ✓ | ✓ | ✗ | ✓ | `ExtIntCast` |
+| 5–7 | `Prims.int` in krmllib | ✓ | – | ✗ | – | `ExtPrimsInt*` |
+| 8, 9 | recursive inductives | ✓ | – | ✗ | ✗ | `ExtDatatypes{Rec,Mutual}` |
+| 10 | Rust backend's missing `lowstar` module | ✓ | ✓ | ✓ | ✓ | `ExtDatatypes{Record,Variant}` |
+| 11 | projector of a constructor application | ✓ | ✓ | ✓ | ✓ | `ExtProjectorOfCtor` |
+| 12 | Rust backend cannot translate `EFun` | ✓ | – | – | – | `ExtBoolHigherOrder` |
+| 14 | no 128-bit integers in Rust | ✓ | ✓ | ✗ | ✓/✗ | `ExtUInt128`, `ExtInt128` |
+| 15 | krmllib ships no `FStar_Int128` | ✓ | – | ✗ | ✗ | `ExtInt128` |
+| 16 | krmllib's undefined rotates | ✗ | ✗ | ✗ | ✗ | `ExtUIntRotate` |
+| 17 | Rust backend rejects `eq_mask`/`gte_mask` | ✓ | ✓ | ✗ | ✓ | `ExtUIntMask` |
+| 18 | the machine-integer modules are not realized | ✗ | ✗ | ✗ | ✗ | `ExtIntNe`, `ExtIntShiftArith`, `ExtUIntRotate` |
+
+Custard is *better* than the pipeline above on five cells and worse on three.
+It is better because it compiles projectors itself (#11), because it does not
+go through krmllib for `UInt8` (#3), and because its Krml output avoids the
+shapes the Rust backend chokes on (#10, #14 for `ExtUInt128`, #17). It is
+worse only through #18, which is a Custard bug and is the one entry below
+that this directory found in Custard rather than in the pipeline it was
+written for.
 
 ---
 
@@ -189,17 +221,23 @@ which makes this another way to produce an out-of-bounds index from verified
 code. OCaml is correct because extraction routes these through Zarith's
 `ediv`/`erem`.
 
-## 6. `Prims_op_Star` is never defined
+## 6. `Prims_op_Star` is never defined -- fixed
 
 *Severity 4. Test: `ExtPrimsIntMul`.*
 
-F\* extraction emits `Prims.op_Star` for `*` on `Prims.int`, and the C backend
-turns that into a call to `Prims_op_Star`. krmllib only ever defines
-`Prims_op_Multiply`, so the generated C fails to compile:
+F\* extraction emitted `Prims.op_Star` for `*` on `Prims.int`, and the C
+backend turned that into a call to `Prims_op_Star`. krmllib only ever defines
+`Prims_op_Multiply`, so the generated C failed to compile:
 
 ```
 error: implicit declaration of function 'Prims_op_Star'
 ```
+
+`krml_compat_name` rewrites the Prims operators to the spellings karamel
+hardwires, and `op_Star` was the one entry missing from its table -- the only
+Prims operator whose pre-mangling name was not derivable from the new one by
+the same rule as the rest. Adding it fixes the cell in both the C and the
+krml C columns.
 
 ## 7. `Prims_int` is 32 bits, and literals bypass the overflow check
 
@@ -578,6 +616,52 @@ that are now pinned down and will not silently regress.
   including `minus 0 = 0` and `x + minus x = 0`.
 * **Rotations** on OCaml (`ExtUIntRotate`), including the `s = 0` case; see
   #16 for C and #17 for Rust.
+
+## 18. Custard does not realize the machine-integer modules
+
+*Severity 4 (every Custard backend). Tests: `ExtIntNe`, `ExtIntShiftArith`,
+`ExtUIntRotate`, `ExtUIntMask`, `ExtUInt8Lognot`.*
+
+`realized_modules` in `src/custard/FStarC.Custard.Builtins.fst` lists the
+modules whose definitions Custard must *not* compile, because the runtime
+already provides them. `FStar.UInt8` is on that list; `FStar.UInt16`,
+`FStar.UInt32`, `FStar.UInt64` and the four signed modules are not.
+
+For those seven, the only operations Custard recognizes are the ones with a
+primitive rule: arithmetic, comparison, `&`/`|`/`^`, the shifts, `v` and
+`uint_to_t`, and the `FStar.Int.Cast` conversions. Everything else — `ne`,
+`lognot`, `shift_arithmetic_right`, `rotate_left`, `rotate_right`, `eq_mask`,
+`gte_mask`, `minus` — falls through, and Custard does what it does with any
+other F\* definition: it compiles it. But the definition is the *model*, a
+fold over a `bool` bit vector in `Prims.int`:
+
+```ocaml
+let fStar_Int_shift_arithmetic_right (n a s : Prims.int) : Prims.int =
+  fStar_Int_from_vec n
+    (fStar_BitVector_shift_arithmetic_right_vec n (fStar_Int_to_vec n a) s)
+```
+
+The three backends then fail in three different ways, all of them a
+consequence of the same thing:
+
+* **OCaml**: the result has type `Prims.int` where `FStar_Int32.t` is wanted,
+  and `ocamlopt` rejects the module.
+* **direct C**: `Prims.int` reaches the C backend, which correctly reports
+  error 367 — it is right about the program it was handed and wrong about the
+  program that was written.
+* **karamel**: same, one stage later.
+
+The fix is in `Builtins`, not in any backend: either add the seven modules to
+`realized_modules`, or give the missing operations primitive rules. The
+realizations do define all of them —
+`stage2/out/lib/fstar/lib/app/ints/FStar_Int32.ml` has `shift_arithmetic_right`,
+`rotate_left`, `rotate_right`, `ne` and `lognot` — which is exactly why the
+plain `ocaml` column passes the same cells that `custard-ocaml` fails.
+
+Note that this is *not* the reason `ExtUInt8Lognot` fails on `custard-ocaml`:
+`FStar.UInt8` is realized, so that column inherits the realization's
+untruncated `lognot` and fails for reason #3, like the plain OCaml column.
+Custard's direct C backend passes it.
 
 ## Notes for whoever extends this
 

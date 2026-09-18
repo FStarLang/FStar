@@ -1236,7 +1236,7 @@ calcStep:
              | Some t -> t
              | None -> mk_term (Const Const_unit) (rr2 $loc($2) $loc($4)) Expr
          in
-         CalcStep (rel, justif, next)
+         mkCalcStep rel justif next
      }
 
 %public
@@ -1245,8 +1245,8 @@ typ:
 
 %public
 %inline quantifier:
-  | FORALL { fun x -> QForall x }
-  | EXISTS { fun x -> QExists x}
+  | FORALL { fun (x,y,z) -> QForall (x,y,z) }
+  | EXISTS { fun (x,y,z) -> QExists (x,y,z) }
   | op=FORALL_OP
     { 
       let op = mk_ident("forall" ^ op, rr $loc(op)) in
