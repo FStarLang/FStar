@@ -9249,6 +9249,41 @@ what round 35 asked for; it is written down here as the next thing.
 this section fills survives the change and the new message uses it, so the
 external is still named -- see §100.2.
 
+### 31.4 `rename_let`
+
+`[@@rename_let "name"]` on a local `let` asks for that binder to be spelled
+`name` in the generated code.  It is what Pulse uses to give an `fn`'s
+compiled locals the names the source wrote, rather than the ones the
+elaborator invented, and it is the only means a program has of naming
+something that does not survive as a declaration.
+
+The ML pipeline implements it in `FStarC.Extraction.ML.Term` by freshening a
+`bv` with the requested `ppname` and substituting it through the body.
+Custard was ignoring the attribute, so Pulse's `RenameLet` test came out with
+every local back to its source spelling.
+
+Here the substitution is nearly free, because §6's naming contract already
+does the work.  A local is named `uniq (ppname b) b.index`, the `'#'` in
+`uniq` is illegal in every target, and `Rename` rewrites each binder to its
+`base_name` at the end, suffixing only where that would genuinely shadow.  So
+`rename_let` has only to change the base:
+
+- the attribute is read on `lb.lbattrs`, after `compress`, exactly as the ML
+  extractor reads it -- a name computed by a `normalize_term` is already a
+  literal by the time extraction runs, and anything else is a warning and a
+  no-op rather than a failure;
+- the `bv` *itself* is renamed and substituted into the body, not just the
+  `ELet`'s name.  Every reference goes through `name_of_bv` on that same
+  `bv`, so binder and uses cannot disagree;
+- the index is preserved.  It is `uniq`'s disambiguator and the key of
+  `st.letdefs`, `st.effletdefs` and `st.lettys`, and keeping it is what makes
+  two bindings that both ask for `dupName` come out as `dupName` and
+  `dupName1` -- from the ordinary `Rename` pass, with nothing here to say
+  about collisions.
+
+`tests/custard/RenameLet.fst` pins all three: the requested names appear, the
+source spellings do not, and the duplicate is numbered.
+
 ## 32 After the attribute
 
 Rounds 36 and 37, and between them they close the question §12.3 opened.

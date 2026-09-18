@@ -160,7 +160,7 @@ let check
             intro_comp_typing g c
               x
           in
-          let st = wrst c (Tm_WithLocalArray { binder = mk_binder_ppname (mk_array init_t) binder.binder_ppname; initializer=init; length=len; body }) in
+          let st = wrst c (Tm_WithLocalArray { binder = mk_binder_with_attrs (mk_array init_t) binder.binder_ppname binder.binder_attrs; initializer=init; length=len; body }) in
           let natural_post : post_hint_for_env g =
             { post with effect_annot = effect_annot_of_comp c } in
           let r = checker_result_for_st_typing

@@ -1145,6 +1145,51 @@ let name_of_lid (l:Ident.lident) : ML name = {
 let name_of_bv (b:bv) : ML string =
   uniq (Ident.string_of_id b.ppname) b.index
 
+(* Section 31.4.  [FStar.Attributes.rename_let] on a local [let] asks for the
+   binder to carry a chosen name into the generated code.  The ML extractor
+   implements it by substituting a freshened [bv] (see
+   {!FStarC.Extraction.ML.Term}); here there is nothing to substitute, because
+   a local's spelling is decided in exactly one place -- [name_of_bv] -- and
+   the renaming pass takes the [base_name] of whatever it finds.  So the
+   attribute only has to change the base, and [uniq] keeps the [bv] index as
+   the disambiguator, which is what makes two bindings asking for the same
+   name come out as [nice] and [nice1] rather than collide.
+
+   The argument is read after [compress], as the ML extractor reads it: a name
+   computed by a [normalize_term] is already a literal by the time extraction
+   runs.  Anything else is ill-formed, and warning about it rather than
+   silently keeping the source spelling is the point -- a [rename_let] whose
+   argument did not reduce is a mistake the author wants to hear about. *)
+let rename_let_name (top:term) (lbattrs:list term) : ML (option string) =
+  match U.get_attribute PC.rename_let_attr lbattrs with
+  | None -> None
+  | Some [(str, _)] ->
+    (match (SS.compress str).n with
+     | Tm_constant (Const_string (s, _)) when s <> "" -> Some s
+     | _ ->
+       E.log_issue top E.Warning_UnrecognizedAttribute
+         "Ignoring ill-formed application of `rename_let`";
+       None)
+  | Some _ ->
+    E.log_issue top E.Warning_UnrecognizedAttribute
+      "Ignoring ill-formed application of `rename_let`";
+    None
+
+(* The name a local [let] binder is given: its source spelling, unless
+   [rename_let] asked for another one.  Renaming the [bv] itself, rather than
+   just the [ELet]'s name, is what keeps the binder and its uses spelled the
+   same way: every reference goes through [name_of_bv] on this very [bv], so
+   there is nothing else to rewrite.  The index is deliberately preserved --
+   it is the disambiguator [uniq] appends and the key of [st.letdefs],
+   [st.effletdefs] and [st.lettys]. *)
+let rename_let_bv (top:term) (b:bv) (body:term) (lbattrs:list term)
+  : ML (bv & term) =
+  match rename_let_name top lbattrs with
+  | None -> b, body
+  | Some s ->
+    let b' = { b with ppname = Ident.mk_ident (s, Ident.range_of_id b.ppname) } in
+    b', SS.subst [NT (b, S.bv_to_name b')] body
+
 (* A readable spelling of one [Mono] argument, structurally: the same scheme
    {!Monomorphize.hint_of_cty} uses for a type instantiation, over terms.
    [mapM] specialized at the tactic monad and at [list] should be called
@@ -2773,6 +2818,7 @@ and expr_of_term (st:state) (t:term) : ML expr =
     (match lb.lbname with
      | Inl bv ->
        let bv, body = SS.open_term_bv bv body in
+       let bv, body = rename_let_bv t bv body lb.lbattrs in
        if inlinable_local st lb then
          (* Section 5.11: a local function is substituted at its uses rather
             than compiled as a closure, so that each use instantiates its type

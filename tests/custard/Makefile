@@ -51,6 +51,15 @@ CUSTARD_TESTS += RetArity
 CUSTARD_TESTS += Realized
 CUSTARD_TESTS += Patlift
 CUSTARD_TESTS += EraseAbbrev
+
+# Section 31.4: [FStar.Attributes.rename_let] on a local [let] must reach the
+# emitted name.  The rename is applied to the [bv] rather than to the [ELet],
+# so the binder and every use of it agree; and because the [bv]'s index is
+# kept, the two [dupName]s are disambiguated by the ordinary [Rename] pass
+# rather than by anything this feature does.
+CUSTARD_TESTS += RenameLet
+GREP_RenameLet   = "let renamedA = " "let dupName = " "let dupName1 = "
+NOGREP_RenameLet = "let a = " "let b = " "let c = "
 GREP_EraseAbbrev = "let eraseAbbrev_add4 (n : Prims.int) (x : Prims.int) (y : Prims.int) : Prims.int"
 # The failure this guards against is [add4] keeping its abbreviated codomain
 # as an arrow instead of taking its binders: [let add4 (n : Prims.int) : ...].

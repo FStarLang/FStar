@@ -29,6 +29,63 @@ module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
 module Abs = Pulse.Checker.Abs
 
+(*
+  The binder that ends up in the elaborated `Tm_Bind` is rebuilt from the `nvar`
+  (see Pulse.Typing.Combinators.nvar_as_binder), which only carries a ppname and
+  hence loses the user-written binder attributes, e.g.
+
+    let [@@@FStar.Attributes.rename_let "foo"] x = e;
+
+  Since the ppname *is* threaded faithfully, we recover the attributes by walking
+  down the spine of binds produced by the continuation elaborator and restoring
+  them on the first binder with a matching ppname. Binds introduced by the prover
+  itself use `ppname_default`, so this does not misfire. Purely cosmetic: binder
+  attributes play no role in typing, and `st_typing_in_ctxt` carries no derivation.
+*)
+let rec restore_binder_attrs (attrs:list term) (nm:string) (t:st_term)
+  : T.Tac st_term
+  = let recurse (body:st_term) = restore_binder_attrs attrs nm body in
+    let with_attrs (b:binder) = { b with binder_attrs = attrs } in
+    // Binds introduced by the prover itself are all named `ppname_default`; stop
+    // at the first user-named binder, which is the one we are looking for.
+    let classify (b:binder) : T.Tac (option bool) =
+      let s = T.unseal b.binder_ppname.name in
+      if s = nm then Some true
+      else if s = T.unseal ppname_default.name then Some false
+      else None
+    in
+    match t.term with
+    | Tm_Bind { binder; head; body } -> (
+      match classify binder with
+      | Some true -> { t with term = Tm_Bind { binder = with_attrs binder; head; body } }
+      | Some false -> { t with term = Tm_Bind { binder; head; body = recurse body } }
+      | None -> t
+    )
+    | Tm_TotBind { binder; head; body } -> (
+      match classify binder with
+      | Some true -> { t with term = Tm_TotBind { binder = with_attrs binder; head; body } }
+      | Some false -> { t with term = Tm_TotBind { binder; head; body = recurse body } }
+      | None -> t
+    )
+    | _ -> t
+
+let restore_binder_attrs_of
+  (#g:env) (#ctxt:slprop) (#post_hint:post_hint_opt g)
+  (b:binder)
+  (r:checker_result_t g ctxt post_hint)
+: T.Tac (checker_result_t g ctxt post_hint)
+= let attrs = b.binder_attrs in
+  if Nil? attrs then r
+  else
+    let nm = T.unseal b.binder_ppname.name in
+    let (| x, g1, t, ctxt', k |) = r in
+    let k : continuation_elaborator g ctxt g1 ctxt' =
+      fun post_hint d ->
+        let (| e, c |) = k post_hint d in
+        (| restore_binder_attrs attrs nm e, c |)
+    in
+    (| x, g1, t, ctxt', k |)
+
 #push-options "--z3rlimit_factor 8 --fuel 0 --ifuel 1"
 let check_bind_fn
   (g:env)
@@ -150,7 +207,7 @@ let check_bind'
       let (| x, g1, _, ctxt', k1 |) = r0 in
       let g1 = reset_context g1 g in
       let r1 = check g1 ctxt' post_hint ppname_default (open_st_term_nv e2 (binder.binder_ppname, x)) in
-      Pulse.Checker.Base.compose_checker_result_t r0 r1 
+      restore_binder_attrs_of binder (Pulse.Checker.Base.compose_checker_result_t r0 r1)
     in
     if not maybe_elaborate then dflt()
     else (
