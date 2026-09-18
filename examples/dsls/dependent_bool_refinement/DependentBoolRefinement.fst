@@ -590,7 +590,7 @@ let rec extend_env_l_lookup_bvar (g:R.env) (sg:src_env) (x:var)
     | [] -> ()
     | hd :: tl -> extend_env_l_lookup_bvar g tl x
 
-#push-options "--fuel 8 --ifuel 2"
+#push-options "--fuel 8 --ifuel 2 --z3rlimit_factor 4"
 let rec elab_open_commute' (n:nat) (e:src_exp) (x:src_exp) 
   : Lemma (ensures
               subst_term_spec (denote_term (elab_exp e)) [ DTs n (denote_term (elab_exp x)) ] ==
@@ -693,7 +693,7 @@ let subtyping_soundness #f (#sg:src_env) (#t0 #t1:src_ty) (ds:sub_typing f sg t0
 
 #pop-options
 
-#push-options "--fuel 8 --ifuel 2"
+#push-options "--fuel 8 --ifuel 2 --z3rlimit_factor 4"
 let rec elab_close_commute' (n:nat) (e:src_exp) (x:var)
   : Lemma (ensures
               subst_term_spec (denote_term (elab_exp e)) [ NDs x n ] ==
@@ -777,7 +777,7 @@ let elab_open_b2t (e:src_exp) (x:var)
     denote_pack_var (R.pack_namedv (RT.make_namedv x));
     elab_open_commute' 0 e (EVar x)
 
-#push-options "--fuel 2 --ifuel 2"
+#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 8"
 let rec soundness (#f:fstar_top_env)
                   (#sg:src_env { src_env_ok sg } ) 
                   (#se:src_exp)

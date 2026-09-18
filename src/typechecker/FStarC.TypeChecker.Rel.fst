@@ -1930,6 +1930,7 @@ let simplify_vc full_norm_allowed env t : ML _
   let steps = [Env.Beta;
                Env.Eager_unfolding;
                Env.Simplify;
+               Env.UnitBinders;
                Env.Primops;
                Env.Exclude Env.Zeta] in
   let steps = if full_norm_allowed then steps else Env.NoFullNorm::steps in
@@ -4900,7 +4901,7 @@ let do_discharge_vc use_env_range_msg env vc : ML unit =
                             // NB: No Eager_unfolding. Why?
                             env,
                             norm_with_steps "FStarC.TypeChecker.Rel.norm_with_steps.7"
-                                            [Env.Simplify; Env.Primops; Env.Exclude Env.Zeta] env goal,
+                                            [Env.Simplify; Env.UnitBinders; Env.Primops; Env.Exclude Env.Zeta] env goal,
                             opts)
         in
 

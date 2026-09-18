@@ -73,6 +73,7 @@ let rec eq_step s1 s2 : ML bool =
   | DontUnfoldAttr lids1, DontUnfoldAttr lids2 -> lids1 =? lids2
   | PureSubtermsWithinComputations, PureSubtermsWithinComputations
   | Simplify, Simplify
+  | UnitBinders, UnitBinders
   | EraseUniverses, EraseUniverses
   | AllowUnboundUniverses, AllowUnboundUniverses
   | Reify, Reify
@@ -117,6 +118,7 @@ let rec step_to_string (s:step) : ML string =
   | DontUnfoldAttr lids1 -> "DontUnfoldAttr " ^ show lids1
   | PureSubtermsWithinComputations -> "PureSubtermsWithinComputations"
   | Simplify -> "Simplify"
+  | UnitBinders -> "UnitBinders"
   | EraseUniverses -> "EraseUniverses"
   | AllowUnboundUniverses -> "AllowUnboundUniverses"
   | Reify -> "Reify"

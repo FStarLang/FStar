@@ -402,7 +402,77 @@ let rec encode_const c env : ML _ =
     | Const_real r -> boxReal (mkReal r), []
     | c -> failwith (Format.fmt1 "Unhandled constant: %s" (show c))
   )
+(* [unit_refinements env t] checks whether [t] is (a nest of refinements over)
+   the unit type, e.g. [u:unit{p}] or [squash p]. If so, it returns the
+   refinement formulas, already instantiated at the unit constant.
+
+   Since unit is a singleton type, a binder [x:t] with such a type does not
+   need to be encoded as an SMT variable at all: every occurrence of [x] can
+   be replaced by the unit constant, and the typing guard for [x] reduces to
+   the conjunction of the returned formulas. This avoids introducing a
+   [Tm_refine_...] type constructor, a quantified variable, and a [HasType]
+   guard for what is really just a hypothesis. *)
+and unit_refinements (env:env_t) (t:typ) : ML (option (list S.term)) =
+    if Options.Ext.enabled "compat:smt_unit_binders" then None else
+    (* NB: not U.is_unit, which also holds of `squash p`, and hence would
+       silently drop the refinement `p`. *)
+    let is_prims_unit (t:typ) : ML bool =
+      match (SS.compress t).n with
+      | Tm_fvar fv -> S.fv_eq_lid fv Const.unit_lid
+      | _ -> false
+    in
+    let rec aux (normalized:bool) (t:typ) (out:list S.term) : ML (option (list S.term)) =
+      let t = U.unmeta (U.unascribe t) in
+      match (SS.compress t).n with
+      | Tm_refine {b=x; phi} ->
+        let bs, phi = SS.open_term [S.mk_binder x] phi in
+        let x = (List.hd bs).binder_bv in
+        (* Since x:unit, we may as well instantiate it right away. *)
+        let phi = SS.subst [NT (x, S.unit_const)] phi in
+        aux normalized x.sort (phi::out)
+      | _ ->
+        match U.is_squash t with
+        | Some p -> Some (p::out)
+        | None ->
+          if is_prims_unit t then Some out
+          else if normalized then None
+          else aux true (whnf env t) out
+    in
+    aux false t []
+
+(* Encode the guard of a binder [x:t] that was eliminated by [unit_refinements],
+   i.e. the conjunction of the (unit-instantiated) refinement formulas. *)
+and encode_unit_refinements (env:env_t) (fs:list S.term) : ML (term & decls_t) =
+    let gs, decls =
+      fs |> List.map (fun f -> encode_formula f env) |> List.unzip
+    in
+    mk_and_l gs, List.flatten decls
+
 and encode_binders (fuel_opt:option term) (bs:Syntax.binders) (env:env_t) : ML
+                            (list fv                       (* translated bound variables *)
+                            & list term                    (* guards *)
+                            & env_t                         (* extended context *)
+                            & decls_t                       (* top-level decls to be emitted *)
+                            & list bv)                     (* names *) =
+    encode_binders_aux (fun _ -> false) fuel_opt bs env
+
+(* [encode_binders_aux may_simplify ...] is as [encode_binders], except that
+   for a binder [x] with [may_simplify x] we are free to simplify its encoding:
+
+     - if its type is a refinement of unit, it is not given an SMT variable at
+       all; it is bound to the unit constant in the returned environment, and
+       only contributes a guard;
+     - otherwise, if its type is a refinement, the guard is inlined rather than
+       going through a [Tm_refine_...] type constructor.
+
+   Both are only sound/appropriate at call sites where the returned [vars] are
+   used to build a quantifier and the guards are used as hypotheses -- not,
+   say, as the arguments and typing hypotheses of a shared, hash-consed axiom
+   for an SMT function symbol of a fixed arity.
+   Note that the returned list of names is still in one-to-one correspondence
+   with [bs], but the list of variables may be shorter. *)
+and encode_binders_aux (may_simplify:bv -> ML bool)
+                       (fuel_opt:option term) (bs:Syntax.binders) (env:env_t) : ML
                             (list fv                       (* translated bound variables *)
                             & list term                    (* guards *)
                             & env_t                         (* extended context *)
@@ -414,19 +484,21 @@ and encode_binders (fuel_opt:option term) (bs:Syntax.binders) (env:env_t) : ML
     let vars, guards, env, decls, names =
       bs |> List.fold_left
       (fun (vars, guards, env, decls, names) b ->
-        let v, g, env, decls', n =
-            let x = b.binder_bv in
-            let xxsym, xx, env' = gen_term_var env x in
-            let guard_x_t, decls' =
-              encode_term_pred fuel_opt (norm env x.sort) env xx
-            in //if we had polarities, we could generate a mkHasTypeZ here in the negative case
-            mk_fv (xxsym, Term_sort),
-            guard_x_t,
-            env',
-            decls',
-            x
-        in
-        v::vars, g::guards, env, decls@decls', n::names)
+        let x = b.binder_bv in
+        let t = norm env x.sort in
+        match (if may_simplify x then unit_refinements env t else None) with
+        | Some fs ->
+          let env' = push_term_var env x mk_Term_unit in
+          let g, decls' = encode_unit_refinements env fs in
+          vars, g::guards, env', decls@decls', x::names
+        | None ->
+          let xxsym, xx, env' = gen_term_var env x in
+          let guard_x_t, decls' =
+            if may_simplify x
+            then encode_term_pred_inline_refinements fuel_opt t env xx
+            else encode_term_pred fuel_opt t env xx
+          in //if we had polarities, we could generate a mkHasTypeZ here in the negative case
+          mk_fv (xxsym, Term_sort)::vars, guard_x_t::guards, env', decls@decls', x::names)
        ([], [], env, [], [])
     in
     List.rev vars,
@@ -438,6 +510,44 @@ and encode_binders (fuel_opt:option term) (bs:Syntax.binders) (env:env_t) : ML
 and encode_term_pred (fuel_opt:option term) (t:typ) (env:env_t) (e:term) : ML (term & decls_t) =
     let t, decls = encode_term t env in
     mk_HasTypeWithFuel fuel_opt e t, decls
+
+(* [encode_term_pred_inline_refinements] is as [encode_term_pred], except that a
+   refinement type [x:b{phi}] is not encoded as a [Tm_refine_...] type
+   constructor. Instead the predicate is inlined as
+
+     HasTypeFuel fuel e b /\ phi[e/x]
+
+   which is precisely what the [refinement_interpretation_Tm_refine_...] axiom
+   states, so this is equivalent, but saves a declaration, three axioms, and one
+   quantifier instantiation for Z3 to recover the refinement.
+
+   Only syntactic refinements are peeled: a type abbreviation such as [Prims.nat]
+   is left alone, so we keep the (small, shared) [Prims.nat] symbol rather than
+   unfolding it to [i:int{i >= 0}]. *)
+and encode_term_pred_inline_refinements (fuel_opt:option term) (t:typ) (env:env_t) (e:term)
+  : ML (term & decls_t) =
+    if Options.Ext.enabled "compat:smt_refinement_guards"
+    then encode_term_pred fuel_opt t env e
+    else
+    let rec aux (t:typ) (gs:list term) (decls:decls_t) : ML (term & decls_t) =
+      let t' = U.unmeta (U.unascribe t) in
+      match (SS.compress t').n with
+      | Tm_refine _ ->
+        begin match normalize_refinement [Env.Weak; Env.HNF] env.tcenv t' with
+        | {n=Tm_refine {b=x; phi}} ->
+          let bs, phi = SS.open_term [S.mk_binder x] phi in
+          let x = (List.hd bs).binder_bv in
+          (* Bind x directly to e, so that phi is encoded already instantiated. *)
+          let env' = push_term_var env x e in
+          let g, decls' = encode_formula phi env' in
+          aux x.sort (g::gs) (decls@decls')
+        | _ -> failwith "impossible: normalize_refinement of a refinement"
+        end
+      | _ ->
+        let base, decls' = encode_term_pred fuel_opt t env e in
+        mk_and_l (base :: List.rev gs), decls@decls'
+    in
+    aux t [] []
 
 and encode_arith_term env head args_e : ML _ =
     let arg_tms, decls = encode_args args_e env in
@@ -1827,7 +1937,19 @@ and encode_formula (phi:typ) (env:env_t) : ML (term & decls_t)  = (* expects phi
             mk_valid_at phi.pos tt, decls in
 
     let encode_q_body env (bs:Syntax.binders) (ps:list args) body =
-        let vars, guards, env, decls, _ = encode_binders None bs env in
+        (* A binder of a unit refinement type needs no SMT variable: we
+           substitute the unit constant for it and keep only its refinement
+           as a guard. We must however keep any binder that is mentioned in
+           an SMT pattern, lest the pattern become ill-formed. *)
+        let pat_names : FlatSet.t bv =
+          List.fold_left
+            (fun out args ->
+              List.fold_left (fun out (t, _) -> union out (Free.names t)) out args)
+            (empty ())
+            ps
+        in
+        let may_simplify x = not (mem x pat_names) in
+        let vars, guards, env, decls, _ = encode_binders_aux may_simplify None bs env in
         let pats, decls' = encode_smt_patterns ps env in
         let body, decls'' = encode_formula body env in
         let guards = match pats with

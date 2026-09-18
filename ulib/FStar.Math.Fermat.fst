@@ -407,6 +407,17 @@ let freshman_aux p a b i =
 
 val freshman (p:int{is_prime p}) (a b:int) : Lemma
   (pow (a + b) p % p = (pow a p + pow b p) % p)
+
+(* Proved separately rather than inline in the [calc] below: as a hint it would
+   be merged into an already very large query for [freshman], which Z3 does not
+   reliably discharge. *)
+private
+val freshman_ends (p:int{is_prime p}) (a b:int) : Lemma
+  (((binomial p 0 * pow a p * pow b 0) % p + (binomial p p * pow a 0 * pow b p) % p) % p ==
+   (pow a p % p + pow b p % p) % p)
+let freshman_ends p a b =
+  binomial_0 p; binomial_n p; small_mod 1 p
+
 let freshman p a b =
   let unfold f (i:nat{0 <= i /\ i <= p}) = binomial p i * pow a (p - i) * pow b i % p in
   Classical.forall_intro (freshman_aux p a b);
@@ -425,7 +436,7 @@ let freshman p a b =
     == { }
     ((binomial p 0 * pow a p * pow b 0) % p +
      (binomial p p * pow a 0 * pow b p) % p) % p;
-    == { binomial_0 p; binomial_n p; small_mod 1 p }
+    == { freshman_ends p a b }
     (pow a p % p + pow b p % p) % p;
     == { lemma_mod_plus_distr_l (pow a p) (pow b p % p) p;
          lemma_mod_plus_distr_r (pow a p) (pow b p) p }
