@@ -1850,35 +1850,54 @@ let extract_attr (attr_lid:lid) (se:sigelt) : ML (option (sigelt & args)) =
     | None -> None
     | Some (attrs', t) -> Some ({ se with sigattrs = attrs' }, t)
 
+(* Does [c] carry a *non-empty* list of SMT patterns?
+
+   [ToSyntax.sort_comp_args] only ever accepts pattern arguments for a literal
+   [Lemma], so an [SMTPAT] flag holding a cons is, in source code, exactly the
+   mark of a [Lemma ... [SMTPat ...]].  A [Lemma] with no patterns still gets an
+   [SMTPAT] flag, but holding [[]]. *)
+let comp_has_smt_pats (c:comp) : ML bool =
+  match comp_smt_pats c with
+  | Some pats ->
+    let head, _ = head_and_args_full (unmeta pats) in
+    (match (un_uinst head).n with
+     | Tm_fvar fv -> fv_eq_lid fv PC.cons_lid
+     | _ -> false)
+  | None -> false
+
 (* [Lemma] is an abbreviation of [Tot], so [effect_name] says nothing about it:
-   being a lemma is a property of how the computation type was *written*.  It
-   is what tells the SMT encoding to turn a [val] into an axiom (see
-   [is_smt_lemma] and [SMTEncoding.Encode]) and what lets [Rel] and [Resugar]
-   recognize one, so [source_effect_name] is consulted here. *)
+   being a lemma is a property of how the computation type was *written*, and
+   that is what [source_effect_name] records.  It is what tells the SMT encoding
+   to turn a definition into an axiom rather than an equation (see
+   [SMTEncoding.Encode]), and what lets [Rel] and [Resugar] recognize one.
+
+   A lemma carrying SMT patterns is recognized from its *structure* instead, so
+   that a comp built by reflection -- which need not have bothered to set
+   [source_effect_name], since nothing else consults it -- is still treated as
+   the lemma it is.  A pattern-less [Lemma] has no such mark: once desugared it
+   is literally a [Tot (squash p)], and only [source_effect_name] tells the two
+   apart. *)
 let is_lemma_comp c =
     match c.n with
-    | Comp ct -> lid_equals ct.source_effect_name PC.effect_Lemma_lid
+    | Comp ct ->
+      lid_equals ct.source_effect_name PC.effect_Lemma_lid
+      || (PC.is_tot_lid ct.effect_name && comp_has_smt_pats c)
     | _ -> false
 
 let is_lemma t =
   let _, c = arrow_formals_comp t in
   is_lemma_comp c
 
-(* Utilities for working with Lemma's decorated with SMTPat *)
+(* Utilities for working with Lemma's decorated with SMTPat.
+
+   This reads the comp's structure rather than [source_effect_name], which keeps
+   it in agreement with [destruct_lemma_with_smt_patterns]/[smt_lemma_as_forall]
+   below -- those are what actually build the axiom, and they already key off
+   the [SMTPAT] flag alone. *)
 let is_smt_lemma t =
   let _, c = arrow_formals_comp t in
   match c.n with
-  | Comp ct when lid_equals ct.source_effect_name PC.effect_Lemma_lid ->
-    begin match comp_smt_pats c with
-    | Some pats ->
-      let pats' = unmeta pats in
-      let head, _ = head_and_args_full pats' in
-      begin match (un_uinst head).n with
-        | Tm_fvar fv -> fv_eq_lid fv PC.cons_lid
-        | _ -> false
-      end
-    | None -> false
-    end
+  | Comp ct -> PC.is_tot_lid ct.effect_name && comp_has_smt_pats c
   | _ -> false
 
 let rec list_elements (e:term) : ML (option (list term)) =

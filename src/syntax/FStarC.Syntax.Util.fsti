@@ -596,7 +596,11 @@ val extract_attr' (attr_lid:lid) (attrs:list term) : ML (option (list term & arg
 
 val extract_attr (attr_lid:lid) (se:sigelt) : ML (option (sigelt & args))
 
-val is_lemma_comp (c:comp) : bool
+(* Does [c] carry a non-empty list of SMT patterns?  In source code this is
+   exactly the mark of a [Lemma ... [SMTPat ...]]: the desugarer accepts pattern
+   arguments for nothing else. *)
+val comp_has_smt_pats (c:comp) : ML bool
+val is_lemma_comp (c:comp) : ML bool
 val is_lemma (t:typ) : ML bool
 
 (* Utilities for working with Lemma's decorated with SMTPat *)

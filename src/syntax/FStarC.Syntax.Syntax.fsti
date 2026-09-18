@@ -295,10 +295,12 @@ and comp_typ = {
      rather than [Tot], [TAC] and [STATE].
 
      It is otherwise presentation only -- the syntactic equality checks all
-     ignore it -- except that [is_lemma_comp]/[is_smt_lemma] read it to decide
-     whether a [val] becomes an SMT axiom, since that too is a property of what
-     the user wrote.  It equals [effect_name] whenever no abbreviation was
-     used. *)
+     ignore it -- except that [Util.is_lemma_comp] reads it to recognize a
+     *pattern-less* lemma, which nothing else distinguishes from a plain
+     [Tot (squash p)].  A lemma carrying an [SMTPat] is recognized from the
+     [SMTPAT] flag instead, so a comp built by reflection need not set this
+     field to be encoded as an axiom.  It equals [effect_name] whenever no
+     abbreviation was used. *)
   source_effect_name:lident
 }
 and comp' =

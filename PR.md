@@ -2224,6 +2224,22 @@ which is what plugin extraction resolves `FStar.Stubs.*` to). Note that
 `is_tot_comp` keys off the effect name only, so a `Tot` carrying a `decreases`
 is now total — the old `inspect_comp` reported `C_Eff` for it.
 
+One footgun the new view exposed is worth calling out. `source_effect_name` is
+presentation metadata, but `Syntax.Util.is_lemma_comp` and `is_smt_lemma` read
+it to decide whether a definition is encoded as an *axiom* rather than an
+equation — so a `Lemma` built by reflection silently stopped being a lemma
+unless the tactic happened to set that field to `FStar.Pervasives.Lemma`. Both
+now key off the comp's structure instead: a total comp carrying a non-empty
+`SMTPAT` flag is a lemma, which in source code is exactly a
+`Lemma ... [SMTPat ...]`, since `ToSyntax.sort_comp_args` accepts pattern
+arguments for nothing else. That also puts them in agreement with
+`destruct_lemma_with_smt_patterns`/`smt_lemma_as_forall`, which build the axiom
+and already keyed off the flag alone. `source_effect_name` is still consulted
+for a *pattern-less* `Lemma`, which once desugared is literally a
+`Tot (squash p)` and has no other mark. `tests/bug-reports/closed/Bug2596b.fst`
+pins this: it splices a lemma whose `source_effect_name` is left at `Tot`, and
+the `SMTPat` still fires.
+
 `tests/tactics/CompRoundTrip.fst` is rewritten to match: it checks *by
 computation* that `inspect_comp (pack_comp cv) == cv` for `Tot`, `GTot`, an
 arbitrary effect, a comp whose `source_effect_name` differs from its
