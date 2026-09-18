@@ -410,4 +410,5 @@ let default_settings : list error_setting =
     Error_CustardBadReference                          , CAlwaysError, 392;
     Error_CustardBadStaticArray                        , CAlwaysError, 393;
     Error_CustardBadComment                            , CAlwaysError, 394;
+    Error_CustardNoFSharpRealization                   , CAlwaysError, 395;
     ]

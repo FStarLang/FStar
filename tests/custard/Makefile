@@ -323,6 +323,57 @@ KRML_TESTS += KrmlBasic
 # testable here.
 KRML_TESTS += KrmlPrims
 
+# Section 122.  Each of these is extracted with --custard_backend FSharp, then
+# compiled by the .NET 10 SDK with warnings 20 and 58 left on and run; the
+# program must exit 0.  Skipped when no 10.x SDK is installed.
+#
+# The list is broad rather than deep on purpose.  What an F# leg is for is not
+# any one feature: it is that F# is the only target Custard has whose compiler
+# checks the types of what this compiler emitted.  C casts, OCaml infers and
+# karamel has its own front end; a generated .fs is checked against the
+# signatures Custard wrote down for every binder and every result, which is
+# why three defects that had been in the OCaml output all along (sections
+# 122.3.1, 122.6.1 and 122.14) surfaced the day this leg ran.
+FS_TESTS += KrmlBasic Hello Literals LitBase LitStr Floats Exceptions Refs
+FS_TESTS += Recursion Mymon AnyCond AnyException UnitPtr Typeclass
+FS_TESTS += MachineInts Unroll ShortCircuit Union Wide128
+
+# Section 122.14.  The unit-argument rule, from the side that only a typed
+# target can see: [j] takes a [unit] and a [UInt32.t], the IR drops the first
+# binder from the definition, and an arrow type that kept it describes a
+# function that does not exist.  Nothing catches it while [j] is only called.
+FSGREP_UnitPtr = "(f : (uint32 -> unit))" "(unitPtr_apply2 unitPtr_j"
+FSNOGREP_UnitPtr = "(unit -> (uint32 -> unit))" "unitPtr_j ()"
+
+# Section 122.6.1.  An [obj] scrutinee against constant patterns needs an
+# unbox that [Obj.magic] does not.
+FSGREP_AnyCond = "unbox<bigint>" "unbox<bool>"
+
+# Section 122.7.  The 128-bit widths are .NET's own, and the complement is
+# the one operator that has to go through the support library.
+FSGREP_Wide128 = "System.UInt128" "FStarCustard.notU128"
+FSNOGREP_Wide128 = "~~~ ("
+
+# Section 122.13.  Prims.int is bigint, with .NET's own literals and
+# operators rather than a parse from a string.
+FSNOGREP_Literals = "parse_int" "uint_to_t"
+
+# Section 122.3.  A name that collides with an F# keyword is quoted rather
+# than decorated, so it stays the name the program chose.  The pin is the
+# whole argument of section 122.3 in one line: a program that binds both
+# [method] and [method_] gets two distinct F# names, which a suffixing
+# escape could not have given it.
+FS_TESTS += OcamlEscape
+FSGREP_OcamlEscape = "(\`\`method\`\` : bool) (method_ : bool)"
+
+# Rejections.  Each is extracted with --custard_backend FSharp and must
+# produce the numbered diagnostic.
+FSREJECT_TESTS += FSNoReal FSPun
+CODE_FSNoReal = 395
+EGREP_FSNoReal = "has no F\* definition and no F\# realization"
+CODE_FSPun = 395
+EGREP_FSPun = "which .NET cannot express"
+
 # Each of these is extracted with --custard_backend C, then compiled by a C11
 # compiler with the warnings on and run; the program must exit 0.  The direct
 # backend has no polymorphism to fall back on, so it always runs with type
@@ -912,6 +963,59 @@ $(OUTPUT_DIR)/%.ml:
 	$(Q)for p in $(NOGREP_$*); do \
 	  grep -q -- "$$p" $@ \
 	    && { echo "ERROR: $* output should not contain $$p"; exit 1; }; done; true
+
+# Section 122.  The F# leg.  Extraction writes three files -- the module, the
+# support library and the project -- into a directory of the test's own, since
+# the project names the two sources and a shared directory would give every
+# test every other test's entry point.
+$(OUTPUT_DIR)/%.fsout: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
+	$(call msg, "CUSTARD-FS", $(basename $(notdir $@)))
+	@mkdir -p $(OUTPUT_DIR)/fs/$*
+	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) \
+	  --custard_backend FSharp --custard_main $*.main $*.fst \
+	  -o $(OUTPUT_DIR)/fs/$*/$*.fs
+	$(Q)for p in $(FSGREP_$*); do \
+	  grep -qF -- "$$p" $(OUTPUT_DIR)/fs/$*/$*.fs \
+	    || { echo "ERROR: $* F# output is missing $$p"; exit 1; }; done
+	$(Q)for p in $(FSNOGREP_$*); do \
+	  grep -qF -- "$$p" $(OUTPUT_DIR)/fs/$*/$*.fs \
+	    && { echo "ERROR: $* F# output should not contain $$p"; exit 1; }; \
+	  done; true
+	@# Section 122.2.  Warning 58 is F#'s indentation warning and is left on
+	@# deliberately, as is 20, which catches a dropped non-unit result.  A
+	@# backend whose whole layout problem is columns has to be checked by
+	@# something that knows where the columns are.
+	$(Q)touch $@
+
+$(OUTPUT_DIR)/%.fsran: $(OUTPUT_DIR)/%.fsout
+	$(call msg, "RUN-FS", $(basename $(notdir $@)))
+	$(Q)cd $(OUTPUT_DIR)/fs/$* && \
+	  DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1 \
+	  $(DOTNET) build -c Release -v quiet --nologo >build.log 2>&1 \
+	    || { echo "ERROR: $* does not compile as F#"; cat build.log; exit 1; }
+	$(Q)cd $(OUTPUT_DIR)/fs/$* && DOTNET_NOLOGO=1 \
+	  $(DOTNET) bin/Release/net10.0/$*.dll
+	$(Q)touch $@
+
+# The F# counterpart of [%.rejected]: same shape, different backend.  It is a
+# separate rule rather than a flag on that one because a test is registered by
+# the suffix its list asks for, and a program that the OCaml backend accepts
+# and this one refuses has to be able to say so without also claiming the
+# OCaml backend refuses it.
+$(OUTPUT_DIR)/%.fsrejected: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
+	$(call msg, "REJECT-FS", $(basename $(notdir $@)))
+	@mkdir -p $(OUTPUT_DIR)/fs/$*
+	$(Q)$(FSTAR) --message_format human --codegen Custard $(WARN_ANY) \
+	  $(FLAGS_$*) --custard_backend FSharp --custard_main $*.main $*.fst \
+	  -o $(OUTPUT_DIR)/fs/$*/$*.fs >$(OUTPUT_DIR)/$*.fserr 2>&1 || true
+	$(Q)grep -qE "(Error|Warning) $(CODE_$*)" $(OUTPUT_DIR)/$*.fserr \
+	  || { echo "ERROR: expected diagnostic $(CODE_$*) from $*"; \
+	       cat $(OUTPUT_DIR)/$*.fserr; false; }
+	$(Q)for p in $(EGREP_$*); do \
+	  grep -q -- "$$p" $(OUTPUT_DIR)/$*.fserr \
+	    || { echo "ERROR: $* diagnostic is missing $$p"; \
+	         cat $(OUTPUT_DIR)/$*.fserr; exit 1; }; done; true
+	$(Q)touch $@
 
 $(OUTPUT_DIR)/%.rejected: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "REJECT", $(basename $(notdir $@)))
@@ -2598,7 +2702,7 @@ CNOGREP_SzWidth32 += "size_t"
 
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
                   $(C_TESTS) $(CXX_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \
-                  $(RUSTSPLIT_TESTS) \
+                  $(RUSTSPLIT_TESTS) $(FS_TESTS) $(FSREJECT_TESTS) \
                   SepApp SepAppC SplitHi SplitLo
 
 # Section 35.3.  A setting whose name matches no registered test.
@@ -2738,6 +2842,22 @@ all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rejected, $(REJECT_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .roots, $(ROOT_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcran, $(C_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcxxran, $(CXX_TESTS)))
+
+# Section 122.  Extraction to F# is always testable; compiling the result
+# needs the .NET 10 SDK, and a consumer who has not got one should see this
+# skip rather than fail.  The probe is for the *major version* and not for the
+# command: this box shipped an 8.0 SDK, which reads a net10.0 project and
+# reports a restore error about a target framework, several steps away from
+# anything a reader of this suite would recognize.
+DOTNET ?= dotnet
+DOTNET10 := $(shell $(DOTNET) --list-sdks 2>/dev/null | grep -c "^1[0-9]\.")
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .fsrejected, $(FSREJECT_TESTS)))
+ifneq ($(DOTNET10),0)
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .fsran, $(FS_TESTS)))
+else
+$(warning no .NET 10 SDK found: skipping the F# run tests)
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .fsout, $(FS_TESTS)))
+endif
 
 # Section 57.4.  Same treatment as krml just below: extraction to Rust is
 # always testable, but *compiling* the result needs a toolchain, and a

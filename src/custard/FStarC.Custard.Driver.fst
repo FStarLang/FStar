@@ -34,6 +34,7 @@ module Find    = FStarC.Find
 module Layout  = FStarC.Custard.Layout
 module Monomorphize = FStarC.Custard.Monomorphize
 module OCaml   = FStarC.Custard.PrintOCaml
+module FS      = FStarC.Custard.PrintFSharp
 module Loader  = FStarC.Custard.Loader
 module RegEmb  = FStarC.Custard.RegEmb
 module Rename  = FStarC.Custard.Rename
@@ -488,6 +489,26 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
       text "karamel decides the width of size_t for itself, and the OCaml \
             backend has no say in it at all."
     ];
+  (* Section 122.12.  Two flags the F# backend does not implement.  Either
+     would otherwise be accepted and quietly ignored, and both are flags whose
+     whole point is to change the shape of the output -- so a run that passed
+     one and got the other shape would have no way to tell. *)
+  if backend = "FSharp" && Options.custard_split () then
+    E.raise_error0 E.Fatal_OptionsNotCompatible [
+      text "--custard_split is not implemented for --custard_backend FSharp.";
+      text "F# compilation is order-sensitive in the same way OCaml's is, so \
+            a split output would also need a generated project listing its \
+            files in link order; the whole-program single file is what this \
+            backend emits today (section 122.12)."
+    ];
+  if backend = "FSharp" && Some? (Options.custard_unit ()) then
+    E.raise_error0 E.Fatal_OptionsNotCompatible [
+      text "--custard_unit is not implemented for --custard_backend FSharp.";
+      text "Linking two separately extracted units means one .NET assembly \
+            referencing another, which the generated project would have to \
+            express; the F# backend compiles one whole program today \
+            (section 122.12)."
+    ];
   let ofile =
     match Options.output_to () with
     | Some fn -> fn
@@ -504,6 +525,7 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
         (if Options.custard_backend_krml () then base ^ ".krml"
          else match backend with
          | "C" -> base ^ ".c"
+         | "FSharp" -> base ^ ".fs"
          | _ -> base ^ ".ml")
   in
   (* The header is named after the source, and the source includes it by that
@@ -574,10 +596,19 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
                      (stem ^ ".h")) hdr;
     BU.write_file ofile src
   | "OCaml" -> BU.write_file ofile (OCaml.print_program (List.map fst imports @ prog))
+  (* Section 122.  One flat module, plus the two files that make the output
+     directory build on its own: the support library and the project. *)
+  | "FSharp" ->
+    let p = List.map fst imports @ prog in
+    BU.write_file ofile (FS.print_program stem p);
+    FS.project_files stem p |> List.iter (fun (f, src) ->
+      BU.write_file (FStarC.Filepath.join_paths
+                       (FStarC.Filepath.dirname ofile) f) src)
   | b ->
     E.raise_error0 E.Fatal_OptionsNotCompatible [
       text ("Unknown --custard_backend " ^ b ^ ".");
-      text "The backends are OCaml (the default), KrmlC, KrmlRust and C."
+      text "The backends are OCaml (the default), FSharp, KrmlC, KrmlRust \
+            and C."
     ]
 
 (* [--profile_component FStarC.Custard] prints the phase breakdown.  Custard

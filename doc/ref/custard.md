@@ -20718,6 +20718,308 @@ level (`## 66.0`, `## 66.1`, with no bare `## 66`), and `section 66` is then
 a citation of the group rather than a mistake.  `18.4` is neither, which is
 the case that had to be caught.
 
+
+
+## 122 An F# backend
+
+F\* has had an F# backend for a long time --- `--codegen FSharp`, a variant
+of the OCaml printer in `FStarC.Extraction.ML.Code` --- and it has been
+unmaintained for long enough that its output no longer compiles against a
+current F# compiler: the indentation it emits was acceptable to the F#
+of the day and is a warning or an error now.  So this is a new backend and
+not a port.  `FStarC.Custard.PrintFSharp` is written against the same IR
+the other four read, and the legacy printer was not consulted beyond
+confirming that its problems are the ones named here.
+
+The target is .NET 10, the current LTS.  That choice is not neutral:
+`System.UInt128` and `System.Int128` were added in .NET 7 and the generic
+math interfaces they use in .NET 7 as well, so §122.7 is only available
+because the floor is this high, and `net10.0` is what the emitted project
+file asks for.
+
+### 122.1 What it is for
+
+The other backends answer a question about a target language.  This one
+answers a question about a platform: a caller who is already on .NET wants
+an assembly, not a C library and a P/Invoke surface.  The output is
+therefore a project rather than a file --- the module, a support library
+and an `.fsproj` --- and `dotnet build` in the directory Custard wrote is
+the whole of the build story.  That is why `project_files` exists and why
+the support library is a string in the printer rather than something
+installed in `ulib`: a directory that needs a second directory to be
+found is a directory that builds on one machine.
+
+F# is close enough to OCaml that a reader of `FStarC.Custard.PrintOCaml`
+will recognize most of this file, and far enough from it that the
+differences are the interesting part.  The rest of this section is those
+differences.
+
+### 122.2 Indentation is part of the language
+
+An OCaml printer may indent for the reader.  An F# printer indents for
+the compiler: offside rules decide where a `let` body ends, where a match
+case ends, and whether a nested expression is a continuation or a new
+statement.  So this backend cannot render a subterm and then decide where
+to put it.  It has to know, while rendering, what column it is at.
+
+That is what `after` is.  `after ind s f` calls `f` with the column the
+text `s` ends at, given that it started at `ind`, and every construct
+that can contain a newline is written this way.  The effect is that a
+subterm is always rendered at its true column, however deeply the
+enclosing constructs nested, and the printer never has to reflow.
+
+The generated file opens with `#nowarn "25" "26" "40" "49" "64" "1182"
+"3220"` --- incomplete matches, unused `rule` bindings, recursive object
+checks, uppercase identifiers in patterns, a type inferred more generic
+than the annotation, unused variables, and the explicit-member-call
+warning.  Each of those is a property of *generated* code and not a
+defect: the IR has already decided that a match is exhaustive, and a
+variable that the layout pass erased is a variable nothing reads.
+
+Three warnings are deliberately *not* suppressed.  Warning 58 is
+indentation, and a backend whose whole difficulty is columns must not
+silence the check that tells it it got them wrong.  Warning 20 catches a
+non-unit result that is discarded, which in this IR means a dropped
+effect.  Warning 3370 catches a mutable-reference mistake.  The F# leg of
+the test suite compiles every program it extracts, so all three are live.
+
+#### 122.2.1 Why the column has to be computed backwards
+
+The first version of `after` split the accumulated text on newlines and
+measured the last piece.  That is linear in everything printed so far,
+once per nested subterm, and the corpus contains a single expression that
+prints to about 100kB --- `LetShare`, which took over half an hour and
+had not finished.
+
+`col_after` scans the string backwards to the first newline instead, so
+it costs one line rather than one file, and `join_at` accumulates a list
+of chunks and a running column and concatenates once at the end rather
+than appending with `^` per element.  `LetShare` prints in 21 seconds.
+The rule is worth stating plainly because it is easy to reintroduce: a
+layout mechanism that asks "what column am I at" must answer from the
+tail of the output, never from the whole of it.
+
+### 122.3 Names
+
+F# has a general escape for identifiers that collide with keywords:
+``` ``match`` ``` is an ordinary name.  That is better than the suffixing
+of §115 in a way worth being explicit about --- it is *injective by
+construction*.  Appending an underscore to a keyword maps `method` to
+`method_`, which is a name a program may already have; a backtick quote
+maps `method` to something no F\* identifier can be, so no collision is
+possible and no second pass over the name table is needed.
+
+`escape_keyword` therefore quotes and does nothing else, and the keyword
+list is F#'s, which includes words OCaml does not reserve (`base`,
+`default`, `member`, `namespace`, `static`, `use`) and the set F# reserves
+for future use and still refuses.
+
+#### 122.3.1 Type variables cannot be quoted
+
+A type variable is written `'a`, and the quote is part of the syntax, so
+the backtick escape does not apply --- and worse, a variable the IR names
+`t'` would print as `'t'`, which F# lexes as a character literal and
+rejects with "Invalid literal in type".  `fsharp_tyvar` maps `'` to `_`
+and `_` to `__`, which is injective for the same reason a doubling escape
+always is, and `t'` becomes `'t_`.
+
+### 122.4 Integers
+
+.NET has the machine integer types, so `FStar.UIntN`/`FStar.IntN` map to
+`uint8`..`uint64` and `sbyte`..`int64` directly, and arithmetic is the
+target's own.  Shifts are the one place the correspondence is not exact:
+F#'s shift operators take an `int32` count whatever the type of the value
+is, so a count arrives as a machine integer of the operand's width and has
+to be converted.  `is_shift` marks those operators and the right operand
+is converted rather than the left.
+
+Conversions go through `int_conv`, which asks whether the conversion is
+value-preserving at the two widths.  A widening conversion is a plain
+`uint32` (etc.) call.  A narrowing one is the same call, which in F# is
+unchecked for the integral types and therefore is the truncation the IR
+means --- but `value_preserving` is still consulted, because the same
+function is used for the 128-bit types, where the answer is not the same
+(§122.7).
+
+`Prims.int` is `bigint`.  That is the whole of the arbitrary-precision
+story: .NET has `System.Numerics.BigInteger` with the operators already
+defined, so the support library adds only the names F\* declares.
+
+### 122.5 Floats
+
+`FStar.Float32.t` is `float32` and `FStar.Float64.t` is `float`, F#'s
+name for the 64-bit type, and the operations are the target's.  There is
+no 16-bit floating-point type in the F# language --- .NET has
+`System.Half`, but with no literal syntax and no operators --- so a
+16-bit float is refused at `reject_fwidth` rather than emulated.
+
+### 122.6 `TAny` is `obj`
+
+The uniform-representation type of §5 is `obj`, and a coercion into or
+out of it is `box`/`unbox`.  That is a worse correspondence than OCaml's
+`Obj.magic`, and the difference is not a matter of degree: `Obj.magic` is
+a no-op on a uniform runtime representation, and `unbox<T>` is a checked
+cast on a runtime that has no uniform representation at all.
+
+Most of what the layout pass produces survives this fine.  A value boxed
+at one type and unboxed at the same type is the identity, and that is the
+overwhelming majority of `TAny` traffic.  The two cases that do not are
+§122.6.1 and §122.6.2.
+
+#### 122.6.1 A scrutinee that is `obj`
+
+A match on a value whose F# type is `obj` cannot use constant patterns:
+`match (x : obj) with | 0 -> ...` does not typecheck, because the pattern
+has type `int` and the scrutinee does not.  `pat_scalar_ty` looks at the
+pattern list, and if the patterns are constants of a scalar type the
+scrutinee is wrapped in `unbox<that type>`.  This is why `AnyCond` and
+`AnyException` compile.
+
+It is also the reason `coerce` must *not* short-circuit when the IR says
+the expression's type already equals the target.  The IR's type for an
+expression is its logical type, not its F# representation type: a
+variable bound by a record pattern whose field the layout pass gave the
+uniform representation has IR type `bigint` and F# type `obj`.  Dropping
+the coercion on `e1.ty = t` therefore dropped an unbox that was needed,
+and the identity case is narrowed to `TAny, TAny`.
+
+#### 122.6.2 The erased pun
+
+`Obj.magic` also lets the OCaml backend pun between two instantiations of
+the same type constructor --- `sized<obj>` and `sized<uint32>` have the
+same runtime representation there, and the layout pass is entitled to
+produce a coercion between them when a type argument was erased on one
+side and not the other.  On .NET they are distinct runtime types and the
+unbox throws `InvalidCastException`, which is a wrong answer at run time
+rather than at compile time, and that is the worst kind to emit.
+
+`erased_pun` detects the shape --- two `TApp`s of the same head with
+different arguments, or a `TBuf`/`TRef` mismatch --- and
+`reject_coercion` raises error 395 explaining that the program needs a
+representation change the .NET runtime cannot express.  A refusal at
+extraction time is the only defensible behaviour here.  It is pinned by
+`tests/custard/FSPun.fst`.
+
+### 122.7 128-bit integers
+
+`System.UInt128` and `System.Int128` exist from .NET 7, so §119's
+`iwidth` has a target here as well as in C, and `int128_enabled` in
+`FStarC.Custard.Builtins` admits `FSharp` alongside `C`.  Two things
+about them are not like the narrower widths.
+
+There is no literal syntax, so a constant is emitted as a `.Parse` call
+on its decimal spelling, which is exact for every value including the
+most negative one.  And `~~~` does not resolve: F# binds it to
+`op_LogicalNot`, which these two types do not define, though `+`, `&&&`,
+`|||`, `<<<` and the comparisons all resolve normally.  `w128_unop`
+routes the complement to `FStarCustard.notU128`/`notI128`, which are one
+line each in the support library.
+
+### 122.8 The support library is embedded
+
+`FStarCustard.fs` is written next to the module, from a string constant
+in the printer, and the emitted header opens it.  It holds the `Prims`
+operators, the `string_of_*` printers, `FStar.List.Tot.Base` in full,
+`FStar.IO`, and the 128-bit helpers of §122.7 --- everything the backend
+realizes that is not a direct mapping to an F# operator.
+
+Keeping it in the printer rather than in `ulib/fs` is a decision about
+the output, not about convenience: the directory Custard writes is a
+complete project, and a project that depends on a file found relative to
+an F\* installation is not.
+
+### 122.9 Anything unrealized is refused
+
+`supported_realizations` is an explicit list of the F\* names this
+backend knows how to produce, and anything else that survives to the
+printer as an unrealized `val` is error 395 rather than a name that will
+fail at `dotnet build` with a message about F#.  The diagnostic names the
+F\* declaration and says that the backend has no realization for it,
+which is a sentence a user can act on.  `tests/custard/FSNoReal.fst` pins
+it.  An `@@custard_extern` target wins over the list, so a program may
+still supply its own.
+
+### 122.10 Lambda binders are annotated
+
+F# infers less than OCaml does, and in particular a lambda passed
+immediately as an argument does not always get its parameter types from
+context.  Every binder this backend emits carries its type.  That is also
+what makes §122.14 visible.
+
+### 122.11 The value restriction
+
+F# generalizes less than OCaml: a top-level `let` whose right-hand side
+is not a syntactic value is not generalized, and a generic value that is
+not a function is an error rather than a weak type variable.
+`reject_generic_values` refuses a non-function top-level definition whose
+type mentions a type variable, with error 395.  Monomorphization means
+this is nearly unreachable --- a specialization has no free type
+variables --- but the `TAny` traffic of §122.6 can produce one.
+
+### 122.12 No split and no separate units
+
+`--custard_split` and `--custard_unit` are refused under this backend.
+Both exist to divide one program across files that a C or OCaml build
+then links, and the unit of compilation here is the project: two projects
+that each contain a copy of the support library and disagree about which
+one defines a type are not something this backend can produce a coherent
+answer for.  A whole program per project is what v1 supports, and the
+refusal says so rather than emitting something that fails at link time.
+
+### 122.13 `Prims` and `FStar.List.Tot.Base`
+
+`Prims.list` is F#'s own list type, so the whole of `FStar.List.Tot.Base`
+is realizable, and all 49 of its extractable functions are in the support
+library rather than being compiled from their F\* bodies.  That is not an
+optimization; it is what makes ordinary programs extract at all, since
+these are the names almost every F\* program reaches for and each one
+compiled from source would drag its proof-oriented helpers behind it.
+
+`Prims` is the same argument at a smaller scale: `strcat`, the bigint
+operators, and the `string_of_*` printers, plus the `to_string` of each
+machine-integer module.
+
+### 122.14 Unit arguments
+
+The IR drops a `unit` binder from a definition that has another binder,
+because a unit argument carries nothing --- but the arrow type of that
+definition kept the `unit` domain.  In OCaml that is invisible almost
+everywhere, since a mismatched arity in a curried language shows up only
+when the function is used as a value.  In F# with annotated binders
+(§122.10) it is immediate: the definition and its own type disagree.
+
+`ty`'s `TArrow` case therefore filters `TUnit` out of the domains, and
+`EApp` filters unit arguments out of the actual arguments, in both cases
+keeping one if everything would be dropped, so that a function of nothing
+but units is still a function.  This is the same rule `PrintC` already
+applies.
+
+It is worth recording that this is a latent defect in the OCaml backend
+too, and that finding it was accidental: `tests/custard/UnitPtr.fst` is
+registered only in `C_TESTS`, so nothing in the suite compiled its OCaml
+output, and its OCaml output does not compile.  Adding it to `FS_TESTS`
+is what surfaced it.  The OCaml printer is not changed here --- it needs
+its own fix and its own test --- but the case is now known.
+
+### 122.15 What the suite checks
+
+`FS_TESTS` is 20 programs, chosen to cover each of the decisions above:
+`Wide128` for §122.7, `AnyCond` and `AnyException` for §122.6.1,
+`UnitPtr` for §122.14, `Literals` for §122.4's bigint spelling,
+`OcamlEscape` for §122.3 --- it binds both `method` and `method_`, so the
+pin on it is the injectivity argument in one line --- `Typeclass` and
+`Mymon` for monomorphized output, and the rest for coverage.  Each is
+extracted, compiled with `dotnet build -c Release`, and run, and must
+exit 0.
+
+Compiling needs the .NET 10 SDK.  The Makefile probes the output of
+`dotnet --list-sdks` for a major version of 10 or above and falls back to
+extraction only, with a warning, when there is not one --- the probe is
+for the version and not for the command because an older SDK does read a
+`net10.0` project and fails with a restore error several steps removed
+from anything a reader of this suite would recognize.  The two rejection
+tests, `FSNoReal` and `FSPun`, need no SDK and always run.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -21062,3 +21364,4 @@ the case that had to be caught.
 | M10ιΣ | `FStar.UInt128` and `FStar.Int128` as `__int128` | Both were compiled from their F\* implementations --- a record of two `UInt64.t`s and the long-hand arithmetic over it --- which was correct and was not the target's own 128-bit integer. The IR gains a width of its own, `iwidth`, rather than a case in `FStarC.Const.width`: that type enumerates the widths F\* has literal syntax for, 128 is not one of them, and a case there would have to be given a meaning by the parser, the resugarer and a user-visible reflection type, all to describe a term no program can produce. `unsigned __int128` is a GCC/Clang extension rather than C11, so the rule fires only under `--custard_backend C` and `--custard_int128 false` turns it off --- off being what the other backends, which have no 128-bit integer at all, already do. The operations that are `val`s at this width and `let`s at the narrower ones --- `eq_mask`, `gte_mask`, `mul32`, `mul_wide`, the two 64-bit conversions, `shift_arithmetic_right` --- get inline rules, because their F\* implementations are about the representation the rule replaces. And C has no 128-bit literal, so a constant is assembled from its halves, at `unsigned __int128` and cast afterwards so that the most negative value, which has no positive counterpart, is still a constant expression. §119 |
 | M10ιΤ | `Pulse.Lib.Comment` | Master gave Pulse `LowStar.Comment`'s two functions and a karamel extension to realize them. Custard had no equivalent and compiled them from their F\* bodies, which threw the text away and left a call to an emitted no-op. The IR gains `Commented (before, after)` as a one-operand `op` rather than a node of `expr'`, so that the thirty-odd exhaustive matches on `expr'` carry it through without a case apiece; the standalone form is the same node with a unit operand. What stops it being deleted is `is_droppable`, not the effect: an `E_Impure` comment cannot sit inside an operation's argument, so the binding the feature exists for gained a temporary whose only purpose was to hold a comment. `comment_gen` takes its operand's effect and travels with the value; `comment` stays impure because it is a statement. Text that is not a literal, or that contains `*/`, is refused at the rule as error 394. Four regression tests. §120 |
 | M10ιΥ | Round 4's structural review: a traversal combinator, per-program state, one emitted name (§121) | Done.  An advisory round rather than a defect report: no bugs, but a measurement that the two mechanisms behind essentially every defect found so far were hand-written traversals and process-global state with convention-gated name minting.  `Syntax` gains `children` and `map_children` --- the only two exhaustive walks in the package now --- with `iter_children`, `fold_children`, `exists_child` and `for_all_children` derived from the first; a binder is deliberately not a child, so a pass with an opinion about a binding form has to say so against a default.  Twenty-three walks in `Simplify` and one in `RegEmb` are now their interesting cases plus a fall-through, and `Simplify` loses 334 lines.  `Layout.rw_expr`, `Monomorphize.mono_expr` and `Rename.rn_expr` stay written out because they rewrite types as well as children, and `coerce_prog` stays because every arm of it has an opinion --- which is now visible as an exception rather than lost in boilerplate, and that was the §117 `EIf`-condition defect's root cause.  `PrintC.reset_program_state` lists all twenty-two per-program variables in one place, where `print_program` used to reset thirteen by hand and leave nine.  `PrintC.emitted_name` is the single spelling of a declaration, read by the `taken_names` seeding, the collision check, the `externs` table and an external's prototype --- §117.2 and §117.3 were both a name allocated against a set that did not contain everything the file would contain.  `Section 18.4`, cited twice and never written, becomes §19.2 and §19.3, and `tests/custard/checkrefs.py` (`make check-refs`) now holds all 922 citations.  Splitting `Extract.fst` along its banners is declined on the record: weakly held by the reporter, navigability only, and churn during an active review |
+| M10ιΦ | An F# backend, targeting .NET 10 | F\* has had an F# backend since long before Custard and it has been unmaintained long enough that its output no longer compiles: what it emits is indentation a current F# compiler refuses.  So `FStarC.Custard.PrintFSharp` is new code against the IR rather than a port.  The output is a *project* --- the module, an embedded support library, and an `.fsproj` naming `net10.0` --- so that `dotnet build` in the directory Custard wrote is the whole build story.  Indentation is the difficulty: `after`/`col_after` render every subterm at its true column, and `col_after` must scan backwards to the last newline or the printer is super-linear (the first version had not finished `LetShare` after half an hour; it now takes 21s).  Keyword escaping is F#'s backtick quote, which is injective by construction and so avoids §115's `method`/`method_` problem; type variables cannot be quoted and use a doubling escape instead, since `t'` would otherwise print as a character literal.  `TAny` is `obj` and `Obj.magic` has no counterpart --- .NET has no uniform representation --- so a scrutinee typed `obj` is unboxed before matching against constant patterns, and a coercion between two instantiations of one type constructor is refused as error 395 rather than emitted as an `unbox` that throws.  `System.UInt128`/`Int128` give §119 a second target; they have no literal and no `~~~`.  `--custard_split` and `--custard_unit` are refused.  21 programs are extracted, compiled and run in CI when a .NET 10 SDK is present, plus two rejection tests that always run; that leg found five defects in the backend and one latent one in the OCaml backend (a dropped unit binder whose arrow type kept its domain --- `UnitPtr`'s OCaml output does not compile, and nothing in the suite had compiled it). §122 |

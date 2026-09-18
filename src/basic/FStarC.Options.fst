@@ -994,19 +994,23 @@ binders explicitly marked [@@monomorphize] (default false)");
     "custard_int128",
     BoolStr,
     text "Compile FStar.UInt128 and FStar.Int128 to C's unsigned __int128 \
-and __int128 rather than to their F* implementations (default true). Only \
---custard_backend C is affected; the other backends have no 128-bit machine \
-integer. Set to false for a target whose compiler lacks the extension, such \
-as MSVC or any 32-bit target.");
+and __int128, and FStar.UInt128/FStar.Int128 to .NET's System.UInt128 and \
+System.Int128, rather than to their F* implementations (default true). Only \
+--custard_backend C and --custard_backend FSharp are affected; the other \
+backends have no 128-bit machine integer. Set to false for a target whose \
+compiler lacks the extension, such as MSVC or any 32-bit target.");
 
   ( noshort,
     "custard_backend",
-    EnumStr ["OCaml"; "KrmlC"; "KrmlRust"; "C"],
-    text "Language Custard emits: OCaml source, karamel's AST for \
-compilation to C or to Rust, or self-contained C11 source (default OCaml). \
-KrmlC and KrmlRust share a printer but not a program: karamel models some \
-modules on the Rust path only, so a .krml built for one target cannot be \
-compiled for the other (section 20)");
+    EnumStr ["OCaml"; "FSharp"; "KrmlC"; "KrmlRust"; "C"],
+    text "Language Custard emits: OCaml source, F# source for .NET, \
+karamel's AST for compilation to C or to Rust, or self-contained C11 source \
+(default OCaml). KrmlC and KrmlRust share a printer but not a program: \
+karamel models some modules on the Rust path only, so a .krml built for one \
+target cannot be compiled for the other (section 20). FSharp targets \
+net10.0 and, unlike OCaml, compiles machine integers and floats to .NET's \
+own types rather than to a support library, so it accepts the programs the \
+C backend accepts rather than the ones the OCaml backend does (section 122)");
 
   ( noshort,
     "custard_sizet_width",

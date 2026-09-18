@@ -61,8 +61,15 @@ let register_rule (l:Ident.lident) (r:rule) : ML unit =
    all.  So off, the F* implementation is what gets compiled -- which is not
    a fallback anyone has to write, it is the behaviour those backends have
    today.  [--custard_int128 false] asks for it on the C path too. *)
+(* Section 122.7.  The F# backend qualifies for the same reason the C backend
+   does: .NET has had [System.Int128] and [System.UInt128] since 7, they are
+   the target's own types rather than a library's, and every operation Custard
+   emits on a machine integer exists on them.  The backends that do not
+   qualify compile the F* implementation instead, which is not a fallback
+   anyone has to write -- it is what they do today. *)
 let int128_enabled () : ML bool =
-  Options.custard_backend () = "C" && Options.custard_int128 ()
+  let b = Options.custard_backend () in
+  (b = "C" || b = "FSharp") && Options.custard_int128 ()
 
 let machine_int_of_module (ns : list string) : ML (option (signedness & iwidth)) =
   match ns with

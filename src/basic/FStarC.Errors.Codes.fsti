@@ -420,6 +420,7 @@ type error_code =
   | Error_CustardBadReference
   | Error_CustardBadStaticArray
   | Error_CustardBadComment
+  | Error_CustardNoFSharpRealization
 
 type error_setting = error_code & error_flag & int
 
