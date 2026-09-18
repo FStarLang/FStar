@@ -22157,6 +22157,110 @@ be on the include path of the generated module that names it.
 `quicksort` also loses the three erased arguments the old driver had to
 pass, which is the shape §127 was about seen from the other end.
 
+## 129 A constructor that is built to be taken apart
+
+FStarLang/FStar#4548, reported against a generated file that is meant to
+be read.  `let (a, (b, _)) = p` in an `inline_for_extraction` callee, and
+a caller that builds the tuple:
+
+```fstar
+inline_for_extraction
+fn body (p : U32.t & (U32.t & unit)) ... { let (a, (b, _)) = p; U32.add_mod a b }
+
+fn entry (x : U32.t) ... { body (x, (U32.add_mod x 1ul, ())) }
+```
+
+came out as
+
+```c
+uint32_t LetPatFold_entry(uint32_t x) {
+  FStar_Pervasives_Native_tuple2__uint32_tuple2_uint32_unit _letpattern =
+      (FStar_Pervasives_Native_tuple2__uint32_tuple2_uint32_unit){
+          ._1 = x,
+          ._2 = (FStar_Pervasives_Native_tuple2__uint32_unit){ ._1 = (x + 1) } };
+  return (_letpattern._1 + _letpattern._2._1);
+}
+```
+
+where `return (x + (x + 1));` will do.  The reporter's numbers are the
+reason it matters: across 68 extracted units, 411 such handle bindings,
+1113 one-field temporaries and 212 `_letpattern` bindings, in 15 files.
+The cost is zero --- they hand-flattened sixteen CUDA kernels and the PTX
+was byte-identical --- so this is readability, and readability is the
+point of those files.
+
+### 129.1 The rule that was there, and the binding in front of it
+
+Custard *does* reduce a `match` on a constructor: `reduce`'s `iota` fires
+whenever the scrutinee is one, and `unbuild` does the same for a
+projection out of one.  Both were in place, and the inlining that the
+report notes had already happened --- `body` was inlined and its
+projections pushed into the caller.
+
+What stops them is the binding.  F\* compiles `let (a, b) = p` by naming
+the scrutinee: `let _letpattern = <e> in match _letpattern with ...`.  So
+the scrutinee `iota` sees is an `EVar`, never a constructor, and the
+rewrite that would fire one step later never gets the chance.
+
+`reduce`'s `ELet` case now substitutes the constructor into the body,
+under two conditions:
+
+* every occurrence of the variable is *destructed on the spot* --- the
+  scrutinee of a `match`, or the target of a projection
+  (`destructed_only`).  This is what says the tuple is never used as a
+  value, so no copy of it survives the substitution;
+* every field is `reeval`.
+
+`unbuild` gained the same case for the projection-only shape, which is
+what a `match` turns into once `depat` has run --- past `reduce`, so the
+two have to be separate.  There the substitution is `psub`, which does
+not rename, so the case additionally asks that the body does not rebind
+the name.
+
+### 129.2 `reeval`
+
+The report's own caveat is the right one: the fold is sound only when the
+constructor's *other* arguments can be dropped, since the branch or the
+projection discards them.  That is purity, and it is the condition
+`ctor_args_pure` already asks of a scrutinee that is a constructor
+already.
+
+There is a second condition the immediate case does not need.  A field
+that *is* read moves to where it is read, and there may be more than one
+such place --- so the fold may repeat it, and, worse, may move it into a
+loop.  `reeval` is that question: variables, constants, projections,
+casts, coercions, tag reads and `EOp` applications over them.  Bounded,
+allocating nothing, and no more expensive to repeat than their operands,
+which is `cheap_expr`'s own wording for the same class.  A call or an
+allocation is *not* in it, and keeps its binding.
+
+Constructors are in it, which is not a widening for its own sake: the
+nested tuple is exactly what `let (a, (b, _)) = p` destructures, and
+without it the rule does not fire on the shape it was written for.  In C
+a constructor is a compound literal and allocates nothing (§103); in
+OCaml it would allocate, but the predicate is only ever asked about a
+value whose every copy is about to be taken apart again.
+
+An effectful field never reaches the question, because ANF has already
+lifted it into a binding of its own, and the fold moves that binding
+nowhere.
+
+### 129.3 What it does not do
+
+The report separates the one-field structs that a `unit` tail leaves ---
+`{._1 = tmp3}` is `Mktuple2 (tmp3, ())` after the layout pass erases the
+unit field --- and asks for them only as a consequence, not as a target.
+That is what happens: folding the projections makes those bindings dead
+and they disappear, **and no declared type changes**.  The one-field
+struct is still declared, and a header that is an interface still spells
+it.  Collapsing the struct itself would be a different and much more
+invasive change, and is not done here.
+
+`tests/custard/pulse/LetPatFold.fst` pins both halves: `body` is a root
+of its own, so the tuple type is declared and the test can check that it
+still is, while `entry` compiles to `return (x + (x + 1));` and the word
+`_letpattern` does not appear.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -22516,3 +22620,4 @@ pass, which is the shape §127 was about seen from the other end.
 | M10κΙ | **Three test suites the migration broke** (§126.6–§126.8) | Done.  CI ran what the local gate had not.  `examples/printf` was two coercion bugs in one program: a lambda binder whose type is exactly `TAny` bound nothing, so no use of it was coerced and OCaml inferred a type from the first `match` branch that the second contradicted; and a call that over-applies a head returning `TAny` was coerced only when the expected type was known, so the same call `let`-bound went out with three arguments to a two-argument function.  `tests/floats/Test01` loses its `Float32` half, which Custard refuses on OCaml by design (§66.4) and the legacy backend emulated; the coverage moves to `FloatExtract` and `tests/custard/Floats.fst`.  `fsharp/tests/{Hello,Test00}` drop their hand-written projects for the one Custard generates, and grow a `main`: .NET has no load-time execution, so a module whose top-level effect prints is a program on OCaml and a library that does nothing on F# |
 | M10κΚ | **A partial application that became a saturated one** (§127) | Done.  The defect that kept `pulse/test/pool` on the old pipeline.  `fork_core (f1 ())` passes a thunk, `f1` having two binders and the call supplying one; erasing the second --- a proof-level `loc_id` --- made the call saturated, so the worker loop ran inline in the spawning thread instead of being forked.  `Mono.keep_thunk` is the rule for exactly this and its comment already named the hazard, but its second clause asked whether the last binder was *unit-shaped* rather than whether the codomain was impure.  It now asks the second, in Custard's sense of impure rather than F*'s (`Mono.impure_codomain`, since a Pulse `fn` is a `Tot` function returning an `stt`), and `Extract`'s `Tm_abs` guard gained the same clause off `body.eff`.  Restricted to an *explicit* last binder, because F* instantiates an implicit at every application, so no partial application stops in front of one --- and keeping one gave §80.1's record field an arity its derived projector could not meet.  The mirror miscount is fixed alongside: a call through a *variable* deleted the argument for the binder `keep_thunk` had just put back, and now passes `()` for it as a call through a name always did.  The cost is a `unit` parameter on a definition whose last binder is erased in front of an impure codomain, which is what the legacy backend keeps anyway |
 | M10κΛ | **A module that must never be compiled** (§128) | Done.  `Pulse.Lib.SpinLock`'s `acquire` loops on a `cas` that is a *specification* --- a read then a write, atomic in Pulse and two accesses once compiled --- so Custard's compiled spin lock locked nothing and the pool example's quicksort raced.  The answer is the mechanism §8.2 already had: the module joins `Builtins.realized_modules`, its values become externals under the names the hand-written `Pulse_Lib_SpinLock.ml` and `.c` already use, and nothing of it is compiled.  Two defects were hiding behind it.  `external_ty` built an external's signature without `keep_thunk`, so `new_lock`, whose one binder is erased, was declared a *value* while every call site emitted `new_lock ()` (§128.1).  And `Realized` means hand-written *OCaml*, so the C backends kept the F\* shape --- right for `Prims.list`, and for a lock a `struct { uint32_t *r; }` beside a realization whose header says `pthread_mutex_t *`; `Builtins.c_realized_modules` is the second table, and makes such a type an `Extern` carrying its header (§128.2).  The DICE build, the only Custard C build with `-Werror`, also caught §116's overflow guard comparing a `uint32_t` length against `SIZE_MAX`, which `-Wtype-limits` calls always false: the length now goes through a `size_t` temporary, which keeps the check real on a 32-bit target (§128.3).  `pulse/test/pool/pulse_task` moves to Custard on top of it and gets shorter: one extraction from one entry point, `fstar.exe --ocamlopt` to link, no `dune` project, no local `Prims.ml` and no `sed` over the output (§128.5) |
+| M10κΜ | **A constructor that is built to be taken apart** (§129) | Done.  FStarLang/FStar#4548.  `let (a, (b, _)) = p` in an inlined callee left the caller building a tuple, naming it and reading it back out; `return (x + (x + 1));` is what it should be, and across the reporter's 68 units there were 411 such bindings.  The rewrites were all in place --- `iota` on a `match` over a constructor, `unbuild` on a projection out of one --- and what stopped them was the *binding* F\* puts in front: `let _letpattern = e in match _letpattern with ...`, so the scrutinee `iota` sees is an `EVar`.  `reduce` now substitutes a let-bound constructor when every occurrence is destructed on the spot and every field is `reeval`, and `unbuild` does the same for the projection-only shape `depat` leaves behind.  `reeval` is the second condition the immediate case never needed: a field that is read *moves*, possibly into a loop and possibly more than once, so it is restricted to the class §103 already calls bounded and allocation-free --- variables, constants, projections, casts, operators, and constructors over them.  A call or an allocation keeps its binding, which is the report's own caveat about discarded components.  No declared type changes: the one-field struct a `unit` tail leaves is still declared, it is just no longer built |

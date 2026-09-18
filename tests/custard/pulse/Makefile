@@ -360,6 +360,17 @@ CGREP_ExtBuf = "(uint8_t *)extbuf_base"
 # would emit a (void) cast, which C++ accepts with or without the fix.
 CGREP_ExtBuf += "uint8_t *"
 
+# Section 129.  A constructor that is bound and then only ever taken apart.
+C_TESTS += LetPatFold
+# [body] is a root of its own so that the tuple type is *declared*: folding
+# the projections changes no declared type, which is what makes the rewrite
+# safe for a unit whose header is an interface.
+EXTRA_LetPatFold = --custard_entry LetPatFold.body
+CGREP_LetPatFold += "FStar_Pervasives_Native_tuple2__uint32_tuple2_uint32_unit p"
+# [entry] is the point: the tuple it builds for [body] is never built.
+CGREP_LetPatFold += "return (x + (x + 1));"
+CNOGREP_LetPatFold += "_letpattern"
+
 # Section 116.  [len * sizeof(elt)] is computed in size_t and wraps; the
 # guard is what stops malloc from succeeding with a block too small for the
 # fill loop that follows it.  A constant length needs none -- [main] allocates
