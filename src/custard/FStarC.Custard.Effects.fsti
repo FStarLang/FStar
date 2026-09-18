@@ -46,8 +46,14 @@ val head_is_impure_marker : TcEnv.env -> typ -> ML bool
     [None] when the head does not carry the attribute. *)
 val impure_effect_result : TcEnv.env -> typ -> ML (option typ)
 
+(** Section 125.10.  Whether a computation is in an effect carrying
+    [@@erasable].  Such a computation has no runtime content whatever its
+    result type says, so it extracts to [()] at type [unit]. *)
+val is_erasable : TcEnv.env -> comp -> ML bool
+
 (** The result type of a computation, seen through the marker: for a marked
-    codomain this is the payload rather than the marked application. *)
+    codomain this is the payload rather than the marked application.  An
+    erasable computation returns [unit] whatever it says it returns. *)
 val result_typ : TcEnv.env -> comp -> ML typ
 
 (** The effect of a computation type, including the [extract_as_impure_effect]

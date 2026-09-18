@@ -13,6 +13,13 @@ CUSTARD_TESTS += Effects
 CUSTARD_TESTS += Curried
 CUSTARD_TESTS += Implicits
 CUSTARD_TESTS += MachineInts
+# Section 125.  The rotates and the arithmetic right shift: operations with
+# no operator in the IR, so each is a rule that expands to something else.
+# Registered on four backends because the expansion is where they can
+# disagree -- C's [>>] at a signed type and OCaml's [shift_right] at an
+# unsigned one are different operations, and a rotate has to pick the right
+# one at both.
+CUSTARD_TESTS += Rotate
 CUSTARD_TESTS += Externs
 CUSTARD_TESTS += Combinators
 CUSTARD_TESTS += Mutual
@@ -192,8 +199,11 @@ NOGREP_Refs = "Array.make" "free"
 # Section 8.5: each exception constructor is its own declaration, raising is
 # a control-flow node rather than a call, and try_with becomes a real
 # 'try ... with' whose single branch hands the value to the handler.
-GREP_Exceptions   = "exception Exceptions_Empty" "exception Exceptions_Bad of" \
-                    "raise Exceptions_Empty" "(try " "with" "Exceptions_Empty ->"
+# Section 125.7 took the mangling off the two names: neither collides with
+# anything else this program emits, so both keep their plain identifier.
+GREP_Exceptions   = "exception Empty" "exception Bad of" \
+                    "raise Empty" "(try " "with" "Empty ->"
+NOGREP_Exceptions += "Exceptions_Empty"
 NOGREP_Exceptions = "FStar_All.try_with" "FStar_All.raise" "Prims.exn"
 
 # Local [let rec]s are lambda-lifted to top-level declarations (section 5.10).
@@ -336,7 +346,7 @@ KRML_TESTS += KrmlPrims
 # 122.3.1, 122.6.1 and 122.14) surfaced the day this leg ran.
 FS_TESTS += KrmlBasic Hello Literals LitBase LitStr Floats Exceptions Refs
 FS_TESTS += Recursion Mymon AnyCond AnyException UnitPtr Typeclass
-FS_TESTS += MachineInts Unroll ShortCircuit Union Wide128
+FS_TESTS += MachineInts Unroll ShortCircuit Union Wide128 Rotate
 
 # Section 122.14.  The unit-argument rule, from the side that only a typed
 # target can see: [j] takes a [unit] and a [UInt32.t], the IR drops the first
@@ -379,6 +389,22 @@ EGREP_FSPun = "which .NET cannot express"
 # backend has no polymorphism to fall back on, so it always runs with type
 # monomorphization (section 5.0.1).
 C_TESTS += KrmlBasic CExtern CRecType IndexedSquash CByValue CDeadLet CFunPtr
+C_TESTS += Rotate
+KRML_TESTS += Rotate
+# The mask is the whole point of the rule, so the C is pinned as well as run:
+# a shift by the width itself is undefined, and a compiler that constant-folds
+# the undefined case into something plausible would let the run pass.
+CGREP_Rotate += "(x >> ((32 - s) & 31))"
+# A signed rotate goes through the unsigned width of the same size, because
+# that is where the right shift is the logical one.
+CGREP_Rotate += "uint32_t custard_rot_a = (uint32_t)x;"
+# And the arithmetic right shift is C's [>>] at a signed type, with nothing
+# around it.
+CGREP_Rotate += "static int8_t Rotate_sar8(int8_t x, uint32_t s) {"
+# Falling back to the F* definition is the defect this rule replaced: it
+# builds a bit-vector list, so [to_vec] appearing at all means the rule did
+# not fire.
+CNOGREP_Rotate += "to_vec"
 C_TESTS += RefStrip
 # Section 25: the eta-expansion chain.  The greps pin the two shapes the
 # fix is about -- a source-parameterless arrow-typed definition becomes a
@@ -1761,6 +1787,20 @@ all: $(OUTPUT_DIR)/SplitHi.out.diff
 
 # These have hand-written targets with their own [all:] lines rather than a
 # list entry, and each consults its own settings in its own recipe.
+# Section 126.3.  [@@noextract_to] names a backend, and drops the definition
+# only on that one.  Extracted twice, and each leg checks that the other leg's
+# definition survived: an attribute that dropped everything would pass a
+# one-sided test.
+CUSTARD_TESTS += NoExtractTo
+FLAGS_NoExtractTo = --custard_entry_module NoExtractTo
+GREP_NoExtractTo += "noExtractTo_only_ocaml"
+GREP_NoExtractTo += "noExtractTo_kept"
+NOGREP_NoExtractTo += "only_c"
+C_TESTS += NoExtractTo
+CGREP_NoExtractTo += "NoExtractTo_only_c"
+CGREP_NoExtractTo += "NoExtractTo_kept"
+CNOGREP_NoExtractTo += "only_ocaml"
+
 # Section 38.  Floating point.  The C test checks its own answers and returns
 # a nonzero exit status if any is wrong; what the greps add is that the
 # arithmetic is C arithmetic at the right *width* -- a Float32 literal without
@@ -1841,6 +1881,10 @@ CGREP_Narrow += "custard_f16_add(a, b)"
 CGREP_Narrow += "custard_f16_lt(custard_f16_sub(a, b)"
 CGREP_Narrow += "custard_f16_of_i64((int64_t)2049)"
 CGREP_Narrow += "custard_bf16_add(CUSTARD_BF16_LIT(16320U)"
+# Section 125.5.  The special values are bit patterns at these widths too,
+# and no <math.h> is involved: the struct has no NAN to borrow.
+CGREP_Narrow += "CUSTARD_F16_LIT(32256U)"
+CNOGREP_Narrow += "CUSTARD_NAN"
 # Section 98.  The generated header carries the contract and no implementation:
 # it names what the program must supply and stops the compile if it did not.
 CGREP_Narrow += "\#ifndef CUSTARD_FLOAT16_DEFINED"
@@ -2334,6 +2378,98 @@ EGREP_FloatSingle += "binary32"
 REJECT_TESTS += FloatLit
 CODE_FloatLit = 380
 EGREP_FloatLit += "is not a floating-point literal"
+
+# Section 125.7.  string_of_exn is Printexc.to_string, so the OCaml name
+# Custard picks for an exception is observable -- the only mangled name that
+# is.  Three cases in one program: [B] is unambiguous and keeps its plain
+# identifier, [A] collides with ExnNameLib's and both stay mangled, and
+# [Not_found] is unambiguous among the program's own exceptions and still
+# stays mangled because it is one of OCaml's.  The .out.expected is the whole
+# assertion; the greps pin the declarations, since a wrong declaration and a
+# wrong reference would agree with each other and still run.
+CUSTARD_TESTS += ExnName
+GREP_ExnName += "exception B"
+GREP_ExnName += "exception ExnName_A"
+GREP_ExnName += "exception ExnNameLib_A"
+GREP_ExnName += "exception ExnName_Not_found"
+NOGREP_ExnName += "exception A"
+NOGREP_ExnName += "exception Not_found"
+
+# Sections 125.8 and 125.9.  Three legacy bug reports, each a value of type
+# [any] reaching a position that needs a real type, each of which used to
+# produce OCaml that did not compile.  The .out.expected is the assertion:
+# every line is a value that had to survive a coercion.  The greps pin the
+# two shapes that are invisible in the output -- the inner match section 115
+# splits out of a tuple pattern under an [any] field, and the absence of one
+# where the field's type is concrete.
+# Section 125.10.  An effect carrying [@@erasable] makes every computation in
+# it proof-level whatever its result type says, and such an effect is usually
+# defined with a representation, so it is reifiable too -- reifying it built
+# the representation of a value that does not exist and the definition was
+# emitted as `() : int`, which does not compile.  The greps are the whole
+# assertion: the three Spec definitions have unit results and empty bodies,
+# the Plain one keeps its int, and no reference to the assumed spec_int
+# survives.  The run is there because a program that does not compile cannot
+# reach its own output.
+# Section 126.6.  A lambda binder of no representation, and a call that
+# over-applies a head that returns one.  Both come from type-level matches.
+CUSTARD_TESTS += AnyLambda
+# The whole point of the test is a value with no representation, so the
+# suite-wide escalation of warning 367 is off for it.
+FLAGS_AnyLambda = --warn_error -367
+GREP_AnyLambda += "Obj.magic"
+
+CUSTARD_TESTS += ErasableEff
+# --custard_main alone would root only what [main] reaches, and what this test
+# is about is precisely the definitions that reach nothing because they were
+# erased.
+FLAGS_ErasableEff = --custard_entry_module ErasableEff
+GREP_ErasableEff += "let erasableEff_use_spec (tmp : unit) : unit"
+GREP_ErasableEff += "let erasableEff_use_spec_arg (n : Prims.int) : unit"
+GREP_ErasableEff += "let erasableEff_spec_int (tmp : unit) : unit"
+GREP_ErasableEff += "let erasableEff_use_plain (tmp : unit) : Prims.int"
+GREP_ErasableEff += "let erasableEff_plain_int (tmp : unit) : Prims.int"
+NOGREP_ErasableEff += "use_ghost"
+
+CUSTARD_TESTS += AnyPat
+FLAGS_AnyPat = --warn_error -367
+GREP_AnyPat += "| (y, z) -> (AnyPat_PStrings"
+GREP_AnyPat += "| { u__0 = s; u__1 = z; _ } -> (AnyPat_BString"
+GREP_AnyPat += "u__2 = (z, tmp); _ } -> (AnyPat_PNats (z, z))"
+NOGREP_AnyPat += "Obj.magic (Obj.magic"
+
+# Section 125.5.  [nan] and [inf] are of_literal's two non-decimal spellings.
+# Seventeen checks of the two IEEE 754 properties a program can actually
+# observe -- a NaN is unordered with everything including itself, an infinity
+# is ordered above every finite value -- run on every backend that has a
+# binary64, and reported through the exit code because direct-to-C has no
+# FStar.IO.  The C pins are on the *macros*: emitting NAN and INFINITY bare
+# would compile identically, and the whole point of the macro names is that
+# [mentions_float_special] can find them without matching a generated
+# identifier.
+CUSTARD_TESTS += FloatSpecial
+C_TESTS       += FloatSpecial
+FS_TESTS      += FloatSpecial
+CGREP_FloatSpecial   += "\#define CUSTARD_NAN NAN"
+CGREP_FloatSpecial   += "\#define CUSTARD_INF INFINITY"
+CGREP_FloatSpecial   += "\#include <math.h>"
+CGREP_FloatSpecial   += "(-CUSTARD_INF)"
+# The support block goes only into the file that mentions the names, and
+# nothing in this program is public, so that file is the source and not the
+# header.
+CHNOGREP_FloatSpecial += "CUSTARD_NAN"
+NOGREP_FloatSpecial  += "nan_"
+GREP_FloatSpecial    += "Stdlib.nan"
+GREP_FloatSpecial    += "Stdlib.neg_infinity"
+
+# The other half: karamel carries the literal as text and has no spelling for
+# either value, so the crossing is refused -- naming the backend that does
+# accept it, which section 46.3 says is a fact about the site.
+REJECT_TESTS += FloatSpecialKrml
+FLAGS_FloatSpecialKrml += --custard_backend KrmlC
+CODE_FloatSpecialKrml := 368
+EGREP_FloatSpecialKrml += "a NaN literal has no karamel representation"
+EGREP_FloatSpecialKrml += "does accept it"
 
 # Section 46.1/46.2.  FStar.Char.char is uint32_t on both C paths.  Both tests
 # check their own answer rather than grepping for a spelling (section 43.2):

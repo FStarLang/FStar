@@ -66,6 +66,18 @@ let main () : ML U32.t =
   let ok12 = B.lt (B.of_literal "70000.0") (B.of_literal "80000.0") in
   let ok13 = B.ieee_eq (B.add B.zero B.one) B.one in
 
+  (* Section 125.5.  At these widths the literal is a bit pattern Custard
+     computes itself, so the two special values are encoded here too: a
+     saturated exponent, with a zero significand for an infinity and the
+     leading fraction bit set for a NaN.  [bits] reads the pattern back, which
+     checks the encoder and not merely the stub library's arithmetic. *)
+  let ok14 = bits (of_literal "inf") = 31744us in
+  let ok15 = bits (of_literal "-inf") = 64512us in
+  let ok16 = bits (of_literal "nan") = 32256us in
+  (* And 70000 overflowing binary16 above lands on exactly that pattern. *)
+  let ok17 = bits (of_literal "70000.0") = 31744us in
+
   if ok0 && ok1 && ok2 && ok3 && ok4 && ok5 && ok6 && ok7 && ok8
      && ok9 && ok10 && ok11 && ok12 && ok13
+     && ok14 && ok15 && ok16 && ok17
   then 0ul else 1ul

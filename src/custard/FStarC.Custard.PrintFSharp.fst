@@ -506,7 +506,14 @@ let constant (c:constant) : ML string =
   | CUnit -> "()"
   | CBool b -> if b then "true" else "false"
   (* Section 39.  F#'s lexer accepts the same grammar section 39.2 does; a
-     binary32 literal is the same text with an [f] after it. *)
+     binary32 literal is the same text with an [f] after it.  Section 125.5's
+     two special values are identifiers instead, and F# suffixes those with
+     [f] too. *)
+  | CFloat (FLNan, fw) ->
+    reject_fwidth fw; if Float32? fw then "(nanf)" else "(nan)"
+  | CFloat (FLInf neg, fw) ->
+    reject_fwidth fw;
+    (if neg then "(-" else "(") ^ (if Float32? fw then "infinityf" else "infinity") ^ ")"
   | CFloat (v, fw) ->
     reject_fwidth fw;
     "(" ^ float_lit_to_string v ^ (if Float32? fw then "f" else "") ^ ")"
@@ -562,11 +569,8 @@ let w128_unop (sw : signedness & iwidth) (o:op) : ML (option string) =
 
 let is_shift (o:op) : bool = BShiftL? o || BShiftR? o
 
-(* Whether a width conversion can change the mathematical value. *)
-let width_bits (w:iwidth) : int =
-  match w with
-  | W8 -> 8 | W16 -> 16 | W32 -> 32 | W64 -> 64 | W128 -> 128 | WSizet -> 64
-
+(* Whether a width conversion can change the mathematical value.
+   [width_bits] is [Syntax]'s. *)
 let value_preserving (a b : signedness & iwidth) : bool =
   let sa, wa = a in
   let sb, wb = b in

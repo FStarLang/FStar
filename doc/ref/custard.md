@@ -1280,11 +1280,17 @@ pipeline under `--cmi`, so it is not a new exposure, but it is worth stating.
 
 ### 4.3 Interaction with `noextract` and friends
 
-`noextract` (and `noextract_to "Custard"`) means "do not *emit* a definition
-for this"; since Custard is demand-driven, reaching a `noextract` definition is
-an *error* (with the request chain shown), not a silent skip.  This is a
-deliberate difference from the ML extraction, which quietly drops them
-(`Modul.fst:729`, `sigelt_has_noextract`).  `inline_for_extraction` /
+`noextract` (and `noextract_to "Custard"`, and `noextract_to` naming whichever
+backend is in hand --- see §126.3) means "do not *emit* a definition for this",
+and Custard honours it where it decides what to *root*: `--custard_entry_module`
+skips such a definition.
+
+It does **not** yet honour it on *reach*.  The intent is that, since Custard is
+demand-driven, reaching a `noextract` definition should be an *error* with the
+request chain shown, rather than the silent drop the ML extraction performs
+(`Modul.fst:729`, `sigelt_has_noextract`) --- a silent drop turns a program
+into one with a missing symbol.  Today a definition reached from a root is
+extracted whatever it is marked.  §126.3.  `inline_for_extraction` /
 `unfold` continue to work: they are handled by `Eager_unfolding`/`Inlining` in
 the normalizer, so such definitions are simply never requested.
 
@@ -21194,6 +21200,654 @@ the property that the SDK CI uses is the one the channel names.  A cache
 hit on the image is not worth an environment that cannot be reproduced,
 and this is the failure mode that argument predicts.
 
+## 125 Five gaps the legacy test suites found
+
+`tests/machine_integers` is one of the older test directories in the
+repository and it is not a Custard test: it is eight programs that
+exercise `FStar.UInt8` through `FStar.Int64` and diff their output.
+Pointing it at Custard failed six of the eight, and both causes were the
+same shape --- a machine-integer operation with no
+builtin rule, falling back to the F\* definition.
+
+### 125.1 What the fallback does
+
+`FStar.UInt32.rotate_left` is
+
+```fstar
+let rotate_left (a:t) (s:t{0 < v s /\ v s < n}) : Tot t =
+  U.logor (shift_left a s) (shift_right a (sub (uint_to_t n) s))
+```
+
+against a `t` that is `{ v : uint_t n }`, and `shift_left` on that `t` is
+in terms of `FStar.UInt.shift_left`, which is in terms of `to_vec` and
+`from_vec` --- bit vectors, as `seq bool`.  Custard does not stop there,
+because nothing tells it to: it inlines through the whole stack and emits
+the bit-vector construction, which is correct and is also several hundred
+machine instructions where one was wanted.
+
+That is the benign half.  The other half does not compile.  `t` is a
+one-field record, so §26's newtype rule erases `Mk`; but `FStar.UInt32.t`
+is *realized* --- `--custard_realize` maps it to OCaml's
+`FStar_UInt32.t` --- so the type does not disappear with its constructor,
+and the emitted `let rotate_left a s = ...` builds an `int` where a
+`FStar_UInt32.t` is expected.  Realization and newtype erasure are two
+answers to the same question and the extractor was applying both.  A
+builtin for the operation is not a fix for that inconsistency, but it is
+what removes the only way anybody was reaching it: every other function
+in those modules already has one.
+
+### 125.2 The rules
+
+`rotate_left`/`rotate_right` at width `n` become
+
+```
+let a = <arg1> and s = <arg2> in (a << s) | (a >> ((n - s) & (n - 1)))
+```
+
+and the mirror image.  The mask is the point.  A rotate by zero is legal
+in F\* --- the refinement on `s` is `0 < v s`, but the caller can and does
+reach the rule through a `v s` the extractor cannot see --- and the naive
+complement `n - s` is then `n`, which is a shift by the width, which is
+undefined behaviour in C and is a rotate-by-zero returning zero on most
+of the machines that do define it.  `(n - s) & (n - 1)` is `0` when `s`
+is `0` and `n - s` otherwise, with no branch, and relies only on `n`
+being a power of two.
+
+`a` and `s` are both read twice, so both are bound; §114's `cheap_expr`
+removes the binding again whenever the argument is a variable or a
+literal, which in practice is nearly always, so the emitted C is the
+expression above with the names substituted.
+
+At a *signed* width the rule casts to the unsigned width of the same
+size, rotates, and casts back, because a rotate is a statement about the
+bit pattern and the right shift it needs is the logical one.  `W128` has
+no rotate to key on --- `FStar.UInt128` declares none --- and `WSizet` is
+excluded for a better reason: `width_bits` answers 64 for it, which
+`--custard_sizet_width 32` makes false, and a rotate is the one place in
+the package where that would produce a wrong answer rather than a
+conservative one.
+
+### 125.3 `shift_arithmetic_right`
+
+§119 gave `shift_arithmetic_right` a rule at `Int128` only, with a
+comment claiming the narrower widths did not need one because the OCaml
+backend's `>>` was already arithmetic there.  Half of that is true.
+`ulib/ml/app/ints/FStar_Ints.ml.body` does say
+`let shift_arithmetic_right = shift_right` over a signed `Stdint.IntN`,
+whose `shift_right` is arithmetic --- but the claim was about a fallback
+that never runs, since without a rule the extractor inlines the F\*
+definition rather than calling the realization.  And it was only ever
+about OCaml; the C, C++, Rust and F# backends were getting the bit-vector
+expansion.  The guard is now `Signed?` at any width, emitting `BShiftR`
+at the signed `PInt`, which every backend already renders as its own
+arithmetic shift.
+
+The realization's `rotate_left` and `rotate_right` for signed widths are,
+incidentally, wrong: they use the arithmetic `M.shift_right` and smear
+the sign bit into the result.  Nothing in `ulib` calls them, and after
+this section neither does Custard.  It is recorded here rather than
+fixed, because fixing it would change the behaviour of the legacy
+extraction pipeline and this branch is not the place.
+
+### 125.4 `width_bits`
+
+Three copies of the width-to-bit-count function existed, in `PrintOCaml`,
+in `PrintFSharp`, and now wanted in `Builtins`.  It is `Syntax`'s, beside
+`iwidth_of_width`, and the two backends read it from there.  A fourth
+copy would have been the one that disagreed.
+
+`tests/custard/Rotate.fst` is 31 numbered checks --- rotate by zero, by
+one and by `n-1` at 8, 16, 32 and 64 bits, a signed rotate over a
+negative value, and `shift_arithmetic_right` at all four signed widths
+--- reporting through its exit code, because §100's direct-to-C output
+has no `FStar.IO` to print with.  It runs on the OCaml, karamel-C,
+direct-C, C++ and F# legs, with the constants computed independently.
+The C is pinned as well as run: a rotate by the width is undefined, and a
+compiler that folds the undefined case into something plausible would let
+a run-only test pass.
+
+### 125.5 `nan` and `inf`
+
+`tests/floats/Test01.fst` asks for `Float64.of_literal "nan"` and Custard
+answered with error 380, "nan is not a floating-point literal".  That was
+deliberate: §39.2 took its grammar from
+`FStarC.Extraction.Krml.valid_float_literal` and wrote down that what a
+`float_lit` cannot denote --- an infinity, a NaN --- is what `of_literal`
+does not accept either, on the grounds that those are what an argument
+that reached C by accident would look like.
+
+The grounds do not survive contact with the test.  An accident does not
+spell itself `nan` in an F\* source file; and a program that wants a NaN
+has no other way to write one, because `FStar.Float64` exposes no
+operation that builds one from finite arguments and the constant folder
+will not divide zero by zero on its behalf.  A refusal is only worth
+having if there is something else to write instead.
+
+So `float_lit` stops being a record and becomes
+
+```fstar
+type float_lit =
+  | FLNum of bool & Real.real
+  | FLNan
+  | FLInf of bool
+```
+
+--- cases rather than magnitudes, because `FStarC.Real.real` is a
+rational and neither special value is one.  A NaN has no sign here.  IEEE
+754 gives it one, but nothing `FStar.Float64` exposes can observe it, and
+a literal that can be written two ways and compared equal neither way is
+worse than one that cannot be written two ways.  The accepted spellings
+are `nan`, `inf` and `infinity`, the last two signed; `float_lit_to_string`
+writes back the shortest, so the round-trip §39.2 requires still holds.
+
+### 125.6 Five backends, five answers
+
+Each backend spells these for itself, and one of them cannot.
+
+**OCaml** and **F#** have them as identifiers rather than literals:
+`Stdlib.nan`, `Stdlib.infinity`, `Stdlib.neg_infinity`, and F#'s `nan`,
+`infinity` with the `f`-suffixed forms at binary32.  Qualifying the OCaml
+ones matters, because `nan` is a plausible name for a program to bind.
+
+**C** has no floating-point constant syntax for either --- there is no
+text a C compiler reads as a NaN, and `0.0/0.0` is not a constant
+expression.  `<math.h>`'s `NAN` and `INFINITY` are the portable spelling,
+and both are of type `float`, which converts to `double` exactly, so one
+spelling serves both widths.  They arrive through `CUSTARD_NAN` and
+`CUSTARD_INF` rather than bare, for §123's reason: placement of the
+support block is decided by asking whether a rendered file *mentions* the
+names, and `NAN` is a token short and ordinary enough that a generated
+identifier could contain it, where `CUSTARD_NAN` cannot be anything but
+this.  The block carries the `#include <math.h>` with it and goes only
+into the file that needs it, which for a program with no public floats is
+the source and not the header.
+
+At **binary16 and bfloat16** there is nothing to borrow: §66 emits those
+as bit patterns because the type is a struct, so the special values are
+encoded by hand as well --- a saturated exponent, with a zero significand
+for an infinity and the leading fraction bit set, a quiet NaN, for a NaN.
+`Narrow.fst` reads the patterns back through its `bits` extern, which
+checks the encoder rather than the stub library's arithmetic, and pins
+that the 70000 which already overflowed binary16 lands on exactly the
+infinity pattern.
+
+**karamel** cannot.  `K.EConstant` carries a floating-point literal as
+*text* and karamel's own `valid_float_literal` is the decimal grammar
+alone, so there is no string to hand it: karamel would emit the
+characters and the C compiler would not read them back.  This is
+§46.3-shaped --- the direct C backend does accept it --- so it is a
+`krml_reject_c_ok`, and the four rejection helpers move up the file to
+sit above their first use, which is now this one.
+
+`FloatSpecial.fst` is seventeen checks of the two properties a program
+can actually observe: a NaN is unordered with everything, itself
+included, and an infinity is ordered above every finite value.  Seven of
+them route a literal through the arithmetic --- `inf - inf` is a NaN,
+`inf + 1` is `inf` --- so what is under test is that the literal is the
+value the hardware produces and not merely a value that compares unequal
+to itself.
+
+### 125.7 The one mangled name a program can read
+
+`tests/micro-benchmarks/StringOfExn.fst` raises `exception A`, catches
+it, and prints `FStar.Exception.string_of_exn e`.  The expected output is
+`StringOfExn.A`.  Custard produced `StringOfExn.StringOfExn_A`.
+
+`string_of_exn` is realized as `Printexc.to_string`, which prints the
+*constructor*, and Custard mangles every constructor it emits --- §12.7,
+because one flat file holds every module's declarations and two modules
+may name the same thing.  So this is the single place where the mangling
+is observable from inside the extracted program.  Everywhere else the
+mangled name is read only by a compiler, or by a person reading generated
+code, and §10 already settled that the mangled names are readable enough
+on their own.
+
+The fix is to apply the mangling where there is a collision and not
+otherwise.  An exception keeps its plain identifier when no other
+constructor in the file wants that spelling, no *other exception* wants
+it either, and it is not one of OCaml's own --- `exception Not_found`
+would be legal and would shadow `Stdlib.Not_found` for the rest of the
+file, where a hand-written realization that is not generated and does not
+know may still mean the original.  A collision with the language is a
+collision.
+
+Two exceptions that want the same short name both stay mangled.  Giving
+it to whichever was declared first would make which of them is readable
+depend on declaration order, which is a worse property than neither of
+them being readable.
+
+Variant constructors could have the same treatment and do not.  Nothing
+observes their spelling --- there is no `Printexc` for a variant --- and
+changing it would churn every OCaml golden in the repository for no gain.
+
+`ExnName.fst` has all three cases in one program: `B`, unambiguous and
+emitted plain; `A`, colliding with `ExnNameLib.A` so that both stay
+mangled; and `Not_found`, unambiguous among the program's own exceptions
+and mangled anyway.  The assertion is the printed output, with greps on
+the declarations besides, since a wrong declaration and a wrong reference
+would agree with each other and still run.
+
+### 125.8 A match that does not know its own type
+
+`tests/bug-reports/closed/Bug734.fst` is the oldest of the three, and the
+shortest:
+
+```fstar
+let arg_type (d:dir) : Tot Type0 =
+  match d with
+  | Bool -> bool
+  | Int -> int
+  | Fun -> int -> Tot int
+
+let def_value (d:dir) : Tot (arg_type d) =
+  match d with
+  | Bool -> true
+  | Int -> 42
+  | Fun -> (fun (x:int) -> x)
+
+let example_fails = def_value Fun 42
+```
+
+`def_value`'s return type is `arg_type d`, which is `any`: it is a
+different type in each branch and Custard has no dependent types to say
+so with.  That is fine, and §14's whole point --- the value crosses out
+through a coercion at each use.  What was not fine is that the emitted
+signature said `bool`, so `def_value Fun` was applied to an argument its
+own declaration said was not there, and the OCaml did not compile.
+
+`Extract`'s `Tm_match` case gave the match node the type of the *first*
+branch.  For a match whose branches agree that is right and costs
+nothing; for one whose branches do not it is a claim that happens to be
+about whichever branch F\* wrote down first.  Nothing read that claim
+until §111's `narrow_rets`, which is a fixpoint that replaces an `any`
+return type with a ground one read off the body --- and a body that is a
+match is read straight off the node.  So a lie told in one pass was
+promoted to a declared signature by another, three passes later.
+
+The rule is now the honest one: drop the branches whose type is `any`,
+and if what is left is one type, that is the match's type; otherwise
+`any`.  Dropping the `any` branches first matters, because a branch that
+lost its type should not be able to make the whole match lose its own ---
+`match b with true -> 1 | false -> (the any one)` is an `int`, and saying
+`any` there would cost a coercion at every use.  Disagreement between two
+*ground* branch types is the case that has to answer `any`, and now does.
+
+### 125.9 Two more ways an `any` reaches a pattern
+
+The other two are §14 coercions that were not inserted, and both are
+about a pattern rather than an expression.
+
+`tests/extraction/Eta_expand.fst` matches on integer literals:
+
+```fstar
+let choose : a:t -> dec a -> int -> dec a = function
+  | A -> fun_a
+  | B -> fun_b
+
+let _ = match choose A 0 2 with
+        | 0 -> ()
+        | 2 -> failwith "Failure of eta-expansion"
+        | _ -> failwith "Unknown failure"
+```
+
+`choose A` returns `any`, so the scrutinee is an `any` and the coercion
+pass has to put a `magic` on it.  It decides what to coerce *to* by
+reading the branches: `scrutinee_of` walks them looking for a pattern
+that names a type.  It consulted constructor and record patterns only, so
+a match whose patterns are all constants found nothing, no coercion went
+in, and the OCaml compared an `Obj.t` against an `int`.  A constant
+pattern names a type exactly as precisely as a constructor pattern does
+--- `0` is a `Prims.int` --- and now says so.
+
+`tests/bug-reports/closed/Bug2595.fst` is the harder one:
+
+```fstar
+let test_buggy2 (x:(b:bool & (if b then (nat & nat) else (string & string))))
+  : sum_type2
+  = match x with
+    | (|false, (y, z)|) -> SumType2_1 y z
+    | (|true, (y, z)|) -> SumType2_2 y z
+```
+
+The second component of the pair is `any`, and the pattern destructures
+it.  A coercion cannot be inserted inside a pattern --- there is nowhere
+to put an expression --- which is exactly what §115 already exists for:
+it replaces such a sub-pattern with a fresh variable and re-matches it
+under a coercion in the branch body.  It did not fire here.
+
+The reason is that §115 asked the *declaration* what the field's type is.
+For `Prims.dtuple2` the second field is declared `'b`, a type variable,
+which is not `any` and never will be at any instantiation the declaration
+can see.  What carries the answer is the scrutinee's own type, which here
+is `(bool, any) dtuple2`.  The pass now substitutes the scrutinee's type
+arguments into the constructor's field types before asking, and threads
+the resolved type down as it descends --- a tuple pattern's components
+come from a `TTuple`, a field's from the instantiated field list, and a
+position under an `any` is itself `any`.  Where the scrutinee's type is
+not a matching application the declaration is used unchanged, which is
+what every position saw before.
+
+`test_ok2` in the same file, whose field type is concrete, is the control:
+no split, no inner match, no coercion, before or after.
+
+One incidental cleanup fell out of it.  §115 hands the coercion pass a
+scrutinee that is *already* a coercion to `any`, and the coercion pass
+then put its own around it, so the output read `Obj.magic (Obj.magic
+any)`.  A coercion computes nothing, so two in a row are one; the
+coercion pass, which is the last one to run and therefore the last chance
+to notice, now fuses them.  An `ECast` is left alone, because that one
+does compute.
+
+### 125.10 An erasable effect returns nothing
+
+`tests/micro-benchmarks/Erasable.fst` defines an effect and marks it:
+
+```fstar
+[@@erasable]
+total
+effect { MGHOST with {repr; return; bind} }
+
+let eff_test2 () : MGhost int = f_ghost_info () + 2
+```
+
+`[@@erasable]` on an effect says that a computation in it has no runtime
+content --- it is `GHOST` under another name, declared by the program
+rather than by `Prims`.  Custard erased the *body*, correctly, to `()`.
+It did not erase the declared result type, so what came out was
+
+```ocaml
+let erasable_eff_test2 (tmp : unit) : Prims.int = ()
+```
+
+which is not a program.  A declaration that disagrees with its own body
+is worse than either being wrong on its own, because the two are read by
+different things: `narrow_rets` and every call site believe the
+signature, and the backend prints the body.
+
+Three places had to agree.  `Effects.of_lid` now answers `E_Ghost` for an
+erasable effect, which is what its drop/duplicate/reorder behaviour
+actually is.  `Effects.result_typ` answers `unit`, which makes the
+*types* `unit -> MGhost int` and `unit -> unit` the same type, as they
+are.  And `extract_letbinding` asks the erasable question **before** the
+reifiable one --- an effect defined with a `repr` is reifiable, so
+reifying `MGhost int` produced `int repr`, which is `int`, the
+representation of a value that does not exist.  That ordering is the
+whole fix; without it the other two never get a turn.
+
+The distinction is not the same as the `[@@erasable]` on a *definition*
+that §5.1 already handled: there the attribute sits on the thing being
+extracted and `is_erasable` finds it on the sigelt.  Here it sits on the
+effect, one level away, and the definition carrying it looks perfectly
+ordinary.
+
+`tests/custard/ErasableEff.fst` declares two effects that differ in
+nothing but the attribute, and pins that every definition in the erasable
+one has a `unit` result --- including one whose F\* result type is a
+function type, since what the effect erases is the whole computation and
+not just a value.  `GTot`, which is F\*'s own erasable effect, is dropped
+outright, as it always was.
+
+## 126 The generic extraction rule runs Custard
+
+Every test directory under `tests/` that extracts OCaml gets the rule
+from `mk/test.mk`:
+
+```make
+$(OUTPUT_DIR)/%.ml: $(CACHE_DIR)/%.fst.checked
+	$(FSTAR) --codegen OCaml $< -o $@
+```
+
+One line, inherited by twenty-odd directories, and the reason the legacy
+pipeline still had coverage at all.  It now reads
+
+```make
+	$(FSTAR) --codegen Custard \
+	  --custard_entry_module $(subst .fst.checked,,$(notdir $<)) $< -o $@
+```
+
+and the `%.fs` rule alongside it gained `--custard_backend FSharp`.
+`--custard_entry_module` rather than `--custard_main`: these tests are
+golden-file tests of *what a module extracts to*, not programs, and most
+have no `main`.  §70.1's entry-module rooting is exactly the "extract
+this module" request they were making of the old pipeline.
+
+### 126.1 Seven goldens became empty
+
+A whole-program monomorphizer has nothing to say about a module holding
+only a type abbreviation, only a record declaration, or only a
+polymorphic function.  An abbreviation is unfolded at its uses; a
+polymorphic function is compiled once per instantiation and there are no
+instantiations.  §70.1 roots abbreviations named by the entry module but
+deliberately not inductives or records --- "an inductive is still rooted
+by its uses" --- so `RecordExtraction`, the four `RemoveUnusedTypars`
+modules, `Bug2912b` and `Bug3865b` now extract to nothing.
+
+The goldens are kept, empty, with a comment saying why.  An empty golden
+still asserts that extraction *succeeded*, which is what six of these
+seven regression tests were originally about; the seventh,
+`RecordExtraction`, was about F#'s record printing, and `KrmlBasic` and
+`AnyCond` print records on the F# leg of `tests/custard` (§122).
+
+### 126.2 The comparison suite keeps its legacy legs
+
+`tests/extraction/backends` exists to run the same module through every
+backend side by side, legacy and Custard, and report the differences in
+`FINDINGS.md`.  Migrating its `ml` leg would have deleted the comparison.
+Because `mk/test.mk` is included at the *top* of that Makefile, its
+implicit `%.ml` rule wins over any later implicit rule, however specific;
+the leg got a **static pattern rule** instead, which make treats as an
+explicit rule for each of its targets and therefore prefers.  Those legs
+should outlive this migration and die with the legacy pipeline itself.
+
+Six cells in that table went from XFAIL to passing without anyone
+touching them: §125.1--125.3's rotates and arithmetic shifts retired
+`ExtIntShiftArith` and `ExtUIntRotate` on all four Custard columns.  What
+remains is `ExtIntNe` on custard-ocaml and `ExtUIntMask` on
+custard-krml-c.
+
+### 126.3 `noextract_to` names a backend
+
+`tests/extraction/NoExtractNorm.fst` asked a question the legacy
+extractor answered in its *debug output*: does a `noextract` definition
+get normalized before being dropped?  The old pipeline normalized every
+top-level `let` and only then decided, which is what `NoExtractNormPerf`
+--- eighteen doubling levels of `inline_for_extraction noextract`, a
+quarter of a million applications --- was there to price.  Custard never
+reaches such a definition: it is not a root, there is nothing to
+normalize and nothing to emit.  That is visible in the generated program,
+so the migrated test greps the output rather than a debug channel, and
+the perf test is a `timeout` around an extraction that takes a tenth of a
+second.
+
+The third definition in that module is `[@@noextract_to "krml"]`, and
+Custard did not know the attribute existed.  The string it carries is a
+codegen name, and in the wild it means "this one has a hand-written C
+implementation": `FStar.UInt128`, `FStar.SizeT` and `FStar.Endianness`
+all use it that way.  `noextract_to_this_backend` now recognises it,
+matching `Custard` (every Custard backend), the `--custard_backend` value
+itself, and `krml` for the three backends that produce C or Rust ---
+Custard's C backend reaches those definitions by the same route karamel
+did.
+
+Unlike the ML extraction it is not a special case: there, `krml` meant
+"extract a stub anyway and let karamel drop the body later"
+(`karamel_fixup_qual`), because there was a second pipeline downstream.
+Custard has none, so the definition is simply not a root.
+
+`tests/custard/NoExtractTo.fst` carries one definition per attribute and
+is extracted twice; each leg checks that its own is gone *and* that the
+other leg's survived, since an attribute that dropped everything would
+pass a one-sided test.
+
+What is still only a rooting filter is the *reaching* half.  §4.3 said
+that reaching a `noextract` definition is an error with the request chain
+shown; it is not, on either the qualifier or the attribute --- a
+definition reached from a root is extracted whatever it is marked.  That
+is a real gap and the §4.3 text now says so rather than describing it as
+done.
+
+### 126.4 The Makefiles that are documentation
+
+`tests/simple_hello`, `tests/dune_hello`, `examples/dependencies` and
+`examples/data_structures` are not really tests.  They are the answer to
+"how do I build an F\* program", written as the smallest Makefile that
+does it, and `examples/dependencies` says so in its first line: *"meant
+as an example for new projects, and intentionally does not import any
+other Makefile in this repo"*.  What they demonstrate is the thing this
+migration changes, so leaving them on the old pipeline would have left
+the documentation pointing at it.
+
+`examples/dependencies` is the one that actually gets shorter.  It had
+four steps --- dependency graph, verify, extract each module, compile and
+link the `.cmx` files in dependency order --- and the last two collapse
+into one run and one `ocamlopt`, because Custard compiles a *program* and
+emits one file.  The `.depend` is still needed, for the same reason it
+always was: every module has to be checked before anything is extracted.
+Its prerequisite list is `ALL_CHECKED_FILES` rather than
+`ALL_ML_FILES`, since there are no per-module `.ml` files to name.
+
+`examples/data_structures` shows the other half.  It used to build its
+program by *appending* `let _ = test()` to the extracted module, which
+works when extraction is per-module and the module is a compilation unit.
+Under a whole-program compiler `test` is not reachable from anything and
+is dead code, so the program is built by naming it: `--custard_main
+RBTreeIntrinsic.test`.  That is the same request, made to the compiler
+rather than to the output file.
+
+Neither `hello` has a `main` at all --- each is a module whose top-level
+effect prints --- and that is what `--custard_entry_module` is for.
+
+`examples/layeredeffects/extraction` needed one thing the others did not:
+a checking pass of its own.  `--codegen OCaml` would check and extract in
+a single run; Custard reads the *implementation* of every module it
+reaches, so everything must be checked first.  Its `--no_cmi` went away
+at the same time, since §4.2 means Custard reads through an interface
+whether or not it is asked to.
+
+### 126.5 What is still on the old pipeline, and why
+
+Three groups.
+
+**The plugin tests** --- `tests/tactics`, `tests/semiring`,
+`examples/native_tactics` --- compile F\* code with `--codegen Plugin`
+and load the result into `fstar.exe`.  A plugin's OCaml has to link
+against the compiler's own OCaml, under the names that compiler was built
+with, and Custard learns those names from a `.cui` (§12.8) that only a
+Custard-built compiler produces.  So these cannot move until the
+bootstrap does; `mk/custard.mk`'s `plugin` target is what they will look
+like when it does, and it works today against the Custard-built compiler.
+
+**`tests/extraction/backends`'s legacy legs**, for the reason in §126.2:
+they exist to be compared against.
+
+**The remaining Pulse dirs** --- `pulse/test/pool/{pulse_task,domainslib}`
+and `pulse/share/pulse/examples/dice/cbor` --- are multi-module builds
+with hand-written OCaml or C alongside, linked by a `dune` project or a
+`Makefile` that names the per-module outputs.  `pulse/test` itself
+already runs on Custard (`pulse/mk/custard-test.mk`).
+
+`pulse/test/pool` is blocked on something more interesting than build
+plumbing, and the attempt is worth recording.  Custard compiles
+`Quicksort.Task` happily --- the whole task pool, `Pulse.Lib.Task`
+included, comes out as one 9.7 kB file, and `quicksort` loses the three
+erased arguments the hand-written driver has to pass today.  But
+`Pulse.Lib.Task.spawn_worker` comes out wrong:
+
+```ocaml
+let f = (fun tmp -> (pulse_Lib_Task_worker_thread p)) in
+let tmp = (f ()) in
+(Pulse_Lib_Core.fork_core tmp)
+```
+
+`fork_core`'s argument is
+`f : loc_id -> stt_div unit (loc l' ** on l pre) (fun _ -> emp)`.  The
+`loc_id` is proof-level and erased, which leaves `f` a function of no
+arguments whose result is an `stt_div` --- and an `stt_div` is a
+*suspended* computation under `extract_as_impure_effect` (§7), not a
+value.  Custard applied it, so the worker loop runs inline, in the
+spawning thread, forever.  Warning 382 fired --- "Custard erased 1
+parameter(s) of the external `Pulse.Lib.Core.hide_div`" --- so the
+pipeline noticed; what it did next was wrong.  What has to happen is that
+erasing every parameter of a function whose result is an impure-effect
+computation leaves a `unit` parameter behind rather than forcing it.
+That is Pulse effect handling, not test plumbing, and it belongs with the
+bootstrap.
+
+### 126.6 A lambda binder of no representation
+
+`examples/printf` failed in CI and not locally, which is the only kind of
+failure worth a section.  `SimplePrintf.string_of_dirs` has
+
+```
+fun (x : arg_type a) -> match a with
+  | Bool -> string_of_bool x
+  | Int -> string_of_int x
+```
+
+where `arg_type` is a type-level `match`, so Custard works `x`'s type out
+to exactly `TAny`.  `coerce_prog`'s `check` bound such a binder with
+`trust`, which answers `None` for any type containing a `TAny` --- on the
+grounds that a `TAny` *inside* a compound type usually means the type was
+not worked out, and a guess there is worse than silence.  So `infer` on
+`EVar x` answered `None`, no use of `x` got an `Obj.magic`, and since a
+lambda binder is unannotated in the output OCaml inferred `x : bool` from
+the first branch and rejected the second.
+
+A top-level `DLet` binder never had this problem: it binds `Some b.b_ty`
+outright, because a top-level binder is *printed*, so its `TAny` is a
+claim the target has already been told.  The asymmetry was the bug.  A
+binder whose type is **exactly** `TAny` now binds `Some TAny`; a compound
+type keeps `trust`, which is the case the conservatism was for.
+
+The same program showed the other half.  `string_of_dirs ds k 42` applies
+a head whose type peels to two arrows and then a `TAny` --- the rest of
+the application is hiding inside a value of no representation.  That is
+well-typed here and not in the target, which counts arrows.  When the
+expected type is known the existing rule coerced the head; when it is not
+--- a `let`-bound call --- nothing did, and the target saw a two-argument
+function given three.  `over_applied` recognizes the shape and coerces the
+head to `TAny`, which is what the target is given for the same call
+written at the top level.
+
+### 126.7 One test loses a backend, and says so
+
+`tests/floats/Test01` ran the whole of `FStar.Float32` and `FStar.Float64`
+through OCaml and diffed the printed results.  Custard **refuses**
+binary32 on the OCaml backend (error 368, §66.4): OCaml has one float type
+and it is binary64, so a program that computes at binary32 everywhere else
+would quietly compute a different answer here.  The legacy backend did not
+refuse --- it emulated binary32 rounding in a realization, and this test
+was checking that emulation.
+
+So the test keeps its `Float64` half and loses its `Float32` half, with a
+comment in the source saying why and where the coverage went:
+`FloatExtract` in the same directory checks `Float32` against a native
+binary32 through C, and `tests/custard/Floats.fst` checks its arithmetic
+at run time.  Refusing and pointing at the backend that can is a better
+answer than emulating, and this is what that costs.
+
+### 126.8 The F# tests build their own project
+
+`fsharp/tests/{Hello,Test00}` had a hand-written `.fsproj` naming one
+generated source and referencing `ulibfs.fsproj`, the legacy F# backend's
+realized library.  Custard's F# backend emits its own support library and
+its own project (§122), so both files are gone and the rules in
+`fsharp/tests/custard.mk` build what extraction wrote.
+
+They are static pattern rules.  `mk/test.mk` is included first and owns
+`$(OUTPUT_DIR)/%.fs`, and an implicit rule added after it loses however
+specific it is --- the same lesson as `tests/extraction/backends` (§126.2).
+
+Both tests had to grow a `main`.  They had none: each was a module whose
+top-level effect printed, which is a program on the OCaml backend because
+OCaml runs a module's initializers when it loads it.  .NET has no
+load-time execution for an assembly nobody runs, and Custard's F# backend
+emits an `Exe` exactly when the program has an entry point --- so
+`--custard_entry_module` on that backend produces a library that does
+nothing, correctly and silently.  That is a real asymmetry between the two
+backends and it is left standing: Custard compiles standalone programs
+(§4.4), and a standalone program names its entry point.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -21542,3 +22196,12 @@ and this is the failure mode that argument predicts.
 | M10ιΧ | The repository moves to the .NET 10 SDK | §122 targets .NET 10, so the devcontainer, `.github/actions/setup-fstar-deps` and the three `.docker/` images install it --- through Microsoft's `dotnet-install.sh` and tarball rather than apt, since Ubuntu's archive carries whichever SDK was current when the release was cut --- and `DOTNET_ROOT` is exported alongside the `PATH` entry, without which a published apphost looks for its runtime under the system install.  One SDK rather than two means the legacy F# path comes along: the two `global.json`s and the `net8.0` target frameworks under `fsharp/tests` and `examples`.  It builds, after one fix: `ulibfs` failed to compile at `-c Release` with FS2014, "duplicate entry `get_x@10` in method table".  The F# 10 optimizer names an inlined closure after its parameter and the *line* it came from and not the file, `FStar_UInt32.uint_to_t` and `FStar_UInt64.uint_to_t` were both `x` on line 10, and `FStar_UInt128` inlines both.  A compiler defect, visible only under `--optimize+`; the parameter of one of them is renamed with a comment, rather than the optimizer turned off, so that the defect stays visible. §122.16 |
 | M10ιΨ | Two support blocks leave the C header | A generated header is a file a person reads, and every one of them carried eleven lines of `custard_unit` typedef plus, for any program touching a 16-bit float, forty lines of §98 reference material.  Both are now emitted only into a file that mentions the names, which for `custard_unit` is usually neither file: the type is still reachable --- a `ref unit` is a `custard_unit *` and a `noeq` record can hold one --- but the layout pass erases unit fields, a unit-returning function is `void`, and §32.6 drops unit arguments, so the token appeared in the whole 160-program corpus exactly as often as the typedef was emitted and not once more.  The float16 block keeps its `#error` and loses the comment, which is reference material and belongs in the reference; the message names the macro, the attribute and §98.  In the header the check still comes after the `@@custard_c_header` includes, since that is what makes it satisfiable.  Placement is decided by asking whether a rendered file mentions the names, which replaces the `uses_narrow` flag --- set in five places, reset in two --- and is strictly better, because a flag can say that a unit uses a narrow float but not which of its two files does.  `CHGREP_X`/`CHNOGREP_X` pin the header alone, since `CGREP` is over the pair and the whole claim is about which file.  Four new tests, on both sides of each decision. §123 |
 | M10ιΩ | Two F# flags that no longer exist | §122.16's SDK bump left the two legacy projects under `fsharp/tests` passing `--mlcompatibility --langversion:5.0`, which the F# 10 compiler removed and stopped supporting respectively.  Neither was load-bearing: the first is for OCaml-shaped source and these projects compile generated F# against `ulibfs`, and the second was buying the non-conforming indentation that `--strict-indentation-` still gives.  Both projects now carry `ulibfs`'s flags, which is what a project compiling against it should say.  The more useful half is why `make fsharp-all` passed locally and failed in CI: `setup-fstar-deps` skipped the install whenever the image already reported an SDK with the requested major version, so both machines said ".NET 10" and ran different compilers.  The channel is now installed unconditionally and the step echoes the version. §124 |
+| M10κΑ | Rotates, and an arithmetic shift at every width (§125.1--125.4) | `tests/machine_integers` failed six of eight programs under Custard, both causes being a machine-integer operation with no builtin rule.  Without one the extractor inlines the F\* definition, which for `rotate_left` is in terms of `FStar.UInt.to_vec` --- bit vectors as `seq bool`, correct and several hundred instructions where one was wanted.  Worse, it does not compile: `FStar.UInt32.t` is a one-field record, so §26 erases its constructor, but the type is *realized*, so it does not erase with it and the result builds an `int` where an `FStar_UInt32.t` is expected.  The new rule is `(a << s) | (a >> ((n - s) & (n - 1)))`; the mask is the whole point, since a rotate by zero is reachable and the naive complement is then a shift by the width, which is undefined in C.  At a signed width it rotates at the unsigned width of the same size and casts back, because the right shift a rotate needs is the logical one.  `WSizet` is excluded because `width_bits` answers 64 for it and `--custard_sizet_width 32` makes that false.  §119's `shift_arithmetic_right` rule is lifted from `Int128` to every signed width; its comment claimed the narrower ones already got an arithmetic `>>` from the OCaml realization, which was a claim about a fallback that never runs, and was never true of the other four backends at all.  `width_bits` had three copies and is now `Syntax`'s.  `tests/custard/Rotate.fst` is 31 checks across five backends, reporting through its exit code, with the C pinned as well as run. §125 |
+| M10κΒ | `nan` and `inf` become literals | §39.2 wrote down that what a `float_lit` cannot denote --- an infinity, a NaN --- is what `of_literal` does not accept either, on the grounds that those are what an argument reaching C by accident would look like.  `tests/floats/Test01.fst` disagrees: an accident does not spell itself `nan` in an F\* source file, and a program that wants a NaN has no other way to write one, since `FStar.Float64` exposes no operation that builds one from finite arguments.  A refusal is worth having only when there is something else to write.  `float_lit` stops being a record and becomes `FLNum | FLNan | FLInf`, cases rather than magnitudes because `FStarC.Real.real` is a rational and neither value is one; a NaN carries no sign, since nothing F\* exposes can observe one.  Each backend then answers for itself: OCaml and F# have identifiers (`Stdlib.nan`, qualified because `nan` is a plausible name for a program to bind); C has no constant syntax at all and borrows `<math.h>`'s `NAN` and `INFINITY` through `CUSTARD_NAN`/`CUSTARD_INF`, macro names rather than bare because §123 decides placement by asking whether a file *mentions* them and `NAN` is short enough to occur inside a generated identifier; binary16 and bfloat16 encode the patterns by hand, as §66 already does for every other literal at those widths; and karamel cannot, because its `EConstant` carries the literal as text and its grammar is the decimal one, so the crossing is refused the §46.3 way, naming the backend that does accept it.  `FloatSpecial.fst` is seventeen checks of the two observable properties, seven of them routing a literal through the arithmetic so that what is tested is the value the hardware produces. §125.5--125.6 |
+| M10κΓ | The one mangled name a program can read | `FStar.Exception.string_of_exn` is `Printexc.to_string`, which prints the *constructor*, so an exception's emitted OCaml name is the single place where §12.7's mangling is observable from inside the extracted program: `StringOfExn.A` came out as `StringOfExn.StringOfExn_A`.  Mangling exists to keep one flat file collision-free, so it is now applied where there is a collision and not otherwise.  An exception keeps its plain identifier when no other constructor in the file wants that spelling, no other exception wants it either, and it is not one of OCaml's own --- an `exception Not_found` of ours would shadow `Stdlib.Not_found` for the rest of the file, where a hand-written realization that is not generated and does not know may still mean the original.  Two exceptions that want the same short name both stay mangled: giving it to whichever was declared first would make which of them is readable depend on declaration order.  Variant constructors are deliberately left alone --- nothing observes their spelling, and changing it would churn every OCaml golden in the repository for no gain.  `ExnName.fst` has all three cases in one program. §125.7 |
+| M10κΔ | Three ways an `any` fails to be coerced (§125.8--125.9) | Three legacy bug reports, all producing OCaml that did not compile, all one value of type `any` reaching a position that needed a real type.  `Bug734`: `Extract` gave a match node the type of its *first* branch, which for `arg_type d` --- a different type per branch --- was a claim about whichever branch F\* wrote down first, and §111's `narrow_rets` promoted it to a declared signature three passes later, so `def_value Fun` was applied to an argument its own declaration said was not there.  The rule is now to drop the `any` branches and take what is left if it agrees, `any` otherwise; dropping first matters, since one branch that lost its type should not cost a coercion at every use of the match.  `Eta_expand`: the coercion pass reads a scrutinee's type off the branch patterns and consulted constructor and record patterns only, so a match on integer literals found nothing to coerce to and compared an `Obj.t` against an `int`; a constant pattern names a type as precisely as a constructor does.  `Bug2595`: §115 splits a destructuring sub-pattern out from under an `any` field, and asked the *declaration* for the field's type --- `'b` for `dtuple2`, never `any` at any instantiation it can see --- when the answer is in the scrutinee's type, `(bool, any) dtuple2`; the type arguments are now substituted in and the resolved type threaded down through tuples, fields and `any` positions alike.  The coercion pass also fuses a coercion onto a coercion, which §115's output made common.  `tests/custard/AnyPat.fst` is all three in one program. §125.8--125.9 |
+| M10κΕ | An erasable effect returns nothing (§125.10) | `[@@erasable]` on an *effect* says a computation in it has no runtime content, which is `GHOST` declared by a program rather than by `Prims`.  Custard erased the body of such a definition to `()` and left its declared result type alone, so `tests/micro-benchmarks/Erasable.fst` extracted `let eff_test2 (tmp : unit) : Prims.int = ()` --- a declaration disagreeing with its own body, which is worse than either being wrong alone, since §111's `narrow_rets` and every call site believe the signature and only the backend reads the body.  Three places had to agree: `Effects.of_lid` answers `E_Ghost`, `Effects.result_typ` answers `unit`, and `extract_letbinding` asks the erasable question *before* the reifiable one --- an effect defined with a `repr` is reifiable, and reifying `MGhost int` yields `int repr`, which is `int`, the representation of a value that does not exist.  The ordering is the whole fix.  This is not the §5.1 case, where the attribute sits on the definition being extracted and is found on the sigelt; here it sits one level away on the effect and the definition looks ordinary.  `tests/custard/ErasableEff.fst` declares two effects differing in nothing but the attribute, and pins a `unit` result for every definition in the erasable one --- including one whose F\* result type is a function type, since what is erased is the computation and not just a value. §125.10 |
+| M10κΖ | The generic extraction rule runs Custard (§126) | `mk/test.mk`'s one inherited `$(OUTPUT_DIR)/%.ml` rule was the reason the legacy pipeline still had coverage across twenty-odd test directories; it and the `%.fs` rule beside it now run `--codegen Custard`, with `--custard_entry_module` rather than `--custard_main` because these are golden-file tests of what a module extracts to and most have no `main`.  Seven goldens went empty (§126.1): a module holding only an abbreviation, a record or a polymorphic function has nothing for a whole-program monomorphizer to emit, and an empty golden still asserts that extraction succeeded.  `tests/extraction/backends` keeps its legacy legs (§126.2), since deleting them would delete the side-by-side comparison they exist for; the `ml` leg needed a *static pattern rule* to win, because `mk/test.mk` is included at the top of that Makefile and an implicit rule seen first beats a more specific implicit rule seen later.  Six cells of that table retired themselves when §125's rotates and arithmetic shifts landed. §126 |
+| M10κΗ | `noextract_to` names a backend (§126.3) | Custard did not know the attribute existed.  The string it carries is a codegen name, and in the wild it means "this one has a hand-written C implementation" --- `FStar.UInt128`, `FStar.SizeT` and `FStar.Endianness` all use it that way.  `noextract_to_this_backend` recognises `Custard` (every Custard backend), the `--custard_backend` value itself, and `krml` for the three backends producing C or Rust, since Custard's C backend reaches those definitions by the route karamel did.  It is not the ML extraction's special case: there `krml` meant "extract a stub and let karamel drop the body" (`karamel_fixup_qual`) because a second pipeline followed; Custard has none, so the definition is simply not a root.  `tests/custard/NoExtractTo.fst` carries one definition per attribute and is extracted twice, each leg checking that its own is gone and the other's survived.  The *reaching* half remains a gap: §4.3 claimed reaching a `noextract` definition is an error with the request chain, which it is not, on either qualifier or attribute; §4.3 now says so.  `tests/extraction`'s four hand-written `--codegen krml` rules move over at the same time --- three asked their question of the legacy extractor's debug output and now ask it of the generated program, and the fourth's `of_literal` injection warning is a Custard error (380). §126.3 |
+| M10κΘ | The Makefiles that are documentation (§126.4) | `tests/simple_hello`, `tests/dune_hello`, `examples/dependencies` and `examples/data_structures` are the answer to "how do I build an F\* program", written as the smallest Makefile that does it; leaving them on the old pipeline would have left the documentation pointing at it.  `examples/dependencies` gets shorter: its four steps --- dependency graph, verify, extract per module, compile and link the `.cmx` files in dependency order --- collapse to one extraction run and one `ocamlopt`, with `ALL_CHECKED_FILES` as the prerequisite since there are no per-module `.ml` files to name.  `examples/data_structures` shows the other half: it built its program by *appending* `let _ = test()` to the extracted module, which works when a module is a compilation unit; under a whole-program compiler `test` is dead code, so the program is built by naming it, `--custard_main RBTreeIntrinsic.test`.  Neither `hello` has a `main`, which is what `--custard_entry_module` is for.  `examples/layeredeffects/extraction` needed a checking pass of its own, since `--codegen OCaml` checked and extracted in one run and Custard reads implementations; its `--no_cmi` went with it (§4.2).  §126.5 records what stays: the `--codegen Plugin` tests, which need a `.cui` only a Custard-built compiler produces and so wait on the bootstrap; `tests/extraction/backends`'s comparison legs; and the multi-module Pulse dirs that link hand-written OCaml or C. §126.4 |
+| M10κΙ | **Three test suites the migration broke** (§126.6–§126.8) | Done.  CI ran what the local gate had not.  `examples/printf` was two coercion bugs in one program: a lambda binder whose type is exactly `TAny` bound nothing, so no use of it was coerced and OCaml inferred a type from the first `match` branch that the second contradicted; and a call that over-applies a head returning `TAny` was coerced only when the expected type was known, so the same call `let`-bound went out with three arguments to a two-argument function.  `tests/floats/Test01` loses its `Float32` half, which Custard refuses on OCaml by design (§66.4) and the legacy backend emulated; the coverage moves to `FloatExtract` and `tests/custard/Floats.fst`.  `fsharp/tests/{Hello,Test00}` drop their hand-written projects for the one Custard generates, and grow a `main`: .NET has no load-time execution, so a module whose top-level effect prints is a program on OCaml and a library that does nothing on F# |

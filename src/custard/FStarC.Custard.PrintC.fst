@@ -1024,12 +1024,22 @@ let round_ne (num:int) (den:int) : ML int =
    arithmetic and the single rounding is {!round_ne}'s. *)
 let narrow_float_bits (fw:fwidth) (v:float_lit) : ML int =
   let (p, emin, emax) = narrow_params fw in
-  let m = Real.mantissa v.fl_mag in
-  let e10 = Real.exponent v.fl_mag in
+  let ebits = if Float16? fw then 5 else 8 in
+  let sign_bit (neg:bool) : int = if neg then pow_int 2 (p + ebits) else 0 in
+  (* Section 125.5.  Both formats here are encoded by hand, so the special
+     values are encoded by hand too: a saturated exponent, with a zero
+     significand for an infinity and the leading fraction bit set -- a quiet
+     NaN -- for a NaN. *)
+  match v with
+  | FLInf neg -> sign_bit neg + (pow_int 2 ebits - 1) * pow_int 2 p
+  | FLNan -> (pow_int 2 ebits - 1) * pow_int 2 p + pow_int 2 (p - 1)
+  | FLNum (neg, mag) ->
+  let m = Real.mantissa mag in
+  let e10 = Real.exponent mag in
   let (num, den) =
     if e10 >= 0 then (m * pow_int 10 e10, 1)
     else (m, pow_int 10 (- e10)) in
-  let sign = if v.fl_neg then pow_int 2 (p + (if Float16? fw then 5 else 8)) else 0 in
+  let sign = sign_bit neg in
   if num = 0 then sign
   else begin
     let e = ilog2_rat num den in
@@ -1044,7 +1054,6 @@ let narrow_float_bits (fw:fwidth) (v:float_lit) : ML int =
     let q = round_ne n2 d2 in
     (* Rounding may have carried the significand up a binade. *)
     let (q, e) = if q >= pow_int 2 (p + 1) then (q / 2, e + 1) else (q, e) in
-    let ebits = if Float16? fw then 5 else 8 in
     let bias = pow_int 2 (ebits - 1) - 1 in
     if e > emax then sign + (pow_int 2 ebits - 1) * pow_int 2 p   (* infinity *)
     else if q < pow_int 2 p then sign + q                          (* subnormal *)
@@ -1110,6 +1119,30 @@ let unit_support : string =
 
 let mentions_unit (s:string) : bool = BU.contains s "custard_unit"
 
+(* Section 125.5.  A NaN and an infinity are [<math.h>]'s [NAN] and
+   [INFINITY], which is the only portable spelling of either: C has no
+   floating-point constant syntax for them, so a literal cannot be written and
+   a [0.0/0.0] would be a constraint violation in a constant expression.
+
+   They get macro names of their own rather than being emitted bare, for the
+   same reason section 123 gives: placement is decided by asking whether a
+   rendered file mentions the names, and [NAN] is a token short and ordinary
+   enough that a generated identifier could contain it.  [CUSTARD_NAN] cannot
+   be anything but this.
+
+   [NAN] and [INFINITY] are of type [float], which is the narrower of the two
+   and converts to [double] exactly, so one spelling serves both widths. *)
+let float_special_support : string =
+  "#ifndef CUSTARD_FLOAT_SPECIAL_DEFINED\n\
+   #define CUSTARD_FLOAT_SPECIAL_DEFINED\n\
+   #include <math.h>\n\
+   #define CUSTARD_NAN NAN\n\
+   #define CUSTARD_INF INFINITY\n\
+   #endif\n"
+
+let mentions_float_special (s:string) : bool =
+  BU.contains s "CUSTARD_NAN" || BU.contains s "CUSTARD_INF"
+
 let constant (c:constant) : ML string =
   match c with
   | CUnit -> unit_value
@@ -1136,6 +1169,11 @@ let constant (c:constant) : ML string =
      arithmetic would be done at double precision and rounded once at the end.
      No cast, because a cast cannot supply the literal's own type and the
      suffix already does. *)
+  (* Section 125.5.  The special values are macros, so there is no suffix to
+     add: [CUSTARD_NANf] would be an identifier. *)
+  | CFloat (FLNan, fw) when Float32? fw || Float64? fw -> "CUSTARD_NAN"
+  | CFloat (FLInf neg, fw) when Float32? fw || Float64? fw ->
+    if neg then "(-CUSTARD_INF)" else "CUSTARD_INF"
   | CFloat (v, Float32) -> float_lit_to_string v ^ "f"
   | CFloat (v, Float64) -> float_lit_to_string v
   (* Section 66.  At the narrow widths the type is a struct, so there is no
@@ -4051,10 +4089,12 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
      is the first line, so the same rule holds there. *)
   let hdr_narrow = mentions_narrow hdr_body in
   let hdr_unit   = mentions_unit hdr_body in
+  let hdr_fspec  = mentions_float_special hdr_body in
   let hdr =
     header ^
   (match includes with [] -> "" | _ -> "\n" ^ String.concat "\n" includes ^ "\n") ^
     (if hdr_unit then "\n" ^ unit_support else "") ^
+    (if hdr_fspec then "\n" ^ float_special_support else "") ^
     (if hdr_narrow then narrow_support else "") ^
     "\n" ^ hdr_body ^
   "#endif\n" in
@@ -4066,6 +4106,8 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
     "#include \"" ^ base ^ ".h\"\n" ^
     (if not hdr_unit && mentions_unit src_body
      then "\n" ^ unit_support else "") ^
+    (if not hdr_fspec && mentions_float_special src_body
+     then "\n" ^ float_special_support else "") ^
     (if not hdr_narrow && mentions_narrow src_body
      then narrow_support else "") ^
     "\n" ^ src_body in

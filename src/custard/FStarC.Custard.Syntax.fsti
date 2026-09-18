@@ -126,6 +126,13 @@ type iwidth =
     IR width.  Total, because every width F* can write is one the IR has. *)
 val iwidth_of_width : width -> iwidth
 
+(** How many bits a width has.  [WSizet] answers 64, which is a statement
+    about the targets this compiler supports rather than about C: the
+    question is only ever asked by a rule that needs a rotate distance or a
+    representable-range test, and on every target Custard emits for,
+    [size_t] is 64 bits. *)
+val width_bits : iwidth -> int
+
 (** The floating-point formats, section 38.  Named after the source modules
     [FStar.Float32] and [FStar.Float64], and matching karamel's [width] so
     that the krml backend can hand them straight over. *)
@@ -154,13 +161,19 @@ type fwidth =
     number* and [FStarC.Real.real] is canonical, so a sign folded into the
     magnitude would be a sign lost.
 
-    [fl_mag] denotes the exact rational [mantissa * 10^exponent] and is never
-    negative.  What it cannot denote -- an infinity, a NaN -- is what
-    [of_literal]'s grammar does not accept either. *)
-type float_lit = {
-  fl_neg : bool;
-  fl_mag : Real.real;
-}
+    Section 125.5: the special values are their own cases rather than
+    magnitudes, because [FStarC.Real.real] is a rational and neither of them
+    is one.  A NaN has no sign here -- IEEE 754 gives it one, but no operation
+    F\* exposes can observe it, and a literal that could be written two ways
+    and compared equal neither way is worse than one that cannot. *)
+type float_lit =
+  | FLNum of bool & Real.real
+  (** A finite literal: its sign, and its magnitude as the exact rational
+      [mantissa * 10^exponent], which is never negative. *)
+  | FLNan
+  (** A quiet NaN. *)
+  | FLInf of bool
+  (** An infinity, and its sign. *)
 
 type constant =
   | CUnit
@@ -261,8 +274,9 @@ val float_lit_to_string : float_lit -> string
 
 (** Parse the argument of [FStar.Float64.of_literal].  [None] if it is not a
     decimal floating-point literal -- an optional sign, a mantissa with at
-    least one digit and at most one point, and an optional decimal exponent.
-    Section 39.2. *)
+    least one digit and at most one point, and an optional decimal exponent
+    -- and not one of the special spellings [nan], [inf] and [infinity], the
+    last two with an optional sign.  Sections 39.2 and 125.5. *)
 val float_lit_of_string : string -> option float_lit
 
 (** Section 118.  The integer [n] as a literal of format [fw], or [None] when

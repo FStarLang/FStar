@@ -2819,7 +2819,17 @@ and expr_of_term (st:state) (t:term) : ML expr =
     let e = List.fold_left (fun e (_, g, b) ->
               join_eff e (join_eff b.eff (match g with None -> E_Pure | Some g -> g.eff)))
               scrut.eff brs in
-    let ty = match brs with [] -> TAny | (_, _, b) :: _ -> b.ty in
+    (* Section 125.8.  The first branch's type is the whole match's only when
+       the branches agree.  When they do not, the match really does return a
+       value of no common representation, and saying otherwise is a claim the
+       rest of the pipeline believes: [narrow_rets] reads a body's type
+       straight off this node, so a [d:dir -> arg_type d] whose first branch
+       is a [bool] came out declared [bool]. *)
+    let ty =
+      match brs |> List.map (fun (_, _, (b:expr)) -> b.ty)
+                |> List.filter (fun t -> not (TAny? t)) with
+      | [] -> TAny
+      | t :: ts -> if ts |> List.for_all (fun u -> u = t) then t else TAny in
     mk (EMatch (scrut, brs)) ty e
 
   | Tm_ascribed {tm} -> expr_of_term st tm
@@ -3116,10 +3126,12 @@ and local_result (st:state) (ty:typ) (xs:binders) : ML (cty & eff) =
      returns is now the closure the representation describes. *)
   let n_extra = List.length xs - List.length bs in
   let eff, ret =
-    if Effects.is_reifiable (tcenv st) (U.comp_effect_name c)
+    if Effects.is_erasable (tcenv st) c then (E_Ghost, TUnit)
+    else if Effects.is_reifiable (tcenv st) (U.comp_effect_name c)
     then peel n_extra E_Pure
               (ty_of_typ st (Effects.reify_comp (env_for_comp (tcenv st) c) c))
-    else peel n_extra (eff_of_comp st c) (ty_of_typ st (U.comp_result c)) in
+    else peel n_extra (eff_of_comp st c)
+              (ty_of_typ st (Effects.result_typ (tcenv st) c)) in
   (ret, eff)
 
 (* Delete the entries flagged [true].  A flag list shorter than the list being
@@ -5062,9 +5074,15 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
         (* Section 7.5, exactly as below: the binders run out on a reifiable
            comp, so what is left is the representation and the definition is
            pure. *)
+        (* Section 125.10, and before the reification below: an erasable
+           effect is usually defined with a [repr], so it is reifiable too,
+           and reifying it produces the representation of a value that does
+           not exist.  [MGhost int] reifies to [int repr], which is [int]. *)
+        else if k = n && Effects.is_erasable (tcenv st) c'
+        then (E_Ghost, TUnit)
         else if k = n && Effects.is_reifiable (tcenv st) (U.comp_effect_name c')
         then (E_Pure, ty_of_typ st (Effects.reify_comp (env_for_comp benv c') c'))
-        else peel_typ (n - k) (eff_of_comp st c') (U.comp_result c')
+        else peel_typ (n - k) (eff_of_comp st c') (Effects.result_typ (tcenv st) c')
       (* Not an arrow that the term level can see, so what is left is handed
          to the [cty]-level peel -- through {!head_ty}, because the arrows may
          still be behind an abbreviation *there*.  [FStar.Set.set a =
@@ -5073,12 +5091,16 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
          is a perfectly ordinary [TApp] of a two-parameter abbreviation whose
          body is an arrow -- and a [TApp] is not a [TArrow]. *)
       | _ -> peel n e (head_ty st (ty_of_typ st t) 10) in
-  let res_typ = U.comp_result c in
+  let res_typ = Effects.result_typ (tcenv st) c in
   (* Section 7.5: a reifiable result type is replaced by its representation,
      and the definition itself becomes pure -- what it now returns is the
      closure the representation describes. *)
   let eff, ret =
-    if Effects.is_reifiable (tcenv st) (U.comp_effect_name c)
+    (* Section 125.10, before the reification for the same reason as in
+       [peel_typ]: an erasable effect has a [repr] to reify through, and the
+       representation describes a value the program does not hold. *)
+    if Effects.is_erasable (tcenv st) c then (E_Ghost, TUnit)
+    else if Effects.is_reifiable (tcenv st) (U.comp_effect_name c)
     then peel n_extra E_Pure
               (ty_of_typ st (Effects.reify_comp (env_for_comp benv c) c))
     else peel_typ n_extra (eff_of_comp st c) res_typ in
@@ -5333,6 +5355,32 @@ let root_is_erased (st:state) (l:Ident.lident) : ML bool =
     true
   | _ -> false
 
+(* Section 126.3.  [@@noextract_to "krml"] is the backend-specific half of
+   [noextract], and the string it carries is a codegen name.  Custard's own
+   names are its [--custard_backend] values; "krml" is accepted for every
+   backend that produces C or Rust, because that is what the attribute has
+   always meant in the wild -- FStar.UInt128, FStar.SizeT and FStar.Endianness
+   use it to say "this one has a hand-written C implementation", and Custard's
+   C backend reaches the same definitions by the same route.  "Custard" names
+   every Custard backend at once.
+
+   Unlike the ML extraction, Custard does not treat the krml case specially:
+   there is no second pipeline downstream to drop the body later, so the
+   definition is simply not a root here. *)
+let noextract_to_this_backend (se:S.sigelt) : ML bool =
+  let b = Options.custard_backend () in
+  let names = "Custard" :: b ::
+              (if b = "KrmlC" || b = "KrmlRust" || b = "C"
+               then ["krml"; "Krml"] else []) in
+  se.sigattrs |> List.existsb (fun attr ->
+    let hd, args = U.head_and_args_full attr in
+    match (SS.compress hd).n, args with
+    | Tm_fvar fv, [(a, _)] when S.fv_eq_lid fv PC.noextract_to_attr ->
+      (match EMB.try_unembed a EMB.id_norm_cb with
+       | Some (s:string) -> List.contains s names
+       | None -> false)
+    | _ -> false)
+
 let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
          (per_module : S.modul -> ML unit) : ML program =
   let mark' (quiet:bool) (f:flag) (l:Ident.lident) : ML unit =
@@ -5435,7 +5483,8 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
           | Sig_let {lbs=(_, lbs)}
             when not (se.sigquals |> List.existsb (function
                         | NoExtract | Projector _ | Discriminator _ -> true
-                        | _ -> false)) ->
+                        | _ -> false)) &&
+                 not (noextract_to_this_backend se) ->
             lbs |> List.iter (fun lb ->
               match lb.lbname with
               (* A specification is a definition too.  [Null.live r : slprop]

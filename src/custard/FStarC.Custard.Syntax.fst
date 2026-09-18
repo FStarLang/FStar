@@ -88,12 +88,20 @@ let is_pure (e:eff) : bool =
 let rec strip_zeros (m:int) (e:int) : int & int =
   if m <> 0 && m % 10 = 0 then strip_zeros (m / 10) (e + 1) else (m, e)
 
-(* Section 69.  Hand-rolled rather than a regexp: the grammar is three
-   productions and the module has no regexp dependency. *)
 let iwidth_of_width (w:width) : iwidth =
   match w with
   | Int8 -> W8 | Int16 -> W16 | Int32 -> W32 | Int64 -> W64 | Sizet -> WSizet
 
+(* Section 125.4.  Shared rather than copied: [PrintOCaml], [PrintFSharp] and
+   [Builtins] all want it, and a fourth copy would have been the one that
+   disagreed.  [WSizet] answers 64 because that is the default; a caller that
+   cannot tolerate --custard_sizet_width 32 making it false has to say so. *)
+let width_bits (w:iwidth) : int =
+  match w with
+  | W8 -> 8 | W16 -> 16 | W32 -> 32 | W64 -> 64 | W128 -> 128 | WSizet -> 64
+
+(* Section 69.  Hand-rolled rather than a regexp: the grammar is three
+   productions and the module has no regexp dependency. *)
 let template_of_string (s:string) : ML (list tmpl_piece) =
   let cs = String.list_of_string s in
   let flush (acc : list char) (out : list tmpl_piece) : list tmpl_piece =
@@ -138,10 +146,14 @@ let fwidth_to_string (fw:fwidth) : string =
   | BFloat16 -> "bf16"
 
 let float_lit_to_string (f:float_lit) : string =
-  let sign = if f.fl_neg then "-" else "" in
-  let m = Real.mantissa f.fl_mag in
-  let e = Real.exponent f.fl_mag in
-  let plain = Real.to_string f.fl_mag in
+  match f with
+  | FLNan -> "nan"
+  | FLInf neg -> (if neg then "-" else "") ^ "inf"
+  | FLNum (neg, mag) ->
+  let sign = if neg then "-" else "" in
+  let m = Real.mantissa mag in
+  let e = Real.exponent mag in
+  let plain = Real.to_string mag in
   if e = 0 && String.length plain > 24
   then
     let (m, e) = strip_zeros m e in
@@ -149,10 +161,23 @@ let float_lit_to_string (f:float_lit) : string =
   else sign ^ plain
 
 (* Section 39.2.  The grammar is FStarC.Extraction.Krml.valid_float_literal's,
-   which is deliberately narrower than C's: no hex float, no infinity, no NaN,
-   because those are what an [of_literal] argument that reached C by accident
-   would look like. *)
+   which is deliberately narrower than C's: no hex float, no digit separator,
+   no [0x1p3].
+
+   Section 125.5 adds the two special values back.  They were originally left
+   out on the grounds that they are what an [of_literal] argument that reached
+   C by accident would look like -- but an accident does not spell itself
+   [nan] in an F* source file, and a library that wants a NaN has no other way
+   to write one: [FStar.Float64] exposes no operation that builds one and the
+   constant folder will not divide zero by zero for you.  The spellings are
+   the three C accepts with [strtod], minus the parenthesised NaN payload,
+   and [float_lit_to_string] writes back the shortest of them. *)
 let float_lit_of_string (s:string) : option float_lit =
+  match s with
+  | "nan" -> Some FLNan
+  | "inf" | "infinity" | "+inf" | "+infinity" -> Some (FLInf false)
+  | "-inf" | "-infinity" -> Some (FLInf true)
+  | _ ->
   let cs = String.list_of_string s in
   let is_digit (c : FStar.Char.char) : bool =
     let n = BU.int_of_char c in n >= 48 && n <= 57 in
@@ -194,7 +219,7 @@ let float_lit_of_string (s:string) : option float_lit =
   match expo, cs with
   | Some expo, [] ->
     let m = value (ipart @ fpart) in
-    Some { fl_neg = neg; fl_mag = Real.mk m (expo - List.length fpart) }
+    Some (FLNum (neg, Real.mk m (expo - List.length fpart)))
   | _ -> None
 
 (* Section 118.  The significand of [fw], in bits, counting the implicit
@@ -218,7 +243,7 @@ let rec odd_part (n:nat) : Tot nat (decreases n) =
 let float_lit_of_int (fw:fwidth) (n:int) : option float_lit =
   let a : nat = if n < 0 then -n else n in
   if fits_in_bits (odd_part a) (significand_bits fw)
-  then Some { fl_neg = n < 0; fl_mag = Real.mk a 0 }
+  then Some (FLNum (n < 0, Real.mk a 0))
   else None
 
 let int_lit_to_string (v:int) (b:int_base) : string = string_of_int_literal v b
