@@ -1787,6 +1787,20 @@ all: $(OUTPUT_DIR)/SplitHi.out.diff
 
 # These have hand-written targets with their own [all:] lines rather than a
 # list entry, and each consults its own settings in its own recipe.
+# Section 126.3.  [@@noextract_to] names a backend, and drops the definition
+# only on that one.  Extracted twice, and each leg checks that the other leg's
+# definition survived: an attribute that dropped everything would pass a
+# one-sided test.
+CUSTARD_TESTS += NoExtractTo
+FLAGS_NoExtractTo = --custard_entry_module NoExtractTo
+GREP_NoExtractTo += "noExtractTo_only_ocaml"
+GREP_NoExtractTo += "noExtractTo_kept"
+NOGREP_NoExtractTo += "only_c"
+C_TESTS += NoExtractTo
+CGREP_NoExtractTo += "NoExtractTo_only_c"
+CGREP_NoExtractTo += "NoExtractTo_kept"
+CNOGREP_NoExtractTo += "only_ocaml"
+
 # Section 38.  Floating point.  The C test checks its own answers and returns
 # a nonzero exit status if any is wrong; what the greps add is that the
 # arithmetic is C arithmetic at the right *width* -- a Float32 literal without

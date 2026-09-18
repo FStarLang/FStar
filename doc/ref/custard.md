@@ -1280,11 +1280,17 @@ pipeline under `--cmi`, so it is not a new exposure, but it is worth stating.
 
 ### 4.3 Interaction with `noextract` and friends
 
-`noextract` (and `noextract_to "Custard"`) means "do not *emit* a definition
-for this"; since Custard is demand-driven, reaching a `noextract` definition is
-an *error* (with the request chain shown), not a silent skip.  This is a
-deliberate difference from the ML extraction, which quietly drops them
-(`Modul.fst:729`, `sigelt_has_noextract`).  `inline_for_extraction` /
+`noextract` (and `noextract_to "Custard"`, and `noextract_to` naming whichever
+backend is in hand --- see §126.3) means "do not *emit* a definition for this",
+and Custard honours it where it decides what to *root*: `--custard_entry_module`
+skips such a definition.
+
+It does **not** yet honour it on *reach*.  The intent is that, since Custard is
+demand-driven, reaching a `noextract` definition should be an *error* with the
+request chain shown, rather than the silent drop the ML extraction performs
+(`Modul.fst:729`, `sigelt_has_noextract`) --- a silent drop turns a program
+into one with a missing symbol.  Today a definition reached from a root is
+extracted whatever it is marked.  §126.3.  `inline_for_extraction` /
 `unfold` continue to work: they are handled by `Eager_unfolding`/`Inlining` in
 the normalizer, so such definitions are simply never requested.
 
@@ -21639,6 +21645,47 @@ touching them: §125.1--125.3's rotates and arithmetic shifts retired
 remains is `ExtIntNe` on custard-ocaml and `ExtUIntMask` on
 custard-krml-c.
 
+### 126.3 `noextract_to` names a backend
+
+`tests/extraction/NoExtractNorm.fst` asked a question the legacy
+extractor answered in its *debug output*: does a `noextract` definition
+get normalized before being dropped?  The old pipeline normalized every
+top-level `let` and only then decided, which is what `NoExtractNormPerf`
+--- eighteen doubling levels of `inline_for_extraction noextract`, a
+quarter of a million applications --- was there to price.  Custard never
+reaches such a definition: it is not a root, there is nothing to
+normalize and nothing to emit.  That is visible in the generated program,
+so the migrated test greps the output rather than a debug channel, and
+the perf test is a `timeout` around an extraction that takes a tenth of a
+second.
+
+The third definition in that module is `[@@noextract_to "krml"]`, and
+Custard did not know the attribute existed.  The string it carries is a
+codegen name, and in the wild it means "this one has a hand-written C
+implementation": `FStar.UInt128`, `FStar.SizeT` and `FStar.Endianness`
+all use it that way.  `noextract_to_this_backend` now recognises it,
+matching `Custard` (every Custard backend), the `--custard_backend` value
+itself, and `krml` for the three backends that produce C or Rust ---
+Custard's C backend reaches those definitions by the same route karamel
+did.
+
+Unlike the ML extraction it is not a special case: there, `krml` meant
+"extract a stub anyway and let karamel drop the body later"
+(`karamel_fixup_qual`), because there was a second pipeline downstream.
+Custard has none, so the definition is simply not a root.
+
+`tests/custard/NoExtractTo.fst` carries one definition per attribute and
+is extracted twice; each leg checks that its own is gone *and* that the
+other leg's survived, since an attribute that dropped everything would
+pass a one-sided test.
+
+What is still only a rooting filter is the *reaching* half.  §4.3 said
+that reaching a `noextract` definition is an error with the request chain
+shown; it is not, on either the qualifier or the attribute --- a
+definition reached from a root is extracted whatever it is marked.  That
+is a real gap and the §4.3 text now says so rather than describing it as
+done.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -21993,3 +22040,4 @@ custard-krml-c.
 | M10κΔ | Three ways an `any` fails to be coerced (§125.8--125.9) | Three legacy bug reports, all producing OCaml that did not compile, all one value of type `any` reaching a position that needed a real type.  `Bug734`: `Extract` gave a match node the type of its *first* branch, which for `arg_type d` --- a different type per branch --- was a claim about whichever branch F\* wrote down first, and §111's `narrow_rets` promoted it to a declared signature three passes later, so `def_value Fun` was applied to an argument its own declaration said was not there.  The rule is now to drop the `any` branches and take what is left if it agrees, `any` otherwise; dropping first matters, since one branch that lost its type should not cost a coercion at every use of the match.  `Eta_expand`: the coercion pass reads a scrutinee's type off the branch patterns and consulted constructor and record patterns only, so a match on integer literals found nothing to coerce to and compared an `Obj.t` against an `int`; a constant pattern names a type as precisely as a constructor does.  `Bug2595`: §115 splits a destructuring sub-pattern out from under an `any` field, and asked the *declaration* for the field's type --- `'b` for `dtuple2`, never `any` at any instantiation it can see --- when the answer is in the scrutinee's type, `(bool, any) dtuple2`; the type arguments are now substituted in and the resolved type threaded down through tuples, fields and `any` positions alike.  The coercion pass also fuses a coercion onto a coercion, which §115's output made common.  `tests/custard/AnyPat.fst` is all three in one program. §125.8--125.9 |
 | M10κΕ | An erasable effect returns nothing (§125.10) | `[@@erasable]` on an *effect* says a computation in it has no runtime content, which is `GHOST` declared by a program rather than by `Prims`.  Custard erased the body of such a definition to `()` and left its declared result type alone, so `tests/micro-benchmarks/Erasable.fst` extracted `let eff_test2 (tmp : unit) : Prims.int = ()` --- a declaration disagreeing with its own body, which is worse than either being wrong alone, since §111's `narrow_rets` and every call site believe the signature and only the backend reads the body.  Three places had to agree: `Effects.of_lid` answers `E_Ghost`, `Effects.result_typ` answers `unit`, and `extract_letbinding` asks the erasable question *before* the reifiable one --- an effect defined with a `repr` is reifiable, and reifying `MGhost int` yields `int repr`, which is `int`, the representation of a value that does not exist.  The ordering is the whole fix.  This is not the §5.1 case, where the attribute sits on the definition being extracted and is found on the sigelt; here it sits one level away on the effect and the definition looks ordinary.  `tests/custard/ErasableEff.fst` declares two effects differing in nothing but the attribute, and pins a `unit` result for every definition in the erasable one --- including one whose F\* result type is a function type, since what is erased is the computation and not just a value. §125.10 |
 | M10κΖ | The generic extraction rule runs Custard (§126) | `mk/test.mk`'s one inherited `$(OUTPUT_DIR)/%.ml` rule was the reason the legacy pipeline still had coverage across twenty-odd test directories; it and the `%.fs` rule beside it now run `--codegen Custard`, with `--custard_entry_module` rather than `--custard_main` because these are golden-file tests of what a module extracts to and most have no `main`.  Seven goldens went empty (§126.1): a module holding only an abbreviation, a record or a polymorphic function has nothing for a whole-program monomorphizer to emit, and an empty golden still asserts that extraction succeeded.  `tests/extraction/backends` keeps its legacy legs (§126.2), since deleting them would delete the side-by-side comparison they exist for; the `ml` leg needed a *static pattern rule* to win, because `mk/test.mk` is included at the top of that Makefile and an implicit rule seen first beats a more specific implicit rule seen later.  Six cells of that table retired themselves when §125's rotates and arithmetic shifts landed. §126 |
+| M10κΗ | `noextract_to` names a backend (§126.3) | Custard did not know the attribute existed.  The string it carries is a codegen name, and in the wild it means "this one has a hand-written C implementation" --- `FStar.UInt128`, `FStar.SizeT` and `FStar.Endianness` all use it that way.  `noextract_to_this_backend` recognises `Custard` (every Custard backend), the `--custard_backend` value itself, and `krml` for the three backends producing C or Rust, since Custard's C backend reaches those definitions by the route karamel did.  It is not the ML extraction's special case: there `krml` meant "extract a stub and let karamel drop the body" (`karamel_fixup_qual`) because a second pipeline followed; Custard has none, so the definition is simply not a root.  `tests/custard/NoExtractTo.fst` carries one definition per attribute and is extracted twice, each leg checking that its own is gone and the other's survived.  The *reaching* half remains a gap: §4.3 claimed reaching a `noextract` definition is an error with the request chain, which it is not, on either qualifier or attribute; §4.3 now says so.  `tests/extraction`'s four hand-written `--codegen krml` rules move over at the same time --- three asked their question of the legacy extractor's debug output and now ask it of the generated program, and the fourth's `of_literal` injection warning is a Custard error (380). §126.3 |

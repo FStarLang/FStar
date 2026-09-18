@@ -5355,6 +5355,32 @@ let root_is_erased (st:state) (l:Ident.lident) : ML bool =
     true
   | _ -> false
 
+(* Section 126.3.  [@@noextract_to "krml"] is the backend-specific half of
+   [noextract], and the string it carries is a codegen name.  Custard's own
+   names are its [--custard_backend] values; "krml" is accepted for every
+   backend that produces C or Rust, because that is what the attribute has
+   always meant in the wild -- FStar.UInt128, FStar.SizeT and FStar.Endianness
+   use it to say "this one has a hand-written C implementation", and Custard's
+   C backend reaches the same definitions by the same route.  "Custard" names
+   every Custard backend at once.
+
+   Unlike the ML extraction, Custard does not treat the krml case specially:
+   there is no second pipeline downstream to drop the body later, so the
+   definition is simply not a root here. *)
+let noextract_to_this_backend (se:S.sigelt) : ML bool =
+  let b = Options.custard_backend () in
+  let names = "Custard" :: b ::
+              (if b = "KrmlC" || b = "KrmlRust" || b = "C"
+               then ["krml"; "Krml"] else []) in
+  se.sigattrs |> List.existsb (fun attr ->
+    let hd, args = U.head_and_args_full attr in
+    match (SS.compress hd).n, args with
+    | Tm_fvar fv, [(a, _)] when S.fv_eq_lid fv PC.noextract_to_attr ->
+      (match EMB.try_unembed a EMB.id_norm_cb with
+       | Some (s:string) -> List.contains s names
+       | None -> false)
+    | _ -> false)
+
 let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
          (per_module : S.modul -> ML unit) : ML program =
   let mark' (quiet:bool) (f:flag) (l:Ident.lident) : ML unit =
@@ -5457,7 +5483,8 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
           | Sig_let {lbs=(_, lbs)}
             when not (se.sigquals |> List.existsb (function
                         | NoExtract | Projector _ | Discriminator _ -> true
-                        | _ -> false)) ->
+                        | _ -> false)) &&
+                 not (noextract_to_this_backend se) ->
             lbs |> List.iter (fun lb ->
               match lb.lbname with
               (* A specification is a definition too.  [Null.live r : slprop]
