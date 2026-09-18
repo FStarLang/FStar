@@ -11,7 +11,36 @@ let is_rational (x:real) : prop =
 
 let is_irrational (x:real) : prop = ~ (is_rational x)
 
-assume val sqrt_two_irrational : unit -> Lemma (is_irrational (S.sqrt 2.0R))
+let square_difference (a b:int)
+  : Lemma ((a-b)*(a-b) == a*a - 2*a*b + b*b) = ()
+
+let square_product (a b:real)
+  : Lemma ((a *. b) *. (a *. b) == (a *. a) *. (b *. b)) = ()
+
+/// From m^2 = 2*n^2, descend to (2*n-m)^2 = 2*(m-n)^2.
+/// The new denominator m-n is positive and smaller than n.
+let rec sqrt_two_descent (m n:pos)
+  : Lemma (requires m*m == 2*n*n) (ensures False) (decreases n)
+  = assert (n < m /\ m < 2*n);
+    square_difference (2*n) m;
+    square_difference m n;
+    sqrt_two_descent (2*n-m) (m-n)
+
+let sqrt_two_irrational () : Lemma (is_irrational (S.sqrt 2.0R))
+  = S.sqrt_positive 2.0R;
+    S.sqrt_square 2.0R;
+    introduce is_rational (S.sqrt 2.0R) ==> False with begin
+      eliminate exists (m:int) (n:pos).
+        S.sqrt 2.0R == of_int m /. of_int n
+      with begin
+        assert (of_int m == S.sqrt 2.0R *. of_int n);
+        assert (m > 0);
+        square_product (S.sqrt 2.0R) (of_int n);
+        assert (of_int (m*m) == of_int (2*n*n));
+        assert (m*m == 2*n*n);
+        sqrt_two_descent m n
+      end
+    end
 
 /// Dov Jarden, Curiosa No. 339, Scripta Mathematica 19 (1953), p. 229.
 /// Case analysis on whether sqrt(2)^sqrt(2) is rational.
