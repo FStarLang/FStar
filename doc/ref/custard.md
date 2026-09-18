@@ -21773,6 +21773,81 @@ computation leaves a `unit` parameter behind rather than forcing it.
 That is Pulse effect handling, not test plumbing, and it belongs with the
 bootstrap.
 
+### 126.6 A lambda binder of no representation
+
+`examples/printf` failed in CI and not locally, which is the only kind of
+failure worth a section.  `SimplePrintf.string_of_dirs` has
+
+```
+fun (x : arg_type a) -> match a with
+  | Bool -> string_of_bool x
+  | Int -> string_of_int x
+```
+
+where `arg_type` is a type-level `match`, so Custard works `x`'s type out
+to exactly `TAny`.  `coerce_prog`'s `check` bound such a binder with
+`trust`, which answers `None` for any type containing a `TAny` --- on the
+grounds that a `TAny` *inside* a compound type usually means the type was
+not worked out, and a guess there is worse than silence.  So `infer` on
+`EVar x` answered `None`, no use of `x` got an `Obj.magic`, and since a
+lambda binder is unannotated in the output OCaml inferred `x : bool` from
+the first branch and rejected the second.
+
+A top-level `DLet` binder never had this problem: it binds `Some b.b_ty`
+outright, because a top-level binder is *printed*, so its `TAny` is a
+claim the target has already been told.  The asymmetry was the bug.  A
+binder whose type is **exactly** `TAny` now binds `Some TAny`; a compound
+type keeps `trust`, which is the case the conservatism was for.
+
+The same program showed the other half.  `string_of_dirs ds k 42` applies
+a head whose type peels to two arrows and then a `TAny` --- the rest of
+the application is hiding inside a value of no representation.  That is
+well-typed here and not in the target, which counts arrows.  When the
+expected type is known the existing rule coerced the head; when it is not
+--- a `let`-bound call --- nothing did, and the target saw a two-argument
+function given three.  `over_applied` recognizes the shape and coerces the
+head to `TAny`, which is what the target is given for the same call
+written at the top level.
+
+### 126.7 One test loses a backend, and says so
+
+`tests/floats/Test01` ran the whole of `FStar.Float32` and `FStar.Float64`
+through OCaml and diffed the printed results.  Custard **refuses**
+binary32 on the OCaml backend (error 368, §66.4): OCaml has one float type
+and it is binary64, so a program that computes at binary32 everywhere else
+would quietly compute a different answer here.  The legacy backend did not
+refuse --- it emulated binary32 rounding in a realization, and this test
+was checking that emulation.
+
+So the test keeps its `Float64` half and loses its `Float32` half, with a
+comment in the source saying why and where the coverage went:
+`FloatExtract` in the same directory checks `Float32` against a native
+binary32 through C, and `tests/custard/Floats.fst` checks its arithmetic
+at run time.  Refusing and pointing at the backend that can is a better
+answer than emulating, and this is what that costs.
+
+### 126.8 The F# tests build their own project
+
+`fsharp/tests/{Hello,Test00}` had a hand-written `.fsproj` naming one
+generated source and referencing `ulibfs.fsproj`, the legacy F# backend's
+realized library.  Custard's F# backend emits its own support library and
+its own project (§122), so both files are gone and the rules in
+`fsharp/tests/custard.mk` build what extraction wrote.
+
+They are static pattern rules.  `mk/test.mk` is included first and owns
+`$(OUTPUT_DIR)/%.fs`, and an implicit rule added after it loses however
+specific it is --- the same lesson as `tests/extraction/backends` (§126.2).
+
+Both tests had to grow a `main`.  They had none: each was a module whose
+top-level effect printed, which is a program on the OCaml backend because
+OCaml runs a module's initializers when it loads it.  .NET has no
+load-time execution for an assembly nobody runs, and Custard's F# backend
+emits an `Exe` exactly when the program has an entry point --- so
+`--custard_entry_module` on that backend produces a library that does
+nothing, correctly and silently.  That is a real asymmetry between the two
+backends and it is left standing: Custard compiles standalone programs
+(§4.4), and a standalone program names its entry point.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -22129,3 +22204,4 @@ bootstrap.
 | M10κΖ | The generic extraction rule runs Custard (§126) | `mk/test.mk`'s one inherited `$(OUTPUT_DIR)/%.ml` rule was the reason the legacy pipeline still had coverage across twenty-odd test directories; it and the `%.fs` rule beside it now run `--codegen Custard`, with `--custard_entry_module` rather than `--custard_main` because these are golden-file tests of what a module extracts to and most have no `main`.  Seven goldens went empty (§126.1): a module holding only an abbreviation, a record or a polymorphic function has nothing for a whole-program monomorphizer to emit, and an empty golden still asserts that extraction succeeded.  `tests/extraction/backends` keeps its legacy legs (§126.2), since deleting them would delete the side-by-side comparison they exist for; the `ml` leg needed a *static pattern rule* to win, because `mk/test.mk` is included at the top of that Makefile and an implicit rule seen first beats a more specific implicit rule seen later.  Six cells of that table retired themselves when §125's rotates and arithmetic shifts landed. §126 |
 | M10κΗ | `noextract_to` names a backend (§126.3) | Custard did not know the attribute existed.  The string it carries is a codegen name, and in the wild it means "this one has a hand-written C implementation" --- `FStar.UInt128`, `FStar.SizeT` and `FStar.Endianness` all use it that way.  `noextract_to_this_backend` recognises `Custard` (every Custard backend), the `--custard_backend` value itself, and `krml` for the three backends producing C or Rust, since Custard's C backend reaches those definitions by the route karamel did.  It is not the ML extraction's special case: there `krml` meant "extract a stub and let karamel drop the body" (`karamel_fixup_qual`) because a second pipeline followed; Custard has none, so the definition is simply not a root.  `tests/custard/NoExtractTo.fst` carries one definition per attribute and is extracted twice, each leg checking that its own is gone and the other's survived.  The *reaching* half remains a gap: §4.3 claimed reaching a `noextract` definition is an error with the request chain, which it is not, on either qualifier or attribute; §4.3 now says so.  `tests/extraction`'s four hand-written `--codegen krml` rules move over at the same time --- three asked their question of the legacy extractor's debug output and now ask it of the generated program, and the fourth's `of_literal` injection warning is a Custard error (380). §126.3 |
 | M10κΘ | The Makefiles that are documentation (§126.4) | `tests/simple_hello`, `tests/dune_hello`, `examples/dependencies` and `examples/data_structures` are the answer to "how do I build an F\* program", written as the smallest Makefile that does it; leaving them on the old pipeline would have left the documentation pointing at it.  `examples/dependencies` gets shorter: its four steps --- dependency graph, verify, extract per module, compile and link the `.cmx` files in dependency order --- collapse to one extraction run and one `ocamlopt`, with `ALL_CHECKED_FILES` as the prerequisite since there are no per-module `.ml` files to name.  `examples/data_structures` shows the other half: it built its program by *appending* `let _ = test()` to the extracted module, which works when a module is a compilation unit; under a whole-program compiler `test` is dead code, so the program is built by naming it, `--custard_main RBTreeIntrinsic.test`.  Neither `hello` has a `main`, which is what `--custard_entry_module` is for.  `examples/layeredeffects/extraction` needed a checking pass of its own, since `--codegen OCaml` checked and extracted in one run and Custard reads implementations; its `--no_cmi` went with it (§4.2).  §126.5 records what stays: the `--codegen Plugin` tests, which need a `.cui` only a Custard-built compiler produces and so wait on the bootstrap; `tests/extraction/backends`'s comparison legs; and the multi-module Pulse dirs that link hand-written OCaml or C. §126.4 |
+| M10κΙ | **Three test suites the migration broke** (§126.6–§126.8) | Done.  CI ran what the local gate had not.  `examples/printf` was two coercion bugs in one program: a lambda binder whose type is exactly `TAny` bound nothing, so no use of it was coerced and OCaml inferred a type from the first `match` branch that the second contradicted; and a call that over-applies a head returning `TAny` was coerced only when the expected type was known, so the same call `let`-bound went out with three arguments to a two-argument function.  `tests/floats/Test01` loses its `Float32` half, which Custard refuses on OCaml by design (§66.4) and the legacy backend emulated; the coverage moves to `FloatExtract` and `tests/custard/Floats.fst`.  `fsharp/tests/{Hello,Test00}` drop their hand-written projects for the one Custard generates, and grow a `main`: .NET has no load-time execution, so a module whose top-level effect prints is a program on OCaml and a library that does nothing on F# |

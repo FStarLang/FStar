@@ -2891,6 +2891,16 @@ and ctys_mismatch (xs ys : list cty) : ML bool =
 (* The types of [n] arguments and the result, when [c] says enough to tell.  It
    may not: an over-application left behind by inlining, or a head whose own
    type was never worked out. *)
+(* Are there more arguments here than the type has arrows, with a [TAny] where
+   the remaining arrows should be?  Section 126.6: that is an application whose
+   tail is hidden inside a value of no representation. *)
+let rec over_applied (n:int) (c:cty) : bool =
+  if n <= 0 then false
+  else match c with
+       | TArrow (_, _, r) -> over_applied (n - 1) r
+       | TAny -> true
+       | _ -> false
+
 let rec peel_arrows (n:int) (c:cty) : option (list cty & cty) =
   if n <= 0 then Some ([], c)
   else match c with
@@ -3209,14 +3219,26 @@ let coerce_prog (prog:program) : ML program =
     | EFun (bs, body) ->
       (* The expectation, when there is one, is what the binders are; a lambda
          binder is not annotated in the output, so its own [b_ty] is only a
-         hint. *)
+         hint.
+
+         Section 126.6.  With one exception, and it is the case that matters.
+         [trust] answers [None] for anything containing a [TAny], because a
+         [TAny] inside a compound type usually means [Extract] did not work the
+         type out rather than that the value has no representation.  A binder
+         whose type is *exactly* [TAny] is not that: it is the [x : arg_type a]
+         of a type-level match, and [Extract] is saying what it means.  Throwing
+         that away left every use of [x] uncoerced -- and a lambda binder is
+         unannotated, so the target then infers its type from the first use and
+         rejects the second. *)
+      let hint (b:binder) : ML (option cty) =
+        if TAny? b.b_ty then Some TAny else trust b.b_ty in
       let ps, res =
         (match exp with
          | Some t ->
            (match peel_arrows (List.length bs) t with
             | Some (ps, res) -> (ps |> List.map Some, Some res)
-            | None -> (bs |> List.map (fun (b:binder) -> trust b.b_ty), None))
-         | None -> (bs |> List.map (fun (b:binder) -> trust b.b_ty), None)) in
+            | None -> (bs |> List.map hint, None))
+         | None -> (bs |> List.map hint, None)) in
       let env = List.fold_left (fun env ((b:binder), t) -> extend env b.b_name t)
                                env (List.zip bs ps) in
       same (EFun (bs, check env res body))
@@ -3248,6 +3270,16 @@ let coerce_prog (prog:program) : ML program =
                let h = go env None h in
                (match infer env h with
                 | Some TAny -> same (EApp (coerce h TAny, es))
+                (* Section 126.6.  The head is a function, but of fewer
+                   arguments than it is being given, and what it returns after
+                   those is [TAny] -- the rest of the application is hiding
+                   inside a value of no representation.  That is well-typed
+                   here and not in the target, which counts arrows.  One
+                   coercion on the head lets the target infer the whole arrow
+                   from the arguments, which is what it does for the same call
+                   written at the top level. *)
+                | Some t when over_applied (List.length es) t ->
+                  same (EApp (coerce h TAny, es))
                 | _ -> same (EApp (h, es)))))
        (* The head's own type is not worked out well enough to retype the
           call, but a parameter it declares [TAny] is a boundary all the same:

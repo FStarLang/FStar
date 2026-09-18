@@ -2411,6 +2411,14 @@ NOGREP_ExnName += "exception Not_found"
 # the Plain one keeps its int, and no reference to the assumed spec_int
 # survives.  The run is there because a program that does not compile cannot
 # reach its own output.
+# Section 126.6.  A lambda binder of no representation, and a call that
+# over-applies a head that returns one.  Both come from type-level matches.
+CUSTARD_TESTS += AnyLambda
+# The whole point of the test is a value with no representation, so the
+# suite-wide escalation of warning 367 is off for it.
+FLAGS_AnyLambda = --warn_error -367
+GREP_AnyLambda += "Obj.magic"
+
 CUSTARD_TESTS += ErasableEff
 # --custard_main alone would root only what [main] reaches, and what this test
 # is about is precisely the definitions that reach nothing because they were
