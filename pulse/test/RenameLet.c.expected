@@ -47,3 +47,15 @@ uint32_t RenameLet_test_array(uint32_t x)
   return arrayName[0U];
 }
 
+uint32_t RenameLet_test_param(uint32_t x)
+{
+  uint32_t fromParam = x + 1U;
+  uint32_t a = fromParam + fromParam;
+  uint32_t positionAfterField = a + 1U;
+  uint32_t b = positionAfterField + positionAfterField;
+  uint32_t refCell = b;
+  uint32_t v = refCell;
+  refCell = v + 1U;
+  return refCell;
+}
+

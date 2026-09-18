@@ -60,3 +60,16 @@ fn test_array (x: UInt32.t)
   a.(0sz) <- UInt32.add_mod x 1ul;
   a.(0sz)
 }
+
+(* The attribute may mention a parameter of the enclosing `fn`: the name is
+   only known once the (cross-module, inline_for_extraction) helper is inlined
+   at its call site. This requires binder attributes to be substituted along
+   with the rest of the body; see Pulse.Syntax.Naming.subst_binder. *)
+fn test_param (x: UInt32.t)
+  returns y : UInt32.t
+{
+  let a = RenameLetLib.helper_param "fromParam" x;
+  let b = RenameLetLib.helper_concat "Field" a;
+  let c = RenameLetLib.helper_mut "Cell" b;
+  c
+}

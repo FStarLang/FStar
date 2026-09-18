@@ -713,11 +713,23 @@ let rec subst_term_list (t:list term) (ss:subst)
 let open_term_list' (t:list term) (v:term) (i:index)
   : Tot (list term) = subst_term_list t [ RT.DT i v ]
 
+(* Binder attributes may mention variables bound further out (e.g.
+   [@@@rename_let ("positionAfter" ^ name)], where [name] is a parameter of the
+   enclosing [fn]), so they must be substituted just like the binder type.
+   Substituting under the seal is harmless for proofs: by [Sealed.sealed_singl]
+   any two [sealed] values of the same type are provably equal. *)
+let subst_binder_attrs (attrs:FStar.Sealed.Inhabited.sealed #(list term) [])
+                       (ss:subst)
+  : Tot (FStar.Sealed.Inhabited.sealed #(list term) [])
+  = FStar.Sealed.map_seal attrs (fun (l:list term) -> subst_term_list l ss)
+
 let subst_binder b ss = 
-  {b with binder_ty=subst_term b.binder_ty ss}
+  {b with binder_ty=subst_term b.binder_ty ss;
+          binder_attrs=subst_binder_attrs b.binder_attrs ss}
 
 let open_binder b v i = 
-  {b with binder_ty=open_term' b.binder_ty v i}
+  {b with binder_ty=open_term' b.binder_ty v i;
+          binder_attrs=subst_binder_attrs b.binder_attrs [ RT.DT i v ]}
 
 let rec subst_term_pairs (t:list (term & term)) (ss:subst)
   : Tot (list (term & term))
