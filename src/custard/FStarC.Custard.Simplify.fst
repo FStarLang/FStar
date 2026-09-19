@@ -789,6 +789,58 @@ let forwarder_table (prog:program) : ML (SMap.t (int & int)) =
     | _ -> ());
   t
 
+(* Section 129.  May this expression be moved to the places a field of it is
+   read, however many there are?  {!dup_ok} is the same question for a value
+   that is already a variable or a projection; this widens it by the class
+   {!cheap_expr}'s comment calls the same class of work as the [ECast] beside
+   it -- bounded, allocating nothing, and no more expensive to repeat than its
+   operands.  A call or an allocation is *not* in it: re-evaluating one costs,
+   and moving one into a loop costs a great deal.  Purity is required on top,
+   because the fields that are never read disappear. *)
+let rec reeval (e:expr) : ML bool =
+  is_pure e.eff &&
+  (match e.e with
+   | EVar _ | EConst _ | EQual _ -> true
+   | EProj (a, _, _) -> reeval a
+   | EDiscrim (a, _) -> reeval a
+   | ECast (a, _) -> reeval a
+   | ECoerce (a, _) -> reeval a
+   | EOp (_, es) -> es |> List.for_all reeval
+   (* A constructor of [reeval] fields is in the class too, by section 103's
+      argument for {!cheap_expr}: in C it is a compound literal and allocates
+      nothing.  In OCaml it would allocate, but only if it survived, and the
+      only reason this predicate is asked is that every copy is about to be
+      taken apart again.  It has to be here, because a nested tuple is exactly
+      what [let (a, (b, _)) = p] destructures. *)
+   | ECtor (_, es) -> es |> List.for_all reeval
+   | ETuple es -> es |> List.for_all reeval
+   | ERecord (_, fs) -> fs |> List.for_all (fun (_, (e:expr)) -> reeval e)
+   | _ -> false)
+
+(* An [EProj] out of a value that is right there.  The rewrites below leave one
+   behind wherever a field had to be put back together, and this is what makes
+   the reconstruction cost nothing in the case that matters -- a projection out
+   of a field that was itself projected out. *)
+(* Section 129.  Is every occurrence of [v] taken apart on the spot: the
+   scrutinee of a [match], or the target of a projection?  Then a constructor
+   bound to [v] may be substituted for it, because [iota] above and
+   {!unbuild} below take every copy apart again and none of them is ever
+   built. *)
+let rec destructed_only (v:string) (x:expr) : ML bool =
+  let g = destructed_only v in
+  let scrut (s:expr) : ML bool =
+    match s.e with EVar w -> w = v | _ -> g s in
+  let brs_ok (brs:list branch) : ML bool =
+    brs |> List.for_all (fun (b:branch) ->
+      let _, gd, bd = b in
+      (match gd with Some gd -> g gd | None -> true) && g bd) in
+  match x.e with
+  | EVar w -> w <> v
+  | EProj (e1, _, _) -> (match e1.e with EVar w -> w = v || g e1 | _ -> g e1)
+  | EMatch (s, brs) -> scrut s && brs_ok brs
+  | ETry (s, brs) -> g s && brs_ok brs
+  | _ -> for_all_children g x
+
 let rec reduce (x:expr) : ML expr =
   match x.e with
   | EApp (h, args) ->
@@ -842,6 +894,27 @@ let rec reduce (x:expr) : ML expr =
     let e1 = reduce e1 in
     if Options.custard_backend () = "C"
        && EFun? e1.e && count v e2 <= 1 && called_only v e2 then
+      let sm : subst = SMap.create 5 in
+      SMap.add sm v e1;
+      reduce (sub sm e2)
+    (* Section 129.  A constructor that is bound and then only ever taken
+       apart.  [let (a, b) = p] is exactly this shape --- F* binds the
+       scrutinee to [_letpattern] and matches it --- and so is any caller that
+       builds a tuple for an [inline_for_extraction] callee which destructures
+       it.  The binding stops [iota] from ever seeing a constructor, so the
+       tuple is built, named and read back out in the generated code.
+
+       Substituting it is sound because every field is [reeval]: the ones a
+       branch keeps may be moved and repeated, and the ones it discards are
+       pure and so may be dropped --- which is the same pair of conditions
+       [ctor_args_pure] asks of a scrutinee that is a constructor already.
+       [sub] renames as it goes, so a binder of the same name inside [e2]
+       cannot capture. *)
+    else if (match e1.e with
+             | ECtor (_, es) | ETuple es -> es |> List.for_all reeval
+             | ERecord (_, fs) -> fs |> List.for_all (fun (_, (e:expr)) -> reeval e)
+             | _ -> false)
+            && destructed_only v e2 then
       let sm : subst = SMap.create 5 in
       SMap.add sm v e1;
       reduce (sub sm e2)
@@ -2331,10 +2404,40 @@ let ex_take (ex:expansion) (e:expr) : ML (option (list expr)) =
 let strip_inline (c:cty) : cty =
   match c with TInline c -> c | c -> c
 
-(* An [EProj] out of a value that is right there.  The rewrites below leave one
-   behind wherever a field had to be put back together, and this is what makes
-   the reconstruction cost nothing in the case that matters -- a projection out
-   of a field that was itself projected out. *)
+(* Is every occurrence of [v] the target of a projection?  Then a record built
+   out of pieces can be substituted for it however many times it is used:
+   [unbuild] takes every copy apart again and none of them is ever built. *)
+let rec only_projected (v:string) (x:expr) : ML bool =
+  let g = only_projected v in
+  match x.e with
+  | EVar w -> w <> v
+  | EProj (e1, _, _) -> (match e1.e with EVar w -> w = v || g e1 | _ -> g e1)
+  | _ -> for_all_children g x
+
+(* Section 129.  Does [x] bind [v] again anywhere inside it?  Substituting
+   through a binder of the same name would capture, and {!psub} deliberately
+   does not rename.  The four binding forms are the ones {!lift_lambdas}
+   lists. *)
+let rec rebinds (v:string) (x:expr) : ML bool =
+  let g = rebinds v in
+  let rec pv (p:pat) : ML bool =
+    match p with
+    | PVar w -> w = v
+    | PCtor (_, ps) -> ps |> List.existsb pv
+    | PTuple ps -> ps |> List.existsb pv
+    | POr ps -> ps |> List.existsb pv
+    | PRecord (_, fs) -> fs |> List.existsb (fun (_, q) -> pv q)
+    | _ -> false in
+  let br (r:branch) : ML bool =
+    let p, gd, b = r in
+    pv p || (match gd with Some gd -> g gd | None -> false) || g b in
+  match x.e with
+  | ELet (w, _, e1, e2) -> w = v || g e1 || g e2
+  | EFun (bs, b) -> (bs |> List.existsb (fun (b:binder) -> b.b_name = v)) || g b
+  | EMatch (sc, brs) -> g sc || (brs |> List.existsb br)
+  | ETry (a, brs) -> g a || (brs |> List.existsb br)
+  | _ -> exists_child g x
+
 let rec unbuild (infos:SMap.t ctor_info) (x:expr) : ML expr =
   let g = unbuild infos in
   let pick (fs:list (string & expr)) (f:string) : ML (option expr) =
@@ -2358,17 +2461,48 @@ let rec unbuild (infos:SMap.t ctor_info) (x:expr) : ML expr =
                 | None -> alt)
         | None -> alt)
      | _ -> alt)
-  | _ -> map_children g x
 
-(* Is every occurrence of [v] the target of a projection?  Then a record built
-   out of pieces can be substituted for it however many times it is used:
-   [unbuild] takes every copy apart again and none of them is ever built. *)
-let rec only_projected (v:string) (x:expr) : ML bool =
-  let g = only_projected v in
-  match x.e with
-  | EVar w -> w <> v
-  | EProj (e1, _, _) -> (match e1.e with EVar w -> w = v || g e1 | _ -> g e1)
-  | _ -> for_all_children g x
+  (* Section 129.  The same fold one binding away: a constructor that is
+     let-bound and then only ever projected out of.  F*'s [let (a, b) = p]
+     compiles to exactly this, and so does any caller that builds a tuple for
+     an [inline_for_extraction] callee which immediately takes it apart --- the
+     projections have already been pushed into the caller by then, and what is
+     left is a named temporary that nothing else reads.
+
+     Substituting the constructor at each projection is sound because every
+     field is [reeval]: the ones that are read may be moved and repeated, and
+     the ones that are not are pure and so may be dropped.  A field that is a
+     call or an allocation keeps the binding, which is the distinction the
+     discarded-read deletion of section 99 draws as well.
+
+     The [let] itself is then simply gone: [only_projected] says the variable
+     has no other reader.  Nothing here changes a declared type --- a one-field
+     struct behind an erased [unit] tail is still declared, it is just no
+     longer built. *)
+  | ELet (v, t, rhs, b) ->
+    let rhs = g rhs in
+    let b = g b in
+    let alt = { x with e = ELet (v, t, rhs, b) } in
+    let fields =
+      match rhs.e with
+      | ERecord (_, fs) -> Some fs
+      | ECtor (cn, es) ->
+        (match SMap.try_find infos (string_of_name cn) with
+         | Some ci ->
+           if List.length es = List.length ci.ci_fields
+           then Some (List.zip (ci.ci_fields |> List.map fst) es)
+           else None
+         | None -> None)
+      | _ -> None in
+    (match fields with
+     | Some fs when (fs |> List.for_all (fun (_, (e:expr)) -> reeval e))
+                 && only_projected v b && not (rebinds v b) ->
+       let sm : subst = SMap.create 1 in
+       SMap.add sm v rhs;
+       g (psub sm b)
+     | _ -> alt)
+
+  | _ -> map_children g x
 
 let inline_fields (vd:verdicts) (prog:program) : ML program =
   if SMap.keys vd.vd_plans = [] then prog else begin
