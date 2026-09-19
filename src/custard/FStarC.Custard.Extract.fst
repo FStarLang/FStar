@@ -1202,7 +1202,17 @@ let rec hint_of_term (st:state) (fuel:int) (t:term) : ML (option string) =
        | Const_machine_int (v, _, _, _) -> Some (show v)
        | Const_bool b     -> Some (if b then "true" else "false")
        | Const_string (s, _) -> Some s
-       | Const_unit       -> Some "unit"
+       (* [()] names nothing, and saying so is not a style preference.  A
+          precondition reaches a term as a trailing implicit [squash] binder,
+          so [16sz] -- [FStar.SizeT.uint_to_t 16] -- is an application with a
+          [()] in it, and rendering that argument made every specialization on
+          a bounded-integer constant [..._uint_to_t_16_unit].  The component is
+          in every such name, distinguishes none of them from any other, and
+          eats the budget {!fit} has for the components that do.  When [()] is
+          all a specialization has, [hint_of_args] falls back to the sequence
+          number, which is the right answer for an argument that carries no
+          information. *)
+       | Const_unit       -> None
        | _ -> None)
     (* A type-level lambda is how a higher-kinded argument arrives --
        [fun a -> option a] instantiating an [m:Type -> Type] -- and what names
