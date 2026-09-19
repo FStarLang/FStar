@@ -23,7 +23,8 @@ static Pulse_Lib_HashTable_Type_ht_t__uintsize_data Pulse_Lib_HashTable_mk_ht__t
 }
 
 static Pulse_Lib_HashTable_Type_ht_t__uintsize_data Pulse_Lib_HashTable_alloc__t_data(size_t (*hashf)(size_t), size_t l) {
-  if ((l) > SIZE_MAX / sizeof(Pulse_Lib_HashTable_Spec_cell__uintsize_data)) { abort(); }
+  { size_t _csz2 = (size_t)(l);
+    if (_csz2 > SIZE_MAX / sizeof(Pulse_Lib_HashTable_Spec_cell__uintsize_data)) { abort(); } }
   Pulse_Lib_HashTable_Spec_cell__uintsize_data *contents = (Pulse_Lib_HashTable_Spec_cell__uintsize_data *)malloc((l) * sizeof(Pulse_Lib_HashTable_Spec_cell__uintsize_data));
   if (contents == NULL) { abort(); }
   for (size_t _ci1 = 0; _ci1 < (l); _ci1++) {

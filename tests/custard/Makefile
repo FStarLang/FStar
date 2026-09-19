@@ -2428,6 +2428,11 @@ CUSTARD_TESTS += AnyLambda
 FLAGS_AnyLambda = --warn_error -367
 GREP_AnyLambda += "Obj.magic"
 
+# Section 127.  A partial application that erasing the last binder would have
+# turned into a saturated one: the thunk has to be run by [ext], not by the
+# [spawn] that builds it, so the order of the two lines is the assertion.
+CUSTARD_TESTS += ThunkArity
+
 CUSTARD_TESTS += ErasableEff
 # --custard_main alone would root only what [main] reaches, and what this test
 # is about is precisely the definitions that reach nothing because they were

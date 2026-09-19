@@ -35,9 +35,10 @@ FSTAR := $(FSTAR_EXE) --ext optimize_let_vc --ext fly_deps --codegen Custard \
          --cache_dir _cache --include . --include $(PULSE_LIB) \
          --already_cached ',*' --warn_error -321-274-272-241-342
 
-# The direct backend's output includes nothing but <stdint.h> and friends and
-# this example's own header, so there is no krmllib on the include path.
-CFLAGS := -I external/c/dice -Wall -Wextra -Werror -std=c11
+# The direct backend's output includes nothing but <stdint.h> and friends,
+# this example's own header and the realization of Pulse's lock (section
+# 128.2), so there is no krmllib on the include path.
+CFLAGS := -I external/c/dice -I external/c/hacl -Wall -Wextra -Werror -std=c11
 
 .PHONY: all krml direct clean
 all: krml direct
@@ -52,8 +53,10 @@ $(OUT)/DPE.krml: dpe/DPE.fst
 
 krml: $(OUT)/DPE.krml
 	$(KRML) -silent -skip-compilation -no-prefix Custard -warn-error -9 \
-	  -add-include '"EverCrypt_Base.h"' -tmpdir $(OUT)/kout $<
+	  -add-include '"EverCrypt_Base.h"' \
+	  -add-include '"Pulse_Lib_SpinLock.h"' -tmpdir $(OUT)/kout $<
 	cp -p external/c/hacl/EverCrypt_Base.h $(OUT)/kout/
+	cp -p external/c/hacl/Pulse_Lib_SpinLock.h $(OUT)/kout/
 	+$(MAKE) -C $(OUT)/kout -f Makefile.basic Custard.o
 
 # ------------------------------------------------------------- direct-to-C

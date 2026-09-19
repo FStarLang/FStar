@@ -1304,6 +1304,13 @@ let realized_modules : list (list string) = [
   ["FStarC"; "Unionfind"];
   ["FStarC"; "Util"];
   ["Prims"];
+  (* Section 128.  Pulse's lock, which must never be compiled from its F*
+     source: [Pulse.Lib.Primitives.cas] is a *specification* -- a read
+     followed by a write, atomic in Pulse's semantics and not atomic at all
+     once it is C or OCaml -- so the compiled spin lock locks nothing.  The
+     realization is [Pulse_Lib_SpinLock.ml] over OCaml's [Mutex] and
+     [Pulse_Lib_SpinLock.c] over [pthread_mutex_t]. *)
+  ["Pulse"; "Lib"; "SpinLock"];
 ]
 
 (* Section 20.  karamel's Rust backend recognizes [Pulse.Lib.Slice] by name --
@@ -1437,6 +1444,32 @@ let type_only_realized_modules : list (list string) = [
 
 let is_type_only_realized_module (ns : list string) : ML bool =
   type_only_realized_modules |> List.existsb (fun m -> m = ns)
+
+(* Section 128.2.  A realization is hand-written *OCaml* (section 8.2), so a
+   realized module's types keep their F* shape on the C backends: [Prims.list]
+   and [FStar.Pervasives.Native.tuple2] are realized modules, and a C program
+   that could not see their layout could not be compiled at all.
+
+   This table names the modules whose realization is hand-written C as well.
+   There the layout is the realization's, not F*'s: [Pulse.Lib.SpinLock.lock]
+   is a [ref bool] in F* and a [pthread_mutex_t *] in [Pulse_Lib_SpinLock.h],
+   and emitting the F* struct would give the linker two incompatible
+   definitions of one C type -- the second of which no compiler would see.
+   So on a C backend the type becomes an external declared by that header,
+   which is the same treatment [@@custard_extern] gives (section 8.1, kind 4),
+   and the module's values carry the header too, so that the header's own
+   prototypes are the only ones.
+
+   The header's name follows the realization convention the OCaml side already
+   uses: the mangled module name, [Pulse_Lib_SpinLock.h]. *)
+let c_realized_modules : list (list string) = [
+  ["Pulse"; "Lib"; "SpinLock"];
+]
+
+let c_realization_header (ns : list string) : ML (option string) =
+  if c_realized_modules |> List.existsb (fun m -> m = ns)
+  then Some (String.concat "_" ns ^ ".h")
+  else None
 
 (* The hardcoded rules: the registry populated by {!register_rule}, then the
    families matched by the shape of the name. *)

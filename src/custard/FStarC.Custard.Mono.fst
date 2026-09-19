@@ -32,6 +32,7 @@ module TcUtil = FStarC.TypeChecker.Util
 module U     = FStarC.Syntax.Util
 module N     = FStarC.TypeChecker.Normalize
 module Prof  = FStarC.Custard.Prof
+module Effects = FStarC.Custard.Effects
 
 (* Custard reduces terms nobody wrote for it, and reduction need not
    terminate: with [zeta] on, which is the default, a recursive definition is
@@ -350,18 +351,34 @@ let classes_to_string (env:TcEnv.env) (bs:binders) (cs:list bclass) : ML string 
        | c -> bclass_to_string c) :: go bs cs in
   String.concat "; " (go bs cs)
 
+(* Impure in Custard's sense rather than in F*'s, which is section 7.2's
+   whole point: a Pulse [fn f () : stt unit] is a [Tot] function *returning* an
+   [stt] value, and it is the [extract_as_impure_effect] attribute on that
+   value's type constructor, not the comp, that makes the arrow impure. *)
+let impure_codomain (env:TcEnv.env) (c:comp) : ML bool =
+  not (U.is_pure_or_ghost_comp c) ||
+  Some? (Effects.impure_effect_result env (U.comp_result c))
+
 (* The guard that makes deleting a binder from a *definition* safe.  Two things
    can go wrong.  Deleting every binder turns the definition into a value, so
-   its body runs at module initialization instead of when it is called, and any
-   partial application of it at a call site silently becomes a saturated one.
-   And a unit-shaped binder in front of an impure codomain is
-   indistinguishable, from the type alone, from the thunk F* writes the same
-   way -- [unit -> ML a] and [squash p -> ML a] are the same arrow.
+   its body runs at module initialization instead of when it is called.  And
+   deleting the *last* binder in front of an impure codomain turns any partial
+   application of it into a saturated one: [f x] built a closure before and
+   runs the body now.  Section 127.
 
    So the last binder is retained when it is dropped and either the definition
-   would otherwise become a value, or it is unit-shaped and the codomain is
-   impure.  It carries no information -- its argument is [()] either way, see
-   [unit_binders] -- it just keeps the definition a function.  Both the
+   would otherwise become a value, or the codomain is impure.  It carries no
+   information -- its argument is [()] either way, see [unit_binders] -- it
+   just keeps the definition a function.
+
+   The second clause used to require the last binder to be *unit-shaped*, on
+   the grounds that [unit -> ML a] and [squash p -> ML a] are the same arrow
+   and only the first is certainly a thunk.  That is true and is not the
+   hazard: what matters is not what the binder was written as but that a
+   caller may have been holding the arrow it stands in front of.  An erased
+   [#f:perm] at the end of a Pulse [fn] is the common case, and
+   [fork_core (f ())] over a two-binder [f] whose second binder is a proof is
+   the miscompilation that found it.  Both the
    signature and the call sites derive their filtering from the same F* type,
    so they agree without communicating.
 
@@ -375,9 +392,17 @@ let keep_thunk (env:TcEnv.env) (bs:binders) (c:comp) (flags:list bool) : ML (lis
   let last (l:list 'a) : ML (option 'a) =
     match List.rev l with x :: _ -> Some x | [] -> None in
   let becomes_value = Cons? flags && List.for_all (fun b -> b) flags in
-  let is_thunk =
-    not (U.is_pure_or_ghost_comp c) &&
-    (match last bs with Some b -> is_unit_binder b | None -> false) in
+  (* Only an *explicit* last binder.  F* instantiates an implicit at every
+     application, so no partial application can stop in front of one: the
+     arrow a caller can be holding always ends at the last explicit binder.
+     A record field whose type is [r -> c -> #p:perm -> #v:erased bool -> stt]
+     is the case that needs this -- keeping its [#v] costs a parameter the
+     projector's own body has no argument for.  Section 127.2. *)
+  let last_explicit =
+    match last bs with
+    | Some b -> not (S.is_bqual_implicit_or_meta b.binder_qual)
+    | None -> false in
+  let is_thunk = impure_codomain env c && last_explicit in
   if last flags = Some true && (becomes_value || is_thunk)
   then (match List.rev flags with
         | _ :: rest -> List.rev (false :: rest)
