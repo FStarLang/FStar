@@ -3269,6 +3269,16 @@ and prim_app (st:state) (l:Ident.lident) (n:int)
   let args = if None? decl_ty
              then args |> List.filter (fun (a, _) -> not (Mono.is_type_term (tcenv st) a))
              else drop_flagged flags args in
+  (* Which of the arguments that survived the filter are there for arity and
+     for nothing else -- the ones {!Mono.keep_thunk} put back, and the
+     unit-shaped ones.  [app_of_fv'] passes [()] for these ({!call_unit_flags});
+     a rule has nowhere to pass them, because a rule replaces the name outright
+     rather than calling a definition whose arity has to be preserved.  So they
+     are not left over in the sense the warning below means, and applying them
+     to the rule's result is how [Pulse.Lib.Array.null #U32.t], whose rule takes
+     no argument at all, came out as the C expression [NULL()]. *)
+  let unit_kept = if None? decl_ty then []
+                  else drop_flagged flags (binder_flags st "u:" l Mono.unit_binders) in
   (* Section 71.  A rule whose arguments are compile-time data gets them
      reduced first.  This has to happen on the *terms*, before extraction:
      [squares 5] extracts to a call, and a call is not a list of elements
@@ -3317,6 +3327,11 @@ and prim_app (st:state) (l:Ident.lident) (n:int)
   let given, extra =
     if List.length args <= n then args, []
     else List.splitAt n args in
+  let extra =
+    extra |> List.mapi (fun i e -> (i + n, e))
+          |> List.filter (fun (j, _) ->
+               not (j < List.length unit_kept && List.nth unit_kept j))
+          |> List.map snd in
   let missing = n - List.length given in
   if missing > 0
   then
