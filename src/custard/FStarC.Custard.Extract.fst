@@ -2296,6 +2296,16 @@ and const_of_arg (st:state) (t:term) : ML (option constant) =
      [16], and the diagnostic contradicts itself. *)
   let t = U.unmeta (U.unascribe (U.unlazy_emb t)) in
   let h, args = U.head_and_args_full t in
+  (* The [()] a precondition leaves behind is not an argument to look in.
+     [uint_to_t] is [x:nat{fits x} -> Pure t ...], so on this compiler its
+     application is [uint_to_t 16 ()] and its *last* argument -- which is what
+     the wrappers below peel -- is the squash witness.  [const_of_arg] then
+     reported the index of [std::bitset<16>] as [()] and raised error 390
+     about a template argument the source never wrote. *)
+  let args = args |> List.filter (fun (a, _) ->
+    match (SS.compress (U.unmeta (U.unascribe (U.unlazy_emb a)))).n with
+    | Tm_constant Const_unit -> false
+    | _ -> true) in
   (* Section 92.  [X.v] is the inverse of [X.uint_to_t], and after a local
      [let] is delta-reduced the constant comes back spelled as the pair
      rather than as the lazy embedding above: [FStar.SizeT.v
