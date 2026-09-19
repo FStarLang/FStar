@@ -9,7 +9,7 @@
 * Info at NegativeTests.ShortCircuiting.fst(25,11-25,36):
   - Expected failure:
   - Subtyping check failed
-  - Expected type _: Prims.unit{Prims.l_False} got type Prims.unit
+  - Expected type Prims.squash Prims.l_False got type Prims.unit
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
   - In context: u: Prims.unit

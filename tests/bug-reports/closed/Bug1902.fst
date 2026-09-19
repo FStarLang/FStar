@@ -32,7 +32,7 @@ let typOfF (): Tac typ =
 //let None: option term
 //  = _ by (
 //    let Tv_Arrow _ comp = admit (); inspect (typOfF ()) in
-//    let C_Total _ typ = inspect_comp comp in
+//    let typ = (inspect_comp comp).result_typ in
 //    exact (quote typ)
 //  )
 
@@ -43,14 +43,12 @@ let rec mk_tot_arr_decr (bs: list binder) (cod : term) decr : Tac term =
     match bs with
     | [] -> cod
     | (b::bs) -> pack (Tv_Arrow b
-      (pack_comp (C_Eff [pack_universe Uv_Zero]
-                        ["Prims"; "Tot"]
-                        (mk_tot_arr_decr bs cod decr)
-                        (`True)
-                        (`(fun _ -> True))
-                        (if decr_at_every_level || FStar.List.Tot.length bs = 0
-                         then [decr]
-                         else []))))
+      (pack_comp ({ effect_name = tot_effect_name
+                  ; result_typ = mk_tot_arr_decr bs cod decr
+                  ; flags = (if decr_at_every_level || FStar.List.Tot.length bs = 0
+                             then [DECREASES (Decreases_lex [decr])]
+                             else [])
+                  ; source_effect_name = tot_effect_name })))
 
 let craft_f' use_f_type: Tac decls =
   let name = pack_fv (cur_module () @ ["f'" ^ (

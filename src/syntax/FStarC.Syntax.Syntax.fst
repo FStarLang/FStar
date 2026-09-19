@@ -235,13 +235,14 @@ let rec mk_Tm_arrow (bs:binders) (c:comp) p =
     match bs with
     | [] ->
       begin match c.n with
-      | Total t -> t
+      | Comp ct when PC.is_tot_lid ct.effect_name -> ct.result_typ
       | _ -> failwith "mk_Tm_arrow: no binders, and the computation is not Tot"
       end
     | [b] -> mk (Tm_arrow {b; comp=c}) p
     | b::bs ->
       let tail = mk_Tm_arrow bs c p in
-      mk (Tm_arrow {b; comp=mk (Total tail) tail.pos}) p
+      mk (Tm_arrow {b; comp=mk (Comp {effect_name=PC.primitive_pure_lid; result_typ=tail; flags=[];
+                                      source_effect_name=PC.primitive_pure_lid}) tail.pos}) p
 
 let mk_Tm_uinst (t:term) (us:universes) =
   match t.n with
@@ -255,10 +256,15 @@ let mk_Tm_uinst (t:term) (us:universes) =
 let extend_app_n t args' r = mk_Tm_app t args' r
 let extend_app t arg r = extend_app_n t [arg] r
 let mk_Tm_delayed lr pos : ML term = mk (Tm_delayed {tm=fst lr; substs=snd lr}) pos
-let mk_Total t : ML comp = mk (Total t) t.pos
-let mk_GTotal t : ML comp = mk (GTotal t) t.pos
-
 let mk_Comp (ct:comp_typ) : ML comp = mk (Comp ct) ct.result_typ.pos
+
+(* [Tot] and [GTot] are ordinary effect names now. *)
+let mk_Total t : ML comp =
+  mk_Comp ({effect_name=PC.primitive_pure_lid; result_typ=t; flags=[];
+            source_effect_name=PC.primitive_pure_lid})
+let mk_GTotal t : ML comp =
+  mk_Comp ({effect_name=PC.primitive_ghost_lid; result_typ=t; flags=[];
+            source_effect_name=PC.primitive_ghost_lid})
 
 
 let order_bv (x y : bv) : int  = x.index - y.index
@@ -415,26 +421,21 @@ let trivial_pre = fvar PC.true_lid None
    the abstraction matters: the SMT encoder falls back to an imprecise encoding
    of any function literal whose effect it cannot determine. *)
 let post_rc : residual_comp = {
-  residual_effect = PC.effect_Tot_lid;
+  residual_effect = PC.primitive_pure_lid;
   residual_typ = Some (mk (Tm_type U_zero) Range.dummyRange);
-  residual_flags = [TOTAL]
+  residual_flags = []
 }
 
 (* [fun (_:t) -> True], the trivial postcondition for a computation returning [t].
-   Postconditions in a [comp_typ] are always abstracted over the result. *)
+   A postcondition is a refinement of the result type now; this is its shape in
+   the reflection view, which still presents one as an abstraction. *)
 let trivial_post (t:typ) : ML term =
   mk (Tm_abs {b=null_binder t; body=trivial_pre; rc_opt=Some post_rc}) t.pos
 
-(* A computation type with no interesting specification. *)
-let mk_triv_comp (univs:universes) (eff:lident) (t:typ) (flags:list cflag) : ML comp =
-  mk_Comp ({ comp_univs = univs;
-             effect_name = eff;
-             result_typ = t;
-             comp_pre = trivial_pre;
-             comp_post = trivial_post t;
-             flags = flags })
-
-let mk_Tac t : ML comp = mk_triv_comp [U_zero] PC.effect_Tac_lid t []
+(* [Tac] is an abbreviation of [TAC], and a [comp_typ] records the root. *)
+let mk_Tac t : ML comp =
+  mk_Comp ({ effect_name = PC.effect_TAC_lid; result_typ = t; flags = [];
+             source_effect_name = PC.effect_Tac_lid })
 
 let fv_eq fv1 fv2 = lid_equals fv1.fv_name fv2.fv_name
 let fv_eq_lid fv lid = lid_equals fv.fv_name lid

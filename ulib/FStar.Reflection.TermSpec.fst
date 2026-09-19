@@ -86,17 +86,21 @@ and aqualv_spec =
 and binder_spec =
   | Bs : sort:term_spec -> qual:aqualv_spec -> binder_spec
 
+and decreases_order_spec =
+  | Ds_lex : list term_spec -> decreases_order_spec
+  | Ds_wf  : term_spec -> term_spec -> decreases_order_spec
+
+and cflag_spec =
+  | Fs_SMTPAT    : term_spec -> cflag_spec
+  | Fs_DECREASES : decreases_order_spec -> cflag_spec
+
+(* Mirrors [comp_view].  [source_effect_name] is presentation only and has no
+bearing on the type theory, so it is not recorded here. *)
 and comp_spec =
-  | Cs_Total  : term_spec -> comp_spec
-  | Cs_GTotal : term_spec -> comp_spec
-  | Cs_Lemma  : term_spec -> term_spec -> term_spec -> comp_spec
-  | Cs_Eff    : us:list universe_spec ->
-                eff_name:name ->
-                result:term_spec ->
-                pre:term_spec ->
-                post:term_spec ->
-                decrs:list term_spec ->
-                comp_spec
+  | Cs : eff_name : name ->
+         result   : term_spec ->
+         flags    : list cflag_spec ->
+         comp_spec
 
 (* All [Pat_Var]s are provably equal, so [Ps_Var] carries nothing. *)
 and pattern_spec =
@@ -189,15 +193,23 @@ and denote_binder (b:binder) : Tot binder_spec (decreases b) =
   Bs (denote_term bv.sort) (denote_aqualv bv.qual)
 
 and denote_comp (c:comp) : Tot comp_spec (decreases c) =
-  match inspect_comp c with
-  | C_Total t  -> Cs_Total (denote_term t)
-  | C_GTotal t -> Cs_GTotal (denote_term t)
-  | C_Lemma pre post pats -> Cs_Lemma (denote_term pre) (denote_term post) (denote_term pats)
-  | C_Eff us eff res pre post decrs ->
-    Cs_Eff (denote_universes us) eff (denote_term res)
-           (denote_term pre)
-           (denote_term post)
-           (denote_terms decrs)
+  let cv = inspect_comp c in
+  Cs cv.effect_name (denote_term cv.result_typ) (denote_flags cv.flags)
+
+and denote_flags (fs:list cflag) : Tot (list cflag_spec) (decreases fs) =
+  match fs with
+  | [] -> []
+  | f::fs -> denote_flag f :: denote_flags fs
+
+and denote_flag (f:cflag) : Tot cflag_spec (decreases f) =
+  match f with
+  | SMTPAT t -> Fs_SMTPAT (denote_term t)
+  | DECREASES d -> Fs_DECREASES (denote_decreases_order d)
+
+and denote_decreases_order (d:decreases_order) : Tot decreases_order_spec (decreases d) =
+  match d with
+  | Decreases_lex ts -> Ds_lex (denote_terms ts)
+  | Decreases_wf rel e -> Ds_wf (denote_term rel) (denote_term e)
 
 and denote_args (a:list argv) : GTot (list (term_spec & aqualv_spec)) (decreases a) =
   match a with
@@ -434,17 +446,22 @@ and subst_binder_spec (b:binder_spec) (ss:subst_spec)
 
 and subst_comp_spec (c:comp_spec) (ss:subst_spec)
   : GTot comp_spec (decreases c)
-  = match c with
-    | Cs_Total t  -> Cs_Total (subst_term_spec t ss)
-    | Cs_GTotal t -> Cs_GTotal (subst_term_spec t ss)
-    | Cs_Lemma pre post pats ->
-      Cs_Lemma (subst_term_spec pre ss) (subst_term_spec post ss) (subst_term_spec pats ss)
-    | Cs_Eff us eff res pre post decrs ->
-      Cs_Eff us eff
-             (subst_term_spec res ss)
-             (subst_term_spec pre ss)
-             (subst_term_spec post ss)
-             (subst_terms_spec decrs ss)
+  = let Cs eff res flags = c in
+    Cs eff (subst_term_spec res ss) (subst_flags_spec flags ss)
+
+and subst_flags_spec (fs:list cflag_spec) (ss:subst_spec)
+  : GTot (list cflag_spec) (decreases fs)
+  = match fs with
+    | [] -> []
+    | f::fs -> subst_flag_spec f ss :: subst_flags_spec fs ss
+
+and subst_flag_spec (f:cflag_spec) (ss:subst_spec)
+  : GTot cflag_spec (decreases f)
+  = match f with
+    | Fs_SMTPAT t -> Fs_SMTPAT (subst_term_spec t ss)
+    | Fs_DECREASES (Ds_lex ts) -> Fs_DECREASES (Ds_lex (subst_terms_spec ts ss))
+    | Fs_DECREASES (Ds_wf rel e) ->
+      Fs_DECREASES (Ds_wf (subst_term_spec rel ss) (subst_term_spec e ss))
 
 and subst_terms_spec (ts:list term_spec) (ss:subst_spec)
   : GTot (list term_spec) (decreases ts)

@@ -197,6 +197,8 @@ let builtin_embeddings : list (Ident.lident & embedding_data) =
     (RC.fstar_refl_data_lid  "universe_view",  {arity=0; syn_emb=refl_emb_lid "e_universe_view";  nbe_emb=Some(nbe_refl_emb_lid "e_universe_view")});
     (RC.fstar_refl_data_lid  "term_view",      {arity=0; syn_emb=refl_emb_lid "e_term_view";      nbe_emb=Some(nbe_refl_emb_lid "e_term_view")});
     (RC.fstar_refl_data_lid  "comp_view",      {arity=0; syn_emb=refl_emb_lid "e_comp_view";      nbe_emb=Some(nbe_refl_emb_lid "e_comp_view")});
+    (RC.fstar_refl_data_lid  "cflag",          {arity=0; syn_emb=refl_emb_lid "e_cflag";          nbe_emb=Some(nbe_refl_emb_lid "e_cflag")});
+    (RC.fstar_refl_data_lid  "decreases_order",{arity=0; syn_emb=refl_emb_lid "e_decreases_order";nbe_emb=Some(nbe_refl_emb_lid "e_decreases_order")});
     (RC.fstar_refl_data_lid  "lb_view",        {arity=0; syn_emb=refl_emb_lid "e_lb_view";        nbe_emb=Some(nbe_refl_emb_lid "e_lb_view")});
     (RC.fstar_refl_data_lid  "sigelt_view",    {arity=0; syn_emb=refl_emb_lid "e_sigelt_view";    nbe_emb=Some(nbe_refl_emb_lid "e_sigelt_view")});
     (RC.fstar_refl_data_lid  "qualifier",      {arity=0; syn_emb=refl_emb_lid "e_qualifier";      nbe_emb=Some(nbe_refl_emb_lid "e_qualifier")});
@@ -530,7 +532,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
              arity,
              true)
           end
-          else if Ident.lid_equals (FStarC.TypeChecker.Env.norm_eff_name tcenv (U.comp_effect_name c))
+          else if Ident.lid_equals (U.comp_effect_name c)
                                     PC.effect_TAC_lid
           then begin
             let h = mk_tactic_interpretation loc non_tvar_arity in

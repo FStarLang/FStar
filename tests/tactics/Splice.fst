@@ -55,12 +55,10 @@ let _ = assert (x == 42)
       lb_fv = recursive_fv
     ; lb_us = []
     ; lb_typ = mk_arr [n]
-        (pack_comp (C_Eff [pack_universe (Uv_Succ (pack_universe Uv_Zero))]
-                          ["Prims"; "Tot"]
-                          (`Type0)
-                          (`True)
-                          (`(fun _ -> True))
-                          [`(10 - (`#(binder_to_term n)))]))
+        (pack_comp ({ effect_name = tot_effect_name
+                    ; result_typ = (`Type0)
+                    ; flags = [DECREASES (Decreases_lex [`(10 - (`#(binder_to_term n)))])]
+                    ; source_effect_name = tot_effect_name }))
     ; lb_def = `(fun n -> if n>=10 then int else int & (`#recursive) (n + 1));
     }]}
     )

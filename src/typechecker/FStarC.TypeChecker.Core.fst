@@ -528,21 +528,17 @@ let rec is_arrow (g:env) (t:term)
           else (
             let Comp ct = c.n in
             let e_tag =
-              if Ident.lid_equals ct.effect_name PC.effect_Pure_lid  ||
+              if U.is_pure_effect ct.effect_name ||
                  Ident.lid_equals ct.effect_name PC.effect_Lemma_lid
               then Some E_Total
-              else if Ident.lid_equals ct.effect_name PC.effect_Ghost_lid
+              else if U.is_ghost_effect ct.effect_name
               then Some E_Ghost
               else None
             in
-            (* Turn   x:t -> Pure/Ghost t' pre post
-               into   x:t{pre} -> Tot/GTot (y:t'{post})
-
-               This is ok for pre.
-               But, it loses precision for post.
-               In effect form, the post is in scope for the entire continuation.
-               Whereas the refinement on the result is not.
-             *)
+            (* A [Pure]/[Ghost] arrow carries no specification any more -- its
+               precondition is an implicit binder and its postcondition is part
+               of the result type -- so it is already in the [Tot]/[GTot] shape
+               this wants. *)
             match e_tag with
             | None ->
               fail [
@@ -556,16 +552,7 @@ let rec is_arrow (g:env) (t:term)
                   (show x)
                   (show x.binder_bv.sort)
                   (show c));
-              let pre, post = U.comp_pre c, U.comp_post c in
-              let arg_typ = U.refine x.binder_bv pre in
-              let res_typ =
-                let g, r = new_binder g (U.comp_result c) (U.comp_result c).pos in
-                let post = S.mk_Tm_app post [(S.bv_to_name r.binder_bv, None)] post.pos in
-                U.refine r.binder_bv post
-              in
-              let xbv = { x.binder_bv with sort = arg_typ } in
-              let x = { x with binder_bv = xbv } in
-              return (x, e_tag, res_typ)
+              return (x, e_tag, U.comp_result c)
           )
 
         | Tm_refine {b=x} ->
@@ -1165,6 +1152,22 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
         maybe_unfold_and_retry t0 t1
 
 
+      (* [squash p] is definitionally [_:unit{p}], so relating two squashed
+         propositions by subtyping is an implication between them. Without this
+         rule, the congruence rule for applications below would instead demand
+         that the two propositions be *equal*, which is much too strong: it is
+         what a caller runs into whenever the postcondition of a lemma is not
+         syntactically the goal it is used to justify. *)
+      | _, _ when SUBTYPING? rel
+               && guard_ok
+               && Some? (U.is_squash t0)
+               && Some? (U.is_squash t1) ->
+        let p0 = Some?.v (U.is_squash t0) in
+        let p1 = Some?.v (U.is_squash t1) in
+        if equal_term p0 p1
+        then return ()
+        else guard g (U.mk_imp p0 p1)
+
       | Tm_refine {b=x0; phi=f0}, Tm_refine {b=x1; phi=f1} ->
         if head_matches x0.sort x1.sort
         then (
@@ -1426,17 +1429,14 @@ and check_relation_comp (g:env) rel (c0 c1:comp)
           check_relation_args g EQUALITY args0 args1
         in
         let eff0, res0 = U.comp_eff_name_and_res c0 in
-        let args0 = [U.comp_pre c0 |> as_arg; U.comp_post c0 |> as_arg] in
         let eff1, res1 = U.comp_eff_name_and_res c1 in
-        let args1 = [U.comp_pre c1 |> as_arg; U.comp_post c1 |> as_arg] in
         if I.lid_equals eff0 eff1
-        then ct_eq res0 args0 res1 args1
+        then ct_eq res0 [] res1 []
         else (
-          let ct0 = Env.unfold_effect_abbrev g.tcenv c0 in
-          let ct1 = Env.unfold_effect_abbrev g.tcenv c1 in
+          let ct0 = U.comp_to_comp_typ c0 in
+          let ct1 = U.comp_to_comp_typ c1 in
           if I.lid_equals ct0.effect_name ct1.effect_name
-          then ct_eq ct0.result_typ [ct0.comp_pre |> as_arg; ct0.comp_post |> as_arg]
-                     ct1.result_typ [ct1.comp_pre |> as_arg; ct1.comp_post |> as_arg]
+          then ct_eq ct0.result_typ [] ct1.result_typ []
           else
             fail [
               text "Subcomp failed: Unequal computation types"
@@ -1675,14 +1675,21 @@ and do_check (g:env) (e:term)
     else fail_str (Format.fmt1 "Effect ascriptions are not fully handled yet: %s" (show c))
 
   | Tm_let {lbs=(false, [lb]); body} ->
-    let Inl x = lb.lbname in
-    let g', x, body = open_term g (S.mk_binder x) body in
+    let Inl x0 = lb.lbname in
     if U.is_pure_or_ghost_effect lb.lbeff
     then (
       let! eff_def, tdef = check "let definition" g lb.lbdef in
-      let! _, ttyp = check "let type" g lb.lbtyp in
+      (* A [let] appearing inside a *type* may still carry the annotation the
+         desugarer left, i.e. none at all: not every producer of a term runs it
+         through the elaborator first. The definition's own type is then the
+         only annotation there is, and it needs no separate check. *)
+      let unannotated = Tm_unknown? (Subst.compress lb.lbtyp).n in
+      let lbtyp = if unannotated then tdef else lb.lbtyp in
+      let x0 = if unannotated then { x0 with sort = tdef } else x0 in
+      let g', x, body = open_term g (S.mk_binder x0) body in
+      let! _, ttyp = check "let type" g lbtyp in
       let! u = is_type g ttyp in
-      with_context "let subtyping" None (fun _ -> check_subtype g (Some lb.lbdef) tdef lb.lbtyp) ;!
+      with_context "let subtyping" None (fun _ -> check_subtype g (Some lb.lbdef) tdef lbtyp) ;!
       with_definition g x u lb.lbdef (
         let! eff_body, t = check "let body" g' body in
         check_no_escape [x] t;!
@@ -1864,39 +1871,20 @@ and check_binders (g_initial:env) (xs:binders)
 and check_comp (g:env) (c:comp)
   : ML (result universe)
   = match c.n with
-    | Total t
-    | GTotal t ->
+    (* [Tot] and [GTot] are primitive: they have no signature to apply and no
+       representation, so all there is to check is that the result is a type. *)
+    | Comp ct when PC.is_tot_or_gtot_lid ct.effect_name ->
       let! _, t = check "(G)Tot comp result" g (U.comp_result c) in
       is_type g t
     | Comp ct ->
-      if List.length ct.comp_univs <> 1
-      then fail_str "Unexpected/missing universe instantitation in comp"
-      else let u = List.hd ct.comp_univs in
-           let effect_app_tm =
-             let head = S.mk_Tm_uinst (S.fvar ct.effect_name None) [u] in
-             S.mk_Tm_app head [as_arg ct.result_typ] ct.result_typ.pos in
-           let! _, t = check "effectful comp" g effect_app_tm in
-           with_context "comp fully applied" None (fun _ -> check_subtype g None t S.teff);!
-           let c_lid = Env.norm_eff_name g.tcenv ct.effect_name in
-           let is_total = Env.lookup_effect_quals g.tcenv c_lid |> List.existsb (fun q -> q = S.TotalEffect) in
-           if not is_total
-           then return S.U_zero  //if it is a non-total effect then u0
-           else if U.is_pure_or_ghost_effect c_lid
-           then return u
-           else (
-              match Env.effect_repr g.tcenv c u with
-              | None ->
-                 fail [
-                  flow (break_ 1) [
-                    text "Total effect";
-                    fquotes (pp (U.comp_effect_name c));
-                    text "(normalized to";
-                    fquotes (pp c_lid) ^^ doc_of_string ")";
-                    text "does not have a representation.";
-                  ]
-                 ]
-              | Some tm -> universe_of g tm
-           )
+      (* A comp is its effect name applied to the result type. *)
+      let u = g.tcenv.universe_of g.tcenv ct.result_typ in
+      let effect_app_tm =
+        let head = S.mk_Tm_uinst (S.fvar ct.effect_name None) [u] in
+        S.mk_Tm_app head [as_arg ct.result_typ] ct.result_typ.pos in
+      let! _, t = check "effectful comp" g effect_app_tm in
+      with_context "comp fully applied" None (fun _ -> check_subtype g None t S.teff);!
+      return (Env.effect_universe g.tcenv ct.effect_name u)
 
 and universe_of (g:env) (t:typ)
   : ML (result universe)

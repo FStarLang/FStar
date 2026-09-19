@@ -124,7 +124,7 @@ let generate_all (nm:name) (params:binders) (ctors : list ctor) : Tac decls =
     lbs = [{
       lb_fv = pack_fv (add_suffix "_repr" nm);
       lb_us = [];
-      lb_typ = mk_arr params <| C_Total (`Type);
+      lb_typ = mk_arr params <| mk_tot_comp (`Type);
       lb_def = mk_abs params t_repr;
     }]
   }
@@ -141,7 +141,7 @@ let generate_all (nm:name) (params:binders) (ctors : list ctor) : Tac decls =
       lbs = [{
         lb_fv = pack_fv (add_suffix "_down" nm);
         lb_us = [];
-        lb_typ = mk_tot_arr params_i <| Tv_Arrow b (C_Total t_repr);
+        lb_typ = mk_tot_arr params_i <| Tv_Arrow b (mk_tot_comp t_repr);
         lb_def = down_def;
       }]
   }
@@ -157,7 +157,7 @@ let generate_all (nm:name) (params:binders) (ctors : list ctor) : Tac decls =
       lbs = [{
         lb_fv = pack_fv (add_suffix "_up" nm);
         lb_us = [];
-        lb_typ = mk_tot_arr params_i <| Tv_Arrow b (C_Total t);
+        lb_typ = mk_tot_arr params_i <| Tv_Arrow b (mk_tot_comp t);
         lb_def = up_def;
       }]
   }

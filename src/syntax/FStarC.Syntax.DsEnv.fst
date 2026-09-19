@@ -871,7 +871,8 @@ let try_lookup_effect_name env l : ML _ =
 let try_lookup_effect_name_and_attributes env l : ML _ =
     match try_lookup_effect_name' (not env.iface) env l with
         | Some ({ sigel = Sig_new_effect(ne) }, l) -> Some (l, ne.cattributes)
-        | Some ({ sigel = Sig_effect_abbrev {cflags=cattributes} }, l) -> Some (l, cattributes)
+        (* An effect abbreviation is a bare alias; it carries no attributes. *)
+        | Some ({ sigel = Sig_effect_abbrev _ }, l) -> Some (l, [])
         | _ -> None
 let try_lookup_effect_defn env l : ML _ =
     match try_lookup_effect_name' (not env.iface) env l with
@@ -881,27 +882,17 @@ let is_effect_name env lid : ML _ =
     match try_lookup_effect_name env lid with
         | None -> false
         | Some _ -> true
-(* Same as [try_lookup_effect_name], but also traverses effect
-abbrevs. TODO: once indexed effects are in, also track how indices and
-other arguments are instantiated. *)
+
+(* Same as [try_lookup_effect_name], but resolves an effect abbreviation to the
+   effect it names.  No chain walking is needed: [Sig_effect_abbrev] stores an
+   already-flattened root, because the node is built that way (see
+   [ToSyntax.desugar_tycon]). *)
 let try_lookup_root_effect_name env l : ML _ =
     match try_lookup_effect_name' (not env.iface) env l with
-	| Some ({ sigel = Sig_effect_abbrev {lid=l'} }, _) ->
-	  let rec aux new_name : ML _ =
-	      match SMap.try_find (sigmap env) (string_of_lid new_name) with
-	      | None -> None
-	      | Some (s, _) ->
-	        begin match s.sigel with
-		| Sig_new_effect(ne)
-		  -> Some (set_lid_range ne.mname (range_of_lid l))
-		| Sig_effect_abbrev {comp=cmp} ->
-                  let l'' = U.comp_effect_name cmp in
-		  aux l''
-	        | _ -> None
-		end
-	  in aux l'
-	| Some (_, l') -> Some l'
-	| _ -> None
+    | Some ({ sigel = Sig_effect_abbrev {root} }, _) ->
+      Some (set_lid_range root (range_of_lid l))
+    | Some (_, l') -> Some l'
+    | _ -> None
 
 let lookup_letbinding_quals_and_attrs env lid : ML _ =
   let k_global_def lid = function

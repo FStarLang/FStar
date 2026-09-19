@@ -125,7 +125,7 @@ let effect_as_etag :
   fun g ->
     fun l ->
       let l1 = delta_norm_eff g l in
-      if FStarC_Ident.lid_equals l1 FStarC_Parser_Const.effect_PURE_lid
+      if FStarC_Syntax_Util.is_pure_effect l1
       then FStarC_Extraction_ML_Syntax.E_PURE
       else
         (let uu___ =
@@ -2382,8 +2382,8 @@ and term_as_mlexpr (g : FStarC_Extraction_ML_UEnv.uenv)
   | (e1, f, t) ->
       let uu___1 = maybe_promote_effect e1 f t in
       (match uu___1 with | (e2, f1) -> (e2, f1, t))
-and term_as_mlexpr' (g : FStarC_Extraction_ML_UEnv.uenv)
-  (top : FStarC_Syntax_Syntax.term) :
+and term_as_mlexpr' (normalize_top_level_lets : Prims.bool)
+  (g : FStarC_Extraction_ML_UEnv.uenv) (top : FStarC_Syntax_Syntax.term) :
   (FStarC_Extraction_ML_Syntax.mlexpr * FStarC_Extraction_ML_Syntax.e_tag *
     FStarC_Extraction_ML_Syntax.mlty)=
   let top1 = FStarC_Syntax_Subst.compress top in
@@ -3698,7 +3698,7 @@ and term_as_mlexpr' (g : FStarC_Extraction_ML_UEnv.uenv)
         | (lbs1, e'1) ->
             let orig_lbs = lbs1 in
             let lbs2 =
-              if top_level
+              if top_level && normalize_top_level_lets
               then
                 let tcenv =
                   let uu___2 =
@@ -4123,6 +4123,15 @@ and term_as_mlexpr' (g : FStarC_Extraction_ML_UEnv.uenv)
                                       (FStarC_Extraction_ML_Syntax.MLE_Match
                                          (e1, mlbranches2))), f_match,
                                     t_match)))))))
+let term_as_mlexpr_without_top_level_normalization
+  (g : FStarC_Extraction_ML_UEnv.uenv) (e : FStarC_Syntax_Syntax.term) :
+  (FStarC_Extraction_ML_Syntax.mlexpr * FStarC_Extraction_ML_Syntax.e_tag *
+    FStarC_Extraction_ML_Syntax.mlty)=
+  let uu___ = term_as_mlexpr' false g e in
+  match uu___ with
+  | (e1, f, t) ->
+      let uu___1 = maybe_promote_effect e1 f t in
+      (match uu___1 with | (e2, f1) -> (e2, f1, t))
 let ind_discriminator_body (env : FStarC_Extraction_ML_UEnv.uenv)
   (discName : FStarC_Ident.lident) (constrName : FStarC_Ident.lident) :
   FStarC_Extraction_ML_Syntax.mlmodule1=
@@ -4244,5 +4253,5 @@ let ind_discriminator_body (env : FStarC_Extraction_ML_UEnv.uenv)
                                FStarC_Extraction_ML_Syntax.mllb_meta = [];
                                FStarC_Extraction_ML_Syntax.print_typ = false
                              }])))))
-let uu___0 : unit= register_pre_translate term_as_mlexpr'
+let uu___0 : unit= register_pre_translate (term_as_mlexpr' true)
 let uu___1 : unit= register_pre_translate_typ translate_term_to_mlty'

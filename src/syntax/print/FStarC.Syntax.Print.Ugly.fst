@@ -412,37 +412,33 @@ and args_to_string args : ML string =
 and comp_to_string c : ML string =
     Errors.with_ctx "While ugly-printing a computation" (fun () ->
     match c.n with
-    | Total t ->
-      begin match (compress t).n with
-        | Tm_type _ when not (Options.print_implicits() || Options.print_universes()) -> term_to_string t
-        | _ -> Format.fmt1 "Tot %s" (term_to_string t)
-      end
-    | GTotal t ->
-      begin match (compress t).n with
-        | Tm_type _ when not (Options.print_implicits() || Options.print_universes()) -> term_to_string t
-        | _ -> Format.fmt1 "GTot %s" (term_to_string t)
-      end
     | Comp c ->
+        (* Printing is presentation, so it goes by the name the user wrote
+           rather than the root effect the desugarer resolved it to. *)
+        let eff = c.source_effect_name in
+        (* [Tot t] and [GTot t] where [t] is a type are printed bare, as [t]. *)
+        let is_bare_type () =
+          Tm_type? (compress c.result_typ).n
+          && not (Options.print_implicits() || Options.print_universes())
+          && Nil? c.flags
+        in
         let basic =
           if (Options.print_effect_args())
-          then Format.fmt "%s<%s> (%s) (requires %s) (ensures %s) (attributes %s)"
-                            [sli c.effect_name;
-                             c.comp_univs |> List.map univ_to_string |> String.concat ", ";
+          then Format.fmt "%s (%s) (attributes %s)"
+                            [sli eff;
                              term_to_string c.result_typ;
-                             term_to_string c.comp_pre;
-                             term_to_string c.comp_post;
                              cflags_to_string c.flags]
-          else if c.flags |> U.for_some (function TOTAL -> true | _ -> false)
-          && not (Options.print_effect_args())
-          then Format.fmt1 "Tot %s" (term_to_string c.result_typ)
+          else if C.is_gtot_lid eff
+          then (if is_bare_type () then term_to_string c.result_typ
+                else Format.fmt1 "GTot %s" (term_to_string c.result_typ))
+          else if C.is_tot_lid eff
+          then (if is_bare_type () then term_to_string c.result_typ
+                else Format.fmt1 "Tot %s" (term_to_string c.result_typ))
           else if not (Options.print_effect_args())
                   && not (Options.print_implicits())
-                  && lid_equals c.effect_name (C.effect_ML_lid())
+                  && lid_equals eff (C.effect_ML_lid())
           then term_to_string c.result_typ
-          else if not (Options.print_effect_args())
-               && c.flags |> U.for_some (function MLEFFECT -> true | _ -> false)
-          then Format.fmt1 "ALL %s" (term_to_string c.result_typ)
-          else Format.fmt2 "%s (%s)" (sli c.effect_name) (term_to_string c.result_typ) in
+          else Format.fmt2 "%s (%s)" (sli eff) (term_to_string c.result_typ) in
       let dec = c.flags
         |> List.collect (function DECREASES dec_order ->
             (match dec_order with
@@ -464,10 +460,7 @@ and comp_to_string c : ML string =
 (* NB: this is reduced version of the one in Print *)
 and cflag_to_string c : ML string =
     match c with
-        | TOTAL -> "total"
-        | MLEFFECT -> "ml"
         | SMTPAT p -> "smtpat " ^ term_to_string p
-        | LEMMA -> "lemma"
         | DECREASES _ -> "" (* TODO : already printed for now *)
 
 and cflags_to_string fs : ML string = FStarC.Common.string_of_list cflag_to_string fs
@@ -519,16 +512,13 @@ let eff_extraction_mode_to_string (x:eff_extraction_mode) : ML string = match x 
 let eff_decl_to_string ed : ML string =
     match ed.combinators with
     | None ->
-      Format.fmt3 "assume effect %s%s%s\n"
+      Format.fmt1 "assume effect %s\n"
         (lid_to_string ed.mname)
-        (enclose_universes <| univ_names_to_string ed.univs)
-        (binders_to_string " " ed.binders)
     | Some c ->
-      Format.fmt6 "effect { %s%s%s with { repr = %s; return = %s; bind = %s } }\n"
+      Format.fmt5 "effect { %s with { repr = %s (* : %s *); return = %s; bind = %s } }\n"
         (lid_to_string ed.mname)
-        (enclose_universes <| univ_names_to_string ed.univs)
-        (binders_to_string " " ed.binders)
         (tscheme_to_string c.repr)
+        (tscheme_to_string c.repr_universe)
         (tscheme_to_string c.return_repr)
         (tscheme_to_string c.bind_repr)
 
@@ -574,12 +564,8 @@ let rec sigelt_to_string (x: sigelt) : ML string =
         ^ eff_decl_to_string ed
 
       | Sig_sub_effect (se) -> sub_eff_to_string se
-      | Sig_effect_abbrev {lid=l; us=univs; bs=tps; comp=c; cflags=flags} ->
-        if (Options.print_universes())
-        then let univs, t = Subst.open_univ_vars univs (mk_Tm_arrow tps c Range.dummyRange) in
-             let tps, c = SU.arrow_formals_comp_ln_strict t in
-             Format.fmt4 "effect %s<%s> %s = %s" (sli l) (univ_names_to_string univs) (binders_to_string " " tps) (comp_to_string c)
-        else Format.fmt3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
+      | Sig_effect_abbrev {lid=l; root} ->
+        Format.fmt2 "effect %s = %s" (sli l) (sli root)
       | Sig_splice {is_typed; lids; tac=t} ->
         Format.fmt3 "splice%s[%s] (%s)"
           (if is_typed then "_t" else "")

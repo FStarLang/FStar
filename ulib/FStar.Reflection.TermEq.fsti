@@ -129,16 +129,14 @@ and faithful_attrs ats : prop =
   allP ats faithful ats
 
 and faithful_comp c =
-  match inspect_comp c with
-  | C_Total t -> faithful t
-  | C_GTotal t -> faithful t
-  | C_Lemma pre post pats -> faithful pre /\ faithful post /\ faithful pats
-  | C_Eff us ef r pre post decs ->
-    allP c faithful_univ us
-     /\ faithful r
-     /\ faithful pre
-     /\ faithful post
-     /\ allP c faithful decs
+  let cv = inspect_comp c in
+  faithful cv.result_typ /\ allP c faithful_flag cv.flags
+
+and faithful_flag (f:cflag) : prop =
+  match f with
+  | SMTPAT t -> faithful t
+  | DECREASES (Decreases_lex ts) -> allP f faithful ts
+  | DECREASES (Decreases_wf rel e) -> faithful rel /\ faithful e
 
 let faithful_term     = t:term{faithful t}
 let faithful_universe = u:universe{faithful_univ u}

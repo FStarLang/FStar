@@ -421,6 +421,8 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.t)
              (uu___.FStarC_TypeChecker_Env.modules);
            FStarC_TypeChecker_Env.expected_typ =
              (uu___.FStarC_TypeChecker_Env.expected_typ);
+           FStarC_TypeChecker_Env.expected_post =
+             (uu___.FStarC_TypeChecker_Env.expected_post);
            FStarC_TypeChecker_Env.sigtab =
              (uu___.FStarC_TypeChecker_Env.sigtab);
            FStarC_TypeChecker_Env.attrtab =
@@ -558,6 +560,8 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.t)
              (uu___.FStarC_TypeChecker_Env.modules);
            FStarC_TypeChecker_Env.expected_typ =
              (uu___.FStarC_TypeChecker_Env.expected_typ);
+           FStarC_TypeChecker_Env.expected_post =
+             (uu___.FStarC_TypeChecker_Env.expected_post);
            FStarC_TypeChecker_Env.sigtab =
              (uu___.FStarC_TypeChecker_Env.sigtab);
            FStarC_TypeChecker_Env.attrtab =

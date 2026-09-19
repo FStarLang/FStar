@@ -4,12 +4,6 @@
   - Failed to prove: QuickTestNBE.f 4 == 0
   - In context:
       va_s0: QuickTestNBE.vale_state
-      qc: QuickTestNBE.quickCode Prims.unit
-      Prims.has_type qc (QuickTestNBE.quickCode Prims.unit)
-      QuickTestNBE.va_qcode_Test2 == qc
-      s0: QuickTestNBE.vale_state
-      Prims.has_type s0 QuickTestNBE.vale_state
-      va_s0 == s0
       ok: Prims.bool
       QuickTestNBE.f 4 - QuickTestNBE.f 4 == 0
   - Also see: QuickTestNBE(1,2-3,4)

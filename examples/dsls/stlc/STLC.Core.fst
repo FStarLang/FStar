@@ -310,7 +310,7 @@ let rec elab_ty (t:stlc_ty)
       R.pack_ln 
         (R.Tv_Arrow
           (RT.mk_simple_binder RT.pp_name_default t1)
-          (R.pack_comp (C_Total t2)))
+          (R.pack_comp (mk_tot_comp t2)))
   
 let rec elab_exp (e:stlc_exp)
   : Tot R.term (decreases (size e))
@@ -366,7 +366,7 @@ let rec stlc_types_are_closed_core (ty:stlc_ty) (ss:subst_spec)
     | TUnit -> denote_pack_fvar (R.pack_fv R.unit_lid)
     | TArrow t1 t2 ->
       denote_pack_arrow (RT.mk_simple_binder RT.pp_name_default (elab_ty t1))
-                        (R.pack_comp (R.C_Total (elab_ty t2)));
+                        (R.pack_comp (R.mk_tot_comp (elab_ty t2)));
       stlc_types_are_closed_core t1 ss;
       stlc_types_are_closed_core t2 (shift_subst_spec ss)
 
@@ -391,7 +391,7 @@ let rec elab_ty_freevars (ty:stlc_ty)
     | TUnit -> denote_pack_fvar (R.pack_fv R.unit_lid)
     | TArrow t1 t2 ->
       denote_pack_arrow (RT.mk_simple_binder RT.pp_name_default (elab_ty t1))
-                        (R.pack_comp (R.C_Total (elab_ty t2)));
+                        (R.pack_comp (R.mk_tot_comp (elab_ty t2)));
       elab_ty_freevars t1;
       elab_ty_freevars t2
       
@@ -508,7 +508,7 @@ let rec soundness (#sg:stlc_env)
       elab_exp_freevars e;
       denote_pack_abs (RT.mk_simple_binder RT.pp_name_default (elab_ty t)) (elab_exp e);
       denote_pack_arrow (RT.mk_simple_binder RT.pp_name_default (elab_ty t))
-                        (R.pack_comp (R.C_Total (elab_ty t')));
+                        (R.pack_comp (R.mk_tot_comp (elab_ty t')));
       let dd
         = RT.T_Abs (extend_env_l g sg)
                    x

@@ -256,18 +256,29 @@ let is_type_param (env:TcEnv.env) (b:binder) : ML bool =
   is_value_indexed_arity env b.binder_bv.sort
 
 (* Rule 1: a non-informative binder carries no runtime value, so it is deleted
-   rather than passed.  The *unit-shaped* ones are excluded here, and
-   [U.is_unit] is the right test because it treats [unit], [squash p] and
-   [_:unit{p}] as the one thing they are.  They are deleted too, but only from
-   a *signature*, by [classify] below, where the codomain is in hand: a unit
-   binder is also how F* writes a thunk, and dropping the wrong one turns an
-   impure function into a value whose effect then runs at module
-   initialization.  This predicate is the one applied to the binders that come
-   from a definition's own lambdas rather than from its type, where there is no
-   codomain to consult and so no way to tell a thunk apart. *)
+   rather than passed.  The binders whose sort is *exactly* [unit] are excluded
+   here.  They are deleted too, but only from a *signature*, by [classify]
+   below, where the codomain is in hand: a [unit] binder is also how F* writes
+   a thunk, and dropping the wrong one turns an impure function into a value
+   whose effect then runs at module initialization.  This predicate is the one
+   applied to the binders that come from a definition's own lambdas rather than
+   from its type, where there is no codomain to consult and so no way to tell a
+   thunk apart.
+
+   [U.is_exactly_unit] and not [U.is_unit] is the test, because a [squash p] or
+   an [_:unit{p}] is a different animal from a [unit].  It is how a
+   precondition reaches a term -- [f: a -> Pure b (requires p) ...] elaborates
+   to a trailing implicit [#_: squash p] binder -- and it can never be a thunk,
+   since F* writes a thunk as [unit -> ...].  So it needs no codomain to be
+   decided, and deleting it *here* is what keeps the two places that read an
+   arity off the same type, [classify] below and [ty_of_typ]'s arrow case,
+   reading the same arity.  Exempting it split them: a definition whose type
+   was an abbreviation of such an arrow lost the binder from its own lambdas,
+   by [classify], and kept it in the emitted arrow, by [ty_of_typ], and the two
+   met at a call site as an ill-typed partial application. *)
 let is_dropped_binder (env:TcEnv.env) (b:binder) : ML bool =
   let sort = b.binder_bv.sort in
-  not (U.is_unit sort) &&
+  not (U.is_exactly_unit sort) &&
   not (is_type_binder env b) &&
   Prof.timed "Mono.must_erase" (fun () ->
     TcUtil.must_erase_for_extraction env sort)
@@ -488,13 +499,22 @@ let erased_binders_unfold (env:TcEnv.env) (t:typ) : ML (list bool) =
   let bs, c = arrow_formals_unfold env t in
   keep_thunk env bs c (bs |> List.map (is_erased_binder env))
 
-(* The sorts of the binders [erased_binders] retains, in order: exactly what a
-   caller still has to supply.  Used to type the binders introduced when a
-   primitive has to be eta-expanded, which would otherwise be [TAny]. *)
+(* The binders [erased_binders_unfold] retains, in order.  Its own filter, and
+   not [erased_binders]: the two disagree about the binder {!keep_thunk} puts
+   back, and about anything an abbreviation hides, and a caller that filters a
+   spine by one list and indexes into the other has the positions wrong. *)
+let retained_binders (env:TcEnv.env) (t:typ) : ML binders =
+  let bs, c = arrow_formals_unfold env t in
+  let flags = keep_thunk env bs c (bs |> List.map (is_erased_binder env)) in
+  List.zip bs flags
+  |> List.filter (fun (_, dropped) -> not dropped)
+  |> List.map fst
+
+(* Their sorts: exactly what a caller still has to supply.  Used to type the
+   binders introduced when a primitive has to be eta-expanded, which would
+   otherwise be [TAny]. *)
 let retained_sorts (env:TcEnv.env) (t:typ) : ML (list typ) =
-  let bs, _ = U.arrow_formals_comp t in
-  bs |> List.filter (fun b -> not (is_erased_binder env b))
-     |> List.map (fun b -> b.binder_bv.sort)
+  retained_binders env t |> List.map (fun (b:binder) -> b.binder_bv.sort)
 
 (* Section 96.  The same binders' [ppname]s, so that an eta-expanded primitive
    says what the declaration said rather than [eta], [eta1].  Filtered by the
@@ -502,9 +522,7 @@ let retained_sorts (env:TcEnv.env) (t:typ) : ML (list typ) =
    by construction; a binder the programmer wrote as [_] comes back as the
    [uu____NNN] F\* invented, which {!Rename.preferred} already collapses. *)
 let retained_names (env:TcEnv.env) (t:typ) : ML (list string) =
-  let bs, _ = U.arrow_formals_comp t in
-  bs |> List.filter (fun b -> not (is_erased_binder env b))
-     |> List.map (fun b -> Ident.string_of_id b.binder_bv.ppname)
+  retained_binders env t |> List.map (fun (b:binder) -> Ident.string_of_id b.binder_bv.ppname)
 
 (* The binders of [t] that are kept but carry no value, so a call site may --
    and should -- pass [()] rather than whatever the source supplies.

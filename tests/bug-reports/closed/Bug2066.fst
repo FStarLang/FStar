@@ -13,8 +13,8 @@ effect {
 
 let lift_Tot_M (a:Type) (f:unit -> Tot a) : repr a = fun _ -> f ()
 
-sub_effect PURE ~> M = lift_Tot_M
+sub_effect Tot ~> M = lift_Tot_M
 
 (* A lift must have type [(a:Type) -> (unit -> src a) -> repr a] *)
 [@@expect_failure]
-sub_effect GHOST ~> M = return
+sub_effect GTot ~> M = return

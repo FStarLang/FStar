@@ -263,7 +263,7 @@ let tc_data (env:env_t) (tcs : list (sigelt & universe))
          let arguments, env', us = tc_tparams env arguments in
          let type_u_tc = S.mk (Tm_type u_tc) result.pos in
          let env' = Env.set_expected_typ env' type_u_tc in
-         let result, res_lcomp = tc_trivial_guard env' result in
+         let result, res_comp = tc_trivial_guard env' result in
          let head, args = U.head_and_args_full result in (* collect nested applications too *)
 
          (*
@@ -307,7 +307,7 @@ let tc_data (env:env_t) (tcs : list (sigelt & universe))
                  (Format.fmt2 "This parameter is not constant: expected %s, got %s" (show bv) (show t))
          ) tps p_args;
 
-         let ty = unfold_whnf env res_lcomp.res_typ |> U.unrefine in
+         let ty = unfold_whnf env (U.comp_result res_comp) |> U.unrefine in
          begin match (SS.compress ty).n with
                | Tm_type _ -> ()
                | _ -> raise_error se Errors.Fatal_WrongResultTypeAfterConstrutor

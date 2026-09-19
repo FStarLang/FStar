@@ -369,6 +369,8 @@ let goal_of_implicit (env : FStarC_TypeChecker_Env.env)
       FStarC_TypeChecker_Env.modules = (env.FStarC_TypeChecker_Env.modules);
       FStarC_TypeChecker_Env.expected_typ =
         (env.FStarC_TypeChecker_Env.expected_typ);
+      FStarC_TypeChecker_Env.expected_post =
+        (env.FStarC_TypeChecker_Env.expected_post);
       FStarC_TypeChecker_Env.sigtab = (env.FStarC_TypeChecker_Env.sigtab);
       FStarC_TypeChecker_Env.attrtab = (env.FStarC_TypeChecker_Env.attrtab);
       FStarC_TypeChecker_Env.instantiate_imp =

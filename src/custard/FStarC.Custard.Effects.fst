@@ -32,8 +32,11 @@ module TcEnv  = FStarC.TypeChecker.Env
 module TcUtil = FStarC.TypeChecker.Util
 module U      = FStarC.Syntax.Util
 
+(* [l] is expected to be a *root* effect name.  An effect abbreviation is a
+   bare alias resolved away by the desugarer, so [comp_typ.effect_name] --- the
+   only source [of_comp] draws from --- already is one, and there is nothing
+   left to normalize. *)
 let of_lid (env:TcEnv.env) (l:Ident.lident) : ML eff =
-  let l = TcEnv.norm_eff_name env l in
   (* Section 125.10.  An effect carrying [@@erasable] is [GHOST] by another
      name: a computation in it has no runtime content whatever its result
      type says, so it drops, duplicates and reorders exactly as a ghost one

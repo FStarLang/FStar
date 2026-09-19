@@ -217,6 +217,21 @@ let effect_Ghost_lid : FStarC_Ident.lident= pconst "Ghost"
 let effect_DIV_lid : FStarC_Ident.lident= psconst "DIV"
 let effect_Div_lid : FStarC_Ident.lident= psconst "Div"
 let effect_Dv_lid : FStarC_Ident.lident= psconst "Dv"
+let is_pure_effect_lid (l : FStarC_Ident.lident) : Prims.bool=
+  ((FStarC_Ident.lid_equals l effect_Tot_lid) ||
+     (FStarC_Ident.lid_equals l effect_PURE_lid))
+    || (FStarC_Ident.lid_equals l effect_Pure_lid)
+let is_ghost_effect_lid (l : FStarC_Ident.lident) : Prims.bool=
+  ((FStarC_Ident.lid_equals l effect_GTot_lid) ||
+     (FStarC_Ident.lid_equals l effect_GHOST_lid))
+    || (FStarC_Ident.lid_equals l effect_Ghost_lid)
+let is_div_effect_lid (l : FStarC_Ident.lident) : Prims.bool=
+  ((FStarC_Ident.lid_equals l effect_DIV_lid) ||
+     (FStarC_Ident.lid_equals l effect_Div_lid))
+    || (FStarC_Ident.lid_equals l effect_Dv_lid)
+let primitive_pure_lid : FStarC_Ident.lident= effect_PURE_lid
+let primitive_ghost_lid : FStarC_Ident.lident= effect_GHOST_lid
+let primitive_div_lid : FStarC_Ident.lident= effect_DIV_lid
 let ef_base (uu___ : unit) : Prims.string Prims.list= ["FStar"; "All"]
 let effect_ALL_lid (uu___ : unit) : FStarC_Ident.lident=
   p2l (FStarC_List.op_At (ef_base ()) ["ALL"])
