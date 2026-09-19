@@ -3240,8 +3240,16 @@ and prim_app (st:state) (l:Ident.lident) (n:int)
   let decl_ty = match lookup_lid_typ st l with
                 | Some ((_, ty), _) -> Some ty
                 | None -> None in
+  (* [erased_binders_unfold], not [erased_binders]: this filters a *call
+     spine*.  A call runs straight through an abbreviation, and -- the reason
+     the two differ here -- a rule's arity counts the binder {!Mono.keep_thunk}
+     puts back, which is what the arity warning below counts too.  Reading the
+     two from different functions is how [FStar.Pervasives.false_elim], whose
+     one explicit binder is a [unit{False}] that rule 1 deletes, lost its only
+     argument: the rule was then under-applied, eta-expanded, and emitted as a
+     function value of unknown representation (error 368). *)
   let flags = match decl_ty with
-              | Some ty -> Mono.erased_binders (tcenv st) ty
+              | Some ty -> Mono.erased_binders_unfold (tcenv st) ty
               | None -> [] in
   (* A rule that builds a buffer, a null pointer or a cast needs to know at
      which type; the type arguments are erased from the value spine, so they
@@ -3286,7 +3294,7 @@ and prim_app (st:state) (l:Ident.lident) (n:int)
      The mistake is easy to make because a rule sees the erased implicits in
      the term it is handed while a use site supplies only the retained
      binders, so counting the wrong ones is the natural error.
-     A warning rather than an error: [erased_binders_unfold] declines to peel
+     A warning rather than an error: [arrow_formals_unfold] declines to peel
      an effectful codomain, so a rule for something returning a function
      through an [ML] abbreviation may legitimately exceed the visible count. *)
   (match decl_ty with

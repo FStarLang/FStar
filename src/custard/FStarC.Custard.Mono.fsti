@@ -143,7 +143,7 @@ val arrow_formals_unfold (env:TcEnv.env) (t:typ) : ML (binders & comp)
     erased arguments the callee has deleted. *)
 val erased_binders_unfold (env:TcEnv.env) (t:typ) : ML (list bool)
 
-(** [retained_sorts env t] is the sorts of the binders [erased_binders] keeps,
+(** [retained_sorts env t] is the sorts of the binders [erased_binders_unfold] keeps,
     in order: exactly what a caller still has to supply.  Used to type the
     binders introduced when a primitive has to be eta-expanded. *)
 val retained_sorts (env:TcEnv.env) (t:typ) : ML (list typ)
