@@ -1148,6 +1148,51 @@ let name_of_lid (l:Ident.lident) : ML name = {
 let name_of_bv (b:bv) : ML string =
   uniq (Ident.string_of_id b.ppname) b.index
 
+(* Section 31.4.  [FStar.Attributes.rename_let] on a local [let] asks for the
+   binder to carry a chosen name into the generated code.  The ML extractor
+   implements it by substituting a freshened [bv] (see
+   {!FStarC.Extraction.ML.Term}); here there is nothing to substitute, because
+   a local's spelling is decided in exactly one place -- [name_of_bv] -- and
+   the renaming pass takes the [base_name] of whatever it finds.  So the
+   attribute only has to change the base, and [uniq] keeps the [bv] index as
+   the disambiguator, which is what makes two bindings asking for the same
+   name come out as [nice] and [nice1] rather than collide.
+
+   The argument is read after [compress], as the ML extractor reads it: a name
+   computed by a [normalize_term] is already a literal by the time extraction
+   runs.  Anything else is ill-formed, and warning about it rather than
+   silently keeping the source spelling is the point -- a [rename_let] whose
+   argument did not reduce is a mistake the author wants to hear about. *)
+let rename_let_name (top:term) (lbattrs:list term) : ML (option string) =
+  match U.get_attribute PC.rename_let_attr lbattrs with
+  | None -> None
+  | Some [(str, _)] ->
+    (match (SS.compress str).n with
+     | Tm_constant (Const_string (s, _)) when s <> "" -> Some s
+     | _ ->
+       E.log_issue top E.Warning_UnrecognizedAttribute
+         "Ignoring ill-formed application of `rename_let`";
+       None)
+  | Some _ ->
+    E.log_issue top E.Warning_UnrecognizedAttribute
+      "Ignoring ill-formed application of `rename_let`";
+    None
+
+(* The name a local [let] binder is given: its source spelling, unless
+   [rename_let] asked for another one.  Renaming the [bv] itself, rather than
+   just the [ELet]'s name, is what keeps the binder and its uses spelled the
+   same way: every reference goes through [name_of_bv] on this very [bv], so
+   there is nothing else to rewrite.  The index is deliberately preserved --
+   it is the disambiguator [uniq] appends and the key of [st.letdefs],
+   [st.effletdefs] and [st.lettys]. *)
+let rename_let_bv (top:term) (b:bv) (body:term) (lbattrs:list term)
+  : ML (bv & term) =
+  match rename_let_name top lbattrs with
+  | None -> b, body
+  | Some s ->
+    let b' = { b with ppname = Ident.mk_ident (s, Ident.range_of_id b.ppname) } in
+    b', SS.subst [NT (b, S.bv_to_name b')] body
+
 (* A readable spelling of one [Mono] argument, structurally: the same scheme
    {!Monomorphize.hint_of_cty} uses for a type instantiation, over terms.
    [mapM] specialized at the tactic monad and at [list] should be called
@@ -1431,6 +1476,17 @@ let compile_time_steps : list TcEnv.step = [
   TcEnv.UnfoldUntil S.delta_constant;
 ]
 
+
+(* Section 128.2.  The backends that emit C, or C through karamel; the Rust
+   one is included because it reaches the same declarations by the same
+   route, and a module realized outside F* is realized there too. *)
+let is_c_backend () : ML bool =
+  let b = Options.custard_backend () in
+  b = "C" || b = "KrmlC" || b = "KrmlRust"
+
+let c_realized_header (l:Ident.lident) : ML (option string) =
+  Builtins.c_realization_header
+    (Builtins.no_fstar_stubs (Ident.ns_of_lid l |> List.map Ident.string_of_id))
 
 let rec request (st:state) (k:spec_key) : ML name =
   Prof.timed "request" (fun () ->
@@ -2712,19 +2768,29 @@ and expr_of_term (st:state) (t:term) : ML expr =
     let body = expr_of_term st body in
     let bs =
       let flags = bs |> List.map (Mono.is_erased_binder (tcenv st)) in
-      (* Same guard as [Mono.keep_thunk], and unconditional for the same reason
-         its own first clause is: a lambda whose binders all vanish stops being
-         a lambda.  Its effects then run where it is built rather than where it
-         is applied -- and, even when there are none, whatever it is passed to
-         is still expecting a function.  A reified [let] whose bound variable
-         is a proof is exactly that: the continuation [fun (tok:squash p) -> k]
-         is [tac_bind]'s second argument, and [tac_bind] is polymorphic, so
-         nothing there drops an argument to match. *)
-      let flags = if Cons? flags && List.for_all (fun b -> b) flags
-                  then (match List.rev flags with
-                        | _ :: r -> List.rev (false :: r)
-                        | [] -> flags)
-                  else flags in
+      (* Same guard as [Mono.keep_thunk], and both of its clauses.  A lambda
+         whose binders all vanish stops being a lambda: its effects then run
+         where it is built rather than where it is applied -- and, even when
+         there are none, whatever it is passed to is still expecting a
+         function.  A reified [let] whose bound variable is a proof is exactly
+         that: the continuation [fun (tok:squash p) -> k] is [tac_bind]'s
+         second argument, and [tac_bind] is polymorphic, so nothing there
+         drops an argument to match.
+
+         Section 127.  And a lambda that loses its *last* binder in front of
+         an impure body stops being the arrow a partial application of it was
+         holding.  The purity read here is the body's own, which is Custard's
+         answer and not F*'s -- the same distinction [Mono.impure_codomain]
+         makes on a comp, arrived at by having already translated the body. *)
+      let flags =
+        let all_erased = Cons? flags && List.for_all (fun b -> b) flags in
+        let last_erased = (match List.rev flags with
+                           | f :: _ -> f | [] -> false) in
+        if last_erased && (all_erased || not (is_pure body.eff))
+        then (match List.rev flags with
+              | _ :: r -> List.rev (false :: r)
+              | [] -> flags)
+        else flags in
       drop_flagged flags bs in
     (* Section 72.2, as in [extract_letbinding]: a binder the guard above put
        back is there for the arity and carries nothing, so [unit] is its type
@@ -2769,19 +2835,51 @@ and expr_of_term (st:state) (t:term) : ML expr =
        (* Unfolding, not the plain [erased_binders]: this filters a *call
           spine*, and a call runs straight through an abbreviation that the
           local's sort stops at.  Section 18.1. *)
-       let flags = match (SS.compress hd_term).n with
-                   | Tm_name bv -> Mono.erased_binders_unfold (tcenv st) bv.sort
-                   | _ -> [] in
+       let sort = match (SS.compress hd_term).n with
+                  | Tm_name bv -> Some bv.sort
+                  | _ -> None in
+       let flags = match sort with
+                   | Some t -> Mono.erased_binders_unfold (tcenv st) t
+                   | None -> [] in
+       (* Section 127.  A binder [keep_thunk] put back is still a binder, and
+          the argument for it is [()] -- exactly as [value_args] supplies one
+          for a top-level call.  Dropping it instead would make a *saturated*
+          call partial, which is the mirror image of the miscompilation that
+          rule exists to prevent, and the C backend reports it as a partial
+          application with no representation. *)
+       let ufs = match sort with
+                 | Some t -> drop_flagged flags (Mono.unit_binders (tcenv st) t)
+                 | None -> [] in
        (* A head with no type to consult -- a [match], a lambda left over from
           beta-reducing a specialized definition -- still must not be given
           the arguments its callee has no binder for.  That is
           [is_erased_term] and not just [is_type_term]: a proof-irrelevant
           argument is deleted by exactly the same rule as a type, and one left
-          behind is emitted as an unbound term variable.  Section 80. *)
-       let args = drop_flagged flags args
-                  |> List.filter (fun (a, _) ->
-                       not (Mono.is_erased_term (tcenv st) a)) in
-       let args = args |> List.map fst |> List.map (expr_of_term st) in
+          behind is emitted as an unbound term variable.  Section 80.  A
+          position [ufs] speaks for is exempt: it is kept deliberately, and
+          the term the source wrote for it is not consulted. *)
+       let rec keep (ufs:list bool) (sp0:S.args) : ML S.args =
+         match ufs, sp0 with
+         | true :: ufs, a :: sp -> a :: keep ufs sp
+         | _ :: ufs, a :: sp ->
+           if Mono.is_erased_term (tcenv st) (fst a)
+           then keep ufs sp else a :: keep ufs sp
+         | [], a :: sp ->
+           if Mono.is_erased_term (tcenv st) (fst a)
+           then keep [] sp else a :: keep [] sp
+         | _, [] -> [] in
+       (* [ufs] has to be narrowed with the spine, or the [()] would land at
+          the wrong index once an erased argument before it has gone. *)
+       let rec narrow (ufs:list bool) (sp0:S.args) : ML (list bool) =
+         match ufs, sp0 with
+         | u :: ufs', a :: sp ->
+           if not u && Mono.is_erased_term (tcenv st) (fst a)
+           then narrow ufs' sp else u :: narrow ufs' sp
+         | _ -> [] in
+       let args0 = drop_flagged flags args in
+       let ufs = narrow ufs args0 in
+       let args = keep ufs args0 in
+       let args = value_args st ufs args in
        (match args with
         | [] -> hd
         | _ ->
@@ -2796,6 +2894,7 @@ and expr_of_term (st:state) (t:term) : ML expr =
     (match lb.lbname with
      | Inl bv ->
        let bv, body = SS.open_term_bv bv body in
+       let bv, body = rename_let_bv t bv body lb.lbattrs in
        if inlinable_local st lb then
          (* Section 5.11: a local function is substituted at its uses rather
             than compiled as a closure, so that each use instantiates its type
@@ -4113,7 +4212,7 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
          below. *)
     let typars, ty = external_ty st l margs in
     DExternal { dx_name = nm; dx_typars = typars; dx_ty = ty; dx_target = None;
-                dx_header = None;
+                dx_header = (if is_c_backend () then c_realized_header l else None);
                 dx_flags = if is_modelled_lid l then [Modelled] else [] }
   | Some se ->
     let d = Prof.timed "extract_sigelt"
@@ -4132,7 +4231,10 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
     let inlined = se.sigquals |> List.existsb (fun q ->
                     q = S.Inline_for_extraction ||
                     q = S.Unfold_for_unification_and_vcgen) in
-    let d = if is_realized && not inlined then with_realized d else d in
+    let d = if not (is_realized && not inlined) then d
+            else (match (if is_c_backend () then c_realized_header l else None) with
+                  | Some h -> with_c_realized h d
+                  | None -> with_realized d) in
     let d = if is_modelled_lid l && not inlined then with_modelled d else d in
     if is_inlinable se && not (is_root st l)
     then with_inline d else d
@@ -4349,6 +4451,24 @@ and with_realized (d:decl) : ML decl =
   | DType t -> DType { t with dt_flags = Realized :: t.dt_flags }
   | d -> d
 
+(* Section 128.2.  On a C backend, a module realized in C as well has no F*
+   shape to keep: the header's declaration is the type, and the F* one is the
+   model that was compiled away.  So the declaration becomes abstract and
+   carries the header, which is exactly what an [@@custard_extern] type gets.
+   [Realized] is deliberately *not* added on top -- it means "hand-written
+   OCaml", and here the answer comes from the C side. *)
+and with_c_realized (h:string) (d:decl) : ML decl =
+  match d with
+  | DType t ->
+    (* The target name is written down rather than left to the printer's own
+       spelling of [dt_name]: on the karamel path a type Custard does not emit
+       is still a lident in Custard's namespace, and only an [Extern] carrying
+       a name reaches the rename table that strips it. *)
+    DType { t with dt_body = TAbstract;
+            dt_flags = Extern (Some (mangled_name t.dt_name), Some h)
+                       :: NoNewtype :: t.dt_flags }
+  | d -> d
+
 (* Section 20.  Unlike {!with_realized} this marks values too: a model's
    operations are karamel's to translate, at their use sites, so Custard must
    emit no declaration for them either.  Everything else about the declaration
@@ -4509,7 +4629,15 @@ and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
        them. *)
     let res = ty_of_typ st (Effects.result_typ (tcenv st) c) in
     let e = eff_of_comp st c in
-    let vs = drop_flagged (Mono.erased_binders (tcenv st) (U.arrow keep c)) keep in
+    (* Section 128.  [keep_thunk], as a definition's own binders get: an
+       external whose every binder is erased in front of an impure codomain
+       would otherwise be declared as a *value*, and every call site -- which
+       computes its spine from the same F* type and therefore does apply the
+       thunk -- would be applying something the declaration says is not a
+       function.  Pulse's [new_lock (v:slprop)] is exactly that. *)
+    let flags = Mono.keep_thunk (tcenv st) keep c
+                  (Mono.erased_binders (tcenv st) (U.arrow keep c)) in
+    let vs = drop_flagged flags keep in
     (* Section 49.3.  Erasure is Custard's own business everywhere except here.
        An external's prototype is fixed outside F*, in a header Custard cannot
        see, so dropping a binder changes the emitted call's arity against a
@@ -4547,7 +4675,7 @@ and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
       match (SS.compress t).n with
       | Tm_arrow _ -> false
       | _ -> TcEnv.non_informative (tcenv st) t in
-    let dropped = List.zip keep (Mono.erased_binders (tcenv st) (U.arrow keep c))
+    let dropped = List.zip keep flags
                   |> List.collect (fun (b, e) ->
                        if e && not (is_type_binder (tcenv st) b)
                           && not (declared_erased b)
@@ -4567,11 +4695,17 @@ and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
               [erased t], which says so and silences this."];
 
 
+    (* A binder the rule above put back carries nothing -- its argument is
+       [()], as [Mono.unit_binders] tells the call site -- so [unit] is its
+       type and not whatever its sort says (section 72.2). *)
+    let bty (b:S.binder) : ML cty =
+      if Mono.is_erased_binder (tcenv st) b then TUnit
+      else ty_of_typ st b.binder_bv.sort in
     let rec build (bs:binders) : ML cty =
       match bs with
       | [] -> res
-      | [b] -> TArrow (ty_of_typ st b.binder_bv.sort, e, res)
-      | b :: bs -> TArrow (ty_of_typ st b.binder_bv.sort, E_Pure, build bs) in
+      | [b] -> TArrow (bty b, e, res)
+      | b :: bs -> TArrow (bty b, E_Pure, build bs) in
     (typars, subst_cty (anys |> List.map (fun a -> (a, TAny))) (build vs))
 
 and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))

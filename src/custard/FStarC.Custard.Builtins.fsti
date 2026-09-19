@@ -182,6 +182,13 @@ val is_realized_module : list string -> ML bool
     realizations name them, with no hand-written file of its own. *)
 val is_type_only_realized_module : list string -> ML bool
 
+(** Section 128.2.  The header that realizes this module in C, if it is one of
+    the modules whose realization is hand-written C as well as OCaml.  Its
+    types then become externals declared by that header rather than structs
+    Custard emits, and its values are declared by it rather than by a
+    prototype of Custard's own. *)
+val c_realization_header : list string -> ML (option string)
+
 (** Raised by a rule lookup that does not apply to the given name, so that the
     next extension in the chain is tried. *)
 exception No_custard_rule

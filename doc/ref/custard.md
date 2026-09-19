@@ -5858,12 +5858,11 @@ three-armed unit-valued match to give it something to catch.
 
 ### 14.12 What is still hand-written
 
-The example's `Pulse_Lib_SpinLock.c` is not copied into the Custard build:
-`c.Makefile` passes `-library Pulse.Lib.SpinLock`, but Custard compiles
-`Pulse.Lib.SpinLock` from its Pulse source like anything else, and copying the
-hand-written file as well is a duplicate definition.  `EverCrypt_Base.h` and
-the EverCrypt objects are still external, as they are in the baseline: they
-are C, not F\*.
+The example's `Pulse_Lib_SpinLock.c` *is* the realization of Pulse's lock, on
+both paths: `c.Makefile` passes karamel `-library Pulse.Lib.SpinLock`, and
+Custard treats the module as realized (§128), so the Custard build includes its
+header and links its object too.  `EverCrypt_Base.h` and the EverCrypt objects
+are still external, as they are in the baseline: they are C, not F\*.
 
 ## 15. Migrating a test suite: pulse/test
 
@@ -9248,6 +9247,41 @@ what round 35 asked for; it is written down here as the next thing.
 `ListC` is now rejected for exactly the reason predicted here.  The table
 this section fills survives the change and the new message uses it, so the
 external is still named -- see §100.2.
+
+### 31.4 `rename_let`
+
+`[@@rename_let "name"]` on a local `let` asks for that binder to be spelled
+`name` in the generated code.  It is what Pulse uses to give an `fn`'s
+compiled locals the names the source wrote, rather than the ones the
+elaborator invented, and it is the only means a program has of naming
+something that does not survive as a declaration.
+
+The ML pipeline implements it in `FStarC.Extraction.ML.Term` by freshening a
+`bv` with the requested `ppname` and substituting it through the body.
+Custard was ignoring the attribute, so Pulse's `RenameLet` test came out with
+every local back to its source spelling.
+
+Here the substitution is nearly free, because §6's naming contract already
+does the work.  A local is named `uniq (ppname b) b.index`, the `'#'` in
+`uniq` is illegal in every target, and `Rename` rewrites each binder to its
+`base_name` at the end, suffixing only where that would genuinely shadow.  So
+`rename_let` has only to change the base:
+
+- the attribute is read on `lb.lbattrs`, after `compress`, exactly as the ML
+  extractor reads it -- a name computed by a `normalize_term` is already a
+  literal by the time extraction runs, and anything else is a warning and a
+  no-op rather than a failure;
+- the `bv` *itself* is renamed and substituted into the body, not just the
+  `ELet`'s name.  Every reference goes through `name_of_bv` on that same
+  `bv`, so binder and uses cannot disagree;
+- the index is preserved.  It is `uniq`'s disambiguator and the key of
+  `st.letdefs`, `st.effletdefs` and `st.lettys`, and keeping it is what makes
+  two bindings that both ask for `dupName` come out as `dupName` and
+  `dupName1` -- from the ordinary `Rename` pass, with nothing here to say
+  about collisions.
+
+`tests/custard/RenameLet.fst` pins all three: the requested names appear, the
+source spellings do not, and the duplicate is numbered.
 
 ## 32 After the attribute
 
@@ -20067,9 +20101,9 @@ allocation did not fail. Nothing in the F\* signature prevents it either:
 karamel emits `KRML_CHECK_SIZE` here, which makes this a memory-safety
 regression against the existing pipeline rather than a cost of going direct. A
 `len > SIZE_MAX / sizeof(elt)` test now shares the `abort ()` the null check
-already had. A constant length gets none: the product is a constant expression
-the C compiler folds, and a comparison it can decide is one `-Wall` would
-rather not see.
+already had --- through a `size_t` temporary, for the reason §128.3 gives. A
+constant length gets none: the product is a constant expression the C compiler
+folds, and a comparison it can decide is one `-Wall` would rather not see.
 
 ### 116.7 An arity decided twice
 
@@ -21740,38 +21774,33 @@ like when it does, and it works today against the Custard-built compiler.
 **`tests/extraction/backends`'s legacy legs**, for the reason in §126.2:
 they exist to be compared against.
 
-**The remaining Pulse dirs** --- `pulse/test/pool/{pulse_task,domainslib}`
-and `pulse/share/pulse/examples/dice/cbor` --- are multi-module builds
-with hand-written OCaml or C alongside, linked by a `dune` project or a
+**The remaining Pulse dirs** --- `pulse/test/pool/domainslib` and
+`pulse/share/pulse/examples/dice/cbor` --- are multi-module builds with
+hand-written OCaml or C alongside, linked by a `dune` project or a
 `Makefile` that names the per-module outputs.  `pulse/test` itself
-already runs on Custard (`pulse/mk/custard-test.mk`).
+already runs on Custard (`pulse/mk/custard-test.mk`), and
+`pulse/test/pool/pulse_task` moved over in §128.5.
 
-`pulse/test/pool` is blocked on something more interesting than build
-plumbing, and the attempt is worth recording.  Custard compiles
-`Quicksort.Task` happily --- the whole task pool, `Pulse.Lib.Task`
-included, comes out as one 9.7 kB file, and `quicksort` loses the three
-erased arguments the hand-written driver has to pass today.  But
-`Pulse.Lib.Task.spawn_worker` comes out wrong:
+`pulse/test/pool` was blocked on something more interesting than build
+plumbing.  Custard compiles `Quicksort.Task` happily --- the whole task
+pool, `Pulse.Lib.Task` included, comes out as one 9.7 kB file, and
+`quicksort` loses the three erased arguments the hand-written driver has
+to pass today --- but `Pulse.Lib.Task.spawn_worker` came out wrong: the
+worker loop ran inline, in the spawning thread, forever, instead of being
+forked.  §127 is that defect and its fix; the first diagnosis written
+here, that Custard had erased the thunk's only parameter and then forced
+it, was wrong, and §127.1 says what the shape really was.
 
-```ocaml
-let f = (fun tmp -> (pulse_Lib_Task_worker_thread p)) in
-let tmp = (f ()) in
-(Pulse_Lib_Core.fork_core tmp)
-```
-
-`fork_core`'s argument is
-`f : loc_id -> stt_div unit (loc l' ** on l pre) (fun _ -> emp)`.  The
-`loc_id` is proof-level and erased, which leaves `f` a function of no
-arguments whose result is an `stt_div` --- and an `stt_div` is a
-*suspended* computation under `extract_as_impure_effect` (§7), not a
-value.  Custard applied it, so the worker loop runs inline, in the
-spawning thread, forever.  Warning 382 fired --- "Custard erased 1
-parameter(s) of the external `Pulse.Lib.Core.hide_div`" --- so the
-pipeline noticed; what it did next was wrong.  What has to happen is that
-erasing every parameter of a function whose result is an impure-effect
-computation leaves a `unit` parameter behind rather than forcing it.
-That is Pulse effect handling, not test plumbing, and it belongs with the
-bootstrap.
+The second half was quite separate.  `Pulse.Lib.Task` locks its run
+queue with `Pulse.Lib.SpinLock`, whose `cas` is a *specification* --- a
+read followed by a write, correct in Pulse's atomic semantics and not
+atomic at all once compiled --- and the legacy pipeline never compiles
+it: the Pulse OCaml extraction plugin rewrites `lock`, `new_lock`,
+`acquire` and `release` to OCaml's `Mutex`.  Custard compiled it from its
+Pulse source like anything else, and the extracted quicksort raced and
+reported its output unsorted.  §128 makes the module realized, which is
+the mechanism Custard already had for "the target language defines this
+one", and the example prints `OK!`.
 
 ### 126.6 A lambda binder of no representation
 
@@ -21847,6 +21876,286 @@ emits an `Exe` exactly when the program has an entry point --- so
 nothing, correctly and silently.  That is a real asymmetry between the two
 backends and it is left standing: Custard compiles standalone programs
 (§4.4), and a standalone program names its entry point.
+
+## 127 A partial application that became a saturated one
+
+`pulse/test/pool` could not move to Custard (§126.5), and the reason was
+not build plumbing.  `Pulse.Lib.Task.spawn_worker` came out as
+
+```ocaml
+let f = (fun tmp -> (pulse_Lib_Task_worker_thread p)) in
+let tmp = (f ()) in
+(Pulse_Lib_Core.fork_core tmp)
+```
+
+`fork_core` takes a *thunk* --- the worker loop, to be run on another
+thread.  What it is given here is the result of running that loop, in the
+spawning thread, forever.
+
+### 127.1 What the shape really was
+
+The first reading was that Custard had erased the thunk's only parameter
+and then forced it.  That is not what happened, and the difference is the
+whole fix.  `fork'` is `inline_for_extraction`, so by the time Custard
+sees it the two lambdas --- its own `f : unit -> stt_div unit ...` and the
+`fn _ { ...; f (); }` block it passes to `fork_core` --- have been
+contracted by the normalizer into one:
+
+```
+let f1 : unit -> l':loc_id{...} -> stt_div unit ...
+       = fun u l' -> worker_thread p in
+fork_core pre l (f1 ())
+```
+
+`f1 ()` is a **partial** application: it supplies the first binder and
+yields the arrow over the second, which is the thunk `fork_core` wants.
+Custard erased `l'`, correctly --- a `loc_id` is proof-level --- and `f1`
+became a function of one argument.  The call site did not change, because
+nothing about it is wrong: it still passes one argument.  It is now
+saturated.
+
+The legacy OCaml backend has the same term and does not have the bug,
+because it keeps every erased parameter as a `unit`:
+`Pulse_Lib_Core.fork_core () () (f1 ())` over
+`let f1 uu___ uu___1 = ...`.  Custard deletes them, which is the point,
+and deleting a *trailing* one changes an arity that a partial application
+was counting on.
+
+It reproduces in nine lines with no Pulse at all:
+
+```fstar
+assume val ext : (G.erased int -> ML unit) -> ML unit
+let spawn (p:int) : ML unit =
+  let f1 (u:unit) (e:G.erased int) : ML unit = work p in
+  ext (f1 ())
+```
+
+### 127.2 The guard was already there, and was too narrow
+
+`Mono.keep_thunk` is exactly the rule for this, and its comment already
+named the hazard --- "any partial application of it at a call site
+silently becomes a saturated one".  It fired in two cases: when *every*
+binder is dropped, and when the last binder is dropped, is **unit-shaped**
+and the codomain is impure.
+
+The unit-shape test was the mistake.  It was there because `unit -> ML a`
+is certainly a thunk and `squash p -> ML a` only might be --- but what
+matters is not what the binder was written as, it is that a caller may
+have been holding the arrow in front of it.  A `G.erased int` binder, or
+an erased `#f:perm` at the end of a Pulse `fn`, is the same hazard
+exactly.  So the second clause is now: the codomain is impure.
+
+Impure in **Custard's** sense, which is why `Mono.impure_codomain` exists.
+A Pulse `fn f () : stt unit` is a `Tot` function returning an `stt`
+value, so `U.is_pure_or_ghost_comp` calls it pure; §7.2's
+`extract_as_impure_effect` attribute on the result's head is what makes
+the arrow impure, and both tests have to be asked.  `keep_thunk`'s first
+clause already declined to test purity at all for this reason; the second
+now tests the right notion of it rather than none.
+
+The lambda case in `Extract`'s `Tm_abs` carries the same guard written out
+--- it has no comp to hand, only a body --- and gained the same second
+clause, reading the purity off `body.eff`, which is Custard's answer
+arrived at by having already translated the body.
+
+With one restriction, which `tests/custard/pulse/ArrowAb` supplied
+immediately: the last binder has to be **explicit**.  F\* instantiates an
+implicit at every application, so no partial application can stop in front
+of one --- the arrow a caller can be holding always ends at the last
+explicit binder, and keeping an implicit past it buys nothing.  It costs
+something, though.  §80.1's record field is
+
+```fstar
+fld: (r: ref bool) -> (c: bool) -> (#p: perm) -> (#v: erased bool) ->
+     stt bool (pts_to r #p v) (fun _ -> pts_to r #p v)
+```
+
+and keeping its `#v` gives the field type a third parameter that the
+projector F\* derives for it has no argument to fill: the projector's body
+applies a value of the *record* type, whose sort is not an arrow, so the
+spine filter there has no binder list to consult and deletes the erased
+arguments outright.  The two answers disagreed and the C backend reported
+the projector as a partial application.  Requiring the binder to be
+explicit makes the case not arise, and is the true statement anyway.
+
+### 127.3 A call through a variable supplies the `()` too
+
+`Extract`'s application path for a head that is not an `fvar` filters the
+spine from the head's own sort, and `Mono.erased_binders_unfold` applies
+`keep_thunk` to it --- so a binder the rule puts back already survives that
+filter.  What came after it did not know: a second pass deleted every
+argument whose *term* is erased, which is exactly the argument for the
+binder just retained.  The call then came out one argument short of the
+arity its callee had been given, which is the same miscount as the defect
+above with the two sides exchanged.
+
+So that path now supplies `()` for such a position, as `Extract.value_args`
+has always done for a call through a name, and deletes only what no binder
+speaks for.  The flags are narrowed alongside the spine as erased arguments
+go, or the `()` lands at the wrong index.
+
+### 127.4 What it costs
+
+A binder `keep_thunk` puts back is emitted as a `unit` and every call site
+passes `()`, which `Mono.unit_binders` and `Extract.value_args` already
+arranged for the clauses that existed.  So the cost is a `unit` parameter
+on any definition whose last binder is erased and whose codomain is
+impure --- which in Pulse code is common, `fork_core`'s callback and the
+Pulse `fn` that implements it being the shape that found it.
+`spawn_worker` gains one.
+
+That is the same parameter the legacy backend keeps, and it is the price
+of an arity that does not depend on whether a call happens to be
+saturated.  Buying it back would mean knowing, for each definition,
+whether any partial application of it survives --- a whole-program
+question that `Simplify`'s `eta_expand_decls` asks for a different reason
+and that is worth revisiting only if the `unit`s show up in a profile.
+
+## 128 A module that must never be compiled
+
+`Pulse.Lib.SpinLock` is the module `pulse/test/pool` was waiting on
+(§126.5).  Its `acquire` loops on `Pulse.Lib.Primitives.cas`, and `cas`
+is a *specification*: a read followed by a write, atomic in Pulse's
+semantics, and two separate memory accesses once it is OCaml or C.  So
+the compiled spin lock locks nothing, and Custard compiled it like any
+other Pulse module.  The legacy pipeline never does --- Pulse's OCaml
+extraction plugin rewrites `lock`, `new_lock`, `acquire` and `release` to
+OCaml's `Mutex`, and its C build passes karamel `-library
+Pulse.Lib.SpinLock` --- and the quicksort over Custard's output raced and
+reported its result unsorted.
+
+Custard already has the mechanism, and it is not a rewrite rule: §8.2's
+*realized module*.  A realization replaces the F\* module, values
+included, on the grounds that where there is a hand-written
+implementation the F\* definition is a model, and extraction must not
+silently pick between two implementations of one name.  That is exactly
+the situation here, with the twist that the model is not merely a
+different representation but an unsound compilation of an atomic
+operation.  `Builtins.realized_modules` gains `Pulse.Lib.SpinLock`, and
+that is the whole of the decision: its values become externals named
+`Pulse_Lib_SpinLock.new_lock` in OCaml and `Pulse_Lib_SpinLock_new_lock`
+in C, which are the names the hand-written files already use.
+
+Two defects were sitting behind it, one in Custard and one in the C
+backend, and neither was reachable before.
+
+### 128.1 An external whose binders are all erased
+
+`new_lock (v:slprop) : stt (lock v) ...` has one binder, and it is
+erased.  §127's `keep_thunk` is the rule that a definition whose last
+explicit binder is erased in front of an impure codomain keeps it as a
+`unit`, so that a partial application stays partial --- and every call
+site of `new_lock` accordingly emitted `new_lock ()`.  But `external_ty`,
+the one place an external's signature is built, used
+`Mono.erased_binders` *without* `keep_thunk`: it declared `new_lock` as a
+**value** of type `lock`.  In OCaml that is a type error at the call, in C
+an implicit declaration of a function with no prototype, which is how the
+DICE build reported it.
+
+`external_ty` now applies `keep_thunk` and types a retained erased binder
+as `TUnit`, so the three ways a symbol can become an external --- a rule,
+a realized module, a bare `val` --- agree about its arity as §63.3 made
+them agree about its type arguments.
+
+### 128.2 A realization that is C as well
+
+`Realized` means *hand-written OCaml* (§8.2), and the C backends
+deliberately keep a realized type's F\* shape: `Prims.list` and
+`FStar.Pervasives.Native.tuple2` are realized modules, and a C program
+that could not see their layout could not be compiled at all.  So the
+direct backend emitted
+
+```c
+struct Pulse_Lib_SpinLock_lock_s { uint32_t *r; };
+```
+
+--- the F\* model's representation --- next to `extern` calls to a
+realization whose header declares the same C type as a
+`pthread_mutex_t *`.  Two incompatible definitions of one type, in two
+translation units, which no compiler is in a position to see.
+
+`Builtins.c_realized_modules` is the second, smaller table: the modules
+whose realization is hand-written C too.  On a C backend their types
+become `Extern` declarations carrying the header --- the same treatment
+`[@@custard_extern]` gives (§8.1, kind 4) --- and their values carry it
+as well, so that the header's own prototypes are the only ones and
+§53.3's conflict check has nothing to compare.  The header's name follows
+the convention the OCaml side already uses: the mangled module name,
+`Pulse_Lib_SpinLock.h`.
+
+The `Extern` flag records the target name explicitly rather than letting
+the printer spell `dt_name`.  On the karamel path a type Custard does not
+emit is still a lident in Custard's own namespace, and the rename table
+that strips the prefix is populated only from an `Extern` that carries a
+name; without it karamel emitted `Custard_Pulse_Lib_SpinLock_lock` at
+every use and the header's `Pulse_Lib_SpinLock_lock` matched nothing.
+
+### 128.3 A length narrower than `size_t`
+
+The DICE example is the only Custard C build with `-Wall -Wextra
+-Werror`, and it caught §116's heap-allocation guard:
+
+```c
+if (((size_t)len) > SIZE_MAX / sizeof(uint8_t)) { abort(); }
+```
+
+is `-Wtype-limits`, "comparison is always false".  The element size is a
+red herring; so is the cast.  What the warning reads is the *type* of the
+left operand after promotion, and `len` is almost always a `uint32_t`,
+whose range fits in a 64-bit `size_t` whatever it is multiplied by.
+Prefixing `sizeof(elt) != 1 &&` does not silence it.
+
+The guard is not pointless --- `size_t` is 32 bits wide on a 32-bit
+target and the product does overflow there --- so the fix is to give the
+comparison an operand of the full range.  The length is bound to a
+`size_t` temporary first, in a block of its own, and the comparison reads
+that:
+
+```c
+{ size_t sz0 = (size_t)len;
+  if (sz0 > SIZE_MAX / sizeof(uint8_t)) { abort(); } }
+```
+
+A variable's range is its type's, whatever value was assigned to it, so
+the comparison is no longer decidable at compile time and the check does
+what §116 wrote it to do.
+
+### 128.4 The realizations
+
+`pulse/lib/pulse/lib/ml/Pulse_Lib_SpinLock.ml` is new and sits beside the
+three realizations Pulse already ships there: `type lock = Mutex.t`,
+`new_lock () = Mutex.create ()`, `acquire = Mutex.lock`, `release =
+Mutex.unlock`, and `free` a no-op, OCaml mutexes being collected.  It is
+the same mapping the legacy plugin performs at extraction time, written
+once as a file rather than as a rewrite in the pipeline.  The C side
+already existed, as the DICE example's
+`external/c/hacl/Pulse_Lib_SpinLock.c`, with the symbol names Custard now
+emits.
+
+With it the pool example links and prints `OK!`.
+
+### 128.5 `pulse/test/pool/pulse_task`
+
+The directory that was waiting on all of this is the last of §126.5's
+Pulse dirs to move, and it gets shorter rather than longer.  It used to
+extract four modules with `--ext pulse:extract_ocaml_bare`, `sed` two
+qualified constructor names out of the results because the extraction
+plugin does not reach patterns, and link them with a `dune` project
+carrying its own `Prims.ml` --- a five-line one, since bare mode means the
+generated code names `Prims.int` and OCaml's own `int` is what it is
+supposed to be.
+
+Under Custard there is one extraction, from one entry point, and
+`fstar.exe --ocamlopt` links it: `Prims` is `fstarlib`'s, integers are
+`Z.t`, and the `dune` project is gone.  What is left beside the driver is
+three realizations --- `Pulse_Lib_SpinLock.ml`, taken from
+`pulse/lib/pulse/lib/ml/`, and the two primitives `Pulse.Lib.Core` and
+`Pulse.Lib.Sleep` declare and do not define.  They are copied into the
+output directory before the link, because a realization's `.cmi` has to
+be on the include path of the generated module that names it.
+
+`quicksort` also loses the three erased arguments the old driver had to
+pass, which is the shape §127 was about seen from the other end.
 
 | M | Deliverable | Notes |
 | --- | --- | --- |
@@ -22205,3 +22514,5 @@ backends and it is left standing: Custard compiles standalone programs
 | M10κΗ | `noextract_to` names a backend (§126.3) | Custard did not know the attribute existed.  The string it carries is a codegen name, and in the wild it means "this one has a hand-written C implementation" --- `FStar.UInt128`, `FStar.SizeT` and `FStar.Endianness` all use it that way.  `noextract_to_this_backend` recognises `Custard` (every Custard backend), the `--custard_backend` value itself, and `krml` for the three backends producing C or Rust, since Custard's C backend reaches those definitions by the route karamel did.  It is not the ML extraction's special case: there `krml` meant "extract a stub and let karamel drop the body" (`karamel_fixup_qual`) because a second pipeline followed; Custard has none, so the definition is simply not a root.  `tests/custard/NoExtractTo.fst` carries one definition per attribute and is extracted twice, each leg checking that its own is gone and the other's survived.  The *reaching* half remains a gap: §4.3 claimed reaching a `noextract` definition is an error with the request chain, which it is not, on either qualifier or attribute; §4.3 now says so.  `tests/extraction`'s four hand-written `--codegen krml` rules move over at the same time --- three asked their question of the legacy extractor's debug output and now ask it of the generated program, and the fourth's `of_literal` injection warning is a Custard error (380). §126.3 |
 | M10κΘ | The Makefiles that are documentation (§126.4) | `tests/simple_hello`, `tests/dune_hello`, `examples/dependencies` and `examples/data_structures` are the answer to "how do I build an F\* program", written as the smallest Makefile that does it; leaving them on the old pipeline would have left the documentation pointing at it.  `examples/dependencies` gets shorter: its four steps --- dependency graph, verify, extract per module, compile and link the `.cmx` files in dependency order --- collapse to one extraction run and one `ocamlopt`, with `ALL_CHECKED_FILES` as the prerequisite since there are no per-module `.ml` files to name.  `examples/data_structures` shows the other half: it built its program by *appending* `let _ = test()` to the extracted module, which works when a module is a compilation unit; under a whole-program compiler `test` is dead code, so the program is built by naming it, `--custard_main RBTreeIntrinsic.test`.  Neither `hello` has a `main`, which is what `--custard_entry_module` is for.  `examples/layeredeffects/extraction` needed a checking pass of its own, since `--codegen OCaml` checked and extracted in one run and Custard reads implementations; its `--no_cmi` went with it (§4.2).  §126.5 records what stays: the `--codegen Plugin` tests, which need a `.cui` only a Custard-built compiler produces and so wait on the bootstrap; `tests/extraction/backends`'s comparison legs; and the multi-module Pulse dirs that link hand-written OCaml or C. §126.4 |
 | M10κΙ | **Three test suites the migration broke** (§126.6–§126.8) | Done.  CI ran what the local gate had not.  `examples/printf` was two coercion bugs in one program: a lambda binder whose type is exactly `TAny` bound nothing, so no use of it was coerced and OCaml inferred a type from the first `match` branch that the second contradicted; and a call that over-applies a head returning `TAny` was coerced only when the expected type was known, so the same call `let`-bound went out with three arguments to a two-argument function.  `tests/floats/Test01` loses its `Float32` half, which Custard refuses on OCaml by design (§66.4) and the legacy backend emulated; the coverage moves to `FloatExtract` and `tests/custard/Floats.fst`.  `fsharp/tests/{Hello,Test00}` drop their hand-written projects for the one Custard generates, and grow a `main`: .NET has no load-time execution, so a module whose top-level effect prints is a program on OCaml and a library that does nothing on F# |
+| M10κΚ | **A partial application that became a saturated one** (§127) | Done.  The defect that kept `pulse/test/pool` on the old pipeline.  `fork_core (f1 ())` passes a thunk, `f1` having two binders and the call supplying one; erasing the second --- a proof-level `loc_id` --- made the call saturated, so the worker loop ran inline in the spawning thread instead of being forked.  `Mono.keep_thunk` is the rule for exactly this and its comment already named the hazard, but its second clause asked whether the last binder was *unit-shaped* rather than whether the codomain was impure.  It now asks the second, in Custard's sense of impure rather than F*'s (`Mono.impure_codomain`, since a Pulse `fn` is a `Tot` function returning an `stt`), and `Extract`'s `Tm_abs` guard gained the same clause off `body.eff`.  Restricted to an *explicit* last binder, because F* instantiates an implicit at every application, so no partial application stops in front of one --- and keeping one gave §80.1's record field an arity its derived projector could not meet.  The mirror miscount is fixed alongside: a call through a *variable* deleted the argument for the binder `keep_thunk` had just put back, and now passes `()` for it as a call through a name always did.  The cost is a `unit` parameter on a definition whose last binder is erased in front of an impure codomain, which is what the legacy backend keeps anyway |
+| M10κΛ | **A module that must never be compiled** (§128) | Done.  `Pulse.Lib.SpinLock`'s `acquire` loops on a `cas` that is a *specification* --- a read then a write, atomic in Pulse and two accesses once compiled --- so Custard's compiled spin lock locked nothing and the pool example's quicksort raced.  The answer is the mechanism §8.2 already had: the module joins `Builtins.realized_modules`, its values become externals under the names the hand-written `Pulse_Lib_SpinLock.ml` and `.c` already use, and nothing of it is compiled.  Two defects were hiding behind it.  `external_ty` built an external's signature without `keep_thunk`, so `new_lock`, whose one binder is erased, was declared a *value* while every call site emitted `new_lock ()` (§128.1).  And `Realized` means hand-written *OCaml*, so the C backends kept the F\* shape --- right for `Prims.list`, and for a lock a `struct { uint32_t *r; }` beside a realization whose header says `pthread_mutex_t *`; `Builtins.c_realized_modules` is the second table, and makes such a type an `Extern` carrying its header (§128.2).  The DICE build, the only Custard C build with `-Werror`, also caught §116's overflow guard comparing a `uint32_t` length against `SIZE_MAX`, which `-Wtype-limits` calls always false: the length now goes through a `size_t` temporary, which keeps the check real on a 32-bit target (§128.3).  `pulse/test/pool/pulse_task` moves to Custard on top of it and gets shorter: one extraction from one entry point, `fstar.exe --ocamlopt` to link, no `dune` project, no local `Prims.ml` and no `sed` over the output (§128.5) |
