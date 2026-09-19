@@ -987,6 +987,190 @@ degrades to today's behaviour rather than to a mismatch.
   it has already consumed into the result type before unfolding it, so the
   *instantiated* arrow is what gets walked.
 
+### The Custard backend: deciding an arity twice
+
+The second extraction backend, `src/custard/`, does not have a `drop_spec_args`.
+It decides which binders survive from the type, and it does so in **two**
+places, which must reach the same answer:
+
+| world | who | predicate |
+|---|---|---|
+| a *declaration* — a top-level `val` or `let`, and the call sites that name it | `Mono.classify` / `classify_def` → `binder_classes` → `app_of_fv'` | rule 1 (`is_dropped_binder`) **or** unit-shaped, then `keep_thunk` |
+| an *anonymous arrow* — a type abbreviation, a lambda, a call through a variable | `Mono.erased_binders` → `ty_of_typ`'s arrow case | `is_erased_binder` (= type binder or rule 1), then `keep_thunk` |
+
+They differ, deliberately, on the binders whose sort is `unit`: only the first
+has the codomain in hand, and a `unit` binder is also how F* writes a **thunk**,
+so dropping the wrong one turns an impure function into a value whose effect
+then runs at module initialization. `Mono.is_dropped_binder` therefore begins by
+exempting them, and the exemption was written with `U.is_unit` — which treats
+`unit`, `squash p` and `_:unit{p}` as the one thing they are, since `squash p`
+*is* `x:unit{p}`.
+
+On master that conflation was harmless, because a `squash` binder was rare.
+Here it is universal: every `requires` is one. The two worlds then disagreed
+about every such binder, and `tests/extraction/SquashArgErasure.fst` is the
+minimal witness — a definition whose type is an *abbreviation* of an arrow with
+a precondition:
+
+```fstar
+let t_t = (x:int) -> (y:int) -> Pure (result unit) (requires x >= 0 /\ y >= 0) ...
+let callee (f: t_t) : Tot t_t = fun x y -> f x y
+let rec caller (fuel: nat) : t_t = fun x y -> ... callee (caller fuel') x y
+```
+
+`classify` unfolds `t_t`, sees three binders and deletes the third by its *own*
+unit rule, so `caller` is emitted with three parameters — `fuel`, `x`, `y`.
+`ty_of_typ` keeps it, so `t_t` is emitted as `int -> int -> unit -> result`.
+The two met at the call site:
+
+```
+Error: This expression has type "int -> int -> unit result"
+       but an expression was expected of type "int -> int -> unit -> unit result"
+```
+
+The same disagreement reached the rules in `Custard.Builtins` through
+`prim_app`, whose spine filter is `erased_binders`: a call to `FStar.UInt32.sub`
+carried one more argument than the rule's declared arity, and the backend's own
+`Warning_CustardRuleArity` fired **257** times in one `make ci`.
+
+The fix is one predicate. A `squash p` binder can never be a thunk — F* writes a
+thunk as `unit -> ...`, never as `squash p -> ...` — so, unlike a `unit` binder,
+it needs no codomain to be decided, and rule 1 can delete it directly:
+
+```fstar
+let is_dropped_binder (env:TcEnv.env) (b:binder) : ML bool =
+  let sort = b.binder_bv.sort in
+  not (U.is_exactly_unit sort) &&          // was: not (U.is_unit sort)
+  not (is_type_binder env b) &&
+  TcUtil.must_erase_for_extraction env sort
+```
+
+`U.is_exactly_unit` is the test for "this type says nothing": unlike
+`is_unit` it does not `unrefine`, so it accepts `Prims.unit` and rejects
+`squash p` and `_:unit{p}`. `classify` is unaffected — a `squash` binder simply
+moves from its second disjunct to its first — and every other reader of rule 1
+now deletes the binder too. The arity warnings went to 0 and
+`tests/extraction/Ints.ml.expected` is reproduced byte for byte.
+
+The general lesson, which the file states about `keep_thunk` and which this
+violated: *deciding an arity twice from the same type is only safe if both
+decisions are the same decision.* A predicate that deliberately differs between
+the two decisions must be exact about the case it is differing on.
+
+The predicate change moved a second, latent disagreement into view, in the same
+function the 257 warnings came from. `prim_app` filtered its call spine with
+`Mono.erased_binders` while checking the resulting arity against
+`Mono.erased_binders_unfold`, and the two differ exactly on the binder
+`Mono.keep_thunk` puts back. `FStar.Pervasives.false_elim` is
+`#a:Type -> unit{False} -> Tot a` and its rule has arity 1; once the
+`unit{False}` binder became droppable, the unfiltered version deleted both
+binders, the rule was under-applied, and `prim_app` eta-expanded it into a
+lambda of unknown representation:
+
+```
+let CFalseElim.g__lam (eta: any) : any [Impure] = <abort>
+let CFalseElim.g (sq: unit) : u32 [Pure] = CFalseElim.g__lam
+Error 368: Custard lost the representation of 2 value(s) in CFalseElim.g__lam
+```
+
+So `prim_app` now filters with `erased_binders_unfold`, and `Mono.retained_sorts`
+and `Mono.retained_names` — which name and type the binders the eta-expansion
+introduces, and so must index the *same* list — were rewritten to share a single
+`retained_binders`, likewise `arrow_formals_unfold` plus `keep_thunk`.
+
+#### A rule outranks the erasability shortcut
+
+`Custard.Extract.app_of_fv` consulted `erasable_app` — "a saturated pure or
+ghost call whose result is non-informative is `()`" — *before* the rule table.
+That was safe on master only by accident. `Prims.admit` was declared
+`Admit a`, an effect abbreviation that was never normalised at that point, so
+`U.is_pure_or_ghost_comp` answered *no* and the call survived to reach its rule,
+`Rule_prim (1, EAbort TAny)`. On this branch `admit` is honestly
+`Tot (_:a{False})` (§4), the shortcut fires, and every `admit ()` — including
+the one Pulse emits for `Tm_Admit` — was silently replaced by `()`. The
+`abort()` disappeared from `pulse/test/Bug356.c.expected`.
+
+The order is now rules first:
+
+```fstar
+match Builtins.lookup_rule l with
+| Some (Builtins.Rule_prim (n, f)) -> prim_app st l n f args
+| _ -> if erasable_app st (lookup_lid_typ st l) args
+       then unit_expr
+       else app_of_fv' st fv args
+```
+
+A rule is a statement about what a name *means* in the target; erasability is an
+optimisation. `admit`, `magic` and `false_elim` all have non-informative results
+by construction, so any of them could have been deleted this way.
+
+#### A binder kept for arity is not an argument
+
+Filtering `prim_app`'s spine with `keep_thunk` then over-supplied the rules in
+the other direction. `Pulse.Lib.Array.null` is `#a:Type0 -> array a`: every
+binder is erased, so `keep_thunk`'s *becomes-a-value* clause restores the last
+one — which here is the **type** binder. `app_of_fv'` handles exactly this,
+passing `()` for any position `Mono.unit_binders` flags, because a binder
+`keep_thunk` restored is there for its arity and for nothing else. `prim_app`
+had no such step, so the restored argument was left over and applied to the
+rule's result:
+
+```c
+uint32_t *a = (uint32_t *)NULL();     // ArrTup.dc, rejected by the C++ compiler
+```
+```ocaml
+let null_x : Prims.int ref = ((Obj.magic 0) ())   (* pulse/test/Null.ml *)
+```
+
+A rule *replaces* a name rather than calling a definition whose arity has to be
+preserved, so for a rule such a binder is not an argument at all. `prim_app`
+now drops the left-over arguments that `unit_binders` flags before the
+"left-over argument" warning of §64.2 considers the rest.
+
+#### A template argument is not the last argument
+
+`const_of_arg` reduces a `Mono` argument to the constant a C++ non-type
+template parameter will see, peeling the wrappers a size index normally arrives
+in — `Ghost.hide`, `uint_to_t`. It peeled by taking the application's **last**
+argument, and `FStar.SizeT.uint_to_t` is
+`x:nat{fits x} -> Pure t (requires ...)`, so on this branch `16sz` is
+`uint_to_t 16 ()` and the last argument is the squash witness. Three tests
+(`TmplLet`, `TmplLet3`, `TmplMono`) stopped with
+
+```
+Error 390: Custard: this external type is applied to a constant that cannot be
+a template argument. ... and neither is unit.
+```
+
+`const_of_arg` now drops `()` arguments before it looks at the spine.
+
+#### `()` is not a name
+
+A specialization's readable suffix is built from its `Mono` arguments by
+`hint_of_term`, which rendered `Const_unit` as `"unit"`. Since a precondition
+now arrives as a trailing implicit `squash` binder, `16sz` is
+`FStar.SizeT.uint_to_t 16 ()` rather than `FStar.SizeT.uint_to_t 16`, and every
+specialization on a bounded-integer constant acquired a `_unit` component —
+`MonoAttr_f__uint_to_t_16_unit`. The component appears in every such name,
+distinguishes none of them, and consumes the width budget `fit` has for the
+components that do. `Const_unit` now yields no hint; when `()` is all a
+specialization has, the suffix falls back to the sequence number.
+
+Three smaller adaptations were needed for the same reason — master's Custard was
+written against the old surface:
+
+* `Custard.Effects.of_lid` and `Custard.RegEmb` called `TcEnv.norm_eff_name`,
+  which §5 removed. `comp_typ.effect_name` is now always a root effect, so the
+  call is simply dropped.
+* `Custard.Loader` passed `N.erase_universes` to `add_modul_to_env`, whose
+  `erase_univs` parameter existed only to erase universes from
+  `eff_decl.binders` (§5, §7).
+* `Custard.Extract.key_of_comp` read `ct.comp_pre` and `ct.comp_post` for the
+  monomorphization key. A comp carries no specification now, so the key is the
+  effect name and the result type. `source_effect_name` is deliberately *not*
+  in the key: it is presentation only, and keying `Lemma` apart from the `Tot`
+  it is an alias of would emit two identical definitions under two names.
+
 ---
 
 ## 11. Resugaring, printing and error messages
@@ -1621,7 +1805,13 @@ both the symptom and, on the first attempt, the fix.
 | `tests/bug-reports/closed/Bug1370b.fst` | Error 316 for a non-alias effect abbreviation |
 | `tests/micro-benchmarks/SimpleEffects_ReprUniverse.fst` | a total effect's universe comes from its `repr` |
 | `tests/extraction/InstantiatedSpecArgs.fst` | `formals_of` instantiates the head's type before looking for spec args |
-| `tests/extraction/SquashArgErasure.fst` | `drop_spec_args` unfolds the arrow's *result* |
+| `tests/extraction/SquashArgErasure.fst` | `drop_spec_args` unfolds the arrow's *result*; and Custard's two arity decisions agree about a `squash` binder |
+| `tests/custard/ErasableEff.fst` | a `sub_effect` names a root effect (`Tot`, not `PURE`) |
+| `pulse/test/Bug356.c.expected` | `admit ()` still emits `abort()`: a Custard rule outranks the erasability shortcut |
+| `tests/custard/CFalseElim.fst` | `prim_app` filters its spine and checks its arity with the same, `keep_thunk`-aware, list |
+| `tests/custard/pulse/MonoAttr.fst` | a `()` argument contributes no component to a specialization's name |
+| `tests/custard/pulse/ArrTup.fst`, `pulse/test/Null.ml.expected` | a binder `keep_thunk` restored is not passed to a rule |
+| `tests/custard/TmplLet.fst`, `TmplLet3.fst`, `TmplMono.fst` | `const_of_arg` peels past the squash witness of `uint_to_t` |
 | `tests/tactics/ExactObligation.fst` | `exact`'s proof obligation is appended, not prepended |
 | `tests/micro-benchmarks/PostconditionDomain.fst` | a postcondition's binder annotation is checked |
 | `tests/micro-benchmarks/NamedSquashBinder.fst` | `split_squash_binders` keeps a user's named binder |
