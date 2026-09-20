@@ -190,16 +190,8 @@ let is_arrow (t:term) : option (binder & option qualifier & comp) =
               q,
               c)
     in
-    match c_view with
-    | R.C_Total c_t -> ret c_t
-    | R.C_Eff _ eff_name c_t _ _ _ ->
-      //
-      // Consider Tot effect with decreases also
-      //
-      if eff_name = tot_lid
-      then ret c_t
-      else None
-    | _ -> None
+    (* NB: this covers a [Tot] with a [decreases] too. *)
+    if R.is_tot_comp c_view then ret c_view.R.result_typ else None
   )
   | _ -> None
 

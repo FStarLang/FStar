@@ -9,6 +9,7 @@ OTHERFLAGS += \
 --smtencoding.nl_arith_repr wrapped\
 --max_fuel 1 \
 --max_ifuel 1 \
+--z3rlimit_factor 2 \
 --warn_error -350
 # ^ 350: deprecated lightweight do notation
 

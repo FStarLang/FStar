@@ -120,7 +120,7 @@ fn len (#t:Type0) (v:rvec t) (#s:erased (Seq.seq t)) (#cap:erased nat)
 fn get_capacity (#t:Type0) (v:rvec t) (#s:erased (Seq.seq t)) (#cap:erased nat)
   preserves is_rvec v s cap
   returns n:SZ.t
-  ensures pure (SZ.v n == cap)
+  ensures pure ((SZ.v n <: nat) == cap)
 {
   unfold (is_rvec v s cap);
   with vec buf sz cap_sz. _;

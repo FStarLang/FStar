@@ -46,6 +46,12 @@ val repeati_extensionality:
   (ensures  Loops.repeati n f acc0 == Loops.repeati n g acc0)
 
 
+(* [Lib.LoopCombinators] is pruned by the [--using_facts_from] above, so
+   [repeat_right]'s typing axiom is not in scope; the two lemmas below state an
+   equality between two [repeat_right]s at *different* accumulator types, which
+   needs it. *)
+#push-options "--using_facts_from '-* +Prims +FStar.Math.Lemmas +FStar.Seq +Lib.IntTypes +Lib.Sequence +Lib.Sequence.Lemmas +Lib.LoopCombinators'"
+
 val repeat_right_extensionality:
      n:nat
   -> lo:nat
@@ -80,6 +86,8 @@ val repeat_gen_right_extensionality:
   (ensures
     Loops.repeat_right 0 n a_f f acc0 ==
     Loops.repeat_right lo_g (lo_g + n) a_g g acc0)
+
+#pop-options
 
 
 // Loops.repeati n a f acc0 ==

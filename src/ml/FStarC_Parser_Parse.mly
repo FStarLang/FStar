@@ -182,7 +182,7 @@ let rec pat_names (bs : pattern list) : ident list =
 (* IMPORTANT: Please extend the string_of_token function in FStarC_Parser_ParseIt.ml
    to make sure they are printed properly, and that --debug Tokens works. *)
 
-%token ASSUME NEW LOGIC ATTRIBUTES
+%token ASSUME NEW LOGIC
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE UNFOLD INLINE_FOR_EXTRACTION
 %token NOEXTRACT
 %token NOEQUALITY UNOPTEQUALITY
@@ -517,7 +517,7 @@ rawDecl:
       { Splice (true, ids, t) }
   | EXCEPTION lid=uident t_opt=option(OF t=typ {t})
       { Exception(lid, t_opt) }
-  | NEW_EFFECT ne=newEffect
+  | NEW_EFFECT ne=effectDefinition
       { NewEffect ne }
   | SUB_EFFECT se=subEffect
       { SubEffect se }
@@ -614,15 +614,6 @@ letbinding:
 /******************************************************************************/
 /*                                Effects                                     */
 /******************************************************************************/
-
-newEffect:
-  | ed=effectRedefinition
-  | ed=effectDefinition
-    { ed }
-
-effectRedefinition:
-  | lid=uident EQUALS t=simpleTerm
-    { RedefineEffect(lid, [], t) }
 
 /* An effect with a monadic representation, used for reification only:
      effect { Tac with { repr = tac_repr; return = tac_return; bind = tac_bind } }
@@ -1016,8 +1007,6 @@ noSeqTerm:
             "Syntax error: To use well-founded relations, write e1 e2"
       }
 
-  | ATTRIBUTES es=nonempty_list(atomicTerm)
-      { mk_term (Attributes es) (rr2 $loc($1) $loc(es)) Type_level }
   | op=ifMaybeOp e1=noSeqTerm ret_opt=option(match_returning) THEN e2=noSeqTerm ELSE e3=noSeqTerm
       { mk_term (If(e1, op, ret_opt, e2, e3)) (rr2 $loc(op) $loc(e3)) Expr }
   | op=ifMaybeOp e1=noSeqTerm ret_opt=option(match_returning) THEN e2=noSeqTerm

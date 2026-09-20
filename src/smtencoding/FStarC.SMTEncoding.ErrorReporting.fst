@@ -275,7 +275,13 @@ let split_goals use_env_msg  //when present, provides an alternate error message
           let t, decls', ok = aux env' default_msg ropt body in
           let ds = (vars |> List.map (fun fv -> DeclFun (fv_name fv) [] (fv_sort fv) None))
                  @ (guards |> List.filter (function App TrueOp [] _ -> false | _ -> true) |> List.map hyp) in
-          gctx ds (names |> List.map CVar) t, decls@decls', ok
+          gctx ds (names |> List.map (fun (x:S.bv) ->
+                     (* A precondition is a [squash]-typed binder.  Report it as
+                        the hypothesis it stands for rather than as a variable of
+                        an uninformative type. *)
+                     match U.un_squash x.sort with
+                     | Some p -> CHyp p
+                     | None -> CVar x)) t, decls@decls', ok
 
         | _ ->
         match (SS.compress q).n with

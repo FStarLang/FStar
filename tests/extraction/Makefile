@@ -25,6 +25,11 @@ RUN += ExtractMe.fst
 RUN += ExtractAs.fst
 RUN += ParseTest.fst
 
+# A precondition is a trailing implicit [squash] binder, and both it and its
+# argument are dropped by extraction.  The binder can be hidden inside the
+# *instantiated* type of the head, so extracting this at all is the test.
+EXTRACT += InstantiatedSpecArgs.fst
+
 include $(FSTAR_ROOT)/mk/test.mk
 
 all: $(OUTPUT_DIR)/FloatLiteralExtraction.test

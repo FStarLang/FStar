@@ -8,6 +8,10 @@ SUBDIRS += ns_resolution
 $(CACHE_DIR)/MustEraseForExtraction.fst.checked: FSTAR_ARGS += --warn_error @318
 FSTAR_ARGS += --warn_error +240
 
+# An implicit of arrow type must be normalized with its (opened) binders in
+# scope; --defensive error is what catches it if it is not.
+$(CACHE_DIR)/ImplicitArrowDefensive.fst.checked: FSTAR_ARGS += --defensive error
+
 # `--ext freshen` restarts the solver before every top-level declaration.
 # ExtFreshen.fst is written so that each declaration depends on facts
 # introduced by the previous ones, so checking it with the option on tests

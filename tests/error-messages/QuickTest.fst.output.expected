@@ -4,12 +4,6 @@
   - Failed to prove: QuickTest.f 4 == 0
   - In context:
       va_s0: QuickTest.vale_state
-      qc: QuickTest.quickCode Prims.unit
-      Prims.has_type qc (QuickTest.quickCode Prims.unit)
-      QuickTest.va_qcode_Test2 == qc
-      s0: QuickTest.vale_state
-      Prims.has_type s0 QuickTest.vale_state
-      va_s0 == s0
       ok: Prims.bool
       QuickTest.f 4 - QuickTest.f 4 == 0
   - Also see: QuickTest(1,2-3,4)

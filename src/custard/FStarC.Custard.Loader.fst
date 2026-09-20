@@ -28,7 +28,6 @@ module Dep   = FStarC.Parser.Dep
 module DsEnv = FStarC.Syntax.DsEnv
 module E     = FStarC.Errors
 module Ident = FStarC.Ident
-module N     = FStarC.TypeChecker.Normalize
 module BU    = FStarC.Util
 module SMap  = FStarC.SMap
 module Tc    = FStarC.TypeChecker.Tc
@@ -187,7 +186,6 @@ let rec ensure_loaded (deps:Dep.deps) (env:TcEnv.env) (m:string) : ML TcEnv.env 
               FStarC.ToSyntax.ToSyntax.add_modul_to_env
                 tcr.checked_module
                 tcr.mii
-                (N.erase_universes env)
                 env.dsenv
             in
             dsenv

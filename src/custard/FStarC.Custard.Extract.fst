@@ -282,13 +282,16 @@ and key_of_arg (acc:ref (list string)) (a:S.arg) : ML unit = key_into acc (fst a
 
 and key_of_comp (acc:ref (list string)) (c:S.comp) : ML unit =
   match c.n with
-  | Total t  -> key_into acc t
-  | GTotal t -> acc := "GTot " :: !acc; key_into acc t
   | Comp ct  ->
+    (* [source_effect_name] is deliberately absent.  It records the name the
+       user *wrote* before the desugarer resolved the abbreviation away, so it
+       is presentation only -- the same over-splitting argument as for a range
+       or an integer's base above: [Lemma] and the [Tot] it is an alias of are
+       one computation, and keying them apart would emit two identical
+       definitions under two names.  The specification is absent because a
+       comp no longer carries one. *)
     acc := (Ident.string_of_lid ct.effect_name ^ " ") :: !acc;
-    key_into acc ct.result_typ;
-    acc := " " :: !acc; key_into acc ct.comp_pre;
-    acc := " " :: !acc; key_into acc ct.comp_post
+    key_into acc ct.result_typ
 
 and key_of_branch (acc:ref (list string)) (br:S.branch) : ML unit =
   let (p, w, e) = br in
@@ -1244,7 +1247,17 @@ let rec hint_of_term (st:state) (fuel:int) (t:term) : ML (option string) =
        | Const_machine_int (v, _, _, _) -> Some (show v)
        | Const_bool b     -> Some (if b then "true" else "false")
        | Const_string (s, _) -> Some s
-       | Const_unit       -> Some "unit"
+       (* [()] names nothing, and saying so is not a style preference.  A
+          precondition reaches a term as a trailing implicit [squash] binder,
+          so [16sz] -- [FStar.SizeT.uint_to_t 16] -- is an application with a
+          [()] in it, and rendering that argument made every specialization on
+          a bounded-integer constant [..._uint_to_t_16_unit].  The component is
+          in every such name, distinguishes none of them from any other, and
+          eats the budget {!fit} has for the components that do.  When [()] is
+          all a specialization has, [hint_of_args] falls back to the sequence
+          number, which is the right answer for an argument that carries no
+          information. *)
+       | Const_unit       -> None
        | _ -> None)
     (* A type-level lambda is how a higher-kinded argument arrives --
        [fun a -> option a] instantiating an [m:Type -> Type] -- and what names
@@ -2349,6 +2362,16 @@ and const_of_arg (st:state) (t:term) : ML (option constant) =
      [16], and the diagnostic contradicts itself. *)
   let t = U.unmeta (U.unascribe (U.unlazy_emb t)) in
   let h, args = U.head_and_args_full t in
+  (* The [()] a precondition leaves behind is not an argument to look in.
+     [uint_to_t] is [x:nat{fits x} -> Pure t ...], so on this compiler its
+     application is [uint_to_t 16 ()] and its *last* argument -- which is what
+     the wrappers below peel -- is the squash witness.  [const_of_arg] then
+     reported the index of [std::bitset<16>] as [()] and raised error 390
+     about a template argument the source never wrote. *)
+  let args = args |> List.filter (fun (a, _) ->
+    match (SS.compress (U.unmeta (U.unascribe (U.unlazy_emb a)))).n with
+    | Tm_constant Const_unit -> false
+    | _ -> true) in
   (* Section 92.  [X.v] is the inverse of [X.uint_to_t], and after a local
      [let] is delta-reduced the constant comes back spelled as the pair
      rather than as the lazy embedding above: [FStar.SizeT.v
@@ -3268,12 +3291,30 @@ and drop_flagged (#a:Type) (flags:list bool) (xs:list a) : ML (list a) =
    at runtime. *)
 and app_of_fv (st:state) (fv:fv) (args:args) : ML expr =
   let l = S.lid_of_fv fv in
-  if erasable_app st (lookup_lid_typ st l) args
-  then unit_expr
-  else
-    match Builtins.lookup_rule l with
-    | Some (Builtins.Rule_prim (n, f)) -> prim_app st l n f args
-    | _ -> app_of_fv' st fv args
+  (* The rule table is consulted before the erasability shortcut below.  A
+     name a rule interprets is a name whose F* type does not describe what it
+     does at runtime, so that shortcut -- which reads exactly that type -- has
+     no standing over it.
+
+     [Prims.admit : #a:Type -> unit -> Tot (_:a{False})] is the case that
+     makes the difference.  It is total, and at [a = unit] its result is
+     non-informative, so the shortcut replaced the call by [()] -- but [admit]
+     does not return a value at all, it aborts, and its rule is the one thing
+     that says so.  The same holds of [Prims.magic] and of
+     [FStar.Pervasives.false_elim].
+
+     This used to be hidden rather than decided.  [admit] was declared in the
+     effect abbreviation [Admit a = PURE a (ensures fun _ -> False)], and the
+     shortcut asks [U.is_pure_or_ghost_comp], which resolves no abbreviation
+     and so answered no.  The call survived for the wrong reason.  With [Tot]
+     written honestly in its type the accident is gone, and the order here is
+     what replaces it.  [pulse/test/Bug356.c.expected] pins the [abort]. *)
+  match Builtins.lookup_rule l with
+  | Some (Builtins.Rule_prim (n, f)) -> prim_app st l n f args
+  | _ ->
+    if erasable_app st (lookup_lid_typ st l) args
+    then unit_expr
+    else app_of_fv' st fv args
 
 (* Section 5.1: a term whose *result* is non-informative is replaced by [()]
    without ever being looked at.  This has to happen before the spine is
@@ -3318,8 +3359,16 @@ and prim_app (st:state) (l:Ident.lident) (n:int)
   let decl_ty = match lookup_lid_typ st l with
                 | Some ((_, ty), _) -> Some ty
                 | None -> None in
+  (* [erased_binders_unfold], not [erased_binders]: this filters a *call
+     spine*.  A call runs straight through an abbreviation, and -- the reason
+     the two differ here -- a rule's arity counts the binder {!Mono.keep_thunk}
+     puts back, which is what the arity warning below counts too.  Reading the
+     two from different functions is how [FStar.Pervasives.false_elim], whose
+     one explicit binder is a [unit{False}] that rule 1 deletes, lost its only
+     argument: the rule was then under-applied, eta-expanded, and emitted as a
+     function value of unknown representation (error 368). *)
   let flags = match decl_ty with
-              | Some ty -> Mono.erased_binders (tcenv st) ty
+              | Some ty -> Mono.erased_binders_unfold (tcenv st) ty
               | None -> [] in
   (* A rule that builds a buffer, a null pointer or a cast needs to know at
      which type; the type arguments are erased from the value spine, so they
@@ -3339,6 +3388,16 @@ and prim_app (st:state) (l:Ident.lident) (n:int)
   let args = if None? decl_ty
              then args |> List.filter (fun (a, _) -> not (Mono.is_type_term (tcenv st) a))
              else drop_flagged flags args in
+  (* Which of the arguments that survived the filter are there for arity and
+     for nothing else -- the ones {!Mono.keep_thunk} put back, and the
+     unit-shaped ones.  [app_of_fv'] passes [()] for these ({!call_unit_flags});
+     a rule has nowhere to pass them, because a rule replaces the name outright
+     rather than calling a definition whose arity has to be preserved.  So they
+     are not left over in the sense the warning below means, and applying them
+     to the rule's result is how [Pulse.Lib.Array.null #U32.t], whose rule takes
+     no argument at all, came out as the C expression [NULL()]. *)
+  let unit_kept = if None? decl_ty then []
+                  else drop_flagged flags (binder_flags st "u:" l Mono.unit_binders) in
   (* Section 71.  A rule whose arguments are compile-time data gets them
      reduced first.  This has to happen on the *terms*, before extraction:
      [squares 5] extracts to a call, and a call is not a list of elements
@@ -3364,7 +3423,7 @@ and prim_app (st:state) (l:Ident.lident) (n:int)
      The mistake is easy to make because a rule sees the erased implicits in
      the term it is handed while a use site supplies only the retained
      binders, so counting the wrong ones is the natural error.
-     A warning rather than an error: [erased_binders_unfold] declines to peel
+     A warning rather than an error: [arrow_formals_unfold] declines to peel
      an effectful codomain, so a rule for something returning a function
      through an [ML] abbreviation may legitimately exceed the visible count. *)
   (match decl_ty with
@@ -3387,6 +3446,11 @@ and prim_app (st:state) (l:Ident.lident) (n:int)
   let given, extra =
     if List.length args <= n then args, []
     else List.splitAt n args in
+  let extra =
+    extra |> List.mapi (fun i e -> (i + n, e))
+          |> List.filter (fun (j, _) ->
+               not (j < List.length unit_kept && List.nth unit_kept j))
+          |> List.map snd in
   let missing = n - List.length given in
   if missing > 0
   then

@@ -241,29 +241,11 @@ and compare_argv_list (b1 b2 : Ghost.erased term)
 and __compare_comp (c1 c2 : comp) : Tot order (decreases c1) =
     let cv1 = inspect_comp c1 in
     let cv2 = inspect_comp c2 in
-    match cv1, cv2 with
-    | C_Total t1, C_Total t2
-
-    | C_GTotal t1, C_GTotal t2 -> __compare_term t1 t2
-
-    | C_Lemma p1 q1 s1, C_Lemma p2 q2 s2 ->
-      lex (__compare_term p1 p2)
-          (fun () ->
-            lex (__compare_term q1 q2)
-                (fun () -> __compare_term s1 s2)
-          )
-
-    | C_Eff us1 eff1 res1 _pre1 _post1 _decrs1,
-      C_Eff us2 eff2 res2 _pre2 _post2 _decrs2 ->
-        (* This could be more complex, not sure it is worth it *)
-        lex (compare_universes us1 us2)
-            (fun _ -> lex (compare_name eff1 eff2)
-                       (fun _ -> __compare_term res1 res2))
-
-    | C_Total _, _  -> Lt     | _, C_Total _ -> Gt
-    | C_GTotal _, _  -> Lt    | _, C_GTotal _ -> Gt
-    | C_Lemma _ _ _, _  -> Lt   | _, C_Lemma _ _ _ -> Gt
-    | C_Eff _ _ _ _ _ _, _ -> Lt    | _, C_Eff _ _ _ _ _ _ -> Gt
+    (* This could be more complex -- the flags are not compared -- not sure it
+       is worth it.  [source_effect_name] is presentation only and is
+       deliberately ignored. *)
+    lex (compare_name cv1.effect_name cv2.effect_name)
+        (fun _ -> __compare_term cv1.result_typ cv2.result_typ)
 
 and __compare_binder (b1 b2 : binder) : order =
     let bview1 = inspect_binder b1 in

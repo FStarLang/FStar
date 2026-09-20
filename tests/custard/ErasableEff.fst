@@ -28,8 +28,8 @@ effect {
   SPEC with { repr; return; bind }
 }
 
-sub_effect PURE ~> PLAIN = lift_PURE
-sub_effect PURE ~> SPEC = lift_PURE
+sub_effect Tot ~> PLAIN = lift_PURE
+sub_effect Tot ~> SPEC = lift_PURE
 
 effect Plain (a:Type) = PLAIN a
 effect Spec (a:Type) = SPEC a

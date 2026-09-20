@@ -49,21 +49,16 @@ and check_u (u:universe) : Tac bool =
   | Uv_Max us -> for_all check_u us
   | Uv_Unk -> true
 and check_comp (c:comp) : Tac bool =
-  match c with
-  | C_Total typ -> check typ
-  | C_GTotal typ -> check typ
-  | C_Lemma pre post pats -> 
-    if not (check pre) then false else
-    if not (check post) then false else
-    check pats
-  | C_Eff us nm res pre post decrs ->
-     if not (for_all check_u us) then false else
-     if not (check res) then false else
-     if not (check pre) then false else
-     if not (check post) then false else
-     if not (for_all check decrs) then false else
-     true
- 
+  if not (check c.result_typ) then false else
+  for_all check_flag c.flags
+
+and check_flag (f:cflag) : Tac bool =
+  match f with
+  | SMTPAT t -> check t
+  | DECREASES (Decreases_lex ts) -> for_all check ts
+  | DECREASES (Decreases_wf rel e) -> if not (check rel) then false else check e
+
+
 and check_br (b:branch) : Tac bool =
   (* Could check the pattern's ascriptions too. *)
   let (p, t) = b in

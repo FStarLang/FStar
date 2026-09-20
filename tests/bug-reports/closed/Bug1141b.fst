@@ -15,7 +15,7 @@
 *)
 module Bug1141b
 
-effect MyTot (a:Type) = PURE a (requires True) (ensures fun _ -> True)
+effect MyTot (a:Type) = PURE a
 
 [@@expect_failure]
 noeq

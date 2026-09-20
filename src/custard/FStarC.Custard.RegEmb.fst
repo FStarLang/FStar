@@ -712,8 +712,7 @@ let registration (st:Extract.state) (arity_opt:option int) (r:Range.t)
   let res = U.comp_result c in
   let tac =
     not (U.is_pure_comp c) &&
-    Ident.lid_equals (TcEnv.norm_eff_name (Extract.tcenv st) (U.comp_effect_name c))
-                     PC.effect_TAC_lid in
+    Ident.lid_equals (U.comp_effect_name c) PC.effect_TAC_lid in
   if not tac && not (U.is_pure_comp c) then
     raise (NoEmbedding ("no plugin for effect " ^ Ident.string_of_lid (U.comp_effect_name c)));
   if n = 0 then

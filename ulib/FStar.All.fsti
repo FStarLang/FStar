@@ -32,7 +32,7 @@ val nonempty_ref (a:Type0) : Lemma (nonempty (ref a)) [SMTPat (nonempty (ref a))
 (** STATE effect: underspecified state *)
 assume effect STATE
 
-assume sub_effect DIV ~> STATE
+assume sub_effect Div ~> STATE
 
 effect St (a:Type) = STATE a
 

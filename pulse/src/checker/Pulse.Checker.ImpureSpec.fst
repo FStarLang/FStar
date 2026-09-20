@@ -550,10 +550,9 @@ let type_of_fv (g:env) (fv:R.fv) : T.Tac (option R.term) =
    into, predicate arguments (`Some (_::_)`) are not. *)
 let binder_is_pred (b:R.binder) : option (list R.term) =
   let doms, c = R.collect_arr_ln (R.inspect_binder b).sort in
-  match R.inspect_comp c with
-  | R.C_Total res | R.C_GTotal res ->
-    if T.term_eq tm_slprop res then Some doms else None
-  | _ -> None
+  let cv = R.inspect_comp c in
+  if R.is_tot_or_gtot_comp cv && T.term_eq tm_slprop cv.R.result_typ
+  then Some doms else None
 
 let combinator_head_fv (t: term) : option R.fv =
   match R.inspect_ln t with

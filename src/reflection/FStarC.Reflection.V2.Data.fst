@@ -35,3 +35,16 @@ let as_ppname (x:string) : Tot ppname_t = FStarC.Sealed.seal x
 
 let notAscription (tv:term_view) : Tot bool =
   not (Tv_AscribedT? tv) && not (Tv_AscribedC? tv)
+
+let tot_effect_name  : name = ["Prims"; "Tot"]
+let gtot_effect_name : name = ["Prims"; "GTot"]
+
+let mk_comp_view (eff:name) (res:typ) : comp_view =
+  { effect_name = eff; result_typ = res; flags = []; source_effect_name = eff }
+
+let mk_tot_comp  (res:typ) : comp_view = mk_comp_view tot_effect_name res
+let mk_gtot_comp (res:typ) : comp_view = mk_comp_view gtot_effect_name res
+
+let is_tot_comp  (cv:comp_view) : bool = cv.effect_name = tot_effect_name
+let is_gtot_comp (cv:comp_view) : bool = cv.effect_name = gtot_effect_name
+let is_tot_or_gtot_comp (cv:comp_view) : bool = is_tot_comp cv || is_gtot_comp cv
