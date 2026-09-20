@@ -1526,14 +1526,19 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
       | Tm_let {lbs=(false, _::_)} ->
         failwith "Impossible: non-recursive let with multiple bindings"
 
-      // A recursive local let. We encode this imprecisely, just generating a
-      // variable. The variable is keyed on a hash of the term, so that two
-      // occurrences of the same inner let rec are encoded by the same symbol.
-      | Tm_let {lbs=(true, lbs)} ->
+      // A recursive local let. We encode this imprecisely, using an
+      // uninterpreted function applied to the free variables of the term.
+      // The symbol is keyed on a hash of the term, so that two occurrences
+      // of the same inner let rec share a symbol, but can depend on different
+      // values of their free variables in the current environment.
+      | Tm_let {lbs=(true, _)} ->
+        let fvs = Free.names t0 |> elems in
+        let arg_sorts = List.map (fun _ -> Term_sort) fvs in
+        let arg_terms = List.map (lookup_term_var env) fvs in
         let tkey_hash = FStarC.Hash.string_of_hash_code (FStarC.Syntax.Hash.ext_hash_term t0) in
         let f = "Tm_inner_let_rec_" ^ BU.digest_of_string tkey_hash in
-        let decl = Term.DeclFun f [] Term_sort (Some "Inner let rec") in
-        mkFreeV <| mk_fv (f, Term_sort), mk_decls f tkey_hash [decl] []
+        let decl = Term.DeclFun f arg_sorts Term_sort (Some "Inner let rec") in
+        mkApp (f, arg_terms), mk_decls f tkey_hash [decl] []
 
       | Tm_let _ ->
         failwith "Impossible: all cases handled above (encode_term)."

@@ -570,6 +570,12 @@ Guidelines for the changelog:
     proof out with `introduce forall ... with ...` instead of relying on
     `Classical.forall_intro`.
 
+  * Fixes a soundness bug in the SMT encoding of local `let rec`
+    expressions. Their uninterpreted symbols now take the expressions' free
+    variables as arguments; previously, the encoding ignored the enclosing
+    environment and could equate results obtained with different captured
+    values, allowing proofs of `False`.
+
 # Version 0.9.7.0
 
 ## Tactics & Reflection
