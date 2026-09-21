@@ -348,6 +348,42 @@ let preprocess (env:Env.env) (goal:term)
     did_anything, (env, t', O.peek ()) :: gs
   )
 
+(* Discharge the goals a tactic left behind.
+
+   Each goal carries its own environment and its own options, which is why they
+   cannot simply be conjoined into one guard here. Instead [TcRel.combine_goals]
+   merges the ones that share a context into a single verification condition, so
+   that the solver encodes that context once instead of once per goal.
+
+   Every goal is labelled with its own range first. Without that, a failure in a
+   merged query would be reported against the whole query rather than against
+   the obligation that caused it; with it, [ErrorReporting.split_goals] finds
+   the label when it reaches the leaf and reports exactly what the unmerged code
+   used to. *)
+let discharge_goals (what:string) (rng:Range.t) (gs:list goal) : ML unit =
+  let open FStarC.Pprint in
+  let vcs = gs |> List.map (fun g ->
+    match getprop (goal_env g) (goal_type g) with
+    | Some vc ->
+      if !dbg_Tac then
+        Format.print2 "%s left a goal: %s\n" what (show vc);
+      (* When the metaprogram supplied an explanation (via [with_error_message],
+         say), lead with it: it says what the obligation is for, which is far
+         more useful than the fact that a tactic produced it. *)
+      let label =
+        match get_label g with
+        | "" -> [doc_of_string (what ^ " left a goal")]
+        | l -> [doc_of_string l; doc_of_string (what ^ " left this goal")]
+      in
+      (goal_env g, TcUtil.label label (goal_range g) vc, goal_opts g)
+    | None ->
+      Err.raise_error rng Err.Fatal_OpenGoalsInSynthesis (what ^ " left open goals"))
+  in
+  Options.with_saved_options (fun () ->
+    TcRel.combine_goals vcs |> List.iter (fun (e, vc, opts) ->
+      Options.set opts;
+      TcRel.force_trivial_guard e (guard_of_guard_formula (NonTrivial vc))))
+
 let synthesize (env:Env.env) (typ:typ) (tau:term) rng : ML term =
   Errors.with_ctx "While synthesizing term with a tactic" (fun () ->
     // Don't run the tactic (and end with a magic) when flychecking is set, cf. issue #73 in fstar-mode.el
@@ -357,19 +393,7 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) rng : ML term =
 
     let gs, w = run_tactic_on_typ tau.pos rng tau env typ in
     // Check that all goals left are irrelevant and provable
-    // TODO: It would be nicer to combine all of these into a guard and return
-    // that to TcTerm, but the varying environments make it awkward.
-    gs |> List.iter (fun g ->
-        match getprop (goal_env g) (goal_type g) with
-        | Some vc ->
-            begin
-            if !dbg_Tac then
-              Format.print1 "Synthesis left a goal: %s\n" (show vc);
-            let guard = guard_of_guard_formula (NonTrivial vc) in
-            TcRel.force_trivial_guard (goal_env g) guard
-            end
-        | None ->
-            Err.raise_error typ Err.Fatal_OpenGoalsInSynthesis "synthesis left open goals");
+    discharge_goals "Synthesis" typ.pos gs;
     w
     end
   )
@@ -596,19 +620,7 @@ let splice
     in
 
     // Check that all goals left are irrelevant and solve them.
-    Options.with_saved_options (fun () ->
-      List.iter (fun g ->
-        Options.set (goal_opts g);
-        match getprop (goal_env g) (goal_type g) with
-        | Some vc ->
-            begin
-            if !dbg_Tac then
-              Format.print1 "Splice left a goal: %s\n" (show vc);
-            let guard = guard_of_guard_formula (NonTrivial vc) in
-            TcRel.force_trivial_guard (goal_env g) guard
-            end
-        | None ->
-            Err.raise_error rng Err.Fatal_OpenGoalsInSynthesis "splice left open goals") gs);
+    discharge_goals "Splice" rng gs;
 
     let lids' = List.collect U.lids_of_sigelt sigelts in
     List.iter (fun lid ->
