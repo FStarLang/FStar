@@ -361,19 +361,19 @@ let preprocess (env:Env.env) (goal:term)
    the label when it reaches the leaf and reports exactly what the unmerged code
    used to. *)
 let discharge_goals (what:string) (rng:Range.t) (gs:list goal) : ML unit =
-  let open FStarC.Pprint in
   let vcs = gs |> List.map (fun g ->
     match getprop (goal_env g) (goal_type g) with
     | Some vc ->
       if !dbg_Tac then
         Format.print2 "%s left a goal: %s\n" what (show vc);
-      (* When the metaprogram supplied an explanation (via [with_error_message],
-         say), lead with it: it says what the obligation is for, which is far
-         more useful than the fact that a tactic produced it. *)
+      (* A goal the metaprogram explained (via [with_error_message]) reports
+         that explanation. Otherwise say exactly what [ErrorReporting.label_goals]
+         would have said on its own: we are here only to pin the range, and a
+         remark about which hook produced the goal is noise to the user. *)
       let label =
         match get_label g with
-        | "" -> [doc_of_string (what ^ " left a goal")]
-        | l -> [doc_of_string l; doc_of_string (what ^ " left this goal")]
+        | "" -> Errors.mkmsg "Assertion failed"
+        | l -> Errors.mkmsg l
       in
       (goal_env g, TcUtil.label label (goal_range g) vc, goal_opts g)
     | None ->
