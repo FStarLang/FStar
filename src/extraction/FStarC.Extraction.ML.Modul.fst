@@ -449,6 +449,23 @@ let extract_let_rec_type env quals attrs lb
     iface,
     def
 
+(* Implicit [squash] binders carry no computational content and are dropped
+   from a data constructor's ML type (see [Term.is_spec_binder]).  Anything
+   enumerated in parallel with that ML type -- the constructor's argument
+   names, a record's field names -- has to drop them too.
+
+   The mask is computed from the *unnormalized* type, exactly as
+   [Term.term_as_mlty] sees it: normalizing unfolds [squash] and would hide
+   the binder. *)
+let spec_binder_mask (ctor:data_constructor) : ML (list bool) =
+    let bs, _ = U.arrow_formals_comp_strict ctor.dtyp in
+    List.map Term.is_spec_binder bs
+
+let drop_spec_binders (mask:list bool) (l:list 'a) : ML (list 'a) =
+    if List.length mask <> List.length l
+    then l
+    else List.zip mask l |> List.filter (fun (m, _) -> not m) |> List.map snd
+
 (* extract_bundle_iface:
        Extracts a bundle of inductive type definitions for an interface
 
@@ -478,6 +495,11 @@ let extract_bundle_iface env se
        let env =
          match Option.find (function RecordType _ -> true | _ -> false) ind.iquals with
          | Some (RecordType (ns, ids)) ->
+           let ids =
+             match ind.idatas with
+             | [ctor] -> drop_spec_binders (spec_binder_mask ctor) ids
+             | _ -> ids
+           in
            let g =
             List.fold_right
                 (fun id g ->
@@ -847,6 +869,7 @@ let extract_bundle env se : ML (env_t & list mlmodule1) =
         let names =
           let bs, _ = U.arrow_node_formals_comp_ln (N.normalize steps (tcenv_of_uenv env_iparams) ctor.dtyp) in
           List.map (fun ({binder_bv={ ppname = ppname }}) -> (string_of_id ppname)) bs
+          |> drop_spec_binders (spec_binder_mask ctor)
         in
         let tys = (ml_tyvars, mlt) in
         let fvv = lid_as_fv ctor.dname None in
@@ -865,6 +888,11 @@ let extract_bundle env se : ML (env_t & list mlmodule1) =
        let tbody, env =
          match Option.find (function RecordType _ -> true | _ -> false) ind.iquals with
          | Some (RecordType (ns, ids)) ->
+             let ids =
+               match ind.idatas with
+               | [ctor] -> drop_spec_binders (spec_binder_mask ctor) ids
+               | _ -> ids
+             in
              let _, c_ty = List.hd ctors in
              assert (List.length ids = List.length c_ty);
              let fields, g =
