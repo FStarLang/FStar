@@ -231,6 +231,14 @@ let set_guard_policy (pol : guard_policy)  : ML (tac unit) =
   let! ps = get in
   set ({ ps with guard_policy = pol })
 
+let get_guard_label ()  : ML (tac string) =
+  let! ps = get in
+  return ps.guard_label
+
+let set_guard_label (l : string)  : ML (tac unit) =
+  let! ps = get in
+  set ({ ps with guard_label = l })
+
 let with_policy pol (t : tac 'a)  : ML (tac 'a) =
   let! old_pol = get_guard_policy () in
   set_guard_policy pol;!
@@ -3054,6 +3062,7 @@ let proofstate_of_goals rng env goals imps =
         psc = PO.null_psc;
         entry_range = rng;
         guard_policy = SMT;
+        guard_label = "";
         freshness = 0;
         tac_verb_dbg = !dbg_TacVerbose;
         local_state = PSMap.empty ();
@@ -3086,6 +3095,7 @@ let proofstate_of_all_implicits rng env imps =
         psc = PO.null_psc;
         entry_range = rng;
         guard_policy = SMT;
+        guard_label = "";
         freshness = 0;
         tac_verb_dbg = !dbg_TacVerbose;
         local_state = PSMap.empty ();

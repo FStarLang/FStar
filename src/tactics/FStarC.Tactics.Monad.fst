@@ -305,9 +305,10 @@ let goal_of_guard (reason:string) (e:Env.env)
                   (f:term) (sc_opt:option should_check_uvar)
                   (rng:Range.t) : tac goal =
   bind getopts (fun opts ->
-  bind (mk_irrelevant_goal reason e f sc_opt rng opts "") (fun goal ->
+  bind get (fun ps ->
+  bind (mk_irrelevant_goal reason e f sc_opt rng opts ps.guard_label) (fun goal ->
   let goal = { goal with is_guard = true } in
-  ret goal))
+  ret goal)))
 
 let wrap_err_doc (pref:error_message) (t : tac 'a) : tac 'a =
   mk_tac fun ps ->
