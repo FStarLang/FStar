@@ -16,6 +16,11 @@
 # Blank lines and lines starting with `#' are ignored.  Keep each group sorted:
 # the order has no effect on the output, only on how easy this file is to read.
 
+# The executable's own main file (stage*/dune/main.ml) blocks SIGPIPE and
+# installs a SIGTERM handler before it calls FStarC.Main.main, so it is a
+# realization like any other in src/ml and its callees are roots.
+FStarC.Platform.unix
+
 # Modules kept for their initializers alone.
 FStarC.Hooks
 FStarC.Interactive.Ide
@@ -340,3 +345,46 @@ FStarC.Real.real
 FStarC.Custard.Builtins.register_post_rule
 FStarC.Custard.Builtins.register_pre_rule
 FStarC.Custard.Builtins.register_rule
+
+# Named by the *ML* extraction's plugin registration code
+# (FStarC.Extraction.ML.RegEmb), which writes OCaml names into a plugin's
+# generated .ml rather than calling them from F*.  The plugin is compiled
+# against the compiler it will be loaded into, so every name it can write has
+# to be in that binary; nothing in the extracted program reaches them, since
+# the compiler's own plugins are registered by Custard's RegEmb instead.
+# FStarC.Tactics.Native's are hand-written OCaml and so are always there.
+FStarC.Ident.lid_of_str
+FStarC.Syntax.Embeddings.debug_wrap
+FStarC.Syntax.Embeddings.arrow_as_prim_step_1
+FStarC.Syntax.Embeddings.arrow_as_prim_step_2
+FStarC.Syntax.Embeddings.arrow_as_prim_step_3
+FStarC.TypeChecker.NBETerm.arrow_as_prim_step_1
+FStarC.TypeChecker.NBETerm.arrow_as_prim_step_2
+FStarC.TypeChecker.NBETerm.arrow_as_prim_step_3
+FStarC.Tactics.InterpFuns.mk_tactic_interpretation_1
+FStarC.Tactics.InterpFuns.mk_tactic_interpretation_2
+FStarC.Tactics.InterpFuns.mk_tactic_interpretation_3
+FStarC.Tactics.InterpFuns.mk_tactic_interpretation_4
+FStarC.Tactics.InterpFuns.mk_tactic_interpretation_5
+FStarC.Tactics.InterpFuns.mk_tactic_interpretation_6
+FStarC.Tactics.InterpFuns.mk_tactic_interpretation_7
+FStarC.Tactics.InterpFuns.mk_tactic_interpretation_8
+FStarC.Tactics.InterpFuns.mk_tactic_interpretation_9
+FStarC.Tactics.InterpFuns.mk_tactic_interpretation_10
+FStarC.Tactics.InterpFuns.mk_tactic_interpretation_11
+FStarC.Tactics.InterpFuns.mk_tactic_interpretation_12
+FStarC.Tactics.InterpFuns.mk_tactic_interpretation_13
+FStarC.Tactics.InterpFuns.mk_tactic_interpretation_14
+FStarC.Tactics.InterpFuns.mk_tactic_interpretation_15
+FStarC.Tactics.InterpFuns.mk_tactic_interpretation_16
+FStarC.Tactics.InterpFuns.mk_tactic_interpretation_17
+FStarC.Tactics.InterpFuns.mk_tactic_interpretation_18
+FStarC.Tactics.InterpFuns.mk_tactic_interpretation_19
+FStarC.Tactics.InterpFuns.mk_tactic_interpretation_20
+
+# Hand-written registrations in a plugin's .ml.fixup use these two as well:
+# a higher-order tactic argument needs its embedding built, and a plugin
+# taking a type argument embeds the rest at that type.  See
+# tests/semiring/CanonCommSemiring.ml.fixup.
+FStarC.Tactics.Interpreter.e_tactic_1_alt
+FStarC.Syntax.Embeddings.mk_any_emb

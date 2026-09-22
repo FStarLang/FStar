@@ -76,6 +76,6 @@ let parse_tiny_decls (contents: string) (r: FStarC_Range.t): (FPAU.error_message
   let lines = String.split_on_char '\n' contents in
   go [] lines
 
-let parse_tiny: FPAU.extension_lang_parser = { parse_decls = parse_tiny_decls }
+let parse_tiny: FPAU.extension_lang_parser = FPAU.mk_extension_lang_parser parse_tiny_decls
 
 let () = FStarC_Parser_AST_Util.register_extension_lang_parser "tiny" parse_tiny;

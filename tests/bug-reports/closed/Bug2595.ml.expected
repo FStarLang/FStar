@@ -60,3 +60,20 @@ let bug2595_test_mixed (x : (bool, Obj.t) prims_dtuple2) : bug2595_t3 =
 
 type bug2595_flen = Prims.int
 
+type 'a bug2595_ntuple_ = Obj.t
+
+type 'a bug2595_ntuple = Obj.t
+
+let fStar_Pervasives_Native_snd (x : ('u_'a * 'u_'b)) : 'u_'b =
+  (match x with
+    | (u__1, u__2) -> u__2
+  )
+
+let bug2595_rest_ (len : Prims.int) (x : Obj.t) : Obj.t =
+  (fStar_Pervasives_Native_snd (Obj.magic (x)))
+
+let bug2595_rest (len : Prims.int) (s : Obj.t) : Obj.t =
+  (match (Obj.magic (s)) with
+    | (u__1, u__2) -> u__2
+  )
+

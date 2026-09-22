@@ -3105,12 +3105,18 @@ RSGREP_NullArg += "nil_right()"
 # [assume val]'s codomain, which has no body for rule 4c to read.  C++ because
 # the target spelling is a class template.
 CXX_TESTS += TmplMono
-FLAGS_TmplMono = --custard_backend C --custard_entry_module TmplMono
+FLAGS_TmplMono = --custard_backend C --custard_entry TmplMono.dispatch
 CGREP_TmplMono += "wm::frag<16> f = wm::mk16(rows)"
 CGREP_TmplMono += "TmplMono_g_gemm__uint_to_t_16(wm::frag<16> f"
 # The index reaches the target through the type, and is not also passed at
 # runtime -- that is the whole of why the section 32.5 rule can be relaxed.
 CNOGREP_TmplMono += "g_gemm__uint_to_t_16(size_t tm"
+
+# [dispatch] rather than the whole module: [g_gemm]'s template index is
+# compile-time known because a *caller* supplies the constant, so [g_gemm] is
+# not a library function and rooting it on its own is error 390 saying exactly
+# that.  See [erased_definition] in FStarC.Custard.Extract.fst -- an [ML unit]
+# definition is code, so --custard_entry_module does root one.
 
 CXX_TESTS += TmplLet
 FLAGS_TmplLet = --custard_backend C --custard_entry_module TmplLet
@@ -3125,12 +3131,12 @@ FLAGS_TmplLet3 = --custard_backend C --custard_entry_module TmplLet3
 CGREP_TmplLet3 += "wm::nfrag<16> f = wm::nmk16(seed)"
 
 CXX_TESTS += TmplMonoV
-FLAGS_TmplMonoV = --custard_backend C --custard_entry_module TmplMonoV
+FLAGS_TmplMonoV = --custard_backend C --custard_entry TmplMonoV.dispatch
 CGREP_TmplMonoV += "wm::frag<16> f = wm::mk16(rows)"
 CGREP_TmplMonoV += "TmplMonoV_g_gemm__uint_to_t_16(wm::frag<16> f"
 
 CXX_TESTS += TmplMonoW
-FLAGS_TmplMonoW = --custard_backend C --custard_entry_module TmplMonoW
+FLAGS_TmplMonoW = --custard_backend C --custard_entry TmplMonoW.dispatch
 CGREP_TmplMonoW += "wm::frag<16> f = wm::mk16(rows)"
 CGREP_TmplMonoW += "TmplMonoW_g_gemm__uint_to_t_16(wm::frag<16> f"
 
@@ -3202,6 +3208,17 @@ GREP_CtorFun += "ctorFun_app (fun u__eta -> u__eta)"
 # The partially applied one: an argument given, the eta-expanded one last.
 GREP_CtorFun += "ctorFun_app3 (fun u__eta -> {"
 NOGREP_CtorFun += "ctorFun_app ()"
+
+# Section 5.7.  A type whose layout is an ABI -- [FStarC.Extraction.KrmlAst],
+# marshalled to a file karamel reads back into its own OCaml declaration --
+# has to keep the ML extraction's boxed tuple field.  The control type next to
+# it still gets the pair inlined, and a field that asks still gets it too.
+CUSTARD_TESTS += BoxedFields
+GREP_BoxedFields += "BoxedFields_Bar of (bool \* string)" \
+                    "BoxedFields_Nested of (bool \* string)" \
+                    "BoxedFields_Baz of bool \* string" \
+                    "BoxedFields_W of bool \* string"
+NOGREP_BoxedFields += "BoxedFields_Bar of bool \* string"
 
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
                   $(C_TESTS) $(CXX_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \
