@@ -4329,7 +4329,7 @@ against `src/**/*.fst` turns up, in rough order of size:
 4. **Plugins, native tactics and embeddings** have no counterpart at all.  This
    is not an independent item so much as the acceptance test for §12: a plugin
    *is* a separately compiled unit linking against the compiler.  Done (M10d),
-   and it is `make custard-plugin`; see §12.12.
+   and it is `tests/custard/plugin`; see §12.12.
 5. **§3.2b — a `Poly` argument in a `Mono` position — is a hard rejection**,
    and the compiler leans on `FStarC.Class.Show`/`Ord`/`Monad` everywhere.
    Measured (M9d).
@@ -4505,7 +4505,8 @@ against `src/**/*.fst` turns up, in rough order of size:
 7. **Build integration.**  One file per unit against the current per-module
    `.ml`; see §12.6.  `--lax` is not a concern: it only admits SMT queries, and
    leaves syntax, elaboration and the checked files unchanged.  **Done** for
-   the compiler itself: `make custard`, described in §12.11.
+   the compiler itself: it is the staged build, described in §12.15 (§12.11
+   is the standalone build that preceded it).
 8. Smaller: `Prims.int` maps to a fixed-width integer on the Krml path
    (`PrintKrml.fst:111`), which is fine for an OCaml target and a latent
    miscompilation for a C one; and `FStar.Printf`'s type-level arity
@@ -4792,10 +4793,24 @@ that the `Prims.int` question of item 8 remains.
 
 ### 12.11 `make custard`
 
+> **Removed.**  `mk/custard.mk`, `make custard`, `make custard-smoke` and the
+> `stagec/` tree they built are gone, and this section is kept for the
+> reasoning rather than for the recipe.  They existed to answer whether a
+> Custard-extracted compiler could be built at all, from *beside* the real
+> build; §12.15 is the answer, and it is the real build.  What each of the
+> four steps below settled has an heir there: the cache is now the staged
+> build's own `stageN/{ulib,fstarc}.checked`, the split is
+> `mk/custard-extract.mk`, and the generated dune project is the one
+> `mk/fstar-NN.mk` already had.  `--custard_entrypoints` and
+> `src/custard/entrypoints.txt` survive unchanged --- `mk/fstar-01.mk`'s
+> `CUSTARD_ENTRYFILES` is the line that reads them.  The one thing that was
+> only ever `make custard`'s is `custard-smoke`, and a compiler that checks
+> the whole library on every `make 3` does not need a smoke test.
+
 The recipe of §12.10 lived in shell one-liners for as long as the question was
-whether it could work at all.  It is now `mk/custard.mk`, reached by `make
-custard` (and `make custard-smoke`), building into `stagec/`.  It depends on a
-stage 2 compiler, which it needs twice over: to *run* the extraction, and for
+whether it could work at all.  It became `mk/custard.mk`, reached by `make
+custard` (and `make custard-smoke`), building into `stagec/`.  It depended on a
+stage 2 compiler, which it needed twice over: to *run* the extraction, and for
 the `.checked` files the extraction reads.
 
 The entry points are no longer a command line.  `src/custard/entrypoints.txt`
@@ -4889,16 +4904,35 @@ and `.o` under `native/` but the `.cmi` under `byte/` --- so a plugin needs
 dune's own lowercase-initial ones (`fStarC_Main.cmx`), which OCaml resolves
 without help.
 
-`make custard-smoke` checks `FStar.List.Tot.Properties` from source with the
+`make custard-smoke` checked `FStar.List.Tot.Properties` from source with the
 result, in a fresh `--cache_dir`: as §12.10 says, a Custard-built compiler
-cannot read a dune-built one's `.checked` files.
+cannot read a dune-built one's `.checked` files.  The staged build has no such
+target and needs none --- it checks the whole library with the compiler it
+just built, every time.
 
 ### 12.12 `make custard-plugin`
+
+> **Moved.**  The target is gone with the rest of `mk/custard.mk`; the test is
+> now `tests/custard/plugin/`, a subdirectory of the ordinary suite with its
+> own makefile, and it runs on every `make test`.  Nothing about *what* it
+> tests changed, and the four steps below are still the four steps --- but
+> three of them stopped being this test's business.  Step 2 is what
+> `--codegen Plugin` now does by itself (§13.6): a Custard extraction with the
+> plugin's modules as entries, linked against the installed `fstarc.cui`.
+> Step 3 is `--ocamlopt_plugin`, which already knew where the compiler's
+> objects are.  And the split between "extract with the dune-built compiler,
+> load into the Custard-built one" collapses, because there is only one
+> compiler now and it is Custard-built --- which also retires
+> `mk/custard-rule.mk`, whose whole job was to recheck the rule test's
+> dependency closure with the *other* compiler.  What is left in the makefile
+> is the part that was always specific: the roots, `--with_fstarc` on the
+> checking step because a rule's source names `FStarC.Custard`'s own types,
+> and the greps of §34, §36 and §64 over the generated C.
 
 Item 4 of §12.8 --- a plugin compiled by Custard, linking against a compiler
 compiled by Custard --- is the acceptance test for this whole section, because
 a plugin is the one thing that is *both* a separate compilation unit and a
-consumer of the compiler's own types.  It is `make custard-plugin`, and it is
+consumer of the compiler's own types.  It was `make custard-plugin`, and it was
 about forty lines of `mk/custard.mk`:
 
 1. check `tests/custard/plugin/CustardPlugin.fst` into the same `--cache_dir`
@@ -4972,8 +5006,12 @@ Pointing Custard at it is the honest measure of §12, and it has been done:
 compiler, compile to one loadable `.cmxs`, and that compiler checks the whole
 of `pulse/test` --- 58 files, 58 pass.**
 
-That is the end of the demonstration §12 was aiming at, and it is a make
-target rather than a demonstration: `make custard-pulse-plugin`.
+That is the end of the demonstration §12 was aiming at, and it was a make
+target rather than a demonstration: `make custard-pulse-plugin`.  That target
+is gone too, and for the happiest of the three reasons: the staged build
+*is* this, on every `make 3`.  Pulse is built as a Custard plugin against the
+compiler's own `.cui` by `pulse/mk/{checker,syntax_extension,extraction}.mk`,
+and `pulse/test` runs against the result.
 
 **What already works.**  `Pulse.Main` extracts whole against
 `stagec/split/fstarc.cui`: one unit, 7.6k lines of OCaml, in about two
@@ -10240,20 +10278,21 @@ a rule is consulted before the definition, its arguments are reduced, and
 what it does not use does not survive. Kuiper's host side is a plugin rule
 and needs nothing further from Custard.
 
-The example is wired into `make custard`'s `plugin` target, which already
-compiles a plugin *with* Custard and loads it into a Custard-built compiler.
+The example is wired into `tests/custard/plugin`, which already compiles a
+plugin *with* Custard and loads it into a Custard-built compiler.
 `CustardRulePlugin` is a third root there, and a root for the same reason the
 other two are: a module that exists for its initializer has to be named or
 nothing reaches it (§4.4). `FStarC.Custard.Builtins.register_rule` and its
 two chaining forms are now in `src/custard/entrypoints.txt`, since a plugin
 calls them through no request the extraction can see.
 
-`mk/custard-rule.mk` is a separate makefile only because the dependency graph
-of the test program has to be generated by the Custard-built compiler and
-then included, and a recipe cannot include a file it has just written. The
-closure is rechecked rather than reused: §12.10's limitation is that a
-Custard-built compiler cannot read a dune-built one's `.checked` files.
-`--lax` is enough, and makes the 37 modules take about fifteen seconds.
+The test program's dependency closure used to need a makefile of its own
+(`mk/custard-rule.mk`), because it had to be generated by the Custard-built
+compiler and then included, and a recipe cannot include a file it has just
+written --- §12.10's limitation being that a Custard-built compiler cannot
+read a dune-built one's `.checked` files.  Now that the compiler running the
+suite is itself Custard-extracted there is only one kind of `.checked` file,
+and the ordinary `.depend` of `mk/test.mk` does the job.
 
 The rule itself fails loudly on a shape it does not expect, and says which
 shape it got. A rule that silently accepts the wrong one is worse than one
@@ -12338,8 +12377,8 @@ so it is a static error in the rule, not a property of a use. Warning 381
 because that count is conservative: `erased_binders_unfold` declines to peel
 an effectful codomain, so a rule could in principle be right and be warned
 about. Measured: zero firings across `tests/custard`,
-`tests/custard/pulse`, and `make custard`, which is thirty-odd rules and the
-whole compiler.
+`tests/custard/pulse`, and the compiler's own extraction, which is thirty-odd
+rules and the whole compiler.
 
 Issue 4565 made it an error where the count is known to be exact. A Pulse
 `fn` whose `requires` became erased `squash` binders went from ten retained
@@ -14398,7 +14437,7 @@ gate that will be deleted by whoever next meets it without the tool.
 `pulse/test` extracts through Custard (§15) and pins nineteen `.c` and
 `.h` goldens.  It is not one of the suites I had been running --- my
 standing set was `tests/custard`, `tests/custard/pulse`,
-`tests/extraction/backends`, `make custard` and `make custard-smoke`
+`tests/extraction/backends` and `make custard`
 --- and its `.expected` files had last been regenerated in §24.
 Everything since that changed the shape of emitted C had accumulated in
 them, and CI had been red on it for that whole stretch.
@@ -14764,7 +14803,8 @@ unused in the program that declares it.
 ## 64.4 The test needs the plugin
 
 Everything above is reachable only with a rule, so the test is in
-`make custard-plugin` and not in `tests/custard`.  `CustardRulePlugin`
+`tests/custard/plugin`, which builds and loads one, rather than in
+`tests/custard` proper.  `CustardRulePlugin`
 grew an `emit` rule forwarding to a polymorphic `sink`, and
 `CustardRuleMain.c` grew the two realizations:
 

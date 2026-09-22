@@ -25,10 +25,10 @@
 
 # Custard does not emit the modules it realizes (FStarC.Custard.Builtins'
 # `realized_modules'), and FStar.Pervasives is one of them: its OCaml is the
-# hand-written one every extraction has always used.  `make custard' picks it
-# up from fstar.lib, which a staged build does not link into the compiler, so
-# the staged build extracts that one module with the ML backend and drops it
-# in beside the split -- exactly what the unified ML pass used to produce.
+# hand-written one every extraction has always used.  It lives in fstar.lib,
+# which a staged build does not link into the compiler, so the staged build
+# extracts that one module with the ML backend and drops it in beside the
+# split -- exactly what the unified ML pass used to produce.
 
 CUSTARD_FLAGS += --lax
 CUSTARD_FLAGS += --codegen Custard
@@ -37,8 +37,8 @@ CUSTARD_FLAGS += --custard_unit $(CUSTARD_UNIT)
 CUSTARD_FLAGS += $(CUSTARD_ENTRIES)
 CUSTARD_FLAGS += $(patsubst %,--custard_link %,$(CUSTARD_LINK))
 # -321 unused warning about interface-less modules, -274 deprecation,
-# -272 top-level effect, -241 stale dependencies: the same set `make custard'
-# uses, and all four are about the corpus rather than about the extraction.
+# -272 top-level effect, -241 stale dependencies: all four are about the
+# corpus rather than about the extraction.
 CUSTARD_FLAGS += --warn_error -321-274-272-241
 
 CUSTARD_STAMP := $(OUTPUT_DIR)/.custard.touch
