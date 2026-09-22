@@ -105,9 +105,16 @@ let fail_doc (msg:error_message) =
 
 let fail msg = fail_doc [text msg]
 
+(* Rolling back the proofstate discards any goals the branch pushed. If it also
+   committed the core checker's cache -- which pushing a guard as an SMT goal
+   does, as the undertaking to prove it -- then those memo entries now record an
+   undertaking nobody holds, and [Core.guard] would silently drop a later
+   identical guard. So clear the memo table, but only when the branch actually
+   committed something, which is the rare case. *)
 let catch (t : tac 'a) : tac (either exn 'a) =
     mk_tac (fun ps ->
             let idtable = !ps.main_context.identifier_info in
+            let commits = Core.commit_count () in
             let tx = UF.new_transaction () in
             try
               let Success (a, q) = run t ps in
@@ -116,6 +123,8 @@ let catch (t : tac 'a) : tac (either exn 'a) =
             with | m ->
                 UF.rollback tx;
                 ps.main_context.identifier_info := idtable;
+                if Core.commit_count () <> commits then
+                  Core.clear_memo_table ();
                 Success (Inl m, ps)
            )
 
