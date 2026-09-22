@@ -30,21 +30,9 @@ let rec apply_squash_or_lem d t =
 
     let ty = tc (cur_env ()) t in
     let tys, c = collect_arr ty in
-    match inspect_comp c with
-    | C_Lemma pre post _ ->
-       begin
-       let post = `((`#post) ()) in (* unthunk *)
-       let post = norm_term [] post in
-       (* Is the lemma an implication? We can try to intro *)
-       match term_as_formula' post with
-       | Implies p q ->
-           apply_lemma (`push1);
-           apply_squash_or_lem (d-1) t
-
-       | _ ->
-           fail "mapply: can't apply (1)"
-       end
-    | C_Total rt ->
+    let cv = inspect_comp c in
+    if not (is_tot_comp cv) then fail "mapply: can't apply (3)" else
+    let rt = cv.result_typ in
        begin match unsquash_term rt with
        (* If the function returns a squash, just apply it, since our goals are squashed *)
        | Some rt ->
@@ -77,7 +65,6 @@ let rec apply_squash_or_lem d t =
              apply t
          end
        end
-    | _ -> fail "mapply: can't apply (3)"
     end
 
 (* `m` is for `magic` *)

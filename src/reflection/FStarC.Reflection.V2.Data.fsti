@@ -170,12 +170,27 @@ type term_view =
 
 val notAscription (t:term_view) : Tot bool
 
-type comp_view =
-    | C_Total of typ
-    | C_GTotal of typ
-    | C_Lemma of term & term & term
-    // pre, post, and then the decreases clause
-    | C_Eff of universes & name & term & term & term & list term
+(* Mirrors FStarC.Syntax.Syntax.decreases_order and cflag.  These cannot be
+reused verbatim from there: the plugin extraction maps
+[FStar.Stubs.Reflection.V2.Data] onto this module, so the constructors have to
+be *declared* here.  [FStarC.Reflection.V2.Builtins] converts between the two.
+Note these shadow the same-named constructors from the opened
+[FStarC.Syntax.Syntax]. *)
+type decreases_order =
+  | Decreases_lex : list term -> decreases_order
+  | Decreases_wf  : term -> term -> decreases_order
+
+type cflag =
+  | SMTPAT    : term -> cflag
+  | DECREASES : decreases_order -> cflag
+
+(* Mirrors FStarC.Syntax.Syntax.comp_typ field for field. *)
+type comp_view = {
+  effect_name : name;
+  result_typ : typ;
+  flags : list cflag;
+  source_effect_name : name;
+}
 
 type ctor = name & typ
 

@@ -138,7 +138,17 @@ let pin_frame (p:pm_slprop) (frame:slprop)
           interp (lift q `star` frame) (update_timeless_mem w m')))
   in
   let frame' : PM.slprop = frame' in
-  (| frame', (fun q m' -> ())|)
+  (* Give the second component its own signature: the expected type of a
+     [dtuple2] argument is not propagated into it, so an unannotated lambda is
+     inferred without the implicit binder that the [requires] clause
+     desugars to. *)
+  let pf (q:pm_slprop) (m':timeless_mem)
+    : Lemma
+      (requires PM.interp (q `PM.star` frame') m')
+      (ensures interp (lift q `star` frame) (update_timeless_mem w m'))
+    = ()
+  in
+  (| frame', pf |)
 
 let is_ghost_action_refl (m:mem)
 : Lemma (is_ghost_action m m)

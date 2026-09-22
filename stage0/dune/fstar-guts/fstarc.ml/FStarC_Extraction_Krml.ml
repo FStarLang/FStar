@@ -601,6 +601,12 @@ type branches = (pattern * expr) Prims.list
 type constant = (width * Prims.string)
 type var = Prims.int
 type lident = (Prims.string Prims.list * Prims.string)
+let translate_decl_accum : decl Prims.list FStarC_Effect.ref=
+  FStarC_Effect.mk_ref []
+let krml_current_decl :
+  FStarC_Extraction_ML_Syntax.mlident FStar_Pervasives_Native.option
+    FStarC_Effect.ref=
+  FStarC_Effect.mk_ref FStar_Pervasives_Native.None
 let pretty_width : width FStarC_Class_PP.pretty=
   {
     FStarC_Class_PP.pp =
@@ -3871,24 +3877,34 @@ let translate_let (env1 : env)
   let uu___ = FStarC_Effect.op_Bang ref_translate_let in uu___ env1 flavor lb
 let translate_decl (env1 : env) (d : FStarC_Extraction_ML_Syntax.mlmodule1) :
   decl Prims.list=
-  match d.FStarC_Extraction_ML_Syntax.mlmodule1_m with
-  | FStarC_Extraction_ML_Syntax.MLM_Let (flavor, lbs) ->
-      FStarC_List.choose (translate_let env1 flavor) lbs
-  | FStarC_Extraction_ML_Syntax.MLM_Loc uu___ -> []
-  | FStarC_Extraction_ML_Syntax.MLM_Ty tys ->
-      FStarC_List.choose (translate_type_decl env1) tys
-  | FStarC_Extraction_ML_Syntax.MLM_Top uu___ ->
-      FStarC_Effect.failwith "todo: translate_decl [MLM_Top]"
-  | FStarC_Extraction_ML_Syntax.MLM_Exn (m, uu___) ->
-      ((let uu___2 =
-          let uu___3 = FStarC_Options.silent () in Prims.not uu___3 in
-        if uu___2
-        then
-          FStarC_Format.print1_warning
-            "Not extracting exception %s to KaRaMeL (exceptions unsupported)\n"
-            m
-        else ());
-       [])
+  FStarC_Effect.op_Colon_Equals krml_current_decl
+    (match d.FStarC_Extraction_ML_Syntax.mlmodule1_m with
+     | FStarC_Extraction_ML_Syntax.MLM_Let (uu___1, lb::uu___2) ->
+         FStar_Pervasives_Native.Some
+           (lb.FStarC_Extraction_ML_Syntax.mllb_name)
+     | uu___1 -> FStar_Pervasives_Native.None);
+  FStarC_Effect.op_Colon_Equals translate_decl_accum [];
+  (let base =
+     match d.FStarC_Extraction_ML_Syntax.mlmodule1_m with
+     | FStarC_Extraction_ML_Syntax.MLM_Let (flavor, lbs) ->
+         FStarC_List.choose (translate_let env1 flavor) lbs
+     | FStarC_Extraction_ML_Syntax.MLM_Loc uu___2 -> []
+     | FStarC_Extraction_ML_Syntax.MLM_Ty tys ->
+         FStarC_List.choose (translate_type_decl env1) tys
+     | FStarC_Extraction_ML_Syntax.MLM_Top uu___2 ->
+         FStarC_Effect.failwith "todo: translate_decl [MLM_Top]"
+     | FStarC_Extraction_ML_Syntax.MLM_Exn (m, uu___2) ->
+         ((let uu___4 =
+             let uu___5 = FStarC_Options.silent () in Prims.not uu___5 in
+           if uu___4
+           then
+             FStarC_Format.print1_warning
+               "Not extracting exception %s to KaRaMeL (exceptions unsupported)\n"
+               m
+           else ());
+          []) in
+   let uu___2 = FStarC_Effect.op_Bang translate_decl_accum in
+   FStarC_List.op_At uu___2 base)
 let translate_module (uenv : FStarC_Extraction_ML_UEnv.uenv)
   (m :
     (FStarC_Extraction_ML_Syntax.mlpath * (FStarC_Extraction_ML_Syntax.mlsig

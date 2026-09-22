@@ -30,6 +30,12 @@ type primitive_step = {
     strong_reduction_ok:bool;
     requires_binder_substitution:bool;
     renorm_after:bool; // whether the result of this primop must possibly undergo more normalization
+    (* Whether this step can answer with a value that has no representation as
+       a term, e.g. an embedded [FStar.Pprint.document].  Such an answer is
+       fine for a normalizer that only inspects the result, but it cannot be
+       compiled, so extraction asks for these steps to be skipped.  See the
+       [Env.SafePrimops] step. *)
+    unrepresentable_result:bool;
     interpretation:interp_t;
     interpretation_nbe:nbe_interp_t;
 }
@@ -38,6 +44,13 @@ val as_primitive_step_nbecbs
     (is_strong:bool)
     (* (l, arity, u_arity, f, f_nbe) *)
      : (Ident.lident & int & int & interp_t & nbe_interp_t) -> primitive_step
+
+(* Add [n] trailing arguments that the step's interpretation ignores.  Use it
+   when the F* function a step implements has a precondition: that desugars to
+   a trailing implicit binder of squash type, and a step whose arity does not
+   account for it fires early, leaving the leftover proof applied to the step's
+   own result. *)
+val with_extra_args (n:int) (s:primitive_step) : primitive_step
 
 (* Some helpers for the NBE. Does not really belong in this module. *)
 val embed_simple: {| EMB.embedding 'a |} -> Range.t -> 'a -> ML term

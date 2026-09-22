@@ -2036,6 +2036,9 @@ and extract_sig_let (g : FStarC_Extraction_ML_UEnv.uenv)
      let se1 =
        FStarC_TypeChecker_Tc.run_postprocess true
          (FStarC_Extraction_ML_UEnv.tcenv_of_uenv g) se in
+     let is_noextract =
+       FStarC_List.contains FStarC_Syntax_Syntax.NoExtract
+         se1.FStarC_Syntax_Syntax.sigquals in
      let uu___ = se1.FStarC_Syntax_Syntax.sigel in
      match uu___ with
      | FStarC_Syntax_Syntax.Sig_let
@@ -2066,7 +2069,8 @@ and extract_sig_let (g : FStarC_Extraction_ML_UEnv.uenv)
                  (match uu___5 with
                   | FStar_Pervasives_Native.Some steps2 ->
                       let uu___6 =
-                        FStarC_TypeChecker_Cfg.translate_norm_steps steps2 in
+                        Obj.magic
+                          (FStarC_TypeChecker_Cfg.translate_norm_steps steps2) in
                       FStar_Pervasives_Native.Some uu___6
                   | uu___6 ->
                       ((let uu___8 =
@@ -2115,6 +2119,8 @@ and extract_sig_let (g : FStarC_Extraction_ML_UEnv.uenv)
                    (env.FStarC_TypeChecker_Env.modules);
                  FStarC_TypeChecker_Env.expected_typ =
                    (env.FStarC_TypeChecker_Env.expected_typ);
+                 FStarC_TypeChecker_Env.expected_post =
+                   (env.FStarC_TypeChecker_Env.expected_post);
                  FStarC_TypeChecker_Env.sigtab =
                    (env.FStarC_TypeChecker_Env.sigtab);
                  FStarC_TypeChecker_Env.attrtab =
@@ -2245,12 +2251,12 @@ and extract_sig_let (g : FStarC_Extraction_ML_UEnv.uenv)
            | FStar_Pervasives_Native.None -> lbs1
            | FStar_Pervasives_Native.Some steps ->
                let uu___2 =
-                 FStarC_List.map (norm_one_lb steps)
+                 FStarC_List.map (norm_one_lb (Obj.magic steps))
                    (FStar_Pervasives_Native.snd lbs1) in
                ((FStar_Pervasives_Native.fst lbs1), uu___2) in
          let uu___2 =
            let lbs1 = maybe_normalize_for_extraction lbs in
-           let uu___3 =
+           let tm =
              FStarC_Syntax_Syntax.mk
                (FStarC_Syntax_Syntax.Tm_let
                   {
@@ -2258,7 +2264,11 @@ and extract_sig_let (g : FStarC_Extraction_ML_UEnv.uenv)
                     FStarC_Syntax_Syntax.body1 =
                       FStarC_Syntax_Util.exp_false_bool
                   }) se1.FStarC_Syntax_Syntax.sigrng in
-           FStarC_Extraction_ML_Term.term_as_mlexpr g uu___3 in
+           if is_noextract
+           then
+             FStarC_Extraction_ML_Term.term_as_mlexpr_without_top_level_normalization
+               g tm
+           else FStarC_Extraction_ML_Term.term_as_mlexpr g tm in
          (match uu___2 with
           | (ml_let, uu___3, uu___4) ->
               let mlattrs = extract_attrs g se1.FStarC_Syntax_Syntax.sigattrs in

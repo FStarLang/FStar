@@ -40,6 +40,7 @@ let steps_to_string f : ML string =
     weak = %s;\n\
     hnf  = %s;\n\
     primops = %s;\n\
+    unrepresentable_primops = %s;\n\
     do_not_unfold_pure_lets = %s;\n\
     unfold_until = %s;\n\
     unfold_only = %s;\n\
@@ -75,6 +76,7 @@ let steps_to_string f : ML string =
     f.weak |> show;
     f.hnf  |> show;
     f.primops |> show;
+    f.unrepresentable_primops |> show;
     f.do_not_unfold_pure_lets |> show;
     f.unfold_until |> show;
     f.unfold_only |> show;
@@ -113,6 +115,7 @@ instance deq_fsteps : deq fsteps = {
             f1.weak =? f2.weak &&
             f1.hnf =? f2.hnf &&
             f1.primops =? f2.primops &&
+            f1.unrepresentable_primops =? f2.unrepresentable_primops &&
             f1.do_not_unfold_pure_lets =? f2.do_not_unfold_pure_lets &&
             f1.unfold_until =? f2.unfold_until &&
             f1.unfold_only =? f2.unfold_only &&
@@ -151,6 +154,7 @@ let default_steps : fsteps = {
     weak = false;
     hnf  = false;
     primops = false;
+    unrepresentable_primops = true;
     do_not_unfold_pure_lets = false;
     unfold_until = None;
     unfold_only = None;
@@ -195,6 +199,7 @@ let fstep_add_one s fs : ML fsteps =
     | Weak -> { fs with weak = true }
     | HNF -> { fs with hnf = true }
     | Primops -> { fs with primops = true }
+    | SafePrimops -> { fs with primops = true; unrepresentable_primops = false }
     | Eager_unfolding -> fs // eager_unfolding is not a step
     | Inlining -> fs // not a step // ZP : Adding qualification because of name clash
     | DoNotUnfoldPureLets ->  { fs with do_not_unfold_pure_lets = true }
@@ -284,10 +289,15 @@ instance showable_cfg : showable cfg = {
 let cfg_env cfg = cfg.tcenv
 
 let find_prim_step cfg fv : ML (option primitive_step) =
-    PSMap.try_find cfg.primitive_steps (I.string_of_lid fv.fv_name)
+    match PSMap.try_find cfg.primitive_steps (I.string_of_lid fv.fv_name) with
+    | Some ps when ps.unrepresentable_result && not cfg.steps.unrepresentable_primops -> None
+    | r -> r
 
 let is_prim_step cfg fv : ML bool =
-    Some? (PSMap.try_find cfg.primitive_steps (I.string_of_lid fv.fv_name))
+    Some? (find_prim_step cfg fv)
+
+let is_built_in_primop fv : ML bool =
+    Some? (PSMap.try_find built_in_primitive_steps (I.string_of_lid fv.fv_name))
 
 let log cfg (f: unit -> ML unit) : ML unit =
     if cfg.debug.gen then f () else ()
@@ -452,7 +462,7 @@ let should_reduce_local_let cfg lb : ML bool =
   else if U.has_attribute lb.lbattrs PC.no_inline_let_attr
   then false //Or, 2. do not unfold as it's explicitly marked as @no_inline_let
   else
-    let n = Env.norm_eff_name cfg.tcenv lb.lbeff in
+    let n = lb.lbeff in
     if U.is_pure_effect n &&
        (cfg.normalize_pure_lets
         || U.has_attribute lb.lbattrs PC.inline_let_attr)

@@ -56,6 +56,9 @@ module U       = FStarC.Syntax.Util
 
 let dbg_Tac = Debug.get_toggle "Tac"
 
+(* Inlined for extraction: see the note on the copy in
+   FStarC.TypeChecker.Primops.Base. *)
+inline_for_extraction
 let solve (#a:Type) {| ev : a |} : Tot a = ev
 
 let embed {|embedding 'a|} r (x:'a) norm_cb = embed x r None norm_cb
@@ -70,6 +73,7 @@ let native_tactics_steps () : ML (list PO.primitive_step) =
     ; strong_reduction_ok          = s.strong_reduction_ok
     ; requires_binder_substitution = false // GM: Don't think we care about pretty-printing on native
     ; renorm_after                 = false
+    ; unrepresentable_result       = false
     ; interpretation               = s.tactic
     ; interpretation_nbe           = fun _cb _us -> NBET.dummy_interp s.name
     }

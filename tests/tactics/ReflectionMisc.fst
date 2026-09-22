@@ -72,7 +72,7 @@ let _ = assert True
 //   match inspect t with
 //   | Tv_Arrow _ c ->
 //     (match inspect_comp c with
-//      | C_Total _ u _ -> pack (Tv_Type (pack_universe (Uv_Succ u)))
+//      | { result_typ = _ } -> pack (Tv_Type (pack_universe (Uv_Succ u)))
 //      | _ -> fail "2")
 //   | _ -> fail "3"
 

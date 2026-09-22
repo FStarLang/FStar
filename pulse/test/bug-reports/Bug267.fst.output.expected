@@ -18,9 +18,9 @@
       ___8: FStar.Ghost.erased Prims.unit
       __c89: FStar.Ghost.erased (FStar.Ghost.erased Prims.int)
       __a910: FStar.Ghost.erased (FStar.Ghost.erased Prims.int)
-      __: Prims.squash (__c89 <= x /\ __a910 == __c89 * y)
-      __: Prims.squash (___8 == ())
-      __: Prims.squash (false == (__c89 < x))
+      __c89 <= x /\ __a910 == __c89 * y
+      ___8 == ()
+      false == (__c89 < x)
       i: Prims.int
   - Also see: Prims.fst(188,27-188,38)
   - See also Bug267.fst(58,4-58,8)

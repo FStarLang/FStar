@@ -72,7 +72,6 @@ and lidents_of_term' (t:term')
   | Decreases t -> lidents_of_term t
   | Labeled (t, _, _) -> lidents_of_term t
   | Discrim lid -> [lid]
-  | Attributes ts -> concat_map lidents_of_term ts
   | Antiquote t -> lidents_of_term t
   | Quote (t, _) -> lidents_of_term t
   | VQuote t -> lidents_of_term t
@@ -172,9 +171,6 @@ and lidents_of_effect_decl (ed:effect_decl) : ML _ =
   | DefineEffect (_, bs, ds) ->
     concat_map lidents_of_binder bs @
     concat_map lidents_of_decl ds
-  | RedefineEffect (_, bs, t) -> 
-    concat_map lidents_of_binder bs @
-    lidents_of_term t
 
 let extension_parser_table : SMap.t extension_parser = SMap.create 20
 let register_extension_parser (ext:string) (parser:extension_parser) : ML unit =
@@ -189,6 +185,8 @@ let lookup_extension_parser (ext:string) : ML _ =
     then do ()
     else None
   | r -> r
+
+let mk_extension_lang_parser f = { parse_decls = f }
 
 let as_open_namespaces_and_abbrevs (ls:list decl)
 : ML open_namespaces_and_abbreviations

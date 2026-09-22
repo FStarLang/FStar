@@ -85,7 +85,7 @@ type mutator_inv gc_state =
 new_effect GC_STATE = STATE_h gc_state
 let gc_post (a:Type) = a -> gc_state -> prop
 sub_effect
-  DIV   ~> GC_STATE = fun (a:Type) (wp:pure_wp a) (p:gc_post a) (gc:gc_state) -> wp (fun a -> p a gc)
+  Div   ~> GC_STATE = fun (a:Type) (wp:pure_wp a) (p:gc_post a) (gc:gc_state) -> wp (fun a -> p a gc)
 
 effect GC (a:Type) (pre:gc_state -> prop) (post: gc_state -> Tot (gc_post a)) =
        GC_STATE a

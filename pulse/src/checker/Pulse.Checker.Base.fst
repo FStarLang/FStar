@@ -524,14 +524,12 @@ let checker_result_for_st_typing (#g:env) (#ctxt:slprop) (#post_hint:post_hint_o
   (| x, g', (comp_u c1, comp_res c1), ctxt', k |)
 #pop-options
 
-let readback_comp_res_as_comp (c:T.comp) : option comp =
-  match c with
-  | T.C_Total t -> (
-    match readback_comp t with
+let readback_comp_res_as_comp (cv:T.comp) : option comp =
+  if T.is_tot_comp cv then (
+    match readback_comp cv.T.result_typ with
     | None -> None
     | Some c -> Some c
-  )
-  | _ -> None
+  ) else None
 
 #push-options "--ifuel 1"
 let rec is_stateful_arrow (g:env) (c:option comp) (args:list T.argv) (out:list T.argv)

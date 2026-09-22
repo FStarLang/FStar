@@ -265,7 +265,7 @@ and elab_ty (t:src_ty)
       R.pack_ln 
         (R.Tv_Arrow 
           (RT.mk_simple_binder RT.pp_name_default t1)
-          (RT.mk_total_tm t2)) //(R.pack_comp (C_Total t2 [])))
+          (RT.mk_total_tm t2)) //(R.pack_comp (mk_tot_comp t2)))
           
     | TRefineBool e ->
       let e = elab_exp e in
@@ -777,6 +777,12 @@ let elab_open_b2t (e:src_exp) (x:var)
     denote_pack_var (R.pack_namedv (RT.make_namedv x));
     elab_open_commute' 0 e (EVar x)
 
+// --z3rlimit_factor 8: `soundness`'s T_App case (the `RT.T_App` at the end of
+// the case below) sits at ~2x the default budget since prop-valued definitions
+// stopped emitting a term equation (FStarLang/FStar#4519). The proof is
+// unchanged; only the number of E-matching steps to reach it went up.
+// Eliminating unit-refinement binders from the encoding shifts the search
+// again, in the same way and for the same reason, hence the further headroom.
 #push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 8"
 let rec soundness (#f:fstar_top_env)
                   (#sg:src_env { src_env_ok sg } ) 

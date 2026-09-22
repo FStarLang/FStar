@@ -71,6 +71,8 @@ let cbrackets (uu___ : doc) : doc=
   match uu___ with | Doc d -> enclose (text "{") (text "}") (Doc d)
 let parens (uu___ : doc) : doc=
   match uu___ with | Doc d -> enclose (text "(") (text ")") (Doc d)
+let tparens (uu___ : doc) : doc=
+  match uu___ with | Doc d -> enclose (text "<") (text ">") (Doc d)
 let cat (uu___ : doc) (uu___1 : doc) : doc=
   match (uu___, uu___1) with | (Doc d1, Doc d2) -> Doc (Prims.strcat d1 d2)
 let reduce (docs : doc Prims.list) : doc=
@@ -401,16 +403,33 @@ let rec doc_of_mltype' (currentModule : FStarC_Extraction_ML_Syntax.mlsymbol)
       let args1 =
         match args with
         | [] -> empty
-        | arg::[] -> doc_of_mltype currentModule (t_prio_name, Left) arg
+        | arg::[] ->
+            let uu___ = FStarC_Extraction_ML_Util.codegen_fsharp () in
+            if uu___
+            then
+              let uu___1 =
+                doc_of_mltype currentModule (t_prio_name, Left) arg in
+              tparens uu___1
+            else doc_of_mltype currentModule (t_prio_name, Left) arg
         | uu___ ->
             let args2 =
               FStarC_List.map
                 (doc_of_mltype currentModule (min_op_prec, NonAssoc)) args in
-            let uu___1 =
-              let uu___2 = combine (text ", ") args2 in hbox uu___2 in
-            parens uu___1 in
+            let uu___1 = FStarC_Extraction_ML_Util.codegen_fsharp () in
+            if uu___1
+            then
+              let uu___2 =
+                let uu___3 = combine (text ", ") args2 in hbox uu___3 in
+              tparens uu___2
+            else
+              (let uu___2 =
+                 let uu___3 = combine (text ", ") args2 in hbox uu___3 in
+               parens uu___2) in
       let name1 = ptsym currentModule name in
-      let uu___ = reduce1 [args1; text name1] in hbox uu___
+      let uu___ = FStarC_Extraction_ML_Util.codegen_fsharp () in
+      if uu___
+      then let uu___1 = reduce [text name1; args1] in hbox uu___1
+      else (let uu___1 = reduce1 [args1; text name1] in hbox uu___1)
   | FStarC_Extraction_ML_Syntax.MLTY_Fun (t1, et, t2) ->
       let d1 = doc_of_mltype currentModule (t_prio_fun, Left) t1 in
       let d2 = doc_of_mltype currentModule (t_prio_fun, Right) t2 in
@@ -691,20 +710,54 @@ let rec doc_of_expr (currentModule : FStarC_Extraction_ML_Syntax.mlsymbol)
   | FStarC_Extraction_ML_Syntax.MLE_If
       (cond, e1, FStar_Pervasives_Native.Some e2) ->
       let cond1 = doc_of_expr currentModule (min_op_prec, NonAssoc) cond in
+      let line_prefix =
+        let uu___ = FStarC_Extraction_ML_Util.codegen_fsharp () in
+        if uu___ then [text "    "] else [] in
       let doc1 =
         let uu___ =
-          let uu___1 = reduce1 [text "if"; cond1; text "then"; text "begin"] in
+          let uu___1 =
+            let uu___2 = FStarC_Extraction_ML_Util.codegen_fsharp () in
+            if uu___2 then [break1] else [] in
           let uu___2 =
-            let uu___3 = doc_of_expr currentModule (min_op_prec, NonAssoc) e1 in
+            let uu___3 =
+              reduce1 [text "if"; cond1; text "then"; text "begin"] in
             let uu___4 =
-              let uu___5 = reduce1 [text "end"; text "else"; text "begin"] in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 =
+                    let uu___8 =
+                      doc_of_expr currentModule (min_op_prec, NonAssoc) e1 in
+                    [uu___8] in
+                  FStarC_List.op_At line_prefix uu___7 in
+                reduce1 uu___6 in
               let uu___6 =
                 let uu___7 =
-                  doc_of_expr currentModule (min_op_prec, NonAssoc) e2 in
-                [uu___7; text "end"] in
+                  let uu___8 =
+                    let uu___9 =
+                      let uu___10 =
+                        reduce1 [text "end"; text "else"; text "begin"] in
+                      [uu___10] in
+                    FStarC_List.op_At line_prefix uu___9 in
+                  reduce1 uu___8 in
+                let uu___8 =
+                  let uu___9 =
+                    let uu___10 =
+                      let uu___11 =
+                        let uu___12 =
+                          doc_of_expr currentModule (min_op_prec, NonAssoc)
+                            e2 in
+                        [uu___12] in
+                      FStarC_List.op_At line_prefix uu___11 in
+                    reduce1 uu___10 in
+                  let uu___10 =
+                    let uu___11 =
+                      reduce1 (FStarC_List.op_At line_prefix [text "end"]) in
+                    [uu___11] in
+                  uu___9 :: uu___10 in
+                uu___7 :: uu___8 in
               uu___5 :: uu___6 in
             uu___3 :: uu___4 in
-          uu___1 :: uu___2 in
+          FStarC_List.op_At uu___1 uu___2 in
         combine hardline uu___ in
       maybe_paren outer e_bin_prio_if doc1
   | FStarC_Extraction_ML_Syntax.MLE_Match (cond, pats) ->
@@ -878,8 +931,27 @@ and doc_of_branch (currentModule : FStarC_Extraction_ML_Syntax.mlsymbol)
       let uu___1 =
         let uu___2 = reduce1 [case; text "->"; text "begin"] in
         let uu___3 =
-          let uu___4 = doc_of_expr currentModule (min_op_prec, NonAssoc) e in
-          [uu___4; text "end"] in
+          let uu___4 =
+            let uu___5 =
+              let uu___6 =
+                let uu___7 = FStarC_Extraction_ML_Util.codegen_fsharp () in
+                if uu___7 then text "    " else empty in
+              let uu___7 =
+                let uu___8 =
+                  doc_of_expr currentModule (min_op_prec, NonAssoc) e in
+                [uu___8] in
+              uu___6 :: uu___7 in
+            reduce1 uu___5 in
+          let uu___5 =
+            let uu___6 =
+              let uu___7 =
+                let uu___8 =
+                  let uu___9 = FStarC_Extraction_ML_Util.codegen_fsharp () in
+                  if uu___9 then text "    " else empty in
+                [uu___8; text "end"] in
+              reduce1 uu___7 in
+            [uu___6] in
+          uu___4 :: uu___5 in
         uu___2 :: uu___3 in
       combine hardline uu___1
 and doc_of_lets (currentModule : FStarC_Extraction_ML_Syntax.mlsymbol)
@@ -1004,10 +1076,15 @@ let doc_of_mltydecl (currentModule : FStarC_Extraction_ML_Syntax.mlsymbol)
           let tparams2 = FStarC_Extraction_ML_Syntax.ty_param_names tparams in
           match tparams2 with
           | [] -> empty
-          | x2::[] -> text x2
+          | x2::[] ->
+              let uu___3 = FStarC_Extraction_ML_Util.codegen_fsharp () in
+              if uu___3 then tparens (text x2) else text x2
           | uu___3 ->
               let doc1 = FStarC_List.map (fun x2 -> text x2) tparams2 in
-              let uu___4 = combine (text ", ") doc1 in parens uu___4 in
+              let uu___4 = FStarC_Extraction_ML_Util.codegen_fsharp () in
+              if uu___4
+              then let uu___5 = combine (text ", ") doc1 in tparens uu___5
+              else (let uu___5 = combine (text ", ") doc1 in parens uu___5) in
         let forbody body1 =
           match body1 with
           | FStarC_Extraction_ML_Syntax.MLTD_Abbrev ty ->
@@ -1045,20 +1122,37 @@ let doc_of_mltydecl (currentModule : FStarC_Extraction_ML_Syntax.mlsymbol)
                 FStarC_List.map (fun d -> reduce1 [text "|"; d]) ctors1 in
               combine hardline ctors2 in
         let doc1 =
-          let uu___3 =
+          let uu___3 = FStarC_Extraction_ML_Util.codegen_fsharp () in
+          if uu___3
+          then
             let uu___4 =
               let uu___5 =
                 let uu___6 = ptsym currentModule ([], x1) in text uu___6 in
-              [uu___5] in
-            tparams1 :: uu___4 in
-          reduce1 uu___3 in
+              [uu___5; tparams1] in
+            reduce uu___4
+          else
+            (let uu___4 =
+               let uu___5 =
+                 let uu___6 =
+                   let uu___7 = ptsym currentModule ([], x1) in text uu___7 in
+                 [uu___6] in
+               tparams1 :: uu___5 in
+             reduce1 uu___4) in
         (match body with
          | FStar_Pervasives_Native.None -> doc1
-         | FStar_Pervasives_Native.Some body1 ->
-             let body2 = forbody body1 in
+         | FStar_Pervasives_Native.Some body_val ->
+             let body1 = forbody body_val in
+             let sep =
+               let uu___3 = FStarC_Extraction_ML_Util.codegen_fsharp () in
+               if uu___3
+               then
+                 match body_val with
+                 | FStarC_Extraction_ML_Syntax.MLTD_DType uu___4 -> hardline
+                 | uu___4 -> break1
+               else hardline in
              let uu___3 =
-               let uu___4 = reduce1 [doc1; text "="] in [uu___4; body2] in
-             combine hardline uu___3) in
+               let uu___4 = reduce1 [doc1; text "="] in [uu___4; body1] in
+             combine sep uu___3) in
   let doc1 = FStarC_List.map for1 decls in
   let doc2 =
     if match doc1 with | hd::tl -> true | uu___ -> false
@@ -1167,16 +1261,13 @@ let doc_of_mlmodule_r (fsharp : Prims.bool)
             (fun uu___1 ->
                match uu___1 with
                | (uu___2, m) -> doc_of_modbody target_mod_name m) sigmod in
-        let prefix =
-          if fsharp then [cat (text "#light \"off\"") hardline] else [] in
         reduce
-          (FStarC_List.op_At prefix
-             [head;
-             hardline;
-             (match doc1 with
-              | FStar_Pervasives_Native.None -> empty
-              | FStar_Pervasives_Native.Some s -> cat s hardline);
-             cat tail hardline]) in
+          [head;
+          hardline;
+          (match doc1 with
+           | FStar_Pervasives_Native.None -> empty
+           | FStar_Pervasives_Native.Some s -> cat s hardline);
+          cat tail hardline] in
   p_mod true mod1
 let pretty (sz : Prims.int) (uu___ : doc) : Prims.string=
   match uu___ with | Doc doc1 -> doc1

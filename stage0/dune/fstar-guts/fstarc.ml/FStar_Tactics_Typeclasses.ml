@@ -117,6 +117,8 @@ let rec head_of (t : FStar_Tactics_NamedView.term)
   | FStar_Tactics_NamedView.Tv_UInst (fv, uu___) ->
       FStar_Pervasives_Native.Some fv
   | FStar_Tactics_NamedView.Tv_App (h, uu___) -> head_of h ps
+  | FStar_Tactics_NamedView.Tv_Refine (b, uu___) ->
+      head_of b.FStar_Tactics_NamedView.sort ps
   | v -> FStar_Pervasives_Native.None
 let rec res_typ (t : FStar_Tactics_NamedView.term)
   (ps : FStarC_Tactics_Types.ref_proofstate) : FStar_Tactics_NamedView.term=

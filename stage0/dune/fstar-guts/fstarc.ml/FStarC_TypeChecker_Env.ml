@@ -362,6 +362,7 @@ and env =
   modules: FStarC_Syntax_Syntax.modul Prims.list ;
   expected_typ:
     (FStarC_Syntax_Syntax.typ * Prims.bool) FStar_Pervasives_Native.option ;
+  expected_post: FStarC_Syntax_Syntax.typ FStar_Pervasives_Native.option ;
   sigtab: FStarC_Syntax_Syntax.sigelt FStarC_SMap.t ;
   attrtab: FStarC_Syntax_Syntax.sigelt Prims.list FStarC_SMap.t ;
   instantiate_imp: Prims.bool ;
@@ -534,11 +535,11 @@ let __proj__Mkeffects__item__lifts (projectee : effects) :
 let __proj__Mkenv__item__solver (projectee : env) : solver_t=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -548,11 +549,11 @@ let __proj__Mkenv__item__solver (projectee : env) : solver_t=
 let __proj__Mkenv__item__range (projectee : env) : FStarC_Range_Type.t=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -562,11 +563,11 @@ let __proj__Mkenv__item__range (projectee : env) : FStarC_Range_Type.t=
 let __proj__Mkenv__item__curmodule (projectee : env) : FStarC_Ident.lident=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -577,11 +578,11 @@ let __proj__Mkenv__item__gamma (projectee : env) :
   FStarC_Syntax_Syntax.binding Prims.list=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -592,11 +593,11 @@ let __proj__Mkenv__item__gamma_sig (projectee : env) :
   sig_binding Prims.list=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -607,11 +608,11 @@ let __proj__Mkenv__item__gamma_cache (projectee : env) :
   cached_elt FStarC_SMap.t=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -622,11 +623,11 @@ let __proj__Mkenv__item__modules (projectee : env) :
   FStarC_Syntax_Syntax.modul Prims.list=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -637,26 +638,42 @@ let __proj__Mkenv__item__expected_typ (projectee : env) :
   (FStarC_Syntax_Syntax.typ * Prims.bool) FStar_Pervasives_Native.option=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
       nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
       unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
       iface_todo; iface_hidden; iface_lids; iface_val_lids;_} -> expected_typ
+let __proj__Mkenv__item__expected_post (projectee : env) :
+  FStarC_Syntax_Syntax.typ FStar_Pervasives_Native.option=
+  match projectee with
+  | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
+      fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
+      splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
+      nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
+      unif_allow_ref_guards; erase_erasable_args; core_check; missing_decl;
+      iface_todo; iface_hidden; iface_lids; iface_val_lids;_} ->
+      expected_post
 let __proj__Mkenv__item__sigtab (projectee : env) :
   FStarC_Syntax_Syntax.sigelt FStarC_SMap.t=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -667,11 +684,11 @@ let __proj__Mkenv__item__attrtab (projectee : env) :
   FStarC_Syntax_Syntax.sigelt Prims.list FStarC_SMap.t=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -681,11 +698,11 @@ let __proj__Mkenv__item__attrtab (projectee : env) :
 let __proj__Mkenv__item__instantiate_imp (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -696,11 +713,11 @@ let __proj__Mkenv__item__instantiate_imp (projectee : env) : Prims.bool=
 let __proj__Mkenv__item__effects (projectee : env) : effects=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -710,11 +727,11 @@ let __proj__Mkenv__item__effects (projectee : env) : effects=
 let __proj__Mkenv__item__generalize (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -726,11 +743,11 @@ let __proj__Mkenv__item__letrecs (projectee : env) :
     FStarC_Syntax_Syntax.univ_names) Prims.list=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -740,11 +757,11 @@ let __proj__Mkenv__item__letrecs (projectee : env) :
 let __proj__Mkenv__item__top_level (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -754,11 +771,11 @@ let __proj__Mkenv__item__top_level (projectee : env) : Prims.bool=
 let __proj__Mkenv__item__check_uvars (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -768,11 +785,11 @@ let __proj__Mkenv__item__check_uvars (projectee : env) : Prims.bool=
 let __proj__Mkenv__item__use_eq_strict (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -783,11 +800,11 @@ let __proj__Mkenv__item__use_eq_strict (projectee : env) : Prims.bool=
 let __proj__Mkenv__item__is_iface (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -797,11 +814,11 @@ let __proj__Mkenv__item__is_iface (projectee : env) : Prims.bool=
 let __proj__Mkenv__item__admit (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -811,11 +828,11 @@ let __proj__Mkenv__item__admit (projectee : env) : Prims.bool=
 let __proj__Mkenv__item__phase1 (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -825,11 +842,11 @@ let __proj__Mkenv__item__phase1 (projectee : env) : Prims.bool=
 let __proj__Mkenv__item__failhard (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -839,11 +856,11 @@ let __proj__Mkenv__item__failhard (projectee : env) : Prims.bool=
 let __proj__Mkenv__item__flychecking (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -853,11 +870,11 @@ let __proj__Mkenv__item__flychecking (projectee : env) : Prims.bool=
 let __proj__Mkenv__item__uvar_subtyping (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -868,11 +885,11 @@ let __proj__Mkenv__item__uvar_subtyping (projectee : env) : Prims.bool=
 let __proj__Mkenv__item__intactics (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -882,11 +899,11 @@ let __proj__Mkenv__item__intactics (projectee : env) : Prims.bool=
 let __proj__Mkenv__item__nocoerce (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -900,11 +917,11 @@ let __proj__Mkenv__item__tc_term (projectee : env) :
         FStarC_TypeChecker_Common.guard_t)=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -919,11 +936,11 @@ let __proj__Mkenv__item__typeof_tot_or_gtot_term (projectee : env) :
           FStarC_TypeChecker_Common.guard_t)=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -935,11 +952,11 @@ let __proj__Mkenv__item__universe_of (projectee : env) :
   env -> FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.universe=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -954,11 +971,11 @@ let __proj__Mkenv__item__typeof_well_typed_tot_or_gtot_term (projectee : env)
         (FStarC_Syntax_Syntax.typ * FStarC_TypeChecker_Common.guard_t)=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -970,11 +987,11 @@ let __proj__Mkenv__item__teq_nosmt_force (projectee : env) :
   env -> FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.term -> Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -986,11 +1003,11 @@ let __proj__Mkenv__item__subtype_nosmt_force (projectee : env) :
   env -> FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.term -> Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -1003,11 +1020,11 @@ let __proj__Mkenv__item__qtbl_name_and_index (projectee : env) :
     FStar_Pervasives_Native.option * Prims.int FStarC_SMap.t)=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -1019,11 +1036,11 @@ let __proj__Mkenv__item__normalized_eff_names (projectee : env) :
   FStarC_Ident.lident FStarC_SMap.t=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -1035,11 +1052,11 @@ let __proj__Mkenv__item__fv_delta_depths (projectee : env) :
   FStarC_Syntax_Syntax.delta_depth FStarC_SMap.t=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -1050,11 +1067,11 @@ let __proj__Mkenv__item__fv_delta_depths (projectee : env) :
 let __proj__Mkenv__item__proof_ns (projectee : env) : proof_namespace=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -1068,11 +1085,11 @@ let __proj__Mkenv__item__synth_hook (projectee : env) :
         FStarC_Range_Type.t -> FStarC_Syntax_Syntax.term=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -1084,11 +1101,11 @@ let __proj__Mkenv__item__try_solve_implicits_hook (projectee : env) :
     FStarC_Syntax_Syntax.term -> FStarC_TypeChecker_Common.implicits -> unit=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -1106,11 +1123,11 @@ let __proj__Mkenv__item__splice (projectee : env) :
               FStarC_Range_Type.t -> FStarC_Syntax_Syntax.sigelt Prims.list=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -1123,11 +1140,11 @@ let __proj__Mkenv__item__mpreprocess (projectee : env) :
       FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.term=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -1141,11 +1158,11 @@ let __proj__Mkenv__item__postprocess (projectee : env) :
         FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.term=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -1156,11 +1173,11 @@ let __proj__Mkenv__item__identifier_info (projectee : env) :
   FStarC_TypeChecker_Common.id_info_table FStarC_Effect.ref=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -1171,11 +1188,11 @@ let __proj__Mkenv__item__identifier_info (projectee : env) :
 let __proj__Mkenv__item__tc_hooks (projectee : env) : tcenv_hooks=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -1185,11 +1202,11 @@ let __proj__Mkenv__item__tc_hooks (projectee : env) : tcenv_hooks=
 let __proj__Mkenv__item__dsenv (projectee : env) : FStarC_Syntax_DsEnv.env=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -1201,11 +1218,11 @@ let __proj__Mkenv__item__nbe (projectee : env) :
     env -> FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.term=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -1216,11 +1233,11 @@ let __proj__Mkenv__item__strict_args_tab (projectee : env) :
   Prims.int Prims.list FStar_Pervasives_Native.option FStarC_SMap.t=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -1232,11 +1249,11 @@ let __proj__Mkenv__item__erasable_types_tab (projectee : env) :
   Prims.bool FStarC_SMap.t=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -1247,11 +1264,11 @@ let __proj__Mkenv__item__erasable_types_tab (projectee : env) :
 let __proj__Mkenv__item__enable_defer_to_tac (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -1263,11 +1280,11 @@ let __proj__Mkenv__item__unif_allow_ref_guards (projectee : env) :
   Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -1278,11 +1295,11 @@ let __proj__Mkenv__item__unif_allow_ref_guards (projectee : env) :
 let __proj__Mkenv__item__erase_erasable_args (projectee : env) : Prims.bool=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -1300,11 +1317,11 @@ let __proj__Mkenv__item__core_check (projectee : env) :
             Prims.bool -> Prims.string) FStar_Pervasives.either=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -1315,11 +1332,11 @@ let __proj__Mkenv__item__missing_decl (projectee : env) :
   FStarC_Ident.lident FStarC_RBSet.t=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -1330,11 +1347,11 @@ let __proj__Mkenv__item__iface_todo (projectee : env) :
   FStarC_Syntax_Syntax.sigelt Prims.list=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -1345,11 +1362,11 @@ let __proj__Mkenv__item__iface_hidden (projectee : env) :
   FStarC_Ident.lident FStarC_RBSet.t=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -1360,11 +1377,11 @@ let __proj__Mkenv__item__iface_lids (projectee : env) :
   FStarC_Ident.lident FStarC_RBSet.t FStar_Pervasives_Native.option=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -1375,11 +1392,11 @@ let __proj__Mkenv__item__iface_val_lids (projectee : env) :
   FStarC_Ident.lident FStarC_RBSet.t=
   match projectee with
   | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
-      expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
-      generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-      admit; phase1; failhard; flychecking; uvar_subtyping; intactics;
-      nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
-      typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
+      expected_typ; expected_post; sigtab; attrtab; instantiate_imp;
+      effects = effects1; generalize; letrecs; top_level; check_uvars;
+      use_eq_strict; is_iface; admit; phase1; failhard; flychecking;
+      uvar_subtyping; intactics; nocoerce; tc_term; typeof_tot_or_gtot_term;
+      universe_of; typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
       subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
       fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
       splice; mpreprocess; postprocess; identifier_info; tc_hooks; dsenv;
@@ -1503,6 +1520,7 @@ let rename_env (subst : FStarC_Syntax_Syntax.subst_t) (e : env) : env=
     gamma_cache = (e.gamma_cache);
     modules = (e.modules);
     expected_typ = (e.expected_typ);
+    expected_post = (e.expected_post);
     sigtab = (e.sigtab);
     attrtab = (e.attrtab);
     instantiate_imp = (e.instantiate_imp);
@@ -1565,6 +1583,7 @@ let set_tc_hooks (env1 : env) (hooks : tcenv_hooks) : env=
     gamma_cache = (env1.gamma_cache);
     modules = (env1.modules);
     expected_typ = (env1.expected_typ);
+    expected_post = (env1.expected_post);
     sigtab = (env1.sigtab);
     attrtab = (env1.attrtab);
     instantiate_imp = (env1.instantiate_imp);
@@ -1624,6 +1643,7 @@ let set_dep_graph (e : env) (g : FStarC_Parser_Dep.deps) : env=
     gamma_cache = (e.gamma_cache);
     modules = (e.modules);
     expected_typ = (e.expected_typ);
+    expected_post = (e.expected_post);
     sigtab = (e.sigtab);
     attrtab = (e.attrtab);
     instantiate_imp = (e.instantiate_imp);
@@ -1692,6 +1712,7 @@ let with_restored_scope (e : env) (f : env -> ('a * env)) : ('a * env)=
       gamma_cache = (e.gamma_cache);
       modules = (e.modules);
       expected_typ = (e.expected_typ);
+      expected_post = (e.expected_post);
       sigtab = (e.sigtab);
       attrtab = (e.attrtab);
       instantiate_imp = (e.instantiate_imp);
@@ -1763,6 +1784,7 @@ let with_restored_scope (e : env) (f : env -> ('a * env)) : ('a * env)=
                   gamma_cache = (env2.gamma_cache);
                   modules = (env2.modules);
                   expected_typ = (env2.expected_typ);
+                  expected_post = (env2.expected_post);
                   sigtab = (env2.sigtab);
                   attrtab = (env2.attrtab);
                   instantiate_imp = (env2.instantiate_imp);
@@ -1837,6 +1859,7 @@ let record_val_for (e : env) (l : FStarC_Ident.lident) : env=
     gamma_cache = (e.gamma_cache);
     modules = (e.modules);
     expected_typ = (e.expected_typ);
+    expected_post = (e.expected_post);
     sigtab = (e.sigtab);
     attrtab = (e.attrtab);
     instantiate_imp = (e.instantiate_imp);
@@ -1900,6 +1923,7 @@ let record_definition_for (e : env) (l : FStarC_Ident.lident) : env=
     gamma_cache = (e.gamma_cache);
     modules = (e.modules);
     expected_typ = (e.expected_typ);
+    expected_post = (e.expected_post);
     sigtab = (e.sigtab);
     attrtab = (e.attrtab);
     instantiate_imp = (e.instantiate_imp);
@@ -1967,6 +1991,7 @@ let set_iface_todo (e : env) (ses : FStarC_Syntax_Syntax.sigelt Prims.list) :
     gamma_cache = (e.gamma_cache);
     modules = (e.modules);
     expected_typ = (e.expected_typ);
+    expected_post = (e.expected_post);
     sigtab = (e.sigtab);
     attrtab = (e.attrtab);
     instantiate_imp = (e.instantiate_imp);
@@ -2042,6 +2067,7 @@ let consume_iface_todo (e : env)
      gamma_cache = (e.gamma_cache);
      modules = (e.modules);
      expected_typ = (e.expected_typ);
+     expected_post = (e.expected_post);
      sigtab = (e.sigtab);
      attrtab = (e.attrtab);
      instantiate_imp = (e.instantiate_imp);
@@ -2117,6 +2143,7 @@ let set_iface_lids (e : env) (ls : FStarC_Ident.lident Prims.list)
     gamma_cache = (e.gamma_cache);
     modules = (e.modules);
     expected_typ = (e.expected_typ);
+    expected_post = (e.expected_post);
     sigtab = (e.sigtab);
     attrtab = (e.attrtab);
     instantiate_imp = (e.instantiate_imp);
@@ -2274,6 +2301,7 @@ let initial_env (deps : FStarC_Parser_Dep.deps)
     gamma_cache = uu___;
     modules = [];
     expected_typ = FStar_Pervasives_Native.None;
+    expected_post = FStar_Pervasives_Native.None;
     sigtab = uu___1;
     attrtab = uu___2;
     instantiate_imp = true;
@@ -2409,6 +2437,7 @@ let push_stack (env1 : env) : env=
      gamma_cache = uu___1;
      modules = (env1.modules);
      expected_typ = (env1.expected_typ);
+     expected_post = (env1.expected_post);
      sigtab = uu___2;
      attrtab = uu___3;
      instantiate_imp = (env1.instantiate_imp);
@@ -2493,6 +2522,7 @@ let snapshot (env1 : env) (msg : Prims.string) : (tcenv_depth_t * env)=
                               gamma_cache = (env2.gamma_cache);
                               modules = (env2.modules);
                               expected_typ = (env2.expected_typ);
+                              expected_post = (env2.expected_post);
                               sigtab = (env2.sigtab);
                               attrtab = (env2.attrtab);
                               instantiate_imp = (env2.instantiate_imp);
@@ -2606,6 +2636,7 @@ let incr_query_index (env1 : env) : env=
               gamma_cache = (env1.gamma_cache);
               modules = (env1.modules);
               expected_typ = (env1.expected_typ);
+              expected_post = (env1.expected_post);
               sigtab = (env1.sigtab);
               attrtab = (env1.attrtab);
               instantiate_imp = (env1.instantiate_imp);
@@ -2669,6 +2700,7 @@ let incr_query_index (env1 : env) : env=
               gamma_cache = (env1.gamma_cache);
               modules = (env1.modules);
               expected_typ = (env1.expected_typ);
+              expected_post = (env1.expected_post);
               sigtab = (env1.sigtab);
               attrtab = (env1.attrtab);
               instantiate_imp = (env1.instantiate_imp);
@@ -2732,6 +2764,7 @@ let set_range (e : env) (r : FStarC_Range_Type.t) : env=
       gamma_cache = (e.gamma_cache);
       modules = (e.modules);
       expected_typ = (e.expected_typ);
+      expected_post = (e.expected_post);
       sigtab = (e.sigtab);
       attrtab = (e.attrtab);
       instantiate_imp = (e.instantiate_imp);
@@ -2827,6 +2860,7 @@ let set_current_module (env1 : env) (lid : FStarC_Ident.lident) : env=
       gamma_cache = (env1.gamma_cache);
       modules = (env1.modules);
       expected_typ = (env1.expected_typ);
+      expected_post = (env1.expected_post);
       sigtab = (env1.sigtab);
       attrtab = (env1.attrtab);
       instantiate_imp = (env1.instantiate_imp);
@@ -2885,6 +2919,7 @@ let set_current_module (env1 : env) (lid : FStarC_Ident.lident) : env=
     gamma_cache = (env2.gamma_cache);
     modules = (env2.modules);
     expected_typ = (env2.expected_typ);
+    expected_post = (env2.expected_post);
     sigtab = (env2.sigtab);
     attrtab = (env2.attrtab);
     instantiate_imp = (env2.instantiate_imp);
@@ -4462,7 +4497,7 @@ let norm_eff_name (env1 : env) (l : FStarC_Ident.lident) :
   FStarC_Ident.set_lid_range res (FStarC_Ident.range_of_lid l)
 let is_erasable_effect (env1 : env) (l : FStarC_Ident.lident) : Prims.bool=
   let uu___ = norm_eff_name env1 l in
-  if FStarC_Ident.lid_equals uu___ FStarC_Parser_Const.effect_GHOST_lid
+  if FStarC_Syntax_Util.is_ghost_effect uu___
   then true
   else
     fv_has_erasable_attr env1
@@ -5030,6 +5065,29 @@ let comp_to_comp_typ (env1 : env) (c : FStarC_Syntax_Syntax.comp) :
               FStarC_Syntax_Syntax.comp_post = uu___4;
               FStarC_Syntax_Syntax.flags = (FStarC_Syntax_Util.comp_flags c)
             }))
+let comp_to_comp_typ_with_univs (univs : FStarC_Syntax_Syntax.universes)
+  (c : FStarC_Syntax_Syntax.comp' FStarC_Syntax_Syntax.syntax) :
+  FStarC_Syntax_Syntax.comp_typ=
+  match c.FStarC_Syntax_Syntax.n with
+  | FStarC_Syntax_Syntax.Comp ct -> ct
+  | uu___ ->
+      let uu___1 =
+        match c.FStarC_Syntax_Syntax.n with
+        | FStarC_Syntax_Syntax.Total t ->
+            (FStarC_Parser_Const.effect_Tot_lid, t)
+        | FStarC_Syntax_Syntax.GTotal t ->
+            (FStarC_Parser_Const.effect_GTot_lid, t) in
+      (match uu___1 with
+       | (effect_name, result_typ) ->
+           let uu___2 = FStarC_Syntax_Syntax.trivial_post result_typ in
+           {
+             FStarC_Syntax_Syntax.comp_univs = univs;
+             FStarC_Syntax_Syntax.effect_name = effect_name;
+             FStarC_Syntax_Syntax.result_typ = result_typ;
+             FStarC_Syntax_Syntax.comp_pre = FStarC_Syntax_Syntax.trivial_pre;
+             FStarC_Syntax_Syntax.comp_post = uu___2;
+             FStarC_Syntax_Syntax.flags = (FStarC_Syntax_Util.comp_flags c)
+           })
 let comp_set_flags (env1 : env) (c : FStarC_Syntax_Syntax.comp)
   (f : FStarC_Syntax_Syntax.cflag Prims.list) : FStarC_Syntax_Syntax.comp=
   FStarC_Defensive.def_check_scoped hasBinders_env
@@ -5101,18 +5159,34 @@ let rec unfold_effect_abbrev (env1 : env) (comp : FStarC_Syntax_Syntax.comp)
                    (((FStarC_List.hd binders1).FStarC_Syntax_Syntax.binder_bv),
                      (c.FStarC_Syntax_Syntax.result_typ))] in
               let c1 = FStarC_Syntax_Subst.subst_comp inst cdef1 in
-              let ct1 = comp_to_comp_typ env1 c1 in
-              let c2 =
+              let ct1 =
+                comp_to_comp_typ_with_univs c.FStarC_Syntax_Syntax.comp_univs
+                  c1 in
+              let comp_pre =
+                FStarC_Syntax_Util.mk_conj_simp
+                  ct1.FStarC_Syntax_Syntax.comp_pre
+                  c.FStarC_Syntax_Syntax.comp_pre in
+              let comp_post =
+                FStarC_Syntax_Util.mk_conj_post
+                  ct1.FStarC_Syntax_Syntax.result_typ
+                  ct1.FStarC_Syntax_Syntax.comp_post
+                  c.FStarC_Syntax_Syntax.comp_post in
+              let flags =
                 let uu___4 =
-                  let uu___5 =
-                    FStarC_Syntax_Util.mk_conj_simp
-                      ct1.FStarC_Syntax_Syntax.comp_pre
-                      c.FStarC_Syntax_Syntax.comp_pre in
-                  let uu___6 =
-                    FStarC_Syntax_Util.mk_conj_post
-                      ct1.FStarC_Syntax_Syntax.result_typ
-                      ct1.FStarC_Syntax_Syntax.comp_post
-                      c.FStarC_Syntax_Syntax.comp_post in
+                  let uu___5 = FStarC_Syntax_Util.is_t_true comp_pre in
+                  if uu___5
+                  then FStarC_Syntax_Util.is_trivial_post comp_post
+                  else false in
+                if uu___4
+                then c.FStarC_Syntax_Syntax.flags
+                else
+                  FStarC_List.filter
+                    (fun uu___5 ->
+                       match uu___5 with
+                       | FStarC_Syntax_Syntax.TOTAL -> false
+                       | uu___6 -> true) c.FStarC_Syntax_Syntax.flags in
+              let c2 =
+                FStarC_Syntax_Syntax.mk_Comp
                   {
                     FStarC_Syntax_Syntax.comp_univs =
                       (ct1.FStarC_Syntax_Syntax.comp_univs);
@@ -5120,12 +5194,10 @@ let rec unfold_effect_abbrev (env1 : env) (comp : FStarC_Syntax_Syntax.comp)
                       (ct1.FStarC_Syntax_Syntax.effect_name);
                     FStarC_Syntax_Syntax.result_typ =
                       (ct1.FStarC_Syntax_Syntax.result_typ);
-                    FStarC_Syntax_Syntax.comp_pre = uu___5;
-                    FStarC_Syntax_Syntax.comp_post = uu___6;
-                    FStarC_Syntax_Syntax.flags =
-                      (c.FStarC_Syntax_Syntax.flags)
+                    FStarC_Syntax_Syntax.comp_pre = comp_pre;
+                    FStarC_Syntax_Syntax.comp_post = comp_post;
+                    FStarC_Syntax_Syntax.flags = flags
                   } in
-                FStarC_Syntax_Syntax.mk_Comp uu___4 in
               unfold_effect_abbrev env1 c2))))
 let effect_repr_aux (only_reifiable : 'uuuuu) (env1 : env)
   (c : FStarC_Syntax_Syntax.comp) (u_res : FStarC_Syntax_Syntax.universe) :
@@ -5281,6 +5353,7 @@ let push_sigelt' (force : Prims.bool) (env1 : env)
       gamma_cache = (env1.gamma_cache);
       modules = (env1.modules);
       expected_typ = (env1.expected_typ);
+      expected_post = (env1.expected_post);
       sigtab = (env1.sigtab);
       attrtab = (env1.attrtab);
       instantiate_imp = (env1.instantiate_imp);
@@ -5361,6 +5434,7 @@ let push_new_effect (env1 : env)
         gamma_cache = (env1.gamma_cache);
         modules = (env1.modules);
         expected_typ = (env1.expected_typ);
+        expected_post = (env1.expected_post);
         sigtab = (env1.sigtab);
         attrtab = (env1.attrtab);
         instantiate_imp = (env1.instantiate_imp);
@@ -5540,9 +5614,7 @@ let update_effect_lattice (env1 : env) (src : FStarC_Ident.lident)
   FStarC_List.iter
     (fun edge2 ->
        let uu___1 =
-         if
-           FStarC_Ident.lid_equals edge2.msource
-             FStarC_Parser_Const.effect_DIV_lid
+         if FStarC_Parser_Const.is_div_effect_lid edge2.msource
          then
            let uu___2 = lookup_effect_quals env1 edge2.mtarget in
            FStarC_List.contains FStarC_Syntax_Syntax.TotalEffect uu___2
@@ -5626,6 +5698,7 @@ let update_effect_lattice (env1 : env) (src : FStarC_Ident.lident)
      gamma_cache = (env1.gamma_cache);
      modules = (env1.modules);
      expected_typ = (env1.expected_typ);
+     expected_post = (env1.expected_post);
      sigtab = (env1.sigtab);
      attrtab = (env1.attrtab);
      instantiate_imp = (env1.instantiate_imp);
@@ -5686,6 +5759,7 @@ let add_lift (e : env) (src : FStarC_Ident.lident)
     gamma_cache = (e.gamma_cache);
     modules = (e.modules);
     expected_typ = (e.expected_typ);
+    expected_post = (e.expected_post);
     sigtab = (e.sigtab);
     attrtab = (e.attrtab);
     instantiate_imp = (e.instantiate_imp);
@@ -5765,6 +5839,7 @@ let push_local_binding (env1 : env) (b : FStarC_Syntax_Syntax.binding) :
     gamma_cache = (env1.gamma_cache);
     modules = (env1.modules);
     expected_typ = (env1.expected_typ);
+    expected_post = (env1.expected_post);
     sigtab = (env1.sigtab);
     attrtab = (env1.attrtab);
     instantiate_imp = (env1.instantiate_imp);
@@ -5833,6 +5908,7 @@ let pop_bv (env1 : env) :
             gamma_cache = (env1.gamma_cache);
             modules = (env1.modules);
             expected_typ = (env1.expected_typ);
+            expected_post = (env1.expected_post);
             sigtab = (env1.sigtab);
             attrtab = (env1.attrtab);
             instantiate_imp = (env1.instantiate_imp);
@@ -5931,6 +6007,7 @@ let set_expected_typ (env1 : env) (t : FStarC_Syntax_Syntax.typ) : env=
     gamma_cache = (env1.gamma_cache);
     modules = (env1.modules);
     expected_typ = (FStar_Pervasives_Native.Some (t, false));
+    expected_post = FStar_Pervasives_Native.None;
     sigtab = (env1.sigtab);
     attrtab = (env1.attrtab);
     instantiate_imp = (env1.instantiate_imp);
@@ -5991,6 +6068,68 @@ let set_expected_typ_maybe_eq (env1 : env) (t : FStarC_Syntax_Syntax.typ)
     gamma_cache = (env1.gamma_cache);
     modules = (env1.modules);
     expected_typ = (FStar_Pervasives_Native.Some (t, use_eq));
+    expected_post = FStar_Pervasives_Native.None;
+    sigtab = (env1.sigtab);
+    attrtab = (env1.attrtab);
+    instantiate_imp = (env1.instantiate_imp);
+    effects = (env1.effects);
+    generalize = (env1.generalize);
+    letrecs = (env1.letrecs);
+    top_level = (env1.top_level);
+    check_uvars = (env1.check_uvars);
+    use_eq_strict = (env1.use_eq_strict);
+    is_iface = (env1.is_iface);
+    admit = (env1.admit);
+    phase1 = (env1.phase1);
+    failhard = (env1.failhard);
+    flychecking = (env1.flychecking);
+    uvar_subtyping = (env1.uvar_subtyping);
+    intactics = (env1.intactics);
+    nocoerce = (env1.nocoerce);
+    tc_term = (env1.tc_term);
+    typeof_tot_or_gtot_term = (env1.typeof_tot_or_gtot_term);
+    universe_of = (env1.universe_of);
+    typeof_well_typed_tot_or_gtot_term =
+      (env1.typeof_well_typed_tot_or_gtot_term);
+    teq_nosmt_force = (env1.teq_nosmt_force);
+    subtype_nosmt_force = (env1.subtype_nosmt_force);
+    qtbl_name_and_index = (env1.qtbl_name_and_index);
+    normalized_eff_names = (env1.normalized_eff_names);
+    fv_delta_depths = (env1.fv_delta_depths);
+    proof_ns = (env1.proof_ns);
+    synth_hook = (env1.synth_hook);
+    try_solve_implicits_hook = (env1.try_solve_implicits_hook);
+    splice = (env1.splice);
+    mpreprocess = (env1.mpreprocess);
+    postprocess = (env1.postprocess);
+    identifier_info = (env1.identifier_info);
+    tc_hooks = (env1.tc_hooks);
+    dsenv = (env1.dsenv);
+    nbe = (env1.nbe);
+    strict_args_tab = (env1.strict_args_tab);
+    erasable_types_tab = (env1.erasable_types_tab);
+    enable_defer_to_tac = (env1.enable_defer_to_tac);
+    unif_allow_ref_guards = (env1.unif_allow_ref_guards);
+    erase_erasable_args = (env1.erase_erasable_args);
+    core_check = (env1.core_check);
+    missing_decl = (env1.missing_decl);
+    iface_todo = (env1.iface_todo);
+    iface_hidden = (env1.iface_hidden);
+    iface_lids = (env1.iface_lids);
+    iface_val_lids = (env1.iface_val_lids)
+  }
+let set_expected_typ_and_post (env1 : env) (t : FStarC_Syntax_Syntax.typ)
+  (use_eq : Prims.bool) (post : FStarC_Syntax_Syntax.typ) : env=
+  {
+    solver = (env1.solver);
+    range = (env1.range);
+    curmodule = (env1.curmodule);
+    gamma = (env1.gamma);
+    gamma_sig = (env1.gamma_sig);
+    gamma_cache = (env1.gamma_cache);
+    modules = (env1.modules);
+    expected_typ = (FStar_Pervasives_Native.Some (t, use_eq));
+    expected_post = (FStar_Pervasives_Native.Some post);
     sigtab = (env1.sigtab);
     attrtab = (env1.attrtab);
     instantiate_imp = (env1.instantiate_imp);
@@ -6045,6 +6184,8 @@ let expected_typ (env1 : env) :
   match env1.expected_typ with
   | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
   | FStar_Pervasives_Native.Some t -> FStar_Pervasives_Native.Some t
+let expected_post (env1 : env) :
+  FStarC_Syntax_Syntax.typ FStar_Pervasives_Native.option= env1.expected_post
 let clear_expected_typ (env_ : env) :
   (env * (FStarC_Syntax_Syntax.typ * Prims.bool)
     FStar_Pervasives_Native.option)=
@@ -6057,6 +6198,7 @@ let clear_expected_typ (env_ : env) :
      gamma_cache = (env_.gamma_cache);
      modules = (env_.modules);
      expected_typ = FStar_Pervasives_Native.None;
+     expected_post = FStar_Pervasives_Native.None;
      sigtab = (env_.sigtab);
      attrtab = (env_.attrtab);
      instantiate_imp = (env_.instantiate_imp);
@@ -6119,6 +6261,7 @@ let finish_module : env -> FStarC_Syntax_Syntax.modul -> env=
         gamma_cache = (env1.gamma_cache);
         modules = (m :: (env1.modules));
         expected_typ = (env1.expected_typ);
+        expected_post = (env1.expected_post);
         sigtab = (env1.sigtab);
         attrtab = (env1.attrtab);
         instantiate_imp = (env1.instantiate_imp);
@@ -6290,6 +6433,7 @@ let cons_proof_ns (b : Prims.bool) (e : env) (path : name_prefix) : env=
     gamma_cache = (e.gamma_cache);
     modules = (e.modules);
     expected_typ = (e.expected_typ);
+    expected_post = (e.expected_post);
     sigtab = (e.sigtab);
     attrtab = (e.attrtab);
     instantiate_imp = (e.instantiate_imp);
@@ -6354,6 +6498,7 @@ let set_proof_ns (ns : proof_namespace) (e : env) : env=
     gamma_cache = (e.gamma_cache);
     modules = (e.modules);
     expected_typ = (e.expected_typ);
+    expected_post = (e.expected_post);
     sigtab = (e.sigtab);
     attrtab = (e.attrtab);
     instantiate_imp = (e.instantiate_imp);

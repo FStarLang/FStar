@@ -18,6 +18,7 @@ SUBDIRS += hacl
 SUBDIRS += calc
 SUBDIRS += friends
 SUBDIRS += extraction
+SUBDIRS += custard
 SUBDIRS += overloading
 
 # These have special makefiles

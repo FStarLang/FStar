@@ -97,13 +97,24 @@ $(OUTPUT_DIR)/%.fsti.json_output: %.fsti
 	@mkdir -p $(dir $@)
 	$(FSTAR) --message_format json --silent -f --print_expected_failures $< >$@ 2>&1
 
+# Extraction goes through Custard.  The target keeps its name, because the
+# .depend that supplies its prerequisites is written by --dep and names .ml
+# files; only the recipe changed.
+#
+# --custard_entry_module is what --extract_module was: every top-level
+# definition of the module is a root, and the module's top-level effects run.
+# The whole program lands in one file rather than one file per module, so the
+# ulib .ml targets that .depend also lists are no longer built by anything ---
+# which was already true, since the .exe rule compiles a single file against
+# the installed library.
 $(OUTPUT_DIR)/%.ml:
 	$(call msg, "EXTRACT", $(basename $(notdir $@)))
-	$(FSTAR) --codegen OCaml $< -o $@
+	$(FSTAR) --codegen Custard --custard_entry_module $(subst .fst.checked,,$(notdir $<)) $< -o $@
 
 $(OUTPUT_DIR)/%.fs:
 	$(call msg, "EXTRACT FS", $(basename $(notdir $@)))
-	$(FSTAR) --codegen FSharp $< -o $@
+	$(FSTAR) --codegen Custard --custard_backend FSharp \
+	  --custard_entry_module $(subst .fst.checked,,$(notdir $<)) $< -o $@
 
 $(OUTPUT_DIR)/$(subst .,_,%).krml:
 	$(call msg, "EXTRACT", $(basename $(notdir $@)))

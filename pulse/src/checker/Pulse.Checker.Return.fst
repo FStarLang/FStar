@@ -87,11 +87,10 @@ let rec free_named_vars (t:term) : T.Tac (list var) =
   | R.Tv_Abs _ body -> free_named_vars body
   | R.Tv_Refine b ref -> free_named_vars (R.inspect_binder b).sort ++ free_named_vars ref
   | R.Tv_Arrow b c ->
+    let cv = R.inspect_comp c in
     free_named_vars (R.inspect_binder b).sort ++
-    (match R.inspect_comp c with
-     | R.C_Total ret | R.C_GTotal ret -> free_named_vars ret
-     | R.C_Lemma pre post pats -> free_named_vars pre ++ free_named_vars post ++ free_named_vars pats
-     | R.C_Eff _ _ ret _ _ _ -> free_named_vars ret)
+    free_named_vars cv.R.result_typ ++
+    free_named_vars_flags cv.R.flags
   | R.Tv_Let _ _ _ def body -> free_named_vars def ++ free_named_vars body
   | R.Tv_Match sc _ brs ->
     TU.fold_left (fun (acc:list var) (br:R.branch) -> List.Tot.append acc (free_named_vars (snd br)))
@@ -99,6 +98,21 @@ let rec free_named_vars (t:term) : T.Tac (list var) =
   | R.Tv_AscribedT e ty _ _ -> free_named_vars e ++ free_named_vars ty
   | R.Tv_AscribedC e _ _ _ -> free_named_vars e
   | _ -> []
+
+// A comp's flags are terms too: an `SMTPat` or a `decreases` clause can mention
+// a named variable, and dropping them here would understate the free set.
+and free_named_vars_flags (fs:list R.cflag) : T.Tac (list var) =
+  match fs with
+  | [] -> []
+  | f::fs -> List.Tot.append (free_named_vars_flag f) (free_named_vars_flags fs)
+
+and free_named_vars_flag (f:R.cflag) : T.Tac (list var) =
+  match f with
+  | R.SMTPAT t -> free_named_vars t
+  | R.DECREASES (R.Decreases_lex ts) ->
+    TU.fold_left (fun (acc:list var) (t:R.term) -> List.Tot.append acc (free_named_vars t)) [] ts
+  | R.DECREASES (R.Decreases_wf rel e) ->
+    List.Tot.append (free_named_vars rel) (free_named_vars e)
 
 // Does the refinement formula `ref` constrain the refinement binder `bx`, i.e.
 // does the result value itself appear in the formula? (`ref` is the opened body

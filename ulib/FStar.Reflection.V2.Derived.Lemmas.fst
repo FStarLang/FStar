@@ -104,28 +104,28 @@ let rec collect_arr_order' (bds: binders) (tt: term) (c: comp)
           (ensures (let bds', c' = collect_arr' bds c in
                     bds' <<: tt /\ c' << tt))
           (decreases c)
-  = match inspect_comp c with
-    | C_Total ret ->
-        ( match inspect_ln_unascribe ret with
+  = let cv = inspect_comp c in
+    if is_tot_comp cv then
+      ( match inspect_ln_unascribe cv.result_typ with
         | Tv_Arrow b c -> collect_arr_order' (b::bds) tt c
         | _ -> ())
-    | _ -> ()
+    else ()
 
 val collect_arr_ln_bs_order : (t:term) ->
             Lemma (ensures forall bds c.
                            (bds, c) == collect_arr_ln_bs t ==>
                                 (c << t /\ bds <<: t)
-                              \/ (c == pack_comp (C_Total t) /\ bds == [])
+                              \/ (c == pack_comp (mk_tot_comp t) /\ bds == [])
                   )
 let collect_arr_ln_bs_order t =
   match inspect_ln_unascribe t with
   | Tv_Arrow b c -> collect_arr_order' [b] t c;
                    Classical.forall_intro_2 (rev_memP #binder);
-                   inspect_pack_comp_inv (C_Total t)
-  | _ -> inspect_pack_comp_inv (C_Total t)
+                   inspect_pack_comp_inv (mk_tot_comp t)
+  | _ -> inspect_pack_comp_inv (mk_tot_comp t)
 
 val collect_arr_ln_bs_ref : (t:term) -> list (bd:binder{bd << t})
-                                     & (c:comp{ c == pack_comp (C_Total t) \/ c << t})
+                                     & (c:comp{ c == pack_comp (mk_tot_comp t) \/ c << t})
 let collect_arr_ln_bs_ref t =
     let bds, c = collect_arr_ln_bs t in
     collect_arr_ln_bs_order t;

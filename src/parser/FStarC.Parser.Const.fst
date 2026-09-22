@@ -281,6 +281,75 @@ let effect_NDET_lid  = psconst "NDET"
 let effect_Ndet_lid  = psconst "Ndet"
 let effect_Nd_lid    = psconst "Nd"
 
+(* Canonical classification of the primitive effects.
+
+   Each of the four primitive effects has several spellings: the
+   effect itself, and abbreviations of it.  Which one of them is the
+   *primitive* one is a property of Prims, not of the compiler, so every
+   place that needs to ask "is this the pure effect?" must go through
+   these predicates rather than comparing against one chosen spelling.
+   See [FStarC.Syntax.Util.is_pure_effect] and friends, which are the
+   usual entry points.
+
+   A computation type carries no specification any more, so these classes are
+   purely about the effect: [Pure]/[Ghost]/[Dv]/[Nd] are front-end
+   abbreviations that ToSyntax unfolds to [Tot]/[GTot]/[Div]/[NDET].  A test
+   that really means "is this literally a [Tot]?" is a different question, and
+   has its own predicates ([is_tot_lid] and friends) just below. *)
+let is_pure_effect_lid (l:lident) : bool =
+     lid_equals l effect_Tot_lid
+  || lid_equals l effect_PURE_lid
+  || lid_equals l effect_Pure_lid
+
+let is_ghost_effect_lid (l:lident) : bool =
+     lid_equals l effect_GTot_lid
+  || lid_equals l effect_GHOST_lid
+  || lid_equals l effect_Ghost_lid
+
+let is_div_effect_lid (l:lident) : bool =
+     lid_equals l effect_DIV_lid
+  || lid_equals l effect_Div_lid
+  || lid_equals l effect_Dv_lid
+
+(* [NDET] is nondeterministic but *terminating*, so it sits strictly between
+   the pure and the divergent class: [Tot ~> NDET ~> Div].  It is therefore
+   both a lift source and a lift target, and cannot be folded into either
+   neighbouring class -- a site that accepts "pure or ndet" and a site that
+   accepts "ndet or div" are asking different questions and both occur. *)
+let is_ndet_effect_lid (l:lident) : bool =
+     lid_equals l effect_NDET_lid
+  || lid_equals l effect_Ndet_lid
+  || lid_equals l effect_Nd_lid
+
+(* The *primitive* spelling of each of the four built-in effects, i.e. the
+   one Prims (or FStar.Pervasives, for [NDET]) actually declares (the others
+   being abbreviations of it).
+
+   Code that *constructs* a computation type must use these rather than
+   naming a spelling directly, so that changing which spelling is primitive
+   is a change to these definitions alone. *)
+let primitive_pure_lid  = effect_Tot_lid
+let primitive_ghost_lid = effect_GTot_lid
+let primitive_div_lid   = effect_Div_lid
+let primitive_ndet_lid  = effect_NDET_lid
+
+(* Is [l] the name of the pure (resp. ghost) *computation type*, i.e. exactly
+   [Tot] (resp. [GTot])?
+
+   This is the narrow question, and it is not the same as the class predicates
+   above: [Pure] and [PURE] are in the pure class but are not [Tot].  It is what
+   a match on the old [Total]/[GTotal] comp constructors used to ask, and it is
+   the right test wherever the *representation* matters -- printing, resugaring,
+   the reflection view, deciding whether an arrow's codomain can be flattened
+   into the spine.
+
+   Even though these are one-line comparisons today, they go through
+   [primitive_pure_lid]/[primitive_ghost_lid] so that the choice of which
+   spelling is primitive stays in one place. *)
+let is_tot_lid  (l:lident) : bool = lid_equals l primitive_pure_lid
+let is_gtot_lid (l:lident) : bool = lid_equals l primitive_ghost_lid
+let is_tot_or_gtot_lid (l:lident) : bool = is_tot_lid l || is_gtot_lid l
+
 (* The "All" monad and its associated symbols. *)
 
 let ef_base () =
@@ -347,6 +416,16 @@ let no_inline_let_attr = attr "no_inline_let"
 let rename_let_attr = attr "rename_let"
 let plugin_attr     = attr "plugin"
 let tcnorm_attr    =  attr "tcnorm"
+let monomorphize_attr = attr "monomorphize"
+let custard_extern_attr = attr "custard_extern"
+let custard_c_header_attr = attr "custard_c_header"
+let custard_float_attr = attr "custard_float"
+let custard_bfloat16_attr = attr "custard_bfloat16"
+let custard_opaque_attr = attr "custard_opaque"
+let custard_c_reference_attr = attr "custard_c_reference"
+let custard_inline_field_attr = attr "custard_inline_field"
+let custard_no_monomorphize_attr = attr "custard_no_monomorphize"
+let custard_compile_time_attr = attr "custard_compile_time"
 let must_erase_for_extraction_attr = attr "must_erase_for_extraction"
 let strict_on_arguments_attr =  attr "strict_on_arguments"
 let smt_arity_attr = attr "smt_arity"
@@ -445,6 +524,7 @@ let tac_opaque_attr = pconst "tac_opaque"
 let mk_class_lid   = fstar_tactics_lid' ["Typeclasses"; "mk_class"]
 let tcresolve_lid  = fstar_tactics_lid' ["Typeclasses"; "tcresolve"]
 let tcclass_lid = fstar_tactics_lid' ["Typeclasses"; "tcclass"]
+let tcmethod_lid = fstar_tactics_lid' ["Typeclasses"; "tcmethod"]
 let tcinstance_lid = fstar_tactics_lid' ["Typeclasses"; "tcinstance"]
 let no_method_lid = fstar_tactics_lid' ["Typeclasses"; "no_method"]
 

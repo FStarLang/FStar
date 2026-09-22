@@ -1,0 +1,342 @@
+# Entry points for the Custard build of the F* compiler.
+#
+# Custard compiles exactly what is reachable from its roots (doc/ref/custard.md
+# section 4.4).  `FStarC.Main.main' is passed by the build; everything here is
+# a root for one of two reasons.
+#
+#   - It is a *callee of a hand-written realization*.  The .ml files in src/ml
+#     are outside the extracted program, so nothing Custard can see reaches
+#     what they call, and a type they mention is unfolded rather than emitted
+#     unless it is named here (section 8.2, section 12.9).
+#
+#   - It is a *module* rather than a definition, which loads the module and
+#     takes its initializers as roots.  That is the only way to reach a module
+#     that exists purely for its side effects (section 4.4).
+#
+# Blank lines and lines starting with `#' are ignored.  Keep each group sorted:
+# the order has no effect on the output, only on how easy this file is to read.
+
+# Modules kept for their initializers alone.
+FStarC.Hooks
+FStarC.Interactive.Ide
+FStarC.Reflection.V2.Interpreter
+
+# FStarC.Parser.AST and friends: the hand-written grammar in
+# src/ml/FStarC_Parser_Parse.mly builds the surface AST directly.
+FStarC.Parser.AST.Util.extension_lang_parser
+FStarC.Parser.AST.Util.mk_extension_lang_parser
+FStarC.Parser.AST.Util.parse_extension_lang
+FStarC.Parser.AST.Util.register_extension_lang_parser
+FStarC.Parser.AST.aqual
+FStarC.Parser.AST.as_frag
+FStarC.Parser.AST.attributes_
+FStarC.Parser.AST.branch
+FStarC.Parser.AST.calc_step
+FStarC.Parser.AST.check_id
+FStarC.Parser.AST.compile_op
+FStarC.Parser.AST.consPat
+FStarC.Parser.AST.consTerm
+FStarC.Parser.AST.constructor_payload
+FStarC.Parser.AST.effect_decl
+FStarC.Parser.AST.expr
+FStarC.Parser.AST.extract_named_refinement
+FStarC.Parser.AST.file
+FStarC.Parser.AST.focusAttrLetBindings
+FStarC.Parser.AST.focusBranches
+FStarC.Parser.AST.focusLetBindings
+FStarC.Parser.AST.idents_of_binders
+FStarC.Parser.AST.inputFragment
+FStarC.Parser.AST.knd
+FStarC.Parser.AST.match_returns_annotation
+FStarC.Parser.AST.mkCalcStep
+FStarC.Parser.AST.mkDTuple
+FStarC.Parser.AST.mkListLit
+FStarC.Parser.AST.mkRefSet
+FStarC.Parser.AST.mkRefinedBinder
+FStarC.Parser.AST.mkRefinedPattern
+FStarC.Parser.AST.mkSeqLit
+FStarC.Parser.AST.mkTuple
+FStarC.Parser.AST.mk_uminus
+FStarC.Parser.AST.patterns
+FStarC.Parser.AST.qualifiers
+FStarC.Parser.AST.tycon_record
+FStarC.Parser.AST.typ
+FStarC.Parser.AST.unit_type
+FStarC.Parser.Const.Tuples.is_tuple_constructor_string
+FStarC.Parser.Const.assert_by_tactic_lid
+FStarC.Parser.Const.is_name
+
+# Syntax, identifiers and ranges: named by the embeddings, the pretty
+# printers and the tactic realizations.
+FStarC.Ident.ipath
+FStarC.Ident.lid
+FStarC.Ident.path
+FStarC.Range.Type.t
+FStarC.Syntax.Embeddings.Base.embed_t
+FStarC.Syntax.Embeddings.Base.norm_cb
+FStarC.Syntax.Embeddings.Base.shadow_term
+FStarC.Syntax.Syntax.antiquotations
+FStarC.Syntax.Syntax.aqual
+FStarC.Syntax.Syntax.arg
+FStarC.Syntax.Syntax.args
+FStarC.Syntax.Syntax.ascription
+FStarC.Syntax.Syntax.attribute
+FStarC.Syntax.Syntax.binders
+FStarC.Syntax.Syntax.bqual
+FStarC.Syntax.Syntax.branch
+FStarC.Syntax.Syntax.cflag
+FStarC.Syntax.Syntax.comp
+FStarC.Syntax.Syntax.ctx_uvar_and_subst
+FStarC.Syntax.Syntax.formula
+FStarC.Syntax.Syntax.formulae
+FStarC.Syntax.Syntax.freenames
+FStarC.Syntax.Syntax.freenames_l
+FStarC.Syntax.Syntax.gamma
+FStarC.Syntax.Syntax.ident_alias
+FStarC.Syntax.Syntax.lbname
+FStarC.Syntax.Syntax.letbindings
+FStarC.Syntax.Syntax.match_returns_ascription
+FStarC.Syntax.Syntax.module_abbrev
+FStarC.Syntax.Syntax.monad_name
+FStarC.Syntax.Syntax.open_kind
+FStarC.Syntax.Syntax.open_module_or_namespace
+FStarC.Syntax.Syntax.pat
+FStarC.Syntax.Syntax.path
+FStarC.Syntax.Syntax.restriction
+FStarC.Syntax.Syntax.sconst
+FStarC.Syntax.Syntax.sigelts
+FStarC.Syntax.Syntax.subst_t
+FStarC.Syntax.Syntax.subst_ts
+FStarC.Syntax.Syntax.term
+FStarC.Syntax.Syntax.tscheme
+FStarC.Syntax.Syntax.tycon
+FStarC.Syntax.Syntax.typ
+FStarC.Syntax.Syntax.univ_name
+FStarC.Syntax.Syntax.univ_names
+FStarC.Syntax.Syntax.universe_uvar
+FStarC.Syntax.Syntax.universes
+FStarC.Syntax.Syntax.uvar
+FStarC.Syntax.Syntax.uvars
+FStarC.Syntax.Syntax.var
+
+# Errors: FStarC_Errors is realized in part, and the .mly reports through it.
+FStar.Errors.Msg.error_message
+FStar.Errors.Msg.mkmsg
+FStarC.Errors.Codes.error_setting
+FStarC.Errors.context_t
+FStarC.Errors.error
+FStarC.Errors.log_issue_text
+FStarC.Errors.raise_error_text
+FStarC.Errors.update_flags
+
+# The ML extraction AST, spelled out by FStarC_Extraction_ML_PrintML.ml.
+FStarC.Extraction.ML.Syntax.metadata
+FStarC.Extraction.ML.Syntax.mlattribute
+FStarC.Extraction.ML.Syntax.mlbranch
+FStarC.Extraction.ML.Syntax.mlident
+FStarC.Extraction.ML.Syntax.mlidents
+FStarC.Extraction.ML.Syntax.mlletbinding
+FStarC.Extraction.ML.Syntax.mlloc
+FStarC.Extraction.ML.Syntax.mlmodule
+FStarC.Extraction.ML.Syntax.mlmodulebody
+FStarC.Extraction.ML.Syntax.mlpath
+FStarC.Extraction.ML.Syntax.mlsig
+FStarC.Extraction.ML.Syntax.mlsymbol
+FStarC.Extraction.ML.Syntax.mlsymbols
+FStarC.Extraction.ML.Syntax.mltydecl
+FStarC.Extraction.ML.Syntax.mltyscheme
+
+# Typechecker and tactic types named by the plugin and NBE realizations.
+FStarC.Tactics.Monad.tac
+FStarC.Tactics.Types.ref_proofstate
+FStarC.TypeChecker.Cfg.prim_step_set
+FStarC.TypeChecker.Cfg.register_plugin
+FStarC.TypeChecker.Cfg.register_prim_step_t
+FStarC.TypeChecker.Cfg.retrieve_prim_step_t
+FStarC.TypeChecker.Env.cached_elt
+FStarC.TypeChecker.Env.core_check_t
+FStarC.TypeChecker.Env.env_t
+FStarC.TypeChecker.Env.goal
+FStarC.TypeChecker.Env.guard_t
+FStarC.TypeChecker.Env.implicit
+FStarC.TypeChecker.Env.implicits
+FStarC.TypeChecker.Env.must_tot
+FStarC.TypeChecker.Env.name_prefix
+FStarC.TypeChecker.Env.proof_namespace
+FStarC.TypeChecker.Env.qninfo
+FStarC.TypeChecker.Env.sig_binding
+FStarC.TypeChecker.Env.sigtable
+FStarC.TypeChecker.Env.solver_depth_t
+FStarC.TypeChecker.Env.splice_t
+FStarC.TypeChecker.Env.steps
+FStarC.TypeChecker.Env.tcenv_depth_t
+FStarC.TypeChecker.NBETerm.args
+
+# Everything else.
+FStarC.Options.optionstate
+
+# The library's plugins (section 13).  Naming a module here is what asks
+# for its [@@plugin] definitions to be registered with the normalizer; it is
+# also what makes them roots, since nothing in the compiler calls them.
+# Kept in step with the `Plugin roots' block of mk/fstar-12.mk.
+FStar.Order
+FStar.Reflection.TermEq
+FStar.Reflection.TermEq.Simple
+FStar.Reflection.V2.Compare
+FStar.Reflection.V2.Formula
+FStar.Tactics.BV
+FStar.Tactics.Canon
+FStar.Tactics.CanonCommMonoidSimple.Equiv
+FStar.Tactics.CheckLN
+FStar.Tactics.Easy
+FStar.Tactics.Effect
+FStar.Tactics.LaxTermEq
+FStar.Tactics.MApply0
+FStar.Tactics.NamedView
+FStar.Tactics.Names
+FStar.Tactics.Parametricity
+FStar.Tactics.PrettifyType
+FStar.Tactics.Print
+FStar.Tactics.SMT
+FStar.Tactics.TypeRepr
+FStar.Tactics.Typeclasses
+FStar.Tactics.V2.Logic
+FStar.Tactics.V2.SyntaxHelpers
+FStar.Tactics.Visit
+
+# Callees of the plugin realizations in ulib/ml/plugin.  These wrappers are
+# what a metaprogram's builtins bottom out in; nothing the extracted program
+# does reaches them, so each one has to be named.
+
+FStar.Pprint.arbitrary_string
+FStar.Pprint.document
+FStarC.Errors.format_issue
+FStarC.Errors.issue
+FStarC.Errors.issue_level
+FStarC.Errors.issue_to_doc'
+FStarC.Ident.mk_ident
+FStarC.Range.Type.range
+FStarC.Range.Type.dummyRange
+FStarC.Syntax.Subst.subst
+FStarC.Tactics.CtrlRewrite.ctrl_rewrite
+FStarC.Tactics.Monad.catch
+FStarC.Tactics.Monad.get
+FStarC.Tactics.Monad.set_goals
+FStarC.Tactics.Monad.set_smt_goals
+FStarC.Tactics.Monad.traise
+FStarC.Tactics.V2.Basic.addns
+FStarC.Tactics.V2.Basic.all_ext_options
+FStarC.Tactics.V2.Basic.alloc
+FStarC.Tactics.V2.Basic.call_subtac
+FStarC.Tactics.V2.Basic.call_subtac_tm
+FStarC.Tactics.V2.Basic.change
+FStarC.Tactics.V2.Basic.clear
+FStarC.Tactics.V2.Basic.clear_top
+FStarC.Tactics.V2.Basic.comp_to_doc
+FStarC.Tactics.V2.Basic.comp_to_string
+FStarC.Tactics.V2.Basic.compress
+FStarC.Tactics.V2.Basic.compress_univ
+FStarC.Tactics.V2.Basic.curms
+FStarC.Tactics.V2.Basic.debugging
+FStarC.Tactics.V2.Basic.dump
+FStarC.Tactics.V2.Basic.dump_all
+FStarC.Tactics.V2.Basic.dump_uvars_of
+FStarC.Tactics.V2.Basic.dup
+FStarC.Tactics.V2.Basic.ext_enabled
+FStarC.Tactics.V2.Basic.ext_getns
+FStarC.Tactics.V2.Basic.ext_getv
+FStarC.Tactics.V2.Basic.fixup_range
+FStarC.Tactics.V2.Basic.free_uvars
+FStarC.Tactics.V2.Basic.fresh
+FStarC.Tactics.V2.Basic.fresh_bv_named
+FStarC.Tactics.V2.Basic.gather_explicit_guards_for_resolved_goals
+FStarC.Tactics.V2.Basic.get_guard_policy
+FStarC.Tactics.V2.Basic.get_vconfig
+FStarC.Tactics.V2.Basic.ghost_uvar_env
+FStarC.Tactics.V2.Basic.grewrite
+FStarC.Tactics.V2.Basic.ide
+FStarC.Tactics.V2.Basic.intro
+FStarC.Tactics.V2.Basic.intro_rec
+FStarC.Tactics.V2.Basic.intros
+FStarC.Tactics.V2.Basic.join
+FStarC.Tactics.V2.Basic.launch_process
+FStarC.Tactics.V2.Basic.lax_on
+FStarC.Tactics.V2.Basic.log_issues
+FStarC.Tactics.V2.Basic.match_env
+FStarC.Tactics.V2.Basic.norm
+FStarC.Tactics.V2.Basic.norm_binding_type
+FStarC.Tactics.V2.Basic.norm_term_env
+FStarC.Tactics.V2.Basic.print
+FStarC.Tactics.V2.Basic.prune
+FStarC.Tactics.V2.Basic.push_bv_dsenv
+FStarC.Tactics.V2.Basic.push_module_abbrev
+FStarC.Tactics.V2.Basic.push_open_namespace
+FStarC.Tactics.V2.Basic.range_to_string
+FStarC.Tactics.V2.Basic.read
+FStarC.Tactics.V2.Basic.refine_intro
+FStarC.Tactics.V2.Basic.refl_check_match_complete
+FStarC.Tactics.V2.Basic.refl_check_prop_validity
+FStarC.Tactics.V2.Basic.refl_check_subtyping
+FStarC.Tactics.V2.Basic.refl_core_check_term
+FStarC.Tactics.V2.Basic.refl_core_check_term_at_type
+FStarC.Tactics.V2.Basic.refl_core_compute_term_type
+FStarC.Tactics.V2.Basic.refl_instantiate_implicits
+FStarC.Tactics.V2.Basic.refl_is_non_informative
+FStarC.Tactics.V2.Basic.refl_maybe_relate_after_unfolding
+FStarC.Tactics.V2.Basic.refl_maybe_unfold_head
+FStarC.Tactics.V2.Basic.refl_norm_well_typed_term
+FStarC.Tactics.V2.Basic.refl_tc_term
+FStarC.Tactics.V2.Basic.refl_try_unify
+FStarC.Tactics.V2.Basic.refl_universe_of
+FStarC.Tactics.V2.Basic.rename_to
+FStarC.Tactics.V2.Basic.resolve_name
+FStarC.Tactics.V2.Basic.revert
+FStarC.Tactics.V2.Basic.rewrite
+FStarC.Tactics.V2.Basic.set_dump_on_failure
+FStarC.Tactics.V2.Basic.set_guard_policy
+FStarC.Tactics.V2.Basic.set_options
+FStarC.Tactics.V2.Basic.set_urgency
+FStarC.Tactics.V2.Basic.set_vconfig
+FStarC.Tactics.V2.Basic.splice_attrs
+FStarC.Tactics.V2.Basic.splice_quals
+FStarC.Tactics.V2.Basic.stats_record
+FStarC.Tactics.V2.Basic.string_to_term
+FStarC.Tactics.V2.Basic.t_apply
+FStarC.Tactics.V2.Basic.t_apply_lemma
+FStarC.Tactics.V2.Basic.t_commute_applied_match
+FStarC.Tactics.V2.Basic.t_destruct
+FStarC.Tactics.V2.Basic.t_exact
+FStarC.Tactics.V2.Basic.t_refl_check_equiv
+FStarC.Tactics.V2.Basic.t_smt_sync
+FStarC.Tactics.V2.Basic.t_trefl
+FStarC.Tactics.V2.Basic.tadmit_t
+FStarC.Tactics.V2.Basic.tc
+FStarC.Tactics.V2.Basic.tcc
+FStarC.Tactics.V2.Basic.term_to_doc
+FStarC.Tactics.V2.Basic.term_to_string
+FStarC.Tactics.V2.Basic.top_env
+FStarC.Tactics.V2.Basic.unify_env
+FStarC.Tactics.V2.Basic.unify_guard_env
+FStarC.Tactics.V2.Basic.unshelve
+FStarC.Tactics.V2.Basic.uvar_env
+FStarC.Tactics.V2.Basic.var_retype
+FStarC.Tactics.V2.Basic.with_compat_pre_core
+FStarC.Tactics.V2.Basic.with_error_context
+FStarC.Tactics.V2.Basic.write
+
+# Named by the menhir grammars in src/ml, which are hand-written OCaml and so
+# outside the extracted program: a real literal and an integer literal are both
+# built in a semantic action.  A type mentioned only there is unfolded rather
+# than emitted unless it is a root, and a function called only there is not
+# compiled at all.
+FStarC.Const.parse_int_literal
+FStarC.Real.of_string
+FStarC.Real.real
+
+# Section 34: Custard's own extension point.  A plugin registers a rule by
+# calling this, through no request the extraction can see, so the symbol has
+# to be a root or it is not in the binary the plugin is loaded into.  The two
+# chaining forms are here for the same reason.
+FStarC.Custard.Builtins.register_post_rule
+FStarC.Custard.Builtins.register_pre_rule
+FStarC.Custard.Builtins.register_rule

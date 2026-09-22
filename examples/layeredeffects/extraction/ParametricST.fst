@@ -35,7 +35,7 @@ effect { ST with {repr; return; bind} }
 
 let lift_PURE_ST (a:Type) (f:unit -> PURE a) : repr a =
   fun s -> f (), s
-sub_effect PURE ~> ST = lift_PURE_ST
+sub_effect Tot ~> ST = lift_PURE_ST
 
 let get () : ST int = ST?.reflect (fun s -> s, s)
 let put (v:int) : ST unit = ST?.reflect (fun _ -> (), v)
