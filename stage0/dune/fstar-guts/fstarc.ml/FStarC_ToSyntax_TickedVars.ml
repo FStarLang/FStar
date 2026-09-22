@@ -1,548 +1,239 @@
-open Prims
-let ident_is_ticked (id : FStarC_Ident.ident) : Prims.bool=
-  let nm = FStarC_Ident.string_of_id id in
-  if (FStarC_String.length nm) > Prims.int_zero
-  then let uu___ = FStarC_String.get nm Prims.int_zero in uu___ = 39
-  else false
-let lident_is_ticked (id : FStarC_Ident.lident) : Prims.bool=
-  let ns = FStarC_Ident.ns_of_lid id in
-  let id1 = FStarC_Ident.ident_of_lid id in
-  if match ns with | [] -> true | uu___ -> false
-  then ident_is_ticked id1
-  else false
-let uu___0 : FStarC_Ident.ident FStarC_RBSet.t FStarC_Class_Monoid.monoid=
-  let uu___ =
-    FStarC_Class_Setlike.empty
-      (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_ident) () in
-  {
-    FStarC_Class_Monoid.mzero = uu___;
-    FStarC_Class_Monoid.mplus =
-      (FStarC_Class_Setlike.union
-         (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_ident))
-  }
-type 'a m =
-  (FStarC_Ident.ident FStarC_RBSet.t, Obj.t, 'a) FStarC_Writer.writer
-let emit1 (x : FStarC_Ident.ident) : unit m=
-  let uu___ =
-    FStarC_Class_Setlike.singleton
-      (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_ident) x in
-  FStarC_Writer.emit uu___0 uu___
-let rec go_term (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term)
-  : unit m=
-  match t.FStarC_Parser_AST.tm with
-  | FStarC_Parser_AST.Paren t1 -> go_term env t1
-  | FStarC_Parser_AST.Labeled uu___ ->
-      FStarC_Effect.failwith "Impossible --- labeled source term"
-  | FStarC_Parser_AST.Var a ->
-      let uu___ =
-        let uu___1 = lident_is_ticked a in
-        if uu___1
-        then
-          let uu___2 =
-            FStarC_Syntax_DsEnv.try_lookup_id env
-              (FStarC_Ident.ident_of_lid a) in
-          match uu___2 with
-          | FStar_Pervasives_Native.None -> true
-          | uu___3 -> false
-        else false in
-      if uu___
-      then emit1 (FStarC_Ident.ident_of_lid a)
-      else
-        FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
-          (Obj.repr ())
-  | FStarC_Parser_AST.Var x ->
-      FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
-        (Obj.repr ())
-  | FStarC_Parser_AST.Wild ->
-      FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
-        (Obj.repr ())
-  | FStarC_Parser_AST.Const uu___ ->
-      FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
-        (Obj.repr ())
-  | FStarC_Parser_AST.Uvar uu___ ->
-      FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
-        (Obj.repr ())
-  | FStarC_Parser_AST.Projector uu___ ->
-      FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
-        (Obj.repr ())
-  | FStarC_Parser_AST.Discrim uu___ ->
-      FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
-        (Obj.repr ())
-  | FStarC_Parser_AST.Name uu___ ->
-      FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
-        (Obj.repr ())
-  | FStarC_Parser_AST.Requires t1 -> go_term env t1
-  | FStarC_Parser_AST.Ensures t1 -> go_term env t1
-  | FStarC_Parser_AST.Decreases t1 -> go_term env t1
-  | FStarC_Parser_AST.NamedTyp (uu___, t1) -> go_term env t1
-  | FStarC_Parser_AST.LexList l ->
-      FStarC_Class_Monad.iterM (FStarC_Writer.monad_writer uu___0) ()
-        (fun uu___ -> Obj.magic (go_term env) uu___) (Obj.magic l)
-  | FStarC_Parser_AST.WFOrder (rel, e) ->
-      let uu___ = go_term env rel in
-      FStarC_Class_Monad.op_let_Bang (FStarC_Writer.monad_writer uu___0) ()
-        () uu___
-        (fun uu___1 ->
-           (fun uu___1 ->
-              let uu___1 = Obj.magic uu___1 in Obj.magic (go_term env e))
-             uu___1)
-  | FStarC_Parser_AST.Paren t1 -> FStarC_Effect.failwith "impossible"
-  | FStarC_Parser_AST.Ascribed (t1, t', tacopt, uu___) ->
-      let uu___1 = go_term env t1 in
-      FStarC_Class_Monad.op_let_Bang (FStarC_Writer.monad_writer uu___0) ()
-        () uu___1
-        (fun uu___2 ->
-           (fun uu___2 ->
-              let uu___2 = Obj.magic uu___2 in
-              let uu___3 = go_term env t' in
-              Obj.magic
-                (FStarC_Class_Monad.op_let_Bang
-                   (FStarC_Writer.monad_writer uu___0) () () uu___3
-                   (fun uu___4 ->
-                      (fun uu___4 ->
-                         let uu___4 = Obj.magic uu___4 in
-                         match tacopt with
-                         | FStar_Pervasives_Native.None ->
-                             Obj.magic
-                               (FStarC_Class_Monad.return
-                                  (FStarC_Writer.monad_writer uu___0) ()
-                                  (Obj.repr ()))
-                         | FStar_Pervasives_Native.Some tac ->
-                             Obj.magic (go_term env tac)) uu___4))) uu___2)
-  | FStarC_Parser_AST.Construct (uu___, ts) ->
-      FStarC_Class_Monad.iterM (FStarC_Writer.monad_writer uu___0) ()
-        (fun uu___1 ->
-           (fun uu___1 ->
-              let uu___1 = Obj.magic uu___1 in
-              match uu___1 with | (a, uu___2) -> Obj.magic (go_term env a))
-             uu___1) (Obj.magic ts)
-  | FStarC_Parser_AST.Op (uu___, ts) ->
-      FStarC_Class_Monad.iterM (FStarC_Writer.monad_writer uu___0) ()
-        (fun uu___1 -> Obj.magic (go_term env) uu___1) (Obj.magic ts)
-  | FStarC_Parser_AST.App (t1, t2, uu___) ->
-      let uu___1 = go_term env t1 in
-      FStarC_Class_Monad.op_let_Bang (FStarC_Writer.monad_writer uu___0) ()
-        () uu___1
-        (fun uu___2 ->
-           (fun uu___2 ->
-              let uu___2 = Obj.magic uu___2 in Obj.magic (go_term env t2))
-             uu___2)
-  | FStarC_Parser_AST.Refine (b, t1) ->
-      let uu___ = go_binder env b in
-      FStarC_Class_Monad.op_let_Bang (FStarC_Writer.monad_writer uu___0) ()
-        () (Obj.magic uu___)
-        (fun uu___1 ->
-           (fun env' ->
-              let env' = Obj.magic env' in Obj.magic (go_term env' t1))
-             uu___1)
-  | FStarC_Parser_AST.Sum (binders, body) ->
-      let uu___ =
-        Obj.magic
-          (FStarC_Class_Monad.foldM_left (FStarC_Writer.monad_writer uu___0)
-             () ()
-             (fun uu___2 uu___1 ->
-                (fun env1 ->
-                   let env1 = Obj.magic env1 in
-                   fun bt ->
-                     let bt = Obj.magic bt in
-                     match bt with
-                     | FStar_Pervasives.Inl binder ->
-                         Obj.magic (Obj.repr (go_binder env1 binder))
-                     | FStar_Pervasives.Inr t1 ->
-                         Obj.magic
-                           (Obj.repr
-                              (let uu___1 = go_term env1 t1 in
-                               FStarC_Class_Monad.op_let_Bang
-                                 (FStarC_Writer.monad_writer uu___0) () ()
-                                 uu___1
-                                 (fun uu___2 ->
-                                    (fun uu___2 ->
-                                       let uu___2 = Obj.magic uu___2 in
-                                       Obj.magic
-                                         (FStarC_Class_Monad.return
-                                            (FStarC_Writer.monad_writer
-                                               uu___0) () (Obj.magic env1)))
-                                      uu___2)))) uu___2 uu___1)
-             (Obj.magic env) (Obj.magic binders)) in
-      FStarC_Class_Monad.op_let_Bang (FStarC_Writer.monad_writer uu___0) ()
-        () (Obj.magic uu___)
-        (fun uu___1 ->
-           (fun env' ->
-              let env' = Obj.magic env' in Obj.magic (go_term env' body))
-             uu___1)
-  | FStarC_Parser_AST.Product (binders, body) ->
-      let uu___ =
-        Obj.magic
-          (FStarC_Class_Monad.foldM_left (FStarC_Writer.monad_writer uu___0)
-             () () (fun uu___2 uu___1 -> Obj.magic go_binder uu___2 uu___1)
-             (Obj.magic env) (Obj.magic binders)) in
-      FStarC_Class_Monad.op_let_Bang (FStarC_Writer.monad_writer uu___0) ()
-        () (Obj.magic uu___)
-        (fun uu___1 ->
-           (fun env' ->
-              let env' = Obj.magic env' in Obj.magic (go_term env' body))
-             uu___1)
-  | FStarC_Parser_AST.Project (t1, uu___) -> go_term env t1
-  | FStarC_Parser_AST.CalcProof (rel, init, steps) ->
-      let uu___ = go_term env rel in
-      FStarC_Class_Monad.op_let_Bang (FStarC_Writer.monad_writer uu___0) ()
-        () uu___
-        (fun uu___1 ->
-           (fun uu___1 ->
-              let uu___1 = Obj.magic uu___1 in
-              let uu___2 = go_term env init in
-              Obj.magic
-                (FStarC_Class_Monad.op_let_Bang
-                   (FStarC_Writer.monad_writer uu___0) () () uu___2
-                   (fun uu___3 ->
-                      (fun uu___3 ->
-                         let uu___3 = Obj.magic uu___3 in
-                         Obj.magic
-                           (FStarC_Class_Monad.iterM
-                              (FStarC_Writer.monad_writer uu___0) ()
-                              (fun uu___4 ->
-                                 (fun uu___4 ->
-                                    let uu___4 = Obj.magic uu___4 in
-                                    match uu___4 with
-                                    | FStarC_Parser_AST.CalcStep
-                                        (rel1, just, next) ->
-                                        let uu___5 = go_term env rel1 in
-                                        Obj.magic
-                                          (FStarC_Class_Monad.op_let_Bang
-                                             (FStarC_Writer.monad_writer
-                                                uu___0) () () uu___5
-                                             (fun uu___6 ->
-                                                (fun uu___6 ->
-                                                   let uu___6 =
-                                                     Obj.magic uu___6 in
-                                                   let uu___7 =
-                                                     go_term env just in
-                                                   Obj.magic
-                                                     (FStarC_Class_Monad.op_let_Bang
-                                                        (FStarC_Writer.monad_writer
-                                                           uu___0) () ()
-                                                        uu___7
-                                                        (fun uu___8 ->
-                                                           (fun uu___8 ->
-                                                              let uu___8 =
-                                                                Obj.magic
-                                                                  uu___8 in
-                                                              Obj.magic
-                                                                (go_term env
-                                                                   next))
-                                                             uu___8))) uu___6)))
-                                   uu___4) (Obj.magic steps))) uu___3)))
-             uu___1)
-  | FStarC_Parser_AST.ElimForall (bs, t1, ts) ->
-      let uu___ = go_binders env bs in
-      FStarC_Class_Monad.op_let_Bang (FStarC_Writer.monad_writer uu___0) ()
-        () (Obj.magic uu___)
-        (fun uu___1 ->
-           (fun env' ->
-              let env' = Obj.magic env' in
-              let uu___1 = go_term env' t1 in
-              Obj.magic
-                (FStarC_Class_Monad.op_let_Bang
-                   (FStarC_Writer.monad_writer uu___0) () () uu___1
-                   (fun uu___2 ->
-                      (fun uu___2 ->
-                         let uu___2 = Obj.magic uu___2 in
-                         Obj.magic
-                           (FStarC_Class_Monad.iterM
-                              (FStarC_Writer.monad_writer uu___0) ()
-                              (fun uu___3 -> Obj.magic (go_term env') uu___3)
-                              (Obj.magic ts))) uu___2))) uu___1)
-  | FStarC_Parser_AST.ElimExists (binders, p, e) ->
-      let uu___ = go_binders env binders in
-      FStarC_Class_Monad.op_let_Bang (FStarC_Writer.monad_writer uu___0) ()
-        () (Obj.magic uu___)
-        (fun uu___1 ->
-           (fun env' ->
-              let env' = Obj.magic env' in
-              let uu___1 = go_term env' p in
-              Obj.magic
-                (FStarC_Class_Monad.op_let_Bang
-                   (FStarC_Writer.monad_writer uu___0) () () uu___1
-                   (fun uu___2 ->
-                      (fun uu___2 ->
-                         let uu___2 = Obj.magic uu___2 in
-                         Obj.magic (go_term env' e)) uu___2))) uu___1)
-  | FStarC_Parser_AST.ElimImplies (p, q, e) ->
-      let uu___ = go_term env p in
-      FStarC_Class_Monad.op_let_Bang (FStarC_Writer.monad_writer uu___0) ()
-        () uu___
-        (fun uu___1 ->
-           (fun uu___1 ->
-              let uu___1 = Obj.magic uu___1 in
-              let uu___2 = go_term env q in
-              Obj.magic
-                (FStarC_Class_Monad.op_let_Bang
-                   (FStarC_Writer.monad_writer uu___0) () () uu___2
-                   (fun uu___3 ->
-                      (fun uu___3 ->
-                         let uu___3 = Obj.magic uu___3 in
-                         Obj.magic (go_term env e)) uu___3))) uu___1)
-  | FStarC_Parser_AST.ElimOr (p, q, e, e') ->
-      let uu___ = go_term env p in
-      FStarC_Class_Monad.op_let_Bang (FStarC_Writer.monad_writer uu___0) ()
-        () uu___
-        (fun uu___1 ->
-           (fun uu___1 ->
-              let uu___1 = Obj.magic uu___1 in
-              let uu___2 = go_term env q in
-              Obj.magic
-                (FStarC_Class_Monad.op_let_Bang
-                   (FStarC_Writer.monad_writer uu___0) () () uu___2
-                   (fun uu___3 ->
-                      (fun uu___3 ->
-                         let uu___3 = Obj.magic uu___3 in
-                         let uu___4 = go_term env e in
-                         Obj.magic
-                           (FStarC_Class_Monad.op_let_Bang
-                              (FStarC_Writer.monad_writer uu___0) () ()
-                              uu___4
-                              (fun uu___5 ->
-                                 (fun uu___5 ->
-                                    let uu___5 = Obj.magic uu___5 in
-                                    Obj.magic (go_term env e')) uu___5)))
-                        uu___3))) uu___1)
-  | FStarC_Parser_AST.ElimAnd (p, q, e) ->
-      let uu___ = go_term env p in
-      FStarC_Class_Monad.op_let_Bang (FStarC_Writer.monad_writer uu___0) ()
-        () uu___
-        (fun uu___1 ->
-           (fun uu___1 ->
-              let uu___1 = Obj.magic uu___1 in
-              let uu___2 = go_term env q in
-              Obj.magic
-                (FStarC_Class_Monad.op_let_Bang
-                   (FStarC_Writer.monad_writer uu___0) () () uu___2
-                   (fun uu___3 ->
-                      (fun uu___3 ->
-                         let uu___3 = Obj.magic uu___3 in
-                         Obj.magic (go_term env e)) uu___3))) uu___1)
-  | FStarC_Parser_AST.ListLiteral ts ->
-      FStarC_Class_Monad.iterM (FStarC_Writer.monad_writer uu___0) ()
-        (fun uu___ -> Obj.magic (go_term env) uu___) (Obj.magic ts)
-  | FStarC_Parser_AST.SeqLiteral ts ->
-      FStarC_Class_Monad.iterM (FStarC_Writer.monad_writer uu___0) ()
-        (fun uu___ -> Obj.magic (go_term env) uu___) (Obj.magic ts)
-  | FStarC_Parser_AST.Abs uu___ ->
-      FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
-        (Obj.repr ())
-  | FStarC_Parser_AST.Function uu___ ->
-      FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
-        (Obj.repr ())
-  | FStarC_Parser_AST.Let uu___ ->
-      FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
-        (Obj.repr ())
-  | FStarC_Parser_AST.LetOpen uu___ ->
-      FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
-        (Obj.repr ())
-  | FStarC_Parser_AST.If uu___ ->
-      FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
-        (Obj.repr ())
-  | FStarC_Parser_AST.QForall uu___ ->
-      FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
-        (Obj.repr ())
-  | FStarC_Parser_AST.QExists uu___ ->
-      FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
-        (Obj.repr ())
-  | FStarC_Parser_AST.QuantOp uu___ ->
-      FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
-        (Obj.repr ())
-  | FStarC_Parser_AST.Record uu___ ->
-      FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
-        (Obj.repr ())
-  | FStarC_Parser_AST.Match uu___ ->
-      FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
-        (Obj.repr ())
-  | FStarC_Parser_AST.TryWith uu___ ->
-      FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
-        (Obj.repr ())
-  | FStarC_Parser_AST.Bind uu___ ->
-      FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
-        (Obj.repr ())
-  | FStarC_Parser_AST.Quote uu___ ->
-      FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
-        (Obj.repr ())
-  | FStarC_Parser_AST.VQuote uu___ ->
-      FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
-        (Obj.repr ())
-  | FStarC_Parser_AST.Antiquote uu___ ->
-      FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
-        (Obj.repr ())
-  | FStarC_Parser_AST.Seq uu___ ->
-      FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
-        (Obj.repr ())
-and go_binder (uu___1 : FStarC_Syntax_DsEnv.env)
-  (uu___ : FStarC_Parser_AST.binder) : FStarC_Syntax_DsEnv.env m=
-  (fun env b ->
-     match b.FStarC_Parser_AST.b with
-     | FStarC_Parser_AST.Variable x ->
-         let uu___ =
-           let uu___1 =
-             let uu___2 = ident_is_ticked x in
-             if uu___2
-             then
-               let uu___3 = FStarC_Syntax_DsEnv.try_lookup_id env x in
-               match uu___3 with
-               | FStar_Pervasives_Native.None -> true
-               | uu___4 -> false
-             else false in
-           if uu___1
-           then emit1 x
-           else
-             FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
-               (Obj.repr ()) in
-         Obj.magic
-           (FStarC_Class_Monad.op_let_Bang
-              (FStarC_Writer.monad_writer uu___0) () () uu___
-              (fun uu___1 ->
-                 (fun uu___1 ->
-                    let uu___1 = Obj.magic uu___1 in
-                    let uu___2 = FStarC_Syntax_DsEnv.push_bv env x in
-                    match uu___2 with
-                    | (env', uu___3) ->
-                        Obj.magic
-                          (FStarC_Class_Monad.return
-                             (FStarC_Writer.monad_writer uu___0) ()
-                             (Obj.magic env'))) uu___1))
-     | FStarC_Parser_AST.Annotated (x, t) ->
-         let uu___ =
-           let uu___1 =
-             let uu___2 = ident_is_ticked x in
-             if uu___2
-             then
-               let uu___3 = FStarC_Syntax_DsEnv.try_lookup_id env x in
-               match uu___3 with
-               | FStar_Pervasives_Native.None -> true
-               | uu___4 -> false
-             else false in
-           if uu___1
-           then emit1 x
-           else
-             FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
-               (Obj.repr ()) in
-         Obj.magic
-           (FStarC_Class_Monad.op_let_Bang
-              (FStarC_Writer.monad_writer uu___0) () () uu___
-              (fun uu___1 ->
-                 (fun uu___1 ->
-                    let uu___1 = Obj.magic uu___1 in
-                    let uu___2 = go_term env t in
-                    Obj.magic
-                      (FStarC_Class_Monad.op_let_Bang
-                         (FStarC_Writer.monad_writer uu___0) () () uu___2
-                         (fun uu___3 ->
-                            (fun uu___3 ->
-                               let uu___3 = Obj.magic uu___3 in
-                               let uu___4 = FStarC_Syntax_DsEnv.push_bv env x in
-                               match uu___4 with
-                               | (env', uu___5) ->
-                                   Obj.magic
-                                     (FStarC_Class_Monad.return
-                                        (FStarC_Writer.monad_writer uu___0)
-                                        () (Obj.magic env'))) uu___3)))
-                   uu___1))
-     | FStarC_Parser_AST.NoName t ->
-         let uu___ = go_term env t in
-         Obj.magic
-           (FStarC_Class_Monad.op_let_Bang
-              (FStarC_Writer.monad_writer uu___0) () () uu___
-              (fun uu___1 ->
-                 (fun uu___1 ->
-                    let uu___1 = Obj.magic uu___1 in
-                    Obj.magic
-                      (FStarC_Class_Monad.return
-                         (FStarC_Writer.monad_writer uu___0) ()
-                         (Obj.magic env))) uu___1))) uu___1 uu___
-and go_binders (uu___1 : FStarC_Syntax_DsEnv.env)
-  (uu___ : FStarC_Parser_AST.binder Prims.list) : FStarC_Syntax_DsEnv.env m=
-  (fun env bs ->
-     Obj.magic
-       (FStarC_Class_Monad.foldM_left (FStarC_Writer.monad_writer uu___0) ()
-          () (fun uu___1 uu___ -> Obj.magic go_binder uu___1 uu___)
-          (Obj.magic env) (Obj.magic bs))) uu___1 uu___
-let free_ticked_vars (env : FStarC_Syntax_DsEnv.env)
-  (t : FStarC_Parser_AST.term) : FStarC_Ident.ident Prims.list=
-  let w = go_term env t in
-  let uu___ = Obj.magic (FStarC_Writer.run_writer uu___0 () (Obj.magic w)) in
-  match uu___ with
-  | (fvs, ()) ->
-      FStarC_Class_Setlike.elems
-        (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_ident) fvs
-let rec unparen (t : FStarC_Parser_AST.term) : FStarC_Parser_AST.term=
-  match t.FStarC_Parser_AST.tm with
-  | FStarC_Parser_AST.Paren t1 -> unparen t1
-  | uu___ -> t
-let tm_type (r : FStarC_Range_Type.range) : FStarC_Parser_AST.term=
-  let uu___ =
-    let uu___1 = FStarC_Ident.lid_of_path ["Type"] r in
-    FStarC_Parser_AST.Name uu___1 in
-  FStarC_Parser_AST.mk_term uu___ r FStarC_Parser_AST.Kind
-let close (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term) :
-  FStarC_Parser_AST.term=
-  let ftv = free_ticked_vars env t in
-  if match ftv with | [] -> true | uu___ -> false
-  then t
-  else
-    (let binders =
-       FStarC_List.map
-         (fun x ->
-            let uu___ =
-              let uu___1 =
-                let uu___2 =
-                  let uu___3 =
-                    FStarC_Class_HasRange.pos FStarC_Ident.hasrange_ident x in
-                  tm_type uu___3 in
-                (x, uu___2) in
-              FStarC_Parser_AST.Annotated uu___1 in
-            let uu___1 =
-              FStarC_Class_HasRange.pos FStarC_Ident.hasrange_ident x in
-            FStarC_Parser_AST.mk_binder uu___ uu___1
-              FStarC_Parser_AST.Type_level
-              (FStar_Pervasives_Native.Some FStarC_Parser_AST.Implicit)) ftv in
-     let result =
-       FStarC_Parser_AST.mk_term (FStarC_Parser_AST.Product (binders, t))
-         t.FStarC_Parser_AST.range t.FStarC_Parser_AST.level in
-     result)
-let close_fun (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term) :
-  FStarC_Parser_AST.term=
-  let ftv = free_ticked_vars env t in
-  if match ftv with | [] -> true | uu___ -> false
-  then t
-  else
-    (let binders =
-       FStarC_List.map
-         (fun x ->
-            let uu___ =
-              let uu___1 =
-                let uu___2 =
-                  let uu___3 =
-                    FStarC_Class_HasRange.pos FStarC_Ident.hasrange_ident x in
-                  tm_type uu___3 in
-                (x, uu___2) in
-              FStarC_Parser_AST.Annotated uu___1 in
-            let uu___1 =
-              FStarC_Class_HasRange.pos FStarC_Ident.hasrange_ident x in
-            FStarC_Parser_AST.mk_binder uu___ uu___1
-              FStarC_Parser_AST.Type_level
-              (FStar_Pervasives_Native.Some FStarC_Parser_AST.Implicit)) ftv in
-     let t1 =
-       let uu___ = let uu___1 = unparen t in uu___1.FStarC_Parser_AST.tm in
-       match uu___ with
-       | FStarC_Parser_AST.Product uu___1 -> t
-       | uu___1 ->
-           FStarC_Parser_AST.mk_term
-             (FStarC_Parser_AST.App
-                ((FStarC_Parser_AST.mk_term
-                    (FStarC_Parser_AST.Name
-                       FStarC_Parser_Const.effect_Tot_lid)
-                    t.FStarC_Parser_AST.range t.FStarC_Parser_AST.level), t,
-                  FStarC_Parser_AST.Nothing)) t.FStarC_Parser_AST.range
-             t.FStarC_Parser_AST.level in
-     let result =
-       FStarC_Parser_AST.mk_term (FStarC_Parser_AST.Product (binders, t1))
-         t1.FStarC_Parser_AST.range t1.FStarC_Parser_AST.level in
-     result)
+(* Generated by F* Custard extraction. Do not edit. *)
+[@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
+
+let ident_is_ticked (id : FStarC_Ident.ident) : bool =
+  (let nm = (FStarC_Ident.string_of_id id) in
+  (if (Prims.op_Greater (FStarC_String.length nm) (Prims.parse_int "0")) then (let tmp = (FStarC_String.get nm (Prims.parse_int "0")) in
+  ((=) tmp 39)) else false))
+
+let lident_is_ticked (id : FStarC_Ident.lident) : bool =
+  (let ns = (FStarC_Ident.ns_of_lid id) in
+  let id1 = (FStarC_Ident.ident_of_lid id) in
+  (if (match ns with
+    | [] -> true
+    | tmp -> false
+  ) then (ident_is_ticked id1) else false))
+
+let emit1 (x : FStarC_Ident.ident) : ((FStarC_Ident.ident) FStarC_RBSet.rbset * unit) =
+  (let tmp = (FStarC_RBSet.fStarC_Class_Setlike_singleton__ident_rbset_ident x) in
+  (FStarC_Writer.fStarC_Writer_emit__rbset_ident_uu___0 tmp))
+
+let uu___0 : ((FStarC_Ident.ident) FStarC_RBSet.rbset) FStarC_Class_Monoid.monoid =
+  (let tmp = (FStarC_RBSet.fStarC_Class_Setlike_empty__ident_rbset_ident ()) in
+  { FStarC_Class_Monoid.mzero = tmp;
+    mplus = FStarC_RBSet.fStarC_Class_Setlike_union__ident_rbset_ident })
+
+let fStarC_Class_Monoid_mzero__rbset_ident_uu___0 : (FStarC_Ident.ident) FStarC_RBSet.rbset =
+  (uu___0).FStarC_Class_Monoid.mzero
+
+let fStarC_Writer_writer_return__rbset_ident_uu___0 (x : 'a) : ((FStarC_Ident.ident) FStarC_RBSet.rbset * 'a) =
+  (fStarC_Class_Monoid_mzero__rbset_ident_uu___0, x)
+
+let fStarC_Class_Monad_return__writer_rbset_ident_uu___0 (tmp : 'a) : ((FStarC_Ident.ident) FStarC_RBSet.rbset * 'a) =
+  (fStarC_Writer_writer_return__rbset_ident_uu___0 tmp)
+
+let fStarC_Class_Monoid_mplus__rbset_ident_uu___0 (tmp : (FStarC_Ident.ident) FStarC_RBSet.rbset) (eta : (FStarC_Ident.ident) FStarC_RBSet.rbset) : (FStarC_Ident.ident) FStarC_RBSet.rbset =
+  ((uu___0).FStarC_Class_Monoid.mplus tmp eta)
+
+let fStarC_Writer_writer_bind__rbset_ident_uu___0 (x : ((FStarC_Ident.ident) FStarC_RBSet.rbset * 'a)) (f : ('a -> ((FStarC_Ident.ident) FStarC_RBSet.rbset * 'b))) : ((FStarC_Ident.ident) FStarC_RBSet.rbset * 'b) =
+  (match x with
+    | (a, x1) -> (let tmp = (f x1) in
+      (match tmp with
+        | (b, y) -> (let tmp1 = (fStarC_Class_Monoid_mplus__rbset_ident_uu___0 a b) in
+          (tmp1, y))
+      ))
+  )
+
+let fStarC_Class_Monad_bind__writer_rbset_ident_uu___0 (tmp : ((FStarC_Ident.ident) FStarC_RBSet.rbset * 'a)) (f : ('a -> ((FStarC_Ident.ident) FStarC_RBSet.rbset * 'b))) : ((FStarC_Ident.ident) FStarC_RBSet.rbset * 'b) =
+  (fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp f)
+
+let fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 (tmp : ((FStarC_Ident.ident) FStarC_RBSet.rbset * 'a)) (f : ('a -> ((FStarC_Ident.ident) FStarC_RBSet.rbset * 'b))) : ((FStarC_Ident.ident) FStarC_RBSet.rbset * 'b) =
+  (fStarC_Class_Monad_bind__writer_rbset_ident_uu___0 tmp f)
+
+let rec fStarC_Class_Monad_iterM__writer_rbset_ident_uu___0 (f : ('a -> ((FStarC_Ident.ident) FStarC_RBSet.rbset * unit))) (l : ('a) list) : ((FStarC_Ident.ident) FStarC_RBSet.rbset * unit) =
+  (match l with
+    | [] -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
+    | (x :: xs) -> (let tmp = (f x) in
+      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp (fun tmp1 -> (fStarC_Class_Monad_iterM__writer_rbset_ident_uu___0 f xs))))
+  )
+
+let rec fStarC_Class_Monad_foldM_left__writer_rbset_ident_uu___0 (f : ('a -> ('b -> ((FStarC_Ident.ident) FStarC_RBSet.rbset * 'a)))) (e : 'a) (xs : ('b) list) : ((FStarC_Ident.ident) FStarC_RBSet.rbset * 'a) =
+  (match xs with
+    | [] -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 e)
+    | (x :: xs1) -> (let tmp = (f e x) in
+      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp (fun e' -> (fStarC_Class_Monad_foldM_left__writer_rbset_ident_uu___0 f e' xs1))))
+  )
+
+let rec go_binder (env : FStarC_Syntax_DsEnv.env) (b : FStarC_Parser_AST.binder) : ((FStarC_Ident.ident) FStarC_RBSet.rbset * FStarC_Syntax_DsEnv.env) =
+  (match (b).FStarC_Parser_AST.b with
+    | (FStarC_Parser_AST.Variable (x)) -> (let tmp = (ident_is_ticked x) in
+      let tmp1 = (if tmp then (let tmp1 = (FStarC_Syntax_DsEnv.try_lookup_id env x) in
+        (match tmp1 with
+          | None -> true
+          | tmp2 -> false
+        )) else false) in
+      let tmp2 = (if tmp1 then (emit1 x) else (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())) in
+      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp2 (fun tmp3 -> (let tmp4 = (FStarC_Syntax_DsEnv.push_bv env x) in
+      (match tmp4 with
+        | (env', tmp5) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 env')
+      )))))
+    | (FStarC_Parser_AST.Annotated (x, t)) -> (let tmp = (ident_is_ticked x) in
+      let tmp1 = (if tmp then (let tmp1 = (FStarC_Syntax_DsEnv.try_lookup_id env x) in
+        (match tmp1 with
+          | None -> true
+          | tmp2 -> false
+        )) else false) in
+      let tmp2 = (if tmp1 then (emit1 x) else (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())) in
+      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp2 (fun tmp3 -> (let tmp4 = (go_term env t) in
+      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp4 (fun tmp5 -> (let tmp6 = (FStarC_Syntax_DsEnv.push_bv env x) in
+      (match tmp6 with
+        | (env', tmp7) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 env')
+      ))))))))
+    | (FStarC_Parser_AST.NoName (t)) -> (let tmp = (go_term env t) in
+      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp (fun tmp1 -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 env))))
+  )
+
+and go_binders (env : FStarC_Syntax_DsEnv.env) (xs : (FStarC_Parser_AST.binder) list) : ((FStarC_Ident.ident) FStarC_RBSet.rbset * FStarC_Syntax_DsEnv.env) =
+  (fStarC_Class_Monad_foldM_left__writer_rbset_ident_uu___0 go_binder env xs)
+
+and go_term (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term) : ((FStarC_Ident.ident) FStarC_RBSet.rbset * unit) =
+  (match (t).FStarC_Parser_AST.tm with
+    | (FStarC_Parser_AST.Paren (t1)) -> (go_term env t1)
+    | (FStarC_Parser_AST.Labeled (u__1, u__2, u__3)) -> (FStarC_Effect.failwith "Impossible --- labeled source term")
+    | (FStarC_Parser_AST.Var (a)) -> (let tmp = (lident_is_ticked a) in
+      let tmp1 = (if tmp then (let tmp1 = (FStarC_Syntax_DsEnv.try_lookup_id env (FStarC_Ident.ident_of_lid a)) in
+        (match tmp1 with
+          | None -> true
+          | tmp2 -> false
+        )) else false) in
+      (if tmp1 then (emit1 (FStarC_Ident.ident_of_lid a)) else (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())))
+    | (FStarC_Parser_AST.Var (x)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
+    | FStarC_Parser_AST.Wild -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.Const (tmp)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.Uvar (tmp)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.Projector (u__1, u__2)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.Discrim (tmp)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.Name (tmp)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.Requires (t1)) -> (go_term env t1)
+    | (FStarC_Parser_AST.Ensures (t1)) -> (go_term env t1)
+    | (FStarC_Parser_AST.Decreases (t1)) -> (go_term env t1)
+    | (FStarC_Parser_AST.NamedTyp (tmp, t1)) -> (go_term env t1)
+    | (FStarC_Parser_AST.LexList (l)) -> (fStarC_Class_Monad_iterM__writer_rbset_ident_uu___0 (go_term env) l)
+    | (FStarC_Parser_AST.WFOrder (rel, e)) -> (let tmp = (go_term env rel) in
+      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp (fun tmp1 -> (go_term env e))))
+    | (FStarC_Parser_AST.Paren (t1)) -> (FStarC_Effect.failwith "impossible")
+    | (FStarC_Parser_AST.Ascribed (t1, t', tacopt, tmp)) -> (let tmp1 = (go_term env t1) in
+      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp1 (fun tmp2 -> (let tmp3 = (go_term env t') in
+      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp3 (fun tmp4 -> (match tacopt with
+        | None -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
+        | (Some (tac)) -> (go_term env tac)
+      )))))))
+    | (FStarC_Parser_AST.Construct (tmp, ts)) -> (fStarC_Class_Monad_iterM__writer_rbset_ident_uu___0 (fun tmp1 -> (match tmp1 with
+        | (a, tmp2) -> (go_term env a)
+      )) ts)
+    | (FStarC_Parser_AST.Op (tmp, ts)) -> (fStarC_Class_Monad_iterM__writer_rbset_ident_uu___0 (go_term env) ts)
+    | (FStarC_Parser_AST.App (t1, t2, tmp)) -> (let tmp1 = (go_term env t1) in
+      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp1 (fun tmp2 -> (go_term env t2))))
+    | (FStarC_Parser_AST.Refine (b, t1)) -> (let tmp = (go_binder env b) in
+      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp (fun env' -> (go_term env' t1))))
+    | (FStarC_Parser_AST.Sum (binders, body)) -> (let tmp = (fStarC_Class_Monad_foldM_left__writer_rbset_ident_uu___0 (fun env1 bt -> (match bt with
+          | (FStar_Pervasives.Inl (binder)) -> (go_binder env1 binder)
+          | (FStar_Pervasives.Inr (t1)) -> (let tmp = (go_term env1 t1) in
+            (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp (fun tmp1 -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 env1))))
+        )) env binders) in
+      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp (fun env' -> (go_term env' body))))
+    | (FStarC_Parser_AST.Product (binders, body)) -> (let tmp = (fStarC_Class_Monad_foldM_left__writer_rbset_ident_uu___0 go_binder env binders) in
+      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp (fun env' -> (go_term env' body))))
+    | (FStarC_Parser_AST.Project (t1, tmp)) -> (go_term env t1)
+    | (FStarC_Parser_AST.CalcProof (rel, init, steps)) -> (let tmp = (go_term env rel) in
+      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp (fun tmp1 -> (let tmp2 = (go_term env init) in
+      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp2 (fun tmp3 -> (fStarC_Class_Monad_iterM__writer_rbset_ident_uu___0 (fun tmp4 -> (match tmp4 with
+        | (rel1, just, next) -> (let tmp5 = (go_term env rel1) in
+          (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp5 (fun tmp6 -> (let tmp7 = (go_term env just) in
+          (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp7 (fun tmp8 -> (go_term env next)))))))
+      )) steps)))))))
+    | (FStarC_Parser_AST.ElimForall (bs, t1, ts)) -> (let tmp = (go_binders env bs) in
+      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp (fun env' -> (let tmp1 = (go_term env' t1) in
+      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp1 (fun tmp2 -> (fStarC_Class_Monad_iterM__writer_rbset_ident_uu___0 (go_term env') ts)))))))
+    | (FStarC_Parser_AST.ElimExists (binders, p, e)) -> (let tmp = (go_binders env binders) in
+      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp (fun env' -> (let tmp1 = (go_term env' p) in
+      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp1 (fun tmp2 -> (go_term env' e)))))))
+    | (FStarC_Parser_AST.ElimImplies (p, q, e)) -> (let tmp = (go_term env p) in
+      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp (fun tmp1 -> (let tmp2 = (go_term env q) in
+      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp2 (fun tmp3 -> (go_term env e)))))))
+    | (FStarC_Parser_AST.ElimOr (p, q, e, e')) -> (let tmp = (go_term env p) in
+      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp (fun tmp1 -> (let tmp2 = (go_term env q) in
+      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp2 (fun tmp3 -> (let tmp4 = (go_term env e) in
+      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp4 (fun tmp5 -> (go_term env e'))))))))))
+    | (FStarC_Parser_AST.ElimAnd (p, q, e)) -> (let tmp = (go_term env p) in
+      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp (fun tmp1 -> (let tmp2 = (go_term env q) in
+      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp2 (fun tmp3 -> (go_term env e)))))))
+    | (FStarC_Parser_AST.ListLiteral (ts)) -> (fStarC_Class_Monad_iterM__writer_rbset_ident_uu___0 (go_term env) ts)
+    | (FStarC_Parser_AST.SeqLiteral (ts)) -> (fStarC_Class_Monad_iterM__writer_rbset_ident_uu___0 (go_term env) ts)
+    | (FStarC_Parser_AST.Abs (u__1, u__2)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.Function (u__1, u__2)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.Let (u__1, u__2, u__3)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.LetOpen (u__1, u__2)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.If (u__1, u__2, u__3, u__4, u__5)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.QForall (u__1, u__2, u__3)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.QExists (u__1, u__2, u__3)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.QuantOp (u__1, u__2, u__3, u__4)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.Record (u__1, u__2)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.Match (u__1, u__2, u__3, u__4)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.TryWith (u__1, u__2)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.Bind (u__1, u__2, u__3)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.Quote (u__1, u__2)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.VQuote (tmp)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.Antiquote (tmp)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.Seq (u__1, u__2)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
+  )
+
+let free_ticked_vars (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term) : (FStarC_Ident.ident) list =
+  (let w = (go_term env t) in
+  (match w with
+    | (fvs, ()) -> (FStarC_RBSet.fStarC_Class_Setlike_elems__ident_rbset_ident fvs)
+  ))
+
+let tm_type (r : FStarC_Range_Type.range) : FStarC_Parser_AST.term =
+  (let tmp = (FStarC_Ident.lid_of_path ("Type" :: []) r) in
+  let tmp1 = (FStarC_Parser_AST.Name (tmp)) in
+  (FStarC_Parser_AST.mk_term tmp1 r FStarC_Parser_AST.Kind))
+
+let rec unparen (t : FStarC_Parser_AST.term) : FStarC_Parser_AST.term =
+  (match (t).FStarC_Parser_AST.tm with
+    | (FStarC_Parser_AST.Paren (t1)) -> (unparen t1)
+    | tmp -> t
+  )
+
+let close_fun (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term) : FStarC_Parser_AST.term =
+  (let ftv = (free_ticked_vars env t) in
+  (if (match ftv with
+    | [] -> true
+    | tmp -> false
+  ) then t else (let binders = (FStarC_List.map (fun x -> (let tmp = (FStarC_Ident.fStarC_Class_HasRange_pos__ident x) in
+    let tmp1 = (tm_type tmp) in
+    let tmp2 = (x, tmp1) in
+    let tmp3 = (FStarC_Parser_AST.Annotated ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))) in
+    let tmp4 = (FStarC_Ident.fStarC_Class_HasRange_pos__ident x) in
+    (FStarC_Parser_AST.mk_binder tmp3 tmp4 FStarC_Parser_AST.Type_level (Some (FStarC_Parser_AST.Implicit))))) ftv) in
+  let tmp = (unparen t) in
+  let tmp1 = (tmp).FStarC_Parser_AST.tm in
+  let t1 = (match tmp1 with
+      | (FStarC_Parser_AST.Product (u__1, u__2)) -> t
+      | tmp2 -> (FStarC_Parser_AST.mk_term (FStarC_Parser_AST.App ((FStarC_Parser_AST.mk_term (FStarC_Parser_AST.Name (FStarC_Parser_Const.effect_Tot_lid)) (t).FStarC_Parser_AST.range (t).FStarC_Parser_AST.level), t, FStarC_Parser_AST.Nothing)) (t).FStarC_Parser_AST.range (t).FStarC_Parser_AST.level)
+    ) in
+  (FStarC_Parser_AST.mk_term (FStarC_Parser_AST.Product (binders, t1)) (t1).FStarC_Parser_AST.range (t1).FStarC_Parser_AST.level))))
+
+let close (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term) : FStarC_Parser_AST.term =
+  (let ftv = (free_ticked_vars env t) in
+  (if (match ftv with
+    | [] -> true
+    | tmp -> false
+  ) then t else (let binders = (FStarC_List.map (fun x -> (let tmp = (FStarC_Ident.fStarC_Class_HasRange_pos__ident x) in
+    let tmp1 = (tm_type tmp) in
+    let tmp2 = (x, tmp1) in
+    let tmp3 = (FStarC_Parser_AST.Annotated ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))) in
+    let tmp4 = (FStarC_Ident.fStarC_Class_HasRange_pos__ident x) in
+    (FStarC_Parser_AST.mk_binder tmp3 tmp4 FStarC_Parser_AST.Type_level (Some (FStarC_Parser_AST.Implicit))))) ftv) in
+  (FStarC_Parser_AST.mk_term (FStarC_Parser_AST.Product (binders, t)) (t).FStarC_Parser_AST.range (t).FStarC_Parser_AST.level))))
+

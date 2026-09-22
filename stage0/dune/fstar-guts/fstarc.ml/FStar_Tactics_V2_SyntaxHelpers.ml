@@ -1,273 +1,126 @@
-open Prims
-let rec collect_arr' (bs : FStar_Tactics_NamedView.binder Prims.list)
-  (c : FStar_Tactics_NamedView.comp) :
-  FStarC_Tactics_Types.ref_proofstate ->
-    (FStar_Tactics_NamedView.binder Prims.list *
-      FStar_Tactics_NamedView.comp)=
-  if FStarC_Reflection_V2_Data.is_tot_comp c
-  then
-    fun ps ->
-      let x =
-        FStar_Tactics_NamedView.inspect
-          c.FStarC_Reflection_V2_Data.result_typ ps in
-      match x with
-      | FStar_Tactics_NamedView.Tv_Arrow (b, c') ->
-          collect_arr' (b :: bs) c' ps
-      | uu___ -> (bs, c)
-  else (fun uu___ -> (bs, c))
-let collect_arr_bs (t : FStarC_Reflection_Types.typ)
-  (ps : FStarC_Tactics_Types.ref_proofstate) :
-  (FStar_Tactics_NamedView.binder Prims.list * FStar_Tactics_NamedView.comp)=
-  let x = collect_arr' [] (FStarC_Reflection_V2_Data.mk_tot_comp t) ps in
-  match x with | (bs, c) -> ((FStar_List_Tot_Base.rev bs), c)
-let _ =
-  FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.SyntaxHelpers.collect_arr_bs" (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.SyntaxHelpers.collect_arr_bs (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 collect_arr_bs)
-               FStarC_Reflection_V2_Embeddings.e_term
-               (FStarC_Syntax_Embeddings.e_tuple2
-                  (FStarC_Syntax_Embeddings.e_list
-                     FStar_Tactics_NamedView.e_binder)
-                  FStarC_Reflection_V2_Embeddings.e_comp_view) psc ncb us
-               args)
-let collect_arr (t : FStarC_Reflection_Types.typ)
-  (ps : FStarC_Tactics_Types.ref_proofstate) :
-  (FStarC_Reflection_Types.typ Prims.list * FStar_Tactics_NamedView.comp)=
-  let x = collect_arr' [] (FStarC_Reflection_V2_Data.mk_tot_comp t) ps in
-  match x with
-  | (bs, c) ->
-      ((FStar_List_Tot_Base.rev
-          (FStar_List_Tot_Base.map (fun b -> b.FStar_Tactics_NamedView.sort)
-             bs)), c)
-let _ =
-  FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.SyntaxHelpers.collect_arr" (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.SyntaxHelpers.collect_arr (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 collect_arr)
-               FStarC_Reflection_V2_Embeddings.e_term
-               (FStarC_Syntax_Embeddings.e_tuple2
-                  (FStarC_Syntax_Embeddings.e_list
-                     FStarC_Reflection_V2_Embeddings.e_term)
-                  FStarC_Reflection_V2_Embeddings.e_comp_view) psc ncb us
-               args)
-let rec collect_abs' (bs : FStar_Tactics_NamedView.binder Prims.list)
-  (t : FStar_Tactics_NamedView.term)
-  (ps : FStarC_Tactics_Types.ref_proofstate) :
-  (FStar_Tactics_NamedView.binder Prims.list * FStar_Tactics_NamedView.term)=
-  let x = FStar_Tactics_NamedView.inspect t ps in
-  match x with
-  | FStar_Tactics_NamedView.Tv_Abs (b, t') -> collect_abs' (b :: bs) t' ps
-  | uu___ -> (bs, t)
-let collect_abs (t : FStar_Tactics_NamedView.term)
-  (ps : FStarC_Tactics_Types.ref_proofstate) :
-  (FStar_Tactics_NamedView.binder Prims.list * FStar_Tactics_NamedView.term)=
-  let x = collect_abs' [] t ps in
-  match x with | (bs, t') -> ((FStar_List_Tot_Base.rev bs), t')
-let _ =
-  FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.SyntaxHelpers.collect_abs" (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.SyntaxHelpers.collect_abs (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 collect_abs)
-               FStarC_Reflection_V2_Embeddings.e_term
-               (FStarC_Syntax_Embeddings.e_tuple2
-                  (FStarC_Syntax_Embeddings.e_list
-                     FStar_Tactics_NamedView.e_binder)
-                  FStarC_Reflection_V2_Embeddings.e_term) psc ncb us args)
-let fail (m : Prims.string) (ps : FStarC_Tactics_Types.ref_proofstate) : 
-  'a=
-  FStarC_Tactics_V2_Builtins.raise_core
-    (FStarC_Tactics_Common.TacticFailure
-       ((FStar_Errors_Msg.mkmsg m), FStar_Pervasives_Native.None)) ps;
-  Prims.magic ()
-let rec mk_arr (bs : FStar_Tactics_NamedView.binder Prims.list)
-  (cod : FStar_Tactics_NamedView.comp) :
-  FStarC_Tactics_Types.ref_proofstate -> FStar_Tactics_NamedView.term=
-  match bs with
-  | [] -> fail "mk_arr, empty binders"
-  | b::[] ->
-      (fun uu___ ->
-         FStar_Tactics_NamedView.pack
-           (FStar_Tactics_NamedView.Tv_Arrow (b, cod)))
-  | b::bs1 ->
-      (fun ps ->
-         let x =
-           let x1 =
-             let x2 = mk_arr bs1 cod ps in
-             FStarC_Reflection_V2_Data.mk_tot_comp x2 in
-           FStar_Tactics_NamedView.Tv_Arrow (b, x1) in
-         FStar_Tactics_NamedView.pack x)
-let _ =
-  FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.SyntaxHelpers.mk_arr" (Prims.of_int 3)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_2
-               "FStar.Tactics.V2.SyntaxHelpers.mk_arr (plugin)"
-               (FStarC_Tactics_Native.from_tactic_2 mk_arr)
-               (FStarC_Syntax_Embeddings.e_list
-                  FStar_Tactics_NamedView.e_binder)
-               FStarC_Reflection_V2_Embeddings.e_comp_view
-               FStarC_Reflection_V2_Embeddings.e_term psc ncb us args)
-let rec mk_tot_arr (bs : FStar_Tactics_NamedView.binder Prims.list)
-  (cod : FStar_Tactics_NamedView.term) :
-  FStarC_Tactics_Types.ref_proofstate -> FStar_Tactics_NamedView.term=
-  match bs with
-  | [] -> (fun uu___ -> cod)
-  | b::bs1 ->
-      (fun ps ->
-         let x =
-           let x1 =
-             let x2 = mk_tot_arr bs1 cod ps in
-             FStarC_Reflection_V2_Data.mk_tot_comp x2 in
-           FStar_Tactics_NamedView.Tv_Arrow (b, x1) in
-         FStar_Tactics_NamedView.pack x)
-let _ =
-  FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.SyntaxHelpers.mk_tot_arr" (Prims.of_int 3)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_2
-               "FStar.Tactics.V2.SyntaxHelpers.mk_tot_arr (plugin)"
-               (FStarC_Tactics_Native.from_tactic_2 mk_tot_arr)
-               (FStarC_Syntax_Embeddings.e_list
-                  FStar_Tactics_NamedView.e_binder)
-               FStarC_Reflection_V2_Embeddings.e_term
-               FStarC_Reflection_V2_Embeddings.e_term psc ncb us args)
-let lookup_lb (lbs : FStar_Tactics_NamedView.letbinding Prims.list)
-  (nm : FStarC_Reflection_Types.name)
-  (ps : FStarC_Tactics_Types.ref_proofstate) :
-  FStar_Tactics_NamedView.letbinding=
-  let x =
-    FStar_List_Tot_Base.find
-      (fun lb ->
-         (FStarC_Reflection_V2_Builtins.inspect_fv
-            lb.FStar_Tactics_NamedView.lb_fv)
-           = nm) lbs in
-  match x with
-  | FStar_Pervasives_Native.Some lb -> lb
-  | FStar_Pervasives_Native.None ->
-      fail "lookup_letbinding: Name not in let group" ps
-let _ =
-  FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.SyntaxHelpers.lookup_lb" (Prims.of_int 3)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_2
-               "FStar.Tactics.V2.SyntaxHelpers.lookup_lb (plugin)"
-               (FStarC_Tactics_Native.from_tactic_2 lookup_lb)
-               (FStarC_Syntax_Embeddings.e_list
-                  FStar_Tactics_NamedView.e_letbinding)
-               (FStarC_Syntax_Embeddings.e_list
-                  FStarC_Syntax_Embeddings.e_string)
-               FStar_Tactics_NamedView.e_letbinding psc ncb us args)
-let rec inspect_unascribe (t : FStar_Tactics_NamedView.term)
-  (ps : FStarC_Tactics_Types.ref_proofstate) :
-  FStar_Tactics_NamedView.term_view=
-  let x = FStar_Tactics_NamedView.inspect t ps in
-  match x with
-  | FStar_Tactics_NamedView.Tv_AscribedT (t1, uu___, uu___1, uu___2) ->
-      inspect_unascribe t1 ps
-  | FStar_Tactics_NamedView.Tv_AscribedC (t1, uu___, uu___1, uu___2) ->
-      inspect_unascribe t1 ps
-  | tv -> tv
-let _ =
-  FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.SyntaxHelpers.inspect_unascribe" (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.SyntaxHelpers.inspect_unascribe (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 inspect_unascribe)
-               FStarC_Reflection_V2_Embeddings.e_term
-               FStar_Tactics_NamedView.e_named_term_view psc ncb us args)
-let rec collect_app' (args : FStarC_Reflection_V2_Data.argv Prims.list)
-  (t : FStar_Tactics_NamedView.term)
-  (ps : FStarC_Tactics_Types.ref_proofstate) :
-  (FStar_Tactics_NamedView.term * FStarC_Reflection_V2_Data.argv Prims.list)=
-  let x = inspect_unascribe t ps in
-  match x with
-  | FStar_Tactics_NamedView.Tv_App (l, r) -> collect_app' (r :: args) l ps
-  | uu___ -> (t, args)
-let collect_app :
-  FStar_Tactics_NamedView.term ->
-    FStarC_Tactics_Types.ref_proofstate ->
-      (FStar_Tactics_NamedView.term * FStarC_Reflection_V2_Data.argv
-        Prims.list)=
-  collect_app' []
-let _ =
-  FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.SyntaxHelpers.collect_app" (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.SyntaxHelpers.collect_app (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 collect_app)
-               FStarC_Reflection_V2_Embeddings.e_term
-               (FStarC_Syntax_Embeddings.e_tuple2
-                  FStarC_Reflection_V2_Embeddings.e_term
-                  (FStarC_Syntax_Embeddings.e_list
-                     (FStarC_Syntax_Embeddings.e_tuple2
-                        FStarC_Reflection_V2_Embeddings.e_term
-                        FStarC_Reflection_V2_Embeddings.e_aqualv))) psc ncb
-               us args)
-let hua (t : FStar_Tactics_NamedView.term)
-  (ps : FStarC_Tactics_Types.ref_proofstate) :
-  (FStarC_Reflection_Types.fv * FStarC_Reflection_V2_Data.universes *
-    FStarC_Reflection_V2_Data.argv Prims.list) FStar_Pervasives_Native.option=
-  let x = collect_app t ps in
-  match x with
-  | (hd, args) ->
-      let x1 = FStar_Tactics_NamedView.inspect hd ps in
+(* Generated by F* Custard extraction. Do not edit. *)
+[@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
+
+let rec collect_arr' (bs : (FStar_Tactics_NamedView.binder) list) (c : FStarC_Reflection_V2_Data.comp_view) : ((FStarC_Tactics_Types.proofstate ref) -> ((FStar_Tactics_NamedView.binder) list * FStarC_Reflection_V2_Data.comp_view)) =
+  (let tmp = (FStarC_Reflection_V2_Data.is_tot_comp c) in
+  (if tmp then (fun ps -> (let tmp1 = (c).FStarC_Reflection_V2_Data.result_typ in
+  let x = (FStar_Tactics_NamedView.inspect tmp1 ps) in
+  ((match x with
+    | (FStar_Tactics_NamedView.Tv_Arrow (b, c')) -> (collect_arr' (b :: bs) c')
+    | tmp2 -> (fun tmp3 -> (bs, c))
+  ) ps))) else (fun tmp1 -> (bs, c))))
+
+let collect_arr (t : FStarC_Reflection_Types.typ) : ((FStarC_Tactics_Types.proofstate ref) -> ((FStarC_Reflection_Types.typ) list * FStarC_Reflection_V2_Data.comp_view)) =
+  (fun ps -> (let tmp = (FStarC_Reflection_V2_Data.mk_tot_comp t) in
+  let x = (collect_arr' [] tmp ps) in
+  (match x with
+    | (bs, c) -> ((FStar_List_Tot_Base.rev (FStar_List_Tot_Base.map (fun b -> ((b : FStar_Tactics_NamedView.binder)).FStar_Tactics_NamedView.sort) bs)), c)
+  )))
+
+let rec inspect_unascribe (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> FStar_Tactics_NamedView.named_term_view) =
+  (fun ps -> (let x = (FStar_Tactics_NamedView.inspect t ps) in
+  ((match x with
+    | (FStar_Tactics_NamedView.Tv_AscribedT (t1, tmp, tmp1, tmp2)) -> (inspect_unascribe t1)
+    | (FStar_Tactics_NamedView.Tv_AscribedC (t1, tmp, tmp1, tmp2)) -> (inspect_unascribe t1)
+    | tv -> (fun tmp -> tv)
+  ) ps)))
+
+let rec collect_app' (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * FStarC_Reflection_V2_Data.aqualv)) list) (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> (FStarC_Reflection_Types.term * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * FStarC_Reflection_V2_Data.aqualv)) list)) =
+  (fun ps -> (let x = (inspect_unascribe t ps) in
+  ((match x with
+    | (FStar_Tactics_NamedView.Tv_App (l, r)) -> (collect_app' (r :: args) l)
+    | tmp -> (fun tmp1 -> (t, args))
+  ) ps)))
+
+let collect_app : (FStarC_Reflection_Types.term -> ((FStarC_Tactics_Types.proofstate ref) -> (FStarC_Reflection_Types.term * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * FStarC_Reflection_V2_Data.aqualv)) list))) =
+  (collect_app' [])
+
+let fail (m : string) : ((FStarC_Tactics_Types.proofstate ref) -> 'a) =
+  (fun ps -> ((ignore (FStarC_Tactics_V2_Builtins.raise_core (FStarC_Tactics_Common.TacticFailure (((FStar_Errors_Msg.mkmsg m), None))) ps));
+  (failwith "Prims.magic")))
+
+let rec mk_arr (bs : (FStar_Tactics_NamedView.binder) list) (cod : FStarC_Reflection_V2_Data.comp_view) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_Types.term) =
+  (match bs with
+    | [] -> (fail "mk_arr, empty binders")
+    | (b :: []) -> (fun tmp -> (FStar_Tactics_NamedView.pack (FStar_Tactics_NamedView.Tv_Arrow (b, cod))))
+    | (b :: bs1) -> (fun ps -> (let x = (mk_arr bs1 cod ps) in
+      let x1 = (FStarC_Reflection_V2_Data.mk_tot_comp x) in
+      let x2 = (FStar_Tactics_NamedView.Tv_Arrow (b, x1)) in
+      (FStar_Tactics_NamedView.pack x2)))
+  )
+
+let rec mk_tot_arr (bs : (FStar_Tactics_NamedView.binder) list) (cod : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_Types.term) =
+  (match bs with
+    | [] -> (fun tmp -> cod)
+    | (b :: bs1) -> (fun ps -> (let x = (mk_tot_arr bs1 cod ps) in
+      let x1 = (FStarC_Reflection_V2_Data.mk_tot_comp x) in
+      let x2 = (FStar_Tactics_NamedView.Tv_Arrow (b, x1)) in
+      (FStar_Tactics_NamedView.pack x2)))
+  )
+
+let collect_arr_bs (t : FStarC_Reflection_Types.typ) : ((FStarC_Tactics_Types.proofstate ref) -> ((FStar_Tactics_NamedView.binder) list * FStarC_Reflection_V2_Data.comp_view)) =
+  (fun ps -> (let tmp = (FStarC_Reflection_V2_Data.mk_tot_comp t) in
+  let x = (collect_arr' [] tmp ps) in
+  (match x with
+    | (bs, c) -> ((FStar_List_Tot_Base.rev bs), c)
+  )))
+
+let hua (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> ((FStarC_Reflection_Types.fv * (FStarC_Syntax_Syntax.universe) list * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * FStarC_Reflection_V2_Data.aqualv)) list)) option) =
+  (fun ps -> (let x = (collect_app t ps) in
+  ((match x with
+    | (hd, args) -> (fun ps1 -> (let x1 = (FStar_Tactics_NamedView.inspect hd ps1) in
       (match x1 with
-       | FStar_Tactics_NamedView.Tv_FVar fv ->
-           FStar_Pervasives_Native.Some (fv, [], args)
-       | FStar_Tactics_NamedView.Tv_UInst (fv, us) ->
-           FStar_Pervasives_Native.Some (fv, us, args)
-       | uu___ -> FStar_Pervasives_Native.None)
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.SyntaxHelpers.hua"
-    (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.SyntaxHelpers.hua (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 hua)
-               FStarC_Reflection_V2_Embeddings.e_term
-               (FStarC_Syntax_Embeddings.e_option
-                  (FStarC_Syntax_Embeddings.e_tuple3
-                     FStarC_Reflection_V2_Embeddings.e_fv
-                     (FStarC_Syntax_Embeddings.e_list
-                        FStarC_Reflection_V2_Embeddings.e_universe)
-                     (FStarC_Syntax_Embeddings.e_list
-                        (FStarC_Syntax_Embeddings.e_tuple2
-                           FStarC_Reflection_V2_Embeddings.e_term
-                           FStarC_Reflection_V2_Embeddings.e_aqualv)))) psc
-               ncb us args)
+        | (FStar_Tactics_NamedView.Tv_FVar (fv)) -> (Some ((fv, [], args)))
+        | (FStar_Tactics_NamedView.Tv_UInst (fv, us)) -> (Some ((fv, us, args)))
+        | tmp -> None
+      )))
+  ) ps)))
+
+let lookup_lb (lbs : (FStar_Tactics_NamedView.letbinding) list) (nm : FStarC_Reflection_Types.name) : ((FStarC_Tactics_Types.proofstate ref) -> FStar_Tactics_NamedView.letbinding) =
+  (fun ps -> (let x = (FStar_List_Tot_Base.find (fun lb -> (let tmp = (FStarC_Reflection_V2_Builtins.inspect_fv (lb).FStar_Tactics_NamedView.lb_fv) in
+    ((=) tmp nm))) lbs) in
+  ((match x with
+    | (Some (lb)) -> (fun tmp -> lb)
+    | None -> (fail "lookup_letbinding: Name not in let group")
+  ) ps)))
+
+let u___plugin_collect_arr_bs : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.SyntaxHelpers.collect_arr_bs" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.SyntaxHelpers.collect_arr_bs (plugin)" collect_arr_bs FStarC_Reflection_V2_Embeddings.e_term (FStarC_Syntax_Embeddings.e_tuple2 (FStarC_Syntax_Embeddings.e_list FStar_Tactics_NamedView.e_binder) FStarC_Reflection_V2_Embeddings.e_comp_view) tmp tmp1 tmp2 tmp3)))
+
+let u___plugin_collect_arr : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.SyntaxHelpers.collect_arr" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.SyntaxHelpers.collect_arr (plugin)" collect_arr FStarC_Reflection_V2_Embeddings.e_term (FStarC_Syntax_Embeddings.e_tuple2 (FStarC_Syntax_Embeddings.e_list FStarC_Reflection_V2_Embeddings.e_term) FStarC_Reflection_V2_Embeddings.e_comp_view) tmp tmp1 tmp2 tmp3)))
+
+let rec collect_abs' (bs : (FStar_Tactics_NamedView.binder) list) (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> ((FStar_Tactics_NamedView.binder) list * FStarC_Reflection_Types.term)) =
+  (fun ps -> (let x = (FStar_Tactics_NamedView.inspect t ps) in
+  ((match x with
+    | (FStar_Tactics_NamedView.Tv_Abs (b, t')) -> (collect_abs' (b :: bs) t')
+    | tmp -> (fun tmp1 -> (bs, t))
+  ) ps)))
+
+let collect_abs (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> ((FStar_Tactics_NamedView.binder) list * FStarC_Reflection_Types.term)) =
+  (fun ps -> (let x = (collect_abs' [] t ps) in
+  (match x with
+    | (bs, t') -> ((FStar_List_Tot_Base.rev bs), t')
+  )))
+
+let u___plugin_collect_abs : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.SyntaxHelpers.collect_abs" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.SyntaxHelpers.collect_abs (plugin)" collect_abs FStarC_Reflection_V2_Embeddings.e_term (FStarC_Syntax_Embeddings.e_tuple2 (FStarC_Syntax_Embeddings.e_list FStar_Tactics_NamedView.e_binder) FStarC_Reflection_V2_Embeddings.e_term) tmp tmp1 tmp2 tmp3)))
+
+let u___plugin_mk_arr : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.SyntaxHelpers.mk_arr" (Prims.parse_int "3") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_2 "FStar.Tactics.V2.SyntaxHelpers.mk_arr (plugin)" mk_arr (FStarC_Syntax_Embeddings.e_list FStar_Tactics_NamedView.e_binder) FStarC_Reflection_V2_Embeddings.e_comp_view FStarC_Reflection_V2_Embeddings.e_term tmp tmp1 tmp2 tmp3)))
+
+let u___plugin_mk_tot_arr : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.SyntaxHelpers.mk_tot_arr" (Prims.parse_int "3") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_2 "FStar.Tactics.V2.SyntaxHelpers.mk_tot_arr (plugin)" mk_tot_arr (FStarC_Syntax_Embeddings.e_list FStar_Tactics_NamedView.e_binder) FStarC_Reflection_V2_Embeddings.e_term FStarC_Reflection_V2_Embeddings.e_term tmp tmp1 tmp2 tmp3)))
+
+let u___plugin_lookup_lb : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.SyntaxHelpers.lookup_lb" (Prims.parse_int "3") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_2 "FStar.Tactics.V2.SyntaxHelpers.lookup_lb (plugin)" lookup_lb (FStarC_Syntax_Embeddings.e_list FStar_Tactics_NamedView.e_letbinding) (FStarC_Syntax_Embeddings.e_list FStarC_Syntax_Embeddings.e_string) FStar_Tactics_NamedView.e_letbinding tmp tmp1 tmp2 tmp3)))
+
+let u___plugin_inspect_unascribe : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.SyntaxHelpers.inspect_unascribe" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.SyntaxHelpers.inspect_unascribe (plugin)" inspect_unascribe FStarC_Reflection_V2_Embeddings.e_term FStar_Tactics_NamedView.e_named_term_view tmp tmp1 tmp2 tmp3)))
+
+let u___plugin_collect_app : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.SyntaxHelpers.collect_app" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.SyntaxHelpers.collect_app (plugin)" collect_app FStarC_Reflection_V2_Embeddings.e_term (FStarC_Syntax_Embeddings.e_tuple2 FStarC_Reflection_V2_Embeddings.e_term (FStarC_Syntax_Embeddings.e_list (FStarC_Syntax_Embeddings.e_tuple2 FStarC_Reflection_V2_Embeddings.e_term FStarC_Reflection_V2_Embeddings.e_aqualv))) tmp tmp1 tmp2 tmp3)))
+
+let u___plugin_hua : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.SyntaxHelpers.hua" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.SyntaxHelpers.hua (plugin)" hua FStarC_Reflection_V2_Embeddings.e_term (FStarC_Syntax_Embeddings.e_option (FStarC_Syntax_Embeddings.e_tuple3 FStarC_Reflection_V2_Embeddings.e_fv (FStarC_Syntax_Embeddings.e_list FStarC_Reflection_V2_Embeddings.e_universe) (FStarC_Syntax_Embeddings.e_list (FStarC_Syntax_Embeddings.e_tuple2 FStarC_Reflection_V2_Embeddings.e_term FStarC_Reflection_V2_Embeddings.e_aqualv)))) tmp tmp1 tmp2 tmp3)))
+
