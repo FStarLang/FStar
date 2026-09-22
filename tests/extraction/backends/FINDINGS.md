@@ -68,7 +68,7 @@ direct C, **ckc** = Custard + karamel C, **ckr** = Custard + karamel Rust.
 | 15 | krmllib ships no `FStar_Int128` | ✓ | – | ✗ | ✗ | `ExtInt128` |
 | 16 | krmllib's undefined rotates | ✓ | ✓ | ✓ | ✓ | `ExtUIntRotate` |
 | 17 | Rust backend rejects `eq_mask`/`gte_mask` | ✓ | ✓ | ✗ | ✓ | `ExtUIntMask` |
-| 18 | the machine-integer modules are not realized | ✗ | ✓ | ✗ | ✓ | `ExtIntNe`, `ExtUIntMask` |
+| 18 | the machine-integer modules are not realized | ✗ | ✓ | ✓ | ✓ | `ExtIntNe`, `ExtUIntMask` |
 
 Custard is *better* than the pipeline above on thirteen cells and worse on
 two. It is better because it compiles projectors itself (#11), because it does
@@ -619,15 +619,20 @@ that are now pinned down and will not silently regress.
 * **Rotations** on OCaml (`ExtUIntRotate`), including the `s = 0` case; see
   #16 for C and #17 for Rust.
 
-## 18. Custard does not realize the machine-integer modules
+## 18. Custard did not realize the machine-integer modules
 
-*Severity 4 (Custard OCaml, and the krml C column). Tests: `ExtIntNe`,
-`ExtUIntMask`.*
+*Severity 4 (Custard OCaml). Tests: `ExtIntNe`, `ExtUIntMask`.*
+
+**Fixed for the masks.** `realized_modules` now lists all eight of
+`FStar.{Int,UInt}{8,16,32,64}`, which is what `ulib/ml/app/ints` provides, so
+`eq_mask` and `gte_mask` reach the realization and `ExtUIntMask` passes on the
+krml C column too. `ExtIntNe` still fails on `custard-ocaml` for the reason
+below: `ne` has no primitive rule and no krml opcode.
 
 `realized_modules` in `src/custard/FStarC.Custard.Builtins.fst` lists the
 modules whose definitions Custard must *not* compile, because the runtime
-already provides them. `FStar.UInt8` is on that list; `FStar.UInt16`,
-`FStar.UInt32`, `FStar.UInt64` and the four signed modules are not.
+already provides them. `FStar.UInt8` was on that list; `FStar.UInt16`,
+`FStar.UInt32`, `FStar.UInt64` and the four signed modules were not.
 
 For those seven, the only operations Custard recognizes are the ones with a
 primitive rule: arithmetic, comparison, `&`/`|`/`^`, the shifts (including
@@ -655,8 +660,8 @@ same thing:
 * **karamel**: same, one stage later.
 
 The fix is in `Builtins`, not in any backend: either add the seven modules to
-`realized_modules`, or give the missing operations primitive rules. The second
-is what §125.1–§125.4 did for `shift_arithmetic_right`, `rotate_left` and
+`realized_modules` -- which is what was done -- or give the missing operations
+primitive rules. The second is what §125.1–§125.4 did for `shift_arithmetic_right`, `rotate_left` and
 `rotate_right`, which is why those two cells left this entry; it is the better
 answer of the two, because a rule serves all five backends and a realization
 serves only OCaml. The realizations do define all of them —

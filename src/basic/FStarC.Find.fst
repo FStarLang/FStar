@@ -277,6 +277,16 @@ let locate_ocaml () : ML _ =
   // This is correct right now, but probably should change.
   Util.get_exec_dir () ^ "/../lib" |> Filepath.normalize_file_path
 
+(* The compiler's own Custard unit interface, installed by mk/stage.mk next to
+   the compiler sources it describes.  It is absent from a compiler that was
+   not extracted by Custard, and from one whose installation did not include
+   the fstarc directory, which is why this is an option: the caller falls back
+   to compiling everything the plugin needs from source. *)
+let locate_fstarc_cui () : ML (option string) =
+  let f = Filepath.canonicalize <|
+          fstar_bin_directory ^ "/../lib/fstar/fstarc/fstarc.cui" in
+  if Filepath.file_exists f then Some f else None
+
 
 (* When reading checked files, we could obtain ranges where the
 filepath does not make sense any more. For instance if we check

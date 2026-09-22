@@ -40,11 +40,13 @@ endif
 checker.src: .force
 	$(MAKE) -f mk/checker.mk FSTAR_EXE=$(FSTAR2_EXE)
 
-extraction.src: .force
-	$(MAKE) -f mk/extraction.mk FSTAR_EXE=$(FSTAR2_EXE)
-
 syntax_extension.src: checker.src .force
 	$(MAKE) -f mk/syntax_extension.mk FSTAR_EXE=$(FSTAR2_EXE)
+
+# The three units are a chain rather than three independent extractions: see
+# the comment on CUSTARD_LINK in mk/extraction.mk.
+extraction.src: syntax_extension.src .force
+	$(MAKE) -f mk/extraction.mk FSTAR_EXE=$(FSTAR2_EXE)
 
 plugin.src: checker.src extraction.src syntax_extension.src
 

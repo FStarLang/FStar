@@ -13,7 +13,7 @@ let _ =
             | (tv_0,_)::args_tail ->
                 (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_9
                    "CanonCommSemiring.canon_semiring_aux (plugin)"
-                   (FStarC_Tactics_Native.from_tactic_9 canon_semiring_aux)
+                   (FStarC_Tactics_Native.from_tactic_9 canonCommSemiring_canon_semiring_aux)
                    FStarC_Reflection_V2_Embeddings.e_term
                    (FStarC_Tactics_Interpreter.e_tactic_1_alt
                        FStarC_Reflection_V2_Embeddings.e_term

@@ -712,6 +712,21 @@ let norm_optional_in (env:TcEnv.env) (steps:list TcEnv.step) (t:term)
 let norm_optional (st:state) (steps:list TcEnv.step) (t:term) : ML (option term) =
   norm_optional_in (tcenv st) steps t
 
+(* The same, for a term that came out of a [Visit] traversal rather than out of
+   an opening.  [Visit.visit_term] does not open binders, so a subterm it hands
+   back may carry loose de Bruijn indices, and the normalizer reports that as
+   [Failure "Failed to find x"] rather than as an error it could be asked
+   about.  [CheckLN.is_ln] is the guard, but it is an *approximation* -- it
+   says nothing about the parts of the syntax it does not descend into -- and
+   a guard that is occasionally wrong must not be the difference between a
+   compile and a crash.  Every caller here is an optimization whose failure
+   mode is to leave the term as it was, so an escaped index degrades to the
+   same answer as a budget overrun. *)
+let norm_optional_open (st:state) (steps:list TcEnv.step) (t:term)
+  : ML (option term) =
+  try norm_optional st steps t
+  with Failure _ -> None
+
 (* Section 31.  [@@normalize_for_extraction steps] says: reduce this
    definition with exactly these steps before compiling it.  The ML pipeline
    honours it in {!FStarC.Extraction.ML.Modul.extract_sig_let}, and EverParse
@@ -901,6 +916,7 @@ let decl_only_attrs : list (Ident.lident & string) = [
   PC.custard_no_monomorphize_attr, "custard_no_monomorphize";
   PC.custard_compile_time_attr,    "custard_compile_time";
   PC.custard_float_attr,           "custard_float";
+  PC.custard_boxed_fields_attr,    "custard_boxed_fields";
 ]
 
 (* Attributes that describe one *field* of a constructor. *)
@@ -1086,6 +1102,9 @@ let attr_home (nm:string) : string =
   | "custard_inline_field" ->
     "It asks for one field of a constructor to be stored by value, so it \
      goes on that field."
+  | "custard_boxed_fields" ->
+    "It keeps the fields of a *type's* constructors boxed, so it goes on \
+     that type."
   | _ -> ""
 
 let report_attr (nm:string) (site:string) (why:string) : ML unit =
@@ -1710,9 +1729,22 @@ and extract_exn (st:state) (l:Ident.lident) (nm:name) : ML decl =
   let _, ty = TcEnv.lookup_datacon (tcenv st) l in
   let bs, _ = U.arrow_formals_comp ty in
   let bs = drop_flagged (bs |> List.map (Mono.is_erased_binder (tcenv st))) bs in
+  (* Section 8.2 again, for the one declaration that is not a value and not a
+     type.  An exception of a realized module belongs to the hand-written
+     OCaml file: [FStarC.Plugins.Base]'s [DynlinkError] is raised by its
+     realization's [dynlink_loadfile], so a second [exception DynlinkError]
+     declared here is a *different* exception, and the [try ... with
+     DynlinkError e] in [FStarC.Plugins] matches nothing.  That failure is
+     silent at compile time and total at run time: the raise escapes to the
+     top level as an unexpected error.  So the declaration is suppressed and
+     every mention resolves to the realization's constructor, exactly as a
+     realized type's does. *)
+  let realized =
+    Builtins.is_realized_module
+      (Builtins.no_fstar_stubs (Ident.ns_of_lid l |> List.map Ident.string_of_id)) in
   DExn { de_name = nm;
          de_args = bs |> List.map (fun b -> ty_of_typ st b.binder_bv.sort);
-         de_flags = [] }
+         de_flags = if realized then [Realized] else [] }
 
 and datacon_owner (st:state) (l:Ident.lident) : ML (option Ident.lident) =
   match TcEnv.lookup_sigelt (tcenv st) l with
@@ -2183,7 +2215,7 @@ and builtin_rules_at (st:state) (fuel:int) (t:term) : ML (list string) =
        | _ ->
          let unfolded =
            if fuel > 0 && FStarC.Syntax.CheckLN.is_ln t0
-           then match norm_optional st
+           then match norm_optional_open st
                         [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
                          TcEnv.Beta; TcEnv.Iota; TcEnv.UnfoldOnly [l]] t0 with
                 | Some t' -> if U.term_eq t' t0 then None else Some t'
@@ -2301,7 +2333,7 @@ and template_index_scan (st:state) (ts:list term) : ML (list bv & list string) =
                   before section 88 rather than anywhere worse. *)
                if fuel > 0 && FStarC.Syntax.CheckLN.is_ln t &&
                   Mono.is_type_term (tcenv st) t
-               then match norm_optional st
+               then match norm_optional_open st
                             [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
                              TcEnv.Beta; TcEnv.Iota;
                              TcEnv.UnfoldOnly [l]] t with
@@ -2852,6 +2884,20 @@ and expr_of_term (st:state) (t:term) : ML expr =
        before translating it.  After this the body is a term of the effect's
        representation type -- a function expecting the proofstate -- and the
        lambda is pure. *)
+    (* Whether the lambda's *codomain* is impure, read off the residual effect
+       before the reification below erases the evidence.  A reified [Tac] body
+       is a function of the proofstate and so is pure, which is the honest
+       answer about the term in hand and the wrong one for the guard further
+       down: what that guard asks is whether a caller can be holding the arrow
+       this lambda's last binder stands in front of, and [Mono.keep_thunk]
+       answers it from the unreified comp.  The two have to agree -- the call
+       site filters its spine by [Mono.erased_binders_unfold], which is
+       [keep_thunk] over the local's sort -- or a saturated call goes out with
+       one argument more than the lambda has binders. *)
+    let reified_codomain =
+      match rc with
+      | Some rc -> Effects.is_reifiable (tcenv st) rc.residual_effect
+      | None -> false in
     let body =
       match rc with
       | Some rc ->
@@ -2874,12 +2920,15 @@ and expr_of_term (st:state) (t:term) : ML expr =
          an impure body stops being the arrow a partial application of it was
          holding.  The purity read here is the body's own, which is Custard's
          answer and not F*'s -- the same distinction [Mono.impure_codomain]
-         makes on a comp, arrived at by having already translated the body. *)
+         makes on a comp, arrived at by having already translated the body --
+         together with [reified_codomain], which is that same question asked
+         of the effect the reification consumed. *)
       let flags =
         let all_erased = Cons? flags && List.for_all (fun b -> b) flags in
         let last_erased = (match List.rev flags with
                            | f :: _ -> f | [] -> false) in
-        if last_erased && (all_erased || not (is_pure body.eff))
+        if last_erased
+           && (all_erased || reified_codomain || not (is_pure body.eff))
         then (match List.rev flags with
               | _ :: r -> List.rev (false :: r)
               | [] -> flags)
@@ -4922,6 +4971,39 @@ and extract_sigelt_body (st:state) (l:Ident.lident) (nm:name) (margs:list (int &
             realized, or because F* only ever saw a [val], the same code
             decides what its signature is. *)
          let typars, ty = external_ty st l margs in
+         (* An [assume val] in a module this run is *compiling* has nowhere to
+            be external to.  An external is a reference to [M.f] in the target
+            language, and for OCaml that names the file Custard is writing:
+            [Bug1485.err_exn] emitted into [Bug1485.ml] is a reference to
+            itself, which does not compile.  The ML backend has always emitted
+            a stub for this case -- [failwith "Not yet implemented: M.f"] --
+            and a stub is the honest translation: the program says the
+            definition does not exist, so a call to it is a failure, and the
+            failure says which name was missing.
+
+            Only for the backends that have no other answer.  A C [assume val]
+            *is* a declaration of a symbol defined elsewhere -- that is how an
+            extern is written, and [tests/custard]'s C++ template tests rely
+            on it -- so C and Rust keep the external. *)
+         if not (is_c_backend ()) &&
+            Options.custard_entry_modules () |> List.existsb (fun (m:string) ->
+              m = Ident.string_of_lid (Ident.lid_of_ids (Ident.ns_of_lid l)))
+         then
+           let rec spine (t:cty) : ML (list binder & cty & eff) =
+             match t with
+             | TArrow (a, e, r) ->
+               let bs, ret, e' = spine r in
+               ({ b_name = "u__unimpl" ^ show (List.length bs); b_ty = a } :: bs),
+               ret, (if Nil? bs then e else e')
+             | _ -> [], t, E_Pure in
+           let bs, ret, e = spine ty in
+           DLet { dl_name = nm; dl_typars = typars; dl_binders = bs;
+                  dl_ret = ret; dl_eff = (if Nil? bs then E_Impure else e);
+                  dl_body = mk (EAbort ("Not yet implemented: " ^
+                                             Ident.string_of_lid l))
+                                    ret E_Impure;
+                  dl_flags = [] }
+         else
          DExternal { dx_name = nm; dx_typars = typars; dx_ty = ty;
                      dx_target = None; dx_header = None; dx_flags = [] })
 
@@ -5494,17 +5576,23 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
    builds is never what the author meant to pay for (issue #4382).  Anything
    else has to say so with [@@@custard_inline_field] on the binder.
 
+   [@@custard_boxed_fields] on the *type* withdraws the uninvited half: a type
+   whose representation is an ABI -- [FStarC.Extraction.KrmlAst], marshalled
+   to a file karamel reads back -- has to be laid out the way the ML
+   extraction lays it out, tuple field and all (section 5.7).  An explicit
+   request on a field still fires, since that one is the source's.
+
    The marker rides on the field's *type* so that it survives the passes that
    rewrite field lists without any of them having to know about it;
    [Simplify.inline_fields] strips every one. *)
 and is_tuple_name (n:name) : bool =
   n.ns = ["FStar"; "Pervasives"; "Native"] && FStarC.Util.starts_with n.id "tuple"
 
-and field_ty (st:state) (b:S.binder) : ML cty =
+and field_ty (st:state) (boxed:bool) (b:S.binder) : ML cty =
   let t = ty_of_typ st b.binder_bv.sort in
   let asked = U.has_attribute b.binder_attrs PC.custard_inline_field_attr in
   match t with
-  | TApp (n, _) when asked || is_tuple_name n -> TInline t
+  | TApp (n, _) when asked || (is_tuple_name n && not boxed) -> TInline t
   | _ -> t
 
 and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : ML decl =
@@ -5516,6 +5604,12 @@ and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : M
   let params = SS.open_binders params in
   let _, ctors = TcEnv.datacons_of_typ (tcenv st) l in
   let n_params = List.length params in
+  let se = TcEnv.lookup_sigelt (tcenv st) l in
+  (* Section 5.7.  The type, not the field, says that its layout is an ABI. *)
+  let boxed =
+    match se with
+    | Some se -> U.has_attribute se.sigattrs PC.custard_boxed_fields_attr
+    | None -> false in
   (* Only the *type* parameters become parameters of the target type; a value
      index has no counterpart in the target's type language. *)
   let ty_params = params |> List.collect (fun b ->
@@ -5561,13 +5655,13 @@ and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : M
     let bs = drop_flagged (bs |> List.map (Mono.is_erased_binder (tcenv st))) bs in
     (name_of_lid c,
      bs |> List.map (fun b ->
-       (name_of_bv b.binder_bv, field_ty st b)))
+       (name_of_bv b.binder_bv, field_ty st boxed b)))
   in
   (* Section 5.5: whether the source said [{ a; b }] or [| C : ... -> t] does
      not decide the target representation -- the layout does -- but it is the
      one thing a *realization* mirrors, so it has to be recorded. *)
   let is_record =
-    match TcEnv.lookup_sigelt (tcenv st) l with
+    match se with
     | Some se -> se.sigquals |> List.existsb (fun q -> RecordType? q)
     | None -> false in
   (* Section 33.4.  Recorded, not acted on: the type is rejected anyway, by
@@ -5605,11 +5699,20 @@ let install_chain_reporter (st:state) : ML unit =
 (* Whether a top-level definition has anything to extract, judged from its
    declared type alone: a ghost computation has no runtime meaning, and
    neither has one whose result is [prop], [slprop], [squash] or any other
-   type the extraction must erase. *)
+   type the extraction must erase.
+
+   The result test asks only about *pure* computations, and the qualification
+   is the whole point of the test rather than a caveat on it.  An uninformative
+   result says a pure computation carries nothing back, and a pure computation
+   that carries nothing back does nothing at all.  An effectful one does: every
+   tactic is [... -> Tac unit], [unit] is uninformative, and without this a
+   [--custard_entry_module] over a tactic module quietly rooted nothing.  That
+   is how [tests/semiring]'s [canon_semiring_aux] went missing. *)
 let erased_definition (st:state) (ty:typ) : ML bool =
   let _, c = U.arrow_formals_comp ty in
   U.is_ghost_effect (U.comp_effect_name c) ||
-  TcUtil.must_erase_for_extraction (tcenv st) (U.comp_result c)
+  (U.is_pure_or_ghost_comp c &&
+   TcUtil.must_erase_for_extraction (tcenv st) (U.comp_result c))
 
 (* Section 72.1.  Whether a definition is one that cannot be a root at all.
 
@@ -5630,8 +5733,17 @@ let erased_definition (st:state) (ty:typ) : ML bool =
    the normal case, not a mistake worth a diagnostic on every module.
 
    [--custard_entry] names one definition and is still taken at its word.
-   What changed there is only the message: section 72.1. *)
+   What changed there is only the message: section 72.1.
+
+   None of this applies to the OCaml backend.  Error 368 is the *direct*
+   backend refusing a polymorphic declaration because C and Rust have nowhere
+   to put the type variable; OCaml has, and the Custard IR is polymorphic all
+   the way to it.  A plugin is the case that cares: [--codegen Plugin] roots
+   the whole module precisely so that a hand-written [.ml.fixup] can refer to
+   what the module defines, and [tests/semiring]'s fixup refers to
+   [canon_semiring_aux], which takes a type. *)
 let unrootable_definition (st:state) (ty:typ) : ML bool =
+  is_c_backend () &&
   Mono.type_binders (tcenv st) ty |> List.existsb (fun b -> b)
 
 (* Section 19.11.  The same question asked of an explicit root, before it is
@@ -5652,12 +5764,12 @@ let unrootable_definition (st:state) (ty:typ) : ML bool =
    saying out loud, which is the same reasoning that makes a misspelled
    [--custard_entry] an error rather than an empty output.
 
-   The predicate is *not* [erased_definition], and the difference is the
-   effect.  [non_info_norm] answers yes for [unit], which is right about the
-   value and wrong about the definition: [main : unit -> ML unit] returns
-   nothing and is the whole program.  A definition is contentless only when
-   its result is non-informative *and* computing it does nothing -- a total
-   or ghost computation.  An effectful one is called for what it does.
+   The predicate is [erased_definition] with types exempted.  [non_info_norm]
+   answers yes for [unit], which is right about the value and wrong about the
+   definition: [main : unit -> ML unit] returns nothing and is the whole
+   program.  A definition is contentless only when its result is
+   non-informative *and* computing it does nothing -- a total or ghost
+   computation.  An effectful one is called for what it does.
 
    A *type* is exempt for the same reason it is a legitimate root at all: its
    result is [Type], which is as non-informative as a result gets, and yet a
@@ -5665,11 +5777,7 @@ let unrootable_definition (st:state) (ty:typ) : ML bool =
    hand-written realization needs emitted (see [tests/custard/TypeEntry.fst]). *)
 let root_is_erased (st:state) (l:Ident.lident) : ML bool =
   let contentless (ty:typ) : ML bool =
-    let _, c = U.arrow_formals_comp ty in
-    not (is_type_sig st ty) &&
-    (U.is_ghost_effect (U.comp_effect_name c) ||
-     (U.is_pure_or_ghost_comp c &&
-      TcUtil.must_erase_for_extraction (tcenv st) (U.comp_result c))) in
+    not (is_type_sig st ty) && erased_definition st ty in
   match lookup_lid_typ st l with
   | Some ((_, ty), _) when contentless ty ->
     E.log_issue0 E.Error_CustardEntryNotFound [
