@@ -584,12 +584,20 @@ val add_mod_small: n: nat -> m:nat -> k1:pos -> k2:pos ->
                   (n + k1 * m) % (k1 * k2)))
 #restart-solver
 let add_mod_small n m k1 k2 =
-  assert (k1 * k2 > 0);
+  let k = k1 * k2 in
+  assert (k > 0);
   assert (k1 * m >= 0);
   assert (n + k1 * m >= 0);
-  mod_spec (k1 * m) (k1 * k2);
-  mod_spec (n + k1 * m) (k1 * k2);
-  div_add_small n m k1 k2
+  mod_spec (k1 * m) k;
+  mod_spec (n + k1 * m) k;
+  div_add_small n m k1 k2;
+  (* Both remainders are taken around the *same* quotient. Naming it keeps the
+     last step linear in the atom [q * k]; leaving the two `/` terms distinct
+     makes Z3 search nonlinearly for the equality it was just handed. *)
+  let q = k1 * m / k in
+  assert ((n + k1 * m) / k == q);
+  assert ((k1 * m) % k == k1 * m - q * k);
+  assert ((n + k1 * m) % k == n + k1 * m - q * k)
 
 let mod_then_mul_64 (n:nat) : Lemma (n % pow2 64 * pow2 64 == n * pow2 64 % pow2 128) =
   Math.pow2_plus 64 64;
