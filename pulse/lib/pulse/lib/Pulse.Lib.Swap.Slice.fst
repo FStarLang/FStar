@@ -25,6 +25,13 @@ open Pulse.Lib.Swap.Common
 // This module is somewhat flaky
 #set-options "--retry 5"
 
+// The outer loop invariant below (the `array_swap_outer_invariant` obligation)
+// became much more expensive once Pulse proof obligations started being deferred
+// and batched into a single shared SMT query per definition: this goal is now
+// discharged with ~50 sibling goals asserted in the same solver context instead
+// of in a query of its own. Measured cost of the hardest goal: 1.2 rlimit
+// before batching, up to ~117 after. 200 leaves headroom over that worst case.
+#push-options "--z3rlimit 200"
 inline_for_extraction noextract [@@noextract_to "krml"]
 fn slice_swap_aux (#t: Type0) (a: S.slice t)
   (mb: (mb: SZ.t {0 < SZ.v mb /\ SZ.v mb < SZ.v (S.len a)}))
@@ -98,6 +105,7 @@ fn slice_swap_aux (#t: Type0) (a: S.slice t)
     ()
   };
 }
+#pop-options
 
 #push-options "--fuel 0 --ifuel 0"
 inline_for_extraction noextract [@@noextract_to "krml"]
