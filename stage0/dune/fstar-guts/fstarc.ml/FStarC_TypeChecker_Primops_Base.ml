@@ -1,1548 +1,337 @@
-open Prims
-type psc =
-  {
-  psc_range: FStarC_Range_Type.t ;
-  psc_subst: unit -> FStarC_Syntax_Syntax.subst_t }
-let __proj__Mkpsc__item__psc_range (projectee : psc) : FStarC_Range_Type.t=
-  match projectee with | { psc_range; psc_subst;_} -> psc_range
-let __proj__Mkpsc__item__psc_subst (projectee : psc) :
-  unit -> FStarC_Syntax_Syntax.subst_t=
-  match projectee with | { psc_range; psc_subst;_} -> psc_subst
-let null_psc : psc=
-  { psc_range = FStarC_Range_Type.dummyRange; psc_subst = (fun uu___ -> []) }
-let psc_range (psc1 : psc) : FStarC_Range_Type.t= psc1.psc_range
-let psc_subst (psc1 : psc) : FStarC_Syntax_Syntax.subst_t= psc1.psc_subst ()
-type interp_t =
-  psc ->
-    FStarC_Syntax_Embeddings_Base.norm_cb ->
-      FStarC_Syntax_Syntax.universes ->
-        FStarC_Syntax_Syntax.args ->
-          FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option
-type nbe_interp_t =
-  FStarC_TypeChecker_NBETerm.nbe_cbs ->
-    FStarC_Syntax_Syntax.universes ->
-      FStarC_TypeChecker_NBETerm.args ->
-        FStarC_TypeChecker_NBETerm.t FStar_Pervasives_Native.option
-type primitive_step =
-  {
-  name: FStarC_Ident.lid ;
-  arity: Prims.int ;
-  univ_arity: Prims.int ;
-  auto_reflect: Prims.int FStar_Pervasives_Native.option ;
-  strong_reduction_ok: Prims.bool ;
-  requires_binder_substitution: Prims.bool ;
-  renorm_after: Prims.bool ;
-  unrepresentable_result: Prims.bool ;
-  interpretation: interp_t ;
-  interpretation_nbe: nbe_interp_t }
-let __proj__Mkprimitive_step__item__name (projectee : primitive_step) :
-  FStarC_Ident.lid=
-  match projectee with
-  | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
-      requires_binder_substitution; renorm_after; unrepresentable_result;
-      interpretation; interpretation_nbe;_} -> name
-let __proj__Mkprimitive_step__item__arity (projectee : primitive_step) :
-  Prims.int=
-  match projectee with
-  | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
-      requires_binder_substitution; renorm_after; unrepresentable_result;
-      interpretation; interpretation_nbe;_} -> arity
-let __proj__Mkprimitive_step__item__univ_arity (projectee : primitive_step) :
-  Prims.int=
-  match projectee with
-  | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
-      requires_binder_substitution; renorm_after; unrepresentable_result;
-      interpretation; interpretation_nbe;_} -> univ_arity
-let __proj__Mkprimitive_step__item__auto_reflect (projectee : primitive_step)
-  : Prims.int FStar_Pervasives_Native.option=
-  match projectee with
-  | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
-      requires_binder_substitution; renorm_after; unrepresentable_result;
-      interpretation; interpretation_nbe;_} -> auto_reflect
-let __proj__Mkprimitive_step__item__strong_reduction_ok
-  (projectee : primitive_step) : Prims.bool=
-  match projectee with
-  | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
-      requires_binder_substitution; renorm_after; unrepresentable_result;
-      interpretation; interpretation_nbe;_} -> strong_reduction_ok
-let __proj__Mkprimitive_step__item__requires_binder_substitution
-  (projectee : primitive_step) : Prims.bool=
-  match projectee with
-  | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
-      requires_binder_substitution; renorm_after; unrepresentable_result;
-      interpretation; interpretation_nbe;_} -> requires_binder_substitution
-let __proj__Mkprimitive_step__item__renorm_after (projectee : primitive_step)
-  : Prims.bool=
-  match projectee with
-  | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
-      requires_binder_substitution; renorm_after; unrepresentable_result;
-      interpretation; interpretation_nbe;_} -> renorm_after
-let __proj__Mkprimitive_step__item__unrepresentable_result
-  (projectee : primitive_step) : Prims.bool=
-  match projectee with
-  | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
-      requires_binder_substitution; renorm_after; unrepresentable_result;
-      interpretation; interpretation_nbe;_} -> unrepresentable_result
-let __proj__Mkprimitive_step__item__interpretation
-  (projectee : primitive_step) : interp_t=
-  match projectee with
-  | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
-      requires_binder_substitution; renorm_after; unrepresentable_result;
-      interpretation; interpretation_nbe;_} -> interpretation
-let __proj__Mkprimitive_step__item__interpretation_nbe
-  (projectee : primitive_step) : nbe_interp_t=
-  match projectee with
-  | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
-      requires_binder_substitution; renorm_after; unrepresentable_result;
-      interpretation; interpretation_nbe;_} -> interpretation_nbe
-let as_primitive_step_nbecbs (is_strong : Prims.bool)
-  (uu___ :
-    (FStarC_Ident.lident * Prims.int * Prims.int * interp_t * nbe_interp_t))
-  : primitive_step=
-  match uu___ with
-  | (l, arity, u_arity, f, f_nbe) ->
-      {
-        name = l;
-        arity;
+(* Generated by F* Custard extraction. Do not edit. *)
+[@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
+
+type psc = {
+  psc_range : FStarC_Range_Type.range;
+  psc_subst : (unit -> (FStarC_Syntax_Syntax.subst_elt) list);
+}
+
+type primitive_step = {
+  name : FStarC_Ident.lident;
+  arity : Prims.int;
+  univ_arity : Prims.int;
+  auto_reflect : (Prims.int) option;
+  strong_reduction_ok : bool;
+  requires_binder_substitution : bool;
+  renorm_after : bool;
+  unrepresentable_result : bool;
+  interpretation : (psc -> (((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) -> ((FStarC_Syntax_Syntax.universe) list -> ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option))));
+  interpretation_nbe : (FStarC_TypeChecker_NBETerm.nbe_cbs -> ((FStarC_Syntax_Syntax.universe) list -> (((FStarC_TypeChecker_NBETerm.t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list -> (FStarC_TypeChecker_NBETerm.t) option)));
+}
+
+let try_unembed_simple (tmp : ('u_'a) FStarC_Syntax_Embeddings_Base.embedding) (x : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ('u_'a) option =
+  (FStarC_Syntax_Embeddings_Base.try_unembed tmp x FStarC_Syntax_Embeddings_Base.id_norm_cb)
+
+let embed_simple (tmp : ('u_'a) FStarC_Syntax_Embeddings_Base.embedding) (r : FStarC_Range_Type.range) (x : 'u_'a) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (FStarC_Syntax_Embeddings_Base.embed tmp x r None FStarC_Syntax_Embeddings_Base.id_norm_cb)
+
+let as_primitive_step_nbecbs (is_strong : bool) (tmp : (FStarC_Ident.lident * Prims.int * Prims.int * (psc -> (((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) -> ((FStarC_Syntax_Syntax.universe) list -> ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)))) * (FStarC_TypeChecker_NBETerm.nbe_cbs -> ((FStarC_Syntax_Syntax.universe) list -> (((FStarC_TypeChecker_NBETerm.t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list -> (FStarC_TypeChecker_NBETerm.t) option))))) : primitive_step =
+  (match tmp with
+    | (l, arity, u_arity, f, f_nbe) -> { name = l;
+        arity = arity;
         univ_arity = u_arity;
-        auto_reflect = FStar_Pervasives_Native.None;
+        auto_reflect = None;
         strong_reduction_ok = is_strong;
         requires_binder_substitution = false;
         renorm_after = false;
         unrepresentable_result = false;
         interpretation = f;
-        interpretation_nbe = f_nbe
-      }
-let with_extra_args (n : Prims.int) (s : primitive_step) : primitive_step=
-  if n <= Prims.int_zero
-  then s
-  else
-    (let a0 = s.arity in
-     {
-       name = (s.name);
-       arity = (a0 + n);
-       univ_arity = (s.univ_arity);
-       auto_reflect = (s.auto_reflect);
-       strong_reduction_ok = (s.strong_reduction_ok);
-       requires_binder_substitution = (s.requires_binder_substitution);
-       renorm_after = (s.renorm_after);
-       unrepresentable_result = (s.unrepresentable_result);
-       interpretation =
-         (fun psc1 cb us args ->
-            s.interpretation psc1 cb us
-              (FStar_Pervasives_Native.fst (FStarC_List.splitAt a0 args)));
-       interpretation_nbe =
-         (fun cb us args ->
-            s.interpretation_nbe cb us
-              (FStar_Pervasives_Native.fst (FStarC_List.splitAt a0 args)))
-     })
-let embed_simple (uu___ : 'a FStarC_Syntax_Embeddings_Base.embedding)
-  (r : FStarC_Range_Type.t) (x : 'a) : FStarC_Syntax_Syntax.term=
-  FStarC_Syntax_Embeddings_Base.embed uu___ x r FStar_Pervasives_Native.None
-    FStarC_Syntax_Embeddings_Base.id_norm_cb
-let try_unembed_simple (uu___ : 'a FStarC_Syntax_Embeddings_Base.embedding)
-  (x : FStarC_Syntax_Syntax.term) : 'a FStar_Pervasives_Native.option=
-  FStarC_Syntax_Embeddings_Base.try_unembed uu___ x
-    FStarC_Syntax_Embeddings_Base.id_norm_cb
-let solve (ev : 'a) : 'a= ev
-let mk_interp1 (uu___2 : 'a FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___1 : 'r FStarC_Syntax_Embeddings_Base.embedding) (uu___ : 'a -> 'r) :
-  interp_t=
-  (fun uu___ uu___1 f psc1 cb us args ->
-     match args with
-     | (a1, uu___2)::[] ->
-         Obj.magic
-           (Obj.repr
-              (let uu___3 = try_unembed_simple uu___ a1 in
-               FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
-                 () () (Obj.magic uu___3)
-                 (fun uu___4 ->
-                    (fun a2 ->
-                       let a2 = Obj.magic a2 in
-                       let uu___4 = embed_simple uu___1 psc1.psc_range (f a2) in
-                       Obj.magic
-                         (FStarC_Class_Monad.return
-                            FStarC_Class_Monad.monad_option ()
-                            (Obj.magic uu___4))) uu___4)))
-     | uu___2 -> Obj.magic (Obj.repr (FStarC_Effect.failwith "arity")))
-    uu___2 uu___1 uu___
-let mk_nbe_interp1 (uu___2 : 'a FStarC_TypeChecker_NBETerm.embedding)
-  (uu___1 : 'r FStarC_TypeChecker_NBETerm.embedding) (uu___ : 'a -> 'r) :
-  nbe_interp_t=
-  (fun uu___ uu___1 f cbs us args ->
-     match args with
-     | (a1, uu___2)::[] ->
-         Obj.magic
-           (Obj.repr
-              (let uu___3 =
-                 let uu___4 = FStarC_TypeChecker_NBETerm.unembed uu___ cbs a1 in
-                 Obj.magic
-                   (FStarC_Class_Monad.op_Less_Dollar_Greater
-                      FStarC_Class_Monad.monad_option () ()
-                      (fun uu___5 -> Obj.magic f uu___5) (Obj.magic uu___4)) in
-               FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
-                 () () (Obj.magic uu___3)
-                 (fun uu___4 ->
-                    (fun r1 ->
-                       let r1 = Obj.magic r1 in
-                       let uu___4 =
-                         FStarC_TypeChecker_NBETerm.embed uu___1 cbs r1 in
-                       Obj.magic
-                         (FStarC_Class_Monad.return
-                            FStarC_Class_Monad.monad_option ()
-                            (Obj.magic uu___4))) uu___4)))
-     | uu___2 -> Obj.magic (Obj.repr FStar_Pervasives_Native.None)) uu___2
-    uu___1 uu___
-let mk_interp2 (uu___3 : 'a FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___2 : 'b FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___1 : 'r FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___ : 'a -> 'b -> 'r) : interp_t=
-  (fun uu___ uu___1 uu___2 f psc1 cb us args ->
-     match args with
-     | (a1, uu___3)::(b1, uu___4)::[] ->
-         Obj.magic
-           (Obj.repr
-              (let uu___5 =
-                 let uu___6 =
-                   let uu___7 = try_unembed_simple uu___ a1 in
-                   Obj.magic
-                     (FStarC_Class_Monad.op_Less_Dollar_Greater
-                        FStarC_Class_Monad.monad_option () ()
-                        (fun uu___8 -> Obj.magic f uu___8) (Obj.magic uu___7)) in
-                 let uu___7 = try_unembed_simple uu___1 b1 in
-                 Obj.magic
-                   (FStarC_Class_Monad.op_Less_Star_Greater
-                      FStarC_Class_Monad.monad_option () ()
-                      (Obj.magic uu___6) (Obj.magic uu___7)) in
-               FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
-                 () () (Obj.magic uu___5)
-                 (fun uu___6 ->
-                    (fun r1 ->
-                       let r1 = Obj.magic r1 in
-                       let uu___6 = embed_simple uu___2 psc1.psc_range r1 in
-                       Obj.magic
-                         (FStarC_Class_Monad.return
-                            FStarC_Class_Monad.monad_option ()
-                            (Obj.magic uu___6))) uu___6)))
-     | uu___3 -> Obj.magic (Obj.repr (FStarC_Effect.failwith "arity")))
-    uu___3 uu___2 uu___1 uu___
-let mk_nbe_interp2 (uu___3 : 'a FStarC_TypeChecker_NBETerm.embedding)
-  (uu___2 : 'b FStarC_TypeChecker_NBETerm.embedding)
-  (uu___1 : 'r FStarC_TypeChecker_NBETerm.embedding) (uu___ : 'a -> 'b -> 'r)
-  : nbe_interp_t=
-  (fun uu___ uu___1 uu___2 f cbs us args ->
-     match args with
-     | (a1, uu___3)::(b1, uu___4)::[] ->
-         Obj.magic
-           (Obj.repr
-              (let uu___5 =
-                 let uu___6 =
-                   let uu___7 =
-                     FStarC_TypeChecker_NBETerm.unembed uu___ cbs a1 in
-                   Obj.magic
-                     (FStarC_Class_Monad.op_Less_Dollar_Greater
-                        FStarC_Class_Monad.monad_option () ()
-                        (fun uu___8 -> Obj.magic f uu___8) (Obj.magic uu___7)) in
-                 let uu___7 =
-                   FStarC_TypeChecker_NBETerm.unembed uu___1 cbs b1 in
-                 Obj.magic
-                   (FStarC_Class_Monad.op_Less_Star_Greater
-                      FStarC_Class_Monad.monad_option () ()
-                      (Obj.magic uu___6) (Obj.magic uu___7)) in
-               FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
-                 () () (Obj.magic uu___5)
-                 (fun uu___6 ->
-                    (fun r1 ->
-                       let r1 = Obj.magic r1 in
-                       let uu___6 =
-                         FStarC_TypeChecker_NBETerm.embed uu___2 cbs r1 in
-                       Obj.magic
-                         (FStarC_Class_Monad.return
-                            FStarC_Class_Monad.monad_option ()
-                            (Obj.magic uu___6))) uu___6)))
-     | uu___3 -> Obj.magic (Obj.repr FStar_Pervasives_Native.None)) uu___3
-    uu___2 uu___1 uu___
-let mk_interp3 (uu___4 : 'a FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___3 : 'b FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___2 : 'c FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___1 : 'r FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___ : 'a -> 'b -> 'c -> 'r) : interp_t=
-  (fun uu___ uu___1 uu___2 uu___3 f psc1 cb us args ->
-     match args with
-     | (a1, uu___4)::(b1, uu___5)::(c1, uu___6)::[] ->
-         Obj.magic
-           (Obj.repr
-              (let uu___7 =
-                 let uu___8 =
-                   let uu___9 =
-                     let uu___10 = try_unembed_simple uu___ a1 in
-                     Obj.magic
-                       (FStarC_Class_Monad.op_Less_Dollar_Greater
-                          FStarC_Class_Monad.monad_option () ()
-                          (fun uu___11 -> Obj.magic f uu___11)
-                          (Obj.magic uu___10)) in
-                   let uu___10 = try_unembed_simple uu___1 b1 in
-                   Obj.magic
-                     (FStarC_Class_Monad.op_Less_Star_Greater
-                        FStarC_Class_Monad.monad_option () ()
-                        (Obj.magic uu___9) (Obj.magic uu___10)) in
-                 let uu___9 = try_unembed_simple uu___2 c1 in
-                 Obj.magic
-                   (FStarC_Class_Monad.op_Less_Star_Greater
-                      FStarC_Class_Monad.monad_option () ()
-                      (Obj.magic uu___8) (Obj.magic uu___9)) in
-               FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
-                 () () (Obj.magic uu___7)
-                 (fun uu___8 ->
-                    (fun r1 ->
-                       let r1 = Obj.magic r1 in
-                       let uu___8 = embed_simple uu___3 psc1.psc_range r1 in
-                       Obj.magic
-                         (FStarC_Class_Monad.return
-                            FStarC_Class_Monad.monad_option ()
-                            (Obj.magic uu___8))) uu___8)))
-     | uu___4 -> Obj.magic (Obj.repr (FStarC_Effect.failwith "arity")))
-    uu___4 uu___3 uu___2 uu___1 uu___
-let mk_nbe_interp3 (uu___4 : 'a FStarC_TypeChecker_NBETerm.embedding)
-  (uu___3 : 'b FStarC_TypeChecker_NBETerm.embedding)
-  (uu___2 : 'c FStarC_TypeChecker_NBETerm.embedding)
-  (uu___1 : 'r FStarC_TypeChecker_NBETerm.embedding)
-  (uu___ : 'a -> 'b -> 'c -> 'r) : nbe_interp_t=
-  (fun uu___ uu___1 uu___2 uu___3 f cbs us args ->
-     match args with
-     | (a1, uu___4)::(b1, uu___5)::(c1, uu___6)::[] ->
-         Obj.magic
-           (Obj.repr
-              (let uu___7 =
-                 let uu___8 =
-                   let uu___9 =
-                     let uu___10 =
-                       FStarC_TypeChecker_NBETerm.unembed uu___ cbs a1 in
-                     Obj.magic
-                       (FStarC_Class_Monad.op_Less_Dollar_Greater
-                          FStarC_Class_Monad.monad_option () ()
-                          (fun uu___11 -> Obj.magic f uu___11)
-                          (Obj.magic uu___10)) in
-                   let uu___10 =
-                     FStarC_TypeChecker_NBETerm.unembed uu___1 cbs b1 in
-                   Obj.magic
-                     (FStarC_Class_Monad.op_Less_Star_Greater
-                        FStarC_Class_Monad.monad_option () ()
-                        (Obj.magic uu___9) (Obj.magic uu___10)) in
-                 let uu___9 =
-                   FStarC_TypeChecker_NBETerm.unembed uu___2 cbs c1 in
-                 Obj.magic
-                   (FStarC_Class_Monad.op_Less_Star_Greater
-                      FStarC_Class_Monad.monad_option () ()
-                      (Obj.magic uu___8) (Obj.magic uu___9)) in
-               FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
-                 () () (Obj.magic uu___7)
-                 (fun uu___8 ->
-                    (fun r1 ->
-                       let r1 = Obj.magic r1 in
-                       let uu___8 =
-                         FStarC_TypeChecker_NBETerm.embed uu___3 cbs r1 in
-                       Obj.magic
-                         (FStarC_Class_Monad.return
-                            FStarC_Class_Monad.monad_option ()
-                            (Obj.magic uu___8))) uu___8)))
-     | uu___4 -> Obj.magic (Obj.repr FStar_Pervasives_Native.None)) uu___4
-    uu___3 uu___2 uu___1 uu___
-let mk_interp4 (uu___5 : 'a FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___4 : 'b FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___3 : 'c FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___2 : 'd FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___1 : 'r FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___ : 'a -> 'b -> 'c -> 'd -> 'r) : interp_t=
-  (fun uu___ uu___1 uu___2 uu___3 uu___4 f psc1 cb us args ->
-     match args with
-     | (a1, uu___5)::(b1, uu___6)::(c1, uu___7)::(d1, uu___8)::[] ->
-         Obj.magic
-           (Obj.repr
-              (let uu___9 =
-                 let uu___10 =
-                   let uu___11 =
-                     let uu___12 =
-                       let uu___13 = try_unembed_simple uu___ a1 in
-                       Obj.magic
-                         (FStarC_Class_Monad.op_Less_Dollar_Greater
-                            FStarC_Class_Monad.monad_option () ()
-                            (fun uu___14 -> Obj.magic f uu___14)
-                            (Obj.magic uu___13)) in
-                     let uu___13 = try_unembed_simple uu___1 b1 in
-                     Obj.magic
-                       (FStarC_Class_Monad.op_Less_Star_Greater
-                          FStarC_Class_Monad.monad_option () ()
-                          (Obj.magic uu___12) (Obj.magic uu___13)) in
-                   let uu___12 = try_unembed_simple uu___2 c1 in
-                   Obj.magic
-                     (FStarC_Class_Monad.op_Less_Star_Greater
-                        FStarC_Class_Monad.monad_option () ()
-                        (Obj.magic uu___11) (Obj.magic uu___12)) in
-                 let uu___11 = try_unembed_simple uu___3 d1 in
-                 Obj.magic
-                   (FStarC_Class_Monad.op_Less_Star_Greater
-                      FStarC_Class_Monad.monad_option () ()
-                      (Obj.magic uu___10) (Obj.magic uu___11)) in
-               FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
-                 () () (Obj.magic uu___9)
-                 (fun uu___10 ->
-                    (fun r1 ->
-                       let r1 = Obj.magic r1 in
-                       let uu___10 = embed_simple uu___4 psc1.psc_range r1 in
-                       Obj.magic
-                         (FStarC_Class_Monad.return
-                            FStarC_Class_Monad.monad_option ()
-                            (Obj.magic uu___10))) uu___10)))
-     | uu___5 -> Obj.magic (Obj.repr (FStarC_Effect.failwith "arity")))
-    uu___5 uu___4 uu___3 uu___2 uu___1 uu___
-let mk_nbe_interp4 (uu___5 : 'a FStarC_TypeChecker_NBETerm.embedding)
-  (uu___4 : 'b FStarC_TypeChecker_NBETerm.embedding)
-  (uu___3 : 'c FStarC_TypeChecker_NBETerm.embedding)
-  (uu___2 : 'd FStarC_TypeChecker_NBETerm.embedding)
-  (uu___1 : 'r FStarC_TypeChecker_NBETerm.embedding)
-  (uu___ : 'a -> 'b -> 'c -> 'd -> 'r) : nbe_interp_t=
-  (fun uu___ uu___1 uu___2 uu___3 uu___4 f cbs us args ->
-     match args with
-     | (a1, uu___5)::(b1, uu___6)::(c1, uu___7)::(d1, uu___8)::[] ->
-         Obj.magic
-           (Obj.repr
-              (let uu___9 =
-                 let uu___10 =
-                   let uu___11 =
-                     let uu___12 =
-                       let uu___13 =
-                         FStarC_TypeChecker_NBETerm.unembed uu___ cbs a1 in
-                       Obj.magic
-                         (FStarC_Class_Monad.op_Less_Dollar_Greater
-                            FStarC_Class_Monad.monad_option () ()
-                            (fun uu___14 -> Obj.magic f uu___14)
-                            (Obj.magic uu___13)) in
-                     let uu___13 =
-                       FStarC_TypeChecker_NBETerm.unembed uu___1 cbs b1 in
-                     Obj.magic
-                       (FStarC_Class_Monad.op_Less_Star_Greater
-                          FStarC_Class_Monad.monad_option () ()
-                          (Obj.magic uu___12) (Obj.magic uu___13)) in
-                   let uu___12 =
-                     FStarC_TypeChecker_NBETerm.unembed uu___2 cbs c1 in
-                   Obj.magic
-                     (FStarC_Class_Monad.op_Less_Star_Greater
-                        FStarC_Class_Monad.monad_option () ()
-                        (Obj.magic uu___11) (Obj.magic uu___12)) in
-                 let uu___11 =
-                   FStarC_TypeChecker_NBETerm.unembed uu___3 cbs d1 in
-                 Obj.magic
-                   (FStarC_Class_Monad.op_Less_Star_Greater
-                      FStarC_Class_Monad.monad_option () ()
-                      (Obj.magic uu___10) (Obj.magic uu___11)) in
-               FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
-                 () () (Obj.magic uu___9)
-                 (fun uu___10 ->
-                    (fun r1 ->
-                       let r1 = Obj.magic r1 in
-                       let uu___10 =
-                         FStarC_TypeChecker_NBETerm.embed uu___4 cbs r1 in
-                       Obj.magic
-                         (FStarC_Class_Monad.return
-                            FStarC_Class_Monad.monad_option ()
-                            (Obj.magic uu___10))) uu___10)))
-     | uu___5 -> Obj.magic (Obj.repr FStar_Pervasives_Native.None)) uu___5
-    uu___4 uu___3 uu___2 uu___1 uu___
-let mk_interp5 (uu___6 : 'a FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___5 : 'b FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___4 : 'c FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___3 : 'd FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___2 : 'e FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___1 : 'r FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___ : 'a -> 'b -> 'c -> 'd -> 'e -> 'r) : interp_t=
-  (fun uu___ uu___1 uu___2 uu___3 uu___4 uu___5 f psc1 cb us args ->
-     match args with
-     | (a1, uu___6)::(b1, uu___7)::(c1, uu___8)::(d1, uu___9)::(e1, uu___10)::[]
-         ->
-         Obj.magic
-           (Obj.repr
-              (let uu___11 =
-                 let uu___12 =
-                   let uu___13 =
-                     let uu___14 =
-                       let uu___15 =
-                         let uu___16 = try_unembed_simple uu___ a1 in
-                         Obj.magic
-                           (FStarC_Class_Monad.op_Less_Dollar_Greater
-                              FStarC_Class_Monad.monad_option () ()
-                              (fun uu___17 -> Obj.magic f uu___17)
-                              (Obj.magic uu___16)) in
-                       let uu___16 = try_unembed_simple uu___1 b1 in
-                       Obj.magic
-                         (FStarC_Class_Monad.op_Less_Star_Greater
-                            FStarC_Class_Monad.monad_option () ()
-                            (Obj.magic uu___15) (Obj.magic uu___16)) in
-                     let uu___15 = try_unembed_simple uu___2 c1 in
-                     Obj.magic
-                       (FStarC_Class_Monad.op_Less_Star_Greater
-                          FStarC_Class_Monad.monad_option () ()
-                          (Obj.magic uu___14) (Obj.magic uu___15)) in
-                   let uu___14 = try_unembed_simple uu___3 d1 in
-                   Obj.magic
-                     (FStarC_Class_Monad.op_Less_Star_Greater
-                        FStarC_Class_Monad.monad_option () ()
-                        (Obj.magic uu___13) (Obj.magic uu___14)) in
-                 let uu___13 = try_unembed_simple uu___4 e1 in
-                 Obj.magic
-                   (FStarC_Class_Monad.op_Less_Star_Greater
-                      FStarC_Class_Monad.monad_option () ()
-                      (Obj.magic uu___12) (Obj.magic uu___13)) in
-               FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
-                 () () (Obj.magic uu___11)
-                 (fun uu___12 ->
-                    (fun r1 ->
-                       let r1 = Obj.magic r1 in
-                       let uu___12 = embed_simple uu___5 psc1.psc_range r1 in
-                       Obj.magic
-                         (FStarC_Class_Monad.return
-                            FStarC_Class_Monad.monad_option ()
-                            (Obj.magic uu___12))) uu___12)))
-     | uu___6 -> Obj.magic (Obj.repr (FStarC_Effect.failwith "arity")))
-    uu___6 uu___5 uu___4 uu___3 uu___2 uu___1 uu___
-let mk_nbe_interp5 (uu___6 : 'a FStarC_TypeChecker_NBETerm.embedding)
-  (uu___5 : 'b FStarC_TypeChecker_NBETerm.embedding)
-  (uu___4 : 'c FStarC_TypeChecker_NBETerm.embedding)
-  (uu___3 : 'd FStarC_TypeChecker_NBETerm.embedding)
-  (uu___2 : 'e FStarC_TypeChecker_NBETerm.embedding)
-  (uu___1 : 'r FStarC_TypeChecker_NBETerm.embedding)
-  (uu___ : 'a -> 'b -> 'c -> 'd -> 'e -> 'r) : nbe_interp_t=
-  (fun uu___ uu___1 uu___2 uu___3 uu___4 uu___5 f cbs us args ->
-     match args with
-     | (a1, uu___6)::(b1, uu___7)::(c1, uu___8)::(d1, uu___9)::(e1, uu___10)::[]
-         ->
-         Obj.magic
-           (Obj.repr
-              (let uu___11 =
-                 let uu___12 =
-                   let uu___13 =
-                     let uu___14 =
-                       let uu___15 =
-                         let uu___16 =
-                           FStarC_TypeChecker_NBETerm.unembed uu___ cbs a1 in
-                         Obj.magic
-                           (FStarC_Class_Monad.op_Less_Dollar_Greater
-                              FStarC_Class_Monad.monad_option () ()
-                              (fun uu___17 -> Obj.magic f uu___17)
-                              (Obj.magic uu___16)) in
-                       let uu___16 =
-                         FStarC_TypeChecker_NBETerm.unembed uu___1 cbs b1 in
-                       Obj.magic
-                         (FStarC_Class_Monad.op_Less_Star_Greater
-                            FStarC_Class_Monad.monad_option () ()
-                            (Obj.magic uu___15) (Obj.magic uu___16)) in
-                     let uu___15 =
-                       FStarC_TypeChecker_NBETerm.unembed uu___2 cbs c1 in
-                     Obj.magic
-                       (FStarC_Class_Monad.op_Less_Star_Greater
-                          FStarC_Class_Monad.monad_option () ()
-                          (Obj.magic uu___14) (Obj.magic uu___15)) in
-                   let uu___14 =
-                     FStarC_TypeChecker_NBETerm.unembed uu___3 cbs d1 in
-                   Obj.magic
-                     (FStarC_Class_Monad.op_Less_Star_Greater
-                        FStarC_Class_Monad.monad_option () ()
-                        (Obj.magic uu___13) (Obj.magic uu___14)) in
-                 let uu___13 =
-                   FStarC_TypeChecker_NBETerm.unembed uu___4 cbs e1 in
-                 Obj.magic
-                   (FStarC_Class_Monad.op_Less_Star_Greater
-                      FStarC_Class_Monad.monad_option () ()
-                      (Obj.magic uu___12) (Obj.magic uu___13)) in
-               FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
-                 () () (Obj.magic uu___11)
-                 (fun uu___12 ->
-                    (fun r1 ->
-                       let r1 = Obj.magic r1 in
-                       let uu___12 =
-                         FStarC_TypeChecker_NBETerm.embed uu___5 cbs r1 in
-                       Obj.magic
-                         (FStarC_Class_Monad.return
-                            FStarC_Class_Monad.monad_option ()
-                            (Obj.magic uu___12))) uu___12)))
-     | uu___6 -> Obj.magic (Obj.repr FStar_Pervasives_Native.None)) uu___6
-    uu___5 uu___4 uu___3 uu___2 uu___1 uu___
-let mk1 (u_arity : Prims.int) (name : FStarC_Ident.lid)
-  (uu___ : 'a FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___1 : 'a FStarC_TypeChecker_NBETerm.embedding)
-  (uu___2 : 'r FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___3 : 'r FStarC_TypeChecker_NBETerm.embedding) (f : 'a -> 'r) :
-  primitive_step=
-  let interp = mk_interp1 uu___ uu___2 f in
-  let nbe_interp = mk_nbe_interp1 uu___1 uu___3 f in
-  as_primitive_step_nbecbs true
-    (name, Prims.int_one, u_arity, interp, nbe_interp)
-let mk2 (u_arity : Prims.int) (name : FStarC_Ident.lid)
-  (uu___ : 'a FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___1 : 'a FStarC_TypeChecker_NBETerm.embedding)
-  (uu___2 : 'b FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___3 : 'b FStarC_TypeChecker_NBETerm.embedding)
-  (uu___4 : 'r FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___5 : 'r FStarC_TypeChecker_NBETerm.embedding) (f : 'a -> 'b -> 'r) :
-  primitive_step=
-  let interp = mk_interp2 uu___ uu___2 uu___4 f in
-  let nbe_interp = mk_nbe_interp2 uu___1 uu___3 uu___5 f in
-  as_primitive_step_nbecbs true
-    (name, (Prims.of_int 2), u_arity, interp, nbe_interp)
-let mk3 (u_arity : Prims.int) (name : FStarC_Ident.lid)
-  (uu___ : 'a FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___1 : 'a FStarC_TypeChecker_NBETerm.embedding)
-  (uu___2 : 'b FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___3 : 'b FStarC_TypeChecker_NBETerm.embedding)
-  (uu___4 : 'c FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___5 : 'c FStarC_TypeChecker_NBETerm.embedding)
-  (uu___6 : 'r FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___7 : 'r FStarC_TypeChecker_NBETerm.embedding)
-  (f : 'a -> 'b -> 'c -> 'r) : primitive_step=
-  let interp = mk_interp3 uu___ uu___2 uu___4 uu___6 f in
-  let nbe_interp = mk_nbe_interp3 uu___1 uu___3 uu___5 uu___7 f in
-  as_primitive_step_nbecbs true
-    (name, (Prims.of_int 3), u_arity, interp, nbe_interp)
-let mk4 (u_arity : Prims.int) (name : FStarC_Ident.lid)
-  (uu___ : 'a FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___1 : 'a FStarC_TypeChecker_NBETerm.embedding)
-  (uu___2 : 'b FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___3 : 'b FStarC_TypeChecker_NBETerm.embedding)
-  (uu___4 : 'c FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___5 : 'c FStarC_TypeChecker_NBETerm.embedding)
-  (uu___6 : 'd FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___7 : 'd FStarC_TypeChecker_NBETerm.embedding)
-  (uu___8 : 'r FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___9 : 'r FStarC_TypeChecker_NBETerm.embedding)
-  (f : 'a -> 'b -> 'c -> 'd -> 'r) : primitive_step=
-  let interp = mk_interp4 uu___ uu___2 uu___4 uu___6 uu___8 f in
-  let nbe_interp = mk_nbe_interp4 uu___1 uu___3 uu___5 uu___7 uu___9 f in
-  as_primitive_step_nbecbs true
-    (name, (Prims.of_int 4), u_arity, interp, nbe_interp)
-let mk5 (u_arity : Prims.int) (name : FStarC_Ident.lid)
-  (uu___ : 'a FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___1 : 'a FStarC_TypeChecker_NBETerm.embedding)
-  (uu___2 : 'b FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___3 : 'b FStarC_TypeChecker_NBETerm.embedding)
-  (uu___4 : 'c FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___5 : 'c FStarC_TypeChecker_NBETerm.embedding)
-  (uu___6 : 'd FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___7 : 'd FStarC_TypeChecker_NBETerm.embedding)
-  (uu___8 : 'e FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___9 : 'e FStarC_TypeChecker_NBETerm.embedding)
-  (uu___10 : 'r FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___11 : 'r FStarC_TypeChecker_NBETerm.embedding)
-  (f : 'a -> 'b -> 'c -> 'd -> 'e -> 'r) : primitive_step=
-  let interp = mk_interp5 uu___ uu___2 uu___4 uu___6 uu___8 uu___10 f in
-  let nbe_interp =
-    mk_nbe_interp5 uu___1 uu___3 uu___5 uu___7 uu___9 uu___11 f in
-  as_primitive_step_nbecbs true
-    (name, (Prims.of_int 5), u_arity, interp, nbe_interp)
-let mk1' (u_arity : Prims.int) (name : FStarC_Ident.lid)
-  (uu___ : 'a FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___1 : 'na FStarC_TypeChecker_NBETerm.embedding)
-  (uu___2 : 'r FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___3 : 'nr FStarC_TypeChecker_NBETerm.embedding)
-  (f : 'a -> 'r FStar_Pervasives_Native.option)
-  (nbe_f : 'na -> 'nr FStar_Pervasives_Native.option) : primitive_step=
-  let interp psc1 cb us args =
-    match args with
-    | (a1, uu___4)::[] ->
-        Obj.magic
-          (Obj.repr
-             (let uu___5 = try_unembed_simple uu___ a1 in
-              FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
-                () () (Obj.magic uu___5)
-                (fun uu___6 ->
-                   (fun a2 ->
-                      let a2 = Obj.magic a2 in
-                      let r1 = f a2 in
-                      Obj.magic
-                        (FStarC_Class_Monad.op_let_Bang
-                           FStarC_Class_Monad.monad_option () ()
-                           (Obj.magic r1)
-                           (fun uu___6 ->
-                              (fun r2 ->
-                                 let r2 = Obj.magic r2 in
-                                 let uu___6 =
-                                   embed_simple uu___2 psc1.psc_range r2 in
-                                 Obj.magic
-                                   (FStarC_Class_Monad.return
-                                      FStarC_Class_Monad.monad_option ()
-                                      (Obj.magic uu___6))) uu___6))) uu___6)))
-    | uu___4 -> Obj.magic (Obj.repr (FStarC_Effect.failwith "arity")) in
-  let nbe_interp cbs us args =
-    match args with
-    | (a1, uu___4)::[] ->
-        Obj.magic
-          (Obj.repr
-             (let uu___5 = FStarC_TypeChecker_NBETerm.unembed uu___1 cbs a1 in
-              FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
-                () () (Obj.magic uu___5)
-                (fun uu___6 ->
-                   (fun a2 ->
-                      let a2 = Obj.magic a2 in
-                      let r1 = nbe_f a2 in
-                      Obj.magic
-                        (FStarC_Class_Monad.op_let_Bang
-                           FStarC_Class_Monad.monad_option () ()
-                           (Obj.magic r1)
-                           (fun uu___6 ->
-                              (fun r2 ->
-                                 let r2 = Obj.magic r2 in
-                                 let uu___6 =
-                                   FStarC_TypeChecker_NBETerm.embed uu___3
-                                     cbs r2 in
-                                 Obj.magic
-                                   (FStarC_Class_Monad.return
-                                      FStarC_Class_Monad.monad_option ()
-                                      (Obj.magic uu___6))) uu___6))) uu___6)))
-    | uu___4 -> Obj.magic (Obj.repr (FStarC_Effect.failwith "arity")) in
-  as_primitive_step_nbecbs true
-    (name, Prims.int_one, u_arity, interp, nbe_interp)
-let mk1_psc' (u_arity : Prims.int) (name : FStarC_Ident.lid)
-  (uu___ : 'a FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___1 : 'na FStarC_TypeChecker_NBETerm.embedding)
-  (uu___2 : 'r FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___3 : 'nr FStarC_TypeChecker_NBETerm.embedding)
-  (f : psc -> 'a -> 'r FStar_Pervasives_Native.option)
-  (nbe_f : psc -> 'na -> 'nr FStar_Pervasives_Native.option) :
-  primitive_step=
-  let interp psc1 cb us args =
-    match args with
-    | (a1, uu___4)::[] ->
-        Obj.magic
-          (Obj.repr
-             (let uu___5 = try_unembed_simple uu___ a1 in
-              FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
-                () () (Obj.magic uu___5)
-                (fun uu___6 ->
-                   (fun a2 ->
-                      let a2 = Obj.magic a2 in
-                      let r1 = f psc1 a2 in
-                      Obj.magic
-                        (FStarC_Class_Monad.op_let_Bang
-                           FStarC_Class_Monad.monad_option () ()
-                           (Obj.magic r1)
-                           (fun uu___6 ->
-                              (fun r2 ->
-                                 let r2 = Obj.magic r2 in
-                                 let uu___6 =
-                                   embed_simple uu___2 psc1.psc_range r2 in
-                                 Obj.magic
-                                   (FStarC_Class_Monad.return
-                                      FStarC_Class_Monad.monad_option ()
-                                      (Obj.magic uu___6))) uu___6))) uu___6)))
-    | uu___4 -> Obj.magic (Obj.repr (FStarC_Effect.failwith "arity")) in
-  let nbe_interp cbs us args =
-    match args with
-    | (a1, uu___4)::[] ->
-        Obj.magic
-          (Obj.repr
-             (let uu___5 = FStarC_TypeChecker_NBETerm.unembed uu___1 cbs a1 in
-              FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
-                () () (Obj.magic uu___5)
-                (fun uu___6 ->
-                   (fun a2 ->
-                      let a2 = Obj.magic a2 in
-                      let r1 = nbe_f null_psc a2 in
-                      Obj.magic
-                        (FStarC_Class_Monad.op_let_Bang
-                           FStarC_Class_Monad.monad_option () ()
-                           (Obj.magic r1)
-                           (fun uu___6 ->
-                              (fun r2 ->
-                                 let r2 = Obj.magic r2 in
-                                 let uu___6 =
-                                   FStarC_TypeChecker_NBETerm.embed uu___3
-                                     cbs r2 in
-                                 Obj.magic
-                                   (FStarC_Class_Monad.return
-                                      FStarC_Class_Monad.monad_option ()
-                                      (Obj.magic uu___6))) uu___6))) uu___6)))
-    | uu___4 -> Obj.magic (Obj.repr (FStarC_Effect.failwith "arity")) in
-  as_primitive_step_nbecbs true
-    (name, Prims.int_one, u_arity, interp, nbe_interp)
-let mk2' (u_arity : Prims.int) (name : FStarC_Ident.lid)
-  (uu___ : 'a FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___1 : 'na FStarC_TypeChecker_NBETerm.embedding)
-  (uu___2 : 'b FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___3 : 'nb FStarC_TypeChecker_NBETerm.embedding)
-  (uu___4 : 'r FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___5 : 'nr FStarC_TypeChecker_NBETerm.embedding)
-  (f : 'a -> 'b -> 'r FStar_Pervasives_Native.option)
-  (nbe_f : 'na -> 'nb -> 'nr FStar_Pervasives_Native.option) :
-  primitive_step=
-  let interp psc1 cb us args =
-    match args with
-    | (a1, uu___6)::(b1, uu___7)::[] ->
-        Obj.magic
-          (Obj.repr
-             (let uu___8 = try_unembed_simple uu___ a1 in
-              FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
-                () () (Obj.magic uu___8)
-                (fun uu___9 ->
-                   (fun a2 ->
-                      let a2 = Obj.magic a2 in
-                      let uu___9 = try_unembed_simple uu___2 b1 in
-                      Obj.magic
-                        (FStarC_Class_Monad.op_let_Bang
-                           FStarC_Class_Monad.monad_option () ()
-                           (Obj.magic uu___9)
-                           (fun uu___10 ->
-                              (fun b2 ->
-                                 let b2 = Obj.magic b2 in
-                                 let r1 = f a2 b2 in
-                                 Obj.magic
-                                   (FStarC_Class_Monad.op_let_Bang
-                                      FStarC_Class_Monad.monad_option () ()
-                                      (Obj.magic r1)
-                                      (fun uu___10 ->
-                                         (fun r2 ->
-                                            let r2 = Obj.magic r2 in
-                                            let uu___10 =
-                                              embed_simple uu___4
-                                                psc1.psc_range r2 in
-                                            Obj.magic
-                                              (FStarC_Class_Monad.return
-                                                 FStarC_Class_Monad.monad_option
-                                                 () (Obj.magic uu___10)))
-                                           uu___10))) uu___10))) uu___9)))
-    | uu___6 -> Obj.magic (Obj.repr (FStarC_Effect.failwith "arity")) in
-  let nbe_interp cbs us args =
-    match args with
-    | (a1, uu___6)::(b1, uu___7)::[] ->
-        Obj.magic
-          (Obj.repr
-             (let uu___8 = FStarC_TypeChecker_NBETerm.unembed uu___1 cbs a1 in
-              FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
-                () () (Obj.magic uu___8)
-                (fun uu___9 ->
-                   (fun a2 ->
-                      let a2 = Obj.magic a2 in
-                      let uu___9 =
-                        FStarC_TypeChecker_NBETerm.unembed uu___3 cbs b1 in
-                      Obj.magic
-                        (FStarC_Class_Monad.op_let_Bang
-                           FStarC_Class_Monad.monad_option () ()
-                           (Obj.magic uu___9)
-                           (fun uu___10 ->
-                              (fun b2 ->
-                                 let b2 = Obj.magic b2 in
-                                 let r1 = nbe_f a2 b2 in
-                                 Obj.magic
-                                   (FStarC_Class_Monad.op_let_Bang
-                                      FStarC_Class_Monad.monad_option () ()
-                                      (Obj.magic r1)
-                                      (fun uu___10 ->
-                                         (fun r2 ->
-                                            let r2 = Obj.magic r2 in
-                                            let uu___10 =
-                                              FStarC_TypeChecker_NBETerm.embed
-                                                uu___5 cbs r2 in
-                                            Obj.magic
-                                              (FStarC_Class_Monad.return
-                                                 FStarC_Class_Monad.monad_option
-                                                 () (Obj.magic uu___10)))
-                                           uu___10))) uu___10))) uu___9)))
-    | uu___6 -> Obj.magic (Obj.repr (FStarC_Effect.failwith "arity")) in
-  as_primitive_step_nbecbs true
-    (name, (Prims.of_int 2), u_arity, interp, nbe_interp)
-let mk3' (u_arity : Prims.int) (name : FStarC_Ident.lid)
-  (uu___ : 'a FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___1 : 'na FStarC_TypeChecker_NBETerm.embedding)
-  (uu___2 : 'b FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___3 : 'nb FStarC_TypeChecker_NBETerm.embedding)
-  (uu___4 : 'c FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___5 : 'nc FStarC_TypeChecker_NBETerm.embedding)
-  (uu___6 : 'r FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___7 : 'nr FStarC_TypeChecker_NBETerm.embedding)
-  (f : 'a -> 'b -> 'c -> 'r FStar_Pervasives_Native.option)
-  (nbe_f : 'na -> 'nb -> 'nc -> 'nr FStar_Pervasives_Native.option) :
-  primitive_step=
-  let interp psc1 cb us args =
-    match args with
-    | (a1, uu___8)::(b1, uu___9)::(c1, uu___10)::[] ->
-        Obj.magic
-          (Obj.repr
-             (let uu___11 = try_unembed_simple uu___ a1 in
-              FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
-                () () (Obj.magic uu___11)
-                (fun uu___12 ->
-                   (fun a2 ->
-                      let a2 = Obj.magic a2 in
-                      let uu___12 = try_unembed_simple uu___2 b1 in
-                      Obj.magic
-                        (FStarC_Class_Monad.op_let_Bang
-                           FStarC_Class_Monad.monad_option () ()
-                           (Obj.magic uu___12)
-                           (fun uu___13 ->
-                              (fun b2 ->
-                                 let b2 = Obj.magic b2 in
-                                 let uu___13 = try_unembed_simple uu___4 c1 in
-                                 Obj.magic
-                                   (FStarC_Class_Monad.op_let_Bang
-                                      FStarC_Class_Monad.monad_option () ()
-                                      (Obj.magic uu___13)
-                                      (fun uu___14 ->
-                                         (fun c2 ->
-                                            let c2 = Obj.magic c2 in
-                                            let r1 = f a2 b2 c2 in
-                                            Obj.magic
-                                              (FStarC_Class_Monad.op_let_Bang
-                                                 FStarC_Class_Monad.monad_option
-                                                 () () (Obj.magic r1)
-                                                 (fun uu___14 ->
-                                                    (fun r2 ->
-                                                       let r2 = Obj.magic r2 in
-                                                       let uu___14 =
-                                                         embed_simple uu___6
-                                                           psc1.psc_range r2 in
-                                                       Obj.magic
-                                                         (FStarC_Class_Monad.return
-                                                            FStarC_Class_Monad.monad_option
-                                                            ()
-                                                            (Obj.magic
-                                                               uu___14)))
-                                                      uu___14))) uu___14)))
-                                uu___13))) uu___12)))
-    | uu___8 -> Obj.magic (Obj.repr (FStarC_Effect.failwith "arity")) in
-  let nbe_interp cbs us args =
-    match args with
-    | (a1, uu___8)::(b1, uu___9)::(c1, uu___10)::[] ->
-        Obj.magic
-          (Obj.repr
-             (let uu___11 = FStarC_TypeChecker_NBETerm.unembed uu___1 cbs a1 in
-              FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
-                () () (Obj.magic uu___11)
-                (fun uu___12 ->
-                   (fun a2 ->
-                      let a2 = Obj.magic a2 in
-                      let uu___12 =
-                        FStarC_TypeChecker_NBETerm.unembed uu___3 cbs b1 in
-                      Obj.magic
-                        (FStarC_Class_Monad.op_let_Bang
-                           FStarC_Class_Monad.monad_option () ()
-                           (Obj.magic uu___12)
-                           (fun uu___13 ->
-                              (fun b2 ->
-                                 let b2 = Obj.magic b2 in
-                                 let uu___13 =
-                                   FStarC_TypeChecker_NBETerm.unembed uu___5
-                                     cbs c1 in
-                                 Obj.magic
-                                   (FStarC_Class_Monad.op_let_Bang
-                                      FStarC_Class_Monad.monad_option () ()
-                                      (Obj.magic uu___13)
-                                      (fun uu___14 ->
-                                         (fun c2 ->
-                                            let c2 = Obj.magic c2 in
-                                            let r1 = nbe_f a2 b2 c2 in
-                                            Obj.magic
-                                              (FStarC_Class_Monad.op_let_Bang
-                                                 FStarC_Class_Monad.monad_option
-                                                 () () (Obj.magic r1)
-                                                 (fun uu___14 ->
-                                                    (fun r2 ->
-                                                       let r2 = Obj.magic r2 in
-                                                       let uu___14 =
-                                                         FStarC_TypeChecker_NBETerm.embed
-                                                           uu___7 cbs r2 in
-                                                       Obj.magic
-                                                         (FStarC_Class_Monad.return
-                                                            FStarC_Class_Monad.monad_option
-                                                            ()
-                                                            (Obj.magic
-                                                               uu___14)))
-                                                      uu___14))) uu___14)))
-                                uu___13))) uu___12)))
-    | uu___8 -> Obj.magic (Obj.repr (FStarC_Effect.failwith "arity")) in
-  as_primitive_step_nbecbs true
-    (name, (Prims.of_int 3), u_arity, interp, nbe_interp)
-let mk4' (u_arity : Prims.int) (name : FStarC_Ident.lid)
-  (uu___ : 'a FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___1 : 'na FStarC_TypeChecker_NBETerm.embedding)
-  (uu___2 : 'b FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___3 : 'nb FStarC_TypeChecker_NBETerm.embedding)
-  (uu___4 : 'c FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___5 : 'nc FStarC_TypeChecker_NBETerm.embedding)
-  (uu___6 : 'd FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___7 : 'nd FStarC_TypeChecker_NBETerm.embedding)
-  (uu___8 : 'r FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___9 : 'nr FStarC_TypeChecker_NBETerm.embedding)
-  (f : 'a -> 'b -> 'c -> 'd -> 'r FStar_Pervasives_Native.option)
-  (nbe_f : 'na -> 'nb -> 'nc -> 'nd -> 'nr FStar_Pervasives_Native.option) :
-  primitive_step=
-  let interp psc1 cb us args =
-    match args with
-    | (a1, uu___10)::(b1, uu___11)::(c1, uu___12)::(d1, uu___13)::[] ->
-        Obj.magic
-          (Obj.repr
-             (let uu___14 = try_unembed_simple uu___ a1 in
-              FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
-                () () (Obj.magic uu___14)
-                (fun uu___15 ->
-                   (fun a2 ->
-                      let a2 = Obj.magic a2 in
-                      let uu___15 = try_unembed_simple uu___2 b1 in
-                      Obj.magic
-                        (FStarC_Class_Monad.op_let_Bang
-                           FStarC_Class_Monad.monad_option () ()
-                           (Obj.magic uu___15)
-                           (fun uu___16 ->
-                              (fun b2 ->
-                                 let b2 = Obj.magic b2 in
-                                 let uu___16 = try_unembed_simple uu___4 c1 in
-                                 Obj.magic
-                                   (FStarC_Class_Monad.op_let_Bang
-                                      FStarC_Class_Monad.monad_option () ()
-                                      (Obj.magic uu___16)
-                                      (fun uu___17 ->
-                                         (fun c2 ->
-                                            let c2 = Obj.magic c2 in
-                                            let uu___17 =
-                                              try_unembed_simple uu___6 d1 in
-                                            Obj.magic
-                                              (FStarC_Class_Monad.op_let_Bang
-                                                 FStarC_Class_Monad.monad_option
-                                                 () () (Obj.magic uu___17)
-                                                 (fun uu___18 ->
-                                                    (fun d2 ->
-                                                       let d2 = Obj.magic d2 in
-                                                       let r1 = f a2 b2 c2 d2 in
-                                                       Obj.magic
-                                                         (FStarC_Class_Monad.op_let_Bang
-                                                            FStarC_Class_Monad.monad_option
-                                                            () ()
-                                                            (Obj.magic r1)
-                                                            (fun uu___18 ->
-                                                               (fun r2 ->
-                                                                  let r2 =
-                                                                    Obj.magic
-                                                                    r2 in
-                                                                  let uu___18
-                                                                    =
-                                                                    embed_simple
-                                                                    uu___8
-                                                                    psc1.psc_range
-                                                                    r2 in
-                                                                  Obj.magic
-                                                                    (
-                                                                    FStarC_Class_Monad.return
-                                                                    FStarC_Class_Monad.monad_option
-                                                                    ()
-                                                                    (Obj.magic
-                                                                    uu___18)))
-                                                                 uu___18)))
-                                                      uu___18))) uu___17)))
-                                uu___16))) uu___15)))
-    | uu___10 -> Obj.magic (Obj.repr (FStarC_Effect.failwith "arity")) in
-  let nbe_interp cbs us args =
-    match args with
-    | (a1, uu___10)::(b1, uu___11)::(c1, uu___12)::(d1, uu___13)::[] ->
-        Obj.magic
-          (Obj.repr
-             (let uu___14 = FStarC_TypeChecker_NBETerm.unembed uu___1 cbs a1 in
-              FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
-                () () (Obj.magic uu___14)
-                (fun uu___15 ->
-                   (fun a2 ->
-                      let a2 = Obj.magic a2 in
-                      let uu___15 =
-                        FStarC_TypeChecker_NBETerm.unembed uu___3 cbs b1 in
-                      Obj.magic
-                        (FStarC_Class_Monad.op_let_Bang
-                           FStarC_Class_Monad.monad_option () ()
-                           (Obj.magic uu___15)
-                           (fun uu___16 ->
-                              (fun b2 ->
-                                 let b2 = Obj.magic b2 in
-                                 let uu___16 =
-                                   FStarC_TypeChecker_NBETerm.unembed uu___5
-                                     cbs c1 in
-                                 Obj.magic
-                                   (FStarC_Class_Monad.op_let_Bang
-                                      FStarC_Class_Monad.monad_option () ()
-                                      (Obj.magic uu___16)
-                                      (fun uu___17 ->
-                                         (fun c2 ->
-                                            let c2 = Obj.magic c2 in
-                                            let uu___17 =
-                                              FStarC_TypeChecker_NBETerm.unembed
-                                                uu___7 cbs d1 in
-                                            Obj.magic
-                                              (FStarC_Class_Monad.op_let_Bang
-                                                 FStarC_Class_Monad.monad_option
-                                                 () () (Obj.magic uu___17)
-                                                 (fun uu___18 ->
-                                                    (fun d2 ->
-                                                       let d2 = Obj.magic d2 in
-                                                       let r1 =
-                                                         nbe_f a2 b2 c2 d2 in
-                                                       Obj.magic
-                                                         (FStarC_Class_Monad.op_let_Bang
-                                                            FStarC_Class_Monad.monad_option
-                                                            () ()
-                                                            (Obj.magic r1)
-                                                            (fun uu___18 ->
-                                                               (fun r2 ->
-                                                                  let r2 =
-                                                                    Obj.magic
-                                                                    r2 in
-                                                                  let uu___18
-                                                                    =
-                                                                    FStarC_TypeChecker_NBETerm.embed
-                                                                    uu___9
-                                                                    cbs r2 in
-                                                                  Obj.magic
-                                                                    (
-                                                                    FStarC_Class_Monad.return
-                                                                    FStarC_Class_Monad.monad_option
-                                                                    ()
-                                                                    (Obj.magic
-                                                                    uu___18)))
-                                                                 uu___18)))
-                                                      uu___18))) uu___17)))
-                                uu___16))) uu___15)))
-    | uu___10 -> Obj.magic (Obj.repr (FStarC_Effect.failwith "arity")) in
-  as_primitive_step_nbecbs true
-    (name, (Prims.of_int 4), u_arity, interp, nbe_interp)
-let mk5' (u_arity : Prims.int) (name : FStarC_Ident.lid)
-  (uu___ : 'a FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___1 : 'na FStarC_TypeChecker_NBETerm.embedding)
-  (uu___2 : 'b FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___3 : 'nb FStarC_TypeChecker_NBETerm.embedding)
-  (uu___4 : 'c FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___5 : 'nc FStarC_TypeChecker_NBETerm.embedding)
-  (uu___6 : 'd FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___7 : 'nd FStarC_TypeChecker_NBETerm.embedding)
-  (uu___8 : 'e FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___9 : 'ne FStarC_TypeChecker_NBETerm.embedding)
-  (uu___10 : 'r FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___11 : 'nr FStarC_TypeChecker_NBETerm.embedding)
-  (f : 'a -> 'b -> 'c -> 'd -> 'e -> 'r FStar_Pervasives_Native.option)
-  (nbe_f :
-    'na -> 'nb -> 'nc -> 'nd -> 'ne -> 'nr FStar_Pervasives_Native.option)
-  : primitive_step=
-  let interp psc1 cb us args =
-    match args with
-    | (a1, uu___12)::(b1, uu___13)::(c1, uu___14)::(d1, uu___15)::(e1,
-                                                                   uu___16)::[]
-        ->
-        Obj.magic
-          (Obj.repr
-             (let uu___17 = try_unembed_simple uu___ a1 in
-              FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
-                () () (Obj.magic uu___17)
-                (fun uu___18 ->
-                   (fun a2 ->
-                      let a2 = Obj.magic a2 in
-                      let uu___18 = try_unembed_simple uu___2 b1 in
-                      Obj.magic
-                        (FStarC_Class_Monad.op_let_Bang
-                           FStarC_Class_Monad.monad_option () ()
-                           (Obj.magic uu___18)
-                           (fun uu___19 ->
-                              (fun b2 ->
-                                 let b2 = Obj.magic b2 in
-                                 let uu___19 = try_unembed_simple uu___4 c1 in
-                                 Obj.magic
-                                   (FStarC_Class_Monad.op_let_Bang
-                                      FStarC_Class_Monad.monad_option () ()
-                                      (Obj.magic uu___19)
-                                      (fun uu___20 ->
-                                         (fun c2 ->
-                                            let c2 = Obj.magic c2 in
-                                            let uu___20 =
-                                              try_unembed_simple uu___6 d1 in
-                                            Obj.magic
-                                              (FStarC_Class_Monad.op_let_Bang
-                                                 FStarC_Class_Monad.monad_option
-                                                 () () (Obj.magic uu___20)
-                                                 (fun uu___21 ->
-                                                    (fun d2 ->
-                                                       let d2 = Obj.magic d2 in
-                                                       let uu___21 =
-                                                         try_unembed_simple
-                                                           uu___8 e1 in
-                                                       Obj.magic
-                                                         (FStarC_Class_Monad.op_let_Bang
-                                                            FStarC_Class_Monad.monad_option
-                                                            () ()
-                                                            (Obj.magic
-                                                               uu___21)
-                                                            (fun uu___22 ->
-                                                               (fun e2 ->
-                                                                  let e2 =
-                                                                    Obj.magic
-                                                                    e2 in
-                                                                  let r1 =
-                                                                    f a2 b2
-                                                                    c2 d2 e2 in
-                                                                  Obj.magic
-                                                                    (
-                                                                    FStarC_Class_Monad.op_let_Bang
-                                                                    FStarC_Class_Monad.monad_option
-                                                                    () ()
-                                                                    (Obj.magic
-                                                                    r1)
-                                                                    (fun
-                                                                    uu___22
-                                                                    ->
-                                                                    (fun r2
-                                                                    ->
-                                                                    let r2 =
-                                                                    Obj.magic
-                                                                    r2 in
-                                                                    let uu___22
-                                                                    =
-                                                                    embed_simple
-                                                                    uu___10
-                                                                    psc1.psc_range
-                                                                    r2 in
-                                                                    Obj.magic
-                                                                    (FStarC_Class_Monad.return
-                                                                    FStarC_Class_Monad.monad_option
-                                                                    ()
-                                                                    (Obj.magic
-                                                                    uu___22)))
-                                                                    uu___22)))
-                                                                 uu___22)))
-                                                      uu___21))) uu___20)))
-                                uu___19))) uu___18)))
-    | uu___12 -> Obj.magic (Obj.repr (FStarC_Effect.failwith "arity")) in
-  let nbe_interp cbs us args =
-    match args with
-    | (a1, uu___12)::(b1, uu___13)::(c1, uu___14)::(d1, uu___15)::(e1,
-                                                                   uu___16)::[]
-        ->
-        Obj.magic
-          (Obj.repr
-             (let uu___17 = FStarC_TypeChecker_NBETerm.unembed uu___1 cbs a1 in
-              FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
-                () () (Obj.magic uu___17)
-                (fun uu___18 ->
-                   (fun a2 ->
-                      let a2 = Obj.magic a2 in
-                      let uu___18 =
-                        FStarC_TypeChecker_NBETerm.unembed uu___3 cbs b1 in
-                      Obj.magic
-                        (FStarC_Class_Monad.op_let_Bang
-                           FStarC_Class_Monad.monad_option () ()
-                           (Obj.magic uu___18)
-                           (fun uu___19 ->
-                              (fun b2 ->
-                                 let b2 = Obj.magic b2 in
-                                 let uu___19 =
-                                   FStarC_TypeChecker_NBETerm.unembed uu___5
-                                     cbs c1 in
-                                 Obj.magic
-                                   (FStarC_Class_Monad.op_let_Bang
-                                      FStarC_Class_Monad.monad_option () ()
-                                      (Obj.magic uu___19)
-                                      (fun uu___20 ->
-                                         (fun c2 ->
-                                            let c2 = Obj.magic c2 in
-                                            let uu___20 =
-                                              FStarC_TypeChecker_NBETerm.unembed
-                                                uu___7 cbs d1 in
-                                            Obj.magic
-                                              (FStarC_Class_Monad.op_let_Bang
-                                                 FStarC_Class_Monad.monad_option
-                                                 () () (Obj.magic uu___20)
-                                                 (fun uu___21 ->
-                                                    (fun d2 ->
-                                                       let d2 = Obj.magic d2 in
-                                                       let uu___21 =
-                                                         FStarC_TypeChecker_NBETerm.unembed
-                                                           uu___9 cbs e1 in
-                                                       Obj.magic
-                                                         (FStarC_Class_Monad.op_let_Bang
-                                                            FStarC_Class_Monad.monad_option
-                                                            () ()
-                                                            (Obj.magic
-                                                               uu___21)
-                                                            (fun uu___22 ->
-                                                               (fun e2 ->
-                                                                  let e2 =
-                                                                    Obj.magic
-                                                                    e2 in
-                                                                  let r1 =
-                                                                    nbe_f a2
-                                                                    b2 c2 d2
-                                                                    e2 in
-                                                                  Obj.magic
-                                                                    (
-                                                                    FStarC_Class_Monad.op_let_Bang
-                                                                    FStarC_Class_Monad.monad_option
-                                                                    () ()
-                                                                    (Obj.magic
-                                                                    r1)
-                                                                    (fun
-                                                                    uu___22
-                                                                    ->
-                                                                    (fun r2
-                                                                    ->
-                                                                    let r2 =
-                                                                    Obj.magic
-                                                                    r2 in
-                                                                    let uu___22
-                                                                    =
-                                                                    FStarC_TypeChecker_NBETerm.embed
-                                                                    uu___11
-                                                                    cbs r2 in
-                                                                    Obj.magic
-                                                                    (FStarC_Class_Monad.return
-                                                                    FStarC_Class_Monad.monad_option
-                                                                    ()
-                                                                    (Obj.magic
-                                                                    uu___22)))
-                                                                    uu___22)))
-                                                                 uu___22)))
-                                                      uu___21))) uu___20)))
-                                uu___19))) uu___18)))
-    | uu___12 -> Obj.magic (Obj.repr (FStarC_Effect.failwith "arity")) in
-  as_primitive_step_nbecbs true
-    (name, (Prims.of_int 5), u_arity, interp, nbe_interp)
-let mk6' (u_arity : Prims.int) (name : FStarC_Ident.lid)
-  (uu___ : 'a FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___1 : 'na FStarC_TypeChecker_NBETerm.embedding)
-  (uu___2 : 'b FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___3 : 'nb FStarC_TypeChecker_NBETerm.embedding)
-  (uu___4 : 'c FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___5 : 'nc FStarC_TypeChecker_NBETerm.embedding)
-  (uu___6 : 'd FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___7 : 'nd FStarC_TypeChecker_NBETerm.embedding)
-  (uu___8 : 'e FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___9 : 'ne FStarC_TypeChecker_NBETerm.embedding)
-  (uu___10 : 'f FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___11 : 'nf FStarC_TypeChecker_NBETerm.embedding)
-  (uu___12 : 'r FStarC_Syntax_Embeddings_Base.embedding)
-  (uu___13 : 'nr FStarC_TypeChecker_NBETerm.embedding)
-  (ff :
-    'a -> 'b -> 'c -> 'd -> 'e -> 'f -> 'r FStar_Pervasives_Native.option)
-  (nbe_ff :
-    'na ->
-      'nb -> 'nc -> 'nd -> 'ne -> 'nf -> 'nr FStar_Pervasives_Native.option)
-  : primitive_step=
-  let interp psc1 cb us args =
-    match args with
-    | (a1, uu___14)::(b1, uu___15)::(c1, uu___16)::(d1, uu___17)::(e1,
-                                                                   uu___18)::
-        (f1, uu___19)::[] ->
-        Obj.magic
-          (Obj.repr
-             (let uu___20 = try_unembed_simple uu___ a1 in
-              FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
-                () () (Obj.magic uu___20)
-                (fun uu___21 ->
-                   (fun a2 ->
-                      let a2 = Obj.magic a2 in
-                      let uu___21 = try_unembed_simple uu___2 b1 in
-                      Obj.magic
-                        (FStarC_Class_Monad.op_let_Bang
-                           FStarC_Class_Monad.monad_option () ()
-                           (Obj.magic uu___21)
-                           (fun uu___22 ->
-                              (fun b2 ->
-                                 let b2 = Obj.magic b2 in
-                                 let uu___22 = try_unembed_simple uu___4 c1 in
-                                 Obj.magic
-                                   (FStarC_Class_Monad.op_let_Bang
-                                      FStarC_Class_Monad.monad_option () ()
-                                      (Obj.magic uu___22)
-                                      (fun uu___23 ->
-                                         (fun c2 ->
-                                            let c2 = Obj.magic c2 in
-                                            let uu___23 =
-                                              try_unembed_simple uu___6 d1 in
-                                            Obj.magic
-                                              (FStarC_Class_Monad.op_let_Bang
-                                                 FStarC_Class_Monad.monad_option
-                                                 () () (Obj.magic uu___23)
-                                                 (fun uu___24 ->
-                                                    (fun d2 ->
-                                                       let d2 = Obj.magic d2 in
-                                                       let uu___24 =
-                                                         try_unembed_simple
-                                                           uu___8 e1 in
-                                                       Obj.magic
-                                                         (FStarC_Class_Monad.op_let_Bang
-                                                            FStarC_Class_Monad.monad_option
-                                                            () ()
-                                                            (Obj.magic
-                                                               uu___24)
-                                                            (fun uu___25 ->
-                                                               (fun e2 ->
-                                                                  let e2 =
-                                                                    Obj.magic
-                                                                    e2 in
-                                                                  let uu___25
-                                                                    =
-                                                                    try_unembed_simple
-                                                                    uu___10
-                                                                    f1 in
-                                                                  Obj.magic
-                                                                    (
-                                                                    FStarC_Class_Monad.op_let_Bang
-                                                                    FStarC_Class_Monad.monad_option
-                                                                    () ()
-                                                                    (Obj.magic
-                                                                    uu___25)
-                                                                    (fun
-                                                                    uu___26
-                                                                    ->
-                                                                    (fun f2
-                                                                    ->
-                                                                    let f2 =
-                                                                    Obj.magic
-                                                                    f2 in
-                                                                    let r1 =
-                                                                    ff a2 b2
-                                                                    c2 d2 e2
-                                                                    f2 in
-                                                                    Obj.magic
-                                                                    (FStarC_Class_Monad.op_let_Bang
-                                                                    FStarC_Class_Monad.monad_option
-                                                                    () ()
-                                                                    (Obj.magic
-                                                                    r1)
-                                                                    (fun
-                                                                    uu___26
-                                                                    ->
-                                                                    (fun r2
-                                                                    ->
-                                                                    let r2 =
-                                                                    Obj.magic
-                                                                    r2 in
-                                                                    let uu___26
-                                                                    =
-                                                                    embed_simple
-                                                                    uu___12
-                                                                    psc1.psc_range
-                                                                    r2 in
-                                                                    Obj.magic
-                                                                    (FStarC_Class_Monad.return
-                                                                    FStarC_Class_Monad.monad_option
-                                                                    ()
-                                                                    (Obj.magic
-                                                                    uu___26)))
-                                                                    uu___26)))
-                                                                    uu___26)))
-                                                                 uu___25)))
-                                                      uu___24))) uu___23)))
-                                uu___22))) uu___21)))
-    | uu___14 -> Obj.magic (Obj.repr (FStarC_Effect.failwith "arity")) in
-  let nbe_interp cbs us args =
-    match args with
-    | (a1, uu___14)::(b1, uu___15)::(c1, uu___16)::(d1, uu___17)::(e1,
-                                                                   uu___18)::
-        (f1, uu___19)::[] ->
-        Obj.magic
-          (Obj.repr
-             (let uu___20 = FStarC_TypeChecker_NBETerm.unembed uu___1 cbs a1 in
-              FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
-                () () (Obj.magic uu___20)
-                (fun uu___21 ->
-                   (fun a2 ->
-                      let a2 = Obj.magic a2 in
-                      let uu___21 =
-                        FStarC_TypeChecker_NBETerm.unembed uu___3 cbs b1 in
-                      Obj.magic
-                        (FStarC_Class_Monad.op_let_Bang
-                           FStarC_Class_Monad.monad_option () ()
-                           (Obj.magic uu___21)
-                           (fun uu___22 ->
-                              (fun b2 ->
-                                 let b2 = Obj.magic b2 in
-                                 let uu___22 =
-                                   FStarC_TypeChecker_NBETerm.unembed uu___5
-                                     cbs c1 in
-                                 Obj.magic
-                                   (FStarC_Class_Monad.op_let_Bang
-                                      FStarC_Class_Monad.monad_option () ()
-                                      (Obj.magic uu___22)
-                                      (fun uu___23 ->
-                                         (fun c2 ->
-                                            let c2 = Obj.magic c2 in
-                                            let uu___23 =
-                                              FStarC_TypeChecker_NBETerm.unembed
-                                                uu___7 cbs d1 in
-                                            Obj.magic
-                                              (FStarC_Class_Monad.op_let_Bang
-                                                 FStarC_Class_Monad.monad_option
-                                                 () () (Obj.magic uu___23)
-                                                 (fun uu___24 ->
-                                                    (fun d2 ->
-                                                       let d2 = Obj.magic d2 in
-                                                       let uu___24 =
-                                                         FStarC_TypeChecker_NBETerm.unembed
-                                                           uu___9 cbs e1 in
-                                                       Obj.magic
-                                                         (FStarC_Class_Monad.op_let_Bang
-                                                            FStarC_Class_Monad.monad_option
-                                                            () ()
-                                                            (Obj.magic
-                                                               uu___24)
-                                                            (fun uu___25 ->
-                                                               (fun e2 ->
-                                                                  let e2 =
-                                                                    Obj.magic
-                                                                    e2 in
-                                                                  let uu___25
-                                                                    =
-                                                                    FStarC_TypeChecker_NBETerm.unembed
-                                                                    uu___11
-                                                                    cbs f1 in
-                                                                  Obj.magic
-                                                                    (
-                                                                    FStarC_Class_Monad.op_let_Bang
-                                                                    FStarC_Class_Monad.monad_option
-                                                                    () ()
-                                                                    (Obj.magic
-                                                                    uu___25)
-                                                                    (fun
-                                                                    uu___26
-                                                                    ->
-                                                                    (fun f2
-                                                                    ->
-                                                                    let f2 =
-                                                                    Obj.magic
-                                                                    f2 in
-                                                                    let r1 =
-                                                                    nbe_ff a2
-                                                                    b2 c2 d2
-                                                                    e2 f2 in
-                                                                    Obj.magic
-                                                                    (FStarC_Class_Monad.op_let_Bang
-                                                                    FStarC_Class_Monad.monad_option
-                                                                    () ()
-                                                                    (Obj.magic
-                                                                    r1)
-                                                                    (fun
-                                                                    uu___26
-                                                                    ->
-                                                                    (fun r2
-                                                                    ->
-                                                                    let r2 =
-                                                                    Obj.magic
-                                                                    r2 in
-                                                                    let uu___26
-                                                                    =
-                                                                    FStarC_TypeChecker_NBETerm.embed
-                                                                    uu___13
-                                                                    cbs r2 in
-                                                                    Obj.magic
-                                                                    (FStarC_Class_Monad.return
-                                                                    FStarC_Class_Monad.monad_option
-                                                                    ()
-                                                                    (Obj.magic
-                                                                    uu___26)))
-                                                                    uu___26)))
-                                                                    uu___26)))
-                                                                 uu___25)))
-                                                      uu___24))) uu___23)))
-                                uu___22))) uu___21)))
-    | uu___14 -> Obj.magic (Obj.repr (FStarC_Effect.failwith "arity")) in
-  as_primitive_step_nbecbs true
-    (name, (Prims.of_int 6), u_arity, interp, nbe_interp)
+        interpretation_nbe = f_nbe }
+  )
+
+let mk3' (u_arity : Prims.int) (name : FStarC_Ident.lident) (tmp : ('a) FStarC_Syntax_Embeddings_Base.embedding) (tmp1 : ('na) FStarC_TypeChecker_NBETerm.embedding) (tmp2 : ('b) FStarC_Syntax_Embeddings_Base.embedding) (tmp3 : ('nb) FStarC_TypeChecker_NBETerm.embedding) (tmp4 : ('c) FStarC_Syntax_Embeddings_Base.embedding) (tmp5 : ('nc) FStarC_TypeChecker_NBETerm.embedding) (tmp6 : ('r) FStarC_Syntax_Embeddings_Base.embedding) (tmp7 : ('nr) FStarC_TypeChecker_NBETerm.embedding) (f : ('a -> ('b -> ('c -> ('r) option)))) (f1 : ('na -> ('nb -> ('nc -> ('nr) option)))) : primitive_step =
+  (let interp = (fun psc cb us args -> (match args with
+      | ((a, tmp8) :: ((b, tmp9) :: ((c, tmp10) :: []))) -> (let tmp11 = (try_unembed_simple tmp a) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp11 (fun a1 -> (let tmp12 = (try_unembed_simple tmp2 b) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp12 (fun b1 -> (let tmp13 = (try_unembed_simple tmp4 c) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp13 (fun c1 -> (let r = (f a1 b1 c1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option r (fun r1 -> (let tmp14 = (embed_simple tmp6 (psc).psc_range r1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_return__option tmp14))))))))))))))
+      | tmp8 -> (FStarC_Effect.failwith "arity")
+    )) in
+  let nbe_interp = (fun cbs us args -> (match args with
+      | ((a, tmp8) :: ((b, tmp9) :: ((c, tmp10) :: []))) -> (let tmp11 = (FStarC_TypeChecker_NBETerm.unembed tmp1 cbs a) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp11 (fun a1 -> (let tmp12 = (FStarC_TypeChecker_NBETerm.unembed tmp3 cbs b) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp12 (fun b1 -> (let tmp13 = (FStarC_TypeChecker_NBETerm.unembed tmp5 cbs c) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp13 (fun c1 -> (let r = (f1 a1 b1 c1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option r (fun r1 -> (let tmp14 = (FStarC_TypeChecker_NBETerm.embed tmp7 cbs r1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_return__option tmp14))))))))))))))
+      | tmp8 -> (FStarC_Effect.failwith "arity")
+    )) in
+  (as_primitive_step_nbecbs true (name, (Prims.parse_int "3"), u_arity, interp, nbe_interp)))
+
+let mk_interp1 (tmp : ('a) FStarC_Syntax_Embeddings_Base.embedding) (tmp1 : ('r) FStarC_Syntax_Embeddings_Base.embedding) (f : ('a -> 'r)) (psc : psc) (cb : ((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (us : (FStarC_Syntax_Syntax.universe) list) (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
+  (match args with
+    | ((a, tmp2) :: []) -> (let tmp3 = (try_unembed_simple tmp a) in
+      (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp3 (fun a1 -> (let tmp4 = (embed_simple tmp1 (psc).psc_range (f a1)) in
+      (FStarC_Class_Monad.fStarC_Class_Monad_return__option tmp4)))))
+    | tmp2 -> (FStarC_Effect.failwith "arity")
+  )
+
+let mk_nbe_interp1 (tmp : ('a) FStarC_TypeChecker_NBETerm.embedding) (tmp1 : ('r) FStarC_TypeChecker_NBETerm.embedding) (f : ('a -> 'r)) (cbs : FStarC_TypeChecker_NBETerm.nbe_cbs) (us : (FStarC_Syntax_Syntax.universe) list) (args : ((FStarC_TypeChecker_NBETerm.t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : (FStarC_TypeChecker_NBETerm.t) option =
+  (match args with
+    | ((a, tmp2) :: []) -> (let tmp3 = (FStarC_TypeChecker_NBETerm.unembed tmp cbs a) in
+      let tmp4 = (FStarC_Class_Monad.fStarC_Class_Monad_op_Less_Dollar_Greater__option f tmp3) in
+      (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp4 (fun r -> (let tmp5 = (FStarC_TypeChecker_NBETerm.embed tmp1 cbs r) in
+      (FStarC_Class_Monad.fStarC_Class_Monad_return__option tmp5)))))
+    | tmp2 -> None
+  )
+
+let mk1 (u_arity : Prims.int) (name : FStarC_Ident.lident) (tmp : ('a) FStarC_Syntax_Embeddings_Base.embedding) (tmp1 : ('a) FStarC_TypeChecker_NBETerm.embedding) (tmp2 : ('r) FStarC_Syntax_Embeddings_Base.embedding) (tmp3 : ('r) FStarC_TypeChecker_NBETerm.embedding) (f : ('a -> 'r)) : primitive_step =
+  (let interp = (mk_interp1 tmp tmp2 f) in
+  let nbe_interp = (mk_nbe_interp1 tmp1 tmp3 f) in
+  (as_primitive_step_nbecbs true (name, (Prims.parse_int "1"), u_arity, interp, nbe_interp)))
+
+let fStarC_Class_Monoid_mzero__list_primitive_step : (primitive_step) list =
+  []
+
+let fStarC_Writer_writer_return__list_primitive_step (x : 'a) : ((primitive_step) list * 'a) =
+  (fStarC_Class_Monoid_mzero__list_primitive_step, x)
+
+let fStarC_Class_Monad_return__writer_list_primitive_step (tmp : 'a) : ((primitive_step) list * 'a) =
+  (fStarC_Writer_writer_return__list_primitive_step tmp)
+
+let fStarC_Class_Monoid_mplus__list_primitive_step (tmp : (primitive_step) list) (eta : (primitive_step) list) : (primitive_step) list =
+  (FStarC_List.op_At tmp eta)
+
+let fStarC_Writer_writer_bind__list_primitive_step (x : ((primitive_step) list * 'a)) (f : ('a -> ((primitive_step) list * 'b))) : ((primitive_step) list * 'b) =
+  (match x with
+    | (a, x1) -> (let tmp = (f x1) in
+      (match tmp with
+        | (b, y) -> (let tmp1 = (fStarC_Class_Monoid_mplus__list_primitive_step a b) in
+          (tmp1, y))
+      ))
+  )
+
+let fStarC_Class_Monad_bind__writer_list_primitive_step (tmp : ((primitive_step) list * 'a)) (f : ('a -> ((primitive_step) list * 'b))) : ((primitive_step) list * 'b) =
+  (fStarC_Writer_writer_bind__list_primitive_step tmp f)
+
+let fStarC_Class_Monad_op_let_Bang__writer_list_primitive_step (tmp : ((primitive_step) list * 'a)) (f : ('a -> ((primitive_step) list * 'b))) : ((primitive_step) list * 'b) =
+  (fStarC_Class_Monad_bind__writer_list_primitive_step tmp f)
+
+let rec fStarC_Class_Monad_iterM__writer_list_primitive_step (f : ('a -> ((primitive_step) list * unit))) (l : ('a) list) : ((primitive_step) list * unit) =
+  (match l with
+    | [] -> (fStarC_Class_Monad_return__writer_list_primitive_step ())
+    | (x :: xs) -> (let tmp = (f x) in
+      (fStarC_Class_Monad_op_let_Bang__writer_list_primitive_step tmp (fun tmp1 -> (fStarC_Class_Monad_iterM__writer_list_primitive_step f xs))))
+  )
+
+let mk_interp2 (tmp : ('a) FStarC_Syntax_Embeddings_Base.embedding) (tmp1 : ('b) FStarC_Syntax_Embeddings_Base.embedding) (tmp2 : ('r) FStarC_Syntax_Embeddings_Base.embedding) (f : ('a -> ('b -> 'r))) (psc : psc) (cb : ((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (us : (FStarC_Syntax_Syntax.universe) list) (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
+  (match args with
+    | ((a, tmp3) :: ((b, tmp4) :: [])) -> (let tmp5 = (try_unembed_simple tmp a) in
+      let tmp6 = (FStarC_Class_Monad.fStarC_Class_Monad_op_Less_Dollar_Greater__option f tmp5) in
+      let tmp7 = (try_unembed_simple tmp1 b) in
+      let tmp8 = (FStarC_Class_Monad.fStarC_Class_Monad_op_Less_Star_Greater__option tmp6 tmp7) in
+      (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp8 (fun r -> (let tmp9 = (embed_simple tmp2 (psc).psc_range r) in
+      (FStarC_Class_Monad.fStarC_Class_Monad_return__option tmp9)))))
+    | tmp3 -> (FStarC_Effect.failwith "arity")
+  )
+
+let mk_nbe_interp2 (tmp : ('a) FStarC_TypeChecker_NBETerm.embedding) (tmp1 : ('b) FStarC_TypeChecker_NBETerm.embedding) (tmp2 : ('r) FStarC_TypeChecker_NBETerm.embedding) (f : ('a -> ('b -> 'r))) (cbs : FStarC_TypeChecker_NBETerm.nbe_cbs) (us : (FStarC_Syntax_Syntax.universe) list) (args : ((FStarC_TypeChecker_NBETerm.t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : (FStarC_TypeChecker_NBETerm.t) option =
+  (match args with
+    | ((a, tmp3) :: ((b, tmp4) :: [])) -> (let tmp5 = (FStarC_TypeChecker_NBETerm.unembed tmp cbs a) in
+      let tmp6 = (FStarC_Class_Monad.fStarC_Class_Monad_op_Less_Dollar_Greater__option f tmp5) in
+      let tmp7 = (FStarC_TypeChecker_NBETerm.unembed tmp1 cbs b) in
+      let tmp8 = (FStarC_Class_Monad.fStarC_Class_Monad_op_Less_Star_Greater__option tmp6 tmp7) in
+      (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp8 (fun r -> (let tmp9 = (FStarC_TypeChecker_NBETerm.embed tmp2 cbs r) in
+      (FStarC_Class_Monad.fStarC_Class_Monad_return__option tmp9)))))
+    | tmp3 -> None
+  )
+
+let mk2 (u_arity : Prims.int) (name : FStarC_Ident.lident) (tmp : ('a) FStarC_Syntax_Embeddings_Base.embedding) (tmp1 : ('a) FStarC_TypeChecker_NBETerm.embedding) (tmp2 : ('b) FStarC_Syntax_Embeddings_Base.embedding) (tmp3 : ('b) FStarC_TypeChecker_NBETerm.embedding) (tmp4 : ('r) FStarC_Syntax_Embeddings_Base.embedding) (tmp5 : ('r) FStarC_TypeChecker_NBETerm.embedding) (f : ('a -> ('b -> 'r))) : primitive_step =
+  (let interp = (mk_interp2 tmp tmp2 tmp4 f) in
+  let nbe_interp = (mk_nbe_interp2 tmp1 tmp3 tmp5 f) in
+  (as_primitive_step_nbecbs true (name, (Prims.parse_int "2"), u_arity, interp, nbe_interp)))
+
+let with_extra_args (n : Prims.int) (s : primitive_step) : primitive_step =
+  (if (Prims.op_Less_Equals n (Prims.parse_int "0")) then s else (let a0 = (s).arity in
+  { name = (s).name;
+    arity = (Prims.op_Plus a0 n);
+    univ_arity = (s).univ_arity;
+    auto_reflect = (s).auto_reflect;
+    strong_reduction_ok = (s).strong_reduction_ok;
+    requires_binder_substitution = (s).requires_binder_substitution;
+    renorm_after = (s).renorm_after;
+    unrepresentable_result = (s).unrepresentable_result;
+    interpretation = (fun psc cb us args -> ((s).interpretation psc cb us (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst (FStarC_List.splitAt a0 args))));
+    interpretation_nbe = (fun cb us args -> ((s).interpretation_nbe cb us (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst (FStarC_List.splitAt a0 args)))) }))
+
+let fStarC_Writer_emit__list_primitive_step (x : (primitive_step) list) : ((primitive_step) list * unit) =
+  (x, ())
+
+let mk_interp5 (tmp : ('a) FStarC_Syntax_Embeddings_Base.embedding) (tmp1 : ('b) FStarC_Syntax_Embeddings_Base.embedding) (tmp2 : ('c) FStarC_Syntax_Embeddings_Base.embedding) (tmp3 : ('d) FStarC_Syntax_Embeddings_Base.embedding) (tmp4 : ('e) FStarC_Syntax_Embeddings_Base.embedding) (tmp5 : ('r) FStarC_Syntax_Embeddings_Base.embedding) (f : ('a -> ('b -> ('c -> ('d -> ('e -> 'r)))))) (psc : psc) (cb : ((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (us : (FStarC_Syntax_Syntax.universe) list) (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
+  (match args with
+    | ((a, tmp6) :: ((b, tmp7) :: ((c, tmp8) :: ((d, tmp9) :: ((e, tmp10) :: []))))) -> (let tmp11 = (try_unembed_simple tmp a) in
+      let tmp12 = (FStarC_Class_Monad.fStarC_Class_Monad_op_Less_Dollar_Greater__option f tmp11) in
+      let tmp13 = (try_unembed_simple tmp1 b) in
+      let tmp14 = (FStarC_Class_Monad.fStarC_Class_Monad_op_Less_Star_Greater__option tmp12 tmp13) in
+      let tmp15 = (try_unembed_simple tmp2 c) in
+      let tmp16 = (FStarC_Class_Monad.fStarC_Class_Monad_op_Less_Star_Greater__option tmp14 tmp15) in
+      let tmp17 = (try_unembed_simple tmp3 d) in
+      let tmp18 = (FStarC_Class_Monad.fStarC_Class_Monad_op_Less_Star_Greater__option tmp16 tmp17) in
+      let tmp19 = (try_unembed_simple tmp4 e) in
+      let tmp20 = (FStarC_Class_Monad.fStarC_Class_Monad_op_Less_Star_Greater__option tmp18 tmp19) in
+      (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp20 (fun r -> (let tmp21 = (embed_simple tmp5 (psc).psc_range r) in
+      (FStarC_Class_Monad.fStarC_Class_Monad_return__option tmp21)))))
+    | tmp6 -> (FStarC_Effect.failwith "arity")
+  )
+
+let mk_nbe_interp5 (tmp : ('a) FStarC_TypeChecker_NBETerm.embedding) (tmp1 : ('b) FStarC_TypeChecker_NBETerm.embedding) (tmp2 : ('c) FStarC_TypeChecker_NBETerm.embedding) (tmp3 : ('d) FStarC_TypeChecker_NBETerm.embedding) (tmp4 : ('e) FStarC_TypeChecker_NBETerm.embedding) (tmp5 : ('r) FStarC_TypeChecker_NBETerm.embedding) (f : ('a -> ('b -> ('c -> ('d -> ('e -> 'r)))))) (cbs : FStarC_TypeChecker_NBETerm.nbe_cbs) (us : (FStarC_Syntax_Syntax.universe) list) (args : ((FStarC_TypeChecker_NBETerm.t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : (FStarC_TypeChecker_NBETerm.t) option =
+  (match args with
+    | ((a, tmp6) :: ((b, tmp7) :: ((c, tmp8) :: ((d, tmp9) :: ((e, tmp10) :: []))))) -> (let tmp11 = (FStarC_TypeChecker_NBETerm.unembed tmp cbs a) in
+      let tmp12 = (FStarC_Class_Monad.fStarC_Class_Monad_op_Less_Dollar_Greater__option f tmp11) in
+      let tmp13 = (FStarC_TypeChecker_NBETerm.unembed tmp1 cbs b) in
+      let tmp14 = (FStarC_Class_Monad.fStarC_Class_Monad_op_Less_Star_Greater__option tmp12 tmp13) in
+      let tmp15 = (FStarC_TypeChecker_NBETerm.unembed tmp2 cbs c) in
+      let tmp16 = (FStarC_Class_Monad.fStarC_Class_Monad_op_Less_Star_Greater__option tmp14 tmp15) in
+      let tmp17 = (FStarC_TypeChecker_NBETerm.unembed tmp3 cbs d) in
+      let tmp18 = (FStarC_Class_Monad.fStarC_Class_Monad_op_Less_Star_Greater__option tmp16 tmp17) in
+      let tmp19 = (FStarC_TypeChecker_NBETerm.unembed tmp4 cbs e) in
+      let tmp20 = (FStarC_Class_Monad.fStarC_Class_Monad_op_Less_Star_Greater__option tmp18 tmp19) in
+      (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp20 (fun r -> (let tmp21 = (FStarC_TypeChecker_NBETerm.embed tmp5 cbs r) in
+      (FStarC_Class_Monad.fStarC_Class_Monad_return__option tmp21)))))
+    | tmp6 -> None
+  )
+
+let mk5 (u_arity : Prims.int) (name : FStarC_Ident.lident) (tmp : ('a) FStarC_Syntax_Embeddings_Base.embedding) (tmp1 : ('a) FStarC_TypeChecker_NBETerm.embedding) (tmp2 : ('b) FStarC_Syntax_Embeddings_Base.embedding) (tmp3 : ('b) FStarC_TypeChecker_NBETerm.embedding) (tmp4 : ('c) FStarC_Syntax_Embeddings_Base.embedding) (tmp5 : ('c) FStarC_TypeChecker_NBETerm.embedding) (tmp6 : ('d) FStarC_Syntax_Embeddings_Base.embedding) (tmp7 : ('d) FStarC_TypeChecker_NBETerm.embedding) (tmp8 : ('e) FStarC_Syntax_Embeddings_Base.embedding) (tmp9 : ('e) FStarC_TypeChecker_NBETerm.embedding) (tmp10 : ('r) FStarC_Syntax_Embeddings_Base.embedding) (tmp11 : ('r) FStarC_TypeChecker_NBETerm.embedding) (f : ('a -> ('b -> ('c -> ('d -> ('e -> 'r)))))) : primitive_step =
+  (let interp = (mk_interp5 tmp tmp2 tmp4 tmp6 tmp8 tmp10 f) in
+  let nbe_interp = (mk_nbe_interp5 tmp1 tmp3 tmp5 tmp7 tmp9 tmp11 f) in
+  (as_primitive_step_nbecbs true (name, (Prims.parse_int "5"), u_arity, interp, nbe_interp)))
+
+let mk2' (u_arity : Prims.int) (name : FStarC_Ident.lident) (tmp : ('a) FStarC_Syntax_Embeddings_Base.embedding) (tmp1 : ('na) FStarC_TypeChecker_NBETerm.embedding) (tmp2 : ('b) FStarC_Syntax_Embeddings_Base.embedding) (tmp3 : ('nb) FStarC_TypeChecker_NBETerm.embedding) (tmp4 : ('r) FStarC_Syntax_Embeddings_Base.embedding) (tmp5 : ('nr) FStarC_TypeChecker_NBETerm.embedding) (f : ('a -> ('b -> ('r) option))) (f1 : ('na -> ('nb -> ('nr) option))) : primitive_step =
+  (let interp = (fun psc cb us args -> (match args with
+      | ((a, tmp6) :: ((b, tmp7) :: [])) -> (let tmp8 = (try_unembed_simple tmp a) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp8 (fun a1 -> (let tmp9 = (try_unembed_simple tmp2 b) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp9 (fun b1 -> (let r = (f a1 b1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option r (fun r1 -> (let tmp10 = (embed_simple tmp4 (psc).psc_range r1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_return__option tmp10)))))))))))
+      | tmp6 -> (FStarC_Effect.failwith "arity")
+    )) in
+  let nbe_interp = (fun cbs us args -> (match args with
+      | ((a, tmp6) :: ((b, tmp7) :: [])) -> (let tmp8 = (FStarC_TypeChecker_NBETerm.unembed tmp1 cbs a) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp8 (fun a1 -> (let tmp9 = (FStarC_TypeChecker_NBETerm.unembed tmp3 cbs b) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp9 (fun b1 -> (let r = (f1 a1 b1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option r (fun r1 -> (let tmp10 = (FStarC_TypeChecker_NBETerm.embed tmp5 cbs r1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_return__option tmp10)))))))))))
+      | tmp6 -> (FStarC_Effect.failwith "arity")
+    )) in
+  (as_primitive_step_nbecbs true (name, (Prims.parse_int "2"), u_arity, interp, nbe_interp)))
+
+let mk1' (u_arity : Prims.int) (name : FStarC_Ident.lident) (tmp : ('a) FStarC_Syntax_Embeddings_Base.embedding) (tmp1 : ('na) FStarC_TypeChecker_NBETerm.embedding) (tmp2 : ('r) FStarC_Syntax_Embeddings_Base.embedding) (tmp3 : ('nr) FStarC_TypeChecker_NBETerm.embedding) (f : ('a -> ('r) option)) (f1 : ('na -> ('nr) option)) : primitive_step =
+  (let interp = (fun psc cb us args -> (match args with
+      | ((a, tmp4) :: []) -> (let tmp5 = (try_unembed_simple tmp a) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp5 (fun a1 -> (let r = (f a1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option r (fun r1 -> (let tmp6 = (embed_simple tmp2 (psc).psc_range r1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_return__option tmp6))))))))
+      | tmp4 -> (FStarC_Effect.failwith "arity")
+    )) in
+  let nbe_interp = (fun cbs us args -> (match args with
+      | ((a, tmp4) :: []) -> (let tmp5 = (FStarC_TypeChecker_NBETerm.unembed tmp1 cbs a) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp5 (fun a1 -> (let r = (f1 a1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option r (fun r1 -> (let tmp6 = (FStarC_TypeChecker_NBETerm.embed tmp3 cbs r1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_return__option tmp6))))))))
+      | tmp4 -> (FStarC_Effect.failwith "arity")
+    )) in
+  (as_primitive_step_nbecbs true (name, (Prims.parse_int "1"), u_arity, interp, nbe_interp)))
+
+let mk4' (u_arity : Prims.int) (name : FStarC_Ident.lident) (tmp : ('a) FStarC_Syntax_Embeddings_Base.embedding) (tmp1 : ('na) FStarC_TypeChecker_NBETerm.embedding) (tmp2 : ('b) FStarC_Syntax_Embeddings_Base.embedding) (tmp3 : ('nb) FStarC_TypeChecker_NBETerm.embedding) (tmp4 : ('c) FStarC_Syntax_Embeddings_Base.embedding) (tmp5 : ('nc) FStarC_TypeChecker_NBETerm.embedding) (tmp6 : ('d) FStarC_Syntax_Embeddings_Base.embedding) (tmp7 : ('nd) FStarC_TypeChecker_NBETerm.embedding) (tmp8 : ('r) FStarC_Syntax_Embeddings_Base.embedding) (tmp9 : ('nr) FStarC_TypeChecker_NBETerm.embedding) (f : ('a -> ('b -> ('c -> ('d -> ('r) option))))) (f1 : ('na -> ('nb -> ('nc -> ('nd -> ('nr) option))))) : primitive_step =
+  (let interp = (fun psc cb us args -> (match args with
+      | ((a, tmp10) :: ((b, tmp11) :: ((c, tmp12) :: ((d, tmp13) :: [])))) -> (let tmp14 = (try_unembed_simple tmp a) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp14 (fun a1 -> (let tmp15 = (try_unembed_simple tmp2 b) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp15 (fun b1 -> (let tmp16 = (try_unembed_simple tmp4 c) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp16 (fun c1 -> (let tmp17 = (try_unembed_simple tmp6 d) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp17 (fun d1 -> (let r = (f a1 b1 c1 d1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option r (fun r1 -> (let tmp18 = (embed_simple tmp8 (psc).psc_range r1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_return__option tmp18)))))))))))))))))
+      | tmp10 -> (FStarC_Effect.failwith "arity")
+    )) in
+  let nbe_interp = (fun cbs us args -> (match args with
+      | ((a, tmp10) :: ((b, tmp11) :: ((c, tmp12) :: ((d, tmp13) :: [])))) -> (let tmp14 = (FStarC_TypeChecker_NBETerm.unembed tmp1 cbs a) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp14 (fun a1 -> (let tmp15 = (FStarC_TypeChecker_NBETerm.unembed tmp3 cbs b) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp15 (fun b1 -> (let tmp16 = (FStarC_TypeChecker_NBETerm.unembed tmp5 cbs c) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp16 (fun c1 -> (let tmp17 = (FStarC_TypeChecker_NBETerm.unembed tmp7 cbs d) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp17 (fun d1 -> (let r = (f1 a1 b1 c1 d1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option r (fun r1 -> (let tmp18 = (FStarC_TypeChecker_NBETerm.embed tmp9 cbs r1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_return__option tmp18)))))))))))))))))
+      | tmp10 -> (FStarC_Effect.failwith "arity")
+    )) in
+  (as_primitive_step_nbecbs true (name, (Prims.parse_int "4"), u_arity, interp, nbe_interp)))
+
+let psc_subst (psc : psc) : (FStarC_Syntax_Syntax.subst_elt) list =
+  ((psc).psc_subst ())
+
+let null_psc : psc =
+  { psc_range = FStarC_Range_Type.dummyRange; psc_subst = (fun tmp -> []) }
+
+let psc_range (psc : psc) : FStarC_Range_Type.range =
+  (psc).psc_range
+
+let mk1_psc' (u_arity : Prims.int) (name : FStarC_Ident.lident) (tmp : ('a) FStarC_Syntax_Embeddings_Base.embedding) (tmp1 : ('na) FStarC_TypeChecker_NBETerm.embedding) (tmp2 : ('r) FStarC_Syntax_Embeddings_Base.embedding) (tmp3 : ('nr) FStarC_TypeChecker_NBETerm.embedding) (f : (psc -> ('a -> ('r) option))) (f1 : (psc -> ('na -> ('nr) option))) : primitive_step =
+  (let interp = (fun psc cb us args -> (match args with
+      | ((a, tmp4) :: []) -> (let tmp5 = (try_unembed_simple tmp a) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp5 (fun a1 -> (let r = (f psc a1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option r (fun r1 -> (let tmp6 = (embed_simple tmp2 (psc).psc_range r1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_return__option tmp6))))))))
+      | tmp4 -> (FStarC_Effect.failwith "arity")
+    )) in
+  let nbe_interp = (fun cbs us args -> (match args with
+      | ((a, tmp4) :: []) -> (let tmp5 = (FStarC_TypeChecker_NBETerm.unembed tmp1 cbs a) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp5 (fun a1 -> (let r = (f1 null_psc a1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option r (fun r1 -> (let tmp6 = (FStarC_TypeChecker_NBETerm.embed tmp3 cbs r1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_return__option tmp6))))))))
+      | tmp4 -> (FStarC_Effect.failwith "arity")
+    )) in
+  (as_primitive_step_nbecbs true (name, (Prims.parse_int "1"), u_arity, interp, nbe_interp)))
+
+let mk5' (u_arity : Prims.int) (name : FStarC_Ident.lident) (tmp : ('a) FStarC_Syntax_Embeddings_Base.embedding) (tmp1 : ('na) FStarC_TypeChecker_NBETerm.embedding) (tmp2 : ('b) FStarC_Syntax_Embeddings_Base.embedding) (tmp3 : ('nb) FStarC_TypeChecker_NBETerm.embedding) (tmp4 : ('c) FStarC_Syntax_Embeddings_Base.embedding) (tmp5 : ('nc) FStarC_TypeChecker_NBETerm.embedding) (tmp6 : ('d) FStarC_Syntax_Embeddings_Base.embedding) (tmp7 : ('nd) FStarC_TypeChecker_NBETerm.embedding) (tmp8 : ('e) FStarC_Syntax_Embeddings_Base.embedding) (tmp9 : ('ne) FStarC_TypeChecker_NBETerm.embedding) (tmp10 : ('r) FStarC_Syntax_Embeddings_Base.embedding) (tmp11 : ('nr) FStarC_TypeChecker_NBETerm.embedding) (f : ('a -> ('b -> ('c -> ('d -> ('e -> ('r) option)))))) (f1 : ('na -> ('nb -> ('nc -> ('nd -> ('ne -> ('nr) option)))))) : primitive_step =
+  (let interp = (fun psc cb us args -> (match args with
+      | ((a, tmp12) :: ((b, tmp13) :: ((c, tmp14) :: ((d, tmp15) :: ((e, tmp16) :: []))))) -> (let tmp17 = (try_unembed_simple tmp a) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp17 (fun a1 -> (let tmp18 = (try_unembed_simple tmp2 b) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp18 (fun b1 -> (let tmp19 = (try_unembed_simple tmp4 c) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp19 (fun c1 -> (let tmp20 = (try_unembed_simple tmp6 d) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp20 (fun d1 -> (let tmp21 = (try_unembed_simple tmp8 e) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp21 (fun e1 -> (let r = (f a1 b1 c1 d1 e1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option r (fun r1 -> (let tmp22 = (embed_simple tmp10 (psc).psc_range r1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_return__option tmp22))))))))))))))))))))
+      | tmp12 -> (FStarC_Effect.failwith "arity")
+    )) in
+  let nbe_interp = (fun cbs us args -> (match args with
+      | ((a, tmp12) :: ((b, tmp13) :: ((c, tmp14) :: ((d, tmp15) :: ((e, tmp16) :: []))))) -> (let tmp17 = (FStarC_TypeChecker_NBETerm.unembed tmp1 cbs a) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp17 (fun a1 -> (let tmp18 = (FStarC_TypeChecker_NBETerm.unembed tmp3 cbs b) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp18 (fun b1 -> (let tmp19 = (FStarC_TypeChecker_NBETerm.unembed tmp5 cbs c) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp19 (fun c1 -> (let tmp20 = (FStarC_TypeChecker_NBETerm.unembed tmp7 cbs d) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp20 (fun d1 -> (let tmp21 = (FStarC_TypeChecker_NBETerm.unembed tmp9 cbs e) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp21 (fun e1 -> (let r = (f1 a1 b1 c1 d1 e1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option r (fun r1 -> (let tmp22 = (FStarC_TypeChecker_NBETerm.embed tmp11 cbs r1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_return__option tmp22))))))))))))))))))))
+      | tmp12 -> (FStarC_Effect.failwith "arity")
+    )) in
+  (as_primitive_step_nbecbs true (name, (Prims.parse_int "5"), u_arity, interp, nbe_interp)))
+
+let mk6' (u_arity : Prims.int) (name : FStarC_Ident.lident) (tmp : ('a) FStarC_Syntax_Embeddings_Base.embedding) (tmp1 : ('na) FStarC_TypeChecker_NBETerm.embedding) (tmp2 : ('b) FStarC_Syntax_Embeddings_Base.embedding) (tmp3 : ('nb) FStarC_TypeChecker_NBETerm.embedding) (tmp4 : ('c) FStarC_Syntax_Embeddings_Base.embedding) (tmp5 : ('nc) FStarC_TypeChecker_NBETerm.embedding) (tmp6 : ('d) FStarC_Syntax_Embeddings_Base.embedding) (tmp7 : ('nd) FStarC_TypeChecker_NBETerm.embedding) (tmp8 : ('e) FStarC_Syntax_Embeddings_Base.embedding) (tmp9 : ('ne) FStarC_TypeChecker_NBETerm.embedding) (tmp10 : ('f) FStarC_Syntax_Embeddings_Base.embedding) (tmp11 : ('nf) FStarC_TypeChecker_NBETerm.embedding) (tmp12 : ('r) FStarC_Syntax_Embeddings_Base.embedding) (tmp13 : ('nr) FStarC_TypeChecker_NBETerm.embedding) (f : ('a -> ('b -> ('c -> ('d -> ('e -> ('f -> ('r) option))))))) (f1 : ('na -> ('nb -> ('nc -> ('nd -> ('ne -> ('nf -> ('nr) option))))))) : primitive_step =
+  (let interp = (fun psc cb us args -> (match args with
+      | ((a, tmp14) :: ((b, tmp15) :: ((c, tmp16) :: ((d, tmp17) :: ((e, tmp18) :: ((f2, tmp19) :: [])))))) -> (let tmp20 = (try_unembed_simple tmp a) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp20 (fun a1 -> (let tmp21 = (try_unembed_simple tmp2 b) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp21 (fun b1 -> (let tmp22 = (try_unembed_simple tmp4 c) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp22 (fun c1 -> (let tmp23 = (try_unembed_simple tmp6 d) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp23 (fun d1 -> (let tmp24 = (try_unembed_simple tmp8 e) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp24 (fun e1 -> (let tmp25 = (try_unembed_simple tmp10 f2) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp25 (fun f3 -> (let r = (f a1 b1 c1 d1 e1 f3) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option r (fun r1 -> (let tmp26 = (embed_simple tmp12 (psc).psc_range r1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_return__option tmp26)))))))))))))))))))))))
+      | tmp14 -> (FStarC_Effect.failwith "arity")
+    )) in
+  let nbe_interp = (fun cbs us args -> (match args with
+      | ((a, tmp14) :: ((b, tmp15) :: ((c, tmp16) :: ((d, tmp17) :: ((e, tmp18) :: ((f2, tmp19) :: [])))))) -> (let tmp20 = (FStarC_TypeChecker_NBETerm.unembed tmp1 cbs a) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp20 (fun a1 -> (let tmp21 = (FStarC_TypeChecker_NBETerm.unembed tmp3 cbs b) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp21 (fun b1 -> (let tmp22 = (FStarC_TypeChecker_NBETerm.unembed tmp5 cbs c) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp22 (fun c1 -> (let tmp23 = (FStarC_TypeChecker_NBETerm.unembed tmp7 cbs d) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp23 (fun d1 -> (let tmp24 = (FStarC_TypeChecker_NBETerm.unembed tmp9 cbs e) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp24 (fun e1 -> (let tmp25 = (FStarC_TypeChecker_NBETerm.unembed tmp11 cbs f2) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp25 (fun f3 -> (let r = (f1 a1 b1 c1 d1 e1 f3) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option r (fun r1 -> (let tmp26 = (FStarC_TypeChecker_NBETerm.embed tmp13 cbs r1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_return__option tmp26)))))))))))))))))))))))
+      | tmp14 -> (FStarC_Effect.failwith "arity")
+    )) in
+  (as_primitive_step_nbecbs true (name, (Prims.parse_int "6"), u_arity, interp, nbe_interp)))
+

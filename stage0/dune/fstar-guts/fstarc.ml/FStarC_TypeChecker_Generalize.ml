@@ -1,612 +1,232 @@
-open Prims
-let dbg_Gen : Prims.bool FStarC_Effect.ref= FStarC_Debug.get_toggle "Gen"
-let showable_univ_var :
-  FStarC_Syntax_Syntax.universe_uvar FStarC_Class_Show.showable=
-  {
-    FStarC_Class_Show.show =
-      (fun u ->
-         FStarC_Class_Show.show FStarC_Syntax_Print.showable_univ
-           (FStarC_Syntax_Syntax.U_unif u))
-  }
-let gen_univs (env : FStarC_TypeChecker_Env.env)
-  (x : FStarC_Syntax_Syntax.universe_uvar FStarC_FlatSet.t) :
-  FStarC_Syntax_Syntax.univ_name Prims.list=
-  let uu___ =
-    FStarC_Class_Setlike.is_empty
-      (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_univ_uvar) x in
-  if uu___
-  then []
-  else
-    (let s =
-       let uu___1 =
-         let uu___2 = FStarC_TypeChecker_Env.univ_vars env in
-         FStarC_Class_Setlike.diff
-           (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_univ_uvar)
-           x uu___2 in
-       FStarC_Class_Setlike.elems
-         (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_univ_uvar)
-         uu___1 in
-     (let uu___2 = FStarC_Effect.op_Bang dbg_Gen in
-      if uu___2
-      then
-        let uu___3 =
-          let uu___4 = FStarC_TypeChecker_Env.univ_vars env in
-          FStarC_Class_Show.show
-            (FStarC_FlatSet.showable_set FStarC_Syntax_Free.ord_univ_uvar
-               showable_univ_var) uu___4 in
-        FStarC_Format.print1 "univ_vars in env: %s\n" uu___3
-      else ());
-     (let r =
-        FStar_Pervasives_Native.Some (FStarC_TypeChecker_Env.get_range env) in
-      let u_names =
-        FStarC_List.map
-          (fun u ->
-             let u_name = FStarC_Syntax_Syntax.new_univ_name r in
-             (let uu___3 = FStarC_Effect.op_Bang dbg_Gen in
-              if uu___3
-              then
-                let uu___4 =
-                  let uu___5 = FStarC_Syntax_Unionfind.univ_uvar_id u in
-                  FStarC_Class_Show.show FStarC_Class_Show.showable_int
-                    uu___5 in
-                let uu___5 =
-                  FStarC_Class_Show.show FStarC_Syntax_Print.showable_univ
-                    (FStarC_Syntax_Syntax.U_unif u) in
-                let uu___6 =
-                  FStarC_Class_Show.show FStarC_Syntax_Print.showable_univ
-                    (FStarC_Syntax_Syntax.U_name u_name) in
-                FStarC_Format.print3 "Setting ?%s (%s) to %s\n" uu___4 uu___5
-                  uu___6
-              else ());
-             FStarC_Syntax_Unionfind.univ_change u
-               (FStarC_Syntax_Syntax.U_name u_name);
-             u_name) s in
-      u_names))
-let gather_free_univnames (env : FStarC_TypeChecker_Env.env)
-  (t : FStarC_Syntax_Syntax.term) :
-  FStarC_Syntax_Syntax.univ_name FStarC_FlatSet.t=
-  let ctx_univnames = FStarC_TypeChecker_Env.univnames env in
-  let tm_univnames = FStarC_Syntax_Free.univnames t in
-  let univnames =
-    FStarC_Class_Setlike.diff
-      (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_ident)
-      tm_univnames ctx_univnames in
-  univnames
-let check_universe_generalization
-  (explicit_univ_names : FStarC_Syntax_Syntax.univ_name Prims.list)
-  (generalized_univ_names : FStarC_Syntax_Syntax.univ_name Prims.list)
-  (t : FStarC_Syntax_Syntax.term) :
-  FStarC_Syntax_Syntax.univ_name Prims.list=
-  match (explicit_univ_names, generalized_univ_names) with
-  | ([], uu___) -> generalized_univ_names
-  | (uu___, []) -> explicit_univ_names
-  | uu___ ->
-      let uu___1 =
-        let uu___2 =
-          FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t in
-        Prims.strcat
-          "Generalized universe in a term containing explicit universe annotation : "
-          uu___2 in
-      FStarC_Errors.raise_error (FStarC_Syntax_Syntax.has_range_syntax ()) t
-        FStarC_Errors_Codes.Fatal_UnexpectedGeneralizedUniverse ()
-        (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-        (Obj.magic uu___1)
-let generalize_universes (env : FStarC_TypeChecker_Env.env)
-  (t0 : FStarC_Syntax_Syntax.term) : FStarC_Syntax_Syntax.tscheme=
-  FStarC_Errors.with_ctx "While generalizing universes"
-    (fun uu___ ->
-       let t =
-         FStarC_TypeChecker_Normalize.normalize
-           [FStarC_TypeChecker_Env.NoFullNorm;
-           FStarC_TypeChecker_Env.Beta;
-           FStarC_TypeChecker_Env.DoNotUnfoldPureLets] env t0 in
-       let univnames =
-         let uu___1 = gather_free_univnames env t in
-         FStarC_Class_Setlike.elems
-           (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_ident)
-           uu___1 in
-       (let uu___2 = FStarC_Effect.op_Bang dbg_Gen in
-        if uu___2
-        then
-          let uu___3 =
-            FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t in
-          let uu___4 =
-            FStarC_Class_Show.show
-              (FStarC_Class_Show.show_list FStarC_Ident.showable_ident)
-              univnames in
-          FStarC_Format.print2
-            "generalizing universes in the term (post norm): %s with univnames: %s\n"
-            uu___3 uu___4
-        else ());
-       (let univs = FStarC_Syntax_Free.univs t in
-        (let uu___3 = FStarC_Effect.op_Bang dbg_Gen in
-         if uu___3
-         then
-           let uu___4 =
-             FStarC_Class_Show.show
-               (FStarC_FlatSet.showable_set FStarC_Syntax_Free.ord_univ_uvar
-                  showable_univ_var) univs in
-           FStarC_Format.print1 "univs to gen : %s\n" uu___4
-         else ());
-        (let gen = gen_univs env univs in
-         (let uu___4 = FStarC_Effect.op_Bang dbg_Gen in
-          if uu___4
-          then
-            let uu___5 =
-              FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t in
-            let uu___6 =
-              FStarC_Class_Show.show
-                (FStarC_Class_Show.show_list FStarC_Ident.showable_ident) gen in
-            FStarC_Format.print2
-              "After generalization, t: %s and univs: %s\n" uu___5 uu___6
-          else ());
-         (let univs1 = check_universe_generalization univnames gen t0 in
-          let t1 = FStarC_TypeChecker_Normalize.reduce_uvar_solutions env t in
-          let ts = FStarC_Syntax_Subst.close_univ_vars univs1 t1 in
-          (univs1, ts)))))
-let gen (env : FStarC_TypeChecker_Env.env) (is_rec : Prims.bool)
-  (lecs :
-    (FStarC_Syntax_Syntax.lbname * FStarC_Syntax_Syntax.term *
-      FStarC_Syntax_Syntax.comp) Prims.list)
-  :
-  (FStarC_Syntax_Syntax.lbname * FStarC_Syntax_Syntax.univ_name Prims.list *
-    FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.comp *
-    FStarC_Syntax_Syntax.binder Prims.list) Prims.list
-    FStar_Pervasives_Native.option=
-  let uu___ =
-    let uu___1 =
-      FStarC_Util.for_all
-        (fun uu___2 ->
-           match uu___2 with
-           | (uu___3, uu___4, c) ->
-               FStarC_Syntax_Util.is_pure_or_ghost_comp c) lecs in
-    Prims.not uu___1 in
-  if uu___
-  then FStar_Pervasives_Native.None
-  else
-    (let norm c =
-       (let uu___2 = FStarC_Debug.medium () in
-        if uu___2
-        then
-          let uu___3 =
-            FStarC_Class_Show.show FStarC_Syntax_Print.showable_comp c in
-          FStarC_Format.print1 "Normalizing before generalizing:\n\t %s\n"
-            uu___3
-        else ());
-       (let c1 =
-          FStarC_TypeChecker_Normalize.normalize_comp
-            [FStarC_TypeChecker_Env.Beta;
-            FStarC_TypeChecker_Env.Exclude FStarC_TypeChecker_Env.Zeta;
-            FStarC_TypeChecker_Env.NoFullNorm;
-            FStarC_TypeChecker_Env.DoNotUnfoldPureLets] env c in
-        (let uu___3 = FStarC_Debug.medium () in
-         if uu___3
-         then
-           let uu___4 =
-             FStarC_Class_Show.show FStarC_Syntax_Print.showable_comp c1 in
-           FStarC_Format.print1 "Normalized to:\n\t %s\n" uu___4
-         else ());
-        c1) in
-     let env_uvars = FStarC_TypeChecker_Env.uvars_in_env env in
-     let gen_uvars uvs =
-       let uu___1 =
-         FStarC_Class_Setlike.diff
-           (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_ctx_uvar)
-           uvs env_uvars in
-       FStarC_Class_Setlike.elems
-         (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_ctx_uvar)
-         uu___1 in
-     let univs_and_uvars_of_lec uu___1 =
-       match uu___1 with
-       | (lbname, e, c) ->
-           let c1 = norm c in
-           let t = FStarC_Syntax_Util.comp_result c1 in
-           let univs = FStarC_Syntax_Free.univs t in
-           let uvt = FStarC_Syntax_Free.uvars t in
-           ((let uu___3 = FStarC_Effect.op_Bang dbg_Gen in
-             if uu___3
-             then
-               let uu___4 =
-                 FStarC_Class_Show.show
-                   (FStarC_FlatSet.showable_set
-                      FStarC_Syntax_Free.ord_univ_uvar showable_univ_var)
-                   univs in
-               let uu___5 =
-                 FStarC_Class_Show.show
-                   (FStarC_FlatSet.showable_set
-                      FStarC_Syntax_Free.ord_ctx_uvar
-                      FStarC_Syntax_Print.showable_ctxu) uvt in
-               FStarC_Format.print2
-                 "^^^^\n\tFree univs = %s\n\tFree uvt=%s\n" uu___4 uu___5
-             else ());
-            (let univs1 =
-               let uu___3 =
-                 FStarC_Class_Setlike.elems
-                   (FStarC_FlatSet.setlike_flat_set
-                      FStarC_Syntax_Free.ord_ctx_uvar) uvt in
-               FStarC_List.fold_left
-                 (fun univs2 uv ->
-                    let uu___4 =
-                      let uu___5 = FStarC_Syntax_Util.ctx_uvar_typ uv in
-                      FStarC_Syntax_Free.univs uu___5 in
-                    FStarC_Class_Setlike.union
-                      (FStarC_FlatSet.setlike_flat_set
-                         FStarC_Syntax_Free.ord_univ_uvar) univs2 uu___4)
-                 univs uu___3 in
-             let uvs = gen_uvars uvt in
-             (let uu___4 = FStarC_Effect.op_Bang dbg_Gen in
-              if uu___4
-              then
-                let uu___5 =
-                  FStarC_Class_Show.show
-                    (FStarC_FlatSet.showable_set
-                       FStarC_Syntax_Free.ord_univ_uvar showable_univ_var)
-                    univs1 in
-                let uu___6 =
-                  FStarC_Class_Show.show
-                    (FStarC_Class_Show.show_list
-                       FStarC_Syntax_Print.showable_ctxu) uvs in
-                FStarC_Format.print2
-                  "^^^^\n\tFree univs = %s\n\tgen_uvars = %s\n" uu___5 uu___6
-              else ());
-             (univs1, uvs, (lbname, e, c1)))) in
-     let uu___1 = univs_and_uvars_of_lec (FStarC_List.hd lecs) in
-     match uu___1 with
-     | (univs, uvs, lec_hd) ->
-         let force_univs_eq lec2 u1 u2 =
-           let uu___2 =
-             FStarC_Class_Setlike.equal
-               (FStarC_FlatSet.setlike_flat_set
-                  FStarC_Syntax_Free.ord_univ_uvar) u1 u2 in
-           if uu___2
-           then ()
-           else
-             (let uu___3 = lec_hd in
-              match uu___3 with
-              | (lb1, uu___4, uu___5) ->
-                  let uu___6 = lec2 in
-                  (match uu___6 with
-                   | (lb2, uu___7, uu___8) ->
-                       let msg =
-                         let uu___9 =
-                           FStarC_Class_Show.show
-                             (FStarC_Class_Show.show_either
-                                FStarC_Syntax_Print.showable_bv
-                                FStarC_Syntax_Syntax.showable_fv) lb1 in
-                         let uu___10 =
-                           FStarC_Class_Show.show
-                             (FStarC_FlatSet.showable_set
-                                FStarC_Syntax_Free.ord_univ_uvar
-                                showable_univ_var) u1 in
-                         let uu___11 =
-                           FStarC_Class_Show.show
-                             (FStarC_Class_Show.show_either
-                                FStarC_Syntax_Print.showable_bv
-                                FStarC_Syntax_Syntax.showable_fv) lb2 in
-                         let uu___12 =
-                           FStarC_Class_Show.show
-                             (FStarC_FlatSet.showable_set
-                                FStarC_Syntax_Free.ord_univ_uvar
-                                showable_univ_var) u2 in
-                         FStarC_Format.fmt4
-                           "Generalizing the types of these mutually recursive definitions requires an incompatible set of universes for %s %s and %s %s"
-                           uu___9 uu___10 uu___11 uu___12 in
-                       FStarC_Errors.raise_error
-                         FStarC_TypeChecker_Env.hasRange_env env
-                         FStarC_Errors_Codes.Fatal_IncompatibleSetOfUniverse
-                         ()
-                         (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                         (Obj.magic msg))) in
-         let force_uvars_eq lec2 u1 u2 =
-           let uvars_subseteq u11 u21 =
-             FStarC_Util.for_all
-               (fun u ->
-                  FStarC_Util.for_some
-                    (fun u' ->
-                       FStarC_Syntax_Unionfind.equiv
-                         u.FStarC_Syntax_Syntax.ctx_uvar_head
-                         u'.FStarC_Syntax_Syntax.ctx_uvar_head) u21) u11 in
-           let uu___2 =
-             let uu___3 = uvars_subseteq u1 u2 in
-             if uu___3 then uvars_subseteq u2 u1 else false in
-           if uu___2
-           then ()
-           else
-             (let uu___3 = lec_hd in
-              match uu___3 with
-              | (lb1, uu___4, uu___5) ->
-                  let uu___6 = lec2 in
-                  (match uu___6 with
-                   | (lb2, uu___7, uu___8) ->
-                       let msg =
-                         let uu___9 =
-                           FStarC_Class_Show.show
-                             (FStarC_Class_Show.show_either
-                                FStarC_Syntax_Print.showable_bv
-                                FStarC_Syntax_Syntax.showable_fv) lb1 in
-                         let uu___10 =
-                           FStarC_Class_Show.show
-                             (FStarC_Class_Show.show_either
-                                FStarC_Syntax_Print.showable_bv
-                                FStarC_Syntax_Syntax.showable_fv) lb2 in
-                         FStarC_Format.fmt2
-                           "Generalizing the types of these mutually recursive definitions requires an incompatible number of types for %s and %s"
-                           uu___9 uu___10 in
-                       FStarC_Errors.raise_error
-                         FStarC_TypeChecker_Env.hasRange_env env
-                         FStarC_Errors_Codes.Fatal_IncompatibleNumberOfTypes
-                         ()
-                         (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                         (Obj.magic msg))) in
-         let lecs1 =
-           FStarC_List.fold_right
-             (fun this_lec lecs2 ->
-                let uu___2 = univs_and_uvars_of_lec this_lec in
-                match uu___2 with
-                | (this_univs, this_uvs, this_lec1) ->
-                    (force_univs_eq this_lec1 univs this_univs;
-                     force_uvars_eq this_lec1 uvs this_uvs;
-                     this_lec1
-                     ::
-                     lecs2)) (FStarC_List.tl lecs) [] in
-         let lecs2 = lec_hd :: lecs1 in
-         let gen_types uvs1 =
-           FStarC_List.concatMap
-             (fun u ->
-                if
-                  match u.FStarC_Syntax_Syntax.ctx_uvar_meta with
-                  | FStar_Pervasives_Native.Some v -> true
-                  | uu___2 -> false
-                then []
-                else
-                  (let uu___2 =
-                     FStarC_Syntax_Unionfind.find
-                       u.FStarC_Syntax_Syntax.ctx_uvar_head in
-                   match uu___2 with
-                   | FStar_Pervasives_Native.Some uu___3 ->
-                       FStarC_Effect.failwith
-                         "Unexpected instantiation of mutually recursive uvar"
-                   | uu___3 ->
-                       let k =
-                         let uu___4 = FStarC_Syntax_Util.ctx_uvar_typ u in
-                         FStarC_TypeChecker_Normalize.normalize
-                           [FStarC_TypeChecker_Env.Beta;
-                           FStarC_TypeChecker_Env.Exclude
-                             FStarC_TypeChecker_Env.Zeta] env uu___4 in
-                       let uu___4 = FStarC_Syntax_Util.arrow_formals k in
-                       (match uu___4 with
-                        | (bs, kres) ->
-                            let uu___5 =
-                              let uu___6 =
-                                let uu___7 =
-                                  FStarC_TypeChecker_Normalize.unfold_whnf
-                                    env kres in
-                                FStarC_Syntax_Util.unrefine uu___7 in
-                              uu___6.FStarC_Syntax_Syntax.n in
-                            (match uu___5 with
-                             | FStarC_Syntax_Syntax.Tm_type uu___6 ->
-                                 let free = FStarC_Syntax_Free.names kres in
-                                 let uu___7 =
-                                   let uu___8 =
-                                     FStarC_Class_Setlike.is_empty
-                                       (FStarC_FlatSet.setlike_flat_set
-                                          FStarC_Syntax_Syntax.ord_bv) free in
-                                   Prims.not uu___8 in
-                                 if uu___7
-                                 then []
-                                 else
-                                   (let a =
-                                      FStarC_Syntax_Syntax.new_bv
-                                        (FStar_Pervasives_Native.Some
-                                           (FStarC_TypeChecker_Env.get_range
-                                              env)) kres in
-                                    let t =
-                                      match bs with
-                                      | [] ->
-                                          FStarC_Syntax_Syntax.bv_to_name a
-                                      | uu___8 ->
-                                          let uu___9 =
-                                            FStarC_Syntax_Syntax.bv_to_name a in
-                                          FStarC_Syntax_Util.abs bs uu___9
-                                            (FStar_Pervasives_Native.Some
-                                               (FStarC_Syntax_Util.residual_tot
-                                                  kres)) in
-                                    FStarC_Syntax_Util.set_uvar
-                                      u.FStarC_Syntax_Syntax.ctx_uvar_head t;
-                                    [(a,
-                                       (FStarC_Syntax_Syntax.as_bqual_implicit
-                                          true))])
-                             | uu___6 -> [])))) uvs1 in
-         let gen_univs1 = gen_univs env univs in
-         let gen_tvars = gen_types uvs in
-         let ecs =
-           FStarC_List.map
-             (fun uu___2 ->
-                match uu___2 with
-                | (lbname, e, c) ->
-                    let uu___3 =
-                      match (gen_tvars, gen_univs1) with
-                      | ([], []) -> (e, c, [])
-                      | uu___4 ->
-                          let uu___5 = (e, c) in
-                          (match uu___5 with
-                           | (e0, c0) ->
-                               let c1 =
-                                 FStarC_TypeChecker_Normalize.normalize_comp
-                                   [FStarC_TypeChecker_Env.Beta;
-                                   FStarC_TypeChecker_Env.DoNotUnfoldPureLets;
-                                   FStarC_TypeChecker_Env.CompressUvars;
-                                   FStarC_TypeChecker_Env.NoFullNorm;
-                                   FStarC_TypeChecker_Env.Exclude
-                                     FStarC_TypeChecker_Env.Zeta] env c in
-                               let e1 =
-                                 FStarC_TypeChecker_Normalize.reduce_uvar_solutions
-                                   env e in
-                               let e2 =
-                                 if is_rec
-                                 then
-                                   let tvar_args =
-                                     FStarC_List.map
-                                       (fun uu___6 ->
-                                          match uu___6 with
-                                          | (x, uu___7) ->
-                                              let uu___8 =
-                                                FStarC_Syntax_Syntax.bv_to_name
-                                                  x in
-                                              FStarC_Syntax_Syntax.iarg
-                                                uu___8) gen_tvars in
-                                   let instantiate_lbname_with_app tm fv =
-                                     if
-                                       FStarC_Syntax_Syntax.fv_eq fv
-                                         (match lbname with
-                                          | FStar_Pervasives.Inr v -> v)
-                                     then
-                                       FStarC_Syntax_Syntax.mk_Tm_app tm
-                                         tvar_args
-                                         tm.FStarC_Syntax_Syntax.pos
-                                     else tm in
-                                   FStarC_Syntax_InstFV.inst
-                                     instantiate_lbname_with_app e1
-                                 else e1 in
-                               let tvars_bs =
-                                 FStarC_List.map
-                                   (fun uu___6 ->
-                                      match uu___6 with
-                                      | (x, q) ->
-                                          FStarC_Syntax_Syntax.mk_binder_with_attrs
-                                            x q FStar_Pervasives_Native.None
-                                            []) gen_tvars in
-                               let t =
-                                 let cod_t =
-                                   FStarC_Syntax_Subst.compress
-                                     (FStarC_Syntax_Util.comp_result c1) in
-                                 match cod_t.FStarC_Syntax_Syntax.n with
-                                 | FStarC_Syntax_Syntax.Tm_arrow uu___6 ->
-                                     let uu___7 =
-                                       FStarC_Syntax_Util.arrow_formals_comp_strict
-                                         cod_t in
-                                     (match uu___7 with
-                                      | (bs, cod) ->
-                                          FStarC_Syntax_Util.arrow
-                                            (FStarC_List.op_At tvars_bs bs)
-                                            cod)
-                                 | uu___6 ->
-                                     FStarC_Syntax_Util.arrow tvars_bs c1 in
-                               let e' =
-                                 let uu___6 =
-                                   let uu___7 =
-                                     FStarC_Syntax_Util.residual_comp_of_comp
-                                       c1 in
-                                   FStar_Pervasives_Native.Some uu___7 in
-                                 FStarC_Syntax_Util.abs tvars_bs e2 uu___6 in
-                               let uu___6 = FStarC_Syntax_Syntax.mk_Total t in
-                               (e', uu___6, tvars_bs)) in
-                    (match uu___3 with
-                     | (e1, c1, gvs) -> (lbname, gen_univs1, e1, c1, gvs)))
-             lecs2 in
-         FStar_Pervasives_Native.Some ecs)
-let generalize' (env : FStarC_TypeChecker_Env.env) (is_rec : Prims.bool)
-  (lecs :
-    (FStarC_Syntax_Syntax.lbname * FStarC_Syntax_Syntax.term *
-      FStarC_Syntax_Syntax.comp) Prims.list)
-  :
-  (FStarC_Syntax_Syntax.lbname * FStarC_Syntax_Syntax.univ_names *
-    FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.comp *
-    FStarC_Syntax_Syntax.binder Prims.list) Prims.list=
-  (let uu___1 = FStarC_Debug.low () in
-   if uu___1
-   then
-     let uu___2 =
-       let uu___3 =
-         FStarC_List.map
-           (fun uu___4 ->
-              match uu___4 with
-              | (lb, uu___5, uu___6) ->
-                  FStarC_Class_Show.show
-                    (FStarC_Class_Show.show_either
-                       FStarC_Syntax_Print.showable_bv
-                       FStarC_Syntax_Syntax.showable_fv) lb) lecs in
-       FStarC_Class_Show.show
-         (FStarC_Class_Show.show_list FStarC_Class_Show.showable_string)
-         uu___3 in
-     FStarC_Format.print1 "Generalizing: %s\n" uu___2
-   else ());
-  (let univnames_lecs =
-     let empty =
-       FStarC_Class_Setlike.from_list
-         (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_ident) [] in
-     FStarC_List.fold_left
-       (fun out uu___1 ->
-          match uu___1 with
-          | (l, t, c) ->
-              let uu___2 = gather_free_univnames env t in
-              FStarC_Class_Setlike.union
-                (FStarC_FlatSet.setlike_flat_set
-                   FStarC_Syntax_Syntax.ord_ident) out uu___2) empty lecs in
-   let univnames_lecs1 =
-     FStarC_Class_Setlike.elems
-       (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_ident)
-       univnames_lecs in
-   let generalized_lecs =
-     let uu___1 = gen env is_rec lecs in
-     match uu___1 with
-     | FStar_Pervasives_Native.None ->
-         FStarC_List.map
-           (fun uu___2 -> match uu___2 with | (l, t, c) -> (l, [], t, c, []))
-           lecs
-     | FStar_Pervasives_Native.Some luecs ->
-         ((let uu___3 = FStarC_Debug.medium () in
-           if uu___3
-           then
-             FStarC_List.iter
-               (fun uu___4 ->
-                  match uu___4 with
-                  | (l, us, e, c, gvs) ->
-                      let uu___5 =
-                        FStarC_Class_Show.show
-                          FStarC_Range_Ops.showable_range
-                          e.FStarC_Syntax_Syntax.pos in
-                      let uu___6 =
-                        FStarC_Class_Show.show
-                          (FStarC_Class_Show.show_either
-                             FStarC_Syntax_Print.showable_bv
-                             FStarC_Syntax_Syntax.showable_fv) l in
-                      let uu___7 =
-                        FStarC_Class_Show.show
-                          FStarC_Syntax_Print.showable_term
-                          (FStarC_Syntax_Util.comp_result c) in
-                      let uu___8 =
-                        FStarC_Class_Show.show
-                          FStarC_Syntax_Print.showable_term e in
-                      let uu___9 =
-                        FStarC_Class_Show.show
-                          (FStarC_Class_Show.show_list
-                             FStarC_Syntax_Print.showable_binder) gvs in
-                      FStarC_Format.print5
-                        "(%s) Generalized %s at type %s\n%s\nVars = (%s)\n"
-                        uu___5 uu___6 uu___7 uu___8 uu___9) luecs
-           else ());
-          luecs) in
-   FStarC_List.map
-     (fun uu___1 ->
-        match uu___1 with
-        | (l, generalized_univs, t, c, gvs) ->
-            let uu___2 =
-              check_universe_generalization univnames_lecs1 generalized_univs
-                t in
-            (l, uu___2, t, c, gvs)) generalized_lecs)
-let generalize (env : FStarC_TypeChecker_Env.env) (is_rec : Prims.bool)
-  (lecs :
-    (FStarC_Syntax_Syntax.lbname * FStarC_Syntax_Syntax.term *
-      FStarC_Syntax_Syntax.comp) Prims.list)
-  :
-  (FStarC_Syntax_Syntax.lbname * FStarC_Syntax_Syntax.univ_names *
-    FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.comp *
-    FStarC_Syntax_Syntax.binder Prims.list) Prims.list=
-  FStarC_Errors.with_ctx "While generalizing"
-    (fun uu___ ->
-       FStarC_Profiling.profile (fun uu___1 -> generalize' env is_rec lecs)
-         (FStar_Pervasives_Native.Some
-            (FStarC_Ident.string_of_lid
-               (FStarC_TypeChecker_Env.current_module env)))
-         "FStarC.TypeChecker.Util.generalize")
+(* Generated by F* Custard extraction. Do not edit. *)
+[@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
+
+let gather_free_univnames (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Ident.ident) list =
+  (let ctx_univnames = (FStarC_TypeChecker_Env.univnames env) in
+  let tm_univnames = (FStarC_Syntax_Free.univnames t) in
+  (FStarC_Syntax_Syntax.fStarC_Class_Setlike_diff__ident_list_ident tm_univnames ctx_univnames))
+
+let dbg_Gen : (bool ref) =
+  (FStarC_Debug.get_toggle "Gen")
+
+let gen_univs (env : FStarC_TypeChecker_Env.env) (x : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : (FStarC_Ident.ident) list =
+  (let tmp = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_is_empty__tuple3_p_uvar_option_version_range x) in
+  (if tmp then [] else (let tmp1 = (FStarC_TypeChecker_Env.univ_vars env) in
+  let tmp2 = (FStarC_Syntax_Unionfind.fStarC_Class_Setlike_diff__tuple3_p_uvar_option_version_range x tmp1) in
+  let tmp3 = (!(dbg_Gen)) in
+  (if tmp3 then (let tmp4 = (FStarC_TypeChecker_Env.univ_vars env) in
+  let tmp5 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_tuple3_p_uvar_version_range tmp4) in
+  (FStarC_Format.print1 "univ_vars in env: %s\n" tmp5)) else ());
+  let r = (Some ((FStarC_TypeChecker_Env.get_range env))) in
+  (FStarC_List.map (fun u -> (let u_name = (FStarC_Syntax_Syntax.new_univ_name r) in
+  let tmp4 = (!(dbg_Gen)) in
+  (if tmp4 then (let tmp5 = (FStarC_Syntax_Unionfind.univ_uvar_id u) in
+  let tmp6 = (FStarC_Class_Show.fStarC_Class_Show_show__int tmp5) in
+  let tmp7 = (FStarC_Syntax_Print.fStarC_Class_Show_show__universe (FStarC_Syntax_Syntax.U_unif ((match u with (custard_tup, _, _) -> custard_tup), (match u with (_, custard_tup, _) -> custard_tup), (match u with (_, _, custard_tup) -> custard_tup)))) in
+  let tmp8 = (FStarC_Syntax_Print.fStarC_Class_Show_show__universe (FStarC_Syntax_Syntax.U_name (u_name))) in
+  (FStarC_Format.print3 "Setting ?%s (%s) to %s\n" tmp6 tmp7 tmp8)) else ());
+  (FStarC_Syntax_Unionfind.univ_change u (FStarC_Syntax_Syntax.U_name (u_name)));
+  u_name)) tmp2))))
+
+let gen (env : FStarC_TypeChecker_Env.env) (is_rec : bool) (lecs : (((FStarC_Syntax_Syntax.bv, FStarC_Syntax_Syntax.fv) FStar_Pervasives.either * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax)) list) : ((((FStarC_Syntax_Syntax.bv, FStarC_Syntax_Syntax.fv) FStar_Pervasives.either * (FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.binder) list)) list) option =
+  (let tmp = (FStarC_Util.for_all (fun tmp -> (match tmp with
+      | (tmp1, tmp2, c) -> (FStarC_Syntax_Util.is_pure_or_ghost_comp c)
+    )) lecs) in
+  let tmp1 = (not tmp) in
+  (if tmp1 then None else (let norm = (fun c -> (let tmp2 = (FStarC_Debug.medium ()) in
+    (if tmp2 then (let tmp3 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_comp' c) in
+    (FStarC_Format.print1 "Normalizing before generalizing:\n\t %s\n" tmp3)) else ());
+    let c1 = (FStarC_TypeChecker_Normalize.normalize_comp (FStarC_TypeChecker_Env.Beta :: ((FStarC_TypeChecker_Env.Exclude (FStarC_TypeChecker_Env.Zeta)) :: (FStarC_TypeChecker_Env.NoFullNorm :: (FStarC_TypeChecker_Env.DoNotUnfoldPureLets :: [])))) env c) in
+    let tmp3 = (FStarC_Debug.medium ()) in
+    (if tmp3 then (let tmp4 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_comp' c1) in
+    (FStarC_Format.print1 "Normalized to:\n\t %s\n" tmp4)) else ());
+    c1)) in
+  let env_uvars = (FStarC_TypeChecker_Env.uvars_in_env env) in
+  let gen_uvars = (fun uvs -> (FStarC_Syntax_Unionfind.fStarC_Class_Setlike_diff__ctx_uvar_list_ctx_uvar uvs env_uvars)) in
+  let univs_and_uvars_of_lec = (fun tmp2 -> (match tmp2 with
+      | (lbname, e, c) -> (let c1 = (norm c) in
+        let t = (FStarC_Syntax_Util.comp_result c1) in
+        let univs = (FStarC_Syntax_Free.univs t) in
+        let uvt = (FStarC_Syntax_Free.uvars t) in
+        let tmp3 = (!(dbg_Gen)) in
+        (if tmp3 then (let tmp4 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_tuple3_p_uvar_version_range univs) in
+        let tmp5 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_ctx_uvar uvt) in
+        (FStarC_Format.print2 "^^^^\n\tFree univs = %s\n\tFree uvt=%s\n" tmp4 tmp5)) else ());
+        let univs1 = (FStarC_List.fold_left (fun univs1 uv -> (let tmp4 = (FStarC_Syntax_Util.ctx_uvar_typ uv) in
+          let tmp5 = (FStarC_Syntax_Free.univs tmp4) in
+          (FStarC_Syntax_Unionfind.fStarC_Class_Setlike_union__tuple3_p_uvar_option_version_range univs1 tmp5))) univs uvt) in
+        let uvs = (gen_uvars uvt) in
+        let tmp4 = (!(dbg_Gen)) in
+        (if tmp4 then (let tmp5 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_tuple3_p_uvar_version_range univs1) in
+        let tmp6 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_ctx_uvar_90 uvs) in
+        (FStarC_Format.print2 "^^^^\n\tFree univs = %s\n\tgen_uvars = %s\n" tmp5 tmp6)) else ());
+        (univs1, uvs, (lbname, e, c1)))
+    )) in
+  let tmp2 = (univs_and_uvars_of_lec (FStarC_List.hd lecs)) in
+  (match tmp2 with
+    | (univs, uvs, lec_hd) -> (let force_univs_eq = (fun lec2 u1 u2 -> (let tmp3 = (FStarC_Syntax_Unionfind.fStarC_Class_Setlike_equal__tuple3_p_uvar_option_version_range u1 u2) in
+        (if tmp3 then () else (match lec_hd with
+          | (lb1, tmp4, tmp5) -> (match lec2 with
+              | (lb2, tmp6, tmp7) -> (let tmp8 = (FStarC_Syntax_Print.fStarC_Class_Show_show__either_bv_fv lb1) in
+                let tmp9 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_tuple3_p_uvar_version_range u1) in
+                let tmp10 = (FStarC_Syntax_Print.fStarC_Class_Show_show__either_bv_fv lb2) in
+                let tmp11 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_tuple3_p_uvar_version_range u2) in
+                let msg = (FStarC_Format.fmt4 "Generalizing the types of these mutually recursive definitions requires an incompatible set of universes for %s %s and %s %s" tmp8 tmp9 tmp10 tmp11) in
+                (FStarC_TypeChecker_Env.fStarC_Errors_raise_error__env_string env FStarC_Errors_Codes.Fatal_IncompatibleSetOfUniverse msg))
+            )
+        )))) in
+      let force_uvars_eq = (fun lec2 u1 u2 -> (let uvars_subseteq = (fun u11 u21 -> (FStarC_Util.for_all (fun u -> (FStarC_Util.for_some (fun u' -> (FStarC_Syntax_Unionfind.equiv ((u).FStarC_Syntax_Syntax.ctx_uvar_head, (u).FStarC_Syntax_Syntax.ctx_uvar_head1, (u).FStarC_Syntax_Syntax.ctx_uvar_head2) ((u').FStarC_Syntax_Syntax.ctx_uvar_head, (u').FStarC_Syntax_Syntax.ctx_uvar_head1, (u').FStarC_Syntax_Syntax.ctx_uvar_head2))) u21)) u11)) in
+        let tmp3 = (uvars_subseteq u1 u2) in
+        let tmp4 = (if tmp3 then (uvars_subseteq u2 u1) else false) in
+        (if tmp4 then () else (match lec_hd with
+          | (lb1, tmp5, tmp6) -> (match lec2 with
+              | (lb2, tmp7, tmp8) -> (let tmp9 = (FStarC_Syntax_Print.fStarC_Class_Show_show__either_bv_fv lb1) in
+                let tmp10 = (FStarC_Syntax_Print.fStarC_Class_Show_show__either_bv_fv lb2) in
+                let msg = (FStarC_Format.fmt2 "Generalizing the types of these mutually recursive definitions requires an incompatible number of types for %s and %s" tmp9 tmp10) in
+                (FStarC_TypeChecker_Env.fStarC_Errors_raise_error__env_string env FStarC_Errors_Codes.Fatal_IncompatibleNumberOfTypes msg))
+            )
+        )))) in
+      let lecs1 = (FStarC_List.fold_right (fun this_lec lecs1 -> (let tmp3 = (univs_and_uvars_of_lec this_lec) in
+        (match tmp3 with
+          | (this_univs, this_uvs, this_lec1) -> ((force_univs_eq this_lec1 univs this_univs);
+            (force_uvars_eq this_lec1 uvs this_uvs);
+            (this_lec1 :: lecs1))
+        ))) (FStarC_List.tl lecs) []) in
+      let lecs2 = (lec_hd :: lecs1) in
+      let gen_types = (fun uvs1 -> (FStarC_List.concatMap (fun u -> (if (match (u).FStarC_Syntax_Syntax.ctx_uvar_meta with
+          | (Some (v)) -> true
+          | tmp3 -> false
+        ) then [] else (let tmp3 = (FStarC_Syntax_Unionfind.find ((u).FStarC_Syntax_Syntax.ctx_uvar_head, (u).FStarC_Syntax_Syntax.ctx_uvar_head1, (u).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
+        (match tmp3 with
+          | (Some (tmp4)) -> (FStarC_Effect.failwith "Unexpected instantiation of mutually recursive uvar")
+          | tmp4 -> (let tmp5 = (FStarC_Syntax_Util.ctx_uvar_typ u) in
+            let k = (FStarC_TypeChecker_Normalize.normalize (FStarC_TypeChecker_Env.Beta :: ((FStarC_TypeChecker_Env.Exclude (FStarC_TypeChecker_Env.Zeta)) :: [])) env tmp5) in
+            let tmp6 = (FStarC_Syntax_Util.arrow_formals k) in
+            (match tmp6 with
+              | (bs, kres) -> (let tmp7 = (FStarC_TypeChecker_Normalize.unfold_whnf env kres) in
+                let tmp8 = (FStarC_Syntax_Util.unrefine tmp7) in
+                let tmp9 = (tmp8).FStarC_Syntax_Syntax.n in
+                (match tmp9 with
+                  | (FStarC_Syntax_Syntax.Tm_type (tmp10)) -> (let free = (FStarC_Syntax_Free.names kres) in
+                    let tmp11 = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_is_empty__bv_list_bv free) in
+                    let tmp12 = (not tmp11) in
+                    (if tmp12 then [] else (let a = (FStarC_Syntax_Syntax.new_bv (Some ((FStarC_TypeChecker_Env.get_range env))) kres) in
+                    let t = (match bs with
+                        | [] -> (FStarC_Syntax_Syntax.bv_to_name a)
+                        | tmp13 -> (let tmp14 = (FStarC_Syntax_Syntax.bv_to_name a) in
+                          (FStarC_Syntax_Util.abs bs tmp14 (Some ((FStarC_Syntax_Util.residual_tot kres)))))
+                      ) in
+                    (FStarC_Syntax_Util.set_uvar ((u).FStarC_Syntax_Syntax.ctx_uvar_head, (u).FStarC_Syntax_Syntax.ctx_uvar_head1, (u).FStarC_Syntax_Syntax.ctx_uvar_head2) t);
+                    ((a, (FStarC_Syntax_Syntax.as_bqual_implicit true)) :: []))))
+                  | tmp10 -> []
+                ))
+            ))
+        )))) uvs1)) in
+      let gen_univs_ = (gen_univs env univs) in
+      let gen_tvars = (gen_types uvs) in
+      let ecs = (FStarC_List.map (fun tmp3 -> (match tmp3 with
+          | (lbname, e, c) -> (let tmp4 = (match (gen_tvars, gen_univs_) with
+                | ([], []) -> (e, c, [])
+                | tmp4 -> (let tmp5 = (e, c) in
+                  (match tmp5 with
+                    | (e0, c0) -> (let c1 = (FStarC_TypeChecker_Normalize.normalize_comp (FStarC_TypeChecker_Env.Beta :: (FStarC_TypeChecker_Env.DoNotUnfoldPureLets :: (FStarC_TypeChecker_Env.CompressUvars :: (FStarC_TypeChecker_Env.NoFullNorm :: ((FStarC_TypeChecker_Env.Exclude (FStarC_TypeChecker_Env.Zeta)) :: []))))) env c) in
+                      let e1 = (FStarC_TypeChecker_Normalize.reduce_uvar_solutions env e) in
+                      let e2 = (if is_rec then (let tvar_args = (FStarC_List.map (fun tmp6 -> (match tmp6 with
+                            | (x, tmp7) -> (let tmp8 = (FStarC_Syntax_Syntax.bv_to_name x) in
+                              (FStarC_Syntax_Syntax.iarg tmp8))
+                          )) gen_tvars) in
+                        let instantiate_lbname_with_app = (fun tm fv -> (if (FStarC_Syntax_Syntax.fv_eq fv (match lbname with
+                            | (FStar_Pervasives.Inr (v)) -> v
+                          )) then (FStarC_Syntax_Syntax.mk_Tm_app tm tvar_args (tm).FStarC_Syntax_Syntax.pos) else tm)) in
+                        (FStarC_Syntax_InstFV.inst instantiate_lbname_with_app e1)) else e1) in
+                      let tvars_bs = (FStarC_List.map (fun tmp6 -> (match tmp6 with
+                          | (x, q) -> (FStarC_Syntax_Syntax.mk_binder_with_attrs x q None [])
+                        )) gen_tvars) in
+                      let cod_t = (FStarC_Syntax_Subst.compress (FStarC_Syntax_Util.comp_result c1)) in
+                      let t = (match (cod_t).FStarC_Syntax_Syntax.n with
+                          | (FStarC_Syntax_Syntax.Tm_arrow (tmp6)) -> (let tmp7 = (FStarC_Syntax_Util.arrow_formals_comp_strict cod_t) in
+                            (match tmp7 with
+                              | (bs, cod) -> (FStarC_Syntax_Util.arrow (FStarC_List.op_At tvars_bs bs) cod)
+                            ))
+                          | tmp6 -> (FStarC_Syntax_Util.arrow tvars_bs c1)
+                        ) in
+                      let tmp6 = (FStarC_Syntax_Util.residual_comp_of_comp c1) in
+                      let tmp7 = (Some (tmp6)) in
+                      let e' = (FStarC_Syntax_Util.abs tvars_bs e2 tmp7) in
+                      let tmp8 = (FStarC_Syntax_Syntax.mk_Total t) in
+                      (e', tmp8, tvars_bs))
+                  ))
+              ) in
+            (match tmp4 with
+              | (e1, c1, gvs) -> (lbname, gen_univs_, e1, c1, gvs)
+            ))
+        )) lecs2) in
+      (Some (ecs)))
+  ))))
+
+let check_universe_generalization (explicit_univ_names : (FStarC_Ident.ident) list) (generalized_univ_names : (FStarC_Ident.ident) list) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Ident.ident) list =
+  (match (explicit_univ_names, generalized_univ_names) with
+    | ([], tmp) -> generalized_univ_names
+    | (tmp, []) -> explicit_univ_names
+    | tmp -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' t) in
+      let tmp2 = (Prims.strcat "Generalized universe in a term containing explicit universe annotation : " tmp1) in
+      (FStarC_Errors.fStarC_Errors_raise_error__syntax_term'_string t FStarC_Errors_Codes.Fatal_UnexpectedGeneralizedUniverse tmp2))
+  )
+
+let generalize' (env : FStarC_TypeChecker_Env.env) (is_rec : bool) (lecs : (((FStarC_Syntax_Syntax.bv, FStarC_Syntax_Syntax.fv) FStar_Pervasives.either * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax)) list) : (((FStarC_Syntax_Syntax.bv, FStarC_Syntax_Syntax.fv) FStar_Pervasives.either * (FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.binder) list)) list =
+  (let tmp = (FStarC_Debug.low ()) in
+  (if tmp then (let tmp1 = (FStarC_List.map (fun tmp1 -> (match tmp1 with
+      | (lb, tmp2, tmp3) -> (FStarC_Syntax_Print.fStarC_Class_Show_show__either_bv_fv lb)
+    )) lecs) in
+  let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string tmp1) in
+  (FStarC_Format.print1 "Generalizing: %s\n" tmp2)) else ());
+  let empty = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_from_list__ident_list_ident []) in
+  let univnames_lecs = (FStarC_List.fold_left (fun out tmp1 -> (match tmp1 with
+      | (l, t, c) -> (let tmp2 = (gather_free_univnames env t) in
+        (FStarC_Syntax_Syntax.fStarC_Class_Setlike_union__ident_list_ident out tmp2))
+    )) empty lecs) in
+  let tmp1 = (gen env is_rec lecs) in
+  let generalized_lecs = (match tmp1 with
+      | None -> (FStarC_List.map (fun tmp2 -> (match tmp2 with
+          | (l, t, c) -> (l, [], t, c, [])
+        )) lecs)
+      | (Some (luecs)) -> (let tmp2 = (FStarC_Debug.medium ()) in
+        (if tmp2 then (FStarC_List.iter (fun tmp3 -> (match tmp3 with
+          | (l, us, e, c, gvs) -> (let tmp4 = (FStarC_Range_Ops.fStarC_Class_Show_show__range (e).FStarC_Syntax_Syntax.pos) in
+            let tmp5 = (FStarC_Syntax_Print.fStarC_Class_Show_show__either_bv_fv l) in
+            let tmp6 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' (FStarC_Syntax_Util.comp_result c)) in
+            let tmp7 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' e) in
+            let tmp8 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_binder gvs) in
+            (FStarC_Format.print5 "(%s) Generalized %s at type %s\n%s\nVars = (%s)\n" tmp4 tmp5 tmp6 tmp7 tmp8))
+        )) luecs) else ());
+        luecs)
+    ) in
+  (FStarC_List.map (fun tmp2 -> (match tmp2 with
+    | (l, generalized_univs, t, c, gvs) -> (let tmp3 = (check_universe_generalization univnames_lecs generalized_univs t) in
+      (l, tmp3, t, c, gvs))
+  )) generalized_lecs))
+
+let generalize (env : FStarC_TypeChecker_Env.env) (is_rec : bool) (lecs : (((FStarC_Syntax_Syntax.bv, FStarC_Syntax_Syntax.fv) FStar_Pervasives.either * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax)) list) : (((FStarC_Syntax_Syntax.bv, FStarC_Syntax_Syntax.fv) FStar_Pervasives.either * (FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.binder) list)) list =
+  (FStarC_Errors.with_ctx "While generalizing" (fun tmp -> (FStarC_Profiling.profile (fun tmp1 -> (generalize' env is_rec lecs)) (Some ((FStarC_Ident.string_of_lid (FStarC_TypeChecker_Env.current_module env)))) "FStarC.TypeChecker.Util.generalize")))
+
+let generalize_universes (env : FStarC_TypeChecker_Env.env) (t0 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
+  (FStarC_Errors.with_ctx "While generalizing universes" (fun tmp -> (let t = (FStarC_TypeChecker_Normalize.normalize (FStarC_TypeChecker_Env.NoFullNorm :: (FStarC_TypeChecker_Env.Beta :: (FStarC_TypeChecker_Env.DoNotUnfoldPureLets :: []))) env t0) in
+  let tmp1 = (gather_free_univnames env t) in
+  let tmp2 = (!(dbg_Gen)) in
+  (if tmp2 then (let tmp3 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' t) in
+  let tmp4 = (FStarC_Ident.fStarC_Class_Show_show__list_ident tmp1) in
+  (FStarC_Format.print2 "generalizing universes in the term (post norm): %s with univnames: %s\n" tmp3 tmp4)) else ());
+  let univs = (FStarC_Syntax_Free.univs t) in
+  let tmp3 = (!(dbg_Gen)) in
+  (if tmp3 then (let tmp4 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_tuple3_p_uvar_version_range univs) in
+  (FStarC_Format.print1 "univs to gen : %s\n" tmp4)) else ());
+  let gen_ = (gen_univs env univs) in
+  let tmp4 = (!(dbg_Gen)) in
+  (if tmp4 then (let tmp5 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' t) in
+  let tmp6 = (FStarC_Ident.fStarC_Class_Show_show__list_ident gen_) in
+  (FStarC_Format.print2 "After generalization, t: %s and univs: %s\n" tmp5 tmp6)) else ());
+  let univs1 = (check_universe_generalization tmp1 gen_ t0) in
+  let t1 = (FStarC_TypeChecker_Normalize.reduce_uvar_solutions env t) in
+  let ts = (FStarC_Syntax_Subst.close_univ_vars univs1 t1) in
+  (univs1, ts))))
+

@@ -1,163 +1,103 @@
-open Prims
-let loaded : Prims.string Prims.list FStarC_Effect.ref=
-  FStarC_Effect.mk_ref []
-let dbg_Plugin : Prims.bool FStarC_Effect.ref=
-  FStarC_Debug.get_toggle "Plugin"
-let pout (s : Prims.string) : unit=
-  let uu___ = FStarC_Effect.op_Bang dbg_Plugin in
-  if uu___ then FStarC_Format.print_string s else ()
-let pout1 (s : Prims.string) (x : Prims.string) : unit=
-  let uu___ = FStarC_Effect.op_Bang dbg_Plugin in
-  if uu___ then FStarC_Format.print1 s x else ()
-let perr (s : Prims.string) : unit=
-  let uu___ = FStarC_Effect.op_Bang dbg_Plugin in
-  if uu___ then FStarC_Format.print_error s else ()
-let perr1 (s : Prims.string) (x : Prims.string) : unit=
-  let uu___ = FStarC_Effect.op_Bang dbg_Plugin in
-  if uu___ then FStarC_Format.print1_error s x else ()
-let do_dynlink (fname : Prims.string) : unit=
-  try
-    (fun uu___ ->
-       match () with | () -> FStarC_Plugins_Base.dynlink_loadfile fname) ()
-  with
-  | FStarC_Plugins_Base.DynlinkError e ->
-      ((let uu___2 =
-          let uu___3 =
-            let uu___4 =
-              let uu___5 =
-                let uu___6 =
-                  let uu___7 =
-                    let uu___8 =
-                      FStarC_Errors.errno
-                        FStarC_Errors_Codes.Error_PluginDynlink in
-                    FStarC_Class_Show.show FStarC_Class_Show.showable_int
-                      uu___8 in
-                  FStarC_Format.fmt1
-                    "Remove the `--load` option or use `--warn_error -%s` to ignore and continue."
-                    uu___7 in
-                FStarC_Errors_Msg.text uu___6 in
-              [uu___5] in
-            (FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
-               (FStarC_Errors_Msg.text "Reason:") (FStarC_Errors_Msg.text e))
-              :: uu___4 in
-          (FStarC_Errors_Msg.text
-             (FStarC_Format.fmt1 "Failed to load plugin file %s" fname))
-            :: uu___3 in
-        FStarC_Errors.log_issue0 FStarC_Errors_Codes.Error_PluginDynlink ()
-          (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-          (Obj.magic uu___2));
-       FStarC_Errors.stop_if_err ())
-let dynlink (fname : Prims.string) : unit=
-  let uu___ =
-    let uu___1 = FStarC_Effect.op_Bang loaded in FStarC_List.mem fname uu___1 in
-  if uu___
-  then pout1 "Plugin %s already loaded, skipping\n" fname
-  else
-    (pout (Prims.strcat "Attempting to load " (Prims.strcat fname "\n"));
-     do_dynlink fname;
-     (let uu___4 =
-        let uu___5 = FStarC_Effect.op_Bang loaded in fname :: uu___5 in
-      FStarC_Effect.op_Colon_Equals loaded uu___4);
-     pout1 "Loaded %s\n" fname)
-let load_plugin (tac : Prims.string) : unit= dynlink tac
-let load_plugins (tacs : Prims.string Prims.list) : unit=
-  FStarC_List.iter load_plugin tacs
-let load_plugins_dir (dir : Prims.string) : unit=
-  let uu___ =
-    let uu___1 =
-      let uu___2 = FStarC_Filepath.readdir dir in
-      FStarC_List.filter
-        (fun s ->
-           ((FStarC_String.length s) >= (Prims.of_int 5)) &&
-             ((FStar_String.sub s
-                 ((FStarC_String.length s) - (Prims.of_int 5))
-                 (Prims.of_int 5))
-                = ".cmxs")) uu___2 in
-    FStarC_List.map (fun s -> Prims.strcat dir (Prims.strcat "/" s)) uu___1 in
-  load_plugins uu___
-let compile_modules (dir : Prims.string) (ms : Prims.string Prims.list) :
-  unit=
-  let compile m =
-    let packages = ["fstar.compiler"] in
-    let pkg pname = Prims.strcat "-package " pname in
-    let args =
-      let uu___ =
-        let uu___1 =
-          let uu___2 =
-            let uu___3 = FStarC_List.map pkg packages in
-            FStar_List_Tot_Base.op_At uu___3
-              ["-o"; Prims.strcat m ".cmxs"; Prims.strcat m ".ml"] in
-          FStar_List_Tot_Base.op_At ["-w"; "-8-11-20-21-26-28"] uu___2 in
-        FStar_List_Tot_Base.op_At ["-I"; dir] uu___1 in
-      FStar_List_Tot_Base.op_At ["ocamlopt"; "-shared"] uu___ in
-    let old_ocamlpath =
-      let uu___ = FStarC_Util.expand_environment_variable "OCAMLPATH" in
-      match uu___ with
-      | FStar_Pervasives_Native.Some s -> s
-      | FStar_Pervasives_Native.None -> "" in
-    let env_setter =
-      let uu___ = FStarC_Find.locate_ocaml () in
-      FStarC_Format.fmt3 "env OCAMLPATH=\"%s%s%s\"" uu___
-        FStarC_Platform.ocamlpath_sep old_ocamlpath in
-    let cmd = FStarC_String.concat " " (env_setter :: "ocamlfind" :: args) in
-    let rc = FStarC_Util.system_run cmd in
-    if rc <> Prims.int_zero
-    then
-      let uu___ =
-        let uu___1 =
-          let uu___2 =
-            let uu___3 =
-              let uu___4 =
-                FStarC_Class_Show.show FStarC_Class_Show.showable_int rc in
-              FStarC_Format.fmt2
-                "Command\n\226\128\152%s\226\128\153\nreturned with exit code %s"
-                cmd uu___4 in
-            FStarC_Errors_Msg.text uu___3 in
-          [uu___2] in
-        (FStarC_Errors_Msg.text "Failed to compile native tactic.") :: uu___1 in
-      FStarC_Errors.raise_error0
-        FStarC_Errors_Codes.Fatal_FailToCompileNativeTactic ()
-        (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-        (Obj.magic uu___)
-    else () in
-  try
-    (fun uu___ ->
-       match () with
-       | () ->
-           let uu___1 =
-             FStarC_List.map (fun m -> Prims.strcat dir (Prims.strcat "/" m))
-               ms in
-           FStarC_List.iter compile uu___1) ()
-  with
-  | uu___ ->
-      ((let uu___2 =
-          let uu___3 = FStarC_Util.print_exn uu___ in
-          FStarC_Format.fmt1 "Failed to load native tactic: %s\n" uu___3 in
-        perr uu___2);
-       FStarC_Effect.raise uu___)
-let autoload_plugin (ext : Prims.string) : Prims.bool=
-  let uu___ = FStarC_Options_Ext.enabled "noautoload" in
-  if uu___
-  then false
-  else
-    ((let uu___2 = FStarC_Effect.op_Bang dbg_Plugin in
-      if uu___2
-      then
-        FStarC_Format.print1 "Trying to find a plugin for extension %s\n" ext
-      else ());
-     (let uu___2 = FStarC_Find.find_file (Prims.strcat ext ".cmxs") in
-      match uu___2 with
-      | FStar_Pervasives_Native.Some fn ->
-          let uu___3 =
-            let uu___4 = FStarC_Effect.op_Bang loaded in
-            FStarC_List.mem fn uu___4 in
-          if uu___3
-          then false
-          else
-            ((let uu___5 = FStarC_Effect.op_Bang dbg_Plugin in
-              if uu___5
-              then FStarC_Format.print1 "Autoloading plugin %s ...\n" fn
-              else ());
-             load_plugin fn;
-             true)
-      | FStar_Pervasives_Native.None -> false))
+(* Generated by F* Custard extraction. Do not edit. *)
+[@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
+
+let dbg_Plugin : (bool ref) =
+  (FStarC_Debug.get_toggle "Plugin")
+
+let loaded : ((string) list ref) =
+  (ref [])
+
+let pout1 (s : string) (x : string) : unit =
+  (let tmp = (!(dbg_Plugin)) in
+  (if tmp then (FStarC_Format.print1 s x) else ()))
+
+let pout (s : string) : unit =
+  (let tmp = (!(dbg_Plugin)) in
+  (if tmp then (FStarC_Format.print_string s) else ()))
+
+let do_dynlink (fname : string) : unit =
+  (try (FStarC_Plugins_Base.dynlink_loadfile fname) with
+    | (FStarC_Plugins_Base.DynlinkError (e)) -> (let tmp = (FStarC_Errors.errno FStarC_Errors_Codes.Error_PluginDynlink) in
+      let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int tmp) in
+      let tmp2 = (FStarC_Format.fmt1 "Remove the `--load` option or use `--warn_error -%s` to ignore and continue." tmp1) in
+      let tmp3 = (FStarC_Errors_Msg.text tmp2) in
+      let tmp4 = (tmp3 :: []) in
+      let tmp5 = ((FStar_Pprint.prefix (Prims.parse_int "2") (Prims.parse_int "1") (FStarC_Errors_Msg.text "Reason:") (FStarC_Errors_Msg.text e)) :: tmp4) in
+      let tmp6 = ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Failed to load plugin file %s" fname)) :: tmp5) in
+      (FStarC_Errors.fStarC_Errors_log_issue0__list_document FStarC_Errors_Codes.Error_PluginDynlink tmp6);
+      (FStarC_Errors.stop_if_err ()))
+  )
+
+let dynlink (fname : string) : unit =
+  (let tmp = (!(loaded)) in
+  let tmp1 = (FStarC_List.mem fname tmp) in
+  (if tmp1 then (pout1 "Plugin %s already loaded, skipping\n" fname) else ((pout (Prims.strcat "Attempting to load " (Prims.strcat fname "\n")));
+  (do_dynlink fname);
+  let tmp2 = (!(loaded)) in
+  let tmp3 = (fname :: tmp2) in
+  ((loaded) := tmp3);
+  (pout1 "Loaded %s\n" fname);
+  ())))
+
+let load_plugin (tac : string) : unit =
+  (dynlink tac)
+
+let autoload_plugin (ext : string) : bool =
+  (let tmp = (FStarC_Options_Ext.enabled "noautoload") in
+  (if tmp then false else (let tmp1 = (!(dbg_Plugin)) in
+  (if tmp1 then (FStarC_Format.print1 "Trying to find a plugin for extension %s\n" ext) else ());
+  let tmp2 = (FStarC_Find.find_file (Prims.strcat ext ".cmxs")) in
+  (match tmp2 with
+    | (Some (fn)) -> (let tmp3 = (!(loaded)) in
+      let tmp4 = (FStarC_List.mem fn tmp3) in
+      (if tmp4 then false else (let tmp5 = (!(dbg_Plugin)) in
+      (if tmp5 then (FStarC_Format.print1 "Autoloading plugin %s ...\n" fn) else ());
+      (load_plugin fn);
+      true)))
+    | None -> false
+  ))))
+
+let perr (s : string) : unit =
+  (let tmp = (!(dbg_Plugin)) in
+  (if tmp then (FStarC_Format.print_error s) else ()))
+
+let compile_modules (dir : string) (ms : (string) list) : unit =
+  (let compile = (fun m -> (let packages = ("fstar.compiler" :: []) in
+    let pkg = (fun pname -> (Prims.strcat "-package " pname)) in
+    let tmp = (FStarC_List.map pkg packages) in
+    let tmp1 = (FStar_List_Tot_Base.op_At tmp ("-o" :: ((Prims.strcat m ".cmxs") :: ((Prims.strcat m ".ml") :: [])))) in
+    let tmp2 = (FStar_List_Tot_Base.op_At ("-w" :: ("-8-11-20-21-26-28" :: [])) tmp1) in
+    let tmp3 = (FStar_List_Tot_Base.op_At ("-I" :: (dir :: [])) tmp2) in
+    let args = (FStar_List_Tot_Base.op_At ("ocamlopt" :: ("-shared" :: [])) tmp3) in
+    let tmp4 = (FStarC_Util.expand_environment_variable "OCAMLPATH") in
+    let old_ocamlpath = (match tmp4 with
+        | (Some (s)) -> s
+        | None -> ""
+      ) in
+    let tmp5 = (FStarC_Find.locate_ocaml ()) in
+    let env_setter = (FStarC_Format.fmt3 "env OCAMLPATH=\"%s%s%s\"" tmp5 FStarC_Platform.ocamlpath_sep old_ocamlpath) in
+    let cmd = (FStarC_String.concat " " (env_setter :: ("ocamlfind" :: args))) in
+    let rc = (FStarC_Util.system_run cmd) in
+    (if ((<>) rc (Prims.parse_int "0")) then (let tmp6 = (FStarC_Class_Show.fStarC_Class_Show_show__int rc) in
+    let tmp7 = (FStarC_Format.fmt2 "Command\n‘%s’\nreturned with exit code %s" cmd tmp6) in
+    let tmp8 = (FStarC_Errors_Msg.text tmp7) in
+    let tmp9 = (tmp8 :: []) in
+    let tmp10 = ((FStarC_Errors_Msg.text "Failed to compile native tactic.") :: tmp9) in
+    (FStarC_Errors.fStarC_Errors_raise_error0__list_document FStarC_Errors_Codes.Fatal_FailToCompileNativeTactic tmp10)) else ()))) in
+  (try (let tmp = (FStarC_List.map (fun m -> (Prims.strcat dir (Prims.strcat "/" m))) ms) in
+  (FStarC_List.iter compile tmp)) with
+    | u__cexn -> (let tmp = (FStarC_Util.print_exn u__cexn) in
+      let tmp1 = (FStarC_Format.fmt1 "Failed to load native tactic: %s\n" tmp) in
+      (perr tmp1);
+      (raise u__cexn))
+  ))
+
+let load_plugins (tacs : (string) list) : unit =
+  (FStarC_List.iter load_plugin tacs)
+
+let load_plugins_dir (dir : string) : unit =
+  (let tmp = (FStarC_Filepath.readdir dir) in
+  let tmp1 = (FStarC_List.filter (fun s -> ((Prims.op_Greater_Equals (FStarC_String.length s) (Prims.parse_int "5")) && ((=) (FStar_String.sub s (Prims.op_Minus (FStarC_String.length s) (Prims.parse_int "5")) (Prims.parse_int "5")) ".cmxs"))) tmp) in
+  let tmp2 = (FStarC_List.map (fun s -> (Prims.strcat dir (Prims.strcat "/" s))) tmp1) in
+  (load_plugins tmp2))
+
