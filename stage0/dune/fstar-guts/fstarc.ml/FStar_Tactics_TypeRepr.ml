@@ -347,7 +347,7 @@ let generate_all (nm : FStarC_Reflection_Types.name)
           let x7 =
             let x8 =
               FStar_Tactics_V2_SyntaxHelpers.mk_arr params
-                (FStarC_Reflection_V2_Data.C_Total
+                (FStarC_Reflection_V2_Data.mk_tot_comp
                    (FStarC_Reflection_V2_Builtins.pack_ln
                       (FStarC_Reflection_V2_Data.Tv_Type
                          (FStarC_Reflection_V2_Builtins.pack_universe
@@ -413,7 +413,7 @@ let generate_all (nm : FStarC_Reflection_Types.name)
               FStar_Tactics_V2_SyntaxHelpers.mk_tot_arr x
                 (FStar_Tactics_NamedView.pack
                    (FStar_Tactics_NamedView.Tv_Arrow
-                      (x7, (FStarC_Reflection_V2_Data.C_Total x2)))) ps in
+                      (x7, (FStarC_Reflection_V2_Data.mk_tot_comp x2)))) ps in
             {
               FStar_Tactics_NamedView.lb_fv =
                 (FStarC_Reflection_V2_Builtins.pack_fv
@@ -482,7 +482,7 @@ let generate_all (nm : FStarC_Reflection_Types.name)
               FStar_Tactics_V2_SyntaxHelpers.mk_tot_arr x
                 (FStar_Tactics_NamedView.pack
                    (FStar_Tactics_NamedView.Tv_Arrow
-                      (x10, (FStarC_Reflection_V2_Data.C_Total x1)))) ps in
+                      (x10, (FStarC_Reflection_V2_Data.mk_tot_comp x1)))) ps in
             {
               FStar_Tactics_NamedView.lb_fv =
                 (FStarC_Reflection_V2_Builtins.pack_fv (add_suffix "_up" nm));

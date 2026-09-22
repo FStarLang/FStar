@@ -217,6 +217,9 @@ let effect_Ghost_lid : FStarC_Ident.lident= pconst "Ghost"
 let effect_DIV_lid : FStarC_Ident.lident= psconst "DIV"
 let effect_Div_lid : FStarC_Ident.lident= psconst "Div"
 let effect_Dv_lid : FStarC_Ident.lident= psconst "Dv"
+let effect_NDET_lid : FStarC_Ident.lident= psconst "NDET"
+let effect_Ndet_lid : FStarC_Ident.lident= psconst "Ndet"
+let effect_Nd_lid : FStarC_Ident.lident= psconst "Nd"
 let is_pure_effect_lid (l : FStarC_Ident.lident) : Prims.bool=
   ((FStarC_Ident.lid_equals l effect_Tot_lid) ||
      (FStarC_Ident.lid_equals l effect_PURE_lid))
@@ -229,9 +232,20 @@ let is_div_effect_lid (l : FStarC_Ident.lident) : Prims.bool=
   ((FStarC_Ident.lid_equals l effect_DIV_lid) ||
      (FStarC_Ident.lid_equals l effect_Div_lid))
     || (FStarC_Ident.lid_equals l effect_Dv_lid)
-let primitive_pure_lid : FStarC_Ident.lident= effect_PURE_lid
-let primitive_ghost_lid : FStarC_Ident.lident= effect_GHOST_lid
-let primitive_div_lid : FStarC_Ident.lident= effect_DIV_lid
+let is_ndet_effect_lid (l : FStarC_Ident.lident) : Prims.bool=
+  ((FStarC_Ident.lid_equals l effect_NDET_lid) ||
+     (FStarC_Ident.lid_equals l effect_Ndet_lid))
+    || (FStarC_Ident.lid_equals l effect_Nd_lid)
+let primitive_pure_lid : FStarC_Ident.lident= effect_Tot_lid
+let primitive_ghost_lid : FStarC_Ident.lident= effect_GTot_lid
+let primitive_div_lid : FStarC_Ident.lident= effect_Div_lid
+let primitive_ndet_lid : FStarC_Ident.lident= effect_NDET_lid
+let is_tot_lid (l : FStarC_Ident.lident) : Prims.bool=
+  FStarC_Ident.lid_equals l primitive_pure_lid
+let is_gtot_lid (l : FStarC_Ident.lident) : Prims.bool=
+  FStarC_Ident.lid_equals l primitive_ghost_lid
+let is_tot_or_gtot_lid (l : FStarC_Ident.lident) : Prims.bool=
+  (is_tot_lid l) || (is_gtot_lid l)
 let ef_base (uu___ : unit) : Prims.string Prims.list= ["FStar"; "All"]
 let effect_ALL_lid (uu___ : unit) : FStarC_Ident.lident=
   p2l (FStarC_List.op_At (ef_base ()) ["ALL"])
@@ -294,6 +308,20 @@ let no_inline_let_attr : FStarC_Ident.lident= attr "no_inline_let"
 let rename_let_attr : FStarC_Ident.lident= attr "rename_let"
 let plugin_attr : FStarC_Ident.lident= attr "plugin"
 let tcnorm_attr : FStarC_Ident.lident= attr "tcnorm"
+let monomorphize_attr : FStarC_Ident.lident= attr "monomorphize"
+let custard_extern_attr : FStarC_Ident.lident= attr "custard_extern"
+let custard_c_header_attr : FStarC_Ident.lident= attr "custard_c_header"
+let custard_float_attr : FStarC_Ident.lident= attr "custard_float"
+let custard_bfloat16_attr : FStarC_Ident.lident= attr "custard_bfloat16"
+let custard_opaque_attr : FStarC_Ident.lident= attr "custard_opaque"
+let custard_c_reference_attr : FStarC_Ident.lident=
+  attr "custard_c_reference"
+let custard_inline_field_attr : FStarC_Ident.lident=
+  attr "custard_inline_field"
+let custard_no_monomorphize_attr : FStarC_Ident.lident=
+  attr "custard_no_monomorphize"
+let custard_compile_time_attr : FStarC_Ident.lident=
+  attr "custard_compile_time"
 let must_erase_for_extraction_attr : FStarC_Ident.lident=
   attr "must_erase_for_extraction"
 let strict_on_arguments_attr : FStarC_Ident.lident=
@@ -410,6 +438,8 @@ let tcresolve_lid : FStarC_Ident.lid=
   fstar_tactics_lid' ["Typeclasses"; "tcresolve"]
 let tcclass_lid : FStarC_Ident.lid=
   fstar_tactics_lid' ["Typeclasses"; "tcclass"]
+let tcmethod_lid : FStarC_Ident.lid=
+  fstar_tactics_lid' ["Typeclasses"; "tcmethod"]
 let tcinstance_lid : FStarC_Ident.lid=
   fstar_tactics_lid' ["Typeclasses"; "tcinstance"]
 let no_method_lid : FStarC_Ident.lid=
@@ -524,8 +554,7 @@ let fext_on_domain_g_lid : FStarC_Ident.lident= fext_lid "on_domain_g"
 let fext_on_dom_g_lid : FStarC_Ident.lident= fext_lid "on_dom_g"
 let sealed_lid : FStarC_Ident.lident= p2l ["FStar"; "Sealed"; "sealed"]
 let seal_lid : FStarC_Ident.lident= p2l ["FStar"; "Sealed"; "seal"]
-let unseal_lid : FStarC_Ident.lident=
-  p2l ["FStar"; "Stubs"; "Tactics"; "Unseal"; "unseal"]
+let unseal_lid : FStarC_Ident.lident= p2l ["FStar"; "Sealed"; "unseal"]
 let map_seal_lid : FStarC_Ident.lident= p2l ["FStar"; "Sealed"; "map_seal"]
 let bind_seal_lid : FStarC_Ident.lident= p2l ["FStar"; "Sealed"; "bind_seal"]
 let tref_lid : FStarC_Ident.lident=

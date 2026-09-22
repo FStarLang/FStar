@@ -231,6 +231,14 @@ let fstar_refl_comp_view : FStarC_Syntax_Syntax.term=
   mk_refl_data_lid_as_term "comp_view"
 let fstar_refl_comp_view_fv : FStarC_Syntax_Syntax.fv=
   mk_refl_data_lid_as_fv "comp_view"
+let fstar_refl_cflag : FStarC_Syntax_Syntax.term=
+  mk_refl_data_lid_as_term "cflag"
+let fstar_refl_cflag_fv : FStarC_Syntax_Syntax.fv=
+  mk_refl_data_lid_as_fv "cflag"
+let fstar_refl_decreases_order : FStarC_Syntax_Syntax.term=
+  mk_refl_data_lid_as_term "decreases_order"
+let fstar_refl_decreases_order_fv : FStarC_Syntax_Syntax.fv=
+  mk_refl_data_lid_as_fv "decreases_order"
 let fstar_refl_term_view : FStarC_Syntax_Syntax.term=
   mk_refl_data_lid_as_term "term_view"
 let fstar_refl_term_view_fv : FStarC_Syntax_Syntax.fv=
@@ -415,10 +423,25 @@ let ref_Tv_AscT : refl_constant= fstar_refl_data_const "Tv_AscribedT"
 let ref_Tv_AscC : refl_constant= fstar_refl_data_const "Tv_AscribedC"
 let ref_Tv_Unknown : refl_constant= fstar_refl_data_const "Tv_Unknown"
 let ref_Tv_Unsupp : refl_constant= fstar_refl_data_const "Tv_Unsupp"
-let ref_C_Total : refl_constant= fstar_refl_data_const "C_Total"
-let ref_C_GTotal : refl_constant= fstar_refl_data_const "C_GTotal"
-let ref_C_Lemma : refl_constant= fstar_refl_data_const "C_Lemma"
-let ref_C_Eff : refl_constant= fstar_refl_data_const "C_Eff"
+let ref_Mk_comp_view : refl_constant=
+  let lid = fstar_refl_data_lid "Mkcomp_view" in
+  let attr =
+    let uu___ =
+      let uu___9 = fstar_refl_data_lid "comp_view" in
+      (uu___9,
+        [FStarC_Ident.mk_ident ("effect_name", FStarC_Range_Type.dummyRange);
+        FStarC_Ident.mk_ident ("result_typ", FStarC_Range_Type.dummyRange);
+        FStarC_Ident.mk_ident ("flags", FStarC_Range_Type.dummyRange);
+        FStarC_Ident.mk_ident
+          ("source_effect_name", FStarC_Range_Type.dummyRange)]) in
+    FStarC_Syntax_Syntax.Record_ctor uu___ in
+  let fv =
+    FStarC_Syntax_Syntax.lid_as_fv lid (FStar_Pervasives_Native.Some attr) in
+  let uu___ = FStarC_Syntax_Syntax.fv_to_tm fv in { lid; fv; t = uu___ }
+let ref_SMTPAT : refl_constant= fstar_refl_data_const "SMTPAT"
+let ref_DECREASES : refl_constant= fstar_refl_data_const "DECREASES"
+let ref_Decreases_lex : refl_constant= fstar_refl_data_const "Decreases_lex"
+let ref_Decreases_wf : refl_constant= fstar_refl_data_const "Decreases_wf"
 let ref_Sg_Let : refl_constant= fstar_refl_data_const "Sg_Let"
 let ref_Sg_Inductive : refl_constant= fstar_refl_data_const "Sg_Inductive"
 let ref_Sg_Val : refl_constant= fstar_refl_data_const "Sg_Val"

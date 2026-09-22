@@ -100,7 +100,8 @@ let rec mk_tot_arr_ln (bs : FStarC_Reflection_Types.binder Prims.list)
         (FStarC_Reflection_V2_Data.Tv_Arrow
            (b,
              (FStarC_Reflection_V2_Builtins.pack_comp
-                (FStarC_Reflection_V2_Data.C_Total (mk_tot_arr_ln bs1 cod)))))
+                (FStarC_Reflection_V2_Data.mk_tot_comp
+                   (mk_tot_arr_ln bs1 cod)))))
 let rec mk_arr_ln (bs : FStarC_Reflection_Types.binder Prims.list)
   (cod : FStarC_Reflection_Types.comp) : FStarC_Reflection_Types.term=
   match bs with
@@ -112,7 +113,7 @@ let rec mk_arr_ln (bs : FStarC_Reflection_Types.binder Prims.list)
         (FStarC_Reflection_V2_Data.Tv_Arrow
            (b,
              (FStarC_Reflection_V2_Builtins.pack_comp
-                (FStarC_Reflection_V2_Data.C_Total (mk_arr_ln bs1 cod)))))
+                (FStarC_Reflection_V2_Data.mk_tot_comp (mk_arr_ln bs1 cod)))))
 let fv_to_string (fv : FStarC_Reflection_Types.fv) : Prims.string=
   FStarC_Reflection_V2_Builtins.implode_qn
     (FStarC_Reflection_V2_Builtins.inspect_fv fv)

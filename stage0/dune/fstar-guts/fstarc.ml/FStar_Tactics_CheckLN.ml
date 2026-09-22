@@ -57,39 +57,24 @@ and check_u (u : FStar_Tactics_NamedView.universe)
   | FStar_Tactics_NamedView.Uv_Succ u1 -> check_u u1 ps
   | FStar_Tactics_NamedView.Uv_Max us -> for_all check_u us ps
   | FStar_Tactics_NamedView.Uv_Unk -> true
-and check_comp (c : FStar_Tactics_NamedView.comp) :
+and check_comp (c : FStar_Tactics_NamedView.comp)
+  (ps : FStarC_Tactics_Types.ref_proofstate) : Prims.bool=
+  let x =
+    let x1 = check c.FStarC_Reflection_V2_Data.result_typ ps in Prims.not x1 in
+  if x
+  then false
+  else for_all check_flag c.FStarC_Reflection_V2_Data.flags ps
+and check_flag (f : FStarC_Reflection_V2_Data.cflag) :
   FStarC_Tactics_Types.ref_proofstate -> Prims.bool=
-  match c with
-  | FStarC_Reflection_V2_Data.C_Total typ -> check typ
-  | FStarC_Reflection_V2_Data.C_GTotal typ -> check typ
-  | FStarC_Reflection_V2_Data.C_Lemma (pre, post, pats) ->
+  match f with
+  | FStarC_Reflection_V2_Data.SMTPAT t -> check t
+  | FStarC_Reflection_V2_Data.DECREASES
+      (FStarC_Reflection_V2_Data.Decreases_lex ts) -> for_all check ts
+  | FStarC_Reflection_V2_Data.DECREASES
+      (FStarC_Reflection_V2_Data.Decreases_wf (rel, e)) ->
       (fun ps ->
-         let x = let x1 = check pre ps in Prims.not x1 in
-         if x
-         then false
-         else
-           (let x1 = let x2 = check post ps in Prims.not x2 in
-            if x1 then false else check pats ps))
-  | FStarC_Reflection_V2_Data.C_Eff (us, nm, res, pre, post, decrs) ->
-      (fun ps ->
-         let x = let x1 = for_all check_u us ps in Prims.not x1 in
-         if x
-         then false
-         else
-           (let x1 = let x2 = check res ps in Prims.not x2 in
-            if x1
-            then false
-            else
-              (let x2 = let x3 = check pre ps in Prims.not x3 in
-               if x2
-               then false
-               else
-                 (let x3 = let x4 = check post ps in Prims.not x4 in
-                  if x3
-                  then false
-                  else
-                    (let x4 = let x5 = for_all check decrs ps in Prims.not x5 in
-                     if x4 then false else true)))))
+         let x = let x1 = check rel ps in Prims.not x1 in
+         if x then false else check e ps)
 and check_br (b : FStar_Tactics_NamedView.branch)
   (ps : FStarC_Tactics_Types.ref_proofstate) : Prims.bool=
   let x = b in match x with | (p, t) -> check t ps

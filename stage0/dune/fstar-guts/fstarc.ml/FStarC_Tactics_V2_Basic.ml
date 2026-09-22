@@ -684,6 +684,56 @@ let proc_guard_formula (reason : Prims.string) (e : env)
                                               "Forcing the guard failed (%s)\n%s\n"
                                               reason uu___4)) uu___3)))
                          uu___1)))) uu___)
+let proof_obligation_implicits_as_goals (e : env)
+  (imps : FStarC_TypeChecker_Env.implicit Prims.list) :
+  unit FStarC_Tactics_Monad.tac=
+  let is_proof_obligation imp =
+    let uu___ =
+      let uu___1 =
+        FStarC_Syntax_Unionfind.find
+          (imp.FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head in
+      match uu___1 with
+      | FStar_Pervasives_Native.None -> true
+      | uu___2 -> false in
+    if uu___
+    then
+      let uu___1 =
+        let uu___2 =
+          FStarC_Syntax_Util.ctx_uvar_typ
+            imp.FStarC_TypeChecker_Common.imp_uvar in
+        FStarC_Syntax_Util.arrow_formals_comp uu___2 in
+      match uu___1 with
+      | (uu___2, c) ->
+          let uu___3 =
+            let uu___4 =
+              let uu___5 =
+                FStarC_TypeChecker_Normalize.unfold_whnf e
+                  (FStarC_Syntax_Util.comp_result c) in
+              FStarC_Syntax_Subst.compress uu___5 in
+            uu___4.FStarC_Syntax_Syntax.n in
+          (match uu___3 with
+           | FStarC_Syntax_Syntax.Tm_refine
+               { FStarC_Syntax_Syntax.b2 = b;
+                 FStarC_Syntax_Syntax.phi = uu___4;_}
+               -> FStarC_Syntax_Util.is_unit b.FStarC_Syntax_Syntax.sort
+           | uu___4 -> false)
+    else false in
+  let uu___ = FStarC_List.filter is_proof_obligation imps in
+  match uu___ with
+  | [] ->
+      FStarC_Class_Monad.return FStarC_Tactics_Monad.monad_tac ()
+        (Obj.repr ())
+  | imps1 ->
+      let uu___1 =
+        FStarC_List.map
+          (fun imp ->
+             let uu___2 =
+               let uu___3 = FStarC_Options.peek () in
+               FStarC_Tactics_Types.mk_goal e
+                 imp.FStarC_TypeChecker_Common.imp_uvar uu___3 true
+                 "goal for an unsolved proof obligation" in
+             bnorm_goal uu___2) imps1 in
+      FStarC_Tactics_Monad.push_goals uu___1
 let proc_guard' (simplify : Prims.bool) (reason : Prims.string) (e : env)
   (g : FStarC_TypeChecker_Common.guard_t)
   (tok :
@@ -718,22 +768,32 @@ let proc_guard' (simplify : Prims.bool) (reason : Prims.string) (e : env)
                (fun uu___2 ->
                   (fun uu___2 ->
                      let uu___2 = Obj.magic uu___2 in
-                     let guard_f =
-                       if simplify
-                       then
-                         let uu___3 =
-                           FStarC_TypeChecker_Rel.simplify_guard e g in
-                         uu___3.FStarC_TypeChecker_Common.guard_f
-                       else g.FStarC_TypeChecker_Common.guard_f in
-                     match guard_f with
-                     | FStarC_TypeChecker_Common.Trivial ->
-                         Obj.magic
-                           (FStarC_Class_Monad.return
-                              FStarC_Tactics_Monad.monad_tac () (Obj.repr ()))
-                     | FStarC_TypeChecker_Common.NonTrivial f ->
-                         Obj.magic
-                           (proc_guard_formula reason e f tok sc_opt rng))
-                    uu___2))) uu___)
+                     let uu___3 = proof_obligation_implicits_as_goals e imps in
+                     Obj.magic
+                       (FStarC_Class_Monad.op_let_Bang
+                          FStarC_Tactics_Monad.monad_tac () () uu___3
+                          (fun uu___4 ->
+                             (fun uu___4 ->
+                                let uu___4 = Obj.magic uu___4 in
+                                let guard_f =
+                                  if simplify
+                                  then
+                                    let uu___5 =
+                                      FStarC_TypeChecker_Rel.simplify_guard e
+                                        g in
+                                    uu___5.FStarC_TypeChecker_Common.guard_f
+                                  else g.FStarC_TypeChecker_Common.guard_f in
+                                match guard_f with
+                                | FStarC_TypeChecker_Common.Trivial ->
+                                    Obj.magic
+                                      (FStarC_Class_Monad.return
+                                         FStarC_Tactics_Monad.monad_tac ()
+                                         (Obj.repr ()))
+                                | FStarC_TypeChecker_Common.NonTrivial f ->
+                                    Obj.magic
+                                      (proc_guard_formula reason e f tok
+                                         sc_opt rng)) uu___4))) uu___2)))
+         uu___)
 let proc_guard :
   Prims.string ->
     env ->
@@ -786,8 +846,6 @@ let tc_unifier_solved_implicits (env1 : FStarC_TypeChecker_Env.env)
                    (env1.FStarC_TypeChecker_Env.modules);
                  FStarC_TypeChecker_Env.expected_typ =
                    (env1.FStarC_TypeChecker_Env.expected_typ);
-                 FStarC_TypeChecker_Env.expected_post =
-                   (env1.FStarC_TypeChecker_Env.expected_post);
                  FStarC_TypeChecker_Env.sigtab =
                    (env1.FStarC_TypeChecker_Env.sigtab);
                  FStarC_TypeChecker_Env.attrtab =
@@ -800,6 +858,8 @@ let tc_unifier_solved_implicits (env1 : FStarC_TypeChecker_Env.env)
                    (env1.FStarC_TypeChecker_Env.generalize);
                  FStarC_TypeChecker_Env.letrecs =
                    (env1.FStarC_TypeChecker_Env.letrecs);
+                 FStarC_TypeChecker_Env.rec_names =
+                   (env1.FStarC_TypeChecker_Env.rec_names);
                  FStarC_TypeChecker_Env.top_level =
                    (env1.FStarC_TypeChecker_Env.top_level);
                  FStarC_TypeChecker_Env.check_uvars =
@@ -836,8 +896,6 @@ let tc_unifier_solved_implicits (env1 : FStarC_TypeChecker_Env.env)
                    (env1.FStarC_TypeChecker_Env.subtype_nosmt_force);
                  FStarC_TypeChecker_Env.qtbl_name_and_index =
                    (env1.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                 FStarC_TypeChecker_Env.normalized_eff_names =
-                   (env1.FStarC_TypeChecker_Env.normalized_eff_names);
                  FStarC_TypeChecker_Env.fv_delta_depths =
                    (env1.FStarC_TypeChecker_Env.fv_delta_depths);
                  FStarC_TypeChecker_Env.proof_ns =
@@ -862,6 +920,8 @@ let tc_unifier_solved_implicits (env1 : FStarC_TypeChecker_Env.env)
                    (env1.FStarC_TypeChecker_Env.nbe);
                  FStarC_TypeChecker_Env.strict_args_tab =
                    (env1.FStarC_TypeChecker_Env.strict_args_tab);
+                 FStarC_TypeChecker_Env.disc_proj_tab =
+                   (env1.FStarC_TypeChecker_Env.disc_proj_tab);
                  FStarC_TypeChecker_Env.erasable_types_tab =
                    (env1.FStarC_TypeChecker_Env.erasable_types_tab);
                  FStarC_TypeChecker_Env.enable_defer_to_tac =
@@ -1282,6 +1342,133 @@ let do_unify_maybe_guards (allow_guards : Prims.bool) (must_tot : Prims.bool)
   FStarC_TypeChecker_Common.guard_t FStar_Pervasives_Native.option
     FStarC_Tactics_Monad.tac=
   __do_unify allow_guards must_tot Check_both env1 t1 t2
+let do_subtype (uu___3 : Prims.bool) (uu___2 : FStarC_TypeChecker_Env.env)
+  (uu___1 : FStarC_Syntax_Syntax.term) (uu___ : FStarC_Syntax_Syntax.term) :
+  Prims.bool FStarC_Tactics_Monad.tac=
+  (fun must_tot env1 t1 t2 ->
+     Obj.magic
+       (FStarC_Class_Monad.op_let_Bang FStarC_Tactics_Monad.monad_tac () ()
+          (Obj.magic
+             (FStarC_Tactics_Monad.mk_tac
+                (fun ps ->
+                   let tx = FStarC_Syntax_Unionfind.new_transaction () in
+                   FStarC_Tactics_Result.Success (tx, ps))))
+          (fun uu___ ->
+             (fun tx ->
+                let tx = Obj.magic tx in
+                let all_uvars =
+                  let uu___ =
+                    let uu___1 = FStarC_Syntax_Free.uvars t1 in
+                    let uu___2 = FStarC_Syntax_Free.uvars t2 in
+                    FStarC_Class_Setlike.union
+                      (FStarC_FlatSet.setlike_flat_set
+                         FStarC_Syntax_Free.ord_ctx_uvar) uu___1 uu___2 in
+                  FStarC_Class_Setlike.elems
+                    (FStarC_FlatSet.setlike_flat_set
+                       FStarC_Syntax_Free.ord_ctx_uvar) uu___ in
+                let uu___ =
+                  let uu___1 =
+                    let uu___2 =
+                      try
+                        (fun uu___3 ->
+                           (fun uu___3 ->
+                              match () with
+                              | () ->
+                                  let uu___4 =
+                                    FStarC_TypeChecker_Rel.subtype_nosmt env1
+                                      t1 t2 in
+                                  (match uu___4 with
+                                   | FStar_Pervasives_Native.Some g when
+                                       FStarC_TypeChecker_Env.is_trivial_guard_formula
+                                         g
+                                       ->
+                                       let uu___5 =
+                                         tc_unifier_solved_implicits env1
+                                           must_tot false all_uvars in
+                                       Obj.magic
+                                         (FStarC_Class_Monad.op_let_Bang
+                                            FStarC_Tactics_Monad.monad_tac ()
+                                            () uu___5
+                                            (fun uu___6 ->
+                                               (fun uu___6 ->
+                                                  let uu___6 =
+                                                    Obj.magic uu___6 in
+                                                  let uu___7 =
+                                                    let uu___8 =
+                                                      FStarC_Class_Listlike.to_list
+                                                        (FStarC_CList.listlike_clist
+                                                           ())
+                                                        g.FStarC_TypeChecker_Common.implicits in
+                                                    FStarC_Tactics_Monad.add_implicits
+                                                      uu___8 in
+                                                  Obj.magic
+                                                    (FStarC_Class_Monad.op_let_Bang
+                                                       FStarC_Tactics_Monad.monad_tac
+                                                       () () uu___7
+                                                       (fun uu___8 ->
+                                                          (fun uu___8 ->
+                                                             let uu___8 =
+                                                               Obj.magic
+                                                                 uu___8 in
+                                                             Obj.magic
+                                                               (FStarC_Class_Monad.return
+                                                                  FStarC_Tactics_Monad.monad_tac
+                                                                  ()
+                                                                  (Obj.magic
+                                                                    true)))
+                                                            uu___8))) uu___6))
+                                   | uu___5 ->
+                                       Obj.magic
+                                         (FStarC_Class_Monad.return
+                                            FStarC_Tactics_Monad.monad_tac ()
+                                            (Obj.magic false)))) uu___3) ()
+                      with
+                      | uu___3 ->
+                          ((fun uu___3 ->
+                              match uu___3 with
+                              | FStarC_Errors.Error uu___4 ->
+                                  Obj.magic
+                                    (FStarC_Class_Monad.return
+                                       FStarC_Tactics_Monad.monad_tac ()
+                                       (Obj.magic false)))) uu___3 in
+                    FStarC_Tactics_Monad.catch uu___2 in
+                  Obj.magic
+                    (FStarC_Class_Monad.op_let_Bang
+                       FStarC_Tactics_Monad.monad_tac () ()
+                       (Obj.magic uu___1)
+                       (fun uu___2 ->
+                          (fun uu___2 ->
+                             let uu___2 = Obj.magic uu___2 in
+                             match uu___2 with
+                             | FStar_Pervasives.Inl exn ->
+                                 Obj.magic
+                                   (Obj.repr
+                                      (FStarC_Tactics_Monad.traise exn))
+                             | FStar_Pervasives.Inr v ->
+                                 Obj.magic
+                                   (Obj.repr
+                                      (FStarC_Class_Monad.return
+                                         FStarC_Tactics_Monad.monad_tac ()
+                                         (Obj.magic v)))) uu___2)) in
+                Obj.magic
+                  (FStarC_Class_Monad.op_let_Bang
+                     FStarC_Tactics_Monad.monad_tac () () (Obj.magic uu___)
+                     (fun uu___1 ->
+                        (fun r ->
+                           let r = Obj.magic r in
+                           if r
+                           then
+                             Obj.magic
+                               (FStarC_Class_Monad.return
+                                  FStarC_Tactics_Monad.monad_tac ()
+                                  (Obj.magic true))
+                           else
+                             (FStarC_Syntax_Unionfind.rollback tx;
+                              Obj.magic
+                                (FStarC_Class_Monad.return
+                                   FStarC_Tactics_Monad.monad_tac ()
+                                   (Obj.magic false)))) uu___1))) uu___)))
+    uu___3 uu___2 uu___1 uu___
 let do_match (uu___3 : Prims.bool) (uu___2 : FStarC_TypeChecker_Env.env)
   (uu___1 : FStarC_Syntax_Syntax.term) (uu___ : FStarC_Syntax_Syntax.term) :
   Prims.bool FStarC_Tactics_Monad.tac=
@@ -1716,8 +1903,6 @@ let __tc_ghost (uu___1 : env) (uu___ : FStarC_Syntax_Syntax.term) :
                                  (e.FStarC_TypeChecker_Env.modules);
                                FStarC_TypeChecker_Env.expected_typ =
                                  (e.FStarC_TypeChecker_Env.expected_typ);
-                               FStarC_TypeChecker_Env.expected_post =
-                                 (e.FStarC_TypeChecker_Env.expected_post);
                                FStarC_TypeChecker_Env.sigtab =
                                  (e.FStarC_TypeChecker_Env.sigtab);
                                FStarC_TypeChecker_Env.attrtab =
@@ -1729,6 +1914,8 @@ let __tc_ghost (uu___1 : env) (uu___ : FStarC_Syntax_Syntax.term) :
                                FStarC_TypeChecker_Env.generalize =
                                  (e.FStarC_TypeChecker_Env.generalize);
                                FStarC_TypeChecker_Env.letrecs = [];
+                               FStarC_TypeChecker_Env.rec_names =
+                                 (e.FStarC_TypeChecker_Env.rec_names);
                                FStarC_TypeChecker_Env.top_level =
                                  (e.FStarC_TypeChecker_Env.top_level);
                                FStarC_TypeChecker_Env.check_uvars =
@@ -1767,8 +1954,6 @@ let __tc_ghost (uu___1 : env) (uu___ : FStarC_Syntax_Syntax.term) :
                                  (e.FStarC_TypeChecker_Env.subtype_nosmt_force);
                                FStarC_TypeChecker_Env.qtbl_name_and_index =
                                  (e.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                               FStarC_TypeChecker_Env.normalized_eff_names =
-                                 (e.FStarC_TypeChecker_Env.normalized_eff_names);
                                FStarC_TypeChecker_Env.fv_delta_depths =
                                  (e.FStarC_TypeChecker_Env.fv_delta_depths);
                                FStarC_TypeChecker_Env.proof_ns =
@@ -1794,6 +1979,8 @@ let __tc_ghost (uu___1 : env) (uu___ : FStarC_Syntax_Syntax.term) :
                                  (e.FStarC_TypeChecker_Env.nbe);
                                FStarC_TypeChecker_Env.strict_args_tab =
                                  (e.FStarC_TypeChecker_Env.strict_args_tab);
+                               FStarC_TypeChecker_Env.disc_proj_tab =
+                                 (e.FStarC_TypeChecker_Env.disc_proj_tab);
                                FStarC_TypeChecker_Env.erasable_types_tab =
                                  (e.FStarC_TypeChecker_Env.erasable_types_tab);
                                FStarC_TypeChecker_Env.enable_defer_to_tac =
@@ -1825,10 +2012,10 @@ let __tc_ghost (uu___1 : env) (uu___ : FStarC_Syntax_Syntax.term) :
                                     FStarC_Tactics_Monad.monad_tac ()
                                     (Obj.magic
                                        (t1,
-                                         (lc.FStarC_TypeChecker_Common.res_typ),
+                                         (FStarC_Syntax_Util.comp_result lc),
                                          g)))) uu___))) uu___))) uu___1 uu___
 let __tc_lax (uu___1 : env) (uu___ : FStarC_Syntax_Syntax.term) :
-  (FStarC_Syntax_Syntax.term * FStarC_TypeChecker_Common.lcomp *
+  (FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.comp *
     FStarC_TypeChecker_Common.guard_t) FStarC_Tactics_Monad.tac=
   (fun e t ->
      Obj.magic
@@ -1874,8 +2061,6 @@ let __tc_lax (uu___1 : env) (uu___ : FStarC_Syntax_Syntax.term) :
                                  (e.FStarC_TypeChecker_Env.modules);
                                FStarC_TypeChecker_Env.expected_typ =
                                  (e.FStarC_TypeChecker_Env.expected_typ);
-                               FStarC_TypeChecker_Env.expected_post =
-                                 (e.FStarC_TypeChecker_Env.expected_post);
                                FStarC_TypeChecker_Env.sigtab =
                                  (e.FStarC_TypeChecker_Env.sigtab);
                                FStarC_TypeChecker_Env.attrtab =
@@ -1888,6 +2073,8 @@ let __tc_lax (uu___1 : env) (uu___ : FStarC_Syntax_Syntax.term) :
                                  (e.FStarC_TypeChecker_Env.generalize);
                                FStarC_TypeChecker_Env.letrecs =
                                  (e.FStarC_TypeChecker_Env.letrecs);
+                               FStarC_TypeChecker_Env.rec_names =
+                                 (e.FStarC_TypeChecker_Env.rec_names);
                                FStarC_TypeChecker_Env.top_level =
                                  (e.FStarC_TypeChecker_Env.top_level);
                                FStarC_TypeChecker_Env.check_uvars =
@@ -1925,8 +2112,6 @@ let __tc_lax (uu___1 : env) (uu___ : FStarC_Syntax_Syntax.term) :
                                  (e.FStarC_TypeChecker_Env.subtype_nosmt_force);
                                FStarC_TypeChecker_Env.qtbl_name_and_index =
                                  (e.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                               FStarC_TypeChecker_Env.normalized_eff_names =
-                                 (e.FStarC_TypeChecker_Env.normalized_eff_names);
                                FStarC_TypeChecker_Env.fv_delta_depths =
                                  (e.FStarC_TypeChecker_Env.fv_delta_depths);
                                FStarC_TypeChecker_Env.proof_ns =
@@ -1952,6 +2137,8 @@ let __tc_lax (uu___1 : env) (uu___ : FStarC_Syntax_Syntax.term) :
                                  (e.FStarC_TypeChecker_Env.nbe);
                                FStarC_TypeChecker_Env.strict_args_tab =
                                  (e.FStarC_TypeChecker_Env.strict_args_tab);
+                               FStarC_TypeChecker_Env.disc_proj_tab =
+                                 (e.FStarC_TypeChecker_Env.disc_proj_tab);
                                FStarC_TypeChecker_Env.erasable_types_tab =
                                  (e.FStarC_TypeChecker_Env.erasable_types_tab);
                                FStarC_TypeChecker_Env.enable_defer_to_tac =
@@ -1991,8 +2178,6 @@ let __tc_lax (uu___1 : env) (uu___ : FStarC_Syntax_Syntax.term) :
                                  (e1.FStarC_TypeChecker_Env.modules);
                                FStarC_TypeChecker_Env.expected_typ =
                                  (e1.FStarC_TypeChecker_Env.expected_typ);
-                               FStarC_TypeChecker_Env.expected_post =
-                                 (e1.FStarC_TypeChecker_Env.expected_post);
                                FStarC_TypeChecker_Env.sigtab =
                                  (e1.FStarC_TypeChecker_Env.sigtab);
                                FStarC_TypeChecker_Env.attrtab =
@@ -2004,6 +2189,8 @@ let __tc_lax (uu___1 : env) (uu___ : FStarC_Syntax_Syntax.term) :
                                FStarC_TypeChecker_Env.generalize =
                                  (e1.FStarC_TypeChecker_Env.generalize);
                                FStarC_TypeChecker_Env.letrecs = [];
+                               FStarC_TypeChecker_Env.rec_names =
+                                 (e1.FStarC_TypeChecker_Env.rec_names);
                                FStarC_TypeChecker_Env.top_level =
                                  (e1.FStarC_TypeChecker_Env.top_level);
                                FStarC_TypeChecker_Env.check_uvars =
@@ -2042,8 +2229,6 @@ let __tc_lax (uu___1 : env) (uu___ : FStarC_Syntax_Syntax.term) :
                                  (e1.FStarC_TypeChecker_Env.subtype_nosmt_force);
                                FStarC_TypeChecker_Env.qtbl_name_and_index =
                                  (e1.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                               FStarC_TypeChecker_Env.normalized_eff_names =
-                                 (e1.FStarC_TypeChecker_Env.normalized_eff_names);
                                FStarC_TypeChecker_Env.fv_delta_depths =
                                  (e1.FStarC_TypeChecker_Env.fv_delta_depths);
                                FStarC_TypeChecker_Env.proof_ns =
@@ -2069,6 +2254,8 @@ let __tc_lax (uu___1 : env) (uu___ : FStarC_Syntax_Syntax.term) :
                                  (e1.FStarC_TypeChecker_Env.nbe);
                                FStarC_TypeChecker_Env.strict_args_tab =
                                  (e1.FStarC_TypeChecker_Env.strict_args_tab);
+                               FStarC_TypeChecker_Env.disc_proj_tab =
+                                 (e1.FStarC_TypeChecker_Env.disc_proj_tab);
                                FStarC_TypeChecker_Env.erasable_types_tab =
                                  (e1.FStarC_TypeChecker_Env.erasable_types_tab);
                                FStarC_TypeChecker_Env.enable_defer_to_tac =
@@ -2109,12 +2296,9 @@ let tcc (e : env) (t : FStarC_Syntax_Syntax.term) :
                let uu___2 = Obj.magic uu___2 in
                match uu___2 with
                | (uu___3, lc, uu___4) ->
-                   let uu___5 =
-                     let uu___6 = FStarC_TypeChecker_Common.lcomp_comp lc in
-                     FStar_Pervasives_Native.fst uu___6 in
                    Obj.magic
                      (FStarC_Class_Monad.return
-                        FStarC_Tactics_Monad.monad_tac () (Obj.magic uu___5)))
+                        FStarC_Tactics_Monad.monad_tac () (Obj.magic lc)))
               uu___2)) in
   FStarC_Tactics_Monad.wrap_err "tcc" uu___
 let tc (e : env) (t : FStarC_Syntax_Syntax.term) :
@@ -2874,8 +3058,6 @@ let __exact_now (set_expected_typ : Prims.bool)
                 (env1.FStarC_TypeChecker_Env.modules);
               FStarC_TypeChecker_Env.expected_typ =
                 (env1.FStarC_TypeChecker_Env.expected_typ);
-              FStarC_TypeChecker_Env.expected_post =
-                (env1.FStarC_TypeChecker_Env.expected_post);
               FStarC_TypeChecker_Env.sigtab =
                 (env1.FStarC_TypeChecker_Env.sigtab);
               FStarC_TypeChecker_Env.attrtab =
@@ -2888,6 +3070,8 @@ let __exact_now (set_expected_typ : Prims.bool)
                 (env1.FStarC_TypeChecker_Env.generalize);
               FStarC_TypeChecker_Env.letrecs =
                 (env1.FStarC_TypeChecker_Env.letrecs);
+              FStarC_TypeChecker_Env.rec_names =
+                (env1.FStarC_TypeChecker_Env.rec_names);
               FStarC_TypeChecker_Env.top_level =
                 (env1.FStarC_TypeChecker_Env.top_level);
               FStarC_TypeChecker_Env.check_uvars =
@@ -2923,8 +3107,6 @@ let __exact_now (set_expected_typ : Prims.bool)
                 (env1.FStarC_TypeChecker_Env.subtype_nosmt_force);
               FStarC_TypeChecker_Env.qtbl_name_and_index =
                 (env1.FStarC_TypeChecker_Env.qtbl_name_and_index);
-              FStarC_TypeChecker_Env.normalized_eff_names =
-                (env1.FStarC_TypeChecker_Env.normalized_eff_names);
               FStarC_TypeChecker_Env.fv_delta_depths =
                 (env1.FStarC_TypeChecker_Env.fv_delta_depths);
               FStarC_TypeChecker_Env.proof_ns =
@@ -2948,6 +3130,8 @@ let __exact_now (set_expected_typ : Prims.bool)
               FStarC_TypeChecker_Env.nbe = (env1.FStarC_TypeChecker_Env.nbe);
               FStarC_TypeChecker_Env.strict_args_tab =
                 (env1.FStarC_TypeChecker_Env.strict_args_tab);
+              FStarC_TypeChecker_Env.disc_proj_tab =
+                (env1.FStarC_TypeChecker_Env.disc_proj_tab);
               FStarC_TypeChecker_Env.erasable_types_tab =
                 (env1.FStarC_TypeChecker_Env.erasable_types_tab);
               FStarC_TypeChecker_Env.enable_defer_to_tac =
@@ -3055,7 +3239,104 @@ let __exact_now (set_expected_typ : Prims.bool)
                                                                     let b =
                                                                     Obj.magic
                                                                     b in
+                                                                    let uu___7
+                                                                    =
                                                                     if b
+                                                                    then
+                                                                    Obj.magic
+                                                                    (Obj.repr
+                                                                    (FStarC_Class_Monad.return
+                                                                    FStarC_Tactics_Monad.monad_tac
+                                                                    ()
+                                                                    (Obj.magic
+                                                                    true)))
+                                                                    else
+                                                                    Obj.magic
+                                                                    (Obj.repr
+                                                                    (let typ'
+                                                                    =
+                                                                    let uu___8
+                                                                    =
+                                                                    FStarC_TypeChecker_Normalize.normalize_refinement
+                                                                    FStarC_TypeChecker_Normalize.whnf_steps
+                                                                    (FStarC_Tactics_Types.goal_env
+                                                                    goal) typ in
+                                                                    FStarC_Syntax_Util.unrefine
+                                                                    uu___8 in
+                                                                    let uu___8
+                                                                    =
+                                                                    FStarC_Syntax_Util.term_eq
+                                                                    typ' typ in
+                                                                    if uu___8
+                                                                    then
+                                                                    Obj.repr
+                                                                    (FStarC_Class_Monad.return
+                                                                    FStarC_Tactics_Monad.monad_tac
+                                                                    ()
+                                                                    (Obj.magic
+                                                                    false))
+                                                                    else
+                                                                    Obj.repr
+                                                                    (let uu___9
+                                                                    =
+                                                                    FStarC_Tactics_Types.goal_type
+                                                                    goal in
+                                                                    do_unify
+                                                                    true
+                                                                    (FStarC_Tactics_Types.goal_env
+                                                                    goal)
+                                                                    typ'
+                                                                    uu___9))) in
+                                                                    Obj.magic
+                                                                    (FStarC_Class_Monad.op_let_Bang
+                                                                    FStarC_Tactics_Monad.monad_tac
+                                                                    () ()
+                                                                    (Obj.magic
+                                                                    uu___7)
+                                                                    (fun
+                                                                    uu___8 ->
+                                                                    (fun b1
+                                                                    ->
+                                                                    let b1 =
+                                                                    Obj.magic
+                                                                    b1 in
+                                                                    let uu___8
+                                                                    =
+                                                                    if b1
+                                                                    then
+                                                                    Obj.magic
+                                                                    (Obj.repr
+                                                                    (FStarC_Class_Monad.return
+                                                                    FStarC_Tactics_Monad.monad_tac
+                                                                    ()
+                                                                    (Obj.magic
+                                                                    true)))
+                                                                    else
+                                                                    Obj.magic
+                                                                    (Obj.repr
+                                                                    (let uu___9
+                                                                    =
+                                                                    FStarC_Tactics_Types.goal_type
+                                                                    goal in
+                                                                    do_subtype
+                                                                    true
+                                                                    (FStarC_Tactics_Types.goal_env
+                                                                    goal) typ
+                                                                    uu___9)) in
+                                                                    Obj.magic
+                                                                    (FStarC_Class_Monad.op_let_Bang
+                                                                    FStarC_Tactics_Monad.monad_tac
+                                                                    () ()
+                                                                    (Obj.magic
+                                                                    uu___8)
+                                                                    (fun
+                                                                    uu___9 ->
+                                                                    (fun b2
+                                                                    ->
+                                                                    let b2 =
+                                                                    Obj.magic
+                                                                    b2 in
+                                                                    if b2
                                                                     then
                                                                     (FStarC_Tactics_Monad.mark_goal_implicit_already_checked
                                                                     goal;
@@ -3063,9 +3344,9 @@ let __exact_now (set_expected_typ : Prims.bool)
                                                                     (solve
                                                                     goal t1))
                                                                     else
-                                                                    (let uu___7
+                                                                    (let uu___9
                                                                     =
-                                                                    let uu___8
+                                                                    let uu___10
                                                                     =
                                                                     FStarC_Tactics_Types.goal_type
                                                                     goal in
@@ -3074,19 +3355,19 @@ let __exact_now (set_expected_typ : Prims.bool)
                                                                     (FStarC_Tactics_Types.goal_env
                                                                     goal))
                                                                     typ
-                                                                    uu___8 in
-                                                                    match uu___7
+                                                                    uu___10 in
+                                                                    match uu___9
                                                                     with
                                                                     | 
                                                                     (typ1,
                                                                     goalt) ->
-                                                                    let uu___8
-                                                                    =
-                                                                    let uu___9
-                                                                    =
                                                                     let uu___10
                                                                     =
                                                                     let uu___11
+                                                                    =
+                                                                    let uu___12
+                                                                    =
+                                                                    let uu___13
                                                                     =
                                                                     ttd
                                                                     (FStarC_Tactics_Types.goal_env
@@ -3097,9 +3378,9 @@ let __exact_now (set_expected_typ : Prims.bool)
                                                                     Prims.int_one
                                                                     (FStarC_Errors_Msg.text
                                                                     "Term")
-                                                                    uu___11 in
+                                                                    uu___13 in
                                                                     FStar_Pprint.op_Hat_Slash_Hat
-                                                                    uu___10
+                                                                    uu___12
                                                                     (FStar_Pprint.op_Hat_Slash_Hat
                                                                     (FStar_Pprint.prefix
                                                                     (Prims.of_int
@@ -3115,9 +3396,11 @@ let __exact_now (set_expected_typ : Prims.bool)
                                                                     (FStarC_Errors_Msg.text
                                                                     "does not exactly solve the goal")
                                                                     goalt)) in
-                                                                    [uu___9] in
+                                                                    [uu___11] in
                                                                     Obj.magic
                                                                     (FStarC_Tactics_Monad.fail_doc
+                                                                    uu___10)))
+                                                                    uu___9)))
                                                                     uu___8)))
                                                                     uu___7)))
                                                          uu___5))) uu___4)))
@@ -3248,7 +3531,8 @@ let try_unify_by_application
   (only_match : Prims.bool) (e : env) (ty1 : FStarC_Syntax_Syntax.term)
   (ty2 : FStarC_Syntax_Syntax.term) (rng : FStarC_Range_Type.t) :
   (FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.aqual *
-    FStarC_Syntax_Syntax.ctx_uvar) Prims.list FStarC_Tactics_Monad.tac=
+    FStarC_Syntax_Syntax.ctx_uvar FStar_Pervasives_Native.option) Prims.list
+    FStarC_Tactics_Monad.tac=
   let must_tot = true in
   let rec aux uu___2 uu___1 uu___ =
     (fun acc typedness_deps ty11 ->
@@ -3321,55 +3605,107 @@ let try_unify_by_application
                                         "Codomain is effectful")
                                  else
                                    Obj.repr
-                                     (FStarC_Class_Monad.op_let_Bang
-                                        FStarC_Tactics_Monad.monad_tac () ()
-                                        (Obj.magic
-                                           (FStarC_Tactics_Monad.new_uvar
-                                              "apply arg" e
-                                              (b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort
-                                              should_check typedness_deps rng))
-                                        (fun uu___3 ->
-                                           (fun uu___3 ->
-                                              let uu___3 = Obj.magic uu___3 in
-                                              match uu___3 with
-                                              | (uvt, uv) ->
-                                                  Obj.magic
-                                                    (FStarC_Class_Monad.op_let_Bang
-                                                       FStarC_Tactics_Monad.monad_tac
-                                                       () ()
-                                                       (FStarC_Tactics_Monad.if_verbose
-                                                          (fun uu___4 ->
-                                                             let uu___5 =
-                                                               FStarC_Class_Show.show
-                                                                 FStarC_Syntax_Print.showable_ctxu
-                                                                 uv in
-                                                             FStarC_Format.print1
-                                                               "t_apply: generated uvar %s\n"
-                                                               uu___5))
-                                                       (fun uu___4 ->
-                                                          (fun uu___4 ->
-                                                             let uu___4 =
-                                                               Obj.magic
-                                                                 uu___4 in
-                                                             let typ =
-                                                               FStarC_Syntax_Util.comp_result
-                                                                 c in
-                                                             let typ' =
-                                                               FStarC_Syntax_Subst.subst
-                                                                 [FStarC_Syntax_Syntax.NT
+                                     (let uu___3 =
+                                        if
+                                          (FStarC_Syntax_Syntax.is_null_binder
+                                             b)
+                                            ||
+                                            (FStarC_Util.starts_with
+                                               (FStarC_Ident.string_of_id
+                                                  (b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.ppname)
+                                               FStarC_Ident.reserved_prefix)
+                                        then
+                                          let uu___4 =
+                                            let uu___5 =
+                                              FStarC_Syntax_Subst.compress
+                                                (b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
+                                            uu___5.FStarC_Syntax_Syntax.n in
+                                          match uu___4 with
+                                          | FStarC_Syntax_Syntax.Tm_fvar fv
+                                              ->
+                                              FStarC_Syntax_Syntax.fv_eq_lid
+                                                fv
+                                                FStarC_Parser_Const.unit_lid
+                                          | uu___5 -> false
+                                        else false in
+                                      if uu___3
+                                      then
+                                        Obj.repr
+                                          (let typ =
+                                             FStarC_Syntax_Util.comp_result c in
+                                           let typ' =
+                                             FStarC_Syntax_Subst.subst
+                                               [FStarC_Syntax_Syntax.NT
+                                                  ((b.FStarC_Syntax_Syntax.binder_bv),
+                                                    FStarC_Syntax_Util.exp_unit)]
+                                               typ in
+                                           aux
+                                             ((FStarC_Syntax_Util.exp_unit,
+                                                (FStarC_Syntax_Util.aqual_of_binder
+                                                   b),
+                                                FStar_Pervasives_Native.None)
+                                             :: acc) typedness_deps typ')
+                                      else
+                                        Obj.repr
+                                          (FStarC_Class_Monad.op_let_Bang
+                                             FStarC_Tactics_Monad.monad_tac
+                                             () ()
+                                             (Obj.magic
+                                                (FStarC_Tactics_Monad.new_uvar
+                                                   "apply arg" e
+                                                   (b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort
+                                                   should_check
+                                                   typedness_deps rng))
+                                             (fun uu___4 ->
+                                                (fun uu___4 ->
+                                                   let uu___4 =
+                                                     Obj.magic uu___4 in
+                                                   match uu___4 with
+                                                   | (uvt, uv) ->
+                                                       Obj.magic
+                                                         (FStarC_Class_Monad.op_let_Bang
+                                                            FStarC_Tactics_Monad.monad_tac
+                                                            () ()
+                                                            (FStarC_Tactics_Monad.if_verbose
+                                                               (fun uu___5 ->
+                                                                  let uu___6
+                                                                    =
+                                                                    FStarC_Class_Show.show
+                                                                    FStarC_Syntax_Print.showable_ctxu
+                                                                    uv in
+                                                                  FStarC_Format.print1
+                                                                    "t_apply: generated uvar %s\n"
+                                                                    uu___6))
+                                                            (fun uu___5 ->
+                                                               (fun uu___5 ->
+                                                                  let uu___5
+                                                                    =
+                                                                    Obj.magic
+                                                                    uu___5 in
+                                                                  let typ =
+                                                                    FStarC_Syntax_Util.comp_result
+                                                                    c in
+                                                                  let typ' =
+                                                                    FStarC_Syntax_Subst.subst
+                                                                    [
+                                                                    FStarC_Syntax_Syntax.NT
                                                                     ((b.FStarC_Syntax_Syntax.binder_bv),
                                                                     uvt)] typ in
-                                                             Obj.magic
-                                                               (aux
-                                                                  ((uvt,
+                                                                  Obj.magic
+                                                                    (
+                                                                    aux
+                                                                    ((uvt,
                                                                     (FStarC_Syntax_Util.aqual_of_binder
-                                                                    b), uv)
-                                                                  :: acc) (uv
-                                                                  ::
-                                                                  typedness_deps)
-                                                                  typ'))
-                                                            uu___4))) uu___3))))))
-                 uu___))) uu___2 uu___1 uu___ in
+                                                                    b),
+                                                                    (FStar_Pervasives_Native.Some
+                                                                    uv)) ::
+                                                                    acc) (uv
+                                                                    ::
+                                                                    typedness_deps)
+                                                                    typ'))
+                                                                 uu___5)))
+                                                  uu___4))))))) uu___)))
+      uu___2 uu___1 uu___ in
   aux [] [] ty1
 let apply_implicits_as_goals (uu___2 : FStarC_TypeChecker_Env.env)
   (uu___1 : FStarC_Tactics_Types.goal FStar_Pervasives_Native.option)
@@ -3646,18 +3982,26 @@ let t_apply (uopt : Prims.bool) (only_match : Prims.bool)
                                                                     (uu___12,
                                                                     uu___13,
                                                                     uv) ->
+                                                                    (match uv
+                                                                    with
+                                                                    | 
+                                                                    FStar_Pervasives_Native.None
+                                                                    -> s
+                                                                    | 
+                                                                    FStar_Pervasives_Native.Some
+                                                                    uv1 ->
                                                                     let uu___14
                                                                     =
                                                                     let uu___15
                                                                     =
                                                                     FStarC_Syntax_Util.ctx_uvar_typ
-                                                                    uv in
+                                                                    uv1 in
                                                                     FStarC_Syntax_Free.uvars
                                                                     uu___15 in
                                                                     FStarC_Class_Setlike.union
                                                                     (FStarC_FlatSet.setlike_flat_set
                                                                     FStarC_Syntax_Free.ord_ctx_uvar)
-                                                                    s uu___14)
+                                                                    s uu___14))
                                                                     uvs
                                                                     uu___10 in
                                                                     let free_in_some_goal
@@ -3687,7 +4031,7 @@ let t_apply (uopt : Prims.bool) (only_match : Prims.bool)
                                                                     uu___11 in
                                                                     let uvt_uv_l
                                                                     =
-                                                                    FStarC_List.map
+                                                                    FStarC_List.collect
                                                                     (fun
                                                                     uu___12
                                                                     ->
@@ -3696,7 +4040,17 @@ let t_apply (uopt : Prims.bool) (only_match : Prims.bool)
                                                                     | 
                                                                     (uvt, _q,
                                                                     uv) ->
-                                                                    (uvt, uv))
+                                                                    (match uv
+                                                                    with
+                                                                    | 
+                                                                    FStar_Pervasives_Native.None
+                                                                    -> []
+                                                                    | 
+                                                                    FStar_Pervasives_Native.Some
+                                                                    uv1 ->
+                                                                    [
+                                                                    (uvt,
+                                                                    uv1)]))
                                                                     uvs in
                                                                     let uu___12
                                                                     =
@@ -3787,26 +4141,15 @@ let lemma_or_sq (c : FStarC_Syntax_Syntax.comp) :
   match uu___ with
   | (eff_name, res) ->
       if
-        FStarC_Ident.lid_equals eff_name FStarC_Parser_Const.effect_Lemma_lid
+        ((FStarC_Ident.lid_equals eff_name
+            FStarC_Parser_Const.effect_Lemma_lid)
+           || (FStarC_Syntax_Util.is_pure_effect eff_name))
+          || (FStarC_Syntax_Util.is_ghost_effect eff_name)
       then
-        let uu___1 =
-          let uu___2 = FStarC_Syntax_Util.comp_post c in
-          ((FStarC_Syntax_Util.comp_pre c), uu___2) in
-        (match uu___1 with
-         | (pre, post) ->
-             let post1 =
-               FStarC_Syntax_Util.mk_app post
-                 [FStarC_Syntax_Syntax.as_arg FStarC_Syntax_Util.exp_unit] in
-             FStar_Pervasives_Native.Some (pre, post1))
-      else
-        if
-          (FStarC_Syntax_Util.is_pure_effect eff_name) ||
-            (FStarC_Syntax_Util.is_ghost_effect eff_name)
-        then
-          (let uu___1 = FStarC_Syntax_Util.un_squash res in
-           FStarC_Option.map (fun post -> (FStarC_Syntax_Util.t_true, post))
-             uu___1)
-        else FStar_Pervasives_Native.None
+        let uu___1 = FStarC_Syntax_Util.un_squash res in
+        FStarC_Option.map (fun post -> (FStarC_Syntax_Util.t_true, post))
+          uu___1
+      else FStar_Pervasives_Native.None
 let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
   (tm : FStarC_Syntax_Syntax.term) : unit FStarC_Tactics_Monad.tac=
   let uu___ =
@@ -3869,9 +4212,6 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                            FStarC_TypeChecker_Env.expected_typ
                                              =
                                              (env1.FStarC_TypeChecker_Env.expected_typ);
-                                           FStarC_TypeChecker_Env.expected_post
-                                             =
-                                             (env1.FStarC_TypeChecker_Env.expected_post);
                                            FStarC_TypeChecker_Env.sigtab =
                                              (env1.FStarC_TypeChecker_Env.sigtab);
                                            FStarC_TypeChecker_Env.attrtab =
@@ -3886,6 +4226,8 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                              (env1.FStarC_TypeChecker_Env.generalize);
                                            FStarC_TypeChecker_Env.letrecs =
                                              (env1.FStarC_TypeChecker_Env.letrecs);
+                                           FStarC_TypeChecker_Env.rec_names =
+                                             (env1.FStarC_TypeChecker_Env.rec_names);
                                            FStarC_TypeChecker_Env.top_level =
                                              (env1.FStarC_TypeChecker_Env.top_level);
                                            FStarC_TypeChecker_Env.check_uvars
@@ -3931,9 +4273,6 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                            FStarC_TypeChecker_Env.qtbl_name_and_index
                                              =
                                              (env1.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                                           FStarC_TypeChecker_Env.normalized_eff_names
-                                             =
-                                             (env1.FStarC_TypeChecker_Env.normalized_eff_names);
                                            FStarC_TypeChecker_Env.fv_delta_depths
                                              =
                                              (env1.FStarC_TypeChecker_Env.fv_delta_depths);
@@ -3965,6 +4304,9 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                            FStarC_TypeChecker_Env.strict_args_tab
                                              =
                                              (env1.FStarC_TypeChecker_Env.strict_args_tab);
+                                           FStarC_TypeChecker_Env.disc_proj_tab
+                                             =
+                                             (env1.FStarC_TypeChecker_Env.disc_proj_tab);
                                            FStarC_TypeChecker_Env.erasable_types_tab
                                              =
                                              (env1.FStarC_TypeChecker_Env.erasable_types_tab);
@@ -4012,58 +4354,101 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                     (match uu___6 with
                                                      | (bs, comp) ->
                                                          let uu___7 =
-                                                           lemma_or_sq comp in
+                                                           match FStarC_List.rev
+                                                                   bs
+                                                           with
+                                                           | b::rev_rest when
+                                                               match 
+                                                                 b.FStarC_Syntax_Syntax.binder_qual
+                                                               with
+                                                               | FStar_Pervasives_Native.Some
+                                                                   (FStarC_Syntax_Syntax.Implicit
+                                                                   uu___8) ->
+                                                                   true
+                                                               | uu___8 ->
+                                                                   false
+                                                               ->
+                                                               let uu___8 =
+                                                                 FStarC_Syntax_Util.un_squash
+                                                                   (b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
+                                                               (match uu___8
+                                                                with
+                                                                | FStar_Pervasives_Native.Some
+                                                                    p ->
+                                                                    ((FStarC_List.rev
+                                                                    rev_rest),
+                                                                    (FStar_Pervasives_Native.Some
+                                                                    p))
+                                                                | FStar_Pervasives_Native.None
+                                                                    ->
+                                                                    (bs,
+                                                                    FStar_Pervasives_Native.None))
+                                                           | uu___8 ->
+                                                               (bs,
+                                                                 FStar_Pervasives_Native.None) in
                                                          (match uu___7 with
-                                                          | FStar_Pervasives_Native.None
+                                                          | (bs1, pre_binder)
                                                               ->
                                                               let uu___8 =
-                                                                let uu___9 =
-                                                                  let uu___10
+                                                                lemma_or_sq
+                                                                  comp in
+                                                              (match uu___8
+                                                               with
+                                                               | FStar_Pervasives_Native.None
+                                                                   ->
+                                                                   let uu___9
+                                                                    =
+                                                                    let uu___10
+                                                                    =
+                                                                    let uu___11
                                                                     =
                                                                     FStarC_Class_PP.pp
                                                                     FStarC_Syntax_Print.pretty_comp
                                                                     comp in
-                                                                  FStar_Pprint.prefix
-                                                                    (
-                                                                    Prims.of_int
+                                                                    FStar_Pprint.prefix
+                                                                    (Prims.of_int
                                                                     2)
                                                                     Prims.int_one
-                                                                    (
-                                                                    FStarC_Errors_Msg.text
+                                                                    (FStarC_Errors_Msg.text
                                                                     "Term to apply has computation type:")
-                                                                    uu___10 in
-                                                                [uu___9;
-                                                                FStarC_Errors_Msg.text
-                                                                  "`apply_lemma` can only apply functions with the Lemma effect or returning a squashed value."] in
-                                                              Obj.magic
-                                                                (FStarC_Tactics_Monad.fail_doc
-                                                                   uu___8)
-                                                          | FStar_Pervasives_Native.Some
-                                                              (pre, post) ->
-                                                              let uu___8 =
-                                                                Obj.magic
-                                                                  (FStarC_Class_Monad.foldM_left
+                                                                    uu___11 in
+                                                                    [uu___10;
+                                                                    FStarC_Errors_Msg.text
+                                                                    "`apply_lemma` can only apply functions with the Lemma effect or returning a squashed value."] in
+                                                                   Obj.magic
+                                                                    (FStarC_Tactics_Monad.fail_doc
+                                                                    uu___9)
+                                                               | FStar_Pervasives_Native.Some
+                                                                   (pre,
+                                                                    post)
+                                                                   ->
+                                                                   let uu___9
+                                                                    =
+                                                                    Obj.magic
+                                                                    (FStarC_Class_Monad.foldM_left
                                                                     FStarC_Tactics_Monad.monad_tac
                                                                     () ()
                                                                     (fun
+                                                                    uu___11
                                                                     uu___10
-                                                                    uu___9 ->
+                                                                    ->
                                                                     (fun
-                                                                    uu___9 ->
-                                                                    let uu___9
-                                                                    =
-                                                                    Obj.magic
-                                                                    uu___9 in
-                                                                    fun
                                                                     uu___10
                                                                     ->
                                                                     let uu___10
                                                                     =
                                                                     Obj.magic
                                                                     uu___10 in
+                                                                    fun
+                                                                    uu___11
+                                                                    ->
+                                                                    let uu___11
+                                                                    =
+                                                                    Obj.magic
+                                                                    uu___11 in
                                                                     match 
-                                                                    (uu___9,
-                                                                    uu___10)
+                                                                    (uu___10,
+                                                                    uu___11)
                                                                     with
                                                                     | 
                                                                     ((uvs,
@@ -4076,20 +4461,20 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     FStarC_Syntax_Syntax.binder_qual
                                                                     = aq;
                                                                     FStarC_Syntax_Syntax.binder_positivity
-                                                                    = uu___11;
+                                                                    = uu___12;
                                                                     FStarC_Syntax_Syntax.binder_attrs
-                                                                    = uu___12;_})
+                                                                    = uu___13;_})
                                                                     ->
                                                                     let b_t =
                                                                     FStarC_Syntax_Subst.subst
                                                                     subst
                                                                     b.FStarC_Syntax_Syntax.sort in
-                                                                    let uu___13
+                                                                    let uu___14
                                                                     =
                                                                     is_unit_t
                                                                     b_t in
                                                                     if
-                                                                    uu___13
+                                                                    uu___14
                                                                     then
                                                                     Obj.magic
                                                                     (FStarC_Class_Monad.return
@@ -4107,17 +4492,17 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     ::
                                                                     subst))))
                                                                     else
-                                                                    (let uu___14
-                                                                    =
-                                                                    let uu___15
+                                                                    (let uu___15
                                                                     =
                                                                     let uu___16
                                                                     =
                                                                     let uu___17
                                                                     =
+                                                                    let uu___18
+                                                                    =
                                                                     should_check_goal_uvar
                                                                     goal in
-                                                                    match uu___17
+                                                                    match uu___18
                                                                     with
                                                                     | 
                                                                     FStarC_Syntax_Syntax.Strict
@@ -4127,11 +4512,11 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     | 
                                                                     x -> x in
                                                                     FStar_Pervasives_Native.Some
-                                                                    uu___16 in
+                                                                    uu___17 in
                                                                     FStarC_Tactics_Monad.new_uvar
                                                                     "apply_lemma"
                                                                     env1 b_t
-                                                                    uu___15
+                                                                    uu___16
                                                                     deps
                                                                     (rangeof
                                                                     goal) in
@@ -4140,44 +4525,44 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     FStarC_Tactics_Monad.monad_tac
                                                                     () ()
                                                                     (Obj.magic
-                                                                    uu___14)
+                                                                    uu___15)
                                                                     (fun
-                                                                    uu___15
+                                                                    uu___16
                                                                     ->
                                                                     (fun
-                                                                    uu___15
+                                                                    uu___16
                                                                     ->
-                                                                    let uu___15
+                                                                    let uu___16
                                                                     =
                                                                     Obj.magic
-                                                                    uu___15 in
-                                                                    match uu___15
+                                                                    uu___16 in
+                                                                    match uu___16
                                                                     with
                                                                     | 
                                                                     (t1, u)
                                                                     ->
                                                                     ((
-                                                                    let uu___17
+                                                                    let uu___18
                                                                     =
                                                                     FStarC_Effect.op_Bang
                                                                     dbg_2635 in
                                                                     if
-                                                                    uu___17
+                                                                    uu___18
                                                                     then
-                                                                    let uu___18
+                                                                    let uu___19
                                                                     =
                                                                     FStarC_Class_Show.show
                                                                     FStarC_Syntax_Print.showable_ctxu
                                                                     u in
-                                                                    let uu___19
+                                                                    let uu___20
                                                                     =
                                                                     FStarC_Class_Show.show
                                                                     FStarC_Syntax_Print.showable_term
                                                                     tm1 in
                                                                     FStarC_Format.print2
                                                                     "Apply lemma created a new uvar %s while applying %s\n"
-                                                                    uu___18
                                                                     uu___19
+                                                                    uu___20
                                                                     else ());
                                                                     Obj.magic
                                                                     (FStarC_Class_Monad.return
@@ -4194,33 +4579,35 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     (b, t1))
                                                                     ::
                                                                     subst))))))
-                                                                    uu___15))))
-                                                                    uu___10
-                                                                    uu___9)
+                                                                    uu___16))))
+                                                                    uu___11
+                                                                    uu___10)
                                                                     (Obj.magic
                                                                     ([], [],
                                                                     [], []))
                                                                     (Obj.magic
-                                                                    bs)) in
-                                                              Obj.magic
-                                                                (FStarC_Class_Monad.op_let_Bang
-                                                                   FStarC_Tactics_Monad.monad_tac
-                                                                   () ()
-                                                                   (Obj.magic
-                                                                    uu___8)
-                                                                   (fun
-                                                                    uu___9 ->
+                                                                    bs1)) in
+                                                                   Obj.magic
+                                                                    (FStarC_Class_Monad.op_let_Bang
+                                                                    FStarC_Tactics_Monad.monad_tac
+                                                                    () ()
+                                                                    (Obj.magic
+                                                                    uu___9)
                                                                     (fun
-                                                                    uu___9 ->
-                                                                    let uu___9
+                                                                    uu___10
+                                                                    ->
+                                                                    (fun
+                                                                    uu___10
+                                                                    ->
+                                                                    let uu___10
                                                                     =
                                                                     Obj.magic
-                                                                    uu___9 in
-                                                                    match uu___9
+                                                                    uu___10 in
+                                                                    match uu___10
                                                                     with
                                                                     | 
                                                                     (uvs,
-                                                                    uu___10,
+                                                                    uu___11,
                                                                     implicits1,
                                                                     subst) ->
                                                                     let implicits2
@@ -4234,72 +4621,80 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     let pre1
                                                                     =
                                                                     FStarC_Syntax_Subst.subst
-                                                                    subst pre in
+                                                                    subst
+                                                                    (match pre_binder
+                                                                    with
+                                                                    | 
+                                                                    FStar_Pervasives_Native.Some
+                                                                    p -> p
+                                                                    | 
+                                                                    FStar_Pervasives_Native.None
+                                                                    -> pre) in
                                                                     let post1
                                                                     =
                                                                     FStarC_Syntax_Subst.subst
                                                                     subst
                                                                     post in
-                                                                    let uu___11
+                                                                    let uu___12
                                                                     =
                                                                     let must_tot
                                                                     = false in
                                                                     let r =
                                                                     if noinst
                                                                     then
-                                                                    let uu___12
+                                                                    let uu___13
                                                                     =
                                                                     FStarC_Tactics_Types.goal_type
                                                                     goal in
-                                                                    let uu___13
+                                                                    let uu___14
                                                                     =
                                                                     FStarC_Syntax_Util.mk_squash
                                                                     post1 in
                                                                     do_match
                                                                     must_tot
                                                                     env1
-                                                                    uu___12
                                                                     uu___13
+                                                                    uu___14
                                                                     else
                                                                     if
                                                                     noinst_lhs
                                                                     then
-                                                                    (let uu___12
+                                                                    (let uu___13
                                                                     =
                                                                     FStarC_Tactics_Types.goal_type
                                                                     goal in
-                                                                    let uu___13
+                                                                    let uu___14
                                                                     =
                                                                     FStarC_Syntax_Util.mk_squash
                                                                     post1 in
                                                                     do_match_on_lhs
                                                                     must_tot
                                                                     env1
-                                                                    uu___12
-                                                                    uu___13)
+                                                                    uu___13
+                                                                    uu___14)
                                                                     else
-                                                                    (let uu___12
+                                                                    (let uu___13
                                                                     =
                                                                     FStarC_Tactics_Types.goal_type
                                                                     goal in
-                                                                    let uu___13
+                                                                    let uu___14
                                                                     =
                                                                     FStarC_Syntax_Util.mk_squash
                                                                     post1 in
                                                                     do_unify
                                                                     must_tot
                                                                     env1
-                                                                    uu___12
-                                                                    uu___13) in
+                                                                    uu___13
+                                                                    uu___14) in
                                                                     r in
                                                                     Obj.magic
                                                                     (FStarC_Class_Monad.op_let_Bang
                                                                     FStarC_Tactics_Monad.monad_tac
                                                                     () ()
                                                                     (Obj.magic
-                                                                    uu___11)
+                                                                    uu___12)
                                                                     (fun
-                                                                    uu___12
+                                                                    uu___13
                                                                     ->
                                                                     (fun b ->
                                                                     let b =
@@ -4309,13 +4704,13 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     Prims.not
                                                                     b
                                                                     then
-                                                                    let uu___12
-                                                                    =
                                                                     let uu___13
                                                                     =
                                                                     let uu___14
                                                                     =
                                                                     let uu___15
+                                                                    =
+                                                                    let uu___16
                                                                     =
                                                                     FStarC_Class_PP.pp
                                                                     FStarC_Syntax_Print.pretty_term
@@ -4326,12 +4721,12 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     Prims.int_one
                                                                     (FStarC_Errors_Msg.text
                                                                     "Cannot instantiate lemma:")
-                                                                    uu___15 in
-                                                                    let uu___15
-                                                                    =
+                                                                    uu___16 in
                                                                     let uu___16
                                                                     =
                                                                     let uu___17
+                                                                    =
+                                                                    let uu___18
                                                                     =
                                                                     FStarC_TypeChecker_Normalize.term_to_doc
                                                                     env1
@@ -4342,41 +4737,41 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     Prims.int_one
                                                                     (FStarC_Errors_Msg.text
                                                                     "with postcondition:")
-                                                                    uu___17 in
-                                                                    let uu___17
-                                                                    =
+                                                                    uu___18 in
                                                                     let uu___18
                                                                     =
                                                                     let uu___19
+                                                                    =
+                                                                    let uu___20
                                                                     =
                                                                     FStarC_Tactics_Types.goal_type
                                                                     goal in
                                                                     FStarC_Class_PP.pp
                                                                     FStarC_Syntax_Print.pretty_term
-                                                                    uu___19 in
+                                                                    uu___20 in
                                                                     FStar_Pprint.prefix
                                                                     (Prims.of_int
                                                                     2)
                                                                     Prims.int_one
                                                                     (FStarC_Errors_Msg.text
                                                                     "to match goal:")
+                                                                    uu___19 in
+                                                                    FStar_Pprint.op_Hat_Slash_Hat
+                                                                    uu___17
                                                                     uu___18 in
                                                                     FStar_Pprint.op_Hat_Slash_Hat
-                                                                    uu___16
-                                                                    uu___17 in
-                                                                    FStar_Pprint.op_Hat_Slash_Hat
-                                                                    uu___14
-                                                                    uu___15 in
-                                                                    [uu___13] in
+                                                                    uu___15
+                                                                    uu___16 in
+                                                                    [uu___14] in
                                                                     Obj.magic
                                                                     (FStarC_Tactics_Monad.fail_doc
-                                                                    uu___12)
+                                                                    uu___13)
                                                                     else
                                                                     (let goal_sc
                                                                     =
                                                                     should_check_goal_uvar
                                                                     goal in
-                                                                    let uu___12
+                                                                    let uu___13
                                                                     =
                                                                     solve'
                                                                     goal
@@ -4385,20 +4780,20 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     (FStarC_Class_Monad.op_let_Bang
                                                                     FStarC_Tactics_Monad.monad_tac
                                                                     () ()
-                                                                    uu___12
-                                                                    (fun
                                                                     uu___13
+                                                                    (fun
+                                                                    uu___14
                                                                     ->
                                                                     (fun
-                                                                    uu___13
+                                                                    uu___14
                                                                     ->
-                                                                    let uu___13
+                                                                    let uu___14
                                                                     =
                                                                     Obj.magic
-                                                                    uu___13 in
+                                                                    uu___14 in
                                                                     let is_free_uvar
                                                                     uv t1 =
-                                                                    let uu___14
+                                                                    let uu___15
                                                                     =
                                                                     FStarC_Syntax_Free.uvars
                                                                     t1 in
@@ -4409,33 +4804,33 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     FStarC_Syntax_Unionfind.equiv
                                                                     u.FStarC_Syntax_Syntax.ctx_uvar_head
                                                                     uv)
-                                                                    uu___14 in
+                                                                    uu___15 in
                                                                     let appears
                                                                     uv goals
                                                                     =
                                                                     FStarC_List.existsML
                                                                     (fun g'
                                                                     ->
-                                                                    let uu___14
+                                                                    let uu___15
                                                                     =
                                                                     FStarC_Tactics_Types.goal_type
                                                                     g' in
                                                                     is_free_uvar
                                                                     uv
-                                                                    uu___14)
+                                                                    uu___15)
                                                                     goals in
                                                                     let checkone
                                                                     t1 goals
                                                                     =
-                                                                    let uu___14
+                                                                    let uu___15
                                                                     =
                                                                     FStarC_Syntax_Util.head_and_args_full
                                                                     t1 in
-                                                                    match uu___14
+                                                                    match uu___15
                                                                     with
                                                                     | 
                                                                     (hd,
-                                                                    uu___15)
+                                                                    uu___16)
                                                                     ->
                                                                     (match 
                                                                     hd.FStarC_Syntax_Syntax.n
@@ -4443,17 +4838,17 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     | 
                                                                     FStarC_Syntax_Syntax.Tm_uvar
                                                                     (uv,
-                                                                    uu___16)
+                                                                    uu___17)
                                                                     ->
                                                                     appears
                                                                     uv.FStarC_Syntax_Syntax.ctx_uvar_head
                                                                     goals
                                                                     | 
-                                                                    uu___16
+                                                                    uu___17
                                                                     -> false) in
                                                                     let must_tot
                                                                     = false in
-                                                                    let uu___14
+                                                                    let uu___15
                                                                     =
                                                                     apply_implicits_as_goals
                                                                     env1
@@ -4465,9 +4860,9 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     FStarC_Tactics_Monad.monad_tac
                                                                     () ()
                                                                     (Obj.magic
-                                                                    uu___14)
+                                                                    uu___15)
                                                                     (fun
-                                                                    uu___15
+                                                                    uu___16
                                                                     ->
                                                                     (fun
                                                                     sub_goals
@@ -4488,17 +4883,17 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     [] -> []
                                                                     | 
                                                                     x::xs1 ->
-                                                                    let uu___15
+                                                                    let uu___16
                                                                     = f x xs1 in
                                                                     if
-                                                                    uu___15
+                                                                    uu___16
                                                                     then
-                                                                    let uu___16
+                                                                    let uu___17
                                                                     =
                                                                     filter' f
                                                                     xs1 in x
                                                                     ::
-                                                                    uu___16
+                                                                    uu___17
                                                                     else
                                                                     filter' f
                                                                     xs1 in
@@ -4507,19 +4902,19 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     filter'
                                                                     (fun g
                                                                     goals ->
-                                                                    let uu___15
-                                                                    =
                                                                     let uu___16
+                                                                    =
+                                                                    let uu___17
                                                                     =
                                                                     FStarC_Tactics_Types.goal_witness
                                                                     g in
                                                                     checkone
-                                                                    uu___16
+                                                                    uu___17
                                                                     goals in
                                                                     Prims.not
-                                                                    uu___15)
+                                                                    uu___16)
                                                                     sub_goals1 in
-                                                                    let uu___15
+                                                                    let uu___16
                                                                     =
                                                                     proc_guard
                                                                     "apply_lemma guard"
@@ -4534,29 +4929,29 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     (FStarC_Class_Monad.op_let_Bang
                                                                     FStarC_Tactics_Monad.monad_tac
                                                                     () ()
-                                                                    uu___15
-                                                                    (fun
                                                                     uu___16
+                                                                    (fun
+                                                                    uu___17
                                                                     ->
                                                                     (fun
-                                                                    uu___16
+                                                                    uu___17
                                                                     ->
-                                                                    let uu___16
-                                                                    =
-                                                                    Obj.magic
-                                                                    uu___16 in
                                                                     let uu___17
                                                                     =
+                                                                    Obj.magic
+                                                                    uu___17 in
                                                                     let uu___18
                                                                     =
                                                                     let uu___19
+                                                                    =
+                                                                    let uu___20
                                                                     =
                                                                     FStarC_TypeChecker_Rel.simplify_vc
                                                                     false
                                                                     env1 pre1 in
                                                                     FStarC_TypeChecker_Env.check_trivial
-                                                                    uu___19 in
-                                                                    match uu___18
+                                                                    uu___20 in
+                                                                    match uu___19
                                                                     with
                                                                     | 
                                                                     FStarC_TypeChecker_Common.Trivial
@@ -4568,7 +4963,7 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     ())
                                                                     | 
                                                                     FStarC_TypeChecker_Common.NonTrivial
-                                                                    uu___19
+                                                                    uu___20
                                                                     ->
                                                                     FStarC_Tactics_Monad.add_irrelevant_goal
                                                                     goal
@@ -4580,26 +4975,26 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     (FStarC_Class_Monad.op_let_Bang
                                                                     FStarC_Tactics_Monad.monad_tac
                                                                     () ()
-                                                                    uu___17
-                                                                    (fun
                                                                     uu___18
+                                                                    (fun
+                                                                    uu___19
                                                                     ->
                                                                     (fun
-                                                                    uu___18
+                                                                    uu___19
                                                                     ->
-                                                                    let uu___18
+                                                                    let uu___19
                                                                     =
                                                                     Obj.magic
-                                                                    uu___18 in
+                                                                    uu___19 in
                                                                     Obj.magic
                                                                     (FStarC_Tactics_Monad.add_goals
                                                                     sub_goals2))
-                                                                    uu___18)))
+                                                                    uu___19)))
+                                                                    uu___17)))
                                                                     uu___16)))
-                                                                    uu___15)))
-                                                                    uu___13))))
-                                                                    uu___12)))
-                                                                    uu___9)))))
+                                                                    uu___14))))
+                                                                    uu___13)))
+                                                                    uu___10))))))
                                                uu___5)))) uu___3))) uu___2)))
              uu___2) in
     FStarC_Tactics_Monad.focus uu___1 in
@@ -5565,8 +5960,6 @@ let _t_trefl (allow_guards : Prims.bool) (l : FStarC_Syntax_Syntax.term)
                                 (uu___9.FStarC_TypeChecker_Env.modules);
                               FStarC_TypeChecker_Env.expected_typ =
                                 (uu___9.FStarC_TypeChecker_Env.expected_typ);
-                              FStarC_TypeChecker_Env.expected_post =
-                                (uu___9.FStarC_TypeChecker_Env.expected_post);
                               FStarC_TypeChecker_Env.sigtab =
                                 (uu___9.FStarC_TypeChecker_Env.sigtab);
                               FStarC_TypeChecker_Env.attrtab =
@@ -5579,6 +5972,8 @@ let _t_trefl (allow_guards : Prims.bool) (l : FStarC_Syntax_Syntax.term)
                                 (uu___9.FStarC_TypeChecker_Env.generalize);
                               FStarC_TypeChecker_Env.letrecs =
                                 (uu___9.FStarC_TypeChecker_Env.letrecs);
+                              FStarC_TypeChecker_Env.rec_names =
+                                (uu___9.FStarC_TypeChecker_Env.rec_names);
                               FStarC_TypeChecker_Env.top_level =
                                 (uu___9.FStarC_TypeChecker_Env.top_level);
                               FStarC_TypeChecker_Env.check_uvars =
@@ -5617,8 +6012,6 @@ let _t_trefl (allow_guards : Prims.bool) (l : FStarC_Syntax_Syntax.term)
                                 (uu___9.FStarC_TypeChecker_Env.subtype_nosmt_force);
                               FStarC_TypeChecker_Env.qtbl_name_and_index =
                                 (uu___9.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                              FStarC_TypeChecker_Env.normalized_eff_names =
-                                (uu___9.FStarC_TypeChecker_Env.normalized_eff_names);
                               FStarC_TypeChecker_Env.fv_delta_depths =
                                 (uu___9.FStarC_TypeChecker_Env.fv_delta_depths);
                               FStarC_TypeChecker_Env.proof_ns =
@@ -5644,6 +6037,8 @@ let _t_trefl (allow_guards : Prims.bool) (l : FStarC_Syntax_Syntax.term)
                                 (uu___9.FStarC_TypeChecker_Env.nbe);
                               FStarC_TypeChecker_Env.strict_args_tab =
                                 (uu___9.FStarC_TypeChecker_Env.strict_args_tab);
+                              FStarC_TypeChecker_Env.disc_proj_tab =
+                                (uu___9.FStarC_TypeChecker_Env.disc_proj_tab);
                               FStarC_TypeChecker_Env.erasable_types_tab =
                                 (uu___9.FStarC_TypeChecker_Env.erasable_types_tab);
                               FStarC_TypeChecker_Env.enable_defer_to_tac =
@@ -6028,8 +6423,6 @@ let join_goals (uu___1 : FStarC_Tactics_Types.goal)
                                 (uu___3.FStarC_TypeChecker_Env.modules);
                               FStarC_TypeChecker_Env.expected_typ =
                                 (uu___3.FStarC_TypeChecker_Env.expected_typ);
-                              FStarC_TypeChecker_Env.expected_post =
-                                (uu___3.FStarC_TypeChecker_Env.expected_post);
                               FStarC_TypeChecker_Env.sigtab =
                                 (uu___3.FStarC_TypeChecker_Env.sigtab);
                               FStarC_TypeChecker_Env.attrtab =
@@ -6042,6 +6435,8 @@ let join_goals (uu___1 : FStarC_Tactics_Types.goal)
                                 (uu___3.FStarC_TypeChecker_Env.generalize);
                               FStarC_TypeChecker_Env.letrecs =
                                 (uu___3.FStarC_TypeChecker_Env.letrecs);
+                              FStarC_TypeChecker_Env.rec_names =
+                                (uu___3.FStarC_TypeChecker_Env.rec_names);
                               FStarC_TypeChecker_Env.top_level =
                                 (uu___3.FStarC_TypeChecker_Env.top_level);
                               FStarC_TypeChecker_Env.check_uvars =
@@ -6080,8 +6475,6 @@ let join_goals (uu___1 : FStarC_Tactics_Types.goal)
                                 (uu___3.FStarC_TypeChecker_Env.subtype_nosmt_force);
                               FStarC_TypeChecker_Env.qtbl_name_and_index =
                                 (uu___3.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                              FStarC_TypeChecker_Env.normalized_eff_names =
-                                (uu___3.FStarC_TypeChecker_Env.normalized_eff_names);
                               FStarC_TypeChecker_Env.fv_delta_depths =
                                 (uu___3.FStarC_TypeChecker_Env.fv_delta_depths);
                               FStarC_TypeChecker_Env.proof_ns =
@@ -6107,6 +6500,8 @@ let join_goals (uu___1 : FStarC_Tactics_Types.goal)
                                 (uu___3.FStarC_TypeChecker_Env.nbe);
                               FStarC_TypeChecker_Env.strict_args_tab =
                                 (uu___3.FStarC_TypeChecker_Env.strict_args_tab);
+                              FStarC_TypeChecker_Env.disc_proj_tab =
+                                (uu___3.FStarC_TypeChecker_Env.disc_proj_tab);
                               FStarC_TypeChecker_Env.erasable_types_tab =
                                 (uu___3.FStarC_TypeChecker_Env.erasable_types_tab);
                               FStarC_TypeChecker_Env.enable_defer_to_tac =
@@ -6627,8 +7022,6 @@ let unshelve (t : FStarC_Syntax_Syntax.term) : unit FStarC_Tactics_Monad.tac=
                       (env1.FStarC_TypeChecker_Env.modules);
                     FStarC_TypeChecker_Env.expected_typ =
                       (env1.FStarC_TypeChecker_Env.expected_typ);
-                    FStarC_TypeChecker_Env.expected_post =
-                      (env1.FStarC_TypeChecker_Env.expected_post);
                     FStarC_TypeChecker_Env.sigtab =
                       (env1.FStarC_TypeChecker_Env.sigtab);
                     FStarC_TypeChecker_Env.attrtab =
@@ -6641,6 +7034,8 @@ let unshelve (t : FStarC_Syntax_Syntax.term) : unit FStarC_Tactics_Monad.tac=
                       (env1.FStarC_TypeChecker_Env.generalize);
                     FStarC_TypeChecker_Env.letrecs =
                       (env1.FStarC_TypeChecker_Env.letrecs);
+                    FStarC_TypeChecker_Env.rec_names =
+                      (env1.FStarC_TypeChecker_Env.rec_names);
                     FStarC_TypeChecker_Env.top_level =
                       (env1.FStarC_TypeChecker_Env.top_level);
                     FStarC_TypeChecker_Env.check_uvars =
@@ -6678,8 +7073,6 @@ let unshelve (t : FStarC_Syntax_Syntax.term) : unit FStarC_Tactics_Monad.tac=
                       (env1.FStarC_TypeChecker_Env.subtype_nosmt_force);
                     FStarC_TypeChecker_Env.qtbl_name_and_index =
                       (env1.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                    FStarC_TypeChecker_Env.normalized_eff_names =
-                      (env1.FStarC_TypeChecker_Env.normalized_eff_names);
                     FStarC_TypeChecker_Env.fv_delta_depths =
                       (env1.FStarC_TypeChecker_Env.fv_delta_depths);
                     FStarC_TypeChecker_Env.proof_ns =
@@ -6704,6 +7097,8 @@ let unshelve (t : FStarC_Syntax_Syntax.term) : unit FStarC_Tactics_Monad.tac=
                       (env1.FStarC_TypeChecker_Env.nbe);
                     FStarC_TypeChecker_Env.strict_args_tab =
                       (env1.FStarC_TypeChecker_Env.strict_args_tab);
+                    FStarC_TypeChecker_Env.disc_proj_tab =
+                      (env1.FStarC_TypeChecker_Env.disc_proj_tab);
                     FStarC_TypeChecker_Env.erasable_types_tab =
                       (env1.FStarC_TypeChecker_Env.erasable_types_tab);
                     FStarC_TypeChecker_Env.enable_defer_to_tac =
@@ -7997,9 +8392,6 @@ let t_destruct (s_tm : FStarC_Syntax_Syntax.term) :
                                                                     FStarC_TypeChecker_Env.expected_typ
                                                                     =
                                                                     (env1.FStarC_TypeChecker_Env.expected_typ);
-                                                                    FStarC_TypeChecker_Env.expected_post
-                                                                    =
-                                                                    (env1.FStarC_TypeChecker_Env.expected_post);
                                                                     FStarC_TypeChecker_Env.sigtab
                                                                     =
                                                                     (env1.FStarC_TypeChecker_Env.sigtab);
@@ -8018,6 +8410,9 @@ let t_destruct (s_tm : FStarC_Syntax_Syntax.term) :
                                                                     FStarC_TypeChecker_Env.letrecs
                                                                     =
                                                                     (env1.FStarC_TypeChecker_Env.letrecs);
+                                                                    FStarC_TypeChecker_Env.rec_names
+                                                                    =
+                                                                    (env1.FStarC_TypeChecker_Env.rec_names);
                                                                     FStarC_TypeChecker_Env.top_level
                                                                     =
                                                                     (env1.FStarC_TypeChecker_Env.top_level);
@@ -8071,9 +8466,6 @@ let t_destruct (s_tm : FStarC_Syntax_Syntax.term) :
                                                                     FStarC_TypeChecker_Env.qtbl_name_and_index
                                                                     =
                                                                     (env1.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                                                                    FStarC_TypeChecker_Env.normalized_eff_names
-                                                                    =
-                                                                    (env1.FStarC_TypeChecker_Env.normalized_eff_names);
                                                                     FStarC_TypeChecker_Env.fv_delta_depths
                                                                     =
                                                                     (env1.FStarC_TypeChecker_Env.fv_delta_depths);
@@ -8110,6 +8502,9 @@ let t_destruct (s_tm : FStarC_Syntax_Syntax.term) :
                                                                     FStarC_TypeChecker_Env.strict_args_tab
                                                                     =
                                                                     (env1.FStarC_TypeChecker_Env.strict_args_tab);
+                                                                    FStarC_TypeChecker_Env.disc_proj_tab
+                                                                    =
+                                                                    (env1.FStarC_TypeChecker_Env.disc_proj_tab);
                                                                     FStarC_TypeChecker_Env.erasable_types_tab
                                                                     =
                                                                     (env1.FStarC_TypeChecker_Env.erasable_types_tab);
@@ -8700,8 +9095,6 @@ let push_bv_dsenv (uu___1 : FStarC_TypeChecker_Env.env)
                 (e.FStarC_TypeChecker_Env.modules);
               FStarC_TypeChecker_Env.expected_typ =
                 (e.FStarC_TypeChecker_Env.expected_typ);
-              FStarC_TypeChecker_Env.expected_post =
-                (e.FStarC_TypeChecker_Env.expected_post);
               FStarC_TypeChecker_Env.sigtab =
                 (e.FStarC_TypeChecker_Env.sigtab);
               FStarC_TypeChecker_Env.attrtab =
@@ -8714,6 +9107,8 @@ let push_bv_dsenv (uu___1 : FStarC_TypeChecker_Env.env)
                 (e.FStarC_TypeChecker_Env.generalize);
               FStarC_TypeChecker_Env.letrecs =
                 (e.FStarC_TypeChecker_Env.letrecs);
+              FStarC_TypeChecker_Env.rec_names =
+                (e.FStarC_TypeChecker_Env.rec_names);
               FStarC_TypeChecker_Env.top_level =
                 (e.FStarC_TypeChecker_Env.top_level);
               FStarC_TypeChecker_Env.check_uvars =
@@ -8749,8 +9144,6 @@ let push_bv_dsenv (uu___1 : FStarC_TypeChecker_Env.env)
                 (e.FStarC_TypeChecker_Env.subtype_nosmt_force);
               FStarC_TypeChecker_Env.qtbl_name_and_index =
                 (e.FStarC_TypeChecker_Env.qtbl_name_and_index);
-              FStarC_TypeChecker_Env.normalized_eff_names =
-                (e.FStarC_TypeChecker_Env.normalized_eff_names);
               FStarC_TypeChecker_Env.fv_delta_depths =
                 (e.FStarC_TypeChecker_Env.fv_delta_depths);
               FStarC_TypeChecker_Env.proof_ns =
@@ -8773,6 +9166,8 @@ let push_bv_dsenv (uu___1 : FStarC_TypeChecker_Env.env)
               FStarC_TypeChecker_Env.nbe = (e.FStarC_TypeChecker_Env.nbe);
               FStarC_TypeChecker_Env.strict_args_tab =
                 (e.FStarC_TypeChecker_Env.strict_args_tab);
+              FStarC_TypeChecker_Env.disc_proj_tab =
+                (e.FStarC_TypeChecker_Env.disc_proj_tab);
               FStarC_TypeChecker_Env.erasable_types_tab =
                 (e.FStarC_TypeChecker_Env.erasable_types_tab);
               FStarC_TypeChecker_Env.enable_defer_to_tac =
@@ -9950,8 +10345,6 @@ let refl_tc_term (uu___1 : FStarC_TypeChecker_Env.env)
                          (g1.FStarC_TypeChecker_Env.modules);
                        FStarC_TypeChecker_Env.expected_typ =
                          (g1.FStarC_TypeChecker_Env.expected_typ);
-                       FStarC_TypeChecker_Env.expected_post =
-                         (g1.FStarC_TypeChecker_Env.expected_post);
                        FStarC_TypeChecker_Env.sigtab =
                          (g1.FStarC_TypeChecker_Env.sigtab);
                        FStarC_TypeChecker_Env.attrtab =
@@ -9963,6 +10356,8 @@ let refl_tc_term (uu___1 : FStarC_TypeChecker_Env.env)
                          (g1.FStarC_TypeChecker_Env.generalize);
                        FStarC_TypeChecker_Env.letrecs =
                          (g1.FStarC_TypeChecker_Env.letrecs);
+                       FStarC_TypeChecker_Env.rec_names =
+                         (g1.FStarC_TypeChecker_Env.rec_names);
                        FStarC_TypeChecker_Env.top_level =
                          (g1.FStarC_TypeChecker_Env.top_level);
                        FStarC_TypeChecker_Env.check_uvars =
@@ -10000,8 +10395,6 @@ let refl_tc_term (uu___1 : FStarC_TypeChecker_Env.env)
                          (g1.FStarC_TypeChecker_Env.subtype_nosmt_force);
                        FStarC_TypeChecker_Env.qtbl_name_and_index =
                          (g1.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                       FStarC_TypeChecker_Env.normalized_eff_names =
-                         (g1.FStarC_TypeChecker_Env.normalized_eff_names);
                        FStarC_TypeChecker_Env.fv_delta_depths =
                          (g1.FStarC_TypeChecker_Env.fv_delta_depths);
                        FStarC_TypeChecker_Env.proof_ns =
@@ -10026,6 +10419,8 @@ let refl_tc_term (uu___1 : FStarC_TypeChecker_Env.env)
                          (g1.FStarC_TypeChecker_Env.nbe);
                        FStarC_TypeChecker_Env.strict_args_tab =
                          (g1.FStarC_TypeChecker_Env.strict_args_tab);
+                       FStarC_TypeChecker_Env.disc_proj_tab =
+                         (g1.FStarC_TypeChecker_Env.disc_proj_tab);
                        FStarC_TypeChecker_Env.erasable_types_tab =
                          (g1.FStarC_TypeChecker_Env.erasable_types_tab);
                        FStarC_TypeChecker_Env.enable_defer_to_tac =
@@ -10066,8 +10461,6 @@ let refl_tc_term (uu___1 : FStarC_TypeChecker_Env.env)
                            (g2.FStarC_TypeChecker_Env.modules);
                          FStarC_TypeChecker_Env.expected_typ =
                            (g2.FStarC_TypeChecker_Env.expected_typ);
-                         FStarC_TypeChecker_Env.expected_post =
-                           (g2.FStarC_TypeChecker_Env.expected_post);
                          FStarC_TypeChecker_Env.sigtab =
                            (g2.FStarC_TypeChecker_Env.sigtab);
                          FStarC_TypeChecker_Env.attrtab =
@@ -10080,6 +10473,8 @@ let refl_tc_term (uu___1 : FStarC_TypeChecker_Env.env)
                            (g2.FStarC_TypeChecker_Env.generalize);
                          FStarC_TypeChecker_Env.letrecs =
                            (g2.FStarC_TypeChecker_Env.letrecs);
+                         FStarC_TypeChecker_Env.rec_names =
+                           (g2.FStarC_TypeChecker_Env.rec_names);
                          FStarC_TypeChecker_Env.top_level =
                            (g2.FStarC_TypeChecker_Env.top_level);
                          FStarC_TypeChecker_Env.check_uvars =
@@ -10115,8 +10510,6 @@ let refl_tc_term (uu___1 : FStarC_TypeChecker_Env.env)
                            (g2.FStarC_TypeChecker_Env.subtype_nosmt_force);
                          FStarC_TypeChecker_Env.qtbl_name_and_index =
                            (g2.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                         FStarC_TypeChecker_Env.normalized_eff_names =
-                           (g2.FStarC_TypeChecker_Env.normalized_eff_names);
                          FStarC_TypeChecker_Env.fv_delta_depths =
                            (g2.FStarC_TypeChecker_Env.fv_delta_depths);
                          FStarC_TypeChecker_Env.proof_ns =
@@ -10141,6 +10534,8 @@ let refl_tc_term (uu___1 : FStarC_TypeChecker_Env.env)
                            (g2.FStarC_TypeChecker_Env.nbe);
                          FStarC_TypeChecker_Env.strict_args_tab =
                            (g2.FStarC_TypeChecker_Env.strict_args_tab);
+                         FStarC_TypeChecker_Env.disc_proj_tab =
+                           (g2.FStarC_TypeChecker_Env.disc_proj_tab);
                          FStarC_TypeChecker_Env.erasable_types_tab =
                            (g2.FStarC_TypeChecker_Env.erasable_types_tab);
                          FStarC_TypeChecker_Env.enable_defer_to_tac =
@@ -10501,8 +10896,6 @@ let refl_instantiate_implicits (uu___3 : FStarC_TypeChecker_Env.env)
                          (g2.FStarC_TypeChecker_Env.modules);
                        FStarC_TypeChecker_Env.expected_typ =
                          (g2.FStarC_TypeChecker_Env.expected_typ);
-                       FStarC_TypeChecker_Env.expected_post =
-                         (g2.FStarC_TypeChecker_Env.expected_post);
                        FStarC_TypeChecker_Env.sigtab =
                          (g2.FStarC_TypeChecker_Env.sigtab);
                        FStarC_TypeChecker_Env.attrtab =
@@ -10514,6 +10907,8 @@ let refl_instantiate_implicits (uu___3 : FStarC_TypeChecker_Env.env)
                          (g2.FStarC_TypeChecker_Env.generalize);
                        FStarC_TypeChecker_Env.letrecs =
                          (g2.FStarC_TypeChecker_Env.letrecs);
+                       FStarC_TypeChecker_Env.rec_names =
+                         (g2.FStarC_TypeChecker_Env.rec_names);
                        FStarC_TypeChecker_Env.top_level =
                          (g2.FStarC_TypeChecker_Env.top_level);
                        FStarC_TypeChecker_Env.check_uvars =
@@ -10549,8 +10944,6 @@ let refl_instantiate_implicits (uu___3 : FStarC_TypeChecker_Env.env)
                          (g2.FStarC_TypeChecker_Env.subtype_nosmt_force);
                        FStarC_TypeChecker_Env.qtbl_name_and_index =
                          (g2.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                       FStarC_TypeChecker_Env.normalized_eff_names =
-                         (g2.FStarC_TypeChecker_Env.normalized_eff_names);
                        FStarC_TypeChecker_Env.fv_delta_depths =
                          (g2.FStarC_TypeChecker_Env.fv_delta_depths);
                        FStarC_TypeChecker_Env.proof_ns =
@@ -10575,6 +10968,8 @@ let refl_instantiate_implicits (uu___3 : FStarC_TypeChecker_Env.env)
                          (g2.FStarC_TypeChecker_Env.nbe);
                        FStarC_TypeChecker_Env.strict_args_tab =
                          (g2.FStarC_TypeChecker_Env.strict_args_tab);
+                       FStarC_TypeChecker_Env.disc_proj_tab =
+                         (g2.FStarC_TypeChecker_Env.disc_proj_tab);
                        FStarC_TypeChecker_Env.erasable_types_tab =
                          (g2.FStarC_TypeChecker_Env.erasable_types_tab);
                        FStarC_TypeChecker_Env.enable_defer_to_tac =
@@ -10894,8 +11289,6 @@ let refl_try_unify (uu___3 : FStarC_TypeChecker_Env.env)
                                   (g1.FStarC_TypeChecker_Env.modules);
                                 FStarC_TypeChecker_Env.expected_typ =
                                   (g1.FStarC_TypeChecker_Env.expected_typ);
-                                FStarC_TypeChecker_Env.expected_post =
-                                  (g1.FStarC_TypeChecker_Env.expected_post);
                                 FStarC_TypeChecker_Env.sigtab =
                                   (g1.FStarC_TypeChecker_Env.sigtab);
                                 FStarC_TypeChecker_Env.attrtab =
@@ -10908,6 +11301,8 @@ let refl_try_unify (uu___3 : FStarC_TypeChecker_Env.env)
                                   (g1.FStarC_TypeChecker_Env.generalize);
                                 FStarC_TypeChecker_Env.letrecs =
                                   (g1.FStarC_TypeChecker_Env.letrecs);
+                                FStarC_TypeChecker_Env.rec_names =
+                                  (g1.FStarC_TypeChecker_Env.rec_names);
                                 FStarC_TypeChecker_Env.top_level =
                                   (g1.FStarC_TypeChecker_Env.top_level);
                                 FStarC_TypeChecker_Env.check_uvars =
@@ -10944,8 +11339,6 @@ let refl_try_unify (uu___3 : FStarC_TypeChecker_Env.env)
                                   (g1.FStarC_TypeChecker_Env.subtype_nosmt_force);
                                 FStarC_TypeChecker_Env.qtbl_name_and_index =
                                   (g1.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                                FStarC_TypeChecker_Env.normalized_eff_names =
-                                  (g1.FStarC_TypeChecker_Env.normalized_eff_names);
                                 FStarC_TypeChecker_Env.fv_delta_depths =
                                   (g1.FStarC_TypeChecker_Env.fv_delta_depths);
                                 FStarC_TypeChecker_Env.proof_ns =
@@ -10971,6 +11364,8 @@ let refl_try_unify (uu___3 : FStarC_TypeChecker_Env.env)
                                   (g1.FStarC_TypeChecker_Env.nbe);
                                 FStarC_TypeChecker_Env.strict_args_tab =
                                   (g1.FStarC_TypeChecker_Env.strict_args_tab);
+                                FStarC_TypeChecker_Env.disc_proj_tab =
+                                  (g1.FStarC_TypeChecker_Env.disc_proj_tab);
                                 FStarC_TypeChecker_Env.erasable_types_tab =
                                   (g1.FStarC_TypeChecker_Env.erasable_types_tab);
                                 FStarC_TypeChecker_Env.enable_defer_to_tac =
@@ -11237,8 +11632,6 @@ let push_open_namespace (uu___1 : FStarC_TypeChecker_Env.env)
          FStarC_TypeChecker_Env.modules = (e.FStarC_TypeChecker_Env.modules);
          FStarC_TypeChecker_Env.expected_typ =
            (e.FStarC_TypeChecker_Env.expected_typ);
-         FStarC_TypeChecker_Env.expected_post =
-           (e.FStarC_TypeChecker_Env.expected_post);
          FStarC_TypeChecker_Env.sigtab = (e.FStarC_TypeChecker_Env.sigtab);
          FStarC_TypeChecker_Env.attrtab = (e.FStarC_TypeChecker_Env.attrtab);
          FStarC_TypeChecker_Env.instantiate_imp =
@@ -11247,6 +11640,8 @@ let push_open_namespace (uu___1 : FStarC_TypeChecker_Env.env)
          FStarC_TypeChecker_Env.generalize =
            (e.FStarC_TypeChecker_Env.generalize);
          FStarC_TypeChecker_Env.letrecs = (e.FStarC_TypeChecker_Env.letrecs);
+         FStarC_TypeChecker_Env.rec_names =
+           (e.FStarC_TypeChecker_Env.rec_names);
          FStarC_TypeChecker_Env.top_level =
            (e.FStarC_TypeChecker_Env.top_level);
          FStarC_TypeChecker_Env.check_uvars =
@@ -11280,8 +11675,6 @@ let push_open_namespace (uu___1 : FStarC_TypeChecker_Env.env)
            (e.FStarC_TypeChecker_Env.subtype_nosmt_force);
          FStarC_TypeChecker_Env.qtbl_name_and_index =
            (e.FStarC_TypeChecker_Env.qtbl_name_and_index);
-         FStarC_TypeChecker_Env.normalized_eff_names =
-           (e.FStarC_TypeChecker_Env.normalized_eff_names);
          FStarC_TypeChecker_Env.fv_delta_depths =
            (e.FStarC_TypeChecker_Env.fv_delta_depths);
          FStarC_TypeChecker_Env.proof_ns =
@@ -11303,6 +11696,8 @@ let push_open_namespace (uu___1 : FStarC_TypeChecker_Env.env)
          FStarC_TypeChecker_Env.nbe = (e.FStarC_TypeChecker_Env.nbe);
          FStarC_TypeChecker_Env.strict_args_tab =
            (e.FStarC_TypeChecker_Env.strict_args_tab);
+         FStarC_TypeChecker_Env.disc_proj_tab =
+           (e.FStarC_TypeChecker_Env.disc_proj_tab);
          FStarC_TypeChecker_Env.erasable_types_tab =
            (e.FStarC_TypeChecker_Env.erasable_types_tab);
          FStarC_TypeChecker_Env.enable_defer_to_tac =
@@ -11350,8 +11745,6 @@ let push_module_abbrev (uu___2 : FStarC_TypeChecker_Env.env)
          FStarC_TypeChecker_Env.modules = (e.FStarC_TypeChecker_Env.modules);
          FStarC_TypeChecker_Env.expected_typ =
            (e.FStarC_TypeChecker_Env.expected_typ);
-         FStarC_TypeChecker_Env.expected_post =
-           (e.FStarC_TypeChecker_Env.expected_post);
          FStarC_TypeChecker_Env.sigtab = (e.FStarC_TypeChecker_Env.sigtab);
          FStarC_TypeChecker_Env.attrtab = (e.FStarC_TypeChecker_Env.attrtab);
          FStarC_TypeChecker_Env.instantiate_imp =
@@ -11360,6 +11753,8 @@ let push_module_abbrev (uu___2 : FStarC_TypeChecker_Env.env)
          FStarC_TypeChecker_Env.generalize =
            (e.FStarC_TypeChecker_Env.generalize);
          FStarC_TypeChecker_Env.letrecs = (e.FStarC_TypeChecker_Env.letrecs);
+         FStarC_TypeChecker_Env.rec_names =
+           (e.FStarC_TypeChecker_Env.rec_names);
          FStarC_TypeChecker_Env.top_level =
            (e.FStarC_TypeChecker_Env.top_level);
          FStarC_TypeChecker_Env.check_uvars =
@@ -11393,8 +11788,6 @@ let push_module_abbrev (uu___2 : FStarC_TypeChecker_Env.env)
            (e.FStarC_TypeChecker_Env.subtype_nosmt_force);
          FStarC_TypeChecker_Env.qtbl_name_and_index =
            (e.FStarC_TypeChecker_Env.qtbl_name_and_index);
-         FStarC_TypeChecker_Env.normalized_eff_names =
-           (e.FStarC_TypeChecker_Env.normalized_eff_names);
          FStarC_TypeChecker_Env.fv_delta_depths =
            (e.FStarC_TypeChecker_Env.fv_delta_depths);
          FStarC_TypeChecker_Env.proof_ns =
@@ -11416,6 +11809,8 @@ let push_module_abbrev (uu___2 : FStarC_TypeChecker_Env.env)
          FStarC_TypeChecker_Env.nbe = (e.FStarC_TypeChecker_Env.nbe);
          FStarC_TypeChecker_Env.strict_args_tab =
            (e.FStarC_TypeChecker_Env.strict_args_tab);
+         FStarC_TypeChecker_Env.disc_proj_tab =
+           (e.FStarC_TypeChecker_Env.disc_proj_tab);
          FStarC_TypeChecker_Env.erasable_types_tab =
            (e.FStarC_TypeChecker_Env.erasable_types_tab);
          FStarC_TypeChecker_Env.enable_defer_to_tac =
@@ -11500,8 +11895,6 @@ let tac_env (env1 : FStarC_TypeChecker_Env.env) : FStarC_TypeChecker_Env.env=
             (env2.FStarC_TypeChecker_Env.modules);
           FStarC_TypeChecker_Env.expected_typ =
             (env2.FStarC_TypeChecker_Env.expected_typ);
-          FStarC_TypeChecker_Env.expected_post =
-            (env2.FStarC_TypeChecker_Env.expected_post);
           FStarC_TypeChecker_Env.sigtab =
             (env2.FStarC_TypeChecker_Env.sigtab);
           FStarC_TypeChecker_Env.attrtab =
@@ -11513,6 +11906,8 @@ let tac_env (env1 : FStarC_TypeChecker_Env.env) : FStarC_TypeChecker_Env.env=
             (env2.FStarC_TypeChecker_Env.generalize);
           FStarC_TypeChecker_Env.letrecs =
             (env2.FStarC_TypeChecker_Env.letrecs);
+          FStarC_TypeChecker_Env.rec_names =
+            (env2.FStarC_TypeChecker_Env.rec_names);
           FStarC_TypeChecker_Env.top_level =
             (env2.FStarC_TypeChecker_Env.top_level);
           FStarC_TypeChecker_Env.check_uvars =
@@ -11548,8 +11943,6 @@ let tac_env (env1 : FStarC_TypeChecker_Env.env) : FStarC_TypeChecker_Env.env=
             (env2.FStarC_TypeChecker_Env.subtype_nosmt_force);
           FStarC_TypeChecker_Env.qtbl_name_and_index =
             (env2.FStarC_TypeChecker_Env.qtbl_name_and_index);
-          FStarC_TypeChecker_Env.normalized_eff_names =
-            (env2.FStarC_TypeChecker_Env.normalized_eff_names);
           FStarC_TypeChecker_Env.fv_delta_depths =
             (env2.FStarC_TypeChecker_Env.fv_delta_depths);
           FStarC_TypeChecker_Env.proof_ns =
@@ -11572,6 +11965,8 @@ let tac_env (env1 : FStarC_TypeChecker_Env.env) : FStarC_TypeChecker_Env.env=
           FStarC_TypeChecker_Env.nbe = (env2.FStarC_TypeChecker_Env.nbe);
           FStarC_TypeChecker_Env.strict_args_tab =
             (env2.FStarC_TypeChecker_Env.strict_args_tab);
+          FStarC_TypeChecker_Env.disc_proj_tab =
+            (env2.FStarC_TypeChecker_Env.disc_proj_tab);
           FStarC_TypeChecker_Env.erasable_types_tab =
             (env2.FStarC_TypeChecker_Env.erasable_types_tab);
           FStarC_TypeChecker_Env.enable_defer_to_tac =
@@ -11609,8 +12004,6 @@ let tac_env (env1 : FStarC_TypeChecker_Env.env) : FStarC_TypeChecker_Env.env=
             (env3.FStarC_TypeChecker_Env.modules);
           FStarC_TypeChecker_Env.expected_typ =
             (env3.FStarC_TypeChecker_Env.expected_typ);
-          FStarC_TypeChecker_Env.expected_post =
-            (env3.FStarC_TypeChecker_Env.expected_post);
           FStarC_TypeChecker_Env.sigtab =
             (env3.FStarC_TypeChecker_Env.sigtab);
           FStarC_TypeChecker_Env.attrtab =
@@ -11623,6 +12016,8 @@ let tac_env (env1 : FStarC_TypeChecker_Env.env) : FStarC_TypeChecker_Env.env=
             (env3.FStarC_TypeChecker_Env.generalize);
           FStarC_TypeChecker_Env.letrecs =
             (env3.FStarC_TypeChecker_Env.letrecs);
+          FStarC_TypeChecker_Env.rec_names =
+            (env3.FStarC_TypeChecker_Env.rec_names);
           FStarC_TypeChecker_Env.top_level =
             (env3.FStarC_TypeChecker_Env.top_level);
           FStarC_TypeChecker_Env.check_uvars =
@@ -11657,8 +12052,6 @@ let tac_env (env1 : FStarC_TypeChecker_Env.env) : FStarC_TypeChecker_Env.env=
             (env3.FStarC_TypeChecker_Env.subtype_nosmt_force);
           FStarC_TypeChecker_Env.qtbl_name_and_index =
             (env3.FStarC_TypeChecker_Env.qtbl_name_and_index);
-          FStarC_TypeChecker_Env.normalized_eff_names =
-            (env3.FStarC_TypeChecker_Env.normalized_eff_names);
           FStarC_TypeChecker_Env.fv_delta_depths =
             (env3.FStarC_TypeChecker_Env.fv_delta_depths);
           FStarC_TypeChecker_Env.proof_ns =
@@ -11681,6 +12074,8 @@ let tac_env (env1 : FStarC_TypeChecker_Env.env) : FStarC_TypeChecker_Env.env=
           FStarC_TypeChecker_Env.nbe = (env3.FStarC_TypeChecker_Env.nbe);
           FStarC_TypeChecker_Env.strict_args_tab =
             (env3.FStarC_TypeChecker_Env.strict_args_tab);
+          FStarC_TypeChecker_Env.disc_proj_tab =
+            (env3.FStarC_TypeChecker_Env.disc_proj_tab);
           FStarC_TypeChecker_Env.erasable_types_tab =
             (env3.FStarC_TypeChecker_Env.erasable_types_tab);
           FStarC_TypeChecker_Env.enable_defer_to_tac =
@@ -11718,8 +12113,6 @@ let tac_env (env1 : FStarC_TypeChecker_Env.env) : FStarC_TypeChecker_Env.env=
             (env4.FStarC_TypeChecker_Env.modules);
           FStarC_TypeChecker_Env.expected_typ =
             (env4.FStarC_TypeChecker_Env.expected_typ);
-          FStarC_TypeChecker_Env.expected_post =
-            (env4.FStarC_TypeChecker_Env.expected_post);
           FStarC_TypeChecker_Env.sigtab =
             (env4.FStarC_TypeChecker_Env.sigtab);
           FStarC_TypeChecker_Env.attrtab =
@@ -11732,6 +12125,8 @@ let tac_env (env1 : FStarC_TypeChecker_Env.env) : FStarC_TypeChecker_Env.env=
             (env4.FStarC_TypeChecker_Env.generalize);
           FStarC_TypeChecker_Env.letrecs =
             (env4.FStarC_TypeChecker_Env.letrecs);
+          FStarC_TypeChecker_Env.rec_names =
+            (env4.FStarC_TypeChecker_Env.rec_names);
           FStarC_TypeChecker_Env.top_level =
             (env4.FStarC_TypeChecker_Env.top_level);
           FStarC_TypeChecker_Env.check_uvars =
@@ -11767,8 +12162,6 @@ let tac_env (env1 : FStarC_TypeChecker_Env.env) : FStarC_TypeChecker_Env.env=
             (env4.FStarC_TypeChecker_Env.subtype_nosmt_force);
           FStarC_TypeChecker_Env.qtbl_name_and_index =
             (env4.FStarC_TypeChecker_Env.qtbl_name_and_index);
-          FStarC_TypeChecker_Env.normalized_eff_names =
-            (env4.FStarC_TypeChecker_Env.normalized_eff_names);
           FStarC_TypeChecker_Env.fv_delta_depths =
             (env4.FStarC_TypeChecker_Env.fv_delta_depths);
           FStarC_TypeChecker_Env.proof_ns =
@@ -11791,6 +12184,8 @@ let tac_env (env1 : FStarC_TypeChecker_Env.env) : FStarC_TypeChecker_Env.env=
           FStarC_TypeChecker_Env.nbe = (env4.FStarC_TypeChecker_Env.nbe);
           FStarC_TypeChecker_Env.strict_args_tab =
             (env4.FStarC_TypeChecker_Env.strict_args_tab);
+          FStarC_TypeChecker_Env.disc_proj_tab =
+            (env4.FStarC_TypeChecker_Env.disc_proj_tab);
           FStarC_TypeChecker_Env.erasable_types_tab =
             (env4.FStarC_TypeChecker_Env.erasable_types_tab);
           FStarC_TypeChecker_Env.enable_defer_to_tac = false;
@@ -11857,8 +12252,6 @@ let proofstate_of_goal_ty (rng : FStarC_Range_Type.t)
       FStarC_TypeChecker_Env.modules = (env1.FStarC_TypeChecker_Env.modules);
       FStarC_TypeChecker_Env.expected_typ =
         (env1.FStarC_TypeChecker_Env.expected_typ);
-      FStarC_TypeChecker_Env.expected_post =
-        (env1.FStarC_TypeChecker_Env.expected_post);
       FStarC_TypeChecker_Env.sigtab = (env1.FStarC_TypeChecker_Env.sigtab);
       FStarC_TypeChecker_Env.attrtab = (env1.FStarC_TypeChecker_Env.attrtab);
       FStarC_TypeChecker_Env.instantiate_imp =
@@ -11867,6 +12260,8 @@ let proofstate_of_goal_ty (rng : FStarC_Range_Type.t)
       FStarC_TypeChecker_Env.generalize =
         (env1.FStarC_TypeChecker_Env.generalize);
       FStarC_TypeChecker_Env.letrecs = (env1.FStarC_TypeChecker_Env.letrecs);
+      FStarC_TypeChecker_Env.rec_names =
+        (env1.FStarC_TypeChecker_Env.rec_names);
       FStarC_TypeChecker_Env.top_level =
         (env1.FStarC_TypeChecker_Env.top_level);
       FStarC_TypeChecker_Env.check_uvars =
@@ -11900,8 +12295,6 @@ let proofstate_of_goal_ty (rng : FStarC_Range_Type.t)
         (env1.FStarC_TypeChecker_Env.subtype_nosmt_force);
       FStarC_TypeChecker_Env.qtbl_name_and_index =
         (env1.FStarC_TypeChecker_Env.qtbl_name_and_index);
-      FStarC_TypeChecker_Env.normalized_eff_names =
-        (env1.FStarC_TypeChecker_Env.normalized_eff_names);
       FStarC_TypeChecker_Env.fv_delta_depths =
         (env1.FStarC_TypeChecker_Env.fv_delta_depths);
       FStarC_TypeChecker_Env.proof_ns =
@@ -11923,6 +12316,8 @@ let proofstate_of_goal_ty (rng : FStarC_Range_Type.t)
       FStarC_TypeChecker_Env.nbe = (env1.FStarC_TypeChecker_Env.nbe);
       FStarC_TypeChecker_Env.strict_args_tab =
         (env1.FStarC_TypeChecker_Env.strict_args_tab);
+      FStarC_TypeChecker_Env.disc_proj_tab =
+        (env1.FStarC_TypeChecker_Env.disc_proj_tab);
       FStarC_TypeChecker_Env.erasable_types_tab =
         (env1.FStarC_TypeChecker_Env.erasable_types_tab);
       FStarC_TypeChecker_Env.enable_defer_to_tac =

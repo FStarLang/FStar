@@ -271,39 +271,19 @@ let escape_char_hex (x : FStarC_BaseTypes.char) : Prims.string=
   escape_byte_hex (FStarC_Util.byte_of_char x)
 let escape_or (fallback : FStarC_BaseTypes.char -> Prims.string)
   (uu___ : FStarC_BaseTypes.char) : Prims.string=
-  if uu___ = 92
-  then "\\\\"
-  else
-    if uu___ = 32
-    then " "
-    else
-      if uu___ = 8
-      then "\\b"
-      else
-        if uu___ = 9
-        then "\\t"
-        else
-          if uu___ = 13
-          then "\\r"
-          else
-            if uu___ = 10
-            then "\\n"
-            else
-              if uu___ = 39
-              then "\\'"
-              else
-                if uu___ = 34
-                then "\\\""
-                else
-                  if FStarC_Util.is_letter_or_digit uu___
-                  then FStarC_Util.string_of_char uu___
-                  else
-                    if FStarC_Util.is_punctuation uu___
-                    then FStarC_Util.string_of_char uu___
-                    else
-                      if FStarC_Util.is_symbol uu___
-                      then FStarC_Util.string_of_char uu___
-                      else fallback uu___
+  match uu___ with
+  | c when c = 92 -> "\\\\"
+  | c when c = 32 -> " "
+  | c when c = 8 -> "\\b"
+  | c when c = 9 -> "\\t"
+  | c when c = 13 -> "\\r"
+  | c when c = 10 -> "\\n"
+  | c when c = 39 -> "\\'"
+  | c when c = 34 -> "\\\""
+  | c when FStarC_Util.is_letter_or_digit c -> FStarC_Util.string_of_char c
+  | c when FStarC_Util.is_punctuation c -> FStarC_Util.string_of_char c
+  | c when FStarC_Util.is_symbol c -> FStarC_Util.string_of_char c
+  | c -> fallback c
 let string_of_mlconstant (sctt : FStarC_Extraction_ML_Syntax.mlconstant) :
   Prims.string=
   match sctt with

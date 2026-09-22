@@ -93,7 +93,6 @@ type term' =
   | Decreases of term 
   | Labeled of (term * Prims.string * Prims.bool) 
   | Discrim of FStarC_Ident.lid 
-  | Attributes of term Prims.list 
   | Antiquote of term 
   | Quote of (term * quote_kind) 
   | VQuote of term 
@@ -333,10 +332,6 @@ let uu___is_Discrim (projectee : term') : Prims.bool=
   match projectee with | Discrim _0 -> true | uu___ -> false
 let __proj__Discrim__item___0 (projectee : term') : FStarC_Ident.lid=
   match projectee with | Discrim _0 -> _0
-let uu___is_Attributes (projectee : term') : Prims.bool=
-  match projectee with | Attributes _0 -> true | uu___ -> false
-let __proj__Attributes__item___0 (projectee : term') : term Prims.list=
-  match projectee with | Attributes _0 -> _0
 let uu___is_Antiquote (projectee : term') : Prims.bool=
   match projectee with | Antiquote _0 -> true | uu___ -> false
 let __proj__Antiquote__item___0 (projectee : term') : term=
@@ -575,7 +570,6 @@ let tagged_term : term FStarC_Class_Tagged.tagged=
          | Decreases uu___ -> "Decreases"
          | Labeled uu___ -> "Labeled"
          | Discrim uu___ -> "Discrim"
-         | Attributes uu___ -> "Attributes"
          | Antiquote uu___ -> "Antiquote"
          | Quote uu___ -> "Quote"
          | VQuote uu___ -> "VQuote"
@@ -889,7 +883,6 @@ and effect_decl =
   | DeclareEffect of (FStarC_Ident.ident * binder Prims.list) 
   | DefineEffect of (FStarC_Ident.ident * binder Prims.list * decl
   Prims.list) 
-  | RedefineEffect of (FStarC_Ident.ident * binder Prims.list * term) 
 let uu___is_TopLevelModule (projectee : decl') : Prims.bool=
   match projectee with | TopLevelModule _0 -> true | uu___ -> false
 let __proj__TopLevelModule__item___0 (projectee : decl') : FStarC_Ident.lid=
@@ -988,11 +981,6 @@ let uu___is_DefineEffect (projectee : effect_decl) : Prims.bool=
 let __proj__DefineEffect__item___0 (projectee : effect_decl) :
   (FStarC_Ident.ident * binder Prims.list * decl Prims.list)=
   match projectee with | DefineEffect _0 -> _0
-let uu___is_RedefineEffect (projectee : effect_decl) : Prims.bool=
-  match projectee with | RedefineEffect _0 -> true | uu___ -> false
-let __proj__RedefineEffect__item___0 (projectee : effect_decl) :
-  (FStarC_Ident.ident * binder Prims.list * term)=
-  match projectee with | RedefineEffect _0 -> _0
 let hasRange_decl : decl FStarC_Class_HasRange.hasRange=
   {
     FStarC_Class_HasRange.pos = (fun d -> d.drange);
@@ -1120,6 +1108,8 @@ let consTerm (r : FStarC_Range_Type.range) (hd : term) (tl : term) :
   mk_term
     (Construct (FStarC_Parser_Const.cons_lid, [(hd, Nothing); (tl, Nothing)]))
     r Expr
+let mkCalcStep (rel : term) (just : term) (next : term) : calc_step=
+  CalcStep (rel, just, next)
 let unit_const (r : FStarC_Range_Type.range) : term=
   mk_term (Const FStarC_Const.Const_unit) r Expr
 let unit_type (r : FStarC_Range_Type.range) : term=
@@ -1838,11 +1828,6 @@ let rec term_to_string (x : term) : Prims.string=
       let uu___1 = term_to_string t in
       FStarC_Format.fmt2 "Unidentified product: [%s] %s" uu___ uu___1
   | Discrim lid -> FStarC_Format.fmt1 "%s?" (FStarC_Ident.string_of_lid lid)
-  | Attributes ts ->
-      let uu___ =
-        let uu___1 = FStarC_List.map term_to_string ts in
-        FStarC_String.concat " " uu___1 in
-      FStarC_Format.fmt1 "(attributes %s)" uu___
   | Antiquote t ->
       let uu___ = term_to_string t in FStarC_Format.fmt1 "(`#%s)" uu___
   | Quote (t, Static) ->
@@ -2176,8 +2161,6 @@ let decl'_to_string (d : decl') : Prims.string=
   | NewEffect (DeclareEffect (i, uu___)) ->
       Prims.strcat "effect " (FStarC_Ident.string_of_id i)
   | NewEffect (DefineEffect (i, uu___, uu___1)) ->
-      Prims.strcat "effect " (FStarC_Ident.string_of_id i)
-  | NewEffect (RedefineEffect (i, uu___, uu___1)) ->
       Prims.strcat "effect " (FStarC_Ident.string_of_id i)
   | Splice (is_typed, ids, t) ->
       let uu___ =
@@ -2837,9 +2820,6 @@ let rec pp_term (t : term) : FStar_Pprint.document=
         let uu___1 = FStarC_Class_PP.pp FStarC_Ident.pretty_lident l in
         [uu___1] in
       ctor "Discrim" uu___
-  | Attributes ts ->
-      let uu___ = let uu___1 = pp_list' pp_term ts in [uu___1] in
-      ctor "Attributes" uu___
   | Antiquote t1 ->
       let uu___ = let uu___1 = pp_term t1 in [uu___1] in
       ctor "Antiquote" uu___

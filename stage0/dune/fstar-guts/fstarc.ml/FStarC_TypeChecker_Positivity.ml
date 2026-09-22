@@ -835,13 +835,7 @@ let mutuals_unused_in_type (mutuals : FStarC_Ident.lident Prims.list)
          ok (b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) bs
   and ok_comp c =
     match c.FStarC_Syntax_Syntax.n with
-    | FStarC_Syntax_Syntax.Total t1 -> ok t1
-    | FStarC_Syntax_Syntax.GTotal t1 -> ok t1
-    | FStarC_Syntax_Syntax.Comp c1 ->
-        let uu___ =
-          let uu___1 = ok c1.FStarC_Syntax_Syntax.result_typ in
-          if uu___1 then ok c1.FStarC_Syntax_Syntax.comp_pre else false in
-        if uu___ then ok c1.FStarC_Syntax_Syntax.comp_post else false in
+    | FStarC_Syntax_Syntax.Comp c1 -> ok c1.FStarC_Syntax_Syntax.result_typ in
   ok t
 type unfolded_memo_elt =
   (FStarC_Ident.lident * FStarC_Syntax_Syntax.args * Prims.int) Prims.list
@@ -1011,10 +1005,8 @@ let rec ty_strictly_positive_in_type (env : FStarC_TypeChecker_Env.env)
                then true
                else
                  (let uu___7 =
-                    let uu___8 =
-                      FStarC_TypeChecker_Env.norm_eff_name env
-                        (FStarC_Syntax_Util.comp_effect_name c) in
-                    FStarC_TypeChecker_Env.lookup_effect_quals env uu___8 in
+                    FStarC_TypeChecker_Env.lookup_effect_quals env
+                      (FStarC_Syntax_Util.comp_effect_name c) in
                   FStarC_List.contains FStarC_Syntax_Syntax.TotalEffect
                     uu___7) in
              if Prims.not check_comp
@@ -1031,23 +1023,6 @@ let rec ty_strictly_positive_in_type (env : FStarC_TypeChecker_Env.env)
                  match uu___7 with
                  | (sbs, c1) ->
                      let return_type = FStarC_Syntax_Util.comp_result c1 in
-                     let post_body =
-                       let uu___8 =
-                         let uu___9 =
-                           let uu___10 = FStarC_Syntax_Util.comp_post c1 in
-                           FStarC_Syntax_Subst.compress uu___10 in
-                         uu___9.FStarC_Syntax_Syntax.n in
-                       match uu___8 with
-                       | FStarC_Syntax_Syntax.Tm_abs
-                           { FStarC_Syntax_Syntax.b = uu___9;
-                             FStarC_Syntax_Syntax.body = body;
-                             FStarC_Syntax_Syntax.rc_opt = uu___10;_}
-                           -> body
-                       | uu___9 -> FStarC_Syntax_Util.comp_post c1 in
-                     let effect_args =
-                       [FStarC_Syntax_Syntax.as_arg
-                          (FStarC_Syntax_Util.comp_pre c1);
-                       FStarC_Syntax_Syntax.as_arg post_body] in
                      let ty_lid_not_to_left_of_arrow =
                        FStarC_List.for_all
                          (fun uu___8 ->
@@ -1060,15 +1035,7 @@ let rec ty_strictly_positive_in_type (env : FStarC_TypeChecker_Env.env)
                                 ->
                                 mutuals_unused_in_type mutuals
                                   b.FStarC_Syntax_Syntax.sort) sbs in
-                     let mutuals_unused_in_effect_args =
-                       FStarC_List.for_all
-                         (fun uu___8 ->
-                            match uu___8 with
-                            | (a, uu___9) -> mutuals_unused_in_type mutuals a)
-                         effect_args in
-                     if
-                       ty_lid_not_to_left_of_arrow &&
-                         mutuals_unused_in_effect_args
+                     if ty_lid_not_to_left_of_arrow
                      then
                        let uu___8 =
                          FStarC_TypeChecker_Env.push_binders env sbs in

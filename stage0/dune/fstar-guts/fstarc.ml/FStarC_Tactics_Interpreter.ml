@@ -26,6 +26,7 @@ let native_tactics_steps (uu___ : unit) :
         (s.FStarC_Tactics_Native.strong_reduction_ok);
       FStarC_TypeChecker_Primops_Base.requires_binder_substitution = false;
       FStarC_TypeChecker_Primops_Base.renorm_after = false;
+      FStarC_TypeChecker_Primops_Base.unrepresentable_result = false;
       FStarC_TypeChecker_Primops_Base.interpretation =
         (s.FStarC_Tactics_Native.tactic);
       FStarC_TypeChecker_Primops_Base.interpretation_nbe =
@@ -421,8 +422,6 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.t)
              (uu___.FStarC_TypeChecker_Env.modules);
            FStarC_TypeChecker_Env.expected_typ =
              (uu___.FStarC_TypeChecker_Env.expected_typ);
-           FStarC_TypeChecker_Env.expected_post =
-             (uu___.FStarC_TypeChecker_Env.expected_post);
            FStarC_TypeChecker_Env.sigtab =
              (uu___.FStarC_TypeChecker_Env.sigtab);
            FStarC_TypeChecker_Env.attrtab =
@@ -435,6 +434,8 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.t)
              (uu___.FStarC_TypeChecker_Env.generalize);
            FStarC_TypeChecker_Env.letrecs =
              (uu___.FStarC_TypeChecker_Env.letrecs);
+           FStarC_TypeChecker_Env.rec_names =
+             (uu___.FStarC_TypeChecker_Env.rec_names);
            FStarC_TypeChecker_Env.top_level =
              (uu___.FStarC_TypeChecker_Env.top_level);
            FStarC_TypeChecker_Env.check_uvars =
@@ -470,8 +471,6 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.t)
              (uu___.FStarC_TypeChecker_Env.subtype_nosmt_force);
            FStarC_TypeChecker_Env.qtbl_name_and_index =
              (uu___.FStarC_TypeChecker_Env.qtbl_name_and_index);
-           FStarC_TypeChecker_Env.normalized_eff_names =
-             (uu___.FStarC_TypeChecker_Env.normalized_eff_names);
            FStarC_TypeChecker_Env.fv_delta_depths =
              (uu___.FStarC_TypeChecker_Env.fv_delta_depths);
            FStarC_TypeChecker_Env.proof_ns =
@@ -495,6 +494,8 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.t)
            FStarC_TypeChecker_Env.nbe = (uu___.FStarC_TypeChecker_Env.nbe);
            FStarC_TypeChecker_Env.strict_args_tab =
              (uu___.FStarC_TypeChecker_Env.strict_args_tab);
+           FStarC_TypeChecker_Env.disc_proj_tab =
+             (uu___.FStarC_TypeChecker_Env.disc_proj_tab);
            FStarC_TypeChecker_Env.erasable_types_tab =
              (uu___.FStarC_TypeChecker_Env.erasable_types_tab);
            FStarC_TypeChecker_Env.enable_defer_to_tac =
@@ -560,8 +561,6 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.t)
              (uu___.FStarC_TypeChecker_Env.modules);
            FStarC_TypeChecker_Env.expected_typ =
              (uu___.FStarC_TypeChecker_Env.expected_typ);
-           FStarC_TypeChecker_Env.expected_post =
-             (uu___.FStarC_TypeChecker_Env.expected_post);
            FStarC_TypeChecker_Env.sigtab =
              (uu___.FStarC_TypeChecker_Env.sigtab);
            FStarC_TypeChecker_Env.attrtab =
@@ -574,6 +573,8 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.t)
              (uu___.FStarC_TypeChecker_Env.generalize);
            FStarC_TypeChecker_Env.letrecs =
              (uu___.FStarC_TypeChecker_Env.letrecs);
+           FStarC_TypeChecker_Env.rec_names =
+             (uu___.FStarC_TypeChecker_Env.rec_names);
            FStarC_TypeChecker_Env.top_level =
              (uu___.FStarC_TypeChecker_Env.top_level);
            FStarC_TypeChecker_Env.check_uvars =
@@ -610,8 +611,6 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.t)
              (uu___.FStarC_TypeChecker_Env.subtype_nosmt_force);
            FStarC_TypeChecker_Env.qtbl_name_and_index =
              (uu___.FStarC_TypeChecker_Env.qtbl_name_and_index);
-           FStarC_TypeChecker_Env.normalized_eff_names =
-             (uu___.FStarC_TypeChecker_Env.normalized_eff_names);
            FStarC_TypeChecker_Env.fv_delta_depths =
              (uu___.FStarC_TypeChecker_Env.fv_delta_depths);
            FStarC_TypeChecker_Env.proof_ns =
@@ -635,6 +634,8 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.t)
            FStarC_TypeChecker_Env.nbe = (uu___.FStarC_TypeChecker_Env.nbe);
            FStarC_TypeChecker_Env.strict_args_tab =
              (uu___.FStarC_TypeChecker_Env.strict_args_tab);
+           FStarC_TypeChecker_Env.disc_proj_tab =
+             (uu___.FStarC_TypeChecker_Env.disc_proj_tab);
            FStarC_TypeChecker_Env.erasable_types_tab =
              (uu___.FStarC_TypeChecker_Env.erasable_types_tab);
            FStarC_TypeChecker_Env.enable_defer_to_tac =

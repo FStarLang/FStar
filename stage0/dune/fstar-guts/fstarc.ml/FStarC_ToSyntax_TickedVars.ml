@@ -183,9 +183,6 @@ let rec go_term (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term)
               let env' = Obj.magic env' in Obj.magic (go_term env' body))
              uu___1)
   | FStarC_Parser_AST.Project (t1, uu___) -> go_term env t1
-  | FStarC_Parser_AST.Attributes cattributes ->
-      FStarC_Class_Monad.iterM (FStarC_Writer.monad_writer uu___0) ()
-        (fun uu___ -> Obj.magic (go_term env) uu___) (Obj.magic cattributes)
   | FStarC_Parser_AST.CalcProof (rel, init, steps) ->
       let uu___ = go_term env rel in
       FStarC_Class_Monad.op_let_Bang (FStarC_Writer.monad_writer uu___0) ()

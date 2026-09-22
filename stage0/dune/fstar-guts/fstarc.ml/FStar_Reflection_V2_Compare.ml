@@ -510,38 +510,12 @@ and __compare_comp (c1 : FStarC_Reflection_Types.comp)
   (c2 : FStarC_Reflection_Types.comp) : FStar_Order.order=
   let cv1 = FStarC_Reflection_V2_Builtins.inspect_comp c1 in
   let cv2 = FStarC_Reflection_V2_Builtins.inspect_comp c2 in
-  match (cv1, cv2) with
-  | (FStarC_Reflection_V2_Data.C_Total t1, FStarC_Reflection_V2_Data.C_Total
-     t2) -> __compare_term t1 t2
-  | (FStarC_Reflection_V2_Data.C_GTotal t1,
-     FStarC_Reflection_V2_Data.C_GTotal t2) -> __compare_term t1 t2
-  | (FStarC_Reflection_V2_Data.C_Lemma (p1, q1, s1),
-     FStarC_Reflection_V2_Data.C_Lemma (p2, q2, s2)) ->
-      FStar_Order.lex (__compare_term p1 p2)
-        (fun uu___ ->
-           FStar_Order.lex (__compare_term q1 q2)
-             (fun uu___1 -> __compare_term s1 s2))
-  | (FStarC_Reflection_V2_Data.C_Eff
-     (us1, eff1, res1, _pre1, _post1, _decrs1),
-     FStarC_Reflection_V2_Data.C_Eff
-     (us2, eff2, res2, _pre2, _post2, _decrs2)) ->
-      FStar_Order.lex (compare_universes us1 us2)
-        (fun uu___ ->
-           FStar_Order.lex (compare_name eff1 eff2)
-             (fun uu___1 -> __compare_term res1 res2))
-  | (FStarC_Reflection_V2_Data.C_Total uu___, uu___1) -> FStar_Order.Lt
-  | (uu___, FStarC_Reflection_V2_Data.C_Total uu___1) -> FStar_Order.Gt
-  | (FStarC_Reflection_V2_Data.C_GTotal uu___, uu___1) -> FStar_Order.Lt
-  | (uu___, FStarC_Reflection_V2_Data.C_GTotal uu___1) -> FStar_Order.Gt
-  | (FStarC_Reflection_V2_Data.C_Lemma (uu___, uu___1, uu___2), uu___3) ->
-      FStar_Order.Lt
-  | (uu___, FStarC_Reflection_V2_Data.C_Lemma (uu___1, uu___2, uu___3)) ->
-      FStar_Order.Gt
-  | (FStarC_Reflection_V2_Data.C_Eff
-     (uu___, uu___1, uu___2, uu___3, uu___4, uu___5), uu___6) ->
-      FStar_Order.Lt
-  | (uu___, FStarC_Reflection_V2_Data.C_Eff
-     (uu___1, uu___2, uu___3, uu___4, uu___5, uu___6)) -> FStar_Order.Gt
+  FStar_Order.lex
+    (compare_name cv1.FStarC_Reflection_V2_Data.effect_name
+       cv2.FStarC_Reflection_V2_Data.effect_name)
+    (fun uu___ ->
+       __compare_term cv1.FStarC_Reflection_V2_Data.result_typ
+         cv2.FStarC_Reflection_V2_Data.result_typ)
 and __compare_binder (b1 : FStarC_Reflection_Types.binder)
   (b2 : FStarC_Reflection_Types.binder) : FStar_Order.order=
   let bview1 = FStarC_Reflection_V2_Builtins.inspect_binder b1 in

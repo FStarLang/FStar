@@ -435,8 +435,6 @@ and free_names_and_uvars_comp
   (c : FStarC_Syntax_Syntax.comp' FStarC_Syntax_Syntax.syntax)
   (use_cache : use_cache_t) : free_vars_and_fvars=
   match c.FStarC_Syntax_Syntax.n with
-  | FStarC_Syntax_Syntax.GTotal t -> free_names_and_uvars t use_cache
-  | FStarC_Syntax_Syntax.Total t -> free_names_and_uvars t use_cache
   | FStarC_Syntax_Syntax.Comp ct ->
       let decreases_vars =
         let uu___ =
@@ -460,23 +458,11 @@ and free_names_and_uvars_comp
         | FStar_Pervasives_Native.Some (FStarC_Syntax_Syntax.SMTPAT p) ->
             free_names_and_uvars p use_cache
         | uu___1 -> no_free_vars in
-      let us =
-        let uu___ =
-          let uu___1 =
-            free_names_and_uvars ct.FStarC_Syntax_Syntax.result_typ use_cache in
-          op_Plus_Plus uu___1 decreases_vars in
-        op_Plus_Plus uu___ pat_vars in
-      let us1 =
-        let uu___ =
-          free_names_and_uvars ct.FStarC_Syntax_Syntax.comp_pre use_cache in
-        op_Plus_Plus uu___ us in
-      let us2 =
-        let uu___ =
-          free_names_and_uvars ct.FStarC_Syntax_Syntax.comp_post use_cache in
-        op_Plus_Plus uu___ us1 in
-      FStarC_List.fold_left
-        (fun us3 u -> let uu___ = free_univs u in op_Plus_Plus us3 uu___) us2
-        ct.FStarC_Syntax_Syntax.comp_univs
+      let uu___ =
+        let uu___1 =
+          free_names_and_uvars ct.FStarC_Syntax_Syntax.result_typ use_cache in
+        op_Plus_Plus uu___1 decreases_vars in
+      op_Plus_Plus uu___ pat_vars
 and free_names_and_uvars_dec_order
   (dec_order : FStarC_Syntax_Syntax.decreases_order)
   (use_cache : use_cache_t) : free_vars_and_fvars=

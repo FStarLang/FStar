@@ -99,26 +99,19 @@ and t = {
   nbe_t: t' ;
   nbe_r: FStarC_Range_Type.t }
 and comp =
-  | Tot of t 
-  | GTot of t 
   | Comp of comp_typ 
 and comp_typ =
   {
-  comp_univs: FStarC_Syntax_Syntax.universes ;
   effect_name: FStarC_Ident.lident ;
   result_typ: t ;
-  comp_pre: t ;
-  comp_post: t ;
-  flags: cflag Prims.list }
+  flags: cflag Prims.list ;
+  source_effect_name: FStarC_Ident.lident }
 and residual_comp =
   {
   residual_effect: FStarC_Ident.lident ;
   residual_typ: t FStar_Pervasives_Native.option ;
   residual_flags: cflag Prims.list }
 and cflag =
-  | TOTAL 
-  | MLEFFECT 
-  | LEMMA 
   | SMTPAT of t 
   | DECREASES_lex of t Prims.list 
   | DECREASES_wf of (t * t) 
@@ -268,45 +261,25 @@ let __proj__Mkt__item__nbe_t (projectee : t) : t'=
   match projectee with | { nbe_t; nbe_r;_} -> nbe_t
 let __proj__Mkt__item__nbe_r (projectee : t) : FStarC_Range_Type.t=
   match projectee with | { nbe_t; nbe_r;_} -> nbe_r
-let uu___is_Tot (projectee : comp) : Prims.bool=
-  match projectee with | Tot _0 -> true | uu___ -> false
-let __proj__Tot__item___0 (projectee : comp) : t=
-  match projectee with | Tot _0 -> _0
-let uu___is_GTot (projectee : comp) : Prims.bool=
-  match projectee with | GTot _0 -> true | uu___ -> false
-let __proj__GTot__item___0 (projectee : comp) : t=
-  match projectee with | GTot _0 -> _0
-let uu___is_Comp (projectee : comp) : Prims.bool=
-  match projectee with | Comp _0 -> true | uu___ -> false
+let uu___is_Comp (projectee : comp) : Prims.bool= true
 let __proj__Comp__item___0 (projectee : comp) : comp_typ=
   match projectee with | Comp _0 -> _0
-let __proj__Mkcomp_typ__item__comp_univs (projectee : comp_typ) :
-  FStarC_Syntax_Syntax.universes=
-  match projectee with
-  | { comp_univs; effect_name; result_typ; comp_pre; comp_post; flags;_} ->
-      comp_univs
 let __proj__Mkcomp_typ__item__effect_name (projectee : comp_typ) :
   FStarC_Ident.lident=
   match projectee with
-  | { comp_univs; effect_name; result_typ; comp_pre; comp_post; flags;_} ->
-      effect_name
+  | { effect_name; result_typ; flags; source_effect_name;_} -> effect_name
 let __proj__Mkcomp_typ__item__result_typ (projectee : comp_typ) : t=
   match projectee with
-  | { comp_univs; effect_name; result_typ; comp_pre; comp_post; flags;_} ->
-      result_typ
-let __proj__Mkcomp_typ__item__comp_pre (projectee : comp_typ) : t=
-  match projectee with
-  | { comp_univs; effect_name; result_typ; comp_pre; comp_post; flags;_} ->
-      comp_pre
-let __proj__Mkcomp_typ__item__comp_post (projectee : comp_typ) : t=
-  match projectee with
-  | { comp_univs; effect_name; result_typ; comp_pre; comp_post; flags;_} ->
-      comp_post
+  | { effect_name; result_typ; flags; source_effect_name;_} -> result_typ
 let __proj__Mkcomp_typ__item__flags (projectee : comp_typ) :
   cflag Prims.list=
   match projectee with
-  | { comp_univs; effect_name; result_typ; comp_pre; comp_post; flags;_} ->
-      flags
+  | { effect_name; result_typ; flags; source_effect_name;_} -> flags
+let __proj__Mkcomp_typ__item__source_effect_name (projectee : comp_typ) :
+  FStarC_Ident.lident=
+  match projectee with
+  | { effect_name; result_typ; flags; source_effect_name;_} ->
+      source_effect_name
 let __proj__Mkresidual_comp__item__residual_effect
   (projectee : residual_comp) : FStarC_Ident.lident=
   match projectee with
@@ -319,12 +292,6 @@ let __proj__Mkresidual_comp__item__residual_flags (projectee : residual_comp)
   : cflag Prims.list=
   match projectee with
   | { residual_effect; residual_typ; residual_flags;_} -> residual_flags
-let uu___is_TOTAL (projectee : cflag) : Prims.bool=
-  match projectee with | TOTAL -> true | uu___ -> false
-let uu___is_MLEFFECT (projectee : cflag) : Prims.bool=
-  match projectee with | MLEFFECT -> true | uu___ -> false
-let uu___is_LEMMA (projectee : cflag) : Prims.bool=
-  match projectee with | LEMMA -> true | uu___ -> false
 let uu___is_SMTPAT (projectee : cflag) : Prims.bool=
   match projectee with | SMTPAT _0 -> true | uu___ -> false
 let __proj__SMTPAT__item___0 (projectee : cflag) : t=
@@ -803,7 +770,17 @@ let lid_as_typ (l : FStarC_Ident.lident)
 let as_iarg (a : t) : arg= (a, (FStarC_Syntax_Syntax.as_aqual_implicit true))
 let as_arg (a : t) : arg= (a, FStar_Pervasives_Native.None)
 let make_arrow1 (t1 : t) (a : arg) : t=
-  mk_t (Arrow (FStar_Pervasives.Inr ([a], (Tot t1))))
+  mk_t
+    (Arrow
+       (FStar_Pervasives.Inr
+          ([a],
+            (Comp
+               {
+                 effect_name = FStarC_Parser_Const.primitive_pure_lid;
+                 result_typ = t1;
+                 flags = [];
+                 source_effect_name = FStarC_Parser_Const.primitive_pure_lid
+               }))))
 let lazy_embed (et : unit -> FStarC_Syntax_Syntax.emb_typ) (x : 'a)
   (f : unit -> t) : t=
   (let uu___1 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in

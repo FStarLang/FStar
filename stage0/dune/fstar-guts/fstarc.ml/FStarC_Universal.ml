@@ -25,8 +25,6 @@ let with_dsenv_of_tcenv (tcenv : FStarC_TypeChecker_Env.env)
             (tcenv.FStarC_TypeChecker_Env.modules);
           FStarC_TypeChecker_Env.expected_typ =
             (tcenv.FStarC_TypeChecker_Env.expected_typ);
-          FStarC_TypeChecker_Env.expected_post =
-            (tcenv.FStarC_TypeChecker_Env.expected_post);
           FStarC_TypeChecker_Env.sigtab =
             (tcenv.FStarC_TypeChecker_Env.sigtab);
           FStarC_TypeChecker_Env.attrtab =
@@ -39,6 +37,8 @@ let with_dsenv_of_tcenv (tcenv : FStarC_TypeChecker_Env.env)
             (tcenv.FStarC_TypeChecker_Env.generalize);
           FStarC_TypeChecker_Env.letrecs =
             (tcenv.FStarC_TypeChecker_Env.letrecs);
+          FStarC_TypeChecker_Env.rec_names =
+            (tcenv.FStarC_TypeChecker_Env.rec_names);
           FStarC_TypeChecker_Env.top_level =
             (tcenv.FStarC_TypeChecker_Env.top_level);
           FStarC_TypeChecker_Env.check_uvars =
@@ -74,8 +74,6 @@ let with_dsenv_of_tcenv (tcenv : FStarC_TypeChecker_Env.env)
             (tcenv.FStarC_TypeChecker_Env.subtype_nosmt_force);
           FStarC_TypeChecker_Env.qtbl_name_and_index =
             (tcenv.FStarC_TypeChecker_Env.qtbl_name_and_index);
-          FStarC_TypeChecker_Env.normalized_eff_names =
-            (tcenv.FStarC_TypeChecker_Env.normalized_eff_names);
           FStarC_TypeChecker_Env.fv_delta_depths =
             (tcenv.FStarC_TypeChecker_Env.fv_delta_depths);
           FStarC_TypeChecker_Env.proof_ns =
@@ -98,6 +96,8 @@ let with_dsenv_of_tcenv (tcenv : FStarC_TypeChecker_Env.env)
           FStarC_TypeChecker_Env.nbe = (tcenv.FStarC_TypeChecker_Env.nbe);
           FStarC_TypeChecker_Env.strict_args_tab =
             (tcenv.FStarC_TypeChecker_Env.strict_args_tab);
+          FStarC_TypeChecker_Env.disc_proj_tab =
+            (tcenv.FStarC_TypeChecker_Env.disc_proj_tab);
           FStarC_TypeChecker_Env.erasable_types_tab =
             (tcenv.FStarC_TypeChecker_Env.erasable_types_tab);
           FStarC_TypeChecker_Env.enable_defer_to_tac =
@@ -476,6 +476,7 @@ let emit (dep_graph : FStarC_Parser_Dep.deps)
       | FStar_Pervasives_Native.Some (FStarC_Options.Plugin) -> ".ml"
       | FStar_Pervasives_Native.Some (FStarC_Options.Krml) -> ".krml"
       | FStar_Pervasives_Native.Some (FStarC_Options.Extension) -> ".ast"
+      | FStar_Pervasives_Native.Some (FStarC_Options.Custard) -> ".custard"
       | uu___ -> fail () in
     let ofile basename =
       let uu___ = FStarC_Options.output_to () in
@@ -601,6 +602,7 @@ let emit (dep_graph : FStarC_Parser_Dep.deps)
                          ofile basename in
                        let ml = printer mlmodule in
                        FStarC_Util.write_file filename ml)) mllib)
+    | FStar_Pervasives_Native.Some (FStarC_Options.Custard) -> ()
     | FStar_Pervasives_Native.Some (FStarC_Options.Extension) ->
         ((let uu___1 =
             let uu___2 =
@@ -709,6 +711,8 @@ and tc_one_file_no_frame (fly_deps : Prims.bool) (skip_solver : Prims.bool)
           match uu___2 with
           | FStar_Pervasives_Native.None ->
               (FStar_Pervasives_Native.None, Prims.int_zero)
+          | FStar_Pervasives_Native.Some (FStarC_Options.Custard) ->
+              (FStar_Pervasives_Native.None, Prims.int_zero)
           | FStar_Pervasives_Native.Some tgt ->
               let uu___3 =
                 let uu___4 =
@@ -728,8 +732,14 @@ and tc_one_file_no_frame (fly_deps : Prims.bool) (skip_solver : Prims.bool)
                           match uu___5 with | (uu___6, defs) -> defs)) in
         let maybe_extract_ml_iface tcmod env1 =
           let uu___2 =
-            let uu___3 = FStarC_Options.codegen () in
-            uu___3 = FStar_Pervasives_Native.None in
+            let uu___3 =
+              let uu___4 = FStarC_Options.codegen () in
+              uu___4 = FStar_Pervasives_Native.None in
+            if uu___3
+            then true
+            else
+              (let uu___4 = FStarC_Options.codegen () in
+               uu___4 = (FStar_Pervasives_Native.Some FStarC_Options.Custard)) in
           if uu___2
           then (env1, Prims.int_zero)
           else
@@ -836,7 +846,11 @@ and tc_one_file_no_frame (fly_deps : Prims.bool) (skip_solver : Prims.bool)
         then
           let r =
             let uu___3 =
-              if fly_deps then FStarC_Options.should_check_file fn else false in
+              if fly_deps
+              then
+                let uu___4 = FStarC_Parser_Dep.module_name_of_file fn in
+                FStarC_Options.should_check uu___4
+              else false in
             if uu___3
             then FStar_Pervasives_Native.None
             else
@@ -844,7 +858,9 @@ and tc_one_file_no_frame (fly_deps : Prims.bool) (skip_solver : Prims.bool)
                 (FStarC_Extraction_ML_UEnv.tcenv_of_uenv env) fn in
           let r1 =
             let uu___3 =
-              let uu___4 = FStarC_Options.should_check_file fn in
+              let uu___4 =
+                let uu___5 = FStarC_Parser_Dep.module_name_of_file fn in
+                FStarC_Options.should_check uu___5 in
               if uu___4
               then
                 let uu___5 = FStarC_Options.force () in
@@ -867,6 +883,15 @@ and tc_one_file_no_frame (fly_deps : Prims.bool) (skip_solver : Prims.bool)
             if uu___3 then FStar_Pervasives_Native.None else r in
           match r1 with
           | FStar_Pervasives_Native.None ->
+              let why =
+                let uu___3 = FStarC_CheckedFiles.last_load_failure () in
+                match uu___3 with
+                | FStar_Pervasives_Native.Some msg ->
+                    [FStarC_Errors_Msg.text
+                       (FStarC_Format.fmt1
+                          "The last checked file that could not be loaded: %s."
+                          msg)]
+                | FStar_Pervasives_Native.None -> [] in
               ((let uu___4 =
                   let uu___5 =
                     let uu___6 = FStarC_Parser_Dep.module_name_of_file fn in
@@ -882,9 +907,10 @@ and tc_one_file_no_frame (fly_deps : Prims.bool) (skip_solver : Prims.bool)
                     ()
                     (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
                     (Obj.magic
-                       [FStarC_Errors_Msg.text
-                          (FStarC_Format.fmt1
-                             "Expected %s to already be checked." fn)])
+                       (FStarC_List.op_At
+                          [FStarC_Errors_Msg.text
+                             (FStarC_Format.fmt1
+                                "Expected %s to already be checked." fn)] why))
                 else ());
                (let uu___5 =
                   let uu___6 =
@@ -905,10 +931,12 @@ and tc_one_file_no_frame (fly_deps : Prims.bool) (skip_solver : Prims.bool)
                     ()
                     (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
                     (Obj.magic
-                       [FStarC_Errors_Msg.text
-                          "Cross-module inlining expects all modules to be checked first.";
-                       FStarC_Errors_Msg.text
-                         (FStarC_Format.fmt1 "Module %s was not checked." fn)])
+                       (FStarC_List.op_At
+                          [FStarC_Errors_Msg.text
+                             "Cross-module inlining expects all modules to be checked first.";
+                          FStarC_Errors_Msg.text
+                            (FStarC_Format.fmt1 "Module %s was not checked."
+                               fn)] why))
                 else ());
                (let uu___5 = tc_source_file () in
                 match uu___5 with
@@ -945,8 +973,7 @@ and tc_one_file_no_frame (fly_deps : Prims.bool) (skip_solver : Prims.bool)
                   let uu___4 =
                     let uu___5 =
                       FStarC_ToSyntax_ToSyntax.add_modul_to_env tcmod1
-                        tc_result.FStarC_CheckedFiles.mii
-                        (FStarC_TypeChecker_Normalize.erase_universes tcenv) in
+                        tc_result.FStarC_CheckedFiles.mii in
                     with_dsenv_of_tcenv tcenv uu___5 in
                   match uu___4 with
                   | (uu___5, tcenv1) ->
@@ -1109,8 +1136,6 @@ and fly_deps_check (filename : Prims.string) (env : uenv)
                               (tcenv.FStarC_TypeChecker_Env.modules);
                             FStarC_TypeChecker_Env.expected_typ =
                               (tcenv.FStarC_TypeChecker_Env.expected_typ);
-                            FStarC_TypeChecker_Env.expected_post =
-                              (tcenv.FStarC_TypeChecker_Env.expected_post);
                             FStarC_TypeChecker_Env.sigtab =
                               (tcenv.FStarC_TypeChecker_Env.sigtab);
                             FStarC_TypeChecker_Env.attrtab =
@@ -1123,6 +1148,8 @@ and fly_deps_check (filename : Prims.string) (env : uenv)
                               (tcenv.FStarC_TypeChecker_Env.generalize);
                             FStarC_TypeChecker_Env.letrecs =
                               (tcenv.FStarC_TypeChecker_Env.letrecs);
+                            FStarC_TypeChecker_Env.rec_names =
+                              (tcenv.FStarC_TypeChecker_Env.rec_names);
                             FStarC_TypeChecker_Env.top_level =
                               (tcenv.FStarC_TypeChecker_Env.top_level);
                             FStarC_TypeChecker_Env.check_uvars =
@@ -1160,8 +1187,6 @@ and fly_deps_check (filename : Prims.string) (env : uenv)
                               (tcenv.FStarC_TypeChecker_Env.subtype_nosmt_force);
                             FStarC_TypeChecker_Env.qtbl_name_and_index =
                               (tcenv.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                            FStarC_TypeChecker_Env.normalized_eff_names =
-                              (tcenv.FStarC_TypeChecker_Env.normalized_eff_names);
                             FStarC_TypeChecker_Env.fv_delta_depths =
                               (tcenv.FStarC_TypeChecker_Env.fv_delta_depths);
                             FStarC_TypeChecker_Env.proof_ns =
@@ -1185,6 +1210,8 @@ and fly_deps_check (filename : Prims.string) (env : uenv)
                               (tcenv.FStarC_TypeChecker_Env.nbe);
                             FStarC_TypeChecker_Env.strict_args_tab =
                               (tcenv.FStarC_TypeChecker_Env.strict_args_tab);
+                            FStarC_TypeChecker_Env.disc_proj_tab =
+                              (tcenv.FStarC_TypeChecker_Env.disc_proj_tab);
                             FStarC_TypeChecker_Env.erasable_types_tab =
                               (tcenv.FStarC_TypeChecker_Env.erasable_types_tab);
                             FStarC_TypeChecker_Env.enable_defer_to_tac =
@@ -1257,8 +1284,6 @@ and scan_and_load_fly_deps_internal (filename : Prims.string) (env : uenv)
           (env1.FStarC_TypeChecker_Env.modules);
         FStarC_TypeChecker_Env.expected_typ =
           (env1.FStarC_TypeChecker_Env.expected_typ);
-        FStarC_TypeChecker_Env.expected_post =
-          (env1.FStarC_TypeChecker_Env.expected_post);
         FStarC_TypeChecker_Env.sigtab = (env1.FStarC_TypeChecker_Env.sigtab);
         FStarC_TypeChecker_Env.attrtab =
           (env1.FStarC_TypeChecker_Env.attrtab);
@@ -1270,6 +1295,8 @@ and scan_and_load_fly_deps_internal (filename : Prims.string) (env : uenv)
           (env1.FStarC_TypeChecker_Env.generalize);
         FStarC_TypeChecker_Env.letrecs =
           (env1.FStarC_TypeChecker_Env.letrecs);
+        FStarC_TypeChecker_Env.rec_names =
+          (env1.FStarC_TypeChecker_Env.rec_names);
         FStarC_TypeChecker_Env.top_level =
           (env1.FStarC_TypeChecker_Env.top_level);
         FStarC_TypeChecker_Env.check_uvars =
@@ -1304,8 +1331,6 @@ and scan_and_load_fly_deps_internal (filename : Prims.string) (env : uenv)
           (env1.FStarC_TypeChecker_Env.subtype_nosmt_force);
         FStarC_TypeChecker_Env.qtbl_name_and_index =
           (env1.FStarC_TypeChecker_Env.qtbl_name_and_index);
-        FStarC_TypeChecker_Env.normalized_eff_names =
-          (env1.FStarC_TypeChecker_Env.normalized_eff_names);
         FStarC_TypeChecker_Env.fv_delta_depths =
           (env1.FStarC_TypeChecker_Env.fv_delta_depths);
         FStarC_TypeChecker_Env.proof_ns =
@@ -1329,6 +1354,8 @@ and scan_and_load_fly_deps_internal (filename : Prims.string) (env : uenv)
         FStarC_TypeChecker_Env.nbe = (env1.FStarC_TypeChecker_Env.nbe);
         FStarC_TypeChecker_Env.strict_args_tab =
           (env1.FStarC_TypeChecker_Env.strict_args_tab);
+        FStarC_TypeChecker_Env.disc_proj_tab =
+          (env1.FStarC_TypeChecker_Env.disc_proj_tab);
         FStarC_TypeChecker_Env.erasable_types_tab =
           (env1.FStarC_TypeChecker_Env.erasable_types_tab);
         FStarC_TypeChecker_Env.enable_defer_to_tac =
@@ -1631,8 +1658,6 @@ let init_env (deps : FStarC_Parser_Dep.deps) : FStarC_TypeChecker_Env.env=
       FStarC_TypeChecker_Env.modules = (env.FStarC_TypeChecker_Env.modules);
       FStarC_TypeChecker_Env.expected_typ =
         (env.FStarC_TypeChecker_Env.expected_typ);
-      FStarC_TypeChecker_Env.expected_post =
-        (env.FStarC_TypeChecker_Env.expected_post);
       FStarC_TypeChecker_Env.sigtab = (env.FStarC_TypeChecker_Env.sigtab);
       FStarC_TypeChecker_Env.attrtab = (env.FStarC_TypeChecker_Env.attrtab);
       FStarC_TypeChecker_Env.instantiate_imp =
@@ -1641,6 +1666,8 @@ let init_env (deps : FStarC_Parser_Dep.deps) : FStarC_TypeChecker_Env.env=
       FStarC_TypeChecker_Env.generalize =
         (env.FStarC_TypeChecker_Env.generalize);
       FStarC_TypeChecker_Env.letrecs = (env.FStarC_TypeChecker_Env.letrecs);
+      FStarC_TypeChecker_Env.rec_names =
+        (env.FStarC_TypeChecker_Env.rec_names);
       FStarC_TypeChecker_Env.top_level =
         (env.FStarC_TypeChecker_Env.top_level);
       FStarC_TypeChecker_Env.check_uvars =
@@ -1671,8 +1698,6 @@ let init_env (deps : FStarC_Parser_Dep.deps) : FStarC_TypeChecker_Env.env=
         (env.FStarC_TypeChecker_Env.subtype_nosmt_force);
       FStarC_TypeChecker_Env.qtbl_name_and_index =
         (env.FStarC_TypeChecker_Env.qtbl_name_and_index);
-      FStarC_TypeChecker_Env.normalized_eff_names =
-        (env.FStarC_TypeChecker_Env.normalized_eff_names);
       FStarC_TypeChecker_Env.fv_delta_depths =
         (env.FStarC_TypeChecker_Env.fv_delta_depths);
       FStarC_TypeChecker_Env.proof_ns = (env.FStarC_TypeChecker_Env.proof_ns);
@@ -1691,6 +1716,8 @@ let init_env (deps : FStarC_Parser_Dep.deps) : FStarC_TypeChecker_Env.env=
       FStarC_TypeChecker_Env.nbe = (env.FStarC_TypeChecker_Env.nbe);
       FStarC_TypeChecker_Env.strict_args_tab =
         (env.FStarC_TypeChecker_Env.strict_args_tab);
+      FStarC_TypeChecker_Env.disc_proj_tab =
+        (env.FStarC_TypeChecker_Env.disc_proj_tab);
       FStarC_TypeChecker_Env.erasable_types_tab =
         (env.FStarC_TypeChecker_Env.erasable_types_tab);
       FStarC_TypeChecker_Env.enable_defer_to_tac =
@@ -1726,8 +1753,6 @@ let init_env (deps : FStarC_Parser_Dep.deps) : FStarC_TypeChecker_Env.env=
       FStarC_TypeChecker_Env.modules = (env1.FStarC_TypeChecker_Env.modules);
       FStarC_TypeChecker_Env.expected_typ =
         (env1.FStarC_TypeChecker_Env.expected_typ);
-      FStarC_TypeChecker_Env.expected_post =
-        (env1.FStarC_TypeChecker_Env.expected_post);
       FStarC_TypeChecker_Env.sigtab = (env1.FStarC_TypeChecker_Env.sigtab);
       FStarC_TypeChecker_Env.attrtab = (env1.FStarC_TypeChecker_Env.attrtab);
       FStarC_TypeChecker_Env.instantiate_imp =
@@ -1736,6 +1761,8 @@ let init_env (deps : FStarC_Parser_Dep.deps) : FStarC_TypeChecker_Env.env=
       FStarC_TypeChecker_Env.generalize =
         (env1.FStarC_TypeChecker_Env.generalize);
       FStarC_TypeChecker_Env.letrecs = (env1.FStarC_TypeChecker_Env.letrecs);
+      FStarC_TypeChecker_Env.rec_names =
+        (env1.FStarC_TypeChecker_Env.rec_names);
       FStarC_TypeChecker_Env.top_level =
         (env1.FStarC_TypeChecker_Env.top_level);
       FStarC_TypeChecker_Env.check_uvars =
@@ -1769,8 +1796,6 @@ let init_env (deps : FStarC_Parser_Dep.deps) : FStarC_TypeChecker_Env.env=
         (env1.FStarC_TypeChecker_Env.subtype_nosmt_force);
       FStarC_TypeChecker_Env.qtbl_name_and_index =
         (env1.FStarC_TypeChecker_Env.qtbl_name_and_index);
-      FStarC_TypeChecker_Env.normalized_eff_names =
-        (env1.FStarC_TypeChecker_Env.normalized_eff_names);
       FStarC_TypeChecker_Env.fv_delta_depths =
         (env1.FStarC_TypeChecker_Env.fv_delta_depths);
       FStarC_TypeChecker_Env.proof_ns =
@@ -1792,6 +1817,8 @@ let init_env (deps : FStarC_Parser_Dep.deps) : FStarC_TypeChecker_Env.env=
       FStarC_TypeChecker_Env.nbe = (env1.FStarC_TypeChecker_Env.nbe);
       FStarC_TypeChecker_Env.strict_args_tab =
         (env1.FStarC_TypeChecker_Env.strict_args_tab);
+      FStarC_TypeChecker_Env.disc_proj_tab =
+        (env1.FStarC_TypeChecker_Env.disc_proj_tab);
       FStarC_TypeChecker_Env.erasable_types_tab =
         (env1.FStarC_TypeChecker_Env.erasable_types_tab);
       FStarC_TypeChecker_Env.enable_defer_to_tac =
@@ -1827,8 +1854,6 @@ let init_env (deps : FStarC_Parser_Dep.deps) : FStarC_TypeChecker_Env.env=
       FStarC_TypeChecker_Env.modules = (env2.FStarC_TypeChecker_Env.modules);
       FStarC_TypeChecker_Env.expected_typ =
         (env2.FStarC_TypeChecker_Env.expected_typ);
-      FStarC_TypeChecker_Env.expected_post =
-        (env2.FStarC_TypeChecker_Env.expected_post);
       FStarC_TypeChecker_Env.sigtab = (env2.FStarC_TypeChecker_Env.sigtab);
       FStarC_TypeChecker_Env.attrtab = (env2.FStarC_TypeChecker_Env.attrtab);
       FStarC_TypeChecker_Env.instantiate_imp =
@@ -1837,6 +1862,8 @@ let init_env (deps : FStarC_Parser_Dep.deps) : FStarC_TypeChecker_Env.env=
       FStarC_TypeChecker_Env.generalize =
         (env2.FStarC_TypeChecker_Env.generalize);
       FStarC_TypeChecker_Env.letrecs = (env2.FStarC_TypeChecker_Env.letrecs);
+      FStarC_TypeChecker_Env.rec_names =
+        (env2.FStarC_TypeChecker_Env.rec_names);
       FStarC_TypeChecker_Env.top_level =
         (env2.FStarC_TypeChecker_Env.top_level);
       FStarC_TypeChecker_Env.check_uvars =
@@ -1870,8 +1897,6 @@ let init_env (deps : FStarC_Parser_Dep.deps) : FStarC_TypeChecker_Env.env=
         (env2.FStarC_TypeChecker_Env.subtype_nosmt_force);
       FStarC_TypeChecker_Env.qtbl_name_and_index =
         (env2.FStarC_TypeChecker_Env.qtbl_name_and_index);
-      FStarC_TypeChecker_Env.normalized_eff_names =
-        (env2.FStarC_TypeChecker_Env.normalized_eff_names);
       FStarC_TypeChecker_Env.fv_delta_depths =
         (env2.FStarC_TypeChecker_Env.fv_delta_depths);
       FStarC_TypeChecker_Env.proof_ns =
@@ -1893,6 +1918,8 @@ let init_env (deps : FStarC_Parser_Dep.deps) : FStarC_TypeChecker_Env.env=
       FStarC_TypeChecker_Env.nbe = (env2.FStarC_TypeChecker_Env.nbe);
       FStarC_TypeChecker_Env.strict_args_tab =
         (env2.FStarC_TypeChecker_Env.strict_args_tab);
+      FStarC_TypeChecker_Env.disc_proj_tab =
+        (env2.FStarC_TypeChecker_Env.disc_proj_tab);
       FStarC_TypeChecker_Env.erasable_types_tab =
         (env2.FStarC_TypeChecker_Env.erasable_types_tab);
       FStarC_TypeChecker_Env.enable_defer_to_tac =
@@ -1928,8 +1955,6 @@ let init_env (deps : FStarC_Parser_Dep.deps) : FStarC_TypeChecker_Env.env=
       FStarC_TypeChecker_Env.modules = (env3.FStarC_TypeChecker_Env.modules);
       FStarC_TypeChecker_Env.expected_typ =
         (env3.FStarC_TypeChecker_Env.expected_typ);
-      FStarC_TypeChecker_Env.expected_post =
-        (env3.FStarC_TypeChecker_Env.expected_post);
       FStarC_TypeChecker_Env.sigtab = (env3.FStarC_TypeChecker_Env.sigtab);
       FStarC_TypeChecker_Env.attrtab = (env3.FStarC_TypeChecker_Env.attrtab);
       FStarC_TypeChecker_Env.instantiate_imp =
@@ -1938,6 +1963,8 @@ let init_env (deps : FStarC_Parser_Dep.deps) : FStarC_TypeChecker_Env.env=
       FStarC_TypeChecker_Env.generalize =
         (env3.FStarC_TypeChecker_Env.generalize);
       FStarC_TypeChecker_Env.letrecs = (env3.FStarC_TypeChecker_Env.letrecs);
+      FStarC_TypeChecker_Env.rec_names =
+        (env3.FStarC_TypeChecker_Env.rec_names);
       FStarC_TypeChecker_Env.top_level =
         (env3.FStarC_TypeChecker_Env.top_level);
       FStarC_TypeChecker_Env.check_uvars =
@@ -1971,8 +1998,6 @@ let init_env (deps : FStarC_Parser_Dep.deps) : FStarC_TypeChecker_Env.env=
         (env3.FStarC_TypeChecker_Env.subtype_nosmt_force);
       FStarC_TypeChecker_Env.qtbl_name_and_index =
         (env3.FStarC_TypeChecker_Env.qtbl_name_and_index);
-      FStarC_TypeChecker_Env.normalized_eff_names =
-        (env3.FStarC_TypeChecker_Env.normalized_eff_names);
       FStarC_TypeChecker_Env.fv_delta_depths =
         (env3.FStarC_TypeChecker_Env.fv_delta_depths);
       FStarC_TypeChecker_Env.proof_ns =
@@ -1993,6 +2018,8 @@ let init_env (deps : FStarC_Parser_Dep.deps) : FStarC_TypeChecker_Env.env=
       FStarC_TypeChecker_Env.nbe = (env3.FStarC_TypeChecker_Env.nbe);
       FStarC_TypeChecker_Env.strict_args_tab =
         (env3.FStarC_TypeChecker_Env.strict_args_tab);
+      FStarC_TypeChecker_Env.disc_proj_tab =
+        (env3.FStarC_TypeChecker_Env.disc_proj_tab);
       FStarC_TypeChecker_Env.erasable_types_tab =
         (env3.FStarC_TypeChecker_Env.erasable_types_tab);
       FStarC_TypeChecker_Env.enable_defer_to_tac =
@@ -2028,8 +2055,6 @@ let init_env (deps : FStarC_Parser_Dep.deps) : FStarC_TypeChecker_Env.env=
       FStarC_TypeChecker_Env.modules = (env4.FStarC_TypeChecker_Env.modules);
       FStarC_TypeChecker_Env.expected_typ =
         (env4.FStarC_TypeChecker_Env.expected_typ);
-      FStarC_TypeChecker_Env.expected_post =
-        (env4.FStarC_TypeChecker_Env.expected_post);
       FStarC_TypeChecker_Env.sigtab = (env4.FStarC_TypeChecker_Env.sigtab);
       FStarC_TypeChecker_Env.attrtab = (env4.FStarC_TypeChecker_Env.attrtab);
       FStarC_TypeChecker_Env.instantiate_imp =
@@ -2038,6 +2063,8 @@ let init_env (deps : FStarC_Parser_Dep.deps) : FStarC_TypeChecker_Env.env=
       FStarC_TypeChecker_Env.generalize =
         (env4.FStarC_TypeChecker_Env.generalize);
       FStarC_TypeChecker_Env.letrecs = (env4.FStarC_TypeChecker_Env.letrecs);
+      FStarC_TypeChecker_Env.rec_names =
+        (env4.FStarC_TypeChecker_Env.rec_names);
       FStarC_TypeChecker_Env.top_level =
         (env4.FStarC_TypeChecker_Env.top_level);
       FStarC_TypeChecker_Env.check_uvars =
@@ -2071,8 +2098,6 @@ let init_env (deps : FStarC_Parser_Dep.deps) : FStarC_TypeChecker_Env.env=
         (env4.FStarC_TypeChecker_Env.subtype_nosmt_force);
       FStarC_TypeChecker_Env.qtbl_name_and_index =
         (env4.FStarC_TypeChecker_Env.qtbl_name_and_index);
-      FStarC_TypeChecker_Env.normalized_eff_names =
-        (env4.FStarC_TypeChecker_Env.normalized_eff_names);
       FStarC_TypeChecker_Env.fv_delta_depths =
         (env4.FStarC_TypeChecker_Env.fv_delta_depths);
       FStarC_TypeChecker_Env.proof_ns =
@@ -2093,6 +2118,8 @@ let init_env (deps : FStarC_Parser_Dep.deps) : FStarC_TypeChecker_Env.env=
       FStarC_TypeChecker_Env.nbe = (env4.FStarC_TypeChecker_Env.nbe);
       FStarC_TypeChecker_Env.strict_args_tab =
         (env4.FStarC_TypeChecker_Env.strict_args_tab);
+      FStarC_TypeChecker_Env.disc_proj_tab =
+        (env4.FStarC_TypeChecker_Env.disc_proj_tab);
       FStarC_TypeChecker_Env.erasable_types_tab =
         (env4.FStarC_TypeChecker_Env.erasable_types_tab);
       FStarC_TypeChecker_Env.enable_defer_to_tac =
@@ -2127,7 +2154,10 @@ let batch_mode_tc (fly_deps : Prims.bool)
         (FStarC_String.concat " " filenames);
       (let uu___4 =
          let uu___5 =
-           FStarC_List.filter FStarC_Options.should_verify_file filenames in
+           FStarC_List.filter
+             (fun fn ->
+                let uu___6 = FStarC_Parser_Dep.module_name_of_file fn in
+                FStarC_Options.should_verify uu___6) filenames in
          FStarC_String.concat " " uu___5 in
        FStarC_Format.print1 "Here's the list of modules we will verify: %s\n"
          uu___4))
@@ -2143,7 +2173,15 @@ let batch_mode_tc (fly_deps : Prims.bool)
        ((let uu___3 =
            let uu___4 = FStarC_Errors.get_err_count () in
            uu___4 = Prims.int_zero in
-         if uu___3 then emit dep_graph mllibs else ());
+         if uu___3
+         then
+           let uu___4 = FStarC_Options.codegen () in
+           match uu___4 with
+           | FStar_Pervasives_Native.Some (FStarC_Options.Custard) ->
+               FStarC_Custard_Driver.run dep_graph
+                 (FStarC_Extraction_ML_UEnv.tcenv_of_uenv env1)
+           | uu___5 -> emit dep_graph mllibs
+         else ());
         (let solver_refresh env2 =
            let uu___3 =
              with_tcenv_of_env env2

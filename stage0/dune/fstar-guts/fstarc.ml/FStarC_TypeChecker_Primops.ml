@@ -243,20 +243,50 @@ let short_circuit_ops :
   [s1; s2]
 let built_in_primitive_steps_list :
   FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
-  FStarC_List.op_At simple_ops
-    (FStarC_List.op_At short_circuit_ops
-       (FStarC_List.op_At FStarC_TypeChecker_Primops_Issue.ops
-          (FStarC_List.op_At FStarC_TypeChecker_Primops_Array.ops
-             (FStarC_List.op_At FStarC_TypeChecker_Primops_Sealed.ops
-                (FStarC_List.op_At FStarC_TypeChecker_Primops_Erased.ops
-                   (FStarC_List.op_At FStarC_TypeChecker_Primops_Docs.ops
-                      (FStarC_List.op_At
-                         FStarC_TypeChecker_Primops_MachineInts.ops
-                         (FStarC_List.op_At
-                            FStarC_TypeChecker_Primops_Errors_Msg.ops
-                            (FStarC_List.op_At
-                               FStarC_TypeChecker_Primops_Range.ops
-                               FStarC_TypeChecker_Primops_Real.ops)))))))))
+  let uu___ =
+    let uu___1 =
+      let uu___2 =
+        let uu___3 =
+          let uu___4 =
+            let uu___5 =
+              let uu___6 =
+                FStarC_List.map
+                  (fun s ->
+                     {
+                       FStarC_TypeChecker_Primops_Base.name =
+                         (s.FStarC_TypeChecker_Primops_Base.name);
+                       FStarC_TypeChecker_Primops_Base.arity =
+                         (s.FStarC_TypeChecker_Primops_Base.arity);
+                       FStarC_TypeChecker_Primops_Base.univ_arity =
+                         (s.FStarC_TypeChecker_Primops_Base.univ_arity);
+                       FStarC_TypeChecker_Primops_Base.auto_reflect =
+                         (s.FStarC_TypeChecker_Primops_Base.auto_reflect);
+                       FStarC_TypeChecker_Primops_Base.strong_reduction_ok =
+                         (s.FStarC_TypeChecker_Primops_Base.strong_reduction_ok);
+                       FStarC_TypeChecker_Primops_Base.requires_binder_substitution
+                         =
+                         (s.FStarC_TypeChecker_Primops_Base.requires_binder_substitution);
+                       FStarC_TypeChecker_Primops_Base.renorm_after =
+                         (s.FStarC_TypeChecker_Primops_Base.renorm_after);
+                       FStarC_TypeChecker_Primops_Base.unrepresentable_result
+                         = true;
+                       FStarC_TypeChecker_Primops_Base.interpretation =
+                         (s.FStarC_TypeChecker_Primops_Base.interpretation);
+                       FStarC_TypeChecker_Primops_Base.interpretation_nbe =
+                         (s.FStarC_TypeChecker_Primops_Base.interpretation_nbe)
+                     })
+                  (FStarC_List.op_At FStarC_TypeChecker_Primops_Docs.ops
+                     FStarC_TypeChecker_Primops_Errors_Msg.ops) in
+              FStarC_List.op_At uu___6
+                (FStarC_List.op_At FStarC_TypeChecker_Primops_MachineInts.ops
+                   (FStarC_List.op_At FStarC_TypeChecker_Primops_Range.ops
+                      FStarC_TypeChecker_Primops_Real.ops)) in
+            FStarC_List.op_At FStarC_TypeChecker_Primops_Erased.ops uu___5 in
+          FStarC_List.op_At FStarC_TypeChecker_Primops_Sealed.ops uu___4 in
+        FStarC_List.op_At FStarC_TypeChecker_Primops_Array.ops uu___3 in
+      FStarC_List.op_At FStarC_TypeChecker_Primops_Issue.ops uu___2 in
+    FStarC_List.op_At short_circuit_ops uu___1 in
+  FStarC_List.op_At simple_ops uu___
 let env_dependent_ops (env : FStarC_TypeChecker_Env.env_t) :
   FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
   FStarC_TypeChecker_Primops_Eq.dec_eq_ops env
