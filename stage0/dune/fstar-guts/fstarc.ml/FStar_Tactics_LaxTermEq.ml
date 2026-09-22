@@ -1,320 +1,209 @@
-open Prims
-type 't comparator_for =
-  't -> 't -> FStarC_Tactics_Types.ref_proofstate -> Prims.bool
-let opt_eq (cmp : 'a comparator_for) :
-  'a FStar_Pervasives_Native.option comparator_for=
-  fun o1 o2 ->
-    match (o1, o2) with
-    | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) ->
-        (fun uu___ -> true)
-    | (FStar_Pervasives_Native.Some x, FStar_Pervasives_Native.Some y) ->
-        cmp x y
-    | uu___ -> (fun uu___1 -> false)
-let either_eq (cmpa : 'a comparator_for) (cmpb : 'b comparator_for) :
-  ('a, 'b) FStar_Pervasives.either comparator_for=
-  fun e1 e2 ->
-    match (e1, e2) with
-    | (FStar_Pervasives.Inl x, FStar_Pervasives.Inl y) -> cmpa x y
-    | (FStar_Pervasives.Inr x, FStar_Pervasives.Inr y) -> cmpb x y
-    | uu___ -> (fun uu___1 -> false)
-let pair_eq (cmpa : 'a comparator_for) (cmpb : 'b comparator_for) :
-  ('a * 'b) comparator_for=
-  fun uu___ uu___1 ->
-    match (uu___, uu___1) with
-    | ((a1, b1), (a2, b2)) ->
-        (fun ps ->
-           let x = cmpa a1 a2 ps in if x then cmpb b1 b2 ps else false)
-let rec list_eq : 'a . 'a comparator_for -> 'a Prims.list comparator_for =
-  fun cmp l1 l2 ->
-    match (l1, l2) with
-    | ([], []) -> (fun uu___ -> true)
-    | (x::xs, y::ys) ->
-        (fun ps ->
-           let x1 = cmp x y ps in if x1 then list_eq cmp xs ys ps else false)
-    | uu___ -> (fun uu___1 -> false)
-let rec univ_eq : FStarC_Reflection_Types.universe comparator_for=
-  fun u1 u2 ps ->
-    let x = FStarC_Tactics_V2_Builtins.compress_univ u1 ps in
-    let x1 = FStarC_Tactics_V2_Builtins.compress_univ u2 ps in
-    let x2 = FStarC_Reflection_V2_Builtins.inspect_universe x in
-    let x3 = FStarC_Reflection_V2_Builtins.inspect_universe x1 in
-    match (x2, x3) with
-    | (FStarC_Reflection_V2_Data.Uv_Zero, FStarC_Reflection_V2_Data.Uv_Zero)
-        -> true
-    | (FStarC_Reflection_V2_Data.Uv_Succ u11,
-       FStarC_Reflection_V2_Data.Uv_Succ u21) -> univ_eq u11 u21 ps
-    | (FStarC_Reflection_V2_Data.Uv_Max us1, FStarC_Reflection_V2_Data.Uv_Max
-       us2) -> list_eq univ_eq us1 us2 ps
-    | (FStarC_Reflection_V2_Data.Uv_BVar v1,
-       FStarC_Reflection_V2_Data.Uv_BVar v2) -> v1 = v2
-    | (FStarC_Reflection_V2_Data.Uv_Name id1,
-       FStarC_Reflection_V2_Data.Uv_Name id2) ->
-        (FStar_Pervasives_Native.fst
-           (FStarC_Reflection_V2_Builtins.inspect_ident id1))
-          =
-          (FStar_Pervasives_Native.fst
-             (FStarC_Reflection_V2_Builtins.inspect_ident id2))
-    | (FStarC_Reflection_V2_Data.Uv_Unif u11,
-       FStarC_Reflection_V2_Data.Uv_Unif u21) -> false
-    | (FStarC_Reflection_V2_Data.Uv_Unk, FStarC_Reflection_V2_Data.Uv_Unk) ->
-        false
-    | uu___ -> false
-let const_eq : FStarC_Reflection_V2_Data.vconst comparator_for=
-  fun c1 c2 uu___ ->
-    match (c1, c2) with
-    | (FStarC_Reflection_V2_Data.C_Unit, FStarC_Reflection_V2_Data.C_Unit) ->
-        true
-    | (FStarC_Reflection_V2_Data.C_Int (i1, uu___1),
-       FStarC_Reflection_V2_Data.C_Int (i2, uu___2)) -> i1 = i2
-    | (FStarC_Reflection_V2_Data.C_MachineInt (i1, uu___1, s1, w1),
-       FStarC_Reflection_V2_Data.C_MachineInt (i2, uu___2, s2, w2)) ->
-        ((i1 = i2) && (s1 = s2)) && (w1 = w2)
-    | (FStarC_Reflection_V2_Data.C_True, FStarC_Reflection_V2_Data.C_True) ->
-        true
-    | (FStarC_Reflection_V2_Data.C_False, FStarC_Reflection_V2_Data.C_False)
-        -> true
-    | (FStarC_Reflection_V2_Data.C_String s1,
-       FStarC_Reflection_V2_Data.C_String s2) -> s1 = s2
-    | (FStarC_Reflection_V2_Data.C_Range r1,
-       FStarC_Reflection_V2_Data.C_Range r2) -> true
-    | (FStarC_Reflection_V2_Data.C_Reify, FStarC_Reflection_V2_Data.C_Reify)
-        -> true
-    | (FStarC_Reflection_V2_Data.C_Reflect n1,
-       FStarC_Reflection_V2_Data.C_Reflect n2) -> n1 = n2
-    | (FStarC_Reflection_V2_Data.C_Real s1, FStarC_Reflection_V2_Data.C_Real
-       s2) -> s1 = s2
-    | (FStarC_Reflection_V2_Data.C_Char s1, FStarC_Reflection_V2_Data.C_Char
-       s2) -> s1 = s2
-    | uu___1 -> false
-let rec term_eq : FStarC_Reflection_Types.term comparator_for=
-  fun t1 t2 ps ->
-    let x = FStarC_Tactics_V2_Builtins.compress t1 ps in
-    let x1 = FStarC_Tactics_V2_Builtins.compress t2 ps in
-    let x2 = FStarC_Reflection_V2_Builtins.inspect_ln x in
-    let x3 = FStarC_Reflection_V2_Builtins.inspect_ln x1 in
-    match (x2, x3) with
-    | (FStarC_Reflection_V2_Data.Tv_Unsupp, uu___) -> false
-    | (uu___, FStarC_Reflection_V2_Data.Tv_Unsupp) -> false
-    | (FStarC_Reflection_V2_Data.Tv_Var v1, FStarC_Reflection_V2_Data.Tv_Var
-       v2) ->
-        (FStarC_Reflection_V2_Builtins.inspect_namedv v1).FStarC_Reflection_V2_Data.uniq
-          =
-          (FStarC_Reflection_V2_Builtins.inspect_namedv v2).FStarC_Reflection_V2_Data.uniq
-    | (FStarC_Reflection_V2_Data.Tv_BVar v1,
-       FStarC_Reflection_V2_Data.Tv_BVar v2) ->
-        (FStarC_Reflection_V2_Builtins.inspect_bv v1).FStarC_Reflection_V2_Data.index
-          =
-          (FStarC_Reflection_V2_Builtins.inspect_bv v2).FStarC_Reflection_V2_Data.index
-    | (FStarC_Reflection_V2_Data.Tv_FVar f1,
-       FStarC_Reflection_V2_Data.Tv_FVar f2) ->
-        (FStarC_Reflection_V2_Builtins.inspect_fv f1) =
-          (FStarC_Reflection_V2_Builtins.inspect_fv f2)
-    | (FStarC_Reflection_V2_Data.Tv_UInst (f1, uu___),
-       FStarC_Reflection_V2_Data.Tv_FVar f2) ->
-        (FStarC_Reflection_V2_Builtins.inspect_fv f1) =
-          (FStarC_Reflection_V2_Builtins.inspect_fv f2)
-    | (FStarC_Reflection_V2_Data.Tv_FVar f1,
-       FStarC_Reflection_V2_Data.Tv_UInst (f2, uu___)) ->
-        (FStarC_Reflection_V2_Builtins.inspect_fv f1) =
-          (FStarC_Reflection_V2_Builtins.inspect_fv f2)
-    | (FStarC_Reflection_V2_Data.Tv_UInst (f1, uu___),
-       FStarC_Reflection_V2_Data.Tv_UInst (f2, uu___1)) ->
-        (FStarC_Reflection_V2_Builtins.inspect_fv f1) =
-          (FStarC_Reflection_V2_Builtins.inspect_fv f2)
-    | (FStarC_Reflection_V2_Data.Tv_App (h1, a1),
-       FStarC_Reflection_V2_Data.Tv_App (h2, a2)) ->
-        let x4 = term_eq h1 h2 ps in if x4 then arg_eq a1 a2 ps else false
-    | (FStarC_Reflection_V2_Data.Tv_Abs (b1, e1),
-       FStarC_Reflection_V2_Data.Tv_Abs (b2, e2)) ->
-        let x4 = binder_eq b1 b2 ps in if x4 then term_eq e1 e2 ps else false
-    | (FStarC_Reflection_V2_Data.Tv_Arrow (b1, c1),
-       FStarC_Reflection_V2_Data.Tv_Arrow (b2, c2)) ->
-        let x4 = binder_eq b1 b2 ps in if x4 then comp_eq c1 c2 ps else false
-    | (FStarC_Reflection_V2_Data.Tv_Type u1,
-       FStarC_Reflection_V2_Data.Tv_Type u2) -> true
-    | (FStarC_Reflection_V2_Data.Tv_Refine (sb1, r1),
-       FStarC_Reflection_V2_Data.Tv_Refine (sb2, r2)) ->
-        let x4 = binder_eq sb1 sb2 ps in
-        if x4 then term_eq r1 r2 ps else false
-    | (FStarC_Reflection_V2_Data.Tv_Const c1,
-       FStarC_Reflection_V2_Data.Tv_Const c2) -> const_eq c1 c2 ps
-    | (FStarC_Reflection_V2_Data.Tv_Uvar (n1, _u1),
-       FStarC_Reflection_V2_Data.Tv_Uvar (n2, _u2)) -> n1 = n2
-    | (FStarC_Reflection_V2_Data.Tv_Let (r1, attrs1, sb1, e1, b1),
-       FStarC_Reflection_V2_Data.Tv_Let (r2, attrs2, sb2, e2, b2)) ->
-        if (Prims.not r1) = r2
-        then false
-        else
-          (let x4 = let x5 = binder_eq sb1 sb2 ps in Prims.not x5 in
-           if x4
-           then false
-           else
-             (let x5 = let x6 = term_eq e1 e2 ps in Prims.not x6 in
-              if x5 then false else term_eq b1 b2 ps))
-    | (FStarC_Reflection_V2_Data.Tv_Match (sc1, o1, brs1),
-       FStarC_Reflection_V2_Data.Tv_Match (sc2, o2, brs2)) ->
-        let x4 = let x5 = term_eq sc1 sc2 ps in Prims.not x5 in
-        if x4
-        then false
-        else
-          (let x5 =
-             let x6 = opt_eq match_returns_ascription_eq o1 o2 ps in
-             Prims.not x6 in
-           if x5 then false else list_eq br_eq brs1 brs2 ps)
-    | (FStarC_Reflection_V2_Data.Tv_AscribedT (t11, uu___, uu___1, uu___2),
-       uu___3) -> term_eq t11 x1 ps
-    | (FStarC_Reflection_V2_Data.Tv_AscribedC (t11, uu___, uu___1, uu___2),
-       uu___3) -> term_eq t11 x1 ps
-    | (uu___, FStarC_Reflection_V2_Data.Tv_AscribedT
-       (t21, uu___1, uu___2, uu___3)) -> term_eq x t21 ps
-    | (uu___, FStarC_Reflection_V2_Data.Tv_AscribedC
-       (t21, uu___1, uu___2, uu___3)) -> term_eq x t21 ps
-    | (FStarC_Reflection_V2_Data.Tv_Unknown,
-       FStarC_Reflection_V2_Data.Tv_Unknown) -> true
-    | uu___ -> false
-and arg_eq : FStarC_Reflection_V2_Data.argv comparator_for=
-  fun uu___ uu___1 ->
-    match (uu___, uu___1) with
-    | ((a1, q1), (a2, q2)) ->
-        (fun ps ->
-           let x = term_eq a1 a2 ps in if x then aqual_eq q1 q2 ps else false)
-and aqual_eq : FStarC_Reflection_V2_Data.aqualv comparator_for=
-  fun a1 a2 ->
-    match (a1, a2) with
-    | (FStarC_Reflection_V2_Data.Q_Implicit,
-       FStarC_Reflection_V2_Data.Q_Implicit) -> (fun uu___ -> true)
-    | (FStarC_Reflection_V2_Data.Q_Explicit,
-       FStarC_Reflection_V2_Data.Q_Explicit) -> (fun uu___ -> true)
-    | (FStarC_Reflection_V2_Data.Q_Equality,
-       FStarC_Reflection_V2_Data.Q_Equality) -> (fun uu___ -> true)
-    | (FStarC_Reflection_V2_Data.Q_Meta m1, FStarC_Reflection_V2_Data.Q_Meta
-       m2) -> term_eq m1 m2
-    | uu___ -> (fun uu___1 -> false)
-and match_returns_ascription_eq :
-  FStarC_Syntax_Syntax.match_returns_ascription comparator_for=
-  fun asc1 asc2 ps ->
-    let x = asc1 in
-    match x with
-    | (b1, (tc1, tacopt1, eq1)) ->
-        let x1 = asc2 in
-        (match x1 with
-         | (b2, (tc2, tacopt2, eq2)) ->
-             let x2 = let x3 = binder_eq b1 b2 ps in Prims.not x3 in
-             if x2
-             then false
-             else
-               (let x3 =
-                  let x4 = either_eq term_eq comp_eq tc1 tc2 ps in
-                  Prims.not x4 in
-                if x3
-                then false
-                else
-                  (let x4 =
-                     let x5 = opt_eq term_eq tacopt1 tacopt2 ps in
-                     Prims.not x5 in
-                   if x4 then false else eq1 = eq2)))
-and binder_eq : FStarC_Reflection_Types.binder comparator_for=
-  fun b1 b2 ps ->
-    let x = FStarC_Reflection_V2_Builtins.inspect_binder b1 in
-    let x1 = FStarC_Reflection_V2_Builtins.inspect_binder b2 in
-    let x2 =
-      let x3 =
-        term_eq x.FStarC_Reflection_V2_Data.sort2
-          x1.FStarC_Reflection_V2_Data.sort2 ps in
-      Prims.not x3 in
-    if x2
-    then false
-    else
-      (let x3 =
-         let x4 =
-           aqual_eq x.FStarC_Reflection_V2_Data.qual
-             x1.FStarC_Reflection_V2_Data.qual ps in
-         Prims.not x4 in
-       if x3
-       then false
-       else
-         list_eq term_eq x.FStarC_Reflection_V2_Data.attrs
-           x1.FStarC_Reflection_V2_Data.attrs ps)
-and comp_eq : FStarC_Reflection_Types.comp comparator_for=
-  fun c1 c2 ps ->
-    let x = FStarC_Reflection_V2_Builtins.inspect_comp c1 in
-    let x1 = FStarC_Reflection_V2_Builtins.inspect_comp c2 in
-    if
-      Prims.not
-        (x.FStarC_Reflection_V2_Data.effect_name =
-           x1.FStarC_Reflection_V2_Data.effect_name)
-    then false
-    else
-      term_eq x.FStarC_Reflection_V2_Data.result_typ
-        x1.FStarC_Reflection_V2_Data.result_typ ps
-and br_eq : FStarC_Reflection_V2_Data.branch comparator_for=
-  fun br1 br2 ps ->
-    let x =
-      let x1 =
-        pat_eq (FStar_Pervasives_Native.fst br1)
-          (FStar_Pervasives_Native.fst br2) ps in
-      Prims.not x1 in
-    if x
-    then false
-    else
-      term_eq (FStar_Pervasives_Native.snd br1)
-        (FStar_Pervasives_Native.snd br2) ps
-and pat_eq : FStarC_Reflection_V2_Data.pattern comparator_for=
-  fun p1 p2 ->
-    match (p1, p2) with
-    | (FStarC_Reflection_V2_Data.Pat_Var (v1, sort1),
-       FStarC_Reflection_V2_Data.Pat_Var (v2, sort2)) -> (fun uu___ -> true)
-    | (FStarC_Reflection_V2_Data.Pat_Constant x1,
-       FStarC_Reflection_V2_Data.Pat_Constant x2) -> const_eq x1 x2
-    | (FStarC_Reflection_V2_Data.Pat_Dot_Term x1,
-       FStarC_Reflection_V2_Data.Pat_Dot_Term x2) -> opt_eq term_eq x1 x2
-    | (FStarC_Reflection_V2_Data.Pat_Cons (head1, us1, subpats1),
-       FStarC_Reflection_V2_Data.Pat_Cons (head2, us2, subpats2)) ->
-        if
-          Prims.not
-            ((FStarC_Reflection_V2_Builtins.inspect_fv head1) =
-               (FStarC_Reflection_V2_Builtins.inspect_fv head2))
-        then (fun uu___ -> false)
-        else list_eq pat_arg_eq subpats1 subpats2
-    | uu___ -> (fun uu___1 -> false)
-and pat_arg_eq :
-  (FStarC_Reflection_V2_Data.pattern * Prims.bool) comparator_for=
-  fun uu___ uu___1 ->
-    match (uu___, uu___1) with
-    | ((p1, b1), (p2, b2)) ->
-        (fun ps ->
-           let x = let x1 = pat_eq p1 p2 ps in Prims.not x1 in
-           if x then false else b1 = b2)
-let lax_term_eq (t1 : FStarC_Reflection_Types.term)
-  (t2 : FStarC_Reflection_Types.term)
-  (ps : FStarC_Tactics_Types.ref_proofstate) : Prims.bool=
-  let x = term_eq t1 t2 ps in x
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.LaxTermEq.lax_term_eq"
-    (Prims.of_int 3)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_2
-               "FStar.Tactics.LaxTermEq.lax_term_eq (plugin)"
-               (FStarC_Tactics_Native.from_tactic_2 lax_term_eq)
-               FStarC_Reflection_V2_Embeddings.e_term
-               FStarC_Reflection_V2_Embeddings.e_term
-               FStarC_Syntax_Embeddings.e_bool psc ncb us args)
-let lax_univ_eq (u1 : FStarC_Reflection_Types.universe)
-  (u2 : FStarC_Reflection_Types.universe) :
-  FStarC_Tactics_Types.ref_proofstate -> Prims.bool= univ_eq u1 u2
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.LaxTermEq.lax_univ_eq"
-    (Prims.of_int 3)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_2
-               "FStar.Tactics.LaxTermEq.lax_univ_eq (plugin)"
-               (FStarC_Tactics_Native.from_tactic_2 lax_univ_eq)
-               FStarC_Reflection_V2_Embeddings.e_universe
-               FStarC_Reflection_V2_Embeddings.e_universe
-               FStarC_Syntax_Embeddings.e_bool psc ncb us args)
+(* Generated by F* Custard extraction. Do not edit. *)
+[@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
+
+let rec list_eq (cmp : ('a -> ('a -> ((FStarC_Tactics_Types.proofstate ref) -> bool)))) (l1 : ('a) list) (l2 : ('a) list) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
+  (match (l1, l2) with
+    | ([], []) -> (fun tmp -> true)
+    | ((x :: xs), (y :: ys)) -> (fun ps -> (let x1 = (cmp x y ps) in
+      ((if x1 then (list_eq cmp xs ys) else (fun tmp -> false)) ps)))
+    | tmp -> (fun tmp1 -> false)
+  )
+
+let const_eq (c1 : FStarC_Reflection_V2_Data.vconst) (c2 : FStarC_Reflection_V2_Data.vconst) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
+  (fun tmp -> (match (c1, c2) with
+    | (FStarC_Reflection_V2_Data.C_Unit, FStarC_Reflection_V2_Data.C_Unit) -> true
+    | ((FStarC_Reflection_V2_Data.C_Int (i1, tmp1)), (FStarC_Reflection_V2_Data.C_Int (i2, tmp2))) -> ((=) i1 i2)
+    | ((FStarC_Reflection_V2_Data.C_MachineInt (i1, tmp1, s1, w1)), (FStarC_Reflection_V2_Data.C_MachineInt (i2, tmp2, s2, w2))) -> ((((=) i1 i2) && ((=) s1 s2)) && ((=) w1 w2))
+    | (FStarC_Reflection_V2_Data.C_True, FStarC_Reflection_V2_Data.C_True) -> true
+    | (FStarC_Reflection_V2_Data.C_False, FStarC_Reflection_V2_Data.C_False) -> true
+    | ((FStarC_Reflection_V2_Data.C_String (s1)), (FStarC_Reflection_V2_Data.C_String (s2))) -> ((=) s1 s2)
+    | ((FStarC_Reflection_V2_Data.C_Range (r1)), (FStarC_Reflection_V2_Data.C_Range (r2))) -> true
+    | (FStarC_Reflection_V2_Data.C_Reify, FStarC_Reflection_V2_Data.C_Reify) -> true
+    | ((FStarC_Reflection_V2_Data.C_Reflect (n1)), (FStarC_Reflection_V2_Data.C_Reflect (n2))) -> ((=) n1 n2)
+    | ((FStarC_Reflection_V2_Data.C_Real (s1)), (FStarC_Reflection_V2_Data.C_Real (s2))) -> ((=) s1 s2)
+    | ((FStarC_Reflection_V2_Data.C_Char (s1)), (FStarC_Reflection_V2_Data.C_Char (s2))) -> ((=) s1 s2)
+    | tmp1 -> false
+  ))
+
+let opt_eq (cmp : ('a -> ('a -> ((FStarC_Tactics_Types.proofstate ref) -> bool)))) (o1 : ('a) option) (o2 : ('a) option) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
+  (match (o1, o2) with
+    | (None, None) -> (fun tmp -> true)
+    | ((Some (x)), (Some (y))) -> (cmp x y)
+    | tmp -> (fun tmp1 -> false)
+  )
+
+let either_eq (cmpa : ('a -> ('a -> ((FStarC_Tactics_Types.proofstate ref) -> bool)))) (cmpb : ('b -> ('b -> ((FStarC_Tactics_Types.proofstate ref) -> bool)))) (e1 : ('a, 'b) FStar_Pervasives.either) (e2 : ('a, 'b) FStar_Pervasives.either) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
+  (match (e1, e2) with
+    | ((FStar_Pervasives.Inl (x)), (FStar_Pervasives.Inl (y))) -> (cmpa x y)
+    | ((FStar_Pervasives.Inr (x)), (FStar_Pervasives.Inr (y))) -> (cmpb x y)
+    | tmp -> (fun tmp1 -> false)
+  )
+
+let rec aqual_eq (a1 : FStarC_Reflection_V2_Data.aqualv) (a2 : FStarC_Reflection_V2_Data.aqualv) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
+  (match (a1, a2) with
+    | (FStarC_Reflection_V2_Data.Q_Implicit, FStarC_Reflection_V2_Data.Q_Implicit) -> (fun tmp -> true)
+    | (FStarC_Reflection_V2_Data.Q_Explicit, FStarC_Reflection_V2_Data.Q_Explicit) -> (fun tmp -> true)
+    | (FStarC_Reflection_V2_Data.Q_Equality, FStarC_Reflection_V2_Data.Q_Equality) -> (fun tmp -> true)
+    | ((FStarC_Reflection_V2_Data.Q_Meta (m1)), (FStarC_Reflection_V2_Data.Q_Meta (m2))) -> (term_eq m1 m2)
+    | tmp -> (fun tmp1 -> false)
+  )
+
+and arg_eq (tmp : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * FStarC_Reflection_V2_Data.aqualv)) (tmp1 : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * FStarC_Reflection_V2_Data.aqualv)) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
+  (match (tmp, tmp1) with
+    | ((a1, q1), (a2, q2)) -> (fun ps -> (let x = (term_eq a1 a2 ps) in
+      ((if x then (aqual_eq q1 q2) else (fun tmp2 -> false)) ps)))
+  )
+
+and binder_eq (b1 : FStarC_Reflection_Types.binder) (b2 : FStarC_Reflection_Types.binder) (ps : (FStarC_Tactics_Types.proofstate ref)) : bool =
+  (let x = (FStarC_Reflection_V2_Builtins.inspect_binder b1) in
+  let x1 = (FStarC_Reflection_V2_Builtins.inspect_binder b2) in
+  let tmp = ((x : FStarC_Reflection_V2_Data.binder_view)).FStarC_Reflection_V2_Data.sort in
+  let tmp1 = ((x1 : FStarC_Reflection_V2_Data.binder_view)).FStarC_Reflection_V2_Data.sort in
+  let x2 = (term_eq tmp tmp1 ps) in
+  let x3 = (not x2) in
+  ((if x3 then (fun tmp2 -> false) else (fun ps1 -> (let tmp2 = (x).FStarC_Reflection_V2_Data.qual in
+  let tmp3 = (x1).FStarC_Reflection_V2_Data.qual in
+  let x4 = (aqual_eq tmp2 tmp3 ps1) in
+  let x5 = (not x4) in
+  let tmp4 = (if x5 then (fun tmp4 -> false) else (let tmp4 = (x).FStarC_Reflection_V2_Data.attrs in
+    let tmp5 = (x1).FStarC_Reflection_V2_Data.attrs in
+    (list_eq term_eq tmp4 tmp5))) in
+  (tmp4 ps1)))) ps))
+
+and comp_eq (c1 : FStarC_Reflection_Types.comp) (c2 : FStarC_Reflection_Types.comp) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
+  (fun ps -> (let x = (FStarC_Reflection_V2_Builtins.inspect_comp c1) in
+  let x1 = (FStarC_Reflection_V2_Builtins.inspect_comp c2) in
+  let tmp = (if (not (let tmp = (x).FStarC_Reflection_V2_Data.effect_name in
+    let tmp1 = (x1).FStarC_Reflection_V2_Data.effect_name in
+    ((=) tmp tmp1))) then (fun tmp -> false) else (let tmp = (x).FStarC_Reflection_V2_Data.result_typ in
+    let tmp1 = (x1).FStarC_Reflection_V2_Data.result_typ in
+    (term_eq tmp tmp1))) in
+  (tmp ps)))
+
+and match_returns_ascription_eq (asc1 : (FStarC_Syntax_Syntax.binder * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax, (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * bool))) (asc2 : (FStarC_Syntax_Syntax.binder * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax, (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * bool))) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
+  (fun ps -> ((match asc1 with
+    | (b1, (tc1, tacopt1, eq1)) -> (fun ps1 -> ((match asc2 with
+        | (b2, (tc2, tacopt2, eq2)) -> (fun ps2 -> (let x = (binder_eq b1 b2 ps2) in
+          let x1 = (not x) in
+          ((if x1 then (fun tmp -> false) else (fun ps3 -> (let x2 = (either_eq term_eq comp_eq tc1 tc2 ps3) in
+          let x3 = (not x2) in
+          ((if x3 then (fun tmp -> false) else (fun ps4 -> (let x4 = (opt_eq term_eq tacopt1 tacopt2 ps4) in
+          let x5 = (not x4) in
+          (if x5 then false else ((=) eq1 eq2))))) ps3)))) ps2)))
+      ) ps1))
+  ) ps))
+
+and pat_arg_eq (tmp : (FStarC_Reflection_V2_Data.pattern * bool)) (tmp1 : (FStarC_Reflection_V2_Data.pattern * bool)) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
+  (match (tmp, tmp1) with
+    | ((p1, b1), (p2, b2)) -> (fun ps -> (let x = (pat_eq p1 p2 ps) in
+      let x1 = (not x) in
+      (if x1 then false else ((=) b1 b2))))
+  )
+
+and pat_eq (p1 : FStarC_Reflection_V2_Data.pattern) (p2 : FStarC_Reflection_V2_Data.pattern) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
+  (match (p1, p2) with
+    | ((FStarC_Reflection_V2_Data.Pat_Var (v1, sort1)), (FStarC_Reflection_V2_Data.Pat_Var (v2, sort2))) -> (fun tmp -> true)
+    | ((FStarC_Reflection_V2_Data.Pat_Constant (x1)), (FStarC_Reflection_V2_Data.Pat_Constant (x2))) -> (const_eq x1 x2)
+    | ((FStarC_Reflection_V2_Data.Pat_Dot_Term (x1)), (FStarC_Reflection_V2_Data.Pat_Dot_Term (x2))) -> (opt_eq term_eq x1 x2)
+    | ((FStarC_Reflection_V2_Data.Pat_Cons (head1, us1, subpats1)), (FStarC_Reflection_V2_Data.Pat_Cons (head2, us2, subpats2))) -> (if (not (let tmp = (FStarC_Reflection_V2_Builtins.inspect_fv head1) in
+      let tmp1 = (FStarC_Reflection_V2_Builtins.inspect_fv head2) in
+      ((=) tmp tmp1))) then (fun tmp -> false) else (list_eq pat_arg_eq subpats1 subpats2))
+    | tmp -> (fun tmp1 -> false)
+  )
+
+and br_eq (br1 : (FStarC_Reflection_V2_Data.pattern * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (br2 : (FStarC_Reflection_V2_Data.pattern * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
+  (fun ps -> (let x = (pat_eq (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst br1) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst br2) ps) in
+  let x1 = (not x) in
+  ((if x1 then (fun tmp -> false) else (term_eq (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd br1) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd br2))) ps)))
+
+and term_eq (t1 : FStarC_Reflection_Types.term) (t2 : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
+  (fun ps -> (let x = (FStarC_Tactics_V2_Builtins.compress t1 ps) in
+  let x1 = (FStarC_Tactics_V2_Builtins.compress t2 ps) in
+  let x2 = (FStarC_Reflection_V2_Builtins.inspect_ln x) in
+  let x3 = (FStarC_Reflection_V2_Builtins.inspect_ln x1) in
+  ((match (x2, x3) with
+    | (FStarC_Reflection_V2_Data.Tv_Unsupp, tmp) -> (fun tmp1 -> false)
+    | (tmp, FStarC_Reflection_V2_Data.Tv_Unsupp) -> (fun tmp1 -> false)
+    | ((FStarC_Reflection_V2_Data.Tv_Var (v1)), (FStarC_Reflection_V2_Data.Tv_Var (v2))) -> (fun tmp -> (let tmp1 = (FStarC_Reflection_V2_Builtins.inspect_namedv v1) in
+      let tmp2 = ((tmp1 : FStarC_Reflection_V2_Data.namedv_view)).FStarC_Reflection_V2_Data.uniq in
+      let tmp3 = (FStarC_Reflection_V2_Builtins.inspect_namedv v2) in
+      let tmp4 = ((tmp3 : FStarC_Reflection_V2_Data.namedv_view)).FStarC_Reflection_V2_Data.uniq in
+      ((=) tmp2 tmp4)))
+    | ((FStarC_Reflection_V2_Data.Tv_BVar (v1)), (FStarC_Reflection_V2_Data.Tv_BVar (v2))) -> (fun tmp -> (let tmp1 = (FStarC_Reflection_V2_Builtins.inspect_bv v1) in
+      let tmp2 = (tmp1).FStarC_Reflection_V2_Data.index in
+      let tmp3 = (FStarC_Reflection_V2_Builtins.inspect_bv v2) in
+      let tmp4 = (tmp3).FStarC_Reflection_V2_Data.index in
+      ((=) tmp2 tmp4)))
+    | ((FStarC_Reflection_V2_Data.Tv_FVar (f1)), (FStarC_Reflection_V2_Data.Tv_FVar (f2))) -> (fun tmp -> (let tmp1 = (FStarC_Reflection_V2_Builtins.inspect_fv f1) in
+      let tmp2 = (FStarC_Reflection_V2_Builtins.inspect_fv f2) in
+      ((=) tmp1 tmp2)))
+    | ((FStarC_Reflection_V2_Data.Tv_UInst (f1, tmp)), (FStarC_Reflection_V2_Data.Tv_FVar (f2))) -> (fun tmp1 -> (let tmp2 = (FStarC_Reflection_V2_Builtins.inspect_fv f1) in
+      let tmp3 = (FStarC_Reflection_V2_Builtins.inspect_fv f2) in
+      ((=) tmp2 tmp3)))
+    | ((FStarC_Reflection_V2_Data.Tv_FVar (f1)), (FStarC_Reflection_V2_Data.Tv_UInst (f2, tmp))) -> (fun tmp1 -> (let tmp2 = (FStarC_Reflection_V2_Builtins.inspect_fv f1) in
+      let tmp3 = (FStarC_Reflection_V2_Builtins.inspect_fv f2) in
+      ((=) tmp2 tmp3)))
+    | ((FStarC_Reflection_V2_Data.Tv_UInst (f1, tmp)), (FStarC_Reflection_V2_Data.Tv_UInst (f2, tmp1))) -> (fun tmp2 -> (let tmp3 = (FStarC_Reflection_V2_Builtins.inspect_fv f1) in
+      let tmp4 = (FStarC_Reflection_V2_Builtins.inspect_fv f2) in
+      ((=) tmp3 tmp4)))
+    | ((FStarC_Reflection_V2_Data.Tv_App (h1, a1)), (FStarC_Reflection_V2_Data.Tv_App (h2, a2))) -> (fun ps1 -> (let x4 = (term_eq h1 h2 ps1) in
+      ((if x4 then (arg_eq a1 a2) else (fun tmp -> false)) ps1)))
+    | ((FStarC_Reflection_V2_Data.Tv_Abs (b1, e1)), (FStarC_Reflection_V2_Data.Tv_Abs (b2, e2))) -> (fun ps1 -> (let x4 = (binder_eq b1 b2 ps1) in
+      ((if x4 then (term_eq e1 e2) else (fun tmp -> false)) ps1)))
+    | ((FStarC_Reflection_V2_Data.Tv_Arrow (b1, c1)), (FStarC_Reflection_V2_Data.Tv_Arrow (b2, c2))) -> (fun ps1 -> (let x4 = (binder_eq b1 b2 ps1) in
+      ((if x4 then (comp_eq c1 c2) else (fun tmp -> false)) ps1)))
+    | ((FStarC_Reflection_V2_Data.Tv_Type (u1)), (FStarC_Reflection_V2_Data.Tv_Type (u2))) -> (fun tmp -> true)
+    | ((FStarC_Reflection_V2_Data.Tv_Refine (sb1, r1)), (FStarC_Reflection_V2_Data.Tv_Refine (sb2, r2))) -> (fun ps1 -> (let x4 = (binder_eq sb1 sb2 ps1) in
+      ((if x4 then (term_eq r1 r2) else (fun tmp -> false)) ps1)))
+    | ((FStarC_Reflection_V2_Data.Tv_Const (c1)), (FStarC_Reflection_V2_Data.Tv_Const (c2))) -> (const_eq c1 c2)
+    | ((FStarC_Reflection_V2_Data.Tv_Uvar (n1, u__u1)), (FStarC_Reflection_V2_Data.Tv_Uvar (n2, u__u2))) -> (fun tmp -> ((=) n1 n2))
+    | ((FStarC_Reflection_V2_Data.Tv_Let (r1, attrs1, sb1, e1, b1)), (FStarC_Reflection_V2_Data.Tv_Let (r2, attrs2, sb2, e2, b2))) -> (if ((=) (not r1) r2) then (fun tmp -> false) else (fun ps1 -> (let x4 = (binder_eq sb1 sb2 ps1) in
+      let x5 = (not x4) in
+      ((if x5 then (fun tmp -> false) else (fun ps2 -> (let x6 = (term_eq e1 e2 ps2) in
+      let x7 = (not x6) in
+      ((if x7 then (fun tmp -> false) else (term_eq b1 b2)) ps2)))) ps1))))
+    | ((FStarC_Reflection_V2_Data.Tv_Match (sc1, o1, brs1)), (FStarC_Reflection_V2_Data.Tv_Match (sc2, o2, brs2))) -> (fun ps1 -> (let x4 = (term_eq sc1 sc2 ps1) in
+      let x5 = (not x4) in
+      ((if x5 then (fun tmp -> false) else (fun ps2 -> (let x6 = (opt_eq match_returns_ascription_eq o1 o2 ps2) in
+      let x7 = (not x6) in
+      ((if x7 then (fun tmp -> false) else (list_eq br_eq brs1 brs2)) ps2)))) ps1)))
+    | ((FStarC_Reflection_V2_Data.Tv_AscribedT (t11, tmp, tmp1, tmp2)), tmp3) -> (term_eq t11 x1)
+    | ((FStarC_Reflection_V2_Data.Tv_AscribedC (t11, tmp, tmp1, tmp2)), tmp3) -> (term_eq t11 x1)
+    | (tmp, (FStarC_Reflection_V2_Data.Tv_AscribedT (t21, tmp1, tmp2, tmp3))) -> (term_eq x t21)
+    | (tmp, (FStarC_Reflection_V2_Data.Tv_AscribedC (t21, tmp1, tmp2, tmp3))) -> (term_eq x t21)
+    | (FStarC_Reflection_V2_Data.Tv_Unknown, FStarC_Reflection_V2_Data.Tv_Unknown) -> (fun tmp -> true)
+    | tmp -> (fun tmp1 -> false)
+  ) ps)))
+
+let lax_term_eq (t1 : FStarC_Reflection_Types.term) (t2 : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
+  (fun ps -> (term_eq t1 t2 ps))
+
+let u___plugin_lax_term_eq : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.LaxTermEq.lax_term_eq" (Prims.parse_int "3") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_2 "FStar.Tactics.LaxTermEq.lax_term_eq (plugin)" lax_term_eq FStarC_Reflection_V2_Embeddings.e_term FStarC_Reflection_V2_Embeddings.e_term FStarC_Syntax_Embeddings.e_bool tmp tmp1 tmp2 tmp3)))
+
+let rec univ_eq (u1 : FStarC_Reflection_Types.universe) (u2 : FStarC_Reflection_Types.universe) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
+  (fun ps -> (let x = (FStarC_Tactics_V2_Builtins.compress_univ u1 ps) in
+  let x1 = (FStarC_Tactics_V2_Builtins.compress_univ u2 ps) in
+  let x2 = (FStarC_Reflection_V2_Builtins.inspect_universe x) in
+  let x3 = (FStarC_Reflection_V2_Builtins.inspect_universe x1) in
+  ((match (x2, x3) with
+    | (FStarC_Reflection_V2_Data.Uv_Zero, FStarC_Reflection_V2_Data.Uv_Zero) -> (fun tmp -> true)
+    | ((FStarC_Reflection_V2_Data.Uv_Succ (u11)), (FStarC_Reflection_V2_Data.Uv_Succ (u21))) -> (univ_eq u11 u21)
+    | ((FStarC_Reflection_V2_Data.Uv_Max (us1)), (FStarC_Reflection_V2_Data.Uv_Max (us2))) -> (list_eq univ_eq us1 us2)
+    | ((FStarC_Reflection_V2_Data.Uv_BVar (v1)), (FStarC_Reflection_V2_Data.Uv_BVar (v2))) -> (fun tmp -> ((=) v1 v2))
+    | ((FStarC_Reflection_V2_Data.Uv_Name (id1)), (FStarC_Reflection_V2_Data.Uv_Name (id2))) -> (fun tmp -> (let tmp1 = (FStarC_Reflection_V2_Builtins.inspect_ident id1) in
+      let tmp2 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp1) in
+      let tmp3 = (FStarC_Reflection_V2_Builtins.inspect_ident id2) in
+      let tmp4 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp3) in
+      ((=) tmp2 tmp4)))
+    | ((FStarC_Reflection_V2_Data.Uv_Unif (u11)), (FStarC_Reflection_V2_Data.Uv_Unif (u21))) -> (fun tmp -> false)
+    | (FStarC_Reflection_V2_Data.Uv_Unk, FStarC_Reflection_V2_Data.Uv_Unk) -> (fun tmp -> false)
+    | tmp -> (fun tmp1 -> false)
+  ) ps)))
+
+let lax_univ_eq (t1 : FStarC_Reflection_Types.universe) : (FStarC_Reflection_Types.universe -> ((FStarC_Tactics_Types.proofstate ref) -> bool)) =
+  (univ_eq t1)
+
+let u___plugin_lax_univ_eq : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.LaxTermEq.lax_univ_eq" (Prims.parse_int "3") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_2 "FStar.Tactics.LaxTermEq.lax_univ_eq (plugin)" lax_univ_eq FStarC_Reflection_V2_Embeddings.e_universe FStarC_Reflection_V2_Embeddings.e_universe FStarC_Syntax_Embeddings.e_bool tmp tmp1 tmp2 tmp3)))
+

@@ -1,186 +1,153 @@
-open Prims
-let compare_pos (p1 : FStarC_Range_Type.pos) (p2 : FStarC_Range_Type.pos) :
-  FStarC_Order.order= FStarC_Class_Ord.cmp FStarC_Class_Ord.ord_int p1 p2
-let deq_pos : FStarC_Range_Type.pos FStarC_Class_Deq.deq=
-  { FStarC_Class_Deq.op_Equals_Question = (=) }
-let ord_pos : FStarC_Range_Type.pos FStarC_Class_Ord.ord=
-  { FStarC_Class_Ord.super = deq_pos; FStarC_Class_Ord.cmp = compare_pos }
-let union_rng (r1 : FStarC_Range_Type.rng) (r2 : FStarC_Range_Type.rng) :
-  FStarC_Range_Type.rng=
-  if r1.FStarC_Range_Type.file_name <> r2.FStarC_Range_Type.file_name
-  then r2
-  else
-    (let start_pos =
-       FStarC_Class_Ord.min ord_pos r1.FStarC_Range_Type.start_pos
-         r2.FStarC_Range_Type.start_pos in
-     let end_pos =
-       FStarC_Class_Ord.max ord_pos r1.FStarC_Range_Type.end_pos
-         r2.FStarC_Range_Type.end_pos in
-     FStarC_Range_Type.mk_rng r1.FStarC_Range_Type.file_name start_pos
-       end_pos)
-let union_ranges (r1 : FStarC_Range_Type.range)
-  (r2 : FStarC_Range_Type.range) : FStarC_Range_Type.range=
-  let uu___ =
-    union_rng r1.FStarC_Range_Type.def_range r2.FStarC_Range_Type.def_range in
-  let uu___1 =
-    union_rng r1.FStarC_Range_Type.use_range r2.FStarC_Range_Type.use_range in
-  { FStarC_Range_Type.def_range = uu___; FStarC_Range_Type.use_range = uu___1
-  }
-let rng_included (r1 : FStarC_Range_Type.rng) (r2 : FStarC_Range_Type.rng) :
-  Prims.bool=
-  if r1.FStarC_Range_Type.file_name <> r2.FStarC_Range_Type.file_name
-  then false
-  else
-    (let uu___ =
-       FStarC_Class_Ord.op_Less_Equals_Question ord_pos
-         r2.FStarC_Range_Type.start_pos r1.FStarC_Range_Type.start_pos in
-     if uu___
-     then
-       FStarC_Class_Ord.op_Greater_Equals_Question ord_pos
-         r2.FStarC_Range_Type.end_pos r1.FStarC_Range_Type.end_pos
-     else false)
-let string_of_pos (pos : FStarC_Range_Type.pos) : Prims.string=
-  let uu___ =
-    FStarC_Class_Show.show FStarC_Class_Show.showable_int
-      (FStarC_Range_Type.pos_line pos) in
-  let uu___1 =
-    FStarC_Class_Show.show FStarC_Class_Show.showable_int
-      (FStarC_Range_Type.pos_col pos) in
-  FStarC_Format.fmt2 "%s,%s" uu___ uu___1
-let file_of_range (r : FStarC_Range_Type.range) : Prims.string=
-  (r.FStarC_Range_Type.def_range).FStarC_Range_Type.file_name
-let set_file_of_range (r : FStarC_Range_Type.range) (f : Prims.string) :
-  FStarC_Range_Type.range=
-  {
-    FStarC_Range_Type.def_range =
-      (let uu___ = r.FStarC_Range_Type.def_range in
-       {
-         FStarC_Range_Type.file_name = (FStarC_Filepath.basename f);
-         FStarC_Range_Type.start_pos = (uu___.FStarC_Range_Type.start_pos);
-         FStarC_Range_Type.end_pos = (uu___.FStarC_Range_Type.end_pos)
-       });
-    FStarC_Range_Type.use_range = (r.FStarC_Range_Type.use_range)
-  }
-let string_of_rng (r : FStarC_Range_Type.rng) : Prims.string=
-  let uu___ = string_of_pos r.FStarC_Range_Type.start_pos in
-  let uu___1 = string_of_pos r.FStarC_Range_Type.end_pos in
-  FStarC_Format.fmt3 "%s(%s-%s)" r.FStarC_Range_Type.file_name uu___ uu___1
-let string_of_def_range (r : FStarC_Range_Type.range) : Prims.string=
-  string_of_rng r.FStarC_Range_Type.def_range
-let string_of_use_range (r : FStarC_Range_Type.range) : Prims.string=
-  string_of_rng r.FStarC_Range_Type.use_range
-let string_of_range (r : FStarC_Range_Type.range) : Prims.string=
-  string_of_def_range r
-let start_of_range (r : FStarC_Range_Type.range) : FStarC_Range_Type.pos=
-  (r.FStarC_Range_Type.def_range).FStarC_Range_Type.start_pos
-let end_of_range (r : FStarC_Range_Type.range) : FStarC_Range_Type.pos=
-  (r.FStarC_Range_Type.def_range).FStarC_Range_Type.end_pos
-let file_of_use_range (r : FStarC_Range_Type.range) : Prims.string=
-  (r.FStarC_Range_Type.use_range).FStarC_Range_Type.file_name
-let start_of_use_range (r : FStarC_Range_Type.range) : FStarC_Range_Type.pos=
-  (r.FStarC_Range_Type.use_range).FStarC_Range_Type.start_pos
-let end_of_use_range (r : FStarC_Range_Type.range) : FStarC_Range_Type.pos=
-  (r.FStarC_Range_Type.use_range).FStarC_Range_Type.end_pos
-let line_of_pos (p : FStarC_Range_Type.pos) : Prims.int=
-  FStarC_Range_Type.pos_line p
-let col_of_pos (p : FStarC_Range_Type.pos) : Prims.int=
-  FStarC_Range_Type.pos_col p
-let end_range (r : FStarC_Range_Type.range) : FStarC_Range_Type.range=
-  FStarC_Range_Type.mk_range
-    (r.FStarC_Range_Type.def_range).FStarC_Range_Type.file_name
-    (r.FStarC_Range_Type.def_range).FStarC_Range_Type.end_pos
-    (r.FStarC_Range_Type.def_range).FStarC_Range_Type.end_pos
-let compare_rng (r1 : FStarC_Range_Type.rng) (r2 : FStarC_Range_Type.rng) :
-  Prims.int=
-  let fcomp =
-    FStar_String.compare r1.FStarC_Range_Type.file_name
-      r2.FStarC_Range_Type.file_name in
-  if fcomp = Prims.int_zero
-  then r1.FStarC_Range_Type.start_pos - r2.FStarC_Range_Type.start_pos
-  else fcomp
-let compare (r1 : FStarC_Range_Type.range) (r2 : FStarC_Range_Type.range) :
-  Prims.int=
-  compare_rng r1.FStarC_Range_Type.def_range r2.FStarC_Range_Type.def_range
-let compare_use_range (r1 : FStarC_Range_Type.range)
-  (r2 : FStarC_Range_Type.range) : Prims.int=
-  compare_rng r1.FStarC_Range_Type.use_range r2.FStarC_Range_Type.use_range
-let range_before_pos (m1 : FStarC_Range_Type.range)
-  (p : FStarC_Range_Type.pos) : Prims.bool=
-  FStarC_Class_Ord.op_Greater_Equals_Question ord_pos p (end_of_range m1)
-let end_of_line (p : FStarC_Range_Type.pos) : FStarC_Range_Type.pos=
-  FStarC_Range_Type.mk_pos (FStarC_Range_Type.pos_line p)
-    (FStarC_Range_Type.col_limit - Prims.int_one)
-let extend_to_end_of_line (r : FStarC_Range_Type.range) :
-  FStarC_Range_Type.range=
-  FStarC_Range_Type.mk_range (file_of_range r) (start_of_range r)
-    (end_of_line (end_of_range r))
-let json_of_pos (pos : FStarC_Range_Type.pos) : FStarC_Json.json=
-  FStarC_Json.JsonList
-    [FStarC_Json.JsonInt (line_of_pos pos);
-    FStarC_Json.JsonInt (col_of_pos pos)]
-let json_of_range_fields (file : Prims.string) (b : FStarC_Range_Type.pos)
-  (e : FStarC_Range_Type.pos) : FStarC_Json.json=
-  FStarC_Json.JsonAssoc
-    [("fname", (FStarC_Json.JsonStr file));
-    ("beg", (json_of_pos b));
-    ("end", (json_of_pos e))]
-let json_of_use_range (r : FStarC_Range_Type.range) : FStarC_Json.json=
-  json_of_range_fields (file_of_use_range r) (start_of_use_range r)
-    (end_of_use_range r)
-let json_of_def_range (r : FStarC_Range_Type.range) : FStarC_Json.json=
-  json_of_range_fields (file_of_range r) (start_of_range r) (end_of_range r)
-let intersect_rng (r1 : FStarC_Range_Type.rng) (r2 : FStarC_Range_Type.rng) :
-  FStarC_Range_Type.rng=
-  if r1.FStarC_Range_Type.file_name <> r2.FStarC_Range_Type.file_name
-  then r2
-  else
-    (let start_pos =
-       FStarC_Class_Ord.max ord_pos r1.FStarC_Range_Type.start_pos
-         r2.FStarC_Range_Type.start_pos in
-     let end_pos =
-       FStarC_Class_Ord.min ord_pos r1.FStarC_Range_Type.end_pos
-         r2.FStarC_Range_Type.end_pos in
-     let uu___ =
-       FStarC_Class_Ord.op_Greater_Equals_Question ord_pos start_pos end_pos in
-     if uu___
-     then r2
-     else
-       FStarC_Range_Type.mk_rng r1.FStarC_Range_Type.file_name start_pos
-         end_pos)
-let intersect_ranges (r1 : FStarC_Range_Type.range)
-  (r2 : FStarC_Range_Type.range) : FStarC_Range_Type.range=
-  let uu___ =
-    intersect_rng r1.FStarC_Range_Type.def_range
-      r2.FStarC_Range_Type.def_range in
-  let uu___1 =
-    intersect_rng r1.FStarC_Range_Type.use_range
-      r2.FStarC_Range_Type.use_range in
-  { FStarC_Range_Type.def_range = uu___; FStarC_Range_Type.use_range = uu___1
-  }
-let bound_range (r : FStarC_Range_Type.range)
-  (bound : FStarC_Range_Type.range) : FStarC_Range_Type.range=
-  intersect_ranges r bound
-let showable_range : FStarC_Range_Type.range FStarC_Class_Show.showable=
-  { FStarC_Class_Show.show = string_of_range }
-let pretty_range : FStarC_Range_Type.range FStarC_Class_PP.pretty=
-  {
-    FStarC_Class_PP.pp =
-      (fun r ->
-         let uu___ = string_of_range r in FStar_Pprint.doc_of_string uu___)
-  }
-let refind_rng (r : FStarC_Range_Type.rng) : FStarC_Range_Type.rng=
-  let uu___ =
-    let uu___1 = FStarC_Options_Ext.enabled "fstar:no_absolute_paths" in
-    if uu___1
-    then r.FStarC_Range_Type.file_name
-    else FStarC_Find.refind_file r.FStarC_Range_Type.file_name in
-  {
-    FStarC_Range_Type.file_name = uu___;
-    FStarC_Range_Type.start_pos = (r.FStarC_Range_Type.start_pos);
-    FStarC_Range_Type.end_pos = (r.FStarC_Range_Type.end_pos)
-  }
-let refind_range (r : FStarC_Range_Type.range) : FStarC_Range_Type.range=
-  let uu___ = refind_rng r.FStarC_Range_Type.def_range in
-  let uu___1 = refind_rng r.FStarC_Range_Type.use_range in
-  { FStarC_Range_Type.def_range = uu___; FStarC_Range_Type.use_range = uu___1
-  }
+(* Generated by F* Custard extraction. Do not edit. *)
+[@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
+
+let compare_pos (p1 : Prims.int) (j : Prims.int) : FStarC_Order.order =
+  (FStarC_Class_Ord.fStarC_Class_Ord_cmp__int_1 p1 j)
+
+let fStarC_Class_Ord_cmp__int (tmp : Prims.int) (j : Prims.int) : FStarC_Order.order =
+  (compare_pos tmp j)
+
+let fStarC_Class_Ord_op_Greater_Equals_Question__int (x : Prims.int) (y : Prims.int) : bool =
+  (let tmp = (fStarC_Class_Ord_cmp__int x y) in
+  ((<>) tmp FStarC_Order.Lt))
+
+let fStarC_Class_Ord_max__int (x : Prims.int) (y : Prims.int) : Prims.int =
+  (let tmp = (fStarC_Class_Ord_op_Greater_Equals_Question__int x y) in
+  (if tmp then x else y))
+
+let fStarC_Class_Ord_op_Less_Equals_Question__int (x : Prims.int) (y : Prims.int) : bool =
+  (let tmp = (fStarC_Class_Ord_cmp__int x y) in
+  ((<>) tmp FStarC_Order.Gt))
+
+let fStarC_Class_Ord_min__int (x : Prims.int) (y : Prims.int) : Prims.int =
+  (let tmp = (fStarC_Class_Ord_op_Less_Equals_Question__int x y) in
+  (if tmp then x else y))
+
+let intersect_rng (r1 : FStarC_Range_Type.rng) (r2 : FStarC_Range_Type.rng) : FStarC_Range_Type.rng =
+  (if ((<>) (r1).FStarC_Range_Type.file_name (r2).FStarC_Range_Type.file_name) then r2 else (let start_pos = (fStarC_Class_Ord_max__int (r1).FStarC_Range_Type.start_pos (r2).FStarC_Range_Type.start_pos) in
+  let end_pos = (fStarC_Class_Ord_min__int (r1).FStarC_Range_Type.end_pos (r2).FStarC_Range_Type.end_pos) in
+  let tmp = (fStarC_Class_Ord_op_Greater_Equals_Question__int start_pos end_pos) in
+  (if tmp then r2 else (FStarC_Range_Type.mk_rng (r1).FStarC_Range_Type.file_name start_pos end_pos))))
+
+let intersect_ranges (r1 : FStarC_Range_Type.range) (r2 : FStarC_Range_Type.range) : FStarC_Range_Type.range =
+  (let tmp = (intersect_rng (r1).FStarC_Range_Type.def_range (r2).FStarC_Range_Type.def_range) in
+  let tmp1 = (intersect_rng (r1).FStarC_Range_Type.use_range (r2).FStarC_Range_Type.use_range) in
+  { FStarC_Range_Type.def_range = tmp; use_range = tmp1 })
+
+let bound_range (r : FStarC_Range_Type.range) (r2 : FStarC_Range_Type.range) : FStarC_Range_Type.range =
+  (intersect_ranges r r2)
+
+let rng_included (r1 : FStarC_Range_Type.rng) (r2 : FStarC_Range_Type.rng) : bool =
+  (if ((<>) (r1).FStarC_Range_Type.file_name (r2).FStarC_Range_Type.file_name) then false else (let tmp = (fStarC_Class_Ord_op_Less_Equals_Question__int (r2).FStarC_Range_Type.start_pos (r1).FStarC_Range_Type.start_pos) in
+  (if tmp then (fStarC_Class_Ord_op_Greater_Equals_Question__int (r2).FStarC_Range_Type.end_pos (r1).FStarC_Range_Type.end_pos) else false)))
+
+let end_of_range (r : FStarC_Range_Type.range) : Prims.int =
+  ((r).FStarC_Range_Type.def_range).FStarC_Range_Type.end_pos
+
+let range_before_pos (m1 : FStarC_Range_Type.range) (p : Prims.int) : bool =
+  (fStarC_Class_Ord_op_Greater_Equals_Question__int p (end_of_range m1))
+
+let end_of_line (p : Prims.int) : Prims.int =
+  (FStarC_Range_Type.mk_pos (FStarC_Range_Type.pos_line p) (Prims.op_Minus FStarC_Range_Type.col_limit (Prims.parse_int "1")))
+
+let start_of_range (r : FStarC_Range_Type.range) : Prims.int =
+  ((r).FStarC_Range_Type.def_range).FStarC_Range_Type.start_pos
+
+let string_of_pos (pos : Prims.int) : string =
+  (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int (FStarC_Range_Type.pos_line pos)) in
+  let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int (FStarC_Range_Type.pos_col pos)) in
+  (FStarC_Format.fmt2 "%s,%s" tmp tmp1))
+
+let string_of_rng (r : FStarC_Range_Type.rng) : string =
+  (let tmp = (string_of_pos (r).FStarC_Range_Type.start_pos) in
+  let tmp1 = (string_of_pos (r).FStarC_Range_Type.end_pos) in
+  (FStarC_Format.fmt3 "%s(%s-%s)" (r).FStarC_Range_Type.file_name tmp tmp1))
+
+let string_of_def_range (r : FStarC_Range_Type.range) : string =
+  (string_of_rng (r).FStarC_Range_Type.def_range)
+
+let string_of_range (r : FStarC_Range_Type.range) : string =
+  (string_of_def_range r)
+
+let refind_rng (r : FStarC_Range_Type.rng) : FStarC_Range_Type.rng =
+  (let tmp = (FStarC_Options_Ext.enabled "fstar:no_absolute_paths") in
+  let tmp1 = (if tmp then (r).FStarC_Range_Type.file_name else (FStarC_Find.refind_file (r).FStarC_Range_Type.file_name)) in
+  { FStarC_Range_Type.file_name = tmp1;
+    start_pos = (r).FStarC_Range_Type.start_pos;
+    end_pos = (r).FStarC_Range_Type.end_pos })
+
+let refind_range (r : FStarC_Range_Type.range) : FStarC_Range_Type.range =
+  (let tmp = (refind_rng (r).FStarC_Range_Type.def_range) in
+  let tmp1 = (refind_rng (r).FStarC_Range_Type.use_range) in
+  { FStarC_Range_Type.def_range = tmp; use_range = tmp1 })
+
+let string_of_use_range (r : FStarC_Range_Type.range) : string =
+  (string_of_rng (r).FStarC_Range_Type.use_range)
+
+let line_of_pos (p : Prims.int) : Prims.int =
+  (FStarC_Range_Type.pos_line p)
+
+let file_of_range (r : FStarC_Range_Type.range) : string =
+  ((r).FStarC_Range_Type.def_range).FStarC_Range_Type.file_name
+
+let fStarC_Class_Show_show__range (tmp : FStarC_Range_Type.range) : string =
+  (string_of_range tmp)
+
+let col_of_pos (p : Prims.int) : Prims.int =
+  (FStarC_Range_Type.pos_col p)
+
+let union_rng (r1 : FStarC_Range_Type.rng) (r2 : FStarC_Range_Type.rng) : FStarC_Range_Type.rng =
+  (if ((<>) (r1).FStarC_Range_Type.file_name (r2).FStarC_Range_Type.file_name) then r2 else (let start_pos = (fStarC_Class_Ord_min__int (r1).FStarC_Range_Type.start_pos (r2).FStarC_Range_Type.start_pos) in
+  let end_pos = (fStarC_Class_Ord_max__int (r1).FStarC_Range_Type.end_pos (r2).FStarC_Range_Type.end_pos) in
+  (FStarC_Range_Type.mk_rng (r1).FStarC_Range_Type.file_name start_pos end_pos)))
+
+let union_ranges (r1 : FStarC_Range_Type.range) (r2 : FStarC_Range_Type.range) : FStarC_Range_Type.range =
+  (let tmp = (union_rng (r1).FStarC_Range_Type.def_range (r2).FStarC_Range_Type.def_range) in
+  let tmp1 = (union_rng (r1).FStarC_Range_Type.use_range (r2).FStarC_Range_Type.use_range) in
+  { FStarC_Range_Type.def_range = tmp; use_range = tmp1 })
+
+let fStarC_Class_PP_pp__range (tmp : FStarC_Range_Type.range) : FStar_Pprint.document =
+  (let tmp1 = (string_of_range tmp) in
+  (FStar_Pprint.doc_of_string tmp1))
+
+let json_of_pos (pos : Prims.int) : FStarC_Json.json =
+  (FStarC_Json.JsonList (((FStarC_Json.JsonInt ((line_of_pos pos))) :: ((FStarC_Json.JsonInt ((col_of_pos pos))) :: []))))
+
+let json_of_range_fields (file : string) (b : Prims.int) (e : Prims.int) : FStarC_Json.json =
+  (FStarC_Json.JsonAssoc ((("fname", (FStarC_Json.JsonStr (file))) :: (("beg", (json_of_pos b)) :: (("end", (json_of_pos e)) :: [])))))
+
+let json_of_def_range (r : FStarC_Range_Type.range) : FStarC_Json.json =
+  (json_of_range_fields (file_of_range r) (start_of_range r) (end_of_range r))
+
+let compare_rng (r1 : FStarC_Range_Type.rng) (r2 : FStarC_Range_Type.rng) : Prims.int =
+  (let fcomp = (FStar_String.compare (r1).FStarC_Range_Type.file_name (r2).FStarC_Range_Type.file_name) in
+  (if ((=) fcomp (Prims.parse_int "0")) then (Prims.op_Minus (r1).FStarC_Range_Type.start_pos (r2).FStarC_Range_Type.start_pos) else fcomp))
+
+let compare (r1 : FStarC_Range_Type.range) (r2 : FStarC_Range_Type.range) : Prims.int =
+  (compare_rng (r1).FStarC_Range_Type.def_range (r2).FStarC_Range_Type.def_range)
+
+let end_range (r : FStarC_Range_Type.range) : FStarC_Range_Type.range =
+  (FStarC_Range_Type.mk_range ((r).FStarC_Range_Type.def_range).FStarC_Range_Type.file_name ((r).FStarC_Range_Type.def_range).FStarC_Range_Type.end_pos ((r).FStarC_Range_Type.def_range).FStarC_Range_Type.end_pos)
+
+let set_file_of_range (r : FStarC_Range_Type.range) (f : string) : FStarC_Range_Type.range =
+  { FStarC_Range_Type.def_range = (let tmp = (r).FStarC_Range_Type.def_range in
+    { FStarC_Range_Type.file_name = (FStarC_Filepath.basename f);
+      start_pos = (tmp).FStarC_Range_Type.start_pos;
+      end_pos = (tmp).FStarC_Range_Type.end_pos });
+    use_range = (r).FStarC_Range_Type.use_range }
+
+let extend_to_end_of_line (r : FStarC_Range_Type.range) : FStarC_Range_Type.range =
+  (FStarC_Range_Type.mk_range (file_of_range r) (start_of_range r) (end_of_line (end_of_range r)))
+
+let file_of_use_range (r : FStarC_Range_Type.range) : string =
+  ((r).FStarC_Range_Type.use_range).FStarC_Range_Type.file_name
+
+let start_of_use_range (r : FStarC_Range_Type.range) : Prims.int =
+  ((r).FStarC_Range_Type.use_range).FStarC_Range_Type.start_pos
+
+let end_of_use_range (r : FStarC_Range_Type.range) : Prims.int =
+  ((r).FStarC_Range_Type.use_range).FStarC_Range_Type.end_pos
+
+let json_of_use_range (r : FStarC_Range_Type.range) : FStarC_Json.json =
+  (json_of_range_fields (file_of_use_range r) (start_of_use_range r) (end_of_use_range r))
+

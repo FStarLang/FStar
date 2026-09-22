@@ -1,2400 +1,1158 @@
-open Prims
-type namedv = FStarC_Reflection_V2_Data.namedv_view
-type bv = FStarC_Reflection_V2_Data.bv_view
-type comp = FStarC_Reflection_V2_Data.comp_view
-type binding = FStarC_Reflection_V2_Data.binding
-type term = FStarC_Reflection_Types.term
-type universe = FStarC_Reflection_Types.universe
-type binder =
-  {
-  uniq: Prims.nat ;
-  ppname: FStarC_Reflection_V2_Data.ppname_t ;
-  sort: FStarC_Reflection_Types.typ ;
-  qual: FStarC_Reflection_V2_Data.aqualv ;
-  attrs: term Prims.list }
-let rec __knot_e_binder _ =
-  FStarC_Syntax_Embeddings_Base.mk_extracted_embedding
-    "FStar.Tactics.NamedView.binder"
-    (fun tm_0 ->
-       match tm_0 with
-       | ("FStar.Tactics.NamedView.Mkbinder",
-          uniq_2::ppname_3::sort_4::qual_5::attrs_6::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                FStarC_Syntax_Embeddings.e_int uniq_2)
-             (fun uniq_2 ->
-                FStarC_Option.bind
-                  (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                     (FStarC_Syntax_Embeddings.e_sealed
-                        FStarC_Syntax_Embeddings.e_string) ppname_3)
-                  (fun ppname_3 ->
-                     FStarC_Option.bind
-                       (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                          FStarC_Reflection_V2_Embeddings.e_term sort_4)
-                       (fun sort_4 ->
-                          FStarC_Option.bind
-                            (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                               FStarC_Reflection_V2_Embeddings.e_aqualv
-                               qual_5)
-                            (fun qual_5 ->
-                               FStarC_Option.bind
-                                 (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                                    (FStarC_Syntax_Embeddings.e_list
-                                       FStarC_Reflection_V2_Embeddings.e_term)
-                                    attrs_6)
-                                 (fun attrs_6 ->
-                                    FStar_Pervasives_Native.Some
-                                      {
-                                        uniq = uniq_2;
-                                        ppname = ppname_3;
-                                        sort = sort_4;
-                                        qual = qual_5;
-                                        attrs = attrs_6
-                                      })))))
-       | _ -> FStar_Pervasives_Native.None)
-    (fun tm_7 ->
-       match tm_7 with
-       | { uniq = uniq_9; ppname = ppname_10; sort = sort_11; qual = qual_12;
-           attrs = attrs_13;_} ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Mkbinder"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  FStarC_Syntax_Embeddings.e_int uniq_9),
-                FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 (FStarC_Syntax_Embeddings.e_sealed
-                    FStarC_Syntax_Embeddings.e_string) ppname_10),
-               FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 FStarC_Reflection_V2_Embeddings.e_term sort_11),
-               FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 FStarC_Reflection_V2_Embeddings.e_aqualv qual_12),
-               FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 (FStarC_Syntax_Embeddings.e_list
-                    FStarC_Reflection_V2_Embeddings.e_term) attrs_13),
-               FStar_Pervasives_Native.None)])
-let e_binder = __knot_e_binder ()
-let __proj__Mkbinder__item__uniq (projectee : binder) : Prims.nat=
-  match projectee with | { uniq; ppname; sort; qual; attrs;_} -> uniq
-let __proj__Mkbinder__item__ppname (projectee : binder) :
-  FStarC_Reflection_V2_Data.ppname_t=
-  match projectee with | { uniq; ppname; sort; qual; attrs;_} -> ppname
-let __proj__Mkbinder__item__sort (projectee : binder) :
-  FStarC_Reflection_Types.typ=
-  match projectee with | { uniq; ppname; sort; qual; attrs;_} -> sort
-let __proj__Mkbinder__item__qual (projectee : binder) :
-  FStarC_Reflection_V2_Data.aqualv=
-  match projectee with | { uniq; ppname; sort; qual; attrs;_} -> qual
-let __proj__Mkbinder__item__attrs (projectee : binder) : term Prims.list=
-  match projectee with | { uniq; ppname; sort; qual; attrs;_} -> attrs
-type binders = binder Prims.list
-type simple_binder = binder
-type univ_name = (Prims.string * FStar_Range.range)
-type named_universe_view =
-  | Uv_Zero 
-  | Uv_Succ of universe 
-  | Uv_Max of FStarC_Reflection_V2_Data.universes 
-  | Uv_BVar of Prims.nat 
-  | Uv_Name of univ_name 
-  | Uv_Unif of FStarC_Reflection_Types.universe_uvar 
-  | Uv_Unk 
-let rec __knot_e_named_universe_view _ =
-  FStarC_Syntax_Embeddings_Base.mk_extracted_embedding
-    "FStar.Tactics.NamedView.named_universe_view"
-    (fun tm_14 ->
-       match tm_14 with
-       | ("FStar.Tactics.NamedView.Uv_Zero", []) ->
-           FStar_Pervasives_Native.Some Uv_Zero
-       | ("FStar.Tactics.NamedView.Uv_Succ", _0_17::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                FStarC_Reflection_V2_Embeddings.e_universe _0_17)
-             (fun _0_17 -> FStar_Pervasives_Native.Some (Uv_Succ _0_17))
-       | ("FStar.Tactics.NamedView.Uv_Max", _0_19::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                (FStarC_Syntax_Embeddings.e_list
-                   FStarC_Reflection_V2_Embeddings.e_universe) _0_19)
-             (fun _0_19 -> FStar_Pervasives_Native.Some (Uv_Max _0_19))
-       | ("FStar.Tactics.NamedView.Uv_BVar", _0_21::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                FStarC_Syntax_Embeddings.e_int _0_21)
-             (fun _0_21 -> FStar_Pervasives_Native.Some (Uv_BVar _0_21))
-       | ("FStar.Tactics.NamedView.Uv_Name", _0_23::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                (FStarC_Syntax_Embeddings.e_tuple2
-                   FStarC_Syntax_Embeddings.e_string
-                   FStarC_Syntax_Embeddings.e_range) _0_23)
-             (fun _0_23 -> FStar_Pervasives_Native.Some (Uv_Name _0_23))
-       | ("FStar.Tactics.NamedView.Uv_Unif", _0_25::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                FStarC_Reflection_V2_Embeddings.e_universe_uvar _0_25)
-             (fun _0_25 -> FStar_Pervasives_Native.Some (Uv_Unif _0_25))
-       | ("FStar.Tactics.NamedView.Uv_Unk", []) ->
-           FStar_Pervasives_Native.Some Uv_Unk
-       | _ -> FStar_Pervasives_Native.None)
-    (fun tm_27 ->
-       match tm_27 with
-       | Uv_Zero ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Uv_Zero"))
-             []
-       | Uv_Succ _0_30 ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Uv_Succ"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  FStarC_Reflection_V2_Embeddings.e_universe _0_30),
-                FStar_Pervasives_Native.None)]
-       | Uv_Max _0_32 ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Uv_Max"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  (FStarC_Syntax_Embeddings.e_list
-                     FStarC_Reflection_V2_Embeddings.e_universe) _0_32),
-                FStar_Pervasives_Native.None)]
-       | Uv_BVar _0_34 ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Uv_BVar"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  FStarC_Syntax_Embeddings.e_int _0_34),
-                FStar_Pervasives_Native.None)]
-       | Uv_Name _0_36 ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Uv_Name"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  (FStarC_Syntax_Embeddings.e_tuple2
-                     FStarC_Syntax_Embeddings.e_string
-                     FStarC_Syntax_Embeddings.e_range) _0_36),
-                FStar_Pervasives_Native.None)]
-       | Uv_Unif _0_38 ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Uv_Unif"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  FStarC_Reflection_V2_Embeddings.e_universe_uvar _0_38),
-                FStar_Pervasives_Native.None)]
-       | Uv_Unk ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Uv_Unk"))
-             [])
-let e_named_universe_view = __knot_e_named_universe_view ()
-let uu___is_Uv_Zero (projectee : named_universe_view) : Prims.bool=
-  match projectee with | Uv_Zero -> true | uu___ -> false
-let uu___is_Uv_Succ (projectee : named_universe_view) : Prims.bool=
-  match projectee with | Uv_Succ _0 -> true | uu___ -> false
-let __proj__Uv_Succ__item___0 (projectee : named_universe_view) : universe=
-  match projectee with | Uv_Succ _0 -> _0
-let uu___is_Uv_Max (projectee : named_universe_view) : Prims.bool=
-  match projectee with | Uv_Max _0 -> true | uu___ -> false
-let __proj__Uv_Max__item___0 (projectee : named_universe_view) :
-  FStarC_Reflection_V2_Data.universes= match projectee with | Uv_Max _0 -> _0
-let uu___is_Uv_BVar (projectee : named_universe_view) : Prims.bool=
-  match projectee with | Uv_BVar _0 -> true | uu___ -> false
-let __proj__Uv_BVar__item___0 (projectee : named_universe_view) : Prims.nat=
-  match projectee with | Uv_BVar _0 -> _0
-let uu___is_Uv_Name (projectee : named_universe_view) : Prims.bool=
-  match projectee with | Uv_Name _0 -> true | uu___ -> false
-let __proj__Uv_Name__item___0 (projectee : named_universe_view) : univ_name=
-  match projectee with | Uv_Name _0 -> _0
-let uu___is_Uv_Unif (projectee : named_universe_view) : Prims.bool=
-  match projectee with | Uv_Unif _0 -> true | uu___ -> false
-let __proj__Uv_Unif__item___0 (projectee : named_universe_view) :
-  FStarC_Reflection_Types.universe_uvar=
-  match projectee with | Uv_Unif _0 -> _0
-let uu___is_Uv_Unk (projectee : named_universe_view) : Prims.bool=
-  match projectee with | Uv_Unk -> true | uu___ -> false
-type pattern__Pat_Constant__payload = {
-  c: FStarC_Reflection_V2_Data.vconst }
-and pattern__Pat_Cons__payload =
-  {
-  head: FStarC_Reflection_Types.fv ;
-  univs: FStarC_Reflection_V2_Data.universes FStar_Pervasives_Native.option ;
-  subpats: (pattern * Prims.bool) Prims.list }
-and pattern__Pat_Var__payload =
-  {
-  v: namedv ;
-  sort1: FStarC_Reflection_Types.typ FStar_Sealed.sealed }
-and pattern__Pat_Dot_Term__payload =
-  {
-  t: term FStar_Pervasives_Native.option }
+(* Generated by F* Custard extraction. Do not edit. *)
+[@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
+
+type binder = {
+  uniq : Prims.int;
+  ppname : string;
+  sort : FStarC_Reflection_Types.typ;
+  qual : FStarC_Reflection_V2_Data.aqualv;
+  attrs : (FStarC_Reflection_Types.term) list;
+}
+
+let u___knot_e_binder (u__thunk : unit) : (binder) FStarC_Syntax_Embeddings_Base.embedding =
+  (FStarC_Syntax_Embeddings_Base.mk_extracted_embedding "FStar.Tactics.NamedView.binder" (fun tmp -> (match tmp with
+    | ("FStar.Tactics.NamedView.Mkbinder", (tmp1 :: (tmp2 :: (tmp3 :: (tmp4 :: (tmp5 :: [])))))) -> (let tmp6 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Syntax_Embeddings.e_int tmp1) in
+      (FStarC_Option.bind tmp6 (fun tmp7 -> (let tmp8 = (FStarC_Syntax_Embeddings_Base.extracted_unembed (FStarC_Syntax_Embeddings.e_sealed FStarC_Syntax_Embeddings.e_string) tmp2) in
+      (FStarC_Option.bind tmp8 (fun tmp9 -> (let tmp10 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp3) in
+      (FStarC_Option.bind tmp10 (fun tmp11 -> (let tmp12 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_aqualv tmp4) in
+      (FStarC_Option.bind tmp12 (fun tmp13 -> (let tmp14 = (FStarC_Syntax_Embeddings_Base.extracted_unembed (FStarC_Syntax_Embeddings.e_list FStarC_Reflection_V2_Embeddings.e_term) tmp5) in
+      (FStarC_Option.bind tmp14 (fun tmp15 -> (Some (({ uniq = tmp7; ppname = tmp9; sort = tmp11; qual = tmp13; attrs = tmp15 } : binder))))))))))))))))))
+    | tmp1 -> None
+  )) (fun tmp -> (let tmp1 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Mkbinder") in
+  let tmp2 = (FStarC_Syntax_Syntax.tdataconstr tmp1) in
+  (FStarC_Syntax_Util.mk_app tmp2 (let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Syntax_Embeddings.e_int (tmp).uniq) in
+  let tmp4 = (FStarC_Syntax_Syntax.as_arg tmp3) in
+  (tmp4 :: (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_embed (FStarC_Syntax_Embeddings.e_sealed FStarC_Syntax_Embeddings.e_string) (tmp).ppname) in
+  let tmp6 = (FStarC_Syntax_Syntax.as_arg tmp5) in
+  (tmp6 :: (let tmp7 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_term ((tmp : binder)).sort) in
+  let tmp8 = (FStarC_Syntax_Syntax.as_arg tmp7) in
+  (tmp8 :: (let tmp9 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_aqualv (tmp).qual) in
+  let tmp10 = (FStarC_Syntax_Syntax.as_arg tmp9) in
+  (tmp10 :: (let tmp11 = (FStarC_Syntax_Embeddings_Base.extracted_embed (FStarC_Syntax_Embeddings.e_list FStarC_Reflection_V2_Embeddings.e_term) (tmp).attrs) in
+  let tmp12 = (FStarC_Syntax_Syntax.as_arg tmp11) in
+  (tmp12 :: []))))))))))))))
+
+let e_binder : (binder) FStarC_Syntax_Embeddings_Base.embedding =
+  (u___knot_e_binder ())
+
+type pattern__Pat_Var__payload = {
+  v : FStarC_Reflection_V2_Data.namedv_view;
+  sort : (FStarC_Reflection_Types.typ) FStar_Sealed.sealed;
+}
+
+type pattern__Pat_Cons__payload = {
+  head : FStarC_Reflection_Types.fv;
+  univs : ((FStarC_Syntax_Syntax.universe) list) option;
+  subpats : ((pattern * bool)) list;
+}
+
 and pattern =
-  | Pat_Constant of pattern__Pat_Constant__payload 
-  | Pat_Cons of pattern__Pat_Cons__payload 
-  | Pat_Var of pattern__Pat_Var__payload 
-  | Pat_Dot_Term of pattern__Pat_Dot_Term__payload 
-let rec __knot_e_pattern__Pat_Constant__payload _ =
-  FStarC_Syntax_Embeddings_Base.mk_extracted_embedding
-    "FStar.Tactics.NamedView.pattern__Pat_Constant__payload"
-    (fun tm_40 ->
-       match tm_40 with
-       | ("FStar.Tactics.NamedView.Mkpattern__Pat_Constant__payload",
-          c_42::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                FStarC_Reflection_V2_Embeddings.e_vconst c_42)
-             (fun c_42 -> FStar_Pervasives_Native.Some { c = c_42 })
-       | _ -> FStar_Pervasives_Native.None)
-    (fun tm_43 ->
-       match tm_43 with
-       | { c = c_45;_} ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str
-                   "FStar.Tactics.NamedView.Mkpattern__Pat_Constant__payload"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  FStarC_Reflection_V2_Embeddings.e_vconst c_45),
-                FStar_Pervasives_Native.None)])
-and __knot_e_pattern__Pat_Cons__payload _ =
-  FStarC_Syntax_Embeddings_Base.mk_extracted_embedding
-    "FStar.Tactics.NamedView.pattern__Pat_Cons__payload"
-    (fun tm_46 ->
-       match tm_46 with
-       | ("FStar.Tactics.NamedView.Mkpattern__Pat_Cons__payload",
-          head_48::univs_49::subpats_50::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                FStarC_Reflection_V2_Embeddings.e_fv head_48)
-             (fun head_48 ->
-                FStarC_Option.bind
-                  (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                     (FStarC_Syntax_Embeddings.e_option
-                        (FStarC_Syntax_Embeddings.e_list
-                           FStarC_Reflection_V2_Embeddings.e_universe))
-                     univs_49)
-                  (fun univs_49 ->
-                     FStarC_Option.bind
-                       (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                          (FStarC_Syntax_Embeddings.e_list
-                             (FStarC_Syntax_Embeddings.e_tuple2
-                                (__knot_e_pattern ())
-                                FStarC_Syntax_Embeddings.e_bool)) subpats_50)
-                       (fun subpats_50 ->
-                          FStar_Pervasives_Native.Some
-                            {
-                              head = head_48;
-                              univs = univs_49;
-                              subpats = subpats_50
-                            })))
-       | _ -> FStar_Pervasives_Native.None)
-    (fun tm_51 ->
-       match tm_51 with
-       | { head = head_53; univs = univs_54; subpats = subpats_55;_} ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str
-                   "FStar.Tactics.NamedView.Mkpattern__Pat_Cons__payload"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  FStarC_Reflection_V2_Embeddings.e_fv head_53),
-                FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 (FStarC_Syntax_Embeddings.e_option
-                    (FStarC_Syntax_Embeddings.e_list
-                       FStarC_Reflection_V2_Embeddings.e_universe)) univs_54),
-               FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 (FStarC_Syntax_Embeddings.e_list
-                    (FStarC_Syntax_Embeddings.e_tuple2 (__knot_e_pattern ())
-                       FStarC_Syntax_Embeddings.e_bool)) subpats_55),
-               FStar_Pervasives_Native.None)])
-and __knot_e_pattern__Pat_Var__payload _ =
-  FStarC_Syntax_Embeddings_Base.mk_extracted_embedding
-    "FStar.Tactics.NamedView.pattern__Pat_Var__payload"
-    (fun tm_56 ->
-       match tm_56 with
-       | ("FStar.Tactics.NamedView.Mkpattern__Pat_Var__payload",
-          v_58::sort_59::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                FStarC_Reflection_V2_Embeddings.e_namedv_view v_58)
-             (fun v_58 ->
-                FStarC_Option.bind
-                  (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                     (FStarC_Syntax_Embeddings.e_sealed
-                        FStarC_Reflection_V2_Embeddings.e_term) sort_59)
-                  (fun sort_59 ->
-                     FStar_Pervasives_Native.Some
-                       { v = v_58; sort1 = sort_59 }))
-       | _ -> FStar_Pervasives_Native.None)
-    (fun tm_60 ->
-       match tm_60 with
-       | { v = v_62; sort1 = sort_63;_} ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str
-                   "FStar.Tactics.NamedView.Mkpattern__Pat_Var__payload"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  FStarC_Reflection_V2_Embeddings.e_namedv_view v_62),
-                FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 (FStarC_Syntax_Embeddings.e_sealed
-                    FStarC_Reflection_V2_Embeddings.e_term) sort_63),
-               FStar_Pervasives_Native.None)])
-and __knot_e_pattern__Pat_Dot_Term__payload _ =
-  FStarC_Syntax_Embeddings_Base.mk_extracted_embedding
-    "FStar.Tactics.NamedView.pattern__Pat_Dot_Term__payload"
-    (fun tm_64 ->
-       match tm_64 with
-       | ("FStar.Tactics.NamedView.Mkpattern__Pat_Dot_Term__payload",
-          t_66::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                (FStarC_Syntax_Embeddings.e_option
-                   FStarC_Reflection_V2_Embeddings.e_term) t_66)
-             (fun t_66 -> FStar_Pervasives_Native.Some { t = t_66 })
-       | _ -> FStar_Pervasives_Native.None)
-    (fun tm_67 ->
-       match tm_67 with
-       | { t = t_69;_} ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str
-                   "FStar.Tactics.NamedView.Mkpattern__Pat_Dot_Term__payload"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  (FStarC_Syntax_Embeddings.e_option
-                     FStarC_Reflection_V2_Embeddings.e_term) t_69),
-                FStar_Pervasives_Native.None)])
-and __knot_e_pattern _ =
-  FStarC_Syntax_Embeddings_Base.mk_extracted_embedding
-    "FStar.Tactics.NamedView.pattern"
-    (fun tm_70 ->
-       match tm_70 with
-       | ("FStar.Tactics.NamedView.Pat_Constant", _0_72::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                (__knot_e_pattern__Pat_Constant__payload ()) _0_72)
-             (fun _0_72 -> FStar_Pervasives_Native.Some (Pat_Constant _0_72))
-       | ("FStar.Tactics.NamedView.Pat_Cons", _0_74::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                (__knot_e_pattern__Pat_Cons__payload ()) _0_74)
-             (fun _0_74 -> FStar_Pervasives_Native.Some (Pat_Cons _0_74))
-       | ("FStar.Tactics.NamedView.Pat_Var", _0_76::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                (__knot_e_pattern__Pat_Var__payload ()) _0_76)
-             (fun _0_76 -> FStar_Pervasives_Native.Some (Pat_Var _0_76))
-       | ("FStar.Tactics.NamedView.Pat_Dot_Term", _0_78::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                (__knot_e_pattern__Pat_Dot_Term__payload ()) _0_78)
-             (fun _0_78 -> FStar_Pervasives_Native.Some (Pat_Dot_Term _0_78))
-       | _ -> FStar_Pervasives_Native.None)
-    (fun tm_79 ->
-       match tm_79 with
-       | Pat_Constant _0_81 ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str
-                   "FStar.Tactics.NamedView.Pat_Constant"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  (__knot_e_pattern__Pat_Constant__payload ()) _0_81),
-                FStar_Pervasives_Native.None)]
-       | Pat_Cons _0_83 ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Pat_Cons"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  (__knot_e_pattern__Pat_Cons__payload ()) _0_83),
-                FStar_Pervasives_Native.None)]
-       | Pat_Var _0_85 ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Pat_Var"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  (__knot_e_pattern__Pat_Var__payload ()) _0_85),
-                FStar_Pervasives_Native.None)]
-       | Pat_Dot_Term _0_87 ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str
-                   "FStar.Tactics.NamedView.Pat_Dot_Term"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  (__knot_e_pattern__Pat_Dot_Term__payload ()) _0_87),
-                FStar_Pervasives_Native.None)])
-let e_pattern__Pat_Constant__payload =
-  __knot_e_pattern__Pat_Constant__payload ()
-let e_pattern__Pat_Cons__payload = __knot_e_pattern__Pat_Cons__payload ()
-let e_pattern__Pat_Var__payload = __knot_e_pattern__Pat_Var__payload ()
-let e_pattern__Pat_Dot_Term__payload =
-  __knot_e_pattern__Pat_Dot_Term__payload ()
-let e_pattern = __knot_e_pattern ()
-let __proj__Mkpattern__Pat_Constant__payload__item__c
-  (projectee : pattern__Pat_Constant__payload) :
-  FStarC_Reflection_V2_Data.vconst= match projectee with | { c;_} -> c
-let __proj__Mkpattern__Pat_Cons__payload__item__head
-  (projectee : pattern__Pat_Cons__payload) : FStarC_Reflection_Types.fv=
-  match projectee with | { head; univs; subpats;_} -> head
-let __proj__Mkpattern__Pat_Cons__payload__item__univs
-  (projectee : pattern__Pat_Cons__payload) :
-  FStarC_Reflection_V2_Data.universes FStar_Pervasives_Native.option=
-  match projectee with | { head; univs; subpats;_} -> univs
-let __proj__Mkpattern__Pat_Cons__payload__item__subpats
-  (projectee : pattern__Pat_Cons__payload) :
-  (pattern * Prims.bool) Prims.list=
-  match projectee with | { head; univs; subpats;_} -> subpats
-let __proj__Mkpattern__Pat_Var__payload__item__v
-  (projectee : pattern__Pat_Var__payload) : namedv=
-  match projectee with | { v; sort1 = sort;_} -> v
-let __proj__Mkpattern__Pat_Var__payload__item__sort
-  (projectee : pattern__Pat_Var__payload) :
-  FStarC_Reflection_Types.typ FStar_Sealed.sealed=
-  match projectee with | { v; sort1 = sort;_} -> sort
-let __proj__Mkpattern__Pat_Dot_Term__payload__item__t
-  (projectee : pattern__Pat_Dot_Term__payload) :
-  term FStar_Pervasives_Native.option= match projectee with | { t;_} -> t
-let uu___is_Pat_Constant (projectee : pattern) : Prims.bool=
-  match projectee with | Pat_Constant _0 -> true | uu___ -> false
-let __proj__Pat_Constant__item___0 (projectee : pattern) :
-  pattern__Pat_Constant__payload=
-  match projectee with | Pat_Constant _0 -> _0
-let uu___is_Pat_Cons (projectee : pattern) : Prims.bool=
-  match projectee with | Pat_Cons _0 -> true | uu___ -> false
-let __proj__Pat_Cons__item___0 (projectee : pattern) :
-  pattern__Pat_Cons__payload= match projectee with | Pat_Cons _0 -> _0
-let uu___is_Pat_Var (projectee : pattern) : Prims.bool=
-  match projectee with | Pat_Var _0 -> true | uu___ -> false
-let __proj__Pat_Var__item___0 (projectee : pattern) :
-  pattern__Pat_Var__payload= match projectee with | Pat_Var _0 -> _0
-let uu___is_Pat_Dot_Term (projectee : pattern) : Prims.bool=
-  match projectee with | Pat_Dot_Term _0 -> true | uu___ -> false
-let __proj__Pat_Dot_Term__item___0 (projectee : pattern) :
-  pattern__Pat_Dot_Term__payload=
-  match projectee with | Pat_Dot_Term _0 -> _0
-type branch = (pattern * term)
-type match_returns_ascription =
-  (binder * ((term, comp) FStar_Pervasives.either * term
-    FStar_Pervasives_Native.option * Prims.bool))
+  | Pat_Constant of FStarC_Reflection_V2_Data.vconst
+  | Pat_Cons of pattern__Pat_Cons__payload
+  | Pat_Var of pattern__Pat_Var__payload
+  | Pat_Dot_Term of (FStarC_Reflection_Types.term) option
+
+
 type named_term_view =
-  | Tv_Var of namedv 
-  | Tv_BVar of bv 
-  | Tv_FVar of FStarC_Reflection_Types.fv 
-  | Tv_UInst of FStarC_Reflection_Types.fv *
-  FStarC_Reflection_V2_Data.universes 
-  | Tv_App of term * FStarC_Reflection_V2_Data.argv 
-  | Tv_Abs of binder * term 
-  | Tv_Arrow of binder * comp 
-  | Tv_Type of universe 
-  | Tv_Refine of simple_binder * term 
-  | Tv_Const of FStarC_Reflection_V2_Data.vconst 
-  | Tv_Uvar of Prims.nat * FStarC_Reflection_Types.ctx_uvar_and_subst 
-  | Tv_Let of Prims.bool * term Prims.list * simple_binder * term * term 
-  | Tv_Match of term * match_returns_ascription
-  FStar_Pervasives_Native.option * branch Prims.list 
-  | Tv_AscribedT of term * term * term FStar_Pervasives_Native.option *
-  Prims.bool 
-  | Tv_AscribedC of term * comp * term FStar_Pervasives_Native.option *
-  Prims.bool 
-  | Tv_Unknown 
-  | Tv_Unsupp 
-let rec __knot_e_named_term_view _ =
-  FStarC_Syntax_Embeddings_Base.mk_extracted_embedding
-    "FStar.Tactics.NamedView.named_term_view"
-    (fun tm_88 ->
-       match tm_88 with
-       | ("FStar.Tactics.NamedView.Tv_Var", v_90::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                FStarC_Reflection_V2_Embeddings.e_namedv_view v_90)
-             (fun v_90 -> FStar_Pervasives_Native.Some (Tv_Var v_90))
-       | ("FStar.Tactics.NamedView.Tv_BVar", v_92::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                FStarC_Reflection_V2_Embeddings.e_bv_view v_92)
-             (fun v_92 -> FStar_Pervasives_Native.Some (Tv_BVar v_92))
-       | ("FStar.Tactics.NamedView.Tv_FVar", v_94::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                FStarC_Reflection_V2_Embeddings.e_fv v_94)
-             (fun v_94 -> FStar_Pervasives_Native.Some (Tv_FVar v_94))
-       | ("FStar.Tactics.NamedView.Tv_UInst", v_96::us_97::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                FStarC_Reflection_V2_Embeddings.e_fv v_96)
-             (fun v_96 ->
-                FStarC_Option.bind
-                  (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                     (FStarC_Syntax_Embeddings.e_list
-                        FStarC_Reflection_V2_Embeddings.e_universe) us_97)
-                  (fun us_97 ->
-                     FStar_Pervasives_Native.Some (Tv_UInst (v_96, us_97))))
-       | ("FStar.Tactics.NamedView.Tv_App", hd_99::a_100::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                FStarC_Reflection_V2_Embeddings.e_term hd_99)
-             (fun hd_99 ->
-                FStarC_Option.bind
-                  (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                     (FStarC_Syntax_Embeddings.e_tuple2
-                        FStarC_Reflection_V2_Embeddings.e_term
-                        FStarC_Reflection_V2_Embeddings.e_aqualv) a_100)
-                  (fun a_100 ->
-                     FStar_Pervasives_Native.Some (Tv_App (hd_99, a_100))))
-       | ("FStar.Tactics.NamedView.Tv_Abs", b_102::body_103::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed e_binder b_102)
-             (fun b_102 ->
-                FStarC_Option.bind
-                  (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                     FStarC_Reflection_V2_Embeddings.e_term body_103)
-                  (fun body_103 ->
-                     FStar_Pervasives_Native.Some (Tv_Abs (b_102, body_103))))
-       | ("FStar.Tactics.NamedView.Tv_Arrow", b_105::c_106::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed e_binder b_105)
-             (fun b_105 ->
-                FStarC_Option.bind
-                  (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                     FStarC_Reflection_V2_Embeddings.e_comp_view c_106)
-                  (fun c_106 ->
-                     FStar_Pervasives_Native.Some (Tv_Arrow (b_105, c_106))))
-       | ("FStar.Tactics.NamedView.Tv_Type", _0_108::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                FStarC_Reflection_V2_Embeddings.e_universe _0_108)
-             (fun _0_108 -> FStar_Pervasives_Native.Some (Tv_Type _0_108))
-       | ("FStar.Tactics.NamedView.Tv_Refine", b_110::ref_111::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed e_binder b_110)
-             (fun b_110 ->
-                FStarC_Option.bind
-                  (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                     FStarC_Reflection_V2_Embeddings.e_term ref_111)
-                  (fun ref_111 ->
-                     FStar_Pervasives_Native.Some
-                       (Tv_Refine (b_110, ref_111))))
-       | ("FStar.Tactics.NamedView.Tv_Const", _0_113::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                FStarC_Reflection_V2_Embeddings.e_vconst _0_113)
-             (fun _0_113 -> FStar_Pervasives_Native.Some (Tv_Const _0_113))
-       | ("FStar.Tactics.NamedView.Tv_Uvar", _0_115::_1_116::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                FStarC_Syntax_Embeddings.e_int _0_115)
-             (fun _0_115 ->
-                FStarC_Option.bind
-                  (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                     FStarC_Reflection_V2_Embeddings.e_ctx_uvar_and_subst
-                     _1_116)
-                  (fun _1_116 ->
-                     FStar_Pervasives_Native.Some (Tv_Uvar (_0_115, _1_116))))
-       | ("FStar.Tactics.NamedView.Tv_Let",
-          recf_118::attrs_119::b_120::def_121::body_122::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                FStarC_Syntax_Embeddings.e_bool recf_118)
-             (fun recf_118 ->
-                FStarC_Option.bind
-                  (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                     (FStarC_Syntax_Embeddings.e_list
-                        FStarC_Reflection_V2_Embeddings.e_term) attrs_119)
-                  (fun attrs_119 ->
-                     FStarC_Option.bind
-                       (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                          e_binder b_120)
-                       (fun b_120 ->
-                          FStarC_Option.bind
-                            (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                               FStarC_Reflection_V2_Embeddings.e_term def_121)
-                            (fun def_121 ->
-                               FStarC_Option.bind
-                                 (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                                    FStarC_Reflection_V2_Embeddings.e_term
-                                    body_122)
-                                 (fun body_122 ->
-                                    FStar_Pervasives_Native.Some
-                                      (Tv_Let
-                                         (recf_118, attrs_119, b_120,
-                                           def_121, body_122)))))))
-       | ("FStar.Tactics.NamedView.Tv_Match",
-          scrutinee_124::ret_125::brs_126::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                FStarC_Reflection_V2_Embeddings.e_term scrutinee_124)
-             (fun scrutinee_124 ->
-                FStarC_Option.bind
-                  (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                     (FStarC_Syntax_Embeddings.e_option
-                        (FStarC_Syntax_Embeddings.e_tuple2 e_binder
-                           (FStarC_Syntax_Embeddings.e_tuple3
-                              (FStarC_Syntax_Embeddings.e_either
-                                 FStarC_Reflection_V2_Embeddings.e_term
-                                 FStarC_Reflection_V2_Embeddings.e_comp_view)
-                              (FStarC_Syntax_Embeddings.e_option
-                                 FStarC_Reflection_V2_Embeddings.e_term)
-                              FStarC_Syntax_Embeddings.e_bool))) ret_125)
-                  (fun ret_125 ->
-                     FStarC_Option.bind
-                       (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                          (FStarC_Syntax_Embeddings.e_list
-                             (FStarC_Syntax_Embeddings.e_tuple2 e_pattern
-                                FStarC_Reflection_V2_Embeddings.e_term))
-                          brs_126)
-                       (fun brs_126 ->
-                          FStar_Pervasives_Native.Some
-                            (Tv_Match (scrutinee_124, ret_125, brs_126)))))
-       | ("FStar.Tactics.NamedView.Tv_AscribedT",
-          e_128::t_129::tac_130::use_eq_131::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                FStarC_Reflection_V2_Embeddings.e_term e_128)
-             (fun e_128 ->
-                FStarC_Option.bind
-                  (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                     FStarC_Reflection_V2_Embeddings.e_term t_129)
-                  (fun t_129 ->
-                     FStarC_Option.bind
-                       (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                          (FStarC_Syntax_Embeddings.e_option
-                             FStarC_Reflection_V2_Embeddings.e_term) tac_130)
-                       (fun tac_130 ->
-                          FStarC_Option.bind
-                            (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                               FStarC_Syntax_Embeddings.e_bool use_eq_131)
-                            (fun use_eq_131 ->
-                               FStar_Pervasives_Native.Some
-                                 (Tv_AscribedT
-                                    (e_128, t_129, tac_130, use_eq_131))))))
-       | ("FStar.Tactics.NamedView.Tv_AscribedC",
-          e_133::c_134::tac_135::use_eq_136::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                FStarC_Reflection_V2_Embeddings.e_term e_133)
-             (fun e_133 ->
-                FStarC_Option.bind
-                  (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                     FStarC_Reflection_V2_Embeddings.e_comp_view c_134)
-                  (fun c_134 ->
-                     FStarC_Option.bind
-                       (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                          (FStarC_Syntax_Embeddings.e_option
-                             FStarC_Reflection_V2_Embeddings.e_term) tac_135)
-                       (fun tac_135 ->
-                          FStarC_Option.bind
-                            (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                               FStarC_Syntax_Embeddings.e_bool use_eq_136)
-                            (fun use_eq_136 ->
-                               FStar_Pervasives_Native.Some
-                                 (Tv_AscribedC
-                                    (e_133, c_134, tac_135, use_eq_136))))))
-       | ("FStar.Tactics.NamedView.Tv_Unknown", []) ->
-           FStar_Pervasives_Native.Some Tv_Unknown
-       | ("FStar.Tactics.NamedView.Tv_Unsupp", []) ->
-           FStar_Pervasives_Native.Some Tv_Unsupp
-       | _ -> FStar_Pervasives_Native.None)
-    (fun tm_139 ->
-       match tm_139 with
-       | Tv_Var v_141 ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_Var"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  FStarC_Reflection_V2_Embeddings.e_namedv_view v_141),
-                FStar_Pervasives_Native.None)]
-       | Tv_BVar v_143 ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_BVar"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  FStarC_Reflection_V2_Embeddings.e_bv_view v_143),
-                FStar_Pervasives_Native.None)]
-       | Tv_FVar v_145 ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_FVar"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  FStarC_Reflection_V2_Embeddings.e_fv v_145),
-                FStar_Pervasives_Native.None)]
-       | Tv_UInst (v_147, us_148) ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_UInst"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  FStarC_Reflection_V2_Embeddings.e_fv v_147),
-                FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 (FStarC_Syntax_Embeddings.e_list
-                    FStarC_Reflection_V2_Embeddings.e_universe) us_148),
-               FStar_Pervasives_Native.None)]
-       | Tv_App (hd_150, a_151) ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_App"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  FStarC_Reflection_V2_Embeddings.e_term hd_150),
-                FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 (FStarC_Syntax_Embeddings.e_tuple2
-                    FStarC_Reflection_V2_Embeddings.e_term
-                    FStarC_Reflection_V2_Embeddings.e_aqualv) a_151),
-               FStar_Pervasives_Native.None)]
-       | Tv_Abs (b_153, body_154) ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_Abs"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed e_binder b_153),
-                FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 FStarC_Reflection_V2_Embeddings.e_term body_154),
-               FStar_Pervasives_Native.None)]
-       | Tv_Arrow (b_156, c_157) ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_Arrow"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed e_binder b_156),
-                FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 FStarC_Reflection_V2_Embeddings.e_comp_view c_157),
-               FStar_Pervasives_Native.None)]
-       | Tv_Type _0_159 ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_Type"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  FStarC_Reflection_V2_Embeddings.e_universe _0_159),
-                FStar_Pervasives_Native.None)]
-       | Tv_Refine (b_161, ref_162) ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_Refine"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed e_binder b_161),
-                FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 FStarC_Reflection_V2_Embeddings.e_term ref_162),
-               FStar_Pervasives_Native.None)]
-       | Tv_Const _0_164 ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_Const"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  FStarC_Reflection_V2_Embeddings.e_vconst _0_164),
-                FStar_Pervasives_Native.None)]
-       | Tv_Uvar (_0_166, _1_167) ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_Uvar"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  FStarC_Syntax_Embeddings.e_int _0_166),
-                FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 FStarC_Reflection_V2_Embeddings.e_ctx_uvar_and_subst _1_167),
-               FStar_Pervasives_Native.None)]
-       | Tv_Let (recf_169, attrs_170, b_171, def_172, body_173) ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_Let"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  FStarC_Syntax_Embeddings.e_bool recf_169),
-                FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 (FStarC_Syntax_Embeddings.e_list
-                    FStarC_Reflection_V2_Embeddings.e_term) attrs_170),
-               FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed e_binder b_171),
-               FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 FStarC_Reflection_V2_Embeddings.e_term def_172),
-               FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 FStarC_Reflection_V2_Embeddings.e_term body_173),
-               FStar_Pervasives_Native.None)]
-       | Tv_Match (scrutinee_175, ret_176, brs_177) ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_Match"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  FStarC_Reflection_V2_Embeddings.e_term scrutinee_175),
-                FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 (FStarC_Syntax_Embeddings.e_option
-                    (FStarC_Syntax_Embeddings.e_tuple2 e_binder
-                       (FStarC_Syntax_Embeddings.e_tuple3
-                          (FStarC_Syntax_Embeddings.e_either
-                             FStarC_Reflection_V2_Embeddings.e_term
-                             FStarC_Reflection_V2_Embeddings.e_comp_view)
-                          (FStarC_Syntax_Embeddings.e_option
-                             FStarC_Reflection_V2_Embeddings.e_term)
-                          FStarC_Syntax_Embeddings.e_bool))) ret_176),
-               FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 (FStarC_Syntax_Embeddings.e_list
-                    (FStarC_Syntax_Embeddings.e_tuple2 e_pattern
-                       FStarC_Reflection_V2_Embeddings.e_term)) brs_177),
-               FStar_Pervasives_Native.None)]
-       | Tv_AscribedT (e_179, t_180, tac_181, use_eq_182) ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str
-                   "FStar.Tactics.NamedView.Tv_AscribedT"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  FStarC_Reflection_V2_Embeddings.e_term e_179),
-                FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 FStarC_Reflection_V2_Embeddings.e_term t_180),
-               FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 (FStarC_Syntax_Embeddings.e_option
-                    FStarC_Reflection_V2_Embeddings.e_term) tac_181),
-               FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 FStarC_Syntax_Embeddings.e_bool use_eq_182),
-               FStar_Pervasives_Native.None)]
-       | Tv_AscribedC (e_184, c_185, tac_186, use_eq_187) ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str
-                   "FStar.Tactics.NamedView.Tv_AscribedC"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  FStarC_Reflection_V2_Embeddings.e_term e_184),
-                FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 FStarC_Reflection_V2_Embeddings.e_comp_view c_185),
-               FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 (FStarC_Syntax_Embeddings.e_option
-                    FStarC_Reflection_V2_Embeddings.e_term) tac_186),
-               FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 FStarC_Syntax_Embeddings.e_bool use_eq_187),
-               FStar_Pervasives_Native.None)]
-       | Tv_Unknown ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_Unknown"))
-             []
-       | Tv_Unsupp ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_Unsupp"))
-             [])
-let e_named_term_view = __knot_e_named_term_view ()
-let uu___is_Tv_Var (projectee : named_term_view) : Prims.bool=
-  match projectee with | Tv_Var v -> true | uu___ -> false
-let __proj__Tv_Var__item__v (projectee : named_term_view) : namedv=
-  match projectee with | Tv_Var v -> v
-let uu___is_Tv_BVar (projectee : named_term_view) : Prims.bool=
-  match projectee with | Tv_BVar v -> true | uu___ -> false
-let __proj__Tv_BVar__item__v (projectee : named_term_view) : bv=
-  match projectee with | Tv_BVar v -> v
-let uu___is_Tv_FVar (projectee : named_term_view) : Prims.bool=
-  match projectee with | Tv_FVar v -> true | uu___ -> false
-let __proj__Tv_FVar__item__v (projectee : named_term_view) :
-  FStarC_Reflection_Types.fv= match projectee with | Tv_FVar v -> v
-let uu___is_Tv_UInst (projectee : named_term_view) : Prims.bool=
-  match projectee with | Tv_UInst (v, us) -> true | uu___ -> false
-let __proj__Tv_UInst__item__v (projectee : named_term_view) :
-  FStarC_Reflection_Types.fv= match projectee with | Tv_UInst (v, us) -> v
-let __proj__Tv_UInst__item__us (projectee : named_term_view) :
-  FStarC_Reflection_V2_Data.universes=
-  match projectee with | Tv_UInst (v, us) -> us
-let uu___is_Tv_App (projectee : named_term_view) : Prims.bool=
-  match projectee with | Tv_App (hd, a) -> true | uu___ -> false
-let __proj__Tv_App__item__hd (projectee : named_term_view) : term=
-  match projectee with | Tv_App (hd, a) -> hd
-let __proj__Tv_App__item__a (projectee : named_term_view) :
-  FStarC_Reflection_V2_Data.argv= match projectee with | Tv_App (hd, a) -> a
-let uu___is_Tv_Abs (projectee : named_term_view) : Prims.bool=
-  match projectee with | Tv_Abs (b, body) -> true | uu___ -> false
-let __proj__Tv_Abs__item__b (projectee : named_term_view) : binder=
-  match projectee with | Tv_Abs (b, body) -> b
-let __proj__Tv_Abs__item__body (projectee : named_term_view) : term=
-  match projectee with | Tv_Abs (b, body) -> body
-let uu___is_Tv_Arrow (projectee : named_term_view) : Prims.bool=
-  match projectee with | Tv_Arrow (b, c) -> true | uu___ -> false
-let __proj__Tv_Arrow__item__b (projectee : named_term_view) : binder=
-  match projectee with | Tv_Arrow (b, c) -> b
-let __proj__Tv_Arrow__item__c (projectee : named_term_view) : comp=
-  match projectee with | Tv_Arrow (b, c) -> c
-let uu___is_Tv_Type (projectee : named_term_view) : Prims.bool=
-  match projectee with | Tv_Type _0 -> true | uu___ -> false
-let __proj__Tv_Type__item___0 (projectee : named_term_view) : universe=
-  match projectee with | Tv_Type _0 -> _0
-let uu___is_Tv_Refine (projectee : named_term_view) : Prims.bool=
-  match projectee with | Tv_Refine (b, ref) -> true | uu___ -> false
-let __proj__Tv_Refine__item__b (projectee : named_term_view) : simple_binder=
-  match projectee with | Tv_Refine (b, ref) -> b
-let __proj__Tv_Refine__item__ref (projectee : named_term_view) : term=
-  match projectee with | Tv_Refine (b, ref) -> ref
-let uu___is_Tv_Const (projectee : named_term_view) : Prims.bool=
-  match projectee with | Tv_Const _0 -> true | uu___ -> false
-let __proj__Tv_Const__item___0 (projectee : named_term_view) :
-  FStarC_Reflection_V2_Data.vconst= match projectee with | Tv_Const _0 -> _0
-let uu___is_Tv_Uvar (projectee : named_term_view) : Prims.bool=
-  match projectee with | Tv_Uvar (_0, _1) -> true | uu___ -> false
-let __proj__Tv_Uvar__item___0 (projectee : named_term_view) : Prims.nat=
-  match projectee with | Tv_Uvar (_0, _1) -> _0
-let __proj__Tv_Uvar__item___1 (projectee : named_term_view) :
-  FStarC_Reflection_Types.ctx_uvar_and_subst=
-  match projectee with | Tv_Uvar (_0, _1) -> _1
-let uu___is_Tv_Let (projectee : named_term_view) : Prims.bool=
-  match projectee with
-  | Tv_Let (recf, attrs, b, def, body) -> true
-  | uu___ -> false
-let __proj__Tv_Let__item__recf (projectee : named_term_view) : Prims.bool=
-  match projectee with | Tv_Let (recf, attrs, b, def, body) -> recf
-let __proj__Tv_Let__item__attrs (projectee : named_term_view) :
-  term Prims.list=
-  match projectee with | Tv_Let (recf, attrs, b, def, body) -> attrs
-let __proj__Tv_Let__item__b (projectee : named_term_view) : simple_binder=
-  match projectee with | Tv_Let (recf, attrs, b, def, body) -> b
-let __proj__Tv_Let__item__def (projectee : named_term_view) : term=
-  match projectee with | Tv_Let (recf, attrs, b, def, body) -> def
-let __proj__Tv_Let__item__body (projectee : named_term_view) : term=
-  match projectee with | Tv_Let (recf, attrs, b, def, body) -> body
-let uu___is_Tv_Match (projectee : named_term_view) : Prims.bool=
-  match projectee with
-  | Tv_Match (scrutinee, ret, brs) -> true
-  | uu___ -> false
-let __proj__Tv_Match__item__scrutinee (projectee : named_term_view) : 
-  term= match projectee with | Tv_Match (scrutinee, ret, brs) -> scrutinee
-let __proj__Tv_Match__item__ret (projectee : named_term_view) :
-  match_returns_ascription FStar_Pervasives_Native.option=
-  match projectee with | Tv_Match (scrutinee, ret, brs) -> ret
-let __proj__Tv_Match__item__brs (projectee : named_term_view) :
-  branch Prims.list=
-  match projectee with | Tv_Match (scrutinee, ret, brs) -> brs
-let uu___is_Tv_AscribedT (projectee : named_term_view) : Prims.bool=
-  match projectee with
-  | Tv_AscribedT (e, t, tac, use_eq) -> true
-  | uu___ -> false
-let __proj__Tv_AscribedT__item__e (projectee : named_term_view) : term=
-  match projectee with | Tv_AscribedT (e, t, tac, use_eq) -> e
-let __proj__Tv_AscribedT__item__t (projectee : named_term_view) : term=
-  match projectee with | Tv_AscribedT (e, t, tac, use_eq) -> t
-let __proj__Tv_AscribedT__item__tac (projectee : named_term_view) :
-  term FStar_Pervasives_Native.option=
-  match projectee with | Tv_AscribedT (e, t, tac, use_eq) -> tac
-let __proj__Tv_AscribedT__item__use_eq (projectee : named_term_view) :
-  Prims.bool=
-  match projectee with | Tv_AscribedT (e, t, tac, use_eq) -> use_eq
-let uu___is_Tv_AscribedC (projectee : named_term_view) : Prims.bool=
-  match projectee with
-  | Tv_AscribedC (e, c, tac, use_eq) -> true
-  | uu___ -> false
-let __proj__Tv_AscribedC__item__e (projectee : named_term_view) : term=
-  match projectee with | Tv_AscribedC (e, c, tac, use_eq) -> e
-let __proj__Tv_AscribedC__item__c (projectee : named_term_view) : comp=
-  match projectee with | Tv_AscribedC (e, c, tac, use_eq) -> c
-let __proj__Tv_AscribedC__item__tac (projectee : named_term_view) :
-  term FStar_Pervasives_Native.option=
-  match projectee with | Tv_AscribedC (e, c, tac, use_eq) -> tac
-let __proj__Tv_AscribedC__item__use_eq (projectee : named_term_view) :
-  Prims.bool=
-  match projectee with | Tv_AscribedC (e, c, tac, use_eq) -> use_eq
-let uu___is_Tv_Unknown (projectee : named_term_view) : Prims.bool=
-  match projectee with | Tv_Unknown -> true | uu___ -> false
-let uu___is_Tv_Unsupp (projectee : named_term_view) : Prims.bool=
-  match projectee with | Tv_Unsupp -> true | uu___ -> false
-let notAscription (tv : named_term_view) : Prims.bool=
-  (Prims.not
-     (match tv with
-      | Tv_AscribedT (e, t, tac, use_eq) -> true
-      | uu___ -> false))
-    &&
-    (Prims.not
-       (match tv with
-        | Tv_AscribedC (e, c, tac, use_eq) -> true
-        | uu___ -> false))
-type letbinding =
-  {
-  lb_fv: FStarC_Reflection_Types.fv ;
-  lb_us: univ_name Prims.list ;
-  lb_typ: FStarC_Reflection_Types.typ ;
-  lb_def: term }
-let rec __knot_e_letbinding _ =
-  FStarC_Syntax_Embeddings_Base.mk_extracted_embedding
-    "FStar.Tactics.NamedView.letbinding"
-    (fun tm_190 ->
-       match tm_190 with
-       | ("FStar.Tactics.NamedView.Mkletbinding",
-          lb_fv_192::lb_us_193::lb_typ_194::lb_def_195::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                FStarC_Reflection_V2_Embeddings.e_fv lb_fv_192)
-             (fun lb_fv_192 ->
-                FStarC_Option.bind
-                  (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                     (FStarC_Syntax_Embeddings.e_list
-                        (FStarC_Syntax_Embeddings.e_tuple2
-                           FStarC_Syntax_Embeddings.e_string
-                           FStarC_Syntax_Embeddings.e_range)) lb_us_193)
-                  (fun lb_us_193 ->
-                     FStarC_Option.bind
-                       (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                          FStarC_Reflection_V2_Embeddings.e_term lb_typ_194)
-                       (fun lb_typ_194 ->
-                          FStarC_Option.bind
-                            (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                               FStarC_Reflection_V2_Embeddings.e_term
-                               lb_def_195)
-                            (fun lb_def_195 ->
-                               FStar_Pervasives_Native.Some
-                                 {
-                                   lb_fv = lb_fv_192;
-                                   lb_us = lb_us_193;
-                                   lb_typ = lb_typ_194;
-                                   lb_def = lb_def_195
-                                 }))))
-       | _ -> FStar_Pervasives_Native.None)
-    (fun tm_196 ->
-       match tm_196 with
-       | { lb_fv = lb_fv_198; lb_us = lb_us_199; lb_typ = lb_typ_200;
-           lb_def = lb_def_201;_} ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str
-                   "FStar.Tactics.NamedView.Mkletbinding"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  FStarC_Reflection_V2_Embeddings.e_fv lb_fv_198),
-                FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 (FStarC_Syntax_Embeddings.e_list
-                    (FStarC_Syntax_Embeddings.e_tuple2
-                       FStarC_Syntax_Embeddings.e_string
-                       FStarC_Syntax_Embeddings.e_range)) lb_us_199),
-               FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 FStarC_Reflection_V2_Embeddings.e_term lb_typ_200),
-               FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 FStarC_Reflection_V2_Embeddings.e_term lb_def_201),
-               FStar_Pervasives_Native.None)])
-let e_letbinding = __knot_e_letbinding ()
-let __proj__Mkletbinding__item__lb_fv (projectee : letbinding) :
-  FStarC_Reflection_Types.fv=
-  match projectee with | { lb_fv; lb_us; lb_typ; lb_def;_} -> lb_fv
-let __proj__Mkletbinding__item__lb_us (projectee : letbinding) :
-  univ_name Prims.list=
-  match projectee with | { lb_fv; lb_us; lb_typ; lb_def;_} -> lb_us
-let __proj__Mkletbinding__item__lb_typ (projectee : letbinding) :
-  FStarC_Reflection_Types.typ=
-  match projectee with | { lb_fv; lb_us; lb_typ; lb_def;_} -> lb_typ
-let __proj__Mkletbinding__item__lb_def (projectee : letbinding) : term=
-  match projectee with | { lb_fv; lb_us; lb_typ; lb_def;_} -> lb_def
-type named_sigelt_view__Sg_Let__payload =
-  {
-  isrec: Prims.bool ;
-  lbs: letbinding Prims.list }
-and named_sigelt_view__Sg_Inductive__payload =
-  {
-  nm: FStarC_Reflection_Types.name ;
-  univs1: univ_name Prims.list ;
-  params: binders ;
-  typ: FStarC_Reflection_Types.typ ;
-  ctors: FStarC_Reflection_V2_Data.ctor Prims.list }
-and named_sigelt_view__Sg_Val__payload =
-  {
-  nm1: FStarC_Reflection_Types.name ;
-  univs2: univ_name Prims.list ;
-  typ1: FStarC_Reflection_Types.typ }
-and named_sigelt_view =
-  | Sg_Let of named_sigelt_view__Sg_Let__payload 
-  | Sg_Inductive of named_sigelt_view__Sg_Inductive__payload 
-  | Sg_Val of named_sigelt_view__Sg_Val__payload 
-  | Unk 
-let rec __knot_e_named_sigelt_view__Sg_Let__payload _ =
-  FStarC_Syntax_Embeddings_Base.mk_extracted_embedding
-    "FStar.Tactics.NamedView.named_sigelt_view__Sg_Let__payload"
-    (fun tm_202 ->
-       match tm_202 with
-       | ("FStar.Tactics.NamedView.Mknamed_sigelt_view__Sg_Let__payload",
-          isrec_204::lbs_205::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                FStarC_Syntax_Embeddings.e_bool isrec_204)
-             (fun isrec_204 ->
-                FStarC_Option.bind
-                  (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                     (FStarC_Syntax_Embeddings.e_list e_letbinding) lbs_205)
-                  (fun lbs_205 ->
-                     FStar_Pervasives_Native.Some
-                       { isrec = isrec_204; lbs = lbs_205 }))
-       | _ -> FStar_Pervasives_Native.None)
-    (fun tm_206 ->
-       match tm_206 with
-       | { isrec = isrec_208; lbs = lbs_209;_} ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str
-                   "FStar.Tactics.NamedView.Mknamed_sigelt_view__Sg_Let__payload"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  FStarC_Syntax_Embeddings.e_bool isrec_208),
-                FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 (FStarC_Syntax_Embeddings.e_list e_letbinding) lbs_209),
-               FStar_Pervasives_Native.None)])
-and __knot_e_named_sigelt_view__Sg_Inductive__payload _ =
-  FStarC_Syntax_Embeddings_Base.mk_extracted_embedding
-    "FStar.Tactics.NamedView.named_sigelt_view__Sg_Inductive__payload"
-    (fun tm_210 ->
-       match tm_210 with
-       | ("FStar.Tactics.NamedView.Mknamed_sigelt_view__Sg_Inductive__payload",
-          nm_212::univs_213::params_214::typ_215::ctors_216::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                (FStarC_Syntax_Embeddings.e_list
-                   FStarC_Syntax_Embeddings.e_string) nm_212)
-             (fun nm_212 ->
-                FStarC_Option.bind
-                  (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                     (FStarC_Syntax_Embeddings.e_list
-                        (FStarC_Syntax_Embeddings.e_tuple2
-                           FStarC_Syntax_Embeddings.e_string
-                           FStarC_Syntax_Embeddings.e_range)) univs_213)
-                  (fun univs_213 ->
-                     FStarC_Option.bind
-                       (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                          (FStarC_Syntax_Embeddings.e_list e_binder)
-                          params_214)
-                       (fun params_214 ->
-                          FStarC_Option.bind
-                            (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                               FStarC_Reflection_V2_Embeddings.e_term typ_215)
-                            (fun typ_215 ->
-                               FStarC_Option.bind
-                                 (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                                    (FStarC_Syntax_Embeddings.e_list
-                                       (FStarC_Syntax_Embeddings.e_tuple2
-                                          (FStarC_Syntax_Embeddings.e_list
-                                             FStarC_Syntax_Embeddings.e_string)
-                                          FStarC_Reflection_V2_Embeddings.e_term))
-                                    ctors_216)
-                                 (fun ctors_216 ->
-                                    FStar_Pervasives_Native.Some
-                                      {
-                                        nm = nm_212;
-                                        univs1 = univs_213;
-                                        params = params_214;
-                                        typ = typ_215;
-                                        ctors = ctors_216
-                                      })))))
-       | _ -> FStar_Pervasives_Native.None)
-    (fun tm_217 ->
-       match tm_217 with
-       | { nm = nm_219; univs1 = univs_220; params = params_221;
-           typ = typ_222; ctors = ctors_223;_} ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str
-                   "FStar.Tactics.NamedView.Mknamed_sigelt_view__Sg_Inductive__payload"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  (FStarC_Syntax_Embeddings.e_list
-                     FStarC_Syntax_Embeddings.e_string) nm_219),
-                FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 (FStarC_Syntax_Embeddings.e_list
-                    (FStarC_Syntax_Embeddings.e_tuple2
-                       FStarC_Syntax_Embeddings.e_string
-                       FStarC_Syntax_Embeddings.e_range)) univs_220),
-               FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 (FStarC_Syntax_Embeddings.e_list e_binder) params_221),
-               FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 FStarC_Reflection_V2_Embeddings.e_term typ_222),
-               FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 (FStarC_Syntax_Embeddings.e_list
-                    (FStarC_Syntax_Embeddings.e_tuple2
-                       (FStarC_Syntax_Embeddings.e_list
-                          FStarC_Syntax_Embeddings.e_string)
-                       FStarC_Reflection_V2_Embeddings.e_term)) ctors_223),
-               FStar_Pervasives_Native.None)])
-and __knot_e_named_sigelt_view__Sg_Val__payload _ =
-  FStarC_Syntax_Embeddings_Base.mk_extracted_embedding
-    "FStar.Tactics.NamedView.named_sigelt_view__Sg_Val__payload"
-    (fun tm_224 ->
-       match tm_224 with
-       | ("FStar.Tactics.NamedView.Mknamed_sigelt_view__Sg_Val__payload",
-          nm_226::univs_227::typ_228::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                (FStarC_Syntax_Embeddings.e_list
-                   FStarC_Syntax_Embeddings.e_string) nm_226)
-             (fun nm_226 ->
-                FStarC_Option.bind
-                  (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                     (FStarC_Syntax_Embeddings.e_list
-                        (FStarC_Syntax_Embeddings.e_tuple2
-                           FStarC_Syntax_Embeddings.e_string
-                           FStarC_Syntax_Embeddings.e_range)) univs_227)
-                  (fun univs_227 ->
-                     FStarC_Option.bind
-                       (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                          FStarC_Reflection_V2_Embeddings.e_term typ_228)
-                       (fun typ_228 ->
-                          FStar_Pervasives_Native.Some
-                            {
-                              nm1 = nm_226;
-                              univs2 = univs_227;
-                              typ1 = typ_228
-                            })))
-       | _ -> FStar_Pervasives_Native.None)
-    (fun tm_229 ->
-       match tm_229 with
-       | { nm1 = nm_231; univs2 = univs_232; typ1 = typ_233;_} ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str
-                   "FStar.Tactics.NamedView.Mknamed_sigelt_view__Sg_Val__payload"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  (FStarC_Syntax_Embeddings.e_list
-                     FStarC_Syntax_Embeddings.e_string) nm_231),
-                FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 (FStarC_Syntax_Embeddings.e_list
-                    (FStarC_Syntax_Embeddings.e_tuple2
-                       FStarC_Syntax_Embeddings.e_string
-                       FStarC_Syntax_Embeddings.e_range)) univs_232),
-               FStar_Pervasives_Native.None);
-             ((FStarC_Syntax_Embeddings_Base.extracted_embed
-                 FStarC_Reflection_V2_Embeddings.e_term typ_233),
-               FStar_Pervasives_Native.None)])
-and __knot_e_named_sigelt_view _ =
-  FStarC_Syntax_Embeddings_Base.mk_extracted_embedding
-    "FStar.Tactics.NamedView.named_sigelt_view"
-    (fun tm_234 ->
-       match tm_234 with
-       | ("FStar.Tactics.NamedView.Sg_Let", _0_236::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                (__knot_e_named_sigelt_view__Sg_Let__payload ()) _0_236)
-             (fun _0_236 -> FStar_Pervasives_Native.Some (Sg_Let _0_236))
-       | ("FStar.Tactics.NamedView.Sg_Inductive", _0_238::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                (__knot_e_named_sigelt_view__Sg_Inductive__payload ()) _0_238)
-             (fun _0_238 ->
-                FStar_Pervasives_Native.Some (Sg_Inductive _0_238))
-       | ("FStar.Tactics.NamedView.Sg_Val", _0_240::[]) ->
-           FStarC_Option.bind
-             (FStarC_Syntax_Embeddings_Base.extracted_unembed
-                (__knot_e_named_sigelt_view__Sg_Val__payload ()) _0_240)
-             (fun _0_240 -> FStar_Pervasives_Native.Some (Sg_Val _0_240))
-       | ("FStar.Tactics.NamedView.Unk", []) ->
-           FStar_Pervasives_Native.Some Unk
-       | _ -> FStar_Pervasives_Native.None)
-    (fun tm_242 ->
-       match tm_242 with
-       | Sg_Let _0_244 ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Sg_Let"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  (__knot_e_named_sigelt_view__Sg_Let__payload ()) _0_244),
-                FStar_Pervasives_Native.None)]
-       | Sg_Inductive _0_246 ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str
-                   "FStar.Tactics.NamedView.Sg_Inductive"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  (__knot_e_named_sigelt_view__Sg_Inductive__payload ())
-                  _0_246), FStar_Pervasives_Native.None)]
-       | Sg_Val _0_248 ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Sg_Val"))
-             [((FStarC_Syntax_Embeddings_Base.extracted_embed
-                  (__knot_e_named_sigelt_view__Sg_Val__payload ()) _0_248),
-                FStar_Pervasives_Native.None)]
-       | Unk ->
-           FStarC_Syntax_Util.mk_app
-             (FStarC_Syntax_Syntax.tdataconstr
-                (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Unk")) [])
-let e_named_sigelt_view__Sg_Let__payload =
-  __knot_e_named_sigelt_view__Sg_Let__payload ()
-let e_named_sigelt_view__Sg_Inductive__payload =
-  __knot_e_named_sigelt_view__Sg_Inductive__payload ()
-let e_named_sigelt_view__Sg_Val__payload =
-  __knot_e_named_sigelt_view__Sg_Val__payload ()
-let e_named_sigelt_view = __knot_e_named_sigelt_view ()
-let __proj__Mknamed_sigelt_view__Sg_Let__payload__item__isrec
-  (projectee : named_sigelt_view__Sg_Let__payload) : Prims.bool=
-  match projectee with | { isrec; lbs;_} -> isrec
-let __proj__Mknamed_sigelt_view__Sg_Let__payload__item__lbs
-  (projectee : named_sigelt_view__Sg_Let__payload) : letbinding Prims.list=
-  match projectee with | { isrec; lbs;_} -> lbs
-let __proj__Mknamed_sigelt_view__Sg_Inductive__payload__item__nm
-  (projectee : named_sigelt_view__Sg_Inductive__payload) :
-  FStarC_Reflection_Types.name=
-  match projectee with | { nm; univs1 = univs; params; typ; ctors;_} -> nm
-let __proj__Mknamed_sigelt_view__Sg_Inductive__payload__item__univs
-  (projectee : named_sigelt_view__Sg_Inductive__payload) :
-  univ_name Prims.list=
-  match projectee with | { nm; univs1 = univs; params; typ; ctors;_} -> univs
-let __proj__Mknamed_sigelt_view__Sg_Inductive__payload__item__params
-  (projectee : named_sigelt_view__Sg_Inductive__payload) : binders=
-  match projectee with
-  | { nm; univs1 = univs; params; typ; ctors;_} -> params
-let __proj__Mknamed_sigelt_view__Sg_Inductive__payload__item__typ
-  (projectee : named_sigelt_view__Sg_Inductive__payload) :
-  FStarC_Reflection_Types.typ=
-  match projectee with | { nm; univs1 = univs; params; typ; ctors;_} -> typ
-let __proj__Mknamed_sigelt_view__Sg_Inductive__payload__item__ctors
-  (projectee : named_sigelt_view__Sg_Inductive__payload) :
-  FStarC_Reflection_V2_Data.ctor Prims.list=
-  match projectee with | { nm; univs1 = univs; params; typ; ctors;_} -> ctors
-let __proj__Mknamed_sigelt_view__Sg_Val__payload__item__nm
-  (projectee : named_sigelt_view__Sg_Val__payload) :
-  FStarC_Reflection_Types.name=
-  match projectee with | { nm1 = nm; univs2 = univs; typ1 = typ;_} -> nm
-let __proj__Mknamed_sigelt_view__Sg_Val__payload__item__univs
-  (projectee : named_sigelt_view__Sg_Val__payload) : univ_name Prims.list=
-  match projectee with | { nm1 = nm; univs2 = univs; typ1 = typ;_} -> univs
-let __proj__Mknamed_sigelt_view__Sg_Val__payload__item__typ
-  (projectee : named_sigelt_view__Sg_Val__payload) :
-  FStarC_Reflection_Types.typ=
-  match projectee with | { nm1 = nm; univs2 = univs; typ1 = typ;_} -> typ
-let uu___is_Sg_Let (projectee : named_sigelt_view) : Prims.bool=
-  match projectee with | Sg_Let _0 -> true | uu___ -> false
-let __proj__Sg_Let__item___0 (projectee : named_sigelt_view) :
-  named_sigelt_view__Sg_Let__payload= match projectee with | Sg_Let _0 -> _0
-let uu___is_Sg_Inductive (projectee : named_sigelt_view) : Prims.bool=
-  match projectee with | Sg_Inductive _0 -> true | uu___ -> false
-let __proj__Sg_Inductive__item___0 (projectee : named_sigelt_view) :
-  named_sigelt_view__Sg_Inductive__payload=
-  match projectee with | Sg_Inductive _0 -> _0
-let uu___is_Sg_Val (projectee : named_sigelt_view) : Prims.bool=
-  match projectee with | Sg_Val _0 -> true | uu___ -> false
-let __proj__Sg_Val__item___0 (projectee : named_sigelt_view) :
-  named_sigelt_view__Sg_Val__payload= match projectee with | Sg_Val _0 -> _0
-let uu___is_Unk (projectee : named_sigelt_view) : Prims.bool=
-  match projectee with | Unk -> true | uu___ -> false
-let binder_to_binding (b : binder) : binding=
-  {
-    FStarC_Reflection_V2_Data.uniq1 = (b.uniq);
-    FStarC_Reflection_V2_Data.sort3 = (b.sort);
-    FStarC_Reflection_V2_Data.ppname3 = (b.ppname)
-  }
-let binding_to_binder (bnd : binding) : binder=
-  {
-    uniq = (bnd.FStarC_Reflection_V2_Data.uniq1);
-    ppname = (bnd.FStarC_Reflection_V2_Data.ppname3);
-    sort = (bnd.FStarC_Reflection_V2_Data.sort3);
-    qual = FStarC_Reflection_V2_Data.Q_Explicit;
-    attrs = []
-  }
-let namedv_to_binder (v : namedv) (sort : term) : binder=
-  {
-    uniq = (v.FStarC_Reflection_V2_Data.uniq);
-    ppname = (v.FStarC_Reflection_V2_Data.ppname);
-    sort;
-    qual = FStarC_Reflection_V2_Data.Q_Explicit;
-    attrs = []
-  }
-exception LengthMismatch 
-let uu___is_LengthMismatch (projectee : Prims.exn) : Prims.bool= true
-exception NotEnoughBinders 
-let uu___is_NotEnoughBinders (projectee : Prims.exn) : Prims.bool= true
-let open_universe_view (v : FStarC_Reflection_V2_Data.universe_view) :
-  named_universe_view=
-  match v with
-  | FStarC_Reflection_V2_Data.Uv_Zero -> Uv_Zero
-  | FStarC_Reflection_V2_Data.Uv_Succ u -> Uv_Succ u
-  | FStarC_Reflection_V2_Data.Uv_Max us -> Uv_Max us
-  | FStarC_Reflection_V2_Data.Uv_BVar n -> Uv_BVar n
-  | FStarC_Reflection_V2_Data.Uv_Name i ->
-      Uv_Name (FStarC_Reflection_V2_Builtins.inspect_ident i)
-  | FStarC_Reflection_V2_Data.Uv_Unif uvar -> Uv_Unif uvar
-  | FStarC_Reflection_V2_Data.Uv_Unk -> Uv_Unk
-let inspect_universe (u : universe)
-  (ps : FStarC_Tactics_Types.ref_proofstate) : named_universe_view=
-  let x = FStarC_Tactics_V2_Builtins.compress_univ u ps in
-  open_universe_view (FStarC_Reflection_V2_Builtins.inspect_universe x)
-let _ =
-  FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.NamedView.inspect_universe" (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.NamedView.inspect_universe (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 inspect_universe)
-               FStarC_Reflection_V2_Embeddings.e_universe
-               e_named_universe_view psc ncb us args)
-let close_universe_view (v : named_universe_view) :
-  FStarC_Reflection_V2_Data.universe_view=
-  match v with
-  | Uv_Zero -> FStarC_Reflection_V2_Data.Uv_Zero
-  | Uv_Succ u -> FStarC_Reflection_V2_Data.Uv_Succ u
-  | Uv_Max us -> FStarC_Reflection_V2_Data.Uv_Max us
-  | Uv_BVar n -> FStarC_Reflection_V2_Data.Uv_BVar n
-  | Uv_Name i ->
-      FStarC_Reflection_V2_Data.Uv_Name
-        (FStarC_Reflection_V2_Builtins.pack_ident i)
-  | Uv_Unif uvar -> FStarC_Reflection_V2_Data.Uv_Unif uvar
-  | Uv_Unk -> FStarC_Reflection_V2_Data.Uv_Unk
-let pack_universe (uv : named_universe_view) : universe=
-  let uv1 = close_universe_view uv in
-  FStarC_Reflection_V2_Builtins.pack_universe uv1
-let _ =
-  FStarC_Tactics_Native.register_plugin
-    "FStar.Tactics.NamedView.pack_universe" Prims.int_one
-    (fun _psc ->
-       fun cb ->
-         fun us ->
-           fun args ->
-             FStarC_Syntax_Embeddings.debug_wrap
-               "FStar.Tactics.NamedView.pack_universe"
-               (fun _ ->
-                  FStarC_Syntax_Embeddings.arrow_as_prim_step_1
-                    e_named_universe_view
-                    FStarC_Reflection_V2_Embeddings.e_universe pack_universe
-                    (FStarC_Ident.lid_of_str
-                       "FStar.Tactics.NamedView.pack_universe") cb us args))
-    (fun cb ->
-       fun us ->
-         fun args ->
-           FStarC_Syntax_Embeddings.debug_wrap
-             "FStar.Tactics.NamedView.pack_universe"
-             (fun _ ->
-                FStarC_TypeChecker_NBETerm.arrow_as_prim_step_1
-                  (FStarC_TypeChecker_NBETerm.e_unsupported ())
-                  FStarC_Reflection_V2_NBEEmbeddings.e_universe pack_universe
-                  (FStarC_Ident.lid_of_str
-                     "FStar.Tactics.NamedView.pack_universe") cb us args))
-let __binding_to_binder (bnd : binding) (b : FStarC_Reflection_Types.binder)
-  : binder=
-  {
-    uniq = (bnd.FStarC_Reflection_V2_Data.uniq1);
-    ppname = (bnd.FStarC_Reflection_V2_Data.ppname3);
-    sort = (bnd.FStarC_Reflection_V2_Data.sort3);
-    qual =
-      ((FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.qual);
-    attrs =
-      ((FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.attrs)
-  }
-let r_binder_to_namedv (b : binder) : FStarC_Reflection_Types.namedv=
-  FStarC_Reflection_V2_Builtins.pack_namedv
-    {
-      FStarC_Reflection_V2_Data.uniq = (b.uniq);
-      FStarC_Reflection_V2_Data.sort = (FStar_Sealed.seal b.sort);
-      FStarC_Reflection_V2_Data.ppname = (b.ppname)
-    }
-let open_binder (b : FStarC_Reflection_Types.binder)
-  (ps : FStarC_Tactics_Types.ref_proofstate) : binder=
-  let x = FStarC_Tactics_V2_Builtins.fresh () ps in
-  {
-    uniq = x;
-    ppname =
-      ((FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.ppname2);
-    sort =
-      ((FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.sort2);
-    qual =
-      ((FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.qual);
-    attrs =
-      ((FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.attrs)
-  }
-let close_binder (b : binder) : FStarC_Reflection_Types.binder=
-  FStarC_Reflection_V2_Builtins.pack_binder
-    {
-      FStarC_Reflection_V2_Data.sort2 = (b.sort);
-      FStarC_Reflection_V2_Data.qual = (b.qual);
-      FStarC_Reflection_V2_Data.attrs = (b.attrs);
-      FStarC_Reflection_V2_Data.ppname2 = (b.ppname)
-    }
-let open_term_with (b : FStarC_Reflection_Types.binder) (nb : binder)
-  (t : term) (uu___ : FStarC_Tactics_Types.ref_proofstate) : term=
-  FStarC_Reflection_V2_Builtins.subst_term
-    [FStarC_Syntax_Syntax.DB
-       (Prims.int_zero,
-         (FStarC_Reflection_V2_Builtins.pack_namedv
-            {
-              FStarC_Reflection_V2_Data.uniq = (nb.uniq);
-              FStarC_Reflection_V2_Data.sort = (FStar_Sealed.seal nb.sort);
-              FStarC_Reflection_V2_Data.ppname = (nb.ppname)
-            }))] t
-let open_term (b : FStarC_Reflection_Types.binder) (t : term)
-  (ps : FStarC_Tactics_Types.ref_proofstate) : (binder * term)=
-  let x = open_binder b ps in let x1 = open_term_with b x t ps in (x, x1)
-let open_comp (b : FStarC_Reflection_Types.binder)
-  (t : FStarC_Reflection_Types.comp)
-  (ps : FStarC_Tactics_Types.ref_proofstate) : (binder * comp)=
-  let x = FStarC_Tactics_V2_Builtins.fresh () ps in
-  ({
-     uniq = x;
-     ppname =
-       ((FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.ppname2);
-     sort =
-       ((FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.sort2);
-     qual =
-       ((FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.qual);
-     attrs =
-       ((FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.attrs)
-   },
-    (FStarC_Reflection_V2_Builtins.inspect_comp
-       (FStarC_Reflection_V2_Builtins.subst_comp
-          [FStarC_Syntax_Syntax.DB
-             (Prims.int_zero,
-               (FStarC_Reflection_V2_Builtins.pack_namedv
-                  {
-                    FStarC_Reflection_V2_Data.uniq = x;
-                    FStarC_Reflection_V2_Data.sort =
-                      (FStar_Sealed.seal
-                         (FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.sort2);
-                    FStarC_Reflection_V2_Data.ppname =
-                      ((FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.ppname2)
-                  }))] t)))
-let open_comp_with (b : FStarC_Reflection_Types.binder) (nb : binder)
-  (c : FStarC_Reflection_Types.comp)
-  (uu___ : FStarC_Tactics_Types.ref_proofstate) : comp=
-  FStarC_Reflection_V2_Builtins.inspect_comp
-    (FStarC_Reflection_V2_Builtins.subst_comp
-       [FStarC_Syntax_Syntax.DB
-          (Prims.int_zero,
-            (FStarC_Reflection_V2_Builtins.pack_namedv
-               {
-                 FStarC_Reflection_V2_Data.uniq = (nb.uniq);
-                 FStarC_Reflection_V2_Data.sort = (FStar_Sealed.seal nb.sort);
-                 FStarC_Reflection_V2_Data.ppname = (nb.ppname)
-               }))] c)
-let open_term_simple (b : FStarC_Reflection_V2_Data.simple_binder) (t : term)
-  (ps : FStarC_Tactics_Types.ref_proofstate) : (simple_binder * term)=
-  let x = FStarC_Tactics_V2_Builtins.fresh () ps in
-  ({
-     uniq = x;
-     ppname =
-       ((FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.ppname2);
-     sort =
-       ((FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.sort2);
-     qual =
-       ((FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.qual);
-     attrs =
-       ((FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.attrs)
-   },
-    (FStarC_Reflection_V2_Builtins.subst_term
-       [FStarC_Syntax_Syntax.DB
-          (Prims.int_zero,
-            (FStarC_Reflection_V2_Builtins.pack_namedv
-               {
-                 FStarC_Reflection_V2_Data.uniq = x;
-                 FStarC_Reflection_V2_Data.sort =
-                   (FStar_Sealed.seal
-                      (FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.sort2);
-                 FStarC_Reflection_V2_Data.ppname =
-                   ((FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.ppname2)
-               }))] t))
-let open_comp_simple (b : FStarC_Reflection_V2_Data.simple_binder)
-  (t : FStarC_Reflection_Types.comp)
-  (ps : FStarC_Tactics_Types.ref_proofstate) : (simple_binder * comp)=
-  let x = FStarC_Tactics_V2_Builtins.fresh () ps in
-  ({
-     uniq = x;
-     ppname =
-       ((FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.ppname2);
-     sort =
-       ((FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.sort2);
-     qual =
-       ((FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.qual);
-     attrs =
-       ((FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.attrs)
-   },
-    (FStarC_Reflection_V2_Builtins.inspect_comp
-       (FStarC_Reflection_V2_Builtins.subst_comp
-          [FStarC_Syntax_Syntax.DB
-             (Prims.int_zero,
-               (FStarC_Reflection_V2_Builtins.pack_namedv
-                  {
-                    FStarC_Reflection_V2_Data.uniq = x;
-                    FStarC_Reflection_V2_Data.sort =
-                      (FStar_Sealed.seal
-                         (FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.sort2);
-                    FStarC_Reflection_V2_Data.ppname =
-                      ((FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.ppname2)
-                  }))] t)))
-let close_term (b : binder) (t : term) :
-  (FStarC_Reflection_Types.binder * term)=
-  let nv = r_binder_to_namedv b in
-  let t' =
-    FStarC_Reflection_V2_Builtins.subst_term
-      [FStarC_Syntax_Syntax.NM (nv, Prims.int_zero)] t in
-  let b1 =
-    FStarC_Reflection_V2_Builtins.pack_binder
-      {
-        FStarC_Reflection_V2_Data.sort2 = (b.sort);
-        FStarC_Reflection_V2_Data.qual = (b.qual);
-        FStarC_Reflection_V2_Data.attrs = (b.attrs);
-        FStarC_Reflection_V2_Data.ppname2 = (b.ppname)
-      } in
-  (b1, t')
-let _ =
-  FStarC_Tactics_Native.register_plugin "FStar.Tactics.NamedView.close_term"
-    (Prims.of_int 2)
-    (fun _psc ->
-       fun cb ->
-         fun us ->
-           fun args ->
-             FStarC_Syntax_Embeddings.debug_wrap
-               "FStar.Tactics.NamedView.close_term"
-               (fun _ ->
-                  FStarC_Syntax_Embeddings.arrow_as_prim_step_2 e_binder
-                    FStarC_Reflection_V2_Embeddings.e_term
-                    (FStarC_Syntax_Embeddings.e_tuple2
-                       FStarC_Reflection_V2_Embeddings.e_binder
-                       FStarC_Reflection_V2_Embeddings.e_term) close_term
-                    (FStarC_Ident.lid_of_str
-                       "FStar.Tactics.NamedView.close_term") cb us args))
-    (fun cb ->
-       fun us ->
-         fun args ->
-           FStarC_Syntax_Embeddings.debug_wrap
-             "FStar.Tactics.NamedView.close_term"
-             (fun _ ->
-                FStarC_TypeChecker_NBETerm.arrow_as_prim_step_2
-                  (FStarC_TypeChecker_NBETerm.e_unsupported ())
-                  FStarC_Reflection_V2_NBEEmbeddings.e_term
-                  (FStarC_TypeChecker_NBETerm.e_tuple2
-                     FStarC_Reflection_V2_NBEEmbeddings.e_binder
-                     FStarC_Reflection_V2_NBEEmbeddings.e_term) close_term
-                  (FStarC_Ident.lid_of_str
-                     "FStar.Tactics.NamedView.close_term") cb us args))
-let close_comp (b : binder) (t : comp) :
-  (FStarC_Reflection_Types.binder * FStarC_Reflection_Types.comp)=
-  let nv = r_binder_to_namedv b in
-  let t' =
-    FStarC_Reflection_V2_Builtins.subst_comp
-      [FStarC_Syntax_Syntax.NM (nv, Prims.int_zero)]
-      (FStarC_Reflection_V2_Builtins.pack_comp t) in
-  let b1 =
-    FStarC_Reflection_V2_Builtins.pack_binder
-      {
-        FStarC_Reflection_V2_Data.sort2 = (b.sort);
-        FStarC_Reflection_V2_Data.qual = (b.qual);
-        FStarC_Reflection_V2_Data.attrs = (b.attrs);
-        FStarC_Reflection_V2_Data.ppname2 = (b.ppname)
-      } in
-  (b1, t')
-let close_term_simple (b : simple_binder) (t : term) :
-  (FStarC_Reflection_V2_Data.simple_binder * term)=
-  let nv = r_binder_to_namedv b in
-  let t' =
-    FStarC_Reflection_V2_Builtins.subst_term
-      [FStarC_Syntax_Syntax.NM (nv, Prims.int_zero)] t in
-  let bv1 =
-    {
-      FStarC_Reflection_V2_Data.sort2 = (b.sort);
-      FStarC_Reflection_V2_Data.qual = (b.qual);
-      FStarC_Reflection_V2_Data.attrs = (b.attrs);
-      FStarC_Reflection_V2_Data.ppname2 = (b.ppname)
-    } in
-  let b1 = FStarC_Reflection_V2_Builtins.pack_binder bv1 in (b1, t')
-let close_comp_simple (b : simple_binder) (t : comp) :
-  (FStarC_Reflection_V2_Data.simple_binder * FStarC_Reflection_Types.comp)=
-  let nv = r_binder_to_namedv b in
-  let t' =
-    FStarC_Reflection_V2_Builtins.subst_comp
-      [FStarC_Syntax_Syntax.NM (nv, Prims.int_zero)]
-      (FStarC_Reflection_V2_Builtins.pack_comp t) in
-  let bv1 =
-    {
-      FStarC_Reflection_V2_Data.sort2 = (b.sort);
-      FStarC_Reflection_V2_Data.qual = (b.qual);
-      FStarC_Reflection_V2_Data.attrs = (b.attrs);
-      FStarC_Reflection_V2_Data.ppname2 = (b.ppname)
-    } in
-  let b1 = FStarC_Reflection_V2_Builtins.pack_binder bv1 in (b1, t')
-let r_subst_binder_sort (s : FStarC_Syntax_Syntax.subst_t)
-  (b : FStarC_Reflection_Types.binder) : FStarC_Reflection_Types.binder=
-  let v = FStarC_Reflection_V2_Builtins.inspect_binder b in
-  let v1 =
-    {
-      FStarC_Reflection_V2_Data.sort2 =
-        (FStarC_Reflection_V2_Builtins.subst_term s
-           v.FStarC_Reflection_V2_Data.sort2);
-      FStarC_Reflection_V2_Data.qual = (v.FStarC_Reflection_V2_Data.qual);
-      FStarC_Reflection_V2_Data.attrs = (v.FStarC_Reflection_V2_Data.attrs);
-      FStarC_Reflection_V2_Data.ppname2 =
-        (v.FStarC_Reflection_V2_Data.ppname2)
-    } in
-  FStarC_Reflection_V2_Builtins.pack_binder v1
-let subst_binder_sort (s : FStarC_Syntax_Syntax.subst_t) (b : binder) :
-  binder=
-  {
-    uniq = (b.uniq);
-    ppname = (b.ppname);
-    sort = (FStarC_Reflection_V2_Builtins.subst_term s b.sort);
-    qual = (b.qual);
-    attrs = (b.attrs)
-  }
-let rec __open_term_n_aux (bs : FStarC_Reflection_Types.binder Prims.list)
-  (nbs : binder Prims.list) (s : FStarC_Syntax_Syntax.subst_t) :
-  FStarC_Tactics_Types.ref_proofstate ->
-    (binder Prims.list * FStarC_Syntax_Syntax.subst_t)=
-  match bs with
-  | [] -> (fun uu___ -> (nbs, s))
-  | b::bs1 ->
-      (fun ps ->
-         let x = r_subst_binder_sort s b in
-         let x1 = open_binder x ps in
-         let x2 = r_binder_to_namedv x1 in
-         __open_term_n_aux bs1 (x1 :: nbs)
-           ((FStarC_Syntax_Syntax.DB (Prims.int_zero, x2)) ::
-           (FStar_Reflection_V2_Derived.shift_subst Prims.int_one s)) ps)
-let open_term_n (bs : FStarC_Reflection_Types.binder Prims.list) (t : term)
-  (ps : FStarC_Tactics_Types.ref_proofstate) : (binder Prims.list * term)=
-  let x = __open_term_n_aux bs [] [] ps in
-  match x with
-  | (nbs, s) ->
-      ((FStar_List_Tot_Base.rev nbs),
-        (FStarC_Reflection_V2_Builtins.subst_term s t))
-let rec open_term_n_with (bs : FStarC_Reflection_Types.binder Prims.list)
-  (nbs : binder Prims.list) (t : term) :
-  FStarC_Tactics_Types.ref_proofstate -> term=
-  match (bs, nbs) with
-  | ([], []) -> (fun uu___ -> t)
-  | (b::bs1, nb::nbs1) ->
-      (fun ps ->
-         let x = open_term_n_with bs1 nbs1 t ps in
-         let x1 = open_term_with b nb x ps in x1)
-  | uu___ ->
-      (fun ps ->
-         FStarC_Tactics_V2_Builtins.raise_core LengthMismatch ps;
-         Prims.magic ())
-let close_term_n (bs : binder Prims.list) (t : term) :
-  (FStarC_Reflection_Types.binder Prims.list * term)=
-  let rec aux bs1 cbs s =
-    match bs1 with
+  | Tv_Var of FStarC_Reflection_V2_Data.namedv_view
+  | Tv_BVar of FStarC_Reflection_V2_Data.bv_view
+  | Tv_FVar of FStarC_Reflection_Types.fv
+  | Tv_UInst of FStarC_Reflection_Types.fv * (FStarC_Syntax_Syntax.universe) list
+  | Tv_App of FStarC_Reflection_Types.term * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * FStarC_Reflection_V2_Data.aqualv)
+  | Tv_Abs of binder * FStarC_Reflection_Types.term
+  | Tv_Arrow of binder * FStarC_Reflection_V2_Data.comp_view
+  | Tv_Type of FStarC_Reflection_Types.universe
+  | Tv_Refine of binder * FStarC_Reflection_Types.term
+  | Tv_Const of FStarC_Reflection_V2_Data.vconst
+  | Tv_Uvar of Prims.int * FStarC_Reflection_Types.ctx_uvar_and_subst
+  | Tv_Let of bool * (FStarC_Reflection_Types.term) list * binder * FStarC_Reflection_Types.term * FStarC_Reflection_Types.term
+  | Tv_Match of FStarC_Reflection_Types.term * ((binder * ((FStarC_Reflection_Types.term, FStarC_Reflection_V2_Data.comp_view) FStar_Pervasives.either * (FStarC_Reflection_Types.term) option * bool))) option * ((pattern * FStarC_Reflection_Types.term)) list
+  | Tv_AscribedT of FStarC_Reflection_Types.term * FStarC_Reflection_Types.term * (FStarC_Reflection_Types.term) option * bool
+  | Tv_AscribedC of FStarC_Reflection_Types.term * FStarC_Reflection_V2_Data.comp_view * (FStarC_Reflection_Types.term) option * bool
+  | Tv_Unknown
+  | Tv_Unsupp
+
+
+let open_binder (b : FStarC_Reflection_Types.binder) (ps : (FStarC_Tactics_Types.proofstate ref)) : binder =
+  (let x = (FStarC_Tactics_V2_Builtins.fresh () ps) in
+  let tmp = (FStarC_Reflection_V2_Builtins.inspect_binder b) in
+  let tmp1 = ((tmp : FStarC_Reflection_V2_Data.binder_view)).FStarC_Reflection_V2_Data.ppname in
+  let tmp2 = (FStarC_Reflection_V2_Builtins.inspect_binder b) in
+  let tmp3 = ((tmp2 : FStarC_Reflection_V2_Data.binder_view)).FStarC_Reflection_V2_Data.sort in
+  let tmp4 = (FStarC_Reflection_V2_Builtins.inspect_binder b) in
+  let tmp5 = (tmp4).FStarC_Reflection_V2_Data.qual in
+  let tmp6 = (FStarC_Reflection_V2_Builtins.inspect_binder b) in
+  let tmp7 = (tmp6).FStarC_Reflection_V2_Data.attrs in
+  ({ uniq = x; ppname = tmp1; sort = tmp3; qual = tmp5; attrs = tmp7 } : binder))
+
+let open_term_with (b : FStarC_Reflection_Types.binder) (nb : binder) (t : FStarC_Reflection_Types.term) (tmp : (FStarC_Tactics_Types.proofstate ref)) : FStarC_Reflection_Types.term =
+  (FStarC_Reflection_V2_Builtins.subst_term ((let tmp1 = (FStarC_Reflection_V2_Builtins.pack_namedv ({ FStarC_Reflection_V2_Data.uniq = (nb).uniq;
+      sort = (FStar_Sealed.seal ((nb : binder)).sort);
+      ppname = (nb).ppname } : FStarC_Reflection_V2_Data.namedv_view)) in
+  (FStarC_Syntax_Syntax.DB ((Prims.parse_int "0"), tmp1))) :: []) t)
+
+let open_term (b : FStarC_Reflection_Types.binder) (t : FStarC_Reflection_Types.term) (ps : (FStarC_Tactics_Types.proofstate ref)) : (binder * FStarC_Reflection_Types.term) =
+  (let x = (open_binder b ps) in
+  let x1 = (open_term_with b x t ps) in
+  (x, x1))
+
+let open_comp (b : FStarC_Reflection_Types.binder) (t : FStarC_Reflection_Types.comp) (ps : (FStarC_Tactics_Types.proofstate ref)) : (binder * FStarC_Reflection_V2_Data.comp_view) =
+  (let x = (FStarC_Tactics_V2_Builtins.fresh () ps) in
+  let tmp = (FStarC_Reflection_V2_Builtins.subst_comp ((let tmp = (FStarC_Reflection_V2_Builtins.pack_namedv (let tmp = (FStarC_Reflection_V2_Builtins.inspect_binder b) in
+      let tmp1 = ((tmp : FStarC_Reflection_V2_Data.binder_view)).FStarC_Reflection_V2_Data.sort in
+      let tmp2 = (FStar_Sealed.seal tmp1) in
+      let tmp3 = (FStarC_Reflection_V2_Builtins.inspect_binder b) in
+      let tmp4 = ((tmp3 : FStarC_Reflection_V2_Data.binder_view)).FStarC_Reflection_V2_Data.ppname in
+      ({ FStarC_Reflection_V2_Data.uniq = x; sort = tmp2; ppname = tmp4 } : FStarC_Reflection_V2_Data.namedv_view))) in
+    (FStarC_Syntax_Syntax.DB ((Prims.parse_int "0"), tmp))) :: []) t) in
+  let tmp1 = (FStarC_Reflection_V2_Builtins.inspect_comp tmp) in
+  ((let tmp2 = (FStarC_Reflection_V2_Builtins.inspect_binder b) in
+  let tmp3 = ((tmp2 : FStarC_Reflection_V2_Data.binder_view)).FStarC_Reflection_V2_Data.ppname in
+  let tmp4 = (FStarC_Reflection_V2_Builtins.inspect_binder b) in
+  let tmp5 = ((tmp4 : FStarC_Reflection_V2_Data.binder_view)).FStarC_Reflection_V2_Data.sort in
+  let tmp6 = (FStarC_Reflection_V2_Builtins.inspect_binder b) in
+  let tmp7 = (tmp6).FStarC_Reflection_V2_Data.qual in
+  let tmp8 = (FStarC_Reflection_V2_Builtins.inspect_binder b) in
+  let tmp9 = (tmp8).FStarC_Reflection_V2_Data.attrs in
+  ({ uniq = x; ppname = tmp3; sort = tmp5; qual = tmp7; attrs = tmp9 } : binder)), tmp1))
+
+let open_term_simple (b : FStarC_Syntax_Syntax.binder) (t : FStarC_Reflection_Types.term) (ps : (FStarC_Tactics_Types.proofstate ref)) : (binder * FStarC_Reflection_Types.term) =
+  (let x = (FStarC_Tactics_V2_Builtins.fresh () ps) in
+  let tmp = (FStarC_Reflection_V2_Builtins.subst_term ((let tmp = (FStarC_Reflection_V2_Builtins.pack_namedv (let tmp = (FStarC_Reflection_V2_Builtins.inspect_binder b) in
+      let tmp1 = ((tmp : FStarC_Reflection_V2_Data.binder_view)).FStarC_Reflection_V2_Data.sort in
+      let tmp2 = (FStar_Sealed.seal tmp1) in
+      let tmp3 = (FStarC_Reflection_V2_Builtins.inspect_binder b) in
+      let tmp4 = ((tmp3 : FStarC_Reflection_V2_Data.binder_view)).FStarC_Reflection_V2_Data.ppname in
+      ({ FStarC_Reflection_V2_Data.uniq = x; sort = tmp2; ppname = tmp4 } : FStarC_Reflection_V2_Data.namedv_view))) in
+    (FStarC_Syntax_Syntax.DB ((Prims.parse_int "0"), tmp))) :: []) t) in
+  ((let tmp1 = (FStarC_Reflection_V2_Builtins.inspect_binder b) in
+  let tmp2 = ((tmp1 : FStarC_Reflection_V2_Data.binder_view)).FStarC_Reflection_V2_Data.ppname in
+  let tmp3 = (FStarC_Reflection_V2_Builtins.inspect_binder b) in
+  let tmp4 = ((tmp3 : FStarC_Reflection_V2_Data.binder_view)).FStarC_Reflection_V2_Data.sort in
+  let tmp5 = (FStarC_Reflection_V2_Builtins.inspect_binder b) in
+  let tmp6 = (tmp5).FStarC_Reflection_V2_Data.qual in
+  let tmp7 = (FStarC_Reflection_V2_Builtins.inspect_binder b) in
+  let tmp8 = (tmp7).FStarC_Reflection_V2_Data.attrs in
+  ({ uniq = x; ppname = tmp2; sort = tmp4; qual = tmp6; attrs = tmp8 } : binder)), tmp))
+
+let r_binder_to_namedv (b : binder) : FStarC_Reflection_Types.namedv =
+  (FStarC_Reflection_V2_Builtins.pack_namedv ({ FStarC_Reflection_V2_Data.uniq = (b).uniq;
+    sort = (FStar_Sealed.seal ((b : binder)).sort);
+    ppname = (b).ppname } : FStarC_Reflection_V2_Data.namedv_view))
+
+let rec open_pat (p : FStarC_Reflection_V2_Data.pattern) (s : (FStarC_Syntax_Syntax.subst_elt) list) : ((FStarC_Tactics_Types.proofstate ref) -> (pattern * (FStarC_Syntax_Syntax.subst_elt) list)) =
+  (match p with
+    | (FStarC_Reflection_V2_Data.Pat_Constant (c)) -> (fun tmp -> ((Pat_Constant (c)), s))
+    | (FStarC_Reflection_V2_Data.Pat_Var (ssort, n)) -> (fun ps -> (let x = (FStarC_Tactics_Unseal.unseal ssort ps) in
+      let x1 = (FStarC_Reflection_V2_Builtins.subst_term s x) in
+      let x2 = (FStarC_Tactics_V2_Builtins.fresh () ps) in
+      let x3 = ({ FStarC_Reflection_V2_Data.uniq = x2;
+          sort = (FStar_Sealed.seal x1);
+          ppname = n } : FStarC_Reflection_V2_Data.namedv_view) in
+      ((Pat_Var (({ v = x3; sort = (FStar_Sealed.seal x1) } : pattern__Pat_Var__payload))), ((let tmp = (FStarC_Reflection_V2_Builtins.pack_namedv x3) in
+      (FStarC_Syntax_Syntax.DB ((Prims.parse_int "0"), tmp))) :: (FStar_Reflection_V2_Derived.shift_subst (Prims.parse_int "1") s)))))
+    | (FStarC_Reflection_V2_Data.Pat_Cons (head, univs, subpats)) -> (fun ps -> (let x = (FStar_Tactics_Util.fold_left (fun tmp tmp1 -> (match (tmp, tmp1) with
+          | ((pats, s1), (pat, b)) -> (fun ps1 -> (let x = (open_pat pat s1 ps1) in
+            (match x with
+              | (pat1, s') -> (((pat1, b) :: pats), s')
+            )))
+        )) ([], s) subpats ps) in
+      (match x with
+        | (subpats1, s1) -> ((Pat_Cons (({ head = head;
+            univs = univs;
+            subpats = (FStar_List_Tot_Base.rev subpats1) } : pattern__Pat_Cons__payload))), s1)
+      )))
+    | (FStarC_Reflection_V2_Data.Pat_Dot_Term (None)) -> (fun tmp -> ((Pat_Dot_Term (None)), s))
+    | (FStarC_Reflection_V2_Data.Pat_Dot_Term ((Some (t)))) -> (fun tmp -> ((Pat_Dot_Term ((let tmp1 = (FStarC_Reflection_V2_Builtins.subst_term s t) in
+      (Some (tmp1))))), s))
+  )
+
+let open_branch (b : (FStarC_Reflection_V2_Data.pattern * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) : ((FStarC_Tactics_Types.proofstate ref) -> (pattern * FStarC_Reflection_Types.term)) =
+  (fun ps -> ((match b with
+    | (pat, t) -> (fun ps1 -> (let x = (open_pat pat [] ps1) in
+      (match x with
+        | (pat1, s) -> (let tmp = (FStarC_Reflection_V2_Builtins.subst_term s t) in
+          (pat1, tmp))
+      )))
+  ) ps))
+
+let open_comp_with (b : FStarC_Reflection_Types.binder) (nb : binder) (c : FStarC_Reflection_Types.comp) (tmp : (FStarC_Tactics_Types.proofstate ref)) : FStarC_Reflection_V2_Data.comp_view =
+  (let tmp1 = (FStarC_Reflection_V2_Builtins.subst_comp ((let tmp1 = (FStarC_Reflection_V2_Builtins.pack_namedv ({ FStarC_Reflection_V2_Data.uniq = (nb).uniq;
+        sort = (FStar_Sealed.seal ((nb : binder)).sort);
+        ppname = (nb).ppname } : FStarC_Reflection_V2_Data.namedv_view)) in
+    (FStarC_Syntax_Syntax.DB ((Prims.parse_int "0"), tmp1))) :: []) c) in
+  (FStarC_Reflection_V2_Builtins.inspect_comp tmp1))
+
+let open_match_returns_ascription (mra : (FStarC_Syntax_Syntax.binder * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax, (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * bool))) : ((FStarC_Tactics_Types.proofstate ref) -> (binder * ((FStarC_Reflection_Types.term, FStarC_Reflection_V2_Data.comp_view) FStar_Pervasives.either * (FStarC_Reflection_Types.term) option * bool))) =
+  (fun ps -> ((match mra with
+    | (b, (ct, topt, use_eq)) -> (fun ps1 -> (let x = (open_binder b ps1) in
+      let x1 = ((match ct with
+          | (FStar_Pervasives.Inl (t)) -> (fun ps2 -> (let x1 = (open_term_with b x t ps2) in
+            (FStar_Pervasives.Inl (x1))))
+          | (FStar_Pervasives.Inr (c)) -> (fun ps2 -> (let x1 = (open_comp_with b x c ps2) in
+            (FStar_Pervasives.Inr (x1))))
+        ) ps1) in
+      let x2 = ((match topt with
+          | None -> (fun tmp -> None)
+          | (Some (t)) -> (fun ps2 -> (let x2 = (open_term_with b x t ps2) in
+            (Some (x2))))
+        ) ps1) in
+      (x, (x1, x2, use_eq))))
+  ) ps))
+
+let open_view (tv : FStarC_Reflection_V2_Data.term_view) : ((FStarC_Tactics_Types.proofstate ref) -> named_term_view) =
+  (match tv with
+    | (FStarC_Reflection_V2_Data.Tv_Var (v)) -> (fun tmp -> (let tmp1 = (FStarC_Reflection_V2_Builtins.inspect_namedv v) in
+      (Tv_Var (tmp1))))
+    | (FStarC_Reflection_V2_Data.Tv_BVar (v)) -> (fun tmp -> (let tmp1 = (FStarC_Reflection_V2_Builtins.inspect_bv v) in
+      (Tv_BVar (tmp1))))
+    | (FStarC_Reflection_V2_Data.Tv_FVar (v)) -> (fun tmp -> (Tv_FVar (v)))
+    | (FStarC_Reflection_V2_Data.Tv_UInst (v, us)) -> (fun tmp -> (Tv_UInst (v, us)))
+    | (FStarC_Reflection_V2_Data.Tv_App (hd, a)) -> (fun tmp -> (Tv_App (hd, a)))
+    | (FStarC_Reflection_V2_Data.Tv_Type (u)) -> (fun tmp -> (Tv_Type (u)))
+    | (FStarC_Reflection_V2_Data.Tv_Const (c)) -> (fun tmp -> (Tv_Const (c)))
+    | (FStarC_Reflection_V2_Data.Tv_Uvar (n, ctx_uvar_and_subst)) -> (fun tmp -> (Tv_Uvar (n, ctx_uvar_and_subst)))
+    | (FStarC_Reflection_V2_Data.Tv_AscribedT (e, t, tac, use_eq)) -> (fun tmp -> (Tv_AscribedT (e, t, tac, use_eq)))
+    | (FStarC_Reflection_V2_Data.Tv_AscribedC (e, c, tac, use_eq)) -> (fun tmp -> (let tmp1 = (FStarC_Reflection_V2_Builtins.inspect_comp c) in
+      (Tv_AscribedC (e, tmp1, tac, use_eq))))
+    | FStarC_Reflection_V2_Data.Tv_Unknown -> (fun tmp -> Tv_Unknown)
+    | FStarC_Reflection_V2_Data.Tv_Unsupp -> (fun tmp -> Tv_Unsupp)
+    | (FStarC_Reflection_V2_Data.Tv_Abs (b, body)) -> (fun ps -> (let x = (open_term b body ps) in
+      (match x with
+        | (nb, body1) -> (Tv_Abs (nb, body1))
+      )))
+    | (FStarC_Reflection_V2_Data.Tv_Arrow (b, c)) -> (fun ps -> (let x = (open_comp b c ps) in
+      (match x with
+        | (nb, c1) -> (Tv_Arrow (nb, c1))
+      )))
+    | (FStarC_Reflection_V2_Data.Tv_Refine (b, ref)) -> (fun ps -> (let x = (open_term_simple b ref ps) in
+      (match x with
+        | (nb, ref1) -> (Tv_Refine (nb, ref1))
+      )))
+    | (FStarC_Reflection_V2_Data.Tv_Let (recf, attrs, b, def, body)) -> (fun ps -> (let x = (open_term_simple b body ps) in
+      (match x with
+        | (nb, body1) -> (let tmp = (if recf then (FStarC_Reflection_V2_Builtins.subst_term ((FStarC_Syntax_Syntax.DB ((Prims.parse_int "0"), (r_binder_to_namedv nb))) :: []) def) else def) in
+          (Tv_Let (recf, attrs, nb, tmp, body1)))
+      )))
+    | (FStarC_Reflection_V2_Data.Tv_Match (scrutinee, ret, brs)) -> (fun ps -> (let x = (FStar_Tactics_Util.map open_branch brs ps) in
+      let x1 = (FStar_Tactics_Util.map_opt open_match_returns_ascription ret ps) in
+      (Tv_Match (scrutinee, x1, x))))
+  )
+
+let inspect (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> named_term_view) =
+  (fun ps -> (let x = (FStarC_Tactics_V2_Builtins.compress t ps) in
+  let x1 = (FStarC_Reflection_V2_Builtins.inspect_ln x) in
+  (open_view x1 ps)))
+
+let close_term (b : binder) (t : FStarC_Reflection_Types.term) : (FStarC_Reflection_Types.binder * FStarC_Reflection_Types.term) =
+  (let nv = (r_binder_to_namedv b) in
+  let t' = (FStarC_Reflection_V2_Builtins.subst_term ((FStarC_Syntax_Syntax.NM (nv, (Prims.parse_int "0"))) :: []) t) in
+  let b1 = (FStarC_Reflection_V2_Builtins.pack_binder ({ FStarC_Reflection_V2_Data.sort = ((b : binder)).sort;
+      qual = (b).qual;
+      attrs = (b).attrs;
+      ppname = (b).ppname } : FStarC_Reflection_V2_Data.binder_view)) in
+  (b1, t'))
+
+let close_comp (b : binder) (t : FStarC_Reflection_V2_Data.comp_view) : (FStarC_Reflection_Types.binder * FStarC_Reflection_Types.comp) =
+  (let nv = (r_binder_to_namedv b) in
+  let tmp = (FStarC_Reflection_V2_Builtins.pack_comp t) in
+  let t' = (FStarC_Reflection_V2_Builtins.subst_comp ((FStarC_Syntax_Syntax.NM (nv, (Prims.parse_int "0"))) :: []) tmp) in
+  let b1 = (FStarC_Reflection_V2_Builtins.pack_binder ({ FStarC_Reflection_V2_Data.sort = ((b : binder)).sort;
+      qual = (b).qual;
+      attrs = (b).attrs;
+      ppname = (b).ppname } : FStarC_Reflection_V2_Data.binder_view)) in
+  (b1, t'))
+
+let close_term_simple (b : binder) (t : FStarC_Reflection_Types.term) : (FStarC_Syntax_Syntax.binder * FStarC_Reflection_Types.term) =
+  (let nv = (r_binder_to_namedv b) in
+  let t' = (FStarC_Reflection_V2_Builtins.subst_term ((FStarC_Syntax_Syntax.NM (nv, (Prims.parse_int "0"))) :: []) t) in
+  let bv = ({ FStarC_Reflection_V2_Data.sort = ((b : binder)).sort;
+      qual = (b).qual;
+      attrs = (b).attrs;
+      ppname = (b).ppname } : FStarC_Reflection_V2_Data.binder_view) in
+  let b1 = (FStarC_Reflection_V2_Builtins.pack_binder bv) in
+  (b1, t'))
+
+let rec close_pat (p : pattern) (s : (FStarC_Syntax_Syntax.subst_elt) list) : (FStarC_Reflection_V2_Data.pattern * (FStarC_Syntax_Syntax.subst_elt) list) =
+  (match p with
+    | (Pat_Constant (c)) -> ((FStarC_Reflection_V2_Data.Pat_Constant (c)), s)
+    | (Pat_Var ({ v = v; sort = sort; _ })) -> (let nv = (FStarC_Reflection_V2_Builtins.pack_namedv v) in
+      let s1 = ((FStarC_Syntax_Syntax.NM (nv, (Prims.parse_int "0"))) :: (FStar_Reflection_V2_Derived.shift_subst (Prims.parse_int "1") s)) in
+      ((let tmp = ((v : FStarC_Reflection_V2_Data.namedv_view)).FStarC_Reflection_V2_Data.ppname in
+      (FStarC_Reflection_V2_Data.Pat_Var (sort, tmp))), s1))
+    | (Pat_Cons ({ head = head; univs = univs; subpats = subpats; _ })) -> (let tmp = (FStar_List_Tot_Base.fold_left (fun tmp tmp1 -> (match (tmp, tmp1) with
+          | ((pats, s1), (pat, b)) -> (let tmp2 = (close_pat pat s1) in
+            (match tmp2 with
+              | (pat1, s') -> (((pat1, b) :: pats), s')
+            ))
+        )) ([], s) subpats) in
+      (match tmp with
+        | (subpats1, s1) -> (let subpats2 = (FStar_List_Tot_Base.rev subpats1) in
+          ((FStarC_Reflection_V2_Data.Pat_Cons (head, univs, subpats2)), s1))
+      ))
+    | (Pat_Dot_Term (None)) -> ((FStarC_Reflection_V2_Data.Pat_Dot_Term (None)), s)
+    | (Pat_Dot_Term ((Some (t)))) -> (let t1 = (FStarC_Reflection_V2_Builtins.subst_term s t) in
+      ((FStarC_Reflection_V2_Data.Pat_Dot_Term ((Some (t1)))), s))
+  )
+
+let close_branch (b : (pattern * FStarC_Reflection_Types.term)) : (FStarC_Reflection_V2_Data.pattern * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
+  (match b with
+    | (pat, t) -> (let tmp = (close_pat pat []) in
+      (match tmp with
+        | (pat1, s) -> (let t' = (FStarC_Reflection_V2_Builtins.subst_term s t) in
+          (pat1, t'))
+      ))
+  )
+
+let close_binder (b : binder) : FStarC_Reflection_Types.binder =
+  (FStarC_Reflection_V2_Builtins.pack_binder ({ FStarC_Reflection_V2_Data.sort = ((b : binder)).sort;
+    qual = (b).qual;
+    attrs = (b).attrs;
+    ppname = (b).ppname } : FStarC_Reflection_V2_Data.binder_view))
+
+let close_match_returns_ascription (mra : (binder * ((FStarC_Reflection_Types.term, FStarC_Reflection_V2_Data.comp_view) FStar_Pervasives.either * (FStarC_Reflection_Types.term) option * bool))) : (FStarC_Syntax_Syntax.binder * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax, (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * bool)) =
+  (match mra with
+    | (nb, (ct, topt, use_eq)) -> (let b = (close_binder nb) in
+      let ct1 = (match ct with
+          | (FStar_Pervasives.Inl (t)) -> (FStar_Pervasives.Inl ((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd (close_term nb t))))
+          | (FStar_Pervasives.Inr (c)) -> (let tmp = (close_comp nb c) in
+            (match tmp with
+              | (tmp1, c1) -> (FStar_Pervasives.Inr (c1))
+            ))
+        ) in
+      let topt1 = (match topt with
+          | None -> None
+          | (Some (t)) -> (Some ((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd (close_term nb t))))
+        ) in
+      (b, (ct1, topt1, use_eq)))
+  )
+
+let close_view (tv : named_term_view) : FStarC_Reflection_V2_Data.term_view =
+  (match tv with
+    | (Tv_Var (v)) -> (let tmp = (FStarC_Reflection_V2_Builtins.pack_namedv v) in
+      (FStarC_Reflection_V2_Data.Tv_Var (tmp)))
+    | (Tv_BVar (v)) -> (let tmp = (FStarC_Reflection_V2_Builtins.pack_bv v) in
+      (FStarC_Reflection_V2_Data.Tv_BVar (tmp)))
+    | (Tv_FVar (v)) -> (FStarC_Reflection_V2_Data.Tv_FVar (v))
+    | (Tv_UInst (v, us)) -> (FStarC_Reflection_V2_Data.Tv_UInst (v, us))
+    | (Tv_App (hd, a)) -> (FStarC_Reflection_V2_Data.Tv_App (hd, a))
+    | (Tv_Type (u)) -> (FStarC_Reflection_V2_Data.Tv_Type (u))
+    | (Tv_Const (c)) -> (FStarC_Reflection_V2_Data.Tv_Const (c))
+    | (Tv_Uvar (n, ctx_uvar_and_subst)) -> (FStarC_Reflection_V2_Data.Tv_Uvar (n, ctx_uvar_and_subst))
+    | (Tv_AscribedT (e, t, tac, use_eq)) -> (FStarC_Reflection_V2_Data.Tv_AscribedT (e, t, tac, use_eq))
+    | (Tv_AscribedC (e, c, tac, use_eq)) -> (let tmp = (FStarC_Reflection_V2_Builtins.pack_comp c) in
+      (FStarC_Reflection_V2_Data.Tv_AscribedC (e, tmp, tac, use_eq)))
+    | Tv_Unknown -> FStarC_Reflection_V2_Data.Tv_Unknown
+    | Tv_Unsupp -> FStarC_Reflection_V2_Data.Tv_Unsupp
+    | (Tv_Abs (nb, body)) -> (let tmp = (close_term nb body) in
+      (match tmp with
+        | (b, body1) -> (FStarC_Reflection_V2_Data.Tv_Abs (b, body1))
+      ))
+    | (Tv_Arrow (nb, c)) -> (let tmp = (close_comp nb c) in
+      (match tmp with
+        | (b, c1) -> (FStarC_Reflection_V2_Data.Tv_Arrow (b, c1))
+      ))
+    | (Tv_Refine (nb, ref)) -> (let tmp = (close_term_simple nb ref) in
+      (match tmp with
+        | (b, ref1) -> (FStarC_Reflection_V2_Data.Tv_Refine (b, ref1))
+      ))
+    | (Tv_Let (recf, attrs, nb, def, body)) -> (let def1 = (if recf then (FStarC_Reflection_V2_Builtins.subst_term ((FStarC_Syntax_Syntax.NM ((r_binder_to_namedv nb), (Prims.parse_int "0"))) :: []) def) else def) in
+      let tmp = (close_term_simple nb body) in
+      (match tmp with
+        | (b, body1) -> (FStarC_Reflection_V2_Data.Tv_Let (recf, attrs, b, def1, body1))
+      ))
+    | (Tv_Match (scrutinee, ret, brs)) -> (let brs1 = (FStar_List_Tot_Base.map close_branch brs) in
+      let ret1 = (match ret with
+          | None -> None
+          | (Some (asc)) -> (Some ((close_match_returns_ascription asc)))
+        ) in
+      (FStarC_Reflection_V2_Data.Tv_Match (scrutinee, ret1, brs1)))
+  )
+
+let pack (tv : named_term_view) : FStarC_Reflection_Types.term =
+  (let tv1 = (close_view tv) in
+  (FStarC_Reflection_V2_Builtins.pack_ln tv1))
+
+type letbinding = {
+  lb_fv : FStarC_Reflection_Types.fv;
+  lb_us : ((string * FStarC_Range_Type.range)) list;
+  lb_typ : FStarC_Reflection_Types.typ;
+  lb_def : FStarC_Reflection_Types.term;
+}
+
+type named_sigelt_view__Sg_Let__payload = {
+  isrec : bool;
+  lbs : (letbinding) list;
+}
+
+type named_sigelt_view__Sg_Inductive__payload = {
+  nm : FStarC_Reflection_Types.name;
+  univs : ((string * FStarC_Range_Type.range)) list;
+  params : (binder) list;
+  typ : FStarC_Reflection_Types.typ;
+  ctors : (((string) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) list;
+}
+
+type named_sigelt_view__Sg_Val__payload = {
+  nm : FStarC_Reflection_Types.name;
+  univs : ((string * FStarC_Range_Type.range)) list;
+  typ : FStarC_Reflection_Types.typ;
+}
+
+type named_sigelt_view =
+  | Sg_Let of named_sigelt_view__Sg_Let__payload
+  | Sg_Inductive of named_sigelt_view__Sg_Inductive__payload
+  | Sg_Val of named_sigelt_view__Sg_Val__payload
+  | Unk
+
+
+let open_univ_s (us : (FStarC_Reflection_Types.univ_name) list) (ps : (FStarC_Tactics_Types.proofstate ref)) : (((string * FStarC_Range_Type.range)) list * (FStarC_Syntax_Syntax.subst_elt) list) =
+  (let x = (FStar_List_Tot_Base.length us) in
+  let x1 = (FStar_Tactics_Util.mapi (fun i u -> (fun tmp -> (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_universe (FStarC_Reflection_V2_Data.Uv_Name (u))) in
+    (FStarC_Syntax_Syntax.UN ((Prims.op_Minus (Prims.op_Minus x (Prims.parse_int "1")) i), tmp1))))) us ps) in
+  let x2 = (FStar_Tactics_Util.map (fun i -> (fun tmp -> (FStarC_Reflection_V2_Builtins.inspect_ident i))) us ps) in
+  (x2, x1))
+
+let open_lb (lb : FStarC_Reflection_Types.letbinding) : ((FStarC_Tactics_Types.proofstate ref) -> letbinding) =
+  (fun ps -> (let x = (FStarC_Reflection_V2_Builtins.inspect_lb lb) in
+  ((fun ps1 -> (let x1 = (open_univ_s (x).FStarC_Reflection_V2_Data.lb_us ps1) in
+  (match x1 with
+    | (lb_us, s) -> (let tmp = (FStarC_Reflection_V2_Builtins.subst_term s (x).FStarC_Reflection_V2_Data.lb_typ) in
+      let tmp1 = (FStarC_Reflection_V2_Builtins.subst_term s (x).FStarC_Reflection_V2_Data.lb_def) in
+      { lb_fv = (x).FStarC_Reflection_V2_Data.lb_fv;
+        lb_us = lb_us;
+        lb_typ = tmp;
+        lb_def = tmp1 })
+  ))) ps)))
+
+let r_subst_binder_sort (s : (FStarC_Syntax_Syntax.subst_elt) list) (b : FStarC_Reflection_Types.binder) : FStarC_Reflection_Types.binder =
+  (let v = (FStarC_Reflection_V2_Builtins.inspect_binder b) in
+  let tmp = ((v : FStarC_Reflection_V2_Data.binder_view)).FStarC_Reflection_V2_Data.sort in
+  let tmp1 = (FStarC_Reflection_V2_Builtins.subst_term s tmp) in
+  let tmp2 = (v).FStarC_Reflection_V2_Data.qual in
+  let tmp3 = (v).FStarC_Reflection_V2_Data.attrs in
+  let tmp4 = ((v : FStarC_Reflection_V2_Data.binder_view)).FStarC_Reflection_V2_Data.ppname in
+  let v1 = ({ FStarC_Reflection_V2_Data.sort = tmp1;
+      qual = tmp2;
+      attrs = tmp3;
+      ppname = tmp4 } : FStarC_Reflection_V2_Data.binder_view) in
+  (FStarC_Reflection_V2_Builtins.pack_binder v1))
+
+let subst_r_binders (s : (FStarC_Syntax_Syntax.subst_elt) list) (eta : (FStarC_Reflection_Types.binder) list) : (FStarC_Reflection_Types.binder) list =
+  (FStar_List_Tot_Base.mapi (fun i b -> (r_subst_binder_sort (FStar_Reflection_V2_Derived.shift_subst i s) b)) eta)
+
+let rec u___open_term_n_aux (bs : (FStarC_Reflection_Types.binder) list) (nbs : (binder) list) (s : (FStarC_Syntax_Syntax.subst_elt) list) : ((FStarC_Tactics_Types.proofstate ref) -> ((binder) list * (FStarC_Syntax_Syntax.subst_elt) list)) =
+  (match bs with
+    | [] -> (fun tmp -> (nbs, s))
+    | (b :: bs1) -> (fun ps -> (let x = (r_subst_binder_sort s b) in
+      let x1 = (open_binder x ps) in
+      let x2 = (r_binder_to_namedv x1) in
+      (u___open_term_n_aux bs1 (x1 :: nbs) ((FStarC_Syntax_Syntax.DB ((Prims.parse_int "0"), x2)) :: (FStar_Reflection_V2_Derived.shift_subst (Prims.parse_int "1") s)) ps)))
+  )
+
+let open_term_n (bs : (FStarC_Reflection_Types.binder) list) (t : FStarC_Reflection_Types.term) (ps : (FStarC_Tactics_Types.proofstate ref)) : ((binder) list * FStarC_Reflection_Types.term) =
+  (let x = (u___open_term_n_aux bs [] [] ps) in
+  (match x with
+    | (nbs, s) -> (let tmp = (FStarC_Reflection_V2_Builtins.subst_term s t) in
+      ((FStar_List_Tot_Base.rev nbs), tmp))
+  ))
+
+exception NotEnoughBinders
+
+let rec open_n_binders_from_arrow (bs : (binder) list) (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_Types.term) =
+  (match bs with
+    | [] -> (fun tmp -> t)
+    | (b :: bs1) -> (fun ps -> (let x = (inspect t ps) in
+      ((match x with
+        | (Tv_Arrow (b', c)) -> (if (let tmp = (FStarC_Reflection_V2_Data.is_tot_comp c) in
+          (not tmp)) then (fun ps1 -> ((ignore (FStarC_Tactics_V2_Builtins.raise_core NotEnoughBinders ps1));
+          (failwith "Prims.magic"))) else (fun ps1 -> (let x1 = (c).FStarC_Reflection_V2_Data.result_typ in
+          let x2 = (FStarC_Reflection_V2_Builtins.subst_term ((FStarC_Syntax_Syntax.NT ((r_binder_to_namedv b'), (pack (let tmp = (FStarC_Reflection_V2_Builtins.inspect_namedv (r_binder_to_namedv b)) in
+            (Tv_Var (tmp)))))) :: []) x1) in
+          (open_n_binders_from_arrow bs1 x2 ps1))))
+        | tmp -> (fun ps1 -> ((ignore (FStarC_Tactics_V2_Builtins.raise_core NotEnoughBinders ps1));
+          (failwith "Prims.magic")))
+      ) ps)))
+  )
+
+let open_sigelt_view (sv : FStarC_Reflection_V2_Data.sigelt_view) : ((FStarC_Tactics_Types.proofstate ref) -> named_sigelt_view) =
+  (match sv with
+    | (FStarC_Reflection_V2_Data.Sg_Let (isrec, lbs)) -> (fun ps -> (let x = (FStar_Tactics_Util.map open_lb lbs ps) in
+      (Sg_Let ({ isrec = isrec; lbs = x }))))
+    | (FStarC_Reflection_V2_Data.Sg_Inductive (nm, univs, params, typ, ctors)) -> (fun ps -> (let x = (FStar_List_Tot_Base.length params) in
+      let x1 = (open_univ_s univs ps) in
+      ((match x1 with
+        | (univs1, s) -> (fun ps1 -> (let x2 = (subst_r_binders s params) in
+          let x3 = (FStarC_Reflection_V2_Builtins.subst_term (FStar_Reflection_V2_Derived.shift_subst x s) typ) in
+          let x4 = (FStar_Tactics_Util.map (fun tmp -> (fun tmp1 -> (match tmp with
+              | (nm1, ty) -> (let tmp2 = (FStarC_Reflection_V2_Builtins.subst_term s ty) in
+                (nm1, tmp2))
+            ))) ctors ps1) in
+          let x5 = (open_term_n x2 x3 ps1) in
+          ((match x5 with
+            | (params1, typ1) -> (fun ps2 -> (let x6 = (FStar_Tactics_Util.map (fun tmp -> (match tmp with
+                  | (nm1, ty) -> (fun ps3 -> (let x6 = (open_n_binders_from_arrow params1 ty ps3) in
+                    (nm1, x6)))
+                )) x4 ps2) in
+              (Sg_Inductive (({ nm = nm;
+                univs = univs1;
+                params = params1;
+                typ = typ1;
+                ctors = x6 } : named_sigelt_view__Sg_Inductive__payload)))))
+          ) ps1)))
+      ) ps)))
+    | (FStarC_Reflection_V2_Data.Sg_Val (nm, univs, typ)) -> (fun ps -> (let x = (open_univ_s univs ps) in
+      (match x with
+        | (univs1, s) -> (Sg_Val ((let tmp = (FStarC_Reflection_V2_Builtins.subst_term s typ) in
+          ({ nm = nm; univs = univs1; typ = tmp } : named_sigelt_view__Sg_Val__payload))))
+      )))
+    | FStarC_Reflection_V2_Data.Unk -> (fun tmp -> Unk)
+  )
+
+let inspect_sigelt (s : FStarC_Reflection_Types.sigelt) : ((FStarC_Tactics_Types.proofstate ref) -> named_sigelt_view) =
+  (fun ps -> (let x = (FStarC_Reflection_V2_Builtins.inspect_sigelt s) in
+  (open_sigelt_view x ps)))
+
+let close_univ_s (us : ((string * FStarC_Range_Type.range)) list) : ((FStarC_Reflection_Types.univ_name) list * (FStarC_Syntax_Syntax.subst_elt) list) =
+  (let n = (FStar_List_Tot_Base.length us) in
+  let us1 = (FStar_List_Tot_Base.map (fun i -> (FStarC_Reflection_V2_Builtins.pack_ident i)) us) in
+  let s = (FStar_List_Tot_Base.mapi (fun i u -> (FStarC_Syntax_Syntax.UD (u, (Prims.op_Minus (Prims.op_Minus n i) (Prims.parse_int "1"))))) us1) in
+  (us1, s))
+
+let close_lb (lb : letbinding) : FStarC_Reflection_Types.letbinding =
+  (let tmp = (close_univ_s (lb).lb_us) in
+  (match tmp with
+    | (lb_us, s) -> (let lb_typ = (FStarC_Reflection_V2_Builtins.subst_term s (lb).lb_typ) in
+      let lb_def = (FStarC_Reflection_V2_Builtins.subst_term s (lb).lb_def) in
+      (FStarC_Reflection_V2_Builtins.pack_lb { FStarC_Reflection_V2_Data.lb_fv = (lb).lb_fv;
+        lb_us = lb_us;
+        lb_typ = lb_typ;
+        lb_def = lb_def }))
+  ))
+
+let rec mk_arr (args : (binder) list) (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_Types.term) =
+  (match args with
+    | [] -> (fun tmp -> t)
+    | (a :: args') -> (fun ps -> (let x = (mk_arr args' t ps) in
+      let x1 = (FStarC_Reflection_V2_Data.mk_tot_comp x) in
+      (pack (Tv_Arrow (a, x1)))))
+  )
+
+let subst_binder_sort (s : (FStarC_Syntax_Syntax.subst_elt) list) (b : binder) : binder =
+  (let tmp = (FStarC_Reflection_V2_Builtins.subst_term s ((b : binder)).sort) in
+  ({ uniq = (b).uniq;
+    ppname = (b).ppname;
+    sort = tmp;
+    qual = (b).qual;
+    attrs = (b).attrs } : binder))
+
+let rec close_term_n__aux (bs : (binder) list) (cbs : (FStarC_Reflection_Types.binder) list) (s : (FStarC_Syntax_Syntax.subst_elt) list) : ((FStarC_Reflection_Types.binder) list * (FStarC_Syntax_Syntax.subst_elt) list) =
+  (match bs with
     | [] -> (cbs, s)
-    | b::bs2 ->
-        let b1 = subst_binder_sort s b in
-        let nv = r_binder_to_namedv b1 in
-        let b2 = close_binder b1 in
-        aux bs2 (b2 :: cbs) ((FStarC_Syntax_Syntax.NM (nv, Prims.int_zero))
-          :: (FStar_Reflection_V2_Derived.shift_subst Prims.int_one s)) in
-  let uu___ = aux bs [] [] in
-  match uu___ with
-  | (cbs, s) ->
-      ((FStar_List_Tot_Base.rev cbs),
-        (FStarC_Reflection_V2_Builtins.subst_term s t))
-let rec open_term_n_simple
-  (bs : FStarC_Reflection_V2_Data.simple_binder Prims.list) (t : term) :
-  FStarC_Tactics_Types.ref_proofstate -> (simple_binder Prims.list * term)=
-  match bs with
-  | [] -> (fun uu___ -> ([], t))
-  | b::bs1 ->
-      (fun ps ->
-         let x = open_term_n_simple bs1 t ps in
-         match x with
-         | (bs', t') ->
-             let x1 = open_term_simple b t' ps in
-             (match x1 with | (b', t'') -> ((b' :: bs'), t'')))
-let rec close_term_n_simple (bs : simple_binder Prims.list) (t : term) :
-  (FStarC_Reflection_V2_Data.simple_binder Prims.list * term)=
-  match bs with
-  | [] -> ([], t)
-  | b::bs1 ->
-      let uu___ = close_term_n_simple bs1 t in
-      (match uu___ with
-       | (bs', t') ->
-           let uu___1 = close_term_simple b t' in
-           (match uu___1 with | (b', t'') -> ((b' :: bs'), t'')))
-let rec open_pat (p : FStarC_Reflection_V2_Data.pattern)
-  (s : FStarC_Syntax_Syntax.subst_t) :
-  FStarC_Tactics_Types.ref_proofstate ->
-    (pattern * FStarC_Syntax_Syntax.subst_t)=
-  match p with
-  | FStarC_Reflection_V2_Data.Pat_Constant c ->
-      (fun uu___ -> ((Pat_Constant { c }), s))
-  | FStarC_Reflection_V2_Data.Pat_Var (ssort, n) ->
-      (fun ps ->
-         let x = FStarC_Tactics_Unseal.unseal ssort ps in
-         let x1 = FStarC_Reflection_V2_Builtins.subst_term s x in
-         let x2 =
-           let x3 = FStarC_Tactics_V2_Builtins.fresh () ps in
-           {
-             FStarC_Reflection_V2_Data.uniq = x3;
-             FStarC_Reflection_V2_Data.sort = (FStar_Sealed.seal x1);
-             FStarC_Reflection_V2_Data.ppname = n
-           } in
-         ((Pat_Var { v = x2; sort1 = (FStar_Sealed.seal x1) }),
-           ((FStarC_Syntax_Syntax.DB
-               (Prims.int_zero,
-                 (FStarC_Reflection_V2_Builtins.pack_namedv x2))) ::
-           (FStar_Reflection_V2_Derived.shift_subst Prims.int_one s))))
-  | FStarC_Reflection_V2_Data.Pat_Cons (head, univs, subpats) ->
-      (fun ps ->
-         let x =
-           FStar_Tactics_Util.fold_left
-             (fun uu___ uu___1 ->
-                match (uu___, uu___1) with
-                | ((pats, s1), (pat, b)) ->
-                    (fun ps1 ->
-                       let x1 = open_pat pat s1 ps1 in
-                       match x1 with
-                       | (pat1, s') -> (((pat1, b) :: pats), s'))) ([], s)
-             subpats ps in
-         match x with
-         | (subpats1, s1) ->
-             ((Pat_Cons
-                 { head; univs; subpats = (FStar_List_Tot_Base.rev subpats1)
-                 }), s1))
-  | FStarC_Reflection_V2_Data.Pat_Dot_Term (FStar_Pervasives_Native.None) ->
-      (fun uu___ -> ((Pat_Dot_Term { t = FStar_Pervasives_Native.None }), s))
-  | FStarC_Reflection_V2_Data.Pat_Dot_Term (FStar_Pervasives_Native.Some t)
-      ->
-      (fun uu___ ->
-         ((Pat_Dot_Term
-             {
-               t =
-                 (FStar_Pervasives_Native.Some
-                    (FStarC_Reflection_V2_Builtins.subst_term s t))
-             }), s))
-let open_branch (b : FStarC_Reflection_V2_Data.branch)
-  (ps : FStarC_Tactics_Types.ref_proofstate) : branch=
-  let x = b in
-  match x with
-  | (pat, t) ->
-      let x1 = open_pat pat [] ps in
-      (match x1 with
-       | (pat1, s) -> (pat1, (FStarC_Reflection_V2_Builtins.subst_term s t)))
-let rec close_pat (p : pattern) (s : FStarC_Syntax_Syntax.subst_t) :
-  (FStarC_Reflection_V2_Data.pattern * FStarC_Syntax_Syntax.subst_t)=
-  match p with
-  | Pat_Constant { c;_} -> ((FStarC_Reflection_V2_Data.Pat_Constant c), s)
-  | Pat_Var { v; sort1 = sort;_} ->
-      let nv = FStarC_Reflection_V2_Builtins.pack_namedv v in
-      let s1 = (FStarC_Syntax_Syntax.NM (nv, Prims.int_zero)) ::
-        (FStar_Reflection_V2_Derived.shift_subst Prims.int_one s) in
-      ((FStarC_Reflection_V2_Data.Pat_Var
-          (sort, (v.FStarC_Reflection_V2_Data.ppname))), s1)
-  | Pat_Cons { head; univs; subpats;_} ->
-      let uu___ =
-        FStar_List_Tot_Base.fold_left
-          (fun uu___1 uu___2 ->
-             match (uu___1, uu___2) with
-             | ((pats, s1), (pat, b)) ->
-                 let uu___3 = close_pat pat s1 in
-                 (match uu___3 with | (pat1, s') -> (((pat1, b) :: pats), s')))
-          ([], s) subpats in
-      (match uu___ with
-       | (subpats1, s1) ->
-           let subpats2 = FStar_List_Tot_Base.rev subpats1 in
-           ((FStarC_Reflection_V2_Data.Pat_Cons (head, univs, subpats2)), s1))
-  | Pat_Dot_Term { t = FStar_Pervasives_Native.None;_} ->
-      ((FStarC_Reflection_V2_Data.Pat_Dot_Term FStar_Pervasives_Native.None),
-        s)
-  | Pat_Dot_Term { t = FStar_Pervasives_Native.Some t;_} ->
-      let t1 = FStarC_Reflection_V2_Builtins.subst_term s t in
-      ((FStarC_Reflection_V2_Data.Pat_Dot_Term
-          (FStar_Pervasives_Native.Some t1)), s)
-let close_branch (b : branch) : FStarC_Reflection_V2_Data.branch=
-  let uu___ = b in
-  match uu___ with
-  | (pat, t) ->
-      let uu___1 = close_pat pat [] in
-      (match uu___1 with
-       | (pat1, s) ->
-           let t' = FStarC_Reflection_V2_Builtins.subst_term s t in
-           (pat1, t'))
-let open_match_returns_ascription
-  (mra : FStarC_Syntax_Syntax.match_returns_ascription)
-  (ps : FStarC_Tactics_Types.ref_proofstate) : match_returns_ascription=
-  let x = mra in
-  match x with
-  | (b, (ct, topt, use_eq)) ->
-      let x1 = open_binder b ps in
-      let x2 =
-        match ct with
-        | FStar_Pervasives.Inl t ->
-            let x3 = open_term_with b x1 t ps in FStar_Pervasives.Inl x3
-        | FStar_Pervasives.Inr c ->
-            let x3 = open_comp_with b x1 c ps in FStar_Pervasives.Inr x3 in
-      let x3 =
-        match topt with
-        | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-        | FStar_Pervasives_Native.Some t ->
-            let x4 = open_term_with b x1 t ps in
-            FStar_Pervasives_Native.Some x4 in
-      (x1, (x2, x3, use_eq))
-let close_match_returns_ascription (mra : match_returns_ascription) :
-  FStarC_Syntax_Syntax.match_returns_ascription=
-  let uu___ = mra in
-  match uu___ with
-  | (nb, (ct, topt, use_eq)) ->
-      let b = close_binder nb in
-      let ct1 =
-        match ct with
-        | FStar_Pervasives.Inl t ->
-            FStar_Pervasives.Inl
-              (FStar_Pervasives_Native.snd (close_term nb t))
-        | FStar_Pervasives.Inr c ->
-            let uu___1 = close_comp nb c in
-            (match uu___1 with | (uu___2, c1) -> FStar_Pervasives.Inr c1) in
-      let topt1 =
-        match topt with
-        | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-        | FStar_Pervasives_Native.Some t ->
-            FStar_Pervasives_Native.Some
-              (FStar_Pervasives_Native.snd (close_term nb t)) in
-      (b, (ct1, topt1, use_eq))
-let open_view (tv : FStarC_Reflection_V2_Data.term_view) :
-  FStarC_Tactics_Types.ref_proofstate -> named_term_view=
-  match tv with
-  | FStarC_Reflection_V2_Data.Tv_Var v ->
-      (fun uu___ -> Tv_Var (FStarC_Reflection_V2_Builtins.inspect_namedv v))
-  | FStarC_Reflection_V2_Data.Tv_BVar v ->
-      (fun uu___ -> Tv_BVar (FStarC_Reflection_V2_Builtins.inspect_bv v))
-  | FStarC_Reflection_V2_Data.Tv_FVar v -> (fun uu___ -> Tv_FVar v)
-  | FStarC_Reflection_V2_Data.Tv_UInst (v, us) ->
-      (fun uu___ -> Tv_UInst (v, us))
-  | FStarC_Reflection_V2_Data.Tv_App (hd, a) -> (fun uu___ -> Tv_App (hd, a))
-  | FStarC_Reflection_V2_Data.Tv_Type u -> (fun uu___ -> Tv_Type u)
-  | FStarC_Reflection_V2_Data.Tv_Const c -> (fun uu___ -> Tv_Const c)
-  | FStarC_Reflection_V2_Data.Tv_Uvar (n, ctx_uvar_and_subst) ->
-      (fun uu___ -> Tv_Uvar (n, ctx_uvar_and_subst))
-  | FStarC_Reflection_V2_Data.Tv_AscribedT (e, t, tac, use_eq) ->
-      (fun uu___ -> Tv_AscribedT (e, t, tac, use_eq))
-  | FStarC_Reflection_V2_Data.Tv_AscribedC (e, c, tac, use_eq) ->
-      (fun uu___ ->
-         Tv_AscribedC
-           (e, (FStarC_Reflection_V2_Builtins.inspect_comp c), tac, use_eq))
-  | FStarC_Reflection_V2_Data.Tv_Unknown -> (fun uu___ -> Tv_Unknown)
-  | FStarC_Reflection_V2_Data.Tv_Unsupp -> (fun uu___ -> Tv_Unsupp)
-  | FStarC_Reflection_V2_Data.Tv_Abs (b, body) ->
-      (fun ps ->
-         let x = open_term b body ps in
-         match x with | (nb, body1) -> Tv_Abs (nb, body1))
-  | FStarC_Reflection_V2_Data.Tv_Arrow (b, c) ->
-      (fun ps ->
-         let x = open_comp b c ps in
-         match x with | (nb, c1) -> Tv_Arrow (nb, c1))
-  | FStarC_Reflection_V2_Data.Tv_Refine (b, ref) ->
-      (fun ps ->
-         let x = open_term_simple b ref ps in
-         match x with | (nb, ref1) -> Tv_Refine (nb, ref1))
-  | FStarC_Reflection_V2_Data.Tv_Let (recf, attrs, b, def, body) ->
-      (fun ps ->
-         let x = open_term_simple b body ps in
-         match x with
-         | (nb, body1) ->
-             Tv_Let
-               (recf, attrs, nb,
-                 (if recf
-                  then
-                    FStarC_Reflection_V2_Builtins.subst_term
-                      [FStarC_Syntax_Syntax.DB
-                         (Prims.int_zero, (r_binder_to_namedv nb))] def
-                  else def), body1))
-  | FStarC_Reflection_V2_Data.Tv_Match (scrutinee, ret, brs) ->
-      (fun ps ->
-         let x = FStar_Tactics_Util.map open_branch brs ps in
-         let x1 =
-           FStar_Tactics_Util.map_opt open_match_returns_ascription ret ps in
-         Tv_Match (scrutinee, x1, x))
-let close_view (tv : named_term_view) : FStarC_Reflection_V2_Data.term_view=
-  match tv with
-  | Tv_Var v ->
-      FStarC_Reflection_V2_Data.Tv_Var
-        (FStarC_Reflection_V2_Builtins.pack_namedv v)
-  | Tv_BVar v ->
-      FStarC_Reflection_V2_Data.Tv_BVar
-        (FStarC_Reflection_V2_Builtins.pack_bv v)
-  | Tv_FVar v -> FStarC_Reflection_V2_Data.Tv_FVar v
-  | Tv_UInst (v, us) -> FStarC_Reflection_V2_Data.Tv_UInst (v, us)
-  | Tv_App (hd, a) -> FStarC_Reflection_V2_Data.Tv_App (hd, a)
-  | Tv_Type u -> FStarC_Reflection_V2_Data.Tv_Type u
-  | Tv_Const c -> FStarC_Reflection_V2_Data.Tv_Const c
-  | Tv_Uvar (n, ctx_uvar_and_subst) ->
-      FStarC_Reflection_V2_Data.Tv_Uvar (n, ctx_uvar_and_subst)
-  | Tv_AscribedT (e, t, tac, use_eq) ->
-      FStarC_Reflection_V2_Data.Tv_AscribedT (e, t, tac, use_eq)
-  | Tv_AscribedC (e, c, tac, use_eq) ->
-      FStarC_Reflection_V2_Data.Tv_AscribedC
-        (e, (FStarC_Reflection_V2_Builtins.pack_comp c), tac, use_eq)
-  | Tv_Unknown -> FStarC_Reflection_V2_Data.Tv_Unknown
-  | Tv_Unsupp -> FStarC_Reflection_V2_Data.Tv_Unsupp
-  | Tv_Abs (nb, body) ->
-      let uu___ = close_term nb body in
-      (match uu___ with
-       | (b, body1) -> FStarC_Reflection_V2_Data.Tv_Abs (b, body1))
-  | Tv_Arrow (nb, c) ->
-      let uu___ = close_comp nb c in
-      (match uu___ with
-       | (b, c1) -> FStarC_Reflection_V2_Data.Tv_Arrow (b, c1))
-  | Tv_Refine (nb, ref) ->
-      let uu___ = close_term_simple nb ref in
-      (match uu___ with
-       | (b, ref1) -> FStarC_Reflection_V2_Data.Tv_Refine (b, ref1))
-  | Tv_Let (recf, attrs, nb, def, body) ->
-      let def1 =
-        if recf
-        then
-          FStarC_Reflection_V2_Builtins.subst_term
-            [FStarC_Syntax_Syntax.NM
-               ((r_binder_to_namedv nb), Prims.int_zero)] def
-        else def in
-      let uu___ = close_term_simple nb body in
-      (match uu___ with
-       | (b, body1) ->
-           FStarC_Reflection_V2_Data.Tv_Let (recf, attrs, b, def1, body1))
-  | Tv_Match (scrutinee, ret, brs) ->
-      let brs1 = FStar_List_Tot_Base.map close_branch brs in
-      let ret1 =
-        match ret with
-        | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-        | FStar_Pervasives_Native.Some asc ->
-            FStar_Pervasives_Native.Some (close_match_returns_ascription asc) in
-      FStarC_Reflection_V2_Data.Tv_Match (scrutinee, ret1, brs1)
-let inspect (t : term) (ps : FStarC_Tactics_Types.ref_proofstate) :
-  named_term_view=
-  let x = FStarC_Tactics_V2_Builtins.compress t ps in
-  let x1 = FStarC_Reflection_V2_Builtins.inspect_ln x in open_view x1 ps
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.NamedView.inspect"
-    (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.NamedView.inspect (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 inspect)
-               FStarC_Reflection_V2_Embeddings.e_term e_named_term_view psc
-               ncb us args)
-let pack (tv : named_term_view) : term=
-  let tv1 = close_view tv in FStarC_Reflection_V2_Builtins.pack_ln tv1
-let _ =
-  FStarC_Tactics_Native.register_plugin "FStar.Tactics.NamedView.pack"
-    Prims.int_one
-    (fun _psc ->
-       fun cb ->
-         fun us ->
-           fun args ->
-             FStarC_Syntax_Embeddings.debug_wrap
-               "FStar.Tactics.NamedView.pack"
-               (fun _ ->
-                  FStarC_Syntax_Embeddings.arrow_as_prim_step_1
-                    e_named_term_view FStarC_Reflection_V2_Embeddings.e_term
-                    pack
-                    (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.pack")
-                    cb us args))
-    (fun cb ->
-       fun us ->
-         fun args ->
-           FStarC_Syntax_Embeddings.debug_wrap "FStar.Tactics.NamedView.pack"
-             (fun _ ->
-                FStarC_TypeChecker_NBETerm.arrow_as_prim_step_1
-                  (FStarC_TypeChecker_NBETerm.e_unsupported ())
-                  FStarC_Reflection_V2_NBEEmbeddings.e_term pack
-                  (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.pack") cb
-                  us args))
-let open_univ_s (us : FStarC_Reflection_Types.univ_name Prims.list)
-  (ps : FStarC_Tactics_Types.ref_proofstate) :
-  (univ_name Prims.list * FStarC_Syntax_Syntax.subst_t)=
-  let x = FStar_List_Tot_Base.length us in
-  let x1 =
-    FStar_Tactics_Util.mapi
-      (fun i u uu___ ->
-         FStarC_Syntax_Syntax.UN
-           (((x - Prims.int_one) - i),
-             (FStarC_Reflection_V2_Builtins.pack_universe
-                (FStarC_Reflection_V2_Data.Uv_Name u)))) us ps in
-  let x2 =
-    FStar_Tactics_Util.map
-      (fun i uu___ -> FStarC_Reflection_V2_Builtins.inspect_ident i) us ps in
-  (x2, x1)
-let close_univ_s (us : univ_name Prims.list) :
-  (FStarC_Reflection_Types.univ_name Prims.list *
-    FStarC_Syntax_Syntax.subst_t)=
-  let n = FStar_List_Tot_Base.length us in
-  let us1 =
-    FStar_List_Tot_Base.map
-      (fun i -> FStarC_Reflection_V2_Builtins.pack_ident i) us in
-  let s =
-    FStar_List_Tot_Base.mapi
-      (fun i u -> FStarC_Syntax_Syntax.UD (u, ((n - i) - Prims.int_one))) us1 in
-  (us1, s)
-let open_lb (lb : FStarC_Reflection_Types.letbinding)
-  (ps : FStarC_Tactics_Types.ref_proofstate) : letbinding=
-  let x = FStarC_Reflection_V2_Builtins.inspect_lb lb in
-  match x with
-  | { FStarC_Reflection_V2_Data.lb_fv = lb_fv;
-      FStarC_Reflection_V2_Data.lb_us = lb_us;
-      FStarC_Reflection_V2_Data.lb_typ = lb_typ;
-      FStarC_Reflection_V2_Data.lb_def = lb_def;_} ->
-      let x1 = open_univ_s lb_us ps in
-      (match x1 with
-       | (lb_us1, s) ->
-           {
-             lb_fv;
-             lb_us = lb_us1;
-             lb_typ = (FStarC_Reflection_V2_Builtins.subst_term s lb_typ);
-             lb_def = (FStarC_Reflection_V2_Builtins.subst_term s lb_def)
-           })
-let close_lb (lb : letbinding) : FStarC_Reflection_Types.letbinding=
-  let uu___ = lb in
-  match uu___ with
-  | { lb_fv; lb_us; lb_typ; lb_def;_} ->
-      let uu___1 = close_univ_s lb_us in
-      (match uu___1 with
-       | (lb_us1, s) ->
-           let lb_typ1 = FStarC_Reflection_V2_Builtins.subst_term s lb_typ in
-           let lb_def1 = FStarC_Reflection_V2_Builtins.subst_term s lb_def in
-           FStarC_Reflection_V2_Builtins.pack_lb
-             {
-               FStarC_Reflection_V2_Data.lb_fv = lb_fv;
-               FStarC_Reflection_V2_Data.lb_us = lb_us1;
-               FStarC_Reflection_V2_Data.lb_typ = lb_typ1;
-               FStarC_Reflection_V2_Data.lb_def = lb_def1
-             })
-let subst_r_binders (s : FStarC_Syntax_Syntax.subst_t)
-  (bs : FStarC_Reflection_Types.binder Prims.list) :
-  FStarC_Reflection_Types.binder Prims.list=
-  FStar_List_Tot_Base.mapi
-    (fun i b ->
-       r_subst_binder_sort (FStar_Reflection_V2_Derived.shift_subst i s) b)
-    bs
-let rec open_n_binders_from_arrow (bs : binders) (t : term) :
-  FStarC_Tactics_Types.ref_proofstate -> term=
-  match bs with
-  | [] -> (fun uu___ -> t)
-  | b::bs1 ->
-      (fun ps ->
-         let x = inspect t ps in
-         match x with
-         | Tv_Arrow (b', c) ->
-             if Prims.not (FStarC_Reflection_V2_Data.is_tot_comp c)
-             then
-               (FStarC_Tactics_V2_Builtins.raise_core NotEnoughBinders ps;
-                Prims.magic ())
-             else
-               (let x1 = c.FStarC_Reflection_V2_Data.result_typ in
-                let x2 =
-                  FStarC_Reflection_V2_Builtins.subst_term
-                    [FStarC_Syntax_Syntax.NT
-                       ((r_binder_to_namedv b'),
-                         (pack
-                            (Tv_Var
-                               (FStarC_Reflection_V2_Builtins.inspect_namedv
-                                  (r_binder_to_namedv b)))))] x1 in
-                open_n_binders_from_arrow bs1 x2 ps)
-         | uu___ ->
-             (FStarC_Tactics_V2_Builtins.raise_core NotEnoughBinders ps;
-              Prims.magic ()))
-let open_sigelt_view (sv : FStarC_Reflection_V2_Data.sigelt_view) :
-  FStarC_Tactics_Types.ref_proofstate -> named_sigelt_view=
-  match sv with
-  | FStarC_Reflection_V2_Data.Sg_Let (isrec, lbs) ->
-      (fun ps ->
-         let x = FStar_Tactics_Util.map open_lb lbs ps in
-         Sg_Let { isrec; lbs = x })
-  | FStarC_Reflection_V2_Data.Sg_Inductive (nm, univs, params, typ, ctors) ->
-      (fun ps ->
-         let x = FStar_List_Tot_Base.length params in
-         let x1 = open_univ_s univs ps in
-         match x1 with
-         | (univs1, s) ->
-             let x2 = subst_r_binders s params in
-             let x3 =
-               FStarC_Reflection_V2_Builtins.subst_term
-                 (FStar_Reflection_V2_Derived.shift_subst x s) typ in
-             let x4 =
-               FStar_Tactics_Util.map
-                 (fun uu___ uu___1 ->
-                    match uu___ with
-                    | (nm1, ty) ->
-                        (nm1,
-                          (FStarC_Reflection_V2_Builtins.subst_term s ty)))
-                 ctors ps in
-             let x5 = open_term_n x2 x3 ps in
-             (match x5 with
-              | (params1, typ1) ->
-                  let x6 =
-                    FStar_Tactics_Util.map
-                      (fun uu___ ->
-                         match uu___ with
-                         | (nm1, ty) ->
-                             (fun ps1 ->
-                                let x7 =
-                                  open_n_binders_from_arrow params1 ty ps1 in
-                                (nm1, x7))) x4 ps in
-                  Sg_Inductive
-                    { nm; univs1; params = params1; typ = typ1; ctors = x6 }))
-  | FStarC_Reflection_V2_Data.Sg_Val (nm, univs, typ) ->
-      (fun ps ->
-         let x = open_univ_s univs ps in
-         match x with
-         | (univs1, s) ->
-             Sg_Val
-               {
-                 nm1 = nm;
-                 univs2 = univs1;
-                 typ1 = (FStarC_Reflection_V2_Builtins.subst_term s typ)
-               })
-  | FStarC_Reflection_V2_Data.Unk -> (fun uu___ -> Unk)
-let rec mk_arr (args : binder Prims.list) (t : term) :
-  FStarC_Tactics_Types.ref_proofstate -> term=
-  match args with
-  | [] -> (fun uu___ -> t)
-  | a::args' ->
-      (fun ps ->
-         let x =
-           let x1 = mk_arr args' t ps in
-           FStarC_Reflection_V2_Data.mk_tot_comp x1 in
-         pack (Tv_Arrow (a, x)))
-let close_sigelt_view (sv : named_sigelt_view) :
-  FStarC_Tactics_Types.ref_proofstate ->
-    FStarC_Reflection_V2_Data.sigelt_view=
-  match sv with
-  | Sg_Let { isrec; lbs;_} ->
-      (fun uu___ ->
-         FStarC_Reflection_V2_Data.Sg_Let
-           (isrec, (FStar_List_Tot_Base.map close_lb lbs)))
-  | Sg_Inductive { nm; univs1 = univs; params; typ; ctors;_} ->
-      (fun ps ->
-         let x = FStar_List_Tot_Base.length params in
-         let x1 =
-           FStar_Tactics_Util.map
-             (fun uu___ ->
-                match uu___ with
-                | (nm1, ty) ->
-                    (fun ps1 -> let x2 = mk_arr params ty ps1 in (nm1, x2)))
-             ctors ps in
-         let x2 = close_term_n params typ in
-         match x2 with
-         | (params1, typ1) ->
-             let x3 = close_univ_s univs in
-             (match x3 with
-              | (univs1, s) ->
-                  let x4 = subst_r_binders s params1 in
-                  let x5 =
-                    FStarC_Reflection_V2_Builtins.subst_term
-                      (FStar_Reflection_V2_Derived.shift_subst x s) typ1 in
-                  let x6 =
-                    FStar_Tactics_Util.map
-                      (fun uu___ uu___1 ->
-                         match uu___ with
-                         | (nm1, ty) ->
-                             (nm1,
-                               (FStarC_Reflection_V2_Builtins.subst_term s ty)))
-                      x1 ps in
-                  FStarC_Reflection_V2_Data.Sg_Inductive
-                    (nm, univs1, x4, x5, x6)))
-  | Sg_Val { nm1 = nm; univs2 = univs; typ1 = typ;_} ->
-      (fun uu___ ->
-         match close_univ_s univs with
-         | (univs1, s) ->
-             FStarC_Reflection_V2_Data.Sg_Val
-               (nm, univs1, (FStarC_Reflection_V2_Builtins.subst_term s typ)))
-let inspect_sigelt (s : FStarC_Reflection_Types.sigelt)
-  (ps : FStarC_Tactics_Types.ref_proofstate) : named_sigelt_view=
-  let x = FStarC_Reflection_V2_Builtins.inspect_sigelt s in
-  open_sigelt_view x ps
-let _ =
-  FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.NamedView.inspect_sigelt" (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.NamedView.inspect_sigelt (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 inspect_sigelt)
-               FStarC_Reflection_V2_Embeddings.e_sigelt e_named_sigelt_view
-               psc ncb us args)
-let pack_sigelt (sv : named_sigelt_view)
-  (ps : FStarC_Tactics_Types.ref_proofstate) :
-  FStarC_Reflection_Types.sigelt=
-  let x = close_sigelt_view sv ps in
-  FStarC_Reflection_V2_Builtins.pack_sigelt x
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.NamedView.pack_sigelt"
-    (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.NamedView.pack_sigelt (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 pack_sigelt)
-               e_named_sigelt_view FStarC_Reflection_V2_Embeddings.e_sigelt
-               psc ncb us args)
-let tcc (e : FStarC_Reflection_Types.env) (t : term)
-  (ps : FStarC_Tactics_Types.ref_proofstate) : comp=
-  let x = FStarC_Tactics_V2_Builtins.tcc e t ps in
-  FStarC_Reflection_V2_Builtins.inspect_comp x
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.NamedView.tcc"
-    (Prims.of_int 3)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_2
-               "FStar.Tactics.NamedView.tcc (plugin)"
-               (FStarC_Tactics_Native.from_tactic_2 tcc)
-               FStarC_Reflection_V2_Embeddings.e_env
-               FStarC_Reflection_V2_Embeddings.e_term
-               FStarC_Reflection_V2_Embeddings.e_comp_view psc ncb us args)
-let comp_to_string (c : comp) :
-  FStarC_Tactics_Types.ref_proofstate -> Prims.string=
-  FStarC_Tactics_V2_Builtins.comp_to_string
-    (FStarC_Reflection_V2_Builtins.pack_comp c)
-let _ =
-  FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.NamedView.comp_to_string" (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.NamedView.comp_to_string (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 comp_to_string)
-               FStarC_Reflection_V2_Embeddings.e_comp_view
-               FStarC_Syntax_Embeddings.e_string psc ncb us args)
-type universe_view = named_universe_view
-type term_view = named_term_view
-type sigelt_view = named_sigelt_view
-let inspect_namedv (x : namedv) : namedv= x
-let pack_namedv (x : namedv) : namedv= x
-let inspect_bv (x : bv) : bv= x
-let pack_bv (x : bv) : bv= x
-let inspect_comp (x : comp) : comp= x
-let pack_comp (x : comp) : comp= x
-let tag_of (t : term) (ps : FStarC_Tactics_Types.ref_proofstate) :
-  Prims.string=
-  let x = inspect t ps in
-  match x with
-  | Tv_Var bv1 -> "Tv_Var"
-  | Tv_BVar fv -> "Tv_BVar"
-  | Tv_FVar fv -> "Tv_FVar"
-  | Tv_UInst (uu___, uu___1) -> "Tv_UInst"
-  | Tv_App (f, x1) -> "Tv_App"
-  | Tv_Abs (x1, t1) -> "Tv_Abs"
-  | Tv_Arrow (x1, t1) -> "Tv_Arrow"
-  | Tv_Type uu___ -> "Tv_Type"
-  | Tv_Refine (x1, t1) -> "Tv_Refine"
-  | Tv_Const cst -> "Tv_Const"
-  | Tv_Uvar (i, t1) -> "Tv_Uvar"
-  | Tv_Let (r, attrs, b, t1, t2) -> "Tv_Let"
-  | Tv_Match (t1, uu___, branches) -> "Tv_Match"
-  | Tv_AscribedT (uu___, uu___1, uu___2, uu___3) -> "Tv_AscribedT"
-  | Tv_AscribedC (uu___, uu___1, uu___2, uu___3) -> "Tv_AscribedC"
-  | Tv_Unknown -> "Tv_Unknown"
-  | Tv_Unsupp -> "Tv_Unsupp"
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.NamedView.tag_of"
-    (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.NamedView.tag_of (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 tag_of)
-               FStarC_Reflection_V2_Embeddings.e_term
-               FStarC_Syntax_Embeddings.e_string psc ncb us args)
+    | (b :: bs1) -> (let b1 = (subst_binder_sort s b) in
+      let nv = (r_binder_to_namedv b1) in
+      let b2 = (close_binder b1) in
+      (close_term_n__aux bs1 (b2 :: cbs) ((FStarC_Syntax_Syntax.NM (nv, (Prims.parse_int "0"))) :: (FStar_Reflection_V2_Derived.shift_subst (Prims.parse_int "1") s))))
+  )
+
+let close_term_n (bs : (binder) list) (t : FStarC_Reflection_Types.term) : ((FStarC_Reflection_Types.binder) list * FStarC_Reflection_Types.term) =
+  (let tmp = (close_term_n__aux bs [] []) in
+  (match tmp with
+    | (cbs, s) -> (let tmp1 = (FStarC_Reflection_V2_Builtins.subst_term s t) in
+      ((FStar_List_Tot_Base.rev cbs), tmp1))
+  ))
+
+let close_sigelt_view (sv : named_sigelt_view) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_V2_Data.sigelt_view) =
+  (match sv with
+    | (Sg_Let ({ isrec = isrec; lbs = lbs; _ })) -> (fun tmp -> (FStarC_Reflection_V2_Data.Sg_Let (isrec, (FStar_List_Tot_Base.map close_lb lbs))))
+    | (Sg_Inductive ({ nm = nm; univs = univs; params = params; typ = typ; ctors = ctors; _ })) -> (fun ps -> (let x = (FStar_List_Tot_Base.length params) in
+      let x1 = (FStar_Tactics_Util.map (fun tmp -> (match tmp with
+          | (nm1, ty) -> (fun ps1 -> (let x1 = (mk_arr params ty ps1) in
+            (nm1, x1)))
+        )) ctors ps) in
+      let x2 = (close_term_n params typ) in
+      ((match x2 with
+        | (params1, typ1) -> (fun ps1 -> (let x3 = (close_univ_s univs) in
+          ((match x3 with
+            | (univs1, s) -> (fun ps2 -> (let x4 = (subst_r_binders s params1) in
+              let x5 = (FStarC_Reflection_V2_Builtins.subst_term (FStar_Reflection_V2_Derived.shift_subst x s) typ1) in
+              let x6 = (FStar_Tactics_Util.map (fun tmp -> (fun tmp1 -> (match tmp with
+                  | (nm1, ty) -> (let tmp2 = (FStarC_Reflection_V2_Builtins.subst_term s ty) in
+                    (nm1, tmp2))
+                ))) x1 ps2) in
+              (FStarC_Reflection_V2_Data.Sg_Inductive (nm, univs1, x4, x5, x6))))
+          ) ps1)))
+      ) ps)))
+    | (Sg_Val ({ nm = nm; univs = univs; typ = typ; _ })) -> (fun tmp -> (match (close_univ_s univs) with
+        | (univs1, s) -> (let tmp1 = (FStarC_Reflection_V2_Builtins.subst_term s typ) in
+          (FStarC_Reflection_V2_Data.Sg_Val (nm, univs1, tmp1)))
+      ))
+  )
+
+let pack_sigelt (sv : named_sigelt_view) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_Types.sigelt) =
+  (fun ps -> (let x = (close_sigelt_view sv ps) in
+  (FStarC_Reflection_V2_Builtins.pack_sigelt x)))
+
+let namedv_to_binder (v : FStarC_Reflection_V2_Data.namedv_view) (sort : FStarC_Reflection_Types.term) : binder =
+  (let tmp = ((v : FStarC_Reflection_V2_Data.namedv_view)).FStarC_Reflection_V2_Data.uniq in
+  let tmp1 = ((v : FStarC_Reflection_V2_Data.namedv_view)).FStarC_Reflection_V2_Data.ppname in
+  ({ uniq = tmp;
+    ppname = tmp1;
+    sort = sort;
+    qual = FStarC_Reflection_V2_Data.Q_Explicit;
+    attrs = [] } : binder))
+
+type named_universe_view =
+  | Uv_Zero
+  | Uv_Succ of FStarC_Reflection_Types.universe
+  | Uv_Max of (FStarC_Syntax_Syntax.universe) list
+  | Uv_BVar of Prims.int
+  | Uv_Name of (string * FStarC_Range_Type.range)
+  | Uv_Unif of FStarC_Reflection_Types.universe_uvar
+  | Uv_Unk
+
+
+let open_universe_view (v : FStarC_Reflection_V2_Data.universe_view) : named_universe_view =
+  (match v with
+    | FStarC_Reflection_V2_Data.Uv_Zero -> Uv_Zero
+    | (FStarC_Reflection_V2_Data.Uv_Succ (u)) -> (Uv_Succ (u))
+    | (FStarC_Reflection_V2_Data.Uv_Max (us)) -> (Uv_Max (us))
+    | (FStarC_Reflection_V2_Data.Uv_BVar (n)) -> (Uv_BVar (n))
+    | (FStarC_Reflection_V2_Data.Uv_Name (i)) -> (let tmp = (FStarC_Reflection_V2_Builtins.inspect_ident i) in
+      (Uv_Name (tmp)))
+    | (FStarC_Reflection_V2_Data.Uv_Unif (uvar)) -> (Uv_Unif (uvar))
+    | FStarC_Reflection_V2_Data.Uv_Unk -> Uv_Unk
+  )
+
+let inspect_universe (u : FStarC_Reflection_Types.universe) : ((FStarC_Tactics_Types.proofstate ref) -> named_universe_view) =
+  (fun ps -> (let x = (FStarC_Tactics_V2_Builtins.compress_univ u ps) in
+  let tmp = (FStarC_Reflection_V2_Builtins.inspect_universe x) in
+  (open_universe_view tmp)))
+
+let u___knot_e_pattern__Pat_Constant__payload (u__thunk : unit) : (FStarC_Reflection_V2_Data.vconst) FStarC_Syntax_Embeddings_Base.embedding =
+  (FStarC_Syntax_Embeddings_Base.mk_extracted_embedding "FStar.Tactics.NamedView.pattern__Pat_Constant__payload" (fun tmp -> (match tmp with
+    | ("FStar.Tactics.NamedView.Mkpattern__Pat_Constant__payload", (tmp1 :: [])) -> (let tmp2 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_vconst tmp1) in
+      (FStarC_Option.bind tmp2 (fun tmp3 -> (Some (tmp3)))))
+    | tmp1 -> None
+  )) (fun tmp -> (let tmp1 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Mkpattern__Pat_Constant__payload") in
+  let tmp2 = (FStarC_Syntax_Syntax.tdataconstr tmp1) in
+  (FStarC_Syntax_Util.mk_app tmp2 (let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_vconst tmp) in
+  let tmp4 = (FStarC_Syntax_Syntax.as_arg tmp3) in
+  (tmp4 :: []))))))
+
+let u___knot_e_pattern__Pat_Var__payload (u__thunk : unit) : (pattern__Pat_Var__payload) FStarC_Syntax_Embeddings_Base.embedding =
+  (FStarC_Syntax_Embeddings_Base.mk_extracted_embedding "FStar.Tactics.NamedView.pattern__Pat_Var__payload" (fun tmp -> (match tmp with
+    | ("FStar.Tactics.NamedView.Mkpattern__Pat_Var__payload", (tmp1 :: (tmp2 :: []))) -> (let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_namedv_view tmp1) in
+      (FStarC_Option.bind tmp3 (fun tmp4 -> (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_unembed (FStarC_Syntax_Embeddings.e_sealed FStarC_Reflection_V2_Embeddings.e_term) tmp2) in
+      (FStarC_Option.bind tmp5 (fun tmp6 -> (Some (({ v = tmp4; sort = tmp6 } : pattern__Pat_Var__payload)))))))))
+    | tmp1 -> None
+  )) (fun tmp -> (let tmp1 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Mkpattern__Pat_Var__payload") in
+  let tmp2 = (FStarC_Syntax_Syntax.tdataconstr tmp1) in
+  (FStarC_Syntax_Util.mk_app tmp2 (let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_namedv_view (tmp).v) in
+  let tmp4 = (FStarC_Syntax_Syntax.as_arg tmp3) in
+  (tmp4 :: (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_embed (FStarC_Syntax_Embeddings.e_sealed FStarC_Reflection_V2_Embeddings.e_term) ((tmp : pattern__Pat_Var__payload)).sort) in
+  let tmp6 = (FStarC_Syntax_Syntax.as_arg tmp5) in
+  (tmp6 :: []))))))))
+
+let u___knot_e_pattern__Pat_Dot_Term__payload (u__thunk : unit) : ((FStarC_Reflection_Types.term) option) FStarC_Syntax_Embeddings_Base.embedding =
+  (FStarC_Syntax_Embeddings_Base.mk_extracted_embedding "FStar.Tactics.NamedView.pattern__Pat_Dot_Term__payload" (fun tmp -> (match tmp with
+    | ("FStar.Tactics.NamedView.Mkpattern__Pat_Dot_Term__payload", (tmp1 :: [])) -> (let tmp2 = (FStarC_Syntax_Embeddings_Base.extracted_unembed (FStarC_Syntax_Embeddings.e_option FStarC_Reflection_V2_Embeddings.e_term) tmp1) in
+      (FStarC_Option.bind tmp2 (fun tmp3 -> (Some (tmp3)))))
+    | tmp1 -> None
+  )) (fun tmp -> (let tmp1 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Mkpattern__Pat_Dot_Term__payload") in
+  let tmp2 = (FStarC_Syntax_Syntax.tdataconstr tmp1) in
+  (FStarC_Syntax_Util.mk_app tmp2 (let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_embed (FStarC_Syntax_Embeddings.e_option FStarC_Reflection_V2_Embeddings.e_term) tmp) in
+  let tmp4 = (FStarC_Syntax_Syntax.as_arg tmp3) in
+  (tmp4 :: []))))))
+
+let rec u___knot_e_pattern (u__thunk : unit) : (pattern) FStarC_Syntax_Embeddings_Base.embedding =
+  (FStarC_Syntax_Embeddings_Base.mk_extracted_embedding "FStar.Tactics.NamedView.pattern" (fun tmp -> (match tmp with
+    | ("FStar.Tactics.NamedView.Pat_Constant", (tmp1 :: [])) -> (let tmp2 = (u___knot_e_pattern__Pat_Constant__payload ()) in
+      let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_unembed tmp2 tmp1) in
+      (FStarC_Option.bind tmp3 (fun tmp4 -> (Some ((Pat_Constant (tmp4)))))))
+    | ("FStar.Tactics.NamedView.Pat_Cons", (tmp1 :: [])) -> (let tmp2 = (u___knot_e_pattern__Pat_Cons__payload ()) in
+      let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_unembed tmp2 tmp1) in
+      (FStarC_Option.bind tmp3 (fun tmp4 -> (Some ((Pat_Cons (tmp4)))))))
+    | ("FStar.Tactics.NamedView.Pat_Var", (tmp1 :: [])) -> (let tmp2 = (u___knot_e_pattern__Pat_Var__payload ()) in
+      let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_unembed tmp2 tmp1) in
+      (FStarC_Option.bind tmp3 (fun tmp4 -> (Some ((Pat_Var (tmp4)))))))
+    | ("FStar.Tactics.NamedView.Pat_Dot_Term", (tmp1 :: [])) -> (let tmp2 = (u___knot_e_pattern__Pat_Dot_Term__payload ()) in
+      let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_unembed tmp2 tmp1) in
+      (FStarC_Option.bind tmp3 (fun tmp4 -> (Some ((Pat_Dot_Term (tmp4)))))))
+    | tmp1 -> None
+  )) (fun tmp -> (match tmp with
+    | (Pat_Constant (tmp1)) -> (let tmp2 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Pat_Constant") in
+      let tmp3 = (FStarC_Syntax_Syntax.tdataconstr tmp2) in
+      (FStarC_Syntax_Util.mk_app tmp3 (let tmp4 = (u___knot_e_pattern__Pat_Constant__payload ()) in
+      let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_embed tmp4 tmp1) in
+      let tmp6 = (FStarC_Syntax_Syntax.as_arg tmp5) in
+      (tmp6 :: []))))
+    | (Pat_Cons (tmp1)) -> (let tmp2 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Pat_Cons") in
+      let tmp3 = (FStarC_Syntax_Syntax.tdataconstr tmp2) in
+      (FStarC_Syntax_Util.mk_app tmp3 (let tmp4 = (u___knot_e_pattern__Pat_Cons__payload ()) in
+      let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_embed tmp4 tmp1) in
+      let tmp6 = (FStarC_Syntax_Syntax.as_arg tmp5) in
+      (tmp6 :: []))))
+    | (Pat_Var (tmp1)) -> (let tmp2 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Pat_Var") in
+      let tmp3 = (FStarC_Syntax_Syntax.tdataconstr tmp2) in
+      (FStarC_Syntax_Util.mk_app tmp3 (let tmp4 = (u___knot_e_pattern__Pat_Var__payload ()) in
+      let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_embed tmp4 tmp1) in
+      let tmp6 = (FStarC_Syntax_Syntax.as_arg tmp5) in
+      (tmp6 :: []))))
+    | (Pat_Dot_Term (tmp1)) -> (let tmp2 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Pat_Dot_Term") in
+      let tmp3 = (FStarC_Syntax_Syntax.tdataconstr tmp2) in
+      (FStarC_Syntax_Util.mk_app tmp3 (let tmp4 = (u___knot_e_pattern__Pat_Dot_Term__payload ()) in
+      let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_embed tmp4 tmp1) in
+      let tmp6 = (FStarC_Syntax_Syntax.as_arg tmp5) in
+      (tmp6 :: []))))
+  )))
+
+and u___knot_e_pattern__Pat_Cons__payload (u__thunk : unit) : (pattern__Pat_Cons__payload) FStarC_Syntax_Embeddings_Base.embedding =
+  (FStarC_Syntax_Embeddings_Base.mk_extracted_embedding "FStar.Tactics.NamedView.pattern__Pat_Cons__payload" (fun tmp -> (match tmp with
+    | ("FStar.Tactics.NamedView.Mkpattern__Pat_Cons__payload", (tmp1 :: (tmp2 :: (tmp3 :: [])))) -> (let tmp4 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_fv tmp1) in
+      (FStarC_Option.bind tmp4 (fun tmp5 -> (let tmp6 = (FStarC_Syntax_Embeddings_Base.extracted_unembed (FStarC_Syntax_Embeddings.e_option (FStarC_Syntax_Embeddings.e_list FStarC_Reflection_V2_Embeddings.e_universe)) tmp2) in
+      (FStarC_Option.bind tmp6 (fun tmp7 -> (let tmp8 = (FStarC_Syntax_Embeddings_Base.extracted_unembed (FStarC_Syntax_Embeddings.e_list (let tmp8 = (u___knot_e_pattern ()) in
+        (FStarC_Syntax_Embeddings.e_tuple2 tmp8 FStarC_Syntax_Embeddings.e_bool))) tmp3) in
+      (FStarC_Option.bind tmp8 (fun tmp9 -> (Some (({ head = tmp5; univs = tmp7; subpats = tmp9 } : pattern__Pat_Cons__payload))))))))))))
+    | tmp1 -> None
+  )) (fun tmp -> (let tmp1 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Mkpattern__Pat_Cons__payload") in
+  let tmp2 = (FStarC_Syntax_Syntax.tdataconstr tmp1) in
+  (FStarC_Syntax_Util.mk_app tmp2 (let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_fv (tmp).head) in
+  let tmp4 = (FStarC_Syntax_Syntax.as_arg tmp3) in
+  (tmp4 :: (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_embed (FStarC_Syntax_Embeddings.e_option (FStarC_Syntax_Embeddings.e_list FStarC_Reflection_V2_Embeddings.e_universe)) ((tmp : pattern__Pat_Cons__payload)).univs) in
+  let tmp6 = (FStarC_Syntax_Syntax.as_arg tmp5) in
+  (tmp6 :: (let tmp7 = (FStarC_Syntax_Embeddings_Base.extracted_embed (FStarC_Syntax_Embeddings.e_list (let tmp7 = (u___knot_e_pattern ()) in
+    (FStarC_Syntax_Embeddings.e_tuple2 tmp7 FStarC_Syntax_Embeddings.e_bool))) (tmp).subpats) in
+  let tmp8 = (FStarC_Syntax_Syntax.as_arg tmp7) in
+  (tmp8 :: []))))))))))
+
+let e_pattern : (pattern) FStarC_Syntax_Embeddings_Base.embedding =
+  (u___knot_e_pattern ())
+
+let u___knot_e_letbinding (u__thunk : unit) : (letbinding) FStarC_Syntax_Embeddings_Base.embedding =
+  (FStarC_Syntax_Embeddings_Base.mk_extracted_embedding "FStar.Tactics.NamedView.letbinding" (fun tmp -> (match tmp with
+    | ("FStar.Tactics.NamedView.Mkletbinding", (tmp1 :: (tmp2 :: (tmp3 :: (tmp4 :: []))))) -> (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_fv tmp1) in
+      (FStarC_Option.bind tmp5 (fun tmp6 -> (let tmp7 = (FStarC_Syntax_Embeddings_Base.extracted_unembed (FStarC_Syntax_Embeddings.e_list (FStarC_Syntax_Embeddings.e_tuple2 FStarC_Syntax_Embeddings.e_string FStarC_Syntax_Embeddings.e_range)) tmp2) in
+      (FStarC_Option.bind tmp7 (fun tmp8 -> (let tmp9 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp3) in
+      (FStarC_Option.bind tmp9 (fun tmp10 -> (let tmp11 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp4) in
+      (FStarC_Option.bind tmp11 (fun tmp12 -> (Some ({ lb_fv = tmp6; lb_us = tmp8; lb_typ = tmp10; lb_def = tmp12 }))))))))))))))
+    | tmp1 -> None
+  )) (fun tmp -> (let tmp1 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Mkletbinding") in
+  let tmp2 = (FStarC_Syntax_Syntax.tdataconstr tmp1) in
+  (FStarC_Syntax_Util.mk_app tmp2 (let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_fv (tmp).lb_fv) in
+  let tmp4 = (FStarC_Syntax_Syntax.as_arg tmp3) in
+  (tmp4 :: (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_embed (FStarC_Syntax_Embeddings.e_list (FStarC_Syntax_Embeddings.e_tuple2 FStarC_Syntax_Embeddings.e_string FStarC_Syntax_Embeddings.e_range)) (tmp).lb_us) in
+  let tmp6 = (FStarC_Syntax_Syntax.as_arg tmp5) in
+  (tmp6 :: (let tmp7 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_term (tmp).lb_typ) in
+  let tmp8 = (FStarC_Syntax_Syntax.as_arg tmp7) in
+  (tmp8 :: (let tmp9 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_term (tmp).lb_def) in
+  let tmp10 = (FStarC_Syntax_Syntax.as_arg tmp9) in
+  (tmp10 :: []))))))))))))
+
+let e_letbinding : (letbinding) FStarC_Syntax_Embeddings_Base.embedding =
+  (u___knot_e_letbinding ())
+
+let u___knot_e_named_term_view (u__thunk : unit) : (named_term_view) FStarC_Syntax_Embeddings_Base.embedding =
+  (FStarC_Syntax_Embeddings_Base.mk_extracted_embedding "FStar.Tactics.NamedView.named_term_view" (fun tmp -> (match tmp with
+    | ("FStar.Tactics.NamedView.Tv_Var", (tmp1 :: [])) -> (let tmp2 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_namedv_view tmp1) in
+      (FStarC_Option.bind tmp2 (fun tmp3 -> (Some ((Tv_Var (tmp3)))))))
+    | ("FStar.Tactics.NamedView.Tv_BVar", (tmp1 :: [])) -> (let tmp2 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_bv_view tmp1) in
+      (FStarC_Option.bind tmp2 (fun tmp3 -> (Some ((Tv_BVar (tmp3)))))))
+    | ("FStar.Tactics.NamedView.Tv_FVar", (tmp1 :: [])) -> (let tmp2 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_fv tmp1) in
+      (FStarC_Option.bind tmp2 (fun tmp3 -> (Some ((Tv_FVar (tmp3)))))))
+    | ("FStar.Tactics.NamedView.Tv_UInst", (tmp1 :: (tmp2 :: []))) -> (let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_fv tmp1) in
+      (FStarC_Option.bind tmp3 (fun tmp4 -> (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_unembed (FStarC_Syntax_Embeddings.e_list FStarC_Reflection_V2_Embeddings.e_universe) tmp2) in
+      (FStarC_Option.bind tmp5 (fun tmp6 -> (Some ((Tv_UInst (tmp4, tmp6))))))))))
+    | ("FStar.Tactics.NamedView.Tv_App", (tmp1 :: (tmp2 :: []))) -> (let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp1) in
+      (FStarC_Option.bind tmp3 (fun tmp4 -> (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_unembed (FStarC_Syntax_Embeddings.e_tuple2 FStarC_Reflection_V2_Embeddings.e_term FStarC_Reflection_V2_Embeddings.e_aqualv) tmp2) in
+      (FStarC_Option.bind tmp5 (fun tmp6 -> (Some ((Tv_App (tmp4, tmp6))))))))))
+    | ("FStar.Tactics.NamedView.Tv_Abs", (tmp1 :: (tmp2 :: []))) -> (let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_unembed e_binder tmp1) in
+      (FStarC_Option.bind tmp3 (fun tmp4 -> (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp2) in
+      (FStarC_Option.bind tmp5 (fun tmp6 -> (Some ((Tv_Abs (tmp4, tmp6))))))))))
+    | ("FStar.Tactics.NamedView.Tv_Arrow", (tmp1 :: (tmp2 :: []))) -> (let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_unembed e_binder tmp1) in
+      (FStarC_Option.bind tmp3 (fun tmp4 -> (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_comp_view tmp2) in
+      (FStarC_Option.bind tmp5 (fun tmp6 -> (Some ((Tv_Arrow (tmp4, tmp6))))))))))
+    | ("FStar.Tactics.NamedView.Tv_Type", (tmp1 :: [])) -> (let tmp2 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_universe tmp1) in
+      (FStarC_Option.bind tmp2 (fun tmp3 -> (Some ((Tv_Type (tmp3)))))))
+    | ("FStar.Tactics.NamedView.Tv_Refine", (tmp1 :: (tmp2 :: []))) -> (let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_unembed e_binder tmp1) in
+      (FStarC_Option.bind tmp3 (fun tmp4 -> (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp2) in
+      (FStarC_Option.bind tmp5 (fun tmp6 -> (Some ((Tv_Refine (tmp4, tmp6))))))))))
+    | ("FStar.Tactics.NamedView.Tv_Const", (tmp1 :: [])) -> (let tmp2 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_vconst tmp1) in
+      (FStarC_Option.bind tmp2 (fun tmp3 -> (Some ((Tv_Const (tmp3)))))))
+    | ("FStar.Tactics.NamedView.Tv_Uvar", (tmp1 :: (tmp2 :: []))) -> (let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Syntax_Embeddings.e_int tmp1) in
+      (FStarC_Option.bind tmp3 (fun tmp4 -> (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_ctx_uvar_and_subst tmp2) in
+      (FStarC_Option.bind tmp5 (fun tmp6 -> (Some ((Tv_Uvar (tmp4, tmp6))))))))))
+    | ("FStar.Tactics.NamedView.Tv_Let", (tmp1 :: (tmp2 :: (tmp3 :: (tmp4 :: (tmp5 :: [])))))) -> (let tmp6 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Syntax_Embeddings.e_bool tmp1) in
+      (FStarC_Option.bind tmp6 (fun tmp7 -> (let tmp8 = (FStarC_Syntax_Embeddings_Base.extracted_unembed (FStarC_Syntax_Embeddings.e_list FStarC_Reflection_V2_Embeddings.e_term) tmp2) in
+      (FStarC_Option.bind tmp8 (fun tmp9 -> (let tmp10 = (FStarC_Syntax_Embeddings_Base.extracted_unembed e_binder tmp3) in
+      (FStarC_Option.bind tmp10 (fun tmp11 -> (let tmp12 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp4) in
+      (FStarC_Option.bind tmp12 (fun tmp13 -> (let tmp14 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp5) in
+      (FStarC_Option.bind tmp14 (fun tmp15 -> (Some ((Tv_Let (tmp7, tmp9, tmp11, tmp13, tmp15)))))))))))))))))))
+    | ("FStar.Tactics.NamedView.Tv_Match", (tmp1 :: (tmp2 :: (tmp3 :: [])))) -> (let tmp4 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp1) in
+      (FStarC_Option.bind tmp4 (fun tmp5 -> (let tmp6 = (FStarC_Syntax_Embeddings_Base.extracted_unembed (FStarC_Syntax_Embeddings.e_option (FStarC_Syntax_Embeddings.e_tuple2 e_binder (FStarC_Syntax_Embeddings.e_tuple3 (FStarC_Syntax_Embeddings.e_either FStarC_Reflection_V2_Embeddings.e_term FStarC_Reflection_V2_Embeddings.e_comp_view) (FStarC_Syntax_Embeddings.e_option FStarC_Reflection_V2_Embeddings.e_term) FStarC_Syntax_Embeddings.e_bool))) tmp2) in
+      (FStarC_Option.bind tmp6 (fun tmp7 -> (let tmp8 = (FStarC_Syntax_Embeddings_Base.extracted_unembed (FStarC_Syntax_Embeddings.e_list (FStarC_Syntax_Embeddings.e_tuple2 e_pattern FStarC_Reflection_V2_Embeddings.e_term)) tmp3) in
+      (FStarC_Option.bind tmp8 (fun tmp9 -> (Some ((Tv_Match (tmp5, tmp7, tmp9)))))))))))))
+    | ("FStar.Tactics.NamedView.Tv_AscribedT", (tmp1 :: (tmp2 :: (tmp3 :: (tmp4 :: []))))) -> (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp1) in
+      (FStarC_Option.bind tmp5 (fun tmp6 -> (let tmp7 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp2) in
+      (FStarC_Option.bind tmp7 (fun tmp8 -> (let tmp9 = (FStarC_Syntax_Embeddings_Base.extracted_unembed (FStarC_Syntax_Embeddings.e_option FStarC_Reflection_V2_Embeddings.e_term) tmp3) in
+      (FStarC_Option.bind tmp9 (fun tmp10 -> (let tmp11 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Syntax_Embeddings.e_bool tmp4) in
+      (FStarC_Option.bind tmp11 (fun tmp12 -> (Some ((Tv_AscribedT (tmp6, tmp8, tmp10, tmp12))))))))))))))))
+    | ("FStar.Tactics.NamedView.Tv_AscribedC", (tmp1 :: (tmp2 :: (tmp3 :: (tmp4 :: []))))) -> (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp1) in
+      (FStarC_Option.bind tmp5 (fun tmp6 -> (let tmp7 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_comp_view tmp2) in
+      (FStarC_Option.bind tmp7 (fun tmp8 -> (let tmp9 = (FStarC_Syntax_Embeddings_Base.extracted_unembed (FStarC_Syntax_Embeddings.e_option FStarC_Reflection_V2_Embeddings.e_term) tmp3) in
+      (FStarC_Option.bind tmp9 (fun tmp10 -> (let tmp11 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Syntax_Embeddings.e_bool tmp4) in
+      (FStarC_Option.bind tmp11 (fun tmp12 -> (Some ((Tv_AscribedC (tmp6, tmp8, tmp10, tmp12))))))))))))))))
+    | ("FStar.Tactics.NamedView.Tv_Unknown", []) -> (Some (Tv_Unknown))
+    | ("FStar.Tactics.NamedView.Tv_Unsupp", []) -> (Some (Tv_Unsupp))
+    | tmp1 -> None
+  )) (fun tmp -> (match tmp with
+    | (Tv_Var (tmp1)) -> (let tmp2 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_Var") in
+      let tmp3 = (FStarC_Syntax_Syntax.tdataconstr tmp2) in
+      (FStarC_Syntax_Util.mk_app tmp3 (let tmp4 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_namedv_view tmp1) in
+      let tmp5 = (FStarC_Syntax_Syntax.as_arg tmp4) in
+      (tmp5 :: []))))
+    | (Tv_BVar (tmp1)) -> (let tmp2 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_BVar") in
+      let tmp3 = (FStarC_Syntax_Syntax.tdataconstr tmp2) in
+      (FStarC_Syntax_Util.mk_app tmp3 (let tmp4 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_bv_view tmp1) in
+      let tmp5 = (FStarC_Syntax_Syntax.as_arg tmp4) in
+      (tmp5 :: []))))
+    | (Tv_FVar (tmp1)) -> (let tmp2 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_FVar") in
+      let tmp3 = (FStarC_Syntax_Syntax.tdataconstr tmp2) in
+      (FStarC_Syntax_Util.mk_app tmp3 (let tmp4 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_fv tmp1) in
+      let tmp5 = (FStarC_Syntax_Syntax.as_arg tmp4) in
+      (tmp5 :: []))))
+    | (Tv_UInst (tmp1, tmp2)) -> (let tmp3 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_UInst") in
+      let tmp4 = (FStarC_Syntax_Syntax.tdataconstr tmp3) in
+      (FStarC_Syntax_Util.mk_app tmp4 (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_fv tmp1) in
+      let tmp6 = (FStarC_Syntax_Syntax.as_arg tmp5) in
+      (tmp6 :: (let tmp7 = (FStarC_Syntax_Embeddings_Base.extracted_embed (FStarC_Syntax_Embeddings.e_list FStarC_Reflection_V2_Embeddings.e_universe) tmp2) in
+      let tmp8 = (FStarC_Syntax_Syntax.as_arg tmp7) in
+      (tmp8 :: []))))))
+    | (Tv_App (tmp1, tmp2)) -> (let tmp3 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_App") in
+      let tmp4 = (FStarC_Syntax_Syntax.tdataconstr tmp3) in
+      (FStarC_Syntax_Util.mk_app tmp4 (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_term tmp1) in
+      let tmp6 = (FStarC_Syntax_Syntax.as_arg tmp5) in
+      (tmp6 :: (let tmp7 = (FStarC_Syntax_Embeddings_Base.extracted_embed (FStarC_Syntax_Embeddings.e_tuple2 FStarC_Reflection_V2_Embeddings.e_term FStarC_Reflection_V2_Embeddings.e_aqualv) tmp2) in
+      let tmp8 = (FStarC_Syntax_Syntax.as_arg tmp7) in
+      (tmp8 :: []))))))
+    | (Tv_Abs (tmp1, tmp2)) -> (let tmp3 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_Abs") in
+      let tmp4 = (FStarC_Syntax_Syntax.tdataconstr tmp3) in
+      (FStarC_Syntax_Util.mk_app tmp4 (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_embed e_binder tmp1) in
+      let tmp6 = (FStarC_Syntax_Syntax.as_arg tmp5) in
+      (tmp6 :: (let tmp7 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_term tmp2) in
+      let tmp8 = (FStarC_Syntax_Syntax.as_arg tmp7) in
+      (tmp8 :: []))))))
+    | (Tv_Arrow (tmp1, tmp2)) -> (let tmp3 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_Arrow") in
+      let tmp4 = (FStarC_Syntax_Syntax.tdataconstr tmp3) in
+      (FStarC_Syntax_Util.mk_app tmp4 (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_embed e_binder tmp1) in
+      let tmp6 = (FStarC_Syntax_Syntax.as_arg tmp5) in
+      (tmp6 :: (let tmp7 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_comp_view tmp2) in
+      let tmp8 = (FStarC_Syntax_Syntax.as_arg tmp7) in
+      (tmp8 :: []))))))
+    | (Tv_Type (tmp1)) -> (let tmp2 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_Type") in
+      let tmp3 = (FStarC_Syntax_Syntax.tdataconstr tmp2) in
+      (FStarC_Syntax_Util.mk_app tmp3 (let tmp4 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_universe tmp1) in
+      let tmp5 = (FStarC_Syntax_Syntax.as_arg tmp4) in
+      (tmp5 :: []))))
+    | (Tv_Refine (tmp1, tmp2)) -> (let tmp3 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_Refine") in
+      let tmp4 = (FStarC_Syntax_Syntax.tdataconstr tmp3) in
+      (FStarC_Syntax_Util.mk_app tmp4 (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_embed e_binder tmp1) in
+      let tmp6 = (FStarC_Syntax_Syntax.as_arg tmp5) in
+      (tmp6 :: (let tmp7 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_term tmp2) in
+      let tmp8 = (FStarC_Syntax_Syntax.as_arg tmp7) in
+      (tmp8 :: []))))))
+    | (Tv_Const (tmp1)) -> (let tmp2 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_Const") in
+      let tmp3 = (FStarC_Syntax_Syntax.tdataconstr tmp2) in
+      (FStarC_Syntax_Util.mk_app tmp3 (let tmp4 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_vconst tmp1) in
+      let tmp5 = (FStarC_Syntax_Syntax.as_arg tmp4) in
+      (tmp5 :: []))))
+    | (Tv_Uvar (tmp1, tmp2)) -> (let tmp3 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_Uvar") in
+      let tmp4 = (FStarC_Syntax_Syntax.tdataconstr tmp3) in
+      (FStarC_Syntax_Util.mk_app tmp4 (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Syntax_Embeddings.e_int tmp1) in
+      let tmp6 = (FStarC_Syntax_Syntax.as_arg tmp5) in
+      (tmp6 :: (let tmp7 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_ctx_uvar_and_subst tmp2) in
+      let tmp8 = (FStarC_Syntax_Syntax.as_arg tmp7) in
+      (tmp8 :: []))))))
+    | (Tv_Let (tmp1, tmp2, tmp3, tmp4, tmp5)) -> (let tmp6 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_Let") in
+      let tmp7 = (FStarC_Syntax_Syntax.tdataconstr tmp6) in
+      (FStarC_Syntax_Util.mk_app tmp7 (let tmp8 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Syntax_Embeddings.e_bool tmp1) in
+      let tmp9 = (FStarC_Syntax_Syntax.as_arg tmp8) in
+      (tmp9 :: (let tmp10 = (FStarC_Syntax_Embeddings_Base.extracted_embed (FStarC_Syntax_Embeddings.e_list FStarC_Reflection_V2_Embeddings.e_term) tmp2) in
+      let tmp11 = (FStarC_Syntax_Syntax.as_arg tmp10) in
+      (tmp11 :: (let tmp12 = (FStarC_Syntax_Embeddings_Base.extracted_embed e_binder tmp3) in
+      let tmp13 = (FStarC_Syntax_Syntax.as_arg tmp12) in
+      (tmp13 :: (let tmp14 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_term tmp4) in
+      let tmp15 = (FStarC_Syntax_Syntax.as_arg tmp14) in
+      (tmp15 :: (let tmp16 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_term tmp5) in
+      let tmp17 = (FStarC_Syntax_Syntax.as_arg tmp16) in
+      (tmp17 :: []))))))))))))
+    | (Tv_Match (tmp1, tmp2, tmp3)) -> (let tmp4 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_Match") in
+      let tmp5 = (FStarC_Syntax_Syntax.tdataconstr tmp4) in
+      (FStarC_Syntax_Util.mk_app tmp5 (let tmp6 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_term tmp1) in
+      let tmp7 = (FStarC_Syntax_Syntax.as_arg tmp6) in
+      (tmp7 :: (let tmp8 = (FStarC_Syntax_Embeddings_Base.extracted_embed (FStarC_Syntax_Embeddings.e_option (FStarC_Syntax_Embeddings.e_tuple2 e_binder (FStarC_Syntax_Embeddings.e_tuple3 (FStarC_Syntax_Embeddings.e_either FStarC_Reflection_V2_Embeddings.e_term FStarC_Reflection_V2_Embeddings.e_comp_view) (FStarC_Syntax_Embeddings.e_option FStarC_Reflection_V2_Embeddings.e_term) FStarC_Syntax_Embeddings.e_bool))) tmp2) in
+      let tmp9 = (FStarC_Syntax_Syntax.as_arg tmp8) in
+      (tmp9 :: (let tmp10 = (FStarC_Syntax_Embeddings_Base.extracted_embed (FStarC_Syntax_Embeddings.e_list (FStarC_Syntax_Embeddings.e_tuple2 e_pattern FStarC_Reflection_V2_Embeddings.e_term)) tmp3) in
+      let tmp11 = (FStarC_Syntax_Syntax.as_arg tmp10) in
+      (tmp11 :: []))))))))
+    | (Tv_AscribedT (tmp1, tmp2, tmp3, tmp4)) -> (let tmp5 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_AscribedT") in
+      let tmp6 = (FStarC_Syntax_Syntax.tdataconstr tmp5) in
+      (FStarC_Syntax_Util.mk_app tmp6 (let tmp7 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_term tmp1) in
+      let tmp8 = (FStarC_Syntax_Syntax.as_arg tmp7) in
+      (tmp8 :: (let tmp9 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_term tmp2) in
+      let tmp10 = (FStarC_Syntax_Syntax.as_arg tmp9) in
+      (tmp10 :: (let tmp11 = (FStarC_Syntax_Embeddings_Base.extracted_embed (FStarC_Syntax_Embeddings.e_option FStarC_Reflection_V2_Embeddings.e_term) tmp3) in
+      let tmp12 = (FStarC_Syntax_Syntax.as_arg tmp11) in
+      (tmp12 :: (let tmp13 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Syntax_Embeddings.e_bool tmp4) in
+      let tmp14 = (FStarC_Syntax_Syntax.as_arg tmp13) in
+      (tmp14 :: []))))))))))
+    | (Tv_AscribedC (tmp1, tmp2, tmp3, tmp4)) -> (let tmp5 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_AscribedC") in
+      let tmp6 = (FStarC_Syntax_Syntax.tdataconstr tmp5) in
+      (FStarC_Syntax_Util.mk_app tmp6 (let tmp7 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_term tmp1) in
+      let tmp8 = (FStarC_Syntax_Syntax.as_arg tmp7) in
+      (tmp8 :: (let tmp9 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_comp_view tmp2) in
+      let tmp10 = (FStarC_Syntax_Syntax.as_arg tmp9) in
+      (tmp10 :: (let tmp11 = (FStarC_Syntax_Embeddings_Base.extracted_embed (FStarC_Syntax_Embeddings.e_option FStarC_Reflection_V2_Embeddings.e_term) tmp3) in
+      let tmp12 = (FStarC_Syntax_Syntax.as_arg tmp11) in
+      (tmp12 :: (let tmp13 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Syntax_Embeddings.e_bool tmp4) in
+      let tmp14 = (FStarC_Syntax_Syntax.as_arg tmp13) in
+      (tmp14 :: []))))))))))
+    | Tv_Unknown -> (let tmp1 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_Unknown") in
+      let tmp2 = (FStarC_Syntax_Syntax.tdataconstr tmp1) in
+      (FStarC_Syntax_Util.mk_app tmp2 []))
+    | Tv_Unsupp -> (let tmp1 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Tv_Unsupp") in
+      let tmp2 = (FStarC_Syntax_Syntax.tdataconstr tmp1) in
+      (FStarC_Syntax_Util.mk_app tmp2 []))
+  )))
+
+let e_named_term_view : (named_term_view) FStarC_Syntax_Embeddings_Base.embedding =
+  (u___knot_e_named_term_view ())
+
+let u___knot_e_named_universe_view (u__thunk : unit) : (named_universe_view) FStarC_Syntax_Embeddings_Base.embedding =
+  (FStarC_Syntax_Embeddings_Base.mk_extracted_embedding "FStar.Tactics.NamedView.named_universe_view" (fun tmp -> (match tmp with
+    | ("FStar.Tactics.NamedView.Uv_Zero", []) -> (Some (Uv_Zero))
+    | ("FStar.Tactics.NamedView.Uv_Succ", (tmp1 :: [])) -> (let tmp2 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_universe tmp1) in
+      (FStarC_Option.bind tmp2 (fun tmp3 -> (Some ((Uv_Succ (tmp3)))))))
+    | ("FStar.Tactics.NamedView.Uv_Max", (tmp1 :: [])) -> (let tmp2 = (FStarC_Syntax_Embeddings_Base.extracted_unembed (FStarC_Syntax_Embeddings.e_list FStarC_Reflection_V2_Embeddings.e_universe) tmp1) in
+      (FStarC_Option.bind tmp2 (fun tmp3 -> (Some ((Uv_Max (tmp3)))))))
+    | ("FStar.Tactics.NamedView.Uv_BVar", (tmp1 :: [])) -> (let tmp2 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Syntax_Embeddings.e_int tmp1) in
+      (FStarC_Option.bind tmp2 (fun tmp3 -> (Some ((Uv_BVar (tmp3)))))))
+    | ("FStar.Tactics.NamedView.Uv_Name", (tmp1 :: [])) -> (let tmp2 = (FStarC_Syntax_Embeddings_Base.extracted_unembed (FStarC_Syntax_Embeddings.e_tuple2 FStarC_Syntax_Embeddings.e_string FStarC_Syntax_Embeddings.e_range) tmp1) in
+      (FStarC_Option.bind tmp2 (fun tmp3 -> (Some ((Uv_Name (tmp3)))))))
+    | ("FStar.Tactics.NamedView.Uv_Unif", (tmp1 :: [])) -> (let tmp2 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_universe_uvar tmp1) in
+      (FStarC_Option.bind tmp2 (fun tmp3 -> (Some ((Uv_Unif (tmp3)))))))
+    | ("FStar.Tactics.NamedView.Uv_Unk", []) -> (Some (Uv_Unk))
+    | tmp1 -> None
+  )) (fun tmp -> (match tmp with
+    | Uv_Zero -> (let tmp1 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Uv_Zero") in
+      let tmp2 = (FStarC_Syntax_Syntax.tdataconstr tmp1) in
+      (FStarC_Syntax_Util.mk_app tmp2 []))
+    | (Uv_Succ (tmp1)) -> (let tmp2 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Uv_Succ") in
+      let tmp3 = (FStarC_Syntax_Syntax.tdataconstr tmp2) in
+      (FStarC_Syntax_Util.mk_app tmp3 (let tmp4 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_universe tmp1) in
+      let tmp5 = (FStarC_Syntax_Syntax.as_arg tmp4) in
+      (tmp5 :: []))))
+    | (Uv_Max (tmp1)) -> (let tmp2 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Uv_Max") in
+      let tmp3 = (FStarC_Syntax_Syntax.tdataconstr tmp2) in
+      (FStarC_Syntax_Util.mk_app tmp3 (let tmp4 = (FStarC_Syntax_Embeddings_Base.extracted_embed (FStarC_Syntax_Embeddings.e_list FStarC_Reflection_V2_Embeddings.e_universe) tmp1) in
+      let tmp5 = (FStarC_Syntax_Syntax.as_arg tmp4) in
+      (tmp5 :: []))))
+    | (Uv_BVar (tmp1)) -> (let tmp2 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Uv_BVar") in
+      let tmp3 = (FStarC_Syntax_Syntax.tdataconstr tmp2) in
+      (FStarC_Syntax_Util.mk_app tmp3 (let tmp4 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Syntax_Embeddings.e_int tmp1) in
+      let tmp5 = (FStarC_Syntax_Syntax.as_arg tmp4) in
+      (tmp5 :: []))))
+    | (Uv_Name (tmp1)) -> (let tmp2 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Uv_Name") in
+      let tmp3 = (FStarC_Syntax_Syntax.tdataconstr tmp2) in
+      (FStarC_Syntax_Util.mk_app tmp3 (let tmp4 = (FStarC_Syntax_Embeddings_Base.extracted_embed (FStarC_Syntax_Embeddings.e_tuple2 FStarC_Syntax_Embeddings.e_string FStarC_Syntax_Embeddings.e_range) tmp1) in
+      let tmp5 = (FStarC_Syntax_Syntax.as_arg tmp4) in
+      (tmp5 :: []))))
+    | (Uv_Unif (tmp1)) -> (let tmp2 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Uv_Unif") in
+      let tmp3 = (FStarC_Syntax_Syntax.tdataconstr tmp2) in
+      (FStarC_Syntax_Util.mk_app tmp3 (let tmp4 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_universe_uvar tmp1) in
+      let tmp5 = (FStarC_Syntax_Syntax.as_arg tmp4) in
+      (tmp5 :: []))))
+    | Uv_Unk -> (let tmp1 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Uv_Unk") in
+      let tmp2 = (FStarC_Syntax_Syntax.tdataconstr tmp1) in
+      (FStarC_Syntax_Util.mk_app tmp2 []))
+  )))
+
+let e_named_universe_view : (named_universe_view) FStarC_Syntax_Embeddings_Base.embedding =
+  (u___knot_e_named_universe_view ())
+
+let u___plugin_inspect_universe : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.NamedView.inspect_universe" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.NamedView.inspect_universe (plugin)" inspect_universe FStarC_Reflection_V2_Embeddings.e_universe e_named_universe_view tmp tmp1 tmp2 tmp3)))
+
+let close_universe_view (v : named_universe_view) : FStarC_Reflection_V2_Data.universe_view =
+  (match v with
+    | Uv_Zero -> FStarC_Reflection_V2_Data.Uv_Zero
+    | (Uv_Succ (u)) -> (FStarC_Reflection_V2_Data.Uv_Succ (u))
+    | (Uv_Max (us)) -> (FStarC_Reflection_V2_Data.Uv_Max (us))
+    | (Uv_BVar (n)) -> (FStarC_Reflection_V2_Data.Uv_BVar (n))
+    | (Uv_Name (i)) -> (let tmp = (FStarC_Reflection_V2_Builtins.pack_ident i) in
+      (FStarC_Reflection_V2_Data.Uv_Name (tmp)))
+    | (Uv_Unif (uvar)) -> (FStarC_Reflection_V2_Data.Uv_Unif (uvar))
+    | Uv_Unk -> FStarC_Reflection_V2_Data.Uv_Unk
+  )
+
+let pack_universe (uv : named_universe_view) : FStarC_Reflection_Types.universe =
+  (let uv1 = (close_universe_view uv) in
+  (FStarC_Reflection_V2_Builtins.pack_universe uv1))
+
+let u___plugin_pack_universe : unit =
+  (FStarC_Tactics_Native.register_plugin "FStar.Tactics.NamedView.pack_universe" (Prims.parse_int "1") (fun tmp tmp1 tmp2 tmp3 -> (let tmp4 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.pack_universe") in
+  (FStarC_Syntax_Embeddings.arrow_as_prim_step_1 e_named_universe_view FStarC_Reflection_V2_Embeddings.e_universe pack_universe tmp4 tmp1 tmp2 tmp3))) (fun tmp tmp1 tmp2 -> (let tmp3 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.pack_universe") in
+  (FStarC_TypeChecker_NBETerm.arrow_as_prim_step_1 (FStarC_TypeChecker_NBETerm.e_unsupported ()) FStarC_Reflection_V2_NBEEmbeddings.e_universe pack_universe tmp3 tmp tmp1 tmp2))))
+
+let u___plugin_close_term : unit =
+  (FStarC_Tactics_Native.register_plugin "FStar.Tactics.NamedView.close_term" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (let tmp4 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.close_term") in
+  (FStarC_Syntax_Embeddings.arrow_as_prim_step_2 e_binder FStarC_Reflection_V2_Embeddings.e_term (FStarC_Syntax_Embeddings.e_tuple2 FStarC_Reflection_V2_Embeddings.e_binder FStarC_Reflection_V2_Embeddings.e_term) close_term tmp4 tmp1 tmp2 tmp3))) (fun tmp tmp1 tmp2 -> (let tmp3 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.close_term") in
+  (FStarC_TypeChecker_NBETerm.arrow_as_prim_step_2 (FStarC_TypeChecker_NBETerm.e_unsupported ()) FStarC_Reflection_V2_NBEEmbeddings.e_term (FStarC_TypeChecker_NBETerm.e_tuple2 FStarC_Reflection_V2_NBEEmbeddings.e_binder FStarC_Reflection_V2_NBEEmbeddings.e_term) close_term tmp3 tmp tmp1 tmp2))))
+
+let u___plugin_inspect : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.NamedView.inspect" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.NamedView.inspect (plugin)" inspect FStarC_Reflection_V2_Embeddings.e_term e_named_term_view tmp tmp1 tmp2 tmp3)))
+
+let u___plugin_pack : unit =
+  (FStarC_Tactics_Native.register_plugin "FStar.Tactics.NamedView.pack" (Prims.parse_int "1") (fun tmp tmp1 tmp2 tmp3 -> (let tmp4 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.pack") in
+  (FStarC_Syntax_Embeddings.arrow_as_prim_step_1 e_named_term_view FStarC_Reflection_V2_Embeddings.e_term pack tmp4 tmp1 tmp2 tmp3))) (fun tmp tmp1 tmp2 -> (let tmp3 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.pack") in
+  (FStarC_TypeChecker_NBETerm.arrow_as_prim_step_1 (FStarC_TypeChecker_NBETerm.e_unsupported ()) FStarC_Reflection_V2_NBEEmbeddings.e_term pack tmp3 tmp tmp1 tmp2))))
+
+let u___knot_e_named_sigelt_view__Sg_Let__payload (u__thunk : unit) : (named_sigelt_view__Sg_Let__payload) FStarC_Syntax_Embeddings_Base.embedding =
+  (FStarC_Syntax_Embeddings_Base.mk_extracted_embedding "FStar.Tactics.NamedView.named_sigelt_view__Sg_Let__payload" (fun tmp -> (match tmp with
+    | ("FStar.Tactics.NamedView.Mknamed_sigelt_view__Sg_Let__payload", (tmp1 :: (tmp2 :: []))) -> (let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Syntax_Embeddings.e_bool tmp1) in
+      (FStarC_Option.bind tmp3 (fun tmp4 -> (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_unembed (FStarC_Syntax_Embeddings.e_list e_letbinding) tmp2) in
+      (FStarC_Option.bind tmp5 (fun tmp6 -> (Some ({ isrec = tmp4; lbs = tmp6 }))))))))
+    | tmp1 -> None
+  )) (fun tmp -> (let tmp1 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Mknamed_sigelt_view__Sg_Let__payload") in
+  let tmp2 = (FStarC_Syntax_Syntax.tdataconstr tmp1) in
+  (FStarC_Syntax_Util.mk_app tmp2 (let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Syntax_Embeddings.e_bool (tmp).isrec) in
+  let tmp4 = (FStarC_Syntax_Syntax.as_arg tmp3) in
+  (tmp4 :: (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_embed (FStarC_Syntax_Embeddings.e_list e_letbinding) (tmp).lbs) in
+  let tmp6 = (FStarC_Syntax_Syntax.as_arg tmp5) in
+  (tmp6 :: []))))))))
+
+let u___knot_e_named_sigelt_view__Sg_Inductive__payload (u__thunk : unit) : (named_sigelt_view__Sg_Inductive__payload) FStarC_Syntax_Embeddings_Base.embedding =
+  (FStarC_Syntax_Embeddings_Base.mk_extracted_embedding "FStar.Tactics.NamedView.named_sigelt_view__Sg_Inductive__payload" (fun tmp -> (match tmp with
+    | ("FStar.Tactics.NamedView.Mknamed_sigelt_view__Sg_Inductive__payload", (tmp1 :: (tmp2 :: (tmp3 :: (tmp4 :: (tmp5 :: [])))))) -> (let tmp6 = (FStarC_Syntax_Embeddings_Base.extracted_unembed (FStarC_Syntax_Embeddings.e_list FStarC_Syntax_Embeddings.e_string) tmp1) in
+      (FStarC_Option.bind tmp6 (fun tmp7 -> (let tmp8 = (FStarC_Syntax_Embeddings_Base.extracted_unembed (FStarC_Syntax_Embeddings.e_list (FStarC_Syntax_Embeddings.e_tuple2 FStarC_Syntax_Embeddings.e_string FStarC_Syntax_Embeddings.e_range)) tmp2) in
+      (FStarC_Option.bind tmp8 (fun tmp9 -> (let tmp10 = (FStarC_Syntax_Embeddings_Base.extracted_unembed (FStarC_Syntax_Embeddings.e_list e_binder) tmp3) in
+      (FStarC_Option.bind tmp10 (fun tmp11 -> (let tmp12 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp4) in
+      (FStarC_Option.bind tmp12 (fun tmp13 -> (let tmp14 = (FStarC_Syntax_Embeddings_Base.extracted_unembed (FStarC_Syntax_Embeddings.e_list (FStarC_Syntax_Embeddings.e_tuple2 (FStarC_Syntax_Embeddings.e_list FStarC_Syntax_Embeddings.e_string) FStarC_Reflection_V2_Embeddings.e_term)) tmp5) in
+      (FStarC_Option.bind tmp14 (fun tmp15 -> (Some (({ nm = tmp7; univs = tmp9; params = tmp11; typ = tmp13; ctors = tmp15 } : named_sigelt_view__Sg_Inductive__payload))))))))))))))))))
+    | tmp1 -> None
+  )) (fun tmp -> (let tmp1 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Mknamed_sigelt_view__Sg_Inductive__payload") in
+  let tmp2 = (FStarC_Syntax_Syntax.tdataconstr tmp1) in
+  (FStarC_Syntax_Util.mk_app tmp2 (let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_embed (FStarC_Syntax_Embeddings.e_list FStarC_Syntax_Embeddings.e_string) ((tmp : named_sigelt_view__Sg_Inductive__payload)).nm) in
+  let tmp4 = (FStarC_Syntax_Syntax.as_arg tmp3) in
+  (tmp4 :: (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_embed (FStarC_Syntax_Embeddings.e_list (FStarC_Syntax_Embeddings.e_tuple2 FStarC_Syntax_Embeddings.e_string FStarC_Syntax_Embeddings.e_range)) ((tmp : named_sigelt_view__Sg_Inductive__payload)).univs) in
+  let tmp6 = (FStarC_Syntax_Syntax.as_arg tmp5) in
+  (tmp6 :: (let tmp7 = (FStarC_Syntax_Embeddings_Base.extracted_embed (FStarC_Syntax_Embeddings.e_list e_binder) (tmp).params) in
+  let tmp8 = (FStarC_Syntax_Syntax.as_arg tmp7) in
+  (tmp8 :: (let tmp9 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_term ((tmp : named_sigelt_view__Sg_Inductive__payload)).typ) in
+  let tmp10 = (FStarC_Syntax_Syntax.as_arg tmp9) in
+  (tmp10 :: (let tmp11 = (FStarC_Syntax_Embeddings_Base.extracted_embed (FStarC_Syntax_Embeddings.e_list (FStarC_Syntax_Embeddings.e_tuple2 (FStarC_Syntax_Embeddings.e_list FStarC_Syntax_Embeddings.e_string) FStarC_Reflection_V2_Embeddings.e_term)) (tmp).ctors) in
+  let tmp12 = (FStarC_Syntax_Syntax.as_arg tmp11) in
+  (tmp12 :: []))))))))))))))
+
+let u___knot_e_named_sigelt_view__Sg_Val__payload (u__thunk : unit) : (named_sigelt_view__Sg_Val__payload) FStarC_Syntax_Embeddings_Base.embedding =
+  (FStarC_Syntax_Embeddings_Base.mk_extracted_embedding "FStar.Tactics.NamedView.named_sigelt_view__Sg_Val__payload" (fun tmp -> (match tmp with
+    | ("FStar.Tactics.NamedView.Mknamed_sigelt_view__Sg_Val__payload", (tmp1 :: (tmp2 :: (tmp3 :: [])))) -> (let tmp4 = (FStarC_Syntax_Embeddings_Base.extracted_unembed (FStarC_Syntax_Embeddings.e_list FStarC_Syntax_Embeddings.e_string) tmp1) in
+      (FStarC_Option.bind tmp4 (fun tmp5 -> (let tmp6 = (FStarC_Syntax_Embeddings_Base.extracted_unembed (FStarC_Syntax_Embeddings.e_list (FStarC_Syntax_Embeddings.e_tuple2 FStarC_Syntax_Embeddings.e_string FStarC_Syntax_Embeddings.e_range)) tmp2) in
+      (FStarC_Option.bind tmp6 (fun tmp7 -> (let tmp8 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp3) in
+      (FStarC_Option.bind tmp8 (fun tmp9 -> (Some (({ nm = tmp5; univs = tmp7; typ = tmp9 } : named_sigelt_view__Sg_Val__payload))))))))))))
+    | tmp1 -> None
+  )) (fun tmp -> (let tmp1 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Mknamed_sigelt_view__Sg_Val__payload") in
+  let tmp2 = (FStarC_Syntax_Syntax.tdataconstr tmp1) in
+  (FStarC_Syntax_Util.mk_app tmp2 (let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_embed (FStarC_Syntax_Embeddings.e_list FStarC_Syntax_Embeddings.e_string) ((tmp : named_sigelt_view__Sg_Val__payload)).nm) in
+  let tmp4 = (FStarC_Syntax_Syntax.as_arg tmp3) in
+  (tmp4 :: (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_embed (FStarC_Syntax_Embeddings.e_list (FStarC_Syntax_Embeddings.e_tuple2 FStarC_Syntax_Embeddings.e_string FStarC_Syntax_Embeddings.e_range)) ((tmp : named_sigelt_view__Sg_Val__payload)).univs) in
+  let tmp6 = (FStarC_Syntax_Syntax.as_arg tmp5) in
+  (tmp6 :: (let tmp7 = (FStarC_Syntax_Embeddings_Base.extracted_embed FStarC_Reflection_V2_Embeddings.e_term ((tmp : named_sigelt_view__Sg_Val__payload)).typ) in
+  let tmp8 = (FStarC_Syntax_Syntax.as_arg tmp7) in
+  (tmp8 :: []))))))))))
+
+let u___knot_e_named_sigelt_view (u__thunk : unit) : (named_sigelt_view) FStarC_Syntax_Embeddings_Base.embedding =
+  (FStarC_Syntax_Embeddings_Base.mk_extracted_embedding "FStar.Tactics.NamedView.named_sigelt_view" (fun tmp -> (match tmp with
+    | ("FStar.Tactics.NamedView.Sg_Let", (tmp1 :: [])) -> (let tmp2 = (u___knot_e_named_sigelt_view__Sg_Let__payload ()) in
+      let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_unembed tmp2 tmp1) in
+      (FStarC_Option.bind tmp3 (fun tmp4 -> (Some ((Sg_Let (tmp4)))))))
+    | ("FStar.Tactics.NamedView.Sg_Inductive", (tmp1 :: [])) -> (let tmp2 = (u___knot_e_named_sigelt_view__Sg_Inductive__payload ()) in
+      let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_unembed tmp2 tmp1) in
+      (FStarC_Option.bind tmp3 (fun tmp4 -> (Some ((Sg_Inductive (tmp4)))))))
+    | ("FStar.Tactics.NamedView.Sg_Val", (tmp1 :: [])) -> (let tmp2 = (u___knot_e_named_sigelt_view__Sg_Val__payload ()) in
+      let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_unembed tmp2 tmp1) in
+      (FStarC_Option.bind tmp3 (fun tmp4 -> (Some ((Sg_Val (tmp4)))))))
+    | ("FStar.Tactics.NamedView.Unk", []) -> (Some (Unk))
+    | tmp1 -> None
+  )) (fun tmp -> (match tmp with
+    | (Sg_Let (tmp1)) -> (let tmp2 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Sg_Let") in
+      let tmp3 = (FStarC_Syntax_Syntax.tdataconstr tmp2) in
+      (FStarC_Syntax_Util.mk_app tmp3 (let tmp4 = (u___knot_e_named_sigelt_view__Sg_Let__payload ()) in
+      let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_embed tmp4 tmp1) in
+      let tmp6 = (FStarC_Syntax_Syntax.as_arg tmp5) in
+      (tmp6 :: []))))
+    | (Sg_Inductive (tmp1)) -> (let tmp2 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Sg_Inductive") in
+      let tmp3 = (FStarC_Syntax_Syntax.tdataconstr tmp2) in
+      (FStarC_Syntax_Util.mk_app tmp3 (let tmp4 = (u___knot_e_named_sigelt_view__Sg_Inductive__payload ()) in
+      let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_embed tmp4 tmp1) in
+      let tmp6 = (FStarC_Syntax_Syntax.as_arg tmp5) in
+      (tmp6 :: []))))
+    | (Sg_Val (tmp1)) -> (let tmp2 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Sg_Val") in
+      let tmp3 = (FStarC_Syntax_Syntax.tdataconstr tmp2) in
+      (FStarC_Syntax_Util.mk_app tmp3 (let tmp4 = (u___knot_e_named_sigelt_view__Sg_Val__payload ()) in
+      let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_embed tmp4 tmp1) in
+      let tmp6 = (FStarC_Syntax_Syntax.as_arg tmp5) in
+      (tmp6 :: []))))
+    | Unk -> (let tmp1 = (FStarC_Ident.lid_of_str "FStar.Tactics.NamedView.Unk") in
+      let tmp2 = (FStarC_Syntax_Syntax.tdataconstr tmp1) in
+      (FStarC_Syntax_Util.mk_app tmp2 []))
+  )))
+
+let e_named_sigelt_view : (named_sigelt_view) FStarC_Syntax_Embeddings_Base.embedding =
+  (u___knot_e_named_sigelt_view ())
+
+let u___plugin_inspect_sigelt : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.NamedView.inspect_sigelt" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.NamedView.inspect_sigelt (plugin)" inspect_sigelt FStarC_Reflection_V2_Embeddings.e_sigelt e_named_sigelt_view tmp tmp1 tmp2 tmp3)))
+
+let u___plugin_pack_sigelt : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.NamedView.pack_sigelt" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.NamedView.pack_sigelt (plugin)" pack_sigelt e_named_sigelt_view FStarC_Reflection_V2_Embeddings.e_sigelt tmp tmp1 tmp2 tmp3)))
+
+let tcc (e : FStarC_Reflection_Types.env) (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_V2_Data.comp_view) =
+  (fun ps -> (let x = (FStarC_Tactics_V2_Builtins.tcc e t ps) in
+  (FStarC_Reflection_V2_Builtins.inspect_comp x)))
+
+let u___plugin_tcc : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.NamedView.tcc" (Prims.parse_int "3") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_2 "FStar.Tactics.NamedView.tcc (plugin)" tcc FStarC_Reflection_V2_Embeddings.e_env FStarC_Reflection_V2_Embeddings.e_term FStarC_Reflection_V2_Embeddings.e_comp_view tmp tmp1 tmp2 tmp3)))
+
+let comp_to_string (c : FStarC_Reflection_V2_Data.comp_view) : ((FStarC_Tactics_Types.proofstate ref) -> string) =
+  (let tmp = (FStarC_Reflection_V2_Builtins.pack_comp c) in
+  (FStarC_Tactics_V2_Builtins.comp_to_string tmp))
+
+let u___plugin_comp_to_string : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.NamedView.comp_to_string" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.NamedView.comp_to_string (plugin)" comp_to_string FStarC_Reflection_V2_Embeddings.e_comp_view FStarC_Syntax_Embeddings.e_string tmp tmp1 tmp2 tmp3)))
+
+let tag_of (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> string) =
+  (fun ps -> (let x = (inspect t ps) in
+  (match x with
+    | (Tv_Var (bv)) -> "Tv_Var"
+    | (Tv_BVar (fv)) -> "Tv_BVar"
+    | (Tv_FVar (fv)) -> "Tv_FVar"
+    | (Tv_UInst (tmp, tmp1)) -> "Tv_UInst"
+    | (Tv_App (f, x1)) -> "Tv_App"
+    | (Tv_Abs (x1, t1)) -> "Tv_Abs"
+    | (Tv_Arrow (x1, t1)) -> "Tv_Arrow"
+    | (Tv_Type (tmp)) -> "Tv_Type"
+    | (Tv_Refine (x1, t1)) -> "Tv_Refine"
+    | (Tv_Const (cst)) -> "Tv_Const"
+    | (Tv_Uvar (i, t1)) -> "Tv_Uvar"
+    | (Tv_Let (r, attrs, b, t1, t2)) -> "Tv_Let"
+    | (Tv_Match (t1, tmp, branches)) -> "Tv_Match"
+    | (Tv_AscribedT (tmp, tmp1, tmp2, tmp3)) -> "Tv_AscribedT"
+    | (Tv_AscribedC (tmp, tmp1, tmp2, tmp3)) -> "Tv_AscribedC"
+    | Tv_Unknown -> "Tv_Unknown"
+    | Tv_Unsupp -> "Tv_Unsupp"
+  )))
+
+let u___plugin_tag_of : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.NamedView.tag_of" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.NamedView.tag_of (plugin)" tag_of FStarC_Reflection_V2_Embeddings.e_term FStarC_Syntax_Embeddings.e_string tmp tmp1 tmp2 tmp3)))
+

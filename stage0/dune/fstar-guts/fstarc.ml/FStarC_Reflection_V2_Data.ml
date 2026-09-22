@@ -1,545 +1,169 @@
-open Prims
-type name = Prims.string Prims.list
-type typ = FStarC_Syntax_Syntax.term
-type binders = FStarC_Syntax_Syntax.binder Prims.list
-type ppname_t = Prims.string FStarC_Sealed.sealed
-let as_ppname (x : Prims.string) : ppname_t= FStarC_Sealed.seal x
-type simple_binder = FStarC_Syntax_Syntax.binder
-type ident_view = (Prims.string * FStarC_Range_Type.t)
-type namedv = FStarC_Syntax_Syntax.bv
-type int_signedness =
-  | Signed 
-  | Unsigned 
-let uu___is_Signed (projectee : int_signedness) : Prims.bool=
-  match projectee with | Signed -> true | uu___ -> false
-let uu___is_Unsigned (projectee : int_signedness) : Prims.bool=
-  match projectee with | Unsigned -> true | uu___ -> false
-type int_width =
-  | Int8 
-  | Int16 
-  | Int32 
-  | Int64 
-  | Sizet 
-let uu___is_Int8 (projectee : int_width) : Prims.bool=
-  match projectee with | Int8 -> true | uu___ -> false
-let uu___is_Int16 (projectee : int_width) : Prims.bool=
-  match projectee with | Int16 -> true | uu___ -> false
-let uu___is_Int32 (projectee : int_width) : Prims.bool=
-  match projectee with | Int32 -> true | uu___ -> false
-let uu___is_Int64 (projectee : int_width) : Prims.bool=
-  match projectee with | Int64 -> true | uu___ -> false
-let uu___is_Sizet (projectee : int_width) : Prims.bool=
-  match projectee with | Sizet -> true | uu___ -> false
-type vconst =
-  | C_Unit 
-  | C_Int of (Prims.int * FStar_IntegerLiteral.int_base FStarC_Sealed.sealed)
-  
-  | C_MachineInt of (Prims.int * FStar_IntegerLiteral.int_base
-  FStarC_Sealed.sealed * int_signedness * int_width) 
-  | C_True 
-  | C_False 
-  | C_String of Prims.string 
-  | C_Range of FStarC_Range_Type.t 
-  | C_Reify 
-  | C_Reflect of name 
-  | C_Real of FStarC_Real.real 
-  | C_Char of FStar_Char.char 
-let uu___is_C_Unit (projectee : vconst) : Prims.bool=
-  match projectee with | C_Unit -> true | uu___ -> false
-let uu___is_C_Int (projectee : vconst) : Prims.bool=
-  match projectee with | C_Int _0 -> true | uu___ -> false
-let __proj__C_Int__item___0 (projectee : vconst) :
-  (Prims.int * FStar_IntegerLiteral.int_base FStarC_Sealed.sealed)=
-  match projectee with | C_Int _0 -> _0
-let uu___is_C_MachineInt (projectee : vconst) : Prims.bool=
-  match projectee with | C_MachineInt _0 -> true | uu___ -> false
-let __proj__C_MachineInt__item___0 (projectee : vconst) :
-  (Prims.int * FStar_IntegerLiteral.int_base FStarC_Sealed.sealed *
-    int_signedness * int_width)=
-  match projectee with | C_MachineInt _0 -> _0
-let uu___is_C_True (projectee : vconst) : Prims.bool=
-  match projectee with | C_True -> true | uu___ -> false
-let uu___is_C_False (projectee : vconst) : Prims.bool=
-  match projectee with | C_False -> true | uu___ -> false
-let uu___is_C_String (projectee : vconst) : Prims.bool=
-  match projectee with | C_String _0 -> true | uu___ -> false
-let __proj__C_String__item___0 (projectee : vconst) : Prims.string=
-  match projectee with | C_String _0 -> _0
-let uu___is_C_Range (projectee : vconst) : Prims.bool=
-  match projectee with | C_Range _0 -> true | uu___ -> false
-let __proj__C_Range__item___0 (projectee : vconst) : FStarC_Range_Type.t=
-  match projectee with | C_Range _0 -> _0
-let uu___is_C_Reify (projectee : vconst) : Prims.bool=
-  match projectee with | C_Reify -> true | uu___ -> false
-let uu___is_C_Reflect (projectee : vconst) : Prims.bool=
-  match projectee with | C_Reflect _0 -> true | uu___ -> false
-let __proj__C_Reflect__item___0 (projectee : vconst) : name=
-  match projectee with | C_Reflect _0 -> _0
-let uu___is_C_Real (projectee : vconst) : Prims.bool=
-  match projectee with | C_Real _0 -> true | uu___ -> false
-let __proj__C_Real__item___0 (projectee : vconst) : FStarC_Real.real=
-  match projectee with | C_Real _0 -> _0
-let uu___is_C_Char (projectee : vconst) : Prims.bool=
-  match projectee with | C_Char _0 -> true | uu___ -> false
-let __proj__C_Char__item___0 (projectee : vconst) : FStar_Char.char=
-  match projectee with | C_Char _0 -> _0
-type universes = FStarC_Syntax_Syntax.universe Prims.list
-type pattern =
-  | Pat_Constant of vconst 
-  | Pat_Cons of FStarC_Syntax_Syntax.fv * universes
-  FStar_Pervasives_Native.option * (pattern * Prims.bool) Prims.list 
-  | Pat_Var of FStarC_Syntax_Syntax.term FStarC_Sealed.sealed * ppname_t 
-  | Pat_Dot_Term of FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option 
-let uu___is_Pat_Constant (projectee : pattern) : Prims.bool=
-  match projectee with | Pat_Constant c -> true | uu___ -> false
-let __proj__Pat_Constant__item__c (projectee : pattern) : vconst=
-  match projectee with | Pat_Constant c -> c
-let uu___is_Pat_Cons (projectee : pattern) : Prims.bool=
-  match projectee with
-  | Pat_Cons (head, univs, subpats) -> true
-  | uu___ -> false
-let __proj__Pat_Cons__item__head (projectee : pattern) :
-  FStarC_Syntax_Syntax.fv=
-  match projectee with | Pat_Cons (head, univs, subpats) -> head
-let __proj__Pat_Cons__item__univs (projectee : pattern) :
-  universes FStar_Pervasives_Native.option=
-  match projectee with | Pat_Cons (head, univs, subpats) -> univs
-let __proj__Pat_Cons__item__subpats (projectee : pattern) :
-  (pattern * Prims.bool) Prims.list=
-  match projectee with | Pat_Cons (head, univs, subpats) -> subpats
-let uu___is_Pat_Var (projectee : pattern) : Prims.bool=
-  match projectee with | Pat_Var (sort, ppname) -> true | uu___ -> false
-let __proj__Pat_Var__item__sort (projectee : pattern) :
-  FStarC_Syntax_Syntax.term FStarC_Sealed.sealed=
-  match projectee with | Pat_Var (sort, ppname) -> sort
-let __proj__Pat_Var__item__ppname (projectee : pattern) : ppname_t=
-  match projectee with | Pat_Var (sort, ppname) -> ppname
-let uu___is_Pat_Dot_Term (projectee : pattern) : Prims.bool=
-  match projectee with | Pat_Dot_Term t -> true | uu___ -> false
-let __proj__Pat_Dot_Term__item__t (projectee : pattern) :
-  FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option=
-  match projectee with | Pat_Dot_Term t -> t
-type branch = (pattern * FStarC_Syntax_Syntax.term)
-type aqualv =
-  | Q_Implicit 
-  | Q_Explicit 
-  | Q_Equality 
-  | Q_Meta of FStarC_Syntax_Syntax.term 
-let uu___is_Q_Implicit (projectee : aqualv) : Prims.bool=
-  match projectee with | Q_Implicit -> true | uu___ -> false
-let uu___is_Q_Explicit (projectee : aqualv) : Prims.bool=
-  match projectee with | Q_Explicit -> true | uu___ -> false
-let uu___is_Q_Equality (projectee : aqualv) : Prims.bool=
-  match projectee with | Q_Equality -> true | uu___ -> false
-let uu___is_Q_Meta (projectee : aqualv) : Prims.bool=
-  match projectee with | Q_Meta _0 -> true | uu___ -> false
-let __proj__Q_Meta__item___0 (projectee : aqualv) :
-  FStarC_Syntax_Syntax.term= match projectee with | Q_Meta _0 -> _0
-type argv = (FStarC_Syntax_Syntax.term * aqualv)
-type namedv_view =
-  {
-  uniq: Prims.int ;
-  sort: typ FStarC_Sealed.sealed ;
-  ppname: ppname_t }
-let __proj__Mknamedv_view__item__uniq (projectee : namedv_view) : Prims.int=
-  match projectee with | { uniq; sort; ppname;_} -> uniq
-let __proj__Mknamedv_view__item__sort (projectee : namedv_view) :
-  typ FStarC_Sealed.sealed=
-  match projectee with | { uniq; sort; ppname;_} -> sort
-let __proj__Mknamedv_view__item__ppname (projectee : namedv_view) : ppname_t=
-  match projectee with | { uniq; sort; ppname;_} -> ppname
-type bv_view =
-  {
-  index: Prims.int ;
-  sort1: typ FStarC_Sealed.sealed ;
-  ppname1: ppname_t }
-let __proj__Mkbv_view__item__index (projectee : bv_view) : Prims.int=
-  match projectee with | { index; sort1 = sort; ppname1 = ppname;_} -> index
-let __proj__Mkbv_view__item__sort (projectee : bv_view) :
-  typ FStarC_Sealed.sealed=
-  match projectee with | { index; sort1 = sort; ppname1 = ppname;_} -> sort
-let __proj__Mkbv_view__item__ppname (projectee : bv_view) : ppname_t=
-  match projectee with | { index; sort1 = sort; ppname1 = ppname;_} -> ppname
-type binder_view =
-  {
-  sort2: typ ;
-  qual: aqualv ;
-  attrs: FStarC_Syntax_Syntax.term Prims.list ;
-  ppname2: ppname_t }
-let __proj__Mkbinder_view__item__sort (projectee : binder_view) : typ=
-  match projectee with
-  | { sort2 = sort; qual; attrs; ppname2 = ppname;_} -> sort
-let __proj__Mkbinder_view__item__qual (projectee : binder_view) : aqualv=
-  match projectee with
-  | { sort2 = sort; qual; attrs; ppname2 = ppname;_} -> qual
-let __proj__Mkbinder_view__item__attrs (projectee : binder_view) :
-  FStarC_Syntax_Syntax.term Prims.list=
-  match projectee with
-  | { sort2 = sort; qual; attrs; ppname2 = ppname;_} -> attrs
-let __proj__Mkbinder_view__item__ppname (projectee : binder_view) : ppname_t=
-  match projectee with
-  | { sort2 = sort; qual; attrs; ppname2 = ppname;_} -> ppname
+(* Generated by F* Custard extraction. Do not edit. *)
+[@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
+
 type binding = {
-  uniq1: Prims.int ;
-  sort3: typ ;
-  ppname3: ppname_t }
-let __proj__Mkbinding__item__uniq (projectee : binding) : Prims.int=
-  match projectee with
-  | { uniq1 = uniq; sort3 = sort; ppname3 = ppname;_} -> uniq
-let __proj__Mkbinding__item__sort (projectee : binding) : typ=
-  match projectee with
-  | { uniq1 = uniq; sort3 = sort; ppname3 = ppname;_} -> sort
-let __proj__Mkbinding__item__ppname (projectee : binding) : ppname_t=
-  match projectee with
-  | { uniq1 = uniq; sort3 = sort; ppname3 = ppname;_} -> ppname
-type bindings = binding Prims.list
-type universe_view =
-  | Uv_Zero 
-  | Uv_Succ of FStarC_Syntax_Syntax.universe 
-  | Uv_Max of universes 
-  | Uv_BVar of Prims.int 
-  | Uv_Name of FStarC_Syntax_Syntax.univ_name 
-  | Uv_Unif of FStarC_Syntax_Syntax.universe_uvar 
-  | Uv_Unk 
-let uu___is_Uv_Zero (projectee : universe_view) : Prims.bool=
-  match projectee with | Uv_Zero -> true | uu___ -> false
-let uu___is_Uv_Succ (projectee : universe_view) : Prims.bool=
-  match projectee with | Uv_Succ _0 -> true | uu___ -> false
-let __proj__Uv_Succ__item___0 (projectee : universe_view) :
-  FStarC_Syntax_Syntax.universe= match projectee with | Uv_Succ _0 -> _0
-let uu___is_Uv_Max (projectee : universe_view) : Prims.bool=
-  match projectee with | Uv_Max _0 -> true | uu___ -> false
-let __proj__Uv_Max__item___0 (projectee : universe_view) : universes=
-  match projectee with | Uv_Max _0 -> _0
-let uu___is_Uv_BVar (projectee : universe_view) : Prims.bool=
-  match projectee with | Uv_BVar _0 -> true | uu___ -> false
-let __proj__Uv_BVar__item___0 (projectee : universe_view) : Prims.int=
-  match projectee with | Uv_BVar _0 -> _0
-let uu___is_Uv_Name (projectee : universe_view) : Prims.bool=
-  match projectee with | Uv_Name _0 -> true | uu___ -> false
-let __proj__Uv_Name__item___0 (projectee : universe_view) :
-  FStarC_Syntax_Syntax.univ_name= match projectee with | Uv_Name _0 -> _0
-let uu___is_Uv_Unif (projectee : universe_view) : Prims.bool=
-  match projectee with | Uv_Unif _0 -> true | uu___ -> false
-let __proj__Uv_Unif__item___0 (projectee : universe_view) :
-  FStarC_Syntax_Syntax.universe_uvar= match projectee with | Uv_Unif _0 -> _0
-let uu___is_Uv_Unk (projectee : universe_view) : Prims.bool=
-  match projectee with | Uv_Unk -> true | uu___ -> false
-type term_view =
-  | Tv_Var of namedv 
-  | Tv_BVar of FStarC_Syntax_Syntax.bv 
-  | Tv_FVar of FStarC_Syntax_Syntax.fv 
-  | Tv_UInst of (FStarC_Syntax_Syntax.fv * universes) 
-  | Tv_App of (FStarC_Syntax_Syntax.term * argv) 
-  | Tv_Abs of (FStarC_Syntax_Syntax.binder * FStarC_Syntax_Syntax.term) 
-  | Tv_Arrow of (FStarC_Syntax_Syntax.binder * FStarC_Syntax_Syntax.comp) 
-  | Tv_Type of FStarC_Syntax_Syntax.universe 
-  | Tv_Refine of (FStarC_Syntax_Syntax.binder * FStarC_Syntax_Syntax.term) 
-  | Tv_Const of vconst 
-  | Tv_Uvar of (Prims.int * FStarC_Syntax_Syntax.ctx_uvar_and_subst) 
-  | Tv_Let of (Prims.bool * FStarC_Syntax_Syntax.term Prims.list *
-  FStarC_Syntax_Syntax.binder * FStarC_Syntax_Syntax.term *
-  FStarC_Syntax_Syntax.term) 
-  | Tv_Match of (FStarC_Syntax_Syntax.term *
-  FStarC_Syntax_Syntax.match_returns_ascription
-  FStar_Pervasives_Native.option * branch Prims.list) 
-  | Tv_AscribedT of (FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.term *
-  FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option * Prims.bool) 
-  | Tv_AscribedC of (FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.comp *
-  FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option * Prims.bool) 
-  | Tv_Unknown 
-  | Tv_Unsupp 
-let uu___is_Tv_Var (projectee : term_view) : Prims.bool=
-  match projectee with | Tv_Var _0 -> true | uu___ -> false
-let __proj__Tv_Var__item___0 (projectee : term_view) : namedv=
-  match projectee with | Tv_Var _0 -> _0
-let uu___is_Tv_BVar (projectee : term_view) : Prims.bool=
-  match projectee with | Tv_BVar _0 -> true | uu___ -> false
-let __proj__Tv_BVar__item___0 (projectee : term_view) :
-  FStarC_Syntax_Syntax.bv= match projectee with | Tv_BVar _0 -> _0
-let uu___is_Tv_FVar (projectee : term_view) : Prims.bool=
-  match projectee with | Tv_FVar _0 -> true | uu___ -> false
-let __proj__Tv_FVar__item___0 (projectee : term_view) :
-  FStarC_Syntax_Syntax.fv= match projectee with | Tv_FVar _0 -> _0
-let uu___is_Tv_UInst (projectee : term_view) : Prims.bool=
-  match projectee with | Tv_UInst _0 -> true | uu___ -> false
-let __proj__Tv_UInst__item___0 (projectee : term_view) :
-  (FStarC_Syntax_Syntax.fv * universes)=
-  match projectee with | Tv_UInst _0 -> _0
-let uu___is_Tv_App (projectee : term_view) : Prims.bool=
-  match projectee with | Tv_App _0 -> true | uu___ -> false
-let __proj__Tv_App__item___0 (projectee : term_view) :
-  (FStarC_Syntax_Syntax.term * argv)= match projectee with | Tv_App _0 -> _0
-let uu___is_Tv_Abs (projectee : term_view) : Prims.bool=
-  match projectee with | Tv_Abs _0 -> true | uu___ -> false
-let __proj__Tv_Abs__item___0 (projectee : term_view) :
-  (FStarC_Syntax_Syntax.binder * FStarC_Syntax_Syntax.term)=
-  match projectee with | Tv_Abs _0 -> _0
-let uu___is_Tv_Arrow (projectee : term_view) : Prims.bool=
-  match projectee with | Tv_Arrow _0 -> true | uu___ -> false
-let __proj__Tv_Arrow__item___0 (projectee : term_view) :
-  (FStarC_Syntax_Syntax.binder * FStarC_Syntax_Syntax.comp)=
-  match projectee with | Tv_Arrow _0 -> _0
-let uu___is_Tv_Type (projectee : term_view) : Prims.bool=
-  match projectee with | Tv_Type _0 -> true | uu___ -> false
-let __proj__Tv_Type__item___0 (projectee : term_view) :
-  FStarC_Syntax_Syntax.universe= match projectee with | Tv_Type _0 -> _0
-let uu___is_Tv_Refine (projectee : term_view) : Prims.bool=
-  match projectee with | Tv_Refine _0 -> true | uu___ -> false
-let __proj__Tv_Refine__item___0 (projectee : term_view) :
-  (FStarC_Syntax_Syntax.binder * FStarC_Syntax_Syntax.term)=
-  match projectee with | Tv_Refine _0 -> _0
-let uu___is_Tv_Const (projectee : term_view) : Prims.bool=
-  match projectee with | Tv_Const _0 -> true | uu___ -> false
-let __proj__Tv_Const__item___0 (projectee : term_view) : vconst=
-  match projectee with | Tv_Const _0 -> _0
-let uu___is_Tv_Uvar (projectee : term_view) : Prims.bool=
-  match projectee with | Tv_Uvar _0 -> true | uu___ -> false
-let __proj__Tv_Uvar__item___0 (projectee : term_view) :
-  (Prims.int * FStarC_Syntax_Syntax.ctx_uvar_and_subst)=
-  match projectee with | Tv_Uvar _0 -> _0
-let uu___is_Tv_Let (projectee : term_view) : Prims.bool=
-  match projectee with | Tv_Let _0 -> true | uu___ -> false
-let __proj__Tv_Let__item___0 (projectee : term_view) :
-  (Prims.bool * FStarC_Syntax_Syntax.term Prims.list *
-    FStarC_Syntax_Syntax.binder * FStarC_Syntax_Syntax.term *
-    FStarC_Syntax_Syntax.term)=
-  match projectee with | Tv_Let _0 -> _0
-let uu___is_Tv_Match (projectee : term_view) : Prims.bool=
-  match projectee with | Tv_Match _0 -> true | uu___ -> false
-let __proj__Tv_Match__item___0 (projectee : term_view) :
-  (FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.match_returns_ascription
-    FStar_Pervasives_Native.option * branch Prims.list)=
-  match projectee with | Tv_Match _0 -> _0
-let uu___is_Tv_AscribedT (projectee : term_view) : Prims.bool=
-  match projectee with | Tv_AscribedT _0 -> true | uu___ -> false
-let __proj__Tv_AscribedT__item___0 (projectee : term_view) :
-  (FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.term *
-    FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option * Prims.bool)=
-  match projectee with | Tv_AscribedT _0 -> _0
-let uu___is_Tv_AscribedC (projectee : term_view) : Prims.bool=
-  match projectee with | Tv_AscribedC _0 -> true | uu___ -> false
-let __proj__Tv_AscribedC__item___0 (projectee : term_view) :
-  (FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.comp *
-    FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option * Prims.bool)=
-  match projectee with | Tv_AscribedC _0 -> _0
-let uu___is_Tv_Unknown (projectee : term_view) : Prims.bool=
-  match projectee with | Tv_Unknown -> true | uu___ -> false
-let uu___is_Tv_Unsupp (projectee : term_view) : Prims.bool=
-  match projectee with | Tv_Unsupp -> true | uu___ -> false
-let notAscription (tv : term_view) : Prims.bool=
-  (Prims.not (match tv with | Tv_AscribedT _0 -> true | uu___ -> false)) &&
-    (Prims.not (match tv with | Tv_AscribedC _0 -> true | uu___ -> false))
-type decreases_order =
-  | Decreases_lex of FStarC_Syntax_Syntax.term Prims.list 
-  | Decreases_wf of FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.term 
-let uu___is_Decreases_lex (projectee : decreases_order) : Prims.bool=
-  match projectee with | Decreases_lex _0 -> true | uu___ -> false
-let __proj__Decreases_lex__item___0 (projectee : decreases_order) :
-  FStarC_Syntax_Syntax.term Prims.list=
-  match projectee with | Decreases_lex _0 -> _0
-let uu___is_Decreases_wf (projectee : decreases_order) : Prims.bool=
-  match projectee with | Decreases_wf (_0, _1) -> true | uu___ -> false
-let __proj__Decreases_wf__item___0 (projectee : decreases_order) :
-  FStarC_Syntax_Syntax.term=
-  match projectee with | Decreases_wf (_0, _1) -> _0
-let __proj__Decreases_wf__item___1 (projectee : decreases_order) :
-  FStarC_Syntax_Syntax.term=
-  match projectee with | Decreases_wf (_0, _1) -> _1
-type cflag =
-  | SMTPAT of FStarC_Syntax_Syntax.term 
-  | DECREASES of decreases_order 
-let uu___is_SMTPAT (projectee : cflag) : Prims.bool=
-  match projectee with | SMTPAT _0 -> true | uu___ -> false
-let __proj__SMTPAT__item___0 (projectee : cflag) : FStarC_Syntax_Syntax.term=
-  match projectee with | SMTPAT _0 -> _0
-let uu___is_DECREASES (projectee : cflag) : Prims.bool=
-  match projectee with | DECREASES _0 -> true | uu___ -> false
-let __proj__DECREASES__item___0 (projectee : cflag) : decreases_order=
-  match projectee with | DECREASES _0 -> _0
-type comp_view =
-  {
-  effect_name: name ;
-  result_typ: typ ;
-  flags: cflag Prims.list ;
-  source_effect_name: name }
-let __proj__Mkcomp_view__item__effect_name (projectee : comp_view) : 
-  name=
-  match projectee with
-  | { effect_name; result_typ; flags; source_effect_name;_} -> effect_name
-let __proj__Mkcomp_view__item__result_typ (projectee : comp_view) : typ=
-  match projectee with
-  | { effect_name; result_typ; flags; source_effect_name;_} -> result_typ
-let __proj__Mkcomp_view__item__flags (projectee : comp_view) :
-  cflag Prims.list=
-  match projectee with
-  | { effect_name; result_typ; flags; source_effect_name;_} -> flags
-let __proj__Mkcomp_view__item__source_effect_name (projectee : comp_view) :
-  name=
-  match projectee with
-  | { effect_name; result_typ; flags; source_effect_name;_} ->
-      source_effect_name
-type ctor = (name * typ)
-type lb_view =
-  {
-  lb_fv: FStarC_Syntax_Syntax.fv ;
-  lb_us: FStarC_Syntax_Syntax.univ_name Prims.list ;
-  lb_typ: typ ;
-  lb_def: FStarC_Syntax_Syntax.term }
-let __proj__Mklb_view__item__lb_fv (projectee : lb_view) :
-  FStarC_Syntax_Syntax.fv=
-  match projectee with | { lb_fv; lb_us; lb_typ; lb_def;_} -> lb_fv
-let __proj__Mklb_view__item__lb_us (projectee : lb_view) :
-  FStarC_Syntax_Syntax.univ_name Prims.list=
-  match projectee with | { lb_fv; lb_us; lb_typ; lb_def;_} -> lb_us
-let __proj__Mklb_view__item__lb_typ (projectee : lb_view) : typ=
-  match projectee with | { lb_fv; lb_us; lb_typ; lb_def;_} -> lb_typ
-let __proj__Mklb_view__item__lb_def (projectee : lb_view) :
-  FStarC_Syntax_Syntax.term=
-  match projectee with | { lb_fv; lb_us; lb_typ; lb_def;_} -> lb_def
-type sigelt_view =
-  | Sg_Let of (Prims.bool * FStarC_Syntax_Syntax.letbinding Prims.list) 
-  | Sg_Inductive of (name * FStarC_Syntax_Syntax.univ_name Prims.list *
-  FStarC_Syntax_Syntax.binder Prims.list * typ * ctor Prims.list) 
-  | Sg_Val of (name * FStarC_Syntax_Syntax.univ_name Prims.list * typ) 
-  | Unk 
-let uu___is_Sg_Let (projectee : sigelt_view) : Prims.bool=
-  match projectee with | Sg_Let _0 -> true | uu___ -> false
-let __proj__Sg_Let__item___0 (projectee : sigelt_view) :
-  (Prims.bool * FStarC_Syntax_Syntax.letbinding Prims.list)=
-  match projectee with | Sg_Let _0 -> _0
-let uu___is_Sg_Inductive (projectee : sigelt_view) : Prims.bool=
-  match projectee with | Sg_Inductive _0 -> true | uu___ -> false
-let __proj__Sg_Inductive__item___0 (projectee : sigelt_view) :
-  (name * FStarC_Syntax_Syntax.univ_name Prims.list *
-    FStarC_Syntax_Syntax.binder Prims.list * typ * ctor Prims.list)=
-  match projectee with | Sg_Inductive _0 -> _0
-let uu___is_Sg_Val (projectee : sigelt_view) : Prims.bool=
-  match projectee with | Sg_Val _0 -> true | uu___ -> false
-let __proj__Sg_Val__item___0 (projectee : sigelt_view) :
-  (name * FStarC_Syntax_Syntax.univ_name Prims.list * typ)=
-  match projectee with | Sg_Val _0 -> _0
-let uu___is_Unk (projectee : sigelt_view) : Prims.bool=
-  match projectee with | Unk -> true | uu___ -> false
+  uniq : Prims.int;
+  sort : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax;
+  ppname : string;
+}
+
+type int_signedness =
+  | Signed
+  | Unsigned
+
+
+type int_width =
+  | Int8
+  | Int16
+  | Int32
+  | Int64
+  | Sizet
+
+
+type vconst =
+  | C_Unit
+  | C_Int of Prims.int * FStar_IntegerLiteral.int_base
+  | C_MachineInt of Prims.int * FStar_IntegerLiteral.int_base * int_signedness * int_width
+  | C_True
+  | C_False
+  | C_String of string
+  | C_Range of FStarC_Range_Type.range
+  | C_Reify
+  | C_Reflect of (string) list
+  | C_Real of FStar_RealLiteral.real_literal_repr
+  | C_Char of FStar_Char.char
+
+
+type pattern =
+  | Pat_Constant of vconst
+  | Pat_Cons of FStarC_Syntax_Syntax.fv * ((FStarC_Syntax_Syntax.universe) list) option * ((pattern * bool)) list
+  | Pat_Var of (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * string
+  | Pat_Dot_Term of ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option
+
+
 type qualifier =
-  | Assumption 
-  | InternalAssumption 
-  | New 
-  | Private 
-  | Unfold_for_unification_and_vcgen 
-  | Visible_default 
-  | Irreducible 
-  | Inline_for_extraction 
-  | NoExtract 
-  | Noeq 
-  | Unopteq 
-  | TotalEffect 
-  | Logic 
-  | Reifiable 
-  | Reflectable of name 
-  | Discriminator of name 
-  | Projector of (name * FStarC_Ident.ident) 
-  | RecordType of (FStarC_Ident.ident Prims.list * FStarC_Ident.ident
-  Prims.list) 
-  | RecordConstructor of (FStarC_Ident.ident Prims.list * FStarC_Ident.ident
-  Prims.list) 
-  | Action of name 
-  | ExceptionConstructor 
-  | HasMaskedEffect 
-  | Effect 
-  | OnlyName 
-let uu___is_Assumption (projectee : qualifier) : Prims.bool=
-  match projectee with | Assumption -> true | uu___ -> false
-let uu___is_InternalAssumption (projectee : qualifier) : Prims.bool=
-  match projectee with | InternalAssumption -> true | uu___ -> false
-let uu___is_New (projectee : qualifier) : Prims.bool=
-  match projectee with | New -> true | uu___ -> false
-let uu___is_Private (projectee : qualifier) : Prims.bool=
-  match projectee with | Private -> true | uu___ -> false
-let uu___is_Unfold_for_unification_and_vcgen (projectee : qualifier) :
-  Prims.bool=
-  match projectee with
-  | Unfold_for_unification_and_vcgen -> true
-  | uu___ -> false
-let uu___is_Visible_default (projectee : qualifier) : Prims.bool=
-  match projectee with | Visible_default -> true | uu___ -> false
-let uu___is_Irreducible (projectee : qualifier) : Prims.bool=
-  match projectee with | Irreducible -> true | uu___ -> false
-let uu___is_Inline_for_extraction (projectee : qualifier) : Prims.bool=
-  match projectee with | Inline_for_extraction -> true | uu___ -> false
-let uu___is_NoExtract (projectee : qualifier) : Prims.bool=
-  match projectee with | NoExtract -> true | uu___ -> false
-let uu___is_Noeq (projectee : qualifier) : Prims.bool=
-  match projectee with | Noeq -> true | uu___ -> false
-let uu___is_Unopteq (projectee : qualifier) : Prims.bool=
-  match projectee with | Unopteq -> true | uu___ -> false
-let uu___is_TotalEffect (projectee : qualifier) : Prims.bool=
-  match projectee with | TotalEffect -> true | uu___ -> false
-let uu___is_Logic (projectee : qualifier) : Prims.bool=
-  match projectee with | Logic -> true | uu___ -> false
-let uu___is_Reifiable (projectee : qualifier) : Prims.bool=
-  match projectee with | Reifiable -> true | uu___ -> false
-let uu___is_Reflectable (projectee : qualifier) : Prims.bool=
-  match projectee with | Reflectable _0 -> true | uu___ -> false
-let __proj__Reflectable__item___0 (projectee : qualifier) : name=
-  match projectee with | Reflectable _0 -> _0
-let uu___is_Discriminator (projectee : qualifier) : Prims.bool=
-  match projectee with | Discriminator _0 -> true | uu___ -> false
-let __proj__Discriminator__item___0 (projectee : qualifier) : name=
-  match projectee with | Discriminator _0 -> _0
-let uu___is_Projector (projectee : qualifier) : Prims.bool=
-  match projectee with | Projector _0 -> true | uu___ -> false
-let __proj__Projector__item___0 (projectee : qualifier) :
-  (name * FStarC_Ident.ident)= match projectee with | Projector _0 -> _0
-let uu___is_RecordType (projectee : qualifier) : Prims.bool=
-  match projectee with | RecordType _0 -> true | uu___ -> false
-let __proj__RecordType__item___0 (projectee : qualifier) :
-  (FStarC_Ident.ident Prims.list * FStarC_Ident.ident Prims.list)=
-  match projectee with | RecordType _0 -> _0
-let uu___is_RecordConstructor (projectee : qualifier) : Prims.bool=
-  match projectee with | RecordConstructor _0 -> true | uu___ -> false
-let __proj__RecordConstructor__item___0 (projectee : qualifier) :
-  (FStarC_Ident.ident Prims.list * FStarC_Ident.ident Prims.list)=
-  match projectee with | RecordConstructor _0 -> _0
-let uu___is_Action (projectee : qualifier) : Prims.bool=
-  match projectee with | Action _0 -> true | uu___ -> false
-let __proj__Action__item___0 (projectee : qualifier) : name=
-  match projectee with | Action _0 -> _0
-let uu___is_ExceptionConstructor (projectee : qualifier) : Prims.bool=
-  match projectee with | ExceptionConstructor -> true | uu___ -> false
-let uu___is_HasMaskedEffect (projectee : qualifier) : Prims.bool=
-  match projectee with | HasMaskedEffect -> true | uu___ -> false
-let uu___is_Effect (projectee : qualifier) : Prims.bool=
-  match projectee with | Effect -> true | uu___ -> false
-let uu___is_OnlyName (projectee : qualifier) : Prims.bool=
-  match projectee with | OnlyName -> true | uu___ -> false
-type qualifiers = qualifier Prims.list
-type var = Prims.int
-type exp =
-  | Unit 
-  | Var of var 
-  | Mult of (exp * exp) 
-let uu___is_Unit (projectee : exp) : Prims.bool=
-  match projectee with | Unit -> true | uu___ -> false
-let uu___is_Var (projectee : exp) : Prims.bool=
-  match projectee with | Var _0 -> true | uu___ -> false
-let __proj__Var__item___0 (projectee : exp) : var=
-  match projectee with | Var _0 -> _0
-let uu___is_Mult (projectee : exp) : Prims.bool=
-  match projectee with | Mult _0 -> true | uu___ -> false
-let __proj__Mult__item___0 (projectee : exp) : (exp * exp)=
-  match projectee with | Mult _0 -> _0
-type decls = FStarC_Syntax_Syntax.sigelt Prims.list
-let tot_effect_name : name= ["Prims"; "Tot"]
-let gtot_effect_name : name= ["Prims"; "GTot"]
-let mk_comp_view (eff : name) (res : typ) : comp_view=
-  { effect_name = eff; result_typ = res; flags = []; source_effect_name = eff
-  }
-let mk_tot_comp (res : typ) : comp_view= mk_comp_view tot_effect_name res
-let mk_gtot_comp (res : typ) : comp_view= mk_comp_view gtot_effect_name res
-let is_tot_comp (cv : comp_view) : Prims.bool=
-  cv.effect_name = tot_effect_name
-let is_gtot_comp (cv : comp_view) : Prims.bool=
-  cv.effect_name = gtot_effect_name
-let is_tot_or_gtot_comp (cv : comp_view) : Prims.bool=
-  (is_tot_comp cv) || (is_gtot_comp cv)
+  | Assumption
+  | InternalAssumption
+  | New
+  | Private
+  | Unfold_for_unification_and_vcgen
+  | Visible_default
+  | Irreducible
+  | Inline_for_extraction
+  | NoExtract
+  | Noeq
+  | Unopteq
+  | TotalEffect
+  | Logic
+  | Reifiable
+  | Reflectable of (string) list
+  | Discriminator of (string) list
+  | Projector of (string) list * FStarC_Ident.ident
+  | RecordType of (FStarC_Ident.ident) list * (FStarC_Ident.ident) list
+  | RecordConstructor of (FStarC_Ident.ident) list * (FStarC_Ident.ident) list
+  | Action of (string) list
+  | ExceptionConstructor
+  | HasMaskedEffect
+  | Effect
+  | OnlyName
+
+
+type aqualv =
+  | Q_Implicit
+  | Q_Explicit
+  | Q_Equality
+  | Q_Meta of (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax
+
+
+type term_view =
+  | Tv_Var of FStarC_Syntax_Syntax.bv
+  | Tv_BVar of FStarC_Syntax_Syntax.bv
+  | Tv_FVar of FStarC_Syntax_Syntax.fv
+  | Tv_UInst of FStarC_Syntax_Syntax.fv * (FStarC_Syntax_Syntax.universe) list
+  | Tv_App of (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * aqualv)
+  | Tv_Abs of FStarC_Syntax_Syntax.binder * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax
+  | Tv_Arrow of FStarC_Syntax_Syntax.binder * (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax
+  | Tv_Type of FStarC_Syntax_Syntax.universe
+  | Tv_Refine of FStarC_Syntax_Syntax.binder * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax
+  | Tv_Const of vconst
+  | Tv_Uvar of Prims.int * (FStarC_Syntax_Syntax.ctx_uvar * (((FStarC_Syntax_Syntax.subst_elt) list) list * FStarC_Syntax_Syntax.maybe_set_use_range))
+  | Tv_Let of bool * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list * FStarC_Syntax_Syntax.binder * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax
+  | Tv_Match of (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * ((FStarC_Syntax_Syntax.binder * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax, (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * bool))) option * ((pattern * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) list
+  | Tv_AscribedT of (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * bool
+  | Tv_AscribedC of (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * bool
+  | Tv_Unknown
+  | Tv_Unsupp
+
+
+type decreases_order =
+  | Decreases_lex of ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list
+  | Decreases_wf of (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax
+
+
+type cflag =
+  | SMTPAT of (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax
+  | DECREASES of decreases_order
+
+
+type comp_view = {
+  effect_name : (string) list;
+  result_typ : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax;
+  flags : (cflag) list;
+  source_effect_name : (string) list;
+}
+
+type universe_view =
+  | Uv_Zero
+  | Uv_Succ of FStarC_Syntax_Syntax.universe
+  | Uv_Max of (FStarC_Syntax_Syntax.universe) list
+  | Uv_BVar of Prims.int
+  | Uv_Name of FStarC_Ident.ident
+  | Uv_Unif of (((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)
+  | Uv_Unk
+
+
+type sigelt_view =
+  | Sg_Let of bool * (FStarC_Syntax_Syntax.letbinding) list
+  | Sg_Inductive of (string) list * (FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.binder) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (((string) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) list
+  | Sg_Val of (string) list * (FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax
+  | Unk
+
+
+type lb_view = {
+  lb_fv : FStarC_Syntax_Syntax.fv;
+  lb_us : (FStarC_Ident.ident) list;
+  lb_typ : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax;
+  lb_def : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax;
+}
+
+type namedv_view = {
+  uniq : Prims.int;
+  sort : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax;
+  ppname : string;
+}
+
+type bv_view = {
+  index : Prims.int;
+  sort : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax;
+  ppname : string;
+}
+
+type binder_view = {
+  sort : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax;
+  qual : aqualv;
+  attrs : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list;
+  ppname : string;
+}
+
+let tot_effect_name : (string) list =
+  ("Prims" :: ("Tot" :: []))
+
+let is_tot_comp (cv : comp_view) : bool =
+  ((=) (cv).effect_name tot_effect_name)
+
+let mk_comp_view (eff : (string) list) (res : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : comp_view =
+  { effect_name = eff; result_typ = res; flags = []; source_effect_name = eff }
+
+let mk_tot_comp (res : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : comp_view =
+  (mk_comp_view tot_effect_name res)
+

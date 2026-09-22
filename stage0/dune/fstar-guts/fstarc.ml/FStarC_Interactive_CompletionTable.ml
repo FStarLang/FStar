@@ -1,683 +1,407 @@
-open Prims
-let string_compare (s1 : Prims.string) (s2 : Prims.string) : Prims.int=
-  FStarC_String.compare s1 s2
-type 'a heap =
-  | EmptyHeap 
-  | Heap of ('a * 'a heap Prims.list) 
-let uu___is_EmptyHeap (projectee : 'a heap) : Prims.bool=
-  match projectee with | EmptyHeap -> true | uu___ -> false
-let uu___is_Heap (projectee : 'a heap) : Prims.bool=
-  match projectee with | Heap _0 -> true | uu___ -> false
-let __proj__Heap__item___0 (projectee : 'a heap) : ('a * 'a heap Prims.list)=
-  match projectee with | Heap _0 -> _0
-let heap_merge (cmp : 'a -> 'a -> Prims.int) (h1 : 'a heap) (h2 : 'a heap) :
-  'a heap=
-  match (h1, h2) with
-  | (EmptyHeap, h) -> h
-  | (h, EmptyHeap) -> h
-  | (Heap (v1, hh1), Heap (v2, hh2)) ->
-      let uu___ = let uu___1 = cmp v1 v2 in uu___1 < Prims.int_zero in
-      if uu___ then Heap (v1, (h2 :: hh1)) else Heap (v2, (h1 :: hh2))
-let heap_insert (cmp : 'a -> 'a -> Prims.int) (h : 'a heap) (v : 'a) :
-  'a heap= heap_merge cmp (Heap (v, [])) h
-let rec heap_merge_pairs :
-  'a . ('a -> 'a -> Prims.int) -> 'a heap Prims.list -> 'a heap =
-  fun cmp l ->
-    match l with
-    | [] -> EmptyHeap
-    | h::[] -> h
-    | h1::h2::hh ->
-        let uu___ = heap_merge cmp h1 h2 in
-        let uu___1 = heap_merge_pairs cmp hh in heap_merge cmp uu___ uu___1
-let heap_peek (uu___ : 'uuuuu heap) : 'uuuuu FStar_Pervasives_Native.option=
-  match uu___ with
-  | EmptyHeap -> FStar_Pervasives_Native.None
-  | Heap (v, uu___1) -> FStar_Pervasives_Native.Some v
-let heap_pop (cmp : 'a -> 'a -> Prims.int) (h : 'a heap) :
-  ('a * 'a heap) FStar_Pervasives_Native.option=
-  match h with
-  | EmptyHeap -> FStar_Pervasives_Native.None
-  | Heap (v, hh) ->
-      let uu___ = let uu___1 = heap_merge_pairs cmp hh in (v, uu___1) in
-      FStar_Pervasives_Native.Some uu___
-let heap_from_list (cmp : 'a -> 'a -> Prims.int) (values : 'a Prims.list) :
-  'a heap= FStarC_List.fold_left (heap_insert cmp) EmptyHeap values
-let push_nodup (key_fn : 'uuuuu -> Prims.string) (x : 'uuuuu)
-  (uu___ : 'uuuuu Prims.list) : 'uuuuu Prims.list=
-  match uu___ with
-  | [] -> [x]
-  | h::t ->
-      if (string_compare (key_fn x) (key_fn h)) = Prims.int_zero
-      then h :: t
-      else x :: h :: t
-let rec add_priorities :
-  'uuuuu .
-    Prims.int ->
-      (Prims.int * 'uuuuu) Prims.list ->
-        'uuuuu Prims.list -> (Prims.int * 'uuuuu) Prims.list
-  =
-  fun n acc uu___ ->
-    match uu___ with
-    | [] -> acc
-    | h::t -> add_priorities (n + Prims.int_one) ((n, h) :: acc) t
-let merge_increasing_lists_rev (key_fn : 'a -> Prims.string)
-  (lists : 'a Prims.list Prims.list) : 'a Prims.list=
-  let cmp v1 v2 =
-    match (v1, v2) with
-    | ((uu___, []), uu___1) -> FStarC_Effect.failwith "impossible"
-    | (uu___, (uu___1, [])) -> FStarC_Effect.failwith "impossible"
-    | ((pr1, h1::uu___), (pr2, h2::uu___1)) ->
-        let cmp_h = string_compare (key_fn h1) (key_fn h2) in
-        if cmp_h <> Prims.int_zero then cmp_h else pr1 - pr2 in
-  let rec aux lists1 acc =
-    let uu___ = heap_pop cmp lists1 in
-    match uu___ with
-    | FStar_Pervasives_Native.None -> acc
-    | FStar_Pervasives_Native.Some ((pr, []), uu___1) ->
-        FStarC_Effect.failwith "impossible"
-    | FStar_Pervasives_Native.Some ((pr, v::[]), lists2) ->
-        aux lists2 (push_nodup key_fn v acc)
-    | FStar_Pervasives_Native.Some ((pr, v::tl), lists2) ->
-        let uu___1 = heap_insert cmp lists2 (pr, tl) in
-        aux uu___1 (push_nodup key_fn v acc) in
-  let lists1 = FStarC_List.filter (fun x -> x <> []) lists in
-  match lists1 with
-  | [] -> []
-  | l::[] -> FStarC_List.rev l
-  | uu___ ->
-      let lists2 = add_priorities Prims.int_zero [] lists1 in
-      let uu___1 = heap_from_list cmp lists2 in aux uu___1 []
-type 'a btree =
-  | StrEmpty 
-  | StrBranch of (Prims.string * 'a * 'a btree * 'a btree) 
-let uu___is_StrEmpty (projectee : 'a btree) : Prims.bool=
-  match projectee with | StrEmpty -> true | uu___ -> false
-let uu___is_StrBranch (projectee : 'a btree) : Prims.bool=
-  match projectee with | StrBranch _0 -> true | uu___ -> false
-let __proj__StrBranch__item___0 (projectee : 'a btree) :
-  (Prims.string * 'a * 'a btree * 'a btree)=
-  match projectee with | StrBranch _0 -> _0
-let rec btree_to_list_rev :
-  'a .
-    'a btree ->
-      (Prims.string * 'a) Prims.list -> (Prims.string * 'a) Prims.list
-  =
-  fun btree1 acc ->
-    match btree1 with
-    | StrEmpty -> acc
-    | StrBranch (key, value, lbt, rbt) ->
-        btree_to_list_rev rbt ((key, value) :: (btree_to_list_rev lbt acc))
-let rec btree_from_list :
-  'a .
-    (Prims.string * 'a) Prims.list ->
-      Prims.int -> ('a btree * (Prims.string * 'a) Prims.list)
-  =
-  fun nodes size ->
-    if size = Prims.int_zero
-    then (StrEmpty, nodes)
-    else
-      (let lbt_size = size / (Prims.of_int 2) in
-       let rbt_size = (size - lbt_size) - Prims.int_one in
-       let uu___ = btree_from_list nodes lbt_size in
-       match uu___ with
-       | (lbt, nodes_left) ->
-           (match nodes_left with
-            | [] ->
-                FStarC_Effect.failwith
-                  "Invalid size passed to btree_from_list"
-            | (k, v)::nodes_left1 ->
-                let uu___1 = btree_from_list nodes_left1 rbt_size in
-                (match uu___1 with
-                 | (rbt, nodes_left2) ->
-                     ((StrBranch (k, v, lbt, rbt)), nodes_left2))))
-let rec btree_insert_replace :
-  'a . 'a btree -> Prims.string -> 'a -> 'a btree =
-  fun bt k v ->
-    match bt with
-    | StrEmpty -> StrBranch (k, v, StrEmpty, StrEmpty)
-    | StrBranch (k', v', lbt, rbt) ->
-        let cmp = string_compare k k' in
-        if cmp < Prims.int_zero
-        then StrBranch (k', v', (btree_insert_replace lbt k v), rbt)
-        else
-          if cmp > Prims.int_zero
-          then StrBranch (k', v', lbt, (btree_insert_replace rbt k v))
-          else StrBranch (k', v, lbt, rbt)
-let rec btree_find_exact :
-  'a . 'a btree -> Prims.string -> 'a FStar_Pervasives_Native.option =
-  fun bt k ->
-    match bt with
-    | StrEmpty -> FStar_Pervasives_Native.None
-    | StrBranch (k', v, lbt, rbt) ->
-        let cmp = string_compare k k' in
-        if cmp < Prims.int_zero
-        then btree_find_exact lbt k
-        else
-          if cmp > Prims.int_zero
-          then btree_find_exact rbt k
-          else FStar_Pervasives_Native.Some v
-let rec btree_extract_min :
-  'a .
-    'a btree -> (Prims.string * 'a * 'a btree) FStar_Pervasives_Native.option
-  =
-  fun bt ->
-    match bt with
-    | StrEmpty -> FStar_Pervasives_Native.None
-    | StrBranch (k, v, StrEmpty, rbt) ->
-        FStar_Pervasives_Native.Some (k, v, rbt)
-    | StrBranch (uu___, uu___1, lbt, uu___2) -> btree_extract_min lbt
-let rec btree_remove : 'a . 'a btree -> Prims.string -> 'a btree =
-  fun bt k ->
-    match bt with
-    | StrEmpty -> StrEmpty
-    | StrBranch (k', v, lbt, rbt) ->
-        let cmp = string_compare k k' in
-        if cmp < Prims.int_zero
-        then StrBranch (k', v, (btree_remove lbt k), rbt)
-        else
-          if cmp > Prims.int_zero
-          then StrBranch (k', v, lbt, (btree_remove rbt k))
-          else
-            (match lbt with
-             | StrEmpty -> bt
-             | uu___ ->
-                 (match btree_extract_min rbt with
-                  | FStar_Pervasives_Native.None -> lbt
-                  | FStar_Pervasives_Native.Some (rbt_min_k, rbt_min_v, rbt')
-                      -> StrBranch (rbt_min_k, rbt_min_v, lbt, rbt')))
-type prefix_match =
-  {
-  prefix: Prims.string FStar_Pervasives_Native.option ;
-  completion: Prims.string }
-let __proj__Mkprefix_match__item__prefix (projectee : prefix_match) :
-  Prims.string FStar_Pervasives_Native.option=
-  match projectee with | { prefix; completion;_} -> prefix
-let __proj__Mkprefix_match__item__completion (projectee : prefix_match) :
-  Prims.string= match projectee with | { prefix; completion;_} -> completion
-type path_elem = {
-  imports: Prims.string Prims.list ;
-  segment: prefix_match }
-type path = path_elem Prims.list
-let __proj__Mkpath_elem__item__imports (projectee : path_elem) :
-  Prims.string Prims.list=
-  match projectee with | { imports; segment;_} -> imports
-let __proj__Mkpath_elem__item__segment (projectee : path_elem) :
-  prefix_match= match projectee with | { imports; segment;_} -> segment
-let matched_prefix_of_path_elem (elem : path_elem) :
-  Prims.string FStar_Pervasives_Native.option= (elem.segment).prefix
-type query = Prims.string Prims.list
-type ns_info = {
-  ns_name: Prims.string ;
-  ns_loaded: Prims.bool }
-let __proj__Mkns_info__item__ns_name (projectee : ns_info) : Prims.string=
-  match projectee with | { ns_name; ns_loaded;_} -> ns_name
-let __proj__Mkns_info__item__ns_loaded (projectee : ns_info) : Prims.bool=
-  match projectee with | { ns_name; ns_loaded;_} -> ns_loaded
-type mod_info =
-  {
-  mod_name: Prims.string ;
-  mod_path: Prims.string ;
-  mod_loaded: Prims.bool }
-let __proj__Mkmod_info__item__mod_name (projectee : mod_info) : Prims.string=
-  match projectee with | { mod_name; mod_path; mod_loaded;_} -> mod_name
-let __proj__Mkmod_info__item__mod_path (projectee : mod_info) : Prims.string=
-  match projectee with | { mod_name; mod_path; mod_loaded;_} -> mod_path
-let __proj__Mkmod_info__item__mod_loaded (projectee : mod_info) : Prims.bool=
-  match projectee with | { mod_name; mod_path; mod_loaded;_} -> mod_loaded
-let mk_path_el (imports : Prims.string Prims.list) (segment : prefix_match) :
-  path_elem= { imports; segment }
-let btree_find_prefix (bt : 'a btree) (prefix : Prims.string) :
-  (prefix_match * 'a) Prims.list=
-  let rec aux bt1 prefix1 acc =
-    match bt1 with
-    | StrEmpty -> acc
-    | StrBranch (k, v, lbt, rbt) ->
-        let cmp = string_compare k prefix1 in
-        let include_middle = FStarC_Util.starts_with k prefix1 in
-        let explore_right = (cmp <= Prims.int_zero) || include_middle in
-        let explore_left = cmp > Prims.int_zero in
-        let matches = if explore_right then aux rbt prefix1 acc else acc in
-        let matches1 =
-          if include_middle
-          then
-            ({
-               prefix = (FStar_Pervasives_Native.Some prefix1);
-               completion = k
-             }, v)
-            :: matches
-          else matches in
-        let matches2 =
-          if explore_left then aux lbt prefix1 matches1 else matches1 in
-        matches2 in
-  aux bt prefix []
-let rec btree_fold :
-  'a 'b . 'a btree -> (Prims.string -> 'a -> 'b -> 'b) -> 'b -> 'b =
-  fun bt f acc ->
-    match bt with
-    | StrEmpty -> acc
-    | StrBranch (k, v, lbt, rbt) ->
-        btree_fold lbt f (f k v (btree_fold rbt f acc))
-let query_to_string (q : Prims.string Prims.list) : Prims.string=
-  FStarC_String.concat "." q
-let mod_name (md : mod_info) : Prims.string= md.mod_name
-type mod_symbol =
-  | Module of mod_info 
-  | Namespace of ns_info 
-let uu___is_Module (projectee : mod_symbol) : Prims.bool=
-  match projectee with | Module _0 -> true | uu___ -> false
-let __proj__Module__item___0 (projectee : mod_symbol) : mod_info=
-  match projectee with | Module _0 -> _0
-let uu___is_Namespace (projectee : mod_symbol) : Prims.bool=
-  match projectee with | Namespace _0 -> true | uu___ -> false
-let __proj__Namespace__item___0 (projectee : mod_symbol) : ns_info=
-  match projectee with | Namespace _0 -> _0
-type lid_symbol = FStarC_Ident.lid
-type 'a name_collection =
-  | Names of 'a btree 
-  | ImportedNames of (Prims.string * 'a name_collection Prims.list) 
-let uu___is_Names (projectee : 'a name_collection) : Prims.bool=
-  match projectee with | Names _0 -> true | uu___ -> false
-let __proj__Names__item___0 (projectee : 'a name_collection) : 'a btree=
-  match projectee with | Names _0 -> _0
-let uu___is_ImportedNames (projectee : 'a name_collection) : Prims.bool=
-  match projectee with | ImportedNames _0 -> true | uu___ -> false
-let __proj__ImportedNames__item___0 (projectee : 'a name_collection) :
-  (Prims.string * 'a name_collection Prims.list)=
-  match projectee with | ImportedNames _0 -> _0
-type 'a names = 'a name_collection Prims.list
+(* Generated by F* Custard extraction. Do not edit. *)
+[@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
+
+type 'u_'a btree =
+  | StrEmpty
+  | StrBranch of string * 'u_'a * ('u_'a) btree * ('u_'a) btree
+
+
+type 'u_'a name_collection =
+  | Names of ('u_'a) btree
+  | ImportedNames of string * (('u_'a) name_collection) list
+
+
 type 'a trie = {
-  bindings: 'a names ;
-  namespaces: 'a trie names }
-let __proj__Mktrie__item__bindings (projectee : 'a trie) : 'a names=
-  match projectee with | { bindings; namespaces;_} -> bindings
-let __proj__Mktrie__item__namespaces (projectee : 'a trie) : 'a trie names=
-  match projectee with | { bindings; namespaces;_} -> namespaces
-let trie_empty (uu___ : unit) : 'uuuuu trie=
-  { bindings = []; namespaces = [] }
-let rec names_find_exact :
-  'a . 'a names -> Prims.string -> 'a FStar_Pervasives_Native.option =
-  fun names1 ns ->
-    let uu___ =
-      match names1 with
-      | [] -> (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None)
-      | (Names bt)::names2 ->
-          ((btree_find_exact bt ns), (FStar_Pervasives_Native.Some names2))
-      | (ImportedNames (uu___1, names2))::more_names ->
-          ((names_find_exact names2 ns),
-            (FStar_Pervasives_Native.Some more_names)) in
-    match uu___ with
-    | (result, names2) ->
-        (match (result, names2) with
-         | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.Some
-            scopes) -> names_find_exact scopes ns
-         | uu___1 -> result)
-let rec trie_descend_exact :
-  'a . 'a trie -> query -> 'a trie FStar_Pervasives_Native.option =
-  fun tr query1 ->
-    match query1 with
-    | [] -> FStar_Pervasives_Native.Some tr
-    | ns::query2 ->
-        FStarC_Option.bind (names_find_exact tr.namespaces ns)
-          (fun scope -> trie_descend_exact scope query2)
-let rec trie_find_exact :
-  'a . 'a trie -> query -> 'a FStar_Pervasives_Native.option =
-  fun tr query1 ->
-    match query1 with
-    | [] -> FStarC_Effect.failwith "Empty query in trie_find_exact"
-    | name::[] -> names_find_exact tr.bindings name
-    | ns::query2 ->
-        FStarC_Option.bind (names_find_exact tr.namespaces ns)
-          (fun scope -> trie_find_exact scope query2)
-let names_insert (name_collections : 'a names) (id : Prims.string) (v : 'a) :
-  'a names=
-  let uu___ =
-    match name_collections with
-    | (Names bt)::tl -> (bt, tl)
-    | uu___1 -> (StrEmpty, name_collections) in
-  match uu___ with
-  | (bt, name_collections1) -> (Names (btree_insert_replace bt id v)) ::
-      name_collections1
-let rec namespaces_mutate :
-  'a .
-    'a trie names ->
-      Prims.string ->
-        query ->
-          query ->
-            ('a trie ->
-               Prims.string -> query -> query -> 'a trie names -> 'a trie)
-              -> ('a trie -> query -> 'a trie) -> 'a trie names
-  =
-  fun namespaces ns q rev_acc mut_node mut_leaf ->
-    let trie1 =
-      FStarC_Option.dflt (trie_empty ()) (names_find_exact namespaces ns) in
-    names_insert namespaces ns
-      (trie_mutate trie1 q rev_acc mut_node mut_leaf)
-and trie_mutate :
-  'a .
-    'a trie ->
-      query ->
-        query ->
-          ('a trie ->
-             Prims.string -> query -> query -> 'a trie names -> 'a trie)
-            -> ('a trie -> query -> 'a trie) -> 'a trie
-  =
-  fun tr q rev_acc mut_node mut_leaf ->
-    match q with
-    | [] -> mut_leaf tr rev_acc
-    | id::q1 ->
-        let ns' =
-          namespaces_mutate tr.namespaces id q1 (id :: rev_acc) mut_node
-            mut_leaf in
-        mut_node tr id q1 rev_acc ns'
-let trie_mutate_leaf (tr : 'a trie) (query1 : query) :
-  ('a trie -> query -> 'a trie) -> 'a trie=
-  trie_mutate tr query1 []
-    (fun tr1 uu___ uu___1 uu___2 namespaces ->
-       { bindings = (tr1.bindings); namespaces })
-let trie_insert (tr : 'a trie) (ns_query : query) (id : Prims.string)
-  (v : 'a) : 'a trie=
-  trie_mutate_leaf tr ns_query
-    (fun tr1 uu___ ->
-       {
-         bindings = (names_insert tr1.bindings id v);
-         namespaces = (tr1.namespaces)
-       })
-let trie_import (tr : 'a trie) (host_query : query) (included_query : query)
-  (mutator : 'a trie -> 'a trie -> Prims.string -> 'a trie) : 'a trie=
-  let label = query_to_string included_query in
-  let included_trie =
-    let uu___ = trie_descend_exact tr included_query in
-    FStarC_Option.dflt (trie_empty ()) uu___ in
-  trie_mutate_leaf tr host_query
-    (fun tr1 uu___ -> mutator tr1 included_trie label)
-let trie_include (tr : 'a trie) (host_query : query) (included_query : query)
-  : 'a trie=
-  trie_import tr host_query included_query
-    (fun tr1 inc label ->
-       {
-         bindings = ((ImportedNames (label, (inc.bindings))) ::
-           (tr1.bindings));
-         namespaces = (tr1.namespaces)
-       })
-let trie_open_namespace (tr : 'a trie) (host_query : query)
-  (included_query : query) : 'a trie=
-  trie_import tr host_query included_query
-    (fun tr1 inc label ->
-       {
-         bindings = (tr1.bindings);
-         namespaces = ((ImportedNames (label, (inc.namespaces))) ::
-           (tr1.namespaces))
-       })
-let trie_add_alias (tr : 'a trie) (key : Prims.string) (host_query : query)
-  (included_query : query) : 'a trie=
-  trie_import tr host_query included_query
-    (fun tr1 inc label ->
-       trie_mutate_leaf tr1 [key]
-         (fun _ignored_overwritten_trie uu___ ->
-            {
-              bindings = [ImportedNames (label, (inc.bindings))];
-              namespaces = []
-            }))
-let names_revmap (fn : 'a btree -> 'b) (name_collections : 'a names) :
-  (Prims.string Prims.list * 'b) Prims.list=
-  let rec aux acc imports name_collections1 =
-    FStarC_List.fold_left
-      (fun acc1 uu___ ->
-         match uu___ with
-         | Names bt -> (imports, (fn bt)) :: acc1
-         | ImportedNames (nm, name_collections2) ->
-             aux acc1 (nm :: imports) name_collections2) acc
-      name_collections1 in
-  aux [] [] name_collections
-let btree_find_all (prefix : Prims.string FStar_Pervasives_Native.option)
-  (bt : 'a btree) : (prefix_match * 'a) Prims.list=
-  btree_fold bt (fun k tr acc -> ({ prefix; completion = k }, tr) :: acc) []
-type name_search_term =
-  | NSTAll 
-  | NSTNone 
-  | NSTPrefix of Prims.string 
-let uu___is_NSTAll (projectee : name_search_term) : Prims.bool=
-  match projectee with | NSTAll -> true | uu___ -> false
-let uu___is_NSTNone (projectee : name_search_term) : Prims.bool=
-  match projectee with | NSTNone -> true | uu___ -> false
-let uu___is_NSTPrefix (projectee : name_search_term) : Prims.bool=
-  match projectee with | NSTPrefix _0 -> true | uu___ -> false
-let __proj__NSTPrefix__item___0 (projectee : name_search_term) :
-  Prims.string= match projectee with | NSTPrefix _0 -> _0
-let names_find_rev (names1 : 'a names) (id : name_search_term) :
-  (path_elem * 'a) Prims.list=
-  let matching_values_per_collection_with_imports =
-    match id with
-    | NSTNone -> []
-    | NSTAll ->
-        names_revmap (btree_find_all FStar_Pervasives_Native.None) names1
-    | NSTPrefix "" ->
-        names_revmap (btree_find_all (FStar_Pervasives_Native.Some ""))
-          names1
-    | NSTPrefix id1 ->
-        names_revmap (fun bt -> btree_find_prefix bt id1) names1 in
-  let matching_values_per_collection =
-    FStarC_List.map
-      (fun uu___ ->
-         match uu___ with
-         | (imports, matches) ->
-             FStarC_List.map
-               (fun uu___1 ->
-                  match uu___1 with
-                  | (segment, v) -> ((mk_path_el imports segment), v))
-               matches) matching_values_per_collection_with_imports in
-  merge_increasing_lists_rev
-    (fun uu___ ->
-       match uu___ with | (path_el, uu___1) -> (path_el.segment).completion)
-    matching_values_per_collection
-let rec trie_find_prefix' :
-  'a .
-    'a trie ->
-      path -> query -> (path * 'a) Prims.list -> (path * 'a) Prims.list
-  =
-  fun tr path_acc query1 acc ->
-    let uu___ =
-      match query1 with
-      | [] -> (NSTAll, NSTAll, [])
-      | id::[] -> ((NSTPrefix id), (NSTPrefix id), [])
-      | ns::query2 -> ((NSTPrefix ns), NSTNone, query2) in
-    match uu___ with
-    | (ns_search_term, bindings_search_term, query2) ->
-        let matching_namespaces_rev =
-          names_find_rev tr.namespaces ns_search_term in
-        let acc_with_recursive_bindings =
-          FStarC_List.fold_left
-            (fun acc1 uu___1 ->
-               match uu___1 with
-               | (path_el, trie1) ->
-                   trie_find_prefix' trie1 (path_el :: path_acc) query2 acc1)
-            acc matching_namespaces_rev in
-        let matching_bindings_rev =
-          names_find_rev tr.bindings bindings_search_term in
-        FStarC_List.rev_map_onto
-          (fun uu___1 ->
-             match uu___1 with
-             | (path_el, v) -> ((FStarC_List.rev (path_el :: path_acc)), v))
-          matching_bindings_rev acc_with_recursive_bindings
-let trie_find_prefix (tr : 'a trie) (query1 : query) :
-  (path * 'a) Prims.list= trie_find_prefix' tr [] query1 []
-type symbol =
-  | ModOrNs of mod_symbol 
-  | Lid of lid_symbol 
-let uu___is_ModOrNs (projectee : symbol) : Prims.bool=
-  match projectee with | ModOrNs _0 -> true | uu___ -> false
-let __proj__ModOrNs__item___0 (projectee : symbol) : mod_symbol=
-  match projectee with | ModOrNs _0 -> _0
-let uu___is_Lid (projectee : symbol) : Prims.bool=
-  match projectee with | Lid _0 -> true | uu___ -> false
-let __proj__Lid__item___0 (projectee : symbol) : lid_symbol=
-  match projectee with | Lid _0 -> _0
+  bindings : (('a) name_collection) list;
+  namespaces : ((('a) trie) name_collection) list;
+}
+
+type mod_info = {
+  mod_name : string;
+  mod_path : string;
+  mod_loaded : bool;
+}
+
+type ns_info = {
+  ns_name : string;
+  ns_loaded : bool;
+}
+
+type mod_symbol =
+  | Module of mod_info
+  | Namespace of ns_info
+
+
 type table = {
-  tbl_lids: lid_symbol trie ;
-  tbl_mods: mod_symbol trie }
-let __proj__Mktable__item__tbl_lids (projectee : table) : lid_symbol trie=
-  match projectee with | { tbl_lids; tbl_mods;_} -> tbl_lids
-let __proj__Mktable__item__tbl_mods (projectee : table) : mod_symbol trie=
-  match projectee with | { tbl_lids; tbl_mods;_} -> tbl_mods
-let empty : table= { tbl_lids = (trie_empty ()); tbl_mods = (trie_empty ()) }
-let insert (tbl : table) (host_query : query) (id : Prims.string)
-  (c : lid_symbol) : table=
-  {
-    tbl_lids = (trie_insert tbl.tbl_lids host_query id c);
-    tbl_mods = (tbl.tbl_mods)
-  }
-let register_alias (tbl : table) (key : Prims.string) (host_query : query)
-  (included_query : query) : table=
-  let uu___ = trie_add_alias tbl.tbl_lids key host_query included_query in
-  { tbl_lids = uu___; tbl_mods = (tbl.tbl_mods) }
-let register_include (tbl : table) (host_query : query)
-  (included_query : query) : table=
-  let uu___ = trie_include tbl.tbl_lids host_query included_query in
-  { tbl_lids = uu___; tbl_mods = (tbl.tbl_mods) }
-let register_open (tbl : table) (is_module : Prims.bool) (host_query : query)
-  (included_query : query) : table=
-  if is_module
-  then register_include tbl host_query included_query
-  else
-    (let uu___ = trie_open_namespace tbl.tbl_lids host_query included_query in
-     { tbl_lids = uu___; tbl_mods = (tbl.tbl_mods) })
-let register_module_path (tbl : table) (loaded : Prims.bool)
-  (path1 : Prims.string) (mod_query : query) : table=
-  let ins_ns id bindings full_name loaded1 =
-    match ((names_find_exact bindings id), loaded1) with
-    | (FStar_Pervasives_Native.None, uu___) ->
-        names_insert bindings id
-          (Namespace { ns_name = full_name; ns_loaded = loaded1 })
-    | (FStar_Pervasives_Native.Some (Namespace
-       { ns_name = uu___; ns_loaded = false;_}), true) ->
-        names_insert bindings id
-          (Namespace { ns_name = full_name; ns_loaded = loaded1 })
-    | (FStar_Pervasives_Native.Some uu___, uu___1) -> bindings in
-  let ins_mod id bindings full_name loaded1 =
-    names_insert bindings id
-      (Module
-         { mod_name = full_name; mod_path = path1; mod_loaded = loaded1 }) in
-  let name_of_revq query1 = FStarC_String.concat "." (FStarC_List.rev query1) in
-  let ins id q revq bindings loaded1 =
-    let name = name_of_revq (id :: revq) in
-    match q with
-    | [] -> ins_mod id bindings name loaded1
-    | uu___ -> ins_ns id bindings name loaded1 in
-  {
-    tbl_lids = (tbl.tbl_lids);
-    tbl_mods =
-      (trie_mutate tbl.tbl_mods mod_query []
-         (fun tr id q revq namespaces ->
-            { bindings = (ins id q revq tr.bindings loaded); namespaces })
-         (fun tr uu___ -> tr))
-  }
-let string_of_path (path1 : path) : Prims.string=
-  let uu___ = FStarC_List.map (fun el -> (el.segment).completion) path1 in
-  FStarC_String.concat "." uu___
-let match_length_of_path (path1 : path) : Prims.int=
-  let uu___ =
-    FStarC_List.fold_left
-      (fun acc elem ->
-         let uu___1 = acc in
-         match uu___1 with
-         | (acc_len, uu___2) ->
-             (match (elem.segment).prefix with
-              | FStar_Pervasives_Native.Some prefix ->
-                  let completion_len =
-                    FStarC_String.length (elem.segment).completion in
-                  (((acc_len + Prims.int_one) + completion_len),
-                    (prefix, completion_len))
-              | FStar_Pervasives_Native.None -> acc))
-      (Prims.int_zero, ("", Prims.int_zero)) path1 in
-  match uu___ with
-  | (length, (last_prefix, last_completion_length)) ->
-      ((length - Prims.int_one) - last_completion_length) +
-        (FStarC_String.length last_prefix)
-let first_import_of_path (path1 : path) :
-  Prims.string FStar_Pervasives_Native.option=
-  match path1 with
-  | [] -> FStar_Pervasives_Native.None
-  | { imports; segment = uu___;_}::uu___1 -> FStarC_List.last_opt imports
-let alist_of_ns_info (ns_info1 : ns_info) :
-  (Prims.string * FStarC_Json.json) Prims.list=
-  [("name", (FStarC_Json.JsonStr (ns_info1.ns_name)));
-  ("loaded", (FStarC_Json.JsonBool (ns_info1.ns_loaded)))]
-let alist_of_mod_info (mod_info1 : mod_info) :
-  (Prims.string * FStarC_Json.json) Prims.list=
-  [("name", (FStarC_Json.JsonStr (mod_info1.mod_name)));
-  ("path", (FStarC_Json.JsonStr (mod_info1.mod_path)));
-  ("loaded", (FStarC_Json.JsonBool (mod_info1.mod_loaded)))]
-type completion_result =
-  {
-  completion_match_length: Prims.int ;
-  completion_candidate: Prims.string ;
-  completion_annotation: Prims.string }
-let __proj__Mkcompletion_result__item__completion_match_length
-  (projectee : completion_result) : Prims.int=
-  match projectee with
-  | { completion_match_length; completion_candidate; completion_annotation;_}
-      -> completion_match_length
-let __proj__Mkcompletion_result__item__completion_candidate
-  (projectee : completion_result) : Prims.string=
-  match projectee with
-  | { completion_match_length; completion_candidate; completion_annotation;_}
-      -> completion_candidate
-let __proj__Mkcompletion_result__item__completion_annotation
-  (projectee : completion_result) : Prims.string=
-  match projectee with
-  | { completion_match_length; completion_candidate; completion_annotation;_}
-      -> completion_annotation
-let json_of_completion_result (result : completion_result) :
-  FStarC_Json.json=
-  FStarC_Json.JsonList
-    [FStarC_Json.JsonInt (result.completion_match_length);
-    FStarC_Json.JsonStr (result.completion_annotation);
-    FStarC_Json.JsonStr (result.completion_candidate)]
-let completion_result_of_lid (x : (path * lid_symbol)) : completion_result=
-  let uu___ = x in
-  match uu___ with
-  | (path1, _lid) ->
-      let uu___1 = match_length_of_path path1 in
-      let uu___2 = string_of_path path1 in
-      {
-        completion_match_length = uu___1;
-        completion_candidate = uu___2;
-        completion_annotation =
-          (FStarC_Option.dflt "" (first_import_of_path path1))
-      }
-let completion_result_of_mod (annot : Prims.string) (loaded : Prims.bool)
-  (path1 : path) : completion_result=
-  let uu___ = match_length_of_path path1 in
-  let uu___1 = string_of_path path1 in
-  {
-    completion_match_length = uu___;
-    completion_candidate = uu___1;
-    completion_annotation =
-      (FStarC_Format.fmt1 (if loaded then " %s " else "(%s)") annot)
-  }
-let completion_result_of_ns_or_mod (x : (path * mod_symbol)) :
-  completion_result=
-  let uu___ = x in
-  match uu___ with
-  | (path1, symb) ->
-      (match symb with
-       | Module
-           { mod_name = uu___1; mod_path = uu___2; mod_loaded = loaded;_} ->
-           completion_result_of_mod "mod" loaded path1
-       | Namespace { ns_name = uu___1; ns_loaded = loaded;_} ->
-           completion_result_of_mod "ns" loaded path1)
-let find_module_or_ns (tbl : table) (query1 : query) :
-  mod_symbol FStar_Pervasives_Native.option=
-  trie_find_exact tbl.tbl_mods query1
-let autocomplete_lid (tbl : table) (query1 : query) :
-  completion_result Prims.list=
-  let uu___ = trie_find_prefix tbl.tbl_lids query1 in
-  FStarC_List.map completion_result_of_lid uu___
-let autocomplete_mod_or_ns (tbl : table) (query1 : query)
-  (filter :
-    (path * mod_symbol) -> (path * mod_symbol) FStar_Pervasives_Native.option)
-  : completion_result Prims.list=
-  let uu___ =
-    let uu___1 = trie_find_prefix tbl.tbl_mods query1 in
-    FStarC_List.filter_map filter uu___1 in
-  FStarC_List.map completion_result_of_ns_or_mod uu___
+  tbl_lids : (FStarC_Ident.lident) trie;
+  tbl_mods : (mod_symbol) trie;
+}
+
+let trie_empty (tmp : unit) : ('tmp) trie =
+  { bindings = []; namespaces = [] }
+
+let empty : table =
+  { tbl_lids = (trie_empty ()); tbl_mods = (trie_empty ()) }
+
+let query_to_string (q : (string) list) : string =
+  (FStarC_String.concat "." q)
+
+let string_compare (s1 : string) (eta : string) : Prims.int =
+  (FStarC_String.compare s1 eta)
+
+let rec btree_find_exact (bt : ('u_'a) btree) (k : string) : ('u_'a) option =
+  (match bt with
+    | StrEmpty -> None
+    | (StrBranch (k', v, lbt, rbt)) -> (let cmp = (string_compare k k') in
+      (if (Prims.op_Less cmp (Prims.parse_int "0")) then (btree_find_exact lbt k) else (if (Prims.op_Greater cmp (Prims.parse_int "0")) then (btree_find_exact rbt k) else (Some (v)))))
+  )
+
+let rec names_find_exact (names : (('u_'a) name_collection) list) (ns : string) : ('u_'a) option =
+  (let tmp = (match names with
+      | [] -> (None, None)
+      | ((Names (bt)) :: names1) -> ((btree_find_exact bt ns), (Some (names1)))
+      | ((ImportedNames (tmp, names1)) :: more_names) -> ((names_find_exact names1 ns), (Some (more_names)))
+    ) in
+  (match tmp with
+    | (result, names1) -> (match (result, names1) with
+        | (None, (Some (scopes))) -> (names_find_exact scopes ns)
+        | tmp1 -> result
+      )
+  ))
+
+let rec trie_descend_exact (tr : ('u_'a) trie) (query : (string) list) : (('u_'a) trie) option =
+  (match query with
+    | [] -> (Some (tr))
+    | (ns :: query1) -> (FStarC_Option.bind (names_find_exact (tr).namespaces ns) (fun scope -> (trie_descend_exact scope query1)))
+  )
+
+let rec btree_insert_replace (bt : ('u_'a) btree) (k : string) (v : 'u_'a) : ('u_'a) btree =
+  (match bt with
+    | StrEmpty -> (StrBranch (k, v, StrEmpty, StrEmpty))
+    | (StrBranch (k', v', lbt, rbt)) -> (let cmp = (string_compare k k') in
+      (if (Prims.op_Less cmp (Prims.parse_int "0")) then (StrBranch (k', v', (btree_insert_replace lbt k v), rbt)) else (if (Prims.op_Greater cmp (Prims.parse_int "0")) then (StrBranch (k', v', lbt, (btree_insert_replace rbt k v))) else (StrBranch (k', v, lbt, rbt)))))
+  )
+
+let names_insert (name_collections : (('u_'a) name_collection) list) (id : string) (v : 'u_'a) : (('u_'a) name_collection) list =
+  (let tmp = (match name_collections with
+      | ((Names (bt)) :: tl) -> (bt, tl)
+      | tmp -> (StrEmpty, name_collections)
+    ) in
+  (match tmp with
+    | (bt, name_collections1) -> ((Names ((btree_insert_replace bt id v))) :: name_collections1)
+  ))
+
+let rec namespaces_mutate (namespaces : ((('u_'a) trie) name_collection) list) (ns : string) (q : (string) list) (rev_acc : (string) list) (mut_node : (('u_'a) trie -> (string -> ((string) list -> ((string) list -> (((('u_'a) trie) name_collection) list -> ('u_'a) trie)))))) (mut_leaf : (('u_'a) trie -> ((string) list -> ('u_'a) trie))) : ((('u_'a) trie) name_collection) list =
+  (let trie = (FStarC_Option.dflt (trie_empty ()) (names_find_exact namespaces ns)) in
+  (names_insert namespaces ns (trie_mutate trie q rev_acc mut_node mut_leaf)))
+
+and trie_mutate (tr : ('u_'a) trie) (q : (string) list) (rev_acc : (string) list) (mut_node : (('u_'a) trie -> (string -> ((string) list -> ((string) list -> (((('u_'a) trie) name_collection) list -> ('u_'a) trie)))))) (mut_leaf : (('u_'a) trie -> ((string) list -> ('u_'a) trie))) : ('u_'a) trie =
+  (match q with
+    | [] -> (mut_leaf tr rev_acc)
+    | (id :: q1) -> (let ns' = (namespaces_mutate (tr).namespaces id q1 (id :: rev_acc) mut_node mut_leaf) in
+      (mut_node tr id q1 rev_acc ns'))
+  )
+
+let trie_mutate_leaf (tr : ('u_'a) trie) (query : (string) list) (mut_leaf : (('u_'a) trie -> ((string) list -> ('u_'a) trie))) : ('u_'a) trie =
+  (trie_mutate tr query [] (fun tr1 tmp tmp1 tmp2 namespaces -> { bindings = (tr1).bindings; namespaces = namespaces }) mut_leaf)
+
+let trie_import (tr : ('u_'a) trie) (host_query : (string) list) (included_query : (string) list) (mutator : (('u_'a) trie -> (('u_'a) trie -> (string -> ('u_'a) trie)))) : ('u_'a) trie =
+  (let label = (query_to_string included_query) in
+  let tmp = (trie_descend_exact tr included_query) in
+  let included_trie = (FStarC_Option.dflt (trie_empty ()) tmp) in
+  (trie_mutate_leaf tr host_query (fun tr1 tmp1 -> (mutator tr1 included_trie label))))
+
+let trie_add_alias (tr : ('u_'a) trie) (key : string) (host_query : (string) list) (included_query : (string) list) : ('u_'a) trie =
+  (trie_import tr host_query included_query (fun tr1 inc label -> (trie_mutate_leaf tr1 (key :: []) (fun u__ignored_overwritten_trie tmp -> { bindings = ((ImportedNames (label, (inc).bindings)) :: []);
+    namespaces = [] }))))
+
+let register_alias (tbl : table) (key : string) (host_query : (string) list) (included_query : (string) list) : table =
+  (let tmp = (trie_add_alias (tbl).tbl_lids key host_query included_query) in
+  { tbl_lids = tmp; tbl_mods = (tbl).tbl_mods })
+
+let trie_include (tr : ('u_'a) trie) (host_query : (string) list) (included_query : (string) list) : ('u_'a) trie =
+  (trie_import tr host_query included_query (fun tr1 inc label -> { bindings = ((ImportedNames (label, (inc).bindings)) :: (tr1).bindings);
+    namespaces = (tr1).namespaces }))
+
+let register_include (tbl : table) (host_query : (string) list) (included_query : (string) list) : table =
+  (let tmp = (trie_include (tbl).tbl_lids host_query included_query) in
+  { tbl_lids = tmp; tbl_mods = (tbl).tbl_mods })
+
+let trie_open_namespace (tr : ('u_'a) trie) (host_query : (string) list) (included_query : (string) list) : ('u_'a) trie =
+  (trie_import tr host_query included_query (fun tr1 inc label -> { bindings = (tr1).bindings;
+    namespaces = ((ImportedNames (label, (inc).namespaces)) :: (tr1).namespaces) }))
+
+let register_open (tbl : table) (is_module : bool) (host_query : (string) list) (included_query : (string) list) : table =
+  (if is_module then (register_include tbl host_query included_query) else (let tmp = (trie_open_namespace (tbl).tbl_lids host_query included_query) in
+  { tbl_lids = tmp; tbl_mods = (tbl).tbl_mods }))
+
+let trie_insert (tr : ('u_'a) trie) (ns_query : (string) list) (id : string) (v : 'u_'a) : ('u_'a) trie =
+  (trie_mutate_leaf tr ns_query (fun tr1 tmp -> { bindings = (names_insert (tr1).bindings id v);
+    namespaces = (tr1).namespaces }))
+
+let insert (tbl : table) (host_query : (string) list) (id : string) (c : FStarC_Ident.lident) : table =
+  { tbl_lids = (trie_insert (tbl).tbl_lids host_query id c);
+    tbl_mods = (tbl).tbl_mods }
+
+let register_module_path (tbl : table) (loaded : bool) (mod_path : string) (mod_query : (string) list) : table =
+  (let ins_ns = (fun id bindings full_name loaded1 -> (match ((names_find_exact bindings id), loaded1) with
+      | (None, tmp) -> (names_insert bindings id (Namespace ({ ns_name = full_name; ns_loaded = loaded1 })))
+      | ((Some ((Namespace ({ ns_name = tmp; ns_loaded = false; _ })))), true) -> (names_insert bindings id (Namespace ({ ns_name = full_name; ns_loaded = loaded1 })))
+      | ((Some (tmp)), tmp1) -> bindings
+    )) in
+  let ins_mod = (fun id bindings full_name loaded1 -> (names_insert bindings id (Module ({ mod_name = full_name; mod_path = mod_path; mod_loaded = loaded1 })))) in
+  let name_of_revq = (fun query -> (FStarC_String.concat "." (FStarC_List.rev query))) in
+  let ins = (fun id q revq bindings loaded1 -> (let name = (name_of_revq (id :: revq)) in
+    (match q with
+      | [] -> (ins_mod id bindings name loaded1)
+      | tmp -> (ins_ns id bindings name loaded1)
+    ))) in
+  { tbl_lids = (tbl).tbl_lids;
+    tbl_mods = (trie_mutate (tbl).tbl_mods mod_query [] (fun tr id q revq namespaces -> { bindings = (ins id q revq (tr).bindings loaded); namespaces = namespaces }) (fun tr tmp -> tr)) })
+
+type completion_result = {
+  completion_match_length : Prims.int;
+  completion_candidate : string;
+  completion_annotation : string;
+}
+
+type prefix_match = {
+  prefix : (string) option;
+  completion : string;
+}
+
+type path_elem = {
+  imports : (string) list;
+  segment : prefix_match;
+}
+
+type name_search_term =
+  | NSTAll
+  | NSTNone
+  | NSTPrefix of string
+
+
+let rec names_revmap__aux (fn : (('u_'a) btree -> 'u_'b)) (acc : (((string) list * 'u_'b)) list) (imports : (string) list) : ((('u_'a) name_collection) list -> (((string) list * 'u_'b)) list) =
+  (FStarC_List.fold_left (fun acc1 tmp -> (match tmp with
+    | (Names (bt)) -> ((imports, (fn bt)) :: acc1)
+    | (ImportedNames (nm, name_collections)) -> ((names_revmap__aux fn) acc1 (nm :: imports) name_collections)
+  )) acc)
+
+let names_revmap (fn : (('u_'a) btree -> 'u_'b)) (eta : (('u_'a) name_collection) list) : (((string) list * 'u_'b)) list =
+  ((names_revmap__aux fn) [] [] eta)
+
+let rec btree_fold (bt : ('u_'a) btree) (f : (string -> ('u_'a -> ('u_'b -> 'u_'b)))) (acc : 'u_'b) : 'u_'b =
+  (match bt with
+    | StrEmpty -> acc
+    | (StrBranch (k, v, lbt, rbt)) -> (btree_fold lbt f (f k v (btree_fold rbt f acc)))
+  )
+
+let btree_find_all (prefix : (string) option) (bt : ('u_'a) btree) : ((prefix_match * 'u_'a)) list =
+  (btree_fold bt (fun k tr acc -> (({ prefix = prefix; completion = k }, tr) :: acc)) [])
+
+let rec btree_find_prefix__aux (bt : ('u_'a) btree) (prefix : string) (acc : ((prefix_match * 'u_'a)) list) : ((prefix_match * 'u_'a)) list =
+  (match bt with
+    | StrEmpty -> acc
+    | (StrBranch (k, v, lbt, rbt)) -> (let cmp = (string_compare k prefix) in
+      let include_middle = (FStarC_Util.starts_with k prefix) in
+      let explore_right = ((Prims.op_Less_Equals cmp (Prims.parse_int "0")) || include_middle) in
+      let explore_left = (Prims.op_Greater cmp (Prims.parse_int "0")) in
+      let matches = (if explore_right then (btree_find_prefix__aux rbt prefix acc) else acc) in
+      let matches1 = (if include_middle then (({ prefix = (Some (prefix)); completion = k }, v) :: matches) else matches) in
+      (if explore_left then (btree_find_prefix__aux lbt prefix matches1) else matches1))
+  )
+
+let btree_find_prefix (bt : ('u_'a) btree) (prefix : string) : ((prefix_match * 'u_'a)) list =
+  (btree_find_prefix__aux bt prefix [])
+
+let mk_path_el (imports : (string) list) (segment : prefix_match) : path_elem =
+  { imports = imports; segment = segment }
+
+type 'u_'a heap =
+  | EmptyHeap
+  | Heap of 'u_'a * (('u_'a) heap) list
+
+
+let heap_merge (cmp : ('u_'a -> ('u_'a -> Prims.int))) (h1 : ('u_'a) heap) (h2 : ('u_'a) heap) : ('u_'a) heap =
+  (match (h1, h2) with
+    | (EmptyHeap, h) -> h
+    | (h, EmptyHeap) -> h
+    | ((Heap (v1, hh1)), (Heap (v2, hh2))) -> (let tmp = (cmp v1 v2) in
+      let tmp1 = (Prims.op_Less tmp (Prims.parse_int "0")) in
+      (if tmp1 then (Heap (v1, (h2 :: hh1))) else (Heap (v2, (h1 :: hh2)))))
+  )
+
+let rec heap_merge_pairs (cmp : ('u_'a -> ('u_'a -> Prims.int))) (l : (('u_'a) heap) list) : ('u_'a) heap =
+  (match l with
+    | [] -> EmptyHeap
+    | (h :: []) -> h
+    | (h1 :: (h2 :: hh)) -> (let tmp = (heap_merge cmp h1 h2) in
+      let tmp1 = (heap_merge_pairs cmp hh) in
+      (heap_merge cmp tmp tmp1))
+  )
+
+let heap_pop (cmp : ('u_'a -> ('u_'a -> Prims.int))) (h : ('u_'a) heap) : (('u_'a * ('u_'a) heap)) option =
+  (match h with
+    | EmptyHeap -> None
+    | (Heap (v, hh)) -> (let tmp = (heap_merge_pairs cmp hh) in
+      let tmp1 = (v, tmp) in
+      (Some (tmp1)))
+  )
+
+let push_nodup (key_fn : ('tmp -> string)) (x : 'tmp) (tmp : ('tmp) list) : ('tmp) list =
+  (match tmp with
+    | [] -> (x :: [])
+    | (h :: t) -> (if ((=) (string_compare (key_fn x) (key_fn h)) (Prims.parse_int "0")) then (h :: t) else (x :: (h :: t)))
+  )
+
+let heap_insert (cmp : ('u_'a -> ('u_'a -> Prims.int))) (h : ('u_'a) heap) (v : 'u_'a) : ('u_'a) heap =
+  (heap_merge cmp (Heap (v, [])) h)
+
+let rec merge_increasing_lists_rev__aux (key_fn : ('u_'a -> string)) (cmp : ((Prims.int * ('u_'a) list) -> ((Prims.int * ('u_'a) list) -> Prims.int))) (lists : ((Prims.int * ('u_'a) list)) heap) (acc : ('u_'a) list) : ('u_'a) list =
+  (let tmp = (heap_pop cmp lists) in
+  (match tmp with
+    | None -> acc
+    | (Some (((pr, []), tmp1))) -> (FStarC_Effect.failwith "impossible")
+    | (Some (((pr, (v :: [])), lists1))) -> ((merge_increasing_lists_rev__aux key_fn cmp) lists1 (push_nodup key_fn v acc))
+    | (Some (((pr, (v :: tl)), lists1))) -> (let tmp1 = (heap_insert cmp lists1 (pr, tl)) in
+      ((merge_increasing_lists_rev__aux key_fn cmp) tmp1 (push_nodup key_fn v acc)))
+  ))
+
+let rec add_priorities (n : Prims.int) (acc : ((Prims.int * 'tmp)) list) (tmp : ('tmp) list) : ((Prims.int * 'tmp)) list =
+  (match tmp with
+    | [] -> acc
+    | (h :: t) -> (add_priorities (Prims.op_Plus n (Prims.parse_int "1")) ((n, h) :: acc) t)
+  )
+
+let heap_from_list (cmp : ('u_'a -> ('u_'a -> Prims.int))) (eta : ('u_'a) list) : ('u_'a) heap =
+  (FStarC_List.fold_left (heap_insert cmp) EmptyHeap eta)
+
+let merge_increasing_lists_rev (key_fn : ('u_'a -> string)) (lists : (('u_'a) list) list) : ('u_'a) list =
+  (let cmp = (fun v1 v2 -> (match (v1, v2) with
+      | ((tmp, []), tmp1) -> (FStarC_Effect.failwith "impossible")
+      | (tmp, (tmp1, [])) -> (FStarC_Effect.failwith "impossible")
+      | ((pr1, (h1 :: tmp)), (pr2, (h2 :: tmp1))) -> (let cmp_h = (string_compare (key_fn h1) (key_fn h2)) in
+        (if ((<>) cmp_h (Prims.parse_int "0")) then cmp_h else (Prims.op_Minus pr1 pr2)))
+    )) in
+  let lists1 = (FStarC_List.filter (fun x -> ((<>) x [])) lists) in
+  (match lists1 with
+    | [] -> []
+    | (l :: []) -> (FStarC_List.rev l)
+    | tmp -> (let lists2 = (add_priorities (Prims.parse_int "0") [] lists1) in
+      let tmp1 = (heap_from_list cmp lists2) in
+      ((merge_increasing_lists_rev__aux key_fn cmp) tmp1 []))
+  ))
+
+let names_find_rev (names : (('u_'a) name_collection) list) (id : name_search_term) : ((path_elem * 'u_'a)) list =
+  (let matching_values_per_collection_with_imports = (match id with
+      | NSTNone -> []
+      | NSTAll -> (names_revmap (btree_find_all None) names)
+      | (NSTPrefix ("")) -> (names_revmap (btree_find_all (Some (""))) names)
+      | (NSTPrefix (id1)) -> (names_revmap (fun bt -> (btree_find_prefix bt id1)) names)
+    ) in
+  let matching_values_per_collection = (FStarC_List.map (fun tmp -> (match tmp with
+      | (imports, matches) -> (FStarC_List.map (fun tmp1 -> (match tmp1 with
+          | (segment, v) -> ((mk_path_el imports segment), v)
+        )) matches)
+    )) matching_values_per_collection_with_imports) in
+  (merge_increasing_lists_rev (fun tmp -> (match tmp with
+    | (path_el, tmp1) -> ((path_el).segment).completion
+  )) matching_values_per_collection))
+
+let rec trie_find_prefix' (tr : ('u_'a) trie) (path_acc : (path_elem) list) (query : (string) list) (acc : (((path_elem) list * 'u_'a)) list) : (((path_elem) list * 'u_'a)) list =
+  (let tmp = (match query with
+      | [] -> (NSTAll, NSTAll, [])
+      | (id :: []) -> ((NSTPrefix (id)), (NSTPrefix (id)), [])
+      | (ns :: query1) -> ((NSTPrefix (ns)), NSTNone, query1)
+    ) in
+  (match tmp with
+    | (ns_search_term, bindings_search_term, query1) -> (let matching_namespaces_rev = (names_find_rev (tr).namespaces ns_search_term) in
+      let acc_with_recursive_bindings = (FStarC_List.fold_left (fun acc1 tmp1 -> (match tmp1 with
+          | (path_el, trie) -> (trie_find_prefix' trie (path_el :: path_acc) query1 acc1)
+        )) acc matching_namespaces_rev) in
+      let matching_bindings_rev = (names_find_rev (tr).bindings bindings_search_term) in
+      (FStarC_List.rev_map_onto (fun tmp1 -> (match tmp1 with
+        | (path_el, v) -> ((FStarC_List.rev (path_el :: path_acc)), v)
+      )) matching_bindings_rev acc_with_recursive_bindings))
+  ))
+
+let trie_find_prefix (tr : ('u_'a) trie) (query : (string) list) : (((path_elem) list * 'u_'a)) list =
+  (trie_find_prefix' tr [] query [])
+
+let match_length_of_path (path : (path_elem) list) : Prims.int =
+  (let tmp = (FStarC_List.fold_left (fun acc elem -> (match acc with
+      | (acc_len, tmp) -> (match ((elem).segment).prefix with
+          | (Some (prefix)) -> (let completion_len = (FStarC_String.length ((elem).segment).completion) in
+            ((Prims.op_Plus (Prims.op_Plus acc_len (Prims.parse_int "1")) completion_len), (prefix, completion_len)))
+          | None -> acc
+        )
+    )) ((Prims.parse_int "0"), ("", (Prims.parse_int "0"))) path) in
+  (match tmp with
+    | (length, (last_prefix, last_completion_length)) -> (Prims.op_Plus (Prims.op_Minus (Prims.op_Minus length (Prims.parse_int "1")) last_completion_length) (FStarC_String.length last_prefix))
+  ))
+
+let string_of_path (path : (path_elem) list) : string =
+  (let tmp = (FStarC_List.map (fun el -> ((el).segment).completion) path) in
+  (FStarC_String.concat "." tmp))
+
+let completion_result_of_mod (annot : string) (loaded : bool) (path : (path_elem) list) : completion_result =
+  (let tmp = (match_length_of_path path) in
+  let tmp1 = (string_of_path path) in
+  { completion_match_length = tmp;
+    completion_candidate = tmp1;
+    completion_annotation = (FStarC_Format.fmt1 (if loaded then " %s " else "(%s)") annot) })
+
+let completion_result_of_ns_or_mod (x : ((path_elem) list * mod_symbol)) : completion_result =
+  (match x with
+    | (path, symb) -> (match symb with
+        | (Module ({ mod_name = tmp; mod_path = tmp1; mod_loaded = loaded; _ })) -> (completion_result_of_mod "mod" loaded path)
+        | (Namespace ({ ns_name = tmp; ns_loaded = loaded; _ })) -> (completion_result_of_mod "ns" loaded path)
+      )
+  )
+
+let autocomplete_mod_or_ns (tbl : table) (query : (string) list) (filter : (((path_elem) list * mod_symbol) -> (((path_elem) list * mod_symbol)) option)) : (completion_result) list =
+  (let tmp = (trie_find_prefix (tbl).tbl_mods query) in
+  let tmp1 = (FStarC_List.filter_map filter tmp) in
+  (FStarC_List.map completion_result_of_ns_or_mod tmp1))
+
+let mod_name (md : mod_info) : string =
+  (md).mod_name
+
+let first_import_of_path (path : (path_elem) list) : (string) option =
+  (match path with
+    | [] -> None
+    | ({ imports = imports; segment = tmp; _ } :: tmp1) -> (FStarC_List.last_opt imports)
+  )
+
+let completion_result_of_lid (x : ((path_elem) list * FStarC_Ident.lident)) : completion_result =
+  (match x with
+    | (path, u__lid) -> (let tmp = (match_length_of_path path) in
+      let tmp1 = (string_of_path path) in
+      { completion_match_length = tmp;
+        completion_candidate = tmp1;
+        completion_annotation = (FStarC_Option.dflt "" (first_import_of_path path)) })
+  )
+
+let autocomplete_lid (tbl : table) (query : (string) list) : (completion_result) list =
+  (let tmp = (trie_find_prefix (tbl).tbl_lids query) in
+  (FStarC_List.map completion_result_of_lid tmp))
+
+let json_of_completion_result (result : completion_result) : FStarC_Json.json =
+  (FStarC_Json.JsonList (((FStarC_Json.JsonInt ((result).completion_match_length)) :: ((FStarC_Json.JsonStr ((result).completion_annotation)) :: ((FStarC_Json.JsonStr ((result).completion_candidate)) :: [])))))
+
+let rec trie_find_exact (tr : ('u_'a) trie) (query : (string) list) : ('u_'a) option =
+  (match query with
+    | [] -> (FStarC_Effect.failwith "Empty query in trie_find_exact")
+    | (name :: []) -> (names_find_exact (tr).bindings name)
+    | (ns :: query1) -> (FStarC_Option.bind (names_find_exact (tr).namespaces ns) (fun scope -> (trie_find_exact scope query1)))
+  )
+
+let find_module_or_ns (tbl : table) (query : (string) list) : (mod_symbol) option =
+  (trie_find_exact (tbl).tbl_mods query)
+
+let alist_of_mod_info (mod_info : mod_info) : ((string * FStarC_Json.json)) list =
+  (("name", (FStarC_Json.JsonStr ((mod_info).mod_name))) :: (("path", (FStarC_Json.JsonStr ((mod_info).mod_path))) :: (("loaded", (FStarC_Json.JsonBool ((mod_info).mod_loaded))) :: [])))
+
+let alist_of_ns_info (ns_info : ns_info) : ((string * FStarC_Json.json)) list =
+  (("name", (FStarC_Json.JsonStr ((ns_info).ns_name))) :: (("loaded", (FStarC_Json.JsonBool ((ns_info).ns_loaded))) :: []))
+

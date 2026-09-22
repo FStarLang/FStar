@@ -1,128 +1,126 @@
-open Prims
-let rec pat_depth (p : FStarC_Syntax_Syntax.pat) : Prims.int=
-  match p.FStarC_Syntax_Syntax.v with
-  | FStarC_Syntax_Syntax.Pat_constant uu___ -> Prims.int_zero
-  | FStarC_Syntax_Syntax.Pat_cons (p1, _us_opt, ps) ->
-      FStarC_List.fold_left
-        (fun d uu___ ->
-           match uu___ with
-           | (p2, uu___1) -> let uu___2 = pat_depth p2 in d + uu___2)
-        Prims.int_zero ps
-  | FStarC_Syntax_Syntax.Pat_var uu___ -> Prims.int_one
-  | FStarC_Syntax_Syntax.Pat_dot_term uu___ -> Prims.int_zero
-let rec is_ln' (n : Prims.int) (t : FStarC_Syntax_Syntax.term) : Prims.bool=
-  let uu___ =
-    let uu___1 = FStarC_Syntax_Subst.compress t in
-    uu___1.FStarC_Syntax_Syntax.n in
-  match uu___ with
-  | FStarC_Syntax_Syntax.Tm_bvar bv -> bv.FStarC_Syntax_Syntax.index < n
-  | FStarC_Syntax_Syntax.Tm_type uu___1 -> true
-  | FStarC_Syntax_Syntax.Tm_name uu___1 -> true
-  | FStarC_Syntax_Syntax.Tm_constant uu___1 -> true
-  | FStarC_Syntax_Syntax.Tm_fvar uu___1 -> true
-  | FStarC_Syntax_Syntax.Tm_uinst (t1, us) ->
-      let uu___1 = is_ln' n t1 in if uu___1 then is_ln'_univs n us else false
-  | FStarC_Syntax_Syntax.Tm_abs
-      { FStarC_Syntax_Syntax.b = b; FStarC_Syntax_Syntax.body = body;
-        FStarC_Syntax_Syntax.rc_opt = rc_opt;_}
-      ->
-      let uu___1 = is_ln'_binders n [b] in
-      if uu___1 then is_ln' (n + Prims.int_one) body else false
-  | FStarC_Syntax_Syntax.Tm_arrow
-      { FStarC_Syntax_Syntax.b1 = b; FStarC_Syntax_Syntax.comp = comp;_} ->
-      let uu___1 = is_ln'_binders n [b] in
-      if uu___1 then is_ln'_comp (n + Prims.int_one) comp else false
-  | FStarC_Syntax_Syntax.Tm_refine
-      { FStarC_Syntax_Syntax.b2 = b; FStarC_Syntax_Syntax.phi = phi;_} ->
-      let uu___1 = is_ln'_bv n b in
-      if uu___1 then is_ln' (n + Prims.int_one) phi else false
-  | FStarC_Syntax_Syntax.Tm_app
-      { FStarC_Syntax_Syntax.hd = hd; FStarC_Syntax_Syntax.arg = arg;_} ->
-      let uu___1 = is_ln' n hd in
-      if uu___1
-      then let uu___2 = arg in (match uu___2 with | (t1, aq) -> is_ln' n t1)
-      else false
-  | FStarC_Syntax_Syntax.Tm_match
-      { FStarC_Syntax_Syntax.scrutinee = scrutinee;
-        FStarC_Syntax_Syntax.ret_opt = ret_opt;
-        FStarC_Syntax_Syntax.brs = brs;
-        FStarC_Syntax_Syntax.rc_opt1 = rc_opt;_}
-      ->
-      let uu___1 = is_ln' n scrutinee in
-      if uu___1
-      then
-        FStarC_List.for_all
-          (fun uu___2 ->
-             match uu___2 with
-             | (p, uu___3, t1) ->
-                 let uu___4 = let uu___5 = pat_depth p in n + uu___5 in
-                 is_ln' uu___4 t1) brs
-      else false
-  | FStarC_Syntax_Syntax.Tm_ascribed
-      { FStarC_Syntax_Syntax.tm = tm; FStarC_Syntax_Syntax.asc = asc;
-        FStarC_Syntax_Syntax.eff_opt = eff_opt;_}
-      -> let uu___1 = is_ln' n tm in if uu___1 then true else false
-  | FStarC_Syntax_Syntax.Tm_let
-      { FStarC_Syntax_Syntax.lbs = lbs; FStarC_Syntax_Syntax.body1 = body;_}
-      ->
-      let uu___1 = is_ln'_letbindings n lbs in
-      if uu___1
-      then
-        is_ln' (n + (FStarC_List.length (FStar_Pervasives_Native.snd lbs)))
-          body
-      else false
-  | uu___1 -> true
-and is_ln'_letbindings (n : Prims.int)
-  (lbs : FStarC_Syntax_Syntax.letbindings) : Prims.bool=
-  let uu___ = lbs in
-  match uu___ with
-  | (isrec, lbs1) ->
-      FStarC_List.for_all (fun lb -> is_ln'_letbinding n lb) lbs1
-and is_ln'_letbinding (n : Prims.int) (lb : FStarC_Syntax_Syntax.letbinding)
-  : Prims.bool=
-  let uu___ = lb in
-  match uu___ with
-  | { FStarC_Syntax_Syntax.lbname = uu___1;
-      FStarC_Syntax_Syntax.lbunivs = lbunivs;
-      FStarC_Syntax_Syntax.lbtyp = lbtyp;
-      FStarC_Syntax_Syntax.lbeff = uu___2;
-      FStarC_Syntax_Syntax.lbdef = lbdef;
-      FStarC_Syntax_Syntax.lbattrs = uu___3;
-      FStarC_Syntax_Syntax.lbpos = uu___4;_} ->
-      let nu = FStar_List_Tot_Base.length lbunivs in
-      let uu___5 = is_ln' (n + nu) lbtyp in
-      if uu___5 then is_ln' (n + nu) lbdef else false
-and is_ln'_binders (n : Prims.int)
-  (bs : FStarC_Syntax_Syntax.binder Prims.list) : Prims.bool=
-  match bs with
-  | [] -> true
-  | b::bs1 ->
-      let uu___ = is_ln'_binder n b in
-      if uu___ then is_ln'_binders (n + Prims.int_one) bs1 else false
-and is_ln'_binder (n : Prims.int) (b : FStarC_Syntax_Syntax.binder) :
-  Prims.bool= is_ln'_bv n b.FStarC_Syntax_Syntax.binder_bv
-and is_ln'_bv (n : Prims.int) (bv : FStarC_Syntax_Syntax.bv) : Prims.bool=
-  is_ln' n bv.FStarC_Syntax_Syntax.sort
-and is_ln'_comp (n : Prims.int) (c : FStarC_Syntax_Syntax.comp) : Prims.bool=
-  match c.FStarC_Syntax_Syntax.n with
-  | FStarC_Syntax_Syntax.Comp ct -> is_ln'_comp_typ n ct
-and is_ln'_comp_typ (n : Prims.nat) (ct : FStarC_Syntax_Syntax.comp_typ) :
-  Prims.bool=
-  let uu___ = is_ln' n ct.FStarC_Syntax_Syntax.result_typ in
-  if uu___ then true else false
-and is_ln'_univ (n : Prims.nat) (u : FStarC_Syntax_Syntax.universe) :
-  Prims.bool=
-  let uu___ = FStarC_Syntax_Subst.compress_univ u in
-  match uu___ with
-  | FStarC_Syntax_Syntax.U_zero -> true
-  | FStarC_Syntax_Syntax.U_succ u1 -> is_ln'_univ n u1
-  | FStarC_Syntax_Syntax.U_max us -> FStarC_List.for_all (is_ln'_univ n) us
-  | FStarC_Syntax_Syntax.U_unif uu___1 -> true
-  | FStarC_Syntax_Syntax.U_bvar i -> i < n
-  | FStarC_Syntax_Syntax.U_name uu___1 -> true
-  | FStarC_Syntax_Syntax.U_unknown -> true
-and is_ln'_univs (n : Prims.nat)
-  (us : FStarC_Syntax_Syntax.universe Prims.list) : Prims.bool=
-  FStarC_List.for_all (is_ln'_univ n) us
-let is_ln (t : FStarC_Syntax_Syntax.term) : Prims.bool=
-  is_ln' Prims.int_zero t
+(* Generated by F* Custard extraction. Do not edit. *)
+[@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
+
+let rec is_ln'_univ (n : Prims.int) (u : FStarC_Syntax_Syntax.universe) : bool =
+  (let tmp = (FStarC_Syntax_Subst.compress_univ u) in
+  (match tmp with
+    | FStarC_Syntax_Syntax.U_zero -> true
+    | (FStarC_Syntax_Syntax.U_succ (u1)) -> (is_ln'_univ n u1)
+    | (FStarC_Syntax_Syntax.U_max (us)) -> (FStarC_List.for_all (is_ln'_univ n) us)
+    | (FStarC_Syntax_Syntax.U_unif (u__1, u__2, u__3)) -> true
+    | (FStarC_Syntax_Syntax.U_bvar (i)) -> (Prims.op_Less i n)
+    | (FStarC_Syntax_Syntax.U_name (tmp1)) -> true
+    | FStarC_Syntax_Syntax.U_unknown -> true
+  ))
+
+let is_ln'_univs (n : Prims.int) (eta : (FStarC_Syntax_Syntax.universe) list) : bool =
+  (FStarC_List.for_all (is_ln'_univ n) eta)
+
+let rec pat_depth (p : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) : Prims.int =
+  (match (p).FStarC_Syntax_Syntax.v with
+    | (FStarC_Syntax_Syntax.Pat_constant (tmp)) -> (Prims.parse_int "0")
+    | (FStarC_Syntax_Syntax.Pat_cons (p1, u__us_opt, ps)) -> (FStarC_List.fold_left (fun d tmp -> (match tmp with
+        | (p2, tmp1) -> (let tmp2 = (pat_depth p2) in
+          (Prims.op_Plus d tmp2))
+      )) (Prims.parse_int "0") ps)
+    | (FStarC_Syntax_Syntax.Pat_var (tmp)) -> (Prims.parse_int "1")
+    | (FStarC_Syntax_Syntax.Pat_dot_term (tmp)) -> (Prims.parse_int "0")
+  )
+
+let rec is_ln'_bv (n : Prims.int) (bv : FStarC_Syntax_Syntax.bv) : bool =
+  (is_ln' n (bv).FStarC_Syntax_Syntax.sort)
+
+and is_ln'_binder (n : Prims.int) (b : FStarC_Syntax_Syntax.binder) : bool =
+  (is_ln'_bv n (b).FStarC_Syntax_Syntax.binder_bv)
+
+and is_ln'_binders (n : Prims.int) (bs : (FStarC_Syntax_Syntax.binder) list) : bool =
+  (match bs with
+    | [] -> true
+    | (b :: bs1) -> (let tmp = (is_ln'_binder n b) in
+      (if tmp then (is_ln'_binders (Prims.op_Plus n (Prims.parse_int "1")) bs1) else false))
+  )
+
+and is_ln'_flag (n : Prims.int) (f : FStarC_Syntax_Syntax.cflag) : bool =
+  (match f with
+    | (FStarC_Syntax_Syntax.SMTPAT (t)) -> (is_ln' n t)
+    | (FStarC_Syntax_Syntax.DECREASES ((FStarC_Syntax_Syntax.Decreases_lex (ts)))) -> (FStarC_List.for_all (is_ln' n) ts)
+    | (FStarC_Syntax_Syntax.DECREASES ((FStarC_Syntax_Syntax.Decreases_wf (rel, e)))) -> (let tmp = (is_ln' n rel) in
+      (if tmp then (is_ln' n e) else false))
+    | tmp -> true
+  )
+
+and is_ln'_comp_typ (n : Prims.int) (ct : FStarC_Syntax_Syntax.comp_typ) : bool =
+  (let tmp = (is_ln' n (ct).FStarC_Syntax_Syntax.result_typ) in
+  (if tmp then (FStarC_List.for_all (is_ln'_flag n) (ct).FStarC_Syntax_Syntax.flags) else false))
+
+and is_ln'_comp (n : Prims.int) (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : bool =
+  (let ct = (c).FStarC_Syntax_Syntax.n in
+  (is_ln'_comp_typ n ct))
+
+and is_ln'_ascription (n : Prims.int) (asc : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax, (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * bool)) : bool =
+  (match asc with
+    | (tc, tacopt, tmp) -> (let tmp1 = (match tc with
+          | (FStar_Pervasives.Inl (t)) -> (is_ln' n t)
+          | (FStar_Pervasives.Inr (c)) -> (is_ln'_comp n c)
+        ) in
+      (if tmp1 then (match tacopt with
+        | None -> true
+        | (Some (tac)) -> (is_ln' n tac)
+      ) else false))
+  )
+
+and is_ln'_letbinding (n : Prims.int) (lb : FStarC_Syntax_Syntax.letbinding) : bool =
+  (let nu = (FStar_List_Tot_Base.length (lb).FStarC_Syntax_Syntax.lbunivs) in
+  let tmp = (is_ln' (Prims.op_Plus n nu) (lb).FStarC_Syntax_Syntax.lbtyp) in
+  (if tmp then (is_ln' (Prims.op_Plus n nu) (lb).FStarC_Syntax_Syntax.lbdef) else false))
+
+and is_ln'_letbindings (n : Prims.int) (lbs : (bool * (FStarC_Syntax_Syntax.letbinding) list)) : bool =
+  (match lbs with
+    | (isrec, lbs1) -> (FStarC_List.for_all (fun lb -> (is_ln'_letbinding n lb)) lbs1)
+  )
+
+and is_ln' (n : Prims.int) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
+  (let tmp = (FStarC_Syntax_Subst.compress t) in
+  let tmp1 = (tmp).FStarC_Syntax_Syntax.n in
+  (match tmp1 with
+    | (FStarC_Syntax_Syntax.Tm_bvar (bv)) -> (Prims.op_Less (bv).FStarC_Syntax_Syntax.index n)
+    | (FStarC_Syntax_Syntax.Tm_type (tmp2)) -> true
+    | (FStarC_Syntax_Syntax.Tm_name (tmp2)) -> true
+    | (FStarC_Syntax_Syntax.Tm_constant (tmp2)) -> true
+    | (FStarC_Syntax_Syntax.Tm_fvar (tmp2)) -> true
+    | (FStarC_Syntax_Syntax.Tm_uinst (t1, us)) -> (let tmp2 = (is_ln' n t1) in
+      (if tmp2 then (is_ln'_univs n us) else false))
+    | (FStarC_Syntax_Syntax.Tm_abs ({ FStarC_Syntax_Syntax.b = b; body = body; rc_opt = rc_opt; _ })) -> (let tmp2 = (is_ln'_binders n (b :: [])) in
+      (if tmp2 then (is_ln' (Prims.op_Plus n (Prims.parse_int "1")) body) else false))
+    | (FStarC_Syntax_Syntax.Tm_arrow ({ FStarC_Syntax_Syntax.b = b; comp = comp; _ })) -> (let tmp2 = (is_ln'_binders n (b :: [])) in
+      (if tmp2 then (is_ln'_comp (Prims.op_Plus n (Prims.parse_int "1")) comp) else false))
+    | (FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = b; phi = phi; _ })) -> (let tmp2 = (is_ln'_bv n b) in
+      (if tmp2 then (is_ln' (Prims.op_Plus n (Prims.parse_int "1")) phi) else false))
+    | (FStarC_Syntax_Syntax.Tm_app ({ FStarC_Syntax_Syntax.hd = hd; arg = u__1; arg1 = u__2; _ })) -> (let tmp2 = (is_ln' n hd) in
+      (if tmp2 then (let tmp3 = (u__1, u__2) in
+      (match tmp3 with
+        | (t1, aq) -> (is_ln' n t1)
+      )) else false))
+    | (FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = scrutinee; ret_opt = ret_opt; brs = brs; rc_opt = rc_opt; _ })) -> (let tmp2 = (is_ln' n scrutinee) in
+      let tmp3 = (if tmp2 then (match ret_opt with
+          | None -> true
+          | (Some ((b, asc))) -> (let tmp3 = (is_ln'_binder n b) in
+            (if tmp3 then (is_ln'_ascription (Prims.op_Plus n (Prims.parse_int "1")) asc) else false))
+        ) else false) in
+      (if tmp3 then (FStarC_List.for_all (fun tmp4 -> (match tmp4 with
+        | (p, tmp5, t1) -> (let tmp6 = (pat_depth p) in
+          let tmp7 = (Prims.op_Plus n tmp6) in
+          (is_ln' tmp7 t1))
+      )) brs) else false))
+    | (FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = tm; asc = u__1; asc1 = u__2; asc2 = u__3; eff_opt = tmp2; _ })) -> (let tmp3 = (is_ln' n tm) in
+      (if tmp3 then (is_ln'_ascription n (u__1, u__2, u__3)) else false))
+    | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = tm; meta = tmp2; _ })) -> (is_ln' n tm)
+    | (FStarC_Syntax_Syntax.Tm_let ({ FStarC_Syntax_Syntax.lbs = u__1; lbs1 = u__2; body = body; _ })) -> (let lbs = (u__1, u__2) in
+      let tmp2 = (is_ln'_letbindings n lbs) in
+      (if tmp2 then (is_ln' (Prims.op_Plus n (FStarC_List.length (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd lbs))) body) else false))
+    | tmp2 -> true
+  ))
+
+let is_ln (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
+  (is_ln' (Prims.parse_int "0") t)
+

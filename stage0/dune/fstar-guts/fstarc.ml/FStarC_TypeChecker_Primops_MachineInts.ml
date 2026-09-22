@@ -1,482 +1,91 @@
-open Prims
-type 'a mymon =
-  (FStarC_TypeChecker_Primops_Base.primitive_step Prims.list, Obj.t, 
-    'a) FStarC_Writer.writer
-let bounded_arith_ops_for (k : FStarC_MachineInts.machint_kind) : unit mymon=
-  let mod_name = FStarC_MachineInts.module_name_for k in
-  let nm s =
-    FStarC_Parser_Const.p2l
-      ["FStar"; FStarC_MachineInts.module_name_for k; s] in
-  let uu___ =
-    let uu___1 =
-      let uu___2 =
-        let uu___3 = nm "v" in
-        FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero uu___3
-          (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k)
-          FStarC_Syntax_Embeddings.e_int FStarC_TypeChecker_NBETerm.e_int
-          (FStarC_MachineInts.v k) in
-      let uu___3 =
-        let uu___4 =
-          let uu___5 =
-            let uu___6 = nm "add" in
-            FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero uu___6
-              (FStarC_MachineInts.e_machint k)
-              (FStarC_MachineInts.nbe_machint k)
-              (FStarC_MachineInts.e_machint k)
-              (FStarC_MachineInts.nbe_machint k)
-              (FStarC_MachineInts.e_machint k)
-              (FStarC_MachineInts.nbe_machint k)
-              (fun x y ->
-                 FStarC_MachineInts.make_as k x
-                   ((FStarC_MachineInts.v k x) + (FStarC_MachineInts.v k y))) in
-          FStarC_TypeChecker_Primops_Base.with_extra_args Prims.int_one
-            uu___5 in
-        let uu___5 =
-          let uu___6 =
-            let uu___7 =
-              let uu___8 = nm "sub" in
-              FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero uu___8
-                (FStarC_MachineInts.e_machint k)
-                (FStarC_MachineInts.nbe_machint k)
-                (FStarC_MachineInts.e_machint k)
-                (FStarC_MachineInts.nbe_machint k)
-                (FStarC_MachineInts.e_machint k)
-                (FStarC_MachineInts.nbe_machint k)
-                (fun x y ->
-                   FStarC_MachineInts.make_as k x
-                     ((FStarC_MachineInts.v k x) - (FStarC_MachineInts.v k y))) in
-            FStarC_TypeChecker_Primops_Base.with_extra_args Prims.int_one
-              uu___7 in
-          let uu___7 =
-            let uu___8 =
-              let uu___9 =
-                let uu___10 = nm "mul" in
-                FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero uu___10
-                  (FStarC_MachineInts.e_machint k)
-                  (FStarC_MachineInts.nbe_machint k)
-                  (FStarC_MachineInts.e_machint k)
-                  (FStarC_MachineInts.nbe_machint k)
-                  (FStarC_MachineInts.e_machint k)
-                  (FStarC_MachineInts.nbe_machint k)
-                  (fun x y ->
-                     FStarC_MachineInts.make_as k x
-                       ((FStarC_MachineInts.v k x) *
-                          (FStarC_MachineInts.v k y))) in
-              FStarC_TypeChecker_Primops_Base.with_extra_args Prims.int_one
-                uu___9 in
-            let uu___9 =
-              let uu___10 =
-                let uu___11 = nm "gt" in
-                FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero uu___11
-                  (FStarC_MachineInts.e_machint k)
-                  (FStarC_MachineInts.nbe_machint k)
-                  (FStarC_MachineInts.e_machint k)
-                  (FStarC_MachineInts.nbe_machint k)
-                  FStarC_Syntax_Embeddings.e_bool
-                  FStarC_TypeChecker_NBETerm.e_bool
-                  (fun x y ->
-                     (FStarC_MachineInts.v k x) > (FStarC_MachineInts.v k y)) in
-              let uu___11 =
-                let uu___12 =
-                  let uu___13 = nm "gte" in
-                  FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero uu___13
-                    (FStarC_MachineInts.e_machint k)
-                    (FStarC_MachineInts.nbe_machint k)
-                    (FStarC_MachineInts.e_machint k)
-                    (FStarC_MachineInts.nbe_machint k)
-                    FStarC_Syntax_Embeddings.e_bool
-                    FStarC_TypeChecker_NBETerm.e_bool
-                    (fun x y ->
-                       (FStarC_MachineInts.v k x) >=
-                         (FStarC_MachineInts.v k y)) in
-                let uu___13 =
-                  let uu___14 =
-                    let uu___15 = nm "lt" in
-                    FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero
-                      uu___15 (FStarC_MachineInts.e_machint k)
-                      (FStarC_MachineInts.nbe_machint k)
-                      (FStarC_MachineInts.e_machint k)
-                      (FStarC_MachineInts.nbe_machint k)
-                      FStarC_Syntax_Embeddings.e_bool
-                      FStarC_TypeChecker_NBETerm.e_bool
-                      (fun x y ->
-                         (FStarC_MachineInts.v k x) <
-                           (FStarC_MachineInts.v k y)) in
-                  let uu___15 =
-                    let uu___16 =
-                      let uu___17 = nm "lte" in
-                      FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero
-                        uu___17 (FStarC_MachineInts.e_machint k)
-                        (FStarC_MachineInts.nbe_machint k)
-                        (FStarC_MachineInts.e_machint k)
-                        (FStarC_MachineInts.nbe_machint k)
-                        FStarC_Syntax_Embeddings.e_bool
-                        FStarC_TypeChecker_NBETerm.e_bool
-                        (fun x y ->
-                           (FStarC_MachineInts.v k x) <=
-                             (FStarC_MachineInts.v k y)) in
-                    [uu___16] in
-                  uu___14 :: uu___15 in
-                uu___12 :: uu___13 in
-              uu___10 :: uu___11 in
-            uu___8 :: uu___9 in
-          uu___6 :: uu___7 in
-        uu___4 :: uu___5 in
-      uu___2 :: uu___3 in
-    FStarC_Writer.emit (FStarC_Class_Monoid.monoid_list ()) uu___1 in
-  FStarC_Class_Monad.op_let_Bang
-    (FStarC_Writer.monad_writer (FStarC_Class_Monoid.monoid_list ())) () ()
-    uu___
-    (fun uu___1 ->
-       (fun uu___1 ->
-          let uu___1 = Obj.magic uu___1 in
-          let sz = FStarC_MachineInts.width k in
-          let modulus = Prims.pow2 sz in
-          let mod1 x = (mod) x modulus in
-          let uu___2 =
-            if FStarC_MachineInts.is_unsigned k
-            then
-              let uu___3 =
-                let uu___4 =
-                  let uu___5 = nm "add_mod" in
-                  FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero uu___5
-                    (FStarC_MachineInts.e_machint k)
-                    (FStarC_MachineInts.nbe_machint k)
-                    (FStarC_MachineInts.e_machint k)
-                    (FStarC_MachineInts.nbe_machint k)
-                    (FStarC_MachineInts.e_machint k)
-                    (FStarC_MachineInts.nbe_machint k)
-                    (fun x y ->
-                       FStarC_MachineInts.make_as k x
-                         (mod1
-                            ((FStarC_MachineInts.v k x) +
-                               (FStarC_MachineInts.v k y)))) in
-                let uu___5 =
-                  let uu___6 =
-                    let uu___7 = nm "sub_mod" in
-                    FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero uu___7
-                      (FStarC_MachineInts.e_machint k)
-                      (FStarC_MachineInts.nbe_machint k)
-                      (FStarC_MachineInts.e_machint k)
-                      (FStarC_MachineInts.nbe_machint k)
-                      (FStarC_MachineInts.e_machint k)
-                      (FStarC_MachineInts.nbe_machint k)
-                      (fun x y ->
-                         FStarC_MachineInts.make_as k x
-                           (mod1
-                              ((FStarC_MachineInts.v k x) -
-                                 (FStarC_MachineInts.v k y)))) in
-                  let uu___7 =
-                    let uu___8 =
-                      let uu___9 = nm "div" in
-                      FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero
-                        uu___9 (FStarC_MachineInts.e_machint k)
-                        (FStarC_MachineInts.nbe_machint k)
-                        (FStarC_MachineInts.e_machint k)
-                        (FStarC_MachineInts.nbe_machint k)
-                        (FStarC_MachineInts.e_machint k)
-                        (FStarC_MachineInts.nbe_machint k)
-                        (fun x y ->
-                           FStarC_MachineInts.make_as k x
-                             (mod1
-                                ((FStarC_MachineInts.v k x) /
-                                   (FStarC_MachineInts.v k y)))) in
-                    let uu___9 =
-                      let uu___10 =
-                        let uu___11 = nm "rem" in
-                        FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero
-                          uu___11 (FStarC_MachineInts.e_machint k)
-                          (FStarC_MachineInts.nbe_machint k)
-                          (FStarC_MachineInts.e_machint k)
-                          (FStarC_MachineInts.nbe_machint k)
-                          (FStarC_MachineInts.e_machint k)
-                          (FStarC_MachineInts.nbe_machint k)
-                          (fun x y ->
-                             FStarC_MachineInts.make_as k x
-                               (mod1
-                                  ((mod) (FStarC_MachineInts.v k x)
-                                     (FStarC_MachineInts.v k y)))) in
-                      let uu___11 =
-                        let uu___12 =
-                          let uu___13 = nm "logor" in
-                          FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero
-                            uu___13 (FStarC_MachineInts.e_machint k)
-                            (FStarC_MachineInts.nbe_machint k)
-                            (FStarC_MachineInts.e_machint k)
-                            (FStarC_MachineInts.nbe_machint k)
-                            (FStarC_MachineInts.e_machint k)
-                            (FStarC_MachineInts.nbe_machint k)
-                            (fun x y ->
-                               FStarC_MachineInts.make_as k x
-                                 (FStarC_Int_Extra.logor
-                                    (FStarC_MachineInts.v k x)
-                                    (FStarC_MachineInts.v k y))) in
-                        let uu___13 =
-                          let uu___14 =
-                            let uu___15 = nm "logand" in
-                            FStarC_TypeChecker_Primops_Base.mk2
-                              Prims.int_zero uu___15
-                              (FStarC_MachineInts.e_machint k)
-                              (FStarC_MachineInts.nbe_machint k)
-                              (FStarC_MachineInts.e_machint k)
-                              (FStarC_MachineInts.nbe_machint k)
-                              (FStarC_MachineInts.e_machint k)
-                              (FStarC_MachineInts.nbe_machint k)
-                              (fun x y ->
-                                 FStarC_MachineInts.make_as k x
-                                   (FStarC_Int_Extra.logand
-                                      (FStarC_MachineInts.v k x)
-                                      (FStarC_MachineInts.v k y))) in
-                          let uu___15 =
-                            let uu___16 =
-                              let uu___17 = nm "logxor" in
-                              FStarC_TypeChecker_Primops_Base.mk2
-                                Prims.int_zero uu___17
-                                (FStarC_MachineInts.e_machint k)
-                                (FStarC_MachineInts.nbe_machint k)
-                                (FStarC_MachineInts.e_machint k)
-                                (FStarC_MachineInts.nbe_machint k)
-                                (FStarC_MachineInts.e_machint k)
-                                (FStarC_MachineInts.nbe_machint k)
-                                (fun x y ->
-                                   FStarC_MachineInts.make_as k x
-                                     (FStarC_Int_Extra.logxor
-                                        (FStarC_MachineInts.v k x)
-                                        (FStarC_MachineInts.v k y))) in
-                            let uu___17 =
-                              let uu___18 =
-                                let uu___19 = nm "lognot" in
-                                FStarC_TypeChecker_Primops_Base.mk1
-                                  Prims.int_zero uu___19
-                                  (FStarC_MachineInts.e_machint k)
-                                  (FStarC_MachineInts.nbe_machint k)
-                                  (FStarC_MachineInts.e_machint k)
-                                  (FStarC_MachineInts.nbe_machint k)
-                                  (fun x ->
-                                     FStarC_MachineInts.make_as k x
-                                       (FStarC_Int_Extra.logand
-                                          (FStarC_Int_Extra.lognot
-                                             (FStarC_MachineInts.v k x))
-                                          (FStarC_MachineInts.mask k))) in
-                              let uu___19 =
-                                let uu___20 =
-                                  let uu___21 =
-                                    let uu___22 = nm "shift_left" in
-                                    FStarC_TypeChecker_Primops_Base.mk2
-                                      Prims.int_zero uu___22
-                                      (FStarC_MachineInts.e_machint k)
-                                      (FStarC_MachineInts.nbe_machint k)
-                                      (FStarC_MachineInts.e_machint
-                                         FStarC_MachineInts.UInt32)
-                                      (FStarC_MachineInts.nbe_machint
-                                         FStarC_MachineInts.UInt32)
-                                      (FStarC_MachineInts.e_machint k)
-                                      (FStarC_MachineInts.nbe_machint k)
-                                      (fun x y ->
-                                         FStarC_MachineInts.make_as k x
-                                           (FStarC_Int_Extra.logand
-                                              (FStarC_Int_Extra.shift_left
-                                                 (FStarC_MachineInts.v k x)
-                                                 (FStarC_MachineInts.v
-                                                    FStarC_MachineInts.UInt32
-                                                    y))
-                                              (FStarC_MachineInts.mask k))) in
-                                  FStarC_TypeChecker_Primops_Base.with_extra_args
-                                    Prims.int_one uu___21 in
-                                let uu___21 =
-                                  let uu___22 =
-                                    let uu___23 =
-                                      let uu___24 = nm "shift_right" in
-                                      FStarC_TypeChecker_Primops_Base.mk2
-                                        Prims.int_zero uu___24
-                                        (FStarC_MachineInts.e_machint k)
-                                        (FStarC_MachineInts.nbe_machint k)
-                                        (FStarC_MachineInts.e_machint
-                                           FStarC_MachineInts.UInt32)
-                                        (FStarC_MachineInts.nbe_machint
-                                           FStarC_MachineInts.UInt32)
-                                        (FStarC_MachineInts.e_machint k)
-                                        (FStarC_MachineInts.nbe_machint k)
-                                        (fun x y ->
-                                           FStarC_MachineInts.make_as k x
-                                             (FStarC_Int_Extra.logand
-                                                (FStarC_Int_Extra.shift_right
-                                                   (FStarC_MachineInts.v k x)
-                                                   (FStarC_MachineInts.v
-                                                      FStarC_MachineInts.UInt32
-                                                      y))
-                                                (FStarC_MachineInts.mask k))) in
-                                    FStarC_TypeChecker_Primops_Base.with_extra_args
-                                      Prims.int_one uu___23 in
-                                  [uu___22] in
-                                uu___20 :: uu___21 in
-                              uu___18 :: uu___19 in
-                            uu___16 :: uu___17 in
-                          uu___14 :: uu___15 in
-                        uu___12 :: uu___13 in
-                      uu___10 :: uu___11 in
-                    uu___8 :: uu___9 in
-                  uu___6 :: uu___7 in
-                uu___4 :: uu___5 in
-              FStarC_Writer.emit (FStarC_Class_Monoid.monoid_list ()) uu___3
-            else
-              FStarC_Class_Monad.return
-                (FStarC_Writer.monad_writer
-                   (FStarC_Class_Monoid.monoid_list ())) () (Obj.repr ()) in
-          Obj.magic
-            (FStarC_Class_Monad.op_let_Bang
-               (FStarC_Writer.monad_writer
-                  (FStarC_Class_Monoid.monoid_list ())) () () uu___2
-               (fun uu___3 ->
-                  (fun uu___3 ->
-                     let uu___3 = Obj.magic uu___3 in
-                     let uu___4 =
-                       if
-                         (FStarC_MachineInts.is_unsigned k) &&
-                           (k <> FStarC_MachineInts.SizeT)
-                       then
-                         let uu___5 =
-                           let uu___6 =
-                             let uu___7 = nm "add_underspec" in
-                             FStarC_TypeChecker_Primops_Base.mk2
-                               Prims.int_zero uu___7
-                               (FStarC_MachineInts.e_machint k)
-                               (FStarC_MachineInts.nbe_machint k)
-                               (FStarC_MachineInts.e_machint k)
-                               (FStarC_MachineInts.nbe_machint k)
-                               (FStarC_MachineInts.e_machint k)
-                               (FStarC_MachineInts.nbe_machint k)
-                               (fun x y ->
-                                  FStarC_MachineInts.make_as k x
-                                    (mod1
-                                       ((FStarC_MachineInts.v k x) +
-                                          (FStarC_MachineInts.v k y)))) in
-                           let uu___7 =
-                             let uu___8 =
-                               let uu___9 = nm "sub_underspec" in
-                               FStarC_TypeChecker_Primops_Base.mk2
-                                 Prims.int_zero uu___9
-                                 (FStarC_MachineInts.e_machint k)
-                                 (FStarC_MachineInts.nbe_machint k)
-                                 (FStarC_MachineInts.e_machint k)
-                                 (FStarC_MachineInts.nbe_machint k)
-                                 (FStarC_MachineInts.e_machint k)
-                                 (FStarC_MachineInts.nbe_machint k)
-                                 (fun x y ->
-                                    FStarC_MachineInts.make_as k x
-                                      (mod1
-                                         ((FStarC_MachineInts.v k x) -
-                                            (FStarC_MachineInts.v k y)))) in
-                             let uu___9 =
-                               let uu___10 =
-                                 let uu___11 = nm "mul_underspec" in
-                                 FStarC_TypeChecker_Primops_Base.mk2
-                                   Prims.int_zero uu___11
-                                   (FStarC_MachineInts.e_machint k)
-                                   (FStarC_MachineInts.nbe_machint k)
-                                   (FStarC_MachineInts.e_machint k)
-                                   (FStarC_MachineInts.nbe_machint k)
-                                   (FStarC_MachineInts.e_machint k)
-                                   (FStarC_MachineInts.nbe_machint k)
-                                   (fun x y ->
-                                      FStarC_MachineInts.make_as k x
-                                        (mod1
-                                           ((FStarC_MachineInts.v k x) *
-                                              (FStarC_MachineInts.v k y)))) in
-                               [uu___10] in
-                             uu___8 :: uu___9 in
-                           uu___6 :: uu___7 in
-                         FStarC_Writer.emit
-                           (FStarC_Class_Monoid.monoid_list ()) uu___5
-                       else
-                         FStarC_Class_Monad.return
-                           (FStarC_Writer.monad_writer
-                              (FStarC_Class_Monoid.monoid_list ())) ()
-                           (Obj.repr ()) in
-                     Obj.magic
-                       (FStarC_Class_Monad.op_let_Bang
-                          (FStarC_Writer.monad_writer
-                             (FStarC_Class_Monoid.monoid_list ())) () ()
-                          uu___4
-                          (fun uu___5 ->
-                             (fun uu___5 ->
-                                let uu___5 = Obj.magic uu___5 in
-                                let uu___6 =
-                                  if
-                                    (FStarC_MachineInts.is_unsigned k) &&
-                                      ((k <> FStarC_MachineInts.SizeT) &&
-                                         (k <> FStarC_MachineInts.UInt128))
-                                  then
-                                    let uu___7 =
-                                      let uu___8 =
-                                        let uu___9 = nm "mul_mod" in
-                                        FStarC_TypeChecker_Primops_Base.mk2
-                                          Prims.int_zero uu___9
-                                          (FStarC_MachineInts.e_machint k)
-                                          (FStarC_MachineInts.nbe_machint k)
-                                          (FStarC_MachineInts.e_machint k)
-                                          (FStarC_MachineInts.nbe_machint k)
-                                          (FStarC_MachineInts.e_machint k)
-                                          (FStarC_MachineInts.nbe_machint k)
-                                          (fun x y ->
-                                             FStarC_MachineInts.make_as k x
-                                               (mod1
-                                                  ((FStarC_MachineInts.v k x)
-                                                     *
-                                                     (FStarC_MachineInts.v k
-                                                        y)))) in
-                                      [uu___8] in
-                                    FStarC_Writer.emit
-                                      (FStarC_Class_Monoid.monoid_list ())
-                                      uu___7
-                                  else
-                                    FStarC_Class_Monad.return
-                                      (FStarC_Writer.monad_writer
-                                         (FStarC_Class_Monoid.monoid_list ()))
-                                      () (Obj.repr ()) in
-                                Obj.magic
-                                  (FStarC_Class_Monad.op_let_Bang
-                                     (FStarC_Writer.monad_writer
-                                        (FStarC_Class_Monoid.monoid_list ()))
-                                     () () uu___6
-                                     (fun uu___7 ->
-                                        (fun uu___7 ->
-                                           let uu___7 = Obj.magic uu___7 in
-                                           Obj.magic
-                                             (FStarC_Class_Monad.return
-                                                (FStarC_Writer.monad_writer
-                                                   (FStarC_Class_Monoid.monoid_list
-                                                      ())) () (Obj.repr ())))
-                                          uu___7))) uu___5))) uu___3)))
-         uu___1)
-let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
-  let uu___ =
-    let uu___1 =
-      let uu___2 =
-        FStarC_Class_Monad.iterM
-          (FStarC_Writer.monad_writer (FStarC_Class_Monoid.monoid_list ()))
-          () (fun uu___3 -> Obj.magic bounded_arith_ops_for uu___3)
-          (Obj.magic FStarC_MachineInts.all_machint_kinds) in
-      FStarC_Class_Monad.op_let_Bang
-        (FStarC_Writer.monad_writer (FStarC_Class_Monoid.monoid_list ())) ()
-        () uu___2
-        (fun uu___3 ->
-           (fun uu___3 ->
-              let uu___3 = Obj.magic uu___3 in
-              Obj.magic
-                (FStarC_Writer.emit (FStarC_Class_Monoid.monoid_list ())
-                   [FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero
-                      FStarC_Parser_Const.char_u32_of_char
-                      FStarC_Syntax_Embeddings.e_char
-                      FStarC_TypeChecker_NBETerm.e_char
-                      (FStarC_MachineInts.e_machint FStarC_MachineInts.UInt32)
-                      (FStarC_MachineInts.nbe_machint
-                         FStarC_MachineInts.UInt32)
-                      (fun c ->
-                         let n = FStarC_Util.int_of_char c in
-                         FStarC_MachineInts.mk FStarC_MachineInts.UInt32 n
-                           FStar_Pervasives_Native.None)])) uu___3) in
-    Obj.magic
-      (FStarC_Writer.run_writer (FStarC_Class_Monoid.monoid_list ()) ()
-         (Obj.magic uu___1)) in
-  FStar_Pervasives_Native.fst uu___
+(* Generated by F* Custard extraction. Do not edit. *)
+[@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
+
+let bounded_arith_ops_for (k : FStarC_MachineInts.machint_kind) : ((FStarC_TypeChecker_Primops_Base.primitive_step) list * unit) =
+  (let nm = (fun s -> (FStarC_Parser_Const.p2l ("FStar" :: ((FStarC_MachineInts.module_name_for k) :: (s :: []))))) in
+  let tmp = (nm "v") in
+  let tmp1 = (FStarC_TypeChecker_Primops_Base.mk1 (Prims.parse_int "0") tmp (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) FStarC_Syntax_Embeddings.e_int FStarC_TypeChecker_NBETerm.e_int (FStarC_MachineInts.v k)) in
+  let tmp2 = (nm "add") in
+  let tmp3 = (FStarC_TypeChecker_Primops_Base.mk2 (Prims.parse_int "0") tmp2 (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (fun x y -> (FStarC_MachineInts.make_as k x (Prims.op_Plus (FStarC_MachineInts.v k x) (FStarC_MachineInts.v k y))))) in
+  let tmp4 = (FStarC_TypeChecker_Primops_Base.with_extra_args (Prims.parse_int "1") tmp3) in
+  let tmp5 = (nm "sub") in
+  let tmp6 = (FStarC_TypeChecker_Primops_Base.mk2 (Prims.parse_int "0") tmp5 (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (fun x y -> (FStarC_MachineInts.make_as k x (Prims.op_Minus (FStarC_MachineInts.v k x) (FStarC_MachineInts.v k y))))) in
+  let tmp7 = (FStarC_TypeChecker_Primops_Base.with_extra_args (Prims.parse_int "1") tmp6) in
+  let tmp8 = (nm "mul") in
+  let tmp9 = (FStarC_TypeChecker_Primops_Base.mk2 (Prims.parse_int "0") tmp8 (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (fun x y -> (FStarC_MachineInts.make_as k x (Prims.op_Star (FStarC_MachineInts.v k x) (FStarC_MachineInts.v k y))))) in
+  let tmp10 = (FStarC_TypeChecker_Primops_Base.with_extra_args (Prims.parse_int "1") tmp9) in
+  let tmp11 = (nm "gt") in
+  let tmp12 = (FStarC_TypeChecker_Primops_Base.mk2 (Prims.parse_int "0") tmp11 (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) FStarC_Syntax_Embeddings.e_bool FStarC_TypeChecker_NBETerm.e_bool (fun x y -> (Prims.op_Greater (FStarC_MachineInts.v k x) (FStarC_MachineInts.v k y)))) in
+  let tmp13 = (nm "gte") in
+  let tmp14 = (FStarC_TypeChecker_Primops_Base.mk2 (Prims.parse_int "0") tmp13 (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) FStarC_Syntax_Embeddings.e_bool FStarC_TypeChecker_NBETerm.e_bool (fun x y -> (Prims.op_Greater_Equals (FStarC_MachineInts.v k x) (FStarC_MachineInts.v k y)))) in
+  let tmp15 = (nm "lt") in
+  let tmp16 = (FStarC_TypeChecker_Primops_Base.mk2 (Prims.parse_int "0") tmp15 (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) FStarC_Syntax_Embeddings.e_bool FStarC_TypeChecker_NBETerm.e_bool (fun x y -> (Prims.op_Less (FStarC_MachineInts.v k x) (FStarC_MachineInts.v k y)))) in
+  let tmp17 = (nm "lte") in
+  let tmp18 = (FStarC_TypeChecker_Primops_Base.mk2 (Prims.parse_int "0") tmp17 (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) FStarC_Syntax_Embeddings.e_bool FStarC_TypeChecker_NBETerm.e_bool (fun x y -> (Prims.op_Less_Equals (FStarC_MachineInts.v k x) (FStarC_MachineInts.v k y)))) in
+  let tmp19 = (tmp18 :: []) in
+  let tmp20 = (tmp16 :: tmp19) in
+  let tmp21 = (tmp14 :: tmp20) in
+  let tmp22 = (tmp12 :: tmp21) in
+  let tmp23 = (tmp10 :: tmp22) in
+  let tmp24 = (tmp7 :: tmp23) in
+  let tmp25 = (tmp4 :: tmp24) in
+  let tmp26 = (tmp1 :: tmp25) in
+  let tmp27 = (FStarC_TypeChecker_Primops_Base.fStarC_Writer_emit__list_primitive_step tmp26) in
+  (FStarC_TypeChecker_Primops_Base.fStarC_Class_Monad_op_let_Bang__writer_list_primitive_step tmp27 (fun tmp28 -> (let sz = (FStarC_MachineInts.width k) in
+  let modulus = (Custard_Prims.prims_pow2 sz) in
+  let mod_ = (fun x -> (Prims.op_Percent x modulus)) in
+  let tmp29 = (if (FStarC_MachineInts.is_unsigned k) then (let tmp29 = (nm "add_mod") in
+    let tmp30 = (FStarC_TypeChecker_Primops_Base.mk2 (Prims.parse_int "0") tmp29 (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (fun x y -> (FStarC_MachineInts.make_as k x (mod_ (Prims.op_Plus (FStarC_MachineInts.v k x) (FStarC_MachineInts.v k y)))))) in
+    let tmp31 = (nm "sub_mod") in
+    let tmp32 = (FStarC_TypeChecker_Primops_Base.mk2 (Prims.parse_int "0") tmp31 (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (fun x y -> (FStarC_MachineInts.make_as k x (mod_ (Prims.op_Minus (FStarC_MachineInts.v k x) (FStarC_MachineInts.v k y)))))) in
+    let tmp33 = (nm "div") in
+    let tmp34 = (FStarC_TypeChecker_Primops_Base.mk2 (Prims.parse_int "0") tmp33 (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (fun x y -> (FStarC_MachineInts.make_as k x (mod_ (Prims.op_Slash (FStarC_MachineInts.v k x) (FStarC_MachineInts.v k y)))))) in
+    let tmp35 = (nm "rem") in
+    let tmp36 = (FStarC_TypeChecker_Primops_Base.mk2 (Prims.parse_int "0") tmp35 (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (fun x y -> (FStarC_MachineInts.make_as k x (mod_ (Prims.op_Percent (FStarC_MachineInts.v k x) (FStarC_MachineInts.v k y)))))) in
+    let tmp37 = (nm "logor") in
+    let tmp38 = (FStarC_TypeChecker_Primops_Base.mk2 (Prims.parse_int "0") tmp37 (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (fun x y -> (FStarC_MachineInts.make_as k x (FStarC_Int_Extra.logor (FStarC_MachineInts.v k x) (FStarC_MachineInts.v k y))))) in
+    let tmp39 = (nm "logand") in
+    let tmp40 = (FStarC_TypeChecker_Primops_Base.mk2 (Prims.parse_int "0") tmp39 (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (fun x y -> (FStarC_MachineInts.make_as k x (FStarC_Int_Extra.logand (FStarC_MachineInts.v k x) (FStarC_MachineInts.v k y))))) in
+    let tmp41 = (nm "logxor") in
+    let tmp42 = (FStarC_TypeChecker_Primops_Base.mk2 (Prims.parse_int "0") tmp41 (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (fun x y -> (FStarC_MachineInts.make_as k x (FStarC_Int_Extra.logxor (FStarC_MachineInts.v k x) (FStarC_MachineInts.v k y))))) in
+    let tmp43 = (nm "lognot") in
+    let tmp44 = (FStarC_TypeChecker_Primops_Base.mk1 (Prims.parse_int "0") tmp43 (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (fun x -> (FStarC_MachineInts.make_as k x (FStarC_Int_Extra.logand (FStarC_Int_Extra.lognot (FStarC_MachineInts.v k x)) (FStarC_MachineInts.mask k))))) in
+    let tmp45 = (nm "shift_left") in
+    let tmp46 = (FStarC_TypeChecker_Primops_Base.mk2 (Prims.parse_int "0") tmp45 (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint FStarC_MachineInts.UInt32) (FStarC_MachineInts.nbe_machint FStarC_MachineInts.UInt32) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (fun x y -> (FStarC_MachineInts.make_as k x (FStarC_Int_Extra.logand (FStarC_Int_Extra.shift_left (FStarC_MachineInts.v k x) (FStarC_MachineInts.v FStarC_MachineInts.UInt32 y)) (FStarC_MachineInts.mask k))))) in
+    let tmp47 = (FStarC_TypeChecker_Primops_Base.with_extra_args (Prims.parse_int "1") tmp46) in
+    let tmp48 = (nm "shift_right") in
+    let tmp49 = (FStarC_TypeChecker_Primops_Base.mk2 (Prims.parse_int "0") tmp48 (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint FStarC_MachineInts.UInt32) (FStarC_MachineInts.nbe_machint FStarC_MachineInts.UInt32) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (fun x y -> (FStarC_MachineInts.make_as k x (FStarC_Int_Extra.logand (FStarC_Int_Extra.shift_right (FStarC_MachineInts.v k x) (FStarC_MachineInts.v FStarC_MachineInts.UInt32 y)) (FStarC_MachineInts.mask k))))) in
+    let tmp50 = (FStarC_TypeChecker_Primops_Base.with_extra_args (Prims.parse_int "1") tmp49) in
+    let tmp51 = (tmp50 :: []) in
+    let tmp52 = (tmp47 :: tmp51) in
+    let tmp53 = (tmp44 :: tmp52) in
+    let tmp54 = (tmp42 :: tmp53) in
+    let tmp55 = (tmp40 :: tmp54) in
+    let tmp56 = (tmp38 :: tmp55) in
+    let tmp57 = (tmp36 :: tmp56) in
+    let tmp58 = (tmp34 :: tmp57) in
+    let tmp59 = (tmp32 :: tmp58) in
+    let tmp60 = (tmp30 :: tmp59) in
+    (FStarC_TypeChecker_Primops_Base.fStarC_Writer_emit__list_primitive_step tmp60)) else (FStarC_TypeChecker_Primops_Base.fStarC_Class_Monad_return__writer_list_primitive_step ())) in
+  (FStarC_TypeChecker_Primops_Base.fStarC_Class_Monad_op_let_Bang__writer_list_primitive_step tmp29 (fun tmp30 -> (let tmp31 = (if ((FStarC_MachineInts.is_unsigned k) && ((<>) k FStarC_MachineInts.SizeT)) then (let tmp31 = (nm "add_underspec") in
+    let tmp32 = (FStarC_TypeChecker_Primops_Base.mk2 (Prims.parse_int "0") tmp31 (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (fun x y -> (FStarC_MachineInts.make_as k x (mod_ (Prims.op_Plus (FStarC_MachineInts.v k x) (FStarC_MachineInts.v k y)))))) in
+    let tmp33 = (nm "sub_underspec") in
+    let tmp34 = (FStarC_TypeChecker_Primops_Base.mk2 (Prims.parse_int "0") tmp33 (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (fun x y -> (FStarC_MachineInts.make_as k x (mod_ (Prims.op_Minus (FStarC_MachineInts.v k x) (FStarC_MachineInts.v k y)))))) in
+    let tmp35 = (nm "mul_underspec") in
+    let tmp36 = (FStarC_TypeChecker_Primops_Base.mk2 (Prims.parse_int "0") tmp35 (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (fun x y -> (FStarC_MachineInts.make_as k x (mod_ (Prims.op_Star (FStarC_MachineInts.v k x) (FStarC_MachineInts.v k y)))))) in
+    let tmp37 = (tmp36 :: []) in
+    let tmp38 = (tmp34 :: tmp37) in
+    let tmp39 = (tmp32 :: tmp38) in
+    (FStarC_TypeChecker_Primops_Base.fStarC_Writer_emit__list_primitive_step tmp39)) else (FStarC_TypeChecker_Primops_Base.fStarC_Class_Monad_return__writer_list_primitive_step ())) in
+  (FStarC_TypeChecker_Primops_Base.fStarC_Class_Monad_op_let_Bang__writer_list_primitive_step tmp31 (fun tmp32 -> (let tmp33 = (if ((FStarC_MachineInts.is_unsigned k) && (((<>) k FStarC_MachineInts.SizeT) && ((<>) k FStarC_MachineInts.UInt128))) then (let tmp33 = (nm "mul_mod") in
+    let tmp34 = (FStarC_TypeChecker_Primops_Base.mk2 (Prims.parse_int "0") tmp33 (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (fun x y -> (FStarC_MachineInts.make_as k x (mod_ (Prims.op_Star (FStarC_MachineInts.v k x) (FStarC_MachineInts.v k y)))))) in
+    let tmp35 = (tmp34 :: []) in
+    (FStarC_TypeChecker_Primops_Base.fStarC_Writer_emit__list_primitive_step tmp35)) else (FStarC_TypeChecker_Primops_Base.fStarC_Class_Monad_return__writer_list_primitive_step ())) in
+  (FStarC_TypeChecker_Primops_Base.fStarC_Class_Monad_op_let_Bang__writer_list_primitive_step tmp33 (fun tmp34 -> (FStarC_TypeChecker_Primops_Base.fStarC_Class_Monad_return__writer_list_primitive_step ())))))))))))))
+
+let ops : (FStarC_TypeChecker_Primops_Base.primitive_step) list =
+  (let tmp = (FStarC_TypeChecker_Primops_Base.fStarC_Class_Monad_iterM__writer_list_primitive_step bounded_arith_ops_for FStarC_MachineInts.all_machint_kinds) in
+  let tmp1 = (FStarC_TypeChecker_Primops_Base.fStarC_Class_Monad_op_let_Bang__writer_list_primitive_step tmp (fun tmp1 -> (FStarC_TypeChecker_Primops_Base.fStarC_Writer_emit__list_primitive_step ((FStarC_TypeChecker_Primops_Base.mk1 (Prims.parse_int "0") FStarC_Parser_Const.char_u32_of_char FStarC_Syntax_Embeddings.e_char FStarC_TypeChecker_NBETerm.e_char (FStarC_MachineInts.e_machint FStarC_MachineInts.UInt32) (FStarC_MachineInts.nbe_machint FStarC_MachineInts.UInt32) (fun c -> (let n = (FStarC_Util.int_of_char c) in
+    (FStarC_MachineInts.mk FStarC_MachineInts.UInt32 n None)))) :: [])))) in
+  (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp1))
+

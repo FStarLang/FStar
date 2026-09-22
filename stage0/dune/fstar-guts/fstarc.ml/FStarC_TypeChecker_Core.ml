@@ -1,8877 +1,3856 @@
-open Prims
-type guard_commit_token_cb = unit -> unit
-type guard_and_tok_t = (FStarC_Syntax_Syntax.typ * guard_commit_token_cb)
-type tot_or_ghost =
-  | E_Total 
-  | E_Ghost 
-let uu___is_E_Total (projectee : tot_or_ghost) : Prims.bool=
-  match projectee with | E_Total -> true | uu___ -> false
-let uu___is_E_Ghost (projectee : tot_or_ghost) : Prims.bool=
-  match projectee with | E_Ghost -> true | uu___ -> false
-type side =
-  | Left 
-  | Right 
-  | Both 
-  | Neither 
-let uu___is_Left (projectee : side) : Prims.bool=
-  match projectee with | Left -> true | uu___ -> false
-let uu___is_Right (projectee : side) : Prims.bool=
-  match projectee with | Right -> true | uu___ -> false
-let uu___is_Both (projectee : side) : Prims.bool=
-  match projectee with | Both -> true | uu___ -> false
-let uu___is_Neither (projectee : side) : Prims.bool=
-  match projectee with | Neither -> true | uu___ -> false
-let dbg : Prims.bool FStarC_Effect.ref= FStarC_Debug.get_toggle "Core"
-let dbg_Eq : Prims.bool FStarC_Effect.ref= FStarC_Debug.get_toggle "CoreEq"
-let dbg_Top : Prims.bool FStarC_Effect.ref= FStarC_Debug.get_toggle "CoreTop"
-let dbg_Exit : Prims.bool FStarC_Effect.ref=
-  FStarC_Debug.get_toggle "CoreExit"
-let dbg_DisableCoreCache : Prims.bool FStarC_Effect.ref=
-  FStarC_Debug.get_toggle "DisableCoreCache"
-let goal_ctr : Prims.int FStarC_Effect.ref=
-  FStarC_Effect.mk_ref Prims.int_zero
-let get_goal_ctr (uu___ : unit) : Prims.int= FStarC_Effect.op_Bang goal_ctr
-let incr_goal_ctr (uu___ : unit) : Prims.int=
-  let v = FStarC_Effect.op_Bang goal_ctr in
-  FStarC_Effect.op_Colon_Equals goal_ctr (v + Prims.int_one);
-  v + Prims.int_one
-type env =
-  {
-  tcenv: FStarC_TypeChecker_Env.env ;
-  allow_universe_instantiation: Prims.bool ;
-  should_read_cache: Prims.bool ;
-  max_binder_index: Prims.int }
-let __proj__Mkenv__item__tcenv (projectee : env) :
-  FStarC_TypeChecker_Env.env=
-  match projectee with
-  | { tcenv; allow_universe_instantiation; should_read_cache;
-      max_binder_index;_} -> tcenv
-let __proj__Mkenv__item__allow_universe_instantiation (projectee : env) :
-  Prims.bool=
-  match projectee with
-  | { tcenv; allow_universe_instantiation; should_read_cache;
-      max_binder_index;_} -> allow_universe_instantiation
-let __proj__Mkenv__item__should_read_cache (projectee : env) : Prims.bool=
-  match projectee with
-  | { tcenv; allow_universe_instantiation; should_read_cache;
-      max_binder_index;_} -> should_read_cache
-let __proj__Mkenv__item__max_binder_index (projectee : env) : Prims.int=
-  match projectee with
-  | { tcenv; allow_universe_instantiation; should_read_cache;
-      max_binder_index;_} -> max_binder_index
-let debug (g : 'uuuuu) (f : unit -> unit) : unit=
-  let uu___ = FStarC_Effect.op_Bang dbg in if uu___ then f () else ()
-let max (a : Prims.int) (b : Prims.int) : Prims.int= if a > b then a else b
-let push_binder (g : env) (b : FStarC_Syntax_Syntax.binder) : env=
-  let uu___ = FStarC_TypeChecker_Env.push_binders g.tcenv [b] in
-  {
-    tcenv = uu___;
-    allow_universe_instantiation = (g.allow_universe_instantiation);
-    should_read_cache = (g.should_read_cache);
-    max_binder_index =
-      (max g.max_binder_index
-         (b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.index)
-  }
-let push_binders : env -> FStarC_Syntax_Syntax.binder Prims.list -> env=
-  FStarC_List.fold_left push_binder
-let fresh_binder (g : env) (old : FStarC_Syntax_Syntax.binder) :
-  (env * FStarC_Syntax_Syntax.binder)=
-  let ctr = g.max_binder_index + Prims.int_one in
-  let bv =
-    let uu___ = old.FStarC_Syntax_Syntax.binder_bv in
-    {
-      FStarC_Syntax_Syntax.ppname = (uu___.FStarC_Syntax_Syntax.ppname);
-      FStarC_Syntax_Syntax.index = ctr;
-      FStarC_Syntax_Syntax.sort = (uu___.FStarC_Syntax_Syntax.sort)
-    } in
-  let b =
-    FStarC_Syntax_Syntax.mk_binder_with_attrs bv
-      old.FStarC_Syntax_Syntax.binder_qual
-      old.FStarC_Syntax_Syntax.binder_positivity
-      old.FStarC_Syntax_Syntax.binder_attrs in
-  let uu___ = push_binder g b in (uu___, b)
-let wild_bv (t : FStarC_Syntax_Syntax.typ) (r : FStarC_Range_Type.t) :
-  FStarC_Syntax_Syntax.bv=
-  {
-    FStarC_Syntax_Syntax.ppname =
-      (FStarC_Ident.mk_ident (FStarC_Ident.reserved_prefix, r));
-    FStarC_Syntax_Syntax.index = Prims.int_zero;
-    FStarC_Syntax_Syntax.sort = t
-  }
-let new_binder (g : env) (t : FStarC_Syntax_Syntax.typ)
-  (r : FStarC_Range_Type.t) : (env * FStarC_Syntax_Syntax.binder)=
-  let bv = wild_bv t r in
-  let b = FStarC_Syntax_Syntax.mk_binder bv in fresh_binder g b
-let open_binders (g : env) (bs : FStarC_Syntax_Syntax.binders) :
-  (env * FStarC_Syntax_Syntax.binder Prims.list *
-    FStarC_Syntax_Syntax.subst_elt Prims.list)=
-  let uu___ =
-    FStarC_List.fold_left
-      (fun uu___1 b ->
-         match uu___1 with
-         | (g1, bs1, subst) ->
-             let bv =
-               let uu___2 = b.FStarC_Syntax_Syntax.binder_bv in
-               let uu___3 =
-                 FStarC_Syntax_Subst.subst subst
-                   (b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
-               {
-                 FStarC_Syntax_Syntax.ppname =
-                   (uu___2.FStarC_Syntax_Syntax.ppname);
-                 FStarC_Syntax_Syntax.index =
-                   (uu___2.FStarC_Syntax_Syntax.index);
-                 FStarC_Syntax_Syntax.sort = uu___3
-               } in
-             let b1 =
-               let uu___2 =
-                 FStarC_Syntax_Subst.subst_bqual subst
-                   b.FStarC_Syntax_Syntax.binder_qual in
-               let uu___3 =
-                 FStarC_List.map (FStarC_Syntax_Subst.subst subst)
-                   b.FStarC_Syntax_Syntax.binder_attrs in
-               {
-                 FStarC_Syntax_Syntax.binder_bv = bv;
-                 FStarC_Syntax_Syntax.binder_qual = uu___2;
-                 FStarC_Syntax_Syntax.binder_positivity =
-                   (b.FStarC_Syntax_Syntax.binder_positivity);
-                 FStarC_Syntax_Syntax.binder_attrs = uu___3
-               } in
-             let uu___2 = fresh_binder g1 b1 in
-             (match uu___2 with
-              | (g2, b') ->
-                  let uu___3 =
-                    let uu___4 =
-                      FStarC_Syntax_Subst.shift_subst Prims.int_one subst in
-                    (FStarC_Syntax_Syntax.DB
-                       (Prims.int_zero, (b'.FStarC_Syntax_Syntax.binder_bv)))
-                      :: uu___4 in
-                  (g2, (b' :: bs1), uu___3))) (g, [], []) bs in
-  match uu___ with
-  | (g1, bs_rev, subst) -> (g1, (FStarC_List.rev bs_rev), subst)
-let open_pat (g : env) (p : FStarC_Syntax_Syntax.pat) :
-  (env * FStarC_Syntax_Syntax.pat * FStarC_Syntax_Syntax.subst_t)=
-  let rec open_pat_aux g1 p1 sub =
-    match p1.FStarC_Syntax_Syntax.v with
-    | FStarC_Syntax_Syntax.Pat_constant uu___ -> (g1, p1, sub)
-    | FStarC_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->
-        let uu___ =
-          FStarC_List.fold_left
-            (fun uu___1 uu___2 ->
-               match (uu___1, uu___2) with
-               | ((g2, pats1, sub1), (p2, imp)) ->
-                   let uu___3 = open_pat_aux g2 p2 sub1 in
-                   (match uu___3 with
-                    | (g3, p3, sub2) -> (g3, ((p3, imp) :: pats1), sub2)))
-            (g1, [], sub) pats in
-        (match uu___ with
-         | (g2, pats1, sub1) ->
-             (g2,
-               {
-                 FStarC_Syntax_Syntax.v =
-                   (FStarC_Syntax_Syntax.Pat_cons
-                      (fv, us_opt, (FStarC_List.rev pats1)));
-                 FStarC_Syntax_Syntax.p = (p1.FStarC_Syntax_Syntax.p)
-               }, sub1))
-    | FStarC_Syntax_Syntax.Pat_var x ->
-        let bx =
-          let uu___ =
-            let uu___1 =
-              FStarC_Syntax_Subst.subst sub x.FStarC_Syntax_Syntax.sort in
-            {
-              FStarC_Syntax_Syntax.ppname = (x.FStarC_Syntax_Syntax.ppname);
-              FStarC_Syntax_Syntax.index = (x.FStarC_Syntax_Syntax.index);
-              FStarC_Syntax_Syntax.sort = uu___1
-            } in
-          FStarC_Syntax_Syntax.mk_binder uu___ in
-        let uu___ = fresh_binder g1 bx in
-        (match uu___ with
-         | (g2, bx') ->
-             let sub1 =
-               let uu___1 = FStarC_Syntax_Subst.shift_subst Prims.int_one sub in
-               (FStarC_Syntax_Syntax.DB
-                  (Prims.int_zero, (bx'.FStarC_Syntax_Syntax.binder_bv)))
-                 :: uu___1 in
-             (g2,
-               {
-                 FStarC_Syntax_Syntax.v =
-                   (FStarC_Syntax_Syntax.Pat_var
-                      (bx'.FStarC_Syntax_Syntax.binder_bv));
-                 FStarC_Syntax_Syntax.p = (p1.FStarC_Syntax_Syntax.p)
-               }, sub1))
-    | FStarC_Syntax_Syntax.Pat_dot_term eopt ->
-        let eopt1 = FStarC_Option.map (FStarC_Syntax_Subst.subst sub) eopt in
-        (g1,
-          {
-            FStarC_Syntax_Syntax.v =
-              (FStarC_Syntax_Syntax.Pat_dot_term eopt1);
-            FStarC_Syntax_Syntax.p = (p1.FStarC_Syntax_Syntax.p)
-          }, sub) in
-  open_pat_aux g p []
-let open_term (g : env) (b : FStarC_Syntax_Syntax.binder)
-  (t : FStarC_Syntax_Syntax.term) :
-  (env * FStarC_Syntax_Syntax.binder * FStarC_Syntax_Syntax.term)=
-  let uu___ = fresh_binder g b in
-  match uu___ with
-  | (g1, b') ->
-      let t1 =
-        FStarC_Syntax_Subst.subst
-          [FStarC_Syntax_Syntax.DB
-             (Prims.int_zero, (b'.FStarC_Syntax_Syntax.binder_bv))] t in
-      (g1, b', t1)
-let open_term_binders (g : env) (bs : FStarC_Syntax_Syntax.binders)
-  (t : FStarC_Syntax_Syntax.term) :
-  (env * FStarC_Syntax_Syntax.binders * FStarC_Syntax_Syntax.term)=
-  let uu___ = open_binders g bs in
-  match uu___ with
-  | (g1, bs1, subst) ->
-      let uu___1 = FStarC_Syntax_Subst.subst subst t in (g1, bs1, uu___1)
-let open_comp (g : env) (b : FStarC_Syntax_Syntax.binder)
-  (c : FStarC_Syntax_Syntax.comp) :
-  (env * FStarC_Syntax_Syntax.binder * FStarC_Syntax_Syntax.comp)=
-  let uu___ = fresh_binder g b in
-  match uu___ with
-  | (g1, bx) ->
-      let c1 =
-        FStarC_Syntax_Subst.subst_comp
-          [FStarC_Syntax_Syntax.DB
-             (Prims.int_zero, (bx.FStarC_Syntax_Syntax.binder_bv))] c in
-      (g1, bx, c1)
-let open_comp_binders (g : env) (bs : FStarC_Syntax_Syntax.binders)
-  (c : FStarC_Syntax_Syntax.comp) :
-  (env * FStarC_Syntax_Syntax.binders * FStarC_Syntax_Syntax.comp)=
-  let uu___ = open_binders g bs in
-  match uu___ with
-  | (g1, bs1, s) ->
-      let c1 = FStarC_Syntax_Subst.subst_comp s c in (g1, bs1, c1)
-let arrow_formals_comp (g : env) (c : FStarC_Syntax_Syntax.term) :
-  (env * FStarC_Syntax_Syntax.binder Prims.list * FStarC_Syntax_Syntax.comp)=
-  let uu___ = FStarC_Syntax_Util.arrow_formals_comp_ln c in
-  match uu___ with
-  | (bs, c1) ->
-      let uu___1 = open_binders g bs in
-      (match uu___1 with
-       | (g1, bs1, subst) ->
-           let uu___2 = FStarC_Syntax_Subst.subst_comp subst c1 in
-           (g1, bs1, uu___2))
-let open_branch (g : env) (br : FStarC_Syntax_Syntax.branch) :
-  (env * FStarC_Syntax_Syntax.branch)=
-  let uu___ = br in
-  match uu___ with
-  | (p, wopt, e) ->
-      let uu___1 = open_pat g p in
-      (match uu___1 with
-       | (g1, p1, s) ->
-           let uu___2 =
-             let uu___3 =
-               FStarC_Option.map (FStarC_Syntax_Subst.subst s) wopt in
-             let uu___4 = FStarC_Syntax_Subst.subst s e in
-             (p1, uu___3, uu___4) in
-           (g1, uu___2))
-let open_branches_eq_pat (g : env) (br0 : FStarC_Syntax_Syntax.branch)
-  (br1 : FStarC_Syntax_Syntax.branch) :
-  (env * (FStarC_Syntax_Syntax.pat * FStarC_Syntax_Syntax.term
-    FStar_Pervasives_Native.option * FStarC_Syntax_Syntax.term) *
-    (FStarC_Syntax_Syntax.pat * FStarC_Syntax_Syntax.term
-    FStar_Pervasives_Native.option * FStarC_Syntax_Syntax.term))=
-  let uu___ = br0 in
-  match uu___ with
-  | (p0, wopt0, e0) ->
-      let uu___1 = br1 in
-      (match uu___1 with
-       | (uu___2, wopt1, e1) ->
-           let uu___3 = open_pat g p0 in
-           (match uu___3 with
-            | (g1, p01, s) ->
-                let uu___4 =
-                  let uu___5 =
-                    FStarC_Option.map (FStarC_Syntax_Subst.subst s) wopt0 in
-                  let uu___6 = FStarC_Syntax_Subst.subst s e0 in
-                  (p01, uu___5, uu___6) in
-                let uu___5 =
-                  let uu___6 =
-                    FStarC_Option.map (FStarC_Syntax_Subst.subst s) wopt1 in
-                  let uu___7 = FStarC_Syntax_Subst.subst s e1 in
-                  (p01, uu___6, uu___7) in
-                (g1, uu___4, uu___5)))
+(* Generated by F* Custard extraction. Do not edit. *)
+[@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
+
+let commit_guard (tok : (unit -> unit)) : unit =
+  (tok ())
+
 type relation =
-  | EQUALITY 
-  | SUBTYPING of FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option 
-let uu___is_EQUALITY (projectee : relation) : Prims.bool=
-  match projectee with | EQUALITY -> true | uu___ -> false
-let uu___is_SUBTYPING (projectee : relation) : Prims.bool=
-  match projectee with | SUBTYPING _0 -> true | uu___ -> false
-let __proj__SUBTYPING__item___0 (projectee : relation) :
-  FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option=
-  match projectee with | SUBTYPING _0 -> _0
-let relation_to_string (uu___ : relation) : Prims.string=
-  match uu___ with
-  | EQUALITY -> "=?="
-  | SUBTYPING (FStar_Pervasives_Native.None) -> "<:?"
-  | SUBTYPING (FStar_Pervasives_Native.Some tm) ->
-      let uu___1 =
-        FStarC_Class_Show.show FStarC_Syntax_Print.showable_term tm in
-      FStarC_Format.fmt1 "( <:? %s)" uu___1
+  | EQUALITY
+  | SUBTYPING of ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option
+
+
 type context_term =
-  | CtxTerm of FStarC_Syntax_Syntax.term 
-  | CtxRel of FStarC_Syntax_Syntax.term * relation *
-  FStarC_Syntax_Syntax.term 
-let uu___is_CtxTerm (projectee : context_term) : Prims.bool=
-  match projectee with | CtxTerm _0 -> true | uu___ -> false
-let __proj__CtxTerm__item___0 (projectee : context_term) :
-  FStarC_Syntax_Syntax.term= match projectee with | CtxTerm _0 -> _0
-let uu___is_CtxRel (projectee : context_term) : Prims.bool=
-  match projectee with | CtxRel (_0, _1, _2) -> true | uu___ -> false
-let __proj__CtxRel__item___0 (projectee : context_term) :
-  FStarC_Syntax_Syntax.term= match projectee with | CtxRel (_0, _1, _2) -> _0
-let __proj__CtxRel__item___1 (projectee : context_term) : relation=
-  match projectee with | CtxRel (_0, _1, _2) -> _1
-let __proj__CtxRel__item___2 (projectee : context_term) :
-  FStarC_Syntax_Syntax.term= match projectee with | CtxRel (_0, _1, _2) -> _2
-let context_term_to_string (c : context_term) : Prims.string=
-  match c with
-  | CtxTerm term ->
-      FStarC_Class_Show.show FStarC_Syntax_Print.showable_term term
-  | CtxRel (t0, r, t1) ->
-      let uu___ = FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t0 in
-      let uu___1 = relation_to_string r in
-      let uu___2 =
-        FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t1 in
-      FStarC_Format.fmt3 "%s %s %s" uu___ uu___1 uu___2
-type context =
-  {
-  no_guard: Prims.bool ;
-  unfolding_ok: Prims.bool ;
-  error_context:
-    (Prims.string * context_term FStar_Pervasives_Native.option) Prims.list }
-let __proj__Mkcontext__item__no_guard (projectee : context) : Prims.bool=
-  match projectee with
-  | { no_guard; unfolding_ok; error_context;_} -> no_guard
-let __proj__Mkcontext__item__unfolding_ok (projectee : context) : Prims.bool=
-  match projectee with
-  | { no_guard; unfolding_ok; error_context;_} -> unfolding_ok
-let __proj__Mkcontext__item__error_context (projectee : context) :
-  (Prims.string * context_term FStar_Pervasives_Native.option) Prims.list=
-  match projectee with
-  | { no_guard; unfolding_ok; error_context;_} -> error_context
-let showable_context : context FStarC_Class_Show.showable=
-  {
-    FStarC_Class_Show.show =
-      (fun context1 ->
-         let uu___ =
-           FStarC_Class_Show.show FStarC_Class_Show.showable_bool
-             context1.no_guard in
-         let uu___1 =
-           FStarC_Class_Show.show FStarC_Class_Show.showable_bool
-             context1.unfolding_ok in
-         let uu___2 =
-           let uu___3 =
-             FStarC_List.map FStar_Pervasives_Native.fst
-               context1.error_context in
-           FStarC_Class_Show.show
-             (FStarC_Class_Show.show_list FStarC_Class_Show.showable_string)
-             uu___3 in
-         FStarC_Format.fmt3
-           "{no_guard=%s; unfolding_ok=%s; error_context=%s}" uu___ uu___1
-           uu___2)
-  }
-let print_ctx_head (ctx : context) : Prims.string=
-  match ctx.error_context with
-  | [] -> "{Context: <empty>}\n"
-  | (msg, ctx_term)::uu___ ->
-      let uu___1 =
-        match ctx_term with
-        | FStar_Pervasives_Native.None -> ""
-        | FStar_Pervasives_Native.Some ctx_term1 ->
-            context_term_to_string ctx_term1 in
-      FStarC_Format.fmt2 "{Context: %s (%s)}\n" msg uu___1
-let print_context (ctx : context) : Prims.string=
-  let rec aux depth ctx1 =
-    match ctx1 with
-    | [] -> ""
-    | (msg, ctx_term)::tl ->
-        let hd =
-          let uu___ =
-            match ctx_term with
-            | FStar_Pervasives_Native.None -> ""
-            | FStar_Pervasives_Native.Some ctx_term1 ->
-                context_term_to_string ctx_term1 in
-          FStarC_Format.fmt3 "%s %s (%s)\n" depth msg uu___ in
-        let tl1 = aux (Prims.strcat depth ">") tl in Prims.strcat hd tl1 in
-  aux "" (FStarC_List.rev ctx.error_context)
-type error = (context * FStarC_Errors_Msg.error_message)
-let print_error (err : error) : Prims.string=
-  let uu___ = err in
-  match uu___ with
-  | (ctx, msg) ->
-      let uu___1 = print_context ctx in
-      let uu___2 = FStarC_Errors_Msg.rendermsg msg in
-      FStarC_Format.fmt2 "%s%s" uu___1 uu___2
-let showable_error : error FStarC_Class_Show.showable=
-  { FStarC_Class_Show.show = print_error }
-let print_error_short (err : error) : Prims.string=
-  let uu___ = err in
-  match uu___ with | (uu___1, msg) -> FStarC_Errors_Msg.rendermsg msg
-type precondition = FStarC_Syntax_Syntax.typ FStar_Pervasives_Native.option
-type 'a success = ('a * precondition)
-type hash_entry =
-  {
-  he_term: FStarC_Syntax_Syntax.term ;
-  he_gamma: FStarC_Syntax_Syntax.binding Prims.list ;
-  he_eff: tot_or_ghost ;
-  he_typ: FStarC_Syntax_Syntax.typ }
-let __proj__Mkhash_entry__item__he_term (projectee : hash_entry) :
-  FStarC_Syntax_Syntax.term=
-  match projectee with | { he_term; he_gamma; he_eff; he_typ;_} -> he_term
-let __proj__Mkhash_entry__item__he_gamma (projectee : hash_entry) :
-  FStarC_Syntax_Syntax.binding Prims.list=
-  match projectee with | { he_term; he_gamma; he_eff; he_typ;_} -> he_gamma
-let __proj__Mkhash_entry__item__he_eff (projectee : hash_entry) :
-  tot_or_ghost=
-  match projectee with | { he_term; he_gamma; he_eff; he_typ;_} -> he_eff
-let __proj__Mkhash_entry__item__he_typ (projectee : hash_entry) :
-  FStarC_Syntax_Syntax.typ=
-  match projectee with | { he_term; he_gamma; he_eff; he_typ;_} -> he_typ
-type guard_entry = {
-  ge_gamma: FStarC_Syntax_Syntax.binding Prims.list }
-let __proj__Mkguard_entry__item__ge_gamma (projectee : guard_entry) :
-  FStarC_Syntax_Syntax.binding Prims.list=
-  match projectee with | { ge_gamma;_} -> ge_gamma
-type cache_t =
-  {
-  term_map: hash_entry FStarC_Syntax_Hash.term_map ;
-  guard_map: guard_entry FStarC_Syntax_Hash.term_map }
-let __proj__Mkcache_t__item__term_map (projectee : cache_t) :
-  hash_entry FStarC_Syntax_Hash.term_map=
-  match projectee with | { term_map; guard_map;_} -> term_map
-let __proj__Mkcache_t__item__guard_map (projectee : cache_t) :
-  guard_entry FStarC_Syntax_Hash.term_map=
-  match projectee with | { term_map; guard_map;_} -> guard_map
-type 'a __result =
-  | Success of ('a * cache_t) 
-  | Error of error 
-let uu___is_Success (projectee : 'a __result) : Prims.bool=
-  match projectee with | Success _0 -> true | uu___ -> false
-let __proj__Success__item___0 (projectee : 'a __result) : ('a * cache_t)=
-  match projectee with | Success _0 -> _0
-let uu___is_Error (projectee : 'a __result) : Prims.bool=
-  match projectee with | Error _0 -> true | uu___ -> false
-let __proj__Error__item___0 (projectee : 'a __result) : error=
-  match projectee with | Error _0 -> _0
-type tc_table =
-  {
-  table: hash_entry FStarC_Syntax_TermHashTable.hashtable ;
-  guard_table: guard_entry FStarC_Syntax_TermHashTable.hashtable ;
-  counter: Prims.int FStarC_Effect.ref }
-let __proj__Mktc_table__item__table (projectee : tc_table) :
-  hash_entry FStarC_Syntax_TermHashTable.hashtable=
-  match projectee with | { table; guard_table; counter;_} -> table
-let __proj__Mktc_table__item__guard_table (projectee : tc_table) :
-  guard_entry FStarC_Syntax_TermHashTable.hashtable=
-  match projectee with | { table; guard_table; counter;_} -> guard_table
-let __proj__Mktc_table__item__counter (projectee : tc_table) :
-  Prims.int FStarC_Effect.ref=
-  match projectee with | { table; guard_table; counter;_} -> counter
-let showable_result (uu___ : 'a FStarC_Class_Show.showable) :
-  'a __result FStarC_Class_Show.showable=
-  {
-    FStarC_Class_Show.show =
-      (fun uu___1 ->
-         match uu___1 with
-         | Success (a1, uu___2) ->
-             let uu___3 = FStarC_Class_Show.show uu___ a1 in
-             Prims.strcat "Success " uu___3
-         | Error e ->
-             let uu___2 = print_error_short e in Prims.strcat "Error " uu___2)
-  }
-type 'a result = context -> cache_t -> 'a success __result
-let equal_term_for_hash (t1 : FStarC_Syntax_Syntax.term)
-  (t2 : FStarC_Syntax_Syntax.term) : Prims.bool=
-  FStarC_Profiling.profile (fun uu___ -> FStarC_Syntax_Hash.equal_term t1 t2)
-    FStar_Pervasives_Native.None
-    "FStarC.TypeChecker.Core.equal_term_for_hash"
-let equal_term (t1 : FStarC_Syntax_Syntax.term)
-  (t2 : FStarC_Syntax_Syntax.term) : Prims.bool=
-  FStarC_Profiling.profile (fun uu___ -> FStarC_Syntax_Hash.equal_term t1 t2)
-    FStar_Pervasives_Native.None "FStarC.TypeChecker.Core.equal_term"
-let table : tc_table=
-  let uu___ = FStarC_Syntax_TermHashTable.create (Prims.of_int 1048576) in
-  let uu___1 = FStarC_Syntax_TermHashTable.create (Prims.of_int 1048576) in
-  let uu___2 = FStarC_Effect.mk_ref Prims.int_zero in
-  { table = uu___; guard_table = uu___1; counter = uu___2 }
+  | CtxTerm of (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax
+  | CtxRel of (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * relation * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax
+
+
+type context = {
+  no_guard : bool;
+  unfolding_ok : bool;
+  error_context : ((string * (context_term) option)) list;
+}
+
+type tot_or_ghost =
+  | E_Total
+  | E_Ghost
+
+
+type hash_entry = {
+  he_term : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax;
+  he_gamma : (FStarC_Syntax_Syntax.binding) list;
+  he_eff : tot_or_ghost;
+  he_typ : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax;
+}
+
+type cache_t = {
+  term_map : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * hash_entry)) FStarC_PIMap.t;
+  guard_map : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.binding) list)) FStarC_PIMap.t;
+}
+
+type 'a u___result =
+  | Success of 'a * cache_t
+  | Error of (context * (FStar_Pprint.document) list)
+
+
+let dbg_Eq : (bool ref) =
+  (FStarC_Debug.get_toggle "CoreEq")
+
+let goal_ctr : (Prims.int ref) =
+  (ref (Prims.parse_int "0"))
+
+let get_goal_ctr (tmp : unit) : Prims.int =
+  (!(goal_ctr))
+
+let dbg : (bool ref) =
+  (FStarC_Debug.get_toggle "Core")
+
+let dbg_Top : (bool ref) =
+  (FStarC_Debug.get_toggle "CoreTop")
+
+type tc_table = {
+  table : (hash_entry) FStarC_Syntax_TermHashTable.hashtable;
+  guard_table : ((FStarC_Syntax_Syntax.binding) list) FStarC_Syntax_TermHashTable.hashtable;
+  counter : (Prims.int ref);
+}
+
+let table : tc_table =
+  (let tmp = (FStarC_Syntax_TermHashTable.create (Prims.parse_int "1048576")) in
+  let tmp1 = (FStarC_Syntax_TermHashTable.create (Prims.parse_int "1048576")) in
+  let tmp2 = (ref (Prims.parse_int "0")) in
+  { table = tmp; guard_table = tmp1; counter = tmp2 })
+
 type cache_stats_t = {
-  hits: Prims.int ;
-  misses: Prims.int }
-let __proj__Mkcache_stats_t__item__hits (projectee : cache_stats_t) :
-  Prims.int= match projectee with | { hits; misses;_} -> hits
-let __proj__Mkcache_stats_t__item__misses (projectee : cache_stats_t) :
-  Prims.int= match projectee with | { hits; misses;_} -> misses
-let cache_stats : cache_stats_t FStarC_Effect.ref=
-  FStarC_Effect.mk_ref { hits = Prims.int_zero; misses = Prims.int_zero }
-let record_cache_hit (uu___ : unit) : unit=
-  let cs = FStarC_Effect.op_Bang cache_stats in
-  FStarC_Effect.op_Colon_Equals cache_stats
-    { hits = (cs.hits + Prims.int_one); misses = (cs.misses) }
-let record_cache_miss (uu___ : unit) : unit=
-  let cs = FStarC_Effect.op_Bang cache_stats in
-  FStarC_Effect.op_Colon_Equals cache_stats
-    { hits = (cs.hits); misses = (cs.misses + Prims.int_one) }
-let reset_cache_stats (uu___ : unit) : unit=
-  FStarC_Effect.op_Colon_Equals cache_stats
-    { hits = Prims.int_zero; misses = Prims.int_zero }
-let report_cache_stats (uu___ : unit) : cache_stats_t=
-  FStarC_Effect.op_Bang cache_stats
-let clear_memo_table (uu___ : unit) : unit=
-  FStarC_Syntax_TermHashTable.clear table.table;
-  FStarC_Syntax_TermHashTable.clear table.guard_table;
-  (let uu___3 =
-     let uu___4 = FStarC_Effect.op_Bang table.counter in
-     uu___4 + Prims.int_one in
-   FStarC_Effect.op_Colon_Equals table.counter uu___3)
-type guard_commit_token =
-  {
-  guard_cache: cache_t FStar_Pervasives_Native.option FStarC_Effect.ref ;
-  guard_counter: Prims.int }
-let __proj__Mkguard_commit_token__item__guard_cache
-  (projectee : guard_commit_token) :
-  cache_t FStar_Pervasives_Native.option FStarC_Effect.ref=
-  match projectee with | { guard_cache; guard_counter;_} -> guard_cache
-let __proj__Mkguard_commit_token__item__guard_counter
-  (projectee : guard_commit_token) : Prims.int=
-  match projectee with | { guard_cache; guard_counter;_} -> guard_counter
-type my_guard_and_tok_t = (FStarC_Syntax_Syntax.typ * unit)
-let empty_token : guard_commit_token_cb= fun uu___ -> ()
-let mk_token (cache : cache_t) : guard_commit_token=
-  let uu___ = FStarC_Effect.mk_ref (FStar_Pervasives_Native.Some cache) in
-  let uu___1 = FStarC_Effect.op_Bang table.counter in
-  { guard_cache = uu___; guard_counter = uu___1 }
-let commit_guard_core (g : guard_commit_token) : unit=
-  let uu___ =
-    let uu___1 = FStarC_Effect.op_Bang table.counter in
-    g.guard_counter <> uu___1 in
-  if uu___
-  then ()
-  else
-    (let cache = FStarC_Effect.op_Bang g.guard_cache in
-     match cache with
-     | FStar_Pervasives_Native.None -> ()
-     | FStar_Pervasives_Native.Some cache1 ->
-         (FStarC_Effect.op_Colon_Equals g.guard_cache
-            FStar_Pervasives_Native.None;
-          FStarC_Syntax_Hash.term_map_fold
-            (fun term hash_entry1 uu___3 ->
-               FStarC_Syntax_TermHashTable.insert term hash_entry1
-                 table.table) cache1.term_map ();
-          FStarC_Syntax_Hash.term_map_fold
-            (fun term guard_entry1 uu___3 ->
-               FStarC_Syntax_TermHashTable.insert term guard_entry1
-                 table.guard_table) cache1.guard_map ()))
-let commit_cache_cb (cache : cache_t) : guard_commit_token_cb=
-  fun uu___ -> let uu___1 = mk_token cache in commit_guard_core uu___1
-let commit_guard (cb : guard_commit_token_cb) : unit= cb ()
-let commit_guard_and_tok_opt
-  (t : guard_and_tok_t FStar_Pervasives_Native.option) : unit=
-  match t with
-  | FStar_Pervasives_Native.None -> ()
-  | FStar_Pervasives_Native.Some (uu___, tok) -> commit_guard tok
-let return (x : 'a) : 'a result=
-  fun uu___ cache -> Success ((x, FStar_Pervasives_Native.None), cache)
-let return_with_guard (x : 'a) (g : precondition) : 'a result=
-  fun uu___ cache -> Success ((x, g), cache)
-let and_pre (p1 : precondition) (p2 : precondition) :
-  FStarC_Syntax_Syntax.term' FStarC_Syntax_Syntax.syntax
-    FStar_Pervasives_Native.option=
-  match (p1, p2) with
-  | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) ->
-      FStar_Pervasives_Native.None
-  | (FStar_Pervasives_Native.Some p, FStar_Pervasives_Native.None) ->
-      FStar_Pervasives_Native.Some p
-  | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.Some p) ->
-      FStar_Pervasives_Native.Some p
-  | (FStar_Pervasives_Native.Some p11, FStar_Pervasives_Native.Some p21) ->
-      let uu___ = FStarC_Syntax_Util.mk_conj p11 p21 in
-      FStar_Pervasives_Native.Some uu___
-let op_let_Bang (x : 'a result) (y : 'a -> 'b result) : 'b result=
-  fun ctx0 cache0 ->
-    let uu___ = x ctx0 cache0 in
-    match uu___ with
-    | Success ((x1, g1), cache1) ->
-        let uu___1 = let uu___2 = y x1 in uu___2 ctx0 cache1 in
-        (match uu___1 with
-         | Success ((y1, g2), cache2) ->
-             let uu___2 =
-               let uu___3 = let uu___4 = and_pre g1 g2 in (y1, uu___4) in
-               (uu___3, cache2) in
-             Success uu___2
-         | err -> err)
-    | Error err -> Error err
-let op_and_Bang (x : 'a result) (y : 'b result) : ('a * 'b) result=
-  fun ctx0 cache0 ->
-    let uu___ = x ctx0 cache0 in
-    match uu___ with
-    | Success ((x1, g1), cache1) ->
-        let uu___1 =
-          let uu___2 ctx01 cache01 =
-            let uu___3 = y ctx01 cache01 in
-            match uu___3 with
-            | Success ((x2, g11), cache11) ->
-                let uu___4 =
-                  let uu___5 uu___6 cache =
-                    Success (((x1, x2), FStar_Pervasives_Native.None), cache) in
-                  uu___5 ctx01 cache11 in
-                (match uu___4 with
-                 | Success ((y1, g2), cache2) ->
-                     let uu___5 =
-                       let uu___6 =
-                         let uu___7 = and_pre g11 g2 in (y1, uu___7) in
-                       (uu___6, cache2) in
-                     Success uu___5
-                 | err -> err)
-            | Error err -> Error err in
-          uu___2 ctx0 cache1 in
-        (match uu___1 with
-         | Success ((y1, g2), cache2) ->
-             let uu___2 =
-               let uu___3 = let uu___4 = and_pre g1 g2 in (y1, uu___4) in
-               (uu___3, cache2) in
-             Success uu___2
-         | err -> err)
-    | Error err -> Error err
-let with_guard (x : 'a result)
-  (f : ('a success, error) FStar_Pervasives.either -> 'b result) : 'b result=
-  fun ctx cache ->
-    let uu___ = x ctx cache in
-    match uu___ with
-    | Success (r, cache') ->
-        let uu___1 = f (FStar_Pervasives.Inl r) in uu___1 ctx cache'
-    | Error err ->
-        let uu___1 = f (FStar_Pervasives.Inr err) in uu___1 ctx cache
-let op_let_Question (x : 'a FStar_Pervasives_Native.option)
-  (f : 'a -> 'b FStar_Pervasives_Native.option) :
-  'b FStar_Pervasives_Native.option=
-  match x with
-  | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-  | FStar_Pervasives_Native.Some x1 -> f x1
-let fail_str (msg : Prims.string) : 'a result=
-  fun ctx cache -> Error (ctx, (FStarC_Errors_Msg.mkmsg msg))
-let fail (msg : FStarC_Errors_Msg.error_message) : 'a result=
-  fun ctx cache -> Error (ctx, msg)
-let fail_propagate (err : error) : 'a result= fun uu___ cache -> Error err
-let dump_context : unit result=
-  fun ctx cache ->
-    (let uu___1 = print_context ctx in FStarC_Format.print_string uu___1);
-    Success (((), FStar_Pervasives_Native.None), cache)
-let handle_with (x : 'a result) (h : unit -> 'a result) : 'a result=
-  fun ctx cache ->
-    let uu___ = x ctx cache in
-    match uu___ with
-    | Error uu___1 -> let uu___2 = h () in uu___2 ctx cache
-    | res -> res
-let with_context (msg : Prims.string)
-  (t : context_term FStar_Pervasives_Native.option) (x : unit -> 'a result) :
-  'a result=
-  fun ctx cache ->
-    let ctx1 =
-      {
-        no_guard = (ctx.no_guard);
-        unfolding_ok = (ctx.unfolding_ok);
-        error_context = ((msg, t) :: (ctx.error_context))
-      } in
-    let uu___ = x () in uu___ ctx1 cache
-let mk_type (u : FStarC_Syntax_Syntax.universe) :
-  FStarC_Syntax_Syntax.term' FStarC_Syntax_Syntax.syntax=
-  FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_type u)
-    FStarC_Range_Type.dummyRange
-let is_type (g : env) (t : FStarC_Syntax_Syntax.term) :
-  FStarC_Syntax_Syntax.universe result=
-  let aux t1 =
-    let uu___ =
-      let uu___1 = FStarC_Syntax_Subst.compress t1 in
-      uu___1.FStarC_Syntax_Syntax.n in
-    match uu___ with
-    | FStarC_Syntax_Syntax.Tm_type u ->
-        (fun uu___1 ->
-           fun cache -> Success ((u, FStar_Pervasives_Native.None), cache))
-    | uu___1 ->
-        let uu___2 =
-          let uu___3 =
-            let uu___4 =
-              let uu___5 =
-                FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term t1 in
-              FStarC_Errors_Msg.fquotes uu___5 in
-            FStar_Pprint.op_Hat_Slash_Hat
-              (FStarC_Errors_Msg.text "Expected a type, got") uu___4 in
-          [uu___3] in
-        fail uu___2 in
-  fun ctx ->
-    fun cache ->
-      let ctx1 =
-        {
-          no_guard = (ctx.no_guard);
-          unfolding_ok = (ctx.unfolding_ok);
-          error_context =
-            (("is_type", (FStar_Pervasives_Native.Some (CtxTerm t))) ::
-            (ctx.error_context))
-        } in
-      let uu___ =
-        let uu___1 = aux t in
-        fun ctx2 ->
-          fun cache1 ->
-            let uu___2 = uu___1 ctx2 cache1 in
-            match uu___2 with
-            | Error uu___3 ->
-                let uu___4 =
-                  let uu___5 =
-                    let uu___6 =
-                      FStarC_TypeChecker_Normalize.unfold_whnf g.tcenv t in
-                    FStarC_Syntax_Util.unrefine uu___6 in
-                  aux uu___5 in
-                uu___4 ctx2 cache1
-            | res -> res in
-      uu___ ctx1 cache
-let rec is_arrow (g : env) (t : FStarC_Syntax_Syntax.term) :
-  (FStarC_Syntax_Syntax.binder * tot_or_ghost * FStarC_Syntax_Syntax.typ)
-    result=
-  let rec aux t1 =
-    let uu___ =
-      let uu___1 = FStarC_Syntax_Subst.compress t1 in
-      uu___1.FStarC_Syntax_Syntax.n in
-    match uu___ with
-    | FStarC_Syntax_Syntax.Tm_arrow
-        { FStarC_Syntax_Syntax.b1 = x; FStarC_Syntax_Syntax.comp = c;_} ->
-        let uu___1 = FStarC_Syntax_Util.is_tot_or_gtot_comp c in
-        if uu___1
-        then
-          let uu___2 = open_comp g x c in
-          (match uu___2 with
-           | (g1, x1, c1) ->
-               let eff =
-                 let uu___3 = FStarC_Syntax_Util.is_total_comp c1 in
-                 if uu___3 then E_Total else E_Ghost in
-               (fun uu___3 ->
-                  fun cache ->
-                    Success
-                      (((x1, eff, (FStarC_Syntax_Util.comp_result c1)),
-                         FStar_Pervasives_Native.None), cache)))
-        else
-          (let uu___2 = c.FStarC_Syntax_Syntax.n in
-           match uu___2 with
-           | FStarC_Syntax_Syntax.Comp ct ->
-               let e_tag =
-                 if
-                   (FStarC_Syntax_Util.is_pure_effect
-                      ct.FStarC_Syntax_Syntax.effect_name)
-                     ||
-                     (FStarC_Ident.lid_equals
-                        ct.FStarC_Syntax_Syntax.effect_name
-                        FStarC_Parser_Const.effect_Lemma_lid)
-                 then FStar_Pervasives_Native.Some E_Total
-                 else
-                   if
-                     FStarC_Syntax_Util.is_ghost_effect
-                       ct.FStarC_Syntax_Syntax.effect_name
-                   then FStar_Pervasives_Native.Some E_Ghost
-                   else FStar_Pervasives_Native.None in
-               (match e_tag with
-                | FStar_Pervasives_Native.None ->
-                    let uu___3 =
-                      let uu___4 =
-                        let uu___5 =
-                          let uu___6 =
-                            FStarC_Class_PP.pp FStarC_Ident.pretty_lident
-                              (FStarC_Syntax_Util.comp_effect_name c) in
-                          FStarC_Errors_Msg.fquotes uu___6 in
-                        FStar_Pprint.op_Hat_Slash_Hat
-                          (FStarC_Errors_Msg.text
-                             "Expected total or gtot arrow, got") uu___5 in
-                      [uu___4] in
-                    fail uu___3
-                | FStar_Pervasives_Native.Some e_tag1 ->
-                    let uu___3 = arrow_formals_comp g t1 in
-                    (match uu___3 with
-                     | (g1, x1::[], c1) ->
-                         (debug g1
-                            (fun uu___5 ->
-                               let uu___6 =
-                                 FStarC_Class_Show.show
-                                   FStarC_Syntax_Print.showable_term t1 in
-                               let uu___7 =
-                                 FStarC_Class_Show.show
-                                   FStarC_Syntax_Print.showable_binder x1 in
-                               let uu___8 =
-                                 FStarC_Class_Show.show
-                                   FStarC_Syntax_Print.showable_term
-                                   (x1.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
-                               let uu___9 =
-                                 FStarC_Class_Show.show
-                                   FStarC_Syntax_Print.showable_comp c1 in
-                               FStarC_Format.print4
-                                 "is_arrow (%s): arg (%s:%s) and comp %s\n"
-                                 uu___6 uu___7 uu___8 uu___9);
-                          (fun uu___5 ->
-                             fun cache ->
-                               Success
-                                 (((x1, e_tag1,
-                                     (FStarC_Syntax_Util.comp_result c1)),
-                                    FStar_Pervasives_Native.None), cache))))))
-    | FStarC_Syntax_Syntax.Tm_refine
-        { FStarC_Syntax_Syntax.b2 = x; FStarC_Syntax_Syntax.phi = uu___1;_}
-        -> is_arrow g x.FStarC_Syntax_Syntax.sort
-    | FStarC_Syntax_Syntax.Tm_meta
-        { FStarC_Syntax_Syntax.tm2 = t2;
-          FStarC_Syntax_Syntax.meta = uu___1;_}
-        -> aux t2
-    | FStarC_Syntax_Syntax.Tm_ascribed
-        { FStarC_Syntax_Syntax.tm = t2; FStarC_Syntax_Syntax.asc = uu___1;
-          FStarC_Syntax_Syntax.eff_opt = uu___2;_}
-        -> aux t2
-    | uu___1 ->
-        let uu___2 =
-          let uu___3 =
-            let uu___4 =
-              let uu___5 =
-                let uu___6 =
-                  FStarC_Class_Tagged.tag_of FStarC_Syntax_Syntax.tagged_term
-                    t1 in
-                FStar_Pprint.doc_of_string uu___6 in
-              let uu___6 =
-                let uu___7 =
-                  let uu___8 =
-                    FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term t1 in
-                  FStarC_Errors_Msg.fquotes uu___8 in
-                FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon uu___7 in
-              FStar_Pprint.op_Hat_Hat uu___5 uu___6 in
-            FStar_Pprint.op_Hat_Slash_Hat
-              (FStarC_Errors_Msg.text "Expected an arrow, got a") uu___4 in
-          [uu___3] in
-        fail uu___2 in
-  fun ctx ->
-    fun cache ->
-      let ctx1 =
-        {
-          no_guard = (ctx.no_guard);
-          unfolding_ok = (ctx.unfolding_ok);
-          error_context = (("is_arrow", FStar_Pervasives_Native.None) ::
-            (ctx.error_context))
-        } in
-      let uu___ =
-        let uu___1 = aux t in
-        fun ctx2 ->
-          fun cache1 ->
-            let uu___2 = uu___1 ctx2 cache1 in
-            match uu___2 with
-            | Error uu___3 ->
-                let uu___4 =
-                  let uu___5 =
-                    FStarC_TypeChecker_Normalize.unfold_whnf g.tcenv t in
-                  aux uu___5 in
-                uu___4 ctx2 cache1
-            | res -> res in
-      uu___ ctx1 cache
-let check_arg_qual (a : FStarC_Syntax_Syntax.aqual)
-  (b : FStarC_Syntax_Syntax.bqual) : unit result=
-  match b with
-  | FStar_Pervasives_Native.Some (FStarC_Syntax_Syntax.Implicit uu___) ->
-      (match a with
-       | FStar_Pervasives_Native.Some
-           { FStarC_Syntax_Syntax.aqual_implicit = true;
-             FStarC_Syntax_Syntax.aqual_attributes = uu___1;_}
-           ->
-           (fun uu___2 ->
-              fun cache ->
-                Success (((), FStar_Pervasives_Native.None), cache))
-       | uu___1 -> fail_str "missing arg qualifier implicit")
-  | FStar_Pervasives_Native.Some (FStarC_Syntax_Syntax.Meta uu___) ->
-      (match a with
-       | FStar_Pervasives_Native.Some
-           { FStarC_Syntax_Syntax.aqual_implicit = true;
-             FStarC_Syntax_Syntax.aqual_attributes = uu___1;_}
-           ->
-           (fun uu___2 ->
-              fun cache ->
-                Success (((), FStar_Pervasives_Native.None), cache))
-       | uu___1 -> fail_str "missing arg qualifier implicit")
-  | uu___ ->
-      (match a with
-       | FStar_Pervasives_Native.Some
-           { FStarC_Syntax_Syntax.aqual_implicit = true;
-             FStarC_Syntax_Syntax.aqual_attributes = uu___1;_}
-           -> fail_str "extra arg qualifier implicit"
-       | uu___1 ->
-           (fun uu___2 ->
-              fun cache ->
-                Success (((), FStar_Pervasives_Native.None), cache)))
-let check_bqual (b0 : FStarC_Syntax_Syntax.bqual)
-  (b1 : FStarC_Syntax_Syntax.bqual) : unit result=
-  if FStarC_Syntax_Util.bqual_compat b0 b1
-  then
-    fun uu___ ->
-      fun cache -> Success (((), FStar_Pervasives_Native.None), cache)
-  else
-    (let uu___ =
-       let uu___1 =
-         FStarC_Class_Show.show
-           (FStarC_Class_Show.show_option FStarC_Syntax_Print.showable_bqual)
-           b0 in
-       let uu___2 =
-         FStarC_Class_Show.show
-           (FStarC_Class_Show.show_option FStarC_Syntax_Print.showable_bqual)
-           b1 in
-       FStarC_Format.fmt2 "Binder qualifier mismatch, %s vs %s" uu___1 uu___2 in
-     fail_str uu___)
-let check_aqual (a0 : FStarC_Syntax_Syntax.aqual)
-  (a1 : FStarC_Syntax_Syntax.aqual) : unit result=
-  match (a0, a1) with
-  | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) ->
-      (fun uu___ ->
-         fun cache -> Success (((), FStar_Pervasives_Native.None), cache))
-  | (FStar_Pervasives_Native.Some
-     { FStarC_Syntax_Syntax.aqual_implicit = b0;
-       FStarC_Syntax_Syntax.aqual_attributes = uu___;_},
-     FStar_Pervasives_Native.Some
-     { FStarC_Syntax_Syntax.aqual_implicit = b1;
-       FStarC_Syntax_Syntax.aqual_attributes = uu___1;_})
-      ->
-      if b0 = b1
-      then
-        (fun uu___2 ->
-           fun cache -> Success (((), FStar_Pervasives_Native.None), cache))
-      else
-        (let uu___2 =
-           let uu___3 =
-             let uu___4 =
-               let uu___5 = FStarC_Class_PP.pp FStarC_Class_PP.pp_bool b0 in
-               let uu___6 =
-                 let uu___7 = FStarC_Class_PP.pp FStarC_Class_PP.pp_bool b1 in
-                 FStar_Pprint.op_Hat_Hat
-                   (FStarC_Errors_Msg.text "and rhs implicit=") uu___7 in
-               FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
-             FStar_Pprint.op_Hat_Hat
-               (FStarC_Errors_Msg.text
-                  "Unequal arg qualifiers: lhs implicit=") uu___4 in
-           [uu___3] in
-         fail uu___2)
-  | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.Some
-     { FStarC_Syntax_Syntax.aqual_implicit = false;
-       FStarC_Syntax_Syntax.aqual_attributes = uu___;_})
-      ->
-      (fun uu___1 ->
-         fun cache -> Success (((), FStar_Pervasives_Native.None), cache))
-  | (FStar_Pervasives_Native.Some
-     { FStarC_Syntax_Syntax.aqual_implicit = false;
-       FStarC_Syntax_Syntax.aqual_attributes = uu___;_},
-     FStar_Pervasives_Native.None) ->
-      (fun uu___1 ->
-         fun cache -> Success (((), FStar_Pervasives_Native.None), cache))
-  | uu___ ->
-      let uu___1 =
-        let uu___2 =
-          let uu___3 =
-            let uu___4 =
-              let uu___5 =
-                FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_aqual a0 in
-              FStarC_Errors_Msg.fquotes uu___5 in
-            let uu___5 =
-              let uu___6 =
-                let uu___7 =
-                  FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_aqual a1 in
-                FStarC_Errors_Msg.fquotes uu___7 in
-              FStar_Pprint.op_Hat_Slash_Hat
-                (FStarC_Errors_Msg.text "and rhs") uu___6 in
-            FStar_Pprint.op_Hat_Hat uu___4 uu___5 in
-          FStar_Pprint.op_Hat_Slash_Hat
-            (FStarC_Errors_Msg.text "Unequal arg qualifiers: lhs") uu___3 in
-        [uu___2] in
-      fail uu___1
-let check_positivity_qual (rel : relation)
-  (p0 :
-    FStarC_Syntax_Syntax.positivity_qualifier FStar_Pervasives_Native.option)
-  (p1 :
-    FStarC_Syntax_Syntax.positivity_qualifier FStar_Pervasives_Native.option)
-  : unit result=
-  if
-    FStarC_TypeChecker_Common.check_positivity_qual
-      (match rel with | SUBTYPING _0 -> true | uu___ -> false) p0 p1
-  then
-    fun uu___ ->
-      fun cache -> Success (((), FStar_Pervasives_Native.None), cache)
-  else fail_str "Unequal positivity qualifiers"
-let mk_forall_l (us : FStarC_Syntax_Syntax.universes)
-  (xs : FStarC_Syntax_Syntax.binders) (t : FStarC_Syntax_Syntax.term) :
-  FStarC_Syntax_Syntax.term=
-  FStarC_List.fold_right2
-    (fun u x t1 ->
-       FStarC_Syntax_Util.mk_forall u x.FStarC_Syntax_Syntax.binder_bv t1) us
-    xs t
-let close_guard (xs : FStarC_Syntax_Syntax.binders)
-  (us : FStarC_Syntax_Syntax.universes) (g : precondition) : precondition=
-  match g with
-  | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-  | FStar_Pervasives_Native.Some t ->
-      let uu___ = mk_forall_l us xs t in FStar_Pervasives_Native.Some uu___
-let close_with_definition (x : FStarC_Syntax_Syntax.binder)
-  (u : FStarC_Syntax_Syntax.universe) (t : FStarC_Syntax_Syntax.term)
-  (g : FStarC_Syntax_Syntax.typ) : FStarC_Syntax_Syntax.typ=
-  let g' =
-    let uu___ =
-      let uu___1 =
-        FStarC_Syntax_Syntax.bv_to_name x.FStarC_Syntax_Syntax.binder_bv in
-      FStarC_Syntax_Util.mk_eq2 u
-        (x.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort uu___1 t in
-    FStarC_Syntax_Util.mk_imp uu___ g in
-  FStarC_Syntax_Util.mk_forall u x.FStarC_Syntax_Syntax.binder_bv g'
-let close_guard_with_definition (x : FStarC_Syntax_Syntax.binder)
-  (u : FStarC_Syntax_Syntax.universe) (t : FStarC_Syntax_Syntax.term)
-  (g : precondition) : precondition=
-  match g with
-  | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-  | FStar_Pervasives_Native.Some t' ->
-      let uu___ =
-        let t'1 =
-          let uu___1 =
-            let uu___2 =
-              FStarC_Syntax_Syntax.bv_to_name
-                x.FStarC_Syntax_Syntax.binder_bv in
-            FStarC_Syntax_Util.mk_eq2 u
-              (x.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort
-              uu___2 t in
-          FStarC_Syntax_Util.mk_imp uu___1 t' in
-        FStarC_Syntax_Util.mk_forall u x.FStarC_Syntax_Syntax.binder_bv t'1 in
-      FStar_Pervasives_Native.Some uu___
-let abs (g : env) (a : FStarC_Syntax_Syntax.typ)
-  (f : FStarC_Syntax_Syntax.binder -> FStarC_Syntax_Syntax.term) :
-  FStarC_Syntax_Syntax.term=
-  let uu___ = new_binder g a a.FStarC_Syntax_Syntax.pos in
-  match uu___ with
-  | (g1, xb) ->
-      FStarC_Syntax_Util.abs [xb] (f xb) FStar_Pervasives_Native.None
-let weaken_subtyping (p : FStarC_Syntax_Syntax.term)
-  (g : FStarC_Syntax_Syntax.term) : FStarC_Syntax_Syntax.term=
-  FStarC_Syntax_Util.mk_imp p g
-let push_hypothesis (g : env) (h : FStarC_Syntax_Syntax.term) : env=
-  let uu___ = new_binder g h h.FStarC_Syntax_Syntax.pos in
-  match uu___ with | (g1, h1) -> g1
-let no_guard (g : 'a result) : 'a result=
-  fun ctx cache ->
-    let uu___ =
-      g
-        {
-          no_guard = true;
-          unfolding_ok = (ctx.unfolding_ok);
-          error_context = (ctx.error_context)
-        } cache in
-    match uu___ with
-    | Success ((x, FStar_Pervasives_Native.None), cache1) ->
-        Success ((x, FStar_Pervasives_Native.None), cache1)
-    | Success ((x, FStar_Pervasives_Native.Some g1), cache1) ->
-        let uu___1 =
-          let uu___2 =
-            let uu___3 =
-              FStarC_Class_Show.show FStarC_Syntax_Print.showable_term g1 in
-            FStarC_Format.fmt1 "Unexpected guard: %s" uu___3 in
-          fail_str uu___2 in
-        uu___1 ctx cache1
-    | err -> err
-let equatable (g : env) (t : FStarC_Syntax_Syntax.term) : Prims.bool=
-  let uu___ = FStarC_Syntax_Util.leftmost_head t in
-  FStarC_TypeChecker_Rel.may_relate_with_logical_guard g.tcenv true uu___
-let apply_predicate (x : FStarC_Syntax_Syntax.binder)
-  (p : FStarC_Syntax_Syntax.term)
-  (e : FStarC_Syntax_Syntax.term' FStarC_Syntax_Syntax.syntax) :
-  FStarC_Syntax_Syntax.term=
-  FStarC_Syntax_Subst.subst
-    [FStarC_Syntax_Syntax.NT ((x.FStarC_Syntax_Syntax.binder_bv), e)] p
-let is_gtot_comp (c : FStarC_Syntax_Syntax.comp) : Prims.bool=
-  let uu___ = FStarC_Syntax_Util.is_tot_or_gtot_comp c in
-  if uu___
-  then let uu___1 = FStarC_Syntax_Util.is_total_comp c in Prims.not uu___1
-  else false
-let rec context_included (g0 : FStarC_Syntax_Syntax.binding Prims.list)
-  (g1 : FStarC_Syntax_Syntax.binding Prims.list) : Prims.bool=
-  if FStarC_Util.physical_equality g0 g1
-  then true
-  else
-    (match (g0, g1) with
-     | ([], uu___) -> true
-     | (b0::g0', b1::g1') ->
-         (match (b0, b1) with
-          | (FStarC_Syntax_Syntax.Binding_var x0,
-             FStarC_Syntax_Syntax.Binding_var x1) ->
-              if
-                x0.FStarC_Syntax_Syntax.index = x1.FStarC_Syntax_Syntax.index
-              then
-                let uu___ =
-                  equal_term x0.FStarC_Syntax_Syntax.sort
-                    x1.FStarC_Syntax_Syntax.sort in
-                (if uu___ then context_included g0' g1' else false)
-              else context_included g0 g1'
-          | (FStarC_Syntax_Syntax.Binding_lid uu___,
-             FStarC_Syntax_Syntax.Binding_lid uu___1) -> true
-          | (FStarC_Syntax_Syntax.Binding_univ uu___,
-             FStarC_Syntax_Syntax.Binding_univ uu___1) -> true
-          | uu___ -> false)
-     | uu___ -> false)
-let replace_all_use_ranges (r : FStarC_Range_Type.t)
-  (t : FStarC_Syntax_Syntax.term) : FStarC_Syntax_Syntax.term=
-  let ur = FStarC_Range_Type.use_range r in
-  FStarC_Syntax_Visit.visit_term false
-    (fun t1 ->
-       {
-         FStarC_Syntax_Syntax.n = (t1.FStarC_Syntax_Syntax.n);
-         FStarC_Syntax_Syntax.pos =
-           (FStarC_Range_Type.set_use_range t1.FStarC_Syntax_Syntax.pos ur);
-         FStarC_Syntax_Syntax.hash_code = (t1.FStarC_Syntax_Syntax.hash_code)
-       }) t
-let get_cache (uu___ : unit) : cache_t result=
-  fun uu___1 cache -> Success ((cache, FStar_Pervasives_Native.None), cache)
-let put_cache (cache : cache_t) : unit result=
-  fun uu___ uu___1 -> Success (((), FStar_Pervasives_Native.None), cache)
-let raw_lookup (e : FStarC_Syntax_Syntax.term) :
-  hash_entry FStar_Pervasives_Native.option result=
-  fun ctx0 cache0 ->
-    let uu___ = get_cache () ctx0 cache0 in
-    match uu___ with
-    | Success ((x, g1), cache1) ->
-        let uu___1 =
-          let uu___2 =
-            let uu___3 = FStarC_Syntax_Hash.term_map_lookup e x.term_map in
-            match uu___3 with
-            | FStar_Pervasives_Native.Some he ->
-                (fun uu___4 ->
-                   fun cache ->
-                     Success
-                       (((FStar_Pervasives_Native.Some he),
-                          FStar_Pervasives_Native.None), cache))
-            | FStar_Pervasives_Native.None ->
-                let uu___4 = FStarC_Syntax_TermHashTable.lookup e table.table in
-                (fun uu___5 ->
-                   fun cache ->
-                     Success ((uu___4, FStar_Pervasives_Native.None), cache)) in
-          uu___2 ctx0 cache1 in
-        (match uu___1 with
-         | Success ((y, g2), cache2) ->
-             let uu___2 =
-               let uu___3 = let uu___4 = and_pre g1 g2 in (y, uu___4) in
-               (uu___3, cache2) in
-             Success uu___2
-         | err -> err)
-    | Error err -> Error err
-let raw_lookup_guard (e : FStarC_Syntax_Syntax.term) :
-  guard_entry FStar_Pervasives_Native.option result=
-  fun ctx0 cache0 ->
-    let uu___ = get_cache () ctx0 cache0 in
-    match uu___ with
-    | Success ((x, g1), cache1) ->
-        let uu___1 =
-          let uu___2 =
-            let uu___3 = FStarC_Syntax_Hash.term_map_lookup e x.guard_map in
-            match uu___3 with
-            | FStar_Pervasives_Native.Some he ->
-                (fun uu___4 ->
-                   fun cache ->
-                     Success
-                       (((FStar_Pervasives_Native.Some he),
-                          FStar_Pervasives_Native.None), cache))
-            | FStar_Pervasives_Native.None ->
-                let uu___4 =
-                  FStarC_Syntax_TermHashTable.lookup e table.guard_table in
-                (fun uu___5 ->
-                   fun cache ->
-                     Success ((uu___4, FStar_Pervasives_Native.None), cache)) in
-          uu___2 ctx0 cache1 in
-        (match uu___1 with
-         | Success ((y, g2), cache2) ->
-             let uu___2 =
-               let uu___3 = let uu___4 = and_pre g1 g2 in (y, uu___4) in
-               (uu___3, cache2) in
-             Success uu___2
-         | err -> err)
-    | Error err -> Error err
-let insert_guard (g : env) (guard : FStarC_Syntax_Syntax.typ) : unit result=
-  fun ctx0 cache0 ->
-    let uu___ = get_cache () ctx0 cache0 in
-    match uu___ with
-    | Success ((x, g1), cache1) ->
-        let uu___1 =
-          let uu___2 =
-            let uu___3 =
-              let uu___4 =
-                FStarC_Syntax_Hash.term_map_add guard
-                  { ge_gamma = ((g.tcenv).FStarC_TypeChecker_Env.gamma) }
-                  x.guard_map in
-              { term_map = (x.term_map); guard_map = uu___4 } in
-            put_cache uu___3 in
-          uu___2 ctx0 cache1 in
-        (match uu___1 with
-         | Success ((y, g2), cache2) ->
-             let uu___2 =
-               let uu___3 = let uu___4 = and_pre g1 g2 in ((), uu___4) in
-               (uu___3, cache2) in
-             Success uu___2
-         | err -> err)
-    | Error err -> Error err
-let guard (g : env) (guard1 : FStarC_Syntax_Syntax.typ) : unit result=
-  fun ctx0 cache0 ->
-    let uu___ = raw_lookup_guard guard1 ctx0 cache0 in
-    match uu___ with
-    | Success ((x, g1), cache1) ->
-        let uu___1 =
-          let uu___2 =
-            match x with
-            | FStar_Pervasives_Native.Some ge ->
-                let uu___3 =
-                  context_included ge.ge_gamma
-                    (g.tcenv).FStarC_TypeChecker_Env.gamma in
-                if uu___3
-                then
-                  (fun uu___4 ->
-                     fun cache ->
-                       Success (((), FStar_Pervasives_Native.None), cache))
-                else
-                  (fun ctx01 ->
-                     fun cache01 ->
-                       let uu___4 = insert_guard g guard1 ctx01 cache01 in
-                       match uu___4 with
-                       | Success ((x1, g11), cache11) ->
-                           let uu___5 =
-                             let uu___6 uu___7 cache =
-                               Success
-                                 (((), (FStar_Pervasives_Native.Some guard1)),
-                                   cache) in
-                             uu___6 ctx01 cache11 in
-                           (match uu___5 with
-                            | Success ((y, g2), cache2) ->
-                                let uu___6 =
-                                  let uu___7 =
-                                    let uu___8 = and_pre g11 g2 in
-                                    ((), uu___8) in
-                                  (uu___7, cache2) in
-                                Success uu___6
-                            | err -> err)
-                       | Error err -> Error err)
-            | uu___3 ->
-                (fun ctx01 ->
-                   fun cache01 ->
-                     let uu___4 = insert_guard g guard1 ctx01 cache01 in
-                     match uu___4 with
-                     | Success ((x1, g11), cache11) ->
-                         let uu___5 =
-                           let uu___6 uu___7 cache =
-                             Success
-                               (((), (FStar_Pervasives_Native.Some guard1)),
-                                 cache) in
-                           uu___6 ctx01 cache11 in
-                         (match uu___5 with
-                          | Success ((y, g2), cache2) ->
-                              let uu___6 =
-                                let uu___7 =
-                                  let uu___8 = and_pre g11 g2 in ((), uu___8) in
-                                (uu___7, cache2) in
-                              Success uu___6
-                          | err -> err)
-                     | Error err -> Error err) in
-          uu___2 ctx0 cache1 in
-        (match uu___1 with
-         | Success ((y, g2), cache2) ->
-             let uu___2 =
-               let uu___3 = let uu___4 = and_pre g1 g2 in ((), uu___4) in
-               (uu___3, cache2) in
-             Success uu___2
-         | err -> err)
-    | Error err -> Error err
-let with_binders (initial_env : env) (xs : FStarC_Syntax_Syntax.binders)
-  (us : FStarC_Syntax_Syntax.universes) (f : 'a result) : 'a result=
-  fun ctx cache ->
-    let uu___ = f ctx cache in
-    match uu___ with
-    | Success (r, cache') ->
-        let uu___1 =
-          match FStar_Pervasives.Inl r with
-          | FStar_Pervasives.Inr err -> fail_propagate err
-          | FStar_Pervasives.Inl (res, FStar_Pervasives_Native.None) ->
-              (fun uu___2 ->
-                 fun cache1 ->
-                   Success ((res, FStar_Pervasives_Native.None), cache1))
-          | FStar_Pervasives.Inl (res, FStar_Pervasives_Native.Some form) ->
-              let form1 = mk_forall_l us xs form in
-              (fun ctx0 ->
-                 fun cache0 ->
-                   let uu___2 = guard initial_env form1 ctx0 cache0 in
-                   match uu___2 with
-                   | Success ((x, g1), cache1) ->
-                       let uu___3 =
-                         let uu___4 uu___5 cache2 =
-                           Success
-                             ((res, FStar_Pervasives_Native.None), cache2) in
-                         uu___4 ctx0 cache1 in
-                       (match uu___3 with
-                        | Success ((y, g2), cache2) ->
-                            let uu___4 =
-                              let uu___5 =
-                                let uu___6 = and_pre g1 g2 in (y, uu___6) in
-                              (uu___5, cache2) in
-                            Success uu___4
-                        | err -> err)
-                   | Error err -> Error err) in
-        uu___1 ctx cache'
-    | Error err -> let uu___1 = fail_propagate err in uu___1 ctx cache
-let with_definition (initial_env : env) (x : FStarC_Syntax_Syntax.binder)
-  (u : FStarC_Syntax_Syntax.universe) (t : FStarC_Syntax_Syntax.term)
-  (f : 'a result) : 'a result=
-  fun ctx cache ->
-    let uu___ = f ctx cache in
-    match uu___ with
-    | Success (r, cache') ->
-        let uu___1 =
-          match FStar_Pervasives.Inl r with
-          | FStar_Pervasives.Inr err -> fail_propagate err
-          | FStar_Pervasives.Inl (res, FStar_Pervasives_Native.None) ->
-              (fun uu___2 ->
-                 fun cache1 ->
-                   Success ((res, FStar_Pervasives_Native.None), cache1))
-          | FStar_Pervasives.Inl (res, FStar_Pervasives_Native.Some form) ->
-              let form1 = close_with_definition x u t form in
-              (fun ctx0 ->
-                 fun cache0 ->
-                   let uu___2 = guard initial_env form1 ctx0 cache0 in
-                   match uu___2 with
-                   | Success ((x1, g1), cache1) ->
-                       let uu___3 =
-                         let uu___4 uu___5 cache2 =
-                           Success
-                             ((res, FStar_Pervasives_Native.None), cache2) in
-                         uu___4 ctx0 cache1 in
-                       (match uu___3 with
-                        | Success ((y, g2), cache2) ->
-                            let uu___4 =
-                              let uu___5 =
-                                let uu___6 = and_pre g1 g2 in (y, uu___6) in
-                              (uu___5, cache2) in
-                            Success uu___4
-                        | err -> err)
-                   | Error err -> Error err) in
-        uu___1 ctx cache'
-    | Error err -> let uu___1 = fail_propagate err in uu___1 ctx cache
-let weaken (initial_env : env) (p : FStarC_Syntax_Syntax.term)
-  (f : 'a result) : 'a result=
-  fun ctx cache ->
-    let uu___ = f ctx cache in
-    match uu___ with
-    | Success (r, cache') ->
-        let uu___1 =
-          match FStar_Pervasives.Inl r with
-          | FStar_Pervasives.Inr err -> fail_propagate err
-          | FStar_Pervasives.Inl (res, FStar_Pervasives_Native.None) ->
-              (fun uu___2 ->
-                 fun cache1 ->
-                   Success ((res, FStar_Pervasives_Native.None), cache1))
-          | FStar_Pervasives.Inl (res, FStar_Pervasives_Native.Some form) ->
-              let form1 = weaken_subtyping p form in
-              (fun ctx0 ->
-                 fun cache0 ->
-                   let uu___2 = guard initial_env form1 ctx0 cache0 in
-                   match uu___2 with
-                   | Success ((x, g1), cache1) ->
-                       let uu___3 =
-                         let uu___4 uu___5 cache2 =
-                           Success
-                             ((res, FStar_Pervasives_Native.None), cache2) in
-                         uu___4 ctx0 cache1 in
-                       (match uu___3 with
-                        | Success ((y, g2), cache2) ->
-                            let uu___4 =
-                              let uu___5 =
-                                let uu___6 = and_pre g1 g2 in (y, uu___6) in
-                              (uu___5, cache2) in
-                            Success uu___4
-                        | err -> err)
-                   | Error err -> Error err) in
-        uu___1 ctx cache'
-    | Error err -> let uu___1 = fail_propagate err in uu___1 ctx cache
-let weaken_with_guard_formula (env1 : env)
-  (p : FStarC_TypeChecker_Common.guard_formula) (g : 'a result) : 'a result=
-  match p with
-  | FStarC_TypeChecker_Common.Trivial -> g
-  | FStarC_TypeChecker_Common.NonTrivial p1 -> weaken env1 p1 g
-let insert (g : env) (e : FStarC_Syntax_Syntax.term)
-  (res : (tot_or_ghost * FStarC_Syntax_Syntax.typ) success) : unit result=
-  fun ctx0 cache0 ->
-    let uu___ = get_cache () ctx0 cache0 in
-    match uu___ with
-    | Success ((x, g1), cache1) ->
-        let uu___1 =
-          let uu___2 =
-            let uu___3 = res in
-            match uu___3 with
-            | ((eff, typ), uu___4) ->
-                let entry =
-                  {
-                    he_term = e;
-                    he_gamma = ((g.tcenv).FStarC_TypeChecker_Env.gamma);
-                    he_eff = eff;
-                    he_typ = typ
-                  } in
-                (debug g
-                   (fun uu___6 ->
-                      let uu___7 =
-                        FStarC_Class_Show.show
-                          FStarC_Syntax_Print.showable_term e in
-                      let uu___8 =
-                        FStarC_Class_Show.show
-                          FStarC_Syntax_Print.showable_term
-                          (FStar_Pervasives_Native.snd
-                             (FStar_Pervasives_Native.fst res)) in
-                      let uu___9 =
-                        FStarC_Class_Show.show
-                          (FStarC_Class_Show.show_list
-                             FStarC_Syntax_Print.showable_binding)
-                          (g.tcenv).FStarC_TypeChecker_Env.gamma in
-                      FStarC_Format.print3
-                        "Inserting into cache\n %s : %s\nwith\n\tenv %s\n"
-                        uu___7 uu___8 uu___9);
-                 (let new_cache =
-                    let uu___6 =
-                      FStarC_Syntax_Hash.term_map_add e entry x.term_map in
-                    { term_map = uu___6; guard_map = (x.guard_map) } in
-                  put_cache new_cache)) in
-          uu___2 ctx0 cache1 in
-        (match uu___1 with
-         | Success ((y, g2), cache2) ->
-             let uu___2 =
-               let uu___3 = let uu___4 = and_pre g1 g2 in ((), uu___4) in
-               (uu___3, cache2) in
-             Success uu___2
-         | err -> err)
-    | Error err -> Error err
-let lookup (g : env) (e : FStarC_Syntax_Syntax.term) :
-  (tot_or_ghost * FStarC_Syntax_Syntax.typ) result=
-  fun ctx0 cache0 ->
-    let uu___ = raw_lookup e ctx0 cache0 in
-    match uu___ with
-    | Success ((x, g1), cache1) ->
-        let uu___1 =
-          let uu___2 =
-            match x with
-            | FStar_Pervasives_Native.None ->
-                (record_cache_miss (); fail_str "not in cache")
-            | FStar_Pervasives_Native.Some he ->
-                let uu___3 =
-                  let uu___4 =
-                    context_included he.he_gamma
-                      (g.tcenv).FStarC_TypeChecker_Env.gamma in
-                  if uu___4
-                  then
-                    let uu___5 = FStarC_Effect.op_Bang dbg_DisableCoreCache in
-                    Prims.not uu___5
-                  else false in
-                if uu___3
-                then
-                  (record_cache_hit ();
-                   (let uu___6 = FStarC_Effect.op_Bang dbg in
-                    if uu___6
-                    then
-                      let uu___7 =
-                        FStarC_Class_Show.show
-                          FStarC_Syntax_Print.showable_term e in
-                      let uu___8 =
-                        FStarC_Class_Show.show
-                          FStarC_Syntax_Print.showable_term he.he_typ in
-                      let uu___9 =
-                        FStarC_Class_Show.show
-                          (FStarC_Class_Show.show_list
-                             FStarC_Syntax_Print.showable_binding)
-                          (g.tcenv).FStarC_TypeChecker_Env.gamma in
-                      let uu___10 =
-                        FStarC_Class_Show.show
-                          (FStarC_Class_Show.show_list
-                             FStarC_Syntax_Print.showable_binding)
-                          he.he_gamma in
-                      FStarC_Format.print4
-                        "cache hit\n %s : %s\nmatching\n\tenv0 %s\n\tenv1 %s\n"
-                        uu___7 uu___8 uu___9 uu___10
-                    else ());
-                   (let ty =
-                      let uu___6 =
-                        FStarC_Class_HasRange.pos
-                          (FStarC_Syntax_Syntax.has_range_syntax ()) e in
-                      replace_all_use_ranges uu___6 he.he_typ in
-                    fun uu___6 ->
-                      fun cache ->
-                        Success
-                          ((((he.he_eff), ty), FStar_Pervasives_Native.None),
-                            cache)))
-                else fail_str "not in cache" in
-          uu___2 ctx0 cache1 in
-        (match uu___1 with
-         | Success ((y, g2), cache2) ->
-             let uu___2 =
-               let uu___3 = let uu___4 = and_pre g1 g2 in (y, uu___4) in
-               (uu___3, cache2) in
-             Success uu___2
-         | err -> err)
-    | Error err -> Error err
-let check_no_escape (bs : FStarC_Syntax_Syntax.binders)
-  (t : FStarC_Syntax_Syntax.term) : unit result=
-  let xs = FStarC_Syntax_Free.names t in
-  let uu___ =
-    FStarC_Util.for_all
-      (fun b ->
-         let uu___1 =
-           FStarC_Class_Setlike.mem
-             (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_bv)
-             b.FStarC_Syntax_Syntax.binder_bv xs in
-         Prims.not uu___1) bs in
-  if uu___
-  then
-    fun uu___1 ->
-      fun cache -> Success (((), FStar_Pervasives_Native.None), cache)
-  else fail_str "Name escapes its scope"
-let rec map :
-  'a 'b . ('a -> 'b result) -> 'a Prims.list -> 'b Prims.list result =
-  fun f l ->
-    match l with
-    | [] ->
-        (fun uu___ ->
-           fun cache -> Success (([], FStar_Pervasives_Native.None), cache))
-    | hd::tl ->
-        let uu___ = f hd in
-        (fun ctx0 ->
-           fun cache0 ->
-             let uu___1 = uu___ ctx0 cache0 in
-             match uu___1 with
-             | Success ((x, g1), cache1) ->
-                 let uu___2 =
-                   let uu___3 =
-                     let uu___4 = map f tl in
-                     fun ctx01 ->
-                       fun cache01 ->
-                         let uu___5 = uu___4 ctx01 cache01 in
-                         match uu___5 with
-                         | Success ((x1, g11), cache11) ->
-                             let uu___6 =
-                               let uu___7 uu___8 cache =
-                                 Success
-                                   (((x :: x1), FStar_Pervasives_Native.None),
-                                     cache) in
-                               uu___7 ctx01 cache11 in
-                             (match uu___6 with
-                              | Success ((y, g2), cache2) ->
-                                  let uu___7 =
-                                    let uu___8 =
-                                      let uu___9 = and_pre g11 g2 in
-                                      (y, uu___9) in
-                                    (uu___8, cache2) in
-                                  Success uu___7
-                              | err -> err)
-                         | Error err -> Error err in
-                   uu___3 ctx0 cache1 in
-                 (match uu___2 with
-                  | Success ((y, g2), cache2) ->
-                      let uu___3 =
-                        let uu___4 =
-                          let uu___5 = and_pre g1 g2 in (y, uu___5) in
-                        (uu___4, cache2) in
-                      Success uu___3
-                  | err -> err)
-             | Error err -> Error err)
-let mapi (f : Prims.int -> 'a -> 'b result) (l : 'a Prims.list) :
-  'b Prims.list result=
-  let rec aux i l1 =
-    match l1 with
-    | [] ->
-        (fun uu___ ->
-           fun cache -> Success (([], FStar_Pervasives_Native.None), cache))
-    | hd::tl ->
-        let uu___ = f i hd in
-        (fun ctx0 ->
-           fun cache0 ->
-             let uu___1 = uu___ ctx0 cache0 in
-             match uu___1 with
-             | Success ((x, g1), cache1) ->
-                 let uu___2 =
-                   let uu___3 =
-                     let uu___4 = aux (i + Prims.int_one) tl in
-                     fun ctx01 ->
-                       fun cache01 ->
-                         let uu___5 = uu___4 ctx01 cache01 in
-                         match uu___5 with
-                         | Success ((x1, g11), cache11) ->
-                             let uu___6 =
-                               let uu___7 uu___8 cache =
-                                 Success
-                                   (((x :: x1), FStar_Pervasives_Native.None),
-                                     cache) in
-                               uu___7 ctx01 cache11 in
-                             (match uu___6 with
-                              | Success ((y, g2), cache2) ->
-                                  let uu___7 =
-                                    let uu___8 =
-                                      let uu___9 = and_pre g11 g2 in
-                                      (y, uu___9) in
-                                    (uu___8, cache2) in
-                                  Success uu___7
-                              | err -> err)
-                         | Error err -> Error err in
-                   uu___3 ctx0 cache1 in
-                 (match uu___2 with
-                  | Success ((y, g2), cache2) ->
-                      let uu___3 =
-                        let uu___4 =
-                          let uu___5 = and_pre g1 g2 in (y, uu___5) in
-                        (uu___4, cache2) in
-                      Success uu___3
-                  | err -> err)
-             | Error err -> Error err) in
-  aux Prims.int_zero l
-let rec map2 :
-  'a 'b 'c .
-    ('a -> 'b -> 'c result) ->
-      'a Prims.list -> 'b Prims.list -> 'c Prims.list result
-  =
-  fun f l1 l2 ->
-    match (l1, l2) with
-    | ([], []) ->
-        (fun uu___ ->
-           fun cache -> Success (([], FStar_Pervasives_Native.None), cache))
-    | (hd1::tl1, hd2::tl2) ->
-        let uu___ = f hd1 hd2 in
-        (fun ctx0 ->
-           fun cache0 ->
-             let uu___1 = uu___ ctx0 cache0 in
-             match uu___1 with
-             | Success ((x, g1), cache1) ->
-                 let uu___2 =
-                   let uu___3 =
-                     let uu___4 = map2 f tl1 tl2 in
-                     fun ctx01 ->
-                       fun cache01 ->
-                         let uu___5 = uu___4 ctx01 cache01 in
-                         match uu___5 with
-                         | Success ((x1, g11), cache11) ->
-                             let uu___6 =
-                               let uu___7 uu___8 cache =
-                                 Success
-                                   (((x :: x1), FStar_Pervasives_Native.None),
-                                     cache) in
-                               uu___7 ctx01 cache11 in
-                             (match uu___6 with
-                              | Success ((y, g2), cache2) ->
-                                  let uu___7 =
-                                    let uu___8 =
-                                      let uu___9 = and_pre g11 g2 in
-                                      (y, uu___9) in
-                                    (uu___8, cache2) in
-                                  Success uu___7
-                              | err -> err)
-                         | Error err -> Error err in
-                   uu___3 ctx0 cache1 in
-                 (match uu___2 with
-                  | Success ((y, g2), cache2) ->
-                      let uu___3 =
-                        let uu___4 =
-                          let uu___5 = and_pre g1 g2 in (y, uu___5) in
-                        (uu___4, cache2) in
-                      Success uu___3
-                  | err -> err)
-             | Error err -> Error err)
-let rec fold :
-  'a 'b . ('a -> 'b -> 'a result) -> 'a -> 'b Prims.list -> 'a result =
-  fun f x l ->
-    match l with
-    | [] ->
-        (fun uu___ ->
-           fun cache -> Success ((x, FStar_Pervasives_Native.None), cache))
-    | hd::tl ->
-        let uu___ = f x hd in
-        (fun ctx0 ->
-           fun cache0 ->
-             let uu___1 = uu___ ctx0 cache0 in
-             match uu___1 with
-             | Success ((x1, g1), cache1) ->
-                 let uu___2 = let uu___3 = fold f x1 tl in uu___3 ctx0 cache1 in
-                 (match uu___2 with
-                  | Success ((y, g2), cache2) ->
-                      let uu___3 =
-                        let uu___4 =
-                          let uu___5 = and_pre g1 g2 in (y, uu___5) in
-                        (uu___4, cache2) in
-                      Success uu___3
-                  | err -> err)
-             | Error err -> Error err)
-let rec fold2 :
-  'a 'b 'c .
-    ('a -> 'b -> 'c -> 'a result) ->
-      'a -> 'b Prims.list -> 'c Prims.list -> 'a result
-  =
-  fun f x l1 l2 ->
-    match (l1, l2) with
-    | ([], []) ->
-        (fun uu___ ->
-           fun cache -> Success ((x, FStar_Pervasives_Native.None), cache))
-    | (hd1::tl1, hd2::tl2) ->
-        let uu___ = f x hd1 hd2 in
-        (fun ctx0 ->
-           fun cache0 ->
-             let uu___1 = uu___ ctx0 cache0 in
-             match uu___1 with
-             | Success ((x1, g1), cache1) ->
-                 let uu___2 =
-                   let uu___3 = fold2 f x1 tl1 tl2 in uu___3 ctx0 cache1 in
-                 (match uu___2 with
-                  | Success ((y, g2), cache2) ->
-                      let uu___3 =
-                        let uu___4 =
-                          let uu___5 = and_pre g1 g2 in (y, uu___5) in
-                        (uu___4, cache2) in
-                      Success uu___3
-                  | err -> err)
-             | Error err -> Error err)
-let rec iter2 :
-  'a 'b .
-    'a Prims.list ->
-      'a Prims.list -> ('a -> 'a -> 'b -> 'b result) -> 'b -> 'b result
-  =
-  fun xs ys f b1 ->
-    match (xs, ys) with
-    | ([], []) ->
-        (fun uu___ ->
-           fun cache -> Success ((b1, FStar_Pervasives_Native.None), cache))
-    | (x::xs1, y::ys1) ->
-        let uu___ = f x y b1 in
-        (fun ctx0 ->
-           fun cache0 ->
-             let uu___1 = uu___ ctx0 cache0 in
-             match uu___1 with
-             | Success ((x1, g1), cache1) ->
-                 let uu___2 =
-                   let uu___3 = iter2 xs1 ys1 f x1 in uu___3 ctx0 cache1 in
-                 (match uu___2 with
-                  | Success ((y1, g2), cache2) ->
-                      let uu___3 =
-                        let uu___4 =
-                          let uu___5 = and_pre g1 g2 in (y1, uu___5) in
-                        (uu___4, cache2) in
-                      Success uu___3
-                  | err -> err)
-             | Error err -> Error err)
-    | uu___ -> fail_str "Lists of differing length"
-let is_non_informative (g : FStarC_TypeChecker_Env.env)
-  (t : FStarC_Syntax_Syntax.typ) : Prims.bool=
-  FStarC_TypeChecker_Normalize.non_info_norm g t
-let non_informative (g : env) (t : FStarC_Syntax_Syntax.typ) : Prims.bool=
-  is_non_informative g.tcenv t
-let as_comp (g : env) (et : (tot_or_ghost * FStarC_Syntax_Syntax.typ)) :
-  FStarC_Syntax_Syntax.comp=
-  match et with
-  | (E_Total, t) -> FStarC_Syntax_Syntax.mk_Total t
-  | (E_Ghost, t) ->
-      let uu___ = non_informative g t in
-      if uu___
-      then FStarC_Syntax_Syntax.mk_Total t
-      else FStarC_Syntax_Syntax.mk_GTotal t
-let comp_as_tot_or_ghost_and_type (c : FStarC_Syntax_Syntax.comp) :
-  (tot_or_ghost * FStarC_Syntax_Syntax.typ) FStar_Pervasives_Native.option=
-  let uu___ = FStarC_Syntax_Util.is_total_comp c in
-  if uu___
-  then
-    FStar_Pervasives_Native.Some
-      (E_Total, (FStarC_Syntax_Util.comp_result c))
-  else
-    (let uu___1 = FStarC_Syntax_Util.is_tot_or_gtot_comp c in
-     if uu___1
-     then
-       FStar_Pervasives_Native.Some
-         (E_Ghost, (FStarC_Syntax_Util.comp_result c))
-     else FStar_Pervasives_Native.None)
-let join_eff (e0 : tot_or_ghost) (e1 : tot_or_ghost) : tot_or_ghost=
-  match (e0, e1) with
-  | (E_Ghost, uu___) -> E_Ghost
-  | (uu___, E_Ghost) -> E_Ghost
-  | uu___ -> E_Total
-let join_eff_l (es : tot_or_ghost Prims.list) : tot_or_ghost=
-  FStar_List_Tot_Base.fold_right join_eff es E_Total
-let guard_not_allowed : Prims.bool result=
-  fun ctx cache ->
-    Success (((ctx.no_guard), FStar_Pervasives_Native.None), cache)
-let unfolding_ok : Prims.bool result=
-  fun ctx cache ->
-    Success (((ctx.unfolding_ok), FStar_Pervasives_Native.None), cache)
-let showable_tot_or_ghost : tot_or_ghost FStarC_Class_Show.showable=
-  {
-    FStarC_Class_Show.show =
-      (fun uu___ ->
-         match uu___ with | E_Total -> "E_Total" | E_Ghost -> "E_Ghost")
-  }
-let showable_side : side FStarC_Class_Show.showable=
-  {
-    FStarC_Class_Show.show =
-      (fun uu___ ->
-         match uu___ with
-         | Left -> "Left"
-         | Right -> "Right"
-         | Both -> "Both"
-         | Neither -> "Neither")
-  }
-let boolean_negation_simp (b : FStarC_Syntax_Syntax.term) :
-  FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option=
-  let uu___ =
-    FStarC_Syntax_Hash.equal_term b FStarC_Syntax_Util.exp_false_bool in
-  if uu___
-  then FStar_Pervasives_Native.None
-  else
-    (let uu___1 = FStarC_Syntax_Util.mk_boolean_negation b in
-     FStar_Pervasives_Native.Some uu___1)
-let combine_path_and_branch_condition
-  (path_condition : FStarC_Syntax_Syntax.term)
-  (branch_condition :
-    FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option)
-  (branch_equality : FStarC_Syntax_Syntax.term) :
-  (FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.term)=
-  let this_path_condition =
-    let bc =
-      match branch_condition with
-      | FStar_Pervasives_Native.None -> branch_equality
-      | FStar_Pervasives_Native.Some bc1 ->
-          let uu___ =
-            let uu___1 = FStarC_Syntax_Util.b2t bc1 in
-            [uu___1; branch_equality] in
-          FStarC_Syntax_Util.mk_conj_l uu___ in
-    let uu___ = FStarC_Syntax_Util.b2t path_condition in
-    FStarC_Syntax_Util.mk_conj uu___ bc in
-  let next_path_condition =
-    match branch_condition with
-    | FStar_Pervasives_Native.None -> FStarC_Syntax_Util.exp_false_bool
-    | FStar_Pervasives_Native.Some bc ->
-        let uu___ =
-          FStarC_Syntax_Hash.equal_term path_condition
-            FStarC_Syntax_Util.exp_true_bool in
-        if uu___
-        then FStarC_Syntax_Util.mk_boolean_negation bc
-        else
-          (let uu___1 = FStarC_Syntax_Util.mk_boolean_negation bc in
-           FStarC_Syntax_Util.mk_and path_condition uu___1) in
-  (this_path_condition, next_path_condition)
-let maybe_relate_after_unfolding (g : FStarC_TypeChecker_Env.env)
-  (t0 : FStarC_Syntax_Syntax.term) (t1 : FStarC_Syntax_Syntax.term) : 
-  side=
-  let dd0 = FStarC_TypeChecker_Env.delta_depth_of_term g t0 in
-  let dd1 = FStarC_TypeChecker_Env.delta_depth_of_term g t1 in
-  if dd0 = dd1
-  then Both
-  else
-    if FStarC_TypeChecker_Common.delta_depth_greater_than dd0 dd1
-    then Left
-    else Right
-let showable_rel : relation FStarC_Class_Show.showable=
-  {
-    FStarC_Class_Show.show =
-      (fun rel ->
-         match rel with | EQUALITY -> "=?=" | SUBTYPING uu___ -> "<:?")
-  }
-let rec check_relation' (g : env) (rel : relation)
-  (t0 : FStarC_Syntax_Syntax.typ) (t1 : FStarC_Syntax_Syntax.typ) :
-  unit result=
-  let err lbl =
-    match rel with
-    | EQUALITY ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 =
-              let uu___3 =
-                let uu___4 =
-                  let uu___5 =
-                    FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term t0 in
-                  FStarC_Errors_Msg.fquotes uu___5 in
-                let uu___5 =
-                  let uu___6 =
-                    let uu___7 =
-                      FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term t1 in
-                    FStarC_Errors_Msg.fquotes uu___7 in
-                  FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "<>")
-                    uu___6 in
-                FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
-              FStar_Pprint.op_Hat_Slash_Hat
-                (FStarC_Errors_Msg.text "not equal terms:") uu___3 in
-            FStar_Pprint.op_Hat_Slash_Hat
-              (FStar_Pprint.parens (FStarC_Errors_Msg.text lbl)) uu___2 in
-          [uu___1] in
-        fail uu___
-    | uu___ ->
-        let uu___1 =
-          let uu___2 =
-            let uu___3 =
-              let uu___4 =
-                let uu___5 =
-                  FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term t0 in
-                FStarC_Errors_Msg.fquotes uu___5 in
-              let uu___5 =
-                let uu___6 =
-                  let uu___7 =
-                    FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term t1 in
-                  FStarC_Errors_Msg.fquotes uu___7 in
-                FStar_Pprint.op_Hat_Slash_Hat
-                  (FStarC_Errors_Msg.text "is not a subtype of") uu___6 in
-              FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
-            FStar_Pprint.op_Hat_Slash_Hat
-              (FStar_Pprint.parens (FStarC_Errors_Msg.text lbl)) uu___3 in
-          [uu___2] in
-        fail uu___1 in
-  fun ctx0 ->
-    fun cache0 ->
-      let uu___ = guard_not_allowed ctx0 cache0 in
-      match uu___ with
-      | Success ((x, g1), cache1) ->
-          let uu___1 =
-            let uu___2 =
-              let guard_ok = Prims.not x in
-              let head_matches t01 t11 =
-                let head0 = FStarC_Syntax_Util.leftmost_head t01 in
-                let head1 = FStarC_Syntax_Util.leftmost_head t11 in
-                let uu___3 =
-                  let uu___4 =
-                    let uu___5 = FStarC_Syntax_Util.un_uinst head0 in
-                    uu___5.FStarC_Syntax_Syntax.n in
-                  let uu___5 =
-                    let uu___6 = FStarC_Syntax_Util.un_uinst head1 in
-                    uu___6.FStarC_Syntax_Syntax.n in
-                  (uu___4, uu___5) in
-                match uu___3 with
-                | (FStarC_Syntax_Syntax.Tm_fvar fv0,
-                   FStarC_Syntax_Syntax.Tm_fvar fv1) ->
-                    FStarC_Syntax_Syntax.fv_eq fv0 fv1
-                | (FStarC_Syntax_Syntax.Tm_name x0,
-                   FStarC_Syntax_Syntax.Tm_name x1) ->
-                    FStarC_Syntax_Syntax.bv_eq x0 x1
-                | (FStarC_Syntax_Syntax.Tm_constant c0,
-                   FStarC_Syntax_Syntax.Tm_constant c1) ->
-                    equal_term head0 head1
-                | (FStarC_Syntax_Syntax.Tm_type uu___4,
-                   FStarC_Syntax_Syntax.Tm_type uu___5) -> true
-                | (FStarC_Syntax_Syntax.Tm_arrow uu___4,
-                   FStarC_Syntax_Syntax.Tm_arrow uu___5) -> true
-                | (FStarC_Syntax_Syntax.Tm_match uu___4,
-                   FStarC_Syntax_Syntax.Tm_match uu___5) -> true
-                | uu___4 -> false in
-              let which_side_to_unfold t01 t11 =
-                maybe_relate_after_unfolding g.tcenv t01 t11 in
-              let maybe_unfold_side side1 t01 t11 =
-                FStarC_Profiling.profile
-                  (fun uu___3 ->
-                     match side1 with
-                     | Neither -> FStar_Pervasives_Native.None
-                     | Both ->
-                         let uu___4 =
-                           let uu___5 =
-                             FStarC_TypeChecker_Normalize.maybe_unfold_head
-                               g.tcenv t01 in
-                           let uu___6 =
-                             FStarC_TypeChecker_Normalize.maybe_unfold_head
-                               g.tcenv t11 in
-                           (uu___5, uu___6) in
-                         (match uu___4 with
-                          | (FStar_Pervasives_Native.Some t02,
-                             FStar_Pervasives_Native.Some t12) ->
-                              FStar_Pervasives_Native.Some (t02, t12)
-                          | (FStar_Pervasives_Native.Some t02,
-                             FStar_Pervasives_Native.None) ->
-                              FStar_Pervasives_Native.Some (t02, t11)
-                          | (FStar_Pervasives_Native.None,
-                             FStar_Pervasives_Native.Some t12) ->
-                              FStar_Pervasives_Native.Some (t01, t12)
-                          | uu___5 -> FStar_Pervasives_Native.None)
-                     | Left ->
-                         let uu___4 =
-                           FStarC_TypeChecker_Normalize.maybe_unfold_head
-                             g.tcenv t01 in
-                         (match uu___4 with
-                          | FStar_Pervasives_Native.Some t02 ->
-                              FStar_Pervasives_Native.Some (t02, t11)
-                          | uu___5 -> FStar_Pervasives_Native.None)
-                     | Right ->
-                         let uu___4 =
-                           FStarC_TypeChecker_Normalize.maybe_unfold_head
-                             g.tcenv t11 in
-                         (match uu___4 with
-                          | FStar_Pervasives_Native.Some t12 ->
-                              FStar_Pervasives_Native.Some (t01, t12)
-                          | uu___5 -> FStar_Pervasives_Native.None))
-                  FStar_Pervasives_Native.None
-                  "FStarC.TypeChecker.Core.maybe_unfold_side" in
-              let maybe_unfold t01 t11 ctx01 cache01 =
-                let uu___3 = unfolding_ok ctx01 cache01 in
-                match uu___3 with
-                | Success ((x1, g11), cache11) ->
-                    let uu___4 =
-                      let uu___5 =
-                        if x1
-                        then
-                          let uu___6 =
-                            let uu___7 = which_side_to_unfold t01 t11 in
-                            maybe_unfold_side uu___7 t01 t11 in
-                          fun uu___7 ->
-                            fun cache ->
-                              Success
-                                ((uu___6, FStar_Pervasives_Native.None),
-                                  cache)
-                        else
-                          (fun uu___6 ->
-                             fun cache ->
-                               Success
-                                 ((FStar_Pervasives_Native.None,
-                                    FStar_Pervasives_Native.None), cache)) in
-                      uu___5 ctx01 cache11 in
-                    (match uu___4 with
-                     | Success ((y, g2), cache2) ->
-                         let uu___5 =
-                           let uu___6 =
-                             let uu___7 = and_pre g11 g2 in (y, uu___7) in
-                           (uu___6, cache2) in
-                         Success uu___5
-                     | err1 -> err1)
-                | Error err1 -> Error err1 in
-              let emit_guard t01 t11 ctx01 cache01 =
-                let uu___3 =
-                  let ctx =
-                    {
-                      no_guard = (ctx01.no_guard);
-                      unfolding_ok = (ctx01.unfolding_ok);
-                      error_context =
-                        (("checking lhs while emitting guard",
-                           FStar_Pervasives_Native.None) ::
-                        (ctx01.error_context))
-                    } in
-                  let uu___4 = do_check g t01 in uu___4 ctx cache01 in
-                match uu___3 with
-                | Success ((x1, g11), cache11) ->
-                    let uu___4 =
-                      let uu___5 =
-                        match x1 with
-                        | (uu___6, t_typ) ->
-                            let uu___7 = universe_of_well_typed_term g t_typ in
-                            (fun ctx02 ->
-                               fun cache02 ->
-                                 let uu___8 = uu___7 ctx02 cache02 in
-                                 match uu___8 with
-                                 | Success ((x2, g12), cache12) ->
-                                     let uu___9 =
-                                       let uu___10 =
-                                         let uu___11 =
-                                           FStarC_Syntax_Util.mk_eq2 x2 t_typ
-                                             t01 t11 in
-                                         guard g uu___11 in
-                                       uu___10 ctx02 cache12 in
-                                     (match uu___9 with
-                                      | Success ((y, g2), cache2) ->
-                                          let uu___10 =
-                                            let uu___11 =
-                                              let uu___12 = and_pre g12 g2 in
-                                              ((), uu___12) in
-                                            (uu___11, cache2) in
-                                          Success uu___10
-                                      | err1 -> err1)
-                                 | Error err1 -> Error err1) in
-                      uu___5 ctx01 cache11 in
-                    (match uu___4 with
-                     | Success ((y, g2), cache2) ->
-                         let uu___5 =
-                           let uu___6 =
-                             let uu___7 = and_pre g11 g2 in ((), uu___7) in
-                           (uu___6, cache2) in
-                         Success uu___5
-                     | err1 -> err1)
-                | Error err1 -> Error err1 in
-              let fallback t01 t11 =
-                if guard_ok
-                then
-                  let uu___3 =
-                    let uu___4 = equatable g t01 in
-                    if uu___4 then true else equatable g t11 in
-                  (if uu___3 then emit_guard t01 t11 else err "not equatable")
-                else err "guards not allowed" in
-              let maybe_unfold_side_and_retry side1 t01 t11 ctx01 cache01 =
-                let uu___3 = unfolding_ok ctx01 cache01 in
-                match uu___3 with
-                | Success ((x1, g11), cache11) ->
-                    let uu___4 =
-                      let uu___5 =
-                        if x1
-                        then
-                          let uu___6 = maybe_unfold_side side1 t01 t11 in
-                          match uu___6 with
-                          | FStar_Pervasives_Native.None -> fallback t01 t11
-                          | FStar_Pervasives_Native.Some (t02, t12) ->
-                              check_relation g rel t02 t12
-                        else fallback t01 t11 in
-                      uu___5 ctx01 cache11 in
-                    (match uu___4 with
-                     | Success ((y, g2), cache2) ->
-                         let uu___5 =
-                           let uu___6 =
-                             let uu___7 = and_pre g11 g2 in ((), uu___7) in
-                           (uu___6, cache2) in
-                         Success uu___5
-                     | err1 -> err1)
-                | Error err1 -> Error err1 in
-              let maybe_unfold_and_retry t01 t11 =
-                let uu___3 = which_side_to_unfold t01 t11 in
-                maybe_unfold_side_and_retry uu___3 t01 t11 in
-              let beta_iota_reduce t =
-                let t2 = FStarC_Syntax_Subst.compress t in
-                let t3 =
-                  FStarC_TypeChecker_Normalize.normalize
-                    [FStarC_TypeChecker_Env.HNF;
-                    FStarC_TypeChecker_Env.Weak;
-                    FStarC_TypeChecker_Env.Beta;
-                    FStarC_TypeChecker_Env.Iota;
-                    FStarC_TypeChecker_Env.Primops] g.tcenv t2 in
-                match t3.FStarC_Syntax_Syntax.n with
-                | FStarC_Syntax_Syntax.Tm_refine uu___3 ->
-                    FStarC_Syntax_Util.flatten_refinement t3
-                | uu___3 -> t3 in
-              let beta_iota_reduce1 t =
-                FStarC_Profiling.profile (fun uu___3 -> beta_iota_reduce t)
-                  FStar_Pervasives_Native.None
-                  "FStarC.TypeChecker.Core.beta_iota_reduce" in
-              let t01 =
-                let uu___3 =
-                  let uu___4 = beta_iota_reduce1 t0 in
-                  FStarC_Syntax_Subst.compress uu___4 in
-                FStarC_Syntax_Util.unlazy_emb uu___3 in
-              let t11 =
-                let uu___3 =
-                  let uu___4 = beta_iota_reduce1 t1 in
-                  FStarC_Syntax_Subst.compress uu___4 in
-                FStarC_Syntax_Util.unlazy_emb uu___3 in
-              let check_relation1 g2 rel1 t02 t12 ctx cache =
-                let ctx1 =
-                  {
-                    no_guard = (ctx.no_guard);
-                    unfolding_ok = (ctx.unfolding_ok);
-                    error_context =
-                      (("check_relation",
-                         (FStar_Pervasives_Native.Some
-                            (CtxRel (t02, rel1, t12)))) ::
-                      (ctx.error_context))
-                  } in
-                let uu___3 = check_relation g2 rel1 t02 t12 in
-                uu___3 ctx1 cache in
-              let uu___3 = equal_term t01 t11 in
-              if uu___3
-              then
-                fun uu___4 ->
-                  fun cache ->
-                    Success (((), FStar_Pervasives_Native.None), cache)
-              else
-                (match ((t01.FStarC_Syntax_Syntax.n),
-                         (t11.FStarC_Syntax_Syntax.n))
-                 with
-                 | (FStarC_Syntax_Syntax.Tm_type u0,
-                    FStarC_Syntax_Syntax.Tm_type u1) ->
-                     let uu___4 =
-                       FStarC_TypeChecker_Rel.teq_nosmt_force g.tcenv t01 t11 in
-                     if uu___4
-                     then
-                       (fun uu___5 ->
-                          fun cache ->
-                            Success
-                              (((), FStar_Pervasives_Native.None), cache))
-                     else err "teq_nosmt_force over Types failed"
-                 | (FStarC_Syntax_Syntax.Tm_meta
-                    { FStarC_Syntax_Syntax.tm2 = t02;
-                      FStarC_Syntax_Syntax.meta =
-                        FStarC_Syntax_Syntax.Meta_pattern uu___4;_},
-                    uu___5) -> check_relation1 g rel t02 t11
-                 | (FStarC_Syntax_Syntax.Tm_meta
-                    { FStarC_Syntax_Syntax.tm2 = t02;
-                      FStarC_Syntax_Syntax.meta =
-                        FStarC_Syntax_Syntax.Meta_named uu___4;_},
-                    uu___5) -> check_relation1 g rel t02 t11
-                 | (FStarC_Syntax_Syntax.Tm_meta
-                    { FStarC_Syntax_Syntax.tm2 = t02;
-                      FStarC_Syntax_Syntax.meta =
-                        FStarC_Syntax_Syntax.Meta_labeled uu___4;_},
-                    uu___5) -> check_relation1 g rel t02 t11
-                 | (FStarC_Syntax_Syntax.Tm_meta
-                    { FStarC_Syntax_Syntax.tm2 = t02;
-                      FStarC_Syntax_Syntax.meta =
-                        FStarC_Syntax_Syntax.Meta_desugared uu___4;_},
-                    uu___5) -> check_relation1 g rel t02 t11
-                 | (FStarC_Syntax_Syntax.Tm_ascribed
-                    { FStarC_Syntax_Syntax.tm = t02;
-                      FStarC_Syntax_Syntax.asc = uu___4;
-                      FStarC_Syntax_Syntax.eff_opt = uu___5;_},
-                    uu___6) -> check_relation1 g rel t02 t11
-                 | (uu___4, FStarC_Syntax_Syntax.Tm_meta
-                    { FStarC_Syntax_Syntax.tm2 = t12;
-                      FStarC_Syntax_Syntax.meta =
-                        FStarC_Syntax_Syntax.Meta_pattern uu___5;_})
-                     -> check_relation1 g rel t01 t12
-                 | (uu___4, FStarC_Syntax_Syntax.Tm_meta
-                    { FStarC_Syntax_Syntax.tm2 = t12;
-                      FStarC_Syntax_Syntax.meta =
-                        FStarC_Syntax_Syntax.Meta_named uu___5;_})
-                     -> check_relation1 g rel t01 t12
-                 | (uu___4, FStarC_Syntax_Syntax.Tm_meta
-                    { FStarC_Syntax_Syntax.tm2 = t12;
-                      FStarC_Syntax_Syntax.meta =
-                        FStarC_Syntax_Syntax.Meta_labeled uu___5;_})
-                     -> check_relation1 g rel t01 t12
-                 | (uu___4, FStarC_Syntax_Syntax.Tm_meta
-                    { FStarC_Syntax_Syntax.tm2 = t12;
-                      FStarC_Syntax_Syntax.meta =
-                        FStarC_Syntax_Syntax.Meta_desugared uu___5;_})
-                     -> check_relation1 g rel t01 t12
-                 | (uu___4, FStarC_Syntax_Syntax.Tm_ascribed
-                    { FStarC_Syntax_Syntax.tm = t12;
-                      FStarC_Syntax_Syntax.asc = uu___5;
-                      FStarC_Syntax_Syntax.eff_opt = uu___6;_})
-                     -> check_relation1 g rel t01 t12
-                 | (FStarC_Syntax_Syntax.Tm_uinst (f0, us0),
-                    FStarC_Syntax_Syntax.Tm_uinst (f1, us1)) ->
-                     let uu___4 = equal_term f0 f1 in
-                     if uu___4
-                     then
-                       let uu___5 =
-                         FStarC_TypeChecker_Rel.teq_nosmt_force g.tcenv t01
-                           t11 in
-                       (if uu___5
-                        then
-                          fun uu___6 ->
-                            fun cache ->
-                              Success
-                                (((), FStar_Pervasives_Native.None), cache)
-                        else err "teq_nosmt_force over Tm_uinst failed")
-                     else maybe_unfold_and_retry t01 t11
-                 | (FStarC_Syntax_Syntax.Tm_fvar uu___4,
-                    FStarC_Syntax_Syntax.Tm_fvar uu___5) ->
-                     maybe_unfold_and_retry t01 t11
-                 | (uu___4, uu___5) when
-                     let uu___6 =
-                       if
-                         (match rel with
-                          | SUBTYPING _0 -> true
-                          | uu___7 -> false) && guard_ok
-                       then
-                         let uu___7 = FStarC_Syntax_Util.is_squash t01 in
-                         match uu___7 with
-                         | FStar_Pervasives_Native.Some v -> true
-                         | uu___8 -> false
-                       else false in
-                     if uu___6
-                     then
-                       let uu___7 = FStarC_Syntax_Util.is_squash t11 in
-                       match uu___7 with
-                       | FStar_Pervasives_Native.Some v -> true
-                       | uu___8 -> false
-                     else false ->
-                     let p0 =
-                       let uu___6 = FStarC_Syntax_Util.is_squash t01 in
-                       match uu___6 with
-                       | FStar_Pervasives_Native.Some v -> v in
-                     let p1 =
-                       let uu___6 = FStarC_Syntax_Util.is_squash t11 in
-                       match uu___6 with
-                       | FStar_Pervasives_Native.Some v -> v in
-                     let uu___6 = equal_term p0 p1 in
-                     if uu___6
-                     then
-                       (fun uu___7 ->
-                          fun cache ->
-                            Success
-                              (((), FStar_Pervasives_Native.None), cache))
-                     else
-                       (let uu___7 = FStarC_Syntax_Util.mk_imp p0 p1 in
-                        guard g uu___7)
-                 | (FStarC_Syntax_Syntax.Tm_refine
-                    { FStarC_Syntax_Syntax.b2 = x0;
-                      FStarC_Syntax_Syntax.phi = f0;_},
-                    FStarC_Syntax_Syntax.Tm_refine
-                    { FStarC_Syntax_Syntax.b2 = x1;
-                      FStarC_Syntax_Syntax.phi = f1;_})
-                     ->
-                     let uu___4 =
-                       head_matches x0.FStarC_Syntax_Syntax.sort
-                         x1.FStarC_Syntax_Syntax.sort in
-                     if uu___4
-                     then
-                       (fun ctx01 ->
-                          fun cache01 ->
-                            let uu___5 =
-                              check_relation1 g EQUALITY
-                                x0.FStarC_Syntax_Syntax.sort
-                                x1.FStarC_Syntax_Syntax.sort ctx01 cache01 in
-                            match uu___5 with
-                            | Success ((x2, g11), cache11) ->
-                                let uu___6 =
-                                  let uu___7 =
-                                    let uu___8 =
-                                      universe_of_well_typed_term g
-                                        x0.FStarC_Syntax_Syntax.sort in
-                                    fun ctx02 ->
-                                      fun cache02 ->
-                                        let uu___9 = uu___8 ctx02 cache02 in
-                                        match uu___9 with
-                                        | Success ((x3, g12), cache12) ->
-                                            let uu___10 =
-                                              let uu___11 =
-                                                let g0 = g in
-                                                let uu___12 =
-                                                  open_term g
-                                                    (FStarC_Syntax_Syntax.mk_binder
-                                                       x0) f0 in
-                                                match uu___12 with
-                                                | (g2, b, f01) ->
-                                                    let f11 =
-                                                      FStarC_Syntax_Subst.subst
-                                                        [FStarC_Syntax_Syntax.DB
-                                                           (Prims.int_zero,
-                                                             (b.FStarC_Syntax_Syntax.binder_bv))]
-                                                        f1 in
-                                                    (fun ctx03 ->
-                                                       fun cache03 ->
-                                                         let uu___13 =
-                                                           guard_not_allowed
-                                                             ctx03 cache03 in
-                                                         match uu___13 with
-                                                         | Success
-                                                             ((x4, g13),
-                                                              cache13)
-                                                             ->
-                                                             let uu___14 =
-                                                               let uu___15 =
-                                                                 if x4
-                                                                 then
-                                                                   with_binders
-                                                                    g0 
-                                                                    [b] 
-                                                                    [x3]
-                                                                    (check_relation1
-                                                                    g2
-                                                                    EQUALITY
-                                                                    f01 f11)
-                                                                 else
-                                                                   (match rel
-                                                                    with
-                                                                    | 
-                                                                    EQUALITY
-                                                                    ->
-                                                                    with_binders
-                                                                    g0 
-                                                                    [b] 
-                                                                    [x3]
-                                                                    (fun ctx
-                                                                    cache ->
-                                                                    let uu___16
-                                                                    =
-                                                                    check_relation1
-                                                                    g2
-                                                                    EQUALITY
-                                                                    f01 f11
-                                                                    ctx cache in
-                                                                    match uu___16
-                                                                    with
-                                                                    | 
-                                                                    Error
-                                                                    uu___17
-                                                                    ->
-                                                                    let uu___18
-                                                                    =
-                                                                    let uu___19
-                                                                    =
-                                                                    FStarC_Syntax_Util.mk_iff
-                                                                    f01 f11 in
-                                                                    guard g2
-                                                                    uu___19 in
-                                                                    uu___18
-                                                                    ctx cache
-                                                                    | 
-                                                                    res ->
-                                                                    res)
-                                                                    | 
-                                                                    SUBTYPING
-                                                                    (FStar_Pervasives_Native.Some
-                                                                    tm) ->
-                                                                    let uu___16
-                                                                    =
-                                                                    let uu___17
-                                                                    =
-                                                                    FStarC_Syntax_Util.mk_imp
-                                                                    f01 f11 in
-                                                                    FStarC_Syntax_Subst.subst
-                                                                    [
-                                                                    FStarC_Syntax_Syntax.NT
-                                                                    ((b.FStarC_Syntax_Syntax.binder_bv),
-                                                                    tm)]
-                                                                    uu___17 in
-                                                                    guard g0
-                                                                    uu___16
-                                                                    | 
-                                                                    SUBTYPING
-                                                                    (FStar_Pervasives_Native.None)
-                                                                    ->
-                                                                    let uu___16
-                                                                    =
-                                                                    let uu___17
-                                                                    =
-                                                                    FStarC_Syntax_Util.mk_imp
-                                                                    f01 f11 in
-                                                                    FStarC_Syntax_Util.mk_forall
-                                                                    x3
-                                                                    b.FStarC_Syntax_Syntax.binder_bv
-                                                                    uu___17 in
-                                                                    guard g0
-                                                                    uu___16) in
-                                                               uu___15 ctx03
-                                                                 cache13 in
-                                                             (match uu___14
-                                                              with
-                                                              | Success
-                                                                  ((y, g21),
-                                                                   cache2)
-                                                                  ->
-                                                                  let uu___15
-                                                                    =
-                                                                    let uu___16
-                                                                    =
-                                                                    let uu___17
-                                                                    =
-                                                                    and_pre
-                                                                    g13 g21 in
-                                                                    ((),
-                                                                    uu___17) in
-                                                                    (uu___16,
-                                                                    cache2) in
-                                                                  Success
-                                                                    uu___15
-                                                              | err1 -> err1)
-                                                         | Error err1 ->
-                                                             Error err1) in
-                                              uu___11 ctx02 cache12 in
-                                            (match uu___10 with
-                                             | Success ((y, g2), cache2) ->
-                                                 let uu___11 =
-                                                   let uu___12 =
-                                                     let uu___13 =
-                                                       and_pre g12 g2 in
-                                                     ((), uu___13) in
-                                                   (uu___12, cache2) in
-                                                 Success uu___11
-                                             | err1 -> err1)
-                                        | Error err1 -> Error err1 in
-                                  uu___7 ctx01 cache11 in
-                                (match uu___6 with
-                                 | Success ((y, g2), cache2) ->
-                                     let uu___7 =
-                                       let uu___8 =
-                                         let uu___9 = and_pre g11 g2 in
-                                         ((), uu___9) in
-                                       (uu___8, cache2) in
-                                     Success uu___7
-                                 | err1 -> err1)
-                            | Error err1 -> Error err1)
-                     else
-                       (fun ctx01 ->
-                          fun cache01 ->
-                            let uu___5 =
-                              maybe_unfold x0.FStarC_Syntax_Syntax.sort
-                                x1.FStarC_Syntax_Syntax.sort ctx01 cache01 in
-                            match uu___5 with
-                            | Success ((x2, g11), cache11) ->
-                                let uu___6 =
-                                  let uu___7 =
-                                    match x2 with
-                                    | FStar_Pervasives_Native.None ->
-                                        ((let uu___9 =
-                                            FStarC_Effect.op_Bang dbg in
-                                          if uu___9
-                                          then
-                                            let uu___10 =
-                                              FStarC_Class_Show.show
-                                                FStarC_Syntax_Print.showable_term
-                                                x0.FStarC_Syntax_Syntax.sort in
-                                            let uu___11 =
-                                              FStarC_Class_Show.show
-                                                FStarC_Syntax_Print.showable_term
-                                                x1.FStarC_Syntax_Syntax.sort in
-                                            FStarC_Format.print2
-                                              "Cannot match ref heads %s and %s\n"
-                                              uu___10 uu___11
-                                          else ());
-                                         fallback t01 t11)
-                                    | FStar_Pervasives_Native.Some (t02, t12)
-                                        ->
-                                        let lhs =
-                                          FStarC_Syntax_Syntax.mk
-                                            (FStarC_Syntax_Syntax.Tm_refine
-                                               {
-                                                 FStarC_Syntax_Syntax.b2 =
-                                                   {
-                                                     FStarC_Syntax_Syntax.ppname
-                                                       =
-                                                       (x0.FStarC_Syntax_Syntax.ppname);
-                                                     FStarC_Syntax_Syntax.index
-                                                       =
-                                                       (x0.FStarC_Syntax_Syntax.index);
-                                                     FStarC_Syntax_Syntax.sort
-                                                       = t02
-                                                   };
-                                                 FStarC_Syntax_Syntax.phi =
-                                                   f0
-                                               })
-                                            t02.FStarC_Syntax_Syntax.pos in
-                                        let rhs =
-                                          FStarC_Syntax_Syntax.mk
-                                            (FStarC_Syntax_Syntax.Tm_refine
-                                               {
-                                                 FStarC_Syntax_Syntax.b2 =
-                                                   {
-                                                     FStarC_Syntax_Syntax.ppname
-                                                       =
-                                                       (x1.FStarC_Syntax_Syntax.ppname);
-                                                     FStarC_Syntax_Syntax.index
-                                                       =
-                                                       (x1.FStarC_Syntax_Syntax.index);
-                                                     FStarC_Syntax_Syntax.sort
-                                                       = t12
-                                                   };
-                                                 FStarC_Syntax_Syntax.phi =
-                                                   f1
-                                               })
-                                            t12.FStarC_Syntax_Syntax.pos in
-                                        let uu___8 =
-                                          FStarC_Syntax_Util.flatten_refinement
-                                            lhs in
-                                        let uu___9 =
-                                          FStarC_Syntax_Util.flatten_refinement
-                                            rhs in
-                                        check_relation1 g rel uu___8 uu___9 in
-                                  uu___7 ctx01 cache11 in
-                                (match uu___6 with
-                                 | Success ((y, g2), cache2) ->
-                                     let uu___7 =
-                                       let uu___8 =
-                                         let uu___9 = and_pre g11 g2 in
-                                         ((), uu___9) in
-                                       (uu___8, cache2) in
-                                     Success uu___7
-                                 | err1 -> err1)
-                            | Error err1 -> Error err1)
-                 | (FStarC_Syntax_Syntax.Tm_refine
-                    { FStarC_Syntax_Syntax.b2 = x0;
-                      FStarC_Syntax_Syntax.phi = f0;_},
-                    uu___4) ->
-                     let uu___5 =
-                       head_matches x0.FStarC_Syntax_Syntax.sort t11 in
-                     if uu___5
-                     then
-                       let uu___6 =
-                         if rel = EQUALITY
-                         then
-                           let uu___7 =
-                             universe_of_well_typed_term g
-                               x0.FStarC_Syntax_Syntax.sort in
-                           fun ctx01 ->
-                             fun cache01 ->
-                               let uu___8 = uu___7 ctx01 cache01 in
-                               match uu___8 with
-                               | Success ((x1, g11), cache11) ->
-                                   let uu___9 =
-                                     let uu___10 =
-                                       let g0 = g in
-                                       let uu___11 =
-                                         open_term g
-                                           (FStarC_Syntax_Syntax.mk_binder x0)
-                                           f0 in
-                                       match uu___11 with
-                                       | (g2, b0, f01) ->
-                                           (fun ctx02 ->
-                                              fun cache02 ->
-                                                let uu___12 =
-                                                  guard_not_allowed ctx02
-                                                    cache02 in
-                                                match uu___12 with
-                                                | Success
-                                                    ((x2, g12), cache12) ->
-                                                    let uu___13 =
-                                                      let uu___14 =
-                                                        if x2
-                                                        then
-                                                          with_binders g0
-                                                            [b0] [x1]
-                                                            (check_relation1
-                                                               g2 EQUALITY
-                                                               FStarC_Syntax_Util.t_true
-                                                               f01)
-                                                        else
-                                                          with_binders g0
-                                                            [b0] [x1]
-                                                            (fun ctx cache ->
-                                                               let uu___15 =
-                                                                 check_relation1
-                                                                   g2
-                                                                   EQUALITY
-                                                                   FStarC_Syntax_Util.t_true
-                                                                   f01 ctx
-                                                                   cache in
-                                                               match uu___15
-                                                               with
-                                                               | Error
-                                                                   uu___16 ->
-                                                                   let uu___17
-                                                                    =
-                                                                    guard g2
-                                                                    f01 in
-                                                                   uu___17
-                                                                    ctx cache
-                                                               | res -> res) in
-                                                      uu___14 ctx02 cache12 in
-                                                    (match uu___13 with
-                                                     | Success
-                                                         ((y, g21), cache2)
-                                                         ->
-                                                         let uu___14 =
-                                                           let uu___15 =
-                                                             let uu___16 =
-                                                               and_pre g12
-                                                                 g21 in
-                                                             ((), uu___16) in
-                                                           (uu___15, cache2) in
-                                                         Success uu___14
-                                                     | err1 -> err1)
-                                                | Error err1 -> Error err1) in
-                                     uu___10 ctx01 cache11 in
-                                   (match uu___9 with
-                                    | Success ((y, g2), cache2) ->
-                                        let uu___10 =
-                                          let uu___11 =
-                                            let uu___12 = and_pre g11 g2 in
-                                            ((), uu___12) in
-                                          (uu___11, cache2) in
-                                        Success uu___10
-                                    | err1 -> err1)
-                               | Error err1 -> Error err1
-                         else
-                           (fun uu___7 ->
-                              fun cache ->
-                                Success
-                                  (((), FStar_Pervasives_Native.None), cache)) in
-                       (fun ctx01 ->
-                          fun cache01 ->
-                            let uu___7 = uu___6 ctx01 cache01 in
-                            match uu___7 with
-                            | Success ((x1, g11), cache11) ->
-                                let uu___8 =
-                                  let uu___9 =
-                                    check_relation1 g rel
-                                      x0.FStarC_Syntax_Syntax.sort t11 in
-                                  uu___9 ctx01 cache11 in
-                                (match uu___8 with
-                                 | Success ((y, g2), cache2) ->
-                                     let uu___9 =
-                                       let uu___10 =
-                                         let uu___11 = and_pre g11 g2 in
-                                         ((), uu___11) in
-                                       (uu___10, cache2) in
-                                     Success uu___9
-                                 | err1 -> err1)
-                            | Error err1 -> Error err1)
-                     else
-                       (fun ctx01 ->
-                          fun cache01 ->
-                            let uu___6 =
-                              maybe_unfold x0.FStarC_Syntax_Syntax.sort t11
-                                ctx01 cache01 in
-                            match uu___6 with
-                            | Success ((x1, g11), cache11) ->
-                                let uu___7 =
-                                  let uu___8 =
-                                    match x1 with
-                                    | FStar_Pervasives_Native.None ->
-                                        fallback t01 t11
-                                    | FStar_Pervasives_Native.Some (t02, t12)
-                                        ->
-                                        let lhs =
-                                          FStarC_Syntax_Syntax.mk
-                                            (FStarC_Syntax_Syntax.Tm_refine
-                                               {
-                                                 FStarC_Syntax_Syntax.b2 =
-                                                   {
-                                                     FStarC_Syntax_Syntax.ppname
-                                                       =
-                                                       (x0.FStarC_Syntax_Syntax.ppname);
-                                                     FStarC_Syntax_Syntax.index
-                                                       =
-                                                       (x0.FStarC_Syntax_Syntax.index);
-                                                     FStarC_Syntax_Syntax.sort
-                                                       = t02
-                                                   };
-                                                 FStarC_Syntax_Syntax.phi =
-                                                   f0
-                                               })
-                                            t02.FStarC_Syntax_Syntax.pos in
-                                        let uu___9 =
-                                          FStarC_Syntax_Util.flatten_refinement
-                                            lhs in
-                                        check_relation1 g rel uu___9 t12 in
-                                  uu___8 ctx01 cache11 in
-                                (match uu___7 with
-                                 | Success ((y, g2), cache2) ->
-                                     let uu___8 =
-                                       let uu___9 =
-                                         let uu___10 = and_pre g11 g2 in
-                                         ((), uu___10) in
-                                       (uu___9, cache2) in
-                                     Success uu___8
-                                 | err1 -> err1)
-                            | Error err1 -> Error err1)
-                 | (uu___4, FStarC_Syntax_Syntax.Tm_refine
-                    { FStarC_Syntax_Syntax.b2 = x1;
-                      FStarC_Syntax_Syntax.phi = f1;_})
-                     ->
-                     let uu___5 =
-                       head_matches t01 x1.FStarC_Syntax_Syntax.sort in
-                     if uu___5
-                     then
-                       let uu___6 =
-                         universe_of_well_typed_term g
-                           x1.FStarC_Syntax_Syntax.sort in
-                       (fun ctx01 ->
-                          fun cache01 ->
-                            let uu___7 = uu___6 ctx01 cache01 in
-                            match uu___7 with
-                            | Success ((x2, g11), cache11) ->
-                                let uu___8 =
-                                  let uu___9 ctx02 cache02 =
-                                    let uu___10 =
-                                      check_relation1 g EQUALITY t01
-                                        x1.FStarC_Syntax_Syntax.sort ctx02
-                                        cache02 in
-                                    match uu___10 with
-                                    | Success ((x3, g12), cache12) ->
-                                        let uu___11 =
-                                          let uu___12 =
-                                            let g0 = g in
-                                            let uu___13 =
-                                              open_term g
-                                                (FStarC_Syntax_Syntax.mk_binder
-                                                   x1) f1 in
-                                            match uu___13 with
-                                            | (g2, b1, f11) ->
-                                                (fun ctx03 ->
-                                                   fun cache03 ->
-                                                     let uu___14 =
-                                                       guard_not_allowed
-                                                         ctx03 cache03 in
-                                                     match uu___14 with
-                                                     | Success
-                                                         ((x4, g13), cache13)
-                                                         ->
-                                                         let uu___15 =
-                                                           let uu___16 =
-                                                             if x4
-                                                             then
-                                                               with_binders
-                                                                 g0 [b1] 
-                                                                 [x2]
-                                                                 (check_relation1
-                                                                    g2
-                                                                    EQUALITY
-                                                                    FStarC_Syntax_Util.t_true
-                                                                    f11)
-                                                             else
-                                                               (match rel
-                                                                with
-                                                                | EQUALITY ->
-                                                                    with_binders
-                                                                    g0 
-                                                                    [b1] 
-                                                                    [x2]
-                                                                    (fun ctx
-                                                                    cache ->
-                                                                    let uu___17
-                                                                    =
-                                                                    check_relation1
-                                                                    g2
-                                                                    EQUALITY
-                                                                    FStarC_Syntax_Util.t_true
-                                                                    f11 ctx
-                                                                    cache in
-                                                                    match uu___17
-                                                                    with
-                                                                    | 
-                                                                    Error
-                                                                    uu___18
-                                                                    ->
-                                                                    let uu___19
-                                                                    =
-                                                                    guard g2
-                                                                    f11 in
-                                                                    uu___19
-                                                                    ctx cache
-                                                                    | 
-                                                                    res ->
-                                                                    res)
-                                                                | SUBTYPING
-                                                                    (FStar_Pervasives_Native.Some
-                                                                    tm) ->
-                                                                    let uu___17
-                                                                    =
-                                                                    FStarC_Syntax_Subst.subst
-                                                                    [
-                                                                    FStarC_Syntax_Syntax.NT
-                                                                    ((b1.FStarC_Syntax_Syntax.binder_bv),
-                                                                    tm)] f11 in
-                                                                    guard g0
-                                                                    uu___17
-                                                                | SUBTYPING
-                                                                    (FStar_Pervasives_Native.None)
-                                                                    ->
-                                                                    let uu___17
-                                                                    =
-                                                                    FStarC_Syntax_Util.mk_forall
-                                                                    x2
-                                                                    b1.FStarC_Syntax_Syntax.binder_bv
-                                                                    f11 in
-                                                                    guard g0
-                                                                    uu___17) in
-                                                           uu___16 ctx03
-                                                             cache13 in
-                                                         (match uu___15 with
-                                                          | Success
-                                                              ((y, g21),
-                                                               cache2)
-                                                              ->
-                                                              let uu___16 =
-                                                                let uu___17 =
-                                                                  let uu___18
-                                                                    =
-                                                                    and_pre
-                                                                    g13 g21 in
-                                                                  ((),
-                                                                    uu___18) in
-                                                                (uu___17,
-                                                                  cache2) in
-                                                              Success uu___16
-                                                          | err1 -> err1)
-                                                     | Error err1 ->
-                                                         Error err1) in
-                                          uu___12 ctx02 cache12 in
-                                        (match uu___11 with
-                                         | Success ((y, g2), cache2) ->
-                                             let uu___12 =
-                                               let uu___13 =
-                                                 let uu___14 = and_pre g12 g2 in
-                                                 ((), uu___14) in
-                                               (uu___13, cache2) in
-                                             Success uu___12
-                                         | err1 -> err1)
-                                    | Error err1 -> Error err1 in
-                                  uu___9 ctx01 cache11 in
-                                (match uu___8 with
-                                 | Success ((y, g2), cache2) ->
-                                     let uu___9 =
-                                       let uu___10 =
-                                         let uu___11 = and_pre g11 g2 in
-                                         ((), uu___11) in
-                                       (uu___10, cache2) in
-                                     Success uu___9
-                                 | err1 -> err1)
-                            | Error err1 -> Error err1)
-                     else
-                       (fun ctx01 ->
-                          fun cache01 ->
-                            let uu___6 =
-                              maybe_unfold t01 x1.FStarC_Syntax_Syntax.sort
-                                ctx01 cache01 in
-                            match uu___6 with
-                            | Success ((x2, g11), cache11) ->
-                                let uu___7 =
-                                  let uu___8 =
-                                    match x2 with
-                                    | FStar_Pervasives_Native.None ->
-                                        fallback t01 t11
-                                    | FStar_Pervasives_Native.Some (t02, t12)
-                                        ->
-                                        let rhs =
-                                          FStarC_Syntax_Syntax.mk
-                                            (FStarC_Syntax_Syntax.Tm_refine
-                                               {
-                                                 FStarC_Syntax_Syntax.b2 =
-                                                   {
-                                                     FStarC_Syntax_Syntax.ppname
-                                                       =
-                                                       (x1.FStarC_Syntax_Syntax.ppname);
-                                                     FStarC_Syntax_Syntax.index
-                                                       =
-                                                       (x1.FStarC_Syntax_Syntax.index);
-                                                     FStarC_Syntax_Syntax.sort
-                                                       = t12
-                                                   };
-                                                 FStarC_Syntax_Syntax.phi =
-                                                   f1
-                                               })
-                                            t12.FStarC_Syntax_Syntax.pos in
-                                        let uu___9 =
-                                          FStarC_Syntax_Util.flatten_refinement
-                                            rhs in
-                                        check_relation1 g rel t02 uu___9 in
-                                  uu___8 ctx01 cache11 in
-                                (match uu___7 with
-                                 | Success ((y, g2), cache2) ->
-                                     let uu___8 =
-                                       let uu___9 =
-                                         let uu___10 = and_pre g11 g2 in
-                                         ((), uu___10) in
-                                       (uu___9, cache2) in
-                                     Success uu___8
-                                 | err1 -> err1)
-                            | Error err1 -> Error err1)
-                 | (FStarC_Syntax_Syntax.Tm_uinst uu___4, uu___5) ->
-                     let head_matches1 = head_matches t01 t11 in
-                     let uu___6 =
-                       FStarC_Syntax_Util.leftmost_head_and_args t01 in
-                     (match uu___6 with
-                      | (head0, args0) ->
-                          let uu___7 =
-                            FStarC_Syntax_Util.leftmost_head_and_args t11 in
-                          (match uu___7 with
-                           | (head1, args1) ->
-                               if
-                                 Prims.not
-                                   (head_matches1 &&
-                                      ((FStarC_List.length args0) =
-                                         (FStarC_List.length args1)))
-                               then maybe_unfold_and_retry t01 t11
-                               else
-                                 (let compare_head_and_args uu___8 ctx cache
-                                    =
-                                    let uu___9 =
-                                      let uu___10 =
-                                        check_relation1 g EQUALITY head0
-                                          head1 ctx cache in
-                                      match uu___10 with
-                                      | Success ((x1, g11), cache11) ->
-                                          let uu___11 =
-                                            let uu___12 =
-                                              check_relation_args g EQUALITY
-                                                args0 args1 in
-                                            uu___12 ctx cache11 in
-                                          (match uu___11 with
-                                           | Success ((y, g2), cache2) ->
-                                               let uu___12 =
-                                                 let uu___13 =
-                                                   let uu___14 =
-                                                     and_pre g11 g2 in
-                                                   ((), uu___14) in
-                                                 (uu___13, cache2) in
-                                               Success uu___12
-                                           | err1 -> err1)
-                                      | Error err1 -> Error err1 in
-                                    match uu___9 with
-                                    | Error uu___10 ->
-                                        let uu___11 =
-                                          maybe_unfold_side_and_retry Both
-                                            t01 t11 in
-                                        uu___11 ctx cache
-                                    | res -> res in
-                                  let uu___8 =
-                                    if guard_ok && (rel = EQUALITY)
-                                    then
-                                      let uu___9 = equatable g t01 in
-                                      (if uu___9
-                                       then true
-                                       else equatable g t11)
-                                    else false in
-                                  if uu___8
-                                  then
-                                    fun ctx ->
-                                      fun cache ->
-                                        let uu___9 =
-                                          no_guard (compare_head_and_args ())
-                                            ctx cache in
-                                        match uu___9 with
-                                        | Error uu___10 ->
-                                            let uu___11 = emit_guard t01 t11 in
-                                            uu___11 ctx cache
-                                        | res -> res
-                                  else compare_head_and_args ())))
-                 | (FStarC_Syntax_Syntax.Tm_fvar uu___4, uu___5) ->
-                     let head_matches1 = head_matches t01 t11 in
-                     let uu___6 =
-                       FStarC_Syntax_Util.leftmost_head_and_args t01 in
-                     (match uu___6 with
-                      | (head0, args0) ->
-                          let uu___7 =
-                            FStarC_Syntax_Util.leftmost_head_and_args t11 in
-                          (match uu___7 with
-                           | (head1, args1) ->
-                               if
-                                 Prims.not
-                                   (head_matches1 &&
-                                      ((FStarC_List.length args0) =
-                                         (FStarC_List.length args1)))
-                               then maybe_unfold_and_retry t01 t11
-                               else
-                                 (let compare_head_and_args uu___8 ctx cache
-                                    =
-                                    let uu___9 =
-                                      let uu___10 =
-                                        check_relation1 g EQUALITY head0
-                                          head1 ctx cache in
-                                      match uu___10 with
-                                      | Success ((x1, g11), cache11) ->
-                                          let uu___11 =
-                                            let uu___12 =
-                                              check_relation_args g EQUALITY
-                                                args0 args1 in
-                                            uu___12 ctx cache11 in
-                                          (match uu___11 with
-                                           | Success ((y, g2), cache2) ->
-                                               let uu___12 =
-                                                 let uu___13 =
-                                                   let uu___14 =
-                                                     and_pre g11 g2 in
-                                                   ((), uu___14) in
-                                                 (uu___13, cache2) in
-                                               Success uu___12
-                                           | err1 -> err1)
-                                      | Error err1 -> Error err1 in
-                                    match uu___9 with
-                                    | Error uu___10 ->
-                                        let uu___11 =
-                                          maybe_unfold_side_and_retry Both
-                                            t01 t11 in
-                                        uu___11 ctx cache
-                                    | res -> res in
-                                  let uu___8 =
-                                    if guard_ok && (rel = EQUALITY)
-                                    then
-                                      let uu___9 = equatable g t01 in
-                                      (if uu___9
-                                       then true
-                                       else equatable g t11)
-                                    else false in
-                                  if uu___8
-                                  then
-                                    fun ctx ->
-                                      fun cache ->
-                                        let uu___9 =
-                                          no_guard (compare_head_and_args ())
-                                            ctx cache in
-                                        match uu___9 with
-                                        | Error uu___10 ->
-                                            let uu___11 = emit_guard t01 t11 in
-                                            uu___11 ctx cache
-                                        | res -> res
-                                  else compare_head_and_args ())))
-                 | (FStarC_Syntax_Syntax.Tm_app uu___4, uu___5) ->
-                     let head_matches1 = head_matches t01 t11 in
-                     let uu___6 =
-                       FStarC_Syntax_Util.leftmost_head_and_args t01 in
-                     (match uu___6 with
-                      | (head0, args0) ->
-                          let uu___7 =
-                            FStarC_Syntax_Util.leftmost_head_and_args t11 in
-                          (match uu___7 with
-                           | (head1, args1) ->
-                               if
-                                 Prims.not
-                                   (head_matches1 &&
-                                      ((FStarC_List.length args0) =
-                                         (FStarC_List.length args1)))
-                               then maybe_unfold_and_retry t01 t11
-                               else
-                                 (let compare_head_and_args uu___8 ctx cache
-                                    =
-                                    let uu___9 =
-                                      let uu___10 =
-                                        check_relation1 g EQUALITY head0
-                                          head1 ctx cache in
-                                      match uu___10 with
-                                      | Success ((x1, g11), cache11) ->
-                                          let uu___11 =
-                                            let uu___12 =
-                                              check_relation_args g EQUALITY
-                                                args0 args1 in
-                                            uu___12 ctx cache11 in
-                                          (match uu___11 with
-                                           | Success ((y, g2), cache2) ->
-                                               let uu___12 =
-                                                 let uu___13 =
-                                                   let uu___14 =
-                                                     and_pre g11 g2 in
-                                                   ((), uu___14) in
-                                                 (uu___13, cache2) in
-                                               Success uu___12
-                                           | err1 -> err1)
-                                      | Error err1 -> Error err1 in
-                                    match uu___9 with
-                                    | Error uu___10 ->
-                                        let uu___11 =
-                                          maybe_unfold_side_and_retry Both
-                                            t01 t11 in
-                                        uu___11 ctx cache
-                                    | res -> res in
-                                  let uu___8 =
-                                    if guard_ok && (rel = EQUALITY)
-                                    then
-                                      let uu___9 = equatable g t01 in
-                                      (if uu___9
-                                       then true
-                                       else equatable g t11)
-                                    else false in
-                                  if uu___8
-                                  then
-                                    fun ctx ->
-                                      fun cache ->
-                                        let uu___9 =
-                                          no_guard (compare_head_and_args ())
-                                            ctx cache in
-                                        match uu___9 with
-                                        | Error uu___10 ->
-                                            let uu___11 = emit_guard t01 t11 in
-                                            uu___11 ctx cache
-                                        | res -> res
-                                  else compare_head_and_args ())))
-                 | (uu___4, FStarC_Syntax_Syntax.Tm_uinst uu___5) ->
-                     let head_matches1 = head_matches t01 t11 in
-                     let uu___6 =
-                       FStarC_Syntax_Util.leftmost_head_and_args t01 in
-                     (match uu___6 with
-                      | (head0, args0) ->
-                          let uu___7 =
-                            FStarC_Syntax_Util.leftmost_head_and_args t11 in
-                          (match uu___7 with
-                           | (head1, args1) ->
-                               if
-                                 Prims.not
-                                   (head_matches1 &&
-                                      ((FStarC_List.length args0) =
-                                         (FStarC_List.length args1)))
-                               then maybe_unfold_and_retry t01 t11
-                               else
-                                 (let compare_head_and_args uu___8 ctx cache
-                                    =
-                                    let uu___9 =
-                                      let uu___10 =
-                                        check_relation1 g EQUALITY head0
-                                          head1 ctx cache in
-                                      match uu___10 with
-                                      | Success ((x1, g11), cache11) ->
-                                          let uu___11 =
-                                            let uu___12 =
-                                              check_relation_args g EQUALITY
-                                                args0 args1 in
-                                            uu___12 ctx cache11 in
-                                          (match uu___11 with
-                                           | Success ((y, g2), cache2) ->
-                                               let uu___12 =
-                                                 let uu___13 =
-                                                   let uu___14 =
-                                                     and_pre g11 g2 in
-                                                   ((), uu___14) in
-                                                 (uu___13, cache2) in
-                                               Success uu___12
-                                           | err1 -> err1)
-                                      | Error err1 -> Error err1 in
-                                    match uu___9 with
-                                    | Error uu___10 ->
-                                        let uu___11 =
-                                          maybe_unfold_side_and_retry Both
-                                            t01 t11 in
-                                        uu___11 ctx cache
-                                    | res -> res in
-                                  let uu___8 =
-                                    if guard_ok && (rel = EQUALITY)
-                                    then
-                                      let uu___9 = equatable g t01 in
-                                      (if uu___9
-                                       then true
-                                       else equatable g t11)
-                                    else false in
-                                  if uu___8
-                                  then
-                                    fun ctx ->
-                                      fun cache ->
-                                        let uu___9 =
-                                          no_guard (compare_head_and_args ())
-                                            ctx cache in
-                                        match uu___9 with
-                                        | Error uu___10 ->
-                                            let uu___11 = emit_guard t01 t11 in
-                                            uu___11 ctx cache
-                                        | res -> res
-                                  else compare_head_and_args ())))
-                 | (uu___4, FStarC_Syntax_Syntax.Tm_fvar uu___5) ->
-                     let head_matches1 = head_matches t01 t11 in
-                     let uu___6 =
-                       FStarC_Syntax_Util.leftmost_head_and_args t01 in
-                     (match uu___6 with
-                      | (head0, args0) ->
-                          let uu___7 =
-                            FStarC_Syntax_Util.leftmost_head_and_args t11 in
-                          (match uu___7 with
-                           | (head1, args1) ->
-                               if
-                                 Prims.not
-                                   (head_matches1 &&
-                                      ((FStarC_List.length args0) =
-                                         (FStarC_List.length args1)))
-                               then maybe_unfold_and_retry t01 t11
-                               else
-                                 (let compare_head_and_args uu___8 ctx cache
-                                    =
-                                    let uu___9 =
-                                      let uu___10 =
-                                        check_relation1 g EQUALITY head0
-                                          head1 ctx cache in
-                                      match uu___10 with
-                                      | Success ((x1, g11), cache11) ->
-                                          let uu___11 =
-                                            let uu___12 =
-                                              check_relation_args g EQUALITY
-                                                args0 args1 in
-                                            uu___12 ctx cache11 in
-                                          (match uu___11 with
-                                           | Success ((y, g2), cache2) ->
-                                               let uu___12 =
-                                                 let uu___13 =
-                                                   let uu___14 =
-                                                     and_pre g11 g2 in
-                                                   ((), uu___14) in
-                                                 (uu___13, cache2) in
-                                               Success uu___12
-                                           | err1 -> err1)
-                                      | Error err1 -> Error err1 in
-                                    match uu___9 with
-                                    | Error uu___10 ->
-                                        let uu___11 =
-                                          maybe_unfold_side_and_retry Both
-                                            t01 t11 in
-                                        uu___11 ctx cache
-                                    | res -> res in
-                                  let uu___8 =
-                                    if guard_ok && (rel = EQUALITY)
-                                    then
-                                      let uu___9 = equatable g t01 in
-                                      (if uu___9
-                                       then true
-                                       else equatable g t11)
-                                    else false in
-                                  if uu___8
-                                  then
-                                    fun ctx ->
-                                      fun cache ->
-                                        let uu___9 =
-                                          no_guard (compare_head_and_args ())
-                                            ctx cache in
-                                        match uu___9 with
-                                        | Error uu___10 ->
-                                            let uu___11 = emit_guard t01 t11 in
-                                            uu___11 ctx cache
-                                        | res -> res
-                                  else compare_head_and_args ())))
-                 | (uu___4, FStarC_Syntax_Syntax.Tm_app uu___5) ->
-                     let head_matches1 = head_matches t01 t11 in
-                     let uu___6 =
-                       FStarC_Syntax_Util.leftmost_head_and_args t01 in
-                     (match uu___6 with
-                      | (head0, args0) ->
-                          let uu___7 =
-                            FStarC_Syntax_Util.leftmost_head_and_args t11 in
-                          (match uu___7 with
-                           | (head1, args1) ->
-                               if
-                                 Prims.not
-                                   (head_matches1 &&
-                                      ((FStarC_List.length args0) =
-                                         (FStarC_List.length args1)))
-                               then maybe_unfold_and_retry t01 t11
-                               else
-                                 (let compare_head_and_args uu___8 ctx cache
-                                    =
-                                    let uu___9 =
-                                      let uu___10 =
-                                        check_relation1 g EQUALITY head0
-                                          head1 ctx cache in
-                                      match uu___10 with
-                                      | Success ((x1, g11), cache11) ->
-                                          let uu___11 =
-                                            let uu___12 =
-                                              check_relation_args g EQUALITY
-                                                args0 args1 in
-                                            uu___12 ctx cache11 in
-                                          (match uu___11 with
-                                           | Success ((y, g2), cache2) ->
-                                               let uu___12 =
-                                                 let uu___13 =
-                                                   let uu___14 =
-                                                     and_pre g11 g2 in
-                                                   ((), uu___14) in
-                                                 (uu___13, cache2) in
-                                               Success uu___12
-                                           | err1 -> err1)
-                                      | Error err1 -> Error err1 in
-                                    match uu___9 with
-                                    | Error uu___10 ->
-                                        let uu___11 =
-                                          maybe_unfold_side_and_retry Both
-                                            t01 t11 in
-                                        uu___11 ctx cache
-                                    | res -> res in
-                                  let uu___8 =
-                                    if guard_ok && (rel = EQUALITY)
-                                    then
-                                      let uu___9 = equatable g t01 in
-                                      (if uu___9
-                                       then true
-                                       else equatable g t11)
-                                    else false in
-                                  if uu___8
-                                  then
-                                    fun ctx ->
-                                      fun cache ->
-                                        let uu___9 =
-                                          no_guard (compare_head_and_args ())
-                                            ctx cache in
-                                        match uu___9 with
-                                        | Error uu___10 ->
-                                            let uu___11 = emit_guard t01 t11 in
-                                            uu___11 ctx cache
-                                        | res -> res
-                                  else compare_head_and_args ())))
-                 | (FStarC_Syntax_Syntax.Tm_abs
-                    { FStarC_Syntax_Syntax.b = b0;
-                      FStarC_Syntax_Syntax.body = body0;
-                      FStarC_Syntax_Syntax.rc_opt = uu___4;_},
-                    FStarC_Syntax_Syntax.Tm_abs
-                    { FStarC_Syntax_Syntax.b = b1;
-                      FStarC_Syntax_Syntax.body = body1;
-                      FStarC_Syntax_Syntax.rc_opt = uu___5;_})
-                     ->
-                     (fun ctx01 ->
-                        fun cache01 ->
-                          let uu___6 =
-                            check_relation1 g EQUALITY
-                              (b0.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort
-                              (b1.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort
-                              ctx01 cache01 in
-                          match uu___6 with
-                          | Success ((x1, g11), cache11) ->
-                              let uu___7 =
-                                let uu___8 =
-                                  let uu___9 =
-                                    check_bqual
-                                      b0.FStarC_Syntax_Syntax.binder_qual
-                                      b1.FStarC_Syntax_Syntax.binder_qual in
-                                  fun ctx02 ->
-                                    fun cache02 ->
-                                      let uu___10 = uu___9 ctx02 cache02 in
-                                      match uu___10 with
-                                      | Success ((x2, g12), cache12) ->
-                                          let uu___11 =
-                                            let uu___12 ctx03 cache03 =
-                                              let uu___13 =
-                                                check_positivity_qual
-                                                  EQUALITY
-                                                  b0.FStarC_Syntax_Syntax.binder_positivity
-                                                  b1.FStarC_Syntax_Syntax.binder_positivity
-                                                  ctx03 cache03 in
-                                              match uu___13 with
-                                              | Success ((x3, g13), cache13)
-                                                  ->
-                                                  let uu___14 =
-                                                    let uu___15 =
-                                                      let uu___16 =
-                                                        universe_of_well_typed_term
-                                                          g
-                                                          (b0.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
-                                                      fun ctx04 ->
-                                                        fun cache04 ->
-                                                          let uu___17 =
-                                                            uu___16 ctx04
-                                                              cache04 in
-                                                          match uu___17 with
-                                                          | Success
-                                                              ((x4, g14),
-                                                               cache14)
-                                                              ->
-                                                              let uu___18 =
-                                                                let uu___19 =
-                                                                  let g0 = g in
-                                                                  let uu___20
-                                                                    =
-                                                                    open_term
-                                                                    g b0
-                                                                    body0 in
-                                                                  match uu___20
-                                                                  with
-                                                                  | (g2, b01,
-                                                                    body01)
-                                                                    ->
-                                                                    let body11
-                                                                    =
-                                                                    FStarC_Syntax_Subst.subst
-                                                                    [
-                                                                    FStarC_Syntax_Syntax.DB
-                                                                    (Prims.int_zero,
-                                                                    (b01.FStarC_Syntax_Syntax.binder_bv))]
-                                                                    body1 in
-                                                                    with_binders
-                                                                    g0 
-                                                                    [b01]
-                                                                    [x4]
-                                                                    (check_relation1
-                                                                    g2
-                                                                    EQUALITY
-                                                                    body01
-                                                                    body11) in
-                                                                uu___19 ctx04
-                                                                  cache14 in
-                                                              (match uu___18
-                                                               with
-                                                               | Success
-                                                                   ((y, g2),
-                                                                    cache2)
-                                                                   ->
-                                                                   let uu___19
-                                                                    =
-                                                                    let uu___20
-                                                                    =
-                                                                    let uu___21
-                                                                    =
-                                                                    and_pre
-                                                                    g14 g2 in
-                                                                    ((),
-                                                                    uu___21) in
-                                                                    (uu___20,
-                                                                    cache2) in
-                                                                   Success
-                                                                    uu___19
-                                                               | err1 -> err1)
-                                                          | Error err1 ->
-                                                              Error err1 in
-                                                    uu___15 ctx03 cache13 in
-                                                  (match uu___14 with
-                                                   | Success
-                                                       ((y, g2), cache2) ->
-                                                       let uu___15 =
-                                                         let uu___16 =
-                                                           let uu___17 =
-                                                             and_pre g13 g2 in
-                                                           ((), uu___17) in
-                                                         (uu___16, cache2) in
-                                                       Success uu___15
-                                                   | err1 -> err1)
-                                              | Error err1 -> Error err1 in
-                                            uu___12 ctx02 cache12 in
-                                          (match uu___11 with
-                                           | Success ((y, g2), cache2) ->
-                                               let uu___12 =
-                                                 let uu___13 =
-                                                   let uu___14 =
-                                                     and_pre g12 g2 in
-                                                   ((), uu___14) in
-                                                 (uu___13, cache2) in
-                                               Success uu___12
-                                           | err1 -> err1)
-                                      | Error err1 -> Error err1 in
-                                uu___8 ctx01 cache11 in
-                              (match uu___7 with
-                               | Success ((y, g2), cache2) ->
-                                   let uu___8 =
-                                     let uu___9 =
-                                       let uu___10 = and_pre g11 g2 in
-                                       ((), uu___10) in
-                                     (uu___9, cache2) in
-                                   Success uu___8
-                               | err1 -> err1)
-                          | Error err1 -> Error err1)
-                 | (FStarC_Syntax_Syntax.Tm_arrow
-                    { FStarC_Syntax_Syntax.b1 = x0;
-                      FStarC_Syntax_Syntax.comp = c0;_},
-                    FStarC_Syntax_Syntax.Tm_arrow
-                    { FStarC_Syntax_Syntax.b1 = x1;
-                      FStarC_Syntax_Syntax.comp = c1;_})
-                     ->
-                     (fun ctx ->
-                        fun cache ->
-                          let ctx1 =
-                            {
-                              no_guard = (ctx.no_guard);
-                              unfolding_ok = (ctx.unfolding_ok);
-                              error_context =
-                                (("subtype arrow",
-                                   FStar_Pervasives_Native.None) ::
-                                (ctx.error_context))
-                            } in
-                          let uu___4 =
-                            let uu___5 =
-                              check_bqual x0.FStarC_Syntax_Syntax.binder_qual
-                                x1.FStarC_Syntax_Syntax.binder_qual in
-                            fun ctx01 ->
-                              fun cache01 ->
-                                let uu___6 = uu___5 ctx01 cache01 in
-                                match uu___6 with
-                                | Success ((x2, g11), cache11) ->
-                                    let uu___7 =
-                                      let uu___8 ctx02 cache02 =
-                                        let uu___9 =
-                                          check_positivity_qual rel
-                                            x0.FStarC_Syntax_Syntax.binder_positivity
-                                            x1.FStarC_Syntax_Syntax.binder_positivity
-                                            ctx02 cache02 in
-                                        match uu___9 with
-                                        | Success ((x3, g12), cache12) ->
-                                            let uu___10 =
-                                              let uu___11 =
-                                                let uu___12 =
-                                                  universe_of_well_typed_term
-                                                    g
-                                                    (x1.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
-                                                fun ctx03 ->
-                                                  fun cache03 ->
-                                                    let uu___13 =
-                                                      uu___12 ctx03 cache03 in
-                                                    match uu___13 with
-                                                    | Success
-                                                        ((x4, g13), cache13)
-                                                        ->
-                                                        let uu___14 =
-                                                          let uu___15 =
-                                                            let uu___16 =
-                                                              open_comp g x1
-                                                                c1 in
-                                                            match uu___16
-                                                            with
-                                                            | (g_x1, x11,
-                                                               c11) ->
-                                                                let c01 =
-                                                                  FStarC_Syntax_Subst.subst_comp
-                                                                    [
-                                                                    FStarC_Syntax_Syntax.DB
-                                                                    (Prims.int_zero,
-                                                                    (x11.FStarC_Syntax_Syntax.binder_bv))]
-                                                                    c0 in
-                                                                let uu___17 =
-                                                                  let rel_arg
-                                                                    =
-                                                                    match rel
-                                                                    with
-                                                                    | 
-                                                                    EQUALITY
-                                                                    ->
-                                                                    EQUALITY
-                                                                    | 
-                                                                    uu___18
-                                                                    ->
-                                                                    let uu___19
-                                                                    =
-                                                                    let uu___20
-                                                                    =
-                                                                    FStarC_Syntax_Syntax.bv_to_name
-                                                                    x11.FStarC_Syntax_Syntax.binder_bv in
-                                                                    FStar_Pervasives_Native.Some
-                                                                    uu___20 in
-                                                                    SUBTYPING
-                                                                    uu___19 in
-                                                                  let rel_comp
-                                                                    =
-                                                                    match rel
-                                                                    with
-                                                                    | 
-                                                                    EQUALITY
-                                                                    ->
-                                                                    EQUALITY
-                                                                    | 
-                                                                    SUBTYPING
-                                                                    e ->
-                                                                    let uu___18
-                                                                    =
-                                                                    let uu___19
-                                                                    =
-                                                                    FStarC_Syntax_Util.is_pure_or_ghost_comp
-                                                                    c01 in
-                                                                    if
-                                                                    uu___19
-                                                                    then
-                                                                    match e
-                                                                    with
-                                                                    | 
-                                                                    FStar_Pervasives_Native.None
-                                                                    ->
-                                                                    FStar_Pervasives_Native.None
-                                                                    | 
-                                                                    FStar_Pervasives_Native.Some
-                                                                    e1 ->
-                                                                    let r =
-                                                                    let uu___20
-                                                                    =
-                                                                    let uu___21
-                                                                    =
-                                                                    FStarC_Syntax_Util.args_of_binders
-                                                                    [x11] in
-                                                                    FStar_Pervasives_Native.snd
-                                                                    uu___21 in
-                                                                    FStarC_Syntax_Syntax.mk_Tm_app
-                                                                    e1
-                                                                    uu___20
-                                                                    FStarC_Range_Type.dummyRange in
-                                                                    FStar_Pervasives_Native.Some
-                                                                    r
-                                                                    else
-                                                                    FStar_Pervasives_Native.None in
-                                                                    SUBTYPING
-                                                                    uu___18 in
-                                                                  fun ctx04
-                                                                    ->
-                                                                    fun
-                                                                    cache04
-                                                                    ->
-                                                                    let uu___18
-                                                                    =
-                                                                    check_relation1
-                                                                    g rel_arg
-                                                                    (x11.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort
-                                                                    (x0.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort
-                                                                    ctx04
-                                                                    cache04 in
-                                                                    match uu___18
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((x5,
-                                                                    g14),
-                                                                    cache14)
-                                                                    ->
-                                                                    let uu___19
-                                                                    =
-                                                                    let uu___20
-                                                                    ctx2
-                                                                    cache2 =
-                                                                    let ctx3
-                                                                    =
-                                                                    {
-                                                                    no_guard
-                                                                    =
-                                                                    (ctx2.no_guard);
-                                                                    unfolding_ok
-                                                                    =
-                                                                    (ctx2.unfolding_ok);
-                                                                    error_context
-                                                                    =
-                                                                    (("check_subcomp",
-                                                                    FStar_Pervasives_Native.None)
-                                                                    ::
-                                                                    (ctx2.error_context))
-                                                                    } in
-                                                                    let uu___21
-                                                                    =
-                                                                    check_relation_comp
-                                                                    g_x1
-                                                                    rel_comp
-                                                                    c01 c11 in
-                                                                    uu___21
-                                                                    ctx3
-                                                                    cache2 in
-                                                                    uu___20
-                                                                    ctx04
-                                                                    cache14 in
-                                                                    (match uu___19
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((y, g2),
-                                                                    cache2)
-                                                                    ->
-                                                                    let uu___20
-                                                                    =
-                                                                    let uu___21
-                                                                    =
-                                                                    let uu___22
-                                                                    =
-                                                                    and_pre
-                                                                    g14 g2 in
-                                                                    ((),
-                                                                    uu___22) in
-                                                                    (uu___21,
-                                                                    cache2) in
-                                                                    Success
-                                                                    uu___20
-                                                                    | 
-                                                                    err1 ->
-                                                                    err1)
-                                                                    | 
-                                                                    Error
-                                                                    err1 ->
-                                                                    Error
-                                                                    err1 in
-                                                                with_binders
-                                                                  g [x11]
-                                                                  [x4]
-                                                                  uu___17 in
-                                                          uu___15 ctx03
-                                                            cache13 in
-                                                        (match uu___14 with
-                                                         | Success
-                                                             ((y, g2),
-                                                              cache2)
-                                                             ->
-                                                             let uu___15 =
-                                                               let uu___16 =
-                                                                 let uu___17
-                                                                   =
-                                                                   and_pre
-                                                                    g13 g2 in
-                                                                 ((),
-                                                                   uu___17) in
-                                                               (uu___16,
-                                                                 cache2) in
-                                                             Success uu___15
-                                                         | err1 -> err1)
-                                                    | Error err1 ->
-                                                        Error err1 in
-                                              uu___11 ctx02 cache12 in
-                                            (match uu___10 with
-                                             | Success ((y, g2), cache2) ->
-                                                 let uu___11 =
-                                                   let uu___12 =
-                                                     let uu___13 =
-                                                       and_pre g12 g2 in
-                                                     ((), uu___13) in
-                                                   (uu___12, cache2) in
-                                                 Success uu___11
-                                             | err1 -> err1)
-                                        | Error err1 -> Error err1 in
-                                      uu___8 ctx01 cache11 in
-                                    (match uu___7 with
-                                     | Success ((y, g2), cache2) ->
-                                         let uu___8 =
-                                           let uu___9 =
-                                             let uu___10 = and_pre g11 g2 in
-                                             ((), uu___10) in
-                                           (uu___9, cache2) in
-                                         Success uu___8
-                                     | err1 -> err1)
-                                | Error err1 -> Error err1 in
-                          uu___4 ctx1 cache)
-                 | (FStarC_Syntax_Syntax.Tm_match
-                    { FStarC_Syntax_Syntax.scrutinee = e0;
-                      FStarC_Syntax_Syntax.ret_opt = uu___4;
-                      FStarC_Syntax_Syntax.brs = brs0;
-                      FStarC_Syntax_Syntax.rc_opt1 = uu___5;_},
-                    FStarC_Syntax_Syntax.Tm_match
-                    { FStarC_Syntax_Syntax.scrutinee = e1;
-                      FStarC_Syntax_Syntax.ret_opt = uu___6;
-                      FStarC_Syntax_Syntax.brs = brs1;
-                      FStarC_Syntax_Syntax.rc_opt1 = uu___7;_})
-                     ->
-                     let relate_branch br0 br1 uu___8 =
-                       match (br0, br1) with
-                       | ((p0, FStar_Pervasives_Native.None, body0),
-                          (p1, FStar_Pervasives_Native.None, body1)) ->
-                           let uu___9 =
-                             let uu___10 = FStarC_Syntax_Syntax.eq_pat p0 p1 in
-                             Prims.not uu___10 in
-                           if uu___9
-                           then fail_str "patterns not equal"
-                           else
-                             (let uu___10 =
-                                open_branches_eq_pat g
-                                  (p0, FStar_Pervasives_Native.None, body0)
-                                  (p1, FStar_Pervasives_Native.None, body1) in
-                              match uu___10 with
-                              | (g', (p01, uu___11, body01),
-                                 (p11, uu___12, body11)) ->
-                                  let uu___13 =
-                                    FStarC_TypeChecker_PatternUtils.raw_pat_as_exp
-                                      g.tcenv p01 in
-                                  (match uu___13 with
-                                   | FStar_Pervasives_Native.Some
-                                       (uu___14, bvs0) ->
-                                       let bs0 =
-                                         FStarC_List.map
-                                           FStarC_Syntax_Syntax.mk_binder
-                                           bvs0 in
-                                       let uu___15 = check_binders g bs0 in
-                                       (fun ctx01 ->
-                                          fun cache01 ->
-                                            let uu___16 =
-                                              uu___15 ctx01 cache01 in
-                                            match uu___16 with
-                                            | Success ((x1, g11), cache11) ->
-                                                let uu___17 =
-                                                  let uu___18 ctx cache =
-                                                    let ctx1 =
-                                                      {
-                                                        no_guard =
-                                                          (ctx.no_guard);
-                                                        unfolding_ok =
-                                                          (ctx.unfolding_ok);
-                                                        error_context =
-                                                          (("relate_branch",
-                                                             FStar_Pervasives_Native.None)
-                                                          ::
-                                                          (ctx.error_context))
-                                                      } in
-                                                    let uu___19 =
-                                                      with_binders g bs0 x1
-                                                        (check_relation1 g'
-                                                           rel body01 body11) in
-                                                    uu___19 ctx1 cache in
-                                                  uu___18 ctx01 cache11 in
-                                                (match uu___17 with
-                                                 | Success ((y, g2), cache2)
-                                                     ->
-                                                     let uu___18 =
-                                                       let uu___19 =
-                                                         let uu___20 =
-                                                           and_pre g11 g2 in
-                                                         ((), uu___20) in
-                                                       (uu___19, cache2) in
-                                                     Success uu___18
-                                                 | err1 -> err1)
-                                            | Error err1 -> Error err1)
-                                   | uu___14 ->
-                                       fail_str
-                                         "raw_pat_as_exp failed in check_equality match rule"))
-                       | uu___9 ->
-                           fail_str
-                             "Core does not support branches with when" in
-                     (fun ctx ->
-                        fun cache ->
-                          let uu___8 =
-                            let uu___9 =
-                              check_relation1 g EQUALITY e0 e1 ctx cache in
-                            match uu___9 with
-                            | Success ((x1, g11), cache11) ->
-                                let uu___10 =
-                                  let uu___11 =
-                                    iter2 brs0 brs1 relate_branch () in
-                                  uu___11 ctx cache11 in
-                                (match uu___10 with
-                                 | Success ((y, g2), cache2) ->
-                                     let uu___11 =
-                                       let uu___12 =
-                                         let uu___13 = and_pre g11 g2 in
-                                         ((), uu___13) in
-                                       (uu___12, cache2) in
-                                     Success uu___11
-                                 | err1 -> err1)
-                            | Error err1 -> Error err1 in
-                          match uu___8 with
-                          | Error uu___9 ->
-                              let uu___10 = fallback t01 t11 in
-                              uu___10 ctx cache
-                          | res -> res)
-                 | uu___4 -> fallback t01 t11) in
-            uu___2 ctx0 cache1 in
-          (match uu___1 with
-           | Success ((y, g2), cache2) ->
-               let uu___2 =
-                 let uu___3 = let uu___4 = and_pre g1 g2 in ((), uu___4) in
-                 (uu___3, cache2) in
-               Success uu___2
-           | err1 -> err1)
-      | Error err1 -> Error err1
-and check_relation (g : env) (rel : relation) (t0 : FStarC_Syntax_Syntax.typ)
-  (t1 : FStarC_Syntax_Syntax.typ) : unit result=
-  let uu___ = FStarC_Effect.op_Bang dbg in
-  if uu___
-  then
-    fun ctx ->
-      fun cache ->
-        ((let uu___2 =
-            FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t0 in
-          let uu___3 = FStarC_Class_Show.show showable_rel rel in
-          let uu___4 =
-            FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t1 in
-          FStarC_Format.print3 "check_relation (%s, %s, %s) {\n" uu___2
-            uu___3 uu___4);
-         (let res =
-            let uu___2 = check_relation' g rel t0 t1 in uu___2 ctx cache in
-          match res with
-          | Error err ->
-              ((let uu___3 =
-                  FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t0 in
-                let uu___4 = FStarC_Class_Show.show showable_rel rel in
-                let uu___5 =
-                  FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t1 in
-                let uu___6 = FStarC_Class_Show.show showable_error err in
-                FStarC_Format.print4
-                  "} check_relation (%s, %s, %s) failed with %s\n" uu___3
-                  uu___4 uu___5 uu___6);
-               Error err)
-          | Success ((uu___2, g1), cache1) ->
-              ((let uu___4 =
-                  FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t0 in
-                let uu___5 = FStarC_Class_Show.show showable_rel rel in
-                let uu___6 =
-                  FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t1 in
-                let uu___7 =
-                  FStarC_Class_Show.show
-                    (FStarC_Class_Show.show_option
-                       FStarC_Syntax_Print.showable_term) g1 in
-                FStarC_Format.print4
-                  "} check_relation  (%s, %s, %s) succeeded with guard %s\n"
-                  uu___4 uu___5 uu___6 uu___7);
-               res)))
-  else check_relation' g rel t0 t1
-and check_relation_args (g : env) (rel : relation)
-  (a0 : FStarC_Syntax_Syntax.args) (a1 : FStarC_Syntax_Syntax.args) :
-  unit result=
-  if (FStarC_List.length a0) = (FStarC_List.length a1)
-  then
-    iter2 a0 a1
-      (fun uu___ uu___1 uu___2 ->
-         match (uu___, uu___1) with
-         | ((t0, q0), (t1, q1)) ->
-             let uu___3 = check_aqual q0 q1 in
-             (fun ctx0 ->
-                fun cache0 ->
-                  let uu___4 = uu___3 ctx0 cache0 in
-                  match uu___4 with
-                  | Success ((x, g1), cache1) ->
-                      let uu___5 =
-                        let uu___6 = check_relation g rel t0 t1 in
-                        uu___6 ctx0 cache1 in
-                      (match uu___5 with
-                       | Success ((y, g2), cache2) ->
-                           let uu___6 =
-                             let uu___7 =
-                               let uu___8 = and_pre g1 g2 in ((), uu___8) in
-                             (uu___7, cache2) in
-                           Success uu___6
-                       | err -> err)
-                  | Error err -> Error err)) ()
-  else fail_str "Unequal number of arguments"
-and check_relation_comp (g : env) (rel : relation)
-  (c0 : FStarC_Syntax_Syntax.comp) (c1 : FStarC_Syntax_Syntax.comp) :
-  unit result=
-  let destruct_comp c =
-    let uu___ = FStarC_Syntax_Util.is_total_comp c in
-    if uu___
-    then
-      FStar_Pervasives_Native.Some
-        (E_Total, (FStarC_Syntax_Util.comp_result c))
-    else
-      (let uu___1 = FStarC_Syntax_Util.is_tot_or_gtot_comp c in
-       if uu___1
-       then
-         FStar_Pervasives_Native.Some
-           (E_Ghost, (FStarC_Syntax_Util.comp_result c))
-       else FStar_Pervasives_Native.None) in
-  let uu___ =
-    let uu___1 = destruct_comp c0 in
-    let uu___2 = destruct_comp c1 in (uu___1, uu___2) in
-  match uu___ with
-  | (FStar_Pervasives_Native.None, uu___1) ->
-      let uu___2 =
-        let uu___3 =
-          FStarC_TypeChecker_TermEqAndSimplify.eq_comp g.tcenv c0 c1 in
-        uu___3 = FStarC_TypeChecker_TermEqAndSimplify.Equal in
-      if uu___2
-      then
-        (fun uu___3 ->
-           fun cache -> Success (((), FStar_Pervasives_Native.None), cache))
-      else
-        (let ct_eq res0 args0 res1 args1 =
-           let uu___3 = check_relation g EQUALITY res0 res1 in
-           fun ctx0 ->
-             fun cache0 ->
-               let uu___4 = uu___3 ctx0 cache0 in
-               match uu___4 with
-               | Success ((x, g1), cache1) ->
-                   let uu___5 =
-                     let uu___6 = check_relation_args g EQUALITY args0 args1 in
-                     uu___6 ctx0 cache1 in
-                   (match uu___5 with
-                    | Success ((y, g2), cache2) ->
-                        let uu___6 =
-                          let uu___7 =
-                            let uu___8 = and_pre g1 g2 in ((), uu___8) in
-                          (uu___7, cache2) in
-                        Success uu___6
-                    | err -> err)
-               | Error err -> Error err in
-         let uu___3 = FStarC_Syntax_Util.comp_eff_name_and_res c0 in
-         match uu___3 with
-         | (eff0, res0) ->
-             let uu___4 = FStarC_Syntax_Util.comp_eff_name_and_res c1 in
-             (match uu___4 with
-              | (eff1, res1) ->
-                  if FStarC_Ident.lid_equals eff0 eff1
-                  then ct_eq res0 [] res1 []
-                  else
-                    (let ct0 = FStarC_Syntax_Util.comp_to_comp_typ c0 in
-                     let ct1 = FStarC_Syntax_Util.comp_to_comp_typ c1 in
-                     if
-                       FStarC_Ident.lid_equals
-                         ct0.FStarC_Syntax_Syntax.effect_name
-                         ct1.FStarC_Syntax_Syntax.effect_name
-                     then
-                       ct_eq ct0.FStarC_Syntax_Syntax.result_typ []
-                         ct1.FStarC_Syntax_Syntax.result_typ []
-                     else
-                       (let uu___5 =
-                          let uu___6 =
-                            let uu___7 =
-                              let uu___8 =
-                                let uu___9 =
-                                  FStarC_Class_PP.pp
-                                    FStarC_Ident.pretty_lident
-                                    ct0.FStarC_Syntax_Syntax.effect_name in
-                                FStarC_Errors_Msg.fquotes uu___9 in
-                              let uu___9 =
-                                let uu___10 =
-                                  let uu___11 =
-                                    FStarC_Class_PP.pp
-                                      FStarC_Ident.pretty_lident
-                                      ct1.FStarC_Syntax_Syntax.effect_name in
-                                  FStarC_Errors_Msg.fquotes uu___11 in
-                                FStar_Pprint.op_Hat_Slash_Hat
-                                  (FStar_Pprint.doc_of_string "and") uu___10 in
-                              FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
-                            FStar_Pprint.op_Hat_Slash_Hat
-                              (FStarC_Errors_Msg.text
-                                 "Subcomp failed: Unequal computation types")
-                              uu___7 in
-                          [uu___6] in
-                        fail uu___5))))
-  | (uu___1, FStar_Pervasives_Native.None) ->
-      let uu___2 =
-        let uu___3 =
-          FStarC_TypeChecker_TermEqAndSimplify.eq_comp g.tcenv c0 c1 in
-        uu___3 = FStarC_TypeChecker_TermEqAndSimplify.Equal in
-      if uu___2
-      then
-        (fun uu___3 ->
-           fun cache -> Success (((), FStar_Pervasives_Native.None), cache))
-      else
-        (let ct_eq res0 args0 res1 args1 =
-           let uu___3 = check_relation g EQUALITY res0 res1 in
-           fun ctx0 ->
-             fun cache0 ->
-               let uu___4 = uu___3 ctx0 cache0 in
-               match uu___4 with
-               | Success ((x, g1), cache1) ->
-                   let uu___5 =
-                     let uu___6 = check_relation_args g EQUALITY args0 args1 in
-                     uu___6 ctx0 cache1 in
-                   (match uu___5 with
-                    | Success ((y, g2), cache2) ->
-                        let uu___6 =
-                          let uu___7 =
-                            let uu___8 = and_pre g1 g2 in ((), uu___8) in
-                          (uu___7, cache2) in
-                        Success uu___6
-                    | err -> err)
-               | Error err -> Error err in
-         let uu___3 = FStarC_Syntax_Util.comp_eff_name_and_res c0 in
-         match uu___3 with
-         | (eff0, res0) ->
-             let uu___4 = FStarC_Syntax_Util.comp_eff_name_and_res c1 in
-             (match uu___4 with
-              | (eff1, res1) ->
-                  if FStarC_Ident.lid_equals eff0 eff1
-                  then ct_eq res0 [] res1 []
-                  else
-                    (let ct0 = FStarC_Syntax_Util.comp_to_comp_typ c0 in
-                     let ct1 = FStarC_Syntax_Util.comp_to_comp_typ c1 in
-                     if
-                       FStarC_Ident.lid_equals
-                         ct0.FStarC_Syntax_Syntax.effect_name
-                         ct1.FStarC_Syntax_Syntax.effect_name
-                     then
-                       ct_eq ct0.FStarC_Syntax_Syntax.result_typ []
-                         ct1.FStarC_Syntax_Syntax.result_typ []
-                     else
-                       (let uu___5 =
-                          let uu___6 =
-                            let uu___7 =
-                              let uu___8 =
-                                let uu___9 =
-                                  FStarC_Class_PP.pp
-                                    FStarC_Ident.pretty_lident
-                                    ct0.FStarC_Syntax_Syntax.effect_name in
-                                FStarC_Errors_Msg.fquotes uu___9 in
-                              let uu___9 =
-                                let uu___10 =
-                                  let uu___11 =
-                                    FStarC_Class_PP.pp
-                                      FStarC_Ident.pretty_lident
-                                      ct1.FStarC_Syntax_Syntax.effect_name in
-                                  FStarC_Errors_Msg.fquotes uu___11 in
-                                FStar_Pprint.op_Hat_Slash_Hat
-                                  (FStar_Pprint.doc_of_string "and") uu___10 in
-                              FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
-                            FStar_Pprint.op_Hat_Slash_Hat
-                              (FStarC_Errors_Msg.text
-                                 "Subcomp failed: Unequal computation types")
-                              uu___7 in
-                          [uu___6] in
-                        fail uu___5))))
-  | (FStar_Pervasives_Native.Some (E_Total, t0), FStar_Pervasives_Native.Some
-     (uu___1, t1)) -> check_relation g rel t0 t1
-  | (FStar_Pervasives_Native.Some (E_Ghost, t0), FStar_Pervasives_Native.Some
-     (E_Ghost, t1)) -> check_relation g rel t0 t1
-  | (FStar_Pervasives_Native.Some (E_Ghost, t0), FStar_Pervasives_Native.Some
-     (E_Total, t1)) ->
-      let uu___1 = non_informative g t1 in
-      if uu___1
-      then check_relation g rel t0 t1
-      else fail_str "Expected a Total computation, but got Ghost"
-and check_subtype (g : env)
-  (e : FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option)
-  (t0 : FStarC_Syntax_Syntax.typ) (t1 : FStarC_Syntax_Syntax.typ) :
-  unit result=
-  fun ctx cache ->
-    FStarC_Profiling.profile
-      (fun uu___ ->
-         let rel = SUBTYPING e in
-         let ctx1 =
-           {
-             no_guard = (ctx.no_guard);
-             unfolding_ok = (ctx.unfolding_ok);
-             error_context =
-               (((if ctx.no_guard
-                  then "check_subtype(no_guard)"
-                  else "check_subtype"),
-                  (FStar_Pervasives_Native.Some (CtxRel (t0, rel, t1)))) ::
-               (ctx.error_context))
-           } in
-         let uu___1 = check_relation g rel t0 t1 in uu___1 ctx1 cache)
-      FStar_Pervasives_Native.None "FStarC.TypeChecker.Core.check_subtype"
-and is_prop (g : env) (t : FStarC_Syntax_Syntax.term) : unit result=
-  fun ctx cache ->
-    let ctx1 =
-      {
-        no_guard = (ctx.no_guard);
-        unfolding_ok = (ctx.unfolding_ok);
-        error_context =
-          (("is_prop", (FStar_Pervasives_Native.Some (CtxTerm t))) ::
-          (ctx.error_context))
-      } in
-    let uu___ =
-      check_subtype g FStar_Pervasives_Native.None t
-        FStarC_Syntax_Syntax.t_prop in
-    uu___ ctx1 cache
-and memo_check (g : env) (e : FStarC_Syntax_Syntax.term) :
-  (tot_or_ghost * FStarC_Syntax_Syntax.typ) result=
-  let check_then_memo g1 e1 =
-    let uu___ = do_check_and_promote g1 e1 in
-    fun ctx ->
-      fun cache ->
-        let uu___1 = uu___ ctx cache in
-        match uu___1 with
-        | Success (r, cache') ->
-            let uu___2 =
-              match FStar_Pervasives.Inl r with
-              | FStar_Pervasives.Inl (res, guard1) ->
-                  (fun ctx0 ->
-                     fun cache0 ->
-                       let uu___3 = insert g1 e1 (res, guard1) ctx0 cache0 in
-                       match uu___3 with
-                       | Success ((x, g11), cache1) ->
-                           let uu___4 =
-                             let uu___5 uu___6 cache2 =
-                               Success ((res, guard1), cache2) in
-                             uu___5 ctx0 cache1 in
-                           (match uu___4 with
-                            | Success ((y, g2), cache2) ->
-                                let uu___5 =
-                                  let uu___6 =
-                                    let uu___7 = and_pre g11 g2 in
-                                    (y, uu___7) in
-                                  (uu___6, cache2) in
-                                Success uu___5
-                            | err -> err)
-                       | Error err -> Error err)
-              | FStar_Pervasives.Inr err -> fail_propagate err in
-            uu___2 ctx cache'
-        | Error err -> let uu___2 = fail_propagate err in uu___2 ctx cache in
-  if Prims.not g.should_read_cache
-  then check_then_memo g e
-  else
-    (fun ctx ->
-       fun cache ->
-         let uu___ = lookup g e ctx cache in
-         match uu___ with
-         | Success (r, cache') ->
-             let uu___1 =
-               match FStar_Pervasives.Inl r with
-               | FStar_Pervasives.Inr uu___2 -> check_then_memo g e
-               | FStar_Pervasives.Inl (et, FStar_Pervasives_Native.None) ->
-                   (fun uu___2 ->
-                      fun cache1 ->
-                        Success ((et, FStar_Pervasives_Native.None), cache1))
-               | FStar_Pervasives.Inl (et, pre) ->
-                   FStarC_Effect.failwith "Impossible" in
-             uu___1 ctx cache'
-         | Error err -> let uu___1 = check_then_memo g e in uu___1 ctx cache)
-and check' (msg : Prims.string) (g : env) (e : FStarC_Syntax_Syntax.term) :
-  (tot_or_ghost * FStarC_Syntax_Syntax.typ) result=
-  fun ctx cache ->
-    let ctx1 =
-      {
-        no_guard = (ctx.no_guard);
-        unfolding_ok = (ctx.unfolding_ok);
-        error_context = ((msg, (FStar_Pervasives_Native.Some (CtxTerm e))) ::
-          (ctx.error_context))
-      } in
-    let uu___ = memo_check g e in uu___ ctx1 cache
-and check (msg : Prims.string) (g : env) (e : FStarC_Syntax_Syntax.term) :
-  (tot_or_ghost * FStarC_Syntax_Syntax.typ) result=
-  let uu___ = FStarC_Effect.op_Bang dbg in
-  if uu___
-  then
-    fun ctx ->
-      fun cache ->
-        ((let uu___2 =
-            FStarC_Class_Show.show FStarC_Syntax_Print.showable_term e in
-          FStarC_Format.print2 "{About to check %s %s\n" msg uu___2);
-         (let res = let uu___2 = check' msg g e in uu___2 ctx cache in
-          match res with
-          | Error err -> Error err
-          | Success (((eff, typ), guard1), cache1) ->
-              ((let uu___3 =
-                  FStarC_Class_Show.show FStarC_Syntax_Print.showable_term e in
-                let uu___4 =
-                  FStarC_Class_Show.show FStarC_Syntax_Print.showable_term
-                    typ in
-                let uu___5 =
-                  FStarC_Class_Show.show
-                    (FStarC_Class_Show.show_option
-                       FStarC_Syntax_Print.showable_term) guard1 in
-                FStarC_Format.print3 "Checked %s at type %s with guard %s}\n"
-                  uu___3 uu___4 uu___5);
-               res)))
-  else check' msg g e
-and do_check_and_promote (g : env) (e : FStarC_Syntax_Syntax.term) :
-  (tot_or_ghost * FStarC_Syntax_Syntax.typ) result=
-  let uu___ = do_check g e in
-  fun ctx0 ->
-    fun cache0 ->
-      let uu___1 = uu___ ctx0 cache0 in
-      match uu___1 with
-      | Success ((x, g1), cache1) ->
-          let uu___2 =
-            let uu___3 =
-              match x with
-              | (eff, t) ->
-                  let eff1 =
-                    match eff with
-                    | E_Total -> E_Total
-                    | E_Ghost ->
-                        let uu___4 = non_informative g t in
-                        if uu___4 then E_Total else E_Ghost in
-                  (fun uu___4 ->
-                     fun cache ->
-                       Success
-                         (((eff1, t), FStar_Pervasives_Native.None), cache)) in
-            uu___3 ctx0 cache1 in
-          (match uu___2 with
-           | Success ((y, g2), cache2) ->
-               let uu___3 =
-                 let uu___4 = let uu___5 = and_pre g1 g2 in (y, uu___5) in
-                 (uu___4, cache2) in
-               Success uu___3
-           | err -> err)
-      | Error err -> Error err
-and do_check (g : env) (e : FStarC_Syntax_Syntax.term) :
-  (tot_or_ghost * FStarC_Syntax_Syntax.typ) result=
-  let e1 = FStarC_Syntax_Subst.compress e in
-  match e1.FStarC_Syntax_Syntax.n with
-  | FStarC_Syntax_Syntax.Tm_lazy
-      { FStarC_Syntax_Syntax.blob = uu___;
-        FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_embedding
-          uu___1;
-        FStarC_Syntax_Syntax.ltyp = uu___2;
-        FStarC_Syntax_Syntax.rng = uu___3;_}
-      -> let uu___4 = FStarC_Syntax_Util.unlazy e1 in do_check g uu___4
-  | FStarC_Syntax_Syntax.Tm_lazy i ->
-      (fun uu___ ->
-         fun cache ->
-           Success
-             (((E_Total, (i.FStarC_Syntax_Syntax.ltyp)),
-                FStar_Pervasives_Native.None), cache))
-  | FStarC_Syntax_Syntax.Tm_meta
-      { FStarC_Syntax_Syntax.tm2 = t; FStarC_Syntax_Syntax.meta = uu___;_} ->
-      memo_check g t
-  | FStarC_Syntax_Syntax.Tm_uvar (uv, s) ->
-      let uu___ =
-        let uu___1 =
-          let uu___2 = FStarC_Syntax_Util.ctx_uvar_typ uv in
-          FStarC_Syntax_Subst.subst' s uu___2 in
-        (E_Total, uu___1) in
-      (fun uu___1 ->
-         fun cache -> Success ((uu___, FStar_Pervasives_Native.None), cache))
-  | FStarC_Syntax_Syntax.Tm_name x ->
-      let uu___ = FStarC_TypeChecker_Env.try_lookup_bv g.tcenv x in
-      (match uu___ with
-       | FStar_Pervasives_Native.None ->
-           let uu___1 =
-             let uu___2 =
-               FStarC_Class_Show.show FStarC_Syntax_Print.showable_bv x in
-             FStarC_Format.fmt1 "Variable not found: %s" uu___2 in
-           fail_str uu___1
-       | FStar_Pervasives_Native.Some (t, uu___1) ->
-           (fun uu___2 ->
-              fun cache ->
-                Success (((E_Total, t), FStar_Pervasives_Native.None), cache)))
-  | FStarC_Syntax_Syntax.Tm_fvar f ->
-      let uu___ =
-        FStarC_TypeChecker_Env.try_lookup_lid g.tcenv
-          f.FStarC_Syntax_Syntax.fv_name in
-      (match uu___ with
-       | FStar_Pervasives_Native.Some (([], t), uu___1) ->
-           (fun uu___2 ->
-              fun cache ->
-                Success (((E_Total, t), FStar_Pervasives_Native.None), cache))
-       | uu___1 -> fail_str "Missing universes instantiation")
-  | FStarC_Syntax_Syntax.Tm_uinst
-      ({ FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_fvar f;
-         FStarC_Syntax_Syntax.pos = uu___;
-         FStarC_Syntax_Syntax.hash_code = uu___1;_},
-       us)
-      ->
-      let uu___2 =
-        FStarC_TypeChecker_Env.try_lookup_and_inst_lid g.tcenv us
-          f.FStarC_Syntax_Syntax.fv_name in
-      (match uu___2 with
-       | FStar_Pervasives_Native.None ->
-           fail_str
-             (FStarC_Format.fmt1 "Top-level name not found: %s"
-                (FStarC_Ident.string_of_lid f.FStarC_Syntax_Syntax.fv_name))
-       | FStar_Pervasives_Native.Some (t, uu___3) ->
-           (fun uu___4 ->
-              fun cache ->
-                Success (((E_Total, t), FStar_Pervasives_Native.None), cache)))
-  | FStarC_Syntax_Syntax.Tm_constant c ->
-      (match c with
-       | FStarC_Const.Const_range_of -> fail_str "Unhandled constant"
-       | FStarC_Const.Const_set_range_of -> fail_str "Unhandled constant"
-       | FStarC_Const.Const_reify uu___ -> fail_str "Unhandled constant"
-       | FStarC_Const.Const_reflect uu___ -> fail_str "Unhandled constant"
-       | uu___ ->
-           let t =
-             FStarC_TypeChecker_TcTerm.tc_constant g.tcenv
-               e1.FStarC_Syntax_Syntax.pos c in
-           (fun uu___1 ->
-              fun cache ->
-                Success (((E_Total, t), FStar_Pervasives_Native.None), cache)))
-  | FStarC_Syntax_Syntax.Tm_type u ->
-      let uu___ =
-        let uu___1 = mk_type (FStarC_Syntax_Syntax.U_succ u) in
-        (E_Total, uu___1) in
-      (fun uu___1 ->
-         fun cache -> Success ((uu___, FStar_Pervasives_Native.None), cache))
-  | FStarC_Syntax_Syntax.Tm_refine
-      { FStarC_Syntax_Syntax.b2 = x; FStarC_Syntax_Syntax.phi = phi;_} ->
-      let uu___ = check "refinement head" g x.FStarC_Syntax_Syntax.sort in
-      (fun ctx0 ->
-         fun cache0 ->
-           let uu___1 = uu___ ctx0 cache0 in
-           match uu___1 with
-           | Success ((x1, g1), cache1) ->
-               let uu___2 =
-                 let uu___3 =
-                   match x1 with
-                   | (uu___4, t) ->
-                       (fun ctx01 ->
-                          fun cache01 ->
-                            let uu___5 = is_type g t ctx01 cache01 in
-                            match uu___5 with
-                            | Success ((x2, g11), cache11) ->
-                                let uu___6 =
-                                  let uu___7 =
-                                    let uu___8 =
-                                      open_term g
-                                        (FStarC_Syntax_Syntax.mk_binder x)
-                                        phi in
-                                    match uu___8 with
-                                    | (g', x3, phi1) ->
-                                        let uu___9 =
-                                          let uu___10 =
-                                            check "refinement formula" g'
-                                              phi1 in
-                                          fun ctx02 ->
-                                            fun cache02 ->
-                                              let uu___11 =
-                                                uu___10 ctx02 cache02 in
-                                              match uu___11 with
-                                              | Success ((x4, g12), cache12)
-                                                  ->
-                                                  let uu___12 =
-                                                    let uu___13 =
-                                                      match x4 with
-                                                      | (uu___14, t') ->
-                                                          let uu___15 =
-                                                            is_prop g' t' in
-                                                          (fun ctx03 ->
-                                                             fun cache03 ->
-                                                               let uu___16 =
-                                                                 uu___15
-                                                                   ctx03
-                                                                   cache03 in
-                                                               match uu___16
-                                                               with
-                                                               | Success
-                                                                   ((x5, g13),
-                                                                    cache13)
-                                                                   ->
-                                                                   let uu___17
-                                                                    =
-                                                                    let uu___18
-                                                                    uu___19
-                                                                    cache =
-                                                                    Success
-                                                                    (((E_Total,
-                                                                    t),
-                                                                    FStar_Pervasives_Native.None),
-                                                                    cache) in
-                                                                    uu___18
-                                                                    ctx03
-                                                                    cache13 in
-                                                                   (match uu___17
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((y, g2),
-                                                                    cache2)
-                                                                    ->
-                                                                    let uu___18
-                                                                    =
-                                                                    let uu___19
-                                                                    =
-                                                                    let uu___20
-                                                                    =
-                                                                    and_pre
-                                                                    g13 g2 in
-                                                                    (y,
-                                                                    uu___20) in
-                                                                    (uu___19,
-                                                                    cache2) in
-                                                                    Success
-                                                                    uu___18
-                                                                    | 
-                                                                    err ->
-                                                                    err)
-                                                               | Error err ->
-                                                                   Error err) in
-                                                    uu___13 ctx02 cache12 in
-                                                  (match uu___12 with
-                                                   | Success
-                                                       ((y, g2), cache2) ->
-                                                       let uu___13 =
-                                                         let uu___14 =
-                                                           let uu___15 =
-                                                             and_pre g12 g2 in
-                                                           (y, uu___15) in
-                                                         (uu___14, cache2) in
-                                                       Success uu___13
-                                                   | err -> err)
-                                              | Error err -> Error err in
-                                        with_binders g [x3] [x2] uu___9 in
-                                  uu___7 ctx01 cache11 in
-                                (match uu___6 with
-                                 | Success ((y, g2), cache2) ->
-                                     let uu___7 =
-                                       let uu___8 =
-                                         let uu___9 = and_pre g11 g2 in
-                                         (y, uu___9) in
-                                       (uu___8, cache2) in
-                                     Success uu___7
-                                 | err -> err)
-                            | Error err -> Error err) in
-                 uu___3 ctx0 cache1 in
-               (match uu___2 with
-                | Success ((y, g2), cache2) ->
-                    let uu___3 =
-                      let uu___4 = let uu___5 = and_pre g1 g2 in (y, uu___5) in
-                      (uu___4, cache2) in
-                    Success uu___3
-                | err -> err)
-           | Error err -> Error err)
-  | FStarC_Syntax_Syntax.Tm_abs uu___ ->
-      let uu___1 = FStarC_Syntax_Util.abs_formals_ln e1 in
-      (match uu___1 with
-       | (xs, body, uu___2) ->
-           let uu___3 = open_term_binders g xs body in
-           (match uu___3 with
-            | (g', xs1, body1) ->
-                (fun ctx0 ->
-                   fun cache0 ->
-                     let uu___4 =
-                       let ctx =
-                         {
-                           no_guard = (ctx0.no_guard);
-                           unfolding_ok = (ctx0.unfolding_ok);
-                           error_context =
-                             (("abs binders", FStar_Pervasives_Native.None)
-                             :: (ctx0.error_context))
-                         } in
-                       let uu___5 = check_binders g xs1 in uu___5 ctx cache0 in
-                     match uu___4 with
-                     | Success ((x, g1), cache1) ->
-                         let uu___5 =
-                           let uu___6 =
-                             let uu___7 =
-                               let uu___8 = check "abs body" g' body1 in
-                               fun ctx01 ->
-                                 fun cache01 ->
-                                   let uu___9 = uu___8 ctx01 cache01 in
-                                   match uu___9 with
-                                   | Success ((x1, g11), cache11) ->
-                                       let uu___10 =
-                                         let uu___11 =
-                                           let uu___12 =
-                                             let uu___13 =
-                                               let uu___14 = as_comp g x1 in
-                                               FStarC_Syntax_Util.arrow xs1
-                                                 uu___14 in
-                                             (E_Total, uu___13) in
-                                           fun uu___13 ->
-                                             fun cache ->
-                                               Success
-                                                 ((uu___12,
-                                                    FStar_Pervasives_Native.None),
-                                                   cache) in
-                                         uu___11 ctx01 cache11 in
-                                       (match uu___10 with
-                                        | Success ((y, g2), cache2) ->
-                                            let uu___11 =
-                                              let uu___12 =
-                                                let uu___13 = and_pre g11 g2 in
-                                                (y, uu___13) in
-                                              (uu___12, cache2) in
-                                            Success uu___11
-                                        | err -> err)
-                                   | Error err -> Error err in
-                             with_binders g xs1 x uu___7 in
-                           uu___6 ctx0 cache1 in
-                         (match uu___5 with
-                          | Success ((y, g2), cache2) ->
-                              let uu___6 =
-                                let uu___7 =
-                                  let uu___8 = and_pre g1 g2 in (y, uu___8) in
-                                (uu___7, cache2) in
-                              Success uu___6
-                          | err -> err)
-                     | Error err -> Error err)))
-  | FStarC_Syntax_Syntax.Tm_arrow uu___ ->
-      let uu___1 = FStarC_Syntax_Util.arrow_formals_comp_ln_strict e1 in
-      (match uu___1 with
-       | (xs, c) ->
-           let uu___2 = open_comp_binders g xs c in
-           (match uu___2 with
-            | (g', xs1, c1) ->
-                (fun ctx0 ->
-                   fun cache0 ->
-                     let uu___3 =
-                       let ctx =
-                         {
-                           no_guard = (ctx0.no_guard);
-                           unfolding_ok = (ctx0.unfolding_ok);
-                           error_context =
-                             (("arrow binders", FStar_Pervasives_Native.None)
-                             :: (ctx0.error_context))
-                         } in
-                       let uu___4 = check_binders g xs1 in uu___4 ctx cache0 in
-                     match uu___3 with
-                     | Success ((x, g1), cache1) ->
-                         let uu___4 =
-                           let uu___5 =
-                             with_binders g xs1 x
-                               (fun ctx01 cache01 ->
-                                  let uu___6 =
-                                    let ctx =
-                                      {
-                                        no_guard = (ctx01.no_guard);
-                                        unfolding_ok = (ctx01.unfolding_ok);
-                                        error_context =
-                                          (("arrow comp",
-                                             FStar_Pervasives_Native.None) ::
-                                          (ctx01.error_context))
-                                      } in
-                                    let uu___7 = check_comp g' c1 in
-                                    uu___7 ctx cache01 in
-                                  match uu___6 with
-                                  | Success ((x1, g11), cache11) ->
-                                      let uu___7 =
-                                        let uu___8 =
-                                          let uu___9 =
-                                            let uu___10 =
-                                              mk_type
-                                                (FStarC_Syntax_Syntax.U_max
-                                                   (x1 :: x)) in
-                                            (E_Total, uu___10) in
-                                          fun uu___10 ->
-                                            fun cache ->
-                                              Success
-                                                ((uu___9,
-                                                   FStar_Pervasives_Native.None),
-                                                  cache) in
-                                        uu___8 ctx01 cache11 in
-                                      (match uu___7 with
-                                       | Success ((y, g2), cache2) ->
-                                           let uu___8 =
-                                             let uu___9 =
-                                               let uu___10 = and_pre g11 g2 in
-                                               (y, uu___10) in
-                                             (uu___9, cache2) in
-                                           Success uu___8
-                                       | err -> err)
-                                  | Error err -> Error err) in
-                           uu___5 ctx0 cache1 in
-                         (match uu___4 with
-                          | Success ((y, g2), cache2) ->
-                              let uu___5 =
-                                let uu___6 =
-                                  let uu___7 = and_pre g1 g2 in (y, uu___7) in
-                                (uu___6, cache2) in
-                              Success uu___5
-                          | err -> err)
-                     | Error err -> Error err)))
-  | FStarC_Syntax_Syntax.Tm_app uu___ ->
-      let rec check_app_arg uu___1 uu___2 =
-        match (uu___1, uu___2) with
-        | ((eff_hd, t_hd), (arg, arg_qual)) ->
-            (fun ctx0 ->
-               fun cache0 ->
-                 let uu___3 = is_arrow g t_hd ctx0 cache0 in
-                 match uu___3 with
-                 | Success ((x, g1), cache1) ->
-                     let uu___4 =
-                       let uu___5 =
-                         match x with
-                         | (x1, eff_arr, t') ->
-                             let uu___6 = check "app arg" g arg in
-                             (fun ctx01 ->
-                                fun cache01 ->
-                                  let uu___7 = uu___6 ctx01 cache01 in
-                                  match uu___7 with
-                                  | Success ((x2, g11), cache11) ->
-                                      let uu___8 =
-                                        let uu___9 =
-                                          match x2 with
-                                          | (eff_arg, t_arg) ->
-                                              (fun ctx02 ->
-                                                 fun cache02 ->
-                                                   let uu___10 =
-                                                     let ctx =
-                                                       {
-                                                         no_guard =
-                                                           (ctx02.no_guard);
-                                                         unfolding_ok =
-                                                           (ctx02.unfolding_ok);
-                                                         error_context =
-                                                           (("app subtyping",
-                                                              (FStar_Pervasives_Native.Some
-                                                                 (CtxTerm arg)))
-                                                           ::
-                                                           (ctx02.error_context))
-                                                       } in
-                                                     let uu___11 =
-                                                       check_subtype g
-                                                         (FStar_Pervasives_Native.Some
-                                                            arg) t_arg
-                                                         (x1.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
-                                                     uu___11 ctx cache02 in
-                                                   match uu___10 with
-                                                   | Success
-                                                       ((x3, g12), cache12)
-                                                       ->
-                                                       let uu___11 =
-                                                         let uu___12 ctx03
-                                                           cache03 =
-                                                           let uu___13 =
-                                                             let ctx =
-                                                               {
-                                                                 no_guard =
-                                                                   (ctx03.no_guard);
-                                                                 unfolding_ok
-                                                                   =
-                                                                   (ctx03.unfolding_ok);
-                                                                 error_context
-                                                                   =
-                                                                   (("app arg qual",
-                                                                    FStar_Pervasives_Native.None)
-                                                                   ::
-                                                                   (ctx03.error_context))
-                                                               } in
-                                                             let uu___14 =
-                                                               check_arg_qual
-                                                                 arg_qual
-                                                                 x1.FStarC_Syntax_Syntax.binder_qual in
-                                                             uu___14 ctx
-                                                               cache03 in
-                                                           match uu___13 with
-                                                           | Success
-                                                               ((x4, g13),
-                                                                cache13)
-                                                               ->
-                                                               let uu___14 =
-                                                                 let uu___15
-                                                                   =
-                                                                   let uu___16
-                                                                    =
-                                                                    let uu___17
-                                                                    =
-                                                                    FStarC_Syntax_Subst.subst
-                                                                    [
-                                                                    FStarC_Syntax_Syntax.NT
-                                                                    ((x1.FStarC_Syntax_Syntax.binder_bv),
-                                                                    arg)] t' in
-                                                                    ((join_eff
-                                                                    eff_hd
-                                                                    (join_eff
-                                                                    eff_arr
-                                                                    eff_arg)),
-                                                                    uu___17) in
-                                                                   fun
-                                                                    uu___17
-                                                                    ->
-                                                                    fun cache
-                                                                    ->
-                                                                    Success
-                                                                    ((uu___16,
-                                                                    FStar_Pervasives_Native.None),
-                                                                    cache) in
-                                                                 uu___15
-                                                                   ctx03
-                                                                   cache13 in
-                                                               (match uu___14
-                                                                with
-                                                                | Success
-                                                                    ((y, g2),
-                                                                    cache2)
-                                                                    ->
-                                                                    let uu___15
-                                                                    =
-                                                                    let uu___16
-                                                                    =
-                                                                    let uu___17
-                                                                    =
-                                                                    and_pre
-                                                                    g13 g2 in
-                                                                    (y,
-                                                                    uu___17) in
-                                                                    (uu___16,
-                                                                    cache2) in
-                                                                    Success
-                                                                    uu___15
-                                                                | err -> err)
-                                                           | Error err ->
-                                                               Error err in
-                                                         uu___12 ctx02
-                                                           cache12 in
-                                                       (match uu___11 with
-                                                        | Success
-                                                            ((y, g2), cache2)
-                                                            ->
-                                                            let uu___12 =
-                                                              let uu___13 =
-                                                                let uu___14 =
-                                                                  and_pre g12
-                                                                    g2 in
-                                                                (y, uu___14) in
-                                                              (uu___13,
-                                                                cache2) in
-                                                            Success uu___12
-                                                        | err -> err)
-                                                   | Error err -> Error err) in
-                                        uu___9 ctx01 cache11 in
-                                      (match uu___8 with
-                                       | Success ((y, g2), cache2) ->
-                                           let uu___9 =
-                                             let uu___10 =
-                                               let uu___11 = and_pre g11 g2 in
-                                               (y, uu___11) in
-                                             (uu___10, cache2) in
-                                           Success uu___9
-                                       | err -> err)
-                                  | Error err -> Error err) in
-                       uu___5 ctx0 cache1 in
-                     (match uu___4 with
-                      | Success ((y, g2), cache2) ->
-                          let uu___5 =
-                            let uu___6 =
-                              let uu___7 = and_pre g1 g2 in (y, uu___7) in
-                            (uu___6, cache2) in
-                          Success uu___5
-                      | err -> err)
-                 | Error err -> Error err) in
-      let check_app hd args =
-        let uu___1 = check "app head" g hd in
-        fun ctx0 ->
-          fun cache0 ->
-            let uu___2 = uu___1 ctx0 cache0 in
-            match uu___2 with
-            | Success ((x, g1), cache1) ->
-                let uu___3 =
-                  let uu___4 =
-                    match x with
-                    | (eff_hd, t) -> fold check_app_arg (eff_hd, t) args in
-                  uu___4 ctx0 cache1 in
-                (match uu___3 with
-                 | Success ((y, g2), cache2) ->
-                     let uu___4 =
-                       let uu___5 = let uu___6 = and_pre g1 g2 in (y, uu___6) in
-                       (uu___5, cache2) in
-                     Success uu___4
-                 | err -> err)
-            | Error err -> Error err in
-      let uu___1 = FStarC_Syntax_Util.head_and_args_full e1 in
-      (match uu___1 with
-       | (hd, args) ->
-           (match args with
-            | (t1, uu___2)::(t2, uu___3)::[] when
-                FStarC_TypeChecker_Util.short_circuit_head hd ->
-                let uu___4 = check "app head" g hd in
-                (fun ctx0 ->
-                   fun cache0 ->
-                     let uu___5 = uu___4 ctx0 cache0 in
-                     match uu___5 with
-                     | Success ((x, g1), cache1) ->
-                         let uu___6 =
-                           let uu___7 =
-                             match x with
-                             | (eff_hd, t_hd) ->
-                                 (fun ctx01 ->
-                                    fun cache01 ->
-                                      let uu___8 =
-                                        is_arrow g t_hd ctx01 cache01 in
-                                      match uu___8 with
-                                      | Success ((x1, g11), cache11) ->
-                                          let uu___9 =
-                                            let uu___10 =
-                                              match x1 with
-                                              | (x2, eff_arr1, s1) ->
-                                                  let uu___11 =
-                                                    check "app arg" g t1 in
-                                                  (fun ctx02 ->
-                                                     fun cache02 ->
-                                                       let uu___12 =
-                                                         uu___11 ctx02
-                                                           cache02 in
-                                                       match uu___12 with
-                                                       | Success
-                                                           ((x3, g12),
-                                                            cache12)
-                                                           ->
-                                                           let uu___13 =
-                                                             let uu___14 =
-                                                               match x3 with
-                                                               | (eff_arg1,
-                                                                  t_t1) ->
-                                                                   (fun ctx03
-                                                                    ->
-                                                                    fun
-                                                                    cache03
-                                                                    ->
-                                                                    let uu___15
-                                                                    =
-                                                                    let ctx =
-                                                                    {
-                                                                    no_guard
-                                                                    =
-                                                                    (ctx03.no_guard);
-                                                                    unfolding_ok
-                                                                    =
-                                                                    (ctx03.unfolding_ok);
-                                                                    error_context
-                                                                    =
-                                                                    (("operator arg1",
-                                                                    FStar_Pervasives_Native.None)
-                                                                    ::
-                                                                    (ctx03.error_context))
-                                                                    } in
-                                                                    let uu___16
-                                                                    =
-                                                                    check_subtype
-                                                                    g
-                                                                    (FStar_Pervasives_Native.Some
-                                                                    t1) t_t1
-                                                                    (x2.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
-                                                                    uu___16
-                                                                    ctx
-                                                                    cache03 in
-                                                                    match uu___15
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((x4,
-                                                                    g13),
-                                                                    cache13)
-                                                                    ->
-                                                                    let uu___16
-                                                                    =
-                                                                    let uu___17
-                                                                    =
-                                                                    let s11 =
-                                                                    FStarC_Syntax_Subst.subst
-                                                                    [
-                                                                    FStarC_Syntax_Syntax.NT
-                                                                    ((x2.FStarC_Syntax_Syntax.binder_bv),
-                                                                    t1)] s1 in
-                                                                    fun ctx04
-                                                                    ->
-                                                                    fun
-                                                                    cache04
-                                                                    ->
-                                                                    let uu___18
-                                                                    =
-                                                                    is_arrow
-                                                                    g s11
-                                                                    ctx04
-                                                                    cache04 in
-                                                                    match uu___18
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((x5,
-                                                                    g14),
-                                                                    cache14)
-                                                                    ->
-                                                                    let uu___19
-                                                                    =
-                                                                    let uu___20
-                                                                    =
-                                                                    match x5
-                                                                    with
-                                                                    | 
-                                                                    (y,
-                                                                    eff_arr2,
-                                                                    s2) ->
-                                                                    let guard_formula
-                                                                    =
-                                                                    FStarC_TypeChecker_Util.short_circuit
-                                                                    hd
-                                                                    [
-                                                                    (t1,
-                                                                    FStar_Pervasives_Native.None)] in
-                                                                    let g' =
-                                                                    match guard_formula
-                                                                    with
-                                                                    | 
-                                                                    FStarC_TypeChecker_Common.Trivial
-                                                                    -> g
-                                                                    | 
-                                                                    FStarC_TypeChecker_Common.NonTrivial
-                                                                    gf ->
-                                                                    push_hypothesis
-                                                                    g gf in
-                                                                    let uu___21
-                                                                    =
-                                                                    let uu___22
-                                                                    =
-                                                                    check
-                                                                    "app arg"
-                                                                    g' t2 in
-                                                                    weaken_with_guard_formula
-                                                                    g
-                                                                    guard_formula
-                                                                    uu___22 in
-                                                                    (fun
-                                                                    ctx05 ->
-                                                                    fun
-                                                                    cache05
-                                                                    ->
-                                                                    let uu___22
-                                                                    =
-                                                                    uu___21
-                                                                    ctx05
-                                                                    cache05 in
-                                                                    match uu___22
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((x6,
-                                                                    g15),
-                                                                    cache15)
-                                                                    ->
-                                                                    let uu___23
-                                                                    =
-                                                                    let uu___24
-                                                                    =
-                                                                    match x6
-                                                                    with
-                                                                    | 
-                                                                    (eff_arg2,
-                                                                    t_t2) ->
-                                                                    (fun
-                                                                    ctx06 ->
-                                                                    fun
-                                                                    cache06
-                                                                    ->
-                                                                    let uu___25
-                                                                    =
-                                                                    let ctx =
-                                                                    {
-                                                                    no_guard
-                                                                    =
-                                                                    (ctx06.no_guard);
-                                                                    unfolding_ok
-                                                                    =
-                                                                    (ctx06.unfolding_ok);
-                                                                    error_context
-                                                                    =
-                                                                    (("operator arg2",
-                                                                    FStar_Pervasives_Native.None)
-                                                                    ::
-                                                                    (ctx06.error_context))
-                                                                    } in
-                                                                    let uu___26
-                                                                    =
-                                                                    check_subtype
-                                                                    g'
-                                                                    (FStar_Pervasives_Native.Some
-                                                                    t2) t_t2
-                                                                    (y.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
-                                                                    uu___26
-                                                                    ctx
-                                                                    cache06 in
-                                                                    match uu___25
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((x7,
-                                                                    g16),
-                                                                    cache16)
-                                                                    ->
-                                                                    let uu___26
-                                                                    =
-                                                                    let uu___27
-                                                                    =
-                                                                    let uu___28
-                                                                    =
-                                                                    let uu___29
-                                                                    =
-                                                                    FStarC_Syntax_Subst.subst
-                                                                    [
-                                                                    FStarC_Syntax_Syntax.NT
-                                                                    ((y.FStarC_Syntax_Syntax.binder_bv),
-                                                                    t2)] s2 in
-                                                                    ((join_eff_l
-                                                                    [eff_hd;
-                                                                    eff_arr1;
-                                                                    eff_arr2;
-                                                                    eff_arg1;
-                                                                    eff_arg2]),
-                                                                    uu___29) in
-                                                                    fun
-                                                                    uu___29
-                                                                    ->
-                                                                    fun cache
-                                                                    ->
-                                                                    Success
-                                                                    ((uu___28,
-                                                                    FStar_Pervasives_Native.None),
-                                                                    cache) in
-                                                                    uu___27
-                                                                    ctx06
-                                                                    cache16 in
-                                                                    (match uu___26
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((y1, g2),
-                                                                    cache2)
-                                                                    ->
-                                                                    let uu___27
-                                                                    =
-                                                                    let uu___28
-                                                                    =
-                                                                    let uu___29
-                                                                    =
-                                                                    and_pre
-                                                                    g16 g2 in
-                                                                    (y1,
-                                                                    uu___29) in
-                                                                    (uu___28,
-                                                                    cache2) in
-                                                                    Success
-                                                                    uu___27
-                                                                    | 
-                                                                    err ->
-                                                                    err)
-                                                                    | 
-                                                                    Error err
-                                                                    ->
-                                                                    Error err) in
-                                                                    uu___24
-                                                                    ctx05
-                                                                    cache15 in
-                                                                    (match uu___23
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((y1, g2),
-                                                                    cache2)
-                                                                    ->
-                                                                    let uu___24
-                                                                    =
-                                                                    let uu___25
-                                                                    =
-                                                                    let uu___26
-                                                                    =
-                                                                    and_pre
-                                                                    g15 g2 in
-                                                                    (y1,
-                                                                    uu___26) in
-                                                                    (uu___25,
-                                                                    cache2) in
-                                                                    Success
-                                                                    uu___24
-                                                                    | 
-                                                                    err ->
-                                                                    err)
-                                                                    | 
-                                                                    Error err
-                                                                    ->
-                                                                    Error err) in
-                                                                    uu___20
-                                                                    ctx04
-                                                                    cache14 in
-                                                                    (match uu___19
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((y, g2),
-                                                                    cache2)
-                                                                    ->
-                                                                    let uu___20
-                                                                    =
-                                                                    let uu___21
-                                                                    =
-                                                                    let uu___22
-                                                                    =
-                                                                    and_pre
-                                                                    g14 g2 in
-                                                                    (y,
-                                                                    uu___22) in
-                                                                    (uu___21,
-                                                                    cache2) in
-                                                                    Success
-                                                                    uu___20
-                                                                    | 
-                                                                    err ->
-                                                                    err)
-                                                                    | 
-                                                                    Error err
-                                                                    ->
-                                                                    Error err in
-                                                                    uu___17
-                                                                    ctx03
-                                                                    cache13 in
-                                                                    (match uu___16
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((y, g2),
-                                                                    cache2)
-                                                                    ->
-                                                                    let uu___17
-                                                                    =
-                                                                    let uu___18
-                                                                    =
-                                                                    let uu___19
-                                                                    =
-                                                                    and_pre
-                                                                    g13 g2 in
-                                                                    (y,
-                                                                    uu___19) in
-                                                                    (uu___18,
-                                                                    cache2) in
-                                                                    Success
-                                                                    uu___17
-                                                                    | 
-                                                                    err ->
-                                                                    err)
-                                                                    | 
-                                                                    Error err
-                                                                    ->
-                                                                    Error err) in
-                                                             uu___14 ctx02
-                                                               cache12 in
-                                                           (match uu___13
-                                                            with
-                                                            | Success
-                                                                ((y, g2),
-                                                                 cache2)
-                                                                ->
-                                                                let uu___14 =
-                                                                  let uu___15
-                                                                    =
-                                                                    let uu___16
-                                                                    =
-                                                                    and_pre
-                                                                    g12 g2 in
-                                                                    (y,
-                                                                    uu___16) in
-                                                                  (uu___15,
-                                                                    cache2) in
-                                                                Success
-                                                                  uu___14
-                                                            | err -> err)
-                                                       | Error err ->
-                                                           Error err) in
-                                            uu___10 ctx01 cache11 in
-                                          (match uu___9 with
-                                           | Success ((y, g2), cache2) ->
-                                               let uu___10 =
-                                                 let uu___11 =
-                                                   let uu___12 =
-                                                     and_pre g11 g2 in
-                                                   (y, uu___12) in
-                                                 (uu___11, cache2) in
-                                               Success uu___10
-                                           | err -> err)
-                                      | Error err -> Error err) in
-                           uu___7 ctx0 cache1 in
-                         (match uu___6 with
-                          | Success ((y, g2), cache2) ->
-                              let uu___7 =
-                                let uu___8 =
-                                  let uu___9 = and_pre g1 g2 in (y, uu___9) in
-                                (uu___8, cache2) in
-                              Success uu___7
-                          | err -> err)
-                     | Error err -> Error err)
-            | uu___2 -> check_app hd args))
-  | FStarC_Syntax_Syntax.Tm_ascribed
-      { FStarC_Syntax_Syntax.tm = e2;
-        FStarC_Syntax_Syntax.asc = (FStar_Pervasives.Inl t, uu___, eq);
-        FStarC_Syntax_Syntax.eff_opt = uu___1;_}
-      ->
-      let uu___2 = check "ascription head" g e2 in
-      (fun ctx0 ->
-         fun cache0 ->
-           let uu___3 = uu___2 ctx0 cache0 in
-           match uu___3 with
-           | Success ((x, g1), cache1) ->
-               let uu___4 =
-                 let uu___5 =
-                   match x with
-                   | (eff, te) ->
-                       let uu___6 = check "ascription type" g t in
-                       (fun ctx01 ->
-                          fun cache01 ->
-                            let uu___7 = uu___6 ctx01 cache01 in
-                            match uu___7 with
-                            | Success ((x1, g11), cache11) ->
-                                let uu___8 =
-                                  let uu___9 =
-                                    match x1 with
-                                    | (uu___10, t') ->
-                                        (fun ctx02 ->
-                                           fun cache02 ->
-                                             let uu___11 =
-                                               is_type g t' ctx02 cache02 in
-                                             match uu___11 with
-                                             | Success ((x2, g12), cache12)
-                                                 ->
-                                                 let uu___12 =
-                                                   let uu___13 ctx03 cache03
-                                                     =
-                                                     let uu___14 =
-                                                       let ctx =
-                                                         {
-                                                           no_guard =
-                                                             (ctx03.no_guard);
-                                                           unfolding_ok =
-                                                             (ctx03.unfolding_ok);
-                                                           error_context =
-                                                             (("ascription subtyping",
-                                                                FStar_Pervasives_Native.None)
-                                                             ::
-                                                             (ctx03.error_context))
-                                                         } in
-                                                       let uu___15 =
-                                                         check_subtype g
-                                                           (FStar_Pervasives_Native.Some
-                                                              e2) te t in
-                                                       uu___15 ctx cache03 in
-                                                     match uu___14 with
-                                                     | Success
-                                                         ((x3, g13), cache13)
-                                                         ->
-                                                         let uu___15 =
-                                                           let uu___16
-                                                             uu___17 cache =
-                                                             Success
-                                                               (((eff, t),
-                                                                  FStar_Pervasives_Native.None),
-                                                                 cache) in
-                                                           uu___16 ctx03
-                                                             cache13 in
-                                                         (match uu___15 with
-                                                          | Success
-                                                              ((y, g2),
-                                                               cache2)
-                                                              ->
-                                                              let uu___16 =
-                                                                let uu___17 =
-                                                                  let uu___18
-                                                                    =
-                                                                    and_pre
-                                                                    g13 g2 in
-                                                                  (y,
-                                                                    uu___18) in
-                                                                (uu___17,
-                                                                  cache2) in
-                                                              Success uu___16
-                                                          | err -> err)
-                                                     | Error err -> Error err in
-                                                   uu___13 ctx02 cache12 in
-                                                 (match uu___12 with
-                                                  | Success ((y, g2), cache2)
-                                                      ->
-                                                      let uu___13 =
-                                                        let uu___14 =
-                                                          let uu___15 =
-                                                            and_pre g12 g2 in
-                                                          (y, uu___15) in
-                                                        (uu___14, cache2) in
-                                                      Success uu___13
-                                                  | err -> err)
-                                             | Error err -> Error err) in
-                                  uu___9 ctx01 cache11 in
-                                (match uu___8 with
-                                 | Success ((y, g2), cache2) ->
-                                     let uu___9 =
-                                       let uu___10 =
-                                         let uu___11 = and_pre g11 g2 in
-                                         (y, uu___11) in
-                                       (uu___10, cache2) in
-                                     Success uu___9
-                                 | err -> err)
-                            | Error err -> Error err) in
-                 uu___5 ctx0 cache1 in
-               (match uu___4 with
-                | Success ((y, g2), cache2) ->
-                    let uu___5 =
-                      let uu___6 = let uu___7 = and_pre g1 g2 in (y, uu___7) in
-                      (uu___6, cache2) in
-                    Success uu___5
-                | err -> err)
-           | Error err -> Error err)
-  | FStarC_Syntax_Syntax.Tm_ascribed
-      { FStarC_Syntax_Syntax.tm = e2;
-        FStarC_Syntax_Syntax.asc = (FStar_Pervasives.Inr c, uu___, uu___1);
-        FStarC_Syntax_Syntax.eff_opt = uu___2;_}
-      ->
-      let uu___3 = FStarC_Syntax_Util.is_tot_or_gtot_comp c in
-      if uu___3
-      then
-        let uu___4 = check "ascription head" g e2 in
-        (fun ctx0 ->
-           fun cache0 ->
-             let uu___5 = uu___4 ctx0 cache0 in
-             match uu___5 with
-             | Success ((x, g1), cache1) ->
-                 let uu___6 =
-                   let uu___7 =
-                     match x with
-                     | (eff, te) ->
-                         (fun ctx01 ->
-                            fun cache01 ->
-                              let uu___8 =
-                                let ctx =
-                                  {
-                                    no_guard = (ctx01.no_guard);
-                                    unfolding_ok = (ctx01.unfolding_ok);
-                                    error_context =
-                                      (("ascription comp",
-                                         FStar_Pervasives_Native.None) ::
-                                      (ctx01.error_context))
-                                  } in
-                                let uu___9 = check_comp g c in
-                                uu___9 ctx cache01 in
-                              match uu___8 with
-                              | Success ((x1, g11), cache11) ->
-                                  let uu___9 =
-                                    let uu___10 =
-                                      let c_e = as_comp g (eff, te) in
-                                      fun ctx02 ->
-                                        fun cache02 ->
-                                          let uu___11 =
-                                            let ctx =
-                                              {
-                                                no_guard = (ctx02.no_guard);
-                                                unfolding_ok =
-                                                  (ctx02.unfolding_ok);
-                                                error_context =
-                                                  (("ascription subtyping (comp)",
-                                                     FStar_Pervasives_Native.None)
-                                                  :: (ctx02.error_context))
-                                              } in
-                                            let uu___12 =
-                                              check_relation_comp g
-                                                (SUBTYPING
-                                                   (FStar_Pervasives_Native.Some
-                                                      e2)) c_e c in
-                                            uu___12 ctx cache02 in
-                                          match uu___11 with
-                                          | Success ((x2, g12), cache12) ->
-                                              let uu___12 =
-                                                let uu___13 =
-                                                  let uu___14 =
-                                                    comp_as_tot_or_ghost_and_type
-                                                      c in
-                                                  match uu___14 with
-                                                  | FStar_Pervasives_Native.Some
-                                                      (eff1, t) ->
-                                                      (fun uu___15 ->
-                                                         fun cache ->
-                                                           Success
-                                                             (((eff1, t),
-                                                                FStar_Pervasives_Native.None),
-                                                               cache)) in
-                                                uu___13 ctx02 cache12 in
-                                              (match uu___12 with
-                                               | Success ((y, g2), cache2) ->
-                                                   let uu___13 =
-                                                     let uu___14 =
-                                                       let uu___15 =
-                                                         and_pre g12 g2 in
-                                                       (y, uu___15) in
-                                                     (uu___14, cache2) in
-                                                   Success uu___13
-                                               | err -> err)
-                                          | Error err -> Error err in
-                                    uu___10 ctx01 cache11 in
-                                  (match uu___9 with
-                                   | Success ((y, g2), cache2) ->
-                                       let uu___10 =
-                                         let uu___11 =
-                                           let uu___12 = and_pre g11 g2 in
-                                           (y, uu___12) in
-                                         (uu___11, cache2) in
-                                       Success uu___10
-                                   | err -> err)
-                              | Error err -> Error err) in
-                   uu___7 ctx0 cache1 in
-                 (match uu___6 with
-                  | Success ((y, g2), cache2) ->
-                      let uu___7 =
-                        let uu___8 =
-                          let uu___9 = and_pre g1 g2 in (y, uu___9) in
-                        (uu___8, cache2) in
-                      Success uu___7
-                  | err -> err)
-             | Error err -> Error err)
-      else
-        (let uu___4 =
-           let uu___5 =
-             FStarC_Class_Show.show FStarC_Syntax_Print.showable_comp c in
-           FStarC_Format.fmt1
-             "Effect ascriptions are not fully handled yet: %s" uu___5 in
-         fail_str uu___4)
-  | FStarC_Syntax_Syntax.Tm_let
-      { FStarC_Syntax_Syntax.lbs = (false, lb::[]);
-        FStarC_Syntax_Syntax.body1 = body;_}
-      ->
-      let uu___ = lb.FStarC_Syntax_Syntax.lbname in
-      (match uu___ with
-       | FStar_Pervasives.Inl x0 ->
-           if
-             FStarC_Syntax_Util.is_pure_or_ghost_effect
-               lb.FStarC_Syntax_Syntax.lbeff
-           then
-             let uu___1 =
-               check "let definition" g lb.FStarC_Syntax_Syntax.lbdef in
-             (fun ctx0 ->
-                fun cache0 ->
-                  let uu___2 = uu___1 ctx0 cache0 in
-                  match uu___2 with
-                  | Success ((x, g1), cache1) ->
-                      let uu___3 =
-                        let uu___4 =
-                          match x with
-                          | (eff_def, tdef) ->
-                              let unannotated =
-                                let uu___5 =
-                                  let uu___6 =
-                                    FStarC_Syntax_Subst.compress
-                                      lb.FStarC_Syntax_Syntax.lbtyp in
-                                  uu___6.FStarC_Syntax_Syntax.n in
-                                match uu___5 with
-                                | FStarC_Syntax_Syntax.Tm_unknown -> true
-                                | uu___6 -> false in
-                              let lbtyp =
-                                if unannotated
-                                then tdef
-                                else lb.FStarC_Syntax_Syntax.lbtyp in
-                              let x01 =
-                                if unannotated
-                                then
-                                  {
-                                    FStarC_Syntax_Syntax.ppname =
-                                      (x0.FStarC_Syntax_Syntax.ppname);
-                                    FStarC_Syntax_Syntax.index =
-                                      (x0.FStarC_Syntax_Syntax.index);
-                                    FStarC_Syntax_Syntax.sort = tdef
-                                  }
-                                else x0 in
-                              let uu___5 =
-                                open_term g
-                                  (FStarC_Syntax_Syntax.mk_binder x01) body in
-                              (match uu___5 with
-                               | (g', x1, body1) ->
-                                   let uu___6 = check "let type" g lbtyp in
-                                   (fun ctx01 ->
-                                      fun cache01 ->
-                                        let uu___7 = uu___6 ctx01 cache01 in
-                                        match uu___7 with
-                                        | Success ((x2, g11), cache11) ->
-                                            let uu___8 =
-                                              let uu___9 =
-                                                match x2 with
-                                                | (uu___10, ttyp) ->
-                                                    (fun ctx02 ->
-                                                       fun cache02 ->
-                                                         let uu___11 =
-                                                           is_type g ttyp
-                                                             ctx02 cache02 in
-                                                         match uu___11 with
-                                                         | Success
-                                                             ((x3, g12),
-                                                              cache12)
-                                                             ->
-                                                             let uu___12 =
-                                                               let uu___13
-                                                                 ctx03
-                                                                 cache03 =
-                                                                 let uu___14
-                                                                   =
-                                                                   let ctx =
-                                                                    {
-                                                                    no_guard
-                                                                    =
-                                                                    (ctx03.no_guard);
-                                                                    unfolding_ok
-                                                                    =
-                                                                    (ctx03.unfolding_ok);
-                                                                    error_context
-                                                                    =
-                                                                    (("let subtyping",
-                                                                    FStar_Pervasives_Native.None)
-                                                                    ::
-                                                                    (ctx03.error_context))
-                                                                    } in
-                                                                   let uu___15
-                                                                    =
-                                                                    check_subtype
-                                                                    g
-                                                                    (FStar_Pervasives_Native.Some
-                                                                    (lb.FStarC_Syntax_Syntax.lbdef))
-                                                                    tdef
-                                                                    lbtyp in
-                                                                   uu___15
-                                                                    ctx
-                                                                    cache03 in
-                                                                 match uu___14
-                                                                 with
-                                                                 | Success
-                                                                    ((x4,
-                                                                    g13),
-                                                                    cache13)
-                                                                    ->
-                                                                    let uu___15
-                                                                    =
-                                                                    let uu___16
-                                                                    =
-                                                                    let uu___17
-                                                                    =
-                                                                    let uu___18
-                                                                    =
-                                                                    check
-                                                                    "let body"
-                                                                    g' body1 in
-                                                                    fun ctx04
-                                                                    ->
-                                                                    fun
-                                                                    cache04
-                                                                    ->
-                                                                    let uu___19
-                                                                    =
-                                                                    uu___18
-                                                                    ctx04
-                                                                    cache04 in
-                                                                    match uu___19
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((x5,
-                                                                    g14),
-                                                                    cache14)
-                                                                    ->
-                                                                    let uu___20
-                                                                    =
-                                                                    let uu___21
-                                                                    =
-                                                                    match x5
-                                                                    with
-                                                                    | 
-                                                                    (eff_body,
-                                                                    t) ->
-                                                                    let uu___22
-                                                                    =
-                                                                    check_no_escape
-                                                                    [x1] t in
-                                                                    (fun
-                                                                    ctx05 ->
-                                                                    fun
-                                                                    cache05
-                                                                    ->
-                                                                    let uu___23
-                                                                    =
-                                                                    uu___22
-                                                                    ctx05
-                                                                    cache05 in
-                                                                    match uu___23
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((x6,
-                                                                    g15),
-                                                                    cache15)
-                                                                    ->
-                                                                    let uu___24
-                                                                    =
-                                                                    let uu___25
-                                                                    uu___26
-                                                                    cache =
-                                                                    Success
-                                                                    ((((join_eff
-                                                                    eff_def
-                                                                    eff_body),
-                                                                    t),
-                                                                    FStar_Pervasives_Native.None),
-                                                                    cache) in
-                                                                    uu___25
-                                                                    ctx05
-                                                                    cache15 in
-                                                                    (match uu___24
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((y, g2),
-                                                                    cache2)
-                                                                    ->
-                                                                    let uu___25
-                                                                    =
-                                                                    let uu___26
-                                                                    =
-                                                                    let uu___27
-                                                                    =
-                                                                    and_pre
-                                                                    g15 g2 in
-                                                                    (y,
-                                                                    uu___27) in
-                                                                    (uu___26,
-                                                                    cache2) in
-                                                                    Success
-                                                                    uu___25
-                                                                    | 
-                                                                    err ->
-                                                                    err)
-                                                                    | 
-                                                                    Error err
-                                                                    ->
-                                                                    Error err) in
-                                                                    uu___21
-                                                                    ctx04
-                                                                    cache14 in
-                                                                    (match uu___20
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((y, g2),
-                                                                    cache2)
-                                                                    ->
-                                                                    let uu___21
-                                                                    =
-                                                                    let uu___22
-                                                                    =
-                                                                    let uu___23
-                                                                    =
-                                                                    and_pre
-                                                                    g14 g2 in
-                                                                    (y,
-                                                                    uu___23) in
-                                                                    (uu___22,
-                                                                    cache2) in
-                                                                    Success
-                                                                    uu___21
-                                                                    | 
-                                                                    err ->
-                                                                    err)
-                                                                    | 
-                                                                    Error err
-                                                                    ->
-                                                                    Error err in
-                                                                    with_definition
-                                                                    g x1 x3
-                                                                    lb.FStarC_Syntax_Syntax.lbdef
-                                                                    uu___17 in
-                                                                    uu___16
-                                                                    ctx03
-                                                                    cache13 in
-                                                                    (match uu___15
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((y, g2),
-                                                                    cache2)
-                                                                    ->
-                                                                    let uu___16
-                                                                    =
-                                                                    let uu___17
-                                                                    =
-                                                                    let uu___18
-                                                                    =
-                                                                    and_pre
-                                                                    g13 g2 in
-                                                                    (y,
-                                                                    uu___18) in
-                                                                    (uu___17,
-                                                                    cache2) in
-                                                                    Success
-                                                                    uu___16
-                                                                    | 
-                                                                    err ->
-                                                                    err)
-                                                                 | Error err
-                                                                    ->
-                                                                    Error err in
-                                                               uu___13 ctx02
-                                                                 cache12 in
-                                                             (match uu___12
-                                                              with
-                                                              | Success
-                                                                  ((y, g2),
-                                                                   cache2)
-                                                                  ->
-                                                                  let uu___13
-                                                                    =
-                                                                    let uu___14
-                                                                    =
-                                                                    let uu___15
-                                                                    =
-                                                                    and_pre
-                                                                    g12 g2 in
-                                                                    (y,
-                                                                    uu___15) in
-                                                                    (uu___14,
-                                                                    cache2) in
-                                                                  Success
-                                                                    uu___13
-                                                              | err -> err)
-                                                         | Error err ->
-                                                             Error err) in
-                                              uu___9 ctx01 cache11 in
-                                            (match uu___8 with
-                                             | Success ((y, g2), cache2) ->
-                                                 let uu___9 =
-                                                   let uu___10 =
-                                                     let uu___11 =
-                                                       and_pre g11 g2 in
-                                                     (y, uu___11) in
-                                                   (uu___10, cache2) in
-                                                 Success uu___9
-                                             | err -> err)
-                                        | Error err -> Error err)) in
-                        uu___4 ctx0 cache1 in
-                      (match uu___3 with
-                       | Success ((y, g2), cache2) ->
-                           let uu___4 =
-                             let uu___5 =
-                               let uu___6 = and_pre g1 g2 in (y, uu___6) in
-                             (uu___5, cache2) in
-                           Success uu___4
-                       | err -> err)
-                  | Error err -> Error err)
-           else
-             (let uu___1 =
-                let uu___2 =
-                  FStarC_Class_Show.show FStarC_Ident.showable_lident
-                    lb.FStarC_Syntax_Syntax.lbeff in
-                FStarC_Format.fmt1 "Let binding is effectful (lbeff = %s)"
-                  uu___2 in
-              fail_str uu___1))
-  | FStarC_Syntax_Syntax.Tm_match
-      { FStarC_Syntax_Syntax.scrutinee = sc;
-        FStarC_Syntax_Syntax.ret_opt = FStar_Pervasives_Native.None;
-        FStarC_Syntax_Syntax.brs = branches;
-        FStarC_Syntax_Syntax.rc_opt1 = rc_opt;_}
-      ->
-      let uu___ = check "scrutinee" g sc in
-      (fun ctx0 ->
-         fun cache0 ->
-           let uu___1 = uu___ ctx0 cache0 in
-           match uu___1 with
-           | Success ((x, g1), cache1) ->
-               let uu___2 =
-                 let uu___3 =
-                   match x with
-                   | (eff_sc, t_sc) ->
-                       let uu___4 = universe_of_well_typed_term g t_sc in
-                       (fun ctx01 ->
-                          fun cache01 ->
-                            let uu___5 = uu___4 ctx01 cache01 in
-                            match uu___5 with
-                            | Success ((x1, g11), cache11) ->
-                                let uu___6 =
-                                  let uu___7 =
-                                    let rec check_branches path_condition
-                                      branch_typ_opt branches1 =
-                                      match branches1 with
-                                      | [] ->
-                                          (match branch_typ_opt with
-                                           | FStar_Pervasives_Native.None ->
-                                               fail_str
-                                                 "could not compute a type for the match"
-                                           | FStar_Pervasives_Native.Some et
-                                               ->
-                                               let uu___8 =
-                                                 boolean_negation_simp
-                                                   path_condition in
-                                               (match uu___8 with
-                                                | FStar_Pervasives_Native.None
-                                                    ->
-                                                    (fun uu___9 ->
-                                                       fun cache ->
-                                                         Success
-                                                           ((et,
-                                                              FStar_Pervasives_Native.None),
-                                                             cache))
-                                                | FStar_Pervasives_Native.Some
-                                                    neg_path ->
-                                                    let uu___9 =
-                                                      let uu___10 =
-                                                        FStarC_Syntax_Util.b2t
-                                                          neg_path in
-                                                      guard g uu___10 in
-                                                    (fun ctx02 ->
-                                                       fun cache02 ->
-                                                         let uu___10 =
-                                                           uu___9 ctx02
-                                                             cache02 in
-                                                         match uu___10 with
-                                                         | Success
-                                                             ((x2, g12),
-                                                              cache12)
-                                                             ->
-                                                             let uu___11 =
-                                                               let uu___12
-                                                                 uu___13
-                                                                 cache =
-                                                                 Success
-                                                                   ((et,
-                                                                    FStar_Pervasives_Native.None),
-                                                                    cache) in
-                                                               uu___12 ctx02
-                                                                 cache12 in
-                                                             (match uu___11
-                                                              with
-                                                              | Success
-                                                                  ((y, g2),
-                                                                   cache2)
-                                                                  ->
-                                                                  let uu___12
-                                                                    =
-                                                                    let uu___13
-                                                                    =
-                                                                    let uu___14
-                                                                    =
-                                                                    and_pre
-                                                                    g12 g2 in
-                                                                    (y,
-                                                                    uu___14) in
-                                                                    (uu___13,
-                                                                    cache2) in
-                                                                  Success
-                                                                    uu___12
-                                                              | err -> err)
-                                                         | Error err ->
-                                                             Error err)))
-                                      | (p, FStar_Pervasives_Native.None, b)::rest
-                                          ->
-                                          let uu___8 =
-                                            open_branch g
-                                              (p,
-                                                FStar_Pervasives_Native.None,
-                                                b) in
-                                          (match uu___8 with
-                                           | (uu___9, (p1, uu___10, b1)) ->
-                                               (fun ctx02 ->
-                                                  fun cache02 ->
-                                                    let uu___11 =
-                                                      let ctx =
-                                                        {
-                                                          no_guard =
-                                                            (ctx02.no_guard);
-                                                          unfolding_ok =
-                                                            (ctx02.unfolding_ok);
-                                                          error_context =
-                                                            (("check_pat",
-                                                               FStar_Pervasives_Native.None)
-                                                            ::
-                                                            (ctx02.error_context))
-                                                        } in
-                                                      let uu___12 =
-                                                        check_pat g p1 t_sc in
-                                                      uu___12 ctx cache02 in
-                                                    match uu___11 with
-                                                    | Success
-                                                        ((x2, g12), cache12)
-                                                        ->
-                                                        let uu___12 =
-                                                          let uu___13 =
-                                                            match x2 with
-                                                            | (bs, us) ->
-                                                                let uu___14 =
-                                                                  pattern_branch_condition
-                                                                    g sc p1 in
-                                                                (fun ctx03 ->
-                                                                   fun
-                                                                    cache03
-                                                                    ->
-                                                                    let uu___15
-                                                                    =
-                                                                    uu___14
-                                                                    ctx03
-                                                                    cache03 in
-                                                                    match uu___15
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((x3,
-                                                                    g13),
-                                                                    cache13)
-                                                                    ->
-                                                                    let uu___16
-                                                                    =
-                                                                    let uu___17
-                                                                    =
-                                                                    let pat_sc_eq
-                                                                    =
-                                                                    let uu___18
-                                                                    =
-                                                                    let uu___19
-                                                                    =
-                                                                    let uu___20
-                                                                    =
-                                                                    FStarC_TypeChecker_PatternUtils.raw_pat_as_exp
-                                                                    g.tcenv
-                                                                    p1 in
-                                                                    FStarC_Option.must
-                                                                    uu___20 in
-                                                                    FStar_Pervasives_Native.fst
-                                                                    uu___19 in
-                                                                    FStarC_Syntax_Util.mk_eq2
-                                                                    x1 t_sc
-                                                                    sc
-                                                                    uu___18 in
-                                                                    let uu___18
-                                                                    =
-                                                                    combine_path_and_branch_condition
-                                                                    path_condition
-                                                                    x3
-                                                                    pat_sc_eq in
-                                                                    match uu___18
-                                                                    with
-                                                                    | 
-                                                                    (this_path_condition,
-                                                                    next_path_condition)
-                                                                    ->
-                                                                    let g'0 =
-                                                                    push_binders
-                                                                    g bs in
-                                                                    let g' =
-                                                                    push_hypothesis
-                                                                    g'0
-                                                                    this_path_condition in
-                                                                    (fun
-                                                                    ctx04 ->
-                                                                    fun
-                                                                    cache04
-                                                                    ->
-                                                                    let uu___19
-                                                                    =
-                                                                    with_binders
-                                                                    g bs us
-                                                                    (weaken
-                                                                    g'0
-                                                                    this_path_condition
-                                                                    (fun
-                                                                    ctx05
-                                                                    cache05
-                                                                    ->
-                                                                    let uu___20
-                                                                    =
-                                                                    let ctx =
-                                                                    {
-                                                                    no_guard
-                                                                    =
-                                                                    (ctx05.no_guard);
-                                                                    unfolding_ok
-                                                                    =
-                                                                    (ctx05.unfolding_ok);
-                                                                    error_context
-                                                                    =
-                                                                    (("branch",
-                                                                    (FStar_Pervasives_Native.Some
-                                                                    (CtxTerm
-                                                                    b1))) ::
-                                                                    (ctx05.error_context))
-                                                                    } in
-                                                                    let uu___21
-                                                                    =
-                                                                    check
-                                                                    "branch"
-                                                                    g' b1 in
-                                                                    uu___21
-                                                                    ctx
-                                                                    cache05 in
-                                                                    match uu___20
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((x4,
-                                                                    g14),
-                                                                    cache14)
-                                                                    ->
-                                                                    let uu___21
-                                                                    =
-                                                                    let uu___22
-                                                                    =
-                                                                    match x4
-                                                                    with
-                                                                    | 
-                                                                    (eff_br,
-                                                                    tbr) ->
-                                                                    (match branch_typ_opt
-                                                                    with
-                                                                    | 
-                                                                    FStar_Pervasives_Native.None
-                                                                    ->
-                                                                    let uu___23
-                                                                    =
-                                                                    check_no_escape
-                                                                    bs tbr in
-                                                                    (fun
-                                                                    ctx06 ->
-                                                                    fun
-                                                                    cache06
-                                                                    ->
-                                                                    let uu___24
-                                                                    =
-                                                                    uu___23
-                                                                    ctx06
-                                                                    cache06 in
-                                                                    match uu___24
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((x5,
-                                                                    g15),
-                                                                    cache15)
-                                                                    ->
-                                                                    let uu___25
-                                                                    =
-                                                                    let uu___26
-                                                                    uu___27
-                                                                    cache =
-                                                                    Success
-                                                                    (((eff_br,
-                                                                    tbr),
-                                                                    FStar_Pervasives_Native.None),
-                                                                    cache) in
-                                                                    uu___26
-                                                                    ctx06
-                                                                    cache15 in
-                                                                    (match uu___25
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((y, g2),
-                                                                    cache2)
-                                                                    ->
-                                                                    let uu___26
-                                                                    =
-                                                                    let uu___27
-                                                                    =
-                                                                    let uu___28
-                                                                    =
-                                                                    and_pre
-                                                                    g15 g2 in
-                                                                    (y,
-                                                                    uu___28) in
-                                                                    (uu___27,
-                                                                    cache2) in
-                                                                    Success
-                                                                    uu___26
-                                                                    | 
-                                                                    err ->
-                                                                    err)
-                                                                    | 
-                                                                    Error err
-                                                                    ->
-                                                                    Error err)
-                                                                    | 
-                                                                    FStar_Pervasives_Native.Some
-                                                                    (acc_eff,
-                                                                    expect_tbr)
-                                                                    ->
-                                                                    (fun
-                                                                    ctx06 ->
-                                                                    fun
-                                                                    cache06
-                                                                    ->
-                                                                    let uu___23
-                                                                    =
-                                                                    let ctx =
-                                                                    {
-                                                                    no_guard
-                                                                    =
-                                                                    (ctx06.no_guard);
-                                                                    unfolding_ok
-                                                                    =
-                                                                    (ctx06.unfolding_ok);
-                                                                    error_context
-                                                                    =
-                                                                    (("check_branch_subtype",
-                                                                    (FStar_Pervasives_Native.Some
-                                                                    (CtxRel
-                                                                    (tbr,
-                                                                    (SUBTYPING
-                                                                    (FStar_Pervasives_Native.Some
-                                                                    b1)),
-                                                                    expect_tbr))))
-                                                                    ::
-                                                                    (ctx06.error_context))
-                                                                    } in
-                                                                    let uu___24
-                                                                    =
-                                                                    check_subtype
-                                                                    g'
-                                                                    (FStar_Pervasives_Native.Some
-                                                                    b1) tbr
-                                                                    expect_tbr in
-                                                                    uu___24
-                                                                    ctx
-                                                                    cache06 in
-                                                                    match uu___23
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((x5,
-                                                                    g15),
-                                                                    cache15)
-                                                                    ->
-                                                                    let uu___24
-                                                                    =
-                                                                    let uu___25
-                                                                    uu___26
-                                                                    cache =
-                                                                    Success
-                                                                    ((((join_eff
-                                                                    eff_br
-                                                                    acc_eff),
-                                                                    expect_tbr),
-                                                                    FStar_Pervasives_Native.None),
-                                                                    cache) in
-                                                                    uu___25
-                                                                    ctx06
-                                                                    cache15 in
-                                                                    (match uu___24
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((y, g2),
-                                                                    cache2)
-                                                                    ->
-                                                                    let uu___25
-                                                                    =
-                                                                    let uu___26
-                                                                    =
-                                                                    let uu___27
-                                                                    =
-                                                                    and_pre
-                                                                    g15 g2 in
-                                                                    (y,
-                                                                    uu___27) in
-                                                                    (uu___26,
-                                                                    cache2) in
-                                                                    Success
-                                                                    uu___25
-                                                                    | 
-                                                                    err ->
-                                                                    err)
-                                                                    | 
-                                                                    Error err
-                                                                    ->
-                                                                    Error err)) in
-                                                                    uu___22
-                                                                    ctx05
-                                                                    cache14 in
-                                                                    (match uu___21
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((y, g2),
-                                                                    cache2)
-                                                                    ->
-                                                                    let uu___22
-                                                                    =
-                                                                    let uu___23
-                                                                    =
-                                                                    let uu___24
-                                                                    =
-                                                                    and_pre
-                                                                    g14 g2 in
-                                                                    (y,
-                                                                    uu___24) in
-                                                                    (uu___23,
-                                                                    cache2) in
-                                                                    Success
-                                                                    uu___22
-                                                                    | 
-                                                                    err ->
-                                                                    err)
-                                                                    | 
-                                                                    Error err
-                                                                    ->
-                                                                    Error err))
-                                                                    ctx04
-                                                                    cache04 in
-                                                                    match uu___19
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((x4,
-                                                                    g14),
-                                                                    cache14)
-                                                                    ->
-                                                                    let uu___20
-                                                                    =
-                                                                    let uu___21
-                                                                    =
-                                                                    match x4
-                                                                    with
-                                                                    | 
-                                                                    (eff_br,
-                                                                    tbr) ->
-                                                                    (match 
-                                                                    p1.FStarC_Syntax_Syntax.v
-                                                                    with
-                                                                    | 
-                                                                    FStarC_Syntax_Syntax.Pat_var
-                                                                    uu___22
-                                                                    ->
-                                                                    (match rest
-                                                                    with
-                                                                    | 
-                                                                    uu___23::uu___24
-                                                                    ->
-                                                                    fail_str
-                                                                    "Redundant branches after wildcard"
-                                                                    | 
-                                                                    uu___23
-                                                                    ->
-                                                                    (fun
-                                                                    uu___24
-                                                                    ->
-                                                                    fun cache
-                                                                    ->
-                                                                    Success
-                                                                    (((eff_br,
-                                                                    tbr),
-                                                                    FStar_Pervasives_Native.None),
-                                                                    cache)))
-                                                                    | 
-                                                                    uu___22
-                                                                    ->
-                                                                    check_branches
-                                                                    next_path_condition
-                                                                    (FStar_Pervasives_Native.Some
-                                                                    (eff_br,
-                                                                    tbr))
-                                                                    rest) in
-                                                                    uu___21
-                                                                    ctx04
-                                                                    cache14 in
-                                                                    (match uu___20
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((y, g2),
-                                                                    cache2)
-                                                                    ->
-                                                                    let uu___21
-                                                                    =
-                                                                    let uu___22
-                                                                    =
-                                                                    let uu___23
-                                                                    =
-                                                                    and_pre
-                                                                    g14 g2 in
-                                                                    (y,
-                                                                    uu___23) in
-                                                                    (uu___22,
-                                                                    cache2) in
-                                                                    Success
-                                                                    uu___21
-                                                                    | 
-                                                                    err ->
-                                                                    err)
-                                                                    | 
-                                                                    Error err
-                                                                    ->
-                                                                    Error err) in
-                                                                    uu___17
-                                                                    ctx03
-                                                                    cache13 in
-                                                                    (match uu___16
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((y, g2),
-                                                                    cache2)
-                                                                    ->
-                                                                    let uu___17
-                                                                    =
-                                                                    let uu___18
-                                                                    =
-                                                                    let uu___19
-                                                                    =
-                                                                    and_pre
-                                                                    g13 g2 in
-                                                                    (y,
-                                                                    uu___19) in
-                                                                    (uu___18,
-                                                                    cache2) in
-                                                                    Success
-                                                                    uu___17
-                                                                    | 
-                                                                    err ->
-                                                                    err)
-                                                                    | 
-                                                                    Error err
-                                                                    ->
-                                                                    Error err) in
-                                                          uu___13 ctx02
-                                                            cache12 in
-                                                        (match uu___12 with
-                                                         | Success
-                                                             ((y, g2),
-                                                              cache2)
-                                                             ->
-                                                             let uu___13 =
-                                                               let uu___14 =
-                                                                 let uu___15
-                                                                   =
-                                                                   and_pre
-                                                                    g12 g2 in
-                                                                 (y, uu___15) in
-                                                               (uu___14,
-                                                                 cache2) in
-                                                             Success uu___13
-                                                         | err -> err)
-                                                    | Error err -> Error err)) in
-                                    let uu___8 =
-                                      match rc_opt with
-                                      | FStar_Pervasives_Native.Some
-                                          {
-                                            FStarC_Syntax_Syntax.residual_effect
-                                              = uu___9;
-                                            FStarC_Syntax_Syntax.residual_typ
-                                              = FStar_Pervasives_Native.Some
-                                              t;
-                                            FStarC_Syntax_Syntax.residual_flags
-                                              = uu___10;_}
-                                          ->
-                                          let uu___11 = universe_of g t in
-                                          (fun ctx02 ->
-                                             fun cache02 ->
-                                               let uu___12 =
-                                                 uu___11 ctx02 cache02 in
-                                               match uu___12 with
-                                               | Success ((x2, g12), cache12)
-                                                   ->
-                                                   let uu___13 =
-                                                     let uu___14 uu___15
-                                                       cache =
-                                                       Success
-                                                         (((FStar_Pervasives_Native.Some
-                                                              (E_Total, t)),
-                                                            FStar_Pervasives_Native.None),
-                                                           cache) in
-                                                     uu___14 ctx02 cache12 in
-                                                   (match uu___13 with
-                                                    | Success
-                                                        ((y, g2), cache2) ->
-                                                        let uu___14 =
-                                                          let uu___15 =
-                                                            let uu___16 =
-                                                              and_pre g12 g2 in
-                                                            (y, uu___16) in
-                                                          (uu___15, cache2) in
-                                                        Success uu___14
-                                                    | err -> err)
-                                               | Error err -> Error err)
-                                      | uu___9 ->
-                                          (fun uu___10 ->
-                                             fun cache ->
-                                               Success
-                                                 ((FStar_Pervasives_Native.None,
-                                                    FStar_Pervasives_Native.None),
-                                                   cache)) in
-                                    fun ctx02 ->
-                                      fun cache02 ->
-                                        let uu___9 = uu___8 ctx02 cache02 in
-                                        match uu___9 with
-                                        | Success ((x2, g12), cache12) ->
-                                            let uu___10 =
-                                              let uu___11 ctx03 cache03 =
-                                                let uu___12 =
-                                                  let ctx =
-                                                    match x2 with
-                                                    | FStar_Pervasives_Native.None
-                                                        ->
-                                                        FStar_Pervasives_Native.None
-                                                    | FStar_Pervasives_Native.Some
-                                                        (uu___13, t) ->
-                                                        FStar_Pervasives_Native.Some
-                                                          (CtxTerm t) in
-                                                  let ctx1 =
-                                                    {
-                                                      no_guard =
-                                                        (ctx03.no_guard);
-                                                      unfolding_ok =
-                                                        (ctx03.unfolding_ok);
-                                                      error_context =
-                                                        (("check_branches",
-                                                           ctx) ::
-                                                        (ctx03.error_context))
-                                                    } in
-                                                  let uu___13 =
-                                                    check_branches
-                                                      FStarC_Syntax_Util.exp_true_bool
-                                                      x2 branches in
-                                                  uu___13 ctx1 cache03 in
-                                                match uu___12 with
-                                                | Success
-                                                    ((x3, g13), cache13) ->
-                                                    let uu___13 =
-                                                      let uu___14 =
-                                                        match x3 with
-                                                        | (eff_br, t_br) ->
-                                                            (fun uu___15 ->
-                                                               fun cache ->
-                                                                 Success
-                                                                   ((((join_eff
-                                                                    eff_sc
-                                                                    eff_br),
-                                                                    t_br),
-                                                                    FStar_Pervasives_Native.None),
-                                                                    cache)) in
-                                                      uu___14 ctx03 cache13 in
-                                                    (match uu___13 with
-                                                     | Success
-                                                         ((y, g2), cache2) ->
-                                                         let uu___14 =
-                                                           let uu___15 =
-                                                             let uu___16 =
-                                                               and_pre g13 g2 in
-                                                             (y, uu___16) in
-                                                           (uu___15, cache2) in
-                                                         Success uu___14
-                                                     | err -> err)
-                                                | Error err -> Error err in
-                                              uu___11 ctx02 cache12 in
-                                            (match uu___10 with
-                                             | Success ((y, g2), cache2) ->
-                                                 let uu___11 =
-                                                   let uu___12 =
-                                                     let uu___13 =
-                                                       and_pre g12 g2 in
-                                                     (y, uu___13) in
-                                                   (uu___12, cache2) in
-                                                 Success uu___11
-                                             | err -> err)
-                                        | Error err -> Error err in
-                                  uu___7 ctx01 cache11 in
-                                (match uu___6 with
-                                 | Success ((y, g2), cache2) ->
-                                     let uu___7 =
-                                       let uu___8 =
-                                         let uu___9 = and_pre g11 g2 in
-                                         (y, uu___9) in
-                                       (uu___8, cache2) in
-                                     Success uu___7
-                                 | err -> err)
-                            | Error err -> Error err) in
-                 uu___3 ctx0 cache1 in
-               (match uu___2 with
-                | Success ((y, g2), cache2) ->
-                    let uu___3 =
-                      let uu___4 = let uu___5 = and_pre g1 g2 in (y, uu___5) in
-                      (uu___4, cache2) in
-                    Success uu___3
-                | err -> err)
-           | Error err -> Error err)
-  | FStarC_Syntax_Syntax.Tm_match
-      { FStarC_Syntax_Syntax.scrutinee = sc;
-        FStarC_Syntax_Syntax.ret_opt = FStar_Pervasives_Native.Some
-          (as_x,
-           (FStar_Pervasives.Inl returns_ty, FStar_Pervasives_Native.None,
-            eq));
-        FStarC_Syntax_Syntax.brs = branches;
-        FStarC_Syntax_Syntax.rc_opt1 = rc_opt;_}
-      ->
-      let uu___ = check "scrutinee" g sc in
-      (fun ctx0 ->
-         fun cache0 ->
-           let uu___1 = uu___ ctx0 cache0 in
-           match uu___1 with
-           | Success ((x, g1), cache1) ->
-               let uu___2 =
-                 let uu___3 =
-                   match x with
-                   | (eff_sc, t_sc) ->
-                       let uu___4 = universe_of_well_typed_term g t_sc in
-                       (fun ctx01 ->
-                          fun cache01 ->
-                            let uu___5 = uu___4 ctx01 cache01 in
-                            match uu___5 with
-                            | Success ((x1, g11), cache11) ->
-                                let uu___6 =
-                                  let uu___7 =
-                                    let as_x1 =
-                                      {
-                                        FStarC_Syntax_Syntax.binder_bv =
-                                          (let uu___8 =
-                                             as_x.FStarC_Syntax_Syntax.binder_bv in
-                                           {
-                                             FStarC_Syntax_Syntax.ppname =
-                                               (uu___8.FStarC_Syntax_Syntax.ppname);
-                                             FStarC_Syntax_Syntax.index =
-                                               (uu___8.FStarC_Syntax_Syntax.index);
-                                             FStarC_Syntax_Syntax.sort = t_sc
-                                           });
-                                        FStarC_Syntax_Syntax.binder_qual =
-                                          (as_x.FStarC_Syntax_Syntax.binder_qual);
-                                        FStarC_Syntax_Syntax.binder_positivity
-                                          =
-                                          (as_x.FStarC_Syntax_Syntax.binder_positivity);
-                                        FStarC_Syntax_Syntax.binder_attrs =
-                                          (as_x.FStarC_Syntax_Syntax.binder_attrs)
-                                      } in
-                                    let uu___8 = open_term g as_x1 returns_ty in
-                                    match uu___8 with
-                                    | (g_as_x, as_x2, returns_ty1) ->
-                                        let uu___9 =
-                                          let uu___10 =
-                                            check "return type" g_as_x
-                                              returns_ty1 in
-                                          with_binders g [as_x2] [x1] uu___10 in
-                                        (fun ctx02 ->
-                                           fun cache02 ->
-                                             let uu___10 =
-                                               uu___9 ctx02 cache02 in
-                                             match uu___10 with
-                                             | Success ((x2, g12), cache12)
-                                                 ->
-                                                 let uu___11 =
-                                                   let uu___12 =
-                                                     match x2 with
-                                                     | (_eff_t, returns_ty_t)
-                                                         ->
-                                                         (fun ctx03 ->
-                                                            fun cache03 ->
-                                                              let uu___13 =
-                                                                is_type
-                                                                  g_as_x
-                                                                  returns_ty_t
-                                                                  ctx03
-                                                                  cache03 in
-                                                              match uu___13
-                                                              with
-                                                              | Success
-                                                                  ((x3, g13),
-                                                                   cache13)
-                                                                  ->
-                                                                  let uu___14
-                                                                    =
-                                                                    let uu___15
-                                                                    =
-                                                                    let rec check_branches
-                                                                    path_condition
-                                                                    branches1
-                                                                    acc_eff =
-                                                                    match branches1
-                                                                    with
-                                                                    | 
-                                                                    [] ->
-                                                                    let uu___16
-                                                                    =
-                                                                    boolean_negation_simp
-                                                                    path_condition in
-                                                                    (match uu___16
-                                                                    with
-                                                                    | 
-                                                                    FStar_Pervasives_Native.None
-                                                                    ->
-                                                                    (fun
-                                                                    uu___17
-                                                                    ->
-                                                                    fun cache
-                                                                    ->
-                                                                    Success
-                                                                    ((acc_eff,
-                                                                    FStar_Pervasives_Native.None),
-                                                                    cache))
-                                                                    | 
-                                                                    FStar_Pervasives_Native.Some
-                                                                    neg_path
-                                                                    ->
-                                                                    let uu___17
-                                                                    =
-                                                                    let uu___18
-                                                                    =
-                                                                    FStarC_Syntax_Util.b2t
-                                                                    neg_path in
-                                                                    guard g
-                                                                    uu___18 in
-                                                                    (fun
-                                                                    ctx04 ->
-                                                                    fun
-                                                                    cache04
-                                                                    ->
-                                                                    let uu___18
-                                                                    =
-                                                                    uu___17
-                                                                    ctx04
-                                                                    cache04 in
-                                                                    match uu___18
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((x4,
-                                                                    g14),
-                                                                    cache14)
-                                                                    ->
-                                                                    let uu___19
-                                                                    =
-                                                                    let uu___20
-                                                                    uu___21
-                                                                    cache =
-                                                                    Success
-                                                                    ((acc_eff,
-                                                                    FStar_Pervasives_Native.None),
-                                                                    cache) in
-                                                                    uu___20
-                                                                    ctx04
-                                                                    cache14 in
-                                                                    (match uu___19
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((y, g2),
-                                                                    cache2)
-                                                                    ->
-                                                                    let uu___20
-                                                                    =
-                                                                    let uu___21
-                                                                    =
-                                                                    let uu___22
-                                                                    =
-                                                                    and_pre
-                                                                    g14 g2 in
-                                                                    (y,
-                                                                    uu___22) in
-                                                                    (uu___21,
-                                                                    cache2) in
-                                                                    Success
-                                                                    uu___20
-                                                                    | 
-                                                                    err ->
-                                                                    err)
-                                                                    | 
-                                                                    Error err
-                                                                    ->
-                                                                    Error err))
-                                                                    | 
-                                                                    (p,
-                                                                    FStar_Pervasives_Native.None,
-                                                                    b)::rest
-                                                                    ->
-                                                                    let uu___16
-                                                                    =
-                                                                    open_branch
-                                                                    g
-                                                                    (p,
-                                                                    FStar_Pervasives_Native.None,
-                                                                    b) in
-                                                                    (match uu___16
-                                                                    with
-                                                                    | 
-                                                                    (uu___17,
-                                                                    (p1,
-                                                                    uu___18,
-                                                                    b1)) ->
-                                                                    (fun
-                                                                    ctx04 ->
-                                                                    fun
-                                                                    cache04
-                                                                    ->
-                                                                    let uu___19
-                                                                    =
-                                                                    let ctx =
-                                                                    {
-                                                                    no_guard
-                                                                    =
-                                                                    (ctx04.no_guard);
-                                                                    unfolding_ok
-                                                                    =
-                                                                    (ctx04.unfolding_ok);
-                                                                    error_context
-                                                                    =
-                                                                    (("check_pat",
-                                                                    FStar_Pervasives_Native.None)
-                                                                    ::
-                                                                    (ctx04.error_context))
-                                                                    } in
-                                                                    let uu___20
-                                                                    =
-                                                                    check_pat
-                                                                    g p1 t_sc in
-                                                                    uu___20
-                                                                    ctx
-                                                                    cache04 in
-                                                                    match uu___19
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((x4,
-                                                                    g14),
-                                                                    cache14)
-                                                                    ->
-                                                                    let uu___20
-                                                                    =
-                                                                    let uu___21
-                                                                    =
-                                                                    match x4
-                                                                    with
-                                                                    | 
-                                                                    (bs, us)
-                                                                    ->
-                                                                    let uu___22
-                                                                    =
-                                                                    pattern_branch_condition
-                                                                    g sc p1 in
-                                                                    (fun
-                                                                    ctx05 ->
-                                                                    fun
-                                                                    cache05
-                                                                    ->
-                                                                    let uu___23
-                                                                    =
-                                                                    uu___22
-                                                                    ctx05
-                                                                    cache05 in
-                                                                    match uu___23
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((x5,
-                                                                    g15),
-                                                                    cache15)
-                                                                    ->
-                                                                    let uu___24
-                                                                    =
-                                                                    let uu___25
-                                                                    =
-                                                                    let pat_sc_eq
-                                                                    =
-                                                                    let uu___26
-                                                                    =
-                                                                    let uu___27
-                                                                    =
-                                                                    let uu___28
-                                                                    =
-                                                                    FStarC_TypeChecker_PatternUtils.raw_pat_as_exp
-                                                                    g.tcenv
-                                                                    p1 in
-                                                                    FStarC_Option.must
-                                                                    uu___28 in
-                                                                    FStar_Pervasives_Native.fst
-                                                                    uu___27 in
-                                                                    FStarC_Syntax_Util.mk_eq2
-                                                                    x1 t_sc
-                                                                    sc
-                                                                    uu___26 in
-                                                                    let uu___26
-                                                                    =
-                                                                    combine_path_and_branch_condition
-                                                                    path_condition
-                                                                    x5
-                                                                    pat_sc_eq in
-                                                                    match uu___26
-                                                                    with
-                                                                    | 
-                                                                    (this_path_condition,
-                                                                    next_path_condition)
-                                                                    ->
-                                                                    let g'0 =
-                                                                    push_binders
-                                                                    g bs in
-                                                                    let g' =
-                                                                    push_hypothesis
-                                                                    g'0
-                                                                    this_path_condition in
-                                                                    let uu___27
-                                                                    =
-                                                                    let uu___28
-                                                                    =
-                                                                    let uu___29
-                                                                    =
-                                                                    let uu___30
-                                                                    =
-                                                                    check
-                                                                    "branch"
-                                                                    g' b1 in
-                                                                    fun ctx06
-                                                                    ->
-                                                                    fun
-                                                                    cache06
-                                                                    ->
-                                                                    let uu___31
-                                                                    =
-                                                                    uu___30
-                                                                    ctx06
-                                                                    cache06 in
-                                                                    match uu___31
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((x6,
-                                                                    g16),
-                                                                    cache16)
-                                                                    ->
-                                                                    let uu___32
-                                                                    =
-                                                                    let uu___33
-                                                                    =
-                                                                    match x6
-                                                                    with
-                                                                    | 
-                                                                    (eff_br,
-                                                                    tbr) ->
-                                                                    let expect_tbr
-                                                                    =
-                                                                    FStarC_Syntax_Subst.subst
-                                                                    [
-                                                                    FStarC_Syntax_Syntax.NT
-                                                                    ((as_x2.FStarC_Syntax_Syntax.binder_bv),
-                                                                    sc)]
-                                                                    returns_ty1 in
-                                                                    let rel =
-                                                                    if eq
-                                                                    then
-                                                                    EQUALITY
-                                                                    else
-                                                                    SUBTYPING
-                                                                    (FStar_Pervasives_Native.Some
-                                                                    b1) in
-                                                                    (fun
-                                                                    ctx07 ->
-                                                                    fun
-                                                                    cache07
-                                                                    ->
-                                                                    let uu___34
-                                                                    =
-                                                                    let ctx =
-                                                                    {
-                                                                    no_guard
-                                                                    =
-                                                                    (ctx07.no_guard);
-                                                                    unfolding_ok
-                                                                    =
-                                                                    (ctx07.unfolding_ok);
-                                                                    error_context
-                                                                    =
-                                                                    (("branch check relation",
-                                                                    FStar_Pervasives_Native.None)
-                                                                    ::
-                                                                    (ctx07.error_context))
-                                                                    } in
-                                                                    let uu___35
-                                                                    =
-                                                                    check_relation
-                                                                    g' rel
-                                                                    tbr
-                                                                    expect_tbr in
-                                                                    uu___35
-                                                                    ctx
-                                                                    cache07 in
-                                                                    match uu___34
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((x7,
-                                                                    g17),
-                                                                    cache17)
-                                                                    ->
-                                                                    let uu___35
-                                                                    =
-                                                                    let uu___36
-                                                                    uu___37
-                                                                    cache =
-                                                                    Success
-                                                                    ((((join_eff
-                                                                    eff_br
-                                                                    acc_eff),
-                                                                    expect_tbr),
-                                                                    FStar_Pervasives_Native.None),
-                                                                    cache) in
-                                                                    uu___36
-                                                                    ctx07
-                                                                    cache17 in
-                                                                    (match uu___35
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((y, g2),
-                                                                    cache2)
-                                                                    ->
-                                                                    let uu___36
-                                                                    =
-                                                                    let uu___37
-                                                                    =
-                                                                    let uu___38
-                                                                    =
-                                                                    and_pre
-                                                                    g17 g2 in
-                                                                    (y,
-                                                                    uu___38) in
-                                                                    (uu___37,
-                                                                    cache2) in
-                                                                    Success
-                                                                    uu___36
-                                                                    | 
-                                                                    err ->
-                                                                    err)
-                                                                    | 
-                                                                    Error err
-                                                                    ->
-                                                                    Error err) in
-                                                                    uu___33
-                                                                    ctx06
-                                                                    cache16 in
-                                                                    (match uu___32
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((y, g2),
-                                                                    cache2)
-                                                                    ->
-                                                                    let uu___33
-                                                                    =
-                                                                    let uu___34
-                                                                    =
-                                                                    let uu___35
-                                                                    =
-                                                                    and_pre
-                                                                    g16 g2 in
-                                                                    (y,
-                                                                    uu___35) in
-                                                                    (uu___34,
-                                                                    cache2) in
-                                                                    Success
-                                                                    uu___33
-                                                                    | 
-                                                                    err ->
-                                                                    err)
-                                                                    | 
-                                                                    Error err
-                                                                    ->
-                                                                    Error err in
-                                                                    weaken
-                                                                    g'0
-                                                                    this_path_condition
-                                                                    uu___29 in
-                                                                    with_binders
-                                                                    g bs us
-                                                                    uu___28 in
-                                                                    (fun
-                                                                    ctx06 ->
-                                                                    fun
-                                                                    cache06
-                                                                    ->
-                                                                    let uu___28
-                                                                    =
-                                                                    uu___27
-                                                                    ctx06
-                                                                    cache06 in
-                                                                    match uu___28
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((x6,
-                                                                    g16),
-                                                                    cache16)
-                                                                    ->
-                                                                    let uu___29
-                                                                    =
-                                                                    let uu___30
-                                                                    =
-                                                                    match x6
-                                                                    with
-                                                                    | 
-                                                                    (eff_br,
-                                                                    tbr) ->
-                                                                    (match 
-                                                                    p1.FStarC_Syntax_Syntax.v
-                                                                    with
-                                                                    | 
-                                                                    FStarC_Syntax_Syntax.Pat_var
-                                                                    uu___31
-                                                                    ->
-                                                                    (match rest
-                                                                    with
-                                                                    | 
-                                                                    uu___32::uu___33
-                                                                    ->
-                                                                    fail_str
-                                                                    "Redundant branches after wildcard"
-                                                                    | 
-                                                                    uu___32
-                                                                    ->
-                                                                    (fun
-                                                                    uu___33
-                                                                    ->
-                                                                    fun cache
-                                                                    ->
-                                                                    Success
-                                                                    ((eff_br,
-                                                                    FStar_Pervasives_Native.None),
-                                                                    cache)))
-                                                                    | 
-                                                                    uu___31
-                                                                    ->
-                                                                    check_branches
-                                                                    next_path_condition
-                                                                    rest
-                                                                    eff_br) in
-                                                                    uu___30
-                                                                    ctx06
-                                                                    cache16 in
-                                                                    (match uu___29
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((y, g2),
-                                                                    cache2)
-                                                                    ->
-                                                                    let uu___30
-                                                                    =
-                                                                    let uu___31
-                                                                    =
-                                                                    let uu___32
-                                                                    =
-                                                                    and_pre
-                                                                    g16 g2 in
-                                                                    (y,
-                                                                    uu___32) in
-                                                                    (uu___31,
-                                                                    cache2) in
-                                                                    Success
-                                                                    uu___30
-                                                                    | 
-                                                                    err ->
-                                                                    err)
-                                                                    | 
-                                                                    Error err
-                                                                    ->
-                                                                    Error err) in
-                                                                    uu___25
-                                                                    ctx05
-                                                                    cache15 in
-                                                                    (match uu___24
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((y, g2),
-                                                                    cache2)
-                                                                    ->
-                                                                    let uu___25
-                                                                    =
-                                                                    let uu___26
-                                                                    =
-                                                                    let uu___27
-                                                                    =
-                                                                    and_pre
-                                                                    g15 g2 in
-                                                                    (y,
-                                                                    uu___27) in
-                                                                    (uu___26,
-                                                                    cache2) in
-                                                                    Success
-                                                                    uu___25
-                                                                    | 
-                                                                    err ->
-                                                                    err)
-                                                                    | 
-                                                                    Error err
-                                                                    ->
-                                                                    Error err) in
-                                                                    uu___21
-                                                                    ctx04
-                                                                    cache14 in
-                                                                    (match uu___20
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((y, g2),
-                                                                    cache2)
-                                                                    ->
-                                                                    let uu___21
-                                                                    =
-                                                                    let uu___22
-                                                                    =
-                                                                    let uu___23
-                                                                    =
-                                                                    and_pre
-                                                                    g14 g2 in
-                                                                    (y,
-                                                                    uu___23) in
-                                                                    (uu___22,
-                                                                    cache2) in
-                                                                    Success
-                                                                    uu___21
-                                                                    | 
-                                                                    err ->
-                                                                    err)
-                                                                    | 
-                                                                    Error err
-                                                                    ->
-                                                                    Error err)) in
-                                                                    let uu___16
-                                                                    =
-                                                                    check_branches
-                                                                    FStarC_Syntax_Util.exp_true_bool
-                                                                    branches
-                                                                    E_Total in
-                                                                    fun ctx04
-                                                                    ->
-                                                                    fun
-                                                                    cache04
-                                                                    ->
-                                                                    let uu___17
-                                                                    =
-                                                                    uu___16
-                                                                    ctx04
-                                                                    cache04 in
-                                                                    match uu___17
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((x4,
-                                                                    g14),
-                                                                    cache14)
-                                                                    ->
-                                                                    let uu___18
-                                                                    =
-                                                                    let uu___19
-                                                                    =
-                                                                    let ty =
-                                                                    FStarC_Syntax_Subst.subst
-                                                                    [
-                                                                    FStarC_Syntax_Syntax.NT
-                                                                    ((as_x2.FStarC_Syntax_Syntax.binder_bv),
-                                                                    sc)]
-                                                                    returns_ty1 in
-                                                                    fun
-                                                                    uu___20
-                                                                    ->
-                                                                    fun cache
-                                                                    ->
-                                                                    Success
-                                                                    (((x4,
-                                                                    ty),
-                                                                    FStar_Pervasives_Native.None),
-                                                                    cache) in
-                                                                    uu___19
-                                                                    ctx04
-                                                                    cache14 in
-                                                                    (match uu___18
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((y, g2),
-                                                                    cache2)
-                                                                    ->
-                                                                    let uu___19
-                                                                    =
-                                                                    let uu___20
-                                                                    =
-                                                                    let uu___21
-                                                                    =
-                                                                    and_pre
-                                                                    g14 g2 in
-                                                                    (y,
-                                                                    uu___21) in
-                                                                    (uu___20,
-                                                                    cache2) in
-                                                                    Success
-                                                                    uu___19
-                                                                    | 
-                                                                    err ->
-                                                                    err)
-                                                                    | 
-                                                                    Error err
-                                                                    ->
-                                                                    Error err in
-                                                                    uu___15
-                                                                    ctx03
-                                                                    cache13 in
-                                                                  (match uu___14
-                                                                   with
-                                                                   | 
-                                                                   Success
-                                                                    ((y, g2),
-                                                                    cache2)
-                                                                    ->
-                                                                    let uu___15
-                                                                    =
-                                                                    let uu___16
-                                                                    =
-                                                                    let uu___17
-                                                                    =
-                                                                    and_pre
-                                                                    g13 g2 in
-                                                                    (y,
-                                                                    uu___17) in
-                                                                    (uu___16,
-                                                                    cache2) in
-                                                                    Success
-                                                                    uu___15
-                                                                   | 
-                                                                   err -> err)
-                                                              | Error err ->
-                                                                  Error err) in
-                                                   uu___12 ctx02 cache12 in
-                                                 (match uu___11 with
-                                                  | Success ((y, g2), cache2)
-                                                      ->
-                                                      let uu___12 =
-                                                        let uu___13 =
-                                                          let uu___14 =
-                                                            and_pre g12 g2 in
-                                                          (y, uu___14) in
-                                                        (uu___13, cache2) in
-                                                      Success uu___12
-                                                  | err -> err)
-                                             | Error err -> Error err) in
-                                  uu___7 ctx01 cache11 in
-                                (match uu___6 with
-                                 | Success ((y, g2), cache2) ->
-                                     let uu___7 =
-                                       let uu___8 =
-                                         let uu___9 = and_pre g11 g2 in
-                                         (y, uu___9) in
-                                       (uu___8, cache2) in
-                                     Success uu___7
-                                 | err -> err)
-                            | Error err -> Error err) in
-                 uu___3 ctx0 cache1 in
-               (match uu___2 with
-                | Success ((y, g2), cache2) ->
-                    let uu___3 =
-                      let uu___4 = let uu___5 = and_pre g1 g2 in (y, uu___5) in
-                      (uu___4, cache2) in
-                    Success uu___3
-                | err -> err)
-           | Error err -> Error err)
-  | FStarC_Syntax_Syntax.Tm_match uu___ ->
-      fail_str "Match with effect returns ascription, or tactic handler"
-  | uu___ ->
-      let uu___1 =
-        let uu___2 =
-          FStarC_Class_Tagged.tag_of FStarC_Syntax_Syntax.tagged_term e1 in
-        FStarC_Format.fmt1 "Unexpected term: %s" uu___2 in
-      fail_str uu___1
-and check_binders (g_initial : env) (xs : FStarC_Syntax_Syntax.binders) :
-  FStarC_Syntax_Syntax.universe Prims.list result=
-  let rec aux g xs1 =
-    match xs1 with
-    | [] ->
-        (fun uu___ ->
-           fun cache -> Success (([], FStar_Pervasives_Native.None), cache))
-    | x::xs2 ->
-        let uu___ =
-          check "binder sort" g
-            (x.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
-        (fun ctx0 ->
-           fun cache0 ->
-             let uu___1 = uu___ ctx0 cache0 in
-             match uu___1 with
-             | Success ((x1, g1), cache1) ->
-                 let uu___2 =
-                   let uu___3 =
-                     match x1 with
-                     | (uu___4, t) ->
-                         (fun ctx01 ->
-                            fun cache01 ->
-                              let uu___5 = is_type g t ctx01 cache01 in
-                              match uu___5 with
-                              | Success ((x2, g11), cache11) ->
-                                  let uu___6 =
-                                    let uu___7 =
-                                      let uu___8 =
-                                        let g' = push_binder g x in
-                                        let uu___9 = aux g' xs2 in
-                                        fun ctx02 ->
-                                          fun cache02 ->
-                                            let uu___10 =
-                                              uu___9 ctx02 cache02 in
-                                            match uu___10 with
-                                            | Success ((x3, g12), cache12) ->
-                                                let uu___11 =
-                                                  let uu___12 uu___13 cache =
-                                                    Success
-                                                      (((x2 :: x3),
-                                                         FStar_Pervasives_Native.None),
-                                                        cache) in
-                                                  uu___12 ctx02 cache12 in
-                                                (match uu___11 with
-                                                 | Success ((y, g2), cache2)
-                                                     ->
-                                                     let uu___12 =
-                                                       let uu___13 =
-                                                         let uu___14 =
-                                                           and_pre g12 g2 in
-                                                         (y, uu___14) in
-                                                       (uu___13, cache2) in
-                                                     Success uu___12
-                                                 | err -> err)
-                                            | Error err -> Error err in
-                                      with_binders g [x] [x2] uu___8 in
-                                    uu___7 ctx01 cache11 in
-                                  (match uu___6 with
-                                   | Success ((y, g2), cache2) ->
-                                       let uu___7 =
-                                         let uu___8 =
-                                           let uu___9 = and_pre g11 g2 in
-                                           (y, uu___9) in
-                                         (uu___8, cache2) in
-                                       Success uu___7
-                                   | err -> err)
-                              | Error err -> Error err) in
-                   uu___3 ctx0 cache1 in
-                 (match uu___2 with
-                  | Success ((y, g2), cache2) ->
-                      let uu___3 =
-                        let uu___4 =
-                          let uu___5 = and_pre g1 g2 in (y, uu___5) in
-                        (uu___4, cache2) in
-                      Success uu___3
-                  | err -> err)
-             | Error err -> Error err) in
-  aux g_initial xs
-and check_comp (g : env) (c : FStarC_Syntax_Syntax.comp) :
-  FStarC_Syntax_Syntax.universe result=
-  match c.FStarC_Syntax_Syntax.n with
-  | FStarC_Syntax_Syntax.Comp ct when
-      FStarC_Parser_Const.is_tot_or_gtot_lid
-        ct.FStarC_Syntax_Syntax.effect_name
-      ->
-      let uu___ =
-        check "(G)Tot comp result" g (FStarC_Syntax_Util.comp_result c) in
-      (fun ctx0 ->
-         fun cache0 ->
-           let uu___1 = uu___ ctx0 cache0 in
-           match uu___1 with
-           | Success ((x, g1), cache1) ->
-               let uu___2 =
-                 let uu___3 = match x with | (uu___4, t) -> is_type g t in
-                 uu___3 ctx0 cache1 in
-               (match uu___2 with
-                | Success ((y, g2), cache2) ->
-                    let uu___3 =
-                      let uu___4 = let uu___5 = and_pre g1 g2 in (y, uu___5) in
-                      (uu___4, cache2) in
-                    Success uu___3
-                | err -> err)
-           | Error err -> Error err)
-  | FStarC_Syntax_Syntax.Comp ct ->
-      let u =
-        (g.tcenv).FStarC_TypeChecker_Env.universe_of g.tcenv
-          ct.FStarC_Syntax_Syntax.result_typ in
-      let effect_app_tm =
-        let head =
-          let uu___ =
-            FStarC_Syntax_Syntax.fvar ct.FStarC_Syntax_Syntax.effect_name
-              FStar_Pervasives_Native.None in
-          FStarC_Syntax_Syntax.mk_Tm_uinst uu___ [u] in
-        FStarC_Syntax_Syntax.mk_Tm_app head
-          [FStarC_Syntax_Syntax.as_arg ct.FStarC_Syntax_Syntax.result_typ]
-          (ct.FStarC_Syntax_Syntax.result_typ).FStarC_Syntax_Syntax.pos in
-      let uu___ = check "effectful comp" g effect_app_tm in
-      (fun ctx0 ->
-         fun cache0 ->
-           let uu___1 = uu___ ctx0 cache0 in
-           match uu___1 with
-           | Success ((x, g1), cache1) ->
-               let uu___2 =
-                 let uu___3 =
-                   match x with
-                   | (uu___4, t) ->
-                       (fun ctx01 ->
-                          fun cache01 ->
-                            let uu___5 =
-                              let ctx =
-                                {
-                                  no_guard = (ctx01.no_guard);
-                                  unfolding_ok = (ctx01.unfolding_ok);
-                                  error_context =
-                                    (("comp fully applied",
-                                       FStar_Pervasives_Native.None) ::
-                                    (ctx01.error_context))
-                                } in
-                              let uu___6 =
-                                check_subtype g FStar_Pervasives_Native.None
-                                  t FStarC_Syntax_Syntax.teff in
-                              uu___6 ctx cache01 in
-                            match uu___5 with
-                            | Success ((x1, g11), cache11) ->
-                                let uu___6 =
-                                  let uu___7 =
-                                    let uu___8 =
-                                      FStarC_TypeChecker_Env.effect_universe
-                                        g.tcenv
-                                        ct.FStarC_Syntax_Syntax.effect_name u in
-                                    fun uu___9 ->
-                                      fun cache ->
-                                        Success
-                                          ((uu___8,
-                                             FStar_Pervasives_Native.None),
-                                            cache) in
-                                  uu___7 ctx01 cache11 in
-                                (match uu___6 with
-                                 | Success ((y, g2), cache2) ->
-                                     let uu___7 =
-                                       let uu___8 =
-                                         let uu___9 = and_pre g11 g2 in
-                                         (y, uu___9) in
-                                       (uu___8, cache2) in
-                                     Success uu___7
-                                 | err -> err)
-                            | Error err -> Error err) in
-                 uu___3 ctx0 cache1 in
-               (match uu___2 with
-                | Success ((y, g2), cache2) ->
-                    let uu___3 =
-                      let uu___4 = let uu___5 = and_pre g1 g2 in (y, uu___5) in
-                      (uu___4, cache2) in
-                    Success uu___3
-                | err -> err)
-           | Error err -> Error err)
-and universe_of (g : env) (t : FStarC_Syntax_Syntax.typ) :
-  FStarC_Syntax_Syntax.universe result=
-  let uu___ = check "universe of" g t in
-  fun ctx0 ->
-    fun cache0 ->
-      let uu___1 = uu___ ctx0 cache0 in
-      match uu___1 with
-      | Success ((x, g1), cache1) ->
-          let uu___2 =
-            let uu___3 = match x with | (uu___4, t1) -> is_type g t1 in
-            uu___3 ctx0 cache1 in
-          (match uu___2 with
-           | Success ((y, g2), cache2) ->
-               let uu___3 =
-                 let uu___4 = let uu___5 = and_pre g1 g2 in (y, uu___5) in
-                 (uu___4, cache2) in
-               Success uu___3
-           | err -> err)
-      | Error err -> Error err
-and universe_of_well_typed_term (g : env) (t : FStarC_Syntax_Syntax.typ) :
-  FStarC_Syntax_Syntax.universe result=
-  try
-    (fun uu___ ->
-       match () with
-       | () ->
-           let u = FStarC_TypeChecker_TcTerm.universe_of g.tcenv t in
-           (fun uu___1 ->
-              fun cache -> Success ((u, FStar_Pervasives_Native.None), cache)))
-      ()
-  with | uu___ -> universe_of g t
-and check_pat (g : env) (p : FStarC_Syntax_Syntax.pat)
-  (t_sc : FStarC_Syntax_Syntax.typ) :
-  (FStarC_Syntax_Syntax.binders * FStarC_Syntax_Syntax.universes) result=
-  let unrefine_tsc t_sc1 =
-    let uu___ =
-      FStarC_TypeChecker_Normalize.normalize_refinement
-        FStarC_TypeChecker_Normalize.whnf_steps g.tcenv t_sc1 in
-    FStarC_Syntax_Util.unrefine uu___ in
-  match p.FStarC_Syntax_Syntax.v with
-  | FStarC_Syntax_Syntax.Pat_constant c ->
-      let e =
-        match c with
-        | FStarC_Const.Const_machine_int (repr, base, sw, w) ->
-            FStarC_ToSyntax_ToSyntax.desugar_machine_integer
-              (g.tcenv).FStarC_TypeChecker_Env.dsenv repr base (sw, w)
-              p.FStarC_Syntax_Syntax.p
-        | uu___ ->
-            FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_constant c)
-              p.FStarC_Syntax_Syntax.p in
-      let uu___ = check "pat_const" g e in
-      (fun ctx0 ->
-         fun cache0 ->
-           let uu___1 = uu___ ctx0 cache0 in
-           match uu___1 with
-           | Success ((x, g1), cache1) ->
-               let uu___2 =
-                 let uu___3 =
-                   match x with
-                   | (uu___4, t_const) ->
-                       (fun ctx01 ->
-                          fun cache01 ->
-                            let uu___5 =
-                              let ctx =
-                                {
-                                  no_guard = (ctx01.no_guard);
-                                  unfolding_ok = (ctx01.unfolding_ok);
-                                  error_context =
-                                    (("check_pat constant",
-                                       FStar_Pervasives_Native.None) ::
-                                    (ctx01.error_context))
-                                } in
-                              let uu___6 =
-                                let uu___7 = unrefine_tsc t_sc in
-                                check_subtype g
-                                  (FStar_Pervasives_Native.Some e) t_const
-                                  uu___7 in
-                              uu___6 ctx cache01 in
-                            match uu___5 with
-                            | Success ((x1, g11), cache11) ->
-                                let uu___6 =
-                                  let uu___7 uu___8 cache =
-                                    Success
-                                      ((([], []),
-                                         FStar_Pervasives_Native.None),
-                                        cache) in
-                                  uu___7 ctx01 cache11 in
-                                (match uu___6 with
-                                 | Success ((y, g2), cache2) ->
-                                     let uu___7 =
-                                       let uu___8 =
-                                         let uu___9 = and_pre g11 g2 in
-                                         (y, uu___9) in
-                                       (uu___8, cache2) in
-                                     Success uu___7
-                                 | err -> err)
-                            | Error err -> Error err) in
-                 uu___3 ctx0 cache1 in
-               (match uu___2 with
-                | Success ((y, g2), cache2) ->
-                    let uu___3 =
-                      let uu___4 = let uu___5 = and_pre g1 g2 in (y, uu___5) in
-                      (uu___4, cache2) in
-                    Success uu___3
-                | err -> err)
-           | Error err -> Error err)
-  | FStarC_Syntax_Syntax.Pat_var bv ->
-      let b =
-        FStarC_Syntax_Syntax.mk_binder
-          {
-            FStarC_Syntax_Syntax.ppname = (bv.FStarC_Syntax_Syntax.ppname);
-            FStarC_Syntax_Syntax.index = (bv.FStarC_Syntax_Syntax.index);
-            FStarC_Syntax_Syntax.sort = t_sc
-          } in
-      (fun ctx0 ->
-         fun cache0 ->
-           let uu___ =
-             let ctx =
-               {
-                 no_guard = (ctx0.no_guard);
-                 unfolding_ok = (ctx0.unfolding_ok);
-                 error_context =
-                   (("check_pat_binder", FStar_Pervasives_Native.None) ::
-                   (ctx0.error_context))
-               } in
-             let uu___1 = check_binders g [b] in uu___1 ctx cache0 in
-           match uu___ with
-           | Success ((x, g1), cache1) ->
-               let uu___1 =
-                 let uu___2 =
-                   match x with
-                   | u::[] ->
-                       (fun uu___3 ->
-                          fun cache ->
-                            Success
-                              ((([b], [u]), FStar_Pervasives_Native.None),
-                                cache)) in
-                 uu___2 ctx0 cache1 in
-               (match uu___1 with
-                | Success ((y, g2), cache2) ->
-                    let uu___2 =
-                      let uu___3 = let uu___4 = and_pre g1 g2 in (y, uu___4) in
-                      (uu___3, cache2) in
-                    Success uu___2
-                | err -> err)
-           | Error err -> Error err)
-  | FStarC_Syntax_Syntax.Pat_cons (fv, usopt, pats) ->
-      let us =
-        if
-          match usopt with
-          | FStar_Pervasives_Native.None -> true
-          | uu___ -> false
-        then []
-        else FStarC_Option.must usopt in
-      let uu___ =
-        let uu___1 =
-          FStarC_TypeChecker_Env.lookup_and_inst_datacon g.tcenv us
-            (FStarC_Syntax_Syntax.lid_of_fv fv) in
-        FStarC_Syntax_Util.arrow_formals uu___1 in
-      (match uu___ with
-       | (formals, t_pat) ->
-           let uu___1 =
-             let pats1 = FStarC_List.map FStar_Pervasives_Native.fst pats in
-             let uu___2 =
-               let uu___3 =
-                 FStarC_Util.prefix_until
-                   (fun p1 ->
-                      match p1.FStarC_Syntax_Syntax.v with
-                      | FStarC_Syntax_Syntax.Pat_dot_term uu___4 -> false
-                      | uu___4 -> true) pats1 in
-               FStarC_Option.map
-                 (fun uu___4 ->
-                    match uu___4 with
-                    | (dot_pats, pat, rest_pats) ->
-                        (dot_pats, (pat :: rest_pats))) uu___3 in
-             FStarC_Option.dflt (pats1, []) uu___2 in
-           (match uu___1 with
-            | (dot_pats, rest_pats) ->
-                let uu___2 =
-                  FStarC_List.splitAt (FStarC_List.length dot_pats) formals in
-                (match uu___2 with
-                 | (dot_formals, rest_formals) ->
-                     let uu___3 =
-                       fold2
-                         (fun ss uu___4 p1 ->
-                            match uu___4 with
-                            | { FStarC_Syntax_Syntax.binder_bv = f;
-                                FStarC_Syntax_Syntax.binder_qual = uu___5;
-                                FStarC_Syntax_Syntax.binder_positivity =
-                                  uu___6;
-                                FStarC_Syntax_Syntax.binder_attrs = uu___7;_}
-                                ->
-                                let expected_t =
-                                  FStarC_Syntax_Subst.subst ss
-                                    f.FStarC_Syntax_Syntax.sort in
-                                (fun ctx0 ->
-                                   fun cache0 ->
-                                     let uu___8 =
-                                       match p1.FStarC_Syntax_Syntax.v with
-                                       | FStarC_Syntax_Syntax.Pat_dot_term
-                                           (FStar_Pervasives_Native.Some t)
-                                           ->
-                                           Success
-                                             ((t,
-                                                FStar_Pervasives_Native.None),
-                                               cache0)
-                                       | uu___9 ->
-                                           fail_str
-                                             "check_pat in core has unset dot pattern"
-                                             ctx0 cache0 in
-                                     match uu___8 with
-                                     | Success ((x, g1), cache1) ->
-                                         let uu___9 =
-                                           let uu___10 =
-                                             let uu___11 =
-                                               check "pat dot term" g x in
-                                             fun ctx01 ->
-                                               fun cache01 ->
-                                                 let uu___12 =
-                                                   uu___11 ctx01 cache01 in
-                                                 match uu___12 with
-                                                 | Success
-                                                     ((x1, g11), cache11) ->
-                                                     let uu___13 =
-                                                       let uu___14 =
-                                                         match x1 with
-                                                         | (uu___15, p_t) ->
-                                                             (fun ctx02 ->
-                                                                fun cache02
-                                                                  ->
-                                                                  let uu___16
-                                                                    =
-                                                                    let ctx =
-                                                                    {
-                                                                    no_guard
-                                                                    =
-                                                                    (ctx02.no_guard);
-                                                                    unfolding_ok
-                                                                    =
-                                                                    (ctx02.unfolding_ok);
-                                                                    error_context
-                                                                    =
-                                                                    (("check_pat cons",
-                                                                    FStar_Pervasives_Native.None)
-                                                                    ::
-                                                                    (ctx02.error_context))
-                                                                    } in
-                                                                    let uu___17
-                                                                    =
-                                                                    check_subtype
-                                                                    g
-                                                                    (FStar_Pervasives_Native.Some
-                                                                    x) p_t
-                                                                    expected_t in
-                                                                    uu___17
-                                                                    ctx
-                                                                    cache02 in
-                                                                  match uu___16
-                                                                  with
-                                                                  | Success
-                                                                    ((x2,
-                                                                    g12),
-                                                                    cache12)
-                                                                    ->
-                                                                    let uu___17
-                                                                    =
-                                                                    let uu___18
-                                                                    uu___19
-                                                                    cache =
-                                                                    Success
-                                                                    (((FStar_List_Tot_Base.op_At
-                                                                    ss
-                                                                    [
-                                                                    FStarC_Syntax_Syntax.NT
-                                                                    (f, x)]),
-                                                                    FStar_Pervasives_Native.None),
-                                                                    cache) in
-                                                                    uu___18
-                                                                    ctx02
-                                                                    cache12 in
-                                                                    (match uu___17
-                                                                    with
-                                                                    | 
-                                                                    Success
-                                                                    ((y, g2),
-                                                                    cache2)
-                                                                    ->
-                                                                    let uu___18
-                                                                    =
-                                                                    let uu___19
-                                                                    =
-                                                                    let uu___20
-                                                                    =
-                                                                    and_pre
-                                                                    g12 g2 in
-                                                                    (y,
-                                                                    uu___20) in
-                                                                    (uu___19,
-                                                                    cache2) in
-                                                                    Success
-                                                                    uu___18
-                                                                    | 
-                                                                    err ->
-                                                                    err)
-                                                                  | Error err
-                                                                    ->
-                                                                    Error err) in
-                                                       uu___14 ctx01 cache11 in
-                                                     (match uu___13 with
-                                                      | Success
-                                                          ((y, g2), cache2)
-                                                          ->
-                                                          let uu___14 =
-                                                            let uu___15 =
-                                                              let uu___16 =
-                                                                and_pre g11
-                                                                  g2 in
-                                                              (y, uu___16) in
-                                                            (uu___15, cache2) in
-                                                          Success uu___14
-                                                      | err -> err)
-                                                 | Error err -> Error err in
-                                           uu___10 ctx0 cache1 in
-                                         (match uu___9 with
-                                          | Success ((y, g2), cache2) ->
-                                              let uu___10 =
-                                                let uu___11 =
-                                                  let uu___12 = and_pre g1 g2 in
-                                                  (y, uu___12) in
-                                                (uu___11, cache2) in
-                                              Success uu___10
-                                          | err -> err)
-                                     | Error err -> Error err)) []
-                         dot_formals dot_pats in
-                     (fun ctx0 ->
-                        fun cache0 ->
-                          let uu___4 = uu___3 ctx0 cache0 in
-                          match uu___4 with
-                          | Success ((x, g1), cache1) ->
-                              let uu___5 =
-                                let uu___6 =
-                                  let uu___7 =
-                                    fold2
-                                      (fun uu___8 uu___9 p1 ->
-                                         match (uu___8, uu___9) with
-                                         | ((g2, ss, bs, us1),
-                                            {
-                                              FStarC_Syntax_Syntax.binder_bv
-                                                = f;
-                                              FStarC_Syntax_Syntax.binder_qual
-                                                = uu___10;
-                                              FStarC_Syntax_Syntax.binder_positivity
-                                                = uu___11;
-                                              FStarC_Syntax_Syntax.binder_attrs
-                                                = uu___12;_})
-                                             ->
-                                             let expected_t =
-                                               FStarC_Syntax_Subst.subst ss
-                                                 f.FStarC_Syntax_Syntax.sort in
-                                             let uu___13 =
-                                               let uu___14 =
-                                                 check_pat g2 p1 expected_t in
-                                               with_binders g2 bs us1 uu___14 in
-                                             (fun ctx01 ->
-                                                fun cache01 ->
-                                                  let uu___14 =
-                                                    uu___13 ctx01 cache01 in
-                                                  match uu___14 with
-                                                  | Success
-                                                      ((x1, g11), cache11) ->
-                                                      let uu___15 =
-                                                        let uu___16 =
-                                                          match x1 with
-                                                          | (bs_p, us_p) ->
-                                                              let p_e =
-                                                                let uu___17 =
-                                                                  let uu___18
-                                                                    =
-                                                                    FStarC_TypeChecker_PatternUtils.raw_pat_as_exp
-                                                                    g2.tcenv
-                                                                    p1 in
-                                                                  FStarC_Option.must
-                                                                    uu___18 in
-                                                                FStar_Pervasives_Native.fst
-                                                                  uu___17 in
-                                                              let uu___17 =
-                                                                let uu___18 =
-                                                                  push_binders
-                                                                    g2 bs_p in
-                                                                (uu___18,
-                                                                  (FStar_List_Tot_Base.op_At
-                                                                    ss
-                                                                    [
-                                                                    FStarC_Syntax_Syntax.NT
-                                                                    (f, p_e)]),
-                                                                  (FStar_List_Tot_Base.op_At
-                                                                    bs bs_p),
-                                                                  (FStar_List_Tot_Base.op_At
-                                                                    us1 us_p)) in
-                                                              (fun uu___18 ->
-                                                                 fun cache ->
-                                                                   Success
-                                                                    ((uu___17,
-                                                                    FStar_Pervasives_Native.None),
-                                                                    cache)) in
-                                                        uu___16 ctx01 cache11 in
-                                                      (match uu___15 with
-                                                       | Success
-                                                           ((y, g21), cache2)
-                                                           ->
-                                                           let uu___16 =
-                                                             let uu___17 =
-                                                               let uu___18 =
-                                                                 and_pre g11
-                                                                   g21 in
-                                                               (y, uu___18) in
-                                                             (uu___17,
-                                                               cache2) in
-                                                           Success uu___16
-                                                       | err -> err)
-                                                  | Error err -> Error err))
-                                      (g, x, [], []) rest_formals rest_pats in
-                                  fun ctx01 ->
-                                    fun cache01 ->
-                                      let uu___8 = uu___7 ctx01 cache01 in
-                                      match uu___8 with
-                                      | Success ((x1, g11), cache11) ->
-                                          let uu___9 =
-                                            let uu___10 =
-                                              match x1 with
-                                              | (uu___11, ss, bs, us1) ->
-                                                  let t_pat1 =
-                                                    FStarC_Syntax_Subst.subst
-                                                      ss t_pat in
-                                                  let uu___12 =
-                                                    let uu___13 =
-                                                      let uu___14 =
-                                                        unrefine_tsc t_sc in
-                                                      check_scrutinee_pattern_type_compatible
-                                                        g uu___14 t_pat1 in
-                                                    no_guard uu___13 in
-                                                  (fun ctx02 ->
-                                                     fun cache02 ->
-                                                       let uu___13 =
-                                                         uu___12 ctx02
-                                                           cache02 in
-                                                       match uu___13 with
-                                                       | Success
-                                                           ((x2, g12),
-                                                            cache12)
-                                                           ->
-                                                           let uu___14 =
-                                                             let uu___15
-                                                               uu___16 cache
-                                                               =
-                                                               Success
-                                                                 (((bs, us1),
-                                                                    FStar_Pervasives_Native.None),
-                                                                   cache) in
-                                                             uu___15 ctx02
-                                                               cache12 in
-                                                           (match uu___14
-                                                            with
-                                                            | Success
-                                                                ((y, g2),
-                                                                 cache2)
-                                                                ->
-                                                                let uu___15 =
-                                                                  let uu___16
-                                                                    =
-                                                                    let uu___17
-                                                                    =
-                                                                    and_pre
-                                                                    g12 g2 in
-                                                                    (y,
-                                                                    uu___17) in
-                                                                  (uu___16,
-                                                                    cache2) in
-                                                                Success
-                                                                  uu___15
-                                                            | err -> err)
-                                                       | Error err ->
-                                                           Error err) in
-                                            uu___10 ctx01 cache11 in
-                                          (match uu___9 with
-                                           | Success ((y, g2), cache2) ->
-                                               let uu___10 =
-                                                 let uu___11 =
-                                                   let uu___12 =
-                                                     and_pre g11 g2 in
-                                                   (y, uu___12) in
-                                                 (uu___11, cache2) in
-                                               Success uu___10
-                                           | err -> err)
-                                      | Error err -> Error err in
-                                uu___6 ctx0 cache1 in
-                              (match uu___5 with
-                               | Success ((y, g2), cache2) ->
-                                   let uu___6 =
-                                     let uu___7 =
-                                       let uu___8 = and_pre g1 g2 in
-                                       (y, uu___8) in
-                                     (uu___7, cache2) in
-                                   Success uu___6
-                               | err -> err)
-                          | Error err -> Error err))))
-  | uu___ -> fail_str "check_pat called with a dot pattern"
-and check_scrutinee_pattern_type_compatible (g : env)
-  (t_sc : FStarC_Syntax_Syntax.typ) (t_pat : FStarC_Syntax_Syntax.typ) :
-  precondition result=
-  let err s =
-    let uu___ =
-      let uu___1 =
-        let uu___2 =
-          let uu___3 =
-            let uu___4 =
-              let uu___5 =
-                FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term t_sc in
-              FStarC_Errors_Msg.fquotes uu___5 in
-            let uu___5 =
-              let uu___6 =
-                let uu___7 =
-                  let uu___8 =
-                    FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term t_pat in
-                  FStarC_Errors_Msg.fquotes uu___8 in
-                [uu___7;
-                FStarC_Errors_Msg.text "are not compatible because";
-                FStarC_Errors_Msg.text s] in
-              (FStarC_Errors_Msg.text "and pattern type") :: uu___6 in
-            uu___4 :: uu___5 in
-          (FStarC_Errors_Msg.text "Scrutinee type") :: uu___3 in
-        FStar_Pprint.flow (FStar_Pprint.break_ Prims.int_one) uu___2 in
-      [uu___1] in
-    fail uu___ in
-  let uu___ = FStarC_Syntax_Util.head_and_args_full t_sc in
-  match uu___ with
-  | (head_sc, args_sc) ->
-      let uu___1 = FStarC_Syntax_Util.head_and_args_full t_pat in
-      (match uu___1 with
-       | (head_pat, args_pat) ->
-           let uu___2 =
-             let uu___3 =
-               let uu___4 =
-                 let uu___5 = FStarC_Syntax_Subst.compress head_sc in
-                 uu___5.FStarC_Syntax_Syntax.n in
-               let uu___5 =
-                 let uu___6 = FStarC_Syntax_Subst.compress head_pat in
-                 uu___6.FStarC_Syntax_Syntax.n in
-               (uu___4, uu___5) in
-             match uu___3 with
-             | (FStarC_Syntax_Syntax.Tm_fvar fv_head,
-                FStarC_Syntax_Syntax.Tm_fvar fv_pat) when
-                 FStarC_Ident.lid_equals
-                   (FStarC_Syntax_Syntax.lid_of_fv fv_head)
-                   (FStarC_Syntax_Syntax.lid_of_fv fv_pat)
-                 ->
-                 (fun uu___4 ->
-                    fun cache ->
-                      Success
-                        ((fv_head, FStar_Pervasives_Native.None), cache))
-             | (FStarC_Syntax_Syntax.Tm_uinst
-                ({
-                   FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_fvar
-                     fv_head;
-                   FStarC_Syntax_Syntax.pos = uu___4;
-                   FStarC_Syntax_Syntax.hash_code = uu___5;_},
-                 us_head),
-                FStarC_Syntax_Syntax.Tm_uinst
-                ({
-                   FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_fvar
-                     fv_pat;
-                   FStarC_Syntax_Syntax.pos = uu___6;
-                   FStarC_Syntax_Syntax.hash_code = uu___7;_},
-                 us_pat)) when
-                 FStarC_Ident.lid_equals
-                   (FStarC_Syntax_Syntax.lid_of_fv fv_head)
-                   (FStarC_Syntax_Syntax.lid_of_fv fv_pat)
-                 ->
-                 let uu___8 =
-                   FStarC_TypeChecker_Rel.teq_nosmt_force g.tcenv head_sc
-                     head_pat in
-                 if uu___8
-                 then
-                   (fun uu___9 ->
-                      fun cache ->
-                        Success
-                          ((fv_head, FStar_Pervasives_Native.None), cache))
-                 else err "Incompatible universe instantiations"
-             | (uu___4, uu___5) ->
-                 let uu___6 =
-                   let uu___7 =
-                     FStarC_Class_Tagged.tag_of
-                       FStarC_Syntax_Syntax.tagged_term head_sc in
-                   let uu___8 =
-                     FStarC_Class_Tagged.tag_of
-                       FStarC_Syntax_Syntax.tagged_term head_pat in
-                   FStarC_Format.fmt2 "Head constructors(%s and %s) not fvar"
-                     uu___7 uu___8 in
-                 err uu___6 in
-           (fun ctx0 ->
-              fun cache0 ->
-                let uu___3 = uu___2 ctx0 cache0 in
-                match uu___3 with
-                | Success ((x, g1), cache1) ->
-                    let uu___4 =
-                      let uu___5 =
-                        let uu___6 =
-                          let uu___7 =
-                            FStarC_TypeChecker_Env.is_type_constructor
-                              g.tcenv (FStarC_Syntax_Syntax.lid_of_fv x) in
-                          if uu___7
-                          then
-                            fun uu___8 ->
-                              fun cache ->
-                                Success
-                                  ((x, FStar_Pervasives_Native.None), cache)
-                          else
-                            (let uu___8 =
-                               let uu___9 =
-                                 FStarC_Class_Show.show
-                                   FStarC_Syntax_Syntax.showable_fv x in
-                               FStarC_Format.fmt1
-                                 "%s is not a type constructor" uu___9 in
-                             err uu___8) in
-                        fun ctx01 ->
-                          fun cache01 ->
-                            let uu___7 = uu___6 ctx01 cache01 in
-                            match uu___7 with
-                            | Success ((x1, g11), cache11) ->
-                                let uu___8 =
-                                  let uu___9 =
-                                    let uu___10 =
-                                      if
-                                        (FStarC_List.length args_sc) =
-                                          (FStarC_List.length args_pat)
-                                      then
-                                        fun uu___11 ->
-                                          fun cache ->
-                                            Success
-                                              ((x,
-                                                 FStar_Pervasives_Native.None),
-                                                cache)
-                                      else
-                                        (let uu___11 =
-                                           let uu___12 =
-                                             FStarC_Class_Show.show
-                                               FStarC_Class_Show.showable_nat
-                                               (FStarC_List.length args_sc) in
-                                           let uu___13 =
-                                             FStarC_Class_Show.show
-                                               FStarC_Class_Show.showable_nat
-                                               (FStarC_List.length args_pat) in
-                                           FStarC_Format.fmt2
-                                             "Number of arguments don't match (%s and %s)"
-                                             uu___12 uu___13 in
-                                         err uu___11) in
-                                    fun ctx02 ->
-                                      fun cache02 ->
-                                        let uu___11 = uu___10 ctx02 cache02 in
-                                        match uu___11 with
-                                        | Success ((x2, g12), cache12) ->
-                                            let uu___12 =
-                                              let uu___13 =
-                                                let uu___14 =
-                                                  let uu___15 =
-                                                    FStarC_TypeChecker_Env.num_inductive_ty_params
-                                                      g.tcenv
-                                                      (FStarC_Syntax_Syntax.lid_of_fv
-                                                         x) in
-                                                  match uu___15 with
-                                                  | FStar_Pervasives_Native.None
-                                                      -> (args_sc, args_pat)
-                                                  | FStar_Pervasives_Native.Some
-                                                      n ->
-                                                      ((FStar_Pervasives_Native.fst
-                                                          (FStarC_Util.first_N
-                                                             n args_sc)),
-                                                        (FStar_Pervasives_Native.fst
-                                                           (FStarC_Util.first_N
-                                                              n args_pat))) in
-                                                match uu___14 with
-                                                | (params_sc, params_pat) ->
-                                                    let uu___15 =
-                                                      iter2 params_sc
-                                                        params_pat
-                                                        (fun uu___16 uu___17
-                                                           uu___18 ->
-                                                           match (uu___16,
-                                                                   uu___17)
-                                                           with
-                                                           | ((t_sc1,
-                                                               uu___19),
-                                                              (t_pat1,
-                                                               uu___20)) ->
-                                                               check_relation
-                                                                 g EQUALITY
-                                                                 t_sc1 t_pat1)
-                                                        () in
-                                                    (fun ctx03 ->
-                                                       fun cache03 ->
-                                                         let uu___16 =
-                                                           uu___15 ctx03
-                                                             cache03 in
-                                                         match uu___16 with
-                                                         | Success
-                                                             ((x3, g13),
-                                                              cache13)
-                                                             ->
-                                                             let uu___17 =
-                                                               let uu___18
-                                                                 uu___19
-                                                                 cache =
-                                                                 Success
-                                                                   ((FStar_Pervasives_Native.None,
-                                                                    FStar_Pervasives_Native.None),
-                                                                    cache) in
-                                                               uu___18 ctx03
-                                                                 cache13 in
-                                                             (match uu___17
-                                                              with
-                                                              | Success
-                                                                  ((y, g2),
-                                                                   cache2)
-                                                                  ->
-                                                                  let uu___18
-                                                                    =
-                                                                    let uu___19
-                                                                    =
-                                                                    let uu___20
-                                                                    =
-                                                                    and_pre
-                                                                    g13 g2 in
-                                                                    (y,
-                                                                    uu___20) in
-                                                                    (uu___19,
-                                                                    cache2) in
-                                                                  Success
-                                                                    uu___18
-                                                              | err1 -> err1)
-                                                         | Error err1 ->
-                                                             Error err1) in
-                                              uu___13 ctx02 cache12 in
-                                            (match uu___12 with
-                                             | Success ((y, g2), cache2) ->
-                                                 let uu___13 =
-                                                   let uu___14 =
-                                                     let uu___15 =
-                                                       and_pre g12 g2 in
-                                                     (y, uu___15) in
-                                                   (uu___14, cache2) in
-                                                 Success uu___13
-                                             | err1 -> err1)
-                                        | Error err1 -> Error err1 in
-                                  uu___9 ctx01 cache11 in
-                                (match uu___8 with
-                                 | Success ((y, g2), cache2) ->
-                                     let uu___9 =
-                                       let uu___10 =
-                                         let uu___11 = and_pre g11 g2 in
-                                         (y, uu___11) in
-                                       (uu___10, cache2) in
-                                     Success uu___9
-                                 | err1 -> err1)
-                            | Error err1 -> Error err1 in
-                      uu___5 ctx0 cache1 in
-                    (match uu___4 with
-                     | Success ((y, g2), cache2) ->
-                         let uu___5 =
-                           let uu___6 =
-                             let uu___7 = and_pre g1 g2 in (y, uu___7) in
-                           (uu___6, cache2) in
-                         Success uu___5
-                     | err1 -> err1)
-                | Error err1 -> Error err1))
-and pattern_branch_condition (g : env)
-  (scrutinee : FStarC_Syntax_Syntax.term) (pat : FStarC_Syntax_Syntax.pat) :
-  FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option result=
-  match pat.FStarC_Syntax_Syntax.v with
-  | FStarC_Syntax_Syntax.Pat_var uu___ ->
-      (fun uu___1 ->
-         fun cache ->
-           Success
-             ((FStar_Pervasives_Native.None, FStar_Pervasives_Native.None),
-               cache))
-  | FStarC_Syntax_Syntax.Pat_constant c ->
-      let const_exp =
-        let uu___ =
-          FStarC_TypeChecker_PatternUtils.raw_pat_as_exp g.tcenv pat in
-        match uu___ with
-        | FStar_Pervasives_Native.None -> FStarC_Effect.failwith "Impossible"
-        | FStar_Pervasives_Native.Some (e, uu___1) -> e in
-      let uu___ = check "constant pattern" g const_exp in
-      (fun ctx0 ->
-         fun cache0 ->
-           let uu___1 = uu___ ctx0 cache0 in
-           match uu___1 with
-           | Success ((x, g1), cache1) ->
-               let uu___2 =
-                 let uu___3 =
-                   match x with
-                   | (uu___4, t_const) ->
-                       let uu___5 =
-                         let uu___6 =
-                           FStarC_Syntax_Util.mk_decidable_eq t_const
-                             scrutinee const_exp in
-                         FStar_Pervasives_Native.Some uu___6 in
-                       (fun uu___6 ->
-                          fun cache ->
-                            Success
-                              ((uu___5, FStar_Pervasives_Native.None), cache)) in
-                 uu___3 ctx0 cache1 in
-               (match uu___2 with
-                | Success ((y, g2), cache2) ->
-                    let uu___3 =
-                      let uu___4 = let uu___5 = and_pre g1 g2 in (y, uu___5) in
-                      (uu___4, cache2) in
-                    Success uu___3
-                | err -> err)
-           | Error err -> Error err)
-  | FStarC_Syntax_Syntax.Pat_cons (fv, us_opt, sub_pats) ->
-      let wild_pat pos =
-        FStarC_Syntax_Syntax.withinfo
-          (FStarC_Syntax_Syntax.Pat_var
-             (wild_bv FStarC_Syntax_Syntax.tun pos)) pos in
-      let mk_head_discriminator uu___ =
-        let pat1 =
-          let uu___1 =
-            let uu___2 =
-              let uu___3 =
-                FStarC_List.map
-                  (fun uu___4 ->
-                     match uu___4 with
-                     | (s, b) -> ((wild_pat s.FStarC_Syntax_Syntax.p), b))
-                  sub_pats in
-              (fv, us_opt, uu___3) in
-            FStarC_Syntax_Syntax.Pat_cons uu___2 in
-          FStarC_Syntax_Syntax.withinfo uu___1 pat.FStarC_Syntax_Syntax.p in
-        let branch1 =
-          (pat1, FStar_Pervasives_Native.None,
-            FStarC_Syntax_Util.exp_true_bool) in
-        let branch2 =
-          ((FStarC_Syntax_Syntax.withinfo
-              (FStarC_Syntax_Syntax.Pat_var
-                 (wild_bv FStarC_Syntax_Syntax.tun
-                    pat1.FStarC_Syntax_Syntax.p)) pat1.FStarC_Syntax_Syntax.p),
-            FStar_Pervasives_Native.None, FStarC_Syntax_Util.exp_false_bool) in
-        FStarC_Syntax_Syntax.mk
-          (FStarC_Syntax_Syntax.Tm_match
-             {
-               FStarC_Syntax_Syntax.scrutinee = scrutinee;
-               FStarC_Syntax_Syntax.ret_opt = FStar_Pervasives_Native.None;
-               FStarC_Syntax_Syntax.brs = [branch1; branch2];
-               FStarC_Syntax_Syntax.rc_opt1 = FStar_Pervasives_Native.None
-             }) scrutinee.FStarC_Syntax_Syntax.pos in
-      let mk_ith_projector i =
-        let uu___ =
-          let bv =
-            let uu___1 =
-              wild_bv FStarC_Syntax_Syntax.tun
-                scrutinee.FStarC_Syntax_Syntax.pos in
-            {
-              FStarC_Syntax_Syntax.ppname =
-                (uu___1.FStarC_Syntax_Syntax.ppname);
-              FStarC_Syntax_Syntax.index = Prims.int_one;
-              FStarC_Syntax_Syntax.sort = (uu___1.FStarC_Syntax_Syntax.sort)
-            } in
-          (bv,
-            (FStarC_Syntax_Syntax.withinfo (FStarC_Syntax_Syntax.Pat_var bv)
-               scrutinee.FStarC_Syntax_Syntax.pos)) in
-        match uu___ with
-        | (ith_pat_var, ith_pat) ->
-            let sub_pats1 =
-              FStarC_List.mapi
-                (fun j uu___1 ->
-                   match uu___1 with
-                   | (s, b) ->
-                       if i <> j
-                       then ((wild_pat s.FStarC_Syntax_Syntax.p), b)
-                       else (ith_pat, b)) sub_pats in
-            let pat1 =
-              FStarC_Syntax_Syntax.withinfo
-                (FStarC_Syntax_Syntax.Pat_cons (fv, us_opt, sub_pats1))
-                pat.FStarC_Syntax_Syntax.p in
-            let branch = FStarC_Syntax_Syntax.bv_to_name ith_pat_var in
-            let eqn =
-              FStarC_Syntax_Subst.close_branch
-                (pat1, FStar_Pervasives_Native.None, branch) in
-            FStarC_Syntax_Syntax.mk
-              (FStarC_Syntax_Syntax.Tm_match
-                 {
-                   FStarC_Syntax_Syntax.scrutinee = scrutinee;
-                   FStarC_Syntax_Syntax.ret_opt =
-                     FStar_Pervasives_Native.None;
-                   FStarC_Syntax_Syntax.brs = [eqn];
-                   FStarC_Syntax_Syntax.rc_opt1 =
-                     FStar_Pervasives_Native.None
-                 }) scrutinee.FStarC_Syntax_Syntax.pos in
-      let discrimination =
-        let uu___ =
-          let uu___1 =
-            FStarC_TypeChecker_Env.typ_of_datacon g.tcenv
-              fv.FStarC_Syntax_Syntax.fv_name in
-          FStarC_TypeChecker_Env.datacons_of_typ g.tcenv uu___1 in
-        match uu___ with
-        | (is_induc, datacons) ->
-            if
-              (Prims.not is_induc) ||
-                ((FStarC_List.length datacons) > Prims.int_one)
-            then
-              let discriminator =
-                FStarC_Syntax_Util.mk_discriminator
-                  fv.FStarC_Syntax_Syntax.fv_name in
-              let uu___1 =
-                FStarC_TypeChecker_Env.try_lookup_lid g.tcenv discriminator in
-              (match uu___1 with
-               | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-               | uu___2 ->
-                   let uu___3 = mk_head_discriminator () in
-                   FStar_Pervasives_Native.Some uu___3)
-            else FStar_Pervasives_Native.None in
-      let uu___ =
-        mapi
-          (fun i uu___1 ->
-             match uu___1 with
-             | (pi, uu___2) ->
-                 (match pi.FStarC_Syntax_Syntax.v with
-                  | FStarC_Syntax_Syntax.Pat_dot_term uu___3 ->
-                      (fun uu___4 ->
-                         fun cache ->
-                           Success
-                             ((FStar_Pervasives_Native.None,
-                                FStar_Pervasives_Native.None), cache))
-                  | FStarC_Syntax_Syntax.Pat_var uu___3 ->
-                      (fun uu___4 ->
-                         fun cache ->
-                           Success
-                             ((FStar_Pervasives_Native.None,
-                                FStar_Pervasives_Native.None), cache))
-                  | uu___3 ->
-                      let scrutinee_sub_term = mk_ith_projector i in
-                      pattern_branch_condition g scrutinee_sub_term pi))
-          sub_pats in
-      (fun ctx0 ->
-         fun cache0 ->
-           let uu___1 = uu___ ctx0 cache0 in
-           match uu___1 with
-           | Success ((x, g1), cache1) ->
-               let uu___2 =
-                 let uu___3 =
-                   let guards =
-                     FStarC_List.collect
-                       (fun uu___4 ->
-                          match uu___4 with
-                          | FStar_Pervasives_Native.None -> []
-                          | FStar_Pervasives_Native.Some t -> [t])
-                       (discrimination :: x) in
-                   match guards with
-                   | [] ->
-                       (fun uu___4 ->
-                          fun cache ->
-                            Success
-                              ((FStar_Pervasives_Native.None,
-                                 FStar_Pervasives_Native.None), cache))
-                   | guards1 ->
-                       let uu___4 =
-                         let uu___5 = FStarC_Syntax_Util.mk_and_l guards1 in
-                         FStar_Pervasives_Native.Some uu___5 in
-                       (fun uu___5 ->
-                          fun cache ->
-                            Success
-                              ((uu___4, FStar_Pervasives_Native.None), cache)) in
-                 uu___3 ctx0 cache1 in
-               (match uu___2 with
-                | Success ((y, g2), cache2) ->
-                    let uu___3 =
-                      let uu___4 = let uu___5 = and_pre g1 g2 in (y, uu___5) in
-                      (uu___4, cache2) in
-                    Success uu___3
-                | err -> err)
-           | Error err -> Error err)
-let initial_env (g : FStarC_TypeChecker_Env.env) : env=
-  let max_index =
-    FStarC_List.fold_left
-      (fun index b ->
-         match b with
-         | FStarC_Syntax_Syntax.Binding_var x ->
-             max x.FStarC_Syntax_Syntax.index index
-         | uu___ -> index) Prims.int_zero g.FStarC_TypeChecker_Env.gamma in
-  {
-    tcenv = g;
+  hits : Prims.int;
+  misses : Prims.int;
+}
+
+let cache_stats : (cache_stats_t ref) =
+  (ref { hits = (Prims.parse_int "0"); misses = (Prims.parse_int "0") })
+
+let reset_cache_stats (tmp : unit) : unit =
+  ((cache_stats) := { hits = (Prims.parse_int "0"); misses = (Prims.parse_int "0") })
+
+type env = {
+  tcenv : FStarC_TypeChecker_Env.env;
+  allow_universe_instantiation : bool;
+  should_read_cache : bool;
+  max_binder_index : Prims.int;
+}
+
+let max (a : Prims.int) (b : Prims.int) : Prims.int =
+  (if (Prims.op_Greater a b) then a else b)
+
+let initial_env (g : FStarC_TypeChecker_Env.env) : env =
+  (let max_index = (FStarC_List.fold_left (fun index b -> (match b with
+      | (FStarC_Syntax_Syntax.Binding_var (x)) -> (max (x).FStarC_Syntax_Syntax.index index)
+      | tmp -> index
+    )) (Prims.parse_int "0") (g).FStarC_TypeChecker_Env.gamma) in
+  { tcenv = g;
     allow_universe_instantiation = false;
     should_read_cache = true;
-    max_binder_index = max_index
-  }
-let check_term_top' (g : FStarC_TypeChecker_Env.env)
-  (e : FStarC_Syntax_Syntax.term)
-  (topt : FStarC_Syntax_Syntax.typ FStar_Pervasives_Native.option)
-  (must_tot : Prims.bool) : (tot_or_ghost * FStarC_Syntax_Syntax.typ) result=
-  let g1 = initial_env g in
-  let uu___ = check "top" g1 e in
-  fun ctx0 ->
-    fun cache0 ->
-      let uu___1 = uu___ ctx0 cache0 in
-      match uu___1 with
-      | Success ((x, g11), cache1) ->
-          let uu___2 =
-            let uu___3 =
-              match topt with
-              | FStar_Pervasives_Native.None ->
-                  if must_tot
-                  then
-                    let uu___4 = x in
-                    (match uu___4 with
-                     | (eff, t) ->
-                         let uu___5 =
-                           if eff = E_Ghost
-                           then
-                             let uu___6 = non_informative g1 t in
-                             Prims.not uu___6
-                           else false in
-                         if uu___5
-                         then fail_str "expected total effect, found ghost"
-                         else
-                           (fun uu___6 ->
-                              fun cache ->
-                                Success
-                                  (((E_Total, t),
-                                     FStar_Pervasives_Native.None), cache)))
-                  else
-                    (fun uu___4 ->
-                       fun cache ->
-                         Success ((x, FStar_Pervasives_Native.None), cache))
-              | FStar_Pervasives_Native.Some t ->
-                  let uu___4 =
-                    if
-                      must_tot || ((FStar_Pervasives_Native.fst x) = E_Total)
-                    then
-                      let uu___5 = FStarC_Syntax_Syntax.mk_Total t in
-                      (uu___5, E_Total)
-                    else
-                      (let uu___5 = FStarC_Syntax_Syntax.mk_GTotal t in
-                       (uu___5, E_Ghost)) in
-                  (match uu___4 with
-                   | (target_comp, eff) ->
-                       (fun ctx01 ->
-                          fun cache01 ->
-                            let uu___5 =
-                              let ctx =
-                                {
-                                  no_guard = (ctx01.no_guard);
-                                  unfolding_ok = (ctx01.unfolding_ok);
-                                  error_context =
-                                    (("top-level subtyping",
-                                       FStar_Pervasives_Native.None) ::
-                                    (ctx01.error_context))
-                                } in
-                              let uu___6 =
-                                let uu___7 = as_comp g1 x in
-                                check_relation_comp
-                                  {
-                                    tcenv = (g1.tcenv);
-                                    allow_universe_instantiation = true;
-                                    should_read_cache =
-                                      (g1.should_read_cache);
-                                    max_binder_index = (g1.max_binder_index)
-                                  }
-                                  (SUBTYPING (FStar_Pervasives_Native.Some e))
-                                  uu___7 target_comp in
-                              uu___6 ctx cache01 in
-                            match uu___5 with
-                            | Success ((x1, g12), cache11) ->
-                                let uu___6 =
-                                  let uu___7 uu___8 cache =
-                                    Success
-                                      (((eff, t),
-                                         FStar_Pervasives_Native.None),
-                                        cache) in
-                                  uu___7 ctx01 cache11 in
-                                (match uu___6 with
-                                 | Success ((y, g2), cache2) ->
-                                     let uu___7 =
-                                       let uu___8 =
-                                         let uu___9 = and_pre g12 g2 in
-                                         (y, uu___9) in
-                                       (uu___8, cache2) in
-                                     Success uu___7
-                                 | err -> err)
-                            | Error err -> Error err)) in
-            uu___3 ctx0 cache1 in
-          (match uu___2 with
-           | Success ((y, g2), cache2) ->
-               let uu___3 =
-                 let uu___4 = let uu___5 = and_pre g11 g2 in (y, uu___5) in
-                 (uu___4, cache2) in
-               Success uu___3
-           | err -> err)
-      | Error err -> Error err
-let simplify_steps : FStarC_TypeChecker_Env.step Prims.list=
-  [FStarC_TypeChecker_Env.Beta;
-  FStarC_TypeChecker_Env.UnfoldUntil FStarC_Syntax_Syntax.delta_constant;
-  FStarC_TypeChecker_Env.UnfoldQual ["unfold"];
-  FStarC_TypeChecker_Env.UnfoldOnly
-    [FStarC_Parser_Const.pure_wp_monotonic_lid;
-    FStarC_Parser_Const.pure_wp_monotonic0_lid];
-  FStarC_TypeChecker_Env.Simplify;
-  FStarC_TypeChecker_Env.Primops;
-  FStarC_TypeChecker_Env.NoFullNorm]
-let initial_cache : cache_t=
-  let uu___ = FStarC_Syntax_Hash.term_map_empty () in
-  let uu___1 = FStarC_Syntax_Hash.term_map_empty () in
-  { term_map = uu___; guard_map = uu___1 }
-let check_term_top (g : FStarC_TypeChecker_Env.env)
-  (e : FStarC_Syntax_Syntax.term)
-  (topt : FStarC_Syntax_Syntax.typ FStar_Pervasives_Native.option)
-  (must_tot : Prims.bool) :
-  ((tot_or_ghost * FStarC_Syntax_Syntax.typ) * precondition) __result=
-  (let uu___1 = FStarC_Effect.op_Bang dbg_Eq in
-   if uu___1
-   then
-     let uu___2 =
-       let uu___3 = get_goal_ctr () in
-       FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___3 in
-     FStarC_Format.print1 "(%s) Entering core ... \n" uu___2
-   else ());
-  (let uu___2 =
-     let uu___3 = FStarC_Effect.op_Bang dbg in
-     if uu___3 then true else FStarC_Effect.op_Bang dbg_Top in
-   if uu___2
-   then
-     let uu___3 =
-       let uu___4 = get_goal_ctr () in
-       FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___4 in
-     let uu___4 = FStarC_Class_Show.show FStarC_Syntax_Print.showable_term e in
-     let uu___5 =
-       FStarC_Class_Show.show
-         (FStarC_Class_Show.show_option FStarC_Syntax_Print.showable_term)
-         topt in
-     FStarC_Format.print3 "(%s) Entering core with %s <: %s\n" uu___3 uu___4
-       uu___5
-   else ());
-  FStarC_Syntax_TermHashTable.reset_counters table.table;
-  reset_cache_stats ();
-  (let ctx =
-     {
-       no_guard = false;
-       unfolding_ok = true;
-       error_context = [("Top", FStar_Pervasives_Native.None)]
-     } in
-   let res =
-     FStarC_Profiling.profile
-       (fun uu___4 ->
-          let uu___5 = check_term_top' g e topt must_tot in
-          uu___5 ctx initial_cache) FStar_Pervasives_Native.None
-       "FStarC.TypeChecker.Core.check_term_top" in
-   (let uu___5 =
-      let uu___6 = FStarC_Effect.op_Bang dbg in
-      if uu___6 then true else FStarC_Effect.op_Bang dbg_Top in
-    if uu___5
-    then
-      let uu___6 =
-        let uu___7 = get_goal_ctr () in
-        FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___7 in
-      let uu___7 =
-        FStarC_Class_Show.show
-          (showable_result
-             (FStarC_Class_Show.show_tuple2
-                (FStarC_Class_Show.show_tuple2 showable_tot_or_ghost
-                   FStarC_Syntax_Print.showable_term)
-                (FStarC_Class_Show.show_option
-                   FStarC_Syntax_Print.showable_term))) res in
-      FStarC_Format.print2 "(%s) Core result = %s\n" uu___6 uu___7
-    else ());
-   (let res1 =
-      match res with
-      | Success ((et, FStar_Pervasives_Native.Some guard0), cache) ->
-          let guard1 =
-            FStarC_TypeChecker_Normalize.normalize simplify_steps g guard0 in
-          ((let uu___6 =
-              let uu___7 =
-                let uu___8 = FStarC_Effect.op_Bang dbg in
-                if uu___8 then true else FStarC_Effect.op_Bang dbg_Top in
-              if uu___7 then true else FStarC_Effect.op_Bang dbg_Exit in
-            if uu___6
-            then
-              ((let uu___8 =
-                  let uu___9 = get_goal_ctr () in
-                  FStarC_Class_Show.show FStarC_Class_Show.showable_int
-                    uu___9 in
-                let uu___9 =
-                  FStarC_Class_Show.show FStarC_Syntax_Print.showable_term
-                    guard0 in
-                let uu___10 =
-                  FStarC_Class_Show.show FStarC_Syntax_Print.showable_term
-                    guard1 in
-                FStarC_Format.print3
-                  "(%s) Exiting core: Simplified guard from {{%s}} to {{%s}}\n"
-                  uu___8 uu___9 uu___10);
-               (let guard_names =
-                  let uu___8 = FStarC_Syntax_Free.names guard1 in
-                  FStarC_Class_Setlike.elems
-                    (FStarC_FlatSet.setlike_flat_set
-                       FStarC_Syntax_Syntax.ord_bv) uu___8 in
-                let uu___8 =
-                  FStarC_List.tryFind
-                    (fun bv ->
-                       FStarC_List.for_all
-                         (fun binding_env ->
-                            match binding_env with
-                            | FStarC_Syntax_Syntax.Binding_var bv_env ->
-                                Prims.not
-                                  (FStarC_Syntax_Syntax.bv_eq bv_env bv)
-                            | uu___9 -> true) g.FStarC_TypeChecker_Env.gamma)
-                    guard_names in
-                match uu___8 with
-                | FStar_Pervasives_Native.Some bv ->
-                    let uu___9 =
-                      let uu___10 = FStarC_Syntax_Syntax.bv_to_name bv in
-                      FStarC_Class_Show.show
-                        FStarC_Syntax_Print.showable_term uu___10 in
-                    FStarC_Format.print1
-                      "WARNING: %s is free in the core generated guard\n"
-                      uu___9
-                | uu___9 -> ()))
-            else ());
-           Success ((et, (FStar_Pervasives_Native.Some guard1)), cache))
-      | Success uu___5 ->
-          ((let uu___7 =
-              let uu___8 = FStarC_Effect.op_Bang dbg in
-              if uu___8 then true else FStarC_Effect.op_Bang dbg_Top in
-            if uu___7
-            then
-              let uu___8 =
-                let uu___9 = get_goal_ctr () in
-                FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___9 in
-              FStarC_Format.print1 "(%s) Exiting core (ok)\n" uu___8
-            else ());
-           res)
-      | Error uu___5 ->
-          ((let uu___7 =
-              let uu___8 = FStarC_Effect.op_Bang dbg in
-              if uu___8 then true else FStarC_Effect.op_Bang dbg_Top in
-            if uu___7
-            then
-              let uu___8 =
-                let uu___9 = get_goal_ctr () in
-                FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___9 in
-              FStarC_Format.print1 "(%s) Exiting core (failed)\n" uu___8
-            else ());
-           res) in
-    (let uu___6 = FStarC_Effect.op_Bang dbg_Eq in
-     if uu___6
-     then
-       (FStarC_Syntax_TermHashTable.print_stats table.table;
-        (let cs = report_cache_stats () in
-         let uu___8 =
-           FStarC_Class_Show.show FStarC_Class_Show.showable_int cs.hits in
-         let uu___9 =
-           FStarC_Class_Show.show FStarC_Class_Show.showable_int cs.misses in
-         FStarC_Format.print2 "Cache_stats { hits = %s; misses = %s }\n"
-           uu___8 uu___9))
-     else ());
-    res1))
-let return_my_guard_and_tok_t (g : precondition) (cache : cache_t) :
-  (FStarC_Syntax_Syntax.typ * (unit -> unit)) FStar_Pervasives_Native.option=
-  let tok = mk_token cache in
-  match g with
-  | FStar_Pervasives_Native.None ->
-      (commit_guard_core tok; FStar_Pervasives_Native.None)
-  | FStar_Pervasives_Native.Some guard1 ->
-      FStar_Pervasives_Native.Some
-        (guard1, ((fun uu___ -> commit_guard_core tok)))
-let check_term (g : FStarC_TypeChecker_Env.env)
-  (e : FStarC_Syntax_Syntax.term) (t : FStarC_Syntax_Syntax.typ)
-  (must_tot : Prims.bool) :
-  (guard_and_tok_t FStar_Pervasives_Native.option, error)
-    FStar_Pervasives.either=
-  let uu___ = check_term_top g e (FStar_Pervasives_Native.Some t) must_tot in
-  match uu___ with
-  | Success ((uu___1, g1), cache) ->
-      let uu___2 = return_my_guard_and_tok_t g1 cache in
-      FStar_Pervasives.Inl uu___2
-  | Error err -> FStar_Pervasives.Inr err
-let check_term_at_type (g : FStarC_TypeChecker_Env.env)
-  (e : FStarC_Syntax_Syntax.term) (t : FStarC_Syntax_Syntax.typ) :
-  ((tot_or_ghost * guard_and_tok_t FStar_Pervasives_Native.option), error)
-    FStar_Pervasives.either=
-  let must_tot = false in
-  let uu___ = check_term_top g e (FStar_Pervasives_Native.Some t) must_tot in
-  match uu___ with
-  | Success (((eff, uu___1), g1), cache) ->
-      let uu___2 =
-        let uu___3 = return_my_guard_and_tok_t g1 cache in (eff, uu___3) in
-      FStar_Pervasives.Inl uu___2
-  | Error err -> FStar_Pervasives.Inr err
-let compute_term_type (g : FStarC_TypeChecker_Env.env)
-  (e : FStarC_Syntax_Syntax.term) :
-  ((tot_or_ghost * FStarC_Syntax_Syntax.typ * guard_and_tok_t
-     FStar_Pervasives_Native.option),
-    error) FStar_Pervasives.either=
-  let must_tot = false in
-  let uu___ = check_term_top g e FStar_Pervasives_Native.None must_tot in
-  match uu___ with
-  | Success (((eff, ty), g1), cache) ->
-      let uu___1 =
-        let uu___2 = return_my_guard_and_tok_t g1 cache in (eff, ty, uu___2) in
-      FStar_Pervasives.Inl uu___1
-  | Error err -> FStar_Pervasives.Inr err
-let open_binders_in_term (env1 : FStarC_TypeChecker_Env.env)
-  (bs : FStarC_Syntax_Syntax.binders) (t : FStarC_Syntax_Syntax.term) :
-  (FStarC_TypeChecker_Env.env * FStarC_Syntax_Syntax.binders *
-    FStarC_Syntax_Syntax.term)=
-  let g = initial_env env1 in
-  let uu___ = open_term_binders g bs t in
-  match uu___ with | (g', bs1, t1) -> ((g'.tcenv), bs1, t1)
-let open_binders_in_comp (env1 : FStarC_TypeChecker_Env.env)
-  (bs : FStarC_Syntax_Syntax.binders) (c : FStarC_Syntax_Syntax.comp) :
-  (FStarC_TypeChecker_Env.env * FStarC_Syntax_Syntax.binders *
-    FStarC_Syntax_Syntax.comp)=
-  let g = initial_env env1 in
-  let uu___ = open_comp_binders g bs c in
-  match uu___ with | (g', bs1, c1) -> ((g'.tcenv), bs1, c1)
-let check_term_equality (guard_ok : Prims.bool) (unfolding_ok1 : Prims.bool)
-  (g : FStarC_TypeChecker_Env.env) (t0 : FStarC_Syntax_Syntax.typ)
-  (t1 : FStarC_Syntax_Syntax.typ) :
-  (guard_and_tok_t FStar_Pervasives_Native.option, error)
-    FStar_Pervasives.either=
-  let g1 = initial_env g in
-  (let uu___1 = FStarC_Effect.op_Bang dbg_Top in
-   if uu___1
-   then
-     let uu___2 = FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t0 in
-     let uu___3 = FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t1 in
-     let uu___4 =
-       FStarC_Class_Show.show FStarC_Class_Show.showable_bool guard_ok in
-     let uu___5 =
-       FStarC_Class_Show.show FStarC_Class_Show.showable_bool unfolding_ok1 in
-     FStarC_Format.print4
-       "Entering check_term_equality with %s and %s (guard_ok=%s; unfolding_ok=%s) {\n"
-       uu___2 uu___3 uu___4 uu___5
-   else ());
-  (let ctx =
-     {
-       no_guard = (Prims.not guard_ok);
-       unfolding_ok = unfolding_ok1;
-       error_context = [("Eq", FStar_Pervasives_Native.None)]
-     } in
-   let r =
-     let uu___1 = check_relation g1 EQUALITY t0 t1 in
-     uu___1 ctx initial_cache in
-   (let uu___2 = FStarC_Effect.op_Bang dbg_Top in
-    if uu___2
-    then
-      let uu___3 =
-        FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t0 in
-      let uu___4 =
-        FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t1 in
-      let uu___5 =
-        FStarC_Class_Show.show
-          (showable_result
-             (FStarC_Class_Show.show_tuple2 FStarC_Class_Show.showable_unit
-                (FStarC_Class_Show.show_option
-                   FStarC_Syntax_Print.showable_term))) r in
-      FStarC_Format.print3
-        "} Exiting check_term_equality (%s, %s). Result = %s.\n" uu___3
-        uu___4 uu___5
-    else ());
-   (let r1 =
-      match r with
-      | Success ((uu___2, g2), cache) ->
-          let uu___3 = return_my_guard_and_tok_t g2 cache in
-          FStar_Pervasives.Inl uu___3
-      | Error err -> FStar_Pervasives.Inr err in
-    r1))
-let check_term_subtyping (guard_ok : Prims.bool) (unfolding_ok1 : Prims.bool)
-  (g : FStarC_TypeChecker_Env.env) (t0 : FStarC_Syntax_Syntax.typ)
-  (t1 : FStarC_Syntax_Syntax.typ) :
-  (guard_and_tok_t FStar_Pervasives_Native.option, error)
-    FStar_Pervasives.either=
-  let g1 = initial_env g in
-  let ctx =
-    {
-      no_guard = (Prims.not guard_ok);
-      unfolding_ok = unfolding_ok1;
-      error_context = [("Subtyping", FStar_Pervasives_Native.None)]
-    } in
-  let uu___ =
-    let uu___1 =
-      check_relation g1 (SUBTYPING FStar_Pervasives_Native.None) t0 t1 in
-    uu___1 ctx initial_cache in
-  match uu___ with
-  | Success ((uu___1, g2), cache) ->
-      let uu___2 = return_my_guard_and_tok_t g2 cache in
-      FStar_Pervasives.Inl uu___2
-  | Error err -> FStar_Pervasives.Inr err
+    max_binder_index = max_index })
+
+let fail_str (msg : string) (ctx : context) (cache : cache_t) : (('a * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result =
+  (Error ((ctx, (FStarC_Errors_Msg.mkmsg msg))))
+
+let mk_type (u : FStarC_Syntax_Syntax.universe) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_type (u)) FStarC_Range_Type.dummyRange)
+
+let fail (msg : (FStar_Pprint.document) list) (ctx : context) (cache : cache_t) : (('a * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result =
+  (Error ((ctx, msg)))
+
+let is_type (g : env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (context -> (cache_t -> ((FStarC_Syntax_Syntax.universe * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (let aux = (fun t1 -> (let tmp = (FStarC_Syntax_Subst.compress t1) in
+    let tmp1 = (tmp).FStarC_Syntax_Syntax.n in
+    (match tmp1 with
+      | (FStarC_Syntax_Syntax.Tm_type (u)) -> (fun tmp2 cache -> (Success ((u, None), cache)))
+      | tmp2 -> (let tmp3 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' t1) in
+        let tmp4 = (FStarC_Errors_Msg.fquotes tmp3) in
+        let tmp5 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Expected a type, got") tmp4) in
+        let tmp6 = (tmp5 :: []) in
+        (fail tmp6))
+    ))) in
+  (fun ctx cache -> (let ctx1 = { no_guard = (ctx).no_guard;
+      unfolding_ok = (ctx).unfolding_ok;
+      error_context = (("is_type", (Some ((CtxTerm (t))))) :: (ctx).error_context) } in
+  let tmp = (aux t) in
+  let tmp1 = (fun ctx2 cache1 -> (let tmp1 = (tmp ctx2 cache1) in
+    (match tmp1 with
+      | (Error (tmp2)) -> (let tmp3 = (FStarC_TypeChecker_Normalize.unfold_whnf (g).tcenv t) in
+        let tmp4 = (FStarC_Syntax_Util.unrefine tmp3) in
+        let tmp5 = (aux tmp4) in
+        (tmp5 ctx2 cache1))
+      | res -> res
+    ))) in
+  (tmp1 ctx1 cache))))
+
+let push_binder (g : env) (b : FStarC_Syntax_Syntax.binder) : env =
+  (let tmp = (FStarC_TypeChecker_Env.push_binders (g).tcenv (b :: [])) in
+  { tcenv = tmp;
+    allow_universe_instantiation = (g).allow_universe_instantiation;
+    should_read_cache = (g).should_read_cache;
+    max_binder_index = (max (g).max_binder_index ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.index) })
+
+let fresh_binder (g : env) (old : FStarC_Syntax_Syntax.binder) : (env * FStarC_Syntax_Syntax.binder) =
+  (let ctr = (Prims.op_Plus (g).max_binder_index (Prims.parse_int "1")) in
+  let tmp = (old).FStarC_Syntax_Syntax.binder_bv in
+  let bv = { FStarC_Syntax_Syntax.ppname = (tmp).FStarC_Syntax_Syntax.ppname;
+      index = ctr;
+      sort = (tmp).FStarC_Syntax_Syntax.sort } in
+  let b = (FStarC_Syntax_Syntax.mk_binder_with_attrs bv (old).FStarC_Syntax_Syntax.binder_qual (old).FStarC_Syntax_Syntax.binder_positivity (old).FStarC_Syntax_Syntax.binder_attrs) in
+  let tmp1 = (push_binder g b) in
+  (tmp1, b))
+
+let open_term (g : env) (b : FStarC_Syntax_Syntax.binder) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (env * FStarC_Syntax_Syntax.binder * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
+  (let tmp = (fresh_binder g b) in
+  (match tmp with
+    | (g1, b') -> (let t1 = (FStarC_Syntax_Subst.subst ((FStarC_Syntax_Syntax.DB ((Prims.parse_int "0"), (b').FStarC_Syntax_Syntax.binder_bv)) :: []) t) in
+      (g1, b', t1))
+  ))
+
+let fStarC_Class_Show_show__relation (tmp : relation) : string =
+  (match tmp with
+    | EQUALITY -> "=?="
+    | (SUBTYPING (tmp1)) -> "<:?"
+  )
+
+let guard_not_allowed (ctx : context) (cache : cache_t) : ((bool * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result =
+  (Success (((ctx).no_guard, None), cache))
+
+let equal_term (t1 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (t2 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
+  (FStarC_Profiling.profile (fun tmp -> (FStarC_Syntax_Hash.equal_term t1 t2)) None "FStarC.TypeChecker.Core.equal_term")
+
+type side =
+  | Left
+  | Right
+  | Both
+  | Neither
+
+
+let maybe_relate_after_unfolding (g : FStarC_TypeChecker_Env.env) (t0 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (t1 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : side =
+  (let dd0 = (FStarC_TypeChecker_Env.delta_depth_of_term g t0) in
+  let dd1 = (FStarC_TypeChecker_Env.delta_depth_of_term g t1) in
+  (if ((=) dd0 dd1) then Both else (if (FStarC_TypeChecker_Common.delta_depth_greater_than dd0 dd1) then Left else Right)))
+
+let unfolding_ok (ctx : context) (cache : cache_t) : ((bool * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result =
+  (Success (((ctx).unfolding_ok, None), cache))
+
+let and_pre (p1 : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option) (p2 : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
+  (match (p1, p2) with
+    | (None, None) -> None
+    | ((Some (p)), None) -> (Some (p))
+    | (None, (Some (p))) -> (Some (p))
+    | ((Some (p11)), (Some (p21))) -> (let tmp = (FStarC_Syntax_Util.mk_conj p11 p21) in
+      (Some (tmp)))
+  )
+
+let get_cache (tmp : context) (cache : cache_t) : ((cache_t * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result =
+  (Success ((cache, None), cache))
+
+let raw_lookup_guard (e : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (ctx0 : context) (cache0 : cache_t) : ((((FStarC_Syntax_Syntax.binding) list) option * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result =
+  (let tmp = (get_cache ctx0 cache0) in
+  (match tmp with
+    | (Success ((x, g1), cache1)) -> (let tmp1 = (FStarC_Syntax_Hash.term_map_lookup e (x).guard_map) in
+      let tmp2 = (match tmp1 with
+          | (Some (he)) -> (fun tmp2 cache -> (Success (((Some (he)), None), cache)))
+          | None -> (let tmp2 = (FStarC_Syntax_TermHashTable.lookup e (table).guard_table) in
+            (fun tmp3 cache -> (Success ((tmp2, None), cache))))
+        ) in
+      let tmp3 = (tmp2 ctx0 cache1) in
+      (match tmp3 with
+        | (Success ((y, g2), cache2)) -> (let tmp4 = (and_pre g1 g2) in
+          let tmp5 = (y, tmp4) in
+          let tmp6 = (tmp5, cache2) in
+          (Success ((match tmp6 with (custard_tup, _) -> custard_tup), (match tmp6 with (_, custard_tup) -> custard_tup))))
+        | err -> err
+      ))
+    | (Error (err)) -> (Error (err))
+  ))
+
+let rec context_included (g0 : (FStarC_Syntax_Syntax.binding) list) (g1 : (FStarC_Syntax_Syntax.binding) list) : bool =
+  (if (FStarC_Util.physical_equality g0 g1) then true else (match (g0, g1) with
+    | ([], tmp) -> true
+    | ((b0 :: g0'), (b1 :: g1')) -> (match (b0, b1) with
+        | ((FStarC_Syntax_Syntax.Binding_var (x0)), (FStarC_Syntax_Syntax.Binding_var (x1))) -> (if ((=) (x0).FStarC_Syntax_Syntax.index (x1).FStarC_Syntax_Syntax.index) then (let tmp = (equal_term (x0).FStarC_Syntax_Syntax.sort (x1).FStarC_Syntax_Syntax.sort) in
+          (if tmp then (context_included g0' g1') else false)) else (context_included g0 g1'))
+        | ((FStarC_Syntax_Syntax.Binding_lid (u__1, u__2)), (FStarC_Syntax_Syntax.Binding_lid (u__11, u__21))) -> true
+        | ((FStarC_Syntax_Syntax.Binding_univ (tmp)), (FStarC_Syntax_Syntax.Binding_univ (tmp1))) -> true
+        | tmp -> false
+      )
+    | tmp -> false
+  ))
+
+let put_cache (cache : cache_t) (tmp : context) (tmp1 : cache_t) : ((unit * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result =
+  (Success (((), None), cache))
+
+let insert_guard (g : env) (guard_ : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (ctx0 : context) (cache0 : cache_t) : ((unit * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result =
+  (let tmp = (get_cache ctx0 cache0) in
+  (match tmp with
+    | (Success ((x, g1), cache1)) -> (let tmp1 = (FStarC_Syntax_Hash.term_map_add guard_ ((g).tcenv).FStarC_TypeChecker_Env.gamma (x).guard_map) in
+      let tmp2 = { term_map = (x).term_map; guard_map = tmp1 } in
+      let tmp3 = (put_cache tmp2) in
+      let tmp4 = (tmp3 ctx0 cache1) in
+      (match tmp4 with
+        | (Success ((y, g2), cache2)) -> (let tmp5 = (and_pre g1 g2) in
+          let tmp6 = (y, tmp5) in
+          let tmp7 = (tmp6, cache2) in
+          (Success ((match tmp7 with (custard_tup, _) -> custard_tup), (match tmp7 with (_, custard_tup) -> custard_tup))))
+        | err -> err
+      ))
+    | (Error (err)) -> (Error (err))
+  ))
+
+let guard (g : env) (guard_ : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (ctx0 : context) (cache0 : cache_t) : ((unit * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result =
+  (let tmp = (raw_lookup_guard guard_ ctx0 cache0) in
+  (match tmp with
+    | (Success ((x, g1), cache1)) -> (let tmp1 = (match x with
+          | (Some (ge)) -> (let tmp1 = (context_included ge ((g).tcenv).FStarC_TypeChecker_Env.gamma) in
+            (if tmp1 then (fun tmp2 cache -> (Success (((), None), cache))) else (fun ctx01 cache01 -> (let tmp2 = (insert_guard g guard_ ctx01 cache01) in
+            (match tmp2 with
+              | (Success ((x1, g11), cache11)) -> (let tmp3 = (fun tmp3 cache -> (Success (((), (Some (guard_))), cache))) in
+                let tmp4 = (tmp3 ctx01 cache11) in
+                (match tmp4 with
+                  | (Success ((y, g2), cache2)) -> (let tmp5 = (and_pre g11 g2) in
+                    let tmp6 = (y, tmp5) in
+                    let tmp7 = (tmp6, cache2) in
+                    (Success ((match tmp7 with (custard_tup, _) -> custard_tup), (match tmp7 with (_, custard_tup) -> custard_tup))))
+                  | err -> err
+                ))
+              | (Error (err)) -> (Error (err))
+            )))))
+          | tmp1 -> (fun ctx01 cache01 -> (let tmp2 = (insert_guard g guard_ ctx01 cache01) in
+            (match tmp2 with
+              | (Success ((x1, g11), cache11)) -> (let tmp3 = (fun tmp3 cache -> (Success (((), (Some (guard_))), cache))) in
+                let tmp4 = (tmp3 ctx01 cache11) in
+                (match tmp4 with
+                  | (Success ((y, g2), cache2)) -> (let tmp5 = (and_pre g11 g2) in
+                    let tmp6 = (y, tmp5) in
+                    let tmp7 = (tmp6, cache2) in
+                    (Success ((match tmp7 with (custard_tup, _) -> custard_tup), (match tmp7 with (_, custard_tup) -> custard_tup))))
+                  | err -> err
+                ))
+              | (Error (err)) -> (Error (err))
+            )))
+        ) in
+      let tmp2 = (tmp1 ctx0 cache1) in
+      (match tmp2 with
+        | (Success ((y, g2), cache2)) -> (let tmp3 = (and_pre g1 g2) in
+          let tmp4 = (y, tmp3) in
+          let tmp5 = (tmp4, cache2) in
+          (Success ((match tmp5 with (custard_tup, _) -> custard_tup), (match tmp5 with (_, custard_tup) -> custard_tup))))
+        | err -> err
+      ))
+    | (Error (err)) -> (Error (err))
+  ))
+
+let equatable (g : env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
+  (let tmp = (FStarC_Syntax_Util.leftmost_head t) in
+  (FStarC_TypeChecker_Rel.may_relate_with_logical_guard (g).tcenv true tmp))
+
+let fail_propagate (err : (context * (FStar_Pprint.document) list)) (tmp : context) (cache : cache_t) : (('a * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result =
+  (Error (err))
+
+let mk_forall_l (us : (FStarC_Syntax_Syntax.universe) list) (eta : (FStarC_Syntax_Syntax.binder) list) (eta1 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (FStarC_List.fold_right2 (fun u x t -> (FStarC_Syntax_Util.mk_forall u (x).FStarC_Syntax_Syntax.binder_bv t)) us eta eta1)
+
+let with_binders (initial_env_ : env) (xs : (FStarC_Syntax_Syntax.binder) list) (us : (FStarC_Syntax_Syntax.universe) list) (f : (context -> (cache_t -> (('a * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result))) (ctx : context) (cache : cache_t) : (('a * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result =
+  (let tmp = (f ctx cache) in
+  (match tmp with
+    | (Success (r, cache')) -> (let tmp1 = (match (FStar_Pervasives.Inl (r)) with
+          | (FStar_Pervasives.Inr (err)) -> (fail_propagate err)
+          | (FStar_Pervasives.Inl ((res, None))) -> (fun tmp1 cache1 -> (Success ((res, None), cache1)))
+          | (FStar_Pervasives.Inl ((res, (Some (form))))) -> (let form1 = (mk_forall_l us xs form) in
+            (fun ctx0 cache0 -> (let tmp1 = (guard initial_env_ form1 ctx0 cache0) in
+            (match tmp1 with
+              | (Success ((x, g1), cache1)) -> (let tmp2 = (fun tmp2 cache2 -> (Success ((res, None), cache2))) in
+                let tmp3 = (tmp2 ctx0 cache1) in
+                (match tmp3 with
+                  | (Success ((y, g2), cache2)) -> (let tmp4 = (and_pre g1 g2) in
+                    let tmp5 = (y, tmp4) in
+                    let tmp6 = (tmp5, cache2) in
+                    (Success ((match tmp6 with (custard_tup, _) -> custard_tup), (match tmp6 with (_, custard_tup) -> custard_tup))))
+                  | err -> err
+                ))
+              | (Error (err)) -> (Error (err))
+            ))))
+        ) in
+      (tmp1 ctx cache'))
+    | (Error (err)) -> (let tmp1 = (fail_propagate err) in
+      (tmp1 ctx cache))
+  ))
+
+let rec iter2 (xs : ('u_'a) list) (ys : ('u_'a) list) (f : ('u_'a -> ('u_'a -> ('u_'b -> (context -> (cache_t -> (('u_'b * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)))))) (b : 'u_'b) : (context -> (cache_t -> (('u_'b * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (match (xs, ys) with
+    | ([], []) -> (fun tmp cache -> (Success ((b, None), cache)))
+    | ((x :: xs1), (y :: ys1)) -> (let tmp = (f x y b) in
+      (fun ctx0 cache0 -> (let tmp1 = (tmp ctx0 cache0) in
+      (match tmp1 with
+        | (Success ((x1, g1), cache1)) -> (let tmp2 = (iter2 xs1 ys1 f x1) in
+          let tmp3 = (tmp2 ctx0 cache1) in
+          (match tmp3 with
+            | (Success ((y1, g2), cache2)) -> (let tmp4 = (and_pre g1 g2) in
+              let tmp5 = (y1, tmp4) in
+              let tmp6 = (tmp5, cache2) in
+              (Success ((match tmp6 with (custard_tup, _) -> custard_tup), (match tmp6 with (_, custard_tup) -> custard_tup))))
+            | err -> err
+          ))
+        | (Error (err)) -> (Error (err))
+      ))))
+    | tmp -> (fail_str "Lists of differing length")
+  )
+
+let check_aqual (a0 : (FStarC_Syntax_Syntax.arg_qualifier) option) (a1 : (FStarC_Syntax_Syntax.arg_qualifier) option) : (context -> (cache_t -> ((unit * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (match (a0, a1) with
+    | (None, None) -> (fun tmp cache -> (Success (((), None), cache)))
+    | ((Some ({ FStarC_Syntax_Syntax.aqual_implicit = b0; aqual_attributes = tmp; _ })), (Some ({ FStarC_Syntax_Syntax.aqual_implicit = b1; aqual_attributes = tmp1; _ }))) -> (if ((=) b0 b1) then (fun tmp2 cache -> (Success (((), None), cache))) else (let tmp2 = (FStarC_Class_PP.fStarC_Class_PP_pp__bool b0) in
+      let tmp3 = (FStarC_Class_PP.fStarC_Class_PP_pp__bool b1) in
+      let tmp4 = (FStar_Pprint.op_Hat_Hat (FStarC_Errors_Msg.text "and rhs implicit=") tmp3) in
+      let tmp5 = (FStar_Pprint.op_Hat_Slash_Hat tmp2 tmp4) in
+      let tmp6 = (FStar_Pprint.op_Hat_Hat (FStarC_Errors_Msg.text "Unequal arg qualifiers: lhs implicit=") tmp5) in
+      let tmp7 = (tmp6 :: []) in
+      (fail tmp7)))
+    | (None, (Some ({ FStarC_Syntax_Syntax.aqual_implicit = false; aqual_attributes = tmp; _ }))) -> (fun tmp1 cache -> (Success (((), None), cache)))
+    | ((Some ({ FStarC_Syntax_Syntax.aqual_implicit = false; aqual_attributes = tmp; _ })), None) -> (fun tmp1 cache -> (Success (((), None), cache)))
+    | tmp -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__option_arg_qualifier a0) in
+      let tmp2 = (FStarC_Errors_Msg.fquotes tmp1) in
+      let tmp3 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__option_arg_qualifier a1) in
+      let tmp4 = (FStarC_Errors_Msg.fquotes tmp3) in
+      let tmp5 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "and rhs") tmp4) in
+      let tmp6 = (FStar_Pprint.op_Hat_Hat tmp2 tmp5) in
+      let tmp7 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Unequal arg qualifiers: lhs") tmp6) in
+      let tmp8 = (tmp7 :: []) in
+      (fail tmp8))
+  )
+
+let no_guard (g : (context -> (cache_t -> (('u_'a * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result))) (ctx : context) (cache : cache_t) : (('u_'a * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result =
+  (let tmp = (g { no_guard = true;
+      unfolding_ok = (ctx).unfolding_ok;
+      error_context = (ctx).error_context } cache) in
+  (match tmp with
+    | (Success ((x, None), cache1)) -> (Success ((x, None), cache1))
+    | (Success ((x, (Some (g1))), cache1)) -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' g1) in
+      let tmp2 = (FStarC_Format.fmt1 "Unexpected guard: %s" tmp1) in
+      let tmp3 = (fail_str tmp2) in
+      (tmp3 ctx cache1))
+    | err -> err
+  ))
+
+let check_bqual (b0 : (FStarC_Syntax_Syntax.binder_qualifier) option) (b1 : (FStarC_Syntax_Syntax.binder_qualifier) option) : (context -> (cache_t -> ((unit * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (if (FStarC_Syntax_Util.bqual_compat b0 b1) then (fun tmp cache -> (Success (((), None), cache))) else (let tmp = (FStarC_Syntax_Print.fStarC_Class_Show_show__option_binder_qualifier b0) in
+  let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__option_binder_qualifier b1) in
+  let tmp2 = (FStarC_Format.fmt2 "Binder qualifier mismatch, %s vs %s" tmp tmp1) in
+  (fail_str tmp2)))
+
+let check_positivity_qual (rel : relation) (p0 : (FStarC_Syntax_Syntax.positivity_qualifier) option) (p1 : (FStarC_Syntax_Syntax.positivity_qualifier) option) : (context -> (cache_t -> ((unit * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (if (FStarC_TypeChecker_Common.check_positivity_qual (match rel with
+    | (SUBTYPING (u__0)) -> true
+    | tmp -> false
+  ) p0 p1) then (fun tmp cache -> (Success (((), None), cache))) else (fail_str "Unequal positivity qualifiers"))
+
+let open_comp (g : env) (b : FStarC_Syntax_Syntax.binder) (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : (env * FStarC_Syntax_Syntax.binder * (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) =
+  (let tmp = (fresh_binder g b) in
+  (match tmp with
+    | (g1, bx) -> (let c1 = (FStarC_Syntax_Subst.subst_comp ((FStarC_Syntax_Syntax.DB ((Prims.parse_int "0"), (bx).FStarC_Syntax_Syntax.binder_bv)) :: []) c) in
+      (g1, bx, c1))
+  ))
+
+let is_non_informative (g : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
+  (FStarC_TypeChecker_Normalize.non_info_norm g t)
+
+let non_informative (g : env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
+  (is_non_informative (g).tcenv t)
+
+let rec fStarC_TypeChecker_Core_open_pat__open_pat_aux__1 (g : env) (p : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) (sub : (FStarC_Syntax_Syntax.subst_elt) list) : (env * (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t * (FStarC_Syntax_Syntax.subst_elt) list) =
+  (match (p).FStarC_Syntax_Syntax.v with
+    | (FStarC_Syntax_Syntax.Pat_constant (tmp)) -> (g, p, sub)
+    | (FStarC_Syntax_Syntax.Pat_cons (fv, us_opt, pats)) -> (let tmp = (FStarC_List.fold_left (fun tmp tmp1 -> (match (tmp, tmp1) with
+          | ((g1, pats1, sub1), (p1, imp)) -> (let tmp2 = (fStarC_TypeChecker_Core_open_pat__open_pat_aux__1 g1 p1 sub1) in
+            (match tmp2 with
+              | (g2, p2, sub2) -> (g2, ((p2, imp) :: pats1), sub2)
+            ))
+        )) (g, [], sub) pats) in
+      (match tmp with
+        | (g1, pats1, sub1) -> (g1, { FStarC_Syntax_Syntax.v = (FStarC_Syntax_Syntax.Pat_cons (fv, us_opt, (FStarC_List.rev pats1)));
+            p = (p).FStarC_Syntax_Syntax.p }, sub1)
+      ))
+    | (FStarC_Syntax_Syntax.Pat_var (x)) -> (let tmp = (FStarC_Syntax_Subst.subst sub (x).FStarC_Syntax_Syntax.sort) in
+      let tmp1 = { FStarC_Syntax_Syntax.ppname = (x).FStarC_Syntax_Syntax.ppname;
+          index = (x).FStarC_Syntax_Syntax.index;
+          sort = tmp } in
+      let bx = (FStarC_Syntax_Syntax.mk_binder tmp1) in
+      let tmp2 = (fresh_binder g bx) in
+      (match tmp2 with
+        | (g1, bx') -> (let tmp3 = (FStarC_Syntax_Subst.shift_subst (Prims.parse_int "1") sub) in
+          let sub1 = ((FStarC_Syntax_Syntax.DB ((Prims.parse_int "0"), (bx').FStarC_Syntax_Syntax.binder_bv)) :: tmp3) in
+          (g1, { FStarC_Syntax_Syntax.v = (FStarC_Syntax_Syntax.Pat_var ((bx').FStarC_Syntax_Syntax.binder_bv));
+            p = (p).FStarC_Syntax_Syntax.p }, sub1))
+      ))
+    | (FStarC_Syntax_Syntax.Pat_dot_term (eopt)) -> (let eopt1 = (FStarC_Option.map (FStarC_Syntax_Subst.subst sub) eopt) in
+      (g, { FStarC_Syntax_Syntax.v = (FStarC_Syntax_Syntax.Pat_dot_term (eopt1));
+        p = (p).FStarC_Syntax_Syntax.p }, sub))
+  )
+
+let open_pat (g : env) (p : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) : (env * (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t * (FStarC_Syntax_Syntax.subst_elt) list) =
+  (fStarC_TypeChecker_Core_open_pat__open_pat_aux__1 g p [])
+
+let open_branches_eq_pat (g : env) (br0 : ((FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (br1 : ((FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) : (env * ((FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) * ((FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) =
+  (match br0 with
+    | (p0, wopt0, e0) -> (match br1 with
+        | (tmp, wopt1, e1) -> (let tmp1 = (open_pat g p0) in
+          (match tmp1 with
+            | (g1, p01, s) -> (let tmp2 = (FStarC_Option.map (FStarC_Syntax_Subst.subst s) wopt0) in
+              let tmp3 = (FStarC_Syntax_Subst.subst s e0) in
+              let tmp4 = (p01, tmp2, tmp3) in
+              let tmp5 = (FStarC_Option.map (FStarC_Syntax_Subst.subst s) wopt1) in
+              let tmp6 = (FStarC_Syntax_Subst.subst s e1) in
+              let tmp7 = (p01, tmp5, tmp6) in
+              (g1, tmp4, tmp7))
+          ))
+      )
+  )
+
+let relation_to_string (tmp : relation) : string =
+  (match tmp with
+    | EQUALITY -> "=?="
+    | (SUBTYPING (None)) -> "<:?"
+    | (SUBTYPING ((Some (tm)))) -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' tm) in
+      (FStarC_Format.fmt1 "( <:? %s)" tmp1))
+  )
+
+let context_term_to_string (c : context_term) : string =
+  (match c with
+    | (CtxTerm (term)) -> (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' term)
+    | (CtxRel (t0, r, t1)) -> (let tmp = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' t0) in
+      let tmp1 = (relation_to_string r) in
+      let tmp2 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' t1) in
+      (FStarC_Format.fmt3 "%s %s %s" tmp tmp1 tmp2))
+  )
+
+let rec print_context__aux (depth : string) (ctx : ((string * (context_term) option)) list) : string =
+  (match ctx with
+    | [] -> ""
+    | ((msg, ctx_term) :: tl) -> (let tmp = (match ctx_term with
+          | None -> ""
+          | (Some (ctx_term1)) -> (context_term_to_string ctx_term1)
+        ) in
+      let hd = (FStarC_Format.fmt3 "%s %s (%s)\n" depth msg tmp) in
+      let tl1 = (print_context__aux (Prims.strcat depth ">") tl) in
+      (Prims.strcat hd tl1))
+  )
+
+let print_context (ctx : context) : string =
+  (print_context__aux "" (FStarC_List.rev (ctx).error_context))
+
+let print_error (err : (context * (FStar_Pprint.document) list)) : string =
+  (match err with
+    | (ctx, msg) -> (let tmp = (print_context ctx) in
+      let tmp1 = (FStarC_Errors_Msg.rendermsg msg) in
+      (FStarC_Format.fmt2 "%s%s" tmp tmp1))
+  )
+
+let fStarC_Class_Show_show__tuple2_context_list_document (tmp : (context * (FStar_Pprint.document) list)) : string =
+  (print_error tmp)
+
+let open_binders (g : env) (bs : (FStarC_Syntax_Syntax.binder) list) : (env * (FStarC_Syntax_Syntax.binder) list * (FStarC_Syntax_Syntax.subst_elt) list) =
+  (let tmp = (FStarC_List.fold_left (fun tmp b -> (match tmp with
+      | (g1, bs1, subst) -> (let tmp1 = (b).FStarC_Syntax_Syntax.binder_bv in
+        let tmp2 = (FStarC_Syntax_Subst.subst subst ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
+        let bv = { FStarC_Syntax_Syntax.ppname = (tmp1).FStarC_Syntax_Syntax.ppname;
+            index = (tmp1).FStarC_Syntax_Syntax.index;
+            sort = tmp2 } in
+        let tmp3 = (FStarC_Syntax_Subst.subst_bqual subst (b).FStarC_Syntax_Syntax.binder_qual) in
+        let tmp4 = (FStarC_List.map (FStarC_Syntax_Subst.subst subst) (b).FStarC_Syntax_Syntax.binder_attrs) in
+        let b1 = { FStarC_Syntax_Syntax.binder_bv = bv;
+            binder_qual = tmp3;
+            binder_positivity = (b).FStarC_Syntax_Syntax.binder_positivity;
+            binder_attrs = tmp4 } in
+        let tmp5 = (fresh_binder g1 b1) in
+        (match tmp5 with
+          | (g2, b') -> (let tmp6 = (FStarC_Syntax_Subst.shift_subst (Prims.parse_int "1") subst) in
+            let tmp7 = ((FStarC_Syntax_Syntax.DB ((Prims.parse_int "0"), (b').FStarC_Syntax_Syntax.binder_bv)) :: tmp6) in
+            (g2, (b' :: bs1), tmp7))
+        ))
+    )) (g, [], []) bs) in
+  (match tmp with
+    | (g1, bs_rev, subst) -> (g1, (FStarC_List.rev bs_rev), subst)
+  ))
+
+let open_term_binders (g : env) (bs : (FStarC_Syntax_Syntax.binder) list) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (env * (FStarC_Syntax_Syntax.binder) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
+  (let tmp = (open_binders g bs) in
+  (match tmp with
+    | (g1, bs1, subst) -> (let tmp1 = (FStarC_Syntax_Subst.subst subst t) in
+      (g1, bs1, tmp1))
+  ))
+
+let as_comp (g : env) (et : (tot_or_ghost * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax =
+  (match et with
+    | (E_Total, t) -> (FStarC_Syntax_Syntax.mk_Total t)
+    | (E_Ghost, t) -> (let tmp = (non_informative g t) in
+      (if tmp then (FStarC_Syntax_Syntax.mk_Total t) else (FStarC_Syntax_Syntax.mk_GTotal t)))
+  )
+
+let open_comp_binders (g : env) (bs : (FStarC_Syntax_Syntax.binder) list) (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : (env * (FStarC_Syntax_Syntax.binder) list * (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) =
+  (let tmp = (open_binders g bs) in
+  (match tmp with
+    | (g1, bs1, s) -> (let c1 = (FStarC_Syntax_Subst.subst_comp s c) in
+      (g1, bs1, c1))
+  ))
+
+let rec fold (f : ('a -> ('b -> (context -> (cache_t -> (('a * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result))))) (x : 'a) (l : ('b) list) : (context -> (cache_t -> (('a * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (match l with
+    | [] -> (fun tmp cache -> (Success ((x, None), cache)))
+    | (hd :: tl) -> (let tmp = (f x hd) in
+      (fun ctx0 cache0 -> (let tmp1 = (tmp ctx0 cache0) in
+      (match tmp1 with
+        | (Success ((x1, g1), cache1)) -> (let tmp2 = (fold f x1 tl) in
+          let tmp3 = (tmp2 ctx0 cache1) in
+          (match tmp3 with
+            | (Success ((y, g2), cache2)) -> (let tmp4 = (and_pre g1 g2) in
+              let tmp5 = (y, tmp4) in
+              let tmp6 = (tmp5, cache2) in
+              (Success ((match tmp6 with (custard_tup, _) -> custard_tup), (match tmp6 with (_, custard_tup) -> custard_tup))))
+            | err -> err
+          ))
+        | (Error (err)) -> (Error (err))
+      ))))
+  )
+
+let arrow_formals_comp (g : env) (c : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (env * (FStarC_Syntax_Syntax.binder) list * (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) =
+  (let tmp = (FStarC_Syntax_Util.arrow_formals_comp_ln c) in
+  (match tmp with
+    | (bs, c1) -> (let tmp1 = (open_binders g bs) in
+      (match tmp1 with
+        | (g1, bs1, subst) -> (let tmp2 = (FStarC_Syntax_Subst.subst_comp subst c1) in
+          (g1, bs1, tmp2))
+      ))
+  ))
+
+let debug (g : 'tmp) (f : (unit -> unit)) : unit =
+  (let tmp = (!(dbg)) in
+  (if tmp then (f ()) else ()))
+
+let rec is_arrow__aux (g : env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (context -> (cache_t -> (((FStarC_Syntax_Syntax.binder * tot_or_ghost * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (let tmp = (FStarC_Syntax_Subst.compress t) in
+  let tmp1 = (tmp).FStarC_Syntax_Syntax.n in
+  (match tmp1 with
+    | (FStarC_Syntax_Syntax.Tm_arrow ({ FStarC_Syntax_Syntax.b = x; comp = c; _ })) -> (let tmp2 = (FStarC_Syntax_Util.is_tot_or_gtot_comp c) in
+      (if tmp2 then (let tmp3 = (open_comp g x c) in
+      (match tmp3 with
+        | (g1, x1, c1) -> (let tmp4 = (FStarC_Syntax_Util.is_total_comp c1) in
+          let eff = (if tmp4 then E_Total else E_Ghost) in
+          (fun tmp5 cache -> (Success (((x1, eff, (FStarC_Syntax_Util.comp_result c1)), None), cache))))
+      )) else (let tmp3 = (c).FStarC_Syntax_Syntax.n in
+      let e_tag = (if ((FStarC_Syntax_Util.is_pure_effect (tmp3).FStarC_Syntax_Syntax.effect_name) || (FStarC_Ident.lid_equals (tmp3).FStarC_Syntax_Syntax.effect_name FStarC_Parser_Const.effect_Lemma_lid)) then (Some (E_Total)) else (if (FStarC_Syntax_Util.is_ghost_effect (tmp3).FStarC_Syntax_Syntax.effect_name) then (Some (E_Ghost)) else None)) in
+      (match e_tag with
+        | None -> (let tmp4 = (FStarC_Ident.fStarC_Class_PP_pp__lident (FStarC_Syntax_Util.comp_effect_name c)) in
+          let tmp5 = (FStarC_Errors_Msg.fquotes tmp4) in
+          let tmp6 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Expected total or gtot arrow, got") tmp5) in
+          let tmp7 = (tmp6 :: []) in
+          (fail tmp7))
+        | (Some (e_tag1)) -> (let tmp4 = (arrow_formals_comp g t) in
+          (match tmp4 with
+            | (g1, (x1 :: []), c1) -> ((debug g1 (fun tmp5 -> (let tmp6 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' t) in
+              let tmp7 = (FStarC_Syntax_Print.fStarC_Class_Show_show__binder x1) in
+              let tmp8 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' ((x1).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
+              let tmp9 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_comp' c1) in
+              (FStarC_Format.print4 "is_arrow (%s): arg (%s:%s) and comp %s\n" tmp6 tmp7 tmp8 tmp9))));
+              (fun tmp5 cache -> (Success (((x1, e_tag1, (FStarC_Syntax_Util.comp_result c1)), None), cache))))
+          ))
+      ))))
+    | (FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = x; phi = tmp2; _ })) -> (is_arrow g (x).FStarC_Syntax_Syntax.sort)
+    | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t1; meta = tmp2; _ })) -> ((is_arrow__aux g) t1)
+    | (FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = t1; asc = u__1; asc1 = u__2; asc2 = u__3; eff_opt = tmp2; _ })) -> ((is_arrow__aux g) t1)
+    | tmp2 -> (let tmp3 = (FStarC_Syntax_Syntax.fStarC_Class_Tagged_tag_of__syntax_term' t) in
+      let tmp4 = (FStar_Pprint.doc_of_string tmp3) in
+      let tmp5 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' t) in
+      let tmp6 = (FStarC_Errors_Msg.fquotes tmp5) in
+      let tmp7 = (FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon tmp6) in
+      let tmp8 = (FStar_Pprint.op_Hat_Hat tmp4 tmp7) in
+      let tmp9 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Expected an arrow, got a") tmp8) in
+      let tmp10 = (tmp9 :: []) in
+      (fail tmp10))
+  ))
+
+and is_arrow (g : env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (context -> (cache_t -> (((FStarC_Syntax_Syntax.binder * tot_or_ghost * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (fun ctx cache -> (let ctx1 = { no_guard = (ctx).no_guard;
+      unfolding_ok = (ctx).unfolding_ok;
+      error_context = (("is_arrow", None) :: (ctx).error_context) } in
+  let tmp = ((is_arrow__aux g) t) in
+  let tmp1 = (fun ctx2 cache1 -> (let tmp1 = (tmp ctx2 cache1) in
+    (match tmp1 with
+      | (Error (tmp2)) -> (let tmp3 = (FStarC_TypeChecker_Normalize.unfold_whnf (g).tcenv t) in
+        let tmp4 = ((is_arrow__aux g) tmp3) in
+        (tmp4 ctx2 cache1))
+      | res -> res
+    ))) in
+  (tmp1 ctx1 cache)))
+
+let check_arg_qual (a : (FStarC_Syntax_Syntax.arg_qualifier) option) (b : (FStarC_Syntax_Syntax.binder_qualifier) option) : (context -> (cache_t -> ((unit * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (match b with
+    | (Some ((FStarC_Syntax_Syntax.Implicit (tmp)))) -> (match a with
+        | (Some ({ FStarC_Syntax_Syntax.aqual_implicit = true; aqual_attributes = tmp1; _ })) -> (fun tmp2 cache -> (Success (((), None), cache)))
+        | tmp1 -> (fail_str "missing arg qualifier implicit")
+      )
+    | (Some ((FStarC_Syntax_Syntax.Meta (tmp)))) -> (match a with
+        | (Some ({ FStarC_Syntax_Syntax.aqual_implicit = true; aqual_attributes = tmp1; _ })) -> (fun tmp2 cache -> (Success (((), None), cache)))
+        | tmp1 -> (fail_str "missing arg qualifier implicit")
+      )
+    | tmp -> (match a with
+        | (Some ({ FStarC_Syntax_Syntax.aqual_implicit = true; aqual_attributes = tmp1; _ })) -> (fail_str "extra arg qualifier implicit")
+        | tmp1 -> (fun tmp2 cache -> (Success (((), None), cache)))
+      )
+  )
+
+let join_eff (e0 : tot_or_ghost) (e1 : tot_or_ghost) : tot_or_ghost =
+  (match (e0, e1) with
+    | (E_Ghost, tmp) -> E_Ghost
+    | (tmp, E_Ghost) -> E_Ghost
+    | tmp -> E_Total
+  )
+
+let wild_bv (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (r : FStarC_Range_Type.range) : FStarC_Syntax_Syntax.bv =
+  { FStarC_Syntax_Syntax.ppname = (FStarC_Ident.mk_ident (FStarC_Ident.reserved_prefix, r));
+    index = (Prims.parse_int "0");
+    sort = t }
+
+let new_binder (g : env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (r : FStarC_Range_Type.range) : (env * FStarC_Syntax_Syntax.binder) =
+  (let bv = (wild_bv t r) in
+  let b = (FStarC_Syntax_Syntax.mk_binder bv) in
+  (fresh_binder g b))
+
+let push_hypothesis (g : env) (h : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : env =
+  (let tmp = (new_binder g h (h).FStarC_Syntax_Syntax.pos) in
+  (match tmp with
+    | (g1, h1) -> g1
+  ))
+
+let weaken_subtyping (p : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (phi2 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (FStarC_Syntax_Util.mk_imp p phi2)
+
+let weaken (initial_env_ : env) (p : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (f : (context -> (cache_t -> (('a * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result))) (ctx : context) (cache : cache_t) : (('a * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result =
+  (let tmp = (f ctx cache) in
+  (match tmp with
+    | (Success (r, cache')) -> (let tmp1 = (match (FStar_Pervasives.Inl (r)) with
+          | (FStar_Pervasives.Inr (err)) -> (fail_propagate err)
+          | (FStar_Pervasives.Inl ((res, None))) -> (fun tmp1 cache1 -> (Success ((res, None), cache1)))
+          | (FStar_Pervasives.Inl ((res, (Some (form))))) -> (let form1 = (weaken_subtyping p form) in
+            (fun ctx0 cache0 -> (let tmp1 = (guard initial_env_ form1 ctx0 cache0) in
+            (match tmp1 with
+              | (Success ((x, g1), cache1)) -> (let tmp2 = (fun tmp2 cache2 -> (Success ((res, None), cache2))) in
+                let tmp3 = (tmp2 ctx0 cache1) in
+                (match tmp3 with
+                  | (Success ((y, g2), cache2)) -> (let tmp4 = (and_pre g1 g2) in
+                    let tmp5 = (y, tmp4) in
+                    let tmp6 = (tmp5, cache2) in
+                    (Success ((match tmp6 with (custard_tup, _) -> custard_tup), (match tmp6 with (_, custard_tup) -> custard_tup))))
+                  | err -> err
+                ))
+              | (Error (err)) -> (Error (err))
+            ))))
+        ) in
+      (tmp1 ctx cache'))
+    | (Error (err)) -> (let tmp1 = (fail_propagate err) in
+      (tmp1 ctx cache))
+  ))
+
+let weaken_with_guard_formula (env : env) (p : FStarC_TypeChecker_Common.guard_formula) (g : (context -> (cache_t -> (('u_'a * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result))) : (context -> (cache_t -> (('u_'a * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (match p with
+    | FStarC_TypeChecker_Common.Trivial -> g
+    | (FStarC_TypeChecker_Common.NonTrivial (p1)) -> (weaken env p1 g)
+  )
+
+let join_eff_l (es : (tot_or_ghost) list) : tot_or_ghost =
+  (FStar_List_Tot_Base.fold_right join_eff es E_Total)
+
+let comp_as_tot_or_ghost_and_type (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : ((tot_or_ghost * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) option =
+  (let tmp = (FStarC_Syntax_Util.is_total_comp c) in
+  (if tmp then (Some ((E_Total, (FStarC_Syntax_Util.comp_result c)))) else (let tmp1 = (FStarC_Syntax_Util.is_tot_or_gtot_comp c) in
+  (if tmp1 then (Some ((E_Ghost, (FStarC_Syntax_Util.comp_result c)))) else None))))
+
+let check_no_escape (bs : (FStarC_Syntax_Syntax.binder) list) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (context -> (cache_t -> ((unit * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (let xs = (FStarC_Syntax_Free.names t) in
+  let tmp = (FStarC_Util.for_all (fun b -> (let tmp = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_mem__bv_list_bv (b).FStarC_Syntax_Syntax.binder_bv xs) in
+    (not tmp))) bs) in
+  (if tmp then (fun tmp1 cache -> (Success (((), None), cache))) else (fail_str "Name escapes its scope")))
+
+let close_with_definition (x : FStarC_Syntax_Syntax.binder) (u : FStarC_Syntax_Syntax.universe) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (g : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (let tmp = (FStarC_Syntax_Syntax.bv_to_name (x).FStarC_Syntax_Syntax.binder_bv) in
+  let tmp1 = (FStarC_Syntax_Util.mk_eq2 u ((x).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort tmp t) in
+  let g' = (FStarC_Syntax_Util.mk_imp tmp1 g) in
+  (FStarC_Syntax_Util.mk_forall u (x).FStarC_Syntax_Syntax.binder_bv g'))
+
+let with_definition (initial_env_ : env) (x : FStarC_Syntax_Syntax.binder) (u : FStarC_Syntax_Syntax.universe) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (f : (context -> (cache_t -> (('a * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result))) (ctx : context) (cache : cache_t) : (('a * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result =
+  (let tmp = (f ctx cache) in
+  (match tmp with
+    | (Success (r, cache')) -> (let tmp1 = (match (FStar_Pervasives.Inl (r)) with
+          | (FStar_Pervasives.Inr (err)) -> (fail_propagate err)
+          | (FStar_Pervasives.Inl ((res, None))) -> (fun tmp1 cache1 -> (Success ((res, None), cache1)))
+          | (FStar_Pervasives.Inl ((res, (Some (form))))) -> (let form1 = (close_with_definition x u t form) in
+            (fun ctx0 cache0 -> (let tmp1 = (guard initial_env_ form1 ctx0 cache0) in
+            (match tmp1 with
+              | (Success ((x1, g1), cache1)) -> (let tmp2 = (fun tmp2 cache2 -> (Success ((res, None), cache2))) in
+                let tmp3 = (tmp2 ctx0 cache1) in
+                (match tmp3 with
+                  | (Success ((y, g2), cache2)) -> (let tmp4 = (and_pre g1 g2) in
+                    let tmp5 = (y, tmp4) in
+                    let tmp6 = (tmp5, cache2) in
+                    (Success ((match tmp6 with (custard_tup, _) -> custard_tup), (match tmp6 with (_, custard_tup) -> custard_tup))))
+                  | err -> err
+                ))
+              | (Error (err)) -> (Error (err))
+            ))))
+        ) in
+      (tmp1 ctx cache'))
+    | (Error (err)) -> (let tmp1 = (fail_propagate err) in
+      (tmp1 ctx cache))
+  ))
+
+let boolean_negation_simp (b : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
+  (let tmp = (FStarC_Syntax_Hash.equal_term b FStarC_Syntax_Util.exp_false_bool) in
+  (if tmp then None else (let tmp1 = (FStarC_Syntax_Util.mk_boolean_negation b) in
+  (Some (tmp1)))))
+
+let open_branch (g : env) (br : ((FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) : (env * ((FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) =
+  (match br with
+    | (p, wopt, e) -> (let tmp = (open_pat g p) in
+      (match tmp with
+        | (g1, p1, s) -> (let tmp1 = (FStarC_Option.map (FStarC_Syntax_Subst.subst s) wopt) in
+          let tmp2 = (FStarC_Syntax_Subst.subst s e) in
+          let tmp3 = (p1, tmp1, tmp2) in
+          (g1, tmp3))
+      ))
+  )
+
+let rec fold2 (f : ('a -> ('b -> ('c -> (context -> (cache_t -> (('a * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)))))) (x : 'a) (l1 : ('b) list) (l2 : ('c) list) : (context -> (cache_t -> (('a * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (match (l1, l2) with
+    | ([], []) -> (fun tmp cache -> (Success ((x, None), cache)))
+    | ((hd1 :: tl1), (hd2 :: tl2)) -> (let tmp = (f x hd1 hd2) in
+      (fun ctx0 cache0 -> (let tmp1 = (tmp ctx0 cache0) in
+      (match tmp1 with
+        | (Success ((x1, g1), cache1)) -> (let tmp2 = (fold2 f x1 tl1 tl2) in
+          let tmp3 = (tmp2 ctx0 cache1) in
+          (match tmp3 with
+            | (Success ((y, g2), cache2)) -> (let tmp4 = (and_pre g1 g2) in
+              let tmp5 = (y, tmp4) in
+              let tmp6 = (tmp5, cache2) in
+              (Success ((match tmp6 with (custard_tup, _) -> custard_tup), (match tmp6 with (_, custard_tup) -> custard_tup))))
+            | err -> err
+          ))
+        | (Error (err)) -> (Error (err))
+      ))))
+  )
+
+let push_binders (eta : env) (eta1 : (FStarC_Syntax_Syntax.binder) list) : env =
+  (FStarC_List.fold_left push_binder eta eta1)
+
+let rec mapi__aux (f : (Prims.int -> ('a -> (context -> (cache_t -> (('b * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result))))) (i : Prims.int) (l : ('a) list) : (context -> (cache_t -> ((('b) list * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (match l with
+    | [] -> (fun tmp cache -> (Success (([], None), cache)))
+    | (hd :: tl) -> (let tmp = (f i hd) in
+      (fun ctx0 cache0 -> (let tmp1 = (tmp ctx0 cache0) in
+      (match tmp1 with
+        | (Success ((x, g1), cache1)) -> (let tmp2 = ((mapi__aux f) (Prims.op_Plus i (Prims.parse_int "1")) tl) in
+          let tmp3 = (fun ctx01 cache01 -> (let tmp3 = (tmp2 ctx01 cache01) in
+            (match tmp3 with
+              | (Success ((x1, g11), cache11)) -> (let tmp4 = (fun tmp4 cache -> (Success (((x :: x1), None), cache))) in
+                let tmp5 = (tmp4 ctx01 cache11) in
+                (match tmp5 with
+                  | (Success ((y, g2), cache2)) -> (let tmp6 = (and_pre g11 g2) in
+                    let tmp7 = (y, tmp6) in
+                    let tmp8 = (tmp7, cache2) in
+                    (Success ((match tmp8 with (custard_tup, _) -> custard_tup), (match tmp8 with (_, custard_tup) -> custard_tup))))
+                  | err -> err
+                ))
+              | (Error (err)) -> (Error (err))
+            ))) in
+          let tmp4 = (tmp3 ctx0 cache1) in
+          (match tmp4 with
+            | (Success ((y, g2), cache2)) -> (let tmp5 = (and_pre g1 g2) in
+              let tmp6 = (y, tmp5) in
+              let tmp7 = (tmp6, cache2) in
+              (Success ((match tmp7 with (custard_tup, _) -> custard_tup), (match tmp7 with (_, custard_tup) -> custard_tup))))
+            | err -> err
+          ))
+        | (Error (err)) -> (Error (err))
+      ))))
+  )
+
+let mapi (f : (Prims.int -> ('a -> (context -> (cache_t -> (('b * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result))))) (eta : ('a) list) : (context -> (cache_t -> ((('b) list * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  ((mapi__aux f) (Prims.parse_int "0") eta)
+
+let combine_path_and_branch_condition (path_condition : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (branch_condition : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option) (branch_equality : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
+  (let bc = (match branch_condition with
+      | None -> branch_equality
+      | (Some (bc)) -> (let tmp = (FStarC_Syntax_Util.b2t bc) in
+        let tmp1 = (tmp :: (branch_equality :: [])) in
+        (FStarC_Syntax_Util.mk_conj_l tmp1))
+    ) in
+  let tmp = (FStarC_Syntax_Util.b2t path_condition) in
+  let this_path_condition = (FStarC_Syntax_Util.mk_conj tmp bc) in
+  let next_path_condition = (match branch_condition with
+      | None -> FStarC_Syntax_Util.exp_false_bool
+      | (Some (bc1)) -> (let tmp1 = (FStarC_Syntax_Hash.equal_term path_condition FStarC_Syntax_Util.exp_true_bool) in
+        (if tmp1 then (FStarC_Syntax_Util.mk_boolean_negation bc1) else (let tmp2 = (FStarC_Syntax_Util.mk_boolean_negation bc1) in
+        (FStarC_Syntax_Util.mk_and path_condition tmp2))))
+    ) in
+  (this_path_condition, next_path_condition))
+
+let insert (g : env) (e : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (res : ((tot_or_ghost * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) (ctx0 : context) (cache0 : cache_t) : ((unit * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result =
+  (let tmp = (get_cache ctx0 cache0) in
+  (match tmp with
+    | (Success ((x, g1), cache1)) -> (let tmp1 = (match res with
+          | ((eff, typ), tmp1) -> (let entry = { he_term = e;
+                he_gamma = ((g).tcenv).FStarC_TypeChecker_Env.gamma;
+                he_eff = eff;
+                he_typ = typ } in
+            (debug g (fun tmp2 -> (let tmp3 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' e) in
+            let tmp4 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst res))) in
+            let tmp5 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_binding ((g).tcenv).FStarC_TypeChecker_Env.gamma) in
+            (FStarC_Format.print3 "Inserting into cache\n %s : %s\nwith\n\tenv %s\n" tmp3 tmp4 tmp5))));
+            let tmp2 = (FStarC_Syntax_Hash.term_map_add e entry (x).term_map) in
+            let new_cache = { term_map = tmp2; guard_map = (x).guard_map } in
+            (put_cache new_cache))
+        ) in
+      let tmp2 = (tmp1 ctx0 cache1) in
+      (match tmp2 with
+        | (Success ((y, g2), cache2)) -> (let tmp3 = (and_pre g1 g2) in
+          let tmp4 = (y, tmp3) in
+          let tmp5 = (tmp4, cache2) in
+          (Success ((match tmp5 with (custard_tup, _) -> custard_tup), (match tmp5 with (_, custard_tup) -> custard_tup))))
+        | err -> err
+      ))
+    | (Error (err)) -> (Error (err))
+  ))
+
+let raw_lookup (e : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (ctx0 : context) (cache0 : cache_t) : (((hash_entry) option * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result =
+  (let tmp = (get_cache ctx0 cache0) in
+  (match tmp with
+    | (Success ((x, g1), cache1)) -> (let tmp1 = (FStarC_Syntax_Hash.term_map_lookup e (x).term_map) in
+      let tmp2 = (match tmp1 with
+          | (Some (he)) -> (fun tmp2 cache -> (Success (((Some (he)), None), cache)))
+          | None -> (let tmp2 = (FStarC_Syntax_TermHashTable.lookup e (table).table) in
+            (fun tmp3 cache -> (Success ((tmp2, None), cache))))
+        ) in
+      let tmp3 = (tmp2 ctx0 cache1) in
+      (match tmp3 with
+        | (Success ((y, g2), cache2)) -> (let tmp4 = (and_pre g1 g2) in
+          let tmp5 = (y, tmp4) in
+          let tmp6 = (tmp5, cache2) in
+          (Success ((match tmp6 with (custard_tup, _) -> custard_tup), (match tmp6 with (_, custard_tup) -> custard_tup))))
+        | err -> err
+      ))
+    | (Error (err)) -> (Error (err))
+  ))
+
+let record_cache_miss (tmp : unit) : unit =
+  (let cs = (!(cache_stats)) in
+  ((cache_stats) := { hits = (cs).hits;
+    misses = (Prims.op_Plus (cs).misses (Prims.parse_int "1")) }))
+
+let dbg_DisableCoreCache : (bool ref) =
+  (FStarC_Debug.get_toggle "DisableCoreCache")
+
+let record_cache_hit (tmp : unit) : unit =
+  (let cs = (!(cache_stats)) in
+  ((cache_stats) := { hits = (Prims.op_Plus (cs).hits (Prims.parse_int "1"));
+    misses = (cs).misses }))
+
+let replace_all_use_ranges (r : FStarC_Range_Type.range) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (let ur = (FStarC_Range_Type.use_range r) in
+  (FStarC_Syntax_Visit.visit_term false (fun t1 -> { FStarC_Syntax_Syntax.n = (t1).FStarC_Syntax_Syntax.n;
+    pos = (FStarC_Range_Type.set_use_range (t1).FStarC_Syntax_Syntax.pos ur);
+    hash_code = (t1).FStarC_Syntax_Syntax.hash_code }) t))
+
+let lookup (g : env) (e : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (ctx0 : context) (cache0 : cache_t) : (((tot_or_ghost * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result =
+  (let tmp = (raw_lookup e ctx0 cache0) in
+  (match tmp with
+    | (Success ((x, g1), cache1)) -> (let tmp1 = (match x with
+          | None -> ((record_cache_miss ());
+            (fail_str "not in cache"))
+          | (Some (he)) -> (let tmp1 = (context_included (he).he_gamma ((g).tcenv).FStarC_TypeChecker_Env.gamma) in
+            let tmp2 = (if tmp1 then (let tmp2 = (!(dbg_DisableCoreCache)) in
+              (not tmp2)) else false) in
+            (if tmp2 then ((record_cache_hit ());
+            let tmp3 = (!(dbg)) in
+            (if tmp3 then (let tmp4 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' e) in
+            let tmp5 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' (he).he_typ) in
+            let tmp6 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_binding ((g).tcenv).FStarC_TypeChecker_Env.gamma) in
+            let tmp7 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_binding (he).he_gamma) in
+            (FStarC_Format.print4 "cache hit\n %s : %s\nmatching\n\tenv0 %s\n\tenv1 %s\n" tmp4 tmp5 tmp6 tmp7)) else ());
+            let tmp4 = (FStarC_Syntax_Syntax.fStarC_Class_HasRange_pos__syntax_term' e) in
+            let ty = (replace_all_use_ranges tmp4 (he).he_typ) in
+            (fun tmp5 cache -> (Success ((((he).he_eff, ty), None), cache)))) else (fail_str "not in cache")))
+        ) in
+      let tmp2 = (tmp1 ctx0 cache1) in
+      (match tmp2 with
+        | (Success ((y, g2), cache2)) -> (let tmp3 = (and_pre g1 g2) in
+          let tmp4 = (y, tmp3) in
+          let tmp5 = (tmp4, cache2) in
+          (Success ((match tmp5 with (custard_tup, _) -> custard_tup), (match tmp5 with (_, custard_tup) -> custard_tup))))
+        | err -> err
+      ))
+    | (Error (err)) -> (Error (err))
+  ))
+
+let rec universe_of (g : env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (context -> (cache_t -> ((FStarC_Syntax_Syntax.universe * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (let tmp = (check "universe of" g t) in
+  (fun ctx0 cache0 -> (let tmp1 = (tmp ctx0 cache0) in
+  (match tmp1 with
+    | (Success ((x, g1), cache1)) -> (let tmp2 = (match x with
+          | (tmp2, t1) -> (is_type g t1)
+        ) in
+      let tmp3 = (tmp2 ctx0 cache1) in
+      (match tmp3 with
+        | (Success ((y, g2), cache2)) -> (let tmp4 = (and_pre g1 g2) in
+          let tmp5 = (y, tmp4) in
+          let tmp6 = (tmp5, cache2) in
+          (Success ((match tmp6 with (custard_tup, _) -> custard_tup), (match tmp6 with (_, custard_tup) -> custard_tup))))
+        | err -> err
+      ))
+    | (Error (err)) -> (Error (err))
+  ))))
+
+and universe_of_well_typed_term (g : env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (context -> (cache_t -> ((FStarC_Syntax_Syntax.universe * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (try (let u = (FStarC_TypeChecker_TcTerm.universe_of (g).tcenv t) in
+  (fun tmp cache -> (Success ((u, None), cache)))) with
+    | u__cexn -> (universe_of g t)
+  )
+
+and check_relation_args (g : env) (rel : relation) (a0 : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) (a1 : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : (context -> (cache_t -> ((unit * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (if ((=) (FStarC_List.length a0) (FStarC_List.length a1)) then (iter2 a0 a1 (fun tmp tmp1 tmp2 -> (match (tmp, tmp1) with
+    | ((t0, q0), (t1, q1)) -> (let tmp3 = (check_aqual q0 q1) in
+      (fun ctx0 cache0 -> (let tmp4 = (tmp3 ctx0 cache0) in
+      (match tmp4 with
+        | (Success ((x, g1), cache1)) -> (let tmp5 = (check_relation g rel t0 t1) in
+          let tmp6 = (tmp5 ctx0 cache1) in
+          (match tmp6 with
+            | (Success ((y, g2), cache2)) -> (let tmp7 = (and_pre g1 g2) in
+              let tmp8 = (y, tmp7) in
+              let tmp9 = (tmp8, cache2) in
+              (Success ((match tmp9 with (custard_tup, _) -> custard_tup), (match tmp9 with (_, custard_tup) -> custard_tup))))
+            | err -> err
+          ))
+        | (Error (err)) -> (Error (err))
+      ))))
+  )) ()) else (fail_str "Unequal number of arguments"))
+
+and check_relation_comp (g : env) (rel : relation) (c0 : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) (c1 : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : (context -> (cache_t -> ((unit * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (let destruct_comp = (fun c -> (let tmp = (FStarC_Syntax_Util.is_total_comp c) in
+    (if tmp then (Some ((E_Total, (FStarC_Syntax_Util.comp_result c)))) else (let tmp1 = (FStarC_Syntax_Util.is_tot_or_gtot_comp c) in
+    (if tmp1 then (Some ((E_Ghost, (FStarC_Syntax_Util.comp_result c)))) else None))))) in
+  let tmp = (destruct_comp c0) in
+  let tmp1 = (destruct_comp c1) in
+  let tmp2 = (tmp, tmp1) in
+  (match tmp2 with
+    | (None, tmp3) -> (let tmp4 = (FStarC_TypeChecker_TermEqAndSimplify.eq_comp (g).tcenv c0 c1) in
+      let tmp5 = ((=) tmp4 FStarC_TypeChecker_TermEqAndSimplify.Equal) in
+      (if tmp5 then (fun tmp6 cache -> (Success (((), None), cache))) else (let ct_eq = (fun res0 args0 res1 args1 -> (let tmp6 = (check_relation g EQUALITY res0 res1) in
+        (fun ctx0 cache0 -> (let tmp7 = (tmp6 ctx0 cache0) in
+        (match tmp7 with
+          | (Success ((x, g1), cache1)) -> (let tmp8 = (check_relation_args g EQUALITY args0 args1) in
+            let tmp9 = (tmp8 ctx0 cache1) in
+            (match tmp9 with
+              | (Success ((y, g2), cache2)) -> (let tmp10 = (and_pre g1 g2) in
+                let tmp11 = (y, tmp10) in
+                let tmp12 = (tmp11, cache2) in
+                (Success ((match tmp12 with (custard_tup, _) -> custard_tup), (match tmp12 with (_, custard_tup) -> custard_tup))))
+              | err -> err
+            ))
+          | (Error (err)) -> (Error (err))
+        ))))) in
+      let tmp6 = (FStarC_Syntax_Util.comp_eff_name_and_res c0) in
+      (match tmp6 with
+        | (eff0, res0) -> (let tmp7 = (FStarC_Syntax_Util.comp_eff_name_and_res c1) in
+          (match tmp7 with
+            | (eff1, res1) -> (if (FStarC_Ident.lid_equals eff0 eff1) then (ct_eq res0 [] res1 []) else (let ct0 = (FStarC_Syntax_Util.comp_to_comp_typ c0) in
+              let ct1 = (FStarC_Syntax_Util.comp_to_comp_typ c1) in
+              (if (FStarC_Ident.lid_equals (ct0).FStarC_Syntax_Syntax.effect_name (ct1).FStarC_Syntax_Syntax.effect_name) then (ct_eq (ct0).FStarC_Syntax_Syntax.result_typ [] (ct1).FStarC_Syntax_Syntax.result_typ []) else (let tmp8 = (FStarC_Ident.fStarC_Class_PP_pp__lident (ct0).FStarC_Syntax_Syntax.effect_name) in
+              let tmp9 = (FStarC_Errors_Msg.fquotes tmp8) in
+              let tmp10 = (FStarC_Ident.fStarC_Class_PP_pp__lident (ct1).FStarC_Syntax_Syntax.effect_name) in
+              let tmp11 = (FStarC_Errors_Msg.fquotes tmp10) in
+              let tmp12 = (FStar_Pprint.op_Hat_Slash_Hat (FStar_Pprint.doc_of_string "and") tmp11) in
+              let tmp13 = (FStar_Pprint.op_Hat_Slash_Hat tmp9 tmp12) in
+              let tmp14 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Subcomp failed: Unequal computation types") tmp13) in
+              let tmp15 = (tmp14 :: []) in
+              (fail tmp15)))))
+          ))
+      ))))
+    | (tmp3, None) -> (let tmp4 = (FStarC_TypeChecker_TermEqAndSimplify.eq_comp (g).tcenv c0 c1) in
+      let tmp5 = ((=) tmp4 FStarC_TypeChecker_TermEqAndSimplify.Equal) in
+      (if tmp5 then (fun tmp6 cache -> (Success (((), None), cache))) else (let ct_eq = (fun res0 args0 res1 args1 -> (let tmp6 = (check_relation g EQUALITY res0 res1) in
+        (fun ctx0 cache0 -> (let tmp7 = (tmp6 ctx0 cache0) in
+        (match tmp7 with
+          | (Success ((x, g1), cache1)) -> (let tmp8 = (check_relation_args g EQUALITY args0 args1) in
+            let tmp9 = (tmp8 ctx0 cache1) in
+            (match tmp9 with
+              | (Success ((y, g2), cache2)) -> (let tmp10 = (and_pre g1 g2) in
+                let tmp11 = (y, tmp10) in
+                let tmp12 = (tmp11, cache2) in
+                (Success ((match tmp12 with (custard_tup, _) -> custard_tup), (match tmp12 with (_, custard_tup) -> custard_tup))))
+              | err -> err
+            ))
+          | (Error (err)) -> (Error (err))
+        ))))) in
+      let tmp6 = (FStarC_Syntax_Util.comp_eff_name_and_res c0) in
+      (match tmp6 with
+        | (eff0, res0) -> (let tmp7 = (FStarC_Syntax_Util.comp_eff_name_and_res c1) in
+          (match tmp7 with
+            | (eff1, res1) -> (if (FStarC_Ident.lid_equals eff0 eff1) then (ct_eq res0 [] res1 []) else (let ct0 = (FStarC_Syntax_Util.comp_to_comp_typ c0) in
+              let ct1 = (FStarC_Syntax_Util.comp_to_comp_typ c1) in
+              (if (FStarC_Ident.lid_equals (ct0).FStarC_Syntax_Syntax.effect_name (ct1).FStarC_Syntax_Syntax.effect_name) then (ct_eq (ct0).FStarC_Syntax_Syntax.result_typ [] (ct1).FStarC_Syntax_Syntax.result_typ []) else (let tmp8 = (FStarC_Ident.fStarC_Class_PP_pp__lident (ct0).FStarC_Syntax_Syntax.effect_name) in
+              let tmp9 = (FStarC_Errors_Msg.fquotes tmp8) in
+              let tmp10 = (FStarC_Ident.fStarC_Class_PP_pp__lident (ct1).FStarC_Syntax_Syntax.effect_name) in
+              let tmp11 = (FStarC_Errors_Msg.fquotes tmp10) in
+              let tmp12 = (FStar_Pprint.op_Hat_Slash_Hat (FStar_Pprint.doc_of_string "and") tmp11) in
+              let tmp13 = (FStar_Pprint.op_Hat_Slash_Hat tmp9 tmp12) in
+              let tmp14 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Subcomp failed: Unequal computation types") tmp13) in
+              let tmp15 = (tmp14 :: []) in
+              (fail tmp15)))))
+          ))
+      ))))
+    | ((Some ((E_Total, t0))), (Some ((tmp3, t1)))) -> (check_relation g rel t0 t1)
+    | ((Some ((E_Ghost, t0))), (Some ((E_Ghost, t1)))) -> (check_relation g rel t0 t1)
+    | ((Some ((E_Ghost, t0))), (Some ((E_Total, t1)))) -> (let tmp3 = (non_informative g t1) in
+      (if tmp3 then (check_relation g rel t0 t1) else (fail_str "Expected a Total computation, but got Ghost")))
+  ))
+
+and check_binders__aux (g : env) (xs : (FStarC_Syntax_Syntax.binder) list) : (context -> (cache_t -> (((FStarC_Syntax_Syntax.universe) list * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (match xs with
+    | [] -> (fun tmp cache -> (Success (([], None), cache)))
+    | (x :: xs1) -> (let tmp = (check "binder sort" g ((x).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
+      (fun ctx0 cache0 -> (let tmp1 = (tmp ctx0 cache0) in
+      (match tmp1 with
+        | (Success ((x1, g1), cache1)) -> (let tmp2 = (match x1 with
+              | (tmp2, t) -> (fun ctx01 cache01 -> (let tmp3 = (is_type g t ctx01 cache01) in
+                (match tmp3 with
+                  | (Success ((x2, g11), cache11)) -> (let g' = (push_binder g x) in
+                    let tmp4 = (check_binders__aux g' xs1) in
+                    let tmp5 = (fun ctx02 cache02 -> (let tmp5 = (tmp4 ctx02 cache02) in
+                      (match tmp5 with
+                        | (Success ((x3, g12), cache12)) -> (let tmp6 = (fun tmp6 cache -> (Success (((x2 :: x3), None), cache))) in
+                          let tmp7 = (tmp6 ctx02 cache12) in
+                          (match tmp7 with
+                            | (Success ((y, g2), cache2)) -> (let tmp8 = (and_pre g12 g2) in
+                              let tmp9 = (y, tmp8) in
+                              let tmp10 = (tmp9, cache2) in
+                              (Success ((match tmp10 with (custard_tup, _) -> custard_tup), (match tmp10 with (_, custard_tup) -> custard_tup))))
+                            | err -> err
+                          ))
+                        | (Error (err)) -> (Error (err))
+                      ))) in
+                    let tmp6 = (with_binders g (x :: []) (x2 :: []) tmp5) in
+                    let tmp7 = (tmp6 ctx01 cache11) in
+                    (match tmp7 with
+                      | (Success ((y, g2), cache2)) -> (let tmp8 = (and_pre g11 g2) in
+                        let tmp9 = (y, tmp8) in
+                        let tmp10 = (tmp9, cache2) in
+                        (Success ((match tmp10 with (custard_tup, _) -> custard_tup), (match tmp10 with (_, custard_tup) -> custard_tup))))
+                      | err -> err
+                    ))
+                  | (Error (err)) -> (Error (err))
+                )))
+            ) in
+          let tmp3 = (tmp2 ctx0 cache1) in
+          (match tmp3 with
+            | (Success ((y, g2), cache2)) -> (let tmp4 = (and_pre g1 g2) in
+              let tmp5 = (y, tmp4) in
+              let tmp6 = (tmp5, cache2) in
+              (Success ((match tmp6 with (custard_tup, _) -> custard_tup), (match tmp6 with (_, custard_tup) -> custard_tup))))
+            | err -> err
+          ))
+        | (Error (err)) -> (Error (err))
+      ))))
+  )
+
+and check_binders (g_initial : env) (xs : (FStarC_Syntax_Syntax.binder) list) : (context -> (cache_t -> (((FStarC_Syntax_Syntax.universe) list * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (check_binders__aux g_initial xs)
+
+and check_relation' (g : env) (rel : relation) (t0 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (t1 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (context -> (cache_t -> ((unit * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (let err = (fun lbl -> (match rel with
+      | EQUALITY -> (let tmp = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' t0) in
+        let tmp1 = (FStarC_Errors_Msg.fquotes tmp) in
+        let tmp2 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' t1) in
+        let tmp3 = (FStarC_Errors_Msg.fquotes tmp2) in
+        let tmp4 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "<>") tmp3) in
+        let tmp5 = (FStar_Pprint.op_Hat_Slash_Hat tmp1 tmp4) in
+        let tmp6 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "not equal terms:") tmp5) in
+        let tmp7 = (FStar_Pprint.op_Hat_Slash_Hat (FStar_Pprint.parens (FStarC_Errors_Msg.text lbl)) tmp6) in
+        let tmp8 = (tmp7 :: []) in
+        (fail tmp8))
+      | tmp -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' t0) in
+        let tmp2 = (FStarC_Errors_Msg.fquotes tmp1) in
+        let tmp3 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' t1) in
+        let tmp4 = (FStarC_Errors_Msg.fquotes tmp3) in
+        let tmp5 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "is not a subtype of") tmp4) in
+        let tmp6 = (FStar_Pprint.op_Hat_Slash_Hat tmp2 tmp5) in
+        let tmp7 = (FStar_Pprint.op_Hat_Slash_Hat (FStar_Pprint.parens (FStarC_Errors_Msg.text lbl)) tmp6) in
+        let tmp8 = (tmp7 :: []) in
+        (fail tmp8))
+    )) in
+  (fun ctx0 cache0 -> (let tmp = (guard_not_allowed ctx0 cache0) in
+  (match tmp with
+    | (Success ((x, g1), cache1)) -> (let guard_ok = (not x) in
+      let head_matches = (fun t01 t11 -> (let head0 = (FStarC_Syntax_Util.leftmost_head t01) in
+        let head1 = (FStarC_Syntax_Util.leftmost_head t11) in
+        let tmp1 = (FStarC_Syntax_Util.un_uinst head0) in
+        let tmp2 = (tmp1).FStarC_Syntax_Syntax.n in
+        let tmp3 = (FStarC_Syntax_Util.un_uinst head1) in
+        let tmp4 = (tmp3).FStarC_Syntax_Syntax.n in
+        let tmp5 = (tmp2, tmp4) in
+        (match tmp5 with
+          | ((FStarC_Syntax_Syntax.Tm_fvar (fv0)), (FStarC_Syntax_Syntax.Tm_fvar (fv1))) -> (FStarC_Syntax_Syntax.fv_eq fv0 fv1)
+          | ((FStarC_Syntax_Syntax.Tm_name (x0)), (FStarC_Syntax_Syntax.Tm_name (x1))) -> (FStarC_Syntax_Syntax.bv_eq x0 x1)
+          | ((FStarC_Syntax_Syntax.Tm_constant (c0)), (FStarC_Syntax_Syntax.Tm_constant (c1))) -> (equal_term head0 head1)
+          | ((FStarC_Syntax_Syntax.Tm_type (tmp6)), (FStarC_Syntax_Syntax.Tm_type (tmp7))) -> true
+          | ((FStarC_Syntax_Syntax.Tm_arrow (tmp6)), (FStarC_Syntax_Syntax.Tm_arrow (tmp7))) -> true
+          | ((FStarC_Syntax_Syntax.Tm_match (tmp6)), (FStarC_Syntax_Syntax.Tm_match (tmp7))) -> true
+          | tmp6 -> false
+        ))) in
+      let which_side_to_unfold = (fun t01 t11 -> (maybe_relate_after_unfolding (g).tcenv t01 t11)) in
+      let maybe_unfold_side = (fun side t01 t11 -> (FStarC_Profiling.profile (fun tmp1 -> (match side with
+          | Neither -> None
+          | Both -> (let tmp2 = (FStarC_TypeChecker_Normalize.maybe_unfold_head (g).tcenv t01) in
+            let tmp3 = (FStarC_TypeChecker_Normalize.maybe_unfold_head (g).tcenv t11) in
+            let tmp4 = (tmp2, tmp3) in
+            (match tmp4 with
+              | ((Some (t02)), (Some (t12))) -> (Some ((t02, t12)))
+              | ((Some (t02)), None) -> (Some ((t02, t11)))
+              | (None, (Some (t12))) -> (Some ((t01, t12)))
+              | tmp5 -> None
+            ))
+          | Left -> (let tmp2 = (FStarC_TypeChecker_Normalize.maybe_unfold_head (g).tcenv t01) in
+            (match tmp2 with
+              | (Some (t02)) -> (Some ((t02, t11)))
+              | tmp3 -> None
+            ))
+          | Right -> (let tmp2 = (FStarC_TypeChecker_Normalize.maybe_unfold_head (g).tcenv t11) in
+            (match tmp2 with
+              | (Some (t12)) -> (Some ((t01, t12)))
+              | tmp3 -> None
+            ))
+        )) None "FStarC.TypeChecker.Core.maybe_unfold_side")) in
+      let maybe_unfold = (fun t01 t11 ctx01 cache01 -> (let tmp1 = (unfolding_ok ctx01 cache01) in
+        (match tmp1 with
+          | (Success ((x1, g11), cache11)) -> (let tmp2 = (if x1 then (let tmp2 = (which_side_to_unfold t01 t11) in
+              let tmp3 = (maybe_unfold_side tmp2 t01 t11) in
+              (fun tmp4 cache -> (Success ((tmp3, None), cache)))) else (fun tmp2 cache -> (Success ((None, None), cache)))) in
+            let tmp3 = (tmp2 ctx01 cache11) in
+            (match tmp3 with
+              | (Success ((y, g2), cache2)) -> (let tmp4 = (and_pre g11 g2) in
+                let tmp5 = (y, tmp4) in
+                let tmp6 = (tmp5, cache2) in
+                (Success ((match tmp6 with (custard_tup, _) -> custard_tup), (match tmp6 with (_, custard_tup) -> custard_tup))))
+              | err1 -> err1
+            ))
+          | (Error (err1)) -> (Error (err1))
+        ))) in
+      let emit_guard = (fun t01 t11 ctx01 cache01 -> (let ctx = { no_guard = (ctx01).no_guard;
+            unfolding_ok = (ctx01).unfolding_ok;
+            error_context = (("checking lhs while emitting guard", None) :: (ctx01).error_context) } in
+        let tmp1 = (do_check g t01) in
+        let tmp2 = (tmp1 ctx cache01) in
+        (match tmp2 with
+          | (Success ((x1, g11), cache11)) -> (let tmp3 = (match x1 with
+                | (tmp3, t_typ) -> (let tmp4 = (universe_of_well_typed_term g t_typ) in
+                  (fun ctx02 cache02 -> (let tmp5 = (tmp4 ctx02 cache02) in
+                  (match tmp5 with
+                    | (Success ((x2, g12), cache12)) -> (let tmp6 = (FStarC_Syntax_Util.mk_eq2 x2 t_typ t01 t11) in
+                      let tmp7 = (guard g tmp6) in
+                      let tmp8 = (tmp7 ctx02 cache12) in
+                      (match tmp8 with
+                        | (Success ((y, g2), cache2)) -> (let tmp9 = (and_pre g12 g2) in
+                          let tmp10 = (y, tmp9) in
+                          let tmp11 = (tmp10, cache2) in
+                          (Success ((match tmp11 with (custard_tup, _) -> custard_tup), (match tmp11 with (_, custard_tup) -> custard_tup))))
+                        | err1 -> err1
+                      ))
+                    | (Error (err1)) -> (Error (err1))
+                  ))))
+              ) in
+            let tmp4 = (tmp3 ctx01 cache11) in
+            (match tmp4 with
+              | (Success ((y, g2), cache2)) -> (let tmp5 = (and_pre g11 g2) in
+                let tmp6 = (y, tmp5) in
+                let tmp7 = (tmp6, cache2) in
+                (Success ((match tmp7 with (custard_tup, _) -> custard_tup), (match tmp7 with (_, custard_tup) -> custard_tup))))
+              | err1 -> err1
+            ))
+          | (Error (err1)) -> (Error (err1))
+        ))) in
+      let fallback = (fun t01 t11 -> (if guard_ok then (let tmp1 = (equatable g t01) in
+        let tmp2 = (if tmp1 then true else (equatable g t11)) in
+        (if tmp2 then (emit_guard t01 t11) else (err "not equatable"))) else (err "guards not allowed"))) in
+      let maybe_unfold_side_and_retry = (fun side t01 t11 ctx01 cache01 -> (let tmp1 = (unfolding_ok ctx01 cache01) in
+        (match tmp1 with
+          | (Success ((x1, g11), cache11)) -> (let tmp2 = (if x1 then (let tmp2 = (maybe_unfold_side side t01 t11) in
+              (match tmp2 with
+                | None -> (fallback t01 t11)
+                | (Some ((t02, t12))) -> (check_relation g rel t02 t12)
+              )) else (fallback t01 t11)) in
+            let tmp3 = (tmp2 ctx01 cache11) in
+            (match tmp3 with
+              | (Success ((y, g2), cache2)) -> (let tmp4 = (and_pre g11 g2) in
+                let tmp5 = (y, tmp4) in
+                let tmp6 = (tmp5, cache2) in
+                (Success ((match tmp6 with (custard_tup, _) -> custard_tup), (match tmp6 with (_, custard_tup) -> custard_tup))))
+              | err1 -> err1
+            ))
+          | (Error (err1)) -> (Error (err1))
+        ))) in
+      let maybe_unfold_and_retry = (fun t01 t11 -> (let tmp1 = (which_side_to_unfold t01 t11) in
+        (maybe_unfold_side_and_retry tmp1 t01 t11))) in
+      let beta_iota_reduce = (fun t -> (let t2 = (FStarC_Syntax_Subst.compress t) in
+        let t3 = (FStarC_TypeChecker_Normalize.normalize (FStarC_TypeChecker_Env.HNF :: (FStarC_TypeChecker_Env.Weak :: (FStarC_TypeChecker_Env.Beta :: (FStarC_TypeChecker_Env.Iota :: (FStarC_TypeChecker_Env.Primops :: []))))) (g).tcenv t2) in
+        (match (t3).FStarC_Syntax_Syntax.n with
+          | (FStarC_Syntax_Syntax.Tm_refine (tmp1)) -> (FStarC_Syntax_Util.flatten_refinement t3)
+          | tmp1 -> t3
+        ))) in
+      let beta_iota_reduce1 = (fun t -> (FStarC_Profiling.profile (fun tmp1 -> (beta_iota_reduce t)) None "FStarC.TypeChecker.Core.beta_iota_reduce")) in
+      let tmp1 = (beta_iota_reduce1 t0) in
+      let tmp2 = (FStarC_Syntax_Subst.compress tmp1) in
+      let t01 = (FStarC_Syntax_Util.unlazy_emb tmp2) in
+      let tmp3 = (beta_iota_reduce1 t1) in
+      let tmp4 = (FStarC_Syntax_Subst.compress tmp3) in
+      let t11 = (FStarC_Syntax_Util.unlazy_emb tmp4) in
+      let check_relation_ = (fun g2 rel1 t02 t12 ctx cache -> (let ctx1 = { no_guard = (ctx).no_guard;
+            unfolding_ok = (ctx).unfolding_ok;
+            error_context = (("check_relation", (Some ((CtxRel (t02, rel1, t12))))) :: (ctx).error_context) } in
+        let tmp5 = (check_relation g2 rel1 t02 t12) in
+        (tmp5 ctx1 cache))) in
+      let tmp5 = (equal_term t01 t11) in
+      let tmp6 = (if tmp5 then (fun tmp6 cache -> (Success (((), None), cache))) else (match ((t01).FStarC_Syntax_Syntax.n, (t11).FStarC_Syntax_Syntax.n) with
+          | ((FStarC_Syntax_Syntax.Tm_type (u0)), (FStarC_Syntax_Syntax.Tm_type (u1))) -> (let tmp6 = (FStarC_TypeChecker_Rel.teq_nosmt_force (g).tcenv t01 t11) in
+            (if tmp6 then (fun tmp7 cache -> (Success (((), None), cache))) else (err "teq_nosmt_force over Types failed")))
+          | ((FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t02; meta = (FStarC_Syntax_Syntax.Meta_pattern (u__1, u__2)); _ })), tmp6) -> (check_relation_ g rel t02 t11)
+          | ((FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t02; meta = (FStarC_Syntax_Syntax.Meta_named (tmp6)); _ })), tmp7) -> (check_relation_ g rel t02 t11)
+          | ((FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t02; meta = (FStarC_Syntax_Syntax.Meta_labeled (u__1, u__2, u__3)); _ })), tmp6) -> (check_relation_ g rel t02 t11)
+          | ((FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t02; meta = (FStarC_Syntax_Syntax.Meta_desugared (tmp6)); _ })), tmp7) -> (check_relation_ g rel t02 t11)
+          | ((FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = t02; asc = u__1; asc1 = u__2; asc2 = u__3; eff_opt = tmp6; _ })), tmp7) -> (check_relation_ g rel t02 t11)
+          | (tmp6, (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t12; meta = (FStarC_Syntax_Syntax.Meta_pattern (u__1, u__2)); _ }))) -> (check_relation_ g rel t01 t12)
+          | (tmp6, (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t12; meta = (FStarC_Syntax_Syntax.Meta_named (tmp7)); _ }))) -> (check_relation_ g rel t01 t12)
+          | (tmp6, (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t12; meta = (FStarC_Syntax_Syntax.Meta_labeled (u__1, u__2, u__3)); _ }))) -> (check_relation_ g rel t01 t12)
+          | (tmp6, (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t12; meta = (FStarC_Syntax_Syntax.Meta_desugared (tmp7)); _ }))) -> (check_relation_ g rel t01 t12)
+          | (tmp6, (FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = t12; asc = u__1; asc1 = u__2; asc2 = u__3; eff_opt = tmp7; _ }))) -> (check_relation_ g rel t01 t12)
+          | ((FStarC_Syntax_Syntax.Tm_uinst (f0, us0)), (FStarC_Syntax_Syntax.Tm_uinst (f1, us1))) -> (let tmp6 = (equal_term f0 f1) in
+            (if tmp6 then (let tmp7 = (FStarC_TypeChecker_Rel.teq_nosmt_force (g).tcenv t01 t11) in
+            (if tmp7 then (fun tmp8 cache -> (Success (((), None), cache))) else (err "teq_nosmt_force over Tm_uinst failed"))) else (maybe_unfold_and_retry t01 t11)))
+          | ((FStarC_Syntax_Syntax.Tm_fvar (tmp6)), (FStarC_Syntax_Syntax.Tm_fvar (tmp7))) -> (maybe_unfold_and_retry t01 t11)
+          | (tmp6, tmp7) when (let tmp8 = (if ((match rel with
+              | (SUBTYPING (u__0)) -> true
+              | tmp8 -> false
+            ) && guard_ok) then (let tmp8 = (FStarC_Syntax_Util.is_squash t01) in
+            (match tmp8 with
+              | (Some (v)) -> true
+              | tmp9 -> false
+            )) else false) in
+          (if tmp8 then (let tmp9 = (FStarC_Syntax_Util.is_squash t11) in
+          (match tmp9 with
+            | (Some (v)) -> true
+            | tmp10 -> false
+          )) else false)) -> (let tmp8 = (FStarC_Syntax_Util.is_squash t01) in
+            let p0 = (match tmp8 with
+                | (Some (v)) -> v
+              ) in
+            let tmp9 = (FStarC_Syntax_Util.is_squash t11) in
+            let p1 = (match tmp9 with
+                | (Some (v)) -> v
+              ) in
+            let tmp10 = (equal_term p0 p1) in
+            (if tmp10 then (fun tmp11 cache -> (Success (((), None), cache))) else (let tmp11 = (FStarC_Syntax_Util.mk_imp p0 p1) in
+            (guard g tmp11))))
+          | ((FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = x0; phi = f0; _ })), (FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = x1; phi = f1; _ }))) -> (let tmp6 = (head_matches (x0).FStarC_Syntax_Syntax.sort (x1).FStarC_Syntax_Syntax.sort) in
+            (if tmp6 then (fun ctx01 cache01 -> (let tmp7 = (check_relation_ g EQUALITY (x0).FStarC_Syntax_Syntax.sort (x1).FStarC_Syntax_Syntax.sort ctx01 cache01) in
+            (match tmp7 with
+              | (Success ((x2, g11), cache11)) -> (let tmp8 = (universe_of_well_typed_term g (x0).FStarC_Syntax_Syntax.sort) in
+                let tmp9 = (fun ctx02 cache02 -> (let tmp9 = (tmp8 ctx02 cache02) in
+                  (match tmp9 with
+                    | (Success ((x3, g12), cache12)) -> (let tmp10 = (open_term g (FStarC_Syntax_Syntax.mk_binder x0) f0) in
+                      let tmp11 = (match tmp10 with
+                          | (g2, b, f01) -> (let f11 = (FStarC_Syntax_Subst.subst ((FStarC_Syntax_Syntax.DB ((Prims.parse_int "0"), (b).FStarC_Syntax_Syntax.binder_bv)) :: []) f1) in
+                            (fun ctx03 cache03 -> (let tmp11 = (guard_not_allowed ctx03 cache03) in
+                            (match tmp11 with
+                              | (Success ((x4, g13), cache13)) -> (let tmp12 = (if x4 then (with_binders g (b :: []) (x3 :: []) (check_relation_ g2 EQUALITY f01 f11)) else (match rel with
+                                    | EQUALITY -> (with_binders g (b :: []) (x3 :: []) (fun ctx cache -> (let tmp12 = (check_relation_ g2 EQUALITY f01 f11 ctx cache) in
+                                      (match tmp12 with
+                                        | (Error (tmp13)) -> (let tmp14 = (FStarC_Syntax_Util.mk_iff f01 f11) in
+                                          let tmp15 = (guard g2 tmp14) in
+                                          (tmp15 ctx cache))
+                                        | res -> res
+                                      ))))
+                                    | (SUBTYPING ((Some (tm)))) -> (let tmp12 = (FStarC_Syntax_Util.mk_imp f01 f11) in
+                                      let tmp13 = (FStarC_Syntax_Subst.subst ((FStarC_Syntax_Syntax.NT ((b).FStarC_Syntax_Syntax.binder_bv, tm)) :: []) tmp12) in
+                                      (guard g tmp13))
+                                    | (SUBTYPING (None)) -> (let tmp12 = (FStarC_Syntax_Util.mk_imp f01 f11) in
+                                      let tmp13 = (FStarC_Syntax_Util.mk_forall x3 (b).FStarC_Syntax_Syntax.binder_bv tmp12) in
+                                      (guard g tmp13))
+                                  )) in
+                                let tmp13 = (tmp12 ctx03 cache13) in
+                                (match tmp13 with
+                                  | (Success ((y, g21), cache2)) -> (let tmp14 = (and_pre g13 g21) in
+                                    let tmp15 = (y, tmp14) in
+                                    let tmp16 = (tmp15, cache2) in
+                                    (Success ((match tmp16 with (custard_tup, _) -> custard_tup), (match tmp16 with (_, custard_tup) -> custard_tup))))
+                                  | err1 -> err1
+                                ))
+                              | (Error (err1)) -> (Error (err1))
+                            ))))
+                        ) in
+                      let tmp12 = (tmp11 ctx02 cache12) in
+                      (match tmp12 with
+                        | (Success ((y, g2), cache2)) -> (let tmp13 = (and_pre g12 g2) in
+                          let tmp14 = (y, tmp13) in
+                          let tmp15 = (tmp14, cache2) in
+                          (Success ((match tmp15 with (custard_tup, _) -> custard_tup), (match tmp15 with (_, custard_tup) -> custard_tup))))
+                        | err1 -> err1
+                      ))
+                    | (Error (err1)) -> (Error (err1))
+                  ))) in
+                let tmp10 = (tmp9 ctx01 cache11) in
+                (match tmp10 with
+                  | (Success ((y, g2), cache2)) -> (let tmp11 = (and_pre g11 g2) in
+                    let tmp12 = (y, tmp11) in
+                    let tmp13 = (tmp12, cache2) in
+                    (Success ((match tmp13 with (custard_tup, _) -> custard_tup), (match tmp13 with (_, custard_tup) -> custard_tup))))
+                  | err1 -> err1
+                ))
+              | (Error (err1)) -> (Error (err1))
+            ))) else (fun ctx01 cache01 -> (let tmp7 = (maybe_unfold (x0).FStarC_Syntax_Syntax.sort (x1).FStarC_Syntax_Syntax.sort ctx01 cache01) in
+            (match tmp7 with
+              | (Success ((x2, g11), cache11)) -> (let tmp8 = (match x2 with
+                    | None -> (let tmp8 = (!(dbg)) in
+                      (if tmp8 then (let tmp9 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' (x0).FStarC_Syntax_Syntax.sort) in
+                      let tmp10 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' (x1).FStarC_Syntax_Syntax.sort) in
+                      (FStarC_Format.print2 "Cannot match ref heads %s and %s\n" tmp9 tmp10)) else ());
+                      (fallback t01 t11))
+                    | (Some ((t02, t12))) -> (let lhs = (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_refine (({ FStarC_Syntax_Syntax.b = { FStarC_Syntax_Syntax.ppname = (x0).FStarC_Syntax_Syntax.ppname;
+                            index = (x0).FStarC_Syntax_Syntax.index;
+                            sort = t02 };
+                          phi = f0 } : FStarC_Syntax_Syntax.term'__Tm_refine__payload))) (t02).FStarC_Syntax_Syntax.pos) in
+                      let rhs = (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_refine (({ FStarC_Syntax_Syntax.b = { FStarC_Syntax_Syntax.ppname = (x1).FStarC_Syntax_Syntax.ppname;
+                            index = (x1).FStarC_Syntax_Syntax.index;
+                            sort = t12 };
+                          phi = f1 } : FStarC_Syntax_Syntax.term'__Tm_refine__payload))) (t12).FStarC_Syntax_Syntax.pos) in
+                      let tmp8 = (FStarC_Syntax_Util.flatten_refinement lhs) in
+                      let tmp9 = (FStarC_Syntax_Util.flatten_refinement rhs) in
+                      (check_relation_ g rel tmp8 tmp9))
+                  ) in
+                let tmp9 = (tmp8 ctx01 cache11) in
+                (match tmp9 with
+                  | (Success ((y, g2), cache2)) -> (let tmp10 = (and_pre g11 g2) in
+                    let tmp11 = (y, tmp10) in
+                    let tmp12 = (tmp11, cache2) in
+                    (Success ((match tmp12 with (custard_tup, _) -> custard_tup), (match tmp12 with (_, custard_tup) -> custard_tup))))
+                  | err1 -> err1
+                ))
+              | (Error (err1)) -> (Error (err1))
+            )))))
+          | ((FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = x0; phi = f0; _ })), tmp6) -> (let tmp7 = (head_matches (x0).FStarC_Syntax_Syntax.sort t11) in
+            (if tmp7 then (let tmp8 = (if ((=) rel EQUALITY) then (let tmp8 = (universe_of_well_typed_term g (x0).FStarC_Syntax_Syntax.sort) in
+              (fun ctx01 cache01 -> (let tmp9 = (tmp8 ctx01 cache01) in
+              (match tmp9 with
+                | (Success ((x1, g11), cache11)) -> (let tmp10 = (open_term g (FStarC_Syntax_Syntax.mk_binder x0) f0) in
+                  let tmp11 = (match tmp10 with
+                      | (g2, b0, f01) -> (fun ctx02 cache02 -> (let tmp11 = (guard_not_allowed ctx02 cache02) in
+                        (match tmp11 with
+                          | (Success ((x2, g12), cache12)) -> (let tmp12 = (if x2 then (with_binders g (b0 :: []) (x1 :: []) (check_relation_ g2 EQUALITY FStarC_Syntax_Util.t_true f01)) else (with_binders g (b0 :: []) (x1 :: []) (fun ctx cache -> (let tmp12 = (check_relation_ g2 EQUALITY FStarC_Syntax_Util.t_true f01 ctx cache) in
+                              (match tmp12 with
+                                | (Error (tmp13)) -> (let tmp14 = (guard g2 f01) in
+                                  (tmp14 ctx cache))
+                                | res -> res
+                              ))))) in
+                            let tmp13 = (tmp12 ctx02 cache12) in
+                            (match tmp13 with
+                              | (Success ((y, g21), cache2)) -> (let tmp14 = (and_pre g12 g21) in
+                                let tmp15 = (y, tmp14) in
+                                let tmp16 = (tmp15, cache2) in
+                                (Success ((match tmp16 with (custard_tup, _) -> custard_tup), (match tmp16 with (_, custard_tup) -> custard_tup))))
+                              | err1 -> err1
+                            ))
+                          | (Error (err1)) -> (Error (err1))
+                        )))
+                    ) in
+                  let tmp12 = (tmp11 ctx01 cache11) in
+                  (match tmp12 with
+                    | (Success ((y, g2), cache2)) -> (let tmp13 = (and_pre g11 g2) in
+                      let tmp14 = (y, tmp13) in
+                      let tmp15 = (tmp14, cache2) in
+                      (Success ((match tmp15 with (custard_tup, _) -> custard_tup), (match tmp15 with (_, custard_tup) -> custard_tup))))
+                    | err1 -> err1
+                  ))
+                | (Error (err1)) -> (Error (err1))
+              )))) else (fun tmp8 cache -> (Success (((), None), cache)))) in
+            (fun ctx01 cache01 -> (let tmp9 = (tmp8 ctx01 cache01) in
+            (match tmp9 with
+              | (Success ((x1, g11), cache11)) -> (let tmp10 = (check_relation_ g rel (x0).FStarC_Syntax_Syntax.sort t11) in
+                let tmp11 = (tmp10 ctx01 cache11) in
+                (match tmp11 with
+                  | (Success ((y, g2), cache2)) -> (let tmp12 = (and_pre g11 g2) in
+                    let tmp13 = (y, tmp12) in
+                    let tmp14 = (tmp13, cache2) in
+                    (Success ((match tmp14 with (custard_tup, _) -> custard_tup), (match tmp14 with (_, custard_tup) -> custard_tup))))
+                  | err1 -> err1
+                ))
+              | (Error (err1)) -> (Error (err1))
+            )))) else (fun ctx01 cache01 -> (let tmp8 = (maybe_unfold (x0).FStarC_Syntax_Syntax.sort t11 ctx01 cache01) in
+            (match tmp8 with
+              | (Success ((x1, g11), cache11)) -> (let tmp9 = (match x1 with
+                    | None -> (fallback t01 t11)
+                    | (Some ((t02, t12))) -> (let lhs = (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_refine (({ FStarC_Syntax_Syntax.b = { FStarC_Syntax_Syntax.ppname = (x0).FStarC_Syntax_Syntax.ppname;
+                            index = (x0).FStarC_Syntax_Syntax.index;
+                            sort = t02 };
+                          phi = f0 } : FStarC_Syntax_Syntax.term'__Tm_refine__payload))) (t02).FStarC_Syntax_Syntax.pos) in
+                      let tmp9 = (FStarC_Syntax_Util.flatten_refinement lhs) in
+                      (check_relation_ g rel tmp9 t12))
+                  ) in
+                let tmp10 = (tmp9 ctx01 cache11) in
+                (match tmp10 with
+                  | (Success ((y, g2), cache2)) -> (let tmp11 = (and_pre g11 g2) in
+                    let tmp12 = (y, tmp11) in
+                    let tmp13 = (tmp12, cache2) in
+                    (Success ((match tmp13 with (custard_tup, _) -> custard_tup), (match tmp13 with (_, custard_tup) -> custard_tup))))
+                  | err1 -> err1
+                ))
+              | (Error (err1)) -> (Error (err1))
+            )))))
+          | (tmp6, (FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = x1; phi = f1; _ }))) -> (let tmp7 = (head_matches t01 (x1).FStarC_Syntax_Syntax.sort) in
+            (if tmp7 then (let tmp8 = (universe_of_well_typed_term g (x1).FStarC_Syntax_Syntax.sort) in
+            (fun ctx01 cache01 -> (let tmp9 = (tmp8 ctx01 cache01) in
+            (match tmp9 with
+              | (Success ((x2, g11), cache11)) -> (let tmp10 = (fun ctx02 cache02 -> (let tmp10 = (check_relation_ g EQUALITY t01 (x1).FStarC_Syntax_Syntax.sort ctx02 cache02) in
+                  (match tmp10 with
+                    | (Success ((x3, g12), cache12)) -> (let tmp11 = (open_term g (FStarC_Syntax_Syntax.mk_binder x1) f1) in
+                      let tmp12 = (match tmp11 with
+                          | (g2, b1, f11) -> (fun ctx03 cache03 -> (let tmp12 = (guard_not_allowed ctx03 cache03) in
+                            (match tmp12 with
+                              | (Success ((x4, g13), cache13)) -> (let tmp13 = (if x4 then (with_binders g (b1 :: []) (x2 :: []) (check_relation_ g2 EQUALITY FStarC_Syntax_Util.t_true f11)) else (match rel with
+                                    | EQUALITY -> (with_binders g (b1 :: []) (x2 :: []) (fun ctx cache -> (let tmp13 = (check_relation_ g2 EQUALITY FStarC_Syntax_Util.t_true f11 ctx cache) in
+                                      (match tmp13 with
+                                        | (Error (tmp14)) -> (let tmp15 = (guard g2 f11) in
+                                          (tmp15 ctx cache))
+                                        | res -> res
+                                      ))))
+                                    | (SUBTYPING ((Some (tm)))) -> (let tmp13 = (FStarC_Syntax_Subst.subst ((FStarC_Syntax_Syntax.NT ((b1).FStarC_Syntax_Syntax.binder_bv, tm)) :: []) f11) in
+                                      (guard g tmp13))
+                                    | (SUBTYPING (None)) -> (let tmp13 = (FStarC_Syntax_Util.mk_forall x2 (b1).FStarC_Syntax_Syntax.binder_bv f11) in
+                                      (guard g tmp13))
+                                  )) in
+                                let tmp14 = (tmp13 ctx03 cache13) in
+                                (match tmp14 with
+                                  | (Success ((y, g21), cache2)) -> (let tmp15 = (and_pre g13 g21) in
+                                    let tmp16 = (y, tmp15) in
+                                    let tmp17 = (tmp16, cache2) in
+                                    (Success ((match tmp17 with (custard_tup, _) -> custard_tup), (match tmp17 with (_, custard_tup) -> custard_tup))))
+                                  | err1 -> err1
+                                ))
+                              | (Error (err1)) -> (Error (err1))
+                            )))
+                        ) in
+                      let tmp13 = (tmp12 ctx02 cache12) in
+                      (match tmp13 with
+                        | (Success ((y, g2), cache2)) -> (let tmp14 = (and_pre g12 g2) in
+                          let tmp15 = (y, tmp14) in
+                          let tmp16 = (tmp15, cache2) in
+                          (Success ((match tmp16 with (custard_tup, _) -> custard_tup), (match tmp16 with (_, custard_tup) -> custard_tup))))
+                        | err1 -> err1
+                      ))
+                    | (Error (err1)) -> (Error (err1))
+                  ))) in
+                let tmp11 = (tmp10 ctx01 cache11) in
+                (match tmp11 with
+                  | (Success ((y, g2), cache2)) -> (let tmp12 = (and_pre g11 g2) in
+                    let tmp13 = (y, tmp12) in
+                    let tmp14 = (tmp13, cache2) in
+                    (Success ((match tmp14 with (custard_tup, _) -> custard_tup), (match tmp14 with (_, custard_tup) -> custard_tup))))
+                  | err1 -> err1
+                ))
+              | (Error (err1)) -> (Error (err1))
+            )))) else (fun ctx01 cache01 -> (let tmp8 = (maybe_unfold t01 (x1).FStarC_Syntax_Syntax.sort ctx01 cache01) in
+            (match tmp8 with
+              | (Success ((x2, g11), cache11)) -> (let tmp9 = (match x2 with
+                    | None -> (fallback t01 t11)
+                    | (Some ((t02, t12))) -> (let rhs = (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_refine (({ FStarC_Syntax_Syntax.b = { FStarC_Syntax_Syntax.ppname = (x1).FStarC_Syntax_Syntax.ppname;
+                            index = (x1).FStarC_Syntax_Syntax.index;
+                            sort = t12 };
+                          phi = f1 } : FStarC_Syntax_Syntax.term'__Tm_refine__payload))) (t12).FStarC_Syntax_Syntax.pos) in
+                      let tmp9 = (FStarC_Syntax_Util.flatten_refinement rhs) in
+                      (check_relation_ g rel t02 tmp9))
+                  ) in
+                let tmp10 = (tmp9 ctx01 cache11) in
+                (match tmp10 with
+                  | (Success ((y, g2), cache2)) -> (let tmp11 = (and_pre g11 g2) in
+                    let tmp12 = (y, tmp11) in
+                    let tmp13 = (tmp12, cache2) in
+                    (Success ((match tmp13 with (custard_tup, _) -> custard_tup), (match tmp13 with (_, custard_tup) -> custard_tup))))
+                  | err1 -> err1
+                ))
+              | (Error (err1)) -> (Error (err1))
+            )))))
+          | ((FStarC_Syntax_Syntax.Tm_uinst (u__1, u__2)), tmp6) -> (let head_matches1 = (head_matches t01 t11) in
+            let tmp7 = (FStarC_Syntax_Util.leftmost_head_and_args t01) in
+            (match tmp7 with
+              | (head0, args0) -> (let tmp8 = (FStarC_Syntax_Util.leftmost_head_and_args t11) in
+                (match tmp8 with
+                  | (head1, args1) -> (if (not (head_matches1 && ((=) (FStarC_List.length args0) (FStarC_List.length args1)))) then (maybe_unfold_and_retry t01 t11) else (let compare_head_and_args = (fun tmp9 ctx cache -> (let tmp10 = (check_relation_ g EQUALITY head0 head1 ctx cache) in
+                      let tmp11 = (match tmp10 with
+                          | (Success ((x1, g11), cache11)) -> (let tmp11 = (check_relation_args g EQUALITY args0 args1) in
+                            let tmp12 = (tmp11 ctx cache11) in
+                            (match tmp12 with
+                              | (Success ((y, g2), cache2)) -> (let tmp13 = (and_pre g11 g2) in
+                                let tmp14 = (y, tmp13) in
+                                let tmp15 = (tmp14, cache2) in
+                                (Success ((match tmp15 with (custard_tup, _) -> custard_tup), (match tmp15 with (_, custard_tup) -> custard_tup))))
+                              | err1 -> err1
+                            ))
+                          | (Error (err1)) -> (Error (err1))
+                        ) in
+                      (match tmp11 with
+                        | (Error (tmp12)) -> (let tmp13 = (maybe_unfold_side_and_retry Both t01 t11) in
+                          (tmp13 ctx cache))
+                        | res -> res
+                      ))) in
+                    let tmp9 = (if (guard_ok && ((=) rel EQUALITY)) then (let tmp9 = (equatable g t01) in
+                      (if tmp9 then true else (equatable g t11))) else false) in
+                    (if tmp9 then (fun ctx cache -> (let tmp10 = (no_guard (compare_head_and_args ()) ctx cache) in
+                    (match tmp10 with
+                      | (Error (tmp11)) -> (let tmp12 = (emit_guard t01 t11) in
+                        (tmp12 ctx cache))
+                      | res -> res
+                    ))) else (compare_head_and_args ()))))
+                ))
+            ))
+          | ((FStarC_Syntax_Syntax.Tm_fvar (tmp6)), tmp7) -> (let head_matches1 = (head_matches t01 t11) in
+            let tmp8 = (FStarC_Syntax_Util.leftmost_head_and_args t01) in
+            (match tmp8 with
+              | (head0, args0) -> (let tmp9 = (FStarC_Syntax_Util.leftmost_head_and_args t11) in
+                (match tmp9 with
+                  | (head1, args1) -> (if (not (head_matches1 && ((=) (FStarC_List.length args0) (FStarC_List.length args1)))) then (maybe_unfold_and_retry t01 t11) else (let compare_head_and_args = (fun tmp10 ctx cache -> (let tmp11 = (check_relation_ g EQUALITY head0 head1 ctx cache) in
+                      let tmp12 = (match tmp11 with
+                          | (Success ((x1, g11), cache11)) -> (let tmp12 = (check_relation_args g EQUALITY args0 args1) in
+                            let tmp13 = (tmp12 ctx cache11) in
+                            (match tmp13 with
+                              | (Success ((y, g2), cache2)) -> (let tmp14 = (and_pre g11 g2) in
+                                let tmp15 = (y, tmp14) in
+                                let tmp16 = (tmp15, cache2) in
+                                (Success ((match tmp16 with (custard_tup, _) -> custard_tup), (match tmp16 with (_, custard_tup) -> custard_tup))))
+                              | err1 -> err1
+                            ))
+                          | (Error (err1)) -> (Error (err1))
+                        ) in
+                      (match tmp12 with
+                        | (Error (tmp13)) -> (let tmp14 = (maybe_unfold_side_and_retry Both t01 t11) in
+                          (tmp14 ctx cache))
+                        | res -> res
+                      ))) in
+                    let tmp10 = (if (guard_ok && ((=) rel EQUALITY)) then (let tmp10 = (equatable g t01) in
+                      (if tmp10 then true else (equatable g t11))) else false) in
+                    (if tmp10 then (fun ctx cache -> (let tmp11 = (no_guard (compare_head_and_args ()) ctx cache) in
+                    (match tmp11 with
+                      | (Error (tmp12)) -> (let tmp13 = (emit_guard t01 t11) in
+                        (tmp13 ctx cache))
+                      | res -> res
+                    ))) else (compare_head_and_args ()))))
+                ))
+            ))
+          | ((FStarC_Syntax_Syntax.Tm_app (tmp6)), tmp7) -> (let head_matches1 = (head_matches t01 t11) in
+            let tmp8 = (FStarC_Syntax_Util.leftmost_head_and_args t01) in
+            (match tmp8 with
+              | (head0, args0) -> (let tmp9 = (FStarC_Syntax_Util.leftmost_head_and_args t11) in
+                (match tmp9 with
+                  | (head1, args1) -> (if (not (head_matches1 && ((=) (FStarC_List.length args0) (FStarC_List.length args1)))) then (maybe_unfold_and_retry t01 t11) else (let compare_head_and_args = (fun tmp10 ctx cache -> (let tmp11 = (check_relation_ g EQUALITY head0 head1 ctx cache) in
+                      let tmp12 = (match tmp11 with
+                          | (Success ((x1, g11), cache11)) -> (let tmp12 = (check_relation_args g EQUALITY args0 args1) in
+                            let tmp13 = (tmp12 ctx cache11) in
+                            (match tmp13 with
+                              | (Success ((y, g2), cache2)) -> (let tmp14 = (and_pre g11 g2) in
+                                let tmp15 = (y, tmp14) in
+                                let tmp16 = (tmp15, cache2) in
+                                (Success ((match tmp16 with (custard_tup, _) -> custard_tup), (match tmp16 with (_, custard_tup) -> custard_tup))))
+                              | err1 -> err1
+                            ))
+                          | (Error (err1)) -> (Error (err1))
+                        ) in
+                      (match tmp12 with
+                        | (Error (tmp13)) -> (let tmp14 = (maybe_unfold_side_and_retry Both t01 t11) in
+                          (tmp14 ctx cache))
+                        | res -> res
+                      ))) in
+                    let tmp10 = (if (guard_ok && ((=) rel EQUALITY)) then (let tmp10 = (equatable g t01) in
+                      (if tmp10 then true else (equatable g t11))) else false) in
+                    (if tmp10 then (fun ctx cache -> (let tmp11 = (no_guard (compare_head_and_args ()) ctx cache) in
+                    (match tmp11 with
+                      | (Error (tmp12)) -> (let tmp13 = (emit_guard t01 t11) in
+                        (tmp13 ctx cache))
+                      | res -> res
+                    ))) else (compare_head_and_args ()))))
+                ))
+            ))
+          | (tmp6, (FStarC_Syntax_Syntax.Tm_uinst (u__1, u__2))) -> (let head_matches1 = (head_matches t01 t11) in
+            let tmp7 = (FStarC_Syntax_Util.leftmost_head_and_args t01) in
+            (match tmp7 with
+              | (head0, args0) -> (let tmp8 = (FStarC_Syntax_Util.leftmost_head_and_args t11) in
+                (match tmp8 with
+                  | (head1, args1) -> (if (not (head_matches1 && ((=) (FStarC_List.length args0) (FStarC_List.length args1)))) then (maybe_unfold_and_retry t01 t11) else (let compare_head_and_args = (fun tmp9 ctx cache -> (let tmp10 = (check_relation_ g EQUALITY head0 head1 ctx cache) in
+                      let tmp11 = (match tmp10 with
+                          | (Success ((x1, g11), cache11)) -> (let tmp11 = (check_relation_args g EQUALITY args0 args1) in
+                            let tmp12 = (tmp11 ctx cache11) in
+                            (match tmp12 with
+                              | (Success ((y, g2), cache2)) -> (let tmp13 = (and_pre g11 g2) in
+                                let tmp14 = (y, tmp13) in
+                                let tmp15 = (tmp14, cache2) in
+                                (Success ((match tmp15 with (custard_tup, _) -> custard_tup), (match tmp15 with (_, custard_tup) -> custard_tup))))
+                              | err1 -> err1
+                            ))
+                          | (Error (err1)) -> (Error (err1))
+                        ) in
+                      (match tmp11 with
+                        | (Error (tmp12)) -> (let tmp13 = (maybe_unfold_side_and_retry Both t01 t11) in
+                          (tmp13 ctx cache))
+                        | res -> res
+                      ))) in
+                    let tmp9 = (if (guard_ok && ((=) rel EQUALITY)) then (let tmp9 = (equatable g t01) in
+                      (if tmp9 then true else (equatable g t11))) else false) in
+                    (if tmp9 then (fun ctx cache -> (let tmp10 = (no_guard (compare_head_and_args ()) ctx cache) in
+                    (match tmp10 with
+                      | (Error (tmp11)) -> (let tmp12 = (emit_guard t01 t11) in
+                        (tmp12 ctx cache))
+                      | res -> res
+                    ))) else (compare_head_and_args ()))))
+                ))
+            ))
+          | (tmp6, (FStarC_Syntax_Syntax.Tm_fvar (tmp7))) -> (let head_matches1 = (head_matches t01 t11) in
+            let tmp8 = (FStarC_Syntax_Util.leftmost_head_and_args t01) in
+            (match tmp8 with
+              | (head0, args0) -> (let tmp9 = (FStarC_Syntax_Util.leftmost_head_and_args t11) in
+                (match tmp9 with
+                  | (head1, args1) -> (if (not (head_matches1 && ((=) (FStarC_List.length args0) (FStarC_List.length args1)))) then (maybe_unfold_and_retry t01 t11) else (let compare_head_and_args = (fun tmp10 ctx cache -> (let tmp11 = (check_relation_ g EQUALITY head0 head1 ctx cache) in
+                      let tmp12 = (match tmp11 with
+                          | (Success ((x1, g11), cache11)) -> (let tmp12 = (check_relation_args g EQUALITY args0 args1) in
+                            let tmp13 = (tmp12 ctx cache11) in
+                            (match tmp13 with
+                              | (Success ((y, g2), cache2)) -> (let tmp14 = (and_pre g11 g2) in
+                                let tmp15 = (y, tmp14) in
+                                let tmp16 = (tmp15, cache2) in
+                                (Success ((match tmp16 with (custard_tup, _) -> custard_tup), (match tmp16 with (_, custard_tup) -> custard_tup))))
+                              | err1 -> err1
+                            ))
+                          | (Error (err1)) -> (Error (err1))
+                        ) in
+                      (match tmp12 with
+                        | (Error (tmp13)) -> (let tmp14 = (maybe_unfold_side_and_retry Both t01 t11) in
+                          (tmp14 ctx cache))
+                        | res -> res
+                      ))) in
+                    let tmp10 = (if (guard_ok && ((=) rel EQUALITY)) then (let tmp10 = (equatable g t01) in
+                      (if tmp10 then true else (equatable g t11))) else false) in
+                    (if tmp10 then (fun ctx cache -> (let tmp11 = (no_guard (compare_head_and_args ()) ctx cache) in
+                    (match tmp11 with
+                      | (Error (tmp12)) -> (let tmp13 = (emit_guard t01 t11) in
+                        (tmp13 ctx cache))
+                      | res -> res
+                    ))) else (compare_head_and_args ()))))
+                ))
+            ))
+          | (tmp6, (FStarC_Syntax_Syntax.Tm_app (tmp7))) -> (let head_matches1 = (head_matches t01 t11) in
+            let tmp8 = (FStarC_Syntax_Util.leftmost_head_and_args t01) in
+            (match tmp8 with
+              | (head0, args0) -> (let tmp9 = (FStarC_Syntax_Util.leftmost_head_and_args t11) in
+                (match tmp9 with
+                  | (head1, args1) -> (if (not (head_matches1 && ((=) (FStarC_List.length args0) (FStarC_List.length args1)))) then (maybe_unfold_and_retry t01 t11) else (let compare_head_and_args = (fun tmp10 ctx cache -> (let tmp11 = (check_relation_ g EQUALITY head0 head1 ctx cache) in
+                      let tmp12 = (match tmp11 with
+                          | (Success ((x1, g11), cache11)) -> (let tmp12 = (check_relation_args g EQUALITY args0 args1) in
+                            let tmp13 = (tmp12 ctx cache11) in
+                            (match tmp13 with
+                              | (Success ((y, g2), cache2)) -> (let tmp14 = (and_pre g11 g2) in
+                                let tmp15 = (y, tmp14) in
+                                let tmp16 = (tmp15, cache2) in
+                                (Success ((match tmp16 with (custard_tup, _) -> custard_tup), (match tmp16 with (_, custard_tup) -> custard_tup))))
+                              | err1 -> err1
+                            ))
+                          | (Error (err1)) -> (Error (err1))
+                        ) in
+                      (match tmp12 with
+                        | (Error (tmp13)) -> (let tmp14 = (maybe_unfold_side_and_retry Both t01 t11) in
+                          (tmp14 ctx cache))
+                        | res -> res
+                      ))) in
+                    let tmp10 = (if (guard_ok && ((=) rel EQUALITY)) then (let tmp10 = (equatable g t01) in
+                      (if tmp10 then true else (equatable g t11))) else false) in
+                    (if tmp10 then (fun ctx cache -> (let tmp11 = (no_guard (compare_head_and_args ()) ctx cache) in
+                    (match tmp11 with
+                      | (Error (tmp12)) -> (let tmp13 = (emit_guard t01 t11) in
+                        (tmp13 ctx cache))
+                      | res -> res
+                    ))) else (compare_head_and_args ()))))
+                ))
+            ))
+          | ((FStarC_Syntax_Syntax.Tm_abs ({ FStarC_Syntax_Syntax.b = b0; body = body0; rc_opt = tmp6; _ })), (FStarC_Syntax_Syntax.Tm_abs ({ FStarC_Syntax_Syntax.b = b1; body = body1; rc_opt = tmp7; _ }))) -> (fun ctx01 cache01 -> (let tmp8 = (check_relation_ g EQUALITY ((b0).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort ((b1).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort ctx01 cache01) in
+            (match tmp8 with
+              | (Success ((x1, g11), cache11)) -> (let tmp9 = (check_bqual (b0).FStarC_Syntax_Syntax.binder_qual (b1).FStarC_Syntax_Syntax.binder_qual) in
+                let tmp10 = (fun ctx02 cache02 -> (let tmp10 = (tmp9 ctx02 cache02) in
+                  (match tmp10 with
+                    | (Success ((x2, g12), cache12)) -> (let tmp11 = (fun ctx03 cache03 -> (let tmp11 = (check_positivity_qual EQUALITY (b0).FStarC_Syntax_Syntax.binder_positivity (b1).FStarC_Syntax_Syntax.binder_positivity ctx03 cache03) in
+                        (match tmp11 with
+                          | (Success ((x3, g13), cache13)) -> (let tmp12 = (universe_of_well_typed_term g ((b0).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
+                            let tmp13 = (fun ctx04 cache04 -> (let tmp13 = (tmp12 ctx04 cache04) in
+                              (match tmp13 with
+                                | (Success ((x4, g14), cache14)) -> (let tmp14 = (open_term g b0 body0) in
+                                  let tmp15 = (match tmp14 with
+                                      | (g2, b01, body01) -> (let body11 = (FStarC_Syntax_Subst.subst ((FStarC_Syntax_Syntax.DB ((Prims.parse_int "0"), (b01).FStarC_Syntax_Syntax.binder_bv)) :: []) body1) in
+                                        (with_binders g (b01 :: []) (x4 :: []) (check_relation_ g2 EQUALITY body01 body11)))
+                                    ) in
+                                  let tmp16 = (tmp15 ctx04 cache14) in
+                                  (match tmp16 with
+                                    | (Success ((y, g2), cache2)) -> (let tmp17 = (and_pre g14 g2) in
+                                      let tmp18 = (y, tmp17) in
+                                      let tmp19 = (tmp18, cache2) in
+                                      (Success ((match tmp19 with (custard_tup, _) -> custard_tup), (match tmp19 with (_, custard_tup) -> custard_tup))))
+                                    | err1 -> err1
+                                  ))
+                                | (Error (err1)) -> (Error (err1))
+                              ))) in
+                            let tmp14 = (tmp13 ctx03 cache13) in
+                            (match tmp14 with
+                              | (Success ((y, g2), cache2)) -> (let tmp15 = (and_pre g13 g2) in
+                                let tmp16 = (y, tmp15) in
+                                let tmp17 = (tmp16, cache2) in
+                                (Success ((match tmp17 with (custard_tup, _) -> custard_tup), (match tmp17 with (_, custard_tup) -> custard_tup))))
+                              | err1 -> err1
+                            ))
+                          | (Error (err1)) -> (Error (err1))
+                        ))) in
+                      let tmp12 = (tmp11 ctx02 cache12) in
+                      (match tmp12 with
+                        | (Success ((y, g2), cache2)) -> (let tmp13 = (and_pre g12 g2) in
+                          let tmp14 = (y, tmp13) in
+                          let tmp15 = (tmp14, cache2) in
+                          (Success ((match tmp15 with (custard_tup, _) -> custard_tup), (match tmp15 with (_, custard_tup) -> custard_tup))))
+                        | err1 -> err1
+                      ))
+                    | (Error (err1)) -> (Error (err1))
+                  ))) in
+                let tmp11 = (tmp10 ctx01 cache11) in
+                (match tmp11 with
+                  | (Success ((y, g2), cache2)) -> (let tmp12 = (and_pre g11 g2) in
+                    let tmp13 = (y, tmp12) in
+                    let tmp14 = (tmp13, cache2) in
+                    (Success ((match tmp14 with (custard_tup, _) -> custard_tup), (match tmp14 with (_, custard_tup) -> custard_tup))))
+                  | err1 -> err1
+                ))
+              | (Error (err1)) -> (Error (err1))
+            )))
+          | ((FStarC_Syntax_Syntax.Tm_arrow ({ FStarC_Syntax_Syntax.b = x0; comp = c0; _ })), (FStarC_Syntax_Syntax.Tm_arrow ({ FStarC_Syntax_Syntax.b = x1; comp = c1; _ }))) -> (fun ctx cache -> (let ctx1 = { no_guard = (ctx).no_guard;
+                unfolding_ok = (ctx).unfolding_ok;
+                error_context = (("subtype arrow", None) :: (ctx).error_context) } in
+            let tmp6 = (check_bqual (x0).FStarC_Syntax_Syntax.binder_qual (x1).FStarC_Syntax_Syntax.binder_qual) in
+            let tmp7 = (fun ctx01 cache01 -> (let tmp7 = (tmp6 ctx01 cache01) in
+              (match tmp7 with
+                | (Success ((x2, g11), cache11)) -> (let tmp8 = (fun ctx02 cache02 -> (let tmp8 = (check_positivity_qual rel (x0).FStarC_Syntax_Syntax.binder_positivity (x1).FStarC_Syntax_Syntax.binder_positivity ctx02 cache02) in
+                    (match tmp8 with
+                      | (Success ((x3, g12), cache12)) -> (let tmp9 = (universe_of_well_typed_term g ((x1).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
+                        let tmp10 = (fun ctx03 cache03 -> (let tmp10 = (tmp9 ctx03 cache03) in
+                          (match tmp10 with
+                            | (Success ((x4, g13), cache13)) -> (let tmp11 = (open_comp g x1 c1) in
+                              let tmp12 = (match tmp11 with
+                                  | (g_x1, x11, c11) -> (let c01 = (FStarC_Syntax_Subst.subst_comp ((FStarC_Syntax_Syntax.DB ((Prims.parse_int "0"), (x11).FStarC_Syntax_Syntax.binder_bv)) :: []) c0) in
+                                    let rel_arg = (match rel with
+                                        | EQUALITY -> EQUALITY
+                                        | tmp12 -> (let tmp13 = (FStarC_Syntax_Syntax.bv_to_name (x11).FStarC_Syntax_Syntax.binder_bv) in
+                                          let tmp14 = (Some (tmp13)) in
+                                          (SUBTYPING (tmp14)))
+                                      ) in
+                                    let rel_comp = (match rel with
+                                        | EQUALITY -> EQUALITY
+                                        | (SUBTYPING (e)) -> (let tmp12 = (FStarC_Syntax_Util.is_pure_or_ghost_comp c01) in
+                                          let tmp13 = (if tmp12 then (match e with
+                                              | None -> None
+                                              | (Some (e1)) -> (let tmp13 = (FStarC_Syntax_Util.args_of_binders (x11 :: [])) in
+                                                let tmp14 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd tmp13) in
+                                                let r = (FStarC_Syntax_Syntax.mk_Tm_app e1 tmp14 FStarC_Range_Type.dummyRange) in
+                                                (Some (r)))
+                                            ) else None) in
+                                          (SUBTYPING (tmp13)))
+                                      ) in
+                                    let tmp12 = (fun ctx04 cache04 -> (let tmp12 = (check_relation_ g rel_arg ((x11).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort ((x0).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort ctx04 cache04) in
+                                      (match tmp12 with
+                                        | (Success ((x5, g14), cache14)) -> (let tmp13 = (fun ctx2 cache2 -> (let ctx3 = { no_guard = (ctx2).no_guard;
+                                                unfolding_ok = (ctx2).unfolding_ok;
+                                                error_context = (("check_subcomp", None) :: (ctx2).error_context) } in
+                                            let tmp13 = (check_relation_comp g_x1 rel_comp c01 c11) in
+                                            (tmp13 ctx3 cache2))) in
+                                          let tmp14 = (tmp13 ctx04 cache14) in
+                                          (match tmp14 with
+                                            | (Success ((y, g2), cache2)) -> (let tmp15 = (and_pre g14 g2) in
+                                              let tmp16 = (y, tmp15) in
+                                              let tmp17 = (tmp16, cache2) in
+                                              (Success ((match tmp17 with (custard_tup, _) -> custard_tup), (match tmp17 with (_, custard_tup) -> custard_tup))))
+                                            | err1 -> err1
+                                          ))
+                                        | (Error (err1)) -> (Error (err1))
+                                      ))) in
+                                    (with_binders g (x11 :: []) (x4 :: []) tmp12))
+                                ) in
+                              let tmp13 = (tmp12 ctx03 cache13) in
+                              (match tmp13 with
+                                | (Success ((y, g2), cache2)) -> (let tmp14 = (and_pre g13 g2) in
+                                  let tmp15 = (y, tmp14) in
+                                  let tmp16 = (tmp15, cache2) in
+                                  (Success ((match tmp16 with (custard_tup, _) -> custard_tup), (match tmp16 with (_, custard_tup) -> custard_tup))))
+                                | err1 -> err1
+                              ))
+                            | (Error (err1)) -> (Error (err1))
+                          ))) in
+                        let tmp11 = (tmp10 ctx02 cache12) in
+                        (match tmp11 with
+                          | (Success ((y, g2), cache2)) -> (let tmp12 = (and_pre g12 g2) in
+                            let tmp13 = (y, tmp12) in
+                            let tmp14 = (tmp13, cache2) in
+                            (Success ((match tmp14 with (custard_tup, _) -> custard_tup), (match tmp14 with (_, custard_tup) -> custard_tup))))
+                          | err1 -> err1
+                        ))
+                      | (Error (err1)) -> (Error (err1))
+                    ))) in
+                  let tmp9 = (tmp8 ctx01 cache11) in
+                  (match tmp9 with
+                    | (Success ((y, g2), cache2)) -> (let tmp10 = (and_pre g11 g2) in
+                      let tmp11 = (y, tmp10) in
+                      let tmp12 = (tmp11, cache2) in
+                      (Success ((match tmp12 with (custard_tup, _) -> custard_tup), (match tmp12 with (_, custard_tup) -> custard_tup))))
+                    | err1 -> err1
+                  ))
+                | (Error (err1)) -> (Error (err1))
+              ))) in
+            (tmp7 ctx1 cache)))
+          | ((FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = e0; ret_opt = tmp6; brs = brs0; rc_opt = tmp7; _ })), (FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = e1; ret_opt = tmp8; brs = brs1; rc_opt = tmp9; _ }))) -> (let relate_branch = (fun br0 br1 tmp10 -> (match (br0, br1) with
+                | ((p0, None, body0), (p1, None, body1)) -> (let tmp11 = (FStarC_Syntax_Syntax.eq_pat p0 p1) in
+                  let tmp12 = (not tmp11) in
+                  (if tmp12 then (fail_str "patterns not equal") else (let tmp13 = (open_branches_eq_pat g (p0, None, body0) (p1, None, body1)) in
+                  (match tmp13 with
+                    | (g', (p01, tmp14, body01), (p11, tmp15, body11)) -> (let tmp16 = (FStarC_TypeChecker_PatternUtils.raw_pat_as_exp (g).tcenv p01) in
+                      (match tmp16 with
+                        | (Some ((tmp17, bvs0))) -> (let bs0 = (FStarC_List.map FStarC_Syntax_Syntax.mk_binder bvs0) in
+                          let tmp18 = (check_binders g bs0) in
+                          (fun ctx01 cache01 -> (let tmp19 = (tmp18 ctx01 cache01) in
+                          (match tmp19 with
+                            | (Success ((x1, g11), cache11)) -> (let tmp20 = (fun ctx cache -> (let ctx1 = { no_guard = (ctx).no_guard;
+                                    unfolding_ok = (ctx).unfolding_ok;
+                                    error_context = (("relate_branch", None) :: (ctx).error_context) } in
+                                let tmp20 = (with_binders g bs0 x1 (check_relation_ g' rel body01 body11)) in
+                                (tmp20 ctx1 cache))) in
+                              let tmp21 = (tmp20 ctx01 cache11) in
+                              (match tmp21 with
+                                | (Success ((y, g2), cache2)) -> (let tmp22 = (and_pre g11 g2) in
+                                  let tmp23 = (y, tmp22) in
+                                  let tmp24 = (tmp23, cache2) in
+                                  (Success ((match tmp24 with (custard_tup, _) -> custard_tup), (match tmp24 with (_, custard_tup) -> custard_tup))))
+                                | err1 -> err1
+                              ))
+                            | (Error (err1)) -> (Error (err1))
+                          ))))
+                        | tmp17 -> (fail_str "raw_pat_as_exp failed in check_equality match rule")
+                      ))
+                  ))))
+                | tmp11 -> (fail_str "Core does not support branches with when")
+              )) in
+            (fun ctx cache -> (let tmp10 = (check_relation_ g EQUALITY e0 e1 ctx cache) in
+            let tmp11 = (match tmp10 with
+                | (Success ((x1, g11), cache11)) -> (let tmp11 = (iter2 brs0 brs1 relate_branch ()) in
+                  let tmp12 = (tmp11 ctx cache11) in
+                  (match tmp12 with
+                    | (Success ((y, g2), cache2)) -> (let tmp13 = (and_pre g11 g2) in
+                      let tmp14 = (y, tmp13) in
+                      let tmp15 = (tmp14, cache2) in
+                      (Success ((match tmp15 with (custard_tup, _) -> custard_tup), (match tmp15 with (_, custard_tup) -> custard_tup))))
+                    | err1 -> err1
+                  ))
+                | (Error (err1)) -> (Error (err1))
+              ) in
+            (match tmp11 with
+              | (Error (tmp12)) -> (let tmp13 = (fallback t01 t11) in
+                (tmp13 ctx cache))
+              | res -> res
+            ))))
+          | tmp6 -> (fallback t01 t11)
+        )) in
+      let tmp7 = (tmp6 ctx0 cache1) in
+      (match tmp7 with
+        | (Success ((y, g2), cache2)) -> (let tmp8 = (and_pre g1 g2) in
+          let tmp9 = (y, tmp8) in
+          let tmp10 = (tmp9, cache2) in
+          (Success ((match tmp10 with (custard_tup, _) -> custard_tup), (match tmp10 with (_, custard_tup) -> custard_tup))))
+        | err1 -> err1
+      ))
+    | (Error (err1)) -> (Error (err1))
+  ))))
+
+and check_relation (g : env) (rel : relation) (t0 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (t1 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (context -> (cache_t -> ((unit * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (let tmp = (!(dbg)) in
+  (if tmp then (fun ctx cache -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' t0) in
+  let tmp2 = (fStarC_Class_Show_show__relation rel) in
+  let tmp3 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' t1) in
+  (FStarC_Format.print3 "check_relation (%s, %s, %s) {\n" tmp1 tmp2 tmp3);
+  let tmp4 = (check_relation' g rel t0 t1) in
+  let res = (tmp4 ctx cache) in
+  (match res with
+    | (Error (err)) -> (let tmp5 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' t0) in
+      let tmp6 = (fStarC_Class_Show_show__relation rel) in
+      let tmp7 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' t1) in
+      let tmp8 = (fStarC_Class_Show_show__tuple2_context_list_document err) in
+      (FStarC_Format.print4 "} check_relation (%s, %s, %s) failed with %s\n" tmp5 tmp6 tmp7 tmp8);
+      (Error (err)))
+    | (Success ((tmp5, g1), cache1)) -> (let tmp6 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' t0) in
+      let tmp7 = (fStarC_Class_Show_show__relation rel) in
+      let tmp8 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' t1) in
+      let tmp9 = (FStarC_Syntax_Print.fStarC_Class_Show_show__option_syntax_term' g1) in
+      (FStarC_Format.print4 "} check_relation  (%s, %s, %s) succeeded with guard %s\n" tmp6 tmp7 tmp8 tmp9);
+      res)
+  ))) else (check_relation' g rel t0 t1)))
+
+and check_subtype (g : env) (e : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option) (t0 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (t1 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (context -> (cache_t -> ((unit * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (fun ctx cache -> (FStarC_Profiling.profile (fun tmp -> (let rel = (SUBTYPING (e)) in
+  let ctx1 = { no_guard = (ctx).no_guard;
+      unfolding_ok = (ctx).unfolding_ok;
+      error_context = (((if (ctx).no_guard then "check_subtype(no_guard)" else "check_subtype"), (Some ((CtxRel (t0, rel, t1))))) :: (ctx).error_context) } in
+  let tmp1 = (check_relation g rel t0 t1) in
+  (tmp1 ctx1 cache))) None "FStarC.TypeChecker.Core.check_subtype"))
+
+and is_prop (g : env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (context -> (cache_t -> ((unit * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (fun ctx cache -> (let ctx1 = { no_guard = (ctx).no_guard;
+      unfolding_ok = (ctx).unfolding_ok;
+      error_context = (("is_prop", (Some ((CtxTerm (t))))) :: (ctx).error_context) } in
+  let tmp = (check_subtype g None t FStarC_Syntax_Syntax.t_prop) in
+  (tmp ctx1 cache)))
+
+and check_comp (g : env) (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : (context -> (cache_t -> ((FStarC_Syntax_Syntax.universe * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (match (c).FStarC_Syntax_Syntax.n with
+    | ct when (FStarC_Parser_Const.is_tot_or_gtot_lid (ct).FStarC_Syntax_Syntax.effect_name) -> (let tmp = (check "(G)Tot comp result" g (FStarC_Syntax_Util.comp_result c)) in
+      (fun ctx0 cache0 -> (let tmp1 = (tmp ctx0 cache0) in
+      (match tmp1 with
+        | (Success ((x, g1), cache1)) -> (let tmp2 = (match x with
+              | (tmp2, t) -> (is_type g t)
+            ) in
+          let tmp3 = (tmp2 ctx0 cache1) in
+          (match tmp3 with
+            | (Success ((y, g2), cache2)) -> (let tmp4 = (and_pre g1 g2) in
+              let tmp5 = (y, tmp4) in
+              let tmp6 = (tmp5, cache2) in
+              (Success ((match tmp6 with (custard_tup, _) -> custard_tup), (match tmp6 with (_, custard_tup) -> custard_tup))))
+            | err -> err
+          ))
+        | (Error (err)) -> (Error (err))
+      ))))
+    | ct -> (let u = (((g).tcenv).FStarC_TypeChecker_Env.universe_of (g).tcenv (ct).FStarC_Syntax_Syntax.result_typ) in
+      let tmp = (FStarC_Syntax_Syntax.fvar (ct).FStarC_Syntax_Syntax.effect_name None) in
+      let head = (FStarC_Syntax_Syntax.mk_Tm_uinst tmp (u :: [])) in
+      let effect_app_tm = (FStarC_Syntax_Syntax.mk_Tm_app head ((FStarC_Syntax_Syntax.as_arg (ct).FStarC_Syntax_Syntax.result_typ) :: []) ((ct).FStarC_Syntax_Syntax.result_typ).FStarC_Syntax_Syntax.pos) in
+      let tmp1 = (check "effectful comp" g effect_app_tm) in
+      (fun ctx0 cache0 -> (let tmp2 = (tmp1 ctx0 cache0) in
+      (match tmp2 with
+        | (Success ((x, g1), cache1)) -> (let tmp3 = (match x with
+              | (tmp3, t) -> (fun ctx01 cache01 -> (let ctx = { no_guard = (ctx01).no_guard;
+                    unfolding_ok = (ctx01).unfolding_ok;
+                    error_context = (("comp fully applied", None) :: (ctx01).error_context) } in
+                let tmp4 = (check_subtype g None t FStarC_Syntax_Syntax.teff) in
+                let tmp5 = (tmp4 ctx cache01) in
+                (match tmp5 with
+                  | (Success ((x1, g11), cache11)) -> (let tmp6 = (FStarC_TypeChecker_Env.effect_universe (g).tcenv (ct).FStarC_Syntax_Syntax.effect_name u) in
+                    let tmp7 = (fun tmp7 cache -> (Success ((tmp6, None), cache))) in
+                    let tmp8 = (tmp7 ctx01 cache11) in
+                    (match tmp8 with
+                      | (Success ((y, g2), cache2)) -> (let tmp9 = (and_pre g11 g2) in
+                        let tmp10 = (y, tmp9) in
+                        let tmp11 = (tmp10, cache2) in
+                        (Success ((match tmp11 with (custard_tup, _) -> custard_tup), (match tmp11 with (_, custard_tup) -> custard_tup))))
+                      | err -> err
+                    ))
+                  | (Error (err)) -> (Error (err))
+                )))
+            ) in
+          let tmp4 = (tmp3 ctx0 cache1) in
+          (match tmp4 with
+            | (Success ((y, g2), cache2)) -> (let tmp5 = (and_pre g1 g2) in
+              let tmp6 = (y, tmp5) in
+              let tmp7 = (tmp6, cache2) in
+              (Success ((match tmp7 with (custard_tup, _) -> custard_tup), (match tmp7 with (_, custard_tup) -> custard_tup))))
+            | err -> err
+          ))
+        | (Error (err)) -> (Error (err))
+      ))))
+  )
+
+and do_check__check_app_arg (g : env) (tmp : (tot_or_ghost * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (tmp1 : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) : (context -> (cache_t -> (((tot_or_ghost * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (match (tmp, tmp1) with
+    | ((eff_hd, t_hd), (arg, arg_qual)) -> (fun ctx0 cache0 -> (let tmp2 = (is_arrow g t_hd ctx0 cache0) in
+      (match tmp2 with
+        | (Success ((x, g1), cache1)) -> (let tmp3 = (match x with
+              | (x1, eff_arr, t') -> (let tmp3 = (check "app arg" g arg) in
+                (fun ctx01 cache01 -> (let tmp4 = (tmp3 ctx01 cache01) in
+                (match tmp4 with
+                  | (Success ((x2, g11), cache11)) -> (let tmp5 = (match x2 with
+                        | (eff_arg, t_arg) -> (fun ctx02 cache02 -> (let ctx = { no_guard = (ctx02).no_guard;
+                              unfolding_ok = (ctx02).unfolding_ok;
+                              error_context = (("app subtyping", (Some ((CtxTerm (arg))))) :: (ctx02).error_context) } in
+                          let tmp5 = (check_subtype g (Some (arg)) t_arg ((x1).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
+                          let tmp6 = (tmp5 ctx cache02) in
+                          (match tmp6 with
+                            | (Success ((x3, g12), cache12)) -> (let tmp7 = (fun ctx03 cache03 -> (let ctx1 = { no_guard = (ctx03).no_guard;
+                                    unfolding_ok = (ctx03).unfolding_ok;
+                                    error_context = (("app arg qual", None) :: (ctx03).error_context) } in
+                                let tmp7 = (check_arg_qual arg_qual (x1).FStarC_Syntax_Syntax.binder_qual) in
+                                let tmp8 = (tmp7 ctx1 cache03) in
+                                (match tmp8 with
+                                  | (Success ((x4, g13), cache13)) -> (let tmp9 = (FStarC_Syntax_Subst.subst ((FStarC_Syntax_Syntax.NT ((x1).FStarC_Syntax_Syntax.binder_bv, arg)) :: []) t') in
+                                    let tmp10 = ((join_eff eff_hd (join_eff eff_arr eff_arg)), tmp9) in
+                                    let tmp11 = (fun tmp11 cache -> (Success ((tmp10, None), cache))) in
+                                    let tmp12 = (tmp11 ctx03 cache13) in
+                                    (match tmp12 with
+                                      | (Success ((y, g2), cache2)) -> (let tmp13 = (and_pre g13 g2) in
+                                        let tmp14 = (y, tmp13) in
+                                        let tmp15 = (tmp14, cache2) in
+                                        (Success ((match tmp15 with (custard_tup, _) -> custard_tup), (match tmp15 with (_, custard_tup) -> custard_tup))))
+                                      | err -> err
+                                    ))
+                                  | (Error (err)) -> (Error (err))
+                                ))) in
+                              let tmp8 = (tmp7 ctx02 cache12) in
+                              (match tmp8 with
+                                | (Success ((y, g2), cache2)) -> (let tmp9 = (and_pre g12 g2) in
+                                  let tmp10 = (y, tmp9) in
+                                  let tmp11 = (tmp10, cache2) in
+                                  (Success ((match tmp11 with (custard_tup, _) -> custard_tup), (match tmp11 with (_, custard_tup) -> custard_tup))))
+                                | err -> err
+                              ))
+                            | (Error (err)) -> (Error (err))
+                          )))
+                      ) in
+                    let tmp6 = (tmp5 ctx01 cache11) in
+                    (match tmp6 with
+                      | (Success ((y, g2), cache2)) -> (let tmp7 = (and_pre g11 g2) in
+                        let tmp8 = (y, tmp7) in
+                        let tmp9 = (tmp8, cache2) in
+                        (Success ((match tmp9 with (custard_tup, _) -> custard_tup), (match tmp9 with (_, custard_tup) -> custard_tup))))
+                      | err -> err
+                    ))
+                  | (Error (err)) -> (Error (err))
+                ))))
+            ) in
+          let tmp4 = (tmp3 ctx0 cache1) in
+          (match tmp4 with
+            | (Success ((y, g2), cache2)) -> (let tmp5 = (and_pre g1 g2) in
+              let tmp6 = (y, tmp5) in
+              let tmp7 = (tmp6, cache2) in
+              (Success ((match tmp7 with (custard_tup, _) -> custard_tup), (match tmp7 with (_, custard_tup) -> custard_tup))))
+            | err -> err
+          ))
+        | (Error (err)) -> (Error (err))
+      )))
+  )
+
+and check_scrutinee_pattern_type_compatible (g : env) (t_sc : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (t_pat : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (context -> (cache_t -> ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (let err = (fun s -> (let tmp = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' t_sc) in
+    let tmp1 = (FStarC_Errors_Msg.fquotes tmp) in
+    let tmp2 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' t_pat) in
+    let tmp3 = (FStarC_Errors_Msg.fquotes tmp2) in
+    let tmp4 = (tmp3 :: ((FStarC_Errors_Msg.text "are not compatible because") :: ((FStarC_Errors_Msg.text s) :: []))) in
+    let tmp5 = ((FStarC_Errors_Msg.text "and pattern type") :: tmp4) in
+    let tmp6 = (tmp1 :: tmp5) in
+    let tmp7 = ((FStarC_Errors_Msg.text "Scrutinee type") :: tmp6) in
+    let tmp8 = (FStar_Pprint.flow (FStar_Pprint.break_ (Prims.parse_int "1")) tmp7) in
+    let tmp9 = (tmp8 :: []) in
+    (fail tmp9))) in
+  let tmp = (FStarC_Syntax_Util.head_and_args_full t_sc) in
+  (match tmp with
+    | (head_sc, args_sc) -> (let tmp1 = (FStarC_Syntax_Util.head_and_args_full t_pat) in
+      (match tmp1 with
+        | (head_pat, args_pat) -> (let tmp2 = (FStarC_Syntax_Subst.compress head_sc) in
+          let tmp3 = (tmp2).FStarC_Syntax_Syntax.n in
+          let tmp4 = (FStarC_Syntax_Subst.compress head_pat) in
+          let tmp5 = (tmp4).FStarC_Syntax_Syntax.n in
+          let tmp6 = (tmp3, tmp5) in
+          let tmp7 = (match tmp6 with
+              | ((FStarC_Syntax_Syntax.Tm_fvar (fv_head)), (FStarC_Syntax_Syntax.Tm_fvar (fv_pat))) when (FStarC_Ident.lid_equals (FStarC_Syntax_Syntax.lid_of_fv fv_head) (FStarC_Syntax_Syntax.lid_of_fv fv_pat)) -> (fun tmp7 cache -> (Success ((fv_head, None), cache)))
+              | ((FStarC_Syntax_Syntax.Tm_uinst ({ FStarC_Syntax_Syntax.n = (FStarC_Syntax_Syntax.Tm_fvar (fv_head)); pos = tmp7; hash_code = tmp8; _ }, us_head)), (FStarC_Syntax_Syntax.Tm_uinst ({ FStarC_Syntax_Syntax.n = (FStarC_Syntax_Syntax.Tm_fvar (fv_pat)); pos = tmp9; hash_code = tmp10; _ }, us_pat))) when (FStarC_Ident.lid_equals (FStarC_Syntax_Syntax.lid_of_fv fv_head) (FStarC_Syntax_Syntax.lid_of_fv fv_pat)) -> (let tmp11 = (FStarC_TypeChecker_Rel.teq_nosmt_force (g).tcenv head_sc head_pat) in
+                (if tmp11 then (fun tmp12 cache -> (Success ((fv_head, None), cache))) else (err "Incompatible universe instantiations")))
+              | (tmp7, tmp8) -> (let tmp9 = (FStarC_Syntax_Syntax.fStarC_Class_Tagged_tag_of__syntax_term' head_sc) in
+                let tmp10 = (FStarC_Syntax_Syntax.fStarC_Class_Tagged_tag_of__syntax_term' head_pat) in
+                let tmp11 = (FStarC_Format.fmt2 "Head constructors(%s and %s) not fvar" tmp9 tmp10) in
+                (err tmp11))
+            ) in
+          (fun ctx0 cache0 -> (let tmp8 = (tmp7 ctx0 cache0) in
+          (match tmp8 with
+            | (Success ((x, g1), cache1)) -> (let tmp9 = (FStarC_TypeChecker_Env.is_type_constructor (g).tcenv (FStarC_Syntax_Syntax.lid_of_fv x)) in
+              let tmp10 = (if tmp9 then (fun tmp10 cache -> (Success ((x, None), cache))) else (let tmp10 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__fv x) in
+                let tmp11 = (FStarC_Format.fmt1 "%s is not a type constructor" tmp10) in
+                (err tmp11))) in
+              let tmp11 = (fun ctx01 cache01 -> (let tmp11 = (tmp10 ctx01 cache01) in
+                (match tmp11 with
+                  | (Success ((x1, g11), cache11)) -> (let tmp12 = (if ((=) (FStarC_List.length args_sc) (FStarC_List.length args_pat)) then (fun tmp12 cache -> (Success ((x, None), cache))) else (let tmp12 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 (FStarC_List.length args_sc)) in
+                      let tmp13 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 (FStarC_List.length args_pat)) in
+                      let tmp14 = (FStarC_Format.fmt2 "Number of arguments don't match (%s and %s)" tmp12 tmp13) in
+                      (err tmp14))) in
+                    let tmp13 = (fun ctx02 cache02 -> (let tmp13 = (tmp12 ctx02 cache02) in
+                      (match tmp13 with
+                        | (Success ((x2, g12), cache12)) -> (let tmp14 = (FStarC_TypeChecker_Env.num_inductive_ty_params (g).tcenv (FStarC_Syntax_Syntax.lid_of_fv x)) in
+                          let tmp15 = (match tmp14 with
+                              | None -> (args_sc, args_pat)
+                              | (Some (n)) -> ((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst (FStarC_Util.first_N n args_sc)), (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst (FStarC_Util.first_N n args_pat)))
+                            ) in
+                          let tmp16 = (match tmp15 with
+                              | (params_sc, params_pat) -> (let tmp16 = (iter2 params_sc params_pat (fun tmp16 tmp17 tmp18 -> (match (tmp16, tmp17) with
+                                    | ((t_sc1, tmp19), (t_pat1, tmp20)) -> (check_relation g EQUALITY t_sc1 t_pat1)
+                                  )) ()) in
+                                (fun ctx03 cache03 -> (let tmp17 = (tmp16 ctx03 cache03) in
+                                (match tmp17 with
+                                  | (Success ((x3, g13), cache13)) -> (let tmp18 = (fun tmp18 cache -> (Success ((None, None), cache))) in
+                                    let tmp19 = (tmp18 ctx03 cache13) in
+                                    (match tmp19 with
+                                      | (Success ((y, g2), cache2)) -> (let tmp20 = (and_pre g13 g2) in
+                                        let tmp21 = (y, tmp20) in
+                                        let tmp22 = (tmp21, cache2) in
+                                        (Success ((match tmp22 with (custard_tup, _) -> custard_tup), (match tmp22 with (_, custard_tup) -> custard_tup))))
+                                      | err1 -> err1
+                                    ))
+                                  | (Error (err1)) -> (Error (err1))
+                                ))))
+                            ) in
+                          let tmp17 = (tmp16 ctx02 cache12) in
+                          (match tmp17 with
+                            | (Success ((y, g2), cache2)) -> (let tmp18 = (and_pre g12 g2) in
+                              let tmp19 = (y, tmp18) in
+                              let tmp20 = (tmp19, cache2) in
+                              (Success ((match tmp20 with (custard_tup, _) -> custard_tup), (match tmp20 with (_, custard_tup) -> custard_tup))))
+                            | err1 -> err1
+                          ))
+                        | (Error (err1)) -> (Error (err1))
+                      ))) in
+                    let tmp14 = (tmp13 ctx01 cache11) in
+                    (match tmp14 with
+                      | (Success ((y, g2), cache2)) -> (let tmp15 = (and_pre g11 g2) in
+                        let tmp16 = (y, tmp15) in
+                        let tmp17 = (tmp16, cache2) in
+                        (Success ((match tmp17 with (custard_tup, _) -> custard_tup), (match tmp17 with (_, custard_tup) -> custard_tup))))
+                      | err1 -> err1
+                    ))
+                  | (Error (err1)) -> (Error (err1))
+                ))) in
+              let tmp12 = (tmp11 ctx0 cache1) in
+              (match tmp12 with
+                | (Success ((y, g2), cache2)) -> (let tmp13 = (and_pre g1 g2) in
+                  let tmp14 = (y, tmp13) in
+                  let tmp15 = (tmp14, cache2) in
+                  (Success ((match tmp15 with (custard_tup, _) -> custard_tup), (match tmp15 with (_, custard_tup) -> custard_tup))))
+                | err1 -> err1
+              ))
+            | (Error (err1)) -> (Error (err1))
+          ))))
+      ))
+  ))
+
+and check_pat (g : env) (p : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) (t_sc : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (context -> (cache_t -> ((((FStarC_Syntax_Syntax.binder) list * (FStarC_Syntax_Syntax.universe) list) * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (let unrefine_tsc = (fun t_sc1 -> (let tmp = (FStarC_TypeChecker_Normalize.normalize_refinement FStarC_TypeChecker_Normalize.whnf_steps (g).tcenv t_sc1) in
+    (FStarC_Syntax_Util.unrefine tmp))) in
+  (match (p).FStarC_Syntax_Syntax.v with
+    | (FStarC_Syntax_Syntax.Pat_constant (c)) -> (let e = (match c with
+          | (FStarC_Const.Const_machine_int (repr, base, sw, w)) -> (FStarC_ToSyntax_ToSyntax.desugar_machine_integer ((g).tcenv).FStarC_TypeChecker_Env.dsenv repr base (sw, w) (p).FStarC_Syntax_Syntax.p)
+          | tmp -> (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_constant (c)) (p).FStarC_Syntax_Syntax.p)
+        ) in
+      let tmp = (check "pat_const" g e) in
+      (fun ctx0 cache0 -> (let tmp1 = (tmp ctx0 cache0) in
+      (match tmp1 with
+        | (Success ((x, g1), cache1)) -> (let tmp2 = (match x with
+              | (tmp2, t_const) -> (fun ctx01 cache01 -> (let ctx = { no_guard = (ctx01).no_guard;
+                    unfolding_ok = (ctx01).unfolding_ok;
+                    error_context = (("check_pat constant", None) :: (ctx01).error_context) } in
+                let tmp3 = (unrefine_tsc t_sc) in
+                let tmp4 = (check_subtype g (Some (e)) t_const tmp3) in
+                let tmp5 = (tmp4 ctx cache01) in
+                (match tmp5 with
+                  | (Success ((x1, g11), cache11)) -> (let tmp6 = (fun tmp6 cache -> (Success ((([], []), None), cache))) in
+                    let tmp7 = (tmp6 ctx01 cache11) in
+                    (match tmp7 with
+                      | (Success ((y, g2), cache2)) -> (let tmp8 = (and_pre g11 g2) in
+                        let tmp9 = (y, tmp8) in
+                        let tmp10 = (tmp9, cache2) in
+                        (Success ((match tmp10 with (custard_tup, _) -> custard_tup), (match tmp10 with (_, custard_tup) -> custard_tup))))
+                      | err -> err
+                    ))
+                  | (Error (err)) -> (Error (err))
+                )))
+            ) in
+          let tmp3 = (tmp2 ctx0 cache1) in
+          (match tmp3 with
+            | (Success ((y, g2), cache2)) -> (let tmp4 = (and_pre g1 g2) in
+              let tmp5 = (y, tmp4) in
+              let tmp6 = (tmp5, cache2) in
+              (Success ((match tmp6 with (custard_tup, _) -> custard_tup), (match tmp6 with (_, custard_tup) -> custard_tup))))
+            | err -> err
+          ))
+        | (Error (err)) -> (Error (err))
+      ))))
+    | (FStarC_Syntax_Syntax.Pat_var (bv)) -> (let b = (FStarC_Syntax_Syntax.mk_binder { FStarC_Syntax_Syntax.ppname = (bv).FStarC_Syntax_Syntax.ppname;
+          index = (bv).FStarC_Syntax_Syntax.index;
+          sort = t_sc }) in
+      (fun ctx0 cache0 -> (let ctx = { no_guard = (ctx0).no_guard;
+          unfolding_ok = (ctx0).unfolding_ok;
+          error_context = (("check_pat_binder", None) :: (ctx0).error_context) } in
+      let tmp = (check_binders g (b :: [])) in
+      let tmp1 = (tmp ctx cache0) in
+      (match tmp1 with
+        | (Success ((x, g1), cache1)) -> (let tmp2 = (match x with
+              | (u :: []) -> (fun tmp2 cache -> (Success ((((b :: []), (u :: [])), None), cache)))
+            ) in
+          let tmp3 = (tmp2 ctx0 cache1) in
+          (match tmp3 with
+            | (Success ((y, g2), cache2)) -> (let tmp4 = (and_pre g1 g2) in
+              let tmp5 = (y, tmp4) in
+              let tmp6 = (tmp5, cache2) in
+              (Success ((match tmp6 with (custard_tup, _) -> custard_tup), (match tmp6 with (_, custard_tup) -> custard_tup))))
+            | err -> err
+          ))
+        | (Error (err)) -> (Error (err))
+      ))))
+    | (FStarC_Syntax_Syntax.Pat_cons (fv, usopt, pats)) -> (let us = (if (match usopt with
+          | None -> true
+          | tmp -> false
+        ) then [] else (FStarC_Option.must usopt)) in
+      let tmp = (FStarC_TypeChecker_Env.lookup_and_inst_datacon (g).tcenv us (FStarC_Syntax_Syntax.lid_of_fv fv)) in
+      let tmp1 = (FStarC_Syntax_Util.arrow_formals tmp) in
+      (match tmp1 with
+        | (formals, t_pat) -> (let pats1 = (FStarC_List.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst pats) in
+          let tmp2 = (FStarC_Util.prefix_until (fun p1 -> (match (p1).FStarC_Syntax_Syntax.v with
+              | (FStarC_Syntax_Syntax.Pat_dot_term (tmp2)) -> false
+              | tmp2 -> true
+            )) pats1) in
+          let tmp3 = (FStarC_Option.map (fun tmp3 -> (match tmp3 with
+              | (dot_pats, pat, rest_pats) -> (dot_pats, (pat :: rest_pats))
+            )) tmp2) in
+          let tmp4 = (FStarC_Option.dflt (pats1, []) tmp3) in
+          (match tmp4 with
+            | (dot_pats, rest_pats) -> (let tmp5 = (FStarC_List.splitAt (FStarC_List.length dot_pats) formals) in
+              (match tmp5 with
+                | (dot_formals, rest_formals) -> (let tmp6 = (fold2 (fun ss tmp6 p1 -> (let expected_t = (FStarC_Syntax_Subst.subst ss ((tmp6).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
+                    (fun ctx0 cache0 -> (let tmp7 = ((match (p1).FStarC_Syntax_Syntax.v with
+                        | (FStarC_Syntax_Syntax.Pat_dot_term ((Some (t)))) -> (fun tmp7 cache -> (Success ((t, None), cache)))
+                        | tmp7 -> (fail_str "check_pat in core has unset dot pattern")
+                      ) ctx0 cache0) in
+                    (match tmp7 with
+                      | (Success ((x, g1), cache1)) -> (let tmp8 = (check "pat dot term" g x) in
+                        let tmp9 = (fun ctx01 cache01 -> (let tmp9 = (tmp8 ctx01 cache01) in
+                          (match tmp9 with
+                            | (Success ((x1, g11), cache11)) -> (let tmp10 = (match x1 with
+                                  | (tmp10, p_t) -> (fun ctx02 cache02 -> (let ctx = { no_guard = (ctx02).no_guard;
+                                        unfolding_ok = (ctx02).unfolding_ok;
+                                        error_context = (("check_pat cons", None) :: (ctx02).error_context) } in
+                                    let tmp11 = (check_subtype g (Some (x)) p_t expected_t) in
+                                    let tmp12 = (tmp11 ctx cache02) in
+                                    (match tmp12 with
+                                      | (Success ((x2, g12), cache12)) -> (let tmp13 = (fun tmp13 cache -> (Success (((FStar_List_Tot_Base.op_At ss ((FStarC_Syntax_Syntax.NT ((tmp6).FStarC_Syntax_Syntax.binder_bv, x)) :: [])), None), cache))) in
+                                        let tmp14 = (tmp13 ctx02 cache12) in
+                                        (match tmp14 with
+                                          | (Success ((y, g2), cache2)) -> (let tmp15 = (and_pre g12 g2) in
+                                            let tmp16 = (y, tmp15) in
+                                            let tmp17 = (tmp16, cache2) in
+                                            (Success ((match tmp17 with (custard_tup, _) -> custard_tup), (match tmp17 with (_, custard_tup) -> custard_tup))))
+                                          | err -> err
+                                        ))
+                                      | (Error (err)) -> (Error (err))
+                                    )))
+                                ) in
+                              let tmp11 = (tmp10 ctx01 cache11) in
+                              (match tmp11 with
+                                | (Success ((y, g2), cache2)) -> (let tmp12 = (and_pre g11 g2) in
+                                  let tmp13 = (y, tmp12) in
+                                  let tmp14 = (tmp13, cache2) in
+                                  (Success ((match tmp14 with (custard_tup, _) -> custard_tup), (match tmp14 with (_, custard_tup) -> custard_tup))))
+                                | err -> err
+                              ))
+                            | (Error (err)) -> (Error (err))
+                          ))) in
+                        let tmp10 = (tmp9 ctx0 cache1) in
+                        (match tmp10 with
+                          | (Success ((y, g2), cache2)) -> (let tmp11 = (and_pre g1 g2) in
+                            let tmp12 = (y, tmp11) in
+                            let tmp13 = (tmp12, cache2) in
+                            (Success ((match tmp13 with (custard_tup, _) -> custard_tup), (match tmp13 with (_, custard_tup) -> custard_tup))))
+                          | err -> err
+                        ))
+                      | (Error (err)) -> (Error (err))
+                    ))))) [] dot_formals dot_pats) in
+                  (fun ctx0 cache0 -> (let tmp7 = (tmp6 ctx0 cache0) in
+                  (match tmp7 with
+                    | (Success ((x, g1), cache1)) -> (let tmp8 = (fold2 (fun tmp8 tmp9 p1 -> (match (tmp8, tmp9) with
+                          | ((g2, ss, bs, us1), { FStarC_Syntax_Syntax.binder_bv = f; binder_qual = tmp10; binder_positivity = tmp11; binder_attrs = tmp12; _ }) -> (let expected_t = (FStarC_Syntax_Subst.subst ss (f).FStarC_Syntax_Syntax.sort) in
+                            let tmp13 = (check_pat g2 p1 expected_t) in
+                            let tmp14 = (with_binders g2 bs us1 tmp13) in
+                            (fun ctx01 cache01 -> (let tmp15 = (tmp14 ctx01 cache01) in
+                            (match tmp15 with
+                              | (Success ((x1, g11), cache11)) -> (let tmp16 = (match x1 with
+                                    | (bs_p, us_p) -> (let tmp16 = (FStarC_TypeChecker_PatternUtils.raw_pat_as_exp (g2).tcenv p1) in
+                                      let tmp17 = (FStarC_Option.must tmp16) in
+                                      let p_e = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp17) in
+                                      let tmp18 = (push_binders g2 bs_p) in
+                                      let tmp19 = (tmp18, (FStar_List_Tot_Base.op_At ss ((FStarC_Syntax_Syntax.NT (f, p_e)) :: [])), (FStar_List_Tot_Base.op_At bs bs_p), (FStar_List_Tot_Base.op_At us1 us_p)) in
+                                      (fun tmp20 cache -> (Success ((tmp19, None), cache))))
+                                  ) in
+                                let tmp17 = (tmp16 ctx01 cache11) in
+                                (match tmp17 with
+                                  | (Success ((y, g21), cache2)) -> (let tmp18 = (and_pre g11 g21) in
+                                    let tmp19 = (y, tmp18) in
+                                    let tmp20 = (tmp19, cache2) in
+                                    (Success ((match tmp20 with (custard_tup, _) -> custard_tup), (match tmp20 with (_, custard_tup) -> custard_tup))))
+                                  | err -> err
+                                ))
+                              | (Error (err)) -> (Error (err))
+                            ))))
+                        )) (g, x, [], []) rest_formals rest_pats) in
+                      let tmp9 = (fun ctx01 cache01 -> (let tmp9 = (tmp8 ctx01 cache01) in
+                        (match tmp9 with
+                          | (Success ((x1, g11), cache11)) -> (let tmp10 = (match x1 with
+                                | (tmp10, ss, bs, us1) -> (let t_pat1 = (FStarC_Syntax_Subst.subst ss t_pat) in
+                                  let tmp11 = (unrefine_tsc t_sc) in
+                                  let tmp12 = (check_scrutinee_pattern_type_compatible g tmp11 t_pat1) in
+                                  let tmp13 = (no_guard tmp12) in
+                                  (fun ctx02 cache02 -> (let tmp14 = (tmp13 ctx02 cache02) in
+                                  (match tmp14 with
+                                    | (Success ((x2, g12), cache12)) -> (let tmp15 = (fun tmp15 cache -> (Success (((bs, us1), None), cache))) in
+                                      let tmp16 = (tmp15 ctx02 cache12) in
+                                      (match tmp16 with
+                                        | (Success ((y, g2), cache2)) -> (let tmp17 = (and_pre g12 g2) in
+                                          let tmp18 = (y, tmp17) in
+                                          let tmp19 = (tmp18, cache2) in
+                                          (Success ((match tmp19 with (custard_tup, _) -> custard_tup), (match tmp19 with (_, custard_tup) -> custard_tup))))
+                                        | err -> err
+                                      ))
+                                    | (Error (err)) -> (Error (err))
+                                  ))))
+                              ) in
+                            let tmp11 = (tmp10 ctx01 cache11) in
+                            (match tmp11 with
+                              | (Success ((y, g2), cache2)) -> (let tmp12 = (and_pre g11 g2) in
+                                let tmp13 = (y, tmp12) in
+                                let tmp14 = (tmp13, cache2) in
+                                (Success ((match tmp14 with (custard_tup, _) -> custard_tup), (match tmp14 with (_, custard_tup) -> custard_tup))))
+                              | err -> err
+                            ))
+                          | (Error (err)) -> (Error (err))
+                        ))) in
+                      let tmp10 = (tmp9 ctx0 cache1) in
+                      (match tmp10 with
+                        | (Success ((y, g2), cache2)) -> (let tmp11 = (and_pre g1 g2) in
+                          let tmp12 = (y, tmp11) in
+                          let tmp13 = (tmp12, cache2) in
+                          (Success ((match tmp13 with (custard_tup, _) -> custard_tup), (match tmp13 with (_, custard_tup) -> custard_tup))))
+                        | err -> err
+                      ))
+                    | (Error (err)) -> (Error (err))
+                  ))))
+              ))
+          ))
+      ))
+    | tmp -> (fail_str "check_pat called with a dot pattern")
+  ))
+
+and pattern_branch_condition (g : env) (scrutinee : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (pat : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) : (context -> (cache_t -> ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (match (pat).FStarC_Syntax_Syntax.v with
+    | (FStarC_Syntax_Syntax.Pat_var (tmp)) -> (fun tmp1 cache -> (Success ((None, None), cache)))
+    | (FStarC_Syntax_Syntax.Pat_constant (c)) -> (let tmp = (FStarC_TypeChecker_PatternUtils.raw_pat_as_exp (g).tcenv pat) in
+      let const_exp = (match tmp with
+          | None -> (FStarC_Effect.failwith "Impossible")
+          | (Some ((e, tmp1))) -> e
+        ) in
+      let tmp1 = (check "constant pattern" g const_exp) in
+      (fun ctx0 cache0 -> (let tmp2 = (tmp1 ctx0 cache0) in
+      (match tmp2 with
+        | (Success ((x, g1), cache1)) -> (let tmp3 = (match x with
+              | (tmp3, t_const) -> (let tmp4 = (FStarC_Syntax_Util.mk_decidable_eq t_const scrutinee const_exp) in
+                let tmp5 = (Some (tmp4)) in
+                (fun tmp6 cache -> (Success ((tmp5, None), cache))))
+            ) in
+          let tmp4 = (tmp3 ctx0 cache1) in
+          (match tmp4 with
+            | (Success ((y, g2), cache2)) -> (let tmp5 = (and_pre g1 g2) in
+              let tmp6 = (y, tmp5) in
+              let tmp7 = (tmp6, cache2) in
+              (Success ((match tmp7 with (custard_tup, _) -> custard_tup), (match tmp7 with (_, custard_tup) -> custard_tup))))
+            | err -> err
+          ))
+        | (Error (err)) -> (Error (err))
+      ))))
+    | (FStarC_Syntax_Syntax.Pat_cons (fv, us_opt, sub_pats)) -> (let wild_pat = (fun pos -> (FStarC_Syntax_Syntax.withinfo (FStarC_Syntax_Syntax.Pat_var ((wild_bv FStarC_Syntax_Syntax.tun pos))) pos)) in
+      let mk_head_discriminator = (fun tmp -> (let tmp1 = (FStarC_List.map (fun tmp1 -> (match tmp1 with
+            | (s, b) -> ((wild_pat (s).FStarC_Syntax_Syntax.p), b)
+          )) sub_pats) in
+        let tmp2 = (fv, us_opt, tmp1) in
+        let tmp3 = (FStarC_Syntax_Syntax.Pat_cons ((match tmp2 with (custard_tup, _, _) -> custard_tup), (match tmp2 with (_, custard_tup, _) -> custard_tup), (match tmp2 with (_, _, custard_tup) -> custard_tup))) in
+        let pat1 = (FStarC_Syntax_Syntax.withinfo tmp3 (pat).FStarC_Syntax_Syntax.p) in
+        let branch1 = (pat1, None, FStarC_Syntax_Util.exp_true_bool) in
+        let branch2 = ((FStarC_Syntax_Syntax.withinfo (FStarC_Syntax_Syntax.Pat_var ((wild_bv FStarC_Syntax_Syntax.tun (pat1).FStarC_Syntax_Syntax.p))) (pat1).FStarC_Syntax_Syntax.p), None, FStarC_Syntax_Util.exp_false_bool) in
+        (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_match (({ FStarC_Syntax_Syntax.scrutinee = scrutinee;
+          ret_opt = None;
+          brs = (branch1 :: (branch2 :: []));
+          rc_opt = None } : FStarC_Syntax_Syntax.term'__Tm_match__payload))) (scrutinee).FStarC_Syntax_Syntax.pos))) in
+      let mk_ith_projector = (fun i -> (let tmp = (wild_bv FStarC_Syntax_Syntax.tun (scrutinee).FStarC_Syntax_Syntax.pos) in
+        let bv = { FStarC_Syntax_Syntax.ppname = (tmp).FStarC_Syntax_Syntax.ppname;
+            index = (Prims.parse_int "1");
+            sort = (tmp).FStarC_Syntax_Syntax.sort } in
+        let tmp1 = (bv, (FStarC_Syntax_Syntax.withinfo (FStarC_Syntax_Syntax.Pat_var (bv)) (scrutinee).FStarC_Syntax_Syntax.pos)) in
+        (match tmp1 with
+          | (ith_pat_var, ith_pat) -> (let sub_pats1 = (FStarC_List.mapi (fun j tmp2 -> (match tmp2 with
+                | (s, b) -> (if ((<>) i j) then ((wild_pat (s).FStarC_Syntax_Syntax.p), b) else (ith_pat, b))
+              )) sub_pats) in
+            let pat1 = (FStarC_Syntax_Syntax.withinfo (FStarC_Syntax_Syntax.Pat_cons (fv, us_opt, sub_pats1)) (pat).FStarC_Syntax_Syntax.p) in
+            let branch = (FStarC_Syntax_Syntax.bv_to_name ith_pat_var) in
+            let eqn = (FStarC_Syntax_Subst.close_branch (pat1, None, branch)) in
+            (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_match (({ FStarC_Syntax_Syntax.scrutinee = scrutinee;
+              ret_opt = None;
+              brs = (eqn :: []);
+              rc_opt = None } : FStarC_Syntax_Syntax.term'__Tm_match__payload))) (scrutinee).FStarC_Syntax_Syntax.pos))
+        ))) in
+      let tmp = (FStarC_TypeChecker_Env.typ_of_datacon (g).tcenv (fv).FStarC_Syntax_Syntax.fv_name) in
+      let tmp1 = (FStarC_TypeChecker_Env.datacons_of_typ (g).tcenv tmp) in
+      let discrimination = (match tmp1 with
+          | (is_induc, datacons) -> (if ((not is_induc) || (Prims.op_Greater (FStarC_List.length datacons) (Prims.parse_int "1"))) then (let discriminator = (FStarC_Syntax_Util.mk_discriminator (fv).FStarC_Syntax_Syntax.fv_name) in
+            let tmp2 = (FStarC_TypeChecker_Env.try_lookup_lid (g).tcenv discriminator) in
+            (match tmp2 with
+              | None -> None
+              | tmp3 -> (let tmp4 = (mk_head_discriminator ()) in
+                (Some (tmp4)))
+            )) else None)
+        ) in
+      let tmp2 = (mapi (fun i tmp2 -> (match tmp2 with
+          | (pi, tmp3) -> (match (pi).FStarC_Syntax_Syntax.v with
+              | (FStarC_Syntax_Syntax.Pat_dot_term (tmp4)) -> (fun tmp5 cache -> (Success ((None, None), cache)))
+              | (FStarC_Syntax_Syntax.Pat_var (tmp4)) -> (fun tmp5 cache -> (Success ((None, None), cache)))
+              | tmp4 -> (let scrutinee_sub_term = (mk_ith_projector i) in
+                (pattern_branch_condition g scrutinee_sub_term pi))
+            )
+        )) sub_pats) in
+      (fun ctx0 cache0 -> (let tmp3 = (tmp2 ctx0 cache0) in
+      (match tmp3 with
+        | (Success ((x, g1), cache1)) -> (let guards = (FStarC_List.collect (fun tmp4 -> (match tmp4 with
+              | None -> []
+              | (Some (t)) -> (t :: [])
+            )) (discrimination :: x)) in
+          let tmp4 = (match guards with
+              | [] -> (fun tmp4 cache -> (Success ((None, None), cache)))
+              | guards1 -> (let tmp4 = (FStarC_Syntax_Util.mk_and_l guards1) in
+                let tmp5 = (Some (tmp4)) in
+                (fun tmp6 cache -> (Success ((tmp5, None), cache))))
+            ) in
+          let tmp5 = (tmp4 ctx0 cache1) in
+          (match tmp5 with
+            | (Success ((y, g2), cache2)) -> (let tmp6 = (and_pre g1 g2) in
+              let tmp7 = (y, tmp6) in
+              let tmp8 = (tmp7, cache2) in
+              (Success ((match tmp8 with (custard_tup, _) -> custard_tup), (match tmp8 with (_, custard_tup) -> custard_tup))))
+            | err -> err
+          ))
+        | (Error (err)) -> (Error (err))
+      ))))
+  )
+
+and do_check__check_branches (g : env) (sc : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (t_sc : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (x : FStarC_Syntax_Syntax.universe) (path_condition : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (branch_typ_opt : ((tot_or_ghost * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) option) (branches : (((FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) list) : (context -> (cache_t -> (((tot_or_ghost * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (match branches with
+    | [] -> (match branch_typ_opt with
+        | None -> (fail_str "could not compute a type for the match")
+        | (Some (et)) -> (let tmp = (boolean_negation_simp path_condition) in
+          (match tmp with
+            | None -> (fun tmp1 cache -> (Success ((et, None), cache)))
+            | (Some (neg_path)) -> (let tmp1 = (FStarC_Syntax_Util.b2t neg_path) in
+              let tmp2 = (guard g tmp1) in
+              (fun ctx0 cache0 -> (let tmp3 = (tmp2 ctx0 cache0) in
+              (match tmp3 with
+                | (Success ((x1, g1), cache1)) -> (let tmp4 = (fun tmp4 cache -> (Success ((et, None), cache))) in
+                  let tmp5 = (tmp4 ctx0 cache1) in
+                  (match tmp5 with
+                    | (Success ((y, g2), cache2)) -> (let tmp6 = (and_pre g1 g2) in
+                      let tmp7 = (y, tmp6) in
+                      let tmp8 = (tmp7, cache2) in
+                      (Success ((match tmp8 with (custard_tup, _) -> custard_tup), (match tmp8 with (_, custard_tup) -> custard_tup))))
+                    | err -> err
+                  ))
+                | (Error (err)) -> (Error (err))
+              ))))
+          ))
+      )
+    | ((p, None, b) :: rest) -> (let tmp = (open_branch g (p, None, b)) in
+      (match tmp with
+        | (tmp1, (p1, tmp2, b1)) -> (fun ctx0 cache0 -> (let ctx = { no_guard = (ctx0).no_guard;
+              unfolding_ok = (ctx0).unfolding_ok;
+              error_context = (("check_pat", None) :: (ctx0).error_context) } in
+          let tmp3 = (check_pat g p1 t_sc) in
+          let tmp4 = (tmp3 ctx cache0) in
+          (match tmp4 with
+            | (Success ((x1, g1), cache1)) -> (let tmp5 = (match x1 with
+                  | (bs, us) -> (let tmp5 = (pattern_branch_condition g sc p1) in
+                    (fun ctx01 cache01 -> (let tmp6 = (tmp5 ctx01 cache01) in
+                    (match tmp6 with
+                      | (Success ((x2, g11), cache11)) -> (let tmp7 = (FStarC_TypeChecker_PatternUtils.raw_pat_as_exp (g).tcenv p1) in
+                        let tmp8 = (FStarC_Option.must tmp7) in
+                        let tmp9 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp8) in
+                        let pat_sc_eq = (FStarC_Syntax_Util.mk_eq2 x t_sc sc tmp9) in
+                        let tmp10 = (combine_path_and_branch_condition path_condition x2 pat_sc_eq) in
+                        let tmp11 = (match tmp10 with
+                            | (this_path_condition, next_path_condition) -> (let g'0 = (push_binders g bs) in
+                              let g' = (push_hypothesis g'0 this_path_condition) in
+                              (fun ctx02 cache02 -> (let tmp11 = (with_binders g bs us (weaken g'0 this_path_condition (fun ctx03 cache03 -> (let ctx1 = { no_guard = (ctx03).no_guard;
+                                    unfolding_ok = (ctx03).unfolding_ok;
+                                    error_context = (("branch", (Some ((CtxTerm (b1))))) :: (ctx03).error_context) } in
+                                let tmp11 = (check "branch" g' b1) in
+                                let tmp12 = (tmp11 ctx1 cache03) in
+                                (match tmp12 with
+                                  | (Success ((x3, g12), cache12)) -> (let tmp13 = (match x3 with
+                                        | (eff_br, tbr) -> (match branch_typ_opt with
+                                            | None -> (let tmp13 = (check_no_escape bs tbr) in
+                                              (fun ctx04 cache04 -> (let tmp14 = (tmp13 ctx04 cache04) in
+                                              (match tmp14 with
+                                                | (Success ((x4, g13), cache13)) -> (let tmp15 = (fun tmp15 cache -> (Success (((eff_br, tbr), None), cache))) in
+                                                  let tmp16 = (tmp15 ctx04 cache13) in
+                                                  (match tmp16 with
+                                                    | (Success ((y, g2), cache2)) -> (let tmp17 = (and_pre g13 g2) in
+                                                      let tmp18 = (y, tmp17) in
+                                                      let tmp19 = (tmp18, cache2) in
+                                                      (Success ((match tmp19 with (custard_tup, _) -> custard_tup), (match tmp19 with (_, custard_tup) -> custard_tup))))
+                                                    | err -> err
+                                                  ))
+                                                | (Error (err)) -> (Error (err))
+                                              ))))
+                                            | (Some ((acc_eff, expect_tbr))) -> (fun ctx04 cache04 -> (let ctx2 = { no_guard = (ctx04).no_guard;
+                                                  unfolding_ok = (ctx04).unfolding_ok;
+                                                  error_context = (("check_branch_subtype", (Some ((CtxRel (tbr, (SUBTYPING ((Some (b1)))), expect_tbr))))) :: (ctx04).error_context) } in
+                                              let tmp13 = (check_subtype g' (Some (b1)) tbr expect_tbr) in
+                                              let tmp14 = (tmp13 ctx2 cache04) in
+                                              (match tmp14 with
+                                                | (Success ((x4, g13), cache13)) -> (let tmp15 = (fun tmp15 cache -> (Success ((((join_eff eff_br acc_eff), expect_tbr), None), cache))) in
+                                                  let tmp16 = (tmp15 ctx04 cache13) in
+                                                  (match tmp16 with
+                                                    | (Success ((y, g2), cache2)) -> (let tmp17 = (and_pre g13 g2) in
+                                                      let tmp18 = (y, tmp17) in
+                                                      let tmp19 = (tmp18, cache2) in
+                                                      (Success ((match tmp19 with (custard_tup, _) -> custard_tup), (match tmp19 with (_, custard_tup) -> custard_tup))))
+                                                    | err -> err
+                                                  ))
+                                                | (Error (err)) -> (Error (err))
+                                              )))
+                                          )
+                                      ) in
+                                    let tmp14 = (tmp13 ctx03 cache12) in
+                                    (match tmp14 with
+                                      | (Success ((y, g2), cache2)) -> (let tmp15 = (and_pre g12 g2) in
+                                        let tmp16 = (y, tmp15) in
+                                        let tmp17 = (tmp16, cache2) in
+                                        (Success ((match tmp17 with (custard_tup, _) -> custard_tup), (match tmp17 with (_, custard_tup) -> custard_tup))))
+                                      | err -> err
+                                    ))
+                                  | (Error (err)) -> (Error (err))
+                                )))) ctx02 cache02) in
+                              (match tmp11 with
+                                | (Success ((x3, g12), cache12)) -> (let tmp12 = (match x3 with
+                                      | (eff_br, tbr) -> (match (p1).FStarC_Syntax_Syntax.v with
+                                          | (FStarC_Syntax_Syntax.Pat_var (tmp12)) -> (match rest with
+                                              | (tmp13 :: tmp14) -> (fail_str "Redundant branches after wildcard")
+                                              | tmp13 -> (fun tmp14 cache -> (Success (((eff_br, tbr), None), cache)))
+                                            )
+                                          | tmp12 -> ((do_check__check_branches g sc t_sc x) next_path_condition (Some ((eff_br, tbr))) rest)
+                                        )
+                                    ) in
+                                  let tmp13 = (tmp12 ctx02 cache12) in
+                                  (match tmp13 with
+                                    | (Success ((y, g2), cache2)) -> (let tmp14 = (and_pre g12 g2) in
+                                      let tmp15 = (y, tmp14) in
+                                      let tmp16 = (tmp15, cache2) in
+                                      (Success ((match tmp16 with (custard_tup, _) -> custard_tup), (match tmp16 with (_, custard_tup) -> custard_tup))))
+                                    | err -> err
+                                  ))
+                                | (Error (err)) -> (Error (err))
+                              ))))
+                          ) in
+                        let tmp12 = (tmp11 ctx01 cache11) in
+                        (match tmp12 with
+                          | (Success ((y, g2), cache2)) -> (let tmp13 = (and_pre g11 g2) in
+                            let tmp14 = (y, tmp13) in
+                            let tmp15 = (tmp14, cache2) in
+                            (Success ((match tmp15 with (custard_tup, _) -> custard_tup), (match tmp15 with (_, custard_tup) -> custard_tup))))
+                          | err -> err
+                        ))
+                      | (Error (err)) -> (Error (err))
+                    ))))
+                ) in
+              let tmp6 = (tmp5 ctx0 cache1) in
+              (match tmp6 with
+                | (Success ((y, g2), cache2)) -> (let tmp7 = (and_pre g1 g2) in
+                  let tmp8 = (y, tmp7) in
+                  let tmp9 = (tmp8, cache2) in
+                  (Success ((match tmp9 with (custard_tup, _) -> custard_tup), (match tmp9 with (_, custard_tup) -> custard_tup))))
+                | err -> err
+              ))
+            | (Error (err)) -> (Error (err))
+          )))
+      ))
+  )
+
+and fStarC_TypeChecker_Core_do_check__check_branches__1 (g : env) (sc : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (eq : bool) (t_sc : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (x : FStarC_Syntax_Syntax.universe) (as_x : FStarC_Syntax_Syntax.binder) (returns_ty : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (path_condition : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (branches : (((FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) list) (acc_eff : tot_or_ghost) : (context -> (cache_t -> ((tot_or_ghost * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (match branches with
+    | [] -> (let tmp = (boolean_negation_simp path_condition) in
+      (match tmp with
+        | None -> (fun tmp1 cache -> (Success ((acc_eff, None), cache)))
+        | (Some (neg_path)) -> (let tmp1 = (FStarC_Syntax_Util.b2t neg_path) in
+          let tmp2 = (guard g tmp1) in
+          (fun ctx0 cache0 -> (let tmp3 = (tmp2 ctx0 cache0) in
+          (match tmp3 with
+            | (Success ((x1, g1), cache1)) -> (let tmp4 = (fun tmp4 cache -> (Success ((acc_eff, None), cache))) in
+              let tmp5 = (tmp4 ctx0 cache1) in
+              (match tmp5 with
+                | (Success ((y, g2), cache2)) -> (let tmp6 = (and_pre g1 g2) in
+                  let tmp7 = (y, tmp6) in
+                  let tmp8 = (tmp7, cache2) in
+                  (Success ((match tmp8 with (custard_tup, _) -> custard_tup), (match tmp8 with (_, custard_tup) -> custard_tup))))
+                | err -> err
+              ))
+            | (Error (err)) -> (Error (err))
+          ))))
+      ))
+    | ((p, None, b) :: rest) -> (let tmp = (open_branch g (p, None, b)) in
+      (match tmp with
+        | (tmp1, (p1, tmp2, b1)) -> (fun ctx0 cache0 -> (let ctx = { no_guard = (ctx0).no_guard;
+              unfolding_ok = (ctx0).unfolding_ok;
+              error_context = (("check_pat", None) :: (ctx0).error_context) } in
+          let tmp3 = (check_pat g p1 t_sc) in
+          let tmp4 = (tmp3 ctx cache0) in
+          (match tmp4 with
+            | (Success ((x1, g1), cache1)) -> (let tmp5 = (match x1 with
+                  | (bs, us) -> (let tmp5 = (pattern_branch_condition g sc p1) in
+                    (fun ctx01 cache01 -> (let tmp6 = (tmp5 ctx01 cache01) in
+                    (match tmp6 with
+                      | (Success ((x2, g11), cache11)) -> (let tmp7 = (FStarC_TypeChecker_PatternUtils.raw_pat_as_exp (g).tcenv p1) in
+                        let tmp8 = (FStarC_Option.must tmp7) in
+                        let tmp9 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp8) in
+                        let pat_sc_eq = (FStarC_Syntax_Util.mk_eq2 x t_sc sc tmp9) in
+                        let tmp10 = (combine_path_and_branch_condition path_condition x2 pat_sc_eq) in
+                        let tmp11 = (match tmp10 with
+                            | (this_path_condition, next_path_condition) -> (let g'0 = (push_binders g bs) in
+                              let g' = (push_hypothesis g'0 this_path_condition) in
+                              let tmp11 = (check "branch" g' b1) in
+                              let tmp12 = (fun ctx02 cache02 -> (let tmp12 = (tmp11 ctx02 cache02) in
+                                (match tmp12 with
+                                  | (Success ((x3, g12), cache12)) -> (let tmp13 = (match x3 with
+                                        | (eff_br, tbr) -> (let expect_tbr = (FStarC_Syntax_Subst.subst ((FStarC_Syntax_Syntax.NT ((as_x).FStarC_Syntax_Syntax.binder_bv, sc)) :: []) returns_ty) in
+                                          let rel = (if eq then EQUALITY else (SUBTYPING ((Some (b1))))) in
+                                          (fun ctx03 cache03 -> (let ctx1 = { no_guard = (ctx03).no_guard;
+                                              unfolding_ok = (ctx03).unfolding_ok;
+                                              error_context = (("branch check relation", None) :: (ctx03).error_context) } in
+                                          let tmp13 = (check_relation g' rel tbr expect_tbr) in
+                                          let tmp14 = (tmp13 ctx1 cache03) in
+                                          (match tmp14 with
+                                            | (Success ((x4, g13), cache13)) -> (let tmp15 = (fun tmp15 cache -> (Success ((((join_eff eff_br acc_eff), expect_tbr), None), cache))) in
+                                              let tmp16 = (tmp15 ctx03 cache13) in
+                                              (match tmp16 with
+                                                | (Success ((y, g2), cache2)) -> (let tmp17 = (and_pre g13 g2) in
+                                                  let tmp18 = (y, tmp17) in
+                                                  let tmp19 = (tmp18, cache2) in
+                                                  (Success ((match tmp19 with (custard_tup, _) -> custard_tup), (match tmp19 with (_, custard_tup) -> custard_tup))))
+                                                | err -> err
+                                              ))
+                                            | (Error (err)) -> (Error (err))
+                                          ))))
+                                      ) in
+                                    let tmp14 = (tmp13 ctx02 cache12) in
+                                    (match tmp14 with
+                                      | (Success ((y, g2), cache2)) -> (let tmp15 = (and_pre g12 g2) in
+                                        let tmp16 = (y, tmp15) in
+                                        let tmp17 = (tmp16, cache2) in
+                                        (Success ((match tmp17 with (custard_tup, _) -> custard_tup), (match tmp17 with (_, custard_tup) -> custard_tup))))
+                                      | err -> err
+                                    ))
+                                  | (Error (err)) -> (Error (err))
+                                ))) in
+                              let tmp13 = (weaken g'0 this_path_condition tmp12) in
+                              let tmp14 = (with_binders g bs us tmp13) in
+                              (fun ctx02 cache02 -> (let tmp15 = (tmp14 ctx02 cache02) in
+                              (match tmp15 with
+                                | (Success ((x3, g12), cache12)) -> (let tmp16 = (match x3 with
+                                      | (eff_br, tbr) -> (match (p1).FStarC_Syntax_Syntax.v with
+                                          | (FStarC_Syntax_Syntax.Pat_var (tmp16)) -> (match rest with
+                                              | (tmp17 :: tmp18) -> (fail_str "Redundant branches after wildcard")
+                                              | tmp17 -> (fun tmp18 cache -> (Success ((eff_br, None), cache)))
+                                            )
+                                          | tmp16 -> ((fStarC_TypeChecker_Core_do_check__check_branches__1 g sc eq t_sc x as_x returns_ty) next_path_condition rest eff_br)
+                                        )
+                                    ) in
+                                  let tmp17 = (tmp16 ctx02 cache12) in
+                                  (match tmp17 with
+                                    | (Success ((y, g2), cache2)) -> (let tmp18 = (and_pre g12 g2) in
+                                      let tmp19 = (y, tmp18) in
+                                      let tmp20 = (tmp19, cache2) in
+                                      (Success ((match tmp20 with (custard_tup, _) -> custard_tup), (match tmp20 with (_, custard_tup) -> custard_tup))))
+                                    | err -> err
+                                  ))
+                                | (Error (err)) -> (Error (err))
+                              ))))
+                          ) in
+                        let tmp12 = (tmp11 ctx01 cache11) in
+                        (match tmp12 with
+                          | (Success ((y, g2), cache2)) -> (let tmp13 = (and_pre g11 g2) in
+                            let tmp14 = (y, tmp13) in
+                            let tmp15 = (tmp14, cache2) in
+                            (Success ((match tmp15 with (custard_tup, _) -> custard_tup), (match tmp15 with (_, custard_tup) -> custard_tup))))
+                          | err -> err
+                        ))
+                      | (Error (err)) -> (Error (err))
+                    ))))
+                ) in
+              let tmp6 = (tmp5 ctx0 cache1) in
+              (match tmp6 with
+                | (Success ((y, g2), cache2)) -> (let tmp7 = (and_pre g1 g2) in
+                  let tmp8 = (y, tmp7) in
+                  let tmp9 = (tmp8, cache2) in
+                  (Success ((match tmp9 with (custard_tup, _) -> custard_tup), (match tmp9 with (_, custard_tup) -> custard_tup))))
+                | err -> err
+              ))
+            | (Error (err)) -> (Error (err))
+          )))
+      ))
+  )
+
+and do_check (g : env) (e : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (context -> (cache_t -> (((tot_or_ghost * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (let e1 = (FStarC_Syntax_Subst.compress e) in
+  (match (e1).FStarC_Syntax_Syntax.n with
+    | (FStarC_Syntax_Syntax.Tm_lazy ({ FStarC_Syntax_Syntax.blob = tmp; lkind = (FStarC_Syntax_Syntax.Lazy_embedding (u__1, u__2)); ltyp = tmp1; rng = tmp2; _ })) -> (let tmp3 = (FStarC_Syntax_Util.unlazy e1) in
+      (do_check g tmp3))
+    | (FStarC_Syntax_Syntax.Tm_lazy (i)) -> (fun tmp cache -> (Success (((E_Total, (i).FStarC_Syntax_Syntax.ltyp), None), cache)))
+    | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t; meta = tmp; _ })) -> (memo_check g t)
+    | (FStarC_Syntax_Syntax.Tm_uvar (uv, s)) -> (let tmp = (FStarC_Syntax_Util.ctx_uvar_typ uv) in
+      let tmp1 = (FStarC_Syntax_Subst.subst' s tmp) in
+      let tmp2 = (E_Total, tmp1) in
+      (fun tmp3 cache -> (Success ((tmp2, None), cache))))
+    | (FStarC_Syntax_Syntax.Tm_name (x)) -> (let tmp = (FStarC_TypeChecker_Env.try_lookup_bv (g).tcenv x) in
+      (match tmp with
+        | None -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__bv x) in
+          let tmp2 = (FStarC_Format.fmt1 "Variable not found: %s" tmp1) in
+          (fail_str tmp2))
+        | (Some ((t, tmp1))) -> (fun tmp2 cache -> (Success (((E_Total, t), None), cache)))
+      ))
+    | (FStarC_Syntax_Syntax.Tm_fvar (f)) -> (let tmp = (FStarC_TypeChecker_Env.try_lookup_lid (g).tcenv (f).FStarC_Syntax_Syntax.fv_name) in
+      (match tmp with
+        | (Some ((([], t), tmp1))) -> (fun tmp2 cache -> (Success (((E_Total, t), None), cache)))
+        | tmp1 -> (fail_str "Missing universes instantiation")
+      ))
+    | (FStarC_Syntax_Syntax.Tm_uinst ({ FStarC_Syntax_Syntax.n = (FStarC_Syntax_Syntax.Tm_fvar (f)); pos = tmp; hash_code = tmp1; _ }, us)) -> (let tmp2 = (FStarC_TypeChecker_Env.try_lookup_and_inst_lid (g).tcenv us (f).FStarC_Syntax_Syntax.fv_name) in
+      (match tmp2 with
+        | None -> (fail_str (FStarC_Format.fmt1 "Top-level name not found: %s" (FStarC_Ident.string_of_lid (f).FStarC_Syntax_Syntax.fv_name)))
+        | (Some ((t, tmp3))) -> (fun tmp4 cache -> (Success (((E_Total, t), None), cache)))
+      ))
+    | (FStarC_Syntax_Syntax.Tm_constant (c)) -> (match c with
+        | FStarC_Const.Const_range_of -> (fail_str "Unhandled constant")
+        | FStarC_Const.Const_set_range_of -> (fail_str "Unhandled constant")
+        | (FStarC_Const.Const_reify (tmp)) -> (fail_str "Unhandled constant")
+        | (FStarC_Const.Const_reflect (tmp)) -> (fail_str "Unhandled constant")
+        | tmp -> (let t = (FStarC_TypeChecker_TcTerm.tc_constant (g).tcenv (e1).FStarC_Syntax_Syntax.pos c) in
+          (fun tmp1 cache -> (Success (((E_Total, t), None), cache))))
+      )
+    | (FStarC_Syntax_Syntax.Tm_type (u)) -> (let tmp = (mk_type (FStarC_Syntax_Syntax.U_succ (u))) in
+      let tmp1 = (E_Total, tmp) in
+      (fun tmp2 cache -> (Success ((tmp1, None), cache))))
+    | (FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = x; phi = phi; _ })) -> (let tmp = (check "refinement head" g (x).FStarC_Syntax_Syntax.sort) in
+      (fun ctx0 cache0 -> (let tmp1 = (tmp ctx0 cache0) in
+      (match tmp1 with
+        | (Success ((x1, g1), cache1)) -> (let tmp2 = (match x1 with
+              | (tmp2, t) -> (fun ctx01 cache01 -> (let tmp3 = (is_type g t ctx01 cache01) in
+                (match tmp3 with
+                  | (Success ((x2, g11), cache11)) -> (let tmp4 = (open_term g (FStarC_Syntax_Syntax.mk_binder x) phi) in
+                    let tmp5 = (match tmp4 with
+                        | (g', x3, phi1) -> (let tmp5 = (check "refinement formula" g' phi1) in
+                          let tmp6 = (fun ctx02 cache02 -> (let tmp6 = (tmp5 ctx02 cache02) in
+                            (match tmp6 with
+                              | (Success ((x4, g12), cache12)) -> (let tmp7 = (match x4 with
+                                    | (tmp7, t') -> (let tmp8 = (is_prop g' t') in
+                                      (fun ctx03 cache03 -> (let tmp9 = (tmp8 ctx03 cache03) in
+                                      (match tmp9 with
+                                        | (Success ((x5, g13), cache13)) -> (let tmp10 = (fun tmp10 cache -> (Success (((E_Total, t), None), cache))) in
+                                          let tmp11 = (tmp10 ctx03 cache13) in
+                                          (match tmp11 with
+                                            | (Success ((y, g2), cache2)) -> (let tmp12 = (and_pre g13 g2) in
+                                              let tmp13 = (y, tmp12) in
+                                              let tmp14 = (tmp13, cache2) in
+                                              (Success ((match tmp14 with (custard_tup, _) -> custard_tup), (match tmp14 with (_, custard_tup) -> custard_tup))))
+                                            | err -> err
+                                          ))
+                                        | (Error (err)) -> (Error (err))
+                                      ))))
+                                  ) in
+                                let tmp8 = (tmp7 ctx02 cache12) in
+                                (match tmp8 with
+                                  | (Success ((y, g2), cache2)) -> (let tmp9 = (and_pre g12 g2) in
+                                    let tmp10 = (y, tmp9) in
+                                    let tmp11 = (tmp10, cache2) in
+                                    (Success ((match tmp11 with (custard_tup, _) -> custard_tup), (match tmp11 with (_, custard_tup) -> custard_tup))))
+                                  | err -> err
+                                ))
+                              | (Error (err)) -> (Error (err))
+                            ))) in
+                          (with_binders g (x3 :: []) (x2 :: []) tmp6))
+                      ) in
+                    let tmp6 = (tmp5 ctx01 cache11) in
+                    (match tmp6 with
+                      | (Success ((y, g2), cache2)) -> (let tmp7 = (and_pre g11 g2) in
+                        let tmp8 = (y, tmp7) in
+                        let tmp9 = (tmp8, cache2) in
+                        (Success ((match tmp9 with (custard_tup, _) -> custard_tup), (match tmp9 with (_, custard_tup) -> custard_tup))))
+                      | err -> err
+                    ))
+                  | (Error (err)) -> (Error (err))
+                )))
+            ) in
+          let tmp3 = (tmp2 ctx0 cache1) in
+          (match tmp3 with
+            | (Success ((y, g2), cache2)) -> (let tmp4 = (and_pre g1 g2) in
+              let tmp5 = (y, tmp4) in
+              let tmp6 = (tmp5, cache2) in
+              (Success ((match tmp6 with (custard_tup, _) -> custard_tup), (match tmp6 with (_, custard_tup) -> custard_tup))))
+            | err -> err
+          ))
+        | (Error (err)) -> (Error (err))
+      ))))
+    | (FStarC_Syntax_Syntax.Tm_abs (tmp)) -> (let tmp1 = (FStarC_Syntax_Util.abs_formals_ln e1) in
+      (match tmp1 with
+        | (xs, body, tmp2) -> (let tmp3 = (open_term_binders g xs body) in
+          (match tmp3 with
+            | (g', xs1, body1) -> (fun ctx0 cache0 -> (let ctx = { no_guard = (ctx0).no_guard;
+                  unfolding_ok = (ctx0).unfolding_ok;
+                  error_context = (("abs binders", None) :: (ctx0).error_context) } in
+              let tmp4 = (check_binders g xs1) in
+              let tmp5 = (tmp4 ctx cache0) in
+              (match tmp5 with
+                | (Success ((x, g1), cache1)) -> (let tmp6 = (check "abs body" g' body1) in
+                  let tmp7 = (fun ctx01 cache01 -> (let tmp7 = (tmp6 ctx01 cache01) in
+                    (match tmp7 with
+                      | (Success ((x1, g11), cache11)) -> (let tmp8 = (as_comp g x1) in
+                        let tmp9 = (FStarC_Syntax_Util.arrow xs1 tmp8) in
+                        let tmp10 = (E_Total, tmp9) in
+                        let tmp11 = (fun tmp11 cache -> (Success ((tmp10, None), cache))) in
+                        let tmp12 = (tmp11 ctx01 cache11) in
+                        (match tmp12 with
+                          | (Success ((y, g2), cache2)) -> (let tmp13 = (and_pre g11 g2) in
+                            let tmp14 = (y, tmp13) in
+                            let tmp15 = (tmp14, cache2) in
+                            (Success ((match tmp15 with (custard_tup, _) -> custard_tup), (match tmp15 with (_, custard_tup) -> custard_tup))))
+                          | err -> err
+                        ))
+                      | (Error (err)) -> (Error (err))
+                    ))) in
+                  let tmp8 = (with_binders g xs1 x tmp7) in
+                  let tmp9 = (tmp8 ctx0 cache1) in
+                  (match tmp9 with
+                    | (Success ((y, g2), cache2)) -> (let tmp10 = (and_pre g1 g2) in
+                      let tmp11 = (y, tmp10) in
+                      let tmp12 = (tmp11, cache2) in
+                      (Success ((match tmp12 with (custard_tup, _) -> custard_tup), (match tmp12 with (_, custard_tup) -> custard_tup))))
+                    | err -> err
+                  ))
+                | (Error (err)) -> (Error (err))
+              )))
+          ))
+      ))
+    | (FStarC_Syntax_Syntax.Tm_arrow (tmp)) -> (let tmp1 = (FStarC_Syntax_Util.arrow_formals_comp_ln_strict e1) in
+      (match tmp1 with
+        | (xs, c) -> (let tmp2 = (open_comp_binders g xs c) in
+          (match tmp2 with
+            | (g', xs1, c1) -> (fun ctx0 cache0 -> (let ctx = { no_guard = (ctx0).no_guard;
+                  unfolding_ok = (ctx0).unfolding_ok;
+                  error_context = (("arrow binders", None) :: (ctx0).error_context) } in
+              let tmp3 = (check_binders g xs1) in
+              let tmp4 = (tmp3 ctx cache0) in
+              (match tmp4 with
+                | (Success ((x, g1), cache1)) -> (let tmp5 = (with_binders g xs1 x (fun ctx01 cache01 -> (let ctx1 = { no_guard = (ctx01).no_guard;
+                        unfolding_ok = (ctx01).unfolding_ok;
+                        error_context = (("arrow comp", None) :: (ctx01).error_context) } in
+                    let tmp5 = (check_comp g' c1) in
+                    let tmp6 = (tmp5 ctx1 cache01) in
+                    (match tmp6 with
+                      | (Success ((x1, g11), cache11)) -> (let tmp7 = (mk_type (FStarC_Syntax_Syntax.U_max ((x1 :: x)))) in
+                        let tmp8 = (E_Total, tmp7) in
+                        let tmp9 = (fun tmp9 cache -> (Success ((tmp8, None), cache))) in
+                        let tmp10 = (tmp9 ctx01 cache11) in
+                        (match tmp10 with
+                          | (Success ((y, g2), cache2)) -> (let tmp11 = (and_pre g11 g2) in
+                            let tmp12 = (y, tmp11) in
+                            let tmp13 = (tmp12, cache2) in
+                            (Success ((match tmp13 with (custard_tup, _) -> custard_tup), (match tmp13 with (_, custard_tup) -> custard_tup))))
+                          | err -> err
+                        ))
+                      | (Error (err)) -> (Error (err))
+                    )))) in
+                  let tmp6 = (tmp5 ctx0 cache1) in
+                  (match tmp6 with
+                    | (Success ((y, g2), cache2)) -> (let tmp7 = (and_pre g1 g2) in
+                      let tmp8 = (y, tmp7) in
+                      let tmp9 = (tmp8, cache2) in
+                      (Success ((match tmp9 with (custard_tup, _) -> custard_tup), (match tmp9 with (_, custard_tup) -> custard_tup))))
+                    | err -> err
+                  ))
+                | (Error (err)) -> (Error (err))
+              )))
+          ))
+      ))
+    | (FStarC_Syntax_Syntax.Tm_app (tmp)) -> (let check_app = (fun hd args -> (let tmp1 = (check "app head" g hd) in
+        (fun ctx0 cache0 -> (let tmp2 = (tmp1 ctx0 cache0) in
+        (match tmp2 with
+          | (Success ((x, g1), cache1)) -> (let tmp3 = (match x with
+                | (eff_hd, t) -> (fold (do_check__check_app_arg g) (eff_hd, t) args)
+              ) in
+            let tmp4 = (tmp3 ctx0 cache1) in
+            (match tmp4 with
+              | (Success ((y, g2), cache2)) -> (let tmp5 = (and_pre g1 g2) in
+                let tmp6 = (y, tmp5) in
+                let tmp7 = (tmp6, cache2) in
+                (Success ((match tmp7 with (custard_tup, _) -> custard_tup), (match tmp7 with (_, custard_tup) -> custard_tup))))
+              | err -> err
+            ))
+          | (Error (err)) -> (Error (err))
+        ))))) in
+      let tmp1 = (FStarC_Syntax_Util.head_and_args_full e1) in
+      (match tmp1 with
+        | (hd, args) -> (match args with
+            | ((t1, tmp2) :: ((t2, tmp3) :: [])) when (FStarC_TypeChecker_Util.short_circuit_head hd) -> (let tmp4 = (check "app head" g hd) in
+              (fun ctx0 cache0 -> (let tmp5 = (tmp4 ctx0 cache0) in
+              (match tmp5 with
+                | (Success ((x, g1), cache1)) -> (let tmp6 = (match x with
+                      | (eff_hd, t_hd) -> (fun ctx01 cache01 -> (let tmp6 = (is_arrow g t_hd ctx01 cache01) in
+                        (match tmp6 with
+                          | (Success ((x1, g11), cache11)) -> (let tmp7 = (match x1 with
+                                | (x2, eff_arr1, s1) -> (let tmp7 = (check "app arg" g t1) in
+                                  (fun ctx02 cache02 -> (let tmp8 = (tmp7 ctx02 cache02) in
+                                  (match tmp8 with
+                                    | (Success ((x3, g12), cache12)) -> (let tmp9 = (match x3 with
+                                          | (eff_arg1, t_t1) -> (fun ctx03 cache03 -> (let ctx = { no_guard = (ctx03).no_guard;
+                                                unfolding_ok = (ctx03).unfolding_ok;
+                                                error_context = (("operator arg1", None) :: (ctx03).error_context) } in
+                                            let tmp9 = (check_subtype g (Some (t1)) t_t1 ((x2).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
+                                            let tmp10 = (tmp9 ctx cache03) in
+                                            (match tmp10 with
+                                              | (Success ((x4, g13), cache13)) -> (let s11 = (FStarC_Syntax_Subst.subst ((FStarC_Syntax_Syntax.NT ((x2).FStarC_Syntax_Syntax.binder_bv, t1)) :: []) s1) in
+                                                let tmp11 = (fun ctx04 cache04 -> (let tmp11 = (is_arrow g s11 ctx04 cache04) in
+                                                  (match tmp11 with
+                                                    | (Success ((x5, g14), cache14)) -> (let tmp12 = (match x5 with
+                                                          | (y, eff_arr2, s2) -> (let guard_formula = (FStarC_TypeChecker_Util.short_circuit hd ((t1, None) :: [])) in
+                                                            let g' = (match guard_formula with
+                                                                | FStarC_TypeChecker_Common.Trivial -> g
+                                                                | (FStarC_TypeChecker_Common.NonTrivial (gf)) -> (push_hypothesis g gf)
+                                                              ) in
+                                                            let tmp12 = (check "app arg" g' t2) in
+                                                            let tmp13 = (weaken_with_guard_formula g guard_formula tmp12) in
+                                                            (fun ctx05 cache05 -> (let tmp14 = (tmp13 ctx05 cache05) in
+                                                            (match tmp14 with
+                                                              | (Success ((x6, g15), cache15)) -> (let tmp15 = (match x6 with
+                                                                    | (eff_arg2, t_t2) -> (fun ctx06 cache06 -> (let ctx1 = { no_guard = (ctx06).no_guard;
+                                                                          unfolding_ok = (ctx06).unfolding_ok;
+                                                                          error_context = (("operator arg2", None) :: (ctx06).error_context) } in
+                                                                      let tmp15 = (check_subtype g' (Some (t2)) t_t2 ((y).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
+                                                                      let tmp16 = (tmp15 ctx1 cache06) in
+                                                                      (match tmp16 with
+                                                                        | (Success ((x7, g16), cache16)) -> (let tmp17 = (FStarC_Syntax_Subst.subst ((FStarC_Syntax_Syntax.NT ((y).FStarC_Syntax_Syntax.binder_bv, t2)) :: []) s2) in
+                                                                          let tmp18 = ((join_eff_l (eff_hd :: (eff_arr1 :: (eff_arr2 :: (eff_arg1 :: (eff_arg2 :: [])))))), tmp17) in
+                                                                          let tmp19 = (fun tmp19 cache -> (Success ((tmp18, None), cache))) in
+                                                                          let tmp20 = (tmp19 ctx06 cache16) in
+                                                                          (match tmp20 with
+                                                                            | (Success ((y1, g2), cache2)) -> (let tmp21 = (and_pre g16 g2) in
+                                                                              let tmp22 = (y1, tmp21) in
+                                                                              let tmp23 = (tmp22, cache2) in
+                                                                              (Success ((match tmp23 with (custard_tup, _) -> custard_tup), (match tmp23 with (_, custard_tup) -> custard_tup))))
+                                                                            | err -> err
+                                                                          ))
+                                                                        | (Error (err)) -> (Error (err))
+                                                                      )))
+                                                                  ) in
+                                                                let tmp16 = (tmp15 ctx05 cache15) in
+                                                                (match tmp16 with
+                                                                  | (Success ((y1, g2), cache2)) -> (let tmp17 = (and_pre g15 g2) in
+                                                                    let tmp18 = (y1, tmp17) in
+                                                                    let tmp19 = (tmp18, cache2) in
+                                                                    (Success ((match tmp19 with (custard_tup, _) -> custard_tup), (match tmp19 with (_, custard_tup) -> custard_tup))))
+                                                                  | err -> err
+                                                                ))
+                                                              | (Error (err)) -> (Error (err))
+                                                            ))))
+                                                        ) in
+                                                      let tmp13 = (tmp12 ctx04 cache14) in
+                                                      (match tmp13 with
+                                                        | (Success ((y, g2), cache2)) -> (let tmp14 = (and_pre g14 g2) in
+                                                          let tmp15 = (y, tmp14) in
+                                                          let tmp16 = (tmp15, cache2) in
+                                                          (Success ((match tmp16 with (custard_tup, _) -> custard_tup), (match tmp16 with (_, custard_tup) -> custard_tup))))
+                                                        | err -> err
+                                                      ))
+                                                    | (Error (err)) -> (Error (err))
+                                                  ))) in
+                                                let tmp12 = (tmp11 ctx03 cache13) in
+                                                (match tmp12 with
+                                                  | (Success ((y, g2), cache2)) -> (let tmp13 = (and_pre g13 g2) in
+                                                    let tmp14 = (y, tmp13) in
+                                                    let tmp15 = (tmp14, cache2) in
+                                                    (Success ((match tmp15 with (custard_tup, _) -> custard_tup), (match tmp15 with (_, custard_tup) -> custard_tup))))
+                                                  | err -> err
+                                                ))
+                                              | (Error (err)) -> (Error (err))
+                                            )))
+                                        ) in
+                                      let tmp10 = (tmp9 ctx02 cache12) in
+                                      (match tmp10 with
+                                        | (Success ((y, g2), cache2)) -> (let tmp11 = (and_pre g12 g2) in
+                                          let tmp12 = (y, tmp11) in
+                                          let tmp13 = (tmp12, cache2) in
+                                          (Success ((match tmp13 with (custard_tup, _) -> custard_tup), (match tmp13 with (_, custard_tup) -> custard_tup))))
+                                        | err -> err
+                                      ))
+                                    | (Error (err)) -> (Error (err))
+                                  ))))
+                              ) in
+                            let tmp8 = (tmp7 ctx01 cache11) in
+                            (match tmp8 with
+                              | (Success ((y, g2), cache2)) -> (let tmp9 = (and_pre g11 g2) in
+                                let tmp10 = (y, tmp9) in
+                                let tmp11 = (tmp10, cache2) in
+                                (Success ((match tmp11 with (custard_tup, _) -> custard_tup), (match tmp11 with (_, custard_tup) -> custard_tup))))
+                              | err -> err
+                            ))
+                          | (Error (err)) -> (Error (err))
+                        )))
+                    ) in
+                  let tmp7 = (tmp6 ctx0 cache1) in
+                  (match tmp7 with
+                    | (Success ((y, g2), cache2)) -> (let tmp8 = (and_pre g1 g2) in
+                      let tmp9 = (y, tmp8) in
+                      let tmp10 = (tmp9, cache2) in
+                      (Success ((match tmp10 with (custard_tup, _) -> custard_tup), (match tmp10 with (_, custard_tup) -> custard_tup))))
+                    | err -> err
+                  ))
+                | (Error (err)) -> (Error (err))
+              ))))
+            | tmp2 -> (check_app hd args)
+          )
+      ))
+    | (FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = e2; asc = (FStar_Pervasives.Inl (t)); asc1 = tmp; asc2 = eq; eff_opt = tmp1; _ })) -> (let tmp2 = (check "ascription head" g e2) in
+      (fun ctx0 cache0 -> (let tmp3 = (tmp2 ctx0 cache0) in
+      (match tmp3 with
+        | (Success ((x, g1), cache1)) -> (let tmp4 = (match x with
+              | (eff, te) -> (let tmp4 = (check "ascription type" g t) in
+                (fun ctx01 cache01 -> (let tmp5 = (tmp4 ctx01 cache01) in
+                (match tmp5 with
+                  | (Success ((x1, g11), cache11)) -> (let tmp6 = (match x1 with
+                        | (tmp6, t') -> (fun ctx02 cache02 -> (let tmp7 = (is_type g t' ctx02 cache02) in
+                          (match tmp7 with
+                            | (Success ((x2, g12), cache12)) -> (let tmp8 = (fun ctx03 cache03 -> (let ctx = { no_guard = (ctx03).no_guard;
+                                    unfolding_ok = (ctx03).unfolding_ok;
+                                    error_context = (("ascription subtyping", None) :: (ctx03).error_context) } in
+                                let tmp8 = (check_subtype g (Some (e2)) te t) in
+                                let tmp9 = (tmp8 ctx cache03) in
+                                (match tmp9 with
+                                  | (Success ((x3, g13), cache13)) -> (let tmp10 = (fun tmp10 cache -> (Success (((eff, t), None), cache))) in
+                                    let tmp11 = (tmp10 ctx03 cache13) in
+                                    (match tmp11 with
+                                      | (Success ((y, g2), cache2)) -> (let tmp12 = (and_pre g13 g2) in
+                                        let tmp13 = (y, tmp12) in
+                                        let tmp14 = (tmp13, cache2) in
+                                        (Success ((match tmp14 with (custard_tup, _) -> custard_tup), (match tmp14 with (_, custard_tup) -> custard_tup))))
+                                      | err -> err
+                                    ))
+                                  | (Error (err)) -> (Error (err))
+                                ))) in
+                              let tmp9 = (tmp8 ctx02 cache12) in
+                              (match tmp9 with
+                                | (Success ((y, g2), cache2)) -> (let tmp10 = (and_pre g12 g2) in
+                                  let tmp11 = (y, tmp10) in
+                                  let tmp12 = (tmp11, cache2) in
+                                  (Success ((match tmp12 with (custard_tup, _) -> custard_tup), (match tmp12 with (_, custard_tup) -> custard_tup))))
+                                | err -> err
+                              ))
+                            | (Error (err)) -> (Error (err))
+                          )))
+                      ) in
+                    let tmp7 = (tmp6 ctx01 cache11) in
+                    (match tmp7 with
+                      | (Success ((y, g2), cache2)) -> (let tmp8 = (and_pre g11 g2) in
+                        let tmp9 = (y, tmp8) in
+                        let tmp10 = (tmp9, cache2) in
+                        (Success ((match tmp10 with (custard_tup, _) -> custard_tup), (match tmp10 with (_, custard_tup) -> custard_tup))))
+                      | err -> err
+                    ))
+                  | (Error (err)) -> (Error (err))
+                ))))
+            ) in
+          let tmp5 = (tmp4 ctx0 cache1) in
+          (match tmp5 with
+            | (Success ((y, g2), cache2)) -> (let tmp6 = (and_pre g1 g2) in
+              let tmp7 = (y, tmp6) in
+              let tmp8 = (tmp7, cache2) in
+              (Success ((match tmp8 with (custard_tup, _) -> custard_tup), (match tmp8 with (_, custard_tup) -> custard_tup))))
+            | err -> err
+          ))
+        | (Error (err)) -> (Error (err))
+      ))))
+    | (FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = e2; asc = (FStar_Pervasives.Inr (c)); asc1 = tmp; asc2 = tmp1; eff_opt = tmp2; _ })) -> (let tmp3 = (FStarC_Syntax_Util.is_tot_or_gtot_comp c) in
+      (if tmp3 then (let tmp4 = (check "ascription head" g e2) in
+      (fun ctx0 cache0 -> (let tmp5 = (tmp4 ctx0 cache0) in
+      (match tmp5 with
+        | (Success ((x, g1), cache1)) -> (let tmp6 = (match x with
+              | (eff, te) -> (fun ctx01 cache01 -> (let ctx = { no_guard = (ctx01).no_guard;
+                    unfolding_ok = (ctx01).unfolding_ok;
+                    error_context = (("ascription comp", None) :: (ctx01).error_context) } in
+                let tmp6 = (check_comp g c) in
+                let tmp7 = (tmp6 ctx cache01) in
+                (match tmp7 with
+                  | (Success ((x1, g11), cache11)) -> (let c_e = (as_comp g (eff, te)) in
+                    let tmp8 = (fun ctx02 cache02 -> (let ctx1 = { no_guard = (ctx02).no_guard;
+                          unfolding_ok = (ctx02).unfolding_ok;
+                          error_context = (("ascription subtyping (comp)", None) :: (ctx02).error_context) } in
+                      let tmp8 = (check_relation_comp g (SUBTYPING ((Some (e2)))) c_e c) in
+                      let tmp9 = (tmp8 ctx1 cache02) in
+                      (match tmp9 with
+                        | (Success ((x2, g12), cache12)) -> (let tmp10 = (comp_as_tot_or_ghost_and_type c) in
+                          let tmp11 = (match tmp10 with
+                              | (Some ((eff1, t))) -> (fun tmp11 cache -> (Success (((eff1, t), None), cache)))
+                            ) in
+                          let tmp12 = (tmp11 ctx02 cache12) in
+                          (match tmp12 with
+                            | (Success ((y, g2), cache2)) -> (let tmp13 = (and_pre g12 g2) in
+                              let tmp14 = (y, tmp13) in
+                              let tmp15 = (tmp14, cache2) in
+                              (Success ((match tmp15 with (custard_tup, _) -> custard_tup), (match tmp15 with (_, custard_tup) -> custard_tup))))
+                            | err -> err
+                          ))
+                        | (Error (err)) -> (Error (err))
+                      ))) in
+                    let tmp9 = (tmp8 ctx01 cache11) in
+                    (match tmp9 with
+                      | (Success ((y, g2), cache2)) -> (let tmp10 = (and_pre g11 g2) in
+                        let tmp11 = (y, tmp10) in
+                        let tmp12 = (tmp11, cache2) in
+                        (Success ((match tmp12 with (custard_tup, _) -> custard_tup), (match tmp12 with (_, custard_tup) -> custard_tup))))
+                      | err -> err
+                    ))
+                  | (Error (err)) -> (Error (err))
+                )))
+            ) in
+          let tmp7 = (tmp6 ctx0 cache1) in
+          (match tmp7 with
+            | (Success ((y, g2), cache2)) -> (let tmp8 = (and_pre g1 g2) in
+              let tmp9 = (y, tmp8) in
+              let tmp10 = (tmp9, cache2) in
+              (Success ((match tmp10 with (custard_tup, _) -> custard_tup), (match tmp10 with (_, custard_tup) -> custard_tup))))
+            | err -> err
+          ))
+        | (Error (err)) -> (Error (err))
+      )))) else (let tmp4 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_comp' c) in
+      let tmp5 = (FStarC_Format.fmt1 "Effect ascriptions are not fully handled yet: %s" tmp4) in
+      (fail_str tmp5))))
+    | (FStarC_Syntax_Syntax.Tm_let ({ FStarC_Syntax_Syntax.lbs = false; lbs1 = (lb :: []); body = body; _ })) -> (let tmp = (lb).FStarC_Syntax_Syntax.lbname in
+      (match tmp with
+        | (FStar_Pervasives.Inl (x0)) -> (if (FStarC_Syntax_Util.is_pure_or_ghost_effect (lb).FStarC_Syntax_Syntax.lbeff) then (let tmp1 = (check "let definition" g (lb).FStarC_Syntax_Syntax.lbdef) in
+          (fun ctx0 cache0 -> (let tmp2 = (tmp1 ctx0 cache0) in
+          (match tmp2 with
+            | (Success ((x, g1), cache1)) -> (let tmp3 = (match x with
+                  | (eff_def, tdef) -> (let tmp3 = (FStarC_Syntax_Subst.compress (lb).FStarC_Syntax_Syntax.lbtyp) in
+                    let tmp4 = (tmp3).FStarC_Syntax_Syntax.n in
+                    let unannotated = (match tmp4 with
+                        | FStarC_Syntax_Syntax.Tm_unknown -> true
+                        | tmp5 -> false
+                      ) in
+                    let lbtyp = (if unannotated then tdef else (lb).FStarC_Syntax_Syntax.lbtyp) in
+                    let x01 = (if unannotated then { FStarC_Syntax_Syntax.ppname = (x0).FStarC_Syntax_Syntax.ppname;
+                        index = (x0).FStarC_Syntax_Syntax.index;
+                        sort = tdef } else x0) in
+                    let tmp5 = (open_term g (FStarC_Syntax_Syntax.mk_binder x01) body) in
+                    (match tmp5 with
+                      | (g', x1, body1) -> (let tmp6 = (check "let type" g lbtyp) in
+                        (fun ctx01 cache01 -> (let tmp7 = (tmp6 ctx01 cache01) in
+                        (match tmp7 with
+                          | (Success ((x2, g11), cache11)) -> (let tmp8 = (match x2 with
+                                | (tmp8, ttyp) -> (fun ctx02 cache02 -> (let tmp9 = (is_type g ttyp ctx02 cache02) in
+                                  (match tmp9 with
+                                    | (Success ((x3, g12), cache12)) -> (let tmp10 = (fun ctx03 cache03 -> (let ctx = { no_guard = (ctx03).no_guard;
+                                            unfolding_ok = (ctx03).unfolding_ok;
+                                            error_context = (("let subtyping", None) :: (ctx03).error_context) } in
+                                        let tmp10 = (check_subtype g (Some ((lb).FStarC_Syntax_Syntax.lbdef)) tdef lbtyp) in
+                                        let tmp11 = (tmp10 ctx cache03) in
+                                        (match tmp11 with
+                                          | (Success ((x4, g13), cache13)) -> (let tmp12 = (check "let body" g' body1) in
+                                            let tmp13 = (fun ctx04 cache04 -> (let tmp13 = (tmp12 ctx04 cache04) in
+                                              (match tmp13 with
+                                                | (Success ((x5, g14), cache14)) -> (let tmp14 = (match x5 with
+                                                      | (eff_body, t) -> (let tmp14 = (check_no_escape (x1 :: []) t) in
+                                                        (fun ctx05 cache05 -> (let tmp15 = (tmp14 ctx05 cache05) in
+                                                        (match tmp15 with
+                                                          | (Success ((x6, g15), cache15)) -> (let tmp16 = (fun tmp16 cache -> (Success ((((join_eff eff_def eff_body), t), None), cache))) in
+                                                            let tmp17 = (tmp16 ctx05 cache15) in
+                                                            (match tmp17 with
+                                                              | (Success ((y, g2), cache2)) -> (let tmp18 = (and_pre g15 g2) in
+                                                                let tmp19 = (y, tmp18) in
+                                                                let tmp20 = (tmp19, cache2) in
+                                                                (Success ((match tmp20 with (custard_tup, _) -> custard_tup), (match tmp20 with (_, custard_tup) -> custard_tup))))
+                                                              | err -> err
+                                                            ))
+                                                          | (Error (err)) -> (Error (err))
+                                                        ))))
+                                                    ) in
+                                                  let tmp15 = (tmp14 ctx04 cache14) in
+                                                  (match tmp15 with
+                                                    | (Success ((y, g2), cache2)) -> (let tmp16 = (and_pre g14 g2) in
+                                                      let tmp17 = (y, tmp16) in
+                                                      let tmp18 = (tmp17, cache2) in
+                                                      (Success ((match tmp18 with (custard_tup, _) -> custard_tup), (match tmp18 with (_, custard_tup) -> custard_tup))))
+                                                    | err -> err
+                                                  ))
+                                                | (Error (err)) -> (Error (err))
+                                              ))) in
+                                            let tmp14 = (with_definition g x1 x3 (lb).FStarC_Syntax_Syntax.lbdef tmp13) in
+                                            let tmp15 = (tmp14 ctx03 cache13) in
+                                            (match tmp15 with
+                                              | (Success ((y, g2), cache2)) -> (let tmp16 = (and_pre g13 g2) in
+                                                let tmp17 = (y, tmp16) in
+                                                let tmp18 = (tmp17, cache2) in
+                                                (Success ((match tmp18 with (custard_tup, _) -> custard_tup), (match tmp18 with (_, custard_tup) -> custard_tup))))
+                                              | err -> err
+                                            ))
+                                          | (Error (err)) -> (Error (err))
+                                        ))) in
+                                      let tmp11 = (tmp10 ctx02 cache12) in
+                                      (match tmp11 with
+                                        | (Success ((y, g2), cache2)) -> (let tmp12 = (and_pre g12 g2) in
+                                          let tmp13 = (y, tmp12) in
+                                          let tmp14 = (tmp13, cache2) in
+                                          (Success ((match tmp14 with (custard_tup, _) -> custard_tup), (match tmp14 with (_, custard_tup) -> custard_tup))))
+                                        | err -> err
+                                      ))
+                                    | (Error (err)) -> (Error (err))
+                                  )))
+                              ) in
+                            let tmp9 = (tmp8 ctx01 cache11) in
+                            (match tmp9 with
+                              | (Success ((y, g2), cache2)) -> (let tmp10 = (and_pre g11 g2) in
+                                let tmp11 = (y, tmp10) in
+                                let tmp12 = (tmp11, cache2) in
+                                (Success ((match tmp12 with (custard_tup, _) -> custard_tup), (match tmp12 with (_, custard_tup) -> custard_tup))))
+                              | err -> err
+                            ))
+                          | (Error (err)) -> (Error (err))
+                        ))))
+                    ))
+                ) in
+              let tmp4 = (tmp3 ctx0 cache1) in
+              (match tmp4 with
+                | (Success ((y, g2), cache2)) -> (let tmp5 = (and_pre g1 g2) in
+                  let tmp6 = (y, tmp5) in
+                  let tmp7 = (tmp6, cache2) in
+                  (Success ((match tmp7 with (custard_tup, _) -> custard_tup), (match tmp7 with (_, custard_tup) -> custard_tup))))
+                | err -> err
+              ))
+            | (Error (err)) -> (Error (err))
+          )))) else (let tmp1 = (FStarC_Ident.fStarC_Class_Show_show__lident (lb).FStarC_Syntax_Syntax.lbeff) in
+          let tmp2 = (FStarC_Format.fmt1 "Let binding is effectful (lbeff = %s)" tmp1) in
+          (fail_str tmp2)))
+      ))
+    | (FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = sc; ret_opt = None; brs = branches; rc_opt = rc_opt; _ })) -> (let tmp = (check "scrutinee" g sc) in
+      (fun ctx0 cache0 -> (let tmp1 = (tmp ctx0 cache0) in
+      (match tmp1 with
+        | (Success ((x, g1), cache1)) -> (let tmp2 = (match x with
+              | (eff_sc, t_sc) -> (let tmp2 = (universe_of_well_typed_term g t_sc) in
+                (fun ctx01 cache01 -> (let tmp3 = (tmp2 ctx01 cache01) in
+                (match tmp3 with
+                  | (Success ((x1, g11), cache11)) -> (let tmp4 = (match rc_opt with
+                        | (Some ({ FStarC_Syntax_Syntax.residual_effect = tmp4; residual_typ = (Some (t)); residual_flags = tmp5; _ })) -> (let tmp6 = (universe_of g t) in
+                          (fun ctx02 cache02 -> (let tmp7 = (tmp6 ctx02 cache02) in
+                          (match tmp7 with
+                            | (Success ((x2, g12), cache12)) -> (let tmp8 = (fun tmp8 cache -> (Success (((Some ((E_Total, t))), None), cache))) in
+                              let tmp9 = (tmp8 ctx02 cache12) in
+                              (match tmp9 with
+                                | (Success ((y, g2), cache2)) -> (let tmp10 = (and_pre g12 g2) in
+                                  let tmp11 = (y, tmp10) in
+                                  let tmp12 = (tmp11, cache2) in
+                                  (Success ((match tmp12 with (custard_tup, _) -> custard_tup), (match tmp12 with (_, custard_tup) -> custard_tup))))
+                                | err -> err
+                              ))
+                            | (Error (err)) -> (Error (err))
+                          ))))
+                        | tmp4 -> (fun tmp5 cache -> (Success ((None, None), cache)))
+                      ) in
+                    let tmp5 = (fun ctx02 cache02 -> (let tmp5 = (tmp4 ctx02 cache02) in
+                      (match tmp5 with
+                        | (Success ((x2, g12), cache12)) -> (let tmp6 = (fun ctx03 cache03 -> (let tmp6 = ((let ctx = (match x2 with
+                                  | None -> None
+                                  | (Some ((tmp6, t))) -> (Some ((CtxTerm (t))))
+                                ) in
+                              (fun ctx1 cache -> (let ctx2 = { no_guard = (ctx1).no_guard;
+                                  unfolding_ok = (ctx1).unfolding_ok;
+                                  error_context = (("check_branches", ctx) :: (ctx1).error_context) } in
+                              let tmp6 = ((do_check__check_branches g sc t_sc x1) FStarC_Syntax_Util.exp_true_bool x2 branches) in
+                              (tmp6 ctx2 cache)))) ctx03 cache03) in
+                            (match tmp6 with
+                              | (Success ((x3, g13), cache13)) -> (let tmp7 = (match x3 with
+                                    | (eff_br, t_br) -> (fun tmp7 cache -> (Success ((((join_eff eff_sc eff_br), t_br), None), cache)))
+                                  ) in
+                                let tmp8 = (tmp7 ctx03 cache13) in
+                                (match tmp8 with
+                                  | (Success ((y, g2), cache2)) -> (let tmp9 = (and_pre g13 g2) in
+                                    let tmp10 = (y, tmp9) in
+                                    let tmp11 = (tmp10, cache2) in
+                                    (Success ((match tmp11 with (custard_tup, _) -> custard_tup), (match tmp11 with (_, custard_tup) -> custard_tup))))
+                                  | err -> err
+                                ))
+                              | (Error (err)) -> (Error (err))
+                            ))) in
+                          let tmp7 = (tmp6 ctx02 cache12) in
+                          (match tmp7 with
+                            | (Success ((y, g2), cache2)) -> (let tmp8 = (and_pre g12 g2) in
+                              let tmp9 = (y, tmp8) in
+                              let tmp10 = (tmp9, cache2) in
+                              (Success ((match tmp10 with (custard_tup, _) -> custard_tup), (match tmp10 with (_, custard_tup) -> custard_tup))))
+                            | err -> err
+                          ))
+                        | (Error (err)) -> (Error (err))
+                      ))) in
+                    let tmp6 = (tmp5 ctx01 cache11) in
+                    (match tmp6 with
+                      | (Success ((y, g2), cache2)) -> (let tmp7 = (and_pre g11 g2) in
+                        let tmp8 = (y, tmp7) in
+                        let tmp9 = (tmp8, cache2) in
+                        (Success ((match tmp9 with (custard_tup, _) -> custard_tup), (match tmp9 with (_, custard_tup) -> custard_tup))))
+                      | err -> err
+                    ))
+                  | (Error (err)) -> (Error (err))
+                ))))
+            ) in
+          let tmp3 = (tmp2 ctx0 cache1) in
+          (match tmp3 with
+            | (Success ((y, g2), cache2)) -> (let tmp4 = (and_pre g1 g2) in
+              let tmp5 = (y, tmp4) in
+              let tmp6 = (tmp5, cache2) in
+              (Success ((match tmp6 with (custard_tup, _) -> custard_tup), (match tmp6 with (_, custard_tup) -> custard_tup))))
+            | err -> err
+          ))
+        | (Error (err)) -> (Error (err))
+      ))))
+    | (FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = sc; ret_opt = (Some ((as_x, ((FStar_Pervasives.Inl (returns_ty)), None, eq)))); brs = branches; rc_opt = rc_opt; _ })) -> (let tmp = (check "scrutinee" g sc) in
+      (fun ctx0 cache0 -> (let tmp1 = (tmp ctx0 cache0) in
+      (match tmp1 with
+        | (Success ((x, g1), cache1)) -> (let tmp2 = (match x with
+              | (eff_sc, t_sc) -> (let tmp2 = (universe_of_well_typed_term g t_sc) in
+                (fun ctx01 cache01 -> (let tmp3 = (tmp2 ctx01 cache01) in
+                (match tmp3 with
+                  | (Success ((x1, g11), cache11)) -> (let as_x1 = { FStarC_Syntax_Syntax.binder_bv = (let tmp4 = (as_x).FStarC_Syntax_Syntax.binder_bv in
+                        { FStarC_Syntax_Syntax.ppname = (tmp4).FStarC_Syntax_Syntax.ppname;
+                          index = (tmp4).FStarC_Syntax_Syntax.index;
+                          sort = t_sc });
+                        binder_qual = (as_x).FStarC_Syntax_Syntax.binder_qual;
+                        binder_positivity = (as_x).FStarC_Syntax_Syntax.binder_positivity;
+                        binder_attrs = (as_x).FStarC_Syntax_Syntax.binder_attrs } in
+                    let tmp4 = (open_term g as_x1 returns_ty) in
+                    let tmp5 = (match tmp4 with
+                        | (g_as_x, as_x2, returns_ty1) -> (let tmp5 = (check "return type" g_as_x returns_ty1) in
+                          let tmp6 = (with_binders g (as_x2 :: []) (x1 :: []) tmp5) in
+                          (fun ctx02 cache02 -> (let tmp7 = (tmp6 ctx02 cache02) in
+                          (match tmp7 with
+                            | (Success ((x2, g12), cache12)) -> (let tmp8 = (match x2 with
+                                  | (u__eff_t, returns_ty_t) -> (fun ctx03 cache03 -> (let tmp8 = (is_type g_as_x returns_ty_t ctx03 cache03) in
+                                    (match tmp8 with
+                                      | (Success ((x3, g13), cache13)) -> (let tmp9 = ((fStarC_TypeChecker_Core_do_check__check_branches__1 g sc eq t_sc x1 as_x2 returns_ty1) FStarC_Syntax_Util.exp_true_bool branches E_Total) in
+                                        let tmp10 = (fun ctx04 cache04 -> (let tmp10 = (tmp9 ctx04 cache04) in
+                                          (match tmp10 with
+                                            | (Success ((x4, g14), cache14)) -> (let ty = (FStarC_Syntax_Subst.subst ((FStarC_Syntax_Syntax.NT ((as_x2).FStarC_Syntax_Syntax.binder_bv, sc)) :: []) returns_ty1) in
+                                              let tmp11 = (fun tmp11 cache -> (Success (((x4, ty), None), cache))) in
+                                              let tmp12 = (tmp11 ctx04 cache14) in
+                                              (match tmp12 with
+                                                | (Success ((y, g2), cache2)) -> (let tmp13 = (and_pre g14 g2) in
+                                                  let tmp14 = (y, tmp13) in
+                                                  let tmp15 = (tmp14, cache2) in
+                                                  (Success ((match tmp15 with (custard_tup, _) -> custard_tup), (match tmp15 with (_, custard_tup) -> custard_tup))))
+                                                | err -> err
+                                              ))
+                                            | (Error (err)) -> (Error (err))
+                                          ))) in
+                                        let tmp11 = (tmp10 ctx03 cache13) in
+                                        (match tmp11 with
+                                          | (Success ((y, g2), cache2)) -> (let tmp12 = (and_pre g13 g2) in
+                                            let tmp13 = (y, tmp12) in
+                                            let tmp14 = (tmp13, cache2) in
+                                            (Success ((match tmp14 with (custard_tup, _) -> custard_tup), (match tmp14 with (_, custard_tup) -> custard_tup))))
+                                          | err -> err
+                                        ))
+                                      | (Error (err)) -> (Error (err))
+                                    )))
+                                ) in
+                              let tmp9 = (tmp8 ctx02 cache12) in
+                              (match tmp9 with
+                                | (Success ((y, g2), cache2)) -> (let tmp10 = (and_pre g12 g2) in
+                                  let tmp11 = (y, tmp10) in
+                                  let tmp12 = (tmp11, cache2) in
+                                  (Success ((match tmp12 with (custard_tup, _) -> custard_tup), (match tmp12 with (_, custard_tup) -> custard_tup))))
+                                | err -> err
+                              ))
+                            | (Error (err)) -> (Error (err))
+                          ))))
+                      ) in
+                    let tmp6 = (tmp5 ctx01 cache11) in
+                    (match tmp6 with
+                      | (Success ((y, g2), cache2)) -> (let tmp7 = (and_pre g11 g2) in
+                        let tmp8 = (y, tmp7) in
+                        let tmp9 = (tmp8, cache2) in
+                        (Success ((match tmp9 with (custard_tup, _) -> custard_tup), (match tmp9 with (_, custard_tup) -> custard_tup))))
+                      | err -> err
+                    ))
+                  | (Error (err)) -> (Error (err))
+                ))))
+            ) in
+          let tmp3 = (tmp2 ctx0 cache1) in
+          (match tmp3 with
+            | (Success ((y, g2), cache2)) -> (let tmp4 = (and_pre g1 g2) in
+              let tmp5 = (y, tmp4) in
+              let tmp6 = (tmp5, cache2) in
+              (Success ((match tmp6 with (custard_tup, _) -> custard_tup), (match tmp6 with (_, custard_tup) -> custard_tup))))
+            | err -> err
+          ))
+        | (Error (err)) -> (Error (err))
+      ))))
+    | (FStarC_Syntax_Syntax.Tm_match (tmp)) -> (fail_str "Match with effect returns ascription, or tactic handler")
+    | tmp -> (let tmp1 = (FStarC_Syntax_Syntax.fStarC_Class_Tagged_tag_of__syntax_term' e1) in
+      let tmp2 = (FStarC_Format.fmt1 "Unexpected term: %s" tmp1) in
+      (fail_str tmp2))
+  ))
+
+and do_check_and_promote (g : env) (e : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (context -> (cache_t -> (((tot_or_ghost * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (let tmp = (do_check g e) in
+  (fun ctx0 cache0 -> (let tmp1 = (tmp ctx0 cache0) in
+  (match tmp1 with
+    | (Success ((x, g1), cache1)) -> (let tmp2 = (match x with
+          | (eff, t) -> (let eff1 = (match eff with
+                | E_Total -> E_Total
+                | E_Ghost -> (let tmp2 = (non_informative g t) in
+                  (if tmp2 then E_Total else E_Ghost))
+              ) in
+            (fun tmp2 cache -> (Success (((eff1, t), None), cache))))
+        ) in
+      let tmp3 = (tmp2 ctx0 cache1) in
+      (match tmp3 with
+        | (Success ((y, g2), cache2)) -> (let tmp4 = (and_pre g1 g2) in
+          let tmp5 = (y, tmp4) in
+          let tmp6 = (tmp5, cache2) in
+          (Success ((match tmp6 with (custard_tup, _) -> custard_tup), (match tmp6 with (_, custard_tup) -> custard_tup))))
+        | err -> err
+      ))
+    | (Error (err)) -> (Error (err))
+  ))))
+
+and memo_check (g : env) (e : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (context -> (cache_t -> (((tot_or_ghost * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (let check_then_memo = (fun g1 e1 -> (let tmp = (do_check_and_promote g1 e1) in
+    (fun ctx cache -> (let tmp1 = (tmp ctx cache) in
+    (match tmp1 with
+      | (Success (r, cache')) -> (let tmp2 = (match (FStar_Pervasives.Inl (r)) with
+            | (FStar_Pervasives.Inl ((res, guard_))) -> (fun ctx0 cache0 -> (let tmp2 = (insert g1 e1 (res, guard_) ctx0 cache0) in
+              (match tmp2 with
+                | (Success ((x, g11), cache1)) -> (let tmp3 = (fun tmp3 cache2 -> (Success ((res, guard_), cache2))) in
+                  let tmp4 = (tmp3 ctx0 cache1) in
+                  (match tmp4 with
+                    | (Success ((y, g2), cache2)) -> (let tmp5 = (and_pre g11 g2) in
+                      let tmp6 = (y, tmp5) in
+                      let tmp7 = (tmp6, cache2) in
+                      (Success ((match tmp7 with (custard_tup, _) -> custard_tup), (match tmp7 with (_, custard_tup) -> custard_tup))))
+                    | err -> err
+                  ))
+                | (Error (err)) -> (Error (err))
+              )))
+            | (FStar_Pervasives.Inr (err)) -> (fail_propagate err)
+          ) in
+        (tmp2 ctx cache'))
+      | (Error (err)) -> (let tmp2 = (fail_propagate err) in
+        (tmp2 ctx cache))
+    ))))) in
+  (if (not (g).should_read_cache) then (check_then_memo g e) else (fun ctx cache -> (let tmp = (lookup g e ctx cache) in
+  (match tmp with
+    | (Success (r, cache')) -> (let tmp1 = (match (FStar_Pervasives.Inl (r)) with
+          | (FStar_Pervasives.Inr (tmp1)) -> (check_then_memo g e)
+          | (FStar_Pervasives.Inl ((et, None))) -> (fun tmp1 cache1 -> (Success ((et, None), cache1)))
+          | (FStar_Pervasives.Inl ((et, pre))) -> (FStarC_Effect.failwith "Impossible")
+        ) in
+      (tmp1 ctx cache'))
+    | (Error (err)) -> (let tmp1 = (check_then_memo g e) in
+      (tmp1 ctx cache))
+  )))))
+
+and check' (msg : string) (g : env) (e : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (context -> (cache_t -> (((tot_or_ghost * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (fun ctx cache -> (let ctx1 = { no_guard = (ctx).no_guard;
+      unfolding_ok = (ctx).unfolding_ok;
+      error_context = ((msg, (Some ((CtxTerm (e))))) :: (ctx).error_context) } in
+  let tmp = (memo_check g e) in
+  (tmp ctx1 cache)))
+
+and check (msg : string) (g : env) (e : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (context -> (cache_t -> (((tot_or_ghost * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (let tmp = (!(dbg)) in
+  (if tmp then (fun ctx cache -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' e) in
+  (FStarC_Format.print2 "{About to check %s %s\n" msg tmp1);
+  let tmp2 = (check' msg g e) in
+  let res = (tmp2 ctx cache) in
+  (match res with
+    | (Error (err)) -> (Error (err))
+    | (Success (((eff, typ), guard_), cache1)) -> (let tmp3 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' e) in
+      let tmp4 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' typ) in
+      let tmp5 = (FStarC_Syntax_Print.fStarC_Class_Show_show__option_syntax_term' guard_) in
+      (FStarC_Format.print3 "Checked %s at type %s with guard %s}\n" tmp3 tmp4 tmp5);
+      res)
+  ))) else (check' msg g e)))
+
+let check_term_top' (g : FStarC_TypeChecker_Env.env) (e : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (topt : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option) (must_tot : bool) : (context -> (cache_t -> (((tot_or_ghost * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result)) =
+  (let g1 = (initial_env g) in
+  let tmp = (check "top" g1 e) in
+  (fun ctx0 cache0 -> (let tmp1 = (tmp ctx0 cache0) in
+  (match tmp1 with
+    | (Success ((x, g11), cache1)) -> (let tmp2 = (match topt with
+          | None -> (if must_tot then (match x with
+              | (eff, t) -> (let tmp2 = (if ((=) eff E_Ghost) then (let tmp2 = (non_informative g1 t) in
+                  (not tmp2)) else false) in
+                (if tmp2 then (fail_str "expected total effect, found ghost") else (fun tmp3 cache -> (Success (((E_Total, t), None), cache)))))
+            ) else (fun tmp2 cache -> (Success ((x, None), cache))))
+          | (Some (t)) -> (let tmp2 = (if (must_tot || ((=) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst x) E_Total)) then (let tmp2 = (FStarC_Syntax_Syntax.mk_Total t) in
+              (tmp2, E_Total)) else (let tmp2 = (FStarC_Syntax_Syntax.mk_GTotal t) in
+              (tmp2, E_Ghost))) in
+            (match tmp2 with
+              | (target_comp, eff) -> (fun ctx01 cache01 -> (let ctx = { no_guard = (ctx01).no_guard;
+                    unfolding_ok = (ctx01).unfolding_ok;
+                    error_context = (("top-level subtyping", None) :: (ctx01).error_context) } in
+                let tmp3 = (as_comp g1 x) in
+                let tmp4 = (check_relation_comp { tcenv = (g1).tcenv;
+                    allow_universe_instantiation = true;
+                    should_read_cache = (g1).should_read_cache;
+                    max_binder_index = (g1).max_binder_index } (SUBTYPING ((Some (e)))) tmp3 target_comp) in
+                let tmp5 = (tmp4 ctx cache01) in
+                (match tmp5 with
+                  | (Success ((x1, g12), cache11)) -> (let tmp6 = (fun tmp6 cache -> (Success (((eff, t), None), cache))) in
+                    let tmp7 = (tmp6 ctx01 cache11) in
+                    (match tmp7 with
+                      | (Success ((y, g2), cache2)) -> (let tmp8 = (and_pre g12 g2) in
+                        let tmp9 = (y, tmp8) in
+                        let tmp10 = (tmp9, cache2) in
+                        (Success ((match tmp10 with (custard_tup, _) -> custard_tup), (match tmp10 with (_, custard_tup) -> custard_tup))))
+                      | err -> err
+                    ))
+                  | (Error (err)) -> (Error (err))
+                )))
+            ))
+        ) in
+      let tmp3 = (tmp2 ctx0 cache1) in
+      (match tmp3 with
+        | (Success ((y, g2), cache2)) -> (let tmp4 = (and_pre g11 g2) in
+          let tmp5 = (y, tmp4) in
+          let tmp6 = (tmp5, cache2) in
+          (Success ((match tmp6 with (custard_tup, _) -> custard_tup), (match tmp6 with (_, custard_tup) -> custard_tup))))
+        | err -> err
+      ))
+    | (Error (err)) -> (Error (err))
+  ))))
+
+let initial_cache : cache_t =
+  (let tmp = (FStarC_Syntax_Hash.term_map_empty ()) in
+  let tmp1 = (FStarC_Syntax_Hash.term_map_empty ()) in
+  { term_map = tmp; guard_map = tmp1 })
+
+let fStarC_Class_Show_show__tot_or_ghost (tmp : tot_or_ghost) : string =
+  (match tmp with
+    | E_Total -> "E_Total"
+    | E_Ghost -> "E_Ghost"
+  )
+
+let fStarC_Class_Show_show__tuple2_tot_or_ghost_syntax_term' (tmp : (tot_or_ghost * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) : string =
+  (match tmp with
+    | (x1, x2) -> (let tmp1 = (fStarC_Class_Show_show__tot_or_ghost x1) in
+      let tmp2 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' x2) in
+      let tmp3 = (Prims.strcat tmp2 ")") in
+      let tmp4 = (Prims.strcat ", " tmp3) in
+      let tmp5 = (Prims.strcat tmp1 tmp4) in
+      (Prims.strcat "(" tmp5))
+  )
+
+let fStarC_Class_Show_show__tuple2_tuple2_tot_or_ghost_syntax_option_syntax (tmp : ((tot_or_ghost * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) : string =
+  (match tmp with
+    | (x1, x2) -> (let tmp1 = (fStarC_Class_Show_show__tuple2_tot_or_ghost_syntax_term' x1) in
+      let tmp2 = (FStarC_Syntax_Print.fStarC_Class_Show_show__option_syntax_term' x2) in
+      let tmp3 = (Prims.strcat tmp2 ")") in
+      let tmp4 = (Prims.strcat ", " tmp3) in
+      let tmp5 = (Prims.strcat tmp1 tmp4) in
+      (Prims.strcat "(" tmp5))
+  )
+
+let print_error_short (err : (context * (FStar_Pprint.document) list)) : string =
+  (match err with
+    | (tmp, msg) -> (FStarC_Errors_Msg.rendermsg msg)
+  )
+
+let fStarC_Class_Show_show____result_tuple2_tuple2_option (tmp : (((tot_or_ghost * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result) : string =
+  (match tmp with
+    | (Success (a, tmp1)) -> (let tmp2 = (fStarC_Class_Show_show__tuple2_tuple2_tot_or_ghost_syntax_option_syntax a) in
+      (Prims.strcat "Success " tmp2))
+    | (Error (e)) -> (let tmp1 = (print_error_short e) in
+      (Prims.strcat "Error " tmp1))
+  )
+
+let simplify_steps : (FStarC_TypeChecker_Env.step) list =
+  (FStarC_TypeChecker_Env.Beta :: ((FStarC_TypeChecker_Env.UnfoldUntil (FStarC_Syntax_Syntax.delta_constant)) :: ((FStarC_TypeChecker_Env.UnfoldQual (("unfold" :: []))) :: ((FStarC_TypeChecker_Env.UnfoldOnly ((FStarC_Parser_Const.pure_wp_monotonic_lid :: (FStarC_Parser_Const.pure_wp_monotonic0_lid :: [])))) :: (FStarC_TypeChecker_Env.Simplify :: (FStarC_TypeChecker_Env.Primops :: (FStarC_TypeChecker_Env.NoFullNorm :: [])))))))
+
+let dbg_Exit : (bool ref) =
+  (FStarC_Debug.get_toggle "CoreExit")
+
+let report_cache_stats (tmp : unit) : cache_stats_t =
+  (!(cache_stats))
+
+let check_term_top (g : FStarC_TypeChecker_Env.env) (e : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (topt : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option) (must_tot : bool) : (((tot_or_ghost * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result =
+  (let tmp = (!(dbg_Eq)) in
+  (if tmp then (let tmp1 = (get_goal_ctr ()) in
+  let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int tmp1) in
+  (FStarC_Format.print1 "(%s) Entering core ... \n" tmp2)) else ());
+  let tmp1 = (!(dbg)) in
+  let tmp2 = (if tmp1 then true else (!(dbg_Top))) in
+  (if tmp2 then (let tmp3 = (get_goal_ctr ()) in
+  let tmp4 = (FStarC_Class_Show.fStarC_Class_Show_show__int tmp3) in
+  let tmp5 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' e) in
+  let tmp6 = (FStarC_Syntax_Print.fStarC_Class_Show_show__option_syntax_term' topt) in
+  (FStarC_Format.print3 "(%s) Entering core with %s <: %s\n" tmp4 tmp5 tmp6)) else ());
+  (FStarC_Syntax_TermHashTable.reset_counters (table).table);
+  (reset_cache_stats ());
+  let ctx = { no_guard = false;
+      unfolding_ok = true;
+      error_context = (("Top", None) :: []) } in
+  let res = (FStarC_Profiling.profile (fun tmp3 -> (let tmp4 = (check_term_top' g e topt must_tot) in
+    (tmp4 ctx initial_cache))) None "FStarC.TypeChecker.Core.check_term_top") in
+  let tmp3 = (!(dbg)) in
+  let tmp4 = (if tmp3 then true else (!(dbg_Top))) in
+  (if tmp4 then (let tmp5 = (get_goal_ctr ()) in
+  let tmp6 = (FStarC_Class_Show.fStarC_Class_Show_show__int tmp5) in
+  let tmp7 = (fStarC_Class_Show_show____result_tuple2_tuple2_option res) in
+  (FStarC_Format.print2 "(%s) Core result = %s\n" tmp6 tmp7)) else ());
+  let res1 = (match res with
+      | (Success ((et, (Some (guard0))), cache)) -> (let guard_ = (FStarC_TypeChecker_Normalize.normalize simplify_steps g guard0) in
+        let tmp5 = (!(dbg)) in
+        let tmp6 = (if tmp5 then true else (!(dbg_Top))) in
+        let tmp7 = (if tmp6 then true else (!(dbg_Exit))) in
+        (if tmp7 then (let tmp8 = (get_goal_ctr ()) in
+        let tmp9 = (FStarC_Class_Show.fStarC_Class_Show_show__int tmp8) in
+        let tmp10 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' guard0) in
+        let tmp11 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' guard_) in
+        (FStarC_Format.print3 "(%s) Exiting core: Simplified guard from {{%s}} to {{%s}}\n" tmp9 tmp10 tmp11);
+        let tmp12 = (FStarC_Syntax_Free.names guard_) in
+        let tmp13 = (FStarC_List.tryFind (fun bv -> (FStarC_List.for_all (fun binding_env -> (match binding_env with
+            | (FStarC_Syntax_Syntax.Binding_var (bv_env)) -> (not (FStarC_Syntax_Syntax.bv_eq bv_env bv))
+            | tmp13 -> true
+          )) (g).FStarC_TypeChecker_Env.gamma)) tmp12) in
+        (match tmp13 with
+          | (Some (bv)) -> (let tmp14 = (FStarC_Syntax_Syntax.bv_to_name bv) in
+            let tmp15 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' tmp14) in
+            (FStarC_Format.print1 "WARNING: %s is free in the core generated guard\n" tmp15))
+          | tmp14 -> ()
+        )) else ());
+        (Success ((et, (Some (guard_))), cache)))
+      | (Success (u__1, u__2)) -> (let tmp5 = (!(dbg)) in
+        let tmp6 = (if tmp5 then true else (!(dbg_Top))) in
+        (if tmp6 then (let tmp7 = (get_goal_ctr ()) in
+        let tmp8 = (FStarC_Class_Show.fStarC_Class_Show_show__int tmp7) in
+        (FStarC_Format.print1 "(%s) Exiting core (ok)\n" tmp8)) else ());
+        res)
+      | (Error (tmp5)) -> (let tmp6 = (!(dbg)) in
+        let tmp7 = (if tmp6 then true else (!(dbg_Top))) in
+        (if tmp7 then (let tmp8 = (get_goal_ctr ()) in
+        let tmp9 = (FStarC_Class_Show.fStarC_Class_Show_show__int tmp8) in
+        (FStarC_Format.print1 "(%s) Exiting core (failed)\n" tmp9)) else ());
+        res)
+    ) in
+  let tmp5 = (!(dbg_Eq)) in
+  (if tmp5 then ((FStarC_Syntax_TermHashTable.print_stats (table).table);
+  let cs = (report_cache_stats ()) in
+  let tmp6 = (FStarC_Class_Show.fStarC_Class_Show_show__int (cs).hits) in
+  let tmp7 = (FStarC_Class_Show.fStarC_Class_Show_show__int (cs).misses) in
+  (FStarC_Format.print2 "Cache_stats { hits = %s; misses = %s }\n" tmp6 tmp7)) else ());
+  res1)
+
+type guard_commit_token = {
+  guard_cache : ((cache_t) option ref);
+  guard_counter : Prims.int;
+}
+
+let mk_token (cache : cache_t) : guard_commit_token =
+  (let tmp = (ref (Some (cache))) in
+  let tmp1 = (!((table).counter)) in
+  { guard_cache = tmp; guard_counter = tmp1 })
+
+let commit_guard_core (g : guard_commit_token) : unit =
+  (let tmp = (!((table).counter)) in
+  let tmp1 = ((<>) (g).guard_counter tmp) in
+  (if tmp1 then () else (let cache = (!((g).guard_cache)) in
+  (match cache with
+    | None -> ()
+    | (Some (cache1)) -> ((((g).guard_cache) := None);
+      (FStarC_Syntax_Hash.term_map_fold (fun term hash_entry tmp2 -> (FStarC_Syntax_TermHashTable.insert term hash_entry (table).table)) (cache1).term_map ());
+      (FStarC_Syntax_Hash.term_map_fold (fun term guard_entry tmp2 -> (FStarC_Syntax_TermHashTable.insert term guard_entry (table).guard_table)) (cache1).guard_map ()))
+  ))))
+
+let return_my_guard_and_tok_t (g : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option) (cache : cache_t) : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (unit -> unit))) option =
+  (let tok = (mk_token cache) in
+  (match g with
+    | None -> ((commit_guard_core tok);
+      None)
+    | (Some (guard_)) -> (Some ((guard_, (fun tmp -> (commit_guard_core tok)))))
+  ))
+
+let check_term (g : FStarC_TypeChecker_Env.env) (e : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (must_tot : bool) : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (unit -> unit))) option, (context * (FStar_Pprint.document) list)) FStar_Pervasives.either =
+  (let tmp = (check_term_top g e (Some (t)) must_tot) in
+  (match tmp with
+    | (Success ((tmp1, g1), cache)) -> (let tmp2 = (return_my_guard_and_tok_t g1 cache) in
+      (FStar_Pervasives.Inl (tmp2)))
+    | (Error (err)) -> (FStar_Pervasives.Inr (err))
+  ))
+
+let open_binders_in_comp (g : FStarC_TypeChecker_Env.env) (bs : (FStarC_Syntax_Syntax.binder) list) (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : (FStarC_TypeChecker_Env.env * (FStarC_Syntax_Syntax.binder) list * (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) =
+  (let g1 = (initial_env g) in
+  let tmp = (open_comp_binders g1 bs c) in
+  (match tmp with
+    | (g', bs1, c1) -> ((g').tcenv, bs1, c1)
+  ))
+
+let empty_token (tmp : unit) : unit =
+  ()
+
+let check_term_subtyping (guard_ok : bool) (unfolding_ok_ : bool) (g : FStarC_TypeChecker_Env.env) (t0 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (t1 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (unit -> unit))) option, (context * (FStar_Pprint.document) list)) FStar_Pervasives.either =
+  (let g1 = (initial_env g) in
+  let ctx = { no_guard = (not guard_ok);
+      unfolding_ok = unfolding_ok_;
+      error_context = (("Subtyping", None) :: []) } in
+  let tmp = (check_relation g1 (SUBTYPING (None)) t0 t1) in
+  let tmp1 = (tmp ctx initial_cache) in
+  (match tmp1 with
+    | (Success ((tmp2, g2), cache)) -> (let tmp3 = (return_my_guard_and_tok_t g2 cache) in
+      (FStar_Pervasives.Inl (tmp3)))
+    | (Error (err)) -> (FStar_Pervasives.Inr (err))
+  ))
+
+let fStarC_Class_Show_show____result_tuple2_unit_option (tmp : ((unit * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) u___result) : string =
+  (match tmp with
+    | (Success (a, tmp1)) -> (let tmp2 = (FStarC_Syntax_Print.fStarC_Class_Show_show__tuple2_unit_option_syntax a) in
+      (Prims.strcat "Success " tmp2))
+    | (Error (e)) -> (let tmp1 = (print_error_short e) in
+      (Prims.strcat "Error " tmp1))
+  )
+
+let check_term_equality (guard_ok : bool) (unfolding_ok_ : bool) (g : FStarC_TypeChecker_Env.env) (t0 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (t1 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (unit -> unit))) option, (context * (FStar_Pprint.document) list)) FStar_Pervasives.either =
+  (let g1 = (initial_env g) in
+  let tmp = (!(dbg_Top)) in
+  (if tmp then (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' t0) in
+  let tmp2 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' t1) in
+  let tmp3 = (FStarC_Class_Show.fStarC_Class_Show_show__bool guard_ok) in
+  let tmp4 = (FStarC_Class_Show.fStarC_Class_Show_show__bool unfolding_ok_) in
+  (FStarC_Format.print4 "Entering check_term_equality with %s and %s (guard_ok=%s; unfolding_ok=%s) {\n" tmp1 tmp2 tmp3 tmp4)) else ());
+  let ctx = { no_guard = (not guard_ok);
+      unfolding_ok = unfolding_ok_;
+      error_context = (("Eq", None) :: []) } in
+  let tmp1 = (check_relation g1 EQUALITY t0 t1) in
+  let r = (tmp1 ctx initial_cache) in
+  let tmp2 = (!(dbg_Top)) in
+  (if tmp2 then (let tmp3 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' t0) in
+  let tmp4 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' t1) in
+  let tmp5 = (fStarC_Class_Show_show____result_tuple2_unit_option r) in
+  (FStarC_Format.print3 "} Exiting check_term_equality (%s, %s). Result = %s.\n" tmp3 tmp4 tmp5)) else ());
+  (match r with
+    | (Success ((tmp3, g2), cache)) -> (let tmp4 = (return_my_guard_and_tok_t g2 cache) in
+      (FStar_Pervasives.Inl (tmp4)))
+    | (Error (err)) -> (FStar_Pervasives.Inr (err))
+  ))
+
+let check_term_at_type (g : FStarC_TypeChecker_Env.env) (e : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((tot_or_ghost * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (unit -> unit))) option), (context * (FStar_Pprint.document) list)) FStar_Pervasives.either =
+  (let must_tot = false in
+  let tmp = (check_term_top g e (Some (t)) must_tot) in
+  (match tmp with
+    | (Success (((eff, tmp1), g1), cache)) -> (let tmp2 = (return_my_guard_and_tok_t g1 cache) in
+      let tmp3 = (eff, tmp2) in
+      (FStar_Pervasives.Inl (tmp3)))
+    | (Error (err)) -> (FStar_Pervasives.Inr (err))
+  ))
+
+let compute_term_type (g : FStarC_TypeChecker_Env.env) (e : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((tot_or_ghost * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (unit -> unit))) option), (context * (FStar_Pprint.document) list)) FStar_Pervasives.either =
+  (let must_tot = false in
+  let tmp = (check_term_top g e None must_tot) in
+  (match tmp with
+    | (Success (((eff, ty), g1), cache)) -> (let tmp1 = (return_my_guard_and_tok_t g1 cache) in
+      let tmp2 = (eff, ty, tmp1) in
+      (FStar_Pervasives.Inl (tmp2)))
+    | (Error (err)) -> (FStar_Pervasives.Inr (err))
+  ))
+
+let fStarC_Class_Show_show__side (tmp : side) : string =
+  (match tmp with
+    | Left -> "Left"
+    | Right -> "Right"
+    | Both -> "Both"
+    | Neither -> "Neither"
+  )
+
+let incr_goal_ctr (tmp : unit) : Prims.int =
+  (let v = (!(goal_ctr)) in
+  ((goal_ctr) := (Prims.op_Plus v (Prims.parse_int "1")));
+  (Prims.op_Plus v (Prims.parse_int "1")))
+
+let commit_guard_and_tok_opt (t : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (unit -> unit))) option) : unit =
+  (match t with
+    | None -> ()
+    | (Some ((tmp, tok))) -> (commit_guard tok)
+  )
+
+let clear_memo_table (tmp : unit) : unit =
+  ((FStarC_Syntax_TermHashTable.clear (table).table);
+  (FStarC_Syntax_TermHashTable.clear (table).guard_table);
+  let tmp1 = (!((table).counter)) in
+  let tmp2 = (Prims.op_Plus tmp1 (Prims.parse_int "1")) in
+  (((table).counter) := tmp2))
+

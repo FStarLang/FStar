@@ -1,815 +1,830 @@
-open Prims
-let bv_to_string (bv : FStarC_Syntax_Syntax.bv) : Prims.string=
-  let uu___ = FStarC_Options.print_real_names () in
-  if uu___
-  then
-    let uu___1 =
-      FStarC_Class_Show.show FStarC_Ident.showable_ident
-        bv.FStarC_Syntax_Syntax.ppname in
-    let uu___2 =
-      let uu___3 =
-        FStarC_Class_Show.show FStarC_Class_Show.showable_int
-          bv.FStarC_Syntax_Syntax.index in
-      Prims.strcat "#" uu___3 in
-    Prims.strcat uu___1 uu___2
-  else
-    FStarC_Class_Show.show FStarC_Ident.showable_ident
-      bv.FStarC_Syntax_Syntax.ppname
-let nm_to_string (bv : FStarC_Syntax_Syntax.bv) : Prims.string=
-  let uu___ = FStarC_Options.print_real_names () in
-  if uu___
-  then bv_to_string bv
-  else FStarC_Ident.string_of_id bv.FStarC_Syntax_Syntax.ppname
-let db_to_string (bv : FStarC_Syntax_Syntax.bv) : Prims.string=
-  let uu___ =
-    let uu___1 =
-      FStarC_Class_Show.show FStarC_Class_Show.showable_int
-        bv.FStarC_Syntax_Syntax.index in
-    Prims.strcat "@" uu___1 in
-  Prims.strcat (FStarC_Ident.string_of_id bv.FStarC_Syntax_Syntax.ppname)
-    uu___
-let filter_imp
-  (aq : FStarC_Syntax_Syntax.binder_qualifier FStar_Pervasives_Native.option)
-  : Prims.bool=
-  match aq with
-  | FStar_Pervasives_Native.Some (FStarC_Syntax_Syntax.Meta t) when
-      FStarC_Syntax_Util.is_fvar FStarC_Parser_Const.tcresolve_lid t -> true
-  | FStar_Pervasives_Native.Some (FStarC_Syntax_Syntax.Implicit uu___) ->
-      false
-  | FStar_Pervasives_Native.Some (FStarC_Syntax_Syntax.Meta uu___) -> false
-  | uu___ -> true
-let filter_imp_args (args : FStarC_Syntax_Syntax.args) :
-  FStarC_Syntax_Syntax.args=
-  FStarC_List.filter
-    (fun uu___ ->
-       match uu___ with
-       | (uu___1, FStar_Pervasives_Native.None) -> true
-       | (uu___1, FStar_Pervasives_Native.Some a) ->
-           Prims.not a.FStarC_Syntax_Syntax.aqual_implicit) args
-let filter_imp_binders (bs : FStarC_Syntax_Syntax.binder Prims.list) :
-  FStarC_Syntax_Syntax.binders=
-  FStarC_List.filter (fun b -> filter_imp b.FStarC_Syntax_Syntax.binder_qual)
-    bs
-let const_to_string : FStarC_Const.sconst -> Prims.string=
-  FStarC_Parser_Const.const_to_string
-let lbname_to_string (uu___ : FStarC_Syntax_Syntax.lbname) : Prims.string=
-  match uu___ with
-  | FStar_Pervasives.Inl l -> bv_to_string l
-  | FStar_Pervasives.Inr l ->
-      FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_fv l
-let uvar_to_string (u : FStarC_Syntax_Syntax.uvar) : Prims.string=
-  let uu___ = FStarC_Options.hide_uvar_nums () in
-  if uu___
-  then "?"
-  else
-    (let uu___1 =
-       let uu___2 = FStarC_Syntax_Unionfind.uvar_id u in
-       FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___2 in
-     Prims.strcat "?" uu___1)
-let version_to_string (v : FStarC_Syntax_Syntax.version) : Prims.string=
-  let uu___ =
-    FStarC_Class_Show.show FStarC_Class_Show.showable_int
-      v.FStarC_Syntax_Syntax.major in
-  let uu___1 =
-    FStarC_Class_Show.show FStarC_Class_Show.showable_int
-      v.FStarC_Syntax_Syntax.minor in
-  FStarC_Format.fmt2 "%s.%s" uu___ uu___1
-let univ_uvar_to_string
-  (u :
-    (FStarC_Syntax_Syntax.universe FStar_Pervasives_Native.option
-      FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version *
-      FStarC_Range_Type.range))
-  : Prims.string=
-  let uu___ = FStarC_Options.hide_uvar_nums () in
-  if uu___
-  then "?"
-  else
-    (let uu___1 =
-       let uu___2 =
-         let uu___3 = FStarC_Syntax_Unionfind.univ_uvar_id u in
-         FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___3 in
-       let uu___3 =
-         let uu___4 =
-           match u with | (uu___5, u1, uu___6) -> version_to_string u1 in
-         Prims.strcat ":" uu___4 in
-       Prims.strcat uu___2 uu___3 in
-     Prims.strcat "?" uu___1)
-let rec int_of_univ (n : Prims.int) (u : FStarC_Syntax_Syntax.universe) :
-  (Prims.int * FStarC_Syntax_Syntax.universe FStar_Pervasives_Native.option)=
-  let uu___ = FStarC_Syntax_Subst.compress_univ u in
-  match uu___ with
-  | FStarC_Syntax_Syntax.U_zero -> (n, FStar_Pervasives_Native.None)
-  | FStarC_Syntax_Syntax.U_succ u1 -> int_of_univ (n + Prims.int_one) u1
-  | uu___1 -> (n, (FStar_Pervasives_Native.Some u))
-let rec univ_to_string (u : FStarC_Syntax_Syntax.universe) : Prims.string=
-  FStarC_Errors.with_ctx "While printing universe"
-    (fun uu___ ->
-       let uu___1 = FStarC_Syntax_Subst.compress_univ u in
-       match uu___1 with
-       | FStarC_Syntax_Syntax.U_unif u1 ->
-           let uu___2 = univ_uvar_to_string u1 in
-           Prims.strcat "U_unif " uu___2
-       | FStarC_Syntax_Syntax.U_name x ->
-           Prims.strcat "U_name " (FStarC_Ident.string_of_id x)
-       | FStarC_Syntax_Syntax.U_bvar x ->
-           let uu___2 =
-             FStarC_Class_Show.show FStarC_Class_Show.showable_int x in
-           Prims.strcat "@" uu___2
-       | FStarC_Syntax_Syntax.U_zero -> "0"
-       | FStarC_Syntax_Syntax.U_succ u1 ->
-           let uu___2 = int_of_univ Prims.int_one u1 in
-           (match uu___2 with
-            | (n, FStar_Pervasives_Native.None) ->
-                FStarC_Class_Show.show FStarC_Class_Show.showable_int n
-            | (n, FStar_Pervasives_Native.Some u2) ->
-                let uu___3 = univ_to_string u2 in
-                let uu___4 =
-                  FStarC_Class_Show.show FStarC_Class_Show.showable_int n in
-                FStarC_Format.fmt2 "(%s + %s)" uu___3 uu___4)
-       | FStarC_Syntax_Syntax.U_max us ->
-           let uu___2 =
-             let uu___3 = FStarC_List.map univ_to_string us in
-             FStarC_String.concat ", " uu___3 in
-           FStarC_Format.fmt1 "(max %s)" uu___2
-       | FStarC_Syntax_Syntax.U_unknown -> "unknown")
-let univs_to_string (us : FStarC_Syntax_Syntax.universe Prims.list) :
-  Prims.string=
-  let uu___ = FStarC_List.map univ_to_string us in
-  FStarC_String.concat ", " uu___
-let qual_to_string (uu___ : FStarC_Syntax_Syntax.qualifier) : Prims.string=
-  match uu___ with
-  | FStarC_Syntax_Syntax.Assumption -> "assume"
-  | FStarC_Syntax_Syntax.InternalAssumption -> "internal_assume"
-  | FStarC_Syntax_Syntax.New -> "new"
-  | FStarC_Syntax_Syntax.Private -> "private"
-  | FStarC_Syntax_Syntax.Unfold_for_unification_and_vcgen -> "unfold"
-  | FStarC_Syntax_Syntax.Inline_for_extraction -> "inline_for_extraction"
-  | FStarC_Syntax_Syntax.NoExtract -> "noextract"
-  | FStarC_Syntax_Syntax.Visible_default -> "visible"
-  | FStarC_Syntax_Syntax.Irreducible -> "irreducible"
-  | FStarC_Syntax_Syntax.Noeq -> "noeq"
-  | FStarC_Syntax_Syntax.Unopteq -> "unopteq"
-  | FStarC_Syntax_Syntax.Logic -> "logic"
-  | FStarC_Syntax_Syntax.TotalEffect -> "total"
-  | FStarC_Syntax_Syntax.Discriminator l ->
-      let uu___1 = FStarC_Class_Show.show FStarC_Ident.showable_lident l in
-      FStarC_Format.fmt1 "(Discriminator %s)" uu___1
-  | FStarC_Syntax_Syntax.Projector (l, x) ->
-      let uu___1 = FStarC_Class_Show.show FStarC_Ident.showable_lident l in
-      FStarC_Format.fmt2 "(Projector %s %s)" uu___1
-        (FStarC_Ident.string_of_id x)
-  | FStarC_Syntax_Syntax.RecordType (ns, fns) ->
-      let uu___1 =
-        let uu___2 = FStarC_Ident.path_of_ns ns in
-        FStarC_Ident.text_of_path uu___2 in
-      let uu___2 =
-        let uu___3 = FStarC_List.map FStarC_Ident.string_of_id fns in
-        FStarC_String.concat ", " uu___3 in
-      FStarC_Format.fmt2 "(RecordType %s %s)" uu___1 uu___2
-  | FStarC_Syntax_Syntax.RecordConstructor (ns, fns) ->
-      let uu___1 =
-        let uu___2 = FStarC_Ident.path_of_ns ns in
-        FStarC_Ident.text_of_path uu___2 in
-      let uu___2 =
-        let uu___3 = FStarC_List.map FStarC_Ident.string_of_id fns in
-        FStarC_String.concat ", " uu___3 in
-      FStarC_Format.fmt2 "(RecordConstructor %s %s)" uu___1 uu___2
-  | FStarC_Syntax_Syntax.Action eff_lid ->
-      let uu___1 =
-        FStarC_Class_Show.show FStarC_Ident.showable_lident eff_lid in
-      FStarC_Format.fmt1 "(Action %s)" uu___1
-  | FStarC_Syntax_Syntax.ExceptionConstructor -> "ExceptionConstructor"
-  | FStarC_Syntax_Syntax.HasMaskedEffect -> "HasMaskedEffect"
-  | FStarC_Syntax_Syntax.Effect -> "Effect"
-  | FStarC_Syntax_Syntax.Reifiable -> "reify"
-  | FStarC_Syntax_Syntax.Reflectable l ->
-      FStarC_Format.fmt1 "(reflect %s)" (FStarC_Ident.string_of_lid l)
-  | FStarC_Syntax_Syntax.OnlyName -> "OnlyName"
-let quals_to_string (quals : FStarC_Syntax_Syntax.qualifier Prims.list) :
-  Prims.string=
-  match quals with
-  | [] -> ""
-  | uu___ ->
-      let uu___1 = FStarC_List.map qual_to_string quals in
-      FStarC_String.concat " " uu___1
-let quals_to_string' (quals : FStarC_Syntax_Syntax.qualifier Prims.list) :
-  Prims.string=
-  match quals with
-  | [] -> ""
-  | uu___ -> let uu___1 = quals_to_string quals in Prims.strcat uu___1 " "
-let paren (s : Prims.string) : Prims.string=
-  Prims.strcat "(" (Prims.strcat s ")")
-let lkind_to_string (uu___ : FStarC_Syntax_Syntax.lazy_kind) : Prims.string=
-  match uu___ with
-  | FStarC_Syntax_Syntax.BadLazy -> "BadLazy"
-  | FStarC_Syntax_Syntax.Lazy_bv -> "Lazy_bv"
-  | FStarC_Syntax_Syntax.Lazy_namedv -> "Lazy_namedv"
-  | FStarC_Syntax_Syntax.Lazy_binder -> "Lazy_binder"
-  | FStarC_Syntax_Syntax.Lazy_optionstate -> "Lazy_optionstate"
-  | FStarC_Syntax_Syntax.Lazy_fvar -> "Lazy_fvar"
-  | FStarC_Syntax_Syntax.Lazy_comp -> "Lazy_comp"
-  | FStarC_Syntax_Syntax.Lazy_env -> "Lazy_env"
-  | FStarC_Syntax_Syntax.Lazy_proofstate -> "Lazy_proofstate"
-  | FStarC_Syntax_Syntax.Lazy_ref_proofstate -> "Lazy_ref_proofstate"
-  | FStarC_Syntax_Syntax.Lazy_goal -> "Lazy_goal"
-  | FStarC_Syntax_Syntax.Lazy_sigelt -> "Lazy_sigelt"
-  | FStarC_Syntax_Syntax.Lazy_uvar -> "Lazy_uvar"
-  | FStarC_Syntax_Syntax.Lazy_letbinding -> "Lazy_letbinding"
-  | FStarC_Syntax_Syntax.Lazy_embedding (e, uu___1) ->
-      let uu___2 =
-        let uu___3 =
-          FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_emb_typ e in
-        Prims.strcat uu___3 ")" in
-      Prims.strcat "Lazy_embedding(" uu___2
-  | FStarC_Syntax_Syntax.Lazy_universe -> "Lazy_universe"
-  | FStarC_Syntax_Syntax.Lazy_universe_uvar -> "Lazy_universe_uvar"
-  | FStarC_Syntax_Syntax.Lazy_issue -> "Lazy_issue"
-  | FStarC_Syntax_Syntax.Lazy_ident -> "Lazy_ident"
-  | FStarC_Syntax_Syntax.Lazy_doc -> "Lazy_doc"
-  | FStarC_Syntax_Syntax.Lazy_extension s -> Prims.strcat "Lazy_extension:" s
-let term_to_string (x : FStarC_Syntax_Syntax.term) : Prims.string=
-  let uu___ = FStarC_Options.ugly () in
-  if uu___
-  then FStarC_Syntax_Print_Ugly.term_to_string x
-  else FStarC_Syntax_Print_Pretty.term_to_string x
-let term_to_string' (env : FStarC_Syntax_DsEnv.env)
-  (x : FStarC_Syntax_Syntax.term) : Prims.string=
-  let uu___ = FStarC_Options.ugly () in
-  if uu___
-  then FStarC_Syntax_Print_Ugly.term_to_string x
-  else FStarC_Syntax_Print_Pretty.term_to_string' env x
-let comp_to_string (c : FStarC_Syntax_Syntax.comp) : Prims.string=
-  let uu___ = FStarC_Options.ugly () in
-  if uu___
-  then FStarC_Syntax_Print_Ugly.comp_to_string c
-  else FStarC_Syntax_Print_Pretty.comp_to_string c
-let comp_to_string' (env : FStarC_Syntax_DsEnv.env)
-  (c : FStarC_Syntax_Syntax.comp) : Prims.string=
-  let uu___ = FStarC_Options.ugly () in
-  if uu___
-  then FStarC_Syntax_Print_Ugly.comp_to_string c
-  else FStarC_Syntax_Print_Pretty.comp_to_string' env c
-let sigelt_to_string (x : FStarC_Syntax_Syntax.sigelt) : Prims.string=
-  let uu___ = FStarC_Options.ugly () in
-  if uu___
-  then FStarC_Syntax_Print_Ugly.sigelt_to_string x
-  else FStarC_Syntax_Print_Pretty.sigelt_to_string x
-let sigelt_to_string' (env : FStarC_Syntax_DsEnv.env)
-  (x : FStarC_Syntax_Syntax.sigelt) : Prims.string=
-  let uu___ = FStarC_Options.ugly () in
-  if uu___
-  then FStarC_Syntax_Print_Ugly.sigelt_to_string x
-  else FStarC_Syntax_Print_Pretty.sigelt_to_string' env x
-let pat_to_string (x : FStarC_Syntax_Syntax.pat) : Prims.string=
-  let uu___ = FStarC_Options.ugly () in
-  if uu___
-  then FStarC_Syntax_Print_Ugly.pat_to_string x
-  else FStarC_Syntax_Print_Pretty.pat_to_string x
-let term_to_doc' (dsenv : FStarC_Syntax_DsEnv.env)
-  (t : FStarC_Syntax_Syntax.term) : FStar_Pprint.document=
-  let uu___ = FStarC_Options.ugly () in
-  if uu___
-  then
-    let uu___1 = FStarC_Syntax_Print_Ugly.term_to_string t in
-    FStar_Pprint.arbitrary_string uu___1
-  else FStarC_Syntax_Print_Pretty.term_to_doc' dsenv t
-let univ_to_doc' (dsenv : FStarC_Syntax_DsEnv.env)
-  (t : FStarC_Syntax_Syntax.universe) : FStar_Pprint.document=
-  let uu___ = FStarC_Options.ugly () in
-  if uu___
-  then
-    let uu___1 = FStarC_Syntax_Print_Ugly.univ_to_string t in
-    FStar_Pprint.arbitrary_string uu___1
-  else FStarC_Syntax_Print_Pretty.univ_to_doc' dsenv t
-let comp_to_doc' (dsenv : FStarC_Syntax_DsEnv.env)
-  (t : FStarC_Syntax_Syntax.comp) : FStar_Pprint.document=
-  let uu___ = FStarC_Options.ugly () in
-  if uu___
-  then
-    let uu___1 = FStarC_Syntax_Print_Ugly.comp_to_string t in
-    FStar_Pprint.arbitrary_string uu___1
-  else FStarC_Syntax_Print_Pretty.comp_to_doc' dsenv t
-let sigelt_to_doc' (dsenv : FStarC_Syntax_DsEnv.env)
-  (t : FStarC_Syntax_Syntax.sigelt) : FStar_Pprint.document=
-  let uu___ = FStarC_Options.ugly () in
-  if uu___
-  then
-    let uu___1 = FStarC_Syntax_Print_Ugly.sigelt_to_string t in
-    FStar_Pprint.arbitrary_string uu___1
-  else FStarC_Syntax_Print_Pretty.sigelt_to_doc' dsenv t
-let term_to_doc (t : FStarC_Syntax_Syntax.term) : FStar_Pprint.document=
-  let uu___ = FStarC_Options.ugly () in
-  if uu___
-  then
-    let uu___1 = FStarC_Syntax_Print_Ugly.term_to_string t in
-    FStar_Pprint.arbitrary_string uu___1
-  else FStarC_Syntax_Print_Pretty.term_to_doc t
-let univ_to_doc (t : FStarC_Syntax_Syntax.universe) : FStar_Pprint.document=
-  let uu___ = FStarC_Options.ugly () in
-  if uu___
-  then
-    let uu___1 = FStarC_Syntax_Print_Ugly.univ_to_string t in
-    FStar_Pprint.arbitrary_string uu___1
-  else FStarC_Syntax_Print_Pretty.univ_to_doc t
-let comp_to_doc (t : FStarC_Syntax_Syntax.comp) : FStar_Pprint.document=
-  let uu___ = FStarC_Options.ugly () in
-  if uu___
-  then
-    let uu___1 = FStarC_Syntax_Print_Ugly.comp_to_string t in
-    FStar_Pprint.arbitrary_string uu___1
-  else FStarC_Syntax_Print_Pretty.comp_to_doc t
-let sigelt_to_doc (t : FStarC_Syntax_Syntax.sigelt) : FStar_Pprint.document=
-  let uu___ = FStarC_Options.ugly () in
-  if uu___
-  then
-    let uu___1 = FStarC_Syntax_Print_Ugly.sigelt_to_string t in
-    FStar_Pprint.arbitrary_string uu___1
-  else FStarC_Syntax_Print_Pretty.sigelt_to_doc t
-let binder_to_string (b : FStarC_Syntax_Syntax.binder) : Prims.string=
-  let uu___ = FStarC_Options.ugly () in
-  if uu___
-  then FStarC_Syntax_Print_Pretty.binder_to_string' false b
-  else FStarC_Syntax_Print_Ugly.binder_to_string b
-let aqual_to_string (q : FStarC_Syntax_Syntax.aqual) : Prims.string=
-  match q with
-  | FStar_Pervasives_Native.Some
-      { FStarC_Syntax_Syntax.aqual_implicit = true;
-        FStarC_Syntax_Syntax.aqual_attributes = uu___;_}
-      -> "#"
-  | uu___ -> ""
-let bqual_to_string' (s : Prims.string) (b : FStarC_Syntax_Syntax.bqual) :
-  Prims.string=
-  match b with
-  | FStar_Pervasives_Native.Some (FStarC_Syntax_Syntax.Implicit false) ->
-      Prims.strcat "#" s
-  | FStar_Pervasives_Native.Some (FStarC_Syntax_Syntax.Implicit true) ->
-      Prims.strcat "#." s
-  | FStar_Pervasives_Native.Some (FStarC_Syntax_Syntax.Equality) ->
-      Prims.strcat "$" s
-  | FStar_Pervasives_Native.Some (FStarC_Syntax_Syntax.Meta t) when
-      FStarC_Syntax_Util.is_fvar FStarC_Parser_Const.tcresolve_lid t ->
-      Prims.strcat "{|" (Prims.strcat s "|}")
-  | FStar_Pervasives_Native.Some (FStarC_Syntax_Syntax.Meta t) ->
-      let uu___ =
-        let uu___1 = term_to_string t in
-        Prims.strcat uu___1 (Prims.strcat "]" s) in
-      Prims.strcat "#[" uu___
-  | FStar_Pervasives_Native.None -> s
-let bqual_to_string (q : FStarC_Syntax_Syntax.bqual) : Prims.string=
-  bqual_to_string' "" q
-let subst_elt_to_string (uu___ : FStarC_Syntax_Syntax.subst_elt) :
-  Prims.string=
-  match uu___ with
-  | FStarC_Syntax_Syntax.DB (i, x) ->
-      let uu___1 = FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
-      let uu___2 = bv_to_string x in
-      FStarC_Format.fmt2 "DB (%s, %s)" uu___1 uu___2
-  | FStarC_Syntax_Syntax.DT (i, t) ->
-      let uu___1 = FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
-      let uu___2 = term_to_string t in
-      FStarC_Format.fmt2 "DT (%s, %s)" uu___1 uu___2
-  | FStarC_Syntax_Syntax.NM (x, i) ->
-      let uu___1 = bv_to_string x in
-      let uu___2 = FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
-      FStarC_Format.fmt2 "NM (%s, %s)" uu___1 uu___2
-  | FStarC_Syntax_Syntax.NT (x, t) ->
-      let uu___1 = bv_to_string x in
-      let uu___2 = term_to_string t in
-      FStarC_Format.fmt2 "NT (%s, %s)" uu___1 uu___2
-  | FStarC_Syntax_Syntax.UN (i, u) ->
-      let uu___1 = FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
-      let uu___2 = univ_to_string u in
-      FStarC_Format.fmt2 "UN (%s, %s)" uu___1 uu___2
-  | FStarC_Syntax_Syntax.UD (u, i) ->
-      let uu___1 = FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
-      FStarC_Format.fmt2 "UD (%s, %s)" (FStarC_Ident.string_of_id u) uu___1
-let modul_to_string (m : FStarC_Syntax_Syntax.modul) : Prims.string=
-  let uu___ =
-    FStarC_Class_Show.show FStarC_Ident.showable_lident
-      m.FStarC_Syntax_Syntax.name in
-  let uu___1 =
-    let uu___2 =
-      FStarC_List.map sigelt_to_string m.FStarC_Syntax_Syntax.declarations in
-    FStarC_String.concat "\n" uu___2 in
-  FStarC_Format.fmt2 "module %s\nDeclarations: [\n%s\n]\n" uu___ uu___1
-let metadata_to_string (uu___ : FStarC_Syntax_Syntax.metadata) :
-  Prims.string=
-  match uu___ with
-  | FStarC_Syntax_Syntax.Meta_pattern (uu___1, ps) ->
-      let pats =
-        let uu___2 =
-          FStarC_List.map
-            (fun args ->
-               let uu___3 =
-                 FStarC_List.map
-                   (fun uu___4 ->
-                      match uu___4 with | (t, uu___5) -> term_to_string t)
-                   args in
-               FStarC_String.concat "; " uu___3) ps in
-        FStarC_String.concat "\\/" uu___2 in
-      FStarC_Format.fmt1 "{Meta_pattern %s}" pats
-  | FStarC_Syntax_Syntax.Meta_named lid ->
-      let uu___1 = FStarC_Class_Show.show FStarC_Ident.showable_lident lid in
-      FStarC_Format.fmt1 "{Meta_named %s}" uu___1
-  | FStarC_Syntax_Syntax.Meta_labeled (l, r, uu___1) ->
-      let uu___2 = FStarC_Errors_Msg.rendermsg l in
-      let uu___3 = FStarC_Range_Ops.string_of_range r in
-      FStarC_Format.fmt2 "{Meta_labeled (%s, %s)}" uu___2 uu___3
-  | FStarC_Syntax_Syntax.Meta_desugared msi -> "{Meta_desugared}"
-  | FStarC_Syntax_Syntax.Meta_monadic (m, t) ->
-      let uu___1 = FStarC_Class_Show.show FStarC_Ident.showable_lident m in
-      let uu___2 = term_to_string t in
-      FStarC_Format.fmt2 "{Meta_monadic(%s @ %s)}" uu___1 uu___2
-  | FStarC_Syntax_Syntax.Meta_monadic_lift (m, m', t) ->
-      let uu___1 = FStarC_Class_Show.show FStarC_Ident.showable_lident m in
-      let uu___2 = FStarC_Class_Show.show FStarC_Ident.showable_lident m' in
-      let uu___3 = term_to_string t in
-      FStarC_Format.fmt3 "{Meta_monadic_lift(%s -> %s @ %s)}" uu___1 uu___2
-        uu___3
-let showable_term : FStarC_Syntax_Syntax.term FStarC_Class_Show.showable=
-  { FStarC_Class_Show.show = term_to_string }
-let showable_univ : FStarC_Syntax_Syntax.universe FStarC_Class_Show.showable=
-  { FStarC_Class_Show.show = univ_to_string }
-let showable_comp : FStarC_Syntax_Syntax.comp FStarC_Class_Show.showable=
-  { FStarC_Class_Show.show = comp_to_string }
-let showable_sigelt : FStarC_Syntax_Syntax.sigelt FStarC_Class_Show.showable=
-  { FStarC_Class_Show.show = sigelt_to_string }
-let showable_bv : FStarC_Syntax_Syntax.bv FStarC_Class_Show.showable=
-  { FStarC_Class_Show.show = bv_to_string }
-let showable_binder : FStarC_Syntax_Syntax.binder FStarC_Class_Show.showable=
-  { FStarC_Class_Show.show = binder_to_string }
-let showable_uvar : FStarC_Syntax_Syntax.uvar FStarC_Class_Show.showable=
-  { FStarC_Class_Show.show = uvar_to_string }
-let ctx_uvar_to_string (ctx_uvar : FStarC_Syntax_Syntax.ctx_uvar) :
-  Prims.string=
-  let reason_string =
-    FStarC_Format.fmt1 "(* %s *)\n"
-      ctx_uvar.FStarC_Syntax_Syntax.ctx_uvar_reason in
-  let uu___ =
-    let uu___1 =
-      FStarC_List.map (FStarC_Class_Show.show showable_binder)
-        ctx_uvar.FStarC_Syntax_Syntax.ctx_uvar_binders in
-    FStarC_String.concat ", " uu___1 in
-  let uu___1 = uvar_to_string ctx_uvar.FStarC_Syntax_Syntax.ctx_uvar_head in
-  let uu___2 =
-    let uu___3 = FStarC_Syntax_Util.ctx_uvar_typ ctx_uvar in
-    term_to_string uu___3 in
-  let uu___3 =
-    let uu___4 = FStarC_Syntax_Util.ctx_uvar_should_check ctx_uvar in
-    match uu___4 with
-    | FStarC_Syntax_Syntax.Allow_unresolved s ->
-        Prims.strcat "Allow_unresolved " s
-    | FStarC_Syntax_Syntax.Allow_untyped s -> Prims.strcat "Allow_untyped " s
-    | FStarC_Syntax_Syntax.Allow_ghost s -> Prims.strcat "Allow_ghost " s
-    | FStarC_Syntax_Syntax.Strict -> "Strict"
-    | FStarC_Syntax_Syntax.Already_checked -> "Already_checked" in
-  FStarC_Format.fmt5 "%s(%s |- %s : %s) %s" reason_string uu___ uu___1 uu___2
-    uu___3
-let showable_ctxu : FStarC_Syntax_Syntax.ctx_uvar FStarC_Class_Show.showable=
-  { FStarC_Class_Show.show = ctx_uvar_to_string }
-let showable_binding :
-  FStarC_Syntax_Syntax.binding FStarC_Class_Show.showable=
-  {
-    FStarC_Class_Show.show =
-      (fun uu___ ->
-         match uu___ with
-         | FStarC_Syntax_Syntax.Binding_var x ->
-             let uu___1 = FStarC_Class_Show.show showable_bv x in
-             Prims.strcat "Binding_var " uu___1
-         | FStarC_Syntax_Syntax.Binding_lid x ->
-             let uu___1 =
-               FStarC_Class_Show.show
-                 (FStarC_Class_Show.show_tuple2 FStarC_Ident.showable_lident
-                    (FStarC_Class_Show.show_tuple2
-                       (FStarC_Class_Show.show_list
-                          FStarC_Ident.showable_ident) showable_term)) x in
-             Prims.strcat "Binding_lid " uu___1
-         | FStarC_Syntax_Syntax.Binding_univ x ->
-             let uu___1 =
-               FStarC_Class_Show.show FStarC_Ident.showable_ident x in
-             Prims.strcat "Binding_univ " uu___1)
-  }
-let showable_subst_elt :
-  FStarC_Syntax_Syntax.subst_elt FStarC_Class_Show.showable=
-  { FStarC_Class_Show.show = subst_elt_to_string }
-let showable_branch : FStarC_Syntax_Syntax.branch FStarC_Class_Show.showable=
-  { FStarC_Class_Show.show = FStarC_Syntax_Print_Ugly.branch_to_string }
-let showable_qualifier :
-  FStarC_Syntax_Syntax.qualifier FStarC_Class_Show.showable=
-  { FStarC_Class_Show.show = qual_to_string }
-let showable_pat : FStarC_Syntax_Syntax.pat FStarC_Class_Show.showable=
-  { FStarC_Class_Show.show = pat_to_string }
-let showable_const : FStarC_Syntax_Syntax.sconst FStarC_Class_Show.showable=
-  { FStarC_Class_Show.show = const_to_string }
-let showable_letbinding :
-  FStarC_Syntax_Syntax.letbinding FStarC_Class_Show.showable=
-  { FStarC_Class_Show.show = FStarC_Syntax_Print_Ugly.lb_to_string }
-let showable_modul : FStarC_Syntax_Syntax.modul FStarC_Class_Show.showable=
-  { FStarC_Class_Show.show = modul_to_string }
-let showable_metadata :
-  FStarC_Syntax_Syntax.metadata FStarC_Class_Show.showable=
-  { FStarC_Class_Show.show = metadata_to_string }
-let showable_ctx_uvar_meta :
-  FStarC_Syntax_Syntax.ctx_uvar_meta_t FStarC_Class_Show.showable=
-  {
-    FStarC_Class_Show.show =
-      (fun uu___ ->
-         match uu___ with
-         | FStarC_Syntax_Syntax.Ctx_uvar_meta_attr attr ->
-             let uu___1 = FStarC_Class_Show.show showable_term attr in
-             Prims.strcat "Ctx_uvar_meta_attr " uu___1
-         | FStarC_Syntax_Syntax.Ctx_uvar_meta_tac r ->
-             let uu___1 = FStarC_Class_Show.show showable_term r in
-             Prims.strcat "Ctx_uvar_meta_tac " uu___1)
-  }
-let showable_bqual :
-  FStarC_Syntax_Syntax.binder_qualifier FStarC_Class_Show.showable=
-  {
-    FStarC_Class_Show.show =
-      (fun b -> bqual_to_string (FStar_Pervasives_Native.Some b))
-  }
-let showable_aqual : FStarC_Syntax_Syntax.aqual FStarC_Class_Show.showable=
-  { FStarC_Class_Show.show = aqual_to_string }
-let tscheme_to_string (ts : FStarC_Syntax_Syntax.tscheme) : Prims.string=
-  let uu___ = FStarC_Options.ugly () in
-  if uu___
-  then FStarC_Syntax_Print_Ugly.tscheme_to_string ts
-  else FStarC_Syntax_Print_Pretty.tscheme_to_string ts
-let tscheme_to_doc (ts : FStarC_Syntax_Syntax.tscheme) :
-  FStar_Pprint.document=
-  let uu___ = FStarC_Options.ugly () in
-  if uu___
-  then
-    let uu___1 = FStarC_Syntax_Print_Ugly.tscheme_to_string ts in
-    FStar_Pprint.arbitrary_string uu___1
-  else FStarC_Syntax_Print_Pretty.tscheme_to_doc ts
-let sub_eff_to_string (se : FStarC_Syntax_Syntax.sub_eff) : Prims.string=
-  let uu___ =
-    FStarC_Class_Show.show FStarC_Ident.showable_lident
-      se.FStarC_Syntax_Syntax.source in
-  let uu___1 =
-    FStarC_Class_Show.show FStarC_Ident.showable_lident
-      se.FStarC_Syntax_Syntax.target in
-  FStarC_Format.fmt2 "sub_effect %s ~> %s" uu___ uu___1
-let showable_sub_eff :
-  FStarC_Syntax_Syntax.sub_eff FStarC_Class_Show.showable=
-  { FStarC_Class_Show.show = sub_eff_to_string }
-let pretty_term : FStarC_Syntax_Syntax.term FStarC_Class_PP.pretty=
-  { FStarC_Class_PP.pp = term_to_doc }
-let pretty_univ : FStarC_Syntax_Syntax.universe FStarC_Class_PP.pretty=
-  { FStarC_Class_PP.pp = univ_to_doc }
-let pretty_sigelt : FStarC_Syntax_Syntax.sigelt FStarC_Class_PP.pretty=
-  { FStarC_Class_PP.pp = sigelt_to_doc }
-let pretty_comp : FStarC_Syntax_Syntax.comp FStarC_Class_PP.pretty=
-  { FStarC_Class_PP.pp = comp_to_doc }
-let pretty_ctxu : FStarC_Syntax_Syntax.ctx_uvar FStarC_Class_PP.pretty=
-  FStarC_Class_PP.pretty_from_showable showable_ctxu
-let pretty_uvar : FStarC_Syntax_Syntax.uvar FStarC_Class_PP.pretty=
-  FStarC_Class_PP.pretty_from_showable showable_uvar
-let pretty_binder : FStarC_Syntax_Syntax.binder FStarC_Class_PP.pretty=
-  FStarC_Class_PP.pretty_from_showable showable_binder
-let pretty_bv : FStarC_Syntax_Syntax.bv FStarC_Class_PP.pretty=
-  FStarC_Class_PP.pretty_from_showable showable_bv
-let pretty_qualifier : FStarC_Syntax_Syntax.qualifier FStarC_Class_PP.pretty=
-  FStarC_Class_PP.pretty_from_showable showable_qualifier
-let pretty_aqual : FStarC_Syntax_Syntax.aqual FStarC_Class_PP.pretty=
-  FStarC_Class_PP.pretty_from_showable showable_aqual
-let pretty_binding : FStarC_Syntax_Syntax.binding FStarC_Class_PP.pretty=
-  {
-    FStarC_Class_PP.pp =
-      (fun uu___ ->
-         match uu___ with
-         | FStarC_Syntax_Syntax.Binding_var bv ->
-             FStarC_Class_PP.pp pretty_bv bv
-         | FStarC_Syntax_Syntax.Binding_lid (l, (us, t)) ->
-             let uu___1 = FStarC_Class_PP.pp FStarC_Ident.pretty_lident l in
-             let uu___2 =
-               let uu___3 = FStarC_Class_PP.pp pretty_term t in
-               FStar_Pprint.op_Hat_Hat FStar_Pprint.colon uu___3 in
-             FStar_Pprint.op_Hat_Hat uu___1 uu___2
-         | FStarC_Syntax_Syntax.Binding_univ u ->
-             FStarC_Class_PP.pp FStarC_Ident.pretty_ident u)
-  }
-let rec sigelt_to_string_short (x : FStarC_Syntax_Syntax.sigelt) :
-  Prims.string=
-  match x.FStarC_Syntax_Syntax.sigel with
-  | FStarC_Syntax_Syntax.Sig_pragma p ->
-      FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_pragma p
-  | FStarC_Syntax_Syntax.Sig_let
-      {
-        FStarC_Syntax_Syntax.lbs1 =
-          (false,
-           { FStarC_Syntax_Syntax.lbname = lb;
-             FStarC_Syntax_Syntax.lbunivs = uu___;
-             FStarC_Syntax_Syntax.lbtyp = uu___1;
-             FStarC_Syntax_Syntax.lbeff = uu___2;
-             FStarC_Syntax_Syntax.lbdef = uu___3;
-             FStarC_Syntax_Syntax.lbattrs = uu___4;
-             FStarC_Syntax_Syntax.lbpos = uu___5;_}::[]);
-        FStarC_Syntax_Syntax.lids1 = uu___6;_}
-      ->
-      let uu___7 = lbname_to_string lb in FStarC_Format.fmt1 "let %s" uu___7
-  | FStarC_Syntax_Syntax.Sig_let
-      {
-        FStarC_Syntax_Syntax.lbs1 =
-          (true,
-           { FStarC_Syntax_Syntax.lbname = lb;
-             FStarC_Syntax_Syntax.lbunivs = uu___;
-             FStarC_Syntax_Syntax.lbtyp = uu___1;
-             FStarC_Syntax_Syntax.lbeff = uu___2;
-             FStarC_Syntax_Syntax.lbdef = uu___3;
-             FStarC_Syntax_Syntax.lbattrs = uu___4;
-             FStarC_Syntax_Syntax.lbpos = uu___5;_}::[]);
-        FStarC_Syntax_Syntax.lids1 = uu___6;_}
-      ->
-      let uu___7 = lbname_to_string lb in
-      FStarC_Format.fmt1 "let rec %s" uu___7
-  | FStarC_Syntax_Syntax.Sig_let
-      { FStarC_Syntax_Syntax.lbs1 = (true, lbs);
-        FStarC_Syntax_Syntax.lids1 = uu___;_}
-      ->
-      let uu___1 =
-        let uu___2 =
-          FStarC_List.map
-            (fun lb -> lbname_to_string lb.FStarC_Syntax_Syntax.lbname) lbs in
-        FStarC_String.concat " and " uu___2 in
-      FStarC_Format.fmt1 "let rec %s" uu___1
-  | FStarC_Syntax_Syntax.Sig_let uu___ ->
-      FStarC_Effect.failwith
-        "Impossible: sigelt_to_string_short, ill-formed let"
-  | FStarC_Syntax_Syntax.Sig_declare_typ
-      { FStarC_Syntax_Syntax.lid2 = lid; FStarC_Syntax_Syntax.us2 = uu___;
-        FStarC_Syntax_Syntax.t2 = uu___1;_}
-      -> FStarC_Format.fmt1 "val %s" (FStarC_Ident.string_of_lid lid)
-  | FStarC_Syntax_Syntax.Sig_inductive_typ
-      { FStarC_Syntax_Syntax.lid = lid; FStarC_Syntax_Syntax.us = uu___;
-        FStarC_Syntax_Syntax.params = uu___1;
-        FStarC_Syntax_Syntax.num_uniform_params = uu___2;
-        FStarC_Syntax_Syntax.t = uu___3;
-        FStarC_Syntax_Syntax.mutuals = uu___4;
-        FStarC_Syntax_Syntax.ds = uu___5;
-        FStarC_Syntax_Syntax.injective_type_params = uu___6;_}
-      -> FStarC_Format.fmt1 "type %s" (FStarC_Ident.string_of_lid lid)
-  | FStarC_Syntax_Syntax.Sig_datacon
-      { FStarC_Syntax_Syntax.lid1 = lid; FStarC_Syntax_Syntax.us1 = uu___;
-        FStarC_Syntax_Syntax.t1 = uu___1;
-        FStarC_Syntax_Syntax.ty_lid = t_lid;
-        FStarC_Syntax_Syntax.num_ty_params = uu___2;
-        FStarC_Syntax_Syntax.mutuals1 = uu___3;
-        FStarC_Syntax_Syntax.injective_type_params1 = uu___4;
-        FStarC_Syntax_Syntax.proj_disc_lids = uu___5;_}
-      ->
-      FStarC_Format.fmt2 "datacon %s for type %s"
-        (FStarC_Ident.string_of_lid lid) (FStarC_Ident.string_of_lid t_lid)
-  | FStarC_Syntax_Syntax.Sig_assume
-      { FStarC_Syntax_Syntax.lid3 = lid; FStarC_Syntax_Syntax.us3 = uu___;
-        FStarC_Syntax_Syntax.phi1 = uu___1;_}
-      -> FStarC_Format.fmt1 "assume %s" (FStarC_Ident.string_of_lid lid)
-  | FStarC_Syntax_Syntax.Sig_bundle
-      { FStarC_Syntax_Syntax.ses = ses; FStarC_Syntax_Syntax.lids = uu___;_}
-      -> sigelt_to_string_short (FStarC_List.hd ses)
-  | FStarC_Syntax_Syntax.Sig_fail
-      { FStarC_Syntax_Syntax.errs = uu___;
-        FStarC_Syntax_Syntax.rng1 = uu___1;
-        FStarC_Syntax_Syntax.fail_in_lax = uu___2;
-        FStarC_Syntax_Syntax.ses1 = ses;_}
-      ->
-      let uu___3 = sigelt_to_string_short (FStarC_List.hd ses) in
-      FStarC_Format.fmt1 "[@@expect_failure] %s" uu___3
-  | FStarC_Syntax_Syntax.Sig_new_effect ed ->
-      let uu___ =
-        FStarC_Class_Show.show FStarC_Ident.showable_lident
-          ed.FStarC_Syntax_Syntax.mname in
-      FStarC_Format.fmt2 "%seffect %s"
-        (if
-           FStarC_List.contains FStarC_Syntax_Syntax.Assumption
-             x.FStarC_Syntax_Syntax.sigquals
-         then "assume "
-         else "") uu___
-  | FStarC_Syntax_Syntax.Sig_sub_effect sub ->
-      let uu___ =
-        FStarC_Class_Show.show FStarC_Ident.showable_lident
-          sub.FStarC_Syntax_Syntax.source in
-      let uu___1 =
-        FStarC_Class_Show.show FStarC_Ident.showable_lident
-          sub.FStarC_Syntax_Syntax.target in
-      FStarC_Format.fmt3 "%ssub_effect %s ~> %s"
-        (if
-           FStarC_List.contains FStarC_Syntax_Syntax.Assumption
-             x.FStarC_Syntax_Syntax.sigquals
-         then "assume "
-         else "") uu___ uu___1
-  | FStarC_Syntax_Syntax.Sig_effect_abbrev
-      { FStarC_Syntax_Syntax.lid4 = l; FStarC_Syntax_Syntax.root = root;_} ->
-      let uu___ = FStarC_Class_Show.show FStarC_Ident.showable_lident l in
-      let uu___1 = FStarC_Class_Show.show FStarC_Ident.showable_lident root in
-      FStarC_Format.fmt2 "effect %s = %s" uu___ uu___1
-  | FStarC_Syntax_Syntax.Sig_splice
-      { FStarC_Syntax_Syntax.is_typed = is_typed;
-        FStarC_Syntax_Syntax.lids2 = lids;
-        FStarC_Syntax_Syntax.tac = uu___;_}
-      ->
-      let uu___1 =
-        let uu___2 = FStarC_List.map FStarC_Ident.string_of_lid lids in
-        FStarC_String.concat "; " uu___2 in
-      FStarC_Format.fmt3 "%splice%s[%s] (...)" "%s"
-        (if is_typed then "_t" else "") uu___1
-let binder_to_json (env : FStarC_Syntax_DsEnv.env)
-  (b : FStarC_Syntax_Syntax.binder) : FStarC_Json.json=
-  let n =
-    let uu___ =
-      let uu___1 = nm_to_string b.FStarC_Syntax_Syntax.binder_bv in
-      bqual_to_string' uu___1 b.FStarC_Syntax_Syntax.binder_qual in
-    FStarC_Json.JsonStr uu___ in
-  let t =
-    let uu___ =
-      term_to_string' env
-        (b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
-    FStarC_Json.JsonStr uu___ in
-  FStarC_Json.JsonAssoc [("name", n); ("type", t)]
-let binders_to_json (env : FStarC_Syntax_DsEnv.env)
-  (bs : FStarC_Syntax_Syntax.binders) : FStarC_Json.json=
-  let uu___ = FStarC_List.map (binder_to_json env) bs in
-  FStarC_Json.JsonList uu___
-let eff_decl_to_string (ed : FStarC_Syntax_Syntax.eff_decl) : Prims.string=
-  let uu___ = FStarC_Options.ugly () in
-  if uu___
-  then FStarC_Syntax_Print_Ugly.eff_decl_to_string ed
-  else FStarC_Syntax_Print_Pretty.eff_decl_to_string ed
-let showable_eff_decl :
-  FStarC_Syntax_Syntax.eff_decl FStarC_Class_Show.showable=
-  { FStarC_Class_Show.show = eff_decl_to_string }
-let args_to_string (args : FStarC_Syntax_Syntax.args) : Prims.string=
-  let uu___ =
-    FStarC_List.map
-      (fun uu___1 ->
-         match uu___1 with
-         | (a, q) ->
-             let uu___2 = aqual_to_string q in
-             let uu___3 = term_to_string a in Prims.strcat uu___2 uu___3)
-      args in
-  FStarC_String.concat " " uu___
-let showable_decreases_order :
-  FStarC_Syntax_Syntax.decreases_order FStarC_Class_Show.showable=
-  {
-    FStarC_Class_Show.show =
-      (fun uu___ ->
-         match uu___ with
-         | FStarC_Syntax_Syntax.Decreases_lex l ->
-             let uu___1 =
-               FStarC_Class_Show.show
-                 (FStarC_Class_Show.show_list showable_term) l in
-             Prims.strcat "Decreases_lex " uu___1
-         | FStarC_Syntax_Syntax.Decreases_wf l ->
-             let uu___1 =
-               FStarC_Class_Show.show
-                 (FStarC_Class_Show.show_tuple2 showable_term showable_term)
-                 l in
-             Prims.strcat "Decreases_wf " uu___1)
-  }
-let cflag_to_string (c : FStarC_Syntax_Syntax.cflag) : Prims.string=
-  match c with
-  | FStarC_Syntax_Syntax.SMTPAT p ->
-      let uu___ = term_to_string p in Prims.strcat "smtpat " uu___
-  | FStarC_Syntax_Syntax.DECREASES do1 ->
-      let uu___ = FStarC_Class_Show.show showable_decreases_order do1 in
-      Prims.strcat "decreases " uu___
-let showable_cflag : FStarC_Syntax_Syntax.cflag FStarC_Class_Show.showable=
-  { FStarC_Class_Show.show = cflag_to_string }
-let binder_to_string_with_type (b : FStarC_Syntax_Syntax.binder) :
-  Prims.string=
-  let uu___ = FStarC_Options.ugly () in
-  if uu___
-  then
-    let attrs =
-      match b.FStarC_Syntax_Syntax.binder_attrs with
-      | [] -> ""
-      | ts ->
-          let uu___1 =
-            let uu___2 =
-              let uu___3 =
-                FStarC_List.map (FStarC_Class_Show.show showable_term) ts in
-              FStarC_String.concat ", " uu___3 in
-            Prims.strcat uu___2 "] " in
-          Prims.strcat "[@@@" uu___1 in
-    (if FStarC_Syntax_Syntax.is_null_binder b
-     then
-       let uu___1 =
-         let uu___2 =
-           term_to_string
-             (b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
-         Prims.strcat "_:" uu___2 in
-       Prims.strcat attrs uu___1
-     else
-       (let uu___1 =
-          let uu___2 =
-            let uu___3 = nm_to_string b.FStarC_Syntax_Syntax.binder_bv in
-            let uu___4 =
-              let uu___5 =
-                term_to_string
-                  (b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
-              Prims.strcat ": " uu___5 in
-            Prims.strcat uu___3 uu___4 in
-          Prims.strcat attrs uu___2 in
-        bqual_to_string' uu___1 b.FStarC_Syntax_Syntax.binder_qual))
-  else FStarC_Syntax_Print_Pretty.binder_to_string' false b
+(* Generated by F* Custard extraction. Do not edit. *)
+[@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
+
+let binder_to_string (b : FStarC_Syntax_Syntax.binder) : string =
+  (let tmp = (FStarC_Options.ugly ()) in
+  (if tmp then (FStarC_Syntax_Print_Pretty.binder_to_string' false b) else (FStarC_Syntax_Print_Ugly.binder_to_string b)))
+
+let fStarC_Class_Show_show__binder (tmp : FStarC_Syntax_Syntax.binder) : string =
+  (binder_to_string tmp)
+
+let uvar_to_string (u : (((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * FStarC_Syntax_Syntax.uvar_decoration)) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : string =
+  (let tmp = (FStarC_Options.hide_uvar_nums ()) in
+  (if tmp then "?" else (let tmp1 = (FStarC_Syntax_Unionfind.uvar_id u) in
+  let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int tmp1) in
+  (Prims.strcat "?" tmp2))))
+
+let term_to_string (x : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : string =
+  (let tmp = (FStarC_Options.ugly ()) in
+  (if tmp then (FStarC_Syntax_Print_Ugly.term_to_string x) else (FStarC_Syntax_Print_Pretty.term_to_string x)))
+
+let ctx_uvar_to_string (ctx_uvar : FStarC_Syntax_Syntax.ctx_uvar) : string =
+  (let reason_string = (FStarC_Format.fmt1 "(* %s *)\n" (ctx_uvar).FStarC_Syntax_Syntax.ctx_uvar_reason) in
+  let tmp = (FStarC_List.map fStarC_Class_Show_show__binder (ctx_uvar).FStarC_Syntax_Syntax.ctx_uvar_binders) in
+  let tmp1 = (FStarC_String.concat ", " tmp) in
+  let tmp2 = (uvar_to_string ((ctx_uvar).FStarC_Syntax_Syntax.ctx_uvar_head, (ctx_uvar).FStarC_Syntax_Syntax.ctx_uvar_head1, (ctx_uvar).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
+  let tmp3 = (FStarC_Syntax_Util.ctx_uvar_typ ctx_uvar) in
+  let tmp4 = (term_to_string tmp3) in
+  let tmp5 = (FStarC_Syntax_Util.ctx_uvar_should_check ctx_uvar) in
+  let tmp6 = (match tmp5 with
+      | (FStarC_Syntax_Syntax.Allow_unresolved (s)) -> (Prims.strcat "Allow_unresolved " s)
+      | (FStarC_Syntax_Syntax.Allow_untyped (s)) -> (Prims.strcat "Allow_untyped " s)
+      | (FStarC_Syntax_Syntax.Allow_ghost (s)) -> (Prims.strcat "Allow_ghost " s)
+      | FStarC_Syntax_Syntax.Strict -> "Strict"
+      | FStarC_Syntax_Syntax.Already_checked -> "Already_checked"
+    ) in
+  (FStarC_Format.fmt5 "%s(%s |- %s : %s) %s" reason_string tmp1 tmp2 tmp4 tmp6))
+
+let fStarC_Class_Show_show__ctx_uvar (tmp : FStarC_Syntax_Syntax.ctx_uvar) : string =
+  (ctx_uvar_to_string tmp)
+
+let bv_to_string (bv : FStarC_Syntax_Syntax.bv) : string =
+  (let tmp = (FStarC_Options.print_real_names ()) in
+  (if tmp then (let tmp1 = (FStarC_Ident.fStarC_Class_Show_show__ident (bv).FStarC_Syntax_Syntax.ppname) in
+  let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int (bv).FStarC_Syntax_Syntax.index) in
+  let tmp3 = (Prims.strcat "#" tmp2) in
+  (Prims.strcat tmp1 tmp3)) else (FStarC_Ident.fStarC_Class_Show_show__ident (bv).FStarC_Syntax_Syntax.ppname)))
+
+let fStarC_Class_Show_show__bv (tmp : FStarC_Syntax_Syntax.bv) : string =
+  (bv_to_string tmp)
+
+let fStarC_Class_Show_show__syntax_term' (tmp : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : string =
+  (term_to_string tmp)
+
+let term_to_doc (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : FStar_Pprint.document =
+  (let tmp = (FStarC_Options.ugly ()) in
+  (if tmp then (let tmp1 = (FStarC_Syntax_Print_Ugly.term_to_string t) in
+  (FStar_Pprint.arbitrary_string tmp1)) else (FStarC_Syntax_Print_Pretty.term_to_doc t)))
+
+let fStarC_Class_PP_pp__syntax_term' (tmp : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : FStar_Pprint.document =
+  (term_to_doc tmp)
+
+let fStarC_Class_PP_pp__bv (tmp : FStarC_Syntax_Syntax.bv) : FStar_Pprint.document =
+  (let tmp1 = (fStarC_Class_Show_show__bv tmp) in
+  (FStar_Pprint.arbitrary_string tmp1))
+
+let fStarC_Class_PP_pp__list_bv (tmp : (FStarC_Syntax_Syntax.bv) list) : FStar_Pprint.document =
+  (let doclist = (fun ds -> (FStar_Pprint.surround_separate (Prims.parse_int "2") (Prims.parse_int "0") (FStar_Pprint.doc_of_string "[]") FStar_Pprint.lbracket (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi (FStar_Pprint.break_ (Prims.parse_int "1"))) FStar_Pprint.rbracket ds)) in
+  let tmp1 = (FStarC_List.map fStarC_Class_PP_pp__bv tmp) in
+  (doclist tmp1))
+
+let version_to_string (v : FStarC_Syntax_Syntax.version) : string =
+  (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int (v).FStarC_Syntax_Syntax.major) in
+  let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int (v).FStarC_Syntax_Syntax.minor) in
+  (FStarC_Format.fmt2 "%s.%s" tmp tmp1))
+
+let univ_uvar_to_string (u : (((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : string =
+  (let tmp = (FStarC_Options.hide_uvar_nums ()) in
+  (if tmp then "?" else (let tmp1 = (FStarC_Syntax_Unionfind.univ_uvar_id u) in
+  let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int tmp1) in
+  let tmp3 = (match u with
+      | (tmp3, u1, tmp4) -> (version_to_string u1)
+    ) in
+  let tmp4 = (Prims.strcat ":" tmp3) in
+  let tmp5 = (Prims.strcat tmp2 tmp4) in
+  (Prims.strcat "?" tmp5))))
+
+let rec int_of_univ (n : Prims.int) (u : FStarC_Syntax_Syntax.universe) : (Prims.int * (FStarC_Syntax_Syntax.universe) option) =
+  (let tmp = (FStarC_Syntax_Subst.compress_univ u) in
+  (match tmp with
+    | FStarC_Syntax_Syntax.U_zero -> (n, None)
+    | (FStarC_Syntax_Syntax.U_succ (u1)) -> (int_of_univ (Prims.op_Plus n (Prims.parse_int "1")) u1)
+    | tmp1 -> (n, (Some (u)))
+  ))
+
+let rec univ_to_string (u : FStarC_Syntax_Syntax.universe) : string =
+  (FStarC_Errors.with_ctx "While printing universe" (fun tmp -> (let tmp1 = (FStarC_Syntax_Subst.compress_univ u) in
+  (match tmp1 with
+    | (FStarC_Syntax_Syntax.U_unif (u__1, u__2, u__3)) -> (let tmp2 = (univ_uvar_to_string (u__1, u__2, u__3)) in
+      (Prims.strcat "U_unif " tmp2))
+    | (FStarC_Syntax_Syntax.U_name (x)) -> (Prims.strcat "U_name " (FStarC_Ident.string_of_id x))
+    | (FStarC_Syntax_Syntax.U_bvar (x)) -> (let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int x) in
+      (Prims.strcat "@" tmp2))
+    | FStarC_Syntax_Syntax.U_zero -> "0"
+    | (FStarC_Syntax_Syntax.U_succ (u1)) -> (let tmp2 = (int_of_univ (Prims.parse_int "1") u1) in
+      (match tmp2 with
+        | (n, None) -> (FStarC_Class_Show.fStarC_Class_Show_show__int n)
+        | (n, (Some (u2))) -> (let tmp3 = (univ_to_string u2) in
+          let tmp4 = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
+          (FStarC_Format.fmt2 "(%s + %s)" tmp3 tmp4))
+      ))
+    | (FStarC_Syntax_Syntax.U_max (us)) -> (let tmp2 = (FStarC_List.map univ_to_string us) in
+      let tmp3 = (FStarC_String.concat ", " tmp2) in
+      (FStarC_Format.fmt1 "(max %s)" tmp3))
+    | FStarC_Syntax_Syntax.U_unknown -> "unknown"
+  ))))
+
+let fStarC_Class_Show_show__universe (tmp : FStarC_Syntax_Syntax.universe) : string =
+  (univ_to_string tmp)
+
+let rec fStarC_Class_Show_show__show_list_aux__list_universe (l : (FStarC_Syntax_Syntax.universe) list) : string =
+  (match l with
+    | [] -> ""
+    | (x :: []) -> (fStarC_Class_Show_show__universe x)
+    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__universe x) in
+      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_universe xs) in
+      let tmp2 = (Prims.strcat ", " tmp1) in
+      (Prims.strcat tmp tmp2))
+  )
+
+let fStarC_Class_Show_show__list_universe (tmp : (FStarC_Syntax_Syntax.universe) list) : string =
+  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_universe tmp) in
+  let tmp2 = (Prims.strcat tmp1 "]") in
+  (Prims.strcat "[" tmp2))
+
+let fStarC_Class_Show_show__tuple2_list_universe_range (tmp : ((FStarC_Syntax_Syntax.universe) list * FStarC_Range_Type.range)) : string =
+  (match tmp with
+    | (x1, x2) -> (let tmp1 = (fStarC_Class_Show_show__list_universe x1) in
+      let tmp2 = (FStarC_Range_Ops.fStarC_Class_Show_show__range x2) in
+      let tmp3 = (Prims.strcat tmp2 ")") in
+      let tmp4 = (Prims.strcat ", " tmp3) in
+      let tmp5 = (Prims.strcat tmp1 tmp4) in
+      (Prims.strcat "(" tmp5))
+  )
+
+let rec fStarC_Class_Show_show__show_list_aux__list_bv (l : (FStarC_Syntax_Syntax.bv) list) : string =
+  (match l with
+    | [] -> ""
+    | (x :: []) -> (fStarC_Class_Show_show__bv x)
+    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__bv x) in
+      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_bv xs) in
+      let tmp2 = (Prims.strcat ", " tmp1) in
+      (Prims.strcat tmp tmp2))
+  )
+
+let fStarC_Class_Show_show__list_bv (tmp : (FStarC_Syntax_Syntax.bv) list) : string =
+  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_bv tmp) in
+  let tmp2 = (Prims.strcat tmp1 "]") in
+  (Prims.strcat "[" tmp2))
+
+let fStarC_Class_Show_show__option_binder (tmp : (FStarC_Syntax_Syntax.binder) option) : string =
+  (match tmp with
+    | None -> "None"
+    | (Some (x)) -> (let tmp1 = (fStarC_Class_Show_show__binder x) in
+      (Prims.strcat "Some " tmp1))
+  )
+
+let subst_elt_to_string (tmp : FStarC_Syntax_Syntax.subst_elt) : string =
+  (match tmp with
+    | (FStarC_Syntax_Syntax.DB (i, x)) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
+      let tmp2 = (bv_to_string x) in
+      (FStarC_Format.fmt2 "DB (%s, %s)" tmp1 tmp2))
+    | (FStarC_Syntax_Syntax.DT (i, t)) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
+      let tmp2 = (term_to_string t) in
+      (FStarC_Format.fmt2 "DT (%s, %s)" tmp1 tmp2))
+    | (FStarC_Syntax_Syntax.NM (x, i)) -> (let tmp1 = (bv_to_string x) in
+      let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
+      (FStarC_Format.fmt2 "NM (%s, %s)" tmp1 tmp2))
+    | (FStarC_Syntax_Syntax.NT (x, t)) -> (let tmp1 = (bv_to_string x) in
+      let tmp2 = (term_to_string t) in
+      (FStarC_Format.fmt2 "NT (%s, %s)" tmp1 tmp2))
+    | (FStarC_Syntax_Syntax.UN (i, u)) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
+      let tmp2 = (univ_to_string u) in
+      (FStarC_Format.fmt2 "UN (%s, %s)" tmp1 tmp2))
+    | (FStarC_Syntax_Syntax.UD (u, i)) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
+      (FStarC_Format.fmt2 "UD (%s, %s)" (FStarC_Ident.string_of_id u) tmp1))
+  )
+
+let fStarC_Class_Show_show__subst_elt (tmp : FStarC_Syntax_Syntax.subst_elt) : string =
+  (subst_elt_to_string tmp)
+
+let rec fStarC_Class_Show_show__show_list_aux__list_subst_elt (l : (FStarC_Syntax_Syntax.subst_elt) list) : string =
+  (match l with
+    | [] -> ""
+    | (x :: []) -> (fStarC_Class_Show_show__subst_elt x)
+    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__subst_elt x) in
+      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_subst_elt xs) in
+      let tmp2 = (Prims.strcat ", " tmp1) in
+      (Prims.strcat tmp tmp2))
+  )
+
+let fStarC_Class_Show_show__list_subst_elt (tmp : (FStarC_Syntax_Syntax.subst_elt) list) : string =
+  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_subst_elt tmp) in
+  let tmp2 = (Prims.strcat tmp1 "]") in
+  (Prims.strcat "[" tmp2))
+
+let fStarC_Class_Show_show__ref_option_list (tmp : (((FStarC_Syntax_Syntax.subst_elt) list) option ref)) : string =
+  (let tmp1 = (!(tmp)) in
+  (match tmp1 with
+    | None -> "no_memo"
+    | (Some (x)) -> (let tmp2 = (fStarC_Class_Show_show__list_subst_elt x) in
+      (Prims.strcat "memo=" tmp2))
+  ))
+
+let pat_to_string (x : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) : string =
+  (let tmp = (FStarC_Options.ugly ()) in
+  (if tmp then (FStarC_Syntax_Print_Ugly.pat_to_string x) else (FStarC_Syntax_Print_Pretty.pat_to_string x)))
+
+let fStarC_Class_Show_show__withinfo_t_pat' (tmp : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) : string =
+  (pat_to_string tmp)
+
+let comp_to_string (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : string =
+  (let tmp = (FStarC_Options.ugly ()) in
+  (if tmp then (FStarC_Syntax_Print_Ugly.comp_to_string c) else (FStarC_Syntax_Print_Pretty.comp_to_string c)))
+
+let fStarC_Class_Show_show__syntax_comp' (tmp : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : string =
+  (comp_to_string tmp)
+
+let aqual_to_string (q : (FStarC_Syntax_Syntax.arg_qualifier) option) : string =
+  (match q with
+    | (Some ({ FStarC_Syntax_Syntax.aqual_implicit = true; aqual_attributes = tmp; _ })) -> "#"
+    | tmp -> ""
+  )
+
+let fStarC_Class_Show_show__option_arg_qualifier (tmp : (FStarC_Syntax_Syntax.arg_qualifier) option) : string =
+  (aqual_to_string tmp)
+
+let fStarC_Class_Show_show__tuple2_syntax_term'_option_arg_qualifier (tmp : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) : string =
+  (match tmp with
+    | (x1, x2) -> (let tmp1 = (fStarC_Class_Show_show__syntax_term' x1) in
+      let tmp2 = (fStarC_Class_Show_show__option_arg_qualifier x2) in
+      let tmp3 = (Prims.strcat tmp2 ")") in
+      let tmp4 = (Prims.strcat ", " tmp3) in
+      let tmp5 = (Prims.strcat tmp1 tmp4) in
+      (Prims.strcat "(" tmp5))
+  )
+
+let rec fStarC_Class_Show_show__show_list_aux__list_tuple2_syntax_option (l : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : string =
+  (match l with
+    | [] -> ""
+    | (x :: []) -> (fStarC_Class_Show_show__tuple2_syntax_term'_option_arg_qualifier x)
+    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__tuple2_syntax_term'_option_arg_qualifier x) in
+      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_tuple2_syntax_option xs) in
+      let tmp2 = (Prims.strcat ", " tmp1) in
+      (Prims.strcat tmp tmp2))
+  )
+
+let fStarC_Class_Show_show__list_tuple2_syntax_option (tmp : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : string =
+  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_tuple2_syntax_option tmp) in
+  let tmp2 = (Prims.strcat tmp1 "]") in
+  (Prims.strcat "[" tmp2))
+
+let fStarC_Class_Show_show__tuple3_fv_list_universe_list_tuple2 (tmp : (FStarC_Syntax_Syntax.fv * (FStarC_Syntax_Syntax.universe) list * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list)) : string =
+  (match tmp with
+    | (x1, x2, x3) -> (let tmp1 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__fv x1) in
+      let tmp2 = (fStarC_Class_Show_show__list_universe x2) in
+      let tmp3 = (fStarC_Class_Show_show__list_tuple2_syntax_option x3) in
+      let tmp4 = (Prims.strcat tmp3 ")") in
+      let tmp5 = (Prims.strcat ", " tmp4) in
+      let tmp6 = (Prims.strcat tmp2 tmp5) in
+      let tmp7 = (Prims.strcat ", " tmp6) in
+      let tmp8 = (Prims.strcat tmp1 tmp7) in
+      (Prims.strcat "(" tmp8))
+  )
+
+let qual_to_string (tmp : FStarC_Syntax_Syntax.qualifier) : string =
+  (match tmp with
+    | FStarC_Syntax_Syntax.Assumption -> "assume"
+    | FStarC_Syntax_Syntax.InternalAssumption -> "internal_assume"
+    | FStarC_Syntax_Syntax.New -> "new"
+    | FStarC_Syntax_Syntax.Private -> "private"
+    | FStarC_Syntax_Syntax.Unfold_for_unification_and_vcgen -> "unfold"
+    | FStarC_Syntax_Syntax.Inline_for_extraction -> "inline_for_extraction"
+    | FStarC_Syntax_Syntax.NoExtract -> "noextract"
+    | FStarC_Syntax_Syntax.Visible_default -> "visible"
+    | FStarC_Syntax_Syntax.Irreducible -> "irreducible"
+    | FStarC_Syntax_Syntax.Noeq -> "noeq"
+    | FStarC_Syntax_Syntax.Unopteq -> "unopteq"
+    | FStarC_Syntax_Syntax.Logic -> "logic"
+    | FStarC_Syntax_Syntax.TotalEffect -> "total"
+    | (FStarC_Syntax_Syntax.Discriminator (l)) -> (let tmp1 = (FStarC_Ident.fStarC_Class_Show_show__lident l) in
+      (FStarC_Format.fmt1 "(Discriminator %s)" tmp1))
+    | (FStarC_Syntax_Syntax.Projector (l, x)) -> (let tmp1 = (FStarC_Ident.fStarC_Class_Show_show__lident l) in
+      (FStarC_Format.fmt2 "(Projector %s %s)" tmp1 (FStarC_Ident.string_of_id x)))
+    | (FStarC_Syntax_Syntax.RecordType (ns, fns)) -> (let tmp1 = (FStarC_Ident.path_of_ns ns) in
+      let tmp2 = (FStarC_Ident.text_of_path tmp1) in
+      let tmp3 = (FStarC_List.map FStarC_Ident.string_of_id fns) in
+      let tmp4 = (FStarC_String.concat ", " tmp3) in
+      (FStarC_Format.fmt2 "(RecordType %s %s)" tmp2 tmp4))
+    | (FStarC_Syntax_Syntax.RecordConstructor (ns, fns)) -> (let tmp1 = (FStarC_Ident.path_of_ns ns) in
+      let tmp2 = (FStarC_Ident.text_of_path tmp1) in
+      let tmp3 = (FStarC_List.map FStarC_Ident.string_of_id fns) in
+      let tmp4 = (FStarC_String.concat ", " tmp3) in
+      (FStarC_Format.fmt2 "(RecordConstructor %s %s)" tmp2 tmp4))
+    | (FStarC_Syntax_Syntax.Action (eff_lid)) -> (let tmp1 = (FStarC_Ident.fStarC_Class_Show_show__lident eff_lid) in
+      (FStarC_Format.fmt1 "(Action %s)" tmp1))
+    | FStarC_Syntax_Syntax.ExceptionConstructor -> "ExceptionConstructor"
+    | FStarC_Syntax_Syntax.HasMaskedEffect -> "HasMaskedEffect"
+    | FStarC_Syntax_Syntax.Effect -> "Effect"
+    | FStarC_Syntax_Syntax.Reifiable -> "reify"
+    | (FStarC_Syntax_Syntax.Reflectable (l)) -> (FStarC_Format.fmt1 "(reflect %s)" (FStarC_Ident.string_of_lid l))
+    | FStarC_Syntax_Syntax.OnlyName -> "OnlyName"
+  )
+
+let fStarC_Class_Show_show__qualifier (tmp : FStarC_Syntax_Syntax.qualifier) : string =
+  (qual_to_string tmp)
+
+let metadata_to_string (tmp : FStarC_Syntax_Syntax.metadata) : string =
+  (match tmp with
+    | (FStarC_Syntax_Syntax.Meta_pattern (tmp1, ps)) -> (let tmp2 = (FStarC_List.map (fun args -> (let tmp2 = (FStarC_List.map (fun tmp2 -> (match tmp2 with
+            | (t, tmp3) -> (term_to_string t)
+          )) args) in
+        (FStarC_String.concat "; " tmp2))) ps) in
+      let pats = (FStarC_String.concat "\\/" tmp2) in
+      (FStarC_Format.fmt1 "{Meta_pattern %s}" pats))
+    | (FStarC_Syntax_Syntax.Meta_named (lid)) -> (let tmp1 = (FStarC_Ident.fStarC_Class_Show_show__lident lid) in
+      (FStarC_Format.fmt1 "{Meta_named %s}" tmp1))
+    | (FStarC_Syntax_Syntax.Meta_labeled (l, r, tmp1)) -> (let tmp2 = (FStarC_Errors_Msg.rendermsg l) in
+      let tmp3 = (FStarC_Range_Ops.string_of_range r) in
+      (FStarC_Format.fmt2 "{Meta_labeled (%s, %s)}" tmp2 tmp3))
+    | (FStarC_Syntax_Syntax.Meta_desugared (msi)) -> "{Meta_desugared}"
+    | (FStarC_Syntax_Syntax.Meta_monadic (m, t)) -> (let tmp1 = (FStarC_Ident.fStarC_Class_Show_show__lident m) in
+      let tmp2 = (term_to_string t) in
+      (FStarC_Format.fmt2 "{Meta_monadic(%s @ %s)}" tmp1 tmp2))
+    | (FStarC_Syntax_Syntax.Meta_monadic_lift (m, m', t)) -> (let tmp1 = (FStarC_Ident.fStarC_Class_Show_show__lident m) in
+      let tmp2 = (FStarC_Ident.fStarC_Class_Show_show__lident m') in
+      let tmp3 = (term_to_string t) in
+      (FStarC_Format.fmt3 "{Meta_monadic_lift(%s -> %s @ %s)}" tmp1 tmp2 tmp3))
+  )
+
+let fStarC_Class_Show_show__metadata (tmp : FStarC_Syntax_Syntax.metadata) : string =
+  (metadata_to_string tmp)
+
+let rec fStarC_Class_Show_show__show_list_aux__list_list_subst_elt (l : ((FStarC_Syntax_Syntax.subst_elt) list) list) : string =
+  (match l with
+    | [] -> ""
+    | (x :: []) -> (fStarC_Class_Show_show__list_subst_elt x)
+    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__list_subst_elt x) in
+      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_list_subst_elt xs) in
+      let tmp2 = (Prims.strcat ", " tmp1) in
+      (Prims.strcat tmp tmp2))
+  )
+
+let fStarC_Class_Show_show__list_list_subst_elt (tmp : ((FStarC_Syntax_Syntax.subst_elt) list) list) : string =
+  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_list_subst_elt tmp) in
+  let tmp2 = (Prims.strcat tmp1 "]") in
+  (Prims.strcat "[" tmp2))
+
+let comp_to_string' (env : FStarC_Syntax_DsEnv.env) (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : string =
+  (let tmp = (FStarC_Options.ugly ()) in
+  (if tmp then (FStarC_Syntax_Print_Ugly.comp_to_string c) else (FStarC_Syntax_Print_Pretty.comp_to_string' env c)))
+
+let term_to_string' (env : FStarC_Syntax_DsEnv.env) (x : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : string =
+  (let tmp = (FStarC_Options.ugly ()) in
+  (if tmp then (FStarC_Syntax_Print_Ugly.term_to_string x) else (FStarC_Syntax_Print_Pretty.term_to_string' env x)))
+
+let fStarC_Class_Show_show__clist_universe (tmp : (FStarC_Syntax_Syntax.universe) FStarC_CList.clist) : string =
+  (let tmp1 = (FStarC_CList.fStarC_Class_Listlike_to_list__universe_clist_universe tmp) in
+  (fStarC_Class_Show_show__list_universe tmp1))
+
+let fStarC_Class_Show_show__tuple2_list_ident_syntax_term' (tmp : ((FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) : string =
+  (match tmp with
+    | (x1, x2) -> (let tmp1 = (FStarC_Ident.fStarC_Class_Show_show__list_ident x1) in
+      let tmp2 = (fStarC_Class_Show_show__syntax_term' x2) in
+      let tmp3 = (Prims.strcat tmp2 ")") in
+      let tmp4 = (Prims.strcat ", " tmp3) in
+      let tmp5 = (Prims.strcat tmp1 tmp4) in
+      (Prims.strcat "(" tmp5))
+  )
+
+let fStarC_Class_Show_show__tuple2_lident_tuple2_list_syntax (tmp : (FStarC_Ident.lident * ((FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax))) : string =
+  (match tmp with
+    | (x1, x2) -> (let tmp1 = (FStarC_Ident.fStarC_Class_Show_show__lident x1) in
+      let tmp2 = (fStarC_Class_Show_show__tuple2_list_ident_syntax_term' x2) in
+      let tmp3 = (Prims.strcat tmp2 ")") in
+      let tmp4 = (Prims.strcat ", " tmp3) in
+      let tmp5 = (Prims.strcat tmp1 tmp4) in
+      (Prims.strcat "(" tmp5))
+  )
+
+let fStarC_Class_Show_show__binding (tmp : FStarC_Syntax_Syntax.binding) : string =
+  (match tmp with
+    | (FStarC_Syntax_Syntax.Binding_var (x)) -> (let tmp1 = (fStarC_Class_Show_show__bv x) in
+      (Prims.strcat "Binding_var " tmp1))
+    | (FStarC_Syntax_Syntax.Binding_lid (u__1, u__2)) -> (let tmp1 = (fStarC_Class_Show_show__tuple2_lident_tuple2_list_syntax (u__1, u__2)) in
+      (Prims.strcat "Binding_lid " tmp1))
+    | (FStarC_Syntax_Syntax.Binding_univ (x)) -> (let tmp1 = (FStarC_Ident.fStarC_Class_Show_show__ident x) in
+      (Prims.strcat "Binding_univ " tmp1))
+  )
+
+let rec fStarC_Class_Show_show__show_list_aux__list_binding (l : (FStarC_Syntax_Syntax.binding) list) : string =
+  (match l with
+    | [] -> ""
+    | (x :: []) -> (fStarC_Class_Show_show__binding x)
+    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__binding x) in
+      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_binding xs) in
+      let tmp2 = (Prims.strcat ", " tmp1) in
+      (Prims.strcat tmp tmp2))
+  )
+
+let fStarC_Class_Show_show__list_binding (tmp : (FStarC_Syntax_Syntax.binding) list) : string =
+  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_binding tmp) in
+  let tmp2 = (Prims.strcat tmp1 "]") in
+  (Prims.strcat "[" tmp2))
+
+let rec fStarC_Class_Show_show__show_list_aux__list_binder (l : (FStarC_Syntax_Syntax.binder) list) : string =
+  (match l with
+    | [] -> ""
+    | (x :: []) -> (fStarC_Class_Show_show__binder x)
+    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__binder x) in
+      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_binder xs) in
+      let tmp2 = (Prims.strcat ", " tmp1) in
+      (Prims.strcat tmp tmp2))
+  )
+
+let fStarC_Class_Show_show__list_binder (tmp : (FStarC_Syntax_Syntax.binder) list) : string =
+  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_binder tmp) in
+  let tmp2 = (Prims.strcat tmp1 "]") in
+  (Prims.strcat "[" tmp2))
+
+let fStarC_Class_Show_show__tuple3_p_uvar_tuple2_version_range (tmp : (((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * FStarC_Syntax_Syntax.uvar_decoration)) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : string =
+  (uvar_to_string tmp)
+
+let fStarC_Class_PP_pp__tuple3_p_uvar_tuple2_version_range (tmp : (((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * FStarC_Syntax_Syntax.uvar_decoration)) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : FStar_Pprint.document =
+  (let tmp1 = (fStarC_Class_Show_show__tuple3_p_uvar_tuple2_version_range tmp) in
+  (FStar_Pprint.arbitrary_string tmp1))
+
+let term_to_doc' (dsenv : FStarC_Syntax_DsEnv.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : FStar_Pprint.document =
+  (let tmp = (FStarC_Options.ugly ()) in
+  (if tmp then (let tmp1 = (FStarC_Syntax_Print_Ugly.term_to_string t) in
+  (FStar_Pprint.arbitrary_string tmp1)) else (FStarC_Syntax_Print_Pretty.term_to_doc' dsenv t)))
+
+let nm_to_string (bv : FStarC_Syntax_Syntax.bv) : string =
+  (let tmp = (FStarC_Options.print_real_names ()) in
+  (if tmp then (bv_to_string bv) else (FStarC_Ident.string_of_id (bv).FStarC_Syntax_Syntax.ppname)))
+
+let bqual_to_string' (s : string) (b : (FStarC_Syntax_Syntax.binder_qualifier) option) : string =
+  (match b with
+    | (Some ((FStarC_Syntax_Syntax.Implicit (false)))) -> (Prims.strcat "#" s)
+    | (Some ((FStarC_Syntax_Syntax.Implicit (true)))) -> (Prims.strcat "#." s)
+    | (Some (FStarC_Syntax_Syntax.Equality)) -> (Prims.strcat "$" s)
+    | (Some ((FStarC_Syntax_Syntax.Meta (t)))) when (FStarC_Syntax_Util.is_fvar FStarC_Parser_Const.tcresolve_lid t) -> (Prims.strcat "{|" (Prims.strcat s "|}"))
+    | (Some ((FStarC_Syntax_Syntax.Meta (t)))) -> (let tmp = (term_to_string t) in
+      let tmp1 = (Prims.strcat tmp (Prims.strcat "]" s)) in
+      (Prims.strcat "#[" tmp1))
+    | None -> s
+  )
+
+let binder_to_json (env : FStarC_Syntax_DsEnv.env) (b : FStarC_Syntax_Syntax.binder) : FStarC_Json.json =
+  (let tmp = (nm_to_string (b).FStarC_Syntax_Syntax.binder_bv) in
+  let tmp1 = (bqual_to_string' tmp (b).FStarC_Syntax_Syntax.binder_qual) in
+  let n = (FStarC_Json.JsonStr (tmp1)) in
+  let tmp2 = (term_to_string' env ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
+  let t = (FStarC_Json.JsonStr (tmp2)) in
+  (FStarC_Json.JsonAssoc ((("name", n) :: (("type", t) :: [])))))
+
+let binders_to_json (env : FStarC_Syntax_DsEnv.env) (bs : (FStarC_Syntax_Syntax.binder) list) : FStarC_Json.json =
+  (let tmp = (FStarC_List.map (binder_to_json env) bs) in
+  (FStarC_Json.JsonList (tmp)))
+
+let comp_to_doc (t : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : FStar_Pprint.document =
+  (let tmp = (FStarC_Options.ugly ()) in
+  (if tmp then (let tmp1 = (FStarC_Syntax_Print_Ugly.comp_to_string t) in
+  (FStar_Pprint.arbitrary_string tmp1)) else (FStarC_Syntax_Print_Pretty.comp_to_doc t)))
+
+let fStarC_Class_PP_pp__syntax_comp' (tmp : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : FStar_Pprint.document =
+  (comp_to_doc tmp)
+
+let fStarC_Class_Show_show__tuple2_tuple3_p_uvar_version_range_string (tmp : ((((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * FStarC_Syntax_Syntax.uvar_decoration)) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range) * string)) : string =
+  (match tmp with
+    | (x1, x2) -> (let tmp1 = (fStarC_Class_Show_show__tuple3_p_uvar_tuple2_version_range x1) in
+      let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__string x2) in
+      let tmp3 = (Prims.strcat tmp2 ")") in
+      let tmp4 = (Prims.strcat ", " tmp3) in
+      let tmp5 = (Prims.strcat tmp1 tmp4) in
+      (Prims.strcat "(" tmp5))
+  )
+
+let fStarC_Class_Show_show__tuple2_syntax_term'_range (tmp : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * FStarC_Range_Type.range)) : string =
+  (match tmp with
+    | (x1, x2) -> (let tmp1 = (fStarC_Class_Show_show__syntax_term' x1) in
+      let tmp2 = (FStarC_Range_Ops.fStarC_Class_Show_show__range x2) in
+      let tmp3 = (Prims.strcat tmp2 ")") in
+      let tmp4 = (Prims.strcat ", " tmp3) in
+      let tmp5 = (Prims.strcat tmp1 tmp4) in
+      (Prims.strcat "(" tmp5))
+  )
+
+let fStarC_Class_Show_show__option_tuple2_syntax_range (tmp : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * FStarC_Range_Type.range)) option) : string =
+  (match tmp with
+    | None -> "None"
+    | (Some (x)) -> (let tmp1 = (fStarC_Class_Show_show__tuple2_syntax_term'_range x) in
+      (Prims.strcat "Some " tmp1))
+  )
+
+let fStarC_Class_Show_show__tuple2_syntax_term'_bool (tmp : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * bool)) : string =
+  (match tmp with
+    | (x1, x2) -> (let tmp1 = (fStarC_Class_Show_show__syntax_term' x1) in
+      let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__bool x2) in
+      let tmp3 = (Prims.strcat tmp2 ")") in
+      let tmp4 = (Prims.strcat ", " tmp3) in
+      let tmp5 = (Prims.strcat tmp1 tmp4) in
+      (Prims.strcat "(" tmp5))
+  )
+
+let fStarC_Class_Show_show__option_tuple2_syntax_bool (tmp : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * bool)) option) : string =
+  (match tmp with
+    | None -> "None"
+    | (Some (x)) -> (let tmp1 = (fStarC_Class_Show_show__tuple2_syntax_term'_bool x) in
+      (Prims.strcat "Some " tmp1))
+  )
+
+let fStarC_Class_Show_show__tuple2_syntax_term'_syntax_term' (tmp : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) : string =
+  (match tmp with
+    | (x1, x2) -> (let tmp1 = (fStarC_Class_Show_show__syntax_term' x1) in
+      let tmp2 = (fStarC_Class_Show_show__syntax_term' x2) in
+      let tmp3 = (Prims.strcat tmp2 ")") in
+      let tmp4 = (Prims.strcat ", " tmp3) in
+      let tmp5 = (Prims.strcat tmp1 tmp4) in
+      (Prims.strcat "(" tmp5))
+  )
+
+let const_to_string (x : FStarC_Const.sconst) : string =
+  (FStarC_Parser_Const.const_to_string x)
+
+let fStarC_Class_Show_show__sconst (tmp : FStarC_Const.sconst) : string =
+  (const_to_string tmp)
+
+let bqual_to_string (q : (FStarC_Syntax_Syntax.binder_qualifier) option) : string =
+  (bqual_to_string' "" q)
+
+let fStarC_Class_Show_show__either_bv_fv (tmp : (FStarC_Syntax_Syntax.bv, FStarC_Syntax_Syntax.fv) FStar_Pervasives.either) : string =
+  (match tmp with
+    | (FStar_Pervasives.Inl (x)) -> (let tmp1 = (fStarC_Class_Show_show__bv x) in
+      (Prims.strcat "Inl " tmp1))
+    | (FStar_Pervasives.Inr (y)) -> (let tmp1 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__fv y) in
+      (Prims.strcat "Inr " tmp1))
+  )
+
+let fStarC_Class_Show_show__option_syntax_term' (tmp : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option) : string =
+  (match tmp with
+    | None -> "None"
+    | (Some (x)) -> (let tmp1 = (fStarC_Class_Show_show__syntax_term' x) in
+      (Prims.strcat "Some " tmp1))
+  )
+
+let fStarC_Class_Show_show__option_syntax_comp' (tmp : ((FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) option) : string =
+  (match tmp with
+    | None -> "None"
+    | (Some (x)) -> (let tmp1 = (fStarC_Class_Show_show__syntax_comp' x) in
+      (Prims.strcat "Some " tmp1))
+  )
+
+let comp_to_doc' (dsenv : FStarC_Syntax_DsEnv.env) (t : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : FStar_Pprint.document =
+  (let tmp = (FStarC_Options.ugly ()) in
+  (if tmp then (let tmp1 = (FStarC_Syntax_Print_Ugly.comp_to_string t) in
+  (FStar_Pprint.arbitrary_string tmp1)) else (FStarC_Syntax_Print_Pretty.comp_to_doc' dsenv t)))
+
+let args_to_string (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : string =
+  (let tmp = (FStarC_List.map (fun tmp -> (match tmp with
+      | (a, q) -> (let tmp1 = (aqual_to_string q) in
+        let tmp2 = (term_to_string a) in
+        (Prims.strcat tmp1 tmp2))
+    )) args) in
+  (FStarC_String.concat " " tmp))
+
+let fStarC_Class_Show_show__option_syntax_term'_88 (tmp : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option) : string =
+  (match tmp with
+    | None -> "None"
+    | (Some (x)) -> (let tmp1 = (fStarC_Class_Show_show__syntax_term' x) in
+      (Prims.strcat "Some " tmp1))
+  )
+
+let rec fStarC_Class_Show_show__show_list_aux__list_ctx_uvar_90 (l : (FStarC_Syntax_Syntax.ctx_uvar) list) : string =
+  (match l with
+    | [] -> ""
+    | (x :: []) -> (fStarC_Class_Show_show__ctx_uvar x)
+    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__ctx_uvar x) in
+      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_ctx_uvar_90 xs) in
+      let tmp2 = (Prims.strcat ", " tmp1) in
+      (Prims.strcat tmp tmp2))
+  )
+
+let fStarC_Class_Show_show__list_ctx_uvar_90 (tmp : (FStarC_Syntax_Syntax.ctx_uvar) list) : string =
+  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_ctx_uvar_90 tmp) in
+  let tmp2 = (Prims.strcat tmp1 "]") in
+  (Prims.strcat "[" tmp2))
+
+let fStarC_Class_Show_show__list_ctx_uvar (tmp : (FStarC_Syntax_Syntax.ctx_uvar) list) : string =
+  (fStarC_Class_Show_show__list_ctx_uvar_90 tmp)
+
+let rec fStarC_Class_Show_show__show_list_aux__list_syntax_term' (l : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) : string =
+  (match l with
+    | [] -> ""
+    | (x :: []) -> (fStarC_Class_Show_show__syntax_term' x)
+    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__syntax_term' x) in
+      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_syntax_term' xs) in
+      let tmp2 = (Prims.strcat ", " tmp1) in
+      (Prims.strcat tmp tmp2))
+  )
+
+let fStarC_Class_Show_show__list_syntax_term' (tmp : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) : string =
+  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_syntax_term' tmp) in
+  let tmp2 = (Prims.strcat tmp1 "]") in
+  (Prims.strcat "[" tmp2))
+
+let fStarC_Class_Show_show__tuple3_p_uvar_option_version_range (tmp : (((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : string =
+  (fStarC_Class_Show_show__universe (FStarC_Syntax_Syntax.U_unif ((match tmp with (custard_tup, _, _) -> custard_tup), (match tmp with (_, custard_tup, _) -> custard_tup), (match tmp with (_, _, custard_tup) -> custard_tup))))
+
+let rec fStarC_Class_Show_show__show_list_aux__list_tuple3_p_uvar_version_range_93 (l : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : string =
+  (match l with
+    | [] -> ""
+    | (x :: []) -> (fStarC_Class_Show_show__tuple3_p_uvar_option_version_range x)
+    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__tuple3_p_uvar_option_version_range x) in
+      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_tuple3_p_uvar_version_range_93 xs) in
+      let tmp2 = (Prims.strcat ", " tmp1) in
+      (Prims.strcat tmp tmp2))
+  )
+
+let fStarC_Class_Show_show__list_tuple3_p_uvar_version_range_93 (tmp : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : string =
+  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_tuple3_p_uvar_version_range_93 tmp) in
+  let tmp2 = (Prims.strcat tmp1 "]") in
+  (Prims.strcat "[" tmp2))
+
+let fStarC_Class_Show_show__list_tuple3_p_uvar_version_range (tmp : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : string =
+  (fStarC_Class_Show_show__list_tuple3_p_uvar_version_range_93 tmp)
+
+let fStarC_Class_PP_pp__option_arg_qualifier (tmp : (FStarC_Syntax_Syntax.arg_qualifier) option) : FStar_Pprint.document =
+  (let tmp1 = (fStarC_Class_Show_show__option_arg_qualifier tmp) in
+  (FStar_Pprint.arbitrary_string tmp1))
+
+let fStarC_Class_Show_show__binder_qualifier (tmp : FStarC_Syntax_Syntax.binder_qualifier) : string =
+  (bqual_to_string (Some (tmp)))
+
+let fStarC_Class_Show_show__option_binder_qualifier (tmp : (FStarC_Syntax_Syntax.binder_qualifier) option) : string =
+  (match tmp with
+    | None -> "None"
+    | (Some (x)) -> (let tmp1 = (fStarC_Class_Show_show__binder_qualifier x) in
+      (Prims.strcat "Some " tmp1))
+  )
+
+let fStarC_Class_Show_show__tuple2_unit_option_syntax (tmp : (unit * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) : string =
+  (match tmp with
+    | (x1, x2) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__unit x1) in
+      let tmp2 = (fStarC_Class_Show_show__option_syntax_term' x2) in
+      let tmp3 = (Prims.strcat tmp2 ")") in
+      let tmp4 = (Prims.strcat ", " tmp3) in
+      let tmp5 = (Prims.strcat tmp1 tmp4) in
+      (Prims.strcat "(" tmp5))
+  )
+
+let fStarC_Class_Show_show__tuple2_bv_syntax_term' (tmp : (FStarC_Syntax_Syntax.bv * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) : string =
+  (match tmp with
+    | (x1, x2) -> (let tmp1 = (fStarC_Class_Show_show__bv x1) in
+      let tmp2 = (fStarC_Class_Show_show__syntax_term' x2) in
+      let tmp3 = (Prims.strcat tmp2 ")") in
+      let tmp4 = (Prims.strcat ", " tmp3) in
+      let tmp5 = (Prims.strcat tmp1 tmp4) in
+      (Prims.strcat "(" tmp5))
+  )
+
+let rec fStarC_Class_Show_show__show_list_aux__list_tuple2_bv_syntax (l : ((FStarC_Syntax_Syntax.bv * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) list) : string =
+  (match l with
+    | [] -> ""
+    | (x :: []) -> (fStarC_Class_Show_show__tuple2_bv_syntax_term' x)
+    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__tuple2_bv_syntax_term' x) in
+      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_tuple2_bv_syntax xs) in
+      let tmp2 = (Prims.strcat ", " tmp1) in
+      (Prims.strcat tmp tmp2))
+  )
+
+let fStarC_Class_Show_show__list_tuple2_bv_syntax (tmp : ((FStarC_Syntax_Syntax.bv * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) list) : string =
+  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_tuple2_bv_syntax tmp) in
+  let tmp2 = (Prims.strcat tmp1 "]") in
+  (Prims.strcat "[" tmp2))
+
+let fStarC_Class_Show_show__tuple2_bv_syntax_term'_117 (tmp : (FStarC_Syntax_Syntax.bv * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) : string =
+  (match tmp with
+    | (x1, x2) -> (let tmp1 = (fStarC_Class_Show_show__bv x1) in
+      let tmp2 = (fStarC_Class_Show_show__syntax_term' x2) in
+      let tmp3 = (Prims.strcat tmp2 ")") in
+      let tmp4 = (Prims.strcat ", " tmp3) in
+      let tmp5 = (Prims.strcat tmp1 tmp4) in
+      (Prims.strcat "(" tmp5))
+  )
+
+let rec fStarC_Class_Show_show__show_list_aux__list_tuple2_bv_syntax_116 (l : ((FStarC_Syntax_Syntax.bv * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) list) : string =
+  (match l with
+    | [] -> ""
+    | (x :: []) -> (fStarC_Class_Show_show__tuple2_bv_syntax_term'_117 x)
+    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__tuple2_bv_syntax_term'_117 x) in
+      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_tuple2_bv_syntax_116 xs) in
+      let tmp2 = (Prims.strcat ", " tmp1) in
+      (Prims.strcat tmp tmp2))
+  )
+
+let fStarC_Class_Show_show__list_tuple2_bv_syntax_116 (tmp : ((FStarC_Syntax_Syntax.bv * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) list) : string =
+  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_tuple2_bv_syntax_116 tmp) in
+  let tmp2 = (Prims.strcat tmp1 "]") in
+  (Prims.strcat "[" tmp2))
+
+let fStarC_Class_Show_show__list_bv_122 (tmp : (FStarC_Syntax_Syntax.bv) list) : string =
+  (fStarC_Class_Show_show__list_bv tmp)
+
+let lbname_to_string (tmp : (FStarC_Syntax_Syntax.bv, FStarC_Syntax_Syntax.fv) FStar_Pervasives.either) : string =
+  (match tmp with
+    | (FStar_Pervasives.Inl (l)) -> (bv_to_string l)
+    | (FStar_Pervasives.Inr (l)) -> (FStarC_Syntax_Syntax.fStarC_Class_Show_show__fv l)
+  )
+
+let rec sigelt_to_string_short (x : FStarC_Syntax_Syntax.sigelt) : string =
+  (match (x).FStarC_Syntax_Syntax.sigel with
+    | (FStarC_Syntax_Syntax.Sig_pragma (p)) -> (FStarC_Syntax_Syntax.fStarC_Class_Show_show__pragma p)
+    | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (false, ({ FStarC_Syntax_Syntax.lbname = lb; lbunivs = tmp; lbtyp = tmp1; lbeff = tmp2; lbdef = tmp3; lbattrs = tmp4; lbpos = tmp5; _ } :: [])); lids = tmp6; _ })) -> (let tmp7 = (lbname_to_string lb) in
+      (FStarC_Format.fmt1 "let %s" tmp7))
+    | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (true, ({ FStarC_Syntax_Syntax.lbname = lb; lbunivs = tmp; lbtyp = tmp1; lbeff = tmp2; lbdef = tmp3; lbattrs = tmp4; lbpos = tmp5; _ } :: [])); lids = tmp6; _ })) -> (let tmp7 = (lbname_to_string lb) in
+      (FStarC_Format.fmt1 "let rec %s" tmp7))
+    | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (true, lbs); lids = tmp; _ })) -> (let tmp1 = (FStarC_List.map (fun lb -> (lbname_to_string (lb).FStarC_Syntax_Syntax.lbname)) lbs) in
+      let tmp2 = (FStarC_String.concat " and " tmp1) in
+      (FStarC_Format.fmt1 "let rec %s" tmp2))
+    | (FStarC_Syntax_Syntax.Sig_let (tmp)) -> (FStarC_Effect.failwith "Impossible: sigelt_to_string_short, ill-formed let")
+    | (FStarC_Syntax_Syntax.Sig_declare_typ ({ FStarC_Syntax_Syntax.lid = lid; us = tmp; t = tmp1; _ })) -> (FStarC_Format.fmt1 "val %s" (FStarC_Ident.string_of_lid lid))
+    | (FStarC_Syntax_Syntax.Sig_inductive_typ ({ FStarC_Syntax_Syntax.lid = lid; us = tmp; params = tmp1; num_uniform_params = tmp2; t = tmp3; mutuals = tmp4; ds = tmp5; injective_type_params = tmp6; _ })) -> (FStarC_Format.fmt1 "type %s" (FStarC_Ident.string_of_lid lid))
+    | (FStarC_Syntax_Syntax.Sig_datacon ({ FStarC_Syntax_Syntax.lid = lid; us = tmp; t = tmp1; ty_lid = t_lid; num_ty_params = tmp2; mutuals = tmp3; injective_type_params = tmp4; proj_disc_lids = tmp5; _ })) -> (FStarC_Format.fmt2 "datacon %s for type %s" (FStarC_Ident.string_of_lid lid) (FStarC_Ident.string_of_lid t_lid))
+    | (FStarC_Syntax_Syntax.Sig_assume ({ FStarC_Syntax_Syntax.lid = lid; us = tmp; phi = tmp1; _ })) -> (FStarC_Format.fmt1 "assume %s" (FStarC_Ident.string_of_lid lid))
+    | (FStarC_Syntax_Syntax.Sig_bundle ({ FStarC_Syntax_Syntax.ses = ses; lids = tmp; _ })) -> (sigelt_to_string_short (FStarC_List.hd ses))
+    | (FStarC_Syntax_Syntax.Sig_fail ({ FStarC_Syntax_Syntax.errs = tmp; rng = tmp1; fail_in_lax = tmp2; ses = ses; _ })) -> (let tmp3 = (sigelt_to_string_short (FStarC_List.hd ses)) in
+      (FStarC_Format.fmt1 "[@@expect_failure] %s" tmp3))
+    | (FStarC_Syntax_Syntax.Sig_new_effect (ed)) -> (let tmp = (FStarC_Ident.fStarC_Class_Show_show__lident (ed).FStarC_Syntax_Syntax.mname) in
+      (FStarC_Format.fmt2 "%seffect %s" (if (FStarC_List.contains FStarC_Syntax_Syntax.Assumption (x).FStarC_Syntax_Syntax.sigquals) then "assume " else "") tmp))
+    | (FStarC_Syntax_Syntax.Sig_sub_effect (sub)) -> (let tmp = (FStarC_Ident.fStarC_Class_Show_show__lident (sub).FStarC_Syntax_Syntax.source) in
+      let tmp1 = (FStarC_Ident.fStarC_Class_Show_show__lident (sub).FStarC_Syntax_Syntax.target) in
+      (FStarC_Format.fmt3 "%ssub_effect %s ~> %s" (if (FStarC_List.contains FStarC_Syntax_Syntax.Assumption (x).FStarC_Syntax_Syntax.sigquals) then "assume " else "") tmp tmp1))
+    | (FStarC_Syntax_Syntax.Sig_effect_abbrev ({ FStarC_Syntax_Syntax.lid = l; root = root; _ })) -> (let tmp = (FStarC_Ident.fStarC_Class_Show_show__lident l) in
+      let tmp1 = (FStarC_Ident.fStarC_Class_Show_show__lident root) in
+      (FStarC_Format.fmt2 "effect %s = %s" tmp tmp1))
+    | (FStarC_Syntax_Syntax.Sig_splice ({ FStarC_Syntax_Syntax.is_typed = is_typed; lids = lids; tac = tmp; _ })) -> (let tmp1 = (FStarC_List.map FStarC_Ident.string_of_lid lids) in
+      let tmp2 = (FStarC_String.concat "; " tmp1) in
+      (FStarC_Format.fmt3 "%splice%s[%s] (...)" "%s" (if is_typed then "_t" else "") tmp2))
+  )
+
+let sigelt_to_string (x : FStarC_Syntax_Syntax.sigelt) : string =
+  (let tmp = (FStarC_Options.ugly ()) in
+  (if tmp then (FStarC_Syntax_Print_Ugly.sigelt_to_string x) else (FStarC_Syntax_Print_Pretty.sigelt_to_string x)))
+
+let fStarC_Class_Show_show__sigelt (tmp : FStarC_Syntax_Syntax.sigelt) : string =
+  (sigelt_to_string tmp)
+
+let rec fStarC_Class_Show_show__show_list_aux__list_sigelt (l : (FStarC_Syntax_Syntax.sigelt) list) : string =
+  (match l with
+    | [] -> ""
+    | (x :: []) -> (fStarC_Class_Show_show__sigelt x)
+    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__sigelt x) in
+      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_sigelt xs) in
+      let tmp2 = (Prims.strcat ", " tmp1) in
+      (Prims.strcat tmp tmp2))
+  )
+
+let fStarC_Class_Show_show__list_sigelt (tmp : (FStarC_Syntax_Syntax.sigelt) list) : string =
+  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_sigelt tmp) in
+  let tmp2 = (Prims.strcat tmp1 "]") in
+  (Prims.strcat "[" tmp2))
+
+let modul_to_string (m : FStarC_Syntax_Syntax.modul) : string =
+  (let tmp = (FStarC_Ident.fStarC_Class_Show_show__lident (m).FStarC_Syntax_Syntax.name) in
+  let tmp1 = (FStarC_List.map sigelt_to_string (m).FStarC_Syntax_Syntax.declarations) in
+  let tmp2 = (FStarC_String.concat "\n" tmp1) in
+  (FStarC_Format.fmt2 "module %s\nDeclarations: [\n%s\n]\n" tmp tmp2))
+
+let fStarC_Class_Show_show__modul (tmp : FStarC_Syntax_Syntax.modul) : string =
+  (modul_to_string tmp)
+
+let rec fStarC_Class_Show_show__show_list_aux__list_syntax_term'_176 (l : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) : string =
+  (match l with
+    | [] -> ""
+    | (x :: []) -> (fStarC_Class_Show_show__syntax_term' x)
+    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__syntax_term' x) in
+      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_syntax_term'_176 xs) in
+      let tmp2 = (Prims.strcat ", " tmp1) in
+      (Prims.strcat tmp tmp2))
+  )
+
+let fStarC_Class_Show_show__list_syntax_term'_176 (tmp : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) : string =
+  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_syntax_term'_176 tmp) in
+  let tmp2 = (Prims.strcat tmp1 "]") in
+  (Prims.strcat "[" tmp2))
+
+let fStarC_Class_PP_pp__qualifier (tmp : FStarC_Syntax_Syntax.qualifier) : FStar_Pprint.document =
+  (let tmp1 = (fStarC_Class_Show_show__qualifier tmp) in
+  (FStar_Pprint.arbitrary_string tmp1))
+
+let tscheme_to_doc (ts : ((FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) : FStar_Pprint.document =
+  (let tmp = (FStarC_Options.ugly ()) in
+  (if tmp then (let tmp1 = (FStarC_Syntax_Print_Ugly.tscheme_to_string ts) in
+  (FStar_Pprint.arbitrary_string tmp1)) else (FStarC_Syntax_Print_Pretty.tscheme_to_doc ts)))
+
+let fStarC_Class_PP_pp__list_qualifier (tmp : (FStarC_Syntax_Syntax.qualifier) list) : FStar_Pprint.document =
+  (let tmp1 = (FStarC_Pprint.flow_map (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi (FStar_Pprint.break_ (Prims.parse_int "1"))) fStarC_Class_PP_pp__qualifier tmp) in
+  (FStarC_Class_PP.gbrackets tmp1))
+
+let sigelt_to_string' (env : FStarC_Syntax_DsEnv.env) (x : FStarC_Syntax_Syntax.sigelt) : string =
+  (let tmp = (FStarC_Options.ugly ()) in
+  (if tmp then (FStarC_Syntax_Print_Ugly.sigelt_to_string x) else (FStarC_Syntax_Print_Pretty.sigelt_to_string' env x)))
+
+let fStarC_Class_Show_show__tuple2_syntax_term'_syntax_term'_194 (tmp : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) : string =
+  (match tmp with
+    | (x1, x2) -> (let tmp1 = (fStarC_Class_Show_show__syntax_term' x1) in
+      let tmp2 = (fStarC_Class_Show_show__syntax_term' x2) in
+      let tmp3 = (Prims.strcat tmp2 ")") in
+      let tmp4 = (Prims.strcat ", " tmp3) in
+      let tmp5 = (Prims.strcat tmp1 tmp4) in
+      (Prims.strcat "(" tmp5))
+  )
+
+let fStarC_Class_Show_show__option_tuple2_syntax_syntax (tmp : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) option) : string =
+  (match tmp with
+    | None -> "None"
+    | (Some (x)) -> (let tmp1 = (fStarC_Class_Show_show__tuple2_syntax_term'_syntax_term'_194 x) in
+      (Prims.strcat "Some " tmp1))
+  )
+

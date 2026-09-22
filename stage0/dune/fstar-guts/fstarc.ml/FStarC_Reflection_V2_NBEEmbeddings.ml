@@ -1,2799 +1,1045 @@
-open Prims
-let noaqs : FStarC_Syntax_Syntax.antiquotations= (Prims.int_zero, [])
-let mkFV (fv : FStarC_Syntax_Syntax.fv)
-  (us : FStarC_Syntax_Syntax.universe Prims.list)
-  (ts :
-    (FStarC_TypeChecker_NBETerm.t * FStarC_Syntax_Syntax.aqual) Prims.list)
-  : FStarC_TypeChecker_NBETerm.t=
-  FStarC_TypeChecker_NBETerm.mkFV fv (FStarC_List.rev us)
-    (FStarC_List.rev ts)
-let mkConstruct (fv : FStarC_Syntax_Syntax.fv)
-  (us : FStarC_Syntax_Syntax.universe Prims.list)
-  (ts :
-    (FStarC_TypeChecker_NBETerm.t * FStarC_Syntax_Syntax.aqual) Prims.list)
-  : FStarC_TypeChecker_NBETerm.t=
-  FStarC_TypeChecker_NBETerm.mkConstruct fv (FStarC_List.rev us)
-    (FStarC_List.rev ts)
-let fv_as_emb_typ (fv : FStarC_Syntax_Syntax.fv) :
-  FStarC_Syntax_Syntax.emb_typ=
-  FStarC_Syntax_Syntax.ET_app
-    ((FStarC_Ident.string_of_lid fv.FStarC_Syntax_Syntax.fv_name), [])
-let mk_emb'
-  (x :
-    FStarC_TypeChecker_NBETerm.nbe_cbs ->
-      'uuuuu -> FStarC_TypeChecker_NBETerm.t)
-  (y :
-    FStarC_TypeChecker_NBETerm.nbe_cbs ->
-      FStarC_TypeChecker_NBETerm.t -> 'uuuuu FStar_Pervasives_Native.option)
-  (fv : FStarC_Syntax_Syntax.fv) :
-  'uuuuu FStarC_TypeChecker_NBETerm.embedding=
-  FStarC_TypeChecker_NBETerm.mk_emb x y (fun uu___ -> mkFV fv [] [])
-    (fun uu___ -> fv_as_emb_typ fv)
-let mk_lazy (cb : FStarC_TypeChecker_NBETerm.nbe_cbs) (obj : 'uuuuu)
-  (ty : FStarC_Syntax_Syntax.term' FStarC_Syntax_Syntax.syntax)
-  (kind : FStarC_Syntax_Syntax.lazy_kind) : FStarC_TypeChecker_NBETerm.t=
-  let li =
-    {
-      FStarC_Syntax_Syntax.blob = (FStar_Dyn.mkdyn obj);
-      FStarC_Syntax_Syntax.lkind = kind;
-      FStarC_Syntax_Syntax.ltyp = ty;
-      FStarC_Syntax_Syntax.rng = FStarC_Range_Type.dummyRange
-    } in
-  let thunk =
-    FStarC_Thunk.mk
-      (fun uu___ ->
-         let uu___1 = FStarC_Syntax_Util.unfold_lazy li in
-         FStarC_TypeChecker_NBETerm.translate_cb cb uu___1) in
-  FStarC_TypeChecker_NBETerm.mk_t
-    (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl li), thunk))
-let e_bv : FStarC_Syntax_Syntax.bv FStarC_TypeChecker_NBETerm.embedding=
-  let embed_bv cb bv =
-    mk_lazy cb bv FStarC_Reflection_V2_Constants.fstar_refl_bv
-      FStarC_Syntax_Syntax.Lazy_bv in
-  let unembed_bv cb t =
-    match t.FStarC_TypeChecker_NBETerm.nbe_t with
-    | FStarC_TypeChecker_NBETerm.Lazy
-        (FStar_Pervasives.Inl
-         { FStarC_Syntax_Syntax.blob = b;
-           FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_bv;
-           FStarC_Syntax_Syntax.ltyp = uu___;
-           FStarC_Syntax_Syntax.rng = uu___1;_},
-         uu___2)
-        ->
-        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
-    | uu___ ->
-        ((let uu___2 =
-            let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
-            FStarC_Format.fmt1 "Not an embedded bv: %s" uu___3 in
-          FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-            (Obj.magic uu___2));
-         FStar_Pervasives_Native.None) in
-  mk_emb' embed_bv unembed_bv FStarC_Reflection_V2_Constants.fstar_refl_bv_fv
-let e_namedv :
-  FStarC_Reflection_V2_Data.namedv FStarC_TypeChecker_NBETerm.embedding=
-  let embed_namedv cb namedv =
-    mk_lazy cb namedv FStarC_Reflection_V2_Constants.fstar_refl_namedv
-      FStarC_Syntax_Syntax.Lazy_namedv in
-  let unembed_namedv cb t =
-    match t.FStarC_TypeChecker_NBETerm.nbe_t with
-    | FStarC_TypeChecker_NBETerm.Lazy
-        (FStar_Pervasives.Inl
-         { FStarC_Syntax_Syntax.blob = b;
-           FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_namedv;
-           FStarC_Syntax_Syntax.ltyp = uu___;
-           FStarC_Syntax_Syntax.rng = uu___1;_},
-         uu___2)
-        ->
-        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
-    | uu___ ->
-        ((let uu___2 =
-            let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
-            FStarC_Format.fmt1 "Not an embedded namedv: %s" uu___3 in
-          FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-            (Obj.magic uu___2));
-         FStar_Pervasives_Native.None) in
-  mk_emb' embed_namedv unembed_namedv
-    FStarC_Reflection_V2_Constants.fstar_refl_namedv_fv
-let e_binder :
-  FStarC_Syntax_Syntax.binder FStarC_TypeChecker_NBETerm.embedding=
-  let embed_binder cb b =
-    mk_lazy cb b FStarC_Reflection_V2_Constants.fstar_refl_binder
-      FStarC_Syntax_Syntax.Lazy_binder in
-  let unembed_binder cb t =
-    match t.FStarC_TypeChecker_NBETerm.nbe_t with
-    | FStarC_TypeChecker_NBETerm.Lazy
-        (FStar_Pervasives.Inl
-         { FStarC_Syntax_Syntax.blob = b;
-           FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_binder;
-           FStarC_Syntax_Syntax.ltyp = uu___;
-           FStarC_Syntax_Syntax.rng = uu___1;_},
-         uu___2)
-        ->
-        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
-    | uu___ ->
-        ((let uu___2 =
-            let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
-            FStarC_Format.fmt1 "Not an embedded binder: %s" uu___3 in
-          FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-            (Obj.magic uu___2));
-         FStar_Pervasives_Native.None) in
-  mk_emb' embed_binder unembed_binder
-    FStarC_Reflection_V2_Constants.fstar_refl_binder_fv
-let rec mapM_opt :
-  'a 'b .
-    ('a -> 'b FStar_Pervasives_Native.option) ->
-      'a Prims.list -> 'b Prims.list FStar_Pervasives_Native.option
-  =
-  fun f l ->
-    match l with
-    | [] -> FStar_Pervasives_Native.Some []
-    | x::xs ->
-        FStarC_Option.bind (f x)
-          (fun x1 ->
-             let uu___ = mapM_opt f xs in
-             FStarC_Option.bind uu___
-               (fun xs1 -> FStar_Pervasives_Native.Some (x1 :: xs1)))
-let e_term_aq
-  (aq :
-    (Prims.int * FStarC_Syntax_Syntax.term' FStarC_Syntax_Syntax.syntax
-      Prims.list))
-  : FStarC_Syntax_Syntax.term FStarC_TypeChecker_NBETerm.embedding=
-  let embed_term cb t =
-    let qi =
-      {
-        FStarC_Syntax_Syntax.qkind = FStarC_Syntax_Syntax.Quote_static;
-        FStarC_Syntax_Syntax.antiquotations = aq
-      } in
-    FStarC_TypeChecker_NBETerm.mk_t
-      (FStarC_TypeChecker_NBETerm.Quote (t, qi)) in
-  let unembed_term cb t =
-    match t.FStarC_TypeChecker_NBETerm.nbe_t with
-    | FStarC_TypeChecker_NBETerm.Quote (tm, qi) ->
-        let uu___ =
-          FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_quoted (tm, qi))
-            FStarC_Range_Type.dummyRange in
-        FStarC_Syntax_Embeddings_Base.unembed
-          (FStarC_Reflection_V2_Embeddings.e_term_aq (Prims.int_zero, []))
-          uu___ FStarC_Syntax_Embeddings_Base.id_norm_cb
-    | uu___ -> FStar_Pervasives_Native.None in
-  {
-    FStarC_TypeChecker_NBETerm.em = embed_term;
-    FStarC_TypeChecker_NBETerm.un = unembed_term;
-    FStarC_TypeChecker_NBETerm.typ =
-      (fun uu___ ->
-         mkFV FStarC_Reflection_V2_Constants.fstar_refl_term_fv [] []);
-    FStarC_TypeChecker_NBETerm.e_typ =
-      (fun uu___ ->
-         fv_as_emb_typ FStarC_Reflection_V2_Constants.fstar_refl_term_fv)
-  }
-let e_term : FStarC_Syntax_Syntax.term FStarC_TypeChecker_NBETerm.embedding=
-  e_term_aq (Prims.int_zero, [])
-let e_sort :
-  FStarC_Syntax_Syntax.term FStarC_Sealed.sealed
-    FStarC_TypeChecker_NBETerm.embedding=
-  FStarC_TypeChecker_NBETerm.e_sealed e_term
-let e_ppname :
-  Prims.string FStarC_Sealed.sealed FStarC_TypeChecker_NBETerm.embedding=
-  FStarC_TypeChecker_NBETerm.e_sealed FStarC_TypeChecker_NBETerm.e_string
-let e_aqualv :
-  FStarC_Reflection_V2_Data.aqualv FStarC_TypeChecker_NBETerm.embedding=
-  let embed_aqualv cb q =
-    match q with
-    | FStarC_Reflection_V2_Data.Q_Explicit ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Q_Explicit.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.Q_Implicit ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Q_Implicit.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.Q_Meta t ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStarC_TypeChecker_NBETerm.embed e_term cb t in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          [uu___1] in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Q_Meta.FStarC_Reflection_V2_Constants.fv
-          [] uu___ in
-  let unembed_aqualv cb t =
-    match t.FStarC_TypeChecker_NBETerm.nbe_t with
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Q_Explicit.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.Q_Explicit
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Q_Implicit.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.Q_Implicit
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], (t1, uu___)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Q_Meta.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___1 = FStarC_TypeChecker_NBETerm.unembed e_term cb t1 in
-        FStarC_Option.bind uu___1
-          (fun t2 ->
-             FStar_Pervasives_Native.Some
-               (FStarC_Reflection_V2_Data.Q_Meta t2))
-    | uu___ ->
-        ((let uu___2 =
-            let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
-            FStarC_Format.fmt1 "Not an embedded aqualv: %s" uu___3 in
-          FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-            (Obj.magic uu___2));
-         FStar_Pervasives_Native.None) in
-  FStarC_TypeChecker_NBETerm.mk_emb embed_aqualv unembed_aqualv
-    (fun uu___ ->
-       mkConstruct FStarC_Reflection_V2_Constants.fstar_refl_aqualv_fv [] [])
-    (fun uu___ ->
-       fv_as_emb_typ FStarC_Reflection_V2_Constants.fstar_refl_aqualv_fv)
-let e_binders :
-  FStarC_Reflection_V2_Data.binders FStarC_TypeChecker_NBETerm.embedding=
-  FStarC_TypeChecker_NBETerm.e_list e_binder
-let e_fv : FStarC_Syntax_Syntax.fv FStarC_TypeChecker_NBETerm.embedding=
-  let embed_fv cb fv =
-    mk_lazy cb fv FStarC_Reflection_V2_Constants.fstar_refl_fv
-      FStarC_Syntax_Syntax.Lazy_fvar in
-  let unembed_fv cb t =
-    match t.FStarC_TypeChecker_NBETerm.nbe_t with
-    | FStarC_TypeChecker_NBETerm.Lazy
-        (FStar_Pervasives.Inl
-         { FStarC_Syntax_Syntax.blob = b;
-           FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_fvar;
-           FStarC_Syntax_Syntax.ltyp = uu___;
-           FStarC_Syntax_Syntax.rng = uu___1;_},
-         uu___2)
-        ->
-        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
-    | uu___ ->
-        ((let uu___2 =
-            let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
-            FStarC_Format.fmt1 "Not an embedded fvar: %s" uu___3 in
-          FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-            (Obj.magic uu___2));
-         FStar_Pervasives_Native.None) in
-  mk_emb' embed_fv unembed_fv FStarC_Reflection_V2_Constants.fstar_refl_fv_fv
-let e_comp : FStarC_Syntax_Syntax.comp FStarC_TypeChecker_NBETerm.embedding=
-  let embed_comp cb c =
-    mk_lazy cb c FStarC_Reflection_V2_Constants.fstar_refl_comp
-      FStarC_Syntax_Syntax.Lazy_comp in
-  let unembed_comp cb t =
-    match t.FStarC_TypeChecker_NBETerm.nbe_t with
-    | FStarC_TypeChecker_NBETerm.Lazy
-        (FStar_Pervasives.Inl
-         { FStarC_Syntax_Syntax.blob = b;
-           FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_comp;
-           FStarC_Syntax_Syntax.ltyp = uu___;
-           FStarC_Syntax_Syntax.rng = uu___1;_},
-         uu___2)
-        ->
-        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
-    | uu___ ->
-        ((let uu___2 =
-            let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
-            FStarC_Format.fmt1 "Not an embedded comp: %s" uu___3 in
-          FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-            (Obj.magic uu___2));
-         FStar_Pervasives_Native.None) in
-  mk_emb' embed_comp unembed_comp
-    FStarC_Reflection_V2_Constants.fstar_refl_comp_fv
-let e_env : FStarC_TypeChecker_Env.env FStarC_TypeChecker_NBETerm.embedding=
-  let embed_env cb e =
-    mk_lazy cb e FStarC_Reflection_V2_Constants.fstar_refl_env
-      FStarC_Syntax_Syntax.Lazy_env in
-  let unembed_env cb t =
-    match t.FStarC_TypeChecker_NBETerm.nbe_t with
-    | FStarC_TypeChecker_NBETerm.Lazy
-        (FStar_Pervasives.Inl
-         { FStarC_Syntax_Syntax.blob = b;
-           FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_env;
-           FStarC_Syntax_Syntax.ltyp = uu___;
-           FStarC_Syntax_Syntax.rng = uu___1;_},
-         uu___2)
-        ->
-        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
-    | uu___ ->
-        ((let uu___2 =
-            let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
-            FStarC_Format.fmt1 "Not an embedded env: %s" uu___3 in
-          FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-            (Obj.magic uu___2));
-         FStar_Pervasives_Native.None) in
-  mk_emb' embed_env unembed_env
-    FStarC_Reflection_V2_Constants.fstar_refl_env_fv
-let e_int_base :
-  FStar_IntegerLiteral.int_base FStarC_TypeChecker_NBETerm.embedding=
-  let embed_int_base uu___ b =
-    match b with
-    | FStar_IntegerLiteral.Dec ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Dec.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStar_IntegerLiteral.Hex ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Hex.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStar_IntegerLiteral.Oct ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Oct.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStar_IntegerLiteral.Bin ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Bin.FStarC_Reflection_V2_Constants.fv
-          [] [] in
-  let unembed_int_base uu___ t =
-    match t.FStarC_TypeChecker_NBETerm.nbe_t with
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Dec.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStar_IntegerLiteral.Dec
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Hex.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStar_IntegerLiteral.Hex
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Oct.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStar_IntegerLiteral.Oct
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Bin.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStar_IntegerLiteral.Bin
-    | uu___1 -> FStar_Pervasives_Native.None in
-  mk_emb' embed_int_base unembed_int_base
-    FStarC_Reflection_V2_Constants.fstar_refl_int_base_fv
-let e_int_signedness :
-  FStarC_Reflection_V2_Data.int_signedness
-    FStarC_TypeChecker_NBETerm.embedding=
-  let embed_int_signedness uu___ s =
-    match s with
-    | FStarC_Reflection_V2_Data.Signed ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Signed.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.Unsigned ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Unsigned.FStarC_Reflection_V2_Constants.fv
-          [] [] in
-  let unembed_int_signedness uu___ t =
-    match t.FStarC_TypeChecker_NBETerm.nbe_t with
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Signed.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.Signed
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Unsigned.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.Unsigned
-    | uu___1 -> FStar_Pervasives_Native.None in
-  mk_emb' embed_int_signedness unembed_int_signedness
-    FStarC_Reflection_V2_Constants.fstar_refl_int_signedness_fv
-let e_int_width :
-  FStarC_Reflection_V2_Data.int_width FStarC_TypeChecker_NBETerm.embedding=
-  let embed_int_width uu___ w =
-    match w with
-    | FStarC_Reflection_V2_Data.Int8 ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Int8.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.Int16 ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Int16.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.Int32 ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Int32.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.Int64 ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Int64.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.Sizet ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Sizet.FStarC_Reflection_V2_Constants.fv
-          [] [] in
-  let unembed_int_width uu___ t =
-    match t.FStarC_TypeChecker_NBETerm.nbe_t with
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Int8.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.Int8
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Int16.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.Int16
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Int32.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.Int32
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Int64.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.Int64
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Sizet.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.Sizet
-    | uu___1 -> FStar_Pervasives_Native.None in
-  mk_emb' embed_int_width unembed_int_width
-    FStarC_Reflection_V2_Constants.fstar_refl_int_width_fv
-let e_vconst :
-  FStarC_Reflection_V2_Data.vconst FStarC_TypeChecker_NBETerm.embedding=
-  let embed_const cb c =
-    match c with
-    | FStarC_Reflection_V2_Data.C_Unit ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_C_Unit.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.C_True ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_C_True.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.C_False ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_C_False.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.C_Int (i, base) ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 =
-              let uu___3 =
-                FStarC_TypeChecker_NBETerm.embed
-                  (FStarC_TypeChecker_NBETerm.e_sealed e_int_base) cb base in
-              FStarC_TypeChecker_NBETerm.as_arg uu___3 in
-            [uu___2] in
-          (FStarC_TypeChecker_NBETerm.as_arg
-             (FStarC_TypeChecker_NBETerm.mk_t
-                (FStarC_TypeChecker_NBETerm.Constant
-                   (FStarC_TypeChecker_NBETerm.Int i))))
-            :: uu___1 in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_C_Int.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.C_MachineInt (i, base, signedness, width) ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 =
-              let uu___3 =
-                FStarC_TypeChecker_NBETerm.embed
-                  (FStarC_TypeChecker_NBETerm.e_sealed e_int_base) cb base in
-              FStarC_TypeChecker_NBETerm.as_arg uu___3 in
-            let uu___3 =
-              let uu___4 =
-                let uu___5 =
-                  FStarC_TypeChecker_NBETerm.embed e_int_signedness cb
-                    signedness in
-                FStarC_TypeChecker_NBETerm.as_arg uu___5 in
-              let uu___5 =
-                let uu___6 =
-                  let uu___7 =
-                    FStarC_TypeChecker_NBETerm.embed e_int_width cb width in
-                  FStarC_TypeChecker_NBETerm.as_arg uu___7 in
-                [uu___6] in
-              uu___4 :: uu___5 in
-            uu___2 :: uu___3 in
-          (FStarC_TypeChecker_NBETerm.as_arg
-             (FStarC_TypeChecker_NBETerm.mk_t
-                (FStarC_TypeChecker_NBETerm.Constant
-                   (FStarC_TypeChecker_NBETerm.Int i))))
-            :: uu___1 in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_C_MachineInt.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.C_String s ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 =
-              FStarC_TypeChecker_NBETerm.embed
-                FStarC_TypeChecker_NBETerm.e_string cb s in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          [uu___1] in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_C_String.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.C_Range r ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 =
-              FStarC_TypeChecker_NBETerm.embed
-                FStarC_TypeChecker_NBETerm.e_range cb r in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          [uu___1] in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_C_Range.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.C_Reify ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_C_Reify.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.C_Reflect ns ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 =
-              FStarC_TypeChecker_NBETerm.embed
-                FStarC_TypeChecker_NBETerm.e_string_list cb ns in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          [uu___1] in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_C_Reflect.FStarC_Reflection_V2_Constants.fv
-          [] uu___ in
-  let unembed_const cb t =
-    match t.FStarC_TypeChecker_NBETerm.nbe_t with
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_C_Unit.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.C_Unit
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_C_True.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.C_True
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_C_False.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.C_False
-    | FStarC_TypeChecker_NBETerm.Construct
-        (fv, [], (base, uu___)::(i, uu___1)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_C_Int.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___2 =
-          FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_int
-            cb i in
-        FStarC_Option.bind uu___2
-          (fun i1 ->
-             let uu___3 =
-               FStarC_TypeChecker_NBETerm.unembed
-                 (FStarC_TypeChecker_NBETerm.e_sealed e_int_base) cb base in
-             FStarC_Option.bind uu___3
-               (fun base1 ->
-                  FStar_Pervasives_Native.Some
-                    (FStarC_Reflection_V2_Data.C_Int (i1, base1))))
-    | FStarC_TypeChecker_NBETerm.Construct
-        (fv, [],
-         (width, uu___)::(signedness, uu___1)::(base, uu___2)::(i, uu___3)::[])
-        when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_C_MachineInt.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___4 =
-          FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_int
-            cb i in
-        FStarC_Option.bind uu___4
-          (fun i1 ->
-             let uu___5 =
-               FStarC_TypeChecker_NBETerm.unembed
-                 (FStarC_TypeChecker_NBETerm.e_sealed e_int_base) cb base in
-             FStarC_Option.bind uu___5
-               (fun base1 ->
-                  let uu___6 =
-                    FStarC_TypeChecker_NBETerm.unembed e_int_signedness cb
-                      signedness in
-                  FStarC_Option.bind uu___6
-                    (fun signedness1 ->
-                       let uu___7 =
-                         FStarC_TypeChecker_NBETerm.unembed e_int_width cb
-                           width in
-                       FStarC_Option.bind uu___7
-                         (fun width1 ->
-                            FStar_Pervasives_Native.Some
-                              (FStarC_Reflection_V2_Data.C_MachineInt
-                                 (i1, base1, signedness1, width1))))))
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], (s, uu___)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_C_String.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___1 =
-          FStarC_TypeChecker_NBETerm.unembed
-            FStarC_TypeChecker_NBETerm.e_string cb s in
-        FStarC_Option.bind uu___1
-          (fun s1 ->
-             FStar_Pervasives_Native.Some
-               (FStarC_Reflection_V2_Data.C_String s1))
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], (r, uu___)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_C_Range.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___1 =
-          FStarC_TypeChecker_NBETerm.unembed
-            FStarC_TypeChecker_NBETerm.e_range cb r in
-        FStarC_Option.bind uu___1
-          (fun r1 ->
-             FStar_Pervasives_Native.Some
-               (FStarC_Reflection_V2_Data.C_Range r1))
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_C_Reify.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.C_Reify
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], (ns, uu___)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_C_Reflect.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___1 =
-          FStarC_TypeChecker_NBETerm.unembed
-            FStarC_TypeChecker_NBETerm.e_string_list cb ns in
-        FStarC_Option.bind uu___1
-          (fun ns1 ->
-             FStar_Pervasives_Native.Some
-               (FStarC_Reflection_V2_Data.C_Reflect ns1))
-    | uu___ ->
-        ((let uu___2 =
-            let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
-            FStarC_Format.fmt1 "Not an embedded vconst: %s" uu___3 in
-          FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-            (Obj.magic uu___2));
-         FStar_Pervasives_Native.None) in
-  mk_emb' embed_const unembed_const
-    FStarC_Reflection_V2_Constants.fstar_refl_vconst_fv
-let e_universe :
-  FStarC_Syntax_Syntax.universe FStarC_TypeChecker_NBETerm.embedding=
-  let embed_universe cb u =
-    mk_lazy cb u FStarC_Reflection_V2_Constants.fstar_refl_universe
-      FStarC_Syntax_Syntax.Lazy_universe in
-  let unembed_universe cb t =
-    match t.FStarC_TypeChecker_NBETerm.nbe_t with
-    | FStarC_TypeChecker_NBETerm.Lazy
-        (FStar_Pervasives.Inl
-         { FStarC_Syntax_Syntax.blob = b;
-           FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_universe;
-           FStarC_Syntax_Syntax.ltyp = uu___;
-           FStarC_Syntax_Syntax.rng = uu___1;_},
-         uu___2)
-        ->
-        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
-    | uu___ ->
-        ((let uu___2 =
-            let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
-            FStarC_Format.fmt1 "Not an embedded universe: %s" uu___3 in
-          FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-            (Obj.magic uu___2));
-         FStar_Pervasives_Native.None) in
-  mk_emb' embed_universe unembed_universe
-    FStarC_Reflection_V2_Constants.fstar_refl_universe_fv
-let rec e_pattern_aq :
-  'uuuuu .
-    'uuuuu ->
-      FStarC_Reflection_V2_Data.pattern FStarC_TypeChecker_NBETerm.embedding
-  =
-  fun aq ->
-    let embed_pattern cb p =
-      match p with
-      | FStarC_Reflection_V2_Data.Pat_Constant c ->
-          let uu___ =
-            let uu___1 =
-              let uu___2 = FStarC_TypeChecker_NBETerm.embed e_vconst cb c in
-              FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-            [uu___1] in
-          mkConstruct
-            FStarC_Reflection_V2_Constants.ref_Pat_Constant.FStarC_Reflection_V2_Constants.fv
-            [] uu___
-      | FStarC_Reflection_V2_Data.Pat_Cons (fv, us_opt, ps) ->
-          let uu___ =
-            let uu___1 =
-              let uu___2 = FStarC_TypeChecker_NBETerm.embed e_fv cb fv in
-              FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-            let uu___2 =
-              let uu___3 =
-                let uu___4 =
-                  FStarC_TypeChecker_NBETerm.embed
-                    (FStarC_TypeChecker_NBETerm.e_option
-                       (FStarC_TypeChecker_NBETerm.e_list e_universe)) cb
-                    us_opt in
-                FStarC_TypeChecker_NBETerm.as_arg uu___4 in
-              let uu___4 =
-                let uu___5 =
-                  let uu___6 =
-                    FStarC_TypeChecker_NBETerm.embed
-                      (FStarC_TypeChecker_NBETerm.e_list
-                         (FStarC_TypeChecker_NBETerm.e_tuple2
-                            (e_pattern_aq aq)
-                            FStarC_TypeChecker_NBETerm.e_bool)) cb ps in
-                  FStarC_TypeChecker_NBETerm.as_arg uu___6 in
-                [uu___5] in
-              uu___3 :: uu___4 in
-            uu___1 :: uu___2 in
-          mkConstruct
-            FStarC_Reflection_V2_Constants.ref_Pat_Cons.FStarC_Reflection_V2_Constants.fv
-            [] uu___
-      | FStarC_Reflection_V2_Data.Pat_Var (sort, ppname) ->
-          let uu___ =
-            let uu___1 =
-              let uu___2 = FStarC_TypeChecker_NBETerm.embed e_sort cb sort in
-              FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-            let uu___2 =
-              let uu___3 =
-                let uu___4 =
-                  FStarC_TypeChecker_NBETerm.embed e_ppname cb ppname in
-                FStarC_TypeChecker_NBETerm.as_arg uu___4 in
-              [uu___3] in
-            uu___1 :: uu___2 in
-          mkConstruct
-            FStarC_Reflection_V2_Constants.ref_Pat_Var.FStarC_Reflection_V2_Constants.fv
-            [] uu___
-      | FStarC_Reflection_V2_Data.Pat_Dot_Term eopt ->
-          let uu___ =
-            let uu___1 =
-              let uu___2 =
-                FStarC_TypeChecker_NBETerm.embed
-                  (FStarC_TypeChecker_NBETerm.e_option e_term) cb eopt in
-              FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-            [uu___1] in
-          mkConstruct
-            FStarC_Reflection_V2_Constants.ref_Pat_Dot_Term.FStarC_Reflection_V2_Constants.fv
-            [] uu___ in
-    let unembed_pattern cb t =
-      match t.FStarC_TypeChecker_NBETerm.nbe_t with
-      | FStarC_TypeChecker_NBETerm.Construct (fv, [], (c, uu___)::[]) when
-          FStarC_Syntax_Syntax.fv_eq_lid fv
-            FStarC_Reflection_V2_Constants.ref_Pat_Constant.FStarC_Reflection_V2_Constants.lid
-          ->
-          let uu___1 = FStarC_TypeChecker_NBETerm.unembed e_vconst cb c in
-          FStarC_Option.bind uu___1
-            (fun c1 ->
-               FStar_Pervasives_Native.Some
-                 (FStarC_Reflection_V2_Data.Pat_Constant c1))
-      | FStarC_TypeChecker_NBETerm.Construct
-          (fv, [], (ps, uu___)::(us_opt, uu___1)::(f, uu___2)::[]) when
-          FStarC_Syntax_Syntax.fv_eq_lid fv
-            FStarC_Reflection_V2_Constants.ref_Pat_Cons.FStarC_Reflection_V2_Constants.lid
-          ->
-          let uu___3 = FStarC_TypeChecker_NBETerm.unembed e_fv cb f in
-          FStarC_Option.bind uu___3
-            (fun f1 ->
-               let uu___4 =
-                 FStarC_TypeChecker_NBETerm.unembed
-                   (FStarC_TypeChecker_NBETerm.e_option
-                      (FStarC_TypeChecker_NBETerm.e_list e_universe)) cb
-                   us_opt in
-               FStarC_Option.bind uu___4
-                 (fun us ->
-                    let uu___5 =
-                      FStarC_TypeChecker_NBETerm.unembed
-                        (FStarC_TypeChecker_NBETerm.e_list
-                           (FStarC_TypeChecker_NBETerm.e_tuple2
-                              (e_pattern_aq aq)
-                              FStarC_TypeChecker_NBETerm.e_bool)) cb ps in
-                    FStarC_Option.bind uu___5
-                      (fun ps1 ->
-                         FStar_Pervasives_Native.Some
-                           (FStarC_Reflection_V2_Data.Pat_Cons (f1, us, ps1)))))
-      | FStarC_TypeChecker_NBETerm.Construct
-          (fv, [], (ppname, uu___)::(sort, uu___1)::[]) when
-          FStarC_Syntax_Syntax.fv_eq_lid fv
-            FStarC_Reflection_V2_Constants.ref_Pat_Var.FStarC_Reflection_V2_Constants.lid
-          ->
-          let uu___2 = FStarC_TypeChecker_NBETerm.unembed e_sort cb sort in
-          FStarC_Option.bind uu___2
-            (fun sort1 ->
-               let uu___3 =
-                 FStarC_TypeChecker_NBETerm.unembed e_ppname cb ppname in
-               FStarC_Option.bind uu___3
-                 (fun ppname1 ->
-                    FStar_Pervasives_Native.Some
-                      (FStarC_Reflection_V2_Data.Pat_Var (sort1, ppname1))))
-      | FStarC_TypeChecker_NBETerm.Construct (fv, [], (eopt, uu___)::[]) when
-          FStarC_Syntax_Syntax.fv_eq_lid fv
-            FStarC_Reflection_V2_Constants.ref_Pat_Dot_Term.FStarC_Reflection_V2_Constants.lid
-          ->
-          let uu___1 =
-            FStarC_TypeChecker_NBETerm.unembed
-              (FStarC_TypeChecker_NBETerm.e_option e_term) cb eopt in
-          FStarC_Option.bind uu___1
-            (fun eopt1 ->
-               FStar_Pervasives_Native.Some
-                 (FStarC_Reflection_V2_Data.Pat_Dot_Term eopt1))
-      | uu___ ->
-          ((let uu___2 =
-              let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
-              FStarC_Format.fmt1 "Not an embedded pattern: %s" uu___3 in
-            FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded
-              () (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-              (Obj.magic uu___2));
-           FStar_Pervasives_Native.None) in
-    mk_emb' embed_pattern unembed_pattern
-      FStarC_Reflection_V2_Constants.fstar_refl_pattern_fv
-let e_pattern :
-  FStarC_Reflection_V2_Data.pattern FStarC_TypeChecker_NBETerm.embedding=
-  e_pattern_aq noaqs
-let e_branch :
-  FStarC_Reflection_V2_Data.branch FStarC_TypeChecker_NBETerm.embedding=
-  FStarC_TypeChecker_NBETerm.e_tuple2 e_pattern e_term
-let e_argv :
-  FStarC_Reflection_V2_Data.argv FStarC_TypeChecker_NBETerm.embedding=
-  FStarC_TypeChecker_NBETerm.e_tuple2 e_term e_aqualv
-let e_branch_aq
-  (aq :
-    (Prims.int * FStarC_Syntax_Syntax.term' FStarC_Syntax_Syntax.syntax
-      Prims.list))
-  :
-  (FStarC_Reflection_V2_Data.pattern * FStarC_Syntax_Syntax.term)
-    FStarC_TypeChecker_NBETerm.embedding=
-  FStarC_TypeChecker_NBETerm.e_tuple2 (e_pattern_aq aq) (e_term_aq aq)
-let e_argv_aq
-  (aq :
-    (Prims.int * FStarC_Syntax_Syntax.term' FStarC_Syntax_Syntax.syntax
-      Prims.list))
-  :
-  (FStarC_Syntax_Syntax.term * FStarC_Reflection_V2_Data.aqualv)
-    FStarC_TypeChecker_NBETerm.embedding=
-  FStarC_TypeChecker_NBETerm.e_tuple2 (e_term_aq aq) e_aqualv
-let e_match_returns_annotation :
-  (FStarC_Syntax_Syntax.binder * ((FStarC_Syntax_Syntax.term,
-    FStarC_Syntax_Syntax.comp) FStar_Pervasives.either *
-    FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option * Prims.bool))
-    FStar_Pervasives_Native.option FStarC_TypeChecker_NBETerm.embedding=
-  FStarC_TypeChecker_NBETerm.e_option
-    (FStarC_TypeChecker_NBETerm.e_tuple2 e_binder
-       (FStarC_TypeChecker_NBETerm.e_tuple3
-          (FStarC_TypeChecker_NBETerm.e_either e_term e_comp)
-          (FStarC_TypeChecker_NBETerm.e_option e_term)
-          FStarC_TypeChecker_NBETerm.e_bool))
-let unlazy_as_t (k : FStarC_Syntax_Syntax.lazy_kind)
-  (t : FStarC_TypeChecker_NBETerm.t) : 'uuuuu=
-  match t.FStarC_TypeChecker_NBETerm.nbe_t with
-  | FStarC_TypeChecker_NBETerm.Lazy
-      (FStar_Pervasives.Inl
-       { FStarC_Syntax_Syntax.blob = v; FStarC_Syntax_Syntax.lkind = k';
-         FStarC_Syntax_Syntax.ltyp = uu___;
-         FStarC_Syntax_Syntax.rng = uu___1;_},
-       uu___2)
-      when
-      FStarC_Class_Deq.op_Equals_Question FStarC_Syntax_Syntax.deq_lazy_kind
-        k k'
-      -> FStar_Dyn.undyn v
-  | uu___ -> FStarC_Effect.failwith "Not a Lazy of the expected kind (NBE)"
-let e_ident : FStarC_Ident.ident FStarC_TypeChecker_NBETerm.embedding=
-  let embed_ident cb se =
-    mk_lazy cb se FStarC_Reflection_V2_Constants.fstar_refl_ident
-      FStarC_Syntax_Syntax.Lazy_ident in
-  let unembed_ident cb t =
-    match t.FStarC_TypeChecker_NBETerm.nbe_t with
-    | FStarC_TypeChecker_NBETerm.Lazy
-        (FStar_Pervasives.Inl
-         { FStarC_Syntax_Syntax.blob = b;
-           FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_ident;
-           FStarC_Syntax_Syntax.ltyp = uu___;
-           FStarC_Syntax_Syntax.rng = uu___1;_},
-         uu___2)
-        ->
-        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
-    | uu___ ->
-        ((let uu___2 =
-            let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
-            FStarC_Format.fmt1 "Not an embedded ident: %s" uu___3 in
-          FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-            (Obj.magic uu___2));
-         FStar_Pervasives_Native.None) in
-  mk_emb' embed_ident unembed_ident
-    FStarC_Reflection_V2_Constants.fstar_refl_ident_fv
-let e_univ_name :
-  FStarC_Syntax_Syntax.univ_name FStarC_TypeChecker_NBETerm.embedding=
+(* Generated by F* Custard extraction. Do not edit. *)
+[@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
+
+let mkFV (fv : FStarC_Syntax_Syntax.fv) (us : (FStarC_Syntax_Syntax.universe) list) (ts : ((FStarC_TypeChecker_NBETerm.t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : FStarC_TypeChecker_NBETerm.t =
+  (FStarC_TypeChecker_NBETerm.mkFV fv (FStarC_List.rev us) (FStarC_List.rev ts))
+
+let fv_as_emb_typ (fv : FStarC_Syntax_Syntax.fv) : FStarC_Syntax_Syntax.emb_typ =
+  (FStarC_Syntax_Syntax.ET_app ((FStarC_Ident.string_of_lid (fv).FStarC_Syntax_Syntax.fv_name), []))
+
+let e_term_aq (aq : (Prims.int * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list)) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStarC_TypeChecker_NBETerm.embedding =
+  (let embed_term = (fun cb t -> (let qi = { FStarC_Syntax_Syntax.qkind = FStarC_Syntax_Syntax.Quote_static;
+        antiquotations = (match aq with (custard_tup, _) -> custard_tup);
+        antiquotations1 = (match aq with (_, custard_tup) -> custard_tup) } in
+    (FStarC_TypeChecker_NBETerm.mk_t (FStarC_TypeChecker_NBETerm.Quote (t, qi))))) in
+  let unembed_term = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Quote (tm, qi)) -> (let tmp = (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_quoted (tm, qi)) FStarC_Range_Type.dummyRange) in
+        (FStarC_Syntax_Embeddings_Base.unembed (FStarC_Reflection_V2_Embeddings.e_term_aq ((Prims.parse_int "0"), [])) tmp FStarC_Syntax_Embeddings_Base.id_norm_cb))
+      | tmp -> None
+    )) in
+  { FStarC_TypeChecker_NBETerm.em = embed_term;
+    un = unembed_term;
+    typ = (fun tmp -> (mkFV FStarC_Reflection_V2_Constants.fstar_refl_term_fv [] []));
+    e_typ = (fun tmp -> (fv_as_emb_typ FStarC_Reflection_V2_Constants.fstar_refl_term_fv)) })
+
+let e_term : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStarC_TypeChecker_NBETerm.embedding =
+  (e_term_aq ((Prims.parse_int "0"), []))
+
+let mk_lazy (cb : FStarC_TypeChecker_NBETerm.nbe_cbs) (obj : 'tmp) (ty : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (kind : FStarC_Syntax_Syntax.lazy_kind) : FStarC_TypeChecker_NBETerm.t =
+  (let li = ({ FStarC_Syntax_Syntax.blob = (FStar_Dyn.mkdyn obj);
+      lkind = kind;
+      ltyp = ty;
+      rng = FStarC_Range_Type.dummyRange } : FStarC_Syntax_Syntax.lazyinfo) in
+  let thunk = (FStarC_Thunk.mk (fun tmp -> (let tmp1 = (FStarC_Syntax_Util.unfold_lazy li) in
+    (FStarC_TypeChecker_NBETerm.translate_cb cb tmp1)))) in
+  (FStarC_TypeChecker_NBETerm.mk_t (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl (li)), thunk))))
+
+let mk_emb' (x : (FStarC_TypeChecker_NBETerm.nbe_cbs -> ('tmp -> FStarC_TypeChecker_NBETerm.t))) (y : (FStarC_TypeChecker_NBETerm.nbe_cbs -> (FStarC_TypeChecker_NBETerm.t -> ('tmp) option))) (fv : FStarC_Syntax_Syntax.fv) : ('tmp) FStarC_TypeChecker_NBETerm.embedding =
+  (FStarC_TypeChecker_NBETerm.mk_emb x y (fun tmp -> (mkFV fv [] [])) (fun tmp -> (fv_as_emb_typ fv)))
+
+let e_fv : (FStarC_Syntax_Syntax.fv) FStarC_TypeChecker_NBETerm.embedding =
+  (let embed_fv = (fun cb fv -> (mk_lazy cb fv FStarC_Reflection_V2_Constants.fstar_refl_fv FStarC_Syntax_Syntax.Lazy_fvar)) in
+  let unembed_fv = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_fvar; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (FStar_Dyn.undyn b) in
+        (Some (tmp3)))
+      | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
+        let tmp2 = (FStarC_Format.fmt1 "Not an embedded fvar: %s" tmp1) in
+        (FStarC_Errors.fStarC_Errors_log_issue0__string FStarC_Errors_Codes.Warning_NotEmbedded tmp2);
+        None)
+    )) in
+  (mk_emb' embed_fv unembed_fv FStarC_Reflection_V2_Constants.fstar_refl_fv_fv))
+
+let mkConstruct (fv : FStarC_Syntax_Syntax.fv) (us : (FStarC_Syntax_Syntax.universe) list) (ts : ((FStarC_TypeChecker_NBETerm.t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : FStarC_TypeChecker_NBETerm.t =
+  (FStarC_TypeChecker_NBETerm.mkConstruct fv (FStarC_List.rev us) (FStarC_List.rev ts))
+
+let e_bv : (FStarC_Syntax_Syntax.bv) FStarC_TypeChecker_NBETerm.embedding =
+  (let embed_bv = (fun cb bv -> (mk_lazy cb bv FStarC_Reflection_V2_Constants.fstar_refl_bv FStarC_Syntax_Syntax.Lazy_bv)) in
+  let unembed_bv = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_bv; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (FStar_Dyn.undyn b) in
+        (Some (tmp3)))
+      | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
+        let tmp2 = (FStarC_Format.fmt1 "Not an embedded bv: %s" tmp1) in
+        (FStarC_Errors.fStarC_Errors_log_issue0__string FStarC_Errors_Codes.Warning_NotEmbedded tmp2);
+        None)
+    )) in
+  (mk_emb' embed_bv unembed_bv FStarC_Reflection_V2_Constants.fstar_refl_bv_fv))
+
+let e_universe : (FStarC_Syntax_Syntax.universe) FStarC_TypeChecker_NBETerm.embedding =
+  (let embed_universe = (fun cb u -> (mk_lazy cb u FStarC_Reflection_V2_Constants.fstar_refl_universe FStarC_Syntax_Syntax.Lazy_universe)) in
+  let unembed_universe = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_universe; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (FStar_Dyn.undyn b) in
+        (Some (tmp3)))
+      | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
+        let tmp2 = (FStarC_Format.fmt1 "Not an embedded universe: %s" tmp1) in
+        (FStarC_Errors.fStarC_Errors_log_issue0__string FStarC_Errors_Codes.Warning_NotEmbedded tmp2);
+        None)
+    )) in
+  (mk_emb' embed_universe unembed_universe FStarC_Reflection_V2_Constants.fstar_refl_universe_fv))
+
+let e_aqualv : (FStarC_Reflection_V2_Data.aqualv) FStarC_TypeChecker_NBETerm.embedding =
+  (let embed_aqualv = (fun cb q -> (match q with
+      | FStarC_Reflection_V2_Data.Q_Explicit -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_Q_Explicit).FStarC_Reflection_V2_Constants.fv [] [])
+      | FStarC_Reflection_V2_Data.Q_Implicit -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_Q_Implicit).FStarC_Reflection_V2_Constants.fv [] [])
+      | (FStarC_Reflection_V2_Data.Q_Meta (t)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed e_term cb t) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (tmp1 :: []) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Q_Meta).FStarC_Reflection_V2_Constants.fv [] tmp2))
+    )) in
+  let unembed_aqualv = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Q_Explicit).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.Q_Explicit))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Q_Implicit).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.Q_Implicit))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], ((t1, tmp) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Q_Meta).FStarC_Reflection_V2_Constants.lid) -> (let tmp1 = (FStarC_TypeChecker_NBETerm.unembed e_term cb t1) in
+        (FStarC_Option.bind tmp1 (fun t2 -> (Some ((FStarC_Reflection_V2_Data.Q_Meta (t2)))))))
+      | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
+        let tmp2 = (FStarC_Format.fmt1 "Not an embedded aqualv: %s" tmp1) in
+        (FStarC_Errors.fStarC_Errors_log_issue0__string FStarC_Errors_Codes.Warning_NotEmbedded tmp2);
+        None)
+    )) in
+  (FStarC_TypeChecker_NBETerm.mk_emb embed_aqualv unembed_aqualv (fun tmp -> (mkConstruct FStarC_Reflection_V2_Constants.fstar_refl_aqualv_fv [] [])) (fun tmp -> (fv_as_emb_typ FStarC_Reflection_V2_Constants.fstar_refl_aqualv_fv))))
+
+let e_argv_aq (aq : (Prims.int * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list)) : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * FStarC_Reflection_V2_Data.aqualv)) FStarC_TypeChecker_NBETerm.embedding =
+  (FStarC_TypeChecker_NBETerm.e_tuple2 (e_term_aq aq) e_aqualv)
+
+let e_binder : (FStarC_Syntax_Syntax.binder) FStarC_TypeChecker_NBETerm.embedding =
+  (let embed_binder = (fun cb b -> (mk_lazy cb b FStarC_Reflection_V2_Constants.fstar_refl_binder FStarC_Syntax_Syntax.Lazy_binder)) in
+  let unembed_binder = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_binder; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (FStar_Dyn.undyn b) in
+        (Some (tmp3)))
+      | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
+        let tmp2 = (FStarC_Format.fmt1 "Not an embedded binder: %s" tmp1) in
+        (FStarC_Errors.fStarC_Errors_log_issue0__string FStarC_Errors_Codes.Warning_NotEmbedded tmp2);
+        None)
+    )) in
+  (mk_emb' embed_binder unembed_binder FStarC_Reflection_V2_Constants.fstar_refl_binder_fv))
+
+let e_comp : ((FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) FStarC_TypeChecker_NBETerm.embedding =
+  (let embed_comp = (fun cb c -> (mk_lazy cb c FStarC_Reflection_V2_Constants.fstar_refl_comp FStarC_Syntax_Syntax.Lazy_comp)) in
+  let unembed_comp = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_comp; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (FStar_Dyn.undyn b) in
+        (Some (tmp3)))
+      | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
+        let tmp2 = (FStarC_Format.fmt1 "Not an embedded comp: %s" tmp1) in
+        (FStarC_Errors.fStarC_Errors_log_issue0__string FStarC_Errors_Codes.Warning_NotEmbedded tmp2);
+        None)
+    )) in
+  (mk_emb' embed_comp unembed_comp FStarC_Reflection_V2_Constants.fstar_refl_comp_fv))
+
+let e_int_base : (FStar_IntegerLiteral.int_base) FStarC_TypeChecker_NBETerm.embedding =
+  (let embed_int_base = (fun tmp b -> (match b with
+      | FStar_IntegerLiteral.Dec -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_Dec).FStarC_Reflection_V2_Constants.fv [] [])
+      | FStar_IntegerLiteral.Hex -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_Hex).FStarC_Reflection_V2_Constants.fv [] [])
+      | FStar_IntegerLiteral.Oct -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_Oct).FStarC_Reflection_V2_Constants.fv [] [])
+      | FStar_IntegerLiteral.Bin -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_Bin).FStarC_Reflection_V2_Constants.fv [] [])
+    )) in
+  let unembed_int_base = (fun tmp t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Dec).FStarC_Reflection_V2_Constants.lid) -> (Some (FStar_IntegerLiteral.Dec))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Hex).FStarC_Reflection_V2_Constants.lid) -> (Some (FStar_IntegerLiteral.Hex))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Oct).FStarC_Reflection_V2_Constants.lid) -> (Some (FStar_IntegerLiteral.Oct))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Bin).FStarC_Reflection_V2_Constants.lid) -> (Some (FStar_IntegerLiteral.Bin))
+      | tmp1 -> None
+    )) in
+  (mk_emb' embed_int_base unembed_int_base FStarC_Reflection_V2_Constants.fstar_refl_int_base_fv))
+
+let e_int_signedness : (FStarC_Reflection_V2_Data.int_signedness) FStarC_TypeChecker_NBETerm.embedding =
+  (let embed_int_signedness = (fun tmp s -> (match s with
+      | FStarC_Reflection_V2_Data.Signed -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_Signed).FStarC_Reflection_V2_Constants.fv [] [])
+      | FStarC_Reflection_V2_Data.Unsigned -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_Unsigned).FStarC_Reflection_V2_Constants.fv [] [])
+    )) in
+  let unembed_int_signedness = (fun tmp t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Signed).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.Signed))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Unsigned).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.Unsigned))
+      | tmp1 -> None
+    )) in
+  (mk_emb' embed_int_signedness unembed_int_signedness FStarC_Reflection_V2_Constants.fstar_refl_int_signedness_fv))
+
+let e_int_width : (FStarC_Reflection_V2_Data.int_width) FStarC_TypeChecker_NBETerm.embedding =
+  (let embed_int_width = (fun tmp w -> (match w with
+      | FStarC_Reflection_V2_Data.Int8 -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_Int8).FStarC_Reflection_V2_Constants.fv [] [])
+      | FStarC_Reflection_V2_Data.Int16 -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_Int16).FStarC_Reflection_V2_Constants.fv [] [])
+      | FStarC_Reflection_V2_Data.Int32 -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_Int32).FStarC_Reflection_V2_Constants.fv [] [])
+      | FStarC_Reflection_V2_Data.Int64 -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_Int64).FStarC_Reflection_V2_Constants.fv [] [])
+      | FStarC_Reflection_V2_Data.Sizet -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_Sizet).FStarC_Reflection_V2_Constants.fv [] [])
+    )) in
+  let unembed_int_width = (fun tmp t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Int8).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.Int8))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Int16).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.Int16))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Int32).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.Int32))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Int64).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.Int64))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Sizet).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.Sizet))
+      | tmp1 -> None
+    )) in
+  (mk_emb' embed_int_width unembed_int_width FStarC_Reflection_V2_Constants.fstar_refl_int_width_fv))
+
+let e_vconst : (FStarC_Reflection_V2_Data.vconst) FStarC_TypeChecker_NBETerm.embedding =
+  (let embed_const = (fun cb c -> (match c with
+      | FStarC_Reflection_V2_Data.C_Unit -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_C_Unit).FStarC_Reflection_V2_Constants.fv [] [])
+      | FStarC_Reflection_V2_Data.C_True -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_C_True).FStarC_Reflection_V2_Constants.fv [] [])
+      | FStarC_Reflection_V2_Data.C_False -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_C_False).FStarC_Reflection_V2_Constants.fv [] [])
+      | (FStarC_Reflection_V2_Data.C_Int (i, base)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed (FStarC_TypeChecker_NBETerm.e_sealed e_int_base) cb base) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (tmp1 :: []) in
+        let tmp3 = ((FStarC_TypeChecker_NBETerm.as_arg (FStarC_TypeChecker_NBETerm.mk_t (FStarC_TypeChecker_NBETerm.Constant ((FStarC_TypeChecker_NBETerm.Int (i)))))) :: tmp2) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_C_Int).FStarC_Reflection_V2_Constants.fv [] tmp3))
+      | (FStarC_Reflection_V2_Data.C_MachineInt (i, base, signedness, width)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed (FStarC_TypeChecker_NBETerm.e_sealed e_int_base) cb base) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (FStarC_TypeChecker_NBETerm.embed e_int_signedness cb signedness) in
+        let tmp3 = (FStarC_TypeChecker_NBETerm.as_arg tmp2) in
+        let tmp4 = (FStarC_TypeChecker_NBETerm.embed e_int_width cb width) in
+        let tmp5 = (FStarC_TypeChecker_NBETerm.as_arg tmp4) in
+        let tmp6 = (tmp5 :: []) in
+        let tmp7 = (tmp3 :: tmp6) in
+        let tmp8 = (tmp1 :: tmp7) in
+        let tmp9 = ((FStarC_TypeChecker_NBETerm.as_arg (FStarC_TypeChecker_NBETerm.mk_t (FStarC_TypeChecker_NBETerm.Constant ((FStarC_TypeChecker_NBETerm.Int (i)))))) :: tmp8) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_C_MachineInt).FStarC_Reflection_V2_Constants.fv [] tmp9))
+      | (FStarC_Reflection_V2_Data.C_String (s)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed FStarC_TypeChecker_NBETerm.e_string cb s) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (tmp1 :: []) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_C_String).FStarC_Reflection_V2_Constants.fv [] tmp2))
+      | (FStarC_Reflection_V2_Data.C_Range (r)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed FStarC_TypeChecker_NBETerm.e_range cb r) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (tmp1 :: []) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_C_Range).FStarC_Reflection_V2_Constants.fv [] tmp2))
+      | FStarC_Reflection_V2_Data.C_Reify -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_C_Reify).FStarC_Reflection_V2_Constants.fv [] [])
+      | (FStarC_Reflection_V2_Data.C_Reflect (ns)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed FStarC_TypeChecker_NBETerm.e_string_list cb ns) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (tmp1 :: []) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_C_Reflect).FStarC_Reflection_V2_Constants.fv [] tmp2))
+    )) in
+  let unembed_const = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_C_Unit).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.C_Unit))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_C_True).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.C_True))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_C_False).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.C_False))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], ((base, tmp) :: ((i, tmp1) :: [])))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_C_Int).FStarC_Reflection_V2_Constants.lid) -> (let tmp2 = (FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_int cb i) in
+        (FStarC_Option.bind tmp2 (fun i1 -> (let tmp3 = (FStarC_TypeChecker_NBETerm.unembed (FStarC_TypeChecker_NBETerm.e_sealed e_int_base) cb base) in
+        (FStarC_Option.bind tmp3 (fun base1 -> (Some ((FStarC_Reflection_V2_Data.C_Int (i1, base1))))))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], ((width, tmp) :: ((signedness, tmp1) :: ((base, tmp2) :: ((i, tmp3) :: [])))))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_C_MachineInt).FStarC_Reflection_V2_Constants.lid) -> (let tmp4 = (FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_int cb i) in
+        (FStarC_Option.bind tmp4 (fun i1 -> (let tmp5 = (FStarC_TypeChecker_NBETerm.unembed (FStarC_TypeChecker_NBETerm.e_sealed e_int_base) cb base) in
+        (FStarC_Option.bind tmp5 (fun base1 -> (let tmp6 = (FStarC_TypeChecker_NBETerm.unembed e_int_signedness cb signedness) in
+        (FStarC_Option.bind tmp6 (fun signedness1 -> (let tmp7 = (FStarC_TypeChecker_NBETerm.unembed e_int_width cb width) in
+        (FStarC_Option.bind tmp7 (fun width1 -> (Some ((FStarC_Reflection_V2_Data.C_MachineInt (i1, base1, signedness1, width1))))))))))))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], ((s, tmp) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_C_String).FStarC_Reflection_V2_Constants.lid) -> (let tmp1 = (FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_string cb s) in
+        (FStarC_Option.bind tmp1 (fun s1 -> (Some ((FStarC_Reflection_V2_Data.C_String (s1)))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], ((r, tmp) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_C_Range).FStarC_Reflection_V2_Constants.lid) -> (let tmp1 = (FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_range cb r) in
+        (FStarC_Option.bind tmp1 (fun r1 -> (Some ((FStarC_Reflection_V2_Data.C_Range (r1)))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_C_Reify).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.C_Reify))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], ((ns, tmp) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_C_Reflect).FStarC_Reflection_V2_Constants.lid) -> (let tmp1 = (FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_string_list cb ns) in
+        (FStarC_Option.bind tmp1 (fun ns1 -> (Some ((FStarC_Reflection_V2_Data.C_Reflect (ns1)))))))
+      | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
+        let tmp2 = (FStarC_Format.fmt1 "Not an embedded vconst: %s" tmp1) in
+        (FStarC_Errors.fStarC_Errors_log_issue0__string FStarC_Errors_Codes.Warning_NotEmbedded tmp2);
+        None)
+    )) in
+  (mk_emb' embed_const unembed_const FStarC_Reflection_V2_Constants.fstar_refl_vconst_fv))
+
+let e_match_returns_annotation : (((FStarC_Syntax_Syntax.binder * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax, (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * bool))) option) FStarC_TypeChecker_NBETerm.embedding =
+  (FStarC_TypeChecker_NBETerm.e_option (FStarC_TypeChecker_NBETerm.e_tuple2 e_binder (FStarC_TypeChecker_NBETerm.e_tuple3 (FStarC_TypeChecker_NBETerm.e_either e_term e_comp) (FStarC_TypeChecker_NBETerm.e_option e_term) FStarC_TypeChecker_NBETerm.e_bool)))
+
+let e_sort : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStarC_TypeChecker_NBETerm.embedding =
+  (FStarC_TypeChecker_NBETerm.e_sealed e_term)
+
+let e_ppname : (string) FStarC_TypeChecker_NBETerm.embedding =
+  (FStarC_TypeChecker_NBETerm.e_sealed FStarC_TypeChecker_NBETerm.e_string)
+
+let rec e_pattern_aq (aq : 'tmp) : (FStarC_Reflection_V2_Data.pattern) FStarC_TypeChecker_NBETerm.embedding =
+  (let embed_pattern = (fun cb p -> (match p with
+      | (FStarC_Reflection_V2_Data.Pat_Constant (c)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed e_vconst cb c) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (tmp1 :: []) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Pat_Constant).FStarC_Reflection_V2_Constants.fv [] tmp2))
+      | (FStarC_Reflection_V2_Data.Pat_Cons (fv, us_opt, ps)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed e_fv cb fv) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (FStarC_TypeChecker_NBETerm.embed (FStarC_TypeChecker_NBETerm.e_option (FStarC_TypeChecker_NBETerm.e_list e_universe)) cb us_opt) in
+        let tmp3 = (FStarC_TypeChecker_NBETerm.as_arg tmp2) in
+        let tmp4 = (FStarC_TypeChecker_NBETerm.embed (FStarC_TypeChecker_NBETerm.e_list (FStarC_TypeChecker_NBETerm.e_tuple2 (e_pattern_aq aq) FStarC_TypeChecker_NBETerm.e_bool)) cb ps) in
+        let tmp5 = (FStarC_TypeChecker_NBETerm.as_arg tmp4) in
+        let tmp6 = (tmp5 :: []) in
+        let tmp7 = (tmp3 :: tmp6) in
+        let tmp8 = (tmp1 :: tmp7) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Pat_Cons).FStarC_Reflection_V2_Constants.fv [] tmp8))
+      | (FStarC_Reflection_V2_Data.Pat_Var (sort, ppname)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed e_sort cb sort) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (FStarC_TypeChecker_NBETerm.embed e_ppname cb ppname) in
+        let tmp3 = (FStarC_TypeChecker_NBETerm.as_arg tmp2) in
+        let tmp4 = (tmp3 :: []) in
+        let tmp5 = (tmp1 :: tmp4) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Pat_Var).FStarC_Reflection_V2_Constants.fv [] tmp5))
+      | (FStarC_Reflection_V2_Data.Pat_Dot_Term (eopt)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed (FStarC_TypeChecker_NBETerm.e_option e_term) cb eopt) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (tmp1 :: []) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Pat_Dot_Term).FStarC_Reflection_V2_Constants.fv [] tmp2))
+    )) in
+  let unembed_pattern = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], ((c, tmp) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Pat_Constant).FStarC_Reflection_V2_Constants.lid) -> (let tmp1 = (FStarC_TypeChecker_NBETerm.unembed e_vconst cb c) in
+        (FStarC_Option.bind tmp1 (fun c1 -> (Some ((FStarC_Reflection_V2_Data.Pat_Constant (c1)))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], ((ps, tmp) :: ((us_opt, tmp1) :: ((f, tmp2) :: []))))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Pat_Cons).FStarC_Reflection_V2_Constants.lid) -> (let tmp3 = (FStarC_TypeChecker_NBETerm.unembed e_fv cb f) in
+        (FStarC_Option.bind tmp3 (fun f1 -> (let tmp4 = (FStarC_TypeChecker_NBETerm.unembed (FStarC_TypeChecker_NBETerm.e_option (FStarC_TypeChecker_NBETerm.e_list e_universe)) cb us_opt) in
+        (FStarC_Option.bind tmp4 (fun us -> (let tmp5 = (FStarC_TypeChecker_NBETerm.unembed (FStarC_TypeChecker_NBETerm.e_list (FStarC_TypeChecker_NBETerm.e_tuple2 (e_pattern_aq aq) FStarC_TypeChecker_NBETerm.e_bool)) cb ps) in
+        (FStarC_Option.bind tmp5 (fun ps1 -> (Some ((FStarC_Reflection_V2_Data.Pat_Cons (f1, us, ps1)))))))))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], ((ppname, tmp) :: ((sort, tmp1) :: [])))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Pat_Var).FStarC_Reflection_V2_Constants.lid) -> (let tmp2 = (FStarC_TypeChecker_NBETerm.unembed e_sort cb sort) in
+        (FStarC_Option.bind tmp2 (fun sort1 -> (let tmp3 = (FStarC_TypeChecker_NBETerm.unembed e_ppname cb ppname) in
+        (FStarC_Option.bind tmp3 (fun ppname1 -> (Some ((FStarC_Reflection_V2_Data.Pat_Var (sort1, ppname1))))))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], ((eopt, tmp) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Pat_Dot_Term).FStarC_Reflection_V2_Constants.lid) -> (let tmp1 = (FStarC_TypeChecker_NBETerm.unembed (FStarC_TypeChecker_NBETerm.e_option e_term) cb eopt) in
+        (FStarC_Option.bind tmp1 (fun eopt1 -> (Some ((FStarC_Reflection_V2_Data.Pat_Dot_Term (eopt1)))))))
+      | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
+        let tmp2 = (FStarC_Format.fmt1 "Not an embedded pattern: %s" tmp1) in
+        (FStarC_Errors.fStarC_Errors_log_issue0__string FStarC_Errors_Codes.Warning_NotEmbedded tmp2);
+        None)
+    )) in
+  (mk_emb' embed_pattern unembed_pattern FStarC_Reflection_V2_Constants.fstar_refl_pattern_fv))
+
+let e_branch_aq (aq : (Prims.int * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list)) : ((FStarC_Reflection_V2_Data.pattern * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) FStarC_TypeChecker_NBETerm.embedding =
+  (FStarC_TypeChecker_NBETerm.e_tuple2 (e_pattern_aq aq) (e_term_aq aq))
+
+let e_argv : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * FStarC_Reflection_V2_Data.aqualv)) FStarC_TypeChecker_NBETerm.embedding =
+  (FStarC_TypeChecker_NBETerm.e_tuple2 e_term e_aqualv)
+
+let unlazy_as_t (k : FStarC_Syntax_Syntax.lazy_kind) (t : FStarC_TypeChecker_NBETerm.t) : 'tmp =
+  (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+    | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = v; lkind = k'; ltyp = tmp; rng = tmp1; _ })), tmp2)) when (FStarC_Syntax_Syntax.fStarC_Class_Deq_op_Equals_Question__lazy_kind k k') -> (FStar_Dyn.undyn v)
+    | tmp -> (FStarC_Effect.failwith "Not a Lazy of the expected kind (NBE)")
+  )
+
+let noaqs : (Prims.int * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) =
+  ((Prims.parse_int "0"), [])
+
+let e_pattern : (FStarC_Reflection_V2_Data.pattern) FStarC_TypeChecker_NBETerm.embedding =
+  (e_pattern_aq noaqs)
+
+let e_branch : ((FStarC_Reflection_V2_Data.pattern * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) FStarC_TypeChecker_NBETerm.embedding =
+  (FStarC_TypeChecker_NBETerm.e_tuple2 e_pattern e_term)
+
+let e_term_view_aq (aq : (Prims.int * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list)) : (FStarC_Reflection_V2_Data.term_view) FStarC_TypeChecker_NBETerm.embedding =
+  (let shift = (fun tmp -> (match tmp with
+      | (s, aqs) -> ((Prims.op_Plus s (Prims.parse_int "1")), aqs)
+    )) in
+  let embed_term_view = (fun cb tv -> (match tv with
+      | (FStarC_Reflection_V2_Data.Tv_FVar (fv)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed e_fv cb fv) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (tmp1 :: []) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Tv_FVar).FStarC_Reflection_V2_Constants.fv [] tmp2))
+      | (FStarC_Reflection_V2_Data.Tv_BVar (bv)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed e_bv cb bv) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (tmp1 :: []) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Tv_BVar).FStarC_Reflection_V2_Constants.fv [] tmp2))
+      | (FStarC_Reflection_V2_Data.Tv_Var (bv)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed e_bv cb bv) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (tmp1 :: []) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Tv_Var).FStarC_Reflection_V2_Constants.fv [] tmp2))
+      | (FStarC_Reflection_V2_Data.Tv_UInst (fv, us)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed e_fv cb fv) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (FStarC_TypeChecker_NBETerm.embed (FStarC_TypeChecker_NBETerm.e_list e_universe) cb us) in
+        let tmp3 = (FStarC_TypeChecker_NBETerm.as_arg tmp2) in
+        let tmp4 = (tmp3 :: []) in
+        let tmp5 = (tmp1 :: tmp4) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Tv_UInst).FStarC_Reflection_V2_Constants.fv [] tmp5))
+      | (FStarC_Reflection_V2_Data.Tv_App (hd, a)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed (e_term_aq aq) cb hd) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (FStarC_TypeChecker_NBETerm.embed (e_argv_aq aq) cb a) in
+        let tmp3 = (FStarC_TypeChecker_NBETerm.as_arg tmp2) in
+        let tmp4 = (tmp3 :: []) in
+        let tmp5 = (tmp1 :: tmp4) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Tv_App).FStarC_Reflection_V2_Constants.fv [] tmp5))
+      | (FStarC_Reflection_V2_Data.Tv_Abs (b, t)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed e_binder cb b) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (FStarC_TypeChecker_NBETerm.embed (e_term_aq (shift aq)) cb t) in
+        let tmp3 = (FStarC_TypeChecker_NBETerm.as_arg tmp2) in
+        let tmp4 = (tmp3 :: []) in
+        let tmp5 = (tmp1 :: tmp4) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Tv_Abs).FStarC_Reflection_V2_Constants.fv [] tmp5))
+      | (FStarC_Reflection_V2_Data.Tv_Arrow (b, c)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed e_binder cb b) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (FStarC_TypeChecker_NBETerm.embed e_comp cb c) in
+        let tmp3 = (FStarC_TypeChecker_NBETerm.as_arg tmp2) in
+        let tmp4 = (tmp3 :: []) in
+        let tmp5 = (tmp1 :: tmp4) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Tv_Arrow).FStarC_Reflection_V2_Constants.fv [] tmp5))
+      | (FStarC_Reflection_V2_Data.Tv_Type (u)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed e_universe cb u) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (tmp1 :: []) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Tv_Type).FStarC_Reflection_V2_Constants.fv [] tmp2))
+      | (FStarC_Reflection_V2_Data.Tv_Refine (b, t)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed e_binder cb b) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (FStarC_TypeChecker_NBETerm.embed (e_term_aq (shift aq)) cb t) in
+        let tmp3 = (FStarC_TypeChecker_NBETerm.as_arg tmp2) in
+        let tmp4 = (tmp3 :: []) in
+        let tmp5 = (tmp1 :: tmp4) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Tv_Refine).FStarC_Reflection_V2_Constants.fv [] tmp5))
+      | (FStarC_Reflection_V2_Data.Tv_Const (c)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed e_vconst cb c) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (tmp1 :: []) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Tv_Const).FStarC_Reflection_V2_Constants.fv [] tmp2))
+      | (FStarC_Reflection_V2_Data.Tv_Uvar (u, d)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed FStarC_TypeChecker_NBETerm.e_int cb u) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (mk_lazy cb (u, d) FStarC_Syntax_Util.t_ctx_uvar_and_sust FStarC_Syntax_Syntax.Lazy_uvar) in
+        let tmp3 = (FStarC_TypeChecker_NBETerm.as_arg tmp2) in
+        let tmp4 = (tmp3 :: []) in
+        let tmp5 = (tmp1 :: tmp4) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Tv_Uvar).FStarC_Reflection_V2_Constants.fv [] tmp5))
+      | (FStarC_Reflection_V2_Data.Tv_Let (r, attrs, b, t1, t2)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed FStarC_TypeChecker_NBETerm.e_bool cb r) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (FStarC_TypeChecker_NBETerm.embed (FStarC_TypeChecker_NBETerm.e_list e_term) cb attrs) in
+        let tmp3 = (FStarC_TypeChecker_NBETerm.as_arg tmp2) in
+        let tmp4 = (FStarC_TypeChecker_NBETerm.embed e_binder cb b) in
+        let tmp5 = (FStarC_TypeChecker_NBETerm.as_arg tmp4) in
+        let tmp6 = (FStarC_TypeChecker_NBETerm.embed (e_term_aq aq) cb t1) in
+        let tmp7 = (FStarC_TypeChecker_NBETerm.as_arg tmp6) in
+        let tmp8 = (FStarC_TypeChecker_NBETerm.embed (e_term_aq (shift aq)) cb t2) in
+        let tmp9 = (FStarC_TypeChecker_NBETerm.as_arg tmp8) in
+        let tmp10 = (tmp9 :: []) in
+        let tmp11 = (tmp7 :: tmp10) in
+        let tmp12 = (tmp5 :: tmp11) in
+        let tmp13 = (tmp3 :: tmp12) in
+        let tmp14 = (tmp1 :: tmp13) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Tv_Let).FStarC_Reflection_V2_Constants.fv [] tmp14))
+      | (FStarC_Reflection_V2_Data.Tv_Match (t, ret_opt, brs)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed (e_term_aq aq) cb t) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (FStarC_TypeChecker_NBETerm.embed e_match_returns_annotation cb ret_opt) in
+        let tmp3 = (FStarC_TypeChecker_NBETerm.as_arg tmp2) in
+        let tmp4 = (FStarC_TypeChecker_NBETerm.embed (FStarC_TypeChecker_NBETerm.e_list (e_branch_aq aq)) cb brs) in
+        let tmp5 = (FStarC_TypeChecker_NBETerm.as_arg tmp4) in
+        let tmp6 = (tmp5 :: []) in
+        let tmp7 = (tmp3 :: tmp6) in
+        let tmp8 = (tmp1 :: tmp7) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Tv_Match).FStarC_Reflection_V2_Constants.fv [] tmp8))
+      | (FStarC_Reflection_V2_Data.Tv_AscribedT (e, t, tacopt, use_eq)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed (e_term_aq aq) cb e) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (FStarC_TypeChecker_NBETerm.embed (e_term_aq aq) cb t) in
+        let tmp3 = (FStarC_TypeChecker_NBETerm.as_arg tmp2) in
+        let tmp4 = (FStarC_TypeChecker_NBETerm.embed (FStarC_TypeChecker_NBETerm.e_option (e_term_aq aq)) cb tacopt) in
+        let tmp5 = (FStarC_TypeChecker_NBETerm.as_arg tmp4) in
+        let tmp6 = (FStarC_TypeChecker_NBETerm.embed FStarC_TypeChecker_NBETerm.e_bool cb use_eq) in
+        let tmp7 = (FStarC_TypeChecker_NBETerm.as_arg tmp6) in
+        let tmp8 = (tmp7 :: []) in
+        let tmp9 = (tmp5 :: tmp8) in
+        let tmp10 = (tmp3 :: tmp9) in
+        let tmp11 = (tmp1 :: tmp10) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Tv_AscT).FStarC_Reflection_V2_Constants.fv [] tmp11))
+      | (FStarC_Reflection_V2_Data.Tv_AscribedC (e, c, tacopt, use_eq)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed (e_term_aq aq) cb e) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (FStarC_TypeChecker_NBETerm.embed e_comp cb c) in
+        let tmp3 = (FStarC_TypeChecker_NBETerm.as_arg tmp2) in
+        let tmp4 = (FStarC_TypeChecker_NBETerm.embed (FStarC_TypeChecker_NBETerm.e_option (e_term_aq aq)) cb tacopt) in
+        let tmp5 = (FStarC_TypeChecker_NBETerm.as_arg tmp4) in
+        let tmp6 = (FStarC_TypeChecker_NBETerm.embed FStarC_TypeChecker_NBETerm.e_bool cb use_eq) in
+        let tmp7 = (FStarC_TypeChecker_NBETerm.as_arg tmp6) in
+        let tmp8 = (tmp7 :: []) in
+        let tmp9 = (tmp5 :: tmp8) in
+        let tmp10 = (tmp3 :: tmp9) in
+        let tmp11 = (tmp1 :: tmp10) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Tv_AscT).FStarC_Reflection_V2_Constants.fv [] tmp11))
+      | FStarC_Reflection_V2_Data.Tv_Unknown -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_Tv_Unknown).FStarC_Reflection_V2_Constants.fv [] [])
+      | FStarC_Reflection_V2_Data.Tv_Unsupp -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_Tv_Unsupp).FStarC_Reflection_V2_Constants.fv [] [])
+    )) in
+  let unembed_term_view = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((b, tmp1) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Tv_Var).FStarC_Reflection_V2_Constants.lid) -> (let tmp2 = (FStarC_TypeChecker_NBETerm.unembed e_bv cb b) in
+        (FStarC_Option.bind tmp2 (fun b1 -> (Some ((FStarC_Reflection_V2_Data.Tv_Var (b1)))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((b, tmp1) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Tv_BVar).FStarC_Reflection_V2_Constants.lid) -> (let tmp2 = (FStarC_TypeChecker_NBETerm.unembed e_bv cb b) in
+        (FStarC_Option.bind tmp2 (fun b1 -> (Some ((FStarC_Reflection_V2_Data.Tv_BVar (b1)))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((f, tmp1) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Tv_FVar).FStarC_Reflection_V2_Constants.lid) -> (let tmp2 = (FStarC_TypeChecker_NBETerm.unembed e_fv cb f) in
+        (FStarC_Option.bind tmp2 (fun f1 -> (Some ((FStarC_Reflection_V2_Data.Tv_FVar (f1)))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((f, tmp1) :: ((us, tmp2) :: [])))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Tv_UInst).FStarC_Reflection_V2_Constants.lid) -> (let tmp3 = (FStarC_TypeChecker_NBETerm.unembed e_fv cb f) in
+        (FStarC_Option.bind tmp3 (fun f1 -> (let tmp4 = (FStarC_TypeChecker_NBETerm.unembed (FStarC_TypeChecker_NBETerm.e_list e_universe) cb us) in
+        (FStarC_Option.bind tmp4 (fun us1 -> (Some ((FStarC_Reflection_V2_Data.Tv_UInst (f1, us1))))))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((r, tmp1) :: ((l, tmp2) :: [])))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Tv_App).FStarC_Reflection_V2_Constants.lid) -> (let tmp3 = (FStarC_TypeChecker_NBETerm.unembed e_term cb l) in
+        (FStarC_Option.bind tmp3 (fun l1 -> (let tmp4 = (FStarC_TypeChecker_NBETerm.unembed e_argv cb r) in
+        (FStarC_Option.bind tmp4 (fun r1 -> (Some ((FStarC_Reflection_V2_Data.Tv_App (l1, r1))))))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((t1, tmp1) :: ((b, tmp2) :: [])))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Tv_Abs).FStarC_Reflection_V2_Constants.lid) -> (let tmp3 = (FStarC_TypeChecker_NBETerm.unembed e_binder cb b) in
+        (FStarC_Option.bind tmp3 (fun b1 -> (let tmp4 = (FStarC_TypeChecker_NBETerm.unembed e_term cb t1) in
+        (FStarC_Option.bind tmp4 (fun t2 -> (Some ((FStarC_Reflection_V2_Data.Tv_Abs (b1, t2))))))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((t1, tmp1) :: ((b, tmp2) :: [])))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Tv_Arrow).FStarC_Reflection_V2_Constants.lid) -> (let tmp3 = (FStarC_TypeChecker_NBETerm.unembed e_binder cb b) in
+        (FStarC_Option.bind tmp3 (fun b1 -> (let tmp4 = (FStarC_TypeChecker_NBETerm.unembed e_comp cb t1) in
+        (FStarC_Option.bind tmp4 (fun c -> (Some ((FStarC_Reflection_V2_Data.Tv_Arrow (b1, c))))))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((u, tmp1) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Tv_Type).FStarC_Reflection_V2_Constants.lid) -> (let tmp2 = (FStarC_TypeChecker_NBETerm.unembed e_universe cb u) in
+        (FStarC_Option.bind tmp2 (fun u1 -> (Some ((FStarC_Reflection_V2_Data.Tv_Type (u1)))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((t1, tmp1) :: ((b, tmp2) :: [])))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Tv_Refine).FStarC_Reflection_V2_Constants.lid) -> (let tmp3 = (FStarC_TypeChecker_NBETerm.unembed e_binder cb b) in
+        (FStarC_Option.bind tmp3 (fun b1 -> (let tmp4 = (FStarC_TypeChecker_NBETerm.unembed e_term cb t1) in
+        (FStarC_Option.bind tmp4 (fun t2 -> (Some ((FStarC_Reflection_V2_Data.Tv_Refine (b1, t2))))))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((c, tmp1) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Tv_Const).FStarC_Reflection_V2_Constants.lid) -> (let tmp2 = (FStarC_TypeChecker_NBETerm.unembed e_vconst cb c) in
+        (FStarC_Option.bind tmp2 (fun c1 -> (Some ((FStarC_Reflection_V2_Data.Tv_Const (c1)))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((l, tmp1) :: ((u, tmp2) :: [])))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Tv_Uvar).FStarC_Reflection_V2_Constants.lid) -> (let tmp3 = (FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_int cb u) in
+        (FStarC_Option.bind tmp3 (fun u1 -> (let ctx_u_s = (unlazy_as_t FStarC_Syntax_Syntax.Lazy_uvar l) in
+        (Some ((FStarC_Reflection_V2_Data.Tv_Uvar (u1, ctx_u_s))))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((t2, tmp1) :: ((t1, tmp2) :: ((b, tmp3) :: ((attrs, tmp4) :: ((r, tmp5) :: []))))))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Tv_Let).FStarC_Reflection_V2_Constants.lid) -> (let tmp6 = (FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_bool cb r) in
+        (FStarC_Option.bind tmp6 (fun r1 -> (let tmp7 = (FStarC_TypeChecker_NBETerm.unembed (FStarC_TypeChecker_NBETerm.e_list e_term) cb attrs) in
+        (FStarC_Option.bind tmp7 (fun attrs1 -> (let tmp8 = (FStarC_TypeChecker_NBETerm.unembed e_binder cb b) in
+        (FStarC_Option.bind tmp8 (fun b1 -> (let tmp9 = (FStarC_TypeChecker_NBETerm.unembed e_term cb t1) in
+        (FStarC_Option.bind tmp9 (fun t11 -> (let tmp10 = (FStarC_TypeChecker_NBETerm.unembed e_term cb t2) in
+        (FStarC_Option.bind tmp10 (fun t21 -> (Some ((FStarC_Reflection_V2_Data.Tv_Let (r1, attrs1, b1, t11, t21)))))))))))))))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((brs, tmp1) :: ((ret_opt, tmp2) :: ((t1, tmp3) :: []))))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Tv_Match).FStarC_Reflection_V2_Constants.lid) -> (let tmp4 = (FStarC_TypeChecker_NBETerm.unembed e_term cb t1) in
+        (FStarC_Option.bind tmp4 (fun t2 -> (let tmp5 = (FStarC_TypeChecker_NBETerm.unembed (FStarC_TypeChecker_NBETerm.e_list e_branch) cb brs) in
+        (FStarC_Option.bind tmp5 (fun brs1 -> (let tmp6 = (FStarC_TypeChecker_NBETerm.unembed e_match_returns_annotation cb ret_opt) in
+        (FStarC_Option.bind tmp6 (fun ret_opt1 -> (Some ((FStarC_Reflection_V2_Data.Tv_Match (t2, ret_opt1, brs1)))))))))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((tacopt, tmp1) :: ((t1, tmp2) :: ((e, tmp3) :: ((use_eq, tmp4) :: [])))))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Tv_AscT).FStarC_Reflection_V2_Constants.lid) -> (let tmp5 = (FStarC_TypeChecker_NBETerm.unembed e_term cb e) in
+        (FStarC_Option.bind tmp5 (fun e1 -> (let tmp6 = (FStarC_TypeChecker_NBETerm.unembed e_term cb t1) in
+        (FStarC_Option.bind tmp6 (fun t2 -> (let tmp7 = (FStarC_TypeChecker_NBETerm.unembed (FStarC_TypeChecker_NBETerm.e_option e_term) cb tacopt) in
+        (FStarC_Option.bind tmp7 (fun tacopt1 -> (let tmp8 = (FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_bool cb use_eq) in
+        (FStarC_Option.bind tmp8 (fun use_eq1 -> (Some ((FStarC_Reflection_V2_Data.Tv_AscribedT (e1, t2, tacopt1, use_eq1))))))))))))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((tacopt, tmp1) :: ((c, tmp2) :: ((e, tmp3) :: ((use_eq, tmp4) :: [])))))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Tv_AscC).FStarC_Reflection_V2_Constants.lid) -> (let tmp5 = (FStarC_TypeChecker_NBETerm.unembed e_term cb e) in
+        (FStarC_Option.bind tmp5 (fun e1 -> (let tmp6 = (FStarC_TypeChecker_NBETerm.unembed e_comp cb c) in
+        (FStarC_Option.bind tmp6 (fun c1 -> (let tmp7 = (FStarC_TypeChecker_NBETerm.unembed (FStarC_TypeChecker_NBETerm.e_option e_term) cb tacopt) in
+        (FStarC_Option.bind tmp7 (fun tacopt1 -> (let tmp8 = (FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_bool cb use_eq) in
+        (FStarC_Option.bind tmp8 (fun use_eq1 -> (Some ((FStarC_Reflection_V2_Data.Tv_AscribedC (e1, c1, tacopt1, use_eq1))))))))))))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Tv_Unknown).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.Tv_Unknown))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Tv_Unsupp).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.Tv_Unsupp))
+      | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
+        let tmp2 = (FStarC_Format.fmt1 "Not an embedded term_view: %s" tmp1) in
+        (FStarC_Errors.fStarC_Errors_log_issue0__string FStarC_Errors_Codes.Warning_NotEmbedded tmp2);
+        None)
+    )) in
+  (mk_emb' embed_term_view unembed_term_view FStarC_Reflection_V2_Constants.fstar_refl_term_view_fv))
+
+let e_term_view : (FStarC_Reflection_V2_Data.term_view) FStarC_TypeChecker_NBETerm.embedding =
+  (e_term_view_aq ((Prims.parse_int "0"), []))
+
+let e_decreases_order : (FStarC_Reflection_V2_Data.decreases_order) FStarC_TypeChecker_NBETerm.embedding =
+  (let ee = (fun cb d -> (match d with
+      | (FStarC_Reflection_V2_Data.Decreases_lex (ts)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed (FStarC_TypeChecker_NBETerm.e_list e_term) cb ts) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (tmp1 :: []) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Decreases_lex).FStarC_Reflection_V2_Constants.fv [] tmp2))
+      | (FStarC_Reflection_V2_Data.Decreases_wf (rel, e)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed e_term cb rel) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (FStarC_TypeChecker_NBETerm.embed e_term cb e) in
+        let tmp3 = (FStarC_TypeChecker_NBETerm.as_arg tmp2) in
+        let tmp4 = (tmp3 :: []) in
+        let tmp5 = (tmp1 :: tmp4) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Decreases_wf).FStarC_Reflection_V2_Constants.fv [] tmp5))
+    )) in
+  let uu = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((ts, tmp1) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Decreases_lex).FStarC_Reflection_V2_Constants.lid) -> (let tmp2 = (FStarC_TypeChecker_NBETerm.unembed (FStarC_TypeChecker_NBETerm.e_list e_term) cb ts) in
+        (FStarC_Option.bind tmp2 (fun ts1 -> (Some ((FStarC_Reflection_V2_Data.Decreases_lex (ts1)))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((e, tmp1) :: ((rel, tmp2) :: [])))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Decreases_wf).FStarC_Reflection_V2_Constants.lid) -> (let tmp3 = (FStarC_TypeChecker_NBETerm.unembed e_term cb rel) in
+        (FStarC_Option.bind tmp3 (fun rel1 -> (let tmp4 = (FStarC_TypeChecker_NBETerm.unembed e_term cb e) in
+        (FStarC_Option.bind tmp4 (fun e1 -> (Some ((FStarC_Reflection_V2_Data.Decreases_wf (rel1, e1))))))))))
+      | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
+        let tmp2 = (FStarC_Format.fmt1 "Not an embedded decreases_order: %s" tmp1) in
+        (FStarC_Errors.fStarC_Errors_log_issue0__string FStarC_Errors_Codes.Warning_NotEmbedded tmp2);
+        None)
+    )) in
+  (mk_emb' ee uu FStarC_Reflection_V2_Constants.fstar_refl_decreases_order_fv))
+
+let e_cflag : (FStarC_Reflection_V2_Data.cflag) FStarC_TypeChecker_NBETerm.embedding =
+  (let ee = (fun cb f -> (match f with
+      | (FStarC_Reflection_V2_Data.SMTPAT (tm)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed e_term cb tm) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (tmp1 :: []) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_SMTPAT).FStarC_Reflection_V2_Constants.fv [] tmp2))
+      | (FStarC_Reflection_V2_Data.DECREASES (d)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed e_decreases_order cb d) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (tmp1 :: []) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_DECREASES).FStarC_Reflection_V2_Constants.fv [] tmp2))
+    )) in
+  let uu = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((tm, tmp1) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_SMTPAT).FStarC_Reflection_V2_Constants.lid) -> (let tmp2 = (FStarC_TypeChecker_NBETerm.unembed e_term cb tm) in
+        (FStarC_Option.bind tmp2 (fun tm1 -> (Some ((FStarC_Reflection_V2_Data.SMTPAT (tm1)))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((d, tmp1) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_DECREASES).FStarC_Reflection_V2_Constants.lid) -> (let tmp2 = (FStarC_TypeChecker_NBETerm.unembed e_decreases_order cb d) in
+        (FStarC_Option.bind tmp2 (fun d1 -> (Some ((FStarC_Reflection_V2_Data.DECREASES (d1)))))))
+      | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
+        let tmp2 = (FStarC_Format.fmt1 "Not an embedded cflag: %s" tmp1) in
+        (FStarC_Errors.fStarC_Errors_log_issue0__string FStarC_Errors_Codes.Warning_NotEmbedded tmp2);
+        None)
+    )) in
+  (mk_emb' ee uu FStarC_Reflection_V2_Constants.fstar_refl_cflag_fv))
+
+let e_comp_view : (FStarC_Reflection_V2_Data.comp_view) FStarC_TypeChecker_NBETerm.embedding =
+  (let embed_comp_view = (fun cb cv -> (let tmp = (FStarC_TypeChecker_NBETerm.embed FStarC_TypeChecker_NBETerm.e_string_list cb (cv).FStarC_Reflection_V2_Data.effect_name) in
+    let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+    let tmp2 = (FStarC_TypeChecker_NBETerm.embed e_term cb (cv).FStarC_Reflection_V2_Data.result_typ) in
+    let tmp3 = (FStarC_TypeChecker_NBETerm.as_arg tmp2) in
+    let tmp4 = (FStarC_TypeChecker_NBETerm.embed (FStarC_TypeChecker_NBETerm.e_list e_cflag) cb (cv).FStarC_Reflection_V2_Data.flags) in
+    let tmp5 = (FStarC_TypeChecker_NBETerm.as_arg tmp4) in
+    let tmp6 = (FStarC_TypeChecker_NBETerm.embed FStarC_TypeChecker_NBETerm.e_string_list cb (cv).FStarC_Reflection_V2_Data.source_effect_name) in
+    let tmp7 = (FStarC_TypeChecker_NBETerm.as_arg tmp6) in
+    let tmp8 = (tmp7 :: []) in
+    let tmp9 = (tmp5 :: tmp8) in
+    let tmp10 = (tmp3 :: tmp9) in
+    let tmp11 = (tmp1 :: tmp10) in
+    (mkConstruct (FStarC_Reflection_V2_Constants.ref_Mk_comp_view).FStarC_Reflection_V2_Constants.fv [] tmp11))) in
+  let unembed_comp_view = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((src, tmp1) :: ((flags, tmp2) :: ((res, tmp3) :: ((eff, tmp4) :: [])))))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Mk_comp_view).FStarC_Reflection_V2_Constants.lid) -> (let tmp5 = (FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_string_list cb eff) in
+        (FStarC_Option.bind tmp5 (fun effect_name -> (let tmp6 = (FStarC_TypeChecker_NBETerm.unembed e_term cb res) in
+        (FStarC_Option.bind tmp6 (fun result_typ -> (let tmp7 = (FStarC_TypeChecker_NBETerm.unembed (FStarC_TypeChecker_NBETerm.e_list e_cflag) cb flags) in
+        (FStarC_Option.bind tmp7 (fun flags1 -> (let tmp8 = (FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_string_list cb src) in
+        (FStarC_Option.bind tmp8 (fun source_effect_name -> (let r = { FStarC_Reflection_V2_Data.effect_name = effect_name;
+            result_typ = result_typ;
+            flags = flags1;
+            source_effect_name = source_effect_name } in
+        (Some (r)))))))))))))))
+      | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
+        let tmp2 = (FStarC_Format.fmt1 "Not an embedded comp_view: %s" tmp1) in
+        (FStarC_Errors.fStarC_Errors_log_issue0__string FStarC_Errors_Codes.Warning_NotEmbedded tmp2);
+        None)
+    )) in
+  (mk_emb' embed_comp_view unembed_comp_view FStarC_Reflection_V2_Constants.fstar_refl_comp_view_fv))
+
+let e_ident : (FStarC_Ident.ident) FStarC_TypeChecker_NBETerm.embedding =
+  (let embed_ident = (fun cb se -> (mk_lazy cb se FStarC_Reflection_V2_Constants.fstar_refl_ident FStarC_Syntax_Syntax.Lazy_ident)) in
+  let unembed_ident = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_ident; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (FStar_Dyn.undyn b) in
+        (Some (tmp3)))
+      | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
+        let tmp2 = (FStarC_Format.fmt1 "Not an embedded ident: %s" tmp1) in
+        (FStarC_Errors.fStarC_Errors_log_issue0__string FStarC_Errors_Codes.Warning_NotEmbedded tmp2);
+        None)
+    )) in
+  (mk_emb' embed_ident unembed_ident FStarC_Reflection_V2_Constants.fstar_refl_ident_fv))
+
+let e_universe_view : (FStarC_Reflection_V2_Data.universe_view) FStarC_TypeChecker_NBETerm.embedding =
+  (let embed_universe_view = (fun cb uv -> (match uv with
+      | FStarC_Reflection_V2_Data.Uv_Zero -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_Uv_Zero).FStarC_Reflection_V2_Constants.fv [] [])
+      | (FStarC_Reflection_V2_Data.Uv_Succ (u)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed e_universe cb u) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (tmp1 :: []) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Uv_Succ).FStarC_Reflection_V2_Constants.fv [] tmp2))
+      | (FStarC_Reflection_V2_Data.Uv_Max (us)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed (FStarC_TypeChecker_NBETerm.e_list e_universe) cb us) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (tmp1 :: []) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Uv_Max).FStarC_Reflection_V2_Constants.fv [] tmp2))
+      | (FStarC_Reflection_V2_Data.Uv_BVar (n)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed FStarC_TypeChecker_NBETerm.e_int cb n) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (tmp1 :: []) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Uv_BVar).FStarC_Reflection_V2_Constants.fv [] tmp2))
+      | (FStarC_Reflection_V2_Data.Uv_Name (i)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed e_ident cb i) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (tmp1 :: []) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Uv_Name).FStarC_Reflection_V2_Constants.fv [] tmp2))
+      | (FStarC_Reflection_V2_Data.Uv_Unif (u)) -> (let tmp = (mk_lazy cb u FStarC_Syntax_Util.t_universe_uvar FStarC_Syntax_Syntax.Lazy_universe_uvar) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (tmp1 :: []) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Uv_Unif).FStarC_Reflection_V2_Constants.fv [] tmp2))
+      | FStarC_Reflection_V2_Data.Uv_Unk -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_Uv_Unk).FStarC_Reflection_V2_Constants.fv [] [])
+    )) in
+  let unembed_universe_view = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Uv_Zero).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.Uv_Zero))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((u, tmp1) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Uv_Succ).FStarC_Reflection_V2_Constants.lid) -> (let tmp2 = (FStarC_TypeChecker_NBETerm.unembed e_universe cb u) in
+        (FStarC_Option.bind tmp2 (fun u1 -> (Some ((FStarC_Reflection_V2_Data.Uv_Succ (u1)))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((us, tmp1) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Uv_Max).FStarC_Reflection_V2_Constants.lid) -> (let tmp2 = (FStarC_TypeChecker_NBETerm.unembed (FStarC_TypeChecker_NBETerm.e_list e_universe) cb us) in
+        (FStarC_Option.bind tmp2 (fun us1 -> (Some ((FStarC_Reflection_V2_Data.Uv_Max (us1)))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((n, tmp1) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Uv_BVar).FStarC_Reflection_V2_Constants.lid) -> (let tmp2 = (FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_int cb n) in
+        (FStarC_Option.bind tmp2 (fun n1 -> (Some ((FStarC_Reflection_V2_Data.Uv_BVar (n1)))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((i, tmp1) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Uv_Name).FStarC_Reflection_V2_Constants.lid) -> (let tmp2 = (FStarC_TypeChecker_NBETerm.unembed e_ident cb i) in
+        (FStarC_Option.bind tmp2 (fun i1 -> (Some ((FStarC_Reflection_V2_Data.Uv_Name (i1)))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((u, tmp1) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Uv_Unif).FStarC_Reflection_V2_Constants.lid) -> (let u1 = (unlazy_as_t FStarC_Syntax_Syntax.Lazy_universe_uvar u) in
+        (Some ((FStarC_Reflection_V2_Data.Uv_Unif (u1)))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Uv_Unk).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.Uv_Unk))
+      | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
+        let tmp2 = (FStarC_Format.fmt1 "Not an embedded universe view: %s" tmp1) in
+        (FStarC_Errors.fStarC_Errors_log_issue0__string FStarC_Errors_Codes.Warning_NotEmbedded tmp2);
+        None)
+    )) in
+  (mk_emb' embed_universe_view unembed_universe_view FStarC_Reflection_V2_Constants.fstar_refl_universe_view_fv))
+
+let e_sigelt : (FStarC_Syntax_Syntax.sigelt) FStarC_TypeChecker_NBETerm.embedding =
+  (let embed_sigelt = (fun cb se -> (mk_lazy cb se FStarC_Reflection_V2_Constants.fstar_refl_sigelt FStarC_Syntax_Syntax.Lazy_sigelt)) in
+  let unembed_sigelt = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_sigelt; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (FStar_Dyn.undyn b) in
+        (Some (tmp3)))
+      | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
+        let tmp2 = (FStarC_Format.fmt1 "Not an embedded sigelt: %s" tmp1) in
+        (FStarC_Errors.fStarC_Errors_log_issue0__string FStarC_Errors_Codes.Warning_NotEmbedded tmp2);
+        None)
+    )) in
+  (mk_emb' embed_sigelt unembed_sigelt FStarC_Reflection_V2_Constants.fstar_refl_sigelt_fv))
+
+let e_letbinding : (FStarC_Syntax_Syntax.letbinding) FStarC_TypeChecker_NBETerm.embedding =
+  (let embed_letbinding = (fun cb lb -> (mk_lazy cb lb FStarC_Reflection_V2_Constants.fstar_refl_letbinding FStarC_Syntax_Syntax.Lazy_letbinding)) in
+  let unembed_letbinding = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = lb; lkind = FStarC_Syntax_Syntax.Lazy_letbinding; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (FStar_Dyn.undyn lb) in
+        (Some (tmp3)))
+      | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
+        let tmp2 = (FStarC_Format.fmt1 "Not an embedded letbinding: %s" tmp1) in
+        (FStarC_Errors.fStarC_Errors_log_issue0__string FStarC_Errors_Codes.Warning_NotEmbedded tmp2);
+        None)
+    )) in
+  (mk_emb' embed_letbinding unembed_letbinding FStarC_Reflection_V2_Constants.fstar_refl_letbinding_fv))
+
+let e_string_list : ((string) list) FStarC_TypeChecker_NBETerm.embedding =
+  (FStarC_TypeChecker_NBETerm.e_list FStarC_TypeChecker_NBETerm.e_string)
+
+let e_univ_name : (FStarC_Ident.ident) FStarC_TypeChecker_NBETerm.embedding =
   e_ident
-let e_univ_names :
-  FStarC_Syntax_Syntax.univ_name Prims.list
-    FStarC_TypeChecker_NBETerm.embedding=
-  FStarC_TypeChecker_NBETerm.e_list e_univ_name
-let e_universe_view :
-  FStarC_Reflection_V2_Data.universe_view
-    FStarC_TypeChecker_NBETerm.embedding=
-  let embed_universe_view cb uv =
-    match uv with
-    | FStarC_Reflection_V2_Data.Uv_Zero ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Uv_Zero.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.Uv_Succ u ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStarC_TypeChecker_NBETerm.embed e_universe cb u in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          [uu___1] in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Uv_Succ.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.Uv_Max us ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 =
-              FStarC_TypeChecker_NBETerm.embed
-                (FStarC_TypeChecker_NBETerm.e_list e_universe) cb us in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          [uu___1] in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Uv_Max.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.Uv_BVar n ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 =
-              FStarC_TypeChecker_NBETerm.embed
-                FStarC_TypeChecker_NBETerm.e_int cb n in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          [uu___1] in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Uv_BVar.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.Uv_Name i ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStarC_TypeChecker_NBETerm.embed e_ident cb i in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          [uu___1] in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Uv_Name.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.Uv_Unif u ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 =
-              mk_lazy cb u FStarC_Syntax_Util.t_universe_uvar
-                FStarC_Syntax_Syntax.Lazy_universe_uvar in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          [uu___1] in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Uv_Unif.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.Uv_Unk ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Uv_Unk.FStarC_Reflection_V2_Constants.fv
-          [] [] in
-  let unembed_universe_view cb t =
-    match t.FStarC_TypeChecker_NBETerm.nbe_t with
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___, []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Uv_Zero.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.Uv_Zero
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___, (u, uu___1)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Uv_Succ.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___2 = FStarC_TypeChecker_NBETerm.unembed e_universe cb u in
-        FStarC_Option.bind uu___2
-          (fun u1 ->
-             FStar_Pervasives_Native.Some
-               (FStarC_Reflection_V2_Data.Uv_Succ u1))
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___, (us, uu___1)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Uv_Max.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___2 =
-          FStarC_TypeChecker_NBETerm.unembed
-            (FStarC_TypeChecker_NBETerm.e_list e_universe) cb us in
-        FStarC_Option.bind uu___2
-          (fun us1 ->
-             FStar_Pervasives_Native.Some
-               (FStarC_Reflection_V2_Data.Uv_Max us1))
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___, (n, uu___1)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Uv_BVar.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___2 =
-          FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_int
-            cb n in
-        FStarC_Option.bind uu___2
-          (fun n1 ->
-             FStar_Pervasives_Native.Some
-               (FStarC_Reflection_V2_Data.Uv_BVar n1))
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___, (i, uu___1)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Uv_Name.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___2 = FStarC_TypeChecker_NBETerm.unembed e_ident cb i in
-        FStarC_Option.bind uu___2
-          (fun i1 ->
-             FStar_Pervasives_Native.Some
-               (FStarC_Reflection_V2_Data.Uv_Name i1))
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___, (u, uu___1)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Uv_Unif.FStarC_Reflection_V2_Constants.lid
-        ->
-        let u1 = unlazy_as_t FStarC_Syntax_Syntax.Lazy_universe_uvar u in
-        FStar_Pervasives_Native.Some (FStarC_Reflection_V2_Data.Uv_Unif u1)
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___, []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Uv_Unk.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.Uv_Unk
-    | uu___ ->
-        ((let uu___2 =
-            let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
-            FStarC_Format.fmt1 "Not an embedded universe view: %s" uu___3 in
-          FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-            (Obj.magic uu___2));
-         FStar_Pervasives_Native.None) in
-  mk_emb' embed_universe_view unembed_universe_view
-    FStarC_Reflection_V2_Constants.fstar_refl_universe_view_fv
-let e_subst_elt :
-  FStarC_Syntax_Syntax.subst_elt FStarC_TypeChecker_NBETerm.embedding=
-  let embed_const cb e =
-    match e with
-    | FStarC_Syntax_Syntax.DB (i, x) ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 =
-              FStarC_TypeChecker_NBETerm.embed
-                FStarC_TypeChecker_NBETerm.e_int cb i in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          let uu___2 =
-            let uu___3 =
-              let uu___4 = FStarC_TypeChecker_NBETerm.embed e_namedv cb x in
-              FStarC_TypeChecker_NBETerm.as_arg uu___4 in
-            [uu___3] in
-          uu___1 :: uu___2 in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_DB.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Syntax_Syntax.NM (x, i) ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStarC_TypeChecker_NBETerm.embed e_namedv cb x in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          let uu___2 =
-            let uu___3 =
-              let uu___4 =
-                FStarC_TypeChecker_NBETerm.embed
-                  FStarC_TypeChecker_NBETerm.e_int cb i in
-              FStarC_TypeChecker_NBETerm.as_arg uu___4 in
-            [uu___3] in
-          uu___1 :: uu___2 in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_NM.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Syntax_Syntax.NT (x, t) ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStarC_TypeChecker_NBETerm.embed e_namedv cb x in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          let uu___2 =
-            let uu___3 =
-              let uu___4 = FStarC_TypeChecker_NBETerm.embed e_term cb t in
-              FStarC_TypeChecker_NBETerm.as_arg uu___4 in
-            [uu___3] in
-          uu___1 :: uu___2 in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_NT.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Syntax_Syntax.UN (i, u) ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 =
-              FStarC_TypeChecker_NBETerm.embed
-                FStarC_TypeChecker_NBETerm.e_int cb i in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          let uu___2 =
-            let uu___3 =
-              let uu___4 = FStarC_TypeChecker_NBETerm.embed e_universe cb u in
-              FStarC_TypeChecker_NBETerm.as_arg uu___4 in
-            [uu___3] in
-          uu___1 :: uu___2 in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_UN.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Syntax_Syntax.UD (n, i) ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStarC_TypeChecker_NBETerm.embed e_univ_name cb n in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          let uu___2 =
-            let uu___3 =
-              let uu___4 =
-                FStarC_TypeChecker_NBETerm.embed
-                  FStarC_TypeChecker_NBETerm.e_int cb i in
-              FStarC_TypeChecker_NBETerm.as_arg uu___4 in
-            [uu___3] in
-          uu___1 :: uu___2 in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_UD.FStarC_Reflection_V2_Constants.fv
-          [] uu___ in
-  let unembed_const cb t =
-    match t.FStarC_TypeChecker_NBETerm.nbe_t with
-    | FStarC_TypeChecker_NBETerm.Construct
-        (fv, [], (x, uu___)::(i, uu___1)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_DB.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___2 =
-          FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_int
-            cb i in
-        FStarC_Option.bind uu___2
-          (fun i1 ->
-             let uu___3 = FStarC_TypeChecker_NBETerm.unembed e_namedv cb x in
-             FStarC_Option.bind uu___3
-               (fun x1 ->
-                  FStar_Pervasives_Native.Some
-                    (FStarC_Syntax_Syntax.DB (i1, x1))))
-    | FStarC_TypeChecker_NBETerm.Construct
-        (fv, [], (i, uu___)::(x, uu___1)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_NM.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___2 = FStarC_TypeChecker_NBETerm.unembed e_namedv cb x in
-        FStarC_Option.bind uu___2
-          (fun x1 ->
-             let uu___3 =
-               FStarC_TypeChecker_NBETerm.unembed
-                 FStarC_TypeChecker_NBETerm.e_int cb i in
-             FStarC_Option.bind uu___3
-               (fun i1 ->
-                  FStar_Pervasives_Native.Some
-                    (FStarC_Syntax_Syntax.NM (x1, i1))))
-    | FStarC_TypeChecker_NBETerm.Construct
-        (fv, [], (t1, uu___)::(x, uu___1)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_NT.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___2 = FStarC_TypeChecker_NBETerm.unembed e_namedv cb x in
-        FStarC_Option.bind uu___2
-          (fun x1 ->
-             let uu___3 = FStarC_TypeChecker_NBETerm.unembed e_term cb t1 in
-             FStarC_Option.bind uu___3
-               (fun t2 ->
-                  FStar_Pervasives_Native.Some
-                    (FStarC_Syntax_Syntax.NT (x1, t2))))
-    | FStarC_TypeChecker_NBETerm.Construct
-        (fv, [], (u, uu___)::(i, uu___1)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_UN.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___2 =
-          FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_int
-            cb i in
-        FStarC_Option.bind uu___2
-          (fun i1 ->
-             let uu___3 = FStarC_TypeChecker_NBETerm.unembed e_universe cb u in
-             FStarC_Option.bind uu___3
-               (fun u1 ->
-                  FStar_Pervasives_Native.Some
-                    (FStarC_Syntax_Syntax.UN (i1, u1))))
-    | FStarC_TypeChecker_NBETerm.Construct
-        (fv, [], (i, uu___)::(n, uu___1)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_UD.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___2 = FStarC_TypeChecker_NBETerm.unembed e_univ_name cb n in
-        FStarC_Option.bind uu___2
-          (fun n1 ->
-             let uu___3 =
-               FStarC_TypeChecker_NBETerm.unembed
-                 FStarC_TypeChecker_NBETerm.e_int cb i in
-             FStarC_Option.bind uu___3
-               (fun i1 ->
-                  FStar_Pervasives_Native.Some
-                    (FStarC_Syntax_Syntax.UD (n1, i1))))
-    | uu___ ->
-        ((let uu___2 =
-            let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
-            FStarC_Format.fmt1 "Not an embedded vconst: %s" uu___3 in
-          FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-            (Obj.magic uu___2));
-         FStar_Pervasives_Native.None) in
-  mk_emb' embed_const unembed_const
-    FStarC_Reflection_V2_Constants.fstar_refl_subst_elt_fv
-let e_subst :
-  FStarC_Syntax_Syntax.subst_elt Prims.list
-    FStarC_TypeChecker_NBETerm.embedding=
-  FStarC_TypeChecker_NBETerm.e_list e_subst_elt
-let e_term_view_aq
-  (aq :
-    (Prims.int * FStarC_Syntax_Syntax.term' FStarC_Syntax_Syntax.syntax
-      Prims.list))
-  : FStarC_Reflection_V2_Data.term_view FStarC_TypeChecker_NBETerm.embedding=
-  let shift uu___ = match uu___ with | (s, aqs) -> ((s + Prims.int_one), aqs) in
-  let embed_term_view cb tv =
-    match tv with
-    | FStarC_Reflection_V2_Data.Tv_FVar fv ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStarC_TypeChecker_NBETerm.embed e_fv cb fv in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          [uu___1] in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Tv_FVar.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.Tv_BVar bv ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStarC_TypeChecker_NBETerm.embed e_bv cb bv in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          [uu___1] in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Tv_BVar.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.Tv_Var bv ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStarC_TypeChecker_NBETerm.embed e_bv cb bv in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          [uu___1] in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Tv_Var.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.Tv_UInst (fv, us) ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStarC_TypeChecker_NBETerm.embed e_fv cb fv in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          let uu___2 =
-            let uu___3 =
-              let uu___4 =
-                FStarC_TypeChecker_NBETerm.embed
-                  (FStarC_TypeChecker_NBETerm.e_list e_universe) cb us in
-              FStarC_TypeChecker_NBETerm.as_arg uu___4 in
-            [uu___3] in
-          uu___1 :: uu___2 in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Tv_UInst.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.Tv_App (hd, a) ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 =
-              FStarC_TypeChecker_NBETerm.embed (e_term_aq aq) cb hd in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          let uu___2 =
-            let uu___3 =
-              let uu___4 =
-                FStarC_TypeChecker_NBETerm.embed (e_argv_aq aq) cb a in
-              FStarC_TypeChecker_NBETerm.as_arg uu___4 in
-            [uu___3] in
-          uu___1 :: uu___2 in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Tv_App.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.Tv_Abs (b, t) ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStarC_TypeChecker_NBETerm.embed e_binder cb b in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          let uu___2 =
-            let uu___3 =
-              let uu___4 =
-                FStarC_TypeChecker_NBETerm.embed (e_term_aq (shift aq)) cb t in
-              FStarC_TypeChecker_NBETerm.as_arg uu___4 in
-            [uu___3] in
-          uu___1 :: uu___2 in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Tv_Abs.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.Tv_Arrow (b, c) ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStarC_TypeChecker_NBETerm.embed e_binder cb b in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          let uu___2 =
-            let uu___3 =
-              let uu___4 = FStarC_TypeChecker_NBETerm.embed e_comp cb c in
-              FStarC_TypeChecker_NBETerm.as_arg uu___4 in
-            [uu___3] in
-          uu___1 :: uu___2 in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Tv_Arrow.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.Tv_Type u ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStarC_TypeChecker_NBETerm.embed e_universe cb u in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          [uu___1] in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Tv_Type.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.Tv_Refine (b, t) ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStarC_TypeChecker_NBETerm.embed e_binder cb b in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          let uu___2 =
-            let uu___3 =
-              let uu___4 =
-                FStarC_TypeChecker_NBETerm.embed (e_term_aq (shift aq)) cb t in
-              FStarC_TypeChecker_NBETerm.as_arg uu___4 in
-            [uu___3] in
-          uu___1 :: uu___2 in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Tv_Refine.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.Tv_Const c ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStarC_TypeChecker_NBETerm.embed e_vconst cb c in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          [uu___1] in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Tv_Const.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.Tv_Uvar (u, d) ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 =
-              FStarC_TypeChecker_NBETerm.embed
-                FStarC_TypeChecker_NBETerm.e_int cb u in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          let uu___2 =
-            let uu___3 =
-              let uu___4 =
-                mk_lazy cb (u, d) FStarC_Syntax_Util.t_ctx_uvar_and_sust
-                  FStarC_Syntax_Syntax.Lazy_uvar in
-              FStarC_TypeChecker_NBETerm.as_arg uu___4 in
-            [uu___3] in
-          uu___1 :: uu___2 in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Tv_Uvar.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.Tv_Let (r, attrs, b, t1, t2) ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 =
-              FStarC_TypeChecker_NBETerm.embed
-                FStarC_TypeChecker_NBETerm.e_bool cb r in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          let uu___2 =
-            let uu___3 =
-              let uu___4 =
-                FStarC_TypeChecker_NBETerm.embed
-                  (FStarC_TypeChecker_NBETerm.e_list e_term) cb attrs in
-              FStarC_TypeChecker_NBETerm.as_arg uu___4 in
-            let uu___4 =
-              let uu___5 =
-                let uu___6 = FStarC_TypeChecker_NBETerm.embed e_binder cb b in
-                FStarC_TypeChecker_NBETerm.as_arg uu___6 in
-              let uu___6 =
-                let uu___7 =
-                  let uu___8 =
-                    FStarC_TypeChecker_NBETerm.embed (e_term_aq aq) cb t1 in
-                  FStarC_TypeChecker_NBETerm.as_arg uu___8 in
-                let uu___8 =
-                  let uu___9 =
-                    let uu___10 =
-                      FStarC_TypeChecker_NBETerm.embed (e_term_aq (shift aq))
-                        cb t2 in
-                    FStarC_TypeChecker_NBETerm.as_arg uu___10 in
-                  [uu___9] in
-                uu___7 :: uu___8 in
-              uu___5 :: uu___6 in
-            uu___3 :: uu___4 in
-          uu___1 :: uu___2 in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Tv_Let.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.Tv_Match (t, ret_opt, brs) ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStarC_TypeChecker_NBETerm.embed (e_term_aq aq) cb t in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          let uu___2 =
-            let uu___3 =
-              let uu___4 =
-                FStarC_TypeChecker_NBETerm.embed e_match_returns_annotation
-                  cb ret_opt in
-              FStarC_TypeChecker_NBETerm.as_arg uu___4 in
-            let uu___4 =
-              let uu___5 =
-                let uu___6 =
-                  FStarC_TypeChecker_NBETerm.embed
-                    (FStarC_TypeChecker_NBETerm.e_list (e_branch_aq aq)) cb
-                    brs in
-                FStarC_TypeChecker_NBETerm.as_arg uu___6 in
-              [uu___5] in
-            uu___3 :: uu___4 in
-          uu___1 :: uu___2 in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Tv_Match.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.Tv_AscribedT (e, t, tacopt, use_eq) ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStarC_TypeChecker_NBETerm.embed (e_term_aq aq) cb e in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          let uu___2 =
-            let uu___3 =
-              let uu___4 =
-                FStarC_TypeChecker_NBETerm.embed (e_term_aq aq) cb t in
-              FStarC_TypeChecker_NBETerm.as_arg uu___4 in
-            let uu___4 =
-              let uu___5 =
-                let uu___6 =
-                  FStarC_TypeChecker_NBETerm.embed
-                    (FStarC_TypeChecker_NBETerm.e_option (e_term_aq aq)) cb
-                    tacopt in
-                FStarC_TypeChecker_NBETerm.as_arg uu___6 in
-              let uu___6 =
-                let uu___7 =
-                  let uu___8 =
-                    FStarC_TypeChecker_NBETerm.embed
-                      FStarC_TypeChecker_NBETerm.e_bool cb use_eq in
-                  FStarC_TypeChecker_NBETerm.as_arg uu___8 in
-                [uu___7] in
-              uu___5 :: uu___6 in
-            uu___3 :: uu___4 in
-          uu___1 :: uu___2 in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Tv_AscT.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.Tv_AscribedC (e, c, tacopt, use_eq) ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStarC_TypeChecker_NBETerm.embed (e_term_aq aq) cb e in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          let uu___2 =
-            let uu___3 =
-              let uu___4 = FStarC_TypeChecker_NBETerm.embed e_comp cb c in
-              FStarC_TypeChecker_NBETerm.as_arg uu___4 in
-            let uu___4 =
-              let uu___5 =
-                let uu___6 =
-                  FStarC_TypeChecker_NBETerm.embed
-                    (FStarC_TypeChecker_NBETerm.e_option (e_term_aq aq)) cb
-                    tacopt in
-                FStarC_TypeChecker_NBETerm.as_arg uu___6 in
-              let uu___6 =
-                let uu___7 =
-                  let uu___8 =
-                    FStarC_TypeChecker_NBETerm.embed
-                      FStarC_TypeChecker_NBETerm.e_bool cb use_eq in
-                  FStarC_TypeChecker_NBETerm.as_arg uu___8 in
-                [uu___7] in
-              uu___5 :: uu___6 in
-            uu___3 :: uu___4 in
-          uu___1 :: uu___2 in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Tv_AscT.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.Tv_Unknown ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Tv_Unknown.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.Tv_Unsupp ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Tv_Unsupp.FStarC_Reflection_V2_Constants.fv
-          [] [] in
-  let unembed_term_view cb t =
-    match t.FStarC_TypeChecker_NBETerm.nbe_t with
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___, (b, uu___1)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Tv_Var.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___2 = FStarC_TypeChecker_NBETerm.unembed e_bv cb b in
-        FStarC_Option.bind uu___2
-          (fun b1 ->
-             FStar_Pervasives_Native.Some
-               (FStarC_Reflection_V2_Data.Tv_Var b1))
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___, (b, uu___1)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Tv_BVar.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___2 = FStarC_TypeChecker_NBETerm.unembed e_bv cb b in
-        FStarC_Option.bind uu___2
-          (fun b1 ->
-             FStar_Pervasives_Native.Some
-               (FStarC_Reflection_V2_Data.Tv_BVar b1))
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___, (f, uu___1)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Tv_FVar.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___2 = FStarC_TypeChecker_NBETerm.unembed e_fv cb f in
-        FStarC_Option.bind uu___2
-          (fun f1 ->
-             FStar_Pervasives_Native.Some
-               (FStarC_Reflection_V2_Data.Tv_FVar f1))
-    | FStarC_TypeChecker_NBETerm.Construct
-        (fv, uu___, (f, uu___1)::(us, uu___2)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Tv_UInst.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___3 = FStarC_TypeChecker_NBETerm.unembed e_fv cb f in
-        FStarC_Option.bind uu___3
-          (fun f1 ->
-             let uu___4 =
-               FStarC_TypeChecker_NBETerm.unembed
-                 (FStarC_TypeChecker_NBETerm.e_list e_universe) cb us in
-             FStarC_Option.bind uu___4
-               (fun us1 ->
-                  FStar_Pervasives_Native.Some
-                    (FStarC_Reflection_V2_Data.Tv_UInst (f1, us1))))
-    | FStarC_TypeChecker_NBETerm.Construct
-        (fv, uu___, (r, uu___1)::(l, uu___2)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Tv_App.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___3 = FStarC_TypeChecker_NBETerm.unembed e_term cb l in
-        FStarC_Option.bind uu___3
-          (fun l1 ->
-             let uu___4 = FStarC_TypeChecker_NBETerm.unembed e_argv cb r in
-             FStarC_Option.bind uu___4
-               (fun r1 ->
-                  FStar_Pervasives_Native.Some
-                    (FStarC_Reflection_V2_Data.Tv_App (l1, r1))))
-    | FStarC_TypeChecker_NBETerm.Construct
-        (fv, uu___, (t1, uu___1)::(b, uu___2)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Tv_Abs.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___3 = FStarC_TypeChecker_NBETerm.unembed e_binder cb b in
-        FStarC_Option.bind uu___3
-          (fun b1 ->
-             let uu___4 = FStarC_TypeChecker_NBETerm.unembed e_term cb t1 in
-             FStarC_Option.bind uu___4
-               (fun t2 ->
-                  FStar_Pervasives_Native.Some
-                    (FStarC_Reflection_V2_Data.Tv_Abs (b1, t2))))
-    | FStarC_TypeChecker_NBETerm.Construct
-        (fv, uu___, (t1, uu___1)::(b, uu___2)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Tv_Arrow.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___3 = FStarC_TypeChecker_NBETerm.unembed e_binder cb b in
-        FStarC_Option.bind uu___3
-          (fun b1 ->
-             let uu___4 = FStarC_TypeChecker_NBETerm.unembed e_comp cb t1 in
-             FStarC_Option.bind uu___4
-               (fun c ->
-                  FStar_Pervasives_Native.Some
-                    (FStarC_Reflection_V2_Data.Tv_Arrow (b1, c))))
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___, (u, uu___1)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Tv_Type.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___2 = FStarC_TypeChecker_NBETerm.unembed e_universe cb u in
-        FStarC_Option.bind uu___2
-          (fun u1 ->
-             FStar_Pervasives_Native.Some
-               (FStarC_Reflection_V2_Data.Tv_Type u1))
-    | FStarC_TypeChecker_NBETerm.Construct
-        (fv, uu___, (t1, uu___1)::(b, uu___2)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Tv_Refine.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___3 = FStarC_TypeChecker_NBETerm.unembed e_binder cb b in
-        FStarC_Option.bind uu___3
-          (fun b1 ->
-             let uu___4 = FStarC_TypeChecker_NBETerm.unembed e_term cb t1 in
-             FStarC_Option.bind uu___4
-               (fun t2 ->
-                  FStar_Pervasives_Native.Some
-                    (FStarC_Reflection_V2_Data.Tv_Refine (b1, t2))))
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___, (c, uu___1)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Tv_Const.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___2 = FStarC_TypeChecker_NBETerm.unembed e_vconst cb c in
-        FStarC_Option.bind uu___2
-          (fun c1 ->
-             FStar_Pervasives_Native.Some
-               (FStarC_Reflection_V2_Data.Tv_Const c1))
-    | FStarC_TypeChecker_NBETerm.Construct
-        (fv, uu___, (l, uu___1)::(u, uu___2)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Tv_Uvar.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___3 =
-          FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_int
-            cb u in
-        FStarC_Option.bind uu___3
-          (fun u1 ->
-             let ctx_u_s = unlazy_as_t FStarC_Syntax_Syntax.Lazy_uvar l in
-             FStar_Pervasives_Native.Some
-               (FStarC_Reflection_V2_Data.Tv_Uvar (u1, ctx_u_s)))
-    | FStarC_TypeChecker_NBETerm.Construct
-        (fv, uu___,
-         (t2, uu___1)::(t1, uu___2)::(b, uu___3)::(attrs, uu___4)::(r,
-                                                                    uu___5)::[])
-        when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Tv_Let.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___6 =
-          FStarC_TypeChecker_NBETerm.unembed
-            FStarC_TypeChecker_NBETerm.e_bool cb r in
-        FStarC_Option.bind uu___6
-          (fun r1 ->
-             let uu___7 =
-               FStarC_TypeChecker_NBETerm.unembed
-                 (FStarC_TypeChecker_NBETerm.e_list e_term) cb attrs in
-             FStarC_Option.bind uu___7
-               (fun attrs1 ->
-                  let uu___8 =
-                    FStarC_TypeChecker_NBETerm.unembed e_binder cb b in
-                  FStarC_Option.bind uu___8
-                    (fun b1 ->
-                       let uu___9 =
-                         FStarC_TypeChecker_NBETerm.unembed e_term cb t1 in
-                       FStarC_Option.bind uu___9
-                         (fun t11 ->
-                            let uu___10 =
-                              FStarC_TypeChecker_NBETerm.unembed e_term cb t2 in
-                            FStarC_Option.bind uu___10
-                              (fun t21 ->
-                                 FStar_Pervasives_Native.Some
-                                   (FStarC_Reflection_V2_Data.Tv_Let
-                                      (r1, attrs1, b1, t11, t21)))))))
-    | FStarC_TypeChecker_NBETerm.Construct
-        (fv, uu___, (brs, uu___1)::(ret_opt, uu___2)::(t1, uu___3)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Tv_Match.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___4 = FStarC_TypeChecker_NBETerm.unembed e_term cb t1 in
-        FStarC_Option.bind uu___4
-          (fun t2 ->
-             let uu___5 =
-               FStarC_TypeChecker_NBETerm.unembed
-                 (FStarC_TypeChecker_NBETerm.e_list e_branch) cb brs in
-             FStarC_Option.bind uu___5
-               (fun brs1 ->
-                  let uu___6 =
-                    FStarC_TypeChecker_NBETerm.unembed
-                      e_match_returns_annotation cb ret_opt in
-                  FStarC_Option.bind uu___6
-                    (fun ret_opt1 ->
-                       FStar_Pervasives_Native.Some
-                         (FStarC_Reflection_V2_Data.Tv_Match
-                            (t2, ret_opt1, brs1)))))
-    | FStarC_TypeChecker_NBETerm.Construct
-        (fv, uu___,
-         (tacopt, uu___1)::(t1, uu___2)::(e, uu___3)::(use_eq, uu___4)::[])
-        when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Tv_AscT.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___5 = FStarC_TypeChecker_NBETerm.unembed e_term cb e in
-        FStarC_Option.bind uu___5
-          (fun e1 ->
-             let uu___6 = FStarC_TypeChecker_NBETerm.unembed e_term cb t1 in
-             FStarC_Option.bind uu___6
-               (fun t2 ->
-                  let uu___7 =
-                    FStarC_TypeChecker_NBETerm.unembed
-                      (FStarC_TypeChecker_NBETerm.e_option e_term) cb tacopt in
-                  FStarC_Option.bind uu___7
-                    (fun tacopt1 ->
-                       let uu___8 =
-                         FStarC_TypeChecker_NBETerm.unembed
-                           FStarC_TypeChecker_NBETerm.e_bool cb use_eq in
-                       FStarC_Option.bind uu___8
-                         (fun use_eq1 ->
-                            FStar_Pervasives_Native.Some
-                              (FStarC_Reflection_V2_Data.Tv_AscribedT
-                                 (e1, t2, tacopt1, use_eq1))))))
-    | FStarC_TypeChecker_NBETerm.Construct
-        (fv, uu___,
-         (tacopt, uu___1)::(c, uu___2)::(e, uu___3)::(use_eq, uu___4)::[])
-        when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Tv_AscC.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___5 = FStarC_TypeChecker_NBETerm.unembed e_term cb e in
-        FStarC_Option.bind uu___5
-          (fun e1 ->
-             let uu___6 = FStarC_TypeChecker_NBETerm.unembed e_comp cb c in
-             FStarC_Option.bind uu___6
-               (fun c1 ->
-                  let uu___7 =
-                    FStarC_TypeChecker_NBETerm.unembed
-                      (FStarC_TypeChecker_NBETerm.e_option e_term) cb tacopt in
-                  FStarC_Option.bind uu___7
-                    (fun tacopt1 ->
-                       let uu___8 =
-                         FStarC_TypeChecker_NBETerm.unembed
-                           FStarC_TypeChecker_NBETerm.e_bool cb use_eq in
-                       FStarC_Option.bind uu___8
-                         (fun use_eq1 ->
-                            FStar_Pervasives_Native.Some
-                              (FStarC_Reflection_V2_Data.Tv_AscribedC
-                                 (e1, c1, tacopt1, use_eq1))))))
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___, []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Tv_Unknown.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.Tv_Unknown
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___, []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Tv_Unsupp.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.Tv_Unsupp
-    | uu___ ->
-        ((let uu___2 =
-            let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
-            FStarC_Format.fmt1 "Not an embedded term_view: %s" uu___3 in
-          FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-            (Obj.magic uu___2));
-         FStar_Pervasives_Native.None) in
-  mk_emb' embed_term_view unembed_term_view
-    FStarC_Reflection_V2_Constants.fstar_refl_term_view_fv
-let e_term_view :
-  FStarC_Reflection_V2_Data.term_view FStarC_TypeChecker_NBETerm.embedding=
-  e_term_view_aq (Prims.int_zero, [])
-let e_namedv_view :
-  FStarC_Reflection_V2_Data.namedv_view FStarC_TypeChecker_NBETerm.embedding=
-  let embed_namedv_view cb namedvv =
-    let uu___ =
-      let uu___1 =
-        let uu___2 =
-          FStarC_TypeChecker_NBETerm.embed FStarC_TypeChecker_NBETerm.e_int
-            cb namedvv.FStarC_Reflection_V2_Data.uniq in
-        FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-      let uu___2 =
-        let uu___3 =
-          let uu___4 =
-            FStarC_TypeChecker_NBETerm.embed e_ppname cb
-              namedvv.FStarC_Reflection_V2_Data.ppname in
-          FStarC_TypeChecker_NBETerm.as_arg uu___4 in
-        let uu___4 =
-          let uu___5 =
-            let uu___6 =
-              FStarC_TypeChecker_NBETerm.embed e_sort cb
-                namedvv.FStarC_Reflection_V2_Data.sort in
-            FStarC_TypeChecker_NBETerm.as_arg uu___6 in
-          [uu___5] in
-        uu___3 :: uu___4 in
-      uu___1 :: uu___2 in
-    mkConstruct
-      FStarC_Reflection_V2_Constants.ref_Mk_namedv_view.FStarC_Reflection_V2_Constants.fv
-      [] uu___ in
-  let unembed_namedv_view cb t =
-    match t.FStarC_TypeChecker_NBETerm.nbe_t with
-    | FStarC_TypeChecker_NBETerm.Construct
-        (fv, uu___, (sort, uu___1)::(ppname, uu___2)::(uniq, uu___3)::[])
-        when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Mk_namedv_view.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___4 =
-          FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_int
-            cb uniq in
-        FStarC_Option.bind uu___4
-          (fun uniq1 ->
-             let uu___5 =
-               FStarC_TypeChecker_NBETerm.unembed e_ppname cb ppname in
-             FStarC_Option.bind uu___5
-               (fun ppname1 ->
-                  let uu___6 =
-                    FStarC_TypeChecker_NBETerm.unembed e_sort cb sort in
-                  FStarC_Option.bind uu___6
-                    (fun sort1 ->
-                       let r =
-                         {
-                           FStarC_Reflection_V2_Data.uniq = uniq1;
-                           FStarC_Reflection_V2_Data.sort = sort1;
-                           FStarC_Reflection_V2_Data.ppname = ppname1
-                         } in
-                       FStar_Pervasives_Native.Some r)))
-    | uu___ ->
-        ((let uu___2 =
-            let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
-            FStarC_Format.fmt1 "Not an embedded namedv_view: %s" uu___3 in
-          FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-            (Obj.magic uu___2));
-         FStar_Pervasives_Native.None) in
-  mk_emb' embed_namedv_view unembed_namedv_view
-    FStarC_Reflection_V2_Constants.fstar_refl_namedv_view_fv
-let e_bv_view :
-  FStarC_Reflection_V2_Data.bv_view FStarC_TypeChecker_NBETerm.embedding=
-  let embed_bv_view cb bvv =
-    let uu___ =
-      let uu___1 =
-        let uu___2 =
-          FStarC_TypeChecker_NBETerm.embed FStarC_TypeChecker_NBETerm.e_int
-            cb bvv.FStarC_Reflection_V2_Data.index in
-        FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-      let uu___2 =
-        let uu___3 =
-          let uu___4 =
-            FStarC_TypeChecker_NBETerm.embed e_ppname cb
-              bvv.FStarC_Reflection_V2_Data.ppname1 in
-          FStarC_TypeChecker_NBETerm.as_arg uu___4 in
-        let uu___4 =
-          let uu___5 =
-            let uu___6 =
-              FStarC_TypeChecker_NBETerm.embed e_sort cb
-                bvv.FStarC_Reflection_V2_Data.sort1 in
-            FStarC_TypeChecker_NBETerm.as_arg uu___6 in
-          [uu___5] in
-        uu___3 :: uu___4 in
-      uu___1 :: uu___2 in
-    mkConstruct
-      FStarC_Reflection_V2_Constants.ref_Mk_bv_view.FStarC_Reflection_V2_Constants.fv
-      [] uu___ in
-  let unembed_bv_view cb t =
-    match t.FStarC_TypeChecker_NBETerm.nbe_t with
-    | FStarC_TypeChecker_NBETerm.Construct
-        (fv, uu___, (sort, uu___1)::(ppname, uu___2)::(idx, uu___3)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Mk_bv_view.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___4 =
-          FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_int
-            cb idx in
-        FStarC_Option.bind uu___4
-          (fun idx1 ->
-             let uu___5 =
-               FStarC_TypeChecker_NBETerm.unembed e_ppname cb ppname in
-             FStarC_Option.bind uu___5
-               (fun ppname1 ->
-                  let uu___6 =
-                    FStarC_TypeChecker_NBETerm.unembed e_sort cb sort in
-                  FStarC_Option.bind uu___6
-                    (fun sort1 ->
-                       let r =
-                         {
-                           FStarC_Reflection_V2_Data.index = idx1;
-                           FStarC_Reflection_V2_Data.sort1 = sort1;
-                           FStarC_Reflection_V2_Data.ppname1 = ppname1
-                         } in
-                       FStar_Pervasives_Native.Some r)))
-    | uu___ ->
-        ((let uu___2 =
-            let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
-            FStarC_Format.fmt1 "Not an embedded bv_view: %s" uu___3 in
-          FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-            (Obj.magic uu___2));
-         FStar_Pervasives_Native.None) in
-  mk_emb' embed_bv_view unembed_bv_view
-    FStarC_Reflection_V2_Constants.fstar_refl_bv_view_fv
-let e_attribute :
-  FStarC_Syntax_Syntax.attribute FStarC_TypeChecker_NBETerm.embedding= e_term
-let e_attributes :
-  FStarC_Syntax_Syntax.attribute Prims.list
-    FStarC_TypeChecker_NBETerm.embedding=
-  FStarC_TypeChecker_NBETerm.e_list e_attribute
-let e_binding :
-  FStarC_Reflection_V2_Data.binding FStarC_TypeChecker_NBETerm.embedding=
-  let embed cb b =
-    let uu___ =
-      let uu___1 =
-        let uu___2 =
-          FStarC_TypeChecker_NBETerm.embed FStarC_TypeChecker_NBETerm.e_int
-            cb b.FStarC_Reflection_V2_Data.uniq1 in
-        FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-      let uu___2 =
-        let uu___3 =
-          let uu___4 =
-            FStarC_TypeChecker_NBETerm.embed e_term cb
-              b.FStarC_Reflection_V2_Data.sort3 in
-          FStarC_TypeChecker_NBETerm.as_arg uu___4 in
-        let uu___4 =
-          let uu___5 =
-            let uu___6 =
-              FStarC_TypeChecker_NBETerm.embed e_ppname cb
-                b.FStarC_Reflection_V2_Data.ppname3 in
-            FStarC_TypeChecker_NBETerm.as_arg uu___6 in
-          [uu___5] in
-        uu___3 :: uu___4 in
-      uu___1 :: uu___2 in
-    mkConstruct
-      FStarC_Reflection_V2_Constants.ref_Mk_binding.FStarC_Reflection_V2_Constants.fv
-      [] uu___ in
-  let unembed cb t =
-    match t.FStarC_TypeChecker_NBETerm.nbe_t with
-    | FStarC_TypeChecker_NBETerm.Construct
-        (fv, uu___, (ppname, uu___1)::(sort, uu___2)::(uniq, uu___3)::[])
-        when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Mk_binding.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___4 =
-          FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_int
-            cb uniq in
-        FStarC_Option.bind uu___4
-          (fun uniq1 ->
-             let uu___5 = FStarC_TypeChecker_NBETerm.unembed e_term cb sort in
-             FStarC_Option.bind uu___5
-               (fun sort1 ->
-                  let uu___6 =
-                    FStarC_TypeChecker_NBETerm.unembed e_ppname cb ppname in
-                  FStarC_Option.bind uu___6
-                    (fun ppname1 ->
-                       let r =
-                         {
-                           FStarC_Reflection_V2_Data.uniq1 = uniq1;
-                           FStarC_Reflection_V2_Data.sort3 = sort1;
-                           FStarC_Reflection_V2_Data.ppname3 = ppname1
-                         } in
-                       FStar_Pervasives_Native.Some r))) in
-  mk_emb' embed unembed FStarC_Reflection_V2_Constants.fstar_refl_binding_fv
-let e_binder_view :
-  FStarC_Reflection_V2_Data.binder_view FStarC_TypeChecker_NBETerm.embedding=
-  let embed_binder_view cb bview =
-    let uu___ =
-      let uu___1 =
-        let uu___2 =
-          FStarC_TypeChecker_NBETerm.embed e_term cb
-            bview.FStarC_Reflection_V2_Data.sort2 in
-        FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-      let uu___2 =
-        let uu___3 =
-          let uu___4 =
-            FStarC_TypeChecker_NBETerm.embed e_aqualv cb
-              bview.FStarC_Reflection_V2_Data.qual in
-          FStarC_TypeChecker_NBETerm.as_arg uu___4 in
-        let uu___4 =
-          let uu___5 =
-            let uu___6 =
-              FStarC_TypeChecker_NBETerm.embed e_attributes cb
-                bview.FStarC_Reflection_V2_Data.attrs in
-            FStarC_TypeChecker_NBETerm.as_arg uu___6 in
-          let uu___6 =
-            let uu___7 =
-              let uu___8 =
-                FStarC_TypeChecker_NBETerm.embed e_ppname cb
-                  bview.FStarC_Reflection_V2_Data.ppname2 in
-              FStarC_TypeChecker_NBETerm.as_arg uu___8 in
-            [uu___7] in
-          uu___5 :: uu___6 in
-        uu___3 :: uu___4 in
-      uu___1 :: uu___2 in
-    mkConstruct
-      FStarC_Reflection_V2_Constants.ref_Mk_binder_view.FStarC_Reflection_V2_Constants.fv
-      [] uu___ in
-  let unembed_binder_view cb t =
-    match t.FStarC_TypeChecker_NBETerm.nbe_t with
-    | FStarC_TypeChecker_NBETerm.Construct
-        (fv, uu___,
-         (ppname, uu___1)::(attrs, uu___2)::(q, uu___3)::(sort, uu___4)::[])
-        when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Mk_binder_view.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___5 = FStarC_TypeChecker_NBETerm.unembed e_term cb sort in
-        FStarC_Option.bind uu___5
-          (fun sort1 ->
-             let uu___6 = FStarC_TypeChecker_NBETerm.unembed e_aqualv cb q in
-             FStarC_Option.bind uu___6
-               (fun q1 ->
-                  let uu___7 =
-                    FStarC_TypeChecker_NBETerm.unembed e_attributes cb attrs in
-                  FStarC_Option.bind uu___7
-                    (fun attrs1 ->
-                       let uu___8 =
-                         FStarC_TypeChecker_NBETerm.unembed e_ppname cb
-                           ppname in
-                       FStarC_Option.bind uu___8
-                         (fun ppname1 ->
-                            let r =
-                              {
-                                FStarC_Reflection_V2_Data.sort2 = sort1;
-                                FStarC_Reflection_V2_Data.qual = q1;
-                                FStarC_Reflection_V2_Data.attrs = attrs1;
-                                FStarC_Reflection_V2_Data.ppname2 = ppname1
-                              } in
-                            FStar_Pervasives_Native.Some r))))
-    | uu___ ->
-        ((let uu___2 =
-            let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
-            FStarC_Format.fmt1 "Not an embedded binder_view: %s" uu___3 in
-          FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-            (Obj.magic uu___2));
-         FStar_Pervasives_Native.None) in
-  mk_emb' embed_binder_view unembed_binder_view
-    FStarC_Reflection_V2_Constants.fstar_refl_binder_view_fv
-let e_decreases_order :
-  FStarC_Reflection_V2_Data.decreases_order
-    FStarC_TypeChecker_NBETerm.embedding=
-  let ee cb d =
-    match d with
-    | FStarC_Reflection_V2_Data.Decreases_lex ts ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 =
-              FStarC_TypeChecker_NBETerm.embed
-                (FStarC_TypeChecker_NBETerm.e_list e_term) cb ts in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          [uu___1] in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Decreases_lex.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.Decreases_wf (rel, e) ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStarC_TypeChecker_NBETerm.embed e_term cb rel in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          let uu___2 =
-            let uu___3 =
-              let uu___4 = FStarC_TypeChecker_NBETerm.embed e_term cb e in
-              FStarC_TypeChecker_NBETerm.as_arg uu___4 in
-            [uu___3] in
-          uu___1 :: uu___2 in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Decreases_wf.FStarC_Reflection_V2_Constants.fv
-          [] uu___ in
-  let uu cb t =
-    match t.FStarC_TypeChecker_NBETerm.nbe_t with
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___, (ts, uu___1)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Decreases_lex.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___2 =
-          FStarC_TypeChecker_NBETerm.unembed
-            (FStarC_TypeChecker_NBETerm.e_list e_term) cb ts in
-        FStarC_Option.bind uu___2
-          (fun ts1 ->
-             FStar_Pervasives_Native.Some
-               (FStarC_Reflection_V2_Data.Decreases_lex ts1))
-    | FStarC_TypeChecker_NBETerm.Construct
-        (fv, uu___, (e, uu___1)::(rel, uu___2)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Decreases_wf.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___3 = FStarC_TypeChecker_NBETerm.unembed e_term cb rel in
-        FStarC_Option.bind uu___3
-          (fun rel1 ->
-             let uu___4 = FStarC_TypeChecker_NBETerm.unembed e_term cb e in
-             FStarC_Option.bind uu___4
-               (fun e1 ->
-                  FStar_Pervasives_Native.Some
-                    (FStarC_Reflection_V2_Data.Decreases_wf (rel1, e1))))
-    | uu___ ->
-        ((let uu___2 =
-            let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
-            FStarC_Format.fmt1 "Not an embedded decreases_order: %s" uu___3 in
-          FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-            (Obj.magic uu___2));
-         FStar_Pervasives_Native.None) in
-  mk_emb' ee uu FStarC_Reflection_V2_Constants.fstar_refl_decreases_order_fv
-let e_cflag :
-  FStarC_Reflection_V2_Data.cflag FStarC_TypeChecker_NBETerm.embedding=
-  let ee cb f =
-    match f with
-    | FStarC_Reflection_V2_Data.SMTPAT tm ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStarC_TypeChecker_NBETerm.embed e_term cb tm in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          [uu___1] in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_SMTPAT.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.DECREASES d ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 =
-              FStarC_TypeChecker_NBETerm.embed e_decreases_order cb d in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          [uu___1] in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_DECREASES.FStarC_Reflection_V2_Constants.fv
-          [] uu___ in
-  let uu cb t =
-    match t.FStarC_TypeChecker_NBETerm.nbe_t with
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___, (tm, uu___1)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_SMTPAT.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___2 = FStarC_TypeChecker_NBETerm.unembed e_term cb tm in
-        FStarC_Option.bind uu___2
-          (fun tm1 ->
-             FStar_Pervasives_Native.Some
-               (FStarC_Reflection_V2_Data.SMTPAT tm1))
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___, (d, uu___1)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_DECREASES.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___2 =
-          FStarC_TypeChecker_NBETerm.unembed e_decreases_order cb d in
-        FStarC_Option.bind uu___2
-          (fun d1 ->
-             FStar_Pervasives_Native.Some
-               (FStarC_Reflection_V2_Data.DECREASES d1))
-    | uu___ ->
-        ((let uu___2 =
-            let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
-            FStarC_Format.fmt1 "Not an embedded cflag: %s" uu___3 in
-          FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-            (Obj.magic uu___2));
-         FStar_Pervasives_Native.None) in
-  mk_emb' ee uu FStarC_Reflection_V2_Constants.fstar_refl_cflag_fv
-let e_comp_view :
-  FStarC_Reflection_V2_Data.comp_view FStarC_TypeChecker_NBETerm.embedding=
-  let embed_comp_view cb cv =
-    let uu___ =
-      let uu___1 =
-        let uu___2 =
-          FStarC_TypeChecker_NBETerm.embed
-            FStarC_TypeChecker_NBETerm.e_string_list cb
-            cv.FStarC_Reflection_V2_Data.effect_name in
-        FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-      let uu___2 =
-        let uu___3 =
-          let uu___4 =
-            FStarC_TypeChecker_NBETerm.embed e_term cb
-              cv.FStarC_Reflection_V2_Data.result_typ in
-          FStarC_TypeChecker_NBETerm.as_arg uu___4 in
-        let uu___4 =
-          let uu___5 =
-            let uu___6 =
-              FStarC_TypeChecker_NBETerm.embed
-                (FStarC_TypeChecker_NBETerm.e_list e_cflag) cb
-                cv.FStarC_Reflection_V2_Data.flags in
-            FStarC_TypeChecker_NBETerm.as_arg uu___6 in
-          let uu___6 =
-            let uu___7 =
-              let uu___8 =
-                FStarC_TypeChecker_NBETerm.embed
-                  FStarC_TypeChecker_NBETerm.e_string_list cb
-                  cv.FStarC_Reflection_V2_Data.source_effect_name in
-              FStarC_TypeChecker_NBETerm.as_arg uu___8 in
-            [uu___7] in
-          uu___5 :: uu___6 in
-        uu___3 :: uu___4 in
-      uu___1 :: uu___2 in
-    mkConstruct
-      FStarC_Reflection_V2_Constants.ref_Mk_comp_view.FStarC_Reflection_V2_Constants.fv
-      [] uu___ in
-  let unembed_comp_view cb t =
-    match t.FStarC_TypeChecker_NBETerm.nbe_t with
-    | FStarC_TypeChecker_NBETerm.Construct
-        (fv, uu___,
-         (src, uu___1)::(flags, uu___2)::(res, uu___3)::(eff, uu___4)::[])
-        when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Mk_comp_view.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___5 =
-          FStarC_TypeChecker_NBETerm.unembed
-            FStarC_TypeChecker_NBETerm.e_string_list cb eff in
-        FStarC_Option.bind uu___5
-          (fun effect_name ->
-             let uu___6 = FStarC_TypeChecker_NBETerm.unembed e_term cb res in
-             FStarC_Option.bind uu___6
-               (fun result_typ ->
-                  let uu___7 =
-                    FStarC_TypeChecker_NBETerm.unembed
-                      (FStarC_TypeChecker_NBETerm.e_list e_cflag) cb flags in
-                  FStarC_Option.bind uu___7
-                    (fun flags1 ->
-                       let uu___8 =
-                         FStarC_TypeChecker_NBETerm.unembed
-                           FStarC_TypeChecker_NBETerm.e_string_list cb src in
-                       FStarC_Option.bind uu___8
-                         (fun source_effect_name ->
-                            let r =
-                              {
-                                FStarC_Reflection_V2_Data.effect_name =
-                                  effect_name;
-                                FStarC_Reflection_V2_Data.result_typ =
-                                  result_typ;
-                                FStarC_Reflection_V2_Data.flags = flags1;
-                                FStarC_Reflection_V2_Data.source_effect_name
-                                  = source_effect_name
-                              } in
-                            FStar_Pervasives_Native.Some r))))
-    | uu___ ->
-        ((let uu___2 =
-            let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
-            FStarC_Format.fmt1 "Not an embedded comp_view: %s" uu___3 in
-          FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-            (Obj.magic uu___2));
-         FStar_Pervasives_Native.None) in
-  mk_emb' embed_comp_view unembed_comp_view
-    FStarC_Reflection_V2_Constants.fstar_refl_comp_view_fv
-let e_sigelt :
-  FStarC_Syntax_Syntax.sigelt FStarC_TypeChecker_NBETerm.embedding=
-  let embed_sigelt cb se =
-    mk_lazy cb se FStarC_Reflection_V2_Constants.fstar_refl_sigelt
-      FStarC_Syntax_Syntax.Lazy_sigelt in
-  let unembed_sigelt cb t =
-    match t.FStarC_TypeChecker_NBETerm.nbe_t with
-    | FStarC_TypeChecker_NBETerm.Lazy
-        (FStar_Pervasives.Inl
-         { FStarC_Syntax_Syntax.blob = b;
-           FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_sigelt;
-           FStarC_Syntax_Syntax.ltyp = uu___;
-           FStarC_Syntax_Syntax.rng = uu___1;_},
-         uu___2)
-        ->
-        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
-    | uu___ ->
-        ((let uu___2 =
-            let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
-            FStarC_Format.fmt1 "Not an embedded sigelt: %s" uu___3 in
-          FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-            (Obj.magic uu___2));
-         FStar_Pervasives_Native.None) in
-  mk_emb' embed_sigelt unembed_sigelt
-    FStarC_Reflection_V2_Constants.fstar_refl_sigelt_fv
-let e_string_list :
-  Prims.string Prims.list FStarC_TypeChecker_NBETerm.embedding=
-  FStarC_TypeChecker_NBETerm.e_list FStarC_TypeChecker_NBETerm.e_string
-let e_ctor :
-  (Prims.string Prims.list * FStarC_Syntax_Syntax.term)
-    FStarC_TypeChecker_NBETerm.embedding=
-  FStarC_TypeChecker_NBETerm.e_tuple2 e_string_list e_term
-let e_lb_view :
-  FStarC_Reflection_V2_Data.lb_view FStarC_TypeChecker_NBETerm.embedding=
-  let embed_lb_view cb lbv =
-    let uu___ =
-      let uu___1 =
-        let uu___2 =
-          FStarC_TypeChecker_NBETerm.embed e_fv cb
-            lbv.FStarC_Reflection_V2_Data.lb_fv in
-        FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-      let uu___2 =
-        let uu___3 =
-          let uu___4 =
-            FStarC_TypeChecker_NBETerm.embed e_univ_names cb
-              lbv.FStarC_Reflection_V2_Data.lb_us in
-          FStarC_TypeChecker_NBETerm.as_arg uu___4 in
-        let uu___4 =
-          let uu___5 =
-            let uu___6 =
-              FStarC_TypeChecker_NBETerm.embed e_term cb
-                lbv.FStarC_Reflection_V2_Data.lb_typ in
-            FStarC_TypeChecker_NBETerm.as_arg uu___6 in
-          let uu___6 =
-            let uu___7 =
-              let uu___8 =
-                FStarC_TypeChecker_NBETerm.embed e_term cb
-                  lbv.FStarC_Reflection_V2_Data.lb_def in
-              FStarC_TypeChecker_NBETerm.as_arg uu___8 in
-            [uu___7] in
-          uu___5 :: uu___6 in
-        uu___3 :: uu___4 in
-      uu___1 :: uu___2 in
-    mkConstruct
-      FStarC_Reflection_V2_Constants.ref_Mk_lb.FStarC_Reflection_V2_Constants.fv
-      [] uu___ in
-  let unembed_lb_view cb t =
-    match t.FStarC_TypeChecker_NBETerm.nbe_t with
-    | FStarC_TypeChecker_NBETerm.Construct
-        (fv, uu___,
-         (fv', uu___1)::(us, uu___2)::(typ, uu___3)::(def, uu___4)::[])
-        when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Mk_lb.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___5 = FStarC_TypeChecker_NBETerm.unembed e_fv cb fv' in
-        FStarC_Option.bind uu___5
-          (fun fv'1 ->
-             let uu___6 =
-               FStarC_TypeChecker_NBETerm.unembed e_univ_names cb us in
-             FStarC_Option.bind uu___6
-               (fun us1 ->
-                  let uu___7 =
-                    FStarC_TypeChecker_NBETerm.unembed e_term cb typ in
-                  FStarC_Option.bind uu___7
-                    (fun typ1 ->
-                       let uu___8 =
-                         FStarC_TypeChecker_NBETerm.unembed e_term cb def in
-                       FStarC_Option.bind uu___8
-                         (fun def1 ->
-                            FStar_Pervasives_Native.Some
-                              {
-                                FStarC_Reflection_V2_Data.lb_fv = fv'1;
-                                FStarC_Reflection_V2_Data.lb_us = us1;
-                                FStarC_Reflection_V2_Data.lb_typ = typ1;
-                                FStarC_Reflection_V2_Data.lb_def = def1
-                              }))))
-    | uu___ ->
-        ((let uu___2 =
-            let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
-            FStarC_Format.fmt1 "Not an embedded lb_view: %s" uu___3 in
-          FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-            (Obj.magic uu___2));
-         FStar_Pervasives_Native.None) in
-  mk_emb' embed_lb_view unembed_lb_view
-    FStarC_Reflection_V2_Constants.fstar_refl_lb_view_fv
-let e_lid : FStarC_Ident.lid FStarC_TypeChecker_NBETerm.embedding=
-  let embed rng lid =
-    let uu___ = FStarC_Ident.path_of_lid lid in
-    FStarC_TypeChecker_NBETerm.embed e_string_list rng uu___ in
-  let unembed cb t =
-    let uu___ = FStarC_TypeChecker_NBETerm.unembed e_string_list cb t in
-    FStarC_Option.map
-      (fun p -> FStarC_Ident.lid_of_path p FStarC_Range_Type.dummyRange)
-      uu___ in
-  FStarC_TypeChecker_NBETerm.mk_emb embed unembed
-    (fun uu___ ->
-       mkConstruct FStarC_Reflection_V2_Constants.fstar_refl_aqualv_fv [] [])
-    (fun uu___ ->
-       fv_as_emb_typ FStarC_Reflection_V2_Constants.fstar_refl_aqualv_fv)
-let e_letbinding :
-  FStarC_Syntax_Syntax.letbinding FStarC_TypeChecker_NBETerm.embedding=
-  let embed_letbinding cb lb =
-    mk_lazy cb lb FStarC_Reflection_V2_Constants.fstar_refl_letbinding
-      FStarC_Syntax_Syntax.Lazy_letbinding in
-  let unembed_letbinding cb t =
-    match t.FStarC_TypeChecker_NBETerm.nbe_t with
-    | FStarC_TypeChecker_NBETerm.Lazy
-        (FStar_Pervasives.Inl
-         { FStarC_Syntax_Syntax.blob = lb;
-           FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_letbinding;
-           FStarC_Syntax_Syntax.ltyp = uu___;
-           FStarC_Syntax_Syntax.rng = uu___1;_},
-         uu___2)
-        ->
-        let uu___3 = FStar_Dyn.undyn lb in
-        FStar_Pervasives_Native.Some uu___3
-    | uu___ ->
-        ((let uu___2 =
-            let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
-            FStarC_Format.fmt1 "Not an embedded letbinding: %s" uu___3 in
-          FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-            (Obj.magic uu___2));
-         FStar_Pervasives_Native.None) in
-  mk_emb' embed_letbinding unembed_letbinding
-    FStarC_Reflection_V2_Constants.fstar_refl_letbinding_fv
-let e_sigelt_view :
-  FStarC_Reflection_V2_Data.sigelt_view FStarC_TypeChecker_NBETerm.embedding=
-  let embed_sigelt_view cb sev =
-    match sev with
-    | FStarC_Reflection_V2_Data.Sg_Let (r, lbs) ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 =
-              FStarC_TypeChecker_NBETerm.embed
-                FStarC_TypeChecker_NBETerm.e_bool cb r in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          let uu___2 =
-            let uu___3 =
-              let uu___4 =
-                FStarC_TypeChecker_NBETerm.embed
-                  (FStarC_TypeChecker_NBETerm.e_list e_letbinding) cb lbs in
-              FStarC_TypeChecker_NBETerm.as_arg uu___4 in
-            [uu___3] in
-          uu___1 :: uu___2 in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Sg_Let.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.Sg_Inductive (nm, univs, bs, t, dcs) ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStarC_TypeChecker_NBETerm.embed e_string_list cb nm in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          let uu___2 =
-            let uu___3 =
-              let uu___4 =
-                FStarC_TypeChecker_NBETerm.embed e_univ_names cb univs in
-              FStarC_TypeChecker_NBETerm.as_arg uu___4 in
-            let uu___4 =
-              let uu___5 =
-                let uu___6 = FStarC_TypeChecker_NBETerm.embed e_binders cb bs in
-                FStarC_TypeChecker_NBETerm.as_arg uu___6 in
-              let uu___6 =
-                let uu___7 =
-                  let uu___8 = FStarC_TypeChecker_NBETerm.embed e_term cb t in
-                  FStarC_TypeChecker_NBETerm.as_arg uu___8 in
-                let uu___8 =
-                  let uu___9 =
-                    let uu___10 =
-                      FStarC_TypeChecker_NBETerm.embed
-                        (FStarC_TypeChecker_NBETerm.e_list e_ctor) cb dcs in
-                    FStarC_TypeChecker_NBETerm.as_arg uu___10 in
-                  [uu___9] in
-                uu___7 :: uu___8 in
-              uu___5 :: uu___6 in
-            uu___3 :: uu___4 in
-          uu___1 :: uu___2 in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Sg_Inductive.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.Sg_Val (nm, univs, t) ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStarC_TypeChecker_NBETerm.embed e_string_list cb nm in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          let uu___2 =
-            let uu___3 =
-              let uu___4 =
-                FStarC_TypeChecker_NBETerm.embed e_univ_names cb univs in
-              FStarC_TypeChecker_NBETerm.as_arg uu___4 in
-            let uu___4 =
-              let uu___5 =
-                let uu___6 = FStarC_TypeChecker_NBETerm.embed e_term cb t in
-                FStarC_TypeChecker_NBETerm.as_arg uu___6 in
-              [uu___5] in
-            uu___3 :: uu___4 in
-          uu___1 :: uu___2 in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Sg_Val.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.Unk ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_Unk.FStarC_Reflection_V2_Constants.fv
-          [] [] in
-  let unembed_sigelt_view cb t =
-    match t.FStarC_TypeChecker_NBETerm.nbe_t with
-    | FStarC_TypeChecker_NBETerm.Construct
-        (fv, uu___,
-         (dcs, uu___1)::(t1, uu___2)::(bs, uu___3)::(us, uu___4)::(nm,
-                                                                   uu___5)::[])
-        when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Sg_Inductive.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___6 = FStarC_TypeChecker_NBETerm.unembed e_string_list cb nm in
-        FStarC_Option.bind uu___6
-          (fun nm1 ->
-             let uu___7 =
-               FStarC_TypeChecker_NBETerm.unembed e_univ_names cb us in
-             FStarC_Option.bind uu___7
-               (fun us1 ->
-                  let uu___8 =
-                    FStarC_TypeChecker_NBETerm.unembed e_binders cb bs in
-                  FStarC_Option.bind uu___8
-                    (fun bs1 ->
-                       let uu___9 =
-                         FStarC_TypeChecker_NBETerm.unembed e_term cb t1 in
-                       FStarC_Option.bind uu___9
-                         (fun t2 ->
-                            let uu___10 =
-                              FStarC_TypeChecker_NBETerm.unembed
-                                (FStarC_TypeChecker_NBETerm.e_list e_ctor) cb
-                                dcs in
-                            FStarC_Option.bind uu___10
-                              (fun dcs1 ->
-                                 FStar_Pervasives_Native.Some
-                                   (FStarC_Reflection_V2_Data.Sg_Inductive
-                                      (nm1, us1, bs1, t2, dcs1)))))))
-    | FStarC_TypeChecker_NBETerm.Construct
-        (fv, uu___, (lbs, uu___1)::(r, uu___2)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Sg_Let.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___3 =
-          FStarC_TypeChecker_NBETerm.unembed
-            FStarC_TypeChecker_NBETerm.e_bool cb r in
-        FStarC_Option.bind uu___3
-          (fun r1 ->
-             let uu___4 =
-               FStarC_TypeChecker_NBETerm.unembed
-                 (FStarC_TypeChecker_NBETerm.e_list e_letbinding) cb lbs in
-             FStarC_Option.bind uu___4
-               (fun lbs1 ->
-                  FStar_Pervasives_Native.Some
-                    (FStarC_Reflection_V2_Data.Sg_Let (r1, lbs1))))
-    | FStarC_TypeChecker_NBETerm.Construct
-        (fv, uu___, (t1, uu___1)::(us, uu___2)::(nm, uu___3)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Sg_Val.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___4 = FStarC_TypeChecker_NBETerm.unembed e_string_list cb nm in
-        FStarC_Option.bind uu___4
-          (fun nm1 ->
-             let uu___5 =
-               FStarC_TypeChecker_NBETerm.unembed e_univ_names cb us in
-             FStarC_Option.bind uu___5
-               (fun us1 ->
-                  let uu___6 =
-                    FStarC_TypeChecker_NBETerm.unembed e_term cb t1 in
-                  FStarC_Option.bind uu___6
-                    (fun t2 ->
-                       FStar_Pervasives_Native.Some
-                         (FStarC_Reflection_V2_Data.Sg_Val (nm1, us1, t2)))))
-    | FStarC_TypeChecker_NBETerm.Construct (fv, uu___, []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_Unk.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.Unk
-    | uu___ ->
-        ((let uu___2 =
-            let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
-            FStarC_Format.fmt1 "Not an embedded sigelt_view: %s" uu___3 in
-          FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-            (Obj.magic uu___2));
-         FStar_Pervasives_Native.None) in
-  mk_emb' embed_sigelt_view unembed_sigelt_view
-    FStarC_Reflection_V2_Constants.fstar_refl_sigelt_view_fv
-let e_name :
-  FStarC_Reflection_V2_Data.name FStarC_TypeChecker_NBETerm.embedding=
-  FStarC_TypeChecker_NBETerm.e_list FStarC_TypeChecker_NBETerm.e_string
-let e_qualifier :
-  FStarC_Reflection_V2_Data.qualifier FStarC_TypeChecker_NBETerm.embedding=
-  let embed cb q =
-    match q with
-    | FStarC_Reflection_V2_Data.Assumption ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_qual_Assumption.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.New ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_qual_New.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.Private ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_qual_Private.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.Unfold_for_unification_and_vcgen ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_qual_Unfold_for_unification_and_vcgen.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.Visible_default ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_qual_Visible_default.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.Irreducible ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_qual_Irreducible.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.Inline_for_extraction ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_qual_Inline_for_extraction.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.NoExtract ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_qual_NoExtract.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.Noeq ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_qual_Noeq.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.Unopteq ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_qual_Unopteq.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.TotalEffect ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_qual_TotalEffect.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.Logic ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_qual_Logic.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.Reifiable ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_qual_Reifiable.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.ExceptionConstructor ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_qual_ExceptionConstructor.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.HasMaskedEffect ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_qual_HasMaskedEffect.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.Effect ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_qual_Effect.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.OnlyName ->
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_qual_OnlyName.FStarC_Reflection_V2_Constants.fv
-          [] []
-    | FStarC_Reflection_V2_Data.Reflectable l ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStarC_TypeChecker_NBETerm.embed e_name cb l in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          [uu___1] in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_qual_Reflectable.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.Discriminator l ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStarC_TypeChecker_NBETerm.embed e_name cb l in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          [uu___1] in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_qual_Discriminator.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.Action l ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStarC_TypeChecker_NBETerm.embed e_name cb l in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          [uu___1] in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_qual_Action.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.Projector li ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 =
-              FStarC_TypeChecker_NBETerm.embed
-                (FStarC_TypeChecker_NBETerm.e_tuple2 e_name e_ident) cb li in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          [uu___1] in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_qual_Projector.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.RecordType ids12 ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 =
-              FStarC_TypeChecker_NBETerm.embed
-                (FStarC_TypeChecker_NBETerm.e_tuple2
-                   (FStarC_TypeChecker_NBETerm.e_list e_ident)
-                   (FStarC_TypeChecker_NBETerm.e_list e_ident)) cb ids12 in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          [uu___1] in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_qual_RecordType.FStarC_Reflection_V2_Constants.fv
-          [] uu___
-    | FStarC_Reflection_V2_Data.RecordConstructor ids12 ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 =
-              FStarC_TypeChecker_NBETerm.embed
-                (FStarC_TypeChecker_NBETerm.e_tuple2
-                   (FStarC_TypeChecker_NBETerm.e_list e_ident)
-                   (FStarC_TypeChecker_NBETerm.e_list e_ident)) cb ids12 in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          [uu___1] in
-        mkConstruct
-          FStarC_Reflection_V2_Constants.ref_qual_RecordConstructor.FStarC_Reflection_V2_Constants.fv
-          [] uu___ in
-  let unembed cb t =
-    match t.FStarC_TypeChecker_NBETerm.nbe_t with
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_qual_Assumption.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.Assumption
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_qual_New.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.New
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_qual_Private.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.Private
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_qual_Unfold_for_unification_and_vcgen.FStarC_Reflection_V2_Constants.lid
-        ->
-        FStar_Pervasives_Native.Some
-          FStarC_Reflection_V2_Data.Unfold_for_unification_and_vcgen
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_qual_Visible_default.FStarC_Reflection_V2_Constants.lid
-        ->
-        FStar_Pervasives_Native.Some
-          FStarC_Reflection_V2_Data.Visible_default
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_qual_Irreducible.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.Irreducible
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_qual_Inline_for_extraction.FStarC_Reflection_V2_Constants.lid
-        ->
-        FStar_Pervasives_Native.Some
-          FStarC_Reflection_V2_Data.Inline_for_extraction
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_qual_NoExtract.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.NoExtract
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_qual_Noeq.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.Noeq
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_qual_Unopteq.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.Unopteq
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_qual_TotalEffect.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.TotalEffect
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_qual_Logic.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.Logic
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_qual_Reifiable.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.Reifiable
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_qual_ExceptionConstructor.FStarC_Reflection_V2_Constants.lid
-        ->
-        FStar_Pervasives_Native.Some
-          FStarC_Reflection_V2_Data.ExceptionConstructor
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_qual_HasMaskedEffect.FStarC_Reflection_V2_Constants.lid
-        ->
-        FStar_Pervasives_Native.Some
-          FStarC_Reflection_V2_Data.HasMaskedEffect
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_qual_Effect.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.Effect
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], []) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_qual_OnlyName.FStarC_Reflection_V2_Constants.lid
-        -> FStar_Pervasives_Native.Some FStarC_Reflection_V2_Data.OnlyName
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], (l, uu___)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_qual_Reflectable.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___1 = FStarC_TypeChecker_NBETerm.unembed e_name cb l in
-        FStarC_Option.bind uu___1
-          (fun l1 ->
-             FStar_Pervasives_Native.Some
-               (FStarC_Reflection_V2_Data.Reflectable l1))
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], (l, uu___)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_qual_Discriminator.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___1 = FStarC_TypeChecker_NBETerm.unembed e_name cb l in
-        FStarC_Option.bind uu___1
-          (fun l1 ->
-             FStar_Pervasives_Native.Some
-               (FStarC_Reflection_V2_Data.Discriminator l1))
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], (l, uu___)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_qual_Action.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___1 = FStarC_TypeChecker_NBETerm.unembed e_name cb l in
-        FStarC_Option.bind uu___1
-          (fun l1 ->
-             FStar_Pervasives_Native.Some
-               (FStarC_Reflection_V2_Data.Action l1))
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], (li, uu___)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_qual_Projector.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___1 =
-          FStarC_TypeChecker_NBETerm.unembed
-            (FStarC_TypeChecker_NBETerm.e_tuple2 e_name e_ident) cb li in
-        FStarC_Option.bind uu___1
-          (fun li1 ->
-             FStar_Pervasives_Native.Some
-               (FStarC_Reflection_V2_Data.Projector li1))
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], (ids12, uu___)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_qual_RecordType.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___1 =
-          FStarC_TypeChecker_NBETerm.unembed
-            (FStarC_TypeChecker_NBETerm.e_tuple2
-               (FStarC_TypeChecker_NBETerm.e_list e_ident)
-               (FStarC_TypeChecker_NBETerm.e_list e_ident)) cb ids12 in
-        FStarC_Option.bind uu___1
-          (fun ids121 ->
-             FStar_Pervasives_Native.Some
-               (FStarC_Reflection_V2_Data.RecordType ids121))
-    | FStarC_TypeChecker_NBETerm.Construct (fv, [], (ids12, uu___)::[]) when
-        FStarC_Syntax_Syntax.fv_eq_lid fv
-          FStarC_Reflection_V2_Constants.ref_qual_RecordConstructor.FStarC_Reflection_V2_Constants.lid
-        ->
-        let uu___1 =
-          FStarC_TypeChecker_NBETerm.unembed
-            (FStarC_TypeChecker_NBETerm.e_tuple2
-               (FStarC_TypeChecker_NBETerm.e_list e_ident)
-               (FStarC_TypeChecker_NBETerm.e_list e_ident)) cb ids12 in
-        FStarC_Option.bind uu___1
-          (fun ids121 ->
-             FStar_Pervasives_Native.Some
-               (FStarC_Reflection_V2_Data.RecordConstructor ids121))
-    | uu___ ->
-        ((let uu___2 =
-            let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
-            FStarC_Format.fmt1 "Not an embedded qualifier: %s" uu___3 in
-          FStarC_Errors.log_issue0 FStarC_Errors_Codes.Warning_NotEmbedded ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-            (Obj.magic uu___2));
-         FStar_Pervasives_Native.None) in
-  FStarC_TypeChecker_NBETerm.mk_emb embed unembed
-    (fun uu___ ->
-       mkConstruct FStarC_Reflection_V2_Constants.fstar_refl_qualifier_fv []
-         [])
-    (fun uu___ ->
-       fv_as_emb_typ FStarC_Reflection_V2_Constants.fstar_refl_qualifier_fv)
-let e_qualifiers :
-  FStarC_Reflection_V2_Data.qualifier Prims.list
-    FStarC_TypeChecker_NBETerm.embedding=
-  FStarC_TypeChecker_NBETerm.e_list e_qualifier
-let e_vconfig : FStarC_Order.order FStarC_TypeChecker_NBETerm.embedding=
-  let emb cb o = FStarC_Effect.failwith "emb vconfig NBE" in
-  let unemb cb t = FStarC_Effect.failwith "unemb vconfig NBE" in
-  mk_emb' emb unemb
-    (FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.vconfig_lid
-       FStar_Pervasives_Native.None)
+
+let e_univ_names : ((FStarC_Ident.ident) list) FStarC_TypeChecker_NBETerm.embedding =
+  (FStarC_TypeChecker_NBETerm.e_list e_univ_name)
+
+let e_binders : ((FStarC_Syntax_Syntax.binder) list) FStarC_TypeChecker_NBETerm.embedding =
+  (FStarC_TypeChecker_NBETerm.e_list e_binder)
+
+let e_ctor : (((string) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) FStarC_TypeChecker_NBETerm.embedding =
+  (FStarC_TypeChecker_NBETerm.e_tuple2 e_string_list e_term)
+
+let e_sigelt_view : (FStarC_Reflection_V2_Data.sigelt_view) FStarC_TypeChecker_NBETerm.embedding =
+  (let embed_sigelt_view = (fun cb sev -> (match sev with
+      | (FStarC_Reflection_V2_Data.Sg_Let (r, lbs)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed FStarC_TypeChecker_NBETerm.e_bool cb r) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (FStarC_TypeChecker_NBETerm.embed (FStarC_TypeChecker_NBETerm.e_list e_letbinding) cb lbs) in
+        let tmp3 = (FStarC_TypeChecker_NBETerm.as_arg tmp2) in
+        let tmp4 = (tmp3 :: []) in
+        let tmp5 = (tmp1 :: tmp4) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Sg_Let).FStarC_Reflection_V2_Constants.fv [] tmp5))
+      | (FStarC_Reflection_V2_Data.Sg_Inductive (nm, univs, bs, t, dcs)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed e_string_list cb nm) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (FStarC_TypeChecker_NBETerm.embed e_univ_names cb univs) in
+        let tmp3 = (FStarC_TypeChecker_NBETerm.as_arg tmp2) in
+        let tmp4 = (FStarC_TypeChecker_NBETerm.embed e_binders cb bs) in
+        let tmp5 = (FStarC_TypeChecker_NBETerm.as_arg tmp4) in
+        let tmp6 = (FStarC_TypeChecker_NBETerm.embed e_term cb t) in
+        let tmp7 = (FStarC_TypeChecker_NBETerm.as_arg tmp6) in
+        let tmp8 = (FStarC_TypeChecker_NBETerm.embed (FStarC_TypeChecker_NBETerm.e_list e_ctor) cb dcs) in
+        let tmp9 = (FStarC_TypeChecker_NBETerm.as_arg tmp8) in
+        let tmp10 = (tmp9 :: []) in
+        let tmp11 = (tmp7 :: tmp10) in
+        let tmp12 = (tmp5 :: tmp11) in
+        let tmp13 = (tmp3 :: tmp12) in
+        let tmp14 = (tmp1 :: tmp13) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Sg_Inductive).FStarC_Reflection_V2_Constants.fv [] tmp14))
+      | (FStarC_Reflection_V2_Data.Sg_Val (nm, univs, t)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed e_string_list cb nm) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (FStarC_TypeChecker_NBETerm.embed e_univ_names cb univs) in
+        let tmp3 = (FStarC_TypeChecker_NBETerm.as_arg tmp2) in
+        let tmp4 = (FStarC_TypeChecker_NBETerm.embed e_term cb t) in
+        let tmp5 = (FStarC_TypeChecker_NBETerm.as_arg tmp4) in
+        let tmp6 = (tmp5 :: []) in
+        let tmp7 = (tmp3 :: tmp6) in
+        let tmp8 = (tmp1 :: tmp7) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_Sg_Val).FStarC_Reflection_V2_Constants.fv [] tmp8))
+      | FStarC_Reflection_V2_Data.Unk -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_Unk).FStarC_Reflection_V2_Constants.fv [] [])
+    )) in
+  let unembed_sigelt_view = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((dcs, tmp1) :: ((t1, tmp2) :: ((bs, tmp3) :: ((us, tmp4) :: ((nm, tmp5) :: []))))))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Sg_Inductive).FStarC_Reflection_V2_Constants.lid) -> (let tmp6 = (FStarC_TypeChecker_NBETerm.unembed e_string_list cb nm) in
+        (FStarC_Option.bind tmp6 (fun nm1 -> (let tmp7 = (FStarC_TypeChecker_NBETerm.unembed e_univ_names cb us) in
+        (FStarC_Option.bind tmp7 (fun us1 -> (let tmp8 = (FStarC_TypeChecker_NBETerm.unembed e_binders cb bs) in
+        (FStarC_Option.bind tmp8 (fun bs1 -> (let tmp9 = (FStarC_TypeChecker_NBETerm.unembed e_term cb t1) in
+        (FStarC_Option.bind tmp9 (fun t2 -> (let tmp10 = (FStarC_TypeChecker_NBETerm.unembed (FStarC_TypeChecker_NBETerm.e_list e_ctor) cb dcs) in
+        (FStarC_Option.bind tmp10 (fun dcs1 -> (Some ((FStarC_Reflection_V2_Data.Sg_Inductive (nm1, us1, bs1, t2, dcs1)))))))))))))))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((lbs, tmp1) :: ((r, tmp2) :: [])))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Sg_Let).FStarC_Reflection_V2_Constants.lid) -> (let tmp3 = (FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_bool cb r) in
+        (FStarC_Option.bind tmp3 (fun r1 -> (let tmp4 = (FStarC_TypeChecker_NBETerm.unembed (FStarC_TypeChecker_NBETerm.e_list e_letbinding) cb lbs) in
+        (FStarC_Option.bind tmp4 (fun lbs1 -> (Some ((FStarC_Reflection_V2_Data.Sg_Let (r1, lbs1))))))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((t1, tmp1) :: ((us, tmp2) :: ((nm, tmp3) :: []))))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Sg_Val).FStarC_Reflection_V2_Constants.lid) -> (let tmp4 = (FStarC_TypeChecker_NBETerm.unembed e_string_list cb nm) in
+        (FStarC_Option.bind tmp4 (fun nm1 -> (let tmp5 = (FStarC_TypeChecker_NBETerm.unembed e_univ_names cb us) in
+        (FStarC_Option.bind tmp5 (fun us1 -> (let tmp6 = (FStarC_TypeChecker_NBETerm.unembed e_term cb t1) in
+        (FStarC_Option.bind tmp6 (fun t2 -> (Some ((FStarC_Reflection_V2_Data.Sg_Val (nm1, us1, t2)))))))))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Unk).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.Unk))
+      | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
+        let tmp2 = (FStarC_Format.fmt1 "Not an embedded sigelt_view: %s" tmp1) in
+        (FStarC_Errors.fStarC_Errors_log_issue0__string FStarC_Errors_Codes.Warning_NotEmbedded tmp2);
+        None)
+    )) in
+  (mk_emb' embed_sigelt_view unembed_sigelt_view FStarC_Reflection_V2_Constants.fstar_refl_sigelt_view_fv))
+
+let e_lb_view : (FStarC_Reflection_V2_Data.lb_view) FStarC_TypeChecker_NBETerm.embedding =
+  (let embed_lb_view = (fun cb lbv -> (let tmp = (FStarC_TypeChecker_NBETerm.embed e_fv cb (lbv).FStarC_Reflection_V2_Data.lb_fv) in
+    let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+    let tmp2 = (FStarC_TypeChecker_NBETerm.embed e_univ_names cb (lbv).FStarC_Reflection_V2_Data.lb_us) in
+    let tmp3 = (FStarC_TypeChecker_NBETerm.as_arg tmp2) in
+    let tmp4 = (FStarC_TypeChecker_NBETerm.embed e_term cb (lbv).FStarC_Reflection_V2_Data.lb_typ) in
+    let tmp5 = (FStarC_TypeChecker_NBETerm.as_arg tmp4) in
+    let tmp6 = (FStarC_TypeChecker_NBETerm.embed e_term cb (lbv).FStarC_Reflection_V2_Data.lb_def) in
+    let tmp7 = (FStarC_TypeChecker_NBETerm.as_arg tmp6) in
+    let tmp8 = (tmp7 :: []) in
+    let tmp9 = (tmp5 :: tmp8) in
+    let tmp10 = (tmp3 :: tmp9) in
+    let tmp11 = (tmp1 :: tmp10) in
+    (mkConstruct (FStarC_Reflection_V2_Constants.ref_Mk_lb).FStarC_Reflection_V2_Constants.fv [] tmp11))) in
+  let unembed_lb_view = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((fv', tmp1) :: ((us, tmp2) :: ((typ, tmp3) :: ((def, tmp4) :: [])))))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Mk_lb).FStarC_Reflection_V2_Constants.lid) -> (let tmp5 = (FStarC_TypeChecker_NBETerm.unembed e_fv cb fv') in
+        (FStarC_Option.bind tmp5 (fun fv'1 -> (let tmp6 = (FStarC_TypeChecker_NBETerm.unembed e_univ_names cb us) in
+        (FStarC_Option.bind tmp6 (fun us1 -> (let tmp7 = (FStarC_TypeChecker_NBETerm.unembed e_term cb typ) in
+        (FStarC_Option.bind tmp7 (fun typ1 -> (let tmp8 = (FStarC_TypeChecker_NBETerm.unembed e_term cb def) in
+        (FStarC_Option.bind tmp8 (fun def1 -> (Some ({ FStarC_Reflection_V2_Data.lb_fv = fv'1;
+          lb_us = us1;
+          lb_typ = typ1;
+          lb_def = def1 }))))))))))))))
+      | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
+        let tmp2 = (FStarC_Format.fmt1 "Not an embedded lb_view: %s" tmp1) in
+        (FStarC_Errors.fStarC_Errors_log_issue0__string FStarC_Errors_Codes.Warning_NotEmbedded tmp2);
+        None)
+    )) in
+  (mk_emb' embed_lb_view unembed_lb_view FStarC_Reflection_V2_Constants.fstar_refl_lb_view_fv))
+
+let e_namedv : (FStarC_Syntax_Syntax.bv) FStarC_TypeChecker_NBETerm.embedding =
+  (let embed_namedv = (fun cb namedv -> (mk_lazy cb namedv FStarC_Reflection_V2_Constants.fstar_refl_namedv FStarC_Syntax_Syntax.Lazy_namedv)) in
+  let unembed_namedv = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_namedv; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (FStar_Dyn.undyn b) in
+        (Some (tmp3)))
+      | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
+        let tmp2 = (FStarC_Format.fmt1 "Not an embedded namedv: %s" tmp1) in
+        (FStarC_Errors.fStarC_Errors_log_issue0__string FStarC_Errors_Codes.Warning_NotEmbedded tmp2);
+        None)
+    )) in
+  (mk_emb' embed_namedv unembed_namedv FStarC_Reflection_V2_Constants.fstar_refl_namedv_fv))
+
+let e_namedv_view : (FStarC_Reflection_V2_Data.namedv_view) FStarC_TypeChecker_NBETerm.embedding =
+  (let embed_namedv_view = (fun cb namedvv -> (let tmp = (FStarC_TypeChecker_NBETerm.embed FStarC_TypeChecker_NBETerm.e_int cb ((namedvv : FStarC_Reflection_V2_Data.namedv_view)).FStarC_Reflection_V2_Data.uniq) in
+    let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+    let tmp2 = (FStarC_TypeChecker_NBETerm.embed e_ppname cb ((namedvv : FStarC_Reflection_V2_Data.namedv_view)).FStarC_Reflection_V2_Data.ppname) in
+    let tmp3 = (FStarC_TypeChecker_NBETerm.as_arg tmp2) in
+    let tmp4 = (FStarC_TypeChecker_NBETerm.embed e_sort cb ((namedvv : FStarC_Reflection_V2_Data.namedv_view)).FStarC_Reflection_V2_Data.sort) in
+    let tmp5 = (FStarC_TypeChecker_NBETerm.as_arg tmp4) in
+    let tmp6 = (tmp5 :: []) in
+    let tmp7 = (tmp3 :: tmp6) in
+    let tmp8 = (tmp1 :: tmp7) in
+    (mkConstruct (FStarC_Reflection_V2_Constants.ref_Mk_namedv_view).FStarC_Reflection_V2_Constants.fv [] tmp8))) in
+  let unembed_namedv_view = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((sort, tmp1) :: ((ppname, tmp2) :: ((uniq, tmp3) :: []))))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Mk_namedv_view).FStarC_Reflection_V2_Constants.lid) -> (let tmp4 = (FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_int cb uniq) in
+        (FStarC_Option.bind tmp4 (fun uniq1 -> (let tmp5 = (FStarC_TypeChecker_NBETerm.unembed e_ppname cb ppname) in
+        (FStarC_Option.bind tmp5 (fun ppname1 -> (let tmp6 = (FStarC_TypeChecker_NBETerm.unembed e_sort cb sort) in
+        (FStarC_Option.bind tmp6 (fun sort1 -> (let r = ({ FStarC_Reflection_V2_Data.uniq = uniq1;
+            sort = sort1;
+            ppname = ppname1 } : FStarC_Reflection_V2_Data.namedv_view) in
+        (Some (r))))))))))))
+      | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
+        let tmp2 = (FStarC_Format.fmt1 "Not an embedded namedv_view: %s" tmp1) in
+        (FStarC_Errors.fStarC_Errors_log_issue0__string FStarC_Errors_Codes.Warning_NotEmbedded tmp2);
+        None)
+    )) in
+  (mk_emb' embed_namedv_view unembed_namedv_view FStarC_Reflection_V2_Constants.fstar_refl_namedv_view_fv))
+
+let e_bv_view : (FStarC_Reflection_V2_Data.bv_view) FStarC_TypeChecker_NBETerm.embedding =
+  (let embed_bv_view = (fun cb bvv -> (let tmp = (FStarC_TypeChecker_NBETerm.embed FStarC_TypeChecker_NBETerm.e_int cb (bvv).FStarC_Reflection_V2_Data.index) in
+    let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+    let tmp2 = (FStarC_TypeChecker_NBETerm.embed e_ppname cb ((bvv : FStarC_Reflection_V2_Data.bv_view)).FStarC_Reflection_V2_Data.ppname) in
+    let tmp3 = (FStarC_TypeChecker_NBETerm.as_arg tmp2) in
+    let tmp4 = (FStarC_TypeChecker_NBETerm.embed e_sort cb ((bvv : FStarC_Reflection_V2_Data.bv_view)).FStarC_Reflection_V2_Data.sort) in
+    let tmp5 = (FStarC_TypeChecker_NBETerm.as_arg tmp4) in
+    let tmp6 = (tmp5 :: []) in
+    let tmp7 = (tmp3 :: tmp6) in
+    let tmp8 = (tmp1 :: tmp7) in
+    (mkConstruct (FStarC_Reflection_V2_Constants.ref_Mk_bv_view).FStarC_Reflection_V2_Constants.fv [] tmp8))) in
+  let unembed_bv_view = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((sort, tmp1) :: ((ppname, tmp2) :: ((idx, tmp3) :: []))))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Mk_bv_view).FStarC_Reflection_V2_Constants.lid) -> (let tmp4 = (FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_int cb idx) in
+        (FStarC_Option.bind tmp4 (fun idx1 -> (let tmp5 = (FStarC_TypeChecker_NBETerm.unembed e_ppname cb ppname) in
+        (FStarC_Option.bind tmp5 (fun ppname1 -> (let tmp6 = (FStarC_TypeChecker_NBETerm.unembed e_sort cb sort) in
+        (FStarC_Option.bind tmp6 (fun sort1 -> (let r = ({ FStarC_Reflection_V2_Data.index = idx1;
+            sort = sort1;
+            ppname = ppname1 } : FStarC_Reflection_V2_Data.bv_view) in
+        (Some (r))))))))))))
+      | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
+        let tmp2 = (FStarC_Format.fmt1 "Not an embedded bv_view: %s" tmp1) in
+        (FStarC_Errors.fStarC_Errors_log_issue0__string FStarC_Errors_Codes.Warning_NotEmbedded tmp2);
+        None)
+    )) in
+  (mk_emb' embed_bv_view unembed_bv_view FStarC_Reflection_V2_Constants.fstar_refl_bv_view_fv))
+
+let e_attribute : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStarC_TypeChecker_NBETerm.embedding =
+  e_term
+
+let e_attributes : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) FStarC_TypeChecker_NBETerm.embedding =
+  (FStarC_TypeChecker_NBETerm.e_list e_attribute)
+
+let e_binder_view : (FStarC_Reflection_V2_Data.binder_view) FStarC_TypeChecker_NBETerm.embedding =
+  (let embed_binder_view = (fun cb bview -> (let tmp = (FStarC_TypeChecker_NBETerm.embed e_term cb ((bview : FStarC_Reflection_V2_Data.binder_view)).FStarC_Reflection_V2_Data.sort) in
+    let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+    let tmp2 = (FStarC_TypeChecker_NBETerm.embed e_aqualv cb (bview).FStarC_Reflection_V2_Data.qual) in
+    let tmp3 = (FStarC_TypeChecker_NBETerm.as_arg tmp2) in
+    let tmp4 = (FStarC_TypeChecker_NBETerm.embed e_attributes cb (bview).FStarC_Reflection_V2_Data.attrs) in
+    let tmp5 = (FStarC_TypeChecker_NBETerm.as_arg tmp4) in
+    let tmp6 = (FStarC_TypeChecker_NBETerm.embed e_ppname cb ((bview : FStarC_Reflection_V2_Data.binder_view)).FStarC_Reflection_V2_Data.ppname) in
+    let tmp7 = (FStarC_TypeChecker_NBETerm.as_arg tmp6) in
+    let tmp8 = (tmp7 :: []) in
+    let tmp9 = (tmp5 :: tmp8) in
+    let tmp10 = (tmp3 :: tmp9) in
+    let tmp11 = (tmp1 :: tmp10) in
+    (mkConstruct (FStarC_Reflection_V2_Constants.ref_Mk_binder_view).FStarC_Reflection_V2_Constants.fv [] tmp11))) in
+  let unembed_binder_view = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((ppname, tmp1) :: ((attrs, tmp2) :: ((q, tmp3) :: ((sort, tmp4) :: [])))))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Mk_binder_view).FStarC_Reflection_V2_Constants.lid) -> (let tmp5 = (FStarC_TypeChecker_NBETerm.unembed e_term cb sort) in
+        (FStarC_Option.bind tmp5 (fun sort1 -> (let tmp6 = (FStarC_TypeChecker_NBETerm.unembed e_aqualv cb q) in
+        (FStarC_Option.bind tmp6 (fun q1 -> (let tmp7 = (FStarC_TypeChecker_NBETerm.unembed e_attributes cb attrs) in
+        (FStarC_Option.bind tmp7 (fun attrs1 -> (let tmp8 = (FStarC_TypeChecker_NBETerm.unembed e_ppname cb ppname) in
+        (FStarC_Option.bind tmp8 (fun ppname1 -> (let r = ({ FStarC_Reflection_V2_Data.sort = sort1;
+            qual = q1;
+            attrs = attrs1;
+            ppname = ppname1 } : FStarC_Reflection_V2_Data.binder_view) in
+        (Some (r)))))))))))))))
+      | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
+        let tmp2 = (FStarC_Format.fmt1 "Not an embedded binder_view: %s" tmp1) in
+        (FStarC_Errors.fStarC_Errors_log_issue0__string FStarC_Errors_Codes.Warning_NotEmbedded tmp2);
+        None)
+    )) in
+  (mk_emb' embed_binder_view unembed_binder_view FStarC_Reflection_V2_Constants.fstar_refl_binder_view_fv))
+
+let e_name : ((string) list) FStarC_TypeChecker_NBETerm.embedding =
+  (FStarC_TypeChecker_NBETerm.e_list FStarC_TypeChecker_NBETerm.e_string)
+
+let e_qualifier : (FStarC_Reflection_V2_Data.qualifier) FStarC_TypeChecker_NBETerm.embedding =
+  (let embed = (fun cb q -> (match q with
+      | FStarC_Reflection_V2_Data.Assumption -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_qual_Assumption).FStarC_Reflection_V2_Constants.fv [] [])
+      | FStarC_Reflection_V2_Data.New -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_qual_New).FStarC_Reflection_V2_Constants.fv [] [])
+      | FStarC_Reflection_V2_Data.Private -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_qual_Private).FStarC_Reflection_V2_Constants.fv [] [])
+      | FStarC_Reflection_V2_Data.Unfold_for_unification_and_vcgen -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_qual_Unfold_for_unification_and_vcgen).FStarC_Reflection_V2_Constants.fv [] [])
+      | FStarC_Reflection_V2_Data.Visible_default -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_qual_Visible_default).FStarC_Reflection_V2_Constants.fv [] [])
+      | FStarC_Reflection_V2_Data.Irreducible -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_qual_Irreducible).FStarC_Reflection_V2_Constants.fv [] [])
+      | FStarC_Reflection_V2_Data.Inline_for_extraction -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_qual_Inline_for_extraction).FStarC_Reflection_V2_Constants.fv [] [])
+      | FStarC_Reflection_V2_Data.NoExtract -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_qual_NoExtract).FStarC_Reflection_V2_Constants.fv [] [])
+      | FStarC_Reflection_V2_Data.Noeq -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_qual_Noeq).FStarC_Reflection_V2_Constants.fv [] [])
+      | FStarC_Reflection_V2_Data.Unopteq -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_qual_Unopteq).FStarC_Reflection_V2_Constants.fv [] [])
+      | FStarC_Reflection_V2_Data.TotalEffect -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_qual_TotalEffect).FStarC_Reflection_V2_Constants.fv [] [])
+      | FStarC_Reflection_V2_Data.Logic -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_qual_Logic).FStarC_Reflection_V2_Constants.fv [] [])
+      | FStarC_Reflection_V2_Data.Reifiable -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_qual_Reifiable).FStarC_Reflection_V2_Constants.fv [] [])
+      | FStarC_Reflection_V2_Data.ExceptionConstructor -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_qual_ExceptionConstructor).FStarC_Reflection_V2_Constants.fv [] [])
+      | FStarC_Reflection_V2_Data.HasMaskedEffect -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_qual_HasMaskedEffect).FStarC_Reflection_V2_Constants.fv [] [])
+      | FStarC_Reflection_V2_Data.Effect -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_qual_Effect).FStarC_Reflection_V2_Constants.fv [] [])
+      | FStarC_Reflection_V2_Data.OnlyName -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_qual_OnlyName).FStarC_Reflection_V2_Constants.fv [] [])
+      | (FStarC_Reflection_V2_Data.Reflectable (l)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed e_name cb l) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (tmp1 :: []) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_qual_Reflectable).FStarC_Reflection_V2_Constants.fv [] tmp2))
+      | (FStarC_Reflection_V2_Data.Discriminator (l)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed e_name cb l) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (tmp1 :: []) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_qual_Discriminator).FStarC_Reflection_V2_Constants.fv [] tmp2))
+      | (FStarC_Reflection_V2_Data.Action (l)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed e_name cb l) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (tmp1 :: []) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_qual_Action).FStarC_Reflection_V2_Constants.fv [] tmp2))
+      | (FStarC_Reflection_V2_Data.Projector (u__1, u__2)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed (FStarC_TypeChecker_NBETerm.e_tuple2 e_name e_ident) cb (u__1, u__2)) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (tmp1 :: []) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_qual_Projector).FStarC_Reflection_V2_Constants.fv [] tmp2))
+      | (FStarC_Reflection_V2_Data.RecordType (u__1, u__2)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed (FStarC_TypeChecker_NBETerm.e_tuple2 (FStarC_TypeChecker_NBETerm.e_list e_ident) (FStarC_TypeChecker_NBETerm.e_list e_ident)) cb (u__1, u__2)) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (tmp1 :: []) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_qual_RecordType).FStarC_Reflection_V2_Constants.fv [] tmp2))
+      | (FStarC_Reflection_V2_Data.RecordConstructor (u__1, u__2)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed (FStarC_TypeChecker_NBETerm.e_tuple2 (FStarC_TypeChecker_NBETerm.e_list e_ident) (FStarC_TypeChecker_NBETerm.e_list e_ident)) cb (u__1, u__2)) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (tmp1 :: []) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_qual_RecordConstructor).FStarC_Reflection_V2_Constants.fv [] tmp2))
+    )) in
+  let unembed = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_qual_Assumption).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.Assumption))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_qual_New).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.New))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_qual_Private).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.Private))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_qual_Unfold_for_unification_and_vcgen).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.Unfold_for_unification_and_vcgen))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_qual_Visible_default).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.Visible_default))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_qual_Irreducible).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.Irreducible))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_qual_Inline_for_extraction).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.Inline_for_extraction))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_qual_NoExtract).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.NoExtract))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_qual_Noeq).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.Noeq))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_qual_Unopteq).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.Unopteq))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_qual_TotalEffect).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.TotalEffect))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_qual_Logic).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.Logic))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_qual_Reifiable).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.Reifiable))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_qual_ExceptionConstructor).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.ExceptionConstructor))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_qual_HasMaskedEffect).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.HasMaskedEffect))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_qual_Effect).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.Effect))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_qual_OnlyName).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.OnlyName))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], ((l, tmp) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_qual_Reflectable).FStarC_Reflection_V2_Constants.lid) -> (let tmp1 = (FStarC_TypeChecker_NBETerm.unembed e_name cb l) in
+        (FStarC_Option.bind tmp1 (fun l1 -> (Some ((FStarC_Reflection_V2_Data.Reflectable (l1)))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], ((l, tmp) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_qual_Discriminator).FStarC_Reflection_V2_Constants.lid) -> (let tmp1 = (FStarC_TypeChecker_NBETerm.unembed e_name cb l) in
+        (FStarC_Option.bind tmp1 (fun l1 -> (Some ((FStarC_Reflection_V2_Data.Discriminator (l1)))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], ((l, tmp) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_qual_Action).FStarC_Reflection_V2_Constants.lid) -> (let tmp1 = (FStarC_TypeChecker_NBETerm.unembed e_name cb l) in
+        (FStarC_Option.bind tmp1 (fun l1 -> (Some ((FStarC_Reflection_V2_Data.Action (l1)))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], ((li, tmp) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_qual_Projector).FStarC_Reflection_V2_Constants.lid) -> (let tmp1 = (FStarC_TypeChecker_NBETerm.unembed (FStarC_TypeChecker_NBETerm.e_tuple2 e_name e_ident) cb li) in
+        (FStarC_Option.bind tmp1 (fun li1 -> (Some ((FStarC_Reflection_V2_Data.Projector ((match li1 with (custard_tup, _) -> custard_tup), (match li1 with (_, custard_tup) -> custard_tup))))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], ((ids12, tmp) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_qual_RecordType).FStarC_Reflection_V2_Constants.lid) -> (let tmp1 = (FStarC_TypeChecker_NBETerm.unembed (FStarC_TypeChecker_NBETerm.e_tuple2 (FStarC_TypeChecker_NBETerm.e_list e_ident) (FStarC_TypeChecker_NBETerm.e_list e_ident)) cb ids12) in
+        (FStarC_Option.bind tmp1 (fun ids121 -> (Some ((FStarC_Reflection_V2_Data.RecordType ((match ids121 with (custard_tup, _) -> custard_tup), (match ids121 with (_, custard_tup) -> custard_tup))))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], ((ids12, tmp) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_qual_RecordConstructor).FStarC_Reflection_V2_Constants.lid) -> (let tmp1 = (FStarC_TypeChecker_NBETerm.unembed (FStarC_TypeChecker_NBETerm.e_tuple2 (FStarC_TypeChecker_NBETerm.e_list e_ident) (FStarC_TypeChecker_NBETerm.e_list e_ident)) cb ids12) in
+        (FStarC_Option.bind tmp1 (fun ids121 -> (Some ((FStarC_Reflection_V2_Data.RecordConstructor ((match ids121 with (custard_tup, _) -> custard_tup), (match ids121 with (_, custard_tup) -> custard_tup))))))))
+      | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
+        let tmp2 = (FStarC_Format.fmt1 "Not an embedded qualifier: %s" tmp1) in
+        (FStarC_Errors.fStarC_Errors_log_issue0__string FStarC_Errors_Codes.Warning_NotEmbedded tmp2);
+        None)
+    )) in
+  (FStarC_TypeChecker_NBETerm.mk_emb embed unembed (fun tmp -> (mkConstruct FStarC_Reflection_V2_Constants.fstar_refl_qualifier_fv [] [])) (fun tmp -> (fv_as_emb_typ FStarC_Reflection_V2_Constants.fstar_refl_qualifier_fv))))
+
+let e_qualifiers : ((FStarC_Reflection_V2_Data.qualifier) list) FStarC_TypeChecker_NBETerm.embedding =
+  (FStarC_TypeChecker_NBETerm.e_list e_qualifier)
+
+let e_subst_elt : (FStarC_Syntax_Syntax.subst_elt) FStarC_TypeChecker_NBETerm.embedding =
+  (let embed_const = (fun cb e -> (match e with
+      | (FStarC_Syntax_Syntax.DB (i, x)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed FStarC_TypeChecker_NBETerm.e_int cb i) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (FStarC_TypeChecker_NBETerm.embed e_namedv cb x) in
+        let tmp3 = (FStarC_TypeChecker_NBETerm.as_arg tmp2) in
+        let tmp4 = (tmp3 :: []) in
+        let tmp5 = (tmp1 :: tmp4) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_DB).FStarC_Reflection_V2_Constants.fv [] tmp5))
+      | (FStarC_Syntax_Syntax.NM (x, i)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed e_namedv cb x) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (FStarC_TypeChecker_NBETerm.embed FStarC_TypeChecker_NBETerm.e_int cb i) in
+        let tmp3 = (FStarC_TypeChecker_NBETerm.as_arg tmp2) in
+        let tmp4 = (tmp3 :: []) in
+        let tmp5 = (tmp1 :: tmp4) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_NM).FStarC_Reflection_V2_Constants.fv [] tmp5))
+      | (FStarC_Syntax_Syntax.NT (x, t)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed e_namedv cb x) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (FStarC_TypeChecker_NBETerm.embed e_term cb t) in
+        let tmp3 = (FStarC_TypeChecker_NBETerm.as_arg tmp2) in
+        let tmp4 = (tmp3 :: []) in
+        let tmp5 = (tmp1 :: tmp4) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_NT).FStarC_Reflection_V2_Constants.fv [] tmp5))
+      | (FStarC_Syntax_Syntax.UN (i, u)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed FStarC_TypeChecker_NBETerm.e_int cb i) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (FStarC_TypeChecker_NBETerm.embed e_universe cb u) in
+        let tmp3 = (FStarC_TypeChecker_NBETerm.as_arg tmp2) in
+        let tmp4 = (tmp3 :: []) in
+        let tmp5 = (tmp1 :: tmp4) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_UN).FStarC_Reflection_V2_Constants.fv [] tmp5))
+      | (FStarC_Syntax_Syntax.UD (n, i)) -> (let tmp = (FStarC_TypeChecker_NBETerm.embed e_univ_name cb n) in
+        let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+        let tmp2 = (FStarC_TypeChecker_NBETerm.embed FStarC_TypeChecker_NBETerm.e_int cb i) in
+        let tmp3 = (FStarC_TypeChecker_NBETerm.as_arg tmp2) in
+        let tmp4 = (tmp3 :: []) in
+        let tmp5 = (tmp1 :: tmp4) in
+        (mkConstruct (FStarC_Reflection_V2_Constants.ref_UD).FStarC_Reflection_V2_Constants.fv [] tmp5))
+    )) in
+  let unembed_const = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], ((x, tmp) :: ((i, tmp1) :: [])))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_DB).FStarC_Reflection_V2_Constants.lid) -> (let tmp2 = (FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_int cb i) in
+        (FStarC_Option.bind tmp2 (fun i1 -> (let tmp3 = (FStarC_TypeChecker_NBETerm.unembed e_namedv cb x) in
+        (FStarC_Option.bind tmp3 (fun x1 -> (Some ((FStarC_Syntax_Syntax.DB (i1, x1))))))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], ((i, tmp) :: ((x, tmp1) :: [])))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_NM).FStarC_Reflection_V2_Constants.lid) -> (let tmp2 = (FStarC_TypeChecker_NBETerm.unembed e_namedv cb x) in
+        (FStarC_Option.bind tmp2 (fun x1 -> (let tmp3 = (FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_int cb i) in
+        (FStarC_Option.bind tmp3 (fun i1 -> (Some ((FStarC_Syntax_Syntax.NM (x1, i1))))))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], ((t1, tmp) :: ((x, tmp1) :: [])))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_NT).FStarC_Reflection_V2_Constants.lid) -> (let tmp2 = (FStarC_TypeChecker_NBETerm.unembed e_namedv cb x) in
+        (FStarC_Option.bind tmp2 (fun x1 -> (let tmp3 = (FStarC_TypeChecker_NBETerm.unembed e_term cb t1) in
+        (FStarC_Option.bind tmp3 (fun t2 -> (Some ((FStarC_Syntax_Syntax.NT (x1, t2))))))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], ((u, tmp) :: ((i, tmp1) :: [])))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_UN).FStarC_Reflection_V2_Constants.lid) -> (let tmp2 = (FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_int cb i) in
+        (FStarC_Option.bind tmp2 (fun i1 -> (let tmp3 = (FStarC_TypeChecker_NBETerm.unembed e_universe cb u) in
+        (FStarC_Option.bind tmp3 (fun u1 -> (Some ((FStarC_Syntax_Syntax.UN (i1, u1))))))))))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], ((i, tmp) :: ((n, tmp1) :: [])))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_UD).FStarC_Reflection_V2_Constants.lid) -> (let tmp2 = (FStarC_TypeChecker_NBETerm.unembed e_univ_name cb n) in
+        (FStarC_Option.bind tmp2 (fun n1 -> (let tmp3 = (FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_int cb i) in
+        (FStarC_Option.bind tmp3 (fun i1 -> (Some ((FStarC_Syntax_Syntax.UD (n1, i1))))))))))
+      | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
+        let tmp2 = (FStarC_Format.fmt1 "Not an embedded vconst: %s" tmp1) in
+        (FStarC_Errors.fStarC_Errors_log_issue0__string FStarC_Errors_Codes.Warning_NotEmbedded tmp2);
+        None)
+    )) in
+  (mk_emb' embed_const unembed_const FStarC_Reflection_V2_Constants.fstar_refl_subst_elt_fv))
+
+let e_subst : ((FStarC_Syntax_Syntax.subst_elt) list) FStarC_TypeChecker_NBETerm.embedding =
+  (FStarC_TypeChecker_NBETerm.e_list e_subst_elt)
+
+let e_env : (FStarC_TypeChecker_Env.env) FStarC_TypeChecker_NBETerm.embedding =
+  (let embed_env = (fun cb e -> (mk_lazy cb e FStarC_Reflection_V2_Constants.fstar_refl_env FStarC_Syntax_Syntax.Lazy_env)) in
+  let unembed_env = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_env; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (FStar_Dyn.undyn b) in
+        (Some (tmp3)))
+      | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
+        let tmp2 = (FStarC_Format.fmt1 "Not an embedded env: %s" tmp1) in
+        (FStarC_Errors.fStarC_Errors_log_issue0__string FStarC_Errors_Codes.Warning_NotEmbedded tmp2);
+        None)
+    )) in
+  (mk_emb' embed_env unembed_env FStarC_Reflection_V2_Constants.fstar_refl_env_fv))
+
+let e_binding : (FStarC_Reflection_V2_Data.binding) FStarC_TypeChecker_NBETerm.embedding =
+  (let embed = (fun cb b -> (let tmp = (FStarC_TypeChecker_NBETerm.embed FStarC_TypeChecker_NBETerm.e_int cb ((b : FStarC_Reflection_V2_Data.binding)).FStarC_Reflection_V2_Data.uniq) in
+    let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
+    let tmp2 = (FStarC_TypeChecker_NBETerm.embed e_term cb ((b : FStarC_Reflection_V2_Data.binding)).FStarC_Reflection_V2_Data.sort) in
+    let tmp3 = (FStarC_TypeChecker_NBETerm.as_arg tmp2) in
+    let tmp4 = (FStarC_TypeChecker_NBETerm.embed e_ppname cb ((b : FStarC_Reflection_V2_Data.binding)).FStarC_Reflection_V2_Data.ppname) in
+    let tmp5 = (FStarC_TypeChecker_NBETerm.as_arg tmp4) in
+    let tmp6 = (tmp5 :: []) in
+    let tmp7 = (tmp3 :: tmp6) in
+    let tmp8 = (tmp1 :: tmp7) in
+    (mkConstruct (FStarC_Reflection_V2_Constants.ref_Mk_binding).FStarC_Reflection_V2_Constants.fv [] tmp8))) in
+  let unembed = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((ppname, tmp1) :: ((sort, tmp2) :: ((uniq, tmp3) :: []))))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Mk_binding).FStarC_Reflection_V2_Constants.lid) -> (let tmp4 = (FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_int cb uniq) in
+        (FStarC_Option.bind tmp4 (fun uniq1 -> (let tmp5 = (FStarC_TypeChecker_NBETerm.unembed e_term cb sort) in
+        (FStarC_Option.bind tmp5 (fun sort1 -> (let tmp6 = (FStarC_TypeChecker_NBETerm.unembed e_ppname cb ppname) in
+        (FStarC_Option.bind tmp6 (fun ppname1 -> (let r = ({ FStarC_Reflection_V2_Data.uniq = uniq1;
+            sort = sort1;
+            ppname = ppname1 } : FStarC_Reflection_V2_Data.binding) in
+        (Some (r))))))))))))
+    )) in
+  (mk_emb' embed unembed FStarC_Reflection_V2_Constants.fstar_refl_binding_fv))
+
