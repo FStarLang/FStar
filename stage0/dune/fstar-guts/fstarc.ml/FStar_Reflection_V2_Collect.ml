@@ -21,19 +21,19 @@ let collect_app_ln :
 let rec collect_arr' (bs : FStarC_Reflection_Types.binder Prims.list)
   (c : FStarC_Reflection_Types.comp) :
   (FStarC_Reflection_Types.binder Prims.list * FStarC_Reflection_Types.comp)=
-  match FStarC_Reflection_V2_Builtins.inspect_comp c with
-  | FStarC_Reflection_V2_Data.C_Total t ->
-      (match inspect_ln_unascribe t with
-       | FStarC_Reflection_V2_Data.Tv_Arrow (b, c1) ->
-           collect_arr' (b :: bs) c1
-       | uu___ -> (bs, c))
-  | uu___ -> (bs, c)
+  let cv = FStarC_Reflection_V2_Builtins.inspect_comp c in
+  if FStarC_Reflection_V2_Data.is_tot_comp cv
+  then
+    match inspect_ln_unascribe cv.FStarC_Reflection_V2_Data.result_typ with
+    | FStarC_Reflection_V2_Data.Tv_Arrow (b, c1) -> collect_arr' (b :: bs) c1
+    | uu___ -> (bs, c)
+  else (bs, c)
 let collect_arr_ln_bs (t : FStarC_Reflection_Types.typ) :
   (FStarC_Reflection_Types.binder Prims.list * FStarC_Reflection_Types.comp)=
   let uu___ =
     collect_arr' []
       (FStarC_Reflection_V2_Builtins.pack_comp
-         (FStarC_Reflection_V2_Data.C_Total t)) in
+         (FStarC_Reflection_V2_Data.mk_tot_comp t)) in
   match uu___ with | (bs, c) -> ((FStar_List_Tot_Base.rev bs), c)
 let collect_arr_ln (t : FStarC_Reflection_Types.typ) :
   (FStarC_Reflection_Types.typ Prims.list * FStarC_Reflection_Types.comp)=

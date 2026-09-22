@@ -239,28 +239,14 @@ and comp_eq : FStarC_Reflection_Types.comp comparator_for=
   fun c1 c2 ps ->
     let x = FStarC_Reflection_V2_Builtins.inspect_comp c1 in
     let x1 = FStarC_Reflection_V2_Builtins.inspect_comp c2 in
-    match (x, x1) with
-    | (FStarC_Reflection_V2_Data.C_Total t1,
-       FStarC_Reflection_V2_Data.C_Total t2) -> term_eq t1 t2 ps
-    | (FStarC_Reflection_V2_Data.C_GTotal t1,
-       FStarC_Reflection_V2_Data.C_GTotal t2) -> term_eq t1 t2 ps
-    | (FStarC_Reflection_V2_Data.C_Lemma (pre1, post1, pat1),
-       FStarC_Reflection_V2_Data.C_Lemma (pre2, post2, pat2)) ->
-        let x2 = let x3 = term_eq pre1 pre2 ps in Prims.not x3 in
-        if x2
-        then false
-        else
-          (let x3 = let x4 = term_eq post1 post2 ps in Prims.not x4 in
-           if x3 then false else term_eq pat1 pat2 ps)
-    | (FStarC_Reflection_V2_Data.C_Eff (us1, ef1, t1, _pre1, _post1, dec1),
-       FStarC_Reflection_V2_Data.C_Eff (us2, ef2, t2, _pre2, _post2, dec2))
-        ->
-        if Prims.not (ef1 = ef2)
-        then false
-        else
-          (let x2 = let x3 = term_eq t1 t2 ps in Prims.not x3 in
-           if x2 then false else true)
-    | uu___ -> false
+    if
+      Prims.not
+        (x.FStarC_Reflection_V2_Data.effect_name =
+           x1.FStarC_Reflection_V2_Data.effect_name)
+    then false
+    else
+      term_eq x.FStarC_Reflection_V2_Data.result_typ
+        x1.FStarC_Reflection_V2_Data.result_typ ps
 and br_eq : FStarC_Reflection_V2_Data.branch comparator_for=
   fun br1 br2 ps ->
     let x =

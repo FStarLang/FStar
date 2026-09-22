@@ -17,21 +17,9 @@ let bounded_arith_ops_for (k : FStarC_MachineInts.machint_kind) : unit mymon=
           (FStarC_MachineInts.v k) in
       let uu___3 =
         let uu___4 =
-          let uu___5 = nm "add" in
-          FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero uu___5
-            (FStarC_MachineInts.e_machint k)
-            (FStarC_MachineInts.nbe_machint k)
-            (FStarC_MachineInts.e_machint k)
-            (FStarC_MachineInts.nbe_machint k)
-            (FStarC_MachineInts.e_machint k)
-            (FStarC_MachineInts.nbe_machint k)
-            (fun x y ->
-               FStarC_MachineInts.make_as k x
-                 ((FStarC_MachineInts.v k x) + (FStarC_MachineInts.v k y))) in
-        let uu___5 =
-          let uu___6 =
-            let uu___7 = nm "sub" in
-            FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero uu___7
+          let uu___5 =
+            let uu___6 = nm "add" in
+            FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero uu___6
               (FStarC_MachineInts.e_machint k)
               (FStarC_MachineInts.nbe_machint k)
               (FStarC_MachineInts.e_machint k)
@@ -40,11 +28,14 @@ let bounded_arith_ops_for (k : FStarC_MachineInts.machint_kind) : unit mymon=
               (FStarC_MachineInts.nbe_machint k)
               (fun x y ->
                  FStarC_MachineInts.make_as k x
-                   ((FStarC_MachineInts.v k x) - (FStarC_MachineInts.v k y))) in
-          let uu___7 =
-            let uu___8 =
-              let uu___9 = nm "mul" in
-              FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero uu___9
+                   ((FStarC_MachineInts.v k x) + (FStarC_MachineInts.v k y))) in
+          FStarC_TypeChecker_Primops_Base.with_extra_args Prims.int_one
+            uu___5 in
+        let uu___5 =
+          let uu___6 =
+            let uu___7 =
+              let uu___8 = nm "sub" in
+              FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero uu___8
                 (FStarC_MachineInts.e_machint k)
                 (FStarC_MachineInts.nbe_machint k)
                 (FStarC_MachineInts.e_machint k)
@@ -53,7 +44,26 @@ let bounded_arith_ops_for (k : FStarC_MachineInts.machint_kind) : unit mymon=
                 (FStarC_MachineInts.nbe_machint k)
                 (fun x y ->
                    FStarC_MachineInts.make_as k x
-                     ((FStarC_MachineInts.v k x) * (FStarC_MachineInts.v k y))) in
+                     ((FStarC_MachineInts.v k x) - (FStarC_MachineInts.v k y))) in
+            FStarC_TypeChecker_Primops_Base.with_extra_args Prims.int_one
+              uu___7 in
+          let uu___7 =
+            let uu___8 =
+              let uu___9 =
+                let uu___10 = nm "mul" in
+                FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero uu___10
+                  (FStarC_MachineInts.e_machint k)
+                  (FStarC_MachineInts.nbe_machint k)
+                  (FStarC_MachineInts.e_machint k)
+                  (FStarC_MachineInts.nbe_machint k)
+                  (FStarC_MachineInts.e_machint k)
+                  (FStarC_MachineInts.nbe_machint k)
+                  (fun x y ->
+                     FStarC_MachineInts.make_as k x
+                       ((FStarC_MachineInts.v k x) *
+                          (FStarC_MachineInts.v k y))) in
+              FStarC_TypeChecker_Primops_Base.with_extra_args Prims.int_one
+                uu___9 in
             let uu___9 =
               let uu___10 =
                 let uu___11 = nm "gt" in
@@ -250,30 +260,10 @@ let bounded_arith_ops_for (k : FStarC_MachineInts.machint_kind) : unit mymon=
                                           (FStarC_MachineInts.mask k))) in
                               let uu___19 =
                                 let uu___20 =
-                                  let uu___21 = nm "shift_left" in
-                                  FStarC_TypeChecker_Primops_Base.mk2
-                                    Prims.int_zero uu___21
-                                    (FStarC_MachineInts.e_machint k)
-                                    (FStarC_MachineInts.nbe_machint k)
-                                    (FStarC_MachineInts.e_machint
-                                       FStarC_MachineInts.UInt32)
-                                    (FStarC_MachineInts.nbe_machint
-                                       FStarC_MachineInts.UInt32)
-                                    (FStarC_MachineInts.e_machint k)
-                                    (FStarC_MachineInts.nbe_machint k)
-                                    (fun x y ->
-                                       FStarC_MachineInts.make_as k x
-                                         (FStarC_Int_Extra.logand
-                                            (FStarC_Int_Extra.shift_left
-                                               (FStarC_MachineInts.v k x)
-                                               (FStarC_MachineInts.v
-                                                  FStarC_MachineInts.UInt32 y))
-                                            (FStarC_MachineInts.mask k))) in
-                                let uu___21 =
-                                  let uu___22 =
-                                    let uu___23 = nm "shift_right" in
+                                  let uu___21 =
+                                    let uu___22 = nm "shift_left" in
                                     FStarC_TypeChecker_Primops_Base.mk2
-                                      Prims.int_zero uu___23
+                                      Prims.int_zero uu___22
                                       (FStarC_MachineInts.e_machint k)
                                       (FStarC_MachineInts.nbe_machint k)
                                       (FStarC_MachineInts.e_machint
@@ -285,12 +275,39 @@ let bounded_arith_ops_for (k : FStarC_MachineInts.machint_kind) : unit mymon=
                                       (fun x y ->
                                          FStarC_MachineInts.make_as k x
                                            (FStarC_Int_Extra.logand
-                                              (FStarC_Int_Extra.shift_right
+                                              (FStarC_Int_Extra.shift_left
                                                  (FStarC_MachineInts.v k x)
                                                  (FStarC_MachineInts.v
                                                     FStarC_MachineInts.UInt32
                                                     y))
                                               (FStarC_MachineInts.mask k))) in
+                                  FStarC_TypeChecker_Primops_Base.with_extra_args
+                                    Prims.int_one uu___21 in
+                                let uu___21 =
+                                  let uu___22 =
+                                    let uu___23 =
+                                      let uu___24 = nm "shift_right" in
+                                      FStarC_TypeChecker_Primops_Base.mk2
+                                        Prims.int_zero uu___24
+                                        (FStarC_MachineInts.e_machint k)
+                                        (FStarC_MachineInts.nbe_machint k)
+                                        (FStarC_MachineInts.e_machint
+                                           FStarC_MachineInts.UInt32)
+                                        (FStarC_MachineInts.nbe_machint
+                                           FStarC_MachineInts.UInt32)
+                                        (FStarC_MachineInts.e_machint k)
+                                        (FStarC_MachineInts.nbe_machint k)
+                                        (fun x y ->
+                                           FStarC_MachineInts.make_as k x
+                                             (FStarC_Int_Extra.logand
+                                                (FStarC_Int_Extra.shift_right
+                                                   (FStarC_MachineInts.v k x)
+                                                   (FStarC_MachineInts.v
+                                                      FStarC_MachineInts.UInt32
+                                                      y))
+                                                (FStarC_MachineInts.mask k))) in
+                                    FStarC_TypeChecker_Primops_Base.with_extra_args
+                                      Prims.int_one uu___23 in
                                   [uu___22] in
                                 uu___20 :: uu___21 in
                               uu___18 :: uu___19 in

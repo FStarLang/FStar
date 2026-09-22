@@ -952,10 +952,8 @@ let catch_errors_aux (f : unit -> 'a) :
           | () -> let uu___2 = f () in FStar_Pervasives_Native.Some uu___2)
          ()
      with
-     | uu___1 ->
-         if handleable uu___1
-         then (err_exn uu___1; FStar_Pervasives_Native.None)
-         else (let uu___2 = finally_restore () in FStarC_Effect.raise uu___1) in
+     | ex when handleable ex -> (err_exn ex; FStar_Pervasives_Native.None)
+     | ex -> let uu___2 = finally_restore () in FStarC_Effect.raise ex in
    let uu___1 = finally_restore () in
    match uu___1 with | (errs, rest) -> (errs, rest, r))
 let no_ctx (f : unit -> 'a) : 'a=

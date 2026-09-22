@@ -1,6 +1,6 @@
 (include_subdirs unqualified)
 (executable
- (name fstarc2_full)
+ (name fstarc1_full)
  (public_name fstar.exe)
  (libraries
     ; The in-tree plugins (plugins.ml) are now folded into the wrapped

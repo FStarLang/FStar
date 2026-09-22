@@ -21,7 +21,7 @@ let rec unexpected : 'a . Prims.string -> 'a =
     unexpected s
 let rec unreachable : 'a . Prims.string -> 'a =
   fun s ->
-    let uu___ =
+    let uu___1 =
       FStar_IO.debug_print_string
         (Prims.strcat "Platform.Error.unreachable: " s) in
     unreachable s

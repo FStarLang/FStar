@@ -529,6 +529,7 @@ let initial_mlident_map : unit -> Prims.string FStarC_PSMap.t=
             | FStar_Pervasives_Native.Some (FStarC_Options.Krml) ->
                 FStarC_Extraction_ML_Syntax.krml_keywords
             | FStar_Pervasives_Native.Some (FStarC_Options.Extension) -> []
+            | FStar_Pervasives_Native.Some (FStarC_Options.Custard) -> []
             | FStar_Pervasives_Native.None -> [] in
           FStarC_List.fold_right (fun x m1 -> FStarC_PSMap.add m1 x "")
             uu___2 (FStarC_PSMap.empty ()) in

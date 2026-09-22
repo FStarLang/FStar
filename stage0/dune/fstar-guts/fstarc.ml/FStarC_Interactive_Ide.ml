@@ -1306,8 +1306,7 @@ let load_partial_checked_file (env : FStarC_TypeChecker_Env.env)
                   (let uu___4 =
                      let uu___5 =
                        FStarC_ToSyntax_ToSyntax.add_partial_modul_to_env m
-                         tc_result.FStarC_CheckedFiles.mii
-                         (FStarC_TypeChecker_Normalize.erase_universes env1) in
+                         tc_result.FStarC_CheckedFiles.mii in
                      FStarC_Universal.with_dsenv_of_tcenv env1 uu___5 in
                    match uu___4 with
                    | (uu___5, env2) ->
@@ -1448,8 +1447,6 @@ let run_push_without_deps (st : FStarC_Interactive_Ide_Types.repl_state)
              (uu___.FStarC_TypeChecker_Env.modules);
            FStarC_TypeChecker_Env.expected_typ =
              (uu___.FStarC_TypeChecker_Env.expected_typ);
-           FStarC_TypeChecker_Env.expected_post =
-             (uu___.FStarC_TypeChecker_Env.expected_post);
            FStarC_TypeChecker_Env.sigtab =
              (uu___.FStarC_TypeChecker_Env.sigtab);
            FStarC_TypeChecker_Env.attrtab =
@@ -1462,6 +1459,8 @@ let run_push_without_deps (st : FStarC_Interactive_Ide_Types.repl_state)
              (uu___.FStarC_TypeChecker_Env.generalize);
            FStarC_TypeChecker_Env.letrecs =
              (uu___.FStarC_TypeChecker_Env.letrecs);
+           FStarC_TypeChecker_Env.rec_names =
+             (uu___.FStarC_TypeChecker_Env.rec_names);
            FStarC_TypeChecker_Env.top_level =
              (uu___.FStarC_TypeChecker_Env.top_level);
            FStarC_TypeChecker_Env.check_uvars =
@@ -1497,8 +1496,6 @@ let run_push_without_deps (st : FStarC_Interactive_Ide_Types.repl_state)
              (uu___.FStarC_TypeChecker_Env.subtype_nosmt_force);
            FStarC_TypeChecker_Env.qtbl_name_and_index =
              (uu___.FStarC_TypeChecker_Env.qtbl_name_and_index);
-           FStarC_TypeChecker_Env.normalized_eff_names =
-             (uu___.FStarC_TypeChecker_Env.normalized_eff_names);
            FStarC_TypeChecker_Env.fv_delta_depths =
              (uu___.FStarC_TypeChecker_Env.fv_delta_depths);
            FStarC_TypeChecker_Env.proof_ns =
@@ -1522,6 +1519,8 @@ let run_push_without_deps (st : FStarC_Interactive_Ide_Types.repl_state)
            FStarC_TypeChecker_Env.nbe = (uu___.FStarC_TypeChecker_Env.nbe);
            FStarC_TypeChecker_Env.strict_args_tab =
              (uu___.FStarC_TypeChecker_Env.strict_args_tab);
+           FStarC_TypeChecker_Env.disc_proj_tab =
+             (uu___.FStarC_TypeChecker_Env.disc_proj_tab);
            FStarC_TypeChecker_Env.erasable_types_tab =
              (uu___.FStarC_TypeChecker_Env.erasable_types_tab);
            FStarC_TypeChecker_Env.enable_defer_to_tac =
@@ -2157,7 +2156,7 @@ let sc_typ (tcenv : FStarC_TypeChecker_Env.env) (sc : search_candidate) :
          (FStar_Pervasives_Native.Some typ);
        typ)
 let sc_fvars (tcenv : FStarC_TypeChecker_Env.env) (sc : search_candidate) :
-  FStarC_Ident.lident FStarC_RBSet.t=
+  FStarC_Ident.lid FStarC_RBSet.t=
   let uu___ = FStarC_Effect.op_Bang sc.sc_fvars in
   match uu___ with
   | FStar_Pervasives_Native.Some fv -> fv

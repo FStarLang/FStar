@@ -134,6 +134,8 @@ let zeta_false (cfg : config) : config=
              FStarC_TypeChecker_Cfg.hnf = (uu___.FStarC_TypeChecker_Cfg.hnf);
              FStarC_TypeChecker_Cfg.primops =
                (uu___.FStarC_TypeChecker_Cfg.primops);
+             FStarC_TypeChecker_Cfg.unrepresentable_primops =
+               (uu___.FStarC_TypeChecker_Cfg.unrepresentable_primops);
              FStarC_TypeChecker_Cfg.do_not_unfold_pure_lets =
                (uu___.FStarC_TypeChecker_Cfg.do_not_unfold_pure_lets);
              FStarC_TypeChecker_Cfg.unfold_until =
@@ -1190,12 +1192,6 @@ and translate_comp (cfg : config)
   (bs : FStarC_TypeChecker_NBETerm.t Prims.list)
   (c : FStarC_Syntax_Syntax.comp) : FStarC_TypeChecker_NBETerm.comp=
   match c.FStarC_Syntax_Syntax.n with
-  | FStarC_Syntax_Syntax.Total typ ->
-      let uu___ = translate cfg bs typ in
-      FStarC_TypeChecker_NBETerm.Tot uu___
-  | FStarC_Syntax_Syntax.GTotal typ ->
-      let uu___ = translate cfg bs typ in
-      FStarC_TypeChecker_NBETerm.GTot uu___
   | FStarC_Syntax_Syntax.Comp ctyp ->
       let uu___ = translate_comp_typ cfg bs ctyp in
       FStarC_TypeChecker_NBETerm.Comp uu___
@@ -1943,10 +1939,6 @@ and readback_comp (cfg : config) (c : FStarC_TypeChecker_NBETerm.comp) :
   FStarC_Syntax_Syntax.comp=
   let c' =
     match c with
-    | FStarC_TypeChecker_NBETerm.Tot typ ->
-        let uu___ = readback cfg typ in FStarC_Syntax_Syntax.Total uu___
-    | FStarC_TypeChecker_NBETerm.GTot typ ->
-        let uu___ = readback cfg typ in FStarC_Syntax_Syntax.GTotal uu___
     | FStarC_TypeChecker_NBETerm.Comp ctyp ->
         let uu___ = readback_comp_typ cfg ctyp in
         FStarC_Syntax_Syntax.Comp uu___ in
@@ -1956,41 +1948,30 @@ and translate_comp_typ (cfg : config)
   (c : FStarC_Syntax_Syntax.comp_typ) : FStarC_TypeChecker_NBETerm.comp_typ=
   let uu___ = c in
   match uu___ with
-  | { FStarC_Syntax_Syntax.comp_univs = comp_univs;
-      FStarC_Syntax_Syntax.effect_name = effect_name;
+  | { FStarC_Syntax_Syntax.effect_name = effect_name;
       FStarC_Syntax_Syntax.result_typ = result_typ;
-      FStarC_Syntax_Syntax.comp_pre = comp_pre;
-      FStarC_Syntax_Syntax.comp_post = comp_post;
-      FStarC_Syntax_Syntax.flags = flags;_} ->
-      let uu___1 = FStarC_List.map (translate_univ cfg bs) comp_univs in
-      let uu___2 = translate cfg bs result_typ in
-      let uu___3 = translate cfg bs comp_pre in
-      let uu___4 = translate cfg bs comp_post in
-      let uu___5 = FStarC_List.map (translate_flag cfg bs) flags in
+      FStarC_Syntax_Syntax.flags = flags;
+      FStarC_Syntax_Syntax.source_effect_name = source_effect_name;_} ->
+      let uu___1 = translate cfg bs result_typ in
+      let uu___2 = FStarC_List.map (translate_flag cfg bs) flags in
       {
-        FStarC_TypeChecker_NBETerm.comp_univs = uu___1;
         FStarC_TypeChecker_NBETerm.effect_name = effect_name;
-        FStarC_TypeChecker_NBETerm.result_typ = uu___2;
-        FStarC_TypeChecker_NBETerm.comp_pre = uu___3;
-        FStarC_TypeChecker_NBETerm.comp_post = uu___4;
-        FStarC_TypeChecker_NBETerm.flags = uu___5
+        FStarC_TypeChecker_NBETerm.result_typ = uu___1;
+        FStarC_TypeChecker_NBETerm.flags = uu___2;
+        FStarC_TypeChecker_NBETerm.source_effect_name = source_effect_name
       }
 and readback_comp_typ (cfg : config)
   (c : FStarC_TypeChecker_NBETerm.comp_typ) : FStarC_Syntax_Syntax.comp_typ=
   let uu___ = readback cfg c.FStarC_TypeChecker_NBETerm.result_typ in
-  let uu___1 = readback cfg c.FStarC_TypeChecker_NBETerm.comp_pre in
-  let uu___2 = readback cfg c.FStarC_TypeChecker_NBETerm.comp_post in
-  let uu___3 =
+  let uu___1 =
     FStarC_List.map (readback_flag cfg) c.FStarC_TypeChecker_NBETerm.flags in
   {
-    FStarC_Syntax_Syntax.comp_univs =
-      (c.FStarC_TypeChecker_NBETerm.comp_univs);
     FStarC_Syntax_Syntax.effect_name =
       (c.FStarC_TypeChecker_NBETerm.effect_name);
     FStarC_Syntax_Syntax.result_typ = uu___;
-    FStarC_Syntax_Syntax.comp_pre = uu___1;
-    FStarC_Syntax_Syntax.comp_post = uu___2;
-    FStarC_Syntax_Syntax.flags = uu___3
+    FStarC_Syntax_Syntax.flags = uu___1;
+    FStarC_Syntax_Syntax.source_effect_name =
+      (c.FStarC_TypeChecker_NBETerm.source_effect_name)
   }
 and translate_residual_comp (cfg : config)
   (bs : FStarC_TypeChecker_NBETerm.t Prims.list)
@@ -2036,9 +2017,6 @@ and translate_flag (cfg : config)
   (bs : FStarC_TypeChecker_NBETerm.t Prims.list)
   (f : FStarC_Syntax_Syntax.cflag) : FStarC_TypeChecker_NBETerm.cflag=
   match f with
-  | FStarC_Syntax_Syntax.TOTAL -> FStarC_TypeChecker_NBETerm.TOTAL
-  | FStarC_Syntax_Syntax.MLEFFECT -> FStarC_TypeChecker_NBETerm.MLEFFECT
-  | FStarC_Syntax_Syntax.LEMMA -> FStarC_TypeChecker_NBETerm.LEMMA
   | FStarC_Syntax_Syntax.SMTPAT p ->
       let uu___ = translate cfg bs p in
       FStarC_TypeChecker_NBETerm.SMTPAT uu___
@@ -2054,9 +2032,6 @@ and translate_flag (cfg : config)
 and readback_flag (cfg : config) (f : FStarC_TypeChecker_NBETerm.cflag) :
   FStarC_Syntax_Syntax.cflag=
   match f with
-  | FStarC_TypeChecker_NBETerm.TOTAL -> FStarC_Syntax_Syntax.TOTAL
-  | FStarC_TypeChecker_NBETerm.MLEFFECT -> FStarC_Syntax_Syntax.MLEFFECT
-  | FStarC_TypeChecker_NBETerm.LEMMA -> FStarC_Syntax_Syntax.LEMMA
   | FStarC_TypeChecker_NBETerm.SMTPAT p ->
       let uu___ = readback cfg p in FStarC_Syntax_Syntax.SMTPAT uu___
   | FStarC_TypeChecker_NBETerm.DECREASES_lex l ->
@@ -2589,6 +2564,8 @@ let normalize
            FStarC_TypeChecker_Cfg.hnf = (uu___.FStarC_TypeChecker_Cfg.hnf);
            FStarC_TypeChecker_Cfg.primops =
              (uu___.FStarC_TypeChecker_Cfg.primops);
+           FStarC_TypeChecker_Cfg.unrepresentable_primops =
+             (uu___.FStarC_TypeChecker_Cfg.unrepresentable_primops);
            FStarC_TypeChecker_Cfg.do_not_unfold_pure_lets =
              (uu___.FStarC_TypeChecker_Cfg.do_not_unfold_pure_lets);
            FStarC_TypeChecker_Cfg.unfold_until =
@@ -2695,6 +2672,8 @@ let normalize_for_unit_test (steps : FStarC_TypeChecker_Env.step Prims.list)
            FStarC_TypeChecker_Cfg.hnf = (uu___.FStarC_TypeChecker_Cfg.hnf);
            FStarC_TypeChecker_Cfg.primops =
              (uu___.FStarC_TypeChecker_Cfg.primops);
+           FStarC_TypeChecker_Cfg.unrepresentable_primops =
+             (uu___.FStarC_TypeChecker_Cfg.unrepresentable_primops);
            FStarC_TypeChecker_Cfg.do_not_unfold_pure_lets =
              (uu___.FStarC_TypeChecker_Cfg.do_not_unfold_pure_lets);
            FStarC_TypeChecker_Cfg.unfold_until =

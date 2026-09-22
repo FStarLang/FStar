@@ -335,8 +335,6 @@ and eq_term' (t1 : FStarC_Parser_AST.term') (t2 : FStarC_Parser_AST.term') :
       if uu___ then b1 = b2 else false
   | (FStarC_Parser_AST.Discrim l1, FStarC_Parser_AST.Discrim l2) ->
       FStarC_Ident.lid_equals l1 l2
-  | (FStarC_Parser_AST.Attributes ts1, FStarC_Parser_AST.Attributes ts2) ->
-      eq_list eq_term ts1 ts2
   | (FStarC_Parser_AST.Antiquote t11, FStarC_Parser_AST.Antiquote t21) ->
       eq_term t11 t21
   | (FStarC_Parser_AST.Quote (t11, k1), FStarC_Parser_AST.Quote (t21, k2)) ->
@@ -711,12 +709,6 @@ and eq_effect_decl (t1 : FStarC_Parser_AST.effect_decl)
         let uu___1 = eq_ident i1 i2 in
         if uu___1 then eq_list eq_binder bs1 bs2 else false in
       if uu___ then eq_list eq_decl ds1 ds2 else false
-  | (FStarC_Parser_AST.RedefineEffect (i1, bs1, t11),
-     FStarC_Parser_AST.RedefineEffect (i2, bs2, t21)) ->
-      let uu___ =
-        let uu___1 = eq_ident i1 i2 in
-        if uu___1 then eq_list eq_binder bs1 bs2 else false in
-      if uu___ then eq_term t11 t21 else false
   | uu___ -> false
 and eq_decl (d1 : FStarC_Parser_AST.decl) (d2 : FStarC_Parser_AST.decl) :
   Prims.bool=

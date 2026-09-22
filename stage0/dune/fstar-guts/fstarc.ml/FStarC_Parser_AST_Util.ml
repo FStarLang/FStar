@@ -118,7 +118,6 @@ and lidents_of_term' (t : FStarC_Parser_AST.term') :
   | FStarC_Parser_AST.Decreases t1 -> lidents_of_term t1
   | FStarC_Parser_AST.Labeled (t1, uu___, uu___1) -> lidents_of_term t1
   | FStarC_Parser_AST.Discrim lid -> [lid]
-  | FStarC_Parser_AST.Attributes ts -> concat_map () lidents_of_term ts
   | FStarC_Parser_AST.Antiquote t1 -> lidents_of_term t1
   | FStarC_Parser_AST.Quote (t1, uu___) -> lidents_of_term t1
   | FStarC_Parser_AST.VQuote t1 -> lidents_of_term t1
@@ -343,9 +342,6 @@ and lidents_of_effect_decl (ed : FStarC_Parser_AST.effect_decl) :
       let uu___1 = concat_map () lidents_of_binder bs in
       let uu___2 = concat_map () lidents_of_decl ds in
       FStarC_List.op_At uu___1 uu___2
-  | FStarC_Parser_AST.RedefineEffect (uu___, bs, t) ->
-      let uu___1 = concat_map () lidents_of_binder bs in
-      let uu___2 = lidents_of_term t in FStarC_List.op_At uu___1 uu___2
 type open_namespaces_and_abbreviations =
   {
   open_namespaces: FStarC_Ident.lident Prims.list ;
@@ -424,6 +420,13 @@ let __proj__Mkextension_lang_parser__item__parse_decls
       (error_message, FStarC_Parser_AST.decl Prims.list)
         FStar_Pervasives.either=
   match projectee with | { parse_decls;_} -> parse_decls
+let mk_extension_lang_parser
+  (f :
+    Prims.string ->
+      FStarC_Range_Type.t ->
+        (error_message, FStarC_Parser_AST.decl Prims.list)
+          FStar_Pervasives.either)
+  : extension_lang_parser= { parse_decls = f }
 let as_open_namespaces_and_abbrevs (ls : FStarC_Parser_AST.decl Prims.list) :
   open_namespaces_and_abbreviations=
   FStarC_List.fold_right

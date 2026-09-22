@@ -87,14 +87,24 @@ let coercion_source_and_target (env : FStarC_TypeChecker_Env.env)
   let uu___ = FStarC_Syntax_Util.arrow_formals_comp f_typ in
   match uu___ with
   | (f_bs, f_c) ->
-      if (match f_bs with | [] -> true | uu___1 -> false)
+      let rec drop_trailing_implicits bs =
+        if match bs with | [] -> true | uu___1 -> false
+        then bs
+        else
+          if
+            FStarC_Syntax_Syntax.is_bqual_implicit_or_meta
+              (FStarC_List.last bs).FStarC_Syntax_Syntax.binder_qual
+          then drop_trailing_implicits (FStarC_List.init bs)
+          else bs in
+      let f_bs' = drop_trailing_implicits f_bs in
+      if (match f_bs' with | [] -> true | uu___1 -> false)
       then FStar_Pervasives_Native.None
       else
         (let src =
            let uu___1 =
-             FStarC_TypeChecker_Env.push_binders env (FStarC_List.init f_bs) in
+             FStarC_TypeChecker_Env.push_binders env (FStarC_List.init f_bs') in
            base_head_fv uu___1
-             ((FStarC_List.last f_bs).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
+             ((FStarC_List.last f_bs').FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
          let tgt =
            let uu___1 = FStarC_TypeChecker_Env.push_binders env f_bs in
            base_head_fv uu___1 (FStarC_Syntax_Util.comp_result f_c) in

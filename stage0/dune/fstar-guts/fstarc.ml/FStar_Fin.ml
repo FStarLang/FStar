@@ -26,7 +26,7 @@ let rec pigeonhole (n : Prims.nat) (s : Prims.nat FStar_Seq_Base.seq) :
      match find s (fun k -> k = k0) Prims.int_one with
      | FStar_Pervasives_Native.Some i -> (Prims.int_zero, i)
      | FStar_Pervasives_Native.None ->
-         let uu___ =
+         let uu___1 =
            pigeonhole (n - Prims.int_one)
              (if n = Prims.int_zero
               then FStar_Seq_Base.MkSeq []
@@ -35,7 +35,7 @@ let rec pigeonhole (n : Prims.nat) (s : Prims.nat FStar_Seq_Base.seq) :
                   (fun i ->
                      let k = FStar_Seq_Base.index s (i + Prims.int_one) in
                      if k < k0 then k else k - Prims.int_one)) in
-         (match uu___ with
+         (match uu___1 with
           | (i1, i2) -> ((i1 + Prims.int_one), (i2 + Prims.int_one))))
 type 'a binary_relation = 'a -> 'a -> Prims.bool
 type 'a equivalence_relation = 'a -> 'a -> Prims.bool
@@ -74,7 +74,7 @@ let rec pigeonhole_eq :
                (FStar_Seq_Base.slice holes
                   (index_of_first_pigeon + Prims.int_one)
                   (FStar_Seq_Base.length holes)) in
-           let uu___ =
+           let uu___1 =
              pigeonhole_eq eq holes_except_first_pigeon
                (if
                   ((FStar_Seq_Base.length pigeons) - Prims.int_one) =
@@ -86,5 +86,5 @@ let rec pigeonhole_eq :
                     Prims.int_zero
                     (fun i ->
                        FStar_Seq_Base.index pigeons (i + Prims.int_one))) in
-           (match uu___ with
+           (match uu___1 with
             | (i1, i2) -> ((i1 + Prims.int_one), (i2 + Prims.int_one))))

@@ -206,122 +206,159 @@ let rec term_cmp : (FStarC_Reflection_Types.term, Obj.t) comparator_for'=
     let tv1 = FStarC_Reflection_V2_Builtins.inspect_ln t1 in
     let tv2 = FStarC_Reflection_V2_Builtins.inspect_ln t2 in
     match (tv1, tv2) with
-    | (FStarC_Reflection_V2_Data.Tv_Unsupp, uu___) -> Unknown
-    | (uu___, FStarC_Reflection_V2_Data.Tv_Unsupp) -> Unknown
+    | (FStarC_Reflection_V2_Data.Tv_Unsupp, uu___) ->
+        Obj.magic (Obj.repr Unknown)
+    | (uu___, FStarC_Reflection_V2_Data.Tv_Unsupp) ->
+        Obj.magic (Obj.repr Unknown)
     | (FStarC_Reflection_V2_Data.Tv_Var v1, FStarC_Reflection_V2_Data.Tv_Var
-       v2) -> co () () v1 v2 t1 t2 (namedv_cmp v1 v2) ()
+       v2) ->
+        Obj.magic
+          (Obj.repr
+             (co () () v1 v2
+                (FStarC_Reflection_V2_Builtins.inspect_namedv v1).FStarC_Reflection_V2_Data.uniq
+                (FStarC_Reflection_V2_Builtins.inspect_namedv v2).FStarC_Reflection_V2_Data.uniq
+                (namedv_cmp v1 v2) ()))
     | (FStarC_Reflection_V2_Data.Tv_BVar v1,
        FStarC_Reflection_V2_Data.Tv_BVar v2) ->
-        co () () v1 v2 t1 t2 (bv_cmp v1 v2) ()
+        Obj.magic
+          (Obj.repr
+             (co () () v1 v2
+                (FStarC_Reflection_V2_Builtins.inspect_bv v1).FStarC_Reflection_V2_Data.index
+                (FStarC_Reflection_V2_Builtins.inspect_bv v2).FStarC_Reflection_V2_Data.index
+                (bv_cmp v1 v2) ()))
     | (FStarC_Reflection_V2_Data.Tv_FVar f1,
        FStarC_Reflection_V2_Data.Tv_FVar f2) ->
-        co () () f1 f2 t1 t2 (fv_cmp f1 f2) ()
+        Obj.magic
+          (Obj.repr
+             (co () () f1 f2 (FStarC_Reflection_V2_Builtins.inspect_fv f1)
+                (FStarC_Reflection_V2_Builtins.inspect_fv f2) (fv_cmp f1 f2)
+                ()))
     | (FStarC_Reflection_V2_Data.Tv_UInst (f1, us1),
        FStarC_Reflection_V2_Data.Tv_UInst (f2, us2)) ->
-        co () () (f1, us1) (f2, us2) t1 t2
-          (op_Amp_Amp_Amp () () f1 f2 us1 us2 (fv_cmp f1 f2)
-             (list_dec_cmp' () t1 t2 univ_cmp us1 us2)) ()
+        Obj.magic
+          (Obj.repr
+             (co () () (f1, us1) (f2, us2) t1 t2
+                (op_Amp_Amp_Amp () () f1 f2 us1 us2 (fv_cmp f1 f2)
+                   (list_dec_cmp' () t1 t2 univ_cmp us1 us2)) ()))
     | (FStarC_Reflection_V2_Data.Tv_App (h1, a1),
        FStarC_Reflection_V2_Data.Tv_App (h2, a2)) ->
-        co () () (h1, a1) (h2, a2) t1 t2
-          (op_Amp_Amp_Amp () () h1 h2 a1 a2 (term_cmp h1 h2) (arg_cmp a1 a2))
-          ()
+        Obj.magic
+          (Obj.repr
+             (co () () (h1, a1) (h2, a2) t1 t2
+                (op_Amp_Amp_Amp () () h1 h2 a1 a2 (term_cmp h1 h2)
+                   (arg_cmp a1 a2)) ()))
     | (FStarC_Reflection_V2_Data.Tv_Abs (b1, e1),
        FStarC_Reflection_V2_Data.Tv_Abs (b2, e2)) ->
-        co () () (b1, e1) (b2, e2) t1 t2
-          (op_Amp_Amp_Amp () () b1 b2 e1 e2 (binder_cmp b1 b2)
-             (term_cmp e1 e2)) ()
+        Obj.magic
+          (Obj.repr
+             (co () () (b1, e1) (b2, e2) t1 t2
+                (op_Amp_Amp_Amp () () b1 b2 e1 e2 (binder_cmp b1 b2)
+                   (term_cmp e1 e2)) ()))
     | (FStarC_Reflection_V2_Data.Tv_Arrow (b1, c1),
        FStarC_Reflection_V2_Data.Tv_Arrow (b2, c2)) ->
-        co () () (b1, c1) (b2, c2) t1 t2
-          (op_Amp_Amp_Amp () () b1 b2 c1 c2 (binder_cmp b1 b2)
-             (comp_cmp c1 c2)) ()
+        Obj.magic
+          (Obj.repr
+             (co () () (b1, c1) (b2, c2) t1 t2
+                (op_Amp_Amp_Amp () () b1 b2 c1 c2 (binder_cmp b1 b2)
+                   (comp_cmp c1 c2)) ()))
     | (FStarC_Reflection_V2_Data.Tv_Type u1,
        FStarC_Reflection_V2_Data.Tv_Type u2) ->
-        co () () u1 u2 t1 t2 (univ_cmp u1 u2) ()
+        Obj.magic (Obj.repr (co () () u1 u2 t1 t2 (univ_cmp u1 u2) ()))
     | (FStarC_Reflection_V2_Data.Tv_Refine (sb1, r1),
        FStarC_Reflection_V2_Data.Tv_Refine (sb2, r2)) ->
-        co () ()
-          (((FStarC_Reflection_V2_Builtins.inspect_binder sb1).FStarC_Reflection_V2_Data.sort2),
-            r1)
-          (((FStarC_Reflection_V2_Builtins.inspect_binder sb2).FStarC_Reflection_V2_Data.sort2),
-            r2) t1 t2
-          (op_Amp_Amp_Amp () ()
-             (FStarC_Reflection_V2_Builtins.inspect_binder sb1).FStarC_Reflection_V2_Data.sort2
-             (FStarC_Reflection_V2_Builtins.inspect_binder sb2).FStarC_Reflection_V2_Data.sort2
-             r1 r2
-             (term_cmp
-                (FStarC_Reflection_V2_Builtins.inspect_binder sb1).FStarC_Reflection_V2_Data.sort2
-                (FStarC_Reflection_V2_Builtins.inspect_binder sb2).FStarC_Reflection_V2_Data.sort2)
-             (term_cmp r1 r2)) ()
-    | (FStarC_Reflection_V2_Data.Tv_Const c1,
-       FStarC_Reflection_V2_Data.Tv_Const c2) ->
-        co () () c1 c2 t1 t2 (const_cmp c1 c2) ()
-    | (FStarC_Reflection_V2_Data.Tv_Uvar (n1, u1),
-       FStarC_Reflection_V2_Data.Tv_Uvar (n2, u2)) ->
-        co () () n1 n2 t1 t2 (eq_cmp n1 n2) ()
-    | (FStarC_Reflection_V2_Data.Tv_Let (r1, attrs1, sb1, e1, b1),
-       FStarC_Reflection_V2_Data.Tv_Let (r2, attrs2, sb2, e2, b2)) ->
-        co () ()
-          ((((r1, attrs1),
-              ((FStarC_Reflection_V2_Builtins.inspect_binder sb1).FStarC_Reflection_V2_Data.sort2)),
-             e1), b1)
-          ((((r2, attrs2),
-              ((FStarC_Reflection_V2_Builtins.inspect_binder sb2).FStarC_Reflection_V2_Data.sort2)),
-             e2), b2) t1 t2
-          (op_Amp_Amp_Amp () ()
-             (((r1, attrs1),
-                ((FStarC_Reflection_V2_Builtins.inspect_binder sb1).FStarC_Reflection_V2_Data.sort2)),
-               e1)
-             (((r2, attrs2),
-                ((FStarC_Reflection_V2_Builtins.inspect_binder sb2).FStarC_Reflection_V2_Data.sort2)),
-               e2) b1 b2
-             (op_Amp_Amp_Amp () ()
-                ((r1, attrs1),
-                  ((FStarC_Reflection_V2_Builtins.inspect_binder sb1).FStarC_Reflection_V2_Data.sort2))
-                ((r2, attrs2),
-                  ((FStarC_Reflection_V2_Builtins.inspect_binder sb2).FStarC_Reflection_V2_Data.sort2))
-                e1 e2
-                (op_Amp_Amp_Amp () () (r1, attrs1) (r2, attrs2)
+        Obj.magic
+          (Obj.repr
+             (co () ()
+                (((FStarC_Reflection_V2_Builtins.inspect_binder sb1).FStarC_Reflection_V2_Data.sort2),
+                  r1)
+                (((FStarC_Reflection_V2_Builtins.inspect_binder sb2).FStarC_Reflection_V2_Data.sort2),
+                  r2) t1 t2
+                (op_Amp_Amp_Amp () ()
                    (FStarC_Reflection_V2_Builtins.inspect_binder sb1).FStarC_Reflection_V2_Data.sort2
                    (FStarC_Reflection_V2_Builtins.inspect_binder sb2).FStarC_Reflection_V2_Data.sort2
-                   (op_Amp_Amp_Amp () () r1 r2 attrs1 attrs2 (eq_cmp r1 r2)
-                      (list_dec_cmp' () t1 t2 term_cmp attrs1 attrs2))
+                   r1 r2
                    (term_cmp
                       (FStarC_Reflection_V2_Builtins.inspect_binder sb1).FStarC_Reflection_V2_Data.sort2
-                      (FStarC_Reflection_V2_Builtins.inspect_binder sb2).FStarC_Reflection_V2_Data.sort2))
-                (term_cmp e1 e2)) (term_cmp b1 b2)) ()
+                      (FStarC_Reflection_V2_Builtins.inspect_binder sb2).FStarC_Reflection_V2_Data.sort2)
+                   (term_cmp r1 r2)) ()))
+    | (FStarC_Reflection_V2_Data.Tv_Const c1,
+       FStarC_Reflection_V2_Data.Tv_Const c2) ->
+        Obj.magic (Obj.repr (co () () c1 c2 t1 t2 (const_cmp c1 c2) ()))
+    | (FStarC_Reflection_V2_Data.Tv_Uvar (n1, u1),
+       FStarC_Reflection_V2_Data.Tv_Uvar (n2, u2)) ->
+        Obj.magic (Obj.repr (co () () n1 n2 t1 t2 (eq_cmp n1 n2) ()))
+    | (FStarC_Reflection_V2_Data.Tv_Let (r1, attrs1, sb1, e1, b1),
+       FStarC_Reflection_V2_Data.Tv_Let (r2, attrs2, sb2, e2, b2)) ->
+        Obj.magic
+          (Obj.repr
+             (co () ()
+                ((((r1, attrs1),
+                    ((FStarC_Reflection_V2_Builtins.inspect_binder sb1).FStarC_Reflection_V2_Data.sort2)),
+                   e1), b1)
+                ((((r2, attrs2),
+                    ((FStarC_Reflection_V2_Builtins.inspect_binder sb2).FStarC_Reflection_V2_Data.sort2)),
+                   e2), b2) t1 t2
+                (op_Amp_Amp_Amp () ()
+                   (((r1, attrs1),
+                      ((FStarC_Reflection_V2_Builtins.inspect_binder sb1).FStarC_Reflection_V2_Data.sort2)),
+                     e1)
+                   (((r2, attrs2),
+                      ((FStarC_Reflection_V2_Builtins.inspect_binder sb2).FStarC_Reflection_V2_Data.sort2)),
+                     e2) b1 b2
+                   (op_Amp_Amp_Amp () ()
+                      ((r1, attrs1),
+                        ((FStarC_Reflection_V2_Builtins.inspect_binder sb1).FStarC_Reflection_V2_Data.sort2))
+                      ((r2, attrs2),
+                        ((FStarC_Reflection_V2_Builtins.inspect_binder sb2).FStarC_Reflection_V2_Data.sort2))
+                      e1 e2
+                      (op_Amp_Amp_Amp () () (r1, attrs1) (r2, attrs2)
+                         (FStarC_Reflection_V2_Builtins.inspect_binder sb1).FStarC_Reflection_V2_Data.sort2
+                         (FStarC_Reflection_V2_Builtins.inspect_binder sb2).FStarC_Reflection_V2_Data.sort2
+                         (op_Amp_Amp_Amp () () r1 r2 attrs1 attrs2
+                            (eq_cmp r1 r2)
+                            (list_dec_cmp' () t1 t2 term_cmp attrs1 attrs2))
+                         (term_cmp
+                            (FStarC_Reflection_V2_Builtins.inspect_binder sb1).FStarC_Reflection_V2_Data.sort2
+                            (FStarC_Reflection_V2_Builtins.inspect_binder sb2).FStarC_Reflection_V2_Data.sort2))
+                      (term_cmp e1 e2)) (term_cmp b1 b2)) ()))
     | (FStarC_Reflection_V2_Data.Tv_Match (sc1, o1, brs1),
        FStarC_Reflection_V2_Data.Tv_Match (sc2, o2, brs2)) ->
-        co () () ((sc1, o1), brs1) ((sc2, o2), brs2) t1 t2
-          (op_Amp_Amp_Amp () () (sc1, o1) (sc2, o2) brs1 brs2
-             (op_Amp_Amp_Amp () () sc1 sc2 o1 o2 (term_cmp sc1 sc2)
-                (opt_dec_cmp' () t1 t2 match_returns_ascription_cmp o1 o2))
-             (list_dec_cmp' () t1 t2 br_cmp brs1 brs2)) ()
+        Obj.magic
+          (Obj.repr
+             (co () () ((sc1, o1), brs1) ((sc2, o2), brs2) t1 t2
+                (op_Amp_Amp_Amp () () (sc1, o1) (sc2, o2) brs1 brs2
+                   (op_Amp_Amp_Amp () () sc1 sc2 o1 o2 (term_cmp sc1 sc2)
+                      (opt_dec_cmp' () t1 t2 match_returns_ascription_cmp o1
+                         o2)) (list_dec_cmp' () t1 t2 br_cmp brs1 brs2)) ()))
     | (FStarC_Reflection_V2_Data.Tv_AscribedT (e1, ta1, tacopt1, eq1),
        FStarC_Reflection_V2_Data.Tv_AscribedT (e2, ta2, tacopt2, eq2)) ->
-        co () () (((e1, ta1), tacopt1), eq1) (((e2, ta2), tacopt2), eq2) t1
-          t2
-          (op_Amp_Amp_Amp () () ((e1, ta1), tacopt1) ((e2, ta2), tacopt2) eq1
-             eq2
-             (op_Amp_Amp_Amp () () (e1, ta1) (e2, ta2) tacopt1 tacopt2
-                (op_Amp_Amp_Amp () () e1 e2 ta1 ta2 (term_cmp e1 e2)
-                   (term_cmp ta1 ta2))
-                (opt_dec_cmp' () t1 t2 term_cmp tacopt1 tacopt2))
-             (eq_cmp eq1 eq2)) ()
+        Obj.magic
+          (Obj.repr
+             (co () () (((e1, ta1), tacopt1), eq1)
+                (((e2, ta2), tacopt2), eq2) t1 t2
+                (op_Amp_Amp_Amp () () ((e1, ta1), tacopt1)
+                   ((e2, ta2), tacopt2) eq1 eq2
+                   (op_Amp_Amp_Amp () () (e1, ta1) (e2, ta2) tacopt1 tacopt2
+                      (op_Amp_Amp_Amp () () e1 e2 ta1 ta2 (term_cmp e1 e2)
+                         (term_cmp ta1 ta2))
+                      (opt_dec_cmp' () t1 t2 term_cmp tacopt1 tacopt2))
+                   (eq_cmp eq1 eq2)) ()))
     | (FStarC_Reflection_V2_Data.Tv_AscribedC (e1, c1, tacopt1, eq1),
        FStarC_Reflection_V2_Data.Tv_AscribedC (e2, c2, tacopt2, eq2)) ->
-        co () () (((e1, c1), tacopt1), eq1) (((e2, c2), tacopt2), eq2) t1 t2
-          (op_Amp_Amp_Amp () () ((e1, c1), tacopt1) ((e2, c2), tacopt2) eq1
-             eq2
-             (op_Amp_Amp_Amp () () (e1, c1) (e2, c2) tacopt1 tacopt2
-                (op_Amp_Amp_Amp () () e1 e2 c1 c2 (term_cmp e1 e2)
-                   (comp_cmp c1 c2))
-                (opt_dec_cmp' () t1 t2 term_cmp tacopt1 tacopt2))
-             (eq_cmp eq1 eq2)) ()
+        Obj.magic
+          (Obj.repr
+             (co () () (((e1, c1), tacopt1), eq1) (((e2, c2), tacopt2), eq2)
+                t1 t2
+                (op_Amp_Amp_Amp () () ((e1, c1), tacopt1) ((e2, c2), tacopt2)
+                   eq1 eq2
+                   (op_Amp_Amp_Amp () () (e1, c1) (e2, c2) tacopt1 tacopt2
+                      (op_Amp_Amp_Amp () () e1 e2 c1 c2 (term_cmp e1 e2)
+                         (comp_cmp c1 c2))
+                      (opt_dec_cmp' () t1 t2 term_cmp tacopt1 tacopt2))
+                   (eq_cmp eq1 eq2)) ()))
     | (FStarC_Reflection_V2_Data.Tv_Unknown,
-       FStarC_Reflection_V2_Data.Tv_Unknown) -> Eq
-    | uu___ -> Neq
+       FStarC_Reflection_V2_Data.Tv_Unknown) -> Obj.magic (Obj.repr Eq)
+    | uu___ -> Obj.magic (Obj.repr Neq)
 and arg_cmp : (FStarC_Reflection_V2_Data.argv, Obj.t) comparator_for'=
   fun uu___ uu___1 ->
     match (uu___, uu___1) with
@@ -381,35 +418,47 @@ and comp_cmp : (FStarC_Reflection_Types.comp, Obj.t) comparator_for'=
   fun c1 c2 ->
     let cv1 = FStarC_Reflection_V2_Builtins.inspect_comp c1 in
     let cv2 = FStarC_Reflection_V2_Builtins.inspect_comp c2 in
-    match (cv1, cv2) with
-    | (FStarC_Reflection_V2_Data.C_Total t1,
-       FStarC_Reflection_V2_Data.C_Total t2) ->
-        co () () t1 t2 c1 c2 (term_cmp t1 t2) ()
-    | (FStarC_Reflection_V2_Data.C_GTotal t1,
-       FStarC_Reflection_V2_Data.C_GTotal t2) ->
-        co () () t1 t2 c1 c2 (term_cmp t1 t2) ()
-    | (FStarC_Reflection_V2_Data.C_Lemma (pre1, post1, pat1),
-       FStarC_Reflection_V2_Data.C_Lemma (pre2, post2, pat2)) ->
-        co () () ((pre1, post1), pat1) ((pre2, post2), pat2) c1 c2
-          (op_Amp_Amp_Amp () () (pre1, post1) (pre2, post2) pat1 pat2
-             (op_Amp_Amp_Amp () () pre1 pre2 post1 post2 (term_cmp pre1 pre2)
-                (term_cmp post1 post2)) (term_cmp pat1 pat2)) ()
-    | (FStarC_Reflection_V2_Data.C_Eff (us1, ef1, t1, pre1, post1, dec1),
-       FStarC_Reflection_V2_Data.C_Eff (us2, ef2, t2, pre2, post2, dec2)) ->
-        co () () (((((us1, ef1), t1), pre1), post1), dec1)
-          (((((us2, ef2), t2), pre2), post2), dec2) c1 c2
-          (op_Amp_Amp_Amp () () ((((us1, ef1), t1), pre1), post1)
-             ((((us2, ef2), t2), pre2), post2) dec1 dec2
-             (op_Amp_Amp_Amp () () (((us1, ef1), t1), pre1)
-                (((us2, ef2), t2), pre2) post1 post2
-                (op_Amp_Amp_Amp () () ((us1, ef1), t1) ((us2, ef2), t2) pre1
-                   pre2
-                   (op_Amp_Amp_Amp () () (us1, ef1) (us2, ef2) t1 t2
-                      (op_Amp_Amp_Amp () () us1 us2 ef1 ef2
-                         (list_dec_cmp' () c1 c2 univ_cmp us1 us2)
-                         (eq_cmp ef1 ef2)) (term_cmp t1 t2))
-                   (term_cmp pre1 pre2)) (term_cmp post1 post2))
-             (list_dec_cmp' () c1 c2 term_cmp dec1 dec2)) ()
+    co () ()
+      (((cv1.FStarC_Reflection_V2_Data.effect_name),
+         (cv1.FStarC_Reflection_V2_Data.result_typ)),
+        (cv1.FStarC_Reflection_V2_Data.flags))
+      (((cv2.FStarC_Reflection_V2_Data.effect_name),
+         (cv2.FStarC_Reflection_V2_Data.result_typ)),
+        (cv2.FStarC_Reflection_V2_Data.flags)) c1 c2
+      (op_Amp_Amp_Amp () ()
+         ((cv1.FStarC_Reflection_V2_Data.effect_name),
+           (cv1.FStarC_Reflection_V2_Data.result_typ))
+         ((cv2.FStarC_Reflection_V2_Data.effect_name),
+           (cv2.FStarC_Reflection_V2_Data.result_typ))
+         cv1.FStarC_Reflection_V2_Data.flags
+         cv2.FStarC_Reflection_V2_Data.flags
+         (op_Amp_Amp_Amp () () cv1.FStarC_Reflection_V2_Data.effect_name
+            cv2.FStarC_Reflection_V2_Data.effect_name
+            cv1.FStarC_Reflection_V2_Data.result_typ
+            cv2.FStarC_Reflection_V2_Data.result_typ
+            (eq_cmp cv1.FStarC_Reflection_V2_Data.effect_name
+               cv2.FStarC_Reflection_V2_Data.effect_name)
+            (term_cmp cv1.FStarC_Reflection_V2_Data.result_typ
+               cv2.FStarC_Reflection_V2_Data.result_typ))
+         (list_dec_cmp' () c1 c2 flag_cmp cv1.FStarC_Reflection_V2_Data.flags
+            cv2.FStarC_Reflection_V2_Data.flags)) ()
+and flag_cmp : (FStarC_Reflection_V2_Data.cflag, Obj.t) comparator_for'=
+  fun f1 f2 ->
+    match (f1, f2) with
+    | (FStarC_Reflection_V2_Data.SMTPAT t1, FStarC_Reflection_V2_Data.SMTPAT
+       t2) -> co () () t1 t2 f1 f2 (term_cmp t1 t2) ()
+    | (FStarC_Reflection_V2_Data.DECREASES
+       (FStarC_Reflection_V2_Data.Decreases_lex ts1),
+       FStarC_Reflection_V2_Data.DECREASES
+       (FStarC_Reflection_V2_Data.Decreases_lex ts2)) ->
+        co () () ts1 ts2 f1 f2 (list_dec_cmp' () f1 f2 term_cmp ts1 ts2) ()
+    | (FStarC_Reflection_V2_Data.DECREASES
+       (FStarC_Reflection_V2_Data.Decreases_wf (rel1, e1)),
+       FStarC_Reflection_V2_Data.DECREASES
+       (FStarC_Reflection_V2_Data.Decreases_wf (rel2, e2))) ->
+        co () () (rel1, e1) (rel2, e2) f1 f2
+          (op_Amp_Amp_Amp () () rel1 rel2 e1 e2 (term_cmp rel1 rel2)
+             (term_cmp e1 e2)) ()
     | uu___ -> Neq
 and br_cmp : (FStarC_Reflection_V2_Data.branch, Obj.t) comparator_for'=
   fun br1 br2 ->

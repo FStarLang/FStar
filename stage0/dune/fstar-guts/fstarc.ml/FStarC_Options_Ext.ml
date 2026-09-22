@@ -9,8 +9,7 @@ let __proj__E__item__map (projectee : ext_state) :
 let defaults : (Prims.string * Prims.string) Prims.list=
   [("context_pruning", "true");
   ("prune_decls", "true");
-  ("fly_deps", "true");
-  ("optimize_let_vc", "true")]
+  ("fly_deps", "true")]
 let init : ext_state=
   let uu___ =
     FStarC_List.fold_right

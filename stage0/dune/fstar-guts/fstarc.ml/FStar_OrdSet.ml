@@ -24,7 +24,9 @@ let last (f : 'a cmp) (s : ('a, Obj.t) ordset) : 'a= last_lib f s
 let rec liat_direct : 'a . 'a cmp -> ('a, Obj.t) ordset -> ('a, Obj.t) ordset
   =
   fun f s ->
-    match s with | x::[] -> [] | h::g::t -> h :: (liat_direct f (g :: t))
+    match s with
+    | x::[] -> []
+    | h::g::t -> let l = liat_direct f (g :: t) in h :: l
 let liat_lib (f : 'a cmp) (s : ('a, Obj.t) ordset) : 'a Prims.list=
   FStar_Pervasives_Native.fst (FStar_List_Tot_Base.unsnoc s)
 let liat (f : 'a cmp) (s : ('a, Obj.t) ordset) : ('a, Obj.t) ordset=
@@ -176,7 +178,7 @@ let rec map_internal :
         let y = g x in
         let ys = map_internal fa fb g xs in
         if
-          (Prims.not (match ys with | hd::tl -> true | uu___ -> false)) ||
+          (Prims.not (match ys with | hd::tl -> true | uu___1 -> false)) ||
             ((match ys with | hd::tl -> hd) <> y)
         then y :: ys
         else ys

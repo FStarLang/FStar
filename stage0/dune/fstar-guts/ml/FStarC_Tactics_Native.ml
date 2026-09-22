@@ -1,6 +1,5 @@
 open FStarC_Range
 open FStarC_Tactics_Types
-open FStarC_Tactics_Result
 open FStarC_Tactics_Monad
 open FStarC_Syntax_Syntax
 
@@ -43,6 +42,7 @@ let register_plugin (s: string) (arity: Prims.int) (t: itac) (n:nbe_itac) =
              POB.strong_reduction_ok=true;
              POB.requires_binder_substitution = false;
              POB.renorm_after = false;
+             POB.unrepresentable_result = false;
              POB.interpretation=t;
              POB.univ_arity=Z.of_int 0;
              POB.interpretation_nbe=n;

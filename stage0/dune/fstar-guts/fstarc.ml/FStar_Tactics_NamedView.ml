@@ -1521,11 +1521,8 @@ let open_term_with (b : FStarC_Reflection_Types.binder) (nb : binder)
 let open_term (b : FStarC_Reflection_Types.binder) (t : term)
   (ps : FStarC_Tactics_Types.ref_proofstate) : (binder * term)=
   let x = open_binder b ps in let x1 = open_term_with b x t ps in (x, x1)
-let subst_comp (s : FStarC_Syntax_Syntax.subst_t) (c : comp) : comp=
-  FStarC_Reflection_V2_Builtins.inspect_comp
-    (FStarC_Reflection_V2_Builtins.subst_comp s
-       (FStarC_Reflection_V2_Builtins.pack_comp c))
-let open_comp (b : FStarC_Reflection_Types.binder) (t : comp)
+let open_comp (b : FStarC_Reflection_Types.binder)
+  (t : FStarC_Reflection_Types.comp)
   (ps : FStarC_Tactics_Types.ref_proofstate) : (binder * comp)=
   let x = FStarC_Tactics_V2_Builtins.fresh () ps in
   ({
@@ -1539,29 +1536,32 @@ let open_comp (b : FStarC_Reflection_Types.binder) (t : comp)
      attrs =
        ((FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.attrs)
    },
-    (subst_comp
+    (FStarC_Reflection_V2_Builtins.inspect_comp
+       (FStarC_Reflection_V2_Builtins.subst_comp
+          [FStarC_Syntax_Syntax.DB
+             (Prims.int_zero,
+               (FStarC_Reflection_V2_Builtins.pack_namedv
+                  {
+                    FStarC_Reflection_V2_Data.uniq = x;
+                    FStarC_Reflection_V2_Data.sort =
+                      (FStar_Sealed.seal
+                         (FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.sort2);
+                    FStarC_Reflection_V2_Data.ppname =
+                      ((FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.ppname2)
+                  }))] t)))
+let open_comp_with (b : FStarC_Reflection_Types.binder) (nb : binder)
+  (c : FStarC_Reflection_Types.comp)
+  (uu___ : FStarC_Tactics_Types.ref_proofstate) : comp=
+  FStarC_Reflection_V2_Builtins.inspect_comp
+    (FStarC_Reflection_V2_Builtins.subst_comp
        [FStarC_Syntax_Syntax.DB
           (Prims.int_zero,
             (FStarC_Reflection_V2_Builtins.pack_namedv
                {
-                 FStarC_Reflection_V2_Data.uniq = x;
-                 FStarC_Reflection_V2_Data.sort =
-                   (FStar_Sealed.seal
-                      (FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.sort2);
-                 FStarC_Reflection_V2_Data.ppname =
-                   ((FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.ppname2)
-               }))] t))
-let open_comp_with (b : FStarC_Reflection_Types.binder) (nb : binder)
-  (c : comp) (uu___ : FStarC_Tactics_Types.ref_proofstate) : comp=
-  subst_comp
-    [FStarC_Syntax_Syntax.DB
-       (Prims.int_zero,
-         (FStarC_Reflection_V2_Builtins.pack_namedv
-            {
-              FStarC_Reflection_V2_Data.uniq = (nb.uniq);
-              FStarC_Reflection_V2_Data.sort = (FStar_Sealed.seal nb.sort);
-              FStarC_Reflection_V2_Data.ppname = (nb.ppname)
-            }))] c
+                 FStarC_Reflection_V2_Data.uniq = (nb.uniq);
+                 FStarC_Reflection_V2_Data.sort = (FStar_Sealed.seal nb.sort);
+                 FStarC_Reflection_V2_Data.ppname = (nb.ppname)
+               }))] c)
 let open_term_simple (b : FStarC_Reflection_V2_Data.simple_binder) (t : term)
   (ps : FStarC_Tactics_Types.ref_proofstate) : (simple_binder * term)=
   let x = FStarC_Tactics_V2_Builtins.fresh () ps in
@@ -1588,7 +1588,8 @@ let open_term_simple (b : FStarC_Reflection_V2_Data.simple_binder) (t : term)
                  FStarC_Reflection_V2_Data.ppname =
                    ((FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.ppname2)
                }))] t))
-let open_comp_simple (b : FStarC_Reflection_V2_Data.simple_binder) (t : comp)
+let open_comp_simple (b : FStarC_Reflection_V2_Data.simple_binder)
+  (t : FStarC_Reflection_Types.comp)
   (ps : FStarC_Tactics_Types.ref_proofstate) : (simple_binder * comp)=
   let x = FStarC_Tactics_V2_Builtins.fresh () ps in
   ({
@@ -1602,18 +1603,19 @@ let open_comp_simple (b : FStarC_Reflection_V2_Data.simple_binder) (t : comp)
      attrs =
        ((FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.attrs)
    },
-    (subst_comp
-       [FStarC_Syntax_Syntax.DB
-          (Prims.int_zero,
-            (FStarC_Reflection_V2_Builtins.pack_namedv
-               {
-                 FStarC_Reflection_V2_Data.uniq = x;
-                 FStarC_Reflection_V2_Data.sort =
-                   (FStar_Sealed.seal
-                      (FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.sort2);
-                 FStarC_Reflection_V2_Data.ppname =
-                   ((FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.ppname2)
-               }))] t))
+    (FStarC_Reflection_V2_Builtins.inspect_comp
+       (FStarC_Reflection_V2_Builtins.subst_comp
+          [FStarC_Syntax_Syntax.DB
+             (Prims.int_zero,
+               (FStarC_Reflection_V2_Builtins.pack_namedv
+                  {
+                    FStarC_Reflection_V2_Data.uniq = x;
+                    FStarC_Reflection_V2_Data.sort =
+                      (FStar_Sealed.seal
+                         (FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.sort2);
+                    FStarC_Reflection_V2_Data.ppname =
+                      ((FStarC_Reflection_V2_Builtins.inspect_binder b).FStarC_Reflection_V2_Data.ppname2)
+                  }))] t)))
 let close_term (b : binder) (t : term) :
   (FStarC_Reflection_Types.binder * term)=
   let nv = r_binder_to_namedv b in
@@ -1661,9 +1663,12 @@ let _ =
                   (FStarC_Ident.lid_of_str
                      "FStar.Tactics.NamedView.close_term") cb us args))
 let close_comp (b : binder) (t : comp) :
-  (FStarC_Reflection_Types.binder * comp)=
+  (FStarC_Reflection_Types.binder * FStarC_Reflection_Types.comp)=
   let nv = r_binder_to_namedv b in
-  let t' = subst_comp [FStarC_Syntax_Syntax.NM (nv, Prims.int_zero)] t in
+  let t' =
+    FStarC_Reflection_V2_Builtins.subst_comp
+      [FStarC_Syntax_Syntax.NM (nv, Prims.int_zero)]
+      (FStarC_Reflection_V2_Builtins.pack_comp t) in
   let b1 =
     FStarC_Reflection_V2_Builtins.pack_binder
       {
@@ -1688,9 +1693,12 @@ let close_term_simple (b : simple_binder) (t : term) :
     } in
   let b1 = FStarC_Reflection_V2_Builtins.pack_binder bv1 in (b1, t')
 let close_comp_simple (b : simple_binder) (t : comp) :
-  (FStarC_Reflection_V2_Data.simple_binder * comp)=
+  (FStarC_Reflection_V2_Data.simple_binder * FStarC_Reflection_Types.comp)=
   let nv = r_binder_to_namedv b in
-  let t' = subst_comp [FStarC_Syntax_Syntax.NM (nv, Prims.int_zero)] t in
+  let t' =
+    FStarC_Reflection_V2_Builtins.subst_comp
+      [FStarC_Syntax_Syntax.NM (nv, Prims.int_zero)]
+      (FStarC_Reflection_V2_Builtins.pack_comp t) in
   let bv1 =
     {
       FStarC_Reflection_V2_Data.sort2 = (b.sort);
@@ -1743,24 +1751,19 @@ let open_term_n (bs : FStarC_Reflection_Types.binder Prims.list) (t : term)
   | (nbs, s) ->
       ((FStar_List_Tot_Base.rev nbs),
         (FStarC_Reflection_V2_Builtins.subst_term s t))
-let rec open_term_n_with (uu___3 : FStarC_Reflection_Types.binder Prims.list)
-  (uu___2 : binder Prims.list) (uu___1 : term)
-  (uu___ : FStarC_Tactics_Types.ref_proofstate) : term=
-  (fun bs nbs t ->
-     match (bs, nbs) with
-     | ([], []) -> Obj.magic (Obj.repr (fun uu___ -> t))
-     | (b::bs1, nb::nbs1) ->
-         Obj.magic
-           (Obj.repr
-              (fun ps ->
-                 let x = open_term_n_with bs1 nbs1 t ps in
-                 let x1 = open_term_with b nb x ps in x1))
-     | uu___ ->
-         Obj.magic
-           (Obj.repr
-              (fun ps ->
-                 FStarC_Tactics_V2_Builtins.raise_core LengthMismatch ps)))
-    uu___3 uu___2 uu___1 uu___
+let rec open_term_n_with (bs : FStarC_Reflection_Types.binder Prims.list)
+  (nbs : binder Prims.list) (t : term) :
+  FStarC_Tactics_Types.ref_proofstate -> term=
+  match (bs, nbs) with
+  | ([], []) -> (fun uu___ -> t)
+  | (b::bs1, nb::nbs1) ->
+      (fun ps ->
+         let x = open_term_n_with bs1 nbs1 t ps in
+         let x1 = open_term_with b nb x ps in x1)
+  | uu___ ->
+      (fun ps ->
+         FStarC_Tactics_V2_Builtins.raise_core LengthMismatch ps;
+         Prims.magic ())
 let close_term_n (bs : binder Prims.list) (t : term) :
   (FStarC_Reflection_Types.binder Prims.list * term)=
   let rec aux bs1 cbs s =
@@ -1909,8 +1912,7 @@ let open_match_returns_ascription
         | FStar_Pervasives.Inl t ->
             let x3 = open_term_with b x1 t ps in FStar_Pervasives.Inl x3
         | FStar_Pervasives.Inr c ->
-            let x3 = FStarC_Reflection_V2_Builtins.inspect_comp c in
-            let x4 = open_comp_with b x1 x3 ps in FStar_Pervasives.Inr x4 in
+            let x3 = open_comp_with b x1 c ps in FStar_Pervasives.Inr x3 in
       let x3 =
         match topt with
         | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
@@ -1931,10 +1933,7 @@ let close_match_returns_ascription (mra : match_returns_ascription) :
               (FStar_Pervasives_Native.snd (close_term nb t))
         | FStar_Pervasives.Inr c ->
             let uu___1 = close_comp nb c in
-            (match uu___1 with
-             | (uu___2, c1) ->
-                 let c2 = FStarC_Reflection_V2_Builtins.pack_comp c1 in
-                 FStar_Pervasives.Inr c2) in
+            (match uu___1 with | (uu___2, c1) -> FStar_Pervasives.Inr c1) in
       let topt1 =
         match topt with
         | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
@@ -1971,8 +1970,7 @@ let open_view (tv : FStarC_Reflection_V2_Data.term_view) :
          match x with | (nb, body1) -> Tv_Abs (nb, body1))
   | FStarC_Reflection_V2_Data.Tv_Arrow (b, c) ->
       (fun ps ->
-         let x =
-           open_comp b (FStarC_Reflection_V2_Builtins.inspect_comp c) ps in
+         let x = open_comp b c ps in
          match x with | (nb, c1) -> Tv_Arrow (nb, c1))
   | FStarC_Reflection_V2_Data.Tv_Refine (b, ref) ->
       (fun ps ->
@@ -2026,9 +2024,7 @@ let close_view (tv : named_term_view) : FStarC_Reflection_V2_Data.term_view=
   | Tv_Arrow (nb, c) ->
       let uu___ = close_comp nb c in
       (match uu___ with
-       | (b, c1) ->
-           let c2 = FStarC_Reflection_V2_Builtins.pack_comp c1 in
-           FStarC_Reflection_V2_Data.Tv_Arrow (b, c2))
+       | (b, c1) -> FStarC_Reflection_V2_Data.Tv_Arrow (b, c1))
   | Tv_Refine (nb, ref) ->
       let uu___ = close_term_simple nb ref in
       (match uu___ with
@@ -2162,32 +2158,33 @@ let subst_r_binders (s : FStarC_Syntax_Syntax.subst_t)
     (fun i b ->
        r_subst_binder_sort (FStar_Reflection_V2_Derived.shift_subst i s) b)
     bs
-let rec open_n_binders_from_arrow (uu___2 : binders) (uu___1 : term)
-  (uu___ : FStarC_Tactics_Types.ref_proofstate) : term=
-  (fun bs t ->
-     match bs with
-     | [] -> Obj.magic (Obj.repr (fun uu___ -> t))
-     | b::bs1 ->
-         Obj.magic
-           (Obj.repr
-              (fun ps ->
-                 let x = inspect t ps in
-                 match x with
-                 | Tv_Arrow (b', FStarC_Reflection_V2_Data.C_Total t') ->
-                     Obj.repr
-                       (let x1 =
-                          FStarC_Reflection_V2_Builtins.subst_term
-                            [FStarC_Syntax_Syntax.NT
-                               ((r_binder_to_namedv b'),
-                                 (pack
-                                    (Tv_Var
-                                       (FStarC_Reflection_V2_Builtins.inspect_namedv
-                                          (r_binder_to_namedv b)))))] t' in
-                        open_n_binders_from_arrow bs1 x1 ps)
-                 | uu___ ->
-                     Obj.repr
-                       (FStarC_Tactics_V2_Builtins.raise_core
-                          NotEnoughBinders ps)))) uu___2 uu___1 uu___
+let rec open_n_binders_from_arrow (bs : binders) (t : term) :
+  FStarC_Tactics_Types.ref_proofstate -> term=
+  match bs with
+  | [] -> (fun uu___ -> t)
+  | b::bs1 ->
+      (fun ps ->
+         let x = inspect t ps in
+         match x with
+         | Tv_Arrow (b', c) ->
+             if Prims.not (FStarC_Reflection_V2_Data.is_tot_comp c)
+             then
+               (FStarC_Tactics_V2_Builtins.raise_core NotEnoughBinders ps;
+                Prims.magic ())
+             else
+               (let x1 = c.FStarC_Reflection_V2_Data.result_typ in
+                let x2 =
+                  FStarC_Reflection_V2_Builtins.subst_term
+                    [FStarC_Syntax_Syntax.NT
+                       ((r_binder_to_namedv b'),
+                         (pack
+                            (Tv_Var
+                               (FStarC_Reflection_V2_Builtins.inspect_namedv
+                                  (r_binder_to_namedv b)))))] x1 in
+                open_n_binders_from_arrow bs1 x2 ps)
+         | uu___ ->
+             (FStarC_Tactics_V2_Builtins.raise_core NotEnoughBinders ps;
+              Prims.magic ()))
 let open_sigelt_view (sv : FStarC_Reflection_V2_Data.sigelt_view) :
   FStarC_Tactics_Types.ref_proofstate -> named_sigelt_view=
   match sv with
@@ -2246,7 +2243,8 @@ let rec mk_arr (args : binder Prims.list) (t : term) :
   | a::args' ->
       (fun ps ->
          let x =
-           let x1 = mk_arr args' t ps in FStarC_Reflection_V2_Data.C_Total x1 in
+           let x1 = mk_arr args' t ps in
+           FStarC_Reflection_V2_Data.mk_tot_comp x1 in
          pack (Tv_Arrow (a, x)))
 let close_sigelt_view (sv : named_sigelt_view) :
   FStarC_Tactics_Types.ref_proofstate ->

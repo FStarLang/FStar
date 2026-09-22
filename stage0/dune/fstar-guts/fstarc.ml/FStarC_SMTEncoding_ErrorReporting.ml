@@ -550,7 +550,15 @@ let split_goals
                                      let uu___7 =
                                        let uu___8 =
                                          FStarC_List.map
-                                           (fun uu___9 -> CVar uu___9) names1 in
+                                           (fun x ->
+                                              let uu___9 =
+                                                FStarC_Syntax_Util.un_squash
+                                                  x.FStarC_Syntax_Syntax.sort in
+                                              match uu___9 with
+                                              | FStar_Pervasives_Native.Some
+                                                  p -> CHyp p
+                                              | FStar_Pervasives_Native.None
+                                                  -> CVar x) names1 in
                                        gctx ds uu___8 t in
                                      (uu___7,
                                        (FStarC_List.op_At decls decls'), ok))))

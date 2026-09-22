@@ -267,7 +267,8 @@ let init_macro_freenames : Prims.string Prims.list FStarC_PSMap.t=
     [("is-BoxBool", ["BoxBool"]);
     ("is-BoxInt", ["BoxInt"]);
     ("is-BoxString", ["BoxString"]);
-    ("is-BoxReal", ["BoxReal"])]
+    ("is-BoxReal", ["BoxReal"]);
+    ("is-BoxProp", ["BoxProp"])]
 let init : pruning_state=
   {
     defs_and_decls_map = (FStarC_PSMap.empty ());
