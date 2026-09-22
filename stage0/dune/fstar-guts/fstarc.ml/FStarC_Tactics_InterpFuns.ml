@@ -35,6 +35,8 @@ let set_auto_reflect (arity : Prims.int)
       (p.FStarC_TypeChecker_Primops_Base.requires_binder_substitution);
     FStarC_TypeChecker_Primops_Base.renorm_after =
       (p.FStarC_TypeChecker_Primops_Base.renorm_after);
+    FStarC_TypeChecker_Primops_Base.unrepresentable_result =
+      (p.FStarC_TypeChecker_Primops_Base.unrepresentable_result);
     FStarC_TypeChecker_Primops_Base.interpretation =
       (p.FStarC_TypeChecker_Primops_Base.interpretation);
     FStarC_TypeChecker_Primops_Base.interpretation_nbe =

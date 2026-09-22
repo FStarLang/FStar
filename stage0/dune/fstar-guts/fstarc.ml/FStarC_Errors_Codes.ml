@@ -375,6 +375,39 @@ type error_code =
   | Error_CannotResolveRecord 
   | Error_MissingPopOptions 
   | Error_AmbiguousName 
+  | Warning_IgnoredNewQualifier 
+  | Error_CustardCannotMonomorphize 
+  | Error_CustardFuelExhausted 
+  | Error_CustardUnextractableEffect 
+  | Warning_CustardLostRepresentation 
+  | Error_CustardNoCRepresentation 
+  | Error_CustardBadUnitInterface 
+  | Error_CustardUnrepresentableValue 
+  | Warning_CustardIneffectiveAttribute 
+  | Error_CustardNotCompileTime 
+  | Warning_CustardKeyNotReduced 
+  | Error_CustardExportCollision 
+  | Warning_CustardNoPublicDefinitions 
+  | Error_CustardMonoExternal 
+  | Warning_CustardGeneratedNameInInterface 
+  | Error_CustardBadLift 
+  | Error_CustardDanglingReference 
+  | Error_CustardBadFloatLiteral 
+  | Warning_CustardRuleArity 
+  | Warning_CustardExternErasure 
+  | Error_CustardSharedGlobal 
+  | Error_CustardExternConflict 
+  | Error_CustardEntryNotFound 
+  | Error_CustardBadFloatWidth 
+  | Warning_CustardFloatVocabulary 
+  | Error_CustardPolyExternalUnused 
+  | Error_CustardBadMacro 
+  | Error_CustardBadTemplateArg 
+  | Warning_CustardReferenceCopied 
+  | Error_CustardBadReference 
+  | Error_CustardBadStaticArray 
+  | Error_CustardBadComment 
+  | Error_CustardNoFSharpRealization 
 let uu___is_Error_DependencyAnalysisFailed (projectee : error_code) :
   Prims.bool=
   match projectee with
@@ -1635,6 +1668,131 @@ let uu___is_Error_MissingPopOptions (projectee : error_code) : Prims.bool=
   match projectee with | Error_MissingPopOptions -> true | uu___ -> false
 let uu___is_Error_AmbiguousName (projectee : error_code) : Prims.bool=
   match projectee with | Error_AmbiguousName -> true | uu___ -> false
+let uu___is_Warning_IgnoredNewQualifier (projectee : error_code) :
+  Prims.bool=
+  match projectee with | Warning_IgnoredNewQualifier -> true | uu___ -> false
+let uu___is_Error_CustardCannotMonomorphize (projectee : error_code) :
+  Prims.bool=
+  match projectee with
+  | Error_CustardCannotMonomorphize -> true
+  | uu___ -> false
+let uu___is_Error_CustardFuelExhausted (projectee : error_code) : Prims.bool=
+  match projectee with | Error_CustardFuelExhausted -> true | uu___ -> false
+let uu___is_Error_CustardUnextractableEffect (projectee : error_code) :
+  Prims.bool=
+  match projectee with
+  | Error_CustardUnextractableEffect -> true
+  | uu___ -> false
+let uu___is_Warning_CustardLostRepresentation (projectee : error_code) :
+  Prims.bool=
+  match projectee with
+  | Warning_CustardLostRepresentation -> true
+  | uu___ -> false
+let uu___is_Error_CustardNoCRepresentation (projectee : error_code) :
+  Prims.bool=
+  match projectee with
+  | Error_CustardNoCRepresentation -> true
+  | uu___ -> false
+let uu___is_Error_CustardBadUnitInterface (projectee : error_code) :
+  Prims.bool=
+  match projectee with
+  | Error_CustardBadUnitInterface -> true
+  | uu___ -> false
+let uu___is_Error_CustardUnrepresentableValue (projectee : error_code) :
+  Prims.bool=
+  match projectee with
+  | Error_CustardUnrepresentableValue -> true
+  | uu___ -> false
+let uu___is_Warning_CustardIneffectiveAttribute (projectee : error_code) :
+  Prims.bool=
+  match projectee with
+  | Warning_CustardIneffectiveAttribute -> true
+  | uu___ -> false
+let uu___is_Error_CustardNotCompileTime (projectee : error_code) :
+  Prims.bool=
+  match projectee with | Error_CustardNotCompileTime -> true | uu___ -> false
+let uu___is_Warning_CustardKeyNotReduced (projectee : error_code) :
+  Prims.bool=
+  match projectee with
+  | Warning_CustardKeyNotReduced -> true
+  | uu___ -> false
+let uu___is_Error_CustardExportCollision (projectee : error_code) :
+  Prims.bool=
+  match projectee with
+  | Error_CustardExportCollision -> true
+  | uu___ -> false
+let uu___is_Warning_CustardNoPublicDefinitions (projectee : error_code) :
+  Prims.bool=
+  match projectee with
+  | Warning_CustardNoPublicDefinitions -> true
+  | uu___ -> false
+let uu___is_Error_CustardMonoExternal (projectee : error_code) : Prims.bool=
+  match projectee with | Error_CustardMonoExternal -> true | uu___ -> false
+let uu___is_Warning_CustardGeneratedNameInInterface (projectee : error_code)
+  : Prims.bool=
+  match projectee with
+  | Warning_CustardGeneratedNameInInterface -> true
+  | uu___ -> false
+let uu___is_Error_CustardBadLift (projectee : error_code) : Prims.bool=
+  match projectee with | Error_CustardBadLift -> true | uu___ -> false
+let uu___is_Error_CustardDanglingReference (projectee : error_code) :
+  Prims.bool=
+  match projectee with
+  | Error_CustardDanglingReference -> true
+  | uu___ -> false
+let uu___is_Error_CustardBadFloatLiteral (projectee : error_code) :
+  Prims.bool=
+  match projectee with
+  | Error_CustardBadFloatLiteral -> true
+  | uu___ -> false
+let uu___is_Warning_CustardRuleArity (projectee : error_code) : Prims.bool=
+  match projectee with | Warning_CustardRuleArity -> true | uu___ -> false
+let uu___is_Warning_CustardExternErasure (projectee : error_code) :
+  Prims.bool=
+  match projectee with
+  | Warning_CustardExternErasure -> true
+  | uu___ -> false
+let uu___is_Error_CustardSharedGlobal (projectee : error_code) : Prims.bool=
+  match projectee with | Error_CustardSharedGlobal -> true | uu___ -> false
+let uu___is_Error_CustardExternConflict (projectee : error_code) :
+  Prims.bool=
+  match projectee with | Error_CustardExternConflict -> true | uu___ -> false
+let uu___is_Error_CustardEntryNotFound (projectee : error_code) : Prims.bool=
+  match projectee with | Error_CustardEntryNotFound -> true | uu___ -> false
+let uu___is_Error_CustardBadFloatWidth (projectee : error_code) : Prims.bool=
+  match projectee with | Error_CustardBadFloatWidth -> true | uu___ -> false
+let uu___is_Warning_CustardFloatVocabulary (projectee : error_code) :
+  Prims.bool=
+  match projectee with
+  | Warning_CustardFloatVocabulary -> true
+  | uu___ -> false
+let uu___is_Error_CustardPolyExternalUnused (projectee : error_code) :
+  Prims.bool=
+  match projectee with
+  | Error_CustardPolyExternalUnused -> true
+  | uu___ -> false
+let uu___is_Error_CustardBadMacro (projectee : error_code) : Prims.bool=
+  match projectee with | Error_CustardBadMacro -> true | uu___ -> false
+let uu___is_Error_CustardBadTemplateArg (projectee : error_code) :
+  Prims.bool=
+  match projectee with | Error_CustardBadTemplateArg -> true | uu___ -> false
+let uu___is_Warning_CustardReferenceCopied (projectee : error_code) :
+  Prims.bool=
+  match projectee with
+  | Warning_CustardReferenceCopied -> true
+  | uu___ -> false
+let uu___is_Error_CustardBadReference (projectee : error_code) : Prims.bool=
+  match projectee with | Error_CustardBadReference -> true | uu___ -> false
+let uu___is_Error_CustardBadStaticArray (projectee : error_code) :
+  Prims.bool=
+  match projectee with | Error_CustardBadStaticArray -> true | uu___ -> false
+let uu___is_Error_CustardBadComment (projectee : error_code) : Prims.bool=
+  match projectee with | Error_CustardBadComment -> true | uu___ -> false
+let uu___is_Error_CustardNoFSharpRealization (projectee : error_code) :
+  Prims.bool=
+  match projectee with
+  | Error_CustardNoFSharpRealization -> true
+  | uu___ -> false
 type error_setting = (error_code * error_flag * Prims.int)
 let default_settings : error_setting Prims.list=
   [(Error_DependencyAnalysisFailed, CAlwaysError, Prims.int_zero);
@@ -2000,4 +2158,37 @@ let default_settings : error_setting Prims.list=
   (Warning_ProofRecovery, CWarning, (Prims.of_int 359));
   (Error_CannotResolveRecord, CAlwaysError, (Prims.of_int 360));
   (Error_MissingPopOptions, CWarning, (Prims.of_int 361));
-  (Error_AmbiguousName, CError, (Prims.of_int 362))]
+  (Error_AmbiguousName, CError, (Prims.of_int 362));
+  (Warning_IgnoredNewQualifier, CWarning, (Prims.of_int 363));
+  (Error_CustardCannotMonomorphize, CAlwaysError, (Prims.of_int 364));
+  (Error_CustardFuelExhausted, CAlwaysError, (Prims.of_int 365));
+  (Error_CustardUnextractableEffect, CAlwaysError, (Prims.of_int 366));
+  (Warning_CustardLostRepresentation, CWarning, (Prims.of_int 367));
+  (Error_CustardNoCRepresentation, CAlwaysError, (Prims.of_int 368));
+  (Error_CustardBadUnitInterface, CAlwaysError, (Prims.of_int 369));
+  (Error_CustardUnrepresentableValue, CAlwaysError, (Prims.of_int 370));
+  (Warning_CustardIneffectiveAttribute, CWarning, (Prims.of_int 371));
+  (Error_CustardNotCompileTime, CAlwaysError, (Prims.of_int 372));
+  (Warning_CustardKeyNotReduced, CWarning, (Prims.of_int 373));
+  (Error_CustardExportCollision, CAlwaysError, (Prims.of_int 374));
+  (Warning_CustardNoPublicDefinitions, CWarning, (Prims.of_int 375));
+  (Error_CustardMonoExternal, CAlwaysError, (Prims.of_int 376));
+  (Warning_CustardGeneratedNameInInterface, CWarning, (Prims.of_int 377));
+  (Error_CustardBadLift, CAlwaysError, (Prims.of_int 378));
+  (Error_CustardDanglingReference, CAlwaysError, (Prims.of_int 379));
+  (Error_CustardBadFloatLiteral, CAlwaysError, (Prims.of_int 380));
+  (Warning_CustardRuleArity, CWarning, (Prims.of_int 381));
+  (Warning_CustardExternErasure, CWarning, (Prims.of_int 382));
+  (Error_CustardSharedGlobal, CAlwaysError, (Prims.of_int 383));
+  (Error_CustardExternConflict, CAlwaysError, (Prims.of_int 384));
+  (Error_CustardEntryNotFound, CAlwaysError, (Prims.of_int 385));
+  (Error_CustardBadFloatWidth, CAlwaysError, (Prims.of_int 386));
+  (Warning_CustardFloatVocabulary, CWarning, (Prims.of_int 387));
+  (Error_CustardPolyExternalUnused, CAlwaysError, (Prims.of_int 388));
+  (Error_CustardBadMacro, CAlwaysError, (Prims.of_int 389));
+  (Error_CustardBadTemplateArg, CAlwaysError, (Prims.of_int 390));
+  (Warning_CustardReferenceCopied, CWarning, (Prims.of_int 391));
+  (Error_CustardBadReference, CAlwaysError, (Prims.of_int 392));
+  (Error_CustardBadStaticArray, CAlwaysError, (Prims.of_int 393));
+  (Error_CustardBadComment, CAlwaysError, (Prims.of_int 394));
+  (Error_CustardNoFSharpRealization, CAlwaysError, (Prims.of_int 395))]

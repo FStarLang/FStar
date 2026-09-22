@@ -181,35 +181,18 @@ and hash_term' (t : FStarC_Syntax_Syntax.term) : FStarC_Hash.hash_code mm=
       FStarC_Effect.failwith "Impossible"
 and hash_comp' (c : FStarC_Syntax_Syntax.comp) : FStarC_Hash.hash_code mm=
   match c.FStarC_Syntax_Syntax.n with
-  | FStarC_Syntax_Syntax.Total t ->
-      let uu___ =
-        let uu___1 = let uu___2 = hash_term t in [uu___2] in
-        (of_int (Prims.of_int 811)) :: uu___1 in
-      mix_list_lit uu___
-  | FStarC_Syntax_Syntax.GTotal t ->
-      let uu___ =
-        let uu___1 = let uu___2 = hash_term t in [uu___2] in
-        (of_int (Prims.of_int 821)) :: uu___1 in
-      mix_list_lit uu___
   | FStarC_Syntax_Syntax.Comp ct ->
       let uu___ =
         let uu___1 =
-          let uu___2 =
-            hash_list hash_universe ct.FStarC_Syntax_Syntax.comp_univs in
+          let uu___2 = hash_lid ct.FStarC_Syntax_Syntax.effect_name in
           let uu___3 =
-            let uu___4 = hash_lid ct.FStarC_Syntax_Syntax.effect_name in
+            let uu___4 = hash_lid ct.FStarC_Syntax_Syntax.source_effect_name in
             let uu___5 =
               let uu___6 = hash_term ct.FStarC_Syntax_Syntax.result_typ in
               let uu___7 =
-                let uu___8 = hash_term ct.FStarC_Syntax_Syntax.comp_pre in
-                let uu___9 =
-                  let uu___10 = hash_term ct.FStarC_Syntax_Syntax.comp_post in
-                  let uu___11 =
-                    let uu___12 =
-                      hash_list hash_flag ct.FStarC_Syntax_Syntax.flags in
-                    [uu___12] in
-                  uu___10 :: uu___11 in
-                uu___8 :: uu___9 in
+                let uu___8 =
+                  hash_list hash_flag ct.FStarC_Syntax_Syntax.flags in
+                [uu___8] in
               uu___6 :: uu___7 in
             uu___4 :: uu___5 in
           uu___2 :: uu___3 in
@@ -457,9 +440,6 @@ and hash_rc (rc : FStarC_Syntax_Syntax.residual_comp) :
   mix_list_lit uu___
 and hash_flag (f : FStarC_Syntax_Syntax.cflag) : FStarC_Hash.hash_code mm=
   match f with
-  | FStarC_Syntax_Syntax.TOTAL -> of_int (Prims.of_int 947)
-  | FStarC_Syntax_Syntax.MLEFFECT -> of_int (Prims.of_int 953)
-  | FStarC_Syntax_Syntax.LEMMA -> of_int (Prims.of_int 967)
   | FStarC_Syntax_Syntax.SMTPAT p ->
       let uu___ = hash_term p in mix (of_int (Prims.of_int 971)) uu___
   | FStarC_Syntax_Syntax.DECREASES (FStarC_Syntax_Syntax.Decreases_lex ts) ->
@@ -724,45 +704,20 @@ and equal_comp (c1 : FStarC_Syntax_Syntax.comp' FStarC_Syntax_Syntax.syntax)
   then true
   else
     (match ((c1.FStarC_Syntax_Syntax.n), (c2.FStarC_Syntax_Syntax.n)) with
-     | (FStarC_Syntax_Syntax.Total t1, FStarC_Syntax_Syntax.Total t2) ->
-         equal_term t1 t2
-     | (FStarC_Syntax_Syntax.GTotal t1, FStarC_Syntax_Syntax.GTotal t2) ->
-         equal_term t1 t2
      | (FStarC_Syntax_Syntax.Comp ct1, FStarC_Syntax_Syntax.Comp ct2) ->
          let uu___ =
-           let uu___1 =
-             let uu___2 =
-               let uu___3 =
-                 if
-                   FStarC_Ident.lid_equals
-                     ct1.FStarC_Syntax_Syntax.effect_name
-                     ct2.FStarC_Syntax_Syntax.effect_name
-                 then
-                   equal_list equal_universe
-                     ct1.FStarC_Syntax_Syntax.comp_univs
-                     ct2.FStarC_Syntax_Syntax.comp_univs
-                 else false in
-               if uu___3
-               then
-                 equal_term ct1.FStarC_Syntax_Syntax.result_typ
-                   ct2.FStarC_Syntax_Syntax.result_typ
-               else false in
-             if uu___2
-             then
-               equal_term ct1.FStarC_Syntax_Syntax.comp_pre
-                 ct2.FStarC_Syntax_Syntax.comp_pre
-             else false in
-           if uu___1
+           if
+             FStarC_Ident.lid_equals ct1.FStarC_Syntax_Syntax.effect_name
+               ct2.FStarC_Syntax_Syntax.effect_name
            then
-             equal_term ct1.FStarC_Syntax_Syntax.comp_post
-               ct2.FStarC_Syntax_Syntax.comp_post
+             equal_term ct1.FStarC_Syntax_Syntax.result_typ
+               ct2.FStarC_Syntax_Syntax.result_typ
            else false in
          if uu___
          then
            equal_list equal_flag ct1.FStarC_Syntax_Syntax.flags
              ct2.FStarC_Syntax_Syntax.flags
-         else false
-     | uu___ -> false)
+         else false)
 and equal_binder (b1 : FStarC_Syntax_Syntax.binder)
   (b2 : FStarC_Syntax_Syntax.binder) : Prims.bool=
   if FStarC_Util.physical_equality b1 b2

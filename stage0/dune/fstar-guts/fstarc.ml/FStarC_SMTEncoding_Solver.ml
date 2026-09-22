@@ -303,20 +303,19 @@ let errors_to_report (tried_recovery : Prims.bool)
                       FStarC_Util.substring_from err.error_reason
                         (FStarC_String.length "unknown because ")
                     else err.error_reason in
-                  if FStarC_Util.starts_with err1 "(incomplete"
-                  then ((ic + Prims.int_one), cc, uc, bc)
-                  else
-                    if
-                      ((FStarC_Util.starts_with err1 "canceled") ||
-                         (FStarC_Util.starts_with err1 "(resource"))
-                        || (FStarC_Util.starts_with err1 "timeout")
-                    then (ic, (cc + Prims.int_one), uc, bc)
-                    else
-                      if
-                        FStarC_Util.starts_with err1
-                          "Overflow encountered when expanding old_vector"
-                      then (ic, cc, uc, (bc + Prims.int_one))
-                      else (ic, cc, (uc + Prims.int_one), bc))
+                  (match () with
+                   | uu___3 when FStarC_Util.starts_with err1 "(incomplete"
+                       -> ((ic + Prims.int_one), cc, uc, bc)
+                   | uu___3 when
+                       ((FStarC_Util.starts_with err1 "canceled") ||
+                          (FStarC_Util.starts_with err1 "(resource"))
+                         || (FStarC_Util.starts_with err1 "timeout")
+                       -> (ic, (cc + Prims.int_one), uc, bc)
+                   | uu___3 when
+                       FStarC_Util.starts_with err1
+                         "Overflow encountered when expanding old_vector"
+                       -> (ic, cc, uc, (bc + Prims.int_one))
+                   | uu___3 -> (ic, cc, (uc + Prims.int_one), bc)))
            (Prims.int_zero, Prims.int_zero, Prims.int_zero, Prims.int_zero)
            gst.gs_errors in
        match uu___1 with

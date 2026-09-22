@@ -3,7 +3,7 @@ let dbg : Prims.bool FStarC_Effect.ref=
   FStarC_Debug.get_toggle "CheckedFiles"
 let debug (f : unit -> unit) : unit=
   let uu___ = FStarC_Effect.op_Bang dbg in if uu___ then f () else ()
-let cache_version_number : Prims.int= Prims.of_int 93
+let cache_version_number : Prims.int= Prims.of_int 99
 type tc_result =
   {
   checked_module: FStarC_Syntax_Syntax.modul ;
@@ -336,21 +336,22 @@ let load_checked_file_with_tc_result (deps : FStarC_Parser_Dep.deps)
     (fun uu___1 ->
        FStarC_Format.print1 "Trying to load checked file with tc result %s\n"
          checked_fn);
-  (let load_tc_result' fn1 =
-     let uu___1 = load_tc_result fn1 in
-     match uu___1 with
-     | FStar_Pervasives_Native.Some x -> x
-     | FStar_Pervasives_Native.None ->
-         FStarC_Effect.failwith
-           "Impossible! if first phase of loading was unknown, it should have succeeded" in
+  (let vanished uu___1 =
+     let msg =
+       FStarC_Format.fmt1 "checked file %s changed while it was being read"
+         checked_fn in
+     let uu___2 =
+       add_and_return checked_fn ((Invalid msg), (FStar_Pervasives.Inl msg)) in
+     FStar_Pervasives.Inl msg in
    let elt = load_checked_file fn checked_fn in
    match elt with
    | (Invalid msg, uu___1) -> FStar_Pervasives.Inl msg
    | (Valid uu___1, uu___2) ->
-       let uu___3 =
-         let uu___4 = load_tc_result' checked_fn in
-         FStar_Pervasives_Native.snd uu___4 in
-       FStar_Pervasives.Inr uu___3
+       let uu___3 = load_tc_result checked_fn in
+       (match uu___3 with
+        | FStar_Pervasives_Native.None -> vanished ()
+        | FStar_Pervasives_Native.Some (uu___4, tc_result1) ->
+            FStar_Pervasives.Inr tc_result1)
    | (Unknown checked_digest, parsing_data) ->
        let uu___1 =
          let uu___2 = FStarC_Parser_Dep.deps_of deps fn in
@@ -361,9 +362,10 @@ let load_checked_file_with_tc_result (deps : FStarC_Parser_Dep.deps)
             let uu___2 = add_and_return checked_fn elt1 in
             FStar_Pervasives.Inl msg
         | FStar_Pervasives.Inr deps_dig' ->
-            let uu___2 = load_tc_result' checked_fn in
+            let uu___2 = load_tc_result checked_fn in
             (match uu___2 with
-             | (deps_dig, tc_result1) ->
+             | FStar_Pervasives_Native.None -> vanished ()
+             | FStar_Pervasives_Native.Some (deps_dig, tc_result1) ->
                  let module_name = FStarC_Parser_Dep.module_name_of_file fn in
                  let uu___3 =
                    if deps_dig = deps_dig'
@@ -469,6 +471,9 @@ let load_parsing_data_from_cache (file_name : Prims.string) :
                 FStar_Pervasives_Native.None
             | (uu___2, FStar_Pervasives.Inr data) ->
                 FStar_Pervasives_Native.Some data))
+let last_failure :
+  Prims.string FStar_Pervasives_Native.option FStarC_Effect.ref=
+  FStarC_Effect.mk_ref FStar_Pervasives_Native.None
 let load_module_from_cache_internal :
   Prims.bool ->
     FStarC_Parser_Dep.deps ->
@@ -483,36 +488,43 @@ let load_module_from_cache_internal :
              let load_it fn1 uu___1 =
                let cache_file = FStarC_Parser_Dep.cache_file_name fn1 in
                let fail msg cache_file1 =
-                 let suppress_warning =
-                   let uu___2 =
-                     if try_load
-                     then true
-                     else FStarC_Options.should_check_file fn1 in
-                   if uu___2
-                   then true
-                   else FStarC_Effect.op_Bang already_failed in
-                 let uu___2 =
-                   if Prims.not suppress_warning
-                   then true
-                   else FStarC_Effect.op_Bang dbg in
-                 if uu___2
-                 then
-                   (FStarC_Effect.op_Colon_Equals already_failed true;
-                    FStarC_Errors.log_issue
-                      FStarC_Class_HasRange.hasRange_range
-                      (FStarC_Range_Type.mk_range fn1
-                         (FStarC_Range_Type.mk_pos Prims.int_zero
-                            Prims.int_zero)
-                         (FStarC_Range_Type.mk_pos Prims.int_zero
-                            Prims.int_zero))
-                      FStarC_Errors_Codes.Warning_CachedFile ()
-                      (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-                      (Obj.magic
-                         [FStarC_Errors_Msg.text
-                            (FStarC_Format.fmt3
-                               "Unable to load %s since %s; will recheck %s (suppressing this warning for further modules)"
-                               cache_file1 msg fn1)]))
-                 else () in
+                 FStarC_Effect.op_Colon_Equals last_failure
+                   (FStar_Pervasives_Native.Some
+                      (FStarC_Format.fmt2 "%s is not usable since %s"
+                         cache_file1 msg));
+                 (let suppress_warning =
+                    let uu___3 =
+                      if try_load
+                      then true
+                      else
+                        (let uu___4 =
+                           FStarC_Parser_Dep.module_name_of_file fn1 in
+                         FStarC_Options.should_check uu___4) in
+                    if uu___3
+                    then true
+                    else FStarC_Effect.op_Bang already_failed in
+                  let uu___3 =
+                    if Prims.not suppress_warning
+                    then true
+                    else FStarC_Effect.op_Bang dbg in
+                  if uu___3
+                  then
+                    (FStarC_Effect.op_Colon_Equals already_failed true;
+                     FStarC_Errors.log_issue
+                       FStarC_Class_HasRange.hasRange_range
+                       (FStarC_Range_Type.mk_range fn1
+                          (FStarC_Range_Type.mk_pos Prims.int_zero
+                             Prims.int_zero)
+                          (FStarC_Range_Type.mk_pos Prims.int_zero
+                             Prims.int_zero))
+                       FStarC_Errors_Codes.Warning_CachedFile ()
+                       (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+                       (Obj.magic
+                          [FStarC_Errors_Msg.text
+                             (FStarC_Format.fmt3
+                                "Unable to load %s since %s; will recheck %s (suppressing this warning for further modules)"
+                                cache_file1 msg fn1)]))
+                  else ()) in
                let uu___2 =
                  load_checked_file_with_tc_result deps fn1 cache_file in
                match uu___2 with
@@ -581,6 +593,9 @@ let load_module_from_cache (env : FStarC_TypeChecker_Env.env)
   (fn : Prims.string) : tc_result FStar_Pervasives_Native.option=
   load_module_from_cache_internal false
     (FStarC_TypeChecker_Env.dep_graph env) fn
+let last_load_failure (uu___ : unit) :
+  Prims.string FStar_Pervasives_Native.option=
+  FStarC_Effect.op_Bang last_failure
 let store_values_to_cache (cache_file : Prims.string)
   (stage1 : checked_file_entry_stage1) (stage2 : checked_file_entry_stage2)
   (smt_decls : FStarC_SMTEncoding_Term.decls_t) : Prims.string=

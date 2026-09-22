@@ -1402,11 +1402,6 @@ and p_term_list (ps : Prims.bool) (pb : Prims.bool)
 and p_newEffect (uu___ : FStarC_Parser_AST.effect_decl) :
   FStar_Pprint.document=
   match uu___ with
-  | FStarC_Parser_AST.RedefineEffect (lid, bs, t) ->
-      let uu___1 =
-        let uu___2 = p_effectRedefinition lid bs t in
-        FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___2 in
-      FStar_Pprint.op_Hat_Hat (str "effect") uu___1
   | FStarC_Parser_AST.DeclareEffect (lid, bs) ->
       let uu___1 =
         let uu___2 =
@@ -1451,15 +1446,6 @@ and p_effectDecl (ps : Prims.bool) (d : FStarC_Parser_AST.decl) :
       let uu___1 = p_simpleTerm ps false e in prefix2 uu___ uu___1
   | uu___ ->
       FStarC_Effect.failwith "Not a declaration of an effect combinator."
-and p_effectRedefinition (uid : FStarC_Ident.ident)
-  (bs : FStarC_Parser_AST.binder Prims.list) (t : FStarC_Parser_AST.term) :
-  FStar_Pprint.document=
-  let uu___ = p_uident uid in
-  let uu___1 = p_binders true bs in
-  let uu___2 =
-    let uu___3 = p_simpleTerm false false t in
-    prefix2 FStar_Pprint.equals uu___3 in
-  surround_maybe_empty (Prims.of_int 2) Prims.int_one uu___ uu___1 uu___2
 and p_subEffect (lift : FStarC_Parser_AST.lift) : FStar_Pprint.document=
   let base =
     let uu___ =
@@ -2087,11 +2073,6 @@ and p_noSeqTerm' (ps : Prims.bool) (pb : Prims.bool)
       let uu___ =
         let uu___1 = p_typ ps pb e1 in
         FStar_Pprint.op_Hat_Slash_Hat (str "decreases") uu___1 in
-      FStar_Pprint.group uu___
-  | FStarC_Parser_AST.Attributes es ->
-      let uu___ =
-        let uu___1 = FStarC_Pprint.separate_map break1 p_atomicTerm es in
-        FStar_Pprint.op_Hat_Slash_Hat (str "attributes") uu___1 in
       FStar_Pprint.group uu___
   | FStarC_Parser_AST.If (e1, op_opt, ret_opt, e2, e3) ->
       if is_unit e3
@@ -3753,8 +3734,6 @@ and p_projectionLHS (e : FStarC_Parser_AST.term) : FStar_Pprint.document=
   | FStarC_Parser_AST.Ensures uu___ ->
       let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
   | FStarC_Parser_AST.Decreases uu___ ->
-      let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
-  | FStarC_Parser_AST.Attributes uu___ ->
       let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
   | FStarC_Parser_AST.Quote uu___ ->
       let uu___1 = p_term false false e in soft_parens_with_nesting uu___1

@@ -242,39 +242,19 @@ and branch_to_ast_string (b : FStar_Tactics_NamedView.branch)
   | (p, e) ->
       let x1 = let x2 = term_to_ast_string e ps in Prims.strcat "_pat, " x2 in
       paren x1
-and comp_to_ast_string (c : FStar_Tactics_NamedView.comp) :
-  FStarC_Tactics_Types.ref_proofstate -> Prims.string=
-  match FStar_Tactics_NamedView.inspect_comp c with
-  | FStarC_Reflection_V2_Data.C_Total t ->
-      (fun ps -> let x = term_to_ast_string t ps in Prims.strcat "Tot " x)
-  | FStarC_Reflection_V2_Data.C_GTotal t ->
-      (fun ps -> let x = term_to_ast_string t ps in Prims.strcat "GTot " x)
-  | FStarC_Reflection_V2_Data.C_Lemma (pre, post, uu___) ->
-      (fun ps ->
-         let x =
-           let x1 = term_to_ast_string pre ps in
-           let x2 =
-             let x3 = term_to_ast_string post ps in Prims.strcat " " x3 in
-           Prims.strcat x1 x2 in
-         Prims.strcat "Lemma " x)
-  | FStarC_Reflection_V2_Data.C_Eff (us, eff, res, uu___, uu___1, uu___2) ->
-      (fun ps ->
-         let x =
-           let x1 =
-             let x2 = universes_to_ast_string us ps in
-             let x3 =
-               let x4 =
-                 let x5 =
-                   let x6 =
-                     let x7 = term_to_ast_string res ps in
-                     Prims.strcat ", " x7 in
-                   Prims.strcat
-                     (FStarC_Reflection_V2_Builtins.implode_qn eff) x6 in
-                 paren x5 in
-               Prims.strcat "> " x4 in
-             Prims.strcat x2 x3 in
-           Prims.strcat "<" x1 in
-         Prims.strcat "Effect" x)
+and comp_to_ast_string (c : FStar_Tactics_NamedView.comp)
+  (ps : FStarC_Tactics_Types.ref_proofstate) : Prims.string=
+  let x = FStar_Tactics_NamedView.inspect_comp c in
+  let x1 =
+    let x2 =
+      let x3 =
+        let x4 = term_to_ast_string x.FStarC_Reflection_V2_Data.result_typ ps in
+        Prims.strcat ", " x4 in
+      Prims.strcat
+        (FStarC_Reflection_V2_Builtins.implode_qn
+           x.FStarC_Reflection_V2_Data.effect_name) x3 in
+    paren x2 in
+  Prims.strcat "Effect " x1
 and const_to_ast_string (c : FStarC_Reflection_V2_Data.vconst)
   (uu___ : FStarC_Tactics_Types.ref_proofstate) : Prims.string=
   match c with

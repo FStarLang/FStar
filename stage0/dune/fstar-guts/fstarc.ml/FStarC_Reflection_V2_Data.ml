@@ -330,34 +330,55 @@ let uu___is_Tv_Unsupp (projectee : term_view) : Prims.bool=
 let notAscription (tv : term_view) : Prims.bool=
   (Prims.not (match tv with | Tv_AscribedT _0 -> true | uu___ -> false)) &&
     (Prims.not (match tv with | Tv_AscribedC _0 -> true | uu___ -> false))
+type decreases_order =
+  | Decreases_lex of FStarC_Syntax_Syntax.term Prims.list 
+  | Decreases_wf of FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.term 
+let uu___is_Decreases_lex (projectee : decreases_order) : Prims.bool=
+  match projectee with | Decreases_lex _0 -> true | uu___ -> false
+let __proj__Decreases_lex__item___0 (projectee : decreases_order) :
+  FStarC_Syntax_Syntax.term Prims.list=
+  match projectee with | Decreases_lex _0 -> _0
+let uu___is_Decreases_wf (projectee : decreases_order) : Prims.bool=
+  match projectee with | Decreases_wf (_0, _1) -> true | uu___ -> false
+let __proj__Decreases_wf__item___0 (projectee : decreases_order) :
+  FStarC_Syntax_Syntax.term=
+  match projectee with | Decreases_wf (_0, _1) -> _0
+let __proj__Decreases_wf__item___1 (projectee : decreases_order) :
+  FStarC_Syntax_Syntax.term=
+  match projectee with | Decreases_wf (_0, _1) -> _1
+type cflag =
+  | SMTPAT of FStarC_Syntax_Syntax.term 
+  | DECREASES of decreases_order 
+let uu___is_SMTPAT (projectee : cflag) : Prims.bool=
+  match projectee with | SMTPAT _0 -> true | uu___ -> false
+let __proj__SMTPAT__item___0 (projectee : cflag) : FStarC_Syntax_Syntax.term=
+  match projectee with | SMTPAT _0 -> _0
+let uu___is_DECREASES (projectee : cflag) : Prims.bool=
+  match projectee with | DECREASES _0 -> true | uu___ -> false
+let __proj__DECREASES__item___0 (projectee : cflag) : decreases_order=
+  match projectee with | DECREASES _0 -> _0
 type comp_view =
-  | C_Total of typ 
-  | C_GTotal of typ 
-  | C_Lemma of (FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.term *
-  FStarC_Syntax_Syntax.term) 
-  | C_Eff of (universes * name * FStarC_Syntax_Syntax.term *
-  FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.term *
-  FStarC_Syntax_Syntax.term Prims.list) 
-let uu___is_C_Total (projectee : comp_view) : Prims.bool=
-  match projectee with | C_Total _0 -> true | uu___ -> false
-let __proj__C_Total__item___0 (projectee : comp_view) : typ=
-  match projectee with | C_Total _0 -> _0
-let uu___is_C_GTotal (projectee : comp_view) : Prims.bool=
-  match projectee with | C_GTotal _0 -> true | uu___ -> false
-let __proj__C_GTotal__item___0 (projectee : comp_view) : typ=
-  match projectee with | C_GTotal _0 -> _0
-let uu___is_C_Lemma (projectee : comp_view) : Prims.bool=
-  match projectee with | C_Lemma _0 -> true | uu___ -> false
-let __proj__C_Lemma__item___0 (projectee : comp_view) :
-  (FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.term *
-    FStarC_Syntax_Syntax.term)=
-  match projectee with | C_Lemma _0 -> _0
-let uu___is_C_Eff (projectee : comp_view) : Prims.bool=
-  match projectee with | C_Eff _0 -> true | uu___ -> false
-let __proj__C_Eff__item___0 (projectee : comp_view) :
-  (universes * name * FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.term *
-    FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.term Prims.list)=
-  match projectee with | C_Eff _0 -> _0
+  {
+  effect_name: name ;
+  result_typ: typ ;
+  flags: cflag Prims.list ;
+  source_effect_name: name }
+let __proj__Mkcomp_view__item__effect_name (projectee : comp_view) : 
+  name=
+  match projectee with
+  | { effect_name; result_typ; flags; source_effect_name;_} -> effect_name
+let __proj__Mkcomp_view__item__result_typ (projectee : comp_view) : typ=
+  match projectee with
+  | { effect_name; result_typ; flags; source_effect_name;_} -> result_typ
+let __proj__Mkcomp_view__item__flags (projectee : comp_view) :
+  cflag Prims.list=
+  match projectee with
+  | { effect_name; result_typ; flags; source_effect_name;_} -> flags
+let __proj__Mkcomp_view__item__source_effect_name (projectee : comp_view) :
+  name=
+  match projectee with
+  | { effect_name; result_typ; flags; source_effect_name;_} ->
+      source_effect_name
 type ctor = (name * typ)
 type lb_view =
   {
@@ -509,3 +530,16 @@ let uu___is_Mult (projectee : exp) : Prims.bool=
 let __proj__Mult__item___0 (projectee : exp) : (exp * exp)=
   match projectee with | Mult _0 -> _0
 type decls = FStarC_Syntax_Syntax.sigelt Prims.list
+let tot_effect_name : name= ["Prims"; "Tot"]
+let gtot_effect_name : name= ["Prims"; "GTot"]
+let mk_comp_view (eff : name) (res : typ) : comp_view=
+  { effect_name = eff; result_typ = res; flags = []; source_effect_name = eff
+  }
+let mk_tot_comp (res : typ) : comp_view= mk_comp_view tot_effect_name res
+let mk_gtot_comp (res : typ) : comp_view= mk_comp_view gtot_effect_name res
+let is_tot_comp (cv : comp_view) : Prims.bool=
+  cv.effect_name = tot_effect_name
+let is_gtot_comp (cv : comp_view) : Prims.bool=
+  cv.effect_name = gtot_effect_name
+let is_tot_or_gtot_comp (cv : comp_view) : Prims.bool=
+  (is_tot_comp cv) || (is_gtot_comp cv)

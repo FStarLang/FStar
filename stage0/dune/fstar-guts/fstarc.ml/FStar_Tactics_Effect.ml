@@ -6,6 +6,8 @@ let tac_bind (t1 : FStarC_Tactics_Types.ref_proofstate -> 'a)
   (ps : FStarC_Tactics_Types.ref_proofstate) : 'b= let x = t1 ps in t2 x ps
 let lift_div_tac (f : unit -> 'a)
   (uu___ : FStarC_Tactics_Types.ref_proofstate) : 'a= f ()
+let lift_ndet_tac (f : unit -> 'a)
+  (uu___ : FStarC_Tactics_Types.ref_proofstate) : 'a= f ()
 let rewrite_with_tactic
   (uu___ : unit -> FStarC_Tactics_Types.ref_proofstate -> unit)
   (uu___1 : unit) (p : Obj.t) : Obj.t= p

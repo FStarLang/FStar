@@ -700,17 +700,10 @@ let rec sigelt_to_string_short (x : FStarC_Syntax_Syntax.sigelt) :
          then "assume "
          else "") uu___ uu___1
   | FStarC_Syntax_Syntax.Sig_effect_abbrev
-      { FStarC_Syntax_Syntax.lid4 = l; FStarC_Syntax_Syntax.us4 = uu___;
-        FStarC_Syntax_Syntax.bs = tps; FStarC_Syntax_Syntax.comp1 = c;
-        FStarC_Syntax_Syntax.cflags = uu___1;_}
-      ->
-      let uu___2 = FStarC_Class_Show.show FStarC_Ident.showable_lident l in
-      let uu___3 =
-        let uu___4 =
-          FStarC_List.map (FStarC_Class_Show.show showable_binder) tps in
-        FStarC_String.concat " " uu___4 in
-      let uu___4 = FStarC_Class_Show.show showable_comp c in
-      FStarC_Format.fmt3 "effect %s %s = %s" uu___2 uu___3 uu___4
+      { FStarC_Syntax_Syntax.lid4 = l; FStarC_Syntax_Syntax.root = root;_} ->
+      let uu___ = FStarC_Class_Show.show FStarC_Ident.showable_lident l in
+      let uu___1 = FStarC_Class_Show.show FStarC_Ident.showable_lident root in
+      FStarC_Format.fmt2 "effect %s = %s" uu___ uu___1
   | FStarC_Syntax_Syntax.Sig_splice
       { FStarC_Syntax_Syntax.is_typed = is_typed;
         FStarC_Syntax_Syntax.lids2 = lids;
@@ -776,9 +769,6 @@ let showable_decreases_order :
   }
 let cflag_to_string (c : FStarC_Syntax_Syntax.cflag) : Prims.string=
   match c with
-  | FStarC_Syntax_Syntax.TOTAL -> "total"
-  | FStarC_Syntax_Syntax.MLEFFECT -> "ml"
-  | FStarC_Syntax_Syntax.LEMMA -> "lemma"
   | FStarC_Syntax_Syntax.SMTPAT p ->
       let uu___ = term_to_string p in Prims.strcat "smtpat " uu___
   | FStarC_Syntax_Syntax.DECREASES do1 ->

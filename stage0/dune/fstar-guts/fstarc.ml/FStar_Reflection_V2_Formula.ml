@@ -517,208 +517,174 @@ let mk_Exists (typ : FStar_Tactics_NamedView.term)
               ((FStar_Tactics_NamedView.pack
                   (FStar_Tactics_NamedView.Tv_BVar b)),
                 FStarC_Reflection_V2_Data.Q_Explicit)))))
-let term_as_formula' (uu___1 : FStar_Tactics_NamedView.term)
-  (uu___ : FStarC_Tactics_Types.ref_proofstate) : formula=
-  (fun t ps ->
-     let x = inspect_unascribe t ps in
-     match x with
-     | FStar_Tactics_NamedView.Tv_Var n -> Obj.magic (Obj.repr (Name n))
-     | FStar_Tactics_NamedView.Tv_FVar fv ->
-         Obj.magic
-           (Obj.repr
-              (if
-                 (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
-                   FStar_Reflection_Const.true_qn
-               then True_
-               else
-                 if
-                   (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
-                     FStar_Reflection_Const.false_qn
-                 then False_
-                 else FV fv))
-     | FStar_Tactics_NamedView.Tv_UInst (fv, uu___) ->
-         Obj.magic
-           (Obj.repr
-              (if
-                 (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
-                   FStar_Reflection_Const.true_qn
-               then True_
-               else
-                 if
-                   (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
-                     FStar_Reflection_Const.false_qn
-                 then False_
-                 else FV fv))
-     | FStar_Tactics_NamedView.Tv_App (h0, t1) ->
-         Obj.magic
-           (Obj.repr
-              (let x1 = collect_app h0 ps in
-               match x1 with
-               | (h, ts) ->
-                   let x2 = FStar_Reflection_V2_Derived.un_uinst h in
-                   let x3 =
-                     let x4 = FStar_Tactics_NamedView.inspect x2 ps in
-                     (x4, (FStar_List_Tot_Base.op_At ts [t1])) in
-                   (match x3 with
-                    | (FStar_Tactics_NamedView.Tv_FVar fv,
-                       (a1, FStarC_Reflection_V2_Data.Q_Implicit)::(a2,
-                                                                    FStarC_Reflection_V2_Data.Q_Explicit)::
-                       (a3, FStarC_Reflection_V2_Data.Q_Explicit)::[]) ->
+let term_as_formula' (t : FStar_Tactics_NamedView.term)
+  (ps : FStarC_Tactics_Types.ref_proofstate) : formula=
+  let x = inspect_unascribe t ps in
+  match x with
+  | FStar_Tactics_NamedView.Tv_Var n -> Name n
+  | FStar_Tactics_NamedView.Tv_FVar fv ->
+      if
+        (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
+          FStar_Reflection_Const.true_qn
+      then True_
+      else
+        if
+          (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
+            FStar_Reflection_Const.false_qn
+        then False_
+        else FV fv
+  | FStar_Tactics_NamedView.Tv_UInst (fv, uu___) ->
+      if
+        (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
+          FStar_Reflection_Const.true_qn
+      then True_
+      else
+        if
+          (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
+            FStar_Reflection_Const.false_qn
+        then False_
+        else FV fv
+  | FStar_Tactics_NamedView.Tv_App (h0, t1) ->
+      let x1 = collect_app h0 ps in
+      (match x1 with
+       | (h, ts) ->
+           let x2 = FStar_Reflection_V2_Derived.un_uinst h in
+           let x3 =
+             let x4 = FStar_Tactics_NamedView.inspect x2 ps in
+             (x4, (FStar_List_Tot_Base.op_At ts [t1])) in
+           (match x3 with
+            | (FStar_Tactics_NamedView.Tv_FVar fv,
+               (a1, FStarC_Reflection_V2_Data.Q_Implicit)::(a2,
+                                                            FStarC_Reflection_V2_Data.Q_Explicit)::
+               (a3, FStarC_Reflection_V2_Data.Q_Explicit)::[]) ->
+                if
+                  (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
+                    FStar_Reflection_Const.eq2_qn
+                then Comp ((Eq (FStar_Pervasives_Native.Some a1)), a2, a3)
+                else
+                  if
+                    (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
+                      FStar_Reflection_Const.eq1_qn
+                  then
+                    Comp ((BoolEq (FStar_Pervasives_Native.Some a1)), a2, a3)
+                  else
+                    if
+                      (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
+                        FStar_Reflection_Const.lt_qn
+                    then Comp (Lt, a2, a3)
+                    else
+                      if
+                        (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
+                          FStar_Reflection_Const.lte_qn
+                      then Comp (Le, a2, a3)
+                      else
+                        if
+                          (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
+                            FStar_Reflection_Const.gt_qn
+                        then Comp (Gt, a2, a3)
+                        else
+                          if
+                            (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
+                              FStar_Reflection_Const.gte_qn
+                          then Comp (Ge, a2, a3)
+                          else App (h0, (FStar_Pervasives_Native.fst t1))
+            | (FStar_Tactics_NamedView.Tv_FVar fv,
+               (a1, FStarC_Reflection_V2_Data.Q_Explicit)::(a2,
+                                                            FStarC_Reflection_V2_Data.Q_Explicit)::[])
+                ->
+                if
+                  (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
+                    FStar_Reflection_Const.imp_qn
+                then Implies (a1, a2)
+                else
+                  if
+                    (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
+                      FStar_Reflection_Const.and_qn
+                  then And (a1, a2)
+                  else
+                    if
+                      (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
+                        FStar_Reflection_Const.iff_qn
+                    then Iff (a1, a2)
+                    else
+                      if
+                        (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
+                          FStar_Reflection_Const.or_qn
+                      then Or (a1, a2)
+                      else
                         if
                           (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
                             FStar_Reflection_Const.eq2_qn
-                        then
-                          Comp
-                            ((Eq (FStar_Pervasives_Native.Some a1)), a2, a3)
+                        then Comp ((Eq FStar_Pervasives_Native.None), a1, a2)
                         else
                           if
                             (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
                               FStar_Reflection_Const.eq1_qn
                           then
                             Comp
-                              ((BoolEq (FStar_Pervasives_Native.Some a1)),
-                                a2, a3)
-                          else
-                            if
-                              (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
-                                FStar_Reflection_Const.lt_qn
-                            then Comp (Lt, a2, a3)
-                            else
-                              if
-                                (FStarC_Reflection_V2_Builtins.inspect_fv fv)
-                                  = FStar_Reflection_Const.lte_qn
-                              then Comp (Le, a2, a3)
-                              else
-                                if
-                                  (FStarC_Reflection_V2_Builtins.inspect_fv
-                                     fv)
-                                    = FStar_Reflection_Const.gt_qn
-                                then Comp (Gt, a2, a3)
-                                else
-                                  if
-                                    (FStarC_Reflection_V2_Builtins.inspect_fv
-                                       fv)
-                                      = FStar_Reflection_Const.gte_qn
-                                  then Comp (Ge, a2, a3)
-                                  else
-                                    App
-                                      (h0, (FStar_Pervasives_Native.fst t1))
-                    | (FStar_Tactics_NamedView.Tv_FVar fv,
-                       (a1, FStarC_Reflection_V2_Data.Q_Explicit)::(a2,
-                                                                    FStarC_Reflection_V2_Data.Q_Explicit)::[])
-                        ->
-                        if
-                          (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
-                            FStar_Reflection_Const.imp_qn
-                        then Implies (a1, a2)
-                        else
-                          if
-                            (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
-                              FStar_Reflection_Const.and_qn
-                          then And (a1, a2)
-                          else
-                            if
-                              (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
-                                FStar_Reflection_Const.iff_qn
-                            then Iff (a1, a2)
-                            else
-                              if
-                                (FStarC_Reflection_V2_Builtins.inspect_fv fv)
-                                  = FStar_Reflection_Const.or_qn
-                              then Or (a1, a2)
-                              else
-                                if
-                                  (FStarC_Reflection_V2_Builtins.inspect_fv
-                                     fv)
-                                    = FStar_Reflection_Const.eq2_qn
-                                then
-                                  Comp
-                                    ((Eq FStar_Pervasives_Native.None), a1,
-                                      a2)
-                                else
-                                  if
-                                    (FStarC_Reflection_V2_Builtins.inspect_fv
-                                       fv)
-                                      = FStar_Reflection_Const.eq1_qn
-                                  then
-                                    Comp
-                                      ((BoolEq FStar_Pervasives_Native.None),
-                                        a1, a2)
-                                  else
-                                    App
-                                      (h0, (FStar_Pervasives_Native.fst t1))
-                    | (FStar_Tactics_NamedView.Tv_FVar fv,
-                       (a1, FStarC_Reflection_V2_Data.Q_Implicit)::(a2,
-                                                                    FStarC_Reflection_V2_Data.Q_Explicit)::[])
-                        ->
-                        if
-                          (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
-                            FStar_Reflection_Const.forall_qn
-                        then mk_Forall a1 a2
-                        else
-                          if
-                            (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
-                              FStar_Reflection_Const.exists_qn
-                          then mk_Exists a1 a2
+                              ((BoolEq FStar_Pervasives_Native.None), a1, a2)
                           else App (h0, (FStar_Pervasives_Native.fst t1))
-                    | (FStar_Tactics_NamedView.Tv_FVar fv,
-                       (a, FStarC_Reflection_V2_Data.Q_Explicit)::[]) ->
-                        if
-                          (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
-                            FStar_Reflection_Const.not_qn
-                        then Not a
-                        else
-                          if
-                            (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
-                              FStar_Reflection_Const.b2t_qn
-                          then
-                            (if
-                               term_eq a
-                                 (FStarC_Reflection_V2_Builtins.pack_ln
-                                    (FStarC_Reflection_V2_Data.Tv_Const
-                                       FStarC_Reflection_V2_Data.C_False))
-                             then False_
-                             else
-                               if
-                                 term_eq a
-                                   (FStarC_Reflection_V2_Builtins.pack_ln
-                                      (FStarC_Reflection_V2_Data.Tv_Const
-                                         FStarC_Reflection_V2_Data.C_True))
-                               then True_
-                               else
-                                 App (h0, (FStar_Pervasives_Native.fst t1)))
-                          else App (h0, (FStar_Pervasives_Native.fst t1))
-                    | uu___ -> App (h0, (FStar_Pervasives_Native.fst t1)))))
-     | FStar_Tactics_NamedView.Tv_Const (FStarC_Reflection_V2_Data.C_Int
-         (i, uu___)) -> Obj.magic (Obj.repr (IntLit i))
-     | FStar_Tactics_NamedView.Tv_Let (uu___, uu___1, uu___2, uu___3, uu___4)
-         -> Obj.magic (Obj.repr F_Unknown)
-     | FStar_Tactics_NamedView.Tv_Match (uu___, uu___1, uu___2) ->
-         Obj.magic (Obj.repr F_Unknown)
-     | FStar_Tactics_NamedView.Tv_Type uu___ ->
-         Obj.magic (Obj.repr F_Unknown)
-     | FStar_Tactics_NamedView.Tv_Abs (uu___, uu___1) ->
-         Obj.magic (Obj.repr F_Unknown)
-     | FStar_Tactics_NamedView.Tv_Arrow (uu___, uu___1) ->
-         Obj.magic (Obj.repr F_Unknown)
-     | FStar_Tactics_NamedView.Tv_Uvar (uu___, uu___1) ->
-         Obj.magic (Obj.repr F_Unknown)
-     | FStar_Tactics_NamedView.Tv_Unknown -> Obj.magic (Obj.repr F_Unknown)
-     | FStar_Tactics_NamedView.Tv_Unsupp -> Obj.magic (Obj.repr F_Unknown)
-     | FStar_Tactics_NamedView.Tv_Refine (uu___, uu___1) ->
-         Obj.magic (Obj.repr F_Unknown)
-     | FStar_Tactics_NamedView.Tv_Const uu___ ->
-         Obj.magic (Obj.repr F_Unknown)
-     | FStar_Tactics_NamedView.Tv_BVar uu___ ->
-         Obj.magic (Obj.repr F_Unknown)
-     | uu___ ->
-         Obj.magic
-           (Obj.repr
-              (FStarC_Tactics_V2_Builtins.raise_core
-                 (FStarC_Tactics_Common.TacticFailure
-                    ([FStar_Pprint.arbitrary_string
-                        "Unexpected: term_as_formula"],
-                      FStar_Pervasives_Native.None)) ps))) uu___1 uu___
+            | (FStar_Tactics_NamedView.Tv_FVar fv,
+               (a1, FStarC_Reflection_V2_Data.Q_Implicit)::(a2,
+                                                            FStarC_Reflection_V2_Data.Q_Explicit)::[])
+                ->
+                if
+                  (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
+                    FStar_Reflection_Const.forall_qn
+                then mk_Forall a1 a2
+                else
+                  if
+                    (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
+                      FStar_Reflection_Const.exists_qn
+                  then mk_Exists a1 a2
+                  else App (h0, (FStar_Pervasives_Native.fst t1))
+            | (FStar_Tactics_NamedView.Tv_FVar fv,
+               (a, FStarC_Reflection_V2_Data.Q_Explicit)::[]) ->
+                if
+                  (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
+                    FStar_Reflection_Const.not_qn
+                then Not a
+                else
+                  if
+                    (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
+                      FStar_Reflection_Const.b2t_qn
+                  then
+                    (if
+                       term_eq a
+                         (FStarC_Reflection_V2_Builtins.pack_ln
+                            (FStarC_Reflection_V2_Data.Tv_Const
+                               FStarC_Reflection_V2_Data.C_False))
+                     then False_
+                     else
+                       if
+                         term_eq a
+                           (FStarC_Reflection_V2_Builtins.pack_ln
+                              (FStarC_Reflection_V2_Data.Tv_Const
+                                 FStarC_Reflection_V2_Data.C_True))
+                       then True_
+                       else App (h0, (FStar_Pervasives_Native.fst t1)))
+                  else App (h0, (FStar_Pervasives_Native.fst t1))
+            | uu___ -> App (h0, (FStar_Pervasives_Native.fst t1))))
+  | FStar_Tactics_NamedView.Tv_Const (FStarC_Reflection_V2_Data.C_Int
+      (i, uu___)) -> IntLit i
+  | FStar_Tactics_NamedView.Tv_Let (uu___, uu___1, uu___2, uu___3, uu___4) ->
+      F_Unknown
+  | FStar_Tactics_NamedView.Tv_Match (uu___, uu___1, uu___2) -> F_Unknown
+  | FStar_Tactics_NamedView.Tv_Type uu___ -> F_Unknown
+  | FStar_Tactics_NamedView.Tv_Abs (uu___, uu___1) -> F_Unknown
+  | FStar_Tactics_NamedView.Tv_Arrow (uu___, uu___1) -> F_Unknown
+  | FStar_Tactics_NamedView.Tv_Uvar (uu___, uu___1) -> F_Unknown
+  | FStar_Tactics_NamedView.Tv_Unknown -> F_Unknown
+  | FStar_Tactics_NamedView.Tv_Unsupp -> F_Unknown
+  | FStar_Tactics_NamedView.Tv_Refine (uu___, uu___1) -> F_Unknown
+  | FStar_Tactics_NamedView.Tv_Const uu___ -> F_Unknown
+  | FStar_Tactics_NamedView.Tv_BVar uu___ -> F_Unknown
+  | uu___ ->
+      (FStarC_Tactics_V2_Builtins.raise_core
+         (FStarC_Tactics_Common.TacticFailure
+            ([FStar_Pprint.arbitrary_string "Unexpected: term_as_formula"],
+              FStar_Pervasives_Native.None)) ps;
+       Prims.magic ())
 let _ =
   FStarC_Tactics_Native.register_tactic
     "FStar.Reflection.V2.Formula.term_as_formula'" (Prims.of_int 2)

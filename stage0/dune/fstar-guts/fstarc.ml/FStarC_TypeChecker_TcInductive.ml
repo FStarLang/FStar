@@ -714,7 +714,7 @@ let tc_data (env : FStarC_TypeChecker_Env.env_t)
                                   FStarC_TypeChecker_TcTerm.tc_trivial_guard
                                     env'1 result in
                                 (match uu___7 with
-                                 | (result1, res_lcomp) ->
+                                 | (result1, res_comp) ->
                                      let uu___8 =
                                        FStarC_Syntax_Util.head_and_args_full
                                          result1 in
@@ -881,7 +881,8 @@ let tc_data (env : FStarC_TypeChecker_Env.env_t)
                                             (let ty =
                                                let uu___11 =
                                                  unfold_whnf env2
-                                                   res_lcomp.FStarC_TypeChecker_Common.res_typ in
+                                                   (FStarC_Syntax_Util.comp_result
+                                                      res_comp) in
                                                FStarC_Syntax_Util.unrefine
                                                  uu___11 in
                                              (let uu___12 =

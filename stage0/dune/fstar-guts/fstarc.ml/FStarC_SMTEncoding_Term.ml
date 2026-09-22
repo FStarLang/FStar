@@ -832,6 +832,7 @@ let boxBitVecFun (sz : Prims.int) : (Prims.string * Prims.string)=
     Prims.strcat "BoxBitVec" uu___1 in
   mkBoxFunctions uu___
 let boxRealFun : (Prims.string * Prims.string)= mkBoxFunctions "BoxReal"
+let boxPropFun : (Prims.string * Prims.string)= mkBoxFunctions "BoxProp"
 let isInjective (s : Prims.string) : Prims.bool=
   if (FStar_String.strlen s) >= (Prims.of_int 3)
   then
@@ -2037,7 +2038,10 @@ and mkPrelude (z3options : Prims.string) : Prims.string=
       ("LexCons",
         [("LexCons_0", Term_sort, true);
         ("LexCons_1", Term_sort, true);
-        ("LexCons_2", Term_sort, true)], Term_sort, (Prims.of_int 11), true)] in
+        ("LexCons_2", Term_sort, true)], Term_sort, (Prims.of_int 11), true);
+      ((FStar_Pervasives_Native.fst boxPropFun),
+        [((FStar_Pervasives_Native.snd boxPropFun), Bool_sort, true)],
+        Term_sort, (Prims.of_int 12), true)] in
   let bcons =
     let uu___ =
       let uu___1 = FStarC_List.collect (constructor_to_decl norng) constrs in
@@ -2140,6 +2144,12 @@ let boxReal (t : term) : term=
 let unboxReal (t : term) : term=
   maybe_elim_box (FStar_Pervasives_Native.snd boxRealFun)
     (FStar_Pervasives_Native.fst boxRealFun) t
+let boxProp (t : term) : term=
+  elim_box true (FStar_Pervasives_Native.fst boxPropFun)
+    (FStar_Pervasives_Native.snd boxPropFun) t
+let unboxProp (t : term) : term=
+  elim_box true (FStar_Pervasives_Native.snd boxPropFun)
+    (FStar_Pervasives_Native.fst boxPropFun) t
 let boxBitVec (sz : Prims.int) (t : term) : term=
   let uu___ =
     let uu___1 = boxBitVecFun sz in FStar_Pervasives_Native.fst uu___1 in

@@ -105,8 +105,8 @@ let rec seq_find_aux :
   =
   fun f l ctr ->
     match ctr with
-    | uu___ when uu___ = Prims.int_zero -> FStar_Pervasives_Native.None
-    | uu___ ->
+    | uu___1 when uu___1 = Prims.int_zero -> FStar_Pervasives_Native.None
+    | uu___1 ->
         let i = ctr - Prims.int_one in
         if f (FStar_Seq_Base.index l i)
         then FStar_Pervasives_Native.Some (FStar_Seq_Base.index l i)

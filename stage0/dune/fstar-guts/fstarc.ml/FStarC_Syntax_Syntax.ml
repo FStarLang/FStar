@@ -250,15 +250,11 @@ and quoteinfo =
   antiquotations: (Prims.int * term' syntax Prims.list) }
 and comp_typ =
   {
-  comp_univs: universes ;
   effect_name: FStarC_Ident.lident ;
   result_typ: term' syntax ;
-  comp_pre: term' syntax ;
-  comp_post: term' syntax ;
-  flags: cflag Prims.list }
+  flags: cflag Prims.list ;
+  source_effect_name: FStarC_Ident.lident }
 and comp' =
-  | Total of term' syntax 
-  | GTotal of term' syntax 
   | Comp of comp_typ 
 and binder =
   {
@@ -270,9 +266,6 @@ and decreases_order =
   | Decreases_lex of term' syntax Prims.list 
   | Decreases_wf of (term' syntax * term' syntax) 
 and cflag =
-  | TOTAL 
-  | MLEFFECT 
-  | LEMMA 
   | SMTPAT of term' syntax 
   | DECREASES of decreases_order 
 and metadata =
@@ -646,44 +639,24 @@ let __proj__Mkquoteinfo__item__qkind (projectee : quoteinfo) : quote_kind=
 let __proj__Mkquoteinfo__item__antiquotations (projectee : quoteinfo) :
   (Prims.int * term' syntax Prims.list)=
   match projectee with | { qkind; antiquotations;_} -> antiquotations
-let __proj__Mkcomp_typ__item__comp_univs (projectee : comp_typ) : universes=
-  match projectee with
-  | { comp_univs; effect_name; result_typ; comp_pre; comp_post; flags;_} ->
-      comp_univs
 let __proj__Mkcomp_typ__item__effect_name (projectee : comp_typ) :
   FStarC_Ident.lident=
   match projectee with
-  | { comp_univs; effect_name; result_typ; comp_pre; comp_post; flags;_} ->
-      effect_name
+  | { effect_name; result_typ; flags; source_effect_name;_} -> effect_name
 let __proj__Mkcomp_typ__item__result_typ (projectee : comp_typ) :
   term' syntax=
   match projectee with
-  | { comp_univs; effect_name; result_typ; comp_pre; comp_post; flags;_} ->
-      result_typ
-let __proj__Mkcomp_typ__item__comp_pre (projectee : comp_typ) : term' syntax=
-  match projectee with
-  | { comp_univs; effect_name; result_typ; comp_pre; comp_post; flags;_} ->
-      comp_pre
-let __proj__Mkcomp_typ__item__comp_post (projectee : comp_typ) :
-  term' syntax=
-  match projectee with
-  | { comp_univs; effect_name; result_typ; comp_pre; comp_post; flags;_} ->
-      comp_post
+  | { effect_name; result_typ; flags; source_effect_name;_} -> result_typ
 let __proj__Mkcomp_typ__item__flags (projectee : comp_typ) :
   cflag Prims.list=
   match projectee with
-  | { comp_univs; effect_name; result_typ; comp_pre; comp_post; flags;_} ->
-      flags
-let uu___is_Total (projectee : comp') : Prims.bool=
-  match projectee with | Total _0 -> true | uu___ -> false
-let __proj__Total__item___0 (projectee : comp') : term' syntax=
-  match projectee with | Total _0 -> _0
-let uu___is_GTotal (projectee : comp') : Prims.bool=
-  match projectee with | GTotal _0 -> true | uu___ -> false
-let __proj__GTotal__item___0 (projectee : comp') : term' syntax=
-  match projectee with | GTotal _0 -> _0
-let uu___is_Comp (projectee : comp') : Prims.bool=
-  match projectee with | Comp _0 -> true | uu___ -> false
+  | { effect_name; result_typ; flags; source_effect_name;_} -> flags
+let __proj__Mkcomp_typ__item__source_effect_name (projectee : comp_typ) :
+  FStarC_Ident.lident=
+  match projectee with
+  | { effect_name; result_typ; flags; source_effect_name;_} ->
+      source_effect_name
+let uu___is_Comp (projectee : comp') : Prims.bool= true
 let __proj__Comp__item___0 (projectee : comp') : comp_typ=
   match projectee with | Comp _0 -> _0
 let __proj__Mkbinder__item__binder_bv (projectee : binder) : bv=
@@ -712,12 +685,6 @@ let uu___is_Decreases_wf (projectee : decreases_order) : Prims.bool=
   match projectee with | Decreases_wf _0 -> true | uu___ -> false
 let __proj__Decreases_wf__item___0 (projectee : decreases_order) :
   (term' syntax * term' syntax)= match projectee with | Decreases_wf _0 -> _0
-let uu___is_TOTAL (projectee : cflag) : Prims.bool=
-  match projectee with | TOTAL -> true | uu___ -> false
-let uu___is_MLEFFECT (projectee : cflag) : Prims.bool=
-  match projectee with | MLEFFECT -> true | uu___ -> false
-let uu___is_LEMMA (projectee : cflag) : Prims.bool=
-  match projectee with | LEMMA -> true | uu___ -> false
 let uu___is_SMTPAT (projectee : cflag) : Prims.bool=
   match projectee with | SMTPAT _0 -> true | uu___ -> false
 let __proj__SMTPAT__item___0 (projectee : cflag) : term' syntax=
@@ -1331,57 +1298,55 @@ type eff_combinators =
   {
   repr: tscheme ;
   return_repr: tscheme ;
-  bind_repr: tscheme }
+  bind_repr: tscheme ;
+  repr_universe: tscheme }
 let __proj__Mkeff_combinators__item__repr (projectee : eff_combinators) :
-  tscheme= match projectee with | { repr; return_repr; bind_repr;_} -> repr
+  tscheme=
+  match projectee with
+  | { repr; return_repr; bind_repr; repr_universe;_} -> repr
 let __proj__Mkeff_combinators__item__return_repr
   (projectee : eff_combinators) : tscheme=
-  match projectee with | { repr; return_repr; bind_repr;_} -> return_repr
+  match projectee with
+  | { repr; return_repr; bind_repr; repr_universe;_} -> return_repr
 let __proj__Mkeff_combinators__item__bind_repr (projectee : eff_combinators)
   : tscheme=
-  match projectee with | { repr; return_repr; bind_repr;_} -> bind_repr
+  match projectee with
+  | { repr; return_repr; bind_repr; repr_universe;_} -> bind_repr
+let __proj__Mkeff_combinators__item__repr_universe
+  (projectee : eff_combinators) : tscheme=
+  match projectee with
+  | { repr; return_repr; bind_repr; repr_universe;_} -> repr_universe
 type eff_decl =
   {
   mname: FStarC_Ident.lident ;
   cattributes: cflag Prims.list ;
-  univs: univ_names ;
-  binders: binders ;
   combinators: eff_combinators FStar_Pervasives_Native.option ;
   eff_attrs: attribute Prims.list ;
   extraction_mode: eff_extraction_mode }
 let __proj__Mkeff_decl__item__mname (projectee : eff_decl) :
   FStarC_Ident.lident=
   match projectee with
-  | { mname; cattributes; univs; binders = binders1; combinators; eff_attrs;
-      extraction_mode;_} -> mname
+  | { mname; cattributes; combinators; eff_attrs; extraction_mode;_} -> mname
 let __proj__Mkeff_decl__item__cattributes (projectee : eff_decl) :
   cflag Prims.list=
   match projectee with
-  | { mname; cattributes; univs; binders = binders1; combinators; eff_attrs;
-      extraction_mode;_} -> cattributes
-let __proj__Mkeff_decl__item__univs (projectee : eff_decl) : univ_names=
-  match projectee with
-  | { mname; cattributes; univs; binders = binders1; combinators; eff_attrs;
-      extraction_mode;_} -> univs
-let __proj__Mkeff_decl__item__binders (projectee : eff_decl) : binders=
-  match projectee with
-  | { mname; cattributes; univs; binders = binders1; combinators; eff_attrs;
-      extraction_mode;_} -> binders1
+  | { mname; cattributes; combinators; eff_attrs; extraction_mode;_} ->
+      cattributes
 let __proj__Mkeff_decl__item__combinators (projectee : eff_decl) :
   eff_combinators FStar_Pervasives_Native.option=
   match projectee with
-  | { mname; cattributes; univs; binders = binders1; combinators; eff_attrs;
-      extraction_mode;_} -> combinators
+  | { mname; cattributes; combinators; eff_attrs; extraction_mode;_} ->
+      combinators
 let __proj__Mkeff_decl__item__eff_attrs (projectee : eff_decl) :
   attribute Prims.list=
   match projectee with
-  | { mname; cattributes; univs; binders = binders1; combinators; eff_attrs;
-      extraction_mode;_} -> eff_attrs
+  | { mname; cattributes; combinators; eff_attrs; extraction_mode;_} ->
+      eff_attrs
 let __proj__Mkeff_decl__item__extraction_mode (projectee : eff_decl) :
   eff_extraction_mode=
   match projectee with
-  | { mname; cattributes; univs; binders = binders1; combinators; eff_attrs;
-      extraction_mode;_} -> extraction_mode
+  | { mname; cattributes; combinators; eff_attrs; extraction_mode;_} ->
+      extraction_mode
 type sig_metadata =
   {
   sigmeta_active: Prims.bool ;
@@ -1390,49 +1355,61 @@ type sig_metadata =
   sigmeta_spliced: Prims.bool ;
   sigmeta_already_checked: Prims.bool ;
   sigmeta_extension_decl: Prims.bool ;
-  sigmeta_extension_data: (Prims.string * FStar_Dyn.dyn) Prims.list }
+  sigmeta_extension_data: (Prims.string * FStar_Dyn.dyn) Prims.list ;
+  sigmeta_type_constructor: Prims.bool }
 let __proj__Mksig_metadata__item__sigmeta_active (projectee : sig_metadata) :
   Prims.bool=
   match projectee with
   | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit; sigmeta_spliced;
       sigmeta_already_checked; sigmeta_extension_decl;
-      sigmeta_extension_data;_} -> sigmeta_active
+      sigmeta_extension_data; sigmeta_type_constructor;_} -> sigmeta_active
 let __proj__Mksig_metadata__item__sigmeta_fact_db_ids
   (projectee : sig_metadata) : Prims.string Prims.list=
   match projectee with
   | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit; sigmeta_spliced;
       sigmeta_already_checked; sigmeta_extension_decl;
-      sigmeta_extension_data;_} -> sigmeta_fact_db_ids
+      sigmeta_extension_data; sigmeta_type_constructor;_} ->
+      sigmeta_fact_db_ids
 let __proj__Mksig_metadata__item__sigmeta_admit (projectee : sig_metadata) :
   Prims.bool=
   match projectee with
   | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit; sigmeta_spliced;
       sigmeta_already_checked; sigmeta_extension_decl;
-      sigmeta_extension_data;_} -> sigmeta_admit
+      sigmeta_extension_data; sigmeta_type_constructor;_} -> sigmeta_admit
 let __proj__Mksig_metadata__item__sigmeta_spliced (projectee : sig_metadata)
   : Prims.bool=
   match projectee with
   | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit; sigmeta_spliced;
       sigmeta_already_checked; sigmeta_extension_decl;
-      sigmeta_extension_data;_} -> sigmeta_spliced
+      sigmeta_extension_data; sigmeta_type_constructor;_} -> sigmeta_spliced
 let __proj__Mksig_metadata__item__sigmeta_already_checked
   (projectee : sig_metadata) : Prims.bool=
   match projectee with
   | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit; sigmeta_spliced;
       sigmeta_already_checked; sigmeta_extension_decl;
-      sigmeta_extension_data;_} -> sigmeta_already_checked
+      sigmeta_extension_data; sigmeta_type_constructor;_} ->
+      sigmeta_already_checked
 let __proj__Mksig_metadata__item__sigmeta_extension_decl
   (projectee : sig_metadata) : Prims.bool=
   match projectee with
   | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit; sigmeta_spliced;
       sigmeta_already_checked; sigmeta_extension_decl;
-      sigmeta_extension_data;_} -> sigmeta_extension_decl
+      sigmeta_extension_data; sigmeta_type_constructor;_} ->
+      sigmeta_extension_decl
 let __proj__Mksig_metadata__item__sigmeta_extension_data
   (projectee : sig_metadata) : (Prims.string * FStar_Dyn.dyn) Prims.list=
   match projectee with
   | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit; sigmeta_spliced;
       sigmeta_already_checked; sigmeta_extension_decl;
-      sigmeta_extension_data;_} -> sigmeta_extension_data
+      sigmeta_extension_data; sigmeta_type_constructor;_} ->
+      sigmeta_extension_data
+let __proj__Mksig_metadata__item__sigmeta_type_constructor
+  (projectee : sig_metadata) : Prims.bool=
+  match projectee with
+  | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit; sigmeta_spliced;
+      sigmeta_already_checked; sigmeta_extension_decl;
+      sigmeta_extension_data; sigmeta_type_constructor;_} ->
+      sigmeta_type_constructor
 type open_kind =
   | Open_module 
   | Open_namespace 
@@ -1495,10 +1472,7 @@ and sigelt'__Sig_assume__payload =
 and sigelt'__Sig_effect_abbrev__payload =
   {
   lid4: FStarC_Ident.lident ;
-  us4: univ_names ;
-  bs: binders ;
-  comp1: comp ;
-  cflags: cflag Prims.list }
+  root: FStarC_Ident.lident }
 and sigelt'__Sig_splice__payload =
   {
   is_typed: Prims.bool ;
@@ -1661,21 +1635,10 @@ let __proj__Mksigelt'__Sig_assume__payload__item__phi
   match projectee with | { lid3 = lid; us3 = us; phi1 = phi;_} -> phi
 let __proj__Mksigelt'__Sig_effect_abbrev__payload__item__lid
   (projectee : sigelt'__Sig_effect_abbrev__payload) : FStarC_Ident.lident=
-  match projectee with | { lid4 = lid; us4 = us; bs; comp1; cflags;_} -> lid
-let __proj__Mksigelt'__Sig_effect_abbrev__payload__item__us
-  (projectee : sigelt'__Sig_effect_abbrev__payload) : univ_names=
-  match projectee with | { lid4 = lid; us4 = us; bs; comp1; cflags;_} -> us
-let __proj__Mksigelt'__Sig_effect_abbrev__payload__item__bs
-  (projectee : sigelt'__Sig_effect_abbrev__payload) : binders=
-  match projectee with | { lid4 = lid; us4 = us; bs; comp1; cflags;_} -> bs
-let __proj__Mksigelt'__Sig_effect_abbrev__payload__item__comp
-  (projectee : sigelt'__Sig_effect_abbrev__payload) : comp=
-  match projectee with
-  | { lid4 = lid; us4 = us; bs; comp1; cflags;_} -> comp1
-let __proj__Mksigelt'__Sig_effect_abbrev__payload__item__cflags
-  (projectee : sigelt'__Sig_effect_abbrev__payload) : cflag Prims.list=
-  match projectee with
-  | { lid4 = lid; us4 = us; bs; comp1; cflags;_} -> cflags
+  match projectee with | { lid4 = lid; root;_} -> lid
+let __proj__Mksigelt'__Sig_effect_abbrev__payload__item__root
+  (projectee : sigelt'__Sig_effect_abbrev__payload) : FStarC_Ident.lident=
+  match projectee with | { lid4 = lid; root;_} -> root
 let __proj__Mksigelt'__Sig_splice__payload__item__is_typed
   (projectee : sigelt'__Sig_splice__payload) : Prims.bool=
   match projectee with | { is_typed; lids2 = lids; tac;_} -> is_typed
@@ -1854,7 +1817,8 @@ let default_sigmeta : sig_metadata=
     sigmeta_spliced = false;
     sigmeta_already_checked = false;
     sigmeta_extension_decl = false;
-    sigmeta_extension_data = []
+    sigmeta_extension_data = [];
+    sigmeta_type_constructor = false
   }
 let mk_sigelt (e : sigelt') : sigelt=
   {
@@ -1891,7 +1855,8 @@ let rec mk_Tm_arrow (bs : binders) (c : comp) (p : FStarC_Range_Type.range) :
   match bs with
   | [] ->
       (match c.n with
-       | Total t -> t
+       | Comp ct when FStarC_Parser_Const.is_tot_lid ct.effect_name ->
+           ct.result_typ
        | uu___ ->
            FStarC_Effect.failwith
              "mk_Tm_arrow: no binders, and the computation is not Tot")
@@ -1900,7 +1865,17 @@ let rec mk_Tm_arrow (bs : binders) (c : comp) (p : FStarC_Range_Type.range) :
       let tail = mk_Tm_arrow bs1 c p in
       let uu___ =
         let uu___1 =
-          let uu___2 = mk (Total tail) tail.pos in { b1 = b; comp = uu___2 } in
+          let uu___2 =
+            mk
+              (Comp
+                 {
+                   effect_name = FStarC_Parser_Const.primitive_pure_lid;
+                   result_typ = tail;
+                   flags = [];
+                   source_effect_name =
+                     FStarC_Parser_Const.primitive_pure_lid
+                 }) tail.pos in
+          { b1 = b; comp = uu___2 } in
         Tm_arrow uu___1 in
       mk uu___ p
 let mk_Tm_uinst (t : term) (us : universes) : term=
@@ -1920,9 +1895,23 @@ let mk_Tm_delayed (lr : (term * subst_ts)) (pos : FStarC_Range_Type.range) :
          tm1 = (FStar_Pervasives_Native.fst lr);
          substs = (FStar_Pervasives_Native.snd lr)
        }) pos
-let mk_Total (t : typ) : comp= mk (Total t) t.pos
-let mk_GTotal (t : typ) : comp= mk (GTotal t) t.pos
 let mk_Comp (ct : comp_typ) : comp= mk (Comp ct) (ct.result_typ).pos
+let mk_Total (t : typ) : comp=
+  mk_Comp
+    {
+      effect_name = FStarC_Parser_Const.primitive_pure_lid;
+      result_typ = t;
+      flags = [];
+      source_effect_name = FStarC_Parser_Const.primitive_pure_lid
+    }
+let mk_GTotal (t : typ) : comp=
+  mk_Comp
+    {
+      effect_name = FStarC_Parser_Const.primitive_ghost_lid;
+      result_typ = t;
+      flags = [];
+      source_effect_name = FStarC_Parser_Const.primitive_ghost_lid
+    }
 let order_bv (x : bv) (y : bv) : Prims.int= x.index - y.index
 let bv_eq (x : bv) (y : bv) : Prims.bool= (order_bv x y) = Prims.int_zero
 let order_ident (x : FStarC_Ident.ident) (y : FStarC_Ident.ident) :
@@ -2148,9 +2137,9 @@ let post_rc : residual_comp=
     let uu___1 = mk (Tm_type U_zero) FStarC_Range_Type.dummyRange in
     FStar_Pervasives_Native.Some uu___1 in
   {
-    residual_effect = FStarC_Parser_Const.effect_Tot_lid;
+    residual_effect = FStarC_Parser_Const.primitive_pure_lid;
     residual_typ = uu___;
-    residual_flags = [TOTAL]
+    residual_flags = []
   }
 let trivial_post (t : typ) : term=
   let uu___ =
@@ -2163,21 +2152,14 @@ let trivial_post (t : typ) : term=
       } in
     Tm_abs uu___1 in
   mk uu___ t.pos
-let mk_triv_comp (univs : universes) (eff : FStarC_Ident.lident) (t : typ)
-  (flags : cflag Prims.list) : comp=
-  let uu___ =
-    let uu___1 = trivial_post t in
-    {
-      comp_univs = univs;
-      effect_name = eff;
-      result_typ = t;
-      comp_pre = trivial_pre;
-      comp_post = uu___1;
-      flags
-    } in
-  mk_Comp uu___
 let mk_Tac (t : typ) : comp=
-  mk_triv_comp [U_zero] FStarC_Parser_Const.effect_Tac_lid t []
+  mk_Comp
+    {
+      effect_name = FStarC_Parser_Const.effect_TAC_lid;
+      result_typ = t;
+      flags = [];
+      source_effect_name = FStarC_Parser_Const.effect_Tac_lid
+    }
 let fv_eq (fv1 : fv) (fv2 : fv) : Prims.bool=
   FStarC_Ident.lid_equals fv1.fv_name fv2.fv_name
 let fv_eq_lid (fv1 : fv) (lid : FStarC_Ident.lident) : Prims.bool=

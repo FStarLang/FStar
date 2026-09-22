@@ -256,8 +256,6 @@ let solve_goals_with_tac (env : FStarC_TypeChecker_Env.env) (g : 'uuuuu)
              (env.FStarC_TypeChecker_Env.modules);
            FStarC_TypeChecker_Env.expected_typ =
              (env.FStarC_TypeChecker_Env.expected_typ);
-           FStarC_TypeChecker_Env.expected_post =
-             (env.FStarC_TypeChecker_Env.expected_post);
            FStarC_TypeChecker_Env.sigtab =
              (env.FStarC_TypeChecker_Env.sigtab);
            FStarC_TypeChecker_Env.attrtab =
@@ -270,6 +268,8 @@ let solve_goals_with_tac (env : FStarC_TypeChecker_Env.env) (g : 'uuuuu)
              (env.FStarC_TypeChecker_Env.generalize);
            FStarC_TypeChecker_Env.letrecs =
              (env.FStarC_TypeChecker_Env.letrecs);
+           FStarC_TypeChecker_Env.rec_names =
+             (env.FStarC_TypeChecker_Env.rec_names);
            FStarC_TypeChecker_Env.top_level =
              (env.FStarC_TypeChecker_Env.top_level);
            FStarC_TypeChecker_Env.check_uvars =
@@ -305,8 +305,6 @@ let solve_goals_with_tac (env : FStarC_TypeChecker_Env.env) (g : 'uuuuu)
              (env.FStarC_TypeChecker_Env.subtype_nosmt_force);
            FStarC_TypeChecker_Env.qtbl_name_and_index =
              (env.FStarC_TypeChecker_Env.qtbl_name_and_index);
-           FStarC_TypeChecker_Env.normalized_eff_names =
-             (env.FStarC_TypeChecker_Env.normalized_eff_names);
            FStarC_TypeChecker_Env.fv_delta_depths =
              (env.FStarC_TypeChecker_Env.fv_delta_depths);
            FStarC_TypeChecker_Env.proof_ns =
@@ -329,6 +327,8 @@ let solve_goals_with_tac (env : FStarC_TypeChecker_Env.env) (g : 'uuuuu)
            FStarC_TypeChecker_Env.nbe = (env.FStarC_TypeChecker_Env.nbe);
            FStarC_TypeChecker_Env.strict_args_tab =
              (env.FStarC_TypeChecker_Env.strict_args_tab);
+           FStarC_TypeChecker_Env.disc_proj_tab =
+             (env.FStarC_TypeChecker_Env.disc_proj_tab);
            FStarC_TypeChecker_Env.erasable_types_tab =
              (env.FStarC_TypeChecker_Env.erasable_types_tab);
            FStarC_TypeChecker_Env.enable_defer_to_tac = false;
@@ -392,8 +392,6 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env)
                            (env1.FStarC_TypeChecker_Env.modules);
                          FStarC_TypeChecker_Env.expected_typ =
                            (env1.FStarC_TypeChecker_Env.expected_typ);
-                         FStarC_TypeChecker_Env.expected_post =
-                           (env1.FStarC_TypeChecker_Env.expected_post);
                          FStarC_TypeChecker_Env.sigtab =
                            (env1.FStarC_TypeChecker_Env.sigtab);
                          FStarC_TypeChecker_Env.attrtab =
@@ -406,6 +404,8 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env)
                            (env1.FStarC_TypeChecker_Env.generalize);
                          FStarC_TypeChecker_Env.letrecs =
                            (env1.FStarC_TypeChecker_Env.letrecs);
+                         FStarC_TypeChecker_Env.rec_names =
+                           (env1.FStarC_TypeChecker_Env.rec_names);
                          FStarC_TypeChecker_Env.top_level =
                            (env1.FStarC_TypeChecker_Env.top_level);
                          FStarC_TypeChecker_Env.check_uvars =
@@ -443,8 +443,6 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env)
                            (env1.FStarC_TypeChecker_Env.subtype_nosmt_force);
                          FStarC_TypeChecker_Env.qtbl_name_and_index =
                            (env1.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                         FStarC_TypeChecker_Env.normalized_eff_names =
-                           (env1.FStarC_TypeChecker_Env.normalized_eff_names);
                          FStarC_TypeChecker_Env.fv_delta_depths =
                            (env1.FStarC_TypeChecker_Env.fv_delta_depths);
                          FStarC_TypeChecker_Env.proof_ns =
@@ -469,6 +467,8 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env)
                            (env1.FStarC_TypeChecker_Env.nbe);
                          FStarC_TypeChecker_Env.strict_args_tab =
                            (env1.FStarC_TypeChecker_Env.strict_args_tab);
+                         FStarC_TypeChecker_Env.disc_proj_tab =
+                           (env1.FStarC_TypeChecker_Env.disc_proj_tab);
                          FStarC_TypeChecker_Env.erasable_types_tab =
                            (env1.FStarC_TypeChecker_Env.erasable_types_tab);
                          FStarC_TypeChecker_Env.enable_defer_to_tac =
@@ -508,8 +508,6 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env)
                            (env2.FStarC_TypeChecker_Env.modules);
                          FStarC_TypeChecker_Env.expected_typ =
                            (env2.FStarC_TypeChecker_Env.expected_typ);
-                         FStarC_TypeChecker_Env.expected_post =
-                           (env2.FStarC_TypeChecker_Env.expected_post);
                          FStarC_TypeChecker_Env.sigtab =
                            (env2.FStarC_TypeChecker_Env.sigtab);
                          FStarC_TypeChecker_Env.attrtab =
@@ -522,6 +520,8 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env)
                            (env2.FStarC_TypeChecker_Env.generalize);
                          FStarC_TypeChecker_Env.letrecs =
                            (env2.FStarC_TypeChecker_Env.letrecs);
+                         FStarC_TypeChecker_Env.rec_names =
+                           (env2.FStarC_TypeChecker_Env.rec_names);
                          FStarC_TypeChecker_Env.top_level =
                            (env2.FStarC_TypeChecker_Env.top_level);
                          FStarC_TypeChecker_Env.check_uvars =
@@ -558,8 +558,6 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env)
                            (env2.FStarC_TypeChecker_Env.subtype_nosmt_force);
                          FStarC_TypeChecker_Env.qtbl_name_and_index =
                            (env2.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                         FStarC_TypeChecker_Env.normalized_eff_names =
-                           (env2.FStarC_TypeChecker_Env.normalized_eff_names);
                          FStarC_TypeChecker_Env.fv_delta_depths =
                            (env2.FStarC_TypeChecker_Env.fv_delta_depths);
                          FStarC_TypeChecker_Env.proof_ns =
@@ -584,6 +582,8 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env)
                            (env2.FStarC_TypeChecker_Env.nbe);
                          FStarC_TypeChecker_Env.strict_args_tab =
                            (env2.FStarC_TypeChecker_Env.strict_args_tab);
+                         FStarC_TypeChecker_Env.disc_proj_tab =
+                           (env2.FStarC_TypeChecker_Env.disc_proj_tab);
                          FStarC_TypeChecker_Env.erasable_types_tab =
                            (env2.FStarC_TypeChecker_Env.erasable_types_tab);
                          FStarC_TypeChecker_Env.enable_defer_to_tac = false;

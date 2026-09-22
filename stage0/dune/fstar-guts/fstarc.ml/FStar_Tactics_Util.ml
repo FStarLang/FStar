@@ -186,7 +186,7 @@ let rec fold_left2 :
   =
   fun f x l1 l2 ->
     match (l1, l2) with
-    | ([], []) -> (fun uu___ -> x)
+    | ([], []) -> (fun uu___1 -> x)
     | (hd1::tl1, hd2::tl2) ->
         (fun ps -> let x1 = f x hd1 hd2 ps in fold_left2 f x1 tl1 tl2 ps)
 let rec string_of_list :

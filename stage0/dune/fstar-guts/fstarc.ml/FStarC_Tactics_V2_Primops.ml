@@ -3,52 +3,16 @@ let solve (ev : 'a) : 'a= ev
 let uu___0 :
   FStarC_Syntax_Syntax.term FStarC_Syntax_Embeddings_Base.embedding=
   FStarC_Reflection_V2_Embeddings.e_term
-let unseal (uu___1 : 'uuuuu) (uu___ : 'a FStarC_Sealed.sealed) :
-  'a FStarC_Tactics_Monad.tac=
-  (fun _typ x ->
-     Obj.magic
-       (FStarC_Class_Monad.return FStarC_Tactics_Monad.monad_tac ()
-          (Obj.magic (FStarC_Sealed.unseal x)))) uu___1 uu___
-let unseal_step : FStarC_TypeChecker_Primops_Base.primitive_step=
-  let s =
-    FStarC_Tactics_InterpFuns.mk_tac_step_2 Prims.int_one "unseal"
-      FStarC_Syntax_Embeddings.e_any
-      (FStarC_Syntax_Embeddings.e_sealed FStarC_Syntax_Embeddings.e_any)
-      FStarC_Syntax_Embeddings.e_any FStarC_TypeChecker_NBETerm.e_any
-      (FStarC_TypeChecker_NBETerm.e_sealed FStarC_TypeChecker_NBETerm.e_any)
-      FStarC_TypeChecker_NBETerm.e_any unseal unseal in
-  {
-    FStarC_TypeChecker_Primops_Base.name = FStarC_Parser_Const.unseal_lid;
-    FStarC_TypeChecker_Primops_Base.arity =
-      (s.FStarC_TypeChecker_Primops_Base.arity);
-    FStarC_TypeChecker_Primops_Base.univ_arity =
-      (s.FStarC_TypeChecker_Primops_Base.univ_arity);
-    FStarC_TypeChecker_Primops_Base.auto_reflect =
-      (s.FStarC_TypeChecker_Primops_Base.auto_reflect);
-    FStarC_TypeChecker_Primops_Base.strong_reduction_ok =
-      (s.FStarC_TypeChecker_Primops_Base.strong_reduction_ok);
-    FStarC_TypeChecker_Primops_Base.requires_binder_substitution =
-      (s.FStarC_TypeChecker_Primops_Base.requires_binder_substitution);
-    FStarC_TypeChecker_Primops_Base.renorm_after =
-      (s.FStarC_TypeChecker_Primops_Base.renorm_after);
-    FStarC_TypeChecker_Primops_Base.interpretation =
-      (s.FStarC_TypeChecker_Primops_Base.interpretation);
-    FStarC_TypeChecker_Primops_Base.interpretation_nbe =
-      (s.FStarC_TypeChecker_Primops_Base.interpretation_nbe)
-  }
 let e_ret_t (d : 'a FStarC_Syntax_Embeddings_Base.embedding) :
   ('a FStar_Pervasives_Native.option * FStarC_Tactics_V2_Basic.issues)
     FStarC_Syntax_Embeddings_Base.embedding=
-  solve
-    (FStarC_Syntax_Embeddings.e_tuple2 (FStarC_Syntax_Embeddings.e_option d)
-       (FStarC_Syntax_Embeddings.e_list FStarC_Syntax_Embeddings.e_issue))
+  FStarC_Syntax_Embeddings.e_tuple2 (FStarC_Syntax_Embeddings.e_option d)
+    (FStarC_Syntax_Embeddings.e_list FStarC_Syntax_Embeddings.e_issue)
 let nbe_e_ret_t (d : 'a FStarC_TypeChecker_NBETerm.embedding) :
   ('a FStar_Pervasives_Native.option * FStarC_Tactics_V2_Basic.issues)
     FStarC_TypeChecker_NBETerm.embedding=
-  solve
-    (FStarC_TypeChecker_NBETerm.e_tuple2
-       (FStarC_TypeChecker_NBETerm.e_option d)
-       (FStarC_TypeChecker_NBETerm.e_list FStarC_TypeChecker_NBETerm.e_issue))
+  FStarC_TypeChecker_NBETerm.e_tuple2 (FStarC_TypeChecker_NBETerm.e_option d)
+    (FStarC_TypeChecker_NBETerm.e_list FStarC_TypeChecker_NBETerm.e_issue)
 let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
   let uu___ =
     FStarC_Tactics_InterpFuns.mk_tot_step_1_psc Prims.int_zero "tracepoint"
@@ -162,242 +126,240 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                             FStarC_Tactics_Types.set_label in
                         let uu___23 =
                           let uu___24 =
-                            let uu___25 =
-                              FStarC_Tactics_InterpFuns.mk_tac_step_1
-                                Prims.int_zero "get"
-                                FStarC_Syntax_Embeddings.e_unit
-                                FStarC_Tactics_Embedding.e_proofstate
-                                FStarC_TypeChecker_NBETerm.e_unit
-                                FStarC_Tactics_Embedding.e_proofstate_nbe
-                                (fun uu___26 -> FStarC_Tactics_Monad.get)
-                                (fun uu___26 -> FStarC_Tactics_Monad.get) in
+                            FStarC_Tactics_InterpFuns.mk_tac_step_1
+                              Prims.int_zero "get"
+                              FStarC_Syntax_Embeddings.e_unit
+                              FStarC_Tactics_Embedding.e_proofstate
+                              FStarC_TypeChecker_NBETerm.e_unit
+                              FStarC_Tactics_Embedding.e_proofstate_nbe
+                              (fun uu___25 -> FStarC_Tactics_Monad.get)
+                              (fun uu___25 -> FStarC_Tactics_Monad.get) in
+                          let uu___25 =
                             let uu___26 =
-                              let uu___27 =
-                                FStarC_Tactics_InterpFuns.mk_tac_step_1
-                                  Prims.int_zero "fixup_range"
-                                  FStarC_Syntax_Embeddings.e_range
-                                  FStarC_Syntax_Embeddings.e_range
-                                  FStarC_TypeChecker_NBETerm.e_range
-                                  FStarC_TypeChecker_NBETerm.e_range
-                                  FStarC_Tactics_V2_Basic.fixup_range
-                                  FStarC_Tactics_V2_Basic.fixup_range in
+                              FStarC_Tactics_InterpFuns.mk_tac_step_1
+                                Prims.int_zero "fixup_range"
+                                FStarC_Syntax_Embeddings.e_range
+                                FStarC_Syntax_Embeddings.e_range
+                                FStarC_TypeChecker_NBETerm.e_range
+                                FStarC_TypeChecker_NBETerm.e_range
+                                FStarC_Tactics_V2_Basic.fixup_range
+                                FStarC_Tactics_V2_Basic.fixup_range in
+                            let uu___27 =
                               let uu___28 =
-                                let uu___29 =
-                                  FStarC_Tactics_InterpFuns.mk_tac_step_1
-                                    Prims.int_zero "compress" uu___0 uu___0
-                                    FStarC_Reflection_V2_NBEEmbeddings.e_attribute
-                                    FStarC_Reflection_V2_NBEEmbeddings.e_attribute
-                                    FStarC_Tactics_V2_Basic.compress
-                                    FStarC_Tactics_V2_Basic.compress in
+                                FStarC_Tactics_InterpFuns.mk_tac_step_1
+                                  Prims.int_zero "compress" uu___0 uu___0
+                                  FStarC_Reflection_V2_NBEEmbeddings.e_attribute
+                                  FStarC_Reflection_V2_NBEEmbeddings.e_attribute
+                                  FStarC_Tactics_V2_Basic.compress
+                                  FStarC_Tactics_V2_Basic.compress in
+                              let uu___29 =
                                 let uu___30 =
-                                  let uu___31 =
+                                  FStarC_Tactics_InterpFuns.mk_tac_step_1
+                                    Prims.int_zero "set_goals"
+                                    (FStarC_Syntax_Embeddings.e_list
+                                       FStarC_Tactics_Embedding.e_goal)
+                                    FStarC_Syntax_Embeddings.e_unit
+                                    (FStarC_TypeChecker_NBETerm.e_list
+                                       FStarC_Tactics_Embedding.e_goal_nbe)
+                                    FStarC_TypeChecker_NBETerm.e_unit
+                                    FStarC_Tactics_Monad.set_goals
+                                    FStarC_Tactics_Monad.set_goals in
+                                let uu___31 =
+                                  let uu___32 =
                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
-                                      Prims.int_zero "set_goals"
+                                      Prims.int_zero "set_smt_goals"
                                       (FStarC_Syntax_Embeddings.e_list
                                          FStarC_Tactics_Embedding.e_goal)
                                       FStarC_Syntax_Embeddings.e_unit
                                       (FStarC_TypeChecker_NBETerm.e_list
                                          FStarC_Tactics_Embedding.e_goal_nbe)
                                       FStarC_TypeChecker_NBETerm.e_unit
-                                      FStarC_Tactics_Monad.set_goals
-                                      FStarC_Tactics_Monad.set_goals in
-                                  let uu___32 =
-                                    let uu___33 =
-                                      FStarC_Tactics_InterpFuns.mk_tac_step_1
-                                        Prims.int_zero "set_smt_goals"
-                                        (FStarC_Syntax_Embeddings.e_list
-                                           FStarC_Tactics_Embedding.e_goal)
-                                        FStarC_Syntax_Embeddings.e_unit
-                                        (FStarC_TypeChecker_NBETerm.e_list
-                                           FStarC_Tactics_Embedding.e_goal_nbe)
-                                        FStarC_TypeChecker_NBETerm.e_unit
-                                        FStarC_Tactics_Monad.set_smt_goals
-                                        FStarC_Tactics_Monad.set_smt_goals in
+                                      FStarC_Tactics_Monad.set_smt_goals
+                                      FStarC_Tactics_Monad.set_smt_goals in
+                                  let uu___33 =
                                     let uu___34 =
                                       let uu___35 =
-                                        let uu___36 =
-                                          FStarC_Tactics_Interpreter.e_tactic_thunk
-                                            FStarC_Syntax_Embeddings.e_any in
-                                        let uu___37 =
-                                          FStarC_Tactics_Interpreter.e_tactic_nbe_thunk
-                                            FStarC_TypeChecker_NBETerm.e_any in
-                                        FStarC_Tactics_InterpFuns.mk_tac_step_2
-                                          Prims.int_one "catch"
-                                          FStarC_Syntax_Embeddings.e_any
-                                          uu___36
-                                          (FStarC_Syntax_Embeddings.e_either
-                                             FStarC_Tactics_Embedding.e_exn
-                                             FStarC_Syntax_Embeddings.e_any)
-                                          FStarC_TypeChecker_NBETerm.e_any
-                                          uu___37
-                                          (FStarC_TypeChecker_NBETerm.e_either
-                                             FStarC_Tactics_Embedding.e_exn_nbe
-                                             FStarC_TypeChecker_NBETerm.e_any)
-                                          (fun uu___38 ->
-                                             FStarC_Tactics_Monad.catch)
-                                          (fun uu___38 ->
-                                             FStarC_Tactics_Monad.catch) in
+                                        FStarC_Tactics_Interpreter.e_tactic_thunk
+                                          FStarC_Syntax_Embeddings.e_any in
                                       let uu___36 =
-                                        let uu___37 =
-                                          FStarC_Tactics_InterpFuns.mk_tac_step_1
-                                            Prims.int_zero "raise_core"
-                                            FStarC_Tactics_Embedding.e_exn
-                                            FStarC_Syntax_Embeddings.e_unit
-                                            FStarC_Tactics_Embedding.e_exn_nbe
-                                            FStarC_TypeChecker_NBETerm.e_unit
-                                            FStarC_Tactics_Monad.traise
-                                            FStarC_Tactics_Monad.traise in
+                                        FStarC_Tactics_Interpreter.e_tactic_nbe_thunk
+                                          FStarC_TypeChecker_NBETerm.e_any in
+                                      FStarC_Tactics_InterpFuns.mk_tac_step_2
+                                        Prims.int_one "catch"
+                                        FStarC_Syntax_Embeddings.e_any
+                                        uu___35
+                                        (FStarC_Syntax_Embeddings.e_either
+                                           FStarC_Tactics_Embedding.e_exn
+                                           FStarC_Syntax_Embeddings.e_any)
+                                        FStarC_TypeChecker_NBETerm.e_any
+                                        uu___36
+                                        (FStarC_TypeChecker_NBETerm.e_either
+                                           FStarC_Tactics_Embedding.e_exn_nbe
+                                           FStarC_TypeChecker_NBETerm.e_any)
+                                        (fun uu___37 ->
+                                           FStarC_Tactics_Monad.catch)
+                                        (fun uu___37 ->
+                                           FStarC_Tactics_Monad.catch) in
+                                    let uu___35 =
+                                      let uu___36 =
+                                        FStarC_Tactics_InterpFuns.mk_tac_step_1
+                                          Prims.int_zero "raise_core"
+                                          FStarC_Tactics_Embedding.e_exn
+                                          FStarC_Syntax_Embeddings.e_unit
+                                          FStarC_Tactics_Embedding.e_exn_nbe
+                                          FStarC_TypeChecker_NBETerm.e_unit
+                                          FStarC_Tactics_Monad.traise
+                                          FStarC_Tactics_Monad.traise in
+                                      let uu___37 =
                                         let uu___38 =
-                                          let uu___39 =
-                                            FStarC_Tactics_InterpFuns.mk_tac_step_1
-                                              Prims.int_zero "intro"
-                                              FStarC_Syntax_Embeddings.e_unit
-                                              FStarC_Reflection_V2_Embeddings.e_binding
-                                              FStarC_TypeChecker_NBETerm.e_unit
-                                              FStarC_Reflection_V2_NBEEmbeddings.e_binding
-                                              FStarC_Tactics_V2_Basic.intro
-                                              FStarC_Tactics_V2_Basic.intro in
+                                          FStarC_Tactics_InterpFuns.mk_tac_step_1
+                                            Prims.int_zero "intro"
+                                            FStarC_Syntax_Embeddings.e_unit
+                                            FStarC_Reflection_V2_Embeddings.e_binding
+                                            FStarC_TypeChecker_NBETerm.e_unit
+                                            FStarC_Reflection_V2_NBEEmbeddings.e_binding
+                                            FStarC_Tactics_V2_Basic.intro
+                                            FStarC_Tactics_V2_Basic.intro in
+                                        let uu___39 =
                                           let uu___40 =
-                                            let uu___41 =
-                                              FStarC_Tactics_InterpFuns.mk_tac_step_1
-                                                Prims.int_zero "intros"
-                                                FStarC_Syntax_Embeddings.e_int
-                                                (FStarC_Syntax_Embeddings.e_list
-                                                   FStarC_Reflection_V2_Embeddings.e_binding)
-                                                FStarC_TypeChecker_NBETerm.e_int
-                                                (FStarC_TypeChecker_NBETerm.e_list
-                                                   FStarC_Reflection_V2_NBEEmbeddings.e_binding)
-                                                FStarC_Tactics_V2_Basic.intros
-                                                FStarC_Tactics_V2_Basic.intros in
+                                            FStarC_Tactics_InterpFuns.mk_tac_step_1
+                                              Prims.int_zero "intros"
+                                              FStarC_Syntax_Embeddings.e_int
+                                              (FStarC_Syntax_Embeddings.e_list
+                                                 FStarC_Reflection_V2_Embeddings.e_binding)
+                                              FStarC_TypeChecker_NBETerm.e_int
+                                              (FStarC_TypeChecker_NBETerm.e_list
+                                                 FStarC_Reflection_V2_NBEEmbeddings.e_binding)
+                                              FStarC_Tactics_V2_Basic.intros
+                                              FStarC_Tactics_V2_Basic.intros in
+                                          let uu___41 =
                                             let uu___42 =
-                                              let uu___43 =
-                                                FStarC_Tactics_InterpFuns.mk_tac_step_1
-                                                  Prims.int_zero "intro_rec"
-                                                  FStarC_Syntax_Embeddings.e_unit
-                                                  (FStarC_Syntax_Embeddings.e_tuple2
-                                                     FStarC_Reflection_V2_Embeddings.e_binding
-                                                     FStarC_Reflection_V2_Embeddings.e_binding)
-                                                  FStarC_TypeChecker_NBETerm.e_unit
-                                                  (FStarC_TypeChecker_NBETerm.e_tuple2
-                                                     FStarC_Reflection_V2_NBEEmbeddings.e_binding
-                                                     FStarC_Reflection_V2_NBEEmbeddings.e_binding)
-                                                  FStarC_Tactics_V2_Basic.intro_rec
-                                                  FStarC_Tactics_V2_Basic.intro_rec in
+                                              FStarC_Tactics_InterpFuns.mk_tac_step_1
+                                                Prims.int_zero "intro_rec"
+                                                FStarC_Syntax_Embeddings.e_unit
+                                                (FStarC_Syntax_Embeddings.e_tuple2
+                                                   FStarC_Reflection_V2_Embeddings.e_binding
+                                                   FStarC_Reflection_V2_Embeddings.e_binding)
+                                                FStarC_TypeChecker_NBETerm.e_unit
+                                                (FStarC_TypeChecker_NBETerm.e_tuple2
+                                                   FStarC_Reflection_V2_NBEEmbeddings.e_binding
+                                                   FStarC_Reflection_V2_NBEEmbeddings.e_binding)
+                                                FStarC_Tactics_V2_Basic.intro_rec
+                                                FStarC_Tactics_V2_Basic.intro_rec in
+                                            let uu___43 =
                                               let uu___44 =
-                                                let uu___45 =
-                                                  FStarC_Tactics_InterpFuns.mk_tac_step_1
-                                                    Prims.int_zero "norm"
+                                                FStarC_Tactics_InterpFuns.mk_tac_step_1
+                                                  Prims.int_zero "norm"
+                                                  (FStarC_Syntax_Embeddings.e_list
+                                                     FStarC_Syntax_Embeddings.e_norm_step)
+                                                  FStarC_Syntax_Embeddings.e_unit
+                                                  (FStarC_TypeChecker_NBETerm.e_list
+                                                     FStarC_TypeChecker_NBETerm.e_norm_step)
+                                                  FStarC_TypeChecker_NBETerm.e_unit
+                                                  FStarC_Tactics_V2_Basic.norm
+                                                  FStarC_Tactics_V2_Basic.norm in
+                                              let uu___45 =
+                                                let uu___46 =
+                                                  FStarC_Tactics_InterpFuns.mk_tac_step_3
+                                                    Prims.int_zero
+                                                    "norm_term_env"
+                                                    FStarC_Reflection_V2_Embeddings.e_env
                                                     (FStarC_Syntax_Embeddings.e_list
                                                        FStarC_Syntax_Embeddings.e_norm_step)
-                                                    FStarC_Syntax_Embeddings.e_unit
+                                                    uu___0 uu___0
+                                                    FStarC_Reflection_V2_NBEEmbeddings.e_env
                                                     (FStarC_TypeChecker_NBETerm.e_list
                                                        FStarC_TypeChecker_NBETerm.e_norm_step)
-                                                    FStarC_TypeChecker_NBETerm.e_unit
-                                                    FStarC_Tactics_V2_Basic.norm
-                                                    FStarC_Tactics_V2_Basic.norm in
-                                                let uu___46 =
-                                                  let uu___47 =
-                                                    FStarC_Tactics_InterpFuns.mk_tac_step_3
+                                                    FStarC_Reflection_V2_NBEEmbeddings.e_attribute
+                                                    FStarC_Reflection_V2_NBEEmbeddings.e_attribute
+                                                    FStarC_Tactics_V2_Basic.norm_term_env
+                                                    FStarC_Tactics_V2_Basic.norm_term_env in
+                                                let uu___47 =
+                                                  let uu___48 =
+                                                    FStarC_Tactics_InterpFuns.mk_tac_step_2
                                                       Prims.int_zero
-                                                      "norm_term_env"
-                                                      FStarC_Reflection_V2_Embeddings.e_env
+                                                      "norm_binding_type"
                                                       (FStarC_Syntax_Embeddings.e_list
                                                          FStarC_Syntax_Embeddings.e_norm_step)
-                                                      uu___0 uu___0
-                                                      FStarC_Reflection_V2_NBEEmbeddings.e_env
+                                                      FStarC_Reflection_V2_Embeddings.e_binding
+                                                      FStarC_Syntax_Embeddings.e_unit
                                                       (FStarC_TypeChecker_NBETerm.e_list
                                                          FStarC_TypeChecker_NBETerm.e_norm_step)
-                                                      FStarC_Reflection_V2_NBEEmbeddings.e_attribute
-                                                      FStarC_Reflection_V2_NBEEmbeddings.e_attribute
-                                                      FStarC_Tactics_V2_Basic.norm_term_env
-                                                      FStarC_Tactics_V2_Basic.norm_term_env in
-                                                  let uu___48 =
-                                                    let uu___49 =
+                                                      FStarC_Reflection_V2_NBEEmbeddings.e_binding
+                                                      FStarC_TypeChecker_NBETerm.e_unit
+                                                      FStarC_Tactics_V2_Basic.norm_binding_type
+                                                      FStarC_Tactics_V2_Basic.norm_binding_type in
+                                                  let uu___49 =
+                                                    let uu___50 =
                                                       FStarC_Tactics_InterpFuns.mk_tac_step_2
                                                         Prims.int_zero
-                                                        "norm_binding_type"
-                                                        (FStarC_Syntax_Embeddings.e_list
-                                                           FStarC_Syntax_Embeddings.e_norm_step)
+                                                        "rename_to"
                                                         FStarC_Reflection_V2_Embeddings.e_binding
-                                                        FStarC_Syntax_Embeddings.e_unit
-                                                        (FStarC_TypeChecker_NBETerm.e_list
-                                                           FStarC_TypeChecker_NBETerm.e_norm_step)
+                                                        FStarC_Syntax_Embeddings.e_string
+                                                        FStarC_Reflection_V2_Embeddings.e_binding
                                                         FStarC_Reflection_V2_NBEEmbeddings.e_binding
-                                                        FStarC_TypeChecker_NBETerm.e_unit
-                                                        FStarC_Tactics_V2_Basic.norm_binding_type
-                                                        FStarC_Tactics_V2_Basic.norm_binding_type in
-                                                    let uu___50 =
-                                                      let uu___51 =
-                                                        FStarC_Tactics_InterpFuns.mk_tac_step_2
-                                                          Prims.int_zero
-                                                          "rename_to"
-                                                          FStarC_Reflection_V2_Embeddings.e_binding
-                                                          FStarC_Syntax_Embeddings.e_string
-                                                          FStarC_Reflection_V2_Embeddings.e_binding
-                                                          FStarC_Reflection_V2_NBEEmbeddings.e_binding
-                                                          FStarC_TypeChecker_NBETerm.e_string
-                                                          FStarC_Reflection_V2_NBEEmbeddings.e_binding
-                                                          FStarC_Tactics_V2_Basic.rename_to
-                                                          FStarC_Tactics_V2_Basic.rename_to in
+                                                        FStarC_TypeChecker_NBETerm.e_string
+                                                        FStarC_Reflection_V2_NBEEmbeddings.e_binding
+                                                        FStarC_Tactics_V2_Basic.rename_to
+                                                        FStarC_Tactics_V2_Basic.rename_to in
+                                                    let uu___51 =
                                                       let uu___52 =
-                                                        let uu___53 =
+                                                        FStarC_Tactics_InterpFuns.mk_tac_step_1
+                                                          Prims.int_zero
+                                                          "var_retype"
+                                                          FStarC_Reflection_V2_Embeddings.e_binding
+                                                          FStarC_Syntax_Embeddings.e_unit
+                                                          FStarC_Reflection_V2_NBEEmbeddings.e_binding
+                                                          FStarC_TypeChecker_NBETerm.e_unit
+                                                          FStarC_Tactics_V2_Basic.var_retype
+                                                          FStarC_Tactics_V2_Basic.var_retype in
+                                                      let uu___53 =
+                                                        let uu___54 =
                                                           FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                             Prims.int_zero
-                                                            "var_retype"
-                                                            FStarC_Reflection_V2_Embeddings.e_binding
+                                                            "revert"
                                                             FStarC_Syntax_Embeddings.e_unit
-                                                            FStarC_Reflection_V2_NBEEmbeddings.e_binding
+                                                            FStarC_Syntax_Embeddings.e_unit
                                                             FStarC_TypeChecker_NBETerm.e_unit
-                                                            FStarC_Tactics_V2_Basic.var_retype
-                                                            FStarC_Tactics_V2_Basic.var_retype in
-                                                        let uu___54 =
-                                                          let uu___55 =
+                                                            FStarC_TypeChecker_NBETerm.e_unit
+                                                            FStarC_Tactics_V2_Basic.revert
+                                                            FStarC_Tactics_V2_Basic.revert in
+                                                        let uu___55 =
+                                                          let uu___56 =
                                                             FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                               Prims.int_zero
-                                                              "revert"
+                                                              "clear_top"
                                                               FStarC_Syntax_Embeddings.e_unit
                                                               FStarC_Syntax_Embeddings.e_unit
                                                               FStarC_TypeChecker_NBETerm.e_unit
                                                               FStarC_TypeChecker_NBETerm.e_unit
-                                                              FStarC_Tactics_V2_Basic.revert
-                                                              FStarC_Tactics_V2_Basic.revert in
-                                                          let uu___56 =
-                                                            let uu___57 =
+                                                              FStarC_Tactics_V2_Basic.clear_top
+                                                              FStarC_Tactics_V2_Basic.clear_top in
+                                                          let uu___57 =
+                                                            let uu___58 =
                                                               FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                 Prims.int_zero
-                                                                "clear_top"
+                                                                "clear"
+                                                                FStarC_Reflection_V2_Embeddings.e_binding
                                                                 FStarC_Syntax_Embeddings.e_unit
-                                                                FStarC_Syntax_Embeddings.e_unit
+                                                                FStarC_Reflection_V2_NBEEmbeddings.e_binding
                                                                 FStarC_TypeChecker_NBETerm.e_unit
-                                                                FStarC_TypeChecker_NBETerm.e_unit
-                                                                FStarC_Tactics_V2_Basic.clear_top
-                                                                FStarC_Tactics_V2_Basic.clear_top in
-                                                            let uu___58 =
-                                                              let uu___59 =
+                                                                FStarC_Tactics_V2_Basic.clear
+                                                                FStarC_Tactics_V2_Basic.clear in
+                                                            let uu___59 =
+                                                              let uu___60 =
                                                                 FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                   Prims.int_zero
-                                                                  "clear"
+                                                                  "rewrite"
                                                                   FStarC_Reflection_V2_Embeddings.e_binding
                                                                   FStarC_Syntax_Embeddings.e_unit
                                                                   FStarC_Reflection_V2_NBEEmbeddings.e_binding
                                                                   FStarC_TypeChecker_NBETerm.e_unit
-                                                                  FStarC_Tactics_V2_Basic.clear
-                                                                  FStarC_Tactics_V2_Basic.clear in
-                                                              let uu___60 =
-                                                                let uu___61 =
-                                                                  FStarC_Tactics_InterpFuns.mk_tac_step_1
-                                                                    Prims.int_zero
-                                                                    "rewrite"
-                                                                    FStarC_Reflection_V2_Embeddings.e_binding
-                                                                    FStarC_Syntax_Embeddings.e_unit
-                                                                    FStarC_Reflection_V2_NBEEmbeddings.e_binding
-                                                                    FStarC_TypeChecker_NBETerm.e_unit
-                                                                    FStarC_Tactics_V2_Basic.rewrite
-                                                                    FStarC_Tactics_V2_Basic.rewrite in
+                                                                  FStarC_Tactics_V2_Basic.rewrite
+                                                                  FStarC_Tactics_V2_Basic.rewrite in
+                                                              let uu___61 =
                                                                 let uu___62 =
-                                                                  let uu___63
-                                                                    =
-                                                                    FStarC_Tactics_InterpFuns.mk_tac_step_2
+                                                                  FStarC_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
                                                                     "grewrite"
                                                                     uu___0
@@ -408,9 +370,8 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_unit
                                                                     FStarC_Tactics_V2_Basic.grewrite
                                                                     FStarC_Tactics_V2_Basic.grewrite in
+                                                                let uu___63 =
                                                                   let uu___64
-                                                                    =
-                                                                    let uu___65
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -421,9 +382,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_unit
                                                                     FStarC_Tactics_V2_Basic.refine_intro
                                                                     FStarC_Tactics_V2_Basic.refine_intro in
-                                                                    let uu___66
+                                                                  let uu___65
                                                                     =
-                                                                    let uu___67
+                                                                    let uu___66
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_3
                                                                     Prims.int_zero
@@ -438,9 +399,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_unit
                                                                     FStarC_Tactics_V2_Basic.t_exact
                                                                     FStarC_Tactics_V2_Basic.t_exact in
-                                                                    let uu___68
+                                                                    let uu___67
                                                                     =
-                                                                    let uu___69
+                                                                    let uu___68
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_4
                                                                     Prims.int_zero
@@ -457,9 +418,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_unit
                                                                     FStarC_Tactics_V2_Basic.t_apply
                                                                     FStarC_Tactics_V2_Basic.t_apply in
-                                                                    let uu___70
+                                                                    let uu___69
                                                                     =
-                                                                    let uu___71
+                                                                    let uu___70
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_3
                                                                     Prims.int_zero
@@ -474,9 +435,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_unit
                                                                     FStarC_Tactics_V2_Basic.t_apply_lemma
                                                                     FStarC_Tactics_V2_Basic.t_apply_lemma in
-                                                                    let uu___72
+                                                                    let uu___71
                                                                     =
-                                                                    let uu___73
+                                                                    let uu___72
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -487,9 +448,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_unit
                                                                     FStarC_Tactics_V2_Basic.set_options
                                                                     FStarC_Tactics_V2_Basic.set_options in
-                                                                    let uu___74
+                                                                    let uu___73
                                                                     =
-                                                                    let uu___75
+                                                                    let uu___74
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
@@ -502,9 +463,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_comp
                                                                     FStarC_Tactics_V2_Basic.tcc
                                                                     FStarC_Tactics_V2_Basic.tcc in
-                                                                    let uu___76
+                                                                    let uu___75
                                                                     =
-                                                                    let uu___77
+                                                                    let uu___76
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
@@ -517,9 +478,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_attribute
                                                                     FStarC_Tactics_V2_Basic.tc
                                                                     FStarC_Tactics_V2_Basic.tc in
-                                                                    let uu___78
+                                                                    let uu___77
                                                                     =
-                                                                    let uu___79
+                                                                    let uu___78
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -530,9 +491,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_unit
                                                                     FStarC_Tactics_V2_Basic.unshelve
                                                                     FStarC_Tactics_V2_Basic.unshelve in
-                                                                    let uu___80
+                                                                    let uu___79
                                                                     =
-                                                                    let uu___81
+                                                                    let uu___80
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_one
@@ -545,14 +506,14 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_any
                                                                     FStarC_Tactics_V2_Basic.unquote
                                                                     (fun
+                                                                    uu___81
                                                                     uu___82
-                                                                    uu___83
                                                                     ->
                                                                     FStarC_Effect.failwith
                                                                     "NBE unquote") in
-                                                                    let uu___82
+                                                                    let uu___81
                                                                     =
-                                                                    let uu___83
+                                                                    let uu___82
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -563,9 +524,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_unit
                                                                     FStarC_Tactics_V2_Basic.prune
                                                                     FStarC_Tactics_V2_Basic.prune in
-                                                                    let uu___84
+                                                                    let uu___83
                                                                     =
-                                                                    let uu___85
+                                                                    let uu___84
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -576,9 +537,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_unit
                                                                     FStarC_Tactics_V2_Basic.addns
                                                                     FStarC_Tactics_V2_Basic.addns in
-                                                                    let uu___86
+                                                                    let uu___85
                                                                     =
-                                                                    let uu___87
+                                                                    let uu___86
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -589,9 +550,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_unit
                                                                     FStarC_Tactics_V2_Basic.print
                                                                     FStarC_Tactics_V2_Basic.print in
-                                                                    let uu___88
+                                                                    let uu___87
                                                                     =
-                                                                    let uu___89
+                                                                    let uu___88
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -602,9 +563,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_bool
                                                                     FStarC_Tactics_V2_Basic.debugging
                                                                     FStarC_Tactics_V2_Basic.debugging in
-                                                                    let uu___90
+                                                                    let uu___89
                                                                     =
-                                                                    let uu___91
+                                                                    let uu___90
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -615,9 +576,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_bool
                                                                     FStarC_Tactics_V2_Basic.ide
                                                                     FStarC_Tactics_V2_Basic.ide in
-                                                                    let uu___92
+                                                                    let uu___91
                                                                     =
-                                                                    let uu___93
+                                                                    let uu___92
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -628,9 +589,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_unit
                                                                     FStarC_Tactics_V2_Basic.dump
                                                                     FStarC_Tactics_V2_Basic.dump in
-                                                                    let uu___94
+                                                                    let uu___93
                                                                     =
-                                                                    let uu___95
+                                                                    let uu___94
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
@@ -643,9 +604,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_unit
                                                                     FStarC_Tactics_V2_Basic.dump_all
                                                                     FStarC_Tactics_V2_Basic.dump_all in
-                                                                    let uu___96
+                                                                    let uu___95
                                                                     =
-                                                                    let uu___97
+                                                                    let uu___96
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
@@ -658,29 +619,29 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_unit
                                                                     FStarC_Tactics_V2_Basic.dump_uvars_of
                                                                     FStarC_Tactics_V2_Basic.dump_uvars_of in
+                                                                    let uu___97
+                                                                    =
                                                                     let uu___98
                                                                     =
                                                                     let uu___99
-                                                                    =
-                                                                    let uu___100
                                                                     =
                                                                     FStarC_Tactics_Interpreter.e_tactic_1
                                                                     FStarC_Reflection_V2_Embeddings.e_term
                                                                     (FStarC_Syntax_Embeddings.e_tuple2
                                                                     FStarC_Syntax_Embeddings.e_bool
                                                                     FStarC_Tactics_Embedding.e_ctrl_flag) in
-                                                                    let uu___101
+                                                                    let uu___100
                                                                     =
                                                                     FStarC_Tactics_Interpreter.e_tactic_thunk
                                                                     FStarC_Syntax_Embeddings.e_unit in
-                                                                    let uu___102
+                                                                    let uu___101
                                                                     =
                                                                     FStarC_Tactics_Interpreter.e_tactic_nbe_1
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_term
                                                                     (FStarC_TypeChecker_NBETerm.e_tuple2
                                                                     FStarC_TypeChecker_NBETerm.e_bool
                                                                     FStarC_Tactics_Embedding.e_ctrl_flag_nbe) in
-                                                                    let uu___103
+                                                                    let uu___102
                                                                     =
                                                                     FStarC_Tactics_Interpreter.e_tactic_nbe_thunk
                                                                     FStarC_TypeChecker_NBETerm.e_unit in
@@ -688,18 +649,18 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     Prims.int_zero
                                                                     "ctrl_rewrite"
                                                                     FStarC_Tactics_Embedding.e_direction
+                                                                    uu___99
                                                                     uu___100
-                                                                    uu___101
                                                                     FStarC_Syntax_Embeddings.e_unit
                                                                     FStarC_Tactics_Embedding.e_direction_nbe
+                                                                    uu___101
                                                                     uu___102
-                                                                    uu___103
                                                                     FStarC_TypeChecker_NBETerm.e_unit
                                                                     FStarC_Tactics_CtrlRewrite.ctrl_rewrite
                                                                     FStarC_Tactics_CtrlRewrite.ctrl_rewrite in
-                                                                    let uu___100
+                                                                    let uu___99
                                                                     =
-                                                                    let uu___101
+                                                                    let uu___100
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -710,9 +671,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_unit
                                                                     FStarC_Tactics_V2_Basic.t_trefl
                                                                     FStarC_Tactics_V2_Basic.t_trefl in
-                                                                    let uu___102
+                                                                    let uu___101
                                                                     =
-                                                                    let uu___103
+                                                                    let uu___102
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -723,9 +684,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_unit
                                                                     FStarC_Tactics_V2_Basic.dup
                                                                     FStarC_Tactics_V2_Basic.dup in
-                                                                    let uu___104
+                                                                    let uu___103
                                                                     =
-                                                                    let uu___105
+                                                                    let uu___104
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -736,9 +697,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_unit
                                                                     FStarC_Tactics_V2_Basic.tadmit_t
                                                                     FStarC_Tactics_V2_Basic.tadmit_t in
-                                                                    let uu___106
+                                                                    let uu___105
                                                                     =
-                                                                    let uu___107
+                                                                    let uu___106
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -749,9 +710,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_unit
                                                                     FStarC_Tactics_V2_Basic.join
                                                                     FStarC_Tactics_V2_Basic.join in
-                                                                    let uu___108
+                                                                    let uu___107
                                                                     =
-                                                                    let uu___109
+                                                                    let uu___108
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -768,9 +729,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_int))
                                                                     FStarC_Tactics_V2_Basic.t_destruct
                                                                     FStarC_Tactics_V2_Basic.t_destruct in
-                                                                    let uu___110
+                                                                    let uu___109
                                                                     =
-                                                                    let uu___111
+                                                                    let uu___110
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -781,9 +742,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_env
                                                                     FStarC_Tactics_V2_Basic.top_env
                                                                     FStarC_Tactics_V2_Basic.top_env in
-                                                                    let uu___112
+                                                                    let uu___111
                                                                     =
-                                                                    let uu___113
+                                                                    let uu___112
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -794,9 +755,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_int
                                                                     FStarC_Tactics_V2_Basic.fresh
                                                                     FStarC_Tactics_V2_Basic.fresh in
-                                                                    let uu___114
+                                                                    let uu___113
                                                                     =
-                                                                    let uu___115
+                                                                    let uu___114
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -807,9 +768,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_int
                                                                     FStarC_Tactics_V2_Basic.curms
                                                                     FStarC_Tactics_V2_Basic.curms in
-                                                                    let uu___116
+                                                                    let uu___115
                                                                     =
-                                                                    let uu___117
+                                                                    let uu___116
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
@@ -824,9 +785,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_attribute
                                                                     FStarC_Tactics_V2_Basic.uvar_env
                                                                     FStarC_Tactics_V2_Basic.uvar_env in
-                                                                    let uu___118
+                                                                    let uu___117
                                                                     =
-                                                                    let uu___119
+                                                                    let uu___118
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
@@ -839,9 +800,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_attribute
                                                                     FStarC_Tactics_V2_Basic.ghost_uvar_env
                                                                     FStarC_Tactics_V2_Basic.ghost_uvar_env in
-                                                                    let uu___120
+                                                                    let uu___119
                                                                     =
-                                                                    let uu___121
+                                                                    let uu___120
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -852,9 +813,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_attribute
                                                                     FStarC_Tactics_V2_Basic.fresh_universe_uvar
                                                                     FStarC_Tactics_V2_Basic.fresh_universe_uvar in
-                                                                    let uu___122
+                                                                    let uu___121
                                                                     =
-                                                                    let uu___123
+                                                                    let uu___122
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_3
                                                                     Prims.int_zero
@@ -869,9 +830,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_bool
                                                                     FStarC_Tactics_V2_Basic.unify_env
                                                                     FStarC_Tactics_V2_Basic.unify_env in
-                                                                    let uu___124
+                                                                    let uu___123
                                                                     =
-                                                                    let uu___125
+                                                                    let uu___124
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_3
                                                                     Prims.int_zero
@@ -886,9 +847,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_bool
                                                                     FStarC_Tactics_V2_Basic.unify_guard_env
                                                                     FStarC_Tactics_V2_Basic.unify_guard_env in
-                                                                    let uu___126
+                                                                    let uu___125
                                                                     =
-                                                                    let uu___127
+                                                                    let uu___126
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_3
                                                                     Prims.int_zero
@@ -903,9 +864,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_bool
                                                                     FStarC_Tactics_V2_Basic.match_env
                                                                     FStarC_Tactics_V2_Basic.match_env in
-                                                                    let uu___128
+                                                                    let uu___127
                                                                     =
-                                                                    let uu___129
+                                                                    let uu___128
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_3
                                                                     Prims.int_zero
@@ -920,9 +881,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_string
                                                                     FStarC_Tactics_V2_Basic.launch_process
                                                                     FStarC_Tactics_V2_Basic.launch_process in
-                                                                    let uu___130
+                                                                    let uu___129
                                                                     =
-                                                                    let uu___131
+                                                                    let uu___130
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -933,9 +894,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_unit
                                                                     FStarC_Tactics_V2_Basic.change
                                                                     FStarC_Tactics_V2_Basic.change in
-                                                                    let uu___132
+                                                                    let uu___131
                                                                     =
-                                                                    let uu___133
+                                                                    let uu___132
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -946,9 +907,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_Tactics_Embedding.e_guard_policy_nbe
                                                                     FStarC_Tactics_V2_Basic.get_guard_policy
                                                                     FStarC_Tactics_V2_Basic.get_guard_policy in
-                                                                    let uu___134
+                                                                    let uu___133
                                                                     =
-                                                                    let uu___135
+                                                                    let uu___134
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -959,9 +920,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_unit
                                                                     FStarC_Tactics_V2_Basic.set_guard_policy
                                                                     FStarC_Tactics_V2_Basic.set_guard_policy in
-                                                                    let uu___136
+                                                                    let uu___135
                                                                     =
-                                                                    let uu___137
+                                                                    let uu___136
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -972,9 +933,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_bool
                                                                     FStarC_Tactics_V2_Basic.lax_on
                                                                     FStarC_Tactics_V2_Basic.lax_on in
-                                                                    let uu___138
+                                                                    let uu___137
                                                                     =
-                                                                    let uu___139
+                                                                    let uu___138
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_one
@@ -987,14 +948,14 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_any
                                                                     FStarC_Tactics_V2_Basic.lget
                                                                     (fun
+                                                                    uu___139
                                                                     uu___140
-                                                                    uu___141
                                                                     ->
                                                                     FStarC_Tactics_Monad.fail
                                                                     "sorry, `lget` does not work in NBE") in
-                                                                    let uu___140
+                                                                    let uu___139
                                                                     =
-                                                                    let uu___141
+                                                                    let uu___140
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_3
                                                                     Prims.int_one
@@ -1009,15 +970,15 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_unit
                                                                     FStarC_Tactics_V2_Basic.lset
                                                                     (fun
+                                                                    uu___141
                                                                     uu___142
                                                                     uu___143
-                                                                    uu___144
                                                                     ->
                                                                     FStarC_Tactics_Monad.fail
                                                                     "sorry, `lset` does not work in NBE") in
-                                                                    let uu___142
+                                                                    let uu___141
                                                                     =
-                                                                    let uu___143
+                                                                    let uu___142
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_one
@@ -1028,9 +989,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_unit
                                                                     FStarC_Tactics_V2_Basic.set_urgency
                                                                     FStarC_Tactics_V2_Basic.set_urgency in
-                                                                    let uu___144
+                                                                    let uu___143
                                                                     =
-                                                                    let uu___145
+                                                                    let uu___144
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_one
@@ -1041,9 +1002,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_unit
                                                                     FStarC_Tactics_V2_Basic.set_dump_on_failure
                                                                     FStarC_Tactics_V2_Basic.set_dump_on_failure in
-                                                                    let uu___146
+                                                                    let uu___145
                                                                     =
-                                                                    let uu___147
+                                                                    let uu___146
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_one
@@ -1054,9 +1015,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_unit
                                                                     FStarC_Tactics_V2_Basic.t_commute_applied_match
                                                                     FStarC_Tactics_V2_Basic.t_commute_applied_match in
-                                                                    let uu___148
+                                                                    let uu___147
                                                                     =
-                                                                    let uu___149
+                                                                    let uu___148
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -1067,9 +1028,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_unit
                                                                     FStarC_Tactics_V2_Basic.gather_explicit_guards_for_resolved_goals
                                                                     FStarC_Tactics_V2_Basic.gather_explicit_guards_for_resolved_goals in
-                                                                    let uu___150
+                                                                    let uu___149
                                                                     =
-                                                                    let uu___151
+                                                                    let uu___150
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
@@ -1082,9 +1043,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_attribute
                                                                     FStarC_Tactics_V2_Basic.string_to_term
                                                                     FStarC_Tactics_V2_Basic.string_to_term in
-                                                                    let uu___152
+                                                                    let uu___151
                                                                     =
-                                                                    let uu___153
+                                                                    let uu___152
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
@@ -1101,9 +1062,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_binding)
                                                                     FStarC_Tactics_V2_Basic.push_bv_dsenv
                                                                     FStarC_Tactics_V2_Basic.push_bv_dsenv in
-                                                                    let uu___154
+                                                                    let uu___153
                                                                     =
-                                                                    let uu___155
+                                                                    let uu___154
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -1114,9 +1075,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_string
                                                                     FStarC_Tactics_V2_Basic.term_to_string
                                                                     FStarC_Tactics_V2_Basic.term_to_string in
-                                                                    let uu___156
+                                                                    let uu___155
                                                                     =
-                                                                    let uu___157
+                                                                    let uu___156
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -1127,9 +1088,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_string
                                                                     FStarC_Tactics_V2_Basic.comp_to_string
                                                                     FStarC_Tactics_V2_Basic.comp_to_string in
-                                                                    let uu___158
+                                                                    let uu___157
                                                                     =
-                                                                    let uu___159
+                                                                    let uu___158
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -1140,9 +1101,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_document
                                                                     FStarC_Tactics_V2_Basic.term_to_doc
                                                                     FStarC_Tactics_V2_Basic.term_to_doc in
-                                                                    let uu___160
+                                                                    let uu___159
                                                                     =
-                                                                    let uu___161
+                                                                    let uu___160
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -1153,9 +1114,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_document
                                                                     FStarC_Tactics_V2_Basic.comp_to_doc
                                                                     FStarC_Tactics_V2_Basic.comp_to_doc in
-                                                                    let uu___162
+                                                                    let uu___161
                                                                     =
-                                                                    let uu___163
+                                                                    let uu___162
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -1166,15 +1127,15 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_string
                                                                     FStarC_Tactics_V2_Basic.range_to_string
                                                                     FStarC_Tactics_V2_Basic.range_to_string in
+                                                                    let uu___163
+                                                                    =
                                                                     let uu___164
                                                                     =
                                                                     let uu___165
                                                                     =
-                                                                    let uu___166
-                                                                    =
                                                                     FStarC_Tactics_Interpreter.e_tactic_thunk
                                                                     FStarC_Syntax_Embeddings.e_any in
-                                                                    let uu___167
+                                                                    let uu___166
                                                                     =
                                                                     FStarC_Tactics_Interpreter.e_tactic_nbe_thunk
                                                                     FStarC_TypeChecker_NBETerm.e_any in
@@ -1183,23 +1144,23 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     "with_compat_pre_core"
                                                                     FStarC_Syntax_Embeddings.e_any
                                                                     FStarC_Syntax_Embeddings.e_int
-                                                                    uu___166
+                                                                    uu___165
                                                                     FStarC_Syntax_Embeddings.e_any
                                                                     FStarC_TypeChecker_NBETerm.e_any
                                                                     FStarC_TypeChecker_NBETerm.e_int
-                                                                    uu___167
+                                                                    uu___166
                                                                     FStarC_TypeChecker_NBETerm.e_any
                                                                     (fun
-                                                                    uu___168
+                                                                    uu___167
                                                                     ->
                                                                     FStarC_Tactics_V2_Basic.with_compat_pre_core)
                                                                     (fun
-                                                                    uu___168
+                                                                    uu___167
                                                                     ->
                                                                     FStarC_Tactics_V2_Basic.with_compat_pre_core) in
-                                                                    let uu___166
+                                                                    let uu___165
                                                                     =
-                                                                    let uu___167
+                                                                    let uu___166
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -1210,9 +1171,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_vconfig
                                                                     FStarC_Tactics_V2_Basic.get_vconfig
                                                                     FStarC_Tactics_V2_Basic.get_vconfig in
-                                                                    let uu___168
+                                                                    let uu___167
                                                                     =
-                                                                    let uu___169
+                                                                    let uu___168
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -1223,9 +1184,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_unit
                                                                     FStarC_Tactics_V2_Basic.set_vconfig
                                                                     FStarC_Tactics_V2_Basic.set_vconfig in
-                                                                    let uu___170
+                                                                    let uu___169
                                                                     =
-                                                                    let uu___171
+                                                                    let uu___170
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -1236,9 +1197,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_unit
                                                                     FStarC_Tactics_V2_Basic.t_smt_sync
                                                                     FStarC_Tactics_V2_Basic.t_smt_sync in
-                                                                    let uu___172
+                                                                    let uu___171
                                                                     =
-                                                                    let uu___173
+                                                                    let uu___172
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -1251,9 +1212,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_int)
                                                                     FStarC_Tactics_V2_Basic.free_uvars
                                                                     FStarC_Tactics_V2_Basic.free_uvars in
-                                                                    let uu___174
+                                                                    let uu___173
                                                                     =
-                                                                    let uu___175
+                                                                    let uu___174
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -1270,9 +1231,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_string))
                                                                     FStarC_Tactics_V2_Basic.all_ext_options
                                                                     FStarC_Tactics_V2_Basic.all_ext_options in
-                                                                    let uu___176
+                                                                    let uu___175
                                                                     =
-                                                                    let uu___177
+                                                                    let uu___176
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -1283,9 +1244,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_string
                                                                     FStarC_Tactics_V2_Basic.ext_getv
                                                                     FStarC_Tactics_V2_Basic.ext_getv in
-                                                                    let uu___178
+                                                                    let uu___177
                                                                     =
-                                                                    let uu___179
+                                                                    let uu___178
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -1296,9 +1257,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_bool
                                                                     FStarC_Tactics_V2_Basic.ext_enabled
                                                                     FStarC_Tactics_V2_Basic.ext_enabled in
-                                                                    let uu___180
+                                                                    let uu___179
                                                                     =
-                                                                    let uu___181
+                                                                    let uu___180
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -1315,9 +1276,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_string))
                                                                     FStarC_Tactics_V2_Basic.ext_getns
                                                                     FStarC_Tactics_V2_Basic.ext_getns in
-                                                                    let uu___182
+                                                                    let uu___181
                                                                     =
-                                                                    let uu___183
+                                                                    let uu___182
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_one
@@ -1331,16 +1292,16 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     (FStarC_Tactics_Embedding.e_tref_nbe
                                                                     ())
                                                                     (fun
-                                                                    uu___184
+                                                                    uu___183
                                                                     ->
                                                                     FStarC_Tactics_V2_Basic.alloc)
                                                                     (fun
-                                                                    uu___184
+                                                                    uu___183
                                                                     ->
                                                                     FStarC_Tactics_V2_Basic.alloc) in
-                                                                    let uu___184
+                                                                    let uu___183
                                                                     =
-                                                                    let uu___185
+                                                                    let uu___184
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_one
@@ -1354,16 +1315,16 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     ())
                                                                     FStarC_TypeChecker_NBETerm.e_any
                                                                     (fun
-                                                                    uu___186
+                                                                    uu___185
                                                                     ->
                                                                     FStarC_Tactics_V2_Basic.read)
                                                                     (fun
-                                                                    uu___186
+                                                                    uu___185
                                                                     ->
                                                                     FStarC_Tactics_V2_Basic.read) in
-                                                                    let uu___186
+                                                                    let uu___185
                                                                     =
-                                                                    let uu___187
+                                                                    let uu___186
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_3
                                                                     Prims.int_one
@@ -1379,16 +1340,16 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_any
                                                                     FStarC_TypeChecker_NBETerm.e_unit
                                                                     (fun
-                                                                    uu___188
+                                                                    uu___187
                                                                     ->
                                                                     FStarC_Tactics_V2_Basic.write)
                                                                     (fun
-                                                                    uu___188
+                                                                    uu___187
                                                                     ->
                                                                     FStarC_Tactics_V2_Basic.write) in
-                                                                    let uu___188
+                                                                    let uu___187
                                                                     =
-                                                                    let uu___189
+                                                                    let uu___188
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -1400,9 +1361,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_qualifiers
                                                                     FStarC_Tactics_V2_Basic.splice_quals
                                                                     FStarC_Tactics_V2_Basic.splice_quals in
-                                                                    let uu___190
+                                                                    let uu___189
                                                                     =
-                                                                    let uu___191
+                                                                    let uu___190
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -1414,9 +1375,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_attributes
                                                                     FStarC_Tactics_V2_Basic.splice_attrs
                                                                     FStarC_Tactics_V2_Basic.splice_attrs in
-                                                                    let uu___192
+                                                                    let uu___191
                                                                     =
-                                                                    let uu___193
+                                                                    let uu___192
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
@@ -1437,9 +1398,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_issue))
                                                                     FStarC_Tactics_V2_Basic.refl_is_non_informative
                                                                     FStarC_Tactics_V2_Basic.refl_is_non_informative in
-                                                                    let uu___194
+                                                                    let uu___193
                                                                     =
-                                                                    let uu___195
+                                                                    let uu___194
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_3
                                                                     Prims.int_zero
@@ -1462,9 +1423,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_issue))
                                                                     FStarC_Tactics_V2_Basic.refl_check_subtyping
                                                                     FStarC_Tactics_V2_Basic.refl_check_subtyping in
-                                                                    let uu___196
+                                                                    let uu___195
                                                                     =
-                                                                    let uu___197
+                                                                    let uu___196
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_5
                                                                     Prims.int_zero
@@ -1491,9 +1452,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_issue))
                                                                     FStarC_Tactics_V2_Basic.t_refl_check_equiv
                                                                     FStarC_Tactics_V2_Basic.t_refl_check_equiv in
-                                                                    let uu___198
+                                                                    let uu___197
                                                                     =
-                                                                    let uu___199
+                                                                    let uu___198
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
@@ -1518,9 +1479,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_issue))
                                                                     FStarC_Tactics_V2_Basic.refl_core_compute_term_type
                                                                     FStarC_Tactics_V2_Basic.refl_core_compute_term_type in
-                                                                    let uu___200
+                                                                    let uu___199
                                                                     =
-                                                                    let uu___201
+                                                                    let uu___200
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_4
                                                                     Prims.int_zero
@@ -1545,9 +1506,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_issue))
                                                                     FStarC_Tactics_V2_Basic.refl_core_check_term
                                                                     FStarC_Tactics_V2_Basic.refl_core_check_term in
-                                                                    let uu___202
+                                                                    let uu___201
                                                                     =
-                                                                    let uu___203
+                                                                    let uu___202
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_3
                                                                     Prims.int_zero
@@ -1570,9 +1531,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_issue))
                                                                     FStarC_Tactics_V2_Basic.refl_core_check_term_at_type
                                                                     FStarC_Tactics_V2_Basic.refl_core_check_term_at_type in
-                                                                    let uu___204
+                                                                    let uu___203
                                                                     =
-                                                                    let uu___205
+                                                                    let uu___204
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
@@ -1601,9 +1562,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_issue))
                                                                     FStarC_Tactics_V2_Basic.refl_tc_term
                                                                     FStarC_Tactics_V2_Basic.refl_tc_term in
-                                                                    let uu___206
+                                                                    let uu___205
                                                                     =
-                                                                    let uu___207
+                                                                    let uu___206
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
@@ -1624,9 +1585,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_issue))
                                                                     FStarC_Tactics_V2_Basic.refl_universe_of
                                                                     FStarC_Tactics_V2_Basic.refl_universe_of in
-                                                                    let uu___208
+                                                                    let uu___207
                                                                     =
-                                                                    let uu___209
+                                                                    let uu___208
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
@@ -1647,9 +1608,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_issue))
                                                                     FStarC_Tactics_V2_Basic.refl_check_prop_validity
                                                                     FStarC_Tactics_V2_Basic.refl_check_prop_validity in
-                                                                    let uu___210
+                                                                    let uu___209
                                                                     =
-                                                                    let uu___211
+                                                                    let uu___210
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_4
                                                                     Prims.int_zero
@@ -1686,9 +1647,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_issue))
                                                                     FStarC_Tactics_V2_Basic.refl_check_match_complete
                                                                     FStarC_Tactics_V2_Basic.refl_check_match_complete in
-                                                                    let uu___212
+                                                                    let uu___211
                                                                     =
-                                                                    let uu___213
+                                                                    let uu___212
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_4
                                                                     Prims.int_zero
@@ -1703,12 +1664,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     (FStarC_Syntax_Embeddings.e_list
                                                                     (FStarC_Syntax_Embeddings.e_tuple2
                                                                     FStarC_Reflection_V2_Embeddings.e_namedv
-                                                                    (solve
-                                                                    uu___0)))
-                                                                    (solve
-                                                                    uu___0)
-                                                                    (solve
-                                                                    uu___0)))
+                                                                    uu___0))
+                                                                    uu___0
+                                                                    uu___0))
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_env
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_attribute
                                                                     (FStarC_TypeChecker_NBETerm.e_option
@@ -1719,17 +1677,14 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     (FStarC_TypeChecker_NBETerm.e_list
                                                                     (FStarC_TypeChecker_NBETerm.e_tuple2
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_namedv
-                                                                    (solve
-                                                                    FStarC_Reflection_V2_NBEEmbeddings.e_attribute)))
-                                                                    (solve
-                                                                    FStarC_Reflection_V2_NBEEmbeddings.e_attribute)
-                                                                    (solve
-                                                                    FStarC_Reflection_V2_NBEEmbeddings.e_attribute)))
+                                                                    FStarC_Reflection_V2_NBEEmbeddings.e_attribute))
+                                                                    FStarC_Reflection_V2_NBEEmbeddings.e_attribute
+                                                                    FStarC_Reflection_V2_NBEEmbeddings.e_attribute))
                                                                     FStarC_Tactics_V2_Basic.refl_instantiate_implicits
                                                                     FStarC_Tactics_V2_Basic.refl_instantiate_implicits in
-                                                                    let uu___214
+                                                                    let uu___213
                                                                     =
-                                                                    let uu___215
+                                                                    let uu___214
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_4
                                                                     Prims.int_zero
@@ -1760,9 +1715,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_term)))
                                                                     FStarC_Tactics_V2_Basic.refl_try_unify
                                                                     FStarC_Tactics_V2_Basic.refl_try_unify in
-                                                                    let uu___216
+                                                                    let uu___215
                                                                     =
-                                                                    let uu___217
+                                                                    let uu___216
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_3
                                                                     Prims.int_zero
@@ -1785,9 +1740,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_issue))
                                                                     FStarC_Tactics_V2_Basic.refl_maybe_relate_after_unfolding
                                                                     FStarC_Tactics_V2_Basic.refl_maybe_relate_after_unfolding in
-                                                                    let uu___218
+                                                                    let uu___217
                                                                     =
-                                                                    let uu___219
+                                                                    let uu___218
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
@@ -1808,9 +1763,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_issue))
                                                                     FStarC_Tactics_V2_Basic.refl_maybe_unfold_head
                                                                     FStarC_Tactics_V2_Basic.refl_maybe_unfold_head in
-                                                                    let uu___220
+                                                                    let uu___219
                                                                     =
-                                                                    let uu___221
+                                                                    let uu___220
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_3
                                                                     Prims.int_zero
@@ -1827,9 +1782,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_attribute
                                                                     FStarC_Tactics_V2_Basic.refl_norm_well_typed_term
                                                                     FStarC_Tactics_V2_Basic.refl_norm_well_typed_term in
-                                                                    let uu___222
+                                                                    let uu___221
                                                                     =
-                                                                    let uu___223
+                                                                    let uu___222
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
@@ -1842,9 +1797,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_env
                                                                     FStarC_Tactics_V2_Basic.push_open_namespace
                                                                     FStarC_Tactics_V2_Basic.push_open_namespace in
-                                                                    let uu___224
+                                                                    let uu___223
                                                                     =
-                                                                    let uu___225
+                                                                    let uu___224
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_3
                                                                     Prims.int_zero
@@ -1859,9 +1814,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_env
                                                                     FStarC_Tactics_V2_Basic.push_module_abbrev
                                                                     FStarC_Tactics_V2_Basic.push_module_abbrev in
-                                                                    let uu___226
+                                                                    let uu___225
                                                                     =
-                                                                    let uu___227
+                                                                    let uu___226
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
@@ -1871,20 +1826,18 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     (FStarC_Syntax_Embeddings.e_option
                                                                     (FStarC_Syntax_Embeddings.e_either
                                                                     FStarC_Reflection_V2_Embeddings.e_bv
-                                                                    (solve
-                                                                    FStarC_Reflection_V2_Embeddings.e_fv)))
+                                                                    FStarC_Reflection_V2_Embeddings.e_fv))
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_env
                                                                     FStarC_TypeChecker_NBETerm.e_string_list
                                                                     (FStarC_TypeChecker_NBETerm.e_option
                                                                     (FStarC_TypeChecker_NBETerm.e_either
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_bv
-                                                                    (solve
-                                                                    FStarC_Reflection_V2_NBEEmbeddings.e_fv)))
+                                                                    FStarC_Reflection_V2_NBEEmbeddings.e_fv))
                                                                     FStarC_Tactics_V2_Basic.resolve_name
                                                                     FStarC_Tactics_V2_Basic.resolve_name in
-                                                                    let uu___228
+                                                                    let uu___227
                                                                     =
-                                                                    let uu___229
+                                                                    let uu___228
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_1
                                                                     Prims.int_zero
@@ -1897,15 +1850,15 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_unit
                                                                     FStarC_Tactics_V2_Basic.log_issues
                                                                     FStarC_Tactics_V2_Basic.log_issues in
+                                                                    let uu___229
+                                                                    =
                                                                     let uu___230
                                                                     =
                                                                     let uu___231
                                                                     =
-                                                                    let uu___232
-                                                                    =
                                                                     FStarC_Tactics_Interpreter.e_tactic_thunk
                                                                     FStarC_Syntax_Embeddings.e_unit in
-                                                                    let uu___233
+                                                                    let uu___232
                                                                     =
                                                                     FStarC_Tactics_Interpreter.e_tactic_nbe_thunk
                                                                     FStarC_TypeChecker_NBETerm.e_unit in
@@ -1913,7 +1866,7 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     Prims.int_zero
                                                                     "call_subtac"
                                                                     FStarC_Reflection_V2_Embeddings.e_env
-                                                                    uu___232
+                                                                    uu___231
                                                                     FStarC_Reflection_V2_Embeddings.e_universe
                                                                     uu___0
                                                                     (FStarC_Syntax_Embeddings.e_tuple2
@@ -1922,7 +1875,7 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     (FStarC_Syntax_Embeddings.e_list
                                                                     FStarC_Syntax_Embeddings.e_issue))
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_env
-                                                                    uu___233
+                                                                    uu___232
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_universe
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_attribute
                                                                     (FStarC_TypeChecker_NBETerm.e_tuple2
@@ -1932,9 +1885,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_issue))
                                                                     FStarC_Tactics_V2_Basic.call_subtac
                                                                     FStarC_Tactics_V2_Basic.call_subtac in
-                                                                    let uu___232
+                                                                    let uu___231
                                                                     =
-                                                                    let uu___233
+                                                                    let uu___232
                                                                     =
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_4
                                                                     Prims.int_zero
@@ -1959,15 +1912,15 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_issue))
                                                                     FStarC_Tactics_V2_Basic.call_subtac_tm
                                                                     FStarC_Tactics_V2_Basic.call_subtac_tm in
+                                                                    let uu___233
+                                                                    =
                                                                     let uu___234
                                                                     =
                                                                     let uu___235
                                                                     =
-                                                                    let uu___236
-                                                                    =
                                                                     FStarC_Tactics_Interpreter.e_tactic_thunk
                                                                     FStarC_Syntax_Embeddings.e_any in
-                                                                    let uu___237
+                                                                    let uu___236
                                                                     =
                                                                     FStarC_Tactics_Interpreter.e_tactic_nbe_thunk
                                                                     FStarC_TypeChecker_NBETerm.e_any in
@@ -1977,24 +1930,24 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_Syntax_Embeddings.e_any
                                                                     FStarC_Syntax_Embeddings.e_any
                                                                     FStarC_Syntax_Embeddings.e_string
-                                                                    uu___236
+                                                                    uu___235
                                                                     FStarC_Syntax_Embeddings.e_any
                                                                     FStarC_TypeChecker_NBETerm.e_any
                                                                     FStarC_TypeChecker_NBETerm.e_any
                                                                     FStarC_TypeChecker_NBETerm.e_string
-                                                                    uu___237
+                                                                    uu___236
                                                                     FStarC_TypeChecker_NBETerm.e_any
                                                                     FStarC_Tactics_V2_Basic.stats_record
                                                                     FStarC_Tactics_V2_Basic.stats_record in
+                                                                    let uu___235
+                                                                    =
                                                                     let uu___236
                                                                     =
                                                                     let uu___237
                                                                     =
-                                                                    let uu___238
-                                                                    =
                                                                     FStarC_Tactics_Interpreter.e_tactic_thunk
                                                                     FStarC_Syntax_Embeddings.e_any in
-                                                                    let uu___239
+                                                                    let uu___238
                                                                     =
                                                                     FStarC_Tactics_Interpreter.e_tactic_nbe_thunk
                                                                     FStarC_TypeChecker_NBETerm.e_any in
@@ -2004,299 +1957,296 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_Syntax_Embeddings.e_any
                                                                     FStarC_Syntax_Embeddings.e_any
                                                                     FStarC_Syntax_Embeddings.e_string
-                                                                    uu___238
+                                                                    uu___237
                                                                     FStarC_Syntax_Embeddings.e_any
                                                                     FStarC_TypeChecker_NBETerm.e_any
                                                                     FStarC_TypeChecker_NBETerm.e_any
                                                                     FStarC_TypeChecker_NBETerm.e_string
-                                                                    uu___239
+                                                                    uu___238
                                                                     FStarC_TypeChecker_NBETerm.e_any
                                                                     FStarC_Tactics_V2_Basic.with_error_context
                                                                     FStarC_Tactics_V2_Basic.with_error_context in
-                                                                    [uu___237] in
-                                                                    uu___235
+                                                                    [uu___236] in
+                                                                    uu___234
                                                                     ::
-                                                                    uu___236 in
-                                                                    uu___233
+                                                                    uu___235 in
+                                                                    uu___232
                                                                     ::
-                                                                    uu___234 in
-                                                                    uu___231
+                                                                    uu___233 in
+                                                                    uu___230
                                                                     ::
-                                                                    uu___232 in
-                                                                    uu___229
+                                                                    uu___231 in
+                                                                    uu___228
                                                                     ::
-                                                                    uu___230 in
-                                                                    uu___227
+                                                                    uu___229 in
+                                                                    uu___226
                                                                     ::
-                                                                    uu___228 in
-                                                                    uu___225
+                                                                    uu___227 in
+                                                                    uu___224
                                                                     ::
-                                                                    uu___226 in
-                                                                    uu___223
+                                                                    uu___225 in
+                                                                    uu___222
                                                                     ::
-                                                                    uu___224 in
-                                                                    uu___221
+                                                                    uu___223 in
+                                                                    uu___220
                                                                     ::
-                                                                    uu___222 in
-                                                                    uu___219
+                                                                    uu___221 in
+                                                                    uu___218
                                                                     ::
-                                                                    uu___220 in
-                                                                    uu___217
+                                                                    uu___219 in
+                                                                    uu___216
                                                                     ::
-                                                                    uu___218 in
-                                                                    uu___215
+                                                                    uu___217 in
+                                                                    uu___214
                                                                     ::
-                                                                    uu___216 in
-                                                                    uu___213
+                                                                    uu___215 in
+                                                                    uu___212
                                                                     ::
-                                                                    uu___214 in
-                                                                    uu___211
+                                                                    uu___213 in
+                                                                    uu___210
                                                                     ::
-                                                                    uu___212 in
-                                                                    uu___209
+                                                                    uu___211 in
+                                                                    uu___208
                                                                     ::
-                                                                    uu___210 in
-                                                                    uu___207
+                                                                    uu___209 in
+                                                                    uu___206
                                                                     ::
-                                                                    uu___208 in
-                                                                    uu___205
+                                                                    uu___207 in
+                                                                    uu___204
                                                                     ::
-                                                                    uu___206 in
-                                                                    uu___203
+                                                                    uu___205 in
+                                                                    uu___202
                                                                     ::
-                                                                    uu___204 in
-                                                                    uu___201
+                                                                    uu___203 in
+                                                                    uu___200
                                                                     ::
-                                                                    uu___202 in
-                                                                    uu___199
+                                                                    uu___201 in
+                                                                    uu___198
                                                                     ::
-                                                                    uu___200 in
-                                                                    uu___197
+                                                                    uu___199 in
+                                                                    uu___196
                                                                     ::
-                                                                    uu___198 in
-                                                                    uu___195
+                                                                    uu___197 in
+                                                                    uu___194
                                                                     ::
-                                                                    uu___196 in
-                                                                    uu___193
+                                                                    uu___195 in
+                                                                    uu___192
                                                                     ::
-                                                                    uu___194 in
-                                                                    uu___191
+                                                                    uu___193 in
+                                                                    uu___190
                                                                     ::
-                                                                    uu___192 in
-                                                                    uu___189
+                                                                    uu___191 in
+                                                                    uu___188
                                                                     ::
-                                                                    uu___190 in
-                                                                    uu___187
+                                                                    uu___189 in
+                                                                    uu___186
                                                                     ::
-                                                                    uu___188 in
-                                                                    uu___185
+                                                                    uu___187 in
+                                                                    uu___184
                                                                     ::
-                                                                    uu___186 in
-                                                                    uu___183
+                                                                    uu___185 in
+                                                                    uu___182
                                                                     ::
-                                                                    uu___184 in
-                                                                    uu___181
+                                                                    uu___183 in
+                                                                    uu___180
                                                                     ::
-                                                                    uu___182 in
-                                                                    uu___179
+                                                                    uu___181 in
+                                                                    uu___178
                                                                     ::
-                                                                    uu___180 in
-                                                                    uu___177
+                                                                    uu___179 in
+                                                                    uu___176
                                                                     ::
-                                                                    uu___178 in
-                                                                    uu___175
+                                                                    uu___177 in
+                                                                    uu___174
                                                                     ::
-                                                                    uu___176 in
-                                                                    uu___173
+                                                                    uu___175 in
+                                                                    uu___172
                                                                     ::
-                                                                    uu___174 in
-                                                                    uu___171
+                                                                    uu___173 in
+                                                                    uu___170
                                                                     ::
-                                                                    uu___172 in
-                                                                    uu___169
+                                                                    uu___171 in
+                                                                    uu___168
                                                                     ::
-                                                                    uu___170 in
-                                                                    uu___167
+                                                                    uu___169 in
+                                                                    uu___166
                                                                     ::
-                                                                    uu___168 in
-                                                                    uu___165
+                                                                    uu___167 in
+                                                                    uu___164
                                                                     ::
-                                                                    uu___166 in
-                                                                    uu___163
+                                                                    uu___165 in
+                                                                    uu___162
                                                                     ::
-                                                                    uu___164 in
-                                                                    uu___161
+                                                                    uu___163 in
+                                                                    uu___160
                                                                     ::
-                                                                    uu___162 in
-                                                                    uu___159
+                                                                    uu___161 in
+                                                                    uu___158
                                                                     ::
-                                                                    uu___160 in
-                                                                    uu___157
+                                                                    uu___159 in
+                                                                    uu___156
                                                                     ::
-                                                                    uu___158 in
-                                                                    uu___155
+                                                                    uu___157 in
+                                                                    uu___154
                                                                     ::
-                                                                    uu___156 in
-                                                                    uu___153
+                                                                    uu___155 in
+                                                                    uu___152
                                                                     ::
-                                                                    uu___154 in
-                                                                    uu___151
+                                                                    uu___153 in
+                                                                    uu___150
                                                                     ::
-                                                                    uu___152 in
-                                                                    uu___149
+                                                                    uu___151 in
+                                                                    uu___148
                                                                     ::
-                                                                    uu___150 in
-                                                                    uu___147
+                                                                    uu___149 in
+                                                                    uu___146
                                                                     ::
-                                                                    uu___148 in
-                                                                    uu___145
+                                                                    uu___147 in
+                                                                    uu___144
                                                                     ::
-                                                                    uu___146 in
-                                                                    uu___143
+                                                                    uu___145 in
+                                                                    uu___142
                                                                     ::
-                                                                    uu___144 in
-                                                                    uu___141
+                                                                    uu___143 in
+                                                                    uu___140
                                                                     ::
-                                                                    uu___142 in
-                                                                    uu___139
+                                                                    uu___141 in
+                                                                    uu___138
                                                                     ::
-                                                                    uu___140 in
-                                                                    uu___137
+                                                                    uu___139 in
+                                                                    uu___136
                                                                     ::
-                                                                    uu___138 in
-                                                                    uu___135
+                                                                    uu___137 in
+                                                                    uu___134
                                                                     ::
-                                                                    uu___136 in
-                                                                    uu___133
+                                                                    uu___135 in
+                                                                    uu___132
                                                                     ::
-                                                                    uu___134 in
-                                                                    uu___131
+                                                                    uu___133 in
+                                                                    uu___130
                                                                     ::
-                                                                    uu___132 in
-                                                                    uu___129
+                                                                    uu___131 in
+                                                                    uu___128
                                                                     ::
-                                                                    uu___130 in
-                                                                    uu___127
+                                                                    uu___129 in
+                                                                    uu___126
                                                                     ::
-                                                                    uu___128 in
-                                                                    uu___125
+                                                                    uu___127 in
+                                                                    uu___124
                                                                     ::
-                                                                    uu___126 in
-                                                                    uu___123
+                                                                    uu___125 in
+                                                                    uu___122
                                                                     ::
-                                                                    uu___124 in
-                                                                    uu___121
+                                                                    uu___123 in
+                                                                    uu___120
                                                                     ::
-                                                                    uu___122 in
-                                                                    uu___119
+                                                                    uu___121 in
+                                                                    uu___118
                                                                     ::
-                                                                    uu___120 in
-                                                                    uu___117
+                                                                    uu___119 in
+                                                                    uu___116
                                                                     ::
-                                                                    uu___118 in
-                                                                    uu___115
+                                                                    uu___117 in
+                                                                    uu___114
                                                                     ::
-                                                                    uu___116 in
-                                                                    uu___113
+                                                                    uu___115 in
+                                                                    uu___112
                                                                     ::
-                                                                    uu___114 in
-                                                                    uu___111
+                                                                    uu___113 in
+                                                                    uu___110
                                                                     ::
-                                                                    uu___112 in
-                                                                    uu___109
+                                                                    uu___111 in
+                                                                    uu___108
                                                                     ::
-                                                                    uu___110 in
-                                                                    uu___107
+                                                                    uu___109 in
+                                                                    uu___106
                                                                     ::
-                                                                    uu___108 in
-                                                                    uu___105
+                                                                    uu___107 in
+                                                                    uu___104
                                                                     ::
-                                                                    uu___106 in
-                                                                    uu___103
+                                                                    uu___105 in
+                                                                    uu___102
                                                                     ::
-                                                                    uu___104 in
-                                                                    uu___101
+                                                                    uu___103 in
+                                                                    uu___100
                                                                     ::
-                                                                    uu___102 in
-                                                                    uu___99
+                                                                    uu___101 in
+                                                                    uu___98
                                                                     ::
-                                                                    uu___100 in
-                                                                    uu___97
+                                                                    uu___99 in
+                                                                    uu___96
                                                                     ::
-                                                                    uu___98 in
-                                                                    uu___95
+                                                                    uu___97 in
+                                                                    uu___94
                                                                     ::
-                                                                    uu___96 in
-                                                                    uu___93
+                                                                    uu___95 in
+                                                                    uu___92
                                                                     ::
-                                                                    uu___94 in
-                                                                    uu___91
+                                                                    uu___93 in
+                                                                    uu___90
                                                                     ::
-                                                                    uu___92 in
-                                                                    uu___89
+                                                                    uu___91 in
+                                                                    uu___88
                                                                     ::
-                                                                    uu___90 in
-                                                                    uu___87
+                                                                    uu___89 in
+                                                                    uu___86
                                                                     ::
-                                                                    uu___88 in
-                                                                    uu___85
+                                                                    uu___87 in
+                                                                    uu___84
                                                                     ::
-                                                                    uu___86 in
-                                                                    uu___83
+                                                                    uu___85 in
+                                                                    uu___82
                                                                     ::
-                                                                    uu___84 in
-                                                                    uu___81
+                                                                    uu___83 in
+                                                                    uu___80
                                                                     ::
-                                                                    uu___82 in
-                                                                    uu___79
+                                                                    uu___81 in
+                                                                    uu___78
                                                                     ::
-                                                                    uu___80 in
-                                                                    uu___77
+                                                                    uu___79 in
+                                                                    uu___76
                                                                     ::
-                                                                    uu___78 in
-                                                                    uu___75
+                                                                    uu___77 in
+                                                                    uu___74
                                                                     ::
-                                                                    uu___76 in
-                                                                    uu___73
+                                                                    uu___75 in
+                                                                    uu___72
                                                                     ::
-                                                                    uu___74 in
-                                                                    uu___71
+                                                                    uu___73 in
+                                                                    uu___70
                                                                     ::
-                                                                    uu___72 in
-                                                                    uu___69
+                                                                    uu___71 in
+                                                                    uu___68
                                                                     ::
-                                                                    uu___70 in
-                                                                    uu___67
+                                                                    uu___69 in
+                                                                    uu___66
                                                                     ::
-                                                                    uu___68 in
-                                                                    uu___65
-                                                                    ::
-                                                                    uu___66 in
-                                                                  uu___63 ::
-                                                                    uu___64 in
-                                                                uu___61 ::
-                                                                  uu___62 in
-                                                              uu___59 ::
-                                                                uu___60 in
-                                                            uu___57 ::
-                                                              uu___58 in
-                                                          uu___55 :: uu___56 in
-                                                        uu___53 :: uu___54 in
-                                                      uu___51 :: uu___52 in
-                                                    uu___49 :: uu___50 in
-                                                  uu___47 :: uu___48 in
-                                                uu___45 :: uu___46 in
-                                              uu___43 :: uu___44 in
-                                            uu___41 :: uu___42 in
-                                          uu___39 :: uu___40 in
-                                        uu___37 :: uu___38 in
-                                      uu___35 :: uu___36 in
-                                    uu___33 :: uu___34 in
-                                  uu___31 :: uu___32 in
-                                uu___29 :: uu___30 in
-                              uu___27 :: uu___28 in
-                            uu___25 :: uu___26 in
-                          unseal_step :: uu___24 in
+                                                                    uu___67 in
+                                                                  uu___64 ::
+                                                                    uu___65 in
+                                                                uu___62 ::
+                                                                  uu___63 in
+                                                              uu___60 ::
+                                                                uu___61 in
+                                                            uu___58 ::
+                                                              uu___59 in
+                                                          uu___56 :: uu___57 in
+                                                        uu___54 :: uu___55 in
+                                                      uu___52 :: uu___53 in
+                                                    uu___50 :: uu___51 in
+                                                  uu___48 :: uu___49 in
+                                                uu___46 :: uu___47 in
+                                              uu___44 :: uu___45 in
+                                            uu___42 :: uu___43 in
+                                          uu___40 :: uu___41 in
+                                        uu___38 :: uu___39 in
+                                      uu___36 :: uu___37 in
+                                    uu___34 :: uu___35 in
+                                  uu___32 :: uu___33 in
+                                uu___30 :: uu___31 in
+                              uu___28 :: uu___29 in
+                            uu___26 :: uu___27 in
+                          uu___24 :: uu___25 in
                         uu___22 :: uu___23 in
                       uu___20 :: uu___21 in
                     uu___18 :: uu___19 in

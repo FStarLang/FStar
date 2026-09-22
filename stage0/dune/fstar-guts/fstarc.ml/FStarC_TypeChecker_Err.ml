@@ -402,8 +402,12 @@ let name_and_result
   (c : FStarC_Syntax_Syntax.comp' FStarC_Syntax_Syntax.syntax) :
   (Prims.string * FStarC_Syntax_Syntax.term' FStarC_Syntax_Syntax.syntax)=
   match c.FStarC_Syntax_Syntax.n with
-  | FStarC_Syntax_Syntax.Total t -> ("Tot", t)
-  | FStarC_Syntax_Syntax.GTotal t -> ("GTot", t)
+  | FStarC_Syntax_Syntax.Comp ct when
+      FStarC_Parser_Const.is_tot_lid ct.FStarC_Syntax_Syntax.effect_name ->
+      ("Tot", (ct.FStarC_Syntax_Syntax.result_typ))
+  | FStarC_Syntax_Syntax.Comp ct when
+      FStarC_Parser_Const.is_gtot_lid ct.FStarC_Syntax_Syntax.effect_name ->
+      ("GTot", (ct.FStarC_Syntax_Syntax.result_typ))
   | FStarC_Syntax_Syntax.Comp ct ->
       let uu___ =
         FStarC_Class_Show.show FStarC_Ident.showable_lident

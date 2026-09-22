@@ -73,21 +73,15 @@ let __proj__NotFoundBV__item__uu___ (projectee : Prims.exn) :
   match projectee with | NotFoundBV uu___ -> uu___
 let lookup_rec_fv (s : param_state) (f : FStarC_Reflection_Types.fv) :
   FStarC_Tactics_Types.ref_proofstate -> FStarC_Reflection_Types.fv=
-  let rec aux uu___1 uu___ =
-    (fun m ->
-       match m with
-       | [] ->
-           Obj.magic
-             (Obj.repr
-                (fun ps -> FStarC_Tactics_V2_Builtins.raise_core NotARecFV ps))
-       | (f1, k)::fs ->
-           Obj.magic
-             (Obj.repr
-                (if
-                   (FStar_Reflection_V2_Compare.compare_fv f f1) =
-                     FStar_Order.Eq
-                 then fun uu___ -> k
-                 else aux fs))) uu___1 uu___ in
+  let rec aux m =
+    match m with
+    | [] ->
+        (fun ps ->
+           FStarC_Tactics_V2_Builtins.raise_core NotARecFV ps; Prims.magic ())
+    | (f1, k)::fs ->
+        if (FStar_Reflection_V2_Compare.compare_fv f f1) = FStar_Order.Eq
+        then (fun uu___ -> k)
+        else aux fs in
   aux s.recs
 let push_fv (f1 : FStarC_Reflection_Types.fv)
   (f2 : FStarC_Reflection_Types.fv) (s : param_state) : param_state=
@@ -96,23 +90,19 @@ let lookup (s : param_state) (v : FStar_Tactics_NamedView.namedv) :
   FStarC_Tactics_Types.ref_proofstate ->
     (FStar_Tactics_NamedView.binder * FStar_Tactics_NamedView.binder *
       FStar_Tactics_NamedView.binder)=
-  let rec aux uu___1 uu___ =
-    (fun bvm ->
-       match bvm with
-       | [] ->
-           Obj.magic
-             (Obj.repr
-                (fun ps ->
-                   FStarC_Tactics_V2_Builtins.raise_core (NotFoundBV v) ps))
-       | (v', r)::tl ->
-           Obj.magic
-             (Obj.repr
-                (if
-                   (FStar_Tactics_NamedView.inspect_namedv v).FStarC_Reflection_V2_Data.uniq
-                     =
-                     (FStar_Tactics_NamedView.inspect_namedv v').FStarC_Reflection_V2_Data.uniq
-                 then fun uu___ -> r
-                 else aux tl))) uu___1 uu___ in
+  let rec aux bvm =
+    match bvm with
+    | [] ->
+        (fun ps ->
+           FStarC_Tactics_V2_Builtins.raise_core (NotFoundBV v) ps;
+           Prims.magic ())
+    | (v', r)::tl ->
+        if
+          (FStar_Tactics_NamedView.inspect_namedv v).FStarC_Reflection_V2_Data.uniq
+            =
+            (FStar_Tactics_NamedView.inspect_namedv v').FStarC_Reflection_V2_Data.uniq
+        then (fun uu___ -> r)
+        else aux tl in
   aux s.bvmap
 let replace_var (s : param_state) (b : Prims.bool)
   (t : FStar_Tactics_NamedView.term)
@@ -132,16 +122,13 @@ let replace_var (s : param_state) (b : Prims.bool)
                         (FStar_Tactics_NamedView.Tv_Var
                            (FStar_Tactics_V2_SyntaxCoercions.binder_to_namedv
                               (if b then y else x2)))))
-        (fun uu___1 uu___ ->
-           (fun uu___ ->
-              match uu___ with
-              | NotFoundBV uu___1 -> Obj.magic (Obj.repr (fun uu___2 -> t))
-              | e ->
-                  Obj.magic
-                    (Obj.repr
-                       (fun ps1 ->
-                          FStarC_Tactics_V2_Builtins.raise_core e ps1)))
-             uu___1 uu___) ps
+        (fun uu___ ->
+           match uu___ with
+           | NotFoundBV uu___1 -> (fun uu___2 -> t)
+           | e ->
+               (fun ps1 ->
+                  FStarC_Tactics_V2_Builtins.raise_core e ps1; Prims.magic ()))
+        ps
   | uu___ -> t
 let replace_by (s : param_state) (b : Prims.bool)
   (t : FStar_Tactics_NamedView.term)
@@ -162,218 +149,176 @@ let rec param' (s : param_state) (t : FStar_Tactics_NamedView.term)
     let x1 = FStar_Tactics_NamedView.inspect t ps in
     match x1 with
     | FStar_Tactics_NamedView.Tv_Type _u ->
-        Obj.magic
-          (Obj.repr
-             (let x2 = FStar_Tactics_V2_Derived.fresh_binder_named "s" t ps in
-              let x3 = FStar_Tactics_V2_Derived.fresh_binder_named "r" t ps in
-              let x4 =
-                FStar_Tactics_V2_Derived.fresh_binder_named "xs"
-                  (FStar_Tactics_NamedView.pack
-                     (FStar_Tactics_NamedView.Tv_Var
-                        (FStar_Tactics_V2_SyntaxCoercions.binder_to_namedv x2)))
-                  ps in
-              let x5 =
-                FStar_Tactics_V2_Derived.fresh_binder_named "xr"
-                  (FStar_Tactics_NamedView.pack
-                     (FStar_Tactics_NamedView.Tv_Var
-                        (FStar_Tactics_V2_SyntaxCoercions.binder_to_namedv x3)))
-                  ps in
-              FStar_Tactics_NamedView.pack
-                (FStar_Tactics_NamedView.Tv_Abs
-                   (x2,
-                     (FStar_Tactics_NamedView.pack
-                        (FStar_Tactics_NamedView.Tv_Abs
-                           (x3,
-                             (FStar_Tactics_NamedView.pack
-                                (FStar_Tactics_NamedView.Tv_Arrow
-                                   (x4,
-                                     (FStarC_Reflection_V2_Data.C_Total
-                                        (FStar_Tactics_NamedView.pack
-                                           (FStar_Tactics_NamedView.Tv_Arrow
-                                              (x5,
-                                                (FStarC_Reflection_V2_Data.C_Total
-                                                   (FStarC_Reflection_V2_Builtins.pack_ln
-                                                      (FStarC_Reflection_V2_Data.Tv_Type
-                                                         (FStarC_Reflection_V2_Builtins.pack_universe
-                                                            FStarC_Reflection_V2_Data.Uv_Unk))))))))))))))))))
+        let x2 = FStar_Tactics_V2_Derived.fresh_binder_named "s" t ps in
+        let x3 = FStar_Tactics_V2_Derived.fresh_binder_named "r" t ps in
+        let x4 =
+          FStar_Tactics_V2_Derived.fresh_binder_named "xs"
+            (FStar_Tactics_NamedView.pack
+               (FStar_Tactics_NamedView.Tv_Var
+                  (FStar_Tactics_V2_SyntaxCoercions.binder_to_namedv x2))) ps in
+        let x5 =
+          FStar_Tactics_V2_Derived.fresh_binder_named "xr"
+            (FStar_Tactics_NamedView.pack
+               (FStar_Tactics_NamedView.Tv_Var
+                  (FStar_Tactics_V2_SyntaxCoercions.binder_to_namedv x3))) ps in
+        FStar_Tactics_NamedView.pack
+          (FStar_Tactics_NamedView.Tv_Abs
+             (x2,
+               (FStar_Tactics_NamedView.pack
+                  (FStar_Tactics_NamedView.Tv_Abs
+                     (x3,
+                       (FStar_Tactics_NamedView.pack
+                          (FStar_Tactics_NamedView.Tv_Arrow
+                             (x4,
+                               (FStarC_Reflection_V2_Data.mk_tot_comp
+                                  (FStar_Tactics_NamedView.pack
+                                     (FStar_Tactics_NamedView.Tv_Arrow
+                                        (x5,
+                                          (FStarC_Reflection_V2_Data.mk_tot_comp
+                                             (FStarC_Reflection_V2_Builtins.pack_ln
+                                                (FStarC_Reflection_V2_Data.Tv_Type
+                                                   (FStarC_Reflection_V2_Builtins.pack_universe
+                                                      FStarC_Reflection_V2_Data.Uv_Unk))))))))))))))))
     | FStar_Tactics_NamedView.Tv_Var bv ->
-        Obj.magic
-          (Obj.repr
-             (let x2 = lookup s bv ps in
-              match x2 with
-              | (uu___, uu___1, b) ->
-                  FStar_Tactics_V2_SyntaxCoercions.binder_to_term b))
+        let x2 = lookup s bv ps in
+        (match x2 with
+         | (uu___, uu___1, b) ->
+             FStar_Tactics_V2_SyntaxCoercions.binder_to_term b)
     | FStar_Tactics_NamedView.Tv_Arrow (b, c) ->
-        Obj.magic
-          (Obj.repr
-             (match FStar_Tactics_NamedView.inspect_comp c with
-              | FStarC_Reflection_V2_Data.C_Total t2 ->
-                  Obj.repr
-                    (let x2 = push_binder b s ps in
-                     match x2 with
-                     | (s', (bx0, bx1, bxR)) ->
-                         let x3 = b.FStar_Tactics_NamedView.qual in
-                         let x4 =
-                           let x5 = replace_by s false t ps in
-                           FStar_Tactics_V2_Derived.fresh_binder_named "f0"
-                             x5 ps in
-                         let x5 =
-                           let x6 = replace_by s true t ps in
-                           FStar_Tactics_V2_Derived.fresh_binder_named "f1"
-                             x6 ps in
-                         let x6 =
-                           FStar_Tactics_V2_SyntaxCoercions.binder_to_term in
-                         let x7 =
-                           let x8 = tapp x3 (x6 x5) (x6 bx1) in
-                           let x9 = tapp x3 (x6 x4) (x6 bx0) in
-                           let x10 = param' s' t2 ps in
-                           FStarC_Reflection_V2_Builtins.pack_ln
-                             (FStarC_Reflection_V2_Data.Tv_App
-                                ((FStarC_Reflection_V2_Builtins.pack_ln
-                                    (FStarC_Reflection_V2_Data.Tv_App
-                                       (x10,
-                                         (x9,
-                                           FStarC_Reflection_V2_Data.Q_Explicit)))),
-                                  (x8, FStarC_Reflection_V2_Data.Q_Explicit))) in
-                         let x8 =
-                           let x9 =
-                             FStar_Tactics_V2_SyntaxHelpers.mk_tot_arr
-                               [bx0; bx1; bxR] x7 ps in
-                           tabs x5 x9 ps in
-                         tabs x4 x8 ps)
-              | uu___ ->
-                  Obj.repr
-                    (FStarC_Tactics_V2_Builtins.raise_core
-                       (Unsupported "effects") ps)))
+        let x2 = FStar_Tactics_NamedView.inspect_comp c in
+        if Prims.not (FStarC_Reflection_V2_Data.is_tot_comp x2)
+        then
+          (FStarC_Tactics_V2_Builtins.raise_core (Unsupported "effects") ps;
+           Prims.magic ())
+        else
+          (let x3 = x2.FStarC_Reflection_V2_Data.result_typ in
+           let x4 = push_binder b s ps in
+           match x4 with
+           | (s', (bx0, bx1, bxR)) ->
+               let x5 = b.FStar_Tactics_NamedView.qual in
+               let x6 =
+                 let x7 = replace_by s false t ps in
+                 FStar_Tactics_V2_Derived.fresh_binder_named "f0" x7 ps in
+               let x7 =
+                 let x8 = replace_by s true t ps in
+                 FStar_Tactics_V2_Derived.fresh_binder_named "f1" x8 ps in
+               let x8 = FStar_Tactics_V2_SyntaxCoercions.binder_to_term in
+               let x9 =
+                 let x10 = tapp x5 (x8 x7) (x8 bx1) in
+                 let x11 = tapp x5 (x8 x6) (x8 bx0) in
+                 let x12 = param' s' x3 ps in
+                 FStarC_Reflection_V2_Builtins.pack_ln
+                   (FStarC_Reflection_V2_Data.Tv_App
+                      ((FStarC_Reflection_V2_Builtins.pack_ln
+                          (FStarC_Reflection_V2_Data.Tv_App
+                             (x12,
+                               (x11, FStarC_Reflection_V2_Data.Q_Explicit)))),
+                        (x10, FStarC_Reflection_V2_Data.Q_Explicit))) in
+               let x10 =
+                 let x11 =
+                   FStar_Tactics_V2_SyntaxHelpers.mk_tot_arr [bx0; bx1; bxR]
+                     x9 ps in
+                 tabs x7 x11 ps in
+               tabs x6 x10 ps)
     | FStar_Tactics_NamedView.Tv_App (l, (r, q)) ->
-        Obj.magic
-          (Obj.repr
-             (let x2 = param' s l ps in
-              let x3 = replace_by s false r ps in
-              let x4 = replace_by s true r ps in
-              let x5 = param' s r ps in
-              FStar_Reflection_V2_Derived.mk_app x2
-                [(x3, q); (x4, q); (x5, q)]))
+        let x2 = param' s l ps in
+        let x3 = replace_by s false r ps in
+        let x4 = replace_by s true r ps in
+        let x5 = param' s r ps in
+        FStar_Reflection_V2_Derived.mk_app x2 [(x3, q); (x4, q); (x5, q)]
     | FStar_Tactics_NamedView.Tv_Abs (b, t1) ->
-        Obj.magic
-          (Obj.repr
-             (let x2 b1 t2 uu___ =
-                FStar_Tactics_NamedView.pack
-                  (FStar_Tactics_NamedView.Tv_Abs (b1, t2)) in
-              let x3 = push_binder b s ps in
-              match x3 with
-              | (s', (bx0, bx1, bxR)) ->
-                  let x4 = param' s' t1 ps in
-                  let x5 = let x6 = x2 bxR x4 ps in x2 bx1 x6 ps in
-                  x2 bx0 x5 ps))
+        let x2 b1 t2 uu___ =
+          FStar_Tactics_NamedView.pack
+            (FStar_Tactics_NamedView.Tv_Abs (b1, t2)) in
+        let x3 = push_binder b s ps in
+        (match x3 with
+         | (s', (bx0, bx1, bxR)) ->
+             let x4 = param' s' t1 ps in
+             let x5 = let x6 = x2 bxR x4 ps in x2 bx1 x6 ps in x2 bx0 x5 ps)
     | FStar_Tactics_NamedView.Tv_Match
         (t1, FStar_Pervasives_Native.None, brs) ->
-        Obj.magic
-          (Obj.repr
-             (let x2 =
-                let x3 = param' s t1 ps in
-                let x4 = FStar_Tactics_Util.map (param_br s) brs ps in
-                FStar_Tactics_NamedView.Tv_Match
-                  (x3, FStar_Pervasives_Native.None, x4) in
-              FStar_Tactics_NamedView.pack x2))
+        let x2 =
+          let x3 = param' s t1 ps in
+          let x4 = FStar_Tactics_Util.map (param_br s) brs ps in
+          FStar_Tactics_NamedView.Tv_Match
+            (x3, FStar_Pervasives_Native.None, x4) in
+        FStar_Tactics_NamedView.pack x2
     | FStar_Tactics_NamedView.Tv_UInst (fv, uu___) ->
-        Obj.magic
-          (Obj.repr
-             (let x2 =
-                let x3 = param_fv s fv ps in
-                FStar_Tactics_NamedView.Tv_FVar x3 in
-              FStar_Tactics_NamedView.pack x2))
+        let x2 =
+          let x3 = param_fv s fv ps in FStar_Tactics_NamedView.Tv_FVar x3 in
+        FStar_Tactics_NamedView.pack x2
     | FStar_Tactics_NamedView.Tv_FVar fv ->
-        Obj.magic
-          (Obj.repr
-             (let x2 =
-                let x3 = param_fv s fv ps in
-                FStar_Tactics_NamedView.Tv_FVar x3 in
-              FStar_Tactics_NamedView.pack x2))
+        let x2 =
+          let x3 = param_fv s fv ps in FStar_Tactics_NamedView.Tv_FVar x3 in
+        FStar_Tactics_NamedView.pack x2
     | FStar_Tactics_NamedView.Tv_Const c ->
-        Obj.magic
-          (Obj.repr
-             (FStarC_Reflection_V2_Builtins.pack_ln
-                (FStarC_Reflection_V2_Data.Tv_Const
-                   FStarC_Reflection_V2_Data.C_Unit)))
+        FStarC_Reflection_V2_Builtins.pack_ln
+          (FStarC_Reflection_V2_Data.Tv_Const
+             FStarC_Reflection_V2_Data.C_Unit)
     | FStar_Tactics_NamedView.Tv_AscribedT (t1, uu___, uu___1, uu___2) ->
-        Obj.magic (Obj.repr (param' s t1 ps))
+        param' s t1 ps
     | FStar_Tactics_NamedView.Tv_AscribedC (t1, uu___, uu___1, uu___2) ->
-        Obj.magic (Obj.repr (param' s t1 ps))
+        param' s t1 ps
     | uu___ ->
-        Obj.magic
-          (Obj.repr
-             (let x2 =
-                let x3 = FStar_Tactics_Print.term_to_ast_string t ps in
-                Unsupported x3 in
-              FStarC_Tactics_V2_Builtins.raise_core x2 ps)) in
+        let x2 =
+          let x3 = FStar_Tactics_Print.term_to_ast_string t ps in
+          Unsupported x3 in
+        (FStarC_Tactics_V2_Builtins.raise_core x2 ps; Prims.magic ()) in
   x
 and param_fv (s : param_state) (f : FStarC_Reflection_Types.fv) :
   FStarC_Tactics_Types.ref_proofstate -> FStarC_Reflection_Types.fv=
   FStar_Tactics_V2_Derived.try_with
     (fun uu___ -> match () with | () -> lookup_rec_fv s f)
-    (fun uu___1 uu___ ->
-       (fun uu___ ps ->
-          let x =
-            FStarC_Reflection_V2_Builtins.explode_qn
-              (Prims.strcat
-                 (FStarC_Reflection_V2_Builtins.implode_qn
-                    (FStarC_Reflection_V2_Builtins.inspect_fv f)) "_param") in
-          let x1 =
-            let x2 = FStarC_Tactics_V2_Builtins.top_env () ps in
-            FStarC_Reflection_V2_Builtins.lookup_typ x2 x in
-          match x1 with
-          | FStar_Pervasives_Native.Some se' ->
-              Obj.magic (Obj.repr (FStarC_Reflection_V2_Builtins.pack_fv x))
-          | FStar_Pervasives_Native.None ->
-              Obj.magic
-                (Obj.repr
-                   (let x2 =
-                      let x3 =
-                        let x4 =
-                          let x5 =
-                            let x6 =
-                              let x7 =
-                                last
-                                  (FStarC_Reflection_V2_Builtins.inspect_fv f)
-                                  ps in
-                              Prims.strcat x7 "_param" in
-                            [x6] in
-                          "Parametricity" :: x5 in
-                        "Tactics" :: x4 in
-                      "FStar" :: x3 in
-                    let x3 =
-                      let x4 = FStarC_Tactics_V2_Builtins.top_env () ps in
-                      FStarC_Reflection_V2_Builtins.lookup_typ x4 x2 in
-                    match x3 with
-                    | FStar_Pervasives_Native.Some se' ->
-                        Obj.repr (FStarC_Reflection_V2_Builtins.pack_fv x2)
-                    | FStar_Pervasives_Native.None ->
-                        Obj.repr
-                          (let x4 =
-                             let x5 =
-                               FStar_Tactics_V2_Derived.cur_module () ps in
-                             let x6 =
-                               let x7 =
-                                 let x8 =
-                                   last
-                                     (FStarC_Reflection_V2_Builtins.inspect_fv
-                                        f) ps in
-                                 Prims.strcat x8 "_param" in
-                               [x7] in
-                             FStar_List_Tot_Base.op_At x5 x6 in
-                           let x5 =
-                             let x6 =
-                               FStarC_Tactics_V2_Builtins.top_env () ps in
-                             FStarC_Reflection_V2_Builtins.lookup_typ x6 x4 in
-                           match x5 with
-                           | FStar_Pervasives_Native.Some se' ->
-                               Obj.repr
-                                 (FStarC_Reflection_V2_Builtins.pack_fv x4)
-                           | FStar_Pervasives_Native.None ->
-                               Obj.repr
-                                 (FStarC_Tactics_V2_Builtins.raise_core
-                                    (NotFoundFV f) ps))))) uu___1 uu___)
+    (fun uu___ ps ->
+       let x =
+         FStarC_Reflection_V2_Builtins.explode_qn
+           (Prims.strcat
+              (FStarC_Reflection_V2_Builtins.implode_qn
+                 (FStarC_Reflection_V2_Builtins.inspect_fv f)) "_param") in
+       let x1 =
+         let x2 = FStarC_Tactics_V2_Builtins.top_env () ps in
+         FStarC_Reflection_V2_Builtins.lookup_typ x2 x in
+       match x1 with
+       | FStar_Pervasives_Native.Some se' ->
+           FStarC_Reflection_V2_Builtins.pack_fv x
+       | FStar_Pervasives_Native.None ->
+           let x2 =
+             let x3 =
+               let x4 =
+                 let x5 =
+                   let x6 =
+                     let x7 =
+                       last (FStarC_Reflection_V2_Builtins.inspect_fv f) ps in
+                     Prims.strcat x7 "_param" in
+                   [x6] in
+                 "Parametricity" :: x5 in
+               "Tactics" :: x4 in
+             "FStar" :: x3 in
+           let x3 =
+             let x4 = FStarC_Tactics_V2_Builtins.top_env () ps in
+             FStarC_Reflection_V2_Builtins.lookup_typ x4 x2 in
+           (match x3 with
+            | FStar_Pervasives_Native.Some se' ->
+                FStarC_Reflection_V2_Builtins.pack_fv x2
+            | FStar_Pervasives_Native.None ->
+                let x4 =
+                  let x5 = FStar_Tactics_V2_Derived.cur_module () ps in
+                  let x6 =
+                    let x7 =
+                      let x8 =
+                        last (FStarC_Reflection_V2_Builtins.inspect_fv f) ps in
+                      Prims.strcat x8 "_param" in
+                    [x7] in
+                  FStar_List_Tot_Base.op_At x5 x6 in
+                let x5 =
+                  let x6 = FStarC_Tactics_V2_Builtins.top_env () ps in
+                  FStarC_Reflection_V2_Builtins.lookup_typ x6 x4 in
+                (match x5 with
+                 | FStar_Pervasives_Native.Some se' ->
+                     FStarC_Reflection_V2_Builtins.pack_fv x4
+                 | FStar_Pervasives_Native.None ->
+                     (FStarC_Tactics_V2_Builtins.raise_core (NotFoundFV f) ps;
+                      Prims.magic ()))))
 and param_pat (s : param_state) (p : FStar_Tactics_NamedView.pattern)
   (ps : FStarC_Tactics_Types.ref_proofstate) :
   (param_state * (FStar_Tactics_NamedView.pattern *
@@ -618,11 +563,12 @@ let param_ctor (nm_ty : FStarC_Reflection_Types.name) (s : param_state)
             | (s1, bs1) ->
                 let x5 = FStar_List_Tot_Base.rev bs1 in
                 let x6 =
-                  match FStar_Tactics_NamedView.inspect_comp c1 with
-                  | FStarC_Reflection_V2_Data.C_Total ty1 -> ty1
-                  | uu___ ->
-                      FStar_Tactics_V2_Derived.fail
-                        "param_ctor got a non-tot comp" ps in
+                  let x7 = FStar_Tactics_NamedView.inspect_comp c1 in
+                  if FStarC_Reflection_V2_Data.is_tot_comp x7
+                  then x7.FStarC_Reflection_V2_Data.result_typ
+                  else
+                    FStar_Tactics_V2_Derived.fail
+                      "param_ctor got a non-tot comp" ps in
                 let x7 =
                   let x8 = param' s1 x6 ps in
                   let x9 =

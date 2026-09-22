@@ -56,36 +56,32 @@ let map_optRO (f : 'a -> FStarC_Tactics_Types.ref_proofstate -> 'b)
       (fun uu___ -> FStar_Pervasives_Native.None)
   | FStar_Pervasives_Native.Some x1 ->
       (fun ps -> let x2 = f x1 ps in FStar_Pervasives_Native.Some x2)
-let fail_doc_at (uu___2 : FStar_Errors_Msg.error_message)
-  (uu___1 : FStar_Range.range FStar_Pervasives_Native.option)
-  (uu___ : FStarC_Tactics_Types.ref_proofstate) : 'a=
-  (fun m r ps ->
-     let x = map_optRO FStarC_Tactics_V2_Builtins.fixup_range r ps in
-     Obj.magic
-       (FStarC_Tactics_V2_Builtins.raise_core
-          (FStarC_Tactics_Common.TacticFailure (m, x)) ps)) uu___2 uu___1
-    uu___
-let fail_doc (uu___1 : FStar_Errors_Msg.error_message)
-  (uu___ : FStarC_Tactics_Types.ref_proofstate) : 'a=
-  (fun m ps ->
-     Obj.magic
-       (FStarC_Tactics_V2_Builtins.raise_core
-          (FStarC_Tactics_Common.TacticFailure
-             (m, FStar_Pervasives_Native.None)) ps)) uu___1 uu___
+let fail_doc_at (m : FStar_Errors_Msg.error_message)
+  (r : FStar_Range.range FStar_Pervasives_Native.option)
+  (ps : FStarC_Tactics_Types.ref_proofstate) : 'a=
+  let x = map_optRO FStarC_Tactics_V2_Builtins.fixup_range r ps in
+  FStarC_Tactics_V2_Builtins.raise_core
+    (FStarC_Tactics_Common.TacticFailure (m, x)) ps;
+  Prims.magic ()
+let fail_doc (m : FStar_Errors_Msg.error_message)
+  (ps : FStarC_Tactics_Types.ref_proofstate) : 'a=
+  FStarC_Tactics_V2_Builtins.raise_core
+    (FStarC_Tactics_Common.TacticFailure (m, FStar_Pervasives_Native.None))
+    ps;
+  Prims.magic ()
 let fail_at (m : Prims.string)
   (r : FStar_Range.range FStar_Pervasives_Native.option) :
   FStarC_Tactics_Types.ref_proofstate -> 'a=
   fail_doc_at (FStar_Errors_Msg.mkmsg m) r
 let fail (m : Prims.string) : FStarC_Tactics_Types.ref_proofstate -> 'a=
   fail_at m FStar_Pervasives_Native.None
-let fail_silently_doc (uu___1 : FStar_Errors_Msg.error_message)
-  (uu___ : FStarC_Tactics_Types.ref_proofstate) : 'a=
-  (fun m ps ->
-     FStarC_Tactics_V2_Builtins.set_urgency Prims.int_zero ps;
-     Obj.magic
-       (FStarC_Tactics_V2_Builtins.raise_core
-          (FStarC_Tactics_Common.TacticFailure
-             (m, FStar_Pervasives_Native.None)) ps)) uu___1 uu___
+let fail_silently_doc (m : FStar_Errors_Msg.error_message)
+  (ps : FStarC_Tactics_Types.ref_proofstate) : 'a=
+  FStarC_Tactics_V2_Builtins.set_urgency Prims.int_zero ps;
+  FStarC_Tactics_V2_Builtins.raise_core
+    (FStarC_Tactics_Common.TacticFailure (m, FStar_Pervasives_Native.None))
+    ps;
+  Prims.magic ()
 let fail_silently (m : Prims.string) :
   FStarC_Tactics_Types.ref_proofstate -> 'a=
   fail_silently_doc (FStar_Errors_Msg.mkmsg m)
@@ -583,6 +579,25 @@ let pose (t : FStar_Tactics_NamedView.term)
   flip () ps;
   exact t ps;
   FStarC_Tactics_V2_Builtins.intro () ps
+let pose_apply (t : FStar_Tactics_NamedView.term)
+  (ps : FStarC_Tactics_Types.ref_proofstate) :
+  FStar_Tactics_NamedView.binding=
+  apply
+    (FStarC_Reflection_V2_Builtins.pack_ln
+       (FStarC_Reflection_V2_Data.Tv_FVar
+          (FStarC_Reflection_V2_Builtins.pack_fv
+             ["FStar"; "Tactics"; "V2"; "Derived"; "__cut"]))) ps;
+  flip () ps;
+  (let x2 = let x3 = ngoals () ps in x3 - Prims.int_one in
+   focus (fun uu___ -> apply t) ps;
+   (let x4 = goals () ps in
+    let x5 = let x6 = ngoals () ps in x6 - x2 in
+    let x6 = if x5 < Prims.int_zero then Prims.int_zero else x5 in
+    let x7 = FStar_List_Tot_Base.splitAt x6 x4 in
+    match x7 with
+    | (introduced, rest) ->
+        (FStarC_Tactics_V2_Builtins.set_goals (op_At () rest introduced) ps;
+         FStarC_Tactics_V2_Builtins.intro () ps)))
 let intro_as (s : Prims.string) (ps : FStarC_Tactics_Types.ref_proofstate) :
   FStar_Tactics_NamedView.binding=
   let x = FStarC_Tactics_V2_Builtins.intro () ps in
@@ -729,13 +744,11 @@ let __grewrite_derived (t1 : FStar_Tactics_NamedView.term)
            FStar_Reflection_V2_Formula.term_as_formula x4 ps1 in
          match x3 with
          | FStar_Reflection_V2_Formula.Comp
-             (FStar_Reflection_V2_Formula.Eq uu___1, lhs, rhs) ->
-             Obj.magic (Obj.repr (lhs, rhs))
+             (FStar_Reflection_V2_Formula.Eq uu___1, lhs, rhs) -> (lhs, rhs)
          | uu___1 ->
-             Obj.magic
-               (Obj.repr
-                  (FStarC_Tactics_V2_Builtins.raise_core
-                     FStarC_Tactics_Common.SKIP ps1)) in
+             (FStarC_Tactics_V2_Builtins.raise_core
+                FStarC_Tactics_Common.SKIP ps1;
+              Prims.magic ()) in
        match x2 with
        | (lhs, rhs) ->
            let x3 = x2 in
@@ -801,11 +814,7 @@ let magic_dump_t (uu___ : unit) (ps : FStarC_Tactics_Types.ref_proofstate) :
   apply
     (FStarC_Reflection_V2_Builtins.pack_ln
        (FStarC_Reflection_V2_Data.Tv_FVar
-          (FStarC_Reflection_V2_Builtins.pack_fv ["Prims"; "magic"]))) ps;
-  exact
-    (FStarC_Reflection_V2_Builtins.pack_ln
-       (FStarC_Reflection_V2_Data.Tv_Const FStarC_Reflection_V2_Data.C_Unit))
-    ps
+          (FStarC_Reflection_V2_Builtins.pack_fv ["Prims"; "magic"]))) ps
 let magic_dump (x : 'a) (uu___ : unit) : 'a= x
 let change_with (t1 : FStarC_Reflection_Types.term)
   (t2 : FStarC_Reflection_Types.term) :
@@ -898,61 +907,51 @@ let bump_nth (n : Prims.pos) (ps : FStarC_Tactics_Types.ref_proofstate) :
   | FStar_Pervasives_Native.None -> fail "bump_nth: not that many goals" ps
   | FStar_Pervasives_Native.Some (h, t) ->
       FStarC_Tactics_V2_Builtins.set_goals (h :: t) ps
-let rec destruct_list (uu___1 : FStar_Tactics_NamedView.term)
-  (uu___ : FStarC_Tactics_Types.ref_proofstate) :
+let rec destruct_list (t : FStar_Tactics_NamedView.term)
+  (ps : FStarC_Tactics_Types.ref_proofstate) :
   FStar_Tactics_NamedView.term Prims.list=
-  (fun t ps ->
-     let x = FStar_Tactics_V2_SyntaxHelpers.collect_app t ps in
-     match x with
-     | (head, args) ->
-         let x1 =
-           let x2 = FStar_Tactics_NamedView.inspect head ps in (x2, args) in
-         (match x1 with
-          | (FStar_Tactics_NamedView.Tv_FVar fv,
-             (a1, FStarC_Reflection_V2_Data.Q_Explicit)::(a2,
-                                                          FStarC_Reflection_V2_Data.Q_Explicit)::[])
-              ->
-              Obj.magic
-                (Obj.repr
-                   (if
-                      (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
-                        FStar_Reflection_Const.cons_qn
-                    then Obj.repr (let x2 = destruct_list a2 ps in a1 :: x2)
-                    else
-                      Obj.repr
-                        (FStarC_Tactics_V2_Builtins.raise_core
-                           FStarC_Tactics_Common.NotAListLiteral ps)))
-          | (FStar_Tactics_NamedView.Tv_FVar fv,
-             (uu___, FStarC_Reflection_V2_Data.Q_Implicit)::(a1,
-                                                             FStarC_Reflection_V2_Data.Q_Explicit)::
-             (a2, FStarC_Reflection_V2_Data.Q_Explicit)::[]) ->
-              Obj.magic
-                (Obj.repr
-                   (if
-                      (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
-                        FStar_Reflection_Const.cons_qn
-                    then Obj.repr (let x2 = destruct_list a2 ps in a1 :: x2)
-                    else
-                      Obj.repr
-                        (FStarC_Tactics_V2_Builtins.raise_core
-                           FStarC_Tactics_Common.NotAListLiteral ps)))
-          | (FStar_Tactics_NamedView.Tv_FVar fv, uu___) ->
-              Obj.magic
-                (Obj.repr
-                   (if
-                      (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
-                        FStar_Reflection_Const.nil_qn
-                    then Obj.repr []
-                    else
-                      Obj.repr
-                        (FStarC_Tactics_V2_Builtins.raise_core
-                           FStarC_Tactics_Common.NotAListLiteral ps)))
-          | uu___ ->
-              Obj.magic
-                (Obj.repr
-                   (FStarC_Tactics_V2_Builtins.raise_core
-                      FStarC_Tactics_Common.NotAListLiteral ps)))) uu___1
-    uu___
+  let x = FStar_Tactics_V2_SyntaxHelpers.collect_app t ps in
+  match x with
+  | (head, args) ->
+      let x1 = let x2 = FStar_Tactics_NamedView.inspect head ps in (x2, args) in
+      (match x1 with
+       | (FStar_Tactics_NamedView.Tv_FVar fv,
+          (a1, FStarC_Reflection_V2_Data.Q_Explicit)::(a2,
+                                                       FStarC_Reflection_V2_Data.Q_Explicit)::[])
+           ->
+           if
+             (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
+               FStar_Reflection_Const.cons_qn
+           then let x2 = destruct_list a2 ps in a1 :: x2
+           else
+             (FStarC_Tactics_V2_Builtins.raise_core
+                FStarC_Tactics_Common.NotAListLiteral ps;
+              Prims.magic ())
+       | (FStar_Tactics_NamedView.Tv_FVar fv,
+          (uu___, FStarC_Reflection_V2_Data.Q_Implicit)::(a1,
+                                                          FStarC_Reflection_V2_Data.Q_Explicit)::
+          (a2, FStarC_Reflection_V2_Data.Q_Explicit)::[]) ->
+           if
+             (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
+               FStar_Reflection_Const.cons_qn
+           then let x2 = destruct_list a2 ps in a1 :: x2
+           else
+             (FStarC_Tactics_V2_Builtins.raise_core
+                FStarC_Tactics_Common.NotAListLiteral ps;
+              Prims.magic ())
+       | (FStar_Tactics_NamedView.Tv_FVar fv, uu___) ->
+           if
+             (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
+               FStar_Reflection_Const.nil_qn
+           then []
+           else
+             (FStarC_Tactics_V2_Builtins.raise_core
+                FStarC_Tactics_Common.NotAListLiteral ps;
+              Prims.magic ())
+       | uu___ ->
+           (FStarC_Tactics_V2_Builtins.raise_core
+              FStarC_Tactics_Common.NotAListLiteral ps;
+            Prims.magic ()))
 let get_match_body (uu___ : unit) (ps : FStarC_Tactics_Types.ref_proofstate)
   : FStar_Tactics_NamedView.term=
   let x =
