@@ -3125,3 +3125,14 @@ GREP_Realized     = "FStar_Pervasives.Mkdtuple3" \
 # No record recovery, no projection, no erased GTot call -- and no [Obj.t].
 NOGREP_Realized   = "u__1" "gmagic" "Obj.t"
 
+
+# A constructor used as a function, of a type §5.2 collapses.  `Extract`
+# builds an [ECtor] out of the arguments the application node carried, so
+# [app W] reaches the layout pass with none, and a collapsed constructor with
+# no argument has no payload to collapse to: it came out as [()], which the
+# call then applied.  The layout pass eta-expands an under-applied constructor
+# before it rewrites one, so the reference is the identity it denotes -- which
+# is what the greps say, and what compiling the output at all asserts.
+CUSTARD_TESTS += CtorFun
+GREP_CtorFun += "(ctorFun_app (fun u__eta -> u__eta) 1ul)"
+NOGREP_CtorFun += "ctorFun_app ()"
