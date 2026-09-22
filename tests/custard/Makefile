@@ -994,6 +994,11 @@ FLAGS_FieldAttr = --custard_backend C --custard_monomorphize_types true \
 CODE_FieldAttr  = 371
 EGREP_FieldAttr = "on the field pimpl_type"
 
+# Section 34 and section 64: the Custard rule tests need a plugin built and
+# loaded, so they are a subdirectory with a makefile of their own.  They were
+# `make custard-plugin' until stagec/ went away.
+SUBDIRS += plugin
+
 include $(FSTAR_ROOT)/mk/test.mk
 
 # Section 62.1.  Finding karamel by name on the PATH is what a dev tree
