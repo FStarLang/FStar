@@ -152,6 +152,12 @@ let try_solve_single_valued_implicits (g:TcEnv.env) (ts: S.term list) : unit =
   let _ = FStarC_TypeChecker_Rel.try_solve_single_valued_implicits g false imps in
   ()
 
+let scoped_implicits (g:TcEnv.env) (t:S.term) =
+  Free.uvars t |> FlatSet.elems |> List.map (fun uv ->
+    let scope = {g with gamma = uv.S.ctx_uvar_gamma} in
+    let term = S.mk (S.Tm_uvar (uv, ([], S.NoUseRange))) uv.S.ctx_uvar_range in
+    scope, term, FStarC_Syntax_Util.ctx_uvar_typ uv)
+
 let lax_check_term_with_unknown_universes (g:TcEnv.env) (e:S.term)
   : S.term option
   = let open FStarC_Tactics_V2_Basic in

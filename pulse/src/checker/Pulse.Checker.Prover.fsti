@@ -27,6 +27,10 @@ val elim_exists (g: env) (frame: slprop) u b body (x: nvar { ~(Set.mem (snd x) (
   continuation_elaborator g (frame `tm_star` tm_exists_sl u b body)
     g' (frame `tm_star` open_term' body (mk_reveal u b.binder_ty (term_of_nvar x)) 0)
 
+val expose_unreachable (g:env) (ctxt:slprop) :
+  T.Tac (g':env { env_extends g' g } &
+         ctxt':slprop & continuation_elaborator g ctxt g' ctxt')
+
 val prove (rng: range) (g: env) (ctxt goals: slprop) (allow_amb: bool) :
   T.Tac (g':env { env_extends g' g } & ctxt': slprop &
     continuation_elaborator g ctxt g' (goals `tm_star` ctxt'))

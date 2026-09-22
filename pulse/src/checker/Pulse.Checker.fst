@@ -319,6 +319,8 @@ let rec check
       else
         Pulse.Checker.Prover.elim_exists_and_pure #g0 #pre0
     in
+    let (| g, pre, k_unreachable |) = Pulse.Checker.Prover.expose_unreachable g pre in
+    let k_elim_pure = k_elab_trans k_elim_pure k_unreachable in
     let r : checker_result_t g pre post_hint =
       let g = push_context (P.tag_of_st_term t) t.range g in
       match t.term with

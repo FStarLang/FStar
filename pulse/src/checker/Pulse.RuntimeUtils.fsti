@@ -76,6 +76,7 @@ val float_one : FStar.Float64.float64
 val lax_check_term_with_unknown_universes (g:env) (t:T.term) : Dv (option T.term)
 val new_implicit_var : reason:string -> range -> env -> typ -> unrefine:bool -> Dv term
 val try_solve_single_valued_implicits : env -> list term -> Dv unit
+val scoped_implicits : env -> term -> Dv (list (env & term & typ))
 module T = FStar.Tactics.V2
 val tc_term_phase1 (g:env) (t:T.term) (instantiate_imps:bool) : Dv (option (T.term & T.term & T.tot_or_ghost) & T.issues)
 val teq_nosmt_force (g:env) (ty1 ty2:T.term) : Dv bool

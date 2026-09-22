@@ -24,12 +24,57 @@ open Pulse.Reflection.Util
 
 module T = FStar.Tactics.V2
 module RU = Pulse.RuntimeUtils
+module R = FStar.Reflection.V2
 module P = Pulse.Syntax.Printer
 open Pulse.Checker.Prover
 open Pulse.Show
 
 let should_allow_ambiguous (t:term) : T.Tac bool =
   Pulse.Reflection.Util.head_has_attr_string "Pulse.Lib.Core.allow_ambiguous" t
+
+exception UnreachableImplicitNotSolved of unit
+
+let rec solve_unreachable_implicits (g:env) (e:term) : T.Tac unit =
+  let pending = RU.scoped_implicits (elab_env g) e in
+  T.iter (fun (scope, uv, ty) ->
+    let ty = RU.deep_compress_safe ty in
+    if not (RU.no_uvars_in_term ty) then () else
+    match R.inspect_ln ty with
+    | R.Tv_Type _ -> ()
+    | _ ->
+      // Prove the contradiction in the uvar's creation scope, not the caller's.
+      let false_typing, _ = T.with_policy T.ForceSMT (fun () ->
+        T.core_check_term_at_type scope tm_l_false (`prop)) in
+      let valid, _ =
+        match false_typing with
+        | Some T.E_Total ->
+          T.with_policy T.ForceSMT (fun () -> T.check_prop_validity scope tm_l_false)
+        | _ -> None, [] in
+      match valid with
+      | None -> ()
+      | Some _ ->
+        let universe, _ = T.with_policy T.ForceSMT (fun () -> T.universe_of scope ty) in
+        (match universe with
+        | None -> ()
+        | Some u ->
+          let head = R.pack_ln (R.Tv_UInst
+            (R.pack_fv ["FStar"; "Pervasives"; "false_elim"]) [u]) in
+          let witness = R.mk_app head [ty, R.Q_Implicit; unit_const, R.Q_Explicit] in
+          let checked, _ = T.with_policy T.ForceSMT (fun () ->
+            T.core_check_term_at_type scope witness ty) in
+          (match checked with
+          | Some T.E_Total ->
+            (try
+              if not (T.with_policy T.ForceSMT (fun () -> T.unify_env scope uv witness))
+              then T.raise (UnreachableImplicitNotSolved ())
+            with
+            | UnreachableImplicitNotSolved _ -> ()
+            | ex -> T.raise ex)
+          | _ -> ()))
+  ) pending;
+  let remaining = RU.scoped_implicits (elab_env g) e in
+  if Cons? remaining && List.Tot.length remaining < List.Tot.length pending then
+    solve_unreachable_implicits g e
 
 open Pulse.PP
 #push-options "--fuel 0 --ifuel 1 --z3rlimit_factor 3"
@@ -69,6 +114,8 @@ let check
     let allow_ambiguous = should_allow_ambiguous e in
     let (| g', ctxt', k |) = prove (RU.range_of_term e) g ctxt (comp_pre c0) allow_ambiguous in
 
+    if not (RU.no_uvars_in_term e) then
+      solve_unreachable_implicits g' e;
     if not (RU.no_uvars_in_term e) then
       fail_doc g (Some range) [
         text "Unexpected unresolved uvars in the term:";

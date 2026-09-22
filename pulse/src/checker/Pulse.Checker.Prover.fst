@@ -30,6 +30,7 @@ open FStar.List { (@) }
 module RU = Pulse.RuntimeUtils
 module T = FStar.Tactics.V2
 module R = FStar.Reflection.V2
+module RT = FStar.Reflection.Typing
 
 type head_id =
   | FVarHead of R.name
@@ -724,6 +725,33 @@ let with_uf_transaction (k: unit -> T.Tac bool) : T.Tac bool =
     | AbortUFTransaction res -> res
     | ex -> T.raise ex
 
+let prove_contradiction (g:env) (ctxt goals:list slprop_view) :
+    T.Tac (option (prover_result g ctxt goals)) =
+  match try_check_prop_validity g tm_l_false with
+  | None -> None
+  | Some pv ->
+    Some (| g, ctxt @ [IsUnreachable], goals, [], fun g' ->
+      (fun frame ->
+        k_elab_equiv
+          (elab_slprops (frame @ ctxt))
+          (elab_slprops (frame @ (ctxt @ [IsUnreachable])))
+          (intro_pure g (elab_slprops (frame @ ctxt)) tm_l_false pv)),
+      cont_elab_refl g' goals goals
+      <: T.Tac _ |)
+
+let expose_unreachable (g:env) (ctxt:slprop) :
+    T.Tac (g':env { env_extends g' g } &
+           ctxt':slprop & continuation_elaborator g ctxt g' ctxt') =
+  if not (ctxt `eq_tm` tm_is_unreachable) then
+    (| g, ctxt, k_elab_unit g ctxt |)
+  else
+    let x = ppname_default, fresh g in
+    let g' = push_binding g (snd x) (fst x) (mk_squash tm_l_false) in
+    let k = k_elab_equiv ctxt tm_emp (elim_pure g tm_emp tm_l_false x g') in
+    let pv = check_prop_validity g' tm_l_false in
+    let k' = k_elab_equiv tm_emp ctxt (intro_pure g' tm_emp tm_l_false pv) in
+    (| g', ctxt, k_elab_trans k k' |)
+
 let forallb (k: 'a -> T.Tac bool) (xs: list 'a) =
   not (T.existsb (fun x -> not (k x)) xs)
 
@@ -744,6 +772,32 @@ let check_slprop_equiv_ext r (g:env) (p q:slprop)
     ]
   | Some token ->
     ()
+
+let normalize_conditional_goal (g:env) (ctxt:list slprop_view) (goal:slprop_view) :
+    T.Tac (option (prover_result g ctxt [goal])) =
+  match goal with
+  | Atom MatchHead _ _ p ->
+    (match R.inspect_ln p with
+    | R.Tv_Match scrut ret branches ->
+      let boolean_scrutinee, _ = T.with_policy T.ForceSMT (fun () ->
+        T.core_check_term_at_type (elab_env g) scrut tm_bool) in
+      if None? boolean_scrutinee then None else
+      let chosen =
+        T.tryPick (fun value ->
+          match try_check_prop_validity g (RT.eq2 u0 tm_bool scrut value) with
+          | Some _ -> Some value
+          | None -> None) [tm_true; tm_false] in
+      (match chosen with
+      | None -> None
+      | Some value ->
+        let reduced = normalize_slprop g (R.pack_ln (R.Tv_Match value ret branches)) false in
+        check_slprop_equiv_ext (RU.range_of_term p) g p reduced;
+        Some (| g, ctxt, [Unknown reduced], [], fun g' ->
+          cont_elab_refl g ctxt ctxt,
+          cont_elab_refl g' [Unknown reduced] [goal]
+          <: T.Tac _ |))
+    | _ -> None)
+  | _ -> None
 
 let on_name = R.inspect_fv (R.pack_fv <| Pulse.Reflection.Util.mk_pulse_lib_core_lid "on")
 let on_head_id : head_id = FVarHead on_name
@@ -1370,12 +1424,15 @@ let prove_step (pg: penv) (ctxt goals: list slprop_view)
     (fun _ -> elim_is_unreachable g ctxt goals);
     (fun _ -> prove_first g ctxt goals (prove_pure g ctxt true));
     (fun _ -> prove_first g ctxt goals (prove_with_pure g ctxt true));
-    (fun _ -> prove_first g ctxt goals (prove_exists g ctxt));
     (fun _ -> prove_first g ctxt goals (unpack_and_norm_goal pg ctxt));
     (fun _ -> prove_first g ctxt goals (prove_atom_unamb g ctxt));
     (fun _ -> prove_first g ctxt goals (prove_atom g ctxt pg.penv_allow_amb));
     (fun _ -> prove_first g ctxt goals (prove_pure g ctxt false));
     (fun _ -> prove_first g ctxt goals (prove_with_pure g ctxt false));
+    (fun _ -> prove_first g ctxt goals (normalize_conditional_goal g ctxt));
+    // Avoid introducing witnesses for lemmas or existentials in a false context.
+    (fun _ -> prove_contradiction g ctxt goals);
+    (fun _ -> prove_first g ctxt goals (prove_exists g ctxt));
     (fun _ -> prove_first g ctxt goals (eager_intro_lemma_step pg ctxt));
     (fun _ -> prove_first g ctxt goals (intro_lemma_step try_prove_core pg ctxt));
   ]

@@ -307,6 +307,10 @@ let partition_matches g (ps qs:list slprop)
       matches'@matches, remaining_ps'@remaining_ps, remaining_qs)
     ps ([], [], qs)
 
+let with_branch_condition b value post =
+  // A returning continuation must come from the branch that is not unreachable.
+  tm_star (tm_pure (RT.eq2 u0 tm_bool b value)) post
+
 let rec combine_terms top g b pq : T.Tac term =
   let p, q = pq in
   Pulse.Checker.Util.debug g "pulse.join_comp" (fun _ ->
@@ -316,8 +320,9 @@ let rec combine_terms top g b pq : T.Tac term =
   let combine_terms p q = combine_terms true g b (p, q) in
   let def () = if T.term_eq p q then p else RT.mk_if b p q in
   match inspect_term p, inspect_term q with
-  | Tm_IsUnreachable, _ -> q
-  | _, Tm_IsUnreachable -> p
+  | Tm_IsUnreachable, Tm_IsUnreachable -> p
+  | Tm_IsUnreachable, _ -> with_branch_condition b tm_false q
+  | _, Tm_IsUnreachable -> with_branch_condition b tm_true p
   | Tm_Emp, Tm_Emp
   | Tm_SLProp, Tm_SLProp
   | Tm_EmpInames, Tm_EmpInames
@@ -361,8 +366,9 @@ let guard_with_pure then_ b (pred: term) n (acc: slprop) : slprop =
 let rec join_slprop g b (ex1 ex2:list (universe & binder)) (p1 p2:slprop)
 : T.Tac slprop
 = match inspect_term p1, inspect_term p2 with
-  | Tm_IsUnreachable, _ -> p2
-  | _, Tm_IsUnreachable -> p1
+  | Tm_IsUnreachable, Tm_IsUnreachable -> p1
+  | Tm_IsUnreachable, _ -> with_branch_condition b tm_false p2
+  | _, Tm_IsUnreachable -> with_branch_condition b tm_true p1
 
   | Tm_ExistsSL .., _
   | Tm_ForallSL .., _
