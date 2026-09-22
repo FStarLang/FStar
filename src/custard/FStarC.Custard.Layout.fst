@@ -361,6 +361,57 @@ let fresh_var (t:tbl) : ML string =
   t.fresh := !t.fresh + 1;
   uniq "_dropped" !t.fresh
 
+(* A constructor used as a function.  `Extract` builds an [ECtor] out of
+   whatever arguments the application node carried, so [Comp <$> f x] -- a
+   constructor passed to a higher-order function -- arrives here with fewer
+   arguments than the constructor has fields.  [Simplify.eta_ctors] expands
+   those, and says so, but it runs after this pass and the rewrites below
+   cannot wait for it: a collapsed type has one field to collapse to, an
+   application carrying none has no such field, and [Comp] came out as [()] --
+   which is not a function and which the OCaml compiler then reported about
+   generated code.  The same is true of [keep_by_slots], which would read a
+   short spine against the full slot list.
+
+   So the expansion happens here as well, over the *source* fields: an [ECtor]
+   is written against those until [rw_decl] below rewrites one, which is
+   exactly the window this pass sits in.  An imported constructor's fields
+   arrive already rewritten, so a use of one may still be short afterwards;
+   that is the case [Simplify.eta_ctors] covers with the upstream unit's
+   plans.  A saturated application -- every one in the overwhelming majority
+   of a program -- is returned untouched. *)
+let eta_ctors (t:tbl) (imports:list (dtype & type_info)) (prog:program) : ML program =
+  let fields : SMap.t (list (string & cty)) = SMap.create 100 in
+  let add (d:dtype) : ML unit =
+    ctors_of_tydef d |> List.iter (fun (cn, fs) -> SMap.add fields (key cn) fs) in
+  imports |> List.iter (fun (d, _) -> add d);
+  SMap.iter t.types (fun _ d -> add d);
+  let rec drop (#a:Type) (n:int) (xs:list a) : ML (list a) =
+    if n <= 0 then xs else (match xs with [] -> [] | _ :: xs -> drop (n - 1) xs) in
+  let fresh () : ML string =
+    t.fresh := !t.fresh + 1;
+    uniq "_eta" !t.fresh in
+  let rec go (x:expr) : ML expr =
+    match x.e with
+    | ECtor (cn, es) ->
+      let es = es |> List.map go in
+      let alt = { x with e = ECtor (cn, es) } in
+      (match SMap.try_find fields (key cn) with
+       | Some fs when List.length es < List.length fs ->
+         let bs = drop (List.length es) fs
+                  |> List.map (fun (f, c) -> { b_name = fresh (); b_ty = c }) in
+         let args = bs |> List.map (fun b -> mk (EVar b.b_name) b.b_ty E_Pure) in
+         (* [x.ty] is the datatype: `Extract` types an [ECtor] by its
+            constructor's result, however many arguments it was given. *)
+         let res = List.fold_right (fun (b:binder) c -> TArrow (b.b_ty, E_Pure, c))
+                                   bs x.ty in
+         mk (EFun (bs, { alt with e = ECtor (cn, es @ args) })) res E_Pure
+       | _ -> alt)
+    | _ -> map_children go x in
+  prog |> List.map (fun d ->
+    match d with
+    | DLet dl -> DLet { dl with dl_body = go dl.dl_body }
+    | d -> d)
+
 (* Dropping an argument is only sound when it cannot have an effect; an impure
    one is sequenced before the result instead (section 5.2, last guard). *)
 let hoist (dropped:list expr) (result:expr) : ML expr =
@@ -830,6 +881,8 @@ let run (imports:list (dtype & type_info)) (prog:program)
   Prof.timed "l.erasure" (fun () -> erasure_fixpoint t);
   Prof.timed "l.layouts" (fun () -> compute_layouts t);
   Prof.timed "l.ctors" (fun () -> register_ctors t);
+  (* Before the rewrite below, which reads a constructor's arity. *)
+  let prog = Prof.timed "l.eta_ctors" (fun () -> eta_ctors t imports prog) in
   if Options.custard_dump_layouts () then begin
     FStarC.Format.print_string "Custard layouts:\n";
     SMap.iter t.layouts (fun k l ->
