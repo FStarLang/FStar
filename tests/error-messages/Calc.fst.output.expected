@@ -5,6 +5,8 @@
   - Failed to prove: Calc.eta Prims.op_Greater_Equals x y
   - In context:
       uu___: Prims.unit
+      Calc.eta Prims.op_Greater_Equals 10 9
+      Calc.eta Prims.op_Less_Equals 9 11
       x: Prims.int
       y: Prims.int
       exists (w: Prims.int).
@@ -50,33 +52,21 @@
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
-  - In context:
-      uu___: Prims.unit
-      uu___: Prims.unit
-      uu___: Prims.unit
-      uu___: Prims.unit
-      uu___: Prims.unit
+  - In context: uu___: Prims.unit
 
 * Info at Calc.fst(64,3-64,5):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
-  - In context:
-      uu___: Prims.unit
-      uu___: Prims.unit
-      uu___: Prims.unit
-      uu___: Prims.unit
+  - In context: uu___: Prims.unit
 
 * Info at Calc.fst(78,3-78,5):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
-  - In context:
-      uu___: Prims.unit
-      uu___: Prims.unit
-      uu___: Prims.unit
+  - In context: uu___: Prims.unit
 
 * Info at Calc.fst(92,42-92,44):
   - Expected failure:
@@ -84,8 +74,6 @@
   - The SMT solver could not prove the query.
   - Failed to prove: Calc.q
   - In context:
-      uu___: Prims.unit
-      uu___: Prims.unit
       uu___: Prims.unit
       Calc.p
   - See also Calc.fst(90,20-90,21)
@@ -97,8 +85,6 @@
   - Failed to prove: Calc.q
   - In context:
       uu___: Prims.unit
-      uu___: Prims.unit
-      uu___: Prims.unit
       Calc.p
   - See also Calc.fst(100,4-100,5)
 
@@ -107,11 +93,7 @@
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
-  - In context:
-      x: Prims.int
-      uu___: Prims.unit
-      uu___: Prims.unit
-      uu___: Prims.unit
+  - In context: x: Prims.int
   - See also Calc.fst(104,12-104,17)
 
 * Info at Calc.fst(120,9-120,17):
@@ -119,10 +101,6 @@
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
-  - In context:
-      x: Prims.int
-      uu___: Prims.unit
-      uu___: Prims.unit
-      uu___: Prims.unit
+  - In context: x: Prims.int
   - See also Calc.fst(104,12-104,17)
 

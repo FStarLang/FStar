@@ -2572,8 +2572,14 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : ML (term & 
         then match args |> List.map simplify with
              | [(Some true, _); (_, (arg, _))]
              | [(_, (arg, _)); (Some true, _)] -> arg, false
-             | [(Some false, (arg, _)); _]
-             | [_; (Some false, (arg, _))] -> keep_false arg, false
+             (* [False /\ X] is [False], but if [X] carries a label then
+                dropping it also drops the range error reporting would have
+                used to point at the sub-goal that actually failed -- and the
+                labelled conjunct is invariably the interesting one. Leave such
+                a conjunction alone; it is no worse than what we started with. *)
+             | [(Some false, (arg, _)); (_, (other, _))]
+             | [(_, (other, _)); (Some false, (arg, _))] when not (has_label other) ->
+               keep_false arg, false
              | _ -> tm, false
         else if S.fv_eq_lid fv PC.or_lid
         then match args |> List.map simplify with
