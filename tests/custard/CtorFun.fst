@@ -33,10 +33,12 @@ let un2 (t : two) : U32.t = match t with | A x -> x | B x -> x
 
 let app2 (f : U32.t -> two) (x : U32.t) : U32.t = un2 (f x)
 
-/// Partially applied: one argument given, one still missing.
-type both = | Both of U32.t & U32.t
+/// Partially applied: one argument given, one still missing.  Declared with
+/// the arrow syntax, since [| Both of a & b] is one field of pair type
+/// (section 5.7) and so cannot be under-applied.
+type both = | Both : U32.t -> U32.t -> both
 
-let unboth (b : both) : U32.t = match b with | Both x y -> U32.add x y
+let unboth (b : both) : U32.t = match b with | Both x y -> U32.add_mod x y
 
 let app3 (f : U32.t -> both) (x : U32.t) : U32.t = unboth (f x)
 

@@ -513,22 +513,19 @@ $(PULSE_OUT)/extraction/.touch: mk/custard.mk $(SPLIT)/.touch \
 # The three units, the four realizations and the two grammars, in one flat
 # directory and one link.  Not a dune project like the compiler's own build:
 # this is a .cmxs against an already built library, which is the one shape
-# dune has no stanza for.  src/ml-custard overlays src/ml: see the header of the one file it
-# holds.  The grammars are inferred against *these* interfaces, exactly as
-# the compiler's own are.
+# dune has no stanza for.  The grammars are inferred against *these*
+# interfaces, exactly as the compiler's own are.
 PULSE_UNITDIRS := $(PULSE_OUT)/checker $(PULSE_OUT)/syntax_extension \
                   $(PULSE_OUT)/extraction
 
 $(PULSE_OUT)/x.cmxs: mk/custard.mk $(BIN) \
                      $(addsuffix /.touch,$(PULSE_UNITDIRS)) \
-                     $(wildcard $(PULSE)/src/ml/*.ml $(PULSE)/src/ml/*.mly) \
-                     $(wildcard $(PULSE)/src/ml-custard/*.ml)
+                     $(wildcard $(PULSE)/src/ml/*.ml $(PULSE)/src/ml/*.mly)
 	$(call bold_msg, "CUSTARD", "PULSE LINK")
 	$(Q)rm -rf $(PULSE_OUT)/link && mkdir -p $(PULSE_OUT)/link
 	$(Q)cp $(addsuffix /*.ml,$(PULSE_UNITDIRS)) $(PULSE_OUT)/link/
 	$(Q)cp -f --no-preserve=mode $(PULSE)/src/ml/*.ml $(PULSE)/src/ml/*.mly \
 	   $(PULSE_OUT)/link/
-	$(Q)cp -f --no-preserve=mode $(PULSE)/src/ml-custard/*.ml $(PULSE_OUT)/link/
 	$(Q)cd $(PULSE_OUT)/link && for f in \
 	     $$($(OCAMLFIND) ocamldep -package $(OCAMLPKGS) -sort *.ml 2>/dev/null); do \
 	   $(OCAMLC) -I . $(INCS) -c $$f >/dev/null 2>&1 || true; \

@@ -3,5 +3,5 @@ module RemoveUnusedTypars_A
 #nowarn "25" "26" "40" "49" "64" "1182" "3220"
 open FStarCustard
 
-
+type removeUnusedTypars_A_t<'a, 'b> = list<'a>
 

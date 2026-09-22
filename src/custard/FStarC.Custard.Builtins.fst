@@ -995,9 +995,9 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
 (* Section 8.5.  [raise] is a control-flow node rather than a call, because a
    backend has to know that nothing after it runs.  [try_with] arrives as two
    functions -- F* has no [try] syntax, so the source always spells it
-   [try_with (fun () -> e) (fun e -> h)] -- and becomes an [ETry] with a
-   single catch-all branch, which is what the two arguments say: an F*
-   handler takes the exception value and does its own matching. *)
+   [try_with (fun () -> e) (fun e -> h)] -- and becomes an [ETry] whose
+   branches are the handler's own, so that an exception the handler does not
+   match propagates instead of failing its match. *)
 let exn_var : string = "_cexn"
 
 let exn_rule (id:string) : ML (option rule) =
@@ -1022,10 +1022,31 @@ let exn_rule (id:string) : ML (option rule) =
       match args with
       | [f; h] ->
         let body = force f in
-        let x = mk (EVar exn_var) TExn E_Pure in
-        mk (ETry (body, [(PVar exn_var, None,
-                          mk (EApp (h, [x])) body.ty E_Impure)]))
-           body.ty E_Impure
+        (* A handler that is syntactically [fun e -> match e with | ...]
+           becomes the [ETry]'s own branches, and an exception none of them
+           matches propagates -- which is what [try] means everywhere else and
+           what the ML backend's own [try_with] case does
+           ([Extraction.ML.Code], [MLE_Try]).  Applying the handler instead
+           kept the match *inside* a catch-all branch, where a missing pattern
+           is a failed match rather than a re-raise: [FStarC.Plugins.dynlink]
+           turned every dynlink failure into "Pattern matching failed", and
+           [try ... with] in F* source is this shape, since [ToSyntax]
+           desugars it to a [function] with no catch-all. *)
+        let branches =
+          match h.e with
+          | EFun ([b], body_h) ->
+            (match body_h.e with
+             | EMatch (scrut, brs) ->
+               (match scrut.e with
+                | EVar x when x = b.b_name -> brs
+                | _ -> [])
+             | _ -> [])
+          | _ -> [] in
+        let branches =
+          if Cons? branches then branches
+          else let x = mk (EVar exn_var) TExn E_Pure in
+               [(PVar exn_var, None, mk (EApp (h, [x])) body.ty E_Impure)] in
+        mk (ETry (body, branches)) body.ty E_Impure
       | _ -> failwith "Custard: try_with applied to the wrong number of arguments"))
   (* [failwith] and [exit] are the support module's own: [exit] in particular
      takes an F* [int], which is a [Z.t], and it is the realization that
@@ -1269,7 +1290,22 @@ let realized_modules : list (list string) = [
   ["FStar"; "Pprint"];
   ["FStar"; "Sealed"];
   ["FStar"; "String"];
+  (* The machine integers.  [machine_int_rule] above already turns every
+     operation the modules *declare* into a builtin, so nothing normally
+     reaches their F* definitions; [eq_mask] and [gte_mask] have no rule,
+     though, and [FStar.UInt128] calls the 64-bit ones.  They are realized in
+     [ulib/ml/app/ints] like the rest of the module (and [FStar.UInt8] in
+     [ulib/ml/app/FStar_UInt8.ml], which is why that one was already here), so
+     compiling them from source would both duplicate the realization's module
+     and lose its constant-time implementation. *)
+  ["FStar"; "Int8"];
+  ["FStar"; "Int16"];
+  ["FStar"; "Int32"];
+  ["FStar"; "Int64"];
   ["FStar"; "UInt8"];
+  ["FStar"; "UInt16"];
+  ["FStar"; "UInt32"];
+  ["FStar"; "UInt64"];
   ["FStarC"; "Array"];
   ["FStarC"; "BaseTypes"];
   ["FStarC"; "Effect"];
@@ -1501,6 +1537,31 @@ let custard_rule (id:string) : ML (option rule) =
 let normalizes_arguments (l : Ident.lident) : ML bool =
   Ident.string_of_lid l = "Pulse.Lib.GlobalArray.mk_static_array"
 
+(* [FStar.List.Tot.Base]'s two erasing refinement coercions.  They strip or
+   add a
+   refinement on the elements of a list and are the identity on the
+   representation, which is exactly what every realization of the module says:
+   [let list_unref _ l = l] in OCaml, the same in F#, and nothing at all in C.
+
+   They need a rule rather than [Rule_realized] because of the [_].  The
+   OCaml realization is shared with the ML backend, which keeps the erased
+   [#p:(a -> prop)] as a dummy parameter; Custard erases it, so a call through
+   the realization is one argument short and the realization's own definition
+   reads it as the list.  Saying "identity" here settles it for both, and for
+   the backends that have no realization to call.
+
+   [list_refb] is not here: its predicate returns [bool] rather than [prop], so
+   it is computation, Custard keeps it, and the call through the realization
+   has the two arguments the realization expects. *)
+let list_coercion_rule (id:string) : ML (option rule) =
+  match id with
+  | "list_unref" | "list_ref" ->
+    Some (Rule_prim (1, fun _ args ->
+      match args with
+      | [a] -> a
+      | _ -> failwith ("Custard: " ^ id ^ " applied to the wrong arity")))
+  | _ -> None
+
 let builtin_rule (l:Ident.lident) : ML rule =
   let r =
     match SMap.try_find table (Ident.string_of_lid l) with
@@ -1538,6 +1599,9 @@ let builtin_rule (l:Ident.lident) : ML rule =
                     | None -> pulse_rule ns id))
            else if ns = ["FStar"; "Custard"] then custard_rule id
            else if ns = ["FStar"; "Exn"] then exn_rule id
+           else if ns = ["FStar"; "List"; "Tot"; "Base"] &&
+                   Some? (list_coercion_rule id)
+           then list_coercion_rule id
            else if is_realized_module ns then Some Rule_realized
            else pulse_rule ns id)
       | [] -> None

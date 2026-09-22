@@ -176,4 +176,19 @@ ROOTS += ulib/FStar.WellFounded.Util.fst
 ROOTS += ulib/experimental/FStar.Reflection.Typing.fst
 ROOTS += ulib/experimental/FStar.ConstantTime.Integers.fst
 
+# The Custard pipeline (mk/custard-extract.mk) extracts the same program in
+# one whole-program pass instead: the roots above bound what is *checked*,
+# and these entry points bound what is *emitted*.  The two entrypoint files
+# name the definitions a hand-written realization reaches by OCaml name --
+# the compiler's own in src/custard, and Pulse's, because Pulse is built by
+# this repo and loaded into this binary.
+CUSTARD_UNIT     := fstarc
+CUSTARD_ROOT     := $(SRC)/fstar/FStarC.Main.fst
+CUSTARD_ENTRYFILES := src/custard/entrypoints.txt pulse/src/custard-entrypoints.txt
+CUSTARD_DEPS     := $(CUSTARD_ENTRYFILES)
+CUSTARD_REALIZED := ulib/FStar.Pervasives.fst
+
+CUSTARD_ENTRIES := --custard_entry FStarC.Main.main
+CUSTARD_ENTRIES += $(patsubst %,--custard_entrypoints %,$(CUSTARD_ENTRYFILES))
+
 include mk/generic-1.mk

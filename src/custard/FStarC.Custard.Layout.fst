@@ -374,16 +374,23 @@ let fresh_var (t:tbl) : ML string =
 
    So the expansion happens here as well, over the *source* fields: an [ECtor]
    is written against those until [rw_decl] below rewrites one, which is
-   exactly the window this pass sits in.  An imported constructor's fields
-   arrive already rewritten, so a use of one may still be short afterwards;
-   that is the case [Simplify.eta_ctors] covers with the upstream unit's
-   plans.  A saturated application -- every one in the overwhelming majority
-   of a program -- is returned untouched. *)
-let eta_ctors (t:tbl) (imports:list (dtype & type_info)) (prog:program) : ML program =
+   exactly the window this pass sits in.
+
+   Only this unit's own types, and deliberately so.  An imported type's
+   layout was decided by the unit that owns it, its fields arrive here
+   already rewritten, and the rewrites below leave a use of its constructor
+   alone -- so counting a short spine against the *source* fields of an
+   imported constructor would expand an application this pass has no business
+   touching, which is how a saturated [N (c, a, y, b)] acquired three binders.
+   The imported case is [Simplify.eta_ctors]', to be read against the upstream
+   unit's plans, and running later is right for it.
+
+   A saturated application -- every one in the overwhelming majority of a
+   program -- is returned untouched. *)
+let eta_ctors (t:tbl) (prog:program) : ML program =
   let fields : SMap.t (list (string & cty)) = SMap.create 100 in
   let add (d:dtype) : ML unit =
     ctors_of_tydef d |> List.iter (fun (cn, fs) -> SMap.add fields (key cn) fs) in
-  imports |> List.iter (fun (d, _) -> add d);
   SMap.iter t.types (fun _ d -> add d);
   let rec drop (#a:Type) (n:int) (xs:list a) : ML (list a) =
     if n <= 0 then xs else (match xs with [] -> [] | _ :: xs -> drop (n - 1) xs) in
@@ -882,7 +889,7 @@ let run (imports:list (dtype & type_info)) (prog:program)
   Prof.timed "l.layouts" (fun () -> compute_layouts t);
   Prof.timed "l.ctors" (fun () -> register_ctors t);
   (* Before the rewrite below, which reads a constructor's arity. *)
-  let prog = Prof.timed "l.eta_ctors" (fun () -> eta_ctors t imports prog) in
+  let prog = Prof.timed "l.eta_ctors" (fun () -> eta_ctors t prog) in
   if Options.custard_dump_layouts () then begin
     FStarC.Format.print_string "Custard layouts:\n";
     SMap.iter t.layouts (fun k l ->

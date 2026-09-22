@@ -34,6 +34,13 @@ open FStarC.Pprint
 
 (* COPY-PASTED ****************************************************************)
 
+(* This AST is written to a file with [save_value_to_file] and read back by
+   karamel's [InputAst], whose OCaml declarations mirror what the ML
+   extraction emits for these ones -- so the layout here is an ABI, not a
+   private choice.  Custard would otherwise inline the tuple field of every
+   constructor below (doc/ref/custard.md, section 5.7), and a compiler built
+   by Custard would write files that karamel reads as garbage. *)
+[@@FStar.Attributes.custard_boxed_fields]
 type decl =
   | DGlobal of list flag & lident & int & typ & expr
   | DFunction of option cc & list flag & int & typ & lident & list binder & expr
