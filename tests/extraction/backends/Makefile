@@ -179,13 +179,13 @@ NO_CUSTARD_KRML_C := ExtBoolHigherOrder
 # primitive rules, which is why ExtIntShiftArith and ExtUIntRotate are no
 # longer here on any of the four columns.
 XFAIL_CUSTARD_OCAML     += ExtIntNe
-XFAIL_CUSTARD_KRML_C    += ExtUIntMask
 #
-# ExtUIntMask is XFAIL on the krml C column rather than NO even though it too
-# stops at error 368: the diagnosis is right about the *program it was given*
-# (a bit-vector fold really has no C representation) but wrong about the
-# program that was written, which is a mask. The bug is in Builtins, not in
-# the C backend, so the cell records a defect rather than a boundary.
+# ExtUIntMask was XFAIL on the krml C column for the same reason, and is no
+# longer: the machine-integer modules are realized in `ulib/ml/app/ints`, so
+# `Builtins.realized_modules` now lists all eight of them and `eq_mask` and
+# `gte_mask` reach the realization rather than the bit-vector fold. The
+# diagnosis in the row above was that the bug was in Builtins and not in the
+# C backend, which is where the fix went.
 
 # FINDINGS.md #3: `FStar.UInt8` *is* a realized module for Custard, so its
 # OCaml column inherits the realization's untruncated `lognot` exactly as the

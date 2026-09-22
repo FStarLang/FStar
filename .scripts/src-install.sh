@@ -51,6 +51,7 @@ cp mk/lib.mk "${PREFIX}/mk/lib.mk"
 cp mk/common.mk "${PREFIX}/mk/common.mk"
 cp -H mk/fstar-12.mk "${PREFIX}/mk/fstar-12.mk"
 cp mk/generic-1.mk "${PREFIX}/mk/generic-1.mk"
+cp mk/custard-extract.mk "${PREFIX}/mk/custard-extract.mk"
 mkdir "${PREFIX}/.scripts"
 cp .scripts/bin-install.sh  "${PREFIX}/.scripts"
 cp .scripts/mk-package.sh   "${PREFIX}/.scripts"
@@ -62,6 +63,23 @@ mkdir "${PREFIX}/karamel"
 git -C karamel archive HEAD | tar -C "${PREFIX}/karamel" -x
 
 cp mk/src_package_mk.mk "${PREFIX}/Makefile"
+
+# The makefiles above are copied by name, so a new `include mk/...' in any of
+# them is a file the package silently lacks -- which is how mk/custard-extract.mk
+# went missing, and the package only fails much later, in check_lib.  Every
+# include one of them names has to have been copied.
+MISSING=""
+for f in "${PREFIX}"/mk/*.mk "${PREFIX}/Makefile"; do
+  for inc in $(sed -n 's,^-\?include \(mk/[^ ]*\.mk\).*,\1,p' "$f"); do
+    if ! [ -f "${PREFIX}/${inc}" ]; then
+      MISSING="${MISSING} ${f} -> ${inc}"
+    fi
+  done
+done
+if [ -n "${MISSING}" ]; then
+  echo "src-install.sh: the package includes makefiles it does not ship:${MISSING}" >&2
+  exit 1
+fi
 
 # Make sure the source package has a proper version.
 FSTAR_COMMIT=$(git describe --match="" --always --abbrev=40 --dirty 2>/dev/null || echo unset)

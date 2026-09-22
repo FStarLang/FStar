@@ -101,6 +101,21 @@ let rec prime_cache (deps:Dep.deps) (env:TcEnv.env) (fn:string) : ML unit =
   | Some _ -> ()
   | None ->
     SMap.add cache_primed fn ();
+    (* An implementation's checked file is validated against its interface's
+       dependences as well as its own -- [hash_dependences] takes them to be a
+       subset of the implementation's, which is true of a dependence *graph*.
+       It is not true of the list [Dep.deps_of] hands back for a file the scan
+       never reached, which is the module's own text and nothing more, so a
+       module the interface mentions and the implementation does not is left
+       [Unknown] and the load fails.  [FStarC.Tactics.Types] is the instance
+       that found this: its interface says [module PO =
+       FStarC.TypeChecker.Primops] and its implementation does not, and a
+       plugin reaches it only through a generated registration.  Priming the
+       interface first is also the order [load_module_from_cache] uses. *)
+    (if Dep.is_implementation fn then
+       match Dep.interface_of deps (Dep.lowercase_module_name fn) with
+       | Some i -> prime_cache deps env i
+       | None -> ());
     Dep.deps_of deps fn |> List.iter (prime_cache deps env);
     Prof.timed "cachefile" (fun () -> ignore (Ch.load_module_from_cache env fn))
 
