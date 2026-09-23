@@ -4625,7 +4625,17 @@ and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
   | None -> ([], TAny)
   | Some ((_, ty), _) ->
     let cs = binder_classes st l in
-    let bs, c = U.arrow_formals_comp ty in
+    (* The *unfolded* spine, because that is the one [cs] is indexed against
+       ({!Mono.classify_demand} takes it) and the one every call site's
+       argument list is computed from.  Stopping at an abbreviation in the
+       codomain instead makes the declaration and its calls disagree about
+       arity: EverParse's [val cbor_det_major_type () : get_major_type_t _]
+       has one binder before the abbreviation and two after, so the erased
+       [unit] in front was kept here -- there being no later binder to carry
+       the thunk -- and dropped at the call, which karamel then rejects as
+       [cbor_det_t vs ()].  With the spine unfolded the [unit] is one of two
+       binders on both sides and both drop it. *)
+    let bs, c = Mono.arrow_formals_unfold (tcenv st) ty in
     (* Section 85.  The names this signature writes into a template-id.  A
        [Mono] value binder among them is exempt from the rule just below, and
        for the reason that rule already gives for a type argument: it is
