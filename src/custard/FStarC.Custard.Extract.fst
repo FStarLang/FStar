@@ -2879,7 +2879,19 @@ and expr_of_term (st:state) (t:term) : ML expr =
         let all_erased = Cons? flags && List.for_all (fun b -> b) flags in
         let last_erased = (match List.rev flags with
                            | f :: _ -> f | [] -> false) in
-        if last_erased && (all_erased || not (is_pure body.eff))
+        (* And [keep_thunk]'s third condition, which is the one the arrow is
+           filtered by: only an *explicit* last binder can be the one a
+           partial application stopped in front of, because F* instantiates an
+           implicit at every application site.  Without it the two sides part
+           company on a Pulse [fn] whose last binder is an erased implicit --
+           [l2r_leaf_writer]'s [#v: erased bytes] -- where the arrow deletes
+           it and the lambda keeps it, and karamel rejects the local whose
+           annotation has one binder fewer than its value. *)
+        let last_explicit =
+          match List.rev bs with
+          | b :: _ -> not (S.is_bqual_implicit_or_meta b.binder_qual)
+          | [] -> false in
+        if last_erased && (all_erased || (not (is_pure body.eff) && last_explicit))
         then (match List.rev flags with
               | _ :: r -> List.rev (false :: r)
               | [] -> flags)
