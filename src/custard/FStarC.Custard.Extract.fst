@@ -4730,6 +4730,23 @@ and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
                    which is how a target intrinsic with a compile-time \
                    operand is normally expressed." ]
          | Mono, Some (_, a) -> go (i + 1) bs' cs' (NT (b.binder_bv, a) :: subst) keep anys
+         (* Section 5.1.  [split_mono_args] deletes a [Dropped] argument
+            outright -- it is not even passed as [()] -- so a declaration that
+            keeps the binder is one parameter longer than every call to it.
+            EverParse's [val cbor_det_major_type () : get_major_type_t _] is
+            that: the [unit] is [Dropped], the call passes only the [cbor_det_t]
+            and karamel rejects the two against each other.  The parameter is
+            gone from the emitted code either way; the only question is whether
+            the declaration agrees, and the warning below is what tells the
+            author an external's prototype moved.
+
+            A *type* binder is exempt for the reason the [Mono] case gives:
+            it leaves the value spine by design and becomes a [dx_typars]
+            entry, so dropping it does not shorten the call -- it unbinds the
+            variable the signature still mentions.  The Rust backend's
+            modelled [Pulse.Lib.Slice.slice t] is that. *)
+         | Dropped, _ when not (is_type_binder (tcenv st) b) ->
+           go (i + 1) bs' cs' subst keep anys
          | Mono, None when is_type_binder (tcenv st) b && is_root st l ->
            (* Section 64.  A root is reached from no F* call site -- that is
               what makes it a root -- so "the call site did not supply it"
