@@ -4202,18 +4202,41 @@ and callee_eff (st:state) (key:string) (n_args:int) : ML eff =
 
 and branch_of_branch (st:state) (br:S.branch) : ML branch =
   let p, g, b = SS.open_branch br in
-  (pat_of_pat st p,
-   (match g with None -> None | Some g -> Some (expr_of_term st g)),
-   expr_of_term st b)
+  let p, freed = pat_of_pat st p in
+  (* Section 5.2's rule, one phase earlier.  [Layout] hands back the names
+     whose sub-pattern *it* deleted and rebinds each to [()]; [pat_of_pat]
+     deletes sub-patterns too, and for the same reason -- the value has no
+     runtime representation -- so it owes the body the same closure.  Without
+     it the name reaches a backend free: a constructor field whose type is an
+     *abbreviation* of [unit] is [Dropped] here rather than erased by
+     [Layout], so [match m with X_a_mid cm -> (| A, cm |)] lost [cm] from the
+     pattern and kept it in the body.  [Simplify] substitutes these away as
+     soon as it sees them; what matters is that the body stays closed in
+     between. *)
+  let bind (e:expr) : ML expr =
+    List.fold_right (fun v acc ->
+      { acc with e = ELet (v, TUnit, unit_expr, acc) }) freed e in
+  (p,
+   (match g with None -> None | Some g -> Some (bind (expr_of_term st g))),
+   bind (expr_of_term st b))
 
-and pat_of_pat (st:state) (p:S.pat) : ML pat =
+(* The variables an F* pattern binds, for the rebinding above.  A
+   [Pat_dot_term] binds nothing a body may name: it is an inferred value, and
+   the occurrences it stands for are the pattern's own. *)
+and pat_bound_vars (p:S.pat) : ML (list string) =
+  match p.v with
+  | Pat_var bv -> [name_of_bv bv]
+  | Pat_cons (_, _, pats) -> pats |> List.collect (fun (p, _) -> pat_bound_vars p)
+  | Pat_constant _ | Pat_dot_term _ -> []
+
+and pat_of_pat (st:state) (p:S.pat) : ML (pat & list string) =
   match p.v with
   | Pat_constant c ->
-    (match constant_of_sconst c with
-     | Some c -> PConst c
-     | None -> PWild)
-  | Pat_var bv -> PVar (name_of_bv bv)
-  | Pat_dot_term _ -> PWild
+    ((match constant_of_sconst c with
+      | Some c -> PConst c
+      | None -> PWild), [])
+  | Pat_var bv -> (PVar (name_of_bv bv), [])
+  | Pat_dot_term _ -> (PWild, [])
   | Pat_cons (fv, _, pats) ->
     (* Which subpatterns survive has to be decided exactly as for a
        constructor *application* (see [app_of_fv']), from the constructor's own
@@ -4223,8 +4246,11 @@ and pat_of_pat (st:state) (p:S.pat) : ML pat =
        pattern of the wrong arity. *)
     let l = S.lid_of_fv fv in
     let flags = ctor_dropped_flags st l in
-    let pats = drop_flagged flags pats |> List.map (fun (p, _) -> pat_of_pat st p) in
-    PCtor (request st { sk_lid = l; sk_args = []; sk_subst = []; sk_holes = 0 }, pats)
+    let gone = keep_flagged flags pats |> List.collect (fun (p, _) -> pat_bound_vars p) in
+    let kept = drop_flagged flags pats |> List.map (fun (p, _) -> pat_of_pat st p) in
+    (PCtor (request st { sk_lid = l; sk_args = []; sk_subst = []; sk_holes = 0 },
+            kept |> List.map fst),
+     gone @ (kept |> List.collect snd))
 
 (* Section 70.2.  [@@custard_c_reference]: values of this type are handles, so
    a binding of one aliases rather than copies.  It is a statement about how
