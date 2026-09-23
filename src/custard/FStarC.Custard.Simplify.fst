@@ -862,6 +862,18 @@ let rec reduce (x:expr) : ML expr =
           but the caller's is the one the surrounding code was built against,
           and an abbreviation is the better name for it. *)
        { arg with ty = x.ty }
+     (* Commuting conversion: an application whose head is a [match] whose
+        arms are lambdas.  None of the backends has closures, so the arms
+        have to meet their argument where beta can fire, and the only place
+        that can happen is inside the arms.  Restricted to atomic arguments,
+        which are pure and free to duplicate, and to a scrutinee that is
+        itself atomic or already evaluated by the arms -- the [match] is
+        evaluated exactly once either way, and only the application moves. *)
+     | EMatch (scrut, brs) when args |> List.for_all is_atomic
+                             && brs |> List.existsb (fun (_, _, bd) -> EFun? bd.e) ->
+       let brs = brs |> List.map (fun (p, gd, bd) ->
+         (p, gd, { x with e = EApp (bd, args) })) in
+       reduce { x with e = EMatch (scrut, brs) }
      | _ -> { x with e = EApp (h, args) })
 
   | EMatch (scrut, brs) ->
