@@ -22261,6 +22261,97 @@ of its own, so the tuple type is declared and the test can check that it
 still is, while `entry` compiles to `return (x + (x + 1));` and the word
 `_letpattern` does not appear.
 
+# 130 An attribute for a preprocessor
+
+`[@@PpxDerivingYoJson]` is an `FStar.Attributes` decoration the ML
+extractor has honoured for years: written on a type, it puts
+`[@@deriving yojson]` on the OCaml type declaration it emits, and
+`ppx_deriving_yojson` turns that into a `_to_yojson`/`_of_yojson` pair.
+The compiler's own sources use it --- `FStarC.Ident`, `FStarC.Const`,
+`FStarC.Range.Type`, `FStarC.Real`, `FStarC.Syntax.Syntax` --- and
+`mk/custard.mk` already writes `(preprocess (pps ppx_deriving.show
+ppx_deriving_yojson sedlex.ppx))` into the `dune` file for the
+Custard-built compiler, because the hand-written realizations beside it
+need it.
+
+Custard read the attribute nowhere.  A type that asks to be serializable
+came out as an ordinary type declaration, the converters were never
+generated, and every caller of one was an unbound identifier at the end
+of a build that had otherwise succeeded --- which is §34.2's complaint
+about silence, in the form where the silence is not even diagnosable by
+reading the extracted file.
+
+### 130.1 A flag, not a feature
+
+The IR gains `Deriving of string` and nothing else.  Custard does not read
+the string, generates no converter, and has no opinion about what `yojson`
+means: that is a question about the preprocessor the generated `.ml` is
+fed to, not about F\*.  This is the same bargain as §36.3's `Prologue` ---
+the decoration is text for a downstream tool, and Custard's job is to put
+it in the right place --- and it is why the flag is a string rather than
+an enumeration of the ppxes anyone has heard of.
+
+`[@@PpxDerivingYoJson]` is the one spelling `Extract.deriving_flags`
+recognizes.  `PpxDerivingShow` and `PpxDerivingShowConstant` are not:
+the second needs a `[@printer ...]` on the type's *manifest* rather than
+an item attribute on its declaration, so they are a different shape and
+not merely a second string.
+
+Only `PrintOCaml` prints it.  There is no ppx behind any of the other
+backends, so the flag reaches C, karamel, Rust and F\# and is ignored,
+exactly as `Prologue` is ignored on the OCaml path.
+
+### 130.2 Per declaration, not per group
+
+The attribute goes on the individual type declaration:
+
+```ocaml
+type deriving_point = {
+  px : Prims.int;
+  py : Prims.int;
+} [@@deriving yojson]
+```
+
+and not after the whole `type ... and ...` item.  OCaml's grammar allows
+either --- attributes belong to each `type_declaration` --- and the ML
+extractor sets `ptype_attributes` per declaration too, but for Custard the
+choice is forced rather than cosmetic: a mutually recursive group is
+*assembled* by `Simplify.scc` out of declarations that were requested
+separately (§6 pass 8), and there is no reason the members should all have
+asked.  A group-wide attribute would derive for types the source never
+decorated.
+
+That is what `tests/custard/Deriving.fst` pins, and the plain `}` of its
+undecorated `span` is the assertion that carries it: two of the three
+types are decorated, so a printer that appended the attribute to every
+declaration would satisfy both positive patterns and leave no plain
+closing brace in the file.
+
+### 130.3 Where the attribute is, and where the author put it
+
+F\* copies a type's `sigattrs` onto every declaration it *generates* from
+that type --- each projector, each discriminator, the constructor.  So
+`[@@PpxDerivingYoJson]` on a two-field record arrives at
+`__proj__Mkpoint__item__px` and `__proj__Mkpoint__item__py` as well, and
+the first version of this reported both of them, under §34.2's own
+warning 371, as an attribute written on a value.  A correct program, two
+warnings, and the advice in each was to move an attribute that was
+already where it belonged.
+
+`Extract.source_attrs` therefore reads nothing off a `Projector`, a
+`Discriminator` or a `Sig_datacon`: those are not places an author
+writes, so an attribute found there is a copy and not a decision.  What
+remains is the case the warning is for --- the attribute on an ordinary
+`let`, on an `assume val`, on an erased type --- where Custard emits no
+definition for a ppx to read and the author has configured nothing.
+`tests/custard/AttrPos.fst` gains that case, beside the four §34.2
+already had.
+
+A `Realized` type is the one silence left.  Its OCaml shape is the
+hand-written module's, Custard emits no declaration for it at all, and
+the realization carries its own `[@@deriving]` or does not; there is
+nothing Custard can honour and nothing it can usefully say.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |

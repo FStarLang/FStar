@@ -948,6 +948,20 @@ let params (ps : list string) : ML string =
   | [p] -> "'" ^ ocaml_var p ^ " "
   | _ -> "(" ^ String.concat ", " (List.map (fun p -> "'" ^ ocaml_var p) ps) ^ ") "
 
+(* Section 130.  The ppx item attribute the source asked for with
+   [@@PpxDerivingYoJson], and nothing else: Custard generates no converter of
+   its own and does not know what the string means.
+
+   Written on the individual type declaration rather than after the whole
+   [type ... and ...] group, because a group is assembled from declarations
+   that were requested separately and need not all have asked.  OCaml's
+   grammar puts the attributes on each [type_declaration], which is where the
+   ML extractor puts them too. *)
+let deriving_attr (fs : list flag) : ML string =
+  match fs |> List.collect (function Deriving s -> [s] | _ -> []) with
+  | [] -> ""
+  | ds -> "[@@deriving " ^ String.concat ", " ds ^ "]"
+
 let print_decl (first:bool) (d:decl) : ML (option string) =
   match d with
   | DType t ->
@@ -955,21 +969,30 @@ let print_decl (first:bool) (d:decl) : ML (option string) =
     else
       let hd = (if first then "type " else "and ") ^
                params t.dt_params ^ ocaml_type_name t.dt_name in
+      let deriv = deriving_attr t.dt_flags in
+      (* The separator differs because a variant's last line already ends in a
+         newline, and an abbreviation's and a record's do not. *)
+      let after (sep:string) (s:string) : string =
+        if deriv = "" then s else s ^ sep ^ deriv in
       (match t.dt_body with
+       (* An abstract type has no definition for a ppx to read; the extractor
+          has already said so (warning 371), so nothing is appended here. *)
        | TAbstract -> Some (hd)
-       | TAbbrev c -> Some (hd ^ " = " ^ ty c)
+       | TAbbrev c -> Some (after " " (hd ^ " = " ^ ty c))
        | TRecord fs ->
-         Some (hd ^ " = {\n" ^
-               String.concat "" (List.map (fun (f, c) ->
-                 "  " ^ ocaml_var f ^ " : " ^ ty c ^ ";\n") fs) ^ "}")
+         Some (after " "
+               (hd ^ " = {\n" ^
+                String.concat "" (List.map (fun (f, c) ->
+                  "  " ^ ocaml_var f ^ " : " ^ ty c ^ ";\n") fs) ^ "}"))
        | TVariant cs ->
-         Some (hd ^ " =\n" ^
-               String.concat "" (List.map (fun (c, fs) ->
-                 "  | " ^ ctor_ref c ^
-                 (match fs with
-                  | [] -> ""
-                  | _ -> " of " ^ String.concat " * " (List.map (fun (_, t) -> ty t) fs))
-                 ^ "\n") cs)))
+         Some (after "  "
+               (hd ^ " =\n" ^
+                String.concat "" (List.map (fun (c, fs) ->
+                  "  | " ^ ctor_ref c ^
+                  (match fs with
+                   | [] -> ""
+                   | _ -> " of " ^ String.concat " * " (List.map (fun (_, t) -> ty t) fs))
+                  ^ "\n") cs))))
 
   (* An external is printed at each of its uses; see {!externals}. *)
   | DExternal _ -> None

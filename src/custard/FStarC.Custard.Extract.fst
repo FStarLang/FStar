@@ -969,6 +969,99 @@ let c_decoration_flags (attrs:list term) : ML (list flag) =
        | _ -> [])
     | _ -> [])
 
+(* Section 130.  [@@PpxDerivingYoJson], read off a *type*.
+
+   The attribute is one F* has had for as long as the ML extractor has, and
+   that extractor turns it into a [[@@deriving yojson]] item attribute on the
+   OCaml type declaration it emits (FStarC.Extraction.ML.Modul.extract_meta).
+   Custard emits the same declaration and had no way to ask for the same
+   attribute, so a module that is serialized through ppx_deriving_yojson --
+   the compiler's own [FStarC.Ident] and [FStarC.Const] among them -- could
+   not be compiled by Custard at all.
+
+   Custard does not read the string and does not generate any of the
+   functions: what [yojson] means is a question for the preprocessor the
+   generated [.ml] is fed to.  Only the OCaml backend prints it; see
+   {!FStarC.Custard.PrintOCaml.print_decl}. *)
+let deriving_flags (attrs:list term) : ML (list flag) =
+  (* Both routes -- the sigelt's attributes and the letbinding's -- are read,
+     for the reason [c_decoration_flags] gives, so the same attribute arrives
+     twice and two [[@@deriving yojson]]s would be a duplicate-definition
+     error out of the ppx rather than a no-op. *)
+  let seen : SMap.t bool = SMap.create 4 in
+  attrs |> List.collect (fun a ->
+    let head, args = U.head_and_args_full (SS.compress a) in
+    match (SS.compress head).n, args with
+    | Tm_fvar fv, [] ->
+      let nm = Ident.string_of_lid (S.lid_of_fv fv) in
+      if Some? (SMap.try_find seen nm) then [] else
+      (SMap.add seen nm true;
+       match nm with
+       | "FStar.Attributes.PpxDerivingYoJson" -> [Deriving "yojson"]
+       | _ -> [])
+    | _ -> [])
+
+(* The attributes of the declaration [l] stands for.  F* records a
+   definition's attributes on the sigelt *and* on the letbinding, and which of
+   the two a particular attribute lands on is not stable, so both are read --
+   the same argument [c_decoration_flags] makes, and the same reason
+   [deriving_flags] deduplicates. *)
+let source_attrs (se:sigelt) (l:Ident.lident) : ML (list term) =
+  (* A projector, a discriminator and a constructor are *generated from* the
+     type declaration, and F* copies the type's attributes onto each of them.
+     So the attribute is here too, and reading it here would report [point]'s
+     [@@PpxDerivingYoJson] once per field as an attribute written on a value.
+     It is not where the author wrote it. *)
+  if se.sigquals |> List.existsb (fun q -> Projector? q || Discriminator? q)
+     || Sig_datacon? se.sigel
+  then []
+  else
+  se.sigattrs @
+  (match se.sigel with
+   | Sig_let {lbs=(_, lbs)} ->
+     lbs |> List.collect (fun lb ->
+       match lb.lbname with
+       | Inr fv when Ident.lid_equals (S.lid_of_fv fv) l -> lb.lbattrs
+       | _ -> [])
+   | _ -> [])
+
+(* Reported once per declaration rather than once per request: a definition is
+   extracted once per specialization key, and an attribute written in the
+   wrong place is a property of the source, not of a call site. *)
+let deriving_reported : SMap.t bool = SMap.create 8
+
+let with_deriving (l:Ident.lident) (fs : list flag) (d:decl) : ML decl =
+  if Nil? fs then d else
+  let complain (why:string) : ML unit =
+    let key = Ident.string_of_lid l in
+    if Some? (SMap.try_find deriving_reported key) then () else begin
+      SMap.add deriving_reported key true;
+      E.log_issue0 E.Warning_CustardIneffectiveAttribute [
+        text ("[@@PpxDerivingYoJson] on " ^ key ^ " has no effect.");
+        text why;
+        text "It asks a ppx to generate converters from the type's \
+              definition, so it goes on a type Custard emits a definition \
+              for." ]
+    end in
+  match d with
+  | DType t when TAbstract? t.dt_body ->
+    complain "Custard emits no definition for this type -- it is external, \
+              realized or merely declared -- so the generated OCaml has \
+              nothing for a ppx to read.";
+    d
+  | DType t when has_flag t.dt_flags Erased ->
+    complain "The type is erased: it has no representation at all in the \
+              generated OCaml, so no declaration is emitted to carry the \
+              attribute.";
+    d
+  | DType t ->
+    let fresh = fs |> List.filter (fun f -> not (has_flag t.dt_flags f)) in
+    DType { t with dt_flags = t.dt_flags @ fresh }
+  | _ ->
+    complain "Custard reads this attribute off a type declaration, never off \
+              a value, so nothing consults it here.";
+    d
+
 (* Where each attribute does belong, for the second sentence of the message. *)
 let attr_home (nm:string) : string =
   match nm with
@@ -4710,6 +4803,17 @@ and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
 
 and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
                    (n_holes:int) (se:sigelt)
+  : ML decl =
+  (* Section 130.  Attached here rather than in each producer below, because
+     every one of them builds a [DType] from the same sigelt and the question
+     -- did the source ask for a ppx? -- is the same for all of them.
+     Duplicates are filtered, so the [Sig_bundle] case going round again does
+     not add the flag twice. *)
+  with_deriving l (deriving_flags (source_attrs se l))
+                (extract_sigelt_body st l nm margs n_holes se)
+
+and extract_sigelt_body (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
+                        (n_holes:int) (se:sigelt)
   : ML decl =
   match se.sigel with
   | Sig_let {lbs=(is_rec, lbs)} ->

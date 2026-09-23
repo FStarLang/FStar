@@ -16,6 +16,11 @@ let width : U32.t = 4ul
 [@@FStar.Attributes.custard_c_header "attrpos.h"]
 let height : U32.t = 5ul
 
+(* [@@PpxDerivingYoJson] asks a ppx for converters generated from a *type's*
+   definition; a value is not a type. *)
+[@@FStar.Attributes.PpxDerivingYoJson]
+let depth : U32.t = 2ul
+
 (* [@@custard_compile_time] names a definition; a parameter is not one. *)
 let scale ([@@@FStar.Attributes.custard_compile_time] k : U32.t) (x : U32.t)
   : U32.t
@@ -30,4 +35,4 @@ let unbox (b:box) : U32.t = match b with | Box c -> c
 
 let main () : U32.t =
   let b = Box (scale width height) in
-  if unbox b = 20ul then 0ul else 1ul
+  if unbox b = 20ul && depth = 2ul then 0ul else 1ul
