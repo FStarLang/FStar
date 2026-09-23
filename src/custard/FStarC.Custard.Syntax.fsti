@@ -575,6 +575,23 @@ type flag =
   (** Ask the C compiler to inline this definition.  [inline] in the generated
       C, nothing in OCaml.  Custard's own inlining decisions are {!Inline},
       which is a different thing: that one substitutes and emits nothing. *)
+  | Deriving of string
+  (** Section 130.  Ask the OCaml backend for a [\[@@deriving <s>\]] item
+      attribute on this type's definition, so that a ppx generates the
+      functions the string names.  [\[@@PpxDerivingYoJson\]] in F\* source is
+      [Deriving "yojson"], which is the one spelling the extractor recognizes
+      today and the one the ML extractor has always honoured.
+
+      Custard does not read the string and generates nothing itself: what the
+      attribute means is a question for the preprocessor that consumes the
+      generated [.ml], not for F\*.  Every other backend ignores the flag,
+      there being no ppx behind any of them.
+
+      A type with no definition of its own in the generated OCaml carries no
+      [\[@@deriving\]]: an abstract or erased one is reported as an
+      ineffective attribute (warning 371) rather than emitted as code that
+      does not compile, and a [Realized] one is the hand-written module's
+      business, since Custard emits no declaration for it at all. *)
   | Realized
   (** The declaration is realized by hand-written OCaml, in the support module
       named by its own namespace (section 8.2): [FStarC.Platform.Base.sys] is

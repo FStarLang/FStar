@@ -674,6 +674,21 @@ ROOTS_Library  = scale
 GREP_Library   = library_scale library_double
 NOGREP_Library = library_unused "let _ ="
 
+# Section 130.  [@@PpxDerivingYoJson] becomes the ppx item attribute
+# [@@deriving yojson] on the OCaml type it decorates, and on nothing else.
+# Extraction only: generating the converters is the preprocessor's work, not
+# Custard's.
+ROOT_TESTS += Deriving
+ROOTS_Deriving  = pick shift widen
+# The record and the variant forms.  [span] is the undecorated record, and
+# its plain closing brace is the negative: the attribute is written on two of
+# the three types here, so a printer that appended it to every declaration --
+# or to a whole [type ... and ...] group -- would pass the other two patterns
+# and leave no plain [}] behind.
+GREP_Deriving  += "^}$$"
+GREP_Deriving  += "} \[@@deriving yojson\]"
+GREP_Deriving  += "^  \[@@deriving yojson\]$$"
+
 # Extraction of each of these must fail with the given error code: they are
 # the diagnostics of sections 3.2 and 3.6.
 REJECT_TESTS += MonoPoly
@@ -876,6 +891,8 @@ EGREP_AttrPos += "custard_opaque\] on the field contents of AttrPos.Box"
 EGREP_AttrPos += "custard_compile_time\] on the parameter k of AttrPos.scale"
 EGREP_AttrPos += "custard_inline_field\] on the declaration AttrPos.width"
 EGREP_AttrPos += "custard_c_header\] on the declaration AttrPos.height"
+EGREP_AttrPos += "PpxDerivingYoJson\] on AttrPos.depth"
+EGREP_AttrPos += "never off a value, so"
 EGREP_AttrPos += "never off a binder, so"
 EGREP_AttrPos += "has no .@@custard_extern"
 
