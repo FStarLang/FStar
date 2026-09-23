@@ -5987,6 +5987,42 @@ let noextract_to_this_backend (se:S.sigelt) : ML bool =
        | None -> false)
     | _ -> false)
 
+(* A module with an interface has a public surface, and it is the interface:
+   [FStarC.TypeChecker.Tc.mark_karamel_private] tags every definition the
+   interface does not declare with the internal [KrmlPrivate] attribute, which
+   is what made the legacy backends emit such a definition as C [static].
+
+   [--custard_entry_module] means "compile this module as a library" (section
+   70.1), and a library's surface is its interface.  Rooting a definition the
+   interface hides is not what [--extract_module] did: EverParse's quackyducky
+   suite has 77 generated modules whose [.fst]-only [t17_gf]/[t18_fg] convert
+   between specification-level types, are used only in ghost position, and
+   were dropped by karamel as unreachable privates.  Rooted, they are kept,
+   and karamel then reports the specification datatype behind them as a
+   garbage-collected type that is not Low*.
+
+   A module without an interface has no such surface, and the question is
+   asked of the *module*, not of the attribute: [Tc.mark_karamel_private]
+   indeed tags nothing there, but it is not the only thing that writes the
+   attribute.  [FStar.Tactics.PrettifyType] stamps [KrmlPrivate] on every
+   [left]/[right]/round-trip definition it generates, unconditionally and
+   whether or not the module has an interface, so reading the attribute alone
+   would un-root section 73's generated conversions in a module that never
+   hid anything -- which is what [tests/custard/PrettyUnit] sees.  The
+   attribute means "not exported from the generated C"; only where an
+   interface exists does that coincide with "not part of the library's
+   surface".
+
+   [--ext no_krml_private] turns the tagging off for a build whose generated C
+   is meant to be consumed by other C code; there it means the same thing
+   here, and the whole module is the surface again. *)
+let is_krml_private (st:state) (m:Ident.lident) (se:S.sigelt) : ML bool =
+  Dep.module_has_interface st.deps m &&
+  se.sigattrs |> List.existsb (fun attr ->
+    match (SS.compress attr).n with
+    | Tm_constant (Const_string ("KrmlPrivate", _)) -> true
+    | _ -> false)
+
 let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
          (per_module : S.modul -> ML unit) : ML program =
   let mark' (quiet:bool) (f:flag) (l:Ident.lident) : ML unit =
@@ -6090,7 +6126,8 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
             when not (se.sigquals |> List.existsb (function
                         | NoExtract | Projector _ | Discriminator _ -> true
                         | _ -> false)) &&
-                 not (noextract_to_this_backend se) ->
+                 not (noextract_to_this_backend se) &&
+                 not (is_krml_private st md.name se) ->
             lbs |> List.iter (fun lb ->
               match lb.lbname with
               (* A specification is a definition too.  [Null.live r : slprop]
