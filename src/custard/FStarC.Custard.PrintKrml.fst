@@ -769,6 +769,17 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
        no interest to anyone, and Custard is happy to leave a call's result
        type as [TAny], which would then clash with what karamel infers.
 
+       Except for a pointer, where what karamel infers is wrong for us.  A
+       discarded [let mut x = e] -- Pulse allows one, and EverParse's
+       [cbor_validate_det'] has one -- reaches karamel as a stack allocation
+       of one element, and [Checker.best_buffer_type] reads an untyped binder
+       bound to one as an *array*, [bool[1]], not a pointer.  karamel then
+       rewrites size-one stack arrays back into scalars whose address is
+       taken, replacing the [ignore] argument with [&x] while leaving the type
+       argument saying [bool[1]], and its own checker rejects the result.
+       Annotating the binder is enough: with the type given, nothing is
+       inferred and the rewrite and the annotation agree.
+
        The name matters, and must not be [_].  karamel's use analysis, finding
        the binder unread, rewrites the binding into [let b = e1 in ignore b],
        and its Rust backend prints a binder's name verbatim: a binder named
@@ -782,7 +793,10 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
        source spelling, so a program with its own [discarded] in scope would
        otherwise have every reference to it captured by this binder. *)
     let x = fresh_local env "discarded" in
-    let b = { K.name = x; K.typ = K.TAny; K.mut = false; K.meta = [] } in
+    let t = match e1.ty with
+            | TBuf _ | TRef _ -> krml_typ env e1.ty
+            | _ -> K.TAny in
+    let b = { K.name = x; K.typ = t; K.mut = false; K.meta = [] } in
     K.ELet (b, krml_expr env e1, krml_expr (extend env x) e2)
 
   | ECtor (n, args) when is_tuple_ctor_name n ->
