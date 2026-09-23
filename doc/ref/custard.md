@@ -16849,6 +16849,39 @@ dead abbreviation reaches a backend at all and is the situation the report
 came from.  Against the unfixed compiler the Rust leg fails with three
 errors, naming `first` and `main` --- neither of which mentions `ugly`.
 
+### 77.5 The other direction: `--custard_no_unfold`
+
+§77.2 explains why karamel reads an abbreviation of an applied type as *the
+name chosen for that instance*.  That is a property worth having on purpose,
+and a whole-program extractor loses it by default: `Monomorphize.unfold_cty`
+and `Layout.resolve` both replace an abbreviation by its body, so an
+abbreviation written precisely to name an instance never reaches karamel and
+the instance gets karamel's own generated name instead.
+
+Unfolding is the right default and §115 says why --- `option sid_t` and
+`option U16.t` are the same type, and a monomorphizer that took the two
+spellings at face value would clone it twice.  But it is a default, not a
+law, and the case against it is concrete.  EverParse's CBOR library publishes
+`CBOR.Pulse.Raw.Slice.byte_slice = Pulse.Lib.Slice.slice U8.t` so that the
+byte-slice fields of its public C types are spelled
+`CBOR_Pulse_Raw_Slice_byte_slice`.  A consumer --- a CDDL- or COSE-generated
+program --- includes that header *and* monomorphizes `slice uint8` on its own
+account; if the library's fields were spelled with karamel's generated name
+the consumer would emit a second, conflicting `typedef` for a struct tag the
+header already defines, and no C translation unit can contain both.
+
+`--custard_no_unfold <lid>` marks one abbreviation `NoUnfold`.  The flag is
+read in exactly the two places that unfold --- the `Realized` arm of
+`unfold_cty` and the `Realized` arm of `resolve` each gain a sibling --- and
+nowhere else, so the abbreviation is emitted and every use of it prints as
+its own name.  It is deliberately a name and not a module: the judgement is
+about one definition and the module around it is full of ordinary
+abbreviations that should keep unfolding.
+
+Not backend specific.  Naming a monomorphic instance is as meaningful on the
+OCaml path as on the karamel one, and an abbreviation that is emitted is
+always a legal thing for a target to see.
+
 ## Section 78. Unfolding a spine is not eta-expanding it
 
 ### 78.1 Intake

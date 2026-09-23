@@ -282,6 +282,12 @@ let rec unfold_cty (st:state) (fuel:int) (c:cty) : ML cty =
         what the target knows. *)
      | Some ({ dt_body = TAbbrev _; dt_flags = fl })
        when has_flag fl Realized -> c
+     (* Section 77.  The same argument as the line above, for a name the
+        program gave itself rather than one a realization owns: the point of
+        [--custard_no_unfold] is that the abbreviation, not the body, is what
+        the target is to see. *)
+     | Some ({ dt_body = TAbbrev _; dt_flags = fl })
+       when has_flag fl NoUnfold -> c
      | Some ({ dt_body = TAbbrev b; dt_params = ps }) ->
        (* An eta-contracted abbreviation -- [type t = flat_set], which binds
           nothing and stands for a type constructor -- takes more arguments
