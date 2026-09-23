@@ -3516,14 +3516,40 @@ and prim_app (st:state) (l:Ident.lident) (n:int)
      The mistake is easy to make because a rule sees the erased implicits in
      the term it is handed while a use site supplies only the retained
      binders, so counting the wrong ones is the natural error.
-     A warning rather than an error: [arrow_formals_unfold] declines to peel
-     an effectful codomain, so a rule for something returning a function
-     through an [ML] abbreviation may legitimately exceed the visible count. *)
+     Nothing here drops an effectful call; the eta-expansion below is what
+     makes the call disappear.  It wraps the rule's effectful result in a
+     lambda, and a lambda is a value, so discarding it is sound.  The lambda
+     stands for a partial application, but when the source already supplied
+     every argument the declaration has, there is none: F\* runs the call
+     here, and wrapping it in a lambda delays it forever.
+
+     Issue 4565.  So this is an error whenever the declaration provably ends
+     after [retained] binders -- its codomain, effectful or not, is headed by
+     a type constant ({!Mono.arrow_spine_exact}), as for a Pulse [fn]'s
+     [stt unit pre post] or an [ML unit].  It stays a warning only where the
+     count may be an undercount: [arrow_formals_unfold] declines to peel an
+     effectful codomain, so a rule for something returning a function through
+     an [ML] abbreviation may legitimately exceed the visible count. *)
   (match decl_ty with
    | Some ty ->
      let retained = Mono.erased_binders_unfold (tcenv st) ty
                     |> List.filter (fun b -> not b) |> List.length in
-     if n > retained then
+     if n > retained && Mono.arrow_spine_exact (tcenv st) ty then
+       custard_error st E.Error_CustardRuleArityExceeded [
+         Pprint.doc_of_string
+           ("The rule for " ^ Ident.string_of_lid l ^ " declares arity " ^
+            show n ^ ", but the declaration retains only " ^ show retained ^
+            " binder(s) after erasure, and its result is not a function.");
+         Pprint.doc_of_string
+           "No use site can supply that many arguments.  Applying the rule \
+            anyway would wrap every call in a lambda that nothing applies, \
+            and the call would silently vanish from the output.";
+         Pprint.doc_of_string
+           "A rule's arity counts the arguments that survive erasure: not \
+            type arguments, not erased or [squash] binders (including the \
+            ones a [requires] clause introduces), but including the trailing \
+            unit applications of a Pulse [fn]."]
+     else if n > retained then
        custard_warning st E.Warning_CustardRuleArity [
          Pprint.doc_of_string
            ("The rule for " ^ Ident.string_of_lid l ^ " declares arity " ^
@@ -3581,7 +3607,7 @@ and prim_app (st:state) (l:Ident.lident) (n:int)
     | _ ->
       (* Section 64.2.  The other direction of the arity mistake, and the one
          that gets further before it is noticed.  Declaring [n] too *large*
-         produces a lambda nothing applies, which the warning above catches;
+         produces a lambda nothing applies, which the check above catches;
          declaring it too *small* leaves arguments over, and they are applied
          to whatever the rule returned.
 

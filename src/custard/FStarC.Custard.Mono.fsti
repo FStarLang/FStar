@@ -136,6 +136,13 @@ val erased_binders (env:TcEnv.env) (t:typ) : ML (list bool)
     measure the same spine. *)
 val arrow_formals_unfold (env:TcEnv.env) (t:typ) : ML (binders & comp)
 
+(** [arrow_spine_exact env t] holds when the codomain [arrow_formals_unfold]
+    stops at cannot be a function: it normalizes to something headed by a type
+    constant, rather than an arrow, a type variable, or an effectful codomain
+    hiding an arrow, and the walk did not run out of fuel.  The spine's length
+    is then the most arguments any use site can supply. *)
+val arrow_spine_exact (env:TcEnv.env) (t:typ) : ML bool
+
 (** [erased_binders_unfold env t] is [erased_binders] over the whole arrow
     spine, unfolding abbreviations in the codomain as [classify] does.  This is
     what filtering a *call spine* wants: a call may run straight through an

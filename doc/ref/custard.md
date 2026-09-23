@@ -12030,6 +12030,22 @@ about. Measured: zero firings across `tests/custard`,
 `tests/custard/pulse`, and `make custard`, which is thirty-odd rules and the
 whole compiler.
 
+Issue 4565 made it an error where the count is known to be exact. A Pulse
+`fn` whose `requires` became erased `squash` binders went from ten retained
+binders to six while its rule still declared ten, and every call vanished
+from the generated CUDA behind a warning that scrolled past in a parallel
+build. Note what actually deletes the call: not the simplifier, which is
+right to drop an unused lambda, but the eta-expansion, which wraps a call F\*
+runs *now* in a lambda that stands for a partial application that does not
+exist. `Mono.arrow_spine_exact` walks the same spine as
+`arrow_formals_unfold` and holds when the codomain -- total or effectful --
+normalizes to something headed by a type constant (`stt unit pre post`,
+`ML unit`): nothing more can be applied, so `n > retained` is necessarily a
+mistake and is error 396 (`Error_CustardRuleArityExceeded`). An arrow
+codomain behind an effect, a type variable, or exhausted fuel may still be
+an undercount, and keeps warning 381. `tests/custard/plugin/CustardRuleOverArity.fst`
+is the regression test.
+
 The alternative -- making `Rule_prim` carry its arity in a checked way --
 was rejected as costing ~30 in-tree call sites to catch a mistake that a
 three-line static check catches. The reporter's own diagnosis is worth

@@ -411,4 +411,5 @@ let default_settings : list error_setting =
     Error_CustardBadStaticArray                        , CAlwaysError, 393;
     Error_CustardBadComment                            , CAlwaysError, 394;
     Error_CustardNoFSharpRealization                   , CAlwaysError, 395;
+    Error_CustardRuleArityExceeded                     , CAlwaysError, 396;
     ]

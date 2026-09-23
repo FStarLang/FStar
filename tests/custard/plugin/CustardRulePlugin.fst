@@ -226,6 +226,16 @@ let under (_tys : list cty) (args : list expr) : ML expr =
   | [x] -> x
   | _ -> failwith "CustardRulePlugin: under applied to the wrong number of arguments"
 
+(* Issue 4565.  Deliberately wrong the other way: [store] retains two
+   arguments (its [squash] binder is erased) and this claims three.  Applied,
+   it would be eta-expanded into a lambda nothing calls, and the store would
+   vanish from the output; registered so that the error has something to fire
+   on.  Never actually invoked. *)
+let over (_tys : list cty) (args : list expr) : ML expr =
+  match args with
+  | [_; _; x] -> x
+  | _ -> failwith "CustardRulePlugin: over applied to the wrong number of arguments"
+
 (* Section 64.  Deliberately wrong in the other way a rule for a polymorphic
    external can be: the [EQual] carries no type argument, so nothing says
    which instantiation is meant. *)
@@ -241,6 +251,7 @@ let _ =
   B.register_rule (Ident.lid_of_str "CustardRuleTest.bare_emit") (B.Rule_prim (1, bare));
   B.register_root (Ident.lid_of_str "CustardRuleTest.bare_sink");
   B.register_rule (Ident.lid_of_str "CustardRuleArity.thrice") (B.Rule_prim (1, under));
+  B.register_rule (Ident.lid_of_str "CustardRuleOverArity.store") (B.Rule_prim (3, over));
   B.register_rule (Ident.lid_of_str "CustardRuleTest.launch") (B.Rule_prim (2, launch));
   B.register_rule (Ident.lid_of_str "CustardRuleTest.emit") (B.Rule_prim (1, emit));
   B.register_root (Ident.lid_of_str sink_lid);
