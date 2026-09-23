@@ -3327,6 +3327,17 @@ let coerce_prog (prog:program) : ML program =
     match exp, infer env x with
     | Some e, Some t -> if cty_mismatch t e then coerce x e else x
     | Some TAny, None -> if concrete_shape x then coerce x TAny else x
+    (* [infer] declined, which for a compound type containing a [TAny] is what
+       [trust] always does -- but the node's own type is still [Extract]'s
+       answer, and when it disagrees with the expectation in a way [TAny]
+       cannot explain away, the disagreement is real.  [ASN1.Spec.Sequence] is
+       the case: [tot_weaken<tuple2<any,any>>] returns a parser of
+       [tuple2<any,any>] into a position declared to parse [any], and the
+       target -- which infers a generic [tot_weaken]'s type variable from its
+       argument rather than taking Custard's word for it -- then has two
+       incompatible types for one expression.  A node whose type is itself
+       [TAny] says nothing and is left alone. *)
+    | Some e, None -> if not (TAny? x.ty) && cty_mismatch x.ty e then coerce x e else x
     | _ -> x
   and go (env:cenv) (exp:option cty) (x:expr) : ML expr =
     let same (e':expr') : expr = { x with e = e' } in
@@ -3469,7 +3480,25 @@ let coerce_prog (prog:program) : ML program =
                                                               else if has_any p then None
                                                               else Some p)
                    | None -> es |> List.map (fun _ -> None)) in
-         same (EApp (go env None h, List.map2 (fun p e -> check env p e) ps es)))
+         let es = List.map2 (fun p e -> check env p e) ps es in
+         (* Section 126.6.  The head's own type says nothing, but the call
+            still stands where something is expected, and the arguments still
+            say what they are.  Dropping the expectation here loses it for the
+            whole of the head -- and the head is a lambda often enough (a
+            [let] that [Simplify] turned back into a redex) that the body then
+            gets retyped against itself and no coercion is ever considered.
+            Rebuilding the arrow the head must have is what the [peel_arrows]
+            failure above already does; it is no less right when the head's
+            type was untrusted from the start. *)
+         let ts = es |> List.map (infer env) in
+         let want =
+           (match exp with
+            | Some r when ts |> List.for_all Some? ->
+              Some (arrows (ts |> List.map (fun t -> match t with Some t -> t | None -> TAny)) r)
+            | _ -> None) in
+         (match want with
+          | Some _ -> same (EApp (check env want h, es))
+          | None -> same (EApp (go env None h, es))))
     | ECtor (n, es) ->
       let fs = fields_of (string_of_name n) (first exp (trust x.ty)) in
       if List.length fs = List.length es
