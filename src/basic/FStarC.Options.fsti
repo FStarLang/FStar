@@ -239,6 +239,7 @@ val custard_unit                : unit    -> ML (option string)
 val custard_links               : unit    -> ML (list string)
 val custard_extern_types        : unit    -> ML (list string)
 val custard_krml_models         : unit    -> ML (list string)
+val custard_no_unfolds          : unit    -> ML (list string)
 val custard_dump_cui            : unit    -> ML bool
 
 val profile_group_by_decl       : unit    -> ML bool

@@ -1338,6 +1338,14 @@ let builtin_krml_models : list (list string) = [
   ["Pulse"; "Lib"; "Slice"];
 ]
 
+(* Section 77.  A type abbreviation the caller wants kept.  Not backend
+   specific: naming a monomorphic instance is as meaningful on the OCaml path
+   as on the karamel one, and an abbreviation that is emitted is always a
+   legal thing for a target to see. *)
+let is_no_unfold_lid (l : Ident.lident) : ML bool =
+  let s = Ident.string_of_lid l in
+  Options.custard_no_unfolds () |> List.existsb (fun m -> m = s)
+
 let is_krml_model (ns : list string) : ML bool =
   Options.custard_backend () = "KrmlRust" &&
   (builtin_krml_models |> List.existsb (fun m -> m = ns) ||

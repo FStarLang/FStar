@@ -4357,6 +4357,7 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
                   | Some h -> with_c_realized h d
                   | None -> with_realized d) in
     let d = if is_modelled_lid l && not inlined then with_modelled d else d in
+    let d = if Builtins.is_no_unfold_lid l then with_no_unfold d else d in
     if is_inlinable se && not (is_root st l)
     then with_inline d else d
 
@@ -4595,6 +4596,12 @@ and with_c_realized (h:string) (d:decl) : ML decl =
    emit no declaration for them either.  Everything else about the declaration
    is kept -- the shape, the arity, the polymorphism -- because the passes
    still have to typecheck uses of it. *)
+(* Section 77.  [--custard_no_unfold]: keep the abbreviation. *)
+and with_no_unfold (d:decl) : ML decl =
+  match d with
+  | DType t -> DType { t with dt_flags = NoUnfold :: t.dt_flags }
+  | d -> d
+
 and with_modelled (d:decl) : ML decl =
   match d with
   | DType t -> DType { t with dt_flags = Modelled :: t.dt_flags }

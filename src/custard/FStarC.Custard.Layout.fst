@@ -304,6 +304,8 @@ let rec resolve (t:tbl) (fuel:int) (c:cty) : ML cty =
              expanding it would replace a type the target has with one it does
              not. *)
           | Some d when has_flag d.dt_flags Realized -> TApp (n, args)
+          (* Section 77.  [--custard_no_unfold]: the name is the answer. *)
+          | Some d when has_flag d.dt_flags NoUnfold -> TApp (n, args)
           | Some d ->
             (match d.dt_body with
              | TAbbrev c ->
