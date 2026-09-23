@@ -1011,10 +1011,16 @@ and case (ind:string) (br:branch) : ML string =
 (* Declarations                                                         *)
 (* -------------------------------------------------------------------- *)
 
+(* Section 122.3.1.  {!fsharp_tyvar} and not [fsharp_var] with a quote in
+   front: a declaration binds the same variables its body mentions, and the
+   body goes through [ty] and so through [fsharp_tyvar].  Spelling the binder
+   any other way declares one name and uses another, which F# reports as an
+   undefined type parameter -- and, where the use is inside a constructor
+   argument, silently infers [obj] instead. *)
 let params (ps : list string) : ML string =
   match ps with
   | [] -> ""
-  | _ -> "<" ^ String.concat ", " (List.map (fun p -> "'" ^ fsharp_var p) ps) ^ ">"
+  | _ -> "<" ^ String.concat ", " (List.map fsharp_tyvar ps) ^ ">"
 
 let print_decl (first:bool) (d:decl) : ML (option string) =
   match d with
