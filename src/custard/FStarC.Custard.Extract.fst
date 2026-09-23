@@ -2922,7 +2922,7 @@ and expr_of_term (st:state) (t:term) : ML expr =
                             rc.residual_effect
       | None -> body in
     let body = expr_of_term st body in
-    let bs =
+    let flags =
       let flags = bs |> List.map (Mono.is_erased_binder (tcenv st)) in
       (* Same guard as [Mono.keep_thunk], and both of its clauses.  A lambda
          whose binders all vanish stops being a lambda: its effects then run
@@ -2963,7 +2963,16 @@ and expr_of_term (st:state) (t:term) : ML expr =
               | _ :: r -> List.rev (false :: r)
               | [] -> flags)
         else flags in
-      drop_flagged flags bs in
+      flags in
+    (* Section 5.2's rule, as in [branch_of_branch] and [extract_letbinding]:
+       a binder dropped here is one the body may still name, and its erased
+       occurrences sit where the erasure left [unit], so [()] is the closure
+       the body is owed. *)
+    let body =
+      List.fold_right (fun (b:S.binder) acc ->
+        { acc with e = ELet (name_of_bv b.binder_bv, TUnit, unit_expr, acc) })
+        (keep_flagged flags bs) body in
+    let bs = drop_flagged flags bs in
     (* Section 72.2, as in [extract_letbinding]: a binder the guard above put
        back is there for the arity and carries nothing, so [unit] is its type
        and not whatever its sort says. *)
@@ -5519,6 +5528,14 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
      an environment that binds them.  [bs] is what [abs_formals] opened and
      what [c] was realigned to, so it is the right set. *)
   let benv = Prof.timed "push_binders" (fun () -> TcEnv.push_binders (tcenv st) bs) in
+  (* Section 5.2's rule, as in [branch_of_branch]: a binder dropped here is one
+     the body may still name.  Its type is erased and its occurrences sit where
+     the erasure left [unit] -- [ASN1.Syntax.mk_gen_items]'s [(pf : squash ...)],
+     written into the second component of a [dtuple2] whose field [Layout] has
+     already erased to [unit] -- so the closure the body is owed is exactly
+     [()].  [Simplify] substitutes these away; what matters is that the body
+     never reaches a backend with a free name. *)
+  let dropped_binders = keep_flagged flags bs in
   let bs = drop_flagged flags bs in
   (* An *erased* binder that survived [drop_flagged] is the one
      {!Mono.keep_thunk} put back so that the definition does not become a
@@ -5659,7 +5676,10 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
         dl_flags   = [];
       })
     | [] -> () in
-  let dl_body = expr_of_term st body in
+  let dl_body =
+    List.fold_right (fun (b:S.binder) acc ->
+      { acc with e = ELet (name_of_bv b.binder_bv, TUnit, unit_expr, acc) })
+      dropped_binders (expr_of_term st body) in
   st.cur := saved_cur;
   st.cur_lid := saved_cur_lid;
   DLet {
