@@ -351,6 +351,26 @@ plugin: $(BIN)
 	$(Q)grep -qF 'the rule'"'"'s result is not a function' $(PLUGIN_DIR)/arity.log \
 	  || { echo "ERROR: 381 fired, but not for the under-arity reason"; \
 	       cat $(PLUGIN_DIR)/arity.log; exit 1; }
+	# Issue 4565: the arity mistake in the direction that used to delete the
+	# call.  The rule for CustardRuleOverArity.store is registered at arity 3
+	# against two retained arguments, and the declaration's codomain is not a
+	# function, so this is an error and not warning 381.
+	$(Q)env FSTAR_LIB=$(abspath ulib) $(abspath $(BIN)) --lax \
+	  --cache_checked_modules --cache_dir $(abspath $(PLUGIN_DIR))/cache \
+	  --include $(PLUGIN_SRC) $(PLUGIN_SRC)/CustardRuleOverArity.fst
+	$(Q)env FSTAR_LIB=$(abspath ulib) $(abspath $(BIN)) \
+	  --load_cmxs $(abspath $(PLUGIN_DIR))/$(PLUGIN_MOD) \
+	  --codegen Custard --custard_backend C \
+	  --custard_monomorphize_types true \
+	  --custard_main CustardRuleOverArity.main \
+	  --cache_dir $(PLUGIN_DIR)/cache --include $(PLUGIN_SRC) \
+	  $(PLUGIN_SRC)/CustardRuleOverArity.fst \
+	  -o $(PLUGIN_DIR)/CustardRuleOverArity.c > $(PLUGIN_DIR)/overarity.log 2>&1 \
+	  && { echo "ERROR: an over-declared rule arity did not fail extraction"; \
+	       cat $(PLUGIN_DIR)/overarity.log; exit 1; } || true
+	$(Q)grep -q 'Error 396' $(PLUGIN_DIR)/overarity.log \
+	  || { echo "ERROR: an over-declared rule arity was not reported as 396"; \
+	       cat $(PLUGIN_DIR)/overarity.log; exit 1; }
 	# Section 64: the other rule-authoring mistake a polymorphic entry point
 	# makes possible -- an EQual built without the argument's type.  Nothing
 	# else records the instantiation, so the reference would name a symbol

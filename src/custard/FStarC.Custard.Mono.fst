@@ -467,6 +467,37 @@ let arrow_formals_unfold (env:TcEnv.env) (t:typ) : ML (binders & comp) =
   Prof.timed "Mono.arrow_formals_unfold" (fun () ->
     arrow_formals_unfold_aux 8 env t)
 
+(* Whether [arrow_formals_unfold]'s count is the whole of what a call can
+   supply.  It walks the same spine with the same fuel, and asks one more
+   thing where that one stops: is there any way for the codomain to be a
+   function?  If the codomain -- total or not -- normalizes to something headed
+   by a type constant, no: the declaration ends there and no use site can pass
+   another argument.  An arrow (under a refinement, or behind an effect the
+   walk declines to peel), a type variable, or exhausted fuel all leave the
+   question open. *)
+let rec arrow_spine_exact_aux (fuel:int) (env:TcEnv.env) (t:typ) : ML bool =
+  let bs, c = U.arrow_formals_comp t in
+  if fuel <= 0 then false
+  else
+    let env = TcEnv.push_binders env bs in
+    let r = norm_bounded env "an arrow spine"
+              [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
+               TcEnv.Beta; TcEnv.Weak; TcEnv.HNF;
+               TcEnv.UnfoldUntil delta_constant]
+              (U.comp_result c) in
+    let r = strip r in
+    match r.n with
+    | Tm_arrow _ -> U.is_total_comp c && arrow_spine_exact_aux (fuel - 1) env r
+    | _ ->
+      let hd, _ = U.head_and_args_full (strip (U.unrefine r)) in
+      match (strip hd).n with
+      | Tm_fvar _ | Tm_uinst _ | Tm_type _ | Tm_constant _ -> true
+      | _ -> false
+
+let arrow_spine_exact (env:TcEnv.env) (t:typ) : ML bool =
+  Prof.timed "Mono.arrow_spine_exact" (fun () ->
+    arrow_spine_exact_aux 8 env t)
+
 (* {!erased_binders} against the *whole* arrow spine, abbreviations included.
 
    Which of the two a caller wants depends on what it is filtering.  Filtering
