@@ -135,6 +135,9 @@ val stub_aliases : list (string & string)
     with [@@custard_extern] (section 8.1, kind 4). *)
 val extern_type_of_lid : Ident.lident -> ML (option extern)
 
+(** Section 77.  Is this type abbreviation one [--custard_no_unfold] names? *)
+val is_no_unfold_lid : Ident.lident -> ML bool
+
 (** Whether karamel supplies this module itself on the backend being emitted
     for, so that Custard must emit neither its types nor its definitions and
     must leave every use of them under the F* name (section 20).  Only ever
