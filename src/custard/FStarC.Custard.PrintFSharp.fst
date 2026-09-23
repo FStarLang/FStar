@@ -358,6 +358,15 @@ let builtin_type (n:name) : ML (option string) =
   | "Prims.int" -> Some "bigint"
   | "Prims.exn" -> Some "exn"
   | "Prims.list" -> Some "list"
+  (* [FStar.Char.char] is a Unicode scalar and a .NET [char] is a UTF-16 code
+     unit, so the two agree on the Basic Multilingual Plane and part company
+     above it.  The support library's [FStar.String] is written against this
+     reading throughout -- [list_of_string] yields code units, [strlen] counts
+     them -- so a program that stays inside it is consistent with itself; what
+     it is not is faithful to F*'s specification for text outside the BMP.
+     That is the same trade [Prims.string] already makes. *)
+  | "FStar.Char.char"
+  | "FStar.String.char" -> Some "char"
   | "FStar.Pervasives.Native.option" -> Some "option"
   | _ -> None
 
@@ -473,10 +482,11 @@ let reject_coercion (a:cty) (b:cty) : ML string =
    sequences of UTF-16 code units, so a code point is escaped only when it has
    to be: the F# compiler reads the source as UTF-8 and decodes the rest for
    itself, which is what the reader wanted in the first place. *)
+let hexd (i:int) : string =
+  let d = ["0";"1";"2";"3";"4";"5";"6";"7";"8";"9";"a";"b";"c";"d";"e";"f"] in
+  match List.nth d i with x -> x
+
 let escape (s:string) : ML string =
-  let hexd (i:int) : string =
-    let d = ["0";"1";"2";"3";"4";"5";"6";"7";"8";"9";"a";"b";"c";"d";"e";"f"] in
-    match List.nth d i with x -> x in
   let esc (c:char) : ML string =
     match c with
     | '\n' -> "\\n"
@@ -501,6 +511,39 @@ let escape (s:string) : ML string =
 let int128_literal (sw : signedness & iwidth) (v:int) (b:int_base) : ML string =
   "(" ^ int_type sw ^ ".Parse \"" ^ int_lit_to_string v Dec ^ "\")"
 
+(* Section 122.9.  [FStar.Char.char] is .NET's [char], which is a UTF-16 code
+   unit: it holds the Basic Multilingual Plane and nothing above it.  A
+   literal outside that range is refused here rather than truncated, since a
+   silently different character is section 38's substitution again.
+
+   The escapes are F#'s own, which are C's for the four that matter plus
+   [\\uXXXX]; anything outside printable ASCII goes through the latter so that
+   the output does not depend on how the file is decoded. *)
+let char_literal (c:char) : ML string =
+  let i = BU.int_of_char c in
+  if i > 65535
+  then E.raise_error0 E.Error_CustardNoCRepresentation [
+         text ("Custard: the character literal U+" ^
+               hexd ((i / 65536) % 16) ^ hexd ((i / 4096) % 16) ^
+               hexd ((i / 256) % 16) ^ hexd ((i / 16) % 16) ^ hexd (i % 16) ^
+               " has no F# representation.");
+         text "An F# char is a UTF-16 code unit and so cannot hold a code \
+               point above the Basic Multilingual Plane (section 122.9)." ]
+  else
+    let body =
+      match c with
+      | '\n' -> "\\n"
+      | '\t' -> "\\t"
+      | '\r' -> "\\r"
+      | '\'' -> "\\'"
+      | '\\' -> "\\\\"
+      | c ->
+        if i < 32 || i > 126
+        then "\\u" ^ hexd ((i / 4096) % 16) ^ hexd ((i / 256) % 16) ^
+                      hexd ((i / 16) % 16) ^ hexd (i % 16)
+        else BU.string_of_char c in
+    "'" ^ body ^ "'"
+
 let constant (c:constant) : ML string =
   match c with
   | CUnit -> "()"
@@ -523,7 +566,7 @@ let constant (c:constant) : ML string =
   (* F# takes 0x, 0o and 0b exactly as F* writes them, so the base a program
      chose to write a constant in survives into the output. *)
   | CInt (v, b, Some sw) -> "(" ^ int_lit_to_string v b ^ int_suffix sw ^ ")"
-  | CChar c -> show (BU.int_of_char c)
+  | CChar c -> char_literal c
   | CString s -> "\"" ^ escape s ^ "\""
 
 (* -------------------------------------------------------------------- *)
@@ -1180,6 +1223,84 @@ let supported_realizations : list (string & string) = [
   "FStar.IO.print_uint32_dec_pad","FStar_IO.print_uint32_dec_pad";
   "FStar.IO.print_uint64_dec_pad","FStar_IO.print_uint64_dec_pad";
   "FStar.IO.debug_print_string",  "FStar_IO.debug_print_string";
+
+  (* [FStar.Char] and [FStar.String] over .NET's own [char] and [string].  See
+     {!builtin_type}: the representation is UTF-16 rather than a sequence of
+     code points, which is the reading every one of these is written against. *)
+  "FStar.Char.lowercase",         "FStar_Char.lowercase";
+  "FStar.Char.uppercase",         "FStar_Char.uppercase";
+  "FStar.Char.int_of_char",       "FStar_Char.int_of_char";
+  "FStar.Char.char_of_int",       "FStar_Char.char_of_int";
+  "FStar.Char.u32_of_char",       "FStar_Char.u32_of_char";
+  "FStar.Char.char_of_u32",       "FStar_Char.char_of_u32";
+  "FStar.String.make",            "FStar_String.make";
+  "FStar.String.strcat",          "FStar_String.strcat";
+  "FStar.String.op_Hat",          "FStar_String.strcat";
+  "FStar.String.split",           "FStar_String.split";
+  "FStar.String.compare",         "FStar_String.compare";
+  "FStar.String.concat",          "FStar_String.concat";
+  "FStar.String.length",          "FStar_String.length";
+  "FStar.String.strlen",          "FStar_String.length";
+  "FStar.String.substring",       "FStar_String.substring";
+  "FStar.String.sub",             "FStar_String.substring";
+  "FStar.String.get",             "FStar_String.get";
+  "FStar.String.index",           "FStar_String.get";
+  "FStar.String.collect",         "FStar_String.collect";
+  "FStar.String.lowercase",       "FStar_String.lowercase";
+  "FStar.String.uppercase",       "FStar_String.uppercase";
+  "FStar.String.index_of",        "FStar_String.index_of";
+  "FStar.String.list_of_string",  "FStar_String.list_of_string";
+  "FStar.String.string_of_list",  "FStar_String.string_of_list";
+  "FStar.String.string_of_char",  "FStar_String.string_of_char";
+
+  (* [FStar.All]: the two that end a program, and the exception handler. *)
+  "FStar.All.failwith",           "FStar_All.failwith";
+  "FStar.All.exit",               "FStar_All.exit";
+  "FStar.All.try_with",           "FStar_All.try_with";
+  "FStar.All.pipe_right",         "FStar_All.pipe_right";
+  "FStar.All.pipe_left",          "FStar_All.pipe_left";
+
+  (* [FStar.List] is [FStar.List.Tot.Base] with an [ML] effect on the
+     higher-order arguments, which in F# is no difference at all: the
+     realizations are the same .NET functions under the other name.  Only
+     [nth] differs, returning the element rather than an [option]. *)
+  "FStar.List.hd",                "FStar_List_Tot_Base.hd";
+  "FStar.List.tl",                "FStar_List_Tot_Base.tl";
+  "FStar.List.tail",              "FStar_List_Tot_Base.tl";
+  "FStar.List.last",              "FStar_List_Tot_Base.last";
+  "FStar.List.init",              "FStar_List_Tot_Base.init";
+  "FStar.List.length",            "FStar_List_Tot_Base.length";
+  "FStar.List.rev",               "FStar_List_Tot_Base.rev";
+  "FStar.List.append",            "FStar_List_Tot_Base.append";
+  "FStar.List.op_At",             "FStar_List_Tot_Base.append";
+  "FStar.List.flatten",           "FStar_List_Tot_Base.flatten";
+  "FStar.List.mem",               "FStar_List_Tot_Base.mem";
+  "FStar.List.contains",          "FStar_List_Tot_Base.contains";
+  "FStar.List.isEmpty",           "FStar_List_Tot_Base.isEmpty";
+  "FStar.List.split",             "FStar_List_Tot_Base.split";
+  "FStar.List.unzip",             "FStar_List_Tot_Base.unzip";
+  "FStar.List.unzip3",            "FStar_List_Tot_Base.unzip3";
+  "FStar.List.splitAt",           "FStar_List_Tot_Base.splitAt";
+  "FStar.List.nth",               "FStar_List.nth";
+  "FStar.List.iter",              "FStar_List.iter";
+  "FStar.List.iteri",             "FStar_List.iteri";
+  "FStar.List.map",               "FStar_List_Tot_Base.map";
+  "FStar.List.mapi",              "FStar_List_Tot_Base.mapi";
+  "FStar.List.collect",           "FStar_List_Tot_Base.collect";
+  "FStar.List.concatMap",         "FStar_List_Tot_Base.concatMap";
+  "FStar.List.fold_left",         "FStar_List_Tot_Base.fold_left";
+  "FStar.List.fold_right",        "FStar_List_Tot_Base.fold_right";
+  "FStar.List.fold_left2",        "FStar_List_Tot_Base.fold_left2";
+  "FStar.List.filter",            "FStar_List_Tot_Base.filter";
+  "FStar.List.for_all",           "FStar_List_Tot_Base.for_all";
+  "FStar.List.existsb",           "FStar_List_Tot_Base.existsb";
+  "FStar.List.find",              "FStar_List_Tot_Base.find";
+  "FStar.List.tryFind",           "FStar_List_Tot_Base.tryFind";
+  "FStar.List.tryPick",           "FStar_List_Tot_Base.tryPick";
+  "FStar.List.choose",            "FStar_List_Tot_Base.choose";
+  "FStar.List.partition",         "FStar_List_Tot_Base.partition";
+  "FStar.List.assoc",             "FStar_List_Tot_Base.assoc";
+  "FStar.List.sortWith",          "FStar_List_Tot_Base.sortWith";
 ]
 
 let supported_realization (n:name) : ML (option string) =
@@ -1612,7 +1733,59 @@ let runtime_source : string =
    \x20 let print_uint8_dec_pad (v : uint8) : unit = w (decpad 3 (uint64 v))\n\
    \x20 let print_uint16_dec_pad (v : uint16) : unit = w (decpad 5 (uint64 v))\n\
    \x20 let print_uint32_dec_pad (v : uint32) : unit = w (decpad 10 (uint64 v))\n\
-   \x20 let print_uint64_dec_pad (v : uint64) : unit = w (decpad 20 v)\n"
+   \x20 let print_uint64_dec_pad (v : uint64) : unit = w (decpad 20 v)\n\
+   \n\
+   // Section 122.9.  [FStar.Char.char] is .NET's [char] and [Prims.string] is\n\
+   // .NET's [string], so these are UTF-16 code units throughout -- see the\n\
+   // note on [builtin_type].  Ordinal comparison and the invariant-culture\n\
+   // case mappings, so that the result does not depend on the machine's\n\
+   // locale the way a verified program's does not.\n\
+   module FStar_Char =\n\
+   \x20 let lowercase (c : char) : char = System.Char.ToLowerInvariant c\n\
+   \x20 let uppercase (c : char) : char = System.Char.ToUpperInvariant c\n\
+   \x20 let int_of_char (c : char) : bigint = bigint (int c)\n\
+   \x20 let char_of_int (i : bigint) : char = char (int i)\n\
+   \x20 let u32_of_char (c : char) : uint32 = uint32 (int c)\n\
+   \x20 let char_of_u32 (u : uint32) : char = char (int u)\n\
+   \n\
+   module FStar_String =\n\
+   \x20 let make (n : bigint) (c : char) : string = System.String (c, int n)\n\
+   \x20 let strcat (s : string) (t : string) : string = s + t\n\
+   \x20 let split (seps : char list) (s : string) : string list =\n\
+   \x20   List.ofArray (s.Split (Array.ofList seps))\n\
+   \x20 let compare (x : string) (y : string) : bigint =\n\
+   \x20   bigint (System.String.CompareOrdinal (x, y))\n\
+   \x20 let concat (sep : string) (l : string list) : string =\n\
+   \x20   System.String.Join (sep, l)\n\
+   \x20 let length (s : string) : bigint = bigint s.Length\n\
+   \x20 let substring (s : string) (i : bigint) (j : bigint) : string =\n\
+   \x20   s.Substring (int i, int j)\n\
+   \x20 let get (s : string) (i : bigint) : char = s.[int i]\n\
+   \x20 let collect (f : char -> string) (s : string) : string =\n\
+   \x20   System.String.Join (\"\", Seq.map f s)\n\
+   \x20 let lowercase (s : string) : string = s.ToLowerInvariant ()\n\
+   \x20 let uppercase (s : string) : string = s.ToUpperInvariant ()\n\
+   \x20 let index_of (s : string) (c : char) : bigint = bigint (s.IndexOf c)\n\
+   \x20 let list_of_string (s : string) : char list = List.ofSeq s\n\
+   \x20 let string_of_list (l : char list) : string = System.String (Array.ofList l)\n\
+   \x20 let string_of_char (c : char) : string = System.String (c, 1)\n\
+   \n\
+   module FStar_All =\n\
+   \x20 let failwith (s : string) : 'a = failwith s\n\
+   \x20 let exit (i : bigint) : 'a = exit (int i)\n\
+   \x20 let try_with (f : unit -> 'a) (g : exn -> 'a) : 'a =\n\
+   \x20   try f () with e -> g e\n\
+   \x20 let pipe_right (x : 'a) (f : 'a -> 'b) : 'b = f x\n\
+   \x20 let pipe_left (f : 'a -> 'b) (x : 'a) : 'b = f x\n\
+   \n\
+   // [FStar.List] is [FStar.List.Tot.Base] with an [ML] effect, which F#\n\
+   // does not distinguish; only the three that are not in the total module\n\
+   // under the same meaning are given here.\n\
+   module FStar_List =\n\
+   \x20 let nth (l : 'a list) (i : bigint) : 'a = List.item (int i) l\n\
+   \x20 let iter (f : 'a -> unit) (l : 'a list) : unit = List.iter f l\n\
+   \x20 let iteri (f : bigint -> 'a -> unit) (l : 'a list) : unit =\n\
+   \x20   List.iteri (fun i x -> f (bigint i) x) l\n"
 
 (* The target framework.  .NET 10 is the current long-term-support release and
    the first that this backend was written against; [System.Int128] needs 7 or
