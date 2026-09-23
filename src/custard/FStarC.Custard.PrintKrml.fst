@@ -120,30 +120,100 @@ let fresh_local (env:kenv) (base:string) : ML string =
    [&[tree]] field into a [&[&[tree]]].  So the traversal descends into
    [TApp]'s arguments, since a datatype applied to a datatype does contain it,
    but stops at [TBuf], [TRef] and the modelled slice, and does not follow a
-   function type at all. *)
-let rec by_value_names (c:cty) : ML (list string) =
+   function type at all.
+
+   A [TApp]'s argument counts by value only at a parameter the head *uses* by
+   value.  [Pulse.Lib.Slice.slice t] is a record [{ elt: t*; len: size_t }]:
+   it mentions [t] only under a pointer, so [slice cbor_raw] contains no
+   [cbor_raw] however the slice itself is spelled.  The krml-model test above
+   catches this for the Rust backend, where the slice is a borrow karamel
+   models, and not for C, where Custard emits the record and the head is an
+   ordinary declaration -- EverParse's [cbor_array] holds a
+   [slice cbor_raw] and was being marked, after which karamel's [GcTypes]
+   pass rewrote it to a pointer and [DataTypes] met a field access on one.
+   So the by-value parameter positions are a fixpoint of their own, over the
+   same type graph: a parameter is by value if the body reaches it outside
+   every pointer, itself passed only at by-value positions.  A head with no
+   declaration here (an external type) is assumed to use all of them. *)
+let type_body_ctys (t:dtype) : ML (list cty) =
+  match t.dt_body with
+  | TAbbrev c -> [c]
+  | TRecord fs -> fs |> List.map snd
+  | TVariant cs -> cs |> List.collect (fun (_, fs) -> fs |> List.map snd)
+  | _ -> []
+
+(* Which of [c]'s type variables does it reach by value, given the current
+   approximation [tbl] of every head's by-value parameter positions? *)
+let rec by_value_vars (tbl:SMap.t (list bool)) (c:cty) : ML (list string) =
   match c with
+  | TVar x -> [x]
   | TApp (n, args) ->
     (* Section 20: karamel models the Pulse slice as a borrow, so a field of
        slice type holds a pointer and not the elements. *)
     if B.is_krml_model n.ns then []
-    else string_of_name n :: (args |> List.collect by_value_names)
-  | TInline c -> by_value_names c
+    else
+      let bs = SMap.try_find tbl (string_of_name n) in
+      args |> List.mapi (fun i a ->
+        let by_value = match bs with
+                       | None -> true
+                       | Some bs -> if i < List.length bs then List.nth bs i else true in
+        if by_value then by_value_vars tbl a else [])
+           |> List.flatten
+  | TInline c -> by_value_vars tbl c
+  | TBuf _ | TRef _ | TArrow _ -> []
+  | _ -> []
+
+let by_value_param_table (p:program) : ML (SMap.t (list bool)) =
+  let params : SMap.t (list string) = SMap.create 100 in
+  let bodies : SMap.t (list cty) = SMap.create 100 in
+  let tbl    : SMap.t (list bool) = SMap.create 100 in
+  let _ = p |> List.iter (fun d ->
+            match d with
+            | DType t ->
+              let n = string_of_name t.dt_name in
+              SMap.add params n t.dt_params;
+              SMap.add bodies n (type_body_ctys t);
+              SMap.add tbl n (t.dt_params |> List.map (fun _ -> false))
+            | _ -> ()) in
+  (* Monotone in the number of positions marked, so it terminates; the keys are
+     fixed and each pass can only turn a [false] into a [true]. *)
+  let rec fixpoint () : ML unit =
+    let changed = SMap.keys tbl |> List.map (fun n ->
+      let ps  = match SMap.try_find params n with Some ps -> ps | None -> [] in
+      let cur = match SMap.try_find tbl n with Some bs -> bs | None -> [] in
+      let vars = match SMap.try_find bodies n with
+                 | Some cs -> cs |> List.collect (by_value_vars tbl)
+                 | None -> [] in
+      let next = ps |> List.map (fun x -> List.mem x vars) in
+      if next = cur then false
+      else (SMap.add tbl n next; true)) in
+    if List.existsb (fun b -> b) changed then fixpoint () in
+  fixpoint ();
+  tbl
+
+let rec by_value_names (tbl:SMap.t (list bool)) (c:cty) : ML (list string) =
+  match c with
+  | TApp (n, args) ->
+    if B.is_krml_model n.ns then []
+    else
+      let bs = SMap.try_find tbl (string_of_name n) in
+      string_of_name n :: (args |> List.mapi (fun i a ->
+        let by_value = match bs with
+                       | None -> true
+                       | Some bs -> if i < List.length bs then List.nth bs i else true in
+        if by_value then by_value_names tbl a else [])
+                                |> List.flatten)
+  | TInline c -> by_value_names tbl c
   | TBuf _ | TRef _ | TArrow _ -> []
   | _ -> []
 
 let rec_type_table (p:program) : ML (SMap.t bool) =
+  let by_value = by_value_param_table p in
   let refs : SMap.t (list string) = SMap.create 100 in
   let _ = p |> List.iter (fun d ->
             match d with
             | DType t ->
-              let body = match t.dt_body with
-                         | TAbbrev c -> by_value_names c
-                         | TRecord fs -> fs |> List.collect (fun (_, c) -> by_value_names c)
-                         | TVariant cs ->
-                           cs |> List.collect (fun (_, fs) ->
-                             fs |> List.collect (fun (_, c) -> by_value_names c))
-                         | _ -> [] in
+              let body = type_body_ctys t |> List.collect (by_value_names by_value) in
               SMap.add refs (string_of_name t.dt_name) body
             | _ -> ()) in
   let out : SMap.t bool = SMap.create 20 in
