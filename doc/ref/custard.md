@@ -5944,6 +5944,73 @@ the same, for the backends that have no other answer.  C and Rust keep the
 external, because there an `assume val` *is* how a symbol defined elsewhere
 is declared, and `tests/custard`'s C++ template tests depend on it.
 
+#### An out-of-tree plugin, and what it may rely on
+
+A plugin built against an *installed* F\* is the case this section's design
+has to be read carefully to answer, because the first reading of it is wrong
+and the wrong reading is discouraging.  The compiler is whole-program and
+dead-code-eliminated, so `fstar.compiler` contains what the compiler itself
+reaches and no more.  A plugin that calls the compiler from hand-written
+OCaml is therefore calling names that may simply not be there --- and
+`--custard_entrypoints`, the option written for exactly this, is described
+above as something the *compiler's* build reads.
+
+The conclusion that an out-of-tree plugin has no way to root anything does
+not follow, and is false.  `--custard_entrypoints` is an option of an
+extraction, not of the compiler's build, and a plugin *is* an extraction.
+Naming `FStarC.Syntax.Util.mk_list` when extracting the plugin roots it in
+**the plugin's** unit: it is not in `fstarc.cui`, so §12.1's rule applies and
+it is compiled into the plugin, under the plugin's own name for it
+(`OotPlugin.fStarC_Syntax_Util_mk_list`).  Hand-written OCaml calls that.
+Nothing has to be re-extracted, and the compiler's build does not have to know
+the plugin exists.
+
+Three of the four things this was thought to block are therefore not blocked:
+
+* **Definitions.**  Root them.  `mk_list`, `DsEnv.transitive_exported_ids`
+  and `Errors.raise_error_doc` all emit.
+* **Type abbreviations.**  Root them; they emit as `type` declarations rather
+  than being unfolded, which is §4.4's rule and nothing new.  Note that error
+  385, "Custard cannot find a definition for `FStarC.Range.pos`", means the
+  lid is wrong and not that the definition was dropped --- `pos` is declared
+  in `FStarC.Range.Type`.
+* **Typeclass instances.**  Root them.  `FStarC.Syntax.Syntax.tagged_term`
+  emits as `fStarC_Syntax_Syntax_tagged_term`, which is a name §5.2 makes
+  from the lid and is therefore as stable as the lid.  It is *not* the
+  specialization name §30.15 warns about.
+
+The fourth is real: **a function whose signature has a `Mono` binder cannot
+be a bare root.**  `FStarC.Errors.raise_error` takes `{| hasRange pos_t |}`,
+and rooting it is error 364 --- "the argument passed to the monomorphized
+binder number 0 of `FStarC.Class.HasRange.pos` is the runtime parameter
+`pos_t`, so there is nothing to specialize on".  This is M10u's question
+asked from outside the tree: a `Mono` binder wants a call site, and a root is
+live by fiat and has none.
+
+M10u's answer works here too, and is three lines:
+
+```fstar
+let raise_error_range (#a:Type) (r:R.range) (c:E.error_code) (msg:list document)
+  : ML a = E.raise_error r c msg
+```
+
+Root the wrapper instead.  If the compiler already has that specialization
+the plugin links against it --- the body comes out as a call to
+`FStarC_Errors.fStarC_Errors_raise_error__range_list_document`, with no copy.
+If it does not, Custard emits a fresh one into the plugin's unit; giving the
+wrapper a plugin-defined position type with its own `hasRange` instance
+produces `fStarC_Errors_raise_error__mypos_list_document` locally.  Either way
+the hand-written OCaml names `ootShim_raise_error_range`, which is the
+plugin's own and is stable, so §30.15's instability never reaches it.  That is
+the general shape: **an unstable name is made stable by putting an F\* call
+site in front of it**, and the call site is also what the `Mono` binder needed.
+
+Error 364 says this.  The two remedies it offers otherwise --- annotate the
+argument, or drop the annotation --- are both unavailable when the enclosing
+definition is a root, since its signature belongs to the library and it has no
+call site, so `root_binder_of_enclosing` distinguishes that case and the
+message asks for the wrapper instead.
+
 ## 14. Migrating an example: DICE
 
 `pulse/share/pulse/examples/dice` is a DICE Protection Environment: about

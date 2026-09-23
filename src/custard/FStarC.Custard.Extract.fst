@@ -498,6 +498,23 @@ let init (deps:Dep.deps) (env:TcEnv.env) : ML state =
 let is_root (st:state) (l:Ident.lident) : ML bool =
   Some? (SMap.try_find st.roots (Ident.string_of_lid l))
 
+(* The definition currently being extracted, for diagnostics. *)
+let enclosing_name (st:state) : ML string =
+  match !st.cur_lid with
+  | Some l -> Ident.string_of_lid l
+  | None -> "the enclosing definition"
+
+(* Section 13.6.  True when the offending name is a parameter of an enclosing
+   definition that is itself a root.  That combination is what distinguishes
+   "you annotated the wrong thing" from "you asked for an entry point whose
+   signature has a Mono binder": the latter has no call site to specialize at
+   and no source of yours to annotate, so it needs different advice. *)
+let root_binder_of_enclosing (st:state) (v:S.bv) : ML bool =
+  Some? (SMap.try_find st.defbinders (show v.index)) &&
+  (match !st.cur_lid with
+   | Some l -> is_root st l
+   | None -> false)
+
 (* Just enough to fire the redexes that substituting a local function creates,
    and nothing else: this runs on the enclosing body, which is code, so any
    further reduction here would be reduction of the emitted program. *)
@@ -4172,12 +4189,39 @@ and check_mono_arg (st:state) (l:Ident.lident) (i:int) (t:term) : ML unit =
                       than by the value -- or to keep the existential out of \
                       runtime data by specializing every use of it.") ]
             | None ->
-              [ text ("Mark " ^ nm ^ " with [@@monomorphize] in the enclosing \
-                      definition so that it, too, is known at specialization \
-                      time, or drop the annotation on binder " ^ show i ^
-                      " and pass it at runtime.") ]
-              @ dyn_hint "To pass it at runtime at this call site only, \
-                          without changing either signature, ")
+              (* Section 13.6.  The enclosing definition may be a *root* --
+                 an entry point asked for by name, typically by an
+                 out-of-tree plugin naming a compiler function it calls from
+                 hand-written OCaml.  Then both remedies are unavailable:
+                 there is no source to annotate (the signature belongs to
+                 the library, not to the caller) and there is no call site to
+                 drop the annotation at, because a root is live by fiat and
+                 has no caller in this program at all.  What supplies one is
+                 an F* wrapper in the plugin, which is M10u's answer to the
+                 same question. *)
+              (if root_binder_of_enclosing st v
+               then
+                 [ text (enclosing_name st ^ " is a root: it was asked for by \
+                         name, so it has no call site in this program, and a \
+                         parameter of a root is a runtime parameter by \
+                         construction.");
+                   text ("Neither remedy applies -- a root's signature is not \
+                         yours to annotate, and there is no call site to drop \
+                         the annotation at.  Give it one: write a wrapper in \
+                         F* that calls " ^ enclosing_name st ^ " at the \
+                         instantiation you need, and root the wrapper instead.");
+                   text "Custard will then link against an existing \
+                         specialization if the producer has one, or emit a \
+                         fresh one into this unit if it does not, and the \
+                         wrapper's own name -- which is yours and is stable -- \
+                         is what hand-written OCaml calls." ]
+               else
+                 [ text ("Mark " ^ nm ^ " with [@@monomorphize] in the enclosing \
+                         definition so that it, too, is known at specialization \
+                         time, or drop the annotation on binder " ^ show i ^
+                         " and pass it at runtime.") ]
+                 @ dyn_hint "To pass it at runtime at this call site only, \
+                             without changing either signature, "))
      in
      custard_error st E.Error_CustardCannotMonomorphize msg
    | _ -> ());
