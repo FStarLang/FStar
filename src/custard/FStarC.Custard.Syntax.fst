@@ -419,6 +419,11 @@ let exists_child (f : expr -> ML bool) (x:expr) : ML bool =
 let for_all_children (f : expr -> ML bool) (x:expr) : ML bool =
   List.for_all f (children x)
 
+let rec occurs (v:string) (x:expr) : ML bool =
+  match x.e with
+  | EVar w -> w = v
+  | _ -> exists_child (occurs v) x
+
 let rec is_droppable (e:expr) : ML bool =
   let all (es:list expr) : ML bool = List.for_all is_droppable es in
   (* Section 120.  Ahead of both tests below, because it overrides both.  A

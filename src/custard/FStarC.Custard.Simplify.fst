@@ -30,14 +30,7 @@ module Format = FStarC.Format
 module Prof   = FStarC.Custard.Prof
 module Options = FStarC.Options
 
-(* Does [v] occur free in [e]?  Custard's variable names come from F* bound
-   variables and so already carry a unique index, but this deliberately does
-   not track shadowing: an over-count keeps a binding that could have been
-   dropped, which is the safe direction. *)
-let rec occurs (v:string) (x:expr) : ML bool =
-  match x.e with
-  | EVar w -> w = v
-  | _ -> exists_child (occurs v) x
+(* [occurs] is {!FStarC.Custard.Syntax.occurs}. *)
 
 (* -------------------------------------------------------------------- *)
 (* ANF                                                                  *)
