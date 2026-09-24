@@ -709,6 +709,7 @@ let flag_to_doc (f:flag) : ML document =
   | CInline -> text "c_inline"
   | Deriving s -> text ("deriving " ^ s)
   | Realized -> text "realized"
+  | NoUnfold -> text "no_unfold"
   | Extern (n, h) ->
     text ("extern" ^ (match n with Some n -> " " ^ n | None -> "") ^
                      (match h with Some h -> " <" ^ h ^ ">" | None -> ""))

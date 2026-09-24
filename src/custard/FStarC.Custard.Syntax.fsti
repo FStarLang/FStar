@@ -622,6 +622,23 @@ type flag =
       declaration is still Custard's to emit; a model is the target compiler's
       and never is.  Sharing the flag dropped [FStar.Pervasives.Native.tuple2]
       from the karamel output, which every [split] needs. *)
+  | NoUnfold
+  (** This type abbreviation stands for itself: neither
+      {!FStarC.Custard.Monomorphize.unfold_cty} nor
+      {!FStarC.Custard.Layout.resolve} may replace it by its body, and the
+      abbreviation is emitted.
+
+      Custard unfolds abbreviations by default and has to: [option sid_t] and
+      [option U16.t] are the same type, and a monomorphizer that took the two
+      spellings at face value would clone it twice.  But an abbreviation is
+      also the only way to give a monomorphic instance of a polymorphic type a
+      name of one's own, and on the karamel path that name is the C struct's:
+      [CBOR.Pulse.Raw.Slice.byte_slice = Pulse.Lib.Slice.slice uint8] is how
+      the CBOR library keeps its byte slice out of the way of a consumer that
+      also monomorphizes [slice uint8] and would otherwise emit a second,
+      conflicting [typedef] for it.
+
+      Set by [--custard_no_unfold]; see section 77 of doc/ref/custard.md. *)
   | Extern of option string & option string
   (** The type is defined outside F*: an abstract [val t : Type0] carrying
       [@@custard_extern] (section 8.1, kind 4).  Custard keeps the declaration
