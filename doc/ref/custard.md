@@ -11455,6 +11455,75 @@ linkage under its own name, that the private helper does not appear in the
 symbol table of either object, and that the library's definitions appear in
 exactly one of the two.
 
+## 42.6 And then the karamel backend stopped refusing
+
+§42.5's last bullet stood for several rounds, and the reason it gave was not
+the real one. "karamel has its own opinion about what a compilation unit is"
+is true and is not an obstacle: karamel already has a flag whose entire job is
+to say *this module was compiled elsewhere*, and that flag is `-library`.
+`Builtin.make_abstract_function_or_global` rewrites a `DFunction` or a
+`DGlobal` into a `DExternal`, leaves `DType` alone, and `CStarToC11`'s
+`declared_in_library` then emits the prototype and no body. That is exactly
+what a `.cui` describes. So the implementation is one case in `krml_decl`:
+an imported `DLet` becomes a `K.DExternal` with the signature the interface
+recorded, and the consumer needs no karamel flag at all — the rewrite
+`-library` would have performed has already happened, upstream of krml.
+
+The one thing that is not free is *which karamel file* an imported
+declaration goes into. karamel names the generated `.c` and `.h` after the
+file; the C symbol comes from the lident's namespace. Put an import in the
+consumer's own file and krml writes a second header declaring a symbol the
+producer's header already declares, which is the two-spellings failure §42.2
+exists to prevent. So `PrintKrml` groups imports by their home file —
+`ue_home` when the producer split, the unit name when it did not — and puts
+them ahead of this run's own declarations. For the same reason a producer's
+own file is named after its `--custard_unit` rather than `Custard`: two units
+both called `Custard` would have krml write two different `Custard.h`, and a
+consumer has one include path.
+
+`Split.avoid` must not be applied to imports. It deliberately moves a
+declaration out of a file name an upstream unit owns, so that this unit's
+relocated code does not collide with it — right for the code this unit
+compiles, and precisely wrong for the code it did not.
+
+Two things differ from the C backend.
+
+- **The interface is everything the unit compiled.** §42.1's filter — a C
+  unit offers its linking interface and nothing else — is guarded on
+  `--custard_backend C`, and on karamel it has nothing to do: karamel decides
+  linkage itself out of `-bundle` and `-static-header`, so Custard has
+  nothing to withhold. A krml unit exports like an OCaml one. If a symbol
+  should be hidden, that is a karamel flag on the producer and not a Custard
+  decision.
+- **`uh_header` and `uh_init` stay `None`.** §42.3's generated initializer and
+  §42.2's recorded header name are both answers to questions the direct-to-C
+  printer has and karamel does not; krml writes its own headers and does its
+  own global initialization.
+
+A polymorphic import is refused. The `.krml` wire format's `DExternal`
+carries no arity — karamel's `InputAstToAst` fills in zero for both the type
+and the const-generic parameter count — so the signature would reach karamel
+mentioning variables nothing binds, and the diagnostic would be karamel's
+checker complaining about a declaration the user never wrote. Monomorphize in
+the producing unit, or compile the two units together.
+
+**KrmlRust still refuses**, and now for a reason located in karamel rather
+than in taste. `AstToMiniRust` translates a `DExternal` function into
+`MiniRust.Assumed` — a promise that something else in the crate defines it,
+for which it then prints nothing — so every call comes out as a path no
+module declares. A `DExternal` *global* is worse: the translation looks the
+declaration up, finds it is not a function, and raises `Failure "impossible"`,
+which is a karamel crash naming neither of the two units. Error 155 is now
+specific to `KrmlRust` and says which of the two it is.
+
+`tests/custard/SepLibK.fst` and `SepAppK.fst` are the test, deliberately the
+same pair of modules as §42.5's. Both halves go through krml in separate
+`-tmpdir`s, as two consumers really would, and the assertions are that the
+downstream `SepLibK.h` holds prototypes and no bodies, that no downstream
+`SepLibK.c` exists at all, that `double_it` — not an entry, and exported
+anyway — is among them, and then that the two objects link and the program
+runs. `SepLibK.rustrefused` pins the `KrmlRust` diagnostic.
+
 # 43 Writing a number down
 
 Round 43 found three ways to spell a number that the target reads back as a

@@ -1102,6 +1102,36 @@ let krml_decl (env:kenv) (d:decl) : ML (option K.decl) =
      translated to the native form, so the declaration would be dead at best
      and contradictory at worst. *)
   | DType { dt_name = n } when Some? (prim_type n) -> None
+
+  (* Section 42.6.  A declaration a linked unit already compiled.  Its body is
+     not here to emit -- a `.cui` strips it -- and emitting one would be the
+     whole point of separate compilation undone, so what is left is the
+     declaration: karamel's [DExternal], which is exactly what karamel's own
+     [-library] rewrites a definition into ([Builtin.make_abstract_function_-
+     or_global]).  The symbol is the home unit's, under the home unit's name,
+     and the prototype comes from the interface rather than from anything this
+     run derived. *)
+  | DLet l when Some? (imported_unit d) ->
+    (* The `.krml` format has no arity on a [DExternal] -- karamel's own
+       [InputAstToAst] fills in zero for both the type and the const-generic
+       one -- so a polymorphic import would reach karamel as a signature
+       mentioning variables nothing binds, and karamel's checker would report
+       it against a declaration this run did not write.  Say it here, where
+       the unit that has to change is still the subject. *)
+    if Cons? l.dl_typars then
+      E.raise_error0 E.Fatal_ExtractionUnsupported [
+        text ("Custard: " ^ string_of_name l.dl_name ^ " comes from a linked \
+              unit and is polymorphic, which karamel's declaration form \
+              cannot express.");
+        text "Monomorphize it in the unit that compiles it (--custard_monomorphize_types), \
+             or compile both units together."
+      ];
+    let env = with_typars env l.dl_typars in
+    let ty = List.fold_right (fun (b:binder) acc -> K.TArrow (krml_typ env b.b_ty, acc))
+                             l.dl_binders (krml_typ env l.dl_ret) in
+    Some (K.DExternal (None, krml_flags l.dl_flags, lident_of_name l.dl_name, ty,
+                       l.dl_binders |> List.map (fun (b:binder) -> b.b_name)))
+
   | DLet l ->
     let env = with_typars env l.dl_typars in
     let n_t = List.length l.dl_typars in
@@ -1265,13 +1295,17 @@ let decls_of (p:program) : ML (list K.decl) =
    someone else's, and are exactly the ones that must keep their names. *)
 let shadow_table (p:program) : ML (SMap.t bool) =
   let t = SMap.create 20 in
+  (* Section 42.6.  A declaration a linked unit compiled counts as emitted: the
+     home unit's printer asked this same question about it and moved it, so the
+     name in the object file this run links against is the moved one.  Asking a
+     narrower question here would have the consumer reference the name the
+     producer did not use. *)
   let emits (d:decl) : ML bool =
-    None? (imported_unit d) &&
-    (match d with
-     | DExternal _ -> false
-     | DType ty -> not (has_flag ty.dt_flags Realized)
-                   && not (has_flag ty.dt_flags Modelled)
-     | _ -> true) in
+    match d with
+    | DExternal _ -> false
+    | DType ty -> not (has_flag ty.dt_flags Realized)
+                  && not (has_flag ty.dt_flags Modelled)
+    | _ -> true in
   p |> List.iter (fun d ->
     let n = name_of_decl d in
     if emits d && B.is_realized_module n.ns
@@ -1321,6 +1355,54 @@ let reject_target_only_types (p:program) : ML unit =
         | _ -> ())
     | _ -> ())
 
+(* Section 42.6.  The karamel file a declaration a linked unit compiled goes
+   into: the one its home unit emitted it from.  karamel names the C file and
+   its header after the karamel file, so a consumer that regroups an imported
+   declaration would regenerate the upstream header under a second name --
+   and the whole reason section 42.2 has the consumer include the producer's
+   header is that two spellings of one declaration is what goes wrong.  With
+   the file name kept, karamel writes the same [SepLibK.h] the producer's own
+   run wrote, holding the prototypes and nothing else.
+
+   A split producer recorded the file per declaration ([ue_home]); an unsplit
+   one emitted everything into one file named after the unit. *)
+let import_file (d:decl) : ML string =
+  match imported_home d with
+  | Some m -> krml_file_name m
+  | None -> (match imported_unit d with
+             | Some u -> krml_file_name u
+             | None -> "Custard")
+
+(* The file this run's own declarations go into when the output is not split.
+   Named after the unit, when there is one: two units whose karamel files were
+   both called [Custard] would have karamel write two different [Custard.h]s,
+   and a consumer has exactly one include path. *)
+let own_file () : ML string =
+  match Options.custard_unit () with
+  | Some u -> krml_file_name u
+  | None -> "Custard"
+
+(* Group the imported declarations by {!import_file}, preserving the order in
+   which the files were first seen, and put them ahead of everything else:
+   karamel reads a file list in order and a reference forward is one it has to
+   resolve later. *)
+let import_files (p:program) : ML (list (string & program)) =
+  let chunks : SMap.t (ref (list decl)) = SMap.create 20 in
+  let order : ref (list string) = mk_ref [] in
+  p |> List.iter (fun d ->
+    if Some? (imported_unit d) then
+      let f = import_file d in
+      let r = match SMap.try_find chunks f with
+              | Some r -> r
+              | None -> let r = mk_ref [] in
+                        SMap.add chunks f r; order := f :: !order; r in
+      r := d :: !r
+    else ());
+  List.rev !order |> List.map (fun f ->
+    (f, (match SMap.try_find chunks f with
+         | Some r -> List.rev !r
+         | None -> [])))
+
 let print_program (p:program) : ML (list Krml.file) =
   reject_target_only_types p;
   extern_types := extern_type_table p;
@@ -1328,12 +1410,15 @@ let print_program (p:program) : ML (list Krml.file) =
   shadowed := shadow_table p;
   rec_types := rec_type_table p;
   dead_abbrevs := dead_abbrev_table p;
-  (* Custard is whole-program, so unsplit there is exactly one karamel "file";
-     karamel is free to split the C output as it likes.  That is enough for C
-     and not for Rust, where the karamel file is the crate module and
-     [-bundle]'s patterns are written against F* module names: see
-     {!print_split} and section 65. *)
-  [("Custard", decls_of p)]
+  let imports = import_files p in
+  let mine = p |> List.filter (fun d -> None? (imported_unit d)) in
+  (* Custard is whole-program, so unsplit there is exactly one karamel "file"
+     of this run's own; karamel is free to split the C output as it likes.
+     That is enough for C and not for Rust, where the karamel file is the
+     crate module and [-bundle]'s patterns are written against F* module
+     names: see {!print_split} and section 65. *)
+  (imports |> List.map (fun (f, ds) -> (f, decls_of ds)))
+  @ [(own_file (), decls_of mine)]
 
 (* [ctor_arity] is consulted for constructors that may live in another file, so
    it is built from the whole program and not from the piece being printed;
@@ -1349,6 +1434,13 @@ let print_split (fs : list (string & program)) : ML (list Krml.file) =
   rec_types := rec_type_table whole;
   dead_abbrevs := dead_abbrev_table whole;
   let arity = ctor_table whole in
+  (* Section 42.6.  An imported declaration goes into the file its home unit
+     emitted it from, whatever this run's split decided: [Split.avoid] moves a
+     declaration out of a file name an upstream unit owns, which is right for
+     the code this unit compiles and exactly wrong for the code it did not. *)
+  let fs = import_files whole
+           @ (fs |> List.map (fun (m, p) ->
+                (krml_file_name m, p |> List.filter (fun d -> None? (imported_unit d))))) in
   fs |> List.collect (fun (m, p) ->
     let env = { names = []; names_t = []; ctor_arity = arity; tvars_any = false } in
     let ds = p |> List.collect (fun d ->
@@ -1361,7 +1453,7 @@ let print_split (fs : list (string & program)) : ML (list Krml.file) =
        the consumer's flags to resolve against -- which is what karamel's own
        input, one file per module F* extracted, already gives it.  karamel
        writes no source for an empty module, so keeping it costs a record. *)
-    [(krml_file_name m, ds)])
+    [(m, ds)])
 
 let write_files (fn:string) (fs : list Krml.file) : ML unit =
   let bin : Krml.binary_format = (Krml.current_version, fs) in
