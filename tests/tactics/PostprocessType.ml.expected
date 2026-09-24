@@ -4,8 +4,8 @@
 type postprocessType_t = Prims.int
 
 let postprocessType_foo1 : Prims.int =
-  (Prims.parse_int "123")
+  (Prims.of_int (123))
 
 let postprocessType_foo2 : Prims.int =
-  (Prims.parse_int "123")
+  (Prims.of_int (123))
 

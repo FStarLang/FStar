@@ -12,6 +12,6 @@ let squashArgErasure_callee (f : (Prims.int -> (Prims.int -> (unit) squashArgEra
   (f eta eta1)
 
 let rec squashArgErasure_caller (fuel : Prims.int) (x : Prims.int) (y : Prims.int) : (unit) squashArgErasure_result =
-  (if ((=) fuel (Prims.parse_int "0")) then SquashArgErasure_RFail else (let fuel' = (Prims.op_Minus fuel (Prims.parse_int "1")) in
+  (if ((=) fuel Prims.int_zero) then SquashArgErasure_RFail else (let fuel' = (Prims.op_Minus fuel Prims.int_one) in
   (squashArgErasure_callee (squashArgErasure_caller fuel') x y)))
 

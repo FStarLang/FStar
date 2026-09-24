@@ -2,12 +2,12 @@
 [@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
 
 let unobservable_incr (x : Prims.int) : Prims.int =
-  (Prims.op_Plus x (Prims.parse_int "1"))
+  (Prims.op_Plus x Prims.int_one)
 
 let unobservable_test (tmp : unit) : Prims.int =
-  (let x = (unobservable_incr (Prims.parse_int "1")) in
+  (let x = (unobservable_incr Prims.int_one) in
   (unobservable_incr x))
 
 let unobservable_test2 (tmp : unit) : Prims.int =
-  (unobservable_incr (Prims.parse_int "1"))
+  (unobservable_incr Prims.int_one)
 

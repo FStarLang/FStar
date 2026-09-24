@@ -492,6 +492,25 @@ let escape (s:string) : ML string =
   in
   String.concat "" (List.map esc (String.list_of_string s))
 
+(* [Prims.int] is [Z.t], and a literal is therefore a call, not a constant.
+   Which call matters: [Prims.parse_int] is [Z.of_string], so spelling every
+   literal that way re-parses a string at every evaluation of the expression.
+   A literal inside a recursive function is evaluated once per iteration --
+   [FStar.Seq.Base.slice'] compares against 0 and subtracts 1 per element --
+   so this is not constant folding at the margin.
+
+   The ladder is the ML extraction's ([FStarC_Extraction_ML_PrintML.ml]): the
+   two values with a shared representation are named, anything that fits in
+   OCaml's [int] goes through [Z.of_int], and only a genuine bignum is
+   parsed.  The bound is 2^30 rather than 2^62 because [int] is 31 bits wide
+   on a 32-bit host and the printer does not know the host. *)
+let prims_int_lit (v:int) (b:int_base) : string =
+  if v = 0 then "Prims.int_zero"
+  else if v = 1 then "Prims.int_one"
+  else if -1073741824 <= v && v <= 1073741823
+  then "(Prims.of_int (" ^ int_lit_to_string v b ^ "))"
+  else "(Prims.parse_int \"" ^ int_lit_to_string v b ^ "\")"
+
 let constant (c:constant) : ML string =
   match c with
   | CUnit -> "()"
@@ -506,11 +525,11 @@ let constant (c:constant) : ML string =
   | CFloat (v, fw) -> reject_fwidth fw; "(" ^ float_lit_to_string v ^ ")"
   (* Prims.int is arbitrary precision in the OCaml runtime, exactly as in the
      ML extraction. *)
-  | CInt (v, b, None) -> "(Prims.parse_int \"" ^ int_lit_to_string v b ^ "\")"
+  | CInt (v, b, None) -> prims_int_lit v b
   (* The realization's injection is [uint_to_t] for unsigned widths and
      [int_to_t] for signed ones. *)
   | CInt (v, b, Some sw) ->
-    "(" ^ int_inj sw ^ " (Prims.parse_int \"" ^ int_lit_to_string v b ^ "\"))"
+    "(" ^ int_inj sw ^ " " ^ prims_int_lit v b ^ ")"
   (* [FStar.Char.char] is realized as a plain OCaml [int] -- a code point, not
      OCaml's byte-sized [char] -- so the literal is the code point itself.
      That is what the ML extraction emits too, and it is what makes a char

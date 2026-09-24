@@ -413,7 +413,7 @@ CGREP_PulseGlobalArray += "(uint32_t *)PulseGlobalArray_sq"
 # karamel has EBufCreateL, and neither has anything to say about const.
 GREP_TESTS += PulseGlobalArray
 GREP_PulseGlobalArray += "let pulseGlobalArray_primes : (FStar_UInt8.t array)"
-GREP_PulseGlobalArray += "FStar_UInt8.uint_to_t (Prims.parse_int \"2\")"
+GREP_PulseGlobalArray += "FStar_UInt8.uint_to_t (Prims.of_int (2))"
 NOGREP_PulseGlobalArray += "squares"
 KRML_TESTS += PulseGlobalArray
 

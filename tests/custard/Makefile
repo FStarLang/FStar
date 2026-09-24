@@ -102,7 +102,10 @@ GREP_Patlift += "match (tmp, tmp1) with"
 # normalizer hands the result back as an embedding rather than as a constant.
 # Left lazy it looks like a term with no runtime meaning and is erased to
 # [()], which typechecks nowhere and is silently wrong where it does.
-GREP_Literals += "(Prims.parse_int \"-1\")"
+GREP_Literals += "(Prims.of_int (-1))"
+GREP_Literals += "(Prims.op_Minus Prims.int_zero n)"
+GREP_Literals += "Prims.int_one"
+GREP_Literals += "(Prims.parse_int \"4611686018427387904\")"
 # Section 5.0: [m : Type -> Type] is a type binder, so it is erased like any
 # other -- and so is a type argument in a spine whose head is a [match], which
 # is what a method call on a [dyn] dictionary compiles to.  Either one left
@@ -117,14 +120,14 @@ NOGREP_HigherKind  += ") a "
 # on it, and this module comes out entirely at [option] with no coercion at
 # all.  That is what is pinned here -- see HigherKind for the case that does
 # still need [Obj.t], where the dictionary is only known at run time.
-GREP_Magic   += "(magic_twice__option (Some ((Prims.parse_int \"21\"))))"
+GREP_Magic   += "(magic_twice__option (Some ((Prims.of_int (21)))))"
 GREP_Magic   += "let magic_ret__option (tmp : 'a) : ('a) option ="
 # Section 8.5: a projector or discriminator that [@@no_auto_projectors] left
 # as a bare [val] must be *derived* from the type declaration, not treated as
 # an external.  Left external it prints as a qualified call to a realization
 # that does not exist.
 NOGREP_AssumedProj += "AssumedProj\.u___proj"
-GREP_AssumedProj += "here = (Prims.parse_int \"7\")"
+GREP_AssumedProj += "here = (Prims.of_int (7))"
 
 NOGREP_Magic += "Obj.magic"
 NOGREP_Magic += "Obj.t"
@@ -202,7 +205,7 @@ GREP_KeyNames = "keyNames_apply__tweak" "keyNames_apply__tweak_1" \
 
 # Section 8.4: a garbage-collected reference is an OCaml 'ref', not a
 # one-element array, and it is never freed.
-GREP_Refs   = "(Prims.int ref)" "(ref (Prims.parse_int \"0\"))" "(!(r))" "(r) := "
+GREP_Refs   = "(Prims.int ref)" "(ref Prims.int_zero)" "(!(r))" "(r) := "
 NOGREP_Refs = "Array.make" "free"
 
 # Section 8.5: each exception constructor is its own declaration, raising is
@@ -310,7 +313,7 @@ GREP_Implicits   = "implicits_clamp (x : Prims.int) : Prims.int" \
                    "implicits_clampi (x : Prims.int) : Prims.int" \
                    "implicits_only_proof (tmp : unit)" \
                    "implicits_thunk (x : Prims.int) (tmp : unit)"
-NOGREP_Implicits = "implicits_clamp (Prims.parse_int \"3\") ()"
+NOGREP_Implicits = "implicits_clamp (Prims.of_int (3)) ()"
 
 # A phantom type parameter is carried rather than eliminated: a type's layout
 # is a function of the type, and dropping a parameter is a function of the

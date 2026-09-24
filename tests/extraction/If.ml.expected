@@ -3,8 +3,8 @@
 
 let if_test (x : bool) : Prims.int =
   (match x with
-    | true when false -> (Prims.parse_int "10")
-    | tmp -> (Prims.parse_int "20")
+    | true when false -> (Prims.of_int (10))
+    | tmp -> (Prims.of_int (20))
   )
 
 let if_x : Prims.int =

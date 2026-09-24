@@ -2,7 +2,7 @@
 [@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
 
 let inlineForExtractionNormRequest_test (x : Prims.int) : Prims.int =
-  (Prims.parse_int "1")
+  Prims.int_one
 
 let inlineForExtractionNormRequest_f2 (b : bool) : bool =
   (not b)

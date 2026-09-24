@@ -3,7 +3,7 @@
 
 let defer_without_defer (x : bool) : unit =
   (let u__return = (ref false) in
-  let v = (Array.make 10 (FStar_UInt8.uint_to_t (Prims.parse_int "1"))) in
+  let v = (Array.make 10 (FStar_UInt8.uint_to_t Prims.int_one)) in
   (if x then (();
   ((u__return) := true)) else ());
   let u__return1 = (!(u__return)) in
@@ -11,7 +11,7 @@ let defer_without_defer (x : bool) : unit =
 
 let defer_with_defer (x : bool) : unit =
   (let u__return = (ref false) in
-  let v = (Array.make 10 (FStar_UInt8.uint_to_t (Prims.parse_int "1"))) in
+  let v = (Array.make 10 (FStar_UInt8.uint_to_t Prims.int_one)) in
   (if x then ((u__return) := true) else ());
   ())
 

@@ -3,36 +3,36 @@
 
 let ints_test1 (x : Prims.int) : Prims.int =
   (match x with
-    | u__iconst0 when u__iconst0 = (Prims.parse_int "0") -> (Prims.parse_int "-1")
-    | u__iconst0 when u__iconst0 = (Prims.parse_int "123") -> (Prims.parse_int "321")
-    | u__iconst0 when u__iconst0 = (Prims.parse_int "999999") -> (Prims.parse_int "888888")
-    | x1 -> (Prims.op_Minus x1 (Prims.parse_int "1"))
+    | u__iconst0 when u__iconst0 = Prims.int_zero -> (Prims.of_int (-1))
+    | u__iconst0 when u__iconst0 = (Prims.of_int (123)) -> (Prims.of_int (321))
+    | u__iconst0 when u__iconst0 = (Prims.of_int (999999)) -> (Prims.of_int (888888))
+    | x1 -> (Prims.op_Minus x1 Prims.int_one)
   )
 
 let ints_test2 (x : FStar_UInt32.t) : FStar_UInt32.t =
   (match x with
-    | u__iconst0 when u__iconst0 = (FStar_UInt32.uint_to_t (Prims.parse_int "0")) -> (FStar_UInt32.uint_to_t (Prims.parse_int "1"))
-    | u__iconst0 when u__iconst0 = (FStar_UInt32.uint_to_t (Prims.parse_int "123")) -> (FStar_UInt32.uint_to_t (Prims.parse_int "321"))
-    | u__iconst0 when u__iconst0 = (FStar_UInt32.uint_to_t (Prims.parse_int "999999")) -> (FStar_UInt32.uint_to_t (Prims.parse_int "888888"))
-    | x1 -> (FStar_UInt32.sub x1 (FStar_UInt32.uint_to_t (Prims.parse_int "1")))
+    | u__iconst0 when u__iconst0 = (FStar_UInt32.uint_to_t Prims.int_zero) -> (FStar_UInt32.uint_to_t Prims.int_one)
+    | u__iconst0 when u__iconst0 = (FStar_UInt32.uint_to_t (Prims.of_int (123))) -> (FStar_UInt32.uint_to_t (Prims.of_int (321)))
+    | u__iconst0 when u__iconst0 = (FStar_UInt32.uint_to_t (Prims.of_int (999999))) -> (FStar_UInt32.uint_to_t (Prims.of_int (888888)))
+    | x1 -> (FStar_UInt32.sub x1 (FStar_UInt32.uint_to_t Prims.int_one))
   )
 
 let ints_test3 (x : FStar_Int16.t) : FStar_Int16.t =
   (match x with
-    | u__iconst0 when u__iconst0 = (FStar_Int16.int_to_t (Prims.parse_int "0")) -> (FStar_Int16.int_to_t (Prims.parse_int "-1"))
-    | u__iconst0 when u__iconst0 = (FStar_Int16.int_to_t (Prims.parse_int "123")) -> (FStar_Int16.int_to_t (Prims.parse_int "321"))
-    | u__iconst0 when u__iconst0 = (FStar_Int16.int_to_t (Prims.parse_int "999")) -> (FStar_Int16.int_to_t (Prims.parse_int "888"))
+    | u__iconst0 when u__iconst0 = (FStar_Int16.int_to_t Prims.int_zero) -> (FStar_Int16.int_to_t (Prims.of_int (-1)))
+    | u__iconst0 when u__iconst0 = (FStar_Int16.int_to_t (Prims.of_int (123))) -> (FStar_Int16.int_to_t (Prims.of_int (321)))
+    | u__iconst0 when u__iconst0 = (FStar_Int16.int_to_t (Prims.of_int (999))) -> (FStar_Int16.int_to_t (Prims.of_int (888)))
     | x1 -> x1
   )
 
 let ints_uu___0 : Prims.int =
-  (Prims.parse_int "-1073741824")
+  (Prims.of_int (-1073741824))
 
 let ints_uu___1 : Prims.int =
-  (Prims.parse_int "-1073741823")
+  (Prims.of_int (-1073741823))
 
 let ints_uu___2 : Prims.int =
-  (Prims.parse_int "1073741823")
+  (Prims.of_int (1073741823))
 
 let ints_uu___3 : Prims.int =
   (Prims.parse_int "-1073741825")

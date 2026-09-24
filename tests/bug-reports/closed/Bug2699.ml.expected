@@ -2,8 +2,8 @@
 [@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
 
 let bug2699_broken_length_f32 : (FStar_UInt32.t * FStar_UInt32.t) =
-  ((FStar_UInt32.uint_to_t (Prims.parse_int "24")), (FStar_UInt32.uint_to_t (Prims.parse_int "28")))
+  ((FStar_UInt32.uint_to_t (Prims.of_int (24))), (FStar_UInt32.uint_to_t (Prims.of_int (28))))
 
 let bug2699_works_length_f32 : (FStar_UInt32.t * FStar_UInt32.t) =
-  ((FStar_UInt32.uint_to_t (Prims.parse_int "24")), (FStar_UInt32.uint_to_t (Prims.parse_int "28")))
+  ((FStar_UInt32.uint_to_t (Prims.of_int (24))), (FStar_UInt32.uint_to_t (Prims.of_int (28))))
 

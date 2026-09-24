@@ -4,10 +4,10 @@
 type b_t = Obj.t
 
 let b_f (x : Obj.t) : Prims.int =
-  (Prims.parse_int "0")
+  Prims.int_zero
 
 type b_t' = Obj.t
 
 let b_f' (x : Obj.t) : Prims.int =
-  (Prims.parse_int "1")
+  Prims.int_one
 
