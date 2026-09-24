@@ -1261,6 +1261,21 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : ML worklist
     let bs = bs |> List.filter (fun ({binder_bv=bv1}) ->
     (src.ctx_uvar_binders |> List.existsb (fun ({binder_bv=bv2}) -> S.bv_eq bv1 bv2)) &&  //binder exists in G_t
     (not (pfx |> List.existsb (fun ({binder_bv=bv2}) -> S.bv_eq bv1 bv2)))) in  //but not in the maximal prefix
+    (* Also drop any binder whose sort mentions a variable that is neither in
+       the maximal prefix nor an earlier kept binder: abstracting over it would
+       produce an ill-scoped arrow type. *)
+    let bs =
+      let _, kept =
+        List.fold_left
+          (fun (scope, kept) (b:binder) ->
+            if subset (Free.names b.binder_bv.sort) scope
+            then add b.binder_bv scope, b::kept
+            else scope, kept)
+          (binders_as_bv_set pfx, [])
+          bs
+      in
+      List.rev kept
+    in
 
   if Nil? bs then aux (U.ctx_uvar_typ src) (fun src' -> src')  //no abstraction over bs
   else begin
@@ -3037,7 +3052,15 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
                let fvs_rhs = Free.names rhs in
                if not (subset fvs_rhs fvs_lhs)
                then Inl ("quasi-pattern, free names on the RHS are not included in the LHS"), wl
-               else Inr (mk_solution env lhs bs rhs), restrict_all_uvars env ctx_u [] uvars wl
+               (* Restrict the RHS uvars *over* bs (as in the pattern case), so
+                  that they can still depend on the variables that
+                  the solution abstracts over. Uvars whose context is already
+                  included in the LHS's context need no restriction. *)
+               else
+                 let ctx_lhs = binders_as_bv_set ctx_u.ctx_uvar_binders in
+                 let uvars = uvars |> List.filter (fun (src:ctx_uvar) ->
+                   not (subset (binders_as_bv_set src.ctx_uvar_binders) ctx_lhs)) in
+                 Inr (mk_solution env lhs bs rhs), restrict_all_uvars env ctx_u bs uvars wl
     in
 
     (*
