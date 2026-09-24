@@ -2456,6 +2456,45 @@ GREP_AnyLambda += "Obj.magic"
 # [spawn] that builds it, so the order of the two lines is the assertion.
 CUSTARD_TESTS += ThunkArity
 
+# Section 5.2, in the two places that were reaching a backend with a free
+# name: a *pattern* whose sub-pattern is deleted, and a *binder* -- top-level
+# or lambda -- that is dropped.  Both are rebound to [()], which [Simplify]
+# then substitutes away; the test is that the output compiles and runs, since
+# what went wrong was an unbound name rather than a wrong answer.
+CUSTARD_TESTS += PatDropUnit
+CUSTARD_TESTS += AbsDropFree
+
+# Section 122.3.1.  A type variable whose F* name ends in a quote: ['t'] is a
+# character literal to OCaml's lexer and an undefined parameter to F#.  The
+# escape is the same on both backends and has to be injective, so the module
+# has a [t'] *and* a [t_] and the greps pin that the two stay apart.
+CUSTARD_TESTS += TyvarQuote
+GREP_TyvarQuote += "('t_, 't__)"
+NOGREP_TyvarQuote += "'t'"
+FS_TESTS += TyvarQuote
+FSGREP_TyvarQuote += "<'t_, 't__>"
+FSNOGREP_TyvarQuote += "'t'"
+
+# An application whose head is a [match] whose arms are lambdas.  No backend
+# has closures, so the argument has to meet the arm where beta can fire; the
+# C leg is the one that cannot emit an arm as a value, and the run pins that
+# the commuting conversion did not change which arm is taken.
+C_TESTS += MatchFun
+# The arms are beta-reduced where they stand, so the emitted function is two
+# returns and holds no function value at all.
+CGREP_MatchFun += "if (c == MATCHFUN_A) return (m + n);"
+CNOGREP_MatchFun += "(*"
+
+# Section 77.5.  [--custard_no_unfold] keeps an abbreviation of an applied
+# type so that the instance carries the name the program gave it.
+# [byte_pair] is named to the flag and must survive; [flag_pair] is the
+# control and must unfold as every abbreviation does by default.
+CUSTARD_TESTS += NoUnfold
+FLAGS_NoUnfold = --custard_no_unfold NoUnfold.byte_pair
+GREP_NoUnfold += "type noUnfold_byte_pair = (FStar_UInt8.t) noUnfold_pair"
+GREP_NoUnfold += "let noUnfold_swap (p : noUnfold_byte_pair) : noUnfold_byte_pair"
+NOGREP_NoUnfold += "noUnfold_flag_pair"
+
 CUSTARD_TESTS += ErasableEff
 # --custard_main alone would root only what [main] reaches, and what this test
 # is about is precisely the definitions that reach nothing because they were
@@ -2550,6 +2589,18 @@ REJECT_TESTS += ExternErase
 CODE_ExternErase := 382
 EGREP_ExternErase += "external ExternErase.run: cb"
 NOEGREP_ExternErase += "ExternErase.run_g"
+
+# Section 5.1, the other half of the same story: what the arity disagreement
+# does when it is not reported.  A [Dropped] binder is deleted from every
+# call, so a declaration that keeps it is one parameter longer than the call
+# -- and [major]'s codomain is an abbreviation, which is what makes the two
+# sides split the spine differently in the first place.  Compiling is the
+# assertion; the greps pin that the emitted prototypes are the header's.
+C_TESTS += ExternDrop
+CGREP_ExternDrop += "include \"ExternDrop_stubs.h"
+CGREP_ExternDrop += "ed_major(((uint32_t)1U))"
+CGREP_ExternDrop += "ed_scale(((uint32_t)3U))"
+CNOGREP_ExternDrop += "ExternDrop_major" "ExternDrop_scale"
 
 # Section 47.2.  An indexed custard_extern type, with the configuration
 # chosen by a typeclass whose indices are all erased -- the shape the

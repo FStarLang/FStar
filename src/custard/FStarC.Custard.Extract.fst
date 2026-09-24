@@ -4730,10 +4730,10 @@ and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
        instantiate, so it becomes [any] here just as it did before, rather
        than escaping as a free variable. *)
     let rec go (i:int) (bs:binders) (cs:list bclass) (subst:list subst_elt)
-               (keep:binders) (anys:list string)
-      : ML (binders & list subst_elt & list string) =
+               (keep:binders) (anys:list string) (gone:binders)
+      : ML (binders & list subst_elt & list string & binders) =
       match bs with
-      | [] -> (List.rev keep, subst, anys)
+      | [] -> (List.rev keep, subst, anys, List.rev gone)
       | b :: bs' ->
         let cs' = match cs with [] -> [] | _ :: cs' -> cs' in
         let cls = match cs with [] -> Poly | c :: _ -> c in
@@ -4783,7 +4783,7 @@ and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
                    monomorphized argument's term, so nothing is discarded -- \
                    which is how a target intrinsic with a compile-time \
                    operand is normally expressed." ]
-         | Mono, Some (_, a) -> go (i + 1) bs' cs' (NT (b.binder_bv, a) :: subst) keep anys
+         | Mono, Some (_, a) -> go (i + 1) bs' cs' (NT (b.binder_bv, a) :: subst) keep anys gone
          (* Section 5.1.  [split_mono_args] deletes a [Dropped] argument
             outright -- it is not even passed as [()] -- so a declaration that
             keeps the binder is one parameter longer than every call to it.
@@ -4800,7 +4800,7 @@ and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
             variable the signature still mentions.  The Rust backend's
             modelled [Pulse.Lib.Slice.slice t] is that. *)
          | Dropped, _ when not (is_type_binder (tcenv st) b) ->
-           go (i + 1) bs' cs' subst keep anys
+           go (i + 1) bs' cs' subst keep anys (b' :: gone)
          | Mono, None when is_type_binder (tcenv st) b && is_root st l ->
            (* Section 64.  A root is reached from no F* call site -- that is
               what makes it a root -- so "the call site did not supply it"
@@ -4814,12 +4814,12 @@ and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
               the instantiations written in the IR and emits one external
               per distinct type vector, which is what the extractor already
               does for an ordinary external through [margs]. *)
-           go (i + 1) bs' cs' subst (b' :: keep) anys
+           go (i + 1) bs' cs' subst (b' :: keep) anys gone
          | Mono, None when is_type_binder (tcenv st) b ->
-           go (i + 1) bs' cs' subst (b' :: keep) (name_of_bv b.binder_bv :: anys)
-         | _ -> go (i + 1) bs' cs' subst (b' :: keep) anys)
+           go (i + 1) bs' cs' subst (b' :: keep) (name_of_bv b.binder_bv :: anys) gone
+         | _ -> go (i + 1) bs' cs' subst (b' :: keep) anys gone)
     in
-    let keep, subst, anys = go 0 bs cs [] [] [] in
+    let keep, subst, anys, gone = go 0 bs cs [] [] [] [] in
     let c = SS.subst_comp subst c in
     let typars = keep |> List.collect (fun b ->
                    let n = name_of_bv b.binder_bv in
@@ -4882,6 +4882,17 @@ and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
                        if e && not (is_type_binder (tcenv st) b)
                           && not (declared_erased b)
                        then [Ident.string_of_id b.binder_bv.ppname] else []) in
+    (* [gone] is reported by the same rule.  A [Dropped] binder leaves the
+       declaration one step earlier than the ones [flags] marks -- [go]
+       deletes it, so it is not in [keep] at all -- but it is the same news
+       for the same reader: a parameter the C prototype still has is not
+       being passed.  Reporting only the late ones would silence exactly the
+       case section 49.3 exists for, since a pure [unit -> unit] parameter
+       that is not the last binder is [Dropped] rather than thunk-kept. *)
+    let dropped = dropped @
+                  (gone |> List.collect (fun (b:S.binder) ->
+                     if not (declared_erased b)
+                     then [Ident.string_of_id b.binder_bv.ppname] else [])) in
     if Cons? dropped then
       custard_warning st E.Warning_CustardExternErasure [
         text ("Custard erased " ^ show (List.length dropped) ^
