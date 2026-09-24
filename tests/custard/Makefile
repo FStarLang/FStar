@@ -1765,6 +1765,111 @@ $(OUTPUT_DIR)/SepAppC.ran: $(OUTPUT_DIR)/SepLibC.c $(OUTPUT_DIR)/SepAppC.c
 
 all: $(OUTPUT_DIR)/SepAppC.ran
 
+# Section 42.6: separate compilation for karamel.  The same pair of modules
+# again -- a library unit and an application that links against its `.cui` --
+# and the assertions differ from SepLibC/SepAppC's in the two places where the
+# backend does:
+#
+#  * what a unit offers.  A C unit offers its linking interface and nothing
+#    else (section 42.1), so [double_it] was [static] and downstream got its
+#    own copy.  karamel decides linkage itself, out of [-bundle] and
+#    [-static-header], so Custard has nothing to withhold and the interface is
+#    everything the unit compiled -- which is why [double_it] is *not* an
+#    entry here and is still reached by the application.
+#  * who writes the header.  Custard writes SepLibC.h; here krml does, from
+#    the declarations Custard puts in a karamel file *named* SepLibK.  So the
+#    two runs must agree on that name without ever having compared notes, and
+#    the assertion is that the downstream SepLibK.h holds prototypes and no
+#    bodies while the upstream one holds both.
+$(OUTPUT_DIR)/SepLibK.krml: $(CACHE_DIR)/SepLibK.fst.checked $(FSTAR_EXE)
+	$(call msg, "CUSTARD-UNIT-KRML", SepLibK)
+	@mkdir -p $(OUTPUT_DIR)
+	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend KrmlC \
+	  --custard_unit SepLibK \
+	  --custard_entry SepLibK.scale --custard_entry SepLibK.manhattan \
+	  --custard_entry SepLibK.origin --odir $(OUTPUT_DIR) SepLibK.fst
+
+$(OUTPUT_DIR)/SepLibK.cui: $(OUTPUT_DIR)/SepLibK.krml
+	$(Q)test -f $@
+
+$(OUTPUT_DIR)/SepAppK.krml: $(CACHE_DIR)/SepAppK.fst.checked \
+                            $(OUTPUT_DIR)/SepLibK.cui $(FSTAR_EXE)
+	$(call msg, "CUSTARD-LINK-KRML", SepAppK)
+	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend KrmlC \
+	  --custard_link $(OUTPUT_DIR)/SepLibK.cui \
+	  --custard_main SepAppK.main SepAppK.fst -o $@
+
+$(OUTPUT_DIR)/SepAppK.ran: $(OUTPUT_DIR)/SepLibK.krml $(OUTPUT_DIR)/SepAppK.krml
+	$(call msg, "KRML", SepLibK)
+	$(Q)rm -rf $(OUTPUT_DIR)/SepLibK_c $(OUTPUT_DIR)/SepAppK_c
+	@# No -no-prefix on either side: the two runs have to spell the symbol
+	@# the same way, and the only thing making them do so is that each
+	@# derived it from the same lident.
+	$(Q)$(KRML_EXE) -silent -skip-linking -tmpdir $(OUTPUT_DIR)/SepLibK_c \
+	  $(OUTPUT_DIR)/SepLibK.krml
+	$(call msg, "KRML", SepAppK)
+	$(Q)$(KRML_EXE) -silent -skip-linking -no-prefix SepAppK \
+	  -tmpdir $(OUTPUT_DIR)/SepAppK_c $(OUTPUT_DIR)/SepAppK.krml
+	@# The downstream run wrote a SepLibK.h of its own -- it has to, since
+	@# it is a separate krml invocation with a separate -tmpdir -- and it
+	@# must hold declarations only.  The struct is declared in both, which
+	@# is what karamel's own -library does and is safe because the two
+	@# headers carry the same include guard.
+	$(Q)grep -qF -- "extern uint32_t SepLibK_manhattan(" \
+	  $(OUTPUT_DIR)/SepAppK_c/SepLibK.h \
+	  || { echo "ERROR: SepAppK did not declare SepLibK_manhattan"; exit 1; }
+	$(Q)grep -qF -- "extern SepLibK_point SepLibK_origin;" \
+	  $(OUTPUT_DIR)/SepAppK_c/SepLibK.h \
+	  || { echo "ERROR: SepAppK did not declare SepLibK_origin"; exit 1; }
+	@# Not an entry, and still on offer: section 42.1's filter is C's.
+	$(Q)grep -qF -- "extern uint32_t SepLibK_double_it(" \
+	  $(OUTPUT_DIR)/SepAppK_c/SepLibK.h \
+	  || { echo "ERROR: SepAppK did not declare SepLibK_double_it"; exit 1; }
+	$(Q)test ! -e $(OUTPUT_DIR)/SepAppK_c/SepLibK.c \
+	  || { echo "ERROR: SepAppK wrote a body for SepLibK"; exit 1; }
+	@# And the file the imports went into is not this unit's own, which is
+	@# the mistake that produces two headers declaring one symbol.
+	$(Q)grep -qF -- "#include \"SepLibK.h\"" \
+	  $(OUTPUT_DIR)/SepAppK_c/Custard.c \
+	  || { echo "ERROR: SepAppK does not include SepLibK.h"; exit 1; }
+	$(call msg, "CC", SepAppK)
+	$(Q)$(CC) $$(tr '\n' ' ' < $(OUTPUT_DIR)/SepLibK_c/compile_flags.txt) \
+	  -I$(OUTPUT_DIR)/SepLibK_c -c $(OUTPUT_DIR)/SepLibK_c/SepLibK.c \
+	  -o $(OUTPUT_DIR)/SepLibK_c/SepLibK.o
+	$(Q)$(CC) $$(tr '\n' ' ' < $(OUTPUT_DIR)/SepLibK_c/compile_flags.txt) \
+	  -I$(OUTPUT_DIR)/SepAppK_c -c $(OUTPUT_DIR)/SepAppK_c/Custard.c \
+	  -o $(OUTPUT_DIR)/SepAppK_c/Custard.o
+	@# The linker is the assertion that matters: it resolves only if both
+	@# runs agreed on every symbol, and it has one definition of each.
+	$(Q)$(CC) $(OUTPUT_DIR)/SepLibK_c/SepLibK.o \
+	  $(OUTPUT_DIR)/SepAppK_c/Custard.o -o $(OUTPUT_DIR)/SepAppK.exe
+	$(call msg, "RUN-C", SepAppK)
+	$(Q)$(OUTPUT_DIR)/SepAppK.exe
+	$(Q)nm -g --defined-only $(OUTPUT_DIR)/SepAppK_c/Custard.o \
+	  | grep -q SepLibK_ \
+	  && { echo "ERROR: SepAppK defines part of SepLibK"; exit 1; }; true
+	$(Q)touch $@
+
+# Section 42.6.  karamel's Rust backend has no form for a declaration without
+# a definition, so the flags are refused rather than half-implemented.  The
+# check is that the refusal happens in Custard, naming the option -- before
+# this it was karamel failing with "impossible" on the first imported global.
+$(OUTPUT_DIR)/SepLibK.rustrefused: $(CACHE_DIR)/SepLibK.fst.checked $(FSTAR_EXE)
+	$(call msg, "REJECT-RUST-UNIT", SepLibK)
+	@mkdir -p $(OUTPUT_DIR)
+	$(Q)$(FSTAR) --message_format human --codegen Custard $(WARN_ANY) \
+	  --custard_backend KrmlRust --custard_unit SepLibK \
+	  --custard_entry SepLibK.scale --odir $(OUTPUT_DIR) SepLibK.fst \
+	  > $(OUTPUT_DIR)/SepLibK.rserr 2>&1 || true
+	$(Q)grep -qF -- "--custard_backend KrmlRust" $(OUTPUT_DIR)/SepLibK.rserr \
+	  || { echo "ERROR: KrmlRust did not refuse --custard_unit"; \
+	       cat $(OUTPUT_DIR)/SepLibK.rserr; exit 1; }
+	$(Q)test ! -e $(OUTPUT_DIR)/SepLibK.cui.rust \
+	  || { echo "ERROR: KrmlRust wrote a unit interface"; exit 1; }
+	$(Q)touch $@
+
+all: $(OUTPUT_DIR)/SepLibK.rustrefused
+
 $(OUTPUT_DIR)/SepApp.exe: $(OUTPUT_DIR)/SepLib.ml $(OUTPUT_DIR)/SepApp.ml
 	$(call msg, "OCAMLOPT", SepApp)
 	$(FSTAR_EXE) --ocamlopt -I $(OUTPUT_DIR) $(OUTPUT_DIR)/SepLib.ml $(OUTPUT_DIR)/SepApp.ml -o $@
@@ -3189,6 +3294,9 @@ endif
 # C one needs a toolchain.  Found by path and not by name -- see 62.1.
 ifneq ($(KRML_FOUND),)
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .cran, $(KRML_TESTS)))
+# Section 42.6.  Two krml runs and a link, so it needs karamel as much as any
+# of the above; the refusal test does not and stays outside.
+all: $(OUTPUT_DIR)/SepAppK.ran
 else
 $(warning krml not found: skipping the karamel C tests)
 endif
