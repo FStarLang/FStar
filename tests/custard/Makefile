@@ -2910,6 +2910,21 @@ CGREP_SzWidth32 += "return (uint32_t)n;"
 # The narrowed run must not mention size_t anywhere, in either file.
 CNOGREP_SzWidth32 += "size_t"
 
+# Section 129.  A copy binding between a tuple's constructor and the match
+# that consumes it.  F* elaborates [let (a, (b, ())) = p] into [let
+# _letpattern = p in match _letpattern with ...] whenever the scrutinee is
+# already a variable, so inlining a callee that destructures a tuple
+# parameter lands one of these between the two.  Neither binding folds while
+# it is there: [p] is not destructed-only, because the copy reads it, and
+# [_letpattern] is not a constructor.  The NOGREPs are the assertion -- the
+# tuple type must not be materialized and the copy must not survive under
+# any name.
+C_TESTS += CLetCopy
+FLAGS_CLetCopy = --custard_backend C --custard_entry_module CLetCopy
+CGREP_CLetCopy += "uint32_t CLetCopy_combine(uint32_t x) {"
+CNOGREP_CLetCopy += "_letpattern"
+CNOGREP_CLetCopy += "tuple2"
+
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
                   $(C_TESTS) $(CXX_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \
                   $(RUSTSPLIT_TESTS) $(FS_TESTS) $(FSREJECT_TESTS) \
