@@ -368,6 +368,13 @@ let builtin_type (n:name) : ML (option string) =
   | "FStar.Char.char"
   | "FStar.String.char" -> Some "char"
   | "FStar.Pervasives.Native.option" -> Some "option"
+  (* Section 122.17.  [FStar.Bytes.bytes] is a .NET [byte[]].  The type is
+     abstract in F*, so the choice is free, and an array of bytes is what the
+     module is about: the OCaml realization uses a [string] only because an
+     OCaml string *is* a byte string, which a .NET one is not.  F#'s
+     structural equality on arrays is what [val bytes : t:Type0{hasEq t}]
+     asks for, so [=] on two of these means what F* says it means. *)
+  | "FStar.Bytes.bytes" -> Some "byte[]"
   | _ -> None
 
 let is_builtin_type (n:name) : ML bool = Some? (builtin_type n)
@@ -1307,6 +1314,40 @@ let supported_realizations : list (string & string) = [
   "FStar.List.partition",         "FStar_List_Tot_Base.partition";
   "FStar.List.assoc",             "FStar_List_Tot_Base.assoc";
   "FStar.List.sortWith",          "FStar_List_Tot_Base.sortWith";
+
+  (* Section 122.17.  [FStar.Bytes], over [byte[]].  The whole module rather
+     than the part some program happened to need, for the reason
+     [FStar.List.Tot.Base] is whole: the next program to want one of these
+     would otherwise be refused for a function that is one line. *)
+  "FStar.Bytes.len",              "FStar_Bytes.len";
+  "FStar.Bytes.empty_bytes",      "FStar_Bytes.empty_bytes";
+  "FStar.Bytes.get",              "FStar_Bytes.get";
+  "FStar.Bytes.create",           "FStar_Bytes.create";
+  "FStar.Bytes.init",             "FStar_Bytes.init";
+  "FStar.Bytes.abyte",            "FStar_Bytes.abyte";
+  "FStar.Bytes.twobytes",         "FStar_Bytes.twobytes";
+  "FStar.Bytes.append",           "FStar_Bytes.append";
+  "FStar.Bytes.slice",            "FStar_Bytes.slice";
+  "FStar.Bytes.sub",              "FStar_Bytes.sub";
+  "FStar.Bytes.split",            "FStar_Bytes.split";
+  "FStar.Bytes.repr_bytes",       "FStar_Bytes.repr_bytes";
+  "FStar.Bytes.int_of_bytes",     "FStar_Bytes.int_of_bytes";
+  "FStar.Bytes.bytes_of_int",     "FStar_Bytes.bytes_of_int";
+  "FStar.Bytes.int32_of_bytes",   "FStar_Bytes.int32_of_bytes";
+  "FStar.Bytes.int16_of_bytes",   "FStar_Bytes.int16_of_bytes";
+  "FStar.Bytes.int8_of_bytes",    "FStar_Bytes.int8_of_bytes";
+  "FStar.Bytes.bytes_of_int32",   "FStar_Bytes.bytes_of_int32";
+  "FStar.Bytes.bytes_of_int16",   "FStar_Bytes.bytes_of_int16";
+  "FStar.Bytes.bytes_of_int8",    "FStar_Bytes.bytes_of_int8";
+  "FStar.Bytes.xor",              "FStar_Bytes.xor";
+  "FStar.Bytes.utf8_encode",      "FStar_Bytes.utf8_encode";
+  "FStar.Bytes.iutf8_opt",        "FStar_Bytes.iutf8_opt";
+  "FStar.Bytes.string_of_hex",    "FStar_Bytes.string_of_hex";
+  "FStar.Bytes.bytes_of_hex",     "FStar_Bytes.bytes_of_hex";
+  "FStar.Bytes.hex_of_string",    "FStar_Bytes.hex_of_string";
+  "FStar.Bytes.hex_of_bytes",     "FStar_Bytes.hex_of_bytes";
+  "FStar.Bytes.print_bytes",      "FStar_Bytes.print_bytes";
+  "FStar.Bytes.bytes_of_string",  "FStar_Bytes.bytes_of_string";
 ]
 
 let supported_realization (n:name) : ML (option string) =
@@ -1791,7 +1832,81 @@ let runtime_source : string =
    \x20 let nth (l : 'a list) (i : bigint) : 'a = List.item (int i) l\n\
    \x20 let iter (f : 'a -> unit) (l : 'a list) : unit = List.iter f l\n\
    \x20 let iteri (f : bigint -> 'a -> unit) (l : 'a list) : unit =\n\
-   \x20   List.iteri (fun i x -> f (bigint i) x) l\n"
+   \x20   List.iteri (fun i x -> f (bigint i) x) l\n\
+   \n\
+   // Section 122.17.  FStar.Bytes over byte[].  Where the OCaml realization\n\
+   // uses a string it is because an OCaml string is a byte string; a .NET\n\
+   // one is UTF-16, so the representation is an array and the two functions\n\
+   // that really do relate bytes to text -- utf8_encode and iutf8_opt -- do\n\
+   // the encoding rather than returning their argument.\n\
+   module FStar_Bytes =\n\
+   \x20 let len (b : byte[]) : uint32 = uint32 b.Length\n\
+   \x20 let empty_bytes : byte[] = Array.empty\n\
+   \x20 let get (b : byte[]) (pos : uint32) : byte = b.[int pos]\n\
+   \x20 let create (n : uint32) (v : byte) : byte[] = Array.create (int n) v\n\
+   \x20 let init (n : uint32) (f : uint32 -> byte) : byte[] =\n\
+   \x20   Array.init (int n) (fun i -> f (uint32 i))\n\
+   \x20 let abyte (b : byte) : byte[] = [| b |]\n\
+   \x20 let twobytes (b : byte * byte) : byte[] = [| fst b; snd b |]\n\
+   \x20 let append (b1 : byte[]) (b2 : byte[]) : byte[] = Array.append b1 b2\n\
+   \x20 let slice (b : byte[]) (s : uint32) (e : uint32) : byte[] =\n\
+   \x20   Array.sub b (int s) (int e - int s)\n\
+   \x20 let sub (b : byte[]) (s : uint32) (l : uint32) : byte[] =\n\
+   \x20   Array.sub b (int s) (int l)\n\
+   \x20 let split (b : byte[]) (k : uint32) : byte[] * byte[] =\n\
+   \x20   (Array.sub b 0 (int k), Array.sub b (int k) (b.Length - int k))\n\
+   \x20 let rec repr_bytes (n : bigint) : bigint =\n\
+   \x20   if n < 256I then 1I else 1I + repr_bytes (n / 256I)\n\
+   \x20 // Big endian, which is what the specification's int_of_bytes_of_int\n\
+   \x20 // and the OCaml realization both say.\n\
+   \x20 let int_of_bytes (b : byte[]) : bigint =\n\
+   \x20   Array.fold (fun acc (x : byte) -> acc * 256I + bigint (int x)) 0I b\n\
+   \x20 let bytes_of_int (nb : bigint) (i : bigint) : byte[] =\n\
+   \x20   let n = int nb\n\
+   \x20   let r : byte[] = Array.zeroCreate n\n\
+   \x20   let mutable v = i\n\
+   \x20   for k in n - 1 .. -1 .. 0 do\n\
+   \x20     r.[k] <- byte (v % 256I)\n\
+   \x20     v <- v / 256I\n\
+   \x20   r\n\
+   \x20 let int32_of_bytes (b : byte[]) : uint32 = uint32 (int_of_bytes b)\n\
+   \x20 let int16_of_bytes (b : byte[]) : uint16 = uint16 (int_of_bytes b)\n\
+   \x20 let int8_of_bytes (b : byte[]) : byte = byte (int_of_bytes b)\n\
+   \x20 let bytes_of_int32 (n : uint32) : byte[] = bytes_of_int 4I (bigint n)\n\
+   \x20 let bytes_of_int16 (n : uint16) : byte[] = bytes_of_int 2I (bigint (int n))\n\
+   \x20 let bytes_of_int8 (n : byte) : byte[] = bytes_of_int 1I (bigint (int n))\n\
+   \x20 let xor (n : uint32) (b1 : byte[]) (b2 : byte[]) : byte[] =\n\
+   \x20   Array.init (int n) (fun i -> b1.[i] ^^^ b2.[i])\n\
+   \x20 let utf8_encode (s : string) : byte[] = Text.Encoding.UTF8.GetBytes s\n\
+   \x20 let bytes_of_string (s : string) : byte[] = utf8_encode s\n\
+   \x20 // Strict: the specification says the result decodes back to the\n\
+   \x20 // argument, and .NET replaces an ill-formed sequence with U+FFFD\n\
+   \x20 // unless the decoder is told to throw.\n\
+   \x20 let private strictUtf8 = Text.UTF8Encoding (false, true)\n\
+   \x20 let iutf8_opt (b : byte[]) : string option =\n\
+   \x20   try Some (strictUtf8.GetString b) with _ -> None\n\
+   \x20 let private hexd = \"0123456789abcdef\"\n\
+   \x20 let private nibble (c : char) : int =\n\
+   \x20   if c >= '0' && c <= '9' then int c - int '0'\n\
+   \x20   elif c >= 'a' && c <= 'f' then 10 + int c - int 'a'\n\
+   \x20   elif c >= 'A' && c <= 'F' then 10 + int c - int 'A'\n\
+   \x20   else failwith \"bytes_of_hex: invalid hex digit\"\n\
+   \x20 let bytes_of_hex (s : string) : byte[] =\n\
+   \x20   if s.Length % 2 <> 0 then failwith \"bytes_of_hex: invalid length\"\n\
+   \x20   else Array.init (s.Length / 2)\n\
+   \x20          (fun i -> byte (nibble s.[2 * i] * 16 + nibble s.[2 * i + 1]))\n\
+   \x20 let hex_of_bytes (b : byte[]) : string =\n\
+   \x20   System.String (Array.collect\n\
+   \x20     (fun (x : byte) -> [| hexd.[int x >>> 4]; hexd.[int x &&& 0xf] |]) b)\n\
+   \x20 // These two are the same encoding over a string whose characters are\n\
+   \x20 // byte values -- which is what an OCaml string holding bytes is, and\n\
+   \x20 // is the reading the OCaml realization gives them.\n\
+   \x20 let string_of_hex (s : string) : string =\n\
+   \x20   System.String (Array.map char (bytes_of_hex s))\n\
+   \x20 let hex_of_string (s : string) : string =\n\
+   \x20   hex_of_bytes (Array.map byte (Array.ofSeq s))\n\
+   \x20 let print_bytes (b : byte[]) : string =\n\
+   \x20   (hex_of_bytes b).ToUpperInvariant ()\n"
 
 (* The target framework.  .NET 10 is the current long-term-support release and
    the first that this backend was written against; [System.Int128] needs 7 or
