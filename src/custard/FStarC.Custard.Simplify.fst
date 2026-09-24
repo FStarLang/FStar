@@ -892,6 +892,13 @@ let rec reduce (x:expr) : ML expr =
      only way the program compiles. *)
   | ELet (v, ty, e1, e2) ->
     let e1 = reduce e1 in
+    (* The body first: the rewrites below ask questions about how [v] is used,
+       and a copy binding or a match sitting unreduced in [e2] answers them
+       wrongly.  [let p = ctor in let q = p in match q] is the shape that
+       matters -- read top-down, [p] is not [destructed_only] because [q]'s
+       definition uses it, and the copy that would fix that has not been
+       propagated yet. *)
+    let e2 = reduce e2 in
     if Options.custard_backend () = "C"
        && EFun? e1.e && count v e2 <= 1 && called_only v e2 then
       let sm : subst = SMap.create 5 in
@@ -910,6 +917,19 @@ let rec reduce (x:expr) : ML expr =
        [ctor_args_pure] asks of a scrutinee that is a constructor already.
        [sub] renames as it goes, so a binder of the same name inside [e2]
        cannot capture. *)
+    (* A copy binding.  F* puts one in front of a pattern match whose
+       scrutinee is already a variable, so [let (a, b) = p] inside an inlined
+       callee arrives here as [let _letpattern = p in match _letpattern with
+       ...].  That defeats both rewrites at once: the fold below wants the
+       *definition* to be a constructor, and it is a variable, while the
+       constructor one binding further up is no longer [destructed_only]
+       because this binding's right-hand side is a bare use of it.
+       Propagating the copy first puts the constructor and the match next to
+       each other, which is what every rewrite here is written against. *)
+    else if (match e1.e with EVar _ -> true | _ -> false) && is_pure e1.eff then
+      let sm : subst = SMap.create 5 in
+      SMap.add sm v e1;
+      reduce (sub sm e2)
     else if (match e1.e with
              | ECtor (_, es) | ETuple es -> es |> List.for_all reeval
              | ERecord (_, fs) -> fs |> List.for_all (fun (_, (e:expr)) -> reeval e)
@@ -918,7 +938,7 @@ let rec reduce (x:expr) : ML expr =
       let sm : subst = SMap.create 5 in
       SMap.add sm v e1;
       reduce (sub sm e2)
-    else { x with e = ELet (v, ty, e1, reduce e2) }
+    else { x with e = ELet (v, ty, e1, e2) }
   | _ -> map_children reduce x
 
 and reduce_branch (br:branch) : ML branch =
