@@ -2,7 +2,7 @@
 [@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
 
 let extractionTest_zero (tmp : unit) : FStar_UInt32.t =
-  (FStar_UInt32.uint_to_t (Prims.parse_int "0"))
+  (FStar_UInt32.uint_to_t Prims.int_zero)
 
 let extractionTest_test_invariants_and_later (tmp : unit) : unit =
   (let k = (fun tmp1 tmp2 -> ()) in
@@ -11,36 +11,36 @@ let extractionTest_test_invariants_and_later (tmp : unit) : unit =
 
 let extractionTest_test_read_write (x : (FStar_UInt32.t ref)) : unit =
   (let n = (!(x)) in
-  ((x) := (FStar_UInt32.add n (FStar_UInt32.uint_to_t (Prims.parse_int "0")))))
+  ((x) := (FStar_UInt32.add n (FStar_UInt32.uint_to_t Prims.int_zero))))
 
 let extractionTest_test_write_10 (x : (FStar_UInt32.t ref)) : unit =
-  (((x) := (FStar_UInt32.uint_to_t (Prims.parse_int "2")));
+  (((x) := (FStar_UInt32.uint_to_t (Prims.of_int (2))));
   (extractionTest_test_read_write x);
-  ((x) := (FStar_UInt32.uint_to_t (Prims.parse_int "0"))))
+  ((x) := (FStar_UInt32.uint_to_t Prims.int_zero)))
 
 let extractionTest_test_inner_ghost_fun (tmp : unit) : unit =
   ()
 
 let extractionTest_write10 (x : (FStar_UInt32.t ref)) : unit =
-  (let ctr = (ref (FStar_UInt32.uint_to_t (Prims.parse_int "10"))) in
+  (let ctr = (ref (FStar_UInt32.uint_to_t (Prims.of_int (10)))) in
   (while (let u___anf0 = (!(ctr)) in
-  (FStar_UInt32.gt u___anf0 (FStar_UInt32.uint_to_t (Prims.parse_int "0")))) do ((extractionTest_test_write_10 x);
+  (FStar_UInt32.gt u___anf0 (FStar_UInt32.uint_to_t Prims.int_zero))) do ((extractionTest_test_write_10 x);
   let u___anf0 = (!(ctr)) in
-  ((ctr) := (FStar_UInt32.sub u___anf0 (FStar_UInt32.uint_to_t (Prims.parse_int "1"))))) done);
+  ((ctr) := (FStar_UInt32.sub u___anf0 (FStar_UInt32.uint_to_t Prims.int_one)))) done);
   ())
 
 let extractionTest_fill_array (x : (FStar_UInt32.t array)) (n : FStar_SizeT.t) (v : FStar_UInt32.t) : unit =
-  (let i = (ref (FStar_SizeT.uint_to_t (Prims.parse_int "0"))) in
+  (let i = (ref (FStar_SizeT.uint_to_t Prims.int_zero)) in
   (while (let u___anf0 = (!(i)) in
   (FStar_SizeT.lt u___anf0 n)) do (let u___anf0 = (!(i)) in
   ((x).((Z.to_int (FStar_SizeT.v u___anf0))) <- v);
   let u___anf01 = (!(i)) in
-  ((i) := (FStar_SizeT.add u___anf01 (FStar_SizeT.uint_to_t (Prims.parse_int "1"))))) done);
+  ((i) := (FStar_SizeT.add u___anf01 (FStar_SizeT.uint_to_t Prims.int_one)))) done);
   ())
 
 let extractionTest_sub_array (x : (FStar_UInt32.t array)) : unit =
   (let u___anf0 = (failwith "Custard: pointer arithmetic has no OCaml representation") in
-  ((u___anf0).(0) <- (FStar_UInt32.uint_to_t (Prims.parse_int "42")));
+  ((u___anf0).(0) <- (FStar_UInt32.uint_to_t (Prims.of_int (42))));
   ())
 
 let extractionTest_test0 (x : FStar_SizeT.t) (y : FStar_SizeT.t) : FStar_SizeT.t =
@@ -52,7 +52,7 @@ type 'a extractionTest_opt =
 
 
 let extractionTest_my_safe_add (x : FStar_SizeT.t) (y : FStar_SizeT.t) : (FStar_SizeT.t) extractionTest_opt =
-  (if (FStar_SizeT.lte x (FStar_SizeT.uint_to_t (Prims.parse_int "0xffff"))) then (if (FStar_SizeT.lte y (FStar_SizeT.sub (FStar_SizeT.uint_to_t (Prims.parse_int "0xffff")) x)) then (ExtractionTest_Some ((FStar_SizeT.add x y))) else ExtractionTest_None) else ExtractionTest_None)
+  (if (FStar_SizeT.lte x (FStar_SizeT.uint_to_t (Prims.of_int (0xffff)))) then (if (FStar_SizeT.lte y (FStar_SizeT.sub (FStar_SizeT.uint_to_t (Prims.of_int (0xffff))) x)) then (ExtractionTest_Some ((FStar_SizeT.add x y))) else ExtractionTest_None) else ExtractionTest_None)
 
 let extractionTest_testbi (x : FStar_SizeT.t) (y : FStar_SizeT.t) : FStar_SizeT.t =
   (FStar_SizeT.rem x y)
@@ -67,13 +67,13 @@ let extractionTest_extract_match (x : (bool) extractionTest_opt) : bool =
   )
 
 let rec extractionTest_fib (x : Prims.int) : Prims.int =
-  (if (Prims.op_Less_Equals x (Prims.parse_int "1")) then (Prims.parse_int "1") else (let x1 = (extractionTest_fib (Prims.op_Minus x (Prims.parse_int "1"))) in
-  let x2 = (extractionTest_fib (Prims.op_Minus x (Prims.parse_int "2"))) in
+  (if (Prims.op_Less_Equals x Prims.int_one) then Prims.int_one else (let x1 = (extractionTest_fib (Prims.op_Minus x Prims.int_one)) in
+  let x2 = (extractionTest_fib (Prims.op_Minus x (Prims.of_int (2)))) in
   (Prims.op_Plus x1 x2)))
 
 let extractionTest_fib2 (x : Prims.int) : Prims.int =
   (let n = (extractionTest_fib x) in
-  let m = (extractionTest_fib (Prims.op_Plus x (Prims.parse_int "1"))) in
+  let m = (extractionTest_fib (Prims.op_Plus x Prims.int_one)) in
   (Prims.op_Plus m n))
 
 type ('a, 'b) extractionTest_data =

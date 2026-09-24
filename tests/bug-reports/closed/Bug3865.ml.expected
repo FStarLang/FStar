@@ -4,9 +4,9 @@
 type 't bug3865_myty = ('t -> 't)
 
 let bug3865_intpak (x : Prims.int) : Prims.int =
-  (Prims.op_Plus x (Prims.parse_int "1"))
+  (Prims.op_Plus x Prims.int_one)
 
 let bug3865_use : unit =
-  (let x = (Prims.op_Plus (Prims.parse_int "123") (Prims.parse_int "1")) in
+  (let x = (Prims.op_Plus (Prims.of_int (123)) Prims.int_one) in
   (FStar_IO.print_string (Prims.strcat (Prims.string_of_int x) "\n")))
 

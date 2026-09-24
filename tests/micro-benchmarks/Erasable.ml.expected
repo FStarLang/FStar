@@ -11,17 +11,17 @@ let erasable_eff_test2 (tmp : unit) : unit =
 
 let erasable_eff_test3 (n : unit) : Prims.int =
   (let tmp = (Erasable.f_mpure ()) in
-  (Prims.op_Plus tmp (Prims.parse_int "2")))
+  (Prims.op_Plus tmp (Prims.of_int (2))))
 
 let erasable_eff_test4 (tmp : unit) : Prims.int =
   (let y = (Erasable.f_mpure ()) in
   let tmp1 = (erasable_eff_test3 ()) in
   let tmp2 = (Prims.op_Plus tmp1 y) in
-  (Prims.op_Plus tmp2 (Prims.parse_int "2")))
+  (Prims.op_Plus tmp2 (Prims.of_int (2))))
 
 let erasable_eff_test5 (b : bool) : Prims.int =
   (if b then (erasable_eff_test4 ()) else (let tmp = (erasable_eff_test3 ()) in
-  (Prims.op_Plus tmp (Prims.parse_int "2"))))
+  (Prims.op_Plus tmp (Prims.of_int (2)))))
 
 let erasable_eff_test6 (b : bool) : Prims.int =
   (erasable_eff_test3 ())

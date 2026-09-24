@@ -5,13 +5,13 @@ let strict_sum0 (x : Prims.int) (eta : Prims.int) : Prims.int =
   (Prims.op_Plus x eta)
 
 let strict_t00 : Prims.int =
-  (Prims.parse_int "5")
+  (Prims.of_int (5))
 
 let strict_t01 (x : Prims.int) : Prims.int =
-  (strict_sum0 x (Prims.parse_int "2"))
+  (strict_sum0 x (Prims.of_int (2)))
 
 let strict_t02 (y : Prims.int) : Prims.int =
-  (Prims.op_Plus (Prims.parse_int "3") y)
+  (Prims.op_Plus (Prims.of_int (3)) y)
 
 let strict_t03 (x : Prims.int) (eta : Prims.int) : Prims.int =
   (strict_sum0 x eta)
@@ -20,35 +20,35 @@ let strict_sum1 (x : Prims.int) (eta : Prims.int) : Prims.int =
   (Prims.op_Plus x eta)
 
 let strict_t11 : Prims.int =
-  (Prims.parse_int "5")
+  (Prims.of_int (5))
 
 let strict_t12 (x : Prims.int) : Prims.int =
-  (strict_sum1 x (Prims.parse_int "2"))
+  (strict_sum1 x (Prims.of_int (2)))
 
 let strict_t13 (y : Prims.int) : Prims.int =
-  (Prims.op_Plus (Prims.parse_int "3") y)
+  (Prims.op_Plus (Prims.of_int (3)) y)
 
 let strict_t14 (x : Prims.int) (eta : Prims.int) : Prims.int =
   (strict_sum1 x eta)
 
 let rec strict_sum2 (x : Prims.int) (y : Prims.int) : Prims.int =
-  (if ((=) x (Prims.parse_int "0")) then y else (strict_sum2 (Prims.op_Minus x (Prims.parse_int "1")) (Prims.op_Plus y (Prims.parse_int "1"))))
+  (if ((=) x Prims.int_zero) then y else (strict_sum2 (Prims.op_Minus x Prims.int_one) (Prims.op_Plus y Prims.int_one)))
 
 let strict_t20 : Prims.int =
-  (Prims.parse_int "5")
+  (Prims.of_int (5))
 
 let strict_t21 (x : Prims.int) : Prims.int =
-  (strict_sum2 x (Prims.parse_int "2"))
+  (strict_sum2 x (Prims.of_int (2)))
 
 let strict_t22 (y : Prims.int) : Prims.int =
-  (Prims.op_Plus (Prims.op_Plus (Prims.op_Plus y (Prims.parse_int "1")) (Prims.parse_int "1")) (Prims.parse_int "1"))
+  (Prims.op_Plus (Prims.op_Plus (Prims.op_Plus y Prims.int_one) Prims.int_one) Prims.int_one)
 
 let strict_t23 (x : Prims.int) (y : Prims.int) : Prims.int =
   (strict_sum2 x y)
 
 let rec strict_bring (i : Prims.int) (x : Obj.t) : (Obj.t * Obj.t) =
-  (if ((=) i (Prims.parse_int "0")) then (Obj.magic (x)) else (match (Obj.magic (x)) with
-    | (xh, xt) -> (match (strict_bring (Prims.op_Minus i (Prims.parse_int "1")) xt) with
+  (if ((=) i Prims.int_zero) then (Obj.magic (x)) else (match (Obj.magic (x)) with
+    | (xh, xt) -> (match (strict_bring (Prims.op_Minus i Prims.int_one) xt) with
         | (y, z) -> (y, (Obj.magic (((Obj.magic (xh)), (Obj.magic (z))))))
       )
   ))

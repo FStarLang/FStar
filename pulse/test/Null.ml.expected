@@ -11,5 +11,5 @@ let null_foo (tmp : unit) : (Prims.int ref) =
   (Obj.magic 0)
 
 let null_test (x : (Prims.int ref)) : Prims.int =
-  (if (not (Obj.is_block (Obj.repr x))) then (Prims.parse_int "0") else (!(x)))
+  (if (not (Obj.is_block (Obj.repr x))) then Prims.int_zero else (!(x)))
 
