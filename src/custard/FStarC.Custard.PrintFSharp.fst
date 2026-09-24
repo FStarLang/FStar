@@ -113,6 +113,37 @@ let externals : ref (SMap.t string) = mk_ref (SMap.create 0)
 let external_target (n:name) : ML (option string) =
   SMap.try_find !externals (string_of_name n)
 
+(* Section 122.18: the F# module currently being printed, when the output is
+   split.  A reference to a name of *this* module must not be qualified --
+   there is no way to say [Foo.x] inside [module Foo] -- and everything in
+   {!qualifiers} is qualified by construction, so the two are reconciled here
+   rather than by keeping a second table per file. *)
+let current_module : ref (option string) = mk_ref None
+
+(* Section 122.18: the F# module each compiled declaration was emitted into.
+   Empty for the whole-program single file, where nothing is qualified. *)
+let qualifiers : ref (SMap.t string) = mk_ref (SMap.create 0)
+
+(* Section 122.18: the names emitted under their plain F* identifier rather
+   than their mangled one.  Mangling exists to keep one flat file
+   collision-free (section 122.3); once a declaration sits in the module its
+   own F* module names, and is the only declaration from its source lid, the
+   module already separates it and the plain name is the shorter one. *)
+let at_home : ref (SMap.t unit) = mk_ref (SMap.create 0)
+
+let is_at_home (n:name) : ML bool =
+  None? n.spec && Some? (SMap.try_find !at_home (string_of_name n))
+
+let qualifier (n:name) : ML (option string) =
+  match SMap.try_find !qualifiers (string_of_name n) with
+  | Some m -> if Some m = !current_module then None else Some m
+  | None -> None
+
+let qualify (n:name) (s:string) : ML string =
+  match qualifier n with
+  | Some m -> m ^ "." ^ s
+  | None -> s
+
 (* [FStar.Pervasives.Native.tupleN] is .NET's own N-tuple: no constructor to
    name, no field to project.  Keyed by both the type's name and its
    constructor's, valued by the arity. *)
@@ -240,15 +271,18 @@ let escape_keyword (s:string) : ML string =
   if List.existsb (fun k -> k = s) fsharp_keywords then "``" ^ s ^ "``" else s
 
 let fsharp_value_name (n:name) : ML string =
+  if is_at_home n then escape_keyword (lowercase_first (sanitize n.id)) else
   escape_keyword (lowercase_first (sanitize (mangled_name n)))
 
 let fsharp_type_name (n:name) : ML string =
+  if is_at_home n then escape_keyword (lowercase_first (sanitize n.id)) else
   escape_keyword (lowercase_first (sanitize (mangled_name n)))
 
 (* A union case and an exception both have to begin with a capital, or F#
    reads them as variables in a pattern (warning 49) and, worse, matches
    anything. *)
 let fsharp_ctor_ident (n:name) : ML string =
+  if is_at_home n then uppercase_first (sanitize n.id) else
   uppercase_first (sanitize (mangled_name n))
 
 let module_name_of_unit (u:string) : ML string = uppercase_first (sanitize u)
@@ -434,14 +468,14 @@ let rec ty (t:cty) : ML string =
   | TApp (n, []) ->
     (match builtin_type n with
      | Some s -> s
-     | None -> fsharp_type_name n)
+     | None -> qualify n (fsharp_type_name n))
   (* F#'s postfix application only takes one argument, so the generic form is
      written the .NET way.  It is also accepted at one argument, which is why
      there is one case here and not two. *)
   | TApp (n, args) ->
     let hd = match builtin_type n with
              | Some s -> s
-             | None -> fsharp_type_name n in
+             | None -> qualify n (fsharp_type_name n) in
     hd ^ "<" ^ String.concat ", " (List.map ty args) ^ ">"
 
 (* Section 122.6.2.  A [box] followed by an [unbox] is exact when the two sides
@@ -656,7 +690,7 @@ let int_conv (sw : signedness & iwidth) : ML string =
    used to build and to match. *)
 let qualified_label (n:name) (f:string) : ML string =
   if is_builtin_type n then fsharp_var f
-  else fsharp_type_name n ^ "." ^ fsharp_var f
+  else qualify n (fsharp_type_name n) ^ "." ^ fsharp_var f
 
 (* A projection has no label list to hang the type off, so it takes an
    ascription instead, with a wildcard for each parameter: it is the type's
@@ -669,7 +703,7 @@ let ascribe_record (n:name) (f:string) (s:string) : ML string =
     let rec wilds (i:int) : ML (list string) =
       if i <= 0 then [] else "_" :: wilds (i - 1) in
     let args = if k = 0 then "" else "<" ^ String.concat ", " (wilds k) ^ ">" in
-    s ^ " : " ^ fsharp_type_name n ^ args
+    s ^ " : " ^ qualify n (fsharp_type_name n) ^ args
 
 (* F# has no integer pattern that means what the IR's [PConst (CInt _)] means:
    a [bigint] literal is not a pattern, and neither is a [UInt128.Parse].  The
@@ -750,7 +784,7 @@ let rec pattern (p:pat) : ML string =
 and ctor_ref (n:name) : ML string =
   match builtin_ctor n with
   | Some c -> c
-  | None -> fsharp_ctor_ident n
+  | None -> qualify n (fsharp_ctor_ident n)
 
 and builtin_ctor (n:name) : ML (option string) =
   match (if Some? n.spec then "" else String.concat "." (n.ns @ [n.id])) with
@@ -771,7 +805,7 @@ let rec term (ind:string) (e:expr) : ML string =
   | EQual (n, _) ->
     (match external_target n with
      | Some t -> t
-     | None -> fsharp_value_name n)
+     | None -> qualify n (fsharp_value_name n))
   | ECtor (n, []) -> ctor_ref n
   | ECtor (n, [a; b]) when builtin_ctor n = Some "::" ->
     join_at ind "(" " :: " term [a; b] ^ ")"
@@ -1471,12 +1505,19 @@ let reject_generic_values (p:program) : ML unit =
 (* Tables and assembly                                                  *)
 (* -------------------------------------------------------------------- *)
 
-let build_tables (p:program) : ML unit =
+(* [homes] is empty for the ordinary whole-program-in-one-file output.  When
+   the output is split (section 122.18) it maps each declaration to the F#
+   module its file compiles to, which is what every cross-file reference is
+   qualified by and what decides whether a declaration is *at home* and so
+   emitted under its plain identifier. *)
+let build_tables (homes : SMap.t string) (p:program) : ML unit =
   let tbl = SMap.create 50 in
   let tups = SMap.create 20 in
   let nul = SMap.create 50 in
   let recs : SMap.t int = SMap.create 100 in
   let labels : SMap.t int = SMap.create 100 in
+  let quals = SMap.create 50 in
+  let home = SMap.create 50 in
   p |> List.iter (fun d ->
     match d with
     | DExternal e ->
@@ -1513,11 +1554,38 @@ let build_tables (p:program) : ML unit =
                                    | None -> 0)))
        | _ -> ())
     | _ -> ());
+  (* Section 122.18.  Every compiled declaration is qualified by its own
+     module -- {!qualifier} drops the qualification again while that module is
+     the one being printed -- so a reference needs to know nothing about where
+     it is.
+
+     A declaration is at home when it sits in the module its own F* module
+     names and carries no specialization suffix.  No suffix means it is the
+     only declaration from its source lid, so the plain identifier is
+     unambiguous within the module. *)
+  p |> List.iter (fun d ->
+    let n = name_of_decl d in
+    match SMap.try_find homes (string_of_name n) with
+    | None -> ()
+    | Some m ->
+      let mark (x:name) : ML unit =
+        SMap.add quals (string_of_name x) m;
+        if None? x.spec && module_name_of_unit (String.concat "." x.ns) = m
+        then SMap.add home (string_of_name x) () in
+      mark n;
+      (match d with
+       | DType t ->
+         (match t.dt_body with
+          | TVariant cs -> cs |> List.iter (fun (cn, _) -> mark cn)
+          | _ -> ())
+       | _ -> ()));
   externals := tbl;
   tuples := tups;
   nullary := nul;
   record_params := recs;
-  record_labels := labels
+  record_labels := labels;
+  qualifiers := quals;
+  at_home := home
 
 (* Section 122.2.  The warnings turned off here are the ones that are about
    the *shape* of generated code rather than about anything that could be
@@ -1564,6 +1632,16 @@ let entrypoints (p:program) : ML (list dlet) =
 
    .NET names its entry point with an attribute rather than by position, and
    requires it to be the last declaration of the last file. *)
+(* The generated entry point is called [main], which in the split output
+   (section 122.18) is a name the program may already have bound at home --
+   an F* [main] in the last module comes out as [main] and not as
+   [modName_main].  F# reports that as a duplicate definition, so the
+   generated one steps aside instead. *)
+let entry_name () : ML string =
+  let rec go (s:string) : ML string =
+    if List.existsb (fun k -> k = s) !reserved_top then go (s ^ "_") else s in
+  go "main"
+
 let entry_calls (p:program) : ML (list string) =
   match entrypoints p with
   | [] -> []
@@ -1571,12 +1649,13 @@ let entry_calls (p:program) : ML (list string) =
     let body =
       ls |> List.map (fun l ->
         let args = String.concat " " (List.map (fun _ -> "()") l.dl_binders) in
-        let call = "(" ^ fsharp_value_name l.dl_name ^ " " ^ args ^ ")" in
+        let call = "(" ^ qualify l.dl_name (fsharp_value_name l.dl_name)
+                       ^ " " ^ args ^ ")" in
         match l.dl_ret with
         | TInt _ -> "  (int " ^ call ^ ")"
         | TUnit -> "  " ^ call ^ "\n  0"
         | _ -> "  (ignore " ^ call ^ ")\n  0") in
-    ["[<EntryPoint>]\nlet main (_argv : string[]) : int =\n" ^
+    ["[<EntryPoint>]\nlet " ^ entry_name () ^ " (_argv : string[]) : int =\n" ^
      String.concat "\n" body]
 
 let assemble (m:string) (ds : list string) : ML string =
@@ -1589,14 +1668,59 @@ let reserve_top (p:program) : ML unit =
     | DExternal e -> [fsharp_value_name e.dx_name]
     | _ -> [])
 
-let print_program (stem:string) (p:program) : ML string =
+let reject_all (p:program) : ML unit =
   reject_target_only_types p;
   reject_realized_types p;
   reject_unrealized p;
-  reject_generic_values p;
-  build_tables p;
+  reject_generic_values p
+
+let print_program (stem:string) (p:program) : ML string =
+  reject_all p;
+  build_tables (SMap.create 0) p;
+  current_module := None;
   reserve_top p;
   assemble (module_name_of_unit stem) (print_decls p @ entry_calls p)
+
+(* Section 122.18.  One F# module per F* source module.  The shape is the
+   OCaml backend's (section 12.9) with two additions that are F#'s own: the
+   project has to list the files, in this order, and the [<EntryPoint>]
+   attribute has to sit on the last declaration of the last file -- which is
+   why the entry calls are appended there and nowhere else. *)
+let print_split (files : list (string & program)) : ML (list (string & string)) =
+  let whole = List.collect snd files in
+  reject_all whole;
+  let homes = SMap.create 100 in
+  files |> List.iter (fun (m, ds) ->
+    let m = module_name_of_unit m in
+    ds |> List.iter (fun d ->
+      SMap.add homes (string_of_name (name_of_decl d)) m));
+  build_tables homes whole;
+  let rendered = files |> List.map (fun (m, ds) ->
+    let m = module_name_of_unit m in
+    current_module := Some m;
+    reserve_top ds;
+    let r = (m, ds, print_decls ds) in
+    current_module := None;
+    r) in
+  (* A module that contributed only externals gets no file: an empty [module]
+     is legal F# but the project would still have to list it, and a file that
+     compiles to nothing is a file a reader has to rule out. *)
+  let rendered = rendered |> List.filter (fun (_, _, ss) -> Cons? ss) in
+  let n = List.length rendered in
+  (* The entry points are called from the last file that exists, which by
+     construction comes after everything they reach.  They are collected from
+     the whole program and qualified from where the call is written, and
+     {!entry_name} needs that file's own top-level names. *)
+  let calls =
+    if n = 0 then [] else
+    let m, ds, _ = List.last rendered in
+    current_module := Some m;
+    reserve_top ds;
+    let cs = entry_calls whole in
+    current_module := None;
+    cs in
+  rendered |> List.mapi (fun i (m, _, ss) ->
+    (m, assemble m (if i = n - 1 then ss @ calls else ss)))
 
 (* -------------------------------------------------------------------- *)
 (* The project                                                          *)
@@ -1913,7 +2037,7 @@ let runtime_source : string =
    later, so nothing older than that would work in any case. *)
 let target_framework : string = "net10.0"
 
-let project_source (stem:string) (exe:bool) : ML string =
+let project_source (stem:string) (exe:bool) (srcs : list string) : ML string =
   "<!-- Generated by F* Custard extraction. Do not edit. -->\n\
    <Project Sdk=\"Microsoft.NET.Sdk\">\n\
    \x20 <PropertyGroup>\n\
@@ -1925,11 +2049,16 @@ let project_source (stem:string) (exe:bool) : ML string =
    \x20   <GenerateDocumentationFile>false</GenerateDocumentationFile>\n\
    \x20 </PropertyGroup>\n\
    \x20 <ItemGroup>\n\
-   \x20   <Compile Include=\"FStarCustard.fs\" />\n\
-   \x20   <Compile Include=\"" ^ stem ^ ".fs\" />\n\
-   \x20 </ItemGroup>\n\
+   \x20   <Compile Include=\"FStarCustard.fs\" />\n" ^
+  String.concat "" (List.map (fun f ->
+    "    <Compile Include=\"" ^ f ^ "\" />\n") srcs) ^
+  "  </ItemGroup>\n\
    </Project>\n"
 
-let project_files (stem:string) (p:program) : ML (list (string & string)) =
+(* The two files that make the output directory build on its own.  [srcs] is
+   the generated sources, in the order F# has to compile them: one entry for
+   the whole-program output, and one per module for a split one. *)
+let project_files (stem:string) (p:program) (srcs : list string)
+  : ML (list (string & string)) =
   [ ("FStarCustard.fs", runtime_source);
-    (stem ^ ".fsproj", project_source stem (Cons? (entrypoints p))) ]
+    (stem ^ ".fsproj", project_source stem (Cons? (entrypoints p)) srcs) ]

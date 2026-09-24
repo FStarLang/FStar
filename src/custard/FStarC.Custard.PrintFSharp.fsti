@@ -16,10 +16,12 @@
 
 (** Section 122.  The F\# backend for Custard, targeting .NET 10.
 
-    F\# is an ML, so the shape of the output is the OCaml backend's: one flat
-    module, every definition under a mangled global name, no functors and no
-    signatures.  What it is *not* is the OCaml backend with the syntax
-    changed.  The OCaml backend spends most of its effort binding names to
+    F\# is an ML, so the shape of the output is the OCaml backend's: every
+    definition under a mangled global name, no functors and no signatures,
+    and one flat module unless [--custard_split] asks for one module per F\*
+    source module (section 122.18).  What it is *not* is the OCaml backend
+    with the syntax changed.  The OCaml backend spends most of its effort
+    binding names to
     the hand-written realizations in [ulib/ml] -- a machine integer is
     [FStar_UInt32.t], an addition is [FStar_UInt32.add] -- because OCaml has
     no unsigned 32-bit type to compile to.  .NET has all of them, and a real
@@ -51,12 +53,20 @@ val module_name_of_unit : string -> ML string
     which is what the module is named after. *)
 val print_program : string -> program -> ML string
 
-(** The [.fsproj] that builds {!print_program}'s output, and the support
-    library it lists ahead of it.  Returned as [(file name, contents)] pairs
-    so that the driver writes them the same way it writes everything else;
-    [stem] is as in {!print_program}.
+(** Section 122.18.  The program as one F\# module per F\* source module,
+    as [(module name, source)] pairs, in the order F\# has to compile them.
+    A module that would be empty is dropped, and the entry points are called
+    from the last one -- .NET names its entry point with an attribute that
+    has to sit on the last declaration of the last file. *)
+val print_split : list (string & program) -> ML (list (string & string))
+
+(** The [.fsproj] that builds the generated sources, and the support library
+    it lists ahead of them.  Returned as [(file name, contents)] pairs so
+    that the driver writes them the same way it writes everything else;
+    [stem] is as in {!print_program}, and the third argument is the generated
+    source files in compile order.
 
     The output directory is self-contained on purpose: [dotnet build] in it
     works with nothing else installed, which is the same property that makes
     the C backend's output shippable (section 122.8). *)
-val project_files : string -> program -> ML (list (string & string))
+val project_files : string -> program -> list string -> ML (list (string & string))
