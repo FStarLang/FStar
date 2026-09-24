@@ -1934,6 +1934,66 @@ $(OUTPUT_DIR)/SplitHi.exe: $(OUTPUT_DIR)/SplitHi.ml SplitMid.ml
 
 all: $(OUTPUT_DIR)/SplitHi.out.diff
 
+# Section 122.18.  The F# leg of output splitting: one F# module per F*
+# source module, and a generated project listing them in the order F#
+# compiles them.  FsSplitLo holds one of each thing whose spelling changes --
+# a variant, a record, an exception, a polymorphic function -- and FsSplitHi
+# refers to all of them across the file boundary and binds [main] itself, so
+# the generated entry point has to step aside.
+$(OUTPUT_DIR)/FsSplitHi.fssplit: $(CACHE_DIR)/FsSplitHi.fst.checked $(FSTAR_EXE)
+	$(call msg, "CUSTARD-SPLIT-FS", FsSplitHi)
+	@mkdir -p $(OUTPUT_DIR)/fs/FsSplitHi
+	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend FSharp \
+	  --custard_split --custard_main FsSplitHi.main \
+	  --odir $(OUTPUT_DIR)/fs/FsSplitHi \
+	  -o $(OUTPUT_DIR)/fs/FsSplitHi/FsSplitHi.fs FsSplitHi.fst
+	$(Q)test -f $(OUTPUT_DIR)/fs/FsSplitHi/FsSplitLo.fs
+	$(Q)test -f $(OUTPUT_DIR)/fs/FsSplitHi/FStarCustard.fs
+	$(Q)for p in $(FSSGREP_FsSplitLo); do \
+	  grep -qF -- "$$p" $(OUTPUT_DIR)/fs/FsSplitHi/FsSplitLo.fs \
+	    || { echo "ERROR: FsSplitLo output is missing $$p"; exit 1; }; done
+	$(Q)for p in $(FSSGREP_FsSplitHi); do \
+	  grep -qF -- "$$p" $(OUTPUT_DIR)/fs/FsSplitHi/FsSplitHi.fs \
+	    || { echo "ERROR: FsSplitHi output is missing $$p"; exit 1; }; done
+	$(Q)for p in $(FSSGREP_FsSplitProj); do \
+	  grep -qF -- "$$p" $(OUTPUT_DIR)/fs/FsSplitHi/FsSplitHi.fsproj \
+	    || { echo "ERROR: FsSplitHi project is missing $$p"; exit 1; }; done
+	$(Q)touch $@
+
+# A declaration in the module its own F* module names is emitted under its
+# plain identifier, constructors and record labels included.
+FSSGREP_FsSplitLo += "type color ="
+FSSGREP_FsSplitLo += "  | Red"
+FSSGREP_FsSplitLo += "let flip (c : color) : color ="
+FSSGREP_FsSplitLo += "exception Bad of string"
+# A cross-file reference is qualified by the module, and never by an [open].
+FSSGREP_FsSplitHi += "(c : FsSplitLo.color)"
+FSSGREP_FsSplitHi += "| FsSplitLo.Red ->"
+FSSGREP_FsSplitHi += "(FsSplitLo.flip FsSplitLo.Red)"
+FSSGREP_FsSplitHi += "raise (FsSplitLo.Bad (s))"
+FSSGREP_FsSplitHi += "FsSplitLo.origin"
+# This module's own [main] keeps the name, so the entry point takes another.
+FSSGREP_FsSplitHi += "let main (tmp : unit) : unit ="
+FSSGREP_FsSplitHi += "let main_ (_argv : string[]) : int ="
+# F# compiles the files in the order the project lists them, so the order is
+# the artefact under test and not an accident of the directory listing.
+FSSGREP_FsSplitProj += "<Compile Include=\"FStarCustard.fs\" />"
+FSSGREP_FsSplitProj += "<Compile Include=\"FsSplitLo.fs\" />"
+FSSGREP_FsSplitProj += "<Compile Include=\"FsSplitHi.fs\" />"
+
+$(OUTPUT_DIR)/FsSplitHi.fssplitran: $(OUTPUT_DIR)/FsSplitHi.fssplit
+	$(call msg, "RUN-FS", FsSplitHi)
+	$(Q)cd $(OUTPUT_DIR)/fs/FsSplitHi && \
+	  DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1 \
+	  $(DOTNET) build -c Release -v quiet --nologo >build.log 2>&1 \
+	    || { echo "ERROR: FsSplitHi does not compile as F#"; \
+	         cat build.log; exit 1; }
+	$(Q)cd $(OUTPUT_DIR)/fs/FsSplitHi && DOTNET_NOLOGO=1 \
+	  $(DOTNET) bin/Release/net10.0/FsSplitHi.dll > FsSplitHi.out
+	$(Q)diff -u FsSplitHi.out.expected \
+	  $(OUTPUT_DIR)/fs/FsSplitHi/FsSplitHi.out
+	$(Q)touch $@
+
 # These have hand-written targets with their own [all:] lines rather than a
 # list entry, and each consults its own settings in its own recipe.
 # Section 126.3.  [@@noextract_to] names a backend, and drops the definition
@@ -3102,7 +3162,7 @@ CNOGREP_CLetCopy += "tuple2"
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
                   $(C_TESTS) $(CXX_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \
                   $(RUSTSPLIT_TESTS) $(FS_TESTS) $(FSREJECT_TESTS) \
-                  SepApp SepAppC SplitHi SplitLo
+                  SepApp SepAppC SplitHi SplitLo FsSplitHi FsSplitLo
 
 # Section 35.3.  A setting whose name matches no registered test.
 #
@@ -3251,7 +3311,9 @@ all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcxxran, $(CXX_TESTS)))
 DOTNET ?= dotnet
 DOTNET10 := $(shell $(DOTNET) --list-sdks 2>/dev/null | grep -c "^1[0-9]\.")
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .fsrejected, $(FSREJECT_TESTS)))
+all: $(OUTPUT_DIR)/FsSplitHi.fssplit
 ifneq ($(DOTNET10),0)
+all: $(OUTPUT_DIR)/FsSplitHi.fssplitran
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .fsran, $(FS_TESTS)))
 else
 $(warning no .NET 10 SDK found: skipping the F# run tests)

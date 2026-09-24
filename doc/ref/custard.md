@@ -21114,15 +21114,21 @@ type mentions a type variable, with error 395.  Monomorphization means
 this is nearly unreachable --- a specialization has no free type
 variables --- but the `TAny` traffic of §122.6 can produce one.
 
-### 122.12 No split and no separate units
+### 122.12 No separate units
 
-`--custard_split` and `--custard_unit` are refused under this backend.
-Both exist to divide one program across files that a C or OCaml build
-then links, and the unit of compilation here is the project: two projects
-that each contain a copy of the support library and disagree about which
-one defines a type are not something this backend can produce a coherent
-answer for.  A whole program per project is what v1 supports, and the
-refusal says so rather than emitting something that fails at link time.
+`--custard_unit` is refused under this backend.  It exists to divide one
+program across units that a C or OCaml build then links, and the unit of
+compilation here is the project: two projects that each contain a copy of
+the support library and disagree about which one defines a type are not
+something this backend can produce a coherent answer for.  A whole
+program per project is what v1 supports, and the refusal says so rather
+than emitting something that fails at link time.
+
+`--custard_split` was refused for the same reason and is not any more;
+§122.18 is what it does.  The two are not the same question.  A split
+divides one extraction across files of one project, which the generated
+project can list in order; a unit divides one program across extractions
+that never see each other.
 
 ### 122.13 `Prims` and `FStar.List.Tot.Base`
 
@@ -21268,6 +21274,57 @@ a machine integer and `bytes_of_int16` and `bytes_of_int8` took a
 `string`; and `iutf8_opt` was `fun x -> Some x`, which is not a
 decoder.  `tests/custard/BytesFS.fst` is extracted on both backends, so
 the next such disagreement is a diff rather than a discovery.
+
+### 122.18 `--custard_split`
+
+Without it the whole program is one F# module, and every name in it is
+the mangled global of §122.3: `bytesFS_check`, `fsSplitLo_flip`.  That is
+the right answer for one file --- the mangling is what keeps a flat file
+collision-free --- and it is the wrong answer for a program of any size,
+because the qualification a reader wants is the one F# already has.
+
+With it, the output is one F# module per F\* source module, named after
+it, in the partition §12.9 computes; the mechanism is the OCaml
+backend's, and the two spell a cross-file reference the same way for the
+same reason.  A declaration that sits in the module its own F\* module
+names, and carries no specialization suffix, is emitted under its plain
+identifier --- `flip`, not `fsSplitLo_flip` --- and referred to from
+elsewhere as `FsSplitLo.flip`.  A specialization keeps its suffix, since
+the plain name would no longer say which one is meant.  Nothing is
+brought into scope with `open`: two modules may have re-specialized the
+same upstream definition, and an `open` would make that clash silent.
+
+Three things are F#'s own.
+
+The project has to list the files, in the order F# compiles them, and F#
+compiles them in the order the project lists.  `Split.run` emits its
+components in dependency order --- each after every component it refers
+to --- so the `<Compile Include=...>` entries are that order, with
+`FStarCustard.fs` first because everything opens it.
+
+`[<EntryPoint>]` has to sit on the last declaration of the last file, so
+the generated entry point is appended to the last file that exists ---
+"that exists" because a module that contributed only externals renders
+to nothing and gets no file.
+
+And the generated entry point is called `main`, which is a name the
+program may now have.  An F\* `main` in the last module used to come out
+as `fsSplitHi_main` and now comes out as `main`, and F# reports the
+second definition as an error rather than shadowing it.  So the
+generated one steps aside --- `main_` --- which is the same escape
+§122.3 applies everywhere else, and it consults the last file's own
+top-level names rather than assuming.
+
+`--custard_unit` is still refused (§122.12): a split divides one
+extraction across files of one project, and a unit divides one program
+across extractions that never see each other.
+
+`tests/custard/FsSplitLo.fst` and `FsSplitHi.fst` are the test.  The
+upstream module holds one of each thing whose spelling changes --- a
+variant, a record, an exception, a polymorphic function --- the
+downstream one refers to all of them across the boundary and binds
+`main` itself, and the pins are on the two files and on the order in the
+project.  It is compiled and run where the SDK of §122.15 is present.
 
 
 
