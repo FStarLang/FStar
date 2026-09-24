@@ -21594,14 +21594,14 @@ its own fix and its own test --- but the case is now known.
 
 ### 122.15 What the suite checks
 
-`FS_TESTS` is 20 programs, chosen to cover each of the decisions above:
+`FS_TESTS` is 24 programs, chosen to cover each of the decisions above:
 `Wide128` for §122.7, `AnyCond` and `AnyException` for §122.6.1,
 `UnitPtr` for §122.14, `Literals` for §122.4's bigint spelling,
 `OcamlEscape` for §122.3 --- it binds both `method` and `method_`, so the
-pin on it is the injectivity argument in one line --- `Typeclass` and
-`Mymon` for monomorphized output, and the rest for coverage.  Each is
-extracted, compiled with `dotnet build -c Release`, and run, and must
-exit 0.
+pin on it is the injectivity argument in one line --- `BytesFS` for
+§122.17, `Typeclass` and `Mymon` for monomorphized output, and the rest
+for coverage.  Each is extracted, compiled with `dotnet build -c
+Release`, and run, and must exit 0.
 
 Compiling needs the .NET 10 SDK.  The Makefile probes the output of
 `dotnet --list-sdks` for a major version of 10 or above and falls back to
@@ -21642,6 +21642,65 @@ the optimizer off for the library --- would have hidden it.  The
 parameter of the `FStar.UInt32` one is renamed, with a comment saying
 why, since a future edit that renames it back would fail three files
 away from the change.
+
+### 122.17 Which hand-written realizations are mirrored
+
+§122.9 says what happens to an unrealized `val`; it does not say which
+ones a user should expect to be realized.  The rule is this one, and it
+is a rule about *specifications*, not about `ulib/ml`:
+
+> A module under `ulib/ml/app` is mirrored when its F\* interface
+> describes a value that .NET has, and is not mirrored when the
+> interface describes OCaml.
+
+The distinction is the whole of §122.1.  `FStar.String`, `FStar.Char`,
+`FStar.IO`, `FStar.Exn`, `FStar.All`, `FStar.List.Tot.Base`,
+`FStar.Option`, `Prims` and the integer modules all describe something
+.NET has under a different name, so the backend supplies the name and
+the program is unchanged.  `FStar.Dyn`, `FStar.Parse`, `FStar.Pprint`
+and `FStar.ImmutableArray` describe an OCaml library --- `Obj.magic`
+plus OCaml's own representation, an OCaml lexer, an OCaml pretty
+printer, `Stdlib.Array` --- and a .NET program that wanted them would
+want a different interface, so they are refused with error 395 and the
+message points at `--custard_backend OCaml`.
+
+Two entries in that inventory have moved since the rule was written.
+
+`FStar.ST`, `FStar.Ref`, `FStar.Heap`, `FStar.Monotonic.Heap` and
+`FStar.MRef` are no longer part of the library: the heap model was
+removed and replaced by an abstract `ref`, `alloc`, `!` and `:=` in
+`FStar.All`.  Those four are ordinary declarations of the kind §122.9
+describes, and the backend realizes them with F#'s own `ref` cell ---
+`(r).Value` and `(r).Value <- x`, which is what `TRef` prints to.  A
+program that allocates, at top level or not, needs nothing further.
+`ulib/ml/app/FStar_ST.ml` and its two neighbours are still on disk and
+are dead; nothing on this path reads them.
+
+`FStar.Bytes` is realized, and is the one module where the two
+realizations are not the same data.  OCaml's is a `string`, because an
+OCaml string *is* a byte string; .NET's is not, so the F# realization is
+a `byte[]`.  That choice is forced twice over.  `FStar.Bytes.bytes` is
+declared `t:Type0{hasEq t}`, and F#'s structural equality on arrays
+gives it one, where a .NET `string` of char-sized code units would give
+the wrong one for any byte above 127.  And `utf8_encode` has to be a
+real encoding: on `byte[]` it is `Text.Encoding.UTF8.GetBytes`, and
+`iutf8_opt` is a `UTF8Encoding (false, true)` --- the strict decoder ---
+because the specification says the result re-encodes to the argument
+and .NET's default decoder silently substitutes U+FFFD instead of
+failing.  `string_of_hex` and `hex_of_string` keep OCaml's reading, in
+which the `string` they name is one whose characters are byte values.
+`int_of_bytes` and `bytes_of_int` are big endian, which is what
+`int_of_bytes_of_int` pins.
+
+Mirroring it found three places where the OCaml realization did not
+match `FStar.Bytes.fsti`, all of them fixed here rather than mirrored:
+`int32_of_bytes` and its two siblings returned an OCaml `int` instead of
+a machine integer and `bytes_of_int16` and `bytes_of_int8` took a
+`U32.t`, so no caller of the interface could use any of the six;
+`string_of_hex` returned OCaml's own `Bytes.t` where the interface says
+`string`; and `iutf8_opt` was `fun x -> Some x`, which is not a
+decoder.  `tests/custard/BytesFS.fst` is extracted on both backends, so
+the next such disagreement is a diff rather than a discovery.
 
 
 

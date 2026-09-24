@@ -388,6 +388,18 @@ FSNOGREP_Literals = "parse_int" "uint_to_t"
 FS_TESTS += OcamlEscape
 FSGREP_OcamlEscape = "(\`\`method\`\` : bool) (method_ : bool)"
 
+# Section 122.17.  FStar.Bytes, whose F# realization is a byte[] where the
+# OCaml one is a string.  Registered on both legs because the point of the
+# realization is that the two agree: the OCaml run diffs the .out.expected
+# and the F# run checks each answer against the same literal itself, since
+# the F# leg does not diff what it prints.  The pins are the two places the
+# byte[] choice is visible -- the type a value of it is given, and the
+# absence of any string operation standing in for one.
+CUSTARD_TESTS += BytesFS
+FS_TESTS += BytesFS
+FSGREP_BytesFS = "(b : byte[])" "(FStar_Bytes.bytes_of_int16 (4660us))"
+FSNOGREP_BytesFS = "(b : string)"
+
 # Rejections.  Each is extracted with --custard_backend FSharp and must
 # produce the numbered diagnostic.
 FSREJECT_TESTS += FSNoReal FSPun
