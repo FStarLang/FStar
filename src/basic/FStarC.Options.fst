@@ -1031,7 +1031,9 @@ C backend has it; karamel decides this for itself");
 the whole program. This is still a single whole-program run. For --custard_backend \
 OCaml it exists because F*'s hand-written OCaml realizations reference modules \
 Custard compiles, and a single output file would make those references circular; \
---odir names the directory the files are written to. For the karamel backends it \
+--odir names the directory the files are written to. For --custard_backend FSharp \
+it does the same and additionally lists the files, in compile order, in the \
+generated project. For the karamel backends it \
 splits the single .krml into one karamel module per F* module, which is what \
 karamel's -bundle and -no-prefix select on, and is required to reproduce a \
 specified crate layout on the Rust path.");
