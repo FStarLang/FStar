@@ -79,6 +79,12 @@ val bind: Range.t -> is_let_binding:bool -> env -> option term -> (comp & guard_
    type, above all, which is the image of a precondition and carries an
    obligation discharged at the call rather than a fact about a result. *)
 val bind_no_capture: Range.t -> is_let_binding:bool -> env -> option term -> (comp & guard_t) -> comp_with_binder -> ML (comp & guard_t)
+(* [bind_capture_quantifier_free] is [bind], except that only the
+   quantifier-free conjuncts of [e1]'s refinement are restated. *)
+val bind_capture_quantifier_free: Range.t -> is_let_binding:bool -> env -> option term -> (comp & guard_t) -> comp_with_binder -> ML (comp & guard_t)
+
+(* Is [t] (up to abbreviations and [squash]) a refinement of [unit]? *)
+val is_refined_unit: env -> typ -> ML bool
 
 val weaken_guard: guard_formula -> guard_formula -> ML guard_formula
 
