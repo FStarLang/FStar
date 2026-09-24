@@ -948,6 +948,15 @@ FLAGS_CNoClosure = --custard_backend C --custard_monomorphize_types true
 FLAGS_CLamField  = --custard_backend C --custard_monomorphize_types true
 FLAGS_CPartialCall = --custard_backend C --custard_monomorphize_types true
 CODE_CNoInt      = 368
+# Issue #4583.  Separate compilation is refused on the karamel backends
+# rather than accepted and ignored.
+REJECT_TESTS += KrmlUnit KrmlLink
+FLAGS_KrmlUnit = --custard_backend KrmlC --custard_unit KrmlUnit
+FLAGS_KrmlLink = --custard_backend KrmlRust --custard_link Missing.cui
+CODE_KrmlUnit  = 155
+CODE_KrmlLink  = 155
+EGREP_KrmlUnit = "not implemented for" "the karamel backends"
+EGREP_KrmlLink = "not implemented for" "the karamel backends"
 CODE_CNoClosure  = 368
 CODE_CLamField   = 368
 CODE_CPartialCall = 368

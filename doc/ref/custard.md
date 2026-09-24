@@ -9827,7 +9827,8 @@ pinned as absent or nothing notices it coming back.
 
 `--custard_unit` and `--custard_link` are implemented for the OCaml backend
 only (error 155), so the separate compilation §12 describes is not available
-to a C consumer yet. Kuiper ships 62 generated `.cu` files and cannot treat
+to a C consumer yet. (Since superseded: §42 implements units for the direct C
+backend. The karamel backends still refuse both flags with error 155, §42.5.) Kuiper ships 62 generated `.cu` files and cannot treat
 whole-program-per-kernel as a workaround. Recorded here because the build
 model was agreed and the implementation was not; it is the largest thing this
 report leaves open.
@@ -10040,9 +10041,10 @@ reach through it.
 
 ## 34.4 Not fixed
 
-§33.5 stands: `--custard_unit` and `--custard_link` are OCaml-only (error
-155), and separate compilation for a C consumer is the largest thing these
-reports leave open.
+§33.5 stood at the time: `--custard_unit` and `--custard_link` were
+OCaml-only (error 155), and separate compilation for a C consumer was the
+largest thing these reports left open. §42 has since closed it for the direct
+C backend; the karamel backends still refuse both flags.
 
 The general form of §34.2 -- a bit per recognized attribute, set where the
 attribute is read, and a report where no pass set it -- is not implemented.
@@ -10360,7 +10362,8 @@ generated device code a human is expected to read.
 blockers are unchanged: the float widths dropped from `KrmlAst.width`
 (round 33's gap 1, which also stops their existing plugin building),
 `ESizeof`, `TExtern of string & list cty`, and `--custard_unit` and
-`--custard_link` being OCaml-only.
+`--custard_link` being unavailable to karamel (§42 later added them for the
+direct C backend; KrmlC and KrmlRust still refuse them with error 155).
 
 Closing a lambda stays the rule's job. Custard could compute free variables
 and prepend them, but the parameter order, which captures are values and
@@ -11030,7 +11033,11 @@ that a stale interface is an error rather than a miscompilation.
   has no realizations and no DAG requirement on translation units.
 - **The karamel backend still refuses.** karamel does its own bundling and
   has its own opinion about what a compilation unit is; wiring `.cui` into it
-  would be answering a question that has not been asked.
+  would be answering a question that has not been asked. Both flags are
+  rejected with error 155 on KrmlC and KrmlRust rather than accepted and
+  ignored (`tests/custard/KrmlUnit.fst`, `KrmlLink.fst`). A karamel library
+  boundary is expressed with `--custard_split` (§65) and karamel's own
+  `-bundle`, `-library`, `-static-header` and `-no-prefix`.
 
 `tests/custard/SepLibC.fst` and `SepAppC.fst` are the test, and they check
 with `nm` what the compiler cannot: that the exported root has external
