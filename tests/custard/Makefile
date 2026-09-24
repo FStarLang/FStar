@@ -2966,6 +2966,20 @@ CGREP_PolyRoot += "PolyRoot_use_it"
 CNOGREP_PolyRoot += "PolyRoot_pick("
 CNOGREP_PolyRoot += "PolyRoot_spec"
 
+# Section 70.1.  A module with an interface has a public surface, and it is
+# the interface: --custard_entry_module roots what the interface declares and
+# not what it hides.  [private_dead] is hidden and unreached, so it is gone;
+# [private_live] is equally hidden and stays, because un-rooting changes only
+# the root set and [exported] calls it.  The complement of this test is
+# PrettyUnit, whose module has no interface and so hides nothing: the
+# KrmlPrivate attribute alone does not answer the question, since
+# FStar.Tactics.PrettifyType stamps it unconditionally.
+ROOT_TESTS += EntryIface
+FLAGS_EntryIface = --custard_entry_module EntryIface
+GREP_EntryIface += "entryIface_exported"
+GREP_EntryIface += "entryIface_private_live"
+NOGREP_EntryIface += "private_dead"
+
 # ... and the other half: --custard_entry names one definition, so it is taken
 # at its word and still refused.  What changed is only the advice.  The
 # NOEGREP is the point of the test: this refusal is correct, and telling the

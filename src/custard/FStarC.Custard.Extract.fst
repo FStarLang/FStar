@@ -5841,13 +5841,14 @@ let noextract_to_this_backend (se:S.sigelt) : ML bool =
        | None -> false)
     | _ -> false)
 
-(* A module with an interface has a public surface, and it is the interface:
+(* Section 131.  A module with an interface has a public surface, and it is
+   the interface:
    [FStarC.TypeChecker.Tc.mark_karamel_private] tags every definition the
    interface does not declare with the internal [KrmlPrivate] attribute, which
    is what made the legacy backends emit such a definition as C [static].
 
-   [--custard_entry_module] means "compile this module as a library" (section
-   70.1), and a library's surface is its interface.  Rooting a definition the
+   [--custard_entry_module] means "compile this module as a library"
+   (section 4.4), and a library's surface is its interface.  Rooting a definition the
    interface hides is not what [--extract_module] did: EverParse's quackyducky
    suite has 77 generated modules whose [.fst]-only [t17_gf]/[t18_fg] convert
    between specification-level types, are used only in ghost position, and

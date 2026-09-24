@@ -1317,6 +1317,13 @@ functions that exist to be looked at, and the property such a test needs is
 that a function added to it is extracted without anyone having to remember to
 name it.
 
+It roots the module's *public surface*.  If the module has an interface, a
+definition the interface does not declare is not part of that surface and is
+not rooted (§131); it is still extracted if something reachable from a root
+calls it, because un-rooting changes the root set and nothing else.  If the
+module has no interface, every top-level definition is public and every one is
+a root.
+
 It roots values only.  A type is rooted by the definitions that use it, and
 under `--custard_monomorphize_types` a parametric type has no single instance
 to root anyway.  A definition with nothing to extract --- a specification, a
@@ -22585,6 +22592,52 @@ A `Realized` type is the one silence left.  Its OCaml shape is the
 hand-written module's, Custard emits no declaration for it at all, and
 the realization carries its own `[@@deriving]` or does not; there is
 nothing Custard can honour and nothing it can usefully say.
+
+# 131 A module's surface is its interface
+
+`--custard_entry_module M` means "every top-level definition of `M` is a
+root" (§4.4), and that is right for a module with no interface, where
+every definition is reachable from outside by name.  It is wrong for a
+module that has an `.fsti`.  There the public surface *is* the interface,
+and a definition the interface does not declare cannot be called by
+anyone but `M` itself.  Rooting it says the opposite: it survives dead
+code elimination and lands in the output even when nothing reaches it.
+
+That is not just wasted bytes.  `--custard_entry_module` is what a
+*library* build uses (§4.4), and a library's contract is its interface;
+an extraction that emits interface-private definitions publishes symbols
+the library never promised, and each one drags in its own transitive
+closure.  A module with an interface and a large private section paid
+for the whole section.
+
+The signal already exists.  The typechecker stamps `KrmlPrivate` on a
+definition an interface does not export, and it does so only when the
+module *has* an interface (`Tc.fst:1290`).  So the rooting guard gained
+a conjunct: a `Sig_let` carrying `KrmlPrivate` is not rooted by
+`--custard_entry_module`.
+
+The attribute alone is not a sound test, though, and that is the subtle
+part.  `FStar.Tactics.PrettifyType` stamps `KrmlPrivate` on the
+`left`/`right` conversions and round-trip lemmas it generates
+*unconditionally*, whether or not the enclosing module has an interface.
+Reading the attribute by itself would therefore un-root generated
+conversions in interface-less modules, which broke `PrettyUnit`.  The
+guard is `Dep.module_has_interface` **and** the attribute, so the
+attribute is consulted only in the situation the typechecker writes it
+for.
+
+Three properties, and `tests/custard/EntryIface.fst` pins all three.
+`exported` is declared by the interface and is rooted.  `private_dead`
+is not declared and nothing reaches it, so it does not appear ---
+the pin on the change.  `private_live` is equally undeclared, is
+*reached* from `exported`, and appears anyway: un-rooting removes a
+root, it does not hide a definition.
+
+The rest of the root vocabulary is untouched.  `--custard_entry` and
+`--custard_main` name a definition outright and root it whatever its
+attributes say; an author who wants an interface-private definition in
+the output can still ask for it by name, which is the escape hatch this
+rule needs and the only one it needs.
 
 | M | Deliverable | Notes |
 | --- | --- | --- |
