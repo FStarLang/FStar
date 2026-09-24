@@ -866,9 +866,9 @@ let rec reduce (x:expr) : ML expr =
         arms are lambdas.  None of the backends has closures, so the arms
         have to meet their argument where beta can fire, and the only place
         that can happen is inside the arms.  Restricted to atomic arguments,
-        which are pure and free to duplicate, and to a scrutinee that is
-        itself atomic or already evaluated by the arms -- the [match] is
-        evaluated exactly once either way, and only the application moves. *)
+        which are pure and free to duplicate; the scrutinee is evaluated
+        exactly once either way, since it stays where it is and only the
+        application moves. *)
      | EMatch (scrut, brs) when args |> List.for_all is_atomic
                              && brs |> List.existsb (fun (_, _, bd) -> EFun? bd.e) ->
        let brs = brs |> List.map (fun (p, gd, bd) ->
