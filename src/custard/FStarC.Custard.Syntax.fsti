@@ -906,6 +906,12 @@ val fold_children : #a:Type -> (a -> expr -> ML a) -> a -> expr -> ML a
 val exists_child : (expr -> ML bool) -> expr -> ML bool
 val for_all_children : (expr -> ML bool) -> expr -> ML bool
 
+(** Does [v] occur free in the expression?  Custard's variable names come from
+    F* bound variables and so already carry a unique index, but this
+    deliberately does not track shadowing: an over-count keeps a binding that
+    could have been dropped, which is the safe direction. *)
+val occurs : string -> expr -> ML bool
+
 (** Section 99.  [is_pure] answers "may this be *moved*"; this answers "may
     this be *deleted*".  Neither implies the other, so this is a union and not
     a weakening: an effect is a property of a node, so a pure call is

@@ -2900,11 +2900,22 @@ and expr_of_term (st:state) (t:term) : ML expr =
     (* Section 5.2's rule, as in [branch_of_branch] and [extract_letbinding]:
        a binder dropped here is one the body may still name, and its erased
        occurrences sit where the erasure left [unit], so [()] is the closure
-       the body is owed. *)
+       the body is owed.
+
+       Only a binder the body actually names, though.  The rebinding is a
+       repair and not a rule: every one of these costs the body its shape,
+       and a definition whose body stops being a single field access stops
+       being inlined at its call sites.  That is not academic --
+       [__proj__Mkrec_t__item__fld] and [__proj__Mkht_t__item__hashf] drop
+       erased binders here and name none of them, and binding them anyway
+       turned both projectors into top-level functions that their call sites
+       then reached by *partial* application: an error 368 for the C backend,
+       and a [Mkht_t] in the OCaml output where a field access belonged. *)
     let body =
       List.fold_right (fun (b:S.binder) acc ->
         { acc with e = ELet (name_of_bv b.binder_bv, TUnit, unit_expr, acc) })
-        (keep_flagged flags bs) body in
+        (keep_flagged flags bs |> List.filter (fun b ->
+           occurs (name_of_bv b.binder_bv) body)) body in
     let bs = drop_flagged flags bs in
     (* Section 72.2, as in [extract_letbinding]: a binder the guard above put
        back is there for the arity and carries nothing, so [unit] is its type
@@ -4233,10 +4244,15 @@ and branch_of_branch (st:state) (br:S.branch) : ML branch =
      [Layout], so [match m with X_a_mid cm -> (| A, cm |)] lost [cm] from the
      pattern and kept it in the body.  [Simplify] substitutes these away as
      soon as it sees them; what matters is that the body stays closed in
-     between. *)
+     between.
+
+     Only a name the body actually mentions, as in [Tm_abs] and
+     [extract_letbinding]: an [ELet] the body has no use for is one more
+     reason for a later pass not to recognize the shape it has. *)
   let bind (e:expr) : ML expr =
     List.fold_right (fun v acc ->
-      { acc with e = ELet (v, TUnit, unit_expr, acc) }) freed e in
+      { acc with e = ELet (v, TUnit, unit_expr, acc) })
+      (freed |> List.filter (fun v -> occurs v e)) e in
   (p,
    (match g with None -> None | Some g -> Some (bind (expr_of_term st g))),
    bind (expr_of_term st b))
@@ -5424,7 +5440,11 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
      written into the second component of a [dtuple2] whose field [Layout] has
      already erased to [unit] -- so the closure the body is owed is exactly
      [()].  [Simplify] substitutes these away; what matters is that the body
-     never reaches a backend with a free name. *)
+     never reaches a backend with a free name.
+
+     Only a binder the body actually names, as in [Tm_abs]: the rebinding
+     costs the body its shape, and a body that stops being a single field
+     access stops being inlined at its call sites. *)
   let dropped_binders = keep_flagged flags bs in
   let bs = drop_flagged flags bs in
   (* An *erased* binder that survived [drop_flagged] is the one
@@ -5567,9 +5587,11 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
       })
     | [] -> () in
   let dl_body =
+    let body = expr_of_term st body in
     List.fold_right (fun (b:S.binder) acc ->
       { acc with e = ELet (name_of_bv b.binder_bv, TUnit, unit_expr, acc) })
-      dropped_binders (expr_of_term st body) in
+      (dropped_binders |> List.filter (fun b ->
+         occurs (name_of_bv b.binder_bv) body)) body in
   st.cur := saved_cur;
   st.cur_lid := saved_cur_lid;
   Builtins.set_current_decl (Some saved_cur);
