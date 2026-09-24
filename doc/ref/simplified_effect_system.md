@@ -1623,10 +1623,19 @@ effect of solving unrelated uvars, and without needing
 
 #### What remains
 
-The normalisation is still unbounded for every caller that leaves the flag set,
-and `Env.step` has no fuel constructor, so bounding it is not a one-line change.
-It is the more fundamental problem behind the 32 GB divergence described in
-[§6.5](#65-other-typechecker-fixes-carried-by-this-work). Note also that the
+The normalisation was still unbounded for every caller that left the flag set,
+and it was the more fundamental problem behind the 32 GB divergence described in
+[§6.5](#65-other-typechecker-fixes-carried-by-this-work). #4558 hit it again: a
+lemma whose body ends in `assert p` relates `squash p <: squash post`, the
+`squash` rewrite is blocked by the open `#a` of `eq2` (not an interpreted head),
+and congruence reaches `equal` on `logand ... =?= dec (enc p)` at width 64.
+
+`equal` therefore no longer normalises eagerly. It reduces both sides to weak
+head normal form, compares them, and if the heads agree recurses on the
+arguments, so only the parts of the terms the comparison visits are reduced.
+A head mismatch is found after one step, and `UnifyMatch.fst`'s
+`nat2unary 10 =?= S (nat2unary 9)` is still decided. The flag remains, and
+`same_formula` still turns even this off. Note also that the
 `no_free_uvars` gate's comment claims it means "neither term has any free
 variables", while it only inspects unification variables and universes.
 
