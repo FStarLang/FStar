@@ -1725,7 +1725,10 @@ $(OUTPUT_DIR)/RelocApp.checked: $(FSTAR_EXE)
 	$(Q)grep -qF -- "Error 369" $(OUTPUT_DIR)/reloc/consumer/out.txt \
 	  || { echo "ERROR: RelocApp did not report error 369"; \
 	       cat $(OUTPUT_DIR)/reloc/consumer/out.txt; exit 1; }
-	$(Q)grep -qF -- "found here as" $(OUTPUT_DIR)/reloc/consumer/out.txt \
+	@# The message is pretty-printed and wraps depending on the path length,
+	@# so join the lines before looking for the phrase.
+	$(Q)tr '\n' ' ' < $(OUTPUT_DIR)/reloc/consumer/out.txt | tr -s ' ' \
+	  | grep -qF -- "found here as" \
 	  || { echo "ERROR: RelocApp did not say where it found the source"; \
 	       cat $(OUTPUT_DIR)/reloc/consumer/out.txt; exit 1; }
 	$(Q)touch $@
