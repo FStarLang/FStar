@@ -287,11 +287,13 @@ plugin: $(BIN)
 	  || { echo "ERROR: the rule did not fold the descriptor"; exit 1; }
 	# Section 36.3: the kernel body was lifted under the name the *descriptor*
 	# gave it, not a generated one, and carries the flags the rule asked for.
-	$(Q)grep -q 'static uint32_t kernel(uint32_t c, uint32_t tid) {' $(PLUGIN_DIR)/CustardRuleTest.c \
-	  || { echo "ERROR: the kernel was not lifted under its own name"; exit 1; }
+	# The name is qualified by [current_decl], the definition the rule was
+	# expanded inside -- [main] here, since that is what calls [launch].
+	$(Q)grep -q 'static uint32_t CustardRuleTest_main_kernel(uint32_t c, uint32_t tid) {' $(PLUGIN_DIR)/CustardRuleTest.c \
+	  || { echo "ERROR: the kernel was not lifted under its own qualified name"; exit 1; }
 	$(Q)grep -qF '__attribute__((noinline))' $(PLUGIN_DIR)/CustardRuleTest.c \
 	  || { echo "ERROR: the rule's Prologue flag did not reach the C"; exit 1; }
-	$(Q)grep -qF '/* kernel kernel, 42 bytes shared */' \
+	$(Q)grep -qF '/* kernel CustardRuleTest.main_kernel, 42 bytes shared */' \
 	  $(PLUGIN_DIR)/CustardRuleTest.c \
 	  || { echo "ERROR: the rule's Comment flag did not reach the C"; exit 1; }
 	# Section 36.2: the runtime entry point nothing in the source calls

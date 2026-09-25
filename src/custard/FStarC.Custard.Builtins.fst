@@ -1631,3 +1631,9 @@ let take_lifted () : ML (list decl) =
   let ds = !lifted in
   lifted := [];
   ds
+
+let cur_decl : ref (option name) = mk_ref None
+
+let current_decl () : ML (option name) = !cur_decl
+
+let set_current_decl (n:option name) : ML unit = cur_decl := n
