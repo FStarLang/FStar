@@ -33,6 +33,9 @@ CUSTARD_TESTS += MonoState
 CUSTARD_TESTS += InlineFields
 CUSTARD_TESTS += KeyNames
 CUSTARD_TESTS += Refs
+# A [ref] bound by a pattern keeps its type through copy propagation's rename.
+GREP_Refs   += "(r) := "
+NOGREP_Refs += "(0) <- "
 CUSTARD_TESTS += Thunk
 CUSTARD_TESTS += Exceptions
 CUSTARD_TESTS += LocalRec

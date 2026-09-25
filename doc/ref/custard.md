@@ -19123,6 +19123,33 @@ beyond symmetry with `reduce`'s forwarder case, and it now keeps its own.
 The substitution machinery moved above the simplifier to make this possible,
 which is where it should have been: it is not inlining-specific.
 
+#### 102.2.1.  A rename is not a substitution
+
+`sub` renames the binders it passes, so that a substituted term cannot be
+captured, and a *pattern's* binders are among them.  A pattern carries no
+types, so `sub_pat` had nothing to put in the substitution entry it makes for
+one and wrote `TAny`, on the stated grounds that nothing downstream reads a
+type off a pattern variable's occurrence.
+
+That was true when the only caller was the inliner and false as soon as copy
+propagation (§129) started substituting into matches in earnest.  Every
+backend reads exactly that type at exactly one place: whether a write prints
+as `r := v` or as `b.(i) <- v` --- `.Value <-` on F#, `*p = v` on C --- is
+decided by `TRef? b.ty` on the *occurrence*, and a tuple holding a `ref` puts
+that occurrence under a pattern. `let (n, r) = p in r := !r + n` came out as
+`r.(0) <- ...` against an OCaml `bool ref`, which is a type error in the
+generated code rather than a wrong answer, and it only appears once a
+`_letpattern` copy has been propagated into the match.
+
+The entries are therefore two kinds, and `sub` now tells them apart. `ELet`
+and `EFun` supply a real type and their entries are taken whole. A pattern
+binder's entry is a *rename*: it keeps the name and leaves the occurrence's
+recorded type and effect alone, which is what `rename_var` next to it already
+did and says it does.
+
+`tests/custard/Refs.fst` pins it with `bump2`, on both the OCaml and the F#
+legs.
+
 ### 102.3.  `--custard_c_no_prefix` and an `assume val`
 
 The reporter's standing item, unrelated to the above.  `Abort.abort` comes
