@@ -5367,6 +5367,186 @@ let dedup_vc (vc:term) : ML term =
   in
   fst (go (SynHash.term_map_empty #unit) vc)
 
+(* [combine_goals] merges proof obligations that share a context into a single
+   verification condition.
+
+   A tactic, a splice or a [with_tactic] preprocessing pass hands back a list of
+   goals, each with its own environment: see the comment in [Tactics.Hooks] on
+   why the environments cannot simply be merged into one guard. Discharging them
+   one at a time asks the solver a separate question per goal, and each of those
+   questions re-encodes the whole context from scratch, even when the contexts
+   are identical or differ only in their innermost binders. For a Pulse
+   definition, which emits one obligation per [check_prop_validity], that is the
+   dominant cost.
+
+   The obligations in one such list come from a single traversal, so their
+   environments are extensions of a common prefix and, thanks to the way [gamma]
+   is consed, they physically share it. We recover that structure here: the
+   common part stays in the environment, and what is left is closed with a
+   [forall] per distinguishing binder, with obligations that agree on a binder
+   placed under one copy of it. [Encode.encode_query] then encodes the common
+   context once and [ErrorReporting.split_goals] skolemizes the [forall]s back
+   into a tree of [GCtx] frames, which the solver emits as nested push/pop
+   scopes with one [check-sat] per leaf. The end result is one query, one
+   encoding of the context, and the same number of goals as before.
+
+   This is deliberately a merge and not a change to how guards are built: the
+   obligations still travel as closed formulae. Scoping the guards at
+   construction, so that the duplicates [dedup_vc] removes are never built, is
+   the follow-on change.
+
+   Two things prevent a merge, and both fall back to discharging the goal on its
+   own rather than giving up on the whole list:
+
+   - a binder that is not a [Binding_var], which has no [forall] to close it
+     with, and
+
+   - a differing optionstate, since options such as [--smtencoding.*] change the
+     encoding itself and so cannot share a query. Goals are grouped by their
+     options first; in practice a definition uses one set throughout. *)
+let combine_goals (vcs : list (env & typ & Options.optionstate))
+  : ML (list (env & typ & Options.optionstate))
+  =
+  (* Two bindings are shared only if their sorts agree as well as their names:
+     [S.bv_eq] is [x.index = y.index] and looks at nothing else, while distinct
+     goals routinely bind *different* hypotheses at the same index. Treating
+     those as shared would keep one goal's hypothesis in the common context and
+     hand it to all the others -- unsound in one direction, and losing the
+     hypothesis in the other.
+
+     Conversely, two goals checked under separately opened copies of the same
+     binder fail to share it and merely end up with a [forall] each; that costs
+     some sharing but nothing goes wrong.
+
+     ([Tactics.V2.Basic.eq_binding] intends exactly this check, but a catch-all
+     [| _ -> false] first case makes all of its branches dead code, so [join]
+     shares no context at all.) *)
+  let binding_eq (b1 b2 : S.binding) : ML bool =
+    match b1, b2 with
+    | S.Binding_var x, S.Binding_var y -> S.bv_eq x y && U.term_eq x.sort y.sort
+    | S.Binding_univ u, S.Binding_univ v -> Ident.ident_equals u v
+    | S.Binding_lid (l1, _), S.Binding_lid (l2, _) -> Ident.lid_equals l1 l2
+    | _ -> false
+  in
+  (* Aligned with [join_goals] (Tactics.V2.Basic): build the binder exactly as
+     [Env.binders_of_bindings] does, with no squash/refinement wrapper. The
+     wrapper in [Encode.encode_query] is for converting environment bindings at
+     encode time, which is a different situation from rewriting a goal term
+     before encoding. *)
+  let binder_of_binding (b : S.binding) : ML (option S.binder) =
+    match b with
+    | S.Binding_var x -> Some (S.mk_binder x)
+    | _ -> None
+  in
+  (* [gamma] is innermost-first, so a shared context is a shared suffix. *)
+  let rec common_prefix (l1 l2 : list S.binding) : ML (list S.binding) =
+    match l1, l2 with
+    | b1::tl1, b2::tl2 ->
+      if binding_eq b1 b2 then b1 :: common_prefix tl1 tl2 else []
+    | _ -> []
+  in
+  let common_suffix (l1 l2 : list S.binding) : ML (list S.binding) =
+    List.rev (common_prefix (List.rev l1) (List.rev l2))
+  in
+  (* [U.mk_conj_l] rotates its argument, which would permute the order in which
+     the leaves are emitted, and hence the order of error messages. Build the
+     conjunction in order instead. *)
+  let rec conj_l (l : list typ) : ML typ =
+    match l with
+    | [] -> U.t_true
+    | [t] -> t
+    | t :: tl -> U.mk_conj t (conj_l tl)
+  in
+  (* All goals in a group share the bindings consumed so far; each carries the
+     ones that remain, outermost first. *)
+  let rec build (goals : list (list S.binding & typ)) : ML typ =
+    let here, deeper = List.partition (fun (bs, _) -> Nil? bs) goals in
+    let rec groups (l : list (list S.binding & typ)) : ML (list typ) =
+      match l with
+      | [] -> []
+      | (bs0, _) :: _ ->
+        let b = List.hd bs0 in
+        let same, rest =
+          List.partition (fun (bs, _) -> match bs with
+                                         | b'::_ -> binding_eq b b'
+                                         | [] -> false) l
+        in
+        let same = List.map (fun (bs, t) -> List.tl bs, t) same in
+        let body = build same in
+        let rest = groups rest in
+        if U.is_t_true body then rest
+        else
+          let q = match binder_of_binding b with
+                  (* [U.close_forall_no_univs] silently drops null binders; use
+                     [mk_forall_no_univ] directly, as [join_goals] does. *)
+                  | Some bd -> U.mk_forall_no_univ bd.binder_bv body
+                  | None -> body (* cannot happen: unclosable goals are filtered out *)
+          in
+          q :: rest
+    in
+    conj_l (List.map snd here @ groups deeper)
+  in
+  (* Everything that has to agree before two obligations may share a query.
+     [Options.optionstate] is the obvious part, but not all of it lives there:
+     [proof_ns] (written by the [prune]/[addns] tactics) and [admit] are fields
+     of [env], and [merge_group] builds the merged environment from the *first*
+     goal's, so goals differing in either must not be grouped -- otherwise the
+     rest silently inherit goal 0's hint database or admit flag. *)
+  let group_key (e : env) (o : Options.optionstate) : ML (string & Env.proof_namespace & bool) =
+    let opts = Options.with_saved_options (fun () -> Options.set o; Options.show_options ()) in
+    opts, e.proof_ns, e.admit
+  in
+  (* Keep the order in which the groups first appear so that errors are reported
+     in a stable order. *)
+  let rec group_by_key (l : list (env & typ & Options.optionstate))
+    : ML (list (list (env & typ & Options.optionstate)))
+    = match l with
+      | [] -> []
+      | (e, _, o) :: _ ->
+        let k = group_key e o in
+        let same, rest = List.partition (fun (e', _, o') -> group_key e' o' = k) l in
+        same :: group_by_key rest
+  in
+  let merge_group (g : list (env & typ & Options.optionstate))
+    : ML (list (env & typ & Options.optionstate))
+    = match g with
+      | [] -> []
+      | [_] -> g
+      | (env0, _, opts) :: _ ->
+        let base = List.fold_left (fun acc (e, _, _) -> common_suffix acc e.gamma)
+                                  env0.gamma (List.tl g) in
+        let n_base = List.length base in
+        (* The bindings of [e] that are not part of [base], outermost first. *)
+        let extra (e:env) : ML (list S.binding) =
+          let n = List.length e.gamma in
+          let rec take n l = if n <= 0 then [] else (match l with [] -> [] | hd::tl -> hd :: take (n-1) tl) in
+          List.rev (take (n - n_base) e.gamma)
+        in
+        let mergeable, standalone =
+          List.partition (fun (e, _, _) ->
+                            extra e |> List.for_all (fun b -> Some? (binder_of_binding b))) g
+        in
+        begin match mergeable with
+        | [] -> standalone
+        | [_] -> g
+        | _ ->
+          let merged = build (List.map (fun (e, t, _) -> extra e, t) mergeable) in
+          standalone @ [({env0 with gamma = base}, merged, opts)]
+        end
+  in
+  match vcs with
+  | [] | [_] -> vcs
+  | _ ->
+    (* An escape hatch for triage, mirroring [FSTAR_NO_DEDUP_VC]: merging only
+       ever changes how obligations are grouped into queries, never which
+       obligations there are, so turning it off is always sound and is the
+       quickest way to tell whether it is responsible for a proof behaving
+       differently. Note that, as with [FSTAR_NO_DEDUP_VC], it is the variable
+       being *set* that disables merging: [FSTAR_NO_COMBINE_GOALS=] with an
+       empty value disables it just as [=1] does. *)
+    if Some? (BU.expand_environment_variable "FSTAR_NO_COMBINE_GOALS") then vcs
+    else vcs |> group_by_key |> List.collect merge_group
+
 let do_discharge_vc use_env_range_msg env vc : ML unit =
   let open FStarC.Pprint in
   let open FStarC.Errors.Msg in
@@ -5417,8 +5597,9 @@ let do_discharge_vc use_env_range_msg env vc : ML unit =
     )
   in
 
-  (* Solve one by one. If anything fails the SMT module will log errors. *)
-  vcs |> List.iter (fun (env, goal, opts) ->
+  (* Merge obligations that share a context, then solve. If anything fails the
+     SMT module will log errors. *)
+  combine_goals vcs |> List.iter (fun (env, goal, opts) ->
     Options.with_saved_options (fun () ->
       FStarC.Options.set opts;
       env.solver.solve use_env_range_msg env (dedup_vc goal)

@@ -376,6 +376,15 @@ val get_guard_policy : unit -> TacRO guard_policy
 (** Set the current guard policy. See [get_guard_policy} for an explanation *)
 val set_guard_policy : guard_policy -> Tac unit
 
+(** Get the current guard label: the explanation attached to VCs that arise
+internally from the tactic engine, and which is reported back to the user if
+one of them cannot be proven. *)
+val get_guard_label : unit -> TacRO string
+
+(** Set the current guard label. See [get_guard_label] for an explanation, and
+[FStar.Tactics.V2.Derived.with_error_message] for the usual way to set it. *)
+val set_guard_label : string -> Tac unit
+
 (** [lax_on] returns true iff the current environment has the
 `--admit_smt_queries true` option set, and thus drops all verification conditions. *)
 val lax_on : unit -> TacRO bool

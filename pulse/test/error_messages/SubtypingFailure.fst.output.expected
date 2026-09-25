@@ -1,9 +1,8 @@
 * Info at SubtypingFailure.fst(18,2-18,10):
   - Expected failure:
-  - Ill-typed term
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: x >= 0
   - In context: x: Prims.int
-  - Also see: Prims.fst(477,18-477,24)
+  - See also Prims.fst(477,18-477,24)
 

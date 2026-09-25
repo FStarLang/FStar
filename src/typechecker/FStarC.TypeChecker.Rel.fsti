@@ -70,6 +70,15 @@ in the guard, raising an error if one cannot be solved just like
 solve_deferred_constraints does.
 
 In any case, if these functions return, they return a guard with guard_f = Trivial. *)
+
+(* Merge proof obligations that share a context into a single verification
+   condition, so that the SMT encoding of the shared context is emitted once
+   rather than once per obligation. Goals whose contexts cannot be merged, or
+   that were checked under different options, are returned separately. See the
+   comment on the definition. *)
+val combine_goals : list (env & typ & FStarC.Options.optionstate)
+                 -> ML (list (env & typ & FStarC.Options.optionstate))
+
 val discharge_guard           : env -> guard_t -> ML guard_t
 val discharge_guard_no_smt    : env -> guard_t -> ML guard_t
 val teq_nosmt        : env -> typ -> typ -> ML (option guard_t)

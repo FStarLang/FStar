@@ -1,6 +1,32 @@
-* Info at Bug59.fst(12,11-12,24):
+* Info at Bug59.fst(21,2-21,9):
+  - Admitting continuation.
+  - Current context:
+      emp
+  - In typing environment:
+      __#175 : squash (1 == 2)
+      __#126 : squash (x == y)
+      y#113 : b
+      x#112 : a
+      b#111 : Type0
+      a#110 : Type0
+
+
+* Info at Bug59.fst(20,18-20,20):
   - Expected failure:
-  - Ill-typed term
+  - Failed to prove pure property: ‘1 == 2’
+  - The SMT solver could not prove the query.
+  - Failed to prove: Prims.l_False
+  - In context:
+      a: Type0
+      b: Type0
+      x: a
+      y: b
+      b == a
+      x == y
+  - See also Prims.fst(183,7-183,60)
+
+* Info at Bug59.fst(17,11-17,24):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: b == a
@@ -9,4 +35,5 @@
       b: Type0
       x: a
       y: b
+  - See also Bug59.fst(16,30-16,37)
 

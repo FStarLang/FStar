@@ -231,6 +231,14 @@ let set_guard_policy (pol : guard_policy)  : ML (tac unit) =
   let! ps = get in
   set ({ ps with guard_policy = pol })
 
+let get_guard_label ()  : ML (tac string) =
+  let! ps = get in
+  return ps.guard_label
+
+let set_guard_label (l : string)  : ML (tac unit) =
+  let! ps = get in
+  set ({ ps with guard_label = l })
+
 let with_policy pol (t : tac 'a)  : ML (tac 'a) =
   let! old_pol = get_guard_policy () in
   set_guard_policy pol;!
@@ -266,6 +274,22 @@ let proc_guard_formula
   | SMT ->
     log (fun () -> Format.print2 "Pushing guard (%s:%s) as SMT goal\n" reason (show f));!
     let! g = goal_of_guard reason e f sc_opt rng in
+    (* Committing the core checker's cache is the undertaking to prove this
+       guard -- [Core.guard] drops a later occurrence of it whose context
+       includes this one, on the grounds that someone is already obliged to
+       prove it. Pushing it as an SMT goal is exactly that undertaking: the
+       goal is discharged before the definition is accepted.
+
+       Without this the cache is thrown away at every guard, and a checker that
+       calls into [Core] repeatedly on the same subterms -- Pulse does -- re-emits
+       the same obligations over and over.
+
+       The one way to break the undertaking is to discard the goal, which only
+       [catch] does, and which does not roll the core table back. So a guard
+       pushed inside a [catch] branch that then fails can silence a later
+       identical one. [Goal] deliberately does not commit for that reason: those
+       goals are handed to a metaprogram that may dispose of them as it likes. *)
+    commit_guard_token ();
     push_smt_goals [g]
 
   | SMTSync ->
@@ -3054,6 +3078,7 @@ let proofstate_of_goals rng env goals imps =
         psc = PO.null_psc;
         entry_range = rng;
         guard_policy = SMT;
+        guard_label = "";
         freshness = 0;
         tac_verb_dbg = !dbg_TacVerbose;
         local_state = PSMap.empty ();
@@ -3086,6 +3111,7 @@ let proofstate_of_all_implicits rng env imps =
         psc = PO.null_psc;
         entry_range = rng;
         guard_policy = SMT;
+        guard_label = "";
         freshness = 0;
         tac_verb_dbg = !dbg_TacVerbose;
         local_state = PSMap.empty ();
