@@ -366,16 +366,54 @@ let is_eq_unif (g: env) (p: term) : Dv (option (term & term)) =
     else
       None
   | None -> None
-let pure_eq_unif (g: env) (p: term) skip_eq_uvar : Dv bool =
-  match is_eq_unif g p with
-  | Some (lhs, rhs) ->
+
+// As above, but simplifying the goal first. Simplification reduces projections
+// applied to a constructed pair (`fst (a, b)` becomes `a`), which is what
+// exposes a bare uvar after an eta-expansion.
+let is_eq_unif_simpl (g: env) (p: term) : T.Tac (option (term & term)) =
+  match is_eq2 (Pulse.Simplify.simplify (RU.deep_compress_safe p)) with
+  | Some (_, lhs, rhs) ->
+    if is_uvar lhs || is_uvar rhs then
+      Some (lhs, rhs)
+    else
+      None
+  | None -> None
+
+let pure_eq_unif (g: env) (p: term) skip_eq_uvar : T.Tac bool =
+  // `skip_eq_uvar` asks for a uvar equation to be *deferred*, so that the goals
+  // that can pin the uvar down are attempted first. Returning true defers.
+  let solve (lhs:term) (rhs:term) : T.Tac bool =
     if skip_eq_uvar then
       true
     else (
       ignore (RU.teq_nosmt_force (elab_env g) lhs rhs);
       false
     )
-  | None -> false
+  in
+  match is_eq_unif g p with
+  | Some (lhs, rhs) -> solve lhs rhs
+  | None ->
+    (* Neither side is a bare uvar. The goal may still be an equation on a
+       projection of a product-typed hole, e.g. `fst ?u == 4`. Refining
+       `?u := (?a, ?b)` is not a guess -- every inhabitant of a product is a
+       pair, and a component left unsolved still raises an error -- and it lets
+       the simplifier reduce the projection, exposing a bare uvar.
+
+       Only equations can benefit, so non-equational goals bail out before the
+       simplifier is invoked; this is a hot path. *)
+    if None? (is_eq2 (RU.deep_compress_safe p)) then false
+    else begin
+      debug_prover g (fun _ -> Printf.sprintf "pure_eq_unif: trying eta on p=%s" (show p));
+      let leaves = Pulse.Eta.eta_expand_projected_uvars g p in
+      RU.try_solve_single_valued_implicits (elab_env g) leaves;
+      (* A component may already have been solved by an earlier goal, in which
+         case nothing is expanded here but the projection still needs reducing
+         before the remaining component is exposed. So this runs unconditionally,
+         not only when the expansion above fired. *)
+      match is_eq_unif_simpl g p with
+      | Some (lhs, rhs) -> solve lhs rhs
+      | None -> false
+    end
 
 // Restore a previously-captured error_range_bound around a thunk.
 let with_saved_bound (saved_bound: option RU.range) (f: unit -> T.Tac 'a)
