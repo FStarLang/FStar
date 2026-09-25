@@ -1137,16 +1137,16 @@ let captured_typing
 (* Restating a conjunct that the continuation's result type already carries
    costs a duplicated hypothesis at every enclosing bind, so a long statement
    sequence would accumulate the same facts quadratically.  Drop those. *)
+let rec conjuncts (phi:term) : ML (list term) =
+  let hd, args = U.head_and_args_full phi in
+  match (U.un_uinst hd).n, args with
+  | Tm_fvar fv, [(a, _); (b, _)] when S.fv_eq_lid fv C.and_lid ->
+    conjuncts a @ conjuncts b
+  | _ -> [phi]
+
 let drop_redundant_conjuncts (env:Env.env) (already_says:typ) (phi:term) : ML term =
   if U.is_t_true phi then phi
   else
-    let rec conjuncts (phi:term) : ML (list term) =
-      let hd, args = U.head_and_args_full phi in
-      match (U.un_uinst hd).n, args with
-      | Tm_fvar fv, [(a, _); (b, _)] when S.fv_eq_lid fv C.and_lid ->
-        conjuncts a @ conjuncts b
-      | _ -> [phi]
-    in
     let already =
       match (N.normalize_refinement N.whnf_steps env already_says).n with
       | Tm_refine {b; phi} ->
@@ -1165,6 +1165,22 @@ let drop_redundant_conjuncts (env:Env.env) (already_says:typ) (phi:term) : ML te
     in
     U.mk_conj_l keep
 
+(* A quantifier is a binder -- [l_Forall (fun x -> ...)] -- so a conjunct with
+   no binder anywhere in it is quantifier-free.  Keep only those. *)
+let quantifier_free_conjuncts (phi:term) : ML term =
+  if U.is_t_true phi then phi
+  else
+    let binds (t:term) : ML bool =
+      let found = mk_ref false in
+      let _ = FStarC.Syntax.Visit.visit_term false (fun t ->
+        (match t.n with
+         | Tm_abs _ | Tm_arrow _ | Tm_refine _ | Tm_let _ | Tm_match _ -> found := true
+         | _ -> ());
+        t) t in
+      !found
+    in
+    U.mk_conj_l (List.filter (fun c -> not (binds c)) (conjuncts phi))
+
 (* The result type of the composite.
 
    This is the *sole* authority on a bind's result type.  [simplify_bind] and
@@ -1174,11 +1190,12 @@ let drop_redundant_conjuncts (env:Env.env) (already_says:typ) (phi:term) : ML te
    they produce with what this returns.  When there is nothing to say, this
    returns [lc2]'s result type unchanged, so the overwrite is a no-op. *)
 let composite_result_typ
-      (capture:bool) (is_let_binding:bool)
+      (capture:bool) (quantifier_free:bool) (is_let_binding:bool)
       (env:Env.env) (e1opt:option term) (lc1:comp) (b:option bv) (lc2:comp)
 : ML (typ & guard_t)
 = let subst_x = bind_result_subst env e1opt lc1 b lc2 in
   let phi = captured_typing env capture is_let_binding (Cons? subst_x) lc1 e1opt b in
+  let phi = if quantifier_free then quantifier_free_conjuncts phi else phi in
   (* [g_esc] is [mzero] except on [eliminate_binder_from_typ]'s last resort,
      where [check_no_escape] may equate the type to a fresh uvar. *)
   let res_typ_base, g_esc =
@@ -1470,7 +1487,7 @@ let bind_general (bi:bind_input) : ML (comp & guard_t) =
   else mk_bind c1 b c2 trivial_guard
 
 let bind_maybe_capture
-      (capture:bool)
+      (capture:bool) (quantifier_free:bool)
       (r1:Range.t)
       (is_let_binding:bool)
       (env:Env.env) (e1opt:option term) (lc1_g : comp & guard_t) (binder_lc2:comp_with_binder) : ML (comp & guard_t) =
@@ -1488,7 +1505,7 @@ let bind_maybe_capture
   (* The result type is computed here and nowhere else: the comps returned below
      are derived from [lc2] and may still mention [b], which is out of scope for
      the caller. *)
-  let res_typ, g_esc = composite_result_typ capture is_let_binding env e1opt lc1 b lc2 in
+  let res_typ, g_esc = composite_result_typ capture quantifier_free is_let_binding env e1opt lc1 b lc2 in
   let c, g =
     match simplify_bind bi with
     | Inl (c, g, reason) ->
@@ -1503,10 +1520,16 @@ let bind_maybe_capture
   U.set_result_typ c res_typ, Env.conj_guard g g_esc
 
 let bind r1 is_let_binding env e1opt lc1 binder_lc2 : ML (comp & guard_t) =
-  bind_maybe_capture true r1 is_let_binding env e1opt lc1 binder_lc2
+  bind_maybe_capture true false r1 is_let_binding env e1opt lc1 binder_lc2
 
 let bind_no_capture r1 is_let_binding env e1opt lc1 binder_lc2 : ML (comp & guard_t) =
-  bind_maybe_capture false r1 is_let_binding env e1opt lc1 binder_lc2
+  bind_maybe_capture false false r1 is_let_binding env e1opt lc1 binder_lc2
+
+let bind_capture_quantifier_free r1 is_let_binding env e1opt lc1 binder_lc2 : ML (comp & guard_t) =
+  bind_maybe_capture true true r1 is_let_binding env e1opt lc1 binder_lc2
+
+let is_refined_unit (env:env) (t:typ) : ML bool =
+  Refined_unit? (unit_shape_of env t)
 
 let weaken_guard g1 g2 : ML _ = match g1, g2 with
     | NonTrivial f1, NonTrivial f2 ->
@@ -2510,7 +2533,7 @@ let weaken_result_typ env (e:term) (lc_g : comp & guard_t) (t:typ) (use_eq:bool)
                           with [x == e]. *)
                       let x = {x with sort=(U.comp_result lc)} in
                       //AR: M_M bind
-                      let c, g_lc = bind_maybe_capture false e.pos false env (Some e) (c, Env.trivial_guard) (Some x, eq_ret, g_eq) in
+                      let c, g_lc = bind_maybe_capture false false e.pos false env (Some e) (c, Env.trivial_guard) (Some x, eq_ret, g_eq) in
                       if Debug.extreme ()
                       then Format.print1 "Strengthened to %s\n" (Normalize.comp_to_string env c);
                       c, Env.conj_guards [g_c; gret; g_lc]

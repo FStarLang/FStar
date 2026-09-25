@@ -2963,6 +2963,12 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
             name_opt |> Option.map (Env.push_bv env)
                      |> Option.dflt env) in
 
+        (* see the comment on [no_capture] below *)
+        let result_is_refined_unit =
+          Cons? arg_comps_rev
+          && U.is_pure_or_ghost_comp cres
+          && TcUtil.is_refined_unit env (U.comp_result cres) in
+
         //Bind arguments
         let _, comp, g_comp =
           List.fold_left
@@ -3011,7 +3017,23 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
                  its value before the solver ever sees it, so the callee's
                  typing axiom never fires and the refinement is simply gone.
                  [FStar.UInt32.lognot 0xff00ul] reduces to [0xffff00fful], and
-                 with it the only statement that the two are related. *)
+                 with it the only statement that the two are related.
+
+                 A lemma call is a third exception.  Its result type
+                 [unit{post}] is not the type of any value -- it is dissolved
+                 into a hypothesis as soon as the call is sequenced -- so
+                 restating an argument's refinement there costs no type
+                 pollution, and it puts the fact right next to the
+                 postcondition that mentions the argument.  Recovering it from
+                 the callee's typing axiom instead takes two instantiations
+                 (the typing axiom, then the refinement's interpretation), and
+                 nonlinear arithmetic is very sensitive to exactly these sign
+                 facts: [eval s >= 0] and [pow2 n > 0] next to a
+                 [distributivity_add_right] postcondition (issue #4591).  Only
+                 the quantifier-free conjuncts are restated, though: a
+                 quantified one -- [Seq.init]'s [forall i. index s i == f i],
+                 say -- is new instantiation work in every goal that follows
+                 the call. *)
               let arg_head_is_reducible_primop () =
                 let hd, _ = U.head_and_args_full e in
                 match (U.un_uinst hd).n with
@@ -3022,16 +3044,19 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
                   && is_empty (Free.uvars e)
                 | _ -> false
               in
+              let capture_all =
+                head_is_data_constructor || arg_head_is_reducible_primop () in
               let no_capture =
-                (not head_is_data_constructor
-                 && not (arg_head_is_reducible_primop ()))
+                (not capture_all && not result_is_refined_unit)
                 || S.is_aqual_implicit q
                 || not (is_empty (Free.uvars (U.comp_result c))) in
               let e_opt = if U.is_pure_or_ghost_comp c then Some e else None in
               let c_out, g_out =
                 if no_capture
                 then TcUtil.bind_no_capture e.pos false env e_opt (c, Env.trivial_guard) (x, out_c, g_out)
-                else TcUtil.bind e.pos false env e_opt (c, Env.trivial_guard) (x, out_c, g_out) in
+                else if capture_all
+                then TcUtil.bind e.pos false env e_opt (c, Env.trivial_guard) (x, out_c, g_out)
+                else TcUtil.bind_capture_quantifier_free e.pos false env e_opt (c, Env.trivial_guard) (x, out_c, g_out) in
               i+1, c_out, g_out)
           (1, cres, Env.trivial_guard)
           arg_comps_rev in
