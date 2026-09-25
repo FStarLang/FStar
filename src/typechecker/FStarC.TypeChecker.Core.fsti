@@ -78,6 +78,27 @@ val check_term_at_type (g:Env.env) (e:term) (t:typ)
 val compute_term_type (g:Env.env) (e:term)
   : ML (either (tot_or_ghost & typ & option guard_and_tok_t) error)
 
+(* Check [e] against a computation type of any effect; the effect of [e]
+   must be a sub-effect of the effect of [c]. The returned guard is not
+   simplified. *)
+val check_term_at_comp (g:Env.env) (e:term) (c:comp)
+  : ML (either (option guard_and_tok_t) error)
+
+(* Check a nest of top-level recursive definitions (see TcTerm.guard_letrecs
+   for termination), whose universes are opened and pushed in [g]. *)
+val check_top_level_letrec (g:Env.env) (lbs:list letbinding)
+  : ML (either (option guard_and_tok_t) error)
+
+(* Compute the computation type of [e], of any effect. If an expected type [t]
+   is given, the computation type returned has result type [t] (and the effect
+   of [e]); [t] is checked to be a type if [check_t]. It need not be when it
+   comes from the elaborator, as the type phase 1 inferred for [e]: that type
+   is only well-formed in contexts where what [e] establishes holds, e.g.
+   [x:U32.t{v x = f b}], at [=] on [uint_t 32], for [e] a call to
+   [U32.uint_to_t (f b)] preceded by a lemma bounding [f b]. *)
+val compute_term_comp (g:Env.env) (e:term) (t:option typ) (check_t:bool)
+  : ML (either (comp & option guard_and_tok_t) error)
+
 val open_binders_in_term (g:Env.env) (bs:binders) (t:term)
   : ML (Env.env & binders & term)
 

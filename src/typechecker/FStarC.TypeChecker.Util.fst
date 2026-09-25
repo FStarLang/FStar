@@ -3146,3 +3146,50 @@ let make_record_fields_in_order
         ]
     in
     List.rev as_rev
+
+let phase2_core_mode () : ML string =
+  let v =
+    match Options.Ext.get "phase2_core" with
+    | "" ->
+      (match BU.expand_environment_variable "FSTAR_PHASE2_CORE" with
+       | Some v -> v
+       | None -> "")
+    | v -> v
+  in
+  match v with
+  | "0" | "false" | "off" -> ""
+  | v -> v
+
+let phase2_core_suspended : ref bool = mk_ref false
+
+let phase2_core_enabled () : ML bool =
+  not !phase2_core_suspended && phase2_core_mode () <> ""
+
+let without_phase2_core (f:unit -> ML 'a) : ML 'a =
+  let old = !phase2_core_suspended in
+  phase2_core_suspended := true;
+  let r = try f () with e -> phase2_core_suspended := old; raise e in
+  phase2_core_suspended := old;
+  r
+
+let phase1_synth : ref bool = mk_ref false
+
+let synth_in_phase1 () : ML bool = !phase1_synth
+
+let with_synth_in_phase1 (f:unit -> ML 'a) : ML 'a =
+  let old = !phase1_synth in
+  phase1_synth := true;
+  let r = try f () with e -> phase1_synth := old; raise e in
+  phase1_synth := old;
+  r
+
+let phase2_core_attempt : ref bool = mk_ref false
+
+let in_phase2_core_attempt () : ML bool = !phase2_core_attempt
+
+let as_phase2_core_attempt (f:unit -> ML 'a) : ML 'a =
+  let old = !phase2_core_attempt in
+  phase2_core_attempt := true;
+  let r = try f () with e -> phase2_core_attempt := old; raise e in
+  phase2_core_attempt := old;
+  r

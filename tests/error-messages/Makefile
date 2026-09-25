@@ -39,5 +39,13 @@ $(OUTPUT_DIR)/TuplePat.fst.json_output : OTHERFLAGS+=--dump_module TuplePat
 $(OUTPUT_DIR)/TuplePat.fst.output      : OTHERFLAGS+=--dump_module TuplePat
 $(OUTPUT_DIR)/Monoid.fst.json_output   : OTHERFLAGS+=--dump_module Monoid
 $(OUTPUT_DIR)/Monoid.fst.output        : OTHERFLAGS+=--dump_module Monoid
+# These two dump the module after type checking, which is phase 2's
+# elaboration: with --ext phase2_core, phase 1's, which lacks the result
+# ascriptions TcTerm puts on matches (TuplePat) and uses fewer fresh names
+# (Monoid). See doc/ref/phase2_core.md.
+$(OUTPUT_DIR)/TuplePat.fst.json_output : OTHERFLAGS+=--ext phase2_core=off
+$(OUTPUT_DIR)/TuplePat.fst.output      : OTHERFLAGS+=--ext phase2_core=off
+$(OUTPUT_DIR)/Monoid.fst.json_output   : OTHERFLAGS+=--ext phase2_core=off
+$(OUTPUT_DIR)/Monoid.fst.output        : OTHERFLAGS+=--ext phase2_core=off
 $(OUTPUT_DIR)/InfixImps.fst.json_output: OTHERFLAGS+=--dump_module InfixImps --print_implicits
 $(OUTPUT_DIR)/InfixImps.fst.output     : OTHERFLAGS+=--dump_module InfixImps --print_implicits

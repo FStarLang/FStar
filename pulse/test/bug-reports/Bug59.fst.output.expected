@@ -3,7 +3,7 @@
   - Ill-typed term
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Failed to prove: b == a
+  - Failed to prove: Prims.has_type y a
   - In context:
       a: Type0
       b: Type0

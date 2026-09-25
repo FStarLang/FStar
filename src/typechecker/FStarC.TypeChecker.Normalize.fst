@@ -1935,7 +1935,8 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
                       | Meta_desugared Sequence when cfg.steps.do_not_unfold_pure_lets ->
                         norm cfg env (Meta(env,m,t.pos)::stack) head
 
-                      | Meta_desugared (Machine_integer (_,_)) ->
+                      | Meta_desugared (Machine_integer (_,_))
+                      | Meta_desugared Tactic_synthesized ->
                         (* meta doesn't block reduction,
                            but we need to put the label back *)
                         norm cfg env (Meta(env,m,t.pos)::stack) head

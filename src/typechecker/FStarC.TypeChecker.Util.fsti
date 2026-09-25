@@ -257,3 +257,26 @@ val make_record_fields_in_order
        (not_found : (ident -> is_imp:bool -> ML (option 'a)))
        (rng : Range.t)
   : ML (list ('a & bool))
+
+(* The mode of the [phase2_core] extension: phase 2 of checking a top-level
+   [let] uses FStarC.TypeChecker.Core instead of re-running TcTerm on the
+   phase-1 elaboration. Set by [--ext phase2_core[=mode]] or, failing that, by
+   the environment variable FSTAR_PHASE2_CORE. Modes: "" (off), "warn" (report
+   Core failures as warnings and fall back to TcTerm), "compare" (as "warn",
+   but also always run TcTerm's phase 2 and report when the types the two
+   record for a definition differ), anything else (on, e.g. "strict"). *)
+val phase2_core_mode : unit -> ML string
+val phase2_core_enabled : unit -> ML bool
+(* Runs [f] as if [phase2_core] were disabled. *)
+val without_phase2_core : (unit -> ML 'a) -> ML 'a
+(* Whether phase 1 is to run [synth_by_tactic]: under [phase2_core], set by
+   [Tc.tc_sig_let] around a phase 1 whose phase 2 is Core's, since nothing
+   else would run the synthesis. *)
+val synth_in_phase1 : unit -> ML bool
+val with_synth_in_phase1 : (unit -> ML 'a) -> ML 'a
+(* Whether Core's phase 2 is running for a definition whose failure is
+   followed by TcTerm's phase 2 (see [Tc.tc_sig_let]). The tactic engine
+   then does not dump the proof state of a failing tactic: TcTerm runs the
+   tactic again, and that run dumps it. *)
+val in_phase2_core_attempt : unit -> ML bool
+val as_phase2_core_attempt : (unit -> ML 'a) -> ML 'a

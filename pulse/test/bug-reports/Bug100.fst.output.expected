@@ -29,10 +29,10 @@
   - Ill-typed term
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Failed to prove: Prims.l_True == (i >= 0 == true)
+  - Failed to prove: Prims.l_True == (i >= 0)
   - In context:
       a1: Bug100.array Prims.int
       s1: FStar.Seq.Base.seq Prims.nat
       i: Prims.int
-  - Also see: Prims.fst(188,27-188,38)
+  - Also see: Prims.fst(477,18-477,24)
 

@@ -254,8 +254,17 @@ let rec traverse (f: pol -> Env.env -> term -> ML tres) (pol:pol) (e:Env.env) (t
 
             | hd, args ->
                 let r0 = traverse f pol e hd in
+                (* Implicit arguments are not propositions at the polarity
+                   of the application: e.g., the one of [l_Forall] is the
+                   type of the bound variable, which also appears (and is
+                   traversed, at the opposite polarity) as the sort of the
+                   binder of its body. *)
                 let r1 = List.fold_right (fun (a, q) r ->
-                                              let r' = traverse f pol e a in
+                                              let r' =
+                                                match q with
+                                                | Some ({ aqual_implicit = true }) -> tpure a
+                                                | _ -> traverse f pol e a
+                                              in
                                               comb2 (fun a args -> (a, q)::args) r' r)
                                                  args (tpure []) in
                 comb2 (fun hd args -> (S.mk_Tm_app hd args t.pos).n) r0 r1

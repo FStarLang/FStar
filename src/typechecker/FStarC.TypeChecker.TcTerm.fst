@@ -930,6 +930,17 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
     let e = mk (Tm_meta {tm=e; meta=Meta_desugared Sequence}) top.pos in
     e, c, g
 
+  | Tm_meta {tm=asc; meta=Meta_desugared Tactic_synthesized}
+      when (match (SS.compress asc).n with Tm_ascribed {asc=(Inl _, None, _)} -> true | _ -> false) ->
+    (* A tactic's result, as elaborated by [tc_synth]: it is trusted to have
+       type [typ], as when the tactic runs. *)
+    let Tm_ascribed {tm=e; asc=(Inl typ, _, _)} = (SS.compress asc).n in
+    let env0, _ = Env.clear_expected_typ env in
+    let typ, _, g1 = tc_term (Env.set_expected_typ env0 (fst <| U.type_u ())) typ in
+    let e = mk (Tm_meta {tm=mk (Tm_ascribed {tm=e; asc=(Inl typ, None, false); eff_opt=None}) e.pos;
+                         meta=Meta_desugared Tactic_synthesized}) top.pos in
+    value_check_expected_typ env e (Inl typ) g1
+
   | Tm_meta {tm=e; meta=Meta_monadic _}
   | Tm_meta {tm=e; meta=Meta_monadic_lift _} ->
     (* KM : This case should not happen when typechecking once but is it really *)
@@ -1367,7 +1378,10 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
         Inr (resolve_overloaded_head env lhead largs, largs)
 
       | _ ->
-        if U.is_synth_by_tactic lhead && not env.phase1
+        (* Under [phase2_core], nothing re-elaborates the phase-1 term, so
+           phase 1 runs the synthesis; Core then checks its result. *)
+        if U.is_synth_by_tactic lhead
+           && (not env.phase1 || TcUtil.synth_in_phase1 ())
         then (
           (* An application of synth_by_tactic *)
           match largs with
@@ -1813,7 +1827,15 @@ and tc_match (env : Env.env) (top : term) : ML (term & comp & guard_t) =
       else
         (* generate a let binding for e1 *)
         let e_match = mk_match (S.bv_to_name guard_x) in
-        let lb = U.mk_letbinding (Inl guard_x) [] (U.comp_result c1) (U.comp_effect_name c1) e1 [] e1.pos in
+        (* Annotated as [check_inner_let] annotates a [let]: with [e1] lifted
+           to the effect of the whole [let], which is that of the binding.
+           Re-checking this [let] (phase 2) produces the same annotations; not
+           re-checking it (phase 2 with Core, lax extraction) must not leave
+           [e1] looking like a computation in [cres]'s effect, e.g. a [Dv]
+           scrutinee in [Tac] code, which reification would then apply to
+           the proof state. *)
+        let e1 = TcUtil.maybe_lift env e1 (U.comp_effect_name c1) (U.comp_effect_name cres) (U.comp_result c1) in
+        let lb = U.mk_letbinding (Inl guard_x) [] (U.comp_result c1) (U.comp_effect_name cres) e1 [] e1.pos in
         let e = mk (Tm_let {lbs=(false, [lb]);
                             body=SS.close [S.mk_binder guard_x] e_match}) top.pos in
         TcUtil.maybe_monadic env e (U.comp_effect_name cres) (U.comp_result cres)
@@ -1872,13 +1894,24 @@ and tc_synth head env args rng : ML _ =
     let tau, _, g2 = tc_tactic t_unit t_unit env tau in
     Rel.force_trivial_guard env g2;
 
-    let t = env.synth_hook env typ ({ tau with pos = rng }) typ.pos in
+    (* When phase 1 runs the synthesis (see [TcUtil.synth_in_phase1]), the
+       tactic still runs as it would in phase 2, not laxly: e.g. [exact]
+       checks its witness. *)
+    let env_synth = if env.phase1 then { env with phase1 = false; admit = false } else env in
+    let t = env.synth_hook env_synth typ ({ tau with pos = rng }) typ.pos in
     if !dbg_Tac then
         Format.print1 "Got %s\n" (show t);
 
     // Should never trigger, meta-F* will check it before.
     TcUtil.check_uvars tau.pos t;
 
+    (* As here, Core trusts that the tactic's result has type [typ]. *)
+    let t =
+      if env.phase1
+      then mk (Tm_meta {tm=mk (Tm_ascribed {tm=t; asc=(Inl typ, None, false); eff_opt=None}) t.pos;
+                        meta=Meta_desugared Tactic_synthesized}) t.pos
+      else t
+    in
     t, mk_Total typ, mzero
 
 and tc_tactic (a:typ) (b:typ) (env:Env.env) (tau:term) : ML (term & comp & guard_t) =
@@ -2049,7 +2082,8 @@ and tc_value env (e:term) : ML (term
     value_check_expected_typ env e tc implicits
 
   | Tm_uinst({n=Tm_fvar fv}, _)
-  | Tm_fvar fv when S.fv_eq_lid fv Const.synth_lid && not env.phase1 ->
+  | Tm_fvar fv when S.fv_eq_lid fv Const.synth_lid
+                   && (not env.phase1 || TcUtil.synth_in_phase1 ()) ->
     raise_error env Errors.Fatal_BadlyInstantiatedSynthByTactic "Badly instantiated synth_by_tactic"
 
   | Tm_uinst({n=Tm_fvar {fv_qual=Some (Unresolved_name _)}}, _)
@@ -3117,7 +3151,15 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
           let app = TcUtil.maybe_monadic env app (U.comp_effect_name comp) (U.comp_result comp) in
           let bind_lifted_args e = function
             | None -> e
-            | Some (x, m, t, e1) ->
+            | Some (x, _, t, e1) ->
+              (* [e1] has been lifted to [comp]'s effect, and so has [e]: the
+                 [let] is a computation in [comp]'s effect, and is annotated
+                 as [check_inner_let] would annotate it. Re-checking it
+                 (phase 2) produces the same annotations; not re-checking it
+                 (phase 2 with Core) must not leave it annotated with the
+                 effect of the argument, e.g. a [Dv] argument in [Tac] code,
+                 which reification cannot handle. *)
+              let m = U.comp_effect_name comp in
               let lb = U.mk_letbinding (Inl x) [] t m e1 [] e1.pos in
               let letbinding = mk (Tm_let {lbs=(false, [lb]); body=SS.close [S.mk_binder x] e}) e.pos in
               mk (Tm_meta {tm=letbinding; meta=Meta_monadic(m, TcUtil.monadic_annot_typ (U.comp_result comp))}) e.pos
@@ -4438,7 +4480,16 @@ and check_top_level_let env e : ML _ =
                  let g1 = abstract_guard_n gvs g1 in
                  g1, e1, univs, c1, Nil? univs && Nil? gvs
          in
+         finish_top_level_let env lb e1 univ_vars c1 g1 topt annot_usable e2 e.pos,
+         S.mk_Total S.t_unit,
+         mzero
 
+     | _ -> failwith "Impossible: check_top_level_let: not a let"
+
+(* The part of checking a top-level [let] that follows the checking of its
+   definition [e1] (opened over [univ_vars]) at [c1], with guard [g1]:
+   handling its top-level effect, and closing it back into a letbinding. *)
+and finish_top_level_let env lb e1 univ_vars c1 g1 topt annot_usable e2 pos : ML term =
          (* Check that it doesn't have a top-level effect; warn if it does.
             Do not warn in phase1 to avoid double errors.*)
          let e2, c1 =
@@ -4509,23 +4560,6 @@ and check_top_level_let env e : ML _ =
          if Debug.medium () then
                 Format.print1 "Let binding AFTER tcnorm: %s\n" (show e1);
 
-         (*
-          * AR: comp for the whole `let x = e1 in e2`, where e2 = ()
-          *
-          *     we have already checked that e1 has the right effect args
-          *     for it to be a top-level effect
-          *
-          *     for wp effects that means trivial precondition,
-          *     and for indexed effects that means as per the top_level_effect
-          *     specification
-          *
-          *     Since the top-level effect is masked at this point,
-          *     we just return Tot unit and the final computation type
-          *
-          *     Note that for top-level lets, this cres is not used anyway
-          *)
-         let cres = S.mk_Total S.t_unit in
-
          (* The declared type is the definition's interface: record it, not the
             sharper one the body happened to have.  A postcondition is a
             refinement of a result type now, so [weaken_result_typ] deliberately
@@ -4541,12 +4575,9 @@ and check_top_level_let env e : ML _ =
            | _ -> U.comp_result c1
          in
 (*close*)let lb = U.close_univs_and_mk_letbinding None lb.lbname univ_vars lbtyp (U.comp_effect_name c1) e1 lb.lbattrs lb.lbpos in
-         mk (Tm_let {lbs=(false, [lb]); body=e2})
-            e.pos,
-         cres,
-         mzero
-
-     | _ -> failwith "Impossible: check_top_level_let: not a let"
+         (* The comp of the whole [let x = e1 in ()] is [Tot unit]: the
+            top-level effect, if any, is masked by now. *)
+         mk (Tm_let {lbs=(false, [lb]); body=e2}) pos
 
 and maybe_intro_smt_lemma env lem_typ (c2:comp) (g_c2:guard_t) : ML (comp & guard_t) =
     if U.is_smt_lemma lem_typ
@@ -4660,9 +4691,14 @@ and check_inner_let env e : ML _ =
             the result type) of every *unannotated* let.  Leave those as [tun]
             so that phase 2 infers them again.  An annotated let keeps the
             checked annotation, which phase 1 may have coerced (a [prop] used as
-            a type becomes a [squash], say) and which phase 2 cannot recover. *)
+            a type becomes a [squash], say) and which phase 2 cannot recover.
+            Under [phase2_core], phase 2 does not re-elaborate, and the
+            let-binding needs a type (for extraction and encoding): record the
+            inferred one. Core checks it, and the body is checked knowing the
+            definition, if pure, anyway. *)
          let lbtyp =
            if env.phase1 && Tm_unknown? (SS.compress lb.lbtyp).n
+              && not (TcUtil.phase2_core_enabled ())
            then lb.lbtyp else (U.comp_result c1) in
          U.mk_letbinding (Inl x) [] lbtyp (U.comp_effect_name cres) e1 attrs lb.lbpos in
        let e = mk (Tm_let {lbs=(false, [lb]); body=SS.close xb e2}) e.pos in

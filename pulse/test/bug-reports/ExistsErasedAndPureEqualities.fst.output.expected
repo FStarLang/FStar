@@ -3,8 +3,8 @@
   - Current context:
       some_pred x v
   - In typing environment:
-      __#495 : squash (_v_5 == v)
-      _v_5#494 : erased int
+      __#497 : squash (_v_5 == v)
+      _v_5#496 : erased int
       __#380 : squash (v == v)
       v#244 : erased int
       x#238 : R.ref int
