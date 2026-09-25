@@ -270,6 +270,16 @@ let rec sub (sm:subst) (x:expr) : ML expr =
   match x.e with
   | EVar v ->
     (match SMap.try_find sm v with
+     (* A pattern binder's entry is a *rename* and not a substitution:
+        [sub_pat] has no type to give it, so it writes [TAny], and taking
+        that entry whole would erase the type the occurrence records.  That
+        type is read: [TRef] versus [TBuf] is what decides whether a write
+        prints as [r := v] or as [b.(i) <- v] on every backend, and the
+        pattern is where a [ref] inside a tuple gets bound.  So a
+        [TAny]-typed rename keeps the occurrence's type and effect, exactly
+        as [rename_var] below does, and every other entry -- which [sub],
+        [ELet] and [EFun] all give a real type -- is taken as it stands. *)
+     | Some ({ e = EVar v' ; ty = TAny }) -> { x with e = EVar v' }
      | Some e -> e
      | None -> x)
   | EConst _ | EQual _ | EAny | EAbort _ -> x
@@ -303,8 +313,9 @@ and sub_pat (sm:subst) (p:pat) : ML pat =
   | PWild | PConst _ -> p
   | PVar v ->
     let v' = rename v in
-    (* The type is unknown here, and nothing downstream reads it off a
-       pattern variable's occurrence. *)
+    (* No type is available here -- a pattern carries none -- so the entry is
+       [TAny], which [sub] reads as "rename, and keep what the occurrence
+       already knows".  Occurrences *are* read for their type. *)
     SMap.add sm v { e = EVar v'; ty = TAny; eff = E_Pure };
     PVar v'
   | PCtor (n, ps) -> PCtor (n, ps |> List.map (sub_pat sm))
