@@ -3297,6 +3297,7 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
       let saved_cur_lid = !st.cur_lid in
       st.cur := nm;
       st.cur_lid := None;
+      Builtins.set_current_decl (Some nm);
       let d = DLet {
         dl_name    = nm;
         dl_typars  = typars @ own_typars;
@@ -3313,6 +3314,7 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
       let key = local_key nm in
       st.cur := saved_cur;
       st.cur_lid := saved_cur_lid;
+      Builtins.set_current_decl (Some saved_cur);
       SMap.add st.emitted key d;
       st.order := key :: !st.order);
     expr_of_term st body
@@ -5242,6 +5244,10 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
   let saved_cur_lid = !st.cur_lid in
   st.cur := nm;
   st.cur_lid := Some l;
+  (* Section 36.3.  A plugin's rule is expanded somewhere inside this
+     definition and cannot see where, so this is what a lifted kernel is
+     named after. *)
+  Builtins.set_current_decl (Some nm);
   let def, c, polycs, poly = Prof.timed "specialize"
     (fun () -> specialize st lb.lbtyp lb.lbdef cs margs n_holes) in
   let bs, body, rc = U.abs_formals def in
@@ -5463,6 +5469,7 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
   let dl_body = expr_of_term st body in
   st.cur := saved_cur;
   st.cur_lid := saved_cur_lid;
+  Builtins.set_current_decl (Some saved_cur);
   DLet {
     dl_name    = nm;
     dl_typars  = typars;

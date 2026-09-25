@@ -270,3 +270,27 @@ val lift_named : string -> list flag -> expr -> ML expr
 (** The declarations {!lift_named} has created, oldest first.  Drained by the
     extraction loop when it collects the program. *)
 val take_lifted : unit -> ML (list decl)
+
+(** Section 36.3.  The declaration the extractor is currently inside, as the
+    target name it will be emitted under.  [None] only before the first
+    declaration is reached; between two top-level declarations it still reads
+    the one that just finished, since it tracks the extractor's own notion of
+    the current declaration rather than being cleared.
+
+    A rule cannot see where it is being expanded, so a plugin that lifts a
+    kernel out of the definition that launches it has nothing to name the
+    result after: every lift in a unit ends up distinguished only by the
+    order it happened in, which is a symbol nobody can read in a profile or
+    in disassembly.  Section 19.12's [lift_lambdas] names an ordinary lifted
+    local after its enclosing definition; this is that same information,
+    offered to plugins that have to do their own lifting.
+
+    It is the *target* name rather than the source lid on purpose.  A target
+    name carries the specialization key, so two specializations of one
+    launcher name their kernels differently; the lid is the same for both and
+    the second lift would collide. *)
+val current_decl : unit -> ML (option name)
+
+(** Set by the extraction loop as it enters and leaves a declaration, and
+    restored on the way out.  Not for plugins. *)
+val set_current_decl : option name -> ML unit
