@@ -355,7 +355,12 @@ Core previously served tactics (`core_check`) and only knew `Tot` and
   necessary. For example, `seq_seq_match p c s 0 n == seq_seq_match p c s'
   0 n'` holds if `s == s'` and `n == n'` by a lemma, while `on_domain a
   (fun _ -> False) == on_domain a p` may only be a hypothesis. Core emits the
-  disjunction of the two guards (`either_guard`).
+  disjunction of the two guards (`either_guard`). Previously Core related
+  only the arguments, treating every type constructor as injective: with
+  `natlt n = i:nat{i < n}`, `natlt i <: natlt n` gave the unprovable
+  `i == n`, and now gives `(x < i ==> x < n) \/ i == n`
+  (FStarLang/FStar#4239, `pulse/test/bug-reports/Bug4239`). Since Pulse
+  calls Core directly, this applies to Pulse in every mode.
   * The exception is an *equation* whose corresponding arguments are
     abstractions, e.g. `forevery (fun i -> p i) == forevery (fun i -> q i)`.
     There the arguments are related first, and the unfoldings only if that
