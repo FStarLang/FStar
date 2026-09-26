@@ -8,10 +8,10 @@ A top-level `let` is checked in two phases (`Tc.tc_sig_let`):
    It infers implicit arguments, universes and types, and inserts coercions.
    The result is a fully elaborated term that carries no unification
    variables.
-2. **Phase 2, checking.** Without the extension, TcTerm runs *again* on the
+2. **Phase 2, checking.** With the extension off, TcTerm runs *again* on the
    elaborated term, now producing verification conditions.
 
-Under `--ext phase2_core`, phase 2 does not re-run TcTerm. It calls
+Phase 2 does not re-run TcTerm; this is the default (see §1). It calls
 `FStarC.TypeChecker.Core` on the phase-1 elaboration instead. Core is a
 checker, not an elaborator. It does no unification and no inference of
 implicits. It is also self-contained, which makes it a small, auditable
@@ -36,17 +36,18 @@ Contents:
 
 ## 1. Enabling it
 
-The mode is taken from `--ext phase2_core=<mode>`. If that is not given, it
-comes from the environment variable `FSTAR_PHASE2_CORE`, which is convenient
-for whole builds, e.g. `FSTAR_PHASE2_CORE=strict make ci`. See
-`TcUtil.phase2_core_mode`.
+The extension is on by default, in `strict` mode. The mode is taken from
+`--ext phase2_core=<mode>`. If that is not given, it comes from the
+environment variable `FSTAR_PHASE2_CORE`, which is convenient for whole
+builds, e.g. `FSTAR_PHASE2_CORE=off make ci`. If neither is set, the mode is
+`strict`. See `TcUtil.phase2_core_mode`.
 
 | mode                   | behaviour |
 |------------------------|-----------|
-| unset, `0`, `false`, `off` | Phase 2 is TcTerm, as before. |
+| `0`, `false`, `off`    | Phase 2 is TcTerm, as before. |
 | `warn`                 | Diagnostic. Core runs. If Core fails, either structurally or because its guard cannot be proved, the failure is reported as Warning 290 (`Warning_Defensive`) and TcTerm's phase 2 runs instead. |
 | `compare`              | Diagnostic. Core runs, and then TcTerm's phase 2 always runs and its result is used. Warning 290 is reported whenever the two record different types (`lbtyp`) for a definition (see §5). Core failures are reported as in `warn` mode. |
-| anything else, e.g. `strict` | Core's result is used. See §2 for failures. |
+| unset, or anything else, e.g. `strict` | Core's result is used. See §2 for failures. |
 
 The extension is skipped for any definition checked with `admit` set
 (`--admit_smt_queries`, lax mode, and so on). It is also skipped when the
@@ -156,7 +157,7 @@ The driver is `Tc.tc_sig_let`, together with `Tc.tc_sig_let_phase2_core`.
     also abstracted over the dropped binders its type depends on, so the
     occurrence becomes `?v v0'`, in scope.
 
-  In strict and default modes, a definition whose phase-1 elaboration has
+  In `strict` mode (the default), a definition whose phase-1 elaboration has
   free names is rejected with an internal error (Error 327). There is no
   fallback to TcTerm. In `warn` and `compare` modes, it is a warning, and
   TcTerm's phase 2 is used.

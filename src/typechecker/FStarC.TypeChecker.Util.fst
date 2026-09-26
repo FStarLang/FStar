@@ -3161,8 +3161,8 @@ let phase2_core_mode () : ML string =
     match Options.Ext.get "phase2_core" with
     | "" ->
       (match BU.expand_environment_variable "FSTAR_PHASE2_CORE" with
-       | Some v -> v
-       | None -> "")
+       | Some v when v <> "" -> v
+       | _ -> "strict")
     | v -> v
   in
   match v with

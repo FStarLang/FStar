@@ -389,8 +389,8 @@ If you are writing code that constructs a `comp`, use `PC.primitive_*_lid`.
 
 The simplified effect system also makes it possible to run
 `FStarC.TypeChecker.Core`, rather than TcTerm, as phase 2 of checking a
-top-level `let`. This is enabled with `--ext phase2_core` and is described in
-[phase2_core.md](phase2_core.md).
+top-level `let`. This is the default (`--ext phase2_core=off` disables it),
+and is described in [phase2_core.md](phase2_core.md).
 
 ### 6.1 Getting a variable out of a type
 

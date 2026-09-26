@@ -261,7 +261,8 @@ val make_record_fields_in_order
 (* The mode of the [phase2_core] extension: phase 2 of checking a top-level
    [let] uses FStarC.TypeChecker.Core instead of re-running TcTerm on the
    phase-1 elaboration. Set by [--ext phase2_core[=mode]] or, failing that, by
-   the environment variable FSTAR_PHASE2_CORE. Modes: "" (off), "warn" (report
+   the environment variable FSTAR_PHASE2_CORE; if neither is set, "strict".
+   Modes: "0", "false" or "off" (off, returned as ""), "warn" (report
    Core failures as warnings and fall back to TcTerm), "compare" (as "warn",
    but also always run TcTerm's phase 2 and report when the types the two
    record for a definition differ), anything else (on, e.g. "strict"). *)
