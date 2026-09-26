@@ -32,8 +32,18 @@ val value_check_expected_typ: env -> term -> either typ comp -> guard_t -> ML (t
 val comp_check_expected_typ: env -> term -> comp -> ML (term & comp & guard_t)
 val check_expected_effect: env -> use_eq:bool -> option comp -> (term & comp) -> ML (term & comp & guard_t)
 
+(* Given the letrecs being checked (env.letrecs), the actual binders of a
+   recursive function and its expected computation type, return the types of
+   the recursive names, refined for termination checking. *)
+val guard_letrecs: env -> binders -> comp -> ML (list (lbname & typ & univ_names))
 val tc_term: env -> term -> ML (term & comp & guard_t)
 val tc_maybe_toplevel_term: env -> term -> ML (term & comp & guard_t)
+(* Finish checking a top-level non-recursive [let lb = e1 in e2], given its
+   definition [e1] checked at [c1] with guard [g1] (opened over universes
+   [univ_vars]), its annotated type [topt] if any, and whether that annotation
+   still describes [c1]. Returns the [Tm_let] with the top-level effect of [e1],
+   if any, handled. *)
+val finish_top_level_let: env -> letbinding -> term -> univ_names -> comp -> guard_t -> option typ -> bool -> term -> Range.t -> ML term
 val tc_tactic : typ -> typ -> env -> term -> ML (term & comp & guard_t)
 val tc_constant: env -> FStarC.Range.t -> sconst -> ML typ
 val tc_comp: env -> comp -> ML (comp & universe & guard_t)

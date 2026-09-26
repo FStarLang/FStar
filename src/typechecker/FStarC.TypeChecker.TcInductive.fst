@@ -1152,11 +1152,14 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
     let arg_exp = S.bv_to_name arg_binder.binder_bv in
     let binders = imp_binders@[arg_binder] in
     let arg = U.arg_of_non_null_binder arg_binder in
+    let imp_args = List.map U.arg_of_non_null_binder imp_binders in
 
+    (* A field's type may mention earlier fields: they are the projections of
+       the projectee, applied (like the projectors below) to the parameters. *)
     let subst = fields |> List.mapi (fun i ({binder_bv=a}) ->
             let field_name = U.mk_field_projector_name lid a i in
             let field_proj_tm = mk_Tm_uinst (S.fv_to_tm (S.lid_as_fv field_name None)) inst_univs in
-            let proj = mk_Tm_app field_proj_tm [arg] p in
+            let proj = mk_Tm_app field_proj_tm (imp_args@[arg]) p in
             NT(a, proj))
     in
 

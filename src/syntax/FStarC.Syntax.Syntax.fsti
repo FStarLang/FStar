@@ -340,6 +340,7 @@ and meta_source_info =
   | Masked_effect
   | Meta_smt_pat
   | Machine_integer of signedness & width
+  | Tactic_synthesized                          (* [e <: t], where a tactic synthesized [e] at type [t] (see [TcTerm.tc_synth]) *)
 and fv_qual =
   | Data_ctor
   | Record_projector of (lident & ident)        (* the fully qualified (unmangled) name of the data constructor and the field being projected *)

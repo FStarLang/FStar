@@ -685,6 +685,11 @@ let catch_errors_and_ignore_rest (f:unit -> ML 'a) : ML (list issue & option 'a)
   in the editor. *)
   errs, r
 
+let catch_all_issues (f : unit -> ML 'a) : ML (list issue & list issue & option 'a) =
+  let errs, rest, r = catch_errors_aux f in
+  (* The catch handler reports the most recent issue first. *)
+  List.rev errs, List.rev rest, r
+
 (* Finds a discrepancy between two multisets of ints. Result is (elem, amount1, amount2)
  * eg. find_multiset_discrepancy [1;1;3;5] [1;1;3;3;4;5] = Some (3, 1, 2)
  *     since 3 appears 1 time in l1, but 2 times in l2. *)

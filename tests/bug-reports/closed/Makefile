@@ -43,3 +43,8 @@ RUN += Bug1714.fst
 
 FSTAR_ROOT ?= ../../..
 include $(FSTAR_ROOT)/mk/test.mk
+
+# The expected output prints the unique ids of names, which depend on how
+# many fresh names were created before, and so on whether phase 2 is TcTerm
+# or Core (--ext phase2_core). See doc/ref/phase2_core.md.
+$(OUTPUT_DIR)/Bug4274.fst.output: OTHERFLAGS+=--ext phase2_core=off

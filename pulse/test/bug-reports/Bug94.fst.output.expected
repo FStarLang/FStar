@@ -1,20 +1,23 @@
 * Info at Bug94.fst(9,16-9,18):
   - Expected failure:
   - Ill-typed term
-  - Assertion failed
+  - Subtyping check failed
+  - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
   - In context: uu___0: Prims.unit
-  - Also see: Prims.fst(477,18-477,24)
+  - See also Bug94.fst(8,1-10,4)
 
 * Info at Bug94.fst(16,16-16,17):
   - Expected failure:
   - Expected expression of type Prims.nat got expression y of type Prims.string
 
-* Info at Bug94.fst(30,18-30,27):
+* Info at Bug94.fst(30,26-30,27):
   - Expected failure:
   - Ill-typed term
-  - Assertion failed
+  - Subtyping check failed
+  - Expected type b: FStar.Ghost.erased Prims.int {b <> 0}
+    got type FStar.Ghost.erased Prims.int
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
   - In context:
@@ -24,4 +27,5 @@
           -> Prims.GTot (FStar.Ghost.erased Prims.int)
       hundred == Bug94.divide 100
       __: Prims.unit
+  - See also Bug94.fst(30,18-30,27)
 

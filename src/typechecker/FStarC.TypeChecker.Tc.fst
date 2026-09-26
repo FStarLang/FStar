@@ -50,6 +50,8 @@ module TcEff = FStarC.TypeChecker.TcEffect
 module PC = FStarC.Parser.Const
 module EMB = FStarC.Syntax.Embeddings
 module Print = FStarC.Syntax.Print
+module Core = FStarC.TypeChecker.Core
+
 
 let dbg_TwoPhases = Debug.get_toggle "TwoPhases"
 let dbg_IdInfoOn  = Debug.get_toggle "IdInfoOn"
@@ -352,7 +354,157 @@ let check_quals_eq (r:Range.t) (l:lident) (qopt : list qualifier) (val_q : list 
           else empty;
         ]
 
+let strip_tactic_synthesized (e:term) : ML term =
+  e |> FStarC.Syntax.Visit.visit_term false (fun t ->
+    match t.n with
+    | Tm_meta {tm; meta=Meta_desugared Tactic_synthesized} ->
+      (match (SS.compress tm).n with
+       | Tm_ascribed {tm} -> tm
+       | _ -> tm)
+    | _ -> t)
+
 (* The type checking rule for Sig_let (lbs, lids) *)
+(* Phase 2 of checking a top-level let-binding with FStarC.TypeChecker.Core
+   (see [TcUtil.phase2_core_enabled]), rather than by re-running TcTerm on its
+   phase-1 elaboration [e]. Core does no inference: it only checks [e], and its
+   guard is discharged here. Returns the checked term, or Core's error. *)
+let tc_sig_let_phase2_core (env:Env.env) (p1typ:option typ) (e:term)
+  : ML (either term Core.error)
+  = (* TcTerm discharges the guard of the body of a top-level function with
+       the function's binders in the environment (see [TcTerm.tc_abs]). Core's
+       guard quantifies over them instead. Its leading quantifiers are opened
+       into the environment, so that the goal, the context shown when it
+       fails, and what tactics handling it (e.g. with [handle_smt_goals]) see
+       are as with TcTerm. Quantifiers further in, e.g. over the thunks of a
+       [calc], are kept, as by TcTerm. *)
+    let rec open_foralls (drop:bv -> typ -> ML bool) (env:Env.env) (g:typ) : ML (Env.env & typ) =
+      let hd, args = U.head_and_args_full g in
+      match (U.un_uinst hd).n, args with
+      | Tm_fvar fv, [_; (f, _)] when S.fv_eq_lid fv PC.forall_lid ->
+        begin match (SS.compress f).n with
+        | Tm_abs {b; body} ->
+          let bs, body = SS.open_term [b] body in
+          let env = if drop (List.hd bs).binder_bv body then env else Env.push_binders env bs in
+          open_foralls drop env body
+        | _ -> env, g
+        end
+      | _ -> env, g
+    in
+    (* TcTerm simplifies guards as it builds them (without full
+       normalization, see [TcUtil]); do the same for Core's guard before
+       it is discharged. This matters for normalization requests, e.g.
+       [norm [nbe; primops] ("a" ^ "b") == "ab"]: the simplifier reduces
+       the primitive application in the argument first, whereas
+       processing the request directly with only [primops] does not
+       unfold [(^)]. *)
+    (* TcTerm discharges the guard of a function body when checking the
+       abstraction; that of any other definition later, in
+       [TcUtil.check_top_level]: errors are reported in the same context. *)
+    let discharge (drop:bv -> typ -> ML bool) (finish:Env.env -> ML Env.env)
+                  (abs_body:option term) (env:Env.env) (g:option Core.guard_and_tok_t) : ML unit =
+      match g with
+      | None -> ()
+      | Some (g, tok) ->
+        let go () =
+          (* E.g. goals produced by tactics are located at the range of the
+             environment: that of the body of a function, as with TcTerm. *)
+          let env = match abs_body with
+                    | Some body -> Env.set_range env body.pos
+                    | None -> env in
+          let env, g = open_foralls drop env g in
+          let env = finish env in
+          if !dbg_TwoPhases then Format.print2 "phase2 core: discharging %s (at %s)\n" (show g) (Range.string_of_range g.pos);
+          Rel.force_trivial_guard env
+            (Rel.simplify_guard env (Env.guard_of_guard_formula (NonTrivial g)))
+        in
+        if Some? abs_body then go ()
+        else Errors.with_ctx "While checking for top-level effects" go;
+        Core.commit_guard tok
+    in
+    match (SS.compress e).n with
+    | Tm_let {lbs=(false, [lb]); body=e2} ->
+      let usubst, univ_names = SS.univ_var_opening lb.lbunivs in
+      let lbdef = SS.subst usubst lb.lbdef in
+      let lbtyp = SS.subst usubst lb.lbtyp in
+      let env_u = Env.push_univ_vars env univ_names in
+      let topt = if Tm_unknown? (SS.compress lbtyp).n then None else Some lbtyp in
+      let user_topt = topt in
+      (* Core does no inference: an unannotated definition is checked against
+         the type phase 1 inferred for it, which is the type TcTerm's phase 2
+         would infer again, and record, and so the one clients of the module
+         expect (up to the unfolding of abbreviations, the refinements that
+         carry postconditions of lemma calls, etc.). *)
+      let check_t, topt =
+        match topt, p1typ with
+        | None, Some t when not (Options.Ext.enabled "phase2_core_infer") -> false, Some (SS.subst usubst t)
+        | _ -> true, topt
+      in
+      if !dbg_TwoPhases then Format.print1 "phase2 core: expected type %s\n" (show topt);
+      begin match Core.compute_term_comp env_u lbdef topt check_t with
+      | Inl (c, g) ->
+        (* An inferred type is recorded as TcTerm would record it: TcTerm
+           normalizes the computation type of every function body it checks
+           (see [TcTerm.check_expected_effect]), unfolding [unfold]
+           abbreviations like [U32.( + )]. Clients rely on it: unification
+           compares the heads of indices, e.g. [raw a (U32.add l1 l2)]. *)
+        let c =
+          if Some? topt then c (* phase 1's type is already normalized *)
+          else
+            let norm_c env = N.normalize_comp [Env.Beta; Env.Eager_unfolding; Env.NoFullNorm; Env.Exclude Env.Zeta] env in
+            (* Only the result of a function is normalized; its binders are
+               recorded as written. *)
+            (* [e] is only inspected for the length of its spine of
+               abstractions, so it need not be opened. *)
+            let rec aux (env:Env.env) (e:term) (c:comp) : ML comp =
+              match (SS.compress e).n, (SS.compress (U.comp_result c)).n with
+              | Tm_abs {body}, Tm_arrow {b; comp} when U.is_total_comp c ->
+                let t = U.comp_result c in
+                let bs, comp = SS.open_comp [b] comp in
+                let comp = aux (Env.push_binders env bs) body comp in
+                S.mk_Total (S.mk (Tm_arrow {b=List.hd (SS.close_binders bs); comp=SS.close_comp bs comp}) t.pos)
+              | _ -> norm_c env c
+            in
+            aux env_u lbdef c
+        in
+        let abs_body =
+          match (SS.compress (U.unascribe lbdef)).n with
+          | Tm_abs {body} -> Some body
+          | _ -> None
+        in
+        discharge (fun _ _ -> false) (fun env -> env) abs_body env_u g;
+        let e = finish_top_level_let env lb lbdef univ_names c Env.trivial_guard user_topt (Some? user_topt) e2 e.pos in
+        Inl e
+      | Inr err -> Inr err
+      end
+
+    | Tm_let {lbs=(true, lbs); body=e2} ->
+      let lbs', _ = SS.open_let_rec lbs e2 in
+      let univ_names = (List.hd lbs').lbunivs in
+      let env_u = Env.push_univ_vars env univ_names in
+      begin match Core.check_top_level_letrec env_u lbs' with
+      | Inl g ->
+        (* The guard mentions the names of the nest (see
+           [Core.check_top_level_letrec]), bound here, after the binders of
+           the function, as by TcTerm: so these are not shown as the context
+           of a failed goal. The quantifiers over the local names of the
+           nest, which the guard no longer mentions, are dropped. *)
+        let is_nest_name (x:bv) (body:typ) : ML bool =
+          not (FStarC.Syntax.Free.names body |> mem x)
+          && lbs' |> List.existsb (fun (lb:letbinding) ->
+               match lb.lbname with
+               | Inr fv -> Ident.string_of_id (Ident.ident_of_lid fv.fv_name) = Ident.string_of_id x.ppname
+               | Inl y -> Ident.string_of_id y.ppname = Ident.string_of_id x.ppname)
+        in
+        let push_nest env =
+          List.fold_left (fun env (lb:letbinding) ->
+            Env.push_let_binding env lb.lbname (lb.lbunivs, lb.lbtyp)) env lbs' in
+        let _, body, _ = U.abs_formals (List.hd lbs').lbdef in
+        discharge is_nest_name push_nest (Some body) env_u g; Inl e
+      | Inr err -> Inr err
+      end
+
+    | _ -> failwith "tc_sig_let_phase2_core: not a let"
+
 let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
     let env0 = env in
     let env = Env.set_range env r in
@@ -456,7 +608,10 @@ let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
 
     (* 3. Type-check the Tm_let and convert it back to Sig_let *)
     let env' = { env with top_level = true; generalize = should_generalize } in
-    let e =
+    let e_src = e in
+    let phase1_lbtyp : ref (option typ) = mk_ref None in
+    let phase1 () : ML term =
+      let e = e_src in
       if do_two_phases env' then run_phase1 (fun _ ->
         let drop_lbtyp (e_lax:term) : ML term =
           match (SS.compress e_lax).n with
@@ -469,6 +624,7 @@ let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
                  | _ -> false)
               | _                       -> failwith "Impossible: first phase lb and second phase lb differ in structure!"
             in
+            if lb_unannotated then phase1_lbtyp := Some lb.lbtyp;
             if lb_unannotated then { e_lax with n = Tm_let {lbs=(false, [ { lb with lbtyp = S.tun } ]);
                                                             body=e2}}  //erase the type annotation
             else e_lax
@@ -481,7 +637,26 @@ let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
         in
         let e =
           Profiling.profile (fun () ->
-              let (e, _, _) = tc_maybe_toplevel_term ({ env' with phase1 = true; admit = true }) e in
+              let tc (e:term) () = tc_maybe_toplevel_term ({ env' with phase1 = true; admit = true }) e in
+              let (e, _, _) =
+                if TcUtil.phase2_core_enabled () && not env'.admit
+                then (
+                  (* Under [phase2_core], phase 1 runs the synthesis. A goal
+                     may mention unification variables that are only solved
+                     after the tactic would have run (e.g. the implicits of
+                     [f h (_ by tac)] when [h]'s subtyping is deferred). So we
+                     first elaborate without synthesis, and then synthesize
+                     over that elaboration, where the goals are fully
+                     resolved, as they are in TcTerm's phase 2. *)
+                  if mem PC.synth_lid (Free.fvars e)
+                  then
+                    let (e1, _, _) = tc e () in
+                    let e1 = N.remove_uvar_solutions env' e1 |> drop_lbtyp in
+                    TcUtil.with_synth_in_phase1 (tc e1)
+                  else TcUtil.with_synth_in_phase1 (tc e)
+                )
+                else tc e ()
+              in
               e)
               (Some (Ident.string_of_lid (Env.current_module env)))
               "FStarC.TypeChecker.Tc.tc_sig_let-tc-phase1"
@@ -497,6 +672,7 @@ let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
         e)
       else e
     in
+    let e = phase1 () in
 
     let env' =
         match (SS.compress e).n with
@@ -510,9 +686,114 @@ let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
     let r =
         //We already generalized phase1; don't need to generalize again
       let should_generalize = not (do_two_phases env') in
-      Profiling.profile (fun () -> tc_maybe_toplevel_term { env' with generalize = should_generalize } e)
-                        (Some (Ident.string_of_lid (Env.current_module env)))
-                        "FStarC.TypeChecker.Tc.tc_sig_let-tc-phase2"
+      let phase2_tcterm_on e =
+        Profiling.profile (fun () -> tc_maybe_toplevel_term { env' with generalize = should_generalize } e)
+                          (Some (Ident.string_of_lid (Env.current_module env)))
+                          "FStarC.TypeChecker.Tc.tc_sig_let-tc-phase2"
+      in
+      let phase2_tcterm () = phase2_tcterm_on e in
+      (* TcTerm's phase 2, when Core's has failed: on the elaboration phase 1
+         produces for it, which differs from Core's (see the inner let case of
+         [TcTerm.tc_maybe_toplevel_term]). *)
+      let fallback_tcterm () =
+        TcUtil.without_phase2_core (fun () -> phase2_tcterm_on (phase1 ()))
+      in
+      (* Phase 1's elaboration of a closed definition must be closed: Core
+         checks it as is. A free name in it is a bug in elaboration (see
+         doc/ref/phase2_core.md, "Ill-scoped phase-1 terms"); it is reported
+         as such, except in the diagnostic modes, where TcTerm's phase 2,
+         which re-elaborates the definition, is used instead. *)
+      let phase1_free_names () = FStarC.Syntax.Free.names e in
+      if do_two_phases env' && TcUtil.phase2_core_enabled () && not env'.admit
+         && Cons? (elems (phase1_free_names ()))
+      then (
+        let msg = [
+          Errors.Msg.text "Internal error: phase 1's elaboration of this definition has free names:";
+          Errors.Msg.text (show (phase1_free_names ()))
+        ] in
+        let mode = TcUtil.phase2_core_mode () in
+        if mode = "warn" || mode = "compare"
+        then (
+          Errors.log_issue env' Errors.Warning_Defensive msg;
+          fallback_tcterm ()
+        )
+        else raise_error (Env.get_range env') Errors.Error_IllScopedTerm msg
+      )
+      else if do_two_phases env' && TcUtil.phase2_core_enabled () && not env'.admit
+      then (
+        let run_core () =
+          let r =
+            Profiling.profile (fun () -> tc_sig_let_phase2_core env' !phase1_lbtyp e)
+                              (Some (Ident.string_of_lid (Env.current_module env)))
+                              "FStarC.TypeChecker.Tc.tc_sig_let-core-phase2"
+          in
+          (* The [Tactic_synthesized] markers only tell Core what to trust.
+             The definition is recorded as TcTerm records it, with the
+             tactics' results in place, e.g. for [def_of]. *)
+          match r with
+          | Inl e when mem PC.synth_lid (Free.fvars e_src) -> Inl (strip_tactic_synthesized e)
+          | _ -> r
+        in
+        let core_failed (err:Core.error) : ML Errors.error_message = [
+          Errors.Msg.text "Core failed to check this definition.";
+          Errors.Msg.text (Core.print_error err)
+        ] in
+        let mode = TcUtil.phase2_core_mode () in
+        if mode = "warn" || mode = "compare"
+        then (
+          (* Diagnostic modes: any failure of the Core path, including its
+             guard being unprovable, is reported as a warning, and TcTerm's
+             phase 2 is used instead. In "compare" mode, TcTerm's phase 2 is
+             always run, and the types the two record for the definition
+             (which is what clients of the module see) are compared. *)
+          let issues, res = Errors.catch_errors (fun () -> TcUtil.as_phase2_core_attempt run_core) in
+          let errs = List.filter (fun (i:Errors.issue) -> Errors.EError? i.issue_level) issues in
+          match errs, res with
+          | [], Some (Inl e) when mode = "warn" -> e, S.mk_Total S.t_unit, Env.trivial_guard
+          | [], Some (Inl e_core) ->
+            let r = fallback_tcterm () in
+            let e_tc, _, _ = r in
+            (match (SS.compress e_core).n, (SS.compress e_tc).n with
+             | Tm_let {lbs=(_, lbs_core)}, Tm_let {lbs=(_, lbs_tc)}
+                 when List.length lbs_core = List.length lbs_tc ->
+               List.iter2 (fun (l1:letbinding) (l2:letbinding) ->
+                 let usubst, _ = SS.univ_var_opening l1.lbunivs in
+                 let t1 = SS.subst usubst l1.lbtyp in
+                 let t2 = SS.subst usubst l2.lbtyp in
+                 if List.length l1.lbunivs <> List.length l2.lbunivs
+                    || not (U.term_eq t1 t2) then
+                   Errors.log_issue env' Errors.Warning_Defensive [
+                     Errors.Msg.text "Core and TcTerm record different types for this definition:";
+                     Errors.Msg.text ("Core:   " ^ show t1);
+                     Errors.Msg.text ("TcTerm: " ^ show t2)
+                   ]) lbs_core lbs_tc
+             | _ -> ());
+            r
+          | _ ->
+            let msg =
+              match res with
+              | Some (Inr err) -> core_failed err
+              | _ ->
+                Errors.Msg.text "Core's guard for this definition could not be discharged:"
+                :: List.map (fun i -> Errors.Msg.text (Errors.format_issue i)) errs
+            in
+            Errors.log_issue env' Errors.Warning_Defensive msg;
+            fallback_tcterm ()
+        )
+        else
+        (* Core decides whether the definition is accepted, and reports why
+           when it is not: an unprovable guard is reported by the SMT solver,
+           with the labels Core put on it, and a structural failure with
+           Core's error. TcTerm's phase 2 is not run. *)
+        match run_core () with
+        | Inl e -> e, S.mk_Total S.t_unit, Env.trivial_guard
+        | Inr err ->
+          let r = match Core.error_range err with Some r -> r | None -> Env.get_range env' in
+          match Core.error_code err with
+          | Some code -> raise_error r code (Core.error_message err)
+          | None -> raise_error r Errors.Error_TypeError (core_failed err)
+      )
+      else phase2_tcterm ()
     in
     let se, lbs = match r with
       | {n=Tm_let {lbs; body=e}}, _, g when Env.is_trivial g ->
