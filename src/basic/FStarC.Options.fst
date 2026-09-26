@@ -2047,6 +2047,100 @@ let rec parse_filename_arg specs enable_filenames arg : ML parse_cmdline_res =
 so we can reset back to it. *)
 let parsed_args_state : ref (option history1) = mk_ref None
 
+(* Section 13.6.  [--codegen Plugin] is a Custard extraction.
+
+   A plugin is OCaml that is dynlinked into this very compiler, so it has to
+   agree with the compiler's own extraction about every name and every data
+   layout it shares.  A Custard-extracted compiler makes those decisions for
+   the program it compiled, and records them in its unit interface; an
+   independently ML-extracted plugin would make different ones and the two
+   would disagree silently.  So the plugin is compiled as a Custard unit
+   linked against [fstarc.cui]: a definition the compiler already emitted is
+   called, and anything else -- a library module the compiler never reached,
+   for instance -- is compiled into the plugin itself, on demand.  That is the
+   whole point of the unit mechanism (section 13), and it is why the compiler
+   no longer has to carry the entire library's plugin flavour just in case.
+
+   The plugin's own modules are the roots, twice over: as [--custard_entry],
+   which is what makes their [@@plugin] definitions get registrations
+   (section 13.3), and as [--custard_entry_module], which emits the rest of
+   what they define -- matching what the ML backend's [--codegen Plugin]
+   produced, since a hand-written fixup or another plugin may call any of it.
+
+   The unit is named after the first file, in the mangled spelling the ML
+   backend used for its output file, so that a Makefile saying [-o Foo.cmxs
+   Foo.ml] keeps working.  A user who passes [--custard_unit] is taken at
+   their word.
+
+   Without an installed [fstarc.cui] -- a compiler that was not extracted by
+   Custard -- there is nothing to link against and the plugin is compiled
+   whole.  It will not load into such a compiler, but that is a property of
+   the compiler, not something to fail here: [--codegen Plugin --dep] and the
+   like still have to work. *)
+let desugar_plugin_codegen () : ML unit =
+  if get_codegen () = Some "Plugin" then begin
+    let module_name_of_file (f:string) : ML string =
+      let drop (suffix:string) (s:string) : ML string =
+        if ends_with s suffix
+        then substring s 0 (String.length s - String.length suffix)
+        else s
+      in
+      (* A checked file is as good a command-line argument as a source file,
+         and [tests/semiring] and [tests/tactics] both pass one: the extraction
+         step has the checking step's output in hand and says so.  Stripping
+         only the source extension left the module called
+         [CanonCommSemiring.fst.checked]. *)
+      Filepath.basename f |> drop ".checked" |> drop ".fsti" |> drop ".fst"
+    in
+    let mods = !file_list_ |> List.map module_name_of_file in
+    set_option' ("codegen", String "Custard");
+    if None? (get_custard_unit ()) then
+      (match mods with
+       | m :: _ -> set_option' ("custard_unit", String (Util.replace_chars m '.' "_"))
+       | [] -> ());
+    let add k xs =
+      set_option' (k, List (as_list' (get_option k) @ List.map String xs))
+    in
+    add "custard_entry" mods;
+    add "custard_entry_module" mods;
+    (match Find.locate_fstarc_cui () with
+     | Some cui -> add "custard_link" [cui]
+     | None -> ());
+    (* Generating a registration reaches the compiler's own modules -- the
+       interpretation functions the normalizer calls, and the embeddings the
+       plugin's argument types need -- so they have to be in this invocation's
+       dependency graph, which is what --with_fstarc does.  Pulse's build says
+       the same thing by hand (pulse/mk/checker.mk).
+
+       --with_fstarc also puts the compiler's *prelude* on the path, and its
+       bundle hashes are not the ones the plugin's own checked file was
+       written against.  The library's checked files therefore go last, where
+       they win, and --already_cached says that the rest of the graph is to be
+       taken from its checked files rather than rechecked against a prelude it
+       does not match.  The module on the command line is exempt from
+       --already_cached by construction (see should_be_already_cached), so a
+       plugin whose source changed is still the thing that gets extracted. *)
+    Find.set_with_fstarc true;
+    (match Find.lib_root () with
+     | Some lib ->
+       let checked = lib ^ "/ulib.checked" in
+       if Filepath.file_exists checked then
+         Find.set_include_path (Find.get_include_path () @ [checked])
+     | None -> ());
+    (* [parse_settings] reverses, so the *last* entry is consulted first: the
+       catch-all goes in front, where a caller's own --already_cached still
+       overrides it.  It cannot be conditional on the caller not having one --
+       [mk/test.mk] passes [--already_cached Prims,FStar], and without the
+       catch-all the compiler's own modules are rechecked against a prelude
+       they do not match. *)
+    let cached =
+      match get_already_cached () with
+      | None -> []
+      | Some xs -> xs
+    in
+    set_option' ("already_cached", List (String "*" :: List.map String cached))
+  end
+
 let parse_cmd_line () =
   let res = Getopt.parse_cmdline all_specs_getopt (parse_filename_arg all_specs_getopt true) in
   let res =
@@ -2065,6 +2159,7 @@ let parse_cmd_line () =
     Find.set_file_list !file_list_;
     ()
   in
+  let () = desugar_plugin_codegen () in
   parsed_args_state := Some (snapshot_all ());
   res, !file_list_
 

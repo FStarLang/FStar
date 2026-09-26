@@ -1,920 +1,318 @@
-open Prims
-let cur_goal (uu___1 : unit) (uu___ : FStarC_Tactics_Types.ref_proofstate) :
-  FStarC_Reflection_Types.typ=
-  (fun uu___ ps ->
-     let x =
-       let x1 = FStarC_Tactics_V2_Builtins.get () ps in
-       FStarC_Tactics_Types.goals_of x1 in
-     match x with
-     | g::uu___1 -> Obj.magic (Obj.repr (FStarC_Tactics_Types.goal_type g))
-     | uu___1 ->
-         Obj.magic
-           (Obj.repr
-              (FStarC_Tactics_V2_Builtins.raise_core
-                 (FStarC_Tactics_Common.TacticFailure
-                    ([FStar_Pprint.arbitrary_string "no more goals"],
-                      FStar_Pervasives_Native.None)) ps))) uu___1 uu___
-let cur_formula (uu___ : unit) (ps : FStarC_Tactics_Types.ref_proofstate) :
-  FStar_Reflection_V2_Formula.formula=
-  let x = cur_goal () ps in FStar_Reflection_V2_Formula.term_as_formula x ps
-let term_eq :
-  FStarC_Reflection_Types.term -> FStarC_Reflection_Types.term -> Prims.bool=
-  FStar_Reflection_TermEq_Simple.term_eq
-let l_revert (uu___ : unit) (ps : FStarC_Tactics_Types.ref_proofstate) :
-  unit=
-  FStarC_Tactics_V2_Builtins.revert () ps;
-  FStar_Tactics_V2_Derived.apply
-    (FStarC_Reflection_V2_Builtins.pack_ln
-       (FStarC_Reflection_V2_Data.Tv_FVar
-          (FStarC_Reflection_V2_Builtins.pack_fv
-             ["FStar"; "Tactics"; "Logic"; "Lemmas"; "revert_squash"]))) ps
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.l_revert"
-    (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.l_revert (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 l_revert)
-               FStarC_Syntax_Embeddings.e_unit
-               FStarC_Syntax_Embeddings.e_unit psc ncb us args)
-let rec l_revert_all (bs : FStar_Tactics_NamedView.binding Prims.list) :
-  FStarC_Tactics_Types.ref_proofstate -> unit=
-  match bs with
-  | [] -> (fun uu___ -> ())
-  | uu___::tl -> (fun ps -> l_revert () ps; l_revert_all tl ps)
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.l_revert_all"
-    (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.l_revert_all (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 l_revert_all)
-               (FStarC_Syntax_Embeddings.e_list
-                  FStarC_Reflection_V2_Embeddings.e_binding)
-               FStarC_Syntax_Embeddings.e_unit psc ncb us args)
-let forall_intro (uu___ : unit) (ps : FStarC_Tactics_Types.ref_proofstate) :
-  FStar_Tactics_NamedView.binding=
-  FStar_Tactics_V2_Derived.apply_lemma
-    (FStarC_Reflection_V2_Builtins.pack_ln
-       (FStarC_Reflection_V2_Data.Tv_FVar
-          (FStarC_Reflection_V2_Builtins.pack_fv
-             ["FStar"; "Tactics"; "Logic"; "Lemmas"; "fa_intro_lem"]))) ps;
-  FStarC_Tactics_V2_Builtins.intro () ps
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.forall_intro"
-    (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.forall_intro (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 forall_intro)
-               FStarC_Syntax_Embeddings.e_unit
-               FStarC_Reflection_V2_Embeddings.e_binding psc ncb us args)
-let forall_intro_as (s : Prims.string)
-  (ps : FStarC_Tactics_Types.ref_proofstate) :
-  FStar_Tactics_NamedView.binding=
-  FStar_Tactics_V2_Derived.apply_lemma
-    (FStarC_Reflection_V2_Builtins.pack_ln
-       (FStarC_Reflection_V2_Data.Tv_FVar
-          (FStarC_Reflection_V2_Builtins.pack_fv
-             ["FStar"; "Tactics"; "Logic"; "Lemmas"; "fa_intro_lem"]))) ps;
-  FStar_Tactics_V2_Derived.intro_as s ps
-let _ =
-  FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.forall_intro_as" (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.forall_intro_as (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 forall_intro_as)
-               FStarC_Syntax_Embeddings.e_string
-               FStarC_Reflection_V2_Embeddings.e_binding psc ncb us args)
-let forall_intros (uu___ : unit) :
-  FStarC_Tactics_Types.ref_proofstate ->
-    FStar_Tactics_NamedView.binding Prims.list=
-  FStar_Tactics_V2_Derived.repeat1 forall_intro
-let _ =
-  FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.forall_intros" (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.forall_intros (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 forall_intros)
-               FStarC_Syntax_Embeddings.e_unit
-               (FStarC_Syntax_Embeddings.e_list
-                  FStarC_Reflection_V2_Embeddings.e_binding) psc ncb us args)
-let split (uu___ : unit) : FStarC_Tactics_Types.ref_proofstate -> unit=
-  FStar_Tactics_V2_Derived.try_with
-    (fun uu___1 ->
-       match () with
-       | () ->
-           FStar_Tactics_V2_Derived.apply_lemma
-             (FStarC_Reflection_V2_Builtins.pack_ln
-                (FStarC_Reflection_V2_Data.Tv_FVar
-                   (FStarC_Reflection_V2_Builtins.pack_fv
-                      ["FStar"; "Tactics"; "Logic"; "Lemmas"; "split_lem"]))))
-    (fun uu___1 -> FStar_Tactics_V2_Derived.fail "Could not split goal")
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.split"
-    (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.split (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 split)
-               FStarC_Syntax_Embeddings.e_unit
-               FStarC_Syntax_Embeddings.e_unit psc ncb us args)
-let implies_intro (uu___ : unit) (ps : FStarC_Tactics_Types.ref_proofstate) :
-  FStar_Tactics_NamedView.binding=
-  FStar_Tactics_V2_Derived.apply_lemma
-    (FStarC_Reflection_V2_Builtins.pack_ln
-       (FStarC_Reflection_V2_Data.Tv_FVar
-          (FStarC_Reflection_V2_Builtins.pack_fv
-             ["FStar"; "Tactics"; "Logic"; "Lemmas"; "imp_intro_lem"]))) ps;
-  FStarC_Tactics_V2_Builtins.intro () ps
-let _ =
-  FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.implies_intro" (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.implies_intro (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 implies_intro)
-               FStarC_Syntax_Embeddings.e_unit
-               FStarC_Reflection_V2_Embeddings.e_binding psc ncb us args)
-let implies_intro_as (s : Prims.string)
-  (ps : FStarC_Tactics_Types.ref_proofstate) :
-  FStar_Tactics_NamedView.binding=
-  FStar_Tactics_V2_Derived.apply_lemma
-    (FStarC_Reflection_V2_Builtins.pack_ln
-       (FStarC_Reflection_V2_Data.Tv_FVar
-          (FStarC_Reflection_V2_Builtins.pack_fv
-             ["FStar"; "Tactics"; "Logic"; "Lemmas"; "imp_intro_lem"]))) ps;
-  FStar_Tactics_V2_Derived.intro_as s ps
-let _ =
-  FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.implies_intro_as" (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.implies_intro_as (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 implies_intro_as)
-               FStarC_Syntax_Embeddings.e_string
-               FStarC_Reflection_V2_Embeddings.e_binding psc ncb us args)
-let implies_intros (uu___ : unit) :
-  FStarC_Tactics_Types.ref_proofstate ->
-    FStar_Tactics_NamedView.binding Prims.list=
-  FStar_Tactics_V2_Derived.repeat1 implies_intro
-let _ =
-  FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.implies_intros" (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.implies_intros (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 implies_intros)
-               FStarC_Syntax_Embeddings.e_unit
-               (FStarC_Syntax_Embeddings.e_list
-                  FStarC_Reflection_V2_Embeddings.e_binding) psc ncb us args)
-let l_intro (uu___ : unit) :
-  FStarC_Tactics_Types.ref_proofstate -> FStar_Tactics_NamedView.binding=
-  FStar_Tactics_V2_Derived.or_else forall_intro implies_intro
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.l_intro"
-    (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.l_intro (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 l_intro)
-               FStarC_Syntax_Embeddings.e_unit
-               FStarC_Reflection_V2_Embeddings.e_binding psc ncb us args)
-let l_intros (uu___ : unit) :
-  FStarC_Tactics_Types.ref_proofstate ->
-    FStar_Tactics_NamedView.binding Prims.list=
-  FStar_Tactics_V2_Derived.repeat l_intro
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.l_intros"
-    (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.l_intros (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 l_intros)
-               FStarC_Syntax_Embeddings.e_unit
-               (FStarC_Syntax_Embeddings.e_list
-                  FStarC_Reflection_V2_Embeddings.e_binding) psc ncb us args)
-let l_exact (t : FStar_Tactics_NamedView.term) :
-  FStarC_Tactics_Types.ref_proofstate -> unit=
-  FStar_Tactics_V2_Derived.exact t
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.l_exact"
-    (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.l_exact (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 l_exact)
-               FStarC_Reflection_V2_Embeddings.e_term
-               FStarC_Syntax_Embeddings.e_unit psc ncb us args)
-let hyp (x : FStar_Tactics_NamedView.namedv) :
-  FStarC_Tactics_Types.ref_proofstate -> unit=
-  l_exact (FStar_Tactics_V2_SyntaxCoercions.namedv_to_term x)
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.hyp"
-    (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.hyp (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 hyp)
-               FStarC_Reflection_V2_Embeddings.e_namedv_view
-               FStarC_Syntax_Embeddings.e_unit psc ncb us args)
-let pose_lemma (t : FStar_Tactics_NamedView.term)
-  (ps : FStarC_Tactics_Types.ref_proofstate) :
-  FStar_Tactics_NamedView.binding=
-  let x =
-    let x1 = FStar_Tactics_V2_Derived.cur_env () ps in
-    FStar_Tactics_NamedView.tcc x1 t ps in
-  let x1 =
-    match x with
-    | FStarC_Reflection_V2_Data.C_Lemma (pre, post, uu___) -> (pre, post)
-    | FStarC_Reflection_V2_Data.C_Eff (uu___, uu___1, res, pre, post, uu___2)
-        ->
-        (if
-           Prims.not
-             (term_eq res
-                (FStarC_Reflection_V2_Builtins.pack_ln
-                   (FStarC_Reflection_V2_Data.Tv_FVar
-                      (FStarC_Reflection_V2_Builtins.pack_fv
-                         ["Prims"; "unit"]))))
-         then FStar_Tactics_V2_Derived.fail "" ps
-         else ();
-         (pre, post))
-    | uu___ -> FStar_Tactics_V2_Derived.fail "" ps in
-  match x1 with
-  | (pre, post) ->
-      let x2 =
-        FStarC_Reflection_V2_Builtins.pack_ln
-          (FStarC_Reflection_V2_Data.Tv_App
-             (post,
-               ((FStarC_Reflection_V2_Builtins.pack_ln
-                   (FStarC_Reflection_V2_Data.Tv_Const
-                      FStarC_Reflection_V2_Data.C_Unit)),
-                 FStarC_Reflection_V2_Data.Q_Explicit))) in
-      let x3 = FStar_Tactics_V2_Derived.norm_term [] x2 ps in
-      let x4 = FStar_Reflection_V2_Formula.term_as_formula' pre ps in
-      (match x4 with
-       | FStar_Reflection_V2_Formula.True_ ->
-           FStar_Tactics_V2_Derived.pose
-             (FStarC_Reflection_V2_Builtins.pack_ln
-                (FStarC_Reflection_V2_Data.Tv_App
-                   ((FStarC_Reflection_V2_Builtins.pack_ln
-                       (FStarC_Reflection_V2_Data.Tv_App
-                          ((FStarC_Reflection_V2_Builtins.pack_ln
-                              (FStarC_Reflection_V2_Data.Tv_App
-                                 ((FStarC_Reflection_V2_Builtins.pack_ln
-                                     (FStarC_Reflection_V2_Data.Tv_App
-                                        ((FStarC_Reflection_V2_Builtins.pack_ln
-                                            (FStarC_Reflection_V2_Data.Tv_FVar
-                                               (FStarC_Reflection_V2_Builtins.pack_fv
-                                                  ["FStar";
-                                                  "Tactics";
-                                                  "Logic";
-                                                  "Lemmas";
-                                                  "__lemma_to_squash"]))),
-                                          (pre,
-                                            FStarC_Reflection_V2_Data.Q_Implicit)))),
-                                   (x3, FStarC_Reflection_V2_Data.Q_Implicit)))),
-                            ((FStarC_Reflection_V2_Builtins.pack_ln
-                                (FStarC_Reflection_V2_Data.Tv_Const
-                                   FStarC_Reflection_V2_Data.C_Unit)),
-                              FStarC_Reflection_V2_Data.Q_Explicit)))),
-                     ((FStarC_Reflection_V2_Builtins.pack_ln
-                         (FStarC_Reflection_V2_Data.Tv_Abs
-                            ((FStarC_Reflection_V2_Builtins.pack_binder
-                                {
-                                  FStarC_Reflection_V2_Data.sort2 =
-                                    (FStarC_Reflection_V2_Builtins.pack_ln
-                                       (FStarC_Reflection_V2_Data.Tv_FVar
-                                          (FStarC_Reflection_V2_Builtins.pack_fv
-                                             ["Prims"; "unit"])));
-                                  FStarC_Reflection_V2_Data.qual =
-                                    FStarC_Reflection_V2_Data.Q_Explicit;
-                                  FStarC_Reflection_V2_Data.attrs = [];
-                                  FStarC_Reflection_V2_Data.ppname2 =
-                                    (FStar_Sealed.seal "uu___")
-                                }), t))),
-                       FStarC_Reflection_V2_Data.Q_Explicit)))) ps
-       | uu___ ->
-           let x5 =
-             FStar_Tactics_V2_Derived.tcut
-               (FStarC_Reflection_V2_Builtins.pack_ln
-                  (FStarC_Reflection_V2_Data.Tv_App
-                     ((FStarC_Reflection_V2_Builtins.pack_ln
-                         (FStarC_Reflection_V2_Data.Tv_FVar
-                            (FStarC_Reflection_V2_Builtins.pack_fv
-                               ["Prims"; "squash"]))),
-                       (pre, FStarC_Reflection_V2_Data.Q_Explicit)))) ps in
-           let x6 =
-             FStar_Tactics_V2_Derived.pose
-               (FStarC_Reflection_V2_Builtins.pack_ln
-                  (FStarC_Reflection_V2_Data.Tv_App
-                     ((FStarC_Reflection_V2_Builtins.pack_ln
-                         (FStarC_Reflection_V2_Data.Tv_App
-                            ((FStarC_Reflection_V2_Builtins.pack_ln
-                                (FStarC_Reflection_V2_Data.Tv_App
-                                   ((FStarC_Reflection_V2_Builtins.pack_ln
-                                       (FStarC_Reflection_V2_Data.Tv_App
-                                          ((FStarC_Reflection_V2_Builtins.pack_ln
-                                              (FStarC_Reflection_V2_Data.Tv_FVar
-                                                 (FStarC_Reflection_V2_Builtins.pack_fv
-                                                    ["FStar";
-                                                    "Tactics";
-                                                    "Logic";
-                                                    "Lemmas";
-                                                    "__lemma_to_squash"]))),
-                                            (pre,
-                                              FStarC_Reflection_V2_Data.Q_Implicit)))),
-                                     (x3,
-                                       FStarC_Reflection_V2_Data.Q_Implicit)))),
-                              ((FStar_Tactics_V2_SyntaxCoercions.binding_to_term
-                                  x5), FStarC_Reflection_V2_Data.Q_Explicit)))),
-                       ((FStarC_Reflection_V2_Builtins.pack_ln
-                           (FStarC_Reflection_V2_Data.Tv_Abs
-                              ((FStarC_Reflection_V2_Builtins.pack_binder
-                                  {
-                                    FStarC_Reflection_V2_Data.sort2 =
-                                      (FStarC_Reflection_V2_Builtins.pack_ln
-                                         (FStarC_Reflection_V2_Data.Tv_FVar
-                                            (FStarC_Reflection_V2_Builtins.pack_fv
-                                               ["Prims"; "unit"])));
-                                    FStarC_Reflection_V2_Data.qual =
-                                      FStarC_Reflection_V2_Data.Q_Explicit;
-                                    FStarC_Reflection_V2_Data.attrs = [];
-                                    FStarC_Reflection_V2_Data.ppname2 =
-                                      (FStar_Sealed.seal "uu___")
-                                  }), t))),
-                         FStarC_Reflection_V2_Data.Q_Explicit)))) ps in
-           (FStar_Tactics_V2_Derived.flip () ps;
-            (let x9 =
-               FStar_Tactics_V2_Derived.trytac
-                 FStar_Tactics_V2_Derived.trivial ps in
-             ());
-            x6))
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.pose_lemma"
-    (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.pose_lemma (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 pose_lemma)
-               FStarC_Reflection_V2_Embeddings.e_term
-               FStarC_Reflection_V2_Embeddings.e_binding psc ncb us args)
-let explode (uu___ : unit) (ps : FStarC_Tactics_Types.ref_proofstate) : 
-  unit=
-  FStar_Tactics_V2_Derived.repeatseq
-    (fun uu___1 ->
-       FStar_Tactics_V2_Derived.first
-         [(fun uu___2 ps1 -> let x1 = l_intro () ps1 in ());
-         (fun uu___2 ps1 -> split () ps1)]) ps
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.explode"
-    (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.explode (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 explode)
-               FStarC_Syntax_Embeddings.e_unit
-               FStarC_Syntax_Embeddings.e_unit psc ncb us args)
-let rec visit
-  (callback : unit -> FStarC_Tactics_Types.ref_proofstate -> unit) :
-  FStarC_Tactics_Types.ref_proofstate -> unit=
-  FStar_Tactics_V2_Derived.focus
-    (fun uu___ ->
-       FStar_Tactics_V2_Derived.or_else callback
-         (fun uu___1 ps ->
-            let x = cur_goal () ps in
-            let x1 = FStar_Reflection_V2_Formula.term_as_formula x ps in
-            match x1 with
-            | FStar_Reflection_V2_Formula.Forall (_b, _sort, _phi) ->
-                let x2 = forall_intros () ps in
-                FStar_Tactics_V2_Derived.seq (fun uu___2 -> visit callback)
-                  (fun uu___2 -> l_revert_all x2) ps
-            | FStar_Reflection_V2_Formula.And (p, q) ->
-                FStar_Tactics_V2_Derived.seq split
-                  (fun uu___2 -> visit callback) ps
-            | FStar_Reflection_V2_Formula.Implies (p, q) ->
-                let x2 = implies_intro () ps in
-                FStar_Tactics_V2_Derived.seq (fun uu___2 -> visit callback)
-                  l_revert ps
-            | uu___2 -> ()))
-let rec simplify_eq_implication (uu___ : unit)
-  (ps : FStarC_Tactics_Types.ref_proofstate) : unit=
-  let x = FStar_Tactics_V2_Derived.cur_env () ps in
-  let x1 = cur_goal () ps in
-  let x2 = FStar_Tactics_V2_Derived.destruct_equality_implication x1 ps in
-  match x2 with
-  | FStar_Pervasives_Native.None ->
-      FStar_Tactics_V2_Derived.fail "Not an equality implication" ps
-  | FStar_Pervasives_Native.Some (uu___1, rhs) ->
-      let x3 = implies_intro () ps in
-      (FStarC_Tactics_V2_Builtins.rewrite x3 ps;
-       FStarC_Tactics_V2_Builtins.clear_top () ps;
-       visit simplify_eq_implication ps)
-let _ =
-  FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.simplify_eq_implication" (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.simplify_eq_implication (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 simplify_eq_implication)
-               FStarC_Syntax_Embeddings.e_unit
-               FStarC_Syntax_Embeddings.e_unit psc ncb us args)
-let rewrite_all_equalities (uu___ : unit) :
-  FStarC_Tactics_Types.ref_proofstate -> unit= visit simplify_eq_implication
-let _ =
-  FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.rewrite_all_equalities" (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.rewrite_all_equalities (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 rewrite_all_equalities)
-               FStarC_Syntax_Embeddings.e_unit
-               FStarC_Syntax_Embeddings.e_unit psc ncb us args)
-let rec unfold_definition_and_simplify_eq (tm : FStar_Tactics_NamedView.term)
-  (ps : FStarC_Tactics_Types.ref_proofstate) : unit=
-  let x = cur_goal () ps in
-  let x1 = FStar_Reflection_V2_Formula.term_as_formula x ps in
-  match x1 with
-  | FStar_Reflection_V2_Formula.App (hd, arg) ->
-      if term_eq hd tm then FStar_Tactics_V2_Derived.trivial () ps else ()
-  | uu___ ->
-      let x2 = FStar_Tactics_V2_Derived.destruct_equality_implication x ps in
-      (match x2 with
-       | FStar_Pervasives_Native.None ->
-           FStar_Tactics_V2_Derived.fail "Not an equality implication" ps
-       | FStar_Pervasives_Native.Some (uu___1, rhs) ->
-           let x3 = implies_intro () ps in
-           (FStarC_Tactics_V2_Builtins.rewrite x3 ps;
-            FStarC_Tactics_V2_Builtins.clear_top () ps;
-            visit (fun uu___2 -> unfold_definition_and_simplify_eq tm) ps))
-let _ =
-  FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.unfold_definition_and_simplify_eq"
-    (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.unfold_definition_and_simplify_eq (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1
-                  unfold_definition_and_simplify_eq)
-               FStarC_Reflection_V2_Embeddings.e_term
-               FStarC_Syntax_Embeddings.e_unit psc ncb us args)
-let cases_or (o : FStar_Tactics_NamedView.term) :
-  FStarC_Tactics_Types.ref_proofstate -> unit=
-  FStar_Tactics_V2_Derived.apply_lemma
-    (FStar_Reflection_V2_Derived.mk_e_app
-       (FStarC_Reflection_V2_Builtins.pack_ln
-          (FStarC_Reflection_V2_Data.Tv_FVar
-             (FStarC_Reflection_V2_Builtins.pack_fv
-                ["FStar"; "Tactics"; "Logic"; "Lemmas"; "or_ind"]))) 
-       [o])
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.cases_or"
-    (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.cases_or (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 cases_or)
-               FStarC_Reflection_V2_Embeddings.e_term
-               FStarC_Syntax_Embeddings.e_unit psc ncb us args)
-let cases_bool (b : FStar_Tactics_NamedView.term)
-  (ps : FStarC_Tactics_Types.ref_proofstate) : unit=
-  let x =
-    FStarC_Reflection_V2_Builtins.pack_ln
-      (FStarC_Reflection_V2_Data.Tv_FVar
-         (FStarC_Reflection_V2_Builtins.pack_fv
-            ["FStar"; "Tactics"; "Logic"; "Lemmas"; "bool_ind"])) in
-  FStar_Tactics_V2_Derived.seq
-    (fun uu___ ->
-       FStar_Tactics_V2_Derived.apply_lemma
-         (FStar_Reflection_V2_Derived.mk_e_app x [b]))
-    (fun uu___ ps1 ->
-       let x1 =
-         FStar_Tactics_V2_Derived.trytac
-           (fun uu___1 ps2 ->
-              let x2 = implies_intro () ps2 in
-              FStarC_Tactics_V2_Builtins.rewrite x2 ps2;
-              FStarC_Tactics_V2_Builtins.clear_top () ps2) ps1 in
-       ()) ps
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.cases_bool"
-    (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.cases_bool (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 cases_bool)
-               FStarC_Reflection_V2_Embeddings.e_term
-               FStarC_Syntax_Embeddings.e_unit psc ncb us args)
-let left (uu___ : unit) : FStarC_Tactics_Types.ref_proofstate -> unit=
-  FStar_Tactics_V2_Derived.apply_lemma
-    (FStarC_Reflection_V2_Builtins.pack_ln
-       (FStarC_Reflection_V2_Data.Tv_FVar
-          (FStarC_Reflection_V2_Builtins.pack_fv
-             ["FStar"; "Tactics"; "Logic"; "Lemmas"; "or_intro_1"])))
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.left"
-    (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.left (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 left)
-               FStarC_Syntax_Embeddings.e_unit
-               FStarC_Syntax_Embeddings.e_unit psc ncb us args)
-let right (uu___ : unit) : FStarC_Tactics_Types.ref_proofstate -> unit=
-  FStar_Tactics_V2_Derived.apply_lemma
-    (FStarC_Reflection_V2_Builtins.pack_ln
-       (FStarC_Reflection_V2_Data.Tv_FVar
-          (FStarC_Reflection_V2_Builtins.pack_fv
-             ["FStar"; "Tactics"; "Logic"; "Lemmas"; "or_intro_2"])))
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.right"
-    (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.right (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 right)
-               FStarC_Syntax_Embeddings.e_unit
-               FStarC_Syntax_Embeddings.e_unit psc ncb us args)
-let and_elim (t : FStar_Tactics_NamedView.term) :
-  FStarC_Tactics_Types.ref_proofstate -> unit=
-  FStar_Tactics_V2_Derived.try_with
-    (fun uu___ ->
-       match () with
-       | () ->
-           FStar_Tactics_V2_Derived.apply_lemma
-             (FStarC_Reflection_V2_Builtins.pack_ln
-                (FStarC_Reflection_V2_Data.Tv_App
-                   ((FStarC_Reflection_V2_Builtins.pack_ln
-                       (FStarC_Reflection_V2_Data.Tv_FVar
-                          (FStarC_Reflection_V2_Builtins.pack_fv
-                             ["FStar";
-                             "Tactics";
-                             "Logic";
-                             "Lemmas";
-                             "__and_elim"]))),
-                     (t, FStarC_Reflection_V2_Data.Q_Explicit)))))
-    (fun uu___ ->
-       FStar_Tactics_V2_Derived.apply_lemma
-         (FStarC_Reflection_V2_Builtins.pack_ln
-            (FStarC_Reflection_V2_Data.Tv_App
-               ((FStarC_Reflection_V2_Builtins.pack_ln
-                   (FStarC_Reflection_V2_Data.Tv_FVar
-                      (FStarC_Reflection_V2_Builtins.pack_fv
-                         ["FStar";
-                         "Tactics";
-                         "Logic";
-                         "Lemmas";
-                         "__and_elim'"]))),
-                 (t, FStarC_Reflection_V2_Data.Q_Explicit)))))
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.and_elim"
-    (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.and_elim (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 and_elim)
-               FStarC_Reflection_V2_Embeddings.e_term
-               FStarC_Syntax_Embeddings.e_unit psc ncb us args)
-let destruct_and (t : FStar_Tactics_NamedView.term)
-  (ps : FStarC_Tactics_Types.ref_proofstate) :
-  (FStar_Tactics_NamedView.binding * FStar_Tactics_NamedView.binding)=
-  and_elim t ps;
-  (let x1 = implies_intro () ps in let x2 = implies_intro () ps in (x1, x2))
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.destruct_and"
-    (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.destruct_and (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 destruct_and)
-               FStarC_Reflection_V2_Embeddings.e_term
-               (FStarC_Syntax_Embeddings.e_tuple2
-                  FStarC_Reflection_V2_Embeddings.e_binding
-                  FStarC_Reflection_V2_Embeddings.e_binding) psc ncb us args)
-let witness (t : FStar_Tactics_NamedView.term)
-  (ps : FStarC_Tactics_Types.ref_proofstate) : unit=
-  FStar_Tactics_V2_Derived.apply_raw
-    (FStarC_Reflection_V2_Builtins.pack_ln
-       (FStarC_Reflection_V2_Data.Tv_FVar
-          (FStarC_Reflection_V2_Builtins.pack_fv
-             ["FStar"; "Tactics"; "Logic"; "Lemmas"; "__witness"]))) ps;
-  FStar_Tactics_V2_Derived.exact t ps
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.witness"
-    (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.witness (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 witness)
-               FStarC_Reflection_V2_Embeddings.e_term
-               FStarC_Syntax_Embeddings.e_unit psc ncb us args)
-let elim_exists (t : FStar_Tactics_NamedView.term)
-  (ps : FStarC_Tactics_Types.ref_proofstate) :
-  (FStar_Tactics_NamedView.binding * FStar_Tactics_NamedView.binding)=
-  FStar_Tactics_V2_Derived.apply_lemma
-    (FStarC_Reflection_V2_Builtins.pack_ln
-       (FStarC_Reflection_V2_Data.Tv_App
-          ((FStarC_Reflection_V2_Builtins.pack_ln
-              (FStarC_Reflection_V2_Data.Tv_FVar
-                 (FStarC_Reflection_V2_Builtins.pack_fv
-                    ["FStar"; "Tactics"; "Logic"; "Lemmas"; "__elim_exists'"]))),
-            (t, FStarC_Reflection_V2_Data.Q_Explicit)))) ps;
-  (let x1 = FStarC_Tactics_V2_Builtins.intro () ps in
-   let x2 = FStarC_Tactics_V2_Builtins.intro () ps in (x1, x2))
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.elim_exists"
-    (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.elim_exists (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 elim_exists)
-               FStarC_Reflection_V2_Embeddings.e_term
-               (FStarC_Syntax_Embeddings.e_tuple2
-                  FStarC_Reflection_V2_Embeddings.e_binding
-                  FStarC_Reflection_V2_Embeddings.e_binding) psc ncb us args)
-let instantiate (fa : FStar_Tactics_NamedView.term)
-  (x : FStar_Tactics_NamedView.term) :
-  FStarC_Tactics_Types.ref_proofstate -> FStar_Tactics_NamedView.binding=
-  FStar_Tactics_V2_Derived.try_with
-    (fun uu___ ->
-       match () with
-       | () ->
-           FStar_Tactics_V2_Derived.pose
-             (FStarC_Reflection_V2_Builtins.pack_ln
-                (FStarC_Reflection_V2_Data.Tv_App
-                   ((FStarC_Reflection_V2_Builtins.pack_ln
-                       (FStarC_Reflection_V2_Data.Tv_App
-                          ((FStarC_Reflection_V2_Builtins.pack_ln
-                              (FStarC_Reflection_V2_Data.Tv_FVar
-                                 (FStarC_Reflection_V2_Builtins.pack_fv
-                                    ["FStar";
-                                    "Tactics";
-                                    "Logic";
-                                    "Lemmas";
-                                    "__forall_inst_sq"]))),
-                            (fa, FStarC_Reflection_V2_Data.Q_Explicit)))),
-                     (x, FStarC_Reflection_V2_Data.Q_Explicit)))))
-    (fun uu___ ->
-       FStar_Tactics_V2_Derived.try_with
-         (fun uu___1 ->
-            match () with
-            | () ->
-                FStar_Tactics_V2_Derived.pose
-                  (FStarC_Reflection_V2_Builtins.pack_ln
-                     (FStarC_Reflection_V2_Data.Tv_App
-                        ((FStarC_Reflection_V2_Builtins.pack_ln
-                            (FStarC_Reflection_V2_Data.Tv_App
-                               ((FStarC_Reflection_V2_Builtins.pack_ln
-                                   (FStarC_Reflection_V2_Data.Tv_FVar
-                                      (FStarC_Reflection_V2_Builtins.pack_fv
-                                         ["FStar";
-                                         "Tactics";
-                                         "Logic";
-                                         "Lemmas";
-                                         "__forall_inst"]))),
-                                 (fa, FStarC_Reflection_V2_Data.Q_Explicit)))),
-                          (x, FStarC_Reflection_V2_Data.Q_Explicit)))))
-         (fun uu___1 -> FStar_Tactics_V2_Derived.fail "could not instantiate"))
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.instantiate"
-    (Prims.of_int 3)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_2
-               "FStar.Tactics.V2.Logic.instantiate (plugin)"
-               (FStarC_Tactics_Native.from_tactic_2 instantiate)
-               FStarC_Reflection_V2_Embeddings.e_term
-               FStarC_Reflection_V2_Embeddings.e_term
-               FStarC_Reflection_V2_Embeddings.e_binding psc ncb us args)
-let instantiate_as (fa : FStar_Tactics_NamedView.term)
-  (x : FStar_Tactics_NamedView.term) (s : Prims.string)
-  (ps : FStarC_Tactics_Types.ref_proofstate) :
-  FStar_Tactics_NamedView.binding=
-  let x1 = instantiate fa x ps in
-  FStarC_Tactics_V2_Builtins.rename_to x1 s ps
-let _ =
-  FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.instantiate_as" (Prims.of_int 4)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_3
-               "FStar.Tactics.V2.Logic.instantiate_as (plugin)"
-               (FStarC_Tactics_Native.from_tactic_3 instantiate_as)
-               FStarC_Reflection_V2_Embeddings.e_term
-               FStarC_Reflection_V2_Embeddings.e_term
-               FStarC_Syntax_Embeddings.e_string
-               FStarC_Reflection_V2_Embeddings.e_binding psc ncb us args)
-let rec sk_binder' (acc : FStar_Tactics_NamedView.binding Prims.list)
-  (b : FStar_Tactics_NamedView.binding) :
-  FStarC_Tactics_Types.ref_proofstate ->
-    (FStar_Tactics_NamedView.binding Prims.list *
-      FStar_Tactics_NamedView.binding)=
-  FStar_Tactics_V2_Derived.focus
-    (fun uu___ ->
-       FStar_Tactics_V2_Derived.try_with
-         (fun uu___1 ->
-            match () with
-            | () ->
-                (fun ps ->
-                   FStar_Tactics_V2_Derived.apply_lemma
-                     (FStarC_Reflection_V2_Builtins.pack_ln
-                        (FStarC_Reflection_V2_Data.Tv_App
-                           ((FStarC_Reflection_V2_Builtins.pack_ln
-                               (FStarC_Reflection_V2_Data.Tv_FVar
-                                  (FStarC_Reflection_V2_Builtins.pack_fv
-                                     ["FStar";
-                                     "Tactics";
-                                     "Logic";
-                                     "Lemmas";
-                                     "sklem0"]))),
-                             ((FStar_Tactics_V2_SyntaxCoercions.binding_to_term
-                                 b), FStarC_Reflection_V2_Data.Q_Explicit))))
-                     ps;
-                   (let x2 =
-                      let x3 = FStar_Tactics_V2_Derived.ngoals () ps in
-                      x3 <> Prims.int_one in
-                    if x2 then FStar_Tactics_V2_Derived.fail "no" ps else ());
-                   FStarC_Tactics_V2_Builtins.clear b ps;
-                   (let x3 = forall_intro () ps in
-                    let x4 = implies_intro () ps in
-                    sk_binder' (x3 :: acc) x4 ps)))
-         (fun uu___1 uu___2 -> (acc, b)))
-let sk_binder (b : FStar_Tactics_NamedView.binding) :
-  FStarC_Tactics_Types.ref_proofstate ->
-    (FStar_Tactics_NamedView.binding Prims.list *
-      FStar_Tactics_NamedView.binding)=
-  sk_binder' [] b
-let skolem (uu___ : unit) (ps : FStarC_Tactics_Types.ref_proofstate) :
-  (FStar_Tactics_NamedView.binding Prims.list *
-    FStar_Tactics_NamedView.binding) Prims.list=
-  let x =
-    let x1 = FStar_Tactics_V2_Derived.cur_env () ps in
-    FStarC_Reflection_V2_Builtins.vars_of_env x1 in
-  FStar_Tactics_Util.map sk_binder x ps
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.skolem"
-    (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.skolem (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 skolem)
-               FStarC_Syntax_Embeddings.e_unit
-               (FStarC_Syntax_Embeddings.e_list
-                  (FStarC_Syntax_Embeddings.e_tuple2
-                     (FStarC_Syntax_Embeddings.e_list
-                        FStarC_Reflection_V2_Embeddings.e_binding)
-                     FStarC_Reflection_V2_Embeddings.e_binding)) psc ncb us
-               args)
-let using_lemma (t : FStar_Tactics_NamedView.term) :
-  FStarC_Tactics_Types.ref_proofstate -> FStar_Tactics_NamedView.binding=
-  FStar_Tactics_V2_Derived.try_with
-    (fun uu___ ->
-       match () with
-       | () ->
-           pose_lemma
-             (FStarC_Reflection_V2_Builtins.pack_ln
-                (FStarC_Reflection_V2_Data.Tv_App
-                   ((FStarC_Reflection_V2_Builtins.pack_ln
-                       (FStarC_Reflection_V2_Data.Tv_FVar
-                          (FStarC_Reflection_V2_Builtins.pack_fv
-                             ["FStar";
-                             "Tactics";
-                             "Logic";
-                             "Lemmas";
-                             "lem1_fa"]))),
-                     (t, FStarC_Reflection_V2_Data.Q_Explicit)))))
-    (fun uu___ ->
-       FStar_Tactics_V2_Derived.try_with
-         (fun uu___1 ->
-            match () with
-            | () ->
-                pose_lemma
-                  (FStarC_Reflection_V2_Builtins.pack_ln
-                     (FStarC_Reflection_V2_Data.Tv_App
-                        ((FStarC_Reflection_V2_Builtins.pack_ln
-                            (FStarC_Reflection_V2_Data.Tv_FVar
-                               (FStarC_Reflection_V2_Builtins.pack_fv
-                                  ["FStar";
-                                  "Tactics";
-                                  "Logic";
-                                  "Lemmas";
-                                  "lem2_fa"]))),
-                          (t, FStarC_Reflection_V2_Data.Q_Explicit)))))
-         (fun uu___1 ->
-            FStar_Tactics_V2_Derived.try_with
-              (fun uu___2 ->
-                 match () with
-                 | () ->
-                     pose_lemma
-                       (FStarC_Reflection_V2_Builtins.pack_ln
-                          (FStarC_Reflection_V2_Data.Tv_App
-                             ((FStarC_Reflection_V2_Builtins.pack_ln
-                                 (FStarC_Reflection_V2_Data.Tv_FVar
-                                    (FStarC_Reflection_V2_Builtins.pack_fv
-                                       ["FStar";
-                                       "Tactics";
-                                       "Logic";
-                                       "Lemmas";
-                                       "lem3_fa"]))),
-                               (t, FStarC_Reflection_V2_Data.Q_Explicit)))))
-              (fun uu___2 ->
-                 FStar_Tactics_V2_Derived.fail
-                   "using_lemma: failed to instantiate")))
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.using_lemma"
-    (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.using_lemma (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 using_lemma)
-               FStarC_Reflection_V2_Embeddings.e_term
-               FStarC_Reflection_V2_Embeddings.e_binding psc ncb us args)
+(* Generated by F* Custard extraction. Do not edit. *)
+[@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
+
+let split (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (FStar_Tactics_V2_Derived.try_with (fun tmp1 -> (let tmp2 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp2 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("Logic" :: ("Lemmas" :: ("split_lem" :: [])))))) in
+    (FStarC_Reflection_V2_Data.Tv_FVar (tmp2)))) in
+  (FStar_Tactics_V2_Derived.apply_lemma tmp2))) (fun tmp1 -> (FStar_Tactics_V2_Derived.fail "Could not split goal")))
+
+let l_revert (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (fun ps -> ((ignore (FStarC_Tactics_V2_Builtins.revert () ps));
+  let tmp1 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("Logic" :: ("Lemmas" :: ("revert_squash" :: [])))))) in
+    (FStarC_Reflection_V2_Data.Tv_FVar (tmp1)))) in
+  (FStar_Tactics_V2_Derived.apply tmp1 ps)))
+
+let u___plugin_l_revert : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.l_revert" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.l_revert (plugin)" l_revert FStarC_Syntax_Embeddings.e_unit FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
+
+let rec l_revert_all (bs : (FStarC_Reflection_V2_Data.binding) list) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (match bs with
+    | [] -> (fun tmp -> ())
+    | (tmp :: tl) -> (fun ps -> ((l_revert () ps);
+      (l_revert_all tl ps)))
+  )
+
+let u___plugin_l_revert_all : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.l_revert_all" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.l_revert_all (plugin)" l_revert_all (FStarC_Syntax_Embeddings.e_list FStarC_Reflection_V2_Embeddings.e_binding) FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
+
+let forall_intro (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_V2_Data.binding) =
+  (fun ps -> (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("Logic" :: ("Lemmas" :: ("fa_intro_lem" :: [])))))) in
+    (FStarC_Reflection_V2_Data.Tv_FVar (tmp1)))) in
+  (FStar_Tactics_V2_Derived.apply_lemma tmp1 ps);
+  (FStarC_Tactics_V2_Builtins.intro () ps)))
+
+let u___plugin_forall_intro : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.forall_intro" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.forall_intro (plugin)" forall_intro FStarC_Syntax_Embeddings.e_unit FStarC_Reflection_V2_Embeddings.e_binding tmp tmp1 tmp2 tmp3)))
+
+let forall_intro_as (s : string) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_V2_Data.binding) =
+  (fun ps -> (let tmp = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("Logic" :: ("Lemmas" :: ("fa_intro_lem" :: [])))))) in
+    (FStarC_Reflection_V2_Data.Tv_FVar (tmp)))) in
+  (FStar_Tactics_V2_Derived.apply_lemma tmp ps);
+  (FStar_Tactics_V2_Derived.intro_as s ps)))
+
+let u___plugin_forall_intro_as : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.forall_intro_as" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.forall_intro_as (plugin)" forall_intro_as FStarC_Syntax_Embeddings.e_string FStarC_Reflection_V2_Embeddings.e_binding tmp tmp1 tmp2 tmp3)))
+
+let forall_intros (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> (FStarC_Reflection_V2_Data.binding) list) =
+  (FStar_Tactics_V2_Derived.repeat1 forall_intro)
+
+let u___plugin_forall_intros : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.forall_intros" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.forall_intros (plugin)" forall_intros FStarC_Syntax_Embeddings.e_unit (FStarC_Syntax_Embeddings.e_list FStarC_Reflection_V2_Embeddings.e_binding) tmp tmp1 tmp2 tmp3)))
+
+let u___plugin_split : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.split" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.split (plugin)" split FStarC_Syntax_Embeddings.e_unit FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
+
+let implies_intro (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_V2_Data.binding) =
+  (fun ps -> (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("Logic" :: ("Lemmas" :: ("imp_intro_lem" :: [])))))) in
+    (FStarC_Reflection_V2_Data.Tv_FVar (tmp1)))) in
+  (FStar_Tactics_V2_Derived.apply_lemma tmp1 ps);
+  (FStarC_Tactics_V2_Builtins.intro () ps)))
+
+let u___plugin_implies_intro : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.implies_intro" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.implies_intro (plugin)" implies_intro FStarC_Syntax_Embeddings.e_unit FStarC_Reflection_V2_Embeddings.e_binding tmp tmp1 tmp2 tmp3)))
+
+let implies_intro_as (s : string) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_V2_Data.binding) =
+  (fun ps -> (let tmp = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("Logic" :: ("Lemmas" :: ("imp_intro_lem" :: [])))))) in
+    (FStarC_Reflection_V2_Data.Tv_FVar (tmp)))) in
+  (FStar_Tactics_V2_Derived.apply_lemma tmp ps);
+  (FStar_Tactics_V2_Derived.intro_as s ps)))
+
+let u___plugin_implies_intro_as : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.implies_intro_as" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.implies_intro_as (plugin)" implies_intro_as FStarC_Syntax_Embeddings.e_string FStarC_Reflection_V2_Embeddings.e_binding tmp tmp1 tmp2 tmp3)))
+
+let implies_intros (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> (FStarC_Reflection_V2_Data.binding) list) =
+  (FStar_Tactics_V2_Derived.repeat1 implies_intro)
+
+let u___plugin_implies_intros : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.implies_intros" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.implies_intros (plugin)" implies_intros FStarC_Syntax_Embeddings.e_unit (FStarC_Syntax_Embeddings.e_list FStarC_Reflection_V2_Embeddings.e_binding) tmp tmp1 tmp2 tmp3)))
+
+let l_intro (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_V2_Data.binding) =
+  (FStar_Tactics_V2_Derived.or_else forall_intro implies_intro)
+
+let u___plugin_l_intro : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.l_intro" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.l_intro (plugin)" l_intro FStarC_Syntax_Embeddings.e_unit FStarC_Reflection_V2_Embeddings.e_binding tmp tmp1 tmp2 tmp3)))
+
+let l_intros (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> (FStarC_Reflection_V2_Data.binding) list) =
+  (FStar_Tactics_V2_Derived.repeat l_intro)
+
+let u___plugin_l_intros : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.l_intros" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.l_intros (plugin)" l_intros FStarC_Syntax_Embeddings.e_unit (FStarC_Syntax_Embeddings.e_list FStarC_Reflection_V2_Embeddings.e_binding) tmp tmp1 tmp2 tmp3)))
+
+let l_exact (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (FStar_Tactics_V2_Derived.exact t)
+
+let u___plugin_l_exact : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.l_exact" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.l_exact (plugin)" l_exact FStarC_Reflection_V2_Embeddings.e_term FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
+
+let hyp (x : FStarC_Reflection_V2_Data.namedv_view) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (l_exact (FStar_Tactics_V2_SyntaxCoercions.namedv_to_term x))
+
+let u___plugin_hyp : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.hyp" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.hyp (plugin)" hyp FStarC_Reflection_V2_Embeddings.e_namedv_view FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
+
+let pose_lemma (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_V2_Data.binding) =
+  (FStar_Tactics_V2_Derived.pose_apply t)
+
+let u___plugin_pose_lemma : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.pose_lemma" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.pose_lemma (plugin)" pose_lemma FStarC_Reflection_V2_Embeddings.e_term FStarC_Reflection_V2_Embeddings.e_binding tmp tmp1 tmp2 tmp3)))
+
+let explode (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (fun ps -> ((FStar_Tactics_V2_Derived.repeatseq (fun tmp1 -> (FStar_Tactics_V2_Derived.first ((fun tmp2 -> (fun ps1 -> ((ignore (l_intro () ps1));
+  ()))) :: ((fun tmp2 -> (fun ps1 -> ((split () ps1);
+  ()))) :: [])))) ps);
+  ()))
+
+let u___plugin_explode : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.explode" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.explode (plugin)" explode FStarC_Syntax_Embeddings.e_unit FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
+
+let cur_goal (tmp : unit) (ps : (FStarC_Tactics_Types.proofstate ref)) : FStarC_Reflection_Types.typ =
+  (let x = (FStarC_Tactics_V2_Builtins.get () ps) in
+  let x1 = (FStarC_Tactics_Types.goals_of x) in
+  ((match x1 with
+    | (g :: tmp1) -> (fun tmp2 -> (FStarC_Tactics_Types.goal_type g))
+    | tmp1 -> (fun ps1 -> ((ignore (FStarC_Tactics_V2_Builtins.raise_core (FStarC_Tactics_Common.TacticFailure (((FStar_Errors_Msg.mkmsg "no more goals"), None))) ps1));
+      (failwith "Prims.magic")))
+  ) ps))
+
+let rec visit (callback : (unit -> ((FStarC_Tactics_Types.proofstate ref) -> unit))) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (FStar_Tactics_V2_Derived.focus (fun tmp -> (FStar_Tactics_V2_Derived.or_else callback (fun tmp1 -> (fun ps -> (let x = (cur_goal () ps) in
+  let x1 = (FStar_Reflection_V2_Formula.term_as_formula x ps) in
+  ((match x1 with
+    | (FStar_Reflection_V2_Formula.Forall (u__b, u__sort, u__phi)) -> (fun ps1 -> (let x2 = (forall_intros () ps1) in
+      (FStar_Tactics_V2_Derived.seq (fun tmp2 -> (visit callback)) (fun tmp2 -> (l_revert_all x2)) ps1)))
+    | (FStar_Reflection_V2_Formula.And (p, q)) -> (FStar_Tactics_V2_Derived.seq split (fun tmp2 -> (visit callback)))
+    | (FStar_Reflection_V2_Formula.Implies (p, q)) -> (fun ps1 -> ((ignore (implies_intro () ps1));
+      (FStar_Tactics_V2_Derived.seq (fun tmp2 -> (visit callback)) l_revert ps1)))
+    | tmp2 -> (fun tmp3 -> ())
+  ) ps)))))))
+
+let rec simplify_eq_implication (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (fun ps -> ((ignore (FStar_Tactics_V2_Derived.cur_env () ps));
+  let x = (cur_goal () ps) in
+  let x1 = (FStar_Tactics_V2_Derived.destruct_equality_implication x ps) in
+  ((match x1 with
+    | None -> (FStar_Tactics_V2_Derived.fail "Not an equality implication")
+    | (Some ((tmp1, rhs))) -> (fun ps1 -> (let x2 = (implies_intro () ps1) in
+      (ignore (FStarC_Tactics_V2_Builtins.rewrite x2 ps1));
+      (ignore (FStarC_Tactics_V2_Builtins.clear_top () ps1));
+      (visit simplify_eq_implication ps1)))
+  ) ps)))
+
+let u___plugin_simplify_eq_implication : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.simplify_eq_implication" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.simplify_eq_implication (plugin)" simplify_eq_implication FStarC_Syntax_Embeddings.e_unit FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
+
+let rewrite_all_equalities (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (visit simplify_eq_implication)
+
+let u___plugin_rewrite_all_equalities : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.rewrite_all_equalities" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.rewrite_all_equalities (plugin)" rewrite_all_equalities FStarC_Syntax_Embeddings.e_unit FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
+
+let term_eq (t1 : FStarC_Reflection_Types.term) : (FStarC_Reflection_Types.term -> bool) =
+  (FStar_Reflection_TermEq_Simple.term_eq t1)
+
+let rec unfold_definition_and_simplify_eq (tm : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (fun ps -> (let x = (cur_goal () ps) in
+  let x1 = (FStar_Reflection_V2_Formula.term_as_formula x ps) in
+  ((match x1 with
+    | (FStar_Reflection_V2_Formula.App (hd, arg)) -> (if (term_eq hd tm) then (FStar_Tactics_V2_Derived.trivial ()) else (fun tmp -> ()))
+    | tmp -> (fun ps1 -> (let x2 = (FStar_Tactics_V2_Derived.destruct_equality_implication x ps1) in
+      ((match x2 with
+        | None -> (FStar_Tactics_V2_Derived.fail "Not an equality implication")
+        | (Some ((tmp1, rhs))) -> (fun ps2 -> (let x3 = (implies_intro () ps2) in
+          (ignore (FStarC_Tactics_V2_Builtins.rewrite x3 ps2));
+          (ignore (FStarC_Tactics_V2_Builtins.clear_top () ps2));
+          (visit (fun tmp2 -> (unfold_definition_and_simplify_eq tm)) ps2)))
+      ) ps1)))
+  ) ps)))
+
+let u___plugin_unfold_definition_and_simplify_eq : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.unfold_definition_and_simplify_eq" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.unfold_definition_and_simplify_eq (plugin)" unfold_definition_and_simplify_eq FStarC_Reflection_V2_Embeddings.e_term FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
+
+let cases_or (o : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (let tmp = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("Logic" :: ("Lemmas" :: ("or_ind" :: [])))))) in
+    (FStarC_Reflection_V2_Data.Tv_FVar (tmp)))) in
+  let tmp1 = (FStar_Reflection_V2_Derived.mk_e_app tmp (o :: [])) in
+  (FStar_Tactics_V2_Derived.apply_lemma tmp1))
+
+let u___plugin_cases_or : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.cases_or" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.cases_or (plugin)" cases_or FStarC_Reflection_V2_Embeddings.e_term FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
+
+let cases_bool (b : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (fun ps -> (let x = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("Logic" :: ("Lemmas" :: ("bool_ind" :: [])))))) in
+    (FStarC_Reflection_V2_Data.Tv_FVar (tmp)))) in
+  (FStar_Tactics_V2_Derived.seq (fun tmp -> (FStar_Tactics_V2_Derived.apply_lemma (FStar_Reflection_V2_Derived.mk_e_app x (b :: [])))) (fun tmp -> (fun ps1 -> ((ignore (FStar_Tactics_V2_Derived.trytac (fun tmp1 -> (fun ps2 -> (let x1 = (implies_intro () ps2) in
+  (ignore (FStarC_Tactics_V2_Builtins.rewrite x1 ps2));
+  (FStarC_Tactics_V2_Builtins.clear_top () ps2)))) ps1));
+  ()))) ps)))
+
+let u___plugin_cases_bool : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.cases_bool" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.cases_bool (plugin)" cases_bool FStarC_Reflection_V2_Embeddings.e_term FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
+
+let left (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("Logic" :: ("Lemmas" :: ("or_intro_1" :: [])))))) in
+    (FStarC_Reflection_V2_Data.Tv_FVar (tmp1)))) in
+  (FStar_Tactics_V2_Derived.apply_lemma tmp1))
+
+let u___plugin_left : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.left" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.left (plugin)" left FStarC_Syntax_Embeddings.e_unit FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
+
+let right (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("Logic" :: ("Lemmas" :: ("or_intro_2" :: [])))))) in
+    (FStarC_Reflection_V2_Data.Tv_FVar (tmp1)))) in
+  (FStar_Tactics_V2_Derived.apply_lemma tmp1))
+
+let u___plugin_right : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.right" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.right (plugin)" right FStarC_Syntax_Embeddings.e_unit FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
+
+let and_elim (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (FStar_Tactics_V2_Derived.try_with (fun tmp -> (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("Logic" :: ("Lemmas" :: ("__and_elim" :: [])))))) in
+      (FStarC_Reflection_V2_Data.Tv_FVar (tmp1)))) in
+    (FStarC_Reflection_V2_Data.Tv_App (tmp1, (t, FStarC_Reflection_V2_Data.Q_Explicit))))) in
+  (FStar_Tactics_V2_Derived.apply_lemma tmp1))) (fun tmp -> (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("Logic" :: ("Lemmas" :: ("__and_elim'" :: [])))))) in
+      (FStarC_Reflection_V2_Data.Tv_FVar (tmp1)))) in
+    (FStarC_Reflection_V2_Data.Tv_App (tmp1, (t, FStarC_Reflection_V2_Data.Q_Explicit))))) in
+  (FStar_Tactics_V2_Derived.apply_lemma tmp1))))
+
+let u___plugin_and_elim : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.and_elim" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.and_elim (plugin)" and_elim FStarC_Reflection_V2_Embeddings.e_term FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
+
+let destruct_and (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> (FStarC_Reflection_V2_Data.binding * FStarC_Reflection_V2_Data.binding)) =
+  (fun ps -> ((and_elim t ps);
+  let x = (implies_intro () ps) in
+  let x1 = (implies_intro () ps) in
+  (x, x1)))
+
+let u___plugin_destruct_and : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.destruct_and" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.destruct_and (plugin)" destruct_and FStarC_Reflection_V2_Embeddings.e_term (FStarC_Syntax_Embeddings.e_tuple2 FStarC_Reflection_V2_Embeddings.e_binding FStarC_Reflection_V2_Embeddings.e_binding) tmp tmp1 tmp2 tmp3)))
+
+let witness (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (fun ps -> (let tmp = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("Logic" :: ("Lemmas" :: ("__witness" :: [])))))) in
+    (FStarC_Reflection_V2_Data.Tv_FVar (tmp)))) in
+  (FStar_Tactics_V2_Derived.apply_raw tmp ps);
+  (FStar_Tactics_V2_Derived.exact t ps)))
+
+let u___plugin_witness : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.witness" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.witness (plugin)" witness FStarC_Reflection_V2_Embeddings.e_term FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
+
+let elim_exists (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> (FStarC_Reflection_V2_Data.binding * FStarC_Reflection_V2_Data.binding)) =
+  (fun ps -> (let tmp = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("Logic" :: ("Lemmas" :: ("__elim_exists'" :: [])))))) in
+      (FStarC_Reflection_V2_Data.Tv_FVar (tmp)))) in
+    (FStarC_Reflection_V2_Data.Tv_App (tmp, (t, FStarC_Reflection_V2_Data.Q_Explicit))))) in
+  (FStar_Tactics_V2_Derived.apply_lemma tmp ps);
+  let x = (FStarC_Tactics_V2_Builtins.intro () ps) in
+  let x1 = (FStarC_Tactics_V2_Builtins.intro () ps) in
+  (x, x1)))
+
+let u___plugin_elim_exists : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.elim_exists" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.elim_exists (plugin)" elim_exists FStarC_Reflection_V2_Embeddings.e_term (FStarC_Syntax_Embeddings.e_tuple2 FStarC_Reflection_V2_Embeddings.e_binding FStarC_Reflection_V2_Embeddings.e_binding) tmp tmp1 tmp2 tmp3)))
+
+let instantiate (fa : FStarC_Reflection_Types.term) (x : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_V2_Data.binding) =
+  (FStar_Tactics_V2_Derived.try_with (fun tmp -> (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("Logic" :: ("Lemmas" :: ("__forall_inst_sq" :: [])))))) in
+        (FStarC_Reflection_V2_Data.Tv_FVar (tmp1)))) in
+      (FStarC_Reflection_V2_Data.Tv_App (tmp1, (fa, FStarC_Reflection_V2_Data.Q_Explicit))))) in
+    (FStarC_Reflection_V2_Data.Tv_App (tmp1, (x, FStarC_Reflection_V2_Data.Q_Explicit))))) in
+  (FStar_Tactics_V2_Derived.pose tmp1))) (fun tmp -> (FStar_Tactics_V2_Derived.try_with (fun tmp1 -> (let tmp2 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp2 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp2 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp2 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("Logic" :: ("Lemmas" :: ("__forall_inst" :: [])))))) in
+        (FStarC_Reflection_V2_Data.Tv_FVar (tmp2)))) in
+      (FStarC_Reflection_V2_Data.Tv_App (tmp2, (fa, FStarC_Reflection_V2_Data.Q_Explicit))))) in
+    (FStarC_Reflection_V2_Data.Tv_App (tmp2, (x, FStarC_Reflection_V2_Data.Q_Explicit))))) in
+  (FStar_Tactics_V2_Derived.pose tmp2))) (fun tmp1 -> (FStar_Tactics_V2_Derived.fail "could not instantiate")))))
+
+let u___plugin_instantiate : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.instantiate" (Prims.parse_int "3") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_2 "FStar.Tactics.V2.Logic.instantiate (plugin)" instantiate FStarC_Reflection_V2_Embeddings.e_term FStarC_Reflection_V2_Embeddings.e_term FStarC_Reflection_V2_Embeddings.e_binding tmp tmp1 tmp2 tmp3)))
+
+let instantiate_as (fa : FStarC_Reflection_Types.term) (x : FStarC_Reflection_Types.term) (s : string) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_V2_Data.binding) =
+  (fun ps -> (let x1 = (instantiate fa x ps) in
+  (FStarC_Tactics_V2_Builtins.rename_to x1 s ps)))
+
+let u___plugin_instantiate_as : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.instantiate_as" (Prims.parse_int "4") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_3 "FStar.Tactics.V2.Logic.instantiate_as (plugin)" instantiate_as FStarC_Reflection_V2_Embeddings.e_term FStarC_Reflection_V2_Embeddings.e_term FStarC_Syntax_Embeddings.e_string FStarC_Reflection_V2_Embeddings.e_binding tmp tmp1 tmp2 tmp3)))
+
+let rec sk_binder' (acc : (FStarC_Reflection_V2_Data.binding) list) (b : FStarC_Reflection_V2_Data.binding) : ((FStarC_Tactics_Types.proofstate ref) -> ((FStarC_Reflection_V2_Data.binding) list * FStarC_Reflection_V2_Data.binding)) =
+  (FStar_Tactics_V2_Derived.focus (fun tmp -> (FStar_Tactics_V2_Derived.try_with (fun tmp1 -> (fun ps -> (let tmp2 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp2 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp2 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("Logic" :: ("Lemmas" :: ("sklem0" :: [])))))) in
+      (FStarC_Reflection_V2_Data.Tv_FVar (tmp2)))) in
+    (FStarC_Reflection_V2_Data.Tv_App (tmp2, ((FStar_Tactics_V2_SyntaxCoercions.binding_to_term b), FStarC_Reflection_V2_Data.Q_Explicit))))) in
+  (FStar_Tactics_V2_Derived.apply_lemma tmp2 ps);
+  let x = (FStar_Tactics_V2_Derived.ngoals () ps) in
+  let x1 = ((<>) x (Prims.parse_int "1")) in
+  (ignore ((if x1 then (FStar_Tactics_V2_Derived.fail "no") else (fun tmp3 -> ())) ps));
+  (ignore (FStarC_Tactics_V2_Builtins.clear b ps));
+  let x2 = (forall_intro () ps) in
+  let x3 = (implies_intro () ps) in
+  (sk_binder' (x2 :: acc) x3 ps)))) (fun tmp1 -> (fun tmp2 -> (acc, b))))))
+
+let sk_binder (b : FStarC_Reflection_V2_Data.binding) : ((FStarC_Tactics_Types.proofstate ref) -> ((FStarC_Reflection_V2_Data.binding) list * FStarC_Reflection_V2_Data.binding)) =
+  (sk_binder' [] b)
+
+let skolem (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> (((FStarC_Reflection_V2_Data.binding) list * FStarC_Reflection_V2_Data.binding)) list) =
+  (fun ps -> (let x = (FStar_Tactics_V2_Derived.cur_env () ps) in
+  let x1 = (FStarC_Reflection_V2_Builtins.vars_of_env x) in
+  (FStar_Tactics_Util.map sk_binder x1 ps)))
+
+let u___plugin_skolem : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.skolem" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.skolem (plugin)" skolem FStarC_Syntax_Embeddings.e_unit (FStarC_Syntax_Embeddings.e_list (FStarC_Syntax_Embeddings.e_tuple2 (FStarC_Syntax_Embeddings.e_list FStarC_Reflection_V2_Embeddings.e_binding) FStarC_Reflection_V2_Embeddings.e_binding)) tmp tmp1 tmp2 tmp3)))
+
+let using_lemma (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_V2_Data.binding) =
+  (FStar_Tactics_V2_Derived.try_with (fun tmp -> (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("Logic" :: ("Lemmas" :: ("lem1_fa" :: [])))))) in
+      (FStarC_Reflection_V2_Data.Tv_FVar (tmp1)))) in
+    (FStarC_Reflection_V2_Data.Tv_App (tmp1, (t, FStarC_Reflection_V2_Data.Q_Explicit))))) in
+  (pose_lemma tmp1))) (fun tmp -> (FStar_Tactics_V2_Derived.try_with (fun tmp1 -> (let tmp2 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp2 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp2 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("Logic" :: ("Lemmas" :: ("lem2_fa" :: [])))))) in
+      (FStarC_Reflection_V2_Data.Tv_FVar (tmp2)))) in
+    (FStarC_Reflection_V2_Data.Tv_App (tmp2, (t, FStarC_Reflection_V2_Data.Q_Explicit))))) in
+  (pose_lemma tmp2))) (fun tmp1 -> (FStar_Tactics_V2_Derived.try_with (fun tmp2 -> (let tmp3 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp3 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp3 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("Logic" :: ("Lemmas" :: ("lem3_fa" :: [])))))) in
+      (FStarC_Reflection_V2_Data.Tv_FVar (tmp3)))) in
+    (FStarC_Reflection_V2_Data.Tv_App (tmp3, (t, FStarC_Reflection_V2_Data.Q_Explicit))))) in
+  (pose_lemma tmp3))) (fun tmp2 -> (FStar_Tactics_V2_Derived.fail "using_lemma: failed to instantiate")))))))
+
+let u___plugin_using_lemma : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.using_lemma" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.using_lemma (plugin)" using_lemma FStarC_Reflection_V2_Embeddings.e_term FStarC_Reflection_V2_Embeddings.e_binding tmp tmp1 tmp2 tmp3)))
+

@@ -2142,6 +2142,25 @@ is already a two-field constructor — the `of` syntax is the only one that
 introduces the pair.  And `| Bar of { x:a; y:b }` is not F\* syntax at all, so
 there is nothing to inline there.
 
+And one thing that needs the opposite.  A type whose representation is an
+**ABI** — read back by a program that declares it separately, not compiled
+from this source — cannot have its layout improved at all, and the tuple field
+Custard inlines uninvited is exactly the improvement that breaks it.
+`[@@custard_boxed_fields]` on the type withdraws the uninvited half, leaving
+`| Bar of a & b` with the single pair-typed field the ML extraction emits; an
+explicit `[@@@custard_inline_field]` on a field still fires, since that one is
+the source's own request.  Written once on a mutually recursive group, it
+holds for every type in it.
+
+There is one such type in this repository, and it is the reason the attribute
+exists: `FStarC.Extraction.KrmlAst`, which `save_value_to_file` writes and
+karamel's `InputAst` reads back into OCaml declarations that mirror the ML
+extraction's output field for field.  Before §12.15 there was no way to
+notice — an ML-built compiler wrote the file and a Custard-built one only
+existed in `stagec` — and afterwards the symptom is karamel reading garbage
+and dying in `InputAstToAst.mk_decl`, with nothing on either side saying why.
+`tests/custard/BoxedFields.fst` is the regression.
+
 ### 5.8 Other representation choices (to be pinned down)
 
 - Machine integers: `UInt32.t` etc. must map to native target types, not to
@@ -3305,6 +3324,18 @@ realization itself does.
 narrowing and the `FStar.SizeT` round trip on the OCaml side, and
 `tests/custard/KrmlBasic.fst` covers them on the C side.
 
+A seventh kind exists for a narrower reason: a *realization Custard shares
+with the ML backend* may take an argument Custard erases.
+`FStar.List.Tot.Base.list_unref` has an erased `#p: a -> prop`, and
+`ulib/ml`'s `let list_unref _ l = l` keeps it, because the ML backend passes
+a dummy for every erased binder.  Custard passes none, so the call arrives
+one argument short --- an OCaml type error, in a file the user did not
+write.  Rather than teach the printer about dummies, `Builtins`' coercion
+rule makes `list_unref` and `list_ref` the identity, which is what they mean:
+both change only a refinement.  `list_refb`'s predicate returns `bool`, so it
+is computation, so it is kept, and the shared realization is already right
+for it.
+
 Effect-level behaviour (`extract_as_impure_effect`, effect classification, the
 drop/dup/reorder discipline) is deliberately *not* part of this table; it lives
 in §7, because it constrains the surrounding code rather than translating a
@@ -3791,6 +3822,20 @@ let stub_aliases = [ "FStar.Stubs.Tactics.Common.Stop", "FStarC.Errors.Stop" ]
 
 A missing entry is not a link error; it is a `.cmxs` that loads, runs, and
 mishandles one control path.
+
+The same identity rule settles what an exception of a *realized* module
+(§8.2) is.  A realization replaces the F\* module, and an exception is a
+declaration like any other: `FStarC.Plugins.Base`'s `DynlinkError` is raised
+by the hand-written `dynlink_loadfile` in `FStarC_Plugins_Base.ml`, so a
+second `exception DynlinkError` declared by Custard is a *different*
+exception and the `try ... with DynlinkError e` in `FStarC.Plugins` matches
+nothing.  The symptom is the one above: a `--load` that should have been
+reported as error 353 escapes to the top level as
+`Unexpected error: FStarC_Plugins_Base.DynlinkError(...)`.  So a `DExn` whose
+module is realized carries the `Realized` flag, and `PrintOCaml` treats it
+exactly as it treats a realized type -- the declaration is suppressed and
+every mention, in an expression or in a pattern, is qualified with the
+realization's module.
 
 One thing this does *not* do: a tuple field of an exception is not inlined the
 way §5.7 inlines one in a constructor, so `exception Bad of string & int`
@@ -4308,7 +4353,7 @@ against `src/**/*.fst` turns up, in rough order of size:
 4. **Plugins, native tactics and embeddings** have no counterpart at all.  This
    is not an independent item so much as the acceptance test for §12: a plugin
    *is* a separately compiled unit linking against the compiler.  Done (M10d),
-   and it is `make custard-plugin`; see §12.12.
+   and it is `tests/custard/plugin`; see §12.12.
 5. **§3.2b — a `Poly` argument in a `Mono` position — is a hard rejection**,
    and the compiler leans on `FStarC.Class.Show`/`Ord`/`Monad` everywhere.
    Measured (M9d).
@@ -4484,7 +4529,8 @@ against `src/**/*.fst` turns up, in rough order of size:
 7. **Build integration.**  One file per unit against the current per-module
    `.ml`; see §12.6.  `--lax` is not a concern: it only admits SMT queries, and
    leaves syntax, elaboration and the checked files unchanged.  **Done** for
-   the compiler itself: `make custard`, described in §12.11.
+   the compiler itself: it is the staged build, described in §12.15 (§12.11
+   is the standalone build that preceded it).
 8. Smaller: `Prims.int` maps to a fixed-width integer on the Krml path
    (`PrintKrml.fst:111`), which is fine for an OCaml target and a latent
    miscompilation for a C one; and `FStar.Printf`'s type-level arity
@@ -4771,10 +4817,24 @@ that the `Prims.int` question of item 8 remains.
 
 ### 12.11 `make custard`
 
+> **Removed.**  `mk/custard.mk`, `make custard`, `make custard-smoke` and the
+> `stagec/` tree they built are gone, and this section is kept for the
+> reasoning rather than for the recipe.  They existed to answer whether a
+> Custard-extracted compiler could be built at all, from *beside* the real
+> build; §12.15 is the answer, and it is the real build.  What each of the
+> four steps below settled has an heir there: the cache is now the staged
+> build's own `stageN/{ulib,fstarc}.checked`, the split is
+> `mk/custard-extract.mk`, and the generated dune project is the one
+> `mk/fstar-NN.mk` already had.  `--custard_entrypoints` and
+> `src/custard/entrypoints.txt` survive unchanged --- `mk/fstar-01.mk`'s
+> `CUSTARD_ENTRYFILES` is the line that reads them.  The one thing that was
+> only ever `make custard`'s is `custard-smoke`, and a compiler that checks
+> the whole library on every `make 3` does not need a smoke test.
+
 The recipe of §12.10 lived in shell one-liners for as long as the question was
-whether it could work at all.  It is now `mk/custard.mk`, reached by `make
-custard` (and `make custard-smoke`), building into `stagec/`.  It depends on a
-stage 2 compiler, which it needs twice over: to *run* the extraction, and for
+whether it could work at all.  It became `mk/custard.mk`, reached by `make
+custard` (and `make custard-smoke`), building into `stagec/`.  It depended on a
+stage 2 compiler, which it needed twice over: to *run* the extraction, and for
 the `.checked` files the extraction reads.
 
 The entry points are no longer a command line.  `src/custard/entrypoints.txt`
@@ -4868,16 +4928,35 @@ and `.o` under `native/` but the `.cmi` under `byte/` --- so a plugin needs
 dune's own lowercase-initial ones (`fStarC_Main.cmx`), which OCaml resolves
 without help.
 
-`make custard-smoke` checks `FStar.List.Tot.Properties` from source with the
+`make custard-smoke` checked `FStar.List.Tot.Properties` from source with the
 result, in a fresh `--cache_dir`: as §12.10 says, a Custard-built compiler
-cannot read a dune-built one's `.checked` files.
+cannot read a dune-built one's `.checked` files.  The staged build has no such
+target and needs none --- it checks the whole library with the compiler it
+just built, every time.
 
 ### 12.12 `make custard-plugin`
+
+> **Moved.**  The target is gone with the rest of `mk/custard.mk`; the test is
+> now `tests/custard/plugin/`, a subdirectory of the ordinary suite with its
+> own makefile, and it runs on every `make test`.  Nothing about *what* it
+> tests changed, and the four steps below are still the four steps --- but
+> three of them stopped being this test's business.  Step 2 is what
+> `--codegen Plugin` now does by itself (§13.6): a Custard extraction with the
+> plugin's modules as entries, linked against the installed `fstarc.cui`.
+> Step 3 is `--ocamlopt_plugin`, which already knew where the compiler's
+> objects are.  And the split between "extract with the dune-built compiler,
+> load into the Custard-built one" collapses, because there is only one
+> compiler now and it is Custard-built --- which also retires
+> `mk/custard-rule.mk`, whose whole job was to recheck the rule test's
+> dependency closure with the *other* compiler.  What is left in the makefile
+> is the part that was always specific: the roots, `--with_fstarc` on the
+> checking step because a rule's source names `FStarC.Custard`'s own types,
+> and the greps of §34, §36 and §64 over the generated C.
 
 Item 4 of §12.8 --- a plugin compiled by Custard, linking against a compiler
 compiled by Custard --- is the acceptance test for this whole section, because
 a plugin is the one thing that is *both* a separate compilation unit and a
-consumer of the compiler's own types.  It is `make custard-plugin`, and it is
+consumer of the compiler's own types.  It was `make custard-plugin`, and it was
 about forty lines of `mk/custard.mk`:
 
 1. check `tests/custard/plugin/CustardPlugin.fst` into the same `--cache_dir`
@@ -4951,8 +5030,12 @@ Pointing Custard at it is the honest measure of §12, and it has been done:
 compiler, compile to one loadable `.cmxs`, and that compiler checks the whole
 of `pulse/test` --- 58 files, 58 pass.**
 
-That is the end of the demonstration §12 was aiming at, and it is a make
-target rather than a demonstration: `make custard-pulse-plugin`.
+That is the end of the demonstration §12 was aiming at, and it was a make
+target rather than a demonstration: `make custard-pulse-plugin`.  That target
+is gone too, and for the happiest of the three reasons: the staged build
+*is* this, on every `make 3`.  Pulse is built as a Custard plugin against the
+compiler's own `.cui` by `pulse/mk/{checker,syntax_extension,extraction}.mk`,
+and `pulse/test` runs against the result.
 
 **What already works.**  `Pulse.Main` extracts whole against
 `stagec/split/fstarc.cui`: one unit, 7.6k lines of OCaml, in about two
@@ -5146,11 +5229,9 @@ build does not make.
 #### What is left
 
 1. **Nothing, for the plugin itself.**  The one realization whose names
-   differ, `Pulse_Extract_CompilerLib.ml`, now has a Custard-flavoured copy in
-   `pulse/src/ml-custard/`, which the link step overlays on `pulse/src/ml/`.
-   (A *sibling* of `src/ml` and not a subdirectory of it: the dune build
-   symlinks `src/ml` into an `include_subdirs unqualified` library, which
-   would pick a subdirectory up as a second definition of the module.)
+   differ, `pulse/src/ml/Pulse_Extract_CompilerLib.ml`, is now written
+   against Custard's names; it had a Custard-flavoured copy beside it for as
+   long as an ML-extracted compiler was still built, and §12.15 retired that.
    The two differences are both about the record a constructor's payload
    becomes: ML extraction disambiguates field names across the whole module,
    so `Tm_meta`'s `tm` is `tm2` and `Tm_let`'s `body` is `body1`; and §5.7
@@ -5277,6 +5358,143 @@ Both are gone: the hand-rolled pipeline is now a generated dune project
 brute force and compiles in parallel.  129 s of the two became 18 s, and the
 whole `make custard` 3 min 3 s became 1 min 19 s --- of which 48 s is the
 extraction, now much the largest stage again.
+
+### 12.15 The staged build runs Custard
+
+`make custard` (§12.11) builds a second compiler beside the real one, to find
+out whether Custard *can* extract F\*.  This section is the step after that:
+the three stages of the ordinary build extract themselves with Custard, and
+`stagec/` is no longer the only Custard-built compiler in the repository.  The
+compiler you get from `make` is one.
+
+What changes in the makefiles is small, because §12.9's splitting already
+made the output shaped like the ML backend's.  `mk/custard-extract.mk` is the
+whole of it, included by `mk/generic-0.mk` and `mk/generic-1.mk` and used by
+`mk/fstar-01.mk`, `mk/fstar-12.mk` and the two test-support makefiles:
+
+- The ML backend extracts one module at a time, so the generic rules give one
+  rule per `.ml` file and `ocamldep` order decides which to re-run.  Custard
+  reads the whole program at once, so there is **one** rule, its prerequisite
+  is every `.checked` file, and it rewrites the output directory.  This is not
+  as costly as it sounds: dune keys recompilation on a file's contents, so the
+  modules the change did not reach are written identically and not rebuilt.
+- A stage is one link unit (`--custard_unit fstarc`), and `fstarctests` is a
+  second one linked against it, exactly as a plugin would be (§13).  The unit
+  interface is installed beside the compiler as
+  `lib/fstar/fstarc/fstarc.cui`, which is what lets something built later ---
+  the Pulse plugin, below --- link against the compiler it will be loaded
+  into.
+- `FStar.Pervasives` is *realized* (`Builtins.realized_modules`), so Custard
+  does not emit it.  `make custard` picks the hand-written module up from
+  `fstar.lib`, which a staged build does not link; the staged build therefore
+  extracts that one module with `--codegen OCaml` into the same directory.
+  That is `CUSTARD_REALIZED`, and it is the only place where the two
+  extractors run over the same build.
+
+The Pulse plugin is three units --- `checker`, `syntax_extension`,
+`extraction` --- chained in that order, each linked against the compiler's
+`.cui` and its predecessors'.  Chained rather than parallel because linking a
+unit against two that export the same specialization key is error 369
+(§12.3), and the three share plenty.
+
+#### The stage0 bump
+
+A `.checked` file is a `Marshal` dump of the compiler's own data types, so a
+compiler built by one extractor cannot read one written by the other: the
+layouts are different for exactly the reasons §5 is about.  `stage0` is
+committed to the repository, and switching it is therefore a two-step
+operation --- bump to an ML-built compiler that *has* the Custard backend and
+the fixes below, then let that one extract stage1 with Custard --- and
+`cache_version_number` in `src/fstar/FStarC.CheckedFiles.fst` goes up, 99 to
+100, so that a stale cache is a diagnosable error rather than a segfault.
+After a bump, the `*.checked` directories of the affected stages have to be
+removed by hand, along with the `_cache` and `_output` directories of the test
+and example trees: a stale `.cmxs` there fails to load with an undefined
+symbol and says nothing about why.
+
+`make boot-diff` is the assurance that the switch is a fixpoint: stage2's
+extraction of itself is byte-identical to stage1's extraction of it.
+
+#### What the bootstrap found
+
+Nine Custard bugs, none of which the test suite or `make custard` reached,
+and each worth naming because each is a class.  The first four:
+
+- **An under-applied constructor of a collapsed type.**  A one-constructor
+  type whose payload the layout pass removes leaves its constructor as the
+  identity, and a *reference* to that constructor --- `map C xs` --- was
+  rewritten to `()` rather than to the identity function.  `Layout.eta_ctors`
+  eta-expands an under-applied constructor before anything rewrites it
+  (§129); `tests/custard/CtorFun.fst` is the regression.
+- **A `Tac` lambda's last erased binder.**  `Extract`'s `Tm_abs` case reified
+  the body before it computed the binder flags, so a `Tac` body looked pure
+  and the guard that keeps a trailing `squash` binder in front of an impure
+  codomain did not fire --- while every call site, reading the *unreified*
+  type, kept it and passed `()`.  The guard now asks
+  `Effects.is_reifiable rc.residual_effect`, which is the question it meant to
+  ask.
+- **`try ... with` swallowing an unmatched exception.**  F\* desugars a handler
+  to `try_with (fun () -> e) (function | P -> h)` with no catch-all, and the
+  ML backend recovers the semantics by splicing the handler's branches into
+  the `try` (`Extraction.ML.Code`, `MLE_Try`).  Custard wrapped the handler in
+  a single catch-all branch instead, which turns an exception the handler does
+  not match --- every `Failure` raised anywhere below a plugin's error
+  handling --- into `Pattern matching failed` at the handler.  `Builtins`'
+  `exn_rule` now splices too.
+- **A layout that is an ABI**: `FStarC.Extraction.KrmlAst` and
+  `[@@custard_boxed_fields]`, §5.7.
+
+Compiling *plugins* against a Custard-extracted compiler (§13.6) found five
+more, each written up where it belongs:
+
+- **A realized module's exception** was declared a second time instead of
+  being referred to, so the handler in `FStarC.Plugins` caught nothing and a
+  failed `--load` escaped as an unexpected error (§8.5).
+- **An `assume val` in a module being compiled** became a reference to the
+  file being written (§13.6).
+- **A root that returns `unit`** was taken for a specification, which is
+  every tactic (§13.6).
+- **A polymorphic root** was refused on OCaml with the C backend's
+  reason (§13.6).
+- **`CheckLN.is_ln` was wrong on four term shapes**, and a guard that is
+  occasionally wrong was the difference between a compile and a crash
+  (§88.3).
+
+And one bug in the *build* rather than in Custard: `--dep` records what the
+ML backend reads, which is not enough to pin down what a whole-program
+extractor reads, so `mk/test.mk` gives each concrete extraction target every
+checked file as an order-only prerequisite, the way `mk/custard-extract.mk`
+does.  Concrete and not the pattern rule, because §49.6's trap is exactly
+that a pattern rule with an extra prerequisite stops overriding a client's.
+
+The first three were all in the compiler's own text before this change and
+none of them could be observed, because the only way to run that text was to
+compile it with the other extractor.  That is the argument for doing this at
+all: a whole-program extractor whose only large input is a program it cannot
+be used to build is being tested on a corpus of one.
+
+#### Makefile hazards
+
+Two that cost real time, recorded so they cost no more:
+
+- `pulse/mk/*.mk` set their `CUSTARD_*` variables *before* `include boot.mk`,
+  so anything mentioning `FSTARC_CUI` or `FSTAR_LIBDIR` has to use deferred
+  `=`, not `:=`.  An empty `--custard_link` is not an error --- it means the
+  unit links against nothing, so it re-emits every compiler module it reaches
+  and collides with the compiler's own in the dune build.
+- Custard mangles a leading `_` to `u__`, so the generated
+  `FStarC_Options._something` of the version rule becomes
+  `FStarC_Options.u__something`; the rule in each stage's
+  `dune/fstar-guts/dune` `sed`s it.
+
+#### What is not fixed
+
+The Pulse test suite has two failures that predate this and are unrelated to
+it, confirmed by running the same suite on the merge-base: a plugin loaded
+with `--include out/lib/pulse` while the stage 3 `fstar.exe` already links it
+statically is error 353 (`The module ... is already loaded`), and `pulse2rust`
+rejects an `ALL` where it wants a `Tot`.  Both reproduce identically with an
+ML-built compiler.
 
 ## 13. Plugins
 
@@ -5618,6 +5836,204 @@ A sixth turned up when the plugin of §12.12 was loaded and reduced nothing:
   forces the application, since there is no other way to specialize on it.
   `tests/custard/Thunk.fst` is a counter that prints `123` if the reference
   is shared and `111` if it is not.
+
+### 13.6 `--codegen Plugin` is a Custard extraction
+
+Once the compiler is extracted by Custard (§12.15), `--codegen Plugin` cannot
+mean what it used to.  A plugin is OCaml dynlinked into *this* compiler, so it
+has to agree with the compiler's own extraction about every name and every data
+layout the two share.  Custard makes those decisions for the program it
+compiled and records them in `fstarc.cui`; an independently ML-extracted plugin
+makes different ones, and the two disagree silently --- a record the compiler
+collapsed to its single field against one the ML backend kept as a record, and
+no diagnostic anywhere.
+
+So `--codegen Plugin` is now a Custard extraction of one unit, linked against
+the compiler's.  `Options.desugar_plugin_codegen`, which runs inside
+`parse_cmd_line` so that the rewrite is part of the state `#push`/`#pop`
+restore to, turns
+
+```
+--codegen Plugin A.fst B.fst
+```
+
+into
+
+```
+--codegen Custard --custard_unit A --custard_link <lib>/fstar/fstarc/fstarc.cui
+  --custard_entry A --custard_entry_module A
+  --custard_entry B --custard_entry_module B
+  --with_fstarc --include <lib>/fstar/ulib.checked --already_cached '*'
+```
+
+Each file is a root twice: as `--custard_entry`, which is what generates its
+`[@@plugin]` registrations (§13.3), and as `--custard_entry_module`, which
+emits the rest of what it defines, since a hand-written fixup or a second
+plugin may call any of it.  That is what the ML backend's plugin flavour
+produced for the module, so Makefiles that append a fixup file keep working.
+The unit is named after the first file in the mangled spelling the ML backend
+used --- `Registers.List` gives `Registers_List` --- so that a Makefile saying
+`-o Registers_List.cmxs Registers_List.ml` still finds its input.  A user who
+passes `--custard_unit` is taken at their word.
+
+The last three flags are the same three Pulse's build writes by hand
+(`pulse/mk/checker.mk`), for the same reasons.  Generating a registration
+reaches the compiler's own modules --- `FStarC.Tactics.InterpFuns`, and the
+embeddings the plugin's argument types need --- which have to be in the
+dependency graph, and `--with_fstarc` is what puts them there.  It also puts
+the compiler's *prelude* on the path, whose bundle hashes are not the ones the
+plugin's own checked file was written against, so the library's checked files
+go last, where they win; and `--already_cached` then says that the rest of the
+graph comes from its checked files rather than being rechecked against a
+prelude it does not match.  The module on the command line is exempt from
+`--already_cached` by construction, so the plugin itself is still extracted
+from what its source says.
+
+`Find.locate_fstarc_cui` looks for the unit interface next to the compiler
+sources, at `<bindir>/../lib/fstar/fstarc/fstarc.cui`, installed there by
+`mk/stage.mk`.  A compiler that was not extracted by Custard has none, and the
+plugin is then compiled whole; it will not load into such a compiler, but that
+is a property of the compiler and not a reason to fail at extraction time,
+where `--codegen Plugin --dep full` still has to work.
+
+#### What this buys
+
+The alternative was to keep making the compiler carry the *entire* library's
+plugin flavour, on the chance that some plugin names a module the compiler
+never reaches.  The unified ML pass did exactly that: it emitted 158 `FStar_*`
+modules into `fstarc.ml`, and the `fstar.compiler` ocamlfind package is what a
+plugin is compiled against, so `FStar.Algebra.CommMonoid` was there whether or
+not anything in the compiler had heard of it.  Custard emits 39 --- what the
+compiler reaches --- and the first attempt at a fix was to root the other 119
+with `--custard_entry_module`.  That is the wrong shape: it is a whole-program
+compiler being asked to compile a library, it re-introduces the dead code the
+switch was supposed to remove, and it immediately turned up two bugs in code
+that no program had ever needed (`FStar.SizeT` emitted as an abbreviation of
+`FStar_UInt64.t` while annotating itself, and an erased `prop -> prop -> prop`
+collapsed to `()` where a two-argument function was expected).
+
+Linking is the shape that was already there.  A definition the compiler
+exported is *called*, with the compiler's layout; anything else is compiled
+into the plugin itself, on demand.  `tests/semiring` gets its own copy of
+`FStar.Algebra.CommMonoid.cm` --- as a record, in the plugin's unit, under the
+plugin's name for it --- and nothing in the compiler has to change for a plugin
+to use a library module nobody anticipated.
+
+#### What a root is, on a backend that has polymorphism
+
+Two rules that decide what `--custard_entry_module` roots had been written
+for the C backend, where they are right, and were wrong for OCaml.  Both were
+found by this switch, and `tests/semiring` found both.
+
+`--custard_entry_module` used to skip a definition with a type binder
+(§19.11): a polymorphic helper is not code until it is instantiated, and a
+root has no caller to instantiate it.  That is the *direct* backend's
+objection --- error 368 is C refusing a declaration whose type is still a
+variable --- and it does not apply to OCaml, whose types are polymorphic and
+whose declarations may be too.  The Custard IR is polymorphic all the way to
+`PrintOCaml`, so the restriction is now conditioned on the backend.  Without
+it a plugin that hands a *polymorphic* definition to a hand-written
+registration loses it, silently at extraction and loudly at link:
+`canon_semiring_aux` takes `(a: Type)` as an explicit argument and is
+registered by `CanonCommSemiring.ml.fixup` rather than by `[@@plugin]`.
+
+A root is also skipped when it is a specification rather than code, and the
+test for that asked `must_erase_for_extraction` about the definition's result
+type.  `unit` answers yes --- which is right about the *value*, and wrong
+about a definition that has to run to produce it.  Every tactic is
+`... -> Tac unit`, so every tactic was a specification, and rooting a module
+of tactics emitted none of them.  The result type only settles the question
+for a pure or ghost computation; an effectful one is kept whatever it
+returns.  `root_is_erased` already said so, in a comment; `erased_definition`
+now agrees with it, and `root_is_erased` is written in terms of it so that
+they cannot drift apart again.
+
+The consequence to watch for is on the C side, where rooting a module now
+reaches `ML unit` definitions it did not before.  `tests/custard`'s
+`TmplMono` has a `g_gemm : ... -> ML unit` that is template-indexed and only
+compilable once instantiated; rooting its module makes it a library function
+and it fails with error 390.  Those tests name their monomorphic entry point
+with `--custard_entry` instead.
+
+#### An `assume val` in a module being compiled
+
+An external is a reference to a name the target language will resolve
+elsewhere.  On OCaml, `M.f` emitted into `M.ml` resolves to the file being
+written, so an `assume val` in a module Custard is *itself* compiling becomes
+a reference to itself and does not compile.  The ML backend has always
+emitted `failwith "Not yet implemented: M.f"` for this, and a stub is the
+honest reading: the program says the definition does not exist, so reaching
+it is a failure, and the failure names what was missing.  Custard now does
+the same, for the backends that have no other answer.  C and Rust keep the
+external, because there an `assume val` *is* how a symbol defined elsewhere
+is declared, and `tests/custard`'s C++ template tests depend on it.
+
+#### An out-of-tree plugin, and what it may rely on
+
+A plugin built against an *installed* F\* is the case this section's design
+has to be read carefully to answer, because the first reading of it is wrong
+and the wrong reading is discouraging.  The compiler is whole-program and
+dead-code-eliminated, so `fstar.compiler` contains what the compiler itself
+reaches and no more.  A plugin that calls the compiler from hand-written
+OCaml is therefore calling names that may simply not be there --- and
+`--custard_entrypoints`, the option written for exactly this, is described
+above as something the *compiler's* build reads.
+
+The conclusion that an out-of-tree plugin has no way to root anything does
+not follow, and is false.  `--custard_entrypoints` is an option of an
+extraction, not of the compiler's build, and a plugin *is* an extraction.
+Naming `FStarC.Syntax.Util.mk_list` when extracting the plugin roots it in
+**the plugin's** unit: it is not in `fstarc.cui`, so §12.1's rule applies and
+it is compiled into the plugin, under the plugin's own name for it
+(`OotPlugin.fStarC_Syntax_Util_mk_list`).  Hand-written OCaml calls that.
+Nothing has to be re-extracted, and the compiler's build does not have to know
+the plugin exists.
+
+Three of the four things this was thought to block are therefore not blocked:
+
+* **Definitions.**  Root them.  `mk_list`, `DsEnv.transitive_exported_ids`
+  and `Errors.raise_error_doc` all emit.
+* **Type abbreviations.**  Root them; they emit as `type` declarations rather
+  than being unfolded, which is §4.4's rule and nothing new.  Note that error
+  385, "Custard cannot find a definition for `FStarC.Range.pos`", means the
+  lid is wrong and not that the definition was dropped --- `pos` is declared
+  in `FStarC.Range.Type`.
+* **Typeclass instances.**  Root them.  `FStarC.Syntax.Syntax.tagged_term`
+  emits as `fStarC_Syntax_Syntax_tagged_term`, which is a name §5.2 makes
+  from the lid and is therefore as stable as the lid.  It is *not* the
+  specialization name §30.15 warns about.
+
+The fourth is real: **a function whose signature has a `Mono` binder cannot
+be a bare root.**  `FStarC.Errors.raise_error` takes `{| hasRange pos_t |}`,
+and rooting it is error 364 --- "the argument passed to the monomorphized
+binder number 0 of `FStarC.Class.HasRange.pos` is the runtime parameter
+`pos_t`, so there is nothing to specialize on".  This is M10u's question
+asked from outside the tree: a `Mono` binder wants a call site, and a root is
+live by fiat and has none.
+
+M10u's answer works here too, and is three lines:
+
+```fstar
+let raise_error_range (#a:Type) (r:R.range) (c:E.error_code) (msg:list document)
+  : ML a = E.raise_error r c msg
+```
+
+Root the wrapper instead.  If the compiler already has that specialization
+the plugin links against it --- the body comes out as a call to
+`FStarC_Errors.fStarC_Errors_raise_error__range_list_document`, with no copy.
+If it does not, Custard emits a fresh one into the plugin's unit; giving the
+wrapper a plugin-defined position type with its own `hasRange` instance
+produces `fStarC_Errors_raise_error__mypos_list_document` locally.  Either way
+the hand-written OCaml names `ootShim_raise_error_range`, which is the
+plugin's own and is stable, so §30.15's instability never reaches it.  That is
+the general shape: **an unstable name is made stable by putting an F\* call
+site in front of it**, and the call site is also what the `Mono` binder needed.
+
+Error 364 says this.  The two remedies it offers otherwise --- annotate the
+argument, or drop the annotation --- are both unavailable when the enclosing
+definition is a root, since its signature belongs to the library and it has no
+call site, so `root_binder_of_enclosing` distinguishes that case and the
+message asks for the wrapper instead.
 
 ## 14. Migrating an example: DICE
 
@@ -9953,20 +10369,21 @@ a rule is consulted before the definition, its arguments are reduced, and
 what it does not use does not survive. Kuiper's host side is a plugin rule
 and needs nothing further from Custard.
 
-The example is wired into `make custard`'s `plugin` target, which already
-compiles a plugin *with* Custard and loads it into a Custard-built compiler.
+The example is wired into `tests/custard/plugin`, which already compiles a
+plugin *with* Custard and loads it into a Custard-built compiler.
 `CustardRulePlugin` is a third root there, and a root for the same reason the
 other two are: a module that exists for its initializer has to be named or
 nothing reaches it (§4.4). `FStarC.Custard.Builtins.register_rule` and its
 two chaining forms are now in `src/custard/entrypoints.txt`, since a plugin
 calls them through no request the extraction can see.
 
-`mk/custard-rule.mk` is a separate makefile only because the dependency graph
-of the test program has to be generated by the Custard-built compiler and
-then included, and a recipe cannot include a file it has just written. The
-closure is rechecked rather than reused: §12.10's limitation is that a
-Custard-built compiler cannot read a dune-built one's `.checked` files.
-`--lax` is enough, and makes the 37 modules take about fifteen seconds.
+The test program's dependency closure used to need a makefile of its own
+(`mk/custard-rule.mk`), because it had to be generated by the Custard-built
+compiler and then included, and a recipe cannot include a file it has just
+written --- §12.10's limitation being that a Custard-built compiler cannot
+read a dune-built one's `.checked` files.  Now that the compiler running the
+suite is itself Custard-extracted there is only one kind of `.checked` file,
+and the ordinary `.depend` of `mk/test.mk` does the job.
 
 The rule itself fails loudly on a shape it does not expect, and says which
 shape it got. A rule that silently accepts the wrong one is worse than one
@@ -12120,8 +12537,8 @@ so it is a static error in the rule, not a property of a use. Warning 381
 because that count is conservative: `erased_binders_unfold` declines to peel
 an effectful codomain, so a rule could in principle be right and be warned
 about. Measured: zero firings across `tests/custard`,
-`tests/custard/pulse`, and `make custard`, which is thirty-odd rules and the
-whole compiler.
+`tests/custard/pulse`, and the compiler's own extraction, which is thirty-odd
+rules and the whole compiler.
 
 Issue 4565 made it an error where the count is known to be exact. A Pulse
 `fn` whose `requires` became erased `squash` binders went from ten retained
@@ -14180,7 +14597,7 @@ gate that will be deleted by whoever next meets it without the tool.
 `pulse/test` extracts through Custard (§15) and pins nineteen `.c` and
 `.h` goldens.  It is not one of the suites I had been running --- my
 standing set was `tests/custard`, `tests/custard/pulse`,
-`tests/extraction/backends`, `make custard` and `make custard-smoke`
+`tests/extraction/backends` and `make custard`
 --- and its `.expected` files had last been regenerated in §24.
 Everything since that changed the shape of emitted C had accumulated in
 them, and CI had been red on it for that whole stretch.
@@ -14546,7 +14963,8 @@ unused in the program that declares it.
 ## 64.4 The test needs the plugin
 
 Everything above is reachable only with a rule, so the test is in
-`make custard-plugin` and not in `tests/custard`.  `CustardRulePlugin`
+`tests/custard/plugin`, which builds and loads one, rather than in
+`tests/custard` proper.  `CustardRulePlugin`
 grew an `emit` rule forwarding to a polymorphic `sink`, and
 `CustardRuleMain.c` grew the two realizations:
 
@@ -17682,6 +18100,21 @@ before this section rather than anywhere worse.
 
 The guard runs before `is_type_term` and not after, because the safety
 condition has to hold before anything else looks at the term.
+
+`CheckLN.is_ln` is an *approximation*, though, and switching the compiler's
+own build to Custard (§12.15) found where.  It did not recurse into
+`Tm_meta`, into the ascription of a `Tm_ascribed`, into a `Tm_match`'s
+return annotation, or into a computation's flags --- and
+`FStar.Reflection.V2.Arith`'s `as_arith_expr` has an inner
+`let precedes_fst_tl ... : Lemma (... tl ...)`, whose *sort* carries exactly
+such an index.  The guard said yes and the normalizer said
+`Failure("Failed to find tl")`.  Those four cases are now covered.
+
+But the deeper point is that a guard which is occasionally wrong must not be
+the difference between a compile and a crash.  `Extract.norm_optional_open`
+runs the normalizer and catches `Failure`, returning `None`, and the two
+best-effort scan sites use it.  The guard now decides whether to *try*; the
+handler decides what happens when trying was a mistake.
 
 ### 88.4.  Three causes, one error code
 

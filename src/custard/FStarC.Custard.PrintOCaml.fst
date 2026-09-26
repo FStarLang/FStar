@@ -1035,6 +1035,8 @@ let print_decl (first:bool) (d:decl) : ML (option string) =
   (* An external is printed at each of its uses; see {!externals}. *)
   | DExternal _ -> None
 
+  | DExn e when has_flag e.de_flags Realized -> None
+
   | DExn e ->
     Some ("exception " ^ ocaml_ctor_ident e.de_name ^
           (match e.de_args with
@@ -1159,6 +1161,9 @@ let build_tables (homes : SMap.t string) (p:program) : ML unit =
      realization: the upstream unit did not compile it either. *)
   p |> List.iter (fun d ->
     match d with
+    | DExn e when has_flag e.de_flags Realized ->
+      SMap.add real (string_of_name e.de_name) ();
+      SMap.add quals (string_of_name e.de_name) (String.concat "_" e.de_name.ns)
     | DType t when has_flag t.dt_flags Realized ->
       let m = String.concat "_" t.dt_name.ns in
       let mark (n:name) : ML unit =
@@ -1215,7 +1220,8 @@ let build_tables (homes : SMap.t string) (p:program) : ML unit =
   exn_idents := SMap.create 0;
   let exns = p |> List.collect (fun d ->
     match d with
-    | DExn e when None? e.de_name.spec && not (is_at_home e.de_name) ->
+    | DExn e when None? e.de_name.spec && not (is_at_home e.de_name)
+               && not (has_flag e.de_flags Realized) ->
       [e.de_name]
     | _ -> []) in
   let short (n:name) : ML string = uppercase_first (sanitize n.id) in

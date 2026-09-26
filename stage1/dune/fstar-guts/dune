@@ -34,4 +34,7 @@
       (copy %{version} version.txt)
       (with-stdout-to
         FStarC_Version.ml
-        (run bash %{script})))))
+        ; Custard mangles a leading underscore to `u__' (doc/ref/custard.md,
+        ; section 5.2), so the assignments the script writes have to be
+        ; renamed to the names the extraction gave the option references.
+        (system "bash %{script} | sed s/FStarC_Options[.]_/FStarC_Options.u__/")))))

@@ -1,6165 +1,2819 @@
-open Prims
-let dbg_TwoPhases : Prims.bool FStarC_Effect.ref=
-  FStarC_Debug.get_toggle "TwoPhases"
-let dbg_IdInfoOn : Prims.bool FStarC_Effect.ref=
-  FStarC_Debug.get_toggle "IdInfoOn"
-let dbg_Normalize : Prims.bool FStarC_Effect.ref=
-  FStarC_Debug.get_toggle "Normalize"
-let dbg_UF : Prims.bool FStarC_Effect.ref= FStarC_Debug.get_toggle "UF"
-let dbg_LogTypes : Prims.bool FStarC_Effect.ref=
-  FStarC_Debug.get_toggle "LogTypes"
-let sigelt_typ (se : FStarC_Syntax_Syntax.sigelt) :
-  FStarC_Syntax_Syntax.typ FStar_Pervasives_Native.option=
-  match se.FStarC_Syntax_Syntax.sigel with
-  | FStarC_Syntax_Syntax.Sig_inductive_typ
-      { FStarC_Syntax_Syntax.lid = uu___; FStarC_Syntax_Syntax.us = uu___1;
-        FStarC_Syntax_Syntax.params = uu___2;
-        FStarC_Syntax_Syntax.num_uniform_params = uu___3;
-        FStarC_Syntax_Syntax.t = t; FStarC_Syntax_Syntax.mutuals = uu___4;
-        FStarC_Syntax_Syntax.ds = uu___5;
-        FStarC_Syntax_Syntax.injective_type_params = uu___6;_}
-      -> FStar_Pervasives_Native.Some t
-  | FStarC_Syntax_Syntax.Sig_datacon
-      { FStarC_Syntax_Syntax.lid1 = uu___; FStarC_Syntax_Syntax.us1 = uu___1;
-        FStarC_Syntax_Syntax.t1 = t; FStarC_Syntax_Syntax.ty_lid = uu___2;
-        FStarC_Syntax_Syntax.num_ty_params = uu___3;
-        FStarC_Syntax_Syntax.mutuals1 = uu___4;
-        FStarC_Syntax_Syntax.injective_type_params1 = uu___5;
-        FStarC_Syntax_Syntax.proj_disc_lids = uu___6;_}
-      -> FStar_Pervasives_Native.Some t
-  | FStarC_Syntax_Syntax.Sig_declare_typ
-      { FStarC_Syntax_Syntax.lid2 = uu___; FStarC_Syntax_Syntax.us2 = uu___1;
-        FStarC_Syntax_Syntax.t2 = t;_}
-      -> FStar_Pervasives_Native.Some t
-  | FStarC_Syntax_Syntax.Sig_let
-      { FStarC_Syntax_Syntax.lbs1 = (uu___, lb::uu___1);
-        FStarC_Syntax_Syntax.lids1 = uu___2;_}
-      -> FStar_Pervasives_Native.Some (lb.FStarC_Syntax_Syntax.lbtyp)
-  | uu___ -> FStar_Pervasives_Native.None
-let set_hint_correlator (env : FStarC_TypeChecker_Env.env)
-  (se : FStarC_Syntax_Syntax.sigelt) : FStarC_TypeChecker_Env.env=
-  let tbl =
-    FStar_Pervasives_Native.snd
-      env.FStarC_TypeChecker_Env.qtbl_name_and_index in
-  let get_n lid =
-    let n_opt =
-      let uu___ = FStarC_Class_Show.show FStarC_Ident.showable_lident lid in
-      FStarC_SMap.try_find tbl uu___ in
-    if
-      match n_opt with
-      | FStar_Pervasives_Native.Some v -> true
-      | uu___ -> false
-    then FStarC_Option.must n_opt
-    else Prims.int_zero in
-  let typ =
-    match sigelt_typ se with
-    | FStar_Pervasives_Native.Some t -> t
-    | uu___ -> FStarC_Syntax_Syntax.tun in
-  let lids = FStarC_Syntax_Util.lids_of_sigelt se in
-  let lid =
-    match lids with
-    | [] ->
-        let uu___ =
-          let uu___1 = FStarC_GenSym.next_id () in
-          FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___1 in
-        FStarC_Ident.lid_add_suffix
-          (FStarC_TypeChecker_Env.current_module env) uu___
-    | l::uu___ -> l in
-  let uu___ =
-    let uu___1 =
-      let uu___2 = let uu___3 = get_n lid in (lid, typ, uu___3) in
-      FStar_Pervasives_Native.Some uu___2 in
-    (uu___1, tbl) in
-  {
-    FStarC_TypeChecker_Env.solver = (env.FStarC_TypeChecker_Env.solver);
-    FStarC_TypeChecker_Env.range = (env.FStarC_TypeChecker_Env.range);
-    FStarC_TypeChecker_Env.curmodule = (env.FStarC_TypeChecker_Env.curmodule);
-    FStarC_TypeChecker_Env.gamma = (env.FStarC_TypeChecker_Env.gamma);
-    FStarC_TypeChecker_Env.gamma_sig = (env.FStarC_TypeChecker_Env.gamma_sig);
-    FStarC_TypeChecker_Env.gamma_cache =
-      (env.FStarC_TypeChecker_Env.gamma_cache);
-    FStarC_TypeChecker_Env.modules = (env.FStarC_TypeChecker_Env.modules);
-    FStarC_TypeChecker_Env.expected_typ =
-      (env.FStarC_TypeChecker_Env.expected_typ);
-    FStarC_TypeChecker_Env.expected_post =
-      (env.FStarC_TypeChecker_Env.expected_post);
-    FStarC_TypeChecker_Env.sigtab = (env.FStarC_TypeChecker_Env.sigtab);
-    FStarC_TypeChecker_Env.attrtab = (env.FStarC_TypeChecker_Env.attrtab);
-    FStarC_TypeChecker_Env.instantiate_imp =
-      (env.FStarC_TypeChecker_Env.instantiate_imp);
-    FStarC_TypeChecker_Env.effects = (env.FStarC_TypeChecker_Env.effects);
-    FStarC_TypeChecker_Env.generalize =
-      (env.FStarC_TypeChecker_Env.generalize);
-    FStarC_TypeChecker_Env.letrecs = (env.FStarC_TypeChecker_Env.letrecs);
-    FStarC_TypeChecker_Env.top_level = (env.FStarC_TypeChecker_Env.top_level);
-    FStarC_TypeChecker_Env.check_uvars =
-      (env.FStarC_TypeChecker_Env.check_uvars);
-    FStarC_TypeChecker_Env.use_eq_strict =
-      (env.FStarC_TypeChecker_Env.use_eq_strict);
-    FStarC_TypeChecker_Env.is_iface = (env.FStarC_TypeChecker_Env.is_iface);
-    FStarC_TypeChecker_Env.admit = (env.FStarC_TypeChecker_Env.admit);
-    FStarC_TypeChecker_Env.phase1 = (env.FStarC_TypeChecker_Env.phase1);
-    FStarC_TypeChecker_Env.failhard = (env.FStarC_TypeChecker_Env.failhard);
-    FStarC_TypeChecker_Env.flychecking =
-      (env.FStarC_TypeChecker_Env.flychecking);
-    FStarC_TypeChecker_Env.uvar_subtyping =
-      (env.FStarC_TypeChecker_Env.uvar_subtyping);
-    FStarC_TypeChecker_Env.intactics = (env.FStarC_TypeChecker_Env.intactics);
-    FStarC_TypeChecker_Env.nocoerce = (env.FStarC_TypeChecker_Env.nocoerce);
-    FStarC_TypeChecker_Env.tc_term = (env.FStarC_TypeChecker_Env.tc_term);
-    FStarC_TypeChecker_Env.typeof_tot_or_gtot_term =
-      (env.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term);
-    FStarC_TypeChecker_Env.universe_of =
-      (env.FStarC_TypeChecker_Env.universe_of);
-    FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
-      (env.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-    FStarC_TypeChecker_Env.teq_nosmt_force =
-      (env.FStarC_TypeChecker_Env.teq_nosmt_force);
-    FStarC_TypeChecker_Env.subtype_nosmt_force =
-      (env.FStarC_TypeChecker_Env.subtype_nosmt_force);
-    FStarC_TypeChecker_Env.qtbl_name_and_index = uu___;
-    FStarC_TypeChecker_Env.normalized_eff_names =
-      (env.FStarC_TypeChecker_Env.normalized_eff_names);
-    FStarC_TypeChecker_Env.fv_delta_depths =
-      (env.FStarC_TypeChecker_Env.fv_delta_depths);
-    FStarC_TypeChecker_Env.proof_ns = (env.FStarC_TypeChecker_Env.proof_ns);
-    FStarC_TypeChecker_Env.synth_hook =
-      (env.FStarC_TypeChecker_Env.synth_hook);
-    FStarC_TypeChecker_Env.try_solve_implicits_hook =
-      (env.FStarC_TypeChecker_Env.try_solve_implicits_hook);
-    FStarC_TypeChecker_Env.splice = (env.FStarC_TypeChecker_Env.splice);
-    FStarC_TypeChecker_Env.mpreprocess =
-      (env.FStarC_TypeChecker_Env.mpreprocess);
-    FStarC_TypeChecker_Env.postprocess =
-      (env.FStarC_TypeChecker_Env.postprocess);
-    FStarC_TypeChecker_Env.identifier_info =
-      (env.FStarC_TypeChecker_Env.identifier_info);
-    FStarC_TypeChecker_Env.tc_hooks = (env.FStarC_TypeChecker_Env.tc_hooks);
-    FStarC_TypeChecker_Env.dsenv = (env.FStarC_TypeChecker_Env.dsenv);
-    FStarC_TypeChecker_Env.nbe = (env.FStarC_TypeChecker_Env.nbe);
-    FStarC_TypeChecker_Env.strict_args_tab =
-      (env.FStarC_TypeChecker_Env.strict_args_tab);
-    FStarC_TypeChecker_Env.erasable_types_tab =
-      (env.FStarC_TypeChecker_Env.erasable_types_tab);
-    FStarC_TypeChecker_Env.enable_defer_to_tac =
-      (env.FStarC_TypeChecker_Env.enable_defer_to_tac);
-    FStarC_TypeChecker_Env.unif_allow_ref_guards =
-      (env.FStarC_TypeChecker_Env.unif_allow_ref_guards);
-    FStarC_TypeChecker_Env.erase_erasable_args =
-      (env.FStarC_TypeChecker_Env.erase_erasable_args);
-    FStarC_TypeChecker_Env.core_check =
-      (env.FStarC_TypeChecker_Env.core_check);
-    FStarC_TypeChecker_Env.missing_decl =
-      (env.FStarC_TypeChecker_Env.missing_decl);
-    FStarC_TypeChecker_Env.iface_todo =
-      (env.FStarC_TypeChecker_Env.iface_todo);
-    FStarC_TypeChecker_Env.iface_hidden =
-      (env.FStarC_TypeChecker_Env.iface_hidden);
-    FStarC_TypeChecker_Env.iface_lids =
-      (env.FStarC_TypeChecker_Env.iface_lids);
-    FStarC_TypeChecker_Env.iface_val_lids =
-      (env.FStarC_TypeChecker_Env.iface_val_lids)
-  }
-let log (env : FStarC_TypeChecker_Env.env) : Prims.bool=
-  let uu___ = FStarC_Options.log_types () in
-  if uu___
-  then
-    Prims.not
-      (FStarC_Ident.lid_equals FStarC_Parser_Const.prims_lid
-         (FStarC_TypeChecker_Env.current_module env))
-  else false
-let tc_type_common (env : FStarC_TypeChecker_Env.env)
-  (ts : FStarC_Syntax_Syntax.tscheme)
-  (expected_typ : FStarC_Syntax_Syntax.typ) (r : FStarC_Range_Type.t) :
-  FStarC_Syntax_Syntax.tscheme=
-  let uu___ = ts in
-  match uu___ with
-  | (uvs, t) ->
-      let uu___1 = FStarC_Syntax_Subst.open_univ_vars uvs t in
-      (match uu___1 with
-       | (uvs1, t1) ->
-           let env1 = FStarC_TypeChecker_Env.push_univ_vars env uvs1 in
-           let t2 =
-             FStarC_TypeChecker_TcTerm.tc_check_trivial_guard env1 t1
-               expected_typ in
-           if uvs1 = []
-           then
-             let uu___2 =
-               FStarC_TypeChecker_Generalize.generalize_universes env1 t2 in
-             (match uu___2 with
-              | (uvs2, t3) ->
-                  (FStarC_TypeChecker_Util.check_uvars r t3; (uvs2, t3)))
-           else
-             (let uu___2 =
-                let uu___3 =
-                  FStarC_TypeChecker_Normalize.remove_uvar_solutions env1 t2 in
-                FStarC_Syntax_Subst.close_univ_vars uvs1 uu___3 in
-              (uvs1, uu___2)))
-let tc_declare_typ (env : FStarC_TypeChecker_Env.env)
-  (ts : FStarC_Syntax_Syntax.tscheme) (r : FStarC_Range_Type.t) :
-  FStarC_Syntax_Syntax.tscheme=
-  let uu___ =
-    let uu___1 = FStarC_Syntax_Util.type_u () in
-    FStar_Pervasives_Native.fst uu___1 in
-  tc_type_common env ts uu___ r
-let tc_assume (env : FStarC_TypeChecker_Env.env)
-  (ts : FStarC_Syntax_Syntax.tscheme) (r : FStarC_Range_Type.t) :
-  FStarC_Syntax_Syntax.tscheme=
-  tc_type_common env ts FStarC_Syntax_Syntax.t_prop r
-let tc_decl_attributes (env : FStarC_TypeChecker_Env.env)
-  (se : FStarC_Syntax_Syntax.sigelt) : FStarC_Syntax_Syntax.sigelt=
-  let uu___ =
-    let uu___1 =
-      FStarC_TypeChecker_Env.lid_exists env
-        FStarC_Parser_Const.attr_substitute_lid in
-    if uu___1
-    then ([], (se.FStarC_Syntax_Syntax.sigattrs))
-    else
-      FStarC_List.partition ((=) FStarC_Syntax_Util.attr_substitute)
-        se.FStarC_Syntax_Syntax.sigattrs in
-  match uu___ with
-  | (blacklisted_attrs, other_attrs) ->
-      let uu___1 = FStarC_TypeChecker_TcTerm.tc_attributes env other_attrs in
-      (match uu___1 with
-       | (g, other_attrs1) ->
-           (FStarC_TypeChecker_Rel.force_trivial_guard env g;
-            {
-              FStarC_Syntax_Syntax.sigel = (se.FStarC_Syntax_Syntax.sigel);
-              FStarC_Syntax_Syntax.sigrng = (se.FStarC_Syntax_Syntax.sigrng);
-              FStarC_Syntax_Syntax.sigquals =
-                (se.FStarC_Syntax_Syntax.sigquals);
-              FStarC_Syntax_Syntax.sigmeta =
-                (se.FStarC_Syntax_Syntax.sigmeta);
-              FStarC_Syntax_Syntax.sigattrs =
-                (FStarC_List.op_At blacklisted_attrs other_attrs1);
-              FStarC_Syntax_Syntax.sigopens_and_abbrevs =
-                (se.FStarC_Syntax_Syntax.sigopens_and_abbrevs);
-              FStarC_Syntax_Syntax.sigopts =
-                (se.FStarC_Syntax_Syntax.sigopts)
-            }))
-let tc_inductive' (env : FStarC_TypeChecker_Env.env)
-  (ses : FStarC_Syntax_Syntax.sigelt Prims.list)
-  (quals : FStarC_Syntax_Syntax.qualifier Prims.list)
-  (attrs : FStarC_Syntax_Syntax.attribute Prims.list)
-  (lids : FStarC_Ident.lident Prims.list) :
-  (FStarC_Syntax_Syntax.sigelt * FStarC_Syntax_Syntax.sigelt Prims.list)=
-  (let uu___1 = FStarC_Debug.low () in
-   if uu___1
-   then
-     let uu___2 =
-       FStarC_Class_Show.show
-         (FStarC_Class_Show.show_list FStarC_Syntax_Print.showable_sigelt)
-         ses in
-     FStarC_Format.print1 ">>>>>>>>>>>>>>tc_inductive %s\n" uu___2
-   else ());
-  (let ses1 = FStarC_List.map (tc_decl_attributes env) ses in
-   let uu___1 =
-     FStarC_TypeChecker_TcInductive.check_inductive_well_typedness env ses1
-       quals lids in
-   match uu___1 with
-   | (sig_bndle, tcs, datas) ->
-       let sig_bndle1 =
-         FStarC_TypeChecker_Positivity.mark_uniform_type_parameters env
-           sig_bndle in
-       let attrs' =
-         FStarC_Syntax_Util.remove_attr FStarC_Parser_Const.erasable_attr
-           attrs in
-       let data_ops_ses =
-         let uu___2 =
-           FStarC_List.map
-             (FStarC_TypeChecker_TcInductive.mk_data_operations quals attrs'
-                env tcs) datas in
-         FStarC_List.flatten uu___2 in
-       ((let uu___3 =
-           let uu___4 = FStarC_Options.no_positivity () in
-           if uu___4
-           then true
-           else
-             (let uu___5 = FStarC_TypeChecker_Env.should_verify env in
-              Prims.not uu___5) in
-         if uu___3
-         then ()
-         else
-           (let env2 = FStarC_TypeChecker_Env.push_sigelt env sig_bndle1 in
-            FStarC_List.iter
-              (fun ty ->
-                 let b =
-                   FStarC_TypeChecker_Positivity.check_strict_positivity env2
-                     lids ty in
-                 if Prims.not b
-                 then
-                   let uu___5 =
-                     match ty.FStarC_Syntax_Syntax.sigel with
-                     | FStarC_Syntax_Syntax.Sig_inductive_typ
-                         { FStarC_Syntax_Syntax.lid = lid;
-                           FStarC_Syntax_Syntax.us = uu___6;
-                           FStarC_Syntax_Syntax.params = uu___7;
-                           FStarC_Syntax_Syntax.num_uniform_params = uu___8;
-                           FStarC_Syntax_Syntax.t = uu___9;
-                           FStarC_Syntax_Syntax.mutuals = uu___10;
-                           FStarC_Syntax_Syntax.ds = uu___11;
-                           FStarC_Syntax_Syntax.injective_type_params =
-                             uu___12;_}
-                         -> (lid, (ty.FStarC_Syntax_Syntax.sigrng))
-                     | uu___6 -> FStarC_Effect.failwith "Impossible!" in
-                   match uu___5 with
-                   | (lid, r) ->
-                       FStarC_Errors.log_issue
-                         FStarC_Class_HasRange.hasRange_range r
-                         FStarC_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition
-                         ()
-                         (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                         (Obj.magic
-                            (Prims.strcat "Inductive type "
-                               (Prims.strcat (FStarC_Ident.string_of_lid lid)
-                                  " does not satisfy the strict positivity condition")))
-                 else ()) tcs;
-            FStarC_List.iter
-              (fun d ->
-                 let uu___5 =
-                   match d.FStarC_Syntax_Syntax.sigel with
-                   | FStarC_Syntax_Syntax.Sig_datacon
-                       { FStarC_Syntax_Syntax.lid1 = data_lid;
-                         FStarC_Syntax_Syntax.us1 = uu___6;
-                         FStarC_Syntax_Syntax.t1 = uu___7;
-                         FStarC_Syntax_Syntax.ty_lid = ty_lid;
-                         FStarC_Syntax_Syntax.num_ty_params = uu___8;
-                         FStarC_Syntax_Syntax.mutuals1 = uu___9;
-                         FStarC_Syntax_Syntax.injective_type_params1 =
-                           uu___10;
-                         FStarC_Syntax_Syntax.proj_disc_lids = uu___11;_}
-                       -> (data_lid, ty_lid)
-                   | uu___6 -> FStarC_Effect.failwith "Impossible" in
-                 match uu___5 with
-                 | (data_lid, ty_lid) ->
-                     let uu___6 =
-                       if
-                         FStarC_Ident.lid_equals ty_lid
-                           FStarC_Parser_Const.exn_lid
-                       then
-                         let uu___7 =
-                           FStarC_TypeChecker_Positivity.check_exn_strict_positivity
-                             env2 data_lid in
-                         Prims.not uu___7
-                       else false in
-                     if uu___6
-                     then
-                       FStarC_Errors.log_issue
-                         FStarC_Syntax_Syntax.has_range_sigelt d
-                         FStarC_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition
-                         ()
-                         (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                         (Obj.magic
-                            (Prims.strcat "Exception "
-                               (Prims.strcat
-                                  (FStarC_Ident.string_of_lid data_lid)
-                                  " does not satisfy the positivity condition")))
-                     else ()) datas));
-        (let skip_haseq =
-           let skip_prims_type uu___3 =
-             let lid =
-               let ty = FStarC_List.hd tcs in
-               match ty.FStarC_Syntax_Syntax.sigel with
-               | FStarC_Syntax_Syntax.Sig_inductive_typ
-                   { FStarC_Syntax_Syntax.lid = lid1;
-                     FStarC_Syntax_Syntax.us = uu___4;
-                     FStarC_Syntax_Syntax.params = uu___5;
-                     FStarC_Syntax_Syntax.num_uniform_params = uu___6;
-                     FStarC_Syntax_Syntax.t = uu___7;
-                     FStarC_Syntax_Syntax.mutuals = uu___8;
-                     FStarC_Syntax_Syntax.ds = uu___9;
-                     FStarC_Syntax_Syntax.injective_type_params = uu___10;_}
-                   -> lid1
-               | uu___4 -> FStarC_Effect.failwith "Impossible" in
-             FStarC_List.existsb
-               (fun s ->
-                  s =
-                    (FStarC_Ident.string_of_id
-                       (FStarC_Ident.ident_of_lid lid)))
-               FStarC_TypeChecker_TcInductive.early_prims_inductives in
-           let is_noeq =
-             FStarC_List.existsb (fun q -> q = FStarC_Syntax_Syntax.Noeq)
-               quals in
-           let is_erasable uu___3 =
-             FStarC_Syntax_Util.has_attribute
-               (FStarC_List.hd tcs).FStarC_Syntax_Syntax.sigattrs
-               FStarC_Parser_Const.erasable_attr in
-           let uu___3 =
-             let uu___4 =
-               if match tcs with | [] -> true | uu___5 -> false
-               then true
-               else
-                 if
-                   FStarC_Ident.lid_equals
-                     env.FStarC_TypeChecker_Env.curmodule
-                     FStarC_Parser_Const.prims_lid
-                 then skip_prims_type ()
-                 else false in
-             if uu___4 then true else is_noeq in
-           if uu___3 then true else is_erasable () in
-         let res =
-           if skip_haseq
-           then (sig_bndle1, data_ops_ses)
-           else
-             (let is_unopteq =
-                FStarC_List.existsb
-                  (fun q -> q = FStarC_Syntax_Syntax.Unopteq) quals in
-              let ses2 =
-                if is_unopteq
-                then
-                  FStarC_TypeChecker_TcInductive.unoptimized_haseq_scheme
-                    sig_bndle1 tcs datas env
-                else
-                  FStarC_TypeChecker_TcInductive.optimized_haseq_scheme
-                    sig_bndle1 tcs datas env in
-              (sig_bndle1, (FStarC_List.op_At ses2 data_ops_ses))) in
-         res)))
-let tc_inductive (env : FStarC_TypeChecker_Env.env)
-  (ses : FStarC_Syntax_Syntax.sigelt Prims.list)
-  (quals : FStarC_Syntax_Syntax.qualifier Prims.list)
-  (attrs : FStarC_Syntax_Syntax.attribute Prims.list)
-  (lids : FStarC_Ident.lident Prims.list) :
-  (FStarC_Syntax_Syntax.sigelt * FStarC_Syntax_Syntax.sigelt Prims.list)=
-  let env1 = FStarC_TypeChecker_Env.push env "tc_inductive" in
-  let pop uu___ =
-    let uu___1 = FStarC_TypeChecker_Env.pop env1 "tc_inductive" in () in
-  let uu___ = FStarC_Options.trace_error () in
-  if uu___
-  then let r = tc_inductive' env1 ses quals attrs lids in (pop (); r)
-  else
-    (try
-       (fun uu___1 ->
-          match () with
-          | () ->
-              let uu___2 = tc_inductive' env1 ses quals attrs lids in
-              (pop (); uu___2)) ()
-     with | uu___1 -> (pop (); FStarC_Effect.raise uu___1))
-let proc_check_with (attrs : FStarC_Syntax_Syntax.attribute Prims.list)
-  (kont : unit -> 'a) : 'a=
-  let uu___ =
-    FStarC_Syntax_Util.get_attribute FStarC_Parser_Const.check_with_lid attrs in
-  match uu___ with
-  | FStar_Pervasives_Native.None -> kont ()
-  | FStar_Pervasives_Native.Some ((a1, FStar_Pervasives_Native.None)::[]) ->
-      let uu___1 =
-        FStarC_Syntax_Embeddings_Base.unembed
-          FStarC_Syntax_Embeddings.e_vconfig a1
-          FStarC_Syntax_Embeddings_Base.id_norm_cb in
-      (match uu___1 with
-       | FStar_Pervasives_Native.None -> FStarC_Effect.failwith "nah"
-       | FStar_Pervasives_Native.Some vcfg ->
-           FStarC_Options.with_saved_options
-             (fun uu___2 -> FStarC_Options.set_vconfig vcfg; kont ())
-       | uu___2 -> FStarC_Effect.failwith "ill-formed `check_with`")
-let store_sigopts (se : FStarC_Syntax_Syntax.sigelt) :
-  FStarC_Syntax_Syntax.sigelt=
-  let uu___ =
-    let uu___1 = FStarC_Options.get_vconfig () in
-    FStar_Pervasives_Native.Some uu___1 in
-  {
-    FStarC_Syntax_Syntax.sigel = (se.FStarC_Syntax_Syntax.sigel);
-    FStarC_Syntax_Syntax.sigrng = (se.FStarC_Syntax_Syntax.sigrng);
-    FStarC_Syntax_Syntax.sigquals = (se.FStarC_Syntax_Syntax.sigquals);
-    FStarC_Syntax_Syntax.sigmeta = (se.FStarC_Syntax_Syntax.sigmeta);
-    FStarC_Syntax_Syntax.sigattrs = (se.FStarC_Syntax_Syntax.sigattrs);
-    FStarC_Syntax_Syntax.sigopens_and_abbrevs =
-      (se.FStarC_Syntax_Syntax.sigopens_and_abbrevs);
-    FStarC_Syntax_Syntax.sigopts = uu___
-  }
-let tc_decls_knot :
-  (FStarC_TypeChecker_Env.env ->
-     FStarC_Syntax_Syntax.sigelt Prims.list ->
-       (FStarC_Syntax_Syntax.sigelt Prims.list * FStarC_TypeChecker_Env.env))
-    FStar_Pervasives_Native.option FStarC_Effect.ref=
-  FStarC_Effect.mk_ref FStar_Pervasives_Native.None
-let do_two_phases (env : 'uuuuu) : Prims.bool= true
-let run_phase1 (f : unit -> 'a) : 'a=
-  FStarC_TypeChecker_Core.clear_memo_table ();
-  (let r = f () in FStarC_TypeChecker_Core.clear_memo_table (); r)
-let read_postprocess_with_attr (for_extraction : Prims.bool)
-  (env : FStarC_TypeChecker_Env.env)
-  (ats : FStarC_Syntax_Syntax.attribute Prims.list) :
-  (FStarC_Syntax_Syntax.attribute Prims.list * FStarC_Syntax_Syntax.term
-    FStar_Pervasives_Native.option * Prims.bool)=
-  let get1 ats1 lid =
-    let uu___ = FStarC_Syntax_Util.extract_attr' lid ats1 in
-    match uu___ with
-    | FStar_Pervasives_Native.None -> (ats1, FStar_Pervasives_Native.None)
-    | FStar_Pervasives_Native.Some
-        (ats2, (tau, FStar_Pervasives_Native.None)::[]) ->
-        (ats2, (FStar_Pervasives_Native.Some tau))
-    | FStar_Pervasives_Native.Some (ats2, args) ->
-        ((let uu___2 =
-            let uu___3 =
-              let uu___4 =
-                let uu___5 =
-                  FStarC_Class_Show.show FStarC_Ident.showable_lident lid in
-                FStarC_Format.fmt1
-                  "Ill-formed application of \226\128\152%s\226\128\153"
-                  uu___5 in
-              FStarC_Errors_Msg.text uu___4 in
-            [uu___3] in
-          FStarC_Errors.log_issue FStarC_TypeChecker_Env.hasRange_env env
-            FStarC_Errors_Codes.Warning_UnrecognizedAttribute ()
-            (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-            (Obj.magic uu___2));
-         (ats2, FStar_Pervasives_Native.None)) in
-  let lid =
-    if for_extraction
-    then FStarC_Parser_Const.postprocess_extr_with
-    else FStarC_Parser_Const.postprocess_with in
-  let uu___ = get1 ats lid in
-  match uu___ with
-  | (ats1, pt) ->
-      let on_type =
-        let uu___1 =
-          FStarC_Syntax_Util.extract_attr'
-            FStarC_Parser_Const.postprocess_type ats1 in
-        match uu___1 with
-        | FStar_Pervasives_Native.Some v -> true
-        | uu___2 -> false in
-      (ats1, pt, on_type)
-let run_postprocess (for_extraction : Prims.bool)
-  (env : FStarC_TypeChecker_Env.env) (se : FStarC_Syntax_Syntax.sigelt) :
-  FStarC_Syntax_Syntax.sigelt=
-  let uu___ =
-    read_postprocess_with_attr for_extraction env
-      se.FStarC_Syntax_Syntax.sigattrs in
-  match uu___ with
-  | (attrs, pt, on_type) ->
-      let se1 =
-        {
-          FStarC_Syntax_Syntax.sigel = (se.FStarC_Syntax_Syntax.sigel);
-          FStarC_Syntax_Syntax.sigrng = (se.FStarC_Syntax_Syntax.sigrng);
-          FStarC_Syntax_Syntax.sigquals = (se.FStarC_Syntax_Syntax.sigquals);
-          FStarC_Syntax_Syntax.sigmeta = (se.FStarC_Syntax_Syntax.sigmeta);
-          FStarC_Syntax_Syntax.sigattrs = attrs;
-          FStarC_Syntax_Syntax.sigopens_and_abbrevs =
-            (se.FStarC_Syntax_Syntax.sigopens_and_abbrevs);
-          FStarC_Syntax_Syntax.sigopts = (se.FStarC_Syntax_Syntax.sigopts)
-        } in
-      let postprocess_lb tau on_type1 lb =
-        let uu___1 =
-          FStarC_Syntax_Subst.univ_var_opening
-            lb.FStarC_Syntax_Syntax.lbunivs in
-        match uu___1 with
-        | (s, univnames) ->
-            let lbdef =
-              FStarC_Syntax_Subst.subst s lb.FStarC_Syntax_Syntax.lbdef in
-            let lbtyp =
-              FStarC_Syntax_Subst.subst s lb.FStarC_Syntax_Syntax.lbtyp in
-            let env1 = FStarC_TypeChecker_Env.push_univ_vars env univnames in
-            let lbdef1 =
-              FStarC_TypeChecker_Env.postprocess env1 tau lbtyp lbdef in
-            let lbdef2 = FStarC_Syntax_Subst.close_univ_vars univnames lbdef1 in
-            let lbtyp1 =
-              if on_type1
-              then
-                let u = env1.FStarC_TypeChecker_Env.universe_of env1 lbtyp in
-                let lbtyp2 =
-                  FStarC_TypeChecker_Env.postprocess env1 tau lbtyp lbtyp in
-                FStarC_Syntax_Subst.close_univ_vars univnames lbtyp2
-              else lbtyp in
-            {
-              FStarC_Syntax_Syntax.lbname = (lb.FStarC_Syntax_Syntax.lbname);
-              FStarC_Syntax_Syntax.lbunivs =
-                (lb.FStarC_Syntax_Syntax.lbunivs);
-              FStarC_Syntax_Syntax.lbtyp = lbtyp1;
-              FStarC_Syntax_Syntax.lbeff = (lb.FStarC_Syntax_Syntax.lbeff);
-              FStarC_Syntax_Syntax.lbdef = lbdef2;
-              FStarC_Syntax_Syntax.lbattrs =
-                (lb.FStarC_Syntax_Syntax.lbattrs);
-              FStarC_Syntax_Syntax.lbpos = (lb.FStarC_Syntax_Syntax.lbpos)
-            } in
-      let se2 =
-        match (pt, (se1.FStarC_Syntax_Syntax.sigel)) with
-        | (FStar_Pervasives_Native.Some tac, FStarC_Syntax_Syntax.Sig_let
-           { FStarC_Syntax_Syntax.lbs1 = lbs;
-             FStarC_Syntax_Syntax.lids1 = lids;_})
-            ->
-            let lbs1 =
-              let uu___1 =
-                FStarC_List.map (postprocess_lb tac on_type)
-                  (FStar_Pervasives_Native.snd lbs) in
-              ((FStar_Pervasives_Native.fst lbs), uu___1) in
-            {
-              FStarC_Syntax_Syntax.sigel =
-                (FStarC_Syntax_Syntax.Sig_let
-                   {
-                     FStarC_Syntax_Syntax.lbs1 = lbs1;
-                     FStarC_Syntax_Syntax.lids1 = lids
-                   });
-              FStarC_Syntax_Syntax.sigrng = (se1.FStarC_Syntax_Syntax.sigrng);
-              FStarC_Syntax_Syntax.sigquals =
-                (se1.FStarC_Syntax_Syntax.sigquals);
-              FStarC_Syntax_Syntax.sigmeta =
-                (se1.FStarC_Syntax_Syntax.sigmeta);
-              FStarC_Syntax_Syntax.sigattrs =
-                (se1.FStarC_Syntax_Syntax.sigattrs);
-              FStarC_Syntax_Syntax.sigopens_and_abbrevs =
-                (se1.FStarC_Syntax_Syntax.sigopens_and_abbrevs);
-              FStarC_Syntax_Syntax.sigopts =
-                (se1.FStarC_Syntax_Syntax.sigopts)
-            }
-        | uu___1 -> se1 in
-      se2
-let check_quals_eq (r : FStarC_Range_Type.t) (l : FStarC_Ident.lident)
-  (qopt : FStarC_Syntax_Syntax.qualifier Prims.list)
-  (val_q : FStarC_Syntax_Syntax.qualifier Prims.list) :
-  FStarC_Syntax_Syntax.qualifier Prims.list=
-  match qopt with
-  | [] -> val_q
-  | q' ->
-      let drop_logic_and_irreducible =
-        FStarC_List.filter
-          (fun x ->
-             Prims.not
-               ((match x with
-                 | FStarC_Syntax_Syntax.Logic -> true
-                 | uu___ -> false) ||
-                  (match x with
-                   | FStarC_Syntax_Syntax.Irreducible -> true
-                   | uu___ -> false))) in
-      let val_q1 = drop_logic_and_irreducible val_q in
-      let q'0 = q' in
-      let q'1 = drop_logic_and_irreducible q' in
-      let uu___ =
-        FStarC_Class_Ord.ord_list_diff FStarC_Syntax_Syntax.ord_qualifier
-          val_q1 q'1 in
-      (match uu___ with
-       | ([], []) -> q'0
-       | (d1, d2) ->
-           let uu___1 =
-             let uu___2 =
-               let uu___3 = FStarC_Class_PP.pp FStarC_Ident.pretty_lident l in
-               FStar_Pprint.op_Hat_Slash_Hat
-                 (FStarC_Errors_Msg.text
-                    "Inconsistent qualifier annotations on") uu___3 in
-             let uu___3 =
-               let uu___4 =
-                 let uu___5 =
-                   let uu___6 =
-                     let uu___7 =
-                       FStarC_Class_PP.pp
-                         (FStarC_Class_PP.pp_list
-                            FStarC_Syntax_Print.pretty_qualifier) val_q1 in
-                     FStarC_Errors_Msg.fquotes uu___7 in
-                   FStar_Pprint.prefix (Prims.of_int 4) Prims.int_one
-                     (FStarC_Errors_Msg.text "Expected") uu___6 in
-                 let uu___6 =
-                   let uu___7 =
-                     let uu___8 =
-                       FStarC_Class_PP.pp
-                         (FStarC_Class_PP.pp_list
-                            FStarC_Syntax_Print.pretty_qualifier) q'1 in
-                     FStarC_Errors_Msg.fquotes uu___8 in
-                   FStar_Pprint.prefix (Prims.of_int 4) Prims.int_one
-                     (FStarC_Errors_Msg.text "got") uu___7 in
-                 FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
-               let uu___5 =
-                 let uu___6 =
-                   if match d1 with | hd::tl -> true | uu___7 -> false
-                   then
-                     let uu___7 =
-                       let uu___8 =
-                         FStarC_Class_PP.pp
-                           (FStarC_Class_PP.pp_list
-                              FStarC_Syntax_Print.pretty_qualifier) d1 in
-                       FStarC_Errors_Msg.fquotes uu___8 in
-                     FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
-                       (FStarC_Errors_Msg.text "Only in declaration: ")
-                       uu___7
-                   else FStar_Pprint.empty in
-                 let uu___7 =
-                   let uu___8 =
-                     if match d2 with | hd::tl -> true | uu___9 -> false
-                     then
-                       let uu___9 =
-                         let uu___10 =
-                           FStarC_Class_PP.pp
-                             (FStarC_Class_PP.pp_list
-                                FStarC_Syntax_Print.pretty_qualifier) d2 in
-                         FStarC_Errors_Msg.fquotes uu___10 in
-                       FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
-                         (FStarC_Errors_Msg.text "Only in definition: ")
-                         uu___9
-                     else FStar_Pprint.empty in
-                   [uu___8] in
-                 uu___6 :: uu___7 in
-               uu___4 :: uu___5 in
-             uu___2 :: uu___3 in
-           FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range r
-             FStarC_Errors_Codes.Fatal_InconsistentQualifierAnnotation ()
-             (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-             (Obj.magic uu___1))
-let tc_sig_let (env : FStarC_TypeChecker_Env.env) (r : FStarC_Range_Type.t)
-  (se : FStarC_Syntax_Syntax.sigelt)
-  (lbs : (Prims.bool * FStarC_Syntax_Syntax.letbinding Prims.list))
-  (lids : FStarC_Ident.lident Prims.list) :
-  (FStarC_Syntax_Syntax.sigelt Prims.list * FStarC_Syntax_Syntax.sigelt
-    Prims.list * FStarC_TypeChecker_Env.env)=
-  let env0 = env in
-  let env1 = FStarC_TypeChecker_Env.set_range env r in
-  let rename_parameters lb =
-    let rename_in_typ def typ =
-      let typ1 = FStarC_Syntax_Subst.compress typ in
-      let def_bs =
-        let uu___ =
-          let uu___1 = FStarC_Syntax_Subst.compress def in
-          uu___1.FStarC_Syntax_Syntax.n in
-        match uu___ with
-        | FStarC_Syntax_Syntax.Tm_abs uu___1 ->
-            let uu___2 = FStarC_Syntax_Util.abs_formals_ln def in
-            (match uu___2 with | (binders, uu___3, uu___4) -> binders)
-        | uu___1 -> [] in
-      match typ1 with
-      | { FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_arrow uu___;
-          FStarC_Syntax_Syntax.pos = r1;
-          FStarC_Syntax_Syntax.hash_code = uu___1;_} ->
-          let uu___2 = FStarC_Syntax_Util.arrow_formals_comp_ln_strict typ1 in
-          (match uu___2 with
-           | (val_bs, c) ->
-               let has_auto_name bv =
-                 FStarC_Util.starts_with
-                   (FStarC_Ident.string_of_id bv.FStarC_Syntax_Syntax.ppname)
-                   FStarC_Ident.reserved_prefix in
-               let rec rename_binders def_bs1 val_bs1 =
-                 match (def_bs1, val_bs1) with
-                 | ([], uu___3) -> val_bs1
-                 | (uu___3, []) -> val_bs1
-                 | ({ FStarC_Syntax_Syntax.binder_bv = body_bv;
-                      FStarC_Syntax_Syntax.binder_qual = uu___3;
-                      FStarC_Syntax_Syntax.binder_positivity = uu___4;
-                      FStarC_Syntax_Syntax.binder_attrs = uu___5;_}::bt,
-                    val_b::vt) ->
-                     ((match ((has_auto_name body_bv),
-                               (has_auto_name
-                                  val_b.FStarC_Syntax_Syntax.binder_bv))
-                       with
-                       | (true, uu___6) -> val_b
-                       | (false, true) ->
-                           {
-                             FStarC_Syntax_Syntax.binder_bv =
-                               (let uu___6 =
-                                  val_b.FStarC_Syntax_Syntax.binder_bv in
-                                {
-                                  FStarC_Syntax_Syntax.ppname =
-                                    (FStarC_Ident.mk_ident
-                                       ((FStarC_Ident.string_of_id
-                                           body_bv.FStarC_Syntax_Syntax.ppname),
-                                         (FStarC_Ident.range_of_id
-                                            (val_b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.ppname)));
-                                  FStarC_Syntax_Syntax.index =
-                                    (uu___6.FStarC_Syntax_Syntax.index);
-                                  FStarC_Syntax_Syntax.sort =
-                                    (uu___6.FStarC_Syntax_Syntax.sort)
-                                });
-                             FStarC_Syntax_Syntax.binder_qual =
-                               (val_b.FStarC_Syntax_Syntax.binder_qual);
-                             FStarC_Syntax_Syntax.binder_positivity =
-                               (val_b.FStarC_Syntax_Syntax.binder_positivity);
-                             FStarC_Syntax_Syntax.binder_attrs =
-                               (val_b.FStarC_Syntax_Syntax.binder_attrs)
-                           }
-                       | (false, false) -> val_b))
-                     :: (rename_binders bt vt) in
-               FStarC_Syntax_Syntax.mk_Tm_arrow
-                 (rename_binders def_bs val_bs) c r1)
-      | uu___ -> typ1 in
-    let uu___ =
-      rename_in_typ lb.FStarC_Syntax_Syntax.lbdef
-        lb.FStarC_Syntax_Syntax.lbtyp in
-    {
-      FStarC_Syntax_Syntax.lbname = (lb.FStarC_Syntax_Syntax.lbname);
-      FStarC_Syntax_Syntax.lbunivs = (lb.FStarC_Syntax_Syntax.lbunivs);
-      FStarC_Syntax_Syntax.lbtyp = uu___;
-      FStarC_Syntax_Syntax.lbeff = (lb.FStarC_Syntax_Syntax.lbeff);
-      FStarC_Syntax_Syntax.lbdef = (lb.FStarC_Syntax_Syntax.lbdef);
-      FStarC_Syntax_Syntax.lbattrs = (lb.FStarC_Syntax_Syntax.lbattrs);
-      FStarC_Syntax_Syntax.lbpos = (lb.FStarC_Syntax_Syntax.lbpos)
-    } in
-  let uu___ =
-    FStarC_List.fold_left
-      (fun uu___1 lb ->
-         match uu___1 with
-         | (gen, lbs1, quals) ->
-             let lbname =
-               match lb.FStarC_Syntax_Syntax.lbname with
-               | FStar_Pervasives.Inr v -> v in
-             let uu___2 =
-               let uu___3 =
-                 FStarC_TypeChecker_Env.try_lookup_val_decl env1
-                   lbname.FStarC_Syntax_Syntax.fv_name in
-               match uu___3 with
-               | FStar_Pervasives_Native.None -> (gen, lb, quals)
-               | FStar_Pervasives_Native.Some ((uvs, tval), vquals) ->
-                   let quals1 =
-                     check_quals_eq r lbname.FStarC_Syntax_Syntax.fv_name
-                       quals vquals in
-                   let def =
-                     match (lb.FStarC_Syntax_Syntax.lbtyp).FStarC_Syntax_Syntax.n
-                     with
-                     | FStarC_Syntax_Syntax.Tm_unknown ->
-                         lb.FStarC_Syntax_Syntax.lbdef
-                     | uu___4 ->
-                         FStarC_Syntax_Syntax.mk
-                           (FStarC_Syntax_Syntax.Tm_ascribed
-                              {
-                                FStarC_Syntax_Syntax.tm =
-                                  (lb.FStarC_Syntax_Syntax.lbdef);
-                                FStarC_Syntax_Syntax.asc =
-                                  ((FStar_Pervasives.Inl
-                                      (lb.FStarC_Syntax_Syntax.lbtyp)),
-                                    FStar_Pervasives_Native.None, false);
-                                FStarC_Syntax_Syntax.eff_opt =
-                                  FStar_Pervasives_Native.None
-                              })
-                           (lb.FStarC_Syntax_Syntax.lbdef).FStarC_Syntax_Syntax.pos in
-                   (if
-                      (lb.FStarC_Syntax_Syntax.lbunivs <> []) &&
-                        ((FStarC_List.length lb.FStarC_Syntax_Syntax.lbunivs)
-                           <> (FStarC_List.length uvs))
-                    then
-                      FStarC_Errors.raise_error
-                        FStarC_Class_HasRange.hasRange_range r
-                        FStarC_Errors_Codes.Fatal_IncoherentInlineUniverse ()
-                        (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                        (Obj.magic
-                           "Inline universes are incoherent with annotation from val declaration")
-                    else ();
-                    (false,
-                      (FStarC_Syntax_Syntax.mk_lb
-                         ((FStar_Pervasives.Inr lbname), uvs,
-                           FStarC_Parser_Const.effect_Tot_lid, tval, def,
-                           (lb.FStarC_Syntax_Syntax.lbattrs),
-                           (lb.FStarC_Syntax_Syntax.lbpos))), quals1)) in
-             (match uu___2 with
-              | (gen1, lb1, quals1) -> (gen1, (lb1 :: lbs1), quals1)))
-      (true, [], (se.FStarC_Syntax_Syntax.sigquals))
-      (FStar_Pervasives_Native.snd lbs) in
-  match uu___ with
-  | (should_generalize, lbs', quals) ->
-      (FStarC_Syntax_Util.check_mutual_universes lbs';
-       (let quals1 =
-          let uu___2 =
-            FStarC_Util.for_some
-              (fun uu___3 ->
-                 match uu___3 with
-                 | FStarC_Syntax_Syntax.Irreducible -> true
-                 | FStarC_Syntax_Syntax.Visible_default -> true
-                 | FStarC_Syntax_Syntax.Unfold_for_unification_and_vcgen ->
-                     true
-                 | uu___4 -> false) quals in
-          if uu___2
-          then quals
-          else FStarC_Syntax_Syntax.Visible_default :: quals in
-        let lbs'1 = FStarC_List.rev lbs' in
-        let uu___2 =
-          let uu___3 =
-            FStarC_Syntax_Util.extract_attr'
-              FStarC_Parser_Const.preprocess_with
-              se.FStarC_Syntax_Syntax.sigattrs in
-          match uu___3 with
-          | FStar_Pervasives_Native.None ->
-              ((se.FStarC_Syntax_Syntax.sigattrs),
-                FStar_Pervasives_Native.None)
-          | FStar_Pervasives_Native.Some
-              (ats, (tau, FStar_Pervasives_Native.None)::[]) ->
-              (ats, (FStar_Pervasives_Native.Some tau))
-          | FStar_Pervasives_Native.Some (ats, args) ->
-              (FStarC_Errors.log_issue FStarC_Class_HasRange.hasRange_range r
-                 FStarC_Errors_Codes.Warning_UnrecognizedAttribute ()
-                 (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                 (Obj.magic "Ill-formed application of `preprocess_with`");
-               ((se.FStarC_Syntax_Syntax.sigattrs),
-                 FStar_Pervasives_Native.None)) in
-        match uu___2 with
-        | (attrs, pre_tau) ->
-            let se1 =
-              {
-                FStarC_Syntax_Syntax.sigel = (se.FStarC_Syntax_Syntax.sigel);
-                FStarC_Syntax_Syntax.sigrng =
-                  (se.FStarC_Syntax_Syntax.sigrng);
-                FStarC_Syntax_Syntax.sigquals =
-                  (se.FStarC_Syntax_Syntax.sigquals);
-                FStarC_Syntax_Syntax.sigmeta =
-                  (se.FStarC_Syntax_Syntax.sigmeta);
-                FStarC_Syntax_Syntax.sigattrs = attrs;
-                FStarC_Syntax_Syntax.sigopens_and_abbrevs =
-                  (se.FStarC_Syntax_Syntax.sigopens_and_abbrevs);
-                FStarC_Syntax_Syntax.sigopts =
-                  (se.FStarC_Syntax_Syntax.sigopts)
-              } in
-            let preprocess_lb tau lb =
-              let lbdef =
-                FStarC_TypeChecker_Env.preprocess env1 tau
-                  lb.FStarC_Syntax_Syntax.lbdef in
-              (let uu___4 =
-                 let uu___5 = FStarC_Debug.medium () in
-                 if uu___5 then true else FStarC_Effect.op_Bang dbg_TwoPhases in
-               if uu___4
-               then
-                 let uu___5 =
-                   FStarC_Class_Show.show FStarC_Syntax_Print.showable_term
-                     lbdef in
-                 FStarC_Format.print1 "lb preprocessed into: %s\n" uu___5
-               else ());
-              {
-                FStarC_Syntax_Syntax.lbname =
-                  (lb.FStarC_Syntax_Syntax.lbname);
-                FStarC_Syntax_Syntax.lbunivs =
-                  (lb.FStarC_Syntax_Syntax.lbunivs);
-                FStarC_Syntax_Syntax.lbtyp = (lb.FStarC_Syntax_Syntax.lbtyp);
-                FStarC_Syntax_Syntax.lbeff = (lb.FStarC_Syntax_Syntax.lbeff);
-                FStarC_Syntax_Syntax.lbdef = lbdef;
-                FStarC_Syntax_Syntax.lbattrs =
-                  (lb.FStarC_Syntax_Syntax.lbattrs);
-                FStarC_Syntax_Syntax.lbpos = (lb.FStarC_Syntax_Syntax.lbpos)
-              } in
-            let lbs'2 =
-              match pre_tau with
-              | FStar_Pervasives_Native.Some tau ->
-                  FStarC_List.map (preprocess_lb tau) lbs'1
-              | FStar_Pervasives_Native.None -> lbs'1 in
-            let e =
-              let uu___3 =
-                let uu___4 =
-                  let uu___5 =
-                    FStarC_Syntax_Syntax.mk
-                      (FStarC_Syntax_Syntax.Tm_constant
-                         FStarC_Const.Const_unit) r in
-                  {
-                    FStarC_Syntax_Syntax.lbs =
-                      ((FStar_Pervasives_Native.fst lbs), lbs'2);
-                    FStarC_Syntax_Syntax.body1 = uu___5
-                  } in
-                FStarC_Syntax_Syntax.Tm_let uu___4 in
-              FStarC_Syntax_Syntax.mk uu___3 r in
-            let env' =
-              {
-                FStarC_TypeChecker_Env.solver =
-                  (env1.FStarC_TypeChecker_Env.solver);
-                FStarC_TypeChecker_Env.range =
-                  (env1.FStarC_TypeChecker_Env.range);
-                FStarC_TypeChecker_Env.curmodule =
-                  (env1.FStarC_TypeChecker_Env.curmodule);
-                FStarC_TypeChecker_Env.gamma =
-                  (env1.FStarC_TypeChecker_Env.gamma);
-                FStarC_TypeChecker_Env.gamma_sig =
-                  (env1.FStarC_TypeChecker_Env.gamma_sig);
-                FStarC_TypeChecker_Env.gamma_cache =
-                  (env1.FStarC_TypeChecker_Env.gamma_cache);
-                FStarC_TypeChecker_Env.modules =
-                  (env1.FStarC_TypeChecker_Env.modules);
-                FStarC_TypeChecker_Env.expected_typ =
-                  (env1.FStarC_TypeChecker_Env.expected_typ);
-                FStarC_TypeChecker_Env.expected_post =
-                  (env1.FStarC_TypeChecker_Env.expected_post);
-                FStarC_TypeChecker_Env.sigtab =
-                  (env1.FStarC_TypeChecker_Env.sigtab);
-                FStarC_TypeChecker_Env.attrtab =
-                  (env1.FStarC_TypeChecker_Env.attrtab);
-                FStarC_TypeChecker_Env.instantiate_imp =
-                  (env1.FStarC_TypeChecker_Env.instantiate_imp);
-                FStarC_TypeChecker_Env.effects =
-                  (env1.FStarC_TypeChecker_Env.effects);
-                FStarC_TypeChecker_Env.generalize = should_generalize;
-                FStarC_TypeChecker_Env.letrecs =
-                  (env1.FStarC_TypeChecker_Env.letrecs);
-                FStarC_TypeChecker_Env.top_level = true;
-                FStarC_TypeChecker_Env.check_uvars =
-                  (env1.FStarC_TypeChecker_Env.check_uvars);
-                FStarC_TypeChecker_Env.use_eq_strict =
-                  (env1.FStarC_TypeChecker_Env.use_eq_strict);
-                FStarC_TypeChecker_Env.is_iface =
-                  (env1.FStarC_TypeChecker_Env.is_iface);
-                FStarC_TypeChecker_Env.admit =
-                  (env1.FStarC_TypeChecker_Env.admit);
-                FStarC_TypeChecker_Env.phase1 =
-                  (env1.FStarC_TypeChecker_Env.phase1);
-                FStarC_TypeChecker_Env.failhard =
-                  (env1.FStarC_TypeChecker_Env.failhard);
-                FStarC_TypeChecker_Env.flychecking =
-                  (env1.FStarC_TypeChecker_Env.flychecking);
-                FStarC_TypeChecker_Env.uvar_subtyping =
-                  (env1.FStarC_TypeChecker_Env.uvar_subtyping);
-                FStarC_TypeChecker_Env.intactics =
-                  (env1.FStarC_TypeChecker_Env.intactics);
-                FStarC_TypeChecker_Env.nocoerce =
-                  (env1.FStarC_TypeChecker_Env.nocoerce);
-                FStarC_TypeChecker_Env.tc_term =
-                  (env1.FStarC_TypeChecker_Env.tc_term);
-                FStarC_TypeChecker_Env.typeof_tot_or_gtot_term =
-                  (env1.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term);
-                FStarC_TypeChecker_Env.universe_of =
-                  (env1.FStarC_TypeChecker_Env.universe_of);
-                FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
-                  (env1.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-                FStarC_TypeChecker_Env.teq_nosmt_force =
-                  (env1.FStarC_TypeChecker_Env.teq_nosmt_force);
-                FStarC_TypeChecker_Env.subtype_nosmt_force =
-                  (env1.FStarC_TypeChecker_Env.subtype_nosmt_force);
-                FStarC_TypeChecker_Env.qtbl_name_and_index =
-                  (env1.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                FStarC_TypeChecker_Env.normalized_eff_names =
-                  (env1.FStarC_TypeChecker_Env.normalized_eff_names);
-                FStarC_TypeChecker_Env.fv_delta_depths =
-                  (env1.FStarC_TypeChecker_Env.fv_delta_depths);
-                FStarC_TypeChecker_Env.proof_ns =
-                  (env1.FStarC_TypeChecker_Env.proof_ns);
-                FStarC_TypeChecker_Env.synth_hook =
-                  (env1.FStarC_TypeChecker_Env.synth_hook);
-                FStarC_TypeChecker_Env.try_solve_implicits_hook =
-                  (env1.FStarC_TypeChecker_Env.try_solve_implicits_hook);
-                FStarC_TypeChecker_Env.splice =
-                  (env1.FStarC_TypeChecker_Env.splice);
-                FStarC_TypeChecker_Env.mpreprocess =
-                  (env1.FStarC_TypeChecker_Env.mpreprocess);
-                FStarC_TypeChecker_Env.postprocess =
-                  (env1.FStarC_TypeChecker_Env.postprocess);
-                FStarC_TypeChecker_Env.identifier_info =
-                  (env1.FStarC_TypeChecker_Env.identifier_info);
-                FStarC_TypeChecker_Env.tc_hooks =
-                  (env1.FStarC_TypeChecker_Env.tc_hooks);
-                FStarC_TypeChecker_Env.dsenv =
-                  (env1.FStarC_TypeChecker_Env.dsenv);
-                FStarC_TypeChecker_Env.nbe =
-                  (env1.FStarC_TypeChecker_Env.nbe);
-                FStarC_TypeChecker_Env.strict_args_tab =
-                  (env1.FStarC_TypeChecker_Env.strict_args_tab);
-                FStarC_TypeChecker_Env.erasable_types_tab =
-                  (env1.FStarC_TypeChecker_Env.erasable_types_tab);
-                FStarC_TypeChecker_Env.enable_defer_to_tac =
-                  (env1.FStarC_TypeChecker_Env.enable_defer_to_tac);
-                FStarC_TypeChecker_Env.unif_allow_ref_guards =
-                  (env1.FStarC_TypeChecker_Env.unif_allow_ref_guards);
-                FStarC_TypeChecker_Env.erase_erasable_args =
-                  (env1.FStarC_TypeChecker_Env.erase_erasable_args);
-                FStarC_TypeChecker_Env.core_check =
-                  (env1.FStarC_TypeChecker_Env.core_check);
-                FStarC_TypeChecker_Env.missing_decl =
-                  (env1.FStarC_TypeChecker_Env.missing_decl);
-                FStarC_TypeChecker_Env.iface_todo =
-                  (env1.FStarC_TypeChecker_Env.iface_todo);
-                FStarC_TypeChecker_Env.iface_hidden =
-                  (env1.FStarC_TypeChecker_Env.iface_hidden);
-                FStarC_TypeChecker_Env.iface_lids =
-                  (env1.FStarC_TypeChecker_Env.iface_lids);
-                FStarC_TypeChecker_Env.iface_val_lids =
-                  (env1.FStarC_TypeChecker_Env.iface_val_lids)
-              } in
-            let e1 =
-              let uu___3 = do_two_phases env' in
-              if uu___3
-              then
-                run_phase1
-                  (fun uu___4 ->
-                     let drop_lbtyp e_lax =
-                       let uu___5 =
-                         let uu___6 = FStarC_Syntax_Subst.compress e_lax in
-                         uu___6.FStarC_Syntax_Syntax.n in
-                       match uu___5 with
-                       | FStarC_Syntax_Syntax.Tm_let
-                           { FStarC_Syntax_Syntax.lbs = (false, lb::[]);
-                             FStarC_Syntax_Syntax.body1 = e2;_}
-                           ->
-                           let lb_unannotated =
-                             let uu___6 =
-                               let uu___7 = FStarC_Syntax_Subst.compress e in
-                               uu___7.FStarC_Syntax_Syntax.n in
-                             match uu___6 with
-                             | FStarC_Syntax_Syntax.Tm_let
-                                 {
-                                   FStarC_Syntax_Syntax.lbs =
-                                     (uu___7, lb1::[]);
-                                   FStarC_Syntax_Syntax.body1 = uu___8;_}
-                                 ->
-                                 let uu___9 =
-                                   let uu___10 =
-                                     FStarC_Syntax_Subst.compress
-                                       lb1.FStarC_Syntax_Syntax.lbtyp in
-                                   uu___10.FStarC_Syntax_Syntax.n in
-                                 (match uu___9 with
-                                  | FStarC_Syntax_Syntax.Tm_unknown -> true
-                                  | uu___10 -> false)
-                             | uu___7 ->
-                                 FStarC_Effect.failwith
-                                   "Impossible: first phase lb and second phase lb differ in structure!" in
-                           if lb_unannotated
-                           then
-                             {
-                               FStarC_Syntax_Syntax.n =
-                                 (FStarC_Syntax_Syntax.Tm_let
-                                    {
-                                      FStarC_Syntax_Syntax.lbs =
-                                        (false,
-                                          [{
-                                             FStarC_Syntax_Syntax.lbname =
-                                               (lb.FStarC_Syntax_Syntax.lbname);
-                                             FStarC_Syntax_Syntax.lbunivs =
-                                               (lb.FStarC_Syntax_Syntax.lbunivs);
-                                             FStarC_Syntax_Syntax.lbtyp =
-                                               FStarC_Syntax_Syntax.tun;
-                                             FStarC_Syntax_Syntax.lbeff =
-                                               (lb.FStarC_Syntax_Syntax.lbeff);
-                                             FStarC_Syntax_Syntax.lbdef =
-                                               (lb.FStarC_Syntax_Syntax.lbdef);
-                                             FStarC_Syntax_Syntax.lbattrs =
-                                               (lb.FStarC_Syntax_Syntax.lbattrs);
-                                             FStarC_Syntax_Syntax.lbpos =
-                                               (lb.FStarC_Syntax_Syntax.lbpos)
-                                           }]);
-                                      FStarC_Syntax_Syntax.body1 = e2
-                                    });
-                               FStarC_Syntax_Syntax.pos =
-                                 (e_lax.FStarC_Syntax_Syntax.pos);
-                               FStarC_Syntax_Syntax.hash_code =
-                                 (e_lax.FStarC_Syntax_Syntax.hash_code)
-                             }
-                           else e_lax
-                       | FStarC_Syntax_Syntax.Tm_let
-                           { FStarC_Syntax_Syntax.lbs = (true, lbs1);
-                             FStarC_Syntax_Syntax.body1 = uu___6;_}
-                           ->
-                           (FStarC_Syntax_Util.check_mutual_universes lbs1;
-                            e_lax) in
-                     let e2 =
-                       FStarC_Profiling.profile
-                         (fun uu___5 ->
-                            let uu___6 =
-                              FStarC_TypeChecker_TcTerm.tc_maybe_toplevel_term
-                                {
-                                  FStarC_TypeChecker_Env.solver =
-                                    (env'.FStarC_TypeChecker_Env.solver);
-                                  FStarC_TypeChecker_Env.range =
-                                    (env'.FStarC_TypeChecker_Env.range);
-                                  FStarC_TypeChecker_Env.curmodule =
-                                    (env'.FStarC_TypeChecker_Env.curmodule);
-                                  FStarC_TypeChecker_Env.gamma =
-                                    (env'.FStarC_TypeChecker_Env.gamma);
-                                  FStarC_TypeChecker_Env.gamma_sig =
-                                    (env'.FStarC_TypeChecker_Env.gamma_sig);
-                                  FStarC_TypeChecker_Env.gamma_cache =
-                                    (env'.FStarC_TypeChecker_Env.gamma_cache);
-                                  FStarC_TypeChecker_Env.modules =
-                                    (env'.FStarC_TypeChecker_Env.modules);
-                                  FStarC_TypeChecker_Env.expected_typ =
-                                    (env'.FStarC_TypeChecker_Env.expected_typ);
-                                  FStarC_TypeChecker_Env.expected_post =
-                                    (env'.FStarC_TypeChecker_Env.expected_post);
-                                  FStarC_TypeChecker_Env.sigtab =
-                                    (env'.FStarC_TypeChecker_Env.sigtab);
-                                  FStarC_TypeChecker_Env.attrtab =
-                                    (env'.FStarC_TypeChecker_Env.attrtab);
-                                  FStarC_TypeChecker_Env.instantiate_imp =
-                                    (env'.FStarC_TypeChecker_Env.instantiate_imp);
-                                  FStarC_TypeChecker_Env.effects =
-                                    (env'.FStarC_TypeChecker_Env.effects);
-                                  FStarC_TypeChecker_Env.generalize =
-                                    (env'.FStarC_TypeChecker_Env.generalize);
-                                  FStarC_TypeChecker_Env.letrecs =
-                                    (env'.FStarC_TypeChecker_Env.letrecs);
-                                  FStarC_TypeChecker_Env.top_level =
-                                    (env'.FStarC_TypeChecker_Env.top_level);
-                                  FStarC_TypeChecker_Env.check_uvars =
-                                    (env'.FStarC_TypeChecker_Env.check_uvars);
-                                  FStarC_TypeChecker_Env.use_eq_strict =
-                                    (env'.FStarC_TypeChecker_Env.use_eq_strict);
-                                  FStarC_TypeChecker_Env.is_iface =
-                                    (env'.FStarC_TypeChecker_Env.is_iface);
-                                  FStarC_TypeChecker_Env.admit = true;
-                                  FStarC_TypeChecker_Env.phase1 = true;
-                                  FStarC_TypeChecker_Env.failhard =
-                                    (env'.FStarC_TypeChecker_Env.failhard);
-                                  FStarC_TypeChecker_Env.flychecking =
-                                    (env'.FStarC_TypeChecker_Env.flychecking);
-                                  FStarC_TypeChecker_Env.uvar_subtyping =
-                                    (env'.FStarC_TypeChecker_Env.uvar_subtyping);
-                                  FStarC_TypeChecker_Env.intactics =
-                                    (env'.FStarC_TypeChecker_Env.intactics);
-                                  FStarC_TypeChecker_Env.nocoerce =
-                                    (env'.FStarC_TypeChecker_Env.nocoerce);
-                                  FStarC_TypeChecker_Env.tc_term =
-                                    (env'.FStarC_TypeChecker_Env.tc_term);
-                                  FStarC_TypeChecker_Env.typeof_tot_or_gtot_term
-                                    =
-                                    (env'.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term);
-                                  FStarC_TypeChecker_Env.universe_of =
-                                    (env'.FStarC_TypeChecker_Env.universe_of);
-                                  FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
-                                    =
-                                    (env'.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-                                  FStarC_TypeChecker_Env.teq_nosmt_force =
-                                    (env'.FStarC_TypeChecker_Env.teq_nosmt_force);
-                                  FStarC_TypeChecker_Env.subtype_nosmt_force
-                                    =
-                                    (env'.FStarC_TypeChecker_Env.subtype_nosmt_force);
-                                  FStarC_TypeChecker_Env.qtbl_name_and_index
-                                    =
-                                    (env'.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                                  FStarC_TypeChecker_Env.normalized_eff_names
-                                    =
-                                    (env'.FStarC_TypeChecker_Env.normalized_eff_names);
-                                  FStarC_TypeChecker_Env.fv_delta_depths =
-                                    (env'.FStarC_TypeChecker_Env.fv_delta_depths);
-                                  FStarC_TypeChecker_Env.proof_ns =
-                                    (env'.FStarC_TypeChecker_Env.proof_ns);
-                                  FStarC_TypeChecker_Env.synth_hook =
-                                    (env'.FStarC_TypeChecker_Env.synth_hook);
-                                  FStarC_TypeChecker_Env.try_solve_implicits_hook
-                                    =
-                                    (env'.FStarC_TypeChecker_Env.try_solve_implicits_hook);
-                                  FStarC_TypeChecker_Env.splice =
-                                    (env'.FStarC_TypeChecker_Env.splice);
-                                  FStarC_TypeChecker_Env.mpreprocess =
-                                    (env'.FStarC_TypeChecker_Env.mpreprocess);
-                                  FStarC_TypeChecker_Env.postprocess =
-                                    (env'.FStarC_TypeChecker_Env.postprocess);
-                                  FStarC_TypeChecker_Env.identifier_info =
-                                    (env'.FStarC_TypeChecker_Env.identifier_info);
-                                  FStarC_TypeChecker_Env.tc_hooks =
-                                    (env'.FStarC_TypeChecker_Env.tc_hooks);
-                                  FStarC_TypeChecker_Env.dsenv =
-                                    (env'.FStarC_TypeChecker_Env.dsenv);
-                                  FStarC_TypeChecker_Env.nbe =
-                                    (env'.FStarC_TypeChecker_Env.nbe);
-                                  FStarC_TypeChecker_Env.strict_args_tab =
-                                    (env'.FStarC_TypeChecker_Env.strict_args_tab);
-                                  FStarC_TypeChecker_Env.erasable_types_tab =
-                                    (env'.FStarC_TypeChecker_Env.erasable_types_tab);
-                                  FStarC_TypeChecker_Env.enable_defer_to_tac
-                                    =
-                                    (env'.FStarC_TypeChecker_Env.enable_defer_to_tac);
-                                  FStarC_TypeChecker_Env.unif_allow_ref_guards
-                                    =
-                                    (env'.FStarC_TypeChecker_Env.unif_allow_ref_guards);
-                                  FStarC_TypeChecker_Env.erase_erasable_args
-                                    =
-                                    (env'.FStarC_TypeChecker_Env.erase_erasable_args);
-                                  FStarC_TypeChecker_Env.core_check =
-                                    (env'.FStarC_TypeChecker_Env.core_check);
-                                  FStarC_TypeChecker_Env.missing_decl =
-                                    (env'.FStarC_TypeChecker_Env.missing_decl);
-                                  FStarC_TypeChecker_Env.iface_todo =
-                                    (env'.FStarC_TypeChecker_Env.iface_todo);
-                                  FStarC_TypeChecker_Env.iface_hidden =
-                                    (env'.FStarC_TypeChecker_Env.iface_hidden);
-                                  FStarC_TypeChecker_Env.iface_lids =
-                                    (env'.FStarC_TypeChecker_Env.iface_lids);
-                                  FStarC_TypeChecker_Env.iface_val_lids =
-                                    (env'.FStarC_TypeChecker_Env.iface_val_lids)
-                                } e in
-                            match uu___6 with | (e3, uu___7, uu___8) -> e3)
-                         (FStar_Pervasives_Native.Some
-                            (FStarC_Ident.string_of_lid
-                               (FStarC_TypeChecker_Env.current_module env1)))
-                         "FStarC.TypeChecker.Tc.tc_sig_let-tc-phase1" in
-                     (let uu___6 =
-                        let uu___7 = FStarC_Debug.medium () in
-                        if uu___7
-                        then true
-                        else FStarC_Effect.op_Bang dbg_TwoPhases in
-                      if uu___6
-                      then
-                        let uu___7 =
-                          FStarC_Class_Show.show
-                            FStarC_Syntax_Print.showable_term e2 in
-                        FStarC_Format.print1
-                          "Let binding after phase 1, before removing uvars: %s\n"
-                          uu___7
-                      else ());
-                     (let e3 =
-                        let uu___6 =
-                          FStarC_TypeChecker_Normalize.remove_uvar_solutions
-                            env' e2 in
-                        drop_lbtyp uu___6 in
-                      (let uu___7 =
-                         let uu___8 = FStarC_Debug.medium () in
-                         if uu___8
-                         then true
-                         else FStarC_Effect.op_Bang dbg_TwoPhases in
-                       if uu___7
-                       then
-                         let uu___8 =
-                           FStarC_Class_Show.show
-                             FStarC_Syntax_Print.showable_term e3 in
-                         FStarC_Format.print1
-                           "Let binding after phase 1, uvars removed: %s\n"
-                           uu___8
-                       else ());
-                      e3))
-              else e in
-            let env'1 =
-              let uu___3 =
-                let uu___4 = FStarC_Syntax_Subst.compress e1 in
-                uu___4.FStarC_Syntax_Syntax.n in
-              match uu___3 with
-              | FStarC_Syntax_Syntax.Tm_let
-                  { FStarC_Syntax_Syntax.lbs = lbs1;
-                    FStarC_Syntax_Syntax.body1 = uu___4;_}
-                  ->
-                  let se2 =
-                    {
-                      FStarC_Syntax_Syntax.sigel =
-                        (FStarC_Syntax_Syntax.Sig_let
-                           {
-                             FStarC_Syntax_Syntax.lbs1 = lbs1;
-                             FStarC_Syntax_Syntax.lids1 = lids
-                           });
-                      FStarC_Syntax_Syntax.sigrng =
-                        (se1.FStarC_Syntax_Syntax.sigrng);
-                      FStarC_Syntax_Syntax.sigquals =
-                        (se1.FStarC_Syntax_Syntax.sigquals);
-                      FStarC_Syntax_Syntax.sigmeta =
-                        (se1.FStarC_Syntax_Syntax.sigmeta);
-                      FStarC_Syntax_Syntax.sigattrs =
-                        (se1.FStarC_Syntax_Syntax.sigattrs);
-                      FStarC_Syntax_Syntax.sigopens_and_abbrevs =
-                        (se1.FStarC_Syntax_Syntax.sigopens_and_abbrevs);
-                      FStarC_Syntax_Syntax.sigopts =
-                        (se1.FStarC_Syntax_Syntax.sigopts)
-                    } in
-                  set_hint_correlator env' se2
-              | uu___4 -> FStarC_Effect.failwith "no way, not a let?" in
-            (FStarC_Errors.stop_if_err ();
-             (let r1 =
-                let should_generalize1 =
-                  let uu___4 = do_two_phases env'1 in Prims.not uu___4 in
-                FStarC_Profiling.profile
-                  (fun uu___4 ->
-                     FStarC_TypeChecker_TcTerm.tc_maybe_toplevel_term
-                       {
-                         FStarC_TypeChecker_Env.solver =
-                           (env'1.FStarC_TypeChecker_Env.solver);
-                         FStarC_TypeChecker_Env.range =
-                           (env'1.FStarC_TypeChecker_Env.range);
-                         FStarC_TypeChecker_Env.curmodule =
-                           (env'1.FStarC_TypeChecker_Env.curmodule);
-                         FStarC_TypeChecker_Env.gamma =
-                           (env'1.FStarC_TypeChecker_Env.gamma);
-                         FStarC_TypeChecker_Env.gamma_sig =
-                           (env'1.FStarC_TypeChecker_Env.gamma_sig);
-                         FStarC_TypeChecker_Env.gamma_cache =
-                           (env'1.FStarC_TypeChecker_Env.gamma_cache);
-                         FStarC_TypeChecker_Env.modules =
-                           (env'1.FStarC_TypeChecker_Env.modules);
-                         FStarC_TypeChecker_Env.expected_typ =
-                           (env'1.FStarC_TypeChecker_Env.expected_typ);
-                         FStarC_TypeChecker_Env.expected_post =
-                           (env'1.FStarC_TypeChecker_Env.expected_post);
-                         FStarC_TypeChecker_Env.sigtab =
-                           (env'1.FStarC_TypeChecker_Env.sigtab);
-                         FStarC_TypeChecker_Env.attrtab =
-                           (env'1.FStarC_TypeChecker_Env.attrtab);
-                         FStarC_TypeChecker_Env.instantiate_imp =
-                           (env'1.FStarC_TypeChecker_Env.instantiate_imp);
-                         FStarC_TypeChecker_Env.effects =
-                           (env'1.FStarC_TypeChecker_Env.effects);
-                         FStarC_TypeChecker_Env.generalize =
-                           should_generalize1;
-                         FStarC_TypeChecker_Env.letrecs =
-                           (env'1.FStarC_TypeChecker_Env.letrecs);
-                         FStarC_TypeChecker_Env.top_level =
-                           (env'1.FStarC_TypeChecker_Env.top_level);
-                         FStarC_TypeChecker_Env.check_uvars =
-                           (env'1.FStarC_TypeChecker_Env.check_uvars);
-                         FStarC_TypeChecker_Env.use_eq_strict =
-                           (env'1.FStarC_TypeChecker_Env.use_eq_strict);
-                         FStarC_TypeChecker_Env.is_iface =
-                           (env'1.FStarC_TypeChecker_Env.is_iface);
-                         FStarC_TypeChecker_Env.admit =
-                           (env'1.FStarC_TypeChecker_Env.admit);
-                         FStarC_TypeChecker_Env.phase1 =
-                           (env'1.FStarC_TypeChecker_Env.phase1);
-                         FStarC_TypeChecker_Env.failhard =
-                           (env'1.FStarC_TypeChecker_Env.failhard);
-                         FStarC_TypeChecker_Env.flychecking =
-                           (env'1.FStarC_TypeChecker_Env.flychecking);
-                         FStarC_TypeChecker_Env.uvar_subtyping =
-                           (env'1.FStarC_TypeChecker_Env.uvar_subtyping);
-                         FStarC_TypeChecker_Env.intactics =
-                           (env'1.FStarC_TypeChecker_Env.intactics);
-                         FStarC_TypeChecker_Env.nocoerce =
-                           (env'1.FStarC_TypeChecker_Env.nocoerce);
-                         FStarC_TypeChecker_Env.tc_term =
-                           (env'1.FStarC_TypeChecker_Env.tc_term);
-                         FStarC_TypeChecker_Env.typeof_tot_or_gtot_term =
-                           (env'1.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term);
-                         FStarC_TypeChecker_Env.universe_of =
-                           (env'1.FStarC_TypeChecker_Env.universe_of);
-                         FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
-                           =
-                           (env'1.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-                         FStarC_TypeChecker_Env.teq_nosmt_force =
-                           (env'1.FStarC_TypeChecker_Env.teq_nosmt_force);
-                         FStarC_TypeChecker_Env.subtype_nosmt_force =
-                           (env'1.FStarC_TypeChecker_Env.subtype_nosmt_force);
-                         FStarC_TypeChecker_Env.qtbl_name_and_index =
-                           (env'1.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                         FStarC_TypeChecker_Env.normalized_eff_names =
-                           (env'1.FStarC_TypeChecker_Env.normalized_eff_names);
-                         FStarC_TypeChecker_Env.fv_delta_depths =
-                           (env'1.FStarC_TypeChecker_Env.fv_delta_depths);
-                         FStarC_TypeChecker_Env.proof_ns =
-                           (env'1.FStarC_TypeChecker_Env.proof_ns);
-                         FStarC_TypeChecker_Env.synth_hook =
-                           (env'1.FStarC_TypeChecker_Env.synth_hook);
-                         FStarC_TypeChecker_Env.try_solve_implicits_hook =
-                           (env'1.FStarC_TypeChecker_Env.try_solve_implicits_hook);
-                         FStarC_TypeChecker_Env.splice =
-                           (env'1.FStarC_TypeChecker_Env.splice);
-                         FStarC_TypeChecker_Env.mpreprocess =
-                           (env'1.FStarC_TypeChecker_Env.mpreprocess);
-                         FStarC_TypeChecker_Env.postprocess =
-                           (env'1.FStarC_TypeChecker_Env.postprocess);
-                         FStarC_TypeChecker_Env.identifier_info =
-                           (env'1.FStarC_TypeChecker_Env.identifier_info);
-                         FStarC_TypeChecker_Env.tc_hooks =
-                           (env'1.FStarC_TypeChecker_Env.tc_hooks);
-                         FStarC_TypeChecker_Env.dsenv =
-                           (env'1.FStarC_TypeChecker_Env.dsenv);
-                         FStarC_TypeChecker_Env.nbe =
-                           (env'1.FStarC_TypeChecker_Env.nbe);
-                         FStarC_TypeChecker_Env.strict_args_tab =
-                           (env'1.FStarC_TypeChecker_Env.strict_args_tab);
-                         FStarC_TypeChecker_Env.erasable_types_tab =
-                           (env'1.FStarC_TypeChecker_Env.erasable_types_tab);
-                         FStarC_TypeChecker_Env.enable_defer_to_tac =
-                           (env'1.FStarC_TypeChecker_Env.enable_defer_to_tac);
-                         FStarC_TypeChecker_Env.unif_allow_ref_guards =
-                           (env'1.FStarC_TypeChecker_Env.unif_allow_ref_guards);
-                         FStarC_TypeChecker_Env.erase_erasable_args =
-                           (env'1.FStarC_TypeChecker_Env.erase_erasable_args);
-                         FStarC_TypeChecker_Env.core_check =
-                           (env'1.FStarC_TypeChecker_Env.core_check);
-                         FStarC_TypeChecker_Env.missing_decl =
-                           (env'1.FStarC_TypeChecker_Env.missing_decl);
-                         FStarC_TypeChecker_Env.iface_todo =
-                           (env'1.FStarC_TypeChecker_Env.iface_todo);
-                         FStarC_TypeChecker_Env.iface_hidden =
-                           (env'1.FStarC_TypeChecker_Env.iface_hidden);
-                         FStarC_TypeChecker_Env.iface_lids =
-                           (env'1.FStarC_TypeChecker_Env.iface_lids);
-                         FStarC_TypeChecker_Env.iface_val_lids =
-                           (env'1.FStarC_TypeChecker_Env.iface_val_lids)
-                       } e1)
-                  (FStar_Pervasives_Native.Some
-                     (FStarC_Ident.string_of_lid
-                        (FStarC_TypeChecker_Env.current_module env1)))
-                  "FStarC.TypeChecker.Tc.tc_sig_let-tc-phase2" in
-              let uu___4 =
-                match r1 with
-                | ({
-                     FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_let
-                       { FStarC_Syntax_Syntax.lbs = lbs1;
-                         FStarC_Syntax_Syntax.body1 = e2;_};
-                     FStarC_Syntax_Syntax.pos = uu___5;
-                     FStarC_Syntax_Syntax.hash_code = uu___6;_},
-                   uu___7, g) when FStarC_TypeChecker_Env.is_trivial g ->
-                    (FStarC_Syntax_Util.check_mutual_universes
-                       (FStar_Pervasives_Native.snd lbs1);
-                     (let lbs2 =
-                        let uu___9 =
-                          FStarC_List.map rename_parameters
-                            (FStar_Pervasives_Native.snd lbs1) in
-                        ((FStar_Pervasives_Native.fst lbs1), uu___9) in
-                      let quals2 =
-                        match e2.FStarC_Syntax_Syntax.n with
-                        | FStarC_Syntax_Syntax.Tm_meta
-                            { FStarC_Syntax_Syntax.tm2 = uu___9;
-                              FStarC_Syntax_Syntax.meta =
-                                FStarC_Syntax_Syntax.Meta_desugared
-                                (FStarC_Syntax_Syntax.Masked_effect);_}
-                            -> FStarC_Syntax_Syntax.HasMaskedEffect :: quals1
-                        | uu___9 -> quals1 in
-                      ({
-                         FStarC_Syntax_Syntax.sigel =
-                           (FStarC_Syntax_Syntax.Sig_let
-                              {
-                                FStarC_Syntax_Syntax.lbs1 = lbs2;
-                                FStarC_Syntax_Syntax.lids1 = lids
-                              });
-                         FStarC_Syntax_Syntax.sigrng =
-                           (se1.FStarC_Syntax_Syntax.sigrng);
-                         FStarC_Syntax_Syntax.sigquals = quals2;
-                         FStarC_Syntax_Syntax.sigmeta =
-                           (se1.FStarC_Syntax_Syntax.sigmeta);
-                         FStarC_Syntax_Syntax.sigattrs =
-                           (se1.FStarC_Syntax_Syntax.sigattrs);
-                         FStarC_Syntax_Syntax.sigopens_and_abbrevs =
-                           (se1.FStarC_Syntax_Syntax.sigopens_and_abbrevs);
-                         FStarC_Syntax_Syntax.sigopts =
-                           (se1.FStarC_Syntax_Syntax.sigopts)
-                       }, lbs2)))
-                | uu___5 ->
-                    FStarC_Effect.failwith
-                      "impossible (typechecking should preserve Tm_let)" in
-              match uu___4 with
-              | (se2, lbs1) ->
-                  let se3 = run_postprocess false env'1 se2 in
-                  ((let uu___6 =
-                      FStarC_Syntax_Util.has_attribute
-                        se3.FStarC_Syntax_Syntax.sigattrs
-                        FStarC_Parser_Const.no_subtping_attr_lid in
-                    if uu___6
-                    then
-                      let env'2 =
-                        {
-                          FStarC_TypeChecker_Env.solver =
-                            (env'1.FStarC_TypeChecker_Env.solver);
-                          FStarC_TypeChecker_Env.range =
-                            (env'1.FStarC_TypeChecker_Env.range);
-                          FStarC_TypeChecker_Env.curmodule =
-                            (env'1.FStarC_TypeChecker_Env.curmodule);
-                          FStarC_TypeChecker_Env.gamma =
-                            (env'1.FStarC_TypeChecker_Env.gamma);
-                          FStarC_TypeChecker_Env.gamma_sig =
-                            (env'1.FStarC_TypeChecker_Env.gamma_sig);
-                          FStarC_TypeChecker_Env.gamma_cache =
-                            (env'1.FStarC_TypeChecker_Env.gamma_cache);
-                          FStarC_TypeChecker_Env.modules =
-                            (env'1.FStarC_TypeChecker_Env.modules);
-                          FStarC_TypeChecker_Env.expected_typ =
-                            (env'1.FStarC_TypeChecker_Env.expected_typ);
-                          FStarC_TypeChecker_Env.expected_post =
-                            (env'1.FStarC_TypeChecker_Env.expected_post);
-                          FStarC_TypeChecker_Env.sigtab =
-                            (env'1.FStarC_TypeChecker_Env.sigtab);
-                          FStarC_TypeChecker_Env.attrtab =
-                            (env'1.FStarC_TypeChecker_Env.attrtab);
-                          FStarC_TypeChecker_Env.instantiate_imp =
-                            (env'1.FStarC_TypeChecker_Env.instantiate_imp);
-                          FStarC_TypeChecker_Env.effects =
-                            (env'1.FStarC_TypeChecker_Env.effects);
-                          FStarC_TypeChecker_Env.generalize =
-                            (env'1.FStarC_TypeChecker_Env.generalize);
-                          FStarC_TypeChecker_Env.letrecs =
-                            (env'1.FStarC_TypeChecker_Env.letrecs);
-                          FStarC_TypeChecker_Env.top_level =
-                            (env'1.FStarC_TypeChecker_Env.top_level);
-                          FStarC_TypeChecker_Env.check_uvars =
-                            (env'1.FStarC_TypeChecker_Env.check_uvars);
-                          FStarC_TypeChecker_Env.use_eq_strict = true;
-                          FStarC_TypeChecker_Env.is_iface =
-                            (env'1.FStarC_TypeChecker_Env.is_iface);
-                          FStarC_TypeChecker_Env.admit =
-                            (env'1.FStarC_TypeChecker_Env.admit);
-                          FStarC_TypeChecker_Env.phase1 =
-                            (env'1.FStarC_TypeChecker_Env.phase1);
-                          FStarC_TypeChecker_Env.failhard =
-                            (env'1.FStarC_TypeChecker_Env.failhard);
-                          FStarC_TypeChecker_Env.flychecking =
-                            (env'1.FStarC_TypeChecker_Env.flychecking);
-                          FStarC_TypeChecker_Env.uvar_subtyping =
-                            (env'1.FStarC_TypeChecker_Env.uvar_subtyping);
-                          FStarC_TypeChecker_Env.intactics =
-                            (env'1.FStarC_TypeChecker_Env.intactics);
-                          FStarC_TypeChecker_Env.nocoerce =
-                            (env'1.FStarC_TypeChecker_Env.nocoerce);
-                          FStarC_TypeChecker_Env.tc_term =
-                            (env'1.FStarC_TypeChecker_Env.tc_term);
-                          FStarC_TypeChecker_Env.typeof_tot_or_gtot_term =
-                            (env'1.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term);
-                          FStarC_TypeChecker_Env.universe_of =
-                            (env'1.FStarC_TypeChecker_Env.universe_of);
-                          FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
-                            =
-                            (env'1.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-                          FStarC_TypeChecker_Env.teq_nosmt_force =
-                            (env'1.FStarC_TypeChecker_Env.teq_nosmt_force);
-                          FStarC_TypeChecker_Env.subtype_nosmt_force =
-                            (env'1.FStarC_TypeChecker_Env.subtype_nosmt_force);
-                          FStarC_TypeChecker_Env.qtbl_name_and_index =
-                            (env'1.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                          FStarC_TypeChecker_Env.normalized_eff_names =
-                            (env'1.FStarC_TypeChecker_Env.normalized_eff_names);
-                          FStarC_TypeChecker_Env.fv_delta_depths =
-                            (env'1.FStarC_TypeChecker_Env.fv_delta_depths);
-                          FStarC_TypeChecker_Env.proof_ns =
-                            (env'1.FStarC_TypeChecker_Env.proof_ns);
-                          FStarC_TypeChecker_Env.synth_hook =
-                            (env'1.FStarC_TypeChecker_Env.synth_hook);
-                          FStarC_TypeChecker_Env.try_solve_implicits_hook =
-                            (env'1.FStarC_TypeChecker_Env.try_solve_implicits_hook);
-                          FStarC_TypeChecker_Env.splice =
-                            (env'1.FStarC_TypeChecker_Env.splice);
-                          FStarC_TypeChecker_Env.mpreprocess =
-                            (env'1.FStarC_TypeChecker_Env.mpreprocess);
-                          FStarC_TypeChecker_Env.postprocess =
-                            (env'1.FStarC_TypeChecker_Env.postprocess);
-                          FStarC_TypeChecker_Env.identifier_info =
-                            (env'1.FStarC_TypeChecker_Env.identifier_info);
-                          FStarC_TypeChecker_Env.tc_hooks =
-                            (env'1.FStarC_TypeChecker_Env.tc_hooks);
-                          FStarC_TypeChecker_Env.dsenv =
-                            (env'1.FStarC_TypeChecker_Env.dsenv);
-                          FStarC_TypeChecker_Env.nbe =
-                            (env'1.FStarC_TypeChecker_Env.nbe);
-                          FStarC_TypeChecker_Env.strict_args_tab =
-                            (env'1.FStarC_TypeChecker_Env.strict_args_tab);
-                          FStarC_TypeChecker_Env.erasable_types_tab =
-                            (env'1.FStarC_TypeChecker_Env.erasable_types_tab);
-                          FStarC_TypeChecker_Env.enable_defer_to_tac =
-                            (env'1.FStarC_TypeChecker_Env.enable_defer_to_tac);
-                          FStarC_TypeChecker_Env.unif_allow_ref_guards =
-                            (env'1.FStarC_TypeChecker_Env.unif_allow_ref_guards);
-                          FStarC_TypeChecker_Env.erase_erasable_args =
-                            (env'1.FStarC_TypeChecker_Env.erase_erasable_args);
-                          FStarC_TypeChecker_Env.core_check =
-                            (env'1.FStarC_TypeChecker_Env.core_check);
-                          FStarC_TypeChecker_Env.missing_decl =
-                            (env'1.FStarC_TypeChecker_Env.missing_decl);
-                          FStarC_TypeChecker_Env.iface_todo =
-                            (env'1.FStarC_TypeChecker_Env.iface_todo);
-                          FStarC_TypeChecker_Env.iface_hidden =
-                            (env'1.FStarC_TypeChecker_Env.iface_hidden);
-                          FStarC_TypeChecker_Env.iface_lids =
-                            (env'1.FStarC_TypeChecker_Env.iface_lids);
-                          FStarC_TypeChecker_Env.iface_val_lids =
-                            (env'1.FStarC_TypeChecker_Env.iface_val_lids)
-                        } in
-                      let err s pos =
-                        FStarC_Errors.raise_error
-                          FStarC_Class_HasRange.hasRange_range pos
-                          FStarC_Errors_Codes.Fatal_InconsistentQualifierAnnotation
-                          ()
-                          (Obj.magic
-                             FStarC_Errors_Msg.is_error_message_string)
-                          (Obj.magic s) in
-                      FStarC_List.iter
-                        (fun lb ->
-                           let uu___7 =
-                             let uu___8 =
-                               FStarC_Syntax_Util.is_lemma
-                                 lb.FStarC_Syntax_Syntax.lbtyp in
-                             Prims.not uu___8 in
-                           if uu___7
-                           then
-                             err "no_subtype annotation on a non-lemma"
-                               lb.FStarC_Syntax_Syntax.lbpos
-                           else
-                             (let lid_opt =
-                                let uu___8 =
-                                  let uu___9 =
-                                    FStarC_Syntax_Free.fvars
-                                      lb.FStarC_Syntax_Syntax.lbtyp in
-                                  FStarC_Class_Setlike.elems
-                                    (FStarC_RBSet.setlike_rbset
-                                       FStarC_Syntax_Syntax.ord_fv) uu___9 in
-                                FStarC_List.tryFind
-                                  (fun lid ->
-                                     let uu___9 =
-                                       let uu___10 =
-                                         let uu___11 =
-                                           let uu___12 =
-                                             FStarC_Ident.path_of_lid lid in
-                                           FStarC_List.hd uu___12 in
-                                         uu___11 = "Prims" in
-                                       if uu___10
-                                       then true
-                                       else
-                                         FStarC_Ident.lid_equals lid
-                                           FStarC_Parser_Const.pattern_lid in
-                                     Prims.not uu___9) uu___8 in
-                              if
-                                match lid_opt with
-                                | FStar_Pervasives_Native.Some v -> true
-                                | uu___8 -> false
-                              then
-                                let uu___8 =
-                                  let uu___9 =
-                                    let uu___10 = FStarC_Option.must lid_opt in
-                                    FStarC_Ident.string_of_lid uu___10 in
-                                  FStarC_Format.fmt1
-                                    "%s is not allowed in no_subtyping lemmas (only prims symbols)"
-                                    uu___9 in
-                                err uu___8 lb.FStarC_Syntax_Syntax.lbpos
-                              else
-                                (let uu___8 = FStarC_Syntax_Util.type_u () in
-                                 match uu___8 with
-                                 | (t, uu___9) ->
-                                     let uu___10 =
-                                       FStarC_Syntax_Subst.open_univ_vars
-                                         lb.FStarC_Syntax_Syntax.lbunivs
-                                         lb.FStarC_Syntax_Syntax.lbtyp in
-                                     (match uu___10 with
-                                      | (uvs, lbtyp) ->
-                                          let uu___11 =
-                                            let uu___12 =
-                                              FStarC_TypeChecker_Env.push_univ_vars
-                                                env'2 uvs in
-                                            FStarC_TypeChecker_TcTerm.tc_check_tot_or_gtot_term
-                                              uu___12 lbtyp t
-                                              (FStar_Pervasives_Native.Some
-                                                 "checking no_subtype annotation") in
-                                          (match uu___11 with
-                                           | (uu___12, uu___13, g) ->
-                                               FStarC_TypeChecker_Rel.force_trivial_guard
-                                                 env'2 g)))))
-                        (FStar_Pervasives_Native.snd lbs1)
-                    else ());
-                   FStarC_List.iter
-                     (fun lb ->
-                        let fv =
-                          match lb.FStarC_Syntax_Syntax.lbname with
-                          | FStar_Pervasives.Inr v -> v in
-                        FStarC_TypeChecker_Env.insert_fv_info env1 fv
-                          lb.FStarC_Syntax_Syntax.lbtyp)
-                     (FStar_Pervasives_Native.snd lbs1);
-                   (let uu___8 = log env1 in
-                    if uu___8
-                    then
-                      let uu___9 =
-                        let uu___10 =
-                          FStarC_List.map
-                            (fun lb ->
-                               let should_log =
-                                 let uu___11 =
-                                   FStarC_TypeChecker_Env.try_lookup_val_decl
-                                     env1
-                                     (match lb.FStarC_Syntax_Syntax.lbname
-                                      with
-                                      | FStar_Pervasives.Inr v -> v).FStarC_Syntax_Syntax.fv_name in
-                                 match uu___11 with
-                                 | FStar_Pervasives_Native.None -> true
-                                 | uu___12 -> false in
-                               if should_log
-                               then
-                                 let uu___11 =
-                                   FStarC_Class_Show.show
-                                     (FStarC_Class_Show.show_either
-                                        FStarC_Syntax_Print.showable_bv
-                                        FStarC_Syntax_Syntax.showable_fv)
-                                     lb.FStarC_Syntax_Syntax.lbname in
-                                 let uu___12 =
-                                   FStarC_Class_Show.show
-                                     FStarC_Syntax_Print.showable_term
-                                     lb.FStarC_Syntax_Syntax.lbtyp in
-                                 FStarC_Format.fmt2 "let %s : %s" uu___11
-                                   uu___12
-                               else "") (FStar_Pervasives_Native.snd lbs1) in
-                        FStarC_String.concat "\n" uu___10 in
-                      FStarC_Format.print1 "%s\n" uu___9
-                    else ());
-                   ([se3], [], env0))))))
-let snapshot_context (env : FStarC_TypeChecker_Env.env) (msg : Prims.string)
-  :
-  ((Prims.int * Prims.int * FStarC_TypeChecker_Env.solver_depth_t *
-    Prims.int) * FStarC_TypeChecker_Env.env)=
-  FStarC_Util.atomically
-    (fun uu___ -> FStarC_TypeChecker_Env.snapshot env msg)
-let rollback_context (solver : FStarC_TypeChecker_Env.solver_t)
-  (msg : Prims.string)
-  (depth :
-    (Prims.int * Prims.int * FStarC_TypeChecker_Env.solver_depth_t *
-      Prims.int) FStar_Pervasives_Native.option)
-  : FStarC_TypeChecker_Env.env=
-  FStarC_Util.atomically
-    (fun uu___ ->
-       let env = FStarC_TypeChecker_Env.rollback solver msg depth in env)
-let push_context (env : FStarC_TypeChecker_Env.env) (msg : Prims.string) :
-  FStarC_TypeChecker_Env.env=
-  let uu___ = snapshot_context env msg in FStar_Pervasives_Native.snd uu___
-let pop_context (env : FStarC_TypeChecker_Env.env) (msg : Prims.string) :
-  FStarC_TypeChecker_Env.env=
-  rollback_context env.FStarC_TypeChecker_Env.solver msg
-    FStar_Pervasives_Native.None
-let process_pragma (env : FStarC_TypeChecker_Env.env)
-  (p : FStarC_Syntax_Syntax.pragma) (r : FStarC_Range_Type.range) : unit=
-  FStarC_Syntax_Util.process_pragma p r;
-  (match p with
-   | FStarC_Syntax_Syntax.ShowOptions ->
-       let uu___1 =
-         let uu___2 =
-           let uu___3 =
-             let uu___4 = FStarC_Options.show_options () in
-             FStar_Pprint.arbitrary_string uu___4 in
-           [uu___3] in
-         (FStarC_Errors_Msg.text "Option state:") :: uu___2 in
-       FStarC_Errors.info FStarC_Class_HasRange.hasRange_range r ()
-         (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-         (Obj.magic uu___1)
-   | FStarC_Syntax_Syntax.PrintEffectsGraph ->
-       let uu___1 = FStarC_TypeChecker_Env.print_effects_graph env in
-       FStarC_Util.write_file "effects.graph" uu___1
-   | FStarC_Syntax_Syntax.Check t0 ->
-       let env' = push_context env "#check" in
-       let tx = FStarC_Syntax_Unionfind.new_transaction () in
-       FStarC_Util.finally
-         (fun uu___1 ->
-            (let uu___3 = pop_context env' "#check" in ());
-            FStarC_Syntax_Unionfind.rollback tx)
-         (fun uu___1 ->
-            let uu___2 =
-              FStarC_TypeChecker_TcTerm.tc_term
-                {
-                  FStarC_TypeChecker_Env.solver =
-                    (env.FStarC_TypeChecker_Env.solver);
-                  FStarC_TypeChecker_Env.range =
-                    (env.FStarC_TypeChecker_Env.range);
-                  FStarC_TypeChecker_Env.curmodule =
-                    (env.FStarC_TypeChecker_Env.curmodule);
-                  FStarC_TypeChecker_Env.gamma =
-                    (env.FStarC_TypeChecker_Env.gamma);
-                  FStarC_TypeChecker_Env.gamma_sig =
-                    (env.FStarC_TypeChecker_Env.gamma_sig);
-                  FStarC_TypeChecker_Env.gamma_cache =
-                    (env.FStarC_TypeChecker_Env.gamma_cache);
-                  FStarC_TypeChecker_Env.modules =
-                    (env.FStarC_TypeChecker_Env.modules);
-                  FStarC_TypeChecker_Env.expected_typ =
-                    (env.FStarC_TypeChecker_Env.expected_typ);
-                  FStarC_TypeChecker_Env.expected_post =
-                    (env.FStarC_TypeChecker_Env.expected_post);
-                  FStarC_TypeChecker_Env.sigtab =
-                    (env.FStarC_TypeChecker_Env.sigtab);
-                  FStarC_TypeChecker_Env.attrtab =
-                    (env.FStarC_TypeChecker_Env.attrtab);
-                  FStarC_TypeChecker_Env.instantiate_imp = false;
-                  FStarC_TypeChecker_Env.effects =
-                    (env.FStarC_TypeChecker_Env.effects);
-                  FStarC_TypeChecker_Env.generalize =
-                    (env.FStarC_TypeChecker_Env.generalize);
-                  FStarC_TypeChecker_Env.letrecs =
-                    (env.FStarC_TypeChecker_Env.letrecs);
-                  FStarC_TypeChecker_Env.top_level =
-                    (env.FStarC_TypeChecker_Env.top_level);
-                  FStarC_TypeChecker_Env.check_uvars =
-                    (env.FStarC_TypeChecker_Env.check_uvars);
-                  FStarC_TypeChecker_Env.use_eq_strict =
-                    (env.FStarC_TypeChecker_Env.use_eq_strict);
-                  FStarC_TypeChecker_Env.is_iface =
-                    (env.FStarC_TypeChecker_Env.is_iface);
-                  FStarC_TypeChecker_Env.admit =
-                    (env.FStarC_TypeChecker_Env.admit);
-                  FStarC_TypeChecker_Env.phase1 =
-                    (env.FStarC_TypeChecker_Env.phase1);
-                  FStarC_TypeChecker_Env.failhard =
-                    (env.FStarC_TypeChecker_Env.failhard);
-                  FStarC_TypeChecker_Env.flychecking =
-                    (env.FStarC_TypeChecker_Env.flychecking);
-                  FStarC_TypeChecker_Env.uvar_subtyping =
-                    (env.FStarC_TypeChecker_Env.uvar_subtyping);
-                  FStarC_TypeChecker_Env.intactics =
-                    (env.FStarC_TypeChecker_Env.intactics);
-                  FStarC_TypeChecker_Env.nocoerce =
-                    (env.FStarC_TypeChecker_Env.nocoerce);
-                  FStarC_TypeChecker_Env.tc_term =
-                    (env.FStarC_TypeChecker_Env.tc_term);
-                  FStarC_TypeChecker_Env.typeof_tot_or_gtot_term =
-                    (env.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term);
-                  FStarC_TypeChecker_Env.universe_of =
-                    (env.FStarC_TypeChecker_Env.universe_of);
-                  FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
-                    (env.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-                  FStarC_TypeChecker_Env.teq_nosmt_force =
-                    (env.FStarC_TypeChecker_Env.teq_nosmt_force);
-                  FStarC_TypeChecker_Env.subtype_nosmt_force =
-                    (env.FStarC_TypeChecker_Env.subtype_nosmt_force);
-                  FStarC_TypeChecker_Env.qtbl_name_and_index =
-                    (env.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                  FStarC_TypeChecker_Env.normalized_eff_names =
-                    (env.FStarC_TypeChecker_Env.normalized_eff_names);
-                  FStarC_TypeChecker_Env.fv_delta_depths =
-                    (env.FStarC_TypeChecker_Env.fv_delta_depths);
-                  FStarC_TypeChecker_Env.proof_ns =
-                    (env.FStarC_TypeChecker_Env.proof_ns);
-                  FStarC_TypeChecker_Env.synth_hook =
-                    (env.FStarC_TypeChecker_Env.synth_hook);
-                  FStarC_TypeChecker_Env.try_solve_implicits_hook =
-                    (env.FStarC_TypeChecker_Env.try_solve_implicits_hook);
-                  FStarC_TypeChecker_Env.splice =
-                    (env.FStarC_TypeChecker_Env.splice);
-                  FStarC_TypeChecker_Env.mpreprocess =
-                    (env.FStarC_TypeChecker_Env.mpreprocess);
-                  FStarC_TypeChecker_Env.postprocess =
-                    (env.FStarC_TypeChecker_Env.postprocess);
-                  FStarC_TypeChecker_Env.identifier_info =
-                    (env.FStarC_TypeChecker_Env.identifier_info);
-                  FStarC_TypeChecker_Env.tc_hooks =
-                    (env.FStarC_TypeChecker_Env.tc_hooks);
-                  FStarC_TypeChecker_Env.dsenv =
-                    (env.FStarC_TypeChecker_Env.dsenv);
-                  FStarC_TypeChecker_Env.nbe =
-                    (env.FStarC_TypeChecker_Env.nbe);
-                  FStarC_TypeChecker_Env.strict_args_tab =
-                    (env.FStarC_TypeChecker_Env.strict_args_tab);
-                  FStarC_TypeChecker_Env.erasable_types_tab =
-                    (env.FStarC_TypeChecker_Env.erasable_types_tab);
-                  FStarC_TypeChecker_Env.enable_defer_to_tac =
-                    (env.FStarC_TypeChecker_Env.enable_defer_to_tac);
-                  FStarC_TypeChecker_Env.unif_allow_ref_guards =
-                    (env.FStarC_TypeChecker_Env.unif_allow_ref_guards);
-                  FStarC_TypeChecker_Env.erase_erasable_args =
-                    (env.FStarC_TypeChecker_Env.erase_erasable_args);
-                  FStarC_TypeChecker_Env.core_check =
-                    (env.FStarC_TypeChecker_Env.core_check);
-                  FStarC_TypeChecker_Env.missing_decl =
-                    (env.FStarC_TypeChecker_Env.missing_decl);
-                  FStarC_TypeChecker_Env.iface_todo =
-                    (env.FStarC_TypeChecker_Env.iface_todo);
-                  FStarC_TypeChecker_Env.iface_hidden =
-                    (env.FStarC_TypeChecker_Env.iface_hidden);
-                  FStarC_TypeChecker_Env.iface_lids =
-                    (env.FStarC_TypeChecker_Env.iface_lids);
-                  FStarC_TypeChecker_Env.iface_val_lids =
-                    (env.FStarC_TypeChecker_Env.iface_val_lids)
-                } t0 in
-            match uu___2 with
-            | (t, lc, g) ->
-                let uu___3 = FStarC_TypeChecker_Common.lcomp_comp lc in
-                (match uu___3 with
-                 | (c, g') ->
-                     let g1 =
-                       FStarC_Class_Monoid.mplus
-                         FStarC_TypeChecker_Common.monoid_guard_t g g' in
-                     FStarC_Options.with_saved_options
-                       (fun uu___4 ->
-                          (let uu___6 =
-                             FStarC_Options.set_options "--print_effect_args" in
-                           ());
-                          (let uu___6 =
-                             let uu___7 =
-                               let uu___8 =
-                                 let uu___9 =
-                                   FStarC_Class_PP.pp
-                                     FStarC_Syntax_Print.pretty_term t in
-                                 let uu___10 =
-                                   let uu___11 =
-                                     FStarC_Class_PP.pp
-                                       FStarC_Syntax_Print.pretty_comp c in
-                                   FStar_Pprint.op_Hat_Slash_Hat
-                                     (FStarC_Errors_Msg.text "has type")
-                                     uu___11 in
-                                 FStar_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
-                               FStar_Pprint.op_Hat_Slash_Hat
-                                 (FStarC_Errors_Msg.text "Term") uu___8 in
-                             let uu___8 =
-                               let uu___9 =
-                                 let uu___10 =
-                                   let uu___11 =
-                                     FStarC_TypeChecker_Env.is_trivial g1 in
-                                   Prims.not uu___11 in
-                                 if uu___10
-                                 then
-                                   let uu___11 =
-                                     FStarC_Class_PP.pp
-                                       FStarC_TypeChecker_Env.pretty_guard g1 in
-                                   FStar_Pprint.op_Hat_Slash_Hat
-                                     (FStarC_Errors_Msg.text "With guard: ")
-                                     uu___11
-                                 else FStar_Pprint.empty in
-                               [uu___9] in
-                             uu___7 :: uu___8 in
-                           FStarC_Errors.info
-                             FStarC_Class_HasRange.hasRange_range r ()
-                             (Obj.magic
-                                FStarC_Errors_Msg.is_error_message_list_doc)
-                             (Obj.magic uu___6)))))
-   | FStarC_Syntax_Syntax.Eval t0 ->
-       let env' = push_context env "#eval" in
-       let tx = FStarC_Syntax_Unionfind.new_transaction () in
-       FStarC_Util.finally
-         (fun uu___1 ->
-            (let uu___3 = pop_context env' "#eval" in ());
-            FStarC_Syntax_Unionfind.rollback tx)
-         (fun uu___1 ->
-            let uu___2 =
-              FStarC_TypeChecker_TcTerm.tc_term
-                {
-                  FStarC_TypeChecker_Env.solver =
-                    (env'.FStarC_TypeChecker_Env.solver);
-                  FStarC_TypeChecker_Env.range =
-                    (env'.FStarC_TypeChecker_Env.range);
-                  FStarC_TypeChecker_Env.curmodule =
-                    (env'.FStarC_TypeChecker_Env.curmodule);
-                  FStarC_TypeChecker_Env.gamma =
-                    (env'.FStarC_TypeChecker_Env.gamma);
-                  FStarC_TypeChecker_Env.gamma_sig =
-                    (env'.FStarC_TypeChecker_Env.gamma_sig);
-                  FStarC_TypeChecker_Env.gamma_cache =
-                    (env'.FStarC_TypeChecker_Env.gamma_cache);
-                  FStarC_TypeChecker_Env.modules =
-                    (env'.FStarC_TypeChecker_Env.modules);
-                  FStarC_TypeChecker_Env.expected_typ =
-                    (env'.FStarC_TypeChecker_Env.expected_typ);
-                  FStarC_TypeChecker_Env.expected_post =
-                    (env'.FStarC_TypeChecker_Env.expected_post);
-                  FStarC_TypeChecker_Env.sigtab =
-                    (env'.FStarC_TypeChecker_Env.sigtab);
-                  FStarC_TypeChecker_Env.attrtab =
-                    (env'.FStarC_TypeChecker_Env.attrtab);
-                  FStarC_TypeChecker_Env.instantiate_imp = false;
-                  FStarC_TypeChecker_Env.effects =
-                    (env'.FStarC_TypeChecker_Env.effects);
-                  FStarC_TypeChecker_Env.generalize =
-                    (env'.FStarC_TypeChecker_Env.generalize);
-                  FStarC_TypeChecker_Env.letrecs =
-                    (env'.FStarC_TypeChecker_Env.letrecs);
-                  FStarC_TypeChecker_Env.top_level =
-                    (env'.FStarC_TypeChecker_Env.top_level);
-                  FStarC_TypeChecker_Env.check_uvars =
-                    (env'.FStarC_TypeChecker_Env.check_uvars);
-                  FStarC_TypeChecker_Env.use_eq_strict =
-                    (env'.FStarC_TypeChecker_Env.use_eq_strict);
-                  FStarC_TypeChecker_Env.is_iface =
-                    (env'.FStarC_TypeChecker_Env.is_iface);
-                  FStarC_TypeChecker_Env.admit = true;
-                  FStarC_TypeChecker_Env.phase1 = true;
-                  FStarC_TypeChecker_Env.failhard =
-                    (env'.FStarC_TypeChecker_Env.failhard);
-                  FStarC_TypeChecker_Env.flychecking =
-                    (env'.FStarC_TypeChecker_Env.flychecking);
-                  FStarC_TypeChecker_Env.uvar_subtyping =
-                    (env'.FStarC_TypeChecker_Env.uvar_subtyping);
-                  FStarC_TypeChecker_Env.intactics =
-                    (env'.FStarC_TypeChecker_Env.intactics);
-                  FStarC_TypeChecker_Env.nocoerce =
-                    (env'.FStarC_TypeChecker_Env.nocoerce);
-                  FStarC_TypeChecker_Env.tc_term =
-                    (env'.FStarC_TypeChecker_Env.tc_term);
-                  FStarC_TypeChecker_Env.typeof_tot_or_gtot_term =
-                    (env'.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term);
-                  FStarC_TypeChecker_Env.universe_of =
-                    (env'.FStarC_TypeChecker_Env.universe_of);
-                  FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
-                    (env'.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-                  FStarC_TypeChecker_Env.teq_nosmt_force =
-                    (env'.FStarC_TypeChecker_Env.teq_nosmt_force);
-                  FStarC_TypeChecker_Env.subtype_nosmt_force =
-                    (env'.FStarC_TypeChecker_Env.subtype_nosmt_force);
-                  FStarC_TypeChecker_Env.qtbl_name_and_index =
-                    (env'.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                  FStarC_TypeChecker_Env.normalized_eff_names =
-                    (env'.FStarC_TypeChecker_Env.normalized_eff_names);
-                  FStarC_TypeChecker_Env.fv_delta_depths =
-                    (env'.FStarC_TypeChecker_Env.fv_delta_depths);
-                  FStarC_TypeChecker_Env.proof_ns =
-                    (env'.FStarC_TypeChecker_Env.proof_ns);
-                  FStarC_TypeChecker_Env.synth_hook =
-                    (env'.FStarC_TypeChecker_Env.synth_hook);
-                  FStarC_TypeChecker_Env.try_solve_implicits_hook =
-                    (env'.FStarC_TypeChecker_Env.try_solve_implicits_hook);
-                  FStarC_TypeChecker_Env.splice =
-                    (env'.FStarC_TypeChecker_Env.splice);
-                  FStarC_TypeChecker_Env.mpreprocess =
-                    (env'.FStarC_TypeChecker_Env.mpreprocess);
-                  FStarC_TypeChecker_Env.postprocess =
-                    (env'.FStarC_TypeChecker_Env.postprocess);
-                  FStarC_TypeChecker_Env.identifier_info =
-                    (env'.FStarC_TypeChecker_Env.identifier_info);
-                  FStarC_TypeChecker_Env.tc_hooks =
-                    (env'.FStarC_TypeChecker_Env.tc_hooks);
-                  FStarC_TypeChecker_Env.dsenv =
-                    (env'.FStarC_TypeChecker_Env.dsenv);
-                  FStarC_TypeChecker_Env.nbe =
-                    (env'.FStarC_TypeChecker_Env.nbe);
-                  FStarC_TypeChecker_Env.strict_args_tab =
-                    (env'.FStarC_TypeChecker_Env.strict_args_tab);
-                  FStarC_TypeChecker_Env.erasable_types_tab =
-                    (env'.FStarC_TypeChecker_Env.erasable_types_tab);
-                  FStarC_TypeChecker_Env.enable_defer_to_tac =
-                    (env'.FStarC_TypeChecker_Env.enable_defer_to_tac);
-                  FStarC_TypeChecker_Env.unif_allow_ref_guards =
-                    (env'.FStarC_TypeChecker_Env.unif_allow_ref_guards);
-                  FStarC_TypeChecker_Env.erase_erasable_args =
-                    (env'.FStarC_TypeChecker_Env.erase_erasable_args);
-                  FStarC_TypeChecker_Env.core_check =
-                    (env'.FStarC_TypeChecker_Env.core_check);
-                  FStarC_TypeChecker_Env.missing_decl =
-                    (env'.FStarC_TypeChecker_Env.missing_decl);
-                  FStarC_TypeChecker_Env.iface_todo =
-                    (env'.FStarC_TypeChecker_Env.iface_todo);
-                  FStarC_TypeChecker_Env.iface_hidden =
-                    (env'.FStarC_TypeChecker_Env.iface_hidden);
-                  FStarC_TypeChecker_Env.iface_lids =
-                    (env'.FStarC_TypeChecker_Env.iface_lids);
-                  FStarC_TypeChecker_Env.iface_val_lids =
-                    (env'.FStarC_TypeChecker_Env.iface_val_lids)
-                } t0 in
-            match uu___2 with
-            | (t_elab, uu___3, g1) ->
-                ((let uu___5 = FStarC_TypeChecker_Rel.guard_to_string env' g1 in
-                  FStarC_Format.print1 "Guard = %s\n" uu___5);
-                 FStarC_TypeChecker_Rel.force_trivial_guard env' g1;
-                 (let uu___6 =
-                    FStarC_TypeChecker_TcTerm.tc_term
-                      {
-                        FStarC_TypeChecker_Env.solver =
-                          (env'.FStarC_TypeChecker_Env.solver);
-                        FStarC_TypeChecker_Env.range =
-                          (env'.FStarC_TypeChecker_Env.range);
-                        FStarC_TypeChecker_Env.curmodule =
-                          (env'.FStarC_TypeChecker_Env.curmodule);
-                        FStarC_TypeChecker_Env.gamma =
-                          (env'.FStarC_TypeChecker_Env.gamma);
-                        FStarC_TypeChecker_Env.gamma_sig =
-                          (env'.FStarC_TypeChecker_Env.gamma_sig);
-                        FStarC_TypeChecker_Env.gamma_cache =
-                          (env'.FStarC_TypeChecker_Env.gamma_cache);
-                        FStarC_TypeChecker_Env.modules =
-                          (env'.FStarC_TypeChecker_Env.modules);
-                        FStarC_TypeChecker_Env.expected_typ =
-                          (env'.FStarC_TypeChecker_Env.expected_typ);
-                        FStarC_TypeChecker_Env.expected_post =
-                          (env'.FStarC_TypeChecker_Env.expected_post);
-                        FStarC_TypeChecker_Env.sigtab =
-                          (env'.FStarC_TypeChecker_Env.sigtab);
-                        FStarC_TypeChecker_Env.attrtab =
-                          (env'.FStarC_TypeChecker_Env.attrtab);
-                        FStarC_TypeChecker_Env.instantiate_imp = false;
-                        FStarC_TypeChecker_Env.effects =
-                          (env'.FStarC_TypeChecker_Env.effects);
-                        FStarC_TypeChecker_Env.generalize =
-                          (env'.FStarC_TypeChecker_Env.generalize);
-                        FStarC_TypeChecker_Env.letrecs =
-                          (env'.FStarC_TypeChecker_Env.letrecs);
-                        FStarC_TypeChecker_Env.top_level =
-                          (env'.FStarC_TypeChecker_Env.top_level);
-                        FStarC_TypeChecker_Env.check_uvars =
-                          (env'.FStarC_TypeChecker_Env.check_uvars);
-                        FStarC_TypeChecker_Env.use_eq_strict =
-                          (env'.FStarC_TypeChecker_Env.use_eq_strict);
-                        FStarC_TypeChecker_Env.is_iface =
-                          (env'.FStarC_TypeChecker_Env.is_iface);
-                        FStarC_TypeChecker_Env.admit =
-                          (env'.FStarC_TypeChecker_Env.admit);
-                        FStarC_TypeChecker_Env.phase1 =
-                          (env'.FStarC_TypeChecker_Env.phase1);
-                        FStarC_TypeChecker_Env.failhard =
-                          (env'.FStarC_TypeChecker_Env.failhard);
-                        FStarC_TypeChecker_Env.flychecking =
-                          (env'.FStarC_TypeChecker_Env.flychecking);
-                        FStarC_TypeChecker_Env.uvar_subtyping =
-                          (env'.FStarC_TypeChecker_Env.uvar_subtyping);
-                        FStarC_TypeChecker_Env.intactics =
-                          (env'.FStarC_TypeChecker_Env.intactics);
-                        FStarC_TypeChecker_Env.nocoerce =
-                          (env'.FStarC_TypeChecker_Env.nocoerce);
-                        FStarC_TypeChecker_Env.tc_term =
-                          (env'.FStarC_TypeChecker_Env.tc_term);
-                        FStarC_TypeChecker_Env.typeof_tot_or_gtot_term =
-                          (env'.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term);
-                        FStarC_TypeChecker_Env.universe_of =
-                          (env'.FStarC_TypeChecker_Env.universe_of);
-                        FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
-                          =
-                          (env'.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-                        FStarC_TypeChecker_Env.teq_nosmt_force =
-                          (env'.FStarC_TypeChecker_Env.teq_nosmt_force);
-                        FStarC_TypeChecker_Env.subtype_nosmt_force =
-                          (env'.FStarC_TypeChecker_Env.subtype_nosmt_force);
-                        FStarC_TypeChecker_Env.qtbl_name_and_index =
-                          (env'.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                        FStarC_TypeChecker_Env.normalized_eff_names =
-                          (env'.FStarC_TypeChecker_Env.normalized_eff_names);
-                        FStarC_TypeChecker_Env.fv_delta_depths =
-                          (env'.FStarC_TypeChecker_Env.fv_delta_depths);
-                        FStarC_TypeChecker_Env.proof_ns =
-                          (env'.FStarC_TypeChecker_Env.proof_ns);
-                        FStarC_TypeChecker_Env.synth_hook =
-                          (env'.FStarC_TypeChecker_Env.synth_hook);
-                        FStarC_TypeChecker_Env.try_solve_implicits_hook =
-                          (env'.FStarC_TypeChecker_Env.try_solve_implicits_hook);
-                        FStarC_TypeChecker_Env.splice =
-                          (env'.FStarC_TypeChecker_Env.splice);
-                        FStarC_TypeChecker_Env.mpreprocess =
-                          (env'.FStarC_TypeChecker_Env.mpreprocess);
-                        FStarC_TypeChecker_Env.postprocess =
-                          (env'.FStarC_TypeChecker_Env.postprocess);
-                        FStarC_TypeChecker_Env.identifier_info =
-                          (env'.FStarC_TypeChecker_Env.identifier_info);
-                        FStarC_TypeChecker_Env.tc_hooks =
-                          (env'.FStarC_TypeChecker_Env.tc_hooks);
-                        FStarC_TypeChecker_Env.dsenv =
-                          (env'.FStarC_TypeChecker_Env.dsenv);
-                        FStarC_TypeChecker_Env.nbe =
-                          (env'.FStarC_TypeChecker_Env.nbe);
-                        FStarC_TypeChecker_Env.strict_args_tab =
-                          (env'.FStarC_TypeChecker_Env.strict_args_tab);
-                        FStarC_TypeChecker_Env.erasable_types_tab =
-                          (env'.FStarC_TypeChecker_Env.erasable_types_tab);
-                        FStarC_TypeChecker_Env.enable_defer_to_tac =
-                          (env'.FStarC_TypeChecker_Env.enable_defer_to_tac);
-                        FStarC_TypeChecker_Env.unif_allow_ref_guards =
-                          (env'.FStarC_TypeChecker_Env.unif_allow_ref_guards);
-                        FStarC_TypeChecker_Env.erase_erasable_args =
-                          (env'.FStarC_TypeChecker_Env.erase_erasable_args);
-                        FStarC_TypeChecker_Env.core_check =
-                          (env'.FStarC_TypeChecker_Env.core_check);
-                        FStarC_TypeChecker_Env.missing_decl =
-                          (env'.FStarC_TypeChecker_Env.missing_decl);
-                        FStarC_TypeChecker_Env.iface_todo =
-                          (env'.FStarC_TypeChecker_Env.iface_todo);
-                        FStarC_TypeChecker_Env.iface_hidden =
-                          (env'.FStarC_TypeChecker_Env.iface_hidden);
-                        FStarC_TypeChecker_Env.iface_lids =
-                          (env'.FStarC_TypeChecker_Env.iface_lids);
-                        FStarC_TypeChecker_Env.iface_val_lids =
-                          (env'.FStarC_TypeChecker_Env.iface_val_lids)
-                      } t_elab in
-                  match uu___6 with
-                  | (t, lc, g) ->
-                      let t1 =
-                        FStarC_TypeChecker_Normalize.normalize
-                          [FStarC_TypeChecker_Env.Beta;
-                          FStarC_TypeChecker_Env.Iota;
-                          FStarC_TypeChecker_Env.Zeta;
-                          FStarC_TypeChecker_Env.Primops;
-                          FStarC_TypeChecker_Env.UnfoldUntil
-                            FStarC_Syntax_Syntax.delta_constant;
-                          FStarC_TypeChecker_Env.Eager_unfolding;
-                          FStarC_TypeChecker_Env.Inlining;
-                          FStarC_TypeChecker_Env.Unmeta;
-                          FStarC_TypeChecker_Env.Unascribe] env' t in
-                      let uu___7 =
-                        let uu___8 =
-                          let uu___9 =
-                            let uu___10 =
-                              FStarC_Class_PP.pp
-                                FStarC_Syntax_Print.pretty_term t0 in
-                            let uu___11 =
-                              let uu___12 =
-                                FStarC_Class_PP.pp
-                                  FStarC_Syntax_Print.pretty_term t1 in
-                              FStar_Pprint.op_Hat_Slash_Hat
-                                (FStarC_Errors_Msg.text "==>") uu___12 in
-                            FStar_Pprint.op_Hat_Slash_Hat uu___10 uu___11 in
-                          FStar_Pprint.op_Hat_Slash_Hat
-                            (FStarC_Errors_Msg.text "#eval") uu___9 in
-                        [uu___8] in
-                      FStarC_Errors.info FStarC_Class_HasRange.hasRange_range
-                        r ()
-                        (Obj.magic
-                           FStarC_Errors_Msg.is_error_message_list_doc)
-                        (Obj.magic uu___7))))
-   | uu___1 -> ())
-let tc_decl' (env0 : FStarC_TypeChecker_Env.env)
-  (se : FStarC_Syntax_Syntax.sigelt) :
-  (FStarC_Syntax_Syntax.sigelt Prims.list * FStarC_Syntax_Syntax.sigelt
-    Prims.list * FStarC_TypeChecker_Env.env)=
-  let env = env0 in
-  let se1 =
-    match se.FStarC_Syntax_Syntax.sigel with
-    | FStarC_Syntax_Syntax.Sig_fail uu___ -> se
-    | uu___ -> tc_decl_attributes env se in
-  FStarC_TypeChecker_Quals.check_sigelt_quals_pre env se1;
-  proc_check_with se1.FStarC_Syntax_Syntax.sigattrs
-    (fun uu___1 ->
-       let r = se1.FStarC_Syntax_Syntax.sigrng in
-       let se2 =
-         let uu___2 = FStarC_Options.record_options () in
-         if uu___2 then store_sigopts se1 else se1 in
-       match se2.FStarC_Syntax_Syntax.sigel with
-       | FStarC_Syntax_Syntax.Sig_inductive_typ uu___2 ->
-           FStarC_Effect.failwith "Impossible bare data-constructor"
-       | FStarC_Syntax_Syntax.Sig_datacon uu___2 ->
-           FStarC_Effect.failwith "Impossible bare data-constructor"
-       | FStarC_Syntax_Syntax.Sig_fail
-           { FStarC_Syntax_Syntax.errs = uu___2;
-             FStarC_Syntax_Syntax.rng1 = uu___3;
-             FStarC_Syntax_Syntax.fail_in_lax = false;
-             FStarC_Syntax_Syntax.ses1 = uu___4;_}
-           when env.FStarC_TypeChecker_Env.admit ->
-           ((let uu___6 = FStarC_Debug.any () in
-             if uu___6
-             then
-               let uu___7 = FStarC_Syntax_Print.sigelt_to_string_short se2 in
-               FStarC_Format.print1
-                 "Skipping %s since env.admit=true and this is not an expect_lax_failure\n"
-                 uu___7
-             else ());
-            ([], [], env))
-       | FStarC_Syntax_Syntax.Sig_fail
-           { FStarC_Syntax_Syntax.errs = expected_errors;
-             FStarC_Syntax_Syntax.rng1 = fail_rng;
-             FStarC_Syntax_Syntax.fail_in_lax = lax;
-             FStarC_Syntax_Syntax.ses1 = ses;_}
-           ->
-           let env' =
-             if lax
-             then
-               {
-                 FStarC_TypeChecker_Env.solver =
-                   (env.FStarC_TypeChecker_Env.solver);
-                 FStarC_TypeChecker_Env.range =
-                   (env.FStarC_TypeChecker_Env.range);
-                 FStarC_TypeChecker_Env.curmodule =
-                   (env.FStarC_TypeChecker_Env.curmodule);
-                 FStarC_TypeChecker_Env.gamma =
-                   (env.FStarC_TypeChecker_Env.gamma);
-                 FStarC_TypeChecker_Env.gamma_sig =
-                   (env.FStarC_TypeChecker_Env.gamma_sig);
-                 FStarC_TypeChecker_Env.gamma_cache =
-                   (env.FStarC_TypeChecker_Env.gamma_cache);
-                 FStarC_TypeChecker_Env.modules =
-                   (env.FStarC_TypeChecker_Env.modules);
-                 FStarC_TypeChecker_Env.expected_typ =
-                   (env.FStarC_TypeChecker_Env.expected_typ);
-                 FStarC_TypeChecker_Env.expected_post =
-                   (env.FStarC_TypeChecker_Env.expected_post);
-                 FStarC_TypeChecker_Env.sigtab =
-                   (env.FStarC_TypeChecker_Env.sigtab);
-                 FStarC_TypeChecker_Env.attrtab =
-                   (env.FStarC_TypeChecker_Env.attrtab);
-                 FStarC_TypeChecker_Env.instantiate_imp =
-                   (env.FStarC_TypeChecker_Env.instantiate_imp);
-                 FStarC_TypeChecker_Env.effects =
-                   (env.FStarC_TypeChecker_Env.effects);
-                 FStarC_TypeChecker_Env.generalize =
-                   (env.FStarC_TypeChecker_Env.generalize);
-                 FStarC_TypeChecker_Env.letrecs =
-                   (env.FStarC_TypeChecker_Env.letrecs);
-                 FStarC_TypeChecker_Env.top_level =
-                   (env.FStarC_TypeChecker_Env.top_level);
-                 FStarC_TypeChecker_Env.check_uvars =
-                   (env.FStarC_TypeChecker_Env.check_uvars);
-                 FStarC_TypeChecker_Env.use_eq_strict =
-                   (env.FStarC_TypeChecker_Env.use_eq_strict);
-                 FStarC_TypeChecker_Env.is_iface =
-                   (env.FStarC_TypeChecker_Env.is_iface);
-                 FStarC_TypeChecker_Env.admit = true;
-                 FStarC_TypeChecker_Env.phase1 =
-                   (env.FStarC_TypeChecker_Env.phase1);
-                 FStarC_TypeChecker_Env.failhard =
-                   (env.FStarC_TypeChecker_Env.failhard);
-                 FStarC_TypeChecker_Env.flychecking =
-                   (env.FStarC_TypeChecker_Env.flychecking);
-                 FStarC_TypeChecker_Env.uvar_subtyping =
-                   (env.FStarC_TypeChecker_Env.uvar_subtyping);
-                 FStarC_TypeChecker_Env.intactics =
-                   (env.FStarC_TypeChecker_Env.intactics);
-                 FStarC_TypeChecker_Env.nocoerce =
-                   (env.FStarC_TypeChecker_Env.nocoerce);
-                 FStarC_TypeChecker_Env.tc_term =
-                   (env.FStarC_TypeChecker_Env.tc_term);
-                 FStarC_TypeChecker_Env.typeof_tot_or_gtot_term =
-                   (env.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term);
-                 FStarC_TypeChecker_Env.universe_of =
-                   (env.FStarC_TypeChecker_Env.universe_of);
-                 FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
-                   (env.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-                 FStarC_TypeChecker_Env.teq_nosmt_force =
-                   (env.FStarC_TypeChecker_Env.teq_nosmt_force);
-                 FStarC_TypeChecker_Env.subtype_nosmt_force =
-                   (env.FStarC_TypeChecker_Env.subtype_nosmt_force);
-                 FStarC_TypeChecker_Env.qtbl_name_and_index =
-                   (env.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                 FStarC_TypeChecker_Env.normalized_eff_names =
-                   (env.FStarC_TypeChecker_Env.normalized_eff_names);
-                 FStarC_TypeChecker_Env.fv_delta_depths =
-                   (env.FStarC_TypeChecker_Env.fv_delta_depths);
-                 FStarC_TypeChecker_Env.proof_ns =
-                   (env.FStarC_TypeChecker_Env.proof_ns);
-                 FStarC_TypeChecker_Env.synth_hook =
-                   (env.FStarC_TypeChecker_Env.synth_hook);
-                 FStarC_TypeChecker_Env.try_solve_implicits_hook =
-                   (env.FStarC_TypeChecker_Env.try_solve_implicits_hook);
-                 FStarC_TypeChecker_Env.splice =
-                   (env.FStarC_TypeChecker_Env.splice);
-                 FStarC_TypeChecker_Env.mpreprocess =
-                   (env.FStarC_TypeChecker_Env.mpreprocess);
-                 FStarC_TypeChecker_Env.postprocess =
-                   (env.FStarC_TypeChecker_Env.postprocess);
-                 FStarC_TypeChecker_Env.identifier_info =
-                   (env.FStarC_TypeChecker_Env.identifier_info);
-                 FStarC_TypeChecker_Env.tc_hooks =
-                   (env.FStarC_TypeChecker_Env.tc_hooks);
-                 FStarC_TypeChecker_Env.dsenv =
-                   (env.FStarC_TypeChecker_Env.dsenv);
-                 FStarC_TypeChecker_Env.nbe =
-                   (env.FStarC_TypeChecker_Env.nbe);
-                 FStarC_TypeChecker_Env.strict_args_tab =
-                   (env.FStarC_TypeChecker_Env.strict_args_tab);
-                 FStarC_TypeChecker_Env.erasable_types_tab =
-                   (env.FStarC_TypeChecker_Env.erasable_types_tab);
-                 FStarC_TypeChecker_Env.enable_defer_to_tac =
-                   (env.FStarC_TypeChecker_Env.enable_defer_to_tac);
-                 FStarC_TypeChecker_Env.unif_allow_ref_guards =
-                   (env.FStarC_TypeChecker_Env.unif_allow_ref_guards);
-                 FStarC_TypeChecker_Env.erase_erasable_args =
-                   (env.FStarC_TypeChecker_Env.erase_erasable_args);
-                 FStarC_TypeChecker_Env.core_check =
-                   (env.FStarC_TypeChecker_Env.core_check);
-                 FStarC_TypeChecker_Env.missing_decl =
-                   (env.FStarC_TypeChecker_Env.missing_decl);
-                 FStarC_TypeChecker_Env.iface_todo =
-                   (env.FStarC_TypeChecker_Env.iface_todo);
-                 FStarC_TypeChecker_Env.iface_hidden =
-                   (env.FStarC_TypeChecker_Env.iface_hidden);
-                 FStarC_TypeChecker_Env.iface_lids =
-                   (env.FStarC_TypeChecker_Env.iface_lids);
-                 FStarC_TypeChecker_Env.iface_val_lids =
-                   (env.FStarC_TypeChecker_Env.iface_val_lids)
-               }
-             else env in
-           let env'1 = FStarC_TypeChecker_Env.push env' "expect_failure" in
-           ((let uu___3 = FStarC_Debug.low () in
-             if uu___3
-             then
-               let uu___4 =
-                 let uu___5 =
-                   FStarC_List.map
-                     (FStarC_Class_Show.show FStarC_Class_Show.showable_int)
-                     expected_errors in
-                 FStarC_String.concat "; " uu___5 in
-               FStarC_Format.print1 ">> Expecting errors: [%s]\n" uu___4
-             else ());
-            (let uu___3 =
-               FStarC_Errors.catch_errors
-                 (fun uu___4 ->
-                    FStarC_Options.with_saved_options
-                      (fun uu___5 ->
-                         let uu___6 =
-                           let uu___7 = FStarC_Effect.op_Bang tc_decls_knot in
-                           match uu___7 with
-                           | FStar_Pervasives_Native.Some v -> v in
-                         uu___6 env'1 ses)) in
-             match uu___3 with
-             | (errs, uu___4) ->
-                 ((let uu___6 =
-                     let uu___7 = FStarC_Options.print_expected_failures () in
-                     if uu___7 then true else FStarC_Debug.low () in
-                   if uu___6
-                   then FStarC_Errors.print_expected_failures errs
-                   else ());
-                  (let uu___6 =
-                     FStarC_TypeChecker_Env.pop env'1 "expect_failure" in
-                   let actual_errors =
-                     FStarC_List.concatMap
-                       (fun i ->
-                          FStarC_Common.list_of_option
-                            i.FStarC_Errors.issue_number) errs in
-                   (match errs with
-                    | [] ->
-                        (FStarC_List.iter FStarC_Errors.print_issue errs;
-                         FStarC_Errors.log_issue
-                           FStarC_Syntax_Syntax.has_range_sigelt se2
-                           FStarC_Errors_Codes.Error_DidNotFail ()
-                           (Obj.magic
-                              FStarC_Errors_Msg.is_error_message_list_doc)
-                           (Obj.magic
-                              [FStarC_Errors_Msg.text
-                                 "This top-level definition was expected to fail, but it succeeded."]))
-                    | uu___8 ->
-                        if expected_errors <> []
-                        then
-                          let uu___9 =
-                            FStarC_Errors.find_multiset_discrepancy
-                              expected_errors actual_errors in
-                          (match uu___9 with
-                           | FStar_Pervasives_Native.None -> ()
-                           | FStar_Pervasives_Native.Some (e, n1, n2) ->
-                               (FStarC_List.iter FStarC_Errors.print_issue
-                                  errs;
-                                (let uu___11 =
-                                   let uu___12 =
-                                     let uu___13 =
-                                       let uu___14 =
-                                         let uu___15 =
-                                           FStarC_Class_Ord.sort
-                                             FStarC_Class_Ord.ord_int
-                                             expected_errors in
-                                         FStarC_Class_PP.pp
-                                           (FStarC_Class_PP.pp_list
-                                              FStarC_Class_PP.pp_int) uu___15 in
-                                       FStar_Pprint.prefix (Prims.of_int 2)
-                                         Prims.int_one
-                                         (FStarC_Errors_Msg.text
-                                            "This top-level definition was expected to raise error codes")
-                                         uu___14 in
-                                     let uu___14 =
-                                       let uu___15 =
-                                         let uu___16 =
-                                           let uu___17 =
-                                             FStarC_Class_Ord.sort
-                                               FStarC_Class_Ord.ord_int
-                                               actual_errors in
-                                           FStarC_Class_PP.pp
-                                             (FStarC_Class_PP.pp_list
-                                                FStarC_Class_PP.pp_int)
-                                             uu___17 in
-                                         FStar_Pprint.prefix (Prims.of_int 2)
-                                           Prims.int_one
-                                           (FStarC_Errors_Msg.text
-                                              "but it raised") uu___16 in
-                                       FStar_Pprint.op_Hat_Hat uu___15
-                                         FStar_Pprint.dot in
-                                     FStar_Pprint.op_Hat_Slash_Hat uu___13
-                                       uu___14 in
-                                   let uu___13 =
-                                     let uu___14 =
-                                       let uu___15 =
-                                         let uu___16 =
-                                           FStarC_Class_Show.show
-                                             FStarC_Class_Show.showable_int e in
-                                         let uu___17 =
-                                           FStarC_Class_Show.show
-                                             FStarC_Class_Show.showable_int
-                                             n2 in
-                                         let uu___18 =
-                                           FStarC_Class_Show.show
-                                             FStarC_Class_Show.showable_int
-                                             n1 in
-                                         FStarC_Format.fmt3
-                                           "Error #%s was raised %s times, instead of %s."
-                                           uu___16 uu___17 uu___18 in
-                                       FStarC_Errors_Msg.text uu___15 in
-                                     [uu___14] in
-                                   uu___12 :: uu___13 in
-                                 FStarC_Errors.log_issue
-                                   FStarC_Class_HasRange.hasRange_range
-                                   fail_rng
-                                   FStarC_Errors_Codes.Error_DidNotFail ()
-                                   (Obj.magic
-                                      FStarC_Errors_Msg.is_error_message_list_doc)
-                                   (Obj.magic uu___11))))
-                        else ());
-                   ([], [], env)))))
-       | FStarC_Syntax_Syntax.Sig_bundle
-           { FStarC_Syntax_Syntax.ses = ses;
-             FStarC_Syntax_Syntax.lids = lids;_}
-           ->
-           let env1 = FStarC_TypeChecker_Env.set_range env r in
-           let ses1 =
-             let uu___2 = do_two_phases env1 in
-             if uu___2
-             then
-               run_phase1
-                 (fun uu___3 ->
-                    let ses2 =
-                      let uu___4 =
-                        let uu___5 =
-                          let uu___6 =
-                            tc_inductive
-                              {
-                                FStarC_TypeChecker_Env.solver =
-                                  (env1.FStarC_TypeChecker_Env.solver);
-                                FStarC_TypeChecker_Env.range =
-                                  (env1.FStarC_TypeChecker_Env.range);
-                                FStarC_TypeChecker_Env.curmodule =
-                                  (env1.FStarC_TypeChecker_Env.curmodule);
-                                FStarC_TypeChecker_Env.gamma =
-                                  (env1.FStarC_TypeChecker_Env.gamma);
-                                FStarC_TypeChecker_Env.gamma_sig =
-                                  (env1.FStarC_TypeChecker_Env.gamma_sig);
-                                FStarC_TypeChecker_Env.gamma_cache =
-                                  (env1.FStarC_TypeChecker_Env.gamma_cache);
-                                FStarC_TypeChecker_Env.modules =
-                                  (env1.FStarC_TypeChecker_Env.modules);
-                                FStarC_TypeChecker_Env.expected_typ =
-                                  (env1.FStarC_TypeChecker_Env.expected_typ);
-                                FStarC_TypeChecker_Env.expected_post =
-                                  (env1.FStarC_TypeChecker_Env.expected_post);
-                                FStarC_TypeChecker_Env.sigtab =
-                                  (env1.FStarC_TypeChecker_Env.sigtab);
-                                FStarC_TypeChecker_Env.attrtab =
-                                  (env1.FStarC_TypeChecker_Env.attrtab);
-                                FStarC_TypeChecker_Env.instantiate_imp =
-                                  (env1.FStarC_TypeChecker_Env.instantiate_imp);
-                                FStarC_TypeChecker_Env.effects =
-                                  (env1.FStarC_TypeChecker_Env.effects);
-                                FStarC_TypeChecker_Env.generalize =
-                                  (env1.FStarC_TypeChecker_Env.generalize);
-                                FStarC_TypeChecker_Env.letrecs =
-                                  (env1.FStarC_TypeChecker_Env.letrecs);
-                                FStarC_TypeChecker_Env.top_level =
-                                  (env1.FStarC_TypeChecker_Env.top_level);
-                                FStarC_TypeChecker_Env.check_uvars =
-                                  (env1.FStarC_TypeChecker_Env.check_uvars);
-                                FStarC_TypeChecker_Env.use_eq_strict =
-                                  (env1.FStarC_TypeChecker_Env.use_eq_strict);
-                                FStarC_TypeChecker_Env.is_iface =
-                                  (env1.FStarC_TypeChecker_Env.is_iface);
-                                FStarC_TypeChecker_Env.admit = true;
-                                FStarC_TypeChecker_Env.phase1 = true;
-                                FStarC_TypeChecker_Env.failhard =
-                                  (env1.FStarC_TypeChecker_Env.failhard);
-                                FStarC_TypeChecker_Env.flychecking =
-                                  (env1.FStarC_TypeChecker_Env.flychecking);
-                                FStarC_TypeChecker_Env.uvar_subtyping =
-                                  (env1.FStarC_TypeChecker_Env.uvar_subtyping);
-                                FStarC_TypeChecker_Env.intactics =
-                                  (env1.FStarC_TypeChecker_Env.intactics);
-                                FStarC_TypeChecker_Env.nocoerce =
-                                  (env1.FStarC_TypeChecker_Env.nocoerce);
-                                FStarC_TypeChecker_Env.tc_term =
-                                  (env1.FStarC_TypeChecker_Env.tc_term);
-                                FStarC_TypeChecker_Env.typeof_tot_or_gtot_term
-                                  =
-                                  (env1.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term);
-                                FStarC_TypeChecker_Env.universe_of =
-                                  (env1.FStarC_TypeChecker_Env.universe_of);
-                                FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
-                                  =
-                                  (env1.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-                                FStarC_TypeChecker_Env.teq_nosmt_force =
-                                  (env1.FStarC_TypeChecker_Env.teq_nosmt_force);
-                                FStarC_TypeChecker_Env.subtype_nosmt_force =
-                                  (env1.FStarC_TypeChecker_Env.subtype_nosmt_force);
-                                FStarC_TypeChecker_Env.qtbl_name_and_index =
-                                  (env1.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                                FStarC_TypeChecker_Env.normalized_eff_names =
-                                  (env1.FStarC_TypeChecker_Env.normalized_eff_names);
-                                FStarC_TypeChecker_Env.fv_delta_depths =
-                                  (env1.FStarC_TypeChecker_Env.fv_delta_depths);
-                                FStarC_TypeChecker_Env.proof_ns =
-                                  (env1.FStarC_TypeChecker_Env.proof_ns);
-                                FStarC_TypeChecker_Env.synth_hook =
-                                  (env1.FStarC_TypeChecker_Env.synth_hook);
-                                FStarC_TypeChecker_Env.try_solve_implicits_hook
-                                  =
-                                  (env1.FStarC_TypeChecker_Env.try_solve_implicits_hook);
-                                FStarC_TypeChecker_Env.splice =
-                                  (env1.FStarC_TypeChecker_Env.splice);
-                                FStarC_TypeChecker_Env.mpreprocess =
-                                  (env1.FStarC_TypeChecker_Env.mpreprocess);
-                                FStarC_TypeChecker_Env.postprocess =
-                                  (env1.FStarC_TypeChecker_Env.postprocess);
-                                FStarC_TypeChecker_Env.identifier_info =
-                                  (env1.FStarC_TypeChecker_Env.identifier_info);
-                                FStarC_TypeChecker_Env.tc_hooks =
-                                  (env1.FStarC_TypeChecker_Env.tc_hooks);
-                                FStarC_TypeChecker_Env.dsenv =
-                                  (env1.FStarC_TypeChecker_Env.dsenv);
-                                FStarC_TypeChecker_Env.nbe =
-                                  (env1.FStarC_TypeChecker_Env.nbe);
-                                FStarC_TypeChecker_Env.strict_args_tab =
-                                  (env1.FStarC_TypeChecker_Env.strict_args_tab);
-                                FStarC_TypeChecker_Env.erasable_types_tab =
-                                  (env1.FStarC_TypeChecker_Env.erasable_types_tab);
-                                FStarC_TypeChecker_Env.enable_defer_to_tac =
-                                  (env1.FStarC_TypeChecker_Env.enable_defer_to_tac);
-                                FStarC_TypeChecker_Env.unif_allow_ref_guards
-                                  =
-                                  (env1.FStarC_TypeChecker_Env.unif_allow_ref_guards);
-                                FStarC_TypeChecker_Env.erase_erasable_args =
-                                  (env1.FStarC_TypeChecker_Env.erase_erasable_args);
-                                FStarC_TypeChecker_Env.core_check =
-                                  (env1.FStarC_TypeChecker_Env.core_check);
-                                FStarC_TypeChecker_Env.missing_decl =
-                                  (env1.FStarC_TypeChecker_Env.missing_decl);
-                                FStarC_TypeChecker_Env.iface_todo =
-                                  (env1.FStarC_TypeChecker_Env.iface_todo);
-                                FStarC_TypeChecker_Env.iface_hidden =
-                                  (env1.FStarC_TypeChecker_Env.iface_hidden);
-                                FStarC_TypeChecker_Env.iface_lids =
-                                  (env1.FStarC_TypeChecker_Env.iface_lids);
-                                FStarC_TypeChecker_Env.iface_val_lids =
-                                  (env1.FStarC_TypeChecker_Env.iface_val_lids)
-                              } ses se2.FStarC_Syntax_Syntax.sigquals
-                              se2.FStarC_Syntax_Syntax.sigattrs lids in
-                          FStar_Pervasives_Native.fst uu___6 in
-                        FStarC_TypeChecker_Normalize.elim_uvars env1 uu___5 in
-                      FStarC_Syntax_Util.ses_of_sigbundle uu___4 in
-                    (let uu___5 =
-                       let uu___6 = FStarC_Debug.medium () in
-                       if uu___6
-                       then true
-                       else FStarC_Effect.op_Bang dbg_TwoPhases in
-                     if uu___5
-                     then
-                       let uu___6 =
-                         FStarC_Class_Show.show
-                           FStarC_Syntax_Print.showable_sigelt
-                           {
-                             FStarC_Syntax_Syntax.sigel =
-                               (FStarC_Syntax_Syntax.Sig_bundle
-                                  {
-                                    FStarC_Syntax_Syntax.ses = ses2;
-                                    FStarC_Syntax_Syntax.lids = lids
-                                  });
-                             FStarC_Syntax_Syntax.sigrng =
-                               (se2.FStarC_Syntax_Syntax.sigrng);
-                             FStarC_Syntax_Syntax.sigquals =
-                               (se2.FStarC_Syntax_Syntax.sigquals);
-                             FStarC_Syntax_Syntax.sigmeta =
-                               (se2.FStarC_Syntax_Syntax.sigmeta);
-                             FStarC_Syntax_Syntax.sigattrs =
-                               (se2.FStarC_Syntax_Syntax.sigattrs);
-                             FStarC_Syntax_Syntax.sigopens_and_abbrevs =
-                               (se2.FStarC_Syntax_Syntax.sigopens_and_abbrevs);
-                             FStarC_Syntax_Syntax.sigopts =
-                               (se2.FStarC_Syntax_Syntax.sigopts)
-                           } in
-                       FStarC_Format.print1 "Inductive after phase 1: %s\n"
-                         uu___6
-                     else ());
-                    ses2)
-             else ses in
-           let uu___2 =
-             tc_inductive env1 ses1 se2.FStarC_Syntax_Syntax.sigquals
-               se2.FStarC_Syntax_Syntax.sigattrs lids in
-           (match uu___2 with
-            | (sigbndle, projectors_ses) ->
-                let sigbndle1 =
-                  {
-                    FStarC_Syntax_Syntax.sigel =
-                      (sigbndle.FStarC_Syntax_Syntax.sigel);
-                    FStarC_Syntax_Syntax.sigrng =
-                      (sigbndle.FStarC_Syntax_Syntax.sigrng);
-                    FStarC_Syntax_Syntax.sigquals =
-                      (sigbndle.FStarC_Syntax_Syntax.sigquals);
-                    FStarC_Syntax_Syntax.sigmeta =
-                      (sigbndle.FStarC_Syntax_Syntax.sigmeta);
-                    FStarC_Syntax_Syntax.sigattrs =
-                      (se2.FStarC_Syntax_Syntax.sigattrs);
-                    FStarC_Syntax_Syntax.sigopens_and_abbrevs =
-                      (sigbndle.FStarC_Syntax_Syntax.sigopens_and_abbrevs);
-                    FStarC_Syntax_Syntax.sigopts =
-                      (sigbndle.FStarC_Syntax_Syntax.sigopts)
-                  } in
-                ([sigbndle1], projectors_ses, env0))
-       | FStarC_Syntax_Syntax.Sig_pragma p ->
-           (process_pragma env p r;
-            (let keep_pragma =
-               match p with
-               | FStarC_Syntax_Syntax.ShowOptions -> false
-               | FStarC_Syntax_Syntax.PrintEffectsGraph -> false
-               | FStarC_Syntax_Syntax.Eval uu___3 -> false
-               | FStarC_Syntax_Syntax.Check uu___3 -> false
-               | uu___3 -> true in
-             ((if keep_pragma then [se2] else []), [], env0)))
-       | FStarC_Syntax_Syntax.Sig_new_effect ne ->
-           let ne1 =
-             let uu___2 = do_two_phases env in
-             if uu___2
-             then
-               run_phase1
-                 (fun uu___3 ->
-                    let ne2 =
-                      let uu___4 =
-                        let uu___5 =
-                          let uu___6 =
-                            FStarC_TypeChecker_TcEffect.tc_eff_decl
-                              {
-                                FStarC_TypeChecker_Env.solver =
-                                  (env.FStarC_TypeChecker_Env.solver);
-                                FStarC_TypeChecker_Env.range =
-                                  (env.FStarC_TypeChecker_Env.range);
-                                FStarC_TypeChecker_Env.curmodule =
-                                  (env.FStarC_TypeChecker_Env.curmodule);
-                                FStarC_TypeChecker_Env.gamma =
-                                  (env.FStarC_TypeChecker_Env.gamma);
-                                FStarC_TypeChecker_Env.gamma_sig =
-                                  (env.FStarC_TypeChecker_Env.gamma_sig);
-                                FStarC_TypeChecker_Env.gamma_cache =
-                                  (env.FStarC_TypeChecker_Env.gamma_cache);
-                                FStarC_TypeChecker_Env.modules =
-                                  (env.FStarC_TypeChecker_Env.modules);
-                                FStarC_TypeChecker_Env.expected_typ =
-                                  (env.FStarC_TypeChecker_Env.expected_typ);
-                                FStarC_TypeChecker_Env.expected_post =
-                                  (env.FStarC_TypeChecker_Env.expected_post);
-                                FStarC_TypeChecker_Env.sigtab =
-                                  (env.FStarC_TypeChecker_Env.sigtab);
-                                FStarC_TypeChecker_Env.attrtab =
-                                  (env.FStarC_TypeChecker_Env.attrtab);
-                                FStarC_TypeChecker_Env.instantiate_imp =
-                                  (env.FStarC_TypeChecker_Env.instantiate_imp);
-                                FStarC_TypeChecker_Env.effects =
-                                  (env.FStarC_TypeChecker_Env.effects);
-                                FStarC_TypeChecker_Env.generalize =
-                                  (env.FStarC_TypeChecker_Env.generalize);
-                                FStarC_TypeChecker_Env.letrecs =
-                                  (env.FStarC_TypeChecker_Env.letrecs);
-                                FStarC_TypeChecker_Env.top_level =
-                                  (env.FStarC_TypeChecker_Env.top_level);
-                                FStarC_TypeChecker_Env.check_uvars =
-                                  (env.FStarC_TypeChecker_Env.check_uvars);
-                                FStarC_TypeChecker_Env.use_eq_strict =
-                                  (env.FStarC_TypeChecker_Env.use_eq_strict);
-                                FStarC_TypeChecker_Env.is_iface =
-                                  (env.FStarC_TypeChecker_Env.is_iface);
-                                FStarC_TypeChecker_Env.admit = true;
-                                FStarC_TypeChecker_Env.phase1 = true;
-                                FStarC_TypeChecker_Env.failhard =
-                                  (env.FStarC_TypeChecker_Env.failhard);
-                                FStarC_TypeChecker_Env.flychecking =
-                                  (env.FStarC_TypeChecker_Env.flychecking);
-                                FStarC_TypeChecker_Env.uvar_subtyping =
-                                  (env.FStarC_TypeChecker_Env.uvar_subtyping);
-                                FStarC_TypeChecker_Env.intactics =
-                                  (env.FStarC_TypeChecker_Env.intactics);
-                                FStarC_TypeChecker_Env.nocoerce =
-                                  (env.FStarC_TypeChecker_Env.nocoerce);
-                                FStarC_TypeChecker_Env.tc_term =
-                                  (env.FStarC_TypeChecker_Env.tc_term);
-                                FStarC_TypeChecker_Env.typeof_tot_or_gtot_term
-                                  =
-                                  (env.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term);
-                                FStarC_TypeChecker_Env.universe_of =
-                                  (env.FStarC_TypeChecker_Env.universe_of);
-                                FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
-                                  =
-                                  (env.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-                                FStarC_TypeChecker_Env.teq_nosmt_force =
-                                  (env.FStarC_TypeChecker_Env.teq_nosmt_force);
-                                FStarC_TypeChecker_Env.subtype_nosmt_force =
-                                  (env.FStarC_TypeChecker_Env.subtype_nosmt_force);
-                                FStarC_TypeChecker_Env.qtbl_name_and_index =
-                                  (env.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                                FStarC_TypeChecker_Env.normalized_eff_names =
-                                  (env.FStarC_TypeChecker_Env.normalized_eff_names);
-                                FStarC_TypeChecker_Env.fv_delta_depths =
-                                  (env.FStarC_TypeChecker_Env.fv_delta_depths);
-                                FStarC_TypeChecker_Env.proof_ns =
-                                  (env.FStarC_TypeChecker_Env.proof_ns);
-                                FStarC_TypeChecker_Env.synth_hook =
-                                  (env.FStarC_TypeChecker_Env.synth_hook);
-                                FStarC_TypeChecker_Env.try_solve_implicits_hook
-                                  =
-                                  (env.FStarC_TypeChecker_Env.try_solve_implicits_hook);
-                                FStarC_TypeChecker_Env.splice =
-                                  (env.FStarC_TypeChecker_Env.splice);
-                                FStarC_TypeChecker_Env.mpreprocess =
-                                  (env.FStarC_TypeChecker_Env.mpreprocess);
-                                FStarC_TypeChecker_Env.postprocess =
-                                  (env.FStarC_TypeChecker_Env.postprocess);
-                                FStarC_TypeChecker_Env.identifier_info =
-                                  (env.FStarC_TypeChecker_Env.identifier_info);
-                                FStarC_TypeChecker_Env.tc_hooks =
-                                  (env.FStarC_TypeChecker_Env.tc_hooks);
-                                FStarC_TypeChecker_Env.dsenv =
-                                  (env.FStarC_TypeChecker_Env.dsenv);
-                                FStarC_TypeChecker_Env.nbe =
-                                  (env.FStarC_TypeChecker_Env.nbe);
-                                FStarC_TypeChecker_Env.strict_args_tab =
-                                  (env.FStarC_TypeChecker_Env.strict_args_tab);
-                                FStarC_TypeChecker_Env.erasable_types_tab =
-                                  (env.FStarC_TypeChecker_Env.erasable_types_tab);
-                                FStarC_TypeChecker_Env.enable_defer_to_tac =
-                                  (env.FStarC_TypeChecker_Env.enable_defer_to_tac);
-                                FStarC_TypeChecker_Env.unif_allow_ref_guards
-                                  =
-                                  (env.FStarC_TypeChecker_Env.unif_allow_ref_guards);
-                                FStarC_TypeChecker_Env.erase_erasable_args =
-                                  (env.FStarC_TypeChecker_Env.erase_erasable_args);
-                                FStarC_TypeChecker_Env.core_check =
-                                  (env.FStarC_TypeChecker_Env.core_check);
-                                FStarC_TypeChecker_Env.missing_decl =
-                                  (env.FStarC_TypeChecker_Env.missing_decl);
-                                FStarC_TypeChecker_Env.iface_todo =
-                                  (env.FStarC_TypeChecker_Env.iface_todo);
-                                FStarC_TypeChecker_Env.iface_hidden =
-                                  (env.FStarC_TypeChecker_Env.iface_hidden);
-                                FStarC_TypeChecker_Env.iface_lids =
-                                  (env.FStarC_TypeChecker_Env.iface_lids);
-                                FStarC_TypeChecker_Env.iface_val_lids =
-                                  (env.FStarC_TypeChecker_Env.iface_val_lids)
-                              } ne se2.FStarC_Syntax_Syntax.sigquals
-                              se2.FStarC_Syntax_Syntax.sigattrs in
-                          {
-                            FStarC_Syntax_Syntax.sigel =
-                              (FStarC_Syntax_Syntax.Sig_new_effect uu___6);
-                            FStarC_Syntax_Syntax.sigrng =
-                              (se2.FStarC_Syntax_Syntax.sigrng);
-                            FStarC_Syntax_Syntax.sigquals =
-                              (se2.FStarC_Syntax_Syntax.sigquals);
-                            FStarC_Syntax_Syntax.sigmeta =
-                              (se2.FStarC_Syntax_Syntax.sigmeta);
-                            FStarC_Syntax_Syntax.sigattrs =
-                              (se2.FStarC_Syntax_Syntax.sigattrs);
-                            FStarC_Syntax_Syntax.sigopens_and_abbrevs =
-                              (se2.FStarC_Syntax_Syntax.sigopens_and_abbrevs);
-                            FStarC_Syntax_Syntax.sigopts =
-                              (se2.FStarC_Syntax_Syntax.sigopts)
-                          } in
-                        FStarC_TypeChecker_Normalize.elim_uvars env uu___5 in
-                      FStarC_Syntax_Util.eff_decl_of_new_effect uu___4 in
-                    (let uu___5 =
-                       let uu___6 = FStarC_Debug.medium () in
-                       if uu___6
-                       then true
-                       else FStarC_Effect.op_Bang dbg_TwoPhases in
-                     if uu___5
-                     then
-                       let uu___6 =
-                         FStarC_Class_Show.show
-                           FStarC_Syntax_Print.showable_sigelt
-                           {
-                             FStarC_Syntax_Syntax.sigel =
-                               (FStarC_Syntax_Syntax.Sig_new_effect ne2);
-                             FStarC_Syntax_Syntax.sigrng =
-                               (se2.FStarC_Syntax_Syntax.sigrng);
-                             FStarC_Syntax_Syntax.sigquals =
-                               (se2.FStarC_Syntax_Syntax.sigquals);
-                             FStarC_Syntax_Syntax.sigmeta =
-                               (se2.FStarC_Syntax_Syntax.sigmeta);
-                             FStarC_Syntax_Syntax.sigattrs =
-                               (se2.FStarC_Syntax_Syntax.sigattrs);
-                             FStarC_Syntax_Syntax.sigopens_and_abbrevs =
-                               (se2.FStarC_Syntax_Syntax.sigopens_and_abbrevs);
-                             FStarC_Syntax_Syntax.sigopts =
-                               (se2.FStarC_Syntax_Syntax.sigopts)
-                           } in
-                       FStarC_Format.print1 "Effect decl after phase 1: %s\n"
-                         uu___6
-                     else ());
-                    ne2)
-             else ne in
-           let ne2 =
-             FStarC_TypeChecker_TcEffect.tc_eff_decl env ne1
-               se2.FStarC_Syntax_Syntax.sigquals
-               se2.FStarC_Syntax_Syntax.sigattrs in
-           let se3 =
-             {
-               FStarC_Syntax_Syntax.sigel =
-                 (FStarC_Syntax_Syntax.Sig_new_effect ne2);
-               FStarC_Syntax_Syntax.sigrng =
-                 (se2.FStarC_Syntax_Syntax.sigrng);
-               FStarC_Syntax_Syntax.sigquals =
-                 (se2.FStarC_Syntax_Syntax.sigquals);
-               FStarC_Syntax_Syntax.sigmeta =
-                 (se2.FStarC_Syntax_Syntax.sigmeta);
-               FStarC_Syntax_Syntax.sigattrs =
-                 (se2.FStarC_Syntax_Syntax.sigattrs);
-               FStarC_Syntax_Syntax.sigopens_and_abbrevs =
-                 (se2.FStarC_Syntax_Syntax.sigopens_and_abbrevs);
-               FStarC_Syntax_Syntax.sigopts =
-                 (se2.FStarC_Syntax_Syntax.sigopts)
-             } in
-           ([se3], [], env0)
-       | FStarC_Syntax_Syntax.Sig_sub_effect sub ->
-           let sub1 = FStarC_TypeChecker_TcEffect.tc_lift env sub r in
-           let se3 =
-             {
-               FStarC_Syntax_Syntax.sigel =
-                 (FStarC_Syntax_Syntax.Sig_sub_effect sub1);
-               FStarC_Syntax_Syntax.sigrng =
-                 (se2.FStarC_Syntax_Syntax.sigrng);
-               FStarC_Syntax_Syntax.sigquals =
-                 (se2.FStarC_Syntax_Syntax.sigquals);
-               FStarC_Syntax_Syntax.sigmeta =
-                 (se2.FStarC_Syntax_Syntax.sigmeta);
-               FStarC_Syntax_Syntax.sigattrs =
-                 (se2.FStarC_Syntax_Syntax.sigattrs);
-               FStarC_Syntax_Syntax.sigopens_and_abbrevs =
-                 (se2.FStarC_Syntax_Syntax.sigopens_and_abbrevs);
-               FStarC_Syntax_Syntax.sigopts =
-                 (se2.FStarC_Syntax_Syntax.sigopts)
-             } in
-           ([se3], [], env)
-       | FStarC_Syntax_Syntax.Sig_effect_abbrev
-           { FStarC_Syntax_Syntax.lid4 = lid; FStarC_Syntax_Syntax.us4 = uvs;
-             FStarC_Syntax_Syntax.bs = tps; FStarC_Syntax_Syntax.comp1 = c;
-             FStarC_Syntax_Syntax.cflags = flags;_}
-           ->
-           let uu___2 =
-             let uu___3 = do_two_phases env in
-             if uu___3
-             then
-               run_phase1
-                 (fun uu___4 ->
-                    let uu___5 =
-                      let uu___6 =
-                        let uu___7 =
-                          FStarC_TypeChecker_TcEffect.tc_effect_abbrev
-                            {
-                              FStarC_TypeChecker_Env.solver =
-                                (env.FStarC_TypeChecker_Env.solver);
-                              FStarC_TypeChecker_Env.range =
-                                (env.FStarC_TypeChecker_Env.range);
-                              FStarC_TypeChecker_Env.curmodule =
-                                (env.FStarC_TypeChecker_Env.curmodule);
-                              FStarC_TypeChecker_Env.gamma =
-                                (env.FStarC_TypeChecker_Env.gamma);
-                              FStarC_TypeChecker_Env.gamma_sig =
-                                (env.FStarC_TypeChecker_Env.gamma_sig);
-                              FStarC_TypeChecker_Env.gamma_cache =
-                                (env.FStarC_TypeChecker_Env.gamma_cache);
-                              FStarC_TypeChecker_Env.modules =
-                                (env.FStarC_TypeChecker_Env.modules);
-                              FStarC_TypeChecker_Env.expected_typ =
-                                (env.FStarC_TypeChecker_Env.expected_typ);
-                              FStarC_TypeChecker_Env.expected_post =
-                                (env.FStarC_TypeChecker_Env.expected_post);
-                              FStarC_TypeChecker_Env.sigtab =
-                                (env.FStarC_TypeChecker_Env.sigtab);
-                              FStarC_TypeChecker_Env.attrtab =
-                                (env.FStarC_TypeChecker_Env.attrtab);
-                              FStarC_TypeChecker_Env.instantiate_imp =
-                                (env.FStarC_TypeChecker_Env.instantiate_imp);
-                              FStarC_TypeChecker_Env.effects =
-                                (env.FStarC_TypeChecker_Env.effects);
-                              FStarC_TypeChecker_Env.generalize =
-                                (env.FStarC_TypeChecker_Env.generalize);
-                              FStarC_TypeChecker_Env.letrecs =
-                                (env.FStarC_TypeChecker_Env.letrecs);
-                              FStarC_TypeChecker_Env.top_level =
-                                (env.FStarC_TypeChecker_Env.top_level);
-                              FStarC_TypeChecker_Env.check_uvars =
-                                (env.FStarC_TypeChecker_Env.check_uvars);
-                              FStarC_TypeChecker_Env.use_eq_strict =
-                                (env.FStarC_TypeChecker_Env.use_eq_strict);
-                              FStarC_TypeChecker_Env.is_iface =
-                                (env.FStarC_TypeChecker_Env.is_iface);
-                              FStarC_TypeChecker_Env.admit = true;
-                              FStarC_TypeChecker_Env.phase1 = true;
-                              FStarC_TypeChecker_Env.failhard =
-                                (env.FStarC_TypeChecker_Env.failhard);
-                              FStarC_TypeChecker_Env.flychecking =
-                                (env.FStarC_TypeChecker_Env.flychecking);
-                              FStarC_TypeChecker_Env.uvar_subtyping =
-                                (env.FStarC_TypeChecker_Env.uvar_subtyping);
-                              FStarC_TypeChecker_Env.intactics =
-                                (env.FStarC_TypeChecker_Env.intactics);
-                              FStarC_TypeChecker_Env.nocoerce =
-                                (env.FStarC_TypeChecker_Env.nocoerce);
-                              FStarC_TypeChecker_Env.tc_term =
-                                (env.FStarC_TypeChecker_Env.tc_term);
-                              FStarC_TypeChecker_Env.typeof_tot_or_gtot_term
-                                =
-                                (env.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term);
-                              FStarC_TypeChecker_Env.universe_of =
-                                (env.FStarC_TypeChecker_Env.universe_of);
-                              FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
-                                =
-                                (env.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-                              FStarC_TypeChecker_Env.teq_nosmt_force =
-                                (env.FStarC_TypeChecker_Env.teq_nosmt_force);
-                              FStarC_TypeChecker_Env.subtype_nosmt_force =
-                                (env.FStarC_TypeChecker_Env.subtype_nosmt_force);
-                              FStarC_TypeChecker_Env.qtbl_name_and_index =
-                                (env.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                              FStarC_TypeChecker_Env.normalized_eff_names =
-                                (env.FStarC_TypeChecker_Env.normalized_eff_names);
-                              FStarC_TypeChecker_Env.fv_delta_depths =
-                                (env.FStarC_TypeChecker_Env.fv_delta_depths);
-                              FStarC_TypeChecker_Env.proof_ns =
-                                (env.FStarC_TypeChecker_Env.proof_ns);
-                              FStarC_TypeChecker_Env.synth_hook =
-                                (env.FStarC_TypeChecker_Env.synth_hook);
-                              FStarC_TypeChecker_Env.try_solve_implicits_hook
-                                =
-                                (env.FStarC_TypeChecker_Env.try_solve_implicits_hook);
-                              FStarC_TypeChecker_Env.splice =
-                                (env.FStarC_TypeChecker_Env.splice);
-                              FStarC_TypeChecker_Env.mpreprocess =
-                                (env.FStarC_TypeChecker_Env.mpreprocess);
-                              FStarC_TypeChecker_Env.postprocess =
-                                (env.FStarC_TypeChecker_Env.postprocess);
-                              FStarC_TypeChecker_Env.identifier_info =
-                                (env.FStarC_TypeChecker_Env.identifier_info);
-                              FStarC_TypeChecker_Env.tc_hooks =
-                                (env.FStarC_TypeChecker_Env.tc_hooks);
-                              FStarC_TypeChecker_Env.dsenv =
-                                (env.FStarC_TypeChecker_Env.dsenv);
-                              FStarC_TypeChecker_Env.nbe =
-                                (env.FStarC_TypeChecker_Env.nbe);
-                              FStarC_TypeChecker_Env.strict_args_tab =
-                                (env.FStarC_TypeChecker_Env.strict_args_tab);
-                              FStarC_TypeChecker_Env.erasable_types_tab =
-                                (env.FStarC_TypeChecker_Env.erasable_types_tab);
-                              FStarC_TypeChecker_Env.enable_defer_to_tac =
-                                (env.FStarC_TypeChecker_Env.enable_defer_to_tac);
-                              FStarC_TypeChecker_Env.unif_allow_ref_guards =
-                                (env.FStarC_TypeChecker_Env.unif_allow_ref_guards);
-                              FStarC_TypeChecker_Env.erase_erasable_args =
-                                (env.FStarC_TypeChecker_Env.erase_erasable_args);
-                              FStarC_TypeChecker_Env.core_check =
-                                (env.FStarC_TypeChecker_Env.core_check);
-                              FStarC_TypeChecker_Env.missing_decl =
-                                (env.FStarC_TypeChecker_Env.missing_decl);
-                              FStarC_TypeChecker_Env.iface_todo =
-                                (env.FStarC_TypeChecker_Env.iface_todo);
-                              FStarC_TypeChecker_Env.iface_hidden =
-                                (env.FStarC_TypeChecker_Env.iface_hidden);
-                              FStarC_TypeChecker_Env.iface_lids =
-                                (env.FStarC_TypeChecker_Env.iface_lids);
-                              FStarC_TypeChecker_Env.iface_val_lids =
-                                (env.FStarC_TypeChecker_Env.iface_val_lids)
-                            } (lid, uvs, tps, c) r in
-                        match uu___7 with
-                        | (lid1, uvs1, tps1, c1) ->
-                            {
-                              FStarC_Syntax_Syntax.sigel =
-                                (FStarC_Syntax_Syntax.Sig_effect_abbrev
-                                   {
-                                     FStarC_Syntax_Syntax.lid4 = lid1;
-                                     FStarC_Syntax_Syntax.us4 = uvs1;
-                                     FStarC_Syntax_Syntax.bs = tps1;
-                                     FStarC_Syntax_Syntax.comp1 = c1;
-                                     FStarC_Syntax_Syntax.cflags = flags
-                                   });
-                              FStarC_Syntax_Syntax.sigrng =
-                                (se2.FStarC_Syntax_Syntax.sigrng);
-                              FStarC_Syntax_Syntax.sigquals =
-                                (se2.FStarC_Syntax_Syntax.sigquals);
-                              FStarC_Syntax_Syntax.sigmeta =
-                                (se2.FStarC_Syntax_Syntax.sigmeta);
-                              FStarC_Syntax_Syntax.sigattrs =
-                                (se2.FStarC_Syntax_Syntax.sigattrs);
-                              FStarC_Syntax_Syntax.sigopens_and_abbrevs =
-                                (se2.FStarC_Syntax_Syntax.sigopens_and_abbrevs);
-                              FStarC_Syntax_Syntax.sigopts =
-                                (se2.FStarC_Syntax_Syntax.sigopts)
-                            } in
-                      FStarC_TypeChecker_Normalize.elim_uvars env uu___6 in
-                    match uu___5.FStarC_Syntax_Syntax.sigel with
-                    | FStarC_Syntax_Syntax.Sig_effect_abbrev
-                        { FStarC_Syntax_Syntax.lid4 = lid1;
-                          FStarC_Syntax_Syntax.us4 = uvs1;
-                          FStarC_Syntax_Syntax.bs = tps1;
-                          FStarC_Syntax_Syntax.comp1 = c1;
-                          FStarC_Syntax_Syntax.cflags = uu___6;_}
-                        -> (lid1, uvs1, tps1, c1)
-                    | uu___6 ->
-                        FStarC_Effect.failwith
-                          "Did not expect Sig_effect_abbrev to not be one after phase 1")
-             else (lid, uvs, tps, c) in
-           (match uu___2 with
-            | (lid1, uvs1, tps1, c1) ->
-                let uu___3 =
-                  FStarC_TypeChecker_TcEffect.tc_effect_abbrev env
-                    (lid1, uvs1, tps1, c1) r in
-                (match uu___3 with
-                 | (lid2, uvs2, tps2, c2) ->
-                     let se3 =
-                       {
-                         FStarC_Syntax_Syntax.sigel =
-                           (FStarC_Syntax_Syntax.Sig_effect_abbrev
-                              {
-                                FStarC_Syntax_Syntax.lid4 = lid2;
-                                FStarC_Syntax_Syntax.us4 = uvs2;
-                                FStarC_Syntax_Syntax.bs = tps2;
-                                FStarC_Syntax_Syntax.comp1 = c2;
-                                FStarC_Syntax_Syntax.cflags = flags
-                              });
-                         FStarC_Syntax_Syntax.sigrng =
-                           (se2.FStarC_Syntax_Syntax.sigrng);
-                         FStarC_Syntax_Syntax.sigquals =
-                           (se2.FStarC_Syntax_Syntax.sigquals);
-                         FStarC_Syntax_Syntax.sigmeta =
-                           (se2.FStarC_Syntax_Syntax.sigmeta);
-                         FStarC_Syntax_Syntax.sigattrs =
-                           (se2.FStarC_Syntax_Syntax.sigattrs);
-                         FStarC_Syntax_Syntax.sigopens_and_abbrevs =
-                           (se2.FStarC_Syntax_Syntax.sigopens_and_abbrevs);
-                         FStarC_Syntax_Syntax.sigopts =
-                           (se2.FStarC_Syntax_Syntax.sigopts)
-                       } in
-                     ([se3], [], env0)))
-       | FStarC_Syntax_Syntax.Sig_declare_typ uu___2 when
-           FStarC_Util.for_some
-             (fun uu___3 ->
-                match uu___3 with
-                | FStarC_Syntax_Syntax.OnlyName -> true
-                | uu___4 -> false) se2.FStarC_Syntax_Syntax.sigquals
-           -> ([], [], env0)
-       | FStarC_Syntax_Syntax.Sig_let uu___2 when
-           FStarC_Util.for_some
-             (fun uu___3 ->
-                match uu___3 with
-                | FStarC_Syntax_Syntax.OnlyName -> true
-                | uu___4 -> false) se2.FStarC_Syntax_Syntax.sigquals
-           -> ([], [], env0)
-       | FStarC_Syntax_Syntax.Sig_declare_typ
-           { FStarC_Syntax_Syntax.lid2 = lid; FStarC_Syntax_Syntax.us2 = uvs;
-             FStarC_Syntax_Syntax.t2 = t;_}
-           ->
-           ((let uu___3 = FStarC_TypeChecker_Env.lid_exists env lid in
-             if uu___3
-             then
-               let uu___4 =
-                 let uu___5 =
-                   let uu___6 =
-                     let uu___7 =
-                       FStarC_Class_Show.show FStarC_Ident.showable_lident
-                         lid in
-                     FStarC_Format.fmt1
-                       "Top-level declaration %s for a name that is already used in this module."
-                       uu___7 in
-                   FStarC_Errors_Msg.text uu___6 in
-                 [uu___5;
-                 FStarC_Errors_Msg.text
-                   "Top-level declarations must be unique in their module."] in
-               FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range
-                 r
-                 FStarC_Errors_Codes.Fatal_AlreadyDefinedTopLevelDeclaration
-                 () (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-                 (Obj.magic uu___4)
-             else ());
-            (let env1 = FStarC_TypeChecker_Env.set_range env r in
-             let uu___3 =
-               let uu___4 = do_two_phases env1 in
-               if uu___4
-               then
-                 run_phase1
-                   (fun uu___5 ->
-                      let uu___6 =
-                        tc_declare_typ
-                          {
-                            FStarC_TypeChecker_Env.solver =
-                              (env1.FStarC_TypeChecker_Env.solver);
-                            FStarC_TypeChecker_Env.range =
-                              (env1.FStarC_TypeChecker_Env.range);
-                            FStarC_TypeChecker_Env.curmodule =
-                              (env1.FStarC_TypeChecker_Env.curmodule);
-                            FStarC_TypeChecker_Env.gamma =
-                              (env1.FStarC_TypeChecker_Env.gamma);
-                            FStarC_TypeChecker_Env.gamma_sig =
-                              (env1.FStarC_TypeChecker_Env.gamma_sig);
-                            FStarC_TypeChecker_Env.gamma_cache =
-                              (env1.FStarC_TypeChecker_Env.gamma_cache);
-                            FStarC_TypeChecker_Env.modules =
-                              (env1.FStarC_TypeChecker_Env.modules);
-                            FStarC_TypeChecker_Env.expected_typ =
-                              (env1.FStarC_TypeChecker_Env.expected_typ);
-                            FStarC_TypeChecker_Env.expected_post =
-                              (env1.FStarC_TypeChecker_Env.expected_post);
-                            FStarC_TypeChecker_Env.sigtab =
-                              (env1.FStarC_TypeChecker_Env.sigtab);
-                            FStarC_TypeChecker_Env.attrtab =
-                              (env1.FStarC_TypeChecker_Env.attrtab);
-                            FStarC_TypeChecker_Env.instantiate_imp =
-                              (env1.FStarC_TypeChecker_Env.instantiate_imp);
-                            FStarC_TypeChecker_Env.effects =
-                              (env1.FStarC_TypeChecker_Env.effects);
-                            FStarC_TypeChecker_Env.generalize =
-                              (env1.FStarC_TypeChecker_Env.generalize);
-                            FStarC_TypeChecker_Env.letrecs =
-                              (env1.FStarC_TypeChecker_Env.letrecs);
-                            FStarC_TypeChecker_Env.top_level =
-                              (env1.FStarC_TypeChecker_Env.top_level);
-                            FStarC_TypeChecker_Env.check_uvars =
-                              (env1.FStarC_TypeChecker_Env.check_uvars);
-                            FStarC_TypeChecker_Env.use_eq_strict =
-                              (env1.FStarC_TypeChecker_Env.use_eq_strict);
-                            FStarC_TypeChecker_Env.is_iface =
-                              (env1.FStarC_TypeChecker_Env.is_iface);
-                            FStarC_TypeChecker_Env.admit = true;
-                            FStarC_TypeChecker_Env.phase1 = true;
-                            FStarC_TypeChecker_Env.failhard =
-                              (env1.FStarC_TypeChecker_Env.failhard);
-                            FStarC_TypeChecker_Env.flychecking =
-                              (env1.FStarC_TypeChecker_Env.flychecking);
-                            FStarC_TypeChecker_Env.uvar_subtyping =
-                              (env1.FStarC_TypeChecker_Env.uvar_subtyping);
-                            FStarC_TypeChecker_Env.intactics =
-                              (env1.FStarC_TypeChecker_Env.intactics);
-                            FStarC_TypeChecker_Env.nocoerce =
-                              (env1.FStarC_TypeChecker_Env.nocoerce);
-                            FStarC_TypeChecker_Env.tc_term =
-                              (env1.FStarC_TypeChecker_Env.tc_term);
-                            FStarC_TypeChecker_Env.typeof_tot_or_gtot_term =
-                              (env1.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term);
-                            FStarC_TypeChecker_Env.universe_of =
-                              (env1.FStarC_TypeChecker_Env.universe_of);
-                            FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
-                              =
-                              (env1.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-                            FStarC_TypeChecker_Env.teq_nosmt_force =
-                              (env1.FStarC_TypeChecker_Env.teq_nosmt_force);
-                            FStarC_TypeChecker_Env.subtype_nosmt_force =
-                              (env1.FStarC_TypeChecker_Env.subtype_nosmt_force);
-                            FStarC_TypeChecker_Env.qtbl_name_and_index =
-                              (env1.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                            FStarC_TypeChecker_Env.normalized_eff_names =
-                              (env1.FStarC_TypeChecker_Env.normalized_eff_names);
-                            FStarC_TypeChecker_Env.fv_delta_depths =
-                              (env1.FStarC_TypeChecker_Env.fv_delta_depths);
-                            FStarC_TypeChecker_Env.proof_ns =
-                              (env1.FStarC_TypeChecker_Env.proof_ns);
-                            FStarC_TypeChecker_Env.synth_hook =
-                              (env1.FStarC_TypeChecker_Env.synth_hook);
-                            FStarC_TypeChecker_Env.try_solve_implicits_hook =
-                              (env1.FStarC_TypeChecker_Env.try_solve_implicits_hook);
-                            FStarC_TypeChecker_Env.splice =
-                              (env1.FStarC_TypeChecker_Env.splice);
-                            FStarC_TypeChecker_Env.mpreprocess =
-                              (env1.FStarC_TypeChecker_Env.mpreprocess);
-                            FStarC_TypeChecker_Env.postprocess =
-                              (env1.FStarC_TypeChecker_Env.postprocess);
-                            FStarC_TypeChecker_Env.identifier_info =
-                              (env1.FStarC_TypeChecker_Env.identifier_info);
-                            FStarC_TypeChecker_Env.tc_hooks =
-                              (env1.FStarC_TypeChecker_Env.tc_hooks);
-                            FStarC_TypeChecker_Env.dsenv =
-                              (env1.FStarC_TypeChecker_Env.dsenv);
-                            FStarC_TypeChecker_Env.nbe =
-                              (env1.FStarC_TypeChecker_Env.nbe);
-                            FStarC_TypeChecker_Env.strict_args_tab =
-                              (env1.FStarC_TypeChecker_Env.strict_args_tab);
-                            FStarC_TypeChecker_Env.erasable_types_tab =
-                              (env1.FStarC_TypeChecker_Env.erasable_types_tab);
-                            FStarC_TypeChecker_Env.enable_defer_to_tac =
-                              (env1.FStarC_TypeChecker_Env.enable_defer_to_tac);
-                            FStarC_TypeChecker_Env.unif_allow_ref_guards =
-                              (env1.FStarC_TypeChecker_Env.unif_allow_ref_guards);
-                            FStarC_TypeChecker_Env.erase_erasable_args =
-                              (env1.FStarC_TypeChecker_Env.erase_erasable_args);
-                            FStarC_TypeChecker_Env.core_check =
-                              (env1.FStarC_TypeChecker_Env.core_check);
-                            FStarC_TypeChecker_Env.missing_decl =
-                              (env1.FStarC_TypeChecker_Env.missing_decl);
-                            FStarC_TypeChecker_Env.iface_todo =
-                              (env1.FStarC_TypeChecker_Env.iface_todo);
-                            FStarC_TypeChecker_Env.iface_hidden =
-                              (env1.FStarC_TypeChecker_Env.iface_hidden);
-                            FStarC_TypeChecker_Env.iface_lids =
-                              (env1.FStarC_TypeChecker_Env.iface_lids);
-                            FStarC_TypeChecker_Env.iface_val_lids =
-                              (env1.FStarC_TypeChecker_Env.iface_val_lids)
-                          } (uvs, t) se2.FStarC_Syntax_Syntax.sigrng in
-                      match uu___6 with
-                      | (uvs1, t1) ->
-                          ((let uu___8 =
-                              let uu___9 = FStarC_Debug.medium () in
-                              if uu___9
-                              then true
-                              else FStarC_Effect.op_Bang dbg_TwoPhases in
-                            if uu___8
-                            then
-                              let uu___9 =
-                                FStarC_Class_Show.show
-                                  FStarC_Syntax_Print.showable_term t1 in
-                              let uu___10 =
-                                FStarC_Class_Show.show
-                                  (FStarC_Class_Show.show_list
-                                     FStarC_Ident.showable_ident) uvs1 in
-                              FStarC_Format.print2
-                                "Val declaration after phase 1: %s and uvs: %s\n"
-                                uu___9 uu___10
-                            else ());
-                           (uvs1, t1)))
-               else (uvs, t) in
-             match uu___3 with
-             | (uvs1, t1) ->
-                 let uu___4 =
-                   tc_declare_typ env1 (uvs1, t1)
-                     se2.FStarC_Syntax_Syntax.sigrng in
-                 (match uu___4 with
-                  | (uvs2, t2) ->
-                      ([{
-                          FStarC_Syntax_Syntax.sigel =
-                            (FStarC_Syntax_Syntax.Sig_declare_typ
-                               {
-                                 FStarC_Syntax_Syntax.lid2 = lid;
-                                 FStarC_Syntax_Syntax.us2 = uvs2;
-                                 FStarC_Syntax_Syntax.t2 = t2
-                               });
-                          FStarC_Syntax_Syntax.sigrng =
-                            (se2.FStarC_Syntax_Syntax.sigrng);
-                          FStarC_Syntax_Syntax.sigquals =
-                            (se2.FStarC_Syntax_Syntax.sigquals);
-                          FStarC_Syntax_Syntax.sigmeta =
-                            (se2.FStarC_Syntax_Syntax.sigmeta);
-                          FStarC_Syntax_Syntax.sigattrs =
-                            (se2.FStarC_Syntax_Syntax.sigattrs);
-                          FStarC_Syntax_Syntax.sigopens_and_abbrevs =
-                            (se2.FStarC_Syntax_Syntax.sigopens_and_abbrevs);
-                          FStarC_Syntax_Syntax.sigopts =
-                            (se2.FStarC_Syntax_Syntax.sigopts)
-                        }], [], env0))))
-       | FStarC_Syntax_Syntax.Sig_assume
-           { FStarC_Syntax_Syntax.lid3 = lid; FStarC_Syntax_Syntax.us3 = uvs;
-             FStarC_Syntax_Syntax.phi1 = t;_}
-           ->
-           (if
-              Prims.not
-                (FStarC_List.contains FStarC_Syntax_Syntax.InternalAssumption
-                   se2.FStarC_Syntax_Syntax.sigquals)
-            then
-              (let uu___3 =
-                 let uu___4 =
-                   FStarC_Class_Show.show FStarC_Ident.showable_lident lid in
-                 FStarC_Format.fmt1 "Admitting a top-level assumption %s"
-                   uu___4 in
-               FStarC_Errors.log_issue FStarC_Class_HasRange.hasRange_range r
-                 FStarC_Errors_Codes.Warning_WarnOnUse ()
-                 (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                 (Obj.magic uu___3))
-            else ();
-            (let env1 = FStarC_TypeChecker_Env.set_range env r in
-             let uu___3 =
-               let uu___4 = do_two_phases env1 in
-               if uu___4
-               then
-                 run_phase1
-                   (fun uu___5 ->
-                      let uu___6 =
-                        tc_assume
-                          {
-                            FStarC_TypeChecker_Env.solver =
-                              (env1.FStarC_TypeChecker_Env.solver);
-                            FStarC_TypeChecker_Env.range =
-                              (env1.FStarC_TypeChecker_Env.range);
-                            FStarC_TypeChecker_Env.curmodule =
-                              (env1.FStarC_TypeChecker_Env.curmodule);
-                            FStarC_TypeChecker_Env.gamma =
-                              (env1.FStarC_TypeChecker_Env.gamma);
-                            FStarC_TypeChecker_Env.gamma_sig =
-                              (env1.FStarC_TypeChecker_Env.gamma_sig);
-                            FStarC_TypeChecker_Env.gamma_cache =
-                              (env1.FStarC_TypeChecker_Env.gamma_cache);
-                            FStarC_TypeChecker_Env.modules =
-                              (env1.FStarC_TypeChecker_Env.modules);
-                            FStarC_TypeChecker_Env.expected_typ =
-                              (env1.FStarC_TypeChecker_Env.expected_typ);
-                            FStarC_TypeChecker_Env.expected_post =
-                              (env1.FStarC_TypeChecker_Env.expected_post);
-                            FStarC_TypeChecker_Env.sigtab =
-                              (env1.FStarC_TypeChecker_Env.sigtab);
-                            FStarC_TypeChecker_Env.attrtab =
-                              (env1.FStarC_TypeChecker_Env.attrtab);
-                            FStarC_TypeChecker_Env.instantiate_imp =
-                              (env1.FStarC_TypeChecker_Env.instantiate_imp);
-                            FStarC_TypeChecker_Env.effects =
-                              (env1.FStarC_TypeChecker_Env.effects);
-                            FStarC_TypeChecker_Env.generalize =
-                              (env1.FStarC_TypeChecker_Env.generalize);
-                            FStarC_TypeChecker_Env.letrecs =
-                              (env1.FStarC_TypeChecker_Env.letrecs);
-                            FStarC_TypeChecker_Env.top_level =
-                              (env1.FStarC_TypeChecker_Env.top_level);
-                            FStarC_TypeChecker_Env.check_uvars =
-                              (env1.FStarC_TypeChecker_Env.check_uvars);
-                            FStarC_TypeChecker_Env.use_eq_strict =
-                              (env1.FStarC_TypeChecker_Env.use_eq_strict);
-                            FStarC_TypeChecker_Env.is_iface =
-                              (env1.FStarC_TypeChecker_Env.is_iface);
-                            FStarC_TypeChecker_Env.admit = true;
-                            FStarC_TypeChecker_Env.phase1 = true;
-                            FStarC_TypeChecker_Env.failhard =
-                              (env1.FStarC_TypeChecker_Env.failhard);
-                            FStarC_TypeChecker_Env.flychecking =
-                              (env1.FStarC_TypeChecker_Env.flychecking);
-                            FStarC_TypeChecker_Env.uvar_subtyping =
-                              (env1.FStarC_TypeChecker_Env.uvar_subtyping);
-                            FStarC_TypeChecker_Env.intactics =
-                              (env1.FStarC_TypeChecker_Env.intactics);
-                            FStarC_TypeChecker_Env.nocoerce =
-                              (env1.FStarC_TypeChecker_Env.nocoerce);
-                            FStarC_TypeChecker_Env.tc_term =
-                              (env1.FStarC_TypeChecker_Env.tc_term);
-                            FStarC_TypeChecker_Env.typeof_tot_or_gtot_term =
-                              (env1.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term);
-                            FStarC_TypeChecker_Env.universe_of =
-                              (env1.FStarC_TypeChecker_Env.universe_of);
-                            FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
-                              =
-                              (env1.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-                            FStarC_TypeChecker_Env.teq_nosmt_force =
-                              (env1.FStarC_TypeChecker_Env.teq_nosmt_force);
-                            FStarC_TypeChecker_Env.subtype_nosmt_force =
-                              (env1.FStarC_TypeChecker_Env.subtype_nosmt_force);
-                            FStarC_TypeChecker_Env.qtbl_name_and_index =
-                              (env1.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                            FStarC_TypeChecker_Env.normalized_eff_names =
-                              (env1.FStarC_TypeChecker_Env.normalized_eff_names);
-                            FStarC_TypeChecker_Env.fv_delta_depths =
-                              (env1.FStarC_TypeChecker_Env.fv_delta_depths);
-                            FStarC_TypeChecker_Env.proof_ns =
-                              (env1.FStarC_TypeChecker_Env.proof_ns);
-                            FStarC_TypeChecker_Env.synth_hook =
-                              (env1.FStarC_TypeChecker_Env.synth_hook);
-                            FStarC_TypeChecker_Env.try_solve_implicits_hook =
-                              (env1.FStarC_TypeChecker_Env.try_solve_implicits_hook);
-                            FStarC_TypeChecker_Env.splice =
-                              (env1.FStarC_TypeChecker_Env.splice);
-                            FStarC_TypeChecker_Env.mpreprocess =
-                              (env1.FStarC_TypeChecker_Env.mpreprocess);
-                            FStarC_TypeChecker_Env.postprocess =
-                              (env1.FStarC_TypeChecker_Env.postprocess);
-                            FStarC_TypeChecker_Env.identifier_info =
-                              (env1.FStarC_TypeChecker_Env.identifier_info);
-                            FStarC_TypeChecker_Env.tc_hooks =
-                              (env1.FStarC_TypeChecker_Env.tc_hooks);
-                            FStarC_TypeChecker_Env.dsenv =
-                              (env1.FStarC_TypeChecker_Env.dsenv);
-                            FStarC_TypeChecker_Env.nbe =
-                              (env1.FStarC_TypeChecker_Env.nbe);
-                            FStarC_TypeChecker_Env.strict_args_tab =
-                              (env1.FStarC_TypeChecker_Env.strict_args_tab);
-                            FStarC_TypeChecker_Env.erasable_types_tab =
-                              (env1.FStarC_TypeChecker_Env.erasable_types_tab);
-                            FStarC_TypeChecker_Env.enable_defer_to_tac =
-                              (env1.FStarC_TypeChecker_Env.enable_defer_to_tac);
-                            FStarC_TypeChecker_Env.unif_allow_ref_guards =
-                              (env1.FStarC_TypeChecker_Env.unif_allow_ref_guards);
-                            FStarC_TypeChecker_Env.erase_erasable_args =
-                              (env1.FStarC_TypeChecker_Env.erase_erasable_args);
-                            FStarC_TypeChecker_Env.core_check =
-                              (env1.FStarC_TypeChecker_Env.core_check);
-                            FStarC_TypeChecker_Env.missing_decl =
-                              (env1.FStarC_TypeChecker_Env.missing_decl);
-                            FStarC_TypeChecker_Env.iface_todo =
-                              (env1.FStarC_TypeChecker_Env.iface_todo);
-                            FStarC_TypeChecker_Env.iface_hidden =
-                              (env1.FStarC_TypeChecker_Env.iface_hidden);
-                            FStarC_TypeChecker_Env.iface_lids =
-                              (env1.FStarC_TypeChecker_Env.iface_lids);
-                            FStarC_TypeChecker_Env.iface_val_lids =
-                              (env1.FStarC_TypeChecker_Env.iface_val_lids)
-                          } (uvs, t) se2.FStarC_Syntax_Syntax.sigrng in
-                      match uu___6 with
-                      | (uvs1, t1) ->
-                          ((let uu___8 =
-                              let uu___9 = FStarC_Debug.medium () in
-                              if uu___9
-                              then true
-                              else FStarC_Effect.op_Bang dbg_TwoPhases in
-                            if uu___8
-                            then
-                              let uu___9 =
-                                FStarC_Class_Show.show
-                                  FStarC_Syntax_Print.showable_term t1 in
-                              let uu___10 =
-                                FStarC_Class_Show.show
-                                  (FStarC_Class_Show.show_list
-                                     FStarC_Ident.showable_ident) uvs1 in
-                              FStarC_Format.print2
-                                "Assume after phase 1: %s and uvs: %s\n"
-                                uu___9 uu___10
-                            else ());
-                           (uvs1, t1)))
-               else (uvs, t) in
-             match uu___3 with
-             | (uvs1, t1) ->
-                 let uu___4 =
-                   tc_assume env1 (uvs1, t1) se2.FStarC_Syntax_Syntax.sigrng in
-                 (match uu___4 with
-                  | (uvs2, t2) ->
-                      ([{
-                          FStarC_Syntax_Syntax.sigel =
-                            (FStarC_Syntax_Syntax.Sig_assume
-                               {
-                                 FStarC_Syntax_Syntax.lid3 = lid;
-                                 FStarC_Syntax_Syntax.us3 = uvs2;
-                                 FStarC_Syntax_Syntax.phi1 = t2
-                               });
-                          FStarC_Syntax_Syntax.sigrng =
-                            (se2.FStarC_Syntax_Syntax.sigrng);
-                          FStarC_Syntax_Syntax.sigquals =
-                            (se2.FStarC_Syntax_Syntax.sigquals);
-                          FStarC_Syntax_Syntax.sigmeta =
-                            (se2.FStarC_Syntax_Syntax.sigmeta);
-                          FStarC_Syntax_Syntax.sigattrs =
-                            (se2.FStarC_Syntax_Syntax.sigattrs);
-                          FStarC_Syntax_Syntax.sigopens_and_abbrevs =
-                            (se2.FStarC_Syntax_Syntax.sigopens_and_abbrevs);
-                          FStarC_Syntax_Syntax.sigopts =
-                            (se2.FStarC_Syntax_Syntax.sigopts)
-                        }], [], env0))))
-       | FStarC_Syntax_Syntax.Sig_splice
-           { FStarC_Syntax_Syntax.is_typed = is_typed;
-             FStarC_Syntax_Syntax.lids2 = lids;
-             FStarC_Syntax_Syntax.tac = t;_}
-           ->
-           ((let uu___3 = FStarC_Debug.any () in
-             if uu___3
-             then
-               let uu___4 =
-                 FStarC_Class_Show.show FStarC_Ident.showable_lident
-                   env.FStarC_TypeChecker_Env.curmodule in
-               let uu___5 =
-                 FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t in
-               let uu___6 =
-                 FStarC_Class_Show.show FStarC_Class_Show.showable_bool
-                   is_typed in
-               FStarC_Format.print3
-                 "%s: Found splice of (%s) with is_typed: %s\n" uu___4 uu___5
-                 uu___6
-             else ());
-            (let ses =
-               env.FStarC_TypeChecker_Env.splice env
-                 se2.FStarC_Syntax_Syntax.sigquals
-                 se2.FStarC_Syntax_Syntax.sigattrs is_typed lids t
-                 se2.FStarC_Syntax_Syntax.sigrng in
-             (let uu___4 = FStarC_Debug.low () in
-              if uu___4
-              then
-                let uu___5 =
-                  FStarC_Class_Show.show
-                    (FStarC_Class_Show.show_list
-                       FStarC_Syntax_Print.showable_sigelt) ses in
-                FStarC_Format.print1 "Will splice decls:\n%s\n" uu___5
-              else ());
-             (let ses1 =
-                if is_typed
-                then
-                  let sigquals =
-                    match se2.FStarC_Syntax_Syntax.sigquals with
-                    | [] -> [FStarC_Syntax_Syntax.Visible_default]
-                    | qs -> qs in
-                  let ses2 =
-                    FStarC_List.map
-                      (fun sp ->
-                         {
-                           FStarC_Syntax_Syntax.sigel =
-                             (sp.FStarC_Syntax_Syntax.sigel);
-                           FStarC_Syntax_Syntax.sigrng =
-                             (sp.FStarC_Syntax_Syntax.sigrng);
-                           FStarC_Syntax_Syntax.sigquals =
-                             (FStarC_List.op_At sigquals
-                                sp.FStarC_Syntax_Syntax.sigquals);
-                           FStarC_Syntax_Syntax.sigmeta =
-                             (sp.FStarC_Syntax_Syntax.sigmeta);
-                           FStarC_Syntax_Syntax.sigattrs =
-                             (FStarC_List.op_At
-                                se2.FStarC_Syntax_Syntax.sigattrs
-                                sp.FStarC_Syntax_Syntax.sigattrs);
-                           FStarC_Syntax_Syntax.sigopens_and_abbrevs =
-                             (sp.FStarC_Syntax_Syntax.sigopens_and_abbrevs);
-                           FStarC_Syntax_Syntax.sigopts =
-                             (sp.FStarC_Syntax_Syntax.sigopts)
-                         }) ses in
-                  let ses3 =
-                    FStarC_List.map
-                      (FStarC_Syntax_Compress.deep_compress_se false false)
-                      ses2 in
-                  ses3
-                else ses in
-              let ses2 =
-                FStarC_List.map
-                  (fun se3 ->
-                     if
-                       env.FStarC_TypeChecker_Env.is_iface &&
-                         (match se3.FStarC_Syntax_Syntax.sigel with
-                          | FStarC_Syntax_Syntax.Sig_declare_typ _0 -> true
-                          | uu___4 -> false)
-                     then
-                       let uu___4 =
-                         let uu___5 =
-                           FStarC_List.filter
-                             (fun q -> q <> FStarC_Syntax_Syntax.Irreducible)
-                             se3.FStarC_Syntax_Syntax.sigquals in
-                         FStarC_Syntax_Syntax.Assumption :: uu___5 in
-                       {
-                         FStarC_Syntax_Syntax.sigel =
-                           (se3.FStarC_Syntax_Syntax.sigel);
-                         FStarC_Syntax_Syntax.sigrng =
-                           (se3.FStarC_Syntax_Syntax.sigrng);
-                         FStarC_Syntax_Syntax.sigquals = uu___4;
-                         FStarC_Syntax_Syntax.sigmeta =
-                           (se3.FStarC_Syntax_Syntax.sigmeta);
-                         FStarC_Syntax_Syntax.sigattrs =
-                           (se3.FStarC_Syntax_Syntax.sigattrs);
-                         FStarC_Syntax_Syntax.sigopens_and_abbrevs =
-                           (se3.FStarC_Syntax_Syntax.sigopens_and_abbrevs);
-                         FStarC_Syntax_Syntax.sigopts =
-                           (se3.FStarC_Syntax_Syntax.sigopts)
-                       }
-                     else se3) ses1 in
-              let ses3 =
-                FStarC_List.map
-                  (fun sp ->
-                     {
-                       FStarC_Syntax_Syntax.sigel =
-                         (sp.FStarC_Syntax_Syntax.sigel);
-                       FStarC_Syntax_Syntax.sigrng =
-                         (sp.FStarC_Syntax_Syntax.sigrng);
-                       FStarC_Syntax_Syntax.sigquals =
-                         (sp.FStarC_Syntax_Syntax.sigquals);
-                       FStarC_Syntax_Syntax.sigmeta =
-                         (let uu___4 = sp.FStarC_Syntax_Syntax.sigmeta in
-                          {
-                            FStarC_Syntax_Syntax.sigmeta_active =
-                              (uu___4.FStarC_Syntax_Syntax.sigmeta_active);
-                            FStarC_Syntax_Syntax.sigmeta_fact_db_ids =
-                              (uu___4.FStarC_Syntax_Syntax.sigmeta_fact_db_ids);
-                            FStarC_Syntax_Syntax.sigmeta_admit =
-                              (uu___4.FStarC_Syntax_Syntax.sigmeta_admit);
-                            FStarC_Syntax_Syntax.sigmeta_spliced = true;
-                            FStarC_Syntax_Syntax.sigmeta_already_checked =
-                              (uu___4.FStarC_Syntax_Syntax.sigmeta_already_checked);
-                            FStarC_Syntax_Syntax.sigmeta_extension_decl =
-                              ((se2.FStarC_Syntax_Syntax.sigmeta).FStarC_Syntax_Syntax.sigmeta_extension_decl);
-                            FStarC_Syntax_Syntax.sigmeta_extension_data =
-                              (uu___4.FStarC_Syntax_Syntax.sigmeta_extension_data)
-                          });
-                       FStarC_Syntax_Syntax.sigattrs =
-                         (sp.FStarC_Syntax_Syntax.sigattrs);
-                       FStarC_Syntax_Syntax.sigopens_and_abbrevs =
-                         (sp.FStarC_Syntax_Syntax.sigopens_and_abbrevs);
-                       FStarC_Syntax_Syntax.sigopts =
-                         (sp.FStarC_Syntax_Syntax.sigopts)
-                     }) ses2 in
-              let dsenv =
-                FStarC_List.fold_left FStarC_Syntax_DsEnv.push_sigelt_force
-                  env.FStarC_TypeChecker_Env.dsenv ses3 in
-              let env1 =
-                {
-                  FStarC_TypeChecker_Env.solver =
-                    (env.FStarC_TypeChecker_Env.solver);
-                  FStarC_TypeChecker_Env.range =
-                    (env.FStarC_TypeChecker_Env.range);
-                  FStarC_TypeChecker_Env.curmodule =
-                    (env.FStarC_TypeChecker_Env.curmodule);
-                  FStarC_TypeChecker_Env.gamma =
-                    (env.FStarC_TypeChecker_Env.gamma);
-                  FStarC_TypeChecker_Env.gamma_sig =
-                    (env.FStarC_TypeChecker_Env.gamma_sig);
-                  FStarC_TypeChecker_Env.gamma_cache =
-                    (env.FStarC_TypeChecker_Env.gamma_cache);
-                  FStarC_TypeChecker_Env.modules =
-                    (env.FStarC_TypeChecker_Env.modules);
-                  FStarC_TypeChecker_Env.expected_typ =
-                    (env.FStarC_TypeChecker_Env.expected_typ);
-                  FStarC_TypeChecker_Env.expected_post =
-                    (env.FStarC_TypeChecker_Env.expected_post);
-                  FStarC_TypeChecker_Env.sigtab =
-                    (env.FStarC_TypeChecker_Env.sigtab);
-                  FStarC_TypeChecker_Env.attrtab =
-                    (env.FStarC_TypeChecker_Env.attrtab);
-                  FStarC_TypeChecker_Env.instantiate_imp =
-                    (env.FStarC_TypeChecker_Env.instantiate_imp);
-                  FStarC_TypeChecker_Env.effects =
-                    (env.FStarC_TypeChecker_Env.effects);
-                  FStarC_TypeChecker_Env.generalize =
-                    (env.FStarC_TypeChecker_Env.generalize);
-                  FStarC_TypeChecker_Env.letrecs =
-                    (env.FStarC_TypeChecker_Env.letrecs);
-                  FStarC_TypeChecker_Env.top_level =
-                    (env.FStarC_TypeChecker_Env.top_level);
-                  FStarC_TypeChecker_Env.check_uvars =
-                    (env.FStarC_TypeChecker_Env.check_uvars);
-                  FStarC_TypeChecker_Env.use_eq_strict =
-                    (env.FStarC_TypeChecker_Env.use_eq_strict);
-                  FStarC_TypeChecker_Env.is_iface =
-                    (env.FStarC_TypeChecker_Env.is_iface);
-                  FStarC_TypeChecker_Env.admit =
-                    (env.FStarC_TypeChecker_Env.admit);
-                  FStarC_TypeChecker_Env.phase1 =
-                    (env.FStarC_TypeChecker_Env.phase1);
-                  FStarC_TypeChecker_Env.failhard =
-                    (env.FStarC_TypeChecker_Env.failhard);
-                  FStarC_TypeChecker_Env.flychecking =
-                    (env.FStarC_TypeChecker_Env.flychecking);
-                  FStarC_TypeChecker_Env.uvar_subtyping =
-                    (env.FStarC_TypeChecker_Env.uvar_subtyping);
-                  FStarC_TypeChecker_Env.intactics =
-                    (env.FStarC_TypeChecker_Env.intactics);
-                  FStarC_TypeChecker_Env.nocoerce =
-                    (env.FStarC_TypeChecker_Env.nocoerce);
-                  FStarC_TypeChecker_Env.tc_term =
-                    (env.FStarC_TypeChecker_Env.tc_term);
-                  FStarC_TypeChecker_Env.typeof_tot_or_gtot_term =
-                    (env.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term);
-                  FStarC_TypeChecker_Env.universe_of =
-                    (env.FStarC_TypeChecker_Env.universe_of);
-                  FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
-                    (env.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-                  FStarC_TypeChecker_Env.teq_nosmt_force =
-                    (env.FStarC_TypeChecker_Env.teq_nosmt_force);
-                  FStarC_TypeChecker_Env.subtype_nosmt_force =
-                    (env.FStarC_TypeChecker_Env.subtype_nosmt_force);
-                  FStarC_TypeChecker_Env.qtbl_name_and_index =
-                    (env.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                  FStarC_TypeChecker_Env.normalized_eff_names =
-                    (env.FStarC_TypeChecker_Env.normalized_eff_names);
-                  FStarC_TypeChecker_Env.fv_delta_depths =
-                    (env.FStarC_TypeChecker_Env.fv_delta_depths);
-                  FStarC_TypeChecker_Env.proof_ns =
-                    (env.FStarC_TypeChecker_Env.proof_ns);
-                  FStarC_TypeChecker_Env.synth_hook =
-                    (env.FStarC_TypeChecker_Env.synth_hook);
-                  FStarC_TypeChecker_Env.try_solve_implicits_hook =
-                    (env.FStarC_TypeChecker_Env.try_solve_implicits_hook);
-                  FStarC_TypeChecker_Env.splice =
-                    (env.FStarC_TypeChecker_Env.splice);
-                  FStarC_TypeChecker_Env.mpreprocess =
-                    (env.FStarC_TypeChecker_Env.mpreprocess);
-                  FStarC_TypeChecker_Env.postprocess =
-                    (env.FStarC_TypeChecker_Env.postprocess);
-                  FStarC_TypeChecker_Env.identifier_info =
-                    (env.FStarC_TypeChecker_Env.identifier_info);
-                  FStarC_TypeChecker_Env.tc_hooks =
-                    (env.FStarC_TypeChecker_Env.tc_hooks);
-                  FStarC_TypeChecker_Env.dsenv = dsenv;
-                  FStarC_TypeChecker_Env.nbe =
-                    (env.FStarC_TypeChecker_Env.nbe);
-                  FStarC_TypeChecker_Env.strict_args_tab =
-                    (env.FStarC_TypeChecker_Env.strict_args_tab);
-                  FStarC_TypeChecker_Env.erasable_types_tab =
-                    (env.FStarC_TypeChecker_Env.erasable_types_tab);
-                  FStarC_TypeChecker_Env.enable_defer_to_tac =
-                    (env.FStarC_TypeChecker_Env.enable_defer_to_tac);
-                  FStarC_TypeChecker_Env.unif_allow_ref_guards =
-                    (env.FStarC_TypeChecker_Env.unif_allow_ref_guards);
-                  FStarC_TypeChecker_Env.erase_erasable_args =
-                    (env.FStarC_TypeChecker_Env.erase_erasable_args);
-                  FStarC_TypeChecker_Env.core_check =
-                    (env.FStarC_TypeChecker_Env.core_check);
-                  FStarC_TypeChecker_Env.missing_decl =
-                    (env.FStarC_TypeChecker_Env.missing_decl);
-                  FStarC_TypeChecker_Env.iface_todo =
-                    (env.FStarC_TypeChecker_Env.iface_todo);
-                  FStarC_TypeChecker_Env.iface_hidden =
-                    (env.FStarC_TypeChecker_Env.iface_hidden);
-                  FStarC_TypeChecker_Env.iface_lids =
-                    (env.FStarC_TypeChecker_Env.iface_lids);
-                  FStarC_TypeChecker_Env.iface_val_lids =
-                    (env.FStarC_TypeChecker_Env.iface_val_lids)
-                } in
-              (let uu___5 = FStarC_Debug.low () in
-               if uu___5
-               then
-                 let uu___6 =
-                   let uu___7 =
-                     FStarC_List.map
-                       (FStarC_Class_Show.show
-                          FStarC_Syntax_Print.showable_sigelt) ses3 in
-                   FStarC_String.concat "\n" uu___7 in
-                 FStarC_Format.print1 "Splice returned sigelts {\n%s\n}\n"
-                   uu___6
-               else ());
-              ([], ses3, env1))))
-       | FStarC_Syntax_Syntax.Sig_let
-           { FStarC_Syntax_Syntax.lbs1 = lbs;
-             FStarC_Syntax_Syntax.lids1 = lids;_}
-           ->
-           FStarC_Profiling.profile
-             (fun uu___2 -> tc_sig_let env r se2 lbs lids)
-             (FStar_Pervasives_Native.Some
-                (FStarC_Ident.string_of_lid
-                   (FStarC_TypeChecker_Env.current_module env)))
-             "FStarC.TypeChecker.Tc.tc_sig_let")
-let tc_decl (env : FStarC_TypeChecker_Env.env)
-  (se : FStarC_Syntax_Syntax.sigelt) :
-  (FStarC_Syntax_Syntax.sigelt Prims.list * FStarC_Syntax_Syntax.sigelt
-    Prims.list * FStarC_TypeChecker_Env.env)=
-  FStarC_GenSym.reset_gensym ();
-  FStarC_TypeChecker_Overload.reset_ambiguity_reports ();
-  (let env0 = env in
-   let env1 = set_hint_correlator env se in
-   let env2 =
-     let uu___2 = FStarC_Options.admit_smt_queries () in
-     if uu___2
-     then
-       {
-         FStarC_TypeChecker_Env.solver = (env1.FStarC_TypeChecker_Env.solver);
-         FStarC_TypeChecker_Env.range = (env1.FStarC_TypeChecker_Env.range);
-         FStarC_TypeChecker_Env.curmodule =
-           (env1.FStarC_TypeChecker_Env.curmodule);
-         FStarC_TypeChecker_Env.gamma = (env1.FStarC_TypeChecker_Env.gamma);
-         FStarC_TypeChecker_Env.gamma_sig =
-           (env1.FStarC_TypeChecker_Env.gamma_sig);
-         FStarC_TypeChecker_Env.gamma_cache =
-           (env1.FStarC_TypeChecker_Env.gamma_cache);
-         FStarC_TypeChecker_Env.modules =
-           (env1.FStarC_TypeChecker_Env.modules);
-         FStarC_TypeChecker_Env.expected_typ =
-           (env1.FStarC_TypeChecker_Env.expected_typ);
-         FStarC_TypeChecker_Env.expected_post =
-           (env1.FStarC_TypeChecker_Env.expected_post);
-         FStarC_TypeChecker_Env.sigtab = (env1.FStarC_TypeChecker_Env.sigtab);
-         FStarC_TypeChecker_Env.attrtab =
-           (env1.FStarC_TypeChecker_Env.attrtab);
-         FStarC_TypeChecker_Env.instantiate_imp =
-           (env1.FStarC_TypeChecker_Env.instantiate_imp);
-         FStarC_TypeChecker_Env.effects =
-           (env1.FStarC_TypeChecker_Env.effects);
-         FStarC_TypeChecker_Env.generalize =
-           (env1.FStarC_TypeChecker_Env.generalize);
-         FStarC_TypeChecker_Env.letrecs =
-           (env1.FStarC_TypeChecker_Env.letrecs);
-         FStarC_TypeChecker_Env.top_level =
-           (env1.FStarC_TypeChecker_Env.top_level);
-         FStarC_TypeChecker_Env.check_uvars =
-           (env1.FStarC_TypeChecker_Env.check_uvars);
-         FStarC_TypeChecker_Env.use_eq_strict =
-           (env1.FStarC_TypeChecker_Env.use_eq_strict);
-         FStarC_TypeChecker_Env.is_iface =
-           (env1.FStarC_TypeChecker_Env.is_iface);
-         FStarC_TypeChecker_Env.admit = true;
-         FStarC_TypeChecker_Env.phase1 = (env1.FStarC_TypeChecker_Env.phase1);
-         FStarC_TypeChecker_Env.failhard =
-           (env1.FStarC_TypeChecker_Env.failhard);
-         FStarC_TypeChecker_Env.flychecking =
-           (env1.FStarC_TypeChecker_Env.flychecking);
-         FStarC_TypeChecker_Env.uvar_subtyping =
-           (env1.FStarC_TypeChecker_Env.uvar_subtyping);
-         FStarC_TypeChecker_Env.intactics =
-           (env1.FStarC_TypeChecker_Env.intactics);
-         FStarC_TypeChecker_Env.nocoerce =
-           (env1.FStarC_TypeChecker_Env.nocoerce);
-         FStarC_TypeChecker_Env.tc_term =
-           (env1.FStarC_TypeChecker_Env.tc_term);
-         FStarC_TypeChecker_Env.typeof_tot_or_gtot_term =
-           (env1.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term);
-         FStarC_TypeChecker_Env.universe_of =
-           (env1.FStarC_TypeChecker_Env.universe_of);
-         FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
-           (env1.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-         FStarC_TypeChecker_Env.teq_nosmt_force =
-           (env1.FStarC_TypeChecker_Env.teq_nosmt_force);
-         FStarC_TypeChecker_Env.subtype_nosmt_force =
-           (env1.FStarC_TypeChecker_Env.subtype_nosmt_force);
-         FStarC_TypeChecker_Env.qtbl_name_and_index =
-           (env1.FStarC_TypeChecker_Env.qtbl_name_and_index);
-         FStarC_TypeChecker_Env.normalized_eff_names =
-           (env1.FStarC_TypeChecker_Env.normalized_eff_names);
-         FStarC_TypeChecker_Env.fv_delta_depths =
-           (env1.FStarC_TypeChecker_Env.fv_delta_depths);
-         FStarC_TypeChecker_Env.proof_ns =
-           (env1.FStarC_TypeChecker_Env.proof_ns);
-         FStarC_TypeChecker_Env.synth_hook =
-           (env1.FStarC_TypeChecker_Env.synth_hook);
-         FStarC_TypeChecker_Env.try_solve_implicits_hook =
-           (env1.FStarC_TypeChecker_Env.try_solve_implicits_hook);
-         FStarC_TypeChecker_Env.splice = (env1.FStarC_TypeChecker_Env.splice);
-         FStarC_TypeChecker_Env.mpreprocess =
-           (env1.FStarC_TypeChecker_Env.mpreprocess);
-         FStarC_TypeChecker_Env.postprocess =
-           (env1.FStarC_TypeChecker_Env.postprocess);
-         FStarC_TypeChecker_Env.identifier_info =
-           (env1.FStarC_TypeChecker_Env.identifier_info);
-         FStarC_TypeChecker_Env.tc_hooks =
-           (env1.FStarC_TypeChecker_Env.tc_hooks);
-         FStarC_TypeChecker_Env.dsenv = (env1.FStarC_TypeChecker_Env.dsenv);
-         FStarC_TypeChecker_Env.nbe = (env1.FStarC_TypeChecker_Env.nbe);
-         FStarC_TypeChecker_Env.strict_args_tab =
-           (env1.FStarC_TypeChecker_Env.strict_args_tab);
-         FStarC_TypeChecker_Env.erasable_types_tab =
-           (env1.FStarC_TypeChecker_Env.erasable_types_tab);
-         FStarC_TypeChecker_Env.enable_defer_to_tac =
-           (env1.FStarC_TypeChecker_Env.enable_defer_to_tac);
-         FStarC_TypeChecker_Env.unif_allow_ref_guards =
-           (env1.FStarC_TypeChecker_Env.unif_allow_ref_guards);
-         FStarC_TypeChecker_Env.erase_erasable_args =
-           (env1.FStarC_TypeChecker_Env.erase_erasable_args);
-         FStarC_TypeChecker_Env.core_check =
-           (env1.FStarC_TypeChecker_Env.core_check);
-         FStarC_TypeChecker_Env.missing_decl =
-           (env1.FStarC_TypeChecker_Env.missing_decl);
-         FStarC_TypeChecker_Env.iface_todo =
-           (env1.FStarC_TypeChecker_Env.iface_todo);
-         FStarC_TypeChecker_Env.iface_hidden =
-           (env1.FStarC_TypeChecker_Env.iface_hidden);
-         FStarC_TypeChecker_Env.iface_lids =
-           (env1.FStarC_TypeChecker_Env.iface_lids);
-         FStarC_TypeChecker_Env.iface_val_lids =
-           (env1.FStarC_TypeChecker_Env.iface_val_lids)
-       }
-     else env1 in
-   (let uu___3 = FStarC_Debug.any () in
-    if uu___3
-    then
-      let uu___4 = FStarC_Syntax_Print.sigelt_to_string_short se in
-      FStarC_Format.print1 "Processing %s\n" uu___4
-    else ());
-   (let uu___4 = FStarC_Debug.medium () in
-    if uu___4
-    then
-      let uu___5 =
-        FStarC_Class_Show.show FStarC_Class_Show.showable_bool
-          env2.FStarC_TypeChecker_Env.admit in
-      let uu___6 =
-        FStarC_Class_Show.show FStarC_Syntax_Print.showable_sigelt se in
-      FStarC_Format.print2 ">>>>>>>>>>>>>>tc_decl admit=%s %s\n" uu___5
-        uu___6
-    else ());
-   (let result =
-      if
-        (se.FStarC_Syntax_Syntax.sigmeta).FStarC_Syntax_Syntax.sigmeta_already_checked
-      then ([se], [], env2)
-      else
-        if
-          (se.FStarC_Syntax_Syntax.sigmeta).FStarC_Syntax_Syntax.sigmeta_admit
-        then
-          (let result1 =
-             tc_decl'
-               {
-                 FStarC_TypeChecker_Env.solver =
-                   (env2.FStarC_TypeChecker_Env.solver);
-                 FStarC_TypeChecker_Env.range =
-                   (env2.FStarC_TypeChecker_Env.range);
-                 FStarC_TypeChecker_Env.curmodule =
-                   (env2.FStarC_TypeChecker_Env.curmodule);
-                 FStarC_TypeChecker_Env.gamma =
-                   (env2.FStarC_TypeChecker_Env.gamma);
-                 FStarC_TypeChecker_Env.gamma_sig =
-                   (env2.FStarC_TypeChecker_Env.gamma_sig);
-                 FStarC_TypeChecker_Env.gamma_cache =
-                   (env2.FStarC_TypeChecker_Env.gamma_cache);
-                 FStarC_TypeChecker_Env.modules =
-                   (env2.FStarC_TypeChecker_Env.modules);
-                 FStarC_TypeChecker_Env.expected_typ =
-                   (env2.FStarC_TypeChecker_Env.expected_typ);
-                 FStarC_TypeChecker_Env.expected_post =
-                   (env2.FStarC_TypeChecker_Env.expected_post);
-                 FStarC_TypeChecker_Env.sigtab =
-                   (env2.FStarC_TypeChecker_Env.sigtab);
-                 FStarC_TypeChecker_Env.attrtab =
-                   (env2.FStarC_TypeChecker_Env.attrtab);
-                 FStarC_TypeChecker_Env.instantiate_imp =
-                   (env2.FStarC_TypeChecker_Env.instantiate_imp);
-                 FStarC_TypeChecker_Env.effects =
-                   (env2.FStarC_TypeChecker_Env.effects);
-                 FStarC_TypeChecker_Env.generalize =
-                   (env2.FStarC_TypeChecker_Env.generalize);
-                 FStarC_TypeChecker_Env.letrecs =
-                   (env2.FStarC_TypeChecker_Env.letrecs);
-                 FStarC_TypeChecker_Env.top_level =
-                   (env2.FStarC_TypeChecker_Env.top_level);
-                 FStarC_TypeChecker_Env.check_uvars =
-                   (env2.FStarC_TypeChecker_Env.check_uvars);
-                 FStarC_TypeChecker_Env.use_eq_strict =
-                   (env2.FStarC_TypeChecker_Env.use_eq_strict);
-                 FStarC_TypeChecker_Env.is_iface =
-                   (env2.FStarC_TypeChecker_Env.is_iface);
-                 FStarC_TypeChecker_Env.admit = true;
-                 FStarC_TypeChecker_Env.phase1 =
-                   (env2.FStarC_TypeChecker_Env.phase1);
-                 FStarC_TypeChecker_Env.failhard =
-                   (env2.FStarC_TypeChecker_Env.failhard);
-                 FStarC_TypeChecker_Env.flychecking =
-                   (env2.FStarC_TypeChecker_Env.flychecking);
-                 FStarC_TypeChecker_Env.uvar_subtyping =
-                   (env2.FStarC_TypeChecker_Env.uvar_subtyping);
-                 FStarC_TypeChecker_Env.intactics =
-                   (env2.FStarC_TypeChecker_Env.intactics);
-                 FStarC_TypeChecker_Env.nocoerce =
-                   (env2.FStarC_TypeChecker_Env.nocoerce);
-                 FStarC_TypeChecker_Env.tc_term =
-                   (env2.FStarC_TypeChecker_Env.tc_term);
-                 FStarC_TypeChecker_Env.typeof_tot_or_gtot_term =
-                   (env2.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term);
-                 FStarC_TypeChecker_Env.universe_of =
-                   (env2.FStarC_TypeChecker_Env.universe_of);
-                 FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
-                   (env2.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-                 FStarC_TypeChecker_Env.teq_nosmt_force =
-                   (env2.FStarC_TypeChecker_Env.teq_nosmt_force);
-                 FStarC_TypeChecker_Env.subtype_nosmt_force =
-                   (env2.FStarC_TypeChecker_Env.subtype_nosmt_force);
-                 FStarC_TypeChecker_Env.qtbl_name_and_index =
-                   (env2.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                 FStarC_TypeChecker_Env.normalized_eff_names =
-                   (env2.FStarC_TypeChecker_Env.normalized_eff_names);
-                 FStarC_TypeChecker_Env.fv_delta_depths =
-                   (env2.FStarC_TypeChecker_Env.fv_delta_depths);
-                 FStarC_TypeChecker_Env.proof_ns =
-                   (env2.FStarC_TypeChecker_Env.proof_ns);
-                 FStarC_TypeChecker_Env.synth_hook =
-                   (env2.FStarC_TypeChecker_Env.synth_hook);
-                 FStarC_TypeChecker_Env.try_solve_implicits_hook =
-                   (env2.FStarC_TypeChecker_Env.try_solve_implicits_hook);
-                 FStarC_TypeChecker_Env.splice =
-                   (env2.FStarC_TypeChecker_Env.splice);
-                 FStarC_TypeChecker_Env.mpreprocess =
-                   (env2.FStarC_TypeChecker_Env.mpreprocess);
-                 FStarC_TypeChecker_Env.postprocess =
-                   (env2.FStarC_TypeChecker_Env.postprocess);
-                 FStarC_TypeChecker_Env.identifier_info =
-                   (env2.FStarC_TypeChecker_Env.identifier_info);
-                 FStarC_TypeChecker_Env.tc_hooks =
-                   (env2.FStarC_TypeChecker_Env.tc_hooks);
-                 FStarC_TypeChecker_Env.dsenv =
-                   (env2.FStarC_TypeChecker_Env.dsenv);
-                 FStarC_TypeChecker_Env.nbe =
-                   (env2.FStarC_TypeChecker_Env.nbe);
-                 FStarC_TypeChecker_Env.strict_args_tab =
-                   (env2.FStarC_TypeChecker_Env.strict_args_tab);
-                 FStarC_TypeChecker_Env.erasable_types_tab =
-                   (env2.FStarC_TypeChecker_Env.erasable_types_tab);
-                 FStarC_TypeChecker_Env.enable_defer_to_tac =
-                   (env2.FStarC_TypeChecker_Env.enable_defer_to_tac);
-                 FStarC_TypeChecker_Env.unif_allow_ref_guards =
-                   (env2.FStarC_TypeChecker_Env.unif_allow_ref_guards);
-                 FStarC_TypeChecker_Env.erase_erasable_args =
-                   (env2.FStarC_TypeChecker_Env.erase_erasable_args);
-                 FStarC_TypeChecker_Env.core_check =
-                   (env2.FStarC_TypeChecker_Env.core_check);
-                 FStarC_TypeChecker_Env.missing_decl =
-                   (env2.FStarC_TypeChecker_Env.missing_decl);
-                 FStarC_TypeChecker_Env.iface_todo =
-                   (env2.FStarC_TypeChecker_Env.iface_todo);
-                 FStarC_TypeChecker_Env.iface_hidden =
-                   (env2.FStarC_TypeChecker_Env.iface_hidden);
-                 FStarC_TypeChecker_Env.iface_lids =
-                   (env2.FStarC_TypeChecker_Env.iface_lids);
-                 FStarC_TypeChecker_Env.iface_val_lids =
-                   (env2.FStarC_TypeChecker_Env.iface_val_lids)
-               } se in
-           result1)
-        else tc_decl' env2 se in
-    (let uu___5 = result in
-     match uu___5 with
-     | (ses, uu___6, uu___7) ->
-         FStarC_List.iter
-           (FStarC_TypeChecker_Quals.check_sigelt_quals_post env2) ses);
-    (match () with
-     | () ->
-         let result1 =
-           let uu___5 = result in
-           match uu___5 with
-           | (ses, ses_e, env3) ->
-               (ses, ses_e,
-                 {
-                   FStarC_TypeChecker_Env.solver =
-                     (env3.FStarC_TypeChecker_Env.solver);
-                   FStarC_TypeChecker_Env.range =
-                     (env3.FStarC_TypeChecker_Env.range);
-                   FStarC_TypeChecker_Env.curmodule =
-                     (env3.FStarC_TypeChecker_Env.curmodule);
-                   FStarC_TypeChecker_Env.gamma =
-                     (env3.FStarC_TypeChecker_Env.gamma);
-                   FStarC_TypeChecker_Env.gamma_sig =
-                     (env3.FStarC_TypeChecker_Env.gamma_sig);
-                   FStarC_TypeChecker_Env.gamma_cache =
-                     (env3.FStarC_TypeChecker_Env.gamma_cache);
-                   FStarC_TypeChecker_Env.modules =
-                     (env3.FStarC_TypeChecker_Env.modules);
-                   FStarC_TypeChecker_Env.expected_typ =
-                     (env3.FStarC_TypeChecker_Env.expected_typ);
-                   FStarC_TypeChecker_Env.expected_post =
-                     (env3.FStarC_TypeChecker_Env.expected_post);
-                   FStarC_TypeChecker_Env.sigtab =
-                     (env3.FStarC_TypeChecker_Env.sigtab);
-                   FStarC_TypeChecker_Env.attrtab =
-                     (env3.FStarC_TypeChecker_Env.attrtab);
-                   FStarC_TypeChecker_Env.instantiate_imp =
-                     (env3.FStarC_TypeChecker_Env.instantiate_imp);
-                   FStarC_TypeChecker_Env.effects =
-                     (env3.FStarC_TypeChecker_Env.effects);
-                   FStarC_TypeChecker_Env.generalize =
-                     (env3.FStarC_TypeChecker_Env.generalize);
-                   FStarC_TypeChecker_Env.letrecs =
-                     (env3.FStarC_TypeChecker_Env.letrecs);
-                   FStarC_TypeChecker_Env.top_level =
-                     (env3.FStarC_TypeChecker_Env.top_level);
-                   FStarC_TypeChecker_Env.check_uvars =
-                     (env3.FStarC_TypeChecker_Env.check_uvars);
-                   FStarC_TypeChecker_Env.use_eq_strict =
-                     (env3.FStarC_TypeChecker_Env.use_eq_strict);
-                   FStarC_TypeChecker_Env.is_iface =
-                     (env3.FStarC_TypeChecker_Env.is_iface);
-                   FStarC_TypeChecker_Env.admit =
-                     (env0.FStarC_TypeChecker_Env.admit);
-                   FStarC_TypeChecker_Env.phase1 =
-                     (env3.FStarC_TypeChecker_Env.phase1);
-                   FStarC_TypeChecker_Env.failhard =
-                     (env3.FStarC_TypeChecker_Env.failhard);
-                   FStarC_TypeChecker_Env.flychecking =
-                     (env3.FStarC_TypeChecker_Env.flychecking);
-                   FStarC_TypeChecker_Env.uvar_subtyping =
-                     (env3.FStarC_TypeChecker_Env.uvar_subtyping);
-                   FStarC_TypeChecker_Env.intactics =
-                     (env3.FStarC_TypeChecker_Env.intactics);
-                   FStarC_TypeChecker_Env.nocoerce =
-                     (env3.FStarC_TypeChecker_Env.nocoerce);
-                   FStarC_TypeChecker_Env.tc_term =
-                     (env3.FStarC_TypeChecker_Env.tc_term);
-                   FStarC_TypeChecker_Env.typeof_tot_or_gtot_term =
-                     (env3.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term);
-                   FStarC_TypeChecker_Env.universe_of =
-                     (env3.FStarC_TypeChecker_Env.universe_of);
-                   FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term
-                     =
-                     (env3.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-                   FStarC_TypeChecker_Env.teq_nosmt_force =
-                     (env3.FStarC_TypeChecker_Env.teq_nosmt_force);
-                   FStarC_TypeChecker_Env.subtype_nosmt_force =
-                     (env3.FStarC_TypeChecker_Env.subtype_nosmt_force);
-                   FStarC_TypeChecker_Env.qtbl_name_and_index =
-                     (env3.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                   FStarC_TypeChecker_Env.normalized_eff_names =
-                     (env3.FStarC_TypeChecker_Env.normalized_eff_names);
-                   FStarC_TypeChecker_Env.fv_delta_depths =
-                     (env3.FStarC_TypeChecker_Env.fv_delta_depths);
-                   FStarC_TypeChecker_Env.proof_ns =
-                     (env3.FStarC_TypeChecker_Env.proof_ns);
-                   FStarC_TypeChecker_Env.synth_hook =
-                     (env3.FStarC_TypeChecker_Env.synth_hook);
-                   FStarC_TypeChecker_Env.try_solve_implicits_hook =
-                     (env3.FStarC_TypeChecker_Env.try_solve_implicits_hook);
-                   FStarC_TypeChecker_Env.splice =
-                     (env3.FStarC_TypeChecker_Env.splice);
-                   FStarC_TypeChecker_Env.mpreprocess =
-                     (env3.FStarC_TypeChecker_Env.mpreprocess);
-                   FStarC_TypeChecker_Env.postprocess =
-                     (env3.FStarC_TypeChecker_Env.postprocess);
-                   FStarC_TypeChecker_Env.identifier_info =
-                     (env3.FStarC_TypeChecker_Env.identifier_info);
-                   FStarC_TypeChecker_Env.tc_hooks =
-                     (env3.FStarC_TypeChecker_Env.tc_hooks);
-                   FStarC_TypeChecker_Env.dsenv =
-                     (env3.FStarC_TypeChecker_Env.dsenv);
-                   FStarC_TypeChecker_Env.nbe =
-                     (env3.FStarC_TypeChecker_Env.nbe);
-                   FStarC_TypeChecker_Env.strict_args_tab =
-                     (env3.FStarC_TypeChecker_Env.strict_args_tab);
-                   FStarC_TypeChecker_Env.erasable_types_tab =
-                     (env3.FStarC_TypeChecker_Env.erasable_types_tab);
-                   FStarC_TypeChecker_Env.enable_defer_to_tac =
-                     (env3.FStarC_TypeChecker_Env.enable_defer_to_tac);
-                   FStarC_TypeChecker_Env.unif_allow_ref_guards =
-                     (env3.FStarC_TypeChecker_Env.unif_allow_ref_guards);
-                   FStarC_TypeChecker_Env.erase_erasable_args =
-                     (env3.FStarC_TypeChecker_Env.erase_erasable_args);
-                   FStarC_TypeChecker_Env.core_check =
-                     (env3.FStarC_TypeChecker_Env.core_check);
-                   FStarC_TypeChecker_Env.missing_decl =
-                     (env3.FStarC_TypeChecker_Env.missing_decl);
-                   FStarC_TypeChecker_Env.iface_todo =
-                     (env3.FStarC_TypeChecker_Env.iface_todo);
-                   FStarC_TypeChecker_Env.iface_hidden =
-                     (env3.FStarC_TypeChecker_Env.iface_hidden);
-                   FStarC_TypeChecker_Env.iface_lids =
-                     (env3.FStarC_TypeChecker_Env.iface_lids);
-                   FStarC_TypeChecker_Env.iface_val_lids =
-                     (env3.FStarC_TypeChecker_Env.iface_val_lids)
-                 }) in
-         result1)))
-let add_sigelt_to_env (env : FStarC_TypeChecker_Env.env)
-  (se : FStarC_Syntax_Syntax.sigelt) (from_cache : Prims.bool) :
-  FStarC_TypeChecker_Env.env=
-  (let uu___1 = FStarC_Debug.low () in
-   if uu___1
-   then
-     let uu___2 = FStarC_Syntax_Print.sigelt_to_string_short se in
-     let uu___3 =
-       FStarC_Class_Show.show FStarC_Class_Show.showable_bool from_cache in
-     FStarC_Format.print2
-       ">>>>>>>>>>>>>>Adding top-level decl to environment: %s (from_cache:%s)\n"
-       uu___2 uu___3
-   else ());
-  (match se.FStarC_Syntax_Syntax.sigel with
-   | FStarC_Syntax_Syntax.Sig_inductive_typ uu___1 ->
-       let uu___2 =
-         let uu___3 =
-           FStarC_Class_Show.show FStarC_Syntax_Print.showable_sigelt se in
-         FStarC_Format.fmt1
-           "add_sigelt_to_env: unexpected bare type/data constructor: %s"
-           uu___3 in
-       FStarC_Errors.raise_error FStarC_Syntax_Syntax.has_range_sigelt se
-         FStarC_Errors_Codes.Fatal_UnexpectedInductiveType ()
-         (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-         (Obj.magic uu___2)
-   | FStarC_Syntax_Syntax.Sig_datacon uu___1 ->
-       let uu___2 =
-         let uu___3 =
-           FStarC_Class_Show.show FStarC_Syntax_Print.showable_sigelt se in
-         FStarC_Format.fmt1
-           "add_sigelt_to_env: unexpected bare type/data constructor: %s"
-           uu___3 in
-       FStarC_Errors.raise_error FStarC_Syntax_Syntax.has_range_sigelt se
-         FStarC_Errors_Codes.Fatal_UnexpectedInductiveType ()
-         (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-         (Obj.magic uu___2)
-   | FStarC_Syntax_Syntax.Sig_declare_typ uu___1 when
-       FStarC_Util.for_some
-         (fun uu___2 ->
-            match uu___2 with
-            | FStarC_Syntax_Syntax.OnlyName -> true
-            | uu___3 -> false) se.FStarC_Syntax_Syntax.sigquals
-       -> env
-   | FStarC_Syntax_Syntax.Sig_let uu___1 when
-       FStarC_Util.for_some
-         (fun uu___2 ->
-            match uu___2 with
-            | FStarC_Syntax_Syntax.OnlyName -> true
-            | uu___3 -> false) se.FStarC_Syntax_Syntax.sigquals
-       -> env
-   | uu___1 ->
-       let env1 = FStarC_TypeChecker_Env.push_sigelt env se in
-       (match se.FStarC_Syntax_Syntax.sigel with
-        | FStarC_Syntax_Syntax.Sig_pragma (FStarC_Syntax_Syntax.PushOptions
-            uu___2) ->
-            if from_cache
-            then env1
-            else
-              (let uu___3 = FStarC_Options.using_facts_from () in
-               {
-                 FStarC_TypeChecker_Env.solver =
-                   (env1.FStarC_TypeChecker_Env.solver);
-                 FStarC_TypeChecker_Env.range =
-                   (env1.FStarC_TypeChecker_Env.range);
-                 FStarC_TypeChecker_Env.curmodule =
-                   (env1.FStarC_TypeChecker_Env.curmodule);
-                 FStarC_TypeChecker_Env.gamma =
-                   (env1.FStarC_TypeChecker_Env.gamma);
-                 FStarC_TypeChecker_Env.gamma_sig =
-                   (env1.FStarC_TypeChecker_Env.gamma_sig);
-                 FStarC_TypeChecker_Env.gamma_cache =
-                   (env1.FStarC_TypeChecker_Env.gamma_cache);
-                 FStarC_TypeChecker_Env.modules =
-                   (env1.FStarC_TypeChecker_Env.modules);
-                 FStarC_TypeChecker_Env.expected_typ =
-                   (env1.FStarC_TypeChecker_Env.expected_typ);
-                 FStarC_TypeChecker_Env.expected_post =
-                   (env1.FStarC_TypeChecker_Env.expected_post);
-                 FStarC_TypeChecker_Env.sigtab =
-                   (env1.FStarC_TypeChecker_Env.sigtab);
-                 FStarC_TypeChecker_Env.attrtab =
-                   (env1.FStarC_TypeChecker_Env.attrtab);
-                 FStarC_TypeChecker_Env.instantiate_imp =
-                   (env1.FStarC_TypeChecker_Env.instantiate_imp);
-                 FStarC_TypeChecker_Env.effects =
-                   (env1.FStarC_TypeChecker_Env.effects);
-                 FStarC_TypeChecker_Env.generalize =
-                   (env1.FStarC_TypeChecker_Env.generalize);
-                 FStarC_TypeChecker_Env.letrecs =
-                   (env1.FStarC_TypeChecker_Env.letrecs);
-                 FStarC_TypeChecker_Env.top_level =
-                   (env1.FStarC_TypeChecker_Env.top_level);
-                 FStarC_TypeChecker_Env.check_uvars =
-                   (env1.FStarC_TypeChecker_Env.check_uvars);
-                 FStarC_TypeChecker_Env.use_eq_strict =
-                   (env1.FStarC_TypeChecker_Env.use_eq_strict);
-                 FStarC_TypeChecker_Env.is_iface =
-                   (env1.FStarC_TypeChecker_Env.is_iface);
-                 FStarC_TypeChecker_Env.admit =
-                   (env1.FStarC_TypeChecker_Env.admit);
-                 FStarC_TypeChecker_Env.phase1 =
-                   (env1.FStarC_TypeChecker_Env.phase1);
-                 FStarC_TypeChecker_Env.failhard =
-                   (env1.FStarC_TypeChecker_Env.failhard);
-                 FStarC_TypeChecker_Env.flychecking =
-                   (env1.FStarC_TypeChecker_Env.flychecking);
-                 FStarC_TypeChecker_Env.uvar_subtyping =
-                   (env1.FStarC_TypeChecker_Env.uvar_subtyping);
-                 FStarC_TypeChecker_Env.intactics =
-                   (env1.FStarC_TypeChecker_Env.intactics);
-                 FStarC_TypeChecker_Env.nocoerce =
-                   (env1.FStarC_TypeChecker_Env.nocoerce);
-                 FStarC_TypeChecker_Env.tc_term =
-                   (env1.FStarC_TypeChecker_Env.tc_term);
-                 FStarC_TypeChecker_Env.typeof_tot_or_gtot_term =
-                   (env1.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term);
-                 FStarC_TypeChecker_Env.universe_of =
-                   (env1.FStarC_TypeChecker_Env.universe_of);
-                 FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
-                   (env1.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-                 FStarC_TypeChecker_Env.teq_nosmt_force =
-                   (env1.FStarC_TypeChecker_Env.teq_nosmt_force);
-                 FStarC_TypeChecker_Env.subtype_nosmt_force =
-                   (env1.FStarC_TypeChecker_Env.subtype_nosmt_force);
-                 FStarC_TypeChecker_Env.qtbl_name_and_index =
-                   (env1.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                 FStarC_TypeChecker_Env.normalized_eff_names =
-                   (env1.FStarC_TypeChecker_Env.normalized_eff_names);
-                 FStarC_TypeChecker_Env.fv_delta_depths =
-                   (env1.FStarC_TypeChecker_Env.fv_delta_depths);
-                 FStarC_TypeChecker_Env.proof_ns = uu___3;
-                 FStarC_TypeChecker_Env.synth_hook =
-                   (env1.FStarC_TypeChecker_Env.synth_hook);
-                 FStarC_TypeChecker_Env.try_solve_implicits_hook =
-                   (env1.FStarC_TypeChecker_Env.try_solve_implicits_hook);
-                 FStarC_TypeChecker_Env.splice =
-                   (env1.FStarC_TypeChecker_Env.splice);
-                 FStarC_TypeChecker_Env.mpreprocess =
-                   (env1.FStarC_TypeChecker_Env.mpreprocess);
-                 FStarC_TypeChecker_Env.postprocess =
-                   (env1.FStarC_TypeChecker_Env.postprocess);
-                 FStarC_TypeChecker_Env.identifier_info =
-                   (env1.FStarC_TypeChecker_Env.identifier_info);
-                 FStarC_TypeChecker_Env.tc_hooks =
-                   (env1.FStarC_TypeChecker_Env.tc_hooks);
-                 FStarC_TypeChecker_Env.dsenv =
-                   (env1.FStarC_TypeChecker_Env.dsenv);
-                 FStarC_TypeChecker_Env.nbe =
-                   (env1.FStarC_TypeChecker_Env.nbe);
-                 FStarC_TypeChecker_Env.strict_args_tab =
-                   (env1.FStarC_TypeChecker_Env.strict_args_tab);
-                 FStarC_TypeChecker_Env.erasable_types_tab =
-                   (env1.FStarC_TypeChecker_Env.erasable_types_tab);
-                 FStarC_TypeChecker_Env.enable_defer_to_tac =
-                   (env1.FStarC_TypeChecker_Env.enable_defer_to_tac);
-                 FStarC_TypeChecker_Env.unif_allow_ref_guards =
-                   (env1.FStarC_TypeChecker_Env.unif_allow_ref_guards);
-                 FStarC_TypeChecker_Env.erase_erasable_args =
-                   (env1.FStarC_TypeChecker_Env.erase_erasable_args);
-                 FStarC_TypeChecker_Env.core_check =
-                   (env1.FStarC_TypeChecker_Env.core_check);
-                 FStarC_TypeChecker_Env.missing_decl =
-                   (env1.FStarC_TypeChecker_Env.missing_decl);
-                 FStarC_TypeChecker_Env.iface_todo =
-                   (env1.FStarC_TypeChecker_Env.iface_todo);
-                 FStarC_TypeChecker_Env.iface_hidden =
-                   (env1.FStarC_TypeChecker_Env.iface_hidden);
-                 FStarC_TypeChecker_Env.iface_lids =
-                   (env1.FStarC_TypeChecker_Env.iface_lids);
-                 FStarC_TypeChecker_Env.iface_val_lids =
-                   (env1.FStarC_TypeChecker_Env.iface_val_lids)
-               })
-        | FStarC_Syntax_Syntax.Sig_pragma (FStarC_Syntax_Syntax.PopOptions)
-            ->
-            if from_cache
-            then env1
-            else
-              (let uu___2 = FStarC_Options.using_facts_from () in
-               {
-                 FStarC_TypeChecker_Env.solver =
-                   (env1.FStarC_TypeChecker_Env.solver);
-                 FStarC_TypeChecker_Env.range =
-                   (env1.FStarC_TypeChecker_Env.range);
-                 FStarC_TypeChecker_Env.curmodule =
-                   (env1.FStarC_TypeChecker_Env.curmodule);
-                 FStarC_TypeChecker_Env.gamma =
-                   (env1.FStarC_TypeChecker_Env.gamma);
-                 FStarC_TypeChecker_Env.gamma_sig =
-                   (env1.FStarC_TypeChecker_Env.gamma_sig);
-                 FStarC_TypeChecker_Env.gamma_cache =
-                   (env1.FStarC_TypeChecker_Env.gamma_cache);
-                 FStarC_TypeChecker_Env.modules =
-                   (env1.FStarC_TypeChecker_Env.modules);
-                 FStarC_TypeChecker_Env.expected_typ =
-                   (env1.FStarC_TypeChecker_Env.expected_typ);
-                 FStarC_TypeChecker_Env.expected_post =
-                   (env1.FStarC_TypeChecker_Env.expected_post);
-                 FStarC_TypeChecker_Env.sigtab =
-                   (env1.FStarC_TypeChecker_Env.sigtab);
-                 FStarC_TypeChecker_Env.attrtab =
-                   (env1.FStarC_TypeChecker_Env.attrtab);
-                 FStarC_TypeChecker_Env.instantiate_imp =
-                   (env1.FStarC_TypeChecker_Env.instantiate_imp);
-                 FStarC_TypeChecker_Env.effects =
-                   (env1.FStarC_TypeChecker_Env.effects);
-                 FStarC_TypeChecker_Env.generalize =
-                   (env1.FStarC_TypeChecker_Env.generalize);
-                 FStarC_TypeChecker_Env.letrecs =
-                   (env1.FStarC_TypeChecker_Env.letrecs);
-                 FStarC_TypeChecker_Env.top_level =
-                   (env1.FStarC_TypeChecker_Env.top_level);
-                 FStarC_TypeChecker_Env.check_uvars =
-                   (env1.FStarC_TypeChecker_Env.check_uvars);
-                 FStarC_TypeChecker_Env.use_eq_strict =
-                   (env1.FStarC_TypeChecker_Env.use_eq_strict);
-                 FStarC_TypeChecker_Env.is_iface =
-                   (env1.FStarC_TypeChecker_Env.is_iface);
-                 FStarC_TypeChecker_Env.admit =
-                   (env1.FStarC_TypeChecker_Env.admit);
-                 FStarC_TypeChecker_Env.phase1 =
-                   (env1.FStarC_TypeChecker_Env.phase1);
-                 FStarC_TypeChecker_Env.failhard =
-                   (env1.FStarC_TypeChecker_Env.failhard);
-                 FStarC_TypeChecker_Env.flychecking =
-                   (env1.FStarC_TypeChecker_Env.flychecking);
-                 FStarC_TypeChecker_Env.uvar_subtyping =
-                   (env1.FStarC_TypeChecker_Env.uvar_subtyping);
-                 FStarC_TypeChecker_Env.intactics =
-                   (env1.FStarC_TypeChecker_Env.intactics);
-                 FStarC_TypeChecker_Env.nocoerce =
-                   (env1.FStarC_TypeChecker_Env.nocoerce);
-                 FStarC_TypeChecker_Env.tc_term =
-                   (env1.FStarC_TypeChecker_Env.tc_term);
-                 FStarC_TypeChecker_Env.typeof_tot_or_gtot_term =
-                   (env1.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term);
-                 FStarC_TypeChecker_Env.universe_of =
-                   (env1.FStarC_TypeChecker_Env.universe_of);
-                 FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
-                   (env1.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-                 FStarC_TypeChecker_Env.teq_nosmt_force =
-                   (env1.FStarC_TypeChecker_Env.teq_nosmt_force);
-                 FStarC_TypeChecker_Env.subtype_nosmt_force =
-                   (env1.FStarC_TypeChecker_Env.subtype_nosmt_force);
-                 FStarC_TypeChecker_Env.qtbl_name_and_index =
-                   (env1.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                 FStarC_TypeChecker_Env.normalized_eff_names =
-                   (env1.FStarC_TypeChecker_Env.normalized_eff_names);
-                 FStarC_TypeChecker_Env.fv_delta_depths =
-                   (env1.FStarC_TypeChecker_Env.fv_delta_depths);
-                 FStarC_TypeChecker_Env.proof_ns = uu___2;
-                 FStarC_TypeChecker_Env.synth_hook =
-                   (env1.FStarC_TypeChecker_Env.synth_hook);
-                 FStarC_TypeChecker_Env.try_solve_implicits_hook =
-                   (env1.FStarC_TypeChecker_Env.try_solve_implicits_hook);
-                 FStarC_TypeChecker_Env.splice =
-                   (env1.FStarC_TypeChecker_Env.splice);
-                 FStarC_TypeChecker_Env.mpreprocess =
-                   (env1.FStarC_TypeChecker_Env.mpreprocess);
-                 FStarC_TypeChecker_Env.postprocess =
-                   (env1.FStarC_TypeChecker_Env.postprocess);
-                 FStarC_TypeChecker_Env.identifier_info =
-                   (env1.FStarC_TypeChecker_Env.identifier_info);
-                 FStarC_TypeChecker_Env.tc_hooks =
-                   (env1.FStarC_TypeChecker_Env.tc_hooks);
-                 FStarC_TypeChecker_Env.dsenv =
-                   (env1.FStarC_TypeChecker_Env.dsenv);
-                 FStarC_TypeChecker_Env.nbe =
-                   (env1.FStarC_TypeChecker_Env.nbe);
-                 FStarC_TypeChecker_Env.strict_args_tab =
-                   (env1.FStarC_TypeChecker_Env.strict_args_tab);
-                 FStarC_TypeChecker_Env.erasable_types_tab =
-                   (env1.FStarC_TypeChecker_Env.erasable_types_tab);
-                 FStarC_TypeChecker_Env.enable_defer_to_tac =
-                   (env1.FStarC_TypeChecker_Env.enable_defer_to_tac);
-                 FStarC_TypeChecker_Env.unif_allow_ref_guards =
-                   (env1.FStarC_TypeChecker_Env.unif_allow_ref_guards);
-                 FStarC_TypeChecker_Env.erase_erasable_args =
-                   (env1.FStarC_TypeChecker_Env.erase_erasable_args);
-                 FStarC_TypeChecker_Env.core_check =
-                   (env1.FStarC_TypeChecker_Env.core_check);
-                 FStarC_TypeChecker_Env.missing_decl =
-                   (env1.FStarC_TypeChecker_Env.missing_decl);
-                 FStarC_TypeChecker_Env.iface_todo =
-                   (env1.FStarC_TypeChecker_Env.iface_todo);
-                 FStarC_TypeChecker_Env.iface_hidden =
-                   (env1.FStarC_TypeChecker_Env.iface_hidden);
-                 FStarC_TypeChecker_Env.iface_lids =
-                   (env1.FStarC_TypeChecker_Env.iface_lids);
-                 FStarC_TypeChecker_Env.iface_val_lids =
-                   (env1.FStarC_TypeChecker_Env.iface_val_lids)
-               })
-        | FStarC_Syntax_Syntax.Sig_pragma (FStarC_Syntax_Syntax.SetOptions
-            uu___2) ->
-            if from_cache
-            then env1
-            else
-              (let uu___3 = FStarC_Options.using_facts_from () in
-               {
-                 FStarC_TypeChecker_Env.solver =
-                   (env1.FStarC_TypeChecker_Env.solver);
-                 FStarC_TypeChecker_Env.range =
-                   (env1.FStarC_TypeChecker_Env.range);
-                 FStarC_TypeChecker_Env.curmodule =
-                   (env1.FStarC_TypeChecker_Env.curmodule);
-                 FStarC_TypeChecker_Env.gamma =
-                   (env1.FStarC_TypeChecker_Env.gamma);
-                 FStarC_TypeChecker_Env.gamma_sig =
-                   (env1.FStarC_TypeChecker_Env.gamma_sig);
-                 FStarC_TypeChecker_Env.gamma_cache =
-                   (env1.FStarC_TypeChecker_Env.gamma_cache);
-                 FStarC_TypeChecker_Env.modules =
-                   (env1.FStarC_TypeChecker_Env.modules);
-                 FStarC_TypeChecker_Env.expected_typ =
-                   (env1.FStarC_TypeChecker_Env.expected_typ);
-                 FStarC_TypeChecker_Env.expected_post =
-                   (env1.FStarC_TypeChecker_Env.expected_post);
-                 FStarC_TypeChecker_Env.sigtab =
-                   (env1.FStarC_TypeChecker_Env.sigtab);
-                 FStarC_TypeChecker_Env.attrtab =
-                   (env1.FStarC_TypeChecker_Env.attrtab);
-                 FStarC_TypeChecker_Env.instantiate_imp =
-                   (env1.FStarC_TypeChecker_Env.instantiate_imp);
-                 FStarC_TypeChecker_Env.effects =
-                   (env1.FStarC_TypeChecker_Env.effects);
-                 FStarC_TypeChecker_Env.generalize =
-                   (env1.FStarC_TypeChecker_Env.generalize);
-                 FStarC_TypeChecker_Env.letrecs =
-                   (env1.FStarC_TypeChecker_Env.letrecs);
-                 FStarC_TypeChecker_Env.top_level =
-                   (env1.FStarC_TypeChecker_Env.top_level);
-                 FStarC_TypeChecker_Env.check_uvars =
-                   (env1.FStarC_TypeChecker_Env.check_uvars);
-                 FStarC_TypeChecker_Env.use_eq_strict =
-                   (env1.FStarC_TypeChecker_Env.use_eq_strict);
-                 FStarC_TypeChecker_Env.is_iface =
-                   (env1.FStarC_TypeChecker_Env.is_iface);
-                 FStarC_TypeChecker_Env.admit =
-                   (env1.FStarC_TypeChecker_Env.admit);
-                 FStarC_TypeChecker_Env.phase1 =
-                   (env1.FStarC_TypeChecker_Env.phase1);
-                 FStarC_TypeChecker_Env.failhard =
-                   (env1.FStarC_TypeChecker_Env.failhard);
-                 FStarC_TypeChecker_Env.flychecking =
-                   (env1.FStarC_TypeChecker_Env.flychecking);
-                 FStarC_TypeChecker_Env.uvar_subtyping =
-                   (env1.FStarC_TypeChecker_Env.uvar_subtyping);
-                 FStarC_TypeChecker_Env.intactics =
-                   (env1.FStarC_TypeChecker_Env.intactics);
-                 FStarC_TypeChecker_Env.nocoerce =
-                   (env1.FStarC_TypeChecker_Env.nocoerce);
-                 FStarC_TypeChecker_Env.tc_term =
-                   (env1.FStarC_TypeChecker_Env.tc_term);
-                 FStarC_TypeChecker_Env.typeof_tot_or_gtot_term =
-                   (env1.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term);
-                 FStarC_TypeChecker_Env.universe_of =
-                   (env1.FStarC_TypeChecker_Env.universe_of);
-                 FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
-                   (env1.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-                 FStarC_TypeChecker_Env.teq_nosmt_force =
-                   (env1.FStarC_TypeChecker_Env.teq_nosmt_force);
-                 FStarC_TypeChecker_Env.subtype_nosmt_force =
-                   (env1.FStarC_TypeChecker_Env.subtype_nosmt_force);
-                 FStarC_TypeChecker_Env.qtbl_name_and_index =
-                   (env1.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                 FStarC_TypeChecker_Env.normalized_eff_names =
-                   (env1.FStarC_TypeChecker_Env.normalized_eff_names);
-                 FStarC_TypeChecker_Env.fv_delta_depths =
-                   (env1.FStarC_TypeChecker_Env.fv_delta_depths);
-                 FStarC_TypeChecker_Env.proof_ns = uu___3;
-                 FStarC_TypeChecker_Env.synth_hook =
-                   (env1.FStarC_TypeChecker_Env.synth_hook);
-                 FStarC_TypeChecker_Env.try_solve_implicits_hook =
-                   (env1.FStarC_TypeChecker_Env.try_solve_implicits_hook);
-                 FStarC_TypeChecker_Env.splice =
-                   (env1.FStarC_TypeChecker_Env.splice);
-                 FStarC_TypeChecker_Env.mpreprocess =
-                   (env1.FStarC_TypeChecker_Env.mpreprocess);
-                 FStarC_TypeChecker_Env.postprocess =
-                   (env1.FStarC_TypeChecker_Env.postprocess);
-                 FStarC_TypeChecker_Env.identifier_info =
-                   (env1.FStarC_TypeChecker_Env.identifier_info);
-                 FStarC_TypeChecker_Env.tc_hooks =
-                   (env1.FStarC_TypeChecker_Env.tc_hooks);
-                 FStarC_TypeChecker_Env.dsenv =
-                   (env1.FStarC_TypeChecker_Env.dsenv);
-                 FStarC_TypeChecker_Env.nbe =
-                   (env1.FStarC_TypeChecker_Env.nbe);
-                 FStarC_TypeChecker_Env.strict_args_tab =
-                   (env1.FStarC_TypeChecker_Env.strict_args_tab);
-                 FStarC_TypeChecker_Env.erasable_types_tab =
-                   (env1.FStarC_TypeChecker_Env.erasable_types_tab);
-                 FStarC_TypeChecker_Env.enable_defer_to_tac =
-                   (env1.FStarC_TypeChecker_Env.enable_defer_to_tac);
-                 FStarC_TypeChecker_Env.unif_allow_ref_guards =
-                   (env1.FStarC_TypeChecker_Env.unif_allow_ref_guards);
-                 FStarC_TypeChecker_Env.erase_erasable_args =
-                   (env1.FStarC_TypeChecker_Env.erase_erasable_args);
-                 FStarC_TypeChecker_Env.core_check =
-                   (env1.FStarC_TypeChecker_Env.core_check);
-                 FStarC_TypeChecker_Env.missing_decl =
-                   (env1.FStarC_TypeChecker_Env.missing_decl);
-                 FStarC_TypeChecker_Env.iface_todo =
-                   (env1.FStarC_TypeChecker_Env.iface_todo);
-                 FStarC_TypeChecker_Env.iface_hidden =
-                   (env1.FStarC_TypeChecker_Env.iface_hidden);
-                 FStarC_TypeChecker_Env.iface_lids =
-                   (env1.FStarC_TypeChecker_Env.iface_lids);
-                 FStarC_TypeChecker_Env.iface_val_lids =
-                   (env1.FStarC_TypeChecker_Env.iface_val_lids)
-               })
-        | FStarC_Syntax_Syntax.Sig_pragma (FStarC_Syntax_Syntax.ResetOptions
-            uu___2) ->
-            if from_cache
-            then env1
-            else
-              (let uu___3 = FStarC_Options.using_facts_from () in
-               {
-                 FStarC_TypeChecker_Env.solver =
-                   (env1.FStarC_TypeChecker_Env.solver);
-                 FStarC_TypeChecker_Env.range =
-                   (env1.FStarC_TypeChecker_Env.range);
-                 FStarC_TypeChecker_Env.curmodule =
-                   (env1.FStarC_TypeChecker_Env.curmodule);
-                 FStarC_TypeChecker_Env.gamma =
-                   (env1.FStarC_TypeChecker_Env.gamma);
-                 FStarC_TypeChecker_Env.gamma_sig =
-                   (env1.FStarC_TypeChecker_Env.gamma_sig);
-                 FStarC_TypeChecker_Env.gamma_cache =
-                   (env1.FStarC_TypeChecker_Env.gamma_cache);
-                 FStarC_TypeChecker_Env.modules =
-                   (env1.FStarC_TypeChecker_Env.modules);
-                 FStarC_TypeChecker_Env.expected_typ =
-                   (env1.FStarC_TypeChecker_Env.expected_typ);
-                 FStarC_TypeChecker_Env.expected_post =
-                   (env1.FStarC_TypeChecker_Env.expected_post);
-                 FStarC_TypeChecker_Env.sigtab =
-                   (env1.FStarC_TypeChecker_Env.sigtab);
-                 FStarC_TypeChecker_Env.attrtab =
-                   (env1.FStarC_TypeChecker_Env.attrtab);
-                 FStarC_TypeChecker_Env.instantiate_imp =
-                   (env1.FStarC_TypeChecker_Env.instantiate_imp);
-                 FStarC_TypeChecker_Env.effects =
-                   (env1.FStarC_TypeChecker_Env.effects);
-                 FStarC_TypeChecker_Env.generalize =
-                   (env1.FStarC_TypeChecker_Env.generalize);
-                 FStarC_TypeChecker_Env.letrecs =
-                   (env1.FStarC_TypeChecker_Env.letrecs);
-                 FStarC_TypeChecker_Env.top_level =
-                   (env1.FStarC_TypeChecker_Env.top_level);
-                 FStarC_TypeChecker_Env.check_uvars =
-                   (env1.FStarC_TypeChecker_Env.check_uvars);
-                 FStarC_TypeChecker_Env.use_eq_strict =
-                   (env1.FStarC_TypeChecker_Env.use_eq_strict);
-                 FStarC_TypeChecker_Env.is_iface =
-                   (env1.FStarC_TypeChecker_Env.is_iface);
-                 FStarC_TypeChecker_Env.admit =
-                   (env1.FStarC_TypeChecker_Env.admit);
-                 FStarC_TypeChecker_Env.phase1 =
-                   (env1.FStarC_TypeChecker_Env.phase1);
-                 FStarC_TypeChecker_Env.failhard =
-                   (env1.FStarC_TypeChecker_Env.failhard);
-                 FStarC_TypeChecker_Env.flychecking =
-                   (env1.FStarC_TypeChecker_Env.flychecking);
-                 FStarC_TypeChecker_Env.uvar_subtyping =
-                   (env1.FStarC_TypeChecker_Env.uvar_subtyping);
-                 FStarC_TypeChecker_Env.intactics =
-                   (env1.FStarC_TypeChecker_Env.intactics);
-                 FStarC_TypeChecker_Env.nocoerce =
-                   (env1.FStarC_TypeChecker_Env.nocoerce);
-                 FStarC_TypeChecker_Env.tc_term =
-                   (env1.FStarC_TypeChecker_Env.tc_term);
-                 FStarC_TypeChecker_Env.typeof_tot_or_gtot_term =
-                   (env1.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term);
-                 FStarC_TypeChecker_Env.universe_of =
-                   (env1.FStarC_TypeChecker_Env.universe_of);
-                 FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
-                   (env1.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-                 FStarC_TypeChecker_Env.teq_nosmt_force =
-                   (env1.FStarC_TypeChecker_Env.teq_nosmt_force);
-                 FStarC_TypeChecker_Env.subtype_nosmt_force =
-                   (env1.FStarC_TypeChecker_Env.subtype_nosmt_force);
-                 FStarC_TypeChecker_Env.qtbl_name_and_index =
-                   (env1.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                 FStarC_TypeChecker_Env.normalized_eff_names =
-                   (env1.FStarC_TypeChecker_Env.normalized_eff_names);
-                 FStarC_TypeChecker_Env.fv_delta_depths =
-                   (env1.FStarC_TypeChecker_Env.fv_delta_depths);
-                 FStarC_TypeChecker_Env.proof_ns = uu___3;
-                 FStarC_TypeChecker_Env.synth_hook =
-                   (env1.FStarC_TypeChecker_Env.synth_hook);
-                 FStarC_TypeChecker_Env.try_solve_implicits_hook =
-                   (env1.FStarC_TypeChecker_Env.try_solve_implicits_hook);
-                 FStarC_TypeChecker_Env.splice =
-                   (env1.FStarC_TypeChecker_Env.splice);
-                 FStarC_TypeChecker_Env.mpreprocess =
-                   (env1.FStarC_TypeChecker_Env.mpreprocess);
-                 FStarC_TypeChecker_Env.postprocess =
-                   (env1.FStarC_TypeChecker_Env.postprocess);
-                 FStarC_TypeChecker_Env.identifier_info =
-                   (env1.FStarC_TypeChecker_Env.identifier_info);
-                 FStarC_TypeChecker_Env.tc_hooks =
-                   (env1.FStarC_TypeChecker_Env.tc_hooks);
-                 FStarC_TypeChecker_Env.dsenv =
-                   (env1.FStarC_TypeChecker_Env.dsenv);
-                 FStarC_TypeChecker_Env.nbe =
-                   (env1.FStarC_TypeChecker_Env.nbe);
-                 FStarC_TypeChecker_Env.strict_args_tab =
-                   (env1.FStarC_TypeChecker_Env.strict_args_tab);
-                 FStarC_TypeChecker_Env.erasable_types_tab =
-                   (env1.FStarC_TypeChecker_Env.erasable_types_tab);
-                 FStarC_TypeChecker_Env.enable_defer_to_tac =
-                   (env1.FStarC_TypeChecker_Env.enable_defer_to_tac);
-                 FStarC_TypeChecker_Env.unif_allow_ref_guards =
-                   (env1.FStarC_TypeChecker_Env.unif_allow_ref_guards);
-                 FStarC_TypeChecker_Env.erase_erasable_args =
-                   (env1.FStarC_TypeChecker_Env.erase_erasable_args);
-                 FStarC_TypeChecker_Env.core_check =
-                   (env1.FStarC_TypeChecker_Env.core_check);
-                 FStarC_TypeChecker_Env.missing_decl =
-                   (env1.FStarC_TypeChecker_Env.missing_decl);
-                 FStarC_TypeChecker_Env.iface_todo =
-                   (env1.FStarC_TypeChecker_Env.iface_todo);
-                 FStarC_TypeChecker_Env.iface_hidden =
-                   (env1.FStarC_TypeChecker_Env.iface_hidden);
-                 FStarC_TypeChecker_Env.iface_lids =
-                   (env1.FStarC_TypeChecker_Env.iface_lids);
-                 FStarC_TypeChecker_Env.iface_val_lids =
-                   (env1.FStarC_TypeChecker_Env.iface_val_lids)
-               })
-        | FStarC_Syntax_Syntax.Sig_pragma
-            (FStarC_Syntax_Syntax.RestartSolver) ->
-            if from_cache || env1.FStarC_TypeChecker_Env.flychecking
-            then env1
-            else
-              ((env1.FStarC_TypeChecker_Env.solver).FStarC_TypeChecker_Env.refresh
-                 (FStar_Pervasives_Native.Some
-                    (env1.FStarC_TypeChecker_Env.proof_ns));
-               env1)
-        | FStarC_Syntax_Syntax.Sig_pragma uu___2 -> env1
-        | FStarC_Syntax_Syntax.Sig_new_effect ne ->
-            FStarC_TypeChecker_Env.push_new_effect env1
-              (ne, (se.FStarC_Syntax_Syntax.sigquals))
-        | FStarC_Syntax_Syntax.Sig_sub_effect sub ->
-            FStarC_TypeChecker_Util.update_env_sub_eff env1 sub
-              se.FStarC_Syntax_Syntax.sigrng
-        | uu___2 -> env1))
-let compress_and_norm (env : FStarC_TypeChecker_Env.env)
-  (t : FStarC_Syntax_Syntax.typ) :
-  FStarC_Syntax_Syntax.typ FStar_Pervasives_Native.option=
-  let uu___ = FStarC_Syntax_Compress.deep_compress_if_no_uvars t in
-  match uu___ with
-  | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-  | FStar_Pervasives_Native.Some t1 ->
-      let uu___1 =
-        FStarC_TypeChecker_Normalize.normalize
-          [FStarC_TypeChecker_Env.AllowUnboundUniverses;
-          FStarC_TypeChecker_Env.CheckNoUvars;
-          FStarC_TypeChecker_Env.Beta;
-          FStarC_TypeChecker_Env.DoNotUnfoldPureLets;
-          FStarC_TypeChecker_Env.CompressUvars;
-          FStarC_TypeChecker_Env.Exclude FStarC_TypeChecker_Env.Zeta;
-          FStarC_TypeChecker_Env.Exclude FStarC_TypeChecker_Env.Iota;
-          FStarC_TypeChecker_Env.NoFullNorm] env t1 in
-      FStar_Pervasives_Native.Some uu___1
-let unassume_iface_val (se : FStarC_Syntax_Syntax.sigelt) :
-  FStarC_Syntax_Syntax.sigelt=
-  match se.FStarC_Syntax_Syntax.sigel with
-  | FStarC_Syntax_Syntax.Sig_declare_typ uu___ ->
-      let uu___1 =
-        FStarC_List.filter (fun q -> q <> FStarC_Syntax_Syntax.Assumption)
-          se.FStarC_Syntax_Syntax.sigquals in
-      {
-        FStarC_Syntax_Syntax.sigel = (se.FStarC_Syntax_Syntax.sigel);
-        FStarC_Syntax_Syntax.sigrng = (se.FStarC_Syntax_Syntax.sigrng);
-        FStarC_Syntax_Syntax.sigquals = uu___1;
-        FStarC_Syntax_Syntax.sigmeta = (se.FStarC_Syntax_Syntax.sigmeta);
-        FStarC_Syntax_Syntax.sigattrs = (se.FStarC_Syntax_Syntax.sigattrs);
-        FStarC_Syntax_Syntax.sigopens_and_abbrevs =
-          (se.FStarC_Syntax_Syntax.sigopens_and_abbrevs);
-        FStarC_Syntax_Syntax.sigopts = (se.FStarC_Syntax_Syntax.sigopts)
-      }
-  | uu___ -> se
-let is_iface_val (se : FStarC_Syntax_Syntax.sigelt) : Prims.bool=
-  match se.FStarC_Syntax_Syntax.sigel with
-  | FStarC_Syntax_Syntax.Sig_declare_typ uu___ ->
-      let uu___1 =
-        FStarC_Util.for_some
-          (fun uu___2 ->
-             match uu___2 with
-             | FStarC_Syntax_Syntax.Projector uu___3 -> true
-             | FStarC_Syntax_Syntax.Discriminator uu___3 -> true
-             | uu___3 -> false) se.FStarC_Syntax_Syntax.sigquals in
-      Prims.not uu___1
-  | uu___ -> false
-let check_subsumes_iface_val (env : FStarC_TypeChecker_Env.env)
-  (iface_se : FStarC_Syntax_Syntax.sigelt)
-  (impl : FStarC_Syntax_Syntax.sigelt) : unit=
-  match iface_se.FStarC_Syntax_Syntax.sigel with
-  | FStarC_Syntax_Syntax.Sig_declare_typ
-      { FStarC_Syntax_Syntax.lid2 = l; FStarC_Syntax_Syntax.us2 = iface_us;
-        FStarC_Syntax_Syntax.t2 = iface_t;_}
-      ->
-      let impl_scheme =
-        match impl.FStarC_Syntax_Syntax.sigel with
-        | FStarC_Syntax_Syntax.Sig_let
-            { FStarC_Syntax_Syntax.lbs1 = (uu___, lbs);
-              FStarC_Syntax_Syntax.lids1 = uu___1;_}
-            ->
-            FStarC_Util.find_map lbs
-              (fun lb ->
-                 if
-                   FStarC_Ident.lid_equals
-                     (match lb.FStarC_Syntax_Syntax.lbname with
-                      | FStar_Pervasives.Inr v -> v).FStarC_Syntax_Syntax.fv_name
-                     l
-                 then
-                   FStar_Pervasives_Native.Some
-                     ((lb.FStarC_Syntax_Syntax.lbunivs),
-                       (lb.FStarC_Syntax_Syntax.lbtyp))
-                 else FStar_Pervasives_Native.None)
-        | FStarC_Syntax_Syntax.Sig_inductive_typ
-            { FStarC_Syntax_Syntax.lid = uu___; FStarC_Syntax_Syntax.us = us;
-              FStarC_Syntax_Syntax.params = uu___1;
-              FStarC_Syntax_Syntax.num_uniform_params = uu___2;
-              FStarC_Syntax_Syntax.t = t;
-              FStarC_Syntax_Syntax.mutuals = uu___3;
-              FStarC_Syntax_Syntax.ds = uu___4;
-              FStarC_Syntax_Syntax.injective_type_params = uu___5;_}
-            -> FStar_Pervasives_Native.Some (us, t)
-        | FStarC_Syntax_Syntax.Sig_datacon
-            { FStarC_Syntax_Syntax.lid1 = uu___;
-              FStarC_Syntax_Syntax.us1 = us; FStarC_Syntax_Syntax.t1 = t;
-              FStarC_Syntax_Syntax.ty_lid = uu___1;
-              FStarC_Syntax_Syntax.num_ty_params = uu___2;
-              FStarC_Syntax_Syntax.mutuals1 = uu___3;
-              FStarC_Syntax_Syntax.injective_type_params1 = uu___4;
-              FStarC_Syntax_Syntax.proj_disc_lids = uu___5;_}
-            -> FStar_Pervasives_Native.Some (us, t)
-        | FStarC_Syntax_Syntax.Sig_declare_typ
-            { FStarC_Syntax_Syntax.lid2 = uu___;
-              FStarC_Syntax_Syntax.us2 = us; FStarC_Syntax_Syntax.t2 = t;_}
-            -> FStar_Pervasives_Native.Some (us, t)
-        | uu___ -> FStar_Pervasives_Native.None in
-      (match impl_scheme with
-       | FStar_Pervasives_Native.None -> ()
-       | FStar_Pervasives_Native.Some (impl_us, impl_t) ->
-           (if (FStarC_List.length impl_us) <> (FStarC_List.length iface_us)
-            then
-              (let uu___1 =
-                 let uu___2 =
-                   let uu___3 =
-                     let uu___4 =
-                       FStarC_Class_PP.pp FStarC_Ident.pretty_lident l in
-                     FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
-                       (FStarC_Errors_Msg.text "The implementation of")
-                       uu___4 in
-                   FStar_Pprint.op_Hat_Slash_Hat uu___3
-                     (FStarC_Errors_Msg.text
-                        "has a different number of universe parameters than its interface.") in
-                 let uu___3 =
-                   let uu___4 =
-                     let uu___5 =
-                       let uu___6 =
-                         FStarC_Class_Show.show
-                           FStarC_Class_Show.showable_nat
-                           (FStarC_List.length iface_us) in
-                       let uu___7 =
-                         FStarC_Class_Show.show
-                           FStarC_Class_Show.showable_nat
-                           (FStarC_List.length impl_us) in
-                       FStarC_Format.fmt2
-                         "The interface declares %s, the implementation has %s."
-                         uu___6 uu___7 in
-                     FStarC_Errors_Msg.text uu___5 in
-                   [uu___4] in
-                 uu___2 :: uu___3 in
-               FStarC_Errors.raise_error
-                 FStarC_Syntax_Syntax.has_range_sigelt impl
-                 FStarC_Errors_Codes.Fatal_IncoherentInlineUniverse ()
-                 (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-                 (Obj.magic uu___1))
-            else ();
-            (let uu___1 = FStarC_Syntax_Subst.open_univ_vars iface_us iface_t in
-             match uu___1 with
-             | (us, iface_t1) ->
-                 let uu___2 =
-                   let uu___3 =
-                     FStarC_List.map
-                       (fun uu___4 -> FStarC_Syntax_Syntax.U_name uu___4) us in
-                   FStarC_TypeChecker_Env.inst_tscheme_with (impl_us, impl_t)
-                     uu___3 in
-                 (match uu___2 with
-                  | (uu___3, impl_t1) ->
-                      let env1 = FStarC_TypeChecker_Env.push_univ_vars env us in
-                      let env2 =
-                        FStarC_TypeChecker_Env.set_range env1
-                          (FStarC_Syntax_Util.range_of_sigelt impl) in
-                      let uu___4 =
-                        FStarC_TypeChecker_Rel.get_subtyping_predicate env2
-                          impl_t1 iface_t1 in
-                      (match uu___4 with
-                       | FStar_Pervasives_Native.None ->
-                           let uu___5 =
-                             let uu___6 =
-                               let uu___7 =
-                                 let uu___8 =
-                                   FStarC_Class_PP.pp
-                                     FStarC_Ident.pretty_lident l in
-                                 FStar_Pprint.prefix (Prims.of_int 2)
-                                   Prims.int_one
-                                   (FStarC_Errors_Msg.text
-                                      "The implementation of") uu___8 in
-                               FStar_Pprint.op_Hat_Slash_Hat uu___7
-                                 (FStarC_Errors_Msg.text
-                                    "does not match its declaration in the interface.") in
-                             let uu___7 =
-                               let uu___8 =
-                                 let uu___9 =
-                                   FStarC_Class_PP.pp
-                                     FStarC_Syntax_Print.pretty_term iface_t1 in
-                                 FStar_Pprint.prefix (Prims.of_int 2)
-                                   Prims.int_one
-                                   (FStarC_Errors_Msg.text "Interface type:")
-                                   uu___9 in
-                               let uu___9 =
-                                 let uu___10 =
-                                   let uu___11 =
-                                     FStarC_Class_PP.pp
-                                       FStarC_Syntax_Print.pretty_term
-                                       impl_t1 in
-                                   FStar_Pprint.prefix (Prims.of_int 2)
-                                     Prims.int_one
-                                     (FStarC_Errors_Msg.text
-                                        "Implementation type:") uu___11 in
-                                 [uu___10] in
-                               uu___8 :: uu___9 in
-                             uu___6 :: uu___7 in
-                           FStarC_Errors.raise_error
-                             FStarC_Syntax_Syntax.has_range_sigelt impl
-                             FStarC_Errors_Codes.Fatal_InterfaceNotImplementedByModule
-                             ()
-                             (Obj.magic
-                                FStarC_Errors_Msg.is_error_message_list_doc)
-                             (Obj.magic uu___5)
-                       | FStar_Pervasives_Native.Some g ->
-                           let uu___5 =
-                             let uu___6 =
-                               FStarC_Syntax_Syntax.fvar l
-                                 FStar_Pervasives_Native.None in
-                             FStarC_TypeChecker_Env.apply_guard g uu___6 in
-                           FStarC_TypeChecker_Rel.force_trivial_guard env2
-                             uu___5)))))
-  | uu___ -> ()
-let split_iface_todo (se : FStarC_Syntax_Syntax.sigelt)
-  (defs : FStarC_Ident.lident Prims.list)
-  (todo : FStarC_Syntax_Syntax.sigelt Prims.list) :
-  (FStarC_Syntax_Syntax.sigelt Prims.list * FStarC_Syntax_Syntax.sigelt
-    Prims.list * FStarC_Syntax_Syntax.sigelt Prims.list)=
-  let defines se' =
-    FStarC_Util.for_some
-      (fun l -> FStarC_Util.for_some (FStarC_Ident.lid_equals l) defs)
-      (FStarC_Syntax_Util.lids_of_sigelt se') in
-  let rec take_mutuals acc todo1 =
-    match todo1 with
-    | hd::tl when
-        let uu___ = is_iface_val hd in if uu___ then defines hd else false ->
-        take_mutuals (hd :: acc) tl
-    | uu___ -> ((FStarC_List.rev acc), todo1) in
-  let rec go copied todo1 =
-    match todo1 with
+(* Generated by F* Custard extraction. Do not edit. *)
+[@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
+
+let compress_and_norm (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
+  (let tmp = (FStarC_Syntax_Compress.deep_compress_if_no_uvars t) in
+  (match tmp with
+    | None -> None
+    | (Some (t1)) -> (let tmp1 = (FStarC_TypeChecker_Normalize.normalize (FStarC_TypeChecker_Env.AllowUnboundUniverses :: (FStarC_TypeChecker_Env.CheckNoUvars :: (FStarC_TypeChecker_Env.Beta :: (FStarC_TypeChecker_Env.DoNotUnfoldPureLets :: (FStarC_TypeChecker_Env.CompressUvars :: ((FStarC_TypeChecker_Env.Exclude (FStarC_TypeChecker_Env.Zeta)) :: ((FStarC_TypeChecker_Env.Exclude (FStarC_TypeChecker_Env.Iota)) :: (FStarC_TypeChecker_Env.NoFullNorm :: [])))))))) env t1) in
+      (Some (tmp1)))
+  ))
+
+let rollback_context (solver : FStarC_TypeChecker_Env.solver_t) (msg : string) (depth : ((Prims.int * Prims.int * (Prims.int * Prims.int * Prims.int) * Prims.int)) option) : FStarC_TypeChecker_Env.env =
+  (FStarC_Util.atomically (fun tmp -> (FStarC_TypeChecker_Env.rollback solver msg depth)))
+
+let snapshot_context (env : FStarC_TypeChecker_Env.env) (msg : string) : ((Prims.int * Prims.int * (Prims.int * Prims.int * Prims.int) * Prims.int) * FStarC_TypeChecker_Env.env) =
+  (FStarC_Util.atomically (fun tmp -> (FStarC_TypeChecker_Env.snapshot env msg)))
+
+let read_postprocess_with_attr (for_extraction : bool) (env : FStarC_TypeChecker_Env.env) (ats : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * bool) =
+  (let get1 = (fun ats1 lid -> (let tmp = (FStarC_Syntax_Util.extract_attr' lid ats1) in
+    (match tmp with
+      | None -> (ats1, None)
+      | (Some ((ats2, ((tau, None) :: [])))) -> (ats2, (Some (tau)))
+      | (Some ((ats2, args))) -> (let tmp1 = (FStarC_Ident.fStarC_Class_Show_show__lident lid) in
+        let tmp2 = (FStarC_Format.fmt1 "Ill-formed application of ‘%s’" tmp1) in
+        let tmp3 = (FStarC_Errors_Msg.text tmp2) in
+        let tmp4 = (tmp3 :: []) in
+        (FStarC_TypeChecker_Env.fStarC_Errors_log_issue__env_list_document env FStarC_Errors_Codes.Warning_UnrecognizedAttribute tmp4);
+        (ats2, None))
+    ))) in
+  let lid = (if for_extraction then FStarC_Parser_Const.postprocess_extr_with else FStarC_Parser_Const.postprocess_with) in
+  let tmp = (get1 ats lid) in
+  (match tmp with
+    | (ats1, pt) -> (let tmp1 = (FStarC_Syntax_Util.extract_attr' FStarC_Parser_Const.postprocess_type ats1) in
+      let on_type = (match tmp1 with
+          | (Some (v)) -> true
+          | tmp2 -> false
+        ) in
+      (ats1, pt, on_type))
+  ))
+
+let run_postprocess (for_extraction : bool) (env : FStarC_TypeChecker_Env.env) (se : FStarC_Syntax_Syntax.sigelt) : FStarC_Syntax_Syntax.sigelt =
+  (let tmp = (read_postprocess_with_attr for_extraction env (se).FStarC_Syntax_Syntax.sigattrs) in
+  (match tmp with
+    | (attrs, pt, on_type) -> (let se1 = { FStarC_Syntax_Syntax.sigel = (se).FStarC_Syntax_Syntax.sigel;
+          sigrng = (se).FStarC_Syntax_Syntax.sigrng;
+          sigquals = (se).FStarC_Syntax_Syntax.sigquals;
+          sigmeta = (se).FStarC_Syntax_Syntax.sigmeta;
+          sigattrs = attrs;
+          sigopens_and_abbrevs = (se).FStarC_Syntax_Syntax.sigopens_and_abbrevs;
+          sigopts = (se).FStarC_Syntax_Syntax.sigopts } in
+      let postprocess_lb = (fun tau on_type1 lb -> (let tmp1 = (FStarC_Syntax_Subst.univ_var_opening (lb).FStarC_Syntax_Syntax.lbunivs) in
+        (match tmp1 with
+          | (s, univnames) -> (let lbdef = (FStarC_Syntax_Subst.subst s (lb).FStarC_Syntax_Syntax.lbdef) in
+            let lbtyp = (FStarC_Syntax_Subst.subst s (lb).FStarC_Syntax_Syntax.lbtyp) in
+            let env1 = (FStarC_TypeChecker_Env.push_univ_vars env univnames) in
+            let lbdef1 = (FStarC_TypeChecker_Env.postprocess env1 tau lbtyp lbdef) in
+            let lbdef2 = (FStarC_Syntax_Subst.close_univ_vars univnames lbdef1) in
+            let lbtyp1 = (if on_type1 then ((ignore ((env1).FStarC_TypeChecker_Env.universe_of env1 lbtyp));
+              let lbtyp1 = (FStarC_TypeChecker_Env.postprocess env1 tau lbtyp lbtyp) in
+              (FStarC_Syntax_Subst.close_univ_vars univnames lbtyp1)) else lbtyp) in
+            { FStarC_Syntax_Syntax.lbname = (lb).FStarC_Syntax_Syntax.lbname;
+              lbunivs = (lb).FStarC_Syntax_Syntax.lbunivs;
+              lbtyp = lbtyp1;
+              lbeff = (lb).FStarC_Syntax_Syntax.lbeff;
+              lbdef = lbdef2;
+              lbattrs = (lb).FStarC_Syntax_Syntax.lbattrs;
+              lbpos = (lb).FStarC_Syntax_Syntax.lbpos })
+        ))) in
+      (match (pt, (se1).FStarC_Syntax_Syntax.sigel) with
+        | ((Some (tac)), (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = lbs; lids = lids; _ }))) -> (let tmp1 = (FStarC_List.map (postprocess_lb tac on_type) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd lbs)) in
+          let lbs1 = ((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst lbs), tmp1) in
+          { FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_let (({ FStarC_Syntax_Syntax.lbs = lbs1; lids = lids } : FStarC_Syntax_Syntax.sigelt'__Sig_let__payload)));
+            sigrng = (se1).FStarC_Syntax_Syntax.sigrng;
+            sigquals = (se1).FStarC_Syntax_Syntax.sigquals;
+            sigmeta = (se1).FStarC_Syntax_Syntax.sigmeta;
+            sigattrs = (se1).FStarC_Syntax_Syntax.sigattrs;
+            sigopens_and_abbrevs = (se1).FStarC_Syntax_Syntax.sigopens_and_abbrevs;
+            sigopts = (se1).FStarC_Syntax_Syntax.sigopts })
+        | tmp1 -> se1
+      ))
+  ))
+
+let is_iface_val (se : FStarC_Syntax_Syntax.sigelt) : bool =
+  (match (se).FStarC_Syntax_Syntax.sigel with
+    | (FStarC_Syntax_Syntax.Sig_declare_typ (tmp)) -> (let tmp1 = (FStarC_Util.for_some (fun tmp1 -> (match tmp1 with
+          | (FStarC_Syntax_Syntax.Projector (u__1, u__2)) -> true
+          | (FStarC_Syntax_Syntax.Discriminator (tmp2)) -> true
+          | tmp2 -> false
+        )) (se).FStarC_Syntax_Syntax.sigquals) in
+      (not tmp1))
+    | tmp -> false
+  )
+
+let unassume_iface_val (se : FStarC_Syntax_Syntax.sigelt) : FStarC_Syntax_Syntax.sigelt =
+  (match (se).FStarC_Syntax_Syntax.sigel with
+    | (FStarC_Syntax_Syntax.Sig_declare_typ (tmp)) -> (let tmp1 = (FStarC_List.filter (fun q -> ((<>) q FStarC_Syntax_Syntax.Assumption)) (se).FStarC_Syntax_Syntax.sigquals) in
+      { FStarC_Syntax_Syntax.sigel = (se).FStarC_Syntax_Syntax.sigel;
+        sigrng = (se).FStarC_Syntax_Syntax.sigrng;
+        sigquals = tmp1;
+        sigmeta = (se).FStarC_Syntax_Syntax.sigmeta;
+        sigattrs = (se).FStarC_Syntax_Syntax.sigattrs;
+        sigopens_and_abbrevs = (se).FStarC_Syntax_Syntax.sigopens_and_abbrevs;
+        sigopts = (se).FStarC_Syntax_Syntax.sigopts })
+    | tmp -> se
+  )
+
+let dbg_IdInfoOn : (bool ref) =
+  (FStarC_Debug.get_toggle "IdInfoOn")
+
+let rec split_iface_todo__take_mutuals (defines : (FStarC_Syntax_Syntax.sigelt -> bool)) (acc : (FStarC_Syntax_Syntax.sigelt) list) (todo : (FStarC_Syntax_Syntax.sigelt) list) : ((FStarC_Syntax_Syntax.sigelt) list * (FStarC_Syntax_Syntax.sigelt) list) =
+  (match todo with
+    | (hd :: tl) when (let tmp = (is_iface_val hd) in
+    (if tmp then (defines hd) else false)) -> ((split_iface_todo__take_mutuals defines) (hd :: acc) tl)
+    | tmp -> ((FStarC_List.rev acc), todo)
+  )
+
+let rec split_iface_todo__go (se : FStarC_Syntax_Syntax.sigelt) (defines : (FStarC_Syntax_Syntax.sigelt -> bool)) (copied : (FStarC_Syntax_Syntax.sigelt) list) (todo : (FStarC_Syntax_Syntax.sigelt) list) : ((FStarC_Syntax_Syntax.sigelt) list * (FStarC_Syntax_Syntax.sigelt) list * (FStarC_Syntax_Syntax.sigelt) list) =
+  (match todo with
     | [] -> ((FStarC_List.rev copied), [], [])
-    | hd::tl ->
-        let uu___ = let uu___1 = is_iface_val hd in Prims.not uu___1 in
-        if uu___
-        then go (hd :: copied) tl
-        else
-          (let uu___1 = defines hd in
-           if uu___1
-           then
-             let uu___2 = take_mutuals [] tl in
-             match uu___2 with
-             | (mutuals, rest) ->
-                 ((FStarC_List.rev copied), (hd :: mutuals), rest)
-           else
-             ((let uu___3 =
-                 FStarC_List.tryFind
-                   (fun i ->
-                      let uu___4 = is_iface_val i in
-                      if uu___4 then defines i else false) tl in
-               match uu___3 with
-               | FStar_Pervasives_Native.Some out_of_order ->
-                   let l =
-                     FStarC_List.hd
-                       (FStarC_Syntax_Util.lids_of_sigelt out_of_order) in
-                   let uu___4 =
-                     let uu___5 =
-                       let uu___6 =
-                         let uu___7 =
-                           FStarC_Class_PP.pp FStarC_Ident.pretty_lident
-                             (FStarC_List.hd
-                                (FStarC_Syntax_Util.lids_of_sigelt hd)) in
-                         let uu___8 =
-                           let uu___9 =
-                             FStarC_Class_PP.pp FStarC_Ident.pretty_lident l in
-                           FStar_Pprint.op_Hat_Slash_Hat
-                             (FStarC_Errors_Msg.text "to precede") uu___9 in
-                         FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
-                       FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
-                         (FStarC_Errors_Msg.text "Expected the definition of")
-                         uu___6 in
-                     [uu___5] in
-                   FStarC_Errors.raise_error
-                     FStarC_Syntax_Syntax.has_range_sigelt se
-                     FStarC_Errors_Codes.Fatal_WrongDefinitionOrder ()
-                     (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-                     (Obj.magic uu___4)
-               | FStar_Pervasives_Native.None -> ());
-              ((FStarC_List.rev copied), [], todo1))) in
-  go [] todo
-let tick_off_iface_todo (env : FStarC_TypeChecker_Env.env)
-  (se : FStarC_Syntax_Syntax.sigelt) :
-  (FStarC_Syntax_Syntax.sigelt Prims.list * FStarC_Syntax_Syntax.sigelt
-    Prims.list * FStarC_TypeChecker_Env.env)=
-  match FStarC_TypeChecker_Env.iface_todo env with
-  | [] -> ([], [], env)
-  | todo ->
-      let defs =
-        match se.FStarC_Syntax_Syntax.sigel with
-        | FStarC_Syntax_Syntax.Sig_fail uu___ -> []
-        | uu___ -> FStarC_Syntax_Util.lids_of_sigelt se in
-      let uu___ = split_iface_todo se defs todo in
-      (match uu___ with
-       | (copied, matched, remaining) ->
-           let env1 =
-             FStarC_TypeChecker_Env.consume_iface_todo env
-               (FStarC_List.op_At copied matched) remaining in
-           let matched_vals = FStarC_List.map unassume_iface_val matched in
-           ((FStarC_List.op_At copied matched_vals), matched_vals, env1))
-let finish_iface_todo (env : FStarC_TypeChecker_Env.env) :
-  (FStarC_Syntax_Syntax.sigelt Prims.list * FStarC_TypeChecker_Env.env)=
-  let todo = FStarC_TypeChecker_Env.iface_todo env in
-  let missing = FStarC_List.filter is_iface_val todo in
-  if (match missing with | hd::tl -> true | uu___1 -> false)
-  then
-    (let names =
-       FStarC_List.collect FStarC_Syntax_Util.lids_of_sigelt missing in
-     let uu___1 =
-       let uu___2 =
-         let uu___3 =
-           let uu___4 =
-             let uu___5 =
-               FStarC_Class_Show.show FStarC_Ident.showable_lident
-                 (FStarC_TypeChecker_Env.current_module env) in
-             FStarC_Format.fmt1
-               "Module %s fails to implement some declarations of its interface:"
-               uu___5 in
-           FStarC_Errors_Msg.text uu___4 in
-         let uu___4 =
-           let uu___5 =
-             FStarC_List.map (FStarC_Class_PP.pp FStarC_Ident.pretty_lident)
-               names in
-           FStar_Pprint.separate FStar_Pprint.hardline uu___5 in
-         FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one uu___3 uu___4 in
-       [uu___2] in
-     FStarC_Errors.log_issue FStarC_Class_HasRange.hasRange_range
-       (FStarC_Syntax_Util.range_of_sigelt (FStarC_List.hd missing))
-       FStarC_Errors_Codes.Fatal_InterfaceNotImplementedByModule ()
-       (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-       (Obj.magic uu___1))
-  else ();
-  (let copied =
-     FStarC_List.filter
-       (fun se -> let uu___1 = is_iface_val se in Prims.not uu___1) todo in
-   let uu___1 = FStarC_TypeChecker_Env.set_iface_todo env [] in
-   (copied, uu___1))
-let mark_karamel_private (env : FStarC_TypeChecker_Env.env)
-  (se : FStarC_Syntax_Syntax.sigelt) : FStarC_Syntax_Syntax.sigelt=
-  let lids = FStarC_Syntax_Util.lids_of_sigelt se in
-  let uu___ =
-    let uu___1 =
-      let uu___2 =
-        let uu___3 = FStarC_Options_Ext.enabled "no_krml_private" in
-        if uu___3
-        then true
-        else Prims.not (FStarC_TypeChecker_Env.has_iface env) in
-      if uu___2
-      then true
-      else (match lids with | [] -> true | uu___3 -> false) in
-    if uu___1
-    then true
-    else
-      FStarC_Util.for_some (FStarC_TypeChecker_Env.declared_in_iface env)
-        lids in
-  if uu___
-  then se
-  else
-    (let rng = FStarC_Syntax_Util.range_of_sigelt se in
-     let attr =
-       FStarC_Syntax_Syntax.mk
-         (FStarC_Syntax_Syntax.Tm_constant
-            (FStarC_Const.Const_string ("KrmlPrivate", rng))) rng in
-     {
-       FStarC_Syntax_Syntax.sigel = (se.FStarC_Syntax_Syntax.sigel);
-       FStarC_Syntax_Syntax.sigrng = (se.FStarC_Syntax_Syntax.sigrng);
-       FStarC_Syntax_Syntax.sigquals = (se.FStarC_Syntax_Syntax.sigquals);
-       FStarC_Syntax_Syntax.sigmeta = (se.FStarC_Syntax_Syntax.sigmeta);
-       FStarC_Syntax_Syntax.sigattrs = (attr ::
-         (se.FStarC_Syntax_Syntax.sigattrs));
-       FStarC_Syntax_Syntax.sigopens_and_abbrevs =
-         (se.FStarC_Syntax_Syntax.sigopens_and_abbrevs);
-       FStarC_Syntax_Syntax.sigopts = (se.FStarC_Syntax_Syntax.sigopts)
-     })
-let tc_decls (env : FStarC_TypeChecker_Env.env)
-  (ses : FStarC_Syntax_Syntax.sigelt Prims.list) :
-  (FStarC_Syntax_Syntax.sigelt Prims.list * FStarC_TypeChecker_Env.env)=
-  let rec process_one_decl ses_env se =
-    let uu___ = ses_env in
-    match uu___ with
-    | (ses1, env1) ->
-        (FStarC_Effect.op_Colon_Equals FStarC_Errors.fallback_range
-           (FStar_Pervasives_Native.Some (se.FStarC_Syntax_Syntax.sigrng));
-         (let uu___2 =
-            if env1.FStarC_TypeChecker_Env.flychecking
-            then FStarC_Debug.any ()
-            else false in
-          if uu___2
-          then ((ses1, env1), [])
-          else
-            ((let uu___4 = FStarC_Debug.low () in
-              if uu___4
-              then
-                let uu___5 =
-                  FStarC_Class_Tagged.tag_of
-                    FStarC_Syntax_Syntax.tagged_sigelt se in
-                let uu___6 = FStarC_Syntax_Print.sigelt_to_string_short se in
-                FStarC_Format.print2
-                  ">>>>>>>>>>>>>>Checking top-level %s decl %s\n" uu___5
-                  uu___6
-              else ());
-             (let uu___5 = FStarC_Options.ide_id_info_off () in
-              if uu___5
-              then FStarC_TypeChecker_Env.toggle_id_info env1 false
-              else ());
-             (let uu___6 = FStarC_Effect.op_Bang dbg_IdInfoOn in
-              if uu___6
-              then FStarC_TypeChecker_Env.toggle_id_info env1 true
-              else ());
-             (let uu___7 = FStarC_Options_Ext.enabled "freshen" in
-              if uu___7
-              then
-                (env1.FStarC_TypeChecker_Env.solver).FStarC_TypeChecker_Env.refresh
-                  (FStar_Pervasives_Native.Some
-                     (env1.FStarC_TypeChecker_Env.proof_ns))
-              else ());
-             (let uu___7 =
-                if
-                  (se.FStarC_Syntax_Syntax.sigmeta).FStarC_Syntax_Syntax.sigmeta_spliced
-                then ([], [], env1)
-                else tick_off_iface_todo env1 se in
-              match uu___7 with
-              | (iface_prefix, iface_matched, env2) ->
-                  (FStarC_List.iter
-                     (fun se1 ->
-                        (env2.FStarC_TypeChecker_Env.solver).FStarC_TypeChecker_Env.encode_sig
-                          env2 se1) iface_prefix;
-                   (let uu___9 =
-                      let uu___10 =
-                        let uu___11 =
-                          FStarC_Syntax_Print.sigelt_to_string_short se in
-                        FStarC_Format.fmt2
-                          "While typechecking the %stop-level declaration \226\128\152%s\226\128\153"
-                          (if
-                             (se.FStarC_Syntax_Syntax.sigmeta).FStarC_Syntax_Syntax.sigmeta_spliced
-                           then "(spliced) "
-                           else "") uu___11 in
-                      FStarC_Errors.with_ctx uu___10
-                        (fun uu___11 -> tc_decl env2 se) in
-                    match uu___9 with
-                    | (ses', ses_elaborated, env3) ->
-                        let ses'1 =
-                          FStarC_List.map
-                            (fun se1 ->
-                               (let uu___11 = FStarC_Effect.op_Bang dbg_UF in
-                                if uu___11
-                                then
-                                  let uu___12 =
-                                    FStarC_Class_Show.show
-                                      FStarC_Syntax_Print.showable_sigelt se1 in
-                                  FStarC_Format.print1
-                                    "About to elim vars from %s\n" uu___12
-                                else ());
-                               FStarC_TypeChecker_Normalize.elim_uvars env3
-                                 se1) ses' in
-                        let ses_elaborated1 =
-                          FStarC_List.map
-                            (fun se1 ->
-                               (let uu___11 = FStarC_Effect.op_Bang dbg_UF in
-                                if uu___11
-                                then
-                                  let uu___12 =
-                                    FStarC_Class_Show.show
-                                      FStarC_Syntax_Print.showable_sigelt se1 in
-                                  FStarC_Format.print1
-                                    "About to elim vars from (elaborated) %s\n"
-                                    uu___12
-                                else ());
-                               FStarC_TypeChecker_Normalize.elim_uvars env3
-                                 se1) ses_elaborated in
-                        (FStarC_TypeChecker_Env.promote_id_info env3
-                           (compress_and_norm env3);
-                         (let ses'2 =
-                            FStarC_List.map
-                              (FStarC_Syntax_Compress.deep_compress_se false
-                                 false) ses'1 in
-                          let ses'3 =
-                            FStarC_List.map (mark_karamel_private env3) ses'2 in
-                          let env4 =
-                            FStarC_List.fold_left
-                              (fun env5 se1 ->
-                                 add_sigelt_to_env env5 se1 false) env3 ses'3 in
-                          FStarC_Syntax_Unionfind.reset ();
-                          (let uu___13 =
-                             let uu___14 =
-                               let uu___15 = FStarC_Options.log_types () in
-                               if uu___15
-                               then true
-                               else FStarC_Debug.medium () in
-                             if uu___14
-                             then true
-                             else FStarC_Effect.op_Bang dbg_LogTypes in
-                           if uu___13
-                           then
-                             let uu___14 =
-                               FStarC_Class_Show.show
-                                 (FStarC_Class_Show.show_list
-                                    FStarC_Syntax_Print.showable_sigelt)
-                                 ses'3 in
-                             FStarC_Format.print1 "Checked: %s\n" uu___14
-                           else ());
-                          FStarC_Profiling.profile
-                            (fun uu___14 ->
-                               FStarC_List.iter
-                                 (fun se1 ->
-                                    (env4.FStarC_TypeChecker_Env.solver).FStarC_TypeChecker_Env.encode_sig
-                                      env4 se1) ses'3)
-                            (FStar_Pervasives_Native.Some
-                               (FStarC_Ident.string_of_lid
-                                  (FStarC_TypeChecker_Env.current_module env4)))
-                            "FStarC.TypeChecker.Tc.encode_sig";
-                          FStarC_List.iter
-                            (fun iface_se ->
-                               let lids =
-                                 FStarC_Syntax_Util.lids_of_sigelt iface_se in
-                               FStarC_List.iter
-                                 (fun impl ->
-                                    let uu___15 =
-                                      FStarC_Util.for_some
-                                        (fun l ->
-                                           FStarC_Util.for_some
-                                             (FStarC_Ident.lid_equals l) lids)
-                                        (FStarC_Syntax_Util.lids_of_sigelt
-                                           impl) in
-                                    if uu___15
-                                    then
-                                      check_subsumes_iface_val env4 iface_se
-                                        impl
-                                    else ()) ses'3) iface_matched;
-                          (((FStarC_List.rev_append ses'3
-                               (FStarC_List.rev_append iface_prefix ses1)),
-                             env4), ses_elaborated1))))))))) in
-  let process_one_decl_timed acc se =
-    FStarC_TypeChecker_Core.clear_memo_table ();
-    (let uu___1 = acc in
-     match uu___1 with
-     | (uu___2, env1) ->
-         let r =
-           FStarC_Profiling.profile (fun uu___3 -> process_one_decl acc se)
-             (FStar_Pervasives_Native.Some
-                (FStarC_Ident.string_of_lid
-                   (FStarC_TypeChecker_Env.current_module env1)))
-             "FStarC.TypeChecker.Tc.process_one_decl" in
-         ((let uu___4 =
-             let uu___5 = FStarC_Options.profile_group_by_decl () in
-             if uu___5 then true else FStarC_Options.timing () in
-           if uu___4
-           then
-             let tag =
-               match FStarC_Syntax_Util.lids_of_sigelt se with
-               | hd::uu___5 -> FStarC_Ident.string_of_lid hd
-               | uu___5 ->
-                   FStarC_Range_Ops.string_of_range
-                     (FStarC_Syntax_Util.range_of_sigelt se) in
-             FStarC_Profiling.report_and_clear tag
-           else ());
-          r)) in
-  let uu___ =
-    FStarC_Syntax_Unionfind.with_uf_enabled
-      (fun uu___1 ->
-         FStarC_Util.fold_flatten process_one_decl_timed ([], env) ses) in
-  match uu___ with | (ses1, env1) -> ((FStarC_List.rev_append ses1 []), env1)
-let uu___0 : unit=
-  FStarC_Effect.op_Colon_Equals tc_decls_knot
-    (FStar_Pervasives_Native.Some tc_decls)
-let tc_partial_modul (env : FStarC_TypeChecker_Env.env)
-  (modul : FStarC_Syntax_Syntax.modul) :
-  (FStarC_Syntax_Syntax.modul * FStarC_TypeChecker_Env.env)=
-  let verify =
-    FStarC_Options.should_verify
-      (FStarC_Ident.string_of_lid modul.FStarC_Syntax_Syntax.name) in
-  let action = if verify then "verifying" else "lax-checking" in
-  let label =
-    if modul.FStarC_Syntax_Syntax.is_interface
-    then "interface"
-    else "implementation" in
-  (let uu___1 = FStarC_Debug.any () in
-   if uu___1
-   then
-     FStarC_Format.print3 "Now %s %s of %s\n" action label
-       (FStarC_Ident.string_of_lid modul.FStarC_Syntax_Syntax.name)
-   else ());
-  (let dsnap = FStarC_Debug.snapshot () in
-   (let uu___2 =
-      let uu___3 =
-        let uu___4 =
-          FStarC_Options.should_check
-            (FStarC_Ident.string_of_lid modul.FStarC_Syntax_Syntax.name) in
-        Prims.not uu___4 in
-      if uu___3
-      then
-        let uu___4 = FStarC_Options.debug_all_modules () in Prims.not uu___4
-      else false in
-    if uu___2 then FStarC_Debug.disable_all () else ());
-   (let name =
-      FStarC_Format.fmt2 "%s %s"
-        (if modul.FStarC_Syntax_Syntax.is_interface
-         then "interface"
-         else "module")
-        (FStarC_Ident.string_of_lid modul.FStarC_Syntax_Syntax.name) in
-    let env1 =
-      {
-        FStarC_TypeChecker_Env.solver = (env.FStarC_TypeChecker_Env.solver);
-        FStarC_TypeChecker_Env.range = (env.FStarC_TypeChecker_Env.range);
-        FStarC_TypeChecker_Env.curmodule =
-          (env.FStarC_TypeChecker_Env.curmodule);
-        FStarC_TypeChecker_Env.gamma = (env.FStarC_TypeChecker_Env.gamma);
-        FStarC_TypeChecker_Env.gamma_sig =
-          (env.FStarC_TypeChecker_Env.gamma_sig);
-        FStarC_TypeChecker_Env.gamma_cache =
-          (env.FStarC_TypeChecker_Env.gamma_cache);
-        FStarC_TypeChecker_Env.modules = (env.FStarC_TypeChecker_Env.modules);
-        FStarC_TypeChecker_Env.expected_typ =
-          (env.FStarC_TypeChecker_Env.expected_typ);
-        FStarC_TypeChecker_Env.expected_post =
-          (env.FStarC_TypeChecker_Env.expected_post);
-        FStarC_TypeChecker_Env.sigtab = (env.FStarC_TypeChecker_Env.sigtab);
-        FStarC_TypeChecker_Env.attrtab = (env.FStarC_TypeChecker_Env.attrtab);
-        FStarC_TypeChecker_Env.instantiate_imp =
-          (env.FStarC_TypeChecker_Env.instantiate_imp);
-        FStarC_TypeChecker_Env.effects = (env.FStarC_TypeChecker_Env.effects);
-        FStarC_TypeChecker_Env.generalize =
-          (env.FStarC_TypeChecker_Env.generalize);
-        FStarC_TypeChecker_Env.letrecs = (env.FStarC_TypeChecker_Env.letrecs);
-        FStarC_TypeChecker_Env.top_level =
-          (env.FStarC_TypeChecker_Env.top_level);
-        FStarC_TypeChecker_Env.check_uvars =
-          (env.FStarC_TypeChecker_Env.check_uvars);
-        FStarC_TypeChecker_Env.use_eq_strict =
-          (env.FStarC_TypeChecker_Env.use_eq_strict);
-        FStarC_TypeChecker_Env.is_iface =
-          (modul.FStarC_Syntax_Syntax.is_interface);
-        FStarC_TypeChecker_Env.admit = (Prims.not verify);
-        FStarC_TypeChecker_Env.phase1 = (env.FStarC_TypeChecker_Env.phase1);
-        FStarC_TypeChecker_Env.failhard =
-          (env.FStarC_TypeChecker_Env.failhard);
-        FStarC_TypeChecker_Env.flychecking =
-          (env.FStarC_TypeChecker_Env.flychecking);
-        FStarC_TypeChecker_Env.uvar_subtyping =
-          (env.FStarC_TypeChecker_Env.uvar_subtyping);
-        FStarC_TypeChecker_Env.intactics =
-          (env.FStarC_TypeChecker_Env.intactics);
-        FStarC_TypeChecker_Env.nocoerce =
-          (env.FStarC_TypeChecker_Env.nocoerce);
-        FStarC_TypeChecker_Env.tc_term = (env.FStarC_TypeChecker_Env.tc_term);
-        FStarC_TypeChecker_Env.typeof_tot_or_gtot_term =
-          (env.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term);
-        FStarC_TypeChecker_Env.universe_of =
-          (env.FStarC_TypeChecker_Env.universe_of);
-        FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
-          (env.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-        FStarC_TypeChecker_Env.teq_nosmt_force =
-          (env.FStarC_TypeChecker_Env.teq_nosmt_force);
-        FStarC_TypeChecker_Env.subtype_nosmt_force =
-          (env.FStarC_TypeChecker_Env.subtype_nosmt_force);
-        FStarC_TypeChecker_Env.qtbl_name_and_index =
-          (env.FStarC_TypeChecker_Env.qtbl_name_and_index);
-        FStarC_TypeChecker_Env.normalized_eff_names =
-          (env.FStarC_TypeChecker_Env.normalized_eff_names);
-        FStarC_TypeChecker_Env.fv_delta_depths =
-          (env.FStarC_TypeChecker_Env.fv_delta_depths);
-        FStarC_TypeChecker_Env.proof_ns =
-          (env.FStarC_TypeChecker_Env.proof_ns);
-        FStarC_TypeChecker_Env.synth_hook =
-          (env.FStarC_TypeChecker_Env.synth_hook);
-        FStarC_TypeChecker_Env.try_solve_implicits_hook =
-          (env.FStarC_TypeChecker_Env.try_solve_implicits_hook);
-        FStarC_TypeChecker_Env.splice = (env.FStarC_TypeChecker_Env.splice);
-        FStarC_TypeChecker_Env.mpreprocess =
-          (env.FStarC_TypeChecker_Env.mpreprocess);
-        FStarC_TypeChecker_Env.postprocess =
-          (env.FStarC_TypeChecker_Env.postprocess);
-        FStarC_TypeChecker_Env.identifier_info =
-          (env.FStarC_TypeChecker_Env.identifier_info);
-        FStarC_TypeChecker_Env.tc_hooks =
-          (env.FStarC_TypeChecker_Env.tc_hooks);
-        FStarC_TypeChecker_Env.dsenv = (env.FStarC_TypeChecker_Env.dsenv);
-        FStarC_TypeChecker_Env.nbe = (env.FStarC_TypeChecker_Env.nbe);
-        FStarC_TypeChecker_Env.strict_args_tab =
-          (env.FStarC_TypeChecker_Env.strict_args_tab);
-        FStarC_TypeChecker_Env.erasable_types_tab =
-          (env.FStarC_TypeChecker_Env.erasable_types_tab);
-        FStarC_TypeChecker_Env.enable_defer_to_tac =
-          (env.FStarC_TypeChecker_Env.enable_defer_to_tac);
-        FStarC_TypeChecker_Env.unif_allow_ref_guards =
-          (env.FStarC_TypeChecker_Env.unif_allow_ref_guards);
-        FStarC_TypeChecker_Env.erase_erasable_args =
-          (env.FStarC_TypeChecker_Env.erase_erasable_args);
-        FStarC_TypeChecker_Env.core_check =
-          (env.FStarC_TypeChecker_Env.core_check);
-        FStarC_TypeChecker_Env.missing_decl =
-          (env.FStarC_TypeChecker_Env.missing_decl);
-        FStarC_TypeChecker_Env.iface_todo =
-          (env.FStarC_TypeChecker_Env.iface_todo);
-        FStarC_TypeChecker_Env.iface_hidden =
-          (env.FStarC_TypeChecker_Env.iface_hidden);
-        FStarC_TypeChecker_Env.iface_lids =
-          (env.FStarC_TypeChecker_Env.iface_lids);
-        FStarC_TypeChecker_Env.iface_val_lids =
-          (env.FStarC_TypeChecker_Env.iface_val_lids)
-      } in
-    let env2 =
-      FStarC_TypeChecker_Env.set_current_module env1
-        modul.FStarC_Syntax_Syntax.name in
-    let env3 =
-      if modul.FStarC_Syntax_Syntax.is_interface
-      then env2
-      else
-        (let uu___2 =
-           FStarC_List.tryFind
-             (fun m ->
-                m.FStarC_Syntax_Syntax.is_interface &&
-                  (FStarC_Ident.lid_equals m.FStarC_Syntax_Syntax.name
-                     modul.FStarC_Syntax_Syntax.name))
-             env2.FStarC_TypeChecker_Env.modules in
-         match uu___2 with
-         | FStar_Pervasives_Native.None -> env2
-         | FStar_Pervasives_Native.Some iface ->
-             let env4 =
-               FStarC_TypeChecker_Env.set_iface_todo env2
-                 iface.FStarC_Syntax_Syntax.declarations in
-             let env5 =
-               let uu___3 =
-                 FStarC_List.collect FStarC_Syntax_Util.lids_of_sigelt
-                   iface.FStarC_Syntax_Syntax.declarations in
-               let uu___4 =
-                 let uu___5 =
-                   FStarC_List.filter is_iface_val
-                     iface.FStarC_Syntax_Syntax.declarations in
-                 FStarC_List.collect FStarC_Syntax_Util.lids_of_sigelt uu___5 in
-               FStarC_TypeChecker_Env.set_iface_lids env4 uu___3 uu___4 in
-             let missing_decl0 = env5.FStarC_TypeChecker_Env.missing_decl in
-             let env6 =
-               FStarC_List.fold_left
-                 (fun env7 se ->
-                    let uu___3 = is_iface_val se in
-                    if uu___3
-                    then
-                      let uu___4 = unassume_iface_val se in
-                      FStarC_TypeChecker_Env.push_sigelt_force env7 uu___4
-                    else env7) env5 iface.FStarC_Syntax_Syntax.declarations in
-             {
-               FStarC_TypeChecker_Env.solver =
-                 (env6.FStarC_TypeChecker_Env.solver);
-               FStarC_TypeChecker_Env.range =
-                 (env6.FStarC_TypeChecker_Env.range);
-               FStarC_TypeChecker_Env.curmodule =
-                 (env6.FStarC_TypeChecker_Env.curmodule);
-               FStarC_TypeChecker_Env.gamma =
-                 (env6.FStarC_TypeChecker_Env.gamma);
-               FStarC_TypeChecker_Env.gamma_sig =
-                 (env6.FStarC_TypeChecker_Env.gamma_sig);
-               FStarC_TypeChecker_Env.gamma_cache =
-                 (env6.FStarC_TypeChecker_Env.gamma_cache);
-               FStarC_TypeChecker_Env.modules =
-                 (env6.FStarC_TypeChecker_Env.modules);
-               FStarC_TypeChecker_Env.expected_typ =
-                 (env6.FStarC_TypeChecker_Env.expected_typ);
-               FStarC_TypeChecker_Env.expected_post =
-                 (env6.FStarC_TypeChecker_Env.expected_post);
-               FStarC_TypeChecker_Env.sigtab =
-                 (env6.FStarC_TypeChecker_Env.sigtab);
-               FStarC_TypeChecker_Env.attrtab =
-                 (env6.FStarC_TypeChecker_Env.attrtab);
-               FStarC_TypeChecker_Env.instantiate_imp =
-                 (env6.FStarC_TypeChecker_Env.instantiate_imp);
-               FStarC_TypeChecker_Env.effects =
-                 (env6.FStarC_TypeChecker_Env.effects);
-               FStarC_TypeChecker_Env.generalize =
-                 (env6.FStarC_TypeChecker_Env.generalize);
-               FStarC_TypeChecker_Env.letrecs =
-                 (env6.FStarC_TypeChecker_Env.letrecs);
-               FStarC_TypeChecker_Env.top_level =
-                 (env6.FStarC_TypeChecker_Env.top_level);
-               FStarC_TypeChecker_Env.check_uvars =
-                 (env6.FStarC_TypeChecker_Env.check_uvars);
-               FStarC_TypeChecker_Env.use_eq_strict =
-                 (env6.FStarC_TypeChecker_Env.use_eq_strict);
-               FStarC_TypeChecker_Env.is_iface =
-                 (env6.FStarC_TypeChecker_Env.is_iface);
-               FStarC_TypeChecker_Env.admit =
-                 (env6.FStarC_TypeChecker_Env.admit);
-               FStarC_TypeChecker_Env.phase1 =
-                 (env6.FStarC_TypeChecker_Env.phase1);
-               FStarC_TypeChecker_Env.failhard =
-                 (env6.FStarC_TypeChecker_Env.failhard);
-               FStarC_TypeChecker_Env.flychecking =
-                 (env6.FStarC_TypeChecker_Env.flychecking);
-               FStarC_TypeChecker_Env.uvar_subtyping =
-                 (env6.FStarC_TypeChecker_Env.uvar_subtyping);
-               FStarC_TypeChecker_Env.intactics =
-                 (env6.FStarC_TypeChecker_Env.intactics);
-               FStarC_TypeChecker_Env.nocoerce =
-                 (env6.FStarC_TypeChecker_Env.nocoerce);
-               FStarC_TypeChecker_Env.tc_term =
-                 (env6.FStarC_TypeChecker_Env.tc_term);
-               FStarC_TypeChecker_Env.typeof_tot_or_gtot_term =
-                 (env6.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term);
-               FStarC_TypeChecker_Env.universe_of =
-                 (env6.FStarC_TypeChecker_Env.universe_of);
-               FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
-                 (env6.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-               FStarC_TypeChecker_Env.teq_nosmt_force =
-                 (env6.FStarC_TypeChecker_Env.teq_nosmt_force);
-               FStarC_TypeChecker_Env.subtype_nosmt_force =
-                 (env6.FStarC_TypeChecker_Env.subtype_nosmt_force);
-               FStarC_TypeChecker_Env.qtbl_name_and_index =
-                 (env6.FStarC_TypeChecker_Env.qtbl_name_and_index);
-               FStarC_TypeChecker_Env.normalized_eff_names =
-                 (env6.FStarC_TypeChecker_Env.normalized_eff_names);
-               FStarC_TypeChecker_Env.fv_delta_depths =
-                 (env6.FStarC_TypeChecker_Env.fv_delta_depths);
-               FStarC_TypeChecker_Env.proof_ns =
-                 (env6.FStarC_TypeChecker_Env.proof_ns);
-               FStarC_TypeChecker_Env.synth_hook =
-                 (env6.FStarC_TypeChecker_Env.synth_hook);
-               FStarC_TypeChecker_Env.try_solve_implicits_hook =
-                 (env6.FStarC_TypeChecker_Env.try_solve_implicits_hook);
-               FStarC_TypeChecker_Env.splice =
-                 (env6.FStarC_TypeChecker_Env.splice);
-               FStarC_TypeChecker_Env.mpreprocess =
-                 (env6.FStarC_TypeChecker_Env.mpreprocess);
-               FStarC_TypeChecker_Env.postprocess =
-                 (env6.FStarC_TypeChecker_Env.postprocess);
-               FStarC_TypeChecker_Env.identifier_info =
-                 (env6.FStarC_TypeChecker_Env.identifier_info);
-               FStarC_TypeChecker_Env.tc_hooks =
-                 (env6.FStarC_TypeChecker_Env.tc_hooks);
-               FStarC_TypeChecker_Env.dsenv =
-                 (env6.FStarC_TypeChecker_Env.dsenv);
-               FStarC_TypeChecker_Env.nbe = (env6.FStarC_TypeChecker_Env.nbe);
-               FStarC_TypeChecker_Env.strict_args_tab =
-                 (env6.FStarC_TypeChecker_Env.strict_args_tab);
-               FStarC_TypeChecker_Env.erasable_types_tab =
-                 (env6.FStarC_TypeChecker_Env.erasable_types_tab);
-               FStarC_TypeChecker_Env.enable_defer_to_tac =
-                 (env6.FStarC_TypeChecker_Env.enable_defer_to_tac);
-               FStarC_TypeChecker_Env.unif_allow_ref_guards =
-                 (env6.FStarC_TypeChecker_Env.unif_allow_ref_guards);
-               FStarC_TypeChecker_Env.erase_erasable_args =
-                 (env6.FStarC_TypeChecker_Env.erase_erasable_args);
-               FStarC_TypeChecker_Env.core_check =
-                 (env6.FStarC_TypeChecker_Env.core_check);
-               FStarC_TypeChecker_Env.missing_decl = missing_decl0;
-               FStarC_TypeChecker_Env.iface_todo =
-                 (env6.FStarC_TypeChecker_Env.iface_todo);
-               FStarC_TypeChecker_Env.iface_hidden =
-                 (env6.FStarC_TypeChecker_Env.iface_hidden);
-               FStarC_TypeChecker_Env.iface_lids =
-                 (env6.FStarC_TypeChecker_Env.iface_lids);
-               FStarC_TypeChecker_Env.iface_val_lids =
-                 (env6.FStarC_TypeChecker_Env.iface_val_lids)
-             }) in
-    let uu___2 =
-      let uu___3 =
-        FStarC_Options.should_check
-          (FStarC_Ident.string_of_lid modul.FStarC_Syntax_Syntax.name) in
-      Prims.not uu___3 in
-    FStarC_Errors.with_ctx_if uu___2
-      (FStarC_Format.fmt2 "While loading dependency %s%s"
-         (FStarC_Ident.string_of_lid modul.FStarC_Syntax_Syntax.name)
-         (if modul.FStarC_Syntax_Syntax.is_interface
-          then " (interface)"
-          else ""))
-      (fun uu___3 ->
-         let uu___4 = tc_decls env3 modul.FStarC_Syntax_Syntax.declarations in
-         match uu___4 with
-         | (ses, env4) ->
-             (FStarC_Debug.restore dsnap;
-              ({
-                 FStarC_Syntax_Syntax.name =
-                   (modul.FStarC_Syntax_Syntax.name);
-                 FStarC_Syntax_Syntax.declarations = ses;
-                 FStarC_Syntax_Syntax.is_interface =
-                   (modul.FStarC_Syntax_Syntax.is_interface)
-               }, env4)))))
-let tc_more_partial_modul (env : FStarC_TypeChecker_Env.env)
-  (modul : FStarC_Syntax_Syntax.modul)
-  (decls : FStarC_Syntax_Syntax.sigelt Prims.list) :
-  (FStarC_Syntax_Syntax.modul * FStarC_Syntax_Syntax.sigelt Prims.list *
-    FStarC_TypeChecker_Env.env)=
-  let uu___ = tc_decls env decls in
-  match uu___ with
-  | (ses, env1) ->
-      let modul1 =
-        {
-          FStarC_Syntax_Syntax.name = (modul.FStarC_Syntax_Syntax.name);
-          FStarC_Syntax_Syntax.declarations =
-            (FStarC_List.op_At modul.FStarC_Syntax_Syntax.declarations ses);
-          FStarC_Syntax_Syntax.is_interface =
-            (modul.FStarC_Syntax_Syntax.is_interface)
-        } in
-      (modul1, ses, env1)
-let finish_partial_modul (should_pop : Prims.bool)
-  (loading_from_cache : Prims.bool) (en : FStarC_TypeChecker_Env.env)
-  (m : FStarC_Syntax_Syntax.modul) :
-  (FStarC_Syntax_Syntax.modul * FStarC_TypeChecker_Env.env)=
-  (let uu___1 = FStarC_Debug.low () in
-   if uu___1
-   then
-     let uu___2 =
-       FStarC_Class_Show.show FStarC_Ident.showable_lident
-         m.FStarC_Syntax_Syntax.name in
-     let uu___3 =
-       FStarC_Class_Show.show FStarC_Class_Show.showable_bool
-         loading_from_cache in
-     FStarC_Format.print3 "Finishing %s %s -- loading_from_cache=%s\n"
-       (if m.FStarC_Syntax_Syntax.is_interface then "interface" else "module")
-       uu___2 uu___3
-   else ());
-  (let uu___1 =
-     if loading_from_cache
-     then (m, en)
-     else
-       (let uu___2 = finish_iface_todo en in
-        match uu___2 with
-        | (trailing, en1) ->
-            ({
-               FStarC_Syntax_Syntax.name = (m.FStarC_Syntax_Syntax.name);
-               FStarC_Syntax_Syntax.declarations =
-                 (FStarC_List.op_At m.FStarC_Syntax_Syntax.declarations
-                    trailing);
-               FStarC_Syntax_Syntax.is_interface =
-                 (m.FStarC_Syntax_Syntax.is_interface)
-             }, en1)) in
-   match uu___1 with
-   | (m1, en1) ->
-       let env = FStarC_TypeChecker_Env.finish_module en1 m1 in
-       (if Prims.not loading_from_cache
-        then
-          (let missing = FStarC_TypeChecker_Env.missing_definition_list env in
-           let mname_ids =
-             FStarC_Ident.ids_of_lid m1.FStarC_Syntax_Syntax.name in
-           if match missing with | hd::tl -> true | uu___3 -> false
-           then
-             let uu___3 =
-               let uu___4 =
-                 let uu___5 =
-                   FStarC_Pprint.separate_map FStar_Pprint.hardline
-                     (fun l ->
-                        FStarC_Class_PP.pp FStarC_Ident.pretty_ident
-                          (FStarC_Ident.ident_of_lid l)) missing in
-                 FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
-                   (FStarC_Errors_Msg.text
-                      (FStarC_Format.fmt1 "Missing definitions in module %s:"
-                         (FStarC_Ident.string_of_lid
-                            m1.FStarC_Syntax_Syntax.name))) uu___5 in
-               [uu___4] in
-             FStarC_Errors.log_issue FStarC_TypeChecker_Env.hasRange_env env
-               FStarC_Errors_Codes.Error_AdmitWithoutDefinition ()
-               (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-               (Obj.magic uu___3)
-           else ())
-        else ();
-        FStarC_SMap.clear
-          (FStar_Pervasives_Native.snd
-             env.FStarC_TypeChecker_Env.qtbl_name_and_index);
-        if should_pop
-        then
-          (let uu___5 =
-             pop_context env
-               (Prims.strcat "Ending modul "
-                  (FStarC_Ident.string_of_lid m1.FStarC_Syntax_Syntax.name)) in
-           ())
-        else ();
-        (let uu___6 =
-           let uu___7 = FStarC_Options.depth () in uu___7 > Prims.int_zero in
-         if uu___6
-         then
-           let uu___7 =
-             let uu___8 =
-               let uu___9 =
-                 let uu___10 = FStarC_Options.depth () in
-                 FStarC_Class_Show.show FStarC_Class_Show.showable_int
-                   uu___10 in
-               Prims.strcat uu___9 "." in
-             Prims.strcat
-               "Some #push-options have not been popped. Current depth is "
-               uu___8 in
-           FStarC_Errors.log_issue FStarC_TypeChecker_Env.hasRange_env env
-             FStarC_Errors_Codes.Error_MissingPopOptions ()
-             (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-             (Obj.magic uu___7)
-         else ());
-        (m1, env)))
-let deep_compress_modul (m : FStarC_Syntax_Syntax.modul) :
-  FStarC_Syntax_Syntax.modul=
-  let uu___ =
-    FStarC_List.map (FStarC_Syntax_Compress.deep_compress_se false false)
-      m.FStarC_Syntax_Syntax.declarations in
-  {
-    FStarC_Syntax_Syntax.name = (m.FStarC_Syntax_Syntax.name);
-    FStarC_Syntax_Syntax.declarations = uu___;
-    FStarC_Syntax_Syntax.is_interface = (m.FStarC_Syntax_Syntax.is_interface)
-  }
-let tc_modul (env0 : FStarC_TypeChecker_Env.env)
-  (m : FStarC_Syntax_Syntax.modul) :
-  (FStarC_Syntax_Syntax.modul * FStarC_TypeChecker_Env.env)=
-  let msg =
-    Prims.strcat "Internals for "
-      (FStarC_Ident.string_of_lid m.FStarC_Syntax_Syntax.name) in
-  let env01 = push_context env0 msg in
-  let uu___ = tc_partial_modul env01 m in
-  match uu___ with
-  | (modul, env) -> finish_partial_modul true false env modul
-let sigelt_key (se : FStarC_Syntax_Syntax.sigelt) :
-  (Prims.string Prims.list * Prims.string)=
-  let uu___ =
-    FStarC_List.map FStarC_Ident.string_of_lid
-      (FStarC_Syntax_Util.lids_of_sigelt se) in
-  let uu___1 =
-    FStarC_Range_Ops.string_of_range (FStarC_Syntax_Util.range_of_sigelt se) in
-  (uu___, uu___1)
-let already_loaded_iface_decls (en : FStarC_TypeChecker_Env.env)
-  (m : FStarC_Syntax_Syntax.modul) :
-  (Prims.string Prims.list * Prims.string) Prims.list=
-  if m.FStarC_Syntax_Syntax.is_interface
-  then []
-  else
-    (let uu___ =
-       FStarC_Option.find
-         (fun mm ->
-            (FStarC_Ident.lid_equals mm.FStarC_Syntax_Syntax.name
-               m.FStarC_Syntax_Syntax.name)
-              && mm.FStarC_Syntax_Syntax.is_interface)
-         en.FStarC_TypeChecker_Env.modules in
-     match uu___ with
-     | FStar_Pervasives_Native.Some i ->
-         FStarC_List.map sigelt_key i.FStarC_Syntax_Syntax.declarations
-     | FStar_Pervasives_Native.None -> [])
-let load_checked_module_sigelts (push : Prims.bool)
-  (en : FStarC_TypeChecker_Env.env) (m : FStarC_Syntax_Syntax.modul) :
-  FStarC_TypeChecker_Env.env=
-  let loaded = already_loaded_iface_decls en m in
-  let env =
-    FStarC_TypeChecker_Env.set_current_module en m.FStarC_Syntax_Syntax.name in
-  let env1 =
-    if push
-    then
-      push_context env
-        (Prims.strcat "Internals for "
-           (FStarC_Ident.string_of_lid m.FStarC_Syntax_Syntax.name))
-    else env in
-  let env2 =
-    FStarC_List.fold_left
-      (fun env3 se ->
-         let uu___ =
-           if match loaded with | hd::tl -> true | uu___1 -> false
-           then let uu___1 = sigelt_key se in FStarC_List.mem uu___1 loaded
-           else false in
-         if uu___
-         then env3
-         else
-           (let env4 = add_sigelt_to_env env3 se true in
-            let lids = FStarC_Syntax_Util.lids_of_sigelt se in
-            FStarC_List.iter
-              (fun lid ->
-                 let uu___2 = FStarC_TypeChecker_Env.lookup_sigelt env4 lid in
-                 ()) lids;
-            env4)) env1 m.FStarC_Syntax_Syntax.declarations in
-  env2
-let load_checked_module (en : FStarC_TypeChecker_Env.env)
-  (m : FStarC_Syntax_Syntax.modul) : FStarC_TypeChecker_Env.env=
-  let dsnap = FStarC_Debug.snapshot () in
-  (let uu___1 =
-     let uu___2 =
-       let uu___3 =
-         FStarC_Options.should_check
-           (FStarC_Ident.string_of_lid m.FStarC_Syntax_Syntax.name) in
-       Prims.not uu___3 in
-     if uu___2
-     then
-       let uu___3 = FStarC_Options.debug_all_modules () in Prims.not uu___3
-     else false in
-   if uu___1 then FStarC_Debug.disable_all () else ());
-  (let env = load_checked_module_sigelts false en m in
-   let uu___1 = finish_partial_modul false true env m in
-   match uu___1 with | (uu___2, env1) -> (FStarC_Debug.restore dsnap; env1))
-let load_partial_checked_module (en : FStarC_TypeChecker_Env.env)
-  (m : FStarC_Syntax_Syntax.modul) : FStarC_TypeChecker_Env.env=
-  load_checked_module_sigelts true en m
-let check_module (env0 : FStarC_TypeChecker_Env.env)
-  (m : FStarC_Syntax_Syntax.modul) :
-  (FStarC_Syntax_Syntax.modul * FStarC_TypeChecker_Env.env)=
-  (let uu___1 = FStarC_Debug.any () in
-   if uu___1
-   then
-     let uu___2 =
-       FStarC_Class_Show.show FStarC_Ident.showable_lident
-         m.FStarC_Syntax_Syntax.name in
-     FStarC_Format.print2 "Checking %s: %s\n"
-       (if m.FStarC_Syntax_Syntax.is_interface then "i'face" else "module")
-       uu___2
-   else ());
-  (let uu___2 =
-     FStarC_Options.dump_module
-       (FStarC_Ident.string_of_lid m.FStarC_Syntax_Syntax.name) in
-   if uu___2
-   then
-     let uu___3 = FStarC_Class_Show.show FStarC_Syntax_Print.showable_modul m in
-     FStarC_Format.print1 "Module before type checking:\n%s\n" uu___3
-   else ());
-  (let env =
-     let uu___2 =
-       let uu___3 =
-         FStarC_Options.should_verify
-           (FStarC_Ident.string_of_lid m.FStarC_Syntax_Syntax.name) in
-       Prims.not uu___3 in
-     {
-       FStarC_TypeChecker_Env.solver = (env0.FStarC_TypeChecker_Env.solver);
-       FStarC_TypeChecker_Env.range = (env0.FStarC_TypeChecker_Env.range);
-       FStarC_TypeChecker_Env.curmodule =
-         (env0.FStarC_TypeChecker_Env.curmodule);
-       FStarC_TypeChecker_Env.gamma = (env0.FStarC_TypeChecker_Env.gamma);
-       FStarC_TypeChecker_Env.gamma_sig =
-         (env0.FStarC_TypeChecker_Env.gamma_sig);
-       FStarC_TypeChecker_Env.gamma_cache =
-         (env0.FStarC_TypeChecker_Env.gamma_cache);
-       FStarC_TypeChecker_Env.modules = (env0.FStarC_TypeChecker_Env.modules);
-       FStarC_TypeChecker_Env.expected_typ =
-         (env0.FStarC_TypeChecker_Env.expected_typ);
-       FStarC_TypeChecker_Env.expected_post =
-         (env0.FStarC_TypeChecker_Env.expected_post);
-       FStarC_TypeChecker_Env.sigtab = (env0.FStarC_TypeChecker_Env.sigtab);
-       FStarC_TypeChecker_Env.attrtab = (env0.FStarC_TypeChecker_Env.attrtab);
-       FStarC_TypeChecker_Env.instantiate_imp =
-         (env0.FStarC_TypeChecker_Env.instantiate_imp);
-       FStarC_TypeChecker_Env.effects = (env0.FStarC_TypeChecker_Env.effects);
-       FStarC_TypeChecker_Env.generalize =
-         (env0.FStarC_TypeChecker_Env.generalize);
-       FStarC_TypeChecker_Env.letrecs = (env0.FStarC_TypeChecker_Env.letrecs);
-       FStarC_TypeChecker_Env.top_level =
-         (env0.FStarC_TypeChecker_Env.top_level);
-       FStarC_TypeChecker_Env.check_uvars =
-         (env0.FStarC_TypeChecker_Env.check_uvars);
-       FStarC_TypeChecker_Env.use_eq_strict =
-         (env0.FStarC_TypeChecker_Env.use_eq_strict);
-       FStarC_TypeChecker_Env.is_iface =
-         (env0.FStarC_TypeChecker_Env.is_iface);
-       FStarC_TypeChecker_Env.admit = uu___2;
-       FStarC_TypeChecker_Env.phase1 = (env0.FStarC_TypeChecker_Env.phase1);
-       FStarC_TypeChecker_Env.failhard =
-         (env0.FStarC_TypeChecker_Env.failhard);
-       FStarC_TypeChecker_Env.flychecking =
-         (env0.FStarC_TypeChecker_Env.flychecking);
-       FStarC_TypeChecker_Env.uvar_subtyping =
-         (env0.FStarC_TypeChecker_Env.uvar_subtyping);
-       FStarC_TypeChecker_Env.intactics =
-         (env0.FStarC_TypeChecker_Env.intactics);
-       FStarC_TypeChecker_Env.nocoerce =
-         (env0.FStarC_TypeChecker_Env.nocoerce);
-       FStarC_TypeChecker_Env.tc_term = (env0.FStarC_TypeChecker_Env.tc_term);
-       FStarC_TypeChecker_Env.typeof_tot_or_gtot_term =
-         (env0.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term);
-       FStarC_TypeChecker_Env.universe_of =
-         (env0.FStarC_TypeChecker_Env.universe_of);
-       FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
-         (env0.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-       FStarC_TypeChecker_Env.teq_nosmt_force =
-         (env0.FStarC_TypeChecker_Env.teq_nosmt_force);
-       FStarC_TypeChecker_Env.subtype_nosmt_force =
-         (env0.FStarC_TypeChecker_Env.subtype_nosmt_force);
-       FStarC_TypeChecker_Env.qtbl_name_and_index =
-         (env0.FStarC_TypeChecker_Env.qtbl_name_and_index);
-       FStarC_TypeChecker_Env.normalized_eff_names =
-         (env0.FStarC_TypeChecker_Env.normalized_eff_names);
-       FStarC_TypeChecker_Env.fv_delta_depths =
-         (env0.FStarC_TypeChecker_Env.fv_delta_depths);
-       FStarC_TypeChecker_Env.proof_ns =
-         (env0.FStarC_TypeChecker_Env.proof_ns);
-       FStarC_TypeChecker_Env.synth_hook =
-         (env0.FStarC_TypeChecker_Env.synth_hook);
-       FStarC_TypeChecker_Env.try_solve_implicits_hook =
-         (env0.FStarC_TypeChecker_Env.try_solve_implicits_hook);
-       FStarC_TypeChecker_Env.splice = (env0.FStarC_TypeChecker_Env.splice);
-       FStarC_TypeChecker_Env.mpreprocess =
-         (env0.FStarC_TypeChecker_Env.mpreprocess);
-       FStarC_TypeChecker_Env.postprocess =
-         (env0.FStarC_TypeChecker_Env.postprocess);
-       FStarC_TypeChecker_Env.identifier_info =
-         (env0.FStarC_TypeChecker_Env.identifier_info);
-       FStarC_TypeChecker_Env.tc_hooks =
-         (env0.FStarC_TypeChecker_Env.tc_hooks);
-       FStarC_TypeChecker_Env.dsenv = (env0.FStarC_TypeChecker_Env.dsenv);
-       FStarC_TypeChecker_Env.nbe = (env0.FStarC_TypeChecker_Env.nbe);
-       FStarC_TypeChecker_Env.strict_args_tab =
-         (env0.FStarC_TypeChecker_Env.strict_args_tab);
-       FStarC_TypeChecker_Env.erasable_types_tab =
-         (env0.FStarC_TypeChecker_Env.erasable_types_tab);
-       FStarC_TypeChecker_Env.enable_defer_to_tac =
-         (env0.FStarC_TypeChecker_Env.enable_defer_to_tac);
-       FStarC_TypeChecker_Env.unif_allow_ref_guards =
-         (env0.FStarC_TypeChecker_Env.unif_allow_ref_guards);
-       FStarC_TypeChecker_Env.erase_erasable_args =
-         (env0.FStarC_TypeChecker_Env.erase_erasable_args);
-       FStarC_TypeChecker_Env.core_check =
-         (env0.FStarC_TypeChecker_Env.core_check);
-       FStarC_TypeChecker_Env.missing_decl =
-         (env0.FStarC_TypeChecker_Env.missing_decl);
-       FStarC_TypeChecker_Env.iface_todo =
-         (env0.FStarC_TypeChecker_Env.iface_todo);
-       FStarC_TypeChecker_Env.iface_hidden =
-         (env0.FStarC_TypeChecker_Env.iface_hidden);
-       FStarC_TypeChecker_Env.iface_lids =
-         (env0.FStarC_TypeChecker_Env.iface_lids);
-       FStarC_TypeChecker_Env.iface_val_lids =
-         (env0.FStarC_TypeChecker_Env.iface_val_lids)
-     } in
-   let uu___2 = tc_modul env m in
-   match uu___2 with
-   | (m1, env1) ->
-       let env2 =
-         {
-           FStarC_TypeChecker_Env.solver =
-             (env1.FStarC_TypeChecker_Env.solver);
-           FStarC_TypeChecker_Env.range = (env1.FStarC_TypeChecker_Env.range);
-           FStarC_TypeChecker_Env.curmodule =
-             (env1.FStarC_TypeChecker_Env.curmodule);
-           FStarC_TypeChecker_Env.gamma = (env1.FStarC_TypeChecker_Env.gamma);
-           FStarC_TypeChecker_Env.gamma_sig =
-             (env1.FStarC_TypeChecker_Env.gamma_sig);
-           FStarC_TypeChecker_Env.gamma_cache =
-             (env1.FStarC_TypeChecker_Env.gamma_cache);
-           FStarC_TypeChecker_Env.modules =
-             (env1.FStarC_TypeChecker_Env.modules);
-           FStarC_TypeChecker_Env.expected_typ =
-             (env1.FStarC_TypeChecker_Env.expected_typ);
-           FStarC_TypeChecker_Env.expected_post =
-             (env1.FStarC_TypeChecker_Env.expected_post);
-           FStarC_TypeChecker_Env.sigtab =
-             (env1.FStarC_TypeChecker_Env.sigtab);
-           FStarC_TypeChecker_Env.attrtab =
-             (env1.FStarC_TypeChecker_Env.attrtab);
-           FStarC_TypeChecker_Env.instantiate_imp =
-             (env1.FStarC_TypeChecker_Env.instantiate_imp);
-           FStarC_TypeChecker_Env.effects =
-             (env1.FStarC_TypeChecker_Env.effects);
-           FStarC_TypeChecker_Env.generalize =
-             (env1.FStarC_TypeChecker_Env.generalize);
-           FStarC_TypeChecker_Env.letrecs =
-             (env1.FStarC_TypeChecker_Env.letrecs);
-           FStarC_TypeChecker_Env.top_level =
-             (env1.FStarC_TypeChecker_Env.top_level);
-           FStarC_TypeChecker_Env.check_uvars =
-             (env1.FStarC_TypeChecker_Env.check_uvars);
-           FStarC_TypeChecker_Env.use_eq_strict =
-             (env1.FStarC_TypeChecker_Env.use_eq_strict);
-           FStarC_TypeChecker_Env.is_iface =
-             (env1.FStarC_TypeChecker_Env.is_iface);
-           FStarC_TypeChecker_Env.admit = (env0.FStarC_TypeChecker_Env.admit);
-           FStarC_TypeChecker_Env.phase1 =
-             (env1.FStarC_TypeChecker_Env.phase1);
-           FStarC_TypeChecker_Env.failhard =
-             (env1.FStarC_TypeChecker_Env.failhard);
-           FStarC_TypeChecker_Env.flychecking =
-             (env1.FStarC_TypeChecker_Env.flychecking);
-           FStarC_TypeChecker_Env.uvar_subtyping =
-             (env1.FStarC_TypeChecker_Env.uvar_subtyping);
-           FStarC_TypeChecker_Env.intactics =
-             (env1.FStarC_TypeChecker_Env.intactics);
-           FStarC_TypeChecker_Env.nocoerce =
-             (env1.FStarC_TypeChecker_Env.nocoerce);
-           FStarC_TypeChecker_Env.tc_term =
-             (env1.FStarC_TypeChecker_Env.tc_term);
-           FStarC_TypeChecker_Env.typeof_tot_or_gtot_term =
-             (env1.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term);
-           FStarC_TypeChecker_Env.universe_of =
-             (env1.FStarC_TypeChecker_Env.universe_of);
-           FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term =
-             (env1.FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term);
-           FStarC_TypeChecker_Env.teq_nosmt_force =
-             (env1.FStarC_TypeChecker_Env.teq_nosmt_force);
-           FStarC_TypeChecker_Env.subtype_nosmt_force =
-             (env1.FStarC_TypeChecker_Env.subtype_nosmt_force);
-           FStarC_TypeChecker_Env.qtbl_name_and_index =
-             (env1.FStarC_TypeChecker_Env.qtbl_name_and_index);
-           FStarC_TypeChecker_Env.normalized_eff_names =
-             (env1.FStarC_TypeChecker_Env.normalized_eff_names);
-           FStarC_TypeChecker_Env.fv_delta_depths =
-             (env1.FStarC_TypeChecker_Env.fv_delta_depths);
-           FStarC_TypeChecker_Env.proof_ns =
-             (env1.FStarC_TypeChecker_Env.proof_ns);
-           FStarC_TypeChecker_Env.synth_hook =
-             (env1.FStarC_TypeChecker_Env.synth_hook);
-           FStarC_TypeChecker_Env.try_solve_implicits_hook =
-             (env1.FStarC_TypeChecker_Env.try_solve_implicits_hook);
-           FStarC_TypeChecker_Env.splice =
-             (env1.FStarC_TypeChecker_Env.splice);
-           FStarC_TypeChecker_Env.mpreprocess =
-             (env1.FStarC_TypeChecker_Env.mpreprocess);
-           FStarC_TypeChecker_Env.postprocess =
-             (env1.FStarC_TypeChecker_Env.postprocess);
-           FStarC_TypeChecker_Env.identifier_info =
-             (env1.FStarC_TypeChecker_Env.identifier_info);
-           FStarC_TypeChecker_Env.tc_hooks =
-             (env1.FStarC_TypeChecker_Env.tc_hooks);
-           FStarC_TypeChecker_Env.dsenv = (env1.FStarC_TypeChecker_Env.dsenv);
-           FStarC_TypeChecker_Env.nbe = (env1.FStarC_TypeChecker_Env.nbe);
-           FStarC_TypeChecker_Env.strict_args_tab =
-             (env1.FStarC_TypeChecker_Env.strict_args_tab);
-           FStarC_TypeChecker_Env.erasable_types_tab =
-             (env1.FStarC_TypeChecker_Env.erasable_types_tab);
-           FStarC_TypeChecker_Env.enable_defer_to_tac =
-             (env1.FStarC_TypeChecker_Env.enable_defer_to_tac);
-           FStarC_TypeChecker_Env.unif_allow_ref_guards =
-             (env1.FStarC_TypeChecker_Env.unif_allow_ref_guards);
-           FStarC_TypeChecker_Env.erase_erasable_args =
-             (env1.FStarC_TypeChecker_Env.erase_erasable_args);
-           FStarC_TypeChecker_Env.core_check =
-             (env1.FStarC_TypeChecker_Env.core_check);
-           FStarC_TypeChecker_Env.missing_decl =
-             (env1.FStarC_TypeChecker_Env.missing_decl);
-           FStarC_TypeChecker_Env.iface_todo =
-             (env1.FStarC_TypeChecker_Env.iface_todo);
-           FStarC_TypeChecker_Env.iface_hidden =
-             (env1.FStarC_TypeChecker_Env.iface_hidden);
-           FStarC_TypeChecker_Env.iface_lids =
-             (env1.FStarC_TypeChecker_Env.iface_lids);
-           FStarC_TypeChecker_Env.iface_val_lids =
-             (env1.FStarC_TypeChecker_Env.iface_val_lids)
-         } in
-       ((let uu___4 =
-           FStarC_Options.dump_module
-             (FStarC_Ident.string_of_lid m1.FStarC_Syntax_Syntax.name) in
-         if uu___4
-         then
-           let uu___5 =
-             FStarC_Class_Show.show FStarC_Syntax_Print.showable_modul m1 in
-           FStarC_Format.print1 "Module after type checking:\n%s\n" uu___5
-         else ());
-        (let uu___5 =
-           let uu___6 =
-             FStarC_Options.dump_module
-               (FStarC_Ident.string_of_lid m1.FStarC_Syntax_Syntax.name) in
-           if uu___6 then FStarC_Effect.op_Bang dbg_Normalize else false in
-         if uu___5
-         then
-           let normalize_toplevel_lets se =
-             match se.FStarC_Syntax_Syntax.sigel with
-             | FStarC_Syntax_Syntax.Sig_let
-                 { FStarC_Syntax_Syntax.lbs1 = (b, lbs);
-                   FStarC_Syntax_Syntax.lids1 = ids;_}
-                 ->
-                 let n =
-                   FStarC_TypeChecker_Normalize.normalize
-                     [FStarC_TypeChecker_Env.Beta;
-                     FStarC_TypeChecker_Env.Eager_unfolding;
-                     FStarC_TypeChecker_Env.Reify;
-                     FStarC_TypeChecker_Env.Inlining;
-                     FStarC_TypeChecker_Env.Primops;
-                     FStarC_TypeChecker_Env.UnfoldUntil
-                       FStarC_Syntax_Syntax.delta_constant;
-                     FStarC_TypeChecker_Env.AllowUnboundUniverses] in
-                 let update lb =
-                   let uu___6 =
-                     FStarC_Syntax_Subst.open_univ_vars
-                       lb.FStarC_Syntax_Syntax.lbunivs
-                       lb.FStarC_Syntax_Syntax.lbdef in
-                   match uu___6 with
-                   | (univnames, e) ->
-                       let uu___7 =
-                         let uu___8 =
-                           FStarC_TypeChecker_Env.push_univ_vars env2
-                             univnames in
-                         n uu___8 e in
-                       {
-                         FStarC_Syntax_Syntax.lbname =
-                           (lb.FStarC_Syntax_Syntax.lbname);
-                         FStarC_Syntax_Syntax.lbunivs =
-                           (lb.FStarC_Syntax_Syntax.lbunivs);
-                         FStarC_Syntax_Syntax.lbtyp =
-                           (lb.FStarC_Syntax_Syntax.lbtyp);
-                         FStarC_Syntax_Syntax.lbeff =
-                           (lb.FStarC_Syntax_Syntax.lbeff);
-                         FStarC_Syntax_Syntax.lbdef = uu___7;
-                         FStarC_Syntax_Syntax.lbattrs =
-                           (lb.FStarC_Syntax_Syntax.lbattrs);
-                         FStarC_Syntax_Syntax.lbpos =
-                           (lb.FStarC_Syntax_Syntax.lbpos)
-                       } in
-                 let uu___6 =
-                   let uu___7 =
-                     let uu___8 =
-                       let uu___9 = FStarC_List.map update lbs in (b, uu___9) in
-                     {
-                       FStarC_Syntax_Syntax.lbs1 = uu___8;
-                       FStarC_Syntax_Syntax.lids1 = ids
-                     } in
-                   FStarC_Syntax_Syntax.Sig_let uu___7 in
-                 {
-                   FStarC_Syntax_Syntax.sigel = uu___6;
-                   FStarC_Syntax_Syntax.sigrng =
-                     (se.FStarC_Syntax_Syntax.sigrng);
-                   FStarC_Syntax_Syntax.sigquals =
-                     (se.FStarC_Syntax_Syntax.sigquals);
-                   FStarC_Syntax_Syntax.sigmeta =
-                     (se.FStarC_Syntax_Syntax.sigmeta);
-                   FStarC_Syntax_Syntax.sigattrs =
-                     (se.FStarC_Syntax_Syntax.sigattrs);
-                   FStarC_Syntax_Syntax.sigopens_and_abbrevs =
-                     (se.FStarC_Syntax_Syntax.sigopens_and_abbrevs);
-                   FStarC_Syntax_Syntax.sigopts =
-                     (se.FStarC_Syntax_Syntax.sigopts)
-                 }
-             | uu___6 -> se in
-           let normalized_module =
-             let uu___6 =
-               FStarC_List.map normalize_toplevel_lets
-                 m1.FStarC_Syntax_Syntax.declarations in
-             {
-               FStarC_Syntax_Syntax.name = (m1.FStarC_Syntax_Syntax.name);
-               FStarC_Syntax_Syntax.declarations = uu___6;
-               FStarC_Syntax_Syntax.is_interface =
-                 (m1.FStarC_Syntax_Syntax.is_interface)
-             } in
-           let uu___6 =
-             FStarC_Class_Show.show FStarC_Syntax_Print.showable_modul
-               normalized_module in
-           FStarC_Format.print1 "%s\n" uu___6
-         else ());
-        (m1, env2)))
+    | (hd :: tl) -> (let tmp = (is_iface_val hd) in
+      let tmp1 = (not tmp) in
+      (if tmp1 then ((split_iface_todo__go se defines) (hd :: copied) tl) else (let tmp2 = (defines hd) in
+      (if tmp2 then (let tmp3 = ((split_iface_todo__take_mutuals defines) [] tl) in
+      (match tmp3 with
+        | (mutuals, rest) -> ((FStarC_List.rev copied), (hd :: mutuals), rest)
+      )) else (let tmp3 = (FStarC_List.tryFind (fun i -> (let tmp3 = (is_iface_val i) in
+        (if tmp3 then (defines i) else false))) tl) in
+      (match tmp3 with
+        | (Some (out_of_order)) -> (let l = (FStarC_List.hd (FStarC_Syntax_Util.lids_of_sigelt out_of_order)) in
+          let tmp4 = (FStarC_Ident.fStarC_Class_PP_pp__lident (FStarC_List.hd (FStarC_Syntax_Util.lids_of_sigelt hd))) in
+          let tmp5 = (FStarC_Ident.fStarC_Class_PP_pp__lident l) in
+          let tmp6 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "to precede") tmp5) in
+          let tmp7 = (FStar_Pprint.op_Hat_Slash_Hat tmp4 tmp6) in
+          let tmp8 = (FStar_Pprint.prefix (Prims.parse_int "2") (Prims.parse_int "1") (FStarC_Errors_Msg.text "Expected the definition of") tmp7) in
+          let tmp9 = (tmp8 :: []) in
+          (FStarC_Errors.fStarC_Errors_raise_error__sigelt_list_document se FStarC_Errors_Codes.Fatal_WrongDefinitionOrder tmp9))
+        | None -> ()
+      );
+      ((FStarC_List.rev copied), [], todo))))))
+  )
+
+let split_iface_todo (se : FStarC_Syntax_Syntax.sigelt) (defs : (FStarC_Ident.lident) list) (todo : (FStarC_Syntax_Syntax.sigelt) list) : ((FStarC_Syntax_Syntax.sigelt) list * (FStarC_Syntax_Syntax.sigelt) list * (FStarC_Syntax_Syntax.sigelt) list) =
+  (let defines = (fun se' -> (FStarC_Util.for_some (fun l -> (FStarC_Util.for_some (FStarC_Ident.lid_equals l) defs)) (FStarC_Syntax_Util.lids_of_sigelt se'))) in
+  ((split_iface_todo__go se defines) [] todo))
+
+let tick_off_iface_todo (env : FStarC_TypeChecker_Env.env) (se : FStarC_Syntax_Syntax.sigelt) : ((FStarC_Syntax_Syntax.sigelt) list * (FStarC_Syntax_Syntax.sigelt) list * FStarC_TypeChecker_Env.env) =
+  (match (FStarC_TypeChecker_Env.iface_todo env) with
+    | [] -> ([], [], env)
+    | todo -> (let defs = (match (se).FStarC_Syntax_Syntax.sigel with
+          | (FStarC_Syntax_Syntax.Sig_fail (tmp)) -> []
+          | tmp -> (FStarC_Syntax_Util.lids_of_sigelt se)
+        ) in
+      let tmp = (split_iface_todo se defs todo) in
+      (match tmp with
+        | (copied, matched, remaining) -> (let env1 = (FStarC_TypeChecker_Env.consume_iface_todo env (FStarC_List.op_At copied matched) remaining) in
+          let matched_vals = (FStarC_List.map unassume_iface_val matched) in
+          ((FStarC_List.op_At copied matched_vals), matched_vals, env1))
+      ))
+  )
+
+let sigelt_typ (se : FStarC_Syntax_Syntax.sigelt) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
+  (match (se).FStarC_Syntax_Syntax.sigel with
+    | (FStarC_Syntax_Syntax.Sig_inductive_typ ({ FStarC_Syntax_Syntax.lid = tmp; us = tmp1; params = tmp2; num_uniform_params = tmp3; t = t; mutuals = tmp4; ds = tmp5; injective_type_params = tmp6; _ })) -> (Some (t))
+    | (FStarC_Syntax_Syntax.Sig_datacon ({ FStarC_Syntax_Syntax.lid = tmp; us = tmp1; t = t; ty_lid = tmp2; num_ty_params = tmp3; mutuals = tmp4; injective_type_params = tmp5; proj_disc_lids = tmp6; _ })) -> (Some (t))
+    | (FStarC_Syntax_Syntax.Sig_declare_typ ({ FStarC_Syntax_Syntax.lid = tmp; us = tmp1; t = t; _ })) -> (Some (t))
+    | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (tmp, (lb :: tmp1)); lids = tmp2; _ })) -> (Some ((lb).FStarC_Syntax_Syntax.lbtyp))
+    | tmp -> None
+  )
+
+let set_hint_correlator (env : FStarC_TypeChecker_Env.env) (se : FStarC_Syntax_Syntax.sigelt) : FStarC_TypeChecker_Env.env =
+  (let tbl = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd ((env).FStarC_TypeChecker_Env.qtbl_name_and_index, (env).FStarC_TypeChecker_Env.qtbl_name_and_index1)) in
+  let get_n = (fun lid -> (let tmp = (FStarC_Ident.fStarC_Class_Show_show__lident lid) in
+    let n_opt = (FStarC_SMap.try_find tbl tmp) in
+    (if (match n_opt with
+      | (Some (v)) -> true
+      | tmp1 -> false
+    ) then (FStarC_Option.must n_opt) else (Prims.parse_int "0")))) in
+  let typ = (match (sigelt_typ se) with
+      | (Some (t)) -> t
+      | tmp -> FStarC_Syntax_Syntax.tun
+    ) in
+  let lids = (FStarC_Syntax_Util.lids_of_sigelt se) in
+  let lid = (match lids with
+      | [] -> (let tmp = (FStarC_GenSym.next_id ()) in
+        let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int tmp) in
+        (FStarC_Ident.lid_add_suffix (FStarC_TypeChecker_Env.current_module env) tmp1))
+      | (l :: tmp) -> l
+    ) in
+  let tmp = (get_n lid) in
+  let tmp1 = (lid, typ, tmp) in
+  let tmp2 = (Some (tmp1)) in
+  let tmp3 = (tmp2, tbl) in
+  { FStarC_TypeChecker_Env.solver = (env).FStarC_TypeChecker_Env.solver;
+    range = (env).FStarC_TypeChecker_Env.range;
+    curmodule = (env).FStarC_TypeChecker_Env.curmodule;
+    gamma = (env).FStarC_TypeChecker_Env.gamma;
+    gamma_sig = (env).FStarC_TypeChecker_Env.gamma_sig;
+    gamma_cache = (env).FStarC_TypeChecker_Env.gamma_cache;
+    modules = (env).FStarC_TypeChecker_Env.modules;
+    expected_typ = (env).FStarC_TypeChecker_Env.expected_typ;
+    sigtab = (env).FStarC_TypeChecker_Env.sigtab;
+    attrtab = (env).FStarC_TypeChecker_Env.attrtab;
+    instantiate_imp = (env).FStarC_TypeChecker_Env.instantiate_imp;
+    effects = (env).FStarC_TypeChecker_Env.effects;
+    generalize = (env).FStarC_TypeChecker_Env.generalize;
+    letrecs = (env).FStarC_TypeChecker_Env.letrecs;
+    rec_names = (env).FStarC_TypeChecker_Env.rec_names;
+    top_level = (env).FStarC_TypeChecker_Env.top_level;
+    check_uvars = (env).FStarC_TypeChecker_Env.check_uvars;
+    use_eq_strict = (env).FStarC_TypeChecker_Env.use_eq_strict;
+    is_iface = (env).FStarC_TypeChecker_Env.is_iface;
+    admit = (env).FStarC_TypeChecker_Env.admit;
+    phase1 = (env).FStarC_TypeChecker_Env.phase1;
+    failhard = (env).FStarC_TypeChecker_Env.failhard;
+    flychecking = (env).FStarC_TypeChecker_Env.flychecking;
+    uvar_subtyping = (env).FStarC_TypeChecker_Env.uvar_subtyping;
+    intactics = (env).FStarC_TypeChecker_Env.intactics;
+    nocoerce = (env).FStarC_TypeChecker_Env.nocoerce;
+    tc_term = (env).FStarC_TypeChecker_Env.tc_term;
+    typeof_tot_or_gtot_term = (env).FStarC_TypeChecker_Env.typeof_tot_or_gtot_term;
+    universe_of = (env).FStarC_TypeChecker_Env.universe_of;
+    typeof_well_typed_tot_or_gtot_term = (env).FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term;
+    teq_nosmt_force = (env).FStarC_TypeChecker_Env.teq_nosmt_force;
+    subtype_nosmt_force = (env).FStarC_TypeChecker_Env.subtype_nosmt_force;
+    qtbl_name_and_index = (match tmp3 with (custard_tup, _) -> custard_tup);
+    qtbl_name_and_index1 = (match tmp3 with (_, custard_tup) -> custard_tup);
+    fv_delta_depths = (env).FStarC_TypeChecker_Env.fv_delta_depths;
+    proof_ns = (env).FStarC_TypeChecker_Env.proof_ns;
+    synth_hook = (env).FStarC_TypeChecker_Env.synth_hook;
+    try_solve_implicits_hook = (env).FStarC_TypeChecker_Env.try_solve_implicits_hook;
+    splice = (env).FStarC_TypeChecker_Env.splice;
+    mpreprocess = (env).FStarC_TypeChecker_Env.mpreprocess;
+    postprocess = (env).FStarC_TypeChecker_Env.postprocess;
+    identifier_info = (env).FStarC_TypeChecker_Env.identifier_info;
+    tc_hooks = (env).FStarC_TypeChecker_Env.tc_hooks;
+    dsenv = (env).FStarC_TypeChecker_Env.dsenv;
+    nbe = (env).FStarC_TypeChecker_Env.nbe;
+    strict_args_tab = (env).FStarC_TypeChecker_Env.strict_args_tab;
+    disc_proj_tab = (env).FStarC_TypeChecker_Env.disc_proj_tab;
+    erasable_types_tab = (env).FStarC_TypeChecker_Env.erasable_types_tab;
+    enable_defer_to_tac = (env).FStarC_TypeChecker_Env.enable_defer_to_tac;
+    unif_allow_ref_guards = (env).FStarC_TypeChecker_Env.unif_allow_ref_guards;
+    erase_erasable_args = (env).FStarC_TypeChecker_Env.erase_erasable_args;
+    core_check = (env).FStarC_TypeChecker_Env.core_check;
+    missing_decl = (env).FStarC_TypeChecker_Env.missing_decl;
+    iface_todo = (env).FStarC_TypeChecker_Env.iface_todo;
+    iface_hidden = (env).FStarC_TypeChecker_Env.iface_hidden;
+    iface_lids = (env).FStarC_TypeChecker_Env.iface_lids;
+    iface_val_lids = (env).FStarC_TypeChecker_Env.iface_val_lids })
+
+let tc_decl_attributes (env : FStarC_TypeChecker_Env.env) (se : FStarC_Syntax_Syntax.sigelt) : FStarC_Syntax_Syntax.sigelt =
+  (let tmp = (FStarC_TypeChecker_Env.lid_exists env FStarC_Parser_Const.attr_substitute_lid) in
+  let tmp1 = (if tmp then ([], (se).FStarC_Syntax_Syntax.sigattrs) else (FStarC_List.partition (fun tmp1 -> ((=) FStarC_Syntax_Util.attr_substitute tmp1)) (se).FStarC_Syntax_Syntax.sigattrs)) in
+  (match tmp1 with
+    | (blacklisted_attrs, other_attrs) -> (let tmp2 = (FStarC_TypeChecker_TcTerm.tc_attributes env other_attrs) in
+      (match tmp2 with
+        | (g, other_attrs1) -> ((FStarC_TypeChecker_Rel.force_trivial_guard env g);
+          { FStarC_Syntax_Syntax.sigel = (se).FStarC_Syntax_Syntax.sigel;
+            sigrng = (se).FStarC_Syntax_Syntax.sigrng;
+            sigquals = (se).FStarC_Syntax_Syntax.sigquals;
+            sigmeta = (se).FStarC_Syntax_Syntax.sigmeta;
+            sigattrs = (FStarC_List.op_At blacklisted_attrs other_attrs1);
+            sigopens_and_abbrevs = (se).FStarC_Syntax_Syntax.sigopens_and_abbrevs;
+            sigopts = (se).FStarC_Syntax_Syntax.sigopts })
+      ))
+  ))
+
+let proc_check_with (attrs : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) (kont : (unit -> 'u_'a)) : 'u_'a =
+  (let tmp = (FStarC_Syntax_Util.get_attribute FStarC_Parser_Const.check_with_lid attrs) in
+  (match tmp with
+    | None -> (kont ())
+    | (Some (((a, None) :: []))) -> (let tmp1 = (FStarC_Syntax_Embeddings_Base.unembed FStarC_Syntax_Embeddings.e_vconfig a FStarC_Syntax_Embeddings_Base.id_norm_cb) in
+      (match tmp1 with
+        | None -> (FStarC_Effect.failwith "nah")
+        | (Some (vcfg)) -> (FStarC_Options.with_saved_options (fun tmp2 -> ((FStarC_Options.set_vconfig vcfg);
+          (kont ()))))
+        | tmp2 -> (FStarC_Effect.failwith "ill-formed `check_with`")
+      ))
+  ))
+
+let store_sigopts (se : FStarC_Syntax_Syntax.sigelt) : FStarC_Syntax_Syntax.sigelt =
+  (let tmp = (FStarC_Options.get_vconfig ()) in
+  let tmp1 = (Some (tmp)) in
+  { FStarC_Syntax_Syntax.sigel = (se).FStarC_Syntax_Syntax.sigel;
+    sigrng = (se).FStarC_Syntax_Syntax.sigrng;
+    sigquals = (se).FStarC_Syntax_Syntax.sigquals;
+    sigmeta = (se).FStarC_Syntax_Syntax.sigmeta;
+    sigattrs = (se).FStarC_Syntax_Syntax.sigattrs;
+    sigopens_and_abbrevs = (se).FStarC_Syntax_Syntax.sigopens_and_abbrevs;
+    sigopts = tmp1 })
+
+let tc_decls_knot : (((FStarC_TypeChecker_Env.env -> ((FStarC_Syntax_Syntax.sigelt) list -> ((FStarC_Syntax_Syntax.sigelt) list * FStarC_TypeChecker_Env.env)))) option ref) =
+  (ref None)
+
+let do_two_phases (env : 'tmp) : bool =
+  true
+
+let run_phase1 (f : (unit -> 'u_'a)) : 'u_'a =
+  ((FStarC_TypeChecker_Core.clear_memo_table ());
+  let r = (f ()) in
+  (FStarC_TypeChecker_Core.clear_memo_table ());
+  r)
+
+let tc_inductive' (env : FStarC_TypeChecker_Env.env) (ses : (FStarC_Syntax_Syntax.sigelt) list) (quals : (FStarC_Syntax_Syntax.qualifier) list) (attrs : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) (lids : (FStarC_Ident.lident) list) : (FStarC_Syntax_Syntax.sigelt * (FStarC_Syntax_Syntax.sigelt) list) =
+  (let tmp = (FStarC_Debug.low ()) in
+  (if tmp then (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_sigelt ses) in
+  (FStarC_Format.print1 ">>>>>>>>>>>>>>tc_inductive %s\n" tmp1)) else ());
+  let ses1 = (FStarC_List.map (tc_decl_attributes env) ses) in
+  let tmp1 = (FStarC_TypeChecker_TcInductive.check_inductive_well_typedness env ses1 quals lids) in
+  (match tmp1 with
+    | (sig_bndle, tcs, datas) -> (let sig_bndle1 = (FStarC_TypeChecker_Positivity.mark_uniform_type_parameters env sig_bndle) in
+      let attrs' = (FStarC_Syntax_Util.remove_attr FStarC_Parser_Const.erasable_attr attrs) in
+      let tmp2 = (FStarC_List.map (FStarC_TypeChecker_TcInductive.mk_data_operations quals attrs' env tcs) datas) in
+      let data_ops_ses = (FStarC_List.flatten tmp2) in
+      let tmp3 = (FStarC_Options.no_positivity ()) in
+      let tmp4 = (if tmp3 then true else (let tmp4 = (FStarC_TypeChecker_Env.should_verify env) in
+        (not tmp4))) in
+      (if tmp4 then () else (let env2 = (FStarC_TypeChecker_Env.push_sigelt env sig_bndle1) in
+      (FStarC_List.iter (fun ty -> (let b = (FStarC_TypeChecker_Positivity.check_strict_positivity env2 lids ty) in
+      (if (not b) then (let tmp5 = (match (ty).FStarC_Syntax_Syntax.sigel with
+          | (FStarC_Syntax_Syntax.Sig_inductive_typ ({ FStarC_Syntax_Syntax.lid = lid; us = tmp5; params = tmp6; num_uniform_params = tmp7; t = tmp8; mutuals = tmp9; ds = tmp10; injective_type_params = tmp11; _ })) -> (lid, (ty).FStarC_Syntax_Syntax.sigrng)
+          | tmp5 -> (FStarC_Effect.failwith "Impossible!")
+        ) in
+      (match tmp5 with
+        | (lid, r) -> (FStarC_Errors.fStarC_Errors_log_issue__range_string r FStarC_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition (Prims.strcat "Inductive type " (Prims.strcat (FStarC_Ident.string_of_lid lid) " does not satisfy the strict positivity condition")))
+      )) else ()))) tcs);
+      (FStarC_List.iter (fun d -> (let tmp5 = (match (d).FStarC_Syntax_Syntax.sigel with
+          | (FStarC_Syntax_Syntax.Sig_datacon ({ FStarC_Syntax_Syntax.lid = data_lid; us = tmp5; t = tmp6; ty_lid = ty_lid; num_ty_params = tmp7; mutuals = tmp8; injective_type_params = tmp9; proj_disc_lids = tmp10; _ })) -> (data_lid, ty_lid)
+          | tmp5 -> (FStarC_Effect.failwith "Impossible")
+        ) in
+      (match tmp5 with
+        | (data_lid, ty_lid) -> (let tmp6 = (if (FStarC_Ident.lid_equals ty_lid FStarC_Parser_Const.exn_lid) then (let tmp6 = (FStarC_TypeChecker_Positivity.check_exn_strict_positivity env2 data_lid) in
+            (not tmp6)) else false) in
+          (if tmp6 then (FStarC_Errors.fStarC_Errors_log_issue__sigelt_string d FStarC_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition (Prims.strcat "Exception " (Prims.strcat (FStarC_Ident.string_of_lid data_lid) " does not satisfy the positivity condition"))) else ()))
+      ))) datas)));
+      let skip_prims_type = (fun tmp5 -> (let ty = (FStarC_List.hd tcs) in
+        let lid = (match (ty).FStarC_Syntax_Syntax.sigel with
+            | (FStarC_Syntax_Syntax.Sig_inductive_typ ({ FStarC_Syntax_Syntax.lid = lid; us = tmp6; params = tmp7; num_uniform_params = tmp8; t = tmp9; mutuals = tmp10; ds = tmp11; injective_type_params = tmp12; _ })) -> lid
+            | tmp6 -> (FStarC_Effect.failwith "Impossible")
+          ) in
+        (FStarC_List.existsb (fun s -> ((=) s (FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid lid)))) FStarC_TypeChecker_TcInductive.early_prims_inductives))) in
+      let is_noeq = (FStarC_List.existsb (fun q -> ((=) q FStarC_Syntax_Syntax.Noeq)) quals) in
+      let is_erasable = (fun tmp5 -> (FStarC_Syntax_Util.has_attribute (let scrut = (FStarC_List.hd tcs) in
+        (scrut).FStarC_Syntax_Syntax.sigattrs) FStarC_Parser_Const.erasable_attr)) in
+      let tmp5 = (if (match tcs with
+          | [] -> true
+          | tmp5 -> false
+        ) then true else (if (FStarC_Ident.lid_equals (env).FStarC_TypeChecker_Env.curmodule FStarC_Parser_Const.prims_lid) then (skip_prims_type ()) else false)) in
+      let tmp6 = (if tmp5 then true else is_noeq) in
+      let skip_haseq = (if tmp6 then true else (is_erasable ())) in
+      (if skip_haseq then (sig_bndle1, data_ops_ses) else (let is_unopteq = (FStarC_List.existsb (fun q -> ((=) q FStarC_Syntax_Syntax.Unopteq)) quals) in
+      let ses2 = (if is_unopteq then (FStarC_TypeChecker_TcInductive.unoptimized_haseq_scheme sig_bndle1 tcs datas env) else (FStarC_TypeChecker_TcInductive.optimized_haseq_scheme sig_bndle1 tcs datas env)) in
+      (sig_bndle1, (FStarC_List.op_At ses2 data_ops_ses)))))
+  ))
+
+let tc_inductive (env : FStarC_TypeChecker_Env.env) (ses : (FStarC_Syntax_Syntax.sigelt) list) (quals : (FStarC_Syntax_Syntax.qualifier) list) (attrs : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) (lids : (FStarC_Ident.lident) list) : (FStarC_Syntax_Syntax.sigelt * (FStarC_Syntax_Syntax.sigelt) list) =
+  (let env1 = (FStarC_TypeChecker_Env.push env "tc_inductive") in
+  let pop = (fun tmp -> ((ignore (FStarC_TypeChecker_Env.pop env1 "tc_inductive"));
+    ())) in
+  let tmp = (FStarC_Options.trace_error ()) in
+  (if tmp then (let r = (tc_inductive' env1 ses quals attrs lids) in
+  (pop ());
+  r) else (try (let tmp1 = (tc_inductive' env1 ses quals attrs lids) in
+  (pop ());
+  tmp1) with
+    | u__cexn -> ((pop ());
+      (raise u__cexn))
+  )))
+
+let dbg_TwoPhases : (bool ref) =
+  (FStarC_Debug.get_toggle "TwoPhases")
+
+let push_context (env : FStarC_TypeChecker_Env.env) (msg : string) : FStarC_TypeChecker_Env.env =
+  (let tmp = (snapshot_context env msg) in
+  (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd tmp))
+
+let pop_context (env : FStarC_TypeChecker_Env.env) (msg : string) : FStarC_TypeChecker_Env.env =
+  (rollback_context (env).FStarC_TypeChecker_Env.solver msg None)
+
+let process_pragma (env : FStarC_TypeChecker_Env.env) (p : FStarC_Syntax_Syntax.pragma) (r : FStarC_Range_Type.range) : unit =
+  ((FStarC_Syntax_Util.process_pragma p r);
+  (match p with
+    | FStarC_Syntax_Syntax.ShowOptions -> (let tmp = (FStarC_Options.show_options ()) in
+      let tmp1 = (FStar_Pprint.arbitrary_string tmp) in
+      let tmp2 = (tmp1 :: []) in
+      let tmp3 = ((FStarC_Errors_Msg.text "Option state:") :: tmp2) in
+      (FStarC_Errors.fStarC_Errors_info__range_list_document r tmp3))
+    | FStarC_Syntax_Syntax.PrintEffectsGraph -> (let tmp = (FStarC_TypeChecker_Env.print_effects_graph env) in
+      (FStarC_Util.write_file "effects.graph" tmp))
+    | (FStarC_Syntax_Syntax.Check (t0)) -> (let env' = (push_context env "#check") in
+      let tx = (FStarC_Syntax_Unionfind.new_transaction ()) in
+      (FStarC_Util.finally (fun tmp -> ((ignore (pop_context env' "#check"));
+      (FStarC_Syntax_Unionfind.rollback tx))) (fun tmp -> (let tmp1 = (FStarC_TypeChecker_TcTerm.tc_term { FStarC_TypeChecker_Env.solver = (env).FStarC_TypeChecker_Env.solver;
+          range = (env).FStarC_TypeChecker_Env.range;
+          curmodule = (env).FStarC_TypeChecker_Env.curmodule;
+          gamma = (env).FStarC_TypeChecker_Env.gamma;
+          gamma_sig = (env).FStarC_TypeChecker_Env.gamma_sig;
+          gamma_cache = (env).FStarC_TypeChecker_Env.gamma_cache;
+          modules = (env).FStarC_TypeChecker_Env.modules;
+          expected_typ = (env).FStarC_TypeChecker_Env.expected_typ;
+          sigtab = (env).FStarC_TypeChecker_Env.sigtab;
+          attrtab = (env).FStarC_TypeChecker_Env.attrtab;
+          instantiate_imp = false;
+          effects = (env).FStarC_TypeChecker_Env.effects;
+          generalize = (env).FStarC_TypeChecker_Env.generalize;
+          letrecs = (env).FStarC_TypeChecker_Env.letrecs;
+          rec_names = (env).FStarC_TypeChecker_Env.rec_names;
+          top_level = (env).FStarC_TypeChecker_Env.top_level;
+          check_uvars = (env).FStarC_TypeChecker_Env.check_uvars;
+          use_eq_strict = (env).FStarC_TypeChecker_Env.use_eq_strict;
+          is_iface = (env).FStarC_TypeChecker_Env.is_iface;
+          admit = (env).FStarC_TypeChecker_Env.admit;
+          phase1 = (env).FStarC_TypeChecker_Env.phase1;
+          failhard = (env).FStarC_TypeChecker_Env.failhard;
+          flychecking = (env).FStarC_TypeChecker_Env.flychecking;
+          uvar_subtyping = (env).FStarC_TypeChecker_Env.uvar_subtyping;
+          intactics = (env).FStarC_TypeChecker_Env.intactics;
+          nocoerce = (env).FStarC_TypeChecker_Env.nocoerce;
+          tc_term = (env).FStarC_TypeChecker_Env.tc_term;
+          typeof_tot_or_gtot_term = (env).FStarC_TypeChecker_Env.typeof_tot_or_gtot_term;
+          universe_of = (env).FStarC_TypeChecker_Env.universe_of;
+          typeof_well_typed_tot_or_gtot_term = (env).FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term;
+          teq_nosmt_force = (env).FStarC_TypeChecker_Env.teq_nosmt_force;
+          subtype_nosmt_force = (env).FStarC_TypeChecker_Env.subtype_nosmt_force;
+          qtbl_name_and_index = (env).FStarC_TypeChecker_Env.qtbl_name_and_index;
+          qtbl_name_and_index1 = (env).FStarC_TypeChecker_Env.qtbl_name_and_index1;
+          fv_delta_depths = (env).FStarC_TypeChecker_Env.fv_delta_depths;
+          proof_ns = (env).FStarC_TypeChecker_Env.proof_ns;
+          synth_hook = (env).FStarC_TypeChecker_Env.synth_hook;
+          try_solve_implicits_hook = (env).FStarC_TypeChecker_Env.try_solve_implicits_hook;
+          splice = (env).FStarC_TypeChecker_Env.splice;
+          mpreprocess = (env).FStarC_TypeChecker_Env.mpreprocess;
+          postprocess = (env).FStarC_TypeChecker_Env.postprocess;
+          identifier_info = (env).FStarC_TypeChecker_Env.identifier_info;
+          tc_hooks = (env).FStarC_TypeChecker_Env.tc_hooks;
+          dsenv = (env).FStarC_TypeChecker_Env.dsenv;
+          nbe = (env).FStarC_TypeChecker_Env.nbe;
+          strict_args_tab = (env).FStarC_TypeChecker_Env.strict_args_tab;
+          disc_proj_tab = (env).FStarC_TypeChecker_Env.disc_proj_tab;
+          erasable_types_tab = (env).FStarC_TypeChecker_Env.erasable_types_tab;
+          enable_defer_to_tac = (env).FStarC_TypeChecker_Env.enable_defer_to_tac;
+          unif_allow_ref_guards = (env).FStarC_TypeChecker_Env.unif_allow_ref_guards;
+          erase_erasable_args = (env).FStarC_TypeChecker_Env.erase_erasable_args;
+          core_check = (env).FStarC_TypeChecker_Env.core_check;
+          missing_decl = (env).FStarC_TypeChecker_Env.missing_decl;
+          iface_todo = (env).FStarC_TypeChecker_Env.iface_todo;
+          iface_hidden = (env).FStarC_TypeChecker_Env.iface_hidden;
+          iface_lids = (env).FStarC_TypeChecker_Env.iface_lids;
+          iface_val_lids = (env).FStarC_TypeChecker_Env.iface_val_lids } t0) in
+      (match tmp1 with
+        | (t, lc, g) -> (FStarC_Options.with_saved_options (fun tmp2 -> ((ignore (FStarC_Options.set_options "--print_effect_args"));
+          let tmp3 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' t) in
+          let tmp4 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_comp' lc) in
+          let tmp5 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "has type") tmp4) in
+          let tmp6 = (FStar_Pprint.op_Hat_Slash_Hat tmp3 tmp5) in
+          let tmp7 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Term") tmp6) in
+          let tmp8 = (FStarC_TypeChecker_Env.is_trivial g) in
+          let tmp9 = (not tmp8) in
+          let tmp10 = (if tmp9 then (let tmp10 = (FStarC_TypeChecker_Common.fStarC_Class_PP_pp__guard_t g) in
+            (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "With guard: ") tmp10)) else FStar_Pprint.empty) in
+          let tmp11 = (tmp10 :: []) in
+          let tmp12 = (tmp7 :: tmp11) in
+          (FStarC_Errors.fStarC_Errors_info__range_list_document r tmp12))))
+      )))))
+    | (FStarC_Syntax_Syntax.Eval (t0)) -> (let env' = (push_context env "#eval") in
+      let tx = (FStarC_Syntax_Unionfind.new_transaction ()) in
+      (FStarC_Util.finally (fun tmp -> ((ignore (pop_context env' "#eval"));
+      (FStarC_Syntax_Unionfind.rollback tx))) (fun tmp -> (let tmp1 = (FStarC_TypeChecker_TcTerm.tc_term { FStarC_TypeChecker_Env.solver = (env').FStarC_TypeChecker_Env.solver;
+          range = (env').FStarC_TypeChecker_Env.range;
+          curmodule = (env').FStarC_TypeChecker_Env.curmodule;
+          gamma = (env').FStarC_TypeChecker_Env.gamma;
+          gamma_sig = (env').FStarC_TypeChecker_Env.gamma_sig;
+          gamma_cache = (env').FStarC_TypeChecker_Env.gamma_cache;
+          modules = (env').FStarC_TypeChecker_Env.modules;
+          expected_typ = (env').FStarC_TypeChecker_Env.expected_typ;
+          sigtab = (env').FStarC_TypeChecker_Env.sigtab;
+          attrtab = (env').FStarC_TypeChecker_Env.attrtab;
+          instantiate_imp = false;
+          effects = (env').FStarC_TypeChecker_Env.effects;
+          generalize = (env').FStarC_TypeChecker_Env.generalize;
+          letrecs = (env').FStarC_TypeChecker_Env.letrecs;
+          rec_names = (env').FStarC_TypeChecker_Env.rec_names;
+          top_level = (env').FStarC_TypeChecker_Env.top_level;
+          check_uvars = (env').FStarC_TypeChecker_Env.check_uvars;
+          use_eq_strict = (env').FStarC_TypeChecker_Env.use_eq_strict;
+          is_iface = (env').FStarC_TypeChecker_Env.is_iface;
+          admit = true;
+          phase1 = true;
+          failhard = (env').FStarC_TypeChecker_Env.failhard;
+          flychecking = (env').FStarC_TypeChecker_Env.flychecking;
+          uvar_subtyping = (env').FStarC_TypeChecker_Env.uvar_subtyping;
+          intactics = (env').FStarC_TypeChecker_Env.intactics;
+          nocoerce = (env').FStarC_TypeChecker_Env.nocoerce;
+          tc_term = (env').FStarC_TypeChecker_Env.tc_term;
+          typeof_tot_or_gtot_term = (env').FStarC_TypeChecker_Env.typeof_tot_or_gtot_term;
+          universe_of = (env').FStarC_TypeChecker_Env.universe_of;
+          typeof_well_typed_tot_or_gtot_term = (env').FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term;
+          teq_nosmt_force = (env').FStarC_TypeChecker_Env.teq_nosmt_force;
+          subtype_nosmt_force = (env').FStarC_TypeChecker_Env.subtype_nosmt_force;
+          qtbl_name_and_index = (env').FStarC_TypeChecker_Env.qtbl_name_and_index;
+          qtbl_name_and_index1 = (env').FStarC_TypeChecker_Env.qtbl_name_and_index1;
+          fv_delta_depths = (env').FStarC_TypeChecker_Env.fv_delta_depths;
+          proof_ns = (env').FStarC_TypeChecker_Env.proof_ns;
+          synth_hook = (env').FStarC_TypeChecker_Env.synth_hook;
+          try_solve_implicits_hook = (env').FStarC_TypeChecker_Env.try_solve_implicits_hook;
+          splice = (env').FStarC_TypeChecker_Env.splice;
+          mpreprocess = (env').FStarC_TypeChecker_Env.mpreprocess;
+          postprocess = (env').FStarC_TypeChecker_Env.postprocess;
+          identifier_info = (env').FStarC_TypeChecker_Env.identifier_info;
+          tc_hooks = (env').FStarC_TypeChecker_Env.tc_hooks;
+          dsenv = (env').FStarC_TypeChecker_Env.dsenv;
+          nbe = (env').FStarC_TypeChecker_Env.nbe;
+          strict_args_tab = (env').FStarC_TypeChecker_Env.strict_args_tab;
+          disc_proj_tab = (env').FStarC_TypeChecker_Env.disc_proj_tab;
+          erasable_types_tab = (env').FStarC_TypeChecker_Env.erasable_types_tab;
+          enable_defer_to_tac = (env').FStarC_TypeChecker_Env.enable_defer_to_tac;
+          unif_allow_ref_guards = (env').FStarC_TypeChecker_Env.unif_allow_ref_guards;
+          erase_erasable_args = (env').FStarC_TypeChecker_Env.erase_erasable_args;
+          core_check = (env').FStarC_TypeChecker_Env.core_check;
+          missing_decl = (env').FStarC_TypeChecker_Env.missing_decl;
+          iface_todo = (env').FStarC_TypeChecker_Env.iface_todo;
+          iface_hidden = (env').FStarC_TypeChecker_Env.iface_hidden;
+          iface_lids = (env').FStarC_TypeChecker_Env.iface_lids;
+          iface_val_lids = (env').FStarC_TypeChecker_Env.iface_val_lids } t0) in
+      (match tmp1 with
+        | (t_elab, tmp2, g1) -> (let tmp3 = (FStarC_TypeChecker_Rel.guard_to_string env' g1) in
+          (FStarC_Format.print1 "Guard = %s\n" tmp3);
+          (FStarC_TypeChecker_Rel.force_trivial_guard env' g1);
+          let tmp4 = (FStarC_TypeChecker_TcTerm.tc_term { FStarC_TypeChecker_Env.solver = (env').FStarC_TypeChecker_Env.solver;
+              range = (env').FStarC_TypeChecker_Env.range;
+              curmodule = (env').FStarC_TypeChecker_Env.curmodule;
+              gamma = (env').FStarC_TypeChecker_Env.gamma;
+              gamma_sig = (env').FStarC_TypeChecker_Env.gamma_sig;
+              gamma_cache = (env').FStarC_TypeChecker_Env.gamma_cache;
+              modules = (env').FStarC_TypeChecker_Env.modules;
+              expected_typ = (env').FStarC_TypeChecker_Env.expected_typ;
+              sigtab = (env').FStarC_TypeChecker_Env.sigtab;
+              attrtab = (env').FStarC_TypeChecker_Env.attrtab;
+              instantiate_imp = false;
+              effects = (env').FStarC_TypeChecker_Env.effects;
+              generalize = (env').FStarC_TypeChecker_Env.generalize;
+              letrecs = (env').FStarC_TypeChecker_Env.letrecs;
+              rec_names = (env').FStarC_TypeChecker_Env.rec_names;
+              top_level = (env').FStarC_TypeChecker_Env.top_level;
+              check_uvars = (env').FStarC_TypeChecker_Env.check_uvars;
+              use_eq_strict = (env').FStarC_TypeChecker_Env.use_eq_strict;
+              is_iface = (env').FStarC_TypeChecker_Env.is_iface;
+              admit = (env').FStarC_TypeChecker_Env.admit;
+              phase1 = (env').FStarC_TypeChecker_Env.phase1;
+              failhard = (env').FStarC_TypeChecker_Env.failhard;
+              flychecking = (env').FStarC_TypeChecker_Env.flychecking;
+              uvar_subtyping = (env').FStarC_TypeChecker_Env.uvar_subtyping;
+              intactics = (env').FStarC_TypeChecker_Env.intactics;
+              nocoerce = (env').FStarC_TypeChecker_Env.nocoerce;
+              tc_term = (env').FStarC_TypeChecker_Env.tc_term;
+              typeof_tot_or_gtot_term = (env').FStarC_TypeChecker_Env.typeof_tot_or_gtot_term;
+              universe_of = (env').FStarC_TypeChecker_Env.universe_of;
+              typeof_well_typed_tot_or_gtot_term = (env').FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term;
+              teq_nosmt_force = (env').FStarC_TypeChecker_Env.teq_nosmt_force;
+              subtype_nosmt_force = (env').FStarC_TypeChecker_Env.subtype_nosmt_force;
+              qtbl_name_and_index = (env').FStarC_TypeChecker_Env.qtbl_name_and_index;
+              qtbl_name_and_index1 = (env').FStarC_TypeChecker_Env.qtbl_name_and_index1;
+              fv_delta_depths = (env').FStarC_TypeChecker_Env.fv_delta_depths;
+              proof_ns = (env').FStarC_TypeChecker_Env.proof_ns;
+              synth_hook = (env').FStarC_TypeChecker_Env.synth_hook;
+              try_solve_implicits_hook = (env').FStarC_TypeChecker_Env.try_solve_implicits_hook;
+              splice = (env').FStarC_TypeChecker_Env.splice;
+              mpreprocess = (env').FStarC_TypeChecker_Env.mpreprocess;
+              postprocess = (env').FStarC_TypeChecker_Env.postprocess;
+              identifier_info = (env').FStarC_TypeChecker_Env.identifier_info;
+              tc_hooks = (env').FStarC_TypeChecker_Env.tc_hooks;
+              dsenv = (env').FStarC_TypeChecker_Env.dsenv;
+              nbe = (env').FStarC_TypeChecker_Env.nbe;
+              strict_args_tab = (env').FStarC_TypeChecker_Env.strict_args_tab;
+              disc_proj_tab = (env').FStarC_TypeChecker_Env.disc_proj_tab;
+              erasable_types_tab = (env').FStarC_TypeChecker_Env.erasable_types_tab;
+              enable_defer_to_tac = (env').FStarC_TypeChecker_Env.enable_defer_to_tac;
+              unif_allow_ref_guards = (env').FStarC_TypeChecker_Env.unif_allow_ref_guards;
+              erase_erasable_args = (env').FStarC_TypeChecker_Env.erase_erasable_args;
+              core_check = (env').FStarC_TypeChecker_Env.core_check;
+              missing_decl = (env').FStarC_TypeChecker_Env.missing_decl;
+              iface_todo = (env').FStarC_TypeChecker_Env.iface_todo;
+              iface_hidden = (env').FStarC_TypeChecker_Env.iface_hidden;
+              iface_lids = (env').FStarC_TypeChecker_Env.iface_lids;
+              iface_val_lids = (env').FStarC_TypeChecker_Env.iface_val_lids } t_elab) in
+          (match tmp4 with
+            | (t, lc, g) -> (let t1 = (FStarC_TypeChecker_Normalize.normalize (FStarC_TypeChecker_Env.Beta :: (FStarC_TypeChecker_Env.Iota :: (FStarC_TypeChecker_Env.Zeta :: (FStarC_TypeChecker_Env.Primops :: ((FStarC_TypeChecker_Env.UnfoldUntil (FStarC_Syntax_Syntax.delta_constant)) :: (FStarC_TypeChecker_Env.Eager_unfolding :: (FStarC_TypeChecker_Env.Inlining :: (FStarC_TypeChecker_Env.Unmeta :: (FStarC_TypeChecker_Env.Unascribe :: []))))))))) env' t) in
+              let tmp5 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' t0) in
+              let tmp6 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' t1) in
+              let tmp7 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "==>") tmp6) in
+              let tmp8 = (FStar_Pprint.op_Hat_Slash_Hat tmp5 tmp7) in
+              let tmp9 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "#eval") tmp8) in
+              let tmp10 = (tmp9 :: []) in
+              (FStarC_Errors.fStarC_Errors_info__range_list_document r tmp10))
+          ))
+      )))))
+    | tmp -> ()
+  ))
+
+let tc_type_common (env : FStarC_TypeChecker_Env.env) (ts : ((FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (expected_typ : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (r : FStarC_Range_Type.range) : ((FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
+  (match ts with
+    | (uvs, t) -> (let tmp = (FStarC_Syntax_Subst.open_univ_vars uvs t) in
+      (match tmp with
+        | (uvs1, t1) -> (let env1 = (FStarC_TypeChecker_Env.push_univ_vars env uvs1) in
+          let t2 = (FStarC_TypeChecker_TcTerm.tc_check_trivial_guard env1 t1 expected_typ) in
+          (if ((=) uvs1 []) then (let tmp1 = (FStarC_TypeChecker_Generalize.generalize_universes env1 t2) in
+          (match tmp1 with
+            | (uvs2, t3) -> ((FStarC_TypeChecker_Util.check_uvars r t3);
+              (uvs2, t3))
+          )) else (let tmp1 = (FStarC_TypeChecker_Normalize.remove_uvar_solutions env1 t2) in
+          let tmp2 = (FStarC_Syntax_Subst.close_univ_vars uvs1 tmp1) in
+          (uvs1, tmp2))))
+      ))
+  )
+
+let tc_declare_typ (env : FStarC_TypeChecker_Env.env) (ts : ((FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (r : FStarC_Range_Type.range) : ((FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
+  (let tmp = (FStarC_Syntax_Util.type_u ()) in
+  let tmp1 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp) in
+  (tc_type_common env ts tmp1 r))
+
+let declares_type_constructor (env : FStarC_TypeChecker_Env.env) (uvs : (FStarC_Ident.ident) list) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
+  (let tmp = (FStarC_Syntax_Subst.open_univ_vars uvs t) in
+  (match tmp with
+    | (tmp1, t1) -> (let tmp2 = (FStarC_Syntax_Util.arrow_formals_comp t1) in
+      (match tmp2 with
+        | (bs, c) -> (let res = (FStarC_Syntax_Util.comp_result c) in
+          let tmp3 = (FStarC_Syntax_Subst.compress res) in
+          let tmp4 = (tmp3).FStarC_Syntax_Syntax.n in
+          let tmp5 = (match tmp4 with
+              | (FStarC_Syntax_Syntax.Tm_type (u__0)) -> true
+              | tmp5 -> false
+            ) in
+          (if tmp5 then true else (let env1 = (FStarC_TypeChecker_Env.push_binders env bs) in
+          let tmp6 = (FStarC_TypeChecker_Normalize.unfold_whnf env1 res) in
+          let tmp7 = (FStarC_Syntax_Util.unrefine tmp6) in
+          let tmp8 = (FStarC_Syntax_Subst.compress tmp7) in
+          let tmp9 = (tmp8).FStarC_Syntax_Syntax.n in
+          (match tmp9 with
+            | (FStarC_Syntax_Syntax.Tm_type (u__0)) -> true
+            | tmp10 -> false
+          ))))
+      ))
+  ))
+
+let set_type_constructor_meta (env : FStarC_TypeChecker_Env.env) (se : FStarC_Syntax_Syntax.sigelt) (uvs : (FStarC_Ident.ident) list) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : FStarC_Syntax_Syntax.sigelt =
+  (let tmp = (FStarC_Util.for_some FStarC_Syntax_Syntax.uu___is_Assumption (se).FStarC_Syntax_Syntax.sigquals) in
+  let tmp1 = (if tmp then (let tmp1 = (FStarC_Util.for_some (fun tmp1 -> (match tmp1 with
+        | (FStarC_Syntax_Syntax.Projector (u__1, u__2)) -> true
+        | (FStarC_Syntax_Syntax.Discriminator (tmp2)) -> true
+        | tmp2 -> false
+      )) (se).FStarC_Syntax_Syntax.sigquals) in
+    (not tmp1)) else false) in
+  (if tmp1 then (let tmp2 = (declares_type_constructor env uvs t) in
+  (if tmp2 then { FStarC_Syntax_Syntax.sigel = (se).FStarC_Syntax_Syntax.sigel;
+    sigrng = (se).FStarC_Syntax_Syntax.sigrng;
+    sigquals = (se).FStarC_Syntax_Syntax.sigquals;
+    sigmeta = (let tmp3 = (se).FStarC_Syntax_Syntax.sigmeta in
+    { FStarC_Syntax_Syntax.sigmeta_active = (tmp3).FStarC_Syntax_Syntax.sigmeta_active;
+      sigmeta_fact_db_ids = (tmp3).FStarC_Syntax_Syntax.sigmeta_fact_db_ids;
+      sigmeta_admit = (tmp3).FStarC_Syntax_Syntax.sigmeta_admit;
+      sigmeta_spliced = (tmp3).FStarC_Syntax_Syntax.sigmeta_spliced;
+      sigmeta_already_checked = (tmp3).FStarC_Syntax_Syntax.sigmeta_already_checked;
+      sigmeta_extension_decl = (tmp3).FStarC_Syntax_Syntax.sigmeta_extension_decl;
+      sigmeta_extension_data = (tmp3).FStarC_Syntax_Syntax.sigmeta_extension_data;
+      sigmeta_type_constructor = true });
+    sigattrs = (se).FStarC_Syntax_Syntax.sigattrs;
+    sigopens_and_abbrevs = (se).FStarC_Syntax_Syntax.sigopens_and_abbrevs;
+    sigopts = (se).FStarC_Syntax_Syntax.sigopts } else ((if (FStarC_List.contains FStarC_Syntax_Syntax.New (se).FStarC_Syntax_Syntax.sigquals) then (FStarC_Errors.fStarC_Errors_log_issue__sigelt_list_document se FStarC_Errors_Codes.Warning_IgnoredNewQualifier ((FStarC_Errors_Msg.text "This 'new' qualifier is ignored: it only means something on a declaration that introduces a type constructor, i.e. one whose result type is a sort.") :: ((FStarC_Errors_Msg.text "It used to make the SMT encoder assert that the declared symbol is distinct from every other type constant. On a declaration like 'assume new type b : int -> bool' that was unsound, since the primitive types are inverted through the very same mechanism, so it proved False (issue #4521).") :: []))) else ());
+  se))) else se))
+
+let tc_assume (env : FStarC_TypeChecker_Env.env) (ts : ((FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (r : FStarC_Range_Type.range) : ((FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
+  (tc_type_common env ts FStarC_Syntax_Syntax.t_prop r)
+
+let rec tc_sig_let__rename_binders (has_auto_name : (FStarC_Syntax_Syntax.bv -> bool)) (def_bs : (FStarC_Syntax_Syntax.binder) list) (val_bs : (FStarC_Syntax_Syntax.binder) list) : (FStarC_Syntax_Syntax.binder) list =
+  (match (def_bs, val_bs) with
+    | ([], tmp) -> val_bs
+    | (tmp, []) -> val_bs
+    | (({ FStarC_Syntax_Syntax.binder_bv = body_bv; binder_qual = tmp; binder_positivity = tmp1; binder_attrs = tmp2; _ } :: bt), (val_b :: vt)) -> ((match ((has_auto_name body_bv), (has_auto_name (val_b).FStarC_Syntax_Syntax.binder_bv)) with
+        | (true, tmp3) -> val_b
+        | (false, true) -> { FStarC_Syntax_Syntax.binder_bv = (let tmp3 = (val_b).FStarC_Syntax_Syntax.binder_bv in
+            { FStarC_Syntax_Syntax.ppname = (FStarC_Ident.mk_ident ((FStarC_Ident.string_of_id (body_bv).FStarC_Syntax_Syntax.ppname), (FStarC_Ident.range_of_id ((val_b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.ppname)));
+              index = (tmp3).FStarC_Syntax_Syntax.index;
+              sort = (tmp3).FStarC_Syntax_Syntax.sort });
+            binder_qual = (val_b).FStarC_Syntax_Syntax.binder_qual;
+            binder_positivity = (val_b).FStarC_Syntax_Syntax.binder_positivity;
+            binder_attrs = (val_b).FStarC_Syntax_Syntax.binder_attrs }
+        | (false, false) -> val_b
+      ) :: ((tc_sig_let__rename_binders has_auto_name) bt vt))
+  )
+
+let check_quals_eq (r : FStarC_Range_Type.range) (l : FStarC_Ident.lident) (qopt : (FStarC_Syntax_Syntax.qualifier) list) (val_q : (FStarC_Syntax_Syntax.qualifier) list) : (FStarC_Syntax_Syntax.qualifier) list =
+  (match qopt with
+    | [] -> val_q
+    | q' -> (let drop_logic_and_irreducible = (FStarC_List.filter (fun x -> (not ((match x with
+          | FStarC_Syntax_Syntax.Logic -> true
+          | tmp -> false
+        ) || (match x with
+          | FStarC_Syntax_Syntax.Irreducible -> true
+          | tmp -> false
+        ))))) in
+      let val_q1 = (drop_logic_and_irreducible val_q) in
+      let q'1 = (drop_logic_and_irreducible q') in
+      let tmp = (FStarC_Syntax_Syntax.fStarC_Class_Ord_ord_list_diff__qualifier val_q1 q'1) in
+      (match tmp with
+        | ([], []) -> q'
+        | (d1, d2) -> (let tmp1 = (FStarC_Ident.fStarC_Class_PP_pp__lident l) in
+          let tmp2 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Inconsistent qualifier annotations on") tmp1) in
+          let tmp3 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__list_qualifier val_q1) in
+          let tmp4 = (FStarC_Errors_Msg.fquotes tmp3) in
+          let tmp5 = (FStar_Pprint.prefix (Prims.parse_int "4") (Prims.parse_int "1") (FStarC_Errors_Msg.text "Expected") tmp4) in
+          let tmp6 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__list_qualifier q'1) in
+          let tmp7 = (FStarC_Errors_Msg.fquotes tmp6) in
+          let tmp8 = (FStar_Pprint.prefix (Prims.parse_int "4") (Prims.parse_int "1") (FStarC_Errors_Msg.text "got") tmp7) in
+          let tmp9 = (FStar_Pprint.op_Hat_Slash_Hat tmp5 tmp8) in
+          let tmp10 = (if (match d1 with
+              | (hd :: tl) -> true
+              | tmp10 -> false
+            ) then (let tmp10 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__list_qualifier d1) in
+            let tmp11 = (FStarC_Errors_Msg.fquotes tmp10) in
+            (FStar_Pprint.prefix (Prims.parse_int "2") (Prims.parse_int "1") (FStarC_Errors_Msg.text "Only in declaration: ") tmp11)) else FStar_Pprint.empty) in
+          let tmp11 = (if (match d2 with
+              | (hd :: tl) -> true
+              | tmp11 -> false
+            ) then (let tmp11 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__list_qualifier d2) in
+            let tmp12 = (FStarC_Errors_Msg.fquotes tmp11) in
+            (FStar_Pprint.prefix (Prims.parse_int "2") (Prims.parse_int "1") (FStarC_Errors_Msg.text "Only in definition: ") tmp12)) else FStar_Pprint.empty) in
+          let tmp12 = (tmp11 :: []) in
+          let tmp13 = (tmp10 :: tmp12) in
+          let tmp14 = (tmp9 :: tmp13) in
+          let tmp15 = (tmp2 :: tmp14) in
+          (FStarC_Errors.fStarC_Errors_raise_error__range_list_document r FStarC_Errors_Codes.Fatal_InconsistentQualifierAnnotation tmp15))
+      ))
+  )
+
+let log (env : FStarC_TypeChecker_Env.env) : bool =
+  (let tmp = (FStarC_Options.log_types ()) in
+  (if tmp then (not (FStarC_Ident.lid_equals FStarC_Parser_Const.prims_lid (FStarC_TypeChecker_Env.current_module env))) else false))
+
+let tc_sig_let (env : FStarC_TypeChecker_Env.env) (r : FStarC_Range_Type.range) (se : FStarC_Syntax_Syntax.sigelt) (lbs : (bool * (FStarC_Syntax_Syntax.letbinding) list)) (lids : (FStarC_Ident.lident) list) : ((FStarC_Syntax_Syntax.sigelt) list * (FStarC_Syntax_Syntax.sigelt) list * FStarC_TypeChecker_Env.env) =
+  (let env1 = (FStarC_TypeChecker_Env.set_range env r) in
+  let rename_parameters = (fun lb -> (let rename_in_typ = (fun def typ -> (let typ1 = (FStarC_Syntax_Subst.compress typ) in
+      let tmp = (FStarC_Syntax_Subst.compress def) in
+      let tmp1 = (tmp).FStarC_Syntax_Syntax.n in
+      let def_bs = (match tmp1 with
+          | (FStarC_Syntax_Syntax.Tm_abs (tmp2)) -> (let tmp3 = (FStarC_Syntax_Util.abs_formals_ln def) in
+            (match tmp3 with
+              | (binders, tmp4, tmp5) -> binders
+            ))
+          | tmp2 -> []
+        ) in
+      (match typ1 with
+        | { FStarC_Syntax_Syntax.n = (FStarC_Syntax_Syntax.Tm_arrow (tmp2)); pos = r1; hash_code = tmp3; _ } -> (let tmp4 = (FStarC_Syntax_Util.arrow_formals_comp_ln_strict typ1) in
+          (match tmp4 with
+            | (val_bs, c) -> (let has_auto_name = (fun bv -> (FStarC_Util.starts_with (FStarC_Ident.string_of_id (bv).FStarC_Syntax_Syntax.ppname) FStarC_Ident.reserved_prefix)) in
+              (FStarC_Syntax_Syntax.mk_Tm_arrow ((tc_sig_let__rename_binders has_auto_name) def_bs val_bs) c r1))
+          ))
+        | tmp2 -> typ1
+      ))) in
+    let tmp = (rename_in_typ (lb).FStarC_Syntax_Syntax.lbdef (lb).FStarC_Syntax_Syntax.lbtyp) in
+    { FStarC_Syntax_Syntax.lbname = (lb).FStarC_Syntax_Syntax.lbname;
+      lbunivs = (lb).FStarC_Syntax_Syntax.lbunivs;
+      lbtyp = tmp;
+      lbeff = (lb).FStarC_Syntax_Syntax.lbeff;
+      lbdef = (lb).FStarC_Syntax_Syntax.lbdef;
+      lbattrs = (lb).FStarC_Syntax_Syntax.lbattrs;
+      lbpos = (lb).FStarC_Syntax_Syntax.lbpos })) in
+  let tmp = (FStarC_List.fold_left (fun tmp lb -> (match tmp with
+      | (gen, lbs1, quals) -> (let lbname = (match (lb).FStarC_Syntax_Syntax.lbname with
+            | (FStar_Pervasives.Inr (v)) -> v
+          ) in
+        let tmp1 = (FStarC_TypeChecker_Env.try_lookup_val_decl env1 (lbname).FStarC_Syntax_Syntax.fv_name) in
+        let tmp2 = (match tmp1 with
+            | None -> (gen, lb, quals)
+            | (Some (((uvs, tval), vquals))) -> (let quals1 = (check_quals_eq r (lbname).FStarC_Syntax_Syntax.fv_name quals vquals) in
+              let def = (match ((lb).FStarC_Syntax_Syntax.lbtyp).FStarC_Syntax_Syntax.n with
+                  | FStarC_Syntax_Syntax.Tm_unknown -> (lb).FStarC_Syntax_Syntax.lbdef
+                  | tmp2 -> (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_ascribed (({ FStarC_Syntax_Syntax.tm = (lb).FStarC_Syntax_Syntax.lbdef;
+                      asc = (FStar_Pervasives.Inl ((lb).FStarC_Syntax_Syntax.lbtyp));
+                      asc1 = None;
+                      asc2 = false;
+                      eff_opt = None } : FStarC_Syntax_Syntax.term'__Tm_ascribed__payload))) ((lb).FStarC_Syntax_Syntax.lbdef).FStarC_Syntax_Syntax.pos)
+                ) in
+              (if (((<>) (lb).FStarC_Syntax_Syntax.lbunivs []) && ((<>) (FStarC_List.length (lb).FStarC_Syntax_Syntax.lbunivs) (FStarC_List.length uvs))) then (FStarC_Errors.fStarC_Errors_raise_error__range_string r FStarC_Errors_Codes.Fatal_IncoherentInlineUniverse "Inline universes are incoherent with annotation from val declaration") else ());
+              (false, (FStarC_Syntax_Syntax.mk_lb ((FStar_Pervasives.Inr (lbname)), uvs, FStarC_Parser_Const.effect_Tot_lid, tval, def, (lb).FStarC_Syntax_Syntax.lbattrs, (lb).FStarC_Syntax_Syntax.lbpos)), quals1))
+          ) in
+        (match tmp2 with
+          | (gen1, lb1, quals1) -> (gen1, (lb1 :: lbs1), quals1)
+        ))
+    )) (true, [], (se).FStarC_Syntax_Syntax.sigquals) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd lbs)) in
+  (match tmp with
+    | (should_generalize, lbs', quals) -> ((FStarC_Syntax_Util.check_mutual_universes lbs');
+      let tmp1 = (FStarC_Util.for_some (fun tmp1 -> (match tmp1 with
+          | FStarC_Syntax_Syntax.Irreducible -> true
+          | FStarC_Syntax_Syntax.Visible_default -> true
+          | FStarC_Syntax_Syntax.Unfold_for_unification_and_vcgen -> true
+          | tmp2 -> false
+        )) quals) in
+      let quals1 = (if tmp1 then quals else (FStarC_Syntax_Syntax.Visible_default :: quals)) in
+      let lbs'1 = (FStarC_List.rev lbs') in
+      let tmp2 = (FStarC_Syntax_Util.extract_attr' FStarC_Parser_Const.preprocess_with (se).FStarC_Syntax_Syntax.sigattrs) in
+      let tmp3 = (match tmp2 with
+          | None -> ((se).FStarC_Syntax_Syntax.sigattrs, None)
+          | (Some ((ats, ((tau, None) :: [])))) -> (ats, (Some (tau)))
+          | (Some ((ats, args))) -> ((FStarC_Errors.fStarC_Errors_log_issue__range_string r FStarC_Errors_Codes.Warning_UnrecognizedAttribute "Ill-formed application of `preprocess_with`");
+            ((se).FStarC_Syntax_Syntax.sigattrs, None))
+        ) in
+      (match tmp3 with
+        | (attrs, pre_tau) -> (let preprocess_lb = (fun tau lb -> (let lbdef = (FStarC_TypeChecker_Env.preprocess env1 tau (lb).FStarC_Syntax_Syntax.lbdef) in
+            let tmp4 = (FStarC_Debug.medium ()) in
+            let tmp5 = (if tmp4 then true else (!(dbg_TwoPhases))) in
+            (if tmp5 then (let tmp6 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' lbdef) in
+            (FStarC_Format.print1 "lb preprocessed into: %s\n" tmp6)) else ());
+            { FStarC_Syntax_Syntax.lbname = (lb).FStarC_Syntax_Syntax.lbname;
+              lbunivs = (lb).FStarC_Syntax_Syntax.lbunivs;
+              lbtyp = (lb).FStarC_Syntax_Syntax.lbtyp;
+              lbeff = (lb).FStarC_Syntax_Syntax.lbeff;
+              lbdef = lbdef;
+              lbattrs = (lb).FStarC_Syntax_Syntax.lbattrs;
+              lbpos = (lb).FStarC_Syntax_Syntax.lbpos })) in
+          let lbs'2 = (match pre_tau with
+              | (Some (tau)) -> (FStarC_List.map (preprocess_lb tau) lbs'1)
+              | None -> lbs'1
+            ) in
+          let tmp4 = (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_constant (FStarC_Const.Const_unit)) r) in
+          let tmp5 = ({ FStarC_Syntax_Syntax.lbs = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst lbs);
+              lbs1 = lbs'2;
+              body = tmp4 } : FStarC_Syntax_Syntax.term'__Tm_let__payload) in
+          let tmp6 = (FStarC_Syntax_Syntax.Tm_let (tmp5)) in
+          let e = (FStarC_Syntax_Syntax.mk tmp6 r) in
+          let env' = { FStarC_TypeChecker_Env.solver = (env1).FStarC_TypeChecker_Env.solver;
+              range = (env1).FStarC_TypeChecker_Env.range;
+              curmodule = (env1).FStarC_TypeChecker_Env.curmodule;
+              gamma = (env1).FStarC_TypeChecker_Env.gamma;
+              gamma_sig = (env1).FStarC_TypeChecker_Env.gamma_sig;
+              gamma_cache = (env1).FStarC_TypeChecker_Env.gamma_cache;
+              modules = (env1).FStarC_TypeChecker_Env.modules;
+              expected_typ = (env1).FStarC_TypeChecker_Env.expected_typ;
+              sigtab = (env1).FStarC_TypeChecker_Env.sigtab;
+              attrtab = (env1).FStarC_TypeChecker_Env.attrtab;
+              instantiate_imp = (env1).FStarC_TypeChecker_Env.instantiate_imp;
+              effects = (env1).FStarC_TypeChecker_Env.effects;
+              generalize = should_generalize;
+              letrecs = (env1).FStarC_TypeChecker_Env.letrecs;
+              rec_names = (env1).FStarC_TypeChecker_Env.rec_names;
+              top_level = true;
+              check_uvars = (env1).FStarC_TypeChecker_Env.check_uvars;
+              use_eq_strict = (env1).FStarC_TypeChecker_Env.use_eq_strict;
+              is_iface = (env1).FStarC_TypeChecker_Env.is_iface;
+              admit = (env1).FStarC_TypeChecker_Env.admit;
+              phase1 = (env1).FStarC_TypeChecker_Env.phase1;
+              failhard = (env1).FStarC_TypeChecker_Env.failhard;
+              flychecking = (env1).FStarC_TypeChecker_Env.flychecking;
+              uvar_subtyping = (env1).FStarC_TypeChecker_Env.uvar_subtyping;
+              intactics = (env1).FStarC_TypeChecker_Env.intactics;
+              nocoerce = (env1).FStarC_TypeChecker_Env.nocoerce;
+              tc_term = (env1).FStarC_TypeChecker_Env.tc_term;
+              typeof_tot_or_gtot_term = (env1).FStarC_TypeChecker_Env.typeof_tot_or_gtot_term;
+              universe_of = (env1).FStarC_TypeChecker_Env.universe_of;
+              typeof_well_typed_tot_or_gtot_term = (env1).FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term;
+              teq_nosmt_force = (env1).FStarC_TypeChecker_Env.teq_nosmt_force;
+              subtype_nosmt_force = (env1).FStarC_TypeChecker_Env.subtype_nosmt_force;
+              qtbl_name_and_index = (env1).FStarC_TypeChecker_Env.qtbl_name_and_index;
+              qtbl_name_and_index1 = (env1).FStarC_TypeChecker_Env.qtbl_name_and_index1;
+              fv_delta_depths = (env1).FStarC_TypeChecker_Env.fv_delta_depths;
+              proof_ns = (env1).FStarC_TypeChecker_Env.proof_ns;
+              synth_hook = (env1).FStarC_TypeChecker_Env.synth_hook;
+              try_solve_implicits_hook = (env1).FStarC_TypeChecker_Env.try_solve_implicits_hook;
+              splice = (env1).FStarC_TypeChecker_Env.splice;
+              mpreprocess = (env1).FStarC_TypeChecker_Env.mpreprocess;
+              postprocess = (env1).FStarC_TypeChecker_Env.postprocess;
+              identifier_info = (env1).FStarC_TypeChecker_Env.identifier_info;
+              tc_hooks = (env1).FStarC_TypeChecker_Env.tc_hooks;
+              dsenv = (env1).FStarC_TypeChecker_Env.dsenv;
+              nbe = (env1).FStarC_TypeChecker_Env.nbe;
+              strict_args_tab = (env1).FStarC_TypeChecker_Env.strict_args_tab;
+              disc_proj_tab = (env1).FStarC_TypeChecker_Env.disc_proj_tab;
+              erasable_types_tab = (env1).FStarC_TypeChecker_Env.erasable_types_tab;
+              enable_defer_to_tac = (env1).FStarC_TypeChecker_Env.enable_defer_to_tac;
+              unif_allow_ref_guards = (env1).FStarC_TypeChecker_Env.unif_allow_ref_guards;
+              erase_erasable_args = (env1).FStarC_TypeChecker_Env.erase_erasable_args;
+              core_check = (env1).FStarC_TypeChecker_Env.core_check;
+              missing_decl = (env1).FStarC_TypeChecker_Env.missing_decl;
+              iface_todo = (env1).FStarC_TypeChecker_Env.iface_todo;
+              iface_hidden = (env1).FStarC_TypeChecker_Env.iface_hidden;
+              iface_lids = (env1).FStarC_TypeChecker_Env.iface_lids;
+              iface_val_lids = (env1).FStarC_TypeChecker_Env.iface_val_lids } in
+          let tmp7 = (do_two_phases env') in
+          let e1 = (if tmp7 then (run_phase1 (fun tmp8 -> (let drop_lbtyp = (fun e_lax -> (let tmp9 = (FStarC_Syntax_Subst.compress e_lax) in
+              let tmp10 = (tmp9).FStarC_Syntax_Syntax.n in
+              (match tmp10 with
+                | (FStarC_Syntax_Syntax.Tm_let ({ FStarC_Syntax_Syntax.lbs = false; lbs1 = (lb :: []); body = e2; _ })) -> (let tmp11 = (FStarC_Syntax_Subst.compress e) in
+                  let tmp12 = (tmp11).FStarC_Syntax_Syntax.n in
+                  let lb_unannotated = (match tmp12 with
+                      | (FStarC_Syntax_Syntax.Tm_let ({ FStarC_Syntax_Syntax.lbs = tmp13; lbs1 = (lb1 :: []); body = tmp14; _ })) -> (let tmp15 = (FStarC_Syntax_Subst.compress (lb1).FStarC_Syntax_Syntax.lbtyp) in
+                        let tmp16 = (tmp15).FStarC_Syntax_Syntax.n in
+                        (match tmp16 with
+                          | FStarC_Syntax_Syntax.Tm_unknown -> true
+                          | tmp17 -> false
+                        ))
+                      | tmp13 -> (FStarC_Effect.failwith "Impossible: first phase lb and second phase lb differ in structure!")
+                    ) in
+                  (if lb_unannotated then { FStarC_Syntax_Syntax.n = (FStarC_Syntax_Syntax.Tm_let (({ FStarC_Syntax_Syntax.lbs = false;
+                      lbs1 = ({ FStarC_Syntax_Syntax.lbname = (lb).FStarC_Syntax_Syntax.lbname;
+                        lbunivs = (lb).FStarC_Syntax_Syntax.lbunivs;
+                        lbtyp = FStarC_Syntax_Syntax.tun;
+                        lbeff = (lb).FStarC_Syntax_Syntax.lbeff;
+                        lbdef = (lb).FStarC_Syntax_Syntax.lbdef;
+                        lbattrs = (lb).FStarC_Syntax_Syntax.lbattrs;
+                        lbpos = (lb).FStarC_Syntax_Syntax.lbpos } :: []);
+                      body = e2 } : FStarC_Syntax_Syntax.term'__Tm_let__payload)));
+                    pos = (e_lax).FStarC_Syntax_Syntax.pos;
+                    hash_code = (e_lax).FStarC_Syntax_Syntax.hash_code } else e_lax))
+                | (FStarC_Syntax_Syntax.Tm_let ({ FStarC_Syntax_Syntax.lbs = true; lbs1 = lbs1; body = tmp11; _ })) -> ((FStarC_Syntax_Util.check_mutual_universes lbs1);
+                  e_lax)
+              ))) in
+            let e1 = (FStarC_Profiling.profile (fun tmp9 -> (let tmp10 = (FStarC_TypeChecker_TcTerm.tc_maybe_toplevel_term { FStarC_TypeChecker_Env.solver = (env').FStarC_TypeChecker_Env.solver;
+                  range = (env').FStarC_TypeChecker_Env.range;
+                  curmodule = (env').FStarC_TypeChecker_Env.curmodule;
+                  gamma = (env').FStarC_TypeChecker_Env.gamma;
+                  gamma_sig = (env').FStarC_TypeChecker_Env.gamma_sig;
+                  gamma_cache = (env').FStarC_TypeChecker_Env.gamma_cache;
+                  modules = (env').FStarC_TypeChecker_Env.modules;
+                  expected_typ = (env').FStarC_TypeChecker_Env.expected_typ;
+                  sigtab = (env').FStarC_TypeChecker_Env.sigtab;
+                  attrtab = (env').FStarC_TypeChecker_Env.attrtab;
+                  instantiate_imp = (env').FStarC_TypeChecker_Env.instantiate_imp;
+                  effects = (env').FStarC_TypeChecker_Env.effects;
+                  generalize = (env').FStarC_TypeChecker_Env.generalize;
+                  letrecs = (env').FStarC_TypeChecker_Env.letrecs;
+                  rec_names = (env').FStarC_TypeChecker_Env.rec_names;
+                  top_level = (env').FStarC_TypeChecker_Env.top_level;
+                  check_uvars = (env').FStarC_TypeChecker_Env.check_uvars;
+                  use_eq_strict = (env').FStarC_TypeChecker_Env.use_eq_strict;
+                  is_iface = (env').FStarC_TypeChecker_Env.is_iface;
+                  admit = true;
+                  phase1 = true;
+                  failhard = (env').FStarC_TypeChecker_Env.failhard;
+                  flychecking = (env').FStarC_TypeChecker_Env.flychecking;
+                  uvar_subtyping = (env').FStarC_TypeChecker_Env.uvar_subtyping;
+                  intactics = (env').FStarC_TypeChecker_Env.intactics;
+                  nocoerce = (env').FStarC_TypeChecker_Env.nocoerce;
+                  tc_term = (env').FStarC_TypeChecker_Env.tc_term;
+                  typeof_tot_or_gtot_term = (env').FStarC_TypeChecker_Env.typeof_tot_or_gtot_term;
+                  universe_of = (env').FStarC_TypeChecker_Env.universe_of;
+                  typeof_well_typed_tot_or_gtot_term = (env').FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term;
+                  teq_nosmt_force = (env').FStarC_TypeChecker_Env.teq_nosmt_force;
+                  subtype_nosmt_force = (env').FStarC_TypeChecker_Env.subtype_nosmt_force;
+                  qtbl_name_and_index = (env').FStarC_TypeChecker_Env.qtbl_name_and_index;
+                  qtbl_name_and_index1 = (env').FStarC_TypeChecker_Env.qtbl_name_and_index1;
+                  fv_delta_depths = (env').FStarC_TypeChecker_Env.fv_delta_depths;
+                  proof_ns = (env').FStarC_TypeChecker_Env.proof_ns;
+                  synth_hook = (env').FStarC_TypeChecker_Env.synth_hook;
+                  try_solve_implicits_hook = (env').FStarC_TypeChecker_Env.try_solve_implicits_hook;
+                  splice = (env').FStarC_TypeChecker_Env.splice;
+                  mpreprocess = (env').FStarC_TypeChecker_Env.mpreprocess;
+                  postprocess = (env').FStarC_TypeChecker_Env.postprocess;
+                  identifier_info = (env').FStarC_TypeChecker_Env.identifier_info;
+                  tc_hooks = (env').FStarC_TypeChecker_Env.tc_hooks;
+                  dsenv = (env').FStarC_TypeChecker_Env.dsenv;
+                  nbe = (env').FStarC_TypeChecker_Env.nbe;
+                  strict_args_tab = (env').FStarC_TypeChecker_Env.strict_args_tab;
+                  disc_proj_tab = (env').FStarC_TypeChecker_Env.disc_proj_tab;
+                  erasable_types_tab = (env').FStarC_TypeChecker_Env.erasable_types_tab;
+                  enable_defer_to_tac = (env').FStarC_TypeChecker_Env.enable_defer_to_tac;
+                  unif_allow_ref_guards = (env').FStarC_TypeChecker_Env.unif_allow_ref_guards;
+                  erase_erasable_args = (env').FStarC_TypeChecker_Env.erase_erasable_args;
+                  core_check = (env').FStarC_TypeChecker_Env.core_check;
+                  missing_decl = (env').FStarC_TypeChecker_Env.missing_decl;
+                  iface_todo = (env').FStarC_TypeChecker_Env.iface_todo;
+                  iface_hidden = (env').FStarC_TypeChecker_Env.iface_hidden;
+                  iface_lids = (env').FStarC_TypeChecker_Env.iface_lids;
+                  iface_val_lids = (env').FStarC_TypeChecker_Env.iface_val_lids } e) in
+              (match tmp10 with
+                | (e1, tmp11, tmp12) -> e1
+              ))) (Some ((FStarC_Ident.string_of_lid (FStarC_TypeChecker_Env.current_module env1)))) "FStarC.TypeChecker.Tc.tc_sig_let-tc-phase1") in
+            let tmp9 = (FStarC_Debug.medium ()) in
+            let tmp10 = (if tmp9 then true else (!(dbg_TwoPhases))) in
+            (if tmp10 then (let tmp11 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' e1) in
+            (FStarC_Format.print1 "Let binding after phase 1, before removing uvars: %s\n" tmp11)) else ());
+            let tmp11 = (FStarC_TypeChecker_Normalize.remove_uvar_solutions env' e1) in
+            let e2 = (drop_lbtyp tmp11) in
+            let tmp12 = (FStarC_Debug.medium ()) in
+            let tmp13 = (if tmp12 then true else (!(dbg_TwoPhases))) in
+            (if tmp13 then (let tmp14 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' e2) in
+            (FStarC_Format.print1 "Let binding after phase 1, uvars removed: %s\n" tmp14)) else ());
+            e2))) else e) in
+          let tmp8 = (FStarC_Syntax_Subst.compress e1) in
+          let tmp9 = (tmp8).FStarC_Syntax_Syntax.n in
+          let env'1 = (match tmp9 with
+              | (FStarC_Syntax_Syntax.Tm_let ({ FStarC_Syntax_Syntax.lbs = u__1; lbs1 = u__2; body = tmp10; _ })) -> (let se1 = { FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_let (({ FStarC_Syntax_Syntax.lbs = (u__1, u__2); lids = lids } : FStarC_Syntax_Syntax.sigelt'__Sig_let__payload)));
+                    sigrng = (se).FStarC_Syntax_Syntax.sigrng;
+                    sigquals = (se).FStarC_Syntax_Syntax.sigquals;
+                    sigmeta = (se).FStarC_Syntax_Syntax.sigmeta;
+                    sigattrs = attrs;
+                    sigopens_and_abbrevs = (se).FStarC_Syntax_Syntax.sigopens_and_abbrevs;
+                    sigopts = (se).FStarC_Syntax_Syntax.sigopts } in
+                (set_hint_correlator env' se1))
+              | tmp10 -> (FStarC_Effect.failwith "no way, not a let?")
+            ) in
+          (FStarC_Errors.stop_if_err ());
+          let tmp10 = (do_two_phases env'1) in
+          let should_generalize1 = (not tmp10) in
+          let r1 = (FStarC_Profiling.profile (fun tmp11 -> (FStarC_TypeChecker_TcTerm.tc_maybe_toplevel_term { FStarC_TypeChecker_Env.solver = (env'1).FStarC_TypeChecker_Env.solver;
+              range = (env'1).FStarC_TypeChecker_Env.range;
+              curmodule = (env'1).FStarC_TypeChecker_Env.curmodule;
+              gamma = (env'1).FStarC_TypeChecker_Env.gamma;
+              gamma_sig = (env'1).FStarC_TypeChecker_Env.gamma_sig;
+              gamma_cache = (env'1).FStarC_TypeChecker_Env.gamma_cache;
+              modules = (env'1).FStarC_TypeChecker_Env.modules;
+              expected_typ = (env'1).FStarC_TypeChecker_Env.expected_typ;
+              sigtab = (env'1).FStarC_TypeChecker_Env.sigtab;
+              attrtab = (env'1).FStarC_TypeChecker_Env.attrtab;
+              instantiate_imp = (env'1).FStarC_TypeChecker_Env.instantiate_imp;
+              effects = (env'1).FStarC_TypeChecker_Env.effects;
+              generalize = should_generalize1;
+              letrecs = (env'1).FStarC_TypeChecker_Env.letrecs;
+              rec_names = (env'1).FStarC_TypeChecker_Env.rec_names;
+              top_level = (env'1).FStarC_TypeChecker_Env.top_level;
+              check_uvars = (env'1).FStarC_TypeChecker_Env.check_uvars;
+              use_eq_strict = (env'1).FStarC_TypeChecker_Env.use_eq_strict;
+              is_iface = (env'1).FStarC_TypeChecker_Env.is_iface;
+              admit = (env'1).FStarC_TypeChecker_Env.admit;
+              phase1 = (env'1).FStarC_TypeChecker_Env.phase1;
+              failhard = (env'1).FStarC_TypeChecker_Env.failhard;
+              flychecking = (env'1).FStarC_TypeChecker_Env.flychecking;
+              uvar_subtyping = (env'1).FStarC_TypeChecker_Env.uvar_subtyping;
+              intactics = (env'1).FStarC_TypeChecker_Env.intactics;
+              nocoerce = (env'1).FStarC_TypeChecker_Env.nocoerce;
+              tc_term = (env'1).FStarC_TypeChecker_Env.tc_term;
+              typeof_tot_or_gtot_term = (env'1).FStarC_TypeChecker_Env.typeof_tot_or_gtot_term;
+              universe_of = (env'1).FStarC_TypeChecker_Env.universe_of;
+              typeof_well_typed_tot_or_gtot_term = (env'1).FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term;
+              teq_nosmt_force = (env'1).FStarC_TypeChecker_Env.teq_nosmt_force;
+              subtype_nosmt_force = (env'1).FStarC_TypeChecker_Env.subtype_nosmt_force;
+              qtbl_name_and_index = (env'1).FStarC_TypeChecker_Env.qtbl_name_and_index;
+              qtbl_name_and_index1 = (env'1).FStarC_TypeChecker_Env.qtbl_name_and_index1;
+              fv_delta_depths = (env'1).FStarC_TypeChecker_Env.fv_delta_depths;
+              proof_ns = (env'1).FStarC_TypeChecker_Env.proof_ns;
+              synth_hook = (env'1).FStarC_TypeChecker_Env.synth_hook;
+              try_solve_implicits_hook = (env'1).FStarC_TypeChecker_Env.try_solve_implicits_hook;
+              splice = (env'1).FStarC_TypeChecker_Env.splice;
+              mpreprocess = (env'1).FStarC_TypeChecker_Env.mpreprocess;
+              postprocess = (env'1).FStarC_TypeChecker_Env.postprocess;
+              identifier_info = (env'1).FStarC_TypeChecker_Env.identifier_info;
+              tc_hooks = (env'1).FStarC_TypeChecker_Env.tc_hooks;
+              dsenv = (env'1).FStarC_TypeChecker_Env.dsenv;
+              nbe = (env'1).FStarC_TypeChecker_Env.nbe;
+              strict_args_tab = (env'1).FStarC_TypeChecker_Env.strict_args_tab;
+              disc_proj_tab = (env'1).FStarC_TypeChecker_Env.disc_proj_tab;
+              erasable_types_tab = (env'1).FStarC_TypeChecker_Env.erasable_types_tab;
+              enable_defer_to_tac = (env'1).FStarC_TypeChecker_Env.enable_defer_to_tac;
+              unif_allow_ref_guards = (env'1).FStarC_TypeChecker_Env.unif_allow_ref_guards;
+              erase_erasable_args = (env'1).FStarC_TypeChecker_Env.erase_erasable_args;
+              core_check = (env'1).FStarC_TypeChecker_Env.core_check;
+              missing_decl = (env'1).FStarC_TypeChecker_Env.missing_decl;
+              iface_todo = (env'1).FStarC_TypeChecker_Env.iface_todo;
+              iface_hidden = (env'1).FStarC_TypeChecker_Env.iface_hidden;
+              iface_lids = (env'1).FStarC_TypeChecker_Env.iface_lids;
+              iface_val_lids = (env'1).FStarC_TypeChecker_Env.iface_val_lids } e1)) (Some ((FStarC_Ident.string_of_lid (FStarC_TypeChecker_Env.current_module env1)))) "FStarC.TypeChecker.Tc.tc_sig_let-tc-phase2") in
+          let tmp11 = (match r1 with
+              | ({ FStarC_Syntax_Syntax.n = (FStarC_Syntax_Syntax.Tm_let ({ FStarC_Syntax_Syntax.lbs = u__1; lbs1 = u__2; body = e2; _ })); pos = tmp11; hash_code = tmp12; _ }, tmp13, g) when (FStarC_TypeChecker_Env.is_trivial g) -> (let lbs1 = (u__1, u__2) in
+                (FStarC_Syntax_Util.check_mutual_universes (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd lbs1));
+                let tmp14 = (FStarC_List.map rename_parameters (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd lbs1)) in
+                let lbs2 = ((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst lbs1), tmp14) in
+                let quals2 = (match (e2).FStarC_Syntax_Syntax.n with
+                    | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = tmp15; meta = (FStarC_Syntax_Syntax.Meta_desugared (FStarC_Syntax_Syntax.Masked_effect)); _ })) -> (FStarC_Syntax_Syntax.HasMaskedEffect :: quals1)
+                    | tmp15 -> quals1
+                  ) in
+                ({ FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_let (({ FStarC_Syntax_Syntax.lbs = lbs2; lids = lids } : FStarC_Syntax_Syntax.sigelt'__Sig_let__payload)));
+                  sigrng = (se).FStarC_Syntax_Syntax.sigrng;
+                  sigquals = quals2;
+                  sigmeta = (se).FStarC_Syntax_Syntax.sigmeta;
+                  sigattrs = attrs;
+                  sigopens_and_abbrevs = (se).FStarC_Syntax_Syntax.sigopens_and_abbrevs;
+                  sigopts = (se).FStarC_Syntax_Syntax.sigopts }, lbs2))
+              | tmp11 -> (FStarC_Effect.failwith "impossible (typechecking should preserve Tm_let)")
+            ) in
+          (match tmp11 with
+            | (se1, lbs1) -> (let se2 = (run_postprocess false env'1 se1) in
+              let tmp12 = (FStarC_Syntax_Util.has_attribute (se2).FStarC_Syntax_Syntax.sigattrs FStarC_Parser_Const.no_subtping_attr_lid) in
+              (if tmp12 then (let env'2 = { FStarC_TypeChecker_Env.solver = (env'1).FStarC_TypeChecker_Env.solver;
+                  range = (env'1).FStarC_TypeChecker_Env.range;
+                  curmodule = (env'1).FStarC_TypeChecker_Env.curmodule;
+                  gamma = (env'1).FStarC_TypeChecker_Env.gamma;
+                  gamma_sig = (env'1).FStarC_TypeChecker_Env.gamma_sig;
+                  gamma_cache = (env'1).FStarC_TypeChecker_Env.gamma_cache;
+                  modules = (env'1).FStarC_TypeChecker_Env.modules;
+                  expected_typ = (env'1).FStarC_TypeChecker_Env.expected_typ;
+                  sigtab = (env'1).FStarC_TypeChecker_Env.sigtab;
+                  attrtab = (env'1).FStarC_TypeChecker_Env.attrtab;
+                  instantiate_imp = (env'1).FStarC_TypeChecker_Env.instantiate_imp;
+                  effects = (env'1).FStarC_TypeChecker_Env.effects;
+                  generalize = (env'1).FStarC_TypeChecker_Env.generalize;
+                  letrecs = (env'1).FStarC_TypeChecker_Env.letrecs;
+                  rec_names = (env'1).FStarC_TypeChecker_Env.rec_names;
+                  top_level = (env'1).FStarC_TypeChecker_Env.top_level;
+                  check_uvars = (env'1).FStarC_TypeChecker_Env.check_uvars;
+                  use_eq_strict = true;
+                  is_iface = (env'1).FStarC_TypeChecker_Env.is_iface;
+                  admit = (env'1).FStarC_TypeChecker_Env.admit;
+                  phase1 = (env'1).FStarC_TypeChecker_Env.phase1;
+                  failhard = (env'1).FStarC_TypeChecker_Env.failhard;
+                  flychecking = (env'1).FStarC_TypeChecker_Env.flychecking;
+                  uvar_subtyping = (env'1).FStarC_TypeChecker_Env.uvar_subtyping;
+                  intactics = (env'1).FStarC_TypeChecker_Env.intactics;
+                  nocoerce = (env'1).FStarC_TypeChecker_Env.nocoerce;
+                  tc_term = (env'1).FStarC_TypeChecker_Env.tc_term;
+                  typeof_tot_or_gtot_term = (env'1).FStarC_TypeChecker_Env.typeof_tot_or_gtot_term;
+                  universe_of = (env'1).FStarC_TypeChecker_Env.universe_of;
+                  typeof_well_typed_tot_or_gtot_term = (env'1).FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term;
+                  teq_nosmt_force = (env'1).FStarC_TypeChecker_Env.teq_nosmt_force;
+                  subtype_nosmt_force = (env'1).FStarC_TypeChecker_Env.subtype_nosmt_force;
+                  qtbl_name_and_index = (env'1).FStarC_TypeChecker_Env.qtbl_name_and_index;
+                  qtbl_name_and_index1 = (env'1).FStarC_TypeChecker_Env.qtbl_name_and_index1;
+                  fv_delta_depths = (env'1).FStarC_TypeChecker_Env.fv_delta_depths;
+                  proof_ns = (env'1).FStarC_TypeChecker_Env.proof_ns;
+                  synth_hook = (env'1).FStarC_TypeChecker_Env.synth_hook;
+                  try_solve_implicits_hook = (env'1).FStarC_TypeChecker_Env.try_solve_implicits_hook;
+                  splice = (env'1).FStarC_TypeChecker_Env.splice;
+                  mpreprocess = (env'1).FStarC_TypeChecker_Env.mpreprocess;
+                  postprocess = (env'1).FStarC_TypeChecker_Env.postprocess;
+                  identifier_info = (env'1).FStarC_TypeChecker_Env.identifier_info;
+                  tc_hooks = (env'1).FStarC_TypeChecker_Env.tc_hooks;
+                  dsenv = (env'1).FStarC_TypeChecker_Env.dsenv;
+                  nbe = (env'1).FStarC_TypeChecker_Env.nbe;
+                  strict_args_tab = (env'1).FStarC_TypeChecker_Env.strict_args_tab;
+                  disc_proj_tab = (env'1).FStarC_TypeChecker_Env.disc_proj_tab;
+                  erasable_types_tab = (env'1).FStarC_TypeChecker_Env.erasable_types_tab;
+                  enable_defer_to_tac = (env'1).FStarC_TypeChecker_Env.enable_defer_to_tac;
+                  unif_allow_ref_guards = (env'1).FStarC_TypeChecker_Env.unif_allow_ref_guards;
+                  erase_erasable_args = (env'1).FStarC_TypeChecker_Env.erase_erasable_args;
+                  core_check = (env'1).FStarC_TypeChecker_Env.core_check;
+                  missing_decl = (env'1).FStarC_TypeChecker_Env.missing_decl;
+                  iface_todo = (env'1).FStarC_TypeChecker_Env.iface_todo;
+                  iface_hidden = (env'1).FStarC_TypeChecker_Env.iface_hidden;
+                  iface_lids = (env'1).FStarC_TypeChecker_Env.iface_lids;
+                  iface_val_lids = (env'1).FStarC_TypeChecker_Env.iface_val_lids } in
+              let err = (fun s pos -> (FStarC_Errors.fStarC_Errors_raise_error__range_string pos FStarC_Errors_Codes.Fatal_InconsistentQualifierAnnotation s)) in
+              (FStarC_List.iter (fun lb -> (let tmp13 = (FStarC_Syntax_Util.is_lemma (lb).FStarC_Syntax_Syntax.lbtyp) in
+              let tmp14 = (not tmp13) in
+              (if tmp14 then (err "no_subtype annotation on a non-lemma" (lb).FStarC_Syntax_Syntax.lbpos) else (let tmp15 = (FStarC_Syntax_Free.fvars (lb).FStarC_Syntax_Syntax.lbtyp) in
+              let tmp16 = (FStarC_RBSet.fStarC_Class_Setlike_elems__lident_rbset_lident tmp15) in
+              let lid_opt = (FStarC_List.tryFind (fun lid -> (let tmp17 = (FStarC_Ident.path_of_lid lid) in
+                let tmp18 = (FStarC_List.hd tmp17) in
+                let tmp19 = ((=) tmp18 "Prims") in
+                let tmp20 = (if tmp19 then true else (FStarC_Ident.lid_equals lid FStarC_Parser_Const.pattern_lid)) in
+                (not tmp20))) tmp16) in
+              (if (match lid_opt with
+                | (Some (v)) -> true
+                | tmp17 -> false
+              ) then (let tmp17 = (FStarC_Option.must lid_opt) in
+              let tmp18 = (FStarC_Ident.string_of_lid tmp17) in
+              let tmp19 = (FStarC_Format.fmt1 "%s is not allowed in no_subtyping lemmas (only prims symbols)" tmp18) in
+              (err tmp19 (lb).FStarC_Syntax_Syntax.lbpos)) else (let tmp17 = (FStarC_Syntax_Util.type_u ()) in
+              (match tmp17 with
+                | (t, tmp18) -> (let tmp19 = (FStarC_Syntax_Subst.open_univ_vars (lb).FStarC_Syntax_Syntax.lbunivs (lb).FStarC_Syntax_Syntax.lbtyp) in
+                  (match tmp19 with
+                    | (uvs, lbtyp) -> (let tmp20 = (FStarC_TypeChecker_Env.push_univ_vars env'2 uvs) in
+                      let tmp21 = (FStarC_TypeChecker_TcTerm.tc_check_tot_or_gtot_term tmp20 lbtyp t (Some ("checking no_subtype annotation"))) in
+                      (match tmp21 with
+                        | (tmp22, tmp23, g) -> (FStarC_TypeChecker_Rel.force_trivial_guard env'2 g)
+                      ))
+                  ))
+              ))))))) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd lbs1))) else ());
+              (FStarC_List.iter (fun lb -> (let fv = (match (lb).FStarC_Syntax_Syntax.lbname with
+                  | (FStar_Pervasives.Inr (v)) -> v
+                ) in
+              (FStarC_TypeChecker_Env.insert_fv_info env1 fv (lb).FStarC_Syntax_Syntax.lbtyp))) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd lbs1));
+              let tmp13 = (log env1) in
+              (if tmp13 then (let tmp14 = (FStarC_List.map (fun lb -> (let tmp14 = (FStarC_TypeChecker_Env.try_lookup_val_decl env1 (let scrut = (match (lb).FStarC_Syntax_Syntax.lbname with
+                      | (FStar_Pervasives.Inr (v)) -> v
+                    ) in
+                  (scrut).FStarC_Syntax_Syntax.fv_name)) in
+                let should_log = (match tmp14 with
+                    | None -> true
+                    | tmp15 -> false
+                  ) in
+                (if should_log then (let tmp15 = (FStarC_Syntax_Print.fStarC_Class_Show_show__either_bv_fv (lb).FStarC_Syntax_Syntax.lbname) in
+                let tmp16 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' (lb).FStarC_Syntax_Syntax.lbtyp) in
+                (FStarC_Format.fmt2 "let %s : %s" tmp15 tmp16)) else ""))) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd lbs1)) in
+              let tmp15 = (FStarC_String.concat "\n" tmp14) in
+              (FStarC_Format.print1 "%s\n" tmp15)) else ());
+              ((se2 :: []), [], env))
+          ))
+      ))
+  ))
+
+let tc_decl' (env0 : FStarC_TypeChecker_Env.env) (se : FStarC_Syntax_Syntax.sigelt) : ((FStarC_Syntax_Syntax.sigelt) list * (FStarC_Syntax_Syntax.sigelt) list * FStarC_TypeChecker_Env.env) =
+  (let se1 = (match (se).FStarC_Syntax_Syntax.sigel with
+      | (FStarC_Syntax_Syntax.Sig_fail (tmp)) -> se
+      | tmp -> (tc_decl_attributes env0 se)
+    ) in
+  (FStarC_TypeChecker_Quals.check_sigelt_quals_pre env0 se1);
+  (proc_check_with (se1).FStarC_Syntax_Syntax.sigattrs (fun tmp -> (let r = (se1).FStarC_Syntax_Syntax.sigrng in
+  let tmp1 = (FStarC_Options.record_options ()) in
+  let se2 = (if tmp1 then (store_sigopts se1) else se1) in
+  (match (se2).FStarC_Syntax_Syntax.sigel with
+    | (FStarC_Syntax_Syntax.Sig_inductive_typ (tmp2)) -> (FStarC_Effect.failwith "Impossible bare data-constructor")
+    | (FStarC_Syntax_Syntax.Sig_datacon (tmp2)) -> (FStarC_Effect.failwith "Impossible bare data-constructor")
+    | (FStarC_Syntax_Syntax.Sig_fail ({ FStarC_Syntax_Syntax.errs = tmp2; rng = tmp3; fail_in_lax = false; ses = tmp4; _ })) when (env0).FStarC_TypeChecker_Env.admit -> (let tmp5 = (FStarC_Debug.any ()) in
+      (if tmp5 then (let tmp6 = (FStarC_Syntax_Print.sigelt_to_string_short se2) in
+      (FStarC_Format.print1 "Skipping %s since env.admit=true and this is not an expect_lax_failure\n" tmp6)) else ());
+      ([], [], env0))
+    | (FStarC_Syntax_Syntax.Sig_fail ({ FStarC_Syntax_Syntax.errs = expected_errors; rng = fail_rng; fail_in_lax = lax; ses = ses; _ })) -> (let env' = (if lax then { FStarC_TypeChecker_Env.solver = (env0).FStarC_TypeChecker_Env.solver;
+          range = (env0).FStarC_TypeChecker_Env.range;
+          curmodule = (env0).FStarC_TypeChecker_Env.curmodule;
+          gamma = (env0).FStarC_TypeChecker_Env.gamma;
+          gamma_sig = (env0).FStarC_TypeChecker_Env.gamma_sig;
+          gamma_cache = (env0).FStarC_TypeChecker_Env.gamma_cache;
+          modules = (env0).FStarC_TypeChecker_Env.modules;
+          expected_typ = (env0).FStarC_TypeChecker_Env.expected_typ;
+          sigtab = (env0).FStarC_TypeChecker_Env.sigtab;
+          attrtab = (env0).FStarC_TypeChecker_Env.attrtab;
+          instantiate_imp = (env0).FStarC_TypeChecker_Env.instantiate_imp;
+          effects = (env0).FStarC_TypeChecker_Env.effects;
+          generalize = (env0).FStarC_TypeChecker_Env.generalize;
+          letrecs = (env0).FStarC_TypeChecker_Env.letrecs;
+          rec_names = (env0).FStarC_TypeChecker_Env.rec_names;
+          top_level = (env0).FStarC_TypeChecker_Env.top_level;
+          check_uvars = (env0).FStarC_TypeChecker_Env.check_uvars;
+          use_eq_strict = (env0).FStarC_TypeChecker_Env.use_eq_strict;
+          is_iface = (env0).FStarC_TypeChecker_Env.is_iface;
+          admit = true;
+          phase1 = (env0).FStarC_TypeChecker_Env.phase1;
+          failhard = (env0).FStarC_TypeChecker_Env.failhard;
+          flychecking = (env0).FStarC_TypeChecker_Env.flychecking;
+          uvar_subtyping = (env0).FStarC_TypeChecker_Env.uvar_subtyping;
+          intactics = (env0).FStarC_TypeChecker_Env.intactics;
+          nocoerce = (env0).FStarC_TypeChecker_Env.nocoerce;
+          tc_term = (env0).FStarC_TypeChecker_Env.tc_term;
+          typeof_tot_or_gtot_term = (env0).FStarC_TypeChecker_Env.typeof_tot_or_gtot_term;
+          universe_of = (env0).FStarC_TypeChecker_Env.universe_of;
+          typeof_well_typed_tot_or_gtot_term = (env0).FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term;
+          teq_nosmt_force = (env0).FStarC_TypeChecker_Env.teq_nosmt_force;
+          subtype_nosmt_force = (env0).FStarC_TypeChecker_Env.subtype_nosmt_force;
+          qtbl_name_and_index = (env0).FStarC_TypeChecker_Env.qtbl_name_and_index;
+          qtbl_name_and_index1 = (env0).FStarC_TypeChecker_Env.qtbl_name_and_index1;
+          fv_delta_depths = (env0).FStarC_TypeChecker_Env.fv_delta_depths;
+          proof_ns = (env0).FStarC_TypeChecker_Env.proof_ns;
+          synth_hook = (env0).FStarC_TypeChecker_Env.synth_hook;
+          try_solve_implicits_hook = (env0).FStarC_TypeChecker_Env.try_solve_implicits_hook;
+          splice = (env0).FStarC_TypeChecker_Env.splice;
+          mpreprocess = (env0).FStarC_TypeChecker_Env.mpreprocess;
+          postprocess = (env0).FStarC_TypeChecker_Env.postprocess;
+          identifier_info = (env0).FStarC_TypeChecker_Env.identifier_info;
+          tc_hooks = (env0).FStarC_TypeChecker_Env.tc_hooks;
+          dsenv = (env0).FStarC_TypeChecker_Env.dsenv;
+          nbe = (env0).FStarC_TypeChecker_Env.nbe;
+          strict_args_tab = (env0).FStarC_TypeChecker_Env.strict_args_tab;
+          disc_proj_tab = (env0).FStarC_TypeChecker_Env.disc_proj_tab;
+          erasable_types_tab = (env0).FStarC_TypeChecker_Env.erasable_types_tab;
+          enable_defer_to_tac = (env0).FStarC_TypeChecker_Env.enable_defer_to_tac;
+          unif_allow_ref_guards = (env0).FStarC_TypeChecker_Env.unif_allow_ref_guards;
+          erase_erasable_args = (env0).FStarC_TypeChecker_Env.erase_erasable_args;
+          core_check = (env0).FStarC_TypeChecker_Env.core_check;
+          missing_decl = (env0).FStarC_TypeChecker_Env.missing_decl;
+          iface_todo = (env0).FStarC_TypeChecker_Env.iface_todo;
+          iface_hidden = (env0).FStarC_TypeChecker_Env.iface_hidden;
+          iface_lids = (env0).FStarC_TypeChecker_Env.iface_lids;
+          iface_val_lids = (env0).FStarC_TypeChecker_Env.iface_val_lids } else env0) in
+      let env'1 = (FStarC_TypeChecker_Env.push env' "expect_failure") in
+      let tmp2 = (FStarC_Debug.low ()) in
+      (if tmp2 then (let tmp3 = (FStarC_List.map FStarC_Class_Show.fStarC_Class_Show_show__int expected_errors) in
+      let tmp4 = (FStarC_String.concat "; " tmp3) in
+      (FStarC_Format.print1 ">> Expecting errors: [%s]\n" tmp4)) else ());
+      let tmp3 = (FStarC_Errors.catch_errors (fun tmp3 -> (FStarC_Options.with_saved_options (fun tmp4 -> (let tmp5 = (!(tc_decls_knot)) in
+        let tmp6 = (match tmp5 with
+            | (Some (v)) -> v
+          ) in
+        (tmp6 env'1 ses)))))) in
+      (match tmp3 with
+        | (errs, tmp4) -> (let tmp5 = (FStarC_Options.print_expected_failures ()) in
+          let tmp6 = (if tmp5 then true else (FStarC_Debug.low ())) in
+          (if tmp6 then (FStarC_Errors.print_expected_failures errs) else ());
+          (ignore (FStarC_TypeChecker_Env.pop env'1 "expect_failure"));
+          let actual_errors = (FStarC_List.concatMap (fun i -> (FStarC_Common.list_of_option (i).FStarC_Errors.issue_number)) errs) in
+          (match errs with
+            | [] -> ((FStarC_List.iter FStarC_Errors.print_issue errs);
+              (FStarC_Errors.fStarC_Errors_log_issue__sigelt_list_document se2 FStarC_Errors_Codes.Error_DidNotFail ((FStarC_Errors_Msg.text "This top-level definition was expected to fail, but it succeeded.") :: [])))
+            | tmp7 -> (if ((<>) expected_errors []) then (let tmp8 = (FStarC_Errors.find_multiset_discrepancy expected_errors actual_errors) in
+              (match tmp8 with
+                | None -> ()
+                | (Some ((e, n1, n2))) -> ((FStarC_List.iter FStarC_Errors.print_issue errs);
+                  let tmp9 = (FStarC_Class_Ord.fStarC_Class_Ord_sort__int expected_errors) in
+                  let tmp10 = (FStarC_Class_PP.fStarC_Class_PP_pp__list_int tmp9) in
+                  let tmp11 = (FStar_Pprint.prefix (Prims.parse_int "2") (Prims.parse_int "1") (FStarC_Errors_Msg.text "This top-level definition was expected to raise error codes") tmp10) in
+                  let tmp12 = (FStarC_Class_Ord.fStarC_Class_Ord_sort__int actual_errors) in
+                  let tmp13 = (FStarC_Class_PP.fStarC_Class_PP_pp__list_int tmp12) in
+                  let tmp14 = (FStar_Pprint.prefix (Prims.parse_int "2") (Prims.parse_int "1") (FStarC_Errors_Msg.text "but it raised") tmp13) in
+                  let tmp15 = (FStar_Pprint.op_Hat_Hat tmp14 FStar_Pprint.dot) in
+                  let tmp16 = (FStar_Pprint.op_Hat_Slash_Hat tmp11 tmp15) in
+                  let tmp17 = (FStarC_Class_Show.fStarC_Class_Show_show__int e) in
+                  let tmp18 = (FStarC_Class_Show.fStarC_Class_Show_show__int n2) in
+                  let tmp19 = (FStarC_Class_Show.fStarC_Class_Show_show__int n1) in
+                  let tmp20 = (FStarC_Format.fmt3 "Error #%s was raised %s times, instead of %s." tmp17 tmp18 tmp19) in
+                  let tmp21 = (FStarC_Errors_Msg.text tmp20) in
+                  let tmp22 = (tmp21 :: []) in
+                  let tmp23 = (tmp16 :: tmp22) in
+                  (FStarC_Errors.fStarC_Errors_log_issue__range_list_document fail_rng FStarC_Errors_Codes.Error_DidNotFail tmp23))
+              )) else ())
+          );
+          ([], [], env0))
+      ))
+    | (FStarC_Syntax_Syntax.Sig_bundle ({ FStarC_Syntax_Syntax.ses = ses; lids = lids; _ })) -> (let env = (FStarC_TypeChecker_Env.set_range env0 r) in
+      let tmp2 = (do_two_phases env) in
+      let ses1 = (if tmp2 then (run_phase1 (fun tmp3 -> (let tmp4 = (tc_inductive { FStarC_TypeChecker_Env.solver = (env).FStarC_TypeChecker_Env.solver;
+            range = (env).FStarC_TypeChecker_Env.range;
+            curmodule = (env).FStarC_TypeChecker_Env.curmodule;
+            gamma = (env).FStarC_TypeChecker_Env.gamma;
+            gamma_sig = (env).FStarC_TypeChecker_Env.gamma_sig;
+            gamma_cache = (env).FStarC_TypeChecker_Env.gamma_cache;
+            modules = (env).FStarC_TypeChecker_Env.modules;
+            expected_typ = (env).FStarC_TypeChecker_Env.expected_typ;
+            sigtab = (env).FStarC_TypeChecker_Env.sigtab;
+            attrtab = (env).FStarC_TypeChecker_Env.attrtab;
+            instantiate_imp = (env).FStarC_TypeChecker_Env.instantiate_imp;
+            effects = (env).FStarC_TypeChecker_Env.effects;
+            generalize = (env).FStarC_TypeChecker_Env.generalize;
+            letrecs = (env).FStarC_TypeChecker_Env.letrecs;
+            rec_names = (env).FStarC_TypeChecker_Env.rec_names;
+            top_level = (env).FStarC_TypeChecker_Env.top_level;
+            check_uvars = (env).FStarC_TypeChecker_Env.check_uvars;
+            use_eq_strict = (env).FStarC_TypeChecker_Env.use_eq_strict;
+            is_iface = (env).FStarC_TypeChecker_Env.is_iface;
+            admit = true;
+            phase1 = true;
+            failhard = (env).FStarC_TypeChecker_Env.failhard;
+            flychecking = (env).FStarC_TypeChecker_Env.flychecking;
+            uvar_subtyping = (env).FStarC_TypeChecker_Env.uvar_subtyping;
+            intactics = (env).FStarC_TypeChecker_Env.intactics;
+            nocoerce = (env).FStarC_TypeChecker_Env.nocoerce;
+            tc_term = (env).FStarC_TypeChecker_Env.tc_term;
+            typeof_tot_or_gtot_term = (env).FStarC_TypeChecker_Env.typeof_tot_or_gtot_term;
+            universe_of = (env).FStarC_TypeChecker_Env.universe_of;
+            typeof_well_typed_tot_or_gtot_term = (env).FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term;
+            teq_nosmt_force = (env).FStarC_TypeChecker_Env.teq_nosmt_force;
+            subtype_nosmt_force = (env).FStarC_TypeChecker_Env.subtype_nosmt_force;
+            qtbl_name_and_index = (env).FStarC_TypeChecker_Env.qtbl_name_and_index;
+            qtbl_name_and_index1 = (env).FStarC_TypeChecker_Env.qtbl_name_and_index1;
+            fv_delta_depths = (env).FStarC_TypeChecker_Env.fv_delta_depths;
+            proof_ns = (env).FStarC_TypeChecker_Env.proof_ns;
+            synth_hook = (env).FStarC_TypeChecker_Env.synth_hook;
+            try_solve_implicits_hook = (env).FStarC_TypeChecker_Env.try_solve_implicits_hook;
+            splice = (env).FStarC_TypeChecker_Env.splice;
+            mpreprocess = (env).FStarC_TypeChecker_Env.mpreprocess;
+            postprocess = (env).FStarC_TypeChecker_Env.postprocess;
+            identifier_info = (env).FStarC_TypeChecker_Env.identifier_info;
+            tc_hooks = (env).FStarC_TypeChecker_Env.tc_hooks;
+            dsenv = (env).FStarC_TypeChecker_Env.dsenv;
+            nbe = (env).FStarC_TypeChecker_Env.nbe;
+            strict_args_tab = (env).FStarC_TypeChecker_Env.strict_args_tab;
+            disc_proj_tab = (env).FStarC_TypeChecker_Env.disc_proj_tab;
+            erasable_types_tab = (env).FStarC_TypeChecker_Env.erasable_types_tab;
+            enable_defer_to_tac = (env).FStarC_TypeChecker_Env.enable_defer_to_tac;
+            unif_allow_ref_guards = (env).FStarC_TypeChecker_Env.unif_allow_ref_guards;
+            erase_erasable_args = (env).FStarC_TypeChecker_Env.erase_erasable_args;
+            core_check = (env).FStarC_TypeChecker_Env.core_check;
+            missing_decl = (env).FStarC_TypeChecker_Env.missing_decl;
+            iface_todo = (env).FStarC_TypeChecker_Env.iface_todo;
+            iface_hidden = (env).FStarC_TypeChecker_Env.iface_hidden;
+            iface_lids = (env).FStarC_TypeChecker_Env.iface_lids;
+            iface_val_lids = (env).FStarC_TypeChecker_Env.iface_val_lids } ses (se2).FStarC_Syntax_Syntax.sigquals (se2).FStarC_Syntax_Syntax.sigattrs lids) in
+        let tmp5 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp4) in
+        let tmp6 = (FStarC_TypeChecker_Normalize.elim_uvars env tmp5) in
+        let ses1 = (FStarC_Syntax_Util.ses_of_sigbundle tmp6) in
+        let tmp7 = (FStarC_Debug.medium ()) in
+        let tmp8 = (if tmp7 then true else (!(dbg_TwoPhases))) in
+        (if tmp8 then (let tmp9 = (FStarC_Syntax_Print.fStarC_Class_Show_show__sigelt { FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_bundle (({ FStarC_Syntax_Syntax.ses = ses1; lids = lids } : FStarC_Syntax_Syntax.sigelt'__Sig_bundle__payload)));
+            sigrng = (se2).FStarC_Syntax_Syntax.sigrng;
+            sigquals = (se2).FStarC_Syntax_Syntax.sigquals;
+            sigmeta = (se2).FStarC_Syntax_Syntax.sigmeta;
+            sigattrs = (se2).FStarC_Syntax_Syntax.sigattrs;
+            sigopens_and_abbrevs = (se2).FStarC_Syntax_Syntax.sigopens_and_abbrevs;
+            sigopts = (se2).FStarC_Syntax_Syntax.sigopts }) in
+        (FStarC_Format.print1 "Inductive after phase 1: %s\n" tmp9)) else ());
+        ses1))) else ses) in
+      let tmp3 = (tc_inductive env ses1 (se2).FStarC_Syntax_Syntax.sigquals (se2).FStarC_Syntax_Syntax.sigattrs lids) in
+      (match tmp3 with
+        | (sigbndle, projectors_ses) -> (let sigbndle1 = { FStarC_Syntax_Syntax.sigel = (sigbndle).FStarC_Syntax_Syntax.sigel;
+              sigrng = (sigbndle).FStarC_Syntax_Syntax.sigrng;
+              sigquals = (sigbndle).FStarC_Syntax_Syntax.sigquals;
+              sigmeta = (sigbndle).FStarC_Syntax_Syntax.sigmeta;
+              sigattrs = (se2).FStarC_Syntax_Syntax.sigattrs;
+              sigopens_and_abbrevs = (sigbndle).FStarC_Syntax_Syntax.sigopens_and_abbrevs;
+              sigopts = (sigbndle).FStarC_Syntax_Syntax.sigopts } in
+          ((sigbndle1 :: []), projectors_ses, env0))
+      ))
+    | (FStarC_Syntax_Syntax.Sig_pragma (p)) -> ((process_pragma env0 p r);
+      let keep_pragma = (match p with
+          | FStarC_Syntax_Syntax.ShowOptions -> false
+          | FStarC_Syntax_Syntax.PrintEffectsGraph -> false
+          | (FStarC_Syntax_Syntax.Eval (tmp2)) -> false
+          | (FStarC_Syntax_Syntax.Check (tmp2)) -> false
+          | tmp2 -> true
+        ) in
+      ((if keep_pragma then (se2 :: []) else []), [], env0))
+    | (FStarC_Syntax_Syntax.Sig_new_effect (ne)) -> (let tmp2 = (do_two_phases env0) in
+      let ne1 = (if tmp2 then (run_phase1 (fun tmp3 -> (let tmp4 = (FStarC_TypeChecker_TcEffect.tc_eff_decl { FStarC_TypeChecker_Env.solver = (env0).FStarC_TypeChecker_Env.solver;
+            range = (env0).FStarC_TypeChecker_Env.range;
+            curmodule = (env0).FStarC_TypeChecker_Env.curmodule;
+            gamma = (env0).FStarC_TypeChecker_Env.gamma;
+            gamma_sig = (env0).FStarC_TypeChecker_Env.gamma_sig;
+            gamma_cache = (env0).FStarC_TypeChecker_Env.gamma_cache;
+            modules = (env0).FStarC_TypeChecker_Env.modules;
+            expected_typ = (env0).FStarC_TypeChecker_Env.expected_typ;
+            sigtab = (env0).FStarC_TypeChecker_Env.sigtab;
+            attrtab = (env0).FStarC_TypeChecker_Env.attrtab;
+            instantiate_imp = (env0).FStarC_TypeChecker_Env.instantiate_imp;
+            effects = (env0).FStarC_TypeChecker_Env.effects;
+            generalize = (env0).FStarC_TypeChecker_Env.generalize;
+            letrecs = (env0).FStarC_TypeChecker_Env.letrecs;
+            rec_names = (env0).FStarC_TypeChecker_Env.rec_names;
+            top_level = (env0).FStarC_TypeChecker_Env.top_level;
+            check_uvars = (env0).FStarC_TypeChecker_Env.check_uvars;
+            use_eq_strict = (env0).FStarC_TypeChecker_Env.use_eq_strict;
+            is_iface = (env0).FStarC_TypeChecker_Env.is_iface;
+            admit = true;
+            phase1 = true;
+            failhard = (env0).FStarC_TypeChecker_Env.failhard;
+            flychecking = (env0).FStarC_TypeChecker_Env.flychecking;
+            uvar_subtyping = (env0).FStarC_TypeChecker_Env.uvar_subtyping;
+            intactics = (env0).FStarC_TypeChecker_Env.intactics;
+            nocoerce = (env0).FStarC_TypeChecker_Env.nocoerce;
+            tc_term = (env0).FStarC_TypeChecker_Env.tc_term;
+            typeof_tot_or_gtot_term = (env0).FStarC_TypeChecker_Env.typeof_tot_or_gtot_term;
+            universe_of = (env0).FStarC_TypeChecker_Env.universe_of;
+            typeof_well_typed_tot_or_gtot_term = (env0).FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term;
+            teq_nosmt_force = (env0).FStarC_TypeChecker_Env.teq_nosmt_force;
+            subtype_nosmt_force = (env0).FStarC_TypeChecker_Env.subtype_nosmt_force;
+            qtbl_name_and_index = (env0).FStarC_TypeChecker_Env.qtbl_name_and_index;
+            qtbl_name_and_index1 = (env0).FStarC_TypeChecker_Env.qtbl_name_and_index1;
+            fv_delta_depths = (env0).FStarC_TypeChecker_Env.fv_delta_depths;
+            proof_ns = (env0).FStarC_TypeChecker_Env.proof_ns;
+            synth_hook = (env0).FStarC_TypeChecker_Env.synth_hook;
+            try_solve_implicits_hook = (env0).FStarC_TypeChecker_Env.try_solve_implicits_hook;
+            splice = (env0).FStarC_TypeChecker_Env.splice;
+            mpreprocess = (env0).FStarC_TypeChecker_Env.mpreprocess;
+            postprocess = (env0).FStarC_TypeChecker_Env.postprocess;
+            identifier_info = (env0).FStarC_TypeChecker_Env.identifier_info;
+            tc_hooks = (env0).FStarC_TypeChecker_Env.tc_hooks;
+            dsenv = (env0).FStarC_TypeChecker_Env.dsenv;
+            nbe = (env0).FStarC_TypeChecker_Env.nbe;
+            strict_args_tab = (env0).FStarC_TypeChecker_Env.strict_args_tab;
+            disc_proj_tab = (env0).FStarC_TypeChecker_Env.disc_proj_tab;
+            erasable_types_tab = (env0).FStarC_TypeChecker_Env.erasable_types_tab;
+            enable_defer_to_tac = (env0).FStarC_TypeChecker_Env.enable_defer_to_tac;
+            unif_allow_ref_guards = (env0).FStarC_TypeChecker_Env.unif_allow_ref_guards;
+            erase_erasable_args = (env0).FStarC_TypeChecker_Env.erase_erasable_args;
+            core_check = (env0).FStarC_TypeChecker_Env.core_check;
+            missing_decl = (env0).FStarC_TypeChecker_Env.missing_decl;
+            iface_todo = (env0).FStarC_TypeChecker_Env.iface_todo;
+            iface_hidden = (env0).FStarC_TypeChecker_Env.iface_hidden;
+            iface_lids = (env0).FStarC_TypeChecker_Env.iface_lids;
+            iface_val_lids = (env0).FStarC_TypeChecker_Env.iface_val_lids } ne (se2).FStarC_Syntax_Syntax.sigquals (se2).FStarC_Syntax_Syntax.sigattrs) in
+        let tmp5 = { FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_new_effect (tmp4));
+            sigrng = (se2).FStarC_Syntax_Syntax.sigrng;
+            sigquals = (se2).FStarC_Syntax_Syntax.sigquals;
+            sigmeta = (se2).FStarC_Syntax_Syntax.sigmeta;
+            sigattrs = (se2).FStarC_Syntax_Syntax.sigattrs;
+            sigopens_and_abbrevs = (se2).FStarC_Syntax_Syntax.sigopens_and_abbrevs;
+            sigopts = (se2).FStarC_Syntax_Syntax.sigopts } in
+        let tmp6 = (FStarC_TypeChecker_Normalize.elim_uvars env0 tmp5) in
+        let ne1 = (FStarC_Syntax_Util.eff_decl_of_new_effect tmp6) in
+        let tmp7 = (FStarC_Debug.medium ()) in
+        let tmp8 = (if tmp7 then true else (!(dbg_TwoPhases))) in
+        (if tmp8 then (let tmp9 = (FStarC_Syntax_Print.fStarC_Class_Show_show__sigelt { FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_new_effect (ne1));
+            sigrng = (se2).FStarC_Syntax_Syntax.sigrng;
+            sigquals = (se2).FStarC_Syntax_Syntax.sigquals;
+            sigmeta = (se2).FStarC_Syntax_Syntax.sigmeta;
+            sigattrs = (se2).FStarC_Syntax_Syntax.sigattrs;
+            sigopens_and_abbrevs = (se2).FStarC_Syntax_Syntax.sigopens_and_abbrevs;
+            sigopts = (se2).FStarC_Syntax_Syntax.sigopts }) in
+        (FStarC_Format.print1 "Effect decl after phase 1: %s\n" tmp9)) else ());
+        ne1))) else ne) in
+      let ne2 = (FStarC_TypeChecker_TcEffect.tc_eff_decl env0 ne1 (se2).FStarC_Syntax_Syntax.sigquals (se2).FStarC_Syntax_Syntax.sigattrs) in
+      let se3 = { FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_new_effect (ne2));
+          sigrng = (se2).FStarC_Syntax_Syntax.sigrng;
+          sigquals = (se2).FStarC_Syntax_Syntax.sigquals;
+          sigmeta = (se2).FStarC_Syntax_Syntax.sigmeta;
+          sigattrs = (se2).FStarC_Syntax_Syntax.sigattrs;
+          sigopens_and_abbrevs = (se2).FStarC_Syntax_Syntax.sigopens_and_abbrevs;
+          sigopts = (se2).FStarC_Syntax_Syntax.sigopts } in
+      ((se3 :: []), [], env0))
+    | (FStarC_Syntax_Syntax.Sig_sub_effect (sub)) -> (let sub1 = (FStarC_TypeChecker_TcEffect.tc_lift env0 sub r) in
+      let se3 = { FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_sub_effect (sub1));
+          sigrng = (se2).FStarC_Syntax_Syntax.sigrng;
+          sigquals = (se2).FStarC_Syntax_Syntax.sigquals;
+          sigmeta = (se2).FStarC_Syntax_Syntax.sigmeta;
+          sigattrs = (se2).FStarC_Syntax_Syntax.sigattrs;
+          sigopens_and_abbrevs = (se2).FStarC_Syntax_Syntax.sigopens_and_abbrevs;
+          sigopts = (se2).FStarC_Syntax_Syntax.sigopts } in
+      ((se3 :: []), [], env0))
+    | (FStarC_Syntax_Syntax.Sig_effect_abbrev (tmp2)) -> ((se2 :: []), [], env0)
+    | (FStarC_Syntax_Syntax.Sig_declare_typ (tmp2)) when (FStarC_Util.for_some (fun tmp3 -> (match tmp3 with
+      | FStarC_Syntax_Syntax.OnlyName -> true
+      | tmp4 -> false
+    )) (se2).FStarC_Syntax_Syntax.sigquals) -> ([], [], env0)
+    | (FStarC_Syntax_Syntax.Sig_let (tmp2)) when (FStarC_Util.for_some (fun tmp3 -> (match tmp3 with
+      | FStarC_Syntax_Syntax.OnlyName -> true
+      | tmp4 -> false
+    )) (se2).FStarC_Syntax_Syntax.sigquals) -> ([], [], env0)
+    | (FStarC_Syntax_Syntax.Sig_declare_typ ({ FStarC_Syntax_Syntax.lid = lid; us = uvs; t = t; _ })) -> (let tmp2 = (FStarC_TypeChecker_Env.lid_exists env0 lid) in
+      (if tmp2 then (let tmp3 = (FStarC_Ident.fStarC_Class_Show_show__lident lid) in
+      let tmp4 = (FStarC_Format.fmt1 "Top-level declaration %s for a name that is already used in this module." tmp3) in
+      let tmp5 = (FStarC_Errors_Msg.text tmp4) in
+      let tmp6 = (tmp5 :: ((FStarC_Errors_Msg.text "Top-level declarations must be unique in their module.") :: [])) in
+      (FStarC_Errors.fStarC_Errors_raise_error__range_list_document r FStarC_Errors_Codes.Fatal_AlreadyDefinedTopLevelDeclaration tmp6)) else ());
+      let env = (FStarC_TypeChecker_Env.set_range env0 r) in
+      let tmp3 = (do_two_phases env) in
+      let tmp4 = (if tmp3 then (run_phase1 (fun tmp4 -> (let tmp5 = (tc_declare_typ { FStarC_TypeChecker_Env.solver = (env).FStarC_TypeChecker_Env.solver;
+            range = (env).FStarC_TypeChecker_Env.range;
+            curmodule = (env).FStarC_TypeChecker_Env.curmodule;
+            gamma = (env).FStarC_TypeChecker_Env.gamma;
+            gamma_sig = (env).FStarC_TypeChecker_Env.gamma_sig;
+            gamma_cache = (env).FStarC_TypeChecker_Env.gamma_cache;
+            modules = (env).FStarC_TypeChecker_Env.modules;
+            expected_typ = (env).FStarC_TypeChecker_Env.expected_typ;
+            sigtab = (env).FStarC_TypeChecker_Env.sigtab;
+            attrtab = (env).FStarC_TypeChecker_Env.attrtab;
+            instantiate_imp = (env).FStarC_TypeChecker_Env.instantiate_imp;
+            effects = (env).FStarC_TypeChecker_Env.effects;
+            generalize = (env).FStarC_TypeChecker_Env.generalize;
+            letrecs = (env).FStarC_TypeChecker_Env.letrecs;
+            rec_names = (env).FStarC_TypeChecker_Env.rec_names;
+            top_level = (env).FStarC_TypeChecker_Env.top_level;
+            check_uvars = (env).FStarC_TypeChecker_Env.check_uvars;
+            use_eq_strict = (env).FStarC_TypeChecker_Env.use_eq_strict;
+            is_iface = (env).FStarC_TypeChecker_Env.is_iface;
+            admit = true;
+            phase1 = true;
+            failhard = (env).FStarC_TypeChecker_Env.failhard;
+            flychecking = (env).FStarC_TypeChecker_Env.flychecking;
+            uvar_subtyping = (env).FStarC_TypeChecker_Env.uvar_subtyping;
+            intactics = (env).FStarC_TypeChecker_Env.intactics;
+            nocoerce = (env).FStarC_TypeChecker_Env.nocoerce;
+            tc_term = (env).FStarC_TypeChecker_Env.tc_term;
+            typeof_tot_or_gtot_term = (env).FStarC_TypeChecker_Env.typeof_tot_or_gtot_term;
+            universe_of = (env).FStarC_TypeChecker_Env.universe_of;
+            typeof_well_typed_tot_or_gtot_term = (env).FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term;
+            teq_nosmt_force = (env).FStarC_TypeChecker_Env.teq_nosmt_force;
+            subtype_nosmt_force = (env).FStarC_TypeChecker_Env.subtype_nosmt_force;
+            qtbl_name_and_index = (env).FStarC_TypeChecker_Env.qtbl_name_and_index;
+            qtbl_name_and_index1 = (env).FStarC_TypeChecker_Env.qtbl_name_and_index1;
+            fv_delta_depths = (env).FStarC_TypeChecker_Env.fv_delta_depths;
+            proof_ns = (env).FStarC_TypeChecker_Env.proof_ns;
+            synth_hook = (env).FStarC_TypeChecker_Env.synth_hook;
+            try_solve_implicits_hook = (env).FStarC_TypeChecker_Env.try_solve_implicits_hook;
+            splice = (env).FStarC_TypeChecker_Env.splice;
+            mpreprocess = (env).FStarC_TypeChecker_Env.mpreprocess;
+            postprocess = (env).FStarC_TypeChecker_Env.postprocess;
+            identifier_info = (env).FStarC_TypeChecker_Env.identifier_info;
+            tc_hooks = (env).FStarC_TypeChecker_Env.tc_hooks;
+            dsenv = (env).FStarC_TypeChecker_Env.dsenv;
+            nbe = (env).FStarC_TypeChecker_Env.nbe;
+            strict_args_tab = (env).FStarC_TypeChecker_Env.strict_args_tab;
+            disc_proj_tab = (env).FStarC_TypeChecker_Env.disc_proj_tab;
+            erasable_types_tab = (env).FStarC_TypeChecker_Env.erasable_types_tab;
+            enable_defer_to_tac = (env).FStarC_TypeChecker_Env.enable_defer_to_tac;
+            unif_allow_ref_guards = (env).FStarC_TypeChecker_Env.unif_allow_ref_guards;
+            erase_erasable_args = (env).FStarC_TypeChecker_Env.erase_erasable_args;
+            core_check = (env).FStarC_TypeChecker_Env.core_check;
+            missing_decl = (env).FStarC_TypeChecker_Env.missing_decl;
+            iface_todo = (env).FStarC_TypeChecker_Env.iface_todo;
+            iface_hidden = (env).FStarC_TypeChecker_Env.iface_hidden;
+            iface_lids = (env).FStarC_TypeChecker_Env.iface_lids;
+            iface_val_lids = (env).FStarC_TypeChecker_Env.iface_val_lids } (uvs, t) (se2).FStarC_Syntax_Syntax.sigrng) in
+        (match tmp5 with
+          | (uvs1, t1) -> (let tmp6 = (FStarC_Debug.medium ()) in
+            let tmp7 = (if tmp6 then true else (!(dbg_TwoPhases))) in
+            (if tmp7 then (let tmp8 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' t1) in
+            let tmp9 = (FStarC_Ident.fStarC_Class_Show_show__list_ident uvs1) in
+            (FStarC_Format.print2 "Val declaration after phase 1: %s and uvs: %s\n" tmp8 tmp9)) else ());
+            (uvs1, t1))
+        )))) else (uvs, t)) in
+      (match tmp4 with
+        | (uvs1, t1) -> (let tmp5 = (tc_declare_typ env (uvs1, t1) (se2).FStarC_Syntax_Syntax.sigrng) in
+          (match tmp5 with
+            | (uvs2, t2) -> (let se3 = { FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_declare_typ (({ FStarC_Syntax_Syntax.lid = lid; us = uvs2; t = t2 } : FStarC_Syntax_Syntax.sigelt'__Sig_declare_typ__payload)));
+                  sigrng = (se2).FStarC_Syntax_Syntax.sigrng;
+                  sigquals = (se2).FStarC_Syntax_Syntax.sigquals;
+                  sigmeta = (se2).FStarC_Syntax_Syntax.sigmeta;
+                  sigattrs = (se2).FStarC_Syntax_Syntax.sigattrs;
+                  sigopens_and_abbrevs = (se2).FStarC_Syntax_Syntax.sigopens_and_abbrevs;
+                  sigopts = (se2).FStarC_Syntax_Syntax.sigopts } in
+              let tmp6 = (set_type_constructor_meta env se3 uvs2 t2) in
+              let tmp7 = (tmp6 :: []) in
+              (tmp7, [], env0))
+          ))
+      ))
+    | (FStarC_Syntax_Syntax.Sig_assume ({ FStarC_Syntax_Syntax.lid = lid; us = uvs; phi = t; _ })) -> ((if (not (FStarC_List.contains FStarC_Syntax_Syntax.InternalAssumption (se2).FStarC_Syntax_Syntax.sigquals)) then (let tmp2 = (FStarC_Ident.fStarC_Class_Show_show__lident lid) in
+      let tmp3 = (FStarC_Format.fmt1 "Admitting a top-level assumption %s" tmp2) in
+      (FStarC_Errors.fStarC_Errors_log_issue__range_string r FStarC_Errors_Codes.Warning_WarnOnUse tmp3)) else ());
+      let env = (FStarC_TypeChecker_Env.set_range env0 r) in
+      let tmp2 = (do_two_phases env) in
+      let tmp3 = (if tmp2 then (run_phase1 (fun tmp3 -> (let tmp4 = (tc_assume { FStarC_TypeChecker_Env.solver = (env).FStarC_TypeChecker_Env.solver;
+            range = (env).FStarC_TypeChecker_Env.range;
+            curmodule = (env).FStarC_TypeChecker_Env.curmodule;
+            gamma = (env).FStarC_TypeChecker_Env.gamma;
+            gamma_sig = (env).FStarC_TypeChecker_Env.gamma_sig;
+            gamma_cache = (env).FStarC_TypeChecker_Env.gamma_cache;
+            modules = (env).FStarC_TypeChecker_Env.modules;
+            expected_typ = (env).FStarC_TypeChecker_Env.expected_typ;
+            sigtab = (env).FStarC_TypeChecker_Env.sigtab;
+            attrtab = (env).FStarC_TypeChecker_Env.attrtab;
+            instantiate_imp = (env).FStarC_TypeChecker_Env.instantiate_imp;
+            effects = (env).FStarC_TypeChecker_Env.effects;
+            generalize = (env).FStarC_TypeChecker_Env.generalize;
+            letrecs = (env).FStarC_TypeChecker_Env.letrecs;
+            rec_names = (env).FStarC_TypeChecker_Env.rec_names;
+            top_level = (env).FStarC_TypeChecker_Env.top_level;
+            check_uvars = (env).FStarC_TypeChecker_Env.check_uvars;
+            use_eq_strict = (env).FStarC_TypeChecker_Env.use_eq_strict;
+            is_iface = (env).FStarC_TypeChecker_Env.is_iface;
+            admit = true;
+            phase1 = true;
+            failhard = (env).FStarC_TypeChecker_Env.failhard;
+            flychecking = (env).FStarC_TypeChecker_Env.flychecking;
+            uvar_subtyping = (env).FStarC_TypeChecker_Env.uvar_subtyping;
+            intactics = (env).FStarC_TypeChecker_Env.intactics;
+            nocoerce = (env).FStarC_TypeChecker_Env.nocoerce;
+            tc_term = (env).FStarC_TypeChecker_Env.tc_term;
+            typeof_tot_or_gtot_term = (env).FStarC_TypeChecker_Env.typeof_tot_or_gtot_term;
+            universe_of = (env).FStarC_TypeChecker_Env.universe_of;
+            typeof_well_typed_tot_or_gtot_term = (env).FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term;
+            teq_nosmt_force = (env).FStarC_TypeChecker_Env.teq_nosmt_force;
+            subtype_nosmt_force = (env).FStarC_TypeChecker_Env.subtype_nosmt_force;
+            qtbl_name_and_index = (env).FStarC_TypeChecker_Env.qtbl_name_and_index;
+            qtbl_name_and_index1 = (env).FStarC_TypeChecker_Env.qtbl_name_and_index1;
+            fv_delta_depths = (env).FStarC_TypeChecker_Env.fv_delta_depths;
+            proof_ns = (env).FStarC_TypeChecker_Env.proof_ns;
+            synth_hook = (env).FStarC_TypeChecker_Env.synth_hook;
+            try_solve_implicits_hook = (env).FStarC_TypeChecker_Env.try_solve_implicits_hook;
+            splice = (env).FStarC_TypeChecker_Env.splice;
+            mpreprocess = (env).FStarC_TypeChecker_Env.mpreprocess;
+            postprocess = (env).FStarC_TypeChecker_Env.postprocess;
+            identifier_info = (env).FStarC_TypeChecker_Env.identifier_info;
+            tc_hooks = (env).FStarC_TypeChecker_Env.tc_hooks;
+            dsenv = (env).FStarC_TypeChecker_Env.dsenv;
+            nbe = (env).FStarC_TypeChecker_Env.nbe;
+            strict_args_tab = (env).FStarC_TypeChecker_Env.strict_args_tab;
+            disc_proj_tab = (env).FStarC_TypeChecker_Env.disc_proj_tab;
+            erasable_types_tab = (env).FStarC_TypeChecker_Env.erasable_types_tab;
+            enable_defer_to_tac = (env).FStarC_TypeChecker_Env.enable_defer_to_tac;
+            unif_allow_ref_guards = (env).FStarC_TypeChecker_Env.unif_allow_ref_guards;
+            erase_erasable_args = (env).FStarC_TypeChecker_Env.erase_erasable_args;
+            core_check = (env).FStarC_TypeChecker_Env.core_check;
+            missing_decl = (env).FStarC_TypeChecker_Env.missing_decl;
+            iface_todo = (env).FStarC_TypeChecker_Env.iface_todo;
+            iface_hidden = (env).FStarC_TypeChecker_Env.iface_hidden;
+            iface_lids = (env).FStarC_TypeChecker_Env.iface_lids;
+            iface_val_lids = (env).FStarC_TypeChecker_Env.iface_val_lids } (uvs, t) (se2).FStarC_Syntax_Syntax.sigrng) in
+        (match tmp4 with
+          | (uvs1, t1) -> (let tmp5 = (FStarC_Debug.medium ()) in
+            let tmp6 = (if tmp5 then true else (!(dbg_TwoPhases))) in
+            (if tmp6 then (let tmp7 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' t1) in
+            let tmp8 = (FStarC_Ident.fStarC_Class_Show_show__list_ident uvs1) in
+            (FStarC_Format.print2 "Assume after phase 1: %s and uvs: %s\n" tmp7 tmp8)) else ());
+            (uvs1, t1))
+        )))) else (uvs, t)) in
+      (match tmp3 with
+        | (uvs1, t1) -> (let tmp4 = (tc_assume env (uvs1, t1) (se2).FStarC_Syntax_Syntax.sigrng) in
+          (match tmp4 with
+            | (uvs2, t2) -> (({ FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_assume (({ FStarC_Syntax_Syntax.lid = lid; us = uvs2; phi = t2 } : FStarC_Syntax_Syntax.sigelt'__Sig_assume__payload)));
+                sigrng = (se2).FStarC_Syntax_Syntax.sigrng;
+                sigquals = (se2).FStarC_Syntax_Syntax.sigquals;
+                sigmeta = (se2).FStarC_Syntax_Syntax.sigmeta;
+                sigattrs = (se2).FStarC_Syntax_Syntax.sigattrs;
+                sigopens_and_abbrevs = (se2).FStarC_Syntax_Syntax.sigopens_and_abbrevs;
+                sigopts = (se2).FStarC_Syntax_Syntax.sigopts } :: []), [], env0)
+          ))
+      ))
+    | (FStarC_Syntax_Syntax.Sig_splice ({ FStarC_Syntax_Syntax.is_typed = is_typed; lids = lids; tac = t; _ })) -> (let tmp2 = (FStarC_Debug.any ()) in
+      (if tmp2 then (let tmp3 = (FStarC_Ident.fStarC_Class_Show_show__lident (env0).FStarC_TypeChecker_Env.curmodule) in
+      let tmp4 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' t) in
+      let tmp5 = (FStarC_Class_Show.fStarC_Class_Show_show__bool is_typed) in
+      (FStarC_Format.print3 "%s: Found splice of (%s) with is_typed: %s\n" tmp3 tmp4 tmp5)) else ());
+      let ses = ((env0).FStarC_TypeChecker_Env.splice env0 (se2).FStarC_Syntax_Syntax.sigquals (se2).FStarC_Syntax_Syntax.sigattrs is_typed lids t (se2).FStarC_Syntax_Syntax.sigrng) in
+      let tmp3 = (FStarC_Debug.low ()) in
+      (if tmp3 then (let tmp4 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_sigelt ses) in
+      (FStarC_Format.print1 "Will splice decls:\n%s\n" tmp4)) else ());
+      let ses1 = (if is_typed then (let sigquals = (match (se2).FStarC_Syntax_Syntax.sigquals with
+            | [] -> (FStarC_Syntax_Syntax.Visible_default :: [])
+            | qs -> qs
+          ) in
+        let ses1 = (FStarC_List.map (fun sp -> { FStarC_Syntax_Syntax.sigel = (sp).FStarC_Syntax_Syntax.sigel;
+            sigrng = (sp).FStarC_Syntax_Syntax.sigrng;
+            sigquals = (FStarC_List.op_At sigquals (sp).FStarC_Syntax_Syntax.sigquals);
+            sigmeta = (sp).FStarC_Syntax_Syntax.sigmeta;
+            sigattrs = (FStarC_List.op_At (se2).FStarC_Syntax_Syntax.sigattrs (sp).FStarC_Syntax_Syntax.sigattrs);
+            sigopens_and_abbrevs = (sp).FStarC_Syntax_Syntax.sigopens_and_abbrevs;
+            sigopts = (sp).FStarC_Syntax_Syntax.sigopts }) ses) in
+        (FStarC_List.map (FStarC_Syntax_Compress.deep_compress_se false false) ses1)) else ses) in
+      let ses2 = (FStarC_List.map (fun se3 -> (if ((env0).FStarC_TypeChecker_Env.is_iface && (match (se3).FStarC_Syntax_Syntax.sigel with
+          | (FStarC_Syntax_Syntax.Sig_declare_typ (u__0)) -> true
+          | tmp4 -> false
+        )) then (let tmp4 = (FStarC_List.filter (fun q -> ((<>) q FStarC_Syntax_Syntax.Irreducible)) (se3).FStarC_Syntax_Syntax.sigquals) in
+        let tmp5 = (FStarC_Syntax_Syntax.Assumption :: tmp4) in
+        { FStarC_Syntax_Syntax.sigel = (se3).FStarC_Syntax_Syntax.sigel;
+          sigrng = (se3).FStarC_Syntax_Syntax.sigrng;
+          sigquals = tmp5;
+          sigmeta = (se3).FStarC_Syntax_Syntax.sigmeta;
+          sigattrs = (se3).FStarC_Syntax_Syntax.sigattrs;
+          sigopens_and_abbrevs = (se3).FStarC_Syntax_Syntax.sigopens_and_abbrevs;
+          sigopts = (se3).FStarC_Syntax_Syntax.sigopts }) else se3)) ses1) in
+      let ses3 = (FStarC_List.map (fun sp -> { FStarC_Syntax_Syntax.sigel = (sp).FStarC_Syntax_Syntax.sigel;
+          sigrng = (sp).FStarC_Syntax_Syntax.sigrng;
+          sigquals = (sp).FStarC_Syntax_Syntax.sigquals;
+          sigmeta = (let tmp4 = (sp).FStarC_Syntax_Syntax.sigmeta in
+          { FStarC_Syntax_Syntax.sigmeta_active = (tmp4).FStarC_Syntax_Syntax.sigmeta_active;
+            sigmeta_fact_db_ids = (tmp4).FStarC_Syntax_Syntax.sigmeta_fact_db_ids;
+            sigmeta_admit = (tmp4).FStarC_Syntax_Syntax.sigmeta_admit;
+            sigmeta_spliced = true;
+            sigmeta_already_checked = (tmp4).FStarC_Syntax_Syntax.sigmeta_already_checked;
+            sigmeta_extension_decl = ((se2).FStarC_Syntax_Syntax.sigmeta).FStarC_Syntax_Syntax.sigmeta_extension_decl;
+            sigmeta_extension_data = (tmp4).FStarC_Syntax_Syntax.sigmeta_extension_data;
+            sigmeta_type_constructor = (tmp4).FStarC_Syntax_Syntax.sigmeta_type_constructor });
+          sigattrs = (sp).FStarC_Syntax_Syntax.sigattrs;
+          sigopens_and_abbrevs = (sp).FStarC_Syntax_Syntax.sigopens_and_abbrevs;
+          sigopts = (sp).FStarC_Syntax_Syntax.sigopts }) ses2) in
+      let dsenv = (FStarC_List.fold_left FStarC_Syntax_DsEnv.push_sigelt_force (env0).FStarC_TypeChecker_Env.dsenv ses3) in
+      let env = { FStarC_TypeChecker_Env.solver = (env0).FStarC_TypeChecker_Env.solver;
+          range = (env0).FStarC_TypeChecker_Env.range;
+          curmodule = (env0).FStarC_TypeChecker_Env.curmodule;
+          gamma = (env0).FStarC_TypeChecker_Env.gamma;
+          gamma_sig = (env0).FStarC_TypeChecker_Env.gamma_sig;
+          gamma_cache = (env0).FStarC_TypeChecker_Env.gamma_cache;
+          modules = (env0).FStarC_TypeChecker_Env.modules;
+          expected_typ = (env0).FStarC_TypeChecker_Env.expected_typ;
+          sigtab = (env0).FStarC_TypeChecker_Env.sigtab;
+          attrtab = (env0).FStarC_TypeChecker_Env.attrtab;
+          instantiate_imp = (env0).FStarC_TypeChecker_Env.instantiate_imp;
+          effects = (env0).FStarC_TypeChecker_Env.effects;
+          generalize = (env0).FStarC_TypeChecker_Env.generalize;
+          letrecs = (env0).FStarC_TypeChecker_Env.letrecs;
+          rec_names = (env0).FStarC_TypeChecker_Env.rec_names;
+          top_level = (env0).FStarC_TypeChecker_Env.top_level;
+          check_uvars = (env0).FStarC_TypeChecker_Env.check_uvars;
+          use_eq_strict = (env0).FStarC_TypeChecker_Env.use_eq_strict;
+          is_iface = (env0).FStarC_TypeChecker_Env.is_iface;
+          admit = (env0).FStarC_TypeChecker_Env.admit;
+          phase1 = (env0).FStarC_TypeChecker_Env.phase1;
+          failhard = (env0).FStarC_TypeChecker_Env.failhard;
+          flychecking = (env0).FStarC_TypeChecker_Env.flychecking;
+          uvar_subtyping = (env0).FStarC_TypeChecker_Env.uvar_subtyping;
+          intactics = (env0).FStarC_TypeChecker_Env.intactics;
+          nocoerce = (env0).FStarC_TypeChecker_Env.nocoerce;
+          tc_term = (env0).FStarC_TypeChecker_Env.tc_term;
+          typeof_tot_or_gtot_term = (env0).FStarC_TypeChecker_Env.typeof_tot_or_gtot_term;
+          universe_of = (env0).FStarC_TypeChecker_Env.universe_of;
+          typeof_well_typed_tot_or_gtot_term = (env0).FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term;
+          teq_nosmt_force = (env0).FStarC_TypeChecker_Env.teq_nosmt_force;
+          subtype_nosmt_force = (env0).FStarC_TypeChecker_Env.subtype_nosmt_force;
+          qtbl_name_and_index = (env0).FStarC_TypeChecker_Env.qtbl_name_and_index;
+          qtbl_name_and_index1 = (env0).FStarC_TypeChecker_Env.qtbl_name_and_index1;
+          fv_delta_depths = (env0).FStarC_TypeChecker_Env.fv_delta_depths;
+          proof_ns = (env0).FStarC_TypeChecker_Env.proof_ns;
+          synth_hook = (env0).FStarC_TypeChecker_Env.synth_hook;
+          try_solve_implicits_hook = (env0).FStarC_TypeChecker_Env.try_solve_implicits_hook;
+          splice = (env0).FStarC_TypeChecker_Env.splice;
+          mpreprocess = (env0).FStarC_TypeChecker_Env.mpreprocess;
+          postprocess = (env0).FStarC_TypeChecker_Env.postprocess;
+          identifier_info = (env0).FStarC_TypeChecker_Env.identifier_info;
+          tc_hooks = (env0).FStarC_TypeChecker_Env.tc_hooks;
+          dsenv = dsenv;
+          nbe = (env0).FStarC_TypeChecker_Env.nbe;
+          strict_args_tab = (env0).FStarC_TypeChecker_Env.strict_args_tab;
+          disc_proj_tab = (env0).FStarC_TypeChecker_Env.disc_proj_tab;
+          erasable_types_tab = (env0).FStarC_TypeChecker_Env.erasable_types_tab;
+          enable_defer_to_tac = (env0).FStarC_TypeChecker_Env.enable_defer_to_tac;
+          unif_allow_ref_guards = (env0).FStarC_TypeChecker_Env.unif_allow_ref_guards;
+          erase_erasable_args = (env0).FStarC_TypeChecker_Env.erase_erasable_args;
+          core_check = (env0).FStarC_TypeChecker_Env.core_check;
+          missing_decl = (env0).FStarC_TypeChecker_Env.missing_decl;
+          iface_todo = (env0).FStarC_TypeChecker_Env.iface_todo;
+          iface_hidden = (env0).FStarC_TypeChecker_Env.iface_hidden;
+          iface_lids = (env0).FStarC_TypeChecker_Env.iface_lids;
+          iface_val_lids = (env0).FStarC_TypeChecker_Env.iface_val_lids } in
+      let tmp4 = (FStarC_Debug.low ()) in
+      (if tmp4 then (let tmp5 = (FStarC_List.map FStarC_Syntax_Print.fStarC_Class_Show_show__sigelt ses3) in
+      let tmp6 = (FStarC_String.concat "\n" tmp5) in
+      (FStarC_Format.print1 "Splice returned sigelts {\n%s\n}\n" tmp6)) else ());
+      ([], ses3, env))
+    | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = lbs; lids = lids; _ })) -> (FStarC_Profiling.profile (fun tmp2 -> (tc_sig_let env0 r se2 lbs lids)) (Some ((FStarC_Ident.string_of_lid (FStarC_TypeChecker_Env.current_module env0)))) "FStarC.TypeChecker.Tc.tc_sig_let")
+  )))))
+
+let tc_decl (env : FStarC_TypeChecker_Env.env) (se : FStarC_Syntax_Syntax.sigelt) : ((FStarC_Syntax_Syntax.sigelt) list * (FStarC_Syntax_Syntax.sigelt) list * FStarC_TypeChecker_Env.env) =
+  ((FStarC_GenSym.reset_gensym ());
+  (FStarC_TypeChecker_Overload.reset_ambiguity_reports ());
+  let env1 = (set_hint_correlator env se) in
+  let tmp = (FStarC_Options.admit_smt_queries ()) in
+  let env2 = (if tmp then { FStarC_TypeChecker_Env.solver = (env1).FStarC_TypeChecker_Env.solver;
+      range = (env1).FStarC_TypeChecker_Env.range;
+      curmodule = (env1).FStarC_TypeChecker_Env.curmodule;
+      gamma = (env1).FStarC_TypeChecker_Env.gamma;
+      gamma_sig = (env1).FStarC_TypeChecker_Env.gamma_sig;
+      gamma_cache = (env1).FStarC_TypeChecker_Env.gamma_cache;
+      modules = (env1).FStarC_TypeChecker_Env.modules;
+      expected_typ = (env1).FStarC_TypeChecker_Env.expected_typ;
+      sigtab = (env1).FStarC_TypeChecker_Env.sigtab;
+      attrtab = (env1).FStarC_TypeChecker_Env.attrtab;
+      instantiate_imp = (env1).FStarC_TypeChecker_Env.instantiate_imp;
+      effects = (env1).FStarC_TypeChecker_Env.effects;
+      generalize = (env1).FStarC_TypeChecker_Env.generalize;
+      letrecs = (env1).FStarC_TypeChecker_Env.letrecs;
+      rec_names = (env1).FStarC_TypeChecker_Env.rec_names;
+      top_level = (env1).FStarC_TypeChecker_Env.top_level;
+      check_uvars = (env1).FStarC_TypeChecker_Env.check_uvars;
+      use_eq_strict = (env1).FStarC_TypeChecker_Env.use_eq_strict;
+      is_iface = (env1).FStarC_TypeChecker_Env.is_iface;
+      admit = true;
+      phase1 = (env1).FStarC_TypeChecker_Env.phase1;
+      failhard = (env1).FStarC_TypeChecker_Env.failhard;
+      flychecking = (env1).FStarC_TypeChecker_Env.flychecking;
+      uvar_subtyping = (env1).FStarC_TypeChecker_Env.uvar_subtyping;
+      intactics = (env1).FStarC_TypeChecker_Env.intactics;
+      nocoerce = (env1).FStarC_TypeChecker_Env.nocoerce;
+      tc_term = (env1).FStarC_TypeChecker_Env.tc_term;
+      typeof_tot_or_gtot_term = (env1).FStarC_TypeChecker_Env.typeof_tot_or_gtot_term;
+      universe_of = (env1).FStarC_TypeChecker_Env.universe_of;
+      typeof_well_typed_tot_or_gtot_term = (env1).FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term;
+      teq_nosmt_force = (env1).FStarC_TypeChecker_Env.teq_nosmt_force;
+      subtype_nosmt_force = (env1).FStarC_TypeChecker_Env.subtype_nosmt_force;
+      qtbl_name_and_index = (env1).FStarC_TypeChecker_Env.qtbl_name_and_index;
+      qtbl_name_and_index1 = (env1).FStarC_TypeChecker_Env.qtbl_name_and_index1;
+      fv_delta_depths = (env1).FStarC_TypeChecker_Env.fv_delta_depths;
+      proof_ns = (env1).FStarC_TypeChecker_Env.proof_ns;
+      synth_hook = (env1).FStarC_TypeChecker_Env.synth_hook;
+      try_solve_implicits_hook = (env1).FStarC_TypeChecker_Env.try_solve_implicits_hook;
+      splice = (env1).FStarC_TypeChecker_Env.splice;
+      mpreprocess = (env1).FStarC_TypeChecker_Env.mpreprocess;
+      postprocess = (env1).FStarC_TypeChecker_Env.postprocess;
+      identifier_info = (env1).FStarC_TypeChecker_Env.identifier_info;
+      tc_hooks = (env1).FStarC_TypeChecker_Env.tc_hooks;
+      dsenv = (env1).FStarC_TypeChecker_Env.dsenv;
+      nbe = (env1).FStarC_TypeChecker_Env.nbe;
+      strict_args_tab = (env1).FStarC_TypeChecker_Env.strict_args_tab;
+      disc_proj_tab = (env1).FStarC_TypeChecker_Env.disc_proj_tab;
+      erasable_types_tab = (env1).FStarC_TypeChecker_Env.erasable_types_tab;
+      enable_defer_to_tac = (env1).FStarC_TypeChecker_Env.enable_defer_to_tac;
+      unif_allow_ref_guards = (env1).FStarC_TypeChecker_Env.unif_allow_ref_guards;
+      erase_erasable_args = (env1).FStarC_TypeChecker_Env.erase_erasable_args;
+      core_check = (env1).FStarC_TypeChecker_Env.core_check;
+      missing_decl = (env1).FStarC_TypeChecker_Env.missing_decl;
+      iface_todo = (env1).FStarC_TypeChecker_Env.iface_todo;
+      iface_hidden = (env1).FStarC_TypeChecker_Env.iface_hidden;
+      iface_lids = (env1).FStarC_TypeChecker_Env.iface_lids;
+      iface_val_lids = (env1).FStarC_TypeChecker_Env.iface_val_lids } else env1) in
+  let tmp1 = (FStarC_Debug.any ()) in
+  (if tmp1 then (let tmp2 = (FStarC_Syntax_Print.sigelt_to_string_short se) in
+  (FStarC_Format.print1 "Processing %s\n" tmp2)) else ());
+  let tmp2 = (FStarC_Debug.medium ()) in
+  (if tmp2 then (let tmp3 = (FStarC_Class_Show.fStarC_Class_Show_show__bool (env2).FStarC_TypeChecker_Env.admit) in
+  let tmp4 = (FStarC_Syntax_Print.fStarC_Class_Show_show__sigelt se) in
+  (FStarC_Format.print2 ">>>>>>>>>>>>>>tc_decl admit=%s %s\n" tmp3 tmp4)) else ());
+  let result = (if ((se).FStarC_Syntax_Syntax.sigmeta).FStarC_Syntax_Syntax.sigmeta_already_checked then ((se :: []), [], env2) else (if ((se).FStarC_Syntax_Syntax.sigmeta).FStarC_Syntax_Syntax.sigmeta_admit then (tc_decl' { FStarC_TypeChecker_Env.solver = (env2).FStarC_TypeChecker_Env.solver;
+      range = (env2).FStarC_TypeChecker_Env.range;
+      curmodule = (env2).FStarC_TypeChecker_Env.curmodule;
+      gamma = (env2).FStarC_TypeChecker_Env.gamma;
+      gamma_sig = (env2).FStarC_TypeChecker_Env.gamma_sig;
+      gamma_cache = (env2).FStarC_TypeChecker_Env.gamma_cache;
+      modules = (env2).FStarC_TypeChecker_Env.modules;
+      expected_typ = (env2).FStarC_TypeChecker_Env.expected_typ;
+      sigtab = (env2).FStarC_TypeChecker_Env.sigtab;
+      attrtab = (env2).FStarC_TypeChecker_Env.attrtab;
+      instantiate_imp = (env2).FStarC_TypeChecker_Env.instantiate_imp;
+      effects = (env2).FStarC_TypeChecker_Env.effects;
+      generalize = (env2).FStarC_TypeChecker_Env.generalize;
+      letrecs = (env2).FStarC_TypeChecker_Env.letrecs;
+      rec_names = (env2).FStarC_TypeChecker_Env.rec_names;
+      top_level = (env2).FStarC_TypeChecker_Env.top_level;
+      check_uvars = (env2).FStarC_TypeChecker_Env.check_uvars;
+      use_eq_strict = (env2).FStarC_TypeChecker_Env.use_eq_strict;
+      is_iface = (env2).FStarC_TypeChecker_Env.is_iface;
+      admit = true;
+      phase1 = (env2).FStarC_TypeChecker_Env.phase1;
+      failhard = (env2).FStarC_TypeChecker_Env.failhard;
+      flychecking = (env2).FStarC_TypeChecker_Env.flychecking;
+      uvar_subtyping = (env2).FStarC_TypeChecker_Env.uvar_subtyping;
+      intactics = (env2).FStarC_TypeChecker_Env.intactics;
+      nocoerce = (env2).FStarC_TypeChecker_Env.nocoerce;
+      tc_term = (env2).FStarC_TypeChecker_Env.tc_term;
+      typeof_tot_or_gtot_term = (env2).FStarC_TypeChecker_Env.typeof_tot_or_gtot_term;
+      universe_of = (env2).FStarC_TypeChecker_Env.universe_of;
+      typeof_well_typed_tot_or_gtot_term = (env2).FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term;
+      teq_nosmt_force = (env2).FStarC_TypeChecker_Env.teq_nosmt_force;
+      subtype_nosmt_force = (env2).FStarC_TypeChecker_Env.subtype_nosmt_force;
+      qtbl_name_and_index = (env2).FStarC_TypeChecker_Env.qtbl_name_and_index;
+      qtbl_name_and_index1 = (env2).FStarC_TypeChecker_Env.qtbl_name_and_index1;
+      fv_delta_depths = (env2).FStarC_TypeChecker_Env.fv_delta_depths;
+      proof_ns = (env2).FStarC_TypeChecker_Env.proof_ns;
+      synth_hook = (env2).FStarC_TypeChecker_Env.synth_hook;
+      try_solve_implicits_hook = (env2).FStarC_TypeChecker_Env.try_solve_implicits_hook;
+      splice = (env2).FStarC_TypeChecker_Env.splice;
+      mpreprocess = (env2).FStarC_TypeChecker_Env.mpreprocess;
+      postprocess = (env2).FStarC_TypeChecker_Env.postprocess;
+      identifier_info = (env2).FStarC_TypeChecker_Env.identifier_info;
+      tc_hooks = (env2).FStarC_TypeChecker_Env.tc_hooks;
+      dsenv = (env2).FStarC_TypeChecker_Env.dsenv;
+      nbe = (env2).FStarC_TypeChecker_Env.nbe;
+      strict_args_tab = (env2).FStarC_TypeChecker_Env.strict_args_tab;
+      disc_proj_tab = (env2).FStarC_TypeChecker_Env.disc_proj_tab;
+      erasable_types_tab = (env2).FStarC_TypeChecker_Env.erasable_types_tab;
+      enable_defer_to_tac = (env2).FStarC_TypeChecker_Env.enable_defer_to_tac;
+      unif_allow_ref_guards = (env2).FStarC_TypeChecker_Env.unif_allow_ref_guards;
+      erase_erasable_args = (env2).FStarC_TypeChecker_Env.erase_erasable_args;
+      core_check = (env2).FStarC_TypeChecker_Env.core_check;
+      missing_decl = (env2).FStarC_TypeChecker_Env.missing_decl;
+      iface_todo = (env2).FStarC_TypeChecker_Env.iface_todo;
+      iface_hidden = (env2).FStarC_TypeChecker_Env.iface_hidden;
+      iface_lids = (env2).FStarC_TypeChecker_Env.iface_lids;
+      iface_val_lids = (env2).FStarC_TypeChecker_Env.iface_val_lids } se) else (tc_decl' env2 se))) in
+  (match result with
+    | (ses, tmp3, tmp4) -> (FStarC_List.iter (FStarC_TypeChecker_Quals.check_sigelt_quals_post env2) ses)
+  );
+  (match result with
+    | (ses, ses_e, env3) -> (ses, ses_e, { FStarC_TypeChecker_Env.solver = (env3).FStarC_TypeChecker_Env.solver;
+        range = (env3).FStarC_TypeChecker_Env.range;
+        curmodule = (env3).FStarC_TypeChecker_Env.curmodule;
+        gamma = (env3).FStarC_TypeChecker_Env.gamma;
+        gamma_sig = (env3).FStarC_TypeChecker_Env.gamma_sig;
+        gamma_cache = (env3).FStarC_TypeChecker_Env.gamma_cache;
+        modules = (env3).FStarC_TypeChecker_Env.modules;
+        expected_typ = (env3).FStarC_TypeChecker_Env.expected_typ;
+        sigtab = (env3).FStarC_TypeChecker_Env.sigtab;
+        attrtab = (env3).FStarC_TypeChecker_Env.attrtab;
+        instantiate_imp = (env3).FStarC_TypeChecker_Env.instantiate_imp;
+        effects = (env3).FStarC_TypeChecker_Env.effects;
+        generalize = (env3).FStarC_TypeChecker_Env.generalize;
+        letrecs = (env3).FStarC_TypeChecker_Env.letrecs;
+        rec_names = (env3).FStarC_TypeChecker_Env.rec_names;
+        top_level = (env3).FStarC_TypeChecker_Env.top_level;
+        check_uvars = (env3).FStarC_TypeChecker_Env.check_uvars;
+        use_eq_strict = (env3).FStarC_TypeChecker_Env.use_eq_strict;
+        is_iface = (env3).FStarC_TypeChecker_Env.is_iface;
+        admit = (env).FStarC_TypeChecker_Env.admit;
+        phase1 = (env3).FStarC_TypeChecker_Env.phase1;
+        failhard = (env3).FStarC_TypeChecker_Env.failhard;
+        flychecking = (env3).FStarC_TypeChecker_Env.flychecking;
+        uvar_subtyping = (env3).FStarC_TypeChecker_Env.uvar_subtyping;
+        intactics = (env3).FStarC_TypeChecker_Env.intactics;
+        nocoerce = (env3).FStarC_TypeChecker_Env.nocoerce;
+        tc_term = (env3).FStarC_TypeChecker_Env.tc_term;
+        typeof_tot_or_gtot_term = (env3).FStarC_TypeChecker_Env.typeof_tot_or_gtot_term;
+        universe_of = (env3).FStarC_TypeChecker_Env.universe_of;
+        typeof_well_typed_tot_or_gtot_term = (env3).FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term;
+        teq_nosmt_force = (env3).FStarC_TypeChecker_Env.teq_nosmt_force;
+        subtype_nosmt_force = (env3).FStarC_TypeChecker_Env.subtype_nosmt_force;
+        qtbl_name_and_index = (env3).FStarC_TypeChecker_Env.qtbl_name_and_index;
+        qtbl_name_and_index1 = (env3).FStarC_TypeChecker_Env.qtbl_name_and_index1;
+        fv_delta_depths = (env3).FStarC_TypeChecker_Env.fv_delta_depths;
+        proof_ns = (env3).FStarC_TypeChecker_Env.proof_ns;
+        synth_hook = (env3).FStarC_TypeChecker_Env.synth_hook;
+        try_solve_implicits_hook = (env3).FStarC_TypeChecker_Env.try_solve_implicits_hook;
+        splice = (env3).FStarC_TypeChecker_Env.splice;
+        mpreprocess = (env3).FStarC_TypeChecker_Env.mpreprocess;
+        postprocess = (env3).FStarC_TypeChecker_Env.postprocess;
+        identifier_info = (env3).FStarC_TypeChecker_Env.identifier_info;
+        tc_hooks = (env3).FStarC_TypeChecker_Env.tc_hooks;
+        dsenv = (env3).FStarC_TypeChecker_Env.dsenv;
+        nbe = (env3).FStarC_TypeChecker_Env.nbe;
+        strict_args_tab = (env3).FStarC_TypeChecker_Env.strict_args_tab;
+        disc_proj_tab = (env3).FStarC_TypeChecker_Env.disc_proj_tab;
+        erasable_types_tab = (env3).FStarC_TypeChecker_Env.erasable_types_tab;
+        enable_defer_to_tac = (env3).FStarC_TypeChecker_Env.enable_defer_to_tac;
+        unif_allow_ref_guards = (env3).FStarC_TypeChecker_Env.unif_allow_ref_guards;
+        erase_erasable_args = (env3).FStarC_TypeChecker_Env.erase_erasable_args;
+        core_check = (env3).FStarC_TypeChecker_Env.core_check;
+        missing_decl = (env3).FStarC_TypeChecker_Env.missing_decl;
+        iface_todo = (env3).FStarC_TypeChecker_Env.iface_todo;
+        iface_hidden = (env3).FStarC_TypeChecker_Env.iface_hidden;
+        iface_lids = (env3).FStarC_TypeChecker_Env.iface_lids;
+        iface_val_lids = (env3).FStarC_TypeChecker_Env.iface_val_lids })
+  ))
+
+let dbg_UF : (bool ref) =
+  (FStarC_Debug.get_toggle "UF")
+
+let mark_karamel_private (env : FStarC_TypeChecker_Env.env) (se : FStarC_Syntax_Syntax.sigelt) : FStarC_Syntax_Syntax.sigelt =
+  (let lids = (FStarC_Syntax_Util.lids_of_sigelt se) in
+  let tmp = (FStarC_Options_Ext.enabled "no_krml_private") in
+  let tmp1 = (if tmp then true else (not (FStarC_TypeChecker_Env.has_iface env))) in
+  let tmp2 = (if tmp1 then true else (match lids with
+      | [] -> true
+      | tmp2 -> false
+    )) in
+  let tmp3 = (if tmp2 then true else (FStarC_Util.for_some (FStarC_TypeChecker_Env.declared_in_iface env) lids)) in
+  (if tmp3 then se else (let rng = (FStarC_Syntax_Util.range_of_sigelt se) in
+  let attr = (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_constant ((FStarC_Const.Const_string ("KrmlPrivate", rng)))) rng) in
+  { FStarC_Syntax_Syntax.sigel = (se).FStarC_Syntax_Syntax.sigel;
+    sigrng = (se).FStarC_Syntax_Syntax.sigrng;
+    sigquals = (se).FStarC_Syntax_Syntax.sigquals;
+    sigmeta = (se).FStarC_Syntax_Syntax.sigmeta;
+    sigattrs = (attr :: (se).FStarC_Syntax_Syntax.sigattrs);
+    sigopens_and_abbrevs = (se).FStarC_Syntax_Syntax.sigopens_and_abbrevs;
+    sigopts = (se).FStarC_Syntax_Syntax.sigopts })))
+
+let add_sigelt_to_env (env : FStarC_TypeChecker_Env.env) (se : FStarC_Syntax_Syntax.sigelt) (from_cache : bool) : FStarC_TypeChecker_Env.env =
+  (let tmp = (FStarC_Debug.low ()) in
+  (if tmp then (let tmp1 = (FStarC_Syntax_Print.sigelt_to_string_short se) in
+  let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__bool from_cache) in
+  (FStarC_Format.print2 ">>>>>>>>>>>>>>Adding top-level decl to environment: %s (from_cache:%s)\n" tmp1 tmp2)) else ());
+  (match (se).FStarC_Syntax_Syntax.sigel with
+    | (FStarC_Syntax_Syntax.Sig_inductive_typ (tmp1)) -> (let tmp2 = (FStarC_Syntax_Print.fStarC_Class_Show_show__sigelt se) in
+      let tmp3 = (FStarC_Format.fmt1 "add_sigelt_to_env: unexpected bare type/data constructor: %s" tmp2) in
+      (FStarC_Errors.fStarC_Errors_raise_error__sigelt_string se FStarC_Errors_Codes.Fatal_UnexpectedInductiveType tmp3))
+    | (FStarC_Syntax_Syntax.Sig_datacon (tmp1)) -> (let tmp2 = (FStarC_Syntax_Print.fStarC_Class_Show_show__sigelt se) in
+      let tmp3 = (FStarC_Format.fmt1 "add_sigelt_to_env: unexpected bare type/data constructor: %s" tmp2) in
+      (FStarC_Errors.fStarC_Errors_raise_error__sigelt_string se FStarC_Errors_Codes.Fatal_UnexpectedInductiveType tmp3))
+    | (FStarC_Syntax_Syntax.Sig_declare_typ (tmp1)) when (FStarC_Util.for_some (fun tmp2 -> (match tmp2 with
+      | FStarC_Syntax_Syntax.OnlyName -> true
+      | tmp3 -> false
+    )) (se).FStarC_Syntax_Syntax.sigquals) -> env
+    | (FStarC_Syntax_Syntax.Sig_let (tmp1)) when (FStarC_Util.for_some (fun tmp2 -> (match tmp2 with
+      | FStarC_Syntax_Syntax.OnlyName -> true
+      | tmp3 -> false
+    )) (se).FStarC_Syntax_Syntax.sigquals) -> env
+    | tmp1 -> (let env1 = (FStarC_TypeChecker_Env.push_sigelt env se) in
+      (match (se).FStarC_Syntax_Syntax.sigel with
+        | (FStarC_Syntax_Syntax.Sig_pragma ((FStarC_Syntax_Syntax.PushOptions (tmp2)))) -> (if from_cache then env1 else (let tmp3 = (FStarC_Options.using_facts_from ()) in
+          { FStarC_TypeChecker_Env.solver = (env1).FStarC_TypeChecker_Env.solver;
+            range = (env1).FStarC_TypeChecker_Env.range;
+            curmodule = (env1).FStarC_TypeChecker_Env.curmodule;
+            gamma = (env1).FStarC_TypeChecker_Env.gamma;
+            gamma_sig = (env1).FStarC_TypeChecker_Env.gamma_sig;
+            gamma_cache = (env1).FStarC_TypeChecker_Env.gamma_cache;
+            modules = (env1).FStarC_TypeChecker_Env.modules;
+            expected_typ = (env1).FStarC_TypeChecker_Env.expected_typ;
+            sigtab = (env1).FStarC_TypeChecker_Env.sigtab;
+            attrtab = (env1).FStarC_TypeChecker_Env.attrtab;
+            instantiate_imp = (env1).FStarC_TypeChecker_Env.instantiate_imp;
+            effects = (env1).FStarC_TypeChecker_Env.effects;
+            generalize = (env1).FStarC_TypeChecker_Env.generalize;
+            letrecs = (env1).FStarC_TypeChecker_Env.letrecs;
+            rec_names = (env1).FStarC_TypeChecker_Env.rec_names;
+            top_level = (env1).FStarC_TypeChecker_Env.top_level;
+            check_uvars = (env1).FStarC_TypeChecker_Env.check_uvars;
+            use_eq_strict = (env1).FStarC_TypeChecker_Env.use_eq_strict;
+            is_iface = (env1).FStarC_TypeChecker_Env.is_iface;
+            admit = (env1).FStarC_TypeChecker_Env.admit;
+            phase1 = (env1).FStarC_TypeChecker_Env.phase1;
+            failhard = (env1).FStarC_TypeChecker_Env.failhard;
+            flychecking = (env1).FStarC_TypeChecker_Env.flychecking;
+            uvar_subtyping = (env1).FStarC_TypeChecker_Env.uvar_subtyping;
+            intactics = (env1).FStarC_TypeChecker_Env.intactics;
+            nocoerce = (env1).FStarC_TypeChecker_Env.nocoerce;
+            tc_term = (env1).FStarC_TypeChecker_Env.tc_term;
+            typeof_tot_or_gtot_term = (env1).FStarC_TypeChecker_Env.typeof_tot_or_gtot_term;
+            universe_of = (env1).FStarC_TypeChecker_Env.universe_of;
+            typeof_well_typed_tot_or_gtot_term = (env1).FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term;
+            teq_nosmt_force = (env1).FStarC_TypeChecker_Env.teq_nosmt_force;
+            subtype_nosmt_force = (env1).FStarC_TypeChecker_Env.subtype_nosmt_force;
+            qtbl_name_and_index = (env1).FStarC_TypeChecker_Env.qtbl_name_and_index;
+            qtbl_name_and_index1 = (env1).FStarC_TypeChecker_Env.qtbl_name_and_index1;
+            fv_delta_depths = (env1).FStarC_TypeChecker_Env.fv_delta_depths;
+            proof_ns = tmp3;
+            synth_hook = (env1).FStarC_TypeChecker_Env.synth_hook;
+            try_solve_implicits_hook = (env1).FStarC_TypeChecker_Env.try_solve_implicits_hook;
+            splice = (env1).FStarC_TypeChecker_Env.splice;
+            mpreprocess = (env1).FStarC_TypeChecker_Env.mpreprocess;
+            postprocess = (env1).FStarC_TypeChecker_Env.postprocess;
+            identifier_info = (env1).FStarC_TypeChecker_Env.identifier_info;
+            tc_hooks = (env1).FStarC_TypeChecker_Env.tc_hooks;
+            dsenv = (env1).FStarC_TypeChecker_Env.dsenv;
+            nbe = (env1).FStarC_TypeChecker_Env.nbe;
+            strict_args_tab = (env1).FStarC_TypeChecker_Env.strict_args_tab;
+            disc_proj_tab = (env1).FStarC_TypeChecker_Env.disc_proj_tab;
+            erasable_types_tab = (env1).FStarC_TypeChecker_Env.erasable_types_tab;
+            enable_defer_to_tac = (env1).FStarC_TypeChecker_Env.enable_defer_to_tac;
+            unif_allow_ref_guards = (env1).FStarC_TypeChecker_Env.unif_allow_ref_guards;
+            erase_erasable_args = (env1).FStarC_TypeChecker_Env.erase_erasable_args;
+            core_check = (env1).FStarC_TypeChecker_Env.core_check;
+            missing_decl = (env1).FStarC_TypeChecker_Env.missing_decl;
+            iface_todo = (env1).FStarC_TypeChecker_Env.iface_todo;
+            iface_hidden = (env1).FStarC_TypeChecker_Env.iface_hidden;
+            iface_lids = (env1).FStarC_TypeChecker_Env.iface_lids;
+            iface_val_lids = (env1).FStarC_TypeChecker_Env.iface_val_lids }))
+        | (FStarC_Syntax_Syntax.Sig_pragma (FStarC_Syntax_Syntax.PopOptions)) -> (if from_cache then env1 else (let tmp2 = (FStarC_Options.using_facts_from ()) in
+          { FStarC_TypeChecker_Env.solver = (env1).FStarC_TypeChecker_Env.solver;
+            range = (env1).FStarC_TypeChecker_Env.range;
+            curmodule = (env1).FStarC_TypeChecker_Env.curmodule;
+            gamma = (env1).FStarC_TypeChecker_Env.gamma;
+            gamma_sig = (env1).FStarC_TypeChecker_Env.gamma_sig;
+            gamma_cache = (env1).FStarC_TypeChecker_Env.gamma_cache;
+            modules = (env1).FStarC_TypeChecker_Env.modules;
+            expected_typ = (env1).FStarC_TypeChecker_Env.expected_typ;
+            sigtab = (env1).FStarC_TypeChecker_Env.sigtab;
+            attrtab = (env1).FStarC_TypeChecker_Env.attrtab;
+            instantiate_imp = (env1).FStarC_TypeChecker_Env.instantiate_imp;
+            effects = (env1).FStarC_TypeChecker_Env.effects;
+            generalize = (env1).FStarC_TypeChecker_Env.generalize;
+            letrecs = (env1).FStarC_TypeChecker_Env.letrecs;
+            rec_names = (env1).FStarC_TypeChecker_Env.rec_names;
+            top_level = (env1).FStarC_TypeChecker_Env.top_level;
+            check_uvars = (env1).FStarC_TypeChecker_Env.check_uvars;
+            use_eq_strict = (env1).FStarC_TypeChecker_Env.use_eq_strict;
+            is_iface = (env1).FStarC_TypeChecker_Env.is_iface;
+            admit = (env1).FStarC_TypeChecker_Env.admit;
+            phase1 = (env1).FStarC_TypeChecker_Env.phase1;
+            failhard = (env1).FStarC_TypeChecker_Env.failhard;
+            flychecking = (env1).FStarC_TypeChecker_Env.flychecking;
+            uvar_subtyping = (env1).FStarC_TypeChecker_Env.uvar_subtyping;
+            intactics = (env1).FStarC_TypeChecker_Env.intactics;
+            nocoerce = (env1).FStarC_TypeChecker_Env.nocoerce;
+            tc_term = (env1).FStarC_TypeChecker_Env.tc_term;
+            typeof_tot_or_gtot_term = (env1).FStarC_TypeChecker_Env.typeof_tot_or_gtot_term;
+            universe_of = (env1).FStarC_TypeChecker_Env.universe_of;
+            typeof_well_typed_tot_or_gtot_term = (env1).FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term;
+            teq_nosmt_force = (env1).FStarC_TypeChecker_Env.teq_nosmt_force;
+            subtype_nosmt_force = (env1).FStarC_TypeChecker_Env.subtype_nosmt_force;
+            qtbl_name_and_index = (env1).FStarC_TypeChecker_Env.qtbl_name_and_index;
+            qtbl_name_and_index1 = (env1).FStarC_TypeChecker_Env.qtbl_name_and_index1;
+            fv_delta_depths = (env1).FStarC_TypeChecker_Env.fv_delta_depths;
+            proof_ns = tmp2;
+            synth_hook = (env1).FStarC_TypeChecker_Env.synth_hook;
+            try_solve_implicits_hook = (env1).FStarC_TypeChecker_Env.try_solve_implicits_hook;
+            splice = (env1).FStarC_TypeChecker_Env.splice;
+            mpreprocess = (env1).FStarC_TypeChecker_Env.mpreprocess;
+            postprocess = (env1).FStarC_TypeChecker_Env.postprocess;
+            identifier_info = (env1).FStarC_TypeChecker_Env.identifier_info;
+            tc_hooks = (env1).FStarC_TypeChecker_Env.tc_hooks;
+            dsenv = (env1).FStarC_TypeChecker_Env.dsenv;
+            nbe = (env1).FStarC_TypeChecker_Env.nbe;
+            strict_args_tab = (env1).FStarC_TypeChecker_Env.strict_args_tab;
+            disc_proj_tab = (env1).FStarC_TypeChecker_Env.disc_proj_tab;
+            erasable_types_tab = (env1).FStarC_TypeChecker_Env.erasable_types_tab;
+            enable_defer_to_tac = (env1).FStarC_TypeChecker_Env.enable_defer_to_tac;
+            unif_allow_ref_guards = (env1).FStarC_TypeChecker_Env.unif_allow_ref_guards;
+            erase_erasable_args = (env1).FStarC_TypeChecker_Env.erase_erasable_args;
+            core_check = (env1).FStarC_TypeChecker_Env.core_check;
+            missing_decl = (env1).FStarC_TypeChecker_Env.missing_decl;
+            iface_todo = (env1).FStarC_TypeChecker_Env.iface_todo;
+            iface_hidden = (env1).FStarC_TypeChecker_Env.iface_hidden;
+            iface_lids = (env1).FStarC_TypeChecker_Env.iface_lids;
+            iface_val_lids = (env1).FStarC_TypeChecker_Env.iface_val_lids }))
+        | (FStarC_Syntax_Syntax.Sig_pragma ((FStarC_Syntax_Syntax.SetOptions (tmp2)))) -> (if from_cache then env1 else (let tmp3 = (FStarC_Options.using_facts_from ()) in
+          { FStarC_TypeChecker_Env.solver = (env1).FStarC_TypeChecker_Env.solver;
+            range = (env1).FStarC_TypeChecker_Env.range;
+            curmodule = (env1).FStarC_TypeChecker_Env.curmodule;
+            gamma = (env1).FStarC_TypeChecker_Env.gamma;
+            gamma_sig = (env1).FStarC_TypeChecker_Env.gamma_sig;
+            gamma_cache = (env1).FStarC_TypeChecker_Env.gamma_cache;
+            modules = (env1).FStarC_TypeChecker_Env.modules;
+            expected_typ = (env1).FStarC_TypeChecker_Env.expected_typ;
+            sigtab = (env1).FStarC_TypeChecker_Env.sigtab;
+            attrtab = (env1).FStarC_TypeChecker_Env.attrtab;
+            instantiate_imp = (env1).FStarC_TypeChecker_Env.instantiate_imp;
+            effects = (env1).FStarC_TypeChecker_Env.effects;
+            generalize = (env1).FStarC_TypeChecker_Env.generalize;
+            letrecs = (env1).FStarC_TypeChecker_Env.letrecs;
+            rec_names = (env1).FStarC_TypeChecker_Env.rec_names;
+            top_level = (env1).FStarC_TypeChecker_Env.top_level;
+            check_uvars = (env1).FStarC_TypeChecker_Env.check_uvars;
+            use_eq_strict = (env1).FStarC_TypeChecker_Env.use_eq_strict;
+            is_iface = (env1).FStarC_TypeChecker_Env.is_iface;
+            admit = (env1).FStarC_TypeChecker_Env.admit;
+            phase1 = (env1).FStarC_TypeChecker_Env.phase1;
+            failhard = (env1).FStarC_TypeChecker_Env.failhard;
+            flychecking = (env1).FStarC_TypeChecker_Env.flychecking;
+            uvar_subtyping = (env1).FStarC_TypeChecker_Env.uvar_subtyping;
+            intactics = (env1).FStarC_TypeChecker_Env.intactics;
+            nocoerce = (env1).FStarC_TypeChecker_Env.nocoerce;
+            tc_term = (env1).FStarC_TypeChecker_Env.tc_term;
+            typeof_tot_or_gtot_term = (env1).FStarC_TypeChecker_Env.typeof_tot_or_gtot_term;
+            universe_of = (env1).FStarC_TypeChecker_Env.universe_of;
+            typeof_well_typed_tot_or_gtot_term = (env1).FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term;
+            teq_nosmt_force = (env1).FStarC_TypeChecker_Env.teq_nosmt_force;
+            subtype_nosmt_force = (env1).FStarC_TypeChecker_Env.subtype_nosmt_force;
+            qtbl_name_and_index = (env1).FStarC_TypeChecker_Env.qtbl_name_and_index;
+            qtbl_name_and_index1 = (env1).FStarC_TypeChecker_Env.qtbl_name_and_index1;
+            fv_delta_depths = (env1).FStarC_TypeChecker_Env.fv_delta_depths;
+            proof_ns = tmp3;
+            synth_hook = (env1).FStarC_TypeChecker_Env.synth_hook;
+            try_solve_implicits_hook = (env1).FStarC_TypeChecker_Env.try_solve_implicits_hook;
+            splice = (env1).FStarC_TypeChecker_Env.splice;
+            mpreprocess = (env1).FStarC_TypeChecker_Env.mpreprocess;
+            postprocess = (env1).FStarC_TypeChecker_Env.postprocess;
+            identifier_info = (env1).FStarC_TypeChecker_Env.identifier_info;
+            tc_hooks = (env1).FStarC_TypeChecker_Env.tc_hooks;
+            dsenv = (env1).FStarC_TypeChecker_Env.dsenv;
+            nbe = (env1).FStarC_TypeChecker_Env.nbe;
+            strict_args_tab = (env1).FStarC_TypeChecker_Env.strict_args_tab;
+            disc_proj_tab = (env1).FStarC_TypeChecker_Env.disc_proj_tab;
+            erasable_types_tab = (env1).FStarC_TypeChecker_Env.erasable_types_tab;
+            enable_defer_to_tac = (env1).FStarC_TypeChecker_Env.enable_defer_to_tac;
+            unif_allow_ref_guards = (env1).FStarC_TypeChecker_Env.unif_allow_ref_guards;
+            erase_erasable_args = (env1).FStarC_TypeChecker_Env.erase_erasable_args;
+            core_check = (env1).FStarC_TypeChecker_Env.core_check;
+            missing_decl = (env1).FStarC_TypeChecker_Env.missing_decl;
+            iface_todo = (env1).FStarC_TypeChecker_Env.iface_todo;
+            iface_hidden = (env1).FStarC_TypeChecker_Env.iface_hidden;
+            iface_lids = (env1).FStarC_TypeChecker_Env.iface_lids;
+            iface_val_lids = (env1).FStarC_TypeChecker_Env.iface_val_lids }))
+        | (FStarC_Syntax_Syntax.Sig_pragma ((FStarC_Syntax_Syntax.ResetOptions (tmp2)))) -> (if from_cache then env1 else (let tmp3 = (FStarC_Options.using_facts_from ()) in
+          { FStarC_TypeChecker_Env.solver = (env1).FStarC_TypeChecker_Env.solver;
+            range = (env1).FStarC_TypeChecker_Env.range;
+            curmodule = (env1).FStarC_TypeChecker_Env.curmodule;
+            gamma = (env1).FStarC_TypeChecker_Env.gamma;
+            gamma_sig = (env1).FStarC_TypeChecker_Env.gamma_sig;
+            gamma_cache = (env1).FStarC_TypeChecker_Env.gamma_cache;
+            modules = (env1).FStarC_TypeChecker_Env.modules;
+            expected_typ = (env1).FStarC_TypeChecker_Env.expected_typ;
+            sigtab = (env1).FStarC_TypeChecker_Env.sigtab;
+            attrtab = (env1).FStarC_TypeChecker_Env.attrtab;
+            instantiate_imp = (env1).FStarC_TypeChecker_Env.instantiate_imp;
+            effects = (env1).FStarC_TypeChecker_Env.effects;
+            generalize = (env1).FStarC_TypeChecker_Env.generalize;
+            letrecs = (env1).FStarC_TypeChecker_Env.letrecs;
+            rec_names = (env1).FStarC_TypeChecker_Env.rec_names;
+            top_level = (env1).FStarC_TypeChecker_Env.top_level;
+            check_uvars = (env1).FStarC_TypeChecker_Env.check_uvars;
+            use_eq_strict = (env1).FStarC_TypeChecker_Env.use_eq_strict;
+            is_iface = (env1).FStarC_TypeChecker_Env.is_iface;
+            admit = (env1).FStarC_TypeChecker_Env.admit;
+            phase1 = (env1).FStarC_TypeChecker_Env.phase1;
+            failhard = (env1).FStarC_TypeChecker_Env.failhard;
+            flychecking = (env1).FStarC_TypeChecker_Env.flychecking;
+            uvar_subtyping = (env1).FStarC_TypeChecker_Env.uvar_subtyping;
+            intactics = (env1).FStarC_TypeChecker_Env.intactics;
+            nocoerce = (env1).FStarC_TypeChecker_Env.nocoerce;
+            tc_term = (env1).FStarC_TypeChecker_Env.tc_term;
+            typeof_tot_or_gtot_term = (env1).FStarC_TypeChecker_Env.typeof_tot_or_gtot_term;
+            universe_of = (env1).FStarC_TypeChecker_Env.universe_of;
+            typeof_well_typed_tot_or_gtot_term = (env1).FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term;
+            teq_nosmt_force = (env1).FStarC_TypeChecker_Env.teq_nosmt_force;
+            subtype_nosmt_force = (env1).FStarC_TypeChecker_Env.subtype_nosmt_force;
+            qtbl_name_and_index = (env1).FStarC_TypeChecker_Env.qtbl_name_and_index;
+            qtbl_name_and_index1 = (env1).FStarC_TypeChecker_Env.qtbl_name_and_index1;
+            fv_delta_depths = (env1).FStarC_TypeChecker_Env.fv_delta_depths;
+            proof_ns = tmp3;
+            synth_hook = (env1).FStarC_TypeChecker_Env.synth_hook;
+            try_solve_implicits_hook = (env1).FStarC_TypeChecker_Env.try_solve_implicits_hook;
+            splice = (env1).FStarC_TypeChecker_Env.splice;
+            mpreprocess = (env1).FStarC_TypeChecker_Env.mpreprocess;
+            postprocess = (env1).FStarC_TypeChecker_Env.postprocess;
+            identifier_info = (env1).FStarC_TypeChecker_Env.identifier_info;
+            tc_hooks = (env1).FStarC_TypeChecker_Env.tc_hooks;
+            dsenv = (env1).FStarC_TypeChecker_Env.dsenv;
+            nbe = (env1).FStarC_TypeChecker_Env.nbe;
+            strict_args_tab = (env1).FStarC_TypeChecker_Env.strict_args_tab;
+            disc_proj_tab = (env1).FStarC_TypeChecker_Env.disc_proj_tab;
+            erasable_types_tab = (env1).FStarC_TypeChecker_Env.erasable_types_tab;
+            enable_defer_to_tac = (env1).FStarC_TypeChecker_Env.enable_defer_to_tac;
+            unif_allow_ref_guards = (env1).FStarC_TypeChecker_Env.unif_allow_ref_guards;
+            erase_erasable_args = (env1).FStarC_TypeChecker_Env.erase_erasable_args;
+            core_check = (env1).FStarC_TypeChecker_Env.core_check;
+            missing_decl = (env1).FStarC_TypeChecker_Env.missing_decl;
+            iface_todo = (env1).FStarC_TypeChecker_Env.iface_todo;
+            iface_hidden = (env1).FStarC_TypeChecker_Env.iface_hidden;
+            iface_lids = (env1).FStarC_TypeChecker_Env.iface_lids;
+            iface_val_lids = (env1).FStarC_TypeChecker_Env.iface_val_lids }))
+        | (FStarC_Syntax_Syntax.Sig_pragma (FStarC_Syntax_Syntax.RestartSolver)) -> (if (from_cache || (env1).FStarC_TypeChecker_Env.flychecking) then env1 else ((((env1).FStarC_TypeChecker_Env.solver).FStarC_TypeChecker_Env.refresh (Some ((env1).FStarC_TypeChecker_Env.proof_ns)));
+          env1))
+        | (FStarC_Syntax_Syntax.Sig_pragma (tmp2)) -> env1
+        | (FStarC_Syntax_Syntax.Sig_new_effect (ne)) -> (FStarC_TypeChecker_Env.push_new_effect env1 (ne, (se).FStarC_Syntax_Syntax.sigquals))
+        | (FStarC_Syntax_Syntax.Sig_sub_effect (sub)) -> (FStarC_TypeChecker_Util.update_env_sub_eff env1 sub (se).FStarC_Syntax_Syntax.sigrng)
+        | tmp2 -> env1
+      ))
+  ))
+
+let dbg_LogTypes : (bool ref) =
+  (FStarC_Debug.get_toggle "LogTypes")
+
+let check_subsumes_iface_val (env : FStarC_TypeChecker_Env.env) (iface_se : FStarC_Syntax_Syntax.sigelt) (impl : FStarC_Syntax_Syntax.sigelt) : unit =
+  (match (iface_se).FStarC_Syntax_Syntax.sigel with
+    | (FStarC_Syntax_Syntax.Sig_declare_typ ({ FStarC_Syntax_Syntax.lid = l; us = iface_us; t = iface_t; _ })) -> (let impl_scheme = (match (impl).FStarC_Syntax_Syntax.sigel with
+          | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (tmp, lbs); lids = tmp1; _ })) -> (FStarC_Util.find_map lbs (fun lb -> (if (FStarC_Ident.lid_equals (let scrut = (match (lb).FStarC_Syntax_Syntax.lbname with
+                | (FStar_Pervasives.Inr (v)) -> v
+              ) in
+            (scrut).FStarC_Syntax_Syntax.fv_name) l) then (Some (((lb).FStarC_Syntax_Syntax.lbunivs, (lb).FStarC_Syntax_Syntax.lbtyp))) else None)))
+          | (FStarC_Syntax_Syntax.Sig_inductive_typ ({ FStarC_Syntax_Syntax.lid = tmp; us = us; params = tmp1; num_uniform_params = tmp2; t = t; mutuals = tmp3; ds = tmp4; injective_type_params = tmp5; _ })) -> (Some ((us, t)))
+          | (FStarC_Syntax_Syntax.Sig_datacon ({ FStarC_Syntax_Syntax.lid = tmp; us = us; t = t; ty_lid = tmp1; num_ty_params = tmp2; mutuals = tmp3; injective_type_params = tmp4; proj_disc_lids = tmp5; _ })) -> (Some ((us, t)))
+          | (FStarC_Syntax_Syntax.Sig_declare_typ ({ FStarC_Syntax_Syntax.lid = tmp; us = us; t = t; _ })) -> (Some ((us, t)))
+          | tmp -> None
+        ) in
+      (match impl_scheme with
+        | None -> ()
+        | (Some ((impl_us, impl_t))) -> ((if ((<>) (FStarC_List.length impl_us) (FStarC_List.length iface_us)) then (let tmp = (FStarC_Ident.fStarC_Class_PP_pp__lident l) in
+          let tmp1 = (FStar_Pprint.prefix (Prims.parse_int "2") (Prims.parse_int "1") (FStarC_Errors_Msg.text "The implementation of") tmp) in
+          let tmp2 = (FStar_Pprint.op_Hat_Slash_Hat tmp1 (FStarC_Errors_Msg.text "has a different number of universe parameters than its interface.")) in
+          let tmp3 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 (FStarC_List.length iface_us)) in
+          let tmp4 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 (FStarC_List.length impl_us)) in
+          let tmp5 = (FStarC_Format.fmt2 "The interface declares %s, the implementation has %s." tmp3 tmp4) in
+          let tmp6 = (FStarC_Errors_Msg.text tmp5) in
+          let tmp7 = (tmp6 :: []) in
+          let tmp8 = (tmp2 :: tmp7) in
+          (FStarC_Errors.fStarC_Errors_raise_error__sigelt_list_document impl FStarC_Errors_Codes.Fatal_IncoherentInlineUniverse tmp8)) else ());
+          let tmp = (FStarC_Syntax_Subst.open_univ_vars iface_us iface_t) in
+          (match tmp with
+            | (us, iface_t1) -> (let tmp1 = (FStarC_List.map (fun u__eta -> (FStarC_Syntax_Syntax.U_name (u__eta))) us) in
+              let tmp2 = (FStarC_TypeChecker_Env.inst_tscheme_with (impl_us, impl_t) tmp1) in
+              (match tmp2 with
+                | (tmp3, impl_t1) -> (let env1 = (FStarC_TypeChecker_Env.push_univ_vars env us) in
+                  let env2 = (FStarC_TypeChecker_Env.set_range env1 (FStarC_Syntax_Util.range_of_sigelt impl)) in
+                  let tmp4 = (FStarC_TypeChecker_Rel.get_subtyping_predicate env2 impl_t1 iface_t1) in
+                  (match tmp4 with
+                    | None -> (let tmp5 = (FStarC_Ident.fStarC_Class_PP_pp__lident l) in
+                      let tmp6 = (FStar_Pprint.prefix (Prims.parse_int "2") (Prims.parse_int "1") (FStarC_Errors_Msg.text "The implementation of") tmp5) in
+                      let tmp7 = (FStar_Pprint.op_Hat_Slash_Hat tmp6 (FStarC_Errors_Msg.text "does not match its declaration in the interface.")) in
+                      let tmp8 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' iface_t1) in
+                      let tmp9 = (FStar_Pprint.prefix (Prims.parse_int "2") (Prims.parse_int "1") (FStarC_Errors_Msg.text "Interface type:") tmp8) in
+                      let tmp10 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' impl_t1) in
+                      let tmp11 = (FStar_Pprint.prefix (Prims.parse_int "2") (Prims.parse_int "1") (FStarC_Errors_Msg.text "Implementation type:") tmp10) in
+                      let tmp12 = (tmp11 :: []) in
+                      let tmp13 = (tmp9 :: tmp12) in
+                      let tmp14 = (tmp7 :: tmp13) in
+                      (FStarC_Errors.fStarC_Errors_raise_error__sigelt_list_document impl FStarC_Errors_Codes.Fatal_InterfaceNotImplementedByModule tmp14))
+                    | (Some (g)) -> (let tmp5 = (FStarC_Syntax_Syntax.fvar l None) in
+                      let tmp6 = (FStarC_TypeChecker_Env.apply_guard g tmp5) in
+                      (FStarC_TypeChecker_Rel.force_trivial_guard env2 tmp6))
+                  ))
+              ))
+          ))
+      ))
+    | tmp -> ()
+  )
+
+let tc_decls__process_one_decl (ses_env : ((FStarC_Syntax_Syntax.sigelt) list * FStarC_TypeChecker_Env.env)) (se : FStarC_Syntax_Syntax.sigelt) : (((FStarC_Syntax_Syntax.sigelt) list * FStarC_TypeChecker_Env.env) * (FStarC_Syntax_Syntax.sigelt) list) =
+  (match ses_env with
+    | (ses, env) -> (((FStarC_Errors.fallback_range) := (Some ((se).FStarC_Syntax_Syntax.sigrng)));
+      let tmp = (if (env).FStarC_TypeChecker_Env.flychecking then (FStarC_Debug.any ()) else false) in
+      (if tmp then ((ses, env), []) else (let tmp1 = (FStarC_Debug.low ()) in
+      (if tmp1 then (let tmp2 = (FStarC_Syntax_Syntax.fStarC_Class_Tagged_tag_of__sigelt se) in
+      let tmp3 = (FStarC_Syntax_Print.sigelt_to_string_short se) in
+      (FStarC_Format.print2 ">>>>>>>>>>>>>>Checking top-level %s decl %s\n" tmp2 tmp3)) else ());
+      let tmp2 = (FStarC_Options.ide_id_info_off ()) in
+      (if tmp2 then (FStarC_TypeChecker_Env.toggle_id_info env false) else ());
+      let tmp3 = (!(dbg_IdInfoOn)) in
+      (if tmp3 then (FStarC_TypeChecker_Env.toggle_id_info env true) else ());
+      let tmp4 = (FStarC_Options_Ext.enabled "freshen") in
+      (if tmp4 then (((env).FStarC_TypeChecker_Env.solver).FStarC_TypeChecker_Env.refresh (Some ((env).FStarC_TypeChecker_Env.proof_ns))) else ());
+      let tmp5 = (if ((se).FStarC_Syntax_Syntax.sigmeta).FStarC_Syntax_Syntax.sigmeta_spliced then ([], [], env) else (tick_off_iface_todo env se)) in
+      (match tmp5 with
+        | (iface_prefix, iface_matched, env1) -> ((FStarC_List.iter (fun se1 -> (((env1).FStarC_TypeChecker_Env.solver).FStarC_TypeChecker_Env.encode_sig env1 se1)) iface_prefix);
+          let tmp6 = (FStarC_Syntax_Print.sigelt_to_string_short se) in
+          let tmp7 = (FStarC_Format.fmt2 "While typechecking the %stop-level declaration ‘%s’" (if ((se).FStarC_Syntax_Syntax.sigmeta).FStarC_Syntax_Syntax.sigmeta_spliced then "(spliced) " else "") tmp6) in
+          let tmp8 = (FStarC_Errors.with_ctx tmp7 (fun tmp8 -> (tc_decl env1 se))) in
+          (match tmp8 with
+            | (ses', ses_elaborated, env2) -> (let ses'1 = (FStarC_List.map (fun se1 -> (let tmp9 = (!(dbg_UF)) in
+                (if tmp9 then (let tmp10 = (FStarC_Syntax_Print.fStarC_Class_Show_show__sigelt se1) in
+                (FStarC_Format.print1 "About to elim vars from %s\n" tmp10)) else ());
+                (FStarC_TypeChecker_Normalize.elim_uvars env2 se1))) ses') in
+              let ses_elaborated1 = (FStarC_List.map (fun se1 -> (let tmp9 = (!(dbg_UF)) in
+                (if tmp9 then (let tmp10 = (FStarC_Syntax_Print.fStarC_Class_Show_show__sigelt se1) in
+                (FStarC_Format.print1 "About to elim vars from (elaborated) %s\n" tmp10)) else ());
+                (FStarC_TypeChecker_Normalize.elim_uvars env2 se1))) ses_elaborated) in
+              (FStarC_TypeChecker_Env.promote_id_info env2 (compress_and_norm env2));
+              let ses'2 = (FStarC_List.map (FStarC_Syntax_Compress.deep_compress_se false false) ses'1) in
+              let ses'3 = (FStarC_List.map (mark_karamel_private env2) ses'2) in
+              let env3 = (FStarC_List.fold_left (fun env3 se1 -> (add_sigelt_to_env env3 se1 false)) env2 ses'3) in
+              (FStarC_Syntax_Unionfind.reset ());
+              let tmp9 = (FStarC_Options.log_types ()) in
+              let tmp10 = (if tmp9 then true else (FStarC_Debug.medium ())) in
+              let tmp11 = (if tmp10 then true else (!(dbg_LogTypes))) in
+              (if tmp11 then (let tmp12 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_sigelt ses'3) in
+              (FStarC_Format.print1 "Checked: %s\n" tmp12)) else ());
+              (FStarC_Profiling.profile (fun tmp12 -> (FStarC_List.iter (fun se1 -> (((env3).FStarC_TypeChecker_Env.solver).FStarC_TypeChecker_Env.encode_sig env3 se1)) ses'3)) (Some ((FStarC_Ident.string_of_lid (FStarC_TypeChecker_Env.current_module env3)))) "FStarC.TypeChecker.Tc.encode_sig");
+              (FStarC_List.iter (fun iface_se -> (let lids = (FStarC_Syntax_Util.lids_of_sigelt iface_se) in
+              (FStarC_List.iter (fun impl -> (let tmp12 = (FStarC_Util.for_some (fun l -> (FStarC_Util.for_some (FStarC_Ident.lid_equals l) lids)) (FStarC_Syntax_Util.lids_of_sigelt impl)) in
+              (if tmp12 then (check_subsumes_iface_val env3 iface_se impl) else ()))) ses'3))) iface_matched);
+              (((FStarC_List.rev_append ses'3 (FStarC_List.rev_append iface_prefix ses)), env3), ses_elaborated1))
+          ))
+      ))))
+  )
+
+let tc_decls (env : FStarC_TypeChecker_Env.env) (ses : (FStarC_Syntax_Syntax.sigelt) list) : ((FStarC_Syntax_Syntax.sigelt) list * FStarC_TypeChecker_Env.env) =
+  (let process_one_decl_timed = (fun acc se -> ((FStarC_TypeChecker_Core.clear_memo_table ());
+    (match acc with
+      | (tmp, env1) -> (let r = (FStarC_Profiling.profile (fun tmp1 -> (tc_decls__process_one_decl acc se)) (Some ((FStarC_Ident.string_of_lid (FStarC_TypeChecker_Env.current_module env1)))) "FStarC.TypeChecker.Tc.process_one_decl") in
+        let tmp1 = (FStarC_Options.profile_group_by_decl ()) in
+        let tmp2 = (if tmp1 then true else (FStarC_Options.timing ())) in
+        (if tmp2 then (let tag = (match (FStarC_Syntax_Util.lids_of_sigelt se) with
+            | (hd :: tmp3) -> (FStarC_Ident.string_of_lid hd)
+            | tmp3 -> (FStarC_Range_Ops.string_of_range (FStarC_Syntax_Util.range_of_sigelt se))
+          ) in
+        (FStarC_Profiling.report_and_clear tag)) else ());
+        r)
+    ))) in
+  let tmp = (FStarC_Syntax_Unionfind.with_uf_enabled (fun tmp -> (FStarC_Util.fold_flatten process_one_decl_timed ([], env) ses))) in
+  (match tmp with
+    | (ses1, env1) -> ((FStarC_List.rev_append ses1 []), env1)
+  ))
+
+let tc_partial_modul (env : FStarC_TypeChecker_Env.env) (modul : FStarC_Syntax_Syntax.modul) : (FStarC_Syntax_Syntax.modul * FStarC_TypeChecker_Env.env) =
+  (let verify = (FStarC_Options.should_verify (FStarC_Ident.string_of_lid (modul).FStarC_Syntax_Syntax.name)) in
+  let action = (if verify then "verifying" else "lax-checking") in
+  let label = (if (modul).FStarC_Syntax_Syntax.is_interface then "interface" else "implementation") in
+  let tmp = (FStarC_Debug.any ()) in
+  (if tmp then (FStarC_Format.print3 "Now %s %s of %s\n" action label (FStarC_Ident.string_of_lid (modul).FStarC_Syntax_Syntax.name)) else ());
+  let dsnap = (FStarC_Debug.snapshot ()) in
+  let tmp1 = (FStarC_Options.should_check (FStarC_Ident.string_of_lid (modul).FStarC_Syntax_Syntax.name)) in
+  let tmp2 = (not tmp1) in
+  let tmp3 = (if tmp2 then (let tmp3 = (FStarC_Options.debug_all_modules ()) in
+    (not tmp3)) else false) in
+  (if tmp3 then (FStarC_Debug.disable_all ()) else ());
+  let env1 = { FStarC_TypeChecker_Env.solver = (env).FStarC_TypeChecker_Env.solver;
+      range = (env).FStarC_TypeChecker_Env.range;
+      curmodule = (env).FStarC_TypeChecker_Env.curmodule;
+      gamma = (env).FStarC_TypeChecker_Env.gamma;
+      gamma_sig = (env).FStarC_TypeChecker_Env.gamma_sig;
+      gamma_cache = (env).FStarC_TypeChecker_Env.gamma_cache;
+      modules = (env).FStarC_TypeChecker_Env.modules;
+      expected_typ = (env).FStarC_TypeChecker_Env.expected_typ;
+      sigtab = (env).FStarC_TypeChecker_Env.sigtab;
+      attrtab = (env).FStarC_TypeChecker_Env.attrtab;
+      instantiate_imp = (env).FStarC_TypeChecker_Env.instantiate_imp;
+      effects = (env).FStarC_TypeChecker_Env.effects;
+      generalize = (env).FStarC_TypeChecker_Env.generalize;
+      letrecs = (env).FStarC_TypeChecker_Env.letrecs;
+      rec_names = (env).FStarC_TypeChecker_Env.rec_names;
+      top_level = (env).FStarC_TypeChecker_Env.top_level;
+      check_uvars = (env).FStarC_TypeChecker_Env.check_uvars;
+      use_eq_strict = (env).FStarC_TypeChecker_Env.use_eq_strict;
+      is_iface = (modul).FStarC_Syntax_Syntax.is_interface;
+      admit = (not verify);
+      phase1 = (env).FStarC_TypeChecker_Env.phase1;
+      failhard = (env).FStarC_TypeChecker_Env.failhard;
+      flychecking = (env).FStarC_TypeChecker_Env.flychecking;
+      uvar_subtyping = (env).FStarC_TypeChecker_Env.uvar_subtyping;
+      intactics = (env).FStarC_TypeChecker_Env.intactics;
+      nocoerce = (env).FStarC_TypeChecker_Env.nocoerce;
+      tc_term = (env).FStarC_TypeChecker_Env.tc_term;
+      typeof_tot_or_gtot_term = (env).FStarC_TypeChecker_Env.typeof_tot_or_gtot_term;
+      universe_of = (env).FStarC_TypeChecker_Env.universe_of;
+      typeof_well_typed_tot_or_gtot_term = (env).FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term;
+      teq_nosmt_force = (env).FStarC_TypeChecker_Env.teq_nosmt_force;
+      subtype_nosmt_force = (env).FStarC_TypeChecker_Env.subtype_nosmt_force;
+      qtbl_name_and_index = (env).FStarC_TypeChecker_Env.qtbl_name_and_index;
+      qtbl_name_and_index1 = (env).FStarC_TypeChecker_Env.qtbl_name_and_index1;
+      fv_delta_depths = (env).FStarC_TypeChecker_Env.fv_delta_depths;
+      proof_ns = (env).FStarC_TypeChecker_Env.proof_ns;
+      synth_hook = (env).FStarC_TypeChecker_Env.synth_hook;
+      try_solve_implicits_hook = (env).FStarC_TypeChecker_Env.try_solve_implicits_hook;
+      splice = (env).FStarC_TypeChecker_Env.splice;
+      mpreprocess = (env).FStarC_TypeChecker_Env.mpreprocess;
+      postprocess = (env).FStarC_TypeChecker_Env.postprocess;
+      identifier_info = (env).FStarC_TypeChecker_Env.identifier_info;
+      tc_hooks = (env).FStarC_TypeChecker_Env.tc_hooks;
+      dsenv = (env).FStarC_TypeChecker_Env.dsenv;
+      nbe = (env).FStarC_TypeChecker_Env.nbe;
+      strict_args_tab = (env).FStarC_TypeChecker_Env.strict_args_tab;
+      disc_proj_tab = (env).FStarC_TypeChecker_Env.disc_proj_tab;
+      erasable_types_tab = (env).FStarC_TypeChecker_Env.erasable_types_tab;
+      enable_defer_to_tac = (env).FStarC_TypeChecker_Env.enable_defer_to_tac;
+      unif_allow_ref_guards = (env).FStarC_TypeChecker_Env.unif_allow_ref_guards;
+      erase_erasable_args = (env).FStarC_TypeChecker_Env.erase_erasable_args;
+      core_check = (env).FStarC_TypeChecker_Env.core_check;
+      missing_decl = (env).FStarC_TypeChecker_Env.missing_decl;
+      iface_todo = (env).FStarC_TypeChecker_Env.iface_todo;
+      iface_hidden = (env).FStarC_TypeChecker_Env.iface_hidden;
+      iface_lids = (env).FStarC_TypeChecker_Env.iface_lids;
+      iface_val_lids = (env).FStarC_TypeChecker_Env.iface_val_lids } in
+  let env2 = (FStarC_TypeChecker_Env.set_current_module env1 (modul).FStarC_Syntax_Syntax.name) in
+  let env3 = (if (modul).FStarC_Syntax_Syntax.is_interface then env2 else (let tmp4 = (FStarC_List.tryFind (fun m -> ((m).FStarC_Syntax_Syntax.is_interface && (FStarC_Ident.lid_equals (m).FStarC_Syntax_Syntax.name (modul).FStarC_Syntax_Syntax.name))) (env2).FStarC_TypeChecker_Env.modules) in
+    (match tmp4 with
+      | None -> env2
+      | (Some (iface)) -> (let env3 = (FStarC_TypeChecker_Env.set_iface_todo env2 (iface).FStarC_Syntax_Syntax.declarations) in
+        let tmp5 = (FStarC_List.collect FStarC_Syntax_Util.lids_of_sigelt (iface).FStarC_Syntax_Syntax.declarations) in
+        let tmp6 = (FStarC_List.filter is_iface_val (iface).FStarC_Syntax_Syntax.declarations) in
+        let tmp7 = (FStarC_List.collect FStarC_Syntax_Util.lids_of_sigelt tmp6) in
+        let env4 = (FStarC_TypeChecker_Env.set_iface_lids env3 tmp5 tmp7) in
+        let missing_decl0 = (env4).FStarC_TypeChecker_Env.missing_decl in
+        let env5 = (FStarC_List.fold_left (fun env5 se -> (let tmp8 = (is_iface_val se) in
+          (if tmp8 then (let tmp9 = (unassume_iface_val se) in
+          (FStarC_TypeChecker_Env.push_sigelt_force env5 tmp9)) else env5))) env4 (iface).FStarC_Syntax_Syntax.declarations) in
+        { FStarC_TypeChecker_Env.solver = (env5).FStarC_TypeChecker_Env.solver;
+          range = (env5).FStarC_TypeChecker_Env.range;
+          curmodule = (env5).FStarC_TypeChecker_Env.curmodule;
+          gamma = (env5).FStarC_TypeChecker_Env.gamma;
+          gamma_sig = (env5).FStarC_TypeChecker_Env.gamma_sig;
+          gamma_cache = (env5).FStarC_TypeChecker_Env.gamma_cache;
+          modules = (env5).FStarC_TypeChecker_Env.modules;
+          expected_typ = (env5).FStarC_TypeChecker_Env.expected_typ;
+          sigtab = (env5).FStarC_TypeChecker_Env.sigtab;
+          attrtab = (env5).FStarC_TypeChecker_Env.attrtab;
+          instantiate_imp = (env5).FStarC_TypeChecker_Env.instantiate_imp;
+          effects = (env5).FStarC_TypeChecker_Env.effects;
+          generalize = (env5).FStarC_TypeChecker_Env.generalize;
+          letrecs = (env5).FStarC_TypeChecker_Env.letrecs;
+          rec_names = (env5).FStarC_TypeChecker_Env.rec_names;
+          top_level = (env5).FStarC_TypeChecker_Env.top_level;
+          check_uvars = (env5).FStarC_TypeChecker_Env.check_uvars;
+          use_eq_strict = (env5).FStarC_TypeChecker_Env.use_eq_strict;
+          is_iface = (env5).FStarC_TypeChecker_Env.is_iface;
+          admit = (env5).FStarC_TypeChecker_Env.admit;
+          phase1 = (env5).FStarC_TypeChecker_Env.phase1;
+          failhard = (env5).FStarC_TypeChecker_Env.failhard;
+          flychecking = (env5).FStarC_TypeChecker_Env.flychecking;
+          uvar_subtyping = (env5).FStarC_TypeChecker_Env.uvar_subtyping;
+          intactics = (env5).FStarC_TypeChecker_Env.intactics;
+          nocoerce = (env5).FStarC_TypeChecker_Env.nocoerce;
+          tc_term = (env5).FStarC_TypeChecker_Env.tc_term;
+          typeof_tot_or_gtot_term = (env5).FStarC_TypeChecker_Env.typeof_tot_or_gtot_term;
+          universe_of = (env5).FStarC_TypeChecker_Env.universe_of;
+          typeof_well_typed_tot_or_gtot_term = (env5).FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term;
+          teq_nosmt_force = (env5).FStarC_TypeChecker_Env.teq_nosmt_force;
+          subtype_nosmt_force = (env5).FStarC_TypeChecker_Env.subtype_nosmt_force;
+          qtbl_name_and_index = (env5).FStarC_TypeChecker_Env.qtbl_name_and_index;
+          qtbl_name_and_index1 = (env5).FStarC_TypeChecker_Env.qtbl_name_and_index1;
+          fv_delta_depths = (env5).FStarC_TypeChecker_Env.fv_delta_depths;
+          proof_ns = (env5).FStarC_TypeChecker_Env.proof_ns;
+          synth_hook = (env5).FStarC_TypeChecker_Env.synth_hook;
+          try_solve_implicits_hook = (env5).FStarC_TypeChecker_Env.try_solve_implicits_hook;
+          splice = (env5).FStarC_TypeChecker_Env.splice;
+          mpreprocess = (env5).FStarC_TypeChecker_Env.mpreprocess;
+          postprocess = (env5).FStarC_TypeChecker_Env.postprocess;
+          identifier_info = (env5).FStarC_TypeChecker_Env.identifier_info;
+          tc_hooks = (env5).FStarC_TypeChecker_Env.tc_hooks;
+          dsenv = (env5).FStarC_TypeChecker_Env.dsenv;
+          nbe = (env5).FStarC_TypeChecker_Env.nbe;
+          strict_args_tab = (env5).FStarC_TypeChecker_Env.strict_args_tab;
+          disc_proj_tab = (env5).FStarC_TypeChecker_Env.disc_proj_tab;
+          erasable_types_tab = (env5).FStarC_TypeChecker_Env.erasable_types_tab;
+          enable_defer_to_tac = (env5).FStarC_TypeChecker_Env.enable_defer_to_tac;
+          unif_allow_ref_guards = (env5).FStarC_TypeChecker_Env.unif_allow_ref_guards;
+          erase_erasable_args = (env5).FStarC_TypeChecker_Env.erase_erasable_args;
+          core_check = (env5).FStarC_TypeChecker_Env.core_check;
+          missing_decl = missing_decl0;
+          iface_todo = (env5).FStarC_TypeChecker_Env.iface_todo;
+          iface_hidden = (env5).FStarC_TypeChecker_Env.iface_hidden;
+          iface_lids = (env5).FStarC_TypeChecker_Env.iface_lids;
+          iface_val_lids = (env5).FStarC_TypeChecker_Env.iface_val_lids })
+    ))) in
+  let tmp4 = (FStarC_Options.should_check (FStarC_Ident.string_of_lid (modul).FStarC_Syntax_Syntax.name)) in
+  let tmp5 = (not tmp4) in
+  (FStarC_Errors.with_ctx_if tmp5 (FStarC_Format.fmt2 "While loading dependency %s%s" (FStarC_Ident.string_of_lid (modul).FStarC_Syntax_Syntax.name) (if (modul).FStarC_Syntax_Syntax.is_interface then " (interface)" else "")) (fun tmp6 -> (let tmp7 = (tc_decls env3 (modul).FStarC_Syntax_Syntax.declarations) in
+  (match tmp7 with
+    | (ses, env4) -> ((FStarC_Debug.restore dsnap);
+      ({ FStarC_Syntax_Syntax.name = (modul).FStarC_Syntax_Syntax.name;
+        declarations = ses;
+        is_interface = (modul).FStarC_Syntax_Syntax.is_interface }, env4))
+  )))))
+
+let tc_more_partial_modul (env : FStarC_TypeChecker_Env.env) (modul : FStarC_Syntax_Syntax.modul) (decls : (FStarC_Syntax_Syntax.sigelt) list) : (FStarC_Syntax_Syntax.modul * (FStarC_Syntax_Syntax.sigelt) list * FStarC_TypeChecker_Env.env) =
+  (let tmp = (tc_decls env decls) in
+  (match tmp with
+    | (ses, env1) -> (let modul1 = { FStarC_Syntax_Syntax.name = (modul).FStarC_Syntax_Syntax.name;
+          declarations = (FStarC_List.op_At (modul).FStarC_Syntax_Syntax.declarations ses);
+          is_interface = (modul).FStarC_Syntax_Syntax.is_interface } in
+      (modul1, ses, env1))
+  ))
+
+let finish_iface_todo (env : FStarC_TypeChecker_Env.env) : ((FStarC_Syntax_Syntax.sigelt) list * FStarC_TypeChecker_Env.env) =
+  (let todo = (FStarC_TypeChecker_Env.iface_todo env) in
+  let missing = (FStarC_List.filter is_iface_val todo) in
+  (if (match missing with
+    | (hd :: tl) -> true
+    | tmp -> false
+  ) then (let names = (FStarC_List.collect FStarC_Syntax_Util.lids_of_sigelt missing) in
+  let tmp = (FStarC_Ident.fStarC_Class_Show_show__lident (FStarC_TypeChecker_Env.current_module env)) in
+  let tmp1 = (FStarC_Format.fmt1 "Module %s fails to implement some declarations of its interface:" tmp) in
+  let tmp2 = (FStarC_Errors_Msg.text tmp1) in
+  let tmp3 = (FStarC_List.map FStarC_Ident.fStarC_Class_PP_pp__lident names) in
+  let tmp4 = (FStar_Pprint.separate FStar_Pprint.hardline tmp3) in
+  let tmp5 = (FStar_Pprint.prefix (Prims.parse_int "2") (Prims.parse_int "1") tmp2 tmp4) in
+  let tmp6 = (tmp5 :: []) in
+  (FStarC_Errors.fStarC_Errors_log_issue__range_list_document (FStarC_Syntax_Util.range_of_sigelt (FStarC_List.hd missing)) FStarC_Errors_Codes.Fatal_InterfaceNotImplementedByModule tmp6)) else ());
+  let copied = (FStarC_List.filter (fun se -> (let tmp = (is_iface_val se) in
+    (not tmp))) todo) in
+  let tmp = (FStarC_TypeChecker_Env.set_iface_todo env []) in
+  (copied, tmp))
+
+let finish_partial_modul (should_pop : bool) (loading_from_cache : bool) (en : FStarC_TypeChecker_Env.env) (m : FStarC_Syntax_Syntax.modul) : (FStarC_Syntax_Syntax.modul * FStarC_TypeChecker_Env.env) =
+  (let tmp = (FStarC_Debug.low ()) in
+  (if tmp then (let tmp1 = (FStarC_Ident.fStarC_Class_Show_show__lident (m).FStarC_Syntax_Syntax.name) in
+  let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__bool loading_from_cache) in
+  (FStarC_Format.print3 "Finishing %s %s -- loading_from_cache=%s\n" (if (m).FStarC_Syntax_Syntax.is_interface then "interface" else "module") tmp1 tmp2)) else ());
+  let tmp1 = (if loading_from_cache then (m, en) else (let tmp1 = (finish_iface_todo en) in
+    (match tmp1 with
+      | (trailing, en1) -> ({ FStarC_Syntax_Syntax.name = (m).FStarC_Syntax_Syntax.name;
+          declarations = (FStarC_List.op_At (m).FStarC_Syntax_Syntax.declarations trailing);
+          is_interface = (m).FStarC_Syntax_Syntax.is_interface }, en1)
+    ))) in
+  (match tmp1 with
+    | (m1, en1) -> (let env = (FStarC_TypeChecker_Env.finish_module en1 m1) in
+      (if (not loading_from_cache) then (let missing = (FStarC_TypeChecker_Env.missing_definition_list env) in
+      (if (match missing with
+        | (hd :: tl) -> true
+        | tmp2 -> false
+      ) then (let tmp2 = (FStarC_Pprint.separate_map FStar_Pprint.hardline (fun l -> (FStarC_Ident.fStarC_Class_PP_pp__ident (FStarC_Ident.ident_of_lid l))) missing) in
+      let tmp3 = (FStar_Pprint.prefix (Prims.parse_int "2") (Prims.parse_int "1") (FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Missing definitions in module %s:" (FStarC_Ident.string_of_lid (m1).FStarC_Syntax_Syntax.name))) tmp2) in
+      let tmp4 = (tmp3 :: []) in
+      (FStarC_TypeChecker_Env.fStarC_Errors_log_issue__env_list_document env FStarC_Errors_Codes.Error_AdmitWithoutDefinition tmp4)) else ())) else ());
+      (FStarC_SMap.clear (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd ((env).FStarC_TypeChecker_Env.qtbl_name_and_index, (env).FStarC_TypeChecker_Env.qtbl_name_and_index1)));
+      (if should_pop then ((ignore (pop_context env (Prims.strcat "Ending modul " (FStarC_Ident.string_of_lid (m1).FStarC_Syntax_Syntax.name))));
+      ()) else ());
+      let tmp2 = (FStarC_Options.depth ()) in
+      let tmp3 = (Prims.op_Greater tmp2 (Prims.parse_int "0")) in
+      (if tmp3 then (let tmp4 = (FStarC_Options.depth ()) in
+      let tmp5 = (FStarC_Class_Show.fStarC_Class_Show_show__int tmp4) in
+      let tmp6 = (Prims.strcat tmp5 ".") in
+      let tmp7 = (Prims.strcat "Some #push-options have not been popped. Current depth is " tmp6) in
+      (FStarC_TypeChecker_Env.fStarC_Errors_log_issue__env_string env FStarC_Errors_Codes.Error_MissingPopOptions tmp7)) else ());
+      (m1, env))
+  ))
+
+let tc_modul (env0 : FStarC_TypeChecker_Env.env) (m : FStarC_Syntax_Syntax.modul) : (FStarC_Syntax_Syntax.modul * FStarC_TypeChecker_Env.env) =
+  (let msg = (Prims.strcat "Internals for " (FStarC_Ident.string_of_lid (m).FStarC_Syntax_Syntax.name)) in
+  let env01 = (push_context env0 msg) in
+  let tmp = (tc_partial_modul env01 m) in
+  (match tmp with
+    | (modul, env) -> (finish_partial_modul true false env modul)
+  ))
+
+let dbg_Normalize : (bool ref) =
+  (FStarC_Debug.get_toggle "Normalize")
+
+let check_module (env0 : FStarC_TypeChecker_Env.env) (m : FStarC_Syntax_Syntax.modul) : (FStarC_Syntax_Syntax.modul * FStarC_TypeChecker_Env.env) =
+  (let tmp = (FStarC_Debug.any ()) in
+  (if tmp then (let tmp1 = (FStarC_Ident.fStarC_Class_Show_show__lident (m).FStarC_Syntax_Syntax.name) in
+  (FStarC_Format.print2 "Checking %s: %s\n" (if (m).FStarC_Syntax_Syntax.is_interface then "i'face" else "module") tmp1)) else ());
+  let tmp1 = (FStarC_Options.dump_module (FStarC_Ident.string_of_lid (m).FStarC_Syntax_Syntax.name)) in
+  (if tmp1 then (let tmp2 = (FStarC_Syntax_Print.fStarC_Class_Show_show__modul m) in
+  (FStarC_Format.print1 "Module before type checking:\n%s\n" tmp2)) else ());
+  let tmp2 = (FStarC_Options.should_verify (FStarC_Ident.string_of_lid (m).FStarC_Syntax_Syntax.name)) in
+  let tmp3 = (not tmp2) in
+  let env = { FStarC_TypeChecker_Env.solver = (env0).FStarC_TypeChecker_Env.solver;
+      range = (env0).FStarC_TypeChecker_Env.range;
+      curmodule = (env0).FStarC_TypeChecker_Env.curmodule;
+      gamma = (env0).FStarC_TypeChecker_Env.gamma;
+      gamma_sig = (env0).FStarC_TypeChecker_Env.gamma_sig;
+      gamma_cache = (env0).FStarC_TypeChecker_Env.gamma_cache;
+      modules = (env0).FStarC_TypeChecker_Env.modules;
+      expected_typ = (env0).FStarC_TypeChecker_Env.expected_typ;
+      sigtab = (env0).FStarC_TypeChecker_Env.sigtab;
+      attrtab = (env0).FStarC_TypeChecker_Env.attrtab;
+      instantiate_imp = (env0).FStarC_TypeChecker_Env.instantiate_imp;
+      effects = (env0).FStarC_TypeChecker_Env.effects;
+      generalize = (env0).FStarC_TypeChecker_Env.generalize;
+      letrecs = (env0).FStarC_TypeChecker_Env.letrecs;
+      rec_names = (env0).FStarC_TypeChecker_Env.rec_names;
+      top_level = (env0).FStarC_TypeChecker_Env.top_level;
+      check_uvars = (env0).FStarC_TypeChecker_Env.check_uvars;
+      use_eq_strict = (env0).FStarC_TypeChecker_Env.use_eq_strict;
+      is_iface = (env0).FStarC_TypeChecker_Env.is_iface;
+      admit = tmp3;
+      phase1 = (env0).FStarC_TypeChecker_Env.phase1;
+      failhard = (env0).FStarC_TypeChecker_Env.failhard;
+      flychecking = (env0).FStarC_TypeChecker_Env.flychecking;
+      uvar_subtyping = (env0).FStarC_TypeChecker_Env.uvar_subtyping;
+      intactics = (env0).FStarC_TypeChecker_Env.intactics;
+      nocoerce = (env0).FStarC_TypeChecker_Env.nocoerce;
+      tc_term = (env0).FStarC_TypeChecker_Env.tc_term;
+      typeof_tot_or_gtot_term = (env0).FStarC_TypeChecker_Env.typeof_tot_or_gtot_term;
+      universe_of = (env0).FStarC_TypeChecker_Env.universe_of;
+      typeof_well_typed_tot_or_gtot_term = (env0).FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term;
+      teq_nosmt_force = (env0).FStarC_TypeChecker_Env.teq_nosmt_force;
+      subtype_nosmt_force = (env0).FStarC_TypeChecker_Env.subtype_nosmt_force;
+      qtbl_name_and_index = (env0).FStarC_TypeChecker_Env.qtbl_name_and_index;
+      qtbl_name_and_index1 = (env0).FStarC_TypeChecker_Env.qtbl_name_and_index1;
+      fv_delta_depths = (env0).FStarC_TypeChecker_Env.fv_delta_depths;
+      proof_ns = (env0).FStarC_TypeChecker_Env.proof_ns;
+      synth_hook = (env0).FStarC_TypeChecker_Env.synth_hook;
+      try_solve_implicits_hook = (env0).FStarC_TypeChecker_Env.try_solve_implicits_hook;
+      splice = (env0).FStarC_TypeChecker_Env.splice;
+      mpreprocess = (env0).FStarC_TypeChecker_Env.mpreprocess;
+      postprocess = (env0).FStarC_TypeChecker_Env.postprocess;
+      identifier_info = (env0).FStarC_TypeChecker_Env.identifier_info;
+      tc_hooks = (env0).FStarC_TypeChecker_Env.tc_hooks;
+      dsenv = (env0).FStarC_TypeChecker_Env.dsenv;
+      nbe = (env0).FStarC_TypeChecker_Env.nbe;
+      strict_args_tab = (env0).FStarC_TypeChecker_Env.strict_args_tab;
+      disc_proj_tab = (env0).FStarC_TypeChecker_Env.disc_proj_tab;
+      erasable_types_tab = (env0).FStarC_TypeChecker_Env.erasable_types_tab;
+      enable_defer_to_tac = (env0).FStarC_TypeChecker_Env.enable_defer_to_tac;
+      unif_allow_ref_guards = (env0).FStarC_TypeChecker_Env.unif_allow_ref_guards;
+      erase_erasable_args = (env0).FStarC_TypeChecker_Env.erase_erasable_args;
+      core_check = (env0).FStarC_TypeChecker_Env.core_check;
+      missing_decl = (env0).FStarC_TypeChecker_Env.missing_decl;
+      iface_todo = (env0).FStarC_TypeChecker_Env.iface_todo;
+      iface_hidden = (env0).FStarC_TypeChecker_Env.iface_hidden;
+      iface_lids = (env0).FStarC_TypeChecker_Env.iface_lids;
+      iface_val_lids = (env0).FStarC_TypeChecker_Env.iface_val_lids } in
+  let tmp4 = (tc_modul env m) in
+  (match tmp4 with
+    | (m1, env1) -> (let env2 = { FStarC_TypeChecker_Env.solver = (env1).FStarC_TypeChecker_Env.solver;
+          range = (env1).FStarC_TypeChecker_Env.range;
+          curmodule = (env1).FStarC_TypeChecker_Env.curmodule;
+          gamma = (env1).FStarC_TypeChecker_Env.gamma;
+          gamma_sig = (env1).FStarC_TypeChecker_Env.gamma_sig;
+          gamma_cache = (env1).FStarC_TypeChecker_Env.gamma_cache;
+          modules = (env1).FStarC_TypeChecker_Env.modules;
+          expected_typ = (env1).FStarC_TypeChecker_Env.expected_typ;
+          sigtab = (env1).FStarC_TypeChecker_Env.sigtab;
+          attrtab = (env1).FStarC_TypeChecker_Env.attrtab;
+          instantiate_imp = (env1).FStarC_TypeChecker_Env.instantiate_imp;
+          effects = (env1).FStarC_TypeChecker_Env.effects;
+          generalize = (env1).FStarC_TypeChecker_Env.generalize;
+          letrecs = (env1).FStarC_TypeChecker_Env.letrecs;
+          rec_names = (env1).FStarC_TypeChecker_Env.rec_names;
+          top_level = (env1).FStarC_TypeChecker_Env.top_level;
+          check_uvars = (env1).FStarC_TypeChecker_Env.check_uvars;
+          use_eq_strict = (env1).FStarC_TypeChecker_Env.use_eq_strict;
+          is_iface = (env1).FStarC_TypeChecker_Env.is_iface;
+          admit = (env0).FStarC_TypeChecker_Env.admit;
+          phase1 = (env1).FStarC_TypeChecker_Env.phase1;
+          failhard = (env1).FStarC_TypeChecker_Env.failhard;
+          flychecking = (env1).FStarC_TypeChecker_Env.flychecking;
+          uvar_subtyping = (env1).FStarC_TypeChecker_Env.uvar_subtyping;
+          intactics = (env1).FStarC_TypeChecker_Env.intactics;
+          nocoerce = (env1).FStarC_TypeChecker_Env.nocoerce;
+          tc_term = (env1).FStarC_TypeChecker_Env.tc_term;
+          typeof_tot_or_gtot_term = (env1).FStarC_TypeChecker_Env.typeof_tot_or_gtot_term;
+          universe_of = (env1).FStarC_TypeChecker_Env.universe_of;
+          typeof_well_typed_tot_or_gtot_term = (env1).FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term;
+          teq_nosmt_force = (env1).FStarC_TypeChecker_Env.teq_nosmt_force;
+          subtype_nosmt_force = (env1).FStarC_TypeChecker_Env.subtype_nosmt_force;
+          qtbl_name_and_index = (env1).FStarC_TypeChecker_Env.qtbl_name_and_index;
+          qtbl_name_and_index1 = (env1).FStarC_TypeChecker_Env.qtbl_name_and_index1;
+          fv_delta_depths = (env1).FStarC_TypeChecker_Env.fv_delta_depths;
+          proof_ns = (env1).FStarC_TypeChecker_Env.proof_ns;
+          synth_hook = (env1).FStarC_TypeChecker_Env.synth_hook;
+          try_solve_implicits_hook = (env1).FStarC_TypeChecker_Env.try_solve_implicits_hook;
+          splice = (env1).FStarC_TypeChecker_Env.splice;
+          mpreprocess = (env1).FStarC_TypeChecker_Env.mpreprocess;
+          postprocess = (env1).FStarC_TypeChecker_Env.postprocess;
+          identifier_info = (env1).FStarC_TypeChecker_Env.identifier_info;
+          tc_hooks = (env1).FStarC_TypeChecker_Env.tc_hooks;
+          dsenv = (env1).FStarC_TypeChecker_Env.dsenv;
+          nbe = (env1).FStarC_TypeChecker_Env.nbe;
+          strict_args_tab = (env1).FStarC_TypeChecker_Env.strict_args_tab;
+          disc_proj_tab = (env1).FStarC_TypeChecker_Env.disc_proj_tab;
+          erasable_types_tab = (env1).FStarC_TypeChecker_Env.erasable_types_tab;
+          enable_defer_to_tac = (env1).FStarC_TypeChecker_Env.enable_defer_to_tac;
+          unif_allow_ref_guards = (env1).FStarC_TypeChecker_Env.unif_allow_ref_guards;
+          erase_erasable_args = (env1).FStarC_TypeChecker_Env.erase_erasable_args;
+          core_check = (env1).FStarC_TypeChecker_Env.core_check;
+          missing_decl = (env1).FStarC_TypeChecker_Env.missing_decl;
+          iface_todo = (env1).FStarC_TypeChecker_Env.iface_todo;
+          iface_hidden = (env1).FStarC_TypeChecker_Env.iface_hidden;
+          iface_lids = (env1).FStarC_TypeChecker_Env.iface_lids;
+          iface_val_lids = (env1).FStarC_TypeChecker_Env.iface_val_lids } in
+      let tmp5 = (FStarC_Options.dump_module (FStarC_Ident.string_of_lid (m1).FStarC_Syntax_Syntax.name)) in
+      (if tmp5 then (let tmp6 = (FStarC_Syntax_Print.fStarC_Class_Show_show__modul m1) in
+      (FStarC_Format.print1 "Module after type checking:\n%s\n" tmp6)) else ());
+      let tmp6 = (FStarC_Options.dump_module (FStarC_Ident.string_of_lid (m1).FStarC_Syntax_Syntax.name)) in
+      let tmp7 = (if tmp6 then (!(dbg_Normalize)) else false) in
+      (if tmp7 then (let normalize_toplevel_lets = (fun se -> (match (se).FStarC_Syntax_Syntax.sigel with
+          | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (b, lbs); lids = ids; _ })) -> (let n = (FStarC_TypeChecker_Normalize.normalize (FStarC_TypeChecker_Env.Beta :: (FStarC_TypeChecker_Env.Eager_unfolding :: (FStarC_TypeChecker_Env.Reify :: (FStarC_TypeChecker_Env.Inlining :: (FStarC_TypeChecker_Env.Primops :: ((FStarC_TypeChecker_Env.UnfoldUntil (FStarC_Syntax_Syntax.delta_constant)) :: (FStarC_TypeChecker_Env.AllowUnboundUniverses :: [])))))))) in
+            let update = (fun lb -> (let tmp8 = (FStarC_Syntax_Subst.open_univ_vars (lb).FStarC_Syntax_Syntax.lbunivs (lb).FStarC_Syntax_Syntax.lbdef) in
+              (match tmp8 with
+                | (univnames, e) -> (let tmp9 = (FStarC_TypeChecker_Env.push_univ_vars env2 univnames) in
+                  let tmp10 = (n tmp9 e) in
+                  { FStarC_Syntax_Syntax.lbname = (lb).FStarC_Syntax_Syntax.lbname;
+                    lbunivs = (lb).FStarC_Syntax_Syntax.lbunivs;
+                    lbtyp = (lb).FStarC_Syntax_Syntax.lbtyp;
+                    lbeff = (lb).FStarC_Syntax_Syntax.lbeff;
+                    lbdef = tmp10;
+                    lbattrs = (lb).FStarC_Syntax_Syntax.lbattrs;
+                    lbpos = (lb).FStarC_Syntax_Syntax.lbpos })
+              ))) in
+            let tmp8 = (FStarC_List.map update lbs) in
+            let tmp9 = (b, tmp8) in
+            let tmp10 = ({ FStarC_Syntax_Syntax.lbs = tmp9; lids = ids } : FStarC_Syntax_Syntax.sigelt'__Sig_let__payload) in
+            let tmp11 = (FStarC_Syntax_Syntax.Sig_let (tmp10)) in
+            { FStarC_Syntax_Syntax.sigel = tmp11;
+              sigrng = (se).FStarC_Syntax_Syntax.sigrng;
+              sigquals = (se).FStarC_Syntax_Syntax.sigquals;
+              sigmeta = (se).FStarC_Syntax_Syntax.sigmeta;
+              sigattrs = (se).FStarC_Syntax_Syntax.sigattrs;
+              sigopens_and_abbrevs = (se).FStarC_Syntax_Syntax.sigopens_and_abbrevs;
+              sigopts = (se).FStarC_Syntax_Syntax.sigopts })
+          | tmp8 -> se
+        )) in
+      let tmp8 = (FStarC_List.map normalize_toplevel_lets (m1).FStarC_Syntax_Syntax.declarations) in
+      let normalized_module = { FStarC_Syntax_Syntax.name = (m1).FStarC_Syntax_Syntax.name;
+          declarations = tmp8;
+          is_interface = (m1).FStarC_Syntax_Syntax.is_interface } in
+      let tmp9 = (FStarC_Syntax_Print.fStarC_Class_Show_show__modul normalized_module) in
+      (FStarC_Format.print1 "%s\n" tmp9)) else ());
+      (m1, env2))
+  ))
+
+let sigelt_key (se : FStarC_Syntax_Syntax.sigelt) : ((string) list * string) =
+  (let tmp = (FStarC_List.map FStarC_Ident.string_of_lid (FStarC_Syntax_Util.lids_of_sigelt se)) in
+  let tmp1 = (FStarC_Range_Ops.string_of_range (FStarC_Syntax_Util.range_of_sigelt se)) in
+  (tmp, tmp1))
+
+let already_loaded_iface_decls (en : FStarC_TypeChecker_Env.env) (m : FStarC_Syntax_Syntax.modul) : (((string) list * string)) list =
+  (if (m).FStarC_Syntax_Syntax.is_interface then [] else (let tmp = (FStarC_Option.find (fun mm -> ((FStarC_Ident.lid_equals (mm).FStarC_Syntax_Syntax.name (m).FStarC_Syntax_Syntax.name) && (mm).FStarC_Syntax_Syntax.is_interface)) (en).FStarC_TypeChecker_Env.modules) in
+  (match tmp with
+    | (Some (i)) -> (FStarC_List.map sigelt_key (i).FStarC_Syntax_Syntax.declarations)
+    | None -> []
+  )))
+
+let load_checked_module_sigelts (push : bool) (en : FStarC_TypeChecker_Env.env) (m : FStarC_Syntax_Syntax.modul) : FStarC_TypeChecker_Env.env =
+  (let loaded = (already_loaded_iface_decls en m) in
+  let env = (FStarC_TypeChecker_Env.set_current_module en (m).FStarC_Syntax_Syntax.name) in
+  let env1 = (if push then (push_context env (Prims.strcat "Internals for " (FStarC_Ident.string_of_lid (m).FStarC_Syntax_Syntax.name))) else env) in
+  (FStarC_List.fold_left (fun env2 se -> (let tmp = (if (match loaded with
+      | (hd :: tl) -> true
+      | tmp -> false
+    ) then (let tmp = (sigelt_key se) in
+    (FStarC_List.mem tmp loaded)) else false) in
+  (if tmp then env2 else (let env3 = (add_sigelt_to_env env2 se true) in
+  let lids = (FStarC_Syntax_Util.lids_of_sigelt se) in
+  (FStarC_List.iter (fun lid -> ((ignore (FStarC_TypeChecker_Env.lookup_sigelt env3 lid));
+  ())) lids);
+  env3)))) env1 (m).FStarC_Syntax_Syntax.declarations))
+
+let load_checked_module (en : FStarC_TypeChecker_Env.env) (m : FStarC_Syntax_Syntax.modul) : FStarC_TypeChecker_Env.env =
+  (let dsnap = (FStarC_Debug.snapshot ()) in
+  let tmp = (FStarC_Options.should_check (FStarC_Ident.string_of_lid (m).FStarC_Syntax_Syntax.name)) in
+  let tmp1 = (not tmp) in
+  let tmp2 = (if tmp1 then (let tmp2 = (FStarC_Options.debug_all_modules ()) in
+    (not tmp2)) else false) in
+  (if tmp2 then (FStarC_Debug.disable_all ()) else ());
+  let env = (load_checked_module_sigelts false en m) in
+  let tmp3 = (finish_partial_modul false true env m) in
+  (match tmp3 with
+    | (tmp4, env1) -> ((FStarC_Debug.restore dsnap);
+      env1)
+  ))
+
+let load_partial_checked_module (en : FStarC_TypeChecker_Env.env) (m : FStarC_Syntax_Syntax.modul) : FStarC_TypeChecker_Env.env =
+  (load_checked_module_sigelts true en m)
+
+let uu___0 : unit =
+  ((tc_decls_knot) := (Some (tc_decls)))
+

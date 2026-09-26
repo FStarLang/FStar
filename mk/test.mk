@@ -200,6 +200,25 @@ __clean:
 	rm -rf $(OUTPUT_DIR) $(CACHE_DIR) .depend
 clean: __clean
 
+# Custard reads the whole program, and --dep records what the *ML* backend
+# reads: for a module whose dependency is abstract in its interface that is
+# the .fsti alone, so the output would otherwise depend on whether the other
+# module's .fst.checked happened to have been built yet
+# (tests/bug-reports/closed/RemoveUnusedTyparsIFace is that case).  This is
+# the same statement mk/custard-extract.mk makes with $(ALL_CHECKED_FILES).
+#
+# Attached to the concrete targets rather than to the pattern rules above.
+# Adding a prerequisite to a pattern rule makes it a *different* rule from a
+# client's identically-named override -- both survive and make picks this
+# one -- which is the trap §49.6 of doc/ref/custard.md describes.  It is
+# order-only so that $< is still the root's checked file.
+CUSTARD_EXTRACT_TARGETS := \
+  $(patsubst %.fst,$(OUTPUT_DIR)/%.ml,$(EXTRACT) $(BUILD) $(RUN)) \
+  $(patsubst %.fst,$(OUTPUT_DIR)/%.fs,$(RUN_FSHARP)) \
+  $(patsubst %.ml.expected,$(OUTPUT_DIR)/%.ml,$(wildcard *.ml.expected)) \
+  $(patsubst %.fs.expected,$(OUTPUT_DIR)/%.fs,$(wildcard *.fs.expected))
+$(sort $(CUSTARD_EXTRACT_TARGETS)): | $(ALL_CHECKED_FILES)
+
 __extract: $(patsubst %.fst,$(OUTPUT_DIR)/%.ml,$(EXTRACT))
 extract: __extract
 ifeq ($(NOEXTRACT),)

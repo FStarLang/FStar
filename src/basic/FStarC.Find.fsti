@@ -93,6 +93,11 @@ val locate_lib () : ML (option string)
 (* Return absolute path of OCaml-installed components of F*. *)
 val locate_ocaml () : ML string
 
+(* Return the absolute path of the Custard unit interface of the compiler
+itself, if this installation has one.  A plugin is compiled against it: see
+FStarC.Options and doc/ref/custard.md, section 13.6. *)
+val locate_fstarc_cui () : ML (option string)
+
 (* Try to find a file from a path we might have read in a checked file.
 Essentially find_file(basename f). *)
 val refind_file (f:string) : ML string

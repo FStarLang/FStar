@@ -1,161 +1,96 @@
-open Prims
-let bogus_cbs : FStarC_TypeChecker_NBETerm.nbe_cbs=
-  {
-    FStarC_TypeChecker_NBETerm.iapp = (fun h _args -> h);
-    FStarC_TypeChecker_NBETerm.translate =
-      (fun uu___ -> FStarC_Effect.failwith "bogus_cbs translate")
-  }
-let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
-  FStarC_List.map
-    (fun p ->
-       let uu___ =
-         FStarC_TypeChecker_Primops_Base.as_primitive_step_nbecbs true p in
-       {
-         FStarC_TypeChecker_Primops_Base.name =
-           (uu___.FStarC_TypeChecker_Primops_Base.name);
-         FStarC_TypeChecker_Primops_Base.arity =
-           (uu___.FStarC_TypeChecker_Primops_Base.arity);
-         FStarC_TypeChecker_Primops_Base.univ_arity =
-           (uu___.FStarC_TypeChecker_Primops_Base.univ_arity);
-         FStarC_TypeChecker_Primops_Base.auto_reflect =
-           (uu___.FStarC_TypeChecker_Primops_Base.auto_reflect);
-         FStarC_TypeChecker_Primops_Base.strong_reduction_ok =
-           (uu___.FStarC_TypeChecker_Primops_Base.strong_reduction_ok);
-         FStarC_TypeChecker_Primops_Base.requires_binder_substitution =
-           (uu___.FStarC_TypeChecker_Primops_Base.requires_binder_substitution);
-         FStarC_TypeChecker_Primops_Base.renorm_after = true;
-         FStarC_TypeChecker_Primops_Base.interpretation =
-           (uu___.FStarC_TypeChecker_Primops_Base.interpretation);
-         FStarC_TypeChecker_Primops_Base.interpretation_nbe =
-           (uu___.FStarC_TypeChecker_Primops_Base.interpretation_nbe)
-       })
-    [(FStarC_Parser_Const.map_seal_lid, (Prims.of_int 4), (Prims.of_int 2),
-       ((fun psc univs cbs args ->
-           match args with
-           | (ta, uu___)::(tb, uu___1)::(s, uu___2)::(f, uu___3)::[] ->
-               let try_unembed e x =
-                 FStarC_Syntax_Embeddings_Base.try_unembed e x
-                   FStarC_Syntax_Embeddings_Base.id_norm_cb in
-               let uu___4 =
-                 let uu___5 = try_unembed FStarC_Syntax_Embeddings.e_any ta in
-                 let uu___6 = try_unembed FStarC_Syntax_Embeddings.e_any tb in
-                 let uu___7 =
-                   try_unembed
-                     (FStarC_Syntax_Embeddings.e_sealed
-                        FStarC_Syntax_Embeddings.e_any) s in
-                 let uu___8 = try_unembed FStarC_Syntax_Embeddings.e_any f in
-                 (uu___5, uu___6, uu___7, uu___8) in
-               (match uu___4 with
-                | (FStar_Pervasives_Native.Some ta1,
-                   FStar_Pervasives_Native.Some tb1,
-                   FStar_Pervasives_Native.Some s1,
-                   FStar_Pervasives_Native.Some f1) ->
-                    let r =
-                      FStarC_Syntax_Util.mk_app f1
-                        [FStarC_Syntax_Syntax.as_arg
-                           (FStarC_Sealed.unseal s1)] in
-                    let emb =
-                      FStarC_Syntax_Embeddings_Base.set_type ta1
-                        FStarC_Syntax_Embeddings.e_any in
-                    let uu___5 =
-                      FStarC_TypeChecker_Primops_Base.embed_simple
-                        (FStarC_Syntax_Embeddings.e_sealed emb)
-                        psc.FStarC_TypeChecker_Primops_Base.psc_range
-                        (FStarC_Sealed.seal r) in
-                    FStar_Pervasives_Native.Some uu___5
-                | uu___5 -> FStar_Pervasives_Native.None)
-           | uu___ -> FStar_Pervasives_Native.None)),
-       ((fun cb univs args ->
-           match args with
-           | (ta, uu___)::(tb, uu___1)::(s, uu___2)::(f, uu___3)::[] ->
-               let try_unembed e x =
-                 FStarC_TypeChecker_NBETerm.unembed e bogus_cbs x in
-               let uu___4 =
-                 let uu___5 = try_unembed FStarC_TypeChecker_NBETerm.e_any ta in
-                 let uu___6 = try_unembed FStarC_TypeChecker_NBETerm.e_any tb in
-                 let uu___7 =
-                   try_unembed
-                     (FStarC_TypeChecker_NBETerm.e_sealed
-                        FStarC_TypeChecker_NBETerm.e_any) s in
-                 let uu___8 = try_unembed FStarC_TypeChecker_NBETerm.e_any f in
-                 (uu___5, uu___6, uu___7, uu___8) in
-               (match uu___4 with
-                | (FStar_Pervasives_Native.Some ta1,
-                   FStar_Pervasives_Native.Some tb1,
-                   FStar_Pervasives_Native.Some s1,
-                   FStar_Pervasives_Native.Some f1) ->
-                    let r =
-                      cb.FStarC_TypeChecker_NBETerm.iapp f1
-                        [FStarC_TypeChecker_NBETerm.as_arg
-                           (FStarC_Sealed.unseal s1)] in
-                    let emb =
-                      FStarC_TypeChecker_NBETerm.set_type ta1
-                        FStarC_TypeChecker_NBETerm.e_any in
-                    let uu___5 =
-                      FStarC_TypeChecker_NBETerm.embed
-                        (FStarC_TypeChecker_NBETerm.e_sealed emb) cb
-                        (FStarC_Sealed.seal r) in
-                    FStar_Pervasives_Native.Some uu___5
-                | uu___5 -> FStar_Pervasives_Native.None)
-           | uu___ -> FStar_Pervasives_Native.None)));
-    (FStarC_Parser_Const.bind_seal_lid, (Prims.of_int 4), (Prims.of_int 2),
-      ((fun psc univs cbs args ->
-          match args with
-          | (ta, uu___)::(tb, uu___1)::(s, uu___2)::(f, uu___3)::[] ->
-              let try_unembed e x =
-                FStarC_Syntax_Embeddings_Base.try_unembed e x
-                  FStarC_Syntax_Embeddings_Base.id_norm_cb in
-              let uu___4 =
-                let uu___5 = try_unembed FStarC_Syntax_Embeddings.e_any ta in
-                let uu___6 = try_unembed FStarC_Syntax_Embeddings.e_any tb in
-                let uu___7 =
-                  try_unembed
-                    (FStarC_Syntax_Embeddings.e_sealed
-                       FStarC_Syntax_Embeddings.e_any) s in
-                let uu___8 = try_unembed FStarC_Syntax_Embeddings.e_any f in
-                (uu___5, uu___6, uu___7, uu___8) in
-              (match uu___4 with
-               | (FStar_Pervasives_Native.Some ta1,
-                  FStar_Pervasives_Native.Some tb1,
-                  FStar_Pervasives_Native.Some s1,
-                  FStar_Pervasives_Native.Some f1) ->
-                   let r =
-                     FStarC_Syntax_Util.mk_app f1
-                       [FStarC_Syntax_Syntax.as_arg (FStarC_Sealed.unseal s1)] in
-                   let uu___5 =
-                     FStarC_TypeChecker_Primops_Base.embed_simple
-                       FStarC_Syntax_Embeddings.e_any
-                       psc.FStarC_TypeChecker_Primops_Base.psc_range r in
-                   FStar_Pervasives_Native.Some uu___5
-               | uu___5 -> FStar_Pervasives_Native.None)
-          | uu___ -> FStar_Pervasives_Native.None)),
-      ((fun cb univs args ->
-          match args with
-          | (ta, uu___)::(tb, uu___1)::(s, uu___2)::(f, uu___3)::[] ->
-              let try_unembed e x =
-                FStarC_TypeChecker_NBETerm.unembed e bogus_cbs x in
-              let uu___4 =
-                let uu___5 = try_unembed FStarC_TypeChecker_NBETerm.e_any ta in
-                let uu___6 = try_unembed FStarC_TypeChecker_NBETerm.e_any tb in
-                let uu___7 =
-                  try_unembed
-                    (FStarC_TypeChecker_NBETerm.e_sealed
-                       FStarC_TypeChecker_NBETerm.e_any) s in
-                let uu___8 = try_unembed FStarC_TypeChecker_NBETerm.e_any f in
-                (uu___5, uu___6, uu___7, uu___8) in
-              (match uu___4 with
-               | (FStar_Pervasives_Native.Some ta1,
-                  FStar_Pervasives_Native.Some tb1,
-                  FStar_Pervasives_Native.Some s1,
-                  FStar_Pervasives_Native.Some f1) ->
-                   let r =
-                     cb.FStarC_TypeChecker_NBETerm.iapp f1
-                       [FStarC_TypeChecker_NBETerm.as_arg
-                          (FStarC_Sealed.unseal s1)] in
-                   let emb =
-                     FStarC_TypeChecker_NBETerm.set_type ta1
-                       FStarC_TypeChecker_NBETerm.e_any in
-                   let uu___5 = FStarC_TypeChecker_NBETerm.embed emb cb r in
-                   FStar_Pervasives_Native.Some uu___5
-               | uu___5 -> FStar_Pervasives_Native.None)
-          | uu___ -> FStar_Pervasives_Native.None)))]
+(* Generated by F* Custard extraction. Do not edit. *)
+[@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
+
+let bogus_cbs : FStarC_TypeChecker_NBETerm.nbe_cbs =
+  { FStarC_TypeChecker_NBETerm.iapp = (fun h u__args -> h);
+    translate = (fun tmp -> (FStarC_Effect.failwith "bogus_cbs translate")) }
+
+let ops : (FStarC_TypeChecker_Primops_Base.primitive_step) list =
+  (FStarC_List.map (fun p -> (let tmp = (FStarC_TypeChecker_Primops_Base.as_primitive_step_nbecbs true p) in
+  { FStarC_TypeChecker_Primops_Base.name = (tmp).FStarC_TypeChecker_Primops_Base.name;
+    arity = (tmp).FStarC_TypeChecker_Primops_Base.arity;
+    univ_arity = (tmp).FStarC_TypeChecker_Primops_Base.univ_arity;
+    auto_reflect = (tmp).FStarC_TypeChecker_Primops_Base.auto_reflect;
+    strong_reduction_ok = (tmp).FStarC_TypeChecker_Primops_Base.strong_reduction_ok;
+    requires_binder_substitution = (tmp).FStarC_TypeChecker_Primops_Base.requires_binder_substitution;
+    renorm_after = true;
+    unrepresentable_result = (tmp).FStarC_TypeChecker_Primops_Base.unrepresentable_result;
+    interpretation = (tmp).FStarC_TypeChecker_Primops_Base.interpretation;
+    interpretation_nbe = (tmp).FStarC_TypeChecker_Primops_Base.interpretation_nbe })) ((FStarC_Parser_Const.unseal_lid, (Prims.parse_int "2"), (Prims.parse_int "1"), (fun psc univs cbs args -> (match args with
+    | ((ta, tmp) :: ((s, tmp1) :: [])) -> (let tmp2 = (FStarC_Syntax_Embeddings_Base.try_unembed FStarC_Syntax_Embeddings.e_any ta FStarC_Syntax_Embeddings_Base.id_norm_cb) in
+      let tmp3 = (FStarC_Syntax_Embeddings_Base.try_unembed (FStarC_Syntax_Embeddings.e_sealed FStarC_Syntax_Embeddings.e_any) s FStarC_Syntax_Embeddings_Base.id_norm_cb) in
+      let tmp4 = (tmp2, tmp3) in
+      (match tmp4 with
+        | ((Some (ta1)), (Some (s1))) -> (let tmp5 = (FStarC_TypeChecker_Primops_Base.embed_simple FStarC_Syntax_Embeddings.e_any (psc).FStarC_TypeChecker_Primops_Base.psc_range s1) in
+          (Some (tmp5)))
+        | tmp5 -> None
+      ))
+    | tmp -> None
+  )), (fun cb univs args -> (match args with
+    | ((ta, tmp) :: ((s, tmp1) :: [])) -> (let tmp2 = (FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_any bogus_cbs ta) in
+      let tmp3 = (FStarC_TypeChecker_NBETerm.unembed (FStarC_TypeChecker_NBETerm.e_sealed FStarC_TypeChecker_NBETerm.e_any) bogus_cbs s) in
+      let tmp4 = (tmp2, tmp3) in
+      (match tmp4 with
+        | ((Some (ta1)), (Some (s1))) -> (let emb = (FStarC_TypeChecker_NBETerm.set_type ta1 FStarC_TypeChecker_NBETerm.e_any) in
+          let tmp5 = (FStarC_TypeChecker_NBETerm.embed emb cb s1) in
+          (Some (tmp5)))
+        | tmp5 -> None
+      ))
+    | tmp -> None
+  ))) :: ((FStarC_Parser_Const.map_seal_lid, (Prims.parse_int "4"), (Prims.parse_int "2"), (fun psc univs cbs args -> (match args with
+    | ((ta, tmp) :: ((tb, tmp1) :: ((s, tmp2) :: ((f, tmp3) :: [])))) -> (let tmp4 = (FStarC_Syntax_Embeddings_Base.try_unembed FStarC_Syntax_Embeddings.e_any ta FStarC_Syntax_Embeddings_Base.id_norm_cb) in
+      let tmp5 = (FStarC_Syntax_Embeddings_Base.try_unembed FStarC_Syntax_Embeddings.e_any tb FStarC_Syntax_Embeddings_Base.id_norm_cb) in
+      let tmp6 = (FStarC_Syntax_Embeddings_Base.try_unembed (FStarC_Syntax_Embeddings.e_sealed FStarC_Syntax_Embeddings.e_any) s FStarC_Syntax_Embeddings_Base.id_norm_cb) in
+      let tmp7 = (FStarC_Syntax_Embeddings_Base.try_unembed FStarC_Syntax_Embeddings.e_any f FStarC_Syntax_Embeddings_Base.id_norm_cb) in
+      let tmp8 = (tmp4, tmp5, tmp6, tmp7) in
+      (match tmp8 with
+        | ((Some (ta1)), (Some (tb1)), (Some (s1)), (Some (f1))) -> (let r = (FStarC_Syntax_Util.mk_app f1 ((FStarC_Syntax_Syntax.as_arg s1) :: [])) in
+          let emb = (FStarC_Syntax_Embeddings_Base.set_type ta1 FStarC_Syntax_Embeddings.e_any) in
+          let tmp9 = (FStarC_TypeChecker_Primops_Base.embed_simple (FStarC_Syntax_Embeddings.e_sealed emb) (psc).FStarC_TypeChecker_Primops_Base.psc_range r) in
+          (Some (tmp9)))
+        | tmp9 -> None
+      ))
+    | tmp -> None
+  )), (fun cb univs args -> (match args with
+    | ((ta, tmp) :: ((tb, tmp1) :: ((s, tmp2) :: ((f, tmp3) :: [])))) -> (let tmp4 = (FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_any bogus_cbs ta) in
+      let tmp5 = (FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_any bogus_cbs tb) in
+      let tmp6 = (FStarC_TypeChecker_NBETerm.unembed (FStarC_TypeChecker_NBETerm.e_sealed FStarC_TypeChecker_NBETerm.e_any) bogus_cbs s) in
+      let tmp7 = (FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_any bogus_cbs f) in
+      let tmp8 = (tmp4, tmp5, tmp6, tmp7) in
+      (match tmp8 with
+        | ((Some (ta1)), (Some (tb1)), (Some (s1)), (Some (f1))) -> (let r = ((cb).FStarC_TypeChecker_NBETerm.iapp f1 ((FStarC_TypeChecker_NBETerm.as_arg s1) :: [])) in
+          let emb = (FStarC_TypeChecker_NBETerm.set_type ta1 FStarC_TypeChecker_NBETerm.e_any) in
+          let tmp9 = (FStarC_TypeChecker_NBETerm.embed (FStarC_TypeChecker_NBETerm.e_sealed emb) cb r) in
+          (Some (tmp9)))
+        | tmp9 -> None
+      ))
+    | tmp -> None
+  ))) :: ((FStarC_Parser_Const.bind_seal_lid, (Prims.parse_int "4"), (Prims.parse_int "2"), (fun psc univs cbs args -> (match args with
+    | ((ta, tmp) :: ((tb, tmp1) :: ((s, tmp2) :: ((f, tmp3) :: [])))) -> (let tmp4 = (FStarC_Syntax_Embeddings_Base.try_unembed FStarC_Syntax_Embeddings.e_any ta FStarC_Syntax_Embeddings_Base.id_norm_cb) in
+      let tmp5 = (FStarC_Syntax_Embeddings_Base.try_unembed FStarC_Syntax_Embeddings.e_any tb FStarC_Syntax_Embeddings_Base.id_norm_cb) in
+      let tmp6 = (FStarC_Syntax_Embeddings_Base.try_unembed (FStarC_Syntax_Embeddings.e_sealed FStarC_Syntax_Embeddings.e_any) s FStarC_Syntax_Embeddings_Base.id_norm_cb) in
+      let tmp7 = (FStarC_Syntax_Embeddings_Base.try_unembed FStarC_Syntax_Embeddings.e_any f FStarC_Syntax_Embeddings_Base.id_norm_cb) in
+      let tmp8 = (tmp4, tmp5, tmp6, tmp7) in
+      (match tmp8 with
+        | ((Some (ta1)), (Some (tb1)), (Some (s1)), (Some (f1))) -> (let r = (FStarC_Syntax_Util.mk_app f1 ((FStarC_Syntax_Syntax.as_arg s1) :: [])) in
+          let tmp9 = (FStarC_TypeChecker_Primops_Base.embed_simple FStarC_Syntax_Embeddings.e_any (psc).FStarC_TypeChecker_Primops_Base.psc_range r) in
+          (Some (tmp9)))
+        | tmp9 -> None
+      ))
+    | tmp -> None
+  )), (fun cb univs args -> (match args with
+    | ((ta, tmp) :: ((tb, tmp1) :: ((s, tmp2) :: ((f, tmp3) :: [])))) -> (let tmp4 = (FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_any bogus_cbs ta) in
+      let tmp5 = (FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_any bogus_cbs tb) in
+      let tmp6 = (FStarC_TypeChecker_NBETerm.unembed (FStarC_TypeChecker_NBETerm.e_sealed FStarC_TypeChecker_NBETerm.e_any) bogus_cbs s) in
+      let tmp7 = (FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_any bogus_cbs f) in
+      let tmp8 = (tmp4, tmp5, tmp6, tmp7) in
+      (match tmp8 with
+        | ((Some (ta1)), (Some (tb1)), (Some (s1)), (Some (f1))) -> (let r = ((cb).FStarC_TypeChecker_NBETerm.iapp f1 ((FStarC_TypeChecker_NBETerm.as_arg s1) :: [])) in
+          let emb = (FStarC_TypeChecker_NBETerm.set_type ta1 FStarC_TypeChecker_NBETerm.e_any) in
+          let tmp9 = (FStarC_TypeChecker_NBETerm.embed emb cb r) in
+          (Some (tmp9)))
+        | tmp9 -> None
+      ))
+    | tmp -> None
+  ))) :: []))))
+

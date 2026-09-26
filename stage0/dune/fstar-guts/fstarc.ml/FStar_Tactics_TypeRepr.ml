@@ -1,524 +1,255 @@
-open Prims
-let empty_elim (uu___1 : Prims.empty) (uu___ : unit) : Obj.t=
-  (fun e a -> Obj.magic (failwith "unreachable")) uu___1 uu___
-let add_suffix (s : Prims.string) (nm : FStarC_Reflection_Types.name) :
-  FStarC_Reflection_Types.name=
-  FStarC_Reflection_V2_Builtins.explode_qn
-    (Prims.strcat (FStarC_Reflection_V2_Builtins.implode_qn nm) s)
-let unitv_ : FStar_Tactics_NamedView.term=
-  FStarC_Reflection_V2_Builtins.pack_ln
-    (FStarC_Reflection_V2_Data.Tv_Const FStarC_Reflection_V2_Data.C_Unit)
-let unitt_ : FStar_Tactics_NamedView.term=
-  FStarC_Reflection_V2_Builtins.pack_ln
-    (FStarC_Reflection_V2_Data.Tv_FVar
-       (FStarC_Reflection_V2_Builtins.pack_fv ["Prims"; "unit"]))
-let empty_ : FStar_Tactics_NamedView.term=
-  FStarC_Reflection_V2_Builtins.pack_ln
-    (FStarC_Reflection_V2_Data.Tv_FVar
-       (FStarC_Reflection_V2_Builtins.pack_fv ["Prims"; "empty"]))
-let either_ (a : FStar_Tactics_NamedView.term)
-  (b : FStar_Tactics_NamedView.term) : FStar_Tactics_NamedView.term=
-  FStarC_Reflection_V2_Builtins.pack_ln
-    (FStarC_Reflection_V2_Data.Tv_App
-       ((FStarC_Reflection_V2_Builtins.pack_ln
-           (FStarC_Reflection_V2_Data.Tv_App
-              ((FStarC_Reflection_V2_Builtins.pack_ln
-                  (FStarC_Reflection_V2_Data.Tv_FVar
-                     (FStarC_Reflection_V2_Builtins.pack_fv
-                        ["FStar"; "Pervasives"; "either"]))),
-                (a, FStarC_Reflection_V2_Data.Q_Explicit)))),
-         (b, FStarC_Reflection_V2_Data.Q_Explicit)))
-let tuple2_ (a : FStar_Tactics_NamedView.term)
-  (b : FStar_Tactics_NamedView.term) : FStar_Tactics_NamedView.term=
-  FStarC_Reflection_V2_Builtins.pack_ln
-    (FStarC_Reflection_V2_Data.Tv_App
-       ((FStarC_Reflection_V2_Builtins.pack_ln
-           (FStarC_Reflection_V2_Data.Tv_App
-              ((FStarC_Reflection_V2_Builtins.pack_ln
-                  (FStarC_Reflection_V2_Data.Tv_FVar
-                     (FStarC_Reflection_V2_Builtins.pack_fv
-                        ["FStar"; "Pervasives"; "Native"; "tuple2"]))),
-                (a, FStarC_Reflection_V2_Data.Q_Explicit)))),
-         (b, FStarC_Reflection_V2_Data.Q_Explicit)))
-let mktuple2_ (a : FStar_Tactics_NamedView.term)
-  (b : FStar_Tactics_NamedView.term) : FStar_Tactics_NamedView.term=
-  FStarC_Reflection_V2_Builtins.pack_ln
-    (FStarC_Reflection_V2_Data.Tv_App
-       ((FStarC_Reflection_V2_Builtins.pack_ln
-           (FStarC_Reflection_V2_Data.Tv_App
-              ((FStarC_Reflection_V2_Builtins.pack_ln
-                  (FStarC_Reflection_V2_Data.Tv_FVar
-                     (FStarC_Reflection_V2_Builtins.pack_fv
-                        ["FStar"; "Pervasives"; "Native"; "Mktuple2"]))),
-                (a, FStarC_Reflection_V2_Data.Q_Explicit)))),
-         (b, FStarC_Reflection_V2_Data.Q_Explicit)))
-let get_inductive_typ (nm : Prims.string)
-  (ps : FStarC_Tactics_Types.ref_proofstate) :
-  FStar_Tactics_NamedView.sigelt_view=
-  let x = FStarC_Tactics_V2_Builtins.top_env () ps in
-  let x1 =
-    FStarC_Reflection_V2_Builtins.lookup_typ x
-      (FStarC_Reflection_V2_Builtins.explode_qn nm) in
-  match x1 with
-  | FStar_Pervasives_Native.None ->
-      FStar_Tactics_V2_Derived.fail "ctors_of_typ: type not found" ps
-  | FStar_Pervasives_Native.Some se ->
-      let x2 = FStar_Tactics_NamedView.inspect_sigelt se ps in
-      if
-        (match x2 with
-         | FStar_Tactics_NamedView.Sg_Inductive _0 -> true
-         | uu___ -> false)
-      then x2
-      else
-        FStar_Tactics_V2_Derived.fail "ctors_of_typ: not an inductive type"
-          ps
-let alg_ctor (ty : FStarC_Reflection_Types.typ)
-  (ps : FStarC_Tactics_Types.ref_proofstate) : FStarC_Reflection_Types.typ=
-  let x = FStar_Tactics_V2_SyntaxHelpers.collect_arr ty ps in
-  match x with
-  | (tys, c) ->
-      FStar_Tactics_Util.fold_right (fun ty1 acc uu___ -> tuple2_ ty1 acc)
-        tys unitt_ ps
-let generate_repr_typ (params : FStar_Tactics_NamedView.binders)
-  (ctors : FStarC_Reflection_V2_Data.ctor Prims.list)
-  (ps : FStarC_Tactics_Types.ref_proofstate) : FStarC_Reflection_Types.typ=
-  let x =
-    FStar_Tactics_Util.map
-      (fun uu___ -> match uu___ with | (uu___1, ty) -> alg_ctor ty) ctors ps in
-  let x1 =
-    FStar_Tactics_Util.fold_right (fun ty acc uu___ -> either_ ty acc) x
-      empty_ ps in
-  x1
-let _ =
-  FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.TypeRepr.generate_repr_typ" (Prims.of_int 3)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_2
-               "FStar.Tactics.TypeRepr.generate_repr_typ (plugin)"
-               (FStarC_Tactics_Native.from_tactic_2 generate_repr_typ)
-               (FStarC_Syntax_Embeddings.e_list
-                  FStar_Tactics_NamedView.e_binder)
-               (FStarC_Syntax_Embeddings.e_list
-                  (FStarC_Syntax_Embeddings.e_tuple2
-                     (FStarC_Syntax_Embeddings.e_list
-                        FStarC_Syntax_Embeddings.e_string)
-                     FStarC_Reflection_V2_Embeddings.e_term))
-               FStarC_Reflection_V2_Embeddings.e_term psc ncb us args)
-let generate_down (uu___ : unit) (ps : FStarC_Tactics_Types.ref_proofstate) :
-  unit=
-  let x = FStarC_Tactics_V2_Builtins.intro () ps in
-  let x1 =
-    FStarC_Tactics_V2_Builtins.t_destruct
-      (FStar_Tactics_V2_SyntaxCoercions.binding_to_term x) ps in
-  FStar_Tactics_Util.iteri
-    (fun i uu___1 ->
-       match uu___1 with
-       | (c, n) ->
-           (fun ps1 ->
-              let x2 =
-                FStar_Tactics_Util.repeatn n
-                  (fun uu___2 -> FStarC_Tactics_V2_Builtins.intro ()) ps1 in
-              let x3 = FStarC_Tactics_V2_Builtins.intro () ps1 in
-              let x4 =
-                FStar_Tactics_Util.fold_right
-                  (fun b acc uu___2 ->
-                     mktuple2_
-                       (FStar_Tactics_V2_SyntaxCoercions.binding_to_term b)
-                       acc) x2 unitv_ ps1 in
-              let x5 =
-                FStar_Tactics_Util.repeatn i
-                  (fun uu___2 ->
-                     FStar_Tactics_V2_Derived.apply
-                       (FStarC_Reflection_V2_Builtins.pack_ln
-                          (FStarC_Reflection_V2_Data.Tv_FVar
-                             (FStarC_Reflection_V2_Builtins.pack_fv
-                                ["FStar"; "Pervasives"; "Inr"])))) ps1 in
-              FStar_Tactics_V2_Derived.apply
-                (FStarC_Reflection_V2_Builtins.pack_ln
-                   (FStarC_Reflection_V2_Data.Tv_FVar
-                      (FStarC_Reflection_V2_Builtins.pack_fv
-                         ["FStar"; "Pervasives"; "Inl"]))) ps1;
-              FStar_Tactics_V2_Derived.exact x4 ps1)) x1 ps
-let _ =
-  FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.TypeRepr.generate_down" (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.TypeRepr.generate_down (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 generate_down)
-               FStarC_Syntax_Embeddings.e_unit
-               FStarC_Syntax_Embeddings.e_unit psc ncb us args)
-let rec get_apply_tuple (b : FStar_Tactics_NamedView.binding)
-  (ps : FStarC_Tactics_Types.ref_proofstate) :
-  FStar_Tactics_NamedView.binding Prims.list=
-  let x =
-    FStar_Tactics_V2_SyntaxHelpers.collect_app
-      b.FStarC_Reflection_V2_Data.sort3 ps in
-  match x with
-  | (hd, args) ->
-      let x1 = let x2 = FStar_Tactics_NamedView.inspect hd ps in (x2, args) in
-      (match x1 with
-       | (FStar_Tactics_NamedView.Tv_UInst (fv, uu___), b1::b2::[]) ->
-           if
-             (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
-               ["FStar"; "Pervasives"; "Native"; "tuple2"]
-           then
-             let x2 =
-               FStarC_Tactics_V2_Builtins.t_destruct
-                 (FStar_Tactics_V2_SyntaxCoercions.binding_to_term b) ps in
-             (FStar_Tactics_V2_Derived.guard
-                ((((FStar_List_Tot_Base.length x2) = Prims.int_one) &&
-                    ((FStarC_Reflection_V2_Builtins.inspect_fv
-                        (FStar_Pervasives_Native.fst
-                           (FStar_List_Tot_Base.hd x2)))
-                       = ["FStar"; "Pervasives"; "Native"; "Mktuple2"]))
-                   &&
-                   ((FStar_Pervasives_Native.snd (FStar_List_Tot_Base.hd x2))
-                      = (Prims.of_int 2))) ps;
-              (let x4 = FStarC_Tactics_V2_Builtins.intro () ps in
-               let x5 = FStarC_Tactics_V2_Builtins.intro () ps in
-               let x6 = FStarC_Tactics_V2_Builtins.intro () ps in
-               let x7 = get_apply_tuple x5 ps in x4 :: x7))
-           else
-             (let x2 =
-                let x3 =
-                  FStarC_Tactics_V2_Builtins.term_to_string
-                    b.FStarC_Reflection_V2_Data.sort3 ps in
-                Prims.strcat "unexpected term in apply_tuple: " x3 in
-              FStar_Tactics_V2_Derived.fail x2 ps)
-       | (FStar_Tactics_NamedView.Tv_FVar fv, b1::b2::[]) ->
-           if
-             (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
-               ["FStar"; "Pervasives"; "Native"; "tuple2"]
-           then
-             let x2 =
-               FStarC_Tactics_V2_Builtins.t_destruct
-                 (FStar_Tactics_V2_SyntaxCoercions.binding_to_term b) ps in
-             (FStar_Tactics_V2_Derived.guard
-                ((((FStar_List_Tot_Base.length x2) = Prims.int_one) &&
-                    ((FStarC_Reflection_V2_Builtins.inspect_fv
-                        (FStar_Pervasives_Native.fst
-                           (FStar_List_Tot_Base.hd x2)))
-                       = ["FStar"; "Pervasives"; "Native"; "Mktuple2"]))
-                   &&
-                   ((FStar_Pervasives_Native.snd (FStar_List_Tot_Base.hd x2))
-                      = (Prims.of_int 2))) ps;
-              (let x4 = FStarC_Tactics_V2_Builtins.intro () ps in
-               let x5 = FStarC_Tactics_V2_Builtins.intro () ps in
-               let x6 = FStarC_Tactics_V2_Builtins.intro () ps in
-               let x7 = get_apply_tuple x5 ps in x4 :: x7))
-           else
-             (let x2 =
-                let x3 =
-                  FStarC_Tactics_V2_Builtins.term_to_string
-                    b.FStarC_Reflection_V2_Data.sort3 ps in
-                Prims.strcat "unexpected term in apply_tuple: " x3 in
-              FStar_Tactics_V2_Derived.fail x2 ps)
-       | (FStar_Tactics_NamedView.Tv_FVar fv, []) ->
-           if
-             (FStarC_Reflection_V2_Builtins.inspect_fv fv) =
-               ["Prims"; "unit"]
-           then []
-           else
-             (let x2 =
-                let x3 =
-                  FStarC_Tactics_V2_Builtins.term_to_string
-                    b.FStarC_Reflection_V2_Data.sort3 ps in
-                Prims.strcat "unexpected term in apply_tuple: " x3 in
-              FStar_Tactics_V2_Derived.fail x2 ps)
-       | uu___ ->
-           let x2 =
-             let x3 =
-               FStarC_Tactics_V2_Builtins.term_to_string
-                 b.FStarC_Reflection_V2_Data.sort3 ps in
-             Prims.strcat "unexpected term in apply_tuple: " x3 in
-           FStar_Tactics_V2_Derived.fail x2 ps)
-let rec generate_up_aux (ctors : FStarC_Reflection_V2_Data.ctor Prims.list)
-  (b : FStar_Tactics_NamedView.binding) :
-  FStarC_Tactics_Types.ref_proofstate -> unit=
-  match ctors with
-  | [] ->
-      (fun ps ->
-         FStar_Tactics_V2_Derived.apply
-           (FStarC_Reflection_V2_Builtins.pack_ln
-              (FStarC_Reflection_V2_Data.Tv_FVar
-                 (FStarC_Reflection_V2_Builtins.pack_fv
-                    ["FStar"; "Tactics"; "TypeRepr"; "empty_elim"]))) ps;
-         FStar_Tactics_V2_Derived.exact
-           (FStar_Tactics_V2_SyntaxCoercions.binding_to_term b) ps)
-  | c::cs ->
-      (fun ps ->
-         let x =
-           FStarC_Tactics_V2_Builtins.t_destruct
-             (FStar_Tactics_V2_SyntaxCoercions.binding_to_term b) ps in
-         if (FStar_List_Tot_Base.length x) <> (Prims.of_int 2)
-         then
-           FStar_Tactics_V2_Derived.fail
-             "generate_up_aux: expected Inl/Inr???" ps
-         else ();
-         FStar_Tactics_V2_Derived.focus
-           (fun uu___ ps1 ->
-              let x3 = FStarC_Tactics_V2_Builtins.intro () ps1 in
-              let x4 = FStarC_Tactics_V2_Builtins.intro () ps1 in
-              let x5 = FStar_Pervasives_Native.fst c in
-              let x6 = get_apply_tuple x3 ps1 in
-              FStar_Tactics_V2_Derived.apply
-                (FStar_Tactics_NamedView.pack
-                   (FStar_Tactics_NamedView.Tv_FVar
-                      (FStarC_Reflection_V2_Builtins.pack_fv x5))) ps1;
-              FStar_Tactics_Util.iter
-                (fun b1 ->
-                   FStar_Tactics_V2_Derived.exact
-                     (FStar_Tactics_V2_SyntaxCoercions.binding_to_term b1))
-                x6 ps1;
-              FStar_Tactics_V2_Derived.qed () ps1) ps;
-         (let x3 = FStarC_Tactics_V2_Builtins.intro () ps in
-          let x4 = FStarC_Tactics_V2_Builtins.intro () ps in
-          generate_up_aux cs x3 ps))
-let generate_up (nm : Prims.string) (uu___ : unit)
-  (ps : FStarC_Tactics_Types.ref_proofstate) : unit=
-  let x = get_inductive_typ nm ps in
-  match x with
-  | FStar_Tactics_NamedView.Sg_Inductive
-      { FStar_Tactics_NamedView.nm = uu___1;
-        FStar_Tactics_NamedView.univs1 = uu___2;
-        FStar_Tactics_NamedView.params = uu___3;
-        FStar_Tactics_NamedView.typ = uu___4;
-        FStar_Tactics_NamedView.ctors = ctors;_}
-      ->
-      let x1 = FStarC_Tactics_V2_Builtins.intro () ps in
-      generate_up_aux ctors x1 ps
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.TypeRepr.generate_up"
-    (Prims.of_int 3)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_2
-               "FStar.Tactics.TypeRepr.generate_up (plugin)"
-               (FStarC_Tactics_Native.from_tactic_2 generate_up)
-               FStarC_Syntax_Embeddings.e_string
-               FStarC_Syntax_Embeddings.e_unit
-               FStarC_Syntax_Embeddings.e_unit psc ncb us args)
-let make_implicits (bs : FStar_Tactics_NamedView.binders) :
-  FStar_Tactics_NamedView.binders=
-  FStar_List_Tot_Base.map
-    (fun b ->
-       match b.FStar_Tactics_NamedView.qual with
-       | FStarC_Reflection_V2_Data.Q_Explicit ->
-           {
-             FStar_Tactics_NamedView.uniq = (b.FStar_Tactics_NamedView.uniq);
-             FStar_Tactics_NamedView.ppname =
-               (b.FStar_Tactics_NamedView.ppname);
-             FStar_Tactics_NamedView.sort = (b.FStar_Tactics_NamedView.sort);
-             FStar_Tactics_NamedView.qual =
-               FStarC_Reflection_V2_Data.Q_Implicit;
-             FStar_Tactics_NamedView.attrs =
-               (b.FStar_Tactics_NamedView.attrs)
-           }
-       | uu___ -> b) bs
-let binder_to_argv (b : FStar_Tactics_NamedView.binder) :
-  FStarC_Reflection_V2_Data.argv=
-  ((FStar_Tactics_V2_SyntaxCoercions.binder_to_term b),
-    (b.FStar_Tactics_NamedView.qual))
-let generate_all (nm : FStarC_Reflection_Types.name)
-  (params : FStar_Tactics_NamedView.binders)
-  (ctors : FStarC_Reflection_V2_Data.ctor Prims.list)
-  (ps : FStarC_Tactics_Types.ref_proofstate) : FStarC_Reflection_Types.decls=
-  let x = make_implicits params in
-  let x1 =
-    FStar_Reflection_V2_Derived.mk_app
-      (FStar_Tactics_NamedView.pack
-         (FStar_Tactics_NamedView.Tv_FVar
-            (FStarC_Reflection_V2_Builtins.pack_fv nm)))
-      (FStar_List_Tot_Base.map binder_to_argv params) in
-  let x2 = generate_repr_typ params ctors ps in
-  let x3 =
-    let x4 =
-      let x5 =
-        let x6 =
-          let x7 =
-            let x8 =
-              FStar_Tactics_V2_SyntaxHelpers.mk_arr params
-                (FStarC_Reflection_V2_Data.C_Total
-                   (FStarC_Reflection_V2_Builtins.pack_ln
-                      (FStarC_Reflection_V2_Data.Tv_Type
-                         (FStarC_Reflection_V2_Builtins.pack_universe
-                            FStarC_Reflection_V2_Data.Uv_Unk)))) ps in
-            let x9 = FStar_Tactics_V2_Derived.mk_abs params x2 ps in
-            {
-              FStar_Tactics_NamedView.lb_fv =
-                (FStarC_Reflection_V2_Builtins.pack_fv
-                   (add_suffix "_repr" nm));
-              FStar_Tactics_NamedView.lb_us = [];
-              FStar_Tactics_NamedView.lb_typ = x8;
-              FStar_Tactics_NamedView.lb_def = x9
-            } in
-          [x7] in
-        {
-          FStar_Tactics_NamedView.isrec = false;
-          FStar_Tactics_NamedView.lbs = x6
-        } in
-      FStar_Tactics_NamedView.Sg_Let x5 in
-    FStar_Tactics_NamedView.pack_sigelt x4 ps in
-  let x4 =
-    FStarC_Reflection_V2_Builtins.pack_ln
-      (FStarC_Reflection_V2_Data.Tv_App
-         ((FStarC_Reflection_V2_Builtins.pack_ln
-             (FStarC_Reflection_V2_Data.Tv_FVar
-                (FStarC_Reflection_V2_Builtins.pack_fv
-                   ["FStar"; "Tactics"; "Effect"; "synth_by_tactic"]))),
-           ((FStarC_Reflection_V2_Builtins.pack_ln
-               (FStarC_Reflection_V2_Data.Tv_Abs
-                  ((FStarC_Reflection_V2_Builtins.pack_binder
-                      {
-                        FStarC_Reflection_V2_Data.sort2 =
-                          (FStarC_Reflection_V2_Builtins.pack_ln
-                             FStarC_Reflection_V2_Data.Tv_Unknown);
-                        FStarC_Reflection_V2_Data.qual =
-                          FStarC_Reflection_V2_Data.Q_Explicit;
-                        FStarC_Reflection_V2_Data.attrs = [];
-                        FStarC_Reflection_V2_Data.ppname2 =
-                          (FStar_Sealed.seal "uu___")
-                      }),
-                    (FStarC_Reflection_V2_Builtins.pack_ln
-                       (FStarC_Reflection_V2_Data.Tv_App
-                          ((FStarC_Reflection_V2_Builtins.pack_ln
-                              (FStarC_Reflection_V2_Data.Tv_FVar
-                                 (FStarC_Reflection_V2_Builtins.pack_fv
-                                    ["FStar";
-                                    "Tactics";
-                                    "TypeRepr";
-                                    "generate_down"]))),
-                            ((FStarC_Reflection_V2_Builtins.pack_ln
-                                (FStarC_Reflection_V2_Data.Tv_Const
-                                   FStarC_Reflection_V2_Data.C_Unit)),
-                              FStarC_Reflection_V2_Data.Q_Explicit))))))),
-             FStarC_Reflection_V2_Data.Q_Explicit))) in
-  let x5 = FStar_Tactics_V2_Derived.mk_abs x x4 ps in
-  let x6 =
-    let x7 = FStar_Tactics_V2_Derived.fresh_binder x1 ps in
-    let x8 =
-      let x9 =
-        let x10 =
-          let x11 =
-            let x12 =
-              FStar_Tactics_V2_SyntaxHelpers.mk_tot_arr x
-                (FStar_Tactics_NamedView.pack
-                   (FStar_Tactics_NamedView.Tv_Arrow
-                      (x7, (FStarC_Reflection_V2_Data.C_Total x2)))) ps in
-            {
-              FStar_Tactics_NamedView.lb_fv =
-                (FStarC_Reflection_V2_Builtins.pack_fv
-                   (add_suffix "_down" nm));
-              FStar_Tactics_NamedView.lb_us = [];
-              FStar_Tactics_NamedView.lb_typ = x12;
-              FStar_Tactics_NamedView.lb_def = x5
-            } in
-          [x11] in
-        {
-          FStar_Tactics_NamedView.isrec = false;
-          FStar_Tactics_NamedView.lbs = x10
-        } in
-      FStar_Tactics_NamedView.Sg_Let x9 in
-    FStar_Tactics_NamedView.pack_sigelt x8 ps in
-  let x7 =
-    FStarC_Reflection_V2_Builtins.pack_ln
-      (FStarC_Reflection_V2_Data.Tv_App
-         ((FStarC_Reflection_V2_Builtins.pack_ln
-             (FStarC_Reflection_V2_Data.Tv_FVar
-                (FStarC_Reflection_V2_Builtins.pack_fv
-                   ["FStar"; "Tactics"; "Effect"; "synth_by_tactic"]))),
-           ((FStarC_Reflection_V2_Builtins.pack_ln
-               (FStarC_Reflection_V2_Data.Tv_Abs
-                  ((FStarC_Reflection_V2_Builtins.pack_binder
-                      {
-                        FStarC_Reflection_V2_Data.sort2 =
-                          (FStarC_Reflection_V2_Builtins.pack_ln
-                             FStarC_Reflection_V2_Data.Tv_Unknown);
-                        FStarC_Reflection_V2_Data.qual =
-                          FStarC_Reflection_V2_Data.Q_Explicit;
-                        FStarC_Reflection_V2_Data.attrs = [];
-                        FStarC_Reflection_V2_Data.ppname2 =
-                          (FStar_Sealed.seal "uu___")
-                      }),
-                    (FStarC_Reflection_V2_Builtins.pack_ln
-                       (FStarC_Reflection_V2_Data.Tv_App
-                          ((FStarC_Reflection_V2_Builtins.pack_ln
-                              (FStarC_Reflection_V2_Data.Tv_App
-                                 ((FStarC_Reflection_V2_Builtins.pack_ln
-                                     (FStarC_Reflection_V2_Data.Tv_FVar
-                                        (FStarC_Reflection_V2_Builtins.pack_fv
-                                           ["FStar";
-                                           "Tactics";
-                                           "TypeRepr";
-                                           "generate_up"]))),
-                                   ((FStar_Tactics_NamedView.pack
-                                       (FStar_Tactics_NamedView.Tv_Const
-                                          (FStarC_Reflection_V2_Data.C_String
-                                             (FStarC_Reflection_V2_Builtins.implode_qn
-                                                nm)))),
-                                     FStarC_Reflection_V2_Data.Q_Explicit)))),
-                            ((FStarC_Reflection_V2_Builtins.pack_ln
-                                (FStarC_Reflection_V2_Data.Tv_Const
-                                   FStarC_Reflection_V2_Data.C_Unit)),
-                              FStarC_Reflection_V2_Data.Q_Explicit))))))),
-             FStarC_Reflection_V2_Data.Q_Explicit))) in
-  let x8 = FStar_Tactics_V2_Derived.mk_abs x x7 ps in
-  let x9 =
-    let x10 = FStar_Tactics_V2_Derived.fresh_binder x2 ps in
-    let x11 =
-      let x12 =
-        let x13 =
-          let x14 =
-            let x15 =
-              FStar_Tactics_V2_SyntaxHelpers.mk_tot_arr x
-                (FStar_Tactics_NamedView.pack
-                   (FStar_Tactics_NamedView.Tv_Arrow
-                      (x10, (FStarC_Reflection_V2_Data.C_Total x1)))) ps in
-            {
-              FStar_Tactics_NamedView.lb_fv =
-                (FStarC_Reflection_V2_Builtins.pack_fv (add_suffix "_up" nm));
-              FStar_Tactics_NamedView.lb_us = [];
-              FStar_Tactics_NamedView.lb_typ = x15;
-              FStar_Tactics_NamedView.lb_def = x8
-            } in
-          [x14] in
-        {
-          FStar_Tactics_NamedView.isrec = false;
-          FStar_Tactics_NamedView.lbs = x13
-        } in
-      FStar_Tactics_NamedView.Sg_Let x12 in
-    FStar_Tactics_NamedView.pack_sigelt x11 ps in
-  [x3; x6; x9]
-let entry (nm : Prims.string) (ps : FStarC_Tactics_Types.ref_proofstate) :
-  FStarC_Reflection_Types.decls=
-  let x = get_inductive_typ nm ps in
-  match x with
-  | FStar_Tactics_NamedView.Sg_Inductive
-      { FStar_Tactics_NamedView.nm = nm1;
-        FStar_Tactics_NamedView.univs1 = uu___;
-        FStar_Tactics_NamedView.params = params;
-        FStar_Tactics_NamedView.typ = uu___1;
-        FStar_Tactics_NamedView.ctors = ctors;_}
-      -> generate_all nm1 params ctors ps
-let _ =
-  FStarC_Tactics_Native.register_tactic "FStar.Tactics.TypeRepr.entry"
-    (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.TypeRepr.entry (plugin)"
-               (FStarC_Tactics_Native.from_tactic_1 entry)
-               FStarC_Syntax_Embeddings.e_string
-               (FStarC_Syntax_Embeddings.e_list
-                  FStarC_Reflection_V2_Embeddings.e_sigelt) psc ncb us args)
+(* Generated by F* Custard extraction. Do not edit. *)
+[@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
+
+let tuple2_ (a : FStarC_Reflection_Types.term) (b : FStarC_Reflection_Types.term) : FStarC_Reflection_Types.term =
+  (FStarC_Reflection_V2_Builtins.pack_ln (let tmp = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Pervasives" :: ("Native" :: ("tuple2" :: []))))) in
+      (FStarC_Reflection_V2_Data.Tv_FVar (tmp)))) in
+    (FStarC_Reflection_V2_Data.Tv_App (tmp, (a, FStarC_Reflection_V2_Data.Q_Explicit))))) in
+  (FStarC_Reflection_V2_Data.Tv_App (tmp, (b, FStarC_Reflection_V2_Data.Q_Explicit)))))
+
+let unitt_ : FStarC_Reflection_Types.term =
+  (FStarC_Reflection_V2_Builtins.pack_ln (let tmp = (FStarC_Reflection_V2_Builtins.pack_fv ("Prims" :: ("unit" :: []))) in
+  (FStarC_Reflection_V2_Data.Tv_FVar (tmp))))
+
+let alg_ctor (ty : FStarC_Reflection_Types.typ) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_Types.typ) =
+  (fun ps -> (let x = (FStar_Tactics_V2_SyntaxHelpers.collect_arr ty ps) in
+  ((match x with
+    | (tys, c) -> (FStar_Tactics_Util.fold_right (fun ty1 acc -> (fun tmp -> (tuple2_ ty1 acc))) tys unitt_)
+  ) ps)))
+
+let either_ (a : FStarC_Reflection_Types.term) (b : FStarC_Reflection_Types.term) : FStarC_Reflection_Types.term =
+  (FStarC_Reflection_V2_Builtins.pack_ln (let tmp = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Pervasives" :: ("either" :: [])))) in
+      (FStarC_Reflection_V2_Data.Tv_FVar (tmp)))) in
+    (FStarC_Reflection_V2_Data.Tv_App (tmp, (a, FStarC_Reflection_V2_Data.Q_Explicit))))) in
+  (FStarC_Reflection_V2_Data.Tv_App (tmp, (b, FStarC_Reflection_V2_Data.Q_Explicit)))))
+
+let empty_ : FStarC_Reflection_Types.term =
+  (FStarC_Reflection_V2_Builtins.pack_ln (let tmp = (FStarC_Reflection_V2_Builtins.pack_fv ("Prims" :: ("empty" :: []))) in
+  (FStarC_Reflection_V2_Data.Tv_FVar (tmp))))
+
+let generate_repr_typ (params : (FStar_Tactics_NamedView.binder) list) (ctors : (((string) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) list) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_Types.typ) =
+  (fun ps -> (let x = (FStar_Tactics_Util.map (fun tmp -> (match tmp with
+      | (tmp1, ty) -> (alg_ctor ty)
+    )) ctors ps) in
+  (FStar_Tactics_Util.fold_right (fun ty acc -> (fun tmp -> (either_ ty acc))) x empty_ ps)))
+
+let u___plugin_generate_repr_typ : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.TypeRepr.generate_repr_typ" (Prims.parse_int "3") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_2 "FStar.Tactics.TypeRepr.generate_repr_typ (plugin)" generate_repr_typ (FStarC_Syntax_Embeddings.e_list FStar_Tactics_NamedView.e_binder) (FStarC_Syntax_Embeddings.e_list (FStarC_Syntax_Embeddings.e_tuple2 (FStarC_Syntax_Embeddings.e_list FStarC_Syntax_Embeddings.e_string) FStarC_Reflection_V2_Embeddings.e_term)) FStarC_Reflection_V2_Embeddings.e_term tmp tmp1 tmp2 tmp3)))
+
+let mktuple2_ (a : FStarC_Reflection_Types.term) (b : FStarC_Reflection_Types.term) : FStarC_Reflection_Types.term =
+  (FStarC_Reflection_V2_Builtins.pack_ln (let tmp = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Pervasives" :: ("Native" :: ("Mktuple2" :: []))))) in
+      (FStarC_Reflection_V2_Data.Tv_FVar (tmp)))) in
+    (FStarC_Reflection_V2_Data.Tv_App (tmp, (a, FStarC_Reflection_V2_Data.Q_Explicit))))) in
+  (FStarC_Reflection_V2_Data.Tv_App (tmp, (b, FStarC_Reflection_V2_Data.Q_Explicit)))))
+
+let unitv_ : FStarC_Reflection_Types.term =
+  (FStarC_Reflection_V2_Builtins.pack_ln (FStarC_Reflection_V2_Data.Tv_Const (FStarC_Reflection_V2_Data.C_Unit)))
+
+let generate_down (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (fun ps -> (let x = (FStarC_Tactics_V2_Builtins.intro () ps) in
+  let x1 = (FStarC_Tactics_V2_Builtins.t_destruct (FStar_Tactics_V2_SyntaxCoercions.binding_to_term x) ps) in
+  (FStar_Tactics_Util.iteri (fun i tmp1 -> (match tmp1 with
+    | (c, n) -> (fun ps1 -> (let x2 = (FStar_Tactics_Util.repeatn n (fun tmp2 -> (FStarC_Tactics_V2_Builtins.intro ())) ps1) in
+      (ignore (FStarC_Tactics_V2_Builtins.intro () ps1));
+      let x3 = (FStar_Tactics_Util.fold_right (fun b acc -> (fun tmp2 -> (mktuple2_ (FStar_Tactics_V2_SyntaxCoercions.binding_to_term b) acc))) x2 unitv_ ps1) in
+      (ignore (FStar_Tactics_Util.repeatn i (fun tmp2 -> (let tmp3 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp3 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Pervasives" :: ("Inr" :: [])))) in
+        (FStarC_Reflection_V2_Data.Tv_FVar (tmp3)))) in
+      (FStar_Tactics_V2_Derived.apply tmp3))) ps1));
+      let tmp2 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp2 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Pervasives" :: ("Inl" :: [])))) in
+        (FStarC_Reflection_V2_Data.Tv_FVar (tmp2)))) in
+      (FStar_Tactics_V2_Derived.apply tmp2 ps1);
+      (FStar_Tactics_V2_Derived.exact x3 ps1)))
+  )) x1 ps)))
+
+let u___plugin_generate_down : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.TypeRepr.generate_down" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.TypeRepr.generate_down (plugin)" generate_down FStarC_Syntax_Embeddings.e_unit FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
+
+let get_inductive_typ (nm : string) (ps : (FStarC_Tactics_Types.proofstate ref)) : FStar_Tactics_NamedView.named_sigelt_view =
+  (let x = (FStarC_Tactics_V2_Builtins.top_env () ps) in
+  let tmp = (FStarC_Reflection_V2_Builtins.explode_qn nm) in
+  let x1 = (FStarC_Reflection_V2_Builtins.lookup_typ x tmp) in
+  ((match x1 with
+    | None -> (FStar_Tactics_V2_Derived.fail "ctors_of_typ: type not found")
+    | (Some (se)) -> (fun ps1 -> (let x2 = (FStar_Tactics_NamedView.inspect_sigelt se ps1) in
+      ((if (match x2 with
+        | (FStar_Tactics_NamedView.Sg_Inductive (u__0)) -> true
+        | tmp1 -> false
+      ) then (fun tmp1 -> x2) else (FStar_Tactics_V2_Derived.fail "ctors_of_typ: not an inductive type")) ps1)))
+  ) ps))
+
+let rec get_apply_tuple (b : FStarC_Reflection_V2_Data.binding) (ps : (FStarC_Tactics_Types.proofstate ref)) : (FStarC_Reflection_V2_Data.binding) list =
+  (let tmp = ((b : FStarC_Reflection_V2_Data.binding)).FStarC_Reflection_V2_Data.sort in
+  let x = (FStar_Tactics_V2_SyntaxHelpers.collect_app tmp ps) in
+  ((match x with
+    | (hd, args) -> (fun ps1 -> (let x1 = (FStar_Tactics_NamedView.inspect hd ps1) in
+      let x2 = (x1, args) in
+      ((match x2 with
+        | ((FStar_Tactics_NamedView.Tv_UInst (fv, tmp1)), (b1 :: (b2 :: []))) -> (if (let tmp2 = (FStarC_Reflection_V2_Builtins.inspect_fv fv) in
+          ((=) tmp2 ("FStar" :: ("Pervasives" :: ("Native" :: ("tuple2" :: [])))))) then (fun ps2 -> (let x3 = (FStarC_Tactics_V2_Builtins.t_destruct (FStar_Tactics_V2_SyntaxCoercions.binding_to_term b) ps2) in
+          (FStar_Tactics_V2_Derived.guard ((((=) (FStar_List_Tot_Base.length x3) (Prims.parse_int "1")) && (let tmp2 = (FStarC_Reflection_V2_Builtins.inspect_fv (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst (FStar_List_Tot_Base.hd x3))) in
+          ((=) tmp2 ("FStar" :: ("Pervasives" :: ("Native" :: ("Mktuple2" :: []))))))) && ((=) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd (FStar_List_Tot_Base.hd x3)) (Prims.parse_int "2"))) ps2);
+          let x4 = (FStarC_Tactics_V2_Builtins.intro () ps2) in
+          let x5 = (FStarC_Tactics_V2_Builtins.intro () ps2) in
+          (ignore (FStarC_Tactics_V2_Builtins.intro () ps2));
+          let x6 = (get_apply_tuple x5 ps2) in
+          (x4 :: x6))) else (fun ps2 -> (let tmp2 = ((b : FStarC_Reflection_V2_Data.binding)).FStarC_Reflection_V2_Data.sort in
+          let x3 = (FStarC_Tactics_V2_Builtins.term_to_string tmp2 ps2) in
+          let x4 = (Prims.strcat "unexpected term in apply_tuple: " x3) in
+          (FStar_Tactics_V2_Derived.fail x4 ps2))))
+        | ((FStar_Tactics_NamedView.Tv_FVar (fv)), (b1 :: (b2 :: []))) -> (if (let tmp1 = (FStarC_Reflection_V2_Builtins.inspect_fv fv) in
+          ((=) tmp1 ("FStar" :: ("Pervasives" :: ("Native" :: ("tuple2" :: [])))))) then (fun ps2 -> (let x3 = (FStarC_Tactics_V2_Builtins.t_destruct (FStar_Tactics_V2_SyntaxCoercions.binding_to_term b) ps2) in
+          (FStar_Tactics_V2_Derived.guard ((((=) (FStar_List_Tot_Base.length x3) (Prims.parse_int "1")) && (let tmp1 = (FStarC_Reflection_V2_Builtins.inspect_fv (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst (FStar_List_Tot_Base.hd x3))) in
+          ((=) tmp1 ("FStar" :: ("Pervasives" :: ("Native" :: ("Mktuple2" :: []))))))) && ((=) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd (FStar_List_Tot_Base.hd x3)) (Prims.parse_int "2"))) ps2);
+          let x4 = (FStarC_Tactics_V2_Builtins.intro () ps2) in
+          let x5 = (FStarC_Tactics_V2_Builtins.intro () ps2) in
+          (ignore (FStarC_Tactics_V2_Builtins.intro () ps2));
+          let x6 = (get_apply_tuple x5 ps2) in
+          (x4 :: x6))) else (fun ps2 -> (let tmp1 = ((b : FStarC_Reflection_V2_Data.binding)).FStarC_Reflection_V2_Data.sort in
+          let x3 = (FStarC_Tactics_V2_Builtins.term_to_string tmp1 ps2) in
+          let x4 = (Prims.strcat "unexpected term in apply_tuple: " x3) in
+          (FStar_Tactics_V2_Derived.fail x4 ps2))))
+        | ((FStar_Tactics_NamedView.Tv_FVar (fv)), []) -> (if (let tmp1 = (FStarC_Reflection_V2_Builtins.inspect_fv fv) in
+          ((=) tmp1 ("Prims" :: ("unit" :: [])))) then (fun tmp1 -> []) else (fun ps2 -> (let tmp1 = ((b : FStarC_Reflection_V2_Data.binding)).FStarC_Reflection_V2_Data.sort in
+          let x3 = (FStarC_Tactics_V2_Builtins.term_to_string tmp1 ps2) in
+          let x4 = (Prims.strcat "unexpected term in apply_tuple: " x3) in
+          (FStar_Tactics_V2_Derived.fail x4 ps2))))
+        | tmp1 -> (fun ps2 -> (let tmp2 = ((b : FStarC_Reflection_V2_Data.binding)).FStarC_Reflection_V2_Data.sort in
+          let x3 = (FStarC_Tactics_V2_Builtins.term_to_string tmp2 ps2) in
+          let x4 = (Prims.strcat "unexpected term in apply_tuple: " x3) in
+          (FStar_Tactics_V2_Derived.fail x4 ps2)))
+      ) ps1)))
+  ) ps))
+
+let rec generate_up_aux (ctors : (((string) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) list) (b : FStarC_Reflection_V2_Data.binding) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (match ctors with
+    | [] -> (fun ps -> (let tmp = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("TypeRepr" :: ("empty_elim" :: []))))) in
+        (FStarC_Reflection_V2_Data.Tv_FVar (tmp)))) in
+      (FStar_Tactics_V2_Derived.apply tmp ps);
+      (FStar_Tactics_V2_Derived.exact (FStar_Tactics_V2_SyntaxCoercions.binding_to_term b) ps)))
+    | (c :: cs) -> (fun ps -> (let x = (FStarC_Tactics_V2_Builtins.t_destruct (FStar_Tactics_V2_SyntaxCoercions.binding_to_term b) ps) in
+      (ignore ((if ((<>) (FStar_List_Tot_Base.length x) (Prims.parse_int "2")) then (FStar_Tactics_V2_Derived.fail "generate_up_aux: expected Inl/Inr???") else (fun tmp -> ())) ps));
+      (FStar_Tactics_V2_Derived.focus (fun tmp -> (fun ps1 -> (let x1 = (FStarC_Tactics_V2_Builtins.intro () ps1) in
+      (ignore (FStarC_Tactics_V2_Builtins.intro () ps1));
+      let x2 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst c) in
+      let x3 = (get_apply_tuple x1 ps1) in
+      (FStar_Tactics_V2_Derived.apply (FStar_Tactics_NamedView.pack (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_fv x2) in
+      (FStar_Tactics_NamedView.Tv_FVar (tmp1)))) ps1);
+      (FStar_Tactics_Util.iter (fun b1 -> (FStar_Tactics_V2_Derived.exact (FStar_Tactics_V2_SyntaxCoercions.binding_to_term b1))) x3 ps1);
+      (FStar_Tactics_V2_Derived.qed () ps1)))) ps);
+      let x1 = (FStarC_Tactics_V2_Builtins.intro () ps) in
+      (ignore (FStarC_Tactics_V2_Builtins.intro () ps));
+      (generate_up_aux cs x1 ps)))
+  )
+
+let generate_up (nm : string) (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (fun ps -> (let x = (get_inductive_typ nm ps) in
+  ((match x with
+    | (FStar_Tactics_NamedView.Sg_Inductive ({ FStar_Tactics_NamedView.nm = tmp1; univs = tmp2; params = tmp3; typ = tmp4; ctors = ctors; _ })) -> (fun ps1 -> (let x1 = (FStarC_Tactics_V2_Builtins.intro () ps1) in
+      (generate_up_aux ctors x1 ps1)))
+  ) ps)))
+
+let u___plugin_generate_up : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.TypeRepr.generate_up" (Prims.parse_int "3") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_2 "FStar.Tactics.TypeRepr.generate_up (plugin)" generate_up FStarC_Syntax_Embeddings.e_string FStarC_Syntax_Embeddings.e_unit FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
+
+let make_implicits (bs : (FStar_Tactics_NamedView.binder) list) : (FStar_Tactics_NamedView.binder) list =
+  (FStar_List_Tot_Base.map (fun b -> (match (b).FStar_Tactics_NamedView.qual with
+    | FStarC_Reflection_V2_Data.Q_Explicit -> ({ FStar_Tactics_NamedView.uniq = (b).FStar_Tactics_NamedView.uniq;
+        ppname = (b).FStar_Tactics_NamedView.ppname;
+        sort = ((b : FStar_Tactics_NamedView.binder)).FStar_Tactics_NamedView.sort;
+        qual = FStarC_Reflection_V2_Data.Q_Implicit;
+        attrs = (b).FStar_Tactics_NamedView.attrs } : FStar_Tactics_NamedView.binder)
+    | tmp -> b
+  )) bs)
+
+let binder_to_argv (b : FStar_Tactics_NamedView.binder) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * FStarC_Reflection_V2_Data.aqualv) =
+  ((FStar_Tactics_V2_SyntaxCoercions.binder_to_term b), (b).FStar_Tactics_NamedView.qual)
+
+let add_suffix (s : string) (nm : FStarC_Reflection_Types.name) : FStarC_Reflection_Types.name =
+  (let tmp = (FStarC_Reflection_V2_Builtins.implode_qn nm) in
+  let tmp1 = (Prims.strcat tmp s) in
+  (FStarC_Reflection_V2_Builtins.explode_qn tmp1))
+
+let generate_all (nm : FStarC_Reflection_Types.name) (params : (FStar_Tactics_NamedView.binder) list) (ctors : (((string) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) list) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_Types.decls) =
+  (fun ps -> (let x = (make_implicits params) in
+  let x1 = (FStar_Reflection_V2_Derived.mk_app (FStar_Tactics_NamedView.pack (let tmp = (FStarC_Reflection_V2_Builtins.pack_fv nm) in
+    (FStar_Tactics_NamedView.Tv_FVar (tmp)))) (FStar_List_Tot_Base.map binder_to_argv params)) in
+  let x2 = (generate_repr_typ params ctors ps) in
+  let tmp = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp = (FStarC_Reflection_V2_Builtins.pack_universe FStarC_Reflection_V2_Data.Uv_Unk) in
+    (FStarC_Reflection_V2_Data.Tv_Type (tmp)))) in
+  let tmp1 = (FStarC_Reflection_V2_Data.mk_tot_comp tmp) in
+  let x3 = (FStar_Tactics_V2_SyntaxHelpers.mk_arr params tmp1 ps) in
+  let x4 = (FStar_Tactics_V2_Derived.mk_abs params x2 ps) in
+  let tmp2 = (FStarC_Reflection_V2_Builtins.pack_fv (add_suffix "_repr" nm)) in
+  let x5 = { FStar_Tactics_NamedView.lb_fv = tmp2;
+      lb_us = [];
+      lb_typ = x3;
+      lb_def = x4 } in
+  let x6 = (x5 :: []) in
+  let x7 = { FStar_Tactics_NamedView.isrec = false; lbs = x6 } in
+  let x8 = (FStar_Tactics_NamedView.Sg_Let (x7)) in
+  let x9 = (FStar_Tactics_NamedView.pack_sigelt x8 ps) in
+  let x10 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp3 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp3 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("Effect" :: ("synth_by_tactic" :: []))))) in
+      (FStarC_Reflection_V2_Data.Tv_FVar (tmp3)))) in
+    (FStarC_Reflection_V2_Data.Tv_App (tmp3, (let tmp4 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp4 = (FStarC_Reflection_V2_Builtins.pack_binder (let tmp4 = (FStarC_Reflection_V2_Builtins.pack_ln FStarC_Reflection_V2_Data.Tv_Unknown) in
+        ({ FStarC_Reflection_V2_Data.sort = tmp4;
+          qual = FStarC_Reflection_V2_Data.Q_Explicit;
+          attrs = [];
+          ppname = (FStar_Sealed.seal "uu___") } : FStarC_Reflection_V2_Data.binder_view))) in
+      let tmp5 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp5 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp5 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("TypeRepr" :: ("generate_down" :: []))))) in
+          (FStarC_Reflection_V2_Data.Tv_FVar (tmp5)))) in
+        (FStarC_Reflection_V2_Data.Tv_App (tmp5, (let tmp6 = (FStarC_Reflection_V2_Builtins.pack_ln (FStarC_Reflection_V2_Data.Tv_Const (FStarC_Reflection_V2_Data.C_Unit))) in
+        (tmp6, FStarC_Reflection_V2_Data.Q_Explicit)))))) in
+      (FStarC_Reflection_V2_Data.Tv_Abs (tmp4, tmp5)))) in
+    (tmp4, FStarC_Reflection_V2_Data.Q_Explicit)))))) in
+  let x11 = (FStar_Tactics_V2_Derived.mk_abs x x10 ps) in
+  let x12 = (FStar_Tactics_V2_Derived.fresh_binder x1 ps) in
+  let x13 = (FStar_Tactics_V2_SyntaxHelpers.mk_tot_arr x (FStar_Tactics_NamedView.pack (let tmp3 = (FStarC_Reflection_V2_Data.mk_tot_comp x2) in
+    (FStar_Tactics_NamedView.Tv_Arrow (x12, tmp3)))) ps) in
+  let tmp3 = (FStarC_Reflection_V2_Builtins.pack_fv (add_suffix "_down" nm)) in
+  let x14 = { FStar_Tactics_NamedView.lb_fv = tmp3;
+      lb_us = [];
+      lb_typ = x13;
+      lb_def = x11 } in
+  let x15 = (x14 :: []) in
+  let x16 = { FStar_Tactics_NamedView.isrec = false; lbs = x15 } in
+  let x17 = (FStar_Tactics_NamedView.Sg_Let (x16)) in
+  let x18 = (FStar_Tactics_NamedView.pack_sigelt x17 ps) in
+  let x19 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp4 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp4 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("Effect" :: ("synth_by_tactic" :: []))))) in
+      (FStarC_Reflection_V2_Data.Tv_FVar (tmp4)))) in
+    (FStarC_Reflection_V2_Data.Tv_App (tmp4, (let tmp5 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp5 = (FStarC_Reflection_V2_Builtins.pack_binder (let tmp5 = (FStarC_Reflection_V2_Builtins.pack_ln FStarC_Reflection_V2_Data.Tv_Unknown) in
+        ({ FStarC_Reflection_V2_Data.sort = tmp5;
+          qual = FStarC_Reflection_V2_Data.Q_Explicit;
+          attrs = [];
+          ppname = (FStar_Sealed.seal "uu___") } : FStarC_Reflection_V2_Data.binder_view))) in
+      let tmp6 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp6 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp6 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp6 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("TypeRepr" :: ("generate_up" :: []))))) in
+            (FStarC_Reflection_V2_Data.Tv_FVar (tmp6)))) in
+          (FStarC_Reflection_V2_Data.Tv_App (tmp6, ((FStar_Tactics_NamedView.pack (FStar_Tactics_NamedView.Tv_Const ((let tmp7 = (FStarC_Reflection_V2_Builtins.implode_qn nm) in
+          (FStarC_Reflection_V2_Data.C_String (tmp7)))))), FStarC_Reflection_V2_Data.Q_Explicit))))) in
+        (FStarC_Reflection_V2_Data.Tv_App (tmp6, (let tmp7 = (FStarC_Reflection_V2_Builtins.pack_ln (FStarC_Reflection_V2_Data.Tv_Const (FStarC_Reflection_V2_Data.C_Unit))) in
+        (tmp7, FStarC_Reflection_V2_Data.Q_Explicit)))))) in
+      (FStarC_Reflection_V2_Data.Tv_Abs (tmp5, tmp6)))) in
+    (tmp5, FStarC_Reflection_V2_Data.Q_Explicit)))))) in
+  let x20 = (FStar_Tactics_V2_Derived.mk_abs x x19 ps) in
+  let x21 = (FStar_Tactics_V2_Derived.fresh_binder x2 ps) in
+  let x22 = (FStar_Tactics_V2_SyntaxHelpers.mk_tot_arr x (FStar_Tactics_NamedView.pack (let tmp4 = (FStarC_Reflection_V2_Data.mk_tot_comp x1) in
+    (FStar_Tactics_NamedView.Tv_Arrow (x21, tmp4)))) ps) in
+  let tmp4 = (FStarC_Reflection_V2_Builtins.pack_fv (add_suffix "_up" nm)) in
+  let x23 = { FStar_Tactics_NamedView.lb_fv = tmp4;
+      lb_us = [];
+      lb_typ = x22;
+      lb_def = x20 } in
+  let x24 = (x23 :: []) in
+  let x25 = { FStar_Tactics_NamedView.isrec = false; lbs = x24 } in
+  let x26 = (FStar_Tactics_NamedView.Sg_Let (x25)) in
+  let x27 = (FStar_Tactics_NamedView.pack_sigelt x26 ps) in
+  (x9 :: (x18 :: (x27 :: [])))))
+
+let entry (nm : string) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_Types.decls) =
+  (fun ps -> (let x = (get_inductive_typ nm ps) in
+  ((match x with
+    | (FStar_Tactics_NamedView.Sg_Inductive ({ FStar_Tactics_NamedView.nm = nm1; univs = tmp; params = params; typ = tmp1; ctors = ctors; _ })) -> (generate_all nm1 params ctors)
+  ) ps)))
+
+let u___plugin_entry : unit =
+  (FStarC_Tactics_Native.register_tactic "FStar.Tactics.TypeRepr.entry" (Prims.parse_int "2") (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.TypeRepr.entry (plugin)" entry FStarC_Syntax_Embeddings.e_string (FStarC_Syntax_Embeddings.e_list FStarC_Reflection_V2_Embeddings.e_sigelt) tmp tmp1 tmp2 tmp3)))
+

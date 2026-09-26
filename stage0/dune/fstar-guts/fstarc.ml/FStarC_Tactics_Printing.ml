@@ -1,412 +1,220 @@
-open Prims
-let dbg_Imp : Prims.bool FStarC_Effect.ref= FStarC_Debug.get_toggle "Imp"
-let term_to_doc (e : FStarC_TypeChecker_Env.env)
-  (t : FStarC_Syntax_Syntax.term) : FStar_Pprint.document=
-  let uu___ =
-    FStarC_Syntax_Print.term_to_doc' e.FStarC_TypeChecker_Env.dsenv t in
-  FStar_Pprint.group uu___
-let term_to_string (e : FStarC_TypeChecker_Env.env)
-  (t : FStarC_Syntax_Syntax.term) : Prims.string=
-  FStarC_Syntax_Print.term_to_string' e.FStarC_TypeChecker_Env.dsenv t
-let unshadow (bs : FStarC_Syntax_Syntax.binders)
-  (t : FStarC_Syntax_Syntax.term) :
-  (FStarC_Syntax_Syntax.binders * FStarC_Syntax_Syntax.term)=
-  let sset bv s =
-    let uu___ =
-      let uu___1 =
-        let uu___2 =
-          FStarC_Class_HasRange.pos FStarC_Syntax_Syntax.hasRange_bv bv in
-        (s, uu___2) in
-      FStarC_Ident.mk_ident uu___1 in
-    {
-      FStarC_Syntax_Syntax.ppname = uu___;
-      FStarC_Syntax_Syntax.index = (bv.FStarC_Syntax_Syntax.index);
-      FStarC_Syntax_Syntax.sort = (bv.FStarC_Syntax_Syntax.sort)
-    } in
-  let fresh_until b f =
-    let rec aux i =
-      let t1 =
-        let uu___ =
-          let uu___1 =
-            FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
-          Prims.strcat "'" uu___1 in
-        Prims.strcat b uu___ in
-      if f t1 then t1 else aux (i + Prims.int_one) in
-    if f b then b else aux Prims.int_zero in
-  let rec go seen subst bs1 bs' t1 =
-    match bs1 with
-    | [] ->
-        let uu___ = FStarC_Syntax_Subst.subst subst t1 in
-        ((FStarC_List.rev bs'), uu___)
-    | b::bs2 ->
-        let b1 =
-          let uu___ = FStarC_Syntax_Subst.subst_binders subst [b] in
-          match uu___ with
-          | b2::[] -> b2
-          | uu___1 ->
-              FStarC_Effect.failwith "impossible: unshadow subst_binders" in
-        let uu___ =
-          ((b1.FStarC_Syntax_Syntax.binder_bv),
-            (b1.FStarC_Syntax_Syntax.binder_qual)) in
-        (match uu___ with
-         | (bv0, q) ->
-             let nbs =
-               let uu___1 =
-                 FStarC_Class_Show.show FStarC_Ident.showable_ident
-                   bv0.FStarC_Syntax_Syntax.ppname in
-               fresh_until uu___1
-                 (fun s -> Prims.not (FStarC_List.mem s seen)) in
-             let bv = sset bv0 nbs in
-             let b2 =
-               FStarC_Syntax_Syntax.mk_binder_with_attrs bv q
-                 b1.FStarC_Syntax_Syntax.binder_positivity
-                 b1.FStarC_Syntax_Syntax.binder_attrs in
-             let uu___1 =
-               let uu___2 =
-                 let uu___3 =
-                   let uu___4 =
-                     let uu___5 = FStarC_Syntax_Syntax.bv_to_name bv in
-                     (bv0, uu___5) in
-                   FStarC_Syntax_Syntax.NT uu___4 in
-                 [uu___3] in
-               FStarC_List.op_At subst uu___2 in
-             go (nbs :: seen) uu___1 bs2 (b2 :: bs') t1) in
-  go [] [] bs [] t
-let maybe_rename_binders (ps : FStarC_Tactics_Types.proofstate)
-  (bs : FStarC_Syntax_Syntax.binders) (t : FStarC_Syntax_Syntax.term) :
-  (FStarC_Syntax_Syntax.binders * FStarC_Syntax_Syntax.term)=
-  let rename_binders subst bs1 =
-    FStarC_List.map
-      (fun uu___ ->
-         let x = uu___.FStarC_Syntax_Syntax.binder_bv in
-         let y =
-           let uu___1 = FStarC_Syntax_Syntax.bv_to_name x in
-           FStarC_Syntax_Subst.subst subst uu___1 in
-         let uu___1 =
-           let uu___2 = FStarC_Syntax_Subst.compress y in
-           uu___2.FStarC_Syntax_Syntax.n in
-         match uu___1 with
-         | FStarC_Syntax_Syntax.Tm_name y1 ->
-             let uu___2 =
-               let uu___3 = uu___.FStarC_Syntax_Syntax.binder_bv in
-               let uu___4 =
-                 FStarC_Syntax_Subst.subst subst x.FStarC_Syntax_Syntax.sort in
-               {
-                 FStarC_Syntax_Syntax.ppname =
-                   (uu___3.FStarC_Syntax_Syntax.ppname);
-                 FStarC_Syntax_Syntax.index =
-                   (uu___3.FStarC_Syntax_Syntax.index);
-                 FStarC_Syntax_Syntax.sort = uu___4
-               } in
-             {
-               FStarC_Syntax_Syntax.binder_bv = uu___2;
-               FStarC_Syntax_Syntax.binder_qual =
-                 (uu___.FStarC_Syntax_Syntax.binder_qual);
-               FStarC_Syntax_Syntax.binder_positivity =
-                 (uu___.FStarC_Syntax_Syntax.binder_positivity);
-               FStarC_Syntax_Syntax.binder_attrs =
-                 (uu___.FStarC_Syntax_Syntax.binder_attrs)
-             }
-         | uu___2 -> FStarC_Effect.failwith "Not a renaming") bs1 in
-  let uu___ = FStarC_Options.tactic_raw_binders () in
-  if uu___
-  then (bs, t)
-  else
-    (let subst =
-       FStarC_TypeChecker_Primops_Base.psc_subst ps.FStarC_Tactics_Types.psc in
-     let bs1 = rename_binders subst bs in
-     let t1 = FStarC_Syntax_Subst.subst subst t in (bs1, t1))
-let goal_to_doc (kind : Prims.string)
-  (maybe_num : (Prims.int * Prims.int) FStar_Pervasives_Native.option)
-  (ps : FStarC_Tactics_Types.proofstate) (g : FStarC_Tactics_Types.goal) :
-  FStar_Pprint.document=
-  let w =
-    let uu___ = FStarC_Options.print_implicits () in
-    if uu___
-    then
-      let uu___1 = FStarC_Tactics_Types.goal_witness g in
-      term_to_doc (FStarC_Tactics_Types.goal_env g) uu___1
-    else
-      (let uu___1 = FStarC_Tactics_Types.check_goal_solved' g in
-       match uu___1 with
-       | FStar_Pervasives_Native.None -> FStar_Pprint.doc_of_string "_"
-       | FStar_Pervasives_Native.Some t ->
-           let uu___2 = FStarC_Tactics_Types.goal_witness g in
-           term_to_doc (FStarC_Tactics_Types.goal_env g) uu___2) in
-  let num =
-    match maybe_num with
-    | FStar_Pervasives_Native.None -> FStar_Pprint.empty
-    | FStar_Pervasives_Native.Some (i, n) ->
-        let uu___ = FStarC_Class_PP.pp FStarC_Class_PP.pp_int i in
-        let uu___1 =
-          let uu___2 = FStarC_Class_PP.pp FStarC_Class_PP.pp_int n in
-          FStar_Pprint.op_Hat_Hat FStar_Pprint.slash uu___2 in
-        FStar_Pprint.op_Hat_Hat uu___ uu___1 in
-  let maybe_label =
-    if g.FStarC_Tactics_Types.label = ""
-    then FStar_Pprint.empty
-    else
-      FStar_Pprint.op_Hat_Hat (FStar_Pprint.break_ Prims.int_one)
-        (FStar_Pprint.parens
-           (FStar_Pprint.doc_of_string g.FStarC_Tactics_Types.label)) in
-  let uu___ =
-    let uu___1 = FStarC_Tactics_Types.goal_type g in
-    (((g.FStarC_Tactics_Types.goal_ctx_uvar).FStarC_Syntax_Syntax.ctx_uvar_binders),
-      uu___1) in
-  match uu___ with
-  | (goal_binders, goal_ty) ->
-      let uu___1 = maybe_rename_binders ps goal_binders goal_ty in
-      (match uu___1 with
-       | (goal_binders1, goal_ty1) ->
-           let uu___2 = unshadow goal_binders1 goal_ty1 in
-           (match uu___2 with
-            | (goal_binders2, goal_ty2) ->
-                let pp_binder b =
-                  let uu___3 =
-                    let uu___4 =
-                      let uu___5 =
-                        let uu___6 =
-                          let uu___7 =
-                            let uu___8 =
-                              FStarC_Class_PP.pp
-                                FStarC_Syntax_Print.pretty_bv
-                                b.FStarC_Syntax_Syntax.binder_bv in
-                            FStar_Pprint.op_Hat_Slash_Hat uu___8
-                              FStar_Pprint.colon in
-                          FStar_Pprint.group uu___7 in
-                        let uu___7 =
-                          FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term
-                            (b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
-                        FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
-                      FStar_Pprint.parens uu___5 in
-                    FStar_Pprint.hang (Prims.of_int 2) uu___4 in
-                  FStar_Pprint.group uu___3 in
-                let uu___3 =
-                  let uu___4 =
-                    let uu___5 =
-                      let uu___6 =
-                        FStarC_Pprint.separate_map
-                          (FStar_Pprint.op_Hat_Hat FStar_Pprint.comma
-                             (FStar_Pprint.break_ Prims.int_one)) pp_binder
-                          goal_binders2 in
-                      let uu___7 =
-                        let uu___8 =
-                          let uu___9 =
-                            let uu___10 =
-                              let uu___11 =
-                                term_to_doc (FStarC_Tactics_Types.goal_env g)
-                                  goal_ty2 in
-                              FStar_Pprint.op_Hat_Slash_Hat
-                                FStar_Pprint.colon uu___11 in
-                            FStar_Pprint.op_Hat_Slash_Hat w uu___10 in
-                          FStar_Pprint.op_Hat_Slash_Hat
-                            (FStar_Pprint.doc_of_string "|-") uu___9 in
-                        FStar_Pprint.group uu___8 in
-                      FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
-                    FStar_Pprint.op_Hat_Slash_Hat maybe_label uu___5 in
-                  FStar_Pprint.op_Hat_Hat
-                    (FStar_Pprint.group
-                       (FStar_Pprint.op_Hat_Slash_Hat
-                          (FStar_Pprint.doc_of_string kind) num)) uu___4 in
-                FStar_Pprint.hang (Prims.of_int 2) uu___3))
-let goal_to_string (kind : Prims.string)
-  (maybe_num : (Prims.int * Prims.int) FStar_Pervasives_Native.option)
-  (ps : FStarC_Tactics_Types.proofstate) (g : FStarC_Tactics_Types.goal) :
-  Prims.string=
-  let uu___ =
-    let uu___1 = goal_to_doc kind maybe_num ps g in
-    FStar_Pprint.render uu___1 in
-  Prims.strcat uu___ "\n"
-let goal_to_string_verbose (g : FStarC_Tactics_Types.goal) : Prims.string=
-  let uu___ =
-    let uu___1 =
-      FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_uvar
-        (g.FStarC_Tactics_Types.goal_ctx_uvar).FStarC_Syntax_Syntax.ctx_uvar_head in
-    FStar_Pprint.render uu___1 in
-  Prims.strcat uu___ "\n"
-let ps_to_doc (p : (Prims.string * FStarC_Tactics_Types.proofstate)) :
-  FStar_Pprint.document=
-  let uu___ = p in
-  match uu___ with
-  | (msg, ps) ->
-      let p_imp imp =
-        FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_uvar
-          (imp.FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head in
-      let n_active = FStarC_List.length ps.FStarC_Tactics_Types.goals in
-      let n_smt = FStarC_List.length ps.FStarC_Tactics_Types.smt_goals in
-      let n = n_active + n_smt in
-      let uu___1 =
-        let uu___2 =
-          let uu___3 =
-            FStarC_Class_Show.show FStarC_Class_Show.showable_int
-              ps.FStarC_Tactics_Types.depth in
-          FStarC_Format.fmt2 "State dump @ depth %s (%s):" uu___3 msg in
-        FStar_Pprint.doc_of_string uu___2 in
-      let uu___2 =
-        let uu___3 =
-          let uu___4 =
-            let uu___5 =
-              if
-                ps.FStarC_Tactics_Types.entry_range <>
-                  FStarC_Range_Type.dummyRange
-              then
-                let uu___6 =
-                  let uu___7 =
-                    FStarC_Class_PP.pp FStarC_Range_Ops.pretty_range
-                      ps.FStarC_Tactics_Types.entry_range in
-                  FStar_Pprint.op_Hat_Hat uu___7 FStar_Pprint.hardline in
-                FStar_Pprint.op_Hat_Hat
-                  (FStar_Pprint.doc_of_string "Location: ") uu___6
-              else FStar_Pprint.empty in
-            FStar_Pprint.group uu___5 in
-          let uu___5 =
-            let uu___6 =
-              let uu___7 =
-                let uu___8 = FStarC_Effect.op_Bang dbg_Imp in
-                if uu___8
-                then
-                  let uu___9 =
-                    let uu___10 =
-                      FStarC_Pprint.separate_map FStar_Pprint.comma p_imp
-                        ps.FStarC_Tactics_Types.all_implicits in
-                    FStar_Pprint.op_Hat_Hat uu___10 FStar_Pprint.hardline in
-                  FStar_Pprint.op_Hat_Hat
-                    (FStar_Pprint.doc_of_string "Imps: ") uu___9
-                else FStar_Pprint.empty in
-              FStar_Pprint.group uu___7 in
-            let uu___7 =
-              let uu___8 =
-                let uu___9 =
-                  let uu___10 =
-                    FStarC_List.mapi
-                      (fun i g ->
-                         goal_to_doc "Goal"
-                           (FStar_Pervasives_Native.Some
-                              ((Prims.int_one + i), n)) ps g)
-                      ps.FStarC_Tactics_Types.goals in
-                  let uu___11 =
-                    FStarC_List.mapi
-                      (fun i g ->
-                         goal_to_doc "SMT Goal"
-                           (FStar_Pervasives_Native.Some
-                              (((Prims.int_one + n_active) + i), n)) ps g)
-                      ps.FStarC_Tactics_Types.smt_goals in
-                  FStarC_List.op_At uu___10 uu___11 in
-                FStar_Pprint.separate FStar_Pprint.hardline uu___9 in
-              FStar_Pprint.op_Hat_Hat uu___8 FStar_Pprint.hardline in
-            FStar_Pprint.op_Hat_Hat uu___6 uu___7 in
-          FStar_Pprint.op_Hat_Hat uu___4 uu___5 in
-        FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu___3 in
-      FStar_Pprint.op_Hat_Hat uu___1 uu___2
-let ps_to_string (p : (Prims.string * FStarC_Tactics_Types.proofstate)) :
-  Prims.string=
-  let uu___ = p in
-  match uu___ with
-  | (msg, ps) ->
-      let uu___1 =
-        let uu___2 = ps_to_doc (msg, ps) in FStar_Pprint.render uu___2 in
-      Prims.strcat uu___1 "\n"
-let goal_to_json (g : FStarC_Tactics_Types.goal) : FStarC_Json.json=
-  let g_binders =
-    (g.FStarC_Tactics_Types.goal_ctx_uvar).FStarC_Syntax_Syntax.ctx_uvar_binders in
-  let g_type = FStarC_Tactics_Types.goal_type g in
-  let uu___ = unshadow g_binders g_type in
-  match uu___ with
-  | (g_binders1, g_type1) ->
-      let j_binders =
-        FStarC_Syntax_Print.binders_to_json
-          (FStarC_TypeChecker_Env.dsenv (FStarC_Tactics_Types.goal_env g))
-          g_binders1 in
-      let uu___1 =
-        let uu___2 =
-          let uu___3 =
-            let uu___4 =
-              let uu___5 =
-                let uu___6 =
-                  let uu___7 =
-                    let uu___8 =
-                      let uu___9 = FStarC_Tactics_Types.goal_witness g in
-                      term_to_string (FStarC_Tactics_Types.goal_env g) uu___9 in
-                    FStarC_Json.JsonStr uu___8 in
-                  ("witness", uu___7) in
-                let uu___7 =
-                  let uu___8 =
-                    let uu___9 =
-                      let uu___10 =
-                        term_to_string (FStarC_Tactics_Types.goal_env g)
-                          g_type1 in
-                      FStarC_Json.JsonStr uu___10 in
-                    ("type", uu___9) in
-                  [uu___8;
-                  ("label",
-                    (FStarC_Json.JsonStr (g.FStarC_Tactics_Types.label)))] in
-                uu___6 :: uu___7 in
-              FStarC_Json.JsonAssoc uu___5 in
-            ("goal", uu___4) in
-          [uu___3] in
-        ("hyps", j_binders) :: uu___2 in
-      FStarC_Json.JsonAssoc uu___1
-let ps_to_json (p : (Prims.string * FStarC_Tactics_Types.proofstate)) :
-  FStarC_Json.json=
-  let uu___ = p in
-  match uu___ with
-  | (msg, ps) ->
-      let uu___1 =
-        let uu___2 =
-          let uu___3 =
-            let uu___4 =
-              let uu___5 =
-                let uu___6 =
-                  let uu___7 =
-                    let uu___8 =
-                      FStarC_List.map goal_to_json
-                        ps.FStarC_Tactics_Types.goals in
-                    FStarC_Json.JsonList uu___8 in
-                  ("goals", uu___7) in
-                let uu___7 =
-                  let uu___8 =
-                    let uu___9 =
-                      let uu___10 =
-                        FStarC_List.map goal_to_json
-                          ps.FStarC_Tactics_Types.smt_goals in
-                      FStarC_Json.JsonList uu___10 in
-                    ("smt-goals", uu___9) in
-                  [uu___8] in
-                uu___6 :: uu___7 in
-              ("urgency",
-                (FStarC_Json.JsonInt (ps.FStarC_Tactics_Types.urgency))) ::
-                uu___5 in
-            ("depth", (FStarC_Json.JsonInt (ps.FStarC_Tactics_Types.depth)))
-              :: uu___4 in
-          ("label", (FStarC_Json.JsonStr msg)) :: uu___3 in
-        let uu___3 =
-          if
-            ps.FStarC_Tactics_Types.entry_range <>
-              FStarC_Range_Type.dummyRange
-          then
-            let uu___4 =
-              let uu___5 =
-                let uu___6 =
-                  FStarC_Range_Ops.refind_range
-                    ps.FStarC_Tactics_Types.entry_range in
-                FStarC_Range_Ops.json_of_def_range uu___6 in
-              ("location", uu___5) in
-            [uu___4]
-          else [] in
-        FStarC_List.op_At uu___2 uu___3 in
-      FStarC_Json.JsonAssoc uu___1
-let do_dump_proofstate (ps : FStarC_Tactics_Types.proofstate)
-  (msg : Prims.string) : unit=
-  let uu___ =
-    let uu___1 = let uu___2 = FStarC_Options.silent () in Prims.not uu___2 in
-    if uu___1 then true else FStarC_Options.interactive () in
-  if uu___
-  then
-    FStarC_Options.with_saved_options
-      (fun uu___1 ->
-         FStarC_Options.set_option "print_effect_args"
-           (FStarC_Options.Bool true);
-         FStarC_Format.print_generic "proof-state" ps_to_string ps_to_json
-           (msg, ps);
-         FStarC_Format.flush_stdout ())
-  else ()
+(* Generated by F* Custard extraction. Do not edit. *)
+[@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
+
+let goal_to_string_verbose (g : FStarC_Tactics_Types.goal) : string =
+  (let tmp = (FStarC_Syntax_Print.fStarC_Class_PP_pp__tuple3_p_uvar_tuple2_version_range (((g).FStarC_Tactics_Types.goal_ctx_uvar).FStarC_Syntax_Syntax.ctx_uvar_head, ((g).FStarC_Tactics_Types.goal_ctx_uvar).FStarC_Syntax_Syntax.ctx_uvar_head1, ((g).FStarC_Tactics_Types.goal_ctx_uvar).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
+  let tmp1 = (FStar_Pprint.render tmp) in
+  (Prims.strcat tmp1 "\n"))
+
+let dbg_Imp : (bool ref) =
+  (FStarC_Debug.get_toggle "Imp")
+
+let term_to_doc (e : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : FStar_Pprint.document =
+  (let tmp = (FStarC_Syntax_Print.term_to_doc' (e).FStarC_TypeChecker_Env.dsenv t) in
+  (FStar_Pprint.group tmp))
+
+let maybe_rename_binders (ps : FStarC_Tactics_Types.proofstate) (bs : (FStarC_Syntax_Syntax.binder) list) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((FStarC_Syntax_Syntax.binder) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
+  (let rename_binders = (fun subst bs1 -> (FStarC_List.map (fun tmp -> (let x = (tmp).FStarC_Syntax_Syntax.binder_bv in
+    let tmp1 = (FStarC_Syntax_Syntax.bv_to_name x) in
+    let y = (FStarC_Syntax_Subst.subst subst tmp1) in
+    let tmp2 = (FStarC_Syntax_Subst.compress y) in
+    let tmp3 = (tmp2).FStarC_Syntax_Syntax.n in
+    (match tmp3 with
+      | (FStarC_Syntax_Syntax.Tm_name (y1)) -> (let tmp4 = (tmp).FStarC_Syntax_Syntax.binder_bv in
+        let tmp5 = (FStarC_Syntax_Subst.subst subst (x).FStarC_Syntax_Syntax.sort) in
+        let tmp6 = { FStarC_Syntax_Syntax.ppname = (tmp4).FStarC_Syntax_Syntax.ppname;
+            index = (tmp4).FStarC_Syntax_Syntax.index;
+            sort = tmp5 } in
+        { FStarC_Syntax_Syntax.binder_bv = tmp6;
+          binder_qual = (tmp).FStarC_Syntax_Syntax.binder_qual;
+          binder_positivity = (tmp).FStarC_Syntax_Syntax.binder_positivity;
+          binder_attrs = (tmp).FStarC_Syntax_Syntax.binder_attrs })
+      | tmp4 -> (FStarC_Effect.failwith "Not a renaming")
+    ))) bs1)) in
+  let tmp = (FStarC_Options.tactic_raw_binders ()) in
+  (if tmp then (bs, t) else (let subst = (FStarC_TypeChecker_Primops_Base.psc_subst (ps).FStarC_Tactics_Types.psc) in
+  let bs1 = (rename_binders subst bs) in
+  let t1 = (FStarC_Syntax_Subst.subst subst t) in
+  (bs1, t1))))
+
+let rec unshadow__aux (b : string) (f : (string -> bool)) (i : Prims.int) : string =
+  (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
+  let tmp1 = (Prims.strcat "'" tmp) in
+  let t = (Prims.strcat b tmp1) in
+  (if (f t) then t else ((unshadow__aux b f) (Prims.op_Plus i (Prims.parse_int "1")))))
+
+let rec unshadow__go (sset : (FStarC_Syntax_Syntax.bv -> (string -> FStarC_Syntax_Syntax.bv))) (fresh_until : (string -> ((string -> bool) -> string))) (seen : (string) list) (subst : (FStarC_Syntax_Syntax.subst_elt) list) (bs : (FStarC_Syntax_Syntax.binder) list) (bs' : (FStarC_Syntax_Syntax.binder) list) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((FStarC_Syntax_Syntax.binder) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
+  (match bs with
+    | [] -> (let tmp = (FStarC_Syntax_Subst.subst subst t) in
+      ((FStarC_List.rev bs'), tmp))
+    | (b :: bs1) -> (let tmp = (FStarC_Syntax_Subst.subst_binders subst (b :: [])) in
+      let b1 = (match tmp with
+          | (b1 :: []) -> b1
+          | tmp1 -> (FStarC_Effect.failwith "impossible: unshadow subst_binders")
+        ) in
+      let tmp1 = ((b1).FStarC_Syntax_Syntax.binder_bv, (b1).FStarC_Syntax_Syntax.binder_qual) in
+      (match tmp1 with
+        | (bv0, q) -> (let tmp2 = (FStarC_Ident.fStarC_Class_Show_show__ident (bv0).FStarC_Syntax_Syntax.ppname) in
+          let nbs = (fresh_until tmp2 (fun s -> (not (FStarC_List.mem s seen)))) in
+          let bv = (sset bv0 nbs) in
+          let b2 = (FStarC_Syntax_Syntax.mk_binder_with_attrs bv q (b1).FStarC_Syntax_Syntax.binder_positivity (b1).FStarC_Syntax_Syntax.binder_attrs) in
+          let tmp3 = (FStarC_Syntax_Syntax.bv_to_name bv) in
+          let tmp4 = (bv0, tmp3) in
+          let tmp5 = (FStarC_Syntax_Syntax.NT ((match tmp4 with (custard_tup, _) -> custard_tup), (match tmp4 with (_, custard_tup) -> custard_tup))) in
+          let tmp6 = (tmp5 :: []) in
+          let tmp7 = (FStarC_List.op_At subst tmp6) in
+          ((unshadow__go sset fresh_until) (nbs :: seen) tmp7 bs1 (b2 :: bs') t))
+      ))
+  )
+
+let unshadow (bs : (FStarC_Syntax_Syntax.binder) list) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((FStarC_Syntax_Syntax.binder) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
+  (let sset = (fun bv s -> (let tmp = (FStarC_Syntax_Syntax.fStarC_Class_HasRange_pos__bv bv) in
+    let tmp1 = (s, tmp) in
+    let tmp2 = (FStarC_Ident.mk_ident tmp1) in
+    { FStarC_Syntax_Syntax.ppname = tmp2;
+      index = (bv).FStarC_Syntax_Syntax.index;
+      sort = (bv).FStarC_Syntax_Syntax.sort })) in
+  let fresh_until = (fun b f -> (if (f b) then b else ((unshadow__aux b f) (Prims.parse_int "0")))) in
+  ((unshadow__go sset fresh_until) [] [] bs [] t))
+
+let goal_to_doc (kind : string) (maybe_num : ((Prims.int * Prims.int)) option) (ps : FStarC_Tactics_Types.proofstate) (g : FStarC_Tactics_Types.goal) : FStar_Pprint.document =
+  (let tmp = (FStarC_Options.print_implicits ()) in
+  let w = (if tmp then (let tmp1 = (FStarC_Tactics_Types.goal_witness g) in
+    (term_to_doc (FStarC_Tactics_Types.goal_env g) tmp1)) else (let tmp1 = (FStarC_Tactics_Types.check_goal_solved' g) in
+    (match tmp1 with
+      | None -> (FStar_Pprint.doc_of_string "_")
+      | (Some (t)) -> (let tmp2 = (FStarC_Tactics_Types.goal_witness g) in
+        (term_to_doc (FStarC_Tactics_Types.goal_env g) tmp2))
+    ))) in
+  let num = (match maybe_num with
+      | None -> FStar_Pprint.empty
+      | (Some ((i, n))) -> (let tmp1 = (FStarC_Class_PP.fStarC_Class_PP_pp__int i) in
+        let tmp2 = (FStarC_Class_PP.fStarC_Class_PP_pp__int n) in
+        let tmp3 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.slash tmp2) in
+        (FStar_Pprint.op_Hat_Hat tmp1 tmp3))
+    ) in
+  let maybe_label = (if ((=) (g).FStarC_Tactics_Types.label "") then FStar_Pprint.empty else (FStar_Pprint.op_Hat_Hat (FStar_Pprint.break_ (Prims.parse_int "1")) (FStar_Pprint.parens (FStar_Pprint.doc_of_string (g).FStarC_Tactics_Types.label)))) in
+  let tmp1 = (FStarC_Tactics_Types.goal_type g) in
+  let tmp2 = (((g).FStarC_Tactics_Types.goal_ctx_uvar).FStarC_Syntax_Syntax.ctx_uvar_binders, tmp1) in
+  (match tmp2 with
+    | (goal_binders, goal_ty) -> (let tmp3 = (maybe_rename_binders ps goal_binders goal_ty) in
+      (match tmp3 with
+        | (goal_binders1, goal_ty1) -> (let tmp4 = (unshadow goal_binders1 goal_ty1) in
+          (match tmp4 with
+            | (goal_binders2, goal_ty2) -> (let pp_binder = (fun b -> (let tmp5 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__bv (b).FStarC_Syntax_Syntax.binder_bv) in
+                let tmp6 = (FStar_Pprint.op_Hat_Slash_Hat tmp5 FStar_Pprint.colon) in
+                let tmp7 = (FStar_Pprint.group tmp6) in
+                let tmp8 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
+                let tmp9 = (FStar_Pprint.op_Hat_Slash_Hat tmp7 tmp8) in
+                let tmp10 = (FStar_Pprint.parens tmp9) in
+                let tmp11 = (FStar_Pprint.hang (Prims.parse_int "2") tmp10) in
+                (FStar_Pprint.group tmp11))) in
+              let tmp5 = (FStarC_Pprint.separate_map (FStar_Pprint.op_Hat_Hat FStar_Pprint.comma (FStar_Pprint.break_ (Prims.parse_int "1"))) pp_binder goal_binders2) in
+              let tmp6 = (term_to_doc (FStarC_Tactics_Types.goal_env g) goal_ty2) in
+              let tmp7 = (FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon tmp6) in
+              let tmp8 = (FStar_Pprint.op_Hat_Slash_Hat w tmp7) in
+              let tmp9 = (FStar_Pprint.op_Hat_Slash_Hat (FStar_Pprint.doc_of_string "|-") tmp8) in
+              let tmp10 = (FStar_Pprint.group tmp9) in
+              let tmp11 = (FStar_Pprint.op_Hat_Slash_Hat tmp5 tmp10) in
+              let tmp12 = (FStar_Pprint.op_Hat_Slash_Hat maybe_label tmp11) in
+              let tmp13 = (FStar_Pprint.op_Hat_Hat (FStar_Pprint.group (FStar_Pprint.op_Hat_Slash_Hat (FStar_Pprint.doc_of_string kind) num)) tmp12) in
+              (FStar_Pprint.hang (Prims.parse_int "2") tmp13))
+          ))
+      ))
+  ))
+
+let ps_to_doc (p : (string * FStarC_Tactics_Types.proofstate)) : FStar_Pprint.document =
+  (match p with
+    | (msg, ps) -> (let p_imp = (fun imp -> (FStarC_Syntax_Print.fStarC_Class_PP_pp__tuple3_p_uvar_tuple2_version_range (((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head, ((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head1, ((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head2))) in
+      let n_active = (FStarC_List.length (ps).FStarC_Tactics_Types.goals) in
+      let n_smt = (FStarC_List.length (ps).FStarC_Tactics_Types.smt_goals) in
+      let n = (Prims.op_Plus n_active n_smt) in
+      let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int (ps).FStarC_Tactics_Types.depth) in
+      let tmp1 = (FStarC_Format.fmt2 "State dump @ depth %s (%s):" tmp msg) in
+      let tmp2 = (FStar_Pprint.doc_of_string tmp1) in
+      let tmp3 = (if ((<>) (ps).FStarC_Tactics_Types.entry_range FStarC_Range_Type.dummyRange) then (let tmp3 = (FStarC_Range_Ops.fStarC_Class_PP_pp__range (ps).FStarC_Tactics_Types.entry_range) in
+        let tmp4 = (FStar_Pprint.op_Hat_Hat tmp3 FStar_Pprint.hardline) in
+        (FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string "Location: ") tmp4)) else FStar_Pprint.empty) in
+      let tmp4 = (FStar_Pprint.group tmp3) in
+      let tmp5 = (!(dbg_Imp)) in
+      let tmp6 = (if tmp5 then (let tmp6 = (FStarC_Pprint.separate_map FStar_Pprint.comma p_imp (ps).FStarC_Tactics_Types.all_implicits) in
+        let tmp7 = (FStar_Pprint.op_Hat_Hat tmp6 FStar_Pprint.hardline) in
+        (FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string "Imps: ") tmp7)) else FStar_Pprint.empty) in
+      let tmp7 = (FStar_Pprint.group tmp6) in
+      let tmp8 = (FStarC_List.mapi (fun i g -> (goal_to_doc "Goal" (Some (((Prims.op_Plus (Prims.parse_int "1") i), n))) ps g)) (ps).FStarC_Tactics_Types.goals) in
+      let tmp9 = (FStarC_List.mapi (fun i g -> (goal_to_doc "SMT Goal" (Some (((Prims.op_Plus (Prims.op_Plus (Prims.parse_int "1") n_active) i), n))) ps g)) (ps).FStarC_Tactics_Types.smt_goals) in
+      let tmp10 = (FStarC_List.op_At tmp8 tmp9) in
+      let tmp11 = (FStar_Pprint.separate FStar_Pprint.hardline tmp10) in
+      let tmp12 = (FStar_Pprint.op_Hat_Hat tmp11 FStar_Pprint.hardline) in
+      let tmp13 = (FStar_Pprint.op_Hat_Hat tmp7 tmp12) in
+      let tmp14 = (FStar_Pprint.op_Hat_Hat tmp4 tmp13) in
+      let tmp15 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline tmp14) in
+      (FStar_Pprint.op_Hat_Hat tmp2 tmp15))
+  )
+
+let ps_to_string (p : (string * FStarC_Tactics_Types.proofstate)) : string =
+  (match p with
+    | (msg, ps) -> (let tmp = (ps_to_doc (msg, ps)) in
+      let tmp1 = (FStar_Pprint.render tmp) in
+      (Prims.strcat tmp1 "\n"))
+  )
+
+let term_to_string (e : FStarC_TypeChecker_Env.env) (x : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : string =
+  (FStarC_Syntax_Print.term_to_string' (e).FStarC_TypeChecker_Env.dsenv x)
+
+let goal_to_json (g : FStarC_Tactics_Types.goal) : FStarC_Json.json =
+  (let g_binders = ((g).FStarC_Tactics_Types.goal_ctx_uvar).FStarC_Syntax_Syntax.ctx_uvar_binders in
+  let g_type = (FStarC_Tactics_Types.goal_type g) in
+  let tmp = (unshadow g_binders g_type) in
+  (match tmp with
+    | (g_binders1, g_type1) -> (let j_binders = (FStarC_Syntax_Print.binders_to_json (FStarC_TypeChecker_Env.dsenv (FStarC_Tactics_Types.goal_env g)) g_binders1) in
+      let tmp1 = (FStarC_Tactics_Types.goal_witness g) in
+      let tmp2 = (term_to_string (FStarC_Tactics_Types.goal_env g) tmp1) in
+      let tmp3 = (FStarC_Json.JsonStr (tmp2)) in
+      let tmp4 = ("witness", tmp3) in
+      let tmp5 = (term_to_string (FStarC_Tactics_Types.goal_env g) g_type1) in
+      let tmp6 = (FStarC_Json.JsonStr (tmp5)) in
+      let tmp7 = ("type", tmp6) in
+      let tmp8 = (tmp7 :: (("label", (FStarC_Json.JsonStr ((g).FStarC_Tactics_Types.label))) :: [])) in
+      let tmp9 = (tmp4 :: tmp8) in
+      let tmp10 = (FStarC_Json.JsonAssoc (tmp9)) in
+      let tmp11 = ("goal", tmp10) in
+      let tmp12 = (tmp11 :: []) in
+      let tmp13 = (("hyps", j_binders) :: tmp12) in
+      (FStarC_Json.JsonAssoc (tmp13)))
+  ))
+
+let ps_to_json (p : (string * FStarC_Tactics_Types.proofstate)) : FStarC_Json.json =
+  (match p with
+    | (msg, ps) -> (let tmp = (FStarC_List.map goal_to_json (ps).FStarC_Tactics_Types.goals) in
+      let tmp1 = (FStarC_Json.JsonList (tmp)) in
+      let tmp2 = ("goals", tmp1) in
+      let tmp3 = (FStarC_List.map goal_to_json (ps).FStarC_Tactics_Types.smt_goals) in
+      let tmp4 = (FStarC_Json.JsonList (tmp3)) in
+      let tmp5 = ("smt-goals", tmp4) in
+      let tmp6 = (tmp5 :: []) in
+      let tmp7 = (tmp2 :: tmp6) in
+      let tmp8 = (("urgency", (FStarC_Json.JsonInt ((ps).FStarC_Tactics_Types.urgency))) :: tmp7) in
+      let tmp9 = (("depth", (FStarC_Json.JsonInt ((ps).FStarC_Tactics_Types.depth))) :: tmp8) in
+      let tmp10 = (("label", (FStarC_Json.JsonStr (msg))) :: tmp9) in
+      let tmp11 = (if ((<>) (ps).FStarC_Tactics_Types.entry_range FStarC_Range_Type.dummyRange) then (let tmp11 = (FStarC_Range_Ops.refind_range (ps).FStarC_Tactics_Types.entry_range) in
+        let tmp12 = (FStarC_Range_Ops.json_of_def_range tmp11) in
+        let tmp13 = ("location", tmp12) in
+        (tmp13 :: [])) else []) in
+      let tmp12 = (FStarC_List.op_At tmp10 tmp11) in
+      (FStarC_Json.JsonAssoc (tmp12)))
+  )
+
+let do_dump_proofstate (ps : FStarC_Tactics_Types.proofstate) (msg : string) : unit =
+  (let tmp = (FStarC_Options.silent ()) in
+  let tmp1 = (not tmp) in
+  let tmp2 = (if tmp1 then true else (FStarC_Options.interactive ())) in
+  (if tmp2 then (FStarC_Options.with_saved_options (fun tmp3 -> ((FStarC_Options.set_option "print_effect_args" (FStarC_Options.Bool (true)));
+  (FStarC_Format.print_generic "proof-state" ps_to_string ps_to_json (msg, ps));
+  (FStarC_Format.flush_stdout ())))) else ()))
+
+let goal_to_string (kind : string) (maybe_num : ((Prims.int * Prims.int)) option) (ps : FStarC_Tactics_Types.proofstate) (g : FStarC_Tactics_Types.goal) : string =
+  (let tmp = (goal_to_doc kind maybe_num ps g) in
+  let tmp1 = (FStar_Pprint.render tmp) in
+  (Prims.strcat tmp1 "\n"))
+

@@ -1,916 +1,538 @@
-open Prims
-type rel =
-  | EQ 
-  | SUB 
-  | SUBINV 
-let uu___is_EQ (projectee : rel) : Prims.bool=
-  match projectee with | EQ -> true | uu___ -> false
-let uu___is_SUB (projectee : rel) : Prims.bool=
-  match projectee with | SUB -> true | uu___ -> false
-let uu___is_SUBINV (projectee : rel) : Prims.bool=
-  match projectee with | SUBINV -> true | uu___ -> false
-type rank_t =
-  | Rigid_rigid 
-  | Flex_rigid_eq 
-  | Flex_flex_pattern_eq 
-  | Flex_rigid 
-  | Rigid_flex 
-  | Flex_flex 
-let uu___is_Rigid_rigid (projectee : rank_t) : Prims.bool=
-  match projectee with | Rigid_rigid -> true | uu___ -> false
-let uu___is_Flex_rigid_eq (projectee : rank_t) : Prims.bool=
-  match projectee with | Flex_rigid_eq -> true | uu___ -> false
-let uu___is_Flex_flex_pattern_eq (projectee : rank_t) : Prims.bool=
-  match projectee with | Flex_flex_pattern_eq -> true | uu___ -> false
-let uu___is_Flex_rigid (projectee : rank_t) : Prims.bool=
-  match projectee with | Flex_rigid -> true | uu___ -> false
-let uu___is_Rigid_flex (projectee : rank_t) : Prims.bool=
-  match projectee with | Rigid_flex -> true | uu___ -> false
-let uu___is_Flex_flex (projectee : rank_t) : Prims.bool=
-  match projectee with | Flex_flex -> true | uu___ -> false
-type 'a problem =
-  {
-  pid: Prims.int ;
-  lhs: 'a ;
-  relation: rel ;
-  rhs: 'a ;
-  element: FStarC_Syntax_Syntax.bv FStar_Pervasives_Native.option ;
-  logical_guard: FStarC_Syntax_Syntax.term ;
-  logical_guard_uvar: FStarC_Syntax_Syntax.ctx_uvar ;
-  reason: Prims.string Prims.list ;
-  loc: FStarC_Range_Type.range ;
-  rank: rank_t FStar_Pervasives_Native.option ;
-  logical: Prims.bool }
-let __proj__Mkproblem__item__pid (projectee : 'a problem) : Prims.int=
-  match projectee with
-  | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
-      reason; loc; rank; logical;_} -> pid
-let __proj__Mkproblem__item__lhs (projectee : 'a problem) : 'a=
-  match projectee with
-  | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
-      reason; loc; rank; logical;_} -> lhs
-let __proj__Mkproblem__item__relation (projectee : 'a problem) : rel=
-  match projectee with
-  | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
-      reason; loc; rank; logical;_} -> relation
-let __proj__Mkproblem__item__rhs (projectee : 'a problem) : 'a=
-  match projectee with
-  | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
-      reason; loc; rank; logical;_} -> rhs
-let __proj__Mkproblem__item__element (projectee : 'a problem) :
-  FStarC_Syntax_Syntax.bv FStar_Pervasives_Native.option=
-  match projectee with
-  | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
-      reason; loc; rank; logical;_} -> element
-let __proj__Mkproblem__item__logical_guard (projectee : 'a problem) :
-  FStarC_Syntax_Syntax.term=
-  match projectee with
-  | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
-      reason; loc; rank; logical;_} -> logical_guard
-let __proj__Mkproblem__item__logical_guard_uvar (projectee : 'a problem) :
-  FStarC_Syntax_Syntax.ctx_uvar=
-  match projectee with
-  | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
-      reason; loc; rank; logical;_} -> logical_guard_uvar
-let __proj__Mkproblem__item__reason (projectee : 'a problem) :
-  Prims.string Prims.list=
-  match projectee with
-  | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
-      reason; loc; rank; logical;_} -> reason
-let __proj__Mkproblem__item__loc (projectee : 'a problem) :
-  FStarC_Range_Type.range=
-  match projectee with
-  | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
-      reason; loc; rank; logical;_} -> loc
-let __proj__Mkproblem__item__rank (projectee : 'a problem) :
-  rank_t FStar_Pervasives_Native.option=
-  match projectee with
-  | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
-      reason; loc; rank; logical;_} -> rank
-let __proj__Mkproblem__item__logical (projectee : 'a problem) : Prims.bool=
-  match projectee with
-  | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
-      reason; loc; rank; logical;_} -> logical
-type prob =
-  | TProb of FStarC_Syntax_Syntax.typ problem 
-  | CProb of FStarC_Syntax_Syntax.comp problem 
-let uu___is_TProb (projectee : prob) : Prims.bool=
-  match projectee with | TProb _0 -> true | uu___ -> false
-let __proj__TProb__item___0 (projectee : prob) :
-  FStarC_Syntax_Syntax.typ problem= match projectee with | TProb _0 -> _0
-let uu___is_CProb (projectee : prob) : Prims.bool=
-  match projectee with | CProb _0 -> true | uu___ -> false
-let __proj__CProb__item___0 (projectee : prob) :
-  FStarC_Syntax_Syntax.comp problem= match projectee with | CProb _0 -> _0
-type prob_t = prob
-let as_tprob (p : prob) : FStarC_Syntax_Syntax.typ problem=
-  match p with
-  | TProb p1 -> p1
-  | uu___ -> FStarC_Effect.failwith "Expected a TProb"
-type probs = prob Prims.list
+(* Generated by F* Custard extraction. Do not edit. *)
+[@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
+
 type guard_formula =
-  | Trivial 
-  | NonTrivial of FStarC_Syntax_Syntax.formula 
-let uu___is_Trivial (projectee : guard_formula) : Prims.bool=
-  match projectee with | Trivial -> true | uu___ -> false
-let uu___is_NonTrivial (projectee : guard_formula) : Prims.bool=
-  match projectee with | NonTrivial _0 -> true | uu___ -> false
-let __proj__NonTrivial__item___0 (projectee : guard_formula) :
-  FStarC_Syntax_Syntax.formula= match projectee with | NonTrivial _0 -> _0
-let showable_guard_formula : guard_formula FStarC_Class_Show.showable=
-  {
-    FStarC_Class_Show.show =
-      (fun uu___ ->
-         match uu___ with
-         | Trivial -> "Trivial"
-         | NonTrivial f ->
-             let uu___1 =
-               FStarC_Class_Show.show FStarC_Syntax_Print.showable_term f in
-             Prims.strcat "NonTrivial " uu___1)
-  }
+  | Trivial
+  | NonTrivial of (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax
+
+
 type deferred_reason =
-  | Deferred_univ_constraint 
-  | Deferred_occur_check_failed 
-  | Deferred_first_order_heuristic_failed 
-  | Deferred_flex 
-  | Deferred_free_names_check_failed 
-  | Deferred_not_a_pattern 
-  | Deferred_flex_flex_nonpattern 
-  | Deferred_delay_match_heuristic 
-  | Deferred_to_user_tac 
-let uu___is_Deferred_univ_constraint (projectee : deferred_reason) :
-  Prims.bool=
-  match projectee with | Deferred_univ_constraint -> true | uu___ -> false
-let uu___is_Deferred_occur_check_failed (projectee : deferred_reason) :
-  Prims.bool=
-  match projectee with | Deferred_occur_check_failed -> true | uu___ -> false
-let uu___is_Deferred_first_order_heuristic_failed
-  (projectee : deferred_reason) : Prims.bool=
-  match projectee with
-  | Deferred_first_order_heuristic_failed -> true
-  | uu___ -> false
-let uu___is_Deferred_flex (projectee : deferred_reason) : Prims.bool=
-  match projectee with | Deferred_flex -> true | uu___ -> false
-let uu___is_Deferred_free_names_check_failed (projectee : deferred_reason) :
-  Prims.bool=
-  match projectee with
-  | Deferred_free_names_check_failed -> true
-  | uu___ -> false
-let uu___is_Deferred_not_a_pattern (projectee : deferred_reason) :
-  Prims.bool=
-  match projectee with | Deferred_not_a_pattern -> true | uu___ -> false
-let uu___is_Deferred_flex_flex_nonpattern (projectee : deferred_reason) :
-  Prims.bool=
-  match projectee with
-  | Deferred_flex_flex_nonpattern -> true
-  | uu___ -> false
-let uu___is_Deferred_delay_match_heuristic (projectee : deferred_reason) :
-  Prims.bool=
-  match projectee with
-  | Deferred_delay_match_heuristic -> true
-  | uu___ -> false
-let uu___is_Deferred_to_user_tac (projectee : deferred_reason) : Prims.bool=
-  match projectee with | Deferred_to_user_tac -> true | uu___ -> false
-let showable_deferred_reason : deferred_reason FStarC_Class_Show.showable=
-  {
-    FStarC_Class_Show.show =
-      (fun uu___ ->
-         match uu___ with
-         | Deferred_univ_constraint -> "Deferred_univ_constraint"
-         | Deferred_occur_check_failed -> "Deferred_occur_check_failed"
-         | Deferred_first_order_heuristic_failed ->
-             "Deferred_first_order_heuristic_failed"
-         | Deferred_flex -> "Deferred_flex"
-         | Deferred_free_names_check_failed ->
-             "Deferred_free_names_check_failed"
-         | Deferred_not_a_pattern -> "Deferred_not_a_pattern"
-         | Deferred_flex_flex_nonpattern -> "Deferred_flex_flex_nonpattern"
-         | Deferred_delay_match_heuristic -> "Deferred_delay_match_heuristic"
-         | Deferred_to_user_tac -> "Deferred_to_user_tac")
-  }
-type deferred = (deferred_reason * Prims.string * prob) FStarC_CList.clist
-type univ_ineq =
-  (FStarC_Syntax_Syntax.universe * FStarC_Syntax_Syntax.universe)
-type identifier_info =
-  {
-  identifier:
-    (FStarC_Syntax_Syntax.bv, FStarC_Syntax_Syntax.fv)
-      FStar_Pervasives.either
-    ;
-  identifier_ty: FStarC_Syntax_Syntax.typ ;
-  identifier_range: FStarC_Range_Type.range }
-let __proj__Mkidentifier_info__item__identifier (projectee : identifier_info)
-  :
-  (FStarC_Syntax_Syntax.bv, FStarC_Syntax_Syntax.fv) FStar_Pervasives.either=
-  match projectee with
-  | { identifier; identifier_ty; identifier_range;_} -> identifier
-let __proj__Mkidentifier_info__item__identifier_ty
-  (projectee : identifier_info) : FStarC_Syntax_Syntax.typ=
-  match projectee with
-  | { identifier; identifier_ty; identifier_range;_} -> identifier_ty
-let __proj__Mkidentifier_info__item__identifier_range
-  (projectee : identifier_info) : FStarC_Range_Type.range=
-  match projectee with
-  | { identifier; identifier_ty; identifier_range;_} -> identifier_range
-type id_info_by_col = (Prims.int * identifier_info) Prims.list
-type col_info_by_row = id_info_by_col FStarC_PIMap.t
-type row_info_by_file = col_info_by_row FStarC_PSMap.t
-type id_info_table =
-  {
-  id_info_enabled: Prims.bool ;
-  id_info_db: row_info_by_file ;
-  id_info_buffer: identifier_info Prims.list }
-let __proj__Mkid_info_table__item__id_info_enabled
-  (projectee : id_info_table) : Prims.bool=
-  match projectee with
-  | { id_info_enabled; id_info_db; id_info_buffer;_} -> id_info_enabled
-let __proj__Mkid_info_table__item__id_info_db (projectee : id_info_table) :
-  row_info_by_file=
-  match projectee with
-  | { id_info_enabled; id_info_db; id_info_buffer;_} -> id_info_db
-let __proj__Mkid_info_table__item__id_info_buffer (projectee : id_info_table)
-  : identifier_info Prims.list=
-  match projectee with
-  | { id_info_enabled; id_info_db; id_info_buffer;_} -> id_info_buffer
-let check_uvar_ctx_invariant (reason : Prims.string)
-  (r : FStarC_Range_Type.range) (should_check : Prims.bool)
-  (g : FStarC_Syntax_Syntax.gamma) (bs : FStarC_Syntax_Syntax.binders) :
-  unit=
-  let fail uu___ =
-    let uu___1 =
-      let uu___2 = FStarC_Range_Ops.string_of_range r in
-      let uu___3 =
-        FStarC_Class_Show.show
-          (FStarC_Class_Show.show_list FStarC_Syntax_Print.showable_binding)
-          g in
-      let uu___4 =
-        FStarC_Class_Show.show
-          (FStarC_Class_Show.show_list FStarC_Syntax_Print.showable_binder)
-          bs in
-      FStarC_Format.fmt5
-        "Invariant violation: gamma and binders are out of sync\n\treason=%s, range=%s, should_check=%s\n\t\n                               gamma=%s\n\tbinders=%s\n"
-        reason uu___2 (if should_check then "true" else "false") uu___3
-        uu___4 in
-    FStarC_Effect.failwith uu___1 in
-  if Prims.not should_check
-  then ()
-  else
-    (let uu___ =
-       let uu___1 =
-         FStarC_Util.prefix_until
-           (fun uu___2 ->
-              match uu___2 with
-              | FStarC_Syntax_Syntax.Binding_var uu___3 -> true
-              | uu___3 -> false) g in
-       (uu___1, bs) in
-     match uu___ with
-     | (FStar_Pervasives_Native.None, []) -> ()
-     | (FStar_Pervasives_Native.Some (uu___1, hd, gamma_tail),
-        uu___2::uu___3) ->
-         let uu___4 = FStarC_Util.prefix bs in
-         (match uu___4 with
-          | (uu___5, x) ->
-              (match hd with
-               | FStarC_Syntax_Syntax.Binding_var x' when
-                   FStarC_Syntax_Syntax.bv_eq
-                     x.FStarC_Syntax_Syntax.binder_bv x'
-                   -> ()
-               | uu___6 -> fail ()))
-     | uu___1 -> fail ())
-let mk_by_tactic (tac : FStarC_Syntax_Syntax.term)
-  (f : FStarC_Syntax_Syntax.term) : FStarC_Syntax_Syntax.term=
-  let t_by_tactic =
-    let uu___ =
-      FStarC_Syntax_Syntax.tabbrev FStarC_Parser_Const.by_tactic_lid in
-    FStarC_Syntax_Syntax.mk_Tm_uinst uu___ [FStarC_Syntax_Syntax.U_zero] in
-  FStarC_Syntax_Syntax.mk_Tm_app t_by_tactic
-    [FStarC_Syntax_Syntax.as_arg tac; FStarC_Syntax_Syntax.as_arg f]
-    FStarC_Range_Type.dummyRange
-let rec delta_depth_greater_than (l : FStarC_Syntax_Syntax.delta_depth)
-  (m : FStarC_Syntax_Syntax.delta_depth) : Prims.bool=
-  match (l, m) with
-  | (FStarC_Syntax_Syntax.Delta_equational_at_level i,
-     FStarC_Syntax_Syntax.Delta_equational_at_level j) -> i > j
-  | (FStarC_Syntax_Syntax.Delta_constant_at_level i,
-     FStarC_Syntax_Syntax.Delta_constant_at_level j) -> i > j
-  | (FStarC_Syntax_Syntax.Delta_abstract d, uu___) ->
-      delta_depth_greater_than d m
-  | (uu___, FStarC_Syntax_Syntax.Delta_abstract d) ->
-      delta_depth_greater_than l d
-  | (FStarC_Syntax_Syntax.Delta_equational_at_level uu___, uu___1) -> true
-  | (uu___, FStarC_Syntax_Syntax.Delta_equational_at_level uu___1) -> false
-let rec decr_delta_depth (uu___ : FStarC_Syntax_Syntax.delta_depth) :
-  FStarC_Syntax_Syntax.delta_depth FStar_Pervasives_Native.option=
-  match uu___ with
-  | FStarC_Syntax_Syntax.Delta_constant_at_level uu___1 when
-      uu___1 = Prims.int_zero -> FStar_Pervasives_Native.None
-  | FStarC_Syntax_Syntax.Delta_equational_at_level uu___1 when
-      uu___1 = Prims.int_zero -> FStar_Pervasives_Native.None
-  | FStarC_Syntax_Syntax.Delta_constant_at_level i ->
-      FStar_Pervasives_Native.Some
-        (FStarC_Syntax_Syntax.Delta_constant_at_level (i - Prims.int_one))
-  | FStarC_Syntax_Syntax.Delta_equational_at_level i ->
-      FStar_Pervasives_Native.Some
-        (FStarC_Syntax_Syntax.Delta_equational_at_level (i - Prims.int_one))
-  | FStarC_Syntax_Syntax.Delta_abstract d -> decr_delta_depth d
-let insert_col_info (col : Prims.int) (info : identifier_info)
-  (col_infos : (Prims.int * identifier_info) Prims.list) :
-  (Prims.int * identifier_info) Prims.list=
-  let rec __insert aux rest =
-    match rest with
-    | [] -> (aux, [(col, info)])
-    | (c, i)::rest' ->
-        if col < c
-        then (aux, ((col, info) :: rest))
-        else __insert ((c, i) :: aux) rest' in
-  let uu___ = __insert [] col_infos in
-  match uu___ with | (l, r) -> FStarC_List.op_At (FStarC_List.rev l) r
-let find_nearest_preceding_col_info (col : Prims.int)
-  (col_infos : (Prims.int * identifier_info) Prims.list) :
-  identifier_info FStar_Pervasives_Native.option=
-  let rec aux out uu___ =
-    match uu___ with
-    | [] -> out
-    | (c, i)::rest ->
-        if c > col then out else aux (FStar_Pervasives_Native.Some i) rest in
-  aux FStar_Pervasives_Native.None col_infos
-let id_info_table_empty : id_info_table=
-  {
-    id_info_enabled = false;
-    id_info_db = (FStarC_PSMap.empty ());
-    id_info_buffer = []
-  }
-let print_identifier_info (info : identifier_info) : Prims.string=
-  let uu___ = FStarC_Range_Ops.string_of_range info.identifier_range in
-  let uu___1 =
-    match info.identifier with
-    | FStar_Pervasives.Inl x ->
-        FStarC_Class_Show.show FStarC_Syntax_Print.showable_bv x
-    | FStar_Pervasives.Inr fv ->
-        FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_fv fv in
-  let uu___2 =
-    FStarC_Class_Show.show FStarC_Syntax_Print.showable_term
-      info.identifier_ty in
-  FStarC_Format.fmt3 "id info { %s, %s : %s}" uu___ uu___1 uu___2
-let id_info__insert
-  (ty_map :
-    FStarC_Syntax_Syntax.typ ->
-      FStarC_Syntax_Syntax.typ FStar_Pervasives_Native.option)
-  (db :
-    (Prims.int * identifier_info) Prims.list FStarC_PIMap.t FStarC_PSMap.t)
-  (info : identifier_info) :
-  (Prims.int * identifier_info) Prims.list FStarC_PIMap.t FStarC_PSMap.t=
-  let range = info.identifier_range in
-  let use_range =
-    FStarC_Range_Type.set_def_range range (FStarC_Range_Type.use_range range) in
-  let id_ty =
-    match info.identifier with
-    | FStar_Pervasives.Inr uu___ -> ty_map info.identifier_ty
-    | FStar_Pervasives.Inl x -> ty_map info.identifier_ty in
-  match id_ty with
-  | FStar_Pervasives_Native.None -> db
-  | FStar_Pervasives_Native.Some id_ty1 ->
-      let info1 =
-        {
-          identifier = (info.identifier);
+  | Deferred_univ_constraint
+  | Deferred_occur_check_failed
+  | Deferred_first_order_heuristic_failed
+  | Deferred_flex
+  | Deferred_free_names_check_failed
+  | Deferred_not_a_pattern
+  | Deferred_flex_flex_nonpattern
+  | Deferred_delay_match_heuristic
+  | Deferred_to_user_tac
+
+
+type rel =
+  | EQ
+  | SUB
+  | SUBINV
+
+
+type rank_t =
+  | Rigid_rigid
+  | Flex_rigid_eq
+  | Flex_flex_pattern_eq
+  | Flex_rigid
+  | Rigid_flex
+  | Flex_flex
+
+
+type 'u_'a problem = {
+  pid : Prims.int;
+  lhs : 'u_'a;
+  relation : rel;
+  rhs : 'u_'a;
+  element : (FStarC_Syntax_Syntax.bv) option;
+  logical_guard : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax;
+  logical_guard_uvar : FStarC_Syntax_Syntax.ctx_uvar;
+  reason : (string) list;
+  loc : FStarC_Range_Type.range;
+  rank : (rank_t) option;
+  logical : bool;
+}
+
+type prob =
+  | TProb of ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) problem
+  | CProb of ((FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) problem
+
+
+type implicit = {
+  imp_reason : string;
+  imp_uvar : FStarC_Syntax_Syntax.ctx_uvar;
+  imp_tm : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax;
+  imp_range : FStarC_Range_Type.range;
+}
+
+type guard_t = {
+  guard_f : guard_formula;
+  deferred_to_tac : ((deferred_reason * string * prob)) FStarC_CList.clist;
+  deferred : ((deferred_reason * string * prob)) FStarC_CList.clist;
+  univ_ineqs : (FStarC_Syntax_Syntax.universe) FStarC_CList.clist;
+  univ_ineqs1 : ((FStarC_Syntax_Syntax.universe * FStarC_Syntax_Syntax.universe)) FStarC_CList.clist;
+  implicits : (implicit) FStarC_CList.clist;
+}
+
+type identifier_info = {
+  identifier : (FStarC_Syntax_Syntax.bv, FStarC_Syntax_Syntax.fv) FStar_Pervasives.either;
+  identifier_ty : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax;
+  identifier_range : FStarC_Range_Type.range;
+}
+
+type id_info_table = {
+  id_info_enabled : bool;
+  id_info_db : ((((Prims.int * identifier_info)) list) FStarC_PIMap.t) FStarC_PSMap.t;
+  id_info_buffer : (identifier_info) list;
+}
+
+let rec delta_depth_greater_than (l : FStarC_Syntax_Syntax.delta_depth) (m : FStarC_Syntax_Syntax.delta_depth) : bool =
+  (match (l, m) with
+    | ((FStarC_Syntax_Syntax.Delta_equational_at_level (i)), (FStarC_Syntax_Syntax.Delta_equational_at_level (j))) -> (Prims.op_Greater i j)
+    | ((FStarC_Syntax_Syntax.Delta_constant_at_level (i)), (FStarC_Syntax_Syntax.Delta_constant_at_level (j))) -> (Prims.op_Greater i j)
+    | ((FStarC_Syntax_Syntax.Delta_abstract (d)), tmp) -> (delta_depth_greater_than d m)
+    | (tmp, (FStarC_Syntax_Syntax.Delta_abstract (d))) -> (delta_depth_greater_than l d)
+    | ((FStarC_Syntax_Syntax.Delta_equational_at_level (tmp)), tmp1) -> true
+    | (tmp, (FStarC_Syntax_Syntax.Delta_equational_at_level (tmp1))) -> false
+  )
+
+let fStarC_Class_Listlike_view__implicit_clist_implicit (tmp : (implicit) FStarC_CList.clist) : (implicit, (implicit) FStarC_CList.clist) FStarC_Class_Listlike.view_t =
+  (FStarC_CList.view tmp)
+
+let rec fStarC_Class_Listlike_to_list__implicit_clist_implicit (l : (implicit) FStarC_CList.clist) : (implicit) list =
+  (match (fStarC_Class_Listlike_view__implicit_clist_implicit l) with
+    | FStarC_Class_Listlike.VNil -> []
+    | (FStarC_Class_Listlike.VCons (x, xs)) -> (let tmp = (fStarC_Class_Listlike_to_list__implicit_clist_implicit xs) in
+      (x :: tmp))
+  )
+
+let fStarC_Class_Listlike_view__tuple3_deferred_reason_string_prob (tmp : ((deferred_reason * string * prob)) FStarC_CList.clist) : ((deferred_reason * string * prob), ((deferred_reason * string * prob)) FStarC_CList.clist) FStarC_Class_Listlike.view_t =
+  (FStarC_CList.view tmp)
+
+let rec fStarC_Class_Listlike_to_list__tuple3_deferred_reason_string_prob (l : ((deferred_reason * string * prob)) FStarC_CList.clist) : ((deferred_reason * string * prob)) list =
+  (match (fStarC_Class_Listlike_view__tuple3_deferred_reason_string_prob l) with
+    | FStarC_Class_Listlike.VNil -> []
+    | (FStarC_Class_Listlike.VCons (x, xs)) -> (let tmp = (fStarC_Class_Listlike_to_list__tuple3_deferred_reason_string_prob xs) in
+      (x :: tmp))
+  )
+
+let fStarC_Class_Listlike_empty__tuple4_int_deferred_reason_ref_either_prob : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist =
+  FStarC_CList.CNil
+
+let fStarC_Class_Listlike_empty__implicit_clist_implicit : (implicit) FStarC_CList.clist =
+  FStarC_CList.CNil
+
+let fStarC_Class_Monoid_mplus__clist_tuple3_deferred_reason_string_prob (tmp : ((deferred_reason * string * prob)) FStarC_CList.clist) (ys : ((deferred_reason * string * prob)) FStarC_CList.clist) : ((deferred_reason * string * prob)) FStarC_CList.clist =
+  (FStarC_CList.ccat tmp ys)
+
+let fStarC_Class_Monoid_op_Plus_Plus__clist_tuple3_deferred_reason_string_prob (tmp : ((deferred_reason * string * prob)) FStarC_CList.clist) (ys : ((deferred_reason * string * prob)) FStarC_CList.clist) : ((deferred_reason * string * prob)) FStarC_CList.clist =
+  (fStarC_Class_Monoid_mplus__clist_tuple3_deferred_reason_string_prob tmp ys)
+
+let fStarC_Class_Monoid_mplus__clist_implicit (tmp : (implicit) FStarC_CList.clist) (ys : (implicit) FStarC_CList.clist) : (implicit) FStarC_CList.clist =
+  (FStarC_CList.ccat tmp ys)
+
+let fStarC_Class_Monoid_op_Plus_Plus__clist_implicit (tmp : (implicit) FStarC_CList.clist) (ys : (implicit) FStarC_CList.clist) : (implicit) FStarC_CList.clist =
+  (fStarC_Class_Monoid_mplus__clist_implicit tmp ys)
+
+let check_uvar_ctx_invariant (reason : string) (r : FStarC_Range_Type.range) (should_check : bool) (g : (FStarC_Syntax_Syntax.binding) list) (bs : (FStarC_Syntax_Syntax.binder) list) : unit =
+  (let fail = (fun tmp -> (let tmp1 = (FStarC_Range_Ops.string_of_range r) in
+    let tmp2 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_binding g) in
+    let tmp3 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_binder bs) in
+    let tmp4 = (FStarC_Format.fmt5 "Invariant violation: gamma and binders are out of sync\n\treason=%s, range=%s, should_check=%s\n\t\n                               gamma=%s\n\tbinders=%s\n" reason tmp1 (if should_check then "true" else "false") tmp2 tmp3) in
+    (FStarC_Effect.failwith tmp4))) in
+  (if (not should_check) then () else (let tmp = (FStarC_Util.prefix_until (fun tmp -> (match tmp with
+      | (FStarC_Syntax_Syntax.Binding_var (tmp1)) -> true
+      | tmp1 -> false
+    )) g) in
+  let tmp1 = (tmp, bs) in
+  (match tmp1 with
+    | (None, []) -> ()
+    | ((Some ((tmp2, hd, gamma_tail))), (tmp3 :: tmp4)) -> (let tmp5 = (FStarC_Util.prefix bs) in
+      (match tmp5 with
+        | (tmp6, x) -> (match hd with
+            | (FStarC_Syntax_Syntax.Binding_var (x')) when (FStarC_Syntax_Syntax.bv_eq (x).FStarC_Syntax_Syntax.binder_bv x') -> ()
+            | tmp7 -> (fail ())
+          )
+      ))
+    | tmp2 -> (fail ())
+  ))))
+
+let fStarC_Class_Listlike_empty__tuple3_deferred_reason_string_prob : ((deferred_reason * string * prob)) FStarC_CList.clist =
+  FStarC_CList.CNil
+
+let trivial_guard : guard_t =
+  { guard_f = Trivial;
+    deferred_to_tac = fStarC_Class_Listlike_empty__tuple3_deferred_reason_string_prob;
+    deferred = fStarC_Class_Listlike_empty__tuple3_deferred_reason_string_prob;
+    univ_ineqs = FStarC_CList.fStarC_Class_Listlike_empty__universe_clist_universe;
+    univ_ineqs1 = FStarC_CList.fStarC_Class_Listlike_empty__tuple2_universe_universe_5;
+    implicits = fStarC_Class_Listlike_empty__implicit_clist_implicit }
+
+let fStarC_Class_Listlike_cons__implicit_clist_implicit (tmp : implicit) (tmp1 : (implicit) FStarC_CList.clist) : (implicit) FStarC_CList.clist =
+  (FStarC_CList.CCons (tmp, tmp1))
+
+let rec fStarC_Class_Listlike_from_list__implicit_clist_implicit (l : (implicit) list) : (implicit) FStarC_CList.clist =
+  (match l with
+    | [] -> fStarC_Class_Listlike_empty__implicit_clist_implicit
+    | (x :: xs) -> (let tmp = (fStarC_Class_Listlike_from_list__implicit_clist_implicit xs) in
+      (fStarC_Class_Listlike_cons__implicit_clist_implicit x tmp))
+  )
+
+let fStarC_Class_Listlike_view__implicit_clist_implicit_5 (tmp : (implicit) FStarC_CList.clist) : (implicit, (implicit) FStarC_CList.clist) FStarC_Class_Listlike.view_t =
+  (FStarC_CList.view tmp)
+
+let rec fStarC_Class_Listlike_to_list__implicit_clist_implicit_4 (l : (implicit) FStarC_CList.clist) : (implicit) list =
+  (match (fStarC_Class_Listlike_view__implicit_clist_implicit_5 l) with
+    | FStarC_Class_Listlike.VNil -> []
+    | (FStarC_Class_Listlike.VCons (x, xs)) -> (let tmp = (fStarC_Class_Listlike_to_list__implicit_clist_implicit_4 xs) in
+      (x :: tmp))
+  )
+
+let rec check_trivial (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : guard_formula =
+  (let tmp = (FStarC_Syntax_Util.unmeta t) in
+  let tmp1 = (FStarC_Syntax_Util.head_and_args_full tmp) in
+  (match tmp1 with
+    | (hd, args) -> (let tmp2 = (FStarC_Syntax_Util.unmeta hd) in
+      let tmp3 = (FStarC_Syntax_Util.un_uinst tmp2) in
+      let tmp4 = (tmp3).FStarC_Syntax_Syntax.n in
+      let tmp5 = (tmp4, args) in
+      (match tmp5 with
+        | ((FStarC_Syntax_Syntax.Tm_fvar (tc)), []) when (FStarC_Syntax_Syntax.fv_eq_lid tc FStarC_Parser_Const.true_lid) -> Trivial
+        | ((FStarC_Syntax_Syntax.Tm_fvar (sq)), ((v, tmp6) :: [])) when (FStarC_Syntax_Syntax.fv_eq_lid sq FStarC_Parser_Const.squash_lid) -> (let tmp7 = (check_trivial v) in
+          (match tmp7 with
+            | Trivial -> Trivial
+            | tmp8 -> (NonTrivial (t))
+          ))
+        | tmp6 -> (NonTrivial (t))
+      ))
+  ))
+
+let fStarC_Class_PP_pp__guard_t (tmp : guard_t) : FStar_Pprint.document =
+  (match (tmp).guard_f with
+    | Trivial -> (FStar_Pprint.doc_of_string "Trivial")
+    | (NonTrivial (f)) -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' f) in
+      (FStar_Pprint.op_Hat_Slash_Hat (FStar_Pprint.doc_of_string "NonTrivial") tmp1))
+  )
+
+let binop_guard (f : (guard_formula -> (guard_formula -> guard_formula))) (g1 : guard_t) (g2 : guard_t) : guard_t =
+  (let tmp = (f (g1).guard_f (g2).guard_f) in
+  let tmp1 = (fStarC_Class_Monoid_op_Plus_Plus__clist_tuple3_deferred_reason_string_prob (g1).deferred_to_tac (g2).deferred_to_tac) in
+  let tmp2 = (fStarC_Class_Monoid_op_Plus_Plus__clist_tuple3_deferred_reason_string_prob (g1).deferred (g2).deferred) in
+  let tmp3 = (FStarC_CList.fStarC_Class_Monoid_op_Plus_Plus__clist_universe (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst ((g1).univ_ineqs, (g1).univ_ineqs1)) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst ((g2).univ_ineqs, (g2).univ_ineqs1))) in
+  let tmp4 = (FStarC_CList.fStarC_Class_Monoid_op_Plus_Plus__clist_tuple2_universe_universe (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd ((g1).univ_ineqs, (g1).univ_ineqs1)) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd ((g2).univ_ineqs, (g2).univ_ineqs1))) in
+  let tmp5 = (tmp3, tmp4) in
+  let tmp6 = (fStarC_Class_Monoid_op_Plus_Plus__clist_implicit (g1).implicits (g2).implicits) in
+  { guard_f = tmp;
+    deferred_to_tac = tmp1;
+    deferred = tmp2;
+    univ_ineqs = (match tmp5 with (custard_tup, _) -> custard_tup);
+    univ_ineqs1 = (match tmp5 with (_, custard_tup) -> custard_tup);
+    implicits = tmp6 })
+
+let conj_guard_f (g1 : guard_formula) (g2 : guard_formula) : guard_formula =
+  (match (g1, g2) with
+    | (Trivial, g) -> g
+    | (g, Trivial) -> g
+    | ((NonTrivial (f1)), (NonTrivial (f2))) -> (let tmp = (FStarC_Syntax_Util.mk_conj f1 f2) in
+      (NonTrivial (tmp)))
+  )
+
+let conj_guard (g1 : guard_t) : (guard_t -> guard_t) =
+  (binop_guard conj_guard_f g1)
+
+let fStarC_Class_Monoid_mplus__list_implicit (tmp : (implicit) list) (eta : (implicit) list) : (implicit) list =
+  (FStarC_List.op_At tmp eta)
+
+let fStarC_Class_Monoid_op_Plus_Plus__list_implicit (tmp : (implicit) list) (eta : (implicit) list) : (implicit) list =
+  (fStarC_Class_Monoid_mplus__list_implicit tmp eta)
+
+let fStarC_Class_Show_show__implicit (tmp : implicit) : string =
+  (FStarC_Syntax_Print.fStarC_Class_Show_show__tuple2_tuple3_p_uvar_version_range_string ((((tmp).imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head, ((tmp).imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head1, ((tmp).imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head2), ((tmp).imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_reason))
+
+let rec fStarC_Class_Show_show__show_list_aux__list_implicit (l : (implicit) list) : string =
+  (match l with
+    | [] -> ""
+    | (x :: []) -> (fStarC_Class_Show_show__implicit x)
+    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__implicit x) in
+      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_implicit xs) in
+      let tmp2 = (Prims.strcat ", " tmp1) in
+      (Prims.strcat tmp tmp2))
+  )
+
+let fStarC_Class_Show_show__list_implicit (tmp : (implicit) list) : string =
+  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_implicit tmp) in
+  let tmp2 = (Prims.strcat tmp1 "]") in
+  (Prims.strcat "[" tmp2))
+
+let fStarC_Class_Binders_freeNames__guard_t (tmp : guard_t) : (FStarC_Syntax_Syntax.bv) list =
+  (match (tmp).guard_f with
+    | Trivial -> (FStarC_Syntax_Syntax.fStarC_Class_Setlike_empty__bv_list_bv ())
+    | (NonTrivial (f)) -> (FStarC_Class_Binders.fStarC_Class_Binders_freeNames__syntax_term' f)
+  )
+
+let fStarC_Class_Monoid_mzero__guard_t : guard_t =
+  trivial_guard
+
+let fStarC_Class_Monoid_mplus__guard_t (tmp : guard_t) : (guard_t -> guard_t) =
+  (conj_guard tmp)
+
+let fStarC_Class_Monoid_op_Plus_Plus__guard_t (tmp : guard_t) : (guard_t -> guard_t) =
+  (fStarC_Class_Monoid_mplus__guard_t tmp)
+
+let weaken_guard_formula (g : guard_t) (fml : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : guard_t =
+  (let tmp = (FStarC_Syntax_Util.is_t_true fml) in
+  (if tmp then g else (match (g).guard_f with
+    | Trivial -> g
+    | (NonTrivial (f)) -> (let tmp1 = (FStarC_Syntax_Util.mk_imp fml f) in
+      let tmp2 = (check_trivial tmp1) in
+      { guard_f = tmp2;
+        deferred_to_tac = (g).deferred_to_tac;
+        deferred = (g).deferred;
+        univ_ineqs = (g).univ_ineqs;
+        univ_ineqs1 = (g).univ_ineqs1;
+        implicits = (g).implicits })
+  )))
+
+let conj_guards (gs : (guard_t) list) : guard_t =
+  (FStarC_List.fold_left conj_guard trivial_guard gs)
+
+let id_info_insert (table : id_info_table) (id : (FStarC_Syntax_Syntax.bv, FStarC_Syntax_Syntax.fv) FStar_Pervasives.either) (ty : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (range : FStarC_Range_Type.range) : id_info_table =
+  (let info = { identifier = id; identifier_ty = ty; identifier_range = range } in
+  { id_info_enabled = (table).id_info_enabled;
+    id_info_db = (table).id_info_db;
+    id_info_buffer = (info :: (table).id_info_buffer) })
+
+let id_info_insert_bv (table : id_info_table) (bv : FStarC_Syntax_Syntax.bv) (ty : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : id_info_table =
+  (if (table).id_info_enabled then (id_info_insert table (FStar_Pervasives.Inl (bv)) ty (FStarC_Syntax_Syntax.range_of_bv bv)) else table)
+
+let id_info_insert_fv (table : id_info_table) (fv : FStarC_Syntax_Syntax.fv) (ty : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : id_info_table =
+  (if (table).id_info_enabled then (id_info_insert table (FStar_Pervasives.Inr (fv)) ty (FStarC_Syntax_Syntax.range_of_fv fv)) else table)
+
+let fStarC_Class_Monoid_msum__guard_t (xs : (guard_t) list) : guard_t =
+  (FStarC_List.fold_left fStarC_Class_Monoid_mplus__guard_t fStarC_Class_Monoid_mzero__guard_t xs)
+
+let fStarC_Class_Listlike_cons__tuple3_deferred_reason_string_prob (tmp : (deferred_reason * string * prob)) (tmp1 : ((deferred_reason * string * prob)) FStarC_CList.clist) : ((deferred_reason * string * prob)) FStarC_CList.clist =
+  (FStarC_CList.CCons (tmp, tmp1))
+
+let rec fStarC_Class_Listlike_from_list__tuple3_deferred_reason_string_prob (l : ((deferred_reason * string * prob)) list) : ((deferred_reason * string * prob)) FStarC_CList.clist =
+  (match l with
+    | [] -> fStarC_Class_Listlike_empty__tuple3_deferred_reason_string_prob
+    | (x :: xs) -> (let tmp = (fStarC_Class_Listlike_from_list__tuple3_deferred_reason_string_prob xs) in
+      (fStarC_Class_Listlike_cons__tuple3_deferred_reason_string_prob x tmp))
+  )
+
+let check_positivity_qual (subtyping : bool) (p0 : (FStarC_Syntax_Syntax.positivity_qualifier) option) (p1 : (FStarC_Syntax_Syntax.positivity_qualifier) option) : bool =
+  (if ((=) p0 p1) then true else (if subtyping then (match (p0, p1) with
+    | ((Some (tmp)), None) -> true
+    | ((Some (FStarC_Syntax_Syntax.BinderUnused)), (Some (FStarC_Syntax_Syntax.BinderStrictlyPositive))) -> true
+    | tmp -> false
+  ) else false))
+
+let mk_by_tactic (tac : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (f : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (let tmp = (FStarC_Syntax_Syntax.tabbrev FStarC_Parser_Const.by_tactic_lid) in
+  let t_by_tactic = (FStarC_Syntax_Syntax.mk_Tm_uinst tmp (FStarC_Syntax_Syntax.U_zero :: [])) in
+  (FStarC_Syntax_Syntax.mk_Tm_app t_by_tactic ((FStarC_Syntax_Syntax.as_arg tac) :: ((FStarC_Syntax_Syntax.as_arg f) :: [])) FStarC_Range_Type.dummyRange))
+
+let imp_guard_f (g1 : guard_formula) (g2 : guard_formula) : guard_formula =
+  (match (g1, g2) with
+    | (Trivial, g) -> g
+    | (g, Trivial) -> Trivial
+    | ((NonTrivial (f1)), (NonTrivial (f2))) -> (let imp = (FStarC_Syntax_Util.mk_imp f1 f2) in
+      (check_trivial imp))
+  )
+
+let imp_guard (g1 : guard_t) (g2 : guard_t) : guard_t =
+  (binop_guard imp_guard_f g1 g2)
+
+let rec one_point_defn__find (as_defn : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) option =
+  (let tmp = (FStarC_Syntax_Util.head_and_args_full t) in
+  (match tmp with
+    | (hd, args) -> (let tmp1 = (FStarC_Syntax_Util.un_uinst hd) in
+      let tmp2 = (tmp1).FStarC_Syntax_Syntax.n in
+      let tmp3 = (tmp2, args) in
+      (match tmp3 with
+        | ((FStarC_Syntax_Syntax.Tm_fvar (fv)), ((a, tmp4) :: ((b, tmp5) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.and_lid) -> (let tmp6 = ((one_point_defn__find as_defn) a) in
+          (match tmp6 with
+            | (Some ((v, rest))) -> (let tmp7 = (FStarC_Syntax_Util.mk_conj_simp rest b) in
+              let tmp8 = (v, tmp7) in
+              (Some (tmp8)))
+            | None -> (let tmp7 = ((one_point_defn__find as_defn) b) in
+              (match tmp7 with
+                | (Some ((v, rest))) -> (let tmp8 = (FStarC_Syntax_Util.mk_conj_simp a rest) in
+                  let tmp9 = (v, tmp8) in
+                  (Some (tmp9)))
+                | None -> None
+              ))
+          ))
+        | tmp4 -> (let tmp5 = (as_defn t) in
+          (match tmp5 with
+            | (Some (v)) -> (Some ((v, FStarC_Syntax_Util.t_true)))
+            | None -> None
+          ))
+      ))
+  ))
+
+let one_point_defn (x : FStarC_Syntax_Syntax.bv) (hyp : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) option =
+  (let is_x = (fun t -> (let tmp = (FStarC_Syntax_Subst.compress t) in
+    let tmp1 = (tmp).FStarC_Syntax_Syntax.n in
+    (match tmp1 with
+      | (FStarC_Syntax_Syntax.Tm_name (y)) -> (FStarC_Syntax_Syntax.bv_eq x y)
+      | tmp2 -> false
+    ))) in
+  let as_defn = (fun t -> (let tmp = (FStarC_Syntax_Util.head_and_args_full t) in
+    (match tmp with
+      | (hd, args) -> (let tmp1 = (FStarC_Syntax_Util.un_uinst hd) in
+        let tmp2 = (tmp1).FStarC_Syntax_Syntax.n in
+        let tmp3 = (tmp2, args) in
+        (match tmp3 with
+          | ((FStarC_Syntax_Syntax.Tm_fvar (fv)), (tmp4 :: ((lhs, tmp5) :: ((rhs, tmp6) :: [])))) when (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.eq2_lid) -> (let tmp7 = (is_x lhs) in
+            let tmp8 = (if tmp7 then (let tmp8 = (FStarC_Syntax_Free.names rhs) in
+              let tmp9 = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_mem__bv_list_bv x tmp8) in
+              (not tmp9)) else false) in
+            (if tmp8 then (Some (rhs)) else (let tmp9 = (is_x rhs) in
+            let tmp10 = (if tmp9 then (let tmp10 = (FStarC_Syntax_Free.names lhs) in
+              let tmp11 = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_mem__bv_list_bv x tmp10) in
+              (not tmp11)) else false) in
+            (if tmp10 then (Some (lhs)) else None))))
+          | tmp4 -> None
+        ))
+    ))) in
+  ((one_point_defn__find as_defn) hyp))
+
+let post_obligation (x : FStarC_Syntax_Syntax.bv) (hyp : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (concl : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (let tmp = (one_point_defn x hyp) in
+  (match tmp with
+    | (Some ((v, rest))) -> (let tmp1 = (FStarC_Syntax_Util.mk_imp_simp rest concl) in
+      (FStarC_Syntax_Subst.subst ((FStarC_Syntax_Syntax.NT (x, v)) :: []) tmp1))
+    | None -> (let tmp1 = (FStarC_Syntax_Util.mk_imp hyp concl) in
+      (FStarC_Syntax_Util.mk_forall_no_univ x tmp1))
+  ))
+
+let fStarC_Class_Listlike_is_empty__tuple3_deferred_reason_string_prob (l : ((deferred_reason * string * prob)) FStarC_CList.clist) : bool =
+  (match (fStarC_Class_Listlike_view__tuple3_deferred_reason_string_prob l) with
+    | FStarC_Class_Listlike.VNil -> true
+    | (FStarC_Class_Listlike.VCons (tmp, tmp1)) -> false
+  )
+
+let rec insert_col_info____insert (col : Prims.int) (info : identifier_info) (aux : ((Prims.int * identifier_info)) list) (rest : ((Prims.int * identifier_info)) list) : (((Prims.int * identifier_info)) list * ((Prims.int * identifier_info)) list) =
+  (match rest with
+    | [] -> (aux, ((col, info) :: []))
+    | ((c, i) :: rest') -> (if (Prims.op_Less col c) then (aux, ((col, info) :: rest)) else ((insert_col_info____insert col info) ((c, i) :: aux) rest'))
+  )
+
+let insert_col_info (col : Prims.int) (info : identifier_info) (col_infos : ((Prims.int * identifier_info)) list) : ((Prims.int * identifier_info)) list =
+  (let tmp = ((insert_col_info____insert col info) [] col_infos) in
+  (match tmp with
+    | (l, r) -> (FStarC_List.op_At (FStarC_List.rev l) r)
+  ))
+
+let id_info__insert (ty_map : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) (db : ((((Prims.int * identifier_info)) list) FStarC_PIMap.t) FStarC_PSMap.t) (info : identifier_info) : ((((Prims.int * identifier_info)) list) FStarC_PIMap.t) FStarC_PSMap.t =
+  (let range = (info).identifier_range in
+  let use_range = (FStarC_Range_Type.set_def_range range (FStarC_Range_Type.use_range range)) in
+  let id_ty = (match (info).identifier with
+      | (FStar_Pervasives.Inr (tmp)) -> (ty_map (info).identifier_ty)
+      | (FStar_Pervasives.Inl (x)) -> (ty_map (info).identifier_ty)
+    ) in
+  (match id_ty with
+    | None -> db
+    | (Some (id_ty1)) -> (let info1 = { identifier = (info).identifier;
           identifier_ty = id_ty1;
-          identifier_range = use_range
-        } in
-      let fn = FStarC_Range_Ops.file_of_range use_range in
-      let start = FStarC_Range_Ops.start_of_range use_range in
-      let uu___ =
-        ((FStarC_Range_Ops.line_of_pos start),
-          (FStarC_Range_Ops.col_of_pos start)) in
-      (match uu___ with
-       | (row, col) ->
-           let rows = FStarC_PSMap.find_default db fn (FStarC_PIMap.empty ()) in
-           let cols = FStarC_PIMap.find_default rows row [] in
-           let uu___1 =
-             let uu___2 = insert_col_info col info1 cols in
-             FStarC_PIMap.add rows row uu___2 in
-           FStarC_PSMap.add db fn uu___1)
-let id_info_insert (table : id_info_table)
-  (id :
-    (FStarC_Syntax_Syntax.bv, FStarC_Syntax_Syntax.fv)
-      FStar_Pervasives.either)
-  (ty : FStarC_Syntax_Syntax.typ) (range : FStarC_Range_Type.range) :
-  id_info_table=
-  let info =
-    { identifier = id; identifier_ty = ty; identifier_range = range } in
-  {
-    id_info_enabled = (table.id_info_enabled);
-    id_info_db = (table.id_info_db);
-    id_info_buffer = (info :: (table.id_info_buffer))
-  }
-let id_info_insert_bv (table : id_info_table) (bv : FStarC_Syntax_Syntax.bv)
-  (ty : FStarC_Syntax_Syntax.typ) : id_info_table=
-  if table.id_info_enabled
-  then
-    id_info_insert table (FStar_Pervasives.Inl bv) ty
-      (FStarC_Syntax_Syntax.range_of_bv bv)
-  else table
-let id_info_insert_fv (table : id_info_table) (fv : FStarC_Syntax_Syntax.fv)
-  (ty : FStarC_Syntax_Syntax.typ) : id_info_table=
-  if table.id_info_enabled
-  then
-    id_info_insert table (FStar_Pervasives.Inr fv) ty
-      (FStarC_Syntax_Syntax.range_of_fv fv)
-  else table
-let id_info_toggle (table : id_info_table) (enabled : Prims.bool) :
-  id_info_table=
-  {
-    id_info_enabled = enabled;
-    id_info_db = (table.id_info_db);
-    id_info_buffer = (table.id_info_buffer)
-  }
-let id_info_promote (table : id_info_table)
-  (ty_map :
-    FStarC_Syntax_Syntax.typ ->
-      FStarC_Syntax_Syntax.typ FStar_Pervasives_Native.option)
-  : id_info_table=
-  let uu___ =
-    FStarC_List.fold_left (id_info__insert ty_map) table.id_info_db
-      table.id_info_buffer in
-  {
-    id_info_enabled = (table.id_info_enabled);
-    id_info_db = uu___;
-    id_info_buffer = []
-  }
-let id_info_at_pos (table : id_info_table) (fn : Prims.string)
-  (row : Prims.int) (col : Prims.int) :
-  identifier_info FStar_Pervasives_Native.option=
-  let rows =
-    FStarC_PSMap.find_default table.id_info_db fn (FStarC_PIMap.empty ()) in
-  let cols = FStarC_PIMap.find_default rows row [] in
-  match find_nearest_preceding_col_info col cols with
-  | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-  | FStar_Pervasives_Native.Some info ->
-      let last_col =
-        FStarC_Range_Ops.col_of_pos
-          (FStarC_Range_Ops.end_of_range info.identifier_range) in
-      if col <= last_col
-      then FStar_Pervasives_Native.Some info
-      else FStar_Pervasives_Native.None
-type implicit =
-  {
-  imp_reason: Prims.string ;
-  imp_uvar: FStarC_Syntax_Syntax.ctx_uvar ;
-  imp_tm: FStarC_Syntax_Syntax.term ;
-  imp_range: FStarC_Range_Type.range }
-let __proj__Mkimplicit__item__imp_reason (projectee : implicit) :
-  Prims.string=
-  match projectee with
-  | { imp_reason; imp_uvar; imp_tm; imp_range;_} -> imp_reason
-let __proj__Mkimplicit__item__imp_uvar (projectee : implicit) :
-  FStarC_Syntax_Syntax.ctx_uvar=
-  match projectee with
-  | { imp_reason; imp_uvar; imp_tm; imp_range;_} -> imp_uvar
-let __proj__Mkimplicit__item__imp_tm (projectee : implicit) :
-  FStarC_Syntax_Syntax.term=
-  match projectee with
-  | { imp_reason; imp_uvar; imp_tm; imp_range;_} -> imp_tm
-let __proj__Mkimplicit__item__imp_range (projectee : implicit) :
-  FStarC_Range_Type.range=
-  match projectee with
-  | { imp_reason; imp_uvar; imp_tm; imp_range;_} -> imp_range
-let showable_implicit : implicit FStarC_Class_Show.showable=
-  {
-    FStarC_Class_Show.show =
-      (fun i ->
-         FStarC_Class_Show.show
-           (FStarC_Class_Show.show_tuple2 FStarC_Syntax_Print.showable_uvar
-              FStarC_Class_Show.showable_string)
-           (((i.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head),
-             ((i.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_reason)))
-  }
-type implicits = implicit Prims.list
-type implicits_t = implicit FStarC_CList.t
-type guard_t =
-  {
-  guard_f: guard_formula ;
-  deferred_to_tac: deferred ;
-  deferred: deferred ;
-  univ_ineqs:
-    (FStarC_Syntax_Syntax.universe FStarC_CList.clist * univ_ineq
-      FStarC_CList.clist)
-    ;
-  implicits: implicits_t }
-let __proj__Mkguard_t__item__guard_f (projectee : guard_t) : guard_formula=
-  match projectee with
-  | { guard_f; deferred_to_tac; deferred = deferred1; univ_ineqs;
-      implicits = implicits1;_} -> guard_f
-let __proj__Mkguard_t__item__deferred_to_tac (projectee : guard_t) :
-  deferred=
-  match projectee with
-  | { guard_f; deferred_to_tac; deferred = deferred1; univ_ineqs;
-      implicits = implicits1;_} -> deferred_to_tac
-let __proj__Mkguard_t__item__deferred (projectee : guard_t) : deferred=
-  match projectee with
-  | { guard_f; deferred_to_tac; deferred = deferred1; univ_ineqs;
-      implicits = implicits1;_} -> deferred1
-let __proj__Mkguard_t__item__univ_ineqs (projectee : guard_t) :
-  (FStarC_Syntax_Syntax.universe FStarC_CList.clist * univ_ineq
-    FStarC_CList.clist)=
-  match projectee with
-  | { guard_f; deferred_to_tac; deferred = deferred1; univ_ineqs;
-      implicits = implicits1;_} -> univ_ineqs
-let __proj__Mkguard_t__item__implicits (projectee : guard_t) : implicits_t=
-  match projectee with
-  | { guard_f; deferred_to_tac; deferred = deferred1; univ_ineqs;
-      implicits = implicits1;_} -> implicits1
-let trivial_guard : guard_t=
-  {
-    guard_f = Trivial;
-    deferred_to_tac =
-      (FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ()));
-    deferred = (FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ()));
-    univ_ineqs =
-      ((FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ())),
-        (FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ())));
-    implicits =
-      (FStarC_Class_Listlike.empty (FStarC_CList.listlike_clist ()))
-  }
-let conj_guard_f (g1 : guard_formula) (g2 : guard_formula) : guard_formula=
-  match (g1, g2) with
-  | (Trivial, g) -> g
-  | (g, Trivial) -> g
-  | (NonTrivial f1, NonTrivial f2) ->
-      let uu___ = FStarC_Syntax_Util.mk_conj f1 f2 in NonTrivial uu___
-let binop_guard (f : guard_formula -> guard_formula -> guard_formula)
-  (g1 : guard_t) (g2 : guard_t) : guard_t=
-  let uu___ = f g1.guard_f g2.guard_f in
-  let uu___1 =
-    FStarC_Class_Monoid.op_Plus_Plus (FStarC_CList.monoid_clist ())
-      g1.deferred_to_tac g2.deferred_to_tac in
-  let uu___2 =
-    FStarC_Class_Monoid.op_Plus_Plus (FStarC_CList.monoid_clist ())
-      g1.deferred g2.deferred in
-  let uu___3 =
-    let uu___4 =
-      FStarC_Class_Monoid.op_Plus_Plus (FStarC_CList.monoid_clist ())
-        (FStar_Pervasives_Native.fst g1.univ_ineqs)
-        (FStar_Pervasives_Native.fst g2.univ_ineqs) in
-    let uu___5 =
-      FStarC_Class_Monoid.op_Plus_Plus (FStarC_CList.monoid_clist ())
-        (FStar_Pervasives_Native.snd g1.univ_ineqs)
-        (FStar_Pervasives_Native.snd g2.univ_ineqs) in
-    (uu___4, uu___5) in
-  let uu___4 =
-    FStarC_Class_Monoid.op_Plus_Plus (FStarC_CList.monoid_clist ())
-      g1.implicits g2.implicits in
-  {
-    guard_f = uu___;
-    deferred_to_tac = uu___1;
-    deferred = uu___2;
-    univ_ineqs = uu___3;
-    implicits = uu___4
-  }
-let conj_guard (g1 : guard_t) (g2 : guard_t) : guard_t=
-  binop_guard conj_guard_f g1 g2
-let monoid_guard_t : guard_t FStarC_Class_Monoid.monoid=
-  {
-    FStarC_Class_Monoid.mzero = trivial_guard;
-    FStarC_Class_Monoid.mplus = conj_guard
-  }
-let rec check_trivial (t : FStarC_Syntax_Syntax.term) : guard_formula=
-  let uu___ =
-    let uu___1 = FStarC_Syntax_Util.unmeta t in
-    FStarC_Syntax_Util.head_and_args_full uu___1 in
-  match uu___ with
-  | (hd, args) ->
-      let uu___1 =
-        let uu___2 =
-          let uu___3 =
-            let uu___4 = FStarC_Syntax_Util.unmeta hd in
-            FStarC_Syntax_Util.un_uinst uu___4 in
-          uu___3.FStarC_Syntax_Syntax.n in
-        (uu___2, args) in
-      (match uu___1 with
-       | (FStarC_Syntax_Syntax.Tm_fvar tc, []) when
-           FStarC_Syntax_Syntax.fv_eq_lid tc FStarC_Parser_Const.true_lid ->
-           Trivial
-       | (FStarC_Syntax_Syntax.Tm_fvar sq, (v, uu___2)::[]) when
-           FStarC_Syntax_Syntax.fv_eq_lid sq FStarC_Parser_Const.squash_lid
-           ->
-           let uu___3 = check_trivial v in
-           (match uu___3 with | Trivial -> Trivial | uu___4 -> NonTrivial t)
-       | uu___2 -> NonTrivial t)
-let imp_guard_f (g1 : guard_formula) (g2 : guard_formula) : guard_formula=
-  match (g1, g2) with
-  | (Trivial, g) -> g
-  | (g, Trivial) -> Trivial
-  | (NonTrivial f1, NonTrivial f2) ->
-      let imp = FStarC_Syntax_Util.mk_imp f1 f2 in check_trivial imp
-let imp_guard (g1 : guard_t) (g2 : guard_t) : guard_t=
-  binop_guard imp_guard_f g1 g2
-let conj_guards (gs : guard_t Prims.list) : guard_t=
-  FStarC_List.fold_left conj_guard trivial_guard gs
-let split_guard (g : guard_t) : (guard_t * guard_t)=
-  ({
-     guard_f = Trivial;
-     deferred_to_tac = (g.deferred_to_tac);
-     deferred = (g.deferred);
-     univ_ineqs = (g.univ_ineqs);
-     implicits = (g.implicits)
-   },
-    {
-      guard_f = (g.guard_f);
-      deferred_to_tac = (trivial_guard.deferred_to_tac);
-      deferred = (trivial_guard.deferred);
-      univ_ineqs = (trivial_guard.univ_ineqs);
-      implicits = (trivial_guard.implicits)
-    })
-let weaken_guard_formula (g : guard_t) (fml : FStarC_Syntax_Syntax.typ) :
-  guard_t=
-  match g.guard_f with
-  | Trivial -> g
-  | NonTrivial f ->
-      let uu___ =
-        let uu___1 = FStarC_Syntax_Util.mk_imp fml f in check_trivial uu___1 in
-      {
-        guard_f = uu___;
-        deferred_to_tac = (g.deferred_to_tac);
-        deferred = (g.deferred);
-        univ_ineqs = (g.univ_ineqs);
-        implicits = (g.implicits)
-      }
-type lcomp =
-  {
-  eff_name: FStarC_Ident.lident ;
-  res_typ: FStarC_Syntax_Syntax.typ ;
-  cflags: FStarC_Syntax_Syntax.cflag Prims.list ;
-  comp_thunk:
-    (unit -> (FStarC_Syntax_Syntax.comp * guard_t),
-      FStarC_Syntax_Syntax.comp) FStar_Pervasives.either FStarC_Effect.ref
-    }
-let __proj__Mklcomp__item__eff_name (projectee : lcomp) :
-  FStarC_Ident.lident=
-  match projectee with
-  | { eff_name; res_typ; cflags; comp_thunk;_} -> eff_name
-let __proj__Mklcomp__item__res_typ (projectee : lcomp) :
-  FStarC_Syntax_Syntax.typ=
-  match projectee with
-  | { eff_name; res_typ; cflags; comp_thunk;_} -> res_typ
-let __proj__Mklcomp__item__cflags (projectee : lcomp) :
-  FStarC_Syntax_Syntax.cflag Prims.list=
-  match projectee with | { eff_name; res_typ; cflags; comp_thunk;_} -> cflags
-let __proj__Mklcomp__item__comp_thunk (projectee : lcomp) :
-  (unit -> (FStarC_Syntax_Syntax.comp * guard_t), FStarC_Syntax_Syntax.comp)
-    FStar_Pervasives.either FStarC_Effect.ref=
-  match projectee with
-  | { eff_name; res_typ; cflags; comp_thunk;_} -> comp_thunk
-let mk_lcomp (eff_name : FStarC_Ident.lident)
-  (res_typ : FStarC_Syntax_Syntax.typ)
-  (cflags : FStarC_Syntax_Syntax.cflag Prims.list)
-  (comp_thunk : unit -> (FStarC_Syntax_Syntax.comp * guard_t)) : lcomp=
-  let uu___ = FStarC_Effect.mk_ref (FStar_Pervasives.Inl comp_thunk) in
-  { eff_name; res_typ; cflags; comp_thunk = uu___ }
-let lcomp_comp (lc : lcomp) : (FStarC_Syntax_Syntax.comp * guard_t)=
-  let uu___ = FStarC_Effect.op_Bang lc.comp_thunk in
-  match uu___ with
-  | FStar_Pervasives.Inl thunk ->
-      let uu___1 = thunk () in
-      (match uu___1 with
-       | (c, g) ->
-           (FStarC_Effect.op_Colon_Equals lc.comp_thunk
-              (FStar_Pervasives.Inr c);
-            (c, g)))
-  | FStar_Pervasives.Inr c -> (c, trivial_guard)
-let apply_lcomp (fc : FStarC_Syntax_Syntax.comp -> FStarC_Syntax_Syntax.comp)
-  (fg : guard_t -> guard_t) (lc : lcomp) : lcomp=
-  mk_lcomp lc.eff_name lc.res_typ lc.cflags
-    (fun uu___ ->
-       let uu___1 = lcomp_comp lc in
-       match uu___1 with
-       | (c, g) -> let uu___2 = fc c in let uu___3 = fg g in (uu___2, uu___3))
-let lcomp_to_string (lc : lcomp) : Prims.string=
-  let uu___ = FStarC_Options.print_effect_args () in
-  if uu___
-  then
-    let uu___1 =
-      let uu___2 = lcomp_comp lc in FStar_Pervasives_Native.fst uu___2 in
-    FStarC_Class_Show.show FStarC_Syntax_Print.showable_comp uu___1
-  else
-    (let uu___1 =
-       FStarC_Class_Show.show FStarC_Ident.showable_lident lc.eff_name in
-     let uu___2 =
-       FStarC_Class_Show.show FStarC_Syntax_Print.showable_term lc.res_typ in
-     FStarC_Format.fmt2 "%s %s" uu___1 uu___2)
-let lcomp_set_flags (lc : lcomp) (fs : FStarC_Syntax_Syntax.cflag Prims.list)
-  : lcomp=
-  let comp_typ_set_flags c =
-    match c.FStarC_Syntax_Syntax.n with
-    | FStarC_Syntax_Syntax.Total uu___ -> c
-    | FStarC_Syntax_Syntax.GTotal uu___ -> c
-    | FStarC_Syntax_Syntax.Comp ct ->
-        let ct1 =
-          {
-            FStarC_Syntax_Syntax.comp_univs =
-              (ct.FStarC_Syntax_Syntax.comp_univs);
-            FStarC_Syntax_Syntax.effect_name =
-              (ct.FStarC_Syntax_Syntax.effect_name);
-            FStarC_Syntax_Syntax.result_typ =
-              (ct.FStarC_Syntax_Syntax.result_typ);
-            FStarC_Syntax_Syntax.comp_pre =
-              (ct.FStarC_Syntax_Syntax.comp_pre);
-            FStarC_Syntax_Syntax.comp_post =
-              (ct.FStarC_Syntax_Syntax.comp_post);
-            FStarC_Syntax_Syntax.flags = fs
-          } in
-        {
-          FStarC_Syntax_Syntax.n = (FStarC_Syntax_Syntax.Comp ct1);
-          FStarC_Syntax_Syntax.pos = (c.FStarC_Syntax_Syntax.pos);
-          FStarC_Syntax_Syntax.hash_code = (c.FStarC_Syntax_Syntax.hash_code)
-        } in
-  mk_lcomp lc.eff_name lc.res_typ fs
-    (fun uu___ ->
-       let uu___1 = lcomp_comp lc in
-       match uu___1 with | (c, g) -> ((comp_typ_set_flags c), g))
-let is_total_lcomp (c : lcomp) : Prims.bool=
-  if FStarC_Ident.lid_equals c.eff_name FStarC_Parser_Const.effect_Tot_lid
-  then true
-  else
-    FStarC_Util.for_some
-      (fun uu___ ->
-         match uu___ with
-         | FStarC_Syntax_Syntax.TOTAL -> true
-         | uu___1 -> false) c.cflags
-let is_tot_or_gtot_lcomp (c : lcomp) : Prims.bool=
-  if
-    (FStarC_Ident.lid_equals c.eff_name FStarC_Parser_Const.effect_Tot_lid)
-      ||
-      (FStarC_Ident.lid_equals c.eff_name FStarC_Parser_Const.effect_GTot_lid)
-  then true
-  else
-    FStarC_Util.for_some
-      (fun uu___ ->
-         match uu___ with
-         | FStarC_Syntax_Syntax.TOTAL -> true
-         | uu___1 -> false) c.cflags
-let is_lcomp_partial_return (c : lcomp) : Prims.bool= false
-let is_pure_lcomp (lc : lcomp) : Prims.bool=
-  let uu___ =
-    let uu___1 = is_total_lcomp lc in
-    if uu___1 then true else FStarC_Syntax_Util.is_pure_effect lc.eff_name in
-  if uu___
-  then true
-  else
-    FStarC_Util.for_some
-      (fun uu___1 ->
-         match uu___1 with
-         | FStarC_Syntax_Syntax.LEMMA -> true
-         | uu___2 -> false) lc.cflags
-let is_pure_or_ghost_lcomp (lc : lcomp) : Prims.bool=
-  let uu___ = is_pure_lcomp lc in
-  if uu___ then true else FStarC_Syntax_Util.is_ghost_effect lc.eff_name
-let set_result_typ_lc (lc : lcomp) (t : FStarC_Syntax_Syntax.typ) : lcomp=
-  mk_lcomp lc.eff_name t lc.cflags
-    (fun uu___ ->
-       let uu___1 = lcomp_comp lc in
-       match uu___1 with
-       | (c, g) ->
-           let uu___2 = FStarC_Syntax_Util.set_result_typ c t in (uu___2, g))
-let residual_comp_of_lcomp (lc : lcomp) : FStarC_Syntax_Syntax.residual_comp=
-  {
-    FStarC_Syntax_Syntax.residual_effect = (lc.eff_name);
-    FStarC_Syntax_Syntax.residual_typ =
-      (FStar_Pervasives_Native.Some (lc.res_typ));
-    FStarC_Syntax_Syntax.residual_flags = (lc.cflags)
-  }
-let lcomp_of_comp_guard (c0 : FStarC_Syntax_Syntax.comp) (g : guard_t) :
-  lcomp=
-  let uu___ =
-    match c0.FStarC_Syntax_Syntax.n with
-    | FStarC_Syntax_Syntax.Total uu___1 ->
-        (FStarC_Parser_Const.effect_Tot_lid, [FStarC_Syntax_Syntax.TOTAL])
-    | FStarC_Syntax_Syntax.GTotal uu___1 ->
-        (FStarC_Parser_Const.effect_GTot_lid, [])
-    | FStarC_Syntax_Syntax.Comp c ->
-        ((c.FStarC_Syntax_Syntax.effect_name),
-          (c.FStarC_Syntax_Syntax.flags)) in
-  match uu___ with
-  | (eff_name, flags) ->
-      mk_lcomp eff_name (FStarC_Syntax_Util.comp_result c0) flags
-        (fun uu___1 -> (c0, g))
-let lcomp_of_comp (c0 : FStarC_Syntax_Syntax.comp) : lcomp=
-  lcomp_of_comp_guard c0 trivial_guard
-let check_positivity_qual (subtyping : Prims.bool)
-  (p0 :
-    FStarC_Syntax_Syntax.positivity_qualifier FStar_Pervasives_Native.option)
-  (p1 :
-    FStarC_Syntax_Syntax.positivity_qualifier FStar_Pervasives_Native.option)
-  : Prims.bool=
-  if p0 = p1
-  then true
-  else
-    if subtyping
-    then
-      (match (p0, p1) with
-       | (FStar_Pervasives_Native.Some uu___, FStar_Pervasives_Native.None)
-           -> true
-       | (FStar_Pervasives_Native.Some (FStarC_Syntax_Syntax.BinderUnused),
-          FStar_Pervasives_Native.Some
-          (FStarC_Syntax_Syntax.BinderStrictlyPositive)) -> true
-       | uu___ -> false)
-    else false
-let one_point_defn (x : FStarC_Syntax_Syntax.bv)
-  (hyp : FStarC_Syntax_Syntax.term) :
-  (FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.term)
-    FStar_Pervasives_Native.option=
-  let is_x t =
-    let uu___ =
-      let uu___1 = FStarC_Syntax_Subst.compress t in
-      uu___1.FStarC_Syntax_Syntax.n in
-    match uu___ with
-    | FStarC_Syntax_Syntax.Tm_name y -> FStarC_Syntax_Syntax.bv_eq x y
-    | uu___1 -> false in
-  let as_defn t =
-    let uu___ = FStarC_Syntax_Util.head_and_args_full t in
-    match uu___ with
-    | (hd, args) ->
-        let uu___1 =
-          let uu___2 =
-            let uu___3 = FStarC_Syntax_Util.un_uinst hd in
-            uu___3.FStarC_Syntax_Syntax.n in
-          (uu___2, args) in
-        (match uu___1 with
-         | (FStarC_Syntax_Syntax.Tm_fvar fv,
-            uu___2::(lhs, uu___3)::(rhs, uu___4)::[]) when
-             FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.eq2_lid ->
-             let uu___5 =
-               let uu___6 = is_x lhs in
-               if uu___6
-               then
-                 let uu___7 =
-                   let uu___8 = FStarC_Syntax_Free.names rhs in
-                   FStarC_Class_Setlike.mem
-                     (FStarC_FlatSet.setlike_flat_set
-                        FStarC_Syntax_Syntax.ord_bv) x uu___8 in
-                 Prims.not uu___7
-               else false in
-             if uu___5
-             then FStar_Pervasives_Native.Some rhs
-             else
-               (let uu___6 =
-                  let uu___7 = is_x rhs in
-                  if uu___7
-                  then
-                    let uu___8 =
-                      let uu___9 = FStarC_Syntax_Free.names lhs in
-                      FStarC_Class_Setlike.mem
-                        (FStarC_FlatSet.setlike_flat_set
-                           FStarC_Syntax_Syntax.ord_bv) x uu___9 in
-                    Prims.not uu___8
-                  else false in
-                if uu___6
-                then FStar_Pervasives_Native.Some lhs
-                else FStar_Pervasives_Native.None)
-         | uu___2 -> FStar_Pervasives_Native.None) in
-  let rec find t =
-    let uu___ = FStarC_Syntax_Util.head_and_args_full t in
-    match uu___ with
-    | (hd, args) ->
-        let uu___1 =
-          let uu___2 =
-            let uu___3 = FStarC_Syntax_Util.un_uinst hd in
-            uu___3.FStarC_Syntax_Syntax.n in
-          (uu___2, args) in
-        (match uu___1 with
-         | (FStarC_Syntax_Syntax.Tm_fvar fv, (a, uu___2)::(b, uu___3)::[])
-             when
-             FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.and_lid ->
-             let uu___4 = find a in
-             (match uu___4 with
-              | FStar_Pervasives_Native.Some (v, rest) ->
-                  let uu___5 =
-                    let uu___6 = FStarC_Syntax_Util.mk_conj_simp rest b in
-                    (v, uu___6) in
-                  FStar_Pervasives_Native.Some uu___5
-              | FStar_Pervasives_Native.None ->
-                  let uu___5 = find b in
-                  (match uu___5 with
-                   | FStar_Pervasives_Native.Some (v, rest) ->
-                       let uu___6 =
-                         let uu___7 = FStarC_Syntax_Util.mk_conj_simp a rest in
-                         (v, uu___7) in
-                       FStar_Pervasives_Native.Some uu___6
-                   | FStar_Pervasives_Native.None ->
-                       FStar_Pervasives_Native.None))
-         | uu___2 ->
-             let uu___3 = as_defn t in
-             (match uu___3 with
-              | FStar_Pervasives_Native.Some v ->
-                  FStar_Pervasives_Native.Some (v, FStarC_Syntax_Util.t_true)
-              | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None)) in
-  find hyp
-let post_obligation (x : FStarC_Syntax_Syntax.bv)
-  (hyp : FStarC_Syntax_Syntax.term) (concl : FStarC_Syntax_Syntax.term) :
-  FStarC_Syntax_Syntax.term=
-  let uu___ = one_point_defn x hyp in
-  match uu___ with
-  | FStar_Pervasives_Native.Some (v, rest) ->
-      let uu___1 = FStarC_Syntax_Util.mk_imp_simp rest concl in
-      FStarC_Syntax_Subst.subst [FStarC_Syntax_Syntax.NT (x, v)] uu___1
-  | FStar_Pervasives_Native.None ->
-      let uu___1 = FStarC_Syntax_Util.mk_imp hyp concl in
-      FStarC_Syntax_Util.mk_forall_no_univ x uu___1
+          identifier_range = use_range } in
+      let fn = (FStarC_Range_Ops.file_of_range use_range) in
+      let start = (FStarC_Range_Ops.start_of_range use_range) in
+      let tmp = ((FStarC_Range_Ops.line_of_pos start), (FStarC_Range_Ops.col_of_pos start)) in
+      (match tmp with
+        | (row, col) -> (let rows = (FStarC_PSMap.find_default db fn (FStarC_PIMap.empty ())) in
+          let cols = (FStarC_PIMap.find_default rows row []) in
+          let tmp1 = (insert_col_info col info1 cols) in
+          let tmp2 = (FStarC_PIMap.add rows row tmp1) in
+          (FStarC_PSMap.add db fn tmp2))
+      ))
+  ))
+
+let id_info_promote (table : id_info_table) (ty_map : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) : id_info_table =
+  (let tmp = (FStarC_List.fold_left (id_info__insert ty_map) (table).id_info_db (table).id_info_buffer) in
+  { id_info_enabled = (table).id_info_enabled;
+    id_info_db = tmp;
+    id_info_buffer = [] })
+
+let id_info_table_empty : id_info_table =
+  { id_info_enabled = false;
+    id_info_db = (FStarC_PSMap.empty ());
+    id_info_buffer = [] }
+
+let id_info_toggle (table : id_info_table) (enabled : bool) : id_info_table =
+  { id_info_enabled = enabled;
+    id_info_db = (table).id_info_db;
+    id_info_buffer = (table).id_info_buffer }
+
+let rec find_nearest_preceding_col_info__aux (col : Prims.int) (out : (identifier_info) option) (tmp : ((Prims.int * identifier_info)) list) : (identifier_info) option =
+  (match tmp with
+    | [] -> out
+    | ((c, i) :: rest) -> (if (Prims.op_Greater c col) then out else ((find_nearest_preceding_col_info__aux col) (Some (i)) rest))
+  )
+
+let find_nearest_preceding_col_info (col : Prims.int) (eta : ((Prims.int * identifier_info)) list) : (identifier_info) option =
+  ((find_nearest_preceding_col_info__aux col) None eta)
+
+let id_info_at_pos (table : id_info_table) (fn : string) (row : Prims.int) (col : Prims.int) : (identifier_info) option =
+  (let rows = (FStarC_PSMap.find_default (table).id_info_db fn (FStarC_PIMap.empty ())) in
+  let cols = (FStarC_PIMap.find_default rows row []) in
+  (match (find_nearest_preceding_col_info col cols) with
+    | None -> None
+    | (Some (info)) -> (let last_col = (FStarC_Range_Ops.col_of_pos (FStarC_Range_Ops.end_of_range (info).identifier_range)) in
+      (if (Prims.op_Less_Equals col last_col) then (Some (info)) else None))
+  ))
+
+let fStarC_Class_Show_show__clist_implicit (tmp : (implicit) FStarC_CList.clist) : string =
+  (let tmp1 = (fStarC_Class_Listlike_to_list__implicit_clist_implicit tmp) in
+  (fStarC_Class_Show_show__list_implicit tmp1))
+
+let fStarC_Class_Listlike_cons__tuple4_int_deferred_reason_ref_either_prob (tmp : (Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) (tmp1 : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist) : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist =
+  (FStarC_CList.CCons (tmp, tmp1))
+
+let fStarC_Class_Listlike_cons__tuple4_int_deferred_reason_ref_either_prob_5 (tmp : (Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) (tmp1 : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist) : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist =
+  (FStarC_CList.CCons (tmp, tmp1))
+
+let rec decr_delta_depth (tmp : FStarC_Syntax_Syntax.delta_depth) : (FStarC_Syntax_Syntax.delta_depth) option =
+  (match tmp with
+    | (FStarC_Syntax_Syntax.Delta_constant_at_level (u__iconst0)) when u__iconst0 = (Prims.parse_int "0") -> None
+    | (FStarC_Syntax_Syntax.Delta_equational_at_level (u__iconst0)) when u__iconst0 = (Prims.parse_int "0") -> None
+    | (FStarC_Syntax_Syntax.Delta_constant_at_level (i)) -> (Some ((FStarC_Syntax_Syntax.Delta_constant_at_level ((Prims.op_Minus i (Prims.parse_int "1"))))))
+    | (FStarC_Syntax_Syntax.Delta_equational_at_level (i)) -> (Some ((FStarC_Syntax_Syntax.Delta_equational_at_level ((Prims.op_Minus i (Prims.parse_int "1"))))))
+    | (FStarC_Syntax_Syntax.Delta_abstract (d)) -> (decr_delta_depth d)
+  )
+
+let fStarC_Class_Monoid_mplus__clist_tuple4_int_deferred_reason_ref_prob (tmp : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist) (ys : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist) : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist =
+  (FStarC_CList.ccat tmp ys)
+
+let fStarC_Class_Monoid_op_Plus_Plus__clist_tuple4_int_deferred_reason_ref_prob (tmp : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist) (ys : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist) : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist =
+  (fStarC_Class_Monoid_mplus__clist_tuple4_int_deferred_reason_ref_prob tmp ys)
+
+let fStarC_Class_Listlike_view__prob_clist_prob (tmp : (prob) FStarC_CList.clist) : (prob, (prob) FStarC_CList.clist) FStarC_Class_Listlike.view_t =
+  (FStarC_CList.view tmp)
+
+let rec fStarC_Class_Listlike_to_list__prob_clist_prob (l : (prob) FStarC_CList.clist) : (prob) list =
+  (match (fStarC_Class_Listlike_view__prob_clist_prob l) with
+    | FStarC_Class_Listlike.VNil -> []
+    | (FStarC_Class_Listlike.VCons (x, xs)) -> (let tmp = (fStarC_Class_Listlike_to_list__prob_clist_prob xs) in
+      (x :: tmp))
+  )
+
+let fStarC_Class_Listlike_view__tuple4_int_deferred_reason_ref_either_prob (tmp : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist) : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob), ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist) FStarC_Class_Listlike.view_t =
+  (FStarC_CList.view tmp)
+
+let rec fStarC_Class_Listlike_to_list__tuple4_int_deferred_reason_ref_either_prob (l : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist) : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) list =
+  (match (fStarC_Class_Listlike_view__tuple4_int_deferred_reason_ref_either_prob l) with
+    | FStarC_Class_Listlike.VNil -> []
+    | (FStarC_Class_Listlike.VCons (x, xs)) -> (let tmp = (fStarC_Class_Listlike_to_list__tuple4_int_deferred_reason_ref_either_prob xs) in
+      (x :: tmp))
+  )
+
+let fStarC_Class_Listlike_cons__tuple2_list_binder_prob_clist_tuple2_list_prob (tmp : ((FStarC_Syntax_Syntax.binder) list * prob)) (tmp1 : (((FStarC_Syntax_Syntax.binder) list * prob)) FStarC_CList.clist) : (((FStarC_Syntax_Syntax.binder) list * prob)) FStarC_CList.clist =
+  (FStarC_CList.CCons (tmp, tmp1))
+
+let fStarC_Class_Listlike_view__tuple2_list_binder_prob_clist_tuple2_list_prob (tmp : (((FStarC_Syntax_Syntax.binder) list * prob)) FStarC_CList.clist) : (((FStarC_Syntax_Syntax.binder) list * prob), (((FStarC_Syntax_Syntax.binder) list * prob)) FStarC_CList.clist) FStarC_Class_Listlike.view_t =
+  (FStarC_CList.view tmp)
+
+let rec fStarC_Class_Listlike_to_list__tuple2_list_binder_prob_clist_tuple2_list_prob (l : (((FStarC_Syntax_Syntax.binder) list * prob)) FStarC_CList.clist) : (((FStarC_Syntax_Syntax.binder) list * prob)) list =
+  (match (fStarC_Class_Listlike_view__tuple2_list_binder_prob_clist_tuple2_list_prob l) with
+    | FStarC_Class_Listlike.VNil -> []
+    | (FStarC_Class_Listlike.VCons (x, xs)) -> (let tmp = (fStarC_Class_Listlike_to_list__tuple2_list_binder_prob_clist_tuple2_list_prob xs) in
+      (x :: tmp))
+  )
+
