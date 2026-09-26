@@ -3161,6 +3161,19 @@ CGREP_SzWidth32 += "return (uint32_t)n;"
 # The narrowed run must not mention size_t anywhere, in either file.
 CNOGREP_SzWidth32 += "size_t"
 
+# Section 6.  The dangling [else].  Both arms of each pair are one statement,
+# so both would be written unbraced, and an unbraced [if] with no [else] in a
+# [then] arm captures the [else] that follows it.  [-Wall -Werror] catches the
+# shape -- gcc and clang both have [-Wdangling-else] -- but the load-bearing
+# check is that the program *runs*: [f false true] must return 2 and [g G
+# false] must return 2, and under the capture the first falls through to 0 and
+# the second takes the [B] arm.
+C_TESTS += CDangle
+FLAGS_CDangle = --custard_backend C --custard_entry_module CDangle
+CGREP_CDangle += "if (a) {"
+CGREP_CDangle += "else if (x == CDANGLE_G)"
+CNOGREP_CDangle += "if (a) if ("
+
 # Section 129.  A copy binding between a tuple's constructor and the match
 # that consumes it.  F* elaborates [let (a, (b, ())) = p] into [let
 # _letpattern = p in match _letpattern with ...] whenever the scrutinee is

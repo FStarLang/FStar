@@ -2767,12 +2767,29 @@ Emission:
   site a `void` call is a statement, so it is emitted as one and stands for
   the unit value.
 
-  **Braces are only written where they hold something.**  A single-statement
-  `if` or `else` body is written inline, which the printer can decide safely
-  because it emits one statement per line and anything that could dangle
-  spans more than one; and the arm of a match that runs when no earlier one
-  did is emitted flat when there is no `if` before it, rather than wrapping
-  the rest of the function in a block that says nothing.
+  **Braces are only written where they hold something, and where C needs
+  them.**  A single-statement `if` or `else` body is written inline --- the
+  printer emits one statement per line, so a body with one line in it is one
+  statement --- and the arm of a match that runs when no earlier one did is
+  emitted flat when there is no `if` before it, rather than wrapping the rest
+  of the function in a block that says nothing.
+
+  The exception is the **dangling `else`**.  C binds an `else` to the nearest
+  unmatched `if`, so a body that is itself an `if` with no `else` of its own
+  captures an `else` written after it:
+
+  ```c
+  if (a) if (b) c();      /* the else below binds to (b), not to (a) */
+  else d();
+  ```
+
+  which is well-formed C meaning something other than what was extracted.
+  A body is therefore braced, one statement or not, whenever the printer is
+  about to write an `else` after it and the body can capture one --- on one
+  line, a statement that opens with `if (` and does not close with a brace.
+  Both places that write an `else` pass that flag: the `else` arm of an `if`,
+  and the `else if` that chains one match arm to the next.  An `else` that
+  nothing follows is left alone, so `else if` chains keep their shape.
 
   **`let mut` becomes a local variable.**  Pulse compiles a `let mut` to a
   stack allocation of one cell (§7.4), and a one-cell array *is* a variable:
