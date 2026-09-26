@@ -108,23 +108,26 @@ let bytes_of_int (nb:Z.t) (i:Z.t) =
 let int_of_bytes_of_int (k:Z.t) (n:'a uint_k) = ()
 let bytes_of_int_of_bytes (b:bytes) = ()
 
-let int32_of_bytes (b:bytes) =
-    Z.to_int (int_of_bytes b)
+(* These six are machine integers on both sides in FStar.Bytes.fsti, at the
+   width the name says; they used to be an OCaml [int] on the way out and a
+   [U32.t] on the way in, which no caller of the interface can supply. *)
+let int32_of_bytes (b:bytes) : U32.t =
+    U32.uint_to_t (int_of_bytes b)
 
-let int16_of_bytes (b:bytes) =
-    Z.to_int (int_of_bytes b)
+let int16_of_bytes (b:bytes) : U16.t =
+    U16.uint_to_t (int_of_bytes b)
 
-let int8_of_bytes (b:bytes) =
-    Z.to_int (int_of_bytes b)
+let int8_of_bytes (b:bytes) : U8.t =
+    U8.uint_to_t (int_of_bytes b)
 
 let bytes_of_int32 (n:U32.t) =
     bytes_of_int (Z.of_int 4) (U32.to_int n)
 
-let bytes_of_int16 (n:U32.t) =
-    bytes_of_int (Z.of_int 2) (U32.to_int n)
+let bytes_of_int16 (n:U16.t) =
+    bytes_of_int (Z.of_int 2) (U16.to_int n)
 
-let bytes_of_int8 (n:U32.t) =
-    bytes_of_int (Z.of_int 1) (U32.to_int n)
+let bytes_of_int8 (n:U8.t) =
+    bytes_of_int (Z.of_int 1) (U8.v n)
 
 type 'a minbytes = bytes
 
@@ -147,7 +150,11 @@ let xor_idempotent (n:U32.t) (b1:bytes) (b2:bytes) = ()
 let utf8 (x:string) : bytes = x (* TODO: use Camomile *)
 let utf8_encode = utf8
 let iutf8 (x:bytes) : string = x (* TODO: use Camomile *)
-let iutf8_opt (x:bytes) : string option = Some (x)
+(* FStar.Bytes.fsti says the result re-encodes to the argument, so an
+   ill-formed sequence has to come back as [None]; this used to be [Some]
+   whatever it was given. *)
+let iutf8_opt (x:bytes) : string option =
+  if String.is_valid_utf_8 x then Some x else None
 (*********************************************************************************)
 
 (* Some helpers to deal with the conversation from hex literals to bytes and
@@ -166,7 +173,7 @@ let char_to_hex c =
   let digits = "0123456789abcdef" in
   digits.[n lsr 4], digits.[n land 0x0f]
 
-let string_of_hex s =
+let bytes_of_hex_ s =
   let n = String.length s in
   if n mod 2 <> 0 then
      failwith "string_of_hex: invalid length"
@@ -181,7 +188,10 @@ let string_of_hex s =
     in
     aux 0;
     res
-let bytes_of_hex s = Bytes.to_string (string_of_hex s)
+(* FStar.Bytes.fsti says [string -> string], and the realization's [bytes] is
+   a [string]; this used to hand back OCaml's own [Bytes.t]. *)
+let string_of_hex s = Bytes.to_string (bytes_of_hex_ s)
+let bytes_of_hex s = Bytes.to_string (bytes_of_hex_ s)
 
 let hex_of_string s =
   let n = String.length s in

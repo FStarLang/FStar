@@ -1317,6 +1317,13 @@ functions that exist to be looked at, and the property such a test needs is
 that a function added to it is extracted without anyone having to remember to
 name it.
 
+It roots the module's *public surface*.  If the module has an interface, a
+definition the interface does not declare is not part of that surface and is
+not rooted (§131); it is still extracted if something reachable from a root
+calls it, because un-rooting changes the root set and nothing else.  If the
+module has no interface, every top-level definition is public and every one is
+a root.
+
 It roots values only.  A type is rooted by the definitions that use it, and
 under `--custard_monomorphize_types` a parametric type has no single instance
 to root anyway.  A definition with nothing to extract --- a specification, a
@@ -2760,12 +2767,29 @@ Emission:
   site a `void` call is a statement, so it is emitted as one and stands for
   the unit value.
 
-  **Braces are only written where they hold something.**  A single-statement
-  `if` or `else` body is written inline, which the printer can decide safely
-  because it emits one statement per line and anything that could dangle
-  spans more than one; and the arm of a match that runs when no earlier one
-  did is emitted flat when there is no `if` before it, rather than wrapping
-  the rest of the function in a block that says nothing.
+  **Braces are only written where they hold something, and where C needs
+  them.**  A single-statement `if` or `else` body is written inline --- the
+  printer emits one statement per line, so a body with one line in it is one
+  statement --- and the arm of a match that runs when no earlier one did is
+  emitted flat when there is no `if` before it, rather than wrapping the rest
+  of the function in a block that says nothing.
+
+  The exception is the **dangling `else`**.  C binds an `else` to the nearest
+  unmatched `if`, so a body that is itself an `if` with no `else` of its own
+  captures an `else` written after it:
+
+  ```c
+  if (a) if (b) c();      /* the else below binds to (b), not to (a) */
+  else d();
+  ```
+
+  which is well-formed C meaning something other than what was extracted.
+  A body is therefore braced, one statement or not, whenever the printer is
+  about to write an `else` after it and the body can capture one --- on one
+  line, a statement that opens with `if (` and does not close with a brace.
+  Both places that write an `else` pass that flag: the `else` arm of an `if`,
+  and the `else if` that chains one match arm to the next.  An `else` that
+  nothing follows is left alone, so `else if` chains keep their shape.
 
   **`let mut` becomes a local variable.**  Pulse compiles a `let mut` to a
   stack allocation of one cell (§7.4), and a one-cell array *is* a variable:
@@ -11038,6 +11062,75 @@ linkage under its own name, that the private helper does not appear in the
 symbol table of either object, and that the library's definitions appear in
 exactly one of the two.
 
+## 42.6 And then the karamel backend stopped refusing
+
+§42.5's last bullet stood for several rounds, and the reason it gave was not
+the real one. "karamel has its own opinion about what a compilation unit is"
+is true and is not an obstacle: karamel already has a flag whose entire job is
+to say *this module was compiled elsewhere*, and that flag is `-library`.
+`Builtin.make_abstract_function_or_global` rewrites a `DFunction` or a
+`DGlobal` into a `DExternal`, leaves `DType` alone, and `CStarToC11`'s
+`declared_in_library` then emits the prototype and no body. That is exactly
+what a `.cui` describes. So the implementation is one case in `krml_decl`:
+an imported `DLet` becomes a `K.DExternal` with the signature the interface
+recorded, and the consumer needs no karamel flag at all — the rewrite
+`-library` would have performed has already happened, upstream of krml.
+
+The one thing that is not free is *which karamel file* an imported
+declaration goes into. karamel names the generated `.c` and `.h` after the
+file; the C symbol comes from the lident's namespace. Put an import in the
+consumer's own file and krml writes a second header declaring a symbol the
+producer's header already declares, which is the two-spellings failure §42.2
+exists to prevent. So `PrintKrml` groups imports by their home file —
+`ue_home` when the producer split, the unit name when it did not — and puts
+them ahead of this run's own declarations. For the same reason a producer's
+own file is named after its `--custard_unit` rather than `Custard`: two units
+both called `Custard` would have krml write two different `Custard.h`, and a
+consumer has one include path.
+
+`Split.avoid` must not be applied to imports. It deliberately moves a
+declaration out of a file name an upstream unit owns, so that this unit's
+relocated code does not collide with it — right for the code this unit
+compiles, and precisely wrong for the code it did not.
+
+Two things differ from the C backend.
+
+- **The interface is everything the unit compiled.** §42.1's filter — a C
+  unit offers its linking interface and nothing else — is guarded on
+  `--custard_backend C`, and on karamel it has nothing to do: karamel decides
+  linkage itself out of `-bundle` and `-static-header`, so Custard has
+  nothing to withhold. A krml unit exports like an OCaml one. If a symbol
+  should be hidden, that is a karamel flag on the producer and not a Custard
+  decision.
+- **`uh_header` and `uh_init` stay `None`.** §42.3's generated initializer and
+  §42.2's recorded header name are both answers to questions the direct-to-C
+  printer has and karamel does not; krml writes its own headers and does its
+  own global initialization.
+
+A polymorphic import is refused. The `.krml` wire format's `DExternal`
+carries no arity — karamel's `InputAstToAst` fills in zero for both the type
+and the const-generic parameter count — so the signature would reach karamel
+mentioning variables nothing binds, and the diagnostic would be karamel's
+checker complaining about a declaration the user never wrote. Monomorphize in
+the producing unit, or compile the two units together.
+
+**KrmlRust still refuses**, and now for a reason located in karamel rather
+than in taste. `AstToMiniRust` translates a `DExternal` function into
+`MiniRust.Assumed` — a promise that something else in the crate defines it,
+for which it then prints nothing — so every call comes out as a path no
+module declares. A `DExternal` *global* is worse: the translation looks the
+declaration up, finds it is not a function, and raises `Failure "impossible"`,
+which is a karamel crash naming neither of the two units. Error 155 is now
+specific to `KrmlRust` and says which of the two it is.
+
+`tests/custard/SepLibK.fst` and `SepAppK.fst` are the test, deliberately the
+same pair of modules as §42.5's. Both halves go through krml in separate
+`-tmpdir`s, as two consumers really would, and the assertions are that the
+downstream `SepLibK.h` holds prototypes and no bodies, that no downstream
+`SepLibK.c` exists at all, that `double_it` — not an entry, and exported
+anyway — is among them, and then that the two objects link and the program
+runs. `SepLibK.rustrefused` pins the `KrmlRust` diagnostic.
+
 # 43 Writing a number down
 
 Round 43 found three ways to spell a number that the target reads back as a
@@ -16431,6 +16524,39 @@ dead abbreviation reaches a backend at all and is the situation the report
 came from.  Against the unfixed compiler the Rust leg fails with three
 errors, naming `first` and `main` --- neither of which mentions `ugly`.
 
+### 77.5 The other direction: `--custard_no_unfold`
+
+§77.2 explains why karamel reads an abbreviation of an applied type as *the
+name chosen for that instance*.  That is a property worth having on purpose,
+and a whole-program extractor loses it by default: `Monomorphize.unfold_cty`
+and `Layout.resolve` both replace an abbreviation by its body, so an
+abbreviation written precisely to name an instance never reaches karamel and
+the instance gets karamel's own generated name instead.
+
+Unfolding is the right default and §115 says why --- `option sid_t` and
+`option U16.t` are the same type, and a monomorphizer that took the two
+spellings at face value would clone it twice.  But it is a default, not a
+law, and the case against it is concrete.  EverParse's CBOR library publishes
+`CBOR.Pulse.Raw.Slice.byte_slice = Pulse.Lib.Slice.slice U8.t` so that the
+byte-slice fields of its public C types are spelled
+`CBOR_Pulse_Raw_Slice_byte_slice`.  A consumer --- a CDDL- or COSE-generated
+program --- includes that header *and* monomorphizes `slice uint8` on its own
+account; if the library's fields were spelled with karamel's generated name
+the consumer would emit a second, conflicting `typedef` for a struct tag the
+header already defines, and no C translation unit can contain both.
+
+`--custard_no_unfold <lid>` marks one abbreviation `NoUnfold`.  The flag is
+read in exactly the two places that unfold --- the `Realized` arm of
+`unfold_cty` and the `Realized` arm of `resolve` each gain a sibling --- and
+nowhere else, so the abbreviation is emitted and every use of it prints as
+its own name.  It is deliberately a name and not a module: the judgement is
+about one definition and the module around it is full of ordinary
+abbreviations that should keep unfolding.
+
+Not backend specific.  Naming a monomorphic instance is as meaningful on the
+OCaml path as on the karamel one, and an abbreviation that is emitted is
+always a legal thing for a target to see.
+
 ## Section 78. Unfolding a spine is not eta-expanding it
 
 ### 78.1 Intake
@@ -19014,6 +19140,33 @@ beyond symmetry with `reduce`'s forwarder case, and it now keeps its own.
 The substitution machinery moved above the simplifier to make this possible,
 which is where it should have been: it is not inlining-specific.
 
+#### 102.2.1.  A rename is not a substitution
+
+`sub` renames the binders it passes, so that a substituted term cannot be
+captured, and a *pattern's* binders are among them.  A pattern carries no
+types, so `sub_pat` had nothing to put in the substitution entry it makes for
+one and wrote `TAny`, on the stated grounds that nothing downstream reads a
+type off a pattern variable's occurrence.
+
+That was true when the only caller was the inliner and false as soon as copy
+propagation (§129) started substituting into matches in earnest.  Every
+backend reads exactly that type at exactly one place: whether a write prints
+as `r := v` or as `b.(i) <- v` --- `.Value <-` on F#, `*p = v` on C --- is
+decided by `TRef? b.ty` on the *occurrence*, and a tuple holding a `ref` puts
+that occurrence under a pattern. `let (n, r) = p in r := !r + n` came out as
+`r.(0) <- ...` against an OCaml `bool ref`, which is a type error in the
+generated code rather than a wrong answer, and it only appears once a
+`_letpattern` copy has been propagated into the match.
+
+The entries are therefore two kinds, and `sub` now tells them apart. `ELet`
+and `EFun` supply a real type and their entries are taken whole. A pattern
+binder's entry is a *rename*: it keeps the name and leaves the occurrence's
+recorded type and effect alone, which is what `rename_var` next to it already
+did and says it does.
+
+`tests/custard/Refs.fst` pins it with `bump2`, on both the OCaml and the F#
+legs.
+
 ### 102.3.  `--custard_c_no_prefix` and an `assume val`
 
 The reporter's standing item, unrelated to the above.  `Abort.abort` comes
@@ -21012,15 +21165,21 @@ type mentions a type variable, with error 395.  Monomorphization means
 this is nearly unreachable --- a specialization has no free type
 variables --- but the `TAny` traffic of §122.6 can produce one.
 
-### 122.12 No split and no separate units
+### 122.12 No separate units
 
-`--custard_split` and `--custard_unit` are refused under this backend.
-Both exist to divide one program across files that a C or OCaml build
-then links, and the unit of compilation here is the project: two projects
-that each contain a copy of the support library and disagree about which
-one defines a type are not something this backend can produce a coherent
-answer for.  A whole program per project is what v1 supports, and the
-refusal says so rather than emitting something that fails at link time.
+`--custard_unit` is refused under this backend.  It exists to divide one
+program across units that a C or OCaml build then links, and the unit of
+compilation here is the project: two projects that each contain a copy of
+the support library and disagree about which one defines a type are not
+something this backend can produce a coherent answer for.  A whole
+program per project is what v1 supports, and the refusal says so rather
+than emitting something that fails at link time.
+
+`--custard_split` was refused for the same reason and is not any more;
+§122.18 is what it does.  The two are not the same question.  A split
+divides one extraction across files of one project, which the generated
+project can list in order; a unit divides one program across extractions
+that never see each other.
 
 ### 122.13 `Prims` and `FStar.List.Tot.Base`
 
@@ -21059,14 +21218,14 @@ its own fix and its own test --- but the case is now known.
 
 ### 122.15 What the suite checks
 
-`FS_TESTS` is 20 programs, chosen to cover each of the decisions above:
+`FS_TESTS` is 24 programs, chosen to cover each of the decisions above:
 `Wide128` for §122.7, `AnyCond` and `AnyException` for §122.6.1,
 `UnitPtr` for §122.14, `Literals` for §122.4's bigint spelling,
 `OcamlEscape` for §122.3 --- it binds both `method` and `method_`, so the
-pin on it is the injectivity argument in one line --- `Typeclass` and
-`Mymon` for monomorphized output, and the rest for coverage.  Each is
-extracted, compiled with `dotnet build -c Release`, and run, and must
-exit 0.
+pin on it is the injectivity argument in one line --- `BytesFS` for
+§122.17, `Typeclass` and `Mymon` for monomorphized output, and the rest
+for coverage.  Each is extracted, compiled with `dotnet build -c
+Release`, and run, and must exit 0.
 
 Compiling needs the .NET 10 SDK.  The Makefile probes the output of
 `dotnet --list-sdks` for a major version of 10 or above and falls back to
@@ -21107,6 +21266,116 @@ the optimizer off for the library --- would have hidden it.  The
 parameter of the `FStar.UInt32` one is renamed, with a comment saying
 why, since a future edit that renames it back would fail three files
 away from the change.
+
+### 122.17 Which hand-written realizations are mirrored
+
+§122.9 says what happens to an unrealized `val`; it does not say which
+ones a user should expect to be realized.  The rule is this one, and it
+is a rule about *specifications*, not about `ulib/ml`:
+
+> A module under `ulib/ml/app` is mirrored when its F\* interface
+> describes a value that .NET has, and is not mirrored when the
+> interface describes OCaml.
+
+The distinction is the whole of §122.1.  `FStar.String`, `FStar.Char`,
+`FStar.IO`, `FStar.Exn`, `FStar.All`, `FStar.List.Tot.Base`,
+`FStar.Option`, `Prims` and the integer modules all describe something
+.NET has under a different name, so the backend supplies the name and
+the program is unchanged.  `FStar.Dyn`, `FStar.Parse`, `FStar.Pprint`
+and `FStar.ImmutableArray` describe an OCaml library --- `Obj.magic`
+plus OCaml's own representation, an OCaml lexer, an OCaml pretty
+printer, `Stdlib.Array` --- and a .NET program that wanted them would
+want a different interface, so they are refused with error 395 and the
+message points at `--custard_backend OCaml`.
+
+Two entries in that inventory have moved since the rule was written.
+
+`FStar.ST`, `FStar.Ref`, `FStar.Heap`, `FStar.Monotonic.Heap` and
+`FStar.MRef` are no longer part of the library: the heap model was
+removed and replaced by an abstract `ref`, `alloc`, `!` and `:=` in
+`FStar.All`.  Those four are ordinary declarations of the kind §122.9
+describes, and the backend realizes them with F#'s own `ref` cell ---
+`(r).Value` and `(r).Value <- x`, which is what `TRef` prints to.  A
+program that allocates, at top level or not, needs nothing further.
+`ulib/ml/app/FStar_ST.ml` and its two neighbours are still on disk and
+are dead; nothing on this path reads them.
+
+`FStar.Bytes` is realized, and is the one module where the two
+realizations are not the same data.  OCaml's is a `string`, because an
+OCaml string *is* a byte string; .NET's is not, so the F# realization is
+a `byte[]`.  That choice is forced twice over.  `FStar.Bytes.bytes` is
+declared `t:Type0{hasEq t}`, and F#'s structural equality on arrays
+gives it one, where a .NET `string` of char-sized code units would give
+the wrong one for any byte above 127.  And `utf8_encode` has to be a
+real encoding: on `byte[]` it is `Text.Encoding.UTF8.GetBytes`, and
+`iutf8_opt` is a `UTF8Encoding (false, true)` --- the strict decoder ---
+because the specification says the result re-encodes to the argument
+and .NET's default decoder silently substitutes U+FFFD instead of
+failing.  `string_of_hex` and `hex_of_string` keep OCaml's reading, in
+which the `string` they name is one whose characters are byte values.
+`int_of_bytes` and `bytes_of_int` are big endian, which is what
+`int_of_bytes_of_int` pins.
+
+Mirroring it found three places where the OCaml realization did not
+match `FStar.Bytes.fsti`, all of them fixed here rather than mirrored:
+`int32_of_bytes` and its two siblings returned an OCaml `int` instead of
+a machine integer and `bytes_of_int16` and `bytes_of_int8` took a
+`U32.t`, so no caller of the interface could use any of the six;
+`string_of_hex` returned OCaml's own `Bytes.t` where the interface says
+`string`; and `iutf8_opt` was `fun x -> Some x`, which is not a
+decoder.  `tests/custard/BytesFS.fst` is extracted on both backends, so
+the next such disagreement is a diff rather than a discovery.
+
+### 122.18 `--custard_split`
+
+Without it the whole program is one F# module, and every name in it is
+the mangled global of §122.3: `bytesFS_check`, `fsSplitLo_flip`.  That is
+the right answer for one file --- the mangling is what keeps a flat file
+collision-free --- and it is the wrong answer for a program of any size,
+because the qualification a reader wants is the one F# already has.
+
+With it, the output is one F# module per F\* source module, named after
+it, in the partition §12.9 computes; the mechanism is the OCaml
+backend's, and the two spell a cross-file reference the same way for the
+same reason.  A declaration that sits in the module its own F\* module
+names, and carries no specialization suffix, is emitted under its plain
+identifier --- `flip`, not `fsSplitLo_flip` --- and referred to from
+elsewhere as `FsSplitLo.flip`.  A specialization keeps its suffix, since
+the plain name would no longer say which one is meant.  Nothing is
+brought into scope with `open`: two modules may have re-specialized the
+same upstream definition, and an `open` would make that clash silent.
+
+Three things are F#'s own.
+
+The project has to list the files, in the order F# compiles them, and F#
+compiles them in the order the project lists.  `Split.run` emits its
+components in dependency order --- each after every component it refers
+to --- so the `<Compile Include=...>` entries are that order, with
+`FStarCustard.fs` first because everything opens it.
+
+`[<EntryPoint>]` has to sit on the last declaration of the last file, so
+the generated entry point is appended to the last file that exists ---
+"that exists" because a module that contributed only externals renders
+to nothing and gets no file.
+
+And the generated entry point is called `main`, which is a name the
+program may now have.  An F\* `main` in the last module used to come out
+as `fsSplitHi_main` and now comes out as `main`, and F# reports the
+second definition as an error rather than shadowing it.  So the
+generated one steps aside --- `main_` --- which is the same escape
+§122.3 applies everywhere else, and it consults the last file's own
+top-level names rather than assuming.
+
+`--custard_unit` is still refused (§122.12): a split divides one
+extraction across files of one project, and a unit divides one program
+across extractions that never see each other.
+
+`tests/custard/FsSplitLo.fst` and `FsSplitHi.fst` are the test.  The
+upstream module holds one of each thing whose spelling changes --- a
+variant, a record, an exception, a polymorphic function --- the
+downstream one refers to all of them across the boundary and binds
+`main` itself, and the pins are on the two files and on the order in the
+project.  It is compiled and run where the SDK of §122.15 is present.
 
 
 
@@ -22367,6 +22636,52 @@ A `Realized` type is the one silence left.  Its OCaml shape is the
 hand-written module's, Custard emits no declaration for it at all, and
 the realization carries its own `[@@deriving]` or does not; there is
 nothing Custard can honour and nothing it can usefully say.
+
+# 131 A module's surface is its interface
+
+`--custard_entry_module M` means "every top-level definition of `M` is a
+root" (§4.4), and that is right for a module with no interface, where
+every definition is reachable from outside by name.  It is wrong for a
+module that has an `.fsti`.  There the public surface *is* the interface,
+and a definition the interface does not declare cannot be called by
+anyone but `M` itself.  Rooting it says the opposite: it survives dead
+code elimination and lands in the output even when nothing reaches it.
+
+That is not just wasted bytes.  `--custard_entry_module` is what a
+*library* build uses (§4.4), and a library's contract is its interface;
+an extraction that emits interface-private definitions publishes symbols
+the library never promised, and each one drags in its own transitive
+closure.  A module with an interface and a large private section paid
+for the whole section.
+
+The signal already exists.  The typechecker stamps `KrmlPrivate` on a
+definition an interface does not export, and it does so only when the
+module *has* an interface (`Tc.fst:1290`).  So the rooting guard gained
+a conjunct: a `Sig_let` carrying `KrmlPrivate` is not rooted by
+`--custard_entry_module`.
+
+The attribute alone is not a sound test, though, and that is the subtle
+part.  `FStar.Tactics.PrettifyType` stamps `KrmlPrivate` on the
+`left`/`right` conversions and round-trip lemmas it generates
+*unconditionally*, whether or not the enclosing module has an interface.
+Reading the attribute by itself would therefore un-root generated
+conversions in interface-less modules, which broke `PrettyUnit`.  The
+guard is `Dep.module_has_interface` **and** the attribute, so the
+attribute is consulted only in the situation the typechecker writes it
+for.
+
+Three properties, and `tests/custard/EntryIface.fst` pins all three.
+`exported` is declared by the interface and is rooted.  `private_dead`
+is not declared and nothing reaches it, so it does not appear ---
+the pin on the change.  `private_live` is equally undeclared, is
+*reached* from `exported`, and appears anyway: un-rooting removes a
+root, it does not hide a definition.
+
+The rest of the root vocabulary is untouched.  `--custard_entry` and
+`--custard_main` name a definition outright and root it whatever its
+attributes say; an author who wants an interface-private definition in
+the output can still ask for it by name, which is the escape hatch this
+rule needs and the only one it needs.
 
 | M | Deliverable | Notes |
 | --- | --- | --- |

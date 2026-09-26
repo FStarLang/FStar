@@ -30,14 +30,7 @@ module Format = FStarC.Format
 module Prof   = FStarC.Custard.Prof
 module Options = FStarC.Options
 
-(* Does [v] occur free in [e]?  Custard's variable names come from F* bound
-   variables and so already carry a unique index, but this deliberately does
-   not track shadowing: an over-count keeps a binding that could have been
-   dropped, which is the safe direction. *)
-let rec occurs (v:string) (x:expr) : ML bool =
-  match x.e with
-  | EVar w -> w = v
-  | _ -> exists_child (occurs v) x
+(* [occurs] is {!FStarC.Custard.Syntax.occurs}. *)
 
 (* -------------------------------------------------------------------- *)
 (* ANF                                                                  *)
@@ -277,6 +270,16 @@ let rec sub (sm:subst) (x:expr) : ML expr =
   match x.e with
   | EVar v ->
     (match SMap.try_find sm v with
+     (* A pattern binder's entry is a *rename* and not a substitution:
+        [sub_pat] has no type to give it, so it writes [TAny], and taking
+        that entry whole would erase the type the occurrence records.  That
+        type is read: [TRef] versus [TBuf] is what decides whether a write
+        prints as [r := v] or as [b.(i) <- v] on every backend, and the
+        pattern is where a [ref] inside a tuple gets bound.  So a
+        [TAny]-typed rename keeps the occurrence's type and effect, exactly
+        as [rename_var] below does, and every other entry -- which [sub],
+        [ELet] and [EFun] all give a real type -- is taken as it stands. *)
+     | Some ({ e = EVar v' ; ty = TAny }) -> { x with e = EVar v' }
      | Some e -> e
      | None -> x)
   | EConst _ | EQual _ | EAny | EAbort _ -> x
@@ -310,8 +313,9 @@ and sub_pat (sm:subst) (p:pat) : ML pat =
   | PWild | PConst _ -> p
   | PVar v ->
     let v' = rename v in
-    (* The type is unknown here, and nothing downstream reads it off a
-       pattern variable's occurrence. *)
+    (* No type is available here -- a pattern carries none -- so the entry is
+       [TAny], which [sub] reads as "rename, and keep what the occurrence
+       already knows".  Occurrences *are* read for their type. *)
     SMap.add sm v { e = EVar v'; ty = TAny; eff = E_Pure };
     PVar v'
   | PCtor (n, ps) -> PCtor (n, ps |> List.map (sub_pat sm))
@@ -862,6 +866,18 @@ let rec reduce (x:expr) : ML expr =
           but the caller's is the one the surrounding code was built against,
           and an abbreviation is the better name for it. *)
        { arg with ty = x.ty }
+     (* Commuting conversion: an application whose head is a [match] whose
+        arms are lambdas.  None of the backends has closures, so the arms
+        have to meet their argument where beta can fire, and the only place
+        that can happen is inside the arms.  Restricted to atomic arguments,
+        which are pure and free to duplicate; the scrutinee is evaluated
+        exactly once either way, since it stays where it is and only the
+        application moves. *)
+     | EMatch (scrut, brs) when args |> List.for_all is_atomic
+                             && brs |> List.existsb (fun (_, _, bd) -> EFun? bd.e) ->
+       let brs = brs |> List.map (fun (p, gd, bd) ->
+         (p, gd, { x with e = EApp (bd, args) })) in
+       reduce { x with e = EMatch (scrut, brs) }
      | _ -> { x with e = EApp (h, args) })
 
   | EMatch (scrut, brs) ->
@@ -3315,6 +3331,17 @@ let coerce_prog (prog:program) : ML program =
     match exp, infer env x with
     | Some e, Some t -> if cty_mismatch t e then coerce x e else x
     | Some TAny, None -> if concrete_shape x then coerce x TAny else x
+    (* [infer] declined, which for a compound type containing a [TAny] is what
+       [trust] always does -- but the node's own type is still [Extract]'s
+       answer, and when it disagrees with the expectation in a way [TAny]
+       cannot explain away, the disagreement is real.  [ASN1.Spec.Sequence] is
+       the case: [tot_weaken<tuple2<any,any>>] returns a parser of
+       [tuple2<any,any>] into a position declared to parse [any], and the
+       target -- which infers a generic [tot_weaken]'s type variable from its
+       argument rather than taking Custard's word for it -- then has two
+       incompatible types for one expression.  A node whose type is itself
+       [TAny] says nothing and is left alone. *)
+    | Some e, None -> if not (TAny? x.ty) && cty_mismatch x.ty e then coerce x e else x
     | _ -> x
   and go (env:cenv) (exp:option cty) (x:expr) : ML expr =
     let same (e':expr') : expr = { x with e = e' } in
@@ -3457,7 +3484,25 @@ let coerce_prog (prog:program) : ML program =
                                                               else if has_any p then None
                                                               else Some p)
                    | None -> es |> List.map (fun _ -> None)) in
-         same (EApp (go env None h, List.map2 (fun p e -> check env p e) ps es)))
+         let es = List.map2 (fun p e -> check env p e) ps es in
+         (* Section 126.6.  The head's own type says nothing, but the call
+            still stands where something is expected, and the arguments still
+            say what they are.  Dropping the expectation here loses it for the
+            whole of the head -- and the head is a lambda often enough (a
+            [let] that [Simplify] turned back into a redex) that the body then
+            gets retyped against itself and no coercion is ever considered.
+            Rebuilding the arrow the head must have is what the [peel_arrows]
+            failure above already does; it is no less right when the head's
+            type was untrusted from the start. *)
+         let ts = es |> List.map (infer env) in
+         let want =
+           (match exp with
+            | Some r when ts |> List.for_all Some? ->
+              Some (arrows (ts |> List.map (fun t -> match t with Some t -> t | None -> TAny)) r)
+            | _ -> None) in
+         (match want with
+          | Some _ -> same (EApp (check env want h, es))
+          | None -> same (EApp (go env None h, es))))
     | ECtor (n, es) ->
       let fs = fields_of (string_of_name n) (first exp (trust x.ty)) in
       if List.length fs = List.length es

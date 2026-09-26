@@ -2859,7 +2859,7 @@ and expr_of_term (st:state) (t:term) : ML expr =
                             rc.residual_effect
       | None -> body in
     let body = expr_of_term st body in
-    let bs =
+    let flags =
       let flags = bs |> List.map (Mono.is_erased_binder (tcenv st)) in
       (* Same guard as [Mono.keep_thunk], and both of its clauses.  A lambda
          whose binders all vanish stops being a lambda: its effects then run
@@ -2879,12 +2879,44 @@ and expr_of_term (st:state) (t:term) : ML expr =
         let all_erased = Cons? flags && List.for_all (fun b -> b) flags in
         let last_erased = (match List.rev flags with
                            | f :: _ -> f | [] -> false) in
-        if last_erased && (all_erased || not (is_pure body.eff))
+        (* And [keep_thunk]'s third condition, which is the one the arrow is
+           filtered by: only an *explicit* last binder can be the one a
+           partial application stopped in front of, because F* instantiates an
+           implicit at every application site.  Without it the two sides part
+           company on a Pulse [fn] whose last binder is an erased implicit --
+           [l2r_leaf_writer]'s [#v: erased bytes] -- where the arrow deletes
+           it and the lambda keeps it, and karamel rejects the local whose
+           annotation has one binder fewer than its value. *)
+        let last_explicit =
+          match List.rev bs with
+          | b :: _ -> not (S.is_bqual_implicit_or_meta b.binder_qual)
+          | [] -> false in
+        if last_erased && (all_erased || (not (is_pure body.eff) && last_explicit))
         then (match List.rev flags with
               | _ :: r -> List.rev (false :: r)
               | [] -> flags)
         else flags in
-      drop_flagged flags bs in
+      flags in
+    (* Section 5.2's rule, as in [branch_of_branch] and [extract_letbinding]:
+       a binder dropped here is one the body may still name, and its erased
+       occurrences sit where the erasure left [unit], so [()] is the closure
+       the body is owed.
+
+       Only a binder the body actually names, though.  The rebinding is a
+       repair and not a rule: every one of these costs the body its shape,
+       and a definition whose body stops being a single field access stops
+       being inlined at its call sites.  That is not academic --
+       [__proj__Mkrec_t__item__fld] and [__proj__Mkht_t__item__hashf] drop
+       erased binders here and name none of them, and binding them anyway
+       turned both projectors into top-level functions that their call sites
+       then reached by *partial* application: an error 368 for the C backend,
+       and a [Mkht_t] in the OCaml output where a field access belonged. *)
+    let body =
+      List.fold_right (fun (b:S.binder) acc ->
+        { acc with e = ELet (name_of_bv b.binder_bv, TUnit, unit_expr, acc) })
+        (keep_flagged flags bs |> List.filter (fun b ->
+           occurs (name_of_bv b.binder_bv) body)) body in
+    let bs = drop_flagged flags bs in
     (* Section 72.2, as in [extract_letbinding]: a binder the guard above put
        back is there for the arity and carries nothing, so [unit] is its type
        and not whatever its sort says. *)
@@ -4202,18 +4234,46 @@ and callee_eff (st:state) (key:string) (n_args:int) : ML eff =
 
 and branch_of_branch (st:state) (br:S.branch) : ML branch =
   let p, g, b = SS.open_branch br in
-  (pat_of_pat st p,
-   (match g with None -> None | Some g -> Some (expr_of_term st g)),
-   expr_of_term st b)
+  let p, freed = pat_of_pat st p in
+  (* Section 5.2's rule, one phase earlier.  [Layout] hands back the names
+     whose sub-pattern *it* deleted and rebinds each to [()]; [pat_of_pat]
+     deletes sub-patterns too, and for the same reason -- the value has no
+     runtime representation -- so it owes the body the same closure.  Without
+     it the name reaches a backend free: a constructor field whose type is an
+     *abbreviation* of [unit] is [Dropped] here rather than erased by
+     [Layout], so [match m with X_a_mid cm -> (| A, cm |)] lost [cm] from the
+     pattern and kept it in the body.  [Simplify] substitutes these away as
+     soon as it sees them; what matters is that the body stays closed in
+     between.
 
-and pat_of_pat (st:state) (p:S.pat) : ML pat =
+     Only a name the body actually mentions, as in [Tm_abs] and
+     [extract_letbinding]: an [ELet] the body has no use for is one more
+     reason for a later pass not to recognize the shape it has. *)
+  let bind (e:expr) : ML expr =
+    List.fold_right (fun v acc ->
+      { acc with e = ELet (v, TUnit, unit_expr, acc) })
+      (freed |> List.filter (fun v -> occurs v e)) e in
+  (p,
+   (match g with None -> None | Some g -> Some (bind (expr_of_term st g))),
+   bind (expr_of_term st b))
+
+(* The variables an F* pattern binds, for the rebinding above.  A
+   [Pat_dot_term] binds nothing a body may name: it is an inferred value, and
+   the occurrences it stands for are the pattern's own. *)
+and pat_bound_vars (p:S.pat) : ML (list string) =
+  match p.v with
+  | Pat_var bv -> [name_of_bv bv]
+  | Pat_cons (_, _, pats) -> pats |> List.collect (fun (p, _) -> pat_bound_vars p)
+  | Pat_constant _ | Pat_dot_term _ -> []
+
+and pat_of_pat (st:state) (p:S.pat) : ML (pat & list string) =
   match p.v with
   | Pat_constant c ->
-    (match constant_of_sconst c with
-     | Some c -> PConst c
-     | None -> PWild)
-  | Pat_var bv -> PVar (name_of_bv bv)
-  | Pat_dot_term _ -> PWild
+    ((match constant_of_sconst c with
+      | Some c -> PConst c
+      | None -> PWild), [])
+  | Pat_var bv -> (PVar (name_of_bv bv), [])
+  | Pat_dot_term _ -> (PWild, [])
   | Pat_cons (fv, _, pats) ->
     (* Which subpatterns survive has to be decided exactly as for a
        constructor *application* (see [app_of_fv']), from the constructor's own
@@ -4223,8 +4283,11 @@ and pat_of_pat (st:state) (p:S.pat) : ML pat =
        pattern of the wrong arity. *)
     let l = S.lid_of_fv fv in
     let flags = ctor_dropped_flags st l in
-    let pats = drop_flagged flags pats |> List.map (fun (p, _) -> pat_of_pat st p) in
-    PCtor (request st { sk_lid = l; sk_args = []; sk_subst = []; sk_holes = 0 }, pats)
+    let gone = keep_flagged flags pats |> List.collect (fun (p, _) -> pat_bound_vars p) in
+    let kept = drop_flagged flags pats |> List.map (fun (p, _) -> pat_of_pat st p) in
+    (PCtor (request st { sk_lid = l; sk_args = []; sk_subst = []; sk_holes = 0 },
+            kept |> List.map fst),
+     gone @ (kept |> List.collect snd))
 
 (* Section 70.2.  [@@custard_c_reference]: values of this type are handles, so
    a binding of one aliases rather than copies.  It is a statement about how
@@ -4357,6 +4420,7 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
                   | Some h -> with_c_realized h d
                   | None -> with_realized d) in
     let d = if is_modelled_lid l && not inlined then with_modelled d else d in
+    let d = if Builtins.is_no_unfold_lid l then with_no_unfold d else d in
     if is_inlinable se && not (is_root st l)
     then with_inline d else d
 
@@ -4595,6 +4659,12 @@ and with_c_realized (h:string) (d:decl) : ML decl =
    emit no declaration for them either.  Everything else about the declaration
    is kept -- the shape, the arity, the polymorphism -- because the passes
    still have to typecheck uses of it. *)
+(* Section 77.  [--custard_no_unfold]: keep the abbreviation. *)
+and with_no_unfold (d:decl) : ML decl =
+  match d with
+  | DType t -> DType { t with dt_flags = NoUnfold :: t.dt_flags }
+  | d -> d
+
 and with_modelled (d:decl) : ML decl =
   match d with
   | DType t -> DType { t with dt_flags = Modelled :: t.dt_flags }
@@ -4625,7 +4695,17 @@ and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
   | None -> ([], TAny)
   | Some ((_, ty), _) ->
     let cs = binder_classes st l in
-    let bs, c = U.arrow_formals_comp ty in
+    (* The *unfolded* spine, because that is the one [cs] is indexed against
+       ({!Mono.classify_demand} takes it) and the one every call site's
+       argument list is computed from.  Stopping at an abbreviation in the
+       codomain instead makes the declaration and its calls disagree about
+       arity: EverParse's [val cbor_det_major_type () : get_major_type_t _]
+       has one binder before the abbreviation and two after, so the erased
+       [unit] in front was kept here -- there being no later binder to carry
+       the thunk -- and dropped at the call, which karamel then rejects as
+       [cbor_det_t vs ()].  With the spine unfolded the [unit] is one of two
+       binders on both sides and both drop it. *)
+    let bs, c = Mono.arrow_formals_unfold (tcenv st) ty in
     (* Section 85.  The names this signature writes into a template-id.  A
        [Mono] value binder among them is exempt from the rule just below, and
        for the reason that rule already gives for a type argument: it is
@@ -4666,10 +4746,10 @@ and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
        instantiate, so it becomes [any] here just as it did before, rather
        than escaping as a free variable. *)
     let rec go (i:int) (bs:binders) (cs:list bclass) (subst:list subst_elt)
-               (keep:binders) (anys:list string)
-      : ML (binders & list subst_elt & list string) =
+               (keep:binders) (anys:list string) (gone:binders)
+      : ML (binders & list subst_elt & list string & binders) =
       match bs with
-      | [] -> (List.rev keep, subst, anys)
+      | [] -> (List.rev keep, subst, anys, List.rev gone)
       | b :: bs' ->
         let cs' = match cs with [] -> [] | _ :: cs' -> cs' in
         let cls = match cs with [] -> Poly | c :: _ -> c in
@@ -4719,7 +4799,24 @@ and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
                    monomorphized argument's term, so nothing is discarded -- \
                    which is how a target intrinsic with a compile-time \
                    operand is normally expressed." ]
-         | Mono, Some (_, a) -> go (i + 1) bs' cs' (NT (b.binder_bv, a) :: subst) keep anys
+         | Mono, Some (_, a) -> go (i + 1) bs' cs' (NT (b.binder_bv, a) :: subst) keep anys gone
+         (* Section 5.1.  [split_mono_args] deletes a [Dropped] argument
+            outright -- it is not even passed as [()] -- so a declaration that
+            keeps the binder is one parameter longer than every call to it.
+            EverParse's [val cbor_det_major_type () : get_major_type_t _] is
+            that: the [unit] is [Dropped], the call passes only the [cbor_det_t]
+            and karamel rejects the two against each other.  The parameter is
+            gone from the emitted code either way; the only question is whether
+            the declaration agrees, and the warning below is what tells the
+            author an external's prototype moved.
+
+            A *type* binder is exempt for the reason the [Mono] case gives:
+            it leaves the value spine by design and becomes a [dx_typars]
+            entry, so dropping it does not shorten the call -- it unbinds the
+            variable the signature still mentions.  The Rust backend's
+            modelled [Pulse.Lib.Slice.slice t] is that. *)
+         | Dropped, _ when not (is_type_binder (tcenv st) b) ->
+           go (i + 1) bs' cs' subst keep anys (b' :: gone)
          | Mono, None when is_type_binder (tcenv st) b && is_root st l ->
            (* Section 64.  A root is reached from no F* call site -- that is
               what makes it a root -- so "the call site did not supply it"
@@ -4733,12 +4830,12 @@ and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
               the instantiations written in the IR and emits one external
               per distinct type vector, which is what the extractor already
               does for an ordinary external through [margs]. *)
-           go (i + 1) bs' cs' subst (b' :: keep) anys
+           go (i + 1) bs' cs' subst (b' :: keep) anys gone
          | Mono, None when is_type_binder (tcenv st) b ->
-           go (i + 1) bs' cs' subst (b' :: keep) (name_of_bv b.binder_bv :: anys)
-         | _ -> go (i + 1) bs' cs' subst (b' :: keep) anys)
+           go (i + 1) bs' cs' subst (b' :: keep) (name_of_bv b.binder_bv :: anys) gone
+         | _ -> go (i + 1) bs' cs' subst (b' :: keep) anys gone)
     in
-    let keep, subst, anys = go 0 bs cs [] [] [] in
+    let keep, subst, anys, gone = go 0 bs cs [] [] [] [] in
     let c = SS.subst_comp subst c in
     let typars = keep |> List.collect (fun b ->
                    let n = name_of_bv b.binder_bv in
@@ -4801,6 +4898,17 @@ and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
                        if e && not (is_type_binder (tcenv st) b)
                           && not (declared_erased b)
                        then [Ident.string_of_id b.binder_bv.ppname] else []) in
+    (* [gone] is reported by the same rule.  A [Dropped] binder leaves the
+       declaration one step earlier than the ones [flags] marks -- [go]
+       deletes it, so it is not in [keep] at all -- but it is the same news
+       for the same reader: a parameter the C prototype still has is not
+       being passed.  Reporting only the late ones would silence exactly the
+       case section 49.3 exists for, since a pure [unit -> unit] parameter
+       that is not the last binder is [Dropped] rather than thunk-kept. *)
+    let dropped = dropped @
+                  (gone |> List.collect (fun (b:S.binder) ->
+                     if not (declared_erased b)
+                     then [Ident.string_of_id b.binder_bv.ppname] else [])) in
     if Cons? dropped then
       custard_warning st E.Warning_CustardExternErasure [
         text ("Custard erased " ^ show (List.length dropped) ^
@@ -5326,6 +5434,18 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
      an environment that binds them.  [bs] is what [abs_formals] opened and
      what [c] was realigned to, so it is the right set. *)
   let benv = Prof.timed "push_binders" (fun () -> TcEnv.push_binders (tcenv st) bs) in
+  (* Section 5.2's rule, as in [branch_of_branch]: a binder dropped here is one
+     the body may still name.  Its type is erased and its occurrences sit where
+     the erasure left [unit] -- [ASN1.Syntax.mk_gen_items]'s [(pf : squash ...)],
+     written into the second component of a [dtuple2] whose field [Layout] has
+     already erased to [unit] -- so the closure the body is owed is exactly
+     [()].  [Simplify] substitutes these away; what matters is that the body
+     never reaches a backend with a free name.
+
+     Only a binder the body actually names, as in [Tm_abs]: the rebinding
+     costs the body its shape, and a body that stops being a single field
+     access stops being inlined at its call sites. *)
+  let dropped_binders = keep_flagged flags bs in
   let bs = drop_flagged flags bs in
   (* An *erased* binder that survived [drop_flagged] is the one
      {!Mono.keep_thunk} put back so that the definition does not become a
@@ -5466,7 +5586,12 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
         dl_flags   = [];
       })
     | [] -> () in
-  let dl_body = expr_of_term st body in
+  let dl_body =
+    let body = expr_of_term st body in
+    List.fold_right (fun (b:S.binder) acc ->
+      { acc with e = ELet (name_of_bv b.binder_bv, TUnit, unit_expr, acc) })
+      (dropped_binders |> List.filter (fun b ->
+         occurs (name_of_bv b.binder_bv) body)) body in
   st.cur := saved_cur;
   st.cur_lid := saved_cur_lid;
   Builtins.set_current_decl (Some saved_cur);
@@ -5716,6 +5841,43 @@ let noextract_to_this_backend (se:S.sigelt) : ML bool =
        | None -> false)
     | _ -> false)
 
+(* Section 131.  A module with an interface has a public surface, and it is
+   the interface:
+   [FStarC.TypeChecker.Tc.mark_karamel_private] tags every definition the
+   interface does not declare with the internal [KrmlPrivate] attribute, which
+   is what made the legacy backends emit such a definition as C [static].
+
+   [--custard_entry_module] means "compile this module as a library"
+   (section 4.4), and a library's surface is its interface.  Rooting a definition the
+   interface hides is not what [--extract_module] did: EverParse's quackyducky
+   suite has 77 generated modules whose [.fst]-only [t17_gf]/[t18_fg] convert
+   between specification-level types, are used only in ghost position, and
+   were dropped by karamel as unreachable privates.  Rooted, they are kept,
+   and karamel then reports the specification datatype behind them as a
+   garbage-collected type that is not Low*.
+
+   A module without an interface has no such surface, and the question is
+   asked of the *module*, not of the attribute: [Tc.mark_karamel_private]
+   indeed tags nothing there, but it is not the only thing that writes the
+   attribute.  [FStar.Tactics.PrettifyType] stamps [KrmlPrivate] on every
+   [left]/[right]/round-trip definition it generates, unconditionally and
+   whether or not the module has an interface, so reading the attribute alone
+   would un-root section 73's generated conversions in a module that never
+   hid anything -- which is what [tests/custard/PrettyUnit] sees.  The
+   attribute means "not exported from the generated C"; only where an
+   interface exists does that coincide with "not part of the library's
+   surface".
+
+   [--ext no_krml_private] turns the tagging off for a build whose generated C
+   is meant to be consumed by other C code; there it means the same thing
+   here, and the whole module is the surface again. *)
+let is_krml_private (st:state) (m:Ident.lident) (se:S.sigelt) : ML bool =
+  Dep.module_has_interface st.deps m &&
+  se.sigattrs |> List.existsb (fun attr ->
+    match (SS.compress attr).n with
+    | Tm_constant (Const_string ("KrmlPrivate", _)) -> true
+    | _ -> false)
+
 let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
          (per_module : S.modul -> ML unit) : ML program =
   let mark' (quiet:bool) (f:flag) (l:Ident.lident) : ML unit =
@@ -5819,7 +5981,8 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
             when not (se.sigquals |> List.existsb (function
                         | NoExtract | Projector _ | Discriminator _ -> true
                         | _ -> false)) &&
-                 not (noextract_to_this_backend se) ->
+                 not (noextract_to_this_backend se) &&
+                 not (is_krml_private st md.name se) ->
             lbs |> List.iter (fun lb ->
               match lb.lbname with
               (* A specification is a definition too.  [Null.live r : slprop]

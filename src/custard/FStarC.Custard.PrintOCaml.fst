@@ -276,6 +276,25 @@ let module_name_of_unit (u:string) : ML string = uppercase_first (sanitize u)
 let ocaml_var (x:string) : ML string =
   escape_keyword (lowercase_first (sanitize x))
 
+(* An OCaml type variable is a quote followed by an identifier, and an
+   identifier may itself contain a quote -- so [t'], which F* names routinely,
+   produces ['t'], which the lexer takes for a character literal and reports
+   as a syntax error about a line nobody wrote.  This is the same hazard
+   {!FStarC.Custard.PrintFSharp.fsharp_tyvar} handles for F#, and the same
+   escape: a quote inside the name becomes an underscore and an underscore
+   doubles, which keeps the mapping injective, since two type variables of one
+   declaration must not collide.  Keyword escaping is [ocaml_var]'s, and a
+   type variable is in its own namespace, but the doubling can turn a
+   non-keyword into one only by lengthening it, so it is applied after. *)
+let ocaml_tyvar (x:string) : ML string =
+  let s = lowercase_first (sanitize x) in
+  let s = String.concat "" (List.map (fun c ->
+            match BU.int_of_char c with
+            | 39 -> "_"
+            | 95 -> "__"
+            | _ -> BU.string_of_char c) (String.list_of_string s)) in
+  "'" ^ escape_keyword s
+
 (* Section 30.13.  The names of the top-level values this run will emit, filled
    in by [build_tables] before anything is printed.
 
@@ -411,7 +430,7 @@ let rec ty (t:cty) : ML string =
   | TUnit -> "unit"
   | TExn -> "exn"
   | TAny -> "Obj.t"
-  | TVar x -> "'" ^ ocaml_var x
+  | TVar x -> ocaml_tyvar x
   | TInt sw -> int_module sw ^ ".t"
   (* Section 38; the reason, and the other two call sites, are on
      [reject_fwidth]. *)
@@ -964,8 +983,8 @@ and case (ind:string) (br:branch) : ML string =
 let params (ps : list string) : ML string =
   match ps with
   | [] -> ""
-  | [p] -> "'" ^ ocaml_var p ^ " "
-  | _ -> "(" ^ String.concat ", " (List.map (fun p -> "'" ^ ocaml_var p) ps) ^ ") "
+  | [p] -> ocaml_tyvar p ^ " "
+  | _ -> "(" ^ String.concat ", " (List.map ocaml_tyvar ps) ^ ") "
 
 (* Section 130.  The ppx item attribute the source asked for with
    [@@PpxDerivingYoJson], and nothing else: Custard generates no converter of
