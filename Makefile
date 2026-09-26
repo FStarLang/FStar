@@ -697,7 +697,9 @@ clean-3: .force
 	$(call bold_msg, "CLEAN", "STAGE 3")
 	$(MAKE) -C stage3 clean
 	rm -f stage3/.fstarlock
-	rm -rf stage3/fstarc.ml
+	@# Not stage3/fstarc.ml: unlike stage1's and stage2's, it is a checked-in
+	@# symlink to stage2/fstarc.ml, which clean-2 empties.  Removing it makes
+	@# the next `make' fail in `install' with no fstarc.cui to copy.
 	rm -rf stage3/ulib.ml
 	rm -rf stage3/ulib.pluginml
 	rm -rf pulse/build/checker.checked pulse/build/checker.ml

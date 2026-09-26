@@ -7,8 +7,8 @@ let reifNativ_return (x : 'a) (tmp : Prims.int) : 'a =
   x
 
 let reifNativ_bind (x : (Prims.int -> 'a)) (f : ('a -> (Prims.int -> 'b))) (tmp : Prims.int) : 'b =
-  (let v = (x (Prims.parse_int "0")) in
-  (f v (Prims.parse_int "0")))
+  (let v = (x Prims.int_zero) in
+  (f v Prims.int_zero))
 
 let reifNativ_lift (f : (unit -> 'a)) (tmp : Prims.int) : 'a =
   (f ())
