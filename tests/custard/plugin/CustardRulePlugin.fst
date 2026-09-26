@@ -164,10 +164,17 @@ let launch (tys : list cty) (args : list expr) : ML expr =
   match args with
   | [d; n] ->
     let n_bytes = total_size (elements (field_at 1 "shmems" d)) in
-    (* The name the lifted kernel gets is the descriptor's own [kname].  For a
-       real device backend this is not cosmetic: it is what appears in
-       profiler output, in disassembly and in error messages. *)
-    let kname = string_of_lit (field_at 0 "kname" d) in
+    (* The name the lifted kernel gets is the descriptor's own [kname],
+       qualified by the definition the rule is being expanded inside.  For a
+       real device backend neither half is cosmetic: the name is what appears
+       in profiler output, in disassembly and in error messages, and a rule
+       cannot see where it is being expanded, so without [current_decl] every
+       kernel in a unit is named by nothing but the descriptor -- two
+       launchers reusing one descriptor name would collide. *)
+    let kname =
+      (match B.current_decl () with
+       | Some nm -> string_of_name nm ^ "_"
+       | None    -> "") ^ string_of_lit (field_at 0 "kname" d) in
     let body = field_at 2 "kbody" d in
     let bs, inner =
       match body.e with

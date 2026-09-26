@@ -1,0 +1,16 @@
+hex_of_bytes: 070707
+print_bytes: 070707
+bytes_of_hex: true
+append: true
+abyte/twobytes: 010203
+bytes_of_int32: 12345678
+bytes_of_int16: 1234
+bytes_of_int8: ab
+int32_of_bytes: true
+repr_bytes: true
+xor: f8f8f8
+hex_of_string: 4142
+string_of_hex: AB
+utf8_encode: 68c3a9
+iutf8_opt: hé
+iutf8_opt/bad: rejected

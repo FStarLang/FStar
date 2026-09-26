@@ -304,6 +304,8 @@ let rec resolve (t:tbl) (fuel:int) (c:cty) : ML cty =
              expanding it would replace a type the target has with one it does
              not. *)
           | Some d when has_flag d.dt_flags Realized -> TApp (n, args)
+          (* Section 77.  [--custard_no_unfold]: the name is the answer. *)
+          | Some d when has_flag d.dt_flags NoUnfold -> TApp (n, args)
           | Some d ->
             (match d.dt_body with
              | TAbbrev c ->
@@ -360,6 +362,64 @@ let keep_by_slots (#a:Type) (slots:list slot) (xs:list a) : ML (list a & list a)
 let fresh_var (t:tbl) : ML string =
   t.fresh := !t.fresh + 1;
   uniq "_dropped" !t.fresh
+
+(* A constructor used as a function.  `Extract` builds an [ECtor] out of
+   whatever arguments the application node carried, so [Comp <$> f x] -- a
+   constructor passed to a higher-order function -- arrives here with fewer
+   arguments than the constructor has fields.  [Simplify.eta_ctors] expands
+   those, and says so, but it runs after this pass and the rewrites below
+   cannot wait for it: a collapsed type has one field to collapse to, an
+   application carrying none has no such field, and [Comp] came out as [()] --
+   which is not a function and which the OCaml compiler then reported about
+   generated code.  The same is true of [keep_by_slots], which would read a
+   short spine against the full slot list.
+
+   So the expansion happens here as well, over the *source* fields: an [ECtor]
+   is written against those until [rw_decl] below rewrites one, which is
+   exactly the window this pass sits in.
+
+   Only this unit's own types, and deliberately so.  An imported type's
+   layout was decided by the unit that owns it, its fields arrive here
+   already rewritten, and the rewrites below leave a use of its constructor
+   alone -- so counting a short spine against the *source* fields of an
+   imported constructor would expand an application this pass has no business
+   touching, which is how a saturated [Rect (pair, y)] acquired a binder.
+   The imported case is [Simplify.eta_ctors]', to be read against the upstream
+   unit's plans, and running later is right for it.
+
+   A saturated application -- every one in the overwhelming majority of a
+   program -- is returned untouched. *)
+let eta_ctors (t:tbl) (prog:program) : ML program =
+  let fields : SMap.t (list (string & cty)) = SMap.create 100 in
+  let add (d:dtype) : ML unit =
+    ctors_of_tydef d |> List.iter (fun (cn, fs) -> SMap.add fields (key cn) fs) in
+  SMap.iter t.types (fun _ d -> add d);
+  let rec drop (#a:Type) (n:int) (xs:list a) : ML (list a) =
+    if n <= 0 then xs else (match xs with [] -> [] | _ :: xs -> drop (n - 1) xs) in
+  let fresh () : ML string =
+    t.fresh := !t.fresh + 1;
+    uniq "_eta" !t.fresh in
+  let rec go (x:expr) : ML expr =
+    match x.e with
+    | ECtor (cn, es) ->
+      let es = es |> List.map go in
+      let alt = { x with e = ECtor (cn, es) } in
+      (match SMap.try_find fields (key cn) with
+       | Some fs when List.length es < List.length fs ->
+         let bs = drop (List.length es) fs
+                  |> List.map (fun (f, c) -> { b_name = fresh (); b_ty = c }) in
+         let args = bs |> List.map (fun b -> mk (EVar b.b_name) b.b_ty E_Pure) in
+         (* [x.ty] is the datatype: `Extract` types an [ECtor] by its
+            constructor's result, however many arguments it was given. *)
+         let res = List.fold_right (fun (b:binder) c -> TArrow (b.b_ty, E_Pure, c))
+                                   bs x.ty in
+         mk (EFun (bs, { alt with e = ECtor (cn, es @ args) })) res E_Pure
+       | _ -> alt)
+    | _ -> map_children go x in
+  prog |> List.map (fun d ->
+    match d with
+    | DLet dl -> DLet { dl with dl_body = go dl.dl_body }
+    | d -> d)
 
 (* Dropping an argument is only sound when it cannot have an effect; an impure
    one is sequenced before the result instead (section 5.2, last guard). *)
@@ -830,6 +890,8 @@ let run (imports:list (dtype & type_info)) (prog:program)
   Prof.timed "l.erasure" (fun () -> erasure_fixpoint t);
   Prof.timed "l.layouts" (fun () -> compute_layouts t);
   Prof.timed "l.ctors" (fun () -> register_ctors t);
+  (* Before the rewrite below, which reads a constructor's arity. *)
+  let prog = Prof.timed "l.eta_ctors" (fun () -> eta_ctors t prog) in
   if Options.custard_dump_layouts () then begin
     FStarC.Format.print_string "Custard layouts:\n";
     SMap.iter t.layouts (fun k l ->

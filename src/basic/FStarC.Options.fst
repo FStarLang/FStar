@@ -216,6 +216,7 @@ let defaults = [
   ("custard_link"                              , List []);
   ("custard_extern_type"                       , List []);
   ("custard_krml_model"                        , List []);
+  ("custard_no_unfold"                         , List []);
   ("custard_dump_cui"                          , Bool false);
   ("compat_pre_core"                           , Unset);
   ("compat_pre_typed_indexed_effects"          , Bool false);
@@ -496,6 +497,7 @@ let get_custard_unit            ()      = lookup_opt "custard_unit"            (
 let get_custard_link            ()      = lookup_opt "custard_link"            (as_list as_string)
 let get_custard_extern_type     ()      = lookup_opt "custard_extern_type"     (as_list as_string)
 let get_custard_krml_model      ()      = lookup_opt "custard_krml_model"      (as_list as_string)
+let get_custard_no_unfold       ()      = lookup_opt "custard_no_unfold"       (as_list as_string)
 let get_custard_dump_cui        ()      = lookup_opt "custard_dump_cui"        as_bool
 let get_defensive               ()      = lookup_opt "defensive"                as_string
 let get_dep                     ()      = lookup_opt "dep"                      (as_option as_string)
@@ -1029,7 +1031,9 @@ C backend has it; karamel decides this for itself");
 the whole program. This is still a single whole-program run. For --custard_backend \
 OCaml it exists because F*'s hand-written OCaml realizations reference modules \
 Custard compiles, and a single output file would make those references circular; \
---odir names the directory the files are written to. For the karamel backends it \
+--odir names the directory the files are written to. For --custard_backend FSharp \
+it does the same and additionally lists the files, in compile order, in the \
+generated project. For the karamel backends it \
 splits the single .krml into one karamel module per F* module, which is what \
 karamel's -bundle and -no-prefix select on, and is required to reproduce a \
 specified crate layout on the Rust path.");
@@ -1069,6 +1073,11 @@ attribute, such as one declared in a library the program does not own.");
     "custard_krml_model",
     Accumulated (SimpleStr "Module"),
     text "Treat a module as one karamel models itself: emit neither its type declarations nor its definitions, and leave every use of them under the F* name, which is what karamel's Rust backend matches on. May be repeated. Only under --custard_backend KrmlRust; Pulse.Lib.Slice is registered already. See section 20 of doc/ref/custard.md.");
+
+  ( noshort,
+    "custard_no_unfold",
+    Accumulated (SimpleStr "Lid"),
+    text "Do not unfold this type abbreviation: emit it, and leave every use of it under its own name rather than replacing it by its body. The way to give a monomorphic instance of a polymorphic type a name of its own, which on the karamel path is the name of the emitted C struct. May be repeated. See section 77 of doc/ref/custard.md.");
 
   ( noshort,
     "custard_dump_cui",
@@ -2219,6 +2228,7 @@ let custard_unit                 () = get_custard_unit ()
 let custard_links                () = get_custard_link ()
 let custard_extern_types         () = get_custard_extern_type ()
 let custard_krml_models          () = get_custard_krml_model ()
+let custard_no_unfolds           () = get_custard_no_unfold ()
 let custard_dump_cui             () = get_custard_dump_cui ()
 
 let profile_group_by_decl        () = get_profile_group_by_decl ()

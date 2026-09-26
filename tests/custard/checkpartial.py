@@ -175,12 +175,24 @@ def main():
     out = []
     failed = []
     with tempfile.TemporaryDirectory() as td:
-        for ml in mls:
+        for i, ml in enumerate(mls):
+            # A directory of its own per module, for two reasons.  ocamlc
+            # writes the .cmi beside the *source* unless told otherwise, and
+            # the sources here are the compiler's own extraction output, so
+            # without -o the sweep leaves a FStarC_Custard_*.cmi in
+            # stage2/fstarc.ml and `make boot-diff' then reports 19 files
+            # that are only on one side.  And the .cmi it writes must not
+            # then be found by the *next* module, which already has the real
+            # one under -I objs: two .cmi for one interface is "make
+            # inconsistent assumptions over interface".
+            wd = os.path.join(td, str(i))
+            os.mkdir(wd)
             r = subprocess.run(
                 ["ocamlfind", "ocamlc", "-package", PKGS, "-I", objs,
                  "-w", "+8", "-warn-error", "-a", "-stop-after", "typing",
+                 "-o", os.path.join(wd, os.path.splitext(os.path.basename(ml))[0]),
                  "-c", ml],
-                cwd=td, capture_output=True, text=True)
+                cwd=wd, capture_output=True, text=True)
             # A module that does not compile reports no warnings, so without
             # this the check would pass for the wrong reason -- which is the
             # failure mode it exists to prevent.  Usually a stale build tree.

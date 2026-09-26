@@ -396,17 +396,27 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
                    definitions reachable from the entry points."
     ];
   phase "entrypoints" (fun () -> check_entrypoints deps env roots);
-  (* Section 42.5.  The C backend links now; karamel does its own bundling and
-     has its own opinion about what a compilation unit is, so wiring a `.cui`
-     into it would be answering a question nobody has asked.  Failing here is
-     better than emitting a file that refers to symbols nothing declares. *)
+  (* Section 42.6.  [KrmlC] links now; Rust does not, and the reason is in
+     karamel rather than here.  A declaration without a body reaches karamel
+     as a [DExternal], and its Rust backend translates one into
+     [MiniRust.Assumed] -- a promise that something else in the crate defines
+     the symbol, which it then prints nothing for.  So a function comes out as
+     a call to a path no module declares, and a *global* does not come out at
+     all: [AstToMiniRust] looks the declaration up, finds it is not a
+     function, and fails with "impossible", which is a karamel crash naming
+     none of the two units involved.  Refusing here says which flag and which
+     unit. *)
   if (Some? (Options.custard_unit ()) || Cons? (Options.custard_links ()))
-     && Options.custard_backend_krml () then
+     && Options.custard_backend () = "KrmlRust" then
     E.raise_error0 E.Fatal_OptionsNotCompatible [
       text "Separate compilation (--custard_unit, --custard_link) is not \
-            implemented for the karamel backends.";
-      text "Use --custard_backend OCaml or --custard_backend C, or compile \
-            the whole program at once."
+            implemented for --custard_backend KrmlRust.";
+      text "karamel's Rust backend has no form for a declaration without a \
+            definition: it assumes a function is defined elsewhere in the \
+            crate and emits nothing for it, and it cannot translate a global \
+            at all.";
+      text "Use --custard_backend KrmlC, OCaml or C, or compile the whole \
+            program at once."
     ];
   (* Looking definitions up in the environment instantiates their universes,
      which needs the union-find; by the time a backend runs it has been put in
@@ -460,7 +470,7 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
      and [-no-prefix] select on file names, and a consumer whose crate or
      header layout is *specified* in those flags cannot express it against a
      program that has collapsed to a single file. *)
-  let split_backends = ["OCaml"; "KrmlC"; "KrmlRust"] in
+  let split_backends = ["OCaml"; "FSharp"; "KrmlC"; "KrmlRust"] in
   let files = if Options.custard_split ()
                  && List.mem (Options.custard_backend ()) split_backends
               then Some (phase "split" (fun () ->
@@ -489,18 +499,10 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
       text "karamel decides the width of size_t for itself, and the OCaml \
             backend has no say in it at all."
     ];
-  (* Section 122.12.  Two flags the F# backend does not implement.  Either
-     would otherwise be accepted and quietly ignored, and both are flags whose
-     whole point is to change the shape of the output -- so a run that passed
-     one and got the other shape would have no way to tell. *)
-  if backend = "FSharp" && Options.custard_split () then
-    E.raise_error0 E.Fatal_OptionsNotCompatible [
-      text "--custard_split is not implemented for --custard_backend FSharp.";
-      text "F# compilation is order-sensitive in the same way OCaml's is, so \
-            a split output would also need a generated project listing its \
-            files in link order; the whole-program single file is what this \
-            backend emits today (section 122.12)."
-    ];
+  (* Section 122.12.  A flag the F# backend does not implement.  It would
+     otherwise be accepted and quietly ignored, and it is a flag whose whole
+     point is to change the shape of the output -- so a run that passed it and
+     got the other shape would have no way to tell. *)
   if backend = "FSharp" && Some? (Options.custard_unit ()) then
     E.raise_error0 E.Fatal_OptionsNotCompatible [
       text "--custard_unit is not implemented for --custard_backend FSharp.";
@@ -589,7 +591,11 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
     (* Section 65.  One karamel file per F* source module, so that karamel's
        own module-level flags have something to select on. *)
     phase "print" (fun () -> Krml.write_files ofile (Krml.print_split (Some?.v files)))
-  | "KrmlC" | "KrmlRust" -> Krml.write_program ofile prog
+  (* Section 42.6.  The imported declarations are handed to the printer, as
+     they are for C and OCaml: what a linked unit compiled reaches karamel as
+     a declaration without a body, so that a reference to it resolves and
+     karamel emits the [extern] prototype for it. *)
+  | "KrmlC" | "KrmlRust" -> Krml.write_program ofile (List.map fst imports @ prog)
   | "C" ->
     let hdr, src = C.print_program stem cu (List.map fst imports @ prog) in
     BU.write_file (FStarC.Filepath.join_paths (FStarC.Filepath.dirname ofile)
@@ -598,12 +604,25 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
   | "OCaml" -> BU.write_file ofile (OCaml.print_program (List.map fst imports @ prog))
   (* Section 122.  One flat module, plus the two files that make the output
      directory build on its own: the support library and the project. *)
+  (* Section 122.18.  One F# module per F* source module, plus the project,
+     which has to list them in the order F# compiles them -- which is the
+     order {!Split.run} produced, since that is dependency order. *)
+  | "FSharp" when Some? files ->
+    phase "print" (fun () ->
+      let rendered = FS.print_split (Some?.v files) in
+      rendered |> List.iter (fun (m, src) ->
+        BU.write_file (Find.prepend_output_dir (m ^ ".fs")) src);
+      FS.project_files stem (List.map fst imports @ prog)
+                       (List.map (fun (m, _) -> m ^ ".fs") rendered)
+      |> List.iter (fun (f, src) ->
+           BU.write_file (Find.prepend_output_dir f) src))
   | "FSharp" ->
     let p = List.map fst imports @ prog in
     BU.write_file ofile (FS.print_program stem p);
-    FS.project_files stem p |> List.iter (fun (f, src) ->
-      BU.write_file (FStarC.Filepath.join_paths
-                       (FStarC.Filepath.dirname ofile) f) src)
+    FS.project_files stem p [FStarC.Filepath.basename ofile]
+    |> List.iter (fun (f, src) ->
+         BU.write_file (FStarC.Filepath.join_paths
+                          (FStarC.Filepath.dirname ofile) f) src)
   | b ->
     E.raise_error0 E.Fatal_OptionsNotCompatible [
       text ("Unknown --custard_backend " ^ b ^ ".");

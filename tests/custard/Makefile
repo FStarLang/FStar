@@ -33,6 +33,9 @@ CUSTARD_TESTS += MonoState
 CUSTARD_TESTS += InlineFields
 CUSTARD_TESTS += KeyNames
 CUSTARD_TESTS += Refs
+# A [ref] bound by a pattern keeps its type through copy propagation's rename.
+GREP_Refs   += "(r) := "
+NOGREP_Refs += "(0) <- "
 CUSTARD_TESTS += Thunk
 CUSTARD_TESTS += Exceptions
 CUSTARD_TESTS += LocalRec
@@ -387,6 +390,18 @@ FSNOGREP_Literals = "parse_int" "uint_to_t"
 # escape could not have given it.
 FS_TESTS += OcamlEscape
 FSGREP_OcamlEscape = "(\`\`method\`\` : bool) (method_ : bool)"
+
+# Section 122.17.  FStar.Bytes, whose F# realization is a byte[] where the
+# OCaml one is a string.  Registered on both legs because the point of the
+# realization is that the two agree: the OCaml run diffs the .out.expected
+# and the F# run checks each answer against the same literal itself, since
+# the F# leg does not diff what it prints.  The pins are the two places the
+# byte[] choice is visible -- the type a value of it is given, and the
+# absence of any string operation standing in for one.
+CUSTARD_TESTS += BytesFS
+FS_TESTS += BytesFS
+FSGREP_BytesFS = "(b : byte[])" "(FStar_Bytes.bytes_of_int16 (4660us))"
+FSNOGREP_BytesFS = "(b : string)"
 
 # Rejections.  Each is extracted with --custard_backend FSharp and must
 # produce the numbered diagnostic.
@@ -1766,6 +1781,111 @@ $(OUTPUT_DIR)/SepAppC.ran: $(OUTPUT_DIR)/SepLibC.c $(OUTPUT_DIR)/SepAppC.c
 
 all: $(OUTPUT_DIR)/SepAppC.ran
 
+# Section 42.6: separate compilation for karamel.  The same pair of modules
+# again -- a library unit and an application that links against its `.cui` --
+# and the assertions differ from SepLibC/SepAppC's in the two places where the
+# backend does:
+#
+#  * what a unit offers.  A C unit offers its linking interface and nothing
+#    else (section 42.1), so [double_it] was [static] and downstream got its
+#    own copy.  karamel decides linkage itself, out of [-bundle] and
+#    [-static-header], so Custard has nothing to withhold and the interface is
+#    everything the unit compiled -- which is why [double_it] is *not* an
+#    entry here and is still reached by the application.
+#  * who writes the header.  Custard writes SepLibC.h; here krml does, from
+#    the declarations Custard puts in a karamel file *named* SepLibK.  So the
+#    two runs must agree on that name without ever having compared notes, and
+#    the assertion is that the downstream SepLibK.h holds prototypes and no
+#    bodies while the upstream one holds both.
+$(OUTPUT_DIR)/SepLibK.krml: $(CACHE_DIR)/SepLibK.fst.checked $(FSTAR_EXE)
+	$(call msg, "CUSTARD-UNIT-KRML", SepLibK)
+	@mkdir -p $(OUTPUT_DIR)
+	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend KrmlC \
+	  --custard_unit SepLibK \
+	  --custard_entry SepLibK.scale --custard_entry SepLibK.manhattan \
+	  --custard_entry SepLibK.origin --odir $(OUTPUT_DIR) SepLibK.fst
+
+$(OUTPUT_DIR)/SepLibK.cui: $(OUTPUT_DIR)/SepLibK.krml
+	$(Q)test -f $@
+
+$(OUTPUT_DIR)/SepAppK.krml: $(CACHE_DIR)/SepAppK.fst.checked \
+                            $(OUTPUT_DIR)/SepLibK.cui $(FSTAR_EXE)
+	$(call msg, "CUSTARD-LINK-KRML", SepAppK)
+	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend KrmlC \
+	  --custard_link $(OUTPUT_DIR)/SepLibK.cui \
+	  --custard_main SepAppK.main SepAppK.fst -o $@
+
+$(OUTPUT_DIR)/SepAppK.ran: $(OUTPUT_DIR)/SepLibK.krml $(OUTPUT_DIR)/SepAppK.krml
+	$(call msg, "KRML", SepLibK)
+	$(Q)rm -rf $(OUTPUT_DIR)/SepLibK_c $(OUTPUT_DIR)/SepAppK_c
+	@# No -no-prefix on either side: the two runs have to spell the symbol
+	@# the same way, and the only thing making them do so is that each
+	@# derived it from the same lident.
+	$(Q)$(KRML_EXE) -silent -skip-linking -tmpdir $(OUTPUT_DIR)/SepLibK_c \
+	  $(OUTPUT_DIR)/SepLibK.krml
+	$(call msg, "KRML", SepAppK)
+	$(Q)$(KRML_EXE) -silent -skip-linking -no-prefix SepAppK \
+	  -tmpdir $(OUTPUT_DIR)/SepAppK_c $(OUTPUT_DIR)/SepAppK.krml
+	@# The downstream run wrote a SepLibK.h of its own -- it has to, since
+	@# it is a separate krml invocation with a separate -tmpdir -- and it
+	@# must hold declarations only.  The struct is declared in both, which
+	@# is what karamel's own -library does and is safe because the two
+	@# headers carry the same include guard.
+	$(Q)grep -qF -- "extern uint32_t SepLibK_manhattan(" \
+	  $(OUTPUT_DIR)/SepAppK_c/SepLibK.h \
+	  || { echo "ERROR: SepAppK did not declare SepLibK_manhattan"; exit 1; }
+	$(Q)grep -qF -- "extern SepLibK_point SepLibK_origin;" \
+	  $(OUTPUT_DIR)/SepAppK_c/SepLibK.h \
+	  || { echo "ERROR: SepAppK did not declare SepLibK_origin"; exit 1; }
+	@# Not an entry, and still on offer: section 42.1's filter is C's.
+	$(Q)grep -qF -- "extern uint32_t SepLibK_double_it(" \
+	  $(OUTPUT_DIR)/SepAppK_c/SepLibK.h \
+	  || { echo "ERROR: SepAppK did not declare SepLibK_double_it"; exit 1; }
+	$(Q)test ! -e $(OUTPUT_DIR)/SepAppK_c/SepLibK.c \
+	  || { echo "ERROR: SepAppK wrote a body for SepLibK"; exit 1; }
+	@# And the file the imports went into is not this unit's own, which is
+	@# the mistake that produces two headers declaring one symbol.
+	$(Q)grep -qF -- "#include \"SepLibK.h\"" \
+	  $(OUTPUT_DIR)/SepAppK_c/Custard.c \
+	  || { echo "ERROR: SepAppK does not include SepLibK.h"; exit 1; }
+	$(call msg, "CC", SepAppK)
+	$(Q)$(CC) $$(tr '\n' ' ' < $(OUTPUT_DIR)/SepLibK_c/compile_flags.txt) \
+	  -I$(OUTPUT_DIR)/SepLibK_c -c $(OUTPUT_DIR)/SepLibK_c/SepLibK.c \
+	  -o $(OUTPUT_DIR)/SepLibK_c/SepLibK.o
+	$(Q)$(CC) $$(tr '\n' ' ' < $(OUTPUT_DIR)/SepLibK_c/compile_flags.txt) \
+	  -I$(OUTPUT_DIR)/SepAppK_c -c $(OUTPUT_DIR)/SepAppK_c/Custard.c \
+	  -o $(OUTPUT_DIR)/SepAppK_c/Custard.o
+	@# The linker is the assertion that matters: it resolves only if both
+	@# runs agreed on every symbol, and it has one definition of each.
+	$(Q)$(CC) $(OUTPUT_DIR)/SepLibK_c/SepLibK.o \
+	  $(OUTPUT_DIR)/SepAppK_c/Custard.o -o $(OUTPUT_DIR)/SepAppK.exe
+	$(call msg, "RUN-C", SepAppK)
+	$(Q)$(OUTPUT_DIR)/SepAppK.exe
+	$(Q)nm -g --defined-only $(OUTPUT_DIR)/SepAppK_c/Custard.o \
+	  | grep -q SepLibK_ \
+	  && { echo "ERROR: SepAppK defines part of SepLibK"; exit 1; }; true
+	$(Q)touch $@
+
+# Section 42.6.  karamel's Rust backend has no form for a declaration without
+# a definition, so the flags are refused rather than half-implemented.  The
+# check is that the refusal happens in Custard, naming the option -- before
+# this it was karamel failing with "impossible" on the first imported global.
+$(OUTPUT_DIR)/SepLibK.rustrefused: $(CACHE_DIR)/SepLibK.fst.checked $(FSTAR_EXE)
+	$(call msg, "REJECT-RUST-UNIT", SepLibK)
+	@mkdir -p $(OUTPUT_DIR)
+	$(Q)$(FSTAR) --message_format human --codegen Custard $(WARN_ANY) \
+	  --custard_backend KrmlRust --custard_unit SepLibK \
+	  --custard_entry SepLibK.scale --odir $(OUTPUT_DIR) SepLibK.fst \
+	  > $(OUTPUT_DIR)/SepLibK.rserr 2>&1 || true
+	$(Q)grep -qF -- "--custard_backend KrmlRust" $(OUTPUT_DIR)/SepLibK.rserr \
+	  || { echo "ERROR: KrmlRust did not refuse --custard_unit"; \
+	       cat $(OUTPUT_DIR)/SepLibK.rserr; exit 1; }
+	$(Q)test ! -e $(OUTPUT_DIR)/SepLibK.cui.rust \
+	  || { echo "ERROR: KrmlRust wrote a unit interface"; exit 1; }
+	$(Q)touch $@
+
+all: $(OUTPUT_DIR)/SepLibK.rustrefused
+
 $(OUTPUT_DIR)/SepApp.exe: $(OUTPUT_DIR)/SepLib.ml $(OUTPUT_DIR)/SepApp.ml
 	$(call msg, "OCAMLOPT", SepApp)
 	$(FSTAR_EXE) --ocamlopt -I $(OUTPUT_DIR) $(OUTPUT_DIR)/SepLib.ml $(OUTPUT_DIR)/SepApp.ml -o $@
@@ -1816,6 +1936,66 @@ $(OUTPUT_DIR)/SplitHi.exe: $(OUTPUT_DIR)/SplitHi.ml SplitMid.ml
 	  $(OUTPUT_DIR)/SplitLo.ml SplitMid.ml $(OUTPUT_DIR)/SplitHi.ml -o $@
 
 all: $(OUTPUT_DIR)/SplitHi.out.diff
+
+# Section 122.18.  The F# leg of output splitting: one F# module per F*
+# source module, and a generated project listing them in the order F#
+# compiles them.  FsSplitLo holds one of each thing whose spelling changes --
+# a variant, a record, an exception, a polymorphic function -- and FsSplitHi
+# refers to all of them across the file boundary and binds [main] itself, so
+# the generated entry point has to step aside.
+$(OUTPUT_DIR)/FsSplitHi.fssplit: $(CACHE_DIR)/FsSplitHi.fst.checked $(FSTAR_EXE)
+	$(call msg, "CUSTARD-SPLIT-FS", FsSplitHi)
+	@mkdir -p $(OUTPUT_DIR)/fs/FsSplitHi
+	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend FSharp \
+	  --custard_split --custard_main FsSplitHi.main \
+	  --odir $(OUTPUT_DIR)/fs/FsSplitHi \
+	  -o $(OUTPUT_DIR)/fs/FsSplitHi/FsSplitHi.fs FsSplitHi.fst
+	$(Q)test -f $(OUTPUT_DIR)/fs/FsSplitHi/FsSplitLo.fs
+	$(Q)test -f $(OUTPUT_DIR)/fs/FsSplitHi/FStarCustard.fs
+	$(Q)for p in $(FSSGREP_FsSplitLo); do \
+	  grep -qF -- "$$p" $(OUTPUT_DIR)/fs/FsSplitHi/FsSplitLo.fs \
+	    || { echo "ERROR: FsSplitLo output is missing $$p"; exit 1; }; done
+	$(Q)for p in $(FSSGREP_FsSplitHi); do \
+	  grep -qF -- "$$p" $(OUTPUT_DIR)/fs/FsSplitHi/FsSplitHi.fs \
+	    || { echo "ERROR: FsSplitHi output is missing $$p"; exit 1; }; done
+	$(Q)for p in $(FSSGREP_FsSplitProj); do \
+	  grep -qF -- "$$p" $(OUTPUT_DIR)/fs/FsSplitHi/FsSplitHi.fsproj \
+	    || { echo "ERROR: FsSplitHi project is missing $$p"; exit 1; }; done
+	$(Q)touch $@
+
+# A declaration in the module its own F* module names is emitted under its
+# plain identifier, constructors and record labels included.
+FSSGREP_FsSplitLo += "type color ="
+FSSGREP_FsSplitLo += "  | Red"
+FSSGREP_FsSplitLo += "let flip (c : color) : color ="
+FSSGREP_FsSplitLo += "exception Bad of string"
+# A cross-file reference is qualified by the module, and never by an [open].
+FSSGREP_FsSplitHi += "(c : FsSplitLo.color)"
+FSSGREP_FsSplitHi += "| FsSplitLo.Red ->"
+FSSGREP_FsSplitHi += "(FsSplitLo.flip FsSplitLo.Red)"
+FSSGREP_FsSplitHi += "raise (FsSplitLo.Bad (s))"
+FSSGREP_FsSplitHi += "FsSplitLo.origin"
+# This module's own [main] keeps the name, so the entry point takes another.
+FSSGREP_FsSplitHi += "let main (tmp : unit) : unit ="
+FSSGREP_FsSplitHi += "let main_ (_argv : string[]) : int ="
+# F# compiles the files in the order the project lists them, so the order is
+# the artefact under test and not an accident of the directory listing.
+FSSGREP_FsSplitProj += "<Compile Include=\"FStarCustard.fs\" />"
+FSSGREP_FsSplitProj += "<Compile Include=\"FsSplitLo.fs\" />"
+FSSGREP_FsSplitProj += "<Compile Include=\"FsSplitHi.fs\" />"
+
+$(OUTPUT_DIR)/FsSplitHi.fssplitran: $(OUTPUT_DIR)/FsSplitHi.fssplit
+	$(call msg, "RUN-FS", FsSplitHi)
+	$(Q)cd $(OUTPUT_DIR)/fs/FsSplitHi && \
+	  DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1 \
+	  $(DOTNET) build -c Release -v quiet --nologo >build.log 2>&1 \
+	    || { echo "ERROR: FsSplitHi does not compile as F#"; \
+	         cat build.log; exit 1; }
+	$(Q)cd $(OUTPUT_DIR)/fs/FsSplitHi && DOTNET_NOLOGO=1 \
+	  $(DOTNET) bin/Release/net10.0/FsSplitHi.dll > FsSplitHi.out
+	$(Q)diff -u FsSplitHi.out.expected \
+	  $(OUTPUT_DIR)/fs/FsSplitHi/FsSplitHi.out
+	$(Q)touch $@
 
 # These have hand-written targets with their own [all:] lines rather than a
 # list entry, and each consults its own settings in its own recipe.
@@ -2456,6 +2636,45 @@ GREP_AnyLambda += "Obj.magic"
 # [spawn] that builds it, so the order of the two lines is the assertion.
 CUSTARD_TESTS += ThunkArity
 
+# Section 5.2, in the two places that were reaching a backend with a free
+# name: a *pattern* whose sub-pattern is deleted, and a *binder* -- top-level
+# or lambda -- that is dropped.  Both are rebound to [()], which [Simplify]
+# then substitutes away; the test is that the output compiles and runs, since
+# what went wrong was an unbound name rather than a wrong answer.
+CUSTARD_TESTS += PatDropUnit
+CUSTARD_TESTS += AbsDropFree
+
+# Section 122.3.1.  A type variable whose F* name ends in a quote: ['t'] is a
+# character literal to OCaml's lexer and an undefined parameter to F#.  The
+# escape is the same on both backends and has to be injective, so the module
+# has a [t'] *and* a [t_] and the greps pin that the two stay apart.
+CUSTARD_TESTS += TyvarQuote
+GREP_TyvarQuote += "('t_, 't__)"
+NOGREP_TyvarQuote += "'t'"
+FS_TESTS += TyvarQuote
+FSGREP_TyvarQuote += "<'t_, 't__>"
+FSNOGREP_TyvarQuote += "'t'"
+
+# An application whose head is a [match] whose arms are lambdas.  No backend
+# has closures, so the argument has to meet the arm where beta can fire; the
+# C leg is the one that cannot emit an arm as a value, and the run pins that
+# the commuting conversion did not change which arm is taken.
+C_TESTS += MatchFun
+# The arms are beta-reduced where they stand, so the emitted function is two
+# returns and holds no function value at all.
+CGREP_MatchFun += "if (c == MATCHFUN_A) return (m + n);"
+CNOGREP_MatchFun += "(*"
+
+# Section 77.5.  [--custard_no_unfold] keeps an abbreviation of an applied
+# type so that the instance carries the name the program gave it.
+# [byte_pair] is named to the flag and must survive; [flag_pair] is the
+# control and must unfold as every abbreviation does by default.
+CUSTARD_TESTS += NoUnfold
+FLAGS_NoUnfold = --custard_no_unfold NoUnfold.byte_pair
+GREP_NoUnfold += "type noUnfold_byte_pair = (FStar_UInt8.t) noUnfold_pair"
+GREP_NoUnfold += "let noUnfold_swap (p : noUnfold_byte_pair) : noUnfold_byte_pair"
+NOGREP_NoUnfold += "noUnfold_flag_pair"
+
 CUSTARD_TESTS += ErasableEff
 # --custard_main alone would root only what [main] reaches, and what this test
 # is about is precisely the definitions that reach nothing because they were
@@ -2550,6 +2769,18 @@ REJECT_TESTS += ExternErase
 CODE_ExternErase := 382
 EGREP_ExternErase += "external ExternErase.run: cb"
 NOEGREP_ExternErase += "ExternErase.run_g"
+
+# Section 5.1, the other half of the same story: what the arity disagreement
+# does when it is not reported.  A [Dropped] binder is deleted from every
+# call, so a declaration that keeps it is one parameter longer than the call
+# -- and [major]'s codomain is an abbreviation, which is what makes the two
+# sides split the spine differently in the first place.  Compiling is the
+# assertion; the greps pin that the emitted prototypes are the header's.
+C_TESTS += ExternDrop
+CGREP_ExternDrop += "include \"ExternDrop_stubs.h"
+CGREP_ExternDrop += "ed_major(((uint32_t)1U))"
+CGREP_ExternDrop += "ed_scale(((uint32_t)3U))"
+CNOGREP_ExternDrop += "ExternDrop_major" "ExternDrop_scale"
 
 # Section 47.2.  An indexed custard_extern type, with the configuration
 # chosen by a typeclass whose indices are all erased -- the shape the
@@ -2738,6 +2969,20 @@ CGREP_PolyRoot += "PolyRoot_use_it"
 CNOGREP_PolyRoot += "PolyRoot_pick("
 CNOGREP_PolyRoot += "PolyRoot_spec"
 
+# Section 70.1.  A module with an interface has a public surface, and it is
+# the interface: --custard_entry_module roots what the interface declares and
+# not what it hides.  [private_dead] is hidden and unreached, so it is gone;
+# [private_live] is equally hidden and stays, because un-rooting changes only
+# the root set and [exported] calls it.  The complement of this test is
+# PrettyUnit, whose module has no interface and so hides nothing: the
+# KrmlPrivate attribute alone does not answer the question, since
+# FStar.Tactics.PrettifyType stamps it unconditionally.
+ROOT_TESTS += EntryIface
+FLAGS_EntryIface = --custard_entry_module EntryIface
+GREP_EntryIface += "entryIface_exported"
+GREP_EntryIface += "entryIface_private_live"
+NOGREP_EntryIface += "private_dead"
+
 # ... and the other half: --custard_entry names one definition, so it is taken
 # at its word and still refused.  What changed is only the advice.  The
 # NOEGREP is the point of the test: this refusal is correct, and telling the
@@ -2916,6 +3161,19 @@ CGREP_SzWidth32 += "return (uint32_t)n;"
 # The narrowed run must not mention size_t anywhere, in either file.
 CNOGREP_SzWidth32 += "size_t"
 
+# Section 6.  The dangling [else].  Both arms of each pair are one statement,
+# so both would be written unbraced, and an unbraced [if] with no [else] in a
+# [then] arm captures the [else] that follows it.  [-Wall -Werror] catches the
+# shape -- gcc and clang both have [-Wdangling-else] -- but the load-bearing
+# check is that the program *runs*: [f false true] must return 2 and [g G
+# false] must return 2, and under the capture the first falls through to 0 and
+# the second takes the [B] arm.
+C_TESTS += CDangle
+FLAGS_CDangle = --custard_backend C --custard_entry_module CDangle
+CGREP_CDangle += "if (a) {"
+CGREP_CDangle += "else if (x == CDANGLE_G)"
+CNOGREP_CDangle += "if (a) if ("
+
 # Section 129.  A copy binding between a tuple's constructor and the match
 # that consumes it.  F* elaborates [let (a, (b, ())) = p] into [let
 # _letpattern = p in match _letpattern with ...] whenever the scrutinee is
@@ -2931,10 +3189,24 @@ CGREP_CLetCopy += "uint32_t CLetCopy_combine(uint32_t x) {"
 CNOGREP_CLetCopy += "_letpattern"
 CNOGREP_CLetCopy += "tuple2"
 
+
+# A constructor used as a function, of a type §5.2 collapses.  `Extract`
+# builds an [ECtor] out of the arguments the application node carried, so
+# [app W] reaches the layout pass with none, and a collapsed constructor with
+# no argument has no payload to collapse to: it came out as [()], which the
+# call then applied.  The layout pass eta-expands an under-applied constructor
+# before it rewrites one, so the reference is the identity it denotes -- which
+# is what the greps say, and what compiling the output at all asserts.
+CUSTARD_TESTS += CtorFun
+GREP_CtorFun += "ctorFun_app (fun u__eta -> u__eta)"
+# The partially applied one: an argument given, the eta-expanded one last.
+GREP_CtorFun += "ctorFun_app3 (fun u__eta -> {"
+NOGREP_CtorFun += "ctorFun_app ()"
+
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
                   $(C_TESTS) $(CXX_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \
                   $(RUSTSPLIT_TESTS) $(FS_TESTS) $(FSREJECT_TESTS) \
-                  SepApp SepAppC SplitHi SplitLo
+                  SepApp SepAppC SplitHi SplitLo FsSplitHi FsSplitLo
 
 # Section 35.3.  A setting whose name matches no registered test.
 #
@@ -3083,7 +3355,9 @@ all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcxxran, $(CXX_TESTS)))
 DOTNET ?= dotnet
 DOTNET10 := $(shell $(DOTNET) --list-sdks 2>/dev/null | grep -c "^1[0-9]\.")
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .fsrejected, $(FSREJECT_TESTS)))
+all: $(OUTPUT_DIR)/FsSplitHi.fssplit
 ifneq ($(DOTNET10),0)
+all: $(OUTPUT_DIR)/FsSplitHi.fssplitran
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .fsran, $(FS_TESTS)))
 else
 $(warning no .NET 10 SDK found: skipping the F# run tests)
@@ -3124,6 +3398,9 @@ endif
 # C one needs a toolchain.  Found by path and not by name -- see 62.1.
 ifneq ($(KRML_FOUND),)
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .cran, $(KRML_TESTS)))
+# Section 42.6.  Two krml runs and a link, so it needs karamel as much as any
+# of the above; the refusal test does not and stays outside.
+all: $(OUTPUT_DIR)/SepAppK.ran
 else
 $(warning krml not found: skipping the karamel C tests)
 endif

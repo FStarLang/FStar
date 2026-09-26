@@ -419,6 +419,11 @@ let exists_child (f : expr -> ML bool) (x:expr) : ML bool =
 let for_all_children (f : expr -> ML bool) (x:expr) : ML bool =
   List.for_all f (children x)
 
+let rec occurs (v:string) (x:expr) : ML bool =
+  match x.e with
+  | EVar w -> w = v
+  | _ -> exists_child (occurs v) x
+
 let rec is_droppable (e:expr) : ML bool =
   let all (es:list expr) : ML bool = List.for_all is_droppable es in
   (* Section 120.  Ahead of both tests below, because it overrides both.  A
@@ -709,6 +714,7 @@ let flag_to_doc (f:flag) : ML document =
   | CInline -> text "c_inline"
   | Deriving s -> text ("deriving " ^ s)
   | Realized -> text "realized"
+  | NoUnfold -> text "no_unfold"
   | Extern (n, h) ->
     text ("extern" ^ (match n with Some n -> " " ^ n | None -> "") ^
                      (match h with Some h -> " <" ^ h ^ ">" | None -> ""))
