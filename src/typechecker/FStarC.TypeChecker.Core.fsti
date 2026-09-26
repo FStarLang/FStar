@@ -55,6 +55,18 @@ instance val showable_error : showable error
 val print_error_short (err:error)
   : ML string
 
+(* The code with which TcTerm reports the same failure, if any: the error
+   is then reported with it, and with [error_message] alone, as by TcTerm. *)
+val error_code (err:error)
+  : ML (option FStarC.Errors.error_code)
+
+val error_message (err:error)
+  : ML FStarC.Errors.error_message
+
+(* The position of the innermost term the error is about, if any. *)
+val error_range (err:error)
+  : ML (option FStarC.Range.t)
+
 val clear_memo_table (_:unit)
   : ML unit
 
@@ -85,7 +97,9 @@ val check_term_at_comp (g:Env.env) (e:term) (c:comp)
   : ML (either (option guard_and_tok_t) error)
 
 (* Check a nest of top-level recursive definitions (see TcTerm.guard_letrecs
-   for termination), whose universes are opened and pushed in [g]. *)
+   for termination), whose universes are opened and pushed in [g]. The guard
+   may mention the top-level names of the nest, which the caller must bind
+   to discharge it. *)
 val check_top_level_letrec (g:Env.env) (lbs:list letbinding)
   : ML (either (option guard_and_tok_t) error)
 

@@ -162,6 +162,9 @@ let decode_arg (ai : byte) (l : blist) : ML (option (U64.t & blist)) =
 (* 3. The item checker.                                                *)
 (* ------------------------------------------------------------------ *)
 
+(* The machine-integer bounds below are proved in a context of a dozen
+   branch conditions, near the default rlimit. *)
+#push-options "--z3rlimit 10"
 let rec item (fuel : U64.t) (l : blist) : ML (option blist) =
   if U64.eq fuel 0UL then None
   else
@@ -206,6 +209,8 @@ and items (fuel : U64.t) (n : U64.t) (l : blist) : ML (option blist) =
     match item (U64.sub fuel 1UL) l with
     | None -> None
     | Some rest -> items (U64.sub fuel 1UL) (U64.sub n 1UL) rest
+
+#pop-options
 
 let validate (l : blist) : ML bool =
   match item 64UL l with

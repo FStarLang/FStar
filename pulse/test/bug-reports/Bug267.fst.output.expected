@@ -8,7 +8,7 @@
   - Could not prove equality between computed type ‘int’ and expected type ‘nat’
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Failed to prove: Prims.l_True == (i >= 0)
+  - Failed to prove: i >= 0
   - In context:
       x: Prims.nat
       y: Prims.nat

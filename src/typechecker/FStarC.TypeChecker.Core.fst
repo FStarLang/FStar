@@ -96,6 +96,7 @@ module PC = FStarC.Parser.Const
 module I = FStarC.Ident
 module BU = FStarC.Util
 module TcUtil = FStarC.TypeChecker.Util
+module Err = FStarC.TypeChecker.Err
 module Hash = FStarC.Syntax.Hash
 module Subst = FStarC.Syntax.Subst
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify
@@ -159,7 +160,11 @@ type env = {
    tcenv : Env.env;
    allow_universe_instantiation : bool;
    should_read_cache: bool;
-   max_binder_index: int
+   max_binder_index: int;
+   (* Checking a top-level function, and no binder has been pushed yet: the
+      binders closed over here are those of the definition, which TcTerm has
+      in its environment when it discharges its guard. *)
+   at_top: bool
 }
 
 
@@ -169,7 +174,8 @@ let debug g (f: unit -> ML unit) : ML unit =
 
 let max a b = if a > b then a else b
 let push_binder g b = { g with max_binder_index=max g.max_binder_index b.binder_bv.index; 
-                               tcenv = Env.push_binders g.tcenv [b] }
+                               tcenv = Env.push_binders g.tcenv [b];
+                               at_top = false }
 
 let push_binders = List.fold_left push_binder
 
@@ -345,17 +351,37 @@ let print_context (ctx:context)
   in
   aux "" (List.rev ctx.error_context)
 
-let error = context & Errors.error_message (* = list doc *)
+(* An error may carry the code with which TcTerm reports the same failure;
+   it is then reported as TcTerm does (see [error_code]). *)
+let error = context & Errors.error_message (* = list doc *) & option Errors.error_code
 
 let print_error (err:error) =
-  let ctx, msg = err in
+  let ctx, msg, _ = err in
   Format.fmt2 "%s%s" (print_context ctx) (Errors.Msg.rendermsg msg)
 
 instance showable_error : showable error = { show = print_error }
 
 let print_error_short (err:error) =
-  let _, msg = err in
+  let _, msg, _ = err in
   Errors.Msg.rendermsg msg
+
+let error_code (err:error) : ML (option Errors.error_code) =
+  let _, _, c = err in c
+
+let error_message (err:error) : ML Errors.error_message =
+  let _, msg, _ = err in msg
+
+(* The position of the innermost term of the error's context that has one. *)
+let error_range (err:error) : ML (option R.t) =
+  let ctx, _, _ = err in
+  let ok (r:R.t) : ML bool = R.file_of_use_range r <> R.file_of_use_range R.dummyRange in
+  let ctx_range (c:context_term) : ML (option R.t) =
+    match c with
+    | CtxRel _ (SUBTYPING (Some tm)) _ -> if ok tm.pos then Some tm.pos else None
+    | CtxTerm t -> if ok t.pos then Some t.pos else None
+    | CtxRel t0 _ _ -> if ok t0.pos then Some t0.pos else None
+  in
+  List.tryPick (fun (_, c) -> match c with None -> None | Some c -> ctx_range c) ctx.error_context
 
 let precondition = option typ
 
@@ -504,9 +530,11 @@ let (let?) (#a:Type) (#b:Type) (x:option a) (f: a -> option b)
     | None -> None
     | Some x -> f x
 
-let fail_str #a msg : result a = fun ctx cache -> Error (ctx, Errors.mkmsg msg)
+let fail_str #a msg : result a = fun ctx cache -> Error (ctx, Errors.mkmsg msg, None)
 
-let fail #a msg : result a = fun ctx cache -> Error (ctx, msg)
+let fail #a msg : result a = fun ctx cache -> Error (ctx, msg, None)
+
+let fail_code #a (code:Errors.error_code) msg : result a = fun ctx cache -> Error (ctx, msg, Some code)
 
 let fail_propagate #a (err:error) : result a = fun _ cache -> Error err
 
@@ -645,17 +673,21 @@ let check_positivity_qual (rel:relation) (p0 p1:option positivity_qualifier)
     then return ()
     else fail_str "Unequal positivity qualifiers"
 
-let mk_forall_l (us:universes) (xs:binders) (t:term)
+let mk_forall_l_gen (keep_unit:bool) (us:universes) (xs:binders) (t:term)
   : ML term
   = (* As [Env.close_guard], a quantifier over a null binder of (unrefined)
-       [unit], e.g. the binder of [let f () = ...], is dropped, so that goals
-       handed to tactics are as with TcTerm. Named binders are kept, e.g. those
+       [unit], e.g. of a thunk [fun () -> ...], is dropped (unless
+       [keep_unit], for the binders of the definition itself, e.g. of
+       [let f () = ...], which TcTerm has in its environment when it
+       discharges the guard), so that goals handed to tactics, and the
+       context of a failed goal, are as with TcTerm. Named binders are kept, e.g. those
        of the thunks of a [calc]: the SMT encoding assumes a quantifier-free
        conjunct of a guard when proving the next ones
        ([ErrorReporting.split_goals]), and keeping the quantifier keeps a
        proof step out of the context of the next. (Other null binders, e.g.
        [_:squash p], are hypotheses and are kept too.) *)
     let vacuous (x:binder) (t:term) : ML bool =
+      not keep_unit &&
       S.is_null_binder x &&
       (match (Subst.compress x.binder_bv.sort).n with
        | Tm_fvar fv -> S.fv_eq_lid fv PC.unit_lid
@@ -668,6 +700,8 @@ let mk_forall_l (us:universes) (xs:binders) (t:term)
         xs
         t
 
+let mk_forall_l us xs t : ML term = mk_forall_l_gen false us xs t
+
 let close_guard (xs:binders) (us:universes) (g:precondition)
   : ML precondition
   = match g with
@@ -676,7 +710,9 @@ let close_guard (xs:binders) (us:universes) (g:precondition)
 
 let close_with_definition (x:binder) (u:universe) (t:term) (g:typ)
 : ML typ
-= let g' = U.mk_imp (U.mk_eq2 u x.binder_bv.sort (S.bv_to_name x.binder_bv) t) g in
+= (* Oriented as TcTerm's [e == x] (see [TcUtil.mk_binder_eqn]), which
+     is how the hypothesis is shown in the context of a failed goal. *)
+  let g' = U.mk_imp (U.mk_eq2 u x.binder_bv.sort t (S.bv_to_name x.binder_bv)) g in
   U.mk_forall u x.binder_bv g'
 
 let close_guard_with_definition (x:binder) (u:universe) (t:term) (g:precondition)
@@ -685,7 +721,7 @@ let close_guard_with_definition (x:binder) (u:universe) (t:term) (g:precondition
     | None -> None
     | Some t' ->
       Some (
-       let t' = U.mk_imp (U.mk_eq2 u x.binder_bv.sort (S.bv_to_name x.binder_bv) t) t' in
+       let t' = U.mk_imp (U.mk_eq2 u x.binder_bv.sort t (S.bv_to_name x.binder_bv)) t' in
        U.mk_forall u x.binder_bv t'
       )
 
@@ -845,10 +881,37 @@ let with_binders (#a:Type) (initial_env:env) (xs:binders) (us:universes) (f:resu
       | Inr err -> fail_propagate err
       | Inl (res, None) -> return res
       | Inl (res, Some form) ->
-        let form = mk_forall_l us xs form in
+        let form = mk_forall_l_gen initial_env.at_top us xs form in
         reemit_guard initial_env form ;!
         return res)
   
+(* As [with_binders] for one binder; if its sort is a refinement
+   [y:t{phi}], quantifies over [t] and assumes [phi], as TcTerm's guards
+   for the domains of arrows do (see [Rel]): the refinement is then shown
+   as a hypothesis in the context of a failed goal. *)
+let with_binder_unrefined (#a:Type) (initial_env:env) (x:binder) (u:universe) (f:result a)
+  : ML (result a)
+  = match (Subst.compress (U.flatten_refinement x.binder_bv.sort)).n with
+    | Tm_refine {b=y; phi} ->
+      with_guard f
+      (function
+        | Inr err -> fail_propagate err
+        | Inl (res, None) -> return res
+        | Inl (res, Some form) ->
+          let phi = Subst.subst [DB(0, x.binder_bv)] phi in
+          let xb = { x with binder_bv = { x.binder_bv with sort = y.sort } } in
+          (* Not twice, e.g. for [x:t{phi}] related to [t{psi}], whose guard
+             is already [phi ==> psi]. *)
+          let already =
+            match FStarC.Syntax.Formula.destruct_typ_as_formula form with
+            | Some (FStarC.Syntax.Formula.BaseConn (l, [(p, _); _])) -> I.lid_equals l PC.imp_lid && U.term_eq p phi
+            | _ -> false
+          in
+          let form = mk_forall_l [u] [xb] (if already then form else U.mk_imp phi form) in
+          reemit_guard initial_env form ;!
+          return res)
+    | _ -> with_binders initial_env [x] [u] f
+
 let with_definition (#a:Type) (initial_env:env) (x:binder) (u:universe) (t:term) (f:result a)
   : result a
   = with_guard f
@@ -871,27 +934,62 @@ let weaken #a (initial_env:env) (p:term) (f:result a)
       reemit_guard initial_env form ;!
       return res)
 
-(* The guard of a branch, under its hypotheses: as [push_branch_hypotheses],
-   each is a separate implication, the equation of the scrutinee with the
-   pattern last. *)
-let weaken_branch #a (initial_env:env) (path_condition:term) (branch_condition:option term)
-                  (branch_equality:term) (f:result a)
-: result a
-= with_guard f
+(* Weaken the guard of [f] with a branch hypothesis (see
+   [branch_conditions]), unless it is trivial. *)
+let weaken_branch #a (initial_env:env) (hyp:typ) (f:result a)
+: ML (result a)
+= if U.is_t_true hyp then f else
+  with_guard f
   (function
     | Inr err -> fail_propagate err
     | Inl (res, None) -> return res
     | Inl (res, Some form) ->
-      let form = U.mk_imp branch_equality form in
-      let form =
-        match branch_condition with
-        | None -> form
-        | Some bc -> U.mk_imp (U.b2t bc) form in
-      let form =
-        if Hash.equal_term path_condition U.exp_true_bool then form
-        else U.mk_imp (U.b2t path_condition) form in
-      reemit_guard initial_env form ;!
+      reemit_guard initial_env (U.mk_imp hyp form) ;!
       return res)
+
+(* Label the guard of [f] with [msg], at [r], for the SMT solver to report
+   when it cannot prove it (see [ErrorReporting.split_goals], where the
+   innermost label wins). The message is only computed if there is a guard. *)
+let label_guard (#a:Type) (g:env) (r:R.t) (msg:unit -> ML Errors.error_message) (f:result a)
+  : result a
+  = with_guard f
+    (function
+      | Inr err -> fail_propagate err
+      | Inl (res, None) -> return res
+      | Inl (res, Some form) ->
+        reemit_guard g (TcUtil.label (msg ()) r form) ;!
+        return res)
+
+(* Locate the goals of the guard of [f] at [r], unless they have a more
+   precise position (within [r]): the message "Could not prove
+   post-condition" is only a position for [ErrorReporting], which reports an
+   inner label, if any, or the message of an outer one, instead. E.g. the
+   guard of checking a function body against its annotated computation type
+   is located at the body, as by TcTerm (see [TcTerm.check_expected_effect]). *)
+let label_position (#a:Type) (g:env) (r:R.t) (f:result a)
+  : result a
+  = label_guard g r (fun () -> Errors.mkmsg "Could not prove post-condition") f
+
+let label_postcondition (#a:Type) (g:env) (at:term) (f:result a)
+  : result a
+  = label_position g at.pos f
+
+(* As TcTerm (see [TcTerm.value_check_expected_typ]), the guard of a subtyping
+   [t0 <: t1] of a term [e] is labeled "Subtyping check failed" at [e], except
+   for a value of type [unit] at [squash p], e.g. a [()] given for a
+   precondition: reporting that as "expected squash p, got unit" would bury
+   the obligation [p], which is only located at [e]. *)
+let label_subtyping (#a:Type) (g:env) (e:term) (t0 t1:typ) (f:result a)
+  : ML (result a)
+  = let is_value =
+      match (Subst.compress (U.unmeta e)).n with
+      | Tm_constant _ | Tm_name _ -> true
+      | _ -> false
+    in
+    if is_value && U.is_unit t0 && Some? (U.un_squash t1)
+    then (* The obligation is still reported at [e], as by TcTerm. *)
+      label_position g e.pos f
+    else label_guard g e.pos (fun () -> Err.subtyping_failed g.tcenv t0 t1 ()) f
 
 let weaken_with_guard_formula env (p:FStarC.TypeChecker.Common.guard_formula) (g:result 'a)
   = match p with
@@ -1035,6 +1133,32 @@ let is_tot_or_ghost_eff (e:eff) : ML bool =
   | ETot | EGhost -> true
   | _ -> false
 
+(* [e], of type [t_e] and effect [eff], was expected to have effect
+   [target_eff] (and type [target_t]): reported as TcTerm's
+   [Err.computed_computation_type_does_not_match_annotation], whose computed
+   type carries the equation TcTerm adds to the type of a pure term. *)
+let fail_effect_mismatch (#a:Type) (g:env) (e:term) (t_e:typ) (e_eff:eff) (target_t:typ) (target_eff:eff)
+  : ML (result a)
+  = let name (x:eff) : ML string =
+      match x with
+      | ETot -> "Tot"
+      | EGhost -> "GTot"
+      | EEff m -> show m
+    in
+    let t_e =
+      match e_eff with
+      | ETot -> U.comp_result (TcUtil.maybe_assume_result_eq_pure_term g.tcenv e (S.mk_Total t_e))
+      | EGhost -> U.comp_result (TcUtil.maybe_assume_result_eq_pure_term g.tcenv e (S.mk_GTotal t_e))
+      | _ -> t_e
+    in
+    let ppt = N.term_to_doc g.tcenv in
+    fail_code Errors.Fatal_ComputedTypeNotMatchAnnotation [
+      prefix 2 1 (text "Computed type") (ppt t_e) ^/^
+      prefix 2 1 (text "and effect") (text (name e_eff)) ^/^
+      prefix 2 1 (text "is not compatible with the annotated type") (ppt target_t) ^/^
+      prefix 2 1 (text "and effect") (text (name target_eff))
+    ]
+
 (* The least effect both [e0] and [e1] lift to, if any. *)
 let join_eff (g:env) (e0 e1:eff)
   : ML (result eff)
@@ -1109,48 +1233,41 @@ instance showable_side = {
 
 
 
-let boolean_negation_simp b =
-  if Hash.equal_term b U.exp_false_bool
-  then None
-  else Some (U.mk_boolean_negation b)
-
-(* The hypotheses of a branch, in its environment: as in TcTerm, the path
-   condition, the branch condition and the equation of the scrutinee with the
-   pattern are separate hypotheses, the equation last (tactics look it up). *)
-let push_branch_hypotheses (g:env) (path_condition:term) (branch_condition:option term)
-                           (branch_equality:term)
-  : ML env
-  = let g =
-      if Hash.equal_term path_condition U.exp_true_bool then g
-      else push_hypothesis g (U.b2t path_condition) in
-    let g =
+(* The conditions of a branch, as TcTerm has them (see
+   [TcUtil.get_neg_branch_conds]). The path condition of a branch, a
+   proposition, is the conjunction of the negations of the conditions of the
+   branches before it; [False] after an irrefutable pattern. Given it, the
+   branch condition [bc] of a branch (if its pattern is refutable) and the
+   equation [eq] of the scrutinee with its pattern, returns:
+   - the hypothesis under which the branch is taken, which does not mention
+     the pattern variables: the path condition and [bc], as one hypothesis;
+   - that, and [eq];
+   - the path condition of the next branch.
+   Of a branch, the guard is [hyp ==> forall xs. eq ==> G], where [xs] are
+   the pattern variables: the equation is the last hypothesis (tactics look
+   it up). *)
+let branch_conditions (path_condition:typ) (branch_condition:option term) (eq:typ)
+  : ML (typ & typ & typ)
+  = let hyp =
       match branch_condition with
-      | None -> g
-      | Some bc -> push_hypothesis g (U.b2t bc) in
-    push_hypothesis g branch_equality
+      | None -> path_condition
+      | Some bc -> U.mk_conj_simp path_condition (U.b2t bc)
+    in
+    let next =
+      match branch_condition with
+      | None -> U.t_false
+      | Some bc -> U.mk_conj_simp path_condition (U.mk_neg (U.b2t bc))
+    in
+    hyp, U.mk_conj_simp hyp eq, next
 
-let combine_path_and_branch_condition (path_condition:term)
-                                      (branch_condition:option term)
-                                      (branch_equality:term)
-  : ML (term & term)
-  = let this_path_condition =
-        let bc =
-            match branch_condition with
-            | None -> branch_equality
-            | Some bc -> U.mk_conj_l [U.b2t bc; branch_equality]
-        in
-        U.mk_conj (U.b2t path_condition) bc
-    in
-    let next_path_condition =
-        match branch_condition with
-        | None -> U.exp_false_bool
-        | Some bc ->
-          if Hash.equal_term path_condition U.exp_true_bool
-          then U.mk_boolean_negation bc
-          else U.mk_and path_condition (U.mk_boolean_negation bc)
-    in
-    this_path_condition, //:Type
-    next_path_condition  //:bool
+let push_branch_hypothesis (g:env) (hyp:typ) : ML env =
+  if U.is_t_true hyp then g else push_hypothesis g hyp
+
+(* The obligation that no branch is missing, given the path condition after
+   the last branch, labeled as by TcTerm. *)
+let exhaustiveness_obligation (r:R.t) (path_condition:typ) : ML (option typ) =
+  if U.is_t_false path_condition then None
+  else Some (TcUtil.label Err.exhaustiveness_check r (U.mk_imp path_condition U.t_false))
 
 let maybe_relate_after_unfolding (g:Env.env) t0 t1 : ML side =
   let dd0 = Env.delta_depth_of_term g t0 in
@@ -1324,9 +1441,20 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
          (elab_exp (open_exp e x)) == open_term (denote_term (elab_exp e)) x]
          where [open_term] unfolds to an application of another recursive
          function. *)
+      let is_name (t:term) : ML bool =
+        match (Subst.compress (U.unascribe (U.unmeta t))).n with
+        | Tm_name _ -> true
+        | _ -> false
+      in
+      (* Likewise when one side is a variable, e.g. the index [g] of a
+         pattern-bound [h:typing g e t] against [extend_gen x t_x g']: the
+         unfolding of the other side can only help if it closes the relation
+         outright; otherwise [g == extend_gen x t_x g'] is what the SMT
+         solver can prove, from the inversion of [h]'s type. *)
       let retry_unfolded t0' t1' =
-        if is_app t0 && is_app t1
-           && not (unfold_to_match 16 (U.unascribe (U.unmeta t0')) (U.unascribe (U.unmeta t1')))
+        if (is_app t0 && is_app t1
+            && not (unfold_to_match 16 (U.unascribe (U.unmeta t0')) (U.unascribe (U.unmeta t1'))))
+           || is_name t0 || is_name t1
         then handle_with (no_guard (check_relation g rel t0' t1'))
                (fun _ -> handle_with (fallback t0 t1) (fun _ -> check_relation g rel t0' t1'))
         else check_relation g rel t0' t1'
@@ -1501,7 +1629,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
             else (
               with_binders g0 [b0] [u0]
                 (handle_with
-                    (check_relation g EQUALITY U.t_true f0)
+                    (no_guard (check_relation g EQUALITY U.t_true f0))
                     (fun _ -> guard g f0))
             )
           ) else return ();!
@@ -1530,7 +1658,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
             | EQUALITY ->
               with_binders g0 [b1] [u1]
                 (handle_with
-                    (check_relation g EQUALITY U.t_true f1)
+                    (no_guard (check_relation g EQUALITY U.t_true f1))
                     (fun _ -> guard g f1))
 
             | SUBTYPING (Some tm) ->
@@ -1545,7 +1673,11 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
                  witness_guard g0 tm f1
 
             | SUBTYPING None ->
-                 guard g0 (U.mk_forall u1 b1.binder_bv f1)
+                 (* Over a fresh (unnamed) variable, as TcTerm's
+                    [Rel.get_subtyping_prop]. *)
+                 let x = S.new_bv (Some (S.range_of_bv b1.binder_bv)) b1.binder_bv.sort in
+                 let f1 = Subst.subst [NT(b1.binder_bv, S.bv_to_name x)] f1 in
+                 guard g0 (U.mk_forall u1 x f1)
           )
         )
         else (
@@ -1688,7 +1820,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
           let! u1 = universe_of_well_typed_term g x1.binder_bv.sort in
           let g_x1, x1, c1 = open_comp g x1 c1 in
           let c0 = Subst.subst_comp [DB(0, x1.binder_bv)] c0 in
-          with_binders g [x1] [u1] (
+          with_binder_unrefined g x1 u1 (
             let rel_arg =
               match rel with
               | EQUALITY -> EQUALITY
@@ -1834,7 +1966,9 @@ and check_subtype (g:env) (e:option term) (t0 t1:typ)
         None
         "FStarC.TypeChecker.Core.check_subtype"
     in
-    chk
+    match e with
+    | Some tm -> label_subtyping g tm t0 t1 chk
+    | None -> chk
 
 (* The guard [phi] about the witness [tm] of a refinement subtyping. The
    type synthesized for an application is its head's result type, which says
@@ -1910,9 +2044,9 @@ and app_facts (g:env) (e:term)
               let pat_sc_eq =
                 U.mk_eq2 u_sc t_sc sc
                   (PatternUtils.raw_pat_as_exp g.tcenv p |> Option.must |> fst) in
-              let this, next = combine_path_and_branch_condition path bc pat_sc_eq in
-              let g'0 = push_binders g bs in
-              let g' = push_branch_hypotheses g'0 path bc pat_sc_eq in
+              let cond, this, next = branch_conditions path bc pat_sc_eq in
+              let g'0 = push_binders (push_branch_hypothesis g cond) bs in
+              let g' = push_hypothesis g'0 pat_sc_eq in
               let! fb = term_facts g' b in
               (* Facts that do not mention the pattern variables hold
                  whenever the branch is taken: stating them under
@@ -1923,10 +2057,6 @@ and app_facts (g:env) (e:term)
                 BU.for_some (fun (b:binder) -> mem b.binder_bv fvs) bs
               in
               let fb_free, fb_bound = List.partition (fun f -> not (mentions_bs f)) fb in
-              let cond =
-                match bc with
-                | None -> U.b2t path
-                | Some bc -> U.mk_conj (U.b2t path) (U.b2t bc) in
               let here =
                 (match fb_free with
                  | [] -> []
@@ -1943,7 +2073,7 @@ and app_facts (g:env) (e:term)
               return (here @ rest)
             | _ -> return []
           in
-          aux U.exp_true_bool brs
+          aux U.t_true brs
       in
       handle_with facts (fun _ -> return [])
     | Tm_meta {meta=Meta_desugared Tactic_synthesized} -> return []
@@ -2169,7 +2299,10 @@ and do_check (g:env) (e:term)
     | None ->
       fail_str (Format.fmt1 "Variable not found: %s" (show x))
     | Some (t, _) ->
-      return (ETot, t)
+      (* As [Env.lookup_bv]: the type of an occurrence is used at the
+         occurrence, e.g. the refinement of a recursive function's argument
+         that proves termination is reported at the recursive call. *)
+      return (ETot, Subst.set_use_range (S.range_of_bv x) t)
     end
 
   | Tm_fvar f ->
@@ -2314,7 +2447,10 @@ and do_check (g:env) (e:term)
       in
       let pure_arg = is_tot_or_ghost_eff eff_arg in
       let subtyping () =
-        check_subtype g (if pure_arg then Some arg else None) t_arg x.binder_bv.sort in
+        (* The obligations of the formal, e.g. a termination refinement,
+           are about this argument: locate them at it, as TcTerm does. *)
+        check_subtype g (if pure_arg then Some arg else None) t_arg
+          (Subst.set_use_range arg.pos x.binder_bv.sort) in
       (if abs_checked then return ()
        else with_context "app subtyping" (Some (CtxTerm arg)) (fun _ -> with_deps subtyping)) ;!
       with_context "app arg qual" None (fun _ -> check_arg_qual arg_qual x.binder_qual) ;!
@@ -2431,10 +2567,13 @@ and do_check (g:env) (e:term)
   | Tm_match {brs}
       when BU.for_some (fun (_, w, _) -> Some? w) brs ->
     (* As in [TcTerm.tc_eqn], which rejects them when verifying *)
-    fail_str "When clauses are not supported"
+    let w = List.tryPick (fun (_, w, _) -> w) brs |> Option.must in
+    with_context "when clause" (Some (CtxTerm w)) (fun _ ->
+      fail_code Errors.Fatal_WhenClauseNotSupported
+        (Errors.mkmsg "When clauses are not yet supported in --verify mode; they will be some day"))
 
   | Tm_match {scrutinee=sc; ret_opt=None; brs=branches; rc_opt} ->
-    check_match g sc branches rc_opt None
+    check_match g e.pos sc branches rc_opt None
 
   | Tm_match {scrutinee=sc; ret_opt=Some (as_x, (Inl returns_ty, None, eq)); brs=branches; rc_opt} ->
     let! eff_sc, t_sc = check "scrutinee" g sc in
@@ -2444,19 +2583,15 @@ and do_check (g:env) (e:term)
     let! _eff_t, returns_ty_t =
       with_binders g [as_x] [u_sc] (check "return type" g_as_x returns_ty) in
     let! _u_ty = is_type g_as_x returns_ty_t in
-    let rec check_branches (path_condition: S.term)
+    let rec check_branches (path_condition: typ)
                            (branches: list S.branch)
                            (acc_eff: eff)
       : ML (result eff)
       = match branches with
         | [] ->
-          (match boolean_negation_simp path_condition with
-           | None ->
-             return acc_eff
-
-           | Some neg_path ->
-             guard g (U.b2t neg_path) ;!
-             return acc_eff)
+          (match exhaustiveness_obligation e.pos path_condition with
+           | None -> return acc_eff
+           | Some phi -> guard g phi ;! return acc_eff)
 
         | (p, None, b) :: rest ->
           let _, (p, _, b) = open_branch g (p, None, b) in
@@ -2465,15 +2600,16 @@ and do_check (g:env) (e:term)
           let pat_sc_eq =
             U.mk_eq2 u_sc t_sc sc
             (PatternUtils.raw_pat_as_exp g.tcenv p |> Option.must |> fst) in
-          let this_path_condition, next_path_condition =
-              combine_path_and_branch_condition path_condition branch_condition pat_sc_eq
+          let hyp, _, next_path_condition =
+              branch_conditions path_condition branch_condition pat_sc_eq
           in
-          let g'0 = push_binders g bs in
-          let g' = push_branch_hypotheses g'0 path_condition branch_condition pat_sc_eq in
+          let g_h = push_branch_hypothesis g hyp in
+          let g'0 = push_binders g_h bs in
+          let g' = push_hypothesis g'0 pat_sc_eq in
           let! eff_br, tbr =
-            with_binders g bs us
-              (weaken_branch g'0
-                 path_condition branch_condition pat_sc_eq
+            weaken_branch g hyp
+            (with_binders g_h bs us
+              (weaken_branch g'0 pat_sc_eq
                  (let! eff_br, tbr = check "branch" g' b in
                   let expect_tbr = Subst.subst [NT(as_x.binder_bv, sc)] returns_ty in
                   let rel =
@@ -2483,7 +2619,7 @@ and do_check (g:env) (e:term)
                   in
                   with_context "branch check relation" None (fun _ -> check_relation g' rel tbr expect_tbr);!
                   let! eff = join_eff g eff_br acc_eff in
-                  return (eff, expect_tbr))) in
+                  return (eff, expect_tbr)))) in
           match p.v with
           | Pat_var _ ->
             //trivially exhaustive
@@ -2494,7 +2630,7 @@ and do_check (g:env) (e:term)
           | _ ->
             check_branches next_path_condition rest eff_br in
 
-    let! eff = check_branches U.exp_true_bool branches ETot in
+    let! eff = check_branches U.t_true branches ETot in
     let ty = Subst.subst [NT(as_x.binder_bv, sc)] returns_ty in
     return (eff, ty)
 
@@ -2509,10 +2645,7 @@ and do_check (g:env) (e:term)
               | EGhost, ETot when non_informative g t -> ETot
               | _ -> eff in
     if not (sub_eff g eff target)
-    then fail [
-           text "Expected a computation with effect" ^/^ pp (eff_to_lid target)
-           ^/^ text "but got" ^/^ pp (eff_to_lid eff)
-         ]
+    then fail_effect_mismatch g e t eff (U.comp_result c) target
     else return (target, t)
 
   | Tm_match _ ->
@@ -2524,7 +2657,7 @@ and do_check (g:env) (e:term)
     let xs = letrec_binders lbs in
     let g' = push_binders g xs in
     with_binders g xs us (
-      check_letrec_defs g lbs us ;!
+      check_letrec_defs g None lbs us ;!
       let! eff, t = check "let rec body" g' body in
       let fvs = FStarC.Syntax.Free.names t in
       if xs |> BU.for_some (fun x -> mem x.binder_bv fvs)
@@ -2796,7 +2929,7 @@ and check_let (g:env) (lb:letbinding) (body:term) (expected:option typ)
 (* A [match] without a return annotation, whose branches are checked against
    [expected] if given, or else against the type of the first one (or the
    residual type recorded by the elaborator, if any). *)
-and check_match (g:env) (sc:term) (branches:list branch) (rc_opt:option residual_comp) (expected:option typ)
+and check_match (g:env) (r:R.t) (sc:term) (branches:list branch) (rc_opt:option residual_comp) (expected:option typ)
   : ML (result (eff & typ))
   = let! eff_sc, t_sc = check "scrutinee" g sc in
     let! u_sc = universe_of_well_typed_term g t_sc in
@@ -2871,13 +3004,9 @@ and check_match (g:env) (sc:term) (branches:list branch) (rc_opt:option residual
              fail_str "could not compute a type for the match"
 
            | Some (eff, t) ->
-             match boolean_negation_simp path_condition with
-             | None ->
-               return (eff, t, [])
-
-             | Some neg_path ->
-               guard g (U.b2t neg_path) ;!
-               return (eff, t, []))
+             match exhaustiveness_obligation r path_condition with
+             | None -> return (eff, t, [])
+             | Some phi -> guard g phi ;! return (eff, t, []))
 
         | (p, None, b) :: rest ->
           let _, (p, _, b) = open_branch g (p, None, b) in
@@ -2886,15 +3015,16 @@ and check_match (g:env) (sc:term) (branches:list branch) (rc_opt:option residual
           let pat_sc_eq =
             U.mk_eq2 u_sc t_sc sc
             (PatternUtils.raw_pat_as_exp g.tcenv p |> Option.must |> fst) in
-          let this_path_condition, next_path_condition =
-              combine_path_and_branch_condition path_condition branch_condition pat_sc_eq
+          let hyp, _, next_path_condition =
+              branch_conditions path_condition branch_condition pat_sc_eq
           in
-          let g'0 = push_binders g bs in
-          let g' = push_branch_hypotheses g'0 path_condition branch_condition pat_sc_eq in
+          let g_h = push_branch_hypothesis g hyp in
+          let g'0 = push_binders g_h bs in
+          let g' = push_hypothesis g'0 pat_sc_eq in
           let! eff_br, tbr, facts =
-            with_binders g bs us
-              (weaken_branch g'0
-                 path_condition branch_condition pat_sc_eq
+            weaken_branch g hyp
+            (with_binders g_h bs us
+              (weaken_branch g'0 pat_sc_eq
                  (match branch_typ_opt with
                   | None ->
                     let! eff_br, tbr = with_context "branch" (Some (CtxTerm b)) (fun _ -> check "branch" g' b) in
@@ -2916,16 +3046,10 @@ and check_match (g:env) (sc:term) (branches:list branch) (rc_opt:option residual
                        let w = if is_tot_or_ghost_eff eff_br then Some b else None in
                        check_subtype g' w tbr expect_tbr;!
                        let! eff = join_eff g eff_br acc_eff in
-                       (* The branch is taken under the path condition and
-                          its own branch condition, which, unlike
-                          [this_path_condition], do not mention the pattern
-                          variables. *)
-                       let cond =
-                         match branch_condition with
-                         | None -> U.b2t path_condition
-                         | Some bc -> U.mk_conj (U.b2t path_condition) (U.b2t bc) in
-                       return (eff, expect_tbr, branch_fact bs us pat_sc_eq cond tbr w))
-                      against)) in
+                       (* The branch is taken under [hyp], which does not
+                          mention the pattern variables. *)
+                       return (eff, expect_tbr, branch_fact bs us pat_sc_eq hyp tbr w))
+                      against))) in
           match p.v with
           | Pat_var _ ->
             //trivially exhaustive
@@ -2955,7 +3079,7 @@ and check_match (g:env) (sc:term) (branches:list branch) (rc_opt:option residual
         | Some (_, t) -> Some (CtxTerm t)
       in
       with_context "check_branches" ctx
-        (fun _ -> check_branches U.exp_true_bool branch_typ_opt branches)
+        (fun _ -> check_branches U.t_true branch_typ_opt branches)
     in
     let! eff = join_eff g eff_sc eff_br in
     let t_br =
@@ -2984,7 +3108,7 @@ and check_against_typ (g:env) (e:term) (t:typ)
       return (promote eff)
     | Tm_match {scrutinee=sc; ret_opt=None; brs; rc_opt}
         when List.for_all (fun (_, w, _) -> None? w) brs ->
-      let! eff, _ = check_match g sc brs rc_opt (Some t) in
+      let! eff, _ = check_match g e.pos sc brs rc_opt (Some t) in
       return (promote eff)
     | Tm_meta {tm}
         when (match (Subst.compress (U.unmeta tm)).n with
@@ -2999,22 +3123,32 @@ and check_against_typ (g:env) (e:term) (t:typ)
          against the arrow's computation type, rather than having its type
          synthesized and then related to the arrow: the body, e.g. a [let]
          binding a local SMT lemma, may then scope over the goal. *)
-      let g', xs, body = open_term_binders g xs body in
+      let _, xs, body = open_term_binders g xs body in
       let! us = with_context "abs binders" None (fun _ -> check_binders g xs) in
       let sub = List.map2 (fun (f:binder) (x:binder) -> NT(f.binder_bv, S.bv_to_name x.binder_bv)) formals xs in
-      with_binders g xs us (
-        let rec check_formals (formals:binders) (xs:binders) : ML (result unit) =
-          match formals, xs with
-          | f::formals, x::xs ->
-            with_context "abs binder subtyping" None (fun _ ->
-              check_subtype g' None (Subst.subst sub f.binder_bv.sort) x.binder_bv.sort) ;!
-            check_formals formals xs
-          | _ -> return ()
-        in
-        check_formals formals xs ;!
-        with_context "abs body" (Some (CtxTerm body)) (fun _ ->
-          check_against_comp g' body (Subst.subst_comp sub c))
-      ) ;!
+      (* As by TcTerm (see [TcTerm.tc_abs_check_binders]), the annotation of
+         each binder is related to its expected type in the scope of the
+         binders before it only. [gi.at_top] is kept for closing the guard
+         over the binders of the spine (see [with_binders]), not for
+         checking anything else. *)
+      let rec check_formals (gi:env) (formals:binders) (xs:binders) (us:universes) : ML (result unit) =
+        let gi_ = { gi with at_top = false } in
+        match formals, xs, us with
+        | f::formals, x::xs, u::us ->
+          label_guard gi_ x.binder_bv.sort.pos
+            (fun () -> Errors.mkmsg "Type annotation on parameter incompatible with the expected type")
+            (with_context "abs binder subtyping" None (fun _ ->
+              check_subtype gi_ None (Subst.subst sub f.binder_bv.sort) x.binder_bv.sort)) ;!
+          with_binders gi [x] [u]
+            (check_formals { push_binder gi x with at_top = gi.at_top } formals xs us)
+        | _ ->
+          with_context "abs body" (Some (CtxTerm body)) (fun _ ->
+            (* At the range of the abstraction, as TcTerm's
+               [check_expected_effect], called by [tc_abs] in the
+               abstraction's environment. *)
+            label_postcondition gi_ e (check_against_comp gi_ body (Subst.subst_comp sub c)))
+      in
+      check_formals g formals xs us ;!
       return ETot
       end
     | _ -> check_against_typ_by_subtyping g e t
@@ -3037,8 +3171,10 @@ and check_against_typ_by_subtyping (g:env) (e:term) (t:typ)
   : ML (result eff)
   = let! eff, te = check "checked term" g e in
     let w = if is_tot_or_ghost_eff eff then Some e else None in
+    let chk () = check_subtype g w te t in
     with_context "subtyping" (Some (CtxRel te (SUBTYPING w) t)) (fun _ ->
-      check_subtype g w te t) ;!
+      (* [check_subtype] labels its guard when it has a witness. *)
+      if Some? w then chk () else label_subtyping g e te t (chk ())) ;!
     return eff
 
 (* For [e = fun xs -> body] (one group of binders) and [t] an arrow with at
@@ -3105,10 +3241,10 @@ and check_against_comp (g:env) (e:term) (c:comp)
       | _ -> eff
     in
     if not (sub_eff g eff target_eff)
-    then fail [
-           text "Expected a computation with effect" ^/^ pp (eff_to_lid target_eff)
-           ^/^ text "but got" ^/^ pp (eff_to_lid eff)
-         ]
+    then (
+      let! _, t_e = handle_with (check "computed type" g e) (fun _ -> return (eff, target_t)) in
+      fail_effect_mismatch g e t_e eff target_t target_eff
+    )
     else return ()
 
 and check_letrec_types (g:env) (lbs:list letbinding)
@@ -3134,9 +3270,14 @@ and check_letrec_types (g:env) (lbs:list letbinding)
    types. Other definitions (and other names in the nest) are checked
    assuming the names at their declared types, as is sound for partial
    correctness. *)
-and check_letrec_defs (g:env) (lbs:list letbinding) (us:list universe)
+and check_letrec_defs (g:env) (top:option (list subst_elt)) (lbs:list letbinding) (us:list universe)
   : ML (result unit)
-  = (* A total definition with [@@admit_termination] is not itself known to
+  = (* [top]: for a top-level nest, maps its local names back to the
+       top-level names; the guard of each body is stated with those,
+       rather than quantified over the local names (see
+       [check_top_level_letrec']).
+
+        A total definition with [@@admit_termination] is not itself known to
        terminate, but, as in [TcTerm], its body must still respect the
        termination arguments of the other names in the nest. *)
     let lb_info (lb:letbinding) : ML (option (int & binders & comp)) =
@@ -3182,10 +3323,23 @@ and check_letrec_defs (g:env) (lbs:list letbinding) (us:list universe)
         let body = if Nil? bs1 then body else U.abs bs1 body rc in
         let c = Subst.close_comp formals c in
         let formals = Subst.close_binders formals in
-        let g', formals, c = open_comp_binders g formals c in
+        (* As TcTerm, which checks the definition's own binders, name the
+           formals as in the definition, not as in its type: they appear
+           in the termination goals. *)
+        let formals =
+          List.map2 (fun (b:binder) (f:binder) ->
+            if S.is_null_bv b.binder_bv then f
+            else { f with binder_bv = { f.binder_bv with ppname = b.binder_bv.ppname } })
+            bs0 formals
+        in
+        let g', formals, opening = open_binders g formals in
+        let c = Subst.subst_comp opening c in
         let! ufs = with_context "let rec formals" None (fun _ -> check_binders g formals) in
         let sub = List.map2 (fun (b:binder) (f:binder) -> NT(b.binder_bv, S.bv_to_name f.binder_bv)) bs0 formals in
-        let body = Subst.subst sub body in
+        (* Rename the definition's binders to the formals by closing and
+           reopening, not by [sub], which would locate every occurrence at
+           the binder. *)
+        let body = Subst.subst opening (Subst.close bs0 body) in
         with_binders g formals ufs (
           let rec check_actuals (bs0:binders) (formals:binders) : ML (result unit) =
             match bs0, formals with
@@ -3198,9 +3352,12 @@ and check_letrec_defs (g:env) (lbs:list letbinding) (us:list universe)
             | _ -> return ()
           in
           check_actuals bs0 formals ;!
+          (* The termination goals are labelled at the range of the
+             environment: as in TcTerm, that of the definition, which
+             includes the recursive calls. *)
           let refined =
             FStarC.TypeChecker.TcTerm.guard_letrecs
-              { g'.tcenv with letrecs = letrecs }
+              (Env.set_range { g'.tcenv with letrecs = letrecs } lb.lbdef.pos)
               formals c
           in
           let refined =
@@ -3233,9 +3390,19 @@ and check_letrec_defs (g:env) (lbs:list letbinding) (us:list universe)
           let bs = List.map fst refined @ List.map fst nonterminating in
           let bus = List.map snd refined @ List.map snd nonterminating in
           let g'' = push_binders g' bs in
-          with_binders g' bs bus (
+          let check_body () =
             with_context "let rec body" (Some (CtxTerm body)) (fun _ ->
-              check_against_comp g'' body c)))
+              check_against_comp g'' body c)
+          in
+          match top with
+          | None -> with_binders g' bs bus (check_body ())
+          | Some back ->
+            with_guard (check_body ()) (function
+              | Inr err -> fail_propagate err
+              | Inl (res, None) -> return res
+              | Inl (res, Some form) ->
+                reemit_guard g' (Subst.subst back form) ;!
+                return res))
 
       | _ ->
         fail_str (Format.fmt1 "Only function literals may be defined recursively; got %s"
@@ -3677,7 +3844,8 @@ let initial_env g : ML env =
   { tcenv = g;
     allow_universe_instantiation = false;
     should_read_cache = true;
-    max_binder_index = max_index
+    max_binder_index = max_index;
+    at_top = false
   }
 
 //
@@ -3686,7 +3854,7 @@ let initial_env g : ML env =
 //
 let check_term_top' g e topt (must_tot:bool)
   : ML (result (eff & typ))
-  = let g = initial_env g in
+  = let g = { initial_env g with at_top = Tm_abs? (Subst.compress (U.unascribe e)).n } in
     let! eff_te =
       match topt with
       | None -> check "top" g e
@@ -3702,7 +3870,7 @@ let check_term_top' g e topt (must_tot:bool)
       | _ -> eff_te
     in
     if must_tot && not (eff_eq (fst eff_te) ETot)
-    then fail_str (Format.fmt1 "expected total effect, found %s" (show (fst eff_te)))
+    then fail_effect_mismatch g e (snd eff_te) (fst eff_te) (snd eff_te) ETot
     else return eff_te
 
 (* Check [e] against the computation type [c] (of any effect). *)
@@ -3733,22 +3901,36 @@ let check_top_level_letrec' g (lbs:list letbinding)
     let replace (t:term) : ML term =
       t |> Syntax.Visit.visit_term false (fun t ->
         match t.n with
+        (* Occurrences keep their ranges: the type of a name is used at
+           its occurrence (see [lookup]). *)
         | Tm_fvar fv ->
           (match name_of fv with
-           | Some x -> { t with n = Tm_name x }
+           | Some x -> { t with n = Tm_name (S.set_range_of_bv x t.pos) }
            | None -> t)
-        | Tm_uinst ({n=Tm_name x}, _) -> { t with n = Tm_name x }
+        | Tm_uinst ({n=Tm_name x}, _) -> { t with n = Tm_name (S.set_range_of_bv x t.pos) }
         | _ -> t)
     in
     let lbs =
       List.map2 (fun lb (_, x) -> { lb with lbname = Inl x; lbdef = replace lb.lbdef }) lbs names
     in
     let! us = check_letrec_types g lbs in
-    let xs = letrec_binders lbs in
-    with_binders g xs us (
-      check_letrec_defs g lbs us ;!
-      return (ETot, S.t_unit)
-    )
+    (* The guard mentions the names at their declared types: substitute the
+       top-level names back, rather than quantifying over them, as they are
+       in TcTerm's environment when it discharges the guard. *)
+    let back : list subst_elt =
+      List.map2 (fun (lb:letbinding) (fv, x) ->
+        let t = S.fv_to_tm fv in
+        let t = match lb.lbunivs with
+                | [] -> t
+                | us -> S.mk_Tm_uinst t (List.map U_name us) in
+        NT (x, t)) lbs names
+    in
+    with_guard (check_letrec_defs g (Some back) lbs us) (function
+      | Inr err -> fail_propagate err
+      | Inl (_, None) -> return (ETot, S.t_unit)
+      | Inl (_, Some form) ->
+        reemit_guard g (Subst.subst back form) ;!
+        return (ETot, S.t_unit))
 
 let simplify_steps =
     [Env.Beta;
@@ -3852,7 +4034,7 @@ let check_term_top g e topt (must_tot:bool)
     | Success (((EGhost, t), guard), cache) -> Success (((E_Ghost, t), guard), cache)
     | Success (((EEff m, _), _), _) ->
       Error ({ unfolding_ok = true; no_guard = false; error_context = [("Top", None)] },
-             [text "Expected a total or ghost term, but it has effect" ^/^ pp m])
+             [text "Expected a total or ghost term, but it has effect" ^/^ pp m], None)
     | Error err -> Error err
 
 let check_term g e t must_tot =

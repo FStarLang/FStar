@@ -87,22 +87,17 @@ The driver is `Tc.tc_sig_let`, together with `Tc.tc_sig_let_phase2_core`.
   for termination using `TcTerm.guard_letrecs`, exactly as TcTerm does, and
   the nest is checked like an inner `let rec`.
 * **Failure in strict mode.** Only Core decides whether a definition is
-  accepted. TcTerm is used only to *explain* a rejection. Core's issues
-  are collected without being reported (`Errors.catch_all_issues`). If
-  Core rejects the definition, either structurally or because its guard
-  cannot be discharged, TcTerm's phase 2 is run on a fresh phase-1
-  elaboration. That elaboration is made with `TcUtil.without_phase2_core`,
-  because phase 1 elaborates slightly differently under the extension (see
-  below).
-  * If TcTerm reports errors, those are the ones shown. They carry
-    TcTerm's labels and ranges, which is what users and the `.expected`
-    files expect.
-  * Otherwise, Core's own errors are reported, and the definition is still
-    rejected: an ordinary Error 19 for an unprovable guard, or else "Core
-    failed to check this definition, although TcTerm accepts it".
-
-  When Core accepts the definition, its warnings and other non-error
-  issues are reported, in the order they were emitted.
+  accepted, and Core reports why it is not. TcTerm's phase 2 is not run to
+  explain a rejection, which would double the work on every failure.
+  * An unprovable guard is reported by the SMT solver, as for TcTerm, with
+    the labels and ranges Core puts on the guard (§6, "Error reporting").
+  * A structural failure is reported with Core's error. Where TcTerm has an
+    error code for the same failure, Core's error carries it
+    (`Core.error_code`) and is reported with it, and with TcTerm's message:
+    Error 34 for a computation of the wrong effect (e.g. `GTot` for `Tot`),
+    Error 236 for a `when` clause. Any other structural failure is Error 12,
+    "Core failed to check this definition", followed by Core's context. It
+    is located at the innermost term of that context (`Core.error_range`).
 * **Ill-scoped phase-1 terms.** Lax phase 1 can leave a free name in its
   elaboration. For example, a uvar standing for the residual type of an
   abstraction, whose context includes a `let`-bound name, may be solved
@@ -280,7 +275,12 @@ Core previously served tactics (`core_check`) and only knew `Tot` and
   they were, not on their unfoldings; otherwise the SMT patterns of lemmas
   about them do not fire (e.g. `denote_term (elab_exp (open_exp e x)) ==
   open_term_spec' (denote_term (elab_exp e)) x`, where `open_term_spec'`
-  unfolds to another recursive function). A recursive definition is
+  unfolds to another recursive function). The same holds when one side is
+  a variable: the index `g'` of a pattern-bound `h:typing g' e t` is
+  related to `extend_gen x t g` by `g' == extend_gen x t g`, which the SMT
+  solver proves by inverting `h`'s type, and not to the `match` that
+  `extend_gen` unfolds to, whose λ it cannot equate
+  (`examples/metatheory/StlcCbvDbParSubst`). A recursive definition is
   unfolded (with `Zeta`, when a guard is allowed) only if the unfolding
   closes the relation without a guard, e.g. by reducing by iota.
 * **Equations between applications.** When two applications with the same
@@ -318,7 +318,7 @@ Core previously served tactics (`core_check`) and only knew `Tot` and
   therefore marks its result as `Tm_meta (Tm_ascribed (e, typ),
   Meta_desugared Tactic_synthesized)`. Core only checks that `typ` is a
   type and returns `typ`. The trust is the same as TcTerm's, but it is now
-  explicit and confined to that one node. TcTerm, as the phase-2 fallback,
+  explicit and confined to that one node. TcTerm, when it is phase 2 (e.g. in `warn` mode),
   trusts it too. The normalizer keeps the marker, as it does
   `Machine_integer`. The marker contributes no facts. It only lives while
   Core checks the definition: the driver removes it
@@ -396,12 +396,14 @@ phi`. Several cases are simplified:
   quantifiers therefore put every earlier `calc` step into the context of
   every later one. With nonlinear steps that derailed the solver, e.g. 3.8s
   instead of 0.2s for a step of `FStar.Math.Fermat.pow_plus`.
-* The driver drops the leading quantifiers over `unit` of a top-level
-  guard, e.g. over the binder of `let f () = ...`, when that binder is
-  unused (`strip_unit_foralls` in `Tc.fst`). TcTerm discharges such a
-  guard with the binder in the environment, so a `handle_smt_goals` tactic
-  sees `False` rather than `forall (_:unit). False`
-  (`examples/tactics/HandleSmtGoal`).
+* The driver opens the leading quantifiers of a top-level guard, e.g.
+  over the binders of `let f x y = ...`, into the environment in which it
+  discharges the guard (`open_foralls` in `Tc.fst`). TcTerm discharges
+  such a guard with the binders in the environment, so a
+  `handle_smt_goals` tactic sees `False` rather than `forall (_:unit).
+  False` (`examples/tactics/HandleSmtGoal`), and the context of a failed
+  goal is the same. For this, the null `unit` binder of `let f () = ...`
+  is kept (`at_top` in Core's environment).
 * When `x` is not quantified and the `let` is annotated, what the
   annotation says about `e1` is added as a fact, before `e1`'s own facts.
   The two may be `term_eq` and still differ: `term_eq` ignores the residual
@@ -453,14 +455,51 @@ they cannot catch this class of problem. Use `compare` mode, or build real
 
 ## 6. Known limitations
 
-* **Guard labels and messages.** Core's failures carry Core's error context,
-  not TcTerm's labels ("Subtyping check failed", the "Expected type ... got
-  type" text, and ranges on sub-terms). The strict driver hides this for
-  definitions TcTerm rejects too, by reporting TcTerm's errors (§2).
-* **Not yet handled natively.** Core may reject the following, or check
-  them less precisely than TcTerm. In strict mode, a rejection is reported
-  as "Core failed to check this definition" (§2):
-  * `when` clauses (TcTerm rejects them too, in verify mode);
+* **Error reporting.** Core labels its guard as TcTerm labels its own, so
+  that a failed goal is reported with the same message, at the same range,
+  and in the same context:
+  * the subtyping of a term at a type is labelled "Subtyping check failed"
+    at the term, with "Expected type ... got type ...", except for a value
+    of type `unit` given for a `squash p` (e.g. `()` for a precondition),
+    which only locates the goal (`label_subtyping`, as
+    `TcTerm.value_check_expected_typ`);
+  * the body of a function checked against an arrow is labelled at the
+    abstraction with the position-only "Could not prove post-condition"
+    (`label_postcondition`, as `TcTerm.check_expected_effect`), and each
+    binder's annotation with "Type annotation on parameter incompatible
+    with the expected type" (as `TcTerm.tc_abs_check_binders`);
+  * the obligations of a formal type, e.g. the termination refinement of
+    a recursive call, are located at the argument; the formals of a
+    recursive function are named as in its definition, not as in its type;
+  * branch conditions are TcTerm's: the negation of the earlier patterns
+    and the pattern's own condition, then the scrutinee's equation, last;
+    the exhaustiveness obligation is labelled at the match;
+  * the refinement of the domain of an arrow is a hypothesis of the guard
+    of its codomain, not the sort of its quantifier.
+
+  Some differences remain, because Core's VCs are deliberately not
+  TcTerm's. The tests whose expected output shows them are pinned to
+  TcTerm with `--ext phase2_core=off` (`tests/error-messages/Makefile`):
+  * Core's VC carries more facts (§4), which then show in the context of a
+    failed goal, e.g. the refinement of `bad (x-1)` in
+    `NegativeTests.ShortCircuiting`, or the definition `f = fun n -> n` in
+    `Coercions`. They may also prove what TcTerm cannot: in
+    `TestErrorLocations.test_elim_exists`, the postcondition of
+    `indefinite_description1` proves the assertion, and only the
+    precondition fails;
+  * Core relates two applications either by unfolding or argument-wise
+    (`either_guard`), and a failure reports the disjunction
+    (`Test.FunctionalExtensionality`);
+  * the failed annotation of a pattern binder is a subtyping failure at
+    the binder, not a failed assertion of the whole definition (`PatAnnot`);
+  * the obligation of a `calc` step's proof is located at the step, not at
+    its relation (`Calc`), because Core's post-condition label covers the
+    whole body of the step's thunk, whereas TcTerm's covers only the final
+    subsumption.
+* **Not yet handled natively.** Core rejects the following, or checks them
+  less precisely than TcTerm:
+  * `when` clauses (rejected with TcTerm's Error 236, as TcTerm rejects
+    them in verify mode);
   * `match ... returns` annotations with tactic handlers;
   * the SMT-pattern checks of `check_smt_pat`.
 * **Elaborated terms differ.** Terms that tactics inspect are phase 1's
@@ -495,7 +534,25 @@ they cannot catch this class of problem. Use `compare` mode, or build real
     to push `subst_term_spec` through the nested `eq2` application. It now
     asserts that chain one level at a time and passes at fuel 2 with rlimit
     ~3 in both modes.
-* **Tests changed.** `pulse/test/bug-reports/Bug216.fst` expected Core, as
+  * `FStar.UInt<N>.eq_mask` and `gte_mask` (generated from
+    `.scripts/FStar.UIntN.fstip`) got `--z3rlimit 10`. Under TcTerm,
+    `gte_mask` used 4.1 of its rlimit of 5 and failed with z3 seed 3; in
+    `strict` mode it failed with seed 0 when checked with the
+    implementation. It now uses at most ~5.5.
+  * `tests/custard/CborBoundary.item` got `--z3rlimit 10`: its
+    machine-integer bounds are proved under a dozen branch conditions, and
+    used 4.7 of the default rlimit of 5 under TcTerm and ~5.6 under Core.
+* **Tests changed.** Pulse checks its terms with Core in every mode, so the
+  labels of §6 "Error reporting" show in the expected output of Pulse's
+  failures (`pulse/test/Test.Recursion`, `nolib/Bug416`,
+  `error_messages/{ReturnImplicit,SubtypingFailure}`,
+  `bug-reports/{Bug59,Bug94,Bug100,Bug206}`): an argument that does not
+  have its formal's type is reported as "Subtyping check failed" at the
+  argument, with the expected and actual types, where it was "Assertion
+  failed" at the application; a termination obligation is located at the
+  decreasing argument.
+
+  `pulse/test/bug-reports/Bug216.fst` expected Core, as
   Pulse uses it (`refl_tc_term`), to reject a `Tac` function argument such
   as `foo 1 (fun _ -> dump "")`, because Core only knew `Tot` and `GTot`.
   Since Core has learnt effects, those definitions are accepted in every
@@ -518,20 +575,16 @@ they cannot catch this class of problem. Use `compare` mode, or build real
   `Bug100` and `Bug267` show `nat`'s refinement `i >= 0` rather than
   `b2t`'s unfolding `i >= 0 == true`. `ExistsErasedAndPureEqualities`
   prints different unique ids.
-* **Side effects of the fallback.** A definition Core rejects is checked
-  again by TcTerm (§2), so its tactics run twice. While Core's attempt runs
-  (`TcUtil.as_phase2_core_attempt`), the tactic engine does not dump the
-  proof state of a failing tactic: TcTerm's run dumps it, as in mode 0.
-  Explicit `dump`s in the tactics of a rejected definition are printed
-  twice.
+* **Ill-scoped phase-1 terms** still fall back to TcTerm's phase 2 (§2):
+  this is the only fallback in strict mode.
 
 ## 7. Debugging
 
 * `--debug CoreTop` prints each top-level query and its simplified guard.
 * `--debug Core` traces the checker.
 * `--debug CoreFacts` shows the facts collected at each witness and `let`.
-* `--debug TwoPhases` prints the phase-1 elaboration and the expected type
-  given to Core.
+* `--debug TwoPhases` prints the phase-1 elaboration, the expected type
+  given to Core, and the guard the driver discharges.
 * `--debug DisableCoreCache` turns memoization off. Use it to rule out cache
   bugs.
 * `FSTAR_PHASE2_CORE=warn` on a module lists every definition Core cannot
