@@ -774,7 +774,8 @@ let lemma_as_set_disjoint_left #a #f (s1 s2: ordset a f)
   : Lemma (requires S.disjoint (as_set s1) (as_set s2)) 
           (ensures intersect s1 s2 = empty) =     
   let mem_eq p q : Lemma (S.mem p (as_set q) <==> mem #a #f p q) = () in
-  Classical.forall_intro_2 mem_eq
+  Classical.forall_intro_2 mem_eq;
+  eq_lemma (intersect s1 s2) empty
 
 let lemma_as_set_disjoint #a #f s1 s2 = 
   Classical.move_requires_2 (lemma_as_set_disjoint_right #a #f) s1 s2;

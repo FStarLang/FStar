@@ -99,17 +99,6 @@
   - Failed to prove: TestErrorLocations.p1
   - See also TestErrorLocations.fst(79,9-79,11)
 
-* Info at TestErrorLocations.fst(91,7-91,13):
-  - Expected failure:
-  - Assertion failed
-  - The SMT solver could not prove the query.
-  - Failed to prove: n = 0
-  - In context:
-      uu___: Prims.unit
-      n: Prims.nat
-      FStar.Classical.Sugar.indefinite_description1 (fun n -> n = 0) == n
-  - See also TestErrorLocations.fst(91,13-91,20)
-
 * Info at TestErrorLocations.fst(90,19-90,36):
   - Expected failure:
   - Assertion failed

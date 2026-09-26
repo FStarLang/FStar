@@ -36,14 +36,16 @@ let shift_bit_lemma_true (u : UI.uint_t 32) (i : nat{i < 32})
   : Lemma (requires True)
           (ensures UI.nth #32 (UI.shift_right #32 u i `UI.logand` 1) 31
                      == UI.nth #32 u (31 - i))
-  = UI.shift_right_lemma_2 u i i;
+  = UI.one_to_vec_lemma #32 31;
+    UI.shift_right_lemma_2 u i i;
     UI.logand_definition (UI.shift_right #32 u i) 1 31
 
 (* The same, with no [requires] clause. *)
 let shift_bit_lemma_true' (u : UI.uint_t 32) (i : nat{i < 32})
   : Lemma (ensures UI.nth #32 (UI.shift_right #32 u i `UI.logand` 1) 31
                      == UI.nth #32 u (31 - i))
-  = UI.shift_right_lemma_2 u i i;
+  = UI.one_to_vec_lemma #32 31;
+    UI.shift_right_lemma_2 u i i;
     UI.logand_definition (UI.shift_right #32 u i) 1 31
 
 (* A single lemma call in the body is enough to trigger it. *)
