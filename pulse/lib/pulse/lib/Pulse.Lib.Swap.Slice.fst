@@ -23,7 +23,7 @@ module Prf = Pulse.Lib.Swap.Spec
 open Pulse.Lib.Swap.Common
 
 // This module is somewhat flaky
-#set-options "--retry 5"
+#set-options "--retry 5 --z3rlimit_factor 4"
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 fn slice_swap_aux (#t: Type0) (a: S.slice t)

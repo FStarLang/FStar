@@ -562,7 +562,9 @@ let sift_up_swap_part2 #t {| total_order t |}
         // Need to prove li <> child. If li = child, then i = parent_idx child = p. But i <> p.
         // So li <> child. We can prove this using: left_idx i = li = child implies parent_idx child = i.
         // But parent_idx child = p. So i = p. Contradiction with i <> p.
-        assert (li = child ==> parent_idx child = i);  // from left_idx_inj
+        // left_idx_inj is what discharges this; without the explicit call the
+        // solver has to derive (2*i+1-1)/2 = i on its own.
+        if li = child then left_idx_inj i child;
         // But parent_idx child = p and i <> p, so li <> child.
         assert (li <> child);
         swap_index_other s child p i;
@@ -587,7 +589,7 @@ let sift_up_swap_part2 #t {| total_order t |}
       )
       else (
         // Same reasoning as for left child
-        assert (ri = child ==> parent_idx child = i);
+        if ri = child then right_idx_inj i child;
         assert (ri <> child);
         swap_index_other s child p i;
         swap_index_other s child p ri;
@@ -633,7 +635,7 @@ let sift_up_swap_lemma #t {| total_order t |}
 // Helper for sift_up: After swapping idx with parent, establish the grandparent->children property
 // for the recursive call. The recursive call has new idx = parent, new sequence = swap_seq.
 // The invariant requires: swap_seq[gp] <=? swap_seq[children of parent].
-#push-options "--fuel 1 --ifuel 1"
+#push-options "--fuel 1 --ifuel 1 --z3rlimit_factor 4"
 let grandparent_up_after_swap #t {| total_order t |} 
   (s:Seq.seq t) (child:nat{child > 0 /\ child < Seq.length s})
   : Lemma (requires almost_heap_sift_up s child /\
@@ -683,6 +685,7 @@ let grandparent_up_after_swap #t {| total_order t |}
       )
     )
 #pop-options
+#push-options "--z3rlimit_factor 4"
 
 //
 // The is_pqueue predicate - includes capacity
@@ -889,6 +892,7 @@ let sift_down_swap_heap_up_at_parent #t {| total_order t |}
 
 // Helper for sift_down_swap_heap_up_at: case parent_idx i = parent
 // In this case, i is a sibling of child (the other child of parent)
+#pop-options
 #push-options "--fuel 1 --ifuel 1"
 let sift_down_swap_heap_up_at_gchild #t {| total_order t |}
   (s:Seq.seq t) (parent:nat{parent < Seq.length s}) (child:nat{child < Seq.length s /\ parent <> child})
@@ -918,6 +922,13 @@ let sift_down_swap_heap_up_at_gchild #t {| total_order t |}
 #pop-options
 
 // Helper for sift_down_swap_heap_up_at: case i is elsewhere (not child, not parent, parent_idx i <> parent)
+// --z3rlimit_factor 4: the two quantifiers in `almost_heap_sift_down` carry no
+// explicit pattern, so Z3 infers one, and this proof is sensitive to which one
+// it picks. Simplifying the encoding shifts that choice (~0.4 -> ~4.3 of the
+// default budget) without changing the proof. An explicit `{:pattern}` would be
+// the better fix, but every candidate is too restrictive for
+// `almost_down_to_full_heap`, which needs instances at children of `bad`.
+#push-options "--z3rlimit_factor 4"
 let sift_down_swap_heap_up_at_other #t {| total_order t |}
   (s:Seq.seq t) (parent:nat{parent < Seq.length s}) (child:nat{child < Seq.length s /\ parent <> child})
   (i:nat{i < Seq.length s /\ i <> 0 /\ i <> child /\ i <> parent /\ parent_idx i <> parent})
@@ -938,6 +949,7 @@ let sift_down_swap_heap_up_at_other #t {| total_order t |}
     swap_length s parent child;
     swap_index_other s parent child i;
     swap_index_other s parent child pi
+#pop-options
 
 // Helper for sift_down_swap_lemma: heap_up_at after swap
 #push-options "--fuel 1 --ifuel 1"
@@ -1088,7 +1100,7 @@ let grandparent_after_swap #t {| total_order t |}
     // heap_down_at s child means: s[child] <=? s[left_idx child] and s[child] <=? s[right_idx child]
     ()
 
-#push-options "--fuel 1 --ifuel 1 --z3rlimit_factor 4"
+#push-options "--fuel 1 --ifuel 1 --z3rlimit_factor 12"
 fn rec sift_down (#t:eqtype) {| total_order t |} (pq:rvec t) (idx:SZ.t) (len:SZ.t)
   (#s:erased (Seq.seq t){SZ.v idx < Seq.length s /\ SZ.v len == Seq.length s /\ 
                           SZ.fits (2 * Seq.length s + 2)})
