@@ -98,12 +98,68 @@ The driver is `Tc.tc_sig_let`, together with `Tc.tc_sig_let_phase2_core`.
     Error 236 for a `when` clause. Any other structural failure is Error 12,
     "Core failed to check this definition", followed by Core's context. It
     is located at the innermost term of that context (`Core.error_range`).
-* **Ill-scoped phase-1 terms.** Lax phase 1 can leave a free name in its
-  elaboration. For example, a uvar standing for the residual type of an
-  abstraction, whose context includes a `let`-bound name, may be solved
-  after that `let` is closed. TcTerm's phase 2 never sees this, because it
-  re-elaborates. If the phase-1 term has free names, the driver uses TcTerm
-  for that definition, in every mode (`--debug TwoPhases` reports it).
+* **Ill-scoped phase-1 terms.** Core checks phase 1's elaboration as it is,
+  so the elaboration must be closed. TcTerm's phase 2 re-elaborates, which
+  hid four bugs in phase 1 that left free names in it. All four break the
+  invariant `Rel` relies on: every occurrence of a uvar is in the scope of
+  its whole context, except for the names its delayed substitution maps.
+  `Rel.ensure_no_uvar_subst` may solve a uvar `?u` as `?v x1 .. xn`, over
+  the suffix of its context that a substitution affects, and then an
+  occurrence of `?u` outside the scope of some `xi` has `xi` free. All four
+  were fixed, and the fixes apply with or without the extension:
+  * *The scrutinee in a branch's environment.* `TcTerm.tc_eqn` checked a
+    branch's pattern, `when` clause and body in an environment that
+    contained the match's logical scrutinee `guard_x`. That name is never
+    bound in the term when the scrutinee is pure. So a uvar created in a
+    branch had `guard_x` in its context. When `Rel.ensure_no_uvar_subst`
+    abstracted that uvar over the suffix of its context, it solved it as
+    `?v ... guard_x ...`, and no closing substitution removed `guard_x`.
+    Example: the typeclass dictionaries in
+    `fun (a,b) (c,d) -> eq a c && eq b d` in
+    `examples/typeclasses/Eq.eq_pair`. The branch is now checked without
+    the scrutinee. The pattern's guard and the branch's equations add the
+    scrutinee to their own environments (`scrutinee_env`).
+  * *Eta-contraction in `Rel.mk_solution`.* A pattern problem
+    `?m x =?= h e x` is solved with `?m := h e`, not `fun x -> h e x`,
+    provided `x` is not free in `h e`. That check missed a uvar `?d` in
+    `e` whose context contains `x`: `restrict_all_uvars` then solved
+    `?d := ?d' x`, which put `x` back into `?m`'s solution, out of scope.
+    Example: `?m a =?= writer s #?d a`, from `x:writer s a` against
+    `m a` (`tests/custard/Mymon`). Now the uvars of the contracted solution
+    are restricted to the binders it still abstracts over, so `?d` cannot
+    depend on `x`. The contraction is refused if `x` occurs in the type of
+    such a uvar.
+  * *A type escaping a binder.* The result type of `let x = e1 in e2`, or of
+    a branch, is used outside the scope of `x`, or of the pattern's
+    variables. It may contain a uvar whose context includes them. Example:
+    in `PulseCore.Action.lift_pre_act0_act`,
+    `fun m0 frame -> let x, m1 = m #ictx m0 frame in U.raise_val x, m1`
+    has an impure scrutinee, so it is elaborated as
+    `let uu___ = .. in match uu___ with ..`. The type
+    `raise_t #?d a & full_mem` escapes both, and the dictionary `?d` has
+    `uu___`, `x` and `m1` in its context; it was later solved as
+    `?v m0 frame uu___`. Now `Rel.restrict_escaping_uvars` restricts every
+    such uvar to its context minus the escaping names (and the binders
+    whose sorts depend on them). It is called by
+    `TcUtil.composite_result_typ` for a `let`, and by `TcTerm.tc_eqn` for a
+    branch. A uvar whose type mentions an escaping name is left alone.
+  * *An ill-scoped uvar type in `Rel.restrict_ctx`.* To solve `?m y =?= e`,
+    each uvar `?s` of `e` is restricted to the part of its context shared
+    with `?m`'s, plus `y`. `?s`'s occurrence in `e` may carry a delayed
+    substitution, which the restriction ignores, and `?s`'s type may mention
+    a name that is dropped. The new uvar then had an ill-scoped type, which
+    later became the residual type of an abstraction solving another uvar.
+    Example: `Pulse.C.Types.Scalar.read_prf`, where `prf'` calls
+    `move_requires (prf v0') p'`. The precondition proof of `mk_fraction`
+    in `prf`'s type has type `squash (fractionable .. (mk_scalar v0'ₚ))` in
+    `prf`'s context, and occurs under `[v0'ₚ := v0']`. Now the new uvar is
+    also abstracted over the dropped binders its type depends on, so the
+    occurrence becomes `?v v0'`, in scope.
+
+  In strict and default modes, a definition whose phase-1 elaboration has
+  free names is rejected with an internal error (Error 327). There is no
+  fallback to TcTerm. In `warn` and `compare` modes, it is a warning, and
+  TcTerm's phase 2 is used.
 
 Phase 1 behaves differently in one respect. In `TcTerm.check_inner_let`,
 phase 1 normally erases the inferred type of every unannotated *inner* `let`,
@@ -280,9 +336,17 @@ Core previously served tactics (`core_check`) and only knew `Tot` and
   related to `extend_gen x t g` by `g' == extend_gen x t g`, which the SMT
   solver proves by inverting `h`'s type, and not to the `match` that
   `extend_gen` unfolds to, whose λ it cannot equate
-  (`examples/metatheory/StlcCbvDbParSubst`). A recursive definition is
-  unfolded (with `Zeta`, when a guard is allowed) only if the unfolding
-  closes the relation without a guard, e.g. by reducing by iota.
+  (`examples/metatheory/StlcCbvDbParSubst`).
+  When one side is a variable and the guard-free comparison fails, Core
+  also normalizes the other side once to head normal form, unfolding
+  recursive definitions (`Zeta`), and compares the results without a guard
+  (`closes_with_zeta`). For example, `t l <: t ([] @ l)` holds under
+  `--no_smt`: `op_At` unfolds to `append [] l`, and iota reduces that to
+  `l` (`bug-reports/closed/Bug3207b`). Recursive definitions are not
+  unfolded in the general unfolding of the heads of applications. That
+  loops, e.g. on relating `f l` with `g l` for two recursive functions:
+  both unfold to `match`es whose branches recurse forever
+  (`bug-reports/closed/Bug606`).
 * **Equations between applications.** When two applications with the same
   head cannot be related without a guard, two guards are possible: one
   relating the arguments, and one relating the unfoldings, or (for an
@@ -575,8 +639,9 @@ they cannot catch this class of problem. Use `compare` mode, or build real
   `Bug100` and `Bug267` show `nat`'s refinement `i >= 0` rather than
   `b2t`'s unfolding `i >= 0 == true`. `ExistsErasedAndPureEqualities`
   prints different unique ids.
-* **Ill-scoped phase-1 terms** still fall back to TcTerm's phase 2 (§2):
-  this is the only fallback in strict mode.
+* **No fallback in strict mode.** Every definition is checked by Core alone.
+  The four causes of ill-scoped phase-1 terms found by CI were fixed (§2).
+  Any remaining one is an internal error (Error 327), not a fallback.
 
 ## 7. Debugging
 

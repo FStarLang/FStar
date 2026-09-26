@@ -4036,8 +4036,14 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
   (* 1. Check the pattern *)
   (*    pat_bvs are the pattern variables, and pat_bv_tms are syntax for a single argument functions that *)
   (*    when applied to the scrutinee return an expression for the bv in terms of projectors *)
+  (*    The pattern, the [when] clause and the branch are checked without
+        [scrutinee] in scope: it is bound by nothing in the term, so it must
+        not occur in their elaboration. A metavariable created in its scope
+        could be solved to a term mentioning it, e.g. when [Rel]'s
+        [ensure_no_uvar_subst] abstracts a metavariable over a suffix of its
+        context that includes [scrutinee], and the name would escape. *)
   let pattern, pat_bvs, pat_bv_tms, pat_env, pat_exp, norm_pat_exp, guard_pat, erasable =
-    tc_pat (Env.push_bv env scrutinee) pat_t pattern
+    tc_pat env pat_t pattern
   in
 
   if Debug.extreme () then
@@ -4068,6 +4074,9 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
         |> SS.subst_ascription [NT (b.binder_bv, norm_pat_exp)]
         |> U.ascribe branch_exp in
     let branch_exp, c, g_branch = tc_term pat_env branch_exp in
+    (* The branch's type is outside the scope of the pattern variables; so
+       must its metavariables be (see [Rel.restrict_escaping_uvars]). *)
+    let g_branch = g_branch ++ Rel.restrict_escaping_uvars pat_env pat_bvs (U.comp_result c) in
     let branch_exp =  //unascribe if we added ascription
       match ret_opt with
       | None -> branch_exp

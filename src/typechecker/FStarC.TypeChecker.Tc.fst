@@ -698,19 +698,26 @@ let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
       let fallback_tcterm () =
         TcUtil.without_phase2_core (fun () -> phase2_tcterm_on (phase1 ()))
       in
-      (* Phase 1 may leave a local name in an annotation, e.g. in the
-         residual type of an abstraction whose body's type was a
-         metavariable, solved only after the [let] binding the name was
-         closed. TcTerm's phase 2 re-elaborates the definition; Core, which
-         keeps phase 1's elaboration, cannot use it. *)
-      let phase1_ill_scoped () = Cons? (elems (FStarC.Syntax.Free.names e)) in
+      (* Phase 1's elaboration of a closed definition must be closed: Core
+         checks it as is. A free name in it is a bug in elaboration (see
+         doc/ref/phase2_core.md, "Ill-scoped phase-1 terms"); it is reported
+         as such, except in the diagnostic modes, where TcTerm's phase 2,
+         which re-elaborates the definition, is used instead. *)
+      let phase1_free_names () = FStarC.Syntax.Free.names e in
       if do_two_phases env' && TcUtil.phase2_core_enabled () && not env'.admit
-         && phase1_ill_scoped ()
+         && Cons? (elems (phase1_free_names ()))
       then (
-        if !dbg_TwoPhases then
-          Format.print1 "phase2 core: phase 1's elaboration has free names %s; using TcTerm\n"
-            (show (FStarC.Syntax.Free.names e));
-        fallback_tcterm ()
+        let msg = [
+          Errors.Msg.text "Internal error: phase 1's elaboration of this definition has free names:";
+          Errors.Msg.text (show (phase1_free_names ()))
+        ] in
+        let mode = TcUtil.phase2_core_mode () in
+        if mode = "warn" || mode = "compare"
+        then (
+          Errors.log_issue env' Errors.Warning_Defensive msg;
+          fallback_tcterm ()
+        )
+        else raise_error (Env.get_range env') Errors.Error_IllScopedTerm msg
       )
       else if do_two_phases env' && TcUtil.phase2_core_enabled () && not env'.admit
       then (

@@ -1188,9 +1188,18 @@ let composite_result_typ
     | _ -> t, mzero
   in
   let phi = drop_redundant_conjuncts env res_typ_base phi in
-  (if U.is_t_true phi then res_typ_base
-   else U.refine (S.new_bv (Some res_typ_base.pos) res_typ_base) phi),
-  g_esc
+  let res_typ =
+    if U.is_t_true phi then res_typ_base
+    else U.refine (S.new_bv (Some res_typ_base.pos) res_typ_base) phi
+  in
+  (* The composite's type is outside [x]'s scope; so must its
+     metavariables be (see [Rel.restrict_escaping_uvars]). *)
+  let g_restrict =
+    match b with
+    | Some x -> Rel.restrict_escaping_uvars env [x] res_typ
+    | None -> mzero
+  in
+  res_typ, g_esc ++ g_restrict
 
 
 (* Everything a bind's comp-and-guard construction works from, after the

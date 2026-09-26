@@ -1451,10 +1451,34 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
          unfolding of the other side can only help if it closes the relation
          outright; otherwise [g == extend_gen x t_x g'] is what the SMT
          solver can prove, from the inversion of [h]'s type. *)
+      (* Whether unfolding the other side of a variable, recursive
+         definitions included, closes the relation outright, e.g. [l] and
+         [[] @ l] under [--no_smt]: [op_At] unfolds to [append [] l], which
+         only reduces to [l] by unfolding [append]. [Zeta] is used only
+         here, in a single normalization to head normal form of the
+         non-variable side, and not in the general unfolding of the heads
+         of applications: there, [match]es of recursive definitions could
+         unfold forever, e.g. relating [f l] and [g l] for two recursive
+         functions that are equal by a lemma. *)
+      let closes_with_zeta () =
+        let zeta t =
+          if is_name t then t
+          else N.normalize [Env.UnfoldUntil delta_constant; Env.Weak; Env.HNF; Env.Primops;
+                            Env.Beta; Env.Iota; Env.Zeta] g.tcenv t
+        in
+        let t0'' = zeta t0 in
+        let t1'' = zeta t1 in
+        if U.term_eq t0 t0'' && U.term_eq t1 t1''
+        then err "no unfolding"
+        else no_guard (check_relation g rel t0'' t1'')
+      in
       let retry_unfolded t0' t1' =
-        if (is_app t0 && is_app t1
-            && not (unfold_to_match 16 (U.unascribe (U.unmeta t0')) (U.unascribe (U.unmeta t1'))))
-           || is_name t0 || is_name t1
+        if is_name t0 || is_name t1
+        then handle_with (no_guard (check_relation g rel t0' t1'))
+               (fun _ -> handle_with (closes_with_zeta ())
+               (fun _ -> handle_with (fallback t0 t1) (fun _ -> check_relation g rel t0' t1')))
+        else if is_app t0 && is_app t1
+            && not (unfold_to_match 16 (U.unascribe (U.unmeta t0')) (U.unascribe (U.unmeta t1')))
         then handle_with (no_guard (check_relation g rel t0' t1'))
                (fun _ -> handle_with (fallback t0 t1) (fun _ -> check_relation g rel t0' t1'))
         else check_relation g rel t0' t1'
