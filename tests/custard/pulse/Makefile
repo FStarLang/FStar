@@ -245,6 +245,17 @@ CNOGREP_ArrInit += "= { };"
 CGREP_ArrInit += "ArrInit_cell _cbuf1[1];"
 CNOGREP_ArrInit += "< 0;"
 
+# Section 94.5.  A fill of EAny is the value the storage already holds, so
+# both shapes are a declaration and nothing else.  The array is the one that
+# matters: at a struct element type no initializer list is available to fall
+# into, so before 94.5 it declared its four cells and then wrote an arbitrary
+# value into each of them.  The cell pins that the same fact reaches the
+# one-cell collapse (section 7.4), which is a different code path.
+CGREP_ArrInit += "ArrInit_cell a[4];"
+CGREP_ArrInit += "uint8_t p;"
+CNOGREP_ArrInit += "(uint8_t){0}"
+CNOGREP_ArrInit += "(ArrInit_cell){0}"
+
 # Section 95.  The same module at a narrowed index width.  [varlen] is the
 # reason this is pinned here rather than in tests/custard: its loop counter
 # is a size_t and its length is now a uint32_t, so the comparison needs a
