@@ -4665,9 +4665,10 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
          let env = p_env wl orig in
          (* Decide an equation between two terms, reducing them lazily.
 
-            Try comparing the terms as they are. If we get Equal or NotEqual,
-            we are done. If we get Unknown, reduce both sides to head normal
-            form and compare again; if that is still inconclusive, decompose
+            Try comparing the terms as they are.  If we get Equal or NotEqual,
+            we are done.  If we get Unknown, try congruence on the terms as
+            written, and only if that does not apply reduce both sides to head
+            normal form and try again; if that is still inconclusive, decompose
             and recurse.  Only the parts of the terms that the comparison
             actually visits are ever reduced.
 
@@ -4684,6 +4685,12 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
             [match] that iota can never fire on, so two kinds that both
             compute to [None] would be reported as different.
 
+            Congruence is tried before the reduction because a reduction can
+            destroy the structure the comparison needs: [serializer p] is a
+            type abbreviation, so reducing it replaces the application, whose
+            argument we would have recursed into, by a refinement whose
+            formula mentions [p] under a binder.
+
             Callers with a better answer than an SMT obligation can turn even
             this off with [eq_norm_heuristic_ok]; see tests/tactics/TestBV.fst,
             and the note above [same_formula] in [meet_or_join]. *)
@@ -4693,6 +4700,7 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
            | TEQ.NotEqual -> false
            | TEQ.Unknown ->
              if not wl.eq_norm_heuristic_ok then false
+             else if congruence env t1 t2 then true
              else
              let hnf t =
                norm_with_steps "FStarC.TypeChecker.Rel.norm_with_steps.2"
@@ -4712,13 +4720,29 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
                   that by inlining the lets; head reduction does not, so ask
                   for a syntactic comparison (up to alpha) first.  It is cheap,
                   and a [true] answer is conclusive. *)
-               U.term_eq t1 t2 ||
-               (let h1, args1 = U.head_and_args_full t1 in
-                let h2, args2 = U.head_and_args_full t2 in
-                not (Nil? args1)
-                && List.length args1 = List.length args2
-                && TEQ.eq_tm env h1 h2 = TEQ.Equal
-                && List.forall2 (fun (a1, _) (a2, _) -> equal env a1 a2) args1 args2)
+               U.term_eq t1 t2 || congruence env t1 t2
+
+         (* Relate two terms by comparing their corresponding subterms.  Note
+            [equal] is what recurses, so every subterm is again reduced only as
+            far as its own comparison needs. *)
+         and congruence env t1 t2 : ML bool =
+           match (SS.compress t1).n, (SS.compress t2).n with
+           | Tm_refine {b=x1; phi=phi1}, Tm_refine {b=x2; phi=phi2} ->
+             (* A refinement carries no arguments for the application case
+                below.  Two refinements of the same type are equal when their
+                formulas are: this is what relates [x:t{f x}] with
+                [x:t{f x == true}], since [b2t] unfolds to the equation. *)
+             equal env x1.sort x2.sort
+             && (let x = S.freshen_bv x1 in
+                 let s = [S.DB (0, x)] in
+                 equal env (SS.subst s phi1) (SS.subst s phi2))
+           | _ ->
+             let h1, args1 = U.head_and_args_full t1 in
+             let h2, args2 = U.head_and_args_full t2 in
+             not (Nil? args1)
+             && List.length args1 = List.length args2
+             && TEQ.eq_tm env h1 h2 = TEQ.Equal
+             && List.forall2 (fun (a1, _) (a2, _) -> equal env a1 a2) args1 args2
          in
          (* The reduction above only ever visits head positions, so it can
             miss an equality hidden somewhere it does not look -- inside the
