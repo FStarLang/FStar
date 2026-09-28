@@ -490,15 +490,15 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
      header a downstream unit includes, and [-o] is what decides it
      (section 42.2). *)
   let backend = Options.custard_backend () in
-  (* Section 95.  Only the direct-to-C printer reads this, so on any other
-     backend it would be silently ignored -- and a flag whose whole purpose is
-     to change the width of every index is not one to ignore quietly. *)
-  if Options.custard_sizet_32 () && backend <> "C" then
+  (* Section 95.  Only the direct-to-C and karamel-C printers read this, so on
+     any other backend it would be silently ignored -- and a flag whose whole
+     purpose is to change the width of every index is not one to ignore
+     quietly. *)
+  if Options.custard_sizet_32 () && backend <> "C" && backend <> "KrmlC" then
     E.raise_error0 E.Fatal_OptionsNotCompatible [
-      text ("--custard_sizet_width 32 is a direct-to-C option, but this run \
-             uses --custard_backend " ^ backend ^ ".");
-      text "karamel decides the width of size_t for itself, and the OCaml \
-            backend has no say in it at all."
+      text ("--custard_sizet_width 32 is a C option (--custard_backend C or \
+             KrmlC), but this run uses --custard_backend " ^ backend ^ ".");
+      text "The Rust and OCaml backends have no say in the width of size_t."
     ];
   (* Section 122.12.  A flag the F# backend does not implement.  It would
      otherwise be accepted and quietly ignored, and it is a flag whose whole

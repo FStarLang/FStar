@@ -1022,7 +1022,7 @@ size_t (default), or uint32_t.  Narrowing is *not* sound in general -- it is \
 correct exactly when the program assumes FStar.SizeT.fits_u32, which F* does \
 not check and this flag does not either -- but on a target where a 64-bit \
 index costs a register it is worth a measurable amount (section 95). Only the \
-C backend has it; karamel decides this for itself");
+C and KrmlC backends have it");
 
   ( noshort,
     "custard_split",

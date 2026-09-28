@@ -511,8 +511,15 @@ let krml_float_lit (fw:fwidth) (v:float_lit) : ML string =
   let s = float_lit_to_string v in
   if Float32? fw && Options.custard_backend () = "KrmlC" then s ^ "f" else s
 
+(* Section 95.  Under [--custard_sizet_width 32], [FStar.SizeT.t] is
+   [uint32_t] here too: karamel is told the narrow width directly, so the
+   type, the literal suffixes and every cast agree.  The same caveat applies
+   as for the direct-to-C backend: narrowing is correct exactly when the
+   program assumes [FStar.SizeT.fits_u32]. *)
 let krml_width (sw : signedness & iwidth) : ML K.width =
   match sw with
+  | (Signed, WSizet) when Options.custard_sizet_32 () -> K.Int32
+  | (Unsigned, WSizet) when Options.custard_sizet_32 () -> K.UInt32
   | (Signed, W8) -> K.Int8
   | (Signed, W16) -> K.Int16
   | (Signed, W32) -> K.Int32
