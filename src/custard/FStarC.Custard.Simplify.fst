@@ -1208,7 +1208,17 @@ let rec inline_expr (tbl : HashTable.t string (list string & list binder & expr)
    karamel backends a definition keeps its [unit] binders (Mono's rule 1),
    and a [fn f (_:unit) : t = (x:_) ...] forwarding to [g x] would otherwise
    be reduced to [f () = g] and expanded back under [g]'s binder names rather
-   than its own -- the same function, renamed. *)
+   than its own -- the same function, renamed.
+
+   Nor when the head is a name with an empty namespace: a target symbol a
+   rule spelled directly (see {!check_resolved}).  Nothing declares it, so
+   {!eta_expand_decls} cannot know its arity to restore the binder, and a C
+   function or macro cannot be partially applied. *)
+
+let is_raw_target_name (f:expr) : bool =
+  match f.e with
+  | EQual (n, _) -> Nil? n.ns
+  | _ -> false
 
 let rec split_last (es:list 'a) : ML (option (list 'a & 'a)) =
   match es with
@@ -1222,7 +1232,8 @@ let rec eta_reduce (bs:list binder) (body:expr) (ret:cty) (ef:eff)
   : ML (list binder & expr & cty & eff) =
   match split_last bs, body.e with
   | Some (bs', b), EApp (f, args)
-      when bs' |> List.existsb (fun (b:binder) -> not (TUnit? b.b_ty)) ->
+      when bs' |> List.existsb (fun (b:binder) -> not (TUnit? b.b_ty))
+           && not (is_raw_target_name f) ->
     (match split_last args with
      | Some (args', { e = EVar v }) when v = b.b_name
                                       && is_pure f.eff
@@ -1631,9 +1642,33 @@ let eta_rename_decls (prog:program) : ML program =
     if fuel <= 0 || anon p' = anon p then p' else go (fuel - 1) p' in
   go (List.length prog) prog
 
+(* A declaration whose address is taken -- a bare [EQual], as a kernel is
+   when it is handed to the launch that runs it -- is called through a
+   pointer with all of its arguments.  Reducing it changes the type the
+   pointer has, and {!eta_expand_decls} does not undo it, because the bare
+   use pins the arity at zero; so such a declaration is left alone. *)
+let address_taken (prog:program) : ML (HashTable.t string bool) =
+  let acc : HashTable.t string int = HashTable.create 100 in
+  prog |> List.iter (fun d ->
+    match d with
+    | DLet l -> expr_uses acc l.dl_body
+    | _ -> ());
+  let tbl : HashTable.t string bool = HashTable.create 100 in
+  prog |> List.iter (fun d ->
+    match d with
+    | DLet l ->
+      let n = string_of_name l.dl_name in
+      (match HashTable.try_find acc n with
+       | Some 0 -> HashTable.add tbl n true
+       | _ -> ())
+    | _ -> ());
+  tbl
+
 let eta_reduce_decls (prog:program) : ML program =
+  let taken = address_taken prog in
   prog |> List.map (fun d ->
     match d with
+    | DLet l when Some? (HashTable.try_find taken (string_of_name l.dl_name)) -> d
     | DLet l ->
       let bs, body, ret, ef = eta_reduce l.dl_binders l.dl_body l.dl_ret l.dl_eff in
       DLet { l with dl_binders = bs; dl_body = body; dl_ret = ret; dl_eff = ef }
@@ -2166,6 +2201,11 @@ let propagate_prologues (prog:program) : ML program =
    of the two: it catches every reference to a name that is not there,
    whatever put it there, and a rule is not the only thing that can.
 
+   A name with an empty namespace is exempt.  No F* declaration has one, so
+   it can only come from a rule, and it is how a rule spells a symbol of the
+   target language directly (a CUDA intrinsic, a macro from a hand-written
+   header) that no F* declaration stands for.
+
    Values only, and value references only.  A missing *type* is already
    rejected by the backends with a message about the type, and a constructor
    or a field resolves to the type that owns it, which is a different
@@ -2184,7 +2224,7 @@ let check_resolved (prog:program) : ML program =
   let rec quals (x:expr) : ML (list name) =
     let sub (es:list expr) : ML (list name) = List.collect quals es in
     match x.e with
-    | EQual (n, _) -> [n]
+    | EQual (n, _) -> if Nil? n.ns then [] else [n]
     | _ -> sub (children x) in
   prog |> List.iter (fun d ->
     match d with
