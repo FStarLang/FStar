@@ -103,7 +103,7 @@ let anf_expr (x0:expr) : ML expr =
       let c = norm c in
       let b = norm b in
       { x with e = EWhile (c, b) }
-    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
+    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ | ESizeof _ -> x
 
     (* Everything else has operand positions, so it needs an accumulator. *)
     | _ ->
@@ -118,7 +118,7 @@ let anf_expr (x0:expr) : ML expr =
          make and not one worth punishing with worse C. *)
       let atomic (e:expr) : ML bool =
         match e.e with
-        | EQual _ | EVar _ | EConst _ | EAny -> true
+        | EQual _ | EVar _ | EConst _ | EAny | ESizeof _ -> true
         | _ -> false in
       let operand (e:expr) : ML expr =
         let e = norm e in
@@ -282,7 +282,7 @@ let rec sub (sm:subst) (x:expr) : ML expr =
      | Some ({ e = EVar v' ; ty = TAny }) -> { x with e = EVar v' }
      | Some e -> e
      | None -> x)
-  | EConst _ | EQual _ | EAny | EAbort _ -> x
+  | EConst _ | EQual _ | EAny | EAbort _ | ESizeof _ -> x
   | ELet (v, ty, e1, e2) ->
     let v' = rename v in
     let e1 = g e1 in
@@ -869,7 +869,7 @@ let forwarder_table (prog:program) : ML (SMap.t (int & int)) =
 let rec reeval (e:expr) : ML bool =
   is_pure e.eff &&
   (match e.e with
-   | EVar _ | EConst _ | EQual _ -> true
+   | EVar _ | EConst _ | EQual _ | ESizeof _ -> true
    | EProj (a, _, _) -> reeval a
    | EDiscrim (a, _) -> reeval a
    | ECast (a, _) -> reeval a
@@ -973,7 +973,7 @@ let rec reduce (x:expr) : ML expr =
        | _ -> reduce r)
     else { x with e = EMatch (scrut, brs |> List.map reduce_branch) })
 
-  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
+  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ | ESizeof _ -> x
   (* Section 3.1: the backends have no closures, so a let-bound lambda that is
      only ever *called* has to reach its call, where beta can fire.  A lambda
      is a value, so moving it duplicates no work, and a single occurrence
@@ -1148,7 +1148,7 @@ let rec eta_reduce (bs:list binder) (body:expr) (ret:cty) (ef:eff)
 let rec cheap_expr (x:expr) : ML bool =
   is_pure x.eff &&
   (match x.e with
-   | EConst _ | EVar _ | EQual _ -> true
+   | EConst _ | EVar _ | EQual _ | ESizeof _ -> true
    | EApp (f, args) -> cheap_expr f && List.for_all cheap_expr args
    | ECast (e, _) | ECoerce (e, _) | EProj (e, _, _) -> cheap_expr e
    (* Section 33.2.  A lambda's *body* is not evaluated when the lambda is,
@@ -1561,6 +1561,7 @@ let rec expr_deps (x:expr) : ML (list string) =
         | ELet (_, t, e1, e2) -> cty_deps t @ sub [e1; e2]
         | EFun (bs, b) -> List.collect (fun (b:binder) -> cty_deps b.b_ty) bs @ expr_deps b
         | ECast (e, t) | ECoerce (e, t) -> cty_deps t @ expr_deps e
+        | ESizeof t -> cty_deps t
         (* The cases above are the ones that mention a type or a name of
            their own; a branch's pattern is one such, which is why both
            matching forms are here and not below. *)
@@ -3479,7 +3480,7 @@ let coerce_prog (prog:program) : ML program =
   and go (env:cenv) (exp:option cty) (x:expr) : ML expr =
     let same (e':expr') : expr = { x with e = e' } in
     match x.e with
-    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
+    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ | ESizeof _ -> x
     | ECast (e1, t) -> same (ECast (go env None e1, t))
     | ECoerce (e1, t) -> same (ECoerce (go env None e1, t))
     (* A comparison's operands all have the one type, so an operand of unknown
@@ -3932,7 +3933,7 @@ let narrow_rets (prog:program) : ML program =
    or allocates. *)
 let rec const_shape (x:expr) : ML bool =
   match x.e with
-  | EConst _ -> true
+  | EConst _ | ESizeof _ -> true
   | ECast (e1, _) | ECoerce (e1, _) -> const_shape e1
   | EOp (o, es) ->
     (match o.po_op with

@@ -934,6 +934,10 @@ let rec term (ind:string) (e:expr) : ML string =
     "(" ^ op_name op ^ " " ^ String.concat " " (List.map (term ind) args) ^ ")"
   | EAny -> "(Obj.magic 0)"
   | EAbort s -> "(failwith \"" ^ escape s ^ "\")"
+  | ESizeof _ ->
+    FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardNoCRepresentation [
+      FStarC.Errors.Msg.text "Custard: sizeof has no OCaml representation.";
+      FStarC.Errors.Msg.text "It is introduced by a rule, and only the C and KrmlC backends can print it." ]
   | EWhile (c, body) ->
     "(while " ^ term ind c ^ " do " ^ term ind body ^ " done)"
   | ERaise e1 -> "(raise " ^ term ind e1 ^ ")"

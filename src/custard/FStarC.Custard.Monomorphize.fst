@@ -521,6 +521,7 @@ let rec mono_expr (st:state) (env:env) (x:expr) : ML expr =
   let e' =
     match x.e with
     | EConst _ | EVar _ | EAny | EAbort _ -> x.e
+    | ESizeof c -> ESizeof (mono_cty st c)
     | EQual (n, args) ->
       let args = args |> List.map (mono_cty st) in
       (* Section 64.  The type arguments are on the node either way; what

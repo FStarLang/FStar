@@ -457,6 +457,10 @@ and expr' =
   | EAny
   (** An arbitrary value of the node's type: what an uninitialized stack
       allocation is filled with.  Only a rule may introduce it. *)
+  | ESizeof  of cty
+  (** The size in bytes of a value of the given type, as a [FStar.SizeT.t]:
+      C's [sizeof].  It computes nothing at runtime.  Only a rule may
+      introduce it, and only the C-family backends can print it. *)
   | EAbort   of string
   (** Control never reaches here; the string says why.  Only a rule may
       introduce it (Pulse's [unreachable], section 8.3). *)

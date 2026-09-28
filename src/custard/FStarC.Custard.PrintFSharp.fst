@@ -1014,6 +1014,10 @@ let rec term (ind:string) (e:expr) : ML string =
      could not. *)
   | EAny -> "(Unchecked.defaultof<" ^ ty e.ty ^ ">)"
   | EAbort s -> "(failwith \"" ^ escape s ^ "\")"
+  | ESizeof _ ->
+    E.raise_error0 E.Error_CustardNoCRepresentation [
+      text "Custard: sizeof has no F# representation.";
+      text "It is introduced by a rule, and only the C and KrmlC backends can print it." ]
   | EWhile (c, body) ->
     let pre = "(while " in
     let hd = pre ^ term (after ind pre) c ^ " do\n" in

@@ -143,6 +143,7 @@ let rec rn_expr (fields:SMap.t string) (ts:scope) (s:scope) (x:expr) : ML expr =
     | EConst _
     | EAny
     | EAbort _ -> x.e
+    | ESizeof c -> ESizeof (rn_cty ts c)
 
     | EVar v -> EVar (lookup s v)
     | EQual (n, args) -> EQual (n, args |> List.map (rn_cty ts))
