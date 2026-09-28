@@ -546,6 +546,10 @@ and expr' =
   | EAny
   (** An arbitrary value of the node's type: what an uninitialized stack
       allocation is filled with.  Only a rule may introduce it. *)
+  | ESizeof  of cty
+  (** The size in bytes of a value of the given type, as a [FStar.SizeT.t]:
+      C's [sizeof].  It computes nothing at runtime.  Only a rule may
+      introduce it, and only the C-family backends can print it. *)
   | EAbort   of string
   (** Abort at run time; the string says why.  This is what a placeholder
       compiles to -- [Prims.admit], [Prims.magic], a body Custard could not

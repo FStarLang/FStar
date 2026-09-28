@@ -1404,7 +1404,7 @@ and rc_live (o:owned) (e:expr) : ML expr =
   | EQual (f, _) when TArrow? e.ty && HashTable.mem !fn_tbl (string_of_name f) -> e
   | EQual (g, _) when HashTable.mem !global_tbl (string_of_name g) -> e
   | EQual _ when is_np e.ty -> unsupported "a global of reference-counted type"
-  | EConst _ | EQual _ | EAny | EAbort _ | EUnreachable _ -> e
+  | EConst _ | EQual _ | EAny | EAbort _ | EUnreachable _ | ESizeof _ -> e
 
   (* A Pulse stack reference or array of counted values (cherry.md,
      "References").  The cells are declared empty and filled by [PBuf "init"],
