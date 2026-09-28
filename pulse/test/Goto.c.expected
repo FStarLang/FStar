@@ -6,7 +6,7 @@ void Goto_test1(int32_t *r) {
 }
 
 size_t Goto_find_zero(int32_t *a, size_t sz) {
-  size_t _return = (size_t){0};
+  size_t _return;
   bool _return1 = false;
   size_t i = 0;
   while (true) {
