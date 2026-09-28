@@ -1506,7 +1506,7 @@ let is_stmt (e:expr) : bool =
 let rec vars_of (e:expr) : ML (list string) =
   match e.e with
   | EVar x -> [x]
-  | EConst _ | EQual _ | EAny | EAbort _ -> []
+  | EConst _ | EQual _ | EAny | EAbort _ | ESizeof _ -> []
   | ELet (_, _, a, b) -> vars_of a @ vars_of b
   | EApp (h, es) -> vars_of h @ List.collect vars_of es
   | EFun (_, b) -> vars_of b
@@ -1533,7 +1533,7 @@ let rec mutates (x:string) (e:expr) : ML bool =
   match e.e with
   | EVar y -> y = x
   | EOp ({ po_op = BufRead }, [{ e = EVar y }; i]) when y = x -> mutates x i
-  | EConst _ | EQual _ | EAny | EAbort _ -> false
+  | EConst _ | EQual _ | EAny | EAbort _ | ESizeof _ -> false
   | ELet (_, _, a, b) -> mutates x a || mutates x b
   | EApp (h, es) -> mutates x h || any es
   | EFun (_, b) -> mutates x b
@@ -1576,7 +1576,7 @@ let rec is_lvalue (e:expr) : ML bool =
 let rec is_pure (e:expr) : ML bool =
   let all (es:list expr) : ML bool = List.for_all is_pure es in
   match e.e with
-  | EConst _ | EVar _ | EQual _ | EAny -> true
+  | EConst _ | EVar _ | EQual _ | EAny | ESizeof _ -> true
   | EApp _ | EFun _ | EWhile _ | EAbort _ | ERaise _ | ETry _ -> false
   | EOp ({ po_op = BufRead }, es) -> all es
   | EOp ({ po_op = BufCreate _ }, _) | EOp ({ po_op = BufWrite }, _)
@@ -1613,7 +1613,7 @@ let rec cell_dead (x:string) (e:expr) : ML bool =
   | EVar y -> y <> x
   | EOp ({ po_op = BufWrite }, [{ e = EVar y }; i; v]) when y = x ->
     is_droppable i && is_droppable v
-  | EConst _ | EQual _ | EAny | EAbort _ -> true
+  | EConst _ | EQual _ | EAny | EAbort _ | ESizeof _ -> true
   | ELet (_, _, a, b) | ESeq (a, b) | EWhile (a, b) -> cell_dead x a && cell_dead x b
   | EApp (h, es) -> cell_dead x h && all es
   | EFun (_, b) | ERaise b -> cell_dead x b
@@ -1639,7 +1639,7 @@ let rec drop_writes (x:string) (e:expr) : ML expr =
   let e' =
     match e.e with
     | EOp ({ po_op = BufWrite }, [{ e = EVar y }; _; _]) when y = x -> EConst CUnit
-    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> e.e
+    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ | ESizeof _ -> e.e
     | ELet (n, t, a, b) -> ELet (n, t, go a, go b)
     | ESeq (a, b) -> ESeq (go a, go b)
     | EWhile (a, b) -> EWhile (go a, go b)
@@ -1689,6 +1689,7 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
     (* What an uninitialized stack slot holds.  A zero of the right type is a
        legal value of it and is what C would give a static. *)
     "(" ^ ty e.ty ^ "){0}"
+  | ESizeof t -> "sizeof(" ^ ty t ^ ")"
   | EQual (n, _) ->
     (match SMap.try_find !externs (string_of_name n) with
      | Some t -> t
@@ -3028,6 +3029,7 @@ let rec static_init (x:expr) : ML (option string) =
      constant expression as the body is, and can initialize a global. *)
   | EQual (n, _) when Some? (SMap.try_find !macros (string_of_name n)) ->
     Some (c_name n)
+  | ESizeof t -> Some ("sizeof(" ^ ty t ^ ")")
   | ECast (e1, t) ->
     (match e1.ty, t, static_init e1 with
      | TInt a, TInt b, Some v when a = b -> Some v

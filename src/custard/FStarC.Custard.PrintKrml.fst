@@ -993,6 +993,13 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
   | EWhile (c, body) -> K.EWhile (krml_expr env c, krml_expr env body)
 
   | EAny -> K.EAny
+  (* Karamel types [sizeof] as [size_t]; under a narrow [size_t] (section 95)
+     the node's own type is [uint32_t], so the checker needs the cast. *)
+  | ESizeof t ->
+    let s = K.ESizeof (krml_typ env t) in
+    (match e.ty with
+     | TInt (_, WSizet) when Options.custard_sizet_32 () -> K.ECast (s, krml_typ env e.ty)
+     | _ -> s)
   | EAbort s -> K.EAbortS s
 
   (* Section 46.3.  These were one [EAbortS], which is a *translation*, not a

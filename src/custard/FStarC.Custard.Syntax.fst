@@ -369,7 +369,7 @@ let branch_children (br:branch) : ML (list expr) =
 
 let children (x:expr) : ML (list expr) =
   match x.e with
-  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> []
+  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ | ESizeof _ -> []
   | ELet (_, _, e1, e2) -> [e1; e2]
   | EApp (h, es) -> h :: es
   | EFun (_, b) -> [b]
@@ -394,7 +394,7 @@ let map_branch (g : expr -> ML expr) (br:branch) : ML branch =
 
 let map_children (g : expr -> ML expr) (x:expr) : ML expr =
   match x.e with
-  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
+  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ | ESizeof _ -> x
   | ELet (v, ty, e1, e2) -> { x with e = ELet (v, ty, g e1, g e2) }
   | EApp (h, es) -> { x with e = EApp (g h, es |> List.map g) }
   | EFun (bs, b) -> { x with e = EFun (bs, g b) }
@@ -442,7 +442,7 @@ let rec is_droppable (e:expr) : ML bool =
      the structural test below cannot see that -- [EApp] is opaque to it. *)
   is_pure e.eff ||
   (match e.e with
-  | EConst _ | EVar _ | EQual _ | EAny -> true
+  | EConst _ | EVar _ | EQual _ | EAny | ESizeof _ -> true
   | EApp _ | EFun _ | EWhile _ | EAbort _ | ERaise _ | ETry _ -> false
   | EOp ({ po_op = BufRead }, es) -> all es
   | EOp ({ po_op = BufCreate _ }, _) | EOp ({ po_op = BufWrite }, _)
@@ -678,6 +678,7 @@ let rec expr_to_doc' (prec:int) (e:expr) : ML document =
         hardline ^^ text "}")
 
   | EAny -> text "any"
+  | ESizeof t -> group (text "sizeof" ^^ parens (cty_to_doc t))
   | EAbort s -> group (text "abort" ^/^ dquotes (text s))
 
   | ERaise e1 -> group (text "raise" ^/^ expr_to_doc' 1 e1)
