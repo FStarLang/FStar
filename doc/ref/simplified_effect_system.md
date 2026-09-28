@@ -1630,12 +1630,39 @@ lemma whose body ends in `assert p` relates `squash p <: squash post`, the
 `squash` rewrite is blocked by the open `#a` of `eq2` (not an interpreted head),
 and congruence reaches `equal` on `logand ... =?= dec (enc p)` at width 64.
 
-`equal` therefore no longer normalises eagerly. It reduces both sides to weak
-head normal form, compares them, and if the heads agree recurses on the
+`equal` therefore no longer normalises eagerly. It first reduces both sides to
+*head* normal form, compares them, and if the heads agree recurses on the
 arguments, so only the parts of the terms the comparison visits are reduced.
 A head mismatch is found after one step, and `UnifyMatch.fst`'s
-`nat2unary 10 =?= S (nat2unary 9)` is still decided. The flag remains, and
-`same_formula` still turns even this off. Note also that the
+`nat2unary 10 =?= S (nat2unary 9)` is still decided.
+
+Two details of that are easy to get wrong, and both cost downstream proofs
+before they were fixed. The reduction must be to head normal form and *not*
+weak head normal form: `unfold_whnf'`'s step set includes `Weak`, and the
+`Tm_match` cases in `Normalize` are guarded by `not cfg.steps.weak`, so under
+`Weak` a match's scrutinee stays weakly reduced, iota never fires, and two
+kinds that both compute to `None` are reported different. `HNF` on its own
+still leaves an application's *arguments* unreduced, which is what bounds the
+cost. And `TEQ.eq_tm` is deliberately incomplete — it has no `Tm_let` case at
+all — so it answers `Unknown` even on two literally identical terms; full
+normalisation used to hide that by inlining the lets, so `equal` now asks
+`U.term_eq` first.
+
+Reducing only head positions is still incomplete: an equality can hide
+somewhere the traversal never looks, such as the sort of a binder of a
+`ghost fn` type, or under an `unfold let` abbreviation that appears as an
+argument. `equal` therefore keeps a fallback that normalises both sides
+outright, as it did before #4558 — but with `Zeta` excluded. That is what
+bounds it, and it is exactly what #4558 needs: the blowup there is
+`FStar.UInt.to_vec`, a *recursive* function, unrolling on a symbolic 64-bit
+argument. With `Zeta` off no recursive definition unfolds at all, so the cost
+is bounded by the size of the term and the length of the chain of
+non-recursive abbreviations in it, while an abbreviation such as
+`unfold let ( @| ) = ICons` is still seen through. The recursive cases the
+fallback gives up on are already decided by the head reduction above, which
+has `Zeta` on but only unfolds in head position.
+
+The flag remains, and `same_formula` still turns even this off. Note also that the
 `no_free_uvars` gate's comment claims it means "neither term has any free
 variables", while it only inspects unification variables and universes.
 
