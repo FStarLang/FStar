@@ -164,6 +164,7 @@ let rec rn_expr (fields:HashTable.t string string) (ts:scope) (s:scope) (x:expr)
     | EConst _
     | EAny
     | EAbort _ | EUnreachable _ -> x.e
+    | ESizeof c -> ESizeof (rn_cty ts c)
 
     | EVar v -> EVar (lookup s v)
     | EQual (n, args) -> EQual (n, args |> List.map (rn_cty ts))
