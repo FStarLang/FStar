@@ -30,6 +30,11 @@ RUN += ParseTest.fst
 # *instantiated* type of the head, so extracting this at all is the test.
 EXTRACT += InstantiatedSpecArgs.fst
 
+# An implicit [squash] *field* is dropped from the extracted record, from the
+# constructor's ML type and from every pattern matching on it.  All three have
+# to agree, so extract, compile and run.
+RUN += SpecFields.fst
+
 include $(FSTAR_ROOT)/mk/test.mk
 
 all: $(OUTPUT_DIR)/FloatLiteralExtraction.test
