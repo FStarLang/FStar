@@ -32,6 +32,7 @@ module TcUtil = FStarC.TypeChecker.Util
 module U     = FStarC.Syntax.Util
 module N     = FStarC.TypeChecker.Normalize
 module Prof  = FStarC.Custard.Prof
+module SMap  = FStarC.SMap
 module Effects = FStarC.Custard.Effects
 
 (* Custard reduces terms nobody wrote for it, and reduction need not
@@ -285,6 +286,8 @@ let is_dropped_binder (env:TcEnv.env) (b:binder) : ML bool =
 
 let is_unit_binder (b:binder) : ML bool = U.is_unit b.binder_bv.sort
 
+let fvar_arity_cache : SMap.t bool = SMap.create 100
+
 (* The term-level counterpart of [is_type_binder]: a spine whose head no
    declaration describes is filtered with this instead.  Structural, like the
    ML extraction's [is_type]: what a term denotes is decided by its head. *)
@@ -298,9 +301,21 @@ let rec is_type_term (env:TcEnv.env) (t:term) : ML bool =
   | Tm_meta {tm=t} -> is_type_term env t
   | Tm_name bv -> is_arity env bv.sort
   | Tm_fvar fv ->
-    (match TcEnv.try_lookup_lid env (S.lid_of_fv fv) with
-     | Some ((_, ty), _) -> is_arity env ty
-     | None -> false)
+    (* Section 19.7.  The answer for a top-level name is a function of the
+       name: its type comes from the environment and [is_arity] on it is a
+       normalization that does not depend on anything local.  It is asked
+       once per fvar-headed application of every subterm every scan visits,
+       which on EverParse's ASN.1 interpreter was three million calls to a
+       few hundred distinct names -- eighteen seconds of normalizing the
+       same handful of types over and over. *)
+    let key = Ident.string_of_lid (S.lid_of_fv fv) in
+    (match SMap.try_find fvar_arity_cache key with
+     | Some b -> b
+     | None ->
+       let b = match TcEnv.try_lookup_lid env (S.lid_of_fv fv) with
+               | Some ((_, ty), _) -> is_arity env ty
+               | None -> false in
+       SMap.add fvar_arity_cache key b; b)
   | Tm_app _ -> is_type_term env (fst (U.head_and_args_full t))
   | Tm_abs _ ->
     let bs, body, _ = U.abs_formals t in
