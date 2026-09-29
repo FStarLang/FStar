@@ -19223,6 +19223,26 @@ did and says it does.
 `tests/custard/Refs.fst` pins it with `bump2`, on both the OCaml and the F#
 legs.
 
+#### 102.2.2.  A constant is propagated too
+
+Copy propagation took a variable definiens only, so `let n = 64ul in ...`
+survived as `uint32_t n = 64;` even when read once --- including when the
+definiens only became `64` by constant folding.  That is observable to a rule
+(§8): one that matches `EConst` saw `EVar "n"` instead and silently did not
+fire, so whether Kuiper's kernels got a `__launch_bounds__` depended on
+whether the source happened to name the block size (issue 4612).
+
+A constant is a value, so substituting it neither moves work nor duplicates
+it --- the same justification as for a variable.  It cannot be renamed, but
+`subst_const` does the next best thing on the lesson above: it replaces only
+the `e` of each use node and keeps the use's recorded type and effect (the
+binding's type if the use knows none).  A string literal is left bound, since
+each copy of it would be another literal.
+
+`tests/custard/CConstLet.fst` is the reporter's MWE.  `CNoClosure` now
+captures a value from an `assume val`: its `let n = 3ul` was propagated into
+the lambda, which then captured nothing and extracted legitimately.
+
 ### 102.3.  `--custard_c_no_prefix` and an `assume val`
 
 The reporter's standing item, unrelated to the above.  `Abort.abort` comes

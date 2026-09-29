@@ -2037,14 +2037,12 @@ CNOGREP_Floats += "FStar_Float32"
 # tell the operands apart, so [sub] and [div] -- which do not commute -- are
 # checked by the program at run time instead: an operand swap exits 1.
 C_TESTS += FloatOptIn
-CGREP_FloatOptIn += "double a = 1.5;"
-CGREP_FloatOptIn += "bool ok2 = ((a - b) < 0.0);"
-CGREP_FloatOptIn += "bool ok3 = ((a / b) <= 0.61);"
+CGREP_FloatOptIn += "bool ok2 = ((1.5 - 2.5) < 0.0);"
+CGREP_FloatOptIn += "bool ok3 = ((1.5 / 2.5) <= 0.61);"
 # The other width, from the other module, and the [f] suffixes that keep it
 # single precision (section 38): without them the sum would be computed at
 # double and rounded once instead of twice.
-CGREP_FloatOptIn += "float x = 1.5f;"
-CGREP_FloatOptIn += "bool ok5 = ((x * y) == 3.375f);"
+CGREP_FloatOptIn += "bool ok5 = ((1.5f * 2.25f) == 3.375f);"
 # Section 118.  [of_int] is a conversion, but at an argument the format holds
 # exactly it folds to the literal -- which is the path ulib's derived [zero]
 # and [one] take.  At 2^24+1 binary32 would round, so the cast stands.
@@ -2088,9 +2086,8 @@ EGREP_FloatHole += "custard_backend C"
 # rounding is under test too -- 2049 is not representable at binary16 and
 # ties-to-even sends it to 2048, which going through a double would not do.
 C_TESTS += Narrow
-CGREP_Narrow += "custard_f16 a = CUSTARD_F16_LIT(15872U);"
-CGREP_Narrow += "custard_f16_add(a, b)"
-CGREP_Narrow += "custard_f16_lt(custard_f16_sub(a, b)"
+CGREP_Narrow += "custard_f16_eq(custard_f16_add(CUSTARD_F16_LIT(15872U), CUSTARD_F16_LIT(16512U))"
+CGREP_Narrow += "custard_f16_lt(custard_f16_sub(CUSTARD_F16_LIT(15872U), CUSTARD_F16_LIT(16512U))"
 CGREP_Narrow += "custard_f16_of_i64((int64_t)2049)"
 CGREP_Narrow += "custard_bf16_add(CUSTARD_BF16_LIT(16320U)"
 # Section 125.5.  The special values are bit patterns at these widths too,
@@ -2107,7 +2104,7 @@ CNOGREP_Narrow += "typedef struct { uint16_t bits; } custard_f16;"
 CNOGREP_Narrow += "custard__bits_of_f32"
 CNOGREP_Narrow += "CUSTARD__F16_BIN"
 # The operators must not have survived as C operators on a struct.
-CNOGREP_Narrow += "a + b"
+CNOGREP_Narrow += "CUSTARD_F16_LIT(15872U) + CUSTARD_F16_LIT(16512U)"
 
 # Section 45.1.  A [@@custard_extern] target is emitted verbatim, and that
 # includes a C keyword: the operand of a type-taking macro or of a C++
@@ -2275,6 +2272,14 @@ CGREP_CShortCircuit += "  if (!"
 C_TESTS += UInt16Mul
 FLAGS_UInt16Mul = --custard_backend C
 CGREP_UInt16Mul += "(unsigned int)"
+
+# Issue 4612.  A [let] bound to a constant is propagated like one bound to a
+# variable, so the literal reaches every use and the binding is gone --
+# including a definiens that only becomes a literal by constant folding.
+C_TESTS += CConstLet
+CEXTRA_CConstLet = CConstLet_stubs.c
+CGREP_CConstLet = "CConstLet_sink((x + 64));" "CConstLet_sink((x + 65));" "CConstLet_sink(((uint32_t)66U));"
+CNOGREP_CConstLet = "uint32_t n ="
 
 # Section 115.  An arrow-valued global is a function pointer, and its arity
 # has to be the pointer's, not the arrow's.  Extraction succeeding is half of

@@ -332,6 +332,25 @@ let rec rename_var (v w : string) (x:expr) : ML expr =
   | EVar u -> if u = v then { x with e = EVar w } else x
   | _ -> map_children (rename_var v w) x
 
+(* Issue 4612.  The same traversal with a constant for [v].  Only the [e] of
+   each use node changes, so every use keeps its recorded type and effect --
+   the caveat [rename_var] exists for -- rather than taking the literal's.
+   A use recorded at [TAny] knows nothing, so it gets the binding's type. *)
+let rec subst_const (v:string) (ty:cty) (c:constant) (x:expr) : ML expr =
+  match x.e with
+  | EVar u ->
+    if u = v then { x with e = EConst c; ty = (match x.ty with TAny -> ty | t -> t) }
+    else x
+  | _ -> map_children (subst_const v ty c) x
+
+(* A constant worth propagating: a scalar, which costs nothing to repeat.  A
+   string literal is left bound, since each copy of it is another literal. *)
+let propagable_const (e:expr) : option constant =
+  match e.e with
+  | EConst (CString _) -> None
+  | EConst c -> Some c
+  | _ -> None
+
 (* Two tables about a type's constructors, filled by [run] and read by the
    rewrites below.  Both are empty until then, which makes a rewrite that
    consults one a no-op rather than a wrong answer.
@@ -553,6 +572,13 @@ let rec simpl (x:expr) : ML expr =
     else if (match e1.e with EVar w -> w <> v | _ -> false) then
       let w = (match e1.e with EVar w -> w | _ -> v) in
       rename_var v w e2
+    (* Issue 4612.  Constant propagation, on the same justification: a
+       constant is a value, so substituting it neither moves work nor
+       duplicates it.  Without it an extraction rule that matches [EConst]
+       sees the name instead, and fires or not depending on whether the
+       source happened to bind the literal. *)
+    else if Some? (propagable_const e1) then
+      subst_const v ty (Some?.v (propagable_const e1)) e2
     else if occurs v e2 then { x with e = ELet (v, ty, e1, e2) }
     (* Section 7.3: an unused binding may only be deleted if evaluating it is
        unobservable; otherwise it becomes a statement, which keeps its effect
