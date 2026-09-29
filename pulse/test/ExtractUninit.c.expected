@@ -2,16 +2,13 @@
 #include "ExtractUninit.h"
 
 uint32_t ExtractUninit_uninit_ref(void) {
-  uint32_t r = (uint32_t){0};
+  uint32_t r;
   r = 3;
   return (r + 29);
 }
 
 uint32_t ExtractUninit_uninit_array(void) {
   uint32_t arr[5];
-  for (size_t _ci1 = 0; _ci1 < 5; _ci1++) {
-    arr[_ci1] = (uint32_t){0};
-  }
   arr[1] = 2;
   arr[3] = 4;
   uint32_t __anf1 = arr[1];

@@ -2146,7 +2146,12 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     let nm = bind_cell x in
     let s2 = emit ind d e2 in
     scope := saved;
-    !out ^ ind ^ decl_of t nm ^ " = " ^ iv ^ ";\n" ^ s2
+    (* Section 94.5.  A cell whose fill is [EAny] is a declaration and nothing
+       else: the arbitrary value the fill asks for is the one the slot has
+       before anything is written to it.  Pulse only hands out [pts_to_uninit]
+       for these, so a read is not reachable until a write has happened. *)
+    !out ^ ind ^ decl_of t nm ^
+    (if EAny? init.e then "" else " = " ^ iv) ^ ";\n" ^ s2
 
   (* Section 97.  [let mut a = alloc v n] used to declare a pointer, allocate
      into a second name, and assign one to the other.  The second name is not
@@ -2404,11 +2409,21 @@ and emit_alloc (ind:string) (d:dest) (nm:option string)
     match nm with Some _ -> "" | None -> finish ind d s in
   let i = fresh "i" in
   let elt_of = match t with TBuf e | TRef e -> e | _ -> t in
+  (* Section 94.5.  [EAny] is *defined* as what an uninitialized allocation is
+     filled with, so a fill that is [EAny] asks for the value every cell
+     already has and a declaration on its own delivers it.  Writing it out
+     costs a loop to store a value chosen for being arbitrary, and it is the
+     only fill that no length or element type makes any tidier: it cannot take
+     an initializer list at an aggregate element type (§94.2), so the loop
+     survives every peephole above.  [Reference.alloc_uninit] and
+     [Array.Core.mask_alloc] are the rules that introduce it. *)
+  let any_init = EAny? init.e in
   (* Same collapse as the [ELet] case above, for a one-cell stack allocation
      that is not bound to a name: the pointer the caller wanted is the address
      of the variable. *)
   if LStack? lt && is_one len then
-    !out ^ ind ^ decl_of elt_of arr ^ " = " ^ iv ^ ";\n" ^
+    !out ^ ind ^ decl_of elt_of arr ^
+    (if any_init then "" else " = " ^ iv) ^ ";\n" ^
     done_ ("&" ^ arr)
   else
   (* Section 94.  A scalar is what [{ 0 }] initializes without
@@ -2496,7 +2511,7 @@ and emit_alloc (ind:string) (d:dest) (nm:option string)
      fill for this case by writing [{ 0 }]; this is the same fact stated for
      an element type that has no initializer list. *)
   let fill =
-    if const_len = Some 0 then "" else
+    if const_len = Some 0 || any_init then "" else
   (* Section 59.  The counter is a [size_t] and the length is compared
      against it, so the cast is there for a length of some other integer
      type; when the length already *is* a [size_t] it says nothing. *)

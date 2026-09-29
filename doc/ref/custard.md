@@ -18371,6 +18371,62 @@ two-cell one both became declarations, while `PulseHashTable`'s
 variable-length array and the three heap allocations kept the loop.  The
 Pulse suite is unchanged at 30 s.
 
+### 94.5.  A fill that is already there
+
+The three conditions of §94.2 all ask what the fill *is*, and there is one
+fill for which the question has a different answer: `EAny`, defined in
+`Syntax` as "an arbitrary value of the node's type: what an uninitialized
+stack allocation is filled with".  Writing it into a cell stores a value
+chosen for being arbitrary over a value that is already arbitrary.  The
+declaration on its own is the whole allocation.
+
+It is also the fill that none of §94.1 could help.  `EAny` is not an
+`EConst`, so the initializer list is refused whatever the element type is,
+and the two rules that introduce it --- `Reference.alloc_uninit` and
+`Array.Core.mask_alloc` --- are reached for precisely when the caller has its
+own way of filling the storage, which in practice means an element type that
+would have failed `scalar_elt` too.  So every one of these took the loop, and
+kept it:
+
+```c
+nvcuda::wmma::fragment<nvcuda::wmma::matrix_a, 16, 16, 16, custard_f16,
+    nvcuda::wmma::row_major>
+    aFrags[2];
+for (size_t _ci1 = 0; _ci1 < (size_t) 2; _ci1++) {
+    aFrags[_ci1] = (nvcuda::wmma::fragment<nvcuda::wmma::matrix_a, 16, 16,
+        16, custard_f16, nvcuda::wmma::row_major>) {0};
+}
+```
+
+`emit_alloc` now emits the declaration and no fill, and so does the one-cell
+collapse of §7.4, which is a separate code path with the same fact available
+to it.  A heap allocation drops the fill and keeps its `malloc`: `malloc`
+returns indeterminate storage, which is what was asked for.
+
+What this gives up is that the storage is no longer *observably* zero.  It
+was never promised to be --- `pts_to_uninit` is what Pulse hands out for
+these, and it admits no read until a write has happened --- so no verified
+program can tell the difference.  The C compilers agree: the suite's C leg is
+`-Wall -Wextra -Werror` and its C++ leg `-Wall -Werror`, and neither reports
+`-Wmaybe-uninitialized` on the declarations this leaves behind.
+
+`ArrInit` pins both shapes.  `uninit_arr` is the one that matters, since a
+struct element type has no initializer list to fall into and so isolates the
+new condition from the old ones; `uninit_ref` pins that §7.4 agrees.  Both
+write a cell and read it back, so what is checked is that removing the fill
+did not remove a value anything depended on.
+
+| Shape | Emits |
+| --- | --- |
+| `R.alloc_uninit U8.t ()` | `uint8_t p;` |
+| `AC.mask_alloc cell 4sz` | `ArrInit_cell a[4];` |
+
+In Kuiper this is the whole of the remaining loop count: 776 fill loops in
+the 69 generated `.cu` files fall to 128, and the 216 tensor-core kernels in
+the two files that change compile to the same register counts and the same
+spill byte counts as before, since `ptxas` was already eliminating the stores.
+The loops were only ever in the source.
+
 ## 95. A width the program assumes
 
 ### 95.1.  The one measured difference
