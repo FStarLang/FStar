@@ -520,11 +520,14 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
 
     | Sequence { s1={s=LetBinding lb; range=s1range}; s2 } ->
       begin match lb.pat.pat with
-      | A.PatVar (_, _, _) ->
+      | A.PatVar (id, q, attrs) ->
         (* A simple bind. Binder attributes (e.g. FStar.Attributes.rename_let)
-        are desugared and threaded through by desugar_bind. *)
-        desugar_bind env lb s2 s.range
+        are desugared and threaded through by desugar_bind. Attributes on the
+        whole pattern, as in [let [@@@a] (x) = e], are the variable's. *)
+        let pat = { lb.pat with pat = A.PatVar (id, q, lb.pat_attrs @ attrs) } in
+        desugar_bind env { lb with pat_attrs = []; pat } s2 s.range
       | A.PatWild (_, attrs) ->
+        let attrs = lb.pat_attrs @ attrs in
         (* Error out if the user wrote binder attributes on a wildcard, since
         there is no binder for them to attach to and they would be ignored. *)
         if Cons? attrs then
@@ -544,10 +547,15 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
           | Default_initializer (Some e, []) -> return e
           | _ -> fail "Pattern bindings cannot have complext initializers" lb.pat.prange
         in
+        (* Attributes on the whole pattern, as in [let [@@@inline_let] (x, y)
+           = e], belong to the binding of [e]: it is the only binder there
+           is for them.  Attributes on the pattern's variables stay in the
+           match branch. *)
         let lb' =
           { norw = lb.norw;
             qualifier = lb.qualifier;
-            pat = A.mk_pattern (A.PatVar (id, None, [])) lb.pat.prange;
+            pat_attrs = [];
+            pat = A.mk_pattern (A.PatVar (id, None, lb.pat_attrs)) lb.pat.prange;
             typ = lb.typ;
             init = lb.init }
         in
