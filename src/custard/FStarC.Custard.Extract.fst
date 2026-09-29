@@ -52,6 +52,7 @@ module S      = FStarC.Syntax.Syntax
 module SMap   = FStarC.SMap
 module Unit   = FStarC.Custard.Unit
 module Visit  = FStarC.Syntax.Visit
+module Hash   = FStarC.Syntax.Hash
 module SS     = FStarC.Syntax.Subst
 module TcEnv  = FStarC.TypeChecker.Env
 module U      = FStarC.Syntax.Util
@@ -2244,6 +2245,24 @@ and template_index_names (st:state) (ts:list term) : ML (list bv) =
 and template_index_scan (st:state) (ts:list term) : ML (list bv & list string) =
   let acc : ref (list bv) = mk_ref [] in
   let seen : ref (list string) = mk_ref [] in
+  (* The fuel below bounds the *depth* of the unfold-and-rescan, not the
+     work: one abbreviation reached by two paths is unfolded and rescanned
+     twice, its own sub-abbreviations four times, and at fuel 10 that is an
+     exponential in disguise.  EverParse's ASN.1 interpreter -- whose types
+     are layered parser abbreviations several deep -- spent twenty-two
+     seconds per definition here and never finished a module.
+
+     The set is keyed by the term, which is the key the fuel comment rules
+     *in*: an abbreviation applied to different arguments is a different
+     term and is scanned again, while the same application reached twice is
+     scanned once.  Nothing is lost -- a second scan of an identical term
+     contributes exactly what the first one did -- and it is the entire
+     difference between exponential and linear. *)
+  let scanned : SMap.t bool = SMap.create 100 in
+  let already (t:term) : ML bool =
+    let k = show (Hash.ext_hash_term t) in
+    if Some? (SMap.try_find scanned k) then true
+    else (SMap.add scanned k true; false) in
   (* Section 88.  The scan is syntactic, and a type abbreviation is exactly
      what makes the syntax it is looking for absent.  [fragment] is an
      [inline_for_extraction] alias for an application of the template, so the
@@ -2305,7 +2324,8 @@ and template_index_scan (st:state) (ts:list term) : ML (list bv & list string) =
                             [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
                              TcEnv.Beta; TcEnv.Iota;
                              TcEnv.UnfoldOnly [l]] t with
-                    | Some t' -> if not (U.term_eq t' t) then scan (fuel - 1) t'
+                    | Some t' -> if not (U.term_eq t' t) && not (already t')
+                                 then scan (fuel - 1) t'
                     | None -> ())
           | _ -> ())
        | _ -> ());
