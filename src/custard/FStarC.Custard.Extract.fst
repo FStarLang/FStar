@@ -713,6 +713,21 @@ let norm_optional_in (env:TcEnv.env) (steps:list TcEnv.step) (t:term)
 let norm_optional (st:state) (steps:list TcEnv.step) (t:term) : ML (option term) =
   norm_optional_in (tcenv st) steps t
 
+(* The same, for a term that came out of a [Visit] traversal rather than out of
+   an opening.  [Visit.visit_term] does not open binders, so a subterm it hands
+   back may carry loose de Bruijn indices, and the normalizer reports that as
+   [Failure "Failed to find x"] rather than as an error it could be asked
+   about.  [CheckLN.is_ln] is the guard, but it is an *approximation* -- it
+   says nothing about the parts of the syntax it does not descend into -- and
+   a guard that is occasionally wrong must not be the difference between a
+   compile and a crash.  Every caller here is an optimization whose failure
+   mode is to leave the term as it was, so an escaped index degrades to the
+   same answer as a budget overrun. *)
+let norm_optional_open (st:state) (steps:list TcEnv.step) (t:term)
+  : ML (option term) =
+  try norm_optional st steps t
+  with Failure _ -> None
+
 (* Section 31.  [@@normalize_for_extraction steps] says: reduce this
    definition with exactly these steps before compiling it.  The ML pipeline
    honours it in {!FStarC.Extraction.ML.Modul.extract_sig_let}, and EverParse
@@ -2184,7 +2199,7 @@ and builtin_rules_at (st:state) (fuel:int) (t:term) : ML (list string) =
        | _ ->
          let unfolded =
            if fuel > 0 && FStarC.Syntax.CheckLN.is_ln t0
-           then match norm_optional st
+           then match norm_optional_open st
                         [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
                          TcEnv.Beta; TcEnv.Iota; TcEnv.UnfoldOnly [l]] t0 with
                 | Some t' -> if U.term_eq t' t0 then None else Some t'
@@ -2320,7 +2335,7 @@ and template_index_scan (st:state) (ts:list term) : ML (list bv & list string) =
                   before section 88 rather than anywhere worse. *)
                if fuel > 0 && FStarC.Syntax.CheckLN.is_ln t &&
                   Mono.is_type_term (tcenv st) t
-               then match norm_optional st
+               then match norm_optional_open st
                             [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
                              TcEnv.Beta; TcEnv.Iota;
                              TcEnv.UnfoldOnly [l]] t with
