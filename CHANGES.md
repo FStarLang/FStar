@@ -261,6 +261,13 @@ Guidelines for the changelog:
     (The PulseCore model currently defines `stt_div = stt`; a foundational model
     of divergence is future work.)
 
+  * A destructuring `let` may now carry attributes on the whole pattern:
+    `let [@@@inline_let] (a, b) = e;`. They are put on the binding of `e`,
+    so `inline_let` substitutes `e`, and then its components, into the body,
+    as `[@@inline_let] let (a, b) = e in ...` does in F*. Attributes written
+    on `a` or `b` are still ignored.
+    Fixes https://github.com/FStarLang/FStar/issues/4620.
+
 ## Core typechecker
 
   * Fixes https://github.com/FStarLang/FStar/issues/4401. A top-level definition

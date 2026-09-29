@@ -382,6 +382,16 @@ CGREP_LetPatFold += "FStar_Pervasives_Native_tuple2__uint32_tuple2_uint32_unit p
 CGREP_LetPatFold += "return (x + (x + 1));"
 CNOGREP_LetPatFold += "_letpattern"
 
+# FStarLang/FStar#4620.  [let [@@@inline_let] (a, b) = e;] substitutes the
+# components; a destructuring [let] without it keeps their bindings.
+C_TESTS += InlineLetPat
+CGREP_InlineLetPat += "uint32_t krow = (x / t);"
+CNOGREP_InlineLetPat += "uint32_t row ="
+CNOGREP_InlineLetPat += "uint32_t col ="
+CNOGREP_InlineLetPat += "uint32_t frow ="
+CNOGREP_InlineLetPat += "_letpattern"
+CGREP_InlineLetPat += "return (((x / t) * t) + ((x % t) + ((x / t) * (x % t))));"
+
 # Section 116.  [len * sizeof(elt)] is computed in size_t and wraps; the
 # guard is what stops malloc from succeeding with a block too small for the
 # fill loop that follows it.  A constant length needs none -- [main] allocates

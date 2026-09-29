@@ -22759,6 +22759,47 @@ attributes say; an author who wants an interface-private definition in
 the output can still ask for it by name, which is the escape hatch this
 rule needs and the only one it needs.
 
+# 132 `inline_let` on a destructuring `let`
+
+FStarLang/FStar#4620.  A GPU kernel author wants
+`let brow, bcol = s_divmod tile tid` substituted into its uses, so that
+`brow * tile + bcol` can fold back to `tid`; Custard keeps both
+components bound, which is the right default and sometimes costs
+registers.
+
+`inline_let` on a *simple* `let` already works, and not because of
+Custard.  `custard_norm_steps` includes `PureSubtermsWithinComputations`,
+which is exactly the configuration in which
+`Cfg.should_reduce_local_let` substitutes an `[@@inline_let]` binding,
+so the binding is gone before the IR exists.  The same holds for F\*'s
+destructuring form: `[@@inline_let] let (a, b) = e in ...` puts the
+attribute on `_letpattern`, the normalizer substitutes `e` into the
+`match`, and once `e` is a constructor, iota substitutes its fields.
+Nothing in `Simplify` needs to know about the attribute; `anf` never sees
+the binding.
+
+What was missing was Pulse *syntax*.  `let a, b = e;` desugars to
+`let _letpattern = e; match _letpattern { (a, b) -> ... }`, and there
+was no way to write an attribute that reaches `_letpattern`: attributes on
+`a` or `b` go to the match branch, where nothing reads them.  Pulse now
+accepts
+
+```pulse
+let [@@@inline_let] (row, col) = divmod x t;
+```
+
+`letPattern` in `pulseparser.mly` takes `[@@@...]` in front of a
+parenthesized pattern, which is the one place it cannot already mean an
+attribute on a variable.  The attributes travel in the new `pat_attrs`
+field of `Sugar.LetBinding` and `Desugar` puts them on `_letpattern`.  On
+`let [@@@a] (x) = e;`, a pattern that is just a variable, they are the
+variable's. On a wildcard they are rejected, as before.
+
+`tests/custard/pulse/InlineLetPat.fst` pins both forms.  The attributed
+Pulse and F\* bindings compile to
+`return (((x / t) * t) + ((x % t) + ((x / t) * (x % t))));`.  An
+unattributed destructuring `let` still binds `krow` and `kcol`.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
