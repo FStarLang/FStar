@@ -5757,11 +5757,23 @@ let install_chain_reporter (st:state) : ML unit =
 (* Whether a top-level definition has anything to extract, judged from its
    declared type alone: a ghost computation has no runtime meaning, and
    neither has one whose result is [prop], [slprop], [squash] or any other
-   type the extraction must erase. *)
+   type the extraction must erase.
+
+   The result test asks only about *pure* computations, and the qualification
+   is the whole point of the test rather than a caveat on it.  An uninformative
+   result says a pure computation carries nothing back, and a pure computation
+   that carries nothing back does nothing at all.  An effectful one does: every
+   tactic is [... -> Tac unit], [unit] is uninformative, and without this a
+   [--custard_entry_module] over a tactic module quietly rooted nothing.  That
+   is how [tests/semiring]'s [canon_semiring_aux] went missing, and how
+   EverParse's [Ast.check_reserved_identifier : ident -> ML unit] -- called
+   only from hand-written OCaml, so rooted only by its module -- went missing
+   from a module that [--custard_entry_module] names. *)
 let erased_definition (st:state) (ty:typ) : ML bool =
   let _, c = U.arrow_formals_comp ty in
   U.is_ghost_effect (U.comp_effect_name c) ||
-  TcUtil.must_erase_for_extraction (tcenv st) (U.comp_result c)
+  (U.is_pure_or_ghost_comp c &&
+   TcUtil.must_erase_for_extraction (tcenv st) (U.comp_result c))
 
 (* Section 72.1.  Whether a definition is one that cannot be a root at all.
 
@@ -5782,8 +5794,17 @@ let erased_definition (st:state) (ty:typ) : ML bool =
    the normal case, not a mistake worth a diagnostic on every module.
 
    [--custard_entry] names one definition and is still taken at its word.
-   What changed there is only the message: section 72.1. *)
+   What changed there is only the message: section 72.1.
+
+   None of this applies to the OCaml backend.  Error 368 is the *direct*
+   backend refusing a polymorphic declaration because C and Rust have nowhere
+   to put the type variable; OCaml has, and the Custard IR is polymorphic all
+   the way to it.  A module compiled as a library for hand-written OCaml is
+   the case that cares: [--custard_entry_module] roots the whole module
+   precisely so that hand-written code can refer to what the module defines,
+   and a polymorphic helper is as referable as any other. *)
 let unrootable_definition (st:state) (ty:typ) : ML bool =
+  is_c_backend () &&
   Mono.type_binders (tcenv st) ty |> List.existsb (fun b -> b)
 
 (* Section 19.11.  The same question asked of an explicit root, before it is
@@ -5804,12 +5825,12 @@ let unrootable_definition (st:state) (ty:typ) : ML bool =
    saying out loud, which is the same reasoning that makes a misspelled
    [--custard_entry] an error rather than an empty output.
 
-   The predicate is *not* [erased_definition], and the difference is the
-   effect.  [non_info_norm] answers yes for [unit], which is right about the
-   value and wrong about the definition: [main : unit -> ML unit] returns
-   nothing and is the whole program.  A definition is contentless only when
-   its result is non-informative *and* computing it does nothing -- a total
-   or ghost computation.  An effectful one is called for what it does.
+   The predicate is [erased_definition] with types exempted.  [non_info_norm]
+   answers yes for [unit], which is right about the value and wrong about the
+   definition: [main : unit -> ML unit] returns nothing and is the whole
+   program.  A definition is contentless only when its result is
+   non-informative *and* computing it does nothing -- a total or ghost
+   computation.  An effectful one is called for what it does.
 
    A *type* is exempt for the same reason it is a legitimate root at all: its
    result is [Type], which is as non-informative as a result gets, and yet a
@@ -5817,11 +5838,7 @@ let unrootable_definition (st:state) (ty:typ) : ML bool =
    hand-written realization needs emitted (see [tests/custard/TypeEntry.fst]). *)
 let root_is_erased (st:state) (l:Ident.lident) : ML bool =
   let contentless (ty:typ) : ML bool =
-    let _, c = U.arrow_formals_comp ty in
-    not (is_type_sig st ty) &&
-    (U.is_ghost_effect (U.comp_effect_name c) ||
-     (U.is_pure_or_ghost_comp c &&
-      TcUtil.must_erase_for_extraction (tcenv st) (U.comp_result c))) in
+    not (is_type_sig st ty) && erased_definition st ty in
   match lookup_lid_typ st l with
   | Some ((_, ty), _) when contentless ty ->
     E.log_issue0 E.Error_CustardEntryNotFound [
