@@ -5052,6 +5052,39 @@ and extract_sigelt_body (st:state) (l:Ident.lident) (nm:name) (margs:list (int &
             realized, or because F* only ever saw a [val], the same code
             decides what its signature is. *)
          let typars, ty = external_ty st l margs in
+         (* An [assume val] in a module this run is *compiling* has nowhere to
+            be external to.  An external is a reference to [M.f] in the target
+            language, and for OCaml that names the file Custard is writing:
+            [Bug1485.err_exn] emitted into [Bug1485.ml] is a reference to
+            itself, which does not compile.  The ML backend has always emitted
+            a stub for this case -- [failwith "Not yet implemented: M.f"] --
+            and a stub is the honest translation: the program says the
+            definition does not exist, so a call to it is a failure, and the
+            failure says which name was missing.
+
+            Only for the backends that have no other answer.  A C [assume val]
+            *is* a declaration of a symbol defined elsewhere -- that is how an
+            extern is written, and [tests/custard]'s C++ template tests rely
+            on it -- so C and Rust keep the external. *)
+         if not (is_c_backend ()) &&
+            Options.custard_entry_modules () |> List.existsb (fun (m:string) ->
+              m = Ident.string_of_lid (Ident.lid_of_ids (Ident.ns_of_lid l)))
+         then
+           let rec spine (t:cty) : ML (list binder & cty & eff) =
+             match t with
+             | TArrow (a, e, r) ->
+               let bs, ret, e' = spine r in
+               ({ b_name = "u__unimpl" ^ show (List.length bs); b_ty = a } :: bs),
+               ret, (if Nil? bs then e else e')
+             | _ -> [], t, E_Pure in
+           let bs, ret, e = spine ty in
+           DLet { dl_name = nm; dl_typars = typars; dl_binders = bs;
+                  dl_ret = ret; dl_eff = (if Nil? bs then E_Impure else e);
+                  dl_body = mk (EAbort ("Not yet implemented: " ^
+                                             Ident.string_of_lid l))
+                                    ret E_Impure;
+                  dl_flags = [] }
+         else
          DExternal { dx_name = nm; dx_typars = typars; dx_ty = ty;
                      dx_target = None; dx_header = None; dx_flags = [] })
 
@@ -5802,10 +5835,21 @@ let erased_definition (st:state) (ty:typ) : ML bool =
    the way to it.  A module compiled as a library for hand-written OCaml is
    the case that cares: [--custard_entry_module] roots the whole module
    precisely so that hand-written code can refer to what the module defines,
-   and a polymorphic helper is as referable as any other. *)
-let unrootable_definition (st:state) (ty:typ) : ML bool =
-  is_c_backend () &&
-  Mono.type_binders (tcenv st) ty |> List.existsb (fun b -> b)
+   and a polymorphic helper is as referable as any other.
+
+   A [Mono] binder is a different matter, and on every backend: it is
+   substituted away, one copy per argument a caller supplies, and a root has
+   no caller to supply one.  [TmplMono.g_gemm]'s [tm] is written into a C++
+   template-id (rule 4d), so only [dispatch]'s call can emit it; rooted on its
+   own it would reach error 390 with [tm] still a runtime parameter.  It used
+   to escape only because its result is [unit] and [erased_definition] took it
+   for a specification.  Types keep the treatment they had: their binders are
+   type parameters, which the test above already covers. *)
+let unrootable_definition (st:state) (l:Ident.lident) (ty:typ) : ML bool =
+  (is_c_backend () &&
+   Mono.type_binders (tcenv st) ty |> List.existsb (fun b -> b)) ||
+  (not (is_type_sig st ty) &&
+   binder_classes st l |> List.existsb (function Mono -> true | _ -> false))
 
 (* Section 19.11.  The same question asked of an explicit root, before it is
    requested rather than after.
@@ -6030,7 +6074,7 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
                  what tells them apart from a genuine [unit] function. *)
               | Inr fv when (not (erased_definition st lb.lbtyp) ||
                              is_type_sig st lb.lbtyp) &&
-                            not (unrootable_definition st lb.lbtyp) ->
+                            not (unrootable_definition st (S.lid_of_fv fv) lb.lbtyp) ->
                 mark' true Root (S.lid_of_fv fv)
               | _ -> ())
           | _ -> ())));

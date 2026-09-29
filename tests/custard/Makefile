@@ -2988,6 +2988,21 @@ GREP_EntryIface += "entryIface_exported"
 GREP_EntryIface += "entryIface_private_live"
 NOGREP_EntryIface += "private_dead"
 
+# An effectful definition is not a specification, even when its result is
+# [unit]: --custard_entry_module roots [check], which only hand-written OCaml
+# calls, and still skips the pure [nothing] and the ghost [spec].  The OCaml
+# backend roots the polymorphic [pick] too (section 72.1 is about C and Rust),
+# and [report], an [assume val] of the module being written, is a stub rather
+# than a reference to the output file itself.
+ROOT_TESTS += EntryEffect
+FLAGS_EntryEffect = --custard_entry_module EntryEffect
+GREP_EntryEffect += "let entryEffect_check"
+GREP_EntryEffect += "let entryEffect_pick"
+GREP_EntryEffect += "Not yet implemented: EntryEffect.report"
+NOGREP_EntryEffect += "entryEffect_nothing"
+NOGREP_EntryEffect += "entryEffect_spec"
+NOGREP_EntryEffect += "(EntryEffect.report"
+
 # ... and the other half: --custard_entry names one definition, so it is taken
 # at its word and still refused.  What changed is only the advice.  The
 # NOEGREP is the point of the test: this refusal is correct, and telling the
