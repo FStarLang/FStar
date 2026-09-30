@@ -1478,7 +1478,9 @@ let rec expr_deps (x:expr) : ML (list string) =
             pat_deps p @ (match g with Some g -> expr_deps g | None -> []) @ expr_deps b))
         | _ -> sub (children x))
 
-let decl_deps (d:decl) : ML (list string) =
+(* Section 133.  A functor instance's member depends on the instance, which
+   is what keeps the instance alive and emits it before any use. *)
+let decl_deps_body (d:decl) : ML (list string) =
   match d with
   | DLet l ->
     List.collect (fun (b:binder) -> cty_deps b.b_ty) l.dl_binders
@@ -1492,6 +1494,14 @@ let decl_deps (d:decl) : ML (list string) =
      | TAbstract -> [])
   | DExternal x -> cty_deps x.dx_ty
   | DExn e -> List.collect cty_deps e.de_args
+  | DModule m ->
+    List.collect (fun (_, c) -> cty_deps c) m.dm_types
+    @ List.map (fun (_, n) -> string_of_name n) m.dm_values
+
+let decl_deps (d:decl) : ML (list string) =
+  (match member_of (decl_flags d) with
+   | Some (m, _) -> [string_of_name m]
+   | None -> []) @ decl_deps_body d
 
 (* Section 72.4.  [tbl] is filled in *dependency* order rather than in program
    order, and before any use is rewritten.
@@ -1983,7 +1993,8 @@ let scc (prog:program) : ML program =
     | DLet l      -> DLet { l with dl_flags = keep l.dl_flags }
     | DType t     -> DType { t with dt_flags = keep t.dt_flags }
     | DExternal x -> DExternal { x with dx_flags = keep x.dx_flags }
-    | DExn _      -> d in
+    | DExn _      -> d
+    | DModule _   -> d in
   List.rev !comps |> List.collect (fun comp ->
     let fs = flags comp in
     comp |> List.collect (fun n ->
@@ -3134,7 +3145,7 @@ let coerce_prog (prog:program) : ML program =
         | b :: bs -> TArrow (b.b_ty, E_Pure, build bs) in
       SMap.add sigs (string_of_name dl.dl_name) (dl.dl_typars, build dl.dl_binders)
     | DExternal dx -> SMap.add sigs (string_of_name dx.dx_name) (dx.dx_typars, dx.dx_ty)
-    | DExn _ -> ()) in
+    | DExn _ | DModule _ -> ()) in
   let params_of (n:name) : ML (list string) =
     match SMap.try_find tparams (string_of_name n) with
     | Some ps -> ps
@@ -3640,7 +3651,8 @@ let lift_lambdas (prog:program) : ML program =
     | DLet d -> SMap.add taken (string_of_name d.dl_name) true
     | DType d -> SMap.add taken (string_of_name d.dt_name) true
     | DExternal d -> SMap.add taken (string_of_name d.dx_name) true
-    | DExn d -> SMap.add taken (string_of_name d.de_name) true);
+    | DExn d -> SMap.add taken (string_of_name d.de_name) true
+    | DModule d -> SMap.add taken (string_of_name d.dm_name) true);
   let lifted : ref (list decl) = mk_ref [] in
   (* One declaration at a time, so that a lifted function is emitted next to
      the definition it came out of and the names stay readable. *)

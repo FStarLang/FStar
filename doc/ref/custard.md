@@ -21251,9 +21251,39 @@ F# generalizes less than OCaml: a top-level `let` whose right-hand side
 is not a syntactic value is not generalized, and a generic value that is
 not a function is an error rather than a weak type variable.
 `reject_generic_values` refuses a non-function top-level definition whose
-type mentions a type variable, with error 395.  Monomorphization means
-this is nearly unreachable --- a specialization has no free type
-variables --- but the `TAny` traffic of §122.6 can produce one.
+type mentions a type variable, with error 370
+(`Error_CustardUnrepresentableValue`).  Monomorphization means this is
+nearly unreachable --- a specialization has no free type variables --- but
+the `TAny` traffic of §122.6 can produce one.
+
+#### 122.11.1 A point-free function is a function
+
+FStarLang/FStar#4623.  `let small (#raw:Type0) : dec raw int = bounded 0 10 5`,
+with `dec raw a = raw -> option a`, has no value parameters, is still
+polymorphic, and has a function type.  The shared eta-expansion of §25 gives
+it its parameter when every use applies it, and then F# generalizes it like
+any other function.  But §25 is bounded by the *uses*, because for C a bare
+use of a function-pointer variable and a bare use of a function are
+different things: so `twice small`, which passes it, pinned it at arity zero,
+and the F# backend refused it as a value it could not write.
+
+In F# the two are the same thing, so `eta_generic_values` expands such a
+definition before anything is printed, independently of its uses:
+
+```fsharp
+let pointFree_small (custard_eta : 'raw) : option<bigint> =
+  (pointFree_bounded (0I) (10I) (5I) custard_eta)
+```
+
+The body is then evaluated at every call rather than once, which nothing can
+observe only when reaching the lambda is pure --- the condition §25.3 imposes
+for the same reason.  So the definition has to be pure, and the arrow spine
+is followed only through pure arrows: `a -> ML (b -> c)` is expanded past its
+first arrow and no further.  The binders follow §122.14's convention, a
+`unit` argument dropped unless every argument is one, because that is how
+the type every use sees is printed.  Anything else --- a definition that is
+not a function, or an impure one --- still gets error 370, whose text now
+says which of the two it is.  `FsPointFree` is the regression test.
 
 ### 122.12 No separate units
 
@@ -22814,6 +22844,106 @@ Pulse and F\* bindings compile to
 `return (((x / t) * t) + ((x % t) + ((x / t) * (x % t))));`.  An
 unattributed destructuring `let` still binds `krow` and `kcol`.
 
+# 133 OCaml functors
+
+On the OCaml backend a program can instantiate an OCaml functor, such as
+`Hashtbl.Make`, without a hand-written shim.  The encoding reads OCaml's
+module language literally:
+
+* an OCaml *signature* is an F\* record type.  A field whose sort is a
+  type (`t: Type0`) or a type constructor (`t: Type0 -> Type0`) is a type
+  member, and every other field is a value member.  A sharing constraint
+  such as `with type key = k` is a parameter of the record type.
+  Only the members the program uses need to be listed;
+* a *functor* is an `assume val` from one such record to another, tagged
+  with the OCaml path it denotes:
+
+```fstar
+noeq type hashed_type = { t: Type0; equal: t -> t -> bool; hash: t -> ocaml_int }
+
+noeq type hashtbl_s (k:Type0) = {
+  t: Type0 -> Type0;
+  create: #a:Type0 -> ocaml_int -> ML (t a);
+  replace: #a:Type0 -> t a -> k -> a -> ML unit;
+  find_opt: #a:Type0 -> t a -> k -> ML (option a);
+}
+
+[@@custard_functor "Hashtbl.Make"]
+assume val hashtbl_make (h:hashed_type) : hashtbl_s h.t
+
+let string_tbl = hashtbl_make { t = string; equal = (fun x y -> x = y); hash = ... }
+```
+
+A value member's type is written exactly as the OCaml member's, in the
+same argument order and with an OCaml-native type wherever OCaml has one.
+F\* `int` is not OCaml `int`, so the test declares
+`[@@custard_extern "int"] assume new type ocaml_int`.  Any argument-order
+or representation fixup is ordinary F\* code wrapped around the member.
+
+## 133.1 What is emitted
+
+A projection whose record reduces, through top-level names only, to an
+application of a `[@@custard_functor]` value denotes a member of a
+functor instance.  `Extract.functor_instance` emits one `DModule` per
+instance.  The instance takes the name of the first top-level `let` that
+was followed (`string_tbl`), or the functor's own name with a counter if
+there is none.  Instances are interned by the functor and a structural key
+of its argument.  OCaml functor application is generative and F\*'s is
+applicative, so two F\* names for the same application have to be the
+same OCaml module, or their types would disagree.
+
+The argument has to reduce to a record literal.  Its type fields are
+printed as `type f = ...`, and higher-kinded ones are rejected.  Each
+value field is compiled as a top-level definition of its own
+(`string_tbl__arg_equal`), so the structure contains only names, and
+every pass sees and optimises the code in it:
+
+```ocaml
+module FunctorHashtbl_string_tbl = Hashtbl.Make (struct
+  type t = string
+  let equal = functorHashtbl_string_tbl__arg_equal
+  let hash = functorHashtbl_string_tbl__arg_hash
+end)
+```
+
+A value member is a `DExternal`, and a type member is an abstract
+`DType`.  Both carry the `Member (instance, field)` flag.  The OCaml
+printer spells them `Instance.field` and declares neither.  The flag is
+also a dependency (`Simplify.decl_deps`), which keeps the instance alive
+and orders it before every use.
+
+## 133.2 Generic code over an instance
+
+`count_new (m: hashtbl_s k) ...` works for any instance.  A record that
+stores a type its other fields mention is compile-time only by rule 4b
+(§30.9).  `Mono.ctor_stores_type` now counts a stored type *constructor*
+as well as a stored type, so such a binder is `Mono`.  Each caller's
+instance is therefore substituted in, and the projections inside
+`count_new` resolve to the instance as they would at top level.
+
+## 133.3 What is refused
+
+Error 397 (`Error_CustardBadFunctor`) is raised when:
+
+* a functor is used on a non-OCaml backend;
+* a functor is applied to other than one argument, or used unapplied as a
+  value;
+* the argument does not reduce to a record, or mentions local variables
+  (an instance is a top-level module);
+* the argument has a higher-kinded type member.
+
+## 133.4 Extern types and exceptions on OCaml
+
+Two smaller pieces were needed to write signatures without shims.
+`[@@custard_extern "int"] assume new type t` now prints as the named
+OCaml type instead of a fresh abstract type.  `[@@custard_extern
+"Not_found"] exception Not_found` names an existing OCaml exception: it is
+not declared, and both its construction and its patterns use the given
+name.  So `try m.find tbl x with Not_found -> ...` catches what
+`Hashtbl.find` raises.
+
+`tests/custard/FunctorHashtbl.fst` pins all of this.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
@@ -23174,3 +23304,4 @@ unattributed destructuring `let` still binds `krow` and `kcol`.
 | M10κΚ | **A partial application that became a saturated one** (§127) | Done.  The defect that kept `pulse/test/pool` on the old pipeline.  `fork_core (f1 ())` passes a thunk, `f1` having two binders and the call supplying one; erasing the second --- a proof-level `loc_id` --- made the call saturated, so the worker loop ran inline in the spawning thread instead of being forked.  `Mono.keep_thunk` is the rule for exactly this and its comment already named the hazard, but its second clause asked whether the last binder was *unit-shaped* rather than whether the codomain was impure.  It now asks the second, in Custard's sense of impure rather than F*'s (`Mono.impure_codomain`, since a Pulse `fn` is a `Tot` function returning an `stt`), and `Extract`'s `Tm_abs` guard gained the same clause off `body.eff`.  Restricted to an *explicit* last binder, because F* instantiates an implicit at every application, so no partial application stops in front of one --- and keeping one gave §80.1's record field an arity its derived projector could not meet.  The mirror miscount is fixed alongside: a call through a *variable* deleted the argument for the binder `keep_thunk` had just put back, and now passes `()` for it as a call through a name always did.  The cost is a `unit` parameter on a definition whose last binder is erased in front of an impure codomain, which is what the legacy backend keeps anyway |
 | M10κΛ | **A module that must never be compiled** (§128) | Done.  `Pulse.Lib.SpinLock`'s `acquire` loops on a `cas` that is a *specification* --- a read then a write, atomic in Pulse and two accesses once compiled --- so Custard's compiled spin lock locked nothing and the pool example's quicksort raced.  The answer is the mechanism §8.2 already had: the module joins `Builtins.realized_modules`, its values become externals under the names the hand-written `Pulse_Lib_SpinLock.ml` and `.c` already use, and nothing of it is compiled.  Two defects were hiding behind it.  `external_ty` built an external's signature without `keep_thunk`, so `new_lock`, whose one binder is erased, was declared a *value* while every call site emitted `new_lock ()` (§128.1).  And `Realized` means hand-written *OCaml*, so the C backends kept the F\* shape --- right for `Prims.list`, and for a lock a `struct { uint32_t *r; }` beside a realization whose header says `pthread_mutex_t *`; `Builtins.c_realized_modules` is the second table, and makes such a type an `Extern` carrying its header (§128.2).  The DICE build, the only Custard C build with `-Werror`, also caught §116's overflow guard comparing a `uint32_t` length against `SIZE_MAX`, which `-Wtype-limits` calls always false: the length now goes through a `size_t` temporary, which keeps the check real on a 32-bit target (§128.3).  `pulse/test/pool/pulse_task` moves to Custard on top of it and gets shorter: one extraction from one entry point, `fstar.exe --ocamlopt` to link, no `dune` project, no local `Prims.ml` and no `sed` over the output (§128.5) |
 | M10κΜ | **A constructor that is built to be taken apart** (§129) | Done.  FStarLang/FStar#4548.  `let (a, (b, _)) = p` in an inlined callee left the caller building a tuple, naming it and reading it back out; `return (x + (x + 1));` is what it should be, and across the reporter's 68 units there were 411 such bindings.  The rewrites were all in place --- `iota` on a `match` over a constructor, `unbuild` on a projection out of one --- and what stopped them was the *binding* F\* puts in front: `let _letpattern = e in match _letpattern with ...`, so the scrutinee `iota` sees is an `EVar`.  `reduce` now substitutes a let-bound constructor when every occurrence is destructed on the spot and every field is `reeval`, and `unbuild` does the same for the projection-only shape `depat` leaves behind.  `reeval` is the second condition the immediate case never needed: a field that is read *moves*, possibly into a loop and possibly more than once, so it is restricted to the class §103 already calls bounded and allocation-free --- variables, constants, projections, casts, operators, and constructors over them.  A call or an allocation keeps its binding, which is the report's own caveat about discarded components.  No declared type changes: the one-field struct a `unit` tail leaves is still declared, it is just no longer built |
+| M10κΝ | **OCaml functors** (§133) | Done.  An OCaml signature is an F\* record type and a functor an `assume val` between two of them, tagged `[@@custard_functor "Hashtbl.Make"]`.  A projection out of an application becomes a member of one interned `module X = F (struct ... end)` per instance, whose argument's value fields are compiled as top-level definitions.  Records storing a type constructor are `Mono` (rule 4b), so generic code over a signature is specialized per instance.  `custard_extern` now also names existing OCaml types and exceptions (`int`, `Not_found`) |

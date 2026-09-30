@@ -92,6 +92,9 @@ val machine_int_of_module : list string -> ML (option (signedness & iwidth))
     one; answers are cached per namespace, negative ones included. *)
 val set_float_probe : (list string -> ML (option fwidth)) -> ML unit
 
+(** The string argument of an attribute, if it has one. *)
+val attribute_string : list FStarC.Syntax.Syntax.term -> FStarC.Ident.lident -> ML (option string)
+
 (** Section 63.1.  The width named by [@@custard_float n] on a type
     declaration, if it carries one.  Raises error 386 for a width Custard
     does not implement, so that the diagnostic names the attribute rather

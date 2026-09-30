@@ -1677,6 +1677,7 @@ and import (st:state) (key:string) : ML (option name) =
       | DLet dl     -> DLet  { dl with dl_flags = imp :: dl.dl_flags }
       | DExternal dx -> DExternal { dx with dx_flags = imp :: dx.dx_flags }
       | DExn de     -> DExn { de with de_flags = imp :: de.de_flags }
+      | DModule dm  -> DModule { dm with dm_flags = imp :: dm.dm_flags }
     in
     let nm = name_of_decl d in
     SMap.add st.names key nm;
@@ -1726,13 +1727,302 @@ and extract_exn (st:state) (l:Ident.lident) (nm:name) : ML decl =
   let _, ty = TcEnv.lookup_datacon (tcenv st) l in
   let bs, _ = U.arrow_formals_comp ty in
   let bs = drop_flagged (bs |> List.map (Mono.is_erased_binder (tcenv st))) bs in
+  (* Section 133.  [@@custard_extern "Not_found"] on an exception names one
+     the target already has, so that F* code can raise and catch the very
+     exception a realization raises.  Nothing is declared for it. *)
+  let flags =
+    match TcEnv.lookup_sigelt (tcenv st) l with
+    | Some se ->
+      (match Builtins.rule_of_attributes se.sigattrs with
+       | Some (Builtins.Rule_extern x) -> [Extern (x.Builtins.x_name, x.Builtins.x_header)]
+       | _ -> [])
+    | None -> [] in
   DExn { de_name = nm;
          de_args = bs |> List.map (fun b -> ty_of_typ st b.binder_bv.sort);
-         de_flags = [] }
+         de_flags = flags }
 
 and datacon_owner (st:state) (l:Ident.lident) : ML (option Ident.lident) =
   match TcEnv.lookup_sigelt (tcenv st) l with
   | Some ({ sigel = Sig_datacon {ty_lid} }) -> Some ty_lid
+  | _ -> None
+
+(* -------------------------------------------------------------------- *)
+(* OCaml functors (section 133)                                         *)
+(* -------------------------------------------------------------------- *)
+
+and functor_path (st:state) (l:Ident.lident) : ML (option string) =
+  match TcEnv.lookup_sigelt (tcenv st) l with
+  | Some se -> Builtins.attribute_string se.sigattrs PC.custard_functor_attr
+  | None -> None
+
+(* The functor application a term denotes, seen through top-level names: the
+   functor, its OCaml path, its argument, and the first name followed, which
+   is what the instance is called.  Only names are followed, not arbitrary
+   computation, so this is cheap enough to ask of every projection. *)
+and functor_app (st:state) (t:term)
+  : ML (option (Ident.lident & string & term & option Ident.lident)) =
+  let rec go (fuel:int) (t:term) (named:option Ident.lident)
+    : ML (option (Ident.lident & string & term & option Ident.lident)) =
+    if fuel <= 0 then None else
+    let hd, args = U.head_and_args_full (U.unascribe (U.unmeta t)) in
+    match (SS.compress (U.un_uinst hd)).n with
+    | Tm_fvar fv ->
+      let l = S.lid_of_fv fv in
+      (match functor_path st l, args with
+       | Some p, [(a, _)] -> Some (l, p, a, named)
+       | Some _, _ ->
+         custard_error st E.Error_CustardBadFunctor [
+           text ("Custard: the functor " ^ Ident.string_of_lid l ^
+                 " is used here with " ^ show (List.length args) ^
+                 " arguments.");
+           text "A [@@custard_functor] declaration takes exactly one \
+                 argument, the record standing for its argument module, and \
+                 is only ever used fully applied." ]
+       | None, [] ->
+         (match TcEnv.lookup_sigelt (tcenv st) l with
+          | Some { sigel = Sig_let {lbs = (false, [lb])} } ->
+            go (fuel - 1) lb.lbdef (if None? named then Some l else named)
+          | _ -> None)
+       | None, _ -> None)
+    | _ -> None in
+  go 20 t None
+
+(* The [DModule] a functor application denotes, emitted the first time it is
+   asked for.  Instances are interned by the functor and its argument, which
+   is what makes OCaml's generative application agree with F*'s applicative
+   one: two F* names for the same application are the same F* types, so they
+   have to be the same OCaml module. *)
+and functor_instance (st:state) (scrut:term) : ML (option name) =
+  match functor_app st scrut with
+  | None -> None
+  | Some (fl, path, arg, named) ->
+    let key = "<functor>" ^ Ident.string_of_lid fl ^ "#" ^ key_of_term arg in
+    match SMap.try_find st.names key with
+    | Some nm -> Some nm
+    | None ->
+      if Options.custard_backend () <> "OCaml" then
+        custard_error st E.Error_CustardBadFunctor [
+          text ("Custard: " ^ Ident.string_of_lid fl ^ " is an OCaml functor \
+                 (" ^ path ^ "), and functors exist only on the OCaml \
+                 backend.") ];
+      if Cons? (elems (Free.names arg)) then
+        custard_error st E.Error_CustardBadFunctor [
+          text ("Custard: the argument of this application of " ^
+                Ident.string_of_lid fl ^ " mentions local variables.");
+          text "A functor instance is a top-level OCaml module, so its \
+                argument must be closed.  Bind the application with a \
+                top-level [let]." ];
+      let nm = match named with
+               | Some l -> name_of_lid l
+               | None ->
+                 let lstr = Ident.string_of_lid fl in
+                 let n = match SMap.try_find st.counts lstr with None -> 0 | Some n -> n in
+                 SMap.add st.counts lstr (n + 1);
+                 { name_of_lid fl with spec = Some (show n) } in
+      SMap.add st.names key nm;
+      let d = functor_module st nm fl path arg in
+      SMap.add st.emitted key d;
+      st.order := key :: !st.order;
+      Some nm
+
+(* The argument structure.  A field whose sort is a type is a type member and
+   the rest are value members; each value is compiled as a top-level
+   definition of its own, so that the module needs no expression syntax and
+   every pass sees the code in it. *)
+and functor_module (st:state) (nm:name) (fl:Ident.lident) (path:string) (arg:term)
+  : ML decl =
+  let ctor_of (t:term) : ML (option (Ident.lident & args)) =
+    let hd, args = U.head_and_args_full (U.unascribe (U.unmeta t)) in
+    match (SS.compress (U.un_uinst hd)).n with
+    | Tm_fvar fv when Some? (datacon_owner st (S.lid_of_fv fv)) ->
+      Some (S.lid_of_fv fv, args)
+    | _ -> None in
+  let whnf (t:term) : ML term =
+    match norm_optional st [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
+                            TcEnv.Beta; TcEnv.Iota; TcEnv.Zeta; TcEnv.Weak;
+                            TcEnv.HNF; TcEnv.UnfoldUntil S.delta_constant] t with
+    | Some t -> t
+    | None -> t in
+  let c, cargs =
+    match ctor_of arg with
+    | Some r -> r
+    | None ->
+      match ctor_of (whnf arg) with
+      | Some r -> r
+      | None ->
+        custard_error st E.Error_CustardBadFunctor [
+          text ("Custard: the argument of " ^ Ident.string_of_lid fl ^
+                " does not reduce to a record.");
+          text "A functor's argument becomes an OCaml structure, so it has \
+                to be known at compile time." ] in
+  let n_params = datacon_params st c in
+  let _, ctyp = TcEnv.lookup_datacon (tcenv st) c in
+  let bs, _ = U.arrow_formals_comp ctyp in
+  let rec go (bs:binders) (args:args) (subst:list subst_elt) (i:int)
+             (tys:list (string & cty)) (vals:list (string & name))
+    : ML (list (string & cty) & list (string & name)) =
+    match bs, args with
+    | b :: bs, (a, _) :: args ->
+      let subst' = NT (b.binder_bv, a) :: subst in
+      if i < n_params then go bs args subst' (i + 1) tys vals else
+      let f = Ident.string_of_id b.binder_bv.ppname in
+      let sort = SS.subst subst b.binder_bv.sort in
+      let b' = { b with binder_bv = { b.binder_bv with sort = sort } } in
+      if Mono.is_type_binder (tcenv st) b' then begin
+        if Cons? (fst (U.arrow_formals sort)) then
+          custard_error st E.Error_CustardBadFunctor [
+            text ("Custard: the type member " ^ f ^ " of the argument of " ^
+                  Ident.string_of_lid fl ^ " is higher-kinded.");
+            text "Only type members of kind [Type] are supported in a \
+                  functor argument." ];
+        go bs args subst' (i + 1) (tys @ [(f, ty_of_typ st a)]) vals
+      end
+      else if Mono.is_erased_binder (tcenv st) b' then
+        go bs args subst' (i + 1) tys vals
+      else begin
+        let vnm = { nm with id = nm.id ^ "__arg_" ^ f } in
+        let key = "<functor-arg>" ^ string_of_name vnm in
+        let saved = !st.cur in
+        let saved_lid = !st.cur_lid in
+        st.cur := vnm;
+        st.cur_lid := None;
+        Builtins.set_current_decl (Some vnm);
+        let body = expr_of_term st a in
+        st.cur := saved;
+        st.cur_lid := saved_lid;
+        Builtins.set_current_decl (Some saved);
+        let d = DLet { dl_name = vnm; dl_typars = []; dl_binders = [];
+                       dl_ret = ty_of_typ st sort; dl_eff = E_Pure;
+                       dl_body = body; dl_flags = [] } in
+        SMap.add st.emitted key d;
+        st.order := key :: !st.order;
+        go bs args subst' (i + 1) tys (vals @ [(f, vnm)])
+      end
+    | _ -> (tys, vals) in
+  let tys, vals = go bs cargs [] 0 [] [] in
+  DModule { dm_name = nm; dm_functor = path; dm_types = tys;
+            dm_values = vals; dm_flags = [] }
+
+and datacon_params (st:state) (c:Ident.lident) : ML int =
+  match TcEnv.lookup_sigelt (tcenv st) c with
+  | Some { sigel = Sig_datacon {num_ty_params} } -> num_ty_params
+  | _ -> 0
+
+and projector_field (st:state) (l:Ident.lident)
+  : ML (option (Ident.lident & Ident.ident)) =
+  match TcEnv.lookup_sigelt (tcenv st) l with
+  | Some se -> se.sigquals |> List.tryPick (function
+                 | S.Projector (c, f) -> Some (c, f)
+                 | _ -> None)
+  | None -> None
+
+(* A projection out of a functor instance: the instance, the member, and the
+   projector's own binders past the record, instantiated at this use, with
+   the arguments that go with them. *)
+and functor_projection (st:state) (l:Ident.lident) (xs:args)
+  : ML (option (name & string & binders & comp & args)) =
+  let args = xs in
+  match projector_field st l with
+  | None -> None
+  | Some (c, f) ->
+    let n = datacon_params st c in
+    if List.length args <= n then None else
+    let pre, rest = List.splitAt (n + 1) args in
+    match functor_instance st (fst (List.last pre)) with
+    | None -> None
+    | Some inst ->
+      match lookup_lid_typ st l with
+      | None -> None
+      | Some ((_, ty), _) ->
+        let bs, comp = U.arrow_formals_comp ty in
+        if List.length bs < n + 1 then None else
+        let bpre, brest = List.splitAt (n + 1) bs in
+        let subst = List.map2 (fun (b:S.binder) (a, _) -> NT (b.binder_bv, a)) bpre pre in
+        Some (inst, Ident.string_of_id f,
+              SS.subst_binders subst brest, SS.subst_comp subst comp, rest)
+
+(* A value member: an external spelled as the module's member, declared once
+   per instance and member, and applied here like any other external. *)
+and functor_member_app (st:state) (l:Ident.lident) (xs:args) : ML (option expr) =
+  match functor_projection st l xs with
+  | None -> None
+  | Some (inst, f, bs, c, rest) ->
+    let key = "<functor-member>" ^ string_of_name inst ^ "." ^ f in
+    let flags = Mono.keep_thunk (tcenv st) bs c
+                  (Mono.erased_binders (tcenv st) (U.arrow bs c)) in
+    let nm =
+      match SMap.try_find st.names key with
+      | Some nm -> nm
+      | None ->
+        let nm = { inst with id = inst.id ^ "__" ^ f } in
+        SMap.add st.names key nm;
+        let typars = bs |> List.collect (fun (b:S.binder) ->
+                       if Mono.is_type_param (tcenv st) b
+                       then [name_of_bv b.binder_bv] else []) in
+        let res = ty_of_typ st (Effects.result_typ (tcenv st) c) in
+        let e = eff_of_comp st c in
+        let bty (b:S.binder) : ML cty =
+          if Mono.is_erased_binder (tcenv st) b then TUnit
+          else ty_of_typ st b.binder_bv.sort in
+        let rec build (bs:binders) : ML cty =
+          match bs with
+          | [] -> res
+          | [b] -> TArrow (bty b, e, res)
+          | b :: bs -> TArrow (bty b, E_Pure, build bs) in
+        let d = DExternal { dx_name = nm; dx_typars = typars;
+                            dx_ty = build (drop_flagged flags bs);
+                            dx_target = None; dx_header = None;
+                            dx_flags = [Member (inst, f)] } in
+        SMap.add st.emitted key d;
+        st.order := key :: !st.order;
+        nm in
+    let rec split (bs:binders) (flags:list bool) (sp:args)
+                  (tys:list cty) (vs:list expr) : ML (list cty & list expr) =
+      match bs, sp with
+      | b :: bs, (a, _) :: sp ->
+        let fl, flags = (match flags with
+                         | x :: xs -> (x, xs)
+                         | [] -> (false, [])) in
+        let tys = if Mono.is_type_param (tcenv st) b
+                  then tys @ [ty_of_typ st a] else tys in
+        let vs = if fl then vs
+                 else if Mono.is_erased_binder (tcenv st) b then vs @ [unit_expr]
+                 else vs @ [expr_of_term st a] in
+        split bs flags sp tys vs
+      | [], _ -> (tys, vs @ List.map (fun (a, _) -> expr_of_term st a) sp)
+      | _, [] -> (tys, vs) in
+    let tys, vs = split bs flags rest [] [] in
+    let hd_ty = callee_sig st key tys in
+    let hd = mk (EQual (nm, tys)) hd_ty E_Pure in
+    match vs with
+    | [] -> Some hd
+    | _ ->
+      let e = List.fold_left (fun e (a:expr) -> join_eff e a.eff)
+                (callee_eff st key (List.length vs)) vs in
+      Some (mk (EApp (hd, vs)) (apply_result st hd_ty (List.length vs)) e)
+
+(* A type member: an abstract type spelled as the module's member. *)
+and functor_type_member (st:state) (hd:term) (xs:args) : ML (option cty) =
+  match (SS.compress (U.un_uinst hd)).n with
+  | Tm_fvar fv ->
+    (match functor_projection st (S.lid_of_fv fv) xs with
+     | None -> None
+     | Some (inst, f, bs, _, rest) ->
+       let key = "<functor-type>" ^ string_of_name inst ^ "." ^ f in
+       let nm =
+         match SMap.try_find st.names key with
+         | Some nm -> nm
+         | None ->
+           let nm = { inst with id = inst.id ^ "__" ^ f } in
+           SMap.add st.names key nm;
+           let d = DType { dt_name = nm;
+                           dt_params = bs |> List.mapi (fun i _ -> "a" ^ show i);
+                           dt_body = TAbstract;
+                           dt_flags = [Member (inst, f); NoNewtype] } in
+           SMap.add st.emitted key d;
+           st.order := key :: !st.order;
+           nm in
+       Some (TApp (nm, rest |> List.map (fun (a, _) -> ty_of_typ st a))))
   | _ -> None
 
 (* -------------------------------------------------------------------- *)
@@ -1891,6 +2181,11 @@ and ty_of_typ (st:state) (t:typ) : ML cty =
      | Some a -> ty_of_typ st a
      | None ->
        let hd, args = U.head_and_args_full t in
+       (* Section 133.  Before section 30.5's projection case, which would
+          unfold the instance's name and find nothing to reduce. *)
+       match functor_type_member st hd args with
+       | Some c -> c
+       | None ->
        (match (U.un_uinst hd).n with
         (* An abbreviation with a binder the target's type language cannot
            hold -- [restricted_t (a:Type) (b:a -> Type)], whose [b] is
@@ -3762,6 +4057,10 @@ and app_of_fv' (st:state) (fv:fv) (args:args) : ML expr =
     mk (ECtor (nm, value_args st (drop_flagged flags ufs) (drop_flagged flags args)))
        (ctor_result_ty st l args) E_Pure
   else
+    (* Section 133. *)
+    match functor_member_app st l args with
+    | Some e -> e
+    | None ->
     let cs = binder_classes st l in
     let margs, msubst, rest, holes = split_mono_args st l cs args in
     let key = { sk_lid = l; sk_args = margs; sk_subst = msubst;
@@ -4363,6 +4662,16 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
                 | Some r -> Some r
                 | None -> Builtins.lookup_rule l)
              | None -> Builtins.lookup_rule l in
+  (match se with
+   | Some se when Some? (Builtins.attribute_string se.sigattrs PC.custard_functor_attr) ->
+     custard_error st E.Error_CustardBadFunctor [
+       text ("Custard: the functor " ^ Ident.string_of_lid l ^
+             " is used as a value.");
+       text "A functor application stands for an OCaml module, and a module \
+             is not a value: use its members by projection, as \
+             [m.create], and pass the application itself only to binders \
+             that are specialized away (section 133)." ]
+   | _ -> ());
   match rule with
   | Some (Builtins.Rule_extern x) when (match se with
                                         | Some { sigel = Sig_declare_typ {t} } ->
