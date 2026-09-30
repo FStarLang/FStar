@@ -320,6 +320,15 @@ let fsharp_local (x:string) : ML string =
 (* Types                                                                *)
 (* -------------------------------------------------------------------- *)
 
+(* Section 95.6.  [--custard_sizet_width 32] narrows [FStar.SizeT.t] here
+   exactly as it does in the direct-to-C backend: the type, the literal
+   suffix and every conversion, all of which go through the three functions
+   below.  The licence is the same as there -- the program assumes or requires
+   [FStar.SizeT.fits_u32], and the flag is its author saying so -- and the
+   reason to want it is the target's: Fable carries a [uint64] as a
+   JavaScript BigInt and a [uint32] as a number. *)
+let sizet_narrow () : ML bool = Options.custard_sizet_32 ()
+
 (* Section 122.4.  A machine integer is .NET's own, not a support module's.
    This is the single largest difference from the OCaml backend and the reason
    this one exists: OCaml has no unsigned 32-bit type, so [FStar.UInt32.t]
@@ -331,7 +340,7 @@ let int_type (sw : signedness & iwidth) : ML string =
   (* [FStar.SizeT.t] is 64 bits at every target F* supports, so it is
      [uint64] and not [unativeint]: the latter would be 32 bits on a 32-bit
      runtime, which is a different type and a different program. *)
-  | WSizet -> "uint64"
+  | WSizet -> if sizet_narrow () then "uint32" else "uint64"
   | W128 -> (match s with
              | Unsigned -> "System.UInt128"
              | Signed -> "System.Int128")
@@ -347,7 +356,7 @@ let int_type (sw : signedness & iwidth) : ML string =
 let int_suffix (sw : signedness & iwidth) : ML string =
   let s, w = sw in
   match w with
-  | WSizet -> "UL"
+  | WSizet -> if sizet_narrow () then "u" else "UL"
   | W8  -> (match s with Unsigned -> "uy" | Signed -> "y")
   | W16 -> (match s with Unsigned -> "us" | Signed -> "s")
   | W32 -> (match s with Unsigned -> "u"  | Signed -> "")
@@ -654,14 +663,17 @@ let w128_unop (sw : signedness & iwidth) (o:op) : ML (option string) =
 let is_shift (o:op) : bool = BShiftL? o || BShiftR? o
 
 (* Whether a width conversion can change the mathematical value.
-   [width_bits] is [Syntax]'s. *)
-let value_preserving (a b : signedness & iwidth) : bool =
+   [width_bits] is [Syntax]'s, which answers 64 for [WSizet] whatever
+   {!sizet_narrow} says, so that one width is read here instead. *)
+let value_preserving (a b : signedness & iwidth) : ML bool =
+  let bits (w:iwidth) : ML int =
+    if WSizet? w && sizet_narrow () then 32 else width_bits w in
   let sa, wa = a in
   let sb, wb = b in
   match sa, sb with
   | Unsigned, Unsigned
-  | Signed, Signed -> width_bits wa <= width_bits wb
-  | Unsigned, Signed -> width_bits wa < width_bits wb
+  | Signed, Signed -> bits wa <= bits wb
+  | Unsigned, Signed -> bits wa < bits wb
   | Signed, Unsigned -> false
 
 (* Section 122.4.  The conversion function for a target width.  F#'s own
@@ -672,7 +684,7 @@ let value_preserving (a b : signedness & iwidth) : bool =
 let int_conv (sw : signedness & iwidth) : ML string =
   let s, w = sw in
   match w with
-  | WSizet -> "uint64"
+  | WSizet -> int_type sw
   | W128 -> (match s with
              | Unsigned -> "FStarCustard.toU128"
              | Signed -> "FStarCustard.toI128")
@@ -905,6 +917,11 @@ let rec term (ind:string) (e:expr) : ML string =
   | ECast (e1, t) ->
     (match e1.ty, t with
      | TInt sw1, TInt sw2 when sw1 = sw2 -> term ind e1
+     (* Section 95.6.  Under --custard_sizet_width 32, [FStar.SizeT.t] and
+        [FStar.UInt32.t] are the same .NET type, and a conversion between
+        them is nothing at all. *)
+     | TInt sw1, TInt sw2 when not (is_w128 sw1) && not (is_w128 sw2)
+                            && int_type sw1 = int_type sw2 -> term ind e1
      | TFloat _, TFloat fw2 ->
        reject_fwidth fw2;
        let pre = "(" ^ (if Float32? fw2 then "float32" else "float") ^ " " in

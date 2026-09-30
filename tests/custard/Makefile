@@ -403,6 +403,15 @@ FS_TESTS += BytesFS
 FSGREP_BytesFS = "(b : byte[])" "(FStar_Bytes.bytes_of_int16 (4660us))"
 FSNOGREP_BytesFS = "(b : string)"
 
+# Section 95.6, FStarLang/FStar#4624.  --custard_sizet_width 32 on the F# leg.
+# The pins are the type, the literal suffix, and a conversion to
+# [FStar.UInt32.t] that is no conversion at all at that width.
+FS_TESTS += FsSizet32
+FLAGS_FsSizet32 = --custard_sizet_width 32
+FSGREP_FsSizet32 = "len : uint32;" "let szWidth_widen (n : uint32) : uint64 =" \
+                   "((b).len + (1u))"
+FSNOGREP_FsSizet32 = "len : uint64;" "(uint32 n)"
+
 # Rejections.  Each is extracted with --custard_backend FSharp and must
 # produce the numbered diagnostic.
 FSREJECT_TESTS += FSNoReal FSPun

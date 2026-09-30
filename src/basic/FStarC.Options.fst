@@ -1017,12 +1017,13 @@ C backend accepts rather than the ones the OCaml backend does (section 122)");
   ( noshort,
     "custard_sizet_width",
     EnumStr ["native"; "32"],
-    text "Width the direct-to-C backend gives FStar.SizeT.t: the target's own \
-size_t (default), or uint32_t.  Narrowing is *not* sound in general -- it is \
-correct exactly when the program assumes FStar.SizeT.fits_u32, which F* does \
-not check and this flag does not either -- but on a target where a 64-bit \
-index costs a register it is worth a measurable amount (section 95). Only the \
-C backend has it; karamel decides this for itself");
+    text "Width the direct-to-C and F# backends give FStar.SizeT.t: the \
+target's own size_t (uint64 in F#) by default, or uint32_t (uint32 in F#).  \
+Narrowing is *not* sound in general -- it is correct exactly when the \
+program assumes FStar.SizeT.fits_u32, which F* does not check and this flag \
+does not either -- but on a target where a 64-bit index costs a register \
+it is worth a measurable amount (section 95).  Only the C and FSharp \
+backends have it; karamel decides this for itself");
 
   ( noshort,
     "custard_split",
