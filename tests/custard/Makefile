@@ -407,6 +407,13 @@ FS_TESTS += BytesFS
 FSGREP_BytesFS = "(b : byte[])" "(FStar_Bytes.bytes_of_int16 (4660us))"
 FSNOGREP_BytesFS = "(b : string)"
 
+# Section 122.11.1, FStarLang/FStar#4623.  A point-free polymorphic definition
+# of function type is eta-expanded rather than refused, even when a use
+# passes it instead of applying it.
+FS_TESTS += FsPointFree
+FSGREP_FsPointFree = "let fsPointFree_small (custard_eta : 'raw) : option<bigint> ="
+FSGREP_FsPointFree += "(fsPointFree_twice fsPointFree_small v)"
+
 # Rejections.  Each is extracted with --custard_backend FSharp and must
 # produce the numbered diagnostic.
 FSREJECT_TESTS += FSNoReal FSPun

@@ -1478,7 +1478,13 @@ let reject_target_only_types (p:program) : ML unit =
 
    Custard monomorphizes, so this is rare by construction: what survives is a
    value in a [Poly] position that nothing ever specialized.  It is refused
-   here, naming the value and what to do about it, rather than downstream. *)
+   here, naming the value and what to do about it, rather than downstream.
+
+   Section 122.11.1.  A definition like that whose type is an *arrow* is not a
+   value in that sense: it is a function written point-free, and F#
+   generalizes a function.  {!eta_generic_values} gives it its parameters
+   before anything is printed, so only a definition that is not a function --
+   or one whose effects eta-expansion would move -- reaches the refusal. *)
 let rec mentions_tyvar (t:cty) : ML bool =
   match t with
   | TVar _ -> true
@@ -1488,18 +1494,77 @@ let rec mentions_tyvar (t:cty) : ML bool =
   | TApp (_, args) -> args |> List.existsb mentions_tyvar
   | _ -> false
 
+(* Section 122.11.1.  [let small : 'raw -> option<bigint> = bounded 0 10 5]
+   becomes [let small (eta : 'raw) : option<bigint> = bounded 0 10 5 eta].
+   The shared eta-expansion of section 25 already does this when every use
+   applies the definition, but a use that *passes* it pins it at arity zero
+   there, since for C a bare use of a function-pointer variable and a bare use
+   of a function are different things.  In F# they are the same thing, so
+   here the expansion does not depend on the uses at all.
+
+   It re-evaluates the body at every call instead of once, which changes
+   nothing the program can observe only when reaching the lambda is pure --
+   the condition section 25.3 imposes too, for the same reason.  So the
+   definition has to be pure, and the spine stops after the first arrow whose
+   application is not: [a -> ML (b -> c)] expanded past its first arrow would
+   run the [ML] part only once [b] arrived.
+
+   The binders follow the arrow-type convention of section 122.14 -- a [unit]
+   argument is dropped unless every argument is one -- because the type every
+   *use* sees is printed by that convention, and the definition has to have
+   that type.  A prefix that would need a lone [unit] binder while the type
+   goes on to take real arguments cannot be spelled consistently, and is left
+   to the refusal. *)
+let eta_generic_value (l:dlet) : ML dlet =
+  let rec spine (t:cty) : ML (list cty & cty & eff) =
+    match t with
+    | TArrow (a, e, b) ->
+      if is_pure e && TArrow? b
+      then let args, r, e' = spine b in (a :: args, r, e')
+      else ([a], b, e)
+    | _ -> ([], t, E_Pure) in
+  let args, ret, ef = spine l.dl_ret in
+  let named = args |> List.mapi (fun i a ->
+                (a, (if i = 0 then "custard_eta" else "custard_eta" ^ show i))) in
+  let kept = named |> List.filter (fun (a, _) -> not (TUnit? a)) in
+  if Nil? kept && TArrow? ret then l
+  else
+    let kept = if Nil? kept then [List.hd named] else kept in
+    let bs = kept |> List.map (fun (a, x) -> { b_name = x; b_ty = a }) in
+    let actuals = named |> List.map (fun (a, x) ->
+                    if TUnit? a && not (List.existsb (fun (_, y) -> y = x) kept)
+                    then mk (EConst CUnit) TUnit E_Pure
+                    else mk (EVar x) a E_Pure) in
+    let body = match l.dl_body.e with
+               | EApp (f, xs) -> mk (EApp (f, xs @ actuals)) ret ef
+               | _ -> mk (EApp (l.dl_body, actuals)) ret ef in
+    { l with dl_binders = bs; dl_body = body; dl_ret = ret; dl_eff = ef }
+
+let eta_generic_values (p:program) : ML program =
+  p |> List.map (fun d ->
+    match d with
+    | DLet l when Nil? l.dl_binders && TArrow? l.dl_ret
+               && mentions_tyvar l.dl_ret && is_pure l.dl_eff ->
+      DLet (eta_generic_value l)
+    | d -> d)
+
 let reject_generic_values (p:program) : ML unit =
   p |> List.iter (fun d ->
     match d with
     | DLet l when Nil? l.dl_binders && mentions_tyvar l.dl_ret ->
+      let why =
+        if TArrow? l.dl_ret && not (is_pure l.dl_eff)
+        then "Its type is a function type, but giving it parameters would \
+              evaluate its body at every call rather than once, and the body \
+              is not pure (section 122.11.1)."
+        else "Nothing in this program specialized it, which means nothing \
+              uses it at a type either." in
       E.raise_error0 E.Error_CustardUnrepresentableValue [
         text ("Custard: " ^ string_of_name l.dl_name ^ " is a top-level value \
                with no parameters whose type " ^ ty l.dl_ret ^ " is still \
                polymorphic.");
-        text "F#'s value restriction does not generalize such a definition, \
-              so it cannot be written at all (section 122.11).  Nothing in \
-              this program specialized it, which means nothing uses it at a \
-              type either.";
+        text ("F#'s value restriction does not generalize such a definition, \
+               so it cannot be written at all (section 122.11).  " ^ why);
         text "Give it a parameter, specialize it at the type it is wanted at, \
               or extract with --custard_backend OCaml." ]
     | _ -> ())
@@ -1678,6 +1743,7 @@ let reject_all (p:program) : ML unit =
   reject_generic_values p
 
 let print_program (stem:string) (p:program) : ML string =
+  let p = eta_generic_values p in
   reject_all p;
   build_tables (SMap.create 0) p;
   current_module := None;
@@ -1690,6 +1756,7 @@ let print_program (stem:string) (p:program) : ML string =
    attribute has to sit on the last declaration of the last file -- which is
    why the entry calls are appended there and nowhere else. *)
 let print_split (files : list (string & program)) : ML (list (string & string)) =
+  let files = files |> List.map (fun (m, ds) -> (m, eta_generic_values ds)) in
   let whole = List.collect snd files in
   reject_all whole;
   let homes = SMap.create 100 in
