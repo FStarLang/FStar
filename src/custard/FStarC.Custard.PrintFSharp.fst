@@ -857,21 +857,37 @@ let rec term (ind:string) (e:expr) : ML string =
        F# requires it to be no further left than that. *)
     let ind' = ind ^ " " in
     hd ^ String.concat "\n" (List.map (case ind') brs) ^ ")"
+  (* Each component is printed at the column it begins at, like any other
+     comma-separated run (section 122.2); a missing one is a [defaultof]. *)
   | ERecord (n, fs) when Some? (tuple_arity n) ->
     let k = Some?.v (tuple_arity n) in
-    "(" ^ String.concat ", "
-            (by_position k "(Unchecked.defaultof<_>)"
-               (fs |> List.map (fun (f, e) -> (f, term (ind ^ " ") e)))) ^ ")"
+    let at (i:int) : ML (option expr) =
+      fs |> List.tryPick (fun (f, e) -> if tuple_index f = i then Some e else None) in
+    let rec go (i:int) : ML (list (option expr)) =
+      if i > k then [] else at i :: go (i + 1) in
+    join_at ind "(" ", "
+      (fun ind' (o:option expr) -> match o with
+                                   | Some e -> term ind' e
+                                   | None -> "(Unchecked.defaultof<_>)")
+      (go 1) ^ ")"
   (* One field per line, unless the whole literal fits on the line it is
      already on: a record is where a reader looks up what a value is made of,
      and the fields of the ones this compiler builds are whole expressions
      rather than names -- but a two-field record of variables is not clearer
-     for being spread over two lines. *)
+     for being spread over two lines.
+
+     A field's value begins after its label and not at the column the label
+     does, and a multi-line value -- a [match], say -- has to be printed at
+     the column it begins at, or its continuation lines are offside of it
+     (FS0058).  In the multi-line layout every label begins at [ind'], so that
+     column is exact there; the one-line layout is chosen only when no value
+     spans lines, when no column is ever consulted. *)
   | ERecord (n, fs) ->
     let ind' = ind ^ "  " in
     let parts = List.mapi (fun i (f, e) ->
-                  (if i = 0 then qualified_label n f else fsharp_var f)
-                  ^ " = " ^ term ind' e) fs in
+                  let pre = (if i = 0 then qualified_label n f else fsharp_var f)
+                            ^ " = " in
+                  pre ^ term (after ind' pre) e) fs in
     let one = "{ " ^ String.concat "; " parts ^ " }" in
     if String.length ind + String.length one <= line_width
        && not (List.existsb (fun c -> c = '\n') (String.list_of_string one))
