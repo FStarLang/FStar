@@ -403,6 +403,10 @@ FS_TESTS += BytesFS
 FSGREP_BytesFS = "(b : byte[])" "(FStar_Bytes.bytes_of_int16 (4660us))"
 FSNOGREP_BytesFS = "(b : string)"
 
+# Section 122.2.2, FStarLang/FStar#4622.  A [match] as a record field's value
+# is printed at the column past its label; the build is the check (FS0058).
+FS_TESTS += FsRecMatch
+
 # Rejections.  Each is extracted with --custard_backend FSharp and must
 # produce the numbered diagnostic.
 FSREJECT_TESTS += FSNoReal FSPun

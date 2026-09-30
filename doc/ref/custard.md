@@ -21084,6 +21084,20 @@ The rule is worth stating plainly because it is easy to reintroduce: a
 layout mechanism that asks "what column am I at" must answer from the
 tail of the output, never from the whole of it.
 
+#### 122.2.2 A field's value begins after its label
+
+FStarLang/FStar#4622.  A record literal laid out one field per line printed
+every field's value at the column of the *label*, two past the brace.  A
+value that fits on one line does not care, but a `match` does: its bars were
+placed under the label, to the left of the `match` they belong to, and the
+file failed with FS0058 and a parse error after it.  The value is now
+rendered at the column past `label = `, which in that layout is exact because
+every label begins at the same column.  The one-line layout is chosen only
+when no value spans lines, so no column is consulted there.  The tuple case
+of `ERecord` had the same flaw one comma at a time and goes through `join_at`
+now.  `FsRecMatch` is the regression test: a `match` as a field's value, as
+every field's value, and inside a nested record.
+
 ### 122.3 Names
 
 F# has a general escape for identifiers that collide with keywords:
