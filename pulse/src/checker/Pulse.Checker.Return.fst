@@ -152,6 +152,17 @@ let rec unrefine_result (t:term) : T.Tac term =
   | T.Tv_AscribedC e _ _ _ -> unrefine_result e
   | _ -> t
 
+// Is `t` (a refinement of) `unit` or a `squash`? An equality `result == term`
+// on such a type carries no information, and would only let the result
+// variable, which is typically dropped as a mere hypothesis, escape its scope.
+let rec is_proof_irrelevant_ty (t:term) : T.Tac bool =
+  if T.term_eq t (`unit) || Some? (is_squash t) then true
+  else match T.inspect t with
+  | T.Tv_Refine b _ -> is_proof_irrelevant_ty b.sort
+  | T.Tv_AscribedT e _ _ _
+  | T.Tv_AscribedC e _ _ _ -> is_proof_irrelevant_ty e
+  | _ -> false
+
 #push-options "--z3rlimit_factor 16 --fuel 0 --ifuel 1"
 #restart-solver
 let check_core
@@ -214,7 +225,7 @@ let check_core
         t
   in
   //if we're inferring a postcondition, then add an equality (if it is non-trivial)
-  let use_eq = use_eq || (not (PostHint? post_hint) && not (T.term_eq ty (`unit))) in
+  let use_eq = use_eq || (not (PostHint? post_hint) && not (is_proof_irrelevant_ty ty)) in
   assume (open_term (close_term post_opened x) x == post_opened);
   let post = close_term post_opened x in
   let ret_st = wtag (Some c) (Tm_Return {expected_type=tm_unknown; insert_eq=use_eq; term=t}) in
