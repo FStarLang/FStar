@@ -21237,9 +21237,39 @@ F# generalizes less than OCaml: a top-level `let` whose right-hand side
 is not a syntactic value is not generalized, and a generic value that is
 not a function is an error rather than a weak type variable.
 `reject_generic_values` refuses a non-function top-level definition whose
-type mentions a type variable, with error 395.  Monomorphization means
-this is nearly unreachable --- a specialization has no free type
-variables --- but the `TAny` traffic of §122.6 can produce one.
+type mentions a type variable, with error 370
+(`Error_CustardUnrepresentableValue`).  Monomorphization means this is
+nearly unreachable --- a specialization has no free type variables --- but
+the `TAny` traffic of §122.6 can produce one.
+
+#### 122.11.1 A point-free function is a function
+
+FStarLang/FStar#4623.  `let small (#raw:Type0) : dec raw int = bounded 0 10 5`,
+with `dec raw a = raw -> option a`, has no value parameters, is still
+polymorphic, and has a function type.  The shared eta-expansion of §25 gives
+it its parameter when every use applies it, and then F# generalizes it like
+any other function.  But §25 is bounded by the *uses*, because for C a bare
+use of a function-pointer variable and a bare use of a function are
+different things: so `twice small`, which passes it, pinned it at arity zero,
+and the F# backend refused it as a value it could not write.
+
+In F# the two are the same thing, so `eta_generic_values` expands such a
+definition before anything is printed, independently of its uses:
+
+```fsharp
+let pointFree_small (custard_eta : 'raw) : option<bigint> =
+  (pointFree_bounded (0I) (10I) (5I) custard_eta)
+```
+
+The body is then evaluated at every call rather than once, which nothing can
+observe only when reaching the lambda is pure --- the condition §25.3 imposes
+for the same reason.  So the definition has to be pure, and the arrow spine
+is followed only through pure arrows: `a -> ML (b -> c)` is expanded past its
+first arrow and no further.  The binders follow §122.14's convention, a
+`unit` argument dropped unless every argument is one, because that is how
+the type every use sees is printed.  Anything else --- a definition that is
+not a function, or an impure one --- still gets error 370, whose text now
+says which of the two it is.  `FsPointFree` is the regression test.
 
 ### 122.12 No separate units
 
