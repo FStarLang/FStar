@@ -618,6 +618,15 @@ let type_params (env:TcEnv.env) (t:typ) : ML (list bool) =
    list a -> list a] takes a type and [list int] is an ordinary runtime value;
    what matters is a type that a constructor stores, which is the arguments
    past the first [num_ty_params]. *)
+(* A field that holds a type or a type constructor: [t : Type0], and also
+   [t : Type0 -> Type0], which is how a functor's result signature
+   (section 133) stores the type it defines. *)
+let is_kind_sort (t:typ) : ML bool =
+  let _, c = U.arrow_formals_comp t in
+  match (SS.compress (U.comp_result c)).n with
+  | Tm_type _ -> true
+  | _ -> false
+
 let ctor_stores_type (env:TcEnv.env) (l:Ident.lident) : ML bool =
   match TcEnv.lookup_sigelt env l with
   | Some ({ sigel = Sig_datacon { t; num_ty_params } }) ->
@@ -639,13 +648,12 @@ let ctor_stores_type (env:TcEnv.env) (l:Ident.lident) : ML bool =
         match bs with
         | [] -> false
         | b :: rest ->
-          (match (SS.compress b.binder_bv.sort).n with
-           | Tm_type _ ->
+          if is_kind_sort b.binder_bv.sort then
              rest |> List.existsb (fun (b2:binder) ->
                elems (Free.names b2.binder_bv.sort)
                |> List.existsb (fun v -> bv_eq v b.binder_bv))
              || scan rest
-           | _ -> scan rest) in
+          else scan rest in
       scan fields
   | _ -> false
 
@@ -673,13 +681,12 @@ let existential_of_lid (env:TcEnv.env) (l:Ident.lident)
                   match bs with
                   | [] -> None
                   | b :: rest ->
-                    (match (SS.compress b.binder_bv.sort).n with
-                     | Tm_type _ when
-                         rest |> List.existsb (fun (b2:binder) ->
-                           elems (Free.names b2.binder_bv.sort)
-                           |> List.existsb (fun v -> bv_eq v b.binder_bv)) ->
-                       Some (Ident.lid_of_ids [b.binder_bv.ppname])
-                     | _ -> pick rest) in
+                    if is_kind_sort b.binder_bv.sort &&
+                       rest |> List.existsb (fun (b2:binder) ->
+                         elems (Free.names b2.binder_bv.sort)
+                         |> List.existsb (fun v -> bv_eq v b.binder_bv))
+                    then Some (Ident.lid_of_ids [b.binder_bv.ppname])
+                    else pick rest in
                 (match pick fields with
                  | Some f -> Some (c, f)
                  | None -> first ds')

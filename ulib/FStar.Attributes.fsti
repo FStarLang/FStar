@@ -432,6 +432,16 @@ val custard_extern (target: string) : unit
     the macro is an overload set, error 384 is what reports it. *)
 val custard_c_header (header: string) : unit
 
+(** Custard: this [assume val] is an OCaml functor, and the argument is its
+    OCaml path, e.g. ["Hashtbl.Make"] (see doc/ref/custard.md, section 133).
+
+    The functor's argument and result are records standing for OCaml module
+    signatures: a field of kind [Type0] (or [Type0 -> Type0], ...) is a type
+    member and any other field a value member.  Every application reached
+    through a projection becomes one OCaml module instance, and a projection
+    out of it a reference to that module's member.  OCaml backend only. *)
+val custard_functor (path: string) : unit
+
 (** Custard: values of this external type are *handles*, so a binding of one
     aliases rather than copies (see doc/ref/custard.md, section 70.2).
 

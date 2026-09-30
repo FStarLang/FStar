@@ -701,7 +701,9 @@ let run (prog:program) : ML program =
        another on the same declaration. *)
     | DExternal x when Cons? x.dx_typars -> [DExternal x]
     | DExternal x -> [DExternal { x with dx_ty = mono_cty st x.dx_ty }]
-    | DExn e -> [DExn { e with de_args = e.de_args |> List.map (mono_cty st) }]) in
+    | DExn e -> [DExn { e with de_args = e.de_args |> List.map (mono_cty st) }]
+    | DModule m ->
+      [DModule { m with dm_types = m.dm_types |> List.map (fun (f, c) -> (f, mono_cty st c)) }]) in
   drain st;
   (* Section 64.  The polymorphic externals are dropped here rather than in
      the pass above, because "was it instantiated?" is not answerable until
