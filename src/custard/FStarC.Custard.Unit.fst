@@ -29,7 +29,7 @@ module E   = FStarC.Errors
 module O   = FStarC.Options
 module SMap = FStarC.SMap
 
-let current_version = 13
+let current_version = 14
 
 (* The IR is plain first-order data -- no references, no closures, no
    hashconsing -- so the same mechanism that stores checked files stores a
@@ -163,6 +163,7 @@ let entry_to_string (e:entry) : ML string =
     | DLet d      -> BU.fmt1 "let %s"      (show d.dl_name)
     | DExternal d -> BU.fmt1 "external %s" (show d.dx_name)
     | DExn d      -> BU.fmt1 "exception %s" (show d.de_name)
+    | DModule d   -> BU.fmt1 "module %s" (show d.dm_name)
   in
   BU.fmt3 "  %s\n    key: %s%s\n" what e.ue_key
     (match e.ue_home with Some m -> "\n    home: " ^ m | None -> "")

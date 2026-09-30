@@ -1234,6 +1234,9 @@ let krml_decl (env:kenv) (d:decl) : ML (option K.decl) =
     ];
     None
 
+  (* Section 133.  Refused by the extractor on every backend but OCaml. *)
+  | DModule _ -> failwith "Custard: a functor instance reached the karamel backend"
+
 (* -------------------------------------------------------------------- *)
 (* Entry point                                                          *)
 (* -------------------------------------------------------------------- *)

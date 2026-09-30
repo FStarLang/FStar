@@ -1135,6 +1135,9 @@ let print_decl (first:bool) (d:decl) : ML (option string) =
   (* An external is printed at each of its uses; see {!externals}. *)
   | DExternal _ -> None
 
+  (* Section 133.  Refused by the extractor on every backend but OCaml. *)
+  | DModule _ -> failwith "Custard: a functor instance reached the F# backend"
+
   | DExn e ->
     Some ("exception " ^ fsharp_ctor_ident e.de_name ^
           (match e.de_args with

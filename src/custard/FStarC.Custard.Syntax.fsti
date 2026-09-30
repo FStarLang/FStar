@@ -679,6 +679,11 @@ type flag =
       when the upstream unit split its output (section 12.9): a reference then
       has to name that file rather than the unit, and the declaration may be
       spelled by its plain identifier rather than its mangled one. *)
+  | Member of name & string
+  (** Section 133.  This declaration is the member named second of the OCaml
+      functor instance named first, a [DModule].  It is emitted as nothing;
+      a use is spelled as the module's member, and the declaration depends on
+      the module so that the module is emitted first and kept alive. *)
 
 type tydef =
   | TAbbrev  of cty
@@ -727,11 +732,26 @@ type dexn = {
   de_flags: list flag;
 }
 
+(** Section 133.  An instance of an OCaml functor:
+    [module M = F (struct type k = ... let v = ... end)].  The argument's type
+    members are given by their definitions and its value members by the
+    top-level declarations holding them, so every expression the argument
+    contains is an ordinary [DLet] that every pass already knows how to
+    process.  OCaml backend only. *)
+type dmodule = {
+  dm_name:    name;
+  dm_functor: string;                (** the functor's OCaml path *)
+  dm_types:   list (string & cty);
+  dm_values:  list (string & name);
+  dm_flags:   list flag;
+}
+
 type decl =
   | DType     of dtype
   | DLet      of dlet
   | DExternal of dexternal
   | DExn      of dexn
+  | DModule   of dmodule
 
 (** A whole program: topologically sorted, with recursive groups marked by the
     [Rec] flag rather than by a syntactic grouping, so that the extraction loop
@@ -870,6 +890,10 @@ val imported_unit : decl -> ML (option string)
 (** The file an imported declaration lives in, for an upstream unit that split
     its output; [None] for a local declaration or a whole-program upstream. *)
 val imported_home : decl -> ML (option string)
+
+(** Section 133.  The functor instance and member name a [Member] flag
+    records, if there is one. *)
+val member_of : list flag -> ML (option (name & string))
 
 (** {1 Traversal} *)
 

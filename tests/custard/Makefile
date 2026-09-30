@@ -38,6 +38,7 @@ GREP_Refs   += "(r) := "
 NOGREP_Refs += "(0) <- "
 CUSTARD_TESTS += Thunk
 CUSTARD_TESTS += Exceptions
+CUSTARD_TESTS += FunctorHashtbl
 CUSTARD_TESTS += LocalRec
 CUSTARD_TESTS += RecEffect
 CUSTARD_TESTS += NewtypeInline
@@ -220,6 +221,9 @@ GREP_Exceptions   = "exception Empty" "exception Bad of" \
                     "raise Empty" "(try " "with" "Empty ->"
 NOGREP_Exceptions += "Exceptions_Empty"
 NOGREP_Exceptions = "FStar_All.try_with" "FStar_All.raise" "Prims.exn"
+GREP_FunctorHashtbl = "= Hashtbl.Make (struct" "FunctorHashtbl_string_tbl.find_opt" \
+                      "(Prims.int) FunctorHashtbl_string_tbl.t" "| Not_found ->"
+NOGREP_FunctorHashtbl = "exception Not_found" "type functorHashtbl_ocaml_int" "Obj.t"
 
 # Local [let rec]s are lambda-lifted to top-level declarations (section 5.10).
 GREP_LocalRec     = "let rec localRec_rev1__aux" "let rec localRec_sum_upto__go" \
