@@ -679,6 +679,8 @@ let rw_decl (t:tbl) (d:decl) : ML (list decl) =
             dl_body    = rw_expr t dl.dl_body }]
   | DExternal dx -> [DExternal { dx with dx_ty = resolve t 100 dx.dx_ty }]
   | DExn de -> [DExn { de with de_args = de.de_args |> List.map (resolve t 100) }]
+  | DModule dm ->
+    [DModule { dm with dm_types = dm.dm_types |> List.map (fun (f, c) -> (f, resolve t 100 c)) }]
 
 (* -------------------------------------------------------------------- *)
 (* 5.5 Representation: records and inline fields                        *)

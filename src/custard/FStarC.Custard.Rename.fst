@@ -243,6 +243,8 @@ let rn_terms (fields:SMap.t string) (d:decl) : ML decl =
     let typars, ts = bind_all empty_scope x.dx_typars in
     DExternal { x with dx_typars = typars; dx_ty = rn_cty ts x.dx_ty }
   | DExn e -> DExn { e with de_args = e.de_args |> List.map (rn_cty empty_scope) }
+  | DModule m ->
+    DModule { m with dm_types = m.dm_types |> List.map (fun (f, c) -> (f, rn_cty empty_scope c)) }
 
 (* The verdicts are rewritten after [rn_types] has published every renaming,
    so that [ti_ctors] spells the field names the generated source spells. *)

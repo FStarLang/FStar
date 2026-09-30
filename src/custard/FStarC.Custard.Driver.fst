@@ -161,7 +161,8 @@ let warn_any (prog:program) : ML unit =
           cs |> List.iter (fun (cn, fs) -> fields (string_of_name cn) fs)
         | TAbstract -> ())
      | DExternal x -> at "declaration" x.dx_ty
-     | DExn e -> e.de_args |> List.iter (at "exception argument"));
+     | DExn e -> e.de_args |> List.iter (at "exception argument")
+     | DModule m -> m.dm_types |> List.iter (fun (f, c) -> at ("type member '" ^ f ^ "'") c));
     (* Section 51.2, corrected in 53.3.  An external with a type parameter is
        a particular and recognizable case of this, and the generic message did
        not say so: the reader is told the declaration's type has an [any] in

@@ -38,6 +38,7 @@ GREP_Refs   += "(r) := "
 NOGREP_Refs += "(0) <- "
 CUSTARD_TESTS += Thunk
 CUSTARD_TESTS += Exceptions
+CUSTARD_TESTS += FunctorHashtbl
 CUSTARD_TESTS += LocalRec
 CUSTARD_TESTS += RecEffect
 CUSTARD_TESTS += NewtypeInline
@@ -220,6 +221,9 @@ GREP_Exceptions   = "exception Empty" "exception Bad of" \
                     "raise Empty" "(try " "with" "Empty ->"
 NOGREP_Exceptions += "Exceptions_Empty"
 NOGREP_Exceptions = "FStar_All.try_with" "FStar_All.raise" "Prims.exn"
+GREP_FunctorHashtbl = "= Hashtbl.Make (struct" "FunctorHashtbl_string_tbl.find_opt" \
+                      "(Prims.int) FunctorHashtbl_string_tbl.t" "| Not_found ->"
+NOGREP_FunctorHashtbl = "exception Not_found" "type functorHashtbl_ocaml_int" "Obj.t"
 
 # Local [let rec]s are lambda-lifted to top-level declarations (section 5.10).
 GREP_LocalRec     = "let rec localRec_rev1__aux" "let rec localRec_sum_upto__go" \
@@ -402,6 +406,13 @@ CUSTARD_TESTS += BytesFS
 FS_TESTS += BytesFS
 FSGREP_BytesFS = "(b : byte[])" "(FStar_Bytes.bytes_of_int16 (4660us))"
 FSNOGREP_BytesFS = "(b : string)"
+
+# Section 122.11.1, FStarLang/FStar#4623.  A point-free polymorphic definition
+# of function type is eta-expanded rather than refused, even when a use
+# passes it instead of applying it.
+FS_TESTS += FsPointFree
+FSGREP_FsPointFree = "let fsPointFree_small (custard_eta : 'raw) : option<bigint> ="
+FSGREP_FsPointFree += "(fsPointFree_twice fsPointFree_small v)"
 
 # Section 95.6, FStarLang/FStar#4624.  --custard_sizet_width 32 on the F# leg.
 # The pins are the type, the literal suffix, and a conversion to
