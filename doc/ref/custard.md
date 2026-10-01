@@ -18512,11 +18512,11 @@ called out rather than merely fixed.
 
 ### 95.4.  What the flag refuses to do quietly
 
-Only the direct-to-C printer reads this.  On any other backend it would be
-silently ignored, and a flag whose entire purpose is to change the width of
-every index in the program is not one to ignore quietly, so
-`--custard_sizet_width 32` with a non-C backend is an error rather than a
-no-op.  karamel decides this for itself, and the OCaml backend has no say in
+Only the direct-to-C and F# printers read this (§95.6).  On any other
+backend it would be silently ignored, and a flag whose entire purpose is to
+change the width of every index in the program is not one to ignore quietly,
+so `--custard_sizet_width 32` with any other backend is an error rather than
+a no-op.  karamel decides this for itself, and the OCaml backend has no say in
 it at all.
 
 It is also recorded in a unit's `layout_options` (§42).  Strictly it changes
@@ -18547,6 +18547,26 @@ had no rule and came out as a declaration with no definition, failing at
 arity 2, but the declaration retains only 1 binder(s) after erasure" --- and
 the reporter's guess of 2 came from the source signature, forgetting the
 ghost binders Custard had already dropped.  §84's warning did its job.
+
+### 95.6.  The F# backend
+
+FStarLang/FStar#4624.  The same flag, and the same licence, on
+`--custard_backend FSharp`, where the reason to want it is the JavaScript
+target: an F# program compiled with Fable carries a `uint64` as a BigInt
+and a `uint32` as a number, so a 64-bit index is BigInt arithmetic on every
+index step.  Under the flag `FStar.SizeT.t` is `uint32`, a literal gets `u`
+rather than `UL`, and both directions of the `FStar.SizeT` conversions are
+at that width --- through `int_type`, `int_suffix` and `int_conv`, exactly as
+in C.  Two things are F#'s own:
+
+- `value_preserving` reads `Sizet` as 32 bits rather than taking
+  `width_bits`'s 64, so an array index or an allocation length goes to .NET's
+  `int` straight from the `uint32` (`(int k)`), never through `uint64`;
+- a conversion between `FStar.SizeT.t` and `FStar.UInt32.t` is between two
+  spellings of one .NET type, and is printed as nothing.
+
+`FsSizet32` runs `SzWidth`'s program on the F# leg under the flag.  The
+default is unchanged: `native` is `uint64` on this backend (§122.4).
 
 ## 96. A name the callee already has
 
