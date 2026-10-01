@@ -742,6 +742,45 @@ let rec ctor_args_pure (e:expr) : ML bool =
   | ETuple es -> es |> List.for_all (fun a -> is_pure a.eff)
   | _ -> false
 
+(* Issue 4630.  The bindings a constructor's fields carry, floated out of it:
+   [C (a, (let y = e in D (y, y)))] is [let y = e in C (a, D (y, y))].  The
+   function returned rebuilds the spine around whatever the caller puts in the
+   constructor's place, and each rebuilt node reuses [at], as {!float_lets}
+   does.
+
+   [None] unless every field that is left is pure.  That is what makes the
+   floating sound: a binding now runs before the fields to its left, which is
+   unobservable only because they are pure -- and iota, the only reason to
+   ask, needs them pure anyway.  Names are unique within a definition (see
+   {!sub}), so widening a binding's scope captures nothing. *)
+let rec float_ctor_lets (at:expr) (e:expr) : ML (option ((expr -> ML expr) & expr)) =
+  let fields (es:list expr) (mk_e:list expr -> expr') : ML (option ((expr -> ML expr) & expr)) =
+    let rs = es |> List.map (float_ctor_lets at) in
+    if rs |> List.existsb None? then None
+    else
+      let rs = rs |> List.map Some?.v in
+      let wrap (r:expr) : ML expr = List.fold_right (fun (wr : (expr -> ML expr) & expr) (acc:expr) -> fst wr acc) rs r in
+      Some (wrap, { e with e = mk_e (rs |> List.map snd); eff = E_Pure }) in
+  match e.e with
+  | ELet (v, t, a, b) ->
+    (match float_ctor_lets at b with
+     | Some (w, b) -> Some ((fun (r:expr) -> { at with e = ELet (v, t, a, w r) } <: ML expr), b)
+     | None -> None)
+  | ESeq (a, b) ->
+    (match float_ctor_lets at b with
+     | Some (w, b) -> Some ((fun (r:expr) -> { at with e = ESeq (a, w r) } <: ML expr), b)
+     | None -> None)
+  | ECtor (n, es) -> fields es (fun es -> ECtor (n, es))
+  | ETuple es -> fields es (fun es -> ETuple es)
+  | _ -> if is_pure e.eff then Some ((fun (r:expr) -> r <: ML expr), e) else None
+
+(* Does [iota] select a branch?  [float_ctor_lets] leaves every field pure,
+   so [ctor_args_pure] needs no asking on that path. *)
+let iota_fires (brs:list branch) (scrut:expr) : ML bool =
+  match brs with
+  | (p, None, _) :: _ -> Some? (match_pat p scrut)
+  | _ -> false
+
 let rec iota (brs:list branch) (scrut:expr) (at:expr) : ML expr =
   match brs with
   | [] -> at
@@ -908,13 +947,31 @@ let rec reduce (x:expr) : ML expr =
 
   | EMatch (scrut, brs) ->
     let scrut = reduce scrut in
+    (* Issue 4630.  A field of the constructor that is under a [let] hides
+       the constructor from [iota] -- the nested tuple a recursive builder
+       returns, [let m = .. in (m, (let y = e in (y, y)))], is exactly this.
+       The bindings, the scrutinee's own and its fields', are floated out in
+       front of the [match], but only when iota then fires: otherwise the
+       scrutinee is left as it was written. *)
+    let floated : option ((expr -> ML expr) & expr) =
+      if iota_fires brs scrut then None
+      else match scrut.e with
+           | ECtor _ | ETuple _ | ELet _ | ESeq _ ->
+             (match float_ctor_lets x scrut with
+              | Some (wrap, s) -> if iota_fires brs s then Some (wrap, s) else None
+              | None -> None)
+           | _ -> None in
+    (match floated with
+     | Some (wrap, s) ->
+       reduce (wrap (iota brs s { x with e = EMatch (s, brs) }))
+     | None ->
     if ctor_args_pure scrut
     then
       let r = iota brs scrut { x with e = EMatch (scrut, brs |> List.map reduce_branch) } in
       (match r.e with
        | EMatch _ -> r
        | _ -> reduce r)
-    else { x with e = EMatch (scrut, brs |> List.map reduce_branch) }
+    else { x with e = EMatch (scrut, brs |> List.map reduce_branch) })
 
   | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
   (* Section 3.1: the backends have no closures, so a let-bound lambda that is

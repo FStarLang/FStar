@@ -21104,6 +21104,20 @@ The rule is worth stating plainly because it is easy to reintroduce: a
 layout mechanism that asks "what column am I at" must answer from the
 tail of the output, never from the whole of it.
 
+#### 122.2.2 A field's value begins after its label
+
+FStarLang/FStar#4622.  A record literal laid out one field per line printed
+every field's value at the column of the *label*, two past the brace.  A
+value that fits on one line does not care, but a `match` does: its bars were
+placed under the label, to the left of the `match` they belong to, and the
+file failed with FS0058 and a parse error after it.  The value is now
+rendered at the column past `label = `, which in that layout is exact because
+every label begins at the same column.  The one-line layout is chosen only
+when no value spans lines, so no column is consulted there.  The tuple case
+of `ERecord` had the same flaw one comma at a time and goes through `join_at`
+now.  `FsRecMatch` is the regression test: a `match` as a field's value, as
+every field's value, and inside a nested record.
+
 ### 122.3 Names
 
 F# has a general escape for identifiers that collide with keywords:
@@ -22949,6 +22963,39 @@ name.  So `try m.find tbl x with Not_found -> ...` catches what
 `Hashtbl.find` raises.
 
 `tests/custard/FunctorHashtbl.fst` pins all of this.
+
+# 134 A constructor field under a `let`
+
+FStarLang/FStar#4630.  `iota` fires on a `match` whose scrutinee is a
+constructor, and §129 extended that to a constructor one binding away.
+Neither sees a constructor whose *field* is a binding:
+
+```fstar
+match (x, (let y = U32.div x 2ul in (y, y))) with
+| (a, (b, c)) -> U32.add_mod a (U32.add_mod b c)
+```
+
+`match_pat` meets `ELet` where the pattern wants `Mktuple2`, says "cannot
+tell", and the tuple is built as a struct and read back out.  This is the
+shape a recursive index builder leaves after inlining --- every level is
+`let major = i / n in let minor = i % n in (major, <next level>)` --- so
+Kuiper's tensor accesses built a nested struct per access.
+
+`reduce` now floats the bindings out in front of the `match`
+(`float_ctor_lets`): the scrutinee's own, and those of every field,
+recursively through nested constructors, in evaluation order.  Then iota
+fires as usual, giving `let y = x / 2 in x + (y + y)`.
+
+Two conditions.  Every field left behind must be pure: a binding floated
+out of the second field now runs before the first, which is unobservable
+only if the first is pure --- and iota, which discards fields, needs that
+anyway.  And iota must fire on the result (`iota_fires`); otherwise the
+scrutinee is left as written, so no other output changes.  Names are unique
+within a definition (§6, `sub`), so widening a binding's scope captures
+nothing.
+
+`tests/custard/CLetField.fst` pins the issue's example and a two-level
+builder.
 
 | M | Deliverable | Notes |
 | --- | --- | --- |

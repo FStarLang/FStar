@@ -414,6 +414,10 @@ FS_TESTS += FsPointFree
 FSGREP_FsPointFree = "let fsPointFree_small (custard_eta : 'raw) : option<bigint> ="
 FSGREP_FsPointFree += "(fsPointFree_twice fsPointFree_small v)"
 
+# Section 122.2.2, FStarLang/FStar#4622.  A [match] as a record field's value
+# is printed at the column past its label; the build is the check (FS0058).
+FS_TESTS += FsRecMatch
+
 # Section 95.6, FStarLang/FStar#4624.  --custard_sizet_width 32 on the F# leg.
 # The pins are the type, the literal suffix, and a conversion to
 # [FStar.UInt32.t] that is no conversion at all at that width.
@@ -3228,6 +3232,16 @@ FLAGS_CLetCopy = --custard_backend C --custard_entry_module CLetCopy
 CGREP_CLetCopy += "uint32_t CLetCopy_combine(uint32_t x) {"
 CNOGREP_CLetCopy += "_letpattern"
 CNOGREP_CLetCopy += "tuple2"
+
+# FStarLang/FStar#4630.  A nested field of a matched constructor under a
+# [let]: the binding is floated out in front of the match so that iota fires,
+# and no tuple is materialized.
+C_TESTS += CLetField
+FLAGS_CLetField = --custard_backend C --custard_entry_module CLetField
+CGREP_CLetField += "return (x + (y + y));"
+CGREP_CLetField += "return ((major * 8) + ((mm * 2) + ml));"
+CNOGREP_CLetField += "tuple2"
+CNOGREP_CLetField += "scrut"
 
 
 # A constructor used as a function, of a type §5.2 collapses.  `Extract`
