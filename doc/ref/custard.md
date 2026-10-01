@@ -22944,6 +22944,39 @@ name.  So `try m.find tbl x with Not_found -> ...` catches what
 
 `tests/custard/FunctorHashtbl.fst` pins all of this.
 
+# 134 A constructor field under a `let`
+
+FStarLang/FStar#4630.  `iota` fires on a `match` whose scrutinee is a
+constructor, and §129 extended that to a constructor one binding away.
+Neither sees a constructor whose *field* is a binding:
+
+```fstar
+match (x, (let y = U32.div x 2ul in (y, y))) with
+| (a, (b, c)) -> U32.add_mod a (U32.add_mod b c)
+```
+
+`match_pat` meets `ELet` where the pattern wants `Mktuple2`, says "cannot
+tell", and the tuple is built as a struct and read back out.  This is the
+shape a recursive index builder leaves after inlining --- every level is
+`let major = i / n in let minor = i % n in (major, <next level>)` --- so
+Kuiper's tensor accesses built a nested struct per access.
+
+`reduce` now floats the bindings out in front of the `match`
+(`float_ctor_lets`): the scrutinee's own, and those of every field,
+recursively through nested constructors, in evaluation order.  Then iota
+fires as usual, giving `let y = x / 2 in x + (y + y)`.
+
+Two conditions.  Every field left behind must be pure: a binding floated
+out of the second field now runs before the first, which is unobservable
+only if the first is pure --- and iota, which discards fields, needs that
+anyway.  And iota must fire on the result (`iota_fires`); otherwise the
+scrutinee is left as written, so no other output changes.  Names are unique
+within a definition (§6, `sub`), so widening a binding's scope captures
+nothing.
+
+`tests/custard/CLetField.fst` pins the issue's example and a two-level
+builder.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen Custard`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |

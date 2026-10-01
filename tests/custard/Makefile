@@ -3224,6 +3224,16 @@ CGREP_CLetCopy += "uint32_t CLetCopy_combine(uint32_t x) {"
 CNOGREP_CLetCopy += "_letpattern"
 CNOGREP_CLetCopy += "tuple2"
 
+# FStarLang/FStar#4630.  A nested field of a matched constructor under a
+# [let]: the binding is floated out in front of the match so that iota fires,
+# and no tuple is materialized.
+C_TESTS += CLetField
+FLAGS_CLetField = --custard_backend C --custard_entry_module CLetField
+CGREP_CLetField += "return (x + (y + y));"
+CGREP_CLetField += "return ((major * 8) + ((mm * 2) + ml));"
+CNOGREP_CLetField += "tuple2"
+CNOGREP_CLetField += "scrut"
+
 
 # A constructor used as a function, of a type §5.2 collapses.  `Extract`
 # builds an [ECtor] out of the arguments the application node carried, so
