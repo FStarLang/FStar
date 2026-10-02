@@ -4753,43 +4753,91 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
          (* Decide an equation between two terms, reducing them lazily.
 
             Try comparing the terms as they are. If we get Equal or NotEqual,
-            we are done. If we get Unknown, reduce both sides to weak head
-            normal form and compare again; if the heads then agree, recurse on
-            the arguments.  Only the parts of the terms that the comparison
+            we are done. If we get Unknown, reduce both sides to head normal
+            form and compare again; if that is still inconclusive, decompose
+            and recurse.  Only the parts of the terms that the comparison
             actually visits are ever reduced.
 
             This used to normalize both sides fully instead, which is
             unbounded: reducing [FStar.UInt.logand] at width 64 unfolds
             [to_vec] on a symbolic argument, and the cost doubles with every
-            bit (#4558).  Reducing to whnf is enough to find a mismatch of
-            heads, and it still relates e.g. [nat2unary 10] and
-            [S (nat2unary 9)] (tests/micro-benchmarks/UnifyMatch.fst).  The
-            recursion on arguments is needed for that: the congruence rules
-            below do not unfold recursive definitions such as [nat2unary].
+            bit (#4558).  [HNF] keeps the arguments of an application
+            unreduced, which is what bounds the cost; the recursion below
+            reduces only the ones the comparison needs.
+
+            Note the reduction is head normal form, not *weak* head normal
+            form: [Weak] would also stop at a [match]'s scrutinee
+            (see [weakly_reduce_scrutinee] in Normalize), leaving a stuck
+            [match] that iota can never fire on, so two kinds that both
+            compute to [None] would be reported as different.
 
             Callers with a better answer than an SMT obligation can turn even
             this off with [eq_norm_heuristic_ok]; see tests/tactics/TestBV.fst,
             and the note above [same_formula] in [meet_or_join]. *)
-         let rec equal t1 t2 : ML bool =
+         let rec equal env t1 t2 : ML bool =
            match TEQ.eq_tm env t1 t2 with
            | TEQ.Equal -> true
            | TEQ.NotEqual -> false
            | TEQ.Unknown ->
              if not wl.eq_norm_heuristic_ok then false
              else
-             let whnf t = N.unfold_whnf' [Env.Iota; Env.Eager_unfolding] env t |> U.unmeta in
-             let t1 = whnf t1 in
-             let t2 = whnf t2 in
+             let hnf t =
+               norm_with_steps "FStarC.TypeChecker.Rel.norm_with_steps.2"
+                 [Env.HNF; Env.UnfoldUntil delta_constant; Env.Primops;
+                  Env.Beta; Env.Eager_unfolding; Env.Iota] env t
+               |> U.unmeta
+             in
+             let t1 = hnf t1 in
+             let t2 = hnf t2 in
              match TEQ.eq_tm env t1 t2 with
              | TEQ.Equal -> true
              | TEQ.NotEqual -> false
              | TEQ.Unknown ->
-               let h1, args1 = U.head_and_args_full t1 in
-               let h2, args2 = U.head_and_args_full t2 in
-               not (Nil? args1)
-               && List.length args1 = List.length args2
-               && TEQ.eq_tm env h1 h2 = TEQ.Equal
-               && List.forall2 (fun (a1, _) (a2, _) -> equal a1 a2) args1 args2
+               (* [eq_tm] is deliberately incomplete -- it has no [Tm_let] case
+                  at all, for one -- so it answers [Unknown] even on two terms
+                  that are literally the same.  Full normalization used to hide
+                  that by inlining the lets; head reduction does not, so ask
+                  for a syntactic comparison (up to alpha) first.  It is cheap,
+                  and a [true] answer is conclusive. *)
+               U.term_eq t1 t2 ||
+               (let h1, args1 = U.head_and_args_full t1 in
+                let h2, args2 = U.head_and_args_full t2 in
+                not (Nil? args1)
+                && List.length args1 = List.length args2
+                && TEQ.eq_tm env h1 h2 = TEQ.Equal
+                && List.forall2 (fun (a1, _) (a2, _) -> equal env a1 a2) args1 args2)
+         in
+         (* The reduction above only ever visits head positions, so it can
+            miss an equality hidden somewhere it does not look -- inside the
+            sort of a binder of a [ghost fn] type, say, or under an [unfold
+            let] abbreviation appearing as an argument.  Fall back to
+            normalizing both sides outright, as this heuristic did before
+            #4558, but with [Zeta] excluded.
+
+            Excluding [Zeta] is what keeps that bounded, and it is precisely
+            what #4558 needs: the blowup there is [FStar.UInt.to_vec], a
+            *recursive* function, unrolling on a symbolic 64-bit argument.
+            With [Zeta] off no recursive definition is unfolded at all, so the
+            reduction is bounded by the size of the term and the length of the
+            chain of (non-recursive) abbreviations in it, while abbreviations
+            such as [unfold let ( @| ) = ICons] are still seen through.  The
+            recursive cases this therefore gives up on -- [nat2unary 10] vs
+            [S (nat2unary 9)], tests/micro-benchmarks/UnifyMatch.fst -- are
+            already decided by the head reduction above, which has [Zeta] on
+            but only unfolds in head position. *)
+         let equal_by_full_norm t1 t2 : ML bool =
+           let full t =
+             norm_with_steps "FStarC.TypeChecker.Rel.norm_with_steps.3"
+               [Env.Exclude Env.Zeta; Env.UnfoldUntil delta_constant;
+                Env.Primops; Env.Beta; Env.Eager_unfolding; Env.Iota] env t
+           in
+           let t1 = full t1 in
+           let t2 = full t2 in
+           U.term_eq t1 t2 || TEQ.eq_tm env t1 t2 = TEQ.Equal
+         in
+         let equal t1 t2 : ML bool =
+           equal env t1 t2
+           || (wl.eq_norm_heuristic_ok && equal_by_full_norm t1 t2)
          in
          if (Env.is_interpreted wl.tcenv head1 || Env.is_interpreted wl.tcenv head2) //we have something like (+ x1 x2) =?= (- y1 y2)
            && problem.relation = EQ

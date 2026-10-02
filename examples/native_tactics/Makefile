@@ -98,4 +98,4 @@ plugin_objs = $(addprefix $(subst .,_,$(1)), .cmxs .cmi .cmx .o)
 	$(FSTAR) $*.fst
 
 clean:
-	rm -f *.test *.ml *.o *.cm[ix] *.cmxs *.checked
+	rm -f *.test *.ml *.o *.cm[ix] *.cmxs *.cui *.checked

@@ -30,14 +30,7 @@ module Format = FStarC.Format
 module Prof   = FStarC.Custard.Prof
 module Options = FStarC.Options
 
-(* Does [v] occur free in [e]?  Custard's variable names come from F* bound
-   variables and so already carry a unique index, but this deliberately does
-   not track shadowing: an over-count keeps a binding that could have been
-   dropped, which is the safe direction. *)
-let rec occurs (v:string) (x:expr) : ML bool =
-  match x.e with
-  | EVar w -> w = v
-  | _ -> exists_child (occurs v) x
+(* [occurs] is {!FStarC.Custard.Syntax.occurs}. *)
 
 (* -------------------------------------------------------------------- *)
 (* ANF                                                                  *)
@@ -277,6 +270,16 @@ let rec sub (sm:subst) (x:expr) : ML expr =
   match x.e with
   | EVar v ->
     (match SMap.try_find sm v with
+     (* A pattern binder's entry is a *rename* and not a substitution:
+        [sub_pat] has no type to give it, so it writes [TAny], and taking
+        that entry whole would erase the type the occurrence records.  That
+        type is read: [TRef] versus [TBuf] is what decides whether a write
+        prints as [r := v] or as [b.(i) <- v] on every backend, and the
+        pattern is where a [ref] inside a tuple gets bound.  So a
+        [TAny]-typed rename keeps the occurrence's type and effect, exactly
+        as [rename_var] below does, and every other entry -- which [sub],
+        [ELet] and [EFun] all give a real type -- is taken as it stands. *)
+     | Some ({ e = EVar v' ; ty = TAny }) -> { x with e = EVar v' }
      | Some e -> e
      | None -> x)
   | EConst _ | EQual _ | EAny | EAbort _ -> x
@@ -310,8 +313,9 @@ and sub_pat (sm:subst) (p:pat) : ML pat =
   | PWild | PConst _ -> p
   | PVar v ->
     let v' = rename v in
-    (* The type is unknown here, and nothing downstream reads it off a
-       pattern variable's occurrence. *)
+    (* No type is available here -- a pattern carries none -- so the entry is
+       [TAny], which [sub] reads as "rename, and keep what the occurrence
+       already knows".  Occurrences *are* read for their type. *)
     SMap.add sm v { e = EVar v'; ty = TAny; eff = E_Pure };
     PVar v'
   | PCtor (n, ps) -> PCtor (n, ps |> List.map (sub_pat sm))
@@ -327,6 +331,25 @@ let rec rename_var (v w : string) (x:expr) : ML expr =
   match x.e with
   | EVar u -> if u = v then { x with e = EVar w } else x
   | _ -> map_children (rename_var v w) x
+
+(* Issue 4612.  The same traversal with a constant for [v].  Only the [e] of
+   each use node changes, so every use keeps its recorded type and effect --
+   the caveat [rename_var] exists for -- rather than taking the literal's.
+   A use recorded at [TAny] knows nothing, so it gets the binding's type. *)
+let rec subst_const (v:string) (ty:cty) (c:constant) (x:expr) : ML expr =
+  match x.e with
+  | EVar u ->
+    if u = v then { x with e = EConst c; ty = (match x.ty with TAny -> ty | t -> t) }
+    else x
+  | _ -> map_children (subst_const v ty c) x
+
+(* A constant worth propagating: a scalar, which costs nothing to repeat.  A
+   string literal is left bound, since each copy of it is another literal. *)
+let propagable_const (e:expr) : option constant =
+  match e.e with
+  | EConst (CString _) -> None
+  | EConst c -> Some c
+  | _ -> None
 
 (* Two tables about a type's constructors, filled by [run] and read by the
    rewrites below.  Both are empty until then, which makes a rewrite that
@@ -549,6 +572,13 @@ let rec simpl (x:expr) : ML expr =
     else if (match e1.e with EVar w -> w <> v | _ -> false) then
       let w = (match e1.e with EVar w -> w | _ -> v) in
       rename_var v w e2
+    (* Issue 4612.  Constant propagation, on the same justification: a
+       constant is a value, so substituting it neither moves work nor
+       duplicates it.  Without it an extraction rule that matches [EConst]
+       sees the name instead, and fires or not depending on whether the
+       source happened to bind the literal. *)
+    else if Some? (propagable_const e1) then
+      subst_const v ty (Some?.v (propagable_const e1)) e2
     else if occurs v e2 then { x with e = ELet (v, ty, e1, e2) }
     (* Section 7.3: an unused binding may only be deleted if evaluating it is
        unobservable; otherwise it becomes a statement, which keeps its effect
@@ -712,6 +742,45 @@ let rec ctor_args_pure (e:expr) : ML bool =
   | ETuple es -> es |> List.for_all (fun a -> is_pure a.eff)
   | _ -> false
 
+(* Issue 4630.  The bindings a constructor's fields carry, floated out of it:
+   [C (a, (let y = e in D (y, y)))] is [let y = e in C (a, D (y, y))].  The
+   function returned rebuilds the spine around whatever the caller puts in the
+   constructor's place, and each rebuilt node reuses [at], as {!float_lets}
+   does.
+
+   [None] unless every field that is left is pure.  That is what makes the
+   floating sound: a binding now runs before the fields to its left, which is
+   unobservable only because they are pure -- and iota, the only reason to
+   ask, needs them pure anyway.  Names are unique within a definition (see
+   {!sub}), so widening a binding's scope captures nothing. *)
+let rec float_ctor_lets (at:expr) (e:expr) : ML (option ((expr -> ML expr) & expr)) =
+  let fields (es:list expr) (mk_e:list expr -> expr') : ML (option ((expr -> ML expr) & expr)) =
+    let rs = es |> List.map (float_ctor_lets at) in
+    if rs |> List.existsb None? then None
+    else
+      let rs = rs |> List.map Some?.v in
+      let wrap (r:expr) : ML expr = List.fold_right (fun (wr : (expr -> ML expr) & expr) (acc:expr) -> fst wr acc) rs r in
+      Some (wrap, { e with e = mk_e (rs |> List.map snd); eff = E_Pure }) in
+  match e.e with
+  | ELet (v, t, a, b) ->
+    (match float_ctor_lets at b with
+     | Some (w, b) -> Some ((fun (r:expr) -> { at with e = ELet (v, t, a, w r) } <: ML expr), b)
+     | None -> None)
+  | ESeq (a, b) ->
+    (match float_ctor_lets at b with
+     | Some (w, b) -> Some ((fun (r:expr) -> { at with e = ESeq (a, w r) } <: ML expr), b)
+     | None -> None)
+  | ECtor (n, es) -> fields es (fun es -> ECtor (n, es))
+  | ETuple es -> fields es (fun es -> ETuple es)
+  | _ -> if is_pure e.eff then Some ((fun (r:expr) -> r <: ML expr), e) else None
+
+(* Does [iota] select a branch?  [float_ctor_lets] leaves every field pure,
+   so [ctor_args_pure] needs no asking on that path. *)
+let iota_fires (brs:list branch) (scrut:expr) : ML bool =
+  match brs with
+  | (p, None, _) :: _ -> Some? (match_pat p scrut)
+  | _ -> false
+
 let rec iota (brs:list branch) (scrut:expr) (at:expr) : ML expr =
   match brs with
   | [] -> at
@@ -862,17 +931,47 @@ let rec reduce (x:expr) : ML expr =
           but the caller's is the one the surrounding code was built against,
           and an abbreviation is the better name for it. *)
        { arg with ty = x.ty }
+     (* Commuting conversion: an application whose head is a [match] whose
+        arms are lambdas.  None of the backends has closures, so the arms
+        have to meet their argument where beta can fire, and the only place
+        that can happen is inside the arms.  Restricted to atomic arguments,
+        which are pure and free to duplicate; the scrutinee is evaluated
+        exactly once either way, since it stays where it is and only the
+        application moves. *)
+     | EMatch (scrut, brs) when args |> List.for_all is_atomic
+                             && brs |> List.existsb (fun (_, _, bd) -> EFun? bd.e) ->
+       let brs = brs |> List.map (fun (p, gd, bd) ->
+         (p, gd, { x with e = EApp (bd, args) })) in
+       reduce { x with e = EMatch (scrut, brs) }
      | _ -> { x with e = EApp (h, args) })
 
   | EMatch (scrut, brs) ->
     let scrut = reduce scrut in
+    (* Issue 4630.  A field of the constructor that is under a [let] hides
+       the constructor from [iota] -- the nested tuple a recursive builder
+       returns, [let m = .. in (m, (let y = e in (y, y)))], is exactly this.
+       The bindings, the scrutinee's own and its fields', are floated out in
+       front of the [match], but only when iota then fires: otherwise the
+       scrutinee is left as it was written. *)
+    let floated : option ((expr -> ML expr) & expr) =
+      if iota_fires brs scrut then None
+      else match scrut.e with
+           | ECtor _ | ETuple _ | ELet _ | ESeq _ ->
+             (match float_ctor_lets x scrut with
+              | Some (wrap, s) -> if iota_fires brs s then Some (wrap, s) else None
+              | None -> None)
+           | _ -> None in
+    (match floated with
+     | Some (wrap, s) ->
+       reduce (wrap (iota brs s { x with e = EMatch (s, brs) }))
+     | None ->
     if ctor_args_pure scrut
     then
       let r = iota brs scrut { x with e = EMatch (scrut, brs |> List.map reduce_branch) } in
       (match r.e with
        | EMatch _ -> r
        | _ -> reduce r)
-    else { x with e = EMatch (scrut, brs |> List.map reduce_branch) }
+    else { x with e = EMatch (scrut, brs |> List.map reduce_branch) })
 
   | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
   (* Section 3.1: the backends have no closures, so a let-bound lambda that is
@@ -1436,7 +1535,9 @@ let rec expr_deps (x:expr) : ML (list string) =
             pat_deps p @ (match g with Some g -> expr_deps g | None -> []) @ expr_deps b))
         | _ -> sub (children x))
 
-let decl_deps (d:decl) : ML (list string) =
+(* Section 133.  A functor instance's member depends on the instance, which
+   is what keeps the instance alive and emits it before any use. *)
+let decl_deps_body (d:decl) : ML (list string) =
   match d with
   | DLet l ->
     List.collect (fun (b:binder) -> cty_deps b.b_ty) l.dl_binders
@@ -1450,6 +1551,14 @@ let decl_deps (d:decl) : ML (list string) =
      | TAbstract -> [])
   | DExternal x -> cty_deps x.dx_ty
   | DExn e -> List.collect cty_deps e.de_args
+  | DModule m ->
+    List.collect (fun (_, c) -> cty_deps c) m.dm_types
+    @ List.map (fun (_, n) -> string_of_name n) m.dm_values
+
+let decl_deps (d:decl) : ML (list string) =
+  (match member_of (decl_flags d) with
+   | Some (m, _) -> [string_of_name m]
+   | None -> []) @ decl_deps_body d
 
 (* Section 72.4.  [tbl] is filled in *dependency* order rather than in program
    order, and before any use is rewritten.
@@ -1941,7 +2050,8 @@ let scc (prog:program) : ML program =
     | DLet l      -> DLet { l with dl_flags = keep l.dl_flags }
     | DType t     -> DType { t with dt_flags = keep t.dt_flags }
     | DExternal x -> DExternal { x with dx_flags = keep x.dx_flags }
-    | DExn _      -> d in
+    | DExn _      -> d
+    | DModule _   -> d in
   List.rev !comps |> List.collect (fun comp ->
     let fs = flags comp in
     comp |> List.collect (fun n ->
@@ -3092,7 +3202,7 @@ let coerce_prog (prog:program) : ML program =
         | b :: bs -> TArrow (b.b_ty, E_Pure, build bs) in
       SMap.add sigs (string_of_name dl.dl_name) (dl.dl_typars, build dl.dl_binders)
     | DExternal dx -> SMap.add sigs (string_of_name dx.dx_name) (dx.dx_typars, dx.dx_ty)
-    | DExn _ -> ()) in
+    | DExn _ | DModule _ -> ()) in
   let params_of (n:name) : ML (list string) =
     match SMap.try_find tparams (string_of_name n) with
     | Some ps -> ps
@@ -3315,6 +3425,17 @@ let coerce_prog (prog:program) : ML program =
     match exp, infer env x with
     | Some e, Some t -> if cty_mismatch t e then coerce x e else x
     | Some TAny, None -> if concrete_shape x then coerce x TAny else x
+    (* [infer] declined, which for a compound type containing a [TAny] is what
+       [trust] always does -- but the node's own type is still [Extract]'s
+       answer, and when it disagrees with the expectation in a way [TAny]
+       cannot explain away, the disagreement is real.  [ASN1.Spec.Sequence] is
+       the case: [tot_weaken<tuple2<any,any>>] returns a parser of
+       [tuple2<any,any>] into a position declared to parse [any], and the
+       target -- which infers a generic [tot_weaken]'s type variable from its
+       argument rather than taking Custard's word for it -- then has two
+       incompatible types for one expression.  A node whose type is itself
+       [TAny] says nothing and is left alone. *)
+    | Some e, None -> if not (TAny? x.ty) && cty_mismatch x.ty e then coerce x e else x
     | _ -> x
   and go (env:cenv) (exp:option cty) (x:expr) : ML expr =
     let same (e':expr') : expr = { x with e = e' } in
@@ -3457,7 +3578,25 @@ let coerce_prog (prog:program) : ML program =
                                                               else if has_any p then None
                                                               else Some p)
                    | None -> es |> List.map (fun _ -> None)) in
-         same (EApp (go env None h, List.map2 (fun p e -> check env p e) ps es)))
+         let es = List.map2 (fun p e -> check env p e) ps es in
+         (* Section 126.6.  The head's own type says nothing, but the call
+            still stands where something is expected, and the arguments still
+            say what they are.  Dropping the expectation here loses it for the
+            whole of the head -- and the head is a lambda often enough (a
+            [let] that [Simplify] turned back into a redex) that the body then
+            gets retyped against itself and no coercion is ever considered.
+            Rebuilding the arrow the head must have is what the [peel_arrows]
+            failure above already does; it is no less right when the head's
+            type was untrusted from the start. *)
+         let ts = es |> List.map (infer env) in
+         let want =
+           (match exp with
+            | Some r when ts |> List.for_all Some? ->
+              Some (arrows (ts |> List.map (fun t -> match t with Some t -> t | None -> TAny)) r)
+            | _ -> None) in
+         (match want with
+          | Some _ -> same (EApp (check env want h, es))
+          | None -> same (EApp (go env None h, es))))
     | ECtor (n, es) ->
       let fs = fields_of (string_of_name n) (first exp (trust x.ty)) in
       if List.length fs = List.length es
@@ -3569,7 +3708,8 @@ let lift_lambdas (prog:program) : ML program =
     | DLet d -> SMap.add taken (string_of_name d.dl_name) true
     | DType d -> SMap.add taken (string_of_name d.dt_name) true
     | DExternal d -> SMap.add taken (string_of_name d.dx_name) true
-    | DExn d -> SMap.add taken (string_of_name d.de_name) true);
+    | DExn d -> SMap.add taken (string_of_name d.de_name) true
+    | DModule d -> SMap.add taken (string_of_name d.dm_name) true);
   let lifted : ref (list decl) = mk_ref [] in
   (* One declaration at a time, so that a lifted function is emitted next to
      the definition it came out of and the names stay readable. *)

@@ -134,6 +134,7 @@ type stmt' =
   | LetBinding {
       norw:bool; (* add norewrite to the branch if this desugars to a match. *)
       qualifier: option mut_or_ref;
+      pat_attrs: list A.term; (* [let [@@@a] (x, y) = e]: attributes on the whole pattern *)
       pat:A.pattern;
       typ:option A.term;
       init:let_init;
@@ -321,9 +322,10 @@ let rec stmt_to_string (s:stmt) : ML string =
       "index", show index;
       "value", show value;
     ]
-  | LetBinding { qualifier; pat; typ; init } ->
+  | LetBinding { qualifier; pat_attrs; pat; typ; init } ->
     "LetBinding " ^ record_string [
       "qualifier", show qualifier;
+      "pat_attrs", show pat_attrs;
       "pat", show pat;
       "typ", show typ;
       "init", show init;
@@ -482,9 +484,10 @@ and eq_stmt' (s1 s2:stmt') : ML bool =
   | Expr e1, Expr e2 -> AD.eq_term e1.e e2.e && forall2 eq_lambda e1.args e2.args
   | ArrayAssignment { arr=a1; index=i1; value=v1 }, ArrayAssignment { arr=a2; index=i2; value=v2 } ->
     AD.eq_term a1 a2 && AD.eq_term i1 i2 && AD.eq_term v1 v2
-  | LetBinding { norw=norw1; qualifier=q1; pat=pat1; typ=t1; init=init1 }, LetBinding { norw=norw2; qualifier=q2; pat=pat2; typ=t2; init=init2 } ->
+  | LetBinding { norw=norw1; qualifier=q1; pat_attrs=a1; pat=pat1; typ=t1; init=init1 }, LetBinding { norw=norw2; qualifier=q2; pat_attrs=a2; pat=pat2; typ=t2; init=init2 } ->
     norw1 = norw2 &&
     eq_opt eq_mut_or_ref q1 q2 &&
+    forall2 AD.eq_term a1 a2 &&
     AD.eq_pattern pat1 pat2 &&
     eq_opt AD.eq_term t1 t2 &&
     eq_let_init init1 init2
@@ -633,7 +636,8 @@ and scan_stmt (cbs:A.dep_scan_callbacks) (s:stmt) : ML unit =
   | Open l -> cbs.add_open l
   | Expr e -> cbs.scan_term e.e; iter (scan_lambda cbs) e.args
   | ArrayAssignment { arr=a; index=i; value=v } -> cbs.scan_term a; cbs.scan_term i; cbs.scan_term v
-  | LetBinding { qualifier=q; pat=p; typ=t; init=init } ->
+  | LetBinding { qualifier=q; pat_attrs=a; pat=p; typ=t; init=init } ->
+    iter cbs.scan_term a;
     scan_let_init cbs init;
     cbs.scan_pattern p;
     iopt cbs.scan_term t
@@ -720,7 +724,7 @@ let add_decorations d ds =
 let mk_expr e args = Expr { e; args }
 let mk_unit rng = Expr { e = A.mk_term (A.Const FStarC.Const.Const_unit) rng A.Expr; args = [] }
 let mk_array_assignment arr index value = ArrayAssignment { arr; index; value }
-let mk_let_binding norw qualifier pat typ init = LetBinding { norw; qualifier; pat; typ; init }
+let mk_let_binding norw qualifier pat_attrs pat typ init = LetBinding { norw; qualifier; pat_attrs; pat; typ; init }
 let mk_block stmt = Block { stmt }
 let mk_if head requires_slprop join_slprop then_ else_opt =
   If { head; requires_slprop; join_slprop; then_; else_opt }

@@ -105,6 +105,10 @@ let is_at_home (n:name) : ML bool =
    repository for no gain. *)
 let exn_idents : ref (SMap.t string) = mk_ref (SMap.create 0)
 
+(* Section 133.  Exceptions declared [@@custard_extern "Not_found"]: the
+   target's own, spelled as the attribute says and never declared. *)
+let extern_ctors : ref (SMap.t string) = mk_ref (SMap.create 0)
+
 (* [FStar.Pervasives.Native.tupleN] is realized as OCaml's own N-tuple, which
    has no constructor to name and no field to project.  The *type* needs no
    help -- [('a, 'b) FStar_Pervasives_Native.tuple2] is an alias for ['a * 'b],
@@ -243,6 +247,23 @@ let ocaml_value_name (n:name) : ML string =
   if is_at_home n then escape_keyword (lowercase_first (sanitize n.id)) else
   escape_keyword (lowercase_first (sanitize (mangled_name n)))
 
+(* Section 133.  A functor instance is an OCaml module, so its identifier is
+   capitalized; otherwise it is named exactly as a value would be. *)
+let ocaml_module_ident (n:name) : ML string =
+  if is_at_home n then uppercase_first (sanitize n.id)
+  else uppercase_first (sanitize (mangled_name n))
+
+let ocaml_module_path (n:name) : ML string =
+  qualify n (ocaml_module_ident n)
+
+(* Types spelled by a fixed OCaml path rather than declared: an external type
+   ([@@custard_extern "int"], section 14.5) and a type member of a functor
+   instance (section 133).  Filled in by {!build_tables}. *)
+let extern_types : ref (SMap.t string) = mk_ref (SMap.create 0)
+
+let extern_type (n:name) : ML (option string) =
+  SMap.try_find !extern_types (string_of_name n)
+
 let ocaml_type_name (n:name) : ML string =
   if is_realized n then sanitize n.id else
   if is_at_home n then escape_keyword (lowercase_first (sanitize n.id)) else
@@ -275,6 +296,25 @@ let module_name_of_unit (u:string) : ML string = uppercase_first (sanitize u)
 
 let ocaml_var (x:string) : ML string =
   escape_keyword (lowercase_first (sanitize x))
+
+(* An OCaml type variable is a quote followed by an identifier, and an
+   identifier may itself contain a quote -- so [t'], which F* names routinely,
+   produces ['t'], which the lexer takes for a character literal and reports
+   as a syntax error about a line nobody wrote.  This is the same hazard
+   {!FStarC.Custard.PrintFSharp.fsharp_tyvar} handles for F#, and the same
+   escape: a quote inside the name becomes an underscore and an underscore
+   doubles, which keeps the mapping injective, since two type variables of one
+   declaration must not collide.  Keyword escaping is [ocaml_var]'s, and a
+   type variable is in its own namespace, but the doubling can turn a
+   non-keyword into one only by lengthening it, so it is applied after. *)
+let ocaml_tyvar (x:string) : ML string =
+  let s = lowercase_first (sanitize x) in
+  let s = String.concat "" (List.map (fun c ->
+            match BU.int_of_char c with
+            | 39 -> "_"
+            | 95 -> "__"
+            | _ -> BU.string_of_char c) (String.list_of_string s)) in
+  "'" ^ escape_keyword s
 
 (* Section 30.13.  The names of the top-level values this run will emit, filled
    in by [build_tables] before anything is printed.
@@ -411,7 +451,7 @@ let rec ty (t:cty) : ML string =
   | TUnit -> "unit"
   | TExn -> "exn"
   | TAny -> "Obj.t"
-  | TVar x -> "'" ^ ocaml_var x
+  | TVar x -> ocaml_tyvar x
   | TInt sw -> int_module sw ^ ".t"
   (* Section 38; the reason, and the other two call sites, are on
      [reject_fwidth]. *)
@@ -458,13 +498,13 @@ let rec ty (t:cty) : ML string =
   | TApp (n, args) when is_tuple_type n && Cons? args ->
     "(" ^ String.concat " * " (List.map ty args) ^ ")"
   | TApp (n, []) ->
-    (match builtin_type n with
-     | Some s -> s
-     | None -> qualify n (ocaml_type_name n))
+    (match builtin_type n, extern_type n with
+     | Some s, _ | None, Some s -> s
+     | None, None -> qualify n (ocaml_type_name n))
   | TApp (n, args) ->
-    let hd = match builtin_type n with
-             | Some s -> s
-             | None -> qualify n (ocaml_type_name n) in
+    let hd = match builtin_type n, extern_type n with
+             | Some s, _ | None, Some s -> s
+             | None, None -> qualify n (ocaml_type_name n) in
     "(" ^ String.concat ", " (List.map ty args) ^ ") " ^ hd
 
 (* -------------------------------------------------------------------- *)
@@ -666,6 +706,9 @@ let rec pattern (p:pat) : ML string =
    [builtin_type] maps to an OCaml type, which have to be OCaml's own. *)
 and ctor_ref (n:name) : ML string =
   match builtin_ctor n with
+  | Some c -> c
+  | None ->
+  match SMap.try_find !extern_ctors (string_of_name n) with
   | Some c -> c
   | None ->
     qualify n (ocaml_ctor_ident n)
@@ -964,8 +1007,8 @@ and case (ind:string) (br:branch) : ML string =
 let params (ps : list string) : ML string =
   match ps with
   | [] -> ""
-  | [p] -> "'" ^ ocaml_var p ^ " "
-  | _ -> "(" ^ String.concat ", " (List.map (fun p -> "'" ^ ocaml_var p) ps) ^ ") "
+  | [p] -> ocaml_tyvar p ^ " "
+  | _ -> "(" ^ String.concat ", " (List.map ocaml_tyvar ps) ^ ") "
 
 (* Section 130.  The ppx item attribute the source asked for with
    [@@PpxDerivingYoJson], and nothing else: Custard generates no converter of
@@ -981,10 +1024,14 @@ let deriving_attr (fs : list flag) : ML string =
   | [] -> ""
   | ds -> "[@@deriving " ^ String.concat ", " ds ^ "]"
 
+let extern_exn (e:dexn) : ML (option string) =
+  e.de_flags |> List.tryPick (function Extern (Some x, _) -> Some x | _ -> None)
+
 let print_decl (first:bool) (d:decl) : ML (option string) =
   match d with
   | DType t ->
-    if is_builtin_type t.dt_name || has_flag t.dt_flags Realized then None
+    if is_builtin_type t.dt_name || has_flag t.dt_flags Realized
+       || Some? (extern_type t.dt_name) then None
     else
       let hd = (if first then "type " else "and ") ^
                params t.dt_params ^ ocaml_type_name t.dt_name in
@@ -1015,6 +1062,24 @@ let print_decl (first:bool) (d:decl) : ML (option string) =
 
   (* An external is printed at each of its uses; see {!externals}. *)
   | DExternal _ -> None
+
+  (* Section 133.  The argument is an anonymous structure, and every value in
+     it a reference to a top-level definition, so nothing here needs to be
+     printed as an expression. *)
+  | DModule m ->
+    let tys = m.dm_types |> List.map (fun (f, c) -> " type " ^ f ^ " = " ^ ty c) in
+    let vals = m.dm_values |> List.map (fun (f, n) ->
+                 " let " ^ f ^ " = " ^
+                 (match external_target n with
+                  | Some t -> t
+                  | None -> qualify n (ocaml_value_name n))) in
+    Some ("module " ^ ocaml_module_ident m.dm_name ^ " = " ^ m.dm_functor ^
+          " (struct" ^ String.concat "" (List.map (fun s -> "\n " ^ s) (tys @ vals)) ^
+          "\nend)")
+
+  (* Section 133.  An external exception is the target's own, and section 8.2's
+     is the realization's -- neither is declared here. *)
+  | DExn e when Some? (extern_exn e) || has_flag e.de_flags Realized -> None
 
   | DExn e ->
     Some ("exception " ^ ocaml_ctor_ident e.de_name ^
@@ -1098,7 +1163,7 @@ let build_tables (homes : SMap.t string) (p:program) : ML unit =
           | TVariant cs -> cs |> List.iter (fun (cn, _) ->
                              SMap.add quals (string_of_name cn) m)
           | _ -> ())
-       | DExn _ -> ())
+       | DExn _ | DModule _ -> ())
     | None ->
     match d with
     | DExternal e ->
@@ -1140,6 +1205,9 @@ let build_tables (homes : SMap.t string) (p:program) : ML unit =
      realization: the upstream unit did not compile it either. *)
   p |> List.iter (fun d ->
     match d with
+    | DExn e when has_flag e.de_flags Realized ->
+      SMap.add real (string_of_name e.de_name) ();
+      SMap.add quals (string_of_name e.de_name) (String.concat "_" e.de_name.ns)
     | DType t when has_flag t.dt_flags Realized ->
       let m = String.concat "_" t.dt_name.ns in
       let mark (n:name) : ML unit =
@@ -1181,11 +1249,31 @@ let build_tables (homes : SMap.t string) (p:program) : ML unit =
     | _ -> ());
   externals := tbl;
   qualifiers := quals;
+  at_home := home;
+  (* Section 133 and 14.5.  After [qualifiers] and [at_home], which a
+     module's spelling reads. *)
+  let ext_tys = SMap.create 20 in
+  p |> List.iter (fun d ->
+    match member_of (decl_flags d) with
+    | Some (m, f) ->
+      let path = ocaml_module_path m ^ "." ^ f in
+      (match d with
+       | DType t -> SMap.add ext_tys (string_of_name t.dt_name) path
+       | DExternal e -> SMap.add tbl (string_of_name e.dx_name) path
+       | _ -> ())
+    | None ->
+      match d with
+      | DType t ->
+        (match t.dt_flags |> List.tryPick (function Extern (Some x, _) -> Some x | _ -> None) with
+         | Some x when not (is_template (template_of_string x)) ->
+           SMap.add ext_tys (string_of_name t.dt_name) x
+         | _ -> ())
+      | _ -> ());
+  extern_types := ext_tys;
   realized := real;
   tuples := tups;
   record_params := recs;
   record_labels := labels;
-  at_home := home;
 
   (* Section 125.7.  Last, because it reads [at_home] through
      {!ocaml_ctor_ident}: an exception keeps its plain identifier when nothing
@@ -1196,7 +1284,9 @@ let build_tables (homes : SMap.t string) (p:program) : ML unit =
   exn_idents := SMap.create 0;
   let exns = p |> List.collect (fun d ->
     match d with
-    | DExn e when None? e.de_name.spec && not (is_at_home e.de_name) ->
+    | DExn e when None? e.de_name.spec && not (is_at_home e.de_name)
+               && None? (extern_exn e)
+               && not (has_flag e.de_flags Realized) ->
       [e.de_name]
     | _ -> []) in
   let short (n:name) : ML string = uppercase_first (sanitize n.id) in
@@ -1208,6 +1298,7 @@ let build_tables (homes : SMap.t string) (p:program) : ML unit =
        | TVariant cs -> cs |> List.iter (fun (cn, _) ->
                           SMap.add taken (ocaml_ctor_ident cn) ())
        | _ -> ())
+    | DExn e when Some? (extern_exn e) -> ()
     | DExn e ->
       if not (List.existsb (fun (x:name) ->
                 string_of_name x = string_of_name e.de_name) exns)
@@ -1226,6 +1317,15 @@ let build_tables (homes : SMap.t string) (p:program) : ML unit =
        && None? (SMap.try_find taken k)
        && not (List.mem k predefined_ctors)
     then SMap.add exn_tbl (string_of_name n) k);
+  let ext_ctors : SMap.t string = SMap.create 5 in
+  p |> List.iter (fun d ->
+    match d with
+    | DExn e ->
+      (match extern_exn e with
+       | Some x -> SMap.add ext_ctors (string_of_name e.de_name) x
+       | None -> ())
+    | _ -> ());
+  extern_ctors := ext_ctors;
   exn_idents := exn_tbl
 
 let header : string =

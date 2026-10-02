@@ -2146,7 +2146,12 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     let nm = bind_cell x in
     let s2 = emit ind d e2 in
     scope := saved;
-    !out ^ ind ^ decl_of t nm ^ " = " ^ iv ^ ";\n" ^ s2
+    (* Section 94.5.  A cell whose fill is [EAny] is a declaration and nothing
+       else: the arbitrary value the fill asks for is the one the slot has
+       before anything is written to it.  Pulse only hands out [pts_to_uninit]
+       for these, so a read is not reachable until a write has happened. *)
+    !out ^ ind ^ decl_of t nm ^
+    (if EAny? init.e then "" else " = " ^ iv) ^ ";\n" ^ s2
 
   (* Section 97.  [let mut a = alloc v n] used to declare a pointer, allocate
      into a second name, and assign one to the other.  The second name is not
@@ -2245,9 +2250,9 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
        exactly this behind. *)
     !out ^
     (if tt = "" && ft = "" then ""
-     else if tt = "" then ind ^ "if (" ^ negate cs ^ ")" ^ brace ind ft
-     else ind ^ "if (" ^ unparen cs ^ ")" ^ brace ind tt ^
-          (if ft = "" then "" else ind ^ "else" ^ brace ind ft))
+     else if tt = "" then ind ^ "if (" ^ negate cs ^ ")" ^ brace ind false ft
+     else ind ^ "if (" ^ unparen cs ^ ")" ^ brace ind (ft <> "") tt ^
+          (if ft = "" then "" else ind ^ "else" ^ brace ind false ft))
 
   | EMatch (scrut, brs) -> emit_match ind d scrut brs
 
@@ -2404,11 +2409,21 @@ and emit_alloc (ind:string) (d:dest) (nm:option string)
     match nm with Some _ -> "" | None -> finish ind d s in
   let i = fresh "i" in
   let elt_of = match t with TBuf e | TRef e -> e | _ -> t in
+  (* Section 94.5.  [EAny] is *defined* as what an uninitialized allocation is
+     filled with, so a fill that is [EAny] asks for the value every cell
+     already has and a declaration on its own delivers it.  Writing it out
+     costs a loop to store a value chosen for being arbitrary, and it is the
+     only fill that no length or element type makes any tidier: it cannot take
+     an initializer list at an aggregate element type (§94.2), so the loop
+     survives every peephole above.  [Reference.alloc_uninit] and
+     [Array.Core.mask_alloc] are the rules that introduce it. *)
+  let any_init = EAny? init.e in
   (* Same collapse as the [ELet] case above, for a one-cell stack allocation
      that is not bound to a name: the pointer the caller wanted is the address
      of the variable. *)
   if LStack? lt && is_one len then
-    !out ^ ind ^ decl_of elt_of arr ^ " = " ^ iv ^ ";\n" ^
+    !out ^ ind ^ decl_of elt_of arr ^
+    (if any_init then "" else " = " ^ iv) ^ ";\n" ^
     done_ ("&" ^ arr)
   else
   (* Section 94.  A scalar is what [{ 0 }] initializes without
@@ -2496,7 +2511,7 @@ and emit_alloc (ind:string) (d:dest) (nm:option string)
      fill for this case by writing [{ 0 }]; this is the same fact stated for
      an element type that has no initializer list. *)
   let fill =
-    if const_len = Some 0 then "" else
+    if const_len = Some 0 || any_init then "" else
   (* Section 59.  The counter is a [size_t] and the length is compared
      against it, so the cast is there for a length of some other integer
      type; when the length already *is* a [size_t] it says nothing. *)
@@ -2586,14 +2601,32 @@ and drop_indent (l:string) : ML string =
 (* The body of an [if] or an [else], which the caller has emitted at [ind ^
    "  "].  A single statement does not need a block, and one statement per
    line is an invariant of this printer, so a body with one newline in it is
-   one statement.  Nothing that could dangle is ever unbraced: a nested [if]
-   spans more than a line. *)
-and brace (ind:string) (body:string) : ML string =
+   one statement.
+
+   [followed] says that the caller writes an [else] straight after this body,
+   and then a single statement is not enough: C's [else] binds to the nearest
+   unmatched [if], so an unbraced [if (b) c;] in the [then] arm captures it
+   and the arm that was meant to run when the *outer* test failed runs when
+   the inner one did.  That is section 6's dangling [else], it is silent --
+   the C is well formed and means something else -- and it is why a body that
+   can capture is braced even though it is one statement. *)
+and brace (ind:string) (followed:bool) (body:string) : ML string =
   let lines = String.split ['\n'] body in
   match lines with
   | [""] -> " { }\n"
-  | [l; ""] -> " " ^ drop_indent l ^ "\n"
+  | [l; ""] -> if followed && dangles l
+               then " {\n" ^ body ^ ind ^ "}\n"
+               else " " ^ drop_indent l ^ "\n"
   | _ -> " {\n" ^ body ^ ind ^ "}\n"
+
+(* Can this one statement capture an [else] written after it?  Only an [if]
+   with no [else] of its own can, and on one line that is a statement that
+   opens with [if (] and does not close with a brace: [if (p == NULL) {
+   abort(); }] is written whole and has nothing left to capture. *)
+and dangles (l:string) : ML bool =
+  let l = drop_indent l in
+  let n = String.length l in
+  starts_with l "if (" && not (n > 0 && String.substring l (n - 1) 1 = "}")
 
 and starts_with (s:string) (pre:string) : ML bool =
   String.length s >= String.length pre &&
@@ -2686,7 +2719,7 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
        nothing. *)
     let last (p:pat) (b:expr) : ML string =
       if first then branch_body ind p b
-      else ind ^ "else" ^ brace ind (branch_body ind' p b) in
+      else ind ^ "else" ^ brace ind false (branch_body ind' p b) in
     match brs with
     | [] -> ""
     (* F* has already checked that the match is exhaustive, so the last branch
@@ -2705,10 +2738,13 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
          is dead and C would warn about it. *)
       if Nil? tests then last p b
       else
+        (* The next arm is written as [else ...], so this one is [followed]
+           exactly when there is a next arm. *)
+        let after = go false rest in
         (if first then ind else ind ^ "else ") ^
         "if (" ^ String.concat " && " tests ^ ")" ^
-        brace ind (branch_body ind' p b) ^
-        go false rest in
+        brace ind (after <> "") (branch_body ind' p b) ^
+        after in
   head ^ go true kept
 
 (* -------------------------------------------------------------------- *)

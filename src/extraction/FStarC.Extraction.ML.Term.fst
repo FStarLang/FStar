@@ -952,6 +952,14 @@ let mk_MLE_Let top_level (lbs:mlletbinding) (body:mlexpr) =
        | _ -> MLE_Let(lbs, body)
 
 let record_fields (g:uenv) (ty:lident) (fns:list ident) (xs:list 'a) =
+  (* An implicit [squash] field is dropped from the ML record (see
+     [is_spec_binder]), so it has no ML field name and no value in [xs].
+     Only prune when the two lists disagree, so that a genuinely missing
+     field name still raises. *)
+  let fns =
+    if List.length fns = List.length xs then fns
+    else fns |> List.filter (fun x -> Some? (UEnv.try_lookup_record_field_name g (ty, x)))
+  in
   let fns = List.map (fun x -> UEnv.lookup_record_field_name g (ty, x)) fns in
   List.map2 (fun (p, s) x -> (s, x)) fns xs
 
@@ -1065,6 +1073,21 @@ let rec extract_one_pat (imp : bool)
     | Pat_cons (f, _, pats) ->
         // The main subtlety here, relative to Bug2595, is to propapate the
         // expected type properly
+
+        (* A sub-pattern matching a spec binder has no ML counterpart: the
+           argument was dropped from the constructor's ML type (see
+           [is_spec_binder]).  Drop it here too, so that the sub-patterns stay
+           aligned with the ML argument types below. *)
+        let pats =
+          match TypeChecker.Env.try_lookup_lid (tcenv_of_uenv g) (S.lid_of_fv f) with
+          | Some ((_, t), _) ->
+            let bs, _ = U.arrow_formals_comp_strict t in
+            if List.length bs <> List.length pats then pats
+            else List.zip bs pats
+                 |> List.filter (fun (b, _) -> not (is_spec_binder b))
+                 |> List.map snd
+          | None -> pats
+        in
 
         //1. Lookup the ML name of the constructor d
         //   and the type scheme of the constructor tys

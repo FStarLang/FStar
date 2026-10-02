@@ -696,6 +696,7 @@ aqual:
   | HASH      %prec below_op { Implicit }
   | DOLLAR    { Equality }
 
+%public
 binderAttributes:
   | LBRACK_AT_AT_AT t=semiColonTermList RBRACK { t }
 

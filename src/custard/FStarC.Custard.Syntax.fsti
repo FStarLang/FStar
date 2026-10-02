@@ -622,6 +622,23 @@ type flag =
       declaration is still Custard's to emit; a model is the target compiler's
       and never is.  Sharing the flag dropped [FStar.Pervasives.Native.tuple2]
       from the karamel output, which every [split] needs. *)
+  | NoUnfold
+  (** This type abbreviation stands for itself: neither
+      {!FStarC.Custard.Monomorphize.unfold_cty} nor
+      {!FStarC.Custard.Layout.resolve} may replace it by its body, and the
+      abbreviation is emitted.
+
+      Custard unfolds abbreviations by default and has to: [option sid_t] and
+      [option U16.t] are the same type, and a monomorphizer that took the two
+      spellings at face value would clone it twice.  But an abbreviation is
+      also the only way to give a monomorphic instance of a polymorphic type a
+      name of one's own, and on the karamel path that name is the C struct's:
+      [CBOR.Pulse.Raw.Slice.byte_slice = Pulse.Lib.Slice.slice uint8] is how
+      the CBOR library keeps its byte slice out of the way of a consumer that
+      also monomorphizes [slice uint8] and would otherwise emit a second,
+      conflicting [typedef] for it.
+
+      Set by [--custard_no_unfold]; see section 77 of doc/ref/custard.md. *)
   | Extern of option string & option string
   (** The type is defined outside F*: an abstract [val t : Type0] carrying
       [@@custard_extern] (section 8.1, kind 4).  Custard keeps the declaration
@@ -662,6 +679,11 @@ type flag =
       when the upstream unit split its output (section 12.9): a reference then
       has to name that file rather than the unit, and the declaration may be
       spelled by its plain identifier rather than its mangled one. *)
+  | Member of name & string
+  (** Section 133.  This declaration is the member named second of the OCaml
+      functor instance named first, a [DModule].  It is emitted as nothing;
+      a use is spelled as the module's member, and the declaration depends on
+      the module so that the module is emitted first and kept alive. *)
 
 type tydef =
   | TAbbrev  of cty
@@ -710,11 +732,26 @@ type dexn = {
   de_flags: list flag;
 }
 
+(** Section 133.  An instance of an OCaml functor:
+    [module M = F (struct type k = ... let v = ... end)].  The argument's type
+    members are given by their definitions and its value members by the
+    top-level declarations holding them, so every expression the argument
+    contains is an ordinary [DLet] that every pass already knows how to
+    process.  OCaml backend only. *)
+type dmodule = {
+  dm_name:    name;
+  dm_functor: string;                (** the functor's OCaml path *)
+  dm_types:   list (string & cty);
+  dm_values:  list (string & name);
+  dm_flags:   list flag;
+}
+
 type decl =
   | DType     of dtype
   | DLet      of dlet
   | DExternal of dexternal
   | DExn      of dexn
+  | DModule   of dmodule
 
 (** A whole program: topologically sorted, with recursive groups marked by the
     [Rec] flag rather than by a syntactic grouping, so that the extraction loop
@@ -854,6 +891,10 @@ val imported_unit : decl -> ML (option string)
     its output; [None] for a local declaration or a whole-program upstream. *)
 val imported_home : decl -> ML (option string)
 
+(** Section 133.  The functor instance and member name a [Member] flag
+    records, if there is one. *)
+val member_of : list flag -> ML (option (name & string))
+
 (** {1 Traversal} *)
 
 (** Section 121.  The immediate sub-expressions of a node, in the order they
@@ -888,6 +929,12 @@ val fold_children : #a:Type -> (a -> expr -> ML a) -> a -> expr -> ML a
 (** Short-circuiting tests over {!children}. *)
 val exists_child : (expr -> ML bool) -> expr -> ML bool
 val for_all_children : (expr -> ML bool) -> expr -> ML bool
+
+(** Does [v] occur free in the expression?  Custard's variable names come from
+    F* bound variables and so already carry a unique index, but this
+    deliberately does not track shadowing: an over-count keeps a binding that
+    could have been dropped, which is the safe direction. *)
+val occurs : string -> expr -> ML bool
 
 (** Section 99.  [is_pure] answers "may this be *moved*"; this answers "may
     this be *deleted*".  Neither implies the other, so this is a union and not

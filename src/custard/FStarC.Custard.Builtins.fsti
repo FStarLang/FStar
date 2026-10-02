@@ -92,6 +92,9 @@ val machine_int_of_module : list string -> ML (option (signedness & iwidth))
     one; answers are cached per namespace, negative ones included. *)
 val set_float_probe : (list string -> ML (option fwidth)) -> ML unit
 
+(** The string argument of an attribute, if it has one. *)
+val attribute_string : list FStarC.Syntax.Syntax.term -> FStarC.Ident.lident -> ML (option string)
+
 (** Section 63.1.  The width named by [@@custard_float n] on a type
     declaration, if it carries one.  Raises error 386 for a width Custard
     does not implement, so that the diagnostic names the attribute rather
@@ -134,6 +137,9 @@ val stub_aliases : list (string & string)
     and unrelated fact about the same declaration.  A program declares its own
     with [@@custard_extern] (section 8.1, kind 4). *)
 val extern_type_of_lid : Ident.lident -> ML (option extern)
+
+(** Section 77.  Is this type abbreviation one [--custard_no_unfold] names? *)
+val is_no_unfold_lid : Ident.lident -> ML bool
 
 (** Whether karamel supplies this module itself on the backend being emitted
     for, so that Custard must emit neither its types nor its definitions and

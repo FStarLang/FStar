@@ -432,6 +432,16 @@ val custard_extern (target: string) : unit
     the macro is an overload set, error 384 is what reports it. *)
 val custard_c_header (header: string) : unit
 
+(** Custard: this [assume val] is an OCaml functor, and the argument is its
+    OCaml path, e.g. ["Hashtbl.Make"] (see doc/ref/custard.md, section 133).
+
+    The functor's argument and result are records standing for OCaml module
+    signatures: a field of kind [Type0] (or [Type0 -> Type0], ...) is a type
+    member and any other field a value member.  Every application reached
+    through a projection becomes one OCaml module instance, and a projection
+    out of it a reference to that module's member.  OCaml backend only. *)
+val custard_functor (path: string) : unit
+
 (** Custard: values of this external type are *handles*, so a binding of one
     aliases rather than copies (see doc/ref/custard.md, section 70.2).
 
@@ -537,6 +547,23 @@ val custard_opaque : unit
     Written on the field's binder:
     [noeq type wrap = | W : [@@@custard_inline_field] p:pair -> wrap] *)
 val custard_inline_field : unit
+
+(** Custard: keep every field of this type's constructors boxed, that is, lay
+    the type out the way the ML extraction does.  It turns off the automatic
+    inlining of tuple fields that [custard_inline_field] describes, so
+    [| Bar of a & b] declares one field of pair type rather than two (see
+    doc/ref/custard.md, section 5.7).
+
+    This is for a type whose representation is an ABI rather than a private
+    choice: [FStarC.Extraction.KrmlAst] is marshalled to a file that karamel
+    reads back into its own [InputAst], whose OCaml declarations mirror the ML
+    extraction's output field for field.  For anything else the indirection is
+    a cost with nothing on the other side of it, and the default is right.
+
+    An explicit [@@@custard_inline_field] on a field still fires: the
+    attribute withdraws what Custard does uninvited, not what the source
+    asked for. *)
+val custard_boxed_fields : unit
 
 (** Custard: this abstract type is bfloat16 -- binary32's 8-bit exponent with
     7 fraction bits stored (8 with the hidden one) -- and the module that

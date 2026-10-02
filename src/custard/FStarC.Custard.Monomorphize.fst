@@ -282,6 +282,12 @@ let rec unfold_cty (st:state) (fuel:int) (c:cty) : ML cty =
         what the target knows. *)
      | Some ({ dt_body = TAbbrev _; dt_flags = fl })
        when has_flag fl Realized -> c
+     (* Section 77.  The same argument as the line above, for a name the
+        program gave itself rather than one a realization owns: the point of
+        [--custard_no_unfold] is that the abbreviation, not the body, is what
+        the target is to see. *)
+     | Some ({ dt_body = TAbbrev _; dt_flags = fl })
+       when has_flag fl NoUnfold -> c
      | Some ({ dt_body = TAbbrev b; dt_params = ps }) ->
        (* An eta-contracted abbreviation -- [type t = flat_set], which binds
           nothing and stands for a type constructor -- takes more arguments
@@ -695,7 +701,9 @@ let run (prog:program) : ML program =
        another on the same declaration. *)
     | DExternal x when Cons? x.dx_typars -> [DExternal x]
     | DExternal x -> [DExternal { x with dx_ty = mono_cty st x.dx_ty }]
-    | DExn e -> [DExn { e with de_args = e.de_args |> List.map (mono_cty st) }]) in
+    | DExn e -> [DExn { e with de_args = e.de_args |> List.map (mono_cty st) }]
+    | DModule m ->
+      [DModule { m with dm_types = m.dm_types |> List.map (fun (f, c) -> (f, mono_cty st c)) }]) in
   drain st;
   (* Section 64.  The polymorphic externals are dropped here rather than in
      the pass above, because "was it instantiated?" is not answerable until

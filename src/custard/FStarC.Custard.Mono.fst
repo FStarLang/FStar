@@ -32,6 +32,7 @@ module TcUtil = FStarC.TypeChecker.Util
 module U     = FStarC.Syntax.Util
 module N     = FStarC.TypeChecker.Normalize
 module Prof  = FStarC.Custard.Prof
+module SMap  = FStarC.SMap
 module Effects = FStarC.Custard.Effects
 
 (* Custard reduces terms nobody wrote for it, and reduction need not
@@ -285,6 +286,8 @@ let is_dropped_binder (env:TcEnv.env) (b:binder) : ML bool =
 
 let is_unit_binder (b:binder) : ML bool = U.is_unit b.binder_bv.sort
 
+let fvar_arity_cache : SMap.t bool = SMap.create 100
+
 (* The term-level counterpart of [is_type_binder]: a spine whose head no
    declaration describes is filtered with this instead.  Structural, like the
    ML extraction's [is_type]: what a term denotes is decided by its head. *)
@@ -298,9 +301,21 @@ let rec is_type_term (env:TcEnv.env) (t:term) : ML bool =
   | Tm_meta {tm=t} -> is_type_term env t
   | Tm_name bv -> is_arity env bv.sort
   | Tm_fvar fv ->
-    (match TcEnv.try_lookup_lid env (S.lid_of_fv fv) with
-     | Some ((_, ty), _) -> is_arity env ty
-     | None -> false)
+    (* Section 19.7.  The answer for a top-level name is a function of the
+       name: its type comes from the environment and [is_arity] on it is a
+       normalization that does not depend on anything local.  It is asked
+       once per fvar-headed application of every subterm every scan visits,
+       which on EverParse's ASN.1 interpreter was three million calls to a
+       few hundred distinct names -- eighteen seconds of normalizing the
+       same handful of types over and over. *)
+    let key = Ident.string_of_lid (S.lid_of_fv fv) in
+    (match SMap.try_find fvar_arity_cache key with
+     | Some b -> b
+     | None ->
+       let b = match TcEnv.try_lookup_lid env (S.lid_of_fv fv) with
+               | Some ((_, ty), _) -> is_arity env ty
+               | None -> false in
+       SMap.add fvar_arity_cache key b; b)
   | Tm_app _ -> is_type_term env (fst (U.head_and_args_full t))
   | Tm_abs _ ->
     let bs, body, _ = U.abs_formals t in
@@ -603,6 +618,15 @@ let type_params (env:TcEnv.env) (t:typ) : ML (list bool) =
    list a -> list a] takes a type and [list int] is an ordinary runtime value;
    what matters is a type that a constructor stores, which is the arguments
    past the first [num_ty_params]. *)
+(* A field that holds a type or a type constructor: [t : Type0], and also
+   [t : Type0 -> Type0], which is how a functor's result signature
+   (section 133) stores the type it defines. *)
+let is_kind_sort (t:typ) : ML bool =
+  let _, c = U.arrow_formals_comp t in
+  match (SS.compress (U.comp_result c)).n with
+  | Tm_type _ -> true
+  | _ -> false
+
 let ctor_stores_type (env:TcEnv.env) (l:Ident.lident) : ML bool =
   match TcEnv.lookup_sigelt env l with
   | Some ({ sigel = Sig_datacon { t; num_ty_params } }) ->
@@ -624,13 +648,12 @@ let ctor_stores_type (env:TcEnv.env) (l:Ident.lident) : ML bool =
         match bs with
         | [] -> false
         | b :: rest ->
-          (match (SS.compress b.binder_bv.sort).n with
-           | Tm_type _ ->
+          if is_kind_sort b.binder_bv.sort then
              rest |> List.existsb (fun (b2:binder) ->
                elems (Free.names b2.binder_bv.sort)
                |> List.existsb (fun v -> bv_eq v b.binder_bv))
              || scan rest
-           | _ -> scan rest) in
+          else scan rest in
       scan fields
   | _ -> false
 
@@ -658,13 +681,12 @@ let existential_of_lid (env:TcEnv.env) (l:Ident.lident)
                   match bs with
                   | [] -> None
                   | b :: rest ->
-                    (match (SS.compress b.binder_bv.sort).n with
-                     | Tm_type _ when
-                         rest |> List.existsb (fun (b2:binder) ->
-                           elems (Free.names b2.binder_bv.sort)
-                           |> List.existsb (fun v -> bv_eq v b.binder_bv)) ->
-                       Some (Ident.lid_of_ids [b.binder_bv.ppname])
-                     | _ -> pick rest) in
+                    if is_kind_sort b.binder_bv.sort &&
+                       rest |> List.existsb (fun (b2:binder) ->
+                         elems (Free.names b2.binder_bv.sort)
+                         |> List.existsb (fun v -> bv_eq v b.binder_bv))
+                    then Some (Ident.lid_of_ids [b.binder_bv.ppname])
+                    else pick rest in
                 (match pick fields with
                  | Some f -> Some (c, f)
                  | None -> first ds')

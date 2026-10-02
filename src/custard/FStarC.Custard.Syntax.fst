@@ -298,6 +298,7 @@ let name_of_decl (d:decl) : name =
   | DLet l -> l.dl_name
   | DExternal e -> e.dx_name
   | DExn e -> e.de_name
+  | DModule m -> m.dm_name
 
 (* Section 69. *)
 let extern_template_of_flags (fs : list flag) : ML (option (list tmpl_piece)) =
@@ -314,6 +315,7 @@ let decl_flags (d:decl) : list flag =
   | DLet l -> l.dl_flags
   | DExternal e -> e.dx_flags
   | DExn e -> e.de_flags
+  | DModule m -> m.dm_flags
 
 let has_flag (fs : list flag) (f : flag) : ML bool =
   List.existsb (fun f' -> f' = f) fs
@@ -340,12 +342,16 @@ let type_names_of_decl (d : decl) : ML (list string) =
     @ type_names_of_cty l.dl_ret
   | DExternal x -> type_names_of_cty x.dx_ty
   | DExn e -> e.de_args |> List.collect type_names_of_cty
+  | DModule m -> m.dm_types |> List.collect (fun (_, c) -> type_names_of_cty c)
 
 let imported_unit (d : decl) : ML (option string) =
   decl_flags d |> List.tryPick (function Imported (u, _) -> Some u | _ -> None)
 
 let imported_home (d : decl) : ML (option string) =
   decl_flags d |> List.tryPick (function Imported (_, h) -> h | _ -> None)
+
+let member_of (fs : list flag) : ML (option (name & string)) =
+  fs |> List.tryPick (function Member (m, f) -> Some (m, f) | _ -> None)
 
 (* Section 99.  See the comment on the declaration in the interface. *)
 (* Section 121.  The two hand-written traversals that all the others are
@@ -418,6 +424,11 @@ let exists_child (f : expr -> ML bool) (x:expr) : ML bool =
 
 let for_all_children (f : expr -> ML bool) (x:expr) : ML bool =
   List.for_all f (children x)
+
+let rec occurs (v:string) (x:expr) : ML bool =
+  match x.e with
+  | EVar w -> w = v
+  | _ -> exists_child (occurs v) x
 
 let rec is_droppable (e:expr) : ML bool =
   let all (es:list expr) : ML bool = List.for_all is_droppable es in
@@ -709,6 +720,7 @@ let flag_to_doc (f:flag) : ML document =
   | CInline -> text "c_inline"
   | Deriving s -> text ("deriving " ^ s)
   | Realized -> text "realized"
+  | NoUnfold -> text "no_unfold"
   | Extern (n, h) ->
     text ("extern" ^ (match n with Some n -> " " ^ n | None -> "") ^
                      (match h with Some h -> " <" ^ h ^ ">" | None -> ""))
@@ -717,6 +729,7 @@ let flag_to_doc (f:flag) : ML document =
   | Modelled -> text "modelled"
   | Imported (u, h) ->
     text ("imported[" ^ u ^ (match h with Some m -> "@" ^ m | None -> "") ^ "]")
+  | Member (m, f) -> text ("member[" ^ string_of_name m ^ "." ^ f ^ "]")
 
 let flags_to_doc (fs : list flag) : ML document =
   match fs with
@@ -789,6 +802,18 @@ let decl_to_doc (d:decl) : ML document =
        | [] -> empty
        | args -> space ^^ text "of" ^/^
                  sep_by (space ^^ text "&" ^^ space) (List.map cty_to_doc args))))
+
+  | DModule m ->
+    flags_to_doc m.dm_flags ^^
+    group (nest 2 (
+      text "module" ^^ space ^^ name_to_doc m.dm_name ^/^ equals ^/^
+      text m.dm_functor ^/^ lparen ^^
+      sep_by (semi ^^ break_ 1)
+        ((m.dm_types |> List.map (fun (f, c) ->
+            group (text "type" ^^ space ^^ text f ^/^ equals ^/^ cty_to_doc c))) @
+         (m.dm_values |> List.map (fun (f, n) ->
+            group (text "let" ^^ space ^^ text f ^/^ equals ^/^ name_to_doc n))))
+      ^^ rparen))
 
 let decl_to_string (d:decl) : ML string = render (decl_to_doc d)
 

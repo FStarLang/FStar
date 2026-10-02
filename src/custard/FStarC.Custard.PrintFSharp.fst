@@ -113,6 +113,37 @@ let externals : ref (SMap.t string) = mk_ref (SMap.create 0)
 let external_target (n:name) : ML (option string) =
   SMap.try_find !externals (string_of_name n)
 
+(* Section 122.18: the F# module currently being printed, when the output is
+   split.  A reference to a name of *this* module must not be qualified --
+   there is no way to say [Foo.x] inside [module Foo] -- and everything in
+   {!qualifiers} is qualified by construction, so the two are reconciled here
+   rather than by keeping a second table per file. *)
+let current_module : ref (option string) = mk_ref None
+
+(* Section 122.18: the F# module each compiled declaration was emitted into.
+   Empty for the whole-program single file, where nothing is qualified. *)
+let qualifiers : ref (SMap.t string) = mk_ref (SMap.create 0)
+
+(* Section 122.18: the names emitted under their plain F* identifier rather
+   than their mangled one.  Mangling exists to keep one flat file
+   collision-free (section 122.3); once a declaration sits in the module its
+   own F* module names, and is the only declaration from its source lid, the
+   module already separates it and the plain name is the shorter one. *)
+let at_home : ref (SMap.t unit) = mk_ref (SMap.create 0)
+
+let is_at_home (n:name) : ML bool =
+  None? n.spec && Some? (SMap.try_find !at_home (string_of_name n))
+
+let qualifier (n:name) : ML (option string) =
+  match SMap.try_find !qualifiers (string_of_name n) with
+  | Some m -> if Some m = !current_module then None else Some m
+  | None -> None
+
+let qualify (n:name) (s:string) : ML string =
+  match qualifier n with
+  | Some m -> m ^ "." ^ s
+  | None -> s
+
 (* [FStar.Pervasives.Native.tupleN] is .NET's own N-tuple: no constructor to
    name, no field to project.  Keyed by both the type's name and its
    constructor's, valued by the arity. *)
@@ -240,15 +271,18 @@ let escape_keyword (s:string) : ML string =
   if List.existsb (fun k -> k = s) fsharp_keywords then "``" ^ s ^ "``" else s
 
 let fsharp_value_name (n:name) : ML string =
+  if is_at_home n then escape_keyword (lowercase_first (sanitize n.id)) else
   escape_keyword (lowercase_first (sanitize (mangled_name n)))
 
 let fsharp_type_name (n:name) : ML string =
+  if is_at_home n then escape_keyword (lowercase_first (sanitize n.id)) else
   escape_keyword (lowercase_first (sanitize (mangled_name n)))
 
 (* A union case and an exception both have to begin with a capital, or F#
    reads them as variables in a pattern (warning 49) and, worse, matches
    anything. *)
 let fsharp_ctor_ident (n:name) : ML string =
+  if is_at_home n then uppercase_first (sanitize n.id) else
   uppercase_first (sanitize (mangled_name n))
 
 let module_name_of_unit (u:string) : ML string = uppercase_first (sanitize u)
@@ -286,6 +320,15 @@ let fsharp_local (x:string) : ML string =
 (* Types                                                                *)
 (* -------------------------------------------------------------------- *)
 
+(* Section 95.6.  [--custard_sizet_width 32] narrows [FStar.SizeT.t] here
+   exactly as it does in the direct-to-C backend: the type, the literal
+   suffix and every conversion, all of which go through the three functions
+   below.  The licence is the same as there -- the program assumes or requires
+   [FStar.SizeT.fits_u32], and the flag is its author saying so -- and the
+   reason to want it is the target's: Fable carries a [uint64] as a
+   JavaScript BigInt and a [uint32] as a number. *)
+let sizet_narrow () : ML bool = Options.custard_sizet_32 ()
+
 (* Section 122.4.  A machine integer is .NET's own, not a support module's.
    This is the single largest difference from the OCaml backend and the reason
    this one exists: OCaml has no unsigned 32-bit type, so [FStar.UInt32.t]
@@ -297,7 +340,7 @@ let int_type (sw : signedness & iwidth) : ML string =
   (* [FStar.SizeT.t] is 64 bits at every target F* supports, so it is
      [uint64] and not [unativeint]: the latter would be 32 bits on a 32-bit
      runtime, which is a different type and a different program. *)
-  | WSizet -> "uint64"
+  | WSizet -> if sizet_narrow () then "uint32" else "uint64"
   | W128 -> (match s with
              | Unsigned -> "System.UInt128"
              | Signed -> "System.Int128")
@@ -313,7 +356,7 @@ let int_type (sw : signedness & iwidth) : ML string =
 let int_suffix (sw : signedness & iwidth) : ML string =
   let s, w = sw in
   match w with
-  | WSizet -> "UL"
+  | WSizet -> if sizet_narrow () then "u" else "UL"
   | W8  -> (match s with Unsigned -> "uy" | Signed -> "y")
   | W16 -> (match s with Unsigned -> "us" | Signed -> "s")
   | W32 -> (match s with Unsigned -> "u"  | Signed -> "")
@@ -358,7 +401,23 @@ let builtin_type (n:name) : ML (option string) =
   | "Prims.int" -> Some "bigint"
   | "Prims.exn" -> Some "exn"
   | "Prims.list" -> Some "list"
+  (* [FStar.Char.char] is a Unicode scalar and a .NET [char] is a UTF-16 code
+     unit, so the two agree on the Basic Multilingual Plane and part company
+     above it.  The support library's [FStar.String] is written against this
+     reading throughout -- [list_of_string] yields code units, [strlen] counts
+     them -- so a program that stays inside it is consistent with itself; what
+     it is not is faithful to F*'s specification for text outside the BMP.
+     That is the same trade [Prims.string] already makes. *)
+  | "FStar.Char.char"
+  | "FStar.String.char" -> Some "char"
   | "FStar.Pervasives.Native.option" -> Some "option"
+  (* Section 122.17.  [FStar.Bytes.bytes] is a .NET [byte[]].  The type is
+     abstract in F*, so the choice is free, and an array of bytes is what the
+     module is about: the OCaml realization uses a [string] only because an
+     OCaml string *is* a byte string, which a .NET one is not.  F#'s
+     structural equality on arrays is what [val bytes : t:Type0{hasEq t}]
+     asks for, so [=] on two of these means what F* says it means. *)
+  | "FStar.Bytes.bytes" -> Some "byte[]"
   | _ -> None
 
 let is_builtin_type (n:name) : ML bool = Some? (builtin_type n)
@@ -418,14 +477,14 @@ let rec ty (t:cty) : ML string =
   | TApp (n, []) ->
     (match builtin_type n with
      | Some s -> s
-     | None -> fsharp_type_name n)
+     | None -> qualify n (fsharp_type_name n))
   (* F#'s postfix application only takes one argument, so the generic form is
      written the .NET way.  It is also accepted at one argument, which is why
      there is one case here and not two. *)
   | TApp (n, args) ->
     let hd = match builtin_type n with
              | Some s -> s
-             | None -> fsharp_type_name n in
+             | None -> qualify n (fsharp_type_name n) in
     hd ^ "<" ^ String.concat ", " (List.map ty args) ^ ">"
 
 (* Section 122.6.2.  A [box] followed by an [unbox] is exact when the two sides
@@ -473,10 +532,11 @@ let reject_coercion (a:cty) (b:cty) : ML string =
    sequences of UTF-16 code units, so a code point is escaped only when it has
    to be: the F# compiler reads the source as UTF-8 and decodes the rest for
    itself, which is what the reader wanted in the first place. *)
+let hexd (i:int) : string =
+  let d = ["0";"1";"2";"3";"4";"5";"6";"7";"8";"9";"a";"b";"c";"d";"e";"f"] in
+  match List.nth d i with x -> x
+
 let escape (s:string) : ML string =
-  let hexd (i:int) : string =
-    let d = ["0";"1";"2";"3";"4";"5";"6";"7";"8";"9";"a";"b";"c";"d";"e";"f"] in
-    match List.nth d i with x -> x in
   let esc (c:char) : ML string =
     match c with
     | '\n' -> "\\n"
@@ -501,6 +561,39 @@ let escape (s:string) : ML string =
 let int128_literal (sw : signedness & iwidth) (v:int) (b:int_base) : ML string =
   "(" ^ int_type sw ^ ".Parse \"" ^ int_lit_to_string v Dec ^ "\")"
 
+(* Section 122.9.  [FStar.Char.char] is .NET's [char], which is a UTF-16 code
+   unit: it holds the Basic Multilingual Plane and nothing above it.  A
+   literal outside that range is refused here rather than truncated, since a
+   silently different character is section 38's substitution again.
+
+   The escapes are F#'s own, which are C's for the four that matter plus
+   [\\uXXXX]; anything outside printable ASCII goes through the latter so that
+   the output does not depend on how the file is decoded. *)
+let char_literal (c:char) : ML string =
+  let i = BU.int_of_char c in
+  if i > 65535
+  then E.raise_error0 E.Error_CustardNoCRepresentation [
+         text ("Custard: the character literal U+" ^
+               hexd ((i / 65536) % 16) ^ hexd ((i / 4096) % 16) ^
+               hexd ((i / 256) % 16) ^ hexd ((i / 16) % 16) ^ hexd (i % 16) ^
+               " has no F# representation.");
+         text "An F# char is a UTF-16 code unit and so cannot hold a code \
+               point above the Basic Multilingual Plane (section 122.9)." ]
+  else
+    let body =
+      match c with
+      | '\n' -> "\\n"
+      | '\t' -> "\\t"
+      | '\r' -> "\\r"
+      | '\'' -> "\\'"
+      | '\\' -> "\\\\"
+      | c ->
+        if i < 32 || i > 126
+        then "\\u" ^ hexd ((i / 4096) % 16) ^ hexd ((i / 256) % 16) ^
+                      hexd ((i / 16) % 16) ^ hexd (i % 16)
+        else BU.string_of_char c in
+    "'" ^ body ^ "'"
+
 let constant (c:constant) : ML string =
   match c with
   | CUnit -> "()"
@@ -523,7 +616,7 @@ let constant (c:constant) : ML string =
   (* F# takes 0x, 0o and 0b exactly as F* writes them, so the base a program
      chose to write a constant in survives into the output. *)
   | CInt (v, b, Some sw) -> "(" ^ int_lit_to_string v b ^ int_suffix sw ^ ")"
-  | CChar c -> show (BU.int_of_char c)
+  | CChar c -> char_literal c
   | CString s -> "\"" ^ escape s ^ "\""
 
 (* -------------------------------------------------------------------- *)
@@ -570,14 +663,17 @@ let w128_unop (sw : signedness & iwidth) (o:op) : ML (option string) =
 let is_shift (o:op) : bool = BShiftL? o || BShiftR? o
 
 (* Whether a width conversion can change the mathematical value.
-   [width_bits] is [Syntax]'s. *)
-let value_preserving (a b : signedness & iwidth) : bool =
+   [width_bits] is [Syntax]'s, which answers 64 for [WSizet] whatever
+   {!sizet_narrow} says, so that one width is read here instead. *)
+let value_preserving (a b : signedness & iwidth) : ML bool =
+  let bits (w:iwidth) : ML int =
+    if WSizet? w && sizet_narrow () then 32 else width_bits w in
   let sa, wa = a in
   let sb, wb = b in
   match sa, sb with
   | Unsigned, Unsigned
-  | Signed, Signed -> width_bits wa <= width_bits wb
-  | Unsigned, Signed -> width_bits wa < width_bits wb
+  | Signed, Signed -> bits wa <= bits wb
+  | Unsigned, Signed -> bits wa < bits wb
   | Signed, Unsigned -> false
 
 (* Section 122.4.  The conversion function for a target width.  F#'s own
@@ -588,7 +684,7 @@ let value_preserving (a b : signedness & iwidth) : bool =
 let int_conv (sw : signedness & iwidth) : ML string =
   let s, w = sw in
   match w with
-  | WSizet -> "uint64"
+  | WSizet -> int_type sw
   | W128 -> (match s with
              | Unsigned -> "FStarCustard.toU128"
              | Signed -> "FStarCustard.toI128")
@@ -606,7 +702,7 @@ let int_conv (sw : signedness & iwidth) : ML string =
    used to build and to match. *)
 let qualified_label (n:name) (f:string) : ML string =
   if is_builtin_type n then fsharp_var f
-  else fsharp_type_name n ^ "." ^ fsharp_var f
+  else qualify n (fsharp_type_name n) ^ "." ^ fsharp_var f
 
 (* A projection has no label list to hang the type off, so it takes an
    ascription instead, with a wildcard for each parameter: it is the type's
@@ -619,7 +715,7 @@ let ascribe_record (n:name) (f:string) (s:string) : ML string =
     let rec wilds (i:int) : ML (list string) =
       if i <= 0 then [] else "_" :: wilds (i - 1) in
     let args = if k = 0 then "" else "<" ^ String.concat ", " (wilds k) ^ ">" in
-    s ^ " : " ^ fsharp_type_name n ^ args
+    s ^ " : " ^ qualify n (fsharp_type_name n) ^ args
 
 (* F# has no integer pattern that means what the IR's [PConst (CInt _)] means:
    a [bigint] literal is not a pattern, and neither is a [UInt128.Parse].  The
@@ -700,7 +796,7 @@ let rec pattern (p:pat) : ML string =
 and ctor_ref (n:name) : ML string =
   match builtin_ctor n with
   | Some c -> c
-  | None -> fsharp_ctor_ident n
+  | None -> qualify n (fsharp_ctor_ident n)
 
 and builtin_ctor (n:name) : ML (option string) =
   match (if Some? n.spec then "" else String.concat "." (n.ns @ [n.id])) with
@@ -721,7 +817,7 @@ let rec term (ind:string) (e:expr) : ML string =
   | EQual (n, _) ->
     (match external_target n with
      | Some t -> t
-     | None -> fsharp_value_name n)
+     | None -> qualify n (fsharp_value_name n))
   | ECtor (n, []) -> ctor_ref n
   | ECtor (n, [a; b]) when builtin_ctor n = Some "::" ->
     join_at ind "(" " :: " term [a; b] ^ ")"
@@ -773,21 +869,37 @@ let rec term (ind:string) (e:expr) : ML string =
        F# requires it to be no further left than that. *)
     let ind' = ind ^ " " in
     hd ^ String.concat "\n" (List.map (case ind') brs) ^ ")"
+  (* Each component is printed at the column it begins at, like any other
+     comma-separated run (section 122.2); a missing one is a [defaultof]. *)
   | ERecord (n, fs) when Some? (tuple_arity n) ->
     let k = Some?.v (tuple_arity n) in
-    "(" ^ String.concat ", "
-            (by_position k "(Unchecked.defaultof<_>)"
-               (fs |> List.map (fun (f, e) -> (f, term (ind ^ " ") e)))) ^ ")"
+    let at (i:int) : ML (option expr) =
+      fs |> List.tryPick (fun (f, e) -> if tuple_index f = i then Some e else None) in
+    let rec go (i:int) : ML (list (option expr)) =
+      if i > k then [] else at i :: go (i + 1) in
+    join_at ind "(" ", "
+      (fun ind' (o:option expr) -> match o with
+                                   | Some e -> term ind' e
+                                   | None -> "(Unchecked.defaultof<_>)")
+      (go 1) ^ ")"
   (* One field per line, unless the whole literal fits on the line it is
      already on: a record is where a reader looks up what a value is made of,
      and the fields of the ones this compiler builds are whole expressions
      rather than names -- but a two-field record of variables is not clearer
-     for being spread over two lines. *)
+     for being spread over two lines.
+
+     A field's value begins after its label and not at the column the label
+     does, and a multi-line value -- a [match], say -- has to be printed at
+     the column it begins at, or its continuation lines are offside of it
+     (FS0058).  In the multi-line layout every label begins at [ind'], so that
+     column is exact there; the one-line layout is chosen only when no value
+     spans lines, when no column is ever consulted. *)
   | ERecord (n, fs) ->
     let ind' = ind ^ "  " in
     let parts = List.mapi (fun i (f, e) ->
-                  (if i = 0 then qualified_label n f else fsharp_var f)
-                  ^ " = " ^ term ind' e) fs in
+                  let pre = (if i = 0 then qualified_label n f else fsharp_var f)
+                            ^ " = " in
+                  pre ^ term (after ind' pre) e) fs in
     let one = "{ " ^ String.concat "; " parts ^ " }" in
     if String.length ind + String.length one <= line_width
        && not (List.existsb (fun c -> c = '\n') (String.list_of_string one))
@@ -821,6 +933,11 @@ let rec term (ind:string) (e:expr) : ML string =
   | ECast (e1, t) ->
     (match e1.ty, t with
      | TInt sw1, TInt sw2 when sw1 = sw2 -> term ind e1
+     (* Section 95.6.  Under --custard_sizet_width 32, [FStar.SizeT.t] and
+        [FStar.UInt32.t] are the same .NET type, and a conversion between
+        them is nothing at all. *)
+     | TInt sw1, TInt sw2 when not (is_w128 sw1) && not (is_w128 sw2)
+                            && int_type sw1 = int_type sw2 -> term ind e1
      | TFloat _, TFloat fw2 ->
        reject_fwidth fw2;
        let pre = "(" ^ (if Float32? fw2 then "float32" else "float") ^ " " in
@@ -1011,10 +1128,16 @@ and case (ind:string) (br:branch) : ML string =
 (* Declarations                                                         *)
 (* -------------------------------------------------------------------- *)
 
+(* Section 122.3.1.  {!fsharp_tyvar} and not [fsharp_var] with a quote in
+   front: a declaration binds the same variables its body mentions, and the
+   body goes through [ty] and so through [fsharp_tyvar].  Spelling the binder
+   any other way declares one name and uses another, which F# reports as an
+   undefined type parameter -- and, where the use is inside a constructor
+   argument, silently infers [obj] instead. *)
 let params (ps : list string) : ML string =
   match ps with
   | [] -> ""
-  | _ -> "<" ^ String.concat ", " (List.map (fun p -> "'" ^ fsharp_var p) ps) ^ ">"
+  | _ -> "<" ^ String.concat ", " (List.map fsharp_tyvar ps) ^ ">"
 
 let print_decl (first:bool) (d:decl) : ML (option string) =
   match d with
@@ -1044,6 +1167,9 @@ let print_decl (first:bool) (d:decl) : ML (option string) =
 
   (* An external is printed at each of its uses; see {!externals}. *)
   | DExternal _ -> None
+
+  (* Section 133.  Refused by the extractor on every backend but OCaml. *)
+  | DModule _ -> failwith "Custard: a functor instance reached the F# backend"
 
   | DExn e ->
     Some ("exception " ^ fsharp_ctor_ident e.de_name ^
@@ -1180,6 +1306,118 @@ let supported_realizations : list (string & string) = [
   "FStar.IO.print_uint32_dec_pad","FStar_IO.print_uint32_dec_pad";
   "FStar.IO.print_uint64_dec_pad","FStar_IO.print_uint64_dec_pad";
   "FStar.IO.debug_print_string",  "FStar_IO.debug_print_string";
+
+  (* [FStar.Char] and [FStar.String] over .NET's own [char] and [string].  See
+     {!builtin_type}: the representation is UTF-16 rather than a sequence of
+     code points, which is the reading every one of these is written against. *)
+  "FStar.Char.lowercase",         "FStar_Char.lowercase";
+  "FStar.Char.uppercase",         "FStar_Char.uppercase";
+  "FStar.Char.int_of_char",       "FStar_Char.int_of_char";
+  "FStar.Char.char_of_int",       "FStar_Char.char_of_int";
+  "FStar.Char.u32_of_char",       "FStar_Char.u32_of_char";
+  "FStar.Char.char_of_u32",       "FStar_Char.char_of_u32";
+  "FStar.String.make",            "FStar_String.make";
+  "FStar.String.strcat",          "FStar_String.strcat";
+  "FStar.String.op_Hat",          "FStar_String.strcat";
+  "FStar.String.split",           "FStar_String.split";
+  "FStar.String.compare",         "FStar_String.compare";
+  "FStar.String.concat",          "FStar_String.concat";
+  "FStar.String.length",          "FStar_String.length";
+  "FStar.String.strlen",          "FStar_String.length";
+  "FStar.String.substring",       "FStar_String.substring";
+  "FStar.String.sub",             "FStar_String.substring";
+  "FStar.String.get",             "FStar_String.get";
+  "FStar.String.index",           "FStar_String.get";
+  "FStar.String.collect",         "FStar_String.collect";
+  "FStar.String.lowercase",       "FStar_String.lowercase";
+  "FStar.String.uppercase",       "FStar_String.uppercase";
+  "FStar.String.index_of",        "FStar_String.index_of";
+  "FStar.String.list_of_string",  "FStar_String.list_of_string";
+  "FStar.String.string_of_list",  "FStar_String.string_of_list";
+  "FStar.String.string_of_char",  "FStar_String.string_of_char";
+
+  (* [FStar.All]: the two that end a program, and the exception handler. *)
+  "FStar.All.failwith",           "FStar_All.failwith";
+  "FStar.All.exit",               "FStar_All.exit";
+  "FStar.All.try_with",           "FStar_All.try_with";
+  "FStar.All.pipe_right",         "FStar_All.pipe_right";
+  "FStar.All.pipe_left",          "FStar_All.pipe_left";
+
+  (* [FStar.List] is [FStar.List.Tot.Base] with an [ML] effect on the
+     higher-order arguments, which in F# is no difference at all: the
+     realizations are the same .NET functions under the other name.  Only
+     [nth] differs, returning the element rather than an [option]. *)
+  "FStar.List.hd",                "FStar_List_Tot_Base.hd";
+  "FStar.List.tl",                "FStar_List_Tot_Base.tl";
+  "FStar.List.tail",              "FStar_List_Tot_Base.tl";
+  "FStar.List.last",              "FStar_List_Tot_Base.last";
+  "FStar.List.init",              "FStar_List_Tot_Base.init";
+  "FStar.List.length",            "FStar_List_Tot_Base.length";
+  "FStar.List.rev",               "FStar_List_Tot_Base.rev";
+  "FStar.List.append",            "FStar_List_Tot_Base.append";
+  "FStar.List.op_At",             "FStar_List_Tot_Base.append";
+  "FStar.List.flatten",           "FStar_List_Tot_Base.flatten";
+  "FStar.List.mem",               "FStar_List_Tot_Base.mem";
+  "FStar.List.contains",          "FStar_List_Tot_Base.contains";
+  "FStar.List.isEmpty",           "FStar_List_Tot_Base.isEmpty";
+  "FStar.List.split",             "FStar_List_Tot_Base.split";
+  "FStar.List.unzip",             "FStar_List_Tot_Base.unzip";
+  "FStar.List.unzip3",            "FStar_List_Tot_Base.unzip3";
+  "FStar.List.splitAt",           "FStar_List_Tot_Base.splitAt";
+  "FStar.List.nth",               "FStar_List.nth";
+  "FStar.List.iter",              "FStar_List.iter";
+  "FStar.List.iteri",             "FStar_List.iteri";
+  "FStar.List.map",               "FStar_List_Tot_Base.map";
+  "FStar.List.mapi",              "FStar_List_Tot_Base.mapi";
+  "FStar.List.collect",           "FStar_List_Tot_Base.collect";
+  "FStar.List.concatMap",         "FStar_List_Tot_Base.concatMap";
+  "FStar.List.fold_left",         "FStar_List_Tot_Base.fold_left";
+  "FStar.List.fold_right",        "FStar_List_Tot_Base.fold_right";
+  "FStar.List.fold_left2",        "FStar_List_Tot_Base.fold_left2";
+  "FStar.List.filter",            "FStar_List_Tot_Base.filter";
+  "FStar.List.for_all",           "FStar_List_Tot_Base.for_all";
+  "FStar.List.existsb",           "FStar_List_Tot_Base.existsb";
+  "FStar.List.find",              "FStar_List_Tot_Base.find";
+  "FStar.List.tryFind",           "FStar_List_Tot_Base.tryFind";
+  "FStar.List.tryPick",           "FStar_List_Tot_Base.tryPick";
+  "FStar.List.choose",            "FStar_List_Tot_Base.choose";
+  "FStar.List.partition",         "FStar_List_Tot_Base.partition";
+  "FStar.List.assoc",             "FStar_List_Tot_Base.assoc";
+  "FStar.List.sortWith",          "FStar_List_Tot_Base.sortWith";
+
+  (* Section 122.17.  [FStar.Bytes], over [byte[]].  The whole module rather
+     than the part some program happened to need, for the reason
+     [FStar.List.Tot.Base] is whole: the next program to want one of these
+     would otherwise be refused for a function that is one line. *)
+  "FStar.Bytes.len",              "FStar_Bytes.len";
+  "FStar.Bytes.empty_bytes",      "FStar_Bytes.empty_bytes";
+  "FStar.Bytes.get",              "FStar_Bytes.get";
+  "FStar.Bytes.create",           "FStar_Bytes.create";
+  "FStar.Bytes.init",             "FStar_Bytes.init";
+  "FStar.Bytes.abyte",            "FStar_Bytes.abyte";
+  "FStar.Bytes.twobytes",         "FStar_Bytes.twobytes";
+  "FStar.Bytes.append",           "FStar_Bytes.append";
+  "FStar.Bytes.slice",            "FStar_Bytes.slice";
+  "FStar.Bytes.sub",              "FStar_Bytes.sub";
+  "FStar.Bytes.split",            "FStar_Bytes.split";
+  "FStar.Bytes.repr_bytes",       "FStar_Bytes.repr_bytes";
+  "FStar.Bytes.int_of_bytes",     "FStar_Bytes.int_of_bytes";
+  "FStar.Bytes.bytes_of_int",     "FStar_Bytes.bytes_of_int";
+  "FStar.Bytes.int32_of_bytes",   "FStar_Bytes.int32_of_bytes";
+  "FStar.Bytes.int16_of_bytes",   "FStar_Bytes.int16_of_bytes";
+  "FStar.Bytes.int8_of_bytes",    "FStar_Bytes.int8_of_bytes";
+  "FStar.Bytes.bytes_of_int32",   "FStar_Bytes.bytes_of_int32";
+  "FStar.Bytes.bytes_of_int16",   "FStar_Bytes.bytes_of_int16";
+  "FStar.Bytes.bytes_of_int8",    "FStar_Bytes.bytes_of_int8";
+  "FStar.Bytes.xor",              "FStar_Bytes.xor";
+  "FStar.Bytes.utf8_encode",      "FStar_Bytes.utf8_encode";
+  "FStar.Bytes.iutf8_opt",        "FStar_Bytes.iutf8_opt";
+  "FStar.Bytes.string_of_hex",    "FStar_Bytes.string_of_hex";
+  "FStar.Bytes.bytes_of_hex",     "FStar_Bytes.bytes_of_hex";
+  "FStar.Bytes.hex_of_string",    "FStar_Bytes.hex_of_string";
+  "FStar.Bytes.hex_of_bytes",     "FStar_Bytes.hex_of_bytes";
+  "FStar.Bytes.print_bytes",      "FStar_Bytes.print_bytes";
+  "FStar.Bytes.bytes_of_string",  "FStar_Bytes.bytes_of_string";
 ]
 
 let supported_realization (n:name) : ML (option string) =
@@ -1273,7 +1511,13 @@ let reject_target_only_types (p:program) : ML unit =
 
    Custard monomorphizes, so this is rare by construction: what survives is a
    value in a [Poly] position that nothing ever specialized.  It is refused
-   here, naming the value and what to do about it, rather than downstream. *)
+   here, naming the value and what to do about it, rather than downstream.
+
+   Section 122.11.1.  A definition like that whose type is an *arrow* is not a
+   value in that sense: it is a function written point-free, and F#
+   generalizes a function.  {!eta_generic_values} gives it its parameters
+   before anything is printed, so only a definition that is not a function --
+   or one whose effects eta-expansion would move -- reaches the refusal. *)
 let rec mentions_tyvar (t:cty) : ML bool =
   match t with
   | TVar _ -> true
@@ -1283,18 +1527,77 @@ let rec mentions_tyvar (t:cty) : ML bool =
   | TApp (_, args) -> args |> List.existsb mentions_tyvar
   | _ -> false
 
+(* Section 122.11.1.  [let small : 'raw -> option<bigint> = bounded 0 10 5]
+   becomes [let small (eta : 'raw) : option<bigint> = bounded 0 10 5 eta].
+   The shared eta-expansion of section 25 already does this when every use
+   applies the definition, but a use that *passes* it pins it at arity zero
+   there, since for C a bare use of a function-pointer variable and a bare use
+   of a function are different things.  In F# they are the same thing, so
+   here the expansion does not depend on the uses at all.
+
+   It re-evaluates the body at every call instead of once, which changes
+   nothing the program can observe only when reaching the lambda is pure --
+   the condition section 25.3 imposes too, for the same reason.  So the
+   definition has to be pure, and the spine stops after the first arrow whose
+   application is not: [a -> ML (b -> c)] expanded past its first arrow would
+   run the [ML] part only once [b] arrived.
+
+   The binders follow the arrow-type convention of section 122.14 -- a [unit]
+   argument is dropped unless every argument is one -- because the type every
+   *use* sees is printed by that convention, and the definition has to have
+   that type.  A prefix that would need a lone [unit] binder while the type
+   goes on to take real arguments cannot be spelled consistently, and is left
+   to the refusal. *)
+let eta_generic_value (l:dlet) : ML dlet =
+  let rec spine (t:cty) : ML (list cty & cty & eff) =
+    match t with
+    | TArrow (a, e, b) ->
+      if is_pure e && TArrow? b
+      then let args, r, e' = spine b in (a :: args, r, e')
+      else ([a], b, e)
+    | _ -> ([], t, E_Pure) in
+  let args, ret, ef = spine l.dl_ret in
+  let named = args |> List.mapi (fun i a ->
+                (a, (if i = 0 then "custard_eta" else "custard_eta" ^ show i))) in
+  let kept = named |> List.filter (fun (a, _) -> not (TUnit? a)) in
+  if Nil? kept && TArrow? ret then l
+  else
+    let kept = if Nil? kept then [List.hd named] else kept in
+    let bs = kept |> List.map (fun (a, x) -> { b_name = x; b_ty = a }) in
+    let actuals = named |> List.map (fun (a, x) ->
+                    if TUnit? a && not (List.existsb (fun (_, y) -> y = x) kept)
+                    then mk (EConst CUnit) TUnit E_Pure
+                    else mk (EVar x) a E_Pure) in
+    let body = match l.dl_body.e with
+               | EApp (f, xs) -> mk (EApp (f, xs @ actuals)) ret ef
+               | _ -> mk (EApp (l.dl_body, actuals)) ret ef in
+    { l with dl_binders = bs; dl_body = body; dl_ret = ret; dl_eff = ef }
+
+let eta_generic_values (p:program) : ML program =
+  p |> List.map (fun d ->
+    match d with
+    | DLet l when Nil? l.dl_binders && TArrow? l.dl_ret
+               && mentions_tyvar l.dl_ret && is_pure l.dl_eff ->
+      DLet (eta_generic_value l)
+    | d -> d)
+
 let reject_generic_values (p:program) : ML unit =
   p |> List.iter (fun d ->
     match d with
     | DLet l when Nil? l.dl_binders && mentions_tyvar l.dl_ret ->
+      let why =
+        if TArrow? l.dl_ret && not (is_pure l.dl_eff)
+        then "Its type is a function type, but giving it parameters would \
+              evaluate its body at every call rather than once, and the body \
+              is not pure (section 122.11.1)."
+        else "Nothing in this program specialized it, which means nothing \
+              uses it at a type either." in
       E.raise_error0 E.Error_CustardUnrepresentableValue [
         text ("Custard: " ^ string_of_name l.dl_name ^ " is a top-level value \
                with no parameters whose type " ^ ty l.dl_ret ^ " is still \
                polymorphic.");
-        text "F#'s value restriction does not generalize such a definition, \
-              so it cannot be written at all (section 122.11).  Nothing in \
-              this program specialized it, which means nothing uses it at a \
-              type either.";
+        text ("F#'s value restriction does not generalize such a definition, \
+               so it cannot be written at all (section 122.11).  " ^ why);
         text "Give it a parameter, specialize it at the type it is wanted at, \
               or extract with --custard_backend OCaml." ]
     | _ -> ())
@@ -1303,12 +1606,19 @@ let reject_generic_values (p:program) : ML unit =
 (* Tables and assembly                                                  *)
 (* -------------------------------------------------------------------- *)
 
-let build_tables (p:program) : ML unit =
+(* [homes] is empty for the ordinary whole-program-in-one-file output.  When
+   the output is split (section 122.18) it maps each declaration to the F#
+   module its file compiles to, which is what every cross-file reference is
+   qualified by and what decides whether a declaration is *at home* and so
+   emitted under its plain identifier. *)
+let build_tables (homes : SMap.t string) (p:program) : ML unit =
   let tbl = SMap.create 50 in
   let tups = SMap.create 20 in
   let nul = SMap.create 50 in
   let recs : SMap.t int = SMap.create 100 in
   let labels : SMap.t int = SMap.create 100 in
+  let quals = SMap.create 50 in
+  let home = SMap.create 50 in
   p |> List.iter (fun d ->
     match d with
     | DExternal e ->
@@ -1345,11 +1655,38 @@ let build_tables (p:program) : ML unit =
                                    | None -> 0)))
        | _ -> ())
     | _ -> ());
+  (* Section 122.18.  Every compiled declaration is qualified by its own
+     module -- {!qualifier} drops the qualification again while that module is
+     the one being printed -- so a reference needs to know nothing about where
+     it is.
+
+     A declaration is at home when it sits in the module its own F* module
+     names and carries no specialization suffix.  No suffix means it is the
+     only declaration from its source lid, so the plain identifier is
+     unambiguous within the module. *)
+  p |> List.iter (fun d ->
+    let n = name_of_decl d in
+    match SMap.try_find homes (string_of_name n) with
+    | None -> ()
+    | Some m ->
+      let mark (x:name) : ML unit =
+        SMap.add quals (string_of_name x) m;
+        if None? x.spec && module_name_of_unit (String.concat "." x.ns) = m
+        then SMap.add home (string_of_name x) () in
+      mark n;
+      (match d with
+       | DType t ->
+         (match t.dt_body with
+          | TVariant cs -> cs |> List.iter (fun (cn, _) -> mark cn)
+          | _ -> ())
+       | _ -> ()));
   externals := tbl;
   tuples := tups;
   nullary := nul;
   record_params := recs;
-  record_labels := labels
+  record_labels := labels;
+  qualifiers := quals;
+  at_home := home
 
 (* Section 122.2.  The warnings turned off here are the ones that are about
    the *shape* of generated code rather than about anything that could be
@@ -1396,6 +1733,16 @@ let entrypoints (p:program) : ML (list dlet) =
 
    .NET names its entry point with an attribute rather than by position, and
    requires it to be the last declaration of the last file. *)
+(* The generated entry point is called [main], which in the split output
+   (section 122.18) is a name the program may already have bound at home --
+   an F* [main] in the last module comes out as [main] and not as
+   [modName_main].  F# reports that as a duplicate definition, so the
+   generated one steps aside instead. *)
+let entry_name () : ML string =
+  let rec go (s:string) : ML string =
+    if List.existsb (fun k -> k = s) !reserved_top then go (s ^ "_") else s in
+  go "main"
+
 let entry_calls (p:program) : ML (list string) =
   match entrypoints p with
   | [] -> []
@@ -1403,12 +1750,13 @@ let entry_calls (p:program) : ML (list string) =
     let body =
       ls |> List.map (fun l ->
         let args = String.concat " " (List.map (fun _ -> "()") l.dl_binders) in
-        let call = "(" ^ fsharp_value_name l.dl_name ^ " " ^ args ^ ")" in
+        let call = "(" ^ qualify l.dl_name (fsharp_value_name l.dl_name)
+                       ^ " " ^ args ^ ")" in
         match l.dl_ret with
         | TInt _ -> "  (int " ^ call ^ ")"
         | TUnit -> "  " ^ call ^ "\n  0"
         | _ -> "  (ignore " ^ call ^ ")\n  0") in
-    ["[<EntryPoint>]\nlet main (_argv : string[]) : int =\n" ^
+    ["[<EntryPoint>]\nlet " ^ entry_name () ^ " (_argv : string[]) : int =\n" ^
      String.concat "\n" body]
 
 let assemble (m:string) (ds : list string) : ML string =
@@ -1421,14 +1769,61 @@ let reserve_top (p:program) : ML unit =
     | DExternal e -> [fsharp_value_name e.dx_name]
     | _ -> [])
 
-let print_program (stem:string) (p:program) : ML string =
+let reject_all (p:program) : ML unit =
   reject_target_only_types p;
   reject_realized_types p;
   reject_unrealized p;
-  reject_generic_values p;
-  build_tables p;
+  reject_generic_values p
+
+let print_program (stem:string) (p:program) : ML string =
+  let p = eta_generic_values p in
+  reject_all p;
+  build_tables (SMap.create 0) p;
+  current_module := None;
   reserve_top p;
   assemble (module_name_of_unit stem) (print_decls p @ entry_calls p)
+
+(* Section 122.18.  One F# module per F* source module.  The shape is the
+   OCaml backend's (section 12.9) with two additions that are F#'s own: the
+   project has to list the files, in this order, and the [<EntryPoint>]
+   attribute has to sit on the last declaration of the last file -- which is
+   why the entry calls are appended there and nowhere else. *)
+let print_split (files : list (string & program)) : ML (list (string & string)) =
+  let files = files |> List.map (fun (m, ds) -> (m, eta_generic_values ds)) in
+  let whole = List.collect snd files in
+  reject_all whole;
+  let homes = SMap.create 100 in
+  files |> List.iter (fun (m, ds) ->
+    let m = module_name_of_unit m in
+    ds |> List.iter (fun d ->
+      SMap.add homes (string_of_name (name_of_decl d)) m));
+  build_tables homes whole;
+  let rendered = files |> List.map (fun (m, ds) ->
+    let m = module_name_of_unit m in
+    current_module := Some m;
+    reserve_top ds;
+    let r = (m, ds, print_decls ds) in
+    current_module := None;
+    r) in
+  (* A module that contributed only externals gets no file: an empty [module]
+     is legal F# but the project would still have to list it, and a file that
+     compiles to nothing is a file a reader has to rule out. *)
+  let rendered = rendered |> List.filter (fun (_, _, ss) -> Cons? ss) in
+  let n = List.length rendered in
+  (* The entry points are called from the last file that exists, which by
+     construction comes after everything they reach.  They are collected from
+     the whole program and qualified from where the call is written, and
+     {!entry_name} needs that file's own top-level names. *)
+  let calls =
+    if n = 0 then [] else
+    let m, ds, _ = List.last rendered in
+    current_module := Some m;
+    reserve_top ds;
+    let cs = entry_calls whole in
+    current_module := None;
+    cs in
+  rendered |> List.mapi (fun i (m, _, ss) ->
+    (m, assemble m (if i = n - 1 then ss @ calls else ss)))
 
 (* -------------------------------------------------------------------- *)
 (* The project                                                          *)
@@ -1612,14 +2007,140 @@ let runtime_source : string =
    \x20 let print_uint8_dec_pad (v : uint8) : unit = w (decpad 3 (uint64 v))\n\
    \x20 let print_uint16_dec_pad (v : uint16) : unit = w (decpad 5 (uint64 v))\n\
    \x20 let print_uint32_dec_pad (v : uint32) : unit = w (decpad 10 (uint64 v))\n\
-   \x20 let print_uint64_dec_pad (v : uint64) : unit = w (decpad 20 v)\n"
+   \x20 let print_uint64_dec_pad (v : uint64) : unit = w (decpad 20 v)\n\
+   \n\
+   // Section 122.9.  [FStar.Char.char] is .NET's [char] and [Prims.string] is\n\
+   // .NET's [string], so these are UTF-16 code units throughout -- see the\n\
+   // note on [builtin_type].  Ordinal comparison and the invariant-culture\n\
+   // case mappings, so that the result does not depend on the machine's\n\
+   // locale the way a verified program's does not.\n\
+   module FStar_Char =\n\
+   \x20 let lowercase (c : char) : char = System.Char.ToLowerInvariant c\n\
+   \x20 let uppercase (c : char) : char = System.Char.ToUpperInvariant c\n\
+   \x20 let int_of_char (c : char) : bigint = bigint (int c)\n\
+   \x20 let char_of_int (i : bigint) : char = char (int i)\n\
+   \x20 let u32_of_char (c : char) : uint32 = uint32 (int c)\n\
+   \x20 let char_of_u32 (u : uint32) : char = char (int u)\n\
+   \n\
+   module FStar_String =\n\
+   \x20 let make (n : bigint) (c : char) : string = System.String (c, int n)\n\
+   \x20 let strcat (s : string) (t : string) : string = s + t\n\
+   \x20 let split (seps : char list) (s : string) : string list =\n\
+   \x20   List.ofArray (s.Split (Array.ofList seps))\n\
+   \x20 let compare (x : string) (y : string) : bigint =\n\
+   \x20   bigint (System.String.CompareOrdinal (x, y))\n\
+   \x20 let concat (sep : string) (l : string list) : string =\n\
+   \x20   System.String.Join (sep, l)\n\
+   \x20 let length (s : string) : bigint = bigint s.Length\n\
+   \x20 let substring (s : string) (i : bigint) (j : bigint) : string =\n\
+   \x20   s.Substring (int i, int j)\n\
+   \x20 let get (s : string) (i : bigint) : char = s.[int i]\n\
+   \x20 let collect (f : char -> string) (s : string) : string =\n\
+   \x20   System.String.Join (\"\", Seq.map f s)\n\
+   \x20 let lowercase (s : string) : string = s.ToLowerInvariant ()\n\
+   \x20 let uppercase (s : string) : string = s.ToUpperInvariant ()\n\
+   \x20 let index_of (s : string) (c : char) : bigint = bigint (s.IndexOf c)\n\
+   \x20 let list_of_string (s : string) : char list = List.ofSeq s\n\
+   \x20 let string_of_list (l : char list) : string = System.String (Array.ofList l)\n\
+   \x20 let string_of_char (c : char) : string = System.String (c, 1)\n\
+   \n\
+   module FStar_All =\n\
+   \x20 let failwith (s : string) : 'a = failwith s\n\
+   \x20 let exit (i : bigint) : 'a = exit (int i)\n\
+   \x20 let try_with (f : unit -> 'a) (g : exn -> 'a) : 'a =\n\
+   \x20   try f () with e -> g e\n\
+   \x20 let pipe_right (x : 'a) (f : 'a -> 'b) : 'b = f x\n\
+   \x20 let pipe_left (f : 'a -> 'b) (x : 'a) : 'b = f x\n\
+   \n\
+   // [FStar.List] is [FStar.List.Tot.Base] with an [ML] effect, which F#\n\
+   // does not distinguish; only the three that are not in the total module\n\
+   // under the same meaning are given here.\n\
+   module FStar_List =\n\
+   \x20 let nth (l : 'a list) (i : bigint) : 'a = List.item (int i) l\n\
+   \x20 let iter (f : 'a -> unit) (l : 'a list) : unit = List.iter f l\n\
+   \x20 let iteri (f : bigint -> 'a -> unit) (l : 'a list) : unit =\n\
+   \x20   List.iteri (fun i x -> f (bigint i) x) l\n\
+   \n\
+   // Section 122.17.  FStar.Bytes over byte[].  Where the OCaml realization\n\
+   // uses a string it is because an OCaml string is a byte string; a .NET\n\
+   // one is UTF-16, so the representation is an array and the two functions\n\
+   // that really do relate bytes to text -- utf8_encode and iutf8_opt -- do\n\
+   // the encoding rather than returning their argument.\n\
+   module FStar_Bytes =\n\
+   \x20 let len (b : byte[]) : uint32 = uint32 b.Length\n\
+   \x20 let empty_bytes : byte[] = Array.empty\n\
+   \x20 let get (b : byte[]) (pos : uint32) : byte = b.[int pos]\n\
+   \x20 let create (n : uint32) (v : byte) : byte[] = Array.create (int n) v\n\
+   \x20 let init (n : uint32) (f : uint32 -> byte) : byte[] =\n\
+   \x20   Array.init (int n) (fun i -> f (uint32 i))\n\
+   \x20 let abyte (b : byte) : byte[] = [| b |]\n\
+   \x20 let twobytes (b : byte * byte) : byte[] = [| fst b; snd b |]\n\
+   \x20 let append (b1 : byte[]) (b2 : byte[]) : byte[] = Array.append b1 b2\n\
+   \x20 let slice (b : byte[]) (s : uint32) (e : uint32) : byte[] =\n\
+   \x20   Array.sub b (int s) (int e - int s)\n\
+   \x20 let sub (b : byte[]) (s : uint32) (l : uint32) : byte[] =\n\
+   \x20   Array.sub b (int s) (int l)\n\
+   \x20 let split (b : byte[]) (k : uint32) : byte[] * byte[] =\n\
+   \x20   (Array.sub b 0 (int k), Array.sub b (int k) (b.Length - int k))\n\
+   \x20 let rec repr_bytes (n : bigint) : bigint =\n\
+   \x20   if n < 256I then 1I else 1I + repr_bytes (n / 256I)\n\
+   \x20 // Big endian, which is what the specification's int_of_bytes_of_int\n\
+   \x20 // and the OCaml realization both say.\n\
+   \x20 let int_of_bytes (b : byte[]) : bigint =\n\
+   \x20   Array.fold (fun acc (x : byte) -> acc * 256I + bigint (int x)) 0I b\n\
+   \x20 let bytes_of_int (nb : bigint) (i : bigint) : byte[] =\n\
+   \x20   let n = int nb\n\
+   \x20   let r : byte[] = Array.zeroCreate n\n\
+   \x20   let mutable v = i\n\
+   \x20   for k in n - 1 .. -1 .. 0 do\n\
+   \x20     r.[k] <- byte (v % 256I)\n\
+   \x20     v <- v / 256I\n\
+   \x20   r\n\
+   \x20 let int32_of_bytes (b : byte[]) : uint32 = uint32 (int_of_bytes b)\n\
+   \x20 let int16_of_bytes (b : byte[]) : uint16 = uint16 (int_of_bytes b)\n\
+   \x20 let int8_of_bytes (b : byte[]) : byte = byte (int_of_bytes b)\n\
+   \x20 let bytes_of_int32 (n : uint32) : byte[] = bytes_of_int 4I (bigint n)\n\
+   \x20 let bytes_of_int16 (n : uint16) : byte[] = bytes_of_int 2I (bigint (int n))\n\
+   \x20 let bytes_of_int8 (n : byte) : byte[] = bytes_of_int 1I (bigint (int n))\n\
+   \x20 let xor (n : uint32) (b1 : byte[]) (b2 : byte[]) : byte[] =\n\
+   \x20   Array.init (int n) (fun i -> b1.[i] ^^^ b2.[i])\n\
+   \x20 let utf8_encode (s : string) : byte[] = Text.Encoding.UTF8.GetBytes s\n\
+   \x20 let bytes_of_string (s : string) : byte[] = utf8_encode s\n\
+   \x20 // Strict: the specification says the result decodes back to the\n\
+   \x20 // argument, and .NET replaces an ill-formed sequence with U+FFFD\n\
+   \x20 // unless the decoder is told to throw.\n\
+   \x20 let private strictUtf8 = Text.UTF8Encoding (false, true)\n\
+   \x20 let iutf8_opt (b : byte[]) : string option =\n\
+   \x20   try Some (strictUtf8.GetString b) with _ -> None\n\
+   \x20 let private hexd = \"0123456789abcdef\"\n\
+   \x20 let private nibble (c : char) : int =\n\
+   \x20   if c >= '0' && c <= '9' then int c - int '0'\n\
+   \x20   elif c >= 'a' && c <= 'f' then 10 + int c - int 'a'\n\
+   \x20   elif c >= 'A' && c <= 'F' then 10 + int c - int 'A'\n\
+   \x20   else failwith \"bytes_of_hex: invalid hex digit\"\n\
+   \x20 let bytes_of_hex (s : string) : byte[] =\n\
+   \x20   if s.Length % 2 <> 0 then failwith \"bytes_of_hex: invalid length\"\n\
+   \x20   else Array.init (s.Length / 2)\n\
+   \x20          (fun i -> byte (nibble s.[2 * i] * 16 + nibble s.[2 * i + 1]))\n\
+   \x20 let hex_of_bytes (b : byte[]) : string =\n\
+   \x20   System.String (Array.collect\n\
+   \x20     (fun (x : byte) -> [| hexd.[int x >>> 4]; hexd.[int x &&& 0xf] |]) b)\n\
+   \x20 // These two are the same encoding over a string whose characters are\n\
+   \x20 // byte values -- which is what an OCaml string holding bytes is, and\n\
+   \x20 // is the reading the OCaml realization gives them.\n\
+   \x20 let string_of_hex (s : string) : string =\n\
+   \x20   System.String (Array.map char (bytes_of_hex s))\n\
+   \x20 let hex_of_string (s : string) : string =\n\
+   \x20   hex_of_bytes (Array.map byte (Array.ofSeq s))\n\
+   \x20 let print_bytes (b : byte[]) : string =\n\
+   \x20   (hex_of_bytes b).ToUpperInvariant ()\n"
 
 (* The target framework.  .NET 10 is the current long-term-support release and
    the first that this backend was written against; [System.Int128] needs 7 or
    later, so nothing older than that would work in any case. *)
 let target_framework : string = "net10.0"
 
-let project_source (stem:string) (exe:bool) : ML string =
+let project_source (stem:string) (exe:bool) (srcs : list string) : ML string =
   "<!-- Generated by F* Custard extraction. Do not edit. -->\n\
    <Project Sdk=\"Microsoft.NET.Sdk\">\n\
    \x20 <PropertyGroup>\n\
@@ -1631,11 +2152,16 @@ let project_source (stem:string) (exe:bool) : ML string =
    \x20   <GenerateDocumentationFile>false</GenerateDocumentationFile>\n\
    \x20 </PropertyGroup>\n\
    \x20 <ItemGroup>\n\
-   \x20   <Compile Include=\"FStarCustard.fs\" />\n\
-   \x20   <Compile Include=\"" ^ stem ^ ".fs\" />\n\
-   \x20 </ItemGroup>\n\
+   \x20   <Compile Include=\"FStarCustard.fs\" />\n" ^
+  String.concat "" (List.map (fun f ->
+    "    <Compile Include=\"" ^ f ^ "\" />\n") srcs) ^
+  "  </ItemGroup>\n\
    </Project>\n"
 
-let project_files (stem:string) (p:program) : ML (list (string & string)) =
+(* The two files that make the output directory build on its own.  [srcs] is
+   the generated sources, in the order F# has to compile them: one entry for
+   the whole-program output, and one per module for a split one. *)
+let project_files (stem:string) (p:program) (srcs : list string)
+  : ML (list (string & string)) =
   [ ("FStarCustard.fs", runtime_source);
-    (stem ^ ".fsproj", project_source stem (Cons? (entrypoints p))) ]
+    (stem ^ ".fsproj", project_source stem (Cons? (entrypoints p)) srcs) ]

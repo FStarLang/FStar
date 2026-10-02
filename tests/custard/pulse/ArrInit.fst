@@ -81,6 +81,40 @@ fn emptyr ()
   4uy
 }
 
+(* Section 94.5.  An allocation whose fill is [EAny]: an arbitrary value of
+   the element type, which is by definition what the uninitialized storage
+   already holds.  [Reference.alloc_uninit] and [Array.Core.mask_alloc] are
+   the rules that introduce it, and none of the peepholes above can reach it
+   -- [EAny] is not an [EConst], so the initializer list is refused whatever
+   the element type is, and at [cell] it would be refused anyway.  So both of
+   these declared their storage and then wrote a value chosen for being
+   arbitrary into every cell of it.  The deprecation on the two rules is about
+   their *model* being unsound, not about what they extract to: they are the
+   shape a backend plugin reaches for when it wants a local that its own
+   intrinsics are about to fill. *)
+module R  = Pulse.Lib.Reference
+module AC = Pulse.Lib.Array.Core
+
+fn uninit_ref ()
+  returns r: U8.t
+{
+  let p = R.alloc_uninit U8.t ();
+  p := 9uy;
+  let v = !p;
+  R.free p;
+  v
+}
+
+fn uninit_arr ()
+  returns r: U8.t
+{
+  let a = AC.mask_alloc cell 4sz;
+  AC.mask_write a 1sz ({ c_a = 6uy; c_b = 7uy });
+  let v = AC.mask_read a 1sz;
+  AC.mask_free a;
+  v.c_b
+}
+
 fn main ()
   returns x: FStar.Int32.t
 {
@@ -90,8 +124,10 @@ fn main ()
   let d = varlen 9sz;
   let e = empty ();
   let f = emptyr ();
+  let g = uninit_ref ();
+  let h = uninit_arr ();
   if (U8.eq a 0uy && U8.eq b 7uy && U8.eq c 5uy && U8.eq d 0uy && U8.eq e 3uy
-      && U8.eq f 4uy) {
+      && U8.eq f 4uy && U8.eq g 9uy && U8.eq h 7uy) {
     0l
   } else {
     1l
