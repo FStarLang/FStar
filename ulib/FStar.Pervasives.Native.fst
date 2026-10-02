@@ -24,7 +24,7 @@ open Prims
 /// It provides several basic types in F* that enjoy some special
 /// status in extraction. For instance, the tuple type below is
 /// compiled to OCaml's tuple type, rather than to a F*-defined
-/// inductive type. See ulib/ml/FStar_Pervasives_Native.ml
+/// inductive type.
 ///
 
 (** [option a] represents either  [Some a]-value or a non-informative [None]. *)
@@ -54,7 +54,9 @@ type option (a: Type) =
 type tuple2 'a 'b = | Mktuple2 : _1: 'a -> _2: 'b -> tuple2 'a 'b
 
 (** The fst and snd projections on pairs are very common *)
+inline_for_extraction
 let fst (x: tuple2 'a 'b) : 'a = Mktuple2?._1 x
+inline_for_extraction
 let snd (x: tuple2 'a 'b) : 'b = Mktuple2?._2 x
 
 type tuple3 'a 'b 'c = | Mktuple3 : _1: 'a -> _2: 'b -> _3: 'c -> tuple3 'a 'b 'c

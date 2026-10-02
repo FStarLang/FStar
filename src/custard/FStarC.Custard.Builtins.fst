@@ -1314,7 +1314,6 @@ let realized_modules : list (list string) = [
   ["FStarC"; "Format"];
   ["FStarC"; "Getopt"];
   ["FStarC"; "Hash"];
-  ["FStarC"; "Hints"];
   ["FStarC"; "IMap"];
   ["FStarC"; "Int"; "Extra"];
   ["FStarC"; "Json"];

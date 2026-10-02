@@ -9,7 +9,6 @@ type u32 = U32.t
 type byte = u8
 
 type bytes = string
-type cbytes = string (* not in FStar.Bytes *)
 
 let len (b:bytes) = U32.of_native_int (String.length b)
 let length (b:bytes) = Z.of_int (String.length b)
@@ -147,9 +146,7 @@ let xor_idempotent (n:U32.t) (b1:bytes) (b2:bytes) = ()
 
 (*********************************************************************************)
 (* Under discussion *)
-let utf8 (x:string) : bytes = x (* TODO: use Camomile *)
-let utf8_encode = utf8
-let iutf8 (x:bytes) : string = x (* TODO: use Camomile *)
+let utf8_encode (x:string) : bytes = x (* TODO: use Camomile *)
 (* FStar.Bytes.fsti says the result re-encodes to the argument, so an
    ill-formed sequence has to come back as [None]; this used to be [Some]
    whatever it was given. *)
@@ -211,48 +208,4 @@ let print_bytes (s:bytes) : string =
   done;
   Buffer.contents b
 
-let string_of_bytes b = b
 let bytes_of_string s = s
-
-(*********************************************************************************)
-(* OLD *)
-(*********************************************************************************)
-
-let cbyte (b:bytes) =
-  try int_of_char (String.get b 0)
-  with _ -> failwith "cbyte: called on empty string"
-
-let cbyte2 (b:bytes) =
-  try (int_of_char (String.get b 0), int_of_char (String.get b 1))
-  with _ -> failwith "cbyte2: need at least length 2"
-
-let index (b:bytes) i =
-  try int_of_char (String.get b (Z.to_int i))
-  with _ -> failwith "index: called out of bound"
-
-let get_cbytes (b:bytes) = b
-let abytes (ba:cbytes) = ba
-let abyte (ba:byte) = String.make 1 (char_of_int ba)
-let abyte2 (ba1,ba2) =
-  String.init 2 (fun i -> if i = 0 then char_of_int ba1 else char_of_int ba2)
-  
-let split_eq = split
-
-let createBytes len (value:int) : bytes =
-    let len = Z.to_int len in
-    try abytes (String.make len (char_of_int value))
-    with _ -> failwith "Default integer for createBytes was greater than max_value"
-
-let initBytes len f : bytes =
-    let len = Z.to_int len in
-    try abytes (String.init len (fun i -> char_of_int (f (Z.of_int i))))
-    with _ -> failwith "Platform.Bytes.initBytes: invalid char returned"
-
-let equalBytes (b1:bytes) (b2:bytes) = b1 = b2
-
-let split2 (b:bytes) i j : bytes * bytes * bytes =
-  let b1, b2 = split b i in
-  let b2a, b2b = split b2 j in
-  (b1, b2a, b2b)
-
-let byte_of_int i = Z.to_int i

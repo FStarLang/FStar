@@ -43,7 +43,6 @@ let to_string (x:int) = x.ToString()
 type unit      = Microsoft.FSharp.Core.unit
 type bool      = Microsoft.FSharp.Core.bool
 type string    = Microsoft.FSharp.Core.string
-type 'a array  = 'a Microsoft.FSharp.Core.array
 type exn       = Microsoft.FSharp.Core.exn
 type 'a list'  = 'a list
 type 'a list   = 'a Microsoft.FSharp.Collections.list
