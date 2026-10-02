@@ -6492,6 +6492,37 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
                             not (unrootable_definition st (S.lid_of_fv fv) lb.lbtyp) ->
                 mark' true Root (S.lid_of_fv fv)
               | _ -> ())
+          (* An [assume val] is part of what the module provides, and a module
+             that is nothing but [assume val]s -- a compile-time flag module,
+             a set of target primitives -- is precisely a library whose
+             interface is its externals.  Rooted nothing, it compiled to an
+             empty unit, and a consumer that reads both that unit and one
+             where the same declarations survived as imports gets whichever
+             of the two its linker happened to keep.
+
+             Values only.  An abstract type's declaration is its [val], so
+             rooting those would put every opaque type of an entry module
+             into the output whether or not anything mentions it; a type that
+             is used is rooted by its use, and one that is realized in the
+             target says so with [@@custard_extern].
+
+             C-emitting backends only.  There an external is the ordinary way
+             to name something the target provides, and the declaration is
+             all the target needs from us.  The OCaml backend has no such
+             story: an unrealized external is a [failwith] that runs when the
+             module is initialized, so emitting one nobody calls turns a
+             working plugin into one that aborts on load. *)
+          | Sig_declare_typ {lid; t}
+            when is_c_backend () &&
+                 not (se.sigquals |> List.existsb (function
+                        | NoExtract | Projector _ | Discriminator _ -> true
+                        | _ -> false)) &&
+                 not (noextract_to_this_backend se) &&
+                 not (is_krml_private st md.name se) &&
+                 not (erased_definition st t) &&
+                 not (is_type_sig st t) &&
+                 not (unrootable_definition st lid t) ->
+            mark' true Root lid
           | _ -> ())));
   Prof.timed "run.roots" (fun () ->
     roots |> List.iter (fun l -> if not (root_is_erased st l) then mark Root l);

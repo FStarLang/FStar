@@ -803,6 +803,15 @@ CGREP_Export += "static uint32_t Export_countdown__"
 # boundary in a real program has.  The link is the assertion -- the stub is
 # written against the generated struct, so a change to its layout or to the
 # name breaks the build rather than passing quietly.
+# [--custard_entry_module] roots a module's externals too: the program calls
+# [used] and never mentions [unused], and both are declared, because what an
+# entry module offers is its interface.  The stub defines both, so the link
+# is the assertion for the first and the grep for the second.
+C_TESTS += EntryRoots
+FLAGS_EntryRoots = --custard_entry_module EntryRootsLib
+CEXTRA_EntryRoots = EntryRoots_stubs.c
+CGREP_EntryRoots += "EntryRootsLib_unused"
+
 C_TESTS += ExternOpt
 CEXTRA_ExternOpt = ExternOpt_stubs.c
 CGREP_ExternOpt += "struct FStar_Pervasives_Native_option__listener_s {"
