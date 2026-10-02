@@ -1311,6 +1311,32 @@ $(OUTPUT_DIR)/%.rssplit: $(OUTPUT_DIR)/rustsplit/%.krml
 	$(Q)$(OUTPUT_DIR)/$*_rss/$*.rsexe
 	$(Q)touch $@
 
+# Section 65.  The C leg with [--custard_split]: one karamel file per F*
+# module, no bundles, and the assertion is which header a declaration is in.
+# Nothing is compiled, because the question is about the file list and not
+# about the C.
+$(OUTPUT_DIR)/csplit/%.krml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
+	$(call msg, "CUSTARD-C-SPLIT", $(basename $(notdir $@)))
+	@mkdir -p $(OUTPUT_DIR)/csplit
+	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) --custard_split \
+	  --custard_backend KrmlC --custard_main $*.main $< -o $@
+
+$(OUTPUT_DIR)/%.csplit: $(OUTPUT_DIR)/csplit/%.krml
+	$(call msg, "KRML-C-SPLIT", $(basename $(notdir $@)))
+	$(Q)rm -rf $(OUTPUT_DIR)/$*_cs && mkdir -p $(OUTPUT_DIR)/$*_cs
+	$(Q)$(KRML_EXE) -silent -skip-compilation -tmpdir $(OUTPUT_DIR)/$*_cs $<
+	@# Each pin is <file>@<text>: the file is the assertion.
+	$(Q)for p in $(CSGREP_$*); do \
+	  f=$${p%%@*}; t=$${p#*@}; \
+	  grep -qF -- "$$t" $(OUTPUT_DIR)/$*_cs/$$f \
+	    || { echo "ERROR: $* split C: $$f is missing $$t"; exit 1; }; done
+	$(Q)for p in $(CSNOGREP_$*); do \
+	  f=$${p%%@*}; t=$${p#*@}; \
+	  grep -qF -- "$$t" $(OUTPUT_DIR)/$*_cs/$$f \
+	    && { echo "ERROR: $* split C: $$f should not contain $$t"; exit 1; }; \
+	  done; true
+	$(Q)touch $@
+
 # karamel emits its own compile_flags.txt, which is the only portable way to
 # learn where krmllib's headers live.
 $(OUTPUT_DIR)/%.cexe: $(OUTPUT_DIR)/%.krml
@@ -2613,6 +2639,12 @@ KRML_TESTS += KrmlExt
 # the call must be.
 KRML_TESTS += KrmlMacro
 KRMLFLAGS_KrmlMacro := -add-include 'Custard.c:"KrmlMacro_stubs.h"'
+
+# Section 65.  An external belongs to its own module's file, not to the file
+# of the first thing its type mentions.
+all: $(OUTPUT_DIR)/KsHi.csplit
+CSGREP_KsHi += "KsExt.h@KsExt_sum"
+CSNOGREP_KsHi += "KsLo.h@KsExt_sum"
 
 KRML_TESTS += FloatsKrml
 
