@@ -2606,10 +2606,13 @@ KRML_TESTS += KrmlExt
 
 # Section 45.2.  A [@@CMacro] on an [assume val], through karamel.  The
 # external was emitted with an empty flag list, so karamel saw a function
-# where the target has a macro: it emitted a prototype and a call, and the
-# link failed.  Linking and running is the assertion.
+# where the target has a macro and spelled the reference as a function name.
+# Linking and running is the assertion.  karamel still emits an [extern]
+# prototype for a macro external, so the stub header is included only from
+# Custard.c, after Custard.h: the prototype must not be macro-expanded, but
+# the call must be.
 KRML_TESTS += KrmlMacro
-KRMLFLAGS_KrmlMacro := -add-include '"KrmlMacro_stubs.h"'
+KRMLFLAGS_KrmlMacro := -add-include 'Custard.c:"KrmlMacro_stubs.h"'
 
 KRML_TESTS += FloatsKrml
 

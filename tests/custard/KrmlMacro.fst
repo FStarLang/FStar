@@ -8,9 +8,9 @@ module U32 = FStar.UInt32
 ///
 /// The [DExternal] was built with no flags at all, so [@@CMacro] -- and every
 /// other C decoration an [assume val] can carry -- was dropped on the way out.
-/// karamel therefore took the symbol for an ordinary function, emitted a
-/// prototype for it and called it, and the link failed because what the
-/// target supplies is a macro and macros have no address.
+/// karamel therefore took the symbol for an ordinary function and spelled the
+/// call with the function's name, not the macro's, so nothing the target
+/// supplies matched it.
 ///
 /// The test is that the result links and runs.
 

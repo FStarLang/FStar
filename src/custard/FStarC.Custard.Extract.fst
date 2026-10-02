@@ -5491,9 +5491,9 @@ and extract_sigelt_body (st:state) (l:Ident.lident) (nm:name) (margs:list (int &
          (* Section 45.2.  An [assume val] carries C decorations like any
             other declaration, and [@@CMacro] on one is the whole point of
             the attribute: the symbol the target realizes is a macro, so the
-            reference must be spelled as one and no prototype may be emitted
-            for it.  Dropping the flags here left the reference looking like
-            a call to a function nothing defines. *)
+            reference must be spelled as one.  Dropping the flags here left
+            the reference looking like a call to a function nothing
+            defines. *)
          DExternal { dx_name = nm; dx_typars = typars; dx_ty = ty;
                      dx_target = None; dx_header = None;
                      dx_flags = c_decoration_flags (source_attrs se l) })
