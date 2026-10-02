@@ -85,8 +85,6 @@ type proc =
 
 let all_procs : (proc list) ref = ref []
 
-let lock () = ()
-let release () = ()
 let sleep n = Thread.delay ((Z.to_float n) /. 1000.)
 
 let mlock = Mutex.create ()
@@ -349,8 +347,6 @@ let finally (h:unit->unit) (f:unit->'a) : 'a = BatPervasives.finally h f ()
 
 let pr  = Printf.printf
 let spr = Printf.sprintf
-let fpr = Printf.fprintf
-
 let strcat s1 s2 = s1 ^ s2
 let concat_l sep (l:string list) = BatString.concat sep l
 
@@ -383,8 +379,6 @@ let float_of_int64 = BatInt64.to_float
 let int_of_int32 i = i
 let int32_of_int i = BatInt32.of_int i
 
-let string_of_int32 = BatInt32.to_string
-let string_of_int64 = BatInt64.to_string
 let string_of_float = string_of_float
 let string_of_char i = BatUTF8.init 1 (fun _ -> BatUChar.chr i)
 let hex_string_of_byte (i:int) =
@@ -438,9 +432,6 @@ let split s sep =
       in
       collect [] 0
 let splitlines s = split s "\n"
-
-let iof = int_of_float
-let foi = float_of_int
 
 let fprint (oc:out_channel) fmt args : unit = Printf.fprintf oc "%s" (FStarC_Format.fmt fmt args)
 
@@ -556,11 +547,6 @@ let prefix_until f l =
        if f hd then Some (BatList.rev prefix, hd, tl)
        else aux (hd::prefix) tl in
   aux [] l
-
-let string_to_ascii_bytes (s:string) : char array =
-  BatArray.of_list (BatString.explode s)
-let ascii_bytes_to_string (b:char array) : string =
-  BatString.implode (BatArray.to_list b)
 
 let copy_file input_name output_name =
   (* see https://ocaml.github.io/ocamlunix/ocamlunix.html#sec33 *)
@@ -936,43 +922,11 @@ let (:=) = write
 let marshal (x:'a) : string = Marshal.to_string x []
 let unmarshal (x:string) : 'a = Marshal.from_string x 0
 
-type signedness = | Unsigned | Signed
-type width = | Int8 | Int16 | Int32 | Int64
-
-let rec z_pow2 n =
-  if n = Z.zero then Z.one
-  else Z.mul (Z.of_string "2") (z_pow2 (Z.sub n Z.one))
-
-let bounds signedness width =
-    let n =
-        match width with
-        | Int8 -> Z.of_string "8"
-        | Int16 -> Z.of_string "16"
-        | Int32 -> Z.of_string "32"
-        | Int64 -> Z.of_string "64"
-    in
-    let lower, upper =
-      match signedness with
-      | Unsigned ->
-        Z.zero, Z.sub (z_pow2 n) Z.one
-      | Signed ->
-        let upper = z_pow2 (Z.sub n Z.one) in
-        Z.neg upper, Z.sub upper Z.one
-    in
-    lower, upper
-
-let within_bounds repr signedness width =
-  let lower, upper = bounds signedness width in
-  let value = Z.of_string (ensure_decimal repr) in
-  Z.leq lower value && Z.leq value upper
-
 let print_array (f: 'a -> string) 
                 (s: 'a array)
   : string 
   = let ls = Array.fold_left (fun out a -> f a  :: out) [] s in
     Printf.sprintf "[| %s |]" (String.concat "; " (List.rev ls))
-
-let array_of_list (l:'a list) = FStar_ImmutableArray_Base.of_list l
 
 let array_length (l:'a FStar_ImmutableArray_Base.t) = FStar_ImmutableArray_Base.length l
 

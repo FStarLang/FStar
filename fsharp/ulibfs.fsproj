@@ -20,7 +20,6 @@
     <Compile Include="base/FStar_All.fs" Link="FStar_All.fs" />
     <Compile Include="base/FStar_Char.fs" Link="FStar_Char.fs" />
     <Compile Include="base/FStar_Dyn.fs" Link="FStar_Dyn.fs" />
-    <Compile Include="base/FStar_Float.fs" Link="FStar_Float.fs" />
     <Compile Include="base/FStar_Ghost.fs" Link="FStar_Ghost.fs" />
     <Compile Include="base/FStar_Int16.fs" Link="FStar_Int16.fs" />
     <Compile Include="base/FStar_Int32.fs" Link="FStar_Int32.fs" />

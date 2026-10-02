@@ -803,6 +803,15 @@ CGREP_Export += "static uint32_t Export_countdown__"
 # boundary in a real program has.  The link is the assertion -- the stub is
 # written against the generated struct, so a change to its layout or to the
 # name breaks the build rather than passing quietly.
+# [--custard_entry_module] roots a module's externals too: the program calls
+# [used] and never mentions [unused], and both are declared, because what an
+# entry module offers is its interface.  The stub defines both, so the link
+# is the assertion for the first and the grep for the second.
+C_TESTS += EntryRoots
+FLAGS_EntryRoots = --custard_entry_module EntryRootsLib
+CEXTRA_EntryRoots = EntryRoots_stubs.c
+CGREP_EntryRoots += "EntryRootsLib_unused"
+
 C_TESTS += ExternOpt
 CEXTRA_ExternOpt = ExternOpt_stubs.c
 CGREP_ExternOpt += "struct FStar_Pervasives_Native_option__listener_s {"
@@ -1309,6 +1318,32 @@ $(OUTPUT_DIR)/%.rssplit: $(OUTPUT_DIR)/rustsplit/%.krml
 	$(Q)cd $(OUTPUT_DIR)/$*_rss && MAKEFLAGS= rustc -O -o $*.rsexe driver.rs
 	$(call msg, "RUN", $(basename $(notdir $@)))
 	$(Q)$(OUTPUT_DIR)/$*_rss/$*.rsexe
+	$(Q)touch $@
+
+# Section 65.  The C leg with [--custard_split]: one karamel file per F*
+# module, no bundles, and the assertion is which header a declaration is in.
+# Nothing is compiled, because the question is about the file list and not
+# about the C.
+$(OUTPUT_DIR)/csplit/%.krml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
+	$(call msg, "CUSTARD-C-SPLIT", $(basename $(notdir $@)))
+	@mkdir -p $(OUTPUT_DIR)/csplit
+	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) --custard_split \
+	  --custard_backend KrmlC --custard_main $*.main $< -o $@
+
+$(OUTPUT_DIR)/%.csplit: $(OUTPUT_DIR)/csplit/%.krml
+	$(call msg, "KRML-C-SPLIT", $(basename $(notdir $@)))
+	$(Q)rm -rf $(OUTPUT_DIR)/$*_cs && mkdir -p $(OUTPUT_DIR)/$*_cs
+	$(Q)$(KRML_EXE) -silent -skip-compilation -tmpdir $(OUTPUT_DIR)/$*_cs $<
+	@# Each pin is <file>@<text>: the file is the assertion.
+	$(Q)for p in $(CSGREP_$*); do \
+	  f=$${p%%@*}; t=$${p#*@}; \
+	  grep -qF -- "$$t" $(OUTPUT_DIR)/$*_cs/$$f \
+	    || { echo "ERROR: $* split C: $$f is missing $$t"; exit 1; }; done
+	$(Q)for p in $(CSNOGREP_$*); do \
+	  f=$${p%%@*}; t=$${p#*@}; \
+	  grep -qF -- "$$t" $(OUTPUT_DIR)/$*_cs/$$f \
+	    && { echo "ERROR: $* split C: $$f should not contain $$t"; exit 1; }; \
+	  done; true
 	$(Q)touch $@
 
 # karamel emits its own compile_flags.txt, which is the only portable way to
@@ -2618,6 +2653,12 @@ KRMLFLAGS_KrmlMacro := -add-include 'Custard.c:"KrmlMacro_stubs.h"'
 # [IfDef], so the test compiles to [#if] rather than to a read of a symbol
 # nothing defines.  Linking and running is the assertion.
 KRML_TESTS += KrmlIfDef
+
+# Section 65.  An external belongs to its own module's file, not to the file
+# of the first thing its type mentions.
+all: $(OUTPUT_DIR)/KsHi.csplit
+CSGREP_KsHi += "KsExt.h@KsExt_sum"
+CSNOGREP_KsHi += "KsLo.h@KsExt_sum"
 
 KRML_TESTS += FloatsKrml
 

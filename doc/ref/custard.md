@@ -7405,22 +7405,19 @@ target-dependent -- C wants the definition compiled and Rust wants it
 abstract -- and Custard's Krml backend does not currently know which of the
 two karamel is going to be asked for.  Not done, and not a small change.
 
-### 19.8a A branch of ulib is not a Custard decision
+### 19.8a `fst` and `snd` are inlined
 
 Custard's C output for `Example_Hashtable` carried two one-line wrapper
-functions for `FStar.Pervasives.Native.fst` and `snd`, and the obvious fix
-was to mark them `inline_for_extraction` in ulib.  It works, and it was
-wrong: those two definitions are extracted by *every* F\* user, and marking
-them inlineable changed the OCaml the standard pipeline emits repo-wide.
-`tests/bug-reports/closed/Bug2595` caught it -- its expected output went from
-`FStar_Pervasives_Native.snd` to `__proj__Mktuple2__item___2` -- and it is
-the only test that happened to look, which is the argument for reverting
-rather than for updating it.
-
-So the wrappers are back, and the principled fix belongs on the Custard side:
-`Simplify` should inline a function whose body is a single projection,
-which is a local decision about the generated program rather than a change to
-what the language extracts.  Not done; noted here so the trade is on record.
+functions for `FStar.Pervasives.Native.fst` and `snd`.  An earlier attempt to
+mark them `inline_for_extraction` in ulib was reverted because it changes the
+OCaml every F\* user extracts (`tests/bug-reports/closed/Bug2595` went from
+`FStar_Pervasives_Native.snd` to an inline match).  They are now
+`inline_for_extraction` after all: tuples are built in, so the projections
+need no realization, and the hand-written `fst`/`snd` in
+`ulib/ml/app/FStar_Pervasives_Native.ml` and its F\# twin are gone.  The
+expected outputs were updated, and the tests that used `fst` as a convenient
+polymorphic function to exercise monomorphization (`NestArr`, `TupAlias`)
+now define their own.
 
 ### 19.9 What is still open
 
@@ -7435,7 +7432,6 @@ what the language extracts.  Not done; noted here so the trade is on record.
 * `--custard_profile_norm`, which would print the request chain for any
   single normalization over a wall-time threshold.  The reporter has asked
   for it twice and has been bisecting by hand instead.
-* Inlining trivial projector functions in `Simplify`, per 19.8a.
 * `cbor_det_elim_simple` is the one of the five 19.11 rejections that is not
   a specification: it is real code whose *ghost* index reaches the layout
   pass.  19.11 does not fix it, and whether it needs anything beyond the same
@@ -21870,8 +21866,8 @@ removed and replaced by an abstract `ref`, `alloc`, `!` and `:=` in
 describes, and the backend realizes them with F#'s own `ref` cell ---
 `(r).Value` and `(r).Value <- x`, which is what `TRef` prints to.  A
 program that allocates, at top level or not, needs nothing further.
-`ulib/ml/app/FStar_ST.ml` and its two neighbours are still on disk and
-are dead; nothing on this path reads them.
+The OCaml realizations of the removed modules (`FStar_ST.ml` and its
+neighbours in `ulib/ml/app`) have been deleted as well.
 
 `FStar.Bytes` is realized, and is the one module where the two
 realizations are not the same data.  OCaml's is a `string`, because an
