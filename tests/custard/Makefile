@@ -2614,6 +2614,11 @@ KRML_TESTS += KrmlExt
 KRML_TESTS += KrmlMacro
 KRMLFLAGS_KrmlMacro := -add-include 'Custard.c:"KrmlMacro_stubs.h"'
 
+# A [@@CIfDef] flag through karamel: the attribute reaches karamel's own
+# [IfDef], so the test compiles to [#if] rather than to a read of a symbol
+# nothing defines.  Linking and running is the assertion.
+KRML_TESTS += KrmlIfDef
+
 KRML_TESTS += FloatsKrml
 
 # The same arithmetic on the OCaml backend, where a Float64 is OCaml's float.
