@@ -1,411 +1,203 @@
-open Prims
-let dbg_Patterns : Prims.bool FStarC_Effect.ref=
-  FStarC_Debug.get_toggle "Patterns"
-let rec elaborate_pat (env : FStarC_TypeChecker_Env.env)
-  (p : FStarC_Syntax_Syntax.pat) : FStarC_Syntax_Syntax.pat=
-  let maybe_dot inaccessible a r =
-    if inaccessible
-    then
-      FStarC_Syntax_Syntax.withinfo
-        (FStarC_Syntax_Syntax.Pat_dot_term FStar_Pervasives_Native.None) r
-    else FStarC_Syntax_Syntax.withinfo (FStarC_Syntax_Syntax.Pat_var a) r in
-  match p.FStarC_Syntax_Syntax.v with
-  | FStarC_Syntax_Syntax.Pat_cons
-      ({ FStarC_Syntax_Syntax.fv_name = uu___;
-         FStarC_Syntax_Syntax.fv_qual = FStar_Pervasives_Native.Some
-           (FStarC_Syntax_Syntax.Unresolved_constructor uu___1);_},
-       uu___2, uu___3)
-      -> p
-  | FStarC_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->
-      let pats1 =
-        FStarC_List.map
-          (fun uu___ ->
-             match uu___ with
-             | (p1, imp) ->
-                 let uu___1 = elaborate_pat env p1 in (uu___1, imp)) pats in
-      let uu___ =
-        FStarC_TypeChecker_Env.lookup_datacon env
-          fv.FStarC_Syntax_Syntax.fv_name in
-      (match uu___ with
-       | (uu___1, t) ->
-           let uu___2 = FStarC_Syntax_Util.arrow_formals t in
-           (match uu___2 with
-            | (f, uu___3) ->
-                let rec aux formals pats2 =
-                  match (formals, pats2) with
-                  | ([], []) -> []
-                  | ([], uu___4::uu___5) ->
-                      FStarC_Errors.raise_error FStarC_Ident.hasrange_lident
-                        fv.FStarC_Syntax_Syntax.fv_name
-                        FStarC_Errors_Codes.Fatal_TooManyPatternArguments ()
-                        (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                        (Obj.magic "Too many pattern arguments")
-                  | (uu___4::uu___5, []) ->
-                      FStarC_List.map
-                        (fun fml ->
-                           let uu___6 =
-                             ((fml.FStarC_Syntax_Syntax.binder_bv),
-                               (fml.FStarC_Syntax_Syntax.binder_qual)) in
-                           match uu___6 with
-                           | (t1, imp) ->
-                               (match imp with
-                                | FStar_Pervasives_Native.Some
-                                    (FStarC_Syntax_Syntax.Implicit
-                                    inaccessible) ->
-                                    let a =
-                                      FStarC_Syntax_Syntax.new_bv
-                                        (FStar_Pervasives_Native.Some
-                                           (FStarC_Syntax_Syntax.range_of_bv
-                                              t1)) FStarC_Syntax_Syntax.tun in
-                                    let r =
-                                      FStarC_Ident.range_of_lid
-                                        fv.FStarC_Syntax_Syntax.fv_name in
-                                    ((maybe_dot inaccessible a r), true)
-                                | uu___7 ->
-                                    let uu___8 =
-                                      let uu___9 =
-                                        FStarC_Class_Show.show
-                                          FStarC_Syntax_Print.showable_pat p in
-                                      FStarC_Format.fmt1
-                                        "Insufficient pattern arguments (%s)"
-                                        uu___9 in
-                                    FStarC_Errors.raise_error
-                                      FStarC_Ident.hasrange_lident
-                                      fv.FStarC_Syntax_Syntax.fv_name
-                                      FStarC_Errors_Codes.Fatal_InsufficientPatternArguments
-                                      ()
-                                      (Obj.magic
-                                         FStarC_Errors_Msg.is_error_message_string)
-                                      (Obj.magic uu___8))) formals
-                  | (f1::formals', (p1, p_imp)::pats') ->
-                      (match ((f1.FStarC_Syntax_Syntax.binder_bv),
-                               (f1.FStarC_Syntax_Syntax.binder_qual))
-                       with
-                       | (uu___4, FStar_Pervasives_Native.Some
-                          (FStarC_Syntax_Syntax.Implicit inaccessible)) when
-                           inaccessible && p_imp ->
-                           (match p1.FStarC_Syntax_Syntax.v with
-                            | FStarC_Syntax_Syntax.Pat_dot_term uu___5 ->
-                                let uu___6 = aux formals' pats' in (p1, true)
-                                  :: uu___6
-                            | FStarC_Syntax_Syntax.Pat_var v when
-                                (FStarC_Ident.string_of_id
-                                   v.FStarC_Syntax_Syntax.ppname)
-                                  = FStarC_Ident.reserved_prefix
-                                ->
-                                let a =
-                                  FStarC_Syntax_Syntax.new_bv
-                                    (FStar_Pervasives_Native.Some
-                                       (p1.FStarC_Syntax_Syntax.p))
-                                    FStarC_Syntax_Syntax.tun in
-                                let p2 =
-                                  maybe_dot inaccessible a
-                                    (FStarC_Ident.range_of_lid
-                                       fv.FStarC_Syntax_Syntax.fv_name) in
-                                let uu___5 = aux formals' pats' in (p2, true)
-                                  :: uu___5
-                            | uu___5 ->
-                                let uu___6 =
-                                  let uu___7 =
-                                    FStarC_Class_Show.show
-                                      FStarC_Syntax_Print.showable_pat p1 in
-                                  FStarC_Format.fmt1
-                                    "This pattern (%s) binds an inaccesible argument; use a wildcard ('_') pattern"
-                                    uu___7 in
-                                FStarC_Errors.raise_error
-                                  FStarC_Class_HasRange.hasRange_range
-                                  p1.FStarC_Syntax_Syntax.p
-                                  FStarC_Errors_Codes.Fatal_InsufficientPatternArguments
-                                  ()
-                                  (Obj.magic
-                                     FStarC_Errors_Msg.is_error_message_string)
-                                  (Obj.magic uu___6))
-                       | (uu___4, FStar_Pervasives_Native.Some
-                          (FStarC_Syntax_Syntax.Implicit uu___5)) when p_imp
-                           ->
-                           let uu___6 = aux formals' pats' in (p1, true) ::
-                             uu___6
-                       | (uu___4, FStar_Pervasives_Native.Some
-                          (FStarC_Syntax_Syntax.Meta uu___5)) when p_imp ->
-                           let uu___6 = aux formals' pats' in (p1, true) ::
-                             uu___6
-                       | (uu___4, FStar_Pervasives_Native.Some
-                          (FStarC_Syntax_Syntax.Implicit inaccessible)) ->
-                           let a =
-                             FStarC_Syntax_Syntax.new_bv
-                               (FStar_Pervasives_Native.Some
-                                  (p1.FStarC_Syntax_Syntax.p))
-                               FStarC_Syntax_Syntax.tun in
-                           let p2 =
-                             maybe_dot inaccessible a
-                               (FStarC_Ident.range_of_lid
-                                  fv.FStarC_Syntax_Syntax.fv_name) in
-                           let uu___5 = aux formals' pats2 in (p2, true) ::
-                             uu___5
-                       | (uu___4, FStar_Pervasives_Native.Some
-                          (FStarC_Syntax_Syntax.Meta uu___5)) ->
-                           let a =
-                             FStarC_Syntax_Syntax.new_bv
-                               (FStar_Pervasives_Native.Some
-                                  (p1.FStarC_Syntax_Syntax.p))
-                               FStarC_Syntax_Syntax.tun in
-                           let p2 =
-                             maybe_dot false a
-                               (FStarC_Ident.range_of_lid
-                                  fv.FStarC_Syntax_Syntax.fv_name) in
-                           let uu___6 = aux formals' pats2 in (p2, true) ::
-                             uu___6
-                       | (uu___4, imp) ->
-                           let uu___5 = aux formals' pats' in
-                           (p1,
-                             (FStarC_Syntax_Syntax.is_bqual_implicit_or_meta
-                                imp))
-                             :: uu___5) in
-                let uu___4 =
-                  let uu___5 =
-                    let uu___6 = aux f pats1 in (fv, us_opt, uu___6) in
-                  FStarC_Syntax_Syntax.Pat_cons uu___5 in
-                {
-                  FStarC_Syntax_Syntax.v = uu___4;
-                  FStarC_Syntax_Syntax.p = (p.FStarC_Syntax_Syntax.p)
-                }))
-  | uu___ -> p
-exception Raw_pat_cannot_be_translated 
-let uu___is_Raw_pat_cannot_be_translated (projectee : Prims.exn) :
-  Prims.bool= true
-let raw_pat_as_exp (env : FStarC_TypeChecker_Env.env)
-  (p : FStarC_Syntax_Syntax.pat) :
-  (FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.bv Prims.list)
-    FStar_Pervasives_Native.option=
-  let rec aux bs p1 =
-    match p1.FStarC_Syntax_Syntax.v with
-    | FStarC_Syntax_Syntax.Pat_constant c ->
-        let e =
-          match c with
-          | FStarC_Const.Const_machine_int (repr, base, sw, w) ->
-              FStarC_ToSyntax_ToSyntax.desugar_machine_integer
-                env.FStarC_TypeChecker_Env.dsenv repr base (sw, w)
-                p1.FStarC_Syntax_Syntax.p
-          | uu___ ->
-              FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_constant c)
-                p1.FStarC_Syntax_Syntax.p in
-        (e, bs)
-    | FStarC_Syntax_Syntax.Pat_dot_term eopt ->
-        (match eopt with
-         | FStar_Pervasives_Native.None ->
-             FStarC_Effect.raise Raw_pat_cannot_be_translated
-         | FStar_Pervasives_Native.Some e ->
-             let uu___ = FStarC_Syntax_Subst.compress e in (uu___, bs))
-    | FStarC_Syntax_Syntax.Pat_var x ->
-        let uu___ =
-          FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_name x)
-            p1.FStarC_Syntax_Syntax.p in
-        (uu___, (x :: bs))
-    | FStarC_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->
-        let uu___ =
-          FStarC_List.fold_right
-            (fun uu___1 uu___2 ->
-               match (uu___1, uu___2) with
-               | ((p2, i), (args, bs1)) ->
-                   let uu___3 = aux bs1 p2 in
-                   (match uu___3 with
-                    | (ep, bs2) ->
-                        (((ep, (FStarC_Syntax_Syntax.as_aqual_implicit i)) ::
-                          args), bs2))) pats ([], bs) in
-        (match uu___ with
-         | (args, bs1) ->
-             let hd = FStarC_Syntax_Syntax.fv_to_tm fv in
-             let hd1 =
-               match us_opt with
-               | FStar_Pervasives_Native.None -> hd
-               | FStar_Pervasives_Native.Some us ->
-                   FStarC_Syntax_Syntax.mk_Tm_uinst hd us in
-             let e =
-               FStarC_Syntax_Syntax.mk_Tm_app hd1 args
-                 p1.FStarC_Syntax_Syntax.p in
-             (e, bs1)) in
-  try
-    (fun uu___ ->
-       match () with
-       | () -> let uu___1 = aux [] p in FStar_Pervasives_Native.Some uu___1)
-      ()
-  with | Raw_pat_cannot_be_translated -> FStar_Pervasives_Native.None
-let pat_as_exp (introduce_bv_uvars : Prims.bool)
-  (inst_pat_cons_univs : Prims.bool) (env : FStarC_TypeChecker_Env.env)
-  (p : FStarC_Syntax_Syntax.pat) :
-  (FStarC_Syntax_Syntax.bv Prims.list * FStarC_Syntax_Syntax.term *
-    FStarC_TypeChecker_Common.guard_t * FStarC_Syntax_Syntax.pat)=
-  let intro_bv env1 x =
-    if Prims.not introduce_bv_uvars
-    then
-      ({
-         FStarC_Syntax_Syntax.ppname = (x.FStarC_Syntax_Syntax.ppname);
-         FStarC_Syntax_Syntax.index = (x.FStarC_Syntax_Syntax.index);
-         FStarC_Syntax_Syntax.sort = FStarC_Syntax_Syntax.tun
-       }, FStarC_TypeChecker_Env.trivial_guard, env1)
-    else
-      (let uu___ = FStarC_Syntax_Util.type_u () in
-       match uu___ with
-       | (t, uu___1) ->
-           let uu___2 =
-             FStarC_TypeChecker_Env.new_implicit_var_aux "pattern bv type"
-               (FStarC_Syntax_Syntax.range_of_bv x) env1 t
-               (FStarC_Syntax_Syntax.Allow_untyped "pattern bv type")
-               FStar_Pervasives_Native.None false in
-           (match uu___2 with
-            | (t_x, uu___3, guard) ->
-                let x1 =
-                  {
-                    FStarC_Syntax_Syntax.ppname =
-                      (x.FStarC_Syntax_Syntax.ppname);
-                    FStarC_Syntax_Syntax.index =
-                      (x.FStarC_Syntax_Syntax.index);
-                    FStarC_Syntax_Syntax.sort = t_x
-                  } in
-                (x1, guard, (FStarC_TypeChecker_Env.push_bv env1 x1)))) in
-  let rec pat_as_arg_with_env env1 p1 =
-    match p1.FStarC_Syntax_Syntax.v with
-    | FStarC_Syntax_Syntax.Pat_constant c ->
-        let e =
-          match c with
-          | FStarC_Const.Const_machine_int (repr, base, sw, w) ->
-              FStarC_ToSyntax_ToSyntax.desugar_machine_integer
-                env1.FStarC_TypeChecker_Env.dsenv repr base (sw, w)
-                p1.FStarC_Syntax_Syntax.p
-          | uu___ ->
-              FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_constant c)
-                p1.FStarC_Syntax_Syntax.p in
-        ([], [], [], env1, e, FStarC_TypeChecker_Common.trivial_guard, p1)
-    | FStarC_Syntax_Syntax.Pat_dot_term eopt ->
-        (match eopt with
-         | FStar_Pervasives_Native.None ->
-             ((let uu___1 = FStarC_Effect.op_Bang dbg_Patterns in
-               if uu___1
-               then
-                 (if Prims.not env1.FStarC_TypeChecker_Env.phase1
-                  then
-                    let uu___2 =
-                      FStarC_Class_Show.show FStarC_Syntax_Print.showable_pat
-                        p1 in
-                    FStarC_Format.print1
-                      "Found a non-instantiated dot pattern in phase2 (%s)\n"
-                      uu___2
-                  else ())
-               else ());
-              (let uu___1 = FStarC_Syntax_Util.type_u () in
-               match uu___1 with
-               | (k, uu___2) ->
-                   let uu___3 =
-                     FStarC_TypeChecker_Env.new_implicit_var_aux
-                       "pat_dot_term type" p1.FStarC_Syntax_Syntax.p env1 k
-                       (FStarC_Syntax_Syntax.Allow_ghost "pat dot term type")
-                       FStar_Pervasives_Native.None false in
-                   (match uu___3 with
-                    | (t, uu___4, g) ->
-                        let uu___5 =
-                          FStarC_TypeChecker_Env.new_implicit_var_aux
-                            "pat_dot_term" p1.FStarC_Syntax_Syntax.p env1 t
-                            (FStarC_Syntax_Syntax.Allow_ghost "pat dot term")
-                            FStar_Pervasives_Native.None false in
-                        (match uu___5 with
-                         | (e, uu___6, g') ->
-                             let p2 =
-                               {
-                                 FStarC_Syntax_Syntax.v =
-                                   (FStarC_Syntax_Syntax.Pat_dot_term
-                                      (FStar_Pervasives_Native.Some e));
-                                 FStarC_Syntax_Syntax.p =
-                                   (p1.FStarC_Syntax_Syntax.p)
-                               } in
-                             let uu___7 =
-                               FStarC_TypeChecker_Common.conj_guard g g' in
-                             ([], [], [], env1, e, uu___7, p2)))))
-         | FStar_Pervasives_Native.Some e ->
-             ([], [], [], env1, e, FStarC_TypeChecker_Env.trivial_guard, p1))
-    | FStarC_Syntax_Syntax.Pat_var x ->
-        let uu___ = intro_bv env1 x in
-        (match uu___ with
-         | (x1, g, env2) ->
-             let e =
-               FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_name x1)
-                 p1.FStarC_Syntax_Syntax.p in
-             ([x1], [x1], [], env2, e, g, p1))
-    | FStarC_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->
-        let uu___ =
-          FStarC_List.fold_left
-            (fun uu___1 uu___2 ->
-               match (uu___1, uu___2) with
-               | ((b, a, w, env2, args, guard, pats1), (p2, imp)) ->
-                   let uu___3 = pat_as_arg_with_env env2 p2 in
-                   (match uu___3 with
-                    | (b', a', w', env3, te, guard', pat) ->
-                        let arg =
-                          if imp
-                          then FStarC_Syntax_Syntax.iarg te
-                          else FStarC_Syntax_Syntax.as_arg te in
-                        let uu___4 =
-                          FStarC_TypeChecker_Common.conj_guard guard guard' in
-                        ((b' :: b), (a' :: a), (w' :: w), env3, (arg ::
-                          args), uu___4, ((pat, imp) :: pats1))))
-            ([], [], [], env1, [], FStarC_TypeChecker_Common.trivial_guard,
-              []) pats in
-        (match uu___ with
-         | (b, a, w, env2, args, guard, pats1) ->
-             let inst_head hd us_opt1 =
-               match us_opt1 with
-               | FStar_Pervasives_Native.None -> hd
-               | FStar_Pervasives_Native.Some us ->
-                   FStarC_Syntax_Syntax.mk_Tm_uinst hd us in
-             let uu___1 =
-               let hd = FStarC_Syntax_Syntax.fv_to_tm fv in
-               if
-                 (Prims.not inst_pat_cons_univs) ||
-                   (match us_opt with
-                    | FStar_Pervasives_Native.Some v -> true
-                    | uu___2 -> false)
-               then let uu___2 = inst_head hd us_opt in (uu___2, us_opt)
-               else
-                 (let uu___2 =
-                    FStarC_TypeChecker_Env.lookup_datacon env2
-                      (FStarC_Syntax_Syntax.lid_of_fv fv) in
-                  match uu___2 with
-                  | (us, uu___3) ->
-                      if (match us with | [] -> true | uu___4 -> false)
-                      then (hd, (FStar_Pervasives_Native.Some []))
-                      else
-                        (let uu___4 = FStarC_Syntax_Syntax.mk_Tm_uinst hd us in
-                         (uu___4, (FStar_Pervasives_Native.Some us)))) in
-             (match uu___1 with
-              | (hd, us_opt1) ->
-                  let e =
-                    FStarC_Syntax_Syntax.mk_Tm_app hd (FStarC_List.rev args)
-                      p1.FStarC_Syntax_Syntax.p in
-                  ((FStarC_List.flatten (FStarC_List.rev b)),
-                    (FStarC_List.flatten (FStarC_List.rev a)),
-                    (FStarC_List.flatten (FStarC_List.rev w)), env2, e,
-                    guard,
-                    {
-                      FStarC_Syntax_Syntax.v =
-                        (FStarC_Syntax_Syntax.Pat_cons
-                           (fv, us_opt1, (FStarC_List.rev pats1)));
-                      FStarC_Syntax_Syntax.p = (p1.FStarC_Syntax_Syntax.p)
-                    }))) in
-  let one_pat env1 p1 =
-    let p2 = elaborate_pat env1 p1 in
-    let uu___ = pat_as_arg_with_env env1 p2 in
-    match uu___ with
-    | (b, a, w, env2, arg, guard, p3) ->
-        let uu___1 = FStarC_Util.find_dup FStarC_Syntax_Syntax.bv_eq b in
-        (match uu___1 with
-         | FStar_Pervasives_Native.Some x ->
-             let m = FStarC_Class_Show.show FStarC_Syntax_Print.showable_bv x in
-             FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range
-               p3.FStarC_Syntax_Syntax.p
-               FStarC_Errors_Codes.Fatal_NonLinearPatternVars ()
-               (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-               (Obj.magic
-                  (FStarC_Format.fmt1
-                     "The pattern variable \"%s\" was used more than once" m))
-         | uu___2 -> (b, a, w, arg, guard, p3)) in
-  let uu___ = one_pat env p in
-  match uu___ with | (b, uu___1, uu___2, tm, guard, p1) -> (b, tm, guard, p1)
+(* Generated by F* Custard extraction. Do not edit. *)
+[@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
+
+let rec elaborate_pat__aux (p : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) (maybe_dot : (bool -> (FStarC_Syntax_Syntax.bv -> (FStarC_Range_Type.range -> (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t)))) (fv : FStarC_Syntax_Syntax.fv) (formals : (FStarC_Syntax_Syntax.binder) list) (pats : (((FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t * bool)) list) : (((FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t * bool)) list =
+  (match (formals, pats) with
+    | ([], []) -> []
+    | ([], (tmp :: tmp1)) -> (FStarC_Errors.fStarC_Errors_raise_error__lident_string (fv).FStarC_Syntax_Syntax.fv_name FStarC_Errors_Codes.Fatal_TooManyPatternArguments "Too many pattern arguments")
+    | ((tmp :: tmp1), []) -> (FStarC_List.map (fun fml -> (let tmp2 = ((fml).FStarC_Syntax_Syntax.binder_bv, (fml).FStarC_Syntax_Syntax.binder_qual) in
+      (match tmp2 with
+        | (t, imp) -> (match imp with
+            | (Some ((FStarC_Syntax_Syntax.Implicit (inaccessible)))) -> (let a = (FStarC_Syntax_Syntax.new_bv (Some ((FStarC_Syntax_Syntax.range_of_bv t))) FStarC_Syntax_Syntax.tun) in
+              let r = (FStarC_Ident.range_of_lid (fv).FStarC_Syntax_Syntax.fv_name) in
+              ((maybe_dot inaccessible a r), true))
+            | tmp3 -> (let tmp4 = (FStarC_Syntax_Print.fStarC_Class_Show_show__withinfo_t_pat' p) in
+              let tmp5 = (FStarC_Format.fmt1 "Insufficient pattern arguments (%s)" tmp4) in
+              (FStarC_Errors.fStarC_Errors_raise_error__lident_string (fv).FStarC_Syntax_Syntax.fv_name FStarC_Errors_Codes.Fatal_InsufficientPatternArguments tmp5))
+          )
+      ))) formals)
+    | ((f :: formals'), ((p1, p_imp) :: pats')) -> (match ((f).FStarC_Syntax_Syntax.binder_bv, (f).FStarC_Syntax_Syntax.binder_qual) with
+        | (tmp, (Some ((FStarC_Syntax_Syntax.Implicit (inaccessible))))) when (inaccessible && p_imp) -> (match (p1).FStarC_Syntax_Syntax.v with
+            | (FStarC_Syntax_Syntax.Pat_dot_term (tmp1)) -> (let tmp2 = ((elaborate_pat__aux p maybe_dot fv) formals' pats') in
+              ((p1, true) :: tmp2))
+            | (FStarC_Syntax_Syntax.Pat_var (v)) when ((=) (FStarC_Ident.string_of_id (v).FStarC_Syntax_Syntax.ppname) FStarC_Ident.reserved_prefix) -> (let a = (FStarC_Syntax_Syntax.new_bv (Some ((p1).FStarC_Syntax_Syntax.p)) FStarC_Syntax_Syntax.tun) in
+              let p2 = (maybe_dot inaccessible a (FStarC_Ident.range_of_lid (fv).FStarC_Syntax_Syntax.fv_name)) in
+              let tmp1 = ((elaborate_pat__aux p maybe_dot fv) formals' pats') in
+              ((p2, true) :: tmp1))
+            | tmp1 -> (let tmp2 = (FStarC_Syntax_Print.fStarC_Class_Show_show__withinfo_t_pat' p1) in
+              let tmp3 = (FStarC_Format.fmt1 "This pattern (%s) binds an inaccesible argument; use a wildcard ('_') pattern" tmp2) in
+              (FStarC_Errors.fStarC_Errors_raise_error__range_string (p1).FStarC_Syntax_Syntax.p FStarC_Errors_Codes.Fatal_InsufficientPatternArguments tmp3))
+          )
+        | (tmp, (Some ((FStarC_Syntax_Syntax.Implicit (tmp1))))) when p_imp -> (let tmp2 = ((elaborate_pat__aux p maybe_dot fv) formals' pats') in
+          ((p1, true) :: tmp2))
+        | (tmp, (Some ((FStarC_Syntax_Syntax.Meta (tmp1))))) when p_imp -> (let tmp2 = ((elaborate_pat__aux p maybe_dot fv) formals' pats') in
+          ((p1, true) :: tmp2))
+        | (tmp, (Some ((FStarC_Syntax_Syntax.Implicit (inaccessible))))) -> (let a = (FStarC_Syntax_Syntax.new_bv (Some ((p1).FStarC_Syntax_Syntax.p)) FStarC_Syntax_Syntax.tun) in
+          let p2 = (maybe_dot inaccessible a (FStarC_Ident.range_of_lid (fv).FStarC_Syntax_Syntax.fv_name)) in
+          let tmp1 = ((elaborate_pat__aux p maybe_dot fv) formals' pats) in
+          ((p2, true) :: tmp1))
+        | (tmp, (Some ((FStarC_Syntax_Syntax.Meta (tmp1))))) -> (let a = (FStarC_Syntax_Syntax.new_bv (Some ((p1).FStarC_Syntax_Syntax.p)) FStarC_Syntax_Syntax.tun) in
+          let p2 = (maybe_dot false a (FStarC_Ident.range_of_lid (fv).FStarC_Syntax_Syntax.fv_name)) in
+          let tmp2 = ((elaborate_pat__aux p maybe_dot fv) formals' pats) in
+          ((p2, true) :: tmp2))
+        | (tmp, imp) -> (let tmp1 = ((elaborate_pat__aux p maybe_dot fv) formals' pats') in
+          ((p1, (FStarC_Syntax_Syntax.is_bqual_implicit_or_meta imp)) :: tmp1))
+      )
+  )
+
+let rec elaborate_pat (env : FStarC_TypeChecker_Env.env) (p : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t =
+  (let maybe_dot = (fun inaccessible a r -> (if inaccessible then (FStarC_Syntax_Syntax.withinfo (FStarC_Syntax_Syntax.Pat_dot_term (None)) r) else (FStarC_Syntax_Syntax.withinfo (FStarC_Syntax_Syntax.Pat_var (a)) r))) in
+  (match (p).FStarC_Syntax_Syntax.v with
+    | (FStarC_Syntax_Syntax.Pat_cons ({ FStarC_Syntax_Syntax.fv_name = tmp; fv_qual = (Some ((FStarC_Syntax_Syntax.Unresolved_constructor (tmp1)))); _ }, tmp2, tmp3)) -> p
+    | (FStarC_Syntax_Syntax.Pat_cons (fv, us_opt, pats)) -> (let pats1 = (FStarC_List.map (fun tmp -> (match tmp with
+          | (p1, imp) -> (let tmp1 = (elaborate_pat env p1) in
+            (tmp1, imp))
+        )) pats) in
+      let tmp = (FStarC_TypeChecker_Env.lookup_datacon env (fv).FStarC_Syntax_Syntax.fv_name) in
+      (match tmp with
+        | (tmp1, t) -> (let tmp2 = (FStarC_Syntax_Util.arrow_formals t) in
+          (match tmp2 with
+            | (f, tmp3) -> (let tmp4 = ((elaborate_pat__aux p maybe_dot fv) f pats1) in
+              let tmp5 = (fv, us_opt, tmp4) in
+              let tmp6 = (FStarC_Syntax_Syntax.Pat_cons ((match tmp5 with (custard_tup, _, _) -> custard_tup), (match tmp5 with (_, custard_tup, _) -> custard_tup), (match tmp5 with (_, _, custard_tup) -> custard_tup))) in
+              { FStarC_Syntax_Syntax.v = tmp6; p = (p).FStarC_Syntax_Syntax.p })
+          ))
+      ))
+    | tmp -> p
+  ))
+
+let dbg_Patterns : (bool ref) =
+  (FStarC_Debug.get_toggle "Patterns")
+
+let rec pat_as_exp__pat_as_arg_with_env (inst_pat_cons_univs : bool) (intro_bv : (FStarC_TypeChecker_Env.env -> (FStarC_Syntax_Syntax.bv -> (FStarC_Syntax_Syntax.bv * FStarC_TypeChecker_Common.guard_t * FStarC_TypeChecker_Env.env)))) (env : FStarC_TypeChecker_Env.env) (p : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) : ((FStarC_Syntax_Syntax.bv) list * (FStarC_Syntax_Syntax.bv) list * (FStarC_Syntax_Syntax.bv) list * FStarC_TypeChecker_Env.env * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * FStarC_TypeChecker_Common.guard_t * (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) =
+  (match (p).FStarC_Syntax_Syntax.v with
+    | (FStarC_Syntax_Syntax.Pat_constant (c)) -> (let e = (match c with
+          | (FStarC_Const.Const_machine_int (repr, base, sw, w)) -> (FStarC_ToSyntax_ToSyntax.desugar_machine_integer (env).FStarC_TypeChecker_Env.dsenv repr base (sw, w) (p).FStarC_Syntax_Syntax.p)
+          | tmp -> (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_constant (c)) (p).FStarC_Syntax_Syntax.p)
+        ) in
+      ([], [], [], env, e, FStarC_TypeChecker_Common.trivial_guard, p))
+    | (FStarC_Syntax_Syntax.Pat_dot_term (eopt)) -> (match eopt with
+        | None -> (let tmp = (!(dbg_Patterns)) in
+          (if tmp then (if (not (env).FStarC_TypeChecker_Env.phase1) then (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__withinfo_t_pat' p) in
+          (FStarC_Format.print1 "Found a non-instantiated dot pattern in phase2 (%s)\n" tmp1)) else ()) else ());
+          let tmp1 = (FStarC_Syntax_Util.type_u ()) in
+          (match tmp1 with
+            | (k, tmp2) -> (let tmp3 = (FStarC_TypeChecker_Env.new_implicit_var_aux "pat_dot_term type" (p).FStarC_Syntax_Syntax.p env k (FStarC_Syntax_Syntax.Allow_ghost ("pat dot term type")) None false) in
+              (match tmp3 with
+                | (t, tmp4, g) -> (let tmp5 = (FStarC_TypeChecker_Env.new_implicit_var_aux "pat_dot_term" (p).FStarC_Syntax_Syntax.p env t (FStarC_Syntax_Syntax.Allow_ghost ("pat dot term")) None false) in
+                  (match tmp5 with
+                    | (e, tmp6, g') -> (let p1 = { FStarC_Syntax_Syntax.v = (FStarC_Syntax_Syntax.Pat_dot_term ((Some (e))));
+                          p = (p).FStarC_Syntax_Syntax.p } in
+                      let tmp7 = (FStarC_TypeChecker_Common.conj_guard g g') in
+                      ([], [], [], env, e, tmp7, p1))
+                  ))
+              ))
+          ))
+        | (Some (e)) -> ([], [], [], env, e, FStarC_TypeChecker_Env.trivial_guard, p)
+      )
+    | (FStarC_Syntax_Syntax.Pat_var (x)) -> (let tmp = (intro_bv env x) in
+      (match tmp with
+        | (x1, g, env1) -> (let e = (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_name (x1)) (p).FStarC_Syntax_Syntax.p) in
+          ((x1 :: []), (x1 :: []), [], env1, e, g, p))
+      ))
+    | (FStarC_Syntax_Syntax.Pat_cons (fv, us_opt, pats)) -> (let tmp = (FStarC_List.fold_left (fun tmp tmp1 -> (match (tmp, tmp1) with
+          | ((b, a, w, env1, args, guard, pats1), (p1, imp)) -> (let tmp2 = ((pat_as_exp__pat_as_arg_with_env inst_pat_cons_univs intro_bv) env1 p1) in
+            (match tmp2 with
+              | (b', a', w', env2, te, guard', pat) -> (let arg = (if imp then (FStarC_Syntax_Syntax.iarg te) else (FStarC_Syntax_Syntax.as_arg te)) in
+                let tmp3 = (FStarC_TypeChecker_Common.conj_guard guard guard') in
+                ((b' :: b), (a' :: a), (w' :: w), env2, (arg :: args), tmp3, ((pat, imp) :: pats1)))
+            ))
+        )) ([], [], [], env, [], FStarC_TypeChecker_Common.trivial_guard, []) pats) in
+      (match tmp with
+        | (b, a, w, env1, args, guard, pats1) -> (let inst_head = (fun hd us_opt1 -> (match us_opt1 with
+              | None -> hd
+              | (Some (us)) -> (FStarC_Syntax_Syntax.mk_Tm_uinst hd us)
+            )) in
+          let hd = (FStarC_Syntax_Syntax.fv_to_tm fv) in
+          let tmp1 = (if ((not inst_pat_cons_univs) || (match us_opt with
+              | (Some (v)) -> true
+              | tmp1 -> false
+            )) then (let tmp1 = (inst_head hd us_opt) in
+            (tmp1, us_opt)) else (let tmp1 = (FStarC_TypeChecker_Env.lookup_datacon env1 (FStarC_Syntax_Syntax.lid_of_fv fv)) in
+            (match tmp1 with
+              | (us, tmp2) -> (if (match us with
+                  | [] -> true
+                  | tmp3 -> false
+                ) then (hd, (Some ([]))) else (let tmp3 = (FStarC_Syntax_Syntax.mk_Tm_uinst hd us) in
+                (tmp3, (Some (us)))))
+            ))) in
+          (match tmp1 with
+            | (hd1, us_opt1) -> (let e = (FStarC_Syntax_Syntax.mk_Tm_app hd1 (FStarC_List.rev args) (p).FStarC_Syntax_Syntax.p) in
+              ((FStarC_List.flatten (FStarC_List.rev b)), (FStarC_List.flatten (FStarC_List.rev a)), (FStarC_List.flatten (FStarC_List.rev w)), env1, e, guard, { FStarC_Syntax_Syntax.v = (FStarC_Syntax_Syntax.Pat_cons (fv, us_opt1, (FStarC_List.rev pats1)));
+                p = (p).FStarC_Syntax_Syntax.p }))
+          ))
+      ))
+  )
+
+let pat_as_exp (introduce_bv_uvars : bool) (inst_pat_cons_univs : bool) (env : FStarC_TypeChecker_Env.env) (p : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) : ((FStarC_Syntax_Syntax.bv) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * FStarC_TypeChecker_Common.guard_t * (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) =
+  (let intro_bv = (fun env1 x -> (if (not introduce_bv_uvars) then ({ FStarC_Syntax_Syntax.ppname = (x).FStarC_Syntax_Syntax.ppname;
+      index = (x).FStarC_Syntax_Syntax.index;
+      sort = FStarC_Syntax_Syntax.tun }, FStarC_TypeChecker_Env.trivial_guard, env1) else (let tmp = (FStarC_Syntax_Util.type_u ()) in
+    (match tmp with
+      | (t, tmp1) -> (let tmp2 = (FStarC_TypeChecker_Env.new_implicit_var_aux "pattern bv type" (FStarC_Syntax_Syntax.range_of_bv x) env1 t (FStarC_Syntax_Syntax.Allow_untyped ("pattern bv type")) None false) in
+        (match tmp2 with
+          | (t_x, tmp3, guard) -> (let x1 = { FStarC_Syntax_Syntax.ppname = (x).FStarC_Syntax_Syntax.ppname;
+                index = (x).FStarC_Syntax_Syntax.index;
+                sort = t_x } in
+            (x1, guard, (FStarC_TypeChecker_Env.push_bv env1 x1)))
+        ))
+    )))) in
+  let one_pat = (fun env1 p1 -> (let p2 = (elaborate_pat env1 p1) in
+    let tmp = ((pat_as_exp__pat_as_arg_with_env inst_pat_cons_univs intro_bv) env1 p2) in
+    (match tmp with
+      | (b, a, w, env2, arg, guard, p3) -> (let tmp1 = (FStarC_Util.find_dup FStarC_Syntax_Syntax.bv_eq b) in
+        (match tmp1 with
+          | (Some (x)) -> (let m = (FStarC_Syntax_Print.fStarC_Class_Show_show__bv x) in
+            (FStarC_Errors.fStarC_Errors_raise_error__range_string (p3).FStarC_Syntax_Syntax.p FStarC_Errors_Codes.Fatal_NonLinearPatternVars (FStarC_Format.fmt1 "The pattern variable \"%s\" was used more than once" m)))
+          | tmp2 -> (b, a, w, arg, guard, p3)
+        ))
+    ))) in
+  let tmp = (one_pat env p) in
+  (match tmp with
+    | (b, tmp1, tmp2, tm, guard, p1) -> (b, tm, guard, p1)
+  ))
+
+exception Raw_pat_cannot_be_translated
+
+let rec raw_pat_as_exp__aux (env : FStarC_TypeChecker_Env.env) (bs : (FStarC_Syntax_Syntax.bv) list) (p : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.bv) list) =
+  (match (p).FStarC_Syntax_Syntax.v with
+    | (FStarC_Syntax_Syntax.Pat_constant (c)) -> (let e = (match c with
+          | (FStarC_Const.Const_machine_int (repr, base, sw, w)) -> (FStarC_ToSyntax_ToSyntax.desugar_machine_integer (env).FStarC_TypeChecker_Env.dsenv repr base (sw, w) (p).FStarC_Syntax_Syntax.p)
+          | tmp -> (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_constant (c)) (p).FStarC_Syntax_Syntax.p)
+        ) in
+      (e, bs))
+    | (FStarC_Syntax_Syntax.Pat_dot_term (eopt)) -> (match eopt with
+        | None -> (raise Raw_pat_cannot_be_translated)
+        | (Some (e)) -> (let tmp = (FStarC_Syntax_Subst.compress e) in
+          (tmp, bs))
+      )
+    | (FStarC_Syntax_Syntax.Pat_var (x)) -> (let tmp = (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_name (x)) (p).FStarC_Syntax_Syntax.p) in
+      (tmp, (x :: bs)))
+    | (FStarC_Syntax_Syntax.Pat_cons (fv, us_opt, pats)) -> (let tmp = (FStarC_List.fold_right (fun tmp tmp1 -> (match (tmp, tmp1) with
+          | ((p1, i), (args, bs1)) -> (let tmp2 = ((raw_pat_as_exp__aux env) bs1 p1) in
+            (match tmp2 with
+              | (ep, bs2) -> (((ep, (FStarC_Syntax_Syntax.as_aqual_implicit i)) :: args), bs2)
+            ))
+        )) pats ([], bs)) in
+      (match tmp with
+        | (args, bs1) -> (let hd = (FStarC_Syntax_Syntax.fv_to_tm fv) in
+          let hd1 = (match us_opt with
+              | None -> hd
+              | (Some (us)) -> (FStarC_Syntax_Syntax.mk_Tm_uinst hd us)
+            ) in
+          let e = (FStarC_Syntax_Syntax.mk_Tm_app hd1 args (p).FStarC_Syntax_Syntax.p) in
+          (e, bs1))
+      ))
+  )
+
+let raw_pat_as_exp (env : FStarC_TypeChecker_Env.env) (p : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.bv) list)) option =
+  (try (let tmp = ((raw_pat_as_exp__aux env) [] p) in
+  (Some (tmp))) with
+    | Raw_pat_cannot_be_translated -> None
+  )
+
