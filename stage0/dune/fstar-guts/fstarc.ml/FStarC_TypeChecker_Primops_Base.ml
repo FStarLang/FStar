@@ -32,62 +32,69 @@ type primitive_step =
   strong_reduction_ok: Prims.bool ;
   requires_binder_substitution: Prims.bool ;
   renorm_after: Prims.bool ;
+  unrepresentable_result: Prims.bool ;
   interpretation: interp_t ;
   interpretation_nbe: nbe_interp_t }
 let __proj__Mkprimitive_step__item__name (projectee : primitive_step) :
   FStarC_Ident.lid=
   match projectee with
   | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
-      requires_binder_substitution; renorm_after; interpretation;
-      interpretation_nbe;_} -> name
+      requires_binder_substitution; renorm_after; unrepresentable_result;
+      interpretation; interpretation_nbe;_} -> name
 let __proj__Mkprimitive_step__item__arity (projectee : primitive_step) :
   Prims.int=
   match projectee with
   | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
-      requires_binder_substitution; renorm_after; interpretation;
-      interpretation_nbe;_} -> arity
+      requires_binder_substitution; renorm_after; unrepresentable_result;
+      interpretation; interpretation_nbe;_} -> arity
 let __proj__Mkprimitive_step__item__univ_arity (projectee : primitive_step) :
   Prims.int=
   match projectee with
   | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
-      requires_binder_substitution; renorm_after; interpretation;
-      interpretation_nbe;_} -> univ_arity
+      requires_binder_substitution; renorm_after; unrepresentable_result;
+      interpretation; interpretation_nbe;_} -> univ_arity
 let __proj__Mkprimitive_step__item__auto_reflect (projectee : primitive_step)
   : Prims.int FStar_Pervasives_Native.option=
   match projectee with
   | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
-      requires_binder_substitution; renorm_after; interpretation;
-      interpretation_nbe;_} -> auto_reflect
+      requires_binder_substitution; renorm_after; unrepresentable_result;
+      interpretation; interpretation_nbe;_} -> auto_reflect
 let __proj__Mkprimitive_step__item__strong_reduction_ok
   (projectee : primitive_step) : Prims.bool=
   match projectee with
   | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
-      requires_binder_substitution; renorm_after; interpretation;
-      interpretation_nbe;_} -> strong_reduction_ok
+      requires_binder_substitution; renorm_after; unrepresentable_result;
+      interpretation; interpretation_nbe;_} -> strong_reduction_ok
 let __proj__Mkprimitive_step__item__requires_binder_substitution
   (projectee : primitive_step) : Prims.bool=
   match projectee with
   | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
-      requires_binder_substitution; renorm_after; interpretation;
-      interpretation_nbe;_} -> requires_binder_substitution
+      requires_binder_substitution; renorm_after; unrepresentable_result;
+      interpretation; interpretation_nbe;_} -> requires_binder_substitution
 let __proj__Mkprimitive_step__item__renorm_after (projectee : primitive_step)
   : Prims.bool=
   match projectee with
   | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
-      requires_binder_substitution; renorm_after; interpretation;
-      interpretation_nbe;_} -> renorm_after
+      requires_binder_substitution; renorm_after; unrepresentable_result;
+      interpretation; interpretation_nbe;_} -> renorm_after
+let __proj__Mkprimitive_step__item__unrepresentable_result
+  (projectee : primitive_step) : Prims.bool=
+  match projectee with
+  | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
+      requires_binder_substitution; renorm_after; unrepresentable_result;
+      interpretation; interpretation_nbe;_} -> unrepresentable_result
 let __proj__Mkprimitive_step__item__interpretation
   (projectee : primitive_step) : interp_t=
   match projectee with
   | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
-      requires_binder_substitution; renorm_after; interpretation;
-      interpretation_nbe;_} -> interpretation
+      requires_binder_substitution; renorm_after; unrepresentable_result;
+      interpretation; interpretation_nbe;_} -> interpretation
 let __proj__Mkprimitive_step__item__interpretation_nbe
   (projectee : primitive_step) : nbe_interp_t=
   match projectee with
   | { name; arity; univ_arity; auto_reflect; strong_reduction_ok;
-      requires_binder_substitution; renorm_after; interpretation;
-      interpretation_nbe;_} -> interpretation_nbe
+      requires_binder_substitution; renorm_after; unrepresentable_result;
+      interpretation; interpretation_nbe;_} -> interpretation_nbe
 let as_primitive_step_nbecbs (is_strong : Prims.bool)
   (uu___ :
     (FStarC_Ident.lident * Prims.int * Prims.int * interp_t * nbe_interp_t))
@@ -102,9 +109,33 @@ let as_primitive_step_nbecbs (is_strong : Prims.bool)
         strong_reduction_ok = is_strong;
         requires_binder_substitution = false;
         renorm_after = false;
+        unrepresentable_result = false;
         interpretation = f;
         interpretation_nbe = f_nbe
       }
+let with_extra_args (n : Prims.int) (s : primitive_step) : primitive_step=
+  if n <= Prims.int_zero
+  then s
+  else
+    (let a0 = s.arity in
+     {
+       name = (s.name);
+       arity = (a0 + n);
+       univ_arity = (s.univ_arity);
+       auto_reflect = (s.auto_reflect);
+       strong_reduction_ok = (s.strong_reduction_ok);
+       requires_binder_substitution = (s.requires_binder_substitution);
+       renorm_after = (s.renorm_after);
+       unrepresentable_result = (s.unrepresentable_result);
+       interpretation =
+         (fun psc1 cb us args ->
+            s.interpretation psc1 cb us
+              (FStar_Pervasives_Native.fst (FStarC_List.splitAt a0 args)));
+       interpretation_nbe =
+         (fun cb us args ->
+            s.interpretation_nbe cb us
+              (FStar_Pervasives_Native.fst (FStarC_List.splitAt a0 args)))
+     })
 let embed_simple (uu___ : 'a FStarC_Syntax_Embeddings_Base.embedding)
   (r : FStarC_Range_Type.t) (x : 'a) : FStarC_Syntax_Syntax.term=
   FStarC_Syntax_Embeddings_Base.embed uu___ x r FStar_Pervasives_Native.None
@@ -144,8 +175,7 @@ let mk_nbe_interp1 (uu___2 : 'a FStarC_TypeChecker_NBETerm.embedding)
          Obj.magic
            (Obj.repr
               (let uu___3 =
-                 let uu___4 =
-                   FStarC_TypeChecker_NBETerm.unembed (solve uu___) cbs a1 in
+                 let uu___4 = FStarC_TypeChecker_NBETerm.unembed uu___ cbs a1 in
                  Obj.magic
                    (FStarC_Class_Monad.op_Less_Dollar_Greater
                       FStarC_Class_Monad.monad_option () ()
@@ -156,8 +186,7 @@ let mk_nbe_interp1 (uu___2 : 'a FStarC_TypeChecker_NBETerm.embedding)
                     (fun r1 ->
                        let r1 = Obj.magic r1 in
                        let uu___4 =
-                         FStarC_TypeChecker_NBETerm.embed (solve uu___1) cbs
-                           r1 in
+                         FStarC_TypeChecker_NBETerm.embed uu___1 cbs r1 in
                        Obj.magic
                          (FStarC_Class_Monad.return
                             FStarC_Class_Monad.monad_option ()
@@ -209,13 +238,13 @@ let mk_nbe_interp2 (uu___3 : 'a FStarC_TypeChecker_NBETerm.embedding)
               (let uu___5 =
                  let uu___6 =
                    let uu___7 =
-                     FStarC_TypeChecker_NBETerm.unembed (solve uu___) cbs a1 in
+                     FStarC_TypeChecker_NBETerm.unembed uu___ cbs a1 in
                    Obj.magic
                      (FStarC_Class_Monad.op_Less_Dollar_Greater
                         FStarC_Class_Monad.monad_option () ()
                         (fun uu___8 -> Obj.magic f uu___8) (Obj.magic uu___7)) in
                  let uu___7 =
-                   FStarC_TypeChecker_NBETerm.unembed (solve uu___1) cbs b1 in
+                   FStarC_TypeChecker_NBETerm.unembed uu___1 cbs b1 in
                  Obj.magic
                    (FStarC_Class_Monad.op_Less_Star_Greater
                       FStarC_Class_Monad.monad_option () ()
@@ -226,8 +255,7 @@ let mk_nbe_interp2 (uu___3 : 'a FStarC_TypeChecker_NBETerm.embedding)
                     (fun r1 ->
                        let r1 = Obj.magic r1 in
                        let uu___6 =
-                         FStarC_TypeChecker_NBETerm.embed (solve uu___2) cbs
-                           r1 in
+                         FStarC_TypeChecker_NBETerm.embed uu___2 cbs r1 in
                        Obj.magic
                          (FStarC_Class_Monad.return
                             FStarC_Class_Monad.monad_option ()
@@ -289,21 +317,20 @@ let mk_nbe_interp3 (uu___4 : 'a FStarC_TypeChecker_NBETerm.embedding)
                  let uu___8 =
                    let uu___9 =
                      let uu___10 =
-                       FStarC_TypeChecker_NBETerm.unembed (solve uu___) cbs
-                         a1 in
+                       FStarC_TypeChecker_NBETerm.unembed uu___ cbs a1 in
                      Obj.magic
                        (FStarC_Class_Monad.op_Less_Dollar_Greater
                           FStarC_Class_Monad.monad_option () ()
                           (fun uu___11 -> Obj.magic f uu___11)
                           (Obj.magic uu___10)) in
                    let uu___10 =
-                     FStarC_TypeChecker_NBETerm.unembed (solve uu___1) cbs b1 in
+                     FStarC_TypeChecker_NBETerm.unembed uu___1 cbs b1 in
                    Obj.magic
                      (FStarC_Class_Monad.op_Less_Star_Greater
                         FStarC_Class_Monad.monad_option () ()
                         (Obj.magic uu___9) (Obj.magic uu___10)) in
                  let uu___9 =
-                   FStarC_TypeChecker_NBETerm.unembed (solve uu___2) cbs c1 in
+                   FStarC_TypeChecker_NBETerm.unembed uu___2 cbs c1 in
                  Obj.magic
                    (FStarC_Class_Monad.op_Less_Star_Greater
                       FStarC_Class_Monad.monad_option () ()
@@ -314,8 +341,7 @@ let mk_nbe_interp3 (uu___4 : 'a FStarC_TypeChecker_NBETerm.embedding)
                     (fun r1 ->
                        let r1 = Obj.magic r1 in
                        let uu___8 =
-                         FStarC_TypeChecker_NBETerm.embed (solve uu___3) cbs
-                           r1 in
+                         FStarC_TypeChecker_NBETerm.embed uu___3 cbs r1 in
                        Obj.magic
                          (FStarC_Class_Monad.return
                             FStarC_Class_Monad.monad_option ()
@@ -386,28 +412,26 @@ let mk_nbe_interp4 (uu___5 : 'a FStarC_TypeChecker_NBETerm.embedding)
                    let uu___11 =
                      let uu___12 =
                        let uu___13 =
-                         FStarC_TypeChecker_NBETerm.unembed (solve uu___) cbs
-                           a1 in
+                         FStarC_TypeChecker_NBETerm.unembed uu___ cbs a1 in
                        Obj.magic
                          (FStarC_Class_Monad.op_Less_Dollar_Greater
                             FStarC_Class_Monad.monad_option () ()
                             (fun uu___14 -> Obj.magic f uu___14)
                             (Obj.magic uu___13)) in
                      let uu___13 =
-                       FStarC_TypeChecker_NBETerm.unembed (solve uu___1) cbs
-                         b1 in
+                       FStarC_TypeChecker_NBETerm.unembed uu___1 cbs b1 in
                      Obj.magic
                        (FStarC_Class_Monad.op_Less_Star_Greater
                           FStarC_Class_Monad.monad_option () ()
                           (Obj.magic uu___12) (Obj.magic uu___13)) in
                    let uu___12 =
-                     FStarC_TypeChecker_NBETerm.unembed (solve uu___2) cbs c1 in
+                     FStarC_TypeChecker_NBETerm.unembed uu___2 cbs c1 in
                    Obj.magic
                      (FStarC_Class_Monad.op_Less_Star_Greater
                         FStarC_Class_Monad.monad_option () ()
                         (Obj.magic uu___11) (Obj.magic uu___12)) in
                  let uu___11 =
-                   FStarC_TypeChecker_NBETerm.unembed (solve uu___3) cbs d1 in
+                   FStarC_TypeChecker_NBETerm.unembed uu___3 cbs d1 in
                  Obj.magic
                    (FStarC_Class_Monad.op_Less_Star_Greater
                       FStarC_Class_Monad.monad_option () ()
@@ -418,8 +442,7 @@ let mk_nbe_interp4 (uu___5 : 'a FStarC_TypeChecker_NBETerm.embedding)
                     (fun r1 ->
                        let r1 = Obj.magic r1 in
                        let uu___10 =
-                         FStarC_TypeChecker_NBETerm.embed (solve uu___4) cbs
-                           r1 in
+                         FStarC_TypeChecker_NBETerm.embed uu___4 cbs r1 in
                        Obj.magic
                          (FStarC_Class_Monad.return
                             FStarC_Class_Monad.monad_option ()
@@ -501,35 +524,32 @@ let mk_nbe_interp5 (uu___6 : 'a FStarC_TypeChecker_NBETerm.embedding)
                      let uu___14 =
                        let uu___15 =
                          let uu___16 =
-                           FStarC_TypeChecker_NBETerm.unembed (solve uu___)
-                             cbs a1 in
+                           FStarC_TypeChecker_NBETerm.unembed uu___ cbs a1 in
                          Obj.magic
                            (FStarC_Class_Monad.op_Less_Dollar_Greater
                               FStarC_Class_Monad.monad_option () ()
                               (fun uu___17 -> Obj.magic f uu___17)
                               (Obj.magic uu___16)) in
                        let uu___16 =
-                         FStarC_TypeChecker_NBETerm.unembed (solve uu___1)
-                           cbs b1 in
+                         FStarC_TypeChecker_NBETerm.unembed uu___1 cbs b1 in
                        Obj.magic
                          (FStarC_Class_Monad.op_Less_Star_Greater
                             FStarC_Class_Monad.monad_option () ()
                             (Obj.magic uu___15) (Obj.magic uu___16)) in
                      let uu___15 =
-                       FStarC_TypeChecker_NBETerm.unembed (solve uu___2) cbs
-                         c1 in
+                       FStarC_TypeChecker_NBETerm.unembed uu___2 cbs c1 in
                      Obj.magic
                        (FStarC_Class_Monad.op_Less_Star_Greater
                           FStarC_Class_Monad.monad_option () ()
                           (Obj.magic uu___14) (Obj.magic uu___15)) in
                    let uu___14 =
-                     FStarC_TypeChecker_NBETerm.unembed (solve uu___3) cbs d1 in
+                     FStarC_TypeChecker_NBETerm.unembed uu___3 cbs d1 in
                    Obj.magic
                      (FStarC_Class_Monad.op_Less_Star_Greater
                         FStarC_Class_Monad.monad_option () ()
                         (Obj.magic uu___13) (Obj.magic uu___14)) in
                  let uu___13 =
-                   FStarC_TypeChecker_NBETerm.unembed (solve uu___4) cbs e1 in
+                   FStarC_TypeChecker_NBETerm.unembed uu___4 cbs e1 in
                  Obj.magic
                    (FStarC_Class_Monad.op_Less_Star_Greater
                       FStarC_Class_Monad.monad_option () ()
@@ -540,8 +560,7 @@ let mk_nbe_interp5 (uu___6 : 'a FStarC_TypeChecker_NBETerm.embedding)
                     (fun r1 ->
                        let r1 = Obj.magic r1 in
                        let uu___12 =
-                         FStarC_TypeChecker_NBETerm.embed (solve uu___5) cbs
-                           r1 in
+                         FStarC_TypeChecker_NBETerm.embed uu___5 cbs r1 in
                        Obj.magic
                          (FStarC_Class_Monad.return
                             FStarC_Class_Monad.monad_option ()
@@ -657,8 +676,7 @@ let mk1' (u_arity : Prims.int) (name : FStarC_Ident.lid)
     | (a1, uu___4)::[] ->
         Obj.magic
           (Obj.repr
-             (let uu___5 =
-                FStarC_TypeChecker_NBETerm.unembed (solve uu___1) cbs a1 in
+             (let uu___5 = FStarC_TypeChecker_NBETerm.unembed uu___1 cbs a1 in
               FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
                 () () (Obj.magic uu___5)
                 (fun uu___6 ->
@@ -673,8 +691,8 @@ let mk1' (u_arity : Prims.int) (name : FStarC_Ident.lid)
                               (fun r2 ->
                                  let r2 = Obj.magic r2 in
                                  let uu___6 =
-                                   FStarC_TypeChecker_NBETerm.embed
-                                     (solve uu___3) cbs r2 in
+                                   FStarC_TypeChecker_NBETerm.embed uu___3
+                                     cbs r2 in
                                  Obj.magic
                                    (FStarC_Class_Monad.return
                                       FStarC_Class_Monad.monad_option ()
@@ -721,8 +739,7 @@ let mk1_psc' (u_arity : Prims.int) (name : FStarC_Ident.lid)
     | (a1, uu___4)::[] ->
         Obj.magic
           (Obj.repr
-             (let uu___5 =
-                FStarC_TypeChecker_NBETerm.unembed (solve uu___1) cbs a1 in
+             (let uu___5 = FStarC_TypeChecker_NBETerm.unembed uu___1 cbs a1 in
               FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
                 () () (Obj.magic uu___5)
                 (fun uu___6 ->
@@ -737,8 +754,8 @@ let mk1_psc' (u_arity : Prims.int) (name : FStarC_Ident.lid)
                               (fun r2 ->
                                  let r2 = Obj.magic r2 in
                                  let uu___6 =
-                                   FStarC_TypeChecker_NBETerm.embed
-                                     (solve uu___3) cbs r2 in
+                                   FStarC_TypeChecker_NBETerm.embed uu___3
+                                     cbs r2 in
                                  Obj.magic
                                    (FStarC_Class_Monad.return
                                       FStarC_Class_Monad.monad_option ()
@@ -797,16 +814,14 @@ let mk2' (u_arity : Prims.int) (name : FStarC_Ident.lid)
     | (a1, uu___6)::(b1, uu___7)::[] ->
         Obj.magic
           (Obj.repr
-             (let uu___8 =
-                FStarC_TypeChecker_NBETerm.unembed (solve uu___1) cbs a1 in
+             (let uu___8 = FStarC_TypeChecker_NBETerm.unembed uu___1 cbs a1 in
               FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
                 () () (Obj.magic uu___8)
                 (fun uu___9 ->
                    (fun a2 ->
                       let a2 = Obj.magic a2 in
                       let uu___9 =
-                        FStarC_TypeChecker_NBETerm.unembed (solve uu___3) cbs
-                          b1 in
+                        FStarC_TypeChecker_NBETerm.unembed uu___3 cbs b1 in
                       Obj.magic
                         (FStarC_Class_Monad.op_let_Bang
                            FStarC_Class_Monad.monad_option () ()
@@ -824,7 +839,7 @@ let mk2' (u_arity : Prims.int) (name : FStarC_Ident.lid)
                                             let r2 = Obj.magic r2 in
                                             let uu___10 =
                                               FStarC_TypeChecker_NBETerm.embed
-                                                (solve uu___5) cbs r2 in
+                                                uu___5 cbs r2 in
                                             Obj.magic
                                               (FStarC_Class_Monad.return
                                                  FStarC_Class_Monad.monad_option
@@ -897,16 +912,14 @@ let mk3' (u_arity : Prims.int) (name : FStarC_Ident.lid)
     | (a1, uu___8)::(b1, uu___9)::(c1, uu___10)::[] ->
         Obj.magic
           (Obj.repr
-             (let uu___11 =
-                FStarC_TypeChecker_NBETerm.unembed (solve uu___1) cbs a1 in
+             (let uu___11 = FStarC_TypeChecker_NBETerm.unembed uu___1 cbs a1 in
               FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
                 () () (Obj.magic uu___11)
                 (fun uu___12 ->
                    (fun a2 ->
                       let a2 = Obj.magic a2 in
                       let uu___12 =
-                        FStarC_TypeChecker_NBETerm.unembed (solve uu___3) cbs
-                          b1 in
+                        FStarC_TypeChecker_NBETerm.unembed uu___3 cbs b1 in
                       Obj.magic
                         (FStarC_Class_Monad.op_let_Bang
                            FStarC_Class_Monad.monad_option () ()
@@ -915,8 +928,8 @@ let mk3' (u_arity : Prims.int) (name : FStarC_Ident.lid)
                               (fun b2 ->
                                  let b2 = Obj.magic b2 in
                                  let uu___13 =
-                                   FStarC_TypeChecker_NBETerm.unembed
-                                     (solve uu___5) cbs c1 in
+                                   FStarC_TypeChecker_NBETerm.unembed uu___5
+                                     cbs c1 in
                                  Obj.magic
                                    (FStarC_Class_Monad.op_let_Bang
                                       FStarC_Class_Monad.monad_option () ()
@@ -934,8 +947,7 @@ let mk3' (u_arity : Prims.int) (name : FStarC_Ident.lid)
                                                        let r2 = Obj.magic r2 in
                                                        let uu___14 =
                                                          FStarC_TypeChecker_NBETerm.embed
-                                                           (solve uu___7) cbs
-                                                           r2 in
+                                                           uu___7 cbs r2 in
                                                        Obj.magic
                                                          (FStarC_Class_Monad.return
                                                             FStarC_Class_Monad.monad_option
@@ -1030,16 +1042,14 @@ let mk4' (u_arity : Prims.int) (name : FStarC_Ident.lid)
     | (a1, uu___10)::(b1, uu___11)::(c1, uu___12)::(d1, uu___13)::[] ->
         Obj.magic
           (Obj.repr
-             (let uu___14 =
-                FStarC_TypeChecker_NBETerm.unembed (solve uu___1) cbs a1 in
+             (let uu___14 = FStarC_TypeChecker_NBETerm.unembed uu___1 cbs a1 in
               FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
                 () () (Obj.magic uu___14)
                 (fun uu___15 ->
                    (fun a2 ->
                       let a2 = Obj.magic a2 in
                       let uu___15 =
-                        FStarC_TypeChecker_NBETerm.unembed (solve uu___3) cbs
-                          b1 in
+                        FStarC_TypeChecker_NBETerm.unembed uu___3 cbs b1 in
                       Obj.magic
                         (FStarC_Class_Monad.op_let_Bang
                            FStarC_Class_Monad.monad_option () ()
@@ -1048,8 +1058,8 @@ let mk4' (u_arity : Prims.int) (name : FStarC_Ident.lid)
                               (fun b2 ->
                                  let b2 = Obj.magic b2 in
                                  let uu___16 =
-                                   FStarC_TypeChecker_NBETerm.unembed
-                                     (solve uu___5) cbs c1 in
+                                   FStarC_TypeChecker_NBETerm.unembed uu___5
+                                     cbs c1 in
                                  Obj.magic
                                    (FStarC_Class_Monad.op_let_Bang
                                       FStarC_Class_Monad.monad_option () ()
@@ -1059,7 +1069,7 @@ let mk4' (u_arity : Prims.int) (name : FStarC_Ident.lid)
                                             let c2 = Obj.magic c2 in
                                             let uu___17 =
                                               FStarC_TypeChecker_NBETerm.unembed
-                                                (solve uu___7) cbs d1 in
+                                                uu___7 cbs d1 in
                                             Obj.magic
                                               (FStarC_Class_Monad.op_let_Bang
                                                  FStarC_Class_Monad.monad_option
@@ -1082,8 +1092,7 @@ let mk4' (u_arity : Prims.int) (name : FStarC_Ident.lid)
                                                                   let uu___18
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.embed
-                                                                    (solve
-                                                                    uu___9)
+                                                                    uu___9
                                                                     cbs r2 in
                                                                   Obj.magic
                                                                     (
@@ -1209,16 +1218,14 @@ let mk5' (u_arity : Prims.int) (name : FStarC_Ident.lid)
         ->
         Obj.magic
           (Obj.repr
-             (let uu___17 =
-                FStarC_TypeChecker_NBETerm.unembed (solve uu___1) cbs a1 in
+             (let uu___17 = FStarC_TypeChecker_NBETerm.unembed uu___1 cbs a1 in
               FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
                 () () (Obj.magic uu___17)
                 (fun uu___18 ->
                    (fun a2 ->
                       let a2 = Obj.magic a2 in
                       let uu___18 =
-                        FStarC_TypeChecker_NBETerm.unembed (solve uu___3) cbs
-                          b1 in
+                        FStarC_TypeChecker_NBETerm.unembed uu___3 cbs b1 in
                       Obj.magic
                         (FStarC_Class_Monad.op_let_Bang
                            FStarC_Class_Monad.monad_option () ()
@@ -1227,8 +1234,8 @@ let mk5' (u_arity : Prims.int) (name : FStarC_Ident.lid)
                               (fun b2 ->
                                  let b2 = Obj.magic b2 in
                                  let uu___19 =
-                                   FStarC_TypeChecker_NBETerm.unembed
-                                     (solve uu___5) cbs c1 in
+                                   FStarC_TypeChecker_NBETerm.unembed uu___5
+                                     cbs c1 in
                                  Obj.magic
                                    (FStarC_Class_Monad.op_let_Bang
                                       FStarC_Class_Monad.monad_option () ()
@@ -1238,7 +1245,7 @@ let mk5' (u_arity : Prims.int) (name : FStarC_Ident.lid)
                                             let c2 = Obj.magic c2 in
                                             let uu___20 =
                                               FStarC_TypeChecker_NBETerm.unembed
-                                                (solve uu___7) cbs d1 in
+                                                uu___7 cbs d1 in
                                             Obj.magic
                                               (FStarC_Class_Monad.op_let_Bang
                                                  FStarC_Class_Monad.monad_option
@@ -1248,8 +1255,7 @@ let mk5' (u_arity : Prims.int) (name : FStarC_Ident.lid)
                                                        let d2 = Obj.magic d2 in
                                                        let uu___21 =
                                                          FStarC_TypeChecker_NBETerm.unembed
-                                                           (solve uu___9) cbs
-                                                           e1 in
+                                                           uu___9 cbs e1 in
                                                        Obj.magic
                                                          (FStarC_Class_Monad.op_let_Bang
                                                             FStarC_Class_Monad.monad_option
@@ -1283,8 +1289,7 @@ let mk5' (u_arity : Prims.int) (name : FStarC_Ident.lid)
                                                                     let uu___22
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.embed
-                                                                    (solve
-                                                                    uu___11)
+                                                                    uu___11
                                                                     cbs r2 in
                                                                     Obj.magic
                                                                     (FStarC_Class_Monad.return
@@ -1435,16 +1440,14 @@ let mk6' (u_arity : Prims.int) (name : FStarC_Ident.lid)
         (f1, uu___19)::[] ->
         Obj.magic
           (Obj.repr
-             (let uu___20 =
-                FStarC_TypeChecker_NBETerm.unembed (solve uu___1) cbs a1 in
+             (let uu___20 = FStarC_TypeChecker_NBETerm.unembed uu___1 cbs a1 in
               FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
                 () () (Obj.magic uu___20)
                 (fun uu___21 ->
                    (fun a2 ->
                       let a2 = Obj.magic a2 in
                       let uu___21 =
-                        FStarC_TypeChecker_NBETerm.unembed (solve uu___3) cbs
-                          b1 in
+                        FStarC_TypeChecker_NBETerm.unembed uu___3 cbs b1 in
                       Obj.magic
                         (FStarC_Class_Monad.op_let_Bang
                            FStarC_Class_Monad.monad_option () ()
@@ -1453,8 +1456,8 @@ let mk6' (u_arity : Prims.int) (name : FStarC_Ident.lid)
                               (fun b2 ->
                                  let b2 = Obj.magic b2 in
                                  let uu___22 =
-                                   FStarC_TypeChecker_NBETerm.unembed
-                                     (solve uu___5) cbs c1 in
+                                   FStarC_TypeChecker_NBETerm.unembed uu___5
+                                     cbs c1 in
                                  Obj.magic
                                    (FStarC_Class_Monad.op_let_Bang
                                       FStarC_Class_Monad.monad_option () ()
@@ -1464,7 +1467,7 @@ let mk6' (u_arity : Prims.int) (name : FStarC_Ident.lid)
                                             let c2 = Obj.magic c2 in
                                             let uu___23 =
                                               FStarC_TypeChecker_NBETerm.unembed
-                                                (solve uu___7) cbs d1 in
+                                                uu___7 cbs d1 in
                                             Obj.magic
                                               (FStarC_Class_Monad.op_let_Bang
                                                  FStarC_Class_Monad.monad_option
@@ -1474,8 +1477,7 @@ let mk6' (u_arity : Prims.int) (name : FStarC_Ident.lid)
                                                        let d2 = Obj.magic d2 in
                                                        let uu___24 =
                                                          FStarC_TypeChecker_NBETerm.unembed
-                                                           (solve uu___9) cbs
-                                                           e1 in
+                                                           uu___9 cbs e1 in
                                                        Obj.magic
                                                          (FStarC_Class_Monad.op_let_Bang
                                                             FStarC_Class_Monad.monad_option
@@ -1490,8 +1492,7 @@ let mk6' (u_arity : Prims.int) (name : FStarC_Ident.lid)
                                                                   let uu___25
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.unembed
-                                                                    (solve
-                                                                    uu___11)
+                                                                    uu___11
                                                                     cbs f1 in
                                                                   Obj.magic
                                                                     (
@@ -1529,8 +1530,7 @@ let mk6' (u_arity : Prims.int) (name : FStarC_Ident.lid)
                                                                     let uu___26
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.embed
-                                                                    (solve
-                                                                    uu___13)
+                                                                    uu___13
                                                                     cbs r2 in
                                                                     Obj.magic
                                                                     (FStarC_Class_Monad.return

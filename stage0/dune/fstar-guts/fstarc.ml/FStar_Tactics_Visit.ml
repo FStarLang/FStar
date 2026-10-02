@@ -161,20 +161,40 @@ and visit_comp
   (ps : FStarC_Tactics_Types.ref_proofstate) : FStarC_Reflection_Types.comp=
   let x = FStarC_Reflection_V2_Builtins.inspect_comp c in
   let x1 =
-    match x with
-    | FStarC_Reflection_V2_Data.C_Total ret ->
-        let x2 = visit_tm ff ret ps in FStarC_Reflection_V2_Data.C_Total x2
-    | FStarC_Reflection_V2_Data.C_GTotal ret ->
-        let x2 = visit_tm ff ret ps in FStarC_Reflection_V2_Data.C_GTotal x2
-    | FStarC_Reflection_V2_Data.C_Lemma (pre, post, pats) ->
-        let x2 = visit_tm ff pre ps in
-        let x3 = visit_tm ff post ps in
-        let x4 = visit_tm ff pats ps in
-        FStarC_Reflection_V2_Data.C_Lemma (x2, x3, x4)
-    | FStarC_Reflection_V2_Data.C_Eff (us, eff, res, pre, post, decrs) ->
-        let x2 = visit_tm ff res ps in
-        let x3 = visit_tm ff pre ps in
-        let x4 = visit_tm ff post ps in
-        let x5 = FStar_Tactics_Util.map (visit_tm ff) decrs ps in
-        FStarC_Reflection_V2_Data.C_Eff (us, eff, x2, x3, x4, x5) in
+    let x2 = visit_tm ff x.FStarC_Reflection_V2_Data.result_typ ps in
+    let x3 =
+      FStar_Tactics_Util.map (visit_flag ff)
+        x.FStarC_Reflection_V2_Data.flags ps in
+    {
+      FStarC_Reflection_V2_Data.effect_name =
+        (x.FStarC_Reflection_V2_Data.effect_name);
+      FStarC_Reflection_V2_Data.result_typ = x2;
+      FStarC_Reflection_V2_Data.flags = x3;
+      FStarC_Reflection_V2_Data.source_effect_name =
+        (x.FStarC_Reflection_V2_Data.source_effect_name)
+    } in
   FStarC_Reflection_V2_Builtins.pack_comp x1
+and visit_flag
+  (ff :
+    FStarC_Reflection_Types.term ->
+      FStarC_Tactics_Types.ref_proofstate -> FStarC_Reflection_Types.term)
+  (f : FStarC_Reflection_V2_Data.cflag) :
+  FStarC_Tactics_Types.ref_proofstate -> FStarC_Reflection_V2_Data.cflag=
+  match f with
+  | FStarC_Reflection_V2_Data.SMTPAT t ->
+      (fun ps ->
+         let x = visit_tm ff t ps in FStarC_Reflection_V2_Data.SMTPAT x)
+  | FStarC_Reflection_V2_Data.DECREASES
+      (FStarC_Reflection_V2_Data.Decreases_lex ts) ->
+      (fun ps ->
+         let x =
+           let x1 = FStar_Tactics_Util.map (visit_tm ff) ts ps in
+           FStarC_Reflection_V2_Data.Decreases_lex x1 in
+         FStarC_Reflection_V2_Data.DECREASES x)
+  | FStarC_Reflection_V2_Data.DECREASES
+      (FStarC_Reflection_V2_Data.Decreases_wf (rel, e)) ->
+      (fun ps ->
+         let x = visit_tm ff rel ps in
+         let x1 = visit_tm ff e ps in
+         FStarC_Reflection_V2_Data.DECREASES
+           (FStarC_Reflection_V2_Data.Decreases_wf (x, x1)))

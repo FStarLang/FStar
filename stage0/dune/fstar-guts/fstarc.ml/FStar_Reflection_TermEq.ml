@@ -381,35 +381,47 @@ and comp_cmp : (FStarC_Reflection_Types.comp, Obj.t) comparator_for'=
   fun c1 c2 ->
     let cv1 = FStarC_Reflection_V2_Builtins.inspect_comp c1 in
     let cv2 = FStarC_Reflection_V2_Builtins.inspect_comp c2 in
-    match (cv1, cv2) with
-    | (FStarC_Reflection_V2_Data.C_Total t1,
-       FStarC_Reflection_V2_Data.C_Total t2) ->
-        co () () t1 t2 c1 c2 (term_cmp t1 t2) ()
-    | (FStarC_Reflection_V2_Data.C_GTotal t1,
-       FStarC_Reflection_V2_Data.C_GTotal t2) ->
-        co () () t1 t2 c1 c2 (term_cmp t1 t2) ()
-    | (FStarC_Reflection_V2_Data.C_Lemma (pre1, post1, pat1),
-       FStarC_Reflection_V2_Data.C_Lemma (pre2, post2, pat2)) ->
-        co () () ((pre1, post1), pat1) ((pre2, post2), pat2) c1 c2
-          (op_Amp_Amp_Amp () () (pre1, post1) (pre2, post2) pat1 pat2
-             (op_Amp_Amp_Amp () () pre1 pre2 post1 post2 (term_cmp pre1 pre2)
-                (term_cmp post1 post2)) (term_cmp pat1 pat2)) ()
-    | (FStarC_Reflection_V2_Data.C_Eff (us1, ef1, t1, pre1, post1, dec1),
-       FStarC_Reflection_V2_Data.C_Eff (us2, ef2, t2, pre2, post2, dec2)) ->
-        co () () (((((us1, ef1), t1), pre1), post1), dec1)
-          (((((us2, ef2), t2), pre2), post2), dec2) c1 c2
-          (op_Amp_Amp_Amp () () ((((us1, ef1), t1), pre1), post1)
-             ((((us2, ef2), t2), pre2), post2) dec1 dec2
-             (op_Amp_Amp_Amp () () (((us1, ef1), t1), pre1)
-                (((us2, ef2), t2), pre2) post1 post2
-                (op_Amp_Amp_Amp () () ((us1, ef1), t1) ((us2, ef2), t2) pre1
-                   pre2
-                   (op_Amp_Amp_Amp () () (us1, ef1) (us2, ef2) t1 t2
-                      (op_Amp_Amp_Amp () () us1 us2 ef1 ef2
-                         (list_dec_cmp' () c1 c2 univ_cmp us1 us2)
-                         (eq_cmp ef1 ef2)) (term_cmp t1 t2))
-                   (term_cmp pre1 pre2)) (term_cmp post1 post2))
-             (list_dec_cmp' () c1 c2 term_cmp dec1 dec2)) ()
+    co () ()
+      (((cv1.FStarC_Reflection_V2_Data.effect_name),
+         (cv1.FStarC_Reflection_V2_Data.result_typ)),
+        (cv1.FStarC_Reflection_V2_Data.flags))
+      (((cv2.FStarC_Reflection_V2_Data.effect_name),
+         (cv2.FStarC_Reflection_V2_Data.result_typ)),
+        (cv2.FStarC_Reflection_V2_Data.flags)) c1 c2
+      (op_Amp_Amp_Amp () ()
+         ((cv1.FStarC_Reflection_V2_Data.effect_name),
+           (cv1.FStarC_Reflection_V2_Data.result_typ))
+         ((cv2.FStarC_Reflection_V2_Data.effect_name),
+           (cv2.FStarC_Reflection_V2_Data.result_typ))
+         cv1.FStarC_Reflection_V2_Data.flags
+         cv2.FStarC_Reflection_V2_Data.flags
+         (op_Amp_Amp_Amp () () cv1.FStarC_Reflection_V2_Data.effect_name
+            cv2.FStarC_Reflection_V2_Data.effect_name
+            cv1.FStarC_Reflection_V2_Data.result_typ
+            cv2.FStarC_Reflection_V2_Data.result_typ
+            (eq_cmp cv1.FStarC_Reflection_V2_Data.effect_name
+               cv2.FStarC_Reflection_V2_Data.effect_name)
+            (term_cmp cv1.FStarC_Reflection_V2_Data.result_typ
+               cv2.FStarC_Reflection_V2_Data.result_typ))
+         (list_dec_cmp' () c1 c2 flag_cmp cv1.FStarC_Reflection_V2_Data.flags
+            cv2.FStarC_Reflection_V2_Data.flags)) ()
+and flag_cmp : (FStarC_Reflection_V2_Data.cflag, Obj.t) comparator_for'=
+  fun f1 f2 ->
+    match (f1, f2) with
+    | (FStarC_Reflection_V2_Data.SMTPAT t1, FStarC_Reflection_V2_Data.SMTPAT
+       t2) -> co () () t1 t2 f1 f2 (term_cmp t1 t2) ()
+    | (FStarC_Reflection_V2_Data.DECREASES
+       (FStarC_Reflection_V2_Data.Decreases_lex ts1),
+       FStarC_Reflection_V2_Data.DECREASES
+       (FStarC_Reflection_V2_Data.Decreases_lex ts2)) ->
+        co () () ts1 ts2 f1 f2 (list_dec_cmp' () f1 f2 term_cmp ts1 ts2) ()
+    | (FStarC_Reflection_V2_Data.DECREASES
+       (FStarC_Reflection_V2_Data.Decreases_wf (rel1, e1)),
+       FStarC_Reflection_V2_Data.DECREASES
+       (FStarC_Reflection_V2_Data.Decreases_wf (rel2, e2))) ->
+        co () () (rel1, e1) (rel2, e2) f1 f2
+          (op_Amp_Amp_Amp () () rel1 rel2 e1 e2 (term_cmp rel1 rel2)
+             (term_cmp e1 e2)) ()
     | uu___ -> Neq
 and br_cmp : (FStarC_Reflection_V2_Data.branch, Obj.t) comparator_for'=
   fun br1 br2 ->

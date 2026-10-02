@@ -369,8 +369,6 @@ let goal_of_implicit (env : FStarC_TypeChecker_Env.env)
       FStarC_TypeChecker_Env.modules = (env.FStarC_TypeChecker_Env.modules);
       FStarC_TypeChecker_Env.expected_typ =
         (env.FStarC_TypeChecker_Env.expected_typ);
-      FStarC_TypeChecker_Env.expected_post =
-        (env.FStarC_TypeChecker_Env.expected_post);
       FStarC_TypeChecker_Env.sigtab = (env.FStarC_TypeChecker_Env.sigtab);
       FStarC_TypeChecker_Env.attrtab = (env.FStarC_TypeChecker_Env.attrtab);
       FStarC_TypeChecker_Env.instantiate_imp =
@@ -379,6 +377,8 @@ let goal_of_implicit (env : FStarC_TypeChecker_Env.env)
       FStarC_TypeChecker_Env.generalize =
         (env.FStarC_TypeChecker_Env.generalize);
       FStarC_TypeChecker_Env.letrecs = (env.FStarC_TypeChecker_Env.letrecs);
+      FStarC_TypeChecker_Env.rec_names =
+        (env.FStarC_TypeChecker_Env.rec_names);
       FStarC_TypeChecker_Env.top_level =
         (env.FStarC_TypeChecker_Env.top_level);
       FStarC_TypeChecker_Env.check_uvars =
@@ -409,8 +409,6 @@ let goal_of_implicit (env : FStarC_TypeChecker_Env.env)
         (env.FStarC_TypeChecker_Env.subtype_nosmt_force);
       FStarC_TypeChecker_Env.qtbl_name_and_index =
         (env.FStarC_TypeChecker_Env.qtbl_name_and_index);
-      FStarC_TypeChecker_Env.normalized_eff_names =
-        (env.FStarC_TypeChecker_Env.normalized_eff_names);
       FStarC_TypeChecker_Env.fv_delta_depths =
         (env.FStarC_TypeChecker_Env.fv_delta_depths);
       FStarC_TypeChecker_Env.proof_ns = (env.FStarC_TypeChecker_Env.proof_ns);
@@ -430,6 +428,8 @@ let goal_of_implicit (env : FStarC_TypeChecker_Env.env)
       FStarC_TypeChecker_Env.nbe = (env.FStarC_TypeChecker_Env.nbe);
       FStarC_TypeChecker_Env.strict_args_tab =
         (env.FStarC_TypeChecker_Env.strict_args_tab);
+      FStarC_TypeChecker_Env.disc_proj_tab =
+        (env.FStarC_TypeChecker_Env.disc_proj_tab);
       FStarC_TypeChecker_Env.erasable_types_tab =
         (env.FStarC_TypeChecker_Env.erasable_types_tab);
       FStarC_TypeChecker_Env.enable_defer_to_tac =

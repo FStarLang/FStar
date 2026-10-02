@@ -622,178 +622,23 @@ let split_guard (g : guard_t) : (guard_t * guard_t)=
     })
 let weaken_guard_formula (g : guard_t) (fml : FStarC_Syntax_Syntax.typ) :
   guard_t=
-  match g.guard_f with
-  | Trivial -> g
-  | NonTrivial f ->
-      let uu___ =
-        let uu___1 = FStarC_Syntax_Util.mk_imp fml f in check_trivial uu___1 in
-      {
-        guard_f = uu___;
-        deferred_to_tac = (g.deferred_to_tac);
-        deferred = (g.deferred);
-        univ_ineqs = (g.univ_ineqs);
-        implicits = (g.implicits)
-      }
-type lcomp =
-  {
-  eff_name: FStarC_Ident.lident ;
-  res_typ: FStarC_Syntax_Syntax.typ ;
-  cflags: FStarC_Syntax_Syntax.cflag Prims.list ;
-  comp_thunk:
-    (unit -> (FStarC_Syntax_Syntax.comp * guard_t),
-      FStarC_Syntax_Syntax.comp) FStar_Pervasives.either FStarC_Effect.ref
-    }
-let __proj__Mklcomp__item__eff_name (projectee : lcomp) :
-  FStarC_Ident.lident=
-  match projectee with
-  | { eff_name; res_typ; cflags; comp_thunk;_} -> eff_name
-let __proj__Mklcomp__item__res_typ (projectee : lcomp) :
-  FStarC_Syntax_Syntax.typ=
-  match projectee with
-  | { eff_name; res_typ; cflags; comp_thunk;_} -> res_typ
-let __proj__Mklcomp__item__cflags (projectee : lcomp) :
-  FStarC_Syntax_Syntax.cflag Prims.list=
-  match projectee with | { eff_name; res_typ; cflags; comp_thunk;_} -> cflags
-let __proj__Mklcomp__item__comp_thunk (projectee : lcomp) :
-  (unit -> (FStarC_Syntax_Syntax.comp * guard_t), FStarC_Syntax_Syntax.comp)
-    FStar_Pervasives.either FStarC_Effect.ref=
-  match projectee with
-  | { eff_name; res_typ; cflags; comp_thunk;_} -> comp_thunk
-let mk_lcomp (eff_name : FStarC_Ident.lident)
-  (res_typ : FStarC_Syntax_Syntax.typ)
-  (cflags : FStarC_Syntax_Syntax.cflag Prims.list)
-  (comp_thunk : unit -> (FStarC_Syntax_Syntax.comp * guard_t)) : lcomp=
-  let uu___ = FStarC_Effect.mk_ref (FStar_Pervasives.Inl comp_thunk) in
-  { eff_name; res_typ; cflags; comp_thunk = uu___ }
-let lcomp_comp (lc : lcomp) : (FStarC_Syntax_Syntax.comp * guard_t)=
-  let uu___ = FStarC_Effect.op_Bang lc.comp_thunk in
-  match uu___ with
-  | FStar_Pervasives.Inl thunk ->
-      let uu___1 = thunk () in
-      (match uu___1 with
-       | (c, g) ->
-           (FStarC_Effect.op_Colon_Equals lc.comp_thunk
-              (FStar_Pervasives.Inr c);
-            (c, g)))
-  | FStar_Pervasives.Inr c -> (c, trivial_guard)
-let apply_lcomp (fc : FStarC_Syntax_Syntax.comp -> FStarC_Syntax_Syntax.comp)
-  (fg : guard_t -> guard_t) (lc : lcomp) : lcomp=
-  mk_lcomp lc.eff_name lc.res_typ lc.cflags
-    (fun uu___ ->
-       let uu___1 = lcomp_comp lc in
-       match uu___1 with
-       | (c, g) -> let uu___2 = fc c in let uu___3 = fg g in (uu___2, uu___3))
-let lcomp_to_string (lc : lcomp) : Prims.string=
-  let uu___ = FStarC_Options.print_effect_args () in
+  let uu___ = FStarC_Syntax_Util.is_t_true fml in
   if uu___
-  then
-    let uu___1 =
-      let uu___2 = lcomp_comp lc in FStar_Pervasives_Native.fst uu___2 in
-    FStarC_Class_Show.show FStarC_Syntax_Print.showable_comp uu___1
+  then g
   else
-    (let uu___1 =
-       FStarC_Class_Show.show FStarC_Ident.showable_lident lc.eff_name in
-     let uu___2 =
-       FStarC_Class_Show.show FStarC_Syntax_Print.showable_term lc.res_typ in
-     FStarC_Format.fmt2 "%s %s" uu___1 uu___2)
-let lcomp_set_flags (lc : lcomp) (fs : FStarC_Syntax_Syntax.cflag Prims.list)
-  : lcomp=
-  let comp_typ_set_flags c =
-    match c.FStarC_Syntax_Syntax.n with
-    | FStarC_Syntax_Syntax.Total uu___ -> c
-    | FStarC_Syntax_Syntax.GTotal uu___ -> c
-    | FStarC_Syntax_Syntax.Comp ct ->
-        let ct1 =
-          {
-            FStarC_Syntax_Syntax.comp_univs =
-              (ct.FStarC_Syntax_Syntax.comp_univs);
-            FStarC_Syntax_Syntax.effect_name =
-              (ct.FStarC_Syntax_Syntax.effect_name);
-            FStarC_Syntax_Syntax.result_typ =
-              (ct.FStarC_Syntax_Syntax.result_typ);
-            FStarC_Syntax_Syntax.comp_pre =
-              (ct.FStarC_Syntax_Syntax.comp_pre);
-            FStarC_Syntax_Syntax.comp_post =
-              (ct.FStarC_Syntax_Syntax.comp_post);
-            FStarC_Syntax_Syntax.flags = fs
-          } in
-        {
-          FStarC_Syntax_Syntax.n = (FStarC_Syntax_Syntax.Comp ct1);
-          FStarC_Syntax_Syntax.pos = (c.FStarC_Syntax_Syntax.pos);
-          FStarC_Syntax_Syntax.hash_code = (c.FStarC_Syntax_Syntax.hash_code)
-        } in
-  mk_lcomp lc.eff_name lc.res_typ fs
-    (fun uu___ ->
-       let uu___1 = lcomp_comp lc in
-       match uu___1 with | (c, g) -> ((comp_typ_set_flags c), g))
-let is_total_lcomp (c : lcomp) : Prims.bool=
-  if FStarC_Ident.lid_equals c.eff_name FStarC_Parser_Const.effect_Tot_lid
-  then true
-  else
-    FStarC_Util.for_some
-      (fun uu___ ->
-         match uu___ with
-         | FStarC_Syntax_Syntax.TOTAL -> true
-         | uu___1 -> false) c.cflags
-let is_tot_or_gtot_lcomp (c : lcomp) : Prims.bool=
-  if
-    (FStarC_Ident.lid_equals c.eff_name FStarC_Parser_Const.effect_Tot_lid)
-      ||
-      (FStarC_Ident.lid_equals c.eff_name FStarC_Parser_Const.effect_GTot_lid)
-  then true
-  else
-    FStarC_Util.for_some
-      (fun uu___ ->
-         match uu___ with
-         | FStarC_Syntax_Syntax.TOTAL -> true
-         | uu___1 -> false) c.cflags
-let is_lcomp_partial_return (c : lcomp) : Prims.bool= false
-let is_pure_lcomp (lc : lcomp) : Prims.bool=
-  let uu___ =
-    let uu___1 = is_total_lcomp lc in
-    if uu___1 then true else FStarC_Syntax_Util.is_pure_effect lc.eff_name in
-  if uu___
-  then true
-  else
-    FStarC_Util.for_some
-      (fun uu___1 ->
-         match uu___1 with
-         | FStarC_Syntax_Syntax.LEMMA -> true
-         | uu___2 -> false) lc.cflags
-let is_pure_or_ghost_lcomp (lc : lcomp) : Prims.bool=
-  let uu___ = is_pure_lcomp lc in
-  if uu___ then true else FStarC_Syntax_Util.is_ghost_effect lc.eff_name
-let set_result_typ_lc (lc : lcomp) (t : FStarC_Syntax_Syntax.typ) : lcomp=
-  mk_lcomp lc.eff_name t lc.cflags
-    (fun uu___ ->
-       let uu___1 = lcomp_comp lc in
-       match uu___1 with
-       | (c, g) ->
-           let uu___2 = FStarC_Syntax_Util.set_result_typ c t in (uu___2, g))
-let residual_comp_of_lcomp (lc : lcomp) : FStarC_Syntax_Syntax.residual_comp=
-  {
-    FStarC_Syntax_Syntax.residual_effect = (lc.eff_name);
-    FStarC_Syntax_Syntax.residual_typ =
-      (FStar_Pervasives_Native.Some (lc.res_typ));
-    FStarC_Syntax_Syntax.residual_flags = (lc.cflags)
-  }
-let lcomp_of_comp_guard (c0 : FStarC_Syntax_Syntax.comp) (g : guard_t) :
-  lcomp=
-  let uu___ =
-    match c0.FStarC_Syntax_Syntax.n with
-    | FStarC_Syntax_Syntax.Total uu___1 ->
-        (FStarC_Parser_Const.effect_Tot_lid, [FStarC_Syntax_Syntax.TOTAL])
-    | FStarC_Syntax_Syntax.GTotal uu___1 ->
-        (FStarC_Parser_Const.effect_GTot_lid, [])
-    | FStarC_Syntax_Syntax.Comp c ->
-        ((c.FStarC_Syntax_Syntax.effect_name),
-          (c.FStarC_Syntax_Syntax.flags)) in
-  match uu___ with
-  | (eff_name, flags) ->
-      mk_lcomp eff_name (FStarC_Syntax_Util.comp_result c0) flags
-        (fun uu___1 -> (c0, g))
-let lcomp_of_comp (c0 : FStarC_Syntax_Syntax.comp) : lcomp=
-  lcomp_of_comp_guard c0 trivial_guard
+    (match g.guard_f with
+     | Trivial -> g
+     | NonTrivial f ->
+         let uu___1 =
+           let uu___2 = FStarC_Syntax_Util.mk_imp fml f in
+           check_trivial uu___2 in
+         {
+           guard_f = uu___1;
+           deferred_to_tac = (g.deferred_to_tac);
+           deferred = (g.deferred);
+           univ_ineqs = (g.univ_ineqs);
+           implicits = (g.implicits)
+         })
 let check_positivity_qual (subtyping : Prims.bool)
   (p0 :
     FStarC_Syntax_Syntax.positivity_qualifier FStar_Pervasives_Native.option)

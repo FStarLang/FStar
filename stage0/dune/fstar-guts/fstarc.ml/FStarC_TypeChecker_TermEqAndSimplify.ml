@@ -226,11 +226,18 @@ let rec eq_tm (env : FStarC_TypeChecker_Env.env_t)
      { FStarC_Syntax_Syntax.b1 = b1; FStarC_Syntax_Syntax.comp = c1;_},
      FStarC_Syntax_Syntax.Tm_arrow
      { FStarC_Syntax_Syntax.b1 = b2; FStarC_Syntax_Syntax.comp = c2;_}) ->
-      let uu___ =
-        eq_tm env
-          (b1.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort
-          (b2.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
-      eq_and uu___ (fun uu___1 -> eq_comp env c1 c2)
+      if
+        Prims.not
+          (FStarC_Syntax_Util.bqual_compat
+             b1.FStarC_Syntax_Syntax.binder_qual
+             b2.FStarC_Syntax_Syntax.binder_qual)
+      then Unknown
+      else
+        (let uu___ =
+           eq_tm env
+             (b1.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort
+             (b2.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
+         eq_and uu___ (fun uu___1 -> eq_comp env c1 c2))
   | uu___ -> Unknown
 and eq_antiquotations (env : FStarC_TypeChecker_Env.env_t)
   (a1 : FStarC_Syntax_Syntax.term Prims.list)
@@ -297,36 +304,16 @@ and eq_comp (env : FStarC_TypeChecker_Env.env_t)
   (c1 : FStarC_Syntax_Syntax.comp) (c2 : FStarC_Syntax_Syntax.comp) :
   eq_result=
   match ((c1.FStarC_Syntax_Syntax.n), (c2.FStarC_Syntax_Syntax.n)) with
-  | (FStarC_Syntax_Syntax.Total t1, FStarC_Syntax_Syntax.Total t2) ->
-      eq_tm env t1 t2
-  | (FStarC_Syntax_Syntax.GTotal t1, FStarC_Syntax_Syntax.GTotal t2) ->
-      eq_tm env t1 t2
   | (FStarC_Syntax_Syntax.Comp ct1, FStarC_Syntax_Syntax.Comp ct2) ->
-      let uu___ =
-        let uu___1 =
-          FStarC_Syntax_Util.eq_univs_list
-            ct1.FStarC_Syntax_Syntax.comp_univs
-            ct2.FStarC_Syntax_Syntax.comp_univs in
-        equal_if uu___1 in
-      eq_and uu___
-        (fun uu___1 ->
-           eq_and
-             (equal_if
-                (FStarC_Ident.lid_equals ct1.FStarC_Syntax_Syntax.effect_name
-                   ct2.FStarC_Syntax_Syntax.effect_name))
-             (fun uu___2 ->
-                let uu___3 =
-                  eq_tm env ct1.FStarC_Syntax_Syntax.result_typ
-                    ct2.FStarC_Syntax_Syntax.result_typ in
-                eq_and uu___3
-                  (fun uu___4 ->
-                     let uu___5 =
-                       eq_tm env ct1.FStarC_Syntax_Syntax.comp_pre
-                         ct2.FStarC_Syntax_Syntax.comp_pre in
-                     eq_and uu___5
-                       (fun uu___6 ->
-                          eq_tm env ct1.FStarC_Syntax_Syntax.comp_post
-                            ct2.FStarC_Syntax_Syntax.comp_post))))
+      eq_and
+        (equal_if
+           (FStarC_Ident.lid_equals ct1.FStarC_Syntax_Syntax.effect_name
+              ct2.FStarC_Syntax_Syntax.effect_name))
+        (fun uu___ ->
+           let uu___1 =
+             eq_tm env ct1.FStarC_Syntax_Syntax.result_typ
+               ct2.FStarC_Syntax_Syntax.result_typ in
+           eq_and uu___1 (fun uu___2 -> Equal))
   | uu___ -> NotEqual
 let eq_tm_bool (e : FStarC_TypeChecker_Env.env_t)
   (t1 : FStarC_Syntax_Syntax.term) (t2 : FStarC_Syntax_Syntax.term) :

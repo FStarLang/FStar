@@ -885,19 +885,19 @@ let builtin_embeddings : (FStarC_Ident.lident * embedding_data) Prims.list=
                                                                     let uu___73
                                                                     =
                                                                     FStarC_Reflection_V2_Constants.fstar_refl_data_lid
-                                                                    "lb_view" in
+                                                                    "cflag" in
                                                                     let uu___74
                                                                     =
                                                                     let uu___75
                                                                     =
                                                                     refl_emb_lid
-                                                                    "e_lb_view" in
+                                                                    "e_cflag" in
                                                                     let uu___76
                                                                     =
                                                                     let uu___77
                                                                     =
                                                                     nbe_refl_emb_lid
-                                                                    "e_lb_view" in
+                                                                    "e_cflag" in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___77 in
                                                                     {
@@ -917,19 +917,19 @@ let builtin_embeddings : (FStarC_Ident.lident * embedding_data) Prims.list=
                                                                     let uu___75
                                                                     =
                                                                     FStarC_Reflection_V2_Constants.fstar_refl_data_lid
-                                                                    "sigelt_view" in
+                                                                    "decreases_order" in
                                                                     let uu___76
                                                                     =
                                                                     let uu___77
                                                                     =
                                                                     refl_emb_lid
-                                                                    "e_sigelt_view" in
+                                                                    "e_decreases_order" in
                                                                     let uu___78
                                                                     =
                                                                     let uu___79
                                                                     =
                                                                     nbe_refl_emb_lid
-                                                                    "e_sigelt_view" in
+                                                                    "e_decreases_order" in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___79 in
                                                                     {
@@ -949,19 +949,19 @@ let builtin_embeddings : (FStarC_Ident.lident * embedding_data) Prims.list=
                                                                     let uu___77
                                                                     =
                                                                     FStarC_Reflection_V2_Constants.fstar_refl_data_lid
-                                                                    "qualifier" in
+                                                                    "lb_view" in
                                                                     let uu___78
                                                                     =
                                                                     let uu___79
                                                                     =
                                                                     refl_emb_lid
-                                                                    "e_qualifier" in
+                                                                    "e_lb_view" in
                                                                     let uu___80
                                                                     =
                                                                     let uu___81
                                                                     =
                                                                     nbe_refl_emb_lid
-                                                                    "e_qualifier" in
+                                                                    "e_lb_view" in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___81 in
                                                                     {
@@ -974,7 +974,77 @@ let builtin_embeddings : (FStarC_Ident.lident * embedding_data) Prims.list=
                                                                     } in
                                                                     (uu___77,
                                                                     uu___78) in
-                                                                    [uu___76] in
+                                                                    let uu___77
+                                                                    =
+                                                                    let uu___78
+                                                                    =
+                                                                    let uu___79
+                                                                    =
+                                                                    FStarC_Reflection_V2_Constants.fstar_refl_data_lid
+                                                                    "sigelt_view" in
+                                                                    let uu___80
+                                                                    =
+                                                                    let uu___81
+                                                                    =
+                                                                    refl_emb_lid
+                                                                    "e_sigelt_view" in
+                                                                    let uu___82
+                                                                    =
+                                                                    let uu___83
+                                                                    =
+                                                                    nbe_refl_emb_lid
+                                                                    "e_sigelt_view" in
+                                                                    FStar_Pervasives_Native.Some
+                                                                    uu___83 in
+                                                                    {
+                                                                    arity =
+                                                                    Prims.int_zero;
+                                                                    syn_emb =
+                                                                    uu___81;
+                                                                    nbe_emb =
+                                                                    uu___82
+                                                                    } in
+                                                                    (uu___79,
+                                                                    uu___80) in
+                                                                    let uu___79
+                                                                    =
+                                                                    let uu___80
+                                                                    =
+                                                                    let uu___81
+                                                                    =
+                                                                    FStarC_Reflection_V2_Constants.fstar_refl_data_lid
+                                                                    "qualifier" in
+                                                                    let uu___82
+                                                                    =
+                                                                    let uu___83
+                                                                    =
+                                                                    refl_emb_lid
+                                                                    "e_qualifier" in
+                                                                    let uu___84
+                                                                    =
+                                                                    let uu___85
+                                                                    =
+                                                                    nbe_refl_emb_lid
+                                                                    "e_qualifier" in
+                                                                    FStar_Pervasives_Native.Some
+                                                                    uu___85 in
+                                                                    {
+                                                                    arity =
+                                                                    Prims.int_zero;
+                                                                    syn_emb =
+                                                                    uu___83;
+                                                                    nbe_emb =
+                                                                    uu___84
+                                                                    } in
+                                                                    (uu___81,
+                                                                    uu___82) in
+                                                                    [uu___80] in
+                                                                    uu___78
+                                                                    ::
+                                                                    uu___79 in
+                                                                    uu___76
+                                                                    ::
+                                                                    uu___77 in
                                                                     uu___74
                                                                     ::
                                                                     uu___75 in
@@ -1451,27 +1521,24 @@ let interpret_plugin_as_term_fun (env : FStarC_Extraction_ML_UEnv.uenv)
                            then cb_tabs
                            else ml_lam "_psc" cb_tabs)), arity, true)
                       else
-                        (let uu___4 =
-                           let uu___5 =
-                             FStarC_TypeChecker_Env.norm_eff_name tcenv
-                               (FStarC_Syntax_Util.comp_effect_name c1) in
-                           FStarC_Ident.lid_equals uu___5
-                             FStarC_Parser_Const.effect_TAC_lid in
-                         if uu___4
-                         then
-                           let h =
+                        if
+                          FStarC_Ident.lid_equals
+                            (FStarC_Syntax_Util.comp_effect_name c1)
+                            FStarC_Parser_Const.effect_TAC_lid
+                        then
+                          (let h =
                              mk_tactic_interpretation loc non_tvar_arity in
                            let tac_fun =
-                             let uu___5 =
-                               let uu___6 =
-                                 let uu___7 =
+                             let uu___4 =
+                               let uu___5 =
+                                 let uu___6 =
                                    mk_from_tactic loc non_tvar_arity in
-                                 let uu___8 =
-                                   let uu___9 = lid_to_name fv_lid1 in
-                                   [uu___9] in
-                                 (uu___7, uu___8) in
-                               FStarC_Extraction_ML_Syntax.MLE_App uu___6 in
-                             mk uu___5 in
+                                 let uu___7 =
+                                   let uu___8 = lid_to_name fv_lid1 in
+                                   [uu___8] in
+                                 (uu___6, uu___7) in
+                               FStarC_Extraction_ML_Syntax.MLE_App uu___5 in
+                             mk uu___4 in
                            let psc = str_to_name "psc" in
                            let ncb = str_to_name "ncb" in
                            let us = str_to_name "us" in
@@ -1495,23 +1562,23 @@ let interpret_plugin_as_term_fun (env : FStarC_Extraction_ML_UEnv.uenv)
                                       (FStarC_Extraction_ML_Syntax.MLE_App
                                          (h,
                                            (FStarC_List.op_At args [all_args]))))
-                             | uu___5 ->
+                             | uu___4 ->
                                  abstract_tvars tvar_names
                                    (mk
                                       (FStarC_Extraction_ML_Syntax.MLE_App
                                          (h, args))) in
                            ((ml_lam "psc" (ml_lam "ncb" (ml_lam "us" tabs))),
-                             (arity + Prims.int_one), false)
-                         else
-                           (let uu___5 =
-                              let uu___6 =
-                                let uu___7 =
-                                  FStarC_Class_Show.show
-                                    FStarC_Syntax_Print.showable_term t1 in
-                                Prims.strcat "Plugins not defined for type "
-                                  uu___7 in
-                              NoEmbedding uu___6 in
-                            FStarC_Effect.raise uu___5))
+                             (arity + Prims.int_one), false))
+                        else
+                          (let uu___4 =
+                             let uu___5 =
+                               let uu___6 =
+                                 FStarC_Class_Show.show
+                                   FStarC_Syntax_Print.showable_term t1 in
+                               Prims.strcat "Plugins not defined for type "
+                                 uu___6 in
+                             NoEmbedding uu___5 in
+                           FStarC_Effect.raise uu___4)
                   | { FStarC_Syntax_Syntax.binder_bv = b;
                       FStarC_Syntax_Syntax.binder_qual = uu___3;
                       FStarC_Syntax_Syntax.binder_positivity = uu___4;

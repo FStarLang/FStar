@@ -125,9 +125,10 @@ let rec res_typ (t : FStar_Tactics_NamedView.term)
   let x = FStar_Tactics_NamedView.inspect t ps in
   match x with
   | FStar_Tactics_NamedView.Tv_Arrow (uu___, c) ->
-      (match FStar_Tactics_NamedView.inspect_comp c with
-       | FStarC_Reflection_V2_Data.C_Total t1 -> res_typ t1 ps
-       | uu___1 -> t)
+      let x1 = FStar_Tactics_NamedView.inspect_comp c in
+      if FStarC_Reflection_V2_Data.is_tot_comp x1
+      then res_typ x1.FStarC_Reflection_V2_Data.result_typ ps
+      else t
   | uu___ -> t
 let fv_eq (fv1 : FStarC_Reflection_Types.fv)
   (fv2 : FStarC_Reflection_Types.fv) : Prims.bool=
@@ -294,14 +295,13 @@ let __proj__Mktc_goal__item__args_and_uvars (projectee : tc_goal) :
   | { g; head_fv; c_se; fundeps; args_and_uvars;_} -> args_and_uvars
 exception Next 
 let uu___is_Next (projectee : Prims.exn) : Prims.bool= true
-let skip (uu___2 : st_t) (uu___1 : Prims.string)
-  (uu___ : FStarC_Tactics_Types.ref_proofstate) : 'a=
-  (fun st s ps ->
-     if st.dbg
-     then FStarC_Tactics_V2_Builtins.print (Prims.strcat "skip: " s) ps
-     else ();
-     Obj.magic (FStarC_Tactics_V2_Builtins.raise_core Next ps)) uu___2 uu___1
-    uu___
+let skip (st : st_t) (s : Prims.string)
+  (ps : FStarC_Tactics_Types.ref_proofstate) : 'a=
+  if st.dbg
+  then FStarC_Tactics_V2_Builtins.print (Prims.strcat "skip: " s) ps
+  else ();
+  FStarC_Tactics_V2_Builtins.raise_core Next ps;
+  Prims.magic ()
 let orskip (st : st_t) (s : Prims.string)
   (k : unit -> FStarC_Tactics_Types.ref_proofstate -> 'a) :
   FStarC_Tactics_Types.ref_proofstate -> 'a=
@@ -313,15 +313,12 @@ let op_Greater_Greater_Greater
   FStarC_Tactics_Types.ref_proofstate -> 'a=
   FStar_Tactics_V2_Derived.try_with
     (fun uu___1 -> match () with | () -> t1 ())
-    (fun uu___2 uu___1 ->
-       (fun uu___1 ->
-          match uu___1 with
-          | Next -> Obj.magic (Obj.repr (t2 ()))
-          | e ->
-              Obj.magic
-                (Obj.repr
-                   (fun ps -> FStarC_Tactics_V2_Builtins.raise_core e ps)))
-         uu___2 uu___1)
+    (fun uu___1 ->
+       match uu___1 with
+       | Next -> t2 ()
+       | e ->
+           (fun ps ->
+              FStarC_Tactics_V2_Builtins.raise_core e ps; Prims.magic ()))
 let run (t : unit -> FStarC_Tactics_Types.ref_proofstate -> 'a) :
   FStarC_Tactics_Types.ref_proofstate -> 'a= t ()
 let rec first :
@@ -329,19 +326,15 @@ let rec first :
     ('a -> FStarC_Tactics_Types.ref_proofstate -> 'b) ->
       'a Prims.list -> FStarC_Tactics_Types.ref_proofstate -> 'b
   =
-  fun uu___2 uu___1 uu___ ->
-    (fun f l ->
-       match l with
-       | [] ->
-           Obj.magic
-             (Obj.repr
-                (fun ps -> FStarC_Tactics_V2_Builtins.raise_core Next ps))
-       | x::xs ->
-           Obj.magic
-             (Obj.repr
-                (run
-                   (op_Greater_Greater_Greater (fun uu___ -> f x)
-                      (fun uu___ -> first f xs))))) uu___2 uu___1 uu___
+  fun f l ->
+    match l with
+    | [] ->
+        (fun ps ->
+           FStarC_Tactics_V2_Builtins.raise_core Next ps; Prims.magic ())
+    | x::xs ->
+        run
+          (op_Greater_Greater_Greater (fun uu___ -> f x)
+             (fun uu___ -> first f xs))
 let rec maybe_intros (uu___ : unit)
   (ps : FStarC_Tactics_Types.ref_proofstate) : unit=
   let x = FStar_Tactics_V2_Derived.cur_goal () ps in
@@ -833,288 +826,275 @@ let mk_class (nm : Prims.string) (ps : FStarC_Tactics_Types.ref_proofstate) :
                       | (bs, cod) ->
                           let x16 = FStar_Tactics_NamedView.inspect_comp cod in
                           (FStar_Tactics_V2_Derived.guard
-                             (match x16 with
-                              | FStarC_Reflection_V2_Data.C_Total ret -> true
-                              | uu___ -> false) ps;
-                           (let x18 = x16 in
-                            match x18 with
-                            | FStarC_Reflection_V2_Data.C_Total cod1 ->
-                                (debug'
-                                   (fun uu___ ps1 ->
-                                      let x20 =
-                                        FStar_Tactics_Util.string_of_list
-                                          FStar_Tactics_V2_Derived.binder_to_string
-                                          params ps1 in
-                                      Prims.strcat "params = " x20) ps;
-                                 debug'
-                                   (fun uu___ uu___1 ->
-                                      Prims.strcat "n_params = "
-                                        (Prims.string_of_int
-                                           (FStar_List_Tot_Base.length params)))
-                                   ps;
-                                 debug'
-                                   (fun uu___ uu___1 ->
-                                      Prims.strcat "n_univs = "
-                                        (Prims.string_of_int
-                                           (FStar_List_Tot_Base.length us)))
-                                   ps;
-                                 debug'
-                                   (fun uu___ ps1 ->
-                                      let x23 =
-                                        FStarC_Tactics_V2_Builtins.term_to_string
-                                          cod1 ps1 in
-                                      Prims.strcat "cod = " x23) ps;
-                                 (let x23 =
-                                    Prims.strcat "__proj__Mk"
-                                      (Prims.strcat x11 "__item__") in
-                                  let x24 = filter_no_method_binders bs ps in
-                                  FStar_Tactics_Util.map
-                                    (fun b ps1 ->
-                                       let x25 =
-                                         FStar_Tactics_V2_Derived.name_of_binder
-                                           b ps1 in
-                                       debug'
-                                         (fun uu___ uu___1 ->
-                                            Prims.strcat "processing method "
-                                              x25) ps1;
-                                       (let x27 =
-                                          FStar_Tactics_V2_Derived.cur_module
-                                            () ps1 in
-                                        let x28 =
-                                          FStarC_Reflection_V2_Builtins.pack_fv
-                                            (op_At () x27 [x25]) in
-                                        let x29 =
-                                          FStar_Tactics_V2_Derived.fresh_namedv_named
-                                            "d" ps1 in
-                                        let x30 =
-                                          FStarC_Reflection_V2_Builtins.pack_ln
-                                            (FStarC_Reflection_V2_Data.Tv_FVar
-                                               (FStarC_Reflection_V2_Builtins.pack_fv
-                                                  ["FStar";
-                                                  "Tactics";
-                                                  "Typeclasses";
-                                                  "tcresolve"])) in
-                                        let x31 =
-                                          let x32 =
-                                            FStarC_Tactics_V2_Builtins.fresh
-                                              () ps1 in
-                                          {
-                                            FStar_Tactics_NamedView.uniq =
-                                              x32;
-                                            FStar_Tactics_NamedView.ppname =
-                                              (FStar_Sealed.seal "dict");
-                                            FStar_Tactics_NamedView.sort =
-                                              cod1;
-                                            FStar_Tactics_NamedView.qual =
-                                              (FStarC_Reflection_V2_Data.Q_Meta
-                                                 x30);
-                                            FStar_Tactics_NamedView.attrs =
-                                              []
-                                          } in
-                                        let x32 =
-                                          let x33 =
-                                            FStar_Tactics_V2_Derived.cur_module
-                                              () ps1 in
-                                          op_At () x33 [Prims.strcat x23 x25] in
-                                        let x33 =
-                                          FStar_Tactics_NamedView.pack
-                                            (FStar_Tactics_NamedView.Tv_FVar
-                                               (FStarC_Reflection_V2_Builtins.pack_fv
-                                                  x32)) in
-                                        let x34 =
-                                          let x35 =
-                                            let x36 =
-                                              FStarC_Tactics_V2_Builtins.top_env
-                                                () ps1 in
-                                            FStarC_Reflection_V2_Builtins.lookup_typ
-                                              x36 x32 in
-                                          match x35 with
-                                          | FStar_Pervasives_Native.None ->
-                                              FStar_Tactics_V2_Derived.fail
-                                                "mk_class: proj not found?"
-                                                ps1
-                                          | FStar_Pervasives_Native.Some se1
-                                              -> se1 in
-                                        let x35 =
-                                          FStarC_Reflection_V2_Builtins.sigelt_attrs
-                                            x34 in
-                                        let x36 =
-                                          let x37 =
-                                            FStar_Tactics_NamedView.inspect_sigelt
-                                              x34 ps1 in
-                                          match x37 with
-                                          | FStar_Tactics_NamedView.Sg_Let
-                                              {
-                                                FStar_Tactics_NamedView.isrec
-                                                  = uu___;
-                                                FStar_Tactics_NamedView.lbs =
-                                                  lbs;_}
-                                              ->
-                                              let x38 =
-                                                FStar_Tactics_V2_SyntaxHelpers.lookup_lb
-                                                  lbs x32 ps1 in
-                                              ((x38.FStar_Tactics_NamedView.lb_us),
-                                                (x38.FStar_Tactics_NamedView.lb_typ),
-                                                (x38.FStar_Tactics_NamedView.lb_fv))
-                                          | FStar_Tactics_NamedView.Sg_Val
-                                              {
-                                                FStar_Tactics_NamedView.nm1 =
-                                                  uu___;
-                                                FStar_Tactics_NamedView.univs2
-                                                  = univs;
-                                                FStar_Tactics_NamedView.typ1
-                                                  = typ;_}
-                                              ->
-                                              (univs, typ,
-                                                (FStarC_Reflection_V2_Builtins.pack_fv
-                                                   x32))
-                                          | uu___ ->
-                                              FStar_Tactics_V2_Derived.fail
-                                                "mk_class: proj not Sg_Let or Sg_Val?"
-                                                ps1 in
-                                        match x36 with
-                                        | (proj_us, proj_typ, proj_fv) ->
-                                            (debug'
-                                               (fun uu___ ps2 ->
-                                                  let x38 =
-                                                    FStarC_Tactics_V2_Builtins.term_to_string
-                                                      proj_typ ps2 in
-                                                  Prims.strcat "proj_ty = "
-                                                    x38) ps1;
-                                             (let x38 =
-                                                let x39 =
-                                                  FStar_Tactics_V2_SyntaxHelpers.collect_arr_bs
-                                                    proj_typ ps1 in
-                                                match x39 with
-                                                | (bs1, cod2) ->
-                                                    let x40 =
-                                                      FStar_List_Tot_Base.splitAt
-                                                        (FStar_List_Tot_Base.length
-                                                           params) bs1 in
-                                                    (match x40 with
-                                                     | (ps2, bs2) ->
-                                                         (match bs2 with
-                                                          | [] ->
-                                                              FStar_Tactics_V2_Derived.fail
-                                                                "mk_class: impossible, no binders"
-                                                                ps1
-                                                          | b1::bs' ->
-                                                              let x41 =
-                                                                binder_set_meta
-                                                                  b1 x30 in
-                                                              FStar_Tactics_V2_SyntaxHelpers.mk_arr
-                                                                (op_At () ps2
-                                                                   (x41 ::
-                                                                   bs')) cod2
-                                                                ps1)) in
-                                              let x39 =
-                                                let x40 =
-                                                  FStar_Tactics_V2_SyntaxHelpers.collect_arr_bs
-                                                    proj_typ ps1 in
-                                                match x40 with
-                                                | (bs1, _cod) ->
-                                                    let x41 =
-                                                      FStar_List_Tot_Base.splitAt
-                                                        (FStar_List_Tot_Base.length
-                                                           params) bs1 in
-                                                    (match x41 with
-                                                     | (ps2, bs2) ->
-                                                         (match bs2 with
-                                                          | [] ->
-                                                              FStar_Tactics_V2_Derived.fail
-                                                                "mk_class: impossible, no binders"
-                                                                ps1
-                                                          | b1::bs' ->
-                                                              let x42 =
-                                                                binder_set_meta
-                                                                  b1 x30 in
-                                                              mk_abs
-                                                                (op_At () ps2
-                                                                   [x42])
-                                                                (FStar_Reflection_V2_Derived.mk_app
-                                                                   (FStar_Tactics_NamedView.pack
-                                                                    (FStar_Tactics_NamedView.Tv_FVar
+                             (FStarC_Reflection_V2_Data.is_tot_comp x16) ps;
+                           (let x18 =
+                              x16.FStarC_Reflection_V2_Data.result_typ in
+                            debug'
+                              (fun uu___ ps1 ->
+                                 let x20 =
+                                   FStar_Tactics_Util.string_of_list
+                                     FStar_Tactics_V2_Derived.binder_to_string
+                                     params ps1 in
+                                 Prims.strcat "params = " x20) ps;
+                            debug'
+                              (fun uu___ uu___1 ->
+                                 Prims.strcat "n_params = "
+                                   (Prims.string_of_int
+                                      (FStar_List_Tot_Base.length params)))
+                              ps;
+                            debug'
+                              (fun uu___ uu___1 ->
+                                 Prims.strcat "n_univs = "
+                                   (Prims.string_of_int
+                                      (FStar_List_Tot_Base.length us))) ps;
+                            debug'
+                              (fun uu___ ps1 ->
+                                 let x23 =
+                                   FStarC_Tactics_V2_Builtins.term_to_string
+                                     x18 ps1 in
+                                 Prims.strcat "cod = " x23) ps;
+                            (let x23 =
+                               Prims.strcat "__proj__Mk"
+                                 (Prims.strcat x11 "__item__") in
+                             let x24 = filter_no_method_binders bs ps in
+                             FStar_Tactics_Util.map
+                               (fun b ps1 ->
+                                  let x25 =
+                                    FStar_Tactics_V2_Derived.name_of_binder b
+                                      ps1 in
+                                  debug'
+                                    (fun uu___ uu___1 ->
+                                       Prims.strcat "processing method " x25)
+                                    ps1;
+                                  (let x27 =
+                                     FStar_Tactics_V2_Derived.cur_module ()
+                                       ps1 in
+                                   let x28 =
+                                     FStarC_Reflection_V2_Builtins.pack_fv
+                                       (op_At () x27 [x25]) in
+                                   let x29 =
+                                     FStar_Tactics_V2_Derived.fresh_namedv_named
+                                       "d" ps1 in
+                                   let x30 =
+                                     FStarC_Reflection_V2_Builtins.pack_ln
+                                       (FStarC_Reflection_V2_Data.Tv_FVar
+                                          (FStarC_Reflection_V2_Builtins.pack_fv
+                                             ["FStar";
+                                             "Tactics";
+                                             "Typeclasses";
+                                             "tcresolve"])) in
+                                   let x31 =
+                                     let x32 =
+                                       FStarC_Tactics_V2_Builtins.fresh ()
+                                         ps1 in
+                                     {
+                                       FStar_Tactics_NamedView.uniq = x32;
+                                       FStar_Tactics_NamedView.ppname =
+                                         (FStar_Sealed.seal "dict");
+                                       FStar_Tactics_NamedView.sort = x18;
+                                       FStar_Tactics_NamedView.qual =
+                                         (FStarC_Reflection_V2_Data.Q_Meta
+                                            x30);
+                                       FStar_Tactics_NamedView.attrs = []
+                                     } in
+                                   let x32 =
+                                     let x33 =
+                                       FStar_Tactics_V2_Derived.cur_module ()
+                                         ps1 in
+                                     op_At () x33 [Prims.strcat x23 x25] in
+                                   let x33 =
+                                     FStar_Tactics_NamedView.pack
+                                       (FStar_Tactics_NamedView.Tv_FVar
+                                          (FStarC_Reflection_V2_Builtins.pack_fv
+                                             x32)) in
+                                   let x34 =
+                                     let x35 =
+                                       let x36 =
+                                         FStarC_Tactics_V2_Builtins.top_env
+                                           () ps1 in
+                                       FStarC_Reflection_V2_Builtins.lookup_typ
+                                         x36 x32 in
+                                     match x35 with
+                                     | FStar_Pervasives_Native.None ->
+                                         FStar_Tactics_V2_Derived.fail
+                                           "mk_class: proj not found?" ps1
+                                     | FStar_Pervasives_Native.Some se1 ->
+                                         se1 in
+                                   let x35 =
+                                     FStarC_Reflection_V2_Builtins.sigelt_attrs
+                                       x34 in
+                                   let x36 =
+                                     let x37 =
+                                       FStar_Tactics_NamedView.inspect_sigelt
+                                         x34 ps1 in
+                                     match x37 with
+                                     | FStar_Tactics_NamedView.Sg_Let
+                                         {
+                                           FStar_Tactics_NamedView.isrec =
+                                             uu___;
+                                           FStar_Tactics_NamedView.lbs = lbs;_}
+                                         ->
+                                         let x38 =
+                                           FStar_Tactics_V2_SyntaxHelpers.lookup_lb
+                                             lbs x32 ps1 in
+                                         ((x38.FStar_Tactics_NamedView.lb_us),
+                                           (x38.FStar_Tactics_NamedView.lb_typ),
+                                           (x38.FStar_Tactics_NamedView.lb_fv))
+                                     | FStar_Tactics_NamedView.Sg_Val
+                                         {
+                                           FStar_Tactics_NamedView.nm1 =
+                                             uu___;
+                                           FStar_Tactics_NamedView.univs2 =
+                                             univs;
+                                           FStar_Tactics_NamedView.typ1 = typ;_}
+                                         ->
+                                         (univs, typ,
+                                           (FStarC_Reflection_V2_Builtins.pack_fv
+                                              x32))
+                                     | uu___ ->
+                                         FStar_Tactics_V2_Derived.fail
+                                           "mk_class: proj not Sg_Let or Sg_Val?"
+                                           ps1 in
+                                   match x36 with
+                                   | (proj_us, proj_typ, proj_fv) ->
+                                       (debug'
+                                          (fun uu___ ps2 ->
+                                             let x38 =
+                                               FStarC_Tactics_V2_Builtins.term_to_string
+                                                 proj_typ ps2 in
+                                             Prims.strcat "proj_ty = " x38)
+                                          ps1;
+                                        (let x38 =
+                                           let x39 =
+                                             FStar_Tactics_V2_SyntaxHelpers.collect_arr_bs
+                                               proj_typ ps1 in
+                                           match x39 with
+                                           | (bs1, cod1) ->
+                                               let x40 =
+                                                 FStar_List_Tot_Base.splitAt
+                                                   (FStar_List_Tot_Base.length
+                                                      params) bs1 in
+                                               (match x40 with
+                                                | (ps2, bs2) ->
+                                                    (match bs2 with
+                                                     | [] ->
+                                                         FStar_Tactics_V2_Derived.fail
+                                                           "mk_class: impossible, no binders"
+                                                           ps1
+                                                     | b1::bs' ->
+                                                         let x41 =
+                                                           binder_set_meta b1
+                                                             x30 in
+                                                         FStar_Tactics_V2_SyntaxHelpers.mk_arr
+                                                           (op_At () ps2 (x41
+                                                              :: bs')) cod1
+                                                           ps1)) in
+                                         let x39 =
+                                           let x40 =
+                                             FStar_Tactics_V2_SyntaxHelpers.collect_arr_bs
+                                               proj_typ ps1 in
+                                           match x40 with
+                                           | (bs1, _cod) ->
+                                               let x41 =
+                                                 FStar_List_Tot_Base.splitAt
+                                                   (FStar_List_Tot_Base.length
+                                                      params) bs1 in
+                                               (match x41 with
+                                                | (ps2, bs2) ->
+                                                    (match bs2 with
+                                                     | [] ->
+                                                         FStar_Tactics_V2_Derived.fail
+                                                           "mk_class: impossible, no binders"
+                                                           ps1
+                                                     | b1::bs' ->
+                                                         let x42 =
+                                                           binder_set_meta b1
+                                                             x30 in
+                                                         mk_abs
+                                                           (op_At () ps2
+                                                              [x42])
+                                                           (FStar_Reflection_V2_Derived.mk_app
+                                                              (FStar_Tactics_NamedView.pack
+                                                                 (FStar_Tactics_NamedView.Tv_FVar
                                                                     proj_fv))
-                                                                   (op_At ()
-                                                                    (FStar_List_Tot_Base.map
-                                                                    (fun p ->
+                                                              (op_At ()
+                                                                 (FStar_List_Tot_Base.map
+                                                                    (
+                                                                    fun p ->
                                                                     ((FStar_Tactics_V2_SyntaxCoercions.binder_to_term
                                                                     p),
                                                                     FStarC_Reflection_V2_Data.Q_Implicit))
                                                                     ps2)
-                                                                    [
-                                                                    ((FStar_Tactics_V2_SyntaxCoercions.binder_to_term
+                                                                 [((FStar_Tactics_V2_SyntaxCoercions.binder_to_term
                                                                     x42),
                                                                     FStarC_Reflection_V2_Data.Q_Explicit)]))
-                                                                ps1)) in
-                                              debug'
-                                                (fun uu___ ps2 ->
-                                                   let x41 =
-                                                     FStarC_Tactics_V2_Builtins.term_to_string
-                                                       x39 ps2 in
-                                                   Prims.strcat "def = " x41)
-                                                ps1;
-                                              debug'
-                                                (fun uu___ ps2 ->
-                                                   let x42 =
-                                                     FStarC_Tactics_V2_Builtins.term_to_string
-                                                       x38 ps2 in
-                                                   Prims.strcat "ty  = " x42)
-                                                ps1;
-                                              (let x42 = x38 in
-                                               let x43 = x39 in
-                                               let x44 = x28 in
-                                               let x45 =
+                                                           ps1)) in
+                                         debug'
+                                           (fun uu___ ps2 ->
+                                              let x41 =
+                                                FStarC_Tactics_V2_Builtins.term_to_string
+                                                  x39 ps2 in
+                                              Prims.strcat "def = " x41) ps1;
+                                         debug'
+                                           (fun uu___ ps2 ->
+                                              let x42 =
+                                                FStarC_Tactics_V2_Builtins.term_to_string
+                                                  x38 ps2 in
+                                              Prims.strcat "ty  = " x42) ps1;
+                                         (let x42 = x38 in
+                                          let x43 = x39 in
+                                          let x44 = x28 in
+                                          let x45 =
+                                            {
+                                              FStar_Tactics_NamedView.lb_fv =
+                                                x44;
+                                              FStar_Tactics_NamedView.lb_us =
+                                                proj_us;
+                                              FStar_Tactics_NamedView.lb_typ
+                                                = x42;
+                                              FStar_Tactics_NamedView.lb_def
+                                                = x43
+                                            } in
+                                          let x46 =
+                                            FStar_Tactics_NamedView.pack_sigelt
+                                              (FStar_Tactics_NamedView.Sg_Let
                                                  {
-                                                   FStar_Tactics_NamedView.lb_fv
-                                                     = x44;
-                                                   FStar_Tactics_NamedView.lb_us
-                                                     = proj_us;
-                                                   FStar_Tactics_NamedView.lb_typ
-                                                     = x42;
-                                                   FStar_Tactics_NamedView.lb_def
-                                                     = x43
-                                                 } in
-                                               let x46 =
-                                                 FStar_Tactics_NamedView.pack_sigelt
-                                                   (FStar_Tactics_NamedView.Sg_Let
-                                                      {
-                                                        FStar_Tactics_NamedView.isrec
-                                                          = false;
-                                                        FStar_Tactics_NamedView.lbs
-                                                          = [x45]
-                                                      }) ps1 in
-                                               FStarC_Reflection_V2_Builtins.set_sigelt_attrs
-                                                 (op_At ()
-                                                    ((FStarC_Reflection_V2_Builtins.pack_ln
-                                                        (FStarC_Reflection_V2_Data.Tv_App
-                                                           ((FStarC_Reflection_V2_Builtins.pack_ln
-                                                               (FStarC_Reflection_V2_Data.Tv_FVar
-                                                                  (FStarC_Reflection_V2_Builtins.pack_fv
-                                                                    ["FStar";
-                                                                    "Attributes";
-                                                                    "smt_arity"]))),
-                                                             ((FStar_Tactics_NamedView.pack
-                                                                 (FStar_Tactics_NamedView.Tv_Const
-                                                                    (
-                                                                    FStarC_Reflection_V2_Data.C_Int
-                                                                    ((FStar_List_Tot_Base.length
+                                                   FStar_Tactics_NamedView.isrec
+                                                     = false;
+                                                   FStar_Tactics_NamedView.lbs
+                                                     = [x45]
+                                                 }) ps1 in
+                                          FStarC_Reflection_V2_Builtins.set_sigelt_attrs
+                                            (op_At ()
+                                               ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                   (FStarC_Reflection_V2_Data.Tv_App
+                                                      ((FStarC_Reflection_V2_Builtins.pack_ln
+                                                          (FStarC_Reflection_V2_Data.Tv_FVar
+                                                             (FStarC_Reflection_V2_Builtins.pack_fv
+                                                                ["FStar";
+                                                                "Attributes";
+                                                                "smt_arity"]))),
+                                                        ((FStar_Tactics_NamedView.pack
+                                                            (FStar_Tactics_NamedView.Tv_Const
+                                                               (FStarC_Reflection_V2_Data.C_Int
+                                                                  ((FStar_List_Tot_Base.length
                                                                     params),
-                                                                    (FStar_Sealed.seal
+                                                                    (
+                                                                    FStar_Sealed.seal
                                                                     FStar_IntegerLiteral.Dec))))),
-                                                               FStarC_Reflection_V2_Data.Q_Explicit))))
-                                                    ::
-                                                    (FStarC_Reflection_V2_Builtins.pack_ln
-                                                       (FStarC_Reflection_V2_Data.Tv_FVar
-                                                          (FStarC_Reflection_V2_Builtins.pack_fv
-                                                             ["FStar";
-                                                             "Tactics";
-                                                             "Typeclasses";
-                                                             "tcmethod"])))
-                                                    :: x35)
-                                                    b.FStar_Tactics_NamedView.attrs)
-                                                 (FStarC_Reflection_V2_Builtins.set_sigelt_quals
-                                                    x4 x46)))))) x24 ps))))))))))))
+                                                          FStarC_Reflection_V2_Data.Q_Explicit))))
+                                               ::
+                                               (FStarC_Reflection_V2_Builtins.pack_ln
+                                                  (FStarC_Reflection_V2_Data.Tv_FVar
+                                                     (FStarC_Reflection_V2_Builtins.pack_fv
+                                                        ["FStar";
+                                                        "Tactics";
+                                                        "Typeclasses";
+                                                        "tcmethod"]))) ::
+                                               x35)
+                                               b.FStar_Tactics_NamedView.attrs)
+                                            (FStarC_Reflection_V2_Builtins.set_sigelt_quals
+                                               x4 x46)))))) x24 ps)))))))))))
 let _ =
   FStarC_Tactics_Native.register_tactic "FStar.Tactics.Typeclasses.mk_class"
     (Prims.of_int 2)

@@ -244,8 +244,7 @@ let mk_LexTop : FStarC_SMTEncoding_Term.term=
   FStarC_SMTEncoding_Term.mk_LexTop
 let is_smt_reifiable_effect (en : FStarC_TypeChecker_Env.env)
   (l : FStarC_Ident.lident) : Prims.bool=
-  let l1 = FStarC_TypeChecker_Env.norm_eff_name en l in
-  FStarC_TypeChecker_Env.is_reifiable_effect en l1
+  FStarC_TypeChecker_Env.is_reifiable_effect en l
 let is_smt_reifiable_comp (en : FStarC_TypeChecker_Env.env)
   (c : FStarC_Syntax_Syntax.comp) : Prims.bool=
   match c.FStarC_Syntax_Syntax.n with

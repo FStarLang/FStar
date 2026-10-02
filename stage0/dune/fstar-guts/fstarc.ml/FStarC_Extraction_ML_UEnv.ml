@@ -490,9 +490,9 @@ let no_fstar_stubs (p : FStarC_Extraction_ML_Syntax.mlpath) :
   FStarC_Extraction_ML_Syntax.mlpath=
   let uu___ = p in
   match uu___ with | (ns, id) -> let ns1 = no_fstar_stubs_ns ns in (ns1, id)
-let lookup_record_field_name (g : uenv)
+let try_lookup_record_field_name (g : uenv)
   (uu___ : (FStarC_Ident.lident * FStarC_Ident.ident)) :
-  FStarC_Extraction_ML_Syntax.mlpath=
+  FStarC_Extraction_ML_Syntax.mlpath FStar_Pervasives_Native.option=
   match uu___ with
   | (type_name, fn) ->
       let key =
@@ -501,14 +501,31 @@ let lookup_record_field_name (g : uenv)
       (match FStarC_PSMap.try_find g.mlpath_of_fieldname
                (FStarC_Ident.string_of_lid key)
        with
-       | FStar_Pervasives_Native.None ->
-           FStarC_Effect.failwith
-             (Prims.strcat "Field name not found: "
-                (FStarC_Ident.string_of_lid key))
+       | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
        | FStar_Pervasives_Native.Some mlp ->
            let uu___1 = mlp in
            (match uu___1 with
-            | (ns, id) -> let ns1 = no_fstar_stubs_ns ns in (ns1, id)))
+            | (ns, id) ->
+                let ns1 = no_fstar_stubs_ns ns in
+                FStar_Pervasives_Native.Some (ns1, id)))
+let lookup_record_field_name (g : uenv)
+  (uu___ : (FStarC_Ident.lident * FStarC_Ident.ident)) :
+  FStarC_Extraction_ML_Syntax.mlpath=
+  match uu___ with
+  | (type_name, fn) ->
+      let uu___1 = try_lookup_record_field_name g (type_name, fn) in
+      (match uu___1 with
+       | FStar_Pervasives_Native.None ->
+           let uu___2 =
+             let uu___3 =
+               let uu___4 =
+                 FStarC_Ident.lid_of_ids
+                   (FStarC_List.op_At (FStarC_Ident.ids_of_lid type_name)
+                      [fn]) in
+               FStarC_Ident.string_of_lid uu___4 in
+             Prims.strcat "Field name not found: " uu___3 in
+           FStarC_Effect.failwith uu___2
+       | FStar_Pervasives_Native.Some mlp -> mlp)
 let initial_mlident_map : unit -> Prims.string FStarC_PSMap.t=
   let map = FStarC_Effect.mk_ref FStar_Pervasives_Native.None in
   fun uu___ ->
@@ -529,6 +546,7 @@ let initial_mlident_map : unit -> Prims.string FStarC_PSMap.t=
             | FStar_Pervasives_Native.Some (FStarC_Options.Krml) ->
                 FStarC_Extraction_ML_Syntax.krml_keywords
             | FStar_Pervasives_Native.Some (FStarC_Options.Extension) -> []
+            | FStar_Pervasives_Native.Some (FStarC_Options.Custard) -> []
             | FStar_Pervasives_Native.None -> [] in
           FStarC_List.fold_right (fun x m1 -> FStarC_PSMap.add m1 x "")
             uu___2 (FStarC_PSMap.empty ()) in

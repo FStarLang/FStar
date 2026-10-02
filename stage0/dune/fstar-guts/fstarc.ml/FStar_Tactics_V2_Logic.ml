@@ -1,19 +1,17 @@
 open Prims
-let cur_goal (uu___1 : unit) (uu___ : FStarC_Tactics_Types.ref_proofstate) :
+let cur_goal (uu___ : unit) (ps : FStarC_Tactics_Types.ref_proofstate) :
   FStarC_Reflection_Types.typ=
-  (fun uu___ ps ->
-     let x =
-       let x1 = FStarC_Tactics_V2_Builtins.get () ps in
-       FStarC_Tactics_Types.goals_of x1 in
-     match x with
-     | g::uu___1 -> Obj.magic (Obj.repr (FStarC_Tactics_Types.goal_type g))
-     | uu___1 ->
-         Obj.magic
-           (Obj.repr
-              (FStarC_Tactics_V2_Builtins.raise_core
-                 (FStarC_Tactics_Common.TacticFailure
-                    ([FStar_Pprint.arbitrary_string "no more goals"],
-                      FStar_Pervasives_Native.None)) ps))) uu___1 uu___
+  let x =
+    let x1 = FStarC_Tactics_V2_Builtins.get () ps in
+    FStarC_Tactics_Types.goals_of x1 in
+  match x with
+  | g::uu___1 -> FStarC_Tactics_Types.goal_type g
+  | uu___1 ->
+      (FStarC_Tactics_V2_Builtins.raise_core
+         (FStarC_Tactics_Common.TacticFailure
+            ([FStar_Pprint.arbitrary_string "no more goals"],
+              FStar_Pervasives_Native.None)) ps;
+       Prims.magic ())
 let cur_formula (uu___ : unit) (ps : FStarC_Tactics_Types.ref_proofstate) :
   FStar_Reflection_V2_Formula.formula=
   let x = cur_goal () ps in FStar_Reflection_V2_Formula.term_as_formula x ps
@@ -259,138 +257,9 @@ let _ =
                (FStarC_Tactics_Native.from_tactic_1 hyp)
                FStarC_Reflection_V2_Embeddings.e_namedv_view
                FStarC_Syntax_Embeddings.e_unit psc ncb us args)
-let pose_lemma (t : FStar_Tactics_NamedView.term)
-  (ps : FStarC_Tactics_Types.ref_proofstate) :
-  FStar_Tactics_NamedView.binding=
-  let x =
-    let x1 = FStar_Tactics_V2_Derived.cur_env () ps in
-    FStar_Tactics_NamedView.tcc x1 t ps in
-  let x1 =
-    match x with
-    | FStarC_Reflection_V2_Data.C_Lemma (pre, post, uu___) -> (pre, post)
-    | FStarC_Reflection_V2_Data.C_Eff (uu___, uu___1, res, pre, post, uu___2)
-        ->
-        (if
-           Prims.not
-             (term_eq res
-                (FStarC_Reflection_V2_Builtins.pack_ln
-                   (FStarC_Reflection_V2_Data.Tv_FVar
-                      (FStarC_Reflection_V2_Builtins.pack_fv
-                         ["Prims"; "unit"]))))
-         then FStar_Tactics_V2_Derived.fail "" ps
-         else ();
-         (pre, post))
-    | uu___ -> FStar_Tactics_V2_Derived.fail "" ps in
-  match x1 with
-  | (pre, post) ->
-      let x2 =
-        FStarC_Reflection_V2_Builtins.pack_ln
-          (FStarC_Reflection_V2_Data.Tv_App
-             (post,
-               ((FStarC_Reflection_V2_Builtins.pack_ln
-                   (FStarC_Reflection_V2_Data.Tv_Const
-                      FStarC_Reflection_V2_Data.C_Unit)),
-                 FStarC_Reflection_V2_Data.Q_Explicit))) in
-      let x3 = FStar_Tactics_V2_Derived.norm_term [] x2 ps in
-      let x4 = FStar_Reflection_V2_Formula.term_as_formula' pre ps in
-      (match x4 with
-       | FStar_Reflection_V2_Formula.True_ ->
-           FStar_Tactics_V2_Derived.pose
-             (FStarC_Reflection_V2_Builtins.pack_ln
-                (FStarC_Reflection_V2_Data.Tv_App
-                   ((FStarC_Reflection_V2_Builtins.pack_ln
-                       (FStarC_Reflection_V2_Data.Tv_App
-                          ((FStarC_Reflection_V2_Builtins.pack_ln
-                              (FStarC_Reflection_V2_Data.Tv_App
-                                 ((FStarC_Reflection_V2_Builtins.pack_ln
-                                     (FStarC_Reflection_V2_Data.Tv_App
-                                        ((FStarC_Reflection_V2_Builtins.pack_ln
-                                            (FStarC_Reflection_V2_Data.Tv_FVar
-                                               (FStarC_Reflection_V2_Builtins.pack_fv
-                                                  ["FStar";
-                                                  "Tactics";
-                                                  "Logic";
-                                                  "Lemmas";
-                                                  "__lemma_to_squash"]))),
-                                          (pre,
-                                            FStarC_Reflection_V2_Data.Q_Implicit)))),
-                                   (x3, FStarC_Reflection_V2_Data.Q_Implicit)))),
-                            ((FStarC_Reflection_V2_Builtins.pack_ln
-                                (FStarC_Reflection_V2_Data.Tv_Const
-                                   FStarC_Reflection_V2_Data.C_Unit)),
-                              FStarC_Reflection_V2_Data.Q_Explicit)))),
-                     ((FStarC_Reflection_V2_Builtins.pack_ln
-                         (FStarC_Reflection_V2_Data.Tv_Abs
-                            ((FStarC_Reflection_V2_Builtins.pack_binder
-                                {
-                                  FStarC_Reflection_V2_Data.sort2 =
-                                    (FStarC_Reflection_V2_Builtins.pack_ln
-                                       (FStarC_Reflection_V2_Data.Tv_FVar
-                                          (FStarC_Reflection_V2_Builtins.pack_fv
-                                             ["Prims"; "unit"])));
-                                  FStarC_Reflection_V2_Data.qual =
-                                    FStarC_Reflection_V2_Data.Q_Explicit;
-                                  FStarC_Reflection_V2_Data.attrs = [];
-                                  FStarC_Reflection_V2_Data.ppname2 =
-                                    (FStar_Sealed.seal "uu___")
-                                }), t))),
-                       FStarC_Reflection_V2_Data.Q_Explicit)))) ps
-       | uu___ ->
-           let x5 =
-             FStar_Tactics_V2_Derived.tcut
-               (FStarC_Reflection_V2_Builtins.pack_ln
-                  (FStarC_Reflection_V2_Data.Tv_App
-                     ((FStarC_Reflection_V2_Builtins.pack_ln
-                         (FStarC_Reflection_V2_Data.Tv_FVar
-                            (FStarC_Reflection_V2_Builtins.pack_fv
-                               ["Prims"; "squash"]))),
-                       (pre, FStarC_Reflection_V2_Data.Q_Explicit)))) ps in
-           let x6 =
-             FStar_Tactics_V2_Derived.pose
-               (FStarC_Reflection_V2_Builtins.pack_ln
-                  (FStarC_Reflection_V2_Data.Tv_App
-                     ((FStarC_Reflection_V2_Builtins.pack_ln
-                         (FStarC_Reflection_V2_Data.Tv_App
-                            ((FStarC_Reflection_V2_Builtins.pack_ln
-                                (FStarC_Reflection_V2_Data.Tv_App
-                                   ((FStarC_Reflection_V2_Builtins.pack_ln
-                                       (FStarC_Reflection_V2_Data.Tv_App
-                                          ((FStarC_Reflection_V2_Builtins.pack_ln
-                                              (FStarC_Reflection_V2_Data.Tv_FVar
-                                                 (FStarC_Reflection_V2_Builtins.pack_fv
-                                                    ["FStar";
-                                                    "Tactics";
-                                                    "Logic";
-                                                    "Lemmas";
-                                                    "__lemma_to_squash"]))),
-                                            (pre,
-                                              FStarC_Reflection_V2_Data.Q_Implicit)))),
-                                     (x3,
-                                       FStarC_Reflection_V2_Data.Q_Implicit)))),
-                              ((FStar_Tactics_V2_SyntaxCoercions.binding_to_term
-                                  x5), FStarC_Reflection_V2_Data.Q_Explicit)))),
-                       ((FStarC_Reflection_V2_Builtins.pack_ln
-                           (FStarC_Reflection_V2_Data.Tv_Abs
-                              ((FStarC_Reflection_V2_Builtins.pack_binder
-                                  {
-                                    FStarC_Reflection_V2_Data.sort2 =
-                                      (FStarC_Reflection_V2_Builtins.pack_ln
-                                         (FStarC_Reflection_V2_Data.Tv_FVar
-                                            (FStarC_Reflection_V2_Builtins.pack_fv
-                                               ["Prims"; "unit"])));
-                                    FStarC_Reflection_V2_Data.qual =
-                                      FStarC_Reflection_V2_Data.Q_Explicit;
-                                    FStarC_Reflection_V2_Data.attrs = [];
-                                    FStarC_Reflection_V2_Data.ppname2 =
-                                      (FStar_Sealed.seal "uu___")
-                                  }), t))),
-                         FStarC_Reflection_V2_Data.Q_Explicit)))) ps in
-           (FStar_Tactics_V2_Derived.flip () ps;
-            (let x9 =
-               FStar_Tactics_V2_Derived.trytac
-                 FStar_Tactics_V2_Derived.trivial ps in
-             ());
-            x6))
+let pose_lemma (t : FStar_Tactics_NamedView.term) :
+  FStarC_Tactics_Types.ref_proofstate -> FStar_Tactics_NamedView.binding=
+  FStar_Tactics_V2_Derived.pose_apply t
 let _ =
   FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.pose_lemma"
     (Prims.of_int 2)

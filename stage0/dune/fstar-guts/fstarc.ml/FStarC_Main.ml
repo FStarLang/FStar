@@ -396,7 +396,7 @@ let go_normal (uu___ : unit) : unit=
                                    (fun d ->
                                       let uu___12 =
                                         FStarC_Class_Show.show
-                                          FStarC_Extraction_Krml.showable_decl
+                                          FStarC_Extraction_KrmlAst.showable_decl
                                           d in
                                       FStarC_Format.print1 "%s\n\n" uu___12)
                                    decls)) files))

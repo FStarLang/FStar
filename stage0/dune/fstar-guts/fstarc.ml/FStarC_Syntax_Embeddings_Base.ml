@@ -112,8 +112,11 @@ let rec unmeta_div_results (t : FStarC_Syntax_Syntax.term) :
           (src, dst, uu___1);_}
       ->
       if
-        (FStarC_Parser_Const.is_pure_effect_lid src) &&
-          (FStarC_Parser_Const.is_div_effect_lid dst)
+        ((FStarC_Parser_Const.is_pure_effect_lid src) ||
+           (FStarC_Parser_Const.is_ndet_effect_lid src))
+          &&
+          ((FStarC_Parser_Const.is_div_effect_lid dst) ||
+             (FStarC_Parser_Const.is_ndet_effect_lid dst))
       then unmeta_div_results t'
       else t
   | FStarC_Syntax_Syntax.Tm_meta
@@ -121,7 +124,9 @@ let rec unmeta_div_results (t : FStarC_Syntax_Syntax.term) :
         FStarC_Syntax_Syntax.meta = FStarC_Syntax_Syntax.Meta_monadic
           (m, uu___1);_}
       ->
-      if FStarC_Parser_Const.is_div_effect_lid m
+      if
+        (FStarC_Parser_Const.is_div_effect_lid m) ||
+          (FStarC_Parser_Const.is_ndet_effect_lid m)
       then unmeta_div_results t'
       else t
   | FStarC_Syntax_Syntax.Tm_meta

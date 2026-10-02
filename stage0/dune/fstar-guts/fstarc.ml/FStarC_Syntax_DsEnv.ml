@@ -1449,19 +1449,15 @@ let try_lookup_effect_name_and_attributes (env1 : env)
   | FStar_Pervasives_Native.Some
       ({
          FStarC_Syntax_Syntax.sigel = FStarC_Syntax_Syntax.Sig_effect_abbrev
-           { FStarC_Syntax_Syntax.lid4 = uu___2;
-             FStarC_Syntax_Syntax.us4 = uu___3;
-             FStarC_Syntax_Syntax.bs = uu___4;
-             FStarC_Syntax_Syntax.comp1 = uu___5;
-             FStarC_Syntax_Syntax.cflags = cattributes;_};
-         FStarC_Syntax_Syntax.sigrng = uu___6;
-         FStarC_Syntax_Syntax.sigquals = uu___7;
-         FStarC_Syntax_Syntax.sigmeta = uu___8;
-         FStarC_Syntax_Syntax.sigattrs = uu___9;
-         FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___10;
-         FStarC_Syntax_Syntax.sigopts = uu___11;_},
+           uu___2;
+         FStarC_Syntax_Syntax.sigrng = uu___3;
+         FStarC_Syntax_Syntax.sigquals = uu___4;
+         FStarC_Syntax_Syntax.sigmeta = uu___5;
+         FStarC_Syntax_Syntax.sigattrs = uu___6;
+         FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___7;
+         FStarC_Syntax_Syntax.sigopts = uu___8;_},
        l1)
-      -> FStar_Pervasives_Native.Some (l1, cattributes)
+      -> FStar_Pervasives_Native.Some (l1, [])
   | uu___2 -> FStar_Pervasives_Native.None
 let try_lookup_effect_defn (env1 : env) (l : FStarC_Ident.lident) :
   FStarC_Syntax_Syntax.eff_decl FStar_Pervasives_Native.option=
@@ -1490,41 +1486,18 @@ let try_lookup_root_effect_name (env1 : env) (l : FStarC_Ident.lident) :
   | FStar_Pervasives_Native.Some
       ({
          FStarC_Syntax_Syntax.sigel = FStarC_Syntax_Syntax.Sig_effect_abbrev
-           { FStarC_Syntax_Syntax.lid4 = l';
-             FStarC_Syntax_Syntax.us4 = uu___2;
-             FStarC_Syntax_Syntax.bs = uu___3;
-             FStarC_Syntax_Syntax.comp1 = uu___4;
-             FStarC_Syntax_Syntax.cflags = uu___5;_};
-         FStarC_Syntax_Syntax.sigrng = uu___6;
-         FStarC_Syntax_Syntax.sigquals = uu___7;
-         FStarC_Syntax_Syntax.sigmeta = uu___8;
-         FStarC_Syntax_Syntax.sigattrs = uu___9;
-         FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___10;
-         FStarC_Syntax_Syntax.sigopts = uu___11;_},
-       uu___12)
+           { FStarC_Syntax_Syntax.lid4 = uu___2;
+             FStarC_Syntax_Syntax.root = root;_};
+         FStarC_Syntax_Syntax.sigrng = uu___3;
+         FStarC_Syntax_Syntax.sigquals = uu___4;
+         FStarC_Syntax_Syntax.sigmeta = uu___5;
+         FStarC_Syntax_Syntax.sigattrs = uu___6;
+         FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___7;
+         FStarC_Syntax_Syntax.sigopts = uu___8;_},
+       uu___9)
       ->
-      let rec aux new_name =
-        let uu___13 =
-          let uu___14 = sigmap env1 in
-          FStarC_SMap.try_find uu___14 (FStarC_Ident.string_of_lid new_name) in
-        match uu___13 with
-        | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-        | FStar_Pervasives_Native.Some (s, uu___14) ->
-            (match s.FStarC_Syntax_Syntax.sigel with
-             | FStarC_Syntax_Syntax.Sig_new_effect ne ->
-                 FStar_Pervasives_Native.Some
-                   (FStarC_Ident.set_lid_range ne.FStarC_Syntax_Syntax.mname
-                      (FStarC_Ident.range_of_lid l))
-             | FStarC_Syntax_Syntax.Sig_effect_abbrev
-                 { FStarC_Syntax_Syntax.lid4 = uu___15;
-                   FStarC_Syntax_Syntax.us4 = uu___16;
-                   FStarC_Syntax_Syntax.bs = uu___17;
-                   FStarC_Syntax_Syntax.comp1 = cmp;
-                   FStarC_Syntax_Syntax.cflags = uu___18;_}
-                 ->
-                 let l'' = FStarC_Syntax_Util.comp_effect_name cmp in aux l''
-             | uu___15 -> FStar_Pervasives_Native.None) in
-      aux l'
+      FStar_Pervasives_Native.Some
+        (FStarC_Ident.set_lid_range root (FStarC_Ident.range_of_lid l))
   | FStar_Pervasives_Native.Some (uu___2, l') ->
       FStar_Pervasives_Native.Some l'
   | uu___2 -> FStar_Pervasives_Native.None
@@ -2197,18 +2170,12 @@ let try_lookup_record_by_field_name_many (env1 : env)
 let try_lookup_record_type (env1 : env) (typename : FStarC_Ident.lident) :
   record_or_dc FStar_Pervasives_Native.option=
   let find_in_cache name =
-    let uu___ =
-      ((FStarC_Ident.ns_of_lid name), (FStarC_Ident.ident_of_lid name)) in
-    match uu___ with
-    | (ns, id) ->
-        let uu___2 = peek_record_cache () in
-        FStarC_Util.find_map uu___2
-          (fun record ->
-             if
-               FStarC_Ident.ident_equals
-                 (FStarC_Ident.ident_of_lid record.typename) id
-             then FStar_Pervasives_Native.Some record
-             else FStar_Pervasives_Native.None) in
+    let uu___ = peek_record_cache () in
+    FStarC_Util.find_map uu___
+      (fun record ->
+         if FStarC_Ident.lid_equals record.typename name
+         then FStar_Pervasives_Native.Some record
+         else FStar_Pervasives_Native.None) in
   resolve_in_open_namespaces'' env1 typename Exported_id_term_type
     (fun uu___ -> Cont_ignore) (fun uu___ -> Cont_ignore)
     (fun r -> Cont_ok r)

@@ -4,19 +4,21 @@ let rec collect_arr' (bs : FStar_Tactics_NamedView.binder Prims.list)
   FStarC_Tactics_Types.ref_proofstate ->
     (FStar_Tactics_NamedView.binder Prims.list *
       FStar_Tactics_NamedView.comp)=
-  match c with
-  | FStarC_Reflection_V2_Data.C_Total t ->
-      (fun ps ->
-         let x = FStar_Tactics_NamedView.inspect t ps in
-         match x with
-         | FStar_Tactics_NamedView.Tv_Arrow (b, c1) ->
-             collect_arr' (b :: bs) c1 ps
-         | uu___ -> (bs, c))
-  | uu___ -> (fun uu___1 -> (bs, c))
+  if FStarC_Reflection_V2_Data.is_tot_comp c
+  then
+    fun ps ->
+      let x =
+        FStar_Tactics_NamedView.inspect
+          c.FStarC_Reflection_V2_Data.result_typ ps in
+      match x with
+      | FStar_Tactics_NamedView.Tv_Arrow (b, c') ->
+          collect_arr' (b :: bs) c' ps
+      | uu___ -> (bs, c)
+  else (fun uu___ -> (bs, c))
 let collect_arr_bs (t : FStarC_Reflection_Types.typ)
   (ps : FStarC_Tactics_Types.ref_proofstate) :
   (FStar_Tactics_NamedView.binder Prims.list * FStar_Tactics_NamedView.comp)=
-  let x = collect_arr' [] (FStarC_Reflection_V2_Data.C_Total t) ps in
+  let x = collect_arr' [] (FStarC_Reflection_V2_Data.mk_tot_comp t) ps in
   match x with | (bs, c) -> ((FStar_List_Tot_Base.rev bs), c)
 let _ =
   FStarC_Tactics_Native.register_tactic
@@ -37,7 +39,7 @@ let _ =
 let collect_arr (t : FStarC_Reflection_Types.typ)
   (ps : FStarC_Tactics_Types.ref_proofstate) :
   (FStarC_Reflection_Types.typ Prims.list * FStar_Tactics_NamedView.comp)=
-  let x = collect_arr' [] (FStarC_Reflection_V2_Data.C_Total t) ps in
+  let x = collect_arr' [] (FStarC_Reflection_V2_Data.mk_tot_comp t) ps in
   match x with
   | (bs, c) ->
       ((FStar_List_Tot_Base.rev
@@ -87,14 +89,12 @@ let _ =
                   (FStarC_Syntax_Embeddings.e_list
                      FStar_Tactics_NamedView.e_binder)
                   FStarC_Reflection_V2_Embeddings.e_term) psc ncb us args)
-let fail (uu___1 : Prims.string)
-  (uu___ : FStarC_Tactics_Types.ref_proofstate) : 'a=
-  (fun m ps ->
-     Obj.magic
-       (FStarC_Tactics_V2_Builtins.raise_core
-          (FStarC_Tactics_Common.TacticFailure
-             ((FStar_Errors_Msg.mkmsg m), FStar_Pervasives_Native.None)) ps))
-    uu___1 uu___
+let fail (m : Prims.string) (ps : FStarC_Tactics_Types.ref_proofstate) : 
+  'a=
+  FStarC_Tactics_V2_Builtins.raise_core
+    (FStarC_Tactics_Common.TacticFailure
+       ((FStar_Errors_Msg.mkmsg m), FStar_Pervasives_Native.None)) ps;
+  Prims.magic ()
 let rec mk_arr (bs : FStar_Tactics_NamedView.binder Prims.list)
   (cod : FStar_Tactics_NamedView.comp) :
   FStarC_Tactics_Types.ref_proofstate -> FStar_Tactics_NamedView.term=
@@ -109,7 +109,7 @@ let rec mk_arr (bs : FStar_Tactics_NamedView.binder Prims.list)
          let x =
            let x1 =
              let x2 = mk_arr bs1 cod ps in
-             FStarC_Reflection_V2_Data.C_Total x2 in
+             FStarC_Reflection_V2_Data.mk_tot_comp x2 in
            FStar_Tactics_NamedView.Tv_Arrow (b, x1) in
          FStar_Tactics_NamedView.pack x)
 let _ =
@@ -136,7 +136,7 @@ let rec mk_tot_arr (bs : FStar_Tactics_NamedView.binder Prims.list)
          let x =
            let x1 =
              let x2 = mk_tot_arr bs1 cod ps in
-             FStarC_Reflection_V2_Data.C_Total x2 in
+             FStarC_Reflection_V2_Data.mk_tot_comp x2 in
            FStar_Tactics_NamedView.Tv_Arrow (b, x1) in
          FStar_Tactics_NamedView.pack x)
 let _ =

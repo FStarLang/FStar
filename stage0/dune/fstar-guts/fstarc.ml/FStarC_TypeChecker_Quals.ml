@@ -578,31 +578,29 @@ let check_erasable (env : FStarC_TypeChecker_Env.env)
      | FStarC_Syntax_Syntax.Sig_new_effect
          { FStarC_Syntax_Syntax.mname = eff_name;
            FStarC_Syntax_Syntax.cattributes = uu___3;
-           FStarC_Syntax_Syntax.univs = uu___4;
-           FStarC_Syntax_Syntax.binders = uu___5;
-           FStarC_Syntax_Syntax.combinators = uu___6;
-           FStarC_Syntax_Syntax.eff_attrs = uu___7;
-           FStarC_Syntax_Syntax.extraction_mode = uu___8;_}
+           FStarC_Syntax_Syntax.combinators = uu___4;
+           FStarC_Syntax_Syntax.eff_attrs = uu___5;
+           FStarC_Syntax_Syntax.extraction_mode = uu___6;_}
          ->
          if
            Prims.not
              (FStarC_List.contains FStarC_Syntax_Syntax.TotalEffect quals)
          then
-           let uu___9 =
-             let uu___10 =
-               let uu___11 =
-                 let uu___12 =
+           let uu___7 =
+             let uu___8 =
+               let uu___9 =
+                 let uu___10 =
                    FStarC_Class_PP.pp FStarC_Ident.pretty_lident eff_name in
-                 FStar_Pprint.op_Hat_Slash_Hat uu___12
+                 FStar_Pprint.op_Hat_Slash_Hat uu___10
                    (FStarC_Errors_Msg.text
                       "is marked erasable but only total effects are allowed to be erasable.") in
                FStar_Pprint.op_Hat_Slash_Hat
-                 (FStarC_Errors_Msg.text "Effect") uu___11 in
-             [uu___10] in
+                 (FStarC_Errors_Msg.text "Effect") uu___9 in
+             [uu___8] in
            FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range r
              FStarC_Errors_Codes.Fatal_QualifierListNotPermitted ()
              (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-             (Obj.magic uu___9)
+             (Obj.magic uu___7)
          else ()
      | uu___3 ->
          FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range r

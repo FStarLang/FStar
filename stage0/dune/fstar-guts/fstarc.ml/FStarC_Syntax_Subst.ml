@@ -309,21 +309,16 @@ let subst_comp_typ'
   | ([], FStarC_Syntax_Syntax.NoUseRange) -> t
   | ([]::[], FStarC_Syntax_Syntax.NoUseRange) -> t
   | uu___ ->
-      let uu___1 =
-        FStarC_List.map (subst_univ (FStar_Pervasives_Native.fst s))
-          t.FStarC_Syntax_Syntax.comp_univs in
-      let uu___2 = tag_lid_with_range t.FStarC_Syntax_Syntax.effect_name s in
-      let uu___3 = subst' s t.FStarC_Syntax_Syntax.result_typ in
-      let uu___4 = subst' s t.FStarC_Syntax_Syntax.comp_pre in
-      let uu___5 = subst' s t.FStarC_Syntax_Syntax.comp_post in
-      let uu___6 = subst_flags' s t.FStarC_Syntax_Syntax.flags in
+      let uu___1 = tag_lid_with_range t.FStarC_Syntax_Syntax.effect_name s in
+      let uu___2 = subst' s t.FStarC_Syntax_Syntax.result_typ in
+      let uu___3 = subst_flags' s t.FStarC_Syntax_Syntax.flags in
+      let uu___4 =
+        tag_lid_with_range t.FStarC_Syntax_Syntax.source_effect_name s in
       {
-        FStarC_Syntax_Syntax.comp_univs = uu___1;
-        FStarC_Syntax_Syntax.effect_name = uu___2;
-        FStarC_Syntax_Syntax.result_typ = uu___3;
-        FStarC_Syntax_Syntax.comp_pre = uu___4;
-        FStarC_Syntax_Syntax.comp_post = uu___5;
-        FStarC_Syntax_Syntax.flags = uu___6
+        FStarC_Syntax_Syntax.effect_name = uu___1;
+        FStarC_Syntax_Syntax.result_typ = uu___2;
+        FStarC_Syntax_Syntax.flags = uu___3;
+        FStarC_Syntax_Syntax.source_effect_name = uu___4
       }
 let subst_comp'
   (s :
@@ -336,10 +331,6 @@ let subst_comp'
   | ([]::[], FStarC_Syntax_Syntax.NoUseRange) -> t
   | uu___ ->
       (match t.FStarC_Syntax_Syntax.n with
-       | FStarC_Syntax_Syntax.Total t1 ->
-           let uu___1 = subst' s t1 in FStarC_Syntax_Syntax.mk_Total uu___1
-       | FStarC_Syntax_Syntax.GTotal t1 ->
-           let uu___1 = subst' s t1 in FStarC_Syntax_Syntax.mk_GTotal uu___1
        | FStarC_Syntax_Syntax.Comp ct ->
            let uu___1 = subst_comp_typ' s ct in
            FStarC_Syntax_Syntax.mk_Comp uu___1)
@@ -478,7 +469,7 @@ let subst_pat'
            FStarC_Syntax_Syntax.p = (p1.FStarC_Syntax_Syntax.p)
          }, n) in
   aux Prims.int_zero p
-let push_subst_lcomp (s : FStarC_Syntax_Syntax.subst_ts)
+let push_subst_rc (s : FStarC_Syntax_Syntax.subst_ts)
   (lopt : FStarC_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option)
   : FStarC_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option=
   match lopt with
@@ -643,7 +634,7 @@ let rec push_subst_aux (resolve_uvars : Prims.bool)
         let uu___1 =
           let uu___2 = subst_binder' s b in
           let uu___3 = subst' s' body in
-          let uu___4 = push_subst_lcomp s' lopt in
+          let uu___4 = push_subst_rc s' lopt in
           {
             FStarC_Syntax_Syntax.b = uu___2;
             FStarC_Syntax_Syntax.body = uu___3;
@@ -714,7 +705,7 @@ let rec push_subst_aux (resolve_uvars : Prims.bool)
             FStar_Pervasives_Native.Some (b1, asc1) in
       let uu___ =
         let uu___1 =
-          let uu___2 = push_subst_lcomp s lopt in
+          let uu___2 = push_subst_rc s lopt in
           {
             FStarC_Syntax_Syntax.scrutinee = t01;
             FStarC_Syntax_Syntax.ret_opt = asc_opt1;

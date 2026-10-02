@@ -1,7 +1,4 @@
 open Prims
-type lcomp_with_binder =
-  (FStarC_Syntax_Syntax.bv FStar_Pervasives_Native.option *
-    FStarC_TypeChecker_Common.lcomp)
 let dbg_Patterns : Prims.bool FStarC_Effect.ref=
   FStarC_Debug.get_toggle "Patterns"
 let rec elaborate_pat (env : FStarC_TypeChecker_Env.env)

@@ -220,7 +220,7 @@ let binder_of_t_q (t : FStarC_Reflection_Types.term)
 let mk_total_tm (t : FStarC_Reflection_Types.term) :
   FStarC_Reflection_Types.comp=
   FStarC_Reflection_V2_Builtins.pack_comp
-    (FStarC_Reflection_V2_Data.C_Total t)
+    (FStarC_Reflection_V2_Data.mk_tot_comp t)
 let open_with_var_elt (x : FStarC_Reflection_V2_Data.var) (i : Prims.nat) :
   subst_elt=
   DT

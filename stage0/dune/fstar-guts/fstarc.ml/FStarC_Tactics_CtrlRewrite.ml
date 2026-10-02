@@ -56,8 +56,6 @@ let __do_rewrite (uu___3 : FStarC_Tactics_Types.goal) (uu___2 : rewriter_ty)
                                 (env.FStarC_TypeChecker_Env.modules);
                               FStarC_TypeChecker_Env.expected_typ =
                                 (env.FStarC_TypeChecker_Env.expected_typ);
-                              FStarC_TypeChecker_Env.expected_post =
-                                (env.FStarC_TypeChecker_Env.expected_post);
                               FStarC_TypeChecker_Env.sigtab =
                                 (env.FStarC_TypeChecker_Env.sigtab);
                               FStarC_TypeChecker_Env.attrtab =
@@ -70,6 +68,8 @@ let __do_rewrite (uu___3 : FStarC_Tactics_Types.goal) (uu___2 : rewriter_ty)
                                 (env.FStarC_TypeChecker_Env.generalize);
                               FStarC_TypeChecker_Env.letrecs =
                                 (env.FStarC_TypeChecker_Env.letrecs);
+                              FStarC_TypeChecker_Env.rec_names =
+                                (env.FStarC_TypeChecker_Env.rec_names);
                               FStarC_TypeChecker_Env.top_level =
                                 (env.FStarC_TypeChecker_Env.top_level);
                               FStarC_TypeChecker_Env.check_uvars =
@@ -107,8 +107,6 @@ let __do_rewrite (uu___3 : FStarC_Tactics_Types.goal) (uu___2 : rewriter_ty)
                                 (env.FStarC_TypeChecker_Env.subtype_nosmt_force);
                               FStarC_TypeChecker_Env.qtbl_name_and_index =
                                 (env.FStarC_TypeChecker_Env.qtbl_name_and_index);
-                              FStarC_TypeChecker_Env.normalized_eff_names =
-                                (env.FStarC_TypeChecker_Env.normalized_eff_names);
                               FStarC_TypeChecker_Env.fv_delta_depths =
                                 (env.FStarC_TypeChecker_Env.fv_delta_depths);
                               FStarC_TypeChecker_Env.proof_ns =
@@ -134,6 +132,8 @@ let __do_rewrite (uu___3 : FStarC_Tactics_Types.goal) (uu___2 : rewriter_ty)
                                 (env.FStarC_TypeChecker_Env.nbe);
                               FStarC_TypeChecker_Env.strict_args_tab =
                                 (env.FStarC_TypeChecker_Env.strict_args_tab);
+                              FStarC_TypeChecker_Env.disc_proj_tab =
+                                (env.FStarC_TypeChecker_Env.disc_proj_tab);
                               FStarC_TypeChecker_Env.erasable_types_tab =
                                 (env.FStarC_TypeChecker_Env.erasable_types_tab);
                               FStarC_TypeChecker_Env.enable_defer_to_tac =
@@ -167,10 +167,9 @@ let __do_rewrite (uu___3 : FStarC_Tactics_Types.goal) (uu___2 : rewriter_ty)
             Obj.magic
               (FStarC_Class_Monad.return FStarC_Tactics_Monad.monad_tac ()
                  (Obj.magic tm))
-        | FStar_Pervasives_Native.Some (uu___, lcomp, g) ->
+        | FStar_Pervasives_Native.Some (uu___, comp, g) ->
             let uu___1 =
-              let uu___2 =
-                FStarC_TypeChecker_Common.is_pure_or_ghost_lcomp lcomp in
+              let uu___2 = FStarC_Syntax_Util.is_pure_or_ghost_comp comp in
               Prims.not uu___2 in
             if uu___1
             then
@@ -180,7 +179,7 @@ let __do_rewrite (uu___3 : FStarC_Tactics_Types.goal) (uu___2 : rewriter_ty)
             else
               (let g1 =
                  FStarC_TypeChecker_Rel.solve_deferred_constraints env g in
-               let typ = lcomp.FStarC_TypeChecker_Common.res_typ in
+               let typ = FStarC_Syntax_Util.comp_result comp in
                let typ1 =
                  let uu___2 = FStarC_Options_Ext.enabled "__unrefine" in
                  if uu___2
@@ -207,7 +206,7 @@ let __do_rewrite (uu___3 : FStarC_Tactics_Types.goal) (uu___2 : rewriter_ty)
                     else typ)
                  else typ in
                let should_check =
-                 let uu___2 = FStarC_TypeChecker_Common.is_total_lcomp lcomp in
+                 let uu___2 = FStarC_Syntax_Util.is_total_comp comp in
                  if uu___2
                  then FStar_Pervasives_Native.None
                  else
@@ -786,40 +785,35 @@ and on_subterms (uu___5 : FStarC_Tactics_Types.goal)
                 (Obj.repr
                    (let bs = [b] in
                     match comp.FStarC_Syntax_Syntax.n with
-                    | FStarC_Syntax_Syntax.Total t ->
+                    | FStarC_Syntax_Syntax.Comp ct when
+                        FStarC_Syntax_Util.is_bare_tot_or_gtot_comp comp ->
                         Obj.repr
-                          (let uu___1 = FStarC_Syntax_Subst.open_term bs t in
+                          (let uu___1 =
+                             FStarC_Syntax_Subst.open_term bs
+                               ct.FStarC_Syntax_Syntax.result_typ in
                            match uu___1 with
-                           | (bs_orig, t1) ->
+                           | (bs_orig, t) ->
                                descend_binders tm1 [] []
-                                 FStarC_Tactics_Types.Continue env bs_orig t1
+                                 FStarC_Tactics_Types.Continue env bs_orig t
                                  FStar_Pervasives_Native.None
-                                 (fun bs1 t2 uu___2 ->
+                                 (fun bs1 t1 uu___2 ->
                                     let uu___3 =
                                       FStarC_Syntax_Util.arrow_ln bs1
                                         {
                                           FStarC_Syntax_Syntax.n =
-                                            (FStarC_Syntax_Syntax.Total t2);
-                                          FStarC_Syntax_Syntax.pos =
-                                            (comp.FStarC_Syntax_Syntax.pos);
-                                          FStarC_Syntax_Syntax.hash_code =
-                                            (comp.FStarC_Syntax_Syntax.hash_code)
-                                        } in
-                                    uu___3.FStarC_Syntax_Syntax.n))
-                    | FStarC_Syntax_Syntax.GTotal t ->
-                        Obj.repr
-                          (let uu___1 = FStarC_Syntax_Subst.open_term bs t in
-                           match uu___1 with
-                           | (bs_orig, t1) ->
-                               descend_binders tm1 [] []
-                                 FStarC_Tactics_Types.Continue env bs_orig t1
-                                 FStar_Pervasives_Native.None
-                                 (fun bs1 t2 uu___2 ->
-                                    let uu___3 =
-                                      FStarC_Syntax_Util.arrow_ln bs1
-                                        {
-                                          FStarC_Syntax_Syntax.n =
-                                            (FStarC_Syntax_Syntax.GTotal t2);
+                                            (FStarC_Syntax_Syntax.Comp
+                                               {
+                                                 FStarC_Syntax_Syntax.effect_name
+                                                   =
+                                                   (ct.FStarC_Syntax_Syntax.effect_name);
+                                                 FStarC_Syntax_Syntax.result_typ
+                                                   = t1;
+                                                 FStarC_Syntax_Syntax.flags =
+                                                   (ct.FStarC_Syntax_Syntax.flags);
+                                                 FStarC_Syntax_Syntax.source_effect_name
+                                                   =
+                                                   (ct.FStarC_Syntax_Syntax.source_effect_name)
+                                               });
                                           FStarC_Syntax_Syntax.pos =
                                             (comp.FStarC_Syntax_Syntax.pos);
                                           FStarC_Syntax_Syntax.hash_code =
