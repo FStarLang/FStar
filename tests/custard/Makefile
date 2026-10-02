@@ -1344,7 +1344,7 @@ $(OUTPUT_DIR)/%.cexe: $(OUTPUT_DIR)/%.krml
 	@# Section 45.3.  The test directory is on the include path because a
 	@# [@@custard_c_header] now reaches karamel's output as an #include.
 	$(Q)$(KRML_EXE) -silent -skip-linking -no-prefix $* -ccopts "-I$(CURDIR)" \
-	  -tmpdir $(OUTPUT_DIR)/$*_c $<
+	  $(KRMLFLAGS_$*) -tmpdir $(OUTPUT_DIR)/$*_c $<
 	$(call msg, "CC", $(basename $(notdir $@)))
 	$(Q)$(CC) $$(tr '\n' ' ' < $(OUTPUT_DIR)/$*_c/compile_flags.txt) \
 	  -I$(CURDIR) $(OUTPUT_DIR)/$*_c/Custard.c -o $@
@@ -2629,6 +2629,16 @@ CGREP_TensorC += "/* A kernel, decorated from source. */"
 # one symbol and called another, and the custard_c_header include was absent
 # besides.  Linking is the assertion.
 KRML_TESTS += KrmlExt
+
+# Section 45.2.  A [@@CMacro] on an [assume val], through karamel.  The
+# external was emitted with an empty flag list, so karamel saw a function
+# where the target has a macro and spelled the reference as a function name.
+# Linking and running is the assertion.  karamel still emits an [extern]
+# prototype for a macro external, so the stub header is included only from
+# Custard.c, after Custard.h: the prototype must not be macro-expanded, but
+# the call must be.
+KRML_TESTS += KrmlMacro
+KRMLFLAGS_KrmlMacro := -add-include 'Custard.c:"KrmlMacro_stubs.h"'
 
 # Section 65.  An external belongs to its own module's file, not to the file
 # of the first thing its type mentions.
