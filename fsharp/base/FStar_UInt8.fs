@@ -57,5 +57,4 @@ let to_string s = Prims.to_string s
 let to_string_hex (s : t) = "0x" + (s.ToString("X").TrimStart([| '0' |]))
 let to_string_hex_pad (s : t) = s.ToString("X").TrimStart([| '0' |]).PadLeft(2, '0')
 let uint_to_t s = int_to_uint8 s
-let to_int s = s
 let __uint_to_t = uint_to_t

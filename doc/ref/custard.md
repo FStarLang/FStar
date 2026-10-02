@@ -21870,8 +21870,8 @@ removed and replaced by an abstract `ref`, `alloc`, `!` and `:=` in
 describes, and the backend realizes them with F#'s own `ref` cell ---
 `(r).Value` and `(r).Value <- x`, which is what `TRef` prints to.  A
 program that allocates, at top level or not, needs nothing further.
-`ulib/ml/app/FStar_ST.ml` and its two neighbours are still on disk and
-are dead; nothing on this path reads them.
+The OCaml realizations of the removed modules (`FStar_ST.ml` and its
+neighbours in `ulib/ml/app`) have been deleted as well.
 
 `FStar.Bytes` is realized, and is the one module where the two
 realizations are not the same data.  OCaml's is a `string`, because an

@@ -20,8 +20,6 @@ let no_position : Lexing.position =
 let no_location : Location.t =
   {loc_start = no_position; loc_end = no_position; loc_ghost = false}
 
-let no_attrs: attributes = []
-
 let loc = no_location
 
 
@@ -104,11 +102,6 @@ let is_try_with_ident x = List.exists (fun tw -> x = tw) try_with_idents
  * literals safely for anything in [-2^30, 2^30 - 1]. *)
 let min_of_int_const = Z.neg (Z.pow (Z.of_int 2) 30)
 let max_of_int_const = Z.sub (Z.pow (Z.of_int 2) 30) Z.one
-
-let maybe_guts (s:string) : string =
-  (* Plugin codegen does not qualify module references with any namespace;
-     the fstarcompiler library is unwrapped, so its modules are top-level. *)
-  s
 
 (* mapping functions from F* ML AST to Parsetree *)
 let build_constant_expr (c: mlconstant) : expression =
@@ -444,9 +437,6 @@ let build_ty_manifest (b: mltybody): core_type option=
   | MLTD_Record l -> None
   | MLTD_DType l -> None
 
-
-let skip_type_defn (current_module:string) (type_name:string) :bool =
-  current_module = "FStar_Pervasives" && type_name = "option"
 
 let type_metadata (md : metadata): attributes option =
   let deriving = BatList.filter_map (function

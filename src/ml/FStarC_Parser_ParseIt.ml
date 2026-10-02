@@ -20,20 +20,6 @@ type input_frag = {
     frag_col:Prims.int
 }
 
-let resetLexbufPos filename lexbuf =
-  lexbuf.cur_p <- {
-    pos_fname= filename;
-    pos_cnum = 0;
-    pos_bol = 0;
-    pos_lnum = 1 }
-
-let setLexbufPos filename lexbuf line col =
-  lexbuf.cur_p <- {
-    pos_fname= filename;
-    pos_cnum = col;
-    pos_bol  = 0;
-    pos_lnum = line }
-
 let find_file filename =
   match FStarC_Find.find_file filename with
     | Some s ->

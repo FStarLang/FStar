@@ -12,4 +12,3 @@ let try_find (m:'value imap) k = ZHashtbl.find_option m k
 let fold (m:'value imap) f a = ZHashtbl.fold f m a
 let remove (m:'value imap) k = ZHashtbl.remove m k
 let keys (m:'value imap) = fold m (fun k _ acc -> k::acc) []
-let copy (m:'value imap) = ZHashtbl.copy m

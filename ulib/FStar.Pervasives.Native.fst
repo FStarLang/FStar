@@ -24,7 +24,7 @@ open Prims
 /// It provides several basic types in F* that enjoy some special
 /// status in extraction. For instance, the tuple type below is
 /// compiled to OCaml's tuple type, rather than to a F*-defined
-/// inductive type. See ulib/ml/FStar_Pervasives_Native.ml
+/// inductive type.
 ///
 
 (** [option a] represents either  [Some a]-value or a non-informative [None]. *)

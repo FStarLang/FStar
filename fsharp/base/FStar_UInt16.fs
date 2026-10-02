@@ -48,7 +48,6 @@ let to_string_hex_pad (i : t) = i.ToString("X4")
 (* The shifts take a uint32 argument, so we need to convert *)
 let shift_right (n : t) (i : System.UInt32) : t = n >>> (int32 i)
 let shift_left  (n : t) (i : System.UInt32) : t = n <<< (int32 i)
-let shift_arithmetic_right = shift_right
 
 (* Comparison operators *)
 let eq  (a:t) (b:t) : bool = a = b
