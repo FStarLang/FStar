@@ -1077,8 +1077,9 @@ let print_decl (first:bool) (d:decl) : ML (option string) =
           " (struct" ^ String.concat "" (List.map (fun s -> "\n " ^ s) (tys @ vals)) ^
           "\nend)")
 
-  (* Section 133.  An external exception is the target's own. *)
-  | DExn e when Some? (extern_exn e) -> None
+  (* Section 133.  An external exception is the target's own, and section 8.2's
+     is the realization's -- neither is declared here. *)
+  | DExn e when Some? (extern_exn e) || has_flag e.de_flags Realized -> None
 
   | DExn e ->
     Some ("exception " ^ ocaml_ctor_ident e.de_name ^
@@ -1204,6 +1205,9 @@ let build_tables (homes : SMap.t string) (p:program) : ML unit =
      realization: the upstream unit did not compile it either. *)
   p |> List.iter (fun d ->
     match d with
+    | DExn e when has_flag e.de_flags Realized ->
+      SMap.add real (string_of_name e.de_name) ();
+      SMap.add quals (string_of_name e.de_name) (String.concat "_" e.de_name.ns)
     | DType t when has_flag t.dt_flags Realized ->
       let m = String.concat "_" t.dt_name.ns in
       let mark (n:name) : ML unit =
@@ -1281,7 +1285,8 @@ let build_tables (homes : SMap.t string) (p:program) : ML unit =
   let exns = p |> List.collect (fun d ->
     match d with
     | DExn e when None? e.de_name.spec && not (is_at_home e.de_name)
-               && None? (extern_exn e) ->
+               && None? (extern_exn e)
+               && not (has_flag e.de_flags Realized) ->
       [e.de_name]
     | _ -> []) in
   let short (n:name) : ML string = uppercase_first (sanitize n.id) in

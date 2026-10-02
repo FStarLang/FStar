@@ -499,6 +499,23 @@ let init (deps:Dep.deps) (env:TcEnv.env) : ML state =
 let is_root (st:state) (l:Ident.lident) : ML bool =
   Some? (SMap.try_find st.roots (Ident.string_of_lid l))
 
+(* The definition currently being extracted, for diagnostics. *)
+let enclosing_name (st:state) : ML string =
+  match !st.cur_lid with
+  | Some l -> Ident.string_of_lid l
+  | None -> "the enclosing definition"
+
+(* Section 13.6.  True when the offending name is a parameter of an enclosing
+   definition that is itself a root.  That combination is what distinguishes
+   "you annotated the wrong thing" from "you asked for an entry point whose
+   signature has a Mono binder": the latter has no call site to specialize at
+   and no source of yours to annotate, so it needs different advice. *)
+let root_binder_of_enclosing (st:state) (v:S.bv) : ML bool =
+  Some? (SMap.try_find st.defbinders (show v.index)) &&
+  (match !st.cur_lid with
+   | Some l -> is_root st l
+   | None -> false)
+
 (* Just enough to fire the redexes that substituting a local function creates,
    and nothing else: this runs on the enclosing body, which is code, so any
    further reduction here would be reduction of the emitted program. *)
@@ -917,6 +934,7 @@ let decl_only_attrs : list (Ident.lident & string) = [
   PC.custard_no_monomorphize_attr, "custard_no_monomorphize";
   PC.custard_compile_time_attr,    "custard_compile_time";
   PC.custard_float_attr,           "custard_float";
+  PC.custard_boxed_fields_attr,    "custard_boxed_fields";
 ]
 
 (* Attributes that describe one *field* of a constructor. *)
@@ -1102,6 +1120,9 @@ let attr_home (nm:string) : string =
   | "custard_inline_field" ->
     "It asks for one field of a constructor to be stored by value, so it \
      goes on that field."
+  | "custard_boxed_fields" ->
+    "It keeps the fields of a *type's* constructors boxed, so it goes on \
+     that type."
   | _ -> ""
 
 let report_attr (nm:string) (site:string) (why:string) : ML unit =
@@ -1730,16 +1751,29 @@ and extract_exn (st:state) (l:Ident.lident) (nm:name) : ML decl =
   (* Section 133.  [@@custard_extern "Not_found"] on an exception names one
      the target already has, so that F* code can raise and catch the very
      exception a realization raises.  Nothing is declared for it. *)
-  let flags =
+  let extern =
     match TcEnv.lookup_sigelt (tcenv st) l with
     | Some se ->
       (match Builtins.rule_of_attributes se.sigattrs with
        | Some (Builtins.Rule_extern x) -> [Extern (x.Builtins.x_name, x.Builtins.x_header)]
        | _ -> [])
     | None -> [] in
+  (* Section 8.2 again, for the one declaration that is not a value and not a
+     type.  An exception of a realized module belongs to the hand-written
+     OCaml file: [FStarC.Plugins.Base]'s [DynlinkError] is raised by its
+     realization's [dynlink_loadfile], so a second [exception DynlinkError]
+     declared here is a *different* exception, and the [try ... with
+     DynlinkError e] in [FStarC.Plugins] matches nothing.  That failure is
+     silent at compile time and total at run time: the raise escapes to the
+     top level as an unexpected error.  So the declaration is suppressed and
+     every mention resolves to the realization's constructor, exactly as a
+     realized type's does. *)
+  let realized =
+    Builtins.is_realized_module
+      (Builtins.no_fstar_stubs (Ident.ns_of_lid l |> List.map Ident.string_of_id)) in
   DExn { de_name = nm;
          de_args = bs |> List.map (fun b -> ty_of_typ st b.binder_bv.sort);
-         de_flags = flags }
+         de_flags = extern @ (if realized then [Realized] else []) }
 
 and datacon_owner (st:state) (l:Ident.lident) : ML (option Ident.lident) =
   match TcEnv.lookup_sigelt (tcenv st) l with
@@ -3182,6 +3216,20 @@ and expr_of_term (st:state) (t:term) : ML expr =
        before translating it.  After this the body is a term of the effect's
        representation type -- a function expecting the proofstate -- and the
        lambda is pure. *)
+    (* Whether the lambda's *codomain* is impure, read off the residual effect
+       before the reification below erases the evidence.  A reified [Tac] body
+       is a function of the proofstate and so is pure, which is the honest
+       answer about the term in hand and the wrong one for the guard further
+       down: what that guard asks is whether a caller can be holding the arrow
+       this lambda's last binder stands in front of, and [Mono.keep_thunk]
+       answers it from the unreified comp.  The two have to agree -- the call
+       site filters its spine by [Mono.erased_binders_unfold], which is
+       [keep_thunk] over the local's sort -- or a saturated call goes out with
+       one argument more than the lambda has binders. *)
+    let reified_codomain =
+      match rc with
+      | Some rc -> Effects.is_reifiable (tcenv st) rc.residual_effect
+      | None -> false in
     let body =
       match rc with
       | Some rc ->
@@ -3204,7 +3252,9 @@ and expr_of_term (st:state) (t:term) : ML expr =
          an impure body stops being the arrow a partial application of it was
          holding.  The purity read here is the body's own, which is Custard's
          answer and not F*'s -- the same distinction [Mono.impure_codomain]
-         makes on a comp, arrived at by having already translated the body. *)
+         makes on a comp, arrived at by having already translated the body --
+         together with [reified_codomain], which is that same question asked
+         of the effect the reification consumed. *)
       let flags =
         let all_erased = Cons? flags && List.for_all (fun b -> b) flags in
         let last_erased = (match List.rev flags with
@@ -3221,7 +3271,9 @@ and expr_of_term (st:state) (t:term) : ML expr =
           match List.rev bs with
           | b :: _ -> not (S.is_bqual_implicit_or_meta b.binder_qual)
           | [] -> false in
-        if last_erased && (all_erased || (not (is_pure body.eff) && last_explicit))
+        if last_erased
+           && (all_erased || ((reified_codomain || not (is_pure body.eff))
+                              && last_explicit))
         then (match List.rev flags with
               | _ :: r -> List.rev (false :: r)
               | [] -> flags)
@@ -4491,12 +4543,39 @@ and check_mono_arg (st:state) (l:Ident.lident) (i:int) (t:term) : ML unit =
                       than by the value -- or to keep the existential out of \
                       runtime data by specializing every use of it.") ]
             | None ->
-              [ text ("Mark " ^ nm ^ " with [@@monomorphize] in the enclosing \
-                      definition so that it, too, is known at specialization \
-                      time, or drop the annotation on binder " ^ show i ^
-                      " and pass it at runtime.") ]
-              @ dyn_hint "To pass it at runtime at this call site only, \
-                          without changing either signature, ")
+              (* Section 13.6.  The enclosing definition may be a *root* --
+                 an entry point asked for by name, typically by an
+                 out-of-tree plugin naming a compiler function it calls from
+                 hand-written OCaml.  Then both remedies are unavailable:
+                 there is no source to annotate (the signature belongs to
+                 the library, not to the caller) and there is no call site to
+                 drop the annotation at, because a root is live by fiat and
+                 has no caller in this program at all.  What supplies one is
+                 an F* wrapper in the plugin, which is M10u's answer to the
+                 same question. *)
+              (if root_binder_of_enclosing st v
+               then
+                 [ text (enclosing_name st ^ " is a root: it was asked for by \
+                         name, so it has no call site in this program, and a \
+                         parameter of a root is a runtime parameter by \
+                         construction.");
+                   text ("Neither remedy applies -- a root's signature is not \
+                         yours to annotate, and there is no call site to drop \
+                         the annotation at.  Give it one: write a wrapper in \
+                         F* that calls " ^ enclosing_name st ^ " at the \
+                         instantiation you need, and root the wrapper instead.");
+                   text "Custard will then link against an existing \
+                         specialization if the producer has one, or emit a \
+                         fresh one into this unit if it does not, and the \
+                         wrapper's own name -- which is yours and is stable -- \
+                         is what hand-written OCaml calls." ]
+               else
+                 [ text ("Mark " ^ nm ^ " with [@@monomorphize] in the enclosing \
+                         definition so that it, too, is known at specialization \
+                         time, or drop the annotation on binder " ^ show i ^
+                         " and pass it at runtime.") ]
+                 @ dyn_hint "To pass it at runtime at this call site only, \
+                             without changing either signature, "))
      in
      custard_error st E.Error_CustardCannotMonomorphize msg
    | _ -> ());
@@ -6003,17 +6082,23 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
    builds is never what the author meant to pay for (issue #4382).  Anything
    else has to say so with [@@@custard_inline_field] on the binder.
 
+   [@@custard_boxed_fields] on the *type* withdraws the uninvited half: a type
+   whose representation is an ABI -- [FStarC.Extraction.KrmlAst], marshalled
+   to a file karamel reads back -- has to be laid out the way the ML
+   extraction lays it out, tuple field and all (section 5.7).  An explicit
+   request on a field still fires, since that one is the source's.
+
    The marker rides on the field's *type* so that it survives the passes that
    rewrite field lists without any of them having to know about it;
    [Simplify.inline_fields] strips every one. *)
 and is_tuple_name (n:name) : bool =
   n.ns = ["FStar"; "Pervasives"; "Native"] && FStarC.Util.starts_with n.id "tuple"
 
-and field_ty (st:state) (b:S.binder) : ML cty =
+and field_ty (st:state) (boxed:bool) (b:S.binder) : ML cty =
   let t = ty_of_typ st b.binder_bv.sort in
   let asked = U.has_attribute b.binder_attrs PC.custard_inline_field_attr in
   match t with
-  | TApp (n, _) when asked || is_tuple_name n -> TInline t
+  | TApp (n, _) when asked || (is_tuple_name n && not boxed) -> TInline t
   | _ -> t
 
 and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : ML decl =
@@ -6025,6 +6110,12 @@ and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : M
   let params = SS.open_binders params in
   let _, ctors = TcEnv.datacons_of_typ (tcenv st) l in
   let n_params = List.length params in
+  let se = TcEnv.lookup_sigelt (tcenv st) l in
+  (* Section 5.7.  The type, not the field, says that its layout is an ABI. *)
+  let boxed =
+    match se with
+    | Some se -> U.has_attribute se.sigattrs PC.custard_boxed_fields_attr
+    | None -> false in
   (* Only the *type* parameters become parameters of the target type; a value
      index has no counterpart in the target's type language. *)
   let ty_params = params |> List.collect (fun b ->
@@ -6070,13 +6161,13 @@ and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : M
     let bs = drop_flagged (bs |> List.map (Mono.is_erased_binder (tcenv st))) bs in
     (name_of_lid c,
      bs |> List.map (fun b ->
-       (name_of_bv b.binder_bv, field_ty st b)))
+       (name_of_bv b.binder_bv, field_ty st boxed b)))
   in
   (* Section 5.5: whether the source said [{ a; b }] or [| C : ... -> t] does
      not decide the target representation -- the layout does -- but it is the
      one thing a *realization* mirrors, so it has to be recorded. *)
   let is_record =
-    match TcEnv.lookup_sigelt (tcenv st) l with
+    match se with
     | Some se -> se.sigquals |> List.existsb (fun q -> RecordType? q)
     | None -> false in
   (* Section 33.4.  Recorded, not acted on: the type is rejected anyway, by

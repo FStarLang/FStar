@@ -37,8 +37,16 @@ let debug (f:unit -> ML unit) : ML unit = if !dbg then f () else ()
 (*
  * We write this version number to the cache files, and
  * detect when loading the cache that the version number is same
+ *
+ * A checked file is a Marshal dump of the compiler's own data types, so it
+ * can only be read back by a binary that lays those types out exactly as the
+ * writer did.  That is not only a matter of the types' F* definitions: the
+ * two extractions lay the same definition out differently (doc/ref/custard.md,
+ * section 5), so a compiler built by Custard cannot read a checked file an
+ * ML-extracted compiler wrote, and nothing in the file says so.  Bumped when
+ * the compiler's own build switched to Custard.
  *)
-let cache_version_number = 99
+let cache_version_number = 100
 
 (*
  * Abbreviation for what we store in the checked files (stages as described below)

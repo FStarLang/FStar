@@ -763,12 +763,21 @@ let handle_sigelt (st:Extract.state) (arity_opt:option int) (se:sigelt) : ML uni
   match se.sigel with
   | Sig_let {lbs=(_, lbs)} ->
     lbs |> List.iter (fun lb ->
+      let name () =
+        match lb.lbname with
+        | Inr fv -> Ident.string_of_lid (S.lid_of_fv fv)
+        | Inl bv -> Ident.string_of_id bv.ppname in
       try registration st arity_opt se.sigrng lb with
-      | NoEmbedding msg ->
-        warn_not_implemented se.sigrng
-          (match lb.lbname with
-           | Inr fv -> Ident.string_of_lid (S.lid_of_fv fv)
-           | Inl bv -> Ident.string_of_id bv.ppname) msg)
+      | NoEmbedding msg -> warn_not_implemented se.sigrng (name ()) msg
+      (* An exception this does not name is not the plugin machinery's to
+         interpret, but the message it carries says nothing about which
+         plugin was being registered when it was raised.  Say so, and
+         re-raise. *)
+      | e ->
+        let open FStarC.Errors.Msg in
+        E.log_issue se.sigrng E.Warning_PluginNotImplemented
+          [text (Format.fmt1 "While registering plugin `%s':" (name ()))];
+        raise e)
   | _ -> ()
 
 (* Only a module the *program* asked for by name gets registrations.
