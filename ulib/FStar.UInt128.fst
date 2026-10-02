@@ -847,6 +847,7 @@ let eq_mask (a b: t) : Pure t
   (ensures (fun r -> (v a = v b ==> v r = pow2 128 - 1) /\ (v a <> v b ==> v r = 0))) =
   let mask = U64.logand (U64.eq_mask a.low b.low)
                         (U64.eq_mask a.high b.high) in
+  if v a = v b then v_inj a b;
   { low = mask; high = mask; }
 
 private let gte_characterization (a b: t) :
