@@ -32,6 +32,12 @@ module UI = FStar.UInt
    sides is an implication, not an equality.  These lemmas must therefore
    check quickly rather than diverge. *)
 
+(* --z3rlimit_factor 4: what is under test here is that the *typechecker*
+   relates the two [squash]es by implication instead of unfolding [nth]/[logand]
+   into [to_vec]/[from_vec] until it runs out of memory.  Discharging the
+   resulting bitvector goal is a separate matter, and it sits close enough to
+   the default budget that unrelated encoding changes tip it over. *)
+#push-options "--z3rlimit_factor 4"
 let shift_bit_lemma_true (u : UI.uint_t 32) (i : nat{i < 32})
   : Lemma (requires True)
           (ensures UI.nth #32 (UI.shift_right #32 u i `UI.logand` 1) 31
@@ -51,3 +57,4 @@ let shift_bit_lemma_one_call (u : UI.uint_t 32) (i : nat{i < 32})
   : Lemma (ensures UI.nth #32 (UI.shift_right #32 u i `UI.logand` 1) 31
                      == UI.nth #32 u (31 - i))
   = UI.shift_right_lemma_2 u i i
+#pop-options
