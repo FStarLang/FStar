@@ -25,6 +25,7 @@ open Pulse.Checker.Base
 module T = FStar.Tactics.V2
 module J = Pulse.JoinComp
 module RU = Pulse.RuntimeUtils
+module R = FStar.Reflection.V2
 #set-options "--z3rlimit 40"
 
 
@@ -60,6 +61,18 @@ let lift_branch_comp (c:comp_st)
 
 #push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 2"
 #restart-solver
+(* Does a joined postcondition still keep something under the branch
+   condition? `Pulse.JoinComp.join_post` leaves what the branches do not agree
+   on as `match b with true -> .. | false -> ..`, which nothing later can take
+   apart unless `b` is a variable that a later test rewrites. *)
+let rec post_keeps_conditional (p:slprop) : T.Tac bool =
+  match inspect_term p with
+  | Tm_Star l r -> if post_keeps_conditional l then true else post_keeps_conditional r
+  | Tm_ExistsSL _ _ body -> post_keeps_conditional body
+  | Tm_WithPure _ _ body -> post_keeps_conditional body
+  | Tm_FStar t -> R.Tv_Match? (R.inspect_ln t)
+  | _ -> false
+
 let check
   (g:env)
   (pre:term)
@@ -147,9 +160,43 @@ let check
         let post_then = infer_post_branch then_ in
         let post_else = infer_post_branch else_ in
         let post = Pulse.JoinComp.join_post #g #hyp #b post_then post_else in
-        let then_ = Pulse.Checker.Prover.prove_post_hint then_ (PostHint post) e1.range in
-        let else_ = Pulse.Checker.Prover.prove_post_hint else_ (PostHint post) e2.range in
-        (| post, then_, else_ |)
+        let prove_both (post:post_hint_for_env g) ()
+          : T.Tac (ph:post_hint_for_env g &
+                   checker_result_t (g_with_eq tm_true) pre (PostHint ph) &
+                   checker_result_t (g_with_eq tm_false) pre (PostHint ph)) =
+          let then_ = Pulse.Checker.Prover.prove_post_hint then_ (PostHint post) e1.range in
+          let else_ = Pulse.Checker.Prover.prove_post_hint else_ (PostHint post) e2.range in
+          (| post, then_, else_ |)
+        in
+        (* When the join keeps part of the state under the condition, see
+           first whether one branch's own postcondition is already a common
+           one: the prover may get there from the other branch by the folds
+           and unfolds it applies on its own (`pulse_intro`), e.g. a branch
+           that left a struct unfolded against one that called a function
+           returning it folded. Either branch postcondition is proved of both
+           branches before it is used, so this only ever picks among sound
+           options; if neither works, keep the join. *)
+        if not (post_keeps_conditional post.post)
+        then prove_both post ()
+        else (
+          let with_post_of (then_:bool) (p:post_hint_for_env g) ()
+            : T.Tac (ph:post_hint_for_env g &
+                     checker_result_t (g_with_eq tm_true) pre (PostHint ph) &
+                     checker_result_t (g_with_eq tm_false) pre (PostHint ph)) =
+            (* The branch's own pure facts, its path condition among them,
+               hold of the other branch only under this branch's condition. *)
+            let p = J.guard_branch_post b then_ p in
+            let p : post_hint_for_env g =
+              { p with effect_annot = post.effect_annot } in
+            prove_both p ()
+          in
+          match RU.try_quietly (with_post_of false post_else) with
+          | Some r -> r
+          | None ->
+            match RU.try_quietly (with_post_of true post_then) with
+            | Some r -> r
+            | None -> prove_both post ()
+        )
   in
   let (| post_hint', then_, else_ |) = joinable in
 

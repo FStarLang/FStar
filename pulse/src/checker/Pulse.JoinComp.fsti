@@ -31,6 +31,11 @@ let infer_post #g #ctxt (r:checker_result_t g ctxt NoHint)
 = let (| x, g', (u, t), post, k |) = r in
   infer_post' g g' u t x post
 
+(* [p], a postcondition of the branch of [if b] selected by [then_], with each
+   of its pure facts weakened to hold only under that branch's condition. *)
+val guard_branch_post (#g:env) (b:term) (then_:bool) (p:post_hint_for_env g)
+: T.Tac (q:post_hint_for_env g { q.effect_annot == p.effect_annot })
+
 val join_post #g #hyp #b
     (p1:post_hint_for_env (g_with_eq g hyp b tm_true))
     (p2:post_hint_for_env (g_with_eq g hyp b tm_false))

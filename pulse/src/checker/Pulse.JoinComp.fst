@@ -361,6 +361,30 @@ let guard_with_pure then_ b (pred: term) n (acc: slprop) : slprop =
       (mk_imp (RT.eq2 u0 tm_bool b (if then_ then tm_true else tm_false)) pred)
       n acc
 
+(* Guard every pure fact of a branch's postcondition by the condition under
+   which that branch was taken, so that the other branch can prove it too. *)
+let rec guard_branch_slprop (then_:bool) (b:term) (p:slprop) : T.Tac slprop =
+  match inspect_term p with
+  | Tm_WithPure pred n body ->
+    guard_with_pure then_ b pred n (guard_branch_slprop then_ b body)
+  | Tm_ExistsSL u bnd body ->
+    tm_exists_sl u bnd (guard_branch_slprop then_ b body)
+  | Tm_Star l r ->
+    tm_star (guard_branch_slprop then_ b l) (guard_branch_slprop then_ b r)
+  | Tm_Pure _ -> (
+    match fst (guard_pures then_ b [p]) with
+    | [q] -> q
+    | _ -> p
+  )
+  | _ -> p
+
+let guard_branch_post #g (b:term) (then_:bool) (p:post_hint_for_env g)
+: T.Tac (q:post_hint_for_env g { q.effect_annot == p.effect_annot })
+= let x = fresh g in
+  let post = open_term_nv p.post (ppname_default, x) in
+  let post = guard_branch_slprop then_ b post in
+  { p with post = close_term post x }
+
 let is_emp (p:slprop) : bool =
   match inspect_term p with
   | Tm_Emp -> true
@@ -464,18 +488,22 @@ let rec generalize_term (g:env)
         Some (g, [(u1, b1, x)], term_of_no_name_var x)
       else None
     (* Only one branch bound this position; the other kept whatever was there
-       on entry. Generalizing over both is still an upper bound. We take the
-       other side's type from the environment rather than the typechecker, so
-       this fires for a variable and gives up on anything else. *)
+       on entry, or computed it from its own hoisted variables (a branch that
+       stores [f w] where the other stores its binder [z]). Generalizing over
+       both is still an upper bound. We take the type from the binder side
+       rather than the typechecker: a variable of the environment is checked
+       against it here, and a term over the other branch's own hoisted
+       variables is checked when that branch is proved against the joined
+       postcondition, which instantiates the new binder with it. *)
     | Some (u1, b1), None ->
-      if same_type_as_binder g xs2 b1 t2
+      if same_type_as_binder g xs2 b1 t2 || not (indep_of xs2 t2)
       then
         let x = fresh g in
         let g = push_binding g x b1.binder_ppname b1.binder_ty in
         Some (g, [(u1, b1, x)], term_of_no_name_var x)
       else None
     | None, Some (u2, b2) ->
-      if same_type_as_binder g xs1 b2 t1
+      if same_type_as_binder g xs1 b2 t1 || not (indep_of xs1 t1)
       then
         let x = fresh g in
         let g = push_binding g x b2.binder_ppname b2.binder_ty in
