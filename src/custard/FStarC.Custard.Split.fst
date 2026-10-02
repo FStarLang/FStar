@@ -250,15 +250,23 @@ let run (deps:Dep.deps) (foreign:list string) (prog:program)
     (* The group's own module, and the home of everything it references.
        References inside the group resolve to nothing yet, which is right:
        they impose no constraint the members do not already impose jointly. *)
+    let owns =
+      g |> List.collect (fun d ->
+             if emits d then [module_of (name_of_decl d)] else []) in
     let cands =
-      (g |> List.collect (fun d ->
-             if emits d then [module_of (name_of_decl d)] else [])) @
+      owns @
       (g |> List.collect (fun d ->
              Simplify.decl_deps d |> List.collect (fun n ->
                match SMap.try_find home (resolve n) with
                | Some m -> [m]
                | None -> []))) in
-    let own = match cands with
+    (* The group's own module is the one its *names* come from, and a group
+       that emits nothing -- a set of externals, say -- still has one.  Taking
+       the first candidate instead would take the home of the first thing the
+       group references, so an [assume val] whose type mentions an upstream
+       type would be declared in the upstream module's file, where a consumer
+       reading both that file and the upstream one sees the name twice. *)
+    let own = match owns with
               | m :: _ -> m
               | [] -> module_of (name_of_decl (List.hd g)) in
     let top = cands |> List.fold_left (fun acc m ->
