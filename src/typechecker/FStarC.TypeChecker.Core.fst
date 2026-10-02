@@ -394,6 +394,9 @@ let mk_token (cache:cache_t) : ML guard_commit_token =
   { guard_cache = mk_ref (Some cache);
     guard_counter = !table.counter }
 
+let commits : ref int = mk_ref 0
+let commit_count () : ML int = !commits
+
 let commit_guard_core (g:guard_commit_token) : ML unit =
   if g.guard_counter <> !table.counter
   then (//table has been cleared since the token was issued; drop the cache
@@ -405,6 +408,7 @@ let commit_guard_core (g:guard_commit_token) : ML unit =
     | None -> () //cache was already used
     | Some cache ->
       g.guard_cache := None; //invalidate the cache in the token
+      commits := !commits + 1;
       FStarC.Syntax.Hash.term_map_fold
         (fun term hash_entry _ -> THT.insert term hash_entry table.table)
         cache.term_map

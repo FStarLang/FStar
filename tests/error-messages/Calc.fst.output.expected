@@ -56,6 +56,7 @@
       uu___: Prims.unit
       uu___: Prims.unit
       uu___: Prims.unit
+  - See also Calc.fst(48,2-56,3)
 
 * Info at Calc.fst(64,3-64,5):
   - Expected failure:
@@ -67,6 +68,7 @@
       uu___: Prims.unit
       uu___: Prims.unit
       uu___: Prims.unit
+  - See also Calc.fst(60,2-68,3)
 
 * Info at Calc.fst(78,3-78,5):
   - Expected failure:
@@ -77,6 +79,7 @@
       uu___: Prims.unit
       uu___: Prims.unit
       uu___: Prims.unit
+  - See also Calc.fst(72,2-80,3)
 
 * Info at Calc.fst(92,42-92,44):
   - Expected failure:

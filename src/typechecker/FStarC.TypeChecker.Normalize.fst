@@ -2439,6 +2439,25 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : ML (term & 
         | Tm_fvar fv when S.fv_eq_lid fv PC.false_lid -> Some false
         | _ -> None
     in
+    (* [simp_t] looks through [Meta_labeled], so a conjunct that simplifies to
+       [False] may be the one carrying the error message and the position of the
+       proof obligation that failed. Collapsing [_ /\ False] to [False] and
+       discarding the other conjuncts is fine, but discarding that label is not:
+       the report would fall back to a generic message at the position of the
+       whole query. *)
+    let keep_label (orig:term) (t:term) : ML term =
+        let rec label_of (t:term) : ML (option metadata) =
+            match (SS.compress t).n with
+            | Tm_meta {tm; meta=m} ->
+              (match m with
+               | Meta_labeled _ -> Some m
+               | _ -> label_of tm)
+            | _ -> None
+        in
+        match label_of orig with
+        | Some m -> S.mk (Tm_meta {tm=t; meta=m}) t.pos
+        | None -> t
+    in
     let is_const_match (phi : term) : ML (option bool) =
         match (SS.compress phi).n with
         (* Trying to be efficient, but just checking if they all agree *)
@@ -2509,8 +2528,8 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : ML (term & 
         then match args |> List.map simplify with
              | [(Some true, _); (_, (arg, _))]
              | [(_, (arg, _)); (Some true, _)] -> arg, false
-             | [(Some false, _); _]
-             | [_; (Some false, _)] -> w U.t_false, false
+             | [(Some false, (arg, _)); _]
+             | [_; (Some false, (arg, _))] -> w (keep_label arg U.t_false), false
              | _ -> tm, false
         else if S.fv_eq_lid fv PC.or_lid
         then match args |> List.map simplify with
