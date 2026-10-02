@@ -3397,6 +3397,16 @@ and maybe_elaborate_short_circuit_args env0 head args
       | [(e1, _aq1); (e2, _aq2)] ->
         let is_and = S.fv_eq_lid fv Const.op_And in
         let r = e1.pos in
+        (* The impure elaborations are re-checked so that they carry the
+           same effect annotations (Meta_monadic on the let and match,
+           lifts on the pure branches) that phase 2 would have inserted:
+           with --ext phase2_core, this phase-1 term is what gets
+           recorded and extracted. The guard [g] keeps the implicits
+           introduced while checking [e1] and [e2]. *)
+        let recheck_short_circuit_elaboration e g =
+          let e, c, g' = tc_term env0 e in
+          Some (e, c, g ++ g')
+        in
         let env1 = Env.set_expected_typ env0 U.t_bool in
         let e1, c1, g1 = tc_term env1 e1 in
         let e2, c2, g2 = tc_term env1 e2 in
@@ -3413,16 +3423,14 @@ and maybe_elaborate_short_circuit_args env0 head args
           in
           let lb = U.mk_letbinding (Inl x1) [] U.t_bool (U.comp_effect_name c1) e1 [] e1.pos in
           let e = mk (Tm_let {lbs=(false, [lb]); body=SS.close [S.mk_binder x1] e}) e.pos in
-          // TODO: maybe_lift??
-          Some (e, c, g1 ++ g2)
+          recheck_short_circuit_elaboration e (g1 ++ g2)
         else if not (U.is_pure_or_ghost_comp c2) then
           let e =
             if is_and
             then U.if_then_else e1 e2 U.exp_false_bool
             else U.if_then_else e1 U.exp_true_bool e2
           in
-          // TODO: maybe_lift??
-          Some (e, c, g1 ++ g2)
+          recheck_short_circuit_elaboration e (g1 ++ g2)
         else // U.is_tot_or_gtot_comp c1 && U.is_tot_or_gtot_comp c2
           let e = if is_and then U.mk_and e1 e2 else U.mk_or e1 e2 in
           Some (e, c, g1 ++ g2)

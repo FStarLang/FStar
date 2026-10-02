@@ -172,14 +172,25 @@ nothing re-elaborates the phase-1 term, so its `Meta_monadic`,
 `Meta_monadic_lift` and `lbeff` annotations are what extraction and
 reification see. TcTerm's own phase 2 re-derives them in `check_inner_let`: the
 definition is lifted to the effect of the whole `let`, which is also its
-`lbeff`. Two let-insertions in TcTerm did not follow that rule and were fixed
-(the fix applies with or without the extension):
+`lbeff`. Three let-insertions in TcTerm did not follow that rule and were fixed
+(the fixes apply with or without the extension):
 * `tc_match`, for an impure scrutinee: `let x = e in match x with ...` now
   lifts `e` to the effect of the match, and uses that effect as `lbeff`.
   Previously, a `Dv` scrutinee in `Tac` code was extracted as reified `TAC`.
 * `tc_app`, when binding effectful arguments (`bind_lifted_args`): `lbeff`
   and `Meta_monadic` now use the effect of the application, not of the
   argument. Previously, reifying such an application failed.
+* `maybe_elaborate_short_circuit_args`: in phase 1, `e1 && e2` / `e1 || e2`
+  with an effectful operand is rewritten to `if` (preceded by a `let` when
+  `e1` is effectful). The rewritten term used to be returned as is, with no
+  `Meta_monadic` on the `let` and `match` and no lifts on the pure branches,
+  because phase 2 would re-check it. It is now re-checked with `tc_term`
+  right away, which inserts the same annotations. Without this, the Custard
+  plugin extraction of `Pulse.Checker.Return.check_core`
+  (`use_eq || (... && not (is_proof_irrelevant_ty ty))`, where
+  `is_proof_irrelevant_ty` is `Tac`) applied a pure `if` to the proof state.
+  The stage-3 build failed with an OCaml type error. Test:
+  `tests/custard/plugin` (`CustardPlugin.sc_left`, `sc_right`).
 
 **Tactics that produce terms run in phase 1.** `synth_by_tactic` and the
 tactic of an ascription `e <: t by tac` are run in phase 1 under the

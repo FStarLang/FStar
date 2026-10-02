@@ -57,3 +57,24 @@ let pcount (#a:Type) (x:a) (n:int) : int = n + 7
 [@@plugin]
 irreducible
 let pswap (#a:Type) (#b:Type) (x:a) (y:b) : b & a = (y, x)
+
+(* Tactic plugins whose bodies use [&&]/[||] with a Tac operand.  Phase 1
+   elaborates such a connective into an [if] (and, for an impure left operand,
+   a [let]); that elaboration must carry the same effect annotations phase 2
+   would have given it, since with --ext phase2_core it is the term that is
+   extracted.  Without them the ML code applied a pure [if] to the proof state
+   and called [is_unit] without one, and the plugin did not compile -- which
+   is how this first showed up, in Pulse.Checker.Return.check_core. *)
+
+let is_unit (t:FStar.Tactics.V2.term) : FStar.Tactics.V2.Tac bool =
+  FStar.Reflection.TermEq.Simple.term_eq t (`unit)
+
+[@@plugin]
+irreducible
+let sc_right (b c:bool) (t:FStar.Tactics.V2.term) : FStar.Tactics.V2.Tac bool =
+  b || (not c && not (is_unit t))
+
+[@@plugin]
+irreducible
+let sc_left (t:FStar.Tactics.V2.term) (b:bool) : FStar.Tactics.V2.Tac bool =
+  is_unit t && not b
