@@ -41,6 +41,9 @@ instance val hashable_letbinding : hashable letbinding
 instance val hashable_pragma     : hashable pragma
 instance val hashable_sigelt     : hashable sigelt
 
+(* uses equal_term *)
+instance val deq_term : FStarC.Class.Deq.deq term
+
 val term_map (a:Type) : Type0
 val term_map_empty  : #a:Type -> ML (term_map a)
 val term_map_add    : #a:Type -> t:term -> v:a -> term_map a -> ML (term_map a)

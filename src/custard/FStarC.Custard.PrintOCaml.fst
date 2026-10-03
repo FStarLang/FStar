@@ -24,7 +24,7 @@ open FStarC.Const
 open FStarC.Custard.Syntax
 
 module BU   = FStarC.Util
-module SMap = FStarC.SMap
+module HashTable = FStarC.HashTable
 module Prof = FStarC.Custard.Prof
 
 (* Section 12.9: the file currently being printed, when the output is split.
@@ -38,7 +38,7 @@ let current_module : ref (option string) = mk_ref None
    rather than bound to a local alias first.  The table is filled in by
    {!print_program}; threading it through every printing function instead
    would be noise, since it is constant for a whole program. *)
-let externals : ref (SMap.t string) = mk_ref (SMap.create 0)
+let externals : ref (HashTable.t string string) = mk_ref (HashTable.create 0)
 
 (* A realization's path is absolute -- [FStarC_Syntax_Syntax.subst_elt] -- and
    that is what a reference to it has to print everywhere except in the file
@@ -58,7 +58,7 @@ let unqualify_self (t:string) : ML string =
     else t
 
 let external_target (n:name) : ML (option string) =
-  match SMap.try_find !externals (string_of_name n) with
+  match HashTable.try_find !externals (string_of_name n) with
   | Some t -> Some (unqualify_self t)
   | None -> None
 
@@ -68,7 +68,7 @@ let external_target (n:name) : ML (option string) =
    re-specialized the same upstream definition -- which section 12.6 expects
    -- and an [open] would make the clash silent and the choice positional.
    Explicit qualification cannot be ambiguous. *)
-let qualifiers : ref (SMap.t string) = mk_ref (SMap.create 0)
+let qualifiers : ref (HashTable.t string string) = mk_ref (HashTable.create 0)
 
 (* The types of a realized module, and their constructors (section 8.2).  A
    reference to one of these prints as the *realization's* own name -- [sys],
@@ -76,10 +76,10 @@ let qualifiers : ref (SMap.t string) = mk_ref (SMap.create 0)
    {!qualifiers} already carries.  Nothing else about them is special: a field
    of a realized record is qualified by exactly the same mechanism as a field
    of an imported one. *)
-let realized : ref (SMap.t unit) = mk_ref (SMap.create 0)
+let realized : ref (HashTable.t string unit) = mk_ref (HashTable.create 0)
 
 let is_realized (n:name) : ML bool =
-  None? n.spec && Some? (SMap.try_find !realized (string_of_name n))
+  None? n.spec && Some? (HashTable.try_find !realized (string_of_name n))
 
 (* Section 12.9: the names emitted under their plain F* identifier rather than
    their mangled one.  Mangling exists only to keep one flat file
@@ -87,10 +87,10 @@ let is_realized (n:name) : ML bool =
    module names, and is the only declaration from its source lid, the module
    already separates it and the plain name is both shorter and -- this is the
    point -- the name the hand-written realizations refer to it by. *)
-let at_home : ref (SMap.t unit) = mk_ref (SMap.create 0)
+let at_home : ref (HashTable.t string unit) = mk_ref (HashTable.create 0)
 
 let is_at_home (n:name) : ML bool =
-  None? n.spec && Some? (SMap.try_find !at_home (string_of_name n))
+  None? n.spec && Some? (HashTable.try_find !at_home (string_of_name n))
 
 (* Section 125.7.  The exceptions emitted under their plain F* identifier
    rather than their mangled one, by full name.  [Printexc.to_string] -- which
@@ -103,11 +103,11 @@ let is_at_home (n:name) : ML bool =
    constructor could be given the same treatment and is not: nothing observes
    its spelling, and changing it would churn every OCaml golden in the
    repository for no gain. *)
-let exn_idents : ref (SMap.t string) = mk_ref (SMap.create 0)
+let exn_idents : ref (HashTable.t string string) = mk_ref (HashTable.create 0)
 
 (* Section 133.  Exceptions declared [@@custard_extern "Not_found"]: the
    target's own, spelled as the attribute says and never declared. *)
-let extern_ctors : ref (SMap.t string) = mk_ref (SMap.create 0)
+let extern_ctors : ref (HashTable.t string string) = mk_ref (HashTable.create 0)
 
 (* [FStar.Pervasives.Native.tupleN] is realized as OCaml's own N-tuple, which
    has no constructor to name and no field to project.  The *type* needs no
@@ -116,7 +116,7 @@ let extern_ctors : ref (SMap.t string) = mk_ref (SMap.create 0)
    matching one and reading a component out of one each have to be written in
    OCaml's tuple syntax.  This table gives the arity, under both the type's
    name and its constructor's. *)
-let tuples : ref (SMap.t int) = mk_ref (SMap.create 0)
+let tuples : ref (HashTable.t string int) = mk_ref (HashTable.create 0)
 
 (* How many type parameters each record type takes.  OCaml resolves a record
    expression's type from its labels, and when two record types in the same
@@ -126,20 +126,20 @@ let tuples : ref (SMap.t int) = mk_ref (SMap.create 0)
    known.  Qualifying a label names the module, not the type, so it does not
    help.  An ascription does, and it needs the parameter count to write
    [(_, _) t]. *)
-let record_params : ref (SMap.t int) = mk_ref (SMap.create 0)
+let record_params : ref (HashTable.t string int) = mk_ref (HashTable.create 0)
 
 (* Which labels are actually contested: keyed by the label qualified with its
    module, the number of record types in that module that declare it.  Only
    those need the ascription, and leaving it off everywhere else keeps the
    generated code readable.  Specializations count as separate types, so
    [both__int] and [both__bool] do make [fst] ambiguous. *)
-let record_labels : ref (SMap.t int) = mk_ref (SMap.create 0)
+let record_labels : ref (HashTable.t string int) = mk_ref (HashTable.create 0)
 
 let label_key (n:name) (f:string) : string =
   String.concat "." n.ns ^ "|" ^ f
 
 let ambiguous_label (n:name) (f:string) : ML bool =
-  match SMap.try_find !record_labels (label_key n f) with
+  match HashTable.try_find !record_labels (label_key n f) with
   | Some k -> k > 1
   | None -> false
 
@@ -150,7 +150,7 @@ let is_tuple_type (n:name) : ML bool =
 
 let tuple_arity (n:name) : ML (option int) =
   if Some? n.spec then None
-  else SMap.try_find !tuples (string_of_name n)
+  else HashTable.try_find !tuples (string_of_name n)
 
 (* A tuple component's field name is [_1], [_2], ...; its position is the
    number.  The name is the declaration's, before [ocaml_var] mangles it. *)
@@ -173,7 +173,7 @@ let by_position (k:int) (dflt:string) (fs : list (string & string)) : ML (list s
   go 1
 
 let qualifier (n:name) : ML (option string) =
-  match SMap.try_find !qualifiers (string_of_name n) with
+  match HashTable.try_find !qualifiers (string_of_name n) with
   | Some m -> if Some m = !current_module then None else Some m
   | None -> None
 
@@ -259,10 +259,10 @@ let ocaml_module_path (n:name) : ML string =
 (* Types spelled by a fixed OCaml path rather than declared: an external type
    ([@@custard_extern "int"], section 14.5) and a type member of a functor
    instance (section 133).  Filled in by {!build_tables}. *)
-let extern_types : ref (SMap.t string) = mk_ref (SMap.create 0)
+let extern_types : ref (HashTable.t string string) = mk_ref (HashTable.create 0)
 
 let extern_type (n:name) : ML (option string) =
-  SMap.try_find !extern_types (string_of_name n)
+  HashTable.try_find !extern_types (string_of_name n)
 
 let ocaml_type_name (n:name) : ML string =
   if is_realized n then sanitize n.id else
@@ -273,7 +273,7 @@ let ocaml_type_name (n:name) : ML string =
    referred to under.  Both spellings have to agree, so both go through here. *)
 let ocaml_ctor_ident (n:name) : ML string =
   if is_realized n || is_at_home n then uppercase_first (sanitize n.id)
-  else match SMap.try_find !exn_idents (string_of_name n) with
+  else match HashTable.try_find !exn_idents (string_of_name n) with
        | Some s -> s
        | None -> uppercase_first (sanitize (mangled_name n))
 
@@ -708,7 +708,7 @@ and ctor_ref (n:name) : ML string =
   match builtin_ctor n with
   | Some c -> c
   | None ->
-  match SMap.try_find !extern_ctors (string_of_name n) with
+  match HashTable.try_find !extern_ctors (string_of_name n) with
   | Some c -> c
   | None ->
     qualify n (ocaml_ctor_ident n)
@@ -729,7 +729,7 @@ and builtin_ctor (n:name) : ML (option string) =
    {!record_params}; they are all wildcards, since it is the type's identity
    that is in question and never its arguments. *)
 let ascribe_record (n:name) (fs:list string) (s:string) : ML string =
-  match SMap.try_find !record_params (string_of_name n) with
+  match HashTable.try_find !record_params (string_of_name n) with
   | _ when not (fs |> List.existsb (ambiguous_label n)) -> s
   | None -> s
   | Some k ->
@@ -1110,12 +1110,12 @@ let print_decl (first:bool) (d:decl) : ML (option string) =
    module its file compiles to, which is what every cross-file reference is
    qualified by and what decides whether a declaration is *at home* and so
    emitted under its plain identifier. *)
-let build_tables (homes : SMap.t string) (p:program) : ML unit =
-  let tbl = SMap.create 50 in
-  let quals = SMap.create 50 in
-  let real = SMap.create 20 in
-  let tups = SMap.create 20 in
-  let home = SMap.create 50 in
+let build_tables (homes : HashTable.t string string) (p:program) : ML unit =
+  let tbl = HashTable.create 50 in
+  let quals = HashTable.create 50 in
+  let real = HashTable.create 20 in
+  let tups = HashTable.create 20 in
+  let home = HashTable.create 50 in
   (* Section 12.9 and 12.3: a declaration imported from a unit that *split* its
      output lives in a file of its own, not in a module named after the unit,
      and it may have been emitted there under its plain identifier.  That is
@@ -1130,8 +1130,8 @@ let build_tables (homes : SMap.t string) (p:program) : ML unit =
             | None -> []) with
     | [] -> homes
     | hs ->
-      let homes' = SMap.copy homes in
-      hs |> List.iter (fun (n, m) -> SMap.add homes' n (module_name_of_unit m));
+      let homes' = HashTable.copy homes in
+      hs |> List.iter (fun (n, m) -> HashTable.add homes' n (module_name_of_unit m));
       homes' in
   p |> List.iter (fun d ->
     (* An imported value is exactly an external whose target happens to be
@@ -1143,31 +1143,31 @@ let build_tables (homes : SMap.t string) (p:program) : ML unit =
          hand-written realization, exactly as below. *)
       (match d with
        | DExternal e ->
-         SMap.add tbl (string_of_name e.dx_name)
+         HashTable.add tbl (string_of_name e.dx_name)
            (match e.dx_target with Some t -> t | None -> realization_of e.dx_name)
        | _ -> ())
     | Some u ->
       let m = module_name_of_unit u in
       (match d with
-       | DLet l -> SMap.add tbl (string_of_name l.dl_name)
+       | DLet l -> HashTable.add tbl (string_of_name l.dl_name)
                      (m ^ "." ^ ocaml_value_name l.dl_name)
        | DExternal e ->
          (* An external the upstream unit did not compile either: it resolves
             to the same hand-written realization here, not to a symbol in the
             upstream module. *)
-         SMap.add tbl (string_of_name e.dx_name)
+         HashTable.add tbl (string_of_name e.dx_name)
            (match e.dx_target with Some t -> t | None -> realization_of e.dx_name)
        | DType t ->
-         SMap.add quals (string_of_name t.dt_name) m;
+         HashTable.add quals (string_of_name t.dt_name) m;
          (match t.dt_body with
           | TVariant cs -> cs |> List.iter (fun (cn, _) ->
-                             SMap.add quals (string_of_name cn) m)
+                             HashTable.add quals (string_of_name cn) m)
           | _ -> ())
        | DExn _ | DModule _ -> ())
     | None ->
     match d with
     | DExternal e ->
-      SMap.add tbl (string_of_name e.dx_name)
+      HashTable.add tbl (string_of_name e.dx_name)
         (match e.dx_target with
          | Some t -> t
          | None -> realization_of e.dx_name)
@@ -1183,13 +1183,13 @@ let build_tables (homes : SMap.t string) (p:program) : ML unit =
      spell. *)
   p |> List.iter (fun d ->
     let n = name_of_decl d in
-    match SMap.try_find homes (string_of_name n) with
+    match HashTable.try_find homes (string_of_name n) with
     | None -> ()
     | Some m ->
       let mark (x:name) : ML unit =
-        SMap.add quals (string_of_name x) m;
+        HashTable.add quals (string_of_name x) m;
         if None? x.spec && module_name_of_unit (String.concat "." x.ns) = m
-        then SMap.add home (string_of_name x) () in
+        then HashTable.add home (string_of_name x) () in
       (* A value is reached through {!externals} when it belongs to a linked
          unit, and through {!qualifiers} otherwise; only the latter is us. *)
       mark n;
@@ -1206,13 +1206,13 @@ let build_tables (homes : SMap.t string) (p:program) : ML unit =
   p |> List.iter (fun d ->
     match d with
     | DExn e when has_flag e.de_flags Realized ->
-      SMap.add real (string_of_name e.de_name) ();
-      SMap.add quals (string_of_name e.de_name) (String.concat "_" e.de_name.ns)
+      HashTable.add real (string_of_name e.de_name) ();
+      HashTable.add quals (string_of_name e.de_name) (String.concat "_" e.de_name.ns)
     | DType t when has_flag t.dt_flags Realized ->
       let m = String.concat "_" t.dt_name.ns in
       let mark (n:name) : ML unit =
-        SMap.add real (string_of_name n) ();
-        SMap.add quals (string_of_name n) m in
+        HashTable.add real (string_of_name n) ();
+        HashTable.add quals (string_of_name n) m in
       mark t.dt_name;
       (match t.dt_body with
        | TVariant cs -> cs |> List.iter (fun (cn, _) -> mark cn)
@@ -1221,28 +1221,28 @@ let build_tables (homes : SMap.t string) (p:program) : ML unit =
          than a name; record its arity under every name it is reached by. *)
       if is_tuple_type t.dt_name then begin
         let arity (fs : list (string & cty)) : ML unit =
-          SMap.add tups (string_of_name t.dt_name) (List.length fs) in
+          HashTable.add tups (string_of_name t.dt_name) (List.length fs) in
         match t.dt_body with
         | TRecord fs -> arity fs
         | TVariant [(cn, fs)] ->
-          arity fs; SMap.add tups (string_of_name cn) (List.length fs)
+          arity fs; HashTable.add tups (string_of_name cn) (List.length fs)
         | _ -> ()
       end
     | _ -> ());
   (* Every record type in the program, realized or not: the ascription is
      just as necessary for a realization's record, and just as harmless when
      the labels happen to be unambiguous. *)
-  let recs : SMap.t int = SMap.create 100 in
-  let labels : SMap.t int = SMap.create 100 in
+  let recs : HashTable.t string int = HashTable.create 100 in
+  let labels : HashTable.t string int = HashTable.create 100 in
   p |> List.iter (fun d ->
     match d with
     | DType t ->
       (match t.dt_body with
        | TRecord fs ->
-         SMap.add recs (string_of_name t.dt_name) (List.length t.dt_params);
+         HashTable.add recs (string_of_name t.dt_name) (List.length t.dt_params);
          fs |> List.iter (fun (f, _) ->
            let k = label_key t.dt_name f in
-           SMap.add labels k (1 + (match SMap.try_find labels k with
+           HashTable.add labels k (1 + (match HashTable.try_find labels k with
                                    | Some i -> i
                                    | None -> 0)))
        | _ -> ())
@@ -1252,21 +1252,21 @@ let build_tables (homes : SMap.t string) (p:program) : ML unit =
   at_home := home;
   (* Section 133 and 14.5.  After [qualifiers] and [at_home], which a
      module's spelling reads. *)
-  let ext_tys = SMap.create 20 in
+  let ext_tys = HashTable.create 20 in
   p |> List.iter (fun d ->
     match member_of (decl_flags d) with
     | Some (m, f) ->
       let path = ocaml_module_path m ^ "." ^ f in
       (match d with
-       | DType t -> SMap.add ext_tys (string_of_name t.dt_name) path
-       | DExternal e -> SMap.add tbl (string_of_name e.dx_name) path
+       | DType t -> HashTable.add ext_tys (string_of_name t.dt_name) path
+       | DExternal e -> HashTable.add tbl (string_of_name e.dx_name) path
        | _ -> ())
     | None ->
       match d with
       | DType t ->
         (match t.dt_flags |> List.tryPick (function Extern (Some x, _) -> Some x | _ -> None) with
          | Some x when not (is_template (template_of_string x)) ->
-           SMap.add ext_tys (string_of_name t.dt_name) x
+           HashTable.add ext_tys (string_of_name t.dt_name) x
          | _ -> ())
       | _ -> ());
   extern_types := ext_tys;
@@ -1281,7 +1281,7 @@ let build_tables (homes : SMap.t string) (p:program) : ML unit =
      the file will emit, and the count is over the exceptions themselves, so
      two exceptions with the same short name both stay mangled -- picking one
      would make which of them is readable depend on declaration order. *)
-  exn_idents := SMap.create 0;
+  exn_idents := HashTable.create 0;
   let exns = p |> List.collect (fun d ->
     match d with
     | DExn e when None? e.de_name.spec && not (is_at_home e.de_name)
@@ -1290,39 +1290,39 @@ let build_tables (homes : SMap.t string) (p:program) : ML unit =
       [e.de_name]
     | _ -> []) in
   let short (n:name) : ML string = uppercase_first (sanitize n.id) in
-  let taken : SMap.t unit = SMap.create 50 in
+  let taken : HashTable.t string unit = HashTable.create 50 in
   p |> List.iter (fun d ->
     match d with
     | DType t ->
       (match t.dt_body with
        | TVariant cs -> cs |> List.iter (fun (cn, _) ->
-                          SMap.add taken (ocaml_ctor_ident cn) ())
+                          HashTable.add taken (ocaml_ctor_ident cn) ())
        | _ -> ())
     | DExn e when Some? (extern_exn e) -> ()
     | DExn e ->
       if not (List.existsb (fun (x:name) ->
                 string_of_name x = string_of_name e.de_name) exns)
-      then SMap.add taken (ocaml_ctor_ident e.de_name) ()
+      then HashTable.add taken (ocaml_ctor_ident e.de_name) ()
     | _ -> ());
-  let counts : SMap.t int = SMap.create 20 in
+  let counts : HashTable.t string int = HashTable.create 20 in
   exns |> List.iter (fun n ->
     let k = short n in
-    SMap.add counts k (1 + (match SMap.try_find counts k with
+    HashTable.add counts k (1 + (match HashTable.try_find counts k with
                             | Some i -> i
                             | None -> 0)));
-  let exn_tbl : SMap.t string = SMap.create 20 in
+  let exn_tbl : HashTable.t string string = HashTable.create 20 in
   exns |> List.iter (fun n ->
     let k = short n in
-    if SMap.try_find counts k = Some 1
-       && None? (SMap.try_find taken k)
+    if HashTable.try_find counts k = Some 1
+       && None? (HashTable.try_find taken k)
        && not (List.mem k predefined_ctors)
-    then SMap.add exn_tbl (string_of_name n) k);
-  let ext_ctors : SMap.t string = SMap.create 5 in
+    then HashTable.add exn_tbl (string_of_name n) k);
+  let ext_ctors : HashTable.t string string = HashTable.create 5 in
   p |> List.iter (fun d ->
     match d with
     | DExn e ->
       (match extern_exn e with
-       | Some x -> SMap.add ext_ctors (string_of_name e.de_name) x
+       | Some x -> HashTable.add ext_ctors (string_of_name e.de_name) x
        | None -> ())
     | _ -> ());
   extern_ctors := ext_ctors;
@@ -1436,18 +1436,18 @@ let reject_target_only_types (p:program) : ML unit =
 
 let print_program (p:program) : ML string =
   reject_target_only_types p;
-  build_tables (SMap.create 0) p;
+  build_tables (HashTable.create 0) p;
   current_module := None;
   reserve_top p;
   assemble (print_decls p @ entry_calls p)
 
 let print_split (files : list (string & program)) : ML (list (string & string)) =
   reject_target_only_types (List.collect snd files);
-  let homes = SMap.create 100 in
+  let homes = HashTable.create 100 in
   files |> List.iter (fun (m, ds) ->
     let m = module_name_of_unit m in
     ds |> List.iter (fun d ->
-      SMap.add homes (string_of_name (name_of_decl d)) m));
+      HashTable.add homes (string_of_name (name_of_decl d)) m));
   Prof.timed "p.tables" (fun () -> build_tables homes (List.collect snd files));
   let rendered = files |> List.map (fun (m, ds) ->
     let m = module_name_of_unit m in

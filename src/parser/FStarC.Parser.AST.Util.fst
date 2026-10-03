@@ -172,12 +172,12 @@ and lidents_of_effect_decl (ed:effect_decl) : ML _ =
     concat_map lidents_of_binder bs @
     concat_map lidents_of_decl ds
 
-let extension_parser_table : SMap.t extension_parser = SMap.create 20
+let extension_parser_table : HashTable.t string extension_parser = HashTable.create 20
 let register_extension_parser (ext:string) (parser:extension_parser) : ML unit =
-  SMap.add extension_parser_table ext parser
+  HashTable.add extension_parser_table ext parser
 
 let lookup_extension_parser (ext:string) : ML _ =
-  let do () = SMap.try_find extension_parser_table ext in
+  let do () = HashTable.try_find extension_parser_table ext in
   let r = do () in
   match r with
   | None ->
@@ -199,15 +199,15 @@ let as_open_namespaces_and_abbrevs (ls:list decl)
     ls
     {open_namespaces = []; module_abbreviations = []}
 
-let extension_lang_parser_table : SMap.t extension_lang_parser = SMap.create 20
+let extension_lang_parser_table : HashTable.t string extension_lang_parser = HashTable.create 20
 let register_extension_lang_parser (ext:string) (parser:extension_lang_parser) : ML unit =
-  SMap.add extension_lang_parser_table ext parser
+  HashTable.add extension_lang_parser_table ext parser
 let lookup_extension_lang_parser (ext:string) : ML _ =
-  let r = SMap.try_find extension_lang_parser_table ext in
+  let r = HashTable.try_find extension_lang_parser_table ext in
   match r with
   | None ->
     if Plugins.autoload_plugin ext
-    then SMap.try_find extension_lang_parser_table ext
+    then HashTable.try_find extension_lang_parser_table ext
     else None
   | _ -> r
 

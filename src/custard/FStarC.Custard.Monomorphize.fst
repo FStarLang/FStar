@@ -50,7 +50,7 @@ open FStarC.BaseTypes
 open FStarC.Const
 open FStarC.Custard.Syntax
 
-module SMap   = FStarC.SMap
+module HashTable = FStarC.HashTable
 module Pprint = FStarC.Pprint
 module String = FStarC.String
 module Options = FStarC.Options
@@ -124,14 +124,14 @@ let clip (s:string) : ML string =
 type state = {
   (* Every type declaration, by name: needed to read a constructor's field
      types back when descending into a pattern. *)
-  types:  SMap.t dtype;
+  types:  HashTable.t string dtype;
   (* Type declarations that must stay polymorphic: see [frozen]. *)
-  frozen: SMap.t bool;
+  frozen: HashTable.t string bool;
   (* Instantiation key -> the name its clone got. *)
-  names:  SMap.t name;
+  names:  HashTable.t string name;
   (* Suffixes already handed out, so that a hint collision falls back to a
      number rather than silently merging two different instantiations. *)
-  taken:  SMap.t bool;
+  taken:  HashTable.t string bool;
   clones: ref (list dtype);
   (* Instantiations whose body has not been built yet.  Building one can
      demand others, hence a worklist rather than recursion. *)
@@ -142,11 +142,11 @@ type state = {
      calls to it were synthesized by a rule and so were never F* call sites
      with arguments to read.  They are ordinary [EQual] type applications by
      now, though, which is all this pass ever needs. *)
-  exts:      SMap.t dexternal;
-  ext_names: SMap.t name;
+  exts:      HashTable.t string dexternal;
+  ext_names: HashTable.t string name;
   (* Referenced with *no* type arguments, which is the only way dropping the
      polymorphic declaration can leave something dangling. *)
-  ext_bare:  SMap.t bool;
+  ext_bare:  HashTable.t string bool;
   ext_clones: ref (list dexternal);
 }
 
@@ -201,7 +201,7 @@ let freeze_realized () : ML bool = Options.custard_backend () = "OCaml"
    carrying the indices; that still works and is arguably better style, but it
    is no longer forced. *)
 let is_extern_type (st:state) (n:name) : ML bool =
-  match SMap.try_find st.types (string_of_name n) with
+  match HashTable.try_find st.types (string_of_name n) with
   | Some d -> d.dt_flags |> List.existsb Extern?
   | None -> false
 
@@ -210,13 +210,13 @@ let is_extern_type (st:state) (n:name) : ML bool =
    is nowhere in a target string for one to go; a template is exactly the
    target string that has somewhere, so for one of those they are kept. *)
 let is_template_type (st:state) (n:name) : ML bool =
-  match SMap.try_find st.types (string_of_name n) with
+  match HashTable.try_find st.types (string_of_name n) with
   | Some d -> Some? (extern_template_of_flags d.dt_flags)
   | None -> false
 
 let is_poly (st:state) (n:name) : ML bool =
-  if Some? (SMap.try_find st.frozen (string_of_name n)) then false
-  else match SMap.try_find st.types (string_of_name n) with
+  if Some? (HashTable.try_find st.frozen (string_of_name n)) then false
+  else match HashTable.try_find st.types (string_of_name n) with
   | Some d -> Cons? d.dt_params
   | None -> false
 
@@ -224,7 +224,7 @@ let is_poly (st:state) (n:name) : ML bool =
    external that reached its instantiations through [margs], so this is exactly
    the rule-synthesized case. *)
 let is_poly_extern (st:state) (n:name) : ML bool =
-  match SMap.try_find st.exts (string_of_name n) with
+  match HashTable.try_find st.exts (string_of_name n) with
   | Some d -> Cons? d.dx_typars
   | None -> false
 
@@ -246,7 +246,7 @@ let rec zip_params (ps:list string) (args:list cty) : list (string & cty) =
 
 let request (st:state) (n:name) (args:list cty) : ML name =
   let key = key_of n args in
-  match SMap.try_find st.names key with
+  match HashTable.try_find st.names key with
   | Some nm -> nm
   | None ->
     let hint = String.concat "_" (args |> List.map (hint_of_cty hint_depth)) in
@@ -254,12 +254,12 @@ let request (st:state) (n:name) (args:list cty) : ML name =
     let rec pick (i:int) : ML string =
       let cand = if i = 0 then base else base ^ "_" ^ show i in
       let k = string_of_name ({ n with spec = None }) ^ "__" ^ cand in
-      if Some? (SMap.try_find st.taken k) then pick (i + 1)
-      else (SMap.add st.taken k true; cand) in
+      if Some? (HashTable.try_find st.taken k) then pick (i + 1)
+      else (HashTable.add st.taken k true; cand) in
     let nm = { n with spec = Some (pick 0) } in
     (* Register before building the body: a recursive type -- [list], whose
        [Cons] mentions [list a] -- must find this name rather than loop. *)
-    SMap.add st.names key nm;
+    HashTable.add st.names key nm;
     st.todo := (n, nm, args) :: !st.todo;
     nm
 
@@ -273,7 +273,7 @@ let rec unfold_cty (st:state) (fuel:int) (c:cty) : ML cty =
   if fuel <= 0 then c
   else match c with
   | TApp (n, args) ->
-    (match SMap.try_find st.types (string_of_name n) with
+    (match HashTable.try_find st.types (string_of_name n) with
      (* Section 115.  Not a *realized* abbreviation.  [FStar.Dyn.dyn] is a
         name for an F* model of a type whose OCaml implementation is
         hand-written; unfolding it puts the model in the emitted signature and
@@ -378,7 +378,7 @@ let request_inst (st:state) (n:name) (args:list cty) : ML name =
    signature is the whole of the work and can be done here. *)
 let request_extern (st:state) (n:name) (args:list cty) : ML name =
   let key = key_of n args in
-  match SMap.try_find st.ext_names key with
+  match HashTable.try_find st.ext_names key with
   | Some nm -> nm
   | None ->
     let hint = String.concat "_" (args |> List.map (hint_of_cty hint_depth)) in
@@ -386,11 +386,11 @@ let request_extern (st:state) (n:name) (args:list cty) : ML name =
     let rec pick (i:int) : ML string =
       let cand = if i = 0 then base else base ^ "_" ^ show i in
       let k = string_of_name ({ n with spec = None }) ^ "__" ^ cand in
-      if Some? (SMap.try_find st.taken k) then pick (i + 1)
-      else (SMap.add st.taken k true; cand) in
+      if Some? (HashTable.try_find st.taken k) then pick (i + 1)
+      else (HashTable.add st.taken k true; cand) in
     let nm = { n with spec = Some (pick 0) } in
-    SMap.add st.ext_names key nm;
-    (match SMap.try_find st.exts (string_of_name n) with
+    HashTable.add st.ext_names key nm;
+    (match HashTable.try_find st.exts (string_of_name n) with
      | None -> ()
      | Some d ->
        let sub = zip_params d.dx_typars args in
@@ -401,7 +401,7 @@ let request_extern (st:state) (n:name) (args:list cty) : ML name =
     nm
 
 let ctor_fields (st:state) (owner:name) (args:list cty) (cn:name) : ML (list cty) =
-  match SMap.try_find st.types (string_of_name owner) with
+  match HashTable.try_find st.types (string_of_name owner) with
   | Some ({ dt_body = TVariant cs; dt_params = ps }) ->
     let sub = zip_params ps args in
     (match cs |> List.tryFind (fun (c, _) -> string_of_name c = string_of_name cn) with
@@ -414,7 +414,7 @@ let ctor_fields (st:state) (owner:name) (args:list cty) (cn:name) : ML (list cty
 
 (* The same, for a record: the types its fields are matched at, by name. *)
 let record_fields (st:state) (owner:name) (args:list cty) : ML (list (string & cty)) =
-  match SMap.try_find st.types (string_of_name owner) with
+  match HashTable.try_find st.types (string_of_name owner) with
   | Some ({ dt_body = TRecord fs; dt_params = ps }) ->
     let sub = zip_params ps args in
     fs |> List.map (fun (f, c) ->
@@ -535,7 +535,7 @@ let rec mono_expr (st:state) (env:env) (x:expr) : ML expr =
              declaration this names is about to be dropped.  Recorded rather
              than reported here, because a use is not an error until we know
              the declaration really went away. *)
-          (SMap.add st.ext_bare (string_of_name n) true; EQual (n, args))
+          (HashTable.add st.ext_bare (string_of_name n) true; EQual (n, args))
       else EQual (n, args)
     | ELet (v, t, e1, e2) ->
       ELet (v, mono_cty st t, go e1, mono_expr st ((v, t) :: env) e2)
@@ -582,7 +582,7 @@ let rec drain (st:state) : ML unit =
   | [] -> ()
   | (orig, nm, args) :: rest ->
     st.todo := rest;
-    (match SMap.try_find st.types (string_of_name orig) with
+    (match HashTable.try_find st.types (string_of_name orig) with
      | None -> ()
      | Some d ->
        let sub = zip_params d.dt_params args in
@@ -604,24 +604,24 @@ let rec drain (st:state) : ML unit =
 (* -------------------------------------------------------------------- *)
 
 let run (prog:program) : ML program =
-  let st = { types  = SMap.create 100;
-             frozen = SMap.create 10;
-             names  = SMap.create 100;
-             taken  = SMap.create 100;
+  let st = { types  = HashTable.create 100;
+             frozen = HashTable.create 10;
+             names  = HashTable.create 100;
+             taken  = HashTable.create 100;
              clones = mk_ref [];
              todo   = mk_ref [];
-             exts       = SMap.create 20;
-             ext_names  = SMap.create 20;
-             ext_bare   = SMap.create 20;
+             exts       = HashTable.create 20;
+             ext_names  = HashTable.create 20;
+             ext_bare   = HashTable.create 20;
              ext_clones = mk_ref [] } in
   prog |> List.iter (fun d ->
     match d with
     | DType t ->
-      SMap.add st.types (string_of_name t.dt_name) t;
-      SMap.add st.taken (string_of_name t.dt_name) true
+      HashTable.add st.types (string_of_name t.dt_name) t;
+      HashTable.add st.taken (string_of_name t.dt_name) true
     | DExternal x ->
-      SMap.add st.exts (string_of_name x.dx_name) x;
-      SMap.add st.taken (string_of_name x.dx_name) true
+      HashTable.add st.exts (string_of_name x.dx_name) x;
+      HashTable.add st.taken (string_of_name x.dx_name) true
     | _ -> ());
   (* Freezing is transitive: a frozen [list] mentions [option] in no way here,
      but if it did, that [option] could not be cloned either. *)
@@ -631,9 +631,9 @@ let run (prog:program) : ML program =
     | TApp (n, args) ->
       let k = string_of_name n in
       args |> List.iter (freeze (fuel - 1));
-      if None? (SMap.try_find st.frozen k) then begin
-        SMap.add st.frozen k true;
-        match SMap.try_find st.types k with
+      if None? (HashTable.try_find st.frozen k) then begin
+        HashTable.add st.frozen k true;
+        match HashTable.try_find st.types k with
         | Some d ->
           (match d.dt_body with
            | TAbbrev c -> freeze (fuel - 1) c
@@ -723,7 +723,7 @@ let run (prog:program) : ML program =
   let rest = rest |> List.collect (fun d ->
     match d with
     | DExternal x when Cons? x.dx_typars ->
-      if None? (SMap.try_find st.ext_bare (string_of_name x.dx_name)) then []
+      if None? (HashTable.try_find st.ext_bare (string_of_name x.dx_name)) then []
       else
         FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardPolyExternalUnused ([
           Pprint.arbitrary_string

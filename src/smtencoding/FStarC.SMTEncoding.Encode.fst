@@ -874,7 +874,7 @@ let encode_top_level_vals env bindings quals =
 exception Let_rec_unencodeable
 
 //Make a copy of all the mutable state of env_t, central place for keeping track of mutable fields in env_t
-let copy_env (en:env_t) = { en with global_cache = SMap.copy en.global_cache}
+let copy_env (en:env_t) = { en with global_cache = HashTable.copy en.global_cache}
 
 let encode_top_level_let :
     env_t -> (bool & list letbinding) -> list qualifier -> ML (decls_t & env_t) =
@@ -2084,7 +2084,7 @@ let init_env tcenv = last_env := [{bvar_bindings=PSMap.empty ();
                                    nolabels=false; use_zfuel_name=false;
                                    encode_non_total_function_typ=true; encoding_quantifier=false;
                                    current_module_name=Env.current_module tcenv |> Ident.string_of_lid;
-                                   global_cache = SMap.create 100}]
+                                   global_cache = HashTable.create 100}]
 let get_env cmn tcenv = match !last_env with
     | [] -> failwith "No env; call init first!"
     | e::_ -> {e with tcenv=tcenv; current_module_name=Ident.string_of_lid cmn}
@@ -2183,11 +2183,11 @@ let recover_caching_and_update_env (env:env_t) (decls:decls_t) : ML decls_t =
   decls |> List.collect (fun elt ->
     if elt.key = None then [elt]  //not meant to be hashconsed, keep it
     else (
-      match SMap.try_find env.global_cache (elt.key |> Some?.v) with
+      match HashTable.try_find env.global_cache (elt.key |> Some?.v) with
       | Some (a_names, _) -> [Term.RetainAssumptions a_names] |> mk_decls_trivial  //hit, retain a_names from the hit entry
                                                                                   //AND drop elt
       | None ->  //no hit, update cache and retain elt
-        SMap.add env.global_cache (elt.key |> Some?.v) (elt.a_names, Env.current_module env.tcenv);
+        HashTable.add env.global_cache (elt.key |> Some?.v) (elt.a_names, Env.current_module env.tcenv);
         [elt]
     )
   )
@@ -2228,11 +2228,11 @@ let give_index_to_z3_and_set_env
         match elt.Pruning.elts_key with
         | None -> None::dropped, List.rev_append elt.Pruning.elts_sums sums //not meant to be hashconsed, keep it
         | Some key ->
-          match SMap.try_find env.global_cache key with
+          match HashTable.try_find env.global_cache key with
           | Some (a_names, _) -> //hit: retain a_names from the hit entry AND drop elt
             Some a_names::dropped, Pruning.Sum_retain a_names :: sums
           | None -> //no hit, update cache and retain elt
-            SMap.add env.global_cache key (elt.Pruning.elts_a_names, Env.current_module env.tcenv);
+            HashTable.add env.global_cache key (elt.Pruning.elts_a_names, Env.current_module env.tcenv);
             None::dropped, List.rev_append elt.Pruning.elts_sums sums)
       ([], [])
   in
@@ -2295,8 +2295,8 @@ let give_index_to_z3_and_set_env
 let give_decls_to_z3_and_set_env (env:env_t) (name:string) (decls:decls_t) : ML unit =
   give_index_to_z3_and_set_env env name (Pruning.summarize_elts decls) (fun _ -> decls)
 
-instance instance_showable_smap (#a:Type) {|_:showable a|} : Tot (showable (SMap.t a)) = {
-  show = (fun smap -> SMap.fold smap (fun k v acc -> Format.fmt3 "%s -> %s\n%s" (show k) (show v) acc) "")
+instance instance_showable_smap (#a:Type) {|_:showable a|} : Tot (showable (HashTable.t string a)) = {
+  show = (fun smap -> HashTable.fold smap (fun k v acc -> Format.fmt3 "%s -> %s\n%s" (show k) (show v) acc) "")
 }
 
 (* [give_to_z3=false] computes the module's encoding (so that it can be stored in
@@ -2325,13 +2325,13 @@ let encode_modul_aux (give_to_z3:bool) tcenv modul =
       //the state before the module was typechecked, because popping
       //the environment will also unload all modules that were loaded
       //on the fly.
-      let keys = SMap.keys env.global_cache in
+      let keys = HashTable.keys env.global_cache in
       List.iter
         (fun k ->
-          match SMap.try_find env.global_cache k with
+          match HashTable.try_find env.global_cache k with
           | None -> ()
           | Some (_, m) -> 
-            if Ident.lid_equals m modul.name then SMap.remove env.global_cache k else ())
+            if Ident.lid_equals m modul.name then HashTable.remove env.global_cache k else ())
         keys;
       let fvb =
         PSMap.fold 
@@ -2352,7 +2352,7 @@ let encode_modul_aux (give_to_z3:bool) tcenv modul =
     if Debug.high ()
     then (
       Format.print3 "Global cache contains %s entries\n{%s}\nenv={%s}" 
-        (show (SMap.size env.global_cache))
+        (show (HashTable.size env.global_cache))
         (show env.global_cache)
         (print_env env)
     );

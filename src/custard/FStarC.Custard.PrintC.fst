@@ -50,7 +50,7 @@ open FStarC.Pprint
 open FStarC.Errors.Msg
 
 module BU     = FStarC.Util
-module SMap   = FStarC.SMap
+module HashTable = FStarC.HashTable
 module E      = FStarC.Errors
 module String = FStarC.String
 module Options = FStarC.Options
@@ -79,7 +79,7 @@ let current : ref string = mk_ref "<toplevel>"
    same information seen from the other end.  [parents] maps a declaration to
    the one that pulled it in, filled by a breadth-first walk from the roots
    so that the chain it yields is a shortest one. *)
-let parents : SMap.t string = SMap.create 50
+let parents : HashTable.t string string = HashTable.create 50
 
 (* Section 31.3.  An external whose signature mentions this type.  On the
    OCaml path that is *why* the type was left polymorphic, by §5.0.1 rule 4,
@@ -92,31 +92,31 @@ let parents : SMap.t string = SMap.create 50
    unrepresentable type in front of the backend, which is the thing a reader
    has to go and change.  The name is kept because the OCaml path still uses
    it in the original sense. *)
-let frozen_by : SMap.t string = SMap.create 20
+let frozen_by : HashTable.t string string = HashTable.create 20
 (* Section 32.5.  Whether the external that froze a type is a [custard_extern]
    -- a C symbol the program named -- or a hand-written OCaml realization.
    The advice differs, and asserting the wrong one sends a reader to look for
    an .ml file that does not exist. *)
-let frozen_by_target : SMap.t string = SMap.create 20
+let frozen_by_target : HashTable.t string string = HashTable.create 20
 
 (* Section 33.4.  Type name -> the constructor and [Type0] field that make it
    an existential, from the {!Existential} flag the extractor sets.  Kept as
    its own table rather than read off {!types} for the ordinary reason: a
    rejection has to be able to explain itself before the printer's tables
    exist, and this one is filled from the program at the same time they are. *)
-let existentials : SMap.t (string & string) = SMap.create 20
+let existentials : HashTable.t string (string & string) = HashTable.create 20
 
 (* Section 72.1.  The declarations that were rooted, so that a rejection can
    tell "nothing reached this" from "nothing reached this *yet*".  An empty
    {!reached_through} says only that the BFS never assigned a parent, which is
    also true of a declaration the walk did not visit; being a root is the fact
    that actually changes the advice, and it is not derivable from [parents]. *)
-let root_decls : SMap.t bool = SMap.create 50
+let root_decls : HashTable.t string bool = HashTable.create 50
 
 let reached_through (n:string) : ML (list string) =
   let rec up (n:string) (fuel:int) (acc:list string) : ML (list string) =
     if fuel <= 0 then List.rev acc
-    else match SMap.try_find parents n with
+    else match HashTable.try_find parents n with
          | None -> List.rev acc
          | Some p -> up p (fuel - 1) (p :: acc) in
   up n 12 []
@@ -155,7 +155,7 @@ let existential_msg () : ML (list Pprint.document) =
     match ns with
     | [] -> []
     | n :: ns ->
-      (match SMap.try_find existentials n with
+      (match HashTable.try_find existentials n with
        | Some (c, f) ->
          [text (n ^ " is an existential package, not an instance of a \
                 parameterized type: its constructor " ^ c ^ " stores the \
@@ -308,7 +308,7 @@ let escape_kw (s:string) : ML string =
    consulted by every printer, because a rename has to reach the definition,
    the prototype and every call site in the file alike: this is one C name
    for one IR name, not a second name for the same thing. *)
-let renames : ref (SMap.t string) = mk_ref (SMap.create 0)
+let renames : ref (HashTable.t string string) = mk_ref (HashTable.create 0)
 
 (* Section 68.  The declarations marked [@@ CMacro ], mapped to the spelling
    the preprocessor sees.  Consulted by {!c_name}, so that every reference to
@@ -316,13 +316,13 @@ let renames : ref (SMap.t string) = mk_ref (SMap.create 0)
    has no linkage and no separate declaration, so the name at the use is the
    only name there is.  Built after {!build_renames}, since the macro name is
    the uppercase of whatever the rename settled on. *)
-let macros : ref (SMap.t string) = mk_ref (SMap.create 0)
+let macros : ref (HashTable.t string string) = mk_ref (HashTable.create 0)
 
 let c_name (n:name) : ML string =
-  match SMap.try_find !macros (string_of_name n) with
+  match HashTable.try_find !macros (string_of_name n) with
   | Some s -> s
   | None ->
-  match SMap.try_find !renames (string_of_name n) with
+  match HashTable.try_find !renames (string_of_name n) with
   | Some s -> s
   | None -> escape_kw (sanitize (mangled_name n))
 let c_var (x:string) : ML string = escape_kw (sanitize x)
@@ -413,7 +413,7 @@ let arm_sel (cn:name) (fs : list (string & cty)) (f:string) : ML string =
    {!build_renames} checks the un-uppercased form, so a rename that is legal
    there is legal here. *)
 let c_tag (n:name) : ML string =
-  String.uppercase (match SMap.try_find !renames (string_of_name n) with
+  String.uppercase (match HashTable.try_find !renames (string_of_name n) with
                     | Some s -> s
                     | None -> sanitize (mangled_name n))
 
@@ -424,11 +424,11 @@ let c_tag (n:name) : ML string =
 (* Printing a pattern or a constructor application needs the layout of the
    type involved, which is not on the node.  Both tables are constant for a
    whole program, so they are globals rather than a threaded environment. *)
-let types : ref (SMap.t dtype) = mk_ref (SMap.create 0)
+let types : ref (HashTable.t string dtype) = mk_ref (HashTable.create 0)
 (* constructor name -> (its type, its field list) *)
-let ctors : ref (SMap.t (dtype & list (string & cty))) = mk_ref (SMap.create 0)
+let ctors : ref (HashTable.t string (dtype & list (string & cty))) = mk_ref (HashTable.create 0)
 (* external name -> the symbol to call it by *)
-let externs : ref (SMap.t string) = mk_ref (SMap.create 0)
+let externs : ref (HashTable.t string string) = mk_ref (HashTable.create 0)
 
 (* Which parameters of a definition survive into C.  A [unit] parameter the
    body never mentions carries no information -- it is F*'s way of writing a
@@ -436,19 +436,19 @@ let externs : ref (SMap.t string) = mk_ref (SMap.create 0)
    signature and from every call site.  The flags are computed once, in
    [print_program], because the call site has to make the same decision as the
    definition. *)
-let keeps : ref (SMap.t (list bool)) = mk_ref (SMap.create 0)
+let keeps : ref (HashTable.t string (list bool)) = mk_ref (HashTable.create 0)
 
 (* Which definitions return [unit], and are therefore emitted as C [void].
    Consulted at the call site, where a [void] call is a statement and cannot be
    an operand. *)
-let void_fns : ref (SMap.t bool) = mk_ref (SMap.create 0)
+let void_fns : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
 
 (* How many arguments each named definition takes, after the dropped
    parameters of [keeps] are removed.  Only used to refuse a call that does
    not match: C has neither partial application nor a way to apply a call's
    result without saying so, and both come out as a plain call with the wrong
    number of operands -- valid IR, and C that does not compile (section 25). *)
-let arities : ref (SMap.t int) = mk_ref (SMap.create 0)
+let arities : ref (HashTable.t string int) = mk_ref (HashTable.create 0)
 
 (* Whether the definition currently being printed returns [void]. *)
 let void_ret : ref bool = mk_ref false
@@ -458,7 +458,7 @@ let rec filter_by (#a:Type) (flags:list bool) (xs:list a) : list a =
   | b :: flags, x :: xs -> (if b then [x] else []) @ filter_by flags xs
   | _ -> xs
 
-let find_type (n:name) : ML (option dtype) = SMap.try_find !types (string_of_name n)
+let find_type (n:name) : ML (option dtype) = HashTable.try_find !types (string_of_name n)
 
 (* Section 69.  The template pieces of an external type's target, if it has a
    target and that target mentions any argument.  Read off the declaration
@@ -480,7 +480,7 @@ let binds_by_ref (t:cty) : ML bool =
   | _ -> false
 
 let find_ctor (n:name) : ML (option (dtype & list (string & cty))) =
-  SMap.try_find !ctors (string_of_name n)
+  HashTable.try_find !ctors (string_of_name n)
 
 (* A variant with a single constructor needs neither a tag nor a union: it is
    just a struct of that constructor's fields.  This is what keeps a pair from
@@ -548,12 +548,12 @@ let mono_advice_for (n:option name) : ML (list string) =
     match (match n with
            | _ when Options.custard_backend () <> "OCaml" -> None
            | None -> None
-           | Some n -> SMap.try_find frozen_by (string_of_name n)) with
+           | Some n -> HashTable.try_find frozen_by (string_of_name n)) with
     | Some ext ->
       let where =
         match (match n with
                | None -> None
-               | Some n -> SMap.try_find frozen_by_target (string_of_name n)) with
+               | Some n -> HashTable.try_find frozen_by_target (string_of_name n)) with
         | Some sym ->
           "it is the C symbol `" ^ sym ^ "', named by a custard_extern \
            attribute, and that symbol's own declaration decides the layout"
@@ -585,7 +585,7 @@ let mono_advice_for (n:option name) : ML (list string) =
          binder since section 19; saying "please report a Custard bug" for the
          type-variable form sent six of Kuiper's modules to the issue tracker
          for a correct refusal. *)
-      if Some? (SMap.try_find root_decls !current)
+      if Some? (HashTable.try_find root_decls !current)
       then ["This declaration is a root, and a root has no call site.  \
              Specialization takes its type arguments from callers, so a root \
              that is still polymorphic has nothing to be specialized against \
@@ -791,7 +791,7 @@ let ty (t:cty) : ML string = decl_of t ""
    afterwards, above them, behind prototypes -- the same arrangement the
    program's own definitions use, and for the same reason. *)
 let eq_queue : ref (list (string & dtype)) = mk_ref []
-let eq_seen : ref (SMap.t string) = mk_ref (SMap.create 20)
+let eq_seen : ref (HashTable.t string string) = mk_ref (HashTable.create 20)
 
 (* Section 116.  Every C name the program itself defines, as the file will
    spell it -- filled after {!build_renames}, since a rename changes what that
@@ -800,16 +800,16 @@ let eq_seen : ref (SMap.t string) = mk_ref (SMap.create 20)
    with its own [pair__eq] got two definitions of it, one of them with the
    wrong type.  The two sides could not both be right by construction, because
    only one of them knew the whole set of names in the file. *)
-let taken_names : ref (SMap.t bool) = mk_ref (SMap.create 50)
+let taken_names : ref (HashTable.t string bool) = mk_ref (HashTable.create 50)
 
 (* [base], or the first [base_1], [base_2], ... that nothing else has taken.
    Registered on the way out, so two generated names cannot collide either. *)
 let alloc_name (base:string) : ML string =
   let rec go (cand:string) (n:int) : ML string =
-    if None? (SMap.try_find !taken_names cand) then cand
+    if None? (HashTable.try_find !taken_names cand) then cand
     else go (base ^ "_" ^ string_of_int n) (n + 1) in
   let f = go base 1 in
-  SMap.add !taken_names f true;
+  HashTable.add !taken_names f true;
   f
 
 let rec eq_target (t:cty) : ML (option dtype) =
@@ -836,11 +836,11 @@ let eq_fn_of (t:cty) : ML (option string) =
        the allocation above hands out a different name each time it is asked,
        so asking twice for the same type has to return the first answer. *)
     let k = string_of_name d.dt_name in
-    (match SMap.try_find !eq_seen k with
+    (match HashTable.try_find !eq_seen k with
      | Some f -> Some f
      | None ->
        let f = alloc_name (c_name d.dt_name ^ "__eq") in
-       SMap.add !eq_seen k f;
+       HashTable.add !eq_seen k f;
        eq_queue := !eq_queue @ [(f, d)];
        Some f)
 
@@ -1385,18 +1385,18 @@ type dest =
    [ELet] below): a use that wants the cell reads or assigns it, a use that
    wants the pointer takes its address. *)
 let scope : ref (list (string & (string & bool))) = mk_ref []
-let declared : ref (SMap.t bool) = mk_ref (SMap.create 0)
+let declared : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
 
 let reset_scope () : ML unit =
-  scope := []; declared := SMap.create 20
+  scope := []; declared := HashTable.create 20
 
 let bind_gen (x:string) (cell:bool) : ML string =
   let base = c_var x in
   let rec pick (i:int) : ML string =
     let cand = if i = 0 then base else base ^ "_" ^ show i in
-    if Some? (SMap.try_find !declared cand) then pick (i + 1) else cand in
+    if Some? (HashTable.try_find !declared cand) then pick (i + 1) else cand in
   let nm = pick 0 in
-  SMap.add !declared nm true;
+  HashTable.add !declared nm true;
   scope := (x, (nm, cell)) :: !scope;
   nm
 
@@ -1443,7 +1443,7 @@ let ctr : ref int = mk_ref 0
 let fresh (stem:string) : ML string =
   ctr := !ctr + 1;
   let nm = "_c" ^ stem ^ show !ctr in
-  SMap.add !declared nm true;
+  HashTable.add !declared nm true;
   nm
 
 (* Section 121.2.  Everything in this module that outlives a single call and
@@ -1465,25 +1465,25 @@ let fresh (stem:string) : ML string =
    definition, for the same reason. *)
 let reset_program_state () : ML unit =
   current := "<toplevel>";
-  SMap.clear parents;
-  SMap.clear frozen_by;
-  SMap.clear frozen_by_target;
-  SMap.clear existentials;
-  SMap.clear root_decls;
-  renames := SMap.create 0;
-  macros := SMap.create 0;
-  types := SMap.create 0;
-  ctors := SMap.create 0;
-  externs := SMap.create 0;
-  keeps := SMap.create 0;
-  void_fns := SMap.create 0;
-  arities := SMap.create 0;
+  HashTable.clear parents;
+  HashTable.clear frozen_by;
+  HashTable.clear frozen_by_target;
+  HashTable.clear existentials;
+  HashTable.clear root_decls;
+  renames := HashTable.create 0;
+  macros := HashTable.create 0;
+  types := HashTable.create 0;
+  ctors := HashTable.create 0;
+  externs := HashTable.create 0;
+  keeps := HashTable.create 0;
+  void_fns := HashTable.create 0;
+  arities := HashTable.create 0;
   void_ret := false;
   eq_queue := [];
-  eq_seen := SMap.create 20;
-  taken_names := SMap.create 50;
+  eq_seen := HashTable.create 20;
+  taken_names := HashTable.create 50;
   scope := [];
-  declared := SMap.create 0;
+  declared := HashTable.create 0;
   ctr := 0
 
 (* Statement-shaped: a form that C has no expression for.  These are the
@@ -1690,7 +1690,7 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
        legal value of it and is what C would give a static. *)
     "(" ^ ty e.ty ^ "){0}"
   | EQual (n, _) ->
-    (match SMap.try_find !externs (string_of_name n) with
+    (match HashTable.try_find !externs (string_of_name n) with
      | Some t -> t
      | None -> c_name n)
   | EApp (hd, args) ->
@@ -1703,7 +1703,7 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
     let args =
       match hd.e with
       | EQual (n, _) ->
-        (match SMap.try_find !keeps (string_of_name n) with
+        (match HashTable.try_find !keeps (string_of_name n) with
          | Some flags -> filter_by flags args
          | None -> args)
       | _ -> args |> List.filter (fun (a:expr) -> not (TUnit? a.ty)) in
@@ -1712,7 +1712,7 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
        few arguments" against a generated prototype. *)
     (match hd.e with
      | EQual (n, _) ->
-       (match SMap.try_find !arities (string_of_name n) with
+       (match HashTable.try_find !arities (string_of_name n) with
         | Some a when a <> List.length args ->
           let got = string_of_int (List.length args) in
           let want = string_of_int a in
@@ -1743,7 +1743,7 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
        inside the macro would see a different thing. *)
     let cast_free_args =
       match hd.e with
-      | EQual (n, _) -> None? (SMap.try_find !externs (string_of_name n))
+      | EQual (n, _) -> None? (HashTable.try_find !externs (string_of_name n))
       | _ -> true in
     let call = c_expr out ind hd ^ "(" ^
                String.concat ", "
@@ -1768,14 +1768,14 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
        the mistake these rounds keep turning up. *)
     let call =
       match hd.e with
-      | EQual (n, _) when Some? (SMap.try_find !externs (string_of_name n))
+      | EQual (n, _) when Some? (HashTable.try_find !externs (string_of_name n))
                           && (TBuf? e.ty || TRef? e.ty) ->
         "(" ^ ty e.ty ^ ")" ^ call
       | _ -> call in
     (* A [void] call is a statement, not an operand.  It runs here and stands
        for the unit value, which is what the caller was going to do with it. *)
     (match hd.e with
-     | EQual (n, _) when Some? (SMap.try_find !void_fns (string_of_name n)) ->
+     | EQual (n, _) when Some? (HashTable.try_find !void_fns (string_of_name n)) ->
        out := !out ^ ind ^ call ^ ";\n"; unit_value
      | _ -> call)
   (* Both nodes are a C cast, but for opposite reasons: a conversion is what
@@ -2682,7 +2682,7 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
      saved by [branch_body]; these two are saved here. *)
   let emits_nothing (p:pat) (b:expr) : ML bool =
     let saved_ctr = !ctr in
-    let saved_declared = SMap.copy !declared in
+    let saved_declared = HashTable.copy !declared in
     let s = branch_body ind' p b in
     ctr := saved_ctr;
     declared := saved_declared;
@@ -2787,7 +2787,7 @@ let check_finite (d:dtype) : ML unit =
           declaration that put it in front of the backend is named instead.
           Before section 100 this case was reported as a frozen type, which
           named the external but not the obstruction; now both are said. *)
-       (match SMap.try_find frozen_by (string_of_name d.dt_name) with
+       (match HashTable.try_find frozen_by (string_of_name d.dt_name) with
         | Some ext ->
           ["It reaches the backend through " ^ ext ^ ", whose signature \
             mentions it.  That declaration is realized outside this program, \
@@ -2881,21 +2881,21 @@ let body_value_deps (b:tydef) : ML (list string) =
    caller to place is the right recovery: [check_finite] will reject it with a
    message about the source, which is more use than one about this traversal. *)
 let sort_types (ds:list dtype) : ML (list dtype) =
-  let index : SMap.t dtype = SMap.create 64 in
-  ds |> List.iter (fun d -> SMap.add index (string_of_name d.dt_name) d);
+  let index : HashTable.t string dtype = HashTable.create 64 in
+  ds |> List.iter (fun d -> HashTable.add index (string_of_name d.dt_name) d);
   let out : ref (list dtype) = mk_ref [] in
-  let seen : SMap.t bool = SMap.create 64 in
-  let busy : SMap.t bool = SMap.create 64 in
+  let seen : HashTable.t string bool = HashTable.create 64 in
+  let busy : HashTable.t string bool = HashTable.create 64 in
   let rec visit (d:dtype) : ML unit =
     let k = string_of_name d.dt_name in
-    if Some? (SMap.try_find seen k) || Some? (SMap.try_find busy k) then () else begin
-      SMap.add busy k true;
+    if Some? (HashTable.try_find seen k) || Some? (HashTable.try_find busy k) then () else begin
+      HashTable.add busy k true;
       body_value_deps d.dt_body |> List.iter (fun n ->
-        match SMap.try_find index n with
+        match HashTable.try_find index n with
         | Some d' -> visit d'
         | None -> ());
-      SMap.remove busy k;
-      SMap.add seen k true;
+      HashTable.remove busy k;
+      HashTable.add seen k true;
       out := d :: !out
     end
   in
@@ -2953,7 +2953,7 @@ let type_decl (d:dtype) : ML (option string) =
             "};\n")
 
 let kept_binders (l:dlet) : ML (list binder) =
-  match SMap.try_find !keeps (string_of_name l.dl_name) with
+  match HashTable.try_find !keeps (string_of_name l.dl_name) with
   | Some flags -> filter_by flags l.dl_binders
   | None -> l.dl_binders
 
@@ -3026,7 +3026,7 @@ let rec static_init (x:expr) : ML (option string) =
   (* Section 68.  A reference to a [@@ CMacro ] definition is a reference to
      its body, textually, before the program runs -- so it is as much a
      constant expression as the body is, and can initialize a global. *)
-  | EQual (n, _) when Some? (SMap.try_find !macros (string_of_name n)) ->
+  | EQual (n, _) when Some? (HashTable.try_find !macros (string_of_name n)) ->
     Some (c_name n)
   | ECast (e1, t) ->
     (match e1.ty, t, static_init e1 with
@@ -3404,21 +3404,21 @@ let comment_of (l:dlet) : ML string =
    somebody else's output. *)
 let build_renames (extra:list string) (p:program) : ML unit =
   let mods = Options.custard_c_no_prefix () @ extra in
-  renames := SMap.create 0;
+  renames := HashTable.create 0;
   if Nil? mods then () else begin
     (* Every C name in the unit as it stands, so that a rename cannot land on
        one.  Types and constructors included: they have no linkage, but a
        [struct] tag and a function sharing a name in one header is at best
        confusing and at worst -- for a typedef -- a redeclaration error. *)
-    let taken : SMap.t string = SMap.create 50 in
+    let taken : HashTable.t string string = HashTable.create 50 in
     p |> List.iter (fun d ->
       let n = name_of_decl d in
-      SMap.add taken (match extern_target d with
+      HashTable.add taken (match extern_target d with
                       | Some t -> t
                       | None -> escape_kw (sanitize (mangled_name n)))
                      (string_of_name n));
-    let claimed : SMap.t string = SMap.create 20 in
-    let used_mod : SMap.t bool = SMap.create 5 in
+    let claimed : HashTable.t string string = HashTable.create 20 in
+    let used_mod : HashTable.t string bool = HashTable.create 5 in
     (* Section 32.9.  A declaration is renamed when it is part of the unit's
        interface.  For a definition that is external linkage, which is
        {!is_public}.  A *type* has no linkage at all, so there is nothing for
@@ -3460,10 +3460,10 @@ let build_renames (extra:list string) (p:program) : ML unit =
       | _ when None? dn.spec ->
         let m = String.concat "." dn.ns in
         if List.existsb (fun x -> x = m) mods then begin
-          SMap.add used_mod m true;
+          HashTable.add used_mod m true;
           let tgt = escape_kw (sanitize dn.id) in
           let src = string_of_name dn in
-          (match SMap.try_find claimed tgt with
+          (match HashTable.try_find claimed tgt with
            | Some other ->
              E.raise_error0 E.Error_CustardExportCollision [
                text ("Custard: --custard_c_no_prefix would name both " ^
@@ -3471,7 +3471,7 @@ let build_renames (extra:list string) (p:program) : ML unit =
                      "' in the generated C.");
                text "Two definitions cannot share one external name."; ]
            | None -> ());
-          (match SMap.try_find taken tgt with
+          (match HashTable.try_find taken tgt with
            | Some other when other <> src ->
              E.raise_error0 E.Error_CustardExportCollision [
                text ("Custard: --custard_c_no_prefix would name " ^ src ^
@@ -3480,14 +3480,14 @@ let build_renames (extra:list string) (p:program) : ML unit =
                text "Rename one of them, or drop the option for this \
 module."; ]
            | _ -> ());
-          SMap.add claimed tgt src;
-          SMap.add !renames src tgt
+          HashTable.add claimed tgt src;
+          HashTable.add !renames src tgt
         end
       | _ -> ());
     (* A module named but contributing nothing is almost always a typo or a
        forgotten --custard_entry_module, and silence there costs a round. *)
     mods |> List.iter (fun m ->
-      if None? (SMap.try_find used_mod m) then
+      if None? (HashTable.try_find used_mod m) then
         E.log_issue0 E.Warning_CustardNoPublicDefinitions [
           text ("Custard: --custard_c_no_prefix " ^ m ^ " renamed nothing.");
           text "The option applies to types, to assume vals, and to \
@@ -3537,7 +3537,7 @@ they are part of this unit's interface."; ])
    rather than being left to the C compiler, which would see only the token
    after substitution. *)
 let build_macros (p:program) : ML unit =
-  macros := SMap.create 0;
+  macros := HashTable.create 0;
   let ms = p |> List.collect (fun d ->
     match d with
     | DLet l when is_macro l -> [l.dl_name]
@@ -3545,18 +3545,18 @@ let build_macros (p:program) : ML unit =
   if Nil? ms then () else begin
     (* Every other C name in the unit, so that a macro landing on one is
        caught: after substitution that name is no longer spellable. *)
-    let taken : SMap.t string = SMap.create 50 in
+    let taken : HashTable.t string string = HashTable.create 50 in
     p |> List.iter (fun d ->
       let n = name_of_decl d in
       if List.existsb (fun m -> string_of_name m = string_of_name n) ms
       then ()
-      else SMap.add taken (c_name n) (string_of_name n));
+      else HashTable.add taken (c_name n) (string_of_name n));
     ms |> List.iter (fun n ->
       let m = String.uppercase (c_name n) in
       let clash =
-        match SMap.try_find taken m with
+        match HashTable.try_find taken m with
         | Some o -> Some o
-        | None -> SMap.try_find !macros m in
+        | None -> HashTable.try_find !macros m in
       match clash with
       | Some o ->
         E.raise_error0 E.Error_CustardExportCollision [
@@ -3568,18 +3568,18 @@ let build_macros (p:program) : ML unit =
                 declaration, which would then be unspellable.";
           text "Rename one of the two, or drop the attribute." ]
       | None ->
-        SMap.add !macros (string_of_name n) m;
+        HashTable.add !macros (string_of_name n) m;
         (* The inverse direction, for the next iteration's collision test. *)
-        SMap.add !macros m (string_of_name n))
+        HashTable.add !macros m (string_of_name n))
   end;
   (* The reverse entries were bookkeeping for the loop above; a lookup is by
      the F* name, so rebuild without them. *)
-  let final : SMap.t string = SMap.create 20 in
+  let final : HashTable.t string string = HashTable.create 20 in
   p |> List.iter (fun d ->
     match d with
     | DLet l when is_macro l ->
-      (match SMap.try_find !macros (string_of_name l.dl_name) with
-       | Some m -> SMap.add final (string_of_name l.dl_name) m
+      (match HashTable.try_find !macros (string_of_name l.dl_name) with
+       | Some m -> HashTable.add final (string_of_name l.dl_name) m
        | None -> ())
     | _ -> ());
   macros := final
@@ -3623,39 +3623,39 @@ let check_interface_names (p:program) : ML unit =
     | TApp (n, args) ->
       (if Some? n.spec then [n] else []) @ (args |> List.collect spec_names)
     | _ -> [] in
-  let declared : SMap.t bool = SMap.create 50 in
+  let declared : HashTable.t string bool = HashTable.create 50 in
   p |> List.iter (function
-    | DType t -> SMap.add declared (string_of_name t.dt_name) true
+    | DType t -> HashTable.add declared (string_of_name t.dt_name) true
     | _ -> ());
   (* Section 70.1.  A generated name that the unit *also* publishes an
      abbreviation for is a different situation from one it does not: the
      stable spelling the warning is about to ask for is already in this very
      header, and telling a reader to write their own would send them past it.
      So name it instead. *)
-  let aliases : SMap.t string = SMap.create 20 in
+  let aliases : HashTable.t string string = HashTable.create 20 in
   p |> List.iter (function
     | DType t ->
       (match t.dt_body with
        | TAbbrev (TApp (n, [])) when Nil? t.dt_params && None? t.dt_name.spec ->
-         SMap.add aliases (string_of_name n) (c_name t.dt_name)
+         HashTable.add aliases (string_of_name n) (c_name t.dt_name)
        | _ -> ())
     | _ -> ());
-  let seen : SMap.t bool = SMap.create 10 in
+  let seen : HashTable.t string bool = HashTable.create 10 in
   p |> List.iter (function
     | DLet l when is_public l ->
       let sig_ctys = (l.dl_binders |> List.map (fun b -> b.b_ty)) @ [l.dl_ret] in
       sig_ctys |> List.collect spec_names |> List.iter (fun n ->
         let s = string_of_name n in
-        if Some? (SMap.try_find declared s) && None? (SMap.try_find seen s)
+        if Some? (HashTable.try_find declared s) && None? (HashTable.try_find seen s)
         then begin
-          SMap.add seen s true;
+          HashTable.add seen s true;
           E.log_issue0 E.Warning_CustardGeneratedNameInInterface [
             text ("Custard: the type `" ^ c_name n ^
                   "' is part of this unit's interface -- " ^
                   string_of_name l.dl_name ^
                   " has it in its signature -- but its name is generated.");
             text "It is a specialization, so the name carries a hint built from the monomorphizer's input and may change when that input does. --custard_c_no_prefix does not rename specializations.";
-            (match SMap.try_find aliases s with
+            (match HashTable.try_find aliases s with
              | Some alias ->
                text ("This header already publishes `" ^ alias ^
                      "' as another name for it; spell that instead.")
@@ -3684,9 +3684,9 @@ let check_interface_names (p:program) : ML unit =
    body.  That is the whole point of the attribute inverted -- naming a symbol
    the program does not own -- so it is caught here instead. *)
 let check_emitted_names (init_name:string) (p:program) : ML unit =
-  let seen : SMap.t (string & bool) = SMap.create 50 in
+  let seen : HashTable.t string (string & bool) = HashTable.create 50 in
   let claim (nm:string) (who:string) (ext:bool) : ML unit =
-    match SMap.try_find seen nm with
+    match HashTable.try_find seen nm with
     (* Two externals reaching one target is not this check's business: it is
        legitimate when the two agree, and section 53.3's own check below --
        which has both prototypes to compare and better advice to give -- owns
@@ -3699,7 +3699,7 @@ let check_emitted_names (init_name:string) (p:program) : ML unit =
         (if ext || ext' then
            [ text "A name given by [@@custard_extern] is taken verbatim and names a symbol outside this program, so a definition that lands on it would take that symbol over -- with no diagnostic from the C compiler and no link error, because the definition simply wins." ]
          else []))
-    | _ -> SMap.add seen nm (who, ext) in
+    | _ -> HashTable.add seen nm (who, ext) in
   (* Only when there is one: the initializer is emitted only for a unit that
      has a global to set up, and a name nothing prints cannot collide. *)
   if Cons? (global_inits_of p) then
@@ -3717,33 +3717,33 @@ let check_emitted_names (init_name:string) (p:program) : ML unit =
    constructor is reached as its own type, which is how {!Simplify.dce}
    resolves it too. *)
 let record_parents (p:program) : ML unit =
-  let defs : SMap.t decl = SMap.create 50 in
-  let own : SMap.t string = SMap.create 50 in
+  let defs : HashTable.t string decl = HashTable.create 50 in
+  let own : HashTable.t string string = HashTable.create 50 in
   let _ = p |> List.iter (fun d ->
-    SMap.add defs (string_of_name (name_of_decl d)) d;
+    HashTable.add defs (string_of_name (name_of_decl d)) d;
     match d with
     | DType t ->
       (match t.dt_body with
        | TVariant cs ->
          cs |> List.iter (fun (cn, _) ->
-                 SMap.add own (string_of_name cn) (string_of_name t.dt_name))
+                 HashTable.add own (string_of_name cn) (string_of_name t.dt_name))
        | _ -> ())
     | _ -> ()) in
   let resolve (n:string) : ML string =
-    match SMap.try_find own n with Some o -> o | None -> n in
-  let seen : SMap.t bool = SMap.create 50 in
+    match HashTable.try_find own n with Some o -> o | None -> n in
+  let seen : HashTable.t string bool = HashTable.create 50 in
   let rec bfs (front:list string) : ML unit =
     match front with
     | [] -> ()
     | _ ->
       let next = front |> List.collect (fun n ->
-        match SMap.try_find defs n with
+        match HashTable.try_find defs n with
         | None -> []
         | Some d ->
           Simplify.decl_deps d |> List.collect (fun c ->
             let c = resolve c in
-            if c = n || Some? (SMap.try_find seen c) then []
-            else (SMap.add seen c true; SMap.add parents c n; [c]))) in
+            if c = n || Some? (HashTable.try_find seen c) then []
+            else (HashTable.add seen c true; HashTable.add parents c n; [c]))) in
       bfs next in
   let rec ty_names (t:cty) (acc:list string) : ML (list string) =
     match t with
@@ -3757,16 +3757,16 @@ let record_parents (p:program) : ML unit =
     match d with
     | DExternal x ->
       ty_names x.dx_ty [] |> List.iter (fun tn ->
-        if None? (SMap.try_find frozen_by tn)
-        then (SMap.add frozen_by tn (string_of_name x.dx_name);
+        if None? (HashTable.try_find frozen_by tn)
+        then (HashTable.add frozen_by tn (string_of_name x.dx_name);
               match x.dx_target with
-              | Some t -> SMap.add frozen_by_target tn t
+              | Some t -> HashTable.add frozen_by_target tn t
               | None -> ()))
     | _ -> ()) in
   let roots = p |> List.collect (fun d ->
     if decl_flags d |> List.existsb (fun f -> Root? f || Entrypoint? f)
     then (let n = string_of_name (name_of_decl d) in
-          SMap.add seen n true; SMap.add root_decls n true; [n])
+          HashTable.add seen n true; HashTable.add root_decls n true; [n])
     else []) in
   bfs roots
 
@@ -3794,30 +3794,30 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
      spelling that is actually emitted -- section 121.3, which is why there
      is nothing to spell out here.  The initializer is the one name no
      declaration stands behind (section 117.3). *)
-  p |> List.iter (fun d -> SMap.add !taken_names (emitted_name d) true);
-  SMap.add !taken_names init_name true;
-  let tt = SMap.create 50 in
-  let ct = SMap.create 50 in
-  let xt = SMap.create 20 in
-  let kt = SMap.create 50 in
-  let vt = SMap.create 50 in
-  let at = SMap.create 50 in
+  p |> List.iter (fun d -> HashTable.add !taken_names (emitted_name d) true);
+  HashTable.add !taken_names init_name true;
+  let tt = HashTable.create 50 in
+  let ct = HashTable.create 50 in
+  let xt = HashTable.create 20 in
+  let kt = HashTable.create 50 in
+  let vt = HashTable.create 50 in
+  let at = HashTable.create 50 in
   p |> List.iter (fun d ->
     match d with
     | DType t ->
-      SMap.add tt (string_of_name t.dt_name) t;
+      HashTable.add tt (string_of_name t.dt_name) t;
       (* Section 33.4. *)
       t.dt_flags |> List.iter (fun f ->
         match f with
         | Existential (c, fld) ->
-          SMap.add existentials (string_of_name t.dt_name) (c, fld)
+          HashTable.add existentials (string_of_name t.dt_name) (c, fld)
         | _ -> ());
       (match t.dt_body with
        | TVariant cs ->
-         cs |> List.iter (fun (c, fs) -> SMap.add ct (string_of_name c) (t, fs))
+         cs |> List.iter (fun (c, fs) -> HashTable.add ct (string_of_name c) (t, fs))
        | _ -> ())
     | DExternal x ->
-      SMap.add xt (string_of_name x.dx_name)
+      HashTable.add xt (string_of_name x.dx_name)
         (match x.dx_target with
          (* Section 121.3.  [emitted_name] answers exactly this; the case
             split is kept here only for the note below, which is about what
@@ -3846,17 +3846,17 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
          [EverCrypt_AutoConfig2_init()] is what both C paths must emit. *)
       let flags = arg_ctys x.dx_ty |> List.map (fun a -> not (TUnit? a)) in
       if List.existsb (fun b -> not b) flags then
-        SMap.add kt (string_of_name x.dx_name) flags;
+        HashTable.add kt (string_of_name x.dx_name) flags;
       (* Same for a unit *result*: the target function returns [void], and a
          prototype saying otherwise is a declaration that does not match the
          definition it will be linked against. *)
       if Cons? flags && TUnit? (ret_cty x.dx_ty) then
-        SMap.add vt (string_of_name x.dx_name) true
+        HashTable.add vt (string_of_name x.dx_name) true
       ;
       (* An external's arity is the one its declared type states; a
          parameterless one is a variable and is not called at all. *)
       let n = List.length (List.filter (fun b -> b) flags) in
-      if n > 0 then SMap.add at (string_of_name x.dx_name) n
+      if n > 0 then HashTable.add at (string_of_name x.dx_name) n
     | DLet l ->
       (* Section 53.1.  Unconditionally, exactly as the external above, and
          for the same reason: a unit argument carries no information.  It used
@@ -3871,8 +3871,8 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
          definition whose every parameter would go: [f()] is fine, but the
          rejection of a parameterless definition below is about the IR, so the
          two must not be confused. *)
-      if List.existsb (fun b -> not b) flags then SMap.add kt (string_of_name l.dl_name) flags;
-      if TUnit? l.dl_ret && Cons? l.dl_binders then SMap.add vt (string_of_name l.dl_name) true
+      if List.existsb (fun b -> not b) flags then HashTable.add kt (string_of_name l.dl_name) flags;
+      if TUnit? l.dl_ret && Cons? l.dl_binders then HashTable.add vt (string_of_name l.dl_name) true
       ;
       (* A parameterless definition of arrow type is lowered to a *variable*
          of function-pointer type (section 25.3), and a call through it
@@ -3886,7 +3886,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
          unit parameters (section 53.1), and so does every call through it,
          so an arity taken from the arrow unfiltered rejects the very calls
          the type it came from describes. *)
-      SMap.add at (string_of_name l.dl_name)
+      HashTable.add at (string_of_name l.dl_name)
         (if Cons? l.dl_binders then n
          else List.length (arg_ctys l.dl_ret |> List.filter
                              (fun (a:cty) -> not (TUnit? a))))
@@ -3953,9 +3953,9 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
      that makes a variadic macro work: with [@@custard_c_header] no prototype
      is emitted at all, and the header's own declaration is the only one. *)
   let () =
-    let seen : SMap.t (string & string) = SMap.create 20 in
+    let seen : HashTable.t string (string & string) = HashTable.create 20 in
     exts_named |> List.iter (fun (nm, src, s) ->
-      match SMap.try_find seen nm with
+      match HashTable.try_find seen nm with
       | Some (src', s') when s' <> s ->
         E.raise_error0 E.Error_CustardExternConflict
           ([text ("Custard: the external target `" ^ nm ^
@@ -3965,7 +3965,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
             text "One C symbol has one prototype, so these cannot both be emitted.";
             text "If the target really does accept both -- a variadic macro, or an overload set -- add [@@custard_c_header \"...\"] naming the header that declares it.  Custard then emits no prototype of its own and includes the header instead, which is the only arrangement in which several type vectors can share one symbol.";
             text "Otherwise give each type vector its own [@@custard_extern] target name."])
-      | _ -> SMap.add seen nm (src, s)) in
+      | _ -> HashTable.add seen nm (src, s)) in
 
   let exts = dedup (exts_named |> List.map (fun (_, _, s) -> s)) in
 

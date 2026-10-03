@@ -22,7 +22,7 @@ open FStarC.List
 open FStarC.SMTEncoding.Z3
 open FStarC.SMTEncoding.Term
 open FStarC.Util
-open FStarC.SMap
+module HashTable = FStarC.HashTable
 open FStarC.TypeChecker
 open FStarC.TypeChecker.Env
 open FStarC.SMTEncoding
@@ -339,8 +339,8 @@ let query_info settings (g:goal) z3result =
         let used_rlimit_str =
           try
             let decimals = 3 in
-            let r0 = int_of_string <| Some?.v <| SMap.try_find z3result.z3result_initial_statistics "rlimit-count" in
-            let r1 = int_of_string <| Some?.v <| SMap.try_find z3result.z3result_statistics "rlimit-count" in
+            let r0 = int_of_string <| Some?.v <| HashTable.try_find z3result.z3result_initial_statistics "rlimit-count" in
+            let r1 = int_of_string <| Some?.v <| HashTable.try_find z3result.z3result_statistics "rlimit-count" in
             let used = r1 - r0 in
             div_with_decimals decimals used (convert_rlimit 1)
           with
@@ -351,7 +351,7 @@ let query_info settings (g:goal) z3result =
         this is the time of this goal alone: the wall clock time we could
         measure here covers the whole batch of goals in the round trip. *)
         let time_str =
-          match SMap.try_find z3result.z3result_statistics "time" with
+          match HashTable.try_find z3result.z3result_statistics "time" with
           | Some t -> t
           | None -> "0.00"
         in
@@ -479,8 +479,8 @@ let make_solver_configs
 let killed_result () : ML z3result = {
     z3result_status             = Z3.KILLED;
     z3result_time               = 0;
-    z3result_initial_statistics = SMap.create 0;
-    z3result_statistics         = SMap.create 0;
+    z3result_initial_statistics = HashTable.create 0;
+    z3result_statistics         = HashTable.create 0;
     z3result_log_file           = None;
 }
 

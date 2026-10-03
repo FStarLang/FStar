@@ -32,7 +32,7 @@ module TcUtil = FStarC.TypeChecker.Util
 module U     = FStarC.Syntax.Util
 module N     = FStarC.TypeChecker.Normalize
 module Prof  = FStarC.Custard.Prof
-module SMap  = FStarC.SMap
+module HashTable = FStarC.HashTable
 module Effects = FStarC.Custard.Effects
 
 (* Custard reduces terms nobody wrote for it, and reduction need not
@@ -286,7 +286,7 @@ let is_dropped_binder (env:TcEnv.env) (b:binder) : ML bool =
 
 let is_unit_binder (b:binder) : ML bool = U.is_unit b.binder_bv.sort
 
-let fvar_arity_cache : SMap.t bool = SMap.create 100
+let fvar_arity_cache : HashTable.t string bool = HashTable.create 100
 
 (* The term-level counterpart of [is_type_binder]: a spine whose head no
    declaration describes is filtered with this instead.  Structural, like the
@@ -309,13 +309,13 @@ let rec is_type_term (env:TcEnv.env) (t:term) : ML bool =
        few hundred distinct names -- eighteen seconds of normalizing the
        same handful of types over and over. *)
     let key = Ident.string_of_lid (S.lid_of_fv fv) in
-    (match SMap.try_find fvar_arity_cache key with
+    (match HashTable.try_find fvar_arity_cache key with
      | Some b -> b
      | None ->
        let b = match TcEnv.try_lookup_lid env (S.lid_of_fv fv) with
                | Some ((_, ty), _) -> is_arity env ty
                | None -> false in
-       SMap.add fvar_arity_cache key b; b)
+       HashTable.add fvar_arity_cache key b; b)
   | Tm_app _ -> is_type_term env (fst (U.head_and_args_full t))
   | Tm_abs _ ->
     let bs, body, _ = U.abs_formals t in

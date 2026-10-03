@@ -342,10 +342,10 @@ type __result a =
   | Success of a & cache_t
   | Error of error
 
-module THT = FStarC.Syntax.TermHashTable
+module HashTable = FStarC.HashTable
 type tc_table = {
-  table:THT.hashtable hash_entry;
-  guard_table:THT.hashtable guard_entry;
+  table:HashTable.t term hash_entry;
+  guard_table:HashTable.t term guard_entry;
   counter:ref int //version counter
 }
 
@@ -363,8 +363,8 @@ let equal_term_for_hash t1 t2 =
 let equal_term t1 t2 =
   FStarC.Profiling.profile (fun _ -> Hash.equal_term t1 t2) None "FStarC.TypeChecker.Core.equal_term"
 let table : tc_table = {
-  table = THT.create 1048576; //2^20
-  guard_table = THT.create 1048576; //2^20
+  table = HashTable.create 1048576; //2^20
+  guard_table = HashTable.create 1048576; //2^20
   counter = mk_ref 0
 } 
 type cache_stats_t = { hits : int; misses : int }
@@ -379,8 +379,8 @@ let reset_cache_stats () =
     cache_stats := { hits = 0; misses = 0 }
 let report_cache_stats () = !cache_stats
 let clear_memo_table () = 
-  THT.clear table.table;
-  THT.clear table.guard_table;
+  HashTable.clear table.table;
+  HashTable.clear table.guard_table;
   table.counter := !table.counter + 1
 
 type guard_commit_token = {
@@ -406,11 +406,11 @@ let commit_guard_core (g:guard_commit_token) : ML unit =
     | Some cache ->
       g.guard_cache := None; //invalidate the cache in the token
       FStarC.Syntax.Hash.term_map_fold
-        (fun term hash_entry _ -> THT.insert term hash_entry table.table)
+        (fun term hash_entry _ -> HashTable.add table.table term hash_entry)
         cache.term_map
         ();
       FStarC.Syntax.Hash.term_map_fold
-        (fun term guard_entry _ -> THT.insert term guard_entry table.guard_table)
+        (fun term guard_entry _ -> HashTable.add table.guard_table term guard_entry)
         cache.guard_map
         ()
   )
@@ -720,7 +720,7 @@ let raw_lookup (e:term) : result (option hash_entry) =
   | Some he ->
     return (Some he)
   | None ->
-    return (THT.lookup e table.table)
+    return (HashTable.try_find table.table e)
 
 let raw_lookup_guard (e:term) : result (option guard_entry) =
   let! cache = get_cache() in
@@ -728,7 +728,7 @@ let raw_lookup_guard (e:term) : result (option guard_entry) =
   | Some he ->
     return (Some he)
   | None ->
-    return (THT.lookup e table.guard_table)
+    return (HashTable.try_find table.guard_table e)
 
 let insert_guard (g:env) (guard:typ)
   : result unit
@@ -2162,7 +2162,6 @@ let check_term_top g e topt (must_tot:bool)
                    (show (get_goal_ctr()))
                    (show e) 
                    (show topt));
-    THT.reset_counters table.table;
     reset_cache_stats();
     let ctx = { unfolding_ok = true; no_guard = false; error_context = [("Top", None)] } in
     let res =
@@ -2214,7 +2213,7 @@ let check_term_top g e topt (must_tot:bool)
     in
     if !dbg_Eq
     then (
-      THT.print_stats table.table;
+      Format.print1 "THT Statistics { num_bindings = %s }\n" (show (HashTable.size table.table));
       let cs = report_cache_stats() in
       Format.print2 "Cache_stats { hits = %s; misses = %s }\n"
                      (show cs.hits)

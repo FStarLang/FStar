@@ -164,11 +164,11 @@ let filter_using_facts_from
         a.assumption_fact_ids 
           |> BU.for_some (function Name lid -> TcEnv.should_enc_lid using_facts_from lid | _ -> false)
     in
-    let already_given_map : SMap.t bool = SMap.create 1000 in
-    let add_assumption a = SMap.add already_given_map a.assumption_name true in
+    let already_given_map : HashTable.t string bool = HashTable.create 1000 in
+    let add_assumption a = HashTable.add already_given_map a.assumption_name true in
     let already_given (a:assumption)
     : ML bool
-    = Some? (SMap.try_find already_given_map a.assumption_name) ||
+    = Some? (HashTable.try_find already_given_map a.assumption_name) ||
       already_given_decl a.assumption_name
     in
     let map_decl (d:decl)

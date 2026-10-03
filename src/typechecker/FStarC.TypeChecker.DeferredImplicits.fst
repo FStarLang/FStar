@@ -281,20 +281,20 @@ let solve_deferred_to_tactic_goals env g : ML guard_t =
         Group them so that all implicits with the same associated sigelt
         are in the same bucket *)
     let bucketize (is:list (implicit & sigelt)) : ML (list (implicits & sigelt)) =
-      let map : SMap.t (implicits & sigelt) = SMap.create 17 in
+      let map : HashTable.t string (implicits & sigelt) = HashTable.create 17 in
       List.iter
         (fun (i, s) ->
            match U.lid_of_sigelt s with
            | None -> failwith "Unexpected: tactic without a name"
            | Some l ->
              let lstr = Ident.string_of_lid l in
-             match SMap.try_find map lstr with
-             | None -> SMap.add map lstr ([i], s)
+             match HashTable.try_find map lstr with
+             | None -> HashTable.add map lstr ([i], s)
              | Some (is, s) ->
-               SMap.remove map lstr;
-               SMap.add map lstr (i::is, s))
+               HashTable.remove map lstr;
+               HashTable.add map lstr (i::is, s))
         is;
-        SMap.fold map (fun _ is out -> is::out) []
+        HashTable.fold map (fun _ is out -> is::out) []
     in
     let buckets = bucketize (eqs@more) in
     // Dispatch each bucket of implicits to their respective tactic

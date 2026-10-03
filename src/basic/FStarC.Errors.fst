@@ -447,7 +447,7 @@ let t_set_parse_warn_error,
          - Some list error_setting in case it parses and is interpreted successfully
          - None in case it does not parse or is not intepretable
     *)
-    let error_flags : SMap.t (option (list error_setting)) = SMap.create 10 in
+    let error_flags : HashTable.t string (option (list error_setting)) = HashTable.create 10 in
     (* set_error_flags is called by Options.set_options, parse_cmd_line etc,
        upon parsing the options.
        It parses the current warn_error string and sets the result in the
@@ -466,10 +466,10 @@ let t_set_parse_warn_error,
           match r with
           | None -> raise (Invalid_warn_error_setting "Parsing of warn_error string failed")
           | Some r ->
-            SMap.add error_flags we (Some r);
+            HashTable.add error_flags we (Some r);
             Getopt.Success
         with Invalid_warn_error_setting msg ->
-            (SMap.add error_flags we None;
+            (HashTable.add error_flags we None;
              Getopt.Error ("Invalid --warn_error setting: " ^ msg ^ "\n", "warn_error"))
     in
     (* get_error_flags is called when logging an issue to figure out
@@ -482,7 +482,7 @@ let t_set_parse_warn_error,
        parse didn't succeed *)
     let get_error_flags () =
       let we = Options.warn_error () in
-      match SMap.try_find error_flags we with
+      match HashTable.try_find error_flags we with
       | Some (Some w) -> w
       | _ -> default_settings
     in

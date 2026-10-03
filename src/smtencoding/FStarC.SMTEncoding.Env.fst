@@ -67,15 +67,15 @@ let mk_data_tester env l x = mk_tester (escape (string_of_lid l)) x
 let varops =
     let initial_ctr = 100 in
     let ctr = mk_ref initial_ctr in
-    let new_scope () : ML (SMap.t bool) = SMap.create 100 in (* a scope records all the names used in that scope *)
+    let new_scope () : ML (HashTable.t string bool) = HashTable.create 100 in (* a scope records all the names used in that scope *)
     let scopes = mk_ref [new_scope ()] in
     let mk_unique y =
         let y = escape y in
-        let y = match BU.find_map (!scopes) (fun names -> SMap.try_find names y) with
+        let y = match BU.find_map (!scopes) (fun names -> HashTable.try_find names y) with
                   | None -> y
                   | Some _ -> BU.incr ctr; y ^ "__" ^ (show !ctr) in
         let top_scope = List.hd !scopes in
-        SMap.add top_scope y true; y in
+        HashTable.add top_scope y true; y in
     let new_var pp rn = mk_unique <| (string_of_id pp) ^ "__" ^ (show rn) in
     let new_fvar lid = mk_unique (string_of_lid lid) in
     let next_id () = BU.incr ctr; !ctr in

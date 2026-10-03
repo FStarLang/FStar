@@ -75,7 +75,7 @@ let set_hint_correlator env se =
     //this is useful when we verify the extracted interface alongside
     let tbl = env.qtbl_name_and_index |> snd in
     let get_n lid =
-      let n_opt = SMap.try_find tbl (show lid) in
+      let n_opt = HashTable.try_find tbl (show lid) in
       if Some? n_opt then n_opt |> Option.must else 0
     in
 
@@ -1531,7 +1531,7 @@ let finish_partial_modul should_pop (loading_from_cache:bool) (en:env) (m:modul)
   );
 
   //we can clear the lid to query index table
-  env.qtbl_name_and_index |> snd |> SMap.clear;
+  env.qtbl_name_and_index |> snd |> HashTable.clear;
 
   //pop BUT ignore the old env
 
@@ -1578,7 +1578,7 @@ let already_loaded_iface_decls (en:env) (m:modul) : ML (list (list string & stri
    context snapshot.  Callers that go on to [finish_partial_modul true] need it;
    [load_checked_module] does not, since the env it keeps afterwards is the
    pushed one and the popped one is discarded -- so the snapshot only costs 9
-   [SMap.copy]s per dependency. *)
+   [HashTable.copy]s per dependency. *)
 let load_checked_module_sigelts (push:bool) (en:env) (m:modul) : ML env =
   //This function tries to very carefully mimic the effect of the environment
   //of having checked the module from scratch, i.e., using tc_module below

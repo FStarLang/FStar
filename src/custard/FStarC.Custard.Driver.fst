@@ -22,7 +22,7 @@ open FStarC.Custard.Syntax
 open FStarC.Errors.Msg
 open FStarC.Class.Show
 
-module SMap  = FStarC.SMap
+module HashTable = FStarC.HashTable
 module BU    = FStarC.Util
 module E     = FStarC.Errors
 module Dep     = FStarC.Parser.Dep
@@ -272,24 +272,24 @@ let imported_decls (imports:list (decl & option type_info)) : ML (list decl) =
    A [DLet]'s body is dropped.  A `.cui` is an interface: what a downstream
    unit needs is the name to call and the signature to call it at.  Keeping the
    body would invite exactly the thing separate compilation is here to prevent. *)
-let unit_entries (keys:list (string & string)) (homes:SMap.t string)
+let unit_entries (keys:list (string & string)) (homes:HashTable.t string string)
                  (prog:program) (infos:list (name & type_info))
   : ML (list Unit.entry) =
   (* Both lookups are once per declaration over a list as long as the program,
      which is quadratic in it and was the second-largest phase of extracting
      the compiler (section 12.14).  Indexing them first makes it linear. *)
-  let key_map : SMap.t string = SMap.create 100 in
+  let key_map : HashTable.t string string = HashTable.create 100 in
   (* [tryPick] takes the first match, so a later duplicate must not win. *)
   keys |> List.iter (fun (n', k) ->
-    if None? (SMap.try_find key_map n') then SMap.add key_map n' k);
-  let info_map : SMap.t type_info = SMap.create 100 in
+    if None? (HashTable.try_find key_map n') then HashTable.add key_map n' k);
+  let info_map : HashTable.t string type_info = HashTable.create 100 in
   infos |> List.iter (fun (n', ti) ->
     let k = string_of_name n' in
-    if None? (SMap.try_find info_map k) then SMap.add info_map k ti);
+    if None? (HashTable.try_find info_map k) then HashTable.add info_map k ti);
   let key_of (n:name) : ML (option string) =
-    SMap.try_find key_map (string_of_name n) in
+    HashTable.try_find key_map (string_of_name n) in
   let info_of (n:name) : ML (option type_info) =
-    SMap.try_find info_map (string_of_name n) in
+    HashTable.try_find info_map (string_of_name n) in
   prog |> List.collect (fun d ->
     if has_flag (decl_flags d) Inline || Some? (imported_unit d) then [] else
     (* An external is a hole this unit *leaves*, not a symbol it provides: a
@@ -338,9 +338,9 @@ let unit_entries (keys:list (string & string)) (homes:SMap.t string)
     | None -> []
     | Some k -> [{ Unit.ue_key = k; Unit.ue_decl = d; Unit.ue_type = ti;
                    Unit.ue_home =
-                     SMap.try_find homes (string_of_name (name_of_decl d)) }])
+                     HashTable.try_find homes (string_of_name (name_of_decl d)) }])
 
-let write_unit_iface (st:Extract.state) (homes:SMap.t string)
+let write_unit_iface (st:Extract.state) (homes:HashTable.t string string)
                      (hdr_file:option string) (init:option string)
                      (prog:program) (infos:list (name & type_info))
   : ML unit =
@@ -478,12 +478,12 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
                      Split.run deps (Extract.link_homes st)
                                (List.map fst imports @ prog)))
               else None in
-  let homes : SMap.t string = SMap.create 100 in
+  let homes : HashTable.t string string = HashTable.create 100 in
   let _ = match files with
           | None -> ()
           | Some fs -> fs |> List.iter (fun (m, ds) ->
                          ds |> List.iter (fun d ->
-                           SMap.add homes (string_of_name (name_of_decl d)) m)) in
+                           HashTable.add homes (string_of_name (name_of_decl d)) m)) in
   (* Custard emits one file for the whole program, so -o is unambiguous here,
      unlike in the per-module backends.  Settled before the interface is
      written, because a C unit's interface has to record the *name* of the

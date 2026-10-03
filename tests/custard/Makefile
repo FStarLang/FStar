@@ -39,6 +39,7 @@ NOGREP_Refs += "(0) <- "
 CUSTARD_TESTS += Thunk
 CUSTARD_TESTS += Exceptions
 CUSTARD_TESTS += FunctorHashtbl
+CUSTARD_TESTS += FunctorClass
 CUSTARD_TESTS += LocalRec
 CUSTARD_TESTS += RecEffect
 CUSTARD_TESTS += NewtypeInline
@@ -224,6 +225,12 @@ NOGREP_Exceptions = "FStar_All.try_with" "FStar_All.raise" "Prims.exn"
 GREP_FunctorHashtbl = "= Hashtbl.Make (struct" "FunctorHashtbl_string_tbl.find_opt" \
                       "(Prims.int) FunctorHashtbl_string_tbl.t" "| Not_found ->"
 NOGREP_FunctorHashtbl = "exception Not_found" "type functorHashtbl_ocaml_int" "Obj.t"
+
+# Section 133.5: one instance per key type, whether the application is reached
+# from a type naming the dictionary or from a body specialized on it.
+GREP_FunctorClass   = "FunctorClass_hashtbl_make__0 = Hashtbl.Make (struct" \
+                      "FunctorClass_hashtbl_make__1 = Hashtbl.Make (struct"
+NOGREP_FunctorClass = "FunctorClass_hashtbl_make__2" "Obj.t"
 
 # Local [let rec]s are lambda-lifted to top-level declarations (section 5.10).
 GREP_LocalRec     = "let rec localRec_rev1__aux" "let rec localRec_sum_upto__go" \
