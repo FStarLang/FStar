@@ -1483,8 +1483,28 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
         | Tm_match _ | Tm_abs _ -> true
         | _ -> false
       in
+      let has_definition (t:term) : ML bool =
+        match (U.un_uinst (U.leftmost_head t)).n with
+        | Tm_fvar fv -> Some? (Env.lookup_definition [Env.Unfold delta_constant] g.tcenv fv.fv_name)
+        | Tm_name _ | Tm_bvar _ -> false
+        | _ -> true
+      in
       let rec unfold_to_match (n:int) (t0:term) (t1:term) : ML bool =
         if head_matches t0 t1 then true
+        else if (is_match t0 && is_app t1) || (is_app t0 && is_match t1) then
+          (* One side unfolded to a [match], the other is still an
+             application: unfold that further. If it has no definition
+             (e.g. [p ** q] against [match c with | true -> p ** q | ...],
+             the unfolding of a [let side .. = if c then p ** q else ..]), the
+             equation between it and the [match] is what the SMT solver can
+             prove, by cases, while one between it and the folded side would
+             need the solver to unfold that, and then to relate the
+             abstractions in its body (e.g., [exists* x. ..]) to those of
+             the other side, which are encoded apart. *)
+          let side = if is_app t0 then Left else Right in
+          match (if n = 0 then None else maybe_unfold_side' false side t0 t1) with
+          | Some (t0, t1) -> unfold_to_match (n - 1) (U.unascribe (U.unmeta t0)) (U.unascribe (U.unmeta t1))
+          | None -> not (has_definition (if is_app t0 then t0 else t1))
         else if not (is_app t0 && is_app t1) then
           (* Unfolding reached a [match] or a [fun], e.g. [maybe_close
              a c] against [close a]: relating that to the other side
