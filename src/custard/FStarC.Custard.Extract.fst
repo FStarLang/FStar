@@ -1000,6 +1000,7 @@ let c_decoration_flags (attrs:list term) : ML (list flag) =
           consumer that already marks its protocol constants for one pipeline
           should not have to mark them again for the other. *)
        | "FStar.Attributes.CMacro" -> [CMacro]
+       | "FStar.Attributes.CIfDef" -> [CIfDef]
        | _ -> [])
     | _ -> [])
 

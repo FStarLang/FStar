@@ -1087,6 +1087,9 @@ let krml_flags (fs : list flag) : ML (list K.flag) =
        same [#define] and a consumer's C does not have to know which one
        produced the header. *)
     | CMacro -> [K.Macro]
+    (* karamel's own [IfDef], for the same reason: the flag only means
+       anything to the pass that turns a test of the constant into a [#if]. *)
+    | CIfDef -> [K.IfDef]
     | _ -> [])
 
 let with_typars (env:kenv) (ps : list string) : ML kenv =
