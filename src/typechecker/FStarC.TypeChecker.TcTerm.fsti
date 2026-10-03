@@ -32,6 +32,10 @@ val value_check_expected_typ: env -> term -> either typ comp -> guard_t -> ML (t
 val comp_check_expected_typ: env -> term -> comp -> ML (term & comp & guard_t)
 val check_expected_effect: env -> use_eq:bool -> option comp -> (term & comp) -> ML (term & comp & guard_t)
 
+(* Warn if the SMT pattern of the lemma type [t], if any, misses one of its
+   bound variables or uses theory symbols. TcTerm does this for each arrow it
+   checks in phase 2. *)
+val check_smt_pat: env -> term -> ML unit
 (* Given the letrecs being checked (env.letrecs), the actual binders of a
    recursive function and its expected computation type, return the types of
    the recursive names, refined for termination checking. *)

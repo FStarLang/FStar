@@ -41,6 +41,7 @@ module BU = FStarC.Util //basic util
 module U  = FStarC.Syntax.Util
 module C  = FStarC.Parser.Const
 module Print = FStarC.Syntax.Print
+module Core = FStarC.TypeChecker.Core
 
 open FStarC.Class.Show
 open FStarC.Class.Listlike
@@ -50,6 +51,38 @@ let dbg_LogTypes     = Debug.get_toggle "LogTypes"
 let dbg_Injectivity   = Debug.get_toggle "Injectivity"
 
 let unfold_whnf = N.unfold_whnf' [Env.AllowUnboundUniverses]
+
+(* Phase 2 with Core (see [CoreCheck]): the binders, kinds and constructor
+   types of an inductive are phase 1's elaboration; Core checks them, and they
+   are recorded as they are. Otherwise, TcTerm checks and elaborates them
+   again. These are the two versions of the checks used below. *)
+let tc_binders_p2 (env:env_t) (bs:binders) : ML (binders & env_t & guard_t & universes) =
+  CoreCheck.phase2 env "the binders of this inductive type"
+    (fun () ->
+      let env, us = CoreCheck.check_binders env "the binders of this inductive type" bs in
+      bs, env, Env.trivial_guard, us)
+    (fun () -> TcTerm.tc_binders env bs)
+
+let tc_tparams_p2 (env:env_t) (bs:binders) : ML (binders & env_t & universes) =
+  CoreCheck.phase2 env "the arguments of this constructor"
+    (fun () ->
+      let env', us = CoreCheck.check_binders env "the arguments of this constructor" bs in
+      ignore (List.fold_left (fun env (b:binder) ->
+        CoreCheck.check_smt_patterns env b.binder_bv.sort;
+        Env.push_binders env [b]) env bs);
+      bs, env', us)
+    (fun () -> TcTerm.tc_tparams env bs)
+
+(* A type, with the type of the type. *)
+let tc_type_p2 (env:env_t) (what:string) (t:term) : ML (term & comp & guard_t) =
+  CoreCheck.phase2 env what
+    (fun () ->
+      let eff, k = CoreCheck.compute_term_type env what t in
+      let c = match eff with
+              | Core.E_Total -> S.mk_Total k
+              | Core.E_Ghost -> S.mk_GTotal k in
+      t, c, Env.trivial_guard)
+    (fun () -> TcTerm.tc_tot_or_gtot_term env t)
 
 let check_sig_inductive_injectivity_on_params (tcenv:env_t) (se:sigelt)
   : ML sigelt
@@ -65,7 +98,7 @@ let check_sig_inductive_injectivity_on_params (tcenv:env_t) (se:sigelt)
     in
     let tps, k = SS.open_term tps k in
     let _, k = U.arrow_formals k in //don't care about indices here
-    let tps, env_tps, _, us = TcTerm.tc_binders tcenv tps in
+    let tps, env_tps, _, us = tc_binders_p2 tcenv tps in
     let u_k =
       TcTerm.level_of_type
         env_tps
@@ -109,7 +142,7 @@ let check_sig_inductive_injectivity_on_params (tcenv:env_t) (se:sigelt)
                 env_tps t_tp
           in
           let formals, t = U.arrow_formals t_tp in
-          let _, _, _, u_formals = TcTerm.tc_binders env_tps formals in
+          let _, _, _, u_formals = tc_binders_p2 env_tps formals in
           let inj = BU.for_all (fun u_formal -> u_leq_u_k u_formal) u_formals in                  
           if inj
           then (
@@ -150,7 +183,7 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
  (*open*)let usubst, uvs = SS.univ_var_opening uvs in
          let env, tps, k = Env.push_univ_vars env uvs, SS.subst_binders usubst tps, SS.subst (SS.shift_subst (List.length tps) usubst) k in
          let tps, k = SS.open_term tps k in
-         let tps, env_tps, guard_params, us = tc_binders env tps in
+         let tps, env_tps, guard_params, us = tc_binders_p2 env tps in
 
          (*
           * AR: typecheck k and get the indices and t out
@@ -158,7 +191,7 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
           *     note that t is opened with indices (by U.arrow_formals)
           *)
          let (indices, t), guard =
-           let k, _, g = tc_tot_or_gtot_term env_tps k in
+           let k, _, g = tc_type_p2 env_tps "the type of this inductive type" k in
            let k = N.normalize [Exclude Iota; Exclude Zeta; Eager_unfolding; NoFullNorm; Exclude Beta] env_tps k in
            U.arrow_formals k, Rel.discharge_guard env_tps (Env.conj_guard guard_params g)
          in
@@ -260,10 +293,14 @@ let tc_data (env:env_t) (tcs : list (sigelt & universe))
                 (show arguments)
                 (show result);
 
-         let arguments, env', us = tc_tparams env arguments in
+         let arguments, env', us = tc_tparams_p2 env arguments in
          let type_u_tc = S.mk (Tm_type u_tc) result.pos in
-         let env' = Env.set_expected_typ env' type_u_tc in
-         let result, res_comp = tc_trivial_guard env' result in
+         let result, res_comp =
+           if CoreCheck.enabled env'
+           then let result, c, _ = tc_type_p2 env' "the result type of this constructor" result in
+                result, c
+           else tc_trivial_guard (Env.set_expected_typ env' type_u_tc) result
+         in
          let head, args = U.head_and_args_full result in (* collect nested applications too *)
 
          (*
@@ -600,7 +637,17 @@ let optimized_haseq_scheme (sig_bndle:sigelt) (tcs:list sigelt) (datas:list sige
     let _, t = U.arrow_formals t in
     if U.is_eqtype_no_unrefine t then cond  //AR: if the type is marked as eqtype, you don't get to assume equality of type parameters
     else U.mk_imp guard cond in
-  let phi, _ = tc_trivial_guard env phi in
+  (* With Core, the formula is elaborated as in phase 1 and checked by Core. *)
+  let phi =
+    CoreCheck.phase2 env "the hasEq condition of this inductive type"
+      (fun () ->
+        let env1 = { env with phase1 = true; admit = true } in
+        let phi, _ = tc_trivial_guard env1 phi in
+        let phi = N.remove_uvar_solutions env phi in
+        CoreCheck.check_term env "the hasEq condition of this inductive type" phi S.t_prop false;
+        phi)
+      (fun () -> fst (tc_trivial_guard env phi))
+  in
   let _ =
     //is this inline with verify_module ?
     if Env.should_verify env then
@@ -956,7 +1003,15 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
                    //
                    //  AR: Shouldn't we push opened universes to env0?
                    //
-                   if Rel.teq_nosmt_force env0 inferred expected
+                   let types_agree =
+                     CoreCheck.phase2 env0 "the type of this inductive against its declaration"
+                       (fun () ->
+                         match Core.check_term_equality false true (Env.push_univ_vars env0 univs) inferred expected with
+                         | Inl None -> true
+                         | _ -> false)
+                       (fun () -> Rel.teq_nosmt_force env0 inferred expected)
+                   in
+                   if types_agree
                    then begin
                      {se with sigel=Sig_inductive_typ {lid=l;
                                                        us=univs;

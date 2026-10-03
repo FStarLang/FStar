@@ -12,7 +12,9 @@ A top-level `let` is checked in two phases (`Tc.tc_sig_let`):
    elaborated term, now producing verification conditions.
 
 Phase 2 does not re-run TcTerm; this is the default (see §1). It calls
-`FStarC.TypeChecker.Core` on the phase-1 elaboration instead. Core is a
+`FStarC.TypeChecker.Core` on the phase-1 elaboration instead. This holds for
+every other declaration form too (`val`, `assume`, inductives, effects,
+attributes, ...; see [§2](#declarations-other-than-let)). Core is a
 checker, not an elaborator. It does no unification and no inference of
 implicits. It is also self-contained, which makes it a small, auditable
 basis for a more trustworthy core of F\*. The extension builds on the
@@ -217,6 +219,76 @@ TcTerm also simplifies each precondition as it creates it, i.e. the guard of
 e.g. `normal p` into the `norm [...] p` request it stands for, and a tactic
 that processes the VC may depend on it (`OPLSS2021.ValeVCNoProp`). Core does
 the same (`Rel.simplify_vc`) when it witnesses a refinement of `unit`.
+
+### Declarations other than `let`
+
+Core is the source of truth for every term of a declaration whose checking
+matters for soundness, not only for `let`s. Each of these is elaborated in
+phase 1 as before (unification variables solved and removed), and phase 2
+checks the elaboration with Core instead of running TcTerm (or `Rel`) again.
+The common part lives in `FStarC.TypeChecker.CoreCheck`:
+
+* `CoreCheck.enabled env` says whether this applies: the extension is on and
+  `env` is neither phase 1 nor `admit`.
+* `CoreCheck.phase2 env what core tcterm` runs `core ()`, or `tcterm ()` when
+  the extension is off. In the `warn` and `compare` modes, a failure of Core
+  is reported as Warning 290 and `tcterm ()` runs instead.
+* `check_term`, `compute_term_type`, `universe_of`, `check_binders` and
+  `check_subtyping` call Core and discharge its guard with the SMT solver
+  (after `Rel.simplify_guard`, as in the `let` driver). A structural failure
+  is reported with Core's error code and message, if it has one
+  (`raise_core_error`).
+
+| declaration, or part of it | phase 2 with Core |
+|---|---|
+| `val` (`Sig_declare_typ`) | Core checks that the type scheme phase 1 elaborated is a type (`Tc.check_type_scheme_with_core`). |
+| `assume` (`Sig_assume`) | The same, but the formula must have type `prop`. In this Prims `prop` is an `assume val`, not `Type`, so `universe_of` would reject it. |
+| inductives (`Sig_bundle`, `TcInductive`) | Core checks the parameters and indices of each type, and its kind (`tc_binders_p2`, `tc_type_p2`). For each constructor, it checks the arguments and the result type (`tc_tparams_p2`). It also checks the binders of the injectivity-on-parameters check. A `val` that predeclares an inductive must agree with it; Core decides this (`Core.check_term_equality`), not `Rel.teq_nosmt_force`. The hasEq formula is elaborated in phase 1, and then Core checks it against `prop`. |
+| projectors, discriminators, hasEq axioms | These are generated as `val`s, `let`s and `assume`s, and checked through those paths. |
+| effects (`TcEffect`) | Every combinator is elaborated as before, and Core checks it against its expected type (`check_comb`). Core also computes the universe of a representation (`repr_universe`). |
+| `sub_effect` | The lift is elaborated in a phase-1 `tc_lift` (and `elim_uvars`) before the phase-2 one. That way, the terms the phase-2 one checks with Core are closed. |
+| attributes | They are elaborated in phase 1, and Core then computes their types (`Tc.tc_decl_attributes`). |
+| implementation vs. interface `val` | `check_subsumes_iface_val` asks Core whether the implementation's type is a subtype of the interface's. |
+| `[@@no_subtyping]` | Core checks the type with `use_eq_strict` set. In that mode, `Core.check_relation` checks `EQUALITY` where it would check `SUBTYPING`. TcTerm's `use_eq_strict` rejected nearly every lemma (`int : eqtype` vs `Type`). Core accepts these lemmas, and rejects actual subtyping, e.g. `nat` for `int`. |
+| `%splice` tactics (`Hooks.splice`) | The tactic is elaborated in phase 1. Core then checks it against `dsl_tac_t` (typed splices) or `unit -> Tac decls`. |
+
+Core reports no SMT-pattern warnings (Warning 271: a pattern that misses a
+bound variable, or uses theory symbols). TcTerm emits these for each arrow
+it checks in phase 2 (`TcTerm.check_smt_pat`). So
+`CoreCheck.check_smt_patterns` walks the arrows of what Core checked, i.e.
+`val`/`assume` types, `let` bodies and constructor arguments, and emits
+them. This works because phase 1's elaboration is kept, and that requires
+the unification variables in the patterns of lemma types to be removed. So
+`Normalize.norm_comp` processes the `SMTPAT` flag when `compress_uvars` is
+set. It used to leave the flag alone, and the projector of a constructor
+with a lemma-typed field then failed with Error 334
+(`tests/bug-reports/closed/Phase2CoreLemmaPatterns.fst`).
+
+Constructor arguments are the first terms Core checks in a context with
+local binders that it did not open itself: the arguments before them. This
+exposed a naming bug. Core names the binders it opens deterministically, as
+`max_binder_index + 1`, so that its checks can be memoized. When the last
+binder of the context was the last name `GenSym` produced, the names `GenSym`
+produced next, e.g. when Core opens an arrow with `U.arrow_formals_comp`,
+were Core's own. Core's indices now start at 2^40 (`Core.core_index_base`)
+(`tests/bug-reports/closed/Phase2CoreBinderNames.fst`).
+
+Some checks are deliberately *not* routed through Core, since they are not
+what justifies the soundness of a declaration:
+
+* The typing of a tactic run by the interpreter (`Interpreter.run_tactic_on_ps`)
+  is not routed. Its result is discarded, because the check only makes sure
+  the tactic won't get stuck. What a tactic produces is justified by the
+  goals it discharges (the terms `synth_by_tactic` produces are marked
+  `Tactic_synthesized`, and Core trusts them for that reason).
+* Postprocessing (`postprocess_with`, `postprocess_for_extraction_with`) is
+  not routed. The tactic's result is justified by the equality proof it
+  must produce.
+* Typed splices that claim their result is already checked
+  (`checked = true`, e.g. Pulse) are trusted. This rests on the type of
+  the splice tactic, `dsl_tac_t`, and Core checks that type.
+* `#check` and `#eval`-like pragmas are not routed; they do not contribute
+  to verification.
 
 ## 3. What Core had to learn
 

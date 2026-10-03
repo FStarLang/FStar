@@ -107,6 +107,18 @@ let tc_type_common (env:env) (ts:tscheme) (expected_typ:typ) (r:Range.t) : ML ts
     uvs, t
   else uvs, t |> N.remove_uvar_solutions env |> SS.close_univ_vars uvs
 
+(* Phase 2 of [tc_type_common] with Core: [ts] is phase 1's elaboration, whose
+   universes are generalized, and is recorded as is. It must be a type, or have
+   type [expected], if given. *)
+let check_type_scheme_with_core (env:env) (what:string) (ts:tscheme) (expected:option typ) : ML tscheme =
+  let uvs, t = SS.open_univ_vars (fst ts) (snd ts) in
+  let env = Env.push_univ_vars env uvs in
+  (match expected with
+   | None -> ignore (CoreCheck.universe_of env what t)
+   | Some k -> CoreCheck.check_term env what t k false);
+  CoreCheck.check_smt_patterns env t;
+  ts
+
 let tc_declare_typ (env:env) (ts:tscheme) (r:Range.t) : ML tscheme =
   tc_type_common env ts (U.type_u () |> fst) r
 
@@ -124,8 +136,29 @@ let tc_decl_attributes env se =
     then ([], se.sigattrs)
     else partition ((=) attr_substitute) se.sigattrs
   in
-  let g, other_attrs = tc_attributes env other_attrs in
-  Rel.force_trivial_guard env g;
+  let tcterm () =
+    let g, other_attrs = tc_attributes env other_attrs in
+    Rel.force_trivial_guard env g;
+    other_attrs
+  in
+  (* With Core: the attributes are elaborated by TcTerm without checking
+     their guards, as in phase 1, and then checked by Core. *)
+  let core () =
+    let env1 = { env with phase1 = true; admit = true } in
+    let other_attrs =
+      FStarC.TypeChecker.Core.clear_memo_table ();
+      let g, other_attrs = tc_attributes env1 other_attrs in
+      Rel.force_trivial_guard env1 g;
+      FStarC.TypeChecker.Core.clear_memo_table ();
+      List.map (N.remove_uvar_solutions env) other_attrs
+    in
+    List.iter (fun a -> ignore (CoreCheck.compute_term_type env "this attribute" a)) other_attrs;
+    other_attrs
+  in
+  let other_attrs =
+    if Nil? other_attrs then other_attrs
+    else CoreCheck.phase2 env "the attributes of this declaration" core tcterm
+  in
   {se with sigattrs = blacklisted_attrs @ other_attrs }
 
 let tc_inductive' env ses quals attrs lids =
@@ -472,6 +505,7 @@ let tc_sig_let_phase2_core (env:Env.env) (p1typ:option typ) (e:term)
           | _ -> None
         in
         discharge (fun _ _ -> false) (fun env -> env) abs_body env_u g;
+        CoreCheck.check_smt_patterns env_u lbdef;
         let e = finish_top_level_let env lb lbdef univ_names c Env.trivial_guard user_topt (Some? user_topt) e2 e.pos in
         Inl e
       | Inr err -> Inr err
@@ -499,7 +533,10 @@ let tc_sig_let_phase2_core (env:Env.env) (p1typ:option typ) (e:term)
           List.fold_left (fun env (lb:letbinding) ->
             Env.push_let_binding env lb.lbname (lb.lbunivs, lb.lbtyp)) env lbs' in
         let _, body, _ = U.abs_formals (List.hd lbs').lbdef in
-        discharge is_nest_name push_nest (Some body) env_u g; Inl e
+        discharge is_nest_name push_nest (Some body) env_u g;
+        let env_nest = push_nest env_u in
+        List.iter (fun (lb:letbinding) -> CoreCheck.check_smt_patterns env_nest lb.lbdef) lbs';
+        Inl e
       | Inr err -> Inr err
       end
 
@@ -835,12 +872,21 @@ let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
                          (lid_opt |> Option.must |> string_of_lid)) lb.lbpos
              else let t, _ = U.type_u () in
                   let uvs, lbtyp = SS.open_univ_vars lb.lbunivs lb.lbtyp in
-                  let _, _, g = TcTerm.tc_check_tot_or_gtot_term
-                    (Env.push_univ_vars env' uvs)
-                    lbtyp
-                    t
-                    (Some "checking no_subtype annotation") in
-                    Rel.force_trivial_guard env' g)
+                  let env_u = Env.push_univ_vars env' uvs in
+                  CoreCheck.phase2 env_u "the no_subtyping annotation"
+                    (fun () ->
+                      (* Core's memo table must not answer with the result of
+                         checking the definition, where subtyping was allowed. *)
+                      Core.clear_memo_table ();
+                      ignore (CoreCheck.universe_of env_u "the no_subtyping annotation" lbtyp);
+                      Core.clear_memo_table ())
+                    (fun () ->
+                      let _, _, g = TcTerm.tc_check_tot_or_gtot_term
+                        env_u
+                        lbtyp
+                        t
+                        (Some "checking no_subtype annotation") in
+                        Rel.force_trivial_guard env' g))
     end;
 
     (* 4. Record the type of top-level lets, and log if requested *)
@@ -1102,7 +1148,17 @@ let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
       let se = { se with sigel = Sig_new_effect(ne) } in
       [se], [], env0
 
-  | Sig_sub_effect(sub) ->  //no need to two-phase here, since lifts are already lax checked
+  | Sig_sub_effect(sub) ->
+    (* With Core, the lift is elaborated in phase 1 and checked by Core
+       (see [TcEff.check_comb]); otherwise it is checked once, by TcTerm. *)
+    let sub =
+      if CoreCheck.enabled env && Some? sub.lift then run_phase1 (fun _ ->
+        let sub = TcEff.tc_lift ({ env with phase1 = true; admit = true }) sub r in
+        match (N.elim_uvars env { se with sigel = Sig_sub_effect sub }).sigel with
+        | Sig_sub_effect sub -> sub
+        | _ -> failwith "Impossible: elim_uvars changed a Sig_sub_effect")
+      else sub
+    in
     let sub = TcEff.tc_lift env sub r in
     let se = { se with sigel = Sig_sub_effect sub } in
     [se], [], env
@@ -1138,7 +1194,11 @@ let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
       else uvs, t
     in
 
-    let uvs, t = tc_declare_typ env (uvs, t) se.sigrng in
+    let uvs, t =
+      CoreCheck.phase2 env "this declaration"
+        (fun () -> check_type_scheme_with_core env "this declaration" (uvs, t) None)
+        (fun () -> tc_declare_typ env (uvs, t) se.sigrng)
+    in
     let se = { se with sigel = Sig_declare_typ {lid; us=uvs; t} } in
     [ set_type_constructor_meta env se uvs t ], [], env0
 
@@ -1156,7 +1216,11 @@ let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
       else uvs, t
     in
 
-    let uvs, t = tc_assume env (uvs, t) se.sigrng in
+    let uvs, t =
+      CoreCheck.phase2 env "this assumption"
+        (fun () -> check_type_scheme_with_core env "this assumption" (uvs, t) (Some t_prop))
+        (fun () -> tc_assume env (uvs, t) se.sigrng)
+    in
     [ { se with sigel = Sig_assume {lid; us=uvs; phi=t} }], [], env0
 
   | Sig_splice {is_typed; lids; tac=t} ->
@@ -1421,16 +1485,20 @@ let check_subsumes_iface_val (env:Env.env) (iface_se:sigelt) (impl:sigelt) : ML 
       let _, impl_t = Env.inst_tscheme_with (impl_us, impl_t) (us |> List.map U_name) in
       let env = Env.push_univ_vars env us in
       let env = Env.set_range env (range_of_sigelt impl) in
-      match Rel.get_subtyping_predicate env impl_t iface_t with
-      | None ->
+      let mismatch () =
         raise_error impl Errors.Fatal_InterfaceNotImplementedByModule [
           prefix 2 1 (text "The implementation of") (pp l)
             ^/^ text "does not match its declaration in the interface.";
           prefix 2 1 (text "Interface type:") (pp iface_t);
           prefix 2 1 (text "Implementation type:") (pp impl_t)
         ]
-      | Some g ->
-        Rel.force_trivial_guard env (Env.apply_guard g (S.fvar l None))
+      in
+      CoreCheck.phase2 env "the implementation against its interface"
+        (fun () -> if not (CoreCheck.check_subtyping env impl_t iface_t) then mismatch ())
+        (fun () ->
+          match Rel.get_subtyping_predicate env impl_t iface_t with
+          | None -> mismatch ()
+          | Some g -> Rel.force_trivial_guard env (Env.apply_guard g (S.fvar l None)))
   )
   | _ -> ()
 

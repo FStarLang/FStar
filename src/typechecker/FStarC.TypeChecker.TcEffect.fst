@@ -77,9 +77,15 @@ let repr_app (repr_ts:S.tscheme) (u:univ_name) (a:term) (r:Range.t) : ML term =
   let _, repr = Env.inst_tscheme_with repr_ts [U_name u] in
   S.mk_Tm_app repr [S.as_arg a] r
 
+(* In phase 2, with Core (see [CoreCheck]), [t] is phase 1's elaboration, and
+   is recorded as is. *)
 let check_comb env (us:list univ_name) (expected:term) (t:term) : ML S.tscheme =
   let env = Env.push_univ_vars env us in
-  let t = tc_check_trivial_guard env t expected in
+  let t =
+    CoreCheck.phase2 env "this effect combinator"
+      (fun () -> CoreCheck.check_term env "this effect combinator" t expected true; t)
+      (fun () -> tc_check_trivial_guard env t expected)
+  in
   us, SS.close_univ_vars us t
 
 (* The [total] qualifier promises that computations in the effect terminate.
@@ -116,7 +122,12 @@ let repr_universe env (repr_ts:S.tscheme) (r:Range.t) : ML S.tscheme =
   let env = Env.push_univ_vars env us in
   let bv_a = S.new_bv (Some r) (u_type r u_a) in
   let env = Env.push_bv env bv_a in
-  let u = universe_of env (repr_app repr_ts u_a (S.bv_to_name bv_a) r) in
+  let t = repr_app repr_ts u_a (S.bv_to_name bv_a) r in
+  let u =
+    CoreCheck.phase2 env "the representation of this effect"
+      (fun () -> CoreCheck.universe_of env "the representation of this effect" t)
+      (fun () -> universe_of env t)
+  in
   [u_a], SS.close_univ_vars [u_a] (S.mk (Tm_type u) r)
 
 let tc_eff_decl env (ed:S.eff_decl) (quals:list S.qualifier) (_attrs:list S.attribute) : ML S.eff_decl =
