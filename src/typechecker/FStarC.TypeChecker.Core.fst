@@ -1352,24 +1352,30 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
       maybe_relate_after_unfolding g.tcenv t0 t1 in
     (* As [Rel] when SMT is allowed: a recursive definition (e.g.
        [let rec type_of_nat (n:nat) = bool]) may be unfolded too. *)
-    let unfold_rec_head (t:term) : ML (option term) =
+    (* When [allow_stuck] is false, an unfolding stuck on a match (e.g. of a
+       recursive definition applied to a variable) is rejected: relating it
+       to another match would relate the branches, which unfold the
+       definition again, without end. *)
+    let unfold_rec_head (allow_stuck:bool) (t:term) : ML (option term) =
       match (U.un_uinst (U.leftmost_head t)).n with
       | Tm_fvar fv
           when None? (Env.lookup_nonrec_definition [Env.Unfold delta_constant] g.tcenv fv.fv_name)
             && Some? (Env.lookup_definition [Env.Unfold delta_constant] g.tcenv fv.fv_name) ->
         let t' = N.normalize [Env.UnfoldUntil delta_constant; Env.Weak; Env.HNF; Env.Primops;
                               Env.Beta; Env.Iota; Env.Zeta] g.tcenv t in
-        if TEQ.eq_tm g.tcenv t t' = TEQ.Equal then None else Some t'
+        if TEQ.eq_tm g.tcenv t t' = TEQ.Equal then None
+        else if not allow_stuck && Tm_match? (U.unascribe (U.leftmost_head t')).n then None
+        else Some t'
       | _ -> None
     in
-    let unfold_head_with (allow_rec:bool) (t:term) : ML (option term) =
+    let unfold_head_with (allow_rec:bool) (allow_stuck:bool) (t:term) : ML (option term) =
       match N.maybe_unfold_head g.tcenv t with
       | Some t -> Some t
-      | None -> if allow_rec then unfold_rec_head t else None
+      | None -> if allow_rec then unfold_rec_head allow_stuck t else None
     in
-    let maybe_unfold_side' (allow_rec:bool) side t0 t1
+    let maybe_unfold_side'' (allow_rec:bool) (allow_stuck:bool) side t0 t1
       : ML (option (term & term))
-      = let unfold_head = unfold_head_with allow_rec in
+      = let unfold_head = unfold_head_with allow_rec allow_stuck in
         Profiling.profile (fun _ ->
         match side with
         | Neither -> None
@@ -1395,6 +1401,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
         None
         "FStarC.TypeChecker.Core.maybe_unfold_side"
     in
+    let maybe_unfold_side' (allow_rec:bool) side t0 t1 = maybe_unfold_side'' allow_rec true side t0 t1 in
     let maybe_unfold_side side t0 t1 = maybe_unfold_side' guard_ok side t0 t1
     in
     let maybe_unfold t0 t1
@@ -1520,7 +1527,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
              allowed, e.g. relating [natlt n & unit] to [abs (ICons n INil)]
              for a recursive [abs] while trying to relate the arguments of
              two applications without a guard. *)
-          match maybe_unfold_side' true side t0 t1 with
+          match maybe_unfold_side'' true guard_ok side t0 t1 with
           | Some (t0', t1') ->
             handle_with (no_guard (check_relation g rel t0' t1')) (fun _ -> fallback t0 t1)
           | None -> fallback t0 t1
