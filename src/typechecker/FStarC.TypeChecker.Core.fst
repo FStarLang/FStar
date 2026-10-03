@@ -1133,6 +1133,17 @@ let is_tot_or_ghost_eff (e:eff) : ML bool =
   | ETot | EGhost -> true
   | _ -> false
 
+(* Whether [t], the type of some term, syntactically says that the term is a
+   type or a proposition. *)
+let is_type_or_prop (t:typ) : ML bool =
+  match (Subst.compress (U.unrefine t)).n with
+  | Tm_type _ -> true
+  | _ -> (
+    match (U.un_uinst (Subst.compress (U.unrefine t))).n with
+    | Tm_fvar fv -> S.fv_eq_lid fv PC.prop_lid || S.fv_eq_lid fv PC.eqtype_lid
+    | _ -> false
+  )
+
 (* [e], of type [t_e] and effect [eff], was expected to have effect
    [target_eff] (and type [target_t]): reported as TcTerm's
    [Err.computed_computation_type_does_not_match_annotation], whose computed
@@ -1427,8 +1438,21 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
         | Tm_app _ | Tm_fvar _ | Tm_uinst _ -> true
         | _ -> false
       in
+      let is_match_or_abs (t:term) : ML bool =
+        match (Subst.compress (U.unascribe (U.unmeta t))).n with
+        | Tm_match _ | Tm_abs _ -> true
+        | _ -> false
+      in
       let rec unfold_to_match (n:int) (t0:term) (t1:term) : ML bool =
-        if not (is_app t0 && is_app t1) || head_matches t0 t1 then true
+        if head_matches t0 t1 then true
+        else if not (is_app t0 && is_app t1) then
+          (* Unfolding reached a [match] or a [fun], e.g. [maybe_close
+             a c] against [close a]: relating that to the other side
+             can only produce a guard about the unfoldings, an equation
+             between a [fun] and a [match] which the SMT solver can
+             seldom prove. Treat it as a mismatch, so that the guard is
+             stated on the terms as they are. *)
+          not (is_match_or_abs t0 || is_match_or_abs t1)
         else if n = 0 then false
         else match maybe_unfold_side' false (which_side_to_unfold t0 t1) t0 t1 with
              | None -> false
@@ -1868,7 +1892,10 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
                             Some (S.mk_Tm_app e (snd (U.args_of_binders [x1])) R.dummyRange)
                    else None)
             in
-            check_relation g rel_arg x1.binder_bv.sort x0.binder_bv.sort ;!
+            (* In [g_x1]: [x1] is free in the guard, as the witness, and
+               binders opened while relating the domains (e.g. those of
+               the branches of a [match]) must not reuse its index. *)
+            check_relation g_x1 rel_arg x1.binder_bv.sort x0.binder_bv.sort ;!
             with_context "check_subcomp" None (fun _ ->
               check_relation_comp g_x1 rel_comp c0 c1
             )
@@ -1885,11 +1912,28 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
               else begin
                 let g', (p0, _, body0), (p1, _, body1) = open_branches_eq_pat g (p0, None, body0) (p1, None, body1) in
                 match PatternUtils.raw_pat_as_exp g.tcenv p0 with
-                | Some (_, bvs0) ->
+                | Some (pe, bvs0) ->
                   let bs0 = List.map S.mk_binder bvs0 in
                   // We need universes for the binders
                   let! us = check_binders g bs0 in
-                  with_context "relate_branch" None (fun _ -> with_binders g bs0 us (check_relation g' rel body0 body1))
+                  (* The bodies are related knowing which branch is taken,
+                     e.g. [y:t{x == Unknown u}] when relating
+                     [dsum_type_of_unknown_tag s] to [t]. *)
+                  let! sc_eq =
+                    match! type_of_checked g e0 with
+                    | None -> return None
+                    | Some (_, t_sc) ->
+                      let! u_sc = quietly (universe_of_well_typed_term g t_sc) in
+                      return (Some (U.mk_eq2 u_sc t_sc e0 pe))
+                  in
+                  let g'', hyp =
+                    match sc_eq with
+                    | None -> g', U.t_true
+                    | Some h -> push_hypothesis g' h, h
+                  in
+                  with_context "relate_branch" None (fun _ ->
+                    with_binders g bs0 us
+                      (weaken_branch g' hyp (check_relation g'' rel body0 body1)))
              | _ -> fail_str "raw_pat_as_exp failed in check_equality match rule"
              end
             | _ -> fail_str "Core does not support branches with when"
@@ -2142,6 +2186,13 @@ and term_facts (g:env) (a:term)
     match! type_of_checked g a with
     | None -> return []
     | Some (eff_a, _) when not (is_tot_or_ghost_eff eff_a) -> return []
+    | Some (_, t_a) when is_type_or_prop t_a ->
+      (* [a] is a type or a proposition, e.g. the [p] of [assert p]: what
+         the types of its subterms say is a specification-level fact that
+         the SMT encoding already derives from their typing, and TcTerm never
+         states it. Stating it anyway can derail the solver
+         (everparse's [LowParse.BitFields.uint_set_bitfield_set_bitfield_same_gen]). *)
+      return []
     | Some (_, t_a) ->
       let! sub = app_facts g a in
       (* The result type of a top-level function is stated as a fact only
