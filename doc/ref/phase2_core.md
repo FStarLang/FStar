@@ -167,7 +167,12 @@ The driver is `Tc.tc_sig_let`, together with `Tc.tc_sig_let_phase2_core`.
 Phase 1 behaves differently in one respect. In `TcTerm.check_inner_let`,
 phase 1 normally erases the inferred type of every unannotated *inner* `let`,
 so that phase 2 can infer it again. Under the extension, the inferred type is
-kept, because Core needs a type on every binder.
+kept, because Core needs a type on every binder. That type must therefore be
+right. Rel used to solve a flex variable from lower bounds with different
+base types by joining them, which equates the bases with an SMT guard that
+is typically false. Phase 1 drops that guard, so the wrong type then
+reached Core (everparse's `CDDL.Spec.AST.Elab.Included.Array`). Now the
+lower bounds are joined only if they share a base type.
 
 **Monadic annotations must be right in phase 1.** Under the extension,
 nothing re-elaborates the phase-1 term, so its `Meta_monadic`,
@@ -454,6 +459,66 @@ Core previously served tactics (`core_check`) and only knew `Tot` and
   * This does not apply to subtyping, e.g. `st pre post <: st pre' post'`:
     the unfoldings are related by implications, while the arguments could
     only be related by equations.
+  * The same "arguments first" order applies to an equation whose
+    arguments merely *contain* abstractions, arrows or refinements, e.g.
+    slprops built with `exists*`, or `reveal #(a -> nat) x`. The SMT
+    encoding keys such binders on their free variables, so an equation
+    between the whole terms is seldom provable.
+  * It also applies to the heads marked `[@@unifier_hint_injective]`, e.g.
+    LowParse's `parser k t`, in both relations, as in Rel. Their
+    unfoldings would only equate two refinement types, while the arguments
+    are typically equal by evaluation (everparse's qd test `T5`,
+    `bug-reports/closed/Phase2CoreKindByEval`).
+  * A quantifier-free guard of the unfoldings is taken on its own rather
+    than in a disjunction, e.g. `i < n ==> i < n * m / m` rather than
+    `(i < n ==> i < n * m / m) \/ n == n * m / m`. As a hypothesis of
+    later goals in a split query, a disjunction makes Z3 case-split. On
+    nonlinear goals that turned a 1s proof into a timeout (kuiper's
+    `TensorCore2D.FadeUpdate`). Rel only emits the implication.
+* **Folded or unfolded guards.** Which form of a guard the SMT solver can
+  prove depends on how it encodes the terms. An abstraction or a
+  refinement is encoded as a fresh symbol keyed on its free variables, so
+  two such terms are only provably equal when they are syntactically
+  equal. A definition's equation relates its application to the encoding
+  of its own body. Core therefore picks the form of the guard as follows:
+  * Unfolding that reaches a `match` or a `fun` on one side while the
+    other is still an application gives a guard on the terms as they were.
+    The exception is an application with no definition, e.g. `p ** q`
+    against the `if` that `side n x` unfolds to. That one is related to
+    the `match`, and the SMT solver proves the result by cases
+    (kuiper's `FlashAttention`).
+  * Unfolding that reaches a refinement on one side is kept only if the
+    refinement's base type comes to have the same head as the other side,
+    e.g. `nat` against `int`. Otherwise the guard is on the folded terms,
+    e.g. `pfr f == ct k`, or `sum_cases ts k == t k`. The SMT solver
+    proves these from the equations of `ct`, or from an SMT pattern about
+    `t k` (`bug-reports/closed/Phase2CoreBranchTypeByUnfolding`,
+    `Phase2CoreFoldedRefinements`).
+  * A recursive head is unfolded only if that closes the relation without
+    a guard, as in Rel, or when relating it to a `match`. Unfolding both
+    sides of an equation between two applications of a recursive
+    definition to stuck `match`es relates the branches, which unfold
+    again without end (LowParse's `bitsum'_key_type`).
+* **Residual types of function literals.** Phase 1's unifier may copy a
+  function literal with different residual types, refined or not. The SMT
+  encoding keys the literal's token on its residual type. Core therefore
+  unrefines these types in the guards it emits, so that the copies agree.
+  The exception is a body, or the tail of its `let`s, that is ascribed a
+  refinement type: that type is then intrinsic to the literal, and the
+  same in all its copies
+  (`bug-reports/closed/Phase2CoreAscribedResidual`).
+* **Local `let rec`** in checking mode: the expected type is pushed into
+  the body, which then sees the recursive functions only through their
+  types. The SMT encoding treats them opaquely
+  (`bug-reports/closed/Phase2CoreLetRecTail`).
+* **Ghost arguments.** A ghost argument for a non-informative formal, e.g.
+  a total function for an `a -> GTot b`, is total, as in TcTerm
+  (`bug-reports/closed/Phase2CoreGhostArgNonInfo`).
+* **`match ... returns t`.** A branch is checked against `t` with the
+  *pattern*, as an expression, substituted for the `as` binder, rather than
+  the scrutinee, as in `TcTerm.tc_eqn`
+  (`bug-reports/closed/Phase2CoreReturnsAtPattern`).
+* **Branches after a wildcard** are checked as dead code, as TcTerm does.
 * **Terms synthesized by tactics.** Phase 1 runs the synthesis, since
   nothing re-elaborates its output. A goal may still mention unification
   variables that are solved only after the tactic would have run: in
