@@ -1352,11 +1352,15 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
       maybe_relate_after_unfolding g.tcenv t0 t1 in
     (* As [Rel] when SMT is allowed: a recursive definition (e.g.
        [let rec type_of_nat (n:nat) = bool]) may be unfolded too. *)
-    (* When [allow_stuck] is false, an unfolding stuck on a match (e.g. of a
-       recursive definition applied to a variable) is rejected: relating it
-       to another match would relate the branches, which unfold the
-       definition again, without end. *)
-    let unfold_rec_head (allow_stuck:bool) (t:term) : ML (option term) =
+    (* An unfolding stuck on a match (e.g. of a recursive definition applied
+       to a variable) is only taken when [allow_stuck] and the other side is
+       a match already: relating two such unfoldings would relate their
+       branches, i.e. the definition applied to the pattern variables, which
+       unfold again, without end. *)
+    let is_match (t:term) : ML bool =
+      Tm_match? (Subst.compress (U.unascribe (U.unmeta t))).n
+    in
+    let unfold_rec_head (allow_stuck:bool) (other:term) (t:term) : ML (option term) =
       match (U.un_uinst (U.leftmost_head t)).n with
       | Tm_fvar fv
           when None? (Env.lookup_nonrec_definition [Env.Unfold delta_constant] g.tcenv fv.fv_name)
@@ -1364,24 +1368,24 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
         let t' = N.normalize [Env.UnfoldUntil delta_constant; Env.Weak; Env.HNF; Env.Primops;
                               Env.Beta; Env.Iota; Env.Zeta] g.tcenv t in
         if TEQ.eq_tm g.tcenv t t' = TEQ.Equal then None
-        else if not allow_stuck && Tm_match? (U.unascribe (U.leftmost_head t')).n then None
+        else if is_match (U.leftmost_head t') && not (allow_stuck && is_match other) then None
         else Some t'
       | _ -> None
     in
-    let unfold_head_with (allow_rec:bool) (allow_stuck:bool) (t:term) : ML (option term) =
+    let unfold_head_with (allow_rec:bool) (allow_stuck:bool) (other:term) (t:term) : ML (option term) =
       match N.maybe_unfold_head g.tcenv t with
       | Some t -> Some t
-      | None -> if allow_rec then unfold_rec_head allow_stuck t else None
+      | None -> if allow_rec then unfold_rec_head allow_stuck other t else None
     in
     let maybe_unfold_side'' (allow_rec:bool) (allow_stuck:bool) side t0 t1
       : ML (option (term & term))
-      = let unfold_head = unfold_head_with allow_rec allow_stuck in
+      = let unfold_head other t = unfold_head_with allow_rec allow_stuck other t in
         Profiling.profile (fun _ ->
         match side with
         | Neither -> None
         | Both -> (
-          match unfold_head t0,
-                unfold_head t1
+          match unfold_head t1 t0,
+                unfold_head t0 t1
           with
           | Some t0, Some t1 -> Some (t0, t1)
           | Some t0, None -> Some (t0, t1)
@@ -1389,12 +1393,12 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
           | _ -> None
         )
         | Left -> (
-          match unfold_head t0 with
+          match unfold_head t1 t0 with
           | Some t0 -> Some (t0, t1)
           | _ -> None
         )
         | Right -> (
-          match unfold_head t1 with
+          match unfold_head t0 t1 with
           | Some t1 -> Some (t0, t1)
           | _ -> None
         ))
