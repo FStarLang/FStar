@@ -764,6 +764,20 @@ let no_guard (g:result 'a)
 
 let equatable g t = t |> U.leftmost_head |> Rel.may_relate_with_logical_guard g.tcenv true
 
+(* Whether an argument of an application, or of an application in an argument
+   and so on, binds a variable, e.g. [p ** (exists* x. q x)], or [reveal #(a ->
+   nat) f]. The SMT encoding of such a term names it after its free variables
+   (e.g., as [Tm_abs_<hash> q] or [Tm_arrow_<hash> a]), so an equation between
+   two of them that differ under the binder is beyond the SMT solver, unless
+   they are related argument-wise, under the binder. *)
+let rec args_contain_binders (t:term) : ML bool =
+  let _, args = U.head_and_args_full t in
+  BU.for_some (fun (a, _) ->
+    match (Subst.compress a).n with
+    | Tm_abs _ | Tm_arrow _ | Tm_refine _ -> true
+    | Tm_app _ -> args_contain_binders a
+    | _ -> false) args
+
 (* Either of two checks suffices: if both have guards, their disjunction is
    the guard. The caches of both are then dropped, since their entries would
    claim that their own guards, rather than the disjunction, were emitted. *)
@@ -1804,7 +1818,9 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
             (equatable g t0 || equatable g t1)
           then (
             (* An equation between two applications with abstractions as
-               corresponding arguments, e.g. [on_domain a f == on_domain a g],
+               corresponding arguments (or terms with binders, as arguments
+               of their arguments: see [args_contain_binders]), e.g.
+               [on_domain a f == on_domain a g],
                is beyond the SMT solver without extensionality. As [Rel]
                does, the arguments, and so the bodies of the abstractions,
                may be related under their binder; but that is sufficient
@@ -1824,7 +1840,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
             handle_with 
               (no_guard (compare_head_and_args ()))
               (fun _ ->
-                if abs_args
+                if abs_args || args_contain_binders t0 || args_contain_binders t1
                 then handle_with (args_or_eq ()) (fun _ -> emit_guard t0 t1)
                 else emit_guard t0 t1)
           )
