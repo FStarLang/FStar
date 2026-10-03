@@ -279,8 +279,8 @@ let mk_stt_ghost_comp_post_equiv (g:R.env) (u:R.universe) (a inames pre post1 po
                (RTS.denote_term (mk_stt_ghost_comp u a inames pre post2)) =
   admit ()
 
-let mk_total t = R.C_Total t
-let mk_ghost t = R.C_GTotal t
+let mk_total t = R.mk_tot_comp t
+let mk_ghost t = R.mk_gtot_comp t
 let binder_of_t_q t q = RT.binder_of_t_q t q
 let binder_of_t_q_s (t:R.term) (q:R.aqualv) (s:RT.pp_name_t) = RT.mk_binder s t q
 let bound_var i : R.term = R.pack_ln (R.Tv_BVar (R.pack_bv (RT.make_bv i)))

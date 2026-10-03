@@ -11,7 +11,7 @@ effect {
 
 let lift_PURE_M (a:Type) (f:unit -> a) : repr a = f ()
 
-sub_effect PURE ~> M = lift_PURE_M
+sub_effect Tot ~> M = lift_PURE_M
 
 assume val f (_:unit) : M int
 

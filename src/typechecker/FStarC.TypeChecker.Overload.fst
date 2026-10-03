@@ -100,10 +100,21 @@ let is_base_lid l b =
    have a rigid head, relates nothing: [find_coercion] cannot use it either. *)
 let coercion_source_and_target env f_typ : ML (option (fv & fv)) =
   let f_bs, f_c = U.arrow_formals_comp f_typ in
-  if Nil? f_bs then None
+  (* [find_coercion] applies the candidate to a single *explicit* argument, so
+     the type it coerces from is that of the last explicit binder.  Anything
+     after it is inferred -- a precondition, for instance, is a trailing
+     implicit [squash] binder. *)
+  let rec drop_trailing_implicits (bs:list binder) : list binder =
+    if Nil? bs then bs
+    else if S.is_bqual_implicit_or_meta (List.last bs).binder_qual
+    then drop_trailing_implicits (List.init bs)
+    else bs
+  in
+  let f_bs' = drop_trailing_implicits f_bs in
+  if Nil? f_bs' then None
   else
-    let src = base_head_fv (Env.push_binders env (List.init f_bs))
-                           (List.last f_bs).binder_bv.sort in
+    let src = base_head_fv (Env.push_binders env (List.init f_bs'))
+                           (List.last f_bs').binder_bv.sort in
     let tgt = base_head_fv (Env.push_binders env f_bs) (U.comp_result f_c) in
     match src, tgt with
     | Some src, Some tgt -> Some (src, tgt)

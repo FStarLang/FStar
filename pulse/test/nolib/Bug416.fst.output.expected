@@ -5,7 +5,7 @@
   - The SMT solver could not prove the query.
   - Failed to prove: Bug416.ref 2
   - In context:
-      uu___0: Prims.squash (Bug416.ref 1)
+      Bug416.ref 1
       __: Prims.unit
   - See also Bug416.fst(8,23-8,28)
 

@@ -261,6 +261,13 @@ Guidelines for the changelog:
     (The PulseCore model currently defines `stt_div = stt`; a foundational model
     of divergence is future work.)
 
+  * A destructuring `let` may now carry attributes on the whole pattern:
+    `let [@@@inline_let] (a, b) = e;`. They are put on the binding of `e`,
+    so `inline_let` substitutes `e`, and then its components, into the body,
+    as `[@@inline_let] let (a, b) = e in ...` does in F*. Attributes written
+    on `a` or `b` are still ignored.
+    Fixes https://github.com/FStarLang/FStar/issues/4620.
+
 ## Core typechecker
 
   * Fixes https://github.com/FStarLang/FStar/issues/4401. A top-level definition
@@ -569,6 +576,12 @@ Guidelines for the changelog:
     `assert` in the vocabulary of the goal it is meant to feed, or to spell a
     proof out with `introduce forall ... with ...` instead of relying on
     `Classical.forall_intro`.
+
+  * Fixes a soundness bug in the SMT encoding of local `let rec`
+    expressions. Their uninterpreted symbols now take the expressions' free
+    variables as arguments; previously, the encoding ignored the enclosing
+    environment and could equate results obtained with different captured
+    values, allowing proofs of `False`.
 
 # Version 0.9.7.0
 

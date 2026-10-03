@@ -29,12 +29,11 @@ FSTAR = $(FSTAR_EXE) $(FSTAR_FLAGS)
 all:
 	+$(MAKE) test
 
-# 1. Extract .ml files
+# 1. Verify
 # - generate the F* dependency graph of $(ROOTS) with `fstar --dep full`
 # - verify every F* file in parallel to generate .checked files
-# - extract each .checked file into a .ml file in parallel
 .depend:
-	$(FSTAR) --dep full $(ROOTS) --extract '* -Prims -FStar' -o $@
+	$(FSTAR) --dep full $(ROOTS) -o $@
 
 include .depend
 
@@ -42,27 +41,33 @@ $(CACHE_DIR)/%.checked:
 	$(FSTAR) $< && \
 	touch $@
 
-# 2. Compile all .ml files to .cmx and link them to get an executable
-$(OUT_DIR)/%.ml:
-	$(FSTAR) --codegen OCaml \
-	  --extract_module $(basename $(notdir $(subst .checked,,$<))) \
-	  $(notdir $(subst .checked,,$<)) && \
-	touch $@
-
-%.cmx:
-	$(FSTAR_EXE) --ocamlopt -I $(OUT_DIR) -c $< -o $@
+# 2. Extract, once, for the whole program.
+#
+# Custard compiles a program rather than a module: one run over everything
+# reachable from the entry point, and one OCaml file out.  So there is no
+# per-module extraction rule and no separate compilation step here -- the
+# prerequisite is every .checked file, because the program is allowed to
+# reach any of them.
+#
+# This program has no [main]: it is a module whose top-level effect prints.
+# --custard_entry_module is the request for that -- every top-level definition
+# of the named module is a root and its top-level effects run, which is what
+# --extract_module meant.  A program with a [main] would say
+# --custard_main Test.main instead.
+$(OUT_DIR)/test.ml: $(ALL_CHECKED_FILES) | $(OUT_DIR)
+	$(FSTAR) --codegen Custard --custard_entry_module Test $(ROOTS) -o $@
 
 $(OUT_DIR):
 	mkdir -p $(OUT_DIR)
 
-$(OUT_DIR)/test.exe: $(subst .ml,.cmx,$(ALL_ML_FILES)) | $(OUT_DIR)
-	$(FSTAR_EXE) --ocamlopt -I $(OUT_DIR) -o $(OUT_DIR)/test.exe $(subst .ml,.cmx,$(ALL_ML_FILES))
+$(OUT_DIR)/test.exe: $(OUT_DIR)/test.ml
+	$(FSTAR_EXE) --ocamlopt $< -o $@
 
-# If we don't have OCaml, just extract the ML files.
+# If we don't have OCaml, just extract.
 ifneq (,$(HAS_OCAML))
 test: run
 else
-test: $(ALL_ML_FILES)
+test: $(OUT_DIR)/test.ml
 endif
 
 run: $(OUT_DIR)/test.exe

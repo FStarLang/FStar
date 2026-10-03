@@ -130,7 +130,7 @@ let decr1 (#b:nat) (n : fin (b + 1)) : fin b =
 
 (* we can however *cut* by it, rewrite, and leave the trivial proof to SMT *)
 let decr2 (#s:nat) (m : fin (s + 1)) : fin s =
-    _ by (assume_safe (fun () -> destruct (quote m);
+    _ by (assume_safe (fun _ -> destruct (quote m);
                                dump "71"; let [b1;_] = intros () in apply (`Z);
                                dump "72"; let [b1;b2;_] = intros () in
                                           // TODO: Ugh! We need the squash because z3 cannot

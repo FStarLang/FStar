@@ -58,6 +58,8 @@ instance val e_bv_view       : embedding bv_view
 instance val e_binding       : embedding RD.binding
          val e_attribute     : embedding attribute
 instance val e_binder_view   : embedding binder_view
+instance val e_decreases_order : embedding RD.decreases_order
+instance val e_cflag         : embedding RD.cflag
 instance val e_comp_view     : embedding comp_view
 instance val e_univ_name     : embedding univ_name
 instance val e_subst_elt     : embedding subst_elt

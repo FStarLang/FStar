@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/base:ubuntu24.04
+FROM mcr.microsoft.com/devcontainers/base:ubuntu26.04
 
 # Base dependencies: opam
 # CI dependencies: jq (to identify F* branch)
@@ -22,7 +22,8 @@ RUN apt-get update \
       libffi-dev \
       tmux \
       rustup \
-      dotnet-sdk-8.0 \
+      libicu-dev \
+      dotnet-sdk-10.0 \
     && apt-get clean -y
 # FIXME: libgmp-dev should be installed automatically by opam,
 # but it is not working, so just adding it above.

@@ -87,19 +87,22 @@ and r_freevars_opt (#a:Type0) (o:option a) (f: (x:a { x << o } -> FStar.Set.set 
 
 and r_freevars_comp (c:R.comp)
   : FStar.Set.set var
-  = match R.inspect_comp c with
-    | R.C_Total t
-    | R.C_GTotal t ->
-      r_freevars t
-    | R.C_Lemma pre post pats ->
-      r_freevars pre `Set.union`
-      r_freevars post `Set.union`
-      r_freevars pats
-    | R.C_Eff us eff_name res pre post decrs ->
-      r_freevars res `Set.union`
-      r_freevars pre `Set.union`
-      r_freevars post `Set.union`
-      r_freevars_terms decrs
+  = let cv = R.inspect_comp c in
+    r_freevars cv.R.result_typ `Set.union`
+    r_freevars_flags cv.R.flags
+
+and r_freevars_flags (fs:list R.cflag)
+  : FStar.Set.set var
+  = match fs with
+    | [] -> Set.empty
+    | f::fs -> r_freevars_flag f `Set.union` r_freevars_flags fs
+
+and r_freevars_flag (f:R.cflag)
+  : FStar.Set.set var
+  = match f with
+    | R.SMTPAT t -> r_freevars t
+    | R.DECREASES (R.Decreases_lex ts) -> r_freevars_terms ts
+    | R.DECREASES (R.Decreases_wf rel e) -> r_freevars rel `Set.union` r_freevars e
 
 and r_freevars_args (ts:list R.argv)
   : FStar.Set.set var
@@ -213,18 +216,22 @@ let rec r_ln' (e:R.term) (n:int)
 
 and r_ln'_comp (c:R.comp) (i:int)
   : Tot bool (decreases c)
-  = match R.inspect_comp c with
-    | R.C_Total t
-    | R.C_GTotal t -> r_ln' t i
-    | R.C_Lemma pre post pats ->
-      r_ln' pre i &&
-      r_ln' post i &&
-      r_ln' pats i
-    | R.C_Eff us eff_name res pre post decrs ->
-      r_ln' res i &&
-      r_ln' pre i &&
-      r_ln' post i &&
-      r_ln'_terms decrs i
+  = let cv = R.inspect_comp c in
+    r_ln' cv.R.result_typ i &&
+    r_ln'_flags cv.R.flags i
+
+and r_ln'_flags (fs:list R.cflag) (i:int)
+  : Tot bool (decreases fs)
+  = match fs with
+    | [] -> true
+    | f::fs -> r_ln'_flag f i && r_ln'_flags fs i
+
+and r_ln'_flag (f:R.cflag) (i:int)
+  : Tot bool (decreases f)
+  = match f with
+    | R.SMTPAT t -> r_ln' t i
+    | R.DECREASES (R.Decreases_lex ts) -> r_ln'_terms ts i
+    | R.DECREASES (R.Decreases_wf rel e) -> r_ln' rel i && r_ln' e i
 
 and r_ln'_args (ts:list R.argv) (i:int)
   : Tot bool (decreases ts)
@@ -366,15 +373,18 @@ let rec freevars_st (t:st_term)
       freevars term
     | Tm_Abs { b; ascription; body } ->
       freevars b.binder_ty ++
+      freevars_list b.binder_attrs ++
       freevars_st body ++
       freevars_ascription ascription
     | Tm_ST { t; args } -> freevars t ++ freevars_terms args
     | Tm_Bind { binder; head; body } ->
       freevars binder.binder_ty ++
+      freevars_list binder.binder_attrs ++
       freevars_st head ++
       freevars_st body
     | Tm_TotBind { binder; head; body } ->
       freevars binder.binder_ty ++
+      freevars_list binder.binder_attrs ++
       freevars head ++
       freevars_st body
     | Tm_If { b; then_; else_; pre; post } ->
@@ -402,11 +412,13 @@ let rec freevars_st (t:st_term)
 
     | Tm_WithLocal { binder; initializer; body } ->
       freevars binder.binder_ty ++
+      freevars_list binder.binder_attrs ++
       freevars_term_opt initializer ++
       freevars_st body
 
     | Tm_WithLocalArray { binder; initializer; length; body } ->
       freevars binder.binder_ty ++
+      freevars_list binder.binder_attrs ++
       freevars_term_opt initializer ++
       freevars length ++
       freevars_st body
@@ -713,11 +725,22 @@ let rec subst_term_list (t:list term) (ss:subst)
 let open_term_list' (t:list term) (v:term) (i:index)
   : Tot (list term) = subst_term_list t [ RT.DT i v ]
 
+(* Binder attributes may mention variables bound further out (e.g.
+   [@@@rename_let ("positionAfter" ^ name)], where [name] is a parameter of the
+   enclosing [fn]), so they must be substituted just like the binder type.
+   NB: unlike in the standalone Pulse repo, [binder_attrs] is a plain [list term]
+   here, so this is just [subst_term_list]; no sealing is involved. *)
+let subst_binder_attrs (attrs:list term) (ss:subst)
+  : Tot (list term)
+  = subst_term_list attrs ss
+
 let subst_binder b ss = 
-  {b with binder_ty=subst_term b.binder_ty ss}
+  {b with binder_ty=subst_term b.binder_ty ss;
+          binder_attrs=subst_binder_attrs b.binder_attrs ss}
 
 let open_binder b v i = 
-  {b with binder_ty=open_term' b.binder_ty v i}
+  {b with binder_ty=open_term' b.binder_ty v i;
+          binder_attrs=subst_binder_attrs b.binder_attrs [ RT.DT i v ]}
 
 let rec subst_term_pairs (t:list (term & term)) (ss:subst)
   : Tot (list (term & term))

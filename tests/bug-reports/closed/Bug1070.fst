@@ -14,4 +14,4 @@ let rec f' a x n =
 let rec f1 (a:Type u#a) = 0
 let f2 (a:Type u#a) = 0
 let rec f3 (a:Type u#a) : _ = 0
-let rec f4 (a:Type u#a) : Tot u#0 _ = 0
+let rec f4 (a:Type u#a) : Tot _ = 0

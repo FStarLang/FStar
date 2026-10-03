@@ -1,7 +1,7 @@
 module Bug3120b
 
 (* This _will_ fail, but it should fail gracefully instead of exploding. *)
-[@@expect_failure [187]]
+[@@expect_failure [147]]
 effect {
   IOw (a : Type u#asd)
   with {

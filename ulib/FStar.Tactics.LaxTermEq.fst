@@ -176,27 +176,9 @@ and binder_eq b1 b2 =
 and comp_eq c1 c2 =
   let cv1 = inspect_comp c1 in
   let cv2 = inspect_comp c2 in
-  match cv1, cv2 with
-  | C_Total t1, C_Total t2
-  | C_GTotal t1, C_GTotal t2 ->
-    term_eq t1 t2
-
-  | C_Lemma pre1 post1 pat1, C_Lemma pre2 post2 pat2 ->
-    if not <| term_eq pre1 pre2 then false else
-    if not <| term_eq post1 post2 then false else
-    term_eq pat1 pat2
-
-  | C_Eff us1 ef1 t1 _pre1 _post1 dec1, C_Eff us2 ef2 t2 _pre2 _post2 dec2 ->
-    // Ignoring universes
-    (* if not <| list_eq univ_eq us1 us2 then false else *)
-    if not <| (ef1 = ef2) then false else
-    if not <| term_eq t1 t2 then false else
-    // Ignore effect args
-    (* if not <| list_eq arg_eq args1 args2 then false else *)
-    (* if not <| list_eq term_eq dec1 dec2 then false else *)
-    true
-
-  | _ -> false
+  (* Ignoring the flags, and [source_effect_name], which is presentation only. *)
+  if not <| (cv1.effect_name = cv2.effect_name) then false else
+  term_eq cv1.result_typ cv2.result_typ
 
 and br_eq br1 br2 =
   //pair_eq pat_eq term_eq br1 br2

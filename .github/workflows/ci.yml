@@ -24,8 +24,6 @@ jobs:
           submodules: true
 
       - uses: ./.github/actions/setup-fstar-deps
-        with:
-          dotnet: true
 
       - name: Run CI
         run: make -skj$(nproc) ci

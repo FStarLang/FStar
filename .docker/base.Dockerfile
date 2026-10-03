@@ -69,9 +69,9 @@ RUN { type -p curl >/dev/null || sudo apt-get install curl -y ; } \
 # Repository install may incur some (transient?) failures (see for instance https://github.com/dotnet/sdk/issues/27082 )
 # So, we use manual install instead, from https://docs.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#manual-install
 ENV DOTNET_ROOT /home/opam/dotnet
-RUN wget -nv https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.419/dotnet-sdk-8.0.419-linux-x64.tar.gz && \
+RUN wget -nv https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.401/dotnet-sdk-10.0.401-linux-x64.tar.gz && \
     mkdir -p $DOTNET_ROOT && \
-    tar xf dotnet-sdk-8.0.419-linux-x64.tar.gz -C $DOTNET_ROOT && \
+    tar xf dotnet-sdk-10.0.401-linux-x64.tar.gz -C $DOTNET_ROOT && \
     echo 'export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools' | tee --append $HOME/.profile $HOME/.bashrc $HOME/.bash_profile && \
     rm -f dotnet-sdk*.tar.gz
 

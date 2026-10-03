@@ -20,8 +20,6 @@ let no_position : Lexing.position =
 let no_location : Location.t =
   {loc_start = no_position; loc_end = no_position; loc_ghost = false}
 
-let no_attrs: attributes = []
-
 let loc = no_location
 
 
@@ -105,11 +103,6 @@ let is_try_with_ident x = List.exists (fun tw -> x = tw) try_with_idents
 let min_of_int_const = Z.neg (Z.pow (Z.of_int 2) 30)
 let max_of_int_const = Z.sub (Z.pow (Z.of_int 2) 30) Z.one
 
-let maybe_guts (s:string) : string =
-  (* Plugin codegen does not qualify module references with any namespace;
-     the fstarcompiler library is unwrapped, so its modules are top-level. *)
-  s
-
 (* mapping functions from F* ML AST to Parsetree *)
 let build_constant_expr (c: mlconstant) : expression =
   let stdint_module (s:FStarC_Const.signedness) (w:FStarC_Const.width) : string =
@@ -174,7 +167,8 @@ let build_constant_pat (c: mlconstant): pattern =
   | MLC_Float v  -> ppat_constant ~loc @@ Pconst_float (string_of_float v, None)
   | MLC_Char v   -> ppat_constant ~loc @@ Pconst_integer (string_of_int v, None)
   | MLC_String v -> ppat_constant ~loc @@ Pconst_string (v, no_location, None)
-  | MLC_Int _ ->
+  (* Two arguments; see [MLP_CTor] in [build_pattern]. *)
+  | MLC_Int (_, _) ->
     failwith "PrintML: unexpected integer pattern, should have become a pattern guard"
 
 let rec build_pattern (p: mlpattern): pattern =
@@ -182,7 +176,10 @@ let rec build_pattern (p: mlpattern): pattern =
   | MLP_Wild -> ppat_any ~loc
   | MLP_Const c -> build_constant_pat c
   | MLP_Var sym -> ppat_var ~loc (mk_sym sym)
-  | MLP_CTor args -> build_constructor_pat args
+  (* Spelled out rather than bound as one variable: F* declares [MLP_CTor] with
+     two arguments, and Custard emits it that way, while the ML extraction packs
+     them into a tuple.  This pattern means the same thing under both. *)
+  | MLP_CTor (path, ps) -> build_constructor_pat (path, ps)
   | MLP_Branch l ->
      (match l with
       | [pat] -> build_pattern pat
@@ -302,7 +299,8 @@ let rec build_expr (e: mlexpr): expression =
    | MLE_Coerce (e, _, _) ->
       let r = pexp_ident ~loc (mk_lident "Obj.magic") in
       pexp_apply ~loc r [(Nolabel, build_expr e)]
-   | MLE_CTor args -> build_constructor_expr args
+   (* Two arguments; see [MLP_CTor] above. *)
+   | MLE_CTor (path, es) -> build_constructor_expr (path, es)
    | MLE_Seq args -> build_seq args
    | MLE_Tuple l -> pexp_tuple ~loc (map build_expr l)
    | MLE_Record (path, _, l) ->
@@ -440,9 +438,6 @@ let build_ty_manifest (b: mltybody): core_type option=
   | MLTD_DType l -> None
 
 
-let skip_type_defn (current_module:string) (type_name:string) :bool =
-  current_module = "FStar_Pervasives" && type_name = "option"
-
 let type_metadata (md : metadata): attributes option =
   let deriving = BatList.filter_map (function
     | PpxDerivingShow | PpxDerivingShowConstant _ -> Some "show"
@@ -509,7 +504,8 @@ let build_module1 (m1: mlmodule1): structure_item option =
      let recf = match flav with | Rec -> Recursive | NonRec -> Nonrecursive in
      let bindings = map (build_binding true recf) mllbs in
      Some (pstr_value ~loc recf bindings)
-  | MLM_Exn exn -> Some (pstr_exception ~loc (build_exn exn))
+  (* Two arguments; see [MLP_CTor] in [build_pattern]. *)
+  | MLM_Exn (sym, tys) -> Some (pstr_exception ~loc (build_exn (sym, tys)))
   | MLM_Top expr ->
       let lb = mk_top_mllb expr in
       let binding = build_binding true Nonrecursive lb in

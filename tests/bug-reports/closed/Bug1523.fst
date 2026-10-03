@@ -17,5 +17,5 @@ module Bug1523
 
 assume val f : #a:Type -> list a -> list a
 
-[@@(expect_failure [66])]
+(* Once resolved only by an error; [f]'s implicit is now determined. *)
 let _ =  assert (l_Forall (fun i -> f i == f i)) // just what (forall i. f i == f i) desugars to

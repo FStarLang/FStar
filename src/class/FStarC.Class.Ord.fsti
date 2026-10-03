@@ -25,8 +25,14 @@ val sort
   (xs : list a)
   : ML (list a)
 
+(* [f] is [@@@monomorphize] for Custard (doc/ref/custard.md 3.2).  [sort_by]
+   builds an [ord a] dictionary out of [f] and hands it to [sort], whose
+   instance binder is monomorphized, so [f] has to be known at specialization
+   time for [sort] to be; and marking [f] promotes [a] with it (rule 5), which
+   is what [sort]'s own type parameter needs.  A closure argument is fine:
+   section 3.2c specializes on its skeleton and passes its free variables. *)
 val sort_by
-  (#a:Type) (f : a -> a -> ML order)
+  (#a:Type) ([@@@monomorphize] f : a -> a -> ML order)
   (xs : list a)
   : ML (list a)
 

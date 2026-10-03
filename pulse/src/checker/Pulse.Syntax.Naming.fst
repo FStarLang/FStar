@@ -157,16 +157,19 @@ let rec close_open_inverse_st'  (t:st_term)
 
     | Tm_Abs { b; ascription; body } ->
       close_open_inverse' b.binder_ty x i;
+      close_open_inverse_list' b.binder_attrs x i;
       close_open_inverse_st' body x (i + 1); 
       close_open_inverse_ascription' ascription x (i + 1)
 
     | Tm_Bind { binder; head; body } ->
       close_open_inverse' binder.binder_ty x i;
+      close_open_inverse_list' binder.binder_attrs x i;
       close_open_inverse_st' head x i;
       close_open_inverse_st' body x (i + 1)
 
     | Tm_TotBind { binder; head; body } ->
       close_open_inverse' binder.binder_ty x i;
+      close_open_inverse_list' binder.binder_attrs x i;
       close_open_inverse' head x i;
       close_open_inverse_st' body x (i + 1)
 
@@ -205,11 +208,13 @@ let rec close_open_inverse_st'  (t:st_term)
 
     | Tm_WithLocal { binder; initializer; body } ->
       close_open_inverse' binder.binder_ty x i; 
+      close_open_inverse_list' binder.binder_attrs x i;
       close_open_inverse_opt' initializer x i;
       close_open_inverse_st' body x (i + 1)
 
     | Tm_WithLocalArray { binder; initializer; length; body } ->
       close_open_inverse' binder.binder_ty x i; 
+      close_open_inverse_list' binder.binder_attrs x i;
       close_open_inverse_opt' initializer x i;
       close_open_inverse' length x i;
       close_open_inverse_st' body x (i + 1)

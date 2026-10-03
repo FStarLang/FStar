@@ -1,6 +1,5 @@
 * Error 19 at IfaceNoSmtLeak.fst(5,35-5,37):
-  - Subtyping check failed
-  - Expected type _: Prims.unit{q x} got type Prims.unit
+  - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: IfaceNoSmtLeak.q x
   - In context: x: Prims.int

@@ -27,7 +27,10 @@ let rec coerce (#a:Type) (ss:list (s:(list a){Cons? s}))
   | [] -> let x : list (list a) = Nil #(list a) in admit(); x (* F* can't prove that      Nil #(list a) === Nil #(s:(list a){Cons? s}) *)
   | h::t -> 
             //assert(eq2 (list (list a)) (list (s:(list a){Cons? s}))); // -- at least this one fails
-            ignore(coerce t); assert(eq2 (list (list a)) (list (s:(list a){Cons? s}))); // -- but it works as soon as we call coerce
+            // -- but it works as soon as we call coerce.  It has to be let-bound:
+            // [ignore]'s implicit argument would be solved to the unrefined
+            // [list (list a)], discarding [coerce]'s postcondition.
+            let _u = coerce t in assert(eq2 (list (list a)) (list (s:(list a){Cons? s})));
             // this is in fact inconsistent 
             //assert(False); -- but F* needs a little help to prove it
             assert (Cons? (Cons?.hd (transport (list (list a)) (list (s:(list a){Cons? s})) [[]])));

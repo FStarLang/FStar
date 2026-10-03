@@ -64,8 +64,6 @@ jobs:
             .github/actions
             .scripts
       - uses: ./FStar/.github/actions/setup-fstar-deps
-        with:
-          dotnet: true
 
       - name: Install ramon
         run: |

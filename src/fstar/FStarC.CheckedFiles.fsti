@@ -72,6 +72,22 @@ val scan_deps_and_check_cache_validity (file:string) : ML (option (list string &
 
 val load_module_from_cache: TcEnv.env -> string -> ML (option tc_result)
 
+(** Why the most recent [load_module_from_cache] returned [None].
+
+    The reason is computed either way, but it is only *reported* when the
+    module is not one the user named on the command line --- a warning saying
+    "will recheck" is noise when rechecking is what was asked for.  Under
+    [--codegen] with cross-module inlining, rechecking is not what happens:
+    the caller raises instead, and then the suppressed reason is the only
+    thing that would have told the user which dependence went stale.  So the
+    caller can ask for it.
+
+    The answer is not keyed on the module asked about, and deliberately so:
+    the module that fails to load is usually not the one that went stale.  A
+    checked file is invalidated by a *dependence*, so the file worth naming is
+    the one the failure is about, which the message carries. *)
+val last_load_failure: unit -> ML (option string)
+
 val store_module_to_cache:
     TcEnv.env ->
     file_name: string ->

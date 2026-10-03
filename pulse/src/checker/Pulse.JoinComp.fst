@@ -181,7 +181,10 @@ let rec close_post x_ret dom_g g1 (bs1:env_bindings) (post:slprop)
         match T.inspect_ln hd with
         | Tv_FVar fv ->
           if inspect_fv fv = R.squash_qn
-          then close_post tl (maybe_elim_rewrites_to (n, p) post)
+          then
+            (* [y] is a hypothesis, but the post may still mention [y] itself;
+               quantify it in that case so that it does not escape. *)
+            close_post tl (maybe_close (n,y,ty) (maybe_elim_rewrites_to (n, p) post))
           else close_post tl (maybe_close (n,y,ty) post)
         | _ -> close_post tl (maybe_close (n,y,ty) post)
       )

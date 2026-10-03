@@ -130,6 +130,10 @@ let fstar_refl_aqualv           = mk_refl_data_lid_as_term "aqualv"
 let fstar_refl_aqualv_fv        = mk_refl_data_lid_as_fv   "aqualv"
 let fstar_refl_comp_view        = mk_refl_data_lid_as_term "comp_view"
 let fstar_refl_comp_view_fv     = mk_refl_data_lid_as_fv   "comp_view"
+let fstar_refl_cflag            = mk_refl_data_lid_as_term "cflag"
+let fstar_refl_cflag_fv         = mk_refl_data_lid_as_fv   "cflag"
+let fstar_refl_decreases_order    = mk_refl_data_lid_as_term "decreases_order"
+let fstar_refl_decreases_order_fv = mk_refl_data_lid_as_fv   "decreases_order"
 let fstar_refl_term_view        = mk_refl_data_lid_as_term "term_view"
 let fstar_refl_term_view_fv     = mk_refl_data_lid_as_fv   "term_view"
 let fstar_refl_pattern          = mk_refl_data_lid_as_term "pattern"
@@ -302,10 +306,26 @@ let ref_Tv_Unknown = fstar_refl_data_const "Tv_Unknown"
 let ref_Tv_Unsupp  = fstar_refl_data_const "Tv_Unsupp"
 
 (* comp_view *)
-let ref_C_Total   = fstar_refl_data_const "C_Total"
-let ref_C_GTotal  = fstar_refl_data_const "C_GTotal"
-let ref_C_Lemma   = fstar_refl_data_const "C_Lemma"
-let ref_C_Eff     = fstar_refl_data_const "C_Eff"
+let ref_Mk_comp_view =
+  let lid = fstar_refl_data_lid "Mkcomp_view" in
+  let attr = Record_ctor (fstar_refl_data_lid "comp_view", [
+                            Ident.mk_ident ("effect_name", Range.dummyRange);
+                            Ident.mk_ident ("result_typ", Range.dummyRange);
+                            Ident.mk_ident ("flags", Range.dummyRange);
+                            Ident.mk_ident ("source_effect_name", Range.dummyRange);
+                            ]) in
+  let fv = lid_as_fv lid (Some attr) in
+  { lid = lid;
+    fv = fv;
+    t = fv_to_tm fv }
+
+(* cflag *)
+let ref_SMTPAT    = fstar_refl_data_const "SMTPAT"
+let ref_DECREASES = fstar_refl_data_const "DECREASES"
+
+(* decreases_order *)
+let ref_Decreases_lex = fstar_refl_data_const "Decreases_lex"
+let ref_Decreases_wf  = fstar_refl_data_const "Decreases_wf"
 
 (* inductives & sigelts *)
 let ref_Sg_Let         = fstar_refl_data_const "Sg_Let"

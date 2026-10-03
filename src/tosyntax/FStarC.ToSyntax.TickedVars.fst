@@ -124,10 +124,6 @@ let rec go_term (env : DsEnv.env) (t: term) : ML (m unit) =
 
   | Project (t, _) -> go_term env t
 
-  | Attributes cattributes ->
-      (* attributes should be closed but better safe than sorry *)
-      iterM (go_term env) cattributes
-
   | CalcProof (rel, init, steps) ->
     go_term env rel;!
     go_term env init;!

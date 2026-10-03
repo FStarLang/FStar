@@ -11,11 +11,11 @@
       uu___0: Prims.unit
       i: Pulse.Lib.Reference.ref Prims.int
       meas: Prims.unit
-      __: Prims.squash Prims.l_True
-      __: Prims.squash (meas == ())
-      __: Prims.squash Prims.l_True
+      Prims.l_True
+      meas == ()
+      Prims.l_True
       __anf0: Prims.int
-      __: Prims.squash (Pulse.Lib.Core.rewrites_to_p __anf0 0)
+      Pulse.Lib.Core.rewrites_to_p __anf0 0
       __: Prims.unit
   - See also WhileInvPreservation.fst(15,4-15,13)
 

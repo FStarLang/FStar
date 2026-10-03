@@ -29,7 +29,7 @@ assume effect M1
 assume effect M2
 assume effect M3
 
-assume sub_effect PURE ~> M1
+assume sub_effect Tot ~> M1
 
 (*
  * We build:

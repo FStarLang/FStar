@@ -235,7 +235,7 @@ let qualifier_compat g r (q:option qualifier) (q':T.aqualv) : T.Tac unit =
 let check_qual g (q:qualifier) : T.Tac qualifier =
   match q with
   | Meta t ->
-    let ty = (`(unit -> T.Tac u#0 unit)) in
+    let ty = (`(unit -> T.Tac unit)) in
     // let t = T.pack (T.Tv_AscribedT t ty None false) in
     let t =
       (* This makes sure to elaborate the meta qualifier so it
@@ -263,8 +263,11 @@ let rec rebuild_abs (g:env) (t:st_term) (annot:T.term)
       qualifier_compat g b.binder_ppname.range q b'.qual;
       let ty = b'.sort in
       let comp = R.inspect_comp c' in
-      match comp with
-      | T.C_Total res_ty -> (
+      if not (T.is_tot_comp comp) then (
+        Env.fail g (Some body.range)
+                   (Printf.sprintf "Unexpected effectful arrow %s" (T.term_to_string annot))
+      ) else (
+        let res_ty = comp.T.result_typ in (
         if Tm_Abs? body.term
         then (
           let b = mk_binder_with_attrs ty b.binder_ppname b.binder_attrs in
@@ -296,11 +299,7 @@ let rec rebuild_abs (g:env) (t:st_term) (annot:T.term)
             let asc = { asc with elaborated = Some c } in
             { t with term = Tm_Abs { b; q; ascription=asc; body }}              
         )
-      )
-      | _ ->
-        Env.fail g (Some t.range) 
-            (Printf.sprintf "Unexpected type of abstraction: %s"
-                (T.term_to_string annot))
+      ))
     )
 
     | _ -> 
@@ -552,7 +551,9 @@ let rec check_abs_core
 
       let ppname_ret = mk_ppname_no_range "_fret" in
       let r  = check g' pre_opened post ppname_ret body_opened  in
-      let (| post, r |) : (ph:post_hint_opt g' & checker_result_t g' pre_opened ph) =
+      (* The [PostHint? ph] refinement has to be stated: the join of the match
+         below no longer records what both branches establish. *)
+      let (| post, r |) : (ph:post_hint_opt g' { PostHint? ph } & checker_result_t g' pre_opened ph) =
         match post with
         | PostHint _ -> (| post, r |)
         | _ ->

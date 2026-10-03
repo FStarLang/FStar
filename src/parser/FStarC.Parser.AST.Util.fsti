@@ -59,6 +59,14 @@ type extension_lang_parser = {
     ML (either error_message (list decl)))
 }
 
+(* A one-field record is represented by that field (Custard, section 5.5), so
+   the constructor is not a name the hand-written OCaml realization of the
+   parser can spell.  It builds one through this instead, which extracts to
+   the same thing under either scheme. *)
+val mk_extension_lang_parser
+    (f : (contents:string -> p:FStarC.Range.t -> ML (either error_message (list decl))))
+  : extension_lang_parser
+
 val as_open_namespaces_and_abbrevs (ls:list decl) : ML open_namespaces_and_abbreviations
 val register_extension_lang_parser (extension_name:string) (parser:extension_lang_parser) : ML unit
 val lookup_extension_lang_parser (extension_name:string) : ML (option extension_lang_parser)

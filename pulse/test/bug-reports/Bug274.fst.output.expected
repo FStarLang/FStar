@@ -2,8 +2,8 @@
   - Expected failure:
   - Tactic failed
   - Cannot prove any of:
+      trade (*?u119*)_ (*?u120*)_
       trade (*?u120*)_ (*?u121*)_
-      trade (*?u121*)_ (*?u122*)_
   - In the context:
       trade p q
       trade q r
@@ -12,8 +12,8 @@
   - Expected failure:
   - Tactic failed
   - Cannot prove any of:
+      trade (*?u119*)_ (*?u120*)_
       trade (*?u120*)_ (*?u121*)_
-      trade (*?u121*)_ (*?u122*)_
   - In the context:
       trade p q
       trade q r
@@ -22,8 +22,8 @@
   - Expected failure:
   - Tactic failed
   - Cannot prove any of:
-      trade (*?u140*)_ (*?u141*)_
-      (*?u140*)_
+      trade (*?u139*)_ (*?u140*)_
+      (*?u139*)_
   - In the context:
       p
       trade p q

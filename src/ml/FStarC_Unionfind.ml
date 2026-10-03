@@ -11,8 +11,6 @@ and 'a data =
 
 let pa_create n v = mk_ref (PArray (Array.make n v))
 
-let pa_init n f = mk_ref (PArray (Array.init n f))
-
 let rec pa_rerootk t k = match !t with
   | PArray _ -> k ()
   | PDiff (i, v, t') ->

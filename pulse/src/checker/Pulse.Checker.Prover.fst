@@ -180,8 +180,9 @@ let get_fvs g (se: R.sigelt) : T.Tac (list (R.fv & list R.univ_name & R.term)) =
 let build_plems_from_lemma (g: penv) (kind: plem_kind_t) (se: R.sigelt) : T.Tac (list plem) =
   T.concatMap (fun (fv, uvs, typ) ->
     let args, ty = R.collect_arr_ln_bs typ in
-    match R.inspect_comp ty with
-    | R.C_Total ty | R.C_GTotal ty -> (
+    let cv = R.inspect_comp ty in
+    if not (R.is_tot_or_gtot_comp cv) then [] else (
+    let ty = cv.R.result_typ in
       match Pulse.Readback.readback_comp ty with
       | Some (C_STGhost inames { pre; res; post }) ->
         if T.term_eq res tm_unit then
@@ -205,8 +206,7 @@ let build_plems_from_lemma (g: penv) (kind: plem_kind_t) (se: R.sigelt) : T.Tac 
         else
           []
       | _ -> []
-    )
-    | _ -> [])
+    ))
   (get_fvs g.penv_env se)
 
 let build_plems (g: penv) : T.Tac plems =
@@ -807,18 +807,16 @@ let binder_is_mkey (b:R.binder) : bool =
 
 let binder_is_pred (b:R.binder) : option nat =
   let doms, c = R.collect_arr_ln (R.inspect_binder b).sort in
-  match R.inspect_comp c with
-  | R.C_Total res | R.C_GTotal res ->
-    if T.term_eq tm_slprop res then Some (List.length doms) else None
-  | _ -> None
+  let cv = R.inspect_comp c in
+  if R.is_tot_or_gtot_comp cv && T.term_eq tm_slprop cv.R.result_typ
+  then Some (List.length doms) else None
 
 let rec has_any_mkeys_in_type (ty: R.term) : bool =
   match R.inspect_ln ty with
   | R.Tv_Arrow b c ->
     if binder_is_mkey b then true else
-    (match R.inspect_comp c with
-    | R.C_Total res | R.C_GTotal res -> has_any_mkeys_in_type res
-    | _ -> false)
+    (let cv = R.inspect_comp c in
+     if R.is_tot_or_gtot_comp cv then has_any_mkeys_in_type cv.R.result_typ else false)
   | _ -> false
 
 let fv_eq (a b: R.fv) : bool =
@@ -869,9 +867,8 @@ and teq_slprop_args (g: env) (cfg: teq_cfg) (h_ty: term) (a b: list R.argv) (use
       match R.inspect_ln h_ty with
       | R.Tv_Arrow h_ty_b h_ty_c ->
         let h_ty =
-          match R.inspect_comp h_ty_c with
-          | R.C_Total res | R.C_GTotal res -> res
-          | _ -> tm_unknown in
+          let cv = R.inspect_comp h_ty_c in
+          if R.is_tot_or_gtot_comp cv then cv.R.result_typ else tm_unknown in
         h_ty, binder_is_pred h_ty_b, binder_is_mkey h_ty_b
       | _ ->
         tm_unknown, None, true in
@@ -1026,9 +1023,8 @@ let build_duplicable_fvs (g: env) : T.Tac (list R.name) =
   let insts = T.concatMap (get_fvs g) insts in
   let insts = T.concatMap (fun (_, us, ty) ->
     let params, ty = R.collect_arr_ln ty in
-    let ty = match R.inspect_comp ty with
-      | R.C_Total ty | R.C_GTotal ty -> ty
-      | _ -> tm_unknown in
+    let ty = let cv = R.inspect_comp ty in
+             if R.is_tot_or_gtot_comp cv then cv.R.result_typ else tm_unknown in
     match T.hua ty with
     | Some (h, _, [pred, _]) ->
       if R.inspect_fv h = duplicable_lid then (
@@ -1073,15 +1069,15 @@ let mk_penv (g: env) (allow_amb: bool) : T.Tac (pg:penv { pg.penv_env == g }) =
 let rec apply_with_uvars_aux (g:env) (t:typ) (v:term) (acc:list term) : T.Tac (typ & term & list term) =
   match R.inspect_ln_unascribe t with
   | R.Tv_Arrow b c -> (
-    match R.inspect_comp c with
-    | R.C_Total res | R.C_GTotal res ->
+    let cv = R.inspect_comp c in
+    if not (R.is_tot_or_gtot_comp cv) then t, v, acc else
+    let res = cv.R.result_typ in
       let { ppname; qual; sort } = R.inspect_binder b in
       let u = RU.new_implicit_var "value for argument in automatically applied ghost lemma"
         (T.range_of_term v) (elab_env g) sort false in
       let v = R.pack_ln <| R.Tv_App v (u, qual) in
       let res = open_term' res u 0 in
-      apply_with_uvars_aux g res v (u :: acc)
-    | _ -> t, v, acc)
+      apply_with_uvars_aux g res v (u :: acc))
   | _ -> t, v, acc
 
 let apply_with_uvars (g:env) (t:typ) (v:term) : T.Tac (typ & term) =

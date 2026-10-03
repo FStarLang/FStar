@@ -113,6 +113,7 @@ val no_fstar_stubs_ns : list mlsymbol -> ML (list mlsymbol)
 val no_fstar_stubs : mlpath -> ML mlpath
 
 (** ML record name for an F* pair of type name and field name *)
+val try_lookup_record_field_name: uenv -> (lident & ident) -> ML (option mlpath)
 val lookup_record_field_name: uenv -> (lident & ident) -> ML mlpath
 
 (*** Extending environment *)

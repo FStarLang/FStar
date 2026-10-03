@@ -663,10 +663,8 @@ let mutuals_unused_in_type (mutuals:list lident) t : ML _ =
     L.for_all (fun b -> ok b.binder_bv.sort) bs
   and ok_comp c : ML bool =
     match c.n with
-    | Total t -> ok t
-    | GTotal t -> ok t
     | Comp c ->
-      ok c.result_typ && ok c.comp_pre && ok c.comp_post
+      ok c.result_typ
   in
   ok t
 
@@ -857,7 +855,6 @@ let rec ty_strictly_positive_in_type (env:env)
      let check_comp =
        U.is_pure_or_ghost_comp c ||
        (c |> U.comp_effect_name
-          |> Env.norm_eff_name env
           |> Env.lookup_effect_quals env
           |> List.contains S.TotalEffect) in
      if not check_comp
@@ -876,30 +873,17 @@ let rec ty_strictly_positive_in_type (env:env)
           and that it is strictly positive in the return type");
        let sbs, c = U.arrow_formals_comp in_type in
        let return_type = FStarC.Syntax.Util.comp_result c in
-       (* Look under the binder of the postcondition: its (null) binder is
-          annotated with the result type, which would otherwise make every
-          computation type look like it mentions the mutuals. *)
-       let post_body =
-         match (SS.compress (U.comp_post c)).n with
-         | Tm_abs {body} -> body
-         | _ -> U.comp_post c in
-       let effect_args = [U.comp_pre c |> S.as_arg; post_body |> S.as_arg] in
+       (* A computation type carries no logical content any more, so it has
+          no effect arguments; there is nothing to check but the binders and
+          the result type.  (See
+          https://github.com/FStarLang/FStar/issues/4252, which was about
+          effect arguments.) *)
        let ty_lid_not_to_left_of_arrow =
             L.for_all 
                (fun ({binder_bv=b}) -> mutuals_unused_in_type mutuals b.sort)
                sbs
        in
-       (* We should also consider the effect arguments for positivity. See
-       https://github.com/FStarLang/FStar/issues/4252. We simply forbid the
-       effect args from mentioning the type. We do not track positivity
-       of effect definitions or mark arguments as positive. If this becomes
-       a limitation, we should revisit. *)
-       let mutuals_unused_in_effect_args =
-            L.for_all
-               (fun (a, _) -> mutuals_unused_in_type mutuals a)
-               effect_args
-       in
-       if ty_lid_not_to_left_of_arrow && mutuals_unused_in_effect_args
+       if ty_lid_not_to_left_of_arrow
        then (
          (* and is strictly positive also in the return type  *)
          ty_strictly_positive_in_type 

@@ -18,9 +18,9 @@ module FStarC.Effect
 
 assume effect ALL
 
-assume sub_effect PURE ~> ALL
-assume sub_effect GHOST ~> ALL
-assume sub_effect DIV ~> ALL
+assume sub_effect Tot ~> ALL
+assume sub_effect GTot ~> ALL
+assume sub_effect Div ~> ALL
 
 effect All (a:Type) = ALL a
 

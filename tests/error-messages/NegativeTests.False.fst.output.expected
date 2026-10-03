@@ -1,12 +1,10 @@
-* Info at NegativeTests.False.fst(23,27-23,32):
+* Info at NegativeTests.False.fst(23,13-23,33):
   - Expected failure:
-  - Subtyping check failed
-  - Expected type f: (_: Prims.unit -> Prims.bool){f () = true}
-    got type x: Prims.unit -> Prims.bool
+  - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
   - In context: uu___: Prims.unit
-  - See also NegativeTests.False.fst(18,31-18,42)
+  - See also NegativeTests.False.fst(18,31-21,68)
 
 * Info at NegativeTests.False.fst(30,42-30,66):
   - Expected failure:

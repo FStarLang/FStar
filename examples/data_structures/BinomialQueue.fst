@@ -468,12 +468,22 @@ let find_max_emp_repr_l (l:priq)
   match l with
   | [] -> ()
   | _ ->
-    (* The postcondition is vacuous here: l is non-empty and compact, so its
-       last tree is Internal and contributes a key to (keys l), which
-       contradicts (keys l) being a permutation of the empty multiset. *)
     last_key_in_keys l;
-    assert (Internal? (L.last l));
-    assert False
+    //
+    // This branch is vacuous: `l` is a non-empty forest, so its last tree
+    // is `Internal` and `keys l` contains that tree's key, contradicting
+    // `repr_l l ms_empty`.
+    //
+    // The `S.mem` step below used to be found by the solver unaided. A
+    // prop-valued definition -- `repr_l` is one -- no longer gets a term
+    // equation `f x == body`, only the formula equation
+    // `Valid (f x) <==> body`, so the chain from `S.subset` down to
+    // `S.mem` now costs an E-matching step the solver does not take here;
+    // it reports `incomplete quantifiers` rather than running out of
+    // budget, and no rlimit helps. Naming the membership fact restores it.
+    //
+    let Internal _ k _ = L.last l in
+    assert (S.mem k (keys l).ms_elems)
 
 let rec find_max_emp_repr_r (l:forest)
   : Lemma

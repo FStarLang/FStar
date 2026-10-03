@@ -1,4 +1,4 @@
-* Info at NegativeTests.Set.fst(28,9-28,30):
+* Info at NegativeTests.Set.fst(28,2-28,8):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
@@ -6,8 +6,9 @@
       FStar.TSet.mem NegativeTests.Set.b
         (FStar.TSet.singleton NegativeTests.Set.a)
   - In context: u: Prims.unit
+  - See also NegativeTests.Set.fst(28,9-28,30)
 
-* Info at NegativeTests.Set.fst(33,9-33,67):
+* Info at NegativeTests.Set.fst(33,2-33,8):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
@@ -17,8 +18,9 @@
             (FStar.TSet.singleton NegativeTests.Set.b))
         (FStar.TSet.singleton NegativeTests.Set.a)
   - In context: u: Prims.unit
+  - See also NegativeTests.Set.fst(33,9-33,67)
 
-* Info at NegativeTests.Set.fst(38,9-38,52):
+* Info at NegativeTests.Set.fst(38,2-38,8):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
@@ -27,6 +29,7 @@
         (FStar.TSet.union (FStar.TSet.singleton NegativeTests.Set.a)
             (FStar.TSet.singleton NegativeTests.Set.b))
   - In context: u: Prims.unit
+  - See also NegativeTests.Set.fst(38,9-38,52)
 
 * Warning 240 at NegativeTests.Set.fst(35,4-35,16):
   - NegativeTests.Set.should_fail3 is declared but no definition was found

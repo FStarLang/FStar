@@ -1,0 +1,12 @@
+# Parser functions of CborBoundarySlice.fst, mutated by
+# ../cbor-corpus/mutants.py.  Anything not listed here -- the per-vector
+# writes above all -- is test data, not parser.
+in_range
+arg_is_minimal
+arg_width
+peek
+rem
+take_be
+utf8_take
+items
+validate

@@ -181,18 +181,58 @@ let notAscription (tv:term_view) : bool =
   not (Tv_AscribedT? tv) && not (Tv_AscribedC? tv)
 
 // Very basic for now
+(* A [decreases] clause: either a lexicographically ordered list of terms, or a
+   well-founded relation together with a term.  Mirrors
+   [FStarC.Syntax.Syntax.decreases_order]. *)
 noeq
-type comp_view =
-  | C_Total     : ret:typ -> comp_view
-  | C_GTotal    : ret:typ -> comp_view
-  | C_Lemma     : term -> term -> term -> comp_view // pre, post, patterns
-  | C_Eff       : us:universes ->
-                  eff_name:name ->
-                  result:term ->
-                  pre:term ->
-                  post:term ->
-                  decrs:list term ->
-                  comp_view
+type decreases_order =
+  | Decreases_lex : list term -> decreases_order
+  | Decreases_wf  : term -> term -> decreases_order
+
+(* Flags on a computation type.  Mirrors [FStarC.Syntax.Syntax.cflag]. *)
+noeq
+type cflag =
+  | SMTPAT    : term -> cflag   (* a [Lemma]'s SMT patterns, as a list literal *)
+  | DECREASES : decreases_order -> cflag
+
+(* A computation type.  This mirrors [FStarC.Syntax.Syntax.comp_typ] field for
+   field: an effect name, a result type and some flags, and nothing else.
+
+   In particular a computation type carries no logical content.  A precondition
+   is an implicit [squash] binder on the arrow, so it is not part of a [comp] at
+   all; a postcondition is a refinement of [result_typ].  There are no
+   weakest-precondition transformers and no effect indices.  A client that
+   wants to read a specification back in the shape a user wrote it must
+   inspect the arrow's binders for the trailing implicit [squash] one, and
+   [result_typ] for its refinement.  See doc/ref/simplified_effect_system.md. *)
+noeq
+type comp_view = {
+  effect_name : name;
+  result_typ  : typ;
+  flags       : list cflag;
+  (* The effect name as it was *written*.  An effect abbreviation is a bare
+     alias of one effect name for another ([effect Lemma = Tot]), and the
+     desugarer resolves it away, so [effect_name] is always the *root* effect.
+     The name the user wrote is kept here, for presentation only; it equals
+     [effect_name] whenever no abbreviation was used. *)
+  source_effect_name : name;
+}
+
+(* The two effects the desugarer gives to an arrow with no effect annotation.
+   An effect abbreviation is resolved away before it reaches a [comp], so these
+   are root effect names and can be compared literally. *)
+let tot_effect_name  : name = ["Prims"; "Tot"]
+let gtot_effect_name : name = ["Prims"; "GTot"]
+
+let mk_comp_view (eff:name) (res:typ) : comp_view =
+  { effect_name = eff; result_typ = res; flags = []; source_effect_name = eff }
+
+let mk_tot_comp  (res:typ) : comp_view = mk_comp_view tot_effect_name res
+let mk_gtot_comp (res:typ) : comp_view = mk_comp_view gtot_effect_name res
+
+let is_tot_comp  (cv:comp_view) : bool = cv.effect_name = tot_effect_name
+let is_gtot_comp (cv:comp_view) : bool = cv.effect_name = gtot_effect_name
+let is_tot_or_gtot_comp (cv:comp_view) : bool = is_tot_comp cv || is_gtot_comp cv
 
 (* Constructor for an inductive type. See explanation in
 [Sg_Inductive] below. *)

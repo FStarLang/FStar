@@ -3,17 +3,22 @@ module Bug3213b
 let forall_elim (#a: Type) (p: (a -> GTot prop)) (x:a)
   : Lemma (requires forall (x: a). p x) (ensures p x) = ()
 
-[@@expect_failure [12; 34]]
+[@@expect_failure [12]]
 let also_bad ()
   : Lemma (forall (f : (nat -> Type0)). (forall (x : nat). f x) ==> (fun (_:nat) -> True) == f) = ()
 
-[@@expect_failure [12; 34]]
+[@@expect_failure [12]]
 let also_bad_assumed ()
   : Lemma (forall (f : (nat -> Type0)). (forall (x : nat). f x) ==> (fun (_:nat) -> True) == f) = admit()
   
 let eq_fun (f1 f2 : 'a -> 'b) (x : 'a) (_ : squash (f1 == f2)) : Lemma (f1 x == f2 x) = ()
   
-[@@expect_failure [19; 19; 19]]
+// dedup_vc (FStarC.TypeChecker.Rel) collapses syntactically identical proof
+// obligations, and the two `forall_elim` calls below raise the *same* one: the
+// precondition `forall (x:a). p x` does not mention the explicit argument, so
+// the obligations for `f0'` and `f1'` are literally the same formula. They are
+// now reported once, hence two errors rather than three.
+[@@expect_failure [19; 19]]
 let bad2 () =
   let f0 : int -> prop = fun x -> True in
   let f1 : int -> prop = fun x -> x >= 0 in

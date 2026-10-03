@@ -98,6 +98,12 @@ ghost fn mask_mext u#a (#t: Type u#a) (arr: array t) #f #v #mask (mask': nat -> 
   requires pure (forall (i: nat). i < Seq.length v ==> (mask i <==> mask' i))
   ensures pts_to_mask arr #f v mask'
 
+(* If the mask is empty, the permission can be rewritten arbitrarily. *)
+ghost fn mask_empty_perm u#a (#t: Type u#a) (arr: array t) #f #v #mask (f': perm)
+  requires pts_to_mask arr #f v mask
+  requires pure (forall (i: nat). i < Seq.length v ==> ~(mask i))
+  ensures pts_to_mask arr #f' v mask
+
 ghost fn mask_ext u#a (#t: Type u#a) (arr: array t) #f #v #mask v' (mask': nat -> prop)
   requires pts_to_mask arr #f v mask
   requires pure (forall (i: nat). i < Seq.length v ==> (mask i <==> mask' i))

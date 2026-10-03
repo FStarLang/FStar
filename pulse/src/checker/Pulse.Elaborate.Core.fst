@@ -83,7 +83,7 @@ let simple_arr (t1 t2 : R.term) : R.term =
            ppname = Sealed.seal "x";
            qual = R.Q_Explicit;
            attrs = [] } in
-  R.pack_ln (R.Tv_Arrow b (R.pack_comp (R.C_Total t2)))
+  R.pack_ln (R.Tv_Arrow b (R.pack_comp (R.mk_tot_comp t2)))
 
 let elab_st_sub (g:env) (c1:comp) (c2:comp)
    : Tot (t:R.term

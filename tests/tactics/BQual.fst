@@ -11,7 +11,7 @@ let _ = assert True by begin
     attrs = [];
   }
   in
-  let t : term = pack (Tv_Arrow b (C_Total (`int))) in
+  let t : term = pack (Tv_Arrow b (mk_tot_comp (`int))) in
   let s = term_to_string t in
   if term_to_string t <> "$xyz: int -> int" then
     fail ("unexpected: " ^ s)

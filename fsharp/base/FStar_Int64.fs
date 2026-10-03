@@ -18,18 +18,12 @@ let ones = System.Int64.MaxValue
 
 (* Reexport add, plus aliases *)
 let add           : t -> t -> t = (+)
-let add_underspec : t -> t -> t = (+)
-let add_mod       : t -> t -> t = (+)
 
 (* Reexport sub, plus aliases *)
 let sub           : t -> t -> t = (-)
-let sub_underspec : t -> t -> t = (-)
-let sub_mod       : t -> t -> t = (-)
 
 (* Reexport mul, plus aliases *)
 let mul           : t -> t -> t = (*)
-let mul_underspec : t -> t -> t = (*)
-let mul_mod       : t -> t -> t = (*)
 
 (* Just reexport these *)
 let div       : t -> t -> t = (/)
@@ -41,9 +35,7 @@ let lognot    :      t -> t = (~~~)
 let to_string : t -> string = string
 let of_string : string -> t = System.Int64.Parse
 
-let to_string_hex (x : t) = "0x" + (x.ToString("X"))
 
-let to_string_hex_pad (i : t) = i.ToString("X16")
 
 (* The shifts take a uint32 argument, so we need to convert *)
 let shift_right (n : t) (i : System.UInt32) : t = n >>> (int32 i)
@@ -58,5 +50,3 @@ let lt  (a:t) (b:t) : bool = a < b
 let lte (a:t) (b:t) : bool = a <= b
 
 (* NOT Constant time operators *)
-let eq_mask  (a:t) (b:t) : t = if a  = b then ones else zero
-let gte_mask (a:t) (b:t) : t = if a >= b then ones else zero

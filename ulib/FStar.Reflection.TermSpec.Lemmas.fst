@@ -153,20 +153,36 @@ and open_close_inverse'_spec_comp (i:nat) (c:comp_spec { ln_spec'_comp c (i - 1)
                  (open_with_var_spec x i)
                == c)
       (decreases c)
-  = match c with
-    | Cs_Total t
-    | Cs_GTotal t -> open_close_inverse'_spec i t x
+  = let Cs _ res flags = c in
+    open_close_inverse'_spec i res x;
+    open_close_inverse'_spec_flags i flags x
 
-    | Cs_Lemma pre post pats ->
-      open_close_inverse'_spec i pre x;
-      open_close_inverse'_spec i post x;
-      open_close_inverse'_spec i pats x
+and open_close_inverse'_spec_flags (i:nat) (fs:list cflag_spec { ln_spec'_flags fs (i - 1) }) (x:var)
+  : Lemma
+      (ensures subst_flags_spec
+                 (subst_flags_spec fs [ NDs x i ])
+                 (open_with_var_spec x i)
+               == fs)
+      (decreases fs)
+  = match fs with
+    | [] -> ()
+    | f::fs ->
+      open_close_inverse'_spec_flag i f x;
+      open_close_inverse'_spec_flags i fs x
 
-    | Cs_Eff _ _ res pre post decrs ->
-      open_close_inverse'_spec i res x;
-      open_close_inverse'_spec i pre x;
-      open_close_inverse'_spec i post x;
-      open_close_inverse'_spec_terms i decrs x
+and open_close_inverse'_spec_flag (i:nat) (f:cflag_spec { ln_spec'_flag f (i - 1) }) (x:var)
+  : Lemma
+      (ensures subst_flag_spec
+                 (subst_flag_spec f [ NDs x i ])
+                 (open_with_var_spec x i)
+               == f)
+      (decreases f)
+  = match f with
+    | Fs_SMTPAT t -> open_close_inverse'_spec i t x
+    | Fs_DECREASES (Ds_lex ts) -> open_close_inverse'_spec_terms i ts x
+    | Fs_DECREASES (Ds_wf rel e) ->
+      open_close_inverse'_spec i rel x;
+      open_close_inverse'_spec i e x
 
 and open_close_inverse'_spec_args (i:nat)
                                   (ts:list (term_spec & aqualv_spec) { ln_spec'_args ts (i - 1) })
@@ -341,20 +357,40 @@ and close_open_inverse'_spec_comp (i:nat)
                  [ NDs x i ]
                == c)
       (decreases c)
-  = match c with
-    | Cs_Total t
-    | Cs_GTotal t -> close_open_inverse'_spec i t x
+  = let Cs _ res flags = c in
+    close_open_inverse'_spec i res x;
+    close_open_inverse'_spec_flags i flags x
 
-    | Cs_Lemma pre post pats ->
-      close_open_inverse'_spec i pre x;
-      close_open_inverse'_spec i post x;
-      close_open_inverse'_spec i pats x
+and close_open_inverse'_spec_flags (i:nat)
+                                   (fs:list cflag_spec)
+                                   (x:var { ~(x `Set.mem` freevars_flags_spec fs) })
+  : Lemma
+      (ensures subst_flags_spec
+                 (subst_flags_spec fs (open_with_var_spec x i))
+                 [ NDs x i ]
+               == fs)
+      (decreases fs)
+  = match fs with
+    | [] -> ()
+    | f::fs ->
+      close_open_inverse'_spec_flag i f x;
+      close_open_inverse'_spec_flags i fs x
 
-    | Cs_Eff _ _ res pre post decrs ->
-      close_open_inverse'_spec i res x;
-      close_open_inverse'_spec i pre x;
-      close_open_inverse'_spec i post x;
-      close_open_inverse'_spec_terms i decrs x
+and close_open_inverse'_spec_flag (i:nat)
+                                  (f:cflag_spec)
+                                  (x:var { ~(x `Set.mem` freevars_flag_spec f) })
+  : Lemma
+      (ensures subst_flag_spec
+                 (subst_flag_spec f (open_with_var_spec x i))
+                 [ NDs x i ]
+               == f)
+      (decreases f)
+  = match f with
+    | Fs_SMTPAT t -> close_open_inverse'_spec i t x
+    | Fs_DECREASES (Ds_lex ts) -> close_open_inverse'_spec_terms i ts x
+    | Fs_DECREASES (Ds_wf rel e) ->
+      close_open_inverse'_spec i rel x;
+      close_open_inverse'_spec i e x
 
 and close_open_inverse'_spec_args (i:nat)
                                   (args:list (term_spec & aqualv_spec))
@@ -634,18 +670,32 @@ and close_comp_with_not_free_var_spec (c:comp_spec) (x:var) (i:nat)
       (requires ~ (Set.mem x (freevars_comp_spec c)))
       (ensures subst_comp_spec c [ NDs x i ] == c)
       (decreases c)
-  = match c with
-    | Cs_Total t
-    | Cs_GTotal t -> close_with_not_free_var_spec t x i
-    | Cs_Lemma pre post pats ->
-      close_with_not_free_var_spec pre x i;
-      close_with_not_free_var_spec post x i;
-      close_with_not_free_var_spec pats x i
-    | Cs_Eff _ _ t pre post decrs ->
-      close_with_not_free_var_spec t x i;
-      close_with_not_free_var_spec pre x i;
-      close_with_not_free_var_spec post x i;
-      close_terms_with_not_free_var_spec decrs x i
+  = let Cs _ res flags = c in
+    close_with_not_free_var_spec res x i;
+    close_flags_with_not_free_var_spec flags x i
+
+and close_flags_with_not_free_var_spec (fs:list cflag_spec) (x:var) (i:nat)
+  : Lemma
+      (requires ~ (Set.mem x (freevars_flags_spec fs)))
+      (ensures subst_flags_spec fs [ NDs x i ] == fs)
+      (decreases fs)
+  = match fs with
+    | [] -> ()
+    | f::fs ->
+      close_flag_with_not_free_var_spec f x i;
+      close_flags_with_not_free_var_spec fs x i
+
+and close_flag_with_not_free_var_spec (f:cflag_spec) (x:var) (i:nat)
+  : Lemma
+      (requires ~ (Set.mem x (freevars_flag_spec f)))
+      (ensures subst_flag_spec f [ NDs x i ] == f)
+      (decreases f)
+  = match f with
+    | Fs_SMTPAT t -> close_with_not_free_var_spec t x i
+    | Fs_DECREASES (Ds_lex ts) -> close_terms_with_not_free_var_spec ts x i
+    | Fs_DECREASES (Ds_wf rel e) ->
+      close_with_not_free_var_spec rel x i;
+      close_with_not_free_var_spec e x i
 
 and close_args_with_not_free_var_spec (l:list (term_spec & aqualv_spec)) (x:var) (i:nat)
   : Lemma
@@ -725,18 +775,30 @@ and open_with_gt_ln_spec_comp (c:comp_spec) (i:nat) (t:term_spec) (j:nat)
   : Lemma (requires ln_spec'_comp c i /\ i < j)
           (ensures subst_comp_spec c [ DTs j t ] == c)
           (decreases c)
-  = match c with
-    | Cs_Total t1
-    | Cs_GTotal t1 -> open_with_gt_ln_spec t1 i t j
-    | Cs_Lemma pre post pats ->
-      open_with_gt_ln_spec pre i t j;
-      open_with_gt_ln_spec post i t j;
-      open_with_gt_ln_spec pats i t j
-    | Cs_Eff _ _ res pre post decrs ->
-      open_with_gt_ln_spec res i t j;
-      open_with_gt_ln_spec pre i t j;
-      open_with_gt_ln_spec post i t j;
-      open_with_gt_ln_spec_terms decrs i t j
+  = let Cs _ res flags = c in
+    open_with_gt_ln_spec res i t j;
+    open_with_gt_ln_spec_flags flags i t j
+
+and open_with_gt_ln_spec_flags (fs:list cflag_spec) (i:nat) (t:term_spec) (j:nat)
+  : Lemma (requires ln_spec'_flags fs i /\ i < j)
+          (ensures subst_flags_spec fs [ DTs j t ] == fs)
+          (decreases fs)
+  = match fs with
+    | [] -> ()
+    | f::fs ->
+      open_with_gt_ln_spec_flag f i t j;
+      open_with_gt_ln_spec_flags fs i t j
+
+and open_with_gt_ln_spec_flag (f:cflag_spec) (i:nat) (t:term_spec) (j:nat)
+  : Lemma (requires ln_spec'_flag f i /\ i < j)
+          (ensures subst_flag_spec f [ DTs j t ] == f)
+          (decreases f)
+  = match f with
+    | Fs_SMTPAT t1 -> open_with_gt_ln_spec t1 i t j
+    | Fs_DECREASES (Ds_lex ts) -> open_with_gt_ln_spec_terms ts i t j
+    | Fs_DECREASES (Ds_wf rel e) ->
+      open_with_gt_ln_spec rel i t j;
+      open_with_gt_ln_spec e i t j
 
 and open_with_gt_ln_spec_terms (l:list term_spec) (i:nat) (t:term_spec) (j:nat)
   : Lemma (requires ln_spec'_terms l i /\ i < j)

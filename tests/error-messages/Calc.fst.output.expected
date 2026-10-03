@@ -12,7 +12,7 @@
         Calc.eta Prims.op_Less_Equals w y
   - See also FStar.Calc.fsti(43,50-43,55)
 
-* Info at Calc.fst(21,2-27,3):
+* Info at Calc.fst(21,7-21,11):
   - Expected failure:
   - Could not prove that this calc-chain is compatible
   - The SMT solver could not prove the query.
@@ -22,9 +22,8 @@
       x: Prims.int
       y: Prims.int
       exists (w: Prims.int). (exists (w: Prims.int). x == w /\ w >= w) /\ w <= y
-  - See also Calc.fst(21,7-21,11)
 
-* Info at Calc.fst(32,2-34,3):
+* Info at Calc.fst(32,7-32,10):
   - Expected failure:
   - Could not prove that this calc-chain is compatible
   - The SMT solver could not prove the query.
@@ -34,9 +33,8 @@
       x: Prims.int
       y: Prims.int
       x == y
-  - See also Calc.fst(32,7-32,10)
 
-* Info at Calc.fst(39,2-43,3):
+* Info at Calc.fst(39,7-39,10):
   - Expected failure:
   - Could not prove that this calc-chain is compatible
   - The SMT solver could not prove the query.
@@ -46,12 +44,10 @@
       x: Prims.int
       y: Prims.int
       exists (w: Prims.int). x == w /\ w == y
-  - See also Calc.fst(39,7-39,10)
 
-* Info at Calc.fst(50,6-50,8):
+* Info at Calc.fst(50,3-50,5):
   - Expected failure:
-  - Subtyping check failed
-  - Expected type Prims.squash (1 == 2) got type Prims.unit
+  - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
   - In context:
@@ -60,12 +56,10 @@
       uu___: Prims.unit
       uu___: Prims.unit
       uu___: Prims.unit
-  - See also Calc.fst(50,3-50,5)
 
-* Info at Calc.fst(64,6-64,8):
+* Info at Calc.fst(64,3-64,5):
   - Expected failure:
-  - Subtyping check failed
-  - Expected type Prims.squash (2 == 3) got type Prims.unit
+  - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
   - In context:
@@ -73,44 +67,39 @@
       uu___: Prims.unit
       uu___: Prims.unit
       uu___: Prims.unit
-  - See also Calc.fst(64,3-64,5)
 
-* Info at Calc.fst(78,6-78,8):
+* Info at Calc.fst(78,3-78,5):
   - Expected failure:
-  - Subtyping check failed
-  - Expected type Prims.squash (3 == 4) got type Prims.unit
+  - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
   - In context:
       uu___: Prims.unit
       uu___: Prims.unit
       uu___: Prims.unit
-  - See also Calc.fst(78,3-78,5)
 
 * Info at Calc.fst(92,42-92,44):
   - Expected failure:
-  - Subtyping check failed
-  - Expected type Prims.squash q got type Prims.unit
+  - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: Calc.q
   - In context:
       uu___: Prims.unit
       uu___: Prims.unit
       uu___: Prims.unit
-      uu___: Prims.squash Calc.p
+      Calc.p
   - See also Calc.fst(90,20-90,21)
 
 * Info at Calc.fst(99,10-99,12):
   - Expected failure:
-  - Subtyping check failed
-  - Expected type Prims.squash q got type Prims.unit
+  - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: Calc.q
   - In context:
       uu___: Prims.unit
       uu___: Prims.unit
       uu___: Prims.unit
-      uu___: Prims.squash Calc.p
+      Calc.p
   - See also Calc.fst(100,4-100,5)
 
 * Info at Calc.fst(113,17-113,25):

@@ -299,8 +299,15 @@ fn partition (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi}))
 }
 
 
-#restart-solver
-#push-options "--retry 10"
+(* [transfer_larger_slice] and [transfer_smaller_slice] both amount to
+   re-indexing a bound on [s] to a bound on a slice of [s].  The step Z3 has
+   to make is to instantiate the hypothesis at [k + l] while the goal mentions
+   [Seq.index (Seq.slice s (l - shift) (r - shift)) k], i.e. (by the SMT
+   pattern on [Seq.lemma_index_slice]) [Seq.index s (k + (l - shift))].  The
+   two index terms are equal only by linear arithmetic, so the E-matching
+   needed to bridge them is not guaranteed to happen.  Rather than rely on it,
+   introduce the witness [j = k + l] explicitly, which puts the term
+   [Seq.index s (j - shift)] in scope and makes the instantiation immediate. *)
 let transfer_larger_slice
   (s : Seq.seq int)
   (shift : nat)
@@ -312,10 +319,15 @@ let transfer_larger_slice
       forall (k: int). l <= k /\ k < r ==> (lb <= Seq.index s (k - shift))
     )
     (ensures larger_than (Seq.slice s (l - shift) (r - shift)) lb)
-= assert (forall (k: int). l <= k /\ k < r ==> (lb <= Seq.index s (k - shift)));
-  assert (forall (k: int). l <= (k+shift) /\ (k+shift) < r ==> (lb <= Seq.index s ((k+shift) - shift)));
-  assert (forall (k: int). l - shift <= k /\ k < r - shift ==> (lb <= Seq.index s k));
-  ()
+= let s' = Seq.slice s (l - shift) (r - shift) in
+  introduce forall (k: int). 0 <= k /\ k < Seq.length s' ==> lb <= Seq.index s' k
+  with introduce _ ==> _
+  with begin
+    let j : int = k + l in
+    assert (l <= j /\ j < r);
+    assert (lb <= Seq.index s (j - shift));
+    assert (j - shift == k + (l - shift))
+  end
 
 let transfer_smaller_slice
   (s : Seq.seq int)
@@ -328,11 +340,15 @@ let transfer_smaller_slice
       forall (k: int). l <= k /\ k < r ==> (Seq.index s (k - shift) <= rb)
     )
     (ensures smaller_than (Seq.slice s (l - shift) (r - shift)) rb)
-= assert (forall (k: int). l <= k /\ k < r ==> (Seq.index s (k - shift) <= rb));
-  assert (forall (k: int). l <= (k+shift) /\ (k+shift) < r ==> (Seq.index s ((k+shift) - shift) <= rb));
-  assert (forall (k: int). l - shift <= k /\ k < r - shift ==> (Seq.index s k <= rb));
-  ()
-#pop-options
+= let s' = Seq.slice s (l - shift) (r - shift) in
+  introduce forall (k: int). 0 <= k /\ k < Seq.length s' ==> Seq.index s' k <= rb
+  with introduce _ ==> _
+  with begin
+    let j : int = k + l in
+    assert (l <= j /\ j < r);
+    assert (Seq.index s (j - shift) <= rb);
+    assert (j - shift == k + (l - shift))
+  end
 
 let transfer_equal_slice
   (s : Seq.seq int)

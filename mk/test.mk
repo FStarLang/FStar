@@ -97,13 +97,24 @@ $(OUTPUT_DIR)/%.fsti.json_output: %.fsti
 	@mkdir -p $(dir $@)
 	$(FSTAR) --message_format json --silent -f --print_expected_failures $< >$@ 2>&1
 
+# Extraction goes through Custard.  The target keeps its name, because the
+# .depend that supplies its prerequisites is written by --dep and names .ml
+# files; only the recipe changed.
+#
+# --custard_entry_module is what --extract_module was: every top-level
+# definition of the module is a root, and the module's top-level effects run.
+# The whole program lands in one file rather than one file per module, so the
+# ulib .ml targets that .depend also lists are no longer built by anything ---
+# which was already true, since the .exe rule compiles a single file against
+# the installed library.
 $(OUTPUT_DIR)/%.ml:
 	$(call msg, "EXTRACT", $(basename $(notdir $@)))
-	$(FSTAR) --codegen OCaml $< -o $@
+	$(FSTAR) --codegen Custard --custard_entry_module $(subst .fst.checked,,$(notdir $<)) $< -o $@
 
 $(OUTPUT_DIR)/%.fs:
 	$(call msg, "EXTRACT FS", $(basename $(notdir $@)))
-	$(FSTAR) --codegen FSharp $< -o $@
+	$(FSTAR) --codegen Custard --custard_backend FSharp \
+	  --custard_entry_module $(subst .fst.checked,,$(notdir $<)) $< -o $@
 
 $(OUTPUT_DIR)/$(subst .,_,%).krml:
 	$(call msg, "EXTRACT", $(basename $(notdir $@)))
@@ -188,6 +199,25 @@ clean: $(addsuffix .__clean, $(SUBDIRS_CLEAN))
 __clean:
 	rm -rf $(OUTPUT_DIR) $(CACHE_DIR) .depend
 clean: __clean
+
+# Custard reads the whole program, and --dep records what the *ML* backend
+# reads: for a module whose dependency is abstract in its interface that is
+# the .fsti alone, so the output would otherwise depend on whether the other
+# module's .fst.checked happened to have been built yet
+# (tests/bug-reports/closed/RemoveUnusedTyparsIFace is that case).  This is
+# the same statement mk/custard-extract.mk makes with $(ALL_CHECKED_FILES).
+#
+# Attached to the concrete targets rather than to the pattern rules above.
+# Adding a prerequisite to a pattern rule makes it a *different* rule from a
+# client's identically-named override -- both survive and make picks this
+# one -- which is the trap §49.6 of doc/ref/custard.md describes.  It is
+# order-only so that $< is still the root's checked file.
+CUSTARD_EXTRACT_TARGETS := \
+  $(patsubst %.fst,$(OUTPUT_DIR)/%.ml,$(EXTRACT) $(BUILD) $(RUN)) \
+  $(patsubst %.fst,$(OUTPUT_DIR)/%.fs,$(RUN_FSHARP)) \
+  $(patsubst %.ml.expected,$(OUTPUT_DIR)/%.ml,$(wildcard *.ml.expected)) \
+  $(patsubst %.fs.expected,$(OUTPUT_DIR)/%.fs,$(wildcard *.fs.expected))
+$(sort $(CUSTARD_EXTRACT_TARGETS)): | $(ALL_CHECKED_FILES)
 
 __extract: $(patsubst %.fst,$(OUTPUT_DIR)/%.ml,$(EXTRACT))
 extract: __extract

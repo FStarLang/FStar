@@ -36,7 +36,5 @@ let fail #a x #b y #c f = f x y
 
 type fs0035 (a:Type) (n:nat) = a
 
-#push-options "--warn_error -272"
-let main = print_string "Test00 OK\n"
-#pop-options
+let main () : FStar.All.ML unit = print_string "Test00 OK\n"
 

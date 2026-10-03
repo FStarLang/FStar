@@ -63,12 +63,16 @@ let rec flatten (#a:Type) (e:exp a) : list a =
    on them because they are written as squashed formulas in the
    definition of monoid; need to be careful with this since these are
    quantified formulas without any patterns. Dangerous stuff! *)
+(* The lemma's statement is its result type now, so each branch of the match
+   below is checked against it separately; the recursive branch needs the room. *)
+#push-options "--z3rlimit_factor 4"
 let rec flatten_correct_aux (#a:Type) (m:monoid a) ml1 ml2 :
   Lemma (mldenote m (ml1 @ ml2) == Monoid?.mult m (mldenote m ml1)
                                                   (mldenote m ml2)) =
   match ml1 with
   | [] -> ()
   | e::es1' -> flatten_correct_aux m es1' ml2
+#pop-options
 
 let rec flatten_correct (#a:Type) (m:monoid a) (e:exp a) :
     Lemma (mdenote m e == mldenote m (flatten e)) =

@@ -82,7 +82,6 @@ instance tagged_term : tagged term = {
   | Decreases      _ -> "Decreases"
   | Labeled        _ -> "Labeled"
   | Discrim        _ -> "Discrim"
-  | Attributes     _ -> "Attributes"
   | Antiquote      _ -> "Antiquote"
   | Quote          _ -> "Quote"
   | VQuote         _ -> "VQuote"
@@ -170,6 +169,8 @@ let un_function p tm = match p.pat, tm.tm with
 
 let consPat r hd tl = PatApp(mk_pattern (PatName C.cons_lid) r, [hd;tl])
 let consTerm r hd tl = mk_term (Construct(C.cons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
+
+let mkCalcStep rel just next = CalcStep (rel, just, next)
 
 let unit_const r = mk_term(Const Const_unit) r Expr
 let unit_type  r = mk_term (Var (Ident.lid_of_str (`%unit))) r Expr
@@ -661,9 +662,6 @@ let rec term_to_string (x:term) : ML string = match x.tm with
   | Discrim lid ->
     Format.fmt1 "%s?" (string_of_lid lid)
 
-  | Attributes ts ->
-    Format.fmt1 "(attributes %s)" (String.concat " " <| List.map term_to_string ts)
-
   | Antiquote t ->
     Format.fmt1 "(`#%s)" (term_to_string t)
 
@@ -885,7 +883,6 @@ let decl'_to_string (d:decl') : ML string = match d with
   | Exception(i, _) -> "exception " ^ (string_of_id i)
   | NewEffect(DeclareEffect(i, _)) -> "effect " ^ (string_of_id i)
   | NewEffect(DefineEffect(i, _, _)) -> "effect " ^ (string_of_id i)
-  | NewEffect(RedefineEffect(i, _, _)) -> "effect " ^ (string_of_id i)
   | Splice (is_typed, ids, t) ->
     "splice" ^ (if is_typed then "_t" else "")
              ^ "["
@@ -1001,7 +998,13 @@ instance pretty_quote_kind : pretty quote_kind = {
 let ctor (n: string) (args: list document) : ML document =
   nest 2 (group (parens (flow (break_ 1) (doc_of_string n :: args))))
 
-let pp_list' (#a:Type) (f: a -> ML document) (xs: list a) : ML document =
+(* [f] is [@@@monomorphize] for Custard (doc/ref/custard.md 3.2), for the same
+   reason as [FStarC.Class.Ord.sort_by]: this builds a [pretty a] dictionary
+   out of [f] and hands it to [pp_list], whose instance binder is
+   monomorphized, so [f] has to be known at specialization time -- and marking
+   [f] promotes [a] with it (rule 5), which is what [pp_list]'s own type
+   parameter needs. *)
+let pp_list' (#a:Type) ([@@@monomorphize] f: a -> ML document) (xs: list a) : ML document =
   (pp_list a { pp = f }).pp xs // hack
 
 instance showable_arg_qualifier : showable arg_qualifier = {
@@ -1124,8 +1127,6 @@ let rec pp_term (t:term) : ML document =
       ctor "Labeled" [pp_term t; doc_of_string s; doc_of_string (show b)]
   | Discrim l ->
       ctor "Discrim" [pp l]
-  | Attributes ts ->
-      ctor "Attributes" [pp_list' pp_term ts]
   | Antiquote t ->
       ctor "Antiquote" [pp_term t]
   | Quote (t, qk) ->

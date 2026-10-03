@@ -82,18 +82,11 @@ val pack_ident    : ident_view -> ident
    See [FStar.Reflection.TermSpec.denote_term]. *)
 val inspect_pack_inv : (tv:term_view) -> Lemma (inspect_ln (pack_ln tv) == tv)
 
+(* [comp_view] mirrors [comp_typ] field for field -- an effect name, a result
+   type and some flags -- so neither direction of this round trip loses
+   anything, and both hold unconditionally. *)
 val pack_inspect_comp_inv : (c:comp) -> Lemma (pack_comp (inspect_comp c) == c)
-
-(* A computation whose effect is [FStar.Pervasives.Lemma] is always inspected as a
-   [C_Lemma], so a [C_Eff] view naming that effect is not in the image of
-   [inspect_comp] and the round trip below does not hold for it.  (Asserting it
-   unconditionally was unsound: both functions are primitive normalizer steps,
-   so the normalizer refutes the very instance the lemma provides.) *)
-val inspect_pack_comp_inv (cv:comp_view)
-  : Lemma (requires (match cv with
-                     | C_Eff _ eff_name _ _ _ _ -> eff_name <> ["FStar"; "Pervasives"; "Lemma"]
-                     | _ -> True))
-          (ensures inspect_comp (pack_comp cv) == cv)
+val inspect_pack_comp_inv (cv:comp_view) : Lemma (inspect_comp (pack_comp cv) == cv)
 
 val inspect_pack_namedv (xv:namedv_view) : Lemma (inspect_namedv (pack_namedv xv) == xv)
 val pack_inspect_namedv (x:namedv) : Lemma (pack_namedv (inspect_namedv x) == x)

@@ -44,9 +44,9 @@ RUN sudo apt install time
 # Sigh, install dotnet. The setup-dotnet action does not
 # work on a container apparently.
 ENV DOTNET_ROOT /dotnet
-RUN wget -nv https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.419/dotnet-sdk-8.0.419-linux-x64.tar.gz && \
+RUN wget -nv https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.401/dotnet-sdk-10.0.401-linux-x64.tar.gz && \
     sudo mkdir -p $DOTNET_ROOT && \
-    sudo tar xf dotnet-sdk-8.0.419-linux-x64.tar.gz -C $DOTNET_ROOT && \
+    sudo tar xf dotnet-sdk-10.0.401-linux-x64.tar.gz -C $DOTNET_ROOT && \
     rm -f dotnet-sdk*.tar.gz
 RUN sudo ln -s $DOTNET_ROOT/dotnet /usr/local/bin/dotnet
 

@@ -104,15 +104,17 @@ let rec param' (s:param_state) (t:term) : Tac term =
     let r = fresh_binder_named "r" t in
     let xs = fresh_binder_named "xs" (Tv_Var s) in
     let xr = fresh_binder_named "xr" (Tv_Var r) in
-    pack <| Tv_Abs s <| Tv_Abs r <| Tv_Arrow xs (C_Total <| Tv_Arrow xr (C_Total <| Tv_Type Uv_Unk))
+    pack <| Tv_Abs s <| Tv_Abs r <| Tv_Arrow xs (mk_tot_comp <| Tv_Arrow xr (mk_tot_comp <| Tv_Type Uv_Unk))
 
   | Tv_Var bv ->
     let (_, _, b) = lookup s bv in
     binder_to_term b
 
   | Tv_Arrow b c -> //      t1 -> t2   ===  (x:t1) -> Tot t2
-    begin match inspect_comp c with
-    | C_Total t2 ->
+    begin
+    let cv = inspect_comp c in
+    if not (is_tot_comp cv) then raise (Unsupported "effects") else
+    let t2 = cv.result_typ in
       let (s', (bx0, bx1, bxR)) = push_binder b s in
       let q = b.qual in
 
@@ -121,7 +123,6 @@ let rec param' (s:param_state) (t:term) : Tac term =
       let b2t = binder_to_term in
       let res = `((`#(param' s' t2)) (`#(tapp q (b2t bf0) (b2t bx0))) (`#(tapp q (b2t bf1) (b2t bx1)))) in
       tabs bf0 (tabs bf1 (mk_tot_arr [bx0; bx1; bxR] res))
-    | _ -> raise (Unsupported "effects")
     end
 
   | Tv_App l (r, q) ->
@@ -287,9 +288,9 @@ let param_ctor (nm_ty:name) (s:param_state) (c:ctor) : Tac ctor =
   let bs = List.Tot.rev bs in
 
   let cod =
-    match inspect_comp c with
-    | C_Total ty -> ty
-    | _ -> fail "param_ctor got a non-tot comp"
+    let cv = inspect_comp c in
+    if is_tot_comp cv then cv.result_typ
+    else fail "param_ctor got a non-tot comp"
   in
 
   let cod = mk_e_app (param' s cod) [replace_by s false orig; replace_by s true orig] in

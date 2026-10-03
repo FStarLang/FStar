@@ -20,12 +20,13 @@ open FStarC
 open FStarC.Effect
 open FStarC.Class.Show
 
+(* The AST itself lives in its own module so that Custard can build karamel
+   input too; it is re-exported here so that existing users of this interface
+   are unaffected. *)
+include FStarC.Extraction.KrmlAst
+
 type version = int
 val current_version: version (* version of AST type, for binary compatibility *)
-
-val decl : Type0
-
-instance val showable_decl : showable decl
 
 type program = list decl
 type file = string & program

@@ -113,16 +113,11 @@ let add4 x y : prog = [
     Add (R 1) (R 0) (R 0);
 ]
 
-(* All of these identities are quite easy by normalization. Once we fix
- * #1482, they will not even require SMT. *)
-let _ = assert_norm (forall x y. equiv (add1 x y) (add2 x y))
-let _ = assert_norm (forall x y. equiv (add1 x y) (add3 x y))
-let _ = assert_norm (forall x y. equiv (add1 x y) (add4 x y))
-let _ = assert_norm (forall x y. equiv (add2 x y) (add3 x y))
-let _ = assert_norm (forall x y. equiv (add2 x y) (add4 x y))
-let _ = assert_norm (forall x y. equiv (add3 x y) (add4 x y))
+(* Without normalizing, these identities require fuel, or else fail.
 
-(* Without normalizing, they require fuel, or else fail *)
+   These come first: a postcondition is a refinement of the result type, so
+   each [assert_norm] below has type [squash (forall x y. ...)] and makes its
+   own proposition a fact for everything that follows. *)
 #push-options "--fuel 0"
 [@@expect_failure] let _ = assert (forall x y. equiv (add1 x y) (add2 x y))
 [@@expect_failure] let _ = assert (forall x y. equiv (add1 x y) (add3 x y))
@@ -131,6 +126,15 @@ let _ = assert_norm (forall x y. equiv (add3 x y) (add4 x y))
 [@@expect_failure] let _ = assert (forall x y. equiv (add2 x y) (add4 x y))
 [@@expect_failure] let _ = assert (forall x y. equiv (add3 x y) (add4 x y))
 #pop-options
+
+(* All of these identities are quite easy by normalization. Once we fix
+ * #1482, they will not even require SMT. *)
+let _ = assert_norm (forall x y. equiv (add1 x y) (add2 x y))
+let _ = assert_norm (forall x y. equiv (add1 x y) (add3 x y))
+let _ = assert_norm (forall x y. equiv (add1 x y) (add4 x y))
+let _ = assert_norm (forall x y. equiv (add2 x y) (add3 x y))
+let _ = assert_norm (forall x y. equiv (add2 x y) (add4 x y))
+let _ = assert_norm (forall x y. equiv (add3 x y) (add4 x y))
 
 (* poly5 x = x^5 + x^4 + x^3 + x^2 + x^1 + 1 *)
 

@@ -94,13 +94,8 @@ val pack_inspect_binder (t:R.binder)
    : Lemma (ensures (R.pack_binder (R.inspect_binder t) == t))
            [SMTPat (R.pack_binder (R.inspect_binder t))]
   
-(* See R.inspect_pack_comp_inv: a C_Eff view naming FStar.Pervasives.Lemma is not in the
-image of R.inspect_comp, which always produces a C_Lemma for that effect. *)
 val inspect_pack_comp (t:R.comp_view)
-  : Lemma (requires (match t with
-                     | R.C_Eff _ eff_name _ _ _ _ -> eff_name <> ["FStar"; "Pervasives"; "Lemma"]
-                     | _ -> True))
-          (ensures (R.inspect_comp (R.pack_comp t) == t))
+  : Lemma (ensures (R.inspect_comp (R.pack_comp t) == t))
           [SMTPat (R.inspect_comp (R.pack_comp t))]
 
 val pack_inspect_comp (t:R.comp)
@@ -313,8 +308,8 @@ let binder_of_t_q t q = mk_binder pp_name_default t q
 
 (* spec-level smart constructors (return [term_spec]/[comp_spec]) *)
 let mk_abs (ty:term_spec) (qual:aqualv_spec) (t:term_spec) : term_spec = Ts_Abs (Bs ty qual) t
-let mk_total (t:term_spec) : comp_spec = Cs_Total t
-let mk_ghost (t:term_spec) : comp_spec = Cs_GTotal t
+let mk_total (t:term_spec) : comp_spec = Cs tot_effect_name t []
+let mk_ghost (t:term_spec) : comp_spec = Cs gtot_effect_name t []
 let mk_arrow (ty:term_spec) (qual:aqualv_spec) (t:term_spec) : term_spec =
   Ts_Arrow (Bs ty qual) (mk_total t)
 let mk_ghost_arrow (ty:term_spec) (qual:aqualv_spec) (t:term_spec) : term_spec =
@@ -324,7 +319,7 @@ let mk_let (e1 t1 e2:term_spec) : term_spec =
   Ts_Let false [] t1 e1 e2
 
 (* concrete comp builder, kept for the (concrete) env/token/sigelt layer *)
-let mk_total_tm (t:R.term) : R.comp = pack_comp (C_Total t)
+let mk_total_tm (t:R.term) : R.comp = pack_comp (mk_tot_comp t)
 
 let open_with_var_elt (x:var) (i:nat) : subst_elt =
   DT i (pack_ln (Tv_Var (var_as_namedv x)))

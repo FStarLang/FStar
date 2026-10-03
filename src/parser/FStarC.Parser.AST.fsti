@@ -89,7 +89,6 @@ type term' =
   | Decreases of term
   | Labeled   of term & string & bool
   | Discrim   of lid   (* Some?  (formerly is_Some) *)
-  | Attributes of list term   (* attributes decorating a term *)
   | Antiquote of term  (* Antiquotation within a quoted term *)
   | Quote     of term & quote_kind
   | VQuote    of term        (* Quoting an lid, this gets removed by the desugarer *)
@@ -286,8 +285,6 @@ and effect_decl =
      with a monadic representation, used for reification/extraction only.
      The [list decl] holds the combinator definitions. *)
   | DefineEffect   of ident & list binder & list decl
-  (* [effect M a p q = N a p' q']: an effect abbreviation. *)
-  | RedefineEffect of ident & list binder & term
 
 instance val hasRange_decl : hasRange decl
 
@@ -323,6 +320,12 @@ val un_function : pattern -> term -> option (pattern & term)
 
 val consPat : range -> pattern -> pattern -> pattern'
 val consTerm : range -> term -> term -> term
+
+(* For the hand-written grammar, which cannot spell [CalcStep] out: it is a
+   one-argument constructor, so Custard's extraction collapses [calc_step] into
+   the tuple and the name does not survive.  Reaching it through a function
+   works under either extraction. *)
+val mkCalcStep : term -> term -> term -> calc_step
 
 val unit_const : range -> term
 val unit_type  : range -> ML term

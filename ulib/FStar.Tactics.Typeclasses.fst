@@ -120,9 +120,8 @@ let rec head_of (t:term) : Tac (option fv) =
 let rec res_typ (t:term) : Tac term =
   match inspect t with
   | Tv_Arrow _ c -> (
-    match inspect_comp c with
-    | C_Total t -> res_typ t
-    | _ -> t
+    let cv = inspect_comp c in
+    if is_tot_comp cv then res_typ cv.result_typ else t
   )
   | _ -> t
 
@@ -528,8 +527,8 @@ let mk_class (nm:string) : Tac decls =
     debug' (fun () -> "got ctor " ^ implode_qn c_name ^ " of type " ^ term_to_string ty);
     let bs, cod = collect_arr_bs ty in
     let r = inspect_comp cod in
-    guard (C_Total? r);
-    let C_Total cod = r in (* must be total *)
+    guard (is_tot_comp r); (* must be total *)
+    let cod = r.result_typ in
 
     debug' (fun () -> "params = " ^ Tactics.Util.string_of_list binder_to_string params);
     debug' (fun () -> "n_params = " ^ string_of_int (List.Tot.Base.length params));

@@ -36,20 +36,19 @@ val collect_app_ln : term -> term & list argv
 let collect_app_ln = collect_app_ln' []
 
 let rec collect_arr' (bs : list binder) (c : comp) : Tot (list binder & comp) (decreases c) =
-    begin match inspect_comp c with
-    | C_Total t ->
-        begin match inspect_ln_unascribe t with
-        | Tv_Arrow b c ->
-            collect_arr' (b::bs) c
-        | _ ->
-            (bs, c)
-        end
-    | _ -> (bs, c)
-    end
+    let cv = inspect_comp c in
+    if is_tot_comp cv then
+      begin match inspect_ln_unascribe cv.result_typ with
+      | Tv_Arrow b c ->
+          collect_arr' (b::bs) c
+      | _ ->
+          (bs, c)
+      end
+    else (bs, c)
 
 val collect_arr_ln_bs : typ -> list binder & comp
 let collect_arr_ln_bs t =
-    let (bs, c) = collect_arr' [] (pack_comp (C_Total t)) in
+    let (bs, c) = collect_arr' [] (pack_comp (mk_tot_comp t)) in
     (List.Tot.Base.rev bs, c)
 
 val collect_arr_ln : typ -> list typ & comp

@@ -9,7 +9,6 @@ type u32 = U32.t
 type byte = u8
 
 type bytes = string
-type cbytes = string (* not in FStar.Bytes *)
 
 let len (b:bytes) = U32.of_native_int (String.length b)
 let length (b:bytes) = Z.of_int (String.length b)
@@ -108,23 +107,26 @@ let bytes_of_int (nb:Z.t) (i:Z.t) =
 let int_of_bytes_of_int (k:Z.t) (n:'a uint_k) = ()
 let bytes_of_int_of_bytes (b:bytes) = ()
 
-let int32_of_bytes (b:bytes) =
-    Z.to_int (int_of_bytes b)
+(* These six are machine integers on both sides in FStar.Bytes.fsti, at the
+   width the name says; they used to be an OCaml [int] on the way out and a
+   [U32.t] on the way in, which no caller of the interface can supply. *)
+let int32_of_bytes (b:bytes) : U32.t =
+    U32.uint_to_t (int_of_bytes b)
 
-let int16_of_bytes (b:bytes) =
-    Z.to_int (int_of_bytes b)
+let int16_of_bytes (b:bytes) : U16.t =
+    U16.uint_to_t (int_of_bytes b)
 
-let int8_of_bytes (b:bytes) =
-    Z.to_int (int_of_bytes b)
+let int8_of_bytes (b:bytes) : U8.t =
+    U8.uint_to_t (int_of_bytes b)
 
 let bytes_of_int32 (n:U32.t) =
     bytes_of_int (Z.of_int 4) (U32.to_int n)
 
-let bytes_of_int16 (n:U32.t) =
-    bytes_of_int (Z.of_int 2) (U32.to_int n)
+let bytes_of_int16 (n:U16.t) =
+    bytes_of_int (Z.of_int 2) (U16.to_int n)
 
-let bytes_of_int8 (n:U32.t) =
-    bytes_of_int (Z.of_int 1) (U32.to_int n)
+let bytes_of_int8 (n:U8.t) =
+    bytes_of_int (Z.of_int 1) (U8.v n)
 
 type 'a minbytes = bytes
 
@@ -144,10 +146,12 @@ let xor_idempotent (n:U32.t) (b1:bytes) (b2:bytes) = ()
 
 (*********************************************************************************)
 (* Under discussion *)
-let utf8 (x:string) : bytes = x (* TODO: use Camomile *)
-let utf8_encode = utf8
-let iutf8 (x:bytes) : string = x (* TODO: use Camomile *)
-let iutf8_opt (x:bytes) : string option = Some (x)
+let utf8_encode (x:string) : bytes = x (* TODO: use Camomile *)
+(* FStar.Bytes.fsti says the result re-encodes to the argument, so an
+   ill-formed sequence has to come back as [None]; this used to be [Some]
+   whatever it was given. *)
+let iutf8_opt (x:bytes) : string option =
+  if String.is_valid_utf_8 x then Some x else None
 (*********************************************************************************)
 
 (* Some helpers to deal with the conversation from hex literals to bytes and
@@ -166,7 +170,7 @@ let char_to_hex c =
   let digits = "0123456789abcdef" in
   digits.[n lsr 4], digits.[n land 0x0f]
 
-let string_of_hex s =
+let bytes_of_hex_ s =
   let n = String.length s in
   if n mod 2 <> 0 then
      failwith "string_of_hex: invalid length"
@@ -181,7 +185,10 @@ let string_of_hex s =
     in
     aux 0;
     res
-let bytes_of_hex s = Bytes.to_string (string_of_hex s)
+(* FStar.Bytes.fsti says [string -> string], and the realization's [bytes] is
+   a [string]; this used to hand back OCaml's own [Bytes.t]. *)
+let string_of_hex s = Bytes.to_string (bytes_of_hex_ s)
+let bytes_of_hex s = Bytes.to_string (bytes_of_hex_ s)
 
 let hex_of_string s =
   let n = String.length s in
@@ -201,48 +208,4 @@ let print_bytes (s:bytes) : string =
   done;
   Buffer.contents b
 
-let string_of_bytes b = b
 let bytes_of_string s = s
-
-(*********************************************************************************)
-(* OLD *)
-(*********************************************************************************)
-
-let cbyte (b:bytes) =
-  try int_of_char (String.get b 0)
-  with _ -> failwith "cbyte: called on empty string"
-
-let cbyte2 (b:bytes) =
-  try (int_of_char (String.get b 0), int_of_char (String.get b 1))
-  with _ -> failwith "cbyte2: need at least length 2"
-
-let index (b:bytes) i =
-  try int_of_char (String.get b (Z.to_int i))
-  with _ -> failwith "index: called out of bound"
-
-let get_cbytes (b:bytes) = b
-let abytes (ba:cbytes) = ba
-let abyte (ba:byte) = String.make 1 (char_of_int ba)
-let abyte2 (ba1,ba2) =
-  String.init 2 (fun i -> if i = 0 then char_of_int ba1 else char_of_int ba2)
-  
-let split_eq = split
-
-let createBytes len (value:int) : bytes =
-    let len = Z.to_int len in
-    try abytes (String.make len (char_of_int value))
-    with _ -> failwith "Default integer for createBytes was greater than max_value"
-
-let initBytes len f : bytes =
-    let len = Z.to_int len in
-    try abytes (String.init len (fun i -> char_of_int (f (Z.of_int i))))
-    with _ -> failwith "Platform.Bytes.initBytes: invalid char returned"
-
-let equalBytes (b1:bytes) (b2:bytes) = b1 = b2
-
-let split2 (b:bytes) i j : bytes * bytes * bytes =
-  let b1, b2 = split b i in
-  let b2a, b2b = split b2 j in
-  (b1, b2a, b2b)
-
-let byte_of_int i = Z.to_int i

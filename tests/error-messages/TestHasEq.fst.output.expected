@@ -11,7 +11,7 @@
       x: a
   - See also TestHasEq.fst(57,0-58,19)
 
-* Info at TestHasEq.fst(84,10-84,70):
+* Info at TestHasEq.fst(85,5-85,6):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.eqtype got type Type0
@@ -20,7 +20,7 @@
   - In context:
       x: x: TestHasEq.erasable_t{C_erasable_t? x}
       y: y: TestHasEq.erasable_t{D_erasable_t? y}
-  - See also TestHasEq.fst(84,12-84,22)
+  - See also Prims.fst(91,23-91,30)
 
 * Info at TestHasEq.fst(88,8-89,30):
   - Expected failure:

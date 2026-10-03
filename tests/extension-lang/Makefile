@@ -13,15 +13,30 @@ all: $(CHECKED)
 
 clean:
 	rm -rf .cache
-	rm TinyPlugin.cmi TinyPlugin.cmx TinyPlugin.o TinyPlugin.cmxs
+	rm -f $(PLUGIN_OBJS)
+	rm -f TinyPlugin.stamp
 	rm -f .depend
 .PHONY: clean
 
-%.done: % TinyPlugin.cmxs
+# The OCaml objects F* dynlinks for TinyPlugin.
+PLUGIN_OBJS = TinyPlugin.cmxs TinyPlugin.cmi TinyPlugin.cmx TinyPlugin.o
+
+# F* compiles TinyPlugin.ml into TinyPlugin.cmxs only when the .cmxs does not
+# exist (FStarC.Main.load_native_tactics); it never notices that an existing one
+# is stale, and dynlinking a .cmxs built by an older binary fails with Error 353,
+# either as an "interface mismatch" or as an undefined symbol.  This stamp is
+# remade precisely when the plugin source or the compiler moved, so drop the
+# objects there and let the next --load rebuild them.  Every rule below that runs
+# F* (they all pass --load) depends on it.
+TinyPlugin.stamp: TinyPlugin.ml $(FSTAR_EXE)
+	rm -f $(PLUGIN_OBJS)
+	touch $@
+
+%.done: % TinyPlugin.stamp
 	$(FSTAR_EXE) $(FSTAR_OPT) $<
 	touch $@
 
-.depend:
+.depend: TinyPlugin.stamp
 	$(FSTAR_EXE) $(FSTAR_OPT) --dep full $(SRCS) -o .depend
 
 include .depend

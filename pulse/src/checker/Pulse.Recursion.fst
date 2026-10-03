@@ -79,9 +79,8 @@ let elab_b (qbv : option qualifier & binder & bv) : Tot Tactics.NamedView.binder
 let inspect_tot_arrow (ty: term) : option (binder_view & term) =
   match R.inspect_ln ty with
   | R.Tv_Arrow bv c ->
-    (match R.inspect_comp c with
-    | C_Total t -> Some (R.inspect_binder bv, t)
-    | _ -> None)
+    (let cv = R.inspect_comp c in
+     if is_tot_comp cv then Some (R.inspect_binder bv, cv.result_typ) else None)
   | _ -> None
 
 let rec recover_bs (g: env) (qbs: list (option qualifier & binder & bv)) (ty: term) (r: range) :

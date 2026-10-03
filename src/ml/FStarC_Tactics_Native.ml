@@ -1,6 +1,5 @@
 open FStarC_Range
 open FStarC_Tactics_Types
-open FStarC_Tactics_Result
 open FStarC_Tactics_Monad
 open FStarC_Syntax_Syntax
 
@@ -11,8 +10,6 @@ module POB = FStarC_TypeChecker_Primops_Base
    tactic effect.  We need them here to break a circular dependency between the
    compiler and ulib (cf. tactics meeting of 2017-08-03). *)
 type 'a __tac = 'a FStarC_Tactics_Monad.tac
-
-let r = dummyRange
 
 type itac =
     POB.psc -> FStarC_Syntax_Embeddings_Base.norm_cb -> universes -> args -> term option
@@ -25,7 +22,6 @@ type native_primitive_step =
       strong_reduction_ok: bool;
       tactic: itac}
 
-let perr  s   = if FStarC_Debug.any () then FStarC_Format.print_error s
 let perr1 s x = if FStarC_Debug.any () then FStarC_Format.print1_error s x
 
 let compiled_tactics: native_primitive_step list ref = ref []
@@ -43,6 +39,7 @@ let register_plugin (s: string) (arity: Prims.int) (t: itac) (n:nbe_itac) =
              POB.strong_reduction_ok=true;
              POB.requires_binder_substitution = false;
              POB.renorm_after = false;
+             POB.unrepresentable_result = false;
              POB.interpretation=t;
              POB.univ_arity=Z.of_int 0;
              POB.interpretation_nbe=n;

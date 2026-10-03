@@ -83,31 +83,16 @@ let l_exact (t:term) =
 // but usually what we want. Coercions could help.
 let hyp (x:namedv) : Tac unit = l_exact (namedv_to_term x)
 
-let pose_lemma (t : term) : Tac binding =
-  let c = tcc (cur_env ()) t in
-  let pre, post =
-    match c with
-    | C_Lemma pre post _ -> pre, post
-    (* [tcc] on an application returns the underlying [PURE] computation,
-       with the [Lemma] abbreviation already unfolded. *)
-    | C_Eff _ _ res pre post _ ->
-      if not (term_eq res (`unit)) then fail "";
-      pre, post
-    | _ -> fail ""
-  in
-  let post = `((`#post) ()) in (* unthunk *)
-  let post = norm_term [] post in
-  (* If the precondition is trivial, do not cut by it *)
-  match term_as_formula' pre with
-  | True_ ->
-    pose (`(__lemma_to_squash #(`#pre) #(`#post) () (fun () -> (`#t))))
-  | _ ->
-    let reqb = tcut (`squash (`#pre)) in
+(* A lemma application is now an ordinary total term of type [squash ens]: its
+   postcondition is the result type and its precondition is a trailing implicit
+   argument.  So there is nothing left to take apart -- posing the term is
+   exactly what the caller wants.  [pose_apply] rather than [pose], so that an
+   undischarged precondition becomes a goal rather than an unsolved implicit.
 
-    let b = pose (`(__lemma_to_squash #(`#pre) #(`#post) (`#(reqb <: term)) (fun () -> (`#t)))) in
-    flip ();
-    ignore (trytac trivial);
-    b
+   Note this deliberately does *not* pre-check the term's computation type with
+   [tcc]: doing so would elaborate [t] a second time and strand that
+   elaboration's implicit precondition. *)
+let pose_lemma (t : term) : Tac binding = pose_apply t
 
 let explode () : Tac unit =
     ignore (

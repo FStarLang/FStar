@@ -20,7 +20,9 @@ open FStar.Tactics.V2.Bare
 open FStar.Tactics.Logic.Lemmas { lemma_from_squash }
 
 let easy_fill () : Tac unit =
+    (* [Lemma b] is now [Tot (squash b)], so [intro] goes through an
+       [a -> Lemma b] goal on its own.  The [lemma_from_squash] switch that
+       used to be needed here would now match any squashed goal and leave its
+       [pre]/[post] uninstantiated. *)
     let _ = repeat intro in
-    (* If the goal is `a -> Lemma b`, intro will fail, try to use this switch *)
-    let _ = trytac (fun () -> apply (`lemma_from_squash); intro ()) in
     smt ()

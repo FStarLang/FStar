@@ -1,9 +1,12 @@
 module Bug3102
 
+(* A let-bound variable that escapes into the result type is now closed
+   existentially rather than rejected, so the [56] cases are gone; what is left
+   here is the message quality of the [66] and [54] cases. *)
+
 let eqto #a (t:a) : Type = x:a{x==t}
 assume val tt : t:int -> Tot (eqto t)
 
-[@@expect_failure [56]]
 let min =
   fun (t1:int) ->
     let e1 = t1 in
@@ -29,7 +32,6 @@ let test2 : g:env -> t1:term -> t2:term -> Tac _ =
     let e2 = t2 in
     check_subtyping g t1 e2
 
-[@@expect_failure [56]]
 let test3 =
   fun (g:env) (t1 t2:term) ->
     let e2 = t2 in
@@ -37,7 +39,6 @@ let test3 =
 
 assume val ff : x:int -> y:int{y == x}
 
-[@@expect_failure [56]]
 let gg =
   fun (x:int) ->
     let z = x in
@@ -45,7 +46,6 @@ let gg =
 
 assume val f : x:int -> Tac (y:int{y == x})
 
-[@@expect_failure [56]]
 let g =
   fun (x:int) ->
     let z = x in

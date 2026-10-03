@@ -47,6 +47,9 @@ module RE      = FStarC.Reflection.V2.Embeddings
 module S       = FStarC.Syntax.Syntax
 module TI      = FStarC.Tactics.Interpreter
 
+(* Inlined for extraction: see the note on the copy in
+   FStarC.TypeChecker.Primops.Base. *)
+inline_for_extraction
 let solve (#a:Type) {| ev : a |} : Tot a = ev
 
 instance _ = RE.e_term (* REMOVE ME *)

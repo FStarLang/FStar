@@ -21,6 +21,13 @@ open FStarC.Syntax.Syntax
 open FStarC.Extraction.ML.Syntax
 
 val is_arity: uenv -> term -> ML bool
+
+(* An implicit binder of type [squash P] is pure specification: it carries no
+   computational content and is dropped from the ML type of whatever binds it.
+   Exposed so that clients that enumerate a binder list alongside its ML
+   counterpart (record field names, say) can drop the same binders. *)
+val is_spec_binder: binder -> ML bool
+
 val normalize_abs: term -> ML term
 
 exception NotSupportedByExtension

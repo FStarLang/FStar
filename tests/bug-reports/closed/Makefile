@@ -28,6 +28,16 @@ RUN += Bug1714.fst
 # so the diff rule triggers automatically, even without these lines.
 # EXTRACT += RemoveUnusedTypars_B.fst
 # EXTRACT += RemoveUnusedTyparsIFace_B.fst
+#
+# Those four .fs goldens were written for a per-module extractor and each is a
+# module that holds nothing but a type or a polymorphic function:
+# `let t (a:Type) (b:Type) = list a`, `let f a b (x:A.t a b) = x`. Custard
+# compiles a whole program, but --custard_entry_module roots every definition
+# of the module, and on the OCaml and F# backends that includes a polymorphic
+# one: those targets have type variables, so the definition is emitted as
+# written rather than once per instantiation. RecordExtraction's and
+# Bug3865b's goldens are empty; an empty golden still asserts that extraction
+# succeeds, which is what those bug reports were about.
 
 FSTAR_ROOT ?= ../../..
 include $(FSTAR_ROOT)/mk/test.mk

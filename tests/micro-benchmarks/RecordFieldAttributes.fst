@@ -33,9 +33,9 @@ let rec unpack_fields (qname : list string) (ty : T.term) : T.Tac (list (string 
     match T.inspect ty with
     | T.Tv_Arrow binder comp -> begin
         let f = unpack_field binder in
-        match T.inspect_comp comp with
-        | T.C_Total ty2 -> f :: unpack_fields qname ty2
-        | _ -> T.fail "Unsupported computation type"
+        let cv = T.inspect_comp comp in
+        if not (T.is_tot_comp cv) then T.fail "Unsupported computation type"
+        else f :: unpack_fields qname cv.T.result_typ
         end
     | T.Tv_FVar fv -> begin
         // The most inner part of 'ty' should be the name of the record type

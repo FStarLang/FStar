@@ -585,43 +585,60 @@ let e_binder_view =
   in
   mk_emb embed_binder_view unembed_binder_view fstar_refl_binder_view_fv
 
+(* NB: [FStarC.Syntax.Syntax] has same-named types and constructors, and is
+   opened after [FStarC.Reflection.V2.Data], hence the [RD.] prefixes. *)
+let e_decreases_order =
+    let ee (rng:Range.t) (d : RD.decreases_order) : ML term =
+        match d with
+        | RD.Decreases_lex ts ->
+            S.mk_Tm_app ref_Decreases_lex.t
+                        [S.as_arg (embed #_ #(e_list e_term) rng ts)] rng
+        | RD.Decreases_wf rel e ->
+            S.mk_Tm_app ref_Decreases_wf.t
+                        [S.as_arg (embed #_ #e_term rng rel);
+                         S.as_arg (embed #_ #e_term rng e)] rng
+    in
+    let uu (t : term) : ML (option RD.decreases_order) =
+        let? fv, args = head_fv_and_args t in
+        match () with
+        | _ when S.fv_eq_lid fv ref_Decreases_lex.lid ->
+          run args (RD.Decreases_lex <$$> e_list e_term)
+        | _ when S.fv_eq_lid fv ref_Decreases_wf.lid ->
+          run args (RD.Decreases_wf <$$> e_term <**> e_term)
+        | _ -> None
+    in
+    mk_emb ee uu fstar_refl_decreases_order_fv
+
+let e_cflag =
+    let ee (rng:Range.t) (f : RD.cflag) : ML term =
+        match f with
+        | RD.SMTPAT t ->
+            S.mk_Tm_app ref_SMTPAT.t [S.as_arg (embed #_ #e_term rng t)] rng
+        | RD.DECREASES d ->
+            S.mk_Tm_app ref_DECREASES.t [S.as_arg (embed #_ #e_decreases_order rng d)] rng
+    in
+    let uu (t : term) : ML (option RD.cflag) =
+        let? fv, args = head_fv_and_args t in
+        match () with
+        | _ when S.fv_eq_lid fv ref_SMTPAT.lid -> run args (RD.SMTPAT <$$> e_term)
+        | _ when S.fv_eq_lid fv ref_DECREASES.lid -> run args (RD.DECREASES <$$> e_decreases_order)
+        | _ -> None
+    in
+    mk_emb ee uu fstar_refl_cflag_fv
+
 let e_comp_view =
     let embed_comp_view (rng:Range.t) (cv : comp_view) : ML term =
-        match cv with
-        | C_Total t ->
-            S.mk_Tm_app ref_C_Total.t [S.as_arg (embed #_ #e_term rng t)]
-                        rng
-
-        | C_GTotal t ->
-            S.mk_Tm_app ref_C_GTotal.t [S.as_arg (embed #_ #e_term rng t)]
-                        rng
-
-        | C_Lemma (pre, post, pats) ->
-            S.mk_Tm_app ref_C_Lemma.t [S.as_arg (embed #_ #e_term rng pre);
-                                       S.as_arg (embed #_ #e_term rng post);
-                                       S.as_arg (embed #_ #e_term rng pats)]
-                        rng
-
-        | C_Eff (us, eff, res, pre, post, decrs) ->
-            S.mk_Tm_app ref_C_Eff.t
-                [ S.as_arg (embed rng us)
-                ; S.as_arg (embed rng eff)
-                ; S.as_arg (embed #_ #e_term rng res)
-                ; S.as_arg (embed #_ #e_term rng pre)
-                ; S.as_arg (embed #_ #e_term rng post)
-                ; S.as_arg (embed #_ #(e_list e_term) rng decrs)] rng
-
-
+        S.mk_Tm_app ref_Mk_comp_view.t
+            [ S.as_arg (embed rng cv.effect_name)
+            ; S.as_arg (embed #_ #e_term rng cv.result_typ)
+            ; S.as_arg (embed #_ #(e_list e_cflag) rng cv.flags)
+            ; S.as_arg (embed rng cv.source_effect_name)] rng
     in
     let unembed_comp_view (t : term) : ML (option comp_view) =
         let? fv, args = head_fv_and_args t in
         match () with
-        | _ when S.fv_eq_lid fv ref_C_Total.lid -> run args (C_Total <$$> e_term)
-        | _ when S.fv_eq_lid fv ref_C_GTotal.lid -> run args (C_GTotal <$$> e_term)
-        | _ when S.fv_eq_lid fv ref_C_Lemma.lid ->
-          run args (curry3 C_Lemma <$$> e_term <**> e_term <**> e_term)
-        | _ when S.fv_eq_lid fv ref_C_Eff.lid ->
-          run args (curry6 C_Eff <$$> e_list e_universe <**> e_string_list <**> e_term <**> e_term <**> e_term <**> e_list e_term)
+        | _ when S.fv_eq_lid fv ref_Mk_comp_view.lid ->
+          run args (Mkcomp_view <$$> e_string_list <**> e_term <**> e_list e_cflag <**> e_string_list)
         | _ -> None
     in
     mk_emb embed_comp_view unembed_comp_view fstar_refl_comp_view_fv

@@ -28,22 +28,22 @@ open FStarC.Const
 open FStarC.TypeChecker.Rel
 open FStarC.TypeChecker.Common
 
-val value_check_expected_typ: env -> term -> either typ lcomp -> guard_t -> ML (term & lcomp & guard_t)
-val comp_check_expected_typ: env -> term -> lcomp -> ML (term & lcomp & guard_t)
+val value_check_expected_typ: env -> term -> either typ comp -> guard_t -> ML (term & comp & guard_t)
+val comp_check_expected_typ: env -> term -> comp -> ML (term & comp & guard_t)
 val check_expected_effect: env -> use_eq:bool -> option comp -> (term & comp) -> ML (term & comp & guard_t)
 
-val tc_term: env -> term -> ML (term & lcomp & guard_t)
-val tc_maybe_toplevel_term: env -> term -> ML (term & lcomp & guard_t)
-val tc_tactic : typ -> typ -> env -> term -> ML (term & lcomp & guard_t)
+val tc_term: env -> term -> ML (term & comp & guard_t)
+val tc_maybe_toplevel_term: env -> term -> ML (term & comp & guard_t)
+val tc_tactic : typ -> typ -> env -> term -> ML (term & comp & guard_t)
 val tc_constant: env -> FStarC.Range.t -> sconst -> ML typ
 val tc_comp: env -> comp -> ML (comp & universe & guard_t)
 val tc_pat : Env.env -> typ -> pat -> ML (pat & list bv & list term & Env.env & term & term & guard_t & bool)
 val tc_binders: env -> binders -> ML (binders & env & guard_t & universes)
-val tc_tot_or_gtot_term: env -> term -> ML (term & lcomp & guard_t)
+val tc_tot_or_gtot_term: env -> term -> ML (term & comp & guard_t)
 //the last string argument is the reason to be printed in the error message
 //pass "" if NA
-val tc_check_tot_or_gtot_term: env -> term -> typ -> option string -> ML (term & lcomp & guard_t)
-val tc_trivial_guard: env -> term -> ML (term & lcomp)
+val tc_check_tot_or_gtot_term: env -> term -> typ -> option string -> ML (term & comp & guard_t)
+val tc_trivial_guard: env -> term -> ML (term & comp)
 val tc_attributes: env -> list term -> ML (guard_t & list term)
 val tc_check_trivial_guard: env -> term -> term -> ML term
 

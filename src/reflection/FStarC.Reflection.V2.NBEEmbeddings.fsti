@@ -50,6 +50,8 @@ instance val e_attribute     : embedding attribute
 instance val e_attributes    : embedding (list attribute) (* This seems rather silly, but `attributes` is a keyword *)
 instance val e_binding       : embedding RD.binding
 instance val e_binder_view   : embedding binder_view
+instance val e_decreases_order : embedding RD.decreases_order
+instance val e_cflag         : embedding RD.cflag
 instance val e_comp_view     : embedding comp_view
 instance val e_sigelt        : embedding sigelt
 instance val e_lb_view       : embedding lb_view

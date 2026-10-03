@@ -308,6 +308,7 @@ let argeq (a1 a2 : argv)   : prop =
   /\ denote_aqualv (snd a1) == denote_aqualv (snd a2)
 let beq   (b1 b2 : binder) : prop = denote_binder b1 == denote_binder b2
 let ceq   (c1 c2 : comp)   : prop = denote_comp c1 == denote_comp c2
+let feq   (f1 f2 : cflag)  : prop = denote_flag f1 == denote_flag f2
 let peq   (p1 p2 : pattern): prop = denote_pattern p1 == denote_pattern p2
 let breq  (r1 r2 : branch) : prop =
   denote_pattern (fst r1) == denote_pattern (fst r2)
@@ -389,6 +390,14 @@ let rec bridge_terms (l1 l2 : list term)
   = match l1, l2 with
     | [], [] -> ()
     | x::xs, y::ys -> bridge_terms xs ys
+    | _ -> ()
+
+let rec bridge_flags (l1 l2 : list cflag)
+  : Lemma (ensures (rel_list feq l1 l2 <==> denote_flags l1 == denote_flags l2))
+          (decreases l1)
+  = match l1, l2 with
+    | [], [] -> ()
+    | x::xs, y::ys -> bridge_flags xs ys
     | _ -> ()
 
 let rec bridge_args (l1 l2 : list argv)
@@ -537,23 +546,23 @@ let denote_binder_eq (b:binder)
   : Lemma (denote_binder b ==
            Bs (denote_term (inspect_binder b).sort) (denote_aqualv (inspect_binder b).qual)) = ()
 
-let denote_comp_Total (c:comp) (t:term)
-  : Lemma (requires inspect_comp c == C_Total t)
-          (ensures denote_comp c == Cs_Total (denote_term t)) = ()
+let denote_comp_eq (c:comp) (eff:name) (res:term) (flags:list cflag) (seff:name)
+  : Lemma (requires inspect_comp c ==
+                    { effect_name = eff; result_typ = res;
+                      flags = flags; source_effect_name = seff })
+          (ensures denote_comp c == Cs eff (denote_term res) (denote_flags flags)) = ()
 
-let denote_comp_GTotal (c:comp) (t:term)
-  : Lemma (requires inspect_comp c == C_GTotal t)
-          (ensures denote_comp c == Cs_GTotal (denote_term t)) = ()
+let denote_flag_SMTPAT (f:cflag) (t:term)
+  : Lemma (requires f == SMTPAT t)
+          (ensures denote_flag f == Fs_SMTPAT (denote_term t)) = ()
 
-let denote_comp_Lemma (c:comp) (pre post pats:term)
-  : Lemma (requires inspect_comp c == C_Lemma pre post pats)
-          (ensures denote_comp c == Cs_Lemma (denote_term pre) (denote_term post) (denote_term pats)) = ()
+let denote_flag_lex (f:cflag) (ts:list term)
+  : Lemma (requires f == DECREASES (Decreases_lex ts))
+          (ensures denote_flag f == Fs_DECREASES (Ds_lex (denote_terms ts))) = ()
 
-let denote_comp_Eff (c:comp) (us:universes) (eff:name) (res:term) (pre:term) (post:term) (decrs:list term)
-  : Lemma (requires inspect_comp c == C_Eff us eff res pre post decrs)
-          (ensures denote_comp c ==
-                   Cs_Eff (denote_universes us) eff (denote_term res)
-                          (denote_term pre) (denote_term post) (denote_terms decrs)) = ()
+let denote_flag_wf (f:cflag) (rel e:term)
+  : Lemma (requires f == DECREASES (Decreases_wf rel e))
+          (ensures denote_flag f == Fs_DECREASES (Ds_wf (denote_term rel) (denote_term e))) = ()
 
 let denote_Pat_Cons (head:fv) (us:option (list universe)) (subpats:list (pattern & bool))
   : Lemma (denote_pattern (Pat_Cons head us subpats) ==
@@ -616,19 +625,19 @@ let head_lemma (t:term)
     | Tv_Let _ _ _ _ _ | Tv_Match _ _ _ | Tv_AscribedT _ _ _ _ | Tv_AscribedC _ _ _ _
     | Tv_Unknown | Tv_Unsupp -> ()
 
-let cs_head (s:comp_spec) : GTot nat =
+let fs_head (s:cflag_spec) : GTot nat =
   match s with
-  | Cs_Total _ -> 0 | Cs_GTotal _ -> 1 | Cs_Lemma _ _ _ -> 2 | Cs_Eff _ _ _ _ _ _ -> 3
+  | Fs_SMTPAT _ -> 0 | Fs_DECREASES (Ds_lex _) -> 1 | Fs_DECREASES (Ds_wf _ _) -> 2
 
-let cv_head (c:comp) : GTot nat =
-  match inspect_comp c with
-  | C_Total _ -> 0 | C_GTotal _ -> 1 | C_Lemma _ _ _ -> 2 | C_Eff _ _ _ _ _ _ -> 3
+let fv_head (f:cflag) : GTot nat =
+  match f with
+  | SMTPAT _ -> 0 | DECREASES (Decreases_lex _) -> 1 | DECREASES (Decreases_wf _ _) -> 2
 
-let comp_head_lemma (c:comp)
-  : Lemma (cs_head (denote_comp c) == cv_head c)
-          [SMTPat (denote_comp c)]
-  = match inspect_comp c with
-    | C_Total _ | C_GTotal _ | C_Lemma _ _ _ | C_Eff _ _ _ _ _ _ -> ()
+let flag_head_lemma (f:cflag)
+  : Lemma (fs_head (denote_flag f) == fv_head f)
+          [SMTPat (denote_flag f)]
+  = match f with
+    | SMTPAT _ | DECREASES (Decreases_lex _) | DECREASES (Decreases_wf _ _) -> ()
 
 let ps_head (s:pattern_spec) : GTot nat =
   match s with
@@ -666,6 +675,7 @@ val binder_cmp       : comparator_for' beq
 val aqual_cmp        : comparator_for' aqeq
 val arg_cmp          : comparator_for' argeq
 val comp_cmp         : comparator_for' ceq
+val flag_cmp         : comparator_for' feq
 val pat_cmp          : comparator_for' peq
 val pat_arg_cmp      : comparator_for' pareq
 val br_cmp           : comparator_for' breq
@@ -792,27 +802,28 @@ and binder_cmp b1 b2 =
 and comp_cmp c1 c2 =
   let cv1 = inspect_comp c1 in
   let cv2 = inspect_comp c2 in
-  match cv1, cv2 with
-  | C_Total t1, C_Total t2 ->
-    co (term_cmp t1 t2) (denote_comp_Total c1 t1; denote_comp_Total c2 t2)
+  (* [source_effect_name] is presentation only and is not denoted. *)
+  co (eq_cmp cv1.effect_name cv2.effect_name
+      &&& term_cmp cv1.result_typ cv2.result_typ
+      &&& list_dec_cmp' c1 c2 flag_cmp cv1.flags cv2.flags)
+     (denote_comp_eq c1 cv1.effect_name cv1.result_typ cv1.flags cv1.source_effect_name;
+      denote_comp_eq c2 cv2.effect_name cv2.result_typ cv2.flags cv2.source_effect_name;
+      bridge_flags cv1.flags cv2.flags)
 
-  | C_GTotal t1, C_GTotal t2 ->
-    co (term_cmp t1 t2) (denote_comp_GTotal c1 t1; denote_comp_GTotal c2 t2)
+and flag_cmp f1 f2 =
+  match f1, f2 with
+  | SMTPAT t1, SMTPAT t2 ->
+    co (term_cmp t1 t2) (denote_flag_SMTPAT f1 t1; denote_flag_SMTPAT f2 t2)
 
-  | C_Lemma pre1 post1 pat1, C_Lemma pre2 post2 pat2 ->
-    co (term_cmp pre1 pre2 &&& term_cmp post1 post2 &&& term_cmp pat1 pat2)
-       (denote_comp_Lemma c1 pre1 post1 pat1; denote_comp_Lemma c2 pre2 post2 pat2)
+  | DECREASES (Decreases_lex ts1), DECREASES (Decreases_lex ts2) ->
+    (* NB: the implicits are given explicitly; inference otherwise picks a
+       ghost instantiation here (see the [opt_dec_cmp'] use above). *)
+    co #_ #_ #_ #feq #_ #_ #f1 #f2 (list_dec_cmp' f1 f2 term_cmp ts1 ts2)
+       (denote_flag_lex f1 ts1; denote_flag_lex f2 ts2; bridge_terms ts1 ts2)
 
-  | C_Eff us1 ef1 t1 pre1 post1 dec1, C_Eff us2 ef2 t2 pre2 post2 dec2 ->
-    co (list_dec_cmp' c1 c2 univ_cmp us1 us2
-        &&& eq_cmp ef1 ef2
-        &&& term_cmp t1 t2
-        &&& term_cmp pre1 pre2
-        &&& term_cmp post1 post2
-        &&& list_dec_cmp' c1 c2 term_cmp dec1 dec2)
-       (denote_comp_Eff c1 us1 ef1 t1 pre1 post1 dec1;
-        denote_comp_Eff c2 us2 ef2 t2 pre2 post2 dec2;
-        bridge_universes us1 us2; bridge_terms dec1 dec2)
+  | DECREASES (Decreases_wf rel1 e1), DECREASES (Decreases_wf rel2 e2) ->
+    co (term_cmp rel1 rel2 &&& term_cmp e1 e2)
+       (denote_flag_wf f1 rel1 e1; denote_flag_wf f2 rel2 e2)
 
   | _ -> Neq
 
@@ -827,7 +838,12 @@ and pat_cmp p1 p2 =
     co (const_cmp x1 x2) ()
 
   | Pat_Dot_Term x1, Pat_Dot_Term x2 ->
-    co (opt_dec_cmp' p1 p2 term_cmp x1 x2) (bridge_opt_term x1 x2)
+    (* [co]'s [#rb #xb #yb] must be pinned to [peq], [p1] and [p2].  A lemma's
+       statement is now its result type rather than a postcondition, so the
+       second argument's type is what the unifier reaches first: it solves
+       [#xb := denote_opt_term x1], and since [denote_opt_term] is [GTot] the
+       whole application becomes [GTot]. *)
+    co #_ #_ #_ #peq #_ #_ #p1 #p2 (opt_dec_cmp' p1 p2 term_cmp x1 x2) (bridge_opt_term x1 x2)
 
   | Pat_Cons head1 us1 subpats1, Pat_Cons head2 us2 subpats2 ->
     co (fv_cmp head1 head2
@@ -974,23 +990,25 @@ let pat_eq_Pat_Cons (p1 p2 : pattern) (f1 f2 : fv) (ous1 ous2 : option universes
                      &&& opt_dec_cmp' p1 p2 (list_dec_cmp' p1 p2 univ_cmp) ous1 ous2
                      &&& list_dec_cmp' p1 p2 pat_arg_cmp args1 args2)) // #2908
 
-let comp_eq_C_Eff (c1 c2 : comp) (us1 us2 : universes) (ef1 ef2 : name) (t1 t2 : typ) (pre1 pre2 post1 post2 : term) (dec1 dec2 : list term)
-  : Lemma (requires inspect_comp c1 == C_Eff us1 ef1 t1 pre1 post1 dec1
-                  /\ inspect_comp c2 == C_Eff us2 ef2 t2 pre2 post2 dec2)
-          (ensures defined (comp_cmp c1 c2) <==>
-                   defined (list_dec_cmp' c1 c2 univ_cmp us1 us2
-                            &&& eq_cmp ef1 ef2
-                            &&& term_cmp t1 t2
-                            &&& term_cmp pre1 pre2
-                            &&& term_cmp post1 post2
-                            &&& list_dec_cmp' c1 c2 term_cmp dec1 dec2))
-  = assume (defined (comp_cmp c1 c2) <==>
-            defined (list_dec_cmp' c1 c2 univ_cmp us1 us2
-                     &&& eq_cmp ef1 ef2
-                     &&& term_cmp t1 t2
-                     &&& term_cmp pre1 pre2
-                     &&& term_cmp post1 post2
-                     &&& list_dec_cmp' c1 c2 term_cmp dec1 dec2)) // #2908, assert_norm doesn't work
+let comp_eq_Cs (c1 c2 : comp)
+  : Lemma (ensures (let cv1 = inspect_comp c1 in
+                    let cv2 = inspect_comp c2 in
+                    defined (comp_cmp c1 c2) <==>
+                    defined (eq_cmp cv1.effect_name cv2.effect_name
+                             &&& term_cmp cv1.result_typ cv2.result_typ
+                             &&& list_dec_cmp' c1 c2 flag_cmp cv1.flags cv2.flags)))
+  = let cv1 = inspect_comp c1 in
+    let cv2 = inspect_comp c2 in
+    assume (defined (comp_cmp c1 c2) <==>
+            defined (eq_cmp cv1.effect_name cv2.effect_name
+                     &&& term_cmp cv1.result_typ cv2.result_typ
+                     &&& list_dec_cmp' c1 c2 flag_cmp cv1.flags cv2.flags)) // #2908, assert_norm doesn't work
+
+let flag_eq_lex (f1 f2 : cflag) (ts1 ts2 : list term)
+  : Lemma (requires f1 == DECREASES (Decreases_lex ts1) /\ f2 == DECREASES (Decreases_lex ts2))
+          (ensures defined (flag_cmp f1 f2) <==> defined (list_dec_cmp' f1 f2 term_cmp ts1 ts2))
+  = assume (defined (flag_cmp f1 f2) <==>
+            defined (list_dec_cmp' f1 f2 term_cmp ts1 ts2)) // #2908, assert_norm doesn't work
 
 let rec faithful_lemma (t1 t2 : term) =
   match inspect_ln t1, inspect_ln t2 with
@@ -1154,29 +1172,40 @@ and faithful_lemma_attrs_dec #b (top1 top2 : b)
   defined_list_dec top1 top2 term_cmp at1 at2
 
 and faithful_lemma_comp (c1 c2 : comp) : Lemma (requires faithful_comp c1 /\ faithful_comp c2) (ensures defined (comp_cmp c1 c2)) =
-  match inspect_comp c1, inspect_comp c2 with
-  | C_Total t1, C_Total t2 -> faithful_lemma t1 t2
-  | C_GTotal t1, C_GTotal t2 -> faithful_lemma t1 t2
-  | C_Lemma pre1 post1 pat1, C_Lemma pre2 post2 pat2 ->
-    faithful_lemma pre1 pre2;
-    faithful_lemma post1 post2;
-    faithful_lemma pat1 pat2
-  | C_Eff us1 e1 r1 pre1 post1 dec1, C_Eff us2 e2 r2 pre2 post2 dec2 ->
-    univ_faithful_lemma_list_dec c1 c2 us1 us2;
-    faithful_lemma r1 r2;
-    faithful_lemma pre1 pre2;
-    faithful_lemma post1 post2;
-    introduce forall x y. L.memP x dec1 /\ L.memP y dec2 ==> defined (term_cmp x y) with
-     (introduce forall y. L.memP x dec1 /\ L.memP y dec2 ==> defined (term_cmp x y) with
-      (introduce (L.memP x dec1 /\ L.memP y dec2) ==> (defined (term_cmp x y)) with (
+  let cv1 = inspect_comp c1 in
+  let cv2 = inspect_comp c2 in
+  faithful_lemma cv1.result_typ cv2.result_typ;
+  introduce forall x y. L.memP x cv1.flags /\ L.memP y cv2.flags ==> defined (flag_cmp x y) with
+   (introduce forall y. L.memP x cv1.flags /\ L.memP y cv2.flags ==> defined (flag_cmp x y) with
+    (introduce (L.memP x cv1.flags /\ L.memP y cv2.flags) ==> (defined (flag_cmp x y)) with (
+     faithful_lemma_flag x y
+     )
+    )
+   )
+  ;
+  defined_list_dec c1 c2 flag_cmp cv1.flags cv2.flags;
+  (***)comp_eq_Cs c1 c2;
+  ()
+
+and faithful_lemma_flag (f1 f2 : cflag)
+  : Lemma (requires faithful_flag f1 /\ faithful_flag f2) (ensures defined (flag_cmp f1 f2)) =
+  match f1, f2 with
+  | SMTPAT t1, SMTPAT t2 -> faithful_lemma t1 t2
+  | DECREASES (Decreases_lex ts1), DECREASES (Decreases_lex ts2) ->
+    introduce forall x y. L.memP x ts1 /\ L.memP y ts2 ==> defined (term_cmp x y) with
+     (introduce forall y. L.memP x ts1 /\ L.memP y ts2 ==> defined (term_cmp x y) with
+      (introduce (L.memP x ts1 /\ L.memP y ts2) ==> (defined (term_cmp x y)) with (
        faithful_lemma x y
        )
       )
      )
     ;
-    defined_list_dec c1 c2 term_cmp dec1 dec2;
-    (***)comp_eq_C_Eff c1 c2 us1 us2 e1 e2 r1 r2 pre1 pre2 post1 post2 dec1 dec2;
+    defined_list_dec f1 f2 term_cmp ts1 ts2;
+    (***)flag_eq_lex f1 f2 ts1 ts2;
     ()
+  | DECREASES (Decreases_wf rel1 e1), DECREASES (Decreases_wf rel2 e2) ->
+    faithful_lemma rel1 rel2;
+    faithful_lemma e1 e2
   | _ -> ()
 
 and univ_faithful_lemma_list_dec #b (u1 u2 : b) (us1 : list universe{us1 << u1}) (us2 : list universe{us2 << u2})
