@@ -1483,11 +1483,28 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
         | Tm_match _ | Tm_abs _ -> true
         | _ -> false
       in
+      let is_refine (t:term) : ML bool =
+        match (Subst.compress (U.unascribe (U.unmeta t))).n with
+        | Tm_refine _ -> true
+        | _ -> false
+      in
       let has_definition (t:term) : ML bool =
         match (U.un_uinst (U.leftmost_head t)).n with
         | Tm_fvar fv -> Some? (Env.lookup_definition [Env.Unfold delta_constant] g.tcenv fv.fv_name)
         | Tm_name _ | Tm_bvar _ -> false
         | _ -> true
+      in
+      let rec bases_match (n:int) (t0:term) (t1:term) : ML bool =
+        (* Whether the base types of two refinements come to have the same
+           head by unfolding applications, e.g. [nat] and [int], but not
+           [sum_type s] (which unfolds to a [match] on [s]) and [t']. *)
+        let t0 = U.unascribe (U.unmeta (U.unrefine t0)) in
+        let t1 = U.unascribe (U.unmeta (U.unrefine t1)) in
+        if head_matches t0 t1 then true
+        else if n = 0 || not (is_app t0 && is_app t1) then false
+        else match maybe_unfold_side' false (which_side_to_unfold t0 t1) t0 t1 with
+             | None -> false
+             | Some (t0, t1) -> bases_match (n - 1) t0 t1
       in
       let rec unfold_to_match (n:int) (t0:term) (t1:term) : ML bool =
         if head_matches t0 t1 then true
@@ -1505,6 +1522,16 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
           match (if n = 0 then None else maybe_unfold_side' false side t0 t1) with
           | Some (t0, t1) -> unfold_to_match (n - 1) (U.unascribe (U.unmeta t0)) (U.unascribe (U.unmeta t1))
           | None -> not (has_definition (if is_app t0 then t0 else t1))
+        else if is_refine t0 || is_refine t1 then
+          (* One side unfolded to a refinement, e.g. [pfr f] to [x:int{f x
+             == true}] against [ct k] for a recursive [ct]: unfolding only
+             helps if the base type of the refinement comes to match the
+             other side, e.g. [nat] against [int]. Otherwise the guard is
+             better stated on the terms as they are, [pfr f == ct k], which
+             the SMT solver can prove from the equations of [ct]: the
+             encoding of the refinement in it would be a fresh term,
+             unrelated to that of the body of [pfr]. *)
+          bases_match n t0 t1
         else if not (is_app t0 && is_app t1) then
           (* Unfolding reached a [match] or a [fun], e.g. [maybe_close
              a c] against [close a]: relating that to the other side
@@ -1909,7 +1936,19 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
                      nesting. (Not so for subtyping, e.g. [st pre post <: st
                      pre' post'], where the unfoldings may be related by
                      implications, but the arguments only by equations.) *)
-                  if abs_args && rel = EQUALITY
+                  (* A head with the [unifier_hint_injective] attribute,
+                     e.g. [parser k t], is related argument-wise, as by
+                     [Rel], which does not unfold it: its unfoldings may only
+                     be related by equations between its arguments that are
+                     beyond the SMT solver, e.g. [parser_kind_prop #t k p ==>
+                     parser_kind_prop #t' k' p], for types [t], [t'] equal by
+                     unfolding. *)
+                  let injective =
+                    match (U.un_uinst head0).n with
+                    | Tm_fvar fv -> Env.fv_has_attr g.tcenv fv PC.unifier_hint_injective_lid
+                    | _ -> false
+                  in
+                  if (abs_args && rel = EQUALITY) || injective
                   then handle_with (argwise ()) (fun _ -> unfolded ())
                   else either_guard unfolded argwise
                 | None -> compare_head_and_args ())
