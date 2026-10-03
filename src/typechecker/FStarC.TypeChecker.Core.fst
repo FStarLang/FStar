@@ -2590,6 +2590,14 @@ and do_check (g:env) (e:term)
         )
         else check "app arg" g arg
       in
+      (* A ghost argument for a non-informative formal, e.g. a total
+         function for an [a -> GTot b], is total, as by TcTerm, which checks
+         it against the formal. *)
+      let eff_arg =
+        match eff_arg with
+        | EGhost when non_informative g x.binder_bv.sort -> ETot
+        | _ -> eff_arg
+      in
       let pure_arg = is_tot_or_ghost_eff eff_arg in
       let subtyping () =
         (* The obligations of the formal, e.g. a termination refinement,
@@ -2742,9 +2750,8 @@ and do_check (g:env) (e:term)
           let _, (p, _, b) = open_branch g (p, None, b) in
           let! (bs, us) = with_context "check_pat" None (fun _ -> check_pat g p t_sc) in
           let! branch_condition = pattern_branch_condition g sc p in
-          let pat_sc_eq =
-            U.mk_eq2 u_sc t_sc sc
-            (PatternUtils.raw_pat_as_exp g.tcenv p |> Option.must |> fst) in
+          let pat_exp = PatternUtils.raw_pat_as_exp g.tcenv p |> Option.must |> fst in
+          let pat_sc_eq = U.mk_eq2 u_sc t_sc sc pat_exp in
           let hyp, _, next_path_condition =
               branch_conditions path_condition branch_condition pat_sc_eq
           in
@@ -2756,7 +2763,11 @@ and do_check (g:env) (e:term)
             (with_binders g_h bs us
               (weaken_branch g'0 pat_sc_eq
                  (let! eff_br, tbr = check "branch" g' b in
-                  let expect_tbr = Subst.subst [NT(as_x.binder_bv, sc)] returns_ty in
+                  (* As in [TcTerm.tc_eqn], the branch is expected to have the
+                     annotation at the pattern, rather than at the scrutinee:
+                     e.g., a recursive function in it applied to the
+                     pattern reduces. *)
+                  let expect_tbr = Subst.subst [NT(as_x.binder_bv, pat_exp)] returns_ty in
                   let rel =
                     if eq
                     then EQUALITY
@@ -3243,9 +3254,21 @@ and check_against_typ (g:env) (e:term) (t:typ)
         when List.for_all (fun (_, w, _) -> None? w) brs ->
       let! eff, _ = check_match g e.pos sc brs rc_opt (Some t) in
       return (promote eff)
+    | Tm_let {lbs=(true, lbs); body} ->
+      (* The SMT encoding knows nothing of a local recursive function, so the
+         expected type is related to the body's, rather than to the whole
+         [let rec]. *)
+      let lbs, body = Subst.open_let_rec lbs body in
+      let! us = check_letrec_types g lbs in
+      let xs = letrec_binders lbs in
+      let! eff =
+        with_binders g xs us (
+          check_letrec_defs g None lbs us ;!
+          check_against_typ (push_binders g xs) body t) in
+      return (promote eff)
     | Tm_meta {tm}
         when (match (Subst.compress (U.unmeta tm)).n with
-              | Tm_let {lbs=(false, _)} | Tm_match _ -> true
+              | Tm_let _ | Tm_match _ -> true
               | _ -> false) ->
       check_against_typ g tm t
     | Tm_abs _ ->
@@ -4086,14 +4109,25 @@ let check_top_level_letrec' g (lbs:list letbinding)
    residual types from their position.) In a guard, the residual types of
    function literals are only used for the typing axioms of their encodings,
    so they are weakened to their unrefined types: copies of a literal are
-   then encoded alike. *)
+   then encoded alike. When the body, or the tail of its [let]s, is ascribed
+   a refinement type (e.g., [fun y -> let _ = lem y in (y <: y:t{p y})]), the
+   residual type is that of the literal itself, rather than of its position,
+   and is kept: it is the same in all copies, including those in definitions,
+   which are encoded as they are. *)
 let unrefine_abs_residuals (t:term) : ML term =
+  let rec ascribed_a_refinement (body:term) : ML bool =
+    match (Subst.compress body).n with
+    | Tm_ascribed {asc=(Inl t', _, _)} -> Tm_refine? (Subst.compress t').n
+    | Tm_meta {tm} -> ascribed_a_refinement tm
+    | Tm_let {lbs=(false, _); body} -> ascribed_a_refinement body
+    | _ -> false
+  in
   Visit.visit_term false (fun t ->
     match t.n with
     | Tm_abs ab when Some? ab.rc_opt && Some? (Some?.v ab.rc_opt).residual_typ ->
       let rc = Some?.v ab.rc_opt in
       let rt = Some?.v rc.residual_typ in
-      if not (Tm_refine? (Subst.compress rt).n) then t
+      if not (Tm_refine? (Subst.compress rt).n) || ascribed_a_refinement ab.body then t
       else { t with n = Tm_abs { ab with rc_opt = Some { rc with residual_typ = Some (U.unrefine rt) } } }
     | _ -> t) t
 
