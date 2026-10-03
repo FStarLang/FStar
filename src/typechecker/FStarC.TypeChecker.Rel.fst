@@ -2834,14 +2834,29 @@ let solve_rigid_flex_or_flex_rigid_subtyping
              | _ -> [])
       in
       let is_refined t = Tm_refine? (SS.compress t).n in
+      (* Solving from the lower bounds means joining them, which only makes
+         sense when they are refinements of one base type.  Otherwise the join
+         equates their bases with an SMT guard -- [ast_env_elem e k v = group]
+         for a match whose branches have those types -- and that guard is
+         usually false.  Phase 1 drops it, and the variable is left solved
+         with a type one of the branches does not have. *)
+      let lower_bounds_share_a_base () : ML bool =
+          match lower_bound_typs () with
+          | [] -> false
+          | t::ts ->
+            let base t = fst (base_and_refinement_maybe_delta true env t) in
+            let b = base t in
+            ts |> List.for_all (fun t' -> TEQ.eq_tm env (base t') b = TEQ.Equal)
+      in
       let prefer_lower_bounds () : ML bool =
           flip
        && bounds_typs |> BU.for_some is_refined
        && Cons? (lower_bound_typs ())
        && (has_typeclass_constraint ctx_uvar wl
-           || lower_bound_typs () |> BU.for_some is_refined
-           || bounds_typs @ deferred_upper_bound_typs ()
-              |> BU.for_some (fun t -> not (is_refined t)))
+           || ((lower_bound_typs () |> BU.for_some is_refined
+                || bounds_typs @ deferred_upper_bound_typs ()
+                   |> BU.for_some (fun t -> not (is_refined t)))
+               && lower_bounds_share_a_base ()))
       in
       if prefer_lower_bounds ()
       then solve (defer_lit Deferred_flex
