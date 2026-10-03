@@ -1516,8 +1516,11 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
              SMT solver may then prove the relation from its equations) is
              only worth it if it closes the relation outright, e.g. when the
              unfolding reduces by iota. Otherwise the guard is stated on the
-             terms as they are. *)
-          match maybe_unfold_side' guard_ok side t0 t1 with
+             terms as they are. This is tried even when guards are not
+             allowed, e.g. relating [natlt n & unit] to [abs (ICons n INil)]
+             for a recursive [abs] while trying to relate the arguments of
+             two applications without a guard. *)
+          match maybe_unfold_side' true side t0 t1 with
           | Some (t0', t1') ->
             handle_with (no_guard (check_relation g rel t0' t1')) (fun _ -> fallback t0 t1)
           | None -> fallback t0 t1
