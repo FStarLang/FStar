@@ -2701,15 +2701,9 @@ and do_check (g:env) (e:term)
                   with_context "branch check relation" None (fun _ -> check_relation g' rel tbr expect_tbr);!
                   let! eff = join_eff g eff_br acc_eff in
                   return (eff, expect_tbr)))) in
-          match p.v with
-          | Pat_var _ ->
-            //trivially exhaustive
-            (match rest with
-             | _ :: _ -> fail_str "Redundant branches after wildcard"
-             | _ -> return eff_br)
-
-          | _ ->
-            check_branches next_path_condition rest eff_br in
+          (* Branches after a wildcard are dead code, checked, as by TcTerm,
+             under the (false) path condition. *)
+          check_branches next_path_condition rest eff_br in
 
     let! eff = check_branches U.t_true branches ETot in
     let ty = Subst.subst [NT(as_x.binder_bv, sc)] returns_ty in
@@ -3131,16 +3125,10 @@ and check_match (g:env) (r:R.t) (sc:term) (branches:list branch) (rc_opt:option 
                           mention the pattern variables. *)
                        return (eff, expect_tbr, branch_fact bs us pat_sc_eq hyp tbr w))
                       against))) in
-          match p.v with
-          | Pat_var _ ->
-            //trivially exhaustive
-            (match rest with
-             | _ :: _ -> fail_str "Redundant branches after wildcard"
-             | _ -> return (eff_br, tbr, facts))
-
-          | _ ->
-            let! eff, t, more = check_branches next_path_condition (Some (eff_br, tbr)) rest in
-            return (eff, t, facts @ more)
+          (* Branches after a wildcard are dead code, checked, as by TcTerm,
+             under the (false) path condition. *)
+          let! eff, t, more = check_branches next_path_condition (Some (eff_br, tbr)) rest in
+          return (eff, t, facts @ more)
     in
 
     let! branch_typ_opt =
