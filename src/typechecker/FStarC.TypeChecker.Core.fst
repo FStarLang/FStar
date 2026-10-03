@@ -100,6 +100,7 @@ module Err = FStarC.TypeChecker.Err
 module Hash = FStarC.Syntax.Hash
 module Subst = FStarC.Syntax.Subst
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify
+module Visit = FStarC.Syntax.Visit
 
 open FStarC.Class.Show
 open FStarC.Class.Setlike
@@ -4021,6 +4022,29 @@ let check_top_level_letrec' g (lbs:list letbinding)
         reemit_guard g (Subst.subst back form) ;!
         return (ETot, S.t_unit))
 
+(* The SMT encoding names a function literal after its body and its type,
+   including the residual type of its body (see Bug1595). Phase 1 gives a
+   literal checked against an expected arrow the residual type of that arrow,
+   e.g. [_:bool{_ == true <==> o x y}] for [fun x y -> f x y] passed as a
+   [x:_ -> y:_ -> Pure bool True (fun z -> z == true <==> o x y)], and its
+   unifier copies the literal as is into implicit arguments, e.g. the [p] of
+   [Classical.forall_intro], where the same literal elsewhere has residual
+   type [bool]: the two copies would be distinct terms to the SMT solver. (By
+   re-checking the implicit arguments, phase 2 of TcTerm recomputed their
+   residual types from their position.) In a guard, the residual types of
+   function literals are only used for the typing axioms of their encodings,
+   so they are weakened to their unrefined types: copies of a literal are
+   then encoded alike. *)
+let unrefine_abs_residuals (t:term) : ML term =
+  Visit.visit_term false (fun t ->
+    match t.n with
+    | Tm_abs ab when Some? ab.rc_opt && Some? (Some?.v ab.rc_opt).residual_typ ->
+      let rc = Some?.v ab.rc_opt in
+      let rt = Some?.v rc.residual_typ in
+      if not (Tm_refine? (Subst.compress rt).n) then t
+      else { t with n = Tm_abs { ab with rc_opt = Some { rc with residual_typ = Some (U.unrefine rt) } } }
+    | _ -> t) t
+
 let simplify_steps =
     [Env.Beta;
      Env.UnfoldUntil delta_constant;
@@ -4065,7 +4089,8 @@ let check_term_top_gen (g:Env.env) (e:term) (topt:option typ) (simplify:bool) (f
       | Success ((et, Some guard0), cache) ->
         // Options.push();
         // Options.set_option "debug" (Options.List [Options.String "Unfolding"]);
-        let guard = if simplify then N.normalize simplify_steps g guard0 else guard0 in
+        let guard = unrefine_abs_residuals guard0 in
+        let guard = if simplify then N.normalize simplify_steps g guard else guard in
         // Options.pop();
         if !dbg || !dbg_Top || !dbg_Exit
         then begin
