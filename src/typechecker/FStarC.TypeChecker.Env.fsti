@@ -140,12 +140,12 @@ and env = {
   curmodule      :lident;                       (* Name of this module *)
   gamma          :list binding;                (* Local typing environment *)
   gamma_sig      :list sig_binding;            (* and signature elements *)
-  gamma_cache    :SMap.t cached_elt;           (* Memo table for the global gamma_sig environment *)
+  gamma_cache    :HashTable.t string cached_elt;           (* Memo table for the global gamma_sig environment *)
   modules        :list modul;                  (* already fully type checked modules *)
   expected_typ   :option (typ & bool);         (* type expected by the context *)
                                                 (* a true bool will check for type equality (else subtyping) *)
-  sigtab         :SMap.t sigelt;              (* a dictionary of long-names to sigelts *)
-  attrtab        :SMap.t (list sigelt);        (* a dictionary of attribute( name)s to sigelts, mostly in support of typeclasses *)
+  sigtab         :HashTable.t string sigelt;              (* a dictionary of long-names to sigelts *)
+  attrtab        :HashTable.t string (list sigelt);        (* a dictionary of attribute( name)s to sigelts, mostly in support of typeclasses *)
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
   effects        :effects;                      (* monad lattice *)
   generalize     :bool;                         (* should we generalize let bindings? *)
@@ -170,10 +170,10 @@ and env = {
   typeof_well_typed_tot_or_gtot_term :env -> term -> must_tot -> ML (typ & guard_t); (* typechecker callback, uses fast path, with a fallback on the slow path *)
   teq_nosmt_force: env -> term -> term -> ML bool;        (* callback to the unifier *)
   subtype_nosmt_force: env -> term -> term -> ML bool;    (* callback to the unifier *)
-  qtbl_name_and_index: option (lident & typ & int) & SMap.t int;
+  qtbl_name_and_index: option (lident & typ & int) & HashTable.t string int;
      (* ^ the top-level term we're currently processing, its type, and the query counter for it,
        in addition we maintain a counter for query index per lid *)
-  fv_delta_depths:SMap.t delta_depth;           (* cache for fv delta depths, its preferable to use Env.delta_depth_of_fv, soon fv.delta_depth should be removed *)
+  fv_delta_depths:HashTable.t string delta_depth;           (* cache for fv delta depths, its preferable to use Env.delta_depth_of_fv, soon fv.delta_depth should be removed *)
   proof_ns       :proof_namespace;                (* the current names that will be encoded to SMT (a.k.a. hint db) *)
   synth_hook          :env -> typ -> term -> Range.t -> ML term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
   try_solve_implicits_hook :env -> term -> implicits -> ML unit;     (* *)
@@ -184,7 +184,7 @@ and env = {
   tc_hooks       : tcenv_hooks;                   (* hooks that the interactive more relies onto for symbol tracking *)
   dsenv          : FStarC.Syntax.DsEnv.env;        (* The desugaring environment from the front-end *)
   nbe            : list step -> env -> term -> ML term;  (* Callback to the NBE function *)
-  strict_args_tab:SMap.t (option (list int));  (* a dictionary of fv names to strict arguments *)
+  strict_args_tab:HashTable.t string (option (list int));  (* a dictionary of fv names to strict arguments *)
   (* Custard section 115.  A cache of {!disc_proj_info}, which the normalizer
      consults on every attempted projector or discriminator reduction and which
      does four uncached [lookup_qname]s.  Here rather than in the normalizer
@@ -193,8 +193,8 @@ and env = {
      stale entry then selects the wrong field.  As a field it is copied by
      [push_stack] and restored by [rollback], and flushed by [add_sigelt] --
      which is exactly the treatment the two tables around it get. *)
-  disc_proj_tab:SMap.t (option (qualifier & int & option int));
-  erasable_types_tab:SMap.t bool;              (* a dictionary of type names to erasable types *)
+  disc_proj_tab:HashTable.t string (option (qualifier & int & option int));
+  erasable_types_tab:HashTable.t string bool;              (* a dictionary of type names to erasable types *)
   enable_defer_to_tac: bool;                     (* Set by default; unset when running within a tactic itself, since we do not allow
                                                     a tactic to defer problems to another tactic via the attribute mechanism *)
   unif_allow_ref_guards:bool;                     (* Allow guards when unifying refinements, even when SMT is disabled *)

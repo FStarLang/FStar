@@ -877,15 +877,14 @@ let print_exn e =
   Printexc.to_string e
 
 let digest_of_file =
-  let open FStarC_SMap in
-  let cache = create (Z.of_int 101) in
+  let cache = Hashtbl.create 101 in
   fun (fname:string) ->
-    match try_find cache fname with
+    match Hashtbl.find_opt cache fname with
     | Some dig -> dig
     | None ->
       let dig = BatDigest.file fname in
       let dig = BatDigest.to_hex dig in
-      add cache fname dig;
+      Hashtbl.replace cache fname dig;
       dig
 
 let digest_of_string (s:string) =

@@ -48,7 +48,7 @@ instance _ : monoid stat = {
 (* the ref bool marks whether a given key is currently
    being recorded. This is so we avoid double counting
    the time taken by reentrant calls. *)
-let st : SMap.t (ref bool & stat) = SMap.create 10
+let st : HashTable.t string (ref bool & stat) = HashTable.create 10
 
 (* Current stats we are logging. This is used to distinguish
    "tree" time (all the time taken by some call)
@@ -57,21 +57,21 @@ let st : SMap.t (ref bool & stat) = SMap.create 10
 let stack : ref (list string) = mk_ref []
 
 let r_running (k : string) : ML (ref bool) =
-  match SMap.try_find st k with
+  match HashTable.try_find st k with
   | None ->
     let r = alloc false in
-    SMap.add st k (r, mzero);
+    HashTable.add st k (r, mzero);
     r
   | Some (r, _) ->
     r
 
 let add (k : string) (s1 : stat) : ML unit =
   let (r, s0) =
-    match SMap.try_find st k with
+    match HashTable.try_find st k with
     | None -> (alloc false, mzero)
     | Some rs -> rs
   in
-  SMap.add st k (r, mplus s0 s1)
+  HashTable.add st k (r, mplus s0 s1)
 
 let do_record
   (key : string)
@@ -122,8 +122,8 @@ let max x y =
   if x > y then x else y
 
 let print_all () : ML string =
-  let keys = SMap.keys st in
-  let points = List.map (fun k -> k, snd <| Some?.v <| SMap.try_find st k) keys in
+  let keys = HashTable.keys st in
+  let points = List.map (fun k -> k, snd <| Some?.v <| HashTable.try_find st k) keys in
   (* Sort by (point) time. *)
   let points =
     points |>

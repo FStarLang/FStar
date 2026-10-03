@@ -23,7 +23,7 @@ open FStarC.Custard.Syntax
 module BU  = FStarC.Util
 module Builtins = FStarC.Custard.Builtins
 module Dep = FStarC.Parser.Dep
-module SMap = FStarC.SMap
+module HashTable = FStarC.HashTable
 
 let module_of (n:name) : ML string =
   match n.ns with
@@ -47,12 +47,12 @@ let rank_key (m:string) : ML string =
    reference graph leaves free but which still matters, because the target
    modules are laid out in one flat directory and a hand-written realization
    may sit anywhere among them. *)
-let source_ranks (deps:Dep.deps) : ML (SMap.t int) =
-  let rank : SMap.t int = SMap.create 100 in
+let source_ranks (deps:Dep.deps) : ML (HashTable.t string int) =
+  let rank : HashTable.t string int = HashTable.create 100 in
   let n : ref int = mk_ref 0 in
   Dep.topological_order deps rank_key |> List.iter (fun m ->
     n := !n + 1;
-    SMap.add rank m !n);
+    HashTable.add rank m !n);
   rank
 
 (* Tarjan, iterative in the sense that matters: the components come out in
@@ -62,33 +62,33 @@ let source_ranks (deps:Dep.deps) : ML (SMap.t int) =
    files and have to be merged. *)
 let sccs (nodes : list string) (succ : string -> ML (list string))
   : ML (list (list string)) =
-  let index : SMap.t int = SMap.create 100 in
-  let low : SMap.t int = SMap.create 100 in
-  let onstack : SMap.t bool = SMap.create 100 in
+  let index : HashTable.t string int = HashTable.create 100 in
+  let low : HashTable.t string int = HashTable.create 100 in
+  let onstack : HashTable.t string bool = HashTable.create 100 in
   let stack : ref (list string) = mk_ref [] in
   let next : ref int = mk_ref 0 in
   let out : ref (list (list string)) = mk_ref [] in
-  let get (m:SMap.t int) (k:string) : ML int =
-    match SMap.try_find m k with Some v -> v | None -> 0 in
+  let get (m:HashTable.t string int) (k:string) : ML int =
+    match HashTable.try_find m k with Some v -> v | None -> 0 in
   let rec go (v:string) : ML unit =
-    SMap.add index v !next; SMap.add low v !next; next := !next + 1;
-    stack := v :: !stack; SMap.add onstack v true;
+    HashTable.add index v !next; HashTable.add low v !next; next := !next + 1;
+    stack := v :: !stack; HashTable.add onstack v true;
     succ v |> List.iter (fun w ->
-      if None? (SMap.try_find index w)
-      then (go w; if get low w < get low v then SMap.add low v (get low w))
-      else if Some true = SMap.try_find onstack w
-      then (if get index w < get low v then SMap.add low v (get index w)));
+      if None? (HashTable.try_find index w)
+      then (go w; if get low w < get low v then HashTable.add low v (get low w))
+      else if Some true = HashTable.try_find onstack w
+      then (if get index w < get low v then HashTable.add low v (get index w)));
     if get low v = get index v
     then begin
       let rec pop (acc : list string) : ML (list string) =
         match !stack with
         | [] -> acc
         | w :: rest ->
-          stack := rest; SMap.add onstack w false;
+          stack := rest; HashTable.add onstack w false;
           if w = v then w :: acc else pop (w :: acc) in
       out := pop [] :: !out
     end in
-  nodes |> List.iter (fun v -> if None? (SMap.try_find index v) then go v);
+  nodes |> List.iter (fun v -> if None? (HashTable.try_find index v) then go v);
   List.rev !out
 
 (* Where each module sits in the output, and which module a cycle of modules
@@ -107,24 +107,24 @@ let sccs (nodes : list string) (succ : string -> ML (list string))
 
    [source_ranks] survives as the tie-break, and as the fallback for a module
    that emits nothing. *)
-let module_ranks (deps:Dep.deps) (prog:program) : ML (SMap.t int) =
+let module_ranks (deps:Dep.deps) (prog:program) : ML (HashTable.t string int) =
   let src = source_ranks deps in
   let src_of (m:string) : ML int =
-    match SMap.try_find src (rank_key m) with Some r -> r | None -> 0 in
+    match HashTable.try_find src (rank_key m) with Some r -> r | None -> 0 in
   (* Which module each declaration came from, constructors included. *)
-  let owner : SMap.t string = SMap.create 100 in
+  let owner : HashTable.t string string = HashTable.create 100 in
   let ctors = Simplify.ctor_owners prog in
   let _ = prog |> List.iter (fun d ->
-            SMap.add owner (string_of_name (name_of_decl d))
+            HashTable.add owner (string_of_name (name_of_decl d))
                            (module_of (name_of_decl d))) in
   let owner_of (n:string) : ML (option string) =
-    let n = match SMap.try_find ctors n with Some o -> o | None -> n in
-    SMap.try_find owner n in
+    let n = match HashTable.try_find ctors n with Some o -> o | None -> n in
+    HashTable.try_find owner n in
   (* One node per module, edges to every module it refers to. *)
-  let succ : SMap.t (list string) = SMap.create 100 in
-  let seen : SMap.t bool = SMap.create 100 in
+  let succ : HashTable.t string (list string) = HashTable.create 100 in
+  let seen : HashTable.t string bool = HashTable.create 100 in
   let node (m:string) : ML unit =
-    if None? (SMap.try_find seen m) then (SMap.add seen m true; SMap.add succ m []) in
+    if None? (HashTable.try_find seen m) then (HashTable.add seen m true; HashTable.add succ m []) in
   let _ = prog |> List.iter (fun d ->
             let m = module_of (name_of_decl d) in
             node m;
@@ -134,19 +134,19 @@ let module_ranks (deps:Dep.deps) (prog:program) : ML (SMap.t int) =
                 if m' <> m
                 then begin
                   node m';
-                  let es = match SMap.try_find succ m with Some es -> es | None -> [] in
-                  if not (List.mem m' es) then SMap.add succ m (m' :: es)
+                  let es = match HashTable.try_find succ m with Some es -> es | None -> [] in
+                  if not (List.mem m' es) then HashTable.add succ m (m' :: es)
                 end
               | None -> ())) in
   (* Deterministic, and as close to F*'s order as the reference graph allows:
      visit the roots in source order, and each node's successors likewise. *)
   let by_source (a:string) (b:string) : ML int = src_of a - src_of b in
-  let nodes = BU.sort_with by_source (SMap.keys succ) in
+  let nodes = BU.sort_with by_source (HashTable.keys succ) in
   let succ_of (m:string) : ML (list string) =
-    match SMap.try_find succ m with
+    match HashTable.try_find succ m with
     | Some es -> BU.sort_with by_source es
     | None -> [] in
-  let rank : SMap.t int = SMap.create 100 in
+  let rank : HashTable.t string int = HashTable.create 100 in
   let n : ref int = mk_ref 0 in
   (* Inside a component the modules do refer to each other in a cycle, so no
      order of them is right and one has to be picked: source order, which is
@@ -156,12 +156,12 @@ let module_ranks (deps:Dep.deps) (prog:program) : ML (SMap.t int) =
      way.  Between components the order is forced, and nothing moves. *)
   let _ = sccs nodes succ_of |> List.iter (fun comp ->
             BU.sort_with by_source comp |> List.iter (fun m ->
-              n := !n + 1; SMap.add rank m !n)) in
+              n := !n + 1; HashTable.add rank m !n)) in
   (* A module that emits nothing is never a destination, but [rank_of] is
      still asked about it; put it after everything, in source order. *)
-  let _ = BU.sort_with by_source (SMap.keys src) |> List.iter (fun m ->
-            if None? (SMap.try_find rank m)
-            then (n := !n + 1; SMap.add rank m !n)) in
+  let _ = BU.sort_with by_source (HashTable.keys src) |> List.iter (fun m ->
+            if None? (HashTable.try_find rank m)
+            then (n := !n + 1; HashTable.add rank m !n)) in
   rank
 
 (* The members of a recursive group have to stay together -- they are printed
@@ -231,20 +231,20 @@ let run (deps:Dep.deps) (foreign:list string) (prog:program)
   let gs = groups prog in
   let rank = module_ranks deps prog in
   let rank_of (m:string) : ML int =
-    match SMap.try_find rank m with
+    match HashTable.try_find rank m with
     | Some r -> r
-    | None -> (match SMap.try_find rank (rank_key m) with Some r -> r | None -> 0) in
+    | None -> (match HashTable.try_find rank (rank_key m) with Some r -> r | None -> 0) in
   (* A reference to a constructor is a reference to its declaration. *)
   let own = Simplify.ctor_owners prog in
   let resolve (n:string) : ML string =
-    match SMap.try_find own n with Some o -> o | None -> n in
+    match HashTable.try_find own n with Some o -> o | None -> n in
   (* The file each declaration ended up in, by [string_of_name] key. *)
-  let home : SMap.t string = SMap.create 100 in
-  let chunks : SMap.t (ref (list decl)) = SMap.create 100 in
+  let home : HashTable.t string string = HashTable.create 100 in
+  let chunks : HashTable.t string (ref (list decl)) = HashTable.create 100 in
   let emit (m:string) (ds : list decl) : ML unit =
-    let r = match SMap.try_find chunks m with
+    let r = match HashTable.try_find chunks m with
             | Some r -> r
-            | None -> let r = mk_ref [] in SMap.add chunks m r; r in
+            | None -> let r = mk_ref [] in HashTable.add chunks m r; r in
     r := List.rev ds @ !r in
   gs |> List.iter (fun (g : list decl) ->
     (* The group's own module, and the home of everything it references.
@@ -257,7 +257,7 @@ let run (deps:Dep.deps) (foreign:list string) (prog:program)
       owns @
       (g |> List.collect (fun d ->
              Simplify.decl_deps d |> List.collect (fun n ->
-               match SMap.try_find home (resolve n) with
+               match HashTable.try_find home (resolve n) with
                | Some m -> [m]
                | None -> []))) in
     (* The group's own module is the one its *names* come from, and a group
@@ -282,14 +282,14 @@ let run (deps:Dep.deps) (foreign:list string) (prog:program)
        fallback rather than the rule. *)
     let best = if rank_of own >= rank_of top then own else top in
     let _ = g |> List.iter (fun d ->
-              if emits d then SMap.add home (string_of_name (name_of_decl d)) best) in
+              if emits d then HashTable.add home (string_of_name (name_of_decl d)) best) in
     emit best g);
   (* Emitting in rank order is what makes every cross-file reference point
      backwards; within a file the extraction order is preserved untouched. *)
-  let names = SMap.keys chunks in
+  let names = HashTable.keys chunks in
   let names = BU.sort_with (fun a b -> rank_of a - rank_of b) names in
   let files = names |> List.collect (fun m ->
-    let ds = match SMap.try_find chunks m with
+    let ds = match HashTable.try_find chunks m with
              | Some r -> List.rev !r
              | None -> [] in
     if ds = [] then [] else [(avoid foreign m, ds)]) in
@@ -303,8 +303,8 @@ let run (deps:Dep.deps) (foreign:list string) (prog:program)
      included, and the consumer's flags were written against that.  So the
      empty modules are emitted too, in dependency order, which costs an empty
      record each and buys back the parity the flags assume. *)
-  let have : SMap.t bool = SMap.create 100 in
-  let _ = files |> List.iter (fun (m, _) -> SMap.add have m true) in
+  let have : HashTable.t string bool = HashTable.create 100 in
+  let _ = files |> List.iter (fun (m, _) -> HashTable.add have m true) in
   (* Only for karamel.  The OCaml split writes one [.ml] per entry, and a
      module that emits nothing is a module whose contents are somebody else's
      -- a hand-written realization, most often -- so an empty file of that
@@ -315,8 +315,8 @@ let run (deps:Dep.deps) (foreign:list string) (prog:program)
   let empties =
     if not want_empties then []
     else Dep.topological_order deps (fun m -> m) |> List.collect (fun m ->
-      if Some? (SMap.try_find have m) || List.mem m foreign
+      if Some? (HashTable.try_find have m) || List.mem m foreign
          || Builtins.is_realized_module (String.split ['.'] m)
       then []
-      else (SMap.add have m true; [(m, [])])) in
+      else (HashTable.add have m true; [(m, [])])) in
   files @ empties

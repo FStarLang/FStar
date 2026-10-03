@@ -4545,7 +4545,7 @@ Separate compilation is not the only reason the output cannot be one file, and
 the other reason is not about relaxing the whole-program assumption at all.
 
 **The problem.** F\* has fifty-odd hand-written OCaml realizations (§8.2), and
-fourteen of them reference modules Custard compiles:
+thirteen of them reference modules Custard compiles:
 
 | realization | references |
 | --- | --- |
@@ -4555,7 +4555,6 @@ fourteen of them reference modules Custard compiles:
 | `FStarC_Parser_LexFStar` | `FStarC_Errors`, `FStarC_Ident` |
 | `FStarC_Parser_ParseIt` | `FStarC_Parser_AST`, `FStarC_Errors`, `FStarC_Options`, … |
 | `FStarC_Reflection_Types` | `FStarC_Syntax_Syntax`, `FStarC_TypeChecker_Env`, … |
-| `FStarC_Syntax_TermHashTable` | `FStarC_Syntax_Hash` |
 | `FStarC_Tactics_Native` | `FStarC_Tactics_Monad`, `FStarC_TypeChecker_Cfg`, … |
 | `FStarC_Tactics_V2_Builtins` | `FStarC_Syntax_Syntax` |
 | `FStarC_Unionfind`, `FStar_IO`, `FStar_Issue`, `FStarC_Util`, `FStar_Reflection_Typing_Builtins` | shallower |
@@ -23337,7 +23336,7 @@ functor instance.  `Extract.functor_instance` emits one `DModule` per
 instance.  The instance takes the name of the first top-level `let` that
 was followed (`string_tbl`), or the functor's own name with a counter if
 there is none.  Instances are interned by the functor and a structural key
-of its argument.  OCaml functor application is generative and F\*'s is
+of its argument's normal form (§133.5).  OCaml functor application is generative and F\*'s is
 applicative, so two F\* names for the same application have to be the
 same OCaml module, or their types would disagree.
 
@@ -23392,6 +23391,55 @@ name.  So `try m.find tbl x with Not_found -> ...` catches what
 `Hashtbl.find` raises.
 
 `tests/custard/FunctorHashtbl.fst` pins all of this.
+
+## 133.5 Instances indexed by a typeclass
+
+The compiler's own hash tables are one F\* type,
+`FStarC.HashTable.t k {| deq k |} {| hashable k |} v`.  It replaces three
+hand-written `Hashtbl.Make` realizations (`FStarC_SMap`, `FStarC_IMap` and
+`FStarC_Syntax_TermHashTable`):
+
+```fstar
+let hashed (k:Type0) {| d: deq k |} {| h: hashable k |} : hashed_type =
+  { t = k; equal = (=?) #k #d; hash = hash #k #h }
+
+inline_for_extraction
+let t k {| deq k |} {| hashable k |} v = (hashtbl_make (hashed k)).t v
+
+inline_for_extraction
+let try_find #k {| deq k |} {| hashable k |} #v (m: t k v) (x: k) : ML (option v) =
+  (hashtbl_make (hashed k)).find_opt m x
+```
+
+The dictionary binders are `Mono` (§30.9 rule 2), so every key type gets its
+own copy of each operation.  In that copy the functor argument is closed
+(`hashed string #deq_string #hashable_string`), so it names a top-level
+instance.  Three details matter:
+
+* **The key is normalized.**  A body specialized on a dictionary receives
+  the dictionary in weak head normal form (§3.3), but a type that mentions
+  the same application keeps the instance's name.  An abbreviation such as
+  `module_name` for `string` causes the same split.  A key built from the
+  raw argument gives two OCaml modules for one F\* application, and their
+  types disagree.  `functor_instance` therefore keys on the argument
+  reduced by `key_norm_steps`, as a specialization key is (§3.7).
+  `tests/custard/FunctorClass.fst` pins this with operations that are not
+  inlined.
+* **The record holds method references, not lambdas.**  `key_norm_steps` is
+  `Weak`, so it does not normalize under a binder.  A dictionary inside
+  `fun x y -> x =? y` keeps whatever form it arrived in, and the keys
+  differ again.
+* **Neither `hashed` nor a helper may hide the functor.**  `functor_app`
+  follows only unapplied top-level names.  So each operation spells out
+  `hashtbl_make (hashed k)` itself, and `hashed` stays a `let` and is not
+  inlined.  The type `t` is `inline_for_extraction`.  Extracted as a
+  generic type, its argument would mention the local variables `k` and
+  the dictionaries, which is error 397.
+
+The compiler is bootstrapped by a Custard without the normalized key.  So
+`FStarC.HashTable`'s operations are also `inline_for_extraction`, and a
+table whose key type is an abbreviation of `string` is created at
+`#string`.
 
 # 134 A constructor field under a `let`
 

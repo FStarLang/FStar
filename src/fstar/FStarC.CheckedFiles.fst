@@ -19,7 +19,7 @@ open FStarC.TypeChecker.Env
 open FStarC.Syntax
 open FStarC
 open FStarC.Effect
-open FStarC.SMap
+module HashTable = FStarC.HashTable
 
 open FStarC.Class.Show
 
@@ -130,12 +130,12 @@ type cache_t =
   either string Dep.parsing_data
 
 //Internal cache
-let mcache : smap cache_t = SMap.create 50
+let mcache : HashTable.t string cache_t = HashTable.create 50
 let add_and_return checked_fn elt = 
-  SMap.add mcache checked_fn elt; elt
-let try_find_in_cache checked_fn = SMap.try_find mcache checked_fn
+  HashTable.add mcache checked_fn elt; elt
+let try_find_in_cache checked_fn = HashTable.try_find mcache checked_fn
 let dump_cache_keys tag = 
-  if !dbg then Format.print2 "(%s) Cache contains %s\n" tag (show (SMap.keys mcache))
+  if !dbg then Format.print2 "(%s) Cache contains %s\n" tag (show (HashTable.keys mcache))
  
 
 (*

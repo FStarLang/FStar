@@ -23,7 +23,7 @@ open FStarC.Syntax.Syntax
 open FStarC.Custard.Syntax
 
 module Ident = FStarC.Ident
-module SMap  = FStarC.SMap
+module HashTable = FStarC.HashTable
 module S     = FStarC.Syntax.Syntax
 module SS    = FStarC.Syntax.Subst
 module U     = FStarC.Syntax.Util
@@ -36,10 +36,10 @@ module BU     = FStarC.Util
 (* The registry                                                         *)
 (* -------------------------------------------------------------------- *)
 
-let table : SMap.t rule = SMap.create 100
+let table : HashTable.t string rule = HashTable.create 100
 
 let register_rule (l:Ident.lident) (r:rule) : ML unit =
-  SMap.add table (Ident.string_of_lid l) r
+  HashTable.add table (Ident.string_of_lid l) r
 
 (* -------------------------------------------------------------------- *)
 (* Machine integers                                                     *)
@@ -381,8 +381,8 @@ let machine_int_rule (sw : signedness & iwidth) (id:string) : ML (option rule) =
    meets declarations -- see [note_float_module] there -- which is sound
    because the type of a module's [add] mentions its [t], so the type is
    always requested before the operation that returns it. *)
-let float_modules : SMap.t fwidth = SMap.create 10
-let float_probed  : SMap.t bool   = SMap.create 10
+let float_modules : HashTable.t string fwidth = HashTable.create 10
+let float_probed  : HashTable.t string bool   = HashTable.create 10
 
 (* {!builtin_rule} dispatches on a [lident] and has no environment, so the
    attribute is read through a callback that {!FStarC.Custard.Extract.init}
@@ -402,17 +402,17 @@ let float_of_module (ns : list string) : ML (option fwidth) =
   | ["FStar"; "Float64"] -> Some Float64
   | _ ->
     let key = String.concat "." ns in
-    match SMap.try_find float_modules key with
+    match HashTable.try_find float_modules key with
     | Some fw -> Some fw
     | None ->
       (* The negative answer is cached too: this runs for every name in
          every module Custard meets, and a miss would otherwise be a
          environment lookup each time. *)
-      if Some? (SMap.try_find float_probed key) then None
+      if Some? (HashTable.try_find float_probed key) then None
       else begin
-        SMap.add float_probed key true;
+        HashTable.add float_probed key true;
         match (!float_probe) ns with
-        | Some fw -> SMap.add float_modules key fw; Some fw
+        | Some fw -> HashTable.add float_modules key fw; Some fw
         | None -> None
       end
 
@@ -1314,7 +1314,6 @@ let realized_modules : list (list string) = [
   ["FStarC"; "Format"];
   ["FStarC"; "Getopt"];
   ["FStarC"; "Hash"];
-  ["FStarC"; "IMap"];
   ["FStarC"; "Int"; "Extra"];
   ["FStarC"; "Json"];
   ["FStarC"; "List"];
@@ -1329,10 +1328,8 @@ let realized_modules : list (list string) = [
   ["FStarC"; "Reflection"; "Types"];
   ["FStarC"; "Tactics"; "Unseal"];
   ["FStarC"; "Tactics"; "V2"; "Builtins"];
-  ["FStarC"; "SMap"];
   ["FStarC"; "String"];
   ["FStarC"; "StringBuffer"];
-  ["FStarC"; "Syntax"; "TermHashTable"];
   ["FStarC"; "Tactics"; "Native"];
   ["FStarC"; "Time"];
   ["FStarC"; "Timing"];
@@ -1571,7 +1568,7 @@ let list_coercion_rule (id:string) : ML (option rule) =
 
 let builtin_rule (l:Ident.lident) : ML rule =
   let r =
-    match SMap.try_find table (Ident.string_of_lid l) with
+    match HashTable.try_find table (Ident.string_of_lid l) with
     | Some r -> Some r
     | None ->
       let path = Ident.path_of_lid l in
