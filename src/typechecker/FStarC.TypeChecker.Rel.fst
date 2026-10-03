@@ -1276,6 +1276,33 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : ML worklist
       in
       List.rev kept
     in
+    (* The type of [src] may mention binders of its context that are neither
+       in the maximal prefix nor in [bs], e.g. [?src] is the precondition
+       proof of a call in a local lemma's type, [x |- ?src : squash (p x)],
+       occurring under a delayed substitution [x := e] after instantiation.
+       Creating the new uvar at [t_t] in the prefix would give it an
+       ill-scoped type, which then leaks free names into solutions (e.g., as
+       the residual type of a lambda). So also abstract over those binders
+       (and the ones their sorts depend on): the occurrence [?src[x := e]]
+       then becomes [?u e], in scope. *)
+    let bs =
+      let t = U.ctx_uvar_typ src in
+      let scope = binders_as_bv_set (pfx @ bs) in
+      if subset (Free.names t) scope then bs
+      else
+        let needed =
+          List.fold_right
+            (fun (b:binder) (needed:FlatSet.t bv) ->
+              if mem b.binder_bv needed
+              then union needed (Free.names b.binder_bv.sort)
+              else needed)
+            src.ctx_uvar_binders
+            (union (Free.names t) (binders_as_bv_set bs))
+        in
+        src.ctx_uvar_binders |> List.filter (fun (b:binder) ->
+          mem b.binder_bv needed &&
+          not (pfx |> List.existsb (fun (b':binder) -> S.bv_eq b.binder_bv b'.binder_bv)))
+    in
 
   if Nil? bs then aux (U.ctx_uvar_typ src) (fun src' -> src')  //no abstraction over bs
   else begin
@@ -1286,6 +1313,57 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : ML worklist
         (bs |> S.binders_to_names |> List.map S.as_arg)
         src.ctx_uvar_range)
   end
+
+(* A type leaving the scope of the variables [xs] (the result type of
+   [let x = e1 in e2], or of a branch, over its pattern variables) must not
+   contain a metavariable whose context includes one of them: that
+   occurrence is outside the scope of its context, which [Rel] assumes
+   never happens, e.g. [ensure_no_uvar_subst] may abstract such a
+   metavariable over the suffix of its context that contains [x], solving
+   it as [?v .. x ..], and [x] then occurs free outside its scope. So each
+   such metavariable is restricted to its context minus [xs] (and whatever
+   depends on them): its solution may not mention [xs], as the type's may
+   not. A metavariable whose type mentions one of [xs] is left alone. *)
+let restrict_escaping_uvars (env:env) (xs:list bv) (t:term) : ML guard_t =
+  match xs with
+  | [] -> Env.trivial_guard
+  | _ ->
+  let xs_set : FlatSet.t bv = Setlike.from_list xs in
+  Free.uvars t |> elems |> List.fold_left (fun (g:guard_t) (uv:ctx_uvar) ->
+    if Some? (UF.find uv.ctx_uvar_head)
+    || not (List.existsb (fun (b:binder) -> mem b.binder_bv xs_set) uv.ctx_uvar_binders)
+    then g
+    else
+      (* [ctx_uvar_gamma] is innermost-first *)
+      let removed, kept =
+        List.fold_left (fun (removed, kept) (b:binding) ->
+          match b with
+          | Binding_var y ->
+            if mem y xs_set
+            || Cons? (elems (inter (Free.names y.sort) removed))
+            then add y removed, kept
+            else removed, b :: kept
+          | _ -> removed, b :: kept)
+          (xs_set, [])
+          (List.rev uv.ctx_uvar_gamma)
+      in
+      if Cons? (elems (inter (Free.names (U.ctx_uvar_typ uv)) removed))
+      then g
+      else
+        let dec = UF.find_decoration uv.ctx_uvar_head in
+        let t', _, g' =
+          Env.new_tac_implicit_var ("restricted " ^ show uv.ctx_uvar_head)
+            uv.ctx_uvar_range
+            { env with gamma = kept }
+            dec.uvar_decoration_typ
+            dec.uvar_decoration_should_check
+            dec.uvar_decoration_typedness_depends_on
+            uv.ctx_uvar_meta
+            dec.uvar_decoration_should_unrefine
+        in
+        set_uvar env uv (Some Already_checked) t';
+        g ++ g')
+    Env.trivial_guard
 
 let restrict_all_uvars env (tgt:ctx_uvar) (bs:binders) (sources:list ctx_uvar) wl : ML worklist =
   match bs with
@@ -2941,11 +3019,18 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
         let rhs_orig = rhs in
         let (Flex (_, ctx_u, args)) = lhs in
         let bs, rhs =
-          let bv_not_free_in_arg x arg =
-              not (mem x (Free.names (fst arg)))
+          (* A uvar ?v in t may have x in its context. Callers restrict
+             such uvars to the binders that remain after contraction (see
+             restrict_all_uvars), so ?v can no longer depend on x; that is
+             only well-typed if x does not occur in ?v's type. *)
+          let bv_not_free_in x t =
+              not (mem x (Free.names t)) &&
+              BU.for_all
+                (fun (uv:ctx_uvar) -> not (mem x (Free.names (U.ctx_uvar_typ uv))))
+                (elems (Free.uvars t))
           in
           let bv_not_free_in_args x args =
-              BU.for_all (bv_not_free_in_arg x) args
+              BU.for_all (fun arg -> bv_not_free_in x (fst arg)) args
           in
           let binder_matches_aqual b aq =
             match b.binder_qual, aq with
@@ -2957,6 +3042,7 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
                        a.aqual_attributes
             | _ -> false
           in
+          let rhs_hd, rhs_args = U.head_and_args_full rhs in
           let rec remove_matching_prefix lhs_binders rhs_args : ML _ =
             match lhs_binders, rhs_args with
             | [], _
@@ -2967,12 +3053,12 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
               | Tm_name x
                 when bv_eq b.binder_bv x
                   && binder_matches_aqual b aq
-                  && bv_not_free_in_args b.binder_bv rhs_tl ->
+                  && bv_not_free_in_args b.binder_bv rhs_tl
+                  && bv_not_free_in b.binder_bv rhs_hd ->
                 remove_matching_prefix lhs_tl rhs_tl
               | _ ->
                 lhs_binders, rhs_args
           in
-          let rhs_hd, rhs_args = U.head_and_args_full rhs in
           let bs, rhs_args =
             remove_matching_prefix
               (List.rev bs_orig)
@@ -2987,7 +3073,7 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
           | [] -> rhs
           | _ -> u_abs (U.ctx_uvar_typ ctx_u) (sn_binders env bs) rhs
         in
-        [TERM(ctx_u, sol)]
+        [TERM(ctx_u, sol)], bs
     in
 
     (*
@@ -3060,7 +3146,8 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
                  let ctx_lhs = binders_as_bv_set ctx_u.ctx_uvar_binders in
                  let uvars = uvars |> List.filter (fun (src:ctx_uvar) ->
                    not (subset (binders_as_bv_set src.ctx_uvar_binders) ctx_lhs)) in
-                 Inr (mk_solution env lhs bs rhs), restrict_all_uvars env ctx_u bs uvars wl
+                 let sol, bs = mk_solution env lhs bs rhs in
+                 Inr sol, restrict_all_uvars env ctx_u bs uvars wl
     in
 
     (*
@@ -3377,8 +3464,8 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
                Deferred_occur_check_failed
                (Thunk.mkv <| "occurs-check failed: " ^ (Option.must msg))
         else if subset fvs2 fvs1
-        then let sol = mk_solution env lhs lhs_binders rhs in
-             let wl = restrict_all_uvars env ctx_uv lhs_binders uvars wl in
+        then let sol, bs = mk_solution env lhs lhs_binders rhs in
+             let wl = restrict_all_uvars env ctx_uv bs uvars wl in
              solve (solve_prob orig None sol wl)
         else if wl.defer_ok = DeferAny
         then

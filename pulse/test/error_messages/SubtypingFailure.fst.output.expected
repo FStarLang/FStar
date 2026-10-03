@@ -1,9 +1,10 @@
-* Info at SubtypingFailure.fst(18,2-18,10):
+* Info at SubtypingFailure.fst(18,9-18,10):
   - Expected failure:
   - Ill-typed term
-  - Assertion failed
+  - Subtyping check failed
+  - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
   - Failed to prove: x >= 0
   - In context: x: Prims.int
-  - Also see: Prims.fst(477,18-477,24)
+  - See also SubtypingFailure.fst(18,2-19,4)
 

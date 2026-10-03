@@ -42,7 +42,23 @@ let between_bounds (s: Seq.seq int) (lb rb: int)
 let sorted (s: Seq.seq int)
   = forall (i j: nat). i <= j /\ j < Seq.length s ==> Seq.index s i <= Seq.index s j
 
-#push-options "--retry 10"
+(* Instantiating the quantifiers explicitly: the SMT solver otherwise finds
+   the instances needed by [lemma_sorted_append] only by luck. *)
+let sorted_elim (s: Seq.seq int) (i j: nat)
+  : Lemma (requires sorted s /\ i <= j /\ j < Seq.length s)
+          (ensures Seq.index s i <= Seq.index s j)
+  = ()
+
+let larger_than_elim (s: Seq.seq int) (lb: int) (k: nat)
+  : Lemma (requires larger_than s lb /\ k < Seq.length s)
+          (ensures lb <= Seq.index s k)
+  = ()
+
+let smaller_than_elim (s: Seq.seq int) (rb: int) (k: nat)
+  : Lemma (requires smaller_than s rb /\ k < Seq.length s)
+          (ensures Seq.index s k <= rb)
+  = ()
+
 let lemma_sorted_append
   (s1 s2 : Seq.seq int)
   (l1 r1 l2 r2 : int)
@@ -57,9 +73,22 @@ let lemma_sorted_append
     introduce forall (i j: nat). i <= j /\ j < Seq.length s ==> Seq.index s i <= Seq.index s j
     with introduce _ ==> _
     with (
-      if j < n1 then ()
-      else if i < n1 then ()
-      else ()
+      if j < n1 then (
+        Seq.lemma_index_app1 s1 s2 i;
+        Seq.lemma_index_app1 s1 s2 j;
+        sorted_elim s1 i j
+      )
+      else if i < n1 then (
+        Seq.lemma_index_app1 s1 s2 i;
+        Seq.lemma_index_app2 s1 s2 j;
+        smaller_than_elim s1 r1 i;
+        larger_than_elim s2 l2 (j - n1)
+      )
+      else (
+        Seq.lemma_index_app2 s1 s2 i;
+        Seq.lemma_index_app2 s1 s2 j;
+        sorted_elim s2 (i - n1) (j - n1)
+      )
     );
     introduce forall (k: int). 0 <= k /\ k < Seq.length s ==> l1 <= Seq.index s k /\ Seq.index s k <= r2
     with introduce _ ==> _
@@ -74,7 +103,6 @@ let lemma_sorted_append_squash
               r1 <= l2))
     : squash (sorted (Seq.append s1 s2) /\ between_bounds (Seq.append s1 s2) l1 r2)
   = lemma_sorted_append s1 s2 l1 r1 l2 r2
-#pop-options
 
 let to_nat (x: int{x >= 0}): nat = x
 (** Permutation reasoning **)

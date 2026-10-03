@@ -354,6 +354,7 @@ and hash_meta_source_info m
    | Masked_effect -> of_int 1061
    | Meta_smt_pat -> of_int 1063
    | Machine_integer sw -> mix (of_int 1069) (hash_sw sw)
+   | Tactic_synthesized -> of_int 1087
 
 and hash_lazyinfo li : ML (mm H.hash_code) = of_int 0 //no meaningful way to hash the blob
 

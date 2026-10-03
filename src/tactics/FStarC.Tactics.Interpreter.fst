@@ -366,7 +366,7 @@ let run_unembedded_tactic_on_ps
 
     (* Any other error, including exceptions being raised by the metaprograms. *)
     | Inl e ->
-        if ps.dump_on_failure then
+        if ps.dump_on_failure && not (FStarC.TypeChecker.Util.in_phase2_core_attempt ()) then
           do_dump_proofstate ps "at the time of failure";
         let open FStarC.Pprint in
         let texn_to_doc e =

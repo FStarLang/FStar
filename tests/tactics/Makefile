@@ -18,3 +18,7 @@ Hacl.Meta.Use.fst.test: Hacl.Meta.Use.fst Hacl_Meta.ml
 	touch $@
 
 $(OUTPUT_DIR)/Postprocess.fst.output: FSTAR_ARGS+=--dump_module Postprocess --ugly
+# The dump prints the unique ids of names, which depend on how many fresh
+# names were created before, and so on whether phase 2 is TcTerm or Core
+# (--ext phase2_core). See doc/ref/phase2_core.md.
+$(OUTPUT_DIR)/Postprocess.fst.output: OTHERFLAGS+=--ext phase2_core=off

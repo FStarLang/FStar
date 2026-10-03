@@ -229,19 +229,16 @@ let ff (_:unit) : nonempty ⊥ = nonempty_intro (loop' (Bad loop''))
 irreducible
 let f (a:Type) (x:a) : option a = Some x
 
-(* The extra 19 is spurious, and lands on a definition that is rejected anyway.
-   A match's postcondition is a refinement of its result type now, so this
-   field type carries [Some? (f Type0 neg_match) ==> _ == (Some?.v (f ...) -> bool)]
-   -- the pattern variable [t] replaced by a projection of the scrutinee, since
-   it may not escape its branch.  The branch then has to prove
-   [(t -> bool) == (Some?.v (f ...) -> bool)] from [f ... == Some t].  The SMT
-   encoding gives arrow types no congruence (each arrow is its own constant,
-   closed over its free variables), so it cannot transport across [t == Some?.v (f ...)]
-   even though that equation is available and provable on its own.  This needs a
-   scrutinee that is *closed*, so that the substitution fires at all, and a
-   branch that builds an arrow; every parameterized form of this type-level
-   match verifies. *)
-[@@expect_failure [3; 19]]
+(* TcTerm also raised a spurious Error 19 on this field type, on a definition
+   that is rejected anyway. A match's postcondition is a refinement of its
+   result type, so the type carries [Some? (f Type0 neg_match) ==> _ == (Some?.v (f ...) -> bool)]:
+   the pattern variable [t] is replaced by a projection of the scrutinee, since
+   it may not escape its branch. TcTerm's VC then had to prove
+   [(t -> bool) == (Some?.v (f ...) -> bool)] from [f ... == Some t], by
+   transporting along [t == Some?.v (f ...)], which the SMT encoding of arrows
+   (one constant each, with no congruence) does not allow. Core, which checks
+   constructor types with --ext phase2_core, proves it. *)
+[@@expect_failure [3]]
 noeq
 type neg_match =
   | MNM : (match f Type0 neg_match with | Some t -> (t -> bool) | None -> unit) -> neg_match

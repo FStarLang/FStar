@@ -46,6 +46,9 @@ val base_and_refinement_maybe_delta : bool -> env -> term -> ML (term & option (
 val base_and_refinement       : env -> term -> ML (term & option (bv & term))
 val unrefine   : env -> typ -> ML typ
 val may_relate_with_logical_guard (env:env) (is_equality:bool) (head:typ) : ML bool
+(* Restrict the unsolved metavariables of a type that leaves the scope of
+   the given variables so that they cannot depend on them. *)
+val restrict_escaping_uvars : env -> list bv -> term -> ML guard_t
 val head_matches_delta (env:env) (logical:bool) (smt_ok:bool) (t1 t2:typ) : ML (match_result & option (typ & typ))
 val flex_prob_closing         : env -> binders -> prob -> ML bool
 val simplify_vc               : full_norm_allowed:bool -> env -> term -> ML term (* the inner simplification of simplify_guard. *)

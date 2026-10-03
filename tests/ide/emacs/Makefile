@@ -5,6 +5,12 @@ include $(FSTAR_ROOT)/mk/test.mk
 
 _ != mkdir -p $(OUTPUT_DIR)
 
+# [compute] normalizes Fib.fib, i.e. phase 2's elaboration of it. With
+# --ext phase2_core, that is phase 1's, which lacks the result ascription
+# TcTerm puts on a match ("8" instead of "8 <: int"). See
+# doc/ref/phase2_core.md.
+$(OUTPUT_DIR)/Fib.compute.ideout: OTHERFLAGS+=--ext phase2_core=off
+
 JSON_CLEANUP=python ../cleanup.py
 
 # Feed .in to F* and record output as .ideout.  Output is passed through cleanup.py

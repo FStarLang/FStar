@@ -181,6 +181,12 @@ val catch_errors : (unit -> ML 'a) -> ML (list issue & option 'a)
 (* Similar to catch_errors, except the warnings are not added to the old handler *)
 val catch_errors_and_ignore_rest (f:unit -> ML 'a) : ML (list issue & option 'a)
 
+(* Run a given function and return its result (if any), the errors it
+logged/raised, and its other issues, each in the order in which they were
+logged. None of them is added to the old handler: the caller decides which
+to keep. *)
+val catch_all_issues (f:unit -> ML 'a) : ML (list issue & list issue & option 'a)
+
 
 
 

@@ -1935,7 +1935,8 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
                       | Meta_desugared Sequence when cfg.steps.do_not_unfold_pure_lets ->
                         norm cfg env (Meta(env,m,t.pos)::stack) head
 
-                      | Meta_desugared (Machine_integer (_,_)) ->
+                      | Meta_desugared (Machine_integer (_,_))
+                      | Meta_desugared Tactic_synthesized ->
                         (* meta doesn't block reduction,
                            but we need to put the label back *)
                         norm cfg env (Meta(env,m,t.pos)::stack) head
@@ -2381,6 +2382,12 @@ and norm_comp : cfg -> env -> comp -> ML comp =
                   DECREASES (l |> List.map (norm cfg env []) |> Decreases_lex)
                 | DECREASES (Decreases_wf (rel, e)) ->
                   DECREASES (Decreases_wf (norm cfg env [] rel, norm cfg env [] e))
+                (* Patterns are otherwise left alone, but the solutions of
+                   their unification variables must be compressed (or
+                   removed, by [remove_uvar_solutions]) as everywhere else:
+                   with --ext phase2_core, phase 1's elaboration is kept. *)
+                | SMTPAT p when cfg.steps.compress_uvars ->
+                  SMTPAT (norm cfg env [] p)
                 | f -> f) in
               let result_typ = norm cfg env [] ct.result_typ in
               { mk_Comp ({ct with result_typ  = result_typ;

@@ -1072,7 +1072,15 @@ let rename_elab_binding_denote (b:binding) (x y:var)
       denote_pack_app h  (elab_exp (rename e1 x y), R.Q_Explicit);
       denote_pack_app h1' (elab_exp (rename e2 x y), R.Q_Explicit);
       rename_elab_commute e1 x y;
-      rename_elab_commute e2 x y
+      rename_elab_commute e2 x y;
+      (* Push the substitution through the [eq2] application one level at a
+         time, so that no single step needs to unfold [subst_term_spec]
+         deeply. *)
+      let ss = [rt_rename x y] in
+      assert (subst_term_spec (denote_term uinst) ss == denote_term uinst);
+      assert (subst_term_spec (denote_term RT.bool_ty_tm) ss == denote_term RT.bool_ty_tm);
+      assert (subst_term_spec (denote_term h) ss == denote_term h);
+      assert (subst_term_spec (denote_term h1) ss == denote_term h1')
 #pop-options
 
 // list-level congruence helpers for RT.bindings_denote_equiv (pure induction, no tokens)
