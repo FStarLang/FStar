@@ -778,13 +778,27 @@ let rec args_contain_binders (t:term) : ML bool =
     | Tm_app _ -> args_contain_binders a
     | _ -> false) args
 
+(* Whether a formula is first-order: no quantifier, abstraction, arrow,
+   refinement, match or let anywhere in it. *)
+let rec quantifier_free (t:term) : ML bool =
+  match (Subst.compress t).n with
+  | Tm_abs _ | Tm_arrow _ | Tm_refine _ | Tm_match _ | Tm_let _ -> false
+  | Tm_app {hd; arg=(a, _)} -> quantifier_free hd && quantifier_free a
+  | Tm_meta {tm} | Tm_ascribed {tm} -> quantifier_free tm
+  | _ -> true
+
 (* Either of two checks suffices: if both have guards, their disjunction is
    the guard. The caches of both are then dropped, since their entries would
-   claim that their own guards, rather than the disjunction, were emitted. *)
+   claim that their own guards, rather than the disjunction, were emitted.
+   But a quantifier-free guard of [f1] is taken on its own: a disjunction is
+   a burden on the SMT solver, which case-splits on it wherever it is a
+   hypothesis, i.e. in every later goal of a split query. *)
 let either_guard (f1 f2: unit -> ML (result unit)) : result unit
   = fun ctx cache ->
       match f1 () ctx cache with
       | Success (((), None), cache1) -> Success (((), None), cache1)
+      | Success (((), Some p1), cache1) when quantifier_free p1 ->
+        Success (((), Some p1), cache1)
       | r1 ->
         match f2 () ctx cache with
         | Success (((), None), cache2) -> Success (((), None), cache2)
@@ -1853,7 +1867,9 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
                does, before settling for that. But the arguments may also be
                provably equal where the unfoldings are not (e.g. equal
                sequences given by a lemma, where the unfoldings quantify
-               over their indices), so if both need a guard, either suffices. *)
+               over their indices), so if both need a guard, either suffices,
+               unless that of the unfoldings is quantifier-free, e.g. [i < n
+               ==> i < n + m], in which case it is the only guard. *)
             handle_with
               (no_guard (check_relation g EQUALITY head0 head1 ;!
                          check_relation_args g EQUALITY args0 args1))
