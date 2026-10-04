@@ -92,7 +92,7 @@ let p_qual (ps:pstate) : ML st_comp_tag =
   | "ATOMIC" -> STAtomic
   | "UNOBSERVABLE" -> STUnobservable
   | "DIVERGENT" -> STDiv
-  | _ -> ps.idx := !ps.idx - 1; fail ps
+  | _ -> backup ps 1; fail ps
 
 (* qualOptFn *)
 let qual_opt_fn (ps:pstate) : ML (option st_comp_tag) =
@@ -335,8 +335,8 @@ let proof_hint (ps:pstate) (bs:list binder) : ML stmt' =
     | "ASSUME" -> ASSUME (p_slprop ps)
     | "UNFOLD" -> let ns = optional_names ps in UNFOLD (ns, p_slprop ps)
     | "FOLD" -> let ns = optional_names ps in FOLD (ns, p_slprop ps)
-    | "UNDERSCORE" -> if Nil? bs then (ps.idx := !ps.idx - 1; fail ps) else WILD
-    | _ -> ps.idx := !ps.idx - 1; fail ps
+    | "UNDERSCORE" -> if Nil? bs then (backup ps 1; fail ps) else WILD
+    | _ -> backup ps 1; fail ps
   in
   mk_proof_hint_with_binders ht bs
 
@@ -352,7 +352,7 @@ and p_stmt_nonempty (ps:pstate) : ML stmt =
   (* A [let] without [norewrite] or a local [fn] without qualifier starts
      with an empty nonterminal in the Menhir grammar *)
   let k = (tok_at ps i0).L.kind in
-  let loc : pstate -> int -> ML R.range = if k = "LET" || k = "FN" then eps_loc else loc in
+  let loc : pstate -> pos -> ML R.range = if k = "LET" || k = "FN" then eps_loc else loc in
   let s1 = p_stmt_noseq ps in
   let s1 = mk_stmt s1 (loc ps i0) in
   if accept ps "SEMICOLON" && not (at_stmt_end ps) then begin
@@ -371,7 +371,7 @@ and p_braced_stmt (ps:pstate) : ML stmt =
 and p_lambda (ps:pstate) : ML lambda =
   let i0 = !ps.idx in
   let bs = binders ps in
-  let r : pstate -> int -> ML R.range = if !ps.idx = i0 then eps_loc else loc in
+  let r : pstate -> pos -> ML R.range = if !ps.idx = i0 then eps_loc else loc in
   let body = p_braced_stmt ps in
   mk_lambda bs None body (r ps i0)
 
@@ -719,7 +719,7 @@ let parse_lang (contents:string) (r:R.range)
       match err with
       | None -> comments
       | Some _ ->
-        let f = if !ps.furthest > !ps.idx then !ps.furthest else !ps.idx in
+        let f = FStarC.SmallInt.max !ps.furthest !ps.idx in
         drop (length comments - (tok_at ps f).ncom) comments
     in
     Inl (ds, err, comments)

@@ -40,6 +40,10 @@ let mk_ref #a x = alloc #a x
 
 val raise (e: exn) : ML 'a
 
+(* Like [raise], but does not record a backtrace: cheaper, for exceptions
+   used for control flow. *)
+val raise_notrace (e: exn) : ML 'a
+
 val exit : int -> ML 'a
 
 val try_with : (unit -> ML 'a) -> (exn -> ML 'a) -> ML 'a

@@ -22,3 +22,6 @@ let[@inline] max (a:t) (b:t) : t = if a >= b then a else b
 let[@inline] min (a:t) (b:t) : t = if a <= b then a else b
 
 let show (a:t) : string = string_of_int a
+
+let[@inline] array_length (a:'a FStar_ImmutableArray_Base.t) : t = Array.length a
+let[@inline] array_index (a:'a FStar_ImmutableArray_Base.t) (i:t) : 'a = Array.unsafe_get a i

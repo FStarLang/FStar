@@ -45,3 +45,8 @@ val max : t -> t -> t
 val min : t -> t -> t
 
 val show : t -> string
+
+val array_length (#a:Type) (arr:FStar.ImmutableArray.Base.t a) : t
+
+(* No bounds check: the index must be in range *)
+val array_index (#a:Type) (arr:FStar.ImmutableArray.Base.t a) (i:t) : a

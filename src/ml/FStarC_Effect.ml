@@ -6,6 +6,7 @@ let op_Colon_Equals x y = x := y
 let alloc x = ref x
 let mk_ref = alloc
 let raise = raise
+let raise_notrace = raise_notrace
 let exit i = exit (Z.to_int i)
 exception Failure = Failure (* NB: reusing OCaml's native Failure. *)
 (* Normally try_with is desugared by the printer (FStarC_Extraction_ML_PrintML)

@@ -78,6 +78,7 @@ FStarC.Parser.Grammar.parse_file
 FStarC.Parser.Lexer.lex_all
 FStarC.Parser.Grammar.parse_incremental
 FStarC.Parser.Grammar.parse_term
+FStarC.Parser.Grammar.parse_tokens
 
 # Syntax, identifiers and ranges: named by the embeddings, the pretty
 # printers and the tactic realizations.

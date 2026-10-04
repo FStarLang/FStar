@@ -76,7 +76,8 @@ Select the parser with --ext parser=<mode>:
     fstar.exe --ext parser=compare --print Foo.fst >/dev/null
 
 * bench: time each file with menhir (sedlex + Menhir), sedlex (lexing
-  only), lex (the new lexer only) and new (new lexer + parser), printing
+  only), lex (the new lexer only), parse (the new parser only, on
+  pre-lexed tokens) and new (reading + new lexer + parser), printing
   "PARSER-BENCH <file> <name> <ms>" to stderr. Options:
   --ext parser_bench_iters=N (default 10) and
   --ext parser_bench_only=<name>. Benchmark a release build

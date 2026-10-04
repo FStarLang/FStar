@@ -776,10 +776,12 @@ let compare_results fname (r_old:parse_result) (r_new:parse_result) =
   | _, ParseError e2 -> Printf.eprintf "PARSER-COMPARE %s: only new failed: %s\n%!" fname (err_str e2)
   | _ -> Printf.eprintf "PARSER-COMPARE %s: results of different kinds\n%!" fname
 
-(* --ext parser=bench: time Menhir, the new lexer alone and the new
-   parser (including lexing) on each file, then use the new parser.
+(* --ext parser=bench: time Menhir, sedlex alone, the new lexer alone,
+   the new parser alone (on pre-lexed tokens) and the new parser
+   (including reading and lexing) on each file, then use the new parser.
    The number of iterations is taken from --ext parser_bench_iters;
-   --ext parser_bench_only=<menhir|lex|new> runs only one of them. *)
+   --ext parser_bench_only=<menhir|sedlex|lex|parse|new> runs only one
+   of them. *)
 let bench fn =
   match fn with
   | Filename f ->
@@ -807,6 +809,8 @@ let bench fn =
         | _ -> go (n + 1)
       in go 0);
     time "lex" (fun () -> FStarC_Parser_Lexer.lex_all f' contents Z.one Z.zero);
+    (let toks, _ = FStarC_Parser_Lexer.lex_all f' contents Z.one Z.zero in
+     time "parse" (fun () -> try ignore (FStarC_Parser_Grammar.parse_tokens f' toks) with _ -> ()));
     time "new" (fun () -> parse_no_lang_new fn);
     parse_no_lang_new fn
   | _ -> parse_no_lang_new fn

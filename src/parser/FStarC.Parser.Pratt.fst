@@ -48,28 +48,35 @@ module S  = FStarC.String
 module A  = FStar.ImmutableArray.Base
 module E  = FStarC.Errors
 module GS = FStarC.GenSym
+module SI = FStarC.SmallInt
 
 (* Raised when a rule does not apply; caught by [attempt]. The position
    of the failure is recorded in [furthest] for error reporting. *)
 exception Fail
 
+(* Token positions are native integers: they are manipulated a lot. *)
+type pos = SI.t
+
 type pstate = {
   toks      : A.t L.token;
-  ntoks     : int;
-  idx       : ref int;
-  furthest  : ref int;
+  ntoks     : pos;
+  idx       : ref pos;
+  furthest  : ref pos;
   fname     : string;
   start_pos : R.pos;
 }
 
 let mk_pstate (fname:string) (start_pos:R.pos) (toks:list L.token) : ML pstate =
   let arr = A.of_list toks in
-  { toks = arr; ntoks = U.array_length arr; idx = mk_ref 0; furthest = mk_ref 0;
+  { toks = arr; ntoks = SI.array_length arr; idx = mk_ref SI.zero; furthest = mk_ref SI.zero;
     fname = fname; start_pos = start_pos }
 
-(* Tokens past the end are the final EOF (or ERROR) token *)
-let tok_at (ps:pstate) (i:int) : ML L.token =
-  U.array_index ps.toks (if i < ps.ntoks then i else ps.ntoks - 1)
+(* The token list is never empty: it ends with EOF (or ERROR). Tokens
+   past the end are that final token. *)
+let last_idx (ps:pstate) : pos = SI.(ps.ntoks - one)
+
+let tok_at (ps:pstate) (i:pos) : L.token =
+  SI.array_index ps.toks (if SI.(i < ps.ntoks) then i else last_idx ps)
 
 let raise_lex_error (#a:Type) (t:L.token) : ML a =
   match t.extra with
@@ -77,26 +84,33 @@ let raise_lex_error (#a:Type) (t:L.token) : ML a =
   | _ -> failwith "impossible: ERROR token without payload"
 
 (* The next token. Like the (lazy) Menhir lexer, a lexical error is only
-   reported once the parser asks for the offending token. *)
+   reported once the parser asks for the offending token, which is
+   always the last one. *)
 let peek (ps:pstate) : ML L.token =
-  let t = tok_at ps !ps.idx in
-  if t.kind = "ERROR" then raise_lex_error t else t
+  let i = !ps.idx in
+  if SI.(i < last_idx ps) then SI.array_index ps.toks i
+  else
+    let t = SI.array_index ps.toks (last_idx ps) in
+    if t.kind = "ERROR" then raise_lex_error t else t
 
 let peek_kind (ps:pstate) : ML string = (peek ps).kind
 
 (* Further lookahead, [peek_n ps 0 = peek ps] *)
-let peek_n (ps:pstate) (n:int) : ML L.token = tok_at ps (!ps.idx + n)
+let peek_n (ps:pstate) (n:int) : ML L.token = tok_at ps SI.(!ps.idx + of_int n)
 let peek_kind_n (ps:pstate) (n:int) : ML string = (peek_n ps n).kind
 
 let is (ps:pstate) (k:string) : ML bool = peek_kind ps = k
 
 let fail (#a:Type) (ps:pstate) : ML a =
-  if !ps.idx > !ps.furthest then ps.furthest := !ps.idx;
-  raise Fail
+  if SI.(!ps.idx > !ps.furthest) then ps.furthest := !ps.idx;
+  raise_notrace Fail
+
+(* Step back over the last [n] tokens *)
+let backup (ps:pstate) (n:int) : ML unit = ps.idx := SI.(!ps.idx - of_int n)
 
 let advance (ps:pstate) : ML L.token =
   let t = peek ps in
-  if t.kind <> "EOF" then ps.idx := !ps.idx + 1;
+  if SI.(!ps.idx < last_idx ps) then ps.idx := SI.(!ps.idx + one);
   t
 
 let expect (ps:pstate) (k:string) : ML L.token =
@@ -132,28 +146,28 @@ let lookahead (ps:pstate) (f:unit -> ML unit) : ML bool =
    [i0, i1) of tokens starts at the start of token i0 and ends at the
    end of token i1-1; an empty span sits at the end of the previous
    token. *)
-let prev_end (ps:pstate) (i:int) : ML R.pos =
-  if i <= 0 then ps.start_pos else (tok_at ps (i - 1)).ep
+let prev_end (ps:pstate) (i:pos) : R.pos =
+  if SI.(i <= zero) then ps.start_pos else (tok_at ps SI.(i - one)).ep
 
-let span_start (ps:pstate) (i0 i1:int) : ML R.pos =
-  if i1 > i0 then (tok_at ps i0).sp else prev_end ps i0
+let span_start (ps:pstate) (i0 i1:pos) : R.pos =
+  if SI.(i1 > i0) then (tok_at ps i0).sp else prev_end ps i0
 
-let span_end (ps:pstate) (i0 i1:int) : ML R.pos =
-  if i1 > i0 then (tok_at ps (i1 - 1)).ep else prev_end ps i0
+let span_end (ps:pstate) (i0 i1:pos) : R.pos =
+  if SI.(i1 > i0) then (tok_at ps SI.(i1 - one)).ep else prev_end ps i0
 
-let rng (ps:pstate) (i0 i1:int) : ML R.range =
+let rng (ps:pstate) (i0 i1:pos) : R.range =
   R.mk_range ps.fname (span_start ps i0 i1) (span_end ps i0 i1)
 
 (* From the start of span [a0,a1) to the end of span [b0,b1) *)
-let rng2 (ps:pstate) (a0 a1 b0 b1:int) : ML R.range =
+let rng2 (ps:pstate) (a0 a1 b0 b1:pos) : R.range =
   R.mk_range ps.fname (span_start ps a0 a1) (span_end ps b0 b1)
 
 (* The range of everything consumed since [i0] *)
-let loc (ps:pstate) (i0:int) : ML R.range = rng ps i0 !ps.idx
+let loc (ps:pstate) (i0:pos) : ML R.range = rng ps i0 !ps.idx
 
 (* Menhir quirk: when a production starts with an inlined [ioption] that
    is empty, [$startpos] is the end of the previous token. *)
-let eps_loc (ps:pstate) (i0:int) : ML R.range =
+let eps_loc (ps:pstate) (i0:pos) : ML R.range =
   R.mk_range ps.fname (prev_end ps i0) (span_end ps i0 !ps.idx)
 
 let tok_rng (ps:pstate) (t:L.token) : R.range = R.mk_range ps.fname t.sp t.ep
@@ -192,8 +206,8 @@ noeq type trailing_rule = {
   t_name    : string;
   t_level   : int;
   t_lhs_min : int;
-  t_guard   : pstate -> ctx -> term -> int -> ML bool;
-  t_run     : pstate -> ctx -> term -> int -> ML term;
+  t_guard   : pstate -> ctx -> term -> pos -> ML bool;
+  t_run     : pstate -> ctx -> term -> pos -> ML term;
 }
 
 (* Rules indexed by token kind: those keyed on the kind and text of the
@@ -272,7 +286,7 @@ let rec find_leading (ps:pstate) (ctx:ctx) (min:int) (rs:list leading_rule) : ML
     then Some r
     else find_leading ps ctx min rs
 
-let rec find_trailing (ps:pstate) (ctx:ctx) (min lvl:int) (lhs:term) (i0:int) (rs:list trailing_rule)
+let rec find_trailing (ps:pstate) (ctx:ctx) (min lvl:int) (lhs:term) (i0:pos) (rs:list trailing_rule)
   : ML (option trailing_rule) =
   match rs with
   | [] -> None
@@ -298,7 +312,7 @@ let rec term_at (ps:pstate) (ctx:ctx) (min:int) : ML term =
   in
   trailing_loop ps ctx min i0 lhs lvl
 
-and trailing_loop (ps:pstate) (ctx:ctx) (min:int) (i0:int) (lhs:term) (lvl:int) : ML term =
+and trailing_loop (ps:pstate) (ctx:ctx) (min:int) (i0:pos) (lhs:term) (lvl:int) : ML term =
   let g = get_grammar () in
   match find_trailing ps ctx min lvl lhs i0 (lookup g.trailing (peek ps)) with
   | None -> lhs

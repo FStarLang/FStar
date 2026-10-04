@@ -60,6 +60,7 @@ module C  = FStarC.Parser.Const
 module SS = FStarC.Syntax.Syntax
 module AU = FStarC.Parser.AST.Util
 module GS = FStarC.GenSym
+module SI = FStarC.SmallInt
 module PSM = FStarC.PSMap
 
 (* ---------------------------------------------------------------------- *)
@@ -195,14 +196,13 @@ let rec find_machine_int (k:string) (l:list (string & signedness & width))
   | [] -> None
   | (k', s, w) :: l -> if k = k' then Some (s, w) else find_machine_int k l
 
-let constant_kinds : PSM.t unit =
-  PSM.of_list (FStar.List.Tot.append
-    (FStar.List.Tot.map (fun k -> (k, ()))
-      ["LPAREN_RPAREN"; "INT"; "CHAR"; "STRING"; "TRUE"; "FALSE"; "REAL";
-       "REIFY"; "RANGE_OF"; "SET_RANGE_OF"])
-    (FStar.List.Tot.map (fun (k, _, _) -> (k, ())) machine_int_kinds))
-
-let is_constant_kind (k:string) : bool = Some? (PSM.try_find constant_kinds k)
+let is_constant_kind (k:string) : bool =
+  match k with
+  | "LPAREN_RPAREN" | "INT" | "CHAR" | "STRING" | "TRUE" | "FALSE" | "REAL"
+  | "REIFY" | "RANGE_OF" | "SET_RANGE_OF"
+  | "UINT8" | "INT8" | "UINT16" | "INT16" | "UINT32" | "INT32"
+  | "UINT64" | "INT64" | "SIZET" -> true
+  | _ -> false
 
 let constant (ps:pstate) : ML sconst =
   let t = peek ps in
@@ -311,16 +311,19 @@ let qlidentOrOperator (ps:pstate) : ML lident =
 
 (* Tokens that can start an atomicTerm *)
 let is_atomic_start_kind (k:string) : bool =
-  is_constant_kind k ||
-  k = "UNDERSCORE" || k = "OPPREFIX" || k = "LPAREN" || k = "LENS_PAREN_LEFT" ||
-  k = "NAME" || k = "IDENT" || k = "BEGIN" || k = "LBRACK" ||
-  k = "SEQ_BANG_LBRACK" || k = "PERCENT_LBRACK" || k = "BANG_LBRACE"
+  match k with
+  | "UNDERSCORE" | "OPPREFIX" | "LPAREN" | "LENS_PAREN_LEFT"
+  | "NAME" | "IDENT" | "BEGIN" | "LBRACK"
+  | "SEQ_BANG_LBRACK" | "PERCENT_LBRACK" | "BANG_LBRACE" -> true
+  | _ -> is_constant_kind k
 
 let is_atomic_start (ps:pstate) : ML bool = is_atomic_start_kind (peek_kind ps)
 
 (* Tokens that start an onlyTrailingTerm *)
 let is_quantifier_kind (k:string) : bool =
-  k = "FORALL" || k = "EXISTS" || k = "FORALL_OP" || k = "EXISTS_OP"
+  match k with
+  | "FORALL" | "EXISTS" | "FORALL_OP" | "EXISTS_OP" -> true
+  | _ -> false
 
 let is_only_trailing_start (ps:pstate) : ML bool =
   let k = peek_kind ps in
@@ -418,11 +421,11 @@ let rec mapi_inorder (#a #b:Type) (i:int) (f:int -> a -> ML b) (l:list a) : ML (
   | [] -> []
   | x :: xs -> let y = f i x in y :: mapi_inorder (i + 1) f xs
 
-let thunk_at (ps:pstate) (i0:int) (t:term) : ML term =
+let thunk_at (ps:pstate) (i0:pos) (t:term) : ML term =
   let r = loc ps i0 in
   mk_term (Abs ([mk_pattern (PatWild (None, [])) r], t)) r Expr
 
-let thunk2_at (ps:pstate) (i0:int) (t:term) : ML term =
+let thunk2_at (ps:pstate) (i0:pos) (t:term) : ML term =
   let r = loc ps i0 in
   let u = mk_term (Const Const_unit) r Expr in
   let t = mk_term (Seq (u, t)) r Expr in
@@ -436,7 +439,7 @@ let semiColonTermList (ps:pstate) : ML (list term) =
   rflex ps "SEMICOLON" "RBRACK" p_noSeqTerm
 
 let is_aqual_start (ps:pstate) : ML bool =
-  is ps "HASH" || is ps "DOLLAR"
+  match peek_kind ps with "HASH" | "DOLLAR" -> true | _ -> false
 
 (* aqual: HASH LBRACK thunk(term) RBRACK | HASH | DOLLAR *)
 let p_aqual (ps:pstate) : ML arg_qualifier =
@@ -533,7 +536,7 @@ and universeFrom (ps:pstate) : ML term =
   in
   universeFrom_rest ps i0 u1
 
-and universeFrom_rest (ps:pstate) (i0:int) (u1:term) : ML term =
+and universeFrom_rest (ps:pstate) (i0:pos) (u1:term) : ML term =
   if is ps "OPINFIX2" then begin
     let i_u1_end = !ps.idx in
     let t = advance ps in
@@ -573,23 +576,27 @@ and universeFrom_rest (ps:pstate) (i0:int) (u1:term) : ML term =
 
 (* The index of the start and end of the last indexing term [e.(i)] with
    exactly one dot-operator, for [e.(i) <- v]. *)
-let last_index : ref (int & int) = mk_ref (-1, -1)
+let last_index : ref (pos & pos) = mk_ref (SI.minus_one, SI.minus_one)
 
 let is_dot_operator_kind (k:string) : bool =
   k = "DOT_LPAREN" || k = "DOT_LBRACK" || k = "DOT_LBRACK_BAR" || k = "DOT_LENS_PAREN_LEFT"
 
 let is_genBinder_start_kind (k:string) : bool =
-  k = "LBRACE_BAR" || k = "LPAREN" || k = "DOT_DOT" || k = "LBRACK" || k = "LBRACE" ||
-  k = "LENS_PAREN_LEFT" || is_constant_kind k || k = "MINUS" || k = "BACKTICK_PERC" ||
-  k = "HASH" || k = "DOLLAR" || k = "LBRACK_AT_AT_AT" || k = "IDENT" ||
-  k = "UNDERSCORE" || k = "NAME"
+  match k with
+  | "LBRACE_BAR" | "LPAREN" | "DOT_DOT" | "LBRACK" | "LBRACE"
+  | "LENS_PAREN_LEFT" | "MINUS" | "BACKTICK_PERC"
+  | "HASH" | "DOLLAR" | "LBRACK_AT_AT_AT" | "IDENT"
+  | "UNDERSCORE" | "NAME" -> true
+  | _ -> is_constant_kind k
 
 let is_atomic_pattern_start_kind (k:string) : bool =
   k <> "LBRACE_BAR" && is_genBinder_start_kind k
 
 let is_multiBinder_start_kind (k:string) : bool =
-  k = "LBRACE_BAR" || k = "LPAREN" || k = "LPAREN_RPAREN" || k = "HASH" ||
-  k = "DOLLAR" || k = "LBRACK_AT_AT_AT" || k = "IDENT" || k = "UNDERSCORE"
+  match k with
+  | "LBRACE_BAR" | "LPAREN" | "LPAREN_RPAREN" | "HASH"
+  | "DOLLAR" | "LBRACK_AT_AT_AT" | "IDENT" | "UNDERSCORE" -> true
+  | _ -> false
 
 (* ---------------------------------------------------------------------- *)
 (* Atoms, applications, patterns and binders                              *)
@@ -689,7 +696,7 @@ let rec atomic (ps:pstate) : ML (term & bool) =
     else fail ps
 
 (* list(DOT qlident) after a projectionLHS *)
-and projections (ps:pstate) (i0:int) (e:term) : ML term =
+and projections (ps:pstate) (i0:pos) (e:term) : ML term =
   let rec fields () : ML (list lident) =
     let k1 = peek_kind_n ps 1 in
     if is ps "DOT" && (k1 = "IDENT" || k1 = "NAME") then begin
@@ -698,7 +705,7 @@ and projections (ps:pstate) (i0:int) (e:term) : ML term =
       lid :: fields ()
     end else begin
       (* Menhir shifts a DOT here before failing; report errors past it *)
-      if is ps "DOT" && !ps.idx + 1 > !ps.furthest then ps.furthest := !ps.idx + 1;
+      if is ps "DOT" && SI.(!ps.idx + one > !ps.furthest) then ps.furthest := SI.(!ps.idx + one);
       []
     end
   in
@@ -714,7 +721,7 @@ and indexing_term (ps:pstate) : ML (term & bool) =
   let e, q = atomic ps in
   if q then (e, q)
   else begin
-    let rec go (e:term) (n:int) : ML (term & int) =
+    let rec go (e:term) (n:SI.t) : ML (term & SI.t) =
       let t = peek ps in
       let closer =
         match t.kind with
@@ -734,10 +741,10 @@ and indexing_term (ps:pstate) : ML (term & bool) =
         ignore (expect ps closer);
         let r = loc ps iop in
         let e = mk_term (Op (op, [e; e2])) (RO.union_ranges e.range r) Expr in
-        go e (n + 1)
+        go e SI.(n + one)
     in
-    let e, n = go e 0 in
-    if n = 1 then last_index := (i0, !ps.idx);
+    let e, n = go e SI.zero in
+    if n = SI.one then last_index := (i0, !ps.idx);
     (e, false)
   end
 
@@ -1207,7 +1214,7 @@ let letbinding (ps:pstate) : ML (bool & (pattern & term)) =
       let ascr = ascribeTyp ps in
       let i_eq = !ps.idx in
       ignore (expect ps "EQUALS");
-      let r = rng2 ps i_f i_f1 i_eq (i_eq + 1) in
+      let r = rng2 ps i_f i_f1 i_eq SI.(i_eq + one) in
       let tm = p_term ps in
       (focus, (mk_pattern (PatAscribed (pat, ascr)) r, tm))
     end else begin
@@ -1296,8 +1303,8 @@ let lrule (name:string) (allowed level:int) (guard:pstate -> ctx -> ML bool)
           (run:pstate -> ctx -> ML term) : leading_rule =
   { l_name = name; l_allowed = allowed; l_level = level; l_guard = guard; l_run = run }
 
-let trule (name:string) (level lhs_min:int) (guard:pstate -> ctx -> term -> int -> ML bool)
-          (run:pstate -> ctx -> term -> int -> ML term) : trailing_rule =
+let trule (name:string) (level lhs_min:int) (guard:pstate -> ctx -> term -> pos -> ML bool)
+          (run:pstate -> ctx -> term -> pos -> ML term) : trailing_rule =
   { t_name = name; t_level = level; t_lhs_min = lhs_min; t_guard = guard; t_run = run }
 
 (* The base of the grammar: tmRefinement, or an application *)
@@ -1775,11 +1782,11 @@ let next_is (k:string) (ps:pstate) (_:ctx) : ML bool = peek_kind_n ps 1 = k
 (* Trailing rules                                                         *)
 (* ---------------------------------------------------------------------- *)
 
-let tguard (_:pstate) (_:ctx) (_:term) (_:int) : ML bool = true
+let tguard (_:pstate) (_:ctx) (_:term) (_:pos) : ML bool = true
 
 (* A binary operator e1 op e2, with the operator named by [name] *)
 let binop (name:L.token -> string) (rhs:int) (lv:level)
-  (ps:pstate) (ctx:ctx) (lhs:term) (i0:int) : ML term =
+  (ps:pstate) (ctx:ctx) (lhs:term) (i0:pos) : ML term =
   let t = advance ps in
   let e2 = term_at ps ctx rhs in
   mk_term (Op (mk_id_tok ps t (name t), [lhs; e2])) (loc ps i0) lv
@@ -1795,13 +1802,13 @@ let right_op (key:string) (l:int) (name:L.token -> string) (lv:level) : string &
   (key, trule key l (l + 1) tguard (binop name l lv))
 
 (* e1; e2 *)
-let t_seq (ps:pstate) (ctx:ctx) (lhs:term) (i0:int) : ML term =
+let t_seq (ps:pstate) (ctx:ctx) (lhs:term) (i0:pos) : ML term =
   ignore (advance ps);
   let e2 = term_at ps ctx 0 in
   mk_term (Seq (lhs, e2)) (loc ps i0) Expr
 
 (* e1 ;; e2   and   e1 ;op e2 *)
-let t_seq_op (ps:pstate) (ctx:ctx) (lhs:term) (i0:int) : ML term =
+let t_seq_op (ps:pstate) (ctx:ctx) (lhs:term) (i0:pos) : ML term =
   let t = advance ps in
   let e2 = term_at ps ctx 0 in
   let r_op = tok_rng ps t in
@@ -1815,12 +1822,12 @@ let t_seq_op (ps:pstate) (ctx:ctx) (lhs:term) (i0:int) : ML term =
   mk_term tm (loc ps i0) Expr
 
 (* e1.(e2) <- e3: only when the lhs is exactly an indexing term *)
-let larrow_guard (ps:pstate) (_:ctx) (lhs:term) (i0:int) : ML bool =
+let larrow_guard (ps:pstate) (_:ctx) (lhs:term) (i0:pos) : ML bool =
   let (a, b) = !last_index in
   a = i0 && b = !ps.idx &&
   (match lhs.tm with Op (_, [_; _]) -> true | _ -> false)
 
-let t_larrow (ps:pstate) (ctx:ctx) (lhs:term) (i0:int) : ML term =
+let t_larrow (ps:pstate) (ctx:ctx) (lhs:term) (i0:pos) : ML term =
   ignore (advance ps);
   let e3 = term_at ps ctx 1 in
   match lhs.tm with
@@ -1830,7 +1837,7 @@ let t_larrow (ps:pstate) (ctx:ctx) (lhs:term) (i0:int) : ML term =
   | _ -> fail ps
 
 (* e <: t [by tac]   and   e $: t [by tac] *)
-let t_ascribe (eq:bool) (ps:pstate) (_:ctx) (lhs:term) (i0:int) : ML term =
+let t_ascribe (eq:bool) (ps:pstate) (_:ctx) (lhs:term) (i0:pos) : ML term =
   let i_op = !ps.idx in
   ignore (advance ps);
   let t = p_typ ps in
@@ -1848,7 +1855,7 @@ let t_ascribe (eq:bool) (ps:pstate) (_:ctx) (lhs:term) (i0:int) : ML term =
   mk_term (Ascribed (lhs, { t with level = Expr }, tac, eq)) r Expr
 
 (* dom -> tgt *)
-let t_arrow (ps:pstate) (ctx:ctx) (lhs:term) (i0:int) : ML term =
+let t_arrow (ps:pstate) (ctx:ctx) (lhs:term) (i0:pos) : ML term =
   let i_arrow = !ps.idx in
   ignore (advance ps);
   let tgt = term_at ps ctx 30 in
@@ -1861,7 +1868,7 @@ let t_arrow (ps:pstate) (ctx:ctx) (lhs:term) (i0:int) : ML term =
   mk_term (Product ([b], tgt)) (loc ps i0) Un
 
 (* e1, ..., en *)
-let t_tuple (ps:pstate) (ctx:ctx) (lhs:term) (i0:int) : ML term =
+let t_tuple (ps:pstate) (ctx:ctx) (lhs:term) (i0:pos) : ML term =
   let i_e = !ps.idx in
   let rec go () : ML (list term) =
     if accept ps "COMMA" then
@@ -1873,13 +1880,13 @@ let t_tuple (ps:pstate) (ctx:ctx) (lhs:term) (i0:int) : ML term =
   mkTuple (lhs :: rest) (rng ps i0 i_e)
 
 (* e1 :: e2 *)
-let t_cons (ps:pstate) (ctx:ctx) (lhs:term) (i0:int) : ML term =
+let t_cons (ps:pstate) (ctx:ctx) (lhs:term) (i0:pos) : ML term =
   ignore (advance ps);
   let e2 = term_at ps ctx 81 in
   consTerm (loc ps i0) lhs e2
 
 (* dependent tuple types  x:t & u *)
-let t_sum (ps:pstate) (ctx:ctx) (lhs:term) (i0:int) : ML term =
+let t_sum (ps:pstate) (ctx:ctx) (lhs:term) (i0:pos) : ML term =
   let i_amp = !ps.idx in
   ignore (advance ps);
   let e2 = term_at ps ctx 82 in
@@ -1896,7 +1903,7 @@ let t_sum (ps:pstate) (ctx:ctx) (lhs:term) (i0:int) : ML term =
   mk_term (Sum (dom, res)) (loc ps i0) Type_level
 
 (* e1 `op` e2 *)
-let t_backtick (ps:pstate) (ctx:ctx) (lhs:term) (i0:int) : ML term =
+let t_backtick (ps:pstate) (ctx:ctx) (lhs:term) (i0:pos) : ML term =
   ignore (advance ps);
   let op = term_at ps ctx 86 in
   ignore (expect ps "BACKTICK");
@@ -2356,15 +2363,17 @@ let legacy_hint_msg =
 (* The error for a failed parse: at the end of the furthest token that
    the parser could not consume, as Menhir does. *)
 let error_of_failure (ps:pstate) : ML E.error =
-  let f = if !ps.furthest > !ps.idx then !ps.furthest else !ps.idx in
+  let f = SI.max !ps.furthest !ps.idx in
   let t = tok_at ps f in
   if t.kind = "ERROR" then raise_lex_error t
   else begin
-    let k (i:int) : ML string = if i >= 0 then (tok_at ps i).kind else "" in
-    let binder_name (i:int) : ML bool = k i = "IDENT" || k i = "UNDERSCORE" in
+    let k (n:int) : ML string =
+      let i = SI.(f - of_int n) in
+      if SI.(i >= zero) then (tok_at ps i).kind else "" in
+    let binder_name (n:int) : ML bool = k n = "IDENT" || k n = "UNDERSCORE" in
     let hint =
-      (k f = "DOT" && binder_name (f - 1) && k (f - 2) = "WITH") ||
-      (k (f - 1) = "DOT" && binder_name (f - 2) && k (f - 3) = "WITH")
+      (k 0 = "DOT" && binder_name 1 && k 2 = "WITH") ||
+      (k 1 = "DOT" && binder_name 2 && k 3 = "WITH")
     in
     let msg = if hint then legacy_hint_msg else "Syntax error" in
     (Codes.Fatal_SyntaxError, FStarC.Errors.Msg.mkmsg msg, R.mk_range ps.fname t.ep t.ep, [])
@@ -2372,7 +2381,7 @@ let error_of_failure (ps:pstate) : ML E.error =
 
 (* Run [f] with the terms of grammar [g], turning a failure into a syntax error *)
 let run_with (#a:Type) (g:grammar) (ps:pstate) (f:unit -> ML a) : ML a =
-  last_index := (-1, -1);
+  last_index := (SI.minus_one, SI.minus_one);
   with_grammar g (fun () ->
     try f () with
     | Fail -> raise (E.Error (error_of_failure ps)))
@@ -2392,9 +2401,7 @@ let start (fname:string) (contents:string) (line col:int) : ML (pstate & list (s
   let ps = mk_pstate fname (R.mk_pos line col) toks in
   (ps, comments)
 
-let parse_file (fname:string) (contents:string) (line col:int)
-  : ML (inputFragment & list (string & R.range))
-= let ps, comments = start fname contents line col in
+let parse_decls (ps:pstate) : ML (list decl) =
   let decls = run ps (fun () ->
     let rec go () : ML (list (list decl)) =
       if is ps "EOF" then []
@@ -2404,7 +2411,16 @@ let parse_file (fname:string) (contents:string) (line col:int)
     in
     go ())
   in
-  (as_frag (flatten decls), comments)
+  flatten decls
+
+let parse_file (fname:string) (contents:string) (line col:int)
+  : ML (inputFragment & list (string & R.range))
+= let ps, comments = start fname contents line col in
+  (as_frag (parse_decls ps), comments)
+
+(* Parse already lexed tokens, for benchmarking the parser alone *)
+let parse_tokens (fname:string) (toks:list L.token) : ML (list decl) =
+  parse_decls (mk_pstate fname (R.mk_pos 1 0) toks)
 
 let parse_term (fname:string) (contents:string) (line col:int) : ML term =
   let ps, _ = start fname contents line col in
@@ -2462,6 +2478,6 @@ let parse_incremental (fname:string) (contents:string) (line col:int)
   | Some _ ->
     (* Like the lazy lexer of Menhir, only report the comments before the
        token where parsing stopped *)
-    let f = if !ps.furthest > !ps.idx then !ps.furthest else !ps.idx in
+    let f = SI.max !ps.furthest !ps.idx in
     let seen = (tok_at ps f).ncom in
     (decls, drop (ncomments - seen) comments, err)
