@@ -21,21 +21,21 @@ open FStarC.Effect
 open FStarC.Class.Show
 
 module BU   = FStarC.Util
-module SMap = FStarC.SMap
+module HashTable = FStarC.HashTable
 
 type counter = {
   c_time:  ref int;                     (* exclusive nanoseconds *)
   c_calls: ref int;
 }
 
-let counters : SMap.t counter = SMap.create 50
+let counters : HashTable.t string counter = HashTable.create 50
 
 let get (name:string) : ML counter =
-  match SMap.try_find counters name with
+  match HashTable.try_find counters name with
   | Some c -> c
   | None ->
     let c = { c_time = mk_ref 0; c_calls = mk_ref 0 } in
-    SMap.add counters name c; c
+    HashTable.add counters name c; c
 
 (* The time charged to the *caller* by everything measured since the caller
    started.  Each [timed] frame saves the running total, zeroes it, and adds
@@ -73,11 +73,11 @@ let count (name:string) : ML unit =
 
 let report () : ML unit =
   if not (is_enabled ()) then () else begin
-    let rows = SMap.fold counters (fun k v acc -> (k, v) :: acc) [] in
+    let rows = HashTable.fold counters (fun k v acc -> (k, v) :: acc) [] in
     let rows = BU.sort_with (fun (_, a) (_, b) -> !b.c_time - !a.c_time) rows in
     Format.print_string "Custard, exclusive time by counter:\n";
     rows |> List.iter (fun (k, c) ->
       Format.print3 "  %s ms\t%s\t(%s calls)\n"
         (show (!c.c_time / 1000000)) k (show !c.c_calls));
-    SMap.clear counters
+    HashTable.clear counters
   end

@@ -47,7 +47,6 @@ let strlen s = length s
 
 let substring s i j =
   BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))
-let sub = substring
 
 let get s i = BatUChar.code (BatUTF8.get s (Z.to_int i))
 let collect f s =

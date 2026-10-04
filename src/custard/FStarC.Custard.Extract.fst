@@ -49,7 +49,7 @@ module PO     = FStarC.TypeChecker.Primops.Base
 module PC     = FStarC.Parser.Const
 module ExtractAs = FStarC.Parser.Const.ExtractAs
 module S      = FStarC.Syntax.Syntax
-module SMap   = FStarC.SMap
+module HashTable = FStarC.HashTable
 module Unit   = FStarC.Custard.Unit
 module Visit  = FStarC.Syntax.Visit
 module Hash   = FStarC.Syntax.Hash
@@ -345,23 +345,23 @@ type state = {
   (* Specialization key -> the IR name it was assigned.  Filled in *before*
      the definition is translated, so that a recursive occurrence finds it and
      stops. *)
-  names:   SMap.t name;
-  emitted: SMap.t decl;
+  names:   HashTable.t string name;
+  emitted: HashTable.t string decl;
   (* Emission order, reversed: a definition is appended once its body has been
      translated, so uses come after definitions. *)
   order:   ref (list string);
   (* lid -> its binder classification (section 3.1), computed once. *)
-  classes: SMap.t (list bclass);
+  classes: HashTable.t string (list bclass);
   (* Which of a declaration's binders are erased, unit-shaped or type
      parameters: a property of its F* type, asked at every *call site* of it
      and answered by normalizing every binder's sort.  Keyed by a tag and the
      lid; see {!binder_flags} and section 12.14. *)
-  bflags:  SMap.t (list bool);
+  bflags:  HashTable.t string (list bool);
   (* lid -> how many specializations of it we have created so far. *)
-  counts:  SMap.t int;
+  counts:  HashTable.t string int;
   (* The mangled names handed out already, so that two specializations whose
      hints coincide still get distinct names. *)
-  suffixes: SMap.t bool;
+  suffixes: HashTable.t string bool;
   fuel:    ref int;
   (* The chain of requests that led to what we are currently working on,
      innermost first.  Only used to make diagnostics debuggable (section
@@ -371,7 +371,7 @@ type state = {
      a recursive binder (by its IR variable name) to the lifted declaration's
      name, its type arguments, the captured variables its call sites have to
      supply, and its full arrow type.  See [lift_letrec]. *)
-  lifted:  SMap.t (name & list cty & list binder & cty & list S.bv);
+  lifted:  HashTable.t string (name & list cty & list binder & cty & list S.bv);
   (* The declaration currently being extracted, which is what a lifted local
      function is named after. *)
   cur:     ref name;
@@ -395,12 +395,12 @@ type state = {
      the variable stands for.  Binder indices are unique after opening, so a
      stale entry can never be found by a different variable and nothing is
      ever removed. *)
-  letdefs: SMap.t S.term;
+  letdefs: HashTable.t string S.term;
   (* Names bound to an *effectful* right-hand side, which [letdefs]
      deliberately does not record.  Kept only so that section 3.2's rejection
      can tell a runtime parameter apart from a computation's result: the two
      need entirely different advice. *)
-  effletdefs: SMap.t unit;
+  effletdefs: HashTable.t string unit;
   (* The binders of the definition currently being extracted.  Section 3.2's
      advice is to write [@@monomorphize] on the offending name "in the
      enclosing definition", which is only possible if the name *is* one of
@@ -408,7 +408,7 @@ type state = {
      instead, and the reader who follows the advice writes an attribute that
      nothing reads.  Indices are unique after opening, so entries accumulate
      harmlessly and are never removed. *)
-  defbinders: SMap.t unit;
+  defbinders: HashTable.t string unit;
   (* The type a local [let] was given, keyed by its bound variable's index.
      In a [--lax] run the typechecker leaves the sort of a binder it invented
      itself (the [uu__] of an ANF-style [let]) unknown, so the *occurrence* of
@@ -416,13 +416,13 @@ type state = {
      perfectly good type.  That loses information the backends need -- whether
      a value is a [ref] rather than a one-element run, for one -- so an
      occurrence whose own sort says nothing falls back to this. *)
-  lettys: SMap.t cty;
+  lettys: HashTable.t string cty;
   (* Every type abbreviation emitted so far, keyed by its target name.  An
      abbreviation is a name for a type, not a type of its own, so a use of it
      in *function position* has to be seen through: [exported_id_set] is an
      arrow, and an application of a value of that type has the arrow's result
      type, not [any].  Section 5.5. *)
-  abbrevs: SMap.t (list string & cty);
+  abbrevs: HashTable.t string (list string & cty);
   (* What the already-compiled units this run links against export, indexed by
      specialization key (section 12.4).  This is the whole of separate
      compilation on the extraction side: a request whose key is already in here
@@ -439,14 +439,14 @@ type state = {
      for by name: an entry point exists precisely because something outside
      the extracted program calls it, and that caller has nothing to inline
      into.  See [pulse/src/custard-entrypoints.txt]. *)
-  roots:   SMap.t bool;
+  roots:   HashTable.t string bool;
   (* Section 31.1.  Definitions whose [normalize_for_extraction] has already
      been honoured, by lid.  The normalization is the expensive one -- it is
      the whole point of the attribute that it does work the extractor would
      not do on its own -- and [extract_lid] is called once per
      specialization, so without this a definition with twenty specializations
      would pay for it twenty times. *)
-  nfe:     SMap.t sigelt;
+  nfe:     HashTable.t string sigelt;
 }
 
 (* Section 63.1.  A module speaks the floating-point vocabulary when it
@@ -468,28 +468,28 @@ let init (deps:Dep.deps) (env:TcEnv.env) : ML state =
   {
   deps    = deps;
   env     = envr;
-  names   = SMap.create 100;
-  emitted = SMap.create 100;
+  names   = HashTable.create 100;
+  emitted = HashTable.create 100;
   order   = mk_ref [];
-  classes = SMap.create 100;
-  bflags = SMap.create 100;
-  counts  = SMap.create 100;
-  suffixes = SMap.create 100;
+  classes = HashTable.create 100;
+  bflags = HashTable.create 100;
+  counts  = HashTable.create 100;
+  suffixes = HashTable.create 100;
   fuel    = mk_ref (Options.custard_fuel ());
   chain   = mk_ref [];
-  lifted  = SMap.create 20;
+  lifted  = HashTable.create 20;
   cur     = mk_ref ({ ns = []; id = "custard"; spec = None });
   cur_lid = mk_ref None;
   chainlids = mk_ref [];
-  letdefs = SMap.create 100;
-  effletdefs = SMap.create 100;
-  defbinders = SMap.create 100;
-  lettys  = SMap.create 100;
-  abbrevs = SMap.create 100;
+  letdefs = HashTable.create 100;
+  effletdefs = HashTable.create 100;
+  defbinders = HashTable.create 100;
+  lettys  = HashTable.create 100;
+  abbrevs = HashTable.create 100;
   links   = Unit.load_links (Options.custard_links ());
   imports = mk_ref [];
-  roots   = SMap.create 20;
-  nfe     = SMap.create 20;
+  roots   = HashTable.create 20;
+  nfe     = HashTable.create 20;
 }
 
 (* A name given on --custard_entry, named by --custard_main, or registered by
@@ -497,7 +497,7 @@ let init (deps:Dep.deps) (env:TcEnv.env) : ML state =
    reason this is worth a name, is that nothing in the F* program has to
    reach them: they are live because someone said so. *)
 let is_root (st:state) (l:Ident.lident) : ML bool =
-  Some? (SMap.try_find st.roots (Ident.string_of_lid l))
+  Some? (HashTable.try_find st.roots (Ident.string_of_lid l))
 
 (* The definition currently being extracted, for diagnostics. *)
 let enclosing_name (st:state) : ML string =
@@ -511,7 +511,7 @@ let enclosing_name (st:state) : ML string =
    signature has a Mono binder": the latter has no call site to specialize at
    and no source of yours to annotate, so it needs different advice. *)
 let root_binder_of_enclosing (st:state) (v:S.bv) : ML bool =
-  Some? (SMap.try_find st.defbinders (show v.index)) &&
+  Some? (HashTable.try_find st.defbinders (show v.index)) &&
   (match !st.cur_lid with
    | Some l -> is_root st l
    | None -> false)
@@ -781,7 +781,7 @@ let fixup_normalize_for_extraction (st:state) (se:sigelt) : ML sigelt =
   match se.sigel with
   | Sig_let {lids; lbs=(is_rec, lbs)} when Some? (U.extract_attr' PC.normalize_for_extraction_lid se.sigattrs) ->
     let key = show lids in
-    (match SMap.try_find st.nfe key with
+    (match HashTable.try_find st.nfe key with
      | Some se -> se
      | None ->
        let se =
@@ -802,7 +802,7 @@ let fixup_normalize_for_extraction (st:state) (se:sigelt) : ML sigelt =
                          else lb.lbtyp in
              { lb with lbdef; lbtyp } in
            { se with sigel = Sig_let {lids; lbs=(is_rec, List.map one lbs)} } in
-       SMap.add st.nfe key se;
+       HashTable.add st.nfe key se;
        se)
   | _ -> se
 
@@ -965,10 +965,10 @@ let c_decoration_flags (attrs:list term) : ML (list flag) =
      redeclaration error, it is a syntax error.  Order is preserved, since
      multiple prologues accumulate and the author's order is the only one
      that means anything. *)
-  let seen : SMap.t bool = SMap.create 8 in
+  let seen : HashTable.t string bool = HashTable.create 8 in
   let fresh (k:string) : ML bool =
-    if Some? (SMap.try_find seen k) then false
-    else (SMap.add seen k true; true) in
+    if Some? (HashTable.try_find seen k) then false
+    else (HashTable.add seen k true; true) in
   attrs |> List.collect (fun a ->
     let a = SS.compress a in
     let head, args = U.head_and_args_full a in
@@ -1000,6 +1000,7 @@ let c_decoration_flags (attrs:list term) : ML (list flag) =
           consumer that already marks its protocol constants for one pipeline
           should not have to mark them again for the other. *)
        | "FStar.Attributes.CMacro" -> [CMacro]
+       | "FStar.Attributes.CIfDef" -> [CIfDef]
        | _ -> [])
     | _ -> [])
 
@@ -1022,14 +1023,14 @@ let deriving_flags (attrs:list term) : ML (list flag) =
      for the reason [c_decoration_flags] gives, so the same attribute arrives
      twice and two [[@@deriving yojson]]s would be a duplicate-definition
      error out of the ppx rather than a no-op. *)
-  let seen : SMap.t bool = SMap.create 4 in
+  let seen : HashTable.t string bool = HashTable.create 4 in
   attrs |> List.collect (fun a ->
     let head, args = U.head_and_args_full (SS.compress a) in
     match (SS.compress head).n, args with
     | Tm_fvar fv, [] ->
       let nm = Ident.string_of_lid (S.lid_of_fv fv) in
-      if Some? (SMap.try_find seen nm) then [] else
-      (SMap.add seen nm true;
+      if Some? (HashTable.try_find seen nm) then [] else
+      (HashTable.add seen nm true;
        match nm with
        | "FStar.Attributes.PpxDerivingYoJson" -> [Deriving "yojson"]
        | _ -> [])
@@ -1062,14 +1063,14 @@ let source_attrs (se:sigelt) (l:Ident.lident) : ML (list term) =
 (* Reported once per declaration rather than once per request: a definition is
    extracted once per specialization key, and an attribute written in the
    wrong place is a property of the source, not of a call site. *)
-let deriving_reported : SMap.t bool = SMap.create 8
+let deriving_reported : HashTable.t string bool = HashTable.create 8
 
 let with_deriving (l:Ident.lident) (fs : list flag) (d:decl) : ML decl =
   if Nil? fs then d else
   let complain (why:string) : ML unit =
     let key = Ident.string_of_lid l in
-    if Some? (SMap.try_find deriving_reported key) then () else begin
-      SMap.add deriving_reported key true;
+    if Some? (HashTable.try_find deriving_reported key) then () else begin
+      HashTable.add deriving_reported key true;
       E.log_issue0 E.Warning_CustardIneffectiveAttribute [
         text ("[@@PpxDerivingYoJson] on " ^ key ^ " has no effect.");
         text why;
@@ -1486,8 +1487,8 @@ let spec_suffix (st:state) (lstr:string) (args:list (int & term)) (n:int)
   else
     let claim (s:string) : ML bool =
       let key = lstr ^ "__" ^ s in
-      if Some? (SMap.try_find st.suffixes key) then false
-      else (SMap.add st.suffixes key true; true) in
+      if Some? (HashTable.try_find st.suffixes key) then false
+      else (HashTable.add st.suffixes key true; true) in
     (* Section 115.  The fallback is claimed too.  Reserving only the
        *preferred* hint left the fallback spelling free, so a later
        specialization whose preferred hint happened to be that spelling
@@ -1516,7 +1517,7 @@ let eff_of_comp (st:state) (c:comp) : ML eff = Effects.of_comp (tcenv st) c
 let unfold_abbrev (st:state) (ty:cty) : ML (option cty) =
   match ty with
   | TApp (n, args) ->
-    (match SMap.try_find st.abbrevs (string_of_name n) with
+    (match HashTable.try_find st.abbrevs (string_of_name n) with
      | Some (ps, body) ->
        let rec zip (ps:list string) (ts:list cty) : list (string & cty) =
          match ps, ts with
@@ -1581,7 +1582,7 @@ let note_abbrev (st:state) (d:decl) : ML unit =
   match d with
   | DType t ->
     (match t.dt_body with
-     | TAbbrev body -> SMap.add st.abbrevs (string_of_name t.dt_name) (t.dt_params, body)
+     | TAbbrev body -> HashTable.add st.abbrevs (string_of_name t.dt_name) (t.dt_params, body)
      | _ -> ())
   | _ -> ()
 
@@ -1622,7 +1623,7 @@ let rec request (st:state) (k:spec_key) : ML name =
   Prof.timed "request" (fun () ->
   let k = { k with sk_lid = unstub_lid st k.sk_lid } in
   let key = string_of_key k in
-  match SMap.try_find st.names key with
+  match HashTable.try_find st.names key with
   | Some nm -> nm
   | None ->
   match import st key with
@@ -1631,12 +1632,12 @@ let rec request (st:state) (k:spec_key) : ML name =
     check_budget st k;
     let l = k.sk_lid in
     let lstr = Ident.string_of_lid l in
-    let n = (match SMap.try_find st.counts lstr with None -> 0 | Some n -> n) in
-    SMap.add st.counts lstr (n + 1);
+    let n = (match HashTable.try_find st.counts lstr with None -> 0 | Some n -> n) in
+    HashTable.add st.counts lstr (n + 1);
     let nm = { name_of_lid l with spec = spec_suffix st lstr k.sk_args n } in
     (* Register before translating: a self-reference must find this name
        rather than loop. *)
-    SMap.add st.names key nm;
+    HashTable.add st.names key nm;
     ensure_lid_available st l;
     match datacon_owner st l with
     (* An exception constructor is not part of a declaration of [Prims.exn]:
@@ -1644,7 +1645,7 @@ let rec request (st:state) (k:spec_key) : ML name =
        *is* the declaration.  Section 8.5. *)
     | Some ty_lid when Ident.lid_equals ty_lid PC.exn_lid ->
       let d = extract_exn st l nm in
-      SMap.add st.emitted key d;
+      HashTable.add st.emitted key d;
       st.order := key :: !st.order;
       nm
     | Some ty_lid ->
@@ -1665,7 +1666,7 @@ let rec request (st:state) (k:spec_key) : ML name =
                   (fun () -> extract_lid st l nm k.sk_subst k.sk_holes)) in
       st.chain := saved;
       st.chainlids := saved_lids;
-      SMap.add st.emitted key d;
+      HashTable.add st.emitted key d;
       note_abbrev st d;
       st.order := key :: !st.order;
       nm)
@@ -1701,7 +1702,7 @@ and import (st:state) (key:string) : ML (option name) =
       | DModule dm  -> DModule { dm with dm_flags = imp :: dm.dm_flags }
     in
     let nm = name_of_decl d in
-    SMap.add st.names key nm;
+    HashTable.add st.names key nm;
     (* Filed under the same key an ordinary translation would have used, and
        for the same reason: {!callee_sig} and {!callee_eff} read it to type a
        call and to decide whether the call may be dropped or reordered.
@@ -1709,7 +1710,7 @@ and import (st:state) (key:string) : ML (option name) =
        dereference of an imported [ref] prints as an array index, and a call
        to an imported effectful function may be optimized away.  It does
        *not* join [st.order], so nothing is emitted for it. *)
-    SMap.add st.emitted key d;
+    HashTable.add st.emitted key d;
     note_abbrev st d;
     st.imports := (d, e.ue_type) :: !st.imports;
     if Options.custard_dump_specializations () then
@@ -1722,7 +1723,7 @@ and import (st:state) (key:string) : ML (option name) =
 and check_budget (st:state) (k:spec_key) : ML unit =
   Prof.timed "budget" (fun () ->
   let lstr = Ident.string_of_lid k.sk_lid in
-  let n = match SMap.try_find st.counts lstr with None -> 0 | Some n -> n in
+  let n = match HashTable.try_find st.counts lstr with None -> 0 | Some n -> n in
   if n >= Options.custard_max_specializations () then
     custard_error st E.Error_CustardFuelExhausted [
       text ("Custard created " ^ show n ^ " specializations of " ^ lstr ^
@@ -1830,8 +1831,17 @@ and functor_instance (st:state) (scrut:term) : ML (option name) =
   match functor_app st scrut with
   | None -> None
   | Some (fl, path, arg, named) ->
-    let key = "<functor>" ^ Ident.string_of_lid fl ^ "#" ^ key_of_term arg in
-    match SMap.try_find st.names key with
+    (* Keyed on the argument's normal form, like a specialization (section
+       3.7), not on the term as written.  A dictionary reaches the argument
+       as the instance's name where a type mentions the application, but as
+       the record it unfolds to inside a body specialized on it (section
+       3.3); keyed raw, the two are separate OCaml modules whose types do
+       not agree.  See section 133.5. *)
+    let karg = match norm_optional st key_norm_steps arg with
+               | Some a -> a
+               | None -> arg in
+    let key = "<functor>" ^ Ident.string_of_lid fl ^ "#" ^ key_of_term karg in
+    match HashTable.try_find st.names key with
     | Some nm -> Some nm
     | None ->
       if Options.custard_backend () <> "OCaml" then
@@ -1850,12 +1860,12 @@ and functor_instance (st:state) (scrut:term) : ML (option name) =
                | Some l -> name_of_lid l
                | None ->
                  let lstr = Ident.string_of_lid fl in
-                 let n = match SMap.try_find st.counts lstr with None -> 0 | Some n -> n in
-                 SMap.add st.counts lstr (n + 1);
+                 let n = match HashTable.try_find st.counts lstr with None -> 0 | Some n -> n in
+                 HashTable.add st.counts lstr (n + 1);
                  { name_of_lid fl with spec = Some (show n) } in
-      SMap.add st.names key nm;
+      HashTable.add st.names key nm;
       let d = functor_module st nm fl path arg in
-      SMap.add st.emitted key d;
+      HashTable.add st.emitted key d;
       st.order := key :: !st.order;
       Some nm
 
@@ -1928,7 +1938,7 @@ and functor_module (st:state) (nm:name) (fl:Ident.lident) (path:string) (arg:ter
         let d = DLet { dl_name = vnm; dl_typars = []; dl_binders = [];
                        dl_ret = ty_of_typ st sort; dl_eff = E_Pure;
                        dl_body = body; dl_flags = [] } in
-        SMap.add st.emitted key d;
+        HashTable.add st.emitted key d;
         st.order := key :: !st.order;
         go bs args subst' (i + 1) tys (vals @ [(f, vnm)])
       end
@@ -1985,11 +1995,11 @@ and functor_member_app (st:state) (l:Ident.lident) (xs:args) : ML (option expr) 
     let flags = Mono.keep_thunk (tcenv st) bs c
                   (Mono.erased_binders (tcenv st) (U.arrow bs c)) in
     let nm =
-      match SMap.try_find st.names key with
+      match HashTable.try_find st.names key with
       | Some nm -> nm
       | None ->
         let nm = { inst with id = inst.id ^ "__" ^ f } in
-        SMap.add st.names key nm;
+        HashTable.add st.names key nm;
         let typars = bs |> List.collect (fun (b:S.binder) ->
                        if Mono.is_type_param (tcenv st) b
                        then [name_of_bv b.binder_bv] else []) in
@@ -2007,7 +2017,7 @@ and functor_member_app (st:state) (l:Ident.lident) (xs:args) : ML (option expr) 
                             dx_ty = build (drop_flagged flags bs);
                             dx_target = None; dx_header = None;
                             dx_flags = [Member (inst, f)] } in
-        SMap.add st.emitted key d;
+        HashTable.add st.emitted key d;
         st.order := key :: !st.order;
         nm in
     let rec split (bs:binders) (flags:list bool) (sp:args)
@@ -2044,16 +2054,16 @@ and functor_type_member (st:state) (hd:term) (xs:args) : ML (option cty) =
      | Some (inst, f, bs, _, rest) ->
        let key = "<functor-type>" ^ string_of_name inst ^ "." ^ f in
        let nm =
-         match SMap.try_find st.names key with
+         match HashTable.try_find st.names key with
          | Some nm -> nm
          | None ->
            let nm = { inst with id = inst.id ^ "__" ^ f } in
-           SMap.add st.names key nm;
+           HashTable.add st.names key nm;
            let d = DType { dt_name = nm;
                            dt_params = bs |> List.mapi (fun i _ -> "a" ^ show i);
                            dt_body = TAbstract;
                            dt_flags = [Member (inst, f); NoNewtype] } in
-           SMap.add st.emitted key d;
+           HashTable.add st.emitted key d;
            st.order := key :: !st.order;
            nm in
        Some (TApp (nm, rest |> List.map (fun (a, _) -> ty_of_typ st a))))
@@ -2068,7 +2078,7 @@ and functor_type_member (st:state) (hd:term) (xs:args) : ML (option cty) =
 and binder_classes (st:state) (l:Ident.lident) : ML (list bclass) =
   Prof.timed "binder_classes" (fun () ->
   let key = Ident.string_of_lid l in
-  match SMap.try_find st.classes key with
+  match HashTable.try_find st.classes key with
   | Some cs -> cs
   | None ->
     ensure_lid_available st l;
@@ -2135,7 +2145,7 @@ and binder_classes (st:state) (l:Ident.lident) : ML (list bclass) =
       else match lookup_lid_typ st l with
            | Some ((_, ty), _) -> classify (tcenv st) attrs ty
            | None -> [] in
-    SMap.add st.classes key cs;
+    HashTable.add st.classes key cs;
     cs)
 
 (* -------------------------------------------------------------------- *)
@@ -2602,11 +2612,11 @@ and template_index_scan (st:state) (ts:list term) : ML (list bv & list string) =
      scanned once.  Nothing is lost -- a second scan of an identical term
      contributes exactly what the first one did -- and it is the entire
      difference between exponential and linear. *)
-  let scanned : SMap.t bool = SMap.create 100 in
+  let scanned : HashTable.t string bool = HashTable.create 100 in
   let already (t:term) : ML bool =
     let k = show (Hash.ext_hash_term t) in
-    if Some? (SMap.try_find scanned k) then true
-    else (SMap.add scanned k true; false) in
+    if Some? (HashTable.try_find scanned k) then true
+    else (HashTable.add scanned k true; false) in
   (* Section 88.  The scan is syntactic, and a type abbreviation is exactly
      what makes the syntax it is looking for absent.  [fragment] is an
      [inline_for_extraction] alias for an application of the template, so the
@@ -2914,12 +2924,12 @@ and compiled_decl (st:state) : ML (option Ident.lident) =
    between "somewhere" and a place to look. *)
 and name_provenance (st:state) (v:bv) : ML string =
   let key = show v.index in
-  if Some? (SMap.try_find st.defbinders key)
+  if Some? (HashTable.try_find st.defbinders key)
   then " (a binder of the definition being extracted)"
-  else match SMap.try_find st.letdefs key with
+  else match HashTable.try_find st.letdefs key with
        | Some d -> " (a local let, bound to: " ^ show d ^ ")"
        | None ->
-         if Some? (SMap.try_find st.effletdefs key)
+         if Some? (HashTable.try_find st.effletdefs key)
          then " (a local let bound to an effectful computation)"
          else " (not a binder of this definition, not a local let: it comes \
                from a definition that was inlined away)"
@@ -3200,7 +3210,7 @@ and expr_of_term (st:state) (t:term) : ML expr =
        let ty = ty_of_typ st b.sort in
        let ty =
          if TAny? ty then
-           match SMap.try_find st.lettys (show b.index) with
+           match HashTable.try_find st.lettys (show b.index) with
            | Some ty' -> ty'
            | None -> ty
          else ty in
@@ -3422,8 +3432,8 @@ and expr_of_term (st:state) (t:term) : ML expr =
           [lbeff], which in an [ML] function reports [ML] for a perfectly pure
           right-hand side. *)
        if e1.eff = E_Pure then
-         SMap.add st.letdefs (show bv.index) lb.lbdef
-       else SMap.add st.effletdefs (show bv.index) ();
+         HashTable.add st.letdefs (show bv.index) lb.lbdef
+       else HashTable.add st.effletdefs (show bv.index) ();
        (* The annotation the typechecker left is authoritative when it says
           anything at all; a [--lax] run often leaves nothing, and then the
           right-hand side's own type is the better answer. *)
@@ -3435,7 +3445,7 @@ and expr_of_term (st:state) (t:term) : ML expr =
        let lty = if erased_lb then e1.ty else
                  let lty = ty_of_typ st lb.lbtyp in
                  if TAny? lty then e1.ty else lty in
-       SMap.add st.lettys (show bv.index) lty;
+       HashTable.add st.lettys (show bv.index) lty;
        let e2 = expr_of_term st body in
        mk (ELet (name_of_bv bv, lty, e1, e2)) e2.ty (join_eff e1.eff e2.eff)
      | Inr _ ->
@@ -3539,7 +3549,7 @@ and expr_of_term (st:state) (t:term) : ML expr =
    a capture keeps its name when it becomes a parameter, so a reference reads
    the same inside the lifted body as outside it. *)
 and lifted_ref (st:state) (b:S.bv) : ML (option expr) =
-  match SMap.try_find st.lifted (name_of_bv b) with
+  match HashTable.try_find st.lifted (name_of_bv b) with
   | None -> None
   | Some (nm, tyargs, caps, ty, _) ->
     let hd = mk (EQual (nm, tyargs)) ty E_Pure in
@@ -3589,7 +3599,7 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
       else
         let hit : ref bool = alloc false in
         let l = l |> List.collect (fun (v:S.bv) ->
-                  match SMap.try_find st.lifted (name_of_bv v) with
+                  match HashTable.try_find st.lifted (name_of_bv v) with
                   | Some (_, _, _, _, vs) -> hit := true; vs
                   | None -> [v]) in
         if !hit then expand (fuel - 1) l else l in
@@ -3635,8 +3645,8 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
       let ns = (!st.cur).ns in
       let esp = (!st.cur).spec in
       let ckey = base ^ (match esp with None -> "" | Some s -> "@" ^ s) in
-      let n = (match SMap.try_find st.counts ckey with None -> 0 | Some n -> n) in
-      SMap.add st.counts ckey (n + 1);
+      let n = (match HashTable.try_find st.counts ckey with None -> 0 | Some n -> n) in
+      HashTable.add st.counts ckey (n + 1);
       let nm = { ns = ns; id = base;
                  spec = (match esp, n with
                          | None,   0 -> None
@@ -3683,7 +3693,7 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
       let binders = caps @ arg_binders in
       let ty = List.fold_right (fun (b:binder) (t, e) -> (TArrow (b.b_ty, e, t), E_Pure))
                                binders (ret, eff) |> fst in
-      SMap.add st.lifted (name_of_bv bv) (nm, tyargs, caps, ty, free);
+      HashTable.add st.lifted (name_of_bv bv) (nm, tyargs, caps, ty, free);
       (nm, binders, ret, eff, own_typars, def_body)) in
     (* The whole group's signatures go in before any body is extracted: the
        calls that make the group recursive are extracted from those bodies,
@@ -3692,7 +3702,7 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
        overwritten by the loop below. *)
     let local_key (nm:name) : ML string = "<local>" ^ mangled_name nm in
     entries |> List.iter (fun (nm, binders, ret, eff, own_typars, _) ->
-      SMap.add st.emitted (local_key nm) (DLet {
+      HashTable.add st.emitted (local_key nm) (DLet {
         dl_name    = nm;
         dl_typars  = typars @ own_typars;
         dl_binders = binders;
@@ -3729,7 +3739,7 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
       st.cur := saved_cur;
       st.cur_lid := saved_cur_lid;
       Builtins.set_current_decl (Some saved_cur);
-      SMap.add st.emitted key d;
+      HashTable.add st.emitted key d;
       st.order := key :: !st.order);
     expr_of_term st body
   end
@@ -4077,14 +4087,14 @@ and prim_app (st:state) (l:Ident.lident) (n:int)
 and binder_flags (st:state) (tag:string) (l:Ident.lident)
                  (f : TcEnv.env -> typ -> ML (list bool)) : ML (list bool) =
   let key = tag ^ Ident.string_of_lid l in
-  match SMap.try_find st.bflags key with
+  match HashTable.try_find st.bflags key with
   | Some fs -> fs
   | None ->
     match lookup_lid_typ st l with
     | None -> []
     | Some ((_, ty), _) ->
       let fs = f (tcenv st) ty in
-      SMap.add st.bflags key fs;
+      HashTable.add st.bflags key fs;
       fs
 
 and ctor_dropped_flags (st:state) (l:Ident.lident) : ML (list bool) =
@@ -4211,7 +4221,7 @@ and call_type_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args) : M
    falls back to [TAny]. *)
 and callee_sig (st:state) (key:string) (tyargs:list cty) : ML cty =
   Prof.timed "callee_sig" (fun () ->
-  match SMap.try_find st.emitted key with
+  match HashTable.try_find st.emitted key with
   | Some (DLet d) ->
     let rec zip (ps:list string) (ts:list cty) : list (string & cty) =
       match ps, ts with
@@ -4447,7 +4457,7 @@ and unfold_lets (st:state) (fuel:int) (t:term) : ML term =
   if fuel <= 0 then t
   else
     let sub = elems (Free.names t) |> List.collect (fun (bv:S.bv) ->
-                match SMap.try_find st.letdefs (show bv.index) with
+                match HashTable.try_find st.letdefs (show bv.index) with
                 | Some d -> [NT (bv, d)]
                 | None -> []) in
     if Nil? sub then t else unfold_lets st (fuel - 1) (SS.subst sub t)
@@ -4499,7 +4509,7 @@ and check_mono_arg (st:state) (l:Ident.lident) (i:int) (t:term) : ML unit =
         different messages.  Suggesting [@@monomorphize] for a computation's
         result would be advice that cannot be followed. *)
      let msg : list Pprint.document =
-       if Some? (SMap.try_find st.effletdefs (show v.index))
+       if Some? (HashTable.try_find st.effletdefs (show v.index))
        then
          [ text ("The argument passed to " ^ where ^ " is " ^ nm ^ ", the \
                  result of an effectful computation, so the whole argument is \
@@ -4591,7 +4601,7 @@ and check_mono_arg (st:state) (l:Ident.lident) (i:int) (t:term) : ML unit =
             " of " ^ Ident.string_of_lid l ^ " is not known at specialization \
             time: it mentions the runtime type parameter " ^
             Ident.string_of_id v.ppname ^ ".");
-      (if Some? (SMap.try_find st.defbinders (show v.index))
+      (if Some? (HashTable.try_find st.defbinders (show v.index))
        then text ("Mark " ^ Ident.string_of_id v.ppname ^ " with \
                   [@@monomorphize] in the enclosing definition so that it, \
                   too, is known at specialization time.  (A runtime *value* \
@@ -4623,7 +4633,7 @@ and check_mono_arg (st:state) (l:Ident.lident) (i:int) (t:term) : ML unit =
    pure, a discarded [scan_stmt cbs s1; ...] is deleted by section 7.3 and the
    recursion silently stops traversing half of its argument. *)
 and callee_eff (st:state) (key:string) (n_args:int) : ML eff =
-  match SMap.try_find st.emitted key with
+  match HashTable.try_find st.emitted key with
   | Some (DLet l) ->
     let n = List.length l.dl_binders in
     if n_args < n then E_Pure
@@ -5488,8 +5498,15 @@ and extract_sigelt_body (st:state) (l:Ident.lident) (nm:name) (margs:list (int &
                                     ret E_Impure;
                   dl_flags = [] }
          else
+         (* Section 45.2.  An [assume val] carries C decorations like any
+            other declaration, and [@@CMacro] on one is the whole point of
+            the attribute: the symbol the target realizes is a macro, so the
+            reference must be spelled as one.  Dropping the flags here left
+            the reference looking like a call to a function nothing
+            defines. *)
          DExternal { dx_name = nm; dx_typars = typars; dx_ty = ty;
-                     dx_target = None; dx_header = None; dx_flags = [] })
+                     dx_target = None; dx_header = None;
+                     dx_flags = c_decoration_flags (source_attrs se l) })
 
   | Sig_inductive_typ {params} ->
     let d = Prof.timed "inductive" (fun () -> extract_inductive st l nm params) in
@@ -5816,7 +5833,7 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
     (fun () -> specialize st lb.lbtyp lb.lbdef cs margs n_holes) in
   let bs, body, rc = U.abs_formals def in
   bs |> List.iter (fun (b:S.binder) ->
-          SMap.add st.defbinders (show b.binder_bv.index) ());
+          HashTable.add st.defbinders (show b.binder_bv.index) ());
   (* [abs_formals] opens the binders under fresh names, but [c] still speaks of
      the ones [specialize] abstracted over.  Left unrelated, the two sets of
      names produce a signature whose result type mentions type variables no
@@ -6032,7 +6049,7 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
   let () =
     match !st.chain with
     | key :: _ ->
-      SMap.add st.emitted key (DLet {
+      HashTable.add st.emitted key (DLet {
         dl_name    = nm;
         dl_typars  = typars;
         dl_binders = binders;
@@ -6191,9 +6208,9 @@ and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : M
 
 let dump_specializations (st:state) : ML unit =
   BU.print_string "Custard specializations:\n";
-  SMap.iter st.counts (fun l n ->
+  HashTable.iter st.counts (fun l n ->
     if n > 1 then BU.print2 "  %s -> %s\n" l (show n));
-  BU.print1 "  (total: %s)\n" (show (SMap.fold st.counts (fun _ n acc -> acc + n) 0))
+  BU.print1 "  (total: %s)\n" (show (HashTable.fold st.counts (fun _ n acc -> acc + n) 0))
 
 (* {!Mono} runs below the extractor and so cannot read the chain out of a
    [state]; it holds a callback instead, and this is where it is filled in.
@@ -6383,13 +6400,13 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
        as good a root as a function: a hand-written realization that mentions,
        say, [FStarC_Range.t] needs the abbreviation emitted even though the
        extracted code unfolds it and never refers to it (section 8.2). *)
-    match SMap.try_find st.emitted key with
+    match HashTable.try_find st.emitted key with
     | Some (DLet d) ->
-      SMap.add st.emitted key (DLet { d with dl_flags = f :: d.dl_flags })
+      HashTable.add st.emitted key (DLet { d with dl_flags = f :: d.dl_flags })
     | Some (DType d) ->
-      SMap.add st.emitted key (DType { d with dt_flags = f :: d.dt_flags })
+      HashTable.add st.emitted key (DType { d with dt_flags = f :: d.dt_flags })
     | Some (DExternal d) ->
-      SMap.add st.emitted key (DExternal { d with dx_flags = f :: d.dx_flags })
+      HashTable.add st.emitted key (DExternal { d with dx_flags = f :: d.dx_flags })
     | Some _ -> ()
     | None when quiet -> ()
     | None ->
@@ -6412,7 +6429,7 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
      projector or discriminator that some *other* root gets to first would be
      extracted, marked [Inline] and cached before its own turn came. *)
   roots |> List.iter (fun (l:Ident.lident) ->
-    SMap.add st.roots (Ident.string_of_lid l) true);
+    HashTable.add st.roots (Ident.string_of_lid l) true);
   (* Section 64.  A plugin's roots belong in this set too.  They were marked
      alongside [--custard_entry]'s below and described as being treated
      "exactly as [--custard_entry]'s are", but they were missing from the one
@@ -6420,7 +6437,7 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
      the question, inlining and now [external_ty], answered it wrongly for
      precisely the names a plugin cares about. *)
   Builtins.registered_roots () |> List.iter (fun (l:Ident.lident) ->
-    SMap.add st.roots (Ident.string_of_lid l) true);
+    HashTable.add st.roots (Ident.string_of_lid l) true);
   let modroots, roots =
     roots |> List.partition (fun (l:Ident.lident) ->
                Cons? (Loader.candidate_files st.deps (Ident.string_of_lid l))) in
@@ -6492,6 +6509,37 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
                             not (unrootable_definition st (S.lid_of_fv fv) lb.lbtyp) ->
                 mark' true Root (S.lid_of_fv fv)
               | _ -> ())
+          (* An [assume val] is part of what the module provides, and a module
+             that is nothing but [assume val]s -- a compile-time flag module,
+             a set of target primitives -- is precisely a library whose
+             interface is its externals.  Rooted nothing, it compiled to an
+             empty unit, and a consumer that reads both that unit and one
+             where the same declarations survived as imports gets whichever
+             of the two its linker happened to keep.
+
+             Values only.  An abstract type's declaration is its [val], so
+             rooting those would put every opaque type of an entry module
+             into the output whether or not anything mentions it; a type that
+             is used is rooted by its use, and one that is realized in the
+             target says so with [@@custard_extern].
+
+             C-emitting backends only.  There an external is the ordinary way
+             to name something the target provides, and the declaration is
+             all the target needs from us.  The OCaml backend has no such
+             story: an unrealized external is a [failwith] that runs when the
+             module is initialized, so emitting one nobody calls turns a
+             working plugin into one that aborts on load. *)
+          | Sig_declare_typ {lid; t}
+            when is_c_backend () &&
+                 not (se.sigquals |> List.existsb (function
+                        | NoExtract | Projector _ | Discriminator _ -> true
+                        | _ -> false)) &&
+                 not (noextract_to_this_backend se) &&
+                 not (is_krml_private st md.name se) &&
+                 not (erased_definition st t) &&
+                 not (is_type_sig st t) &&
+                 not (unrootable_definition st lid t) ->
+            mark' true Root lid
           | _ -> ())));
   Prof.timed "run.roots" (fun () ->
     roots |> List.iter (fun l -> if not (root_is_erased st l) then mark Root l);
@@ -6518,14 +6566,14 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
      order they appear.  Across a split, the linker runs each unit's in
      dependency order.  What is *not* guaranteed is the order of two
      initializers in unrelated modules; F* gives no meaning to that either. *)
-  let seen_inits : SMap.t unit = SMap.create 100 in
+  let seen_inits : HashTable.t string unit = HashTable.create 100 in
   let rec inits (fuel:int) : ML unit =
     if fuel <= 0 then () else
     let fresh = TcEnv.modules (tcenv st) |> List.collect (fun (md:S.modul) ->
       let m = Ident.string_of_lid md.name in
-      match SMap.try_find seen_inits m with
+      match HashTable.try_find seen_inits m with
       | Some () -> []
-      | None -> SMap.add seen_inits m (); [md]) in
+      | None -> HashTable.add seen_inits m (); [md]) in
     if Nil? fresh then () else begin
       Prof.timed "inits" (fun () ->
        fresh |> List.iter (fun (md:S.modul) ->
@@ -6555,7 +6603,7 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
   Prof.timed "run.collect" (fun () ->
     Builtins.take_lifted () @
     (List.rev !st.order |> List.collect (fun key ->
-      match SMap.try_find st.emitted key with
+      match HashTable.try_find st.emitted key with
       | Some d -> [d]
       | None -> [])))
 
@@ -6567,14 +6615,14 @@ let request_lid (st:state) (l:Ident.lident) : ML name =
    its own name, which is unique by construction and cannot collide with a
    real key (those always name a lid and a list of arguments). *)
 let emit (st:state) (key:string) (d:decl) : ML unit =
-  match SMap.try_find st.emitted key with
+  match HashTable.try_find st.emitted key with
   | Some _ -> ()
   | None ->
-    SMap.add st.emitted key d;
+    HashTable.add st.emitted key d;
     st.order := key :: !st.order
 
 let emitted (st:state) (key:string) : ML bool =
-  Some? (SMap.try_find st.emitted key)
+  Some? (HashTable.try_find st.emitted key)
 
 let imports (st:state) : ML (list (decl & option type_info)) = List.rev !st.imports
 
@@ -6587,7 +6635,7 @@ let link_no_prefix (st:state) : ML (list string) = Unit.link_no_prefix st.links
 let link_inits (st:state) : ML (list string) = Unit.link_inits st.links
 
 let exported_keys (st:state) : ML (list (string & string)) =
-  SMap.fold st.names (fun key nm acc -> (string_of_name nm, key) :: acc) []
+  HashTable.fold st.names (fun key nm acc -> (string_of_name nm, key) :: acc) []
 
 let loaded_digests (_:state) : ML (list (string & string)) = Loader.loaded_digests ()
 

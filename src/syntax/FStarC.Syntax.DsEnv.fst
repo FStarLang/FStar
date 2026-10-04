@@ -148,7 +148,7 @@ type env = {
                                                             in the implementation itself, so they must keep shadowing the
                                                             modules the implementation opens; [push_scope_mod] re-pushes
                                                             them on top of every `open`. *)
-  exported_ids:         SMap.t exported_id_set;         (* identifiers (stored as strings for efficiency)
+  exported_ids:         HashTable.t string exported_id_set;         (* identifiers (stored as strings for efficiency)
                                                              reachable in a module, not shadowed by "include"
                                                              declarations. Used only to handle such shadowings,
                                                              not "private"/"abstract" definitions which it is
@@ -156,13 +156,13 @@ type env = {
                                                              iden is in exported_ids[ModulA] if, and only if,
                                                              there is no 'include ModulB' (with ModulB.iden
                                                              defined or reachable) after iden in ModulA. *)
-  trans_exported_ids:   SMap.t exported_id_set;         (* transitive version of exported_ids along the
+  trans_exported_ids:   HashTable.t string exported_id_set;         (* transitive version of exported_ids along the
                                                              "include" relation: an identifier is in this set
                                                              for a module if and only if it is defined either
                                                              in this module or in one of its included modules. *)
-  includes:             SMap.t (ref (list (lident & restriction)));   (* list of "includes" declarations for each module. *)
+  includes:             HashTable.t string (ref (list (lident & restriction)));   (* list of "includes" declarations for each module. *)
   sigaccum:             sigelts;                          (* type declarations being accumulated for the current module *)
-  sigmap:               SMap.t (sigelt & bool);         (* bool indicates that this was declared in an interface file *)
+  sigmap:               HashTable.t string (sigelt & bool);         (* bool indicates that this was declared in an interface file *)
   iface:                bool;                             (* whether or not we're desugaring an interface; different scoping rules apply *)
   admitted_iface:       bool;                             (* is it an admitted interface; different scoping rules apply *)
   expect_typ:           bool;                             (* syntactically, expect a type at this position in the term *)
@@ -259,7 +259,7 @@ let expect_typ e = e.expect_typ
 let all_exported_id_kinds: list exported_id_kind = [ Exported_id_field; Exported_id_term_type ]
 let transitive_exported_ids env lid : ML _ =
     let module_name = Ident.string_of_lid lid in
-    match SMap.try_find env.trans_exported_ids module_name with
+    match HashTable.try_find env.trans_exported_ids module_name with
     | None -> []
     | Some exported_id_set -> !(exported_id_set Exported_id_term_type) |> elems
 let opens_and_abbrevs env : ML (list (either open_module_or_namespace module_abbrev)) =
@@ -295,7 +295,7 @@ let syntax_only env = env.syntax_only
 let set_syntax_only env b = { env with syntax_only = b }
 let ds_hooks env = env.ds_hooks
 let set_ds_hooks env hooks = { env with ds_hooks = hooks }
-let new_sigmap () : ML _ = SMap.create 100
+let new_sigmap () : ML _ = HashTable.create #string 100
 let empty_env deps : ML _ = {curmodule=None;
                     curmonad=None;
                     modules=[];
@@ -362,10 +362,10 @@ let find_in_record_many ids record (cont: record_or_dc -> ML (cont_t 'a)) : ML (
   else Cont_ignore
 
 let get_exported_id_set (e: env) (mname: string) : ML (option (exported_id_kind -> ref string_set)) =
-    SMap.try_find e.exported_ids mname
+    HashTable.try_find e.exported_ids mname
 
 let get_trans_exported_id_set (e: env) (mname: string) : ML (option (exported_id_kind -> ref string_set)) =
-    SMap.try_find e.trans_exported_ids mname
+    HashTable.try_find e.trans_exported_ids mname
 
 let string_of_exported_id_kind = function
     | Exported_id_field -> "field"
@@ -432,7 +432,7 @@ let find_in_module_with_includes_gen
           let mexports = !(mex eikind) in
           mem (string_of_id id) mexports
         in
-        let mincludes = match SMap.try_find env.includes mname with
+        let mincludes = match HashTable.try_find env.includes mname with
         | None -> []
         | Some minc ->
           !minc |> filter_map (fun (ns, restriction) ->
@@ -608,7 +608,7 @@ let found_local_binding r (lb:local_binding) : ML _ =
     (bv_to_name x r)
 
 let find_in_module env lid (k_global_def: _ -> _ -> ML _) k_not_found : ML _ =
-    begin match SMap.try_find (sigmap env) (string_of_lid lid) with
+    begin match HashTable.try_find (sigmap env) (string_of_lid lid) with
         | Some sb -> k_global_def lid sb
         | None -> k_not_found
     end
@@ -627,7 +627,7 @@ let lookup_default_id
   let find_in_monad = match env.curmonad with
   | Some _ ->
     let lid = qualify env id in
-    begin match SMap.try_find (sigmap env) (string_of_lid lid) with
+    begin match HashTable.try_find (sigmap env) (string_of_lid lid) with
     | Some r -> Some (k_global_def lid r)
     | None -> None
     end
@@ -929,8 +929,8 @@ let try_lookup_definition env (lid:lident) : ML _ =
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
 
-let empty_include_smap : SMap.t (ref (list (lident & restriction))) = new_sigmap()
-let empty_exported_id_smap : SMap.t exported_id_set = new_sigmap()
+let empty_include_smap : HashTable.t string (ref (list (lident & restriction))) = new_sigmap()
+let empty_exported_id_smap : HashTable.t string exported_id_set = new_sigmap()
 
 let try_lookup_lid' any_val exclude_interface env (lid:lident) : ML (option (term & list attribute)) =
   match try_lookup_name any_val exclude_interface env lid with
@@ -1352,7 +1352,7 @@ let push_top_level_rec_binding env0 (x:ident) : ML (env & ref bool) =
 
 let push_sigelt' fail_on_dup env s : ML _ =
   let err #a (l : lident) : ML a =
-    let sopt = SMap.try_find (sigmap env) (string_of_lid l) in
+    let sopt = HashTable.try_find (sigmap env) (string_of_lid l) in
     let r = match sopt with
       | Some (se, _) ->
         begin match Option.find (lid_equals l) (lids_of_sigelt se) with
@@ -1413,7 +1413,7 @@ let push_sigelt' fail_on_dup env s : ML _ =
     in
     let is_iface = env.iface && not env.admitted_iface in
     // printfn "Adding %s at key %s with flag %A" (FStarC.Syntax.Print.sigelt_to_string_short se) (string_of_lid lid) is_iface;
-    SMap.add (sigmap env) (string_of_lid lid) (se, env.iface && not env.admitted_iface);
+    HashTable.add (sigmap env) (string_of_lid lid) (se, env.iface && not env.admitted_iface);
     ()
   in
   lss |> List.iter (fun (lids, se) ->
@@ -1622,7 +1622,7 @@ let push_include' env ns restriction : ML _ =
       let env = push_scope_mod env (Open_module_or_namespace ((ns, Open_module, restriction),false)) in
       (* update the list of includes *)
       let curmod = string_of_lid (current_module env) in
-      let () = match SMap.try_find env.includes curmod with
+      let () = match HashTable.try_find env.includes curmod with
       | None -> ()
       | Some incl -> incl := (ns, restriction) :: !incl
       in
@@ -1682,7 +1682,7 @@ let check_admits env m : ML _ =
       | Sig_declare_typ {lid=l; us=u; t} when not (se.sigquals |> List.contains Assumption)
                                             && ns_of_lid l = mname_ids ->
         // l is already fully qualified, so no name resolution
-        begin match SMap.try_find (sigmap env) (string_of_lid l) with
+        begin match HashTable.try_find (sigmap env) (string_of_lid l) with
           | Some ({sigel=Sig_let _}, _)
           | Some ({sigel=Sig_inductive_typ _}, _)
           | Some ({sigel=Sig_splice _}, _) ->
@@ -1698,7 +1698,7 @@ let check_admits env m : ML _ =
               ]
             end;
             let quals = Assumption :: se.sigquals in
-            SMap.add (sigmap env) (string_of_lid l) ({ se with sigquals = quals }, false);
+            HashTable.add (sigmap env) (string_of_lid l) ({ se with sigquals = quals }, false);
             l::lids
         end
       | _ -> lids) []
@@ -1713,24 +1713,24 @@ let finish env modul : ML _ =
       if List.contains Private quals
       then ses |> List.iter (fun se -> match se.sigel with
                 | Sig_datacon {lid} ->
-                  SMap.remove (sigmap env) (string_of_lid lid)
+                  HashTable.remove (sigmap env) (string_of_lid lid)
                 | Sig_inductive_typ {lid;us=univ_names;params=binders;t=typ} ->
-                  SMap.remove (sigmap env) (string_of_lid lid);
+                  HashTable.remove (sigmap env) (string_of_lid lid);
                   if not (List.contains Private quals)
                   then //it's only abstract; add it back to the environment as an abstract type
                        let sigel = Sig_declare_typ {lid;us=univ_names;t=S.mk_Tm_arrow binders (S.mk_Total typ) (Ident.range_of_lid lid)} in
                        let se = {se with sigel=sigel; sigquals=Assumption::quals} in
-                       SMap.add (sigmap env) (string_of_lid lid) (se, false)
+                       HashTable.add (sigmap env) (string_of_lid lid) (se, false)
                 | _ -> ())
 
     | Sig_declare_typ {lid} ->
       if List.contains Private quals
-      then SMap.remove (sigmap env) (string_of_lid lid)
+      then HashTable.remove (sigmap env) (string_of_lid lid)
 
     | Sig_let {lbs=(_,lbs)} ->
       if List.contains Private quals
       then begin
-           lbs |> List.iter (fun lb -> SMap.remove (sigmap env) (string_of_lid (Inr?.v lb.lbname).fv_name))
+           lbs |> List.iter (fun lb -> HashTable.remove (sigmap env) (string_of_lid (Inr?.v lb.lbname).fv_name))
       end
 
     | _ -> ());
@@ -1761,10 +1761,10 @@ let stack: ref (list env) = mk_ref []
 let push env : ML _ = BU.atomically (fun () ->
   push_record_cache();
   stack := env::!stack;
-  {env with exported_ids = SMap.copy env.exported_ids;
-            trans_exported_ids = SMap.copy env.trans_exported_ids;
-            includes = SMap.copy env.includes;
-            sigmap = SMap.copy env.sigmap })
+  {env with exported_ids = HashTable.copy env.exported_ids;
+            trans_exported_ids = HashTable.copy env.trans_exported_ids;
+            includes = HashTable.copy env.includes;
+            sigmap = HashTable.copy env.sigmap })
 
 let pop () : ML _ = BU.atomically (fun () ->
   match !stack with
@@ -1812,11 +1812,11 @@ let set_module_iface_flag (env:env) (m:lident) (from_ to_ : bool) : ML unit =
     else { se with sigquals = Assumption :: se.sigquals }
   in
   let sm = sigmap env in
-  SMap.keys sm |> List.iter (fun k ->
-    match SMap.try_find sm k with
+  HashTable.keys sm |> List.iter (fun k ->
+    match HashTable.try_find sm k with
     | Some (se, b) when b = from_ && sigelt_in_m se && is_iface_val se ->
-      SMap.remove sm k;
-      SMap.add sm k (adjust_quals se, to_)
+      HashTable.remove sm k;
+      HashTable.add sm k (adjust_quals se, to_)
     | _ -> ())
 
 let export_interface (m:lident) env : ML _ =
@@ -1827,18 +1827,18 @@ let export_interface (m:lident) env : ML _ =
             | _ -> false in
     let sm = sigmap env in
     let env = pop () in // FIXME PUSH POP
-    let keys = SMap.keys sm in
+    let keys = HashTable.keys sm in
     let sm' = sigmap env in
     keys |> List.iter (fun k ->
-    match SMap.try_find sm' k with
+    match HashTable.try_find sm' k with
         | Some (se, true) when sigelt_in_m se ->
-          SMap.remove sm' k;
+          HashTable.remove sm' k;
 //          printfn "Exporting %s" k;
           let se = match se.sigel with
             | Sig_declare_typ {lid=l; us=u; t} ->
               { se with sigquals = Assumption::se.sigquals }
             | _ -> se in
-          SMap.add sm' k (se, false)
+          HashTable.add sm' k (se, false)
         | _ -> ());
     env
 
@@ -1913,12 +1913,12 @@ let as_includes : option (list (lident & restriction)) -> ML (ref (list (lident 
 let inclusion_info env (l:lident) : ML _ =
    let mname = FStarC.Ident.string_of_lid l in
    let as_ids_opt m =
-      Option.map as_exported_ids (SMap.try_find m mname)
+      Option.map as_exported_ids (HashTable.try_find m mname)
    in
    {
       mii_exported_ids = as_ids_opt env.exported_ids;
       mii_trans_exported_ids = as_ids_opt env.trans_exported_ids;
-      mii_includes = Option.map (fun r -> !r) (SMap.try_find env.includes mname);
+      mii_includes = Option.map (fun r -> !r) (HashTable.try_find env.includes mname);
       mii_no_prelude = env.no_prelude;
    }
 
@@ -1931,8 +1931,8 @@ let inclusion_info env (l:lident) : ML _ =
 let iface_top_level_defs (env:env) (m:lident) : ML scope_mod =
   let sm = sigmap env in
   let ids =
-    SMap.keys sm |> List.fold_left (fun ids k ->
-      match SMap.try_find sm k with
+    HashTable.keys sm |> List.fold_left (fun ids k ->
+      match HashTable.try_find sm k with
       | Some (se, _) ->
         U.lids_of_sigelt se |> List.fold_left (fun ids l ->
           if nsstr l = string_of_lid m
@@ -1945,12 +1945,12 @@ let iface_top_level_defs (env:env) (m:lident) : ML scope_mod =
 let iface_record_scope_mods (env:env) (m:lident) : ML (list scope_mod) =
   let sm = sigmap env in
   let globals = mk_ref [] in
-  SMap.keys sm |> List.iter (fun k ->
-    match SMap.try_find sm k with
+  HashTable.keys sm |> List.iter (fun k ->
+    match HashTable.try_find sm k with
     | Some (se, _) ->
       (match se.sigel with
        | Sig_inductive_typ {lid; ds=[dc]} when nsstr lid = string_of_lid m ->
-         (match SMap.try_find sm (string_of_lid dc) with
+         (match HashTable.try_find sm (string_of_lid dc) with
           | Some (dcse, _) ->
             let bundle = mk_sigelt (Sig_bundle {ses=[se;dcse]; lids=[lid;dc]}) in
             extract_record env globals { bundle with sigquals = se.sigquals }
@@ -1973,11 +1973,11 @@ let prepare_module_or_interface no_prelude intf admitted env mname (mii:module_i
     let auto_open = namespace_scope_of_module mname @ List.rev auto_open in
 
     (* Create new empty set of exported identifiers for the current module, for 'include' *)
-    let () = SMap.add env.exported_ids (string_of_lid mname) (as_exported_id_set mii.mii_exported_ids) in
+    let () = HashTable.add env.exported_ids (string_of_lid mname) (as_exported_id_set mii.mii_exported_ids) in
     (* Create new empty set of transitively exported identifiers for the current module, for 'include' *)
-    let () = SMap.add env.trans_exported_ids (string_of_lid mname) (as_exported_id_set mii.mii_trans_exported_ids) in
+    let () = HashTable.add env.trans_exported_ids (string_of_lid mname) (as_exported_id_set mii.mii_trans_exported_ids) in
     (* Create new empty list of includes for the current module *)
-    let () = SMap.add env.includes (string_of_lid mname) (as_includes mii.mii_includes) in
+    let () = HashTable.add env.includes (string_of_lid mname) (as_includes mii.mii_includes) in
     let env' = {
       env with curmodule=Some mname;
       sigmap=env.sigmap;
@@ -2011,7 +2011,7 @@ let prepare_module_or_interface no_prelude intf admitted env mname (mii:module_i
           let env =
             m.declarations |> List.fold_left (fun env se ->
               match U.lids_of_sigelt se with
-              | l::_ when None? (SMap.try_find (sigmap env) (string_of_lid l)) ->
+              | l::_ when None? (HashTable.try_find (sigmap env) (string_of_lid l)) ->
                 push_sigelt_force env se
               | _ -> env) env
           in
@@ -2052,7 +2052,7 @@ let fail_or env lookup lid : ML _ =
     else
       let all_ids_in_module (m : lident) : ML (list string) =
         let m = string_of_lid m in
-        match SMap.try_find env.trans_exported_ids m with
+        match HashTable.try_find env.trans_exported_ids m with
         | Some f ->
           let exported_ids = !(f Exported_id_term_type) in
           exported_ids |> Class.Setlike.elems

@@ -22,7 +22,7 @@ open FStarC.List
 open FStarC.Custard.Syntax
 
 module BU = FStarC.Util
-module SMap = FStarC.SMap
+module HashTable = FStarC.HashTable
 module Options = FStarC.Options
 module Prof = FStarC.Custard.Prof
 
@@ -41,11 +41,11 @@ let layout_to_string (l:layout) : ML string =
 (* -------------------------------------------------------------------- *)
 
 type tbl = {
-  types:   SMap.t dtype;                (* type key   -> declaration     *)
-  erased:  SMap.t bool;                 (* type key   -> erasure         *)
-  layouts: SMap.t layout;               (* type key   -> layout          *)
-  ctors:   SMap.t (string & ctor_layout); (* ctor key -> owner key, layout *)
-  pinned:  SMap.t unit;                 (* type keys whose verdict is imported *)
+  types:   HashTable.t string dtype;                (* type key   -> declaration     *)
+  erased:  HashTable.t string bool;                 (* type key   -> erasure         *)
+  layouts: HashTable.t string layout;               (* type key   -> layout          *)
+  ctors:   HashTable.t string (string & ctor_layout); (* ctor key -> owner key, layout *)
+  pinned:  HashTable.t string unit;                 (* type keys whose verdict is imported *)
   fresh:   ref int;
 }
 
@@ -92,7 +92,7 @@ let rec cty_erased (t:tbl) (c:cty) : ML bool =
   | TBuf _ | TRef _ -> false
   | TInline c -> cty_erased t c
   | TApp (n, _) ->
-    (match SMap.try_find t.erased (key n) with
+    (match HashTable.try_find t.erased (key n) with
      | Some b -> b
      | None -> false)
 
@@ -117,13 +117,13 @@ let dtype_erased (t:tbl) (d:dtype) : ML bool =
 let erasure_fixpoint (t:tbl) : ML unit =
   let step () : ML bool =
     let changed = mk_ref false in
-    SMap.iter t.types (fun k d ->
-      let old = match SMap.try_find t.erased k with
+    HashTable.iter t.types (fun k d ->
+      let old = match HashTable.try_find t.erased k with
                 | Some b -> b
                 | None -> false in
-      if Some? (SMap.try_find t.pinned k) then () else
+      if Some? (HashTable.try_find t.pinned k) then () else
       let nw = dtype_erased t d in
-      if nw <> old then (changed := true; SMap.add t.erased k nw));
+      if nw <> old then (changed := true; HashTable.add t.erased k nw));
     !changed
   in
   (* Erasure only ever grows, so the number of type declarations bounds the
@@ -133,7 +133,7 @@ let erasure_fixpoint (t:tbl) : ML unit =
     else if step () then loop (fuel - 1)
     else ()
   in
-  loop (SMap.fold t.types (fun _ _ n -> n + 1) 1)
+  loop (HashTable.fold t.types (fun _ _ n -> n + 1) 1)
 
 (* A collapsed newtype has no constructor left to inline a field into, so its
    payload must shed the [TInline] marker of section 5.7 before it is
@@ -181,10 +181,10 @@ let rec names_of_cty (c:cty) : ML (list string) =
 (* Collapsing [type t = | C of t] would produce an infinite type, so a
    candidate that can reach itself through other candidates' representations is
    rejected (section 5.2, third guard). *)
-let acyclic_candidates (cands:SMap.t cty) : ML (SMap.t cty) =
-  let ok = SMap.create 20 in
-  SMap.iter cands (fun k rep ->
-    let seen = SMap.create 10 in
+let acyclic_candidates (cands:HashTable.t string cty) : ML (HashTable.t string cty) =
+  let ok = HashTable.create 20 in
+  HashTable.iter cands (fun k rep ->
+    let seen = HashTable.create 10 in
     (* Depth-first search through the representations of other candidates; a
        non-candidate name is a leaf, because it keeps its own declaration and
        so breaks the cycle. *)
@@ -194,45 +194,45 @@ let acyclic_candidates (cands:SMap.t cty) : ML (SMap.t cty) =
       | m :: rest ->
         if m = k then true
         else
-          match SMap.try_find seen m with
+          match HashTable.try_find seen m with
           | Some _ -> go rest
           | None ->
-            SMap.add seen m true;
-            match SMap.try_find cands m with
+            HashTable.add seen m true;
+            match HashTable.try_find cands m with
             | Some rep' -> go (names_of_cty rep' @ rest)
             | None -> go rest
     in
-    if not (go (names_of_cty rep)) then SMap.add ok k rep);
+    if not (go (names_of_cty rep)) then HashTable.add ok k rep);
   ok
 
 let compute_layouts (t:tbl) : ML unit =
   (* Pass 1: constructor layouts, and the newtype candidates. *)
-  let cands = SMap.create 20 in
-  SMap.iter t.types (fun k d ->
-    if Some? (SMap.try_find t.pinned k) then () else
-    let erased = match SMap.try_find t.erased k with
+  let cands = HashTable.create 20 in
+  HashTable.iter t.types (fun k d ->
+    if Some? (HashTable.try_find t.pinned k) then () else
+    let erased = match HashTable.try_find t.erased k with
                  | Some b -> b
                  | None -> false in
-    if erased then SMap.add t.layouts k L_erased
+    if erased then HashTable.add t.layouts k L_erased
     else
       match d.dt_body with
-      | TAbstract -> SMap.add t.layouts k L_opaque
-      | TAbbrev c -> SMap.add t.layouts k (L_abbrev c)
+      | TAbstract -> HashTable.add t.layouts k L_opaque
+      | TAbbrev c -> HashTable.add t.layouts k (L_abbrev c)
       | _ ->
         let cls = ctor_layouts t d in
-        SMap.add t.layouts k (L_struct cls);
+        HashTable.add t.layouts k (L_struct cls);
         if not (has_flag d.dt_flags NoNewtype) then
           match cls with
           | [cl] ->
             if cl.cl_arity = 1 then
               (match cl.cl_fields with
-               | [(_, c)] -> SMap.add cands k (uninline c)
+               | [(_, c)] -> HashTable.add cands k (uninline c)
                | _ -> ())
           | _ -> ());
   (* Pass 2: reject the candidates whose representation is cyclic. *)
   let cands = acyclic_candidates cands in
-  SMap.iter cands (fun k _ ->
-    match SMap.try_find t.layouts k with
+  HashTable.iter cands (fun k _ ->
+    match HashTable.try_find t.layouts k with
     | Some (L_struct [cl]) ->
       let idx =
         cl.cl_slots |> List.fold_left (fun (i, found) s ->
@@ -241,7 +241,7 @@ let compute_layouts (t:tbl) : ML unit =
           | _ -> (i + 1, found)) (0, None) |> snd in
       (match idx, cl.cl_fields with
        | Some i, [(f, c)] ->
-         SMap.add t.layouts k
+         HashTable.add t.layouts k
            (L_newtype { nt_ctor = cl.cl_name; nt_field = f;
                         nt_index = i; nt_ty = uninline c })
        | _ -> ())
@@ -251,19 +251,19 @@ let compute_layouts (t:tbl) : ML unit =
    types: their applications and patterns still have to be rewritten, and the
    rewriter finds them through this table. *)
 let register_ctors (t:tbl) : ML unit =
-  SMap.iter t.types (fun k d ->
+  HashTable.iter t.types (fun k d ->
     (* A pinned type's constructor layouts came from the interface and were
        registered when the table was seeded.  Recomputing them here would be
        the same computation over a different program, which is precisely what
        pinning exists to prevent. *)
-    if Some? (SMap.try_find t.pinned k) then () else
-    ctor_layouts t d |> List.iter (fun cl -> SMap.add t.ctors (key cl.cl_name) (k, cl)))
+    if Some? (HashTable.try_find t.pinned k) then () else
+    ctor_layouts t d |> List.iter (fun cl -> HashTable.add t.ctors (key cl.cl_name) (k, cl)))
 
 let ctor_owner (t:tbl) (n:name) : ML (option (layout & ctor_layout)) =
-  match SMap.try_find t.ctors (key n) with
+  match HashTable.try_find t.ctors (key n) with
   | None -> None
   | Some (owner, cl) ->
-    match SMap.try_find t.layouts owner with
+    match HashTable.try_find t.layouts owner with
     | None -> None
     | Some l -> Some (l, cl)
 
@@ -286,10 +286,10 @@ let rec resolve (t:tbl) (fuel:int) (c:cty) : ML cty =
     | TInline c -> TInline (resolve t fuel c)
     | TApp (n, args) ->
       let args = args |> List.map (resolve t fuel) in
-      (match SMap.try_find t.layouts (key n) with
+      (match HashTable.try_find t.layouts (key n) with
        | Some L_erased -> TUnit
        | Some (L_newtype nt) ->
-         let params = match SMap.try_find t.types (key n) with
+         let params = match HashTable.try_find t.types (key n) with
                       | Some d -> d.dt_params
                       | None -> [] in
          let s = (try List.zip params args with _ -> []) in
@@ -297,7 +297,7 @@ let rec resolve (t:tbl) (fuel:int) (c:cty) : ML cty =
        (* A type abbreviation carries no representation of its own, and the
           backends need to see the machine integer behind, say, [pos_us]. *)
        | _ ->
-         (match SMap.try_find t.types (key n) with
+         (match HashTable.try_find t.types (key n) with
           (* A realized abbreviation is not one: the hand-written OCaml gives
              the *name* a definition of its own ([FStar.Dyn.dyn] is [Obj.t],
              not the [unit -> value_type_bundle] the F* source says), and
@@ -390,10 +390,10 @@ let fresh_var (t:tbl) : ML string =
    A saturated application -- every one in the overwhelming majority of a
    program -- is returned untouched. *)
 let eta_ctors (t:tbl) (prog:program) : ML program =
-  let fields : SMap.t (list (string & cty)) = SMap.create 100 in
+  let fields : HashTable.t string (list (string & cty)) = HashTable.create 100 in
   let add (d:dtype) : ML unit =
-    ctors_of_tydef d |> List.iter (fun (cn, fs) -> SMap.add fields (key cn) fs) in
-  SMap.iter t.types (fun _ d -> add d);
+    ctors_of_tydef d |> List.iter (fun (cn, fs) -> HashTable.add fields (key cn) fs) in
+  HashTable.iter t.types (fun _ d -> add d);
   let rec drop (#a:Type) (n:int) (xs:list a) : ML (list a) =
     if n <= 0 then xs else (match xs with [] -> [] | _ :: xs -> drop (n - 1) xs) in
   let fresh () : ML string =
@@ -404,7 +404,7 @@ let eta_ctors (t:tbl) (prog:program) : ML program =
     | ECtor (cn, es) ->
       let es = es |> List.map go in
       let alt = { x with e = ECtor (cn, es) } in
-      (match SMap.try_find fields (key cn) with
+      (match HashTable.try_find fields (key cn) with
        | Some fs when List.length es < List.length fs ->
          let bs = drop (List.length es) fs
                   |> List.map (fun (f, c) -> { b_name = fresh (); b_ty = c }) in
@@ -480,7 +480,7 @@ let rec rw_pat (t:tbl) (p:pat) : ML (pat & list string) =
     let freed = qs |> List.collect (fun (_, (_, vs)) -> vs) in
     let others (keep:string -> ML bool) : ML (list string) =
       fs |> List.collect (fun (f, q) -> if keep f then [] else pat_vars q) in
-    (match SMap.try_find t.layouts (key n) with
+    (match HashTable.try_find t.layouts (key n) with
      | Some L_erased -> (PWild, freed @ others (fun _ -> false))
      | Some (L_newtype nt) ->
        (match fs |> List.tryFind (fun (f, _) -> f = nt.nt_field) with
@@ -536,7 +536,7 @@ let rec rw_expr (t:tbl) (x:expr) : ML expr =
 
   | ERecord (n, fs) ->
     let fs = fs |> List.map (fun (f, e) -> (f, rw_expr t e)) in
-    (match SMap.try_find t.layouts (key n) with
+    (match HashTable.try_find t.layouts (key n) with
      | Some L_erased -> hoist (fs |> List.map snd) { unit_expr with eff = x.eff }
      | Some (L_newtype nt) ->
        (match fs |> List.tryFind (fun (f, _) -> f = nt.nt_field) with
@@ -650,7 +650,7 @@ let rw_decl (t:tbl) (d:decl) : ML (list decl) =
   match d with
   | DType dt ->
     let k = key dt.dt_name in
-    (match SMap.try_find t.layouts k with
+    (match HashTable.try_find t.layouts k with
      (* An erased type has no runtime representation and no remaining
         references: every [TApp] of it resolved to [TUnit]. *)
      | Some L_erased -> []
@@ -778,12 +778,12 @@ let strip_inline (c:cty) : cty =
 let rec ctor_plan (look:name -> ML (option dtype)) (seen:list string)
                   (fs : list (string & cty)) : ML fplan =
   let allpos = fs |> List.for_all (fun (f, _) -> positional f) in
-  let next : SMap.t int = SMap.create 1 in
+  let next : HashTable.t string int = HashTable.create 1 in
   let fresh (f:string) (g:string) : ML string =
     if allpos
     then begin
-      let i = (match SMap.try_find next "n" with Some i -> i | None -> 0) in
-      SMap.add next "n" (i + 1);
+      let i = (match HashTable.try_find next "n" with Some i -> i | None -> 0) in
+      HashTable.add next "n" (i + 1);
       "_" ^ string_of_int i
     end
     else if g = "" then f else f ^ "_" ^ g in
@@ -868,15 +868,15 @@ let close_fields (d:decl) : ML decl =
 let run (imports:list (dtype & type_info)) (prog:program)
   : ML (program & list (name & type_info) & verdicts) =
   let prog = List.map close_fields prog in
-  let t = { types   = SMap.create 100;
-            erased  = SMap.create 100;
-            layouts = SMap.create 100;
-            ctors   = SMap.create 100;
-            pinned  = SMap.create 10;
+  let t = { types   = HashTable.create 100;
+            erased  = HashTable.create 100;
+            layouts = HashTable.create 100;
+            ctors   = HashTable.create 100;
+            pinned  = HashTable.create 10;
             fresh   = mk_ref 0 } in
   prog |> List.iter (fun d ->
     match d with
-    | DType dt -> SMap.add t.types (key dt.dt_name) dt
+    | DType dt -> HashTable.add t.types (key dt.dt_name) dt
     | _ -> ());
   (* Seed the imported verdicts *before* the analysis, and mark them pinned.
      Seeding rather than excluding is the point: [rw_decl] below looks every
@@ -885,10 +885,10 @@ let run (imports:list (dtype & type_info)) (prog:program)
      alone or, worse, rewritten by a locally re-derived guess. *)
   imports |> List.iter (fun (dt, ti) ->
     let k = key dt.dt_name in
-    SMap.add t.pinned k ();
-    SMap.add t.erased k ti.ti_erased;
-    SMap.add t.layouts k ti.ti_layout;
-    ti.ti_ctors |> List.iter (fun cl -> SMap.add t.ctors (key cl.cl_name) (k, cl)));
+    HashTable.add t.pinned k ();
+    HashTable.add t.erased k ti.ti_erased;
+    HashTable.add t.layouts k ti.ti_layout;
+    ti.ti_ctors |> List.iter (fun cl -> HashTable.add t.ctors (key cl.cl_name) (k, cl)));
   Prof.timed "l.erasure" (fun () -> erasure_fixpoint t);
   Prof.timed "l.layouts" (fun () -> compute_layouts t);
   Prof.timed "l.ctors" (fun () -> register_ctors t);
@@ -896,7 +896,7 @@ let run (imports:list (dtype & type_info)) (prog:program)
   let prog = Prof.timed "l.eta_ctors" (fun () -> eta_ctors t prog) in
   if Options.custard_dump_layouts () then begin
     FStarC.Format.print_string "Custard layouts:\n";
-    SMap.iter t.layouts (fun k l ->
+    HashTable.iter t.layouts (fun k l ->
       FStarC.Format.print2 "  %s : %s\n" k (layout_to_string l))
   end;
   let prog' = Prof.timed "l.rewrite" (fun () -> prog |> List.collect (rw_decl t)) in
@@ -904,18 +904,18 @@ let run (imports:list (dtype & type_info)) (prog:program)
   (* The representation verdicts are read off the program as this pass leaves
      it -- erasure has already deleted the fields it deletes, and a plan must
      describe the fields that are actually there. *)
-  let final : SMap.t dtype = SMap.create 100 in
+  let final : HashTable.t string dtype = HashTable.create 100 in
   (* An imported declaration is the one its interface carries, which is the
      one the backend will print; a local one is what [rw_decl] just produced.
      Each is what the rewriter that applies the plan will actually see. *)
-  imports |> List.iter (fun (dt, _) -> SMap.add final (key dt.dt_name) dt);
+  imports |> List.iter (fun (dt, _) -> HashTable.add final (key dt.dt_name) dt);
   prog' |> List.iter (fun d ->
     match d with
-    | DType dt -> SMap.add final (key dt.dt_name) dt
+    | DType dt -> HashTable.add final (key dt.dt_name) dt
     | _ -> ());
-  let look (n:name) : ML (option dtype) = SMap.try_find final (key n) in
+  let look (n:name) : ML (option dtype) = HashTable.try_find final (key n) in
 
-  let vd = { vd_records = SMap.create 50; vd_plans = SMap.create 50 } in
+  let vd = { vd_records = HashTable.create 50; vd_plans = HashTable.create 50 } in
   (* An imported type's verdict is adopted rather than re-derived.  It would
      come out the same either way -- that is the whole point of computing it
      here -- but an interface should say what it means, and pinning keeps that
@@ -926,36 +926,36 @@ let run (imports:list (dtype & type_info)) (prog:program)
        constructor the verdict is keyed on is only in [ti_ctors]. *)
     (if ti.ti_record then
        match dt.dt_body, ti.ti_ctors with
-       | TRecord _, [cl] -> SMap.add vd.vd_records (key cl.cl_name) dt.dt_name
-       | TVariant [(cn, _)], _ -> SMap.add vd.vd_records (key cn) dt.dt_name
+       | TRecord _, [cl] -> HashTable.add vd.vd_records (key cl.cl_name) dt.dt_name
+       | TVariant [(cn, _)], _ -> HashTable.add vd.vd_records (key cn) dt.dt_name
        | _ -> ());
-    ti.ti_plans |> List.iter (fun (cn, pl) -> SMap.add vd.vd_plans (key cn) pl));
-  let derived : SMap.t (bool & list (name & fplan)) = SMap.create 50 in
+    ti.ti_plans |> List.iter (fun (cn, pl) -> HashTable.add vd.vd_plans (key cn) pl));
+  let derived : HashTable.t string (bool & list (name & fplan)) = HashTable.create 50 in
   prog' |> List.iter (fun d ->
     match d with
-    | DType dt when None? (SMap.try_find t.pinned (key dt.dt_name)) ->
+    | DType dt when None? (HashTable.try_find t.pinned (key dt.dt_name)) ->
       let is_rec = record_verdict dt in
       let plans = ctor_plans look dt in
-      SMap.add derived (key dt.dt_name) (is_rec, plans);
+      HashTable.add derived (key dt.dt_name) (is_rec, plans);
       (match dt.dt_body with
-       | TVariant [(cn, _)] when is_rec -> SMap.add vd.vd_records (key cn) dt.dt_name
+       | TVariant [(cn, _)] when is_rec -> HashTable.add vd.vd_records (key cn) dt.dt_name
        | _ -> ());
-      plans |> List.iter (fun (cn, pl) -> SMap.add vd.vd_plans (key cn) pl)
+      plans |> List.iter (fun (cn, pl) -> HashTable.add vd.vd_plans (key cn) pl)
     | _ -> ());
 
   (* The verdicts this run *derived*, which is what an interface exports; a
      pinned one came from somewhere else and is that unit's to export. *)
   let infos =
-    SMap.keys t.types |> List.collect (fun k ->
-      if Some? (SMap.try_find t.pinned k) then [] else
-      match SMap.try_find t.types k, SMap.try_find t.layouts k with
+    HashTable.keys t.types |> List.collect (fun k ->
+      if Some? (HashTable.try_find t.pinned k) then [] else
+      match HashTable.try_find t.types k, HashTable.try_find t.layouts k with
       | Some d, Some l ->
         let is_rec, plans =
-          match SMap.try_find derived k with
+          match HashTable.try_find derived k with
           | Some v -> v
           | None -> (false, []) in
         [(d.dt_name,
-          { ti_erased = (match SMap.try_find t.erased k with Some b -> b | None -> false);
+          { ti_erased = (match HashTable.try_find t.erased k with Some b -> b | None -> false);
             ti_layout = l;
             ti_ctors  = ctor_layouts t d;
             ti_record = is_rec;

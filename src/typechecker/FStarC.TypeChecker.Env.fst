@@ -25,7 +25,7 @@ open FStarC.Syntax.Subst
 open FStarC.Syntax.Util
 open FStarC.Syntax.Hash {}
 open FStarC.Syntax.Print {}
-open FStarC.SMap
+module HashTable = FStarC.HashTable
 open FStarC.Ident
 open FStarC.Range
 open FStarC.Errors
@@ -233,9 +233,9 @@ let consume_iface_todo (e:env) (consumed:list sigelt) (remaining:list sigelt) : 
      they may hold information computed while the name was still hidden. *)
   lids |> List.iter (fun l ->
     let s = string_of_lid l in
-    SMap.remove e.fv_delta_depths s;
-    SMap.remove e.strict_args_tab s;
-    SMap.remove e.disc_proj_tab s);
+    HashTable.remove e.fv_delta_depths s;
+    HashTable.remove e.strict_args_tab s;
+    HashTable.remove e.disc_proj_tab s);
   let hidden = lids |> List.fold_left (fun s l -> remove l s) e.iface_hidden in
   { e with iface_todo = remaining; iface_hidden = hidden }
 
@@ -256,7 +256,7 @@ let declared_in_iface (e:env) (l:lident) : ML bool =
 let has_iface_val (e:env) (l:lident) : ML bool =
   mem l e.iface_val_lids
 
-type sigtable = SMap.t sigelt
+type sigtable = HashTable.t string sigelt
 
 let should_verify env : ML _ =
     not env.admit
@@ -271,8 +271,8 @@ let visible_at d q = match d, q with
   | _ -> false
 
 let default_table_size = 200
-let new_sigtab () : ML _ = SMap.create default_table_size
-let new_gamma_cache () : ML _ = SMap.create 100
+let new_sigtab () : ML _ = HashTable.create #string default_table_size
+let new_gamma_cache () : ML _ = HashTable.create #string 100
 
 let initial_env deps
   tc_term
@@ -322,8 +322,8 @@ let initial_env deps
     universe_of=universe_of;
     teq_nosmt_force=teq_nosmt_force;
     subtype_nosmt_force=subtype_nosmt_force;
-    qtbl_name_and_index=None, SMap.create 10;
-    fv_delta_depths = SMap.create 50;
+    qtbl_name_and_index=None, HashTable.create 10;
+    fv_delta_depths = HashTable.create 50;
     proof_ns = Options.using_facts_from ();
     synth_hook = (fun e g tau rng -> failwith "no synthesizer available");
     try_solve_implicits_hook = (fun e tau imps -> failwith "no implicit hook available");
@@ -334,9 +334,9 @@ let initial_env deps
     tc_hooks = default_tc_hooks;
     dsenv = FStarC.Syntax.DsEnv.(set_current_module (empty_env deps) module_lid);
     nbe = nbe;
-    strict_args_tab = SMap.create 20;
-    disc_proj_tab = SMap.create 50;
-    erasable_types_tab = SMap.create 20;
+    strict_args_tab = HashTable.create 20;
+    disc_proj_tab = HashTable.create 50;
+    erasable_types_tab = HashTable.create 20;
     enable_defer_to_tac=true;
     unif_allow_ref_guards=false;
     erase_erasable_args=false;
@@ -378,15 +378,15 @@ let peek_query_indices () : ML _ = List.hd !query_indices
 let stack = mk_ref ([] <: list env)
 let push_stack env : ML _ =
     stack := env::!stack;
-    {env with sigtab=SMap.copy (sigtab env);
-              attrtab=SMap.copy (attrtab env);
-              gamma_cache=SMap.copy (gamma_cache env);
+    {env with sigtab=HashTable.copy (sigtab env);
+              attrtab=HashTable.copy (attrtab env);
+              gamma_cache=HashTable.copy (gamma_cache env);
               identifier_info=mk_ref !env.identifier_info;
-              qtbl_name_and_index=env.qtbl_name_and_index |> fst, SMap.copy (env.qtbl_name_and_index |> snd);
-              fv_delta_depths=SMap.copy env.fv_delta_depths;
-              strict_args_tab=SMap.copy env.strict_args_tab;
-              disc_proj_tab=SMap.copy env.disc_proj_tab;
-              erasable_types_tab=SMap.copy env.erasable_types_tab }
+              qtbl_name_and_index=env.qtbl_name_and_index |> fst, HashTable.copy (env.qtbl_name_and_index |> snd);
+              fv_delta_depths=HashTable.copy env.fv_delta_depths;
+              strict_args_tab=HashTable.copy env.strict_args_tab;
+              disc_proj_tab=HashTable.copy env.disc_proj_tab;
+              erasable_types_tab=HashTable.copy env.erasable_types_tab }
 
 let pop_stack () : ML _ =
     match !stack with
@@ -432,12 +432,12 @@ let incr_query_index env : ML _ =
     | None ->
       let next = n + 1 in
       add_query_index (l, next);
-      SMap.add tbl (string_of_lid l) next;
+      HashTable.add tbl (string_of_lid l) next;
       {env with qtbl_name_and_index=Some (l, typ, next), tbl}
     | Some (_, m) ->
       let next = m + 1 in
       add_query_index (l, next);
-      SMap.add tbl (string_of_lid l) next;
+      HashTable.add tbl (string_of_lid l) next;
       {env with qtbl_name_and_index=Some (l, typ, next), tbl}
 
 ////////////////////////////////////////////////////////////
@@ -474,7 +474,7 @@ let set_current_module env lid =
   let env = {env with curmodule=lid} in
   {env with dsenv=DsEnv.set_current_module env.dsenv lid}
 let has_interface env l = env.modules |> BU.for_some (fun m -> m.is_interface && lid_equals m.name l)
-let find_in_sigtab env lid : ML _ = SMap.try_find (sigtab env) (string_of_lid lid)
+let find_in_sigtab env lid : ML _ = HashTable.try_find (sigtab env) (string_of_lid lid)
 
 //Construct a new universe unification variable
 let new_u_univ () : ML _ = U_unif (UF.univ_fresh Range.dummyRange)
@@ -532,10 +532,10 @@ let in_cur_mod env (l:lident) : ML tri = (* TODO: need a more efficient namespac
 
 let lookup_qname env (lid:lident) : ML (qninfo) =
   let cur_mod = in_cur_mod env lid in
-  let cache t = SMap.add (gamma_cache env) (string_of_lid lid) t; Some t in
+  let cache t = HashTable.add (gamma_cache env) (string_of_lid lid) t; Some t in
   let found =
     if cur_mod <> No
-    then match SMap.try_find (gamma_cache env) (string_of_lid lid) with
+    then match HashTable.try_find (gamma_cache env) (string_of_lid lid) with
       | None ->
         (BU.find_map env.gamma (function
           | Binding_lid(l, (us_names, t)) when lid_equals lid l->
@@ -571,7 +571,7 @@ let lookup_sigelt (env:env) (lid:lid) : ML (option sigelt) =
    filtering there would permanently drop the interface entries that happen to
    be hidden at that moment, and they would not come back once revealed. *)
 let lookup_attr_all (env:env) (attr:string) : ML (list sigelt) =
-    match SMap.try_find (attrtab env) attr with
+    match HashTable.try_find (attrtab env) attr with
     | Some ses -> ses
     | None -> []
 
@@ -586,7 +586,7 @@ let lookup_attr (env:env) (attr:string) : ML (list sigelt) =
                not (U.lids_of_sigelt se |> BU.for_some (fun l -> mem l env.iface_hidden)))
 
 let add_se_to_attrtab env se : ML _ =
-    let add_one env se attr = SMap.add (attrtab env) attr (se :: lookup_attr_all env attr) in
+    let add_one env se attr = HashTable.add (attrtab env) attr (se :: lookup_attr_all env attr) in
     List.iter (fun attr ->
                 let hd, _ = U.head_and_args_full attr in
                 match (Subst.compress hd).n with
@@ -599,8 +599,8 @@ The force flag overrides the check, it's convenient in the checking for
 haseq in inductives. *)
 let try_add_sigelt force env se l : ML _ =
   let s = string_of_lid l in
-  if not force && Some? (SMap.try_find (sigtab env) s) then (
-    let old_se = Some?.v (SMap.try_find (sigtab env) s) in
+  if not force && Some? (HashTable.try_find (sigtab env) s) then (
+    let old_se = Some?.v (HashTable.try_find (sigtab env) s) in
     if Sig_declare_typ? old_se.sigel &&
         (Sig_let? se.sigel || Sig_inductive_typ? se.sigel || Sig_datacon? se.sigel)
     then
@@ -619,7 +619,7 @@ let try_add_sigelt force env se l : ML _ =
       ]
     )
   );
-  SMap.add (sigtab env) s se
+  HashTable.add (sigtab env) s se
 
 let rec add_sigelt force env se : ML _ = match se.sigel with
     | Sig_bundle {ses} -> add_sigelts force env ses
@@ -637,15 +637,15 @@ let rec add_sigelt force env se : ML _ = match se.sigel with
            we are now implementing), then the memoized delta depth of every other
            name of this module may be stale too, since it may have been computed
            while this name was still abstract. Flush them. *)
-        (match SMap.try_find env.fv_delta_depths s with
+        (match HashTable.try_find env.fv_delta_depths s with
          | Some (Delta_abstract _) ->
            let ns = nsstr l ^ "." in
-           SMap.keys env.fv_delta_depths |> List.iter (fun k ->
-             if BU.starts_with k ns then SMap.remove env.fv_delta_depths k)
+           HashTable.keys env.fv_delta_depths |> List.iter (fun k ->
+             if BU.starts_with k ns then HashTable.remove env.fv_delta_depths k)
          | _ -> ());
-        SMap.remove env.fv_delta_depths s;
-        SMap.remove env.strict_args_tab s;
-        SMap.remove env.disc_proj_tab s);
+        HashTable.remove env.fv_delta_depths s;
+        HashTable.remove env.strict_args_tab s;
+        HashTable.remove env.disc_proj_tab s);
       add_se_to_attrtab env se
 
 and add_sigelts force env ses : ML _ =
@@ -1077,17 +1077,17 @@ is harmless. This does happen when checking the implementation of an
 interface: the interface's `val`s are checked and encoded to SMT first. *)
 and delta_depth_of_fv (env:env) (fv:S.fv) : ML (delta_depth) =
   let lid = fv.fv_name in
-  (string_of_lid lid) |> SMap.try_find env.fv_delta_depths |> (function
+  (string_of_lid lid) |> HashTable.try_find env.fv_delta_depths |> (function
   | Some dd -> dd
   | None ->
-    SMap.add env.fv_delta_depths (string_of_lid lid) delta_equational;
+    HashTable.add env.fv_delta_depths (string_of_lid lid) delta_equational;
     // ^ To prevent an infinite loop on recursive functions, we pre-seed the cache with
     // a delta_equational. If we run into the same function while computing its delta_depth,
     // we will return delta_equational. If not, we override the cache with the correct delta_depth.
     let d = delta_depth_of_qninfo env fv (lookup_qname env fv.fv_name) in
     // if Debug.any () then
     //  Format.print2_error "Memoizing delta_depth_of_fv %s ->\t%s\n" (show lid) (show d);
-    SMap.add env.fv_delta_depths (string_of_lid lid) d;
+    HashTable.add env.fv_delta_depths (string_of_lid lid) d;
     d)
 
 (* Computes the delta_depth of an fv, but taking into account the visibility
@@ -1167,12 +1167,12 @@ let fv_with_lid_has_attr env fv_lid attr_lid : ML (bool) =
 let fv_has_attr env fv attr_lid : ML _ =
   fv_with_lid_has_attr env fv.fv_name attr_lid
 
-let cache_in_fv_tab (tab:SMap.t 'a) (fv:fv) (f:unit -> ML (bool & 'a)) : ML ('a) =
+let cache_in_fv_tab (tab:HashTable.t string 'a) (fv:fv) (f:unit -> ML (bool & 'a)) : ML ('a) =
   let s = string_of_lid (S.lid_of_fv fv) in
-  match SMap.try_find tab s with
+  match HashTable.try_find tab s with
   | None ->
     let should_cache, res = f () in
-    if should_cache then SMap.add tab s res;
+    if should_cache then HashTable.add tab s res;
     res
 
   | Some r ->
@@ -1629,20 +1629,20 @@ let print_effects_graph env : ML _ =
   let eff_name lid = lid |> ident_of_lid |> string_of_id in
   let path_str path = path |> List.map eff_name |> String.concat ";" in
 
-  let lifts : smap (smap string) = smap_create 20 in
+  let lifts : HashTable.t string (HashTable.t string string) = HashTable.create 20 in
 
   env.effects.order |> List.iter (fun ({msource=src; mtarget=tgt; mpath=path}) ->
     let key = eff_name src in
     let m =
-      match smap_try_find lifts key with
+      match HashTable.try_find lifts key with
       | None ->
-        let m = smap_create 10 in
-        smap_add lifts key m;
+        let m = HashTable.create 10 in
+        HashTable.add lifts key m;
         m
       | Some m -> m in
-    match smap_try_find m (eff_name tgt) with
+    match HashTable.try_find m (eff_name tgt) with
     | Some _ -> ()
-    | None -> smap_add m (eff_name tgt) (path_str path));
+    | None -> HashTable.add m (eff_name tgt) (path_str path));
 
   Format.fmt1 "digraph {\n\
     label=\"Effects ordering\"\n\
@@ -1650,8 +1650,8 @@ let print_effects_graph env : ML _ =
       label = \"Lifts\"\n
       %s\n\
     }}\n"
-    ((smap_fold lifts (fun src m s ->
-        smap_fold m (fun tgt path s ->
+    ((HashTable.fold lifts (fun src m s ->
+        HashTable.fold m (fun tgt path s ->
           (Format.fmt3 "%s -> %s [label=\"%s\"]" src tgt path)::s) s) []) |> String.concat "\n")
 
 let update_effect_lattice env src tgt : ML _ =
@@ -1720,14 +1720,14 @@ let update_effect_lattice env src tgt : ML _ =
                         (show edge.mtarget)));
 
   let joins =
-    let ubs : smap (list (lident & lident & lident)) = SMap.create 10 in
+    let ubs : HashTable.t string (list (lident & lident & lident)) = HashTable.create 10 in
     let add_ub i j k =
       let key = string_of_lid i ^ ":" ^ string_of_lid j in
       let v =
-        match smap_try_find ubs key with
+        match HashTable.try_find ubs key with
         | Some ubs -> (i, j, k)::ubs
         | None -> [i, j, k] in
-      smap_add ubs key v in
+      HashTable.add ubs key v in
 
     ms |> List.iter (fun i ->
       ms |> List.iter (fun j ->
@@ -1737,7 +1737,7 @@ let update_effect_lattice env src tgt : ML _ =
                | Some _, Some _ -> add_ub i j k
                | _ -> ())));
 
-    smap_fold ubs (fun s l joins ->
+    HashTable.fold ubs (fun s l joins ->
       let lubs = List.filter (fun (i, j, k) ->
         List.for_all (fun (_, _, k') ->
           find_edge order (k, k') |> Some?) l) l in
@@ -1859,7 +1859,7 @@ let univnames env =
 
 let lidents env : ML (list lident) =
   let keys = List.collect fst env.gamma_sig in
-  SMap.fold (sigtab env) (fun _ v keys -> U.lids_of_sigelt v@keys) keys
+  HashTable.fold (sigtab env) (fun _ v keys -> U.lids_of_sigelt v@keys) keys
 
 let should_enc_path proof_ns path =
     let rec str_i_prefix xs ys =

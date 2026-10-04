@@ -136,14 +136,14 @@ let mk_decls name key decls aux_decls : ML decls_t = [{
   key         = Some (BU.digest_of_string key);
   decls       = decls;
   a_names     =  //AR: collect the names of aux_decls and decls to be retained in case of a cache hit
-    let sm = SMap.create 20 in
+    let sm = HashTable.create 20 in
     List.iter (fun elt ->
-      List.iter (fun s -> SMap.add sm s "0") elt.a_names
+      List.iter (fun s -> HashTable.add sm s "0") elt.a_names
     ) aux_decls;
     List.iter (fun d -> match d with
-                        | Assume a -> SMap.add sm (a.assumption_name) "0"
+                        | Assume a -> HashTable.add sm (a.assumption_name) "0"
                         | _ -> ()) decls;
-    SMap.keys sm
+    HashTable.keys sm
 }]
 
 let mk_decls_trivial decls : ML decls_t = [{
@@ -804,7 +804,7 @@ let termToSmt
   =
   //a counter and a hash table for string constants to integer ids mapping
   let string_id_counter = mk_ref 0 in
-  let string_cache= SMap.create 20 in
+  let string_cache= HashTable.create 20 in
 
   fun print_ranges enclosing_name t ->
       let next_qid =
@@ -829,13 +829,13 @@ let termToSmt
         | Integer i -> doc_of_string i
         | Real r -> doc_of_string (FStarC.Real.to_smt_string r)
         | String s ->
-          let id_opt = SMap.try_find string_cache s in
+          let id_opt = HashTable.try_find string_cache s in
           doc_of_string (match id_opt with
            | Some id -> id
            | None ->
              let id = !string_id_counter |> show in
              BU.incr string_id_counter;
-             SMap.add string_cache s id;
+             HashTable.add string_cache s id;
              id)
         | BoundV i ->
           List.nth names i |> fv_name |> doc_of_string

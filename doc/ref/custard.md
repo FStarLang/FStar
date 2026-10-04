@@ -4545,7 +4545,7 @@ Separate compilation is not the only reason the output cannot be one file, and
 the other reason is not about relaxing the whole-program assumption at all.
 
 **The problem.** F\* has fifty-odd hand-written OCaml realizations (§8.2), and
-fourteen of them reference modules Custard compiles:
+thirteen of them reference modules Custard compiles:
 
 | realization | references |
 | --- | --- |
@@ -4555,7 +4555,6 @@ fourteen of them reference modules Custard compiles:
 | `FStarC_Parser_LexFStar` | `FStarC_Errors`, `FStarC_Ident` |
 | `FStarC_Parser_ParseIt` | `FStarC_Parser_AST`, `FStarC_Errors`, `FStarC_Options`, … |
 | `FStarC_Reflection_Types` | `FStarC_Syntax_Syntax`, `FStarC_TypeChecker_Env`, … |
-| `FStarC_Syntax_TermHashTable` | `FStarC_Syntax_Hash` |
 | `FStarC_Tactics_Native` | `FStarC_Tactics_Monad`, `FStarC_TypeChecker_Cfg`, … |
 | `FStarC_Tactics_V2_Builtins` | `FStarC_Syntax_Syntax` |
 | `FStarC_Unionfind`, `FStar_IO`, `FStar_Issue`, `FStarC_Util`, `FStar_Reflection_Typing_Builtins` | shallower |
@@ -7405,22 +7404,19 @@ target-dependent -- C wants the definition compiled and Rust wants it
 abstract -- and Custard's Krml backend does not currently know which of the
 two karamel is going to be asked for.  Not done, and not a small change.
 
-### 19.8a A branch of ulib is not a Custard decision
+### 19.8a `fst` and `snd` are inlined
 
 Custard's C output for `Example_Hashtable` carried two one-line wrapper
-functions for `FStar.Pervasives.Native.fst` and `snd`, and the obvious fix
-was to mark them `inline_for_extraction` in ulib.  It works, and it was
-wrong: those two definitions are extracted by *every* F\* user, and marking
-them inlineable changed the OCaml the standard pipeline emits repo-wide.
-`tests/bug-reports/closed/Bug2595` caught it -- its expected output went from
-`FStar_Pervasives_Native.snd` to `__proj__Mktuple2__item___2` -- and it is
-the only test that happened to look, which is the argument for reverting
-rather than for updating it.
-
-So the wrappers are back, and the principled fix belongs on the Custard side:
-`Simplify` should inline a function whose body is a single projection,
-which is a local decision about the generated program rather than a change to
-what the language extracts.  Not done; noted here so the trade is on record.
+functions for `FStar.Pervasives.Native.fst` and `snd`.  An earlier attempt to
+mark them `inline_for_extraction` in ulib was reverted because it changes the
+OCaml every F\* user extracts (`tests/bug-reports/closed/Bug2595` went from
+`FStar_Pervasives_Native.snd` to an inline match).  They are now
+`inline_for_extraction` after all: tuples are built in, so the projections
+need no realization, and the hand-written `fst`/`snd` in
+`ulib/ml/app/FStar_Pervasives_Native.ml` and its F\# twin are gone.  The
+expected outputs were updated, and the tests that used `fst` as a convenient
+polymorphic function to exercise monomorphization (`NestArr`, `TupAlias`)
+now define their own.
 
 ### 19.9 What is still open
 
@@ -7435,7 +7431,6 @@ what the language extracts.  Not done; noted here so the trade is on record.
 * `--custard_profile_norm`, which would print the request chain for any
   single normalization over a wall-time threshold.  The reporter has asked
   for it twice and has been bisecting by hand instead.
-* Inlining trivial projector functions in `Simplify`, per 19.8a.
 * `cbor_det_elim_simple` is the one of the five 19.11 rejections that is not
   a specification: it is real code whose *ghost* index reaches the layout
   pass.  19.11 does not fix it, and whether it needs anything beyond the same
@@ -21870,8 +21865,8 @@ removed and replaced by an abstract `ref`, `alloc`, `!` and `:=` in
 describes, and the backend realizes them with F#'s own `ref` cell ---
 `(r).Value` and `(r).Value <- x`, which is what `TRef` prints to.  A
 program that allocates, at top level or not, needs nothing further.
-`ulib/ml/app/FStar_ST.ml` and its two neighbours are still on disk and
-are dead; nothing on this path reads them.
+The OCaml realizations of the removed modules (`FStar_ST.ml` and its
+neighbours in `ulib/ml/app`) have been deleted as well.
 
 `FStar.Bytes` is realized, and is the one module where the two
 realizations are not the same data.  OCaml's is a `string`, because an
@@ -23341,7 +23336,7 @@ functor instance.  `Extract.functor_instance` emits one `DModule` per
 instance.  The instance takes the name of the first top-level `let` that
 was followed (`string_tbl`), or the functor's own name with a counter if
 there is none.  Instances are interned by the functor and a structural key
-of its argument.  OCaml functor application is generative and F\*'s is
+of its argument's normal form (§133.5).  OCaml functor application is generative and F\*'s is
 applicative, so two F\* names for the same application have to be the
 same OCaml module, or their types would disagree.
 
@@ -23396,6 +23391,55 @@ name.  So `try m.find tbl x with Not_found -> ...` catches what
 `Hashtbl.find` raises.
 
 `tests/custard/FunctorHashtbl.fst` pins all of this.
+
+## 133.5 Instances indexed by a typeclass
+
+The compiler's own hash tables are one F\* type,
+`FStarC.HashTable.t k {| deq k |} {| hashable k |} v`.  It replaces three
+hand-written `Hashtbl.Make` realizations (`FStarC_SMap`, `FStarC_IMap` and
+`FStarC_Syntax_TermHashTable`):
+
+```fstar
+let hashed (k:Type0) {| d: deq k |} {| h: hashable k |} : hashed_type =
+  { t = k; equal = (=?) #k #d; hash = hash #k #h }
+
+inline_for_extraction
+let t k {| deq k |} {| hashable k |} v = (hashtbl_make (hashed k)).t v
+
+inline_for_extraction
+let try_find #k {| deq k |} {| hashable k |} #v (m: t k v) (x: k) : ML (option v) =
+  (hashtbl_make (hashed k)).find_opt m x
+```
+
+The dictionary binders are `Mono` (§30.9 rule 2), so every key type gets its
+own copy of each operation.  In that copy the functor argument is closed
+(`hashed string #deq_string #hashable_string`), so it names a top-level
+instance.  Three details matter:
+
+* **The key is normalized.**  A body specialized on a dictionary receives
+  the dictionary in weak head normal form (§3.3), but a type that mentions
+  the same application keeps the instance's name.  An abbreviation such as
+  `module_name` for `string` causes the same split.  A key built from the
+  raw argument gives two OCaml modules for one F\* application, and their
+  types disagree.  `functor_instance` therefore keys on the argument
+  reduced by `key_norm_steps`, as a specialization key is (§3.7).
+  `tests/custard/FunctorClass.fst` pins this with operations that are not
+  inlined.
+* **The record holds method references, not lambdas.**  `key_norm_steps` is
+  `Weak`, so it does not normalize under a binder.  A dictionary inside
+  `fun x y -> x =? y` keeps whatever form it arrived in, and the keys
+  differ again.
+* **Neither `hashed` nor a helper may hide the functor.**  `functor_app`
+  follows only unapplied top-level names.  So each operation spells out
+  `hashtbl_make (hashed k)` itself, and `hashed` stays a `let` and is not
+  inlined.  The type `t` is `inline_for_extraction`.  Extracted as a
+  generic type, its argument would mention the local variables `k` and
+  the dictionaries, which is error 397.
+
+The compiler is bootstrapped by a Custard without the normalized key.  So
+`FStarC.HashTable`'s operations are also `inline_for_extraction`, and a
+table whose key type is an abbreviation of `string` is created at
+`#string`.
 
 # 134 A constructor field under a `let`
 

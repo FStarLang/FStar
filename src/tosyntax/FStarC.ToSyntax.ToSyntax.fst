@@ -41,19 +41,19 @@ module EMB = FStarC.Syntax.Embeddings
 module SS  = FStarC.Syntax.Subst
 
 let extension_tosyntax_table 
-  : SMap.t extension_tosyntax_decl_t
-  = SMap.create 20
+  : HashTable.t string extension_tosyntax_decl_t
+  = HashTable.create 20
 
 let register_extension_tosyntax
     (lang_name:string)
     (cb:extension_tosyntax_decl_t)
 : ML unit
-= SMap.add extension_tosyntax_table lang_name cb
+= HashTable.add extension_tosyntax_table lang_name cb
 
 let lookup_extension_tosyntax
     (lang_name:string)
 : ML _
-= SMap.try_find extension_tosyntax_table lang_name
+= HashTable.try_find extension_tosyntax_table lang_name
 
 let dbg_attrs    = Debug.get_toggle "attrs"
 let dbg_ToSyntax = Debug.get_toggle "ToSyntax"

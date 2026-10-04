@@ -24,7 +24,7 @@ open FStarC.Const
 open FStarC.Custard.Syntax
 
 module BU   = FStarC.Util
-module SMap = FStarC.SMap
+module HashTable = FStarC.HashTable
 module E    = FStarC.Errors
 module Msg  = FStarC.Errors.Msg
 
@@ -108,10 +108,10 @@ let line_width : int = 80
    target, which the program supplied itself, and the handful of names the
    support library of section 122.8 implements.  Everything else is refused
    (section 122.9), which is why this table can be small. *)
-let externals : ref (SMap.t string) = mk_ref (SMap.create 0)
+let externals : ref (HashTable.t string string) = mk_ref (HashTable.create 0)
 
 let external_target (n:name) : ML (option string) =
-  SMap.try_find !externals (string_of_name n)
+  HashTable.try_find !externals (string_of_name n)
 
 (* Section 122.18: the F# module currently being printed, when the output is
    split.  A reference to a name of *this* module must not be qualified --
@@ -122,20 +122,20 @@ let current_module : ref (option string) = mk_ref None
 
 (* Section 122.18: the F# module each compiled declaration was emitted into.
    Empty for the whole-program single file, where nothing is qualified. *)
-let qualifiers : ref (SMap.t string) = mk_ref (SMap.create 0)
+let qualifiers : ref (HashTable.t string string) = mk_ref (HashTable.create 0)
 
 (* Section 122.18: the names emitted under their plain F* identifier rather
    than their mangled one.  Mangling exists to keep one flat file
    collision-free (section 122.3); once a declaration sits in the module its
    own F* module names, and is the only declaration from its source lid, the
    module already separates it and the plain name is the shorter one. *)
-let at_home : ref (SMap.t unit) = mk_ref (SMap.create 0)
+let at_home : ref (HashTable.t string unit) = mk_ref (HashTable.create 0)
 
 let is_at_home (n:name) : ML bool =
-  None? n.spec && Some? (SMap.try_find !at_home (string_of_name n))
+  None? n.spec && Some? (HashTable.try_find !at_home (string_of_name n))
 
 let qualifier (n:name) : ML (option string) =
-  match SMap.try_find !qualifiers (string_of_name n) with
+  match HashTable.try_find !qualifiers (string_of_name n) with
   | Some m -> if Some m = !current_module then None else Some m
   | None -> None
 
@@ -147,25 +147,25 @@ let qualify (n:name) (s:string) : ML string =
 (* [FStar.Pervasives.Native.tupleN] is .NET's own N-tuple: no constructor to
    name, no field to project.  Keyed by both the type's name and its
    constructor's, valued by the arity. *)
-let tuples : ref (SMap.t int) = mk_ref (SMap.create 0)
+let tuples : ref (HashTable.t string int) = mk_ref (HashTable.create 0)
 
 (* Constructors declared with no arguments.  [| C _ -> ] is a type error in F#
    when [C] is nullary, and a discriminator has to be written one way or the
    other, so the arity is recorded rather than guessed. *)
-let nullary : ref (SMap.t unit) = mk_ref (SMap.create 0)
+let nullary : ref (HashTable.t string unit) = mk_ref (HashTable.create 0)
 
 (* How many type parameters each record type takes, and which of its labels
    are contested.  F# resolves a bare label to the *last* record type declared
    with it, exactly as OCaml does, and is silent about it in exactly the same
    way; the fix is the same too. *)
-let record_params : ref (SMap.t int) = mk_ref (SMap.create 0)
-let record_labels : ref (SMap.t int) = mk_ref (SMap.create 0)
+let record_params : ref (HashTable.t string int) = mk_ref (HashTable.create 0)
+let record_labels : ref (HashTable.t string int) = mk_ref (HashTable.create 0)
 
 let label_key (n:name) (f:string) : string =
   String.concat "." n.ns ^ "|" ^ f
 
 let ambiguous_label (n:name) (f:string) : ML bool =
-  match SMap.try_find !record_labels (label_key n f) with
+  match HashTable.try_find !record_labels (label_key n f) with
   | Some k -> k > 1
   | None -> false
 
@@ -176,10 +176,10 @@ let is_tuple_type (n:name) : ML bool =
 
 let tuple_arity (n:name) : ML (option int) =
   if Some? n.spec then None
-  else SMap.try_find !tuples (string_of_name n)
+  else HashTable.try_find !tuples (string_of_name n)
 
 let is_nullary_ctor (n:name) : ML bool =
-  Some? (SMap.try_find !nullary (string_of_name n))
+  Some? (HashTable.try_find !nullary (string_of_name n))
 
 (* A tuple component's field name is [_1], [_2], ...; its position is the
    number. *)
@@ -709,7 +709,7 @@ let qualified_label (n:name) (f:string) : ML string =
    identity that is in question and never its arguments. *)
 let ascribe_record (n:name) (f:string) (s:string) : ML string =
   if not (ambiguous_label n f) then s else
-  match SMap.try_find !record_params (string_of_name n) with
+  match HashTable.try_find !record_params (string_of_name n) with
   | None -> s
   | Some k ->
     let rec wilds (i:int) : ML (list string) =
@@ -1611,46 +1611,46 @@ let reject_generic_values (p:program) : ML unit =
    module its file compiles to, which is what every cross-file reference is
    qualified by and what decides whether a declaration is *at home* and so
    emitted under its plain identifier. *)
-let build_tables (homes : SMap.t string) (p:program) : ML unit =
-  let tbl = SMap.create 50 in
-  let tups = SMap.create 20 in
-  let nul = SMap.create 50 in
-  let recs : SMap.t int = SMap.create 100 in
-  let labels : SMap.t int = SMap.create 100 in
-  let quals = SMap.create 50 in
-  let home = SMap.create 50 in
+let build_tables (homes : HashTable.t string string) (p:program) : ML unit =
+  let tbl = HashTable.create 50 in
+  let tups = HashTable.create 20 in
+  let nul = HashTable.create 50 in
+  let recs : HashTable.t string int = HashTable.create 100 in
+  let labels : HashTable.t string int = HashTable.create 100 in
+  let quals = HashTable.create 50 in
+  let home = HashTable.create 50 in
   p |> List.iter (fun d ->
     match d with
     | DExternal e ->
       (match e.dx_target with
-       | Some t -> SMap.add tbl (string_of_name e.dx_name) t
+       | Some t -> HashTable.add tbl (string_of_name e.dx_name) t
        | None ->
          (match supported_realization e.dx_name with
-          | Some t -> SMap.add tbl (string_of_name e.dx_name) t
+          | Some t -> HashTable.add tbl (string_of_name e.dx_name) t
           (* Refused by {!reject_unrealized} before anything is printed. *)
           | None -> ()))
     | DExn e ->
-      if Nil? e.de_args then SMap.add nul (string_of_name e.de_name) ()
+      if Nil? e.de_args then HashTable.add nul (string_of_name e.de_name) ()
     | DType t ->
       (match t.dt_body with
        | TVariant cs ->
          cs |> List.iter (fun (cn, fs) ->
-           if Nil? fs then SMap.add nul (string_of_name cn) ());
+           if Nil? fs then HashTable.add nul (string_of_name cn) ());
          (* [tupleN] is the one realized type whose F# form is syntax rather
             than a name; record its arity under every name it is reached by. *)
          if is_tuple_type t.dt_name then
            (match cs with
             | [(cn, fs)] ->
-              SMap.add tups (string_of_name t.dt_name) (List.length fs);
-              SMap.add tups (string_of_name cn) (List.length fs)
+              HashTable.add tups (string_of_name t.dt_name) (List.length fs);
+              HashTable.add tups (string_of_name cn) (List.length fs)
             | _ -> ())
        | TRecord fs ->
          if is_tuple_type t.dt_name then
-           SMap.add tups (string_of_name t.dt_name) (List.length fs);
-         SMap.add recs (string_of_name t.dt_name) (List.length t.dt_params);
+           HashTable.add tups (string_of_name t.dt_name) (List.length fs);
+         HashTable.add recs (string_of_name t.dt_name) (List.length t.dt_params);
          fs |> List.iter (fun (f, _) ->
            let k = label_key t.dt_name f in
-           SMap.add labels k (1 + (match SMap.try_find labels k with
+           HashTable.add labels k (1 + (match HashTable.try_find labels k with
                                    | Some i -> i
                                    | None -> 0)))
        | _ -> ())
@@ -1666,13 +1666,13 @@ let build_tables (homes : SMap.t string) (p:program) : ML unit =
      unambiguous within the module. *)
   p |> List.iter (fun d ->
     let n = name_of_decl d in
-    match SMap.try_find homes (string_of_name n) with
+    match HashTable.try_find homes (string_of_name n) with
     | None -> ()
     | Some m ->
       let mark (x:name) : ML unit =
-        SMap.add quals (string_of_name x) m;
+        HashTable.add quals (string_of_name x) m;
         if None? x.spec && module_name_of_unit (String.concat "." x.ns) = m
-        then SMap.add home (string_of_name x) () in
+        then HashTable.add home (string_of_name x) () in
       mark n;
       (match d with
        | DType t ->
@@ -1778,7 +1778,7 @@ let reject_all (p:program) : ML unit =
 let print_program (stem:string) (p:program) : ML string =
   let p = eta_generic_values p in
   reject_all p;
-  build_tables (SMap.create 0) p;
+  build_tables (HashTable.create 0) p;
   current_module := None;
   reserve_top p;
   assemble (module_name_of_unit stem) (print_decls p @ entry_calls p)
@@ -1792,11 +1792,11 @@ let print_split (files : list (string & program)) : ML (list (string & string)) 
   let files = files |> List.map (fun (m, ds) -> (m, eta_generic_values ds)) in
   let whole = List.collect snd files in
   reject_all whole;
-  let homes = SMap.create 100 in
+  let homes = HashTable.create 100 in
   files |> List.iter (fun (m, ds) ->
     let m = module_name_of_unit m in
     ds |> List.iter (fun d ->
-      SMap.add homes (string_of_name (name_of_decl d)) m));
+      HashTable.add homes (string_of_name (name_of_decl d)) m));
   build_tables homes whole;
   let rendered = files |> List.map (fun (m, ds) ->
     let m = module_name_of_unit m in

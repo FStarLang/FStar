@@ -27,7 +27,7 @@ open FStarC.Class.Show
 open FStarC.Class.Deq
 
 open FStarC.PSMap
-open FStarC.SMap
+module HashTable = FStarC.HashTable
 
 module Util = FStarC.Util
 module List = FStarC.List
@@ -2222,13 +2222,13 @@ let custom_prims () = get_prims()
 let path_of_text text = String.split ['.'] text
 
 let parse_settings ns : ML (list (list string & bool)) =
-    let cache = smap_create 31 in
+    let cache = HashTable.create 31 in
     let with_cache (f: string -> ML (list (list string & bool))) s : ML (list (list string & bool)) =
-      match smap_try_find cache s with
+      match HashTable.try_find cache s with
       | Some s -> s
       | None ->
         let res = f s in
-        smap_add cache s res;
+        HashTable.add cache s res;
         res
     in
     let parse_one_setting s =

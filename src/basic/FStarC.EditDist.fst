@@ -2,19 +2,19 @@ module FStarC.EditDist
 open FStarC.Effect
 
 let edit_distance (s1 s2 : string) : ML int =
-  let cache : IMap.t (IMap.t int) = IMap.create 10 in
+  let cache : HashTable.t int (HashTable.t int int) = HashTable.create 10 in
   let lookup (i : int) (j : int) : ML (option int) =
-    match IMap.try_find cache i with
-    | Some m -> IMap.try_find m j
+    match HashTable.try_find cache i with
+    | Some m -> HashTable.try_find m j
     | None -> None
   in
   let set (i : int) (j : int) (d : int) : ML unit =
-    let m = match IMap.try_find cache i with
+    let m = match HashTable.try_find cache i with
       | Some m -> m
-      | None -> IMap.create 10
+      | None -> HashTable.create 10
     in
-    IMap.add m j d;
-    IMap.add cache i m
+    HashTable.add m j d;
+    HashTable.add cache i m
   in
   let l1 = String.length s1 in
   let l2 = String.length s2 in

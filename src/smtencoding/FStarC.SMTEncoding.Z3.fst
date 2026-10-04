@@ -302,7 +302,7 @@ type smt_output = {
 
 let parse_stats (smt_stats : option smt_output_section) : ML z3statistics =
     (* Parse the statistics section, if it exists *)
-    let statistics : z3statistics = SMap.create 0 in
+    let statistics : z3statistics = HashTable.create 0 in
     match smt_stats with
     | None -> statistics
     | Some lines ->
@@ -315,7 +315,7 @@ let parse_stats (smt_stats : option smt_output_section) : ML z3statistics =
            let key = List.hd tokens in
            let ltok = List.nth tokens ((List.length tokens) - 1) in
            let value = if BU.ends_with ltok ")" then (BU.substring ltok 0 ((String.length ltok) - 1)) else ltok in
-           SMap.add statistics key value
+           HashTable.add statistics key value
         | _ -> ()
       in
       List.iter parse_line lines;

@@ -39,6 +39,7 @@ NOGREP_Refs += "(0) <- "
 CUSTARD_TESTS += Thunk
 CUSTARD_TESTS += Exceptions
 CUSTARD_TESTS += FunctorHashtbl
+CUSTARD_TESTS += FunctorClass
 CUSTARD_TESTS += LocalRec
 CUSTARD_TESTS += RecEffect
 CUSTARD_TESTS += NewtypeInline
@@ -224,6 +225,12 @@ NOGREP_Exceptions = "FStar_All.try_with" "FStar_All.raise" "Prims.exn"
 GREP_FunctorHashtbl = "= Hashtbl.Make (struct" "FunctorHashtbl_string_tbl.find_opt" \
                       "(Prims.int) FunctorHashtbl_string_tbl.t" "| Not_found ->"
 NOGREP_FunctorHashtbl = "exception Not_found" "type functorHashtbl_ocaml_int" "Obj.t"
+
+# Section 133.5: one instance per key type, whether the application is reached
+# from a type naming the dictionary or from a body specialized on it.
+GREP_FunctorClass   = "FunctorClass_hashtbl_make__0 = Hashtbl.Make (struct" \
+                      "FunctorClass_hashtbl_make__1 = Hashtbl.Make (struct"
+NOGREP_FunctorClass = "FunctorClass_hashtbl_make__2" "Obj.t"
 
 # Local [let rec]s are lambda-lifted to top-level declarations (section 5.10).
 GREP_LocalRec     = "let rec localRec_rev1__aux" "let rec localRec_sum_upto__go" \
@@ -803,6 +810,15 @@ CGREP_Export += "static uint32_t Export_countdown__"
 # boundary in a real program has.  The link is the assertion -- the stub is
 # written against the generated struct, so a change to its layout or to the
 # name breaks the build rather than passing quietly.
+# [--custard_entry_module] roots a module's externals too: the program calls
+# [used] and never mentions [unused], and both are declared, because what an
+# entry module offers is its interface.  The stub defines both, so the link
+# is the assertion for the first and the grep for the second.
+C_TESTS += EntryRoots
+FLAGS_EntryRoots = --custard_entry_module EntryRootsLib
+CEXTRA_EntryRoots = EntryRoots_stubs.c
+CGREP_EntryRoots += "EntryRootsLib_unused"
+
 C_TESTS += ExternOpt
 CEXTRA_ExternOpt = ExternOpt_stubs.c
 CGREP_ExternOpt += "struct FStar_Pervasives_Native_option__listener_s {"
@@ -1344,7 +1360,7 @@ $(OUTPUT_DIR)/%.cexe: $(OUTPUT_DIR)/%.krml
 	@# Section 45.3.  The test directory is on the include path because a
 	@# [@@custard_c_header] now reaches karamel's output as an #include.
 	$(Q)$(KRML_EXE) -silent -skip-linking -no-prefix $* -ccopts "-I$(CURDIR)" \
-	  -tmpdir $(OUTPUT_DIR)/$*_c $<
+	  $(KRMLFLAGS_$*) -tmpdir $(OUTPUT_DIR)/$*_c $<
 	$(call msg, "CC", $(basename $(notdir $@)))
 	$(Q)$(CC) $$(tr '\n' ' ' < $(OUTPUT_DIR)/$*_c/compile_flags.txt) \
 	  -I$(CURDIR) $(OUTPUT_DIR)/$*_c/Custard.c -o $@
@@ -2629,6 +2645,21 @@ CGREP_TensorC += "/* A kernel, decorated from source. */"
 # one symbol and called another, and the custard_c_header include was absent
 # besides.  Linking is the assertion.
 KRML_TESTS += KrmlExt
+
+# Section 45.2.  A [@@CMacro] on an [assume val], through karamel.  The
+# external was emitted with an empty flag list, so karamel saw a function
+# where the target has a macro and spelled the reference as a function name.
+# Linking and running is the assertion.  karamel still emits an [extern]
+# prototype for a macro external, so the stub header is included only from
+# Custard.c, after Custard.h: the prototype must not be macro-expanded, but
+# the call must be.
+KRML_TESTS += KrmlMacro
+KRMLFLAGS_KrmlMacro := -add-include 'Custard.c:"KrmlMacro_stubs.h"'
+
+# A [@@CIfDef] flag through karamel: the attribute reaches karamel's own
+# [IfDef], so the test compiles to [#if] rather than to a read of a symbol
+# nothing defines.  Linking and running is the assertion.
+KRML_TESTS += KrmlIfDef
 
 # Section 65.  An external belongs to its own module's file, not to the file
 # of the first thing its type mentions.

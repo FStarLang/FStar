@@ -6,8 +6,6 @@ let stdout = stdout
 let stderr = stderr
 
 let pr  = Printf.printf
-let spr = Printf.sprintf
-let fpr = Printf.fprintf
 
 let print_newline = print_newline
 let print_string s = pr "%s" s; flush stdout

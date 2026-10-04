@@ -2,8 +2,6 @@ module FStar_String
 open Prims
 
 let make (i : nat) (c : FStar_Char.char) = String.init (Microsoft.FSharp.Core.Operators.int i) (fun _ -> string([|c|]))
-let strcat s t = s ^ t
-let op_Hat s t =  strcat s t
 
 let split (seps : FStar_Char.char list) (s : string) = s.Split(Array.ofList seps)
   

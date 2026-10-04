@@ -26,7 +26,7 @@ type z3status =
     | UNKNOWN of option string         //z3 reason
     | TIMEOUT of option string         //z3 reason
     | KILLED
-type z3statistics = SMap.t string
+type z3statistics = HashTable.t string string
 
 type z3result = {
       z3result_status      : z3status;

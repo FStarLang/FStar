@@ -47,7 +47,7 @@ module U  = FStarC.Syntax.Util
 module EMB = FStarC.Syntax.Embeddings
 module TcComm = FStarC.TypeChecker.Common
 module Free = FStarC.Syntax.Free
-module SMap = FStarC.SMap
+module HashTable = FStarC.HashTable
 module PO = FStarC.TypeChecker.Primops
 module Print = FStarC.Syntax.Print //bring into scope for show instances
 open FStarC.TypeChecker.Normalize.Unfolding
@@ -193,11 +193,11 @@ let check_strict_projector (cfg : Cfg.cfg) (hua : fv & universes & args) : ML bo
 let disc_proj_info_cached env (l:Ident.lident)
   : ML (option (qualifier & int & option int)) =
   let k = Ident.string_of_lid l in
-  match SMap.try_find env.disc_proj_tab k with
+  match HashTable.try_find env.disc_proj_tab k with
   | Some r -> r
   | None ->
     let r = Env.disc_proj_info env l in
-    SMap.add env.disc_proj_tab k r;
+    HashTable.add env.disc_proj_tab k r;
     r
 
 (* Is [head] a projector or discriminator whose reduction is currently enabled?

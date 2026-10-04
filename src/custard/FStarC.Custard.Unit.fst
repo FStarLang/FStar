@@ -27,7 +27,7 @@ module BU  = FStarC.Format
 module U   = FStarC.Util
 module E   = FStarC.Errors
 module O   = FStarC.Options
-module SMap = FStarC.SMap
+module HashTable = FStarC.HashTable
 
 let current_version = 14
 
@@ -195,21 +195,21 @@ type unit_ref = {
 (* [string & entry]: the unit an entry came from, kept alongside it so a
    backend can qualify the name without a second lookup. *)
 type links = {
-  lk_tbl:   SMap.t (string & entry);
+  lk_tbl:   HashTable.t string (string & entry);
   lk_units: list unit_ref;   (* in --custard_link order *)
 }
 
-let empty_links : links = { lk_tbl = SMap.create 1; lk_units = [] }
+let empty_links : links = { lk_tbl = HashTable.create 1; lk_units = [] }
 
 let load_links (fns:list string) : ML links =
-  let tbl : SMap.t (string & entry) = SMap.create 1000 in
+  let tbl : HashTable.t string (string & entry) = HashTable.create 1000 in
   (* [List.map] rather than a reference, so that [lk_units] comes out in
      --custard_link order without a reversal to get wrong. *)
   let units = fns |> List.map (fun fn ->
     let i = read_iface fn in
     let u = i.ui_header.uh_name in
     i.ui_entries |> List.iter (fun e ->
-      match SMap.try_find tbl e.ue_key with
+      match HashTable.try_find tbl e.ue_key with
       (* Section 116.  Two units that both monomorphized [duo] at [uint32]
          agree by construction -- the name is computed from the declaration
          and the type vector, and the layouts were settled under the same
@@ -231,22 +231,22 @@ let load_links (fns:list string) : ML links =
           text (BU.fmt1 "The key is: %s" e.ue_key);
           text "Link only one of them, or merge the two units."
         ]
-      | _ -> SMap.add tbl e.ue_key (u, e));
+      | _ -> HashTable.add tbl e.ue_key (u, e));
     { ur_name   = u;
       ur_header = i.ui_header.uh_header;
       ur_init   = i.ui_header.uh_init;
       ur_no_prefix = i.ui_header.uh_no_prefix }) in
   if O.custard_dump_cui () && fns <> [] then
-    BU.print1 "Custard: linked %s specializations.\n" (show (List.length (SMap.keys tbl)));
+    BU.print1 "Custard: linked %s specializations.\n" (show (List.length (HashTable.keys tbl)));
   { lk_tbl = tbl; lk_units = units }
 
 let lookup (l:links) (k:string) : ML (option (string & entry)) =
-  SMap.try_find l.lk_tbl k
+  HashTable.try_find l.lk_tbl k
 
-let is_empty (l:links) : ML bool = SMap.keys l.lk_tbl = [] && Nil? l.lk_units
+let is_empty (l:links) : ML bool = HashTable.keys l.lk_tbl = [] && Nil? l.lk_units
 
 let link_homes (l:links) : ML (list string) =
-  SMap.fold l.lk_tbl (fun _ (_, e) acc ->
+  HashTable.fold l.lk_tbl (fun _ (_, e) acc ->
     match e.ue_home with
     | Some h -> if List.mem h acc then acc else h :: acc
     | None -> acc) []

@@ -61,15 +61,15 @@ type iface = {
 }
 
 let extension_extractor_table
-  : SMap.t extension_extractor
-  = SMap.create 20
+  : HashTable.t string extension_extractor
+  = HashTable.create 20
 
 let register_extension_extractor (ext:string) (callback:extension_extractor) : ML unit =
-  SMap.add extension_extractor_table ext callback
+  HashTable.add extension_extractor_table ext callback
 
 let lookup_extension_extractor (ext:string) : ML (option extension_extractor) =
   (* Try to find a plugin if lookup fails *)
-  let do () = SMap.try_find extension_extractor_table ext in
+  let do () = HashTable.try_find extension_extractor_table ext in
   match do () with
   | None ->
     if Plugins.autoload_plugin ext

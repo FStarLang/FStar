@@ -127,7 +127,7 @@ type verify_mode =
 
 type intf_and_impl = option string & option string
 
-type files_for_module_name = SMap.t intf_and_impl
+type files_for_module_name = HashTable.t string intf_and_impl
 
 let intf_and_impl_to_string ii =
   match ii with
@@ -143,7 +143,7 @@ let files_for_module_name_to_string (m:files_for_module_name) =
     match sopt with
     | None -> "<None>"
     | Some s -> s in
-  SMap.iter m (fun k v -> Format.print2 "%s:%s\n" k (intf_and_impl_to_string v));
+  HashTable.iter m (fun k v -> Format.print2 "%s:%s\n" k (intf_and_impl_to_string v));
   Format.print_string "}\n"
 
 type color = | White | Gray | Black
@@ -222,17 +222,17 @@ let module_name_from_include_path (f:string) : ML (option string) =
 dependency graph, and is a pure function of the file name and the include
 path, so we memoize it, invalidating the cache whenever the include path
 changes. *)
-let module_name_cache : SMap.t (option string) = SMap.create 100
+let module_name_cache : HashTable.t string (option string) = HashTable.create 100
 let module_name_cache_epoch : ref int = mk_ref (-1)
 
 (* In public interface *)
 let maybe_module_name_of_file f =
   let epoch = Find.epoch () in
   if !module_name_cache_epoch <> epoch then (
-    SMap.clear module_name_cache;
+    HashTable.clear module_name_cache;
     module_name_cache_epoch := epoch
   );
-  match SMap.try_find module_name_cache f with
+  match HashTable.try_find module_name_cache f with
   | Some res -> res
   | None ->
     let res =
@@ -240,7 +240,7 @@ let maybe_module_name_of_file f =
       | Some longname -> Some longname
       | None -> check_and_strip_suffix (Filepath.basename f)
     in
-    SMap.add module_name_cache f res;
+    HashTable.add module_name_cache f res;
     res
 
 let module_name_of_file f =
@@ -292,9 +292,9 @@ type dep_node = {
     color:color
 }
 type dependence_graph = //maps file names to the modules it depends on
-     | Deps of SMap.t dep_node //(dependences * color)>
+     | Deps of HashTable.t string dep_node //(dependences * color)>
 let copy_dep_graph (d:dependence_graph) =
-  let Deps m = d in Deps (SMap.copy m)
+  let Deps m = d in Deps (HashTable.copy m)
 
 let str_of_parsing_data_elt elt =
   let str_of_open_kind = function
@@ -347,19 +347,19 @@ let empty_parsing_data = { elts = []; no_prelude = false }
 type deps = {
     dep_graph:dependence_graph;                 //dependences of the entire project, not just those reachable from the command line
     file_system_map:files_for_module_name;      //an abstraction of the file system, keys are lowercase module names
-    valid_namespaces: SMap.t (list string);     //all namespaces, mapped to the modules in that namespace
+    valid_namespaces: HashTable.t string (list string);     //all namespaces, mapped to the modules in that namespace
     cmd_line_files:list file_name;              //all command-line files
     all_files:ref (RBSet.t file_name);                   //all files
     interfaces_with_inlining:list module_name;  //interfaces that use `inline_for_extraction` require inlining
-    parse_results:SMap.t parsing_data             //map from filenames to parsing_data
+    parse_results:HashTable.t string parsing_data             //map from filenames to parsing_data
                                                 //callers (Universal.fs) use this to get the parsing data for caching purposes
 }
 let copy_deps (d:deps) : ML deps = { d with dep_graph = copy_dep_graph d.dep_graph; all_files=mk_ref (!d.all_files) }
-let deps_try_find (Deps m) k = SMap.try_find m k
+let deps_try_find (Deps m) k = HashTable.try_find m k
 let deps_add_dep (Deps m) k v =
-  SMap.add m k v
-let deps_keys (Deps m) = SMap.keys m
-let deps_empty () = Deps (SMap.create 41)
+  HashTable.add m k v
+let deps_keys (Deps m) = HashTable.keys m
+let deps_empty () = Deps (HashTable.create 41)
 let mk_deps dg fs ns c a i pr = {
     dep_graph=dg;
     file_system_map=fs;
@@ -370,7 +370,7 @@ let mk_deps dg fs ns c a i pr = {
     parse_results=pr;
 }
 (* In public interface *)
-let empty_deps clf = mk_deps (deps_empty ()) (SMap.create 0) (SMap.create 0) clf (RBSet.empty()) [] (SMap.create 0)
+let empty_deps clf = mk_deps (deps_empty ()) (HashTable.create 0) (HashTable.create 0) clf (RBSet.empty()) [] (HashTable.create 0)
 let module_name_of_dep = function
     | UseInterface m
     | PreferInterface m
@@ -379,7 +379,7 @@ let module_name_of_dep = function
 
 let resolve_module_name (file_system_map:files_for_module_name) (key:module_name)
     : ML (option module_name)
-    = match SMap.try_find file_system_map key with
+    = match HashTable.try_find file_system_map key with
       | Some (Some fn, _)
       | Some (_, Some fn) ->
         Some (lowercase_module_name fn)
@@ -387,13 +387,13 @@ let resolve_module_name (file_system_map:files_for_module_name) (key:module_name
 
 let interface_of_internal (file_system_map:files_for_module_name) (key:module_name)
 : ML (option file_name)
-= match SMap.try_find file_system_map key with
+= match HashTable.try_find file_system_map key with
   | Some (Some iface, _) -> Some iface
   | _ -> None
 
 let implementation_of_internal (file_system_map:files_for_module_name) (key:module_name)
 : ML (option file_name)
-= match SMap.try_find file_system_map key with
+= match HashTable.try_find file_system_map key with
   | Some (_, Some impl) -> Some impl
   | _ -> None
 
@@ -478,13 +478,13 @@ let cache_file_name =
            ];
         Find.prepend_cache_dir cache_fn
     in
-    let memo = SMap.create 100 in
+    let memo = HashTable.create 100 in
     let memo (f: string -> ML string) x =
-      match SMap.try_find memo x with
+      match HashTable.try_find memo x with
       | Some res -> res
       | None ->
         let res = f x in
-        SMap.add memo x res;
+        HashTable.add memo x res;
         res
     in
     memo checked_file_and_exists_flag
@@ -677,16 +677,16 @@ let hierarchical_modules_for_dir (cwd:string) (include_roots:list string)
 let check_unique_module_names_for_dir (dir:string)
                                       (candidates : list (string & string))
   : ML unit =
-  let seen : SMap.t string = SMap.create 100 in
+  let seen : HashTable.t string string = HashTable.create 100 in
   candidates |> List.iter (fun (longname, path) ->
     let key = String.lowercase longname ^ (if is_interface path then ":i" else ":") in
-    match SMap.try_find seen key with
+    match HashTable.try_find seen key with
     | Some prev ->
       raise_error0 Errors.Fatal_DuplicateModuleOrInterface [
         text (Format.fmt4 "Module %s is provided by more than one file in include directory %s: %s and %s." longname dir prev path);
         text "A module must have a unique source file. For example, do not provide both a flat 'X.Y.Z.fst' and a nested 'X/Y/Z.fst' for the same module."
       ]
-    | None -> SMap.add seen key path)
+    | None -> HashTable.add seen key path)
 
 (** Enumerate F* files in all include directories, returning pairs of long names
   and full paths. Explicit and manifest-declared roots are scanned recursively,
@@ -725,26 +725,26 @@ let build_inclusion_candidates_list (): ML (list (string & string)) =
     (if any). *)
 let build_map fs_map valid_ns_map (filenames: list string): ML unit =
   let add_fs_entry key full_path =
-    match SMap.try_find fs_map key with
+    match HashTable.try_find fs_map key with
     | Some (intf, impl) ->
         if is_interface full_path then
-          SMap.add fs_map key (Some full_path, impl)
+          HashTable.add fs_map key (Some full_path, impl)
         else
-          SMap.add fs_map key (intf, Some full_path)
+          HashTable.add fs_map key (intf, Some full_path)
     | None ->
         if is_interface full_path then
-          SMap.add fs_map key (Some full_path, None)
+          HashTable.add fs_map key (Some full_path, None)
         else
-          SMap.add fs_map key (None, Some full_path)
+          HashTable.add fs_map key (None, Some full_path)
   in
   let add_ns_entry key full_path =
     match namespace_of_module key with
     | None -> ()
     | Some ns ->
       let ns = Ident.string_of_lid ns in
-      match SMap.try_find valid_ns_map ns  with
-      | None -> SMap.add valid_ns_map ns [key]
-      | Some keys -> SMap.add valid_ns_map ns (key::keys)
+      match HashTable.try_find valid_ns_map ns  with
+      | None -> HashTable.add valid_ns_map ns [key]
+      | Some keys -> HashTable.add valid_ns_map ns (key::keys)
   in
   let add_entry key full_path =
     add_fs_entry key full_path;
@@ -760,18 +760,18 @@ let build_map fs_map valid_ns_map (filenames: list string): ML unit =
   ) filenames
 
 let is_valid_namespace deps ns =
-  let res = Some? (SMap.try_find deps.valid_namespaces (String.lowercase (Ident.string_of_lid ns))) in
+  let res = Some? (HashTable.try_find deps.valid_namespaces (String.lowercase (Ident.string_of_lid ns))) in
   if not res
   then Format.print2 "Could not resolve namespace %s\n valid namespaces are %s\n"
-      (show ns) (show <| List.sortWith String.compare (SMap.keys deps.valid_namespaces));
+      (show ns) (show <| List.sortWith String.compare (HashTable.keys deps.valid_namespaces));
   res
 
 let interface_of deps key = 
-  if Nil? (SMap.keys deps.file_system_map)
+  if Nil? (HashTable.keys deps.file_system_map)
   then build_map deps.file_system_map deps.valid_namespaces deps.cmd_line_files;
   interface_of_internal deps.file_system_map key
 let implementation_of deps key =
-  if Nil? (SMap.keys deps.file_system_map)
+  if Nil? (HashTable.keys deps.file_system_map)
   then build_map deps.file_system_map deps.valid_namespaces deps.cmd_line_files;
   implementation_of_internal deps.file_system_map key
 
@@ -821,29 +821,29 @@ let warned_about : ref (list (option intf_and_impl)) = mk_ref Nil
 
    The index is memoized on the map itself: [build_map] only ever populates a
    map that is still empty (see [interface_of]), so a non-empty map is never
-   mutated again.  Buckets are built by prepending during [SMap.iter] and then
+   mutated again.  Buckets are built by prepending during [HashTable.iter] and then
    reversed, so iterating a bucket visits entries in exactly the order
-   [SMap.iter] used to, keeping the order of the shadowing warnings unchanged. *)
+   [HashTable.iter] used to, keeping the order of the shadowing warnings unchanged. *)
 type ns_entry = {
   ne_suffix   : string;            //the shortened name
   ne_file     : intf_and_impl;     //what it resolves to
   ne_shadowed : option intf_and_impl; //the module this shortening shadows, if any
 }
 
-let ns_index_memo : ref (option (files_for_module_name & SMap.t (list ns_entry))) =
+let ns_index_memo : ref (option (files_for_module_name & HashTable.t string (list ns_entry))) =
   mk_ref None
 
-let namespace_index (m:files_for_module_name) : ML (SMap.t (list ns_entry)) =
+let namespace_index (m:files_for_module_name) : ML (HashTable.t string (list ns_entry)) =
   match !ns_index_memo with
   | Some (m', idx) when BU.physical_equality m m' -> idx
   | _ ->
-    let idx : SMap.t (list ns_entry) = SMap.create 100 in
+    let idx : HashTable.t string (list ns_entry) = HashTable.create 100 in
     let suffix_exists mopt =
       match mopt with
       | None -> false
       | Some (intf, impl) -> Some? intf || Some? impl
     in
-    SMap.iter m (fun k fn ->
+    HashTable.iter m (fun k fn ->
       (* register [k] under each of its proper dot-terminated prefixes:
          "a.b.c" is registered under "a." as "b.c" and under "a.b." as "c" *)
       let rec prefixes (acc:string) (segs:list string) : ML unit =
@@ -855,18 +855,18 @@ let namespace_index (m:files_for_module_name) : ML (SMap.t (list ns_entry)) =
             String.substring k (String.length p) (String.length k - String.length p)
           in
           let shadowed =
-            let so = SMap.try_find m suffix in
+            let so = HashTable.try_find m suffix in
             if suffix_exists so then so else None
           in
           let e = { ne_suffix = suffix; ne_file = fn; ne_shadowed = shadowed } in
-          let cur = match SMap.try_find idx p with None -> [] | Some l -> l in
-          SMap.add idx p (e :: cur);
+          let cur = match HashTable.try_find idx p with None -> [] | Some l -> l in
+          HashTable.add idx p (e :: cur);
           prefixes p rest
       in
       prefixes "" (String.split ['.'] k)
     );
-    SMap.keys idx |> List.iter (fun p ->
-      SMap.add idx p (List.rev (Option.must (SMap.try_find idx p)))
+    HashTable.keys idx |> List.iter (fun p ->
+      HashTable.add idx p (List.rev (Option.must (HashTable.try_find idx p)))
     );
     ns_index_memo := Some (m, idx);
     idx
@@ -878,7 +878,7 @@ let enter_namespace
   (implicit_open:bool) : ML bool =
   let sprefix = sprefix ^ "." in
   let entries =
-    match SMap.try_find (namespace_index original_map) sprefix with
+    match HashTable.try_find (namespace_index original_map) sprefix with
     | None -> []
     | Some l -> l
   in
@@ -900,7 +900,7 @@ let enter_namespace
           text "Rename" ^/^ fquotes (doc_of_string str) ^/^ text "to avoid conflicts.";
        ]
      | _ -> ());
-    SMap.add working_map e.ne_suffix e.ne_file
+    HashTable.add working_map e.ne_suffix e.ne_file
   );
   Cons? entries
 
@@ -1369,7 +1369,7 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
       @open_module_ns
   in
 
-  let working_map = SMap.copy original_map in
+  let working_map = HashTable.copy original_map in
 
   let set_interface_inlining () =
     if is_interface filename
@@ -1461,9 +1461,9 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
     let key = String.lowercase (string_of_id ident) in
     let alias = lowercase_join_longident lid true in
     // Only fully qualified module aliases are allowed.
-    match SMap.try_find original_map alias with
+    match HashTable.try_find original_map alias with
     | Some deps_of_aliased_module ->
-      SMap.add working_map key deps_of_aliased_module;
+      HashTable.add working_map key deps_of_aliased_module;
       add_dep (dep_edge (lowercase_join_longident lid true) false);
       true
     | None ->
@@ -1584,15 +1584,15 @@ let collect_one
  * map lowercase module names to filenames. *)
 
 // Used by F*.js
-let collect_one_cache : ref (SMap.t (list dependence & list dependence & bool)) =
-  mk_ref (SMap.create 0)
+let collect_one_cache : ref (HashTable.t string (list dependence & list dependence & bool)) =
+  mk_ref (HashTable.create 0)
 
-let set_collect_one_cache (cache: SMap.t (list dependence & list dependence & bool)) : ML unit =
+let set_collect_one_cache (cache: HashTable.t string (list dependence & list dependence & bool)) : ML unit =
   collect_one_cache := cache
 
 let dep_graph_copy dep_graph =
     let (Deps g) = dep_graph in
-    Deps (SMap.copy g)
+    Deps (HashTable.copy g)
 
 let widen_deps friends dep_graph file_system_map widened =
     let widened = mk_ref widened in
@@ -1608,10 +1608,10 @@ let widen_deps friends dep_graph file_system_map widened =
           FriendImplementation m
         | _ -> d)
     in
-    SMap.fold
+    HashTable.fold
        dg
        (fun filename dep_node () ->
-          SMap.add
+          HashTable.add
             dg'
             filename
             ({dep_node with edges=widen_one dep_node.edges; color=White}))
@@ -1802,9 +1802,9 @@ let all_files_in_include_paths () =
 let build_dep_graph_for_files
       (files:list string)
       (all_cmd_line_files:list string)
-      (file_system_map:_)
-      (dep_graph:_)
-      (parse_results:_)
+      (file_system_map:files_for_module_name)
+      (dep_graph:dependence_graph)
+      (parse_results:HashTable.t string parsing_data)
       (get_parsing_data_from_cache:string -> ML (option parsing_data))
 : ML (list string) //interfaces needing inlining
 = (* The dependency graph; keys are lowercased module names, values = list of
@@ -1820,7 +1820,7 @@ let build_dep_graph_for_files
     if deps_try_find dep_graph file_name = None then
     begin
       let parsing_data, (deps, mo_roots, needs_interface_inlining) =
-        match SMap.try_find !collect_one_cache file_name with
+        match HashTable.try_find !collect_one_cache file_name with
         | Some cached ->
           debug_print (fun _ -> 
             Format.print1 "Using cached parsing data for %s\n" file_name
@@ -1838,7 +1838,7 @@ let build_dep_graph_for_files
       );
       if needs_interface_inlining
       then add_interface_for_inlining file_name;
-      SMap.add parse_results file_name parsing_data;
+      HashTable.add parse_results file_name parsing_data;
       let deps = deps @ maybe_use_interface file_system_map file_name in
       let dep_node : dep_node = {
         edges = List.unique deps;
@@ -1879,7 +1879,7 @@ let collect_deps_of_decl (deps:deps) (filename:string) (ds:list decl)
       Inl <| Parser.AST.Module { mname = l; decls = ds; no_prelude }
    | _ -> Inr ds
   in
-  if Nil? (SMap.keys deps.file_system_map)
+  if Nil? (HashTable.keys deps.file_system_map)
   then build_map deps.file_system_map deps.valid_namespaces [filename];
   let pd = collect_module_or_decls filename roots in
   debug_print (fun _ -> 
@@ -1984,12 +1984,12 @@ let collect (all_cmd_line_files: list file_name)
   // lowercased module names this file depends on.
   let dep_graph : dependence_graph = deps_empty () in
   // Cached parsing results for each file
-  let parse_results = SMap.create 40 in
+  let parse_results = HashTable.create #string 40 in
   // A map from lowercase module names (e.g. [a.b.c]) to the corresponding
   // filenames (e.g. [/where/to/find/A.B.C.fst]). Consider this map
   // immutable from there on.
-  let file_system_map = SMap.create 41 in
-  let valid_namespaces = SMap.create 41 in
+  let file_system_map = HashTable.create 41 in
+  let valid_namespaces = HashTable.create 41 in
   build_map file_system_map valid_namespaces all_cmd_line_files;
   let inlining_ifaces =
     build_dep_graph_for_files all_cmd_line_files all_cmd_line_files file_system_map dep_graph parse_results get_parsing_data_from_cache
@@ -2151,10 +2151,10 @@ let topological_order (deps:deps) (normalize : module_name -> ML module_name)
   let norm (m:module_name) : ML module_name = normalize m in
   (* One node per normalized name, carrying the union of the edges of every
      file that maps to it -- implementation and interface alike. *)
-  let edges : SMap.t (list module_name) = SMap.create 41 in
+  let edges : HashTable.t string (list module_name) = HashTable.create 41 in
   let add (m:module_name) (ds:list module_name) : ML unit =
-    let prev = Option.dflt [] (SMap.try_find edges m) in
-    SMap.add edges m (ds @ prev) in
+    let prev = Option.dflt [] (HashTable.try_find edges m) in
+    HashTable.add edges m (ds @ prev) in
   let _ =
     deps_keys deps.dep_graph |> List.iter (fun f ->
       match maybe_module_name_of_file f with
@@ -2166,11 +2166,11 @@ let topological_order (deps:deps) (normalize : module_name -> ML module_name)
           | Some ({edges=es}) -> es |> List.map (fun d -> norm (module_name_of_dep d)) in
         add (norm m) ds) in
   let order : ref (list module_name) = mk_ref [] in
-  let visited = SMap.create 41 in
+  let visited = HashTable.create #string 41 in
   let rec visit (m:module_name) : ML unit =
-    if Some? (SMap.try_find visited m) then () else begin
-      SMap.add visited m true;
-      Option.dflt [] (SMap.try_find edges m) |> List.iter visit;
+    if Some? (HashTable.try_find visited m) then () else begin
+      HashTable.add visited m true;
+      Option.dflt [] (HashTable.try_find edges m) |> List.iter visit;
       order := m :: !order
     end in
   (* Command-line roots first, so that whatever they reach ranks before
@@ -2183,7 +2183,7 @@ let topological_order (deps:deps) (normalize : module_name -> ML module_name)
     match maybe_module_name_of_file f with
     | None -> ()
     | Some m -> visit (norm m));
-  SMap.keys edges |> List.iter visit;
+  HashTable.keys edges |> List.iter visit;
   List.rev !order
 
 let parsing_data_of_modul deps filename modul_opt =
@@ -2212,9 +2212,9 @@ let from_graph (deps:deps) (f:file_name) : ML (list file_name) =
   | None -> snd (parsing_data_of_modul deps f None)
 
 let deps_of =
-  let cache = SMap.create 40 in
+  let cache = HashTable.create #string 40 in
   fun deps (f:file_name) ->
-    match SMap.try_find cache f with
+    match HashTable.try_find cache f with
     | Some deps -> deps
     | None ->
       let res =
@@ -2235,7 +2235,7 @@ let deps_of =
           )
       else from_graph deps f
     in
-    SMap.add cache f res;
+    HashTable.add cache f res;
     res
 
 let deps_of_modul deps (m:module_name) : ML (list module_name) =
@@ -2244,23 +2244,23 @@ let deps_of_modul deps (m:module_name) : ML (list module_name) =
          |> Option.dflt []
   in
   m |> String.lowercase
-    |> SMap.try_find deps.file_system_map
+    |> HashTable.try_find deps.file_system_map
     |> Option.map (fun (intf_opt, impl_opt) ->
                       remove_dups_fast (aux intf_opt @ aux impl_opt))
     |> Option.dflt []
 
 (* In public interface *)
 let parsing_data_of deps fn =
-  match SMap.try_find deps.parse_results fn with
+  match HashTable.try_find deps.parse_results fn with
   | None -> 
     failwith (Format.fmt1 "Parsing data not found for %s" fn)
   | Some pd -> pd
 
 let populate_parsing_data fn ast_modul deps =
-  match SMap.try_find deps.parse_results fn with
+  match HashTable.try_find deps.parse_results fn with
   | None -> 
     let pd = collect_module_or_decls fn (Inl ast_modul) in
-    SMap.add deps.parse_results fn pd
+    HashTable.add deps.parse_results fn pd
   | Some _ -> ()
 
 let print_digest (dig:list (string & string)) : ML string = show dig
@@ -2290,7 +2290,7 @@ let print_make (outc : out_channel) deps : ML unit =
 (* In public interface *)
 let print_raw (outc : out_channel) (deps:deps) =
     let (Deps deps) = deps.dep_graph in
-      SMap.fold deps (fun k dep_node out ->
+      HashTable.fold deps (fun k dep_node out ->
         Format.fmt2 "%s -> [\n\t%s\n] " k (List.map dep_to_string dep_node.edges |> String.concat ";\n\t") :: out) []
       |> String.concat ";;\n"
       |> (fun s -> BU.fprint outc "%s\n" [s])
@@ -2306,18 +2306,18 @@ let print_raw (outc : out_channel) (deps:deps) =
 let print_full (outc : out_channel) (deps:deps) : ML unit =
     let pre_tag = Options.Ext.get "dep_pretag" in
     //let (Mk (deps, file_system_map, all_cmd_line_files, all_files)) = deps in
-    let sort_output_files (orig_output_file_map:SMap.t string) =
+    let sort_output_files (orig_output_file_map:HashTable.t string string) =
         let order : ref (list string) = mk_ref [] in
-        let remaining_output_files = SMap.copy orig_output_file_map in
-        let visited_other_modules = SMap.create 41 in
+        let remaining_output_files = HashTable.copy orig_output_file_map in
+        let visited_other_modules = HashTable.create 41 in
         let should_visit lc_module_name =
-            Some? (SMap.try_find remaining_output_files lc_module_name)
-            || None? (SMap.try_find visited_other_modules lc_module_name)
+            Some? (HashTable.try_find remaining_output_files lc_module_name)
+            || None? (HashTable.try_find visited_other_modules lc_module_name)
         in
         let mark_visiting lc_module_name =
-            let ml_file_opt = SMap.try_find remaining_output_files lc_module_name in
-            SMap.remove remaining_output_files lc_module_name;
-            SMap.add visited_other_modules lc_module_name true;
+            let ml_file_opt = HashTable.try_find remaining_output_files lc_module_name in
+            HashTable.remove remaining_output_files lc_module_name;
+            HashTable.add visited_other_modules lc_module_name true;
             ml_file_opt
         in
         let emit_output_file_opt ml_file_opt =
@@ -2350,7 +2350,7 @@ let print_full (outc : out_channel) (deps:deps) : ML unit =
               end;
               aux modules_to_extract
         in
-        let all_extracted_modules = SMap.keys orig_output_file_map in
+        let all_extracted_modules = HashTable.keys orig_output_file_map in
         aux all_extracted_modules;
         List.rev !order
     in
@@ -2577,30 +2577,30 @@ let print_full (outc : out_channel) (deps:deps) : ML unit =
            |> Util.sort_with String.compare
     in
     let all_ml_files =
-        let ml_file_map = SMap.create 41 in
+        let ml_file_map = HashTable.create 41 in
         all_fst_files
         |> List.iter (fun fst_file ->
                        let mname = lowercase_module_name fst_file in
                        if Options.should_extract mname Options.OCaml
-                       then SMap.add ml_file_map mname (output_ml_file fst_file));
+                       then HashTable.add ml_file_map mname (output_ml_file fst_file));
         sort_output_files ml_file_map
     in
     let all_fs_files =
-        let fs_file_map = SMap.create 41 in
+        let fs_file_map = HashTable.create 41 in
         all_fst_files
         |> List.iter (fun fst_file ->
                        let mname = lowercase_module_name fst_file in
                        if Options.should_extract mname Options.FSharp
-                       then SMap.add fs_file_map mname (output_fs_file fst_file));
+                       then HashTable.add fs_file_map mname (output_fs_file fst_file));
         sort_output_files fs_file_map
     in
     let all_krml_files =
-        let krml_file_map = SMap.create 41 in
+        let krml_file_map = HashTable.create 41 in
         keys
         |> List.iter (fun fst_file ->
                        let mname = lowercase_module_name fst_file in
                        if Options.should_extract mname Options.Krml
-                       then SMap.add krml_file_map mname (output_krml_file fst_file));
+                       then HashTable.add krml_file_map mname (output_krml_file fst_file));
         sort_output_files krml_file_map
     in
     all_fsti_files
