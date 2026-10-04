@@ -27,7 +27,11 @@ FStarC.Interactive.Ide
 FStarC.Reflection.V2.Interpreter
 
 # FStarC.Parser.AST and friends: the hand-written grammar in
-# src/ml/FStarC_Parser_Parse.mly builds the surface AST directly.
+# src/ml/FStarC_Parser_Parse.mly builds the surface AST directly, and
+# src/ml/FStarC_Parser_ParseIt.ml calls the new parser (FStarC.Parser.Grammar).
+FStarC.GenSym.get_gensym_state
+FStarC.GenSym.set_gensym_state
+FStarC.Options.Ext.get
 FStarC.Parser.AST.Util.extension_lang_parser
 FStarC.Parser.AST.Util.mk_extension_lang_parser
 FStarC.Parser.AST.Util.parse_extension_lang
@@ -70,6 +74,10 @@ FStarC.Parser.AST.unit_type
 FStarC.Parser.Const.Tuples.is_tuple_constructor_string
 FStarC.Parser.Const.assert_by_tactic_lid
 FStarC.Parser.Const.is_name
+FStarC.Parser.Grammar.parse_file
+FStarC.Parser.Lexer.lex_all
+FStarC.Parser.Grammar.parse_incremental
+FStarC.Parser.Grammar.parse_term
 
 # Syntax, identifiers and ranges: named by the embeddings, the pretty
 # printers and the tactic realizations.

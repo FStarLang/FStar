@@ -62,6 +62,8 @@ EXTRACT += --extract +FStar.List.Tot.Properties
 
 ROOTS :=
 ROOTS += $(SRC)/fstar/FStarC.Main.fst
+# The new parser is only called from src/ml/FStarC_Parser_ParseIt.ml
+ROOTS += $(SRC)/parser/FStarC.Parser.Grammar.fst
 
 # Plugin roots: the files that define plugins in the library, so we make
 # sure to also extract them and link them into F*. (Formerly in mk/plugins.mk.)

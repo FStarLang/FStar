@@ -482,10 +482,39 @@ let string_of_token =
   | DOT_DOT -> "DOT_DOT"
   | _ -> "(unknown token)"
 
+(* Which parser to use: "new" (default), "menhir", "compare" or "bench".
+   Any other value selects Menhir. *)
+let parser_mode () =
+  match FStarC_Options_Ext.get "parser" with
+  | "" -> "new"
+  | m -> m
+
+let parse_fstar_incrementally_new (s:string) (r:FStarC_Range.t) =
+  let open FStar_Pervasives in
+  let open FStarC_Range in
+  let filename = file_of_range r in
+  try
+    let decls, comments, err_opt =
+      FStarC_Parser_Grammar.parse_incremental filename s
+        (line_of_pos (start_of_range r)) (col_of_pos (start_of_range r))
+    in
+    (* parse_lang collects the comments from the Menhir lexer's buffer *)
+    List.iter FStarC_Parser_Util.add_comment (List.rev comments);
+    match err_opt with
+    | None -> Inr decls
+    | Some (_, msg, r) ->
+      let open FStarC_Parser_AST in
+      Inr (decls @ [mk_decl Unparseable r []])
+  with
+  | FStarC_Errors.Error(e, msg, r, _ctx) ->
+    let err : FStarC_Parser_AST_Util.error_message = { message = msg; range = r } in
+    Inl err
+
 let parse_fstar_incrementally
 : FStarC_Parser_AST_Util.extension_lang_parser 
 = let f =
     fun (s:string) (r:FStarC_Range.t) ->
+      if parser_mode () = "new" then parse_fstar_incrementally_new s r else
       let open FStar_Pervasives in
       let open FStarC_Range in
       let lexbuf =
@@ -569,7 +598,7 @@ let parse_lang lang fn =
   | FStarC_Errors.Error(e, msg, r, _ctx) ->
     ParseError (e, msg, r)
 
-let parse_no_lang fn =
+let parse_no_lang_menhir fn =
   let lexbuf, filename, contents =
     match fn with
     | Filename f ->
@@ -633,6 +662,187 @@ let parse_no_lang fn =
     | FStarC_Parser_Parse.MenhirBasics.Error as _e  ->
 *)
       ParseError (err_of_parse_error filename lexbuf None)
+
+
+(* The new parser (FStarC.Parser.Grammar), the default (--ext parser=new).
+   With --ext parser=compare, both parsers are run, differences are
+   reported on stderr, and the result of the Menhir parser is used. *)
+let parse_no_lang_new fn =
+  let filename, contents, line, col =
+    match fn with
+    | Filename f ->
+      check_extension f;
+      let f', contents = read_file f in
+      f', contents, Z.one, Z.zero
+    | Incremental s
+    | Toplevel s
+    | Fragment s -> s.frag_fname, s.frag_text, s.frag_line, s.frag_col
+  in
+  try
+    match fn with
+    | Filename _
+    | Toplevel _ ->
+      let frag, comments = FStarC_Parser_Grammar.parse_file filename contents line col in
+      let frag = match frag with
+        | FStar_Pervasives.Inl modul when has_extension filename (interface_extensions ()) ->
+          FStar_Pervasives.Inl (FStarC_Parser_AST.as_interface modul)
+        | _ -> frag
+      in
+      (* Comments of extension-language blocks are left in the shared buffer *)
+      ASTFragment (frag, FStarC_Parser_Util.flush_comments () @ comments)
+    | Incremental i ->
+      let decls, comments, err_opt =
+        FStarC_Parser_Grammar.parse_incremental filename contents line col in
+      let contents_at = contents_at i.frag_text in
+      let decls = List.map (fun d -> d, contents_at d.FStarC_Parser_AST.drange) decls in
+      IncrementalFragment (decls, FStarC_Parser_Util.flush_comments () @ comments, err_opt)
+    | Fragment _ ->
+      Term (FStarC_Parser_Grammar.parse_term filename contents line col)
+  with
+  | FStarC_Errors.Empty_frag -> ASTFragment (FStar_Pervasives.Inr [], [])
+  | FStarC_Errors.Error (e, msg, r, _ctx) -> ParseError (e, msg, r)
+
+(* Structural comparison of parse results, reporting the first difference
+   together with the innermost enclosing range. *)
+let looks_like_range (o:Obj.t) =
+  let is_rng o =
+    Obj.is_block o && Obj.tag o = 0 && Obj.size o = 3 &&
+    (let f = Obj.field o 0 in Obj.is_block f && Obj.tag f = Obj.string_tag)
+  in
+  Obj.is_block o && Obj.tag o = 0 && Obj.size o = 2 &&
+  is_rng (Obj.field o 0) && is_rng (Obj.field o 1)
+
+let show_obj (o:Obj.t) =
+  if Obj.is_int o then string_of_int (Obj.obj o)
+  else if Obj.tag o = Obj.string_tag then Printf.sprintf "%S" (Obj.obj o)
+  else if looks_like_range o then FStarC_Range_Ops.string_of_range (Obj.obj o)
+  else Printf.sprintf "<block tag=%d size=%d>" (Obj.tag o) (Obj.size o)
+
+let rec first_diff (ctx:Obj.t option) (path:string) (a:Obj.t) (b:Obj.t) : string option =
+  if compare a b = 0 then None
+  else if Obj.is_int a || Obj.is_int b || Obj.tag a <> Obj.tag b
+          || Obj.tag a >= Obj.no_scan_tag || Obj.size a <> Obj.size b
+          || looks_like_range a then
+    let where = match ctx with
+      | Some r -> FStarC_Range_Ops.string_of_range (Obj.obj r)
+      | None -> "?"
+    in
+    Some (Printf.sprintf "at %s (path %s): menhir=%s new=%s" where path (show_obj a) (show_obj b))
+  else begin
+    (* Find the range of this node, if any, to use as context *)
+    let ctx = ref ctx in
+    for i = 0 to Obj.size a - 1 do
+      if looks_like_range (Obj.field a i) then ctx := Some (Obj.field a i)
+    done;
+    let res = ref None in
+    let i = ref 0 in
+    while !res = None && !i < Obj.size a do
+      res := first_diff !ctx (path ^ "." ^ string_of_int !i) (Obj.field a !i) (Obj.field b !i);
+      incr i
+    done;
+    !res
+  end
+
+let report_diff fname what (a:'a) (b:'a) =
+  match first_diff None "" (Obj.repr a) (Obj.repr b) with
+  | None -> ()
+  | Some msg -> Printf.eprintf "PARSER-COMPARE %s: %s differ %s\n%!" fname what msg
+
+let compare_results fname (r_old:parse_result) (r_new:parse_result) =
+  let err_str (e, msg, r) =
+    Printf.sprintf "%s %s: %s" (Z.to_string (FStarC_Errors.errno e)) (FStarC_Range_Ops.string_of_range r)
+      (FStarC_Errors_Msg.rendermsg msg)
+  in
+  match r_old, r_new with
+  | ASTFragment (f1, c1), ASTFragment (f2, c2) ->
+    report_diff fname "ASTs" f1 f2;
+    report_diff fname "comments" c1 c2
+  | IncrementalFragment (d1, c1, e1), IncrementalFragment (d2, c2, e2) ->
+    report_diff fname "decls" (List.map fst d1) (List.map fst d2);
+    report_diff fname "code fragments" (List.map snd d1) (List.map snd d2);
+    (match e1, e2 with
+     | None, None -> ()
+     | Some e1, Some e2 ->
+       if err_str e1 <> err_str e2 then
+         Printf.eprintf "PARSER-COMPARE %s: errors differ\n  menhir: %s\n  new:    %s\n%!" fname (err_str e1) (err_str e2)
+     | Some e1, None -> Printf.eprintf "PARSER-COMPARE %s: only menhir failed: %s\n%!" fname (err_str e1)
+     | None, Some e2 -> Printf.eprintf "PARSER-COMPARE %s: only new failed: %s\n%!" fname (err_str e2));
+    report_diff fname "comments" c1 c2
+  | Term t1, Term t2 -> report_diff fname "terms" t1 t2
+  | ParseError e1, ParseError e2 ->
+    if err_str e1 <> err_str e2 then
+      Printf.eprintf "PARSER-COMPARE %s: errors differ\n  menhir: %s\n  new:    %s\n%!" fname (err_str e1) (err_str e2)
+  | ParseError e1, _ -> Printf.eprintf "PARSER-COMPARE %s: only menhir failed: %s\n%!" fname (err_str e1)
+  | _, ParseError e2 -> Printf.eprintf "PARSER-COMPARE %s: only new failed: %s\n%!" fname (err_str e2)
+  | _ -> Printf.eprintf "PARSER-COMPARE %s: results of different kinds\n%!" fname
+
+(* --ext parser=bench: time Menhir, the new lexer alone and the new
+   parser (including lexing) on each file, then use the new parser.
+   The number of iterations is taken from --ext parser_bench_iters;
+   --ext parser_bench_only=<menhir|lex|new> runs only one of them. *)
+let bench fn =
+  match fn with
+  | Filename f ->
+    let iters = try int_of_string (FStarC_Options_Ext.get "parser_bench_iters") with _ -> 10 in
+    let f', contents = read_file f in
+    let only = FStarC_Options_Ext.get "parser_bench_only" in
+    let time name k =
+      if only = "" || only = name then
+      let g0 = FStarC_GenSym.get_gensym_state () in
+      let t0 = Unix.gettimeofday () in
+      for _ = 1 to iters do
+        FStarC_GenSym.set_gensym_state g0;
+        ignore (FStarC_Parser_Util.flush_comments ());
+        ignore (Sys.opaque_identity (k ()))
+      done;
+      let t = (Unix.gettimeofday () -. t0) /. float_of_int iters in
+      Printf.eprintf "PARSER-BENCH %s %s %.3f ms\n%!" f name (1000. *. t)
+    in
+    time "menhir" (fun () -> parse_no_lang_menhir fn);
+    time "sedlex" (fun () ->
+      let lexbuf = create contents f' 1 0 in
+      let rec go n =
+        match FStarC_Parser_LexFStar.token lexbuf with
+        | FStarC_Parser_Parse.EOF -> n
+        | _ -> go (n + 1)
+      in go 0);
+    time "lex" (fun () -> FStarC_Parser_Lexer.lex_all f' contents Z.one Z.zero);
+    time "new" (fun () -> parse_no_lang_new fn);
+    parse_no_lang_new fn
+  | _ -> parse_no_lang_new fn
+
+let parse_no_lang fn =
+  match parser_mode () with
+  | "new" -> parse_no_lang_new fn
+  | "bench" -> bench fn
+  | "compare" ->
+    let fname = match fn with
+      | Filename f -> f
+      | Incremental s | Toplevel s | Fragment s -> s.frag_fname
+    in
+    let g0 = FStarC_GenSym.get_gensym_state () in
+    let r_old = parse_no_lang_menhir fn in
+    let g1 = FStarC_GenSym.get_gensym_state () in
+    FStarC_GenSym.set_gensym_state g0;
+    (* Warnings are reported by the Menhir run only *)
+    let _issues, r_new =
+      FStarC_Errors.catch_errors (fun () ->
+        try parse_no_lang_new fn
+        with e -> ParseError (Fatal_SyntaxError,
+                              UMsg.mkmsg ("new parser raised " ^ Printexc.to_string e),
+                              FStarC_Range.dummyRange))
+    in
+    let g2 = FStarC_GenSym.get_gensym_state () in
+    FStarC_GenSym.set_gensym_state g1;
+    (match r_new with
+     | Some r_new ->
+       compare_results fname r_old r_new;
+       if Z.compare g1 g2 <> 0 then
+         Printf.eprintf "PARSER-COMPARE %s: gensym counters differ (menhir=%s new=%s)\n%!"
+           fname (Z.to_string g1) (Z.to_string g2)
+     | None -> Printf.eprintf "PARSER-COMPARE %s: new parser raised an error\n%!" fname);
+    r_old
+  | _ -> parse_no_lang_menhir fn
 
 
 let parse (lang_opt:lang_opts) fn =

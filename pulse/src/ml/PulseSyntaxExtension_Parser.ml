@@ -221,7 +221,7 @@ let lexbuf_and_lexer (s:string) (r:range) =
   lexbuf, wrap_lexer lexbuf
   
 
-let parse_decl (s:string) (r:range) =
+let parse_decl_menhir (s:string) (r:range) =
   let fn = file_of_range r in
   let lexbuf, lexer = lexbuf_and_lexer s r in
   try
@@ -234,7 +234,7 @@ let parse_decl (s:string) (r:range) =
     Inr (Some (FStar_Errors_Msg.mkmsg "Syntax error", r))
 
  
-let parse_peek_id (s:string) (r:range) : (string, FStar_Pprint.document list * range) either =
+let parse_peek_id_menhir (s:string) (r:range) : (string, FStar_Pprint.document list * range) either =
   (* print_string ("About to parse <" ^ s ^ ">"); *)
   let fn = file_of_range r in
   let lexbuf, lexer = lexbuf_and_lexer s r in
@@ -248,7 +248,7 @@ let parse_peek_id (s:string) (r:range) : (string, FStar_Pprint.document list * r
     Inr (FStar_Errors_Msg.mkmsg "Syntax error", r)
 
 
-let parse_lang (s:string) (r:range) =
+let parse_lang_menhir (s:string) (r:range) =
   let fn = file_of_range r in
   let lexbuf, lexer = lexbuf_and_lexer s r in
   let range_of_either (d: (PulseSyntaxExtension_Sugar.decl, FStarC_Parser_AST.decl) either) =
@@ -264,3 +264,101 @@ let parse_lang (s:string) (r:range) =
     let pos = FStarC_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
     let r = FStarC_Range.mk_range fn pos pos in
     Inr (Some (FStar_Errors_Msg.mkmsg "#lang-pulse: Syntax error", r))
+
+
+(* The new parser (PulseSyntaxExtension.Grammar), selected like the F*
+   one: it is the default, and --ext parser=menhir selects Menhir. With
+   --ext parser=compare, both parsers are run, differences are reported
+   on stderr, and the result of the Menhir parser is used. *)
+let err_str (msg, r) =
+  Printf.sprintf "%s: %s" (FStarC_Range_Ops.string_of_range r) (FStarC_Errors_Msg.rendermsg msg)
+
+let report_err fname what e1 e2 =
+  match e1, e2 with
+  | None, None -> ()
+  | Some e1, Some e2 ->
+    if err_str e1 <> err_str e2 then
+      Printf.eprintf "PARSER-COMPARE %s: %s errors differ\n  menhir: %s\n  new:    %s\n%!" fname what (err_str e1) (err_str e2)
+  | Some e1, None -> Printf.eprintf "PARSER-COMPARE %s: %s only menhir failed: %s\n%!" fname what (err_str e1)
+  | None, Some e2 -> Printf.eprintf "PARSER-COMPARE %s: %s only new failed: %s\n%!" fname what (err_str e2)
+
+let run_compare fname what menhir_fn new_fn compare =
+  let g0 = FStarC_GenSym.get_gensym_state () in
+  let r_old = menhir_fn () in
+  let g1 = FStarC_GenSym.get_gensym_state () in
+  FStarC_GenSym.set_gensym_state g0;
+  (try
+     let r_new = new_fn () in
+     compare r_old r_new
+   with e ->
+     Printf.eprintf "PARSER-COMPARE %s: %s new parser raised %s\n%!" fname what (Printexc.to_string e));
+  FStarC_GenSym.set_gensym_state g1;
+  r_old
+
+let parse_decl (s:string) (r:range) =
+  match FStarC_Parser_ParseIt.parser_mode () with
+  | "new" -> PulseSyntaxExtension_Grammar.parse_decl s r
+  | "compare" ->
+    let fname = file_of_range r in
+    run_compare fname "pulse decl" (fun () -> parse_decl_menhir s r)
+      (fun () -> PulseSyntaxExtension_Grammar.parse_decl s r)
+      (fun r1 r2 ->
+        match r1, r2 with
+        | Inl d1, Inl d2 -> FStarC_Parser_ParseIt.report_diff fname "pulse decls" d1 d2
+        | Inr e1, Inr e2 -> report_err fname "pulse decl" e1 e2
+        | Inr e1, _ -> report_err fname "pulse decl" e1 None
+        | _, Inr e2 -> report_err fname "pulse decl" None e2)
+  | _ -> parse_decl_menhir s r
+
+let parse_peek_id (s:string) (r:range) : (string, FStar_Pprint.document list * range) either =
+  match FStarC_Parser_ParseIt.parser_mode () with
+  | "new" -> PulseSyntaxExtension_Grammar.parse_peek_id s r
+  | "compare" ->
+    let fname = file_of_range r in
+    run_compare fname "pulse peek id" (fun () -> parse_peek_id_menhir s r)
+      (fun () -> PulseSyntaxExtension_Grammar.parse_peek_id s r)
+      (fun r1 r2 ->
+        match r1, r2 with
+        | Inl d1, Inl d2 -> FStarC_Parser_ParseIt.report_diff fname "pulse peek ids" d1 d2
+        | Inr e1, Inr e2 -> report_err fname "pulse peek id" (Some e1) (Some e2)
+        | Inr e1, _ -> report_err fname "pulse peek id" (Some e1) None
+        | _, Inr e2 -> report_err fname "pulse peek id" None (Some e2))
+  | _ -> parse_peek_id_menhir s r
+
+let parse_lang_new (s:string) (r:range) =
+  match PulseSyntaxExtension_Grammar.parse_lang s r with
+  | Inl (ds, err, comments) -> Inl (ds, err), comments
+  | Inr e -> Inr e, []
+
+let parse_lang (s:string) (r:range) =
+  match FStarC_Parser_ParseIt.parser_mode () with
+  | "new" ->
+    let res, comments = parse_lang_new s r in
+    (* Like the Menhir lexer, leave the comments in the buffer of the F* parser *)
+    List.iter FStarC_Parser_Util.add_comment (List.rev comments);
+    res
+  | "compare" ->
+    let fname = file_of_range r in
+    let as_err = function None -> None | Some (_, msg, r) -> Some (msg, r) in
+    let saved = FStarC_Parser_Util.flush_comments () in
+    let c_old = ref [] in
+    let res =
+      run_compare fname "pulse lang"
+        (fun () ->
+          let res = parse_lang_menhir s r in
+          c_old := FStarC_Parser_Util.flush_comments ();
+          res)
+        (fun () -> parse_lang_new s r)
+        (fun r1 (r2, c_new) ->
+          FStarC_Parser_ParseIt.report_diff fname "pulse comments" !c_old c_new;
+          match r1, r2 with
+          | Inl (d1, e1), Inl (d2, e2) ->
+            FStarC_Parser_ParseIt.report_diff fname "pulse decls" d1 d2;
+            report_err fname "pulse lang" (as_err e1) (as_err e2)
+          | Inr e1, Inr e2 -> report_err fname "pulse lang" e1 e2
+          | Inr e1, _ -> report_err fname "pulse lang" e1 None
+          | _, Inr e2 -> report_err fname "pulse lang" None e2)
+    in
+    FStarC_Parser_Util.comments := !c_old @ saved;
+    res
+  | _ -> parse_lang_menhir s r

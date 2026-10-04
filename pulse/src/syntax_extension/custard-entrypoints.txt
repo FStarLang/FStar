@@ -52,3 +52,9 @@ PulseSyntaxExtension.ASTBuilder.parse_pulse
 # call site; see pulse/src/custard-entrypoints.txt and section 12.13.
 PulseSyntaxExtension.Env.union_ctx_uvars
 PulseSyntaxExtension.Env.union_univ_uvars
+
+# PulseSyntaxExtension_Parser.ml: the new parser, see
+# PulseSyntaxExtension.Grammar
+PulseSyntaxExtension.Grammar.parse_decl
+PulseSyntaxExtension.Grammar.parse_peek_id
+PulseSyntaxExtension.Grammar.parse_lang

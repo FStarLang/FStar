@@ -336,6 +336,9 @@ val mkApp : term -> list (term & imp) -> range -> ML term
 val mkExplicitApp : term -> list term -> range -> ML term
 
 val mkRefSet : range -> list term -> ML term
+val mkListLit : range -> list term -> term
+val mkSeqLit : range -> list term -> term
+val focusBranches : list (bool & branch) -> range -> ML (list branch)
 
 val focusLetBindings : list (bool & (pattern & term)) -> range -> ML (list (pattern & term))
 val focusAttrLetBindings : list (option attributes_ & (bool & (pattern & term))) -> range -> ML (list (option attributes_ & (pattern & term)))
