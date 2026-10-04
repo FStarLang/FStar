@@ -39,5 +39,31 @@ $(OUTPUT_DIR)/TuplePat.fst.json_output : OTHERFLAGS+=--dump_module TuplePat
 $(OUTPUT_DIR)/TuplePat.fst.output      : OTHERFLAGS+=--dump_module TuplePat
 $(OUTPUT_DIR)/Monoid.fst.json_output   : OTHERFLAGS+=--dump_module Monoid
 $(OUTPUT_DIR)/Monoid.fst.output        : OTHERFLAGS+=--dump_module Monoid
+# These two dump the module after type checking, which is phase 2's
+# elaboration: with --ext phase2_core, phase 1's, which lacks the result
+# ascriptions TcTerm puts on matches (TuplePat) and uses fewer fresh names
+# (Monoid). See doc/ref/phase2_core.md.
+$(OUTPUT_DIR)/TuplePat.fst.json_output : OTHERFLAGS+=--ext phase2_core=off
+$(OUTPUT_DIR)/TuplePat.fst.output      : OTHERFLAGS+=--ext phase2_core=off
+$(OUTPUT_DIR)/Monoid.fst.json_output   : OTHERFLAGS+=--ext phase2_core=off
+$(OUTPUT_DIR)/Monoid.fst.output        : OTHERFLAGS+=--ext phase2_core=off
 $(OUTPUT_DIR)/InfixImps.fst.json_output: OTHERFLAGS+=--dump_module InfixImps --print_implicits
 $(OUTPUT_DIR)/InfixImps.fst.output     : OTHERFLAGS+=--dump_module InfixImps --print_implicits
+# With --ext phase2_core, Core's VCs are not TcTerm's, so for these the
+# failures reported (though as precise) differ from the expected output.
+# See doc/ref/phase2_core.md, "Error reporting".
+# - ShortCircuiting, Coercions: Core's VC carries more facts, e.g. the
+#   refinement of [bad (x-1)], or the definition [f = fun n -> n], and so
+#   they are in the context of a failed goal;
+# - Test.FunctionalExtensionality: Core relates two applications by
+#   unfolding or argument-wise, and a failure reports the disjunction;
+# - PatAnnot: Core reports the failed annotation of a pattern binder as a
+#   subtyping failure at the binder, not as a failed assertion;
+# - Calc: the obligation of a proof step is located at the step;
+# - TestErrorLocations: in test_elim_exists, Core proves the assertion
+#   from the postcondition of indefinite_description1, so only its
+#   precondition fails.
+PHASE2_CORE_OFF := NegativeTests.ShortCircuiting Coercions Test.FunctionalExtensionality PatAnnot Calc TestErrorLocations
+$(foreach m,$(PHASE2_CORE_OFF),$(eval $(OUTPUT_DIR)/$(m).fst.output      : OTHERFLAGS+=--ext phase2_core=off))
+$(foreach m,$(PHASE2_CORE_OFF),$(eval $(OUTPUT_DIR)/$(m).fst.json_output : OTHERFLAGS+=--ext phase2_core=off))
+$(foreach m,$(PHASE2_CORE_OFF),$(eval $(CACHE_DIR)/$(m).fst.checked      : OTHERFLAGS+=--ext phase2_core=off))

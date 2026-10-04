@@ -43,6 +43,7 @@ module Env     = FStarC.TypeChecker.Env
 module TcUtil  = FStarC.TypeChecker.Util
 module TcRel   = FStarC.TypeChecker.Rel
 module TcTerm  = FStarC.TypeChecker.TcTerm
+module CoreCheck = FStarC.TypeChecker.CoreCheck
 module TEQ     = FStarC.TypeChecker.TermEqAndSimplify
 
 (* We only use the _abstract_ embeddings from this module,
@@ -254,8 +255,17 @@ let rec traverse (f: pol -> Env.env -> term -> ML tres) (pol:pol) (e:Env.env) (t
 
             | hd, args ->
                 let r0 = traverse f pol e hd in
+                (* Implicit arguments are not propositions at the polarity
+                   of the application: e.g., the one of [l_Forall] is the
+                   type of the bound variable, which also appears (and is
+                   traversed, at the opposite polarity) as the sort of the
+                   binder of its body. *)
                 let r1 = List.fold_right (fun (a, q) r ->
-                                              let r' = traverse f pol e a in
+                                              let r' =
+                                                match q with
+                                                | Some ({ aqual_implicit = true }) -> tpure a
+                                                | _ -> traverse f pol e a
+                                              in
                                               comb2 (fun a args -> (a, q)::args) r' r)
                                                  args (tpure []) in
                 comb2 (fun hd args -> (S.mk_Tm_app hd args t.pos).n) r0 r1
@@ -490,13 +500,32 @@ let splice
   Errors.with_ctx "While running splice with a tactic" (fun () ->
     if env.flychecking then [] else begin
 
-    let tau, _, g =
+    let tc env tau =
       if is_typed
       then TcTerm.tc_check_tot_or_gtot_term env tau U.t_dsl_tac_typ None
       else TcTerm.tc_tactic t_unit S.t_decls env tau
     in
-
-    TcRel.force_trivial_guard env g;
+    (* The tactic is part of the declaration: with Core (see [CoreCheck]), it
+       is elaborated as in phase 1 and checked by Core. This matters for a
+       typed splice, whose type ([dsl_tac_t]) is what justifies accepting the
+       declarations it returns without checking them again. *)
+    let tau =
+      CoreCheck.phase2 env "the tactic of this splice"
+        (fun () ->
+          let env1 = { env with phase1 = true; admit = true } in
+          FStarC.TypeChecker.Core.clear_memo_table ();
+          let tau, _, g = tc env1 tau in
+          TcRel.force_trivial_guard env1 g;
+          FStarC.TypeChecker.Core.clear_memo_table ();
+          let tau = N.remove_uvar_solutions env tau in
+          let t = if is_typed then U.t_dsl_tac_typ else S.t_tac_of t_unit S.t_decls in
+          CoreCheck.check_term env "the tactic of this splice" tau t true;
+          tau)
+        (fun () ->
+          let tau, _, g = tc env tau in
+          TcRel.force_trivial_guard env g;
+          tau)
+    in
 
     let ps = FStarC.Tactics.V2.Basic.proofstate_of_goals tau.pos env [] [] in
     let ps = { ps with
