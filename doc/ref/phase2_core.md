@@ -499,6 +499,24 @@ Core previously served tactics (`core_check`) and only knew `Tot` and
     sides of an equation between two applications of a recursive
     definition to stuck `match`es relates the branches, which unfold
     again without end (LowParse's `bitsum'_key_type`).
+  * A `match` whose scrutinee only reduces after unfolding definitions in
+    it is evaluated, as Rel does with `UnfoldUntil delta_constant` (no
+    `Zeta`), and the result is kept only if a branch is taken. Examples are
+    `parse_array_kind k 8 2`, which unfolds to a `match` on
+    `fldata_array_precond k 8 2 && ..`, and `dsum_tag_of_data t20_sum`,
+    which unfolds to a `match` on `t20_sum`. Unfolding heads one at a
+    time stops at the scrutinee's primitive head (`&&`), and the guard on
+    the whole slprop equation was unprovable (everparse's qd tests `Amount`
+    and `T20`, `bug-reports/closed/Phase2CoreStuckMatchByEval`). Head
+    normal form leaves constructor arguments alone, e.g. `Some k.lo`, on
+    which a primitive `=` is stuck, in the scrutinee or in a nested `match`
+    in the branch taken. If no branch is taken in head normal form, the
+    `match` is normalized fully (`T24_y`).
+  * When neither side unfolds and one of them is a literal, e.g.
+    `k0.parser_kind_low + k1.parser_kind_low` against `25`, both sides are
+    evaluated in the same way. Rel's guard `.. == 25` is normalized away
+    when discharged; Core instead closes the relation without a guard
+    (`T24_y`).
 * **Residual types of function literals.** Phase 1's unifier may copy a
   function literal with different residual types, refined or not. The SMT
   encoding keys the literal's token on its residual type. Core therefore

@@ -1401,10 +1401,38 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
         else Some t'
       | _ -> None
     in
+    (* As [Rel] ([head_matches_delta]), which unfolds with [UnfoldUntil
+       delta_constant]: a [match] whose scrutinee only reduces after
+       unfolding definitions in it, e.g. [parse_array_kind k 8 2] unfolded
+       to [match fldata_array_precond k 8 2 && .. with | true -> .. | _ ->
+       ..], is reduced by computing that scrutinee. [Zeta] is left out, as
+       in [Rel]. The reduction is kept only if a branch is taken. Reducing
+       to head normal form leaves the arguments of constructors as they are,
+       e.g. [Some k.lo], on which a primitive equality is stuck, in the
+       scrutinee or in that of a nested [match] in the branch taken; if no
+       branch is taken then, the [match] is normalized fully. *)
+    let reduce_match (t:term) : ML (option term) =
+      let reduced t' = if is_match (U.leftmost_head t') then None else Some t' in
+      if not (is_match t) then None
+      else
+        let t' = N.normalize [Env.UnfoldUntil delta_constant; Env.Weak; Env.HNF; Env.Primops;
+                              Env.Beta; Env.Iota] g.tcenv t in
+        match reduced t' with
+        | Some t' -> Some t'
+        | None ->
+          reduced (N.normalize [Env.UnfoldUntil delta_constant; Env.Weak; Env.Primops;
+                                Env.Beta; Env.Iota] g.tcenv t)
+    in
     let unfold_head_with (allow_rec:bool) (allow_stuck:bool) (other:term) (t:term) : ML (option term) =
       match N.maybe_unfold_head g.tcenv t with
-      | Some t -> Some t
-      | None -> if allow_rec then unfold_rec_head allow_stuck other t else None
+      | Some t' -> (
+        match reduce_match t' with
+        | Some t'' -> Some t''
+        | None -> Some t')
+      | None ->
+        match reduce_match t with
+        | Some t' -> Some t'
+        | None -> if allow_rec then unfold_rec_head allow_stuck other t else None
     in
     let maybe_unfold_side'' (allow_rec:bool) (allow_stuck:bool) side t0 t1
       : ML (option (term & term))
@@ -1583,6 +1611,30 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
         then err "no unfolding"
         else no_guard (check_relation g rel t0'' t1'')
       in
+      (* Neither side unfolds, e.g. [k0.parser_kind_low + k1.parser_kind_low]
+         (a primitive operation on projections of definitions) against the
+         literal [25]. As [Rel], whose guard [k0.parser_kind_low +
+         k1.parser_kind_low == 25] is normalized away when discharged, the
+         relation is closed by evaluating both sides, if one of them is a
+         literal. [Zeta] is left out. *)
+      let closes_by_evaluation () =
+        let is_const (t:term) : ML bool =
+          match (Subst.compress (U.unascribe (U.unmeta t))).n with
+          | Tm_constant _ -> true
+          | _ -> false
+        in
+        if not (is_const t0 || is_const t1) then err "no evaluation"
+        else
+          let ev t =
+            N.normalize [Env.UnfoldUntil delta_constant; Env.Weak; Env.Primops;
+                         Env.Beta; Env.Iota] g.tcenv t
+          in
+          let t0'' = ev t0 in
+          let t1'' = ev t1 in
+          if U.term_eq t0 t0'' && U.term_eq t1 t1''
+          then err "no evaluation"
+          else no_guard (check_relation g rel t0'' t1'')
+      in
       let retry_unfolded t0' t1' =
         if is_name t0 || is_name t1
         then handle_with (no_guard (check_relation g rel t0' t1'))
@@ -1610,7 +1662,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
           match maybe_unfold_side'' true guard_ok side t0 t1 with
           | Some (t0', t1') ->
             handle_with (no_guard (check_relation g rel t0' t1')) (fun _ -> fallback t0 t1)
-          | None -> fallback t0 t1
+          | None -> handle_with (closes_by_evaluation ()) (fun _ -> fallback t0 t1)
       else
         fallback t0 t1
     in
