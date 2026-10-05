@@ -32,14 +32,14 @@
      The rule parses its own right-hand side, usually by calling
      [term_at] recursively at the precedence it wants for it.
 
-   Rules are stored in a [grammar] keyed by token kind (optionally
-   refined by the token text, e.g. "IDENT:fn"), so that language
+   Rules are stored in a [grammar] keyed by token kind, so that language
    extensions can add syntax to F* terms by registering more rules. *)
 module FStarC.Parser.Pratt
 
 open FStarC
 open FStarC.Effect
 open FStarC.Parser.AST
+open FStarC.Parser.TokenKind
 module L  = FStarC.Parser.Lexer
 module R  = FStarC.Range
 module U  = FStarC.Util
@@ -91,15 +91,15 @@ let peek (ps:pstate) : ML L.token =
   if SI.(i < last_idx ps) then SI.array_index ps.toks i
   else
     let t = SI.array_index ps.toks (last_idx ps) in
-    if t.kind = "ERROR" then raise_lex_error t else t
+    if t.kind = ERROR then raise_lex_error t else t
 
-let peek_kind (ps:pstate) : ML string = (peek ps).kind
+let peek_kind (ps:pstate) : ML token_kind = (peek ps).kind
 
 (* Further lookahead, [peek_n ps 0 = peek ps] *)
 let peek_n (ps:pstate) (n:int) : ML L.token = tok_at ps SI.(!ps.idx + of_int n)
-let peek_kind_n (ps:pstate) (n:int) : ML string = (peek_n ps n).kind
+let peek_kind_n (ps:pstate) (n:int) : ML token_kind = (peek_n ps n).kind
 
-let is (ps:pstate) (k:string) : ML bool = peek_kind ps = k
+let is (ps:pstate) (k:token_kind) : ML bool = peek_kind ps = k
 
 let fail (#a:Type) (ps:pstate) : ML a =
   if SI.(!ps.idx > !ps.furthest) then ps.furthest := !ps.idx;
@@ -113,10 +113,10 @@ let advance (ps:pstate) : ML L.token =
   if SI.(!ps.idx < last_idx ps) then ps.idx := SI.(!ps.idx + one);
   t
 
-let expect (ps:pstate) (k:string) : ML L.token =
+let expect (ps:pstate) (k:token_kind) : ML L.token =
   if is ps k then advance ps else fail ps
 
-let accept (ps:pstate) (k:string) : ML bool =
+let accept (ps:pstate) (k:token_kind) : ML bool =
   if is ps k then (ignore (advance ps); true) else false
 
 (* Run [f]; if it fails, restore the input position and the gensym
@@ -210,48 +210,50 @@ noeq type trailing_rule = {
   t_run     : pstate -> ctx -> term -> pos -> ML term;
 }
 
-(* Rules indexed by token kind: those keyed on the kind and text of the
-   token (tried first), and those keyed on the kind only. *)
+(* Rules indexed by token kind: an array indexed by [kind_index] for the
+   fixed kinds, and a map for the keywords of language extensions. *)
 noeq type rules (a:Type) = {
-  by_text : M.t (list a);
-  any     : list a;
+  by_kind    : A.t (list a);
+  by_keyword : M.t (list a);
 }
 
 noeq type grammar = {
-  leading  : M.t (rules leading_rule);
-  trailing : M.t (rules trailing_rule);
+  leading  : rules leading_rule;
+  trailing : rules trailing_rule;
   (* Terms of maximal precedence (applications, atoms), used when no
      leading rule applies. *)
   base     : pstate -> ctx -> ML term;
   base_level : int;
 }
 
+let empty_rules (a:Type) : rules a =
+  let rec go (n:int) : list (list a) = if n <= 0 then [] else [] :: go (n - 1) in
+  { by_kind = A.of_list (go num_kinds); by_keyword = M.empty () }
+
 let empty_grammar (base : pstate -> ctx -> ML term) (base_level:int) : grammar =
-  { leading = M.empty (); trailing = M.empty (); base = base; base_level = base_level }
+  { leading = empty_rules _; trailing = empty_rules _; base = base; base_level = base_level }
 
-let add_to (#a:Type) (m:M.t (rules a)) (key:string) (x:a) : ML (M.t (rules a)) =
-  let i = S.index_of key ':' in
-  let kind = if i < 0 then key else S.substring key 0 i in
-  let rs = match M.try_find m kind with
-           | Some rs -> rs
-           | None -> { by_text = M.empty (); any = [] } in
-  let rs =
-    if i < 0 then { rs with any = FStar.List.Tot.append rs.any [x] }
-    else
-      let text = S.substring key (i + 1) (S.length key - i - 1) in
-      let l = match M.try_find rs.by_text text with Some l -> l | None -> [] in
-      { rs with by_text = M.add rs.by_text text (FStar.List.Tot.append l [x]) }
-  in
-  M.add m kind rs
+let add_to (#a:Type) (rs:rules a) (k:token_kind) (x:a) : ML (rules a) =
+  match k with
+  | KEYWORD s ->
+    let l = match M.try_find rs.by_keyword s with Some l -> l | None -> [] in
+    { rs with by_keyword = M.add rs.by_keyword s (FStar.List.Tot.append l [x]) }
+  | _ ->
+    let i = kind_index k in
+    let rec go (j:int) : list (list a) =
+      if j >= num_kinds then []
+      else
+        let l = SI.array_index rs.by_kind (SI.of_int j) in
+        (if j = i then FStar.List.Tot.append l [x] else l) :: go (j + 1)
+    in
+    { rs with by_kind = A.of_list (go 0) }
 
-(* Register rules. Rules for the same key are tried in order. [key] is
-   either a token kind (e.g. "LPAREN") or a kind and text (e.g. "IDENT:fn"),
-   the latter taking priority. *)
-let add_leading (g:grammar) (key:string) (r:leading_rule) : ML grammar =
-  { g with leading = add_to g.leading key r }
+(* Register rules. Rules for the same kind are tried in order. *)
+let add_leading (g:grammar) (k:token_kind) (r:leading_rule) : ML grammar =
+  { g with leading = add_to g.leading k r }
 
-let add_trailing (g:grammar) (key:string) (r:trailing_rule) : ML grammar =
-  { g with trailing = add_to g.trailing key r }
+let add_trailing (g:grammar) (k:token_kind) (r:trailing_rule) : ML grammar =
+  { g with trailing = add_to g.trailing k r }
 
 let cur_grammar : ref (option grammar) = mk_ref None
 
@@ -267,14 +269,10 @@ let with_grammar (#a:Type) (g:grammar) (f:unit -> ML a) : ML a =
   cur_grammar := saved;
   r
 
-let lookup (#a:Type) (m:M.t (rules a)) (t:L.token) : list a =
-  match M.try_find m t.kind with
-  | None -> []
-  | Some rs ->
-    if t.text = "" then rs.any
-    else match M.try_find rs.by_text t.text with
-         | Some l -> FStar.List.Tot.append l rs.any
-         | None -> rs.any
+let lookup (#a:Type) (rs:rules a) (t:L.token) : list a =
+  match t.kind with
+  | KEYWORD s -> (match M.try_find rs.by_keyword s with Some l -> l | None -> [])
+  | k -> SI.array_index rs.by_kind (SI.of_int (kind_index k))
 
 let in_gap (ctx:ctx) (l:int) : bool = 30 < l && l < ctx.dom
 

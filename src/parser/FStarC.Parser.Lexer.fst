@@ -37,6 +37,8 @@ module Uni = FStarC.Parser.Unicode
 module SI  = FStarC.SmallInt
 module Codes = FStarC.Errors.Codes
 
+open FStarC.Parser.TokenKind
+
 type extra =
   | NoExtra
   | CharLit of int
@@ -44,11 +46,11 @@ type extra =
   | Blob of string & string & R.pos & R.pos
   | LexError of Codes.error_code & string & R.range
 
-(* [kind] is the name of the Menhir token (IDENT, LPAREN, ...).  [text]
+(* [kind] is the kind of the token (see FStarC.Parser.TokenKind).  [text]
    is the token payload, if any: the identifier, the operator, the
    (cleaned) numeric literal, the string literal contents, etc. *)
 type token = {
-  kind  : string;
+  kind  : token_kind;
   text  : string;
   sp    : R.pos;
   ep    : R.pos;
@@ -64,244 +66,244 @@ let cps (s:string) : list SI.t =
   in
   go SI.zero
 
-let keywords : M.t (string & string) =
+let keywords : M.t (token_kind & string) =
   let kw k = (k, "") in
   M.of_list [
-    "noeq", kw "NOEQUALITY";
-    "unopteq", kw "UNOPTEQUALITY";
-    "and", kw "AND";
-    "assert", kw "ASSERT";
-    "assume", kw "ASSUME";
-    "begin", kw "BEGIN";
-    "by", kw "BY";
-    "calc", kw "CALC";
-    "class", kw "CLASS";
-    "decreases", kw "DECREASES";
-    "effect", kw "EFFECT";
-    "eliminate", kw "ELIM";
-    "else", kw "ELSE";
-    "end", kw "END";
-    "ensures", kw "ENSURES";
-    "exception", kw "EXCEPTION";
-    "exists", kw "EXISTS";
-    "false", kw "FALSE";
-    "friend", kw "FRIEND";
-    "forall", kw "FORALL";
-    "fun", kw "FUN";
-    "λ", kw "FUN";
-    "function", kw "FUNCTION";
-    "if", kw "IF";
-    "in", kw "IN";
-    "include", kw "INCLUDE";
-    "inline", kw "INLINE";
-    "inline_for_extraction", kw "INLINE_FOR_EXTRACTION";
-    "instance", kw "INSTANCE";
-    "introduce", kw "INTRO";
-    "irreducible", kw "IRREDUCIBLE";
-    "let", kw "LET";
-    "logic", kw "LOGIC";
-    "match", kw "MATCH";
-    "returns", kw "RETURNS";
-    "as", kw "AS";
-    "module", kw "MODULE";
-    "new", kw "NEW";
-    "new_effect", kw "NEW_EFFECT";
-    "noextract", kw "NOEXTRACT";
-    "of", kw "OF";
-    "open", kw "OPEN";
-    "opaque", kw "OPAQUE";
-    "private", kw "PRIVATE";
-    "quote", kw "QUOTE";
-    "range_of", kw "RANGE_OF";
-    "rec", kw "REC";
-    "reifiable", kw "REIFIABLE";
-    "reify", kw "REIFY";
-    "reflectable", kw "REFLECTABLE";
-    "requires", kw "REQUIRES";
-    "set_range_of", kw "SET_RANGE_OF";
-    "sub_effect", kw "SUB_EFFECT";
-    "synth", kw "SYNTH";
-    "then", kw "THEN";
-    "total", kw "TOTAL";
-    "true", kw "TRUE";
-    "try", kw "TRY";
-    "type", kw "TYPE";
-    "unfold", kw "UNFOLD";
-    "unfoldable", kw "UNFOLDABLE";
-    "val", kw "VAL";
-    "when", kw "WHEN";
-    "with", kw "WITH";
-    "_", kw "UNDERSCORE";
-    "α", ("IDENT", "'a");
-    "β", ("IDENT", "'b");
-    "γ", ("IDENT", "'c");
-    "δ", ("IDENT", "'d");
-    "ε", ("IDENT", "'e");
-    "φ", ("IDENT", "'f");
-    "χ", ("IDENT", "'g");
-    "η", ("IDENT", "'h");
-    "ι", ("IDENT", "'i");
-    "κ", ("IDENT", "'k");
-    "μ", ("IDENT", "'m");
-    "ν", ("IDENT", "'n");
-    "π", ("IDENT", "'p");
-    "θ", ("IDENT", "'q");
-    "ρ", ("IDENT", "'r");
-    "σ", ("IDENT", "'s");
-    "τ", ("IDENT", "'t");
-    "ψ", ("IDENT", "'u");
-    "ω", ("IDENT", "'w");
-    "ξ", ("IDENT", "'x");
-    "ζ", ("IDENT", "'z");
+    "noeq", kw NOEQUALITY;
+    "unopteq", kw UNOPTEQUALITY;
+    "and", kw AND;
+    "assert", kw ASSERT;
+    "assume", kw ASSUME;
+    "begin", kw BEGIN;
+    "by", kw BY;
+    "calc", kw CALC;
+    "class", kw CLASS;
+    "decreases", kw DECREASES;
+    "effect", kw EFFECT;
+    "eliminate", kw ELIM;
+    "else", kw ELSE;
+    "end", kw END;
+    "ensures", kw ENSURES;
+    "exception", kw EXCEPTION;
+    "exists", kw EXISTS;
+    "false", kw FALSE;
+    "friend", kw FRIEND;
+    "forall", kw FORALL;
+    "fun", kw FUN;
+    "λ", kw FUN;
+    "function", kw FUNCTION;
+    "if", kw IF;
+    "in", kw IN;
+    "include", kw INCLUDE;
+    "inline", kw INLINE;
+    "inline_for_extraction", kw INLINE_FOR_EXTRACTION;
+    "instance", kw INSTANCE;
+    "introduce", kw INTRO;
+    "irreducible", kw IRREDUCIBLE;
+    "let", kw LET;
+    "logic", kw LOGIC;
+    "match", kw MATCH;
+    "returns", kw RETURNS;
+    "as", kw AS;
+    "module", kw MODULE;
+    "new", kw NEW;
+    "new_effect", kw NEW_EFFECT;
+    "noextract", kw NOEXTRACT;
+    "of", kw OF;
+    "open", kw OPEN;
+    "opaque", kw OPAQUE;
+    "private", kw PRIVATE;
+    "quote", kw QUOTE;
+    "range_of", kw RANGE_OF;
+    "rec", kw REC;
+    "reifiable", kw REIFIABLE;
+    "reify", kw REIFY;
+    "reflectable", kw REFLECTABLE;
+    "requires", kw REQUIRES;
+    "set_range_of", kw SET_RANGE_OF;
+    "sub_effect", kw SUB_EFFECT;
+    "synth", kw SYNTH;
+    "then", kw THEN;
+    "total", kw TOTAL;
+    "true", kw TRUE;
+    "try", kw TRY;
+    "type", kw TYPE;
+    "unfold", kw UNFOLD;
+    "unfoldable", kw UNFOLDABLE;
+    "val", kw VAL;
+    "when", kw WHEN;
+    "with", kw WITH;
+    "_", kw UNDERSCORE;
+    "α", (IDENT, "'a");
+    "β", (IDENT, "'b");
+    "γ", (IDENT, "'c");
+    "δ", (IDENT, "'d");
+    "ε", (IDENT, "'e");
+    "φ", (IDENT, "'f");
+    "χ", (IDENT, "'g");
+    "η", (IDENT, "'h");
+    "ι", (IDENT, "'i");
+    "κ", (IDENT, "'k");
+    "μ", (IDENT, "'m");
+    "ν", (IDENT, "'n");
+    "π", (IDENT, "'p");
+    "θ", (IDENT, "'q");
+    "ρ", (IDENT, "'r");
+    "σ", (IDENT, "'s");
+    "τ", (IDENT, "'t");
+    "ψ", (IDENT, "'u");
+    "ω", (IDENT, "'w");
+    "ξ", (IDENT, "'x");
+    "ζ", (IDENT, "'z");
   ]
 
-let constructors : M.t (string & string) =
+let constructors : M.t (token_kind & string) =
   M.of_list [
-    "ℕ", ("IDENT", "nat");
-    "ℤ", ("IDENT", "int");
-    "𝔹", ("IDENT", "bool");
+    "ℕ", (IDENT, "nat");
+    "ℤ", (IDENT, "int");
+    "𝔹", (IDENT, "bool");
   ]
 
 (* The ASCII operator tokens (op_token_1..5 in the sedlex lexer). *)
-let op_tokens : list (string & string & string) = [
-  "~", "TILDE", "~";
-  "-", "MINUS", "";
-  "/\\", "CONJUNCTION", "";
-  "\\/", "DISJUNCTION", "";
-  "<:", "SUBTYPE", "";
-  "$:", "EQUALTYPE", "";
-  "<@", "SUBKIND", "";
-  "(|", "LENS_PAREN_LEFT", "";
-  "|)", "LENS_PAREN_RIGHT", "";
-  "#", "HASH", "";
-  "u#", "UNIV_HASH", "";
-  "&", "AMP", "";
-  "()", "LPAREN_RPAREN", "";
-  "(", "LPAREN", "";
-  ")", "RPAREN", "";
-  ",", "COMMA", "";
-  "~>", "SQUIGGLY_RARROW", "";
-  "->", "RARROW", "";
-  "<--", "LONG_LEFT_ARROW", "";
-  "<-", "LARROW", "";
-  "<==>", "IFF", "";
-  "==>", "IMPLIES", "";
-  ".", "DOT", "";
-  "?.", "QMARK_DOT", "";
-  "?", "QMARK", "";
-  ".[|", "DOT_LBRACK_BAR", "";
-  ".[", "DOT_LBRACK", "";
-  ".(|", "DOT_LENS_PAREN_LEFT", "";
-  ".(", "DOT_LPAREN", "";
-  "$", "DOLLAR", "";
-  "{:pattern", "LBRACE_COLON_PATTERN", "";
-  "{:well-founded", "LBRACE_COLON_WELL_FOUNDED", "";
-  ":", "COLON", "";
-  "::", "COLON_COLON", "";
-  ":=", "COLON_EQUALS", "";
-  ";", "SEMICOLON", "";
-  "=", "EQUALS", "";
-  "%[", "PERCENT_LBRACK", "";
-  "returns$", "RETURNS_EQ", "";
-  "!{", "BANG_LBRACE", "";
-  "[@@@", "LBRACK_AT_AT_AT", "";
-  "[@@", "LBRACK_AT_AT", "";
-  "[@", "LBRACK_AT", "";
-  "[|", "LBRACK_BAR", "";
-  "{|", "LBRACE_BAR", "";
-  "[", "LBRACK", "";
-  "|>", "PIPE_RIGHT", "";
-  "]", "RBRACK", "";
-  "|]", "BAR_RBRACK", "";
-  "|}", "BAR_RBRACE", "";
-  "{", "LBRACE", "";
-  "|", "BAR", "";
-  "}", "RBRACE", "";
+let op_tokens : list (string & token_kind & string) = [
+  "~", TILDE, "~";
+  "-", MINUS, "";
+  "/\\", CONJUNCTION, "";
+  "\\/", DISJUNCTION, "";
+  "<:", SUBTYPE, "";
+  "$:", EQUALTYPE, "";
+  "<@", SUBKIND, "";
+  "(|", LENS_PAREN_LEFT, "";
+  "|)", LENS_PAREN_RIGHT, "";
+  "#", HASH, "";
+  "u#", UNIV_HASH, "";
+  "&", AMP, "";
+  "()", LPAREN_RPAREN, "";
+  "(", LPAREN, "";
+  ")", RPAREN, "";
+  ",", COMMA, "";
+  "~>", SQUIGGLY_RARROW, "";
+  "->", RARROW, "";
+  "<--", LONG_LEFT_ARROW, "";
+  "<-", LARROW, "";
+  "<==>", IFF, "";
+  "==>", IMPLIES, "";
+  ".", DOT, "";
+  "?.", QMARK_DOT, "";
+  "?", QMARK, "";
+  ".[|", DOT_LBRACK_BAR, "";
+  ".[", DOT_LBRACK, "";
+  ".(|", DOT_LENS_PAREN_LEFT, "";
+  ".(", DOT_LPAREN, "";
+  "$", DOLLAR, "";
+  "{:pattern", LBRACE_COLON_PATTERN, "";
+  "{:well-founded", LBRACE_COLON_WELL_FOUNDED, "";
+  ":", COLON, "";
+  "::", COLON_COLON, "";
+  ":=", COLON_EQUALS, "";
+  ";", SEMICOLON, "";
+  "=", EQUALS, "";
+  "%[", PERCENT_LBRACK, "";
+  "returns$", RETURNS_EQ, "";
+  "!{", BANG_LBRACE, "";
+  "[@@@", LBRACK_AT_AT_AT, "";
+  "[@@", LBRACK_AT_AT, "";
+  "[@", LBRACK_AT, "";
+  "[|", LBRACK_BAR, "";
+  "{|", LBRACE_BAR, "";
+  "[", LBRACK, "";
+  "|>", PIPE_RIGHT, "";
+  "]", RBRACK, "";
+  "|]", BAR_RBRACK, "";
+  "|}", BAR_RBRACE, "";
+  "{", LBRACE, "";
+  "|", BAR, "";
+  "}", RBRACE, "";
 ]
 
-let op_token_cps : list (list SI.t & string & string) =
+let op_token_cps : list (list SI.t & token_kind & string) =
   List.map (fun (s, k, t) -> (cps s, k, t)) op_tokens
 
 (* Unicode operators; only reachable through the [uoperator] rule, i.e.,
    for single non-ASCII math symbols. *)
-let uoperators : M.t (string & string) =
+let uoperators : M.t (token_kind & string) =
   M.of_list [
-    "∀", ("FORALL", "");
-    "∃", ("EXISTS", "");
-    "⊤", ("NAME", "True");
-    "⊥", ("NAME", "False");
-    "⟹", ("IMPLIES", "");
-    "⟺", ("IFF", "");
-    "→", ("RARROW", "");
-    "←", ("LARROW", "");
-    "⟵", ("LONG_LEFT_ARROW", "");
-    "↝", ("SQUIGGLY_RARROW", "");
-    "≔", ("COLON_EQUALS", "");
-    "∧", ("CONJUNCTION", "");
-    "∨", ("DISJUNCTION", "");
-    "¬", ("TILDE", "~");
-    "⸬", ("COLON_COLON", "");
-    "▹", ("PIPE_RIGHT", "");
-    "÷", ("OPINFIX3L", "÷");
-    "‖", ("OPINFIX0a", "||");
-    "×", ("IDENT", "op_Star");
-    "∗", ("OPINFIX3L", "*");
-    "⇒", ("OPINFIX0c", "=>");
-    "≥", ("OPINFIX0c", ">=");
-    "≤", ("OPINFIX0c", "<=");
-    "≠", ("OPINFIX0c", "<>");
-    "≪", ("OPINFIX0c", "<<");
-    "◃", ("OPINFIX0c", "<|");
-    "±", ("OPPREFIX", "±");
-    "∁", ("OPPREFIX", "∁");
-    "∂", ("OPPREFIX", "∂");
-    "√", ("OPPREFIX", "√");
+    "∀", (FORALL, "");
+    "∃", (EXISTS, "");
+    "⊤", (NAME, "True");
+    "⊥", (NAME, "False");
+    "⟹", (IMPLIES, "");
+    "⟺", (IFF, "");
+    "→", (RARROW, "");
+    "←", (LARROW, "");
+    "⟵", (LONG_LEFT_ARROW, "");
+    "↝", (SQUIGGLY_RARROW, "");
+    "≔", (COLON_EQUALS, "");
+    "∧", (CONJUNCTION, "");
+    "∨", (DISJUNCTION, "");
+    "¬", (TILDE, "~");
+    "⸬", (COLON_COLON, "");
+    "▹", (PIPE_RIGHT, "");
+    "÷", (OPINFIX3L, "÷");
+    "‖", (OPINFIX0a, "||");
+    "×", (IDENT, "op_Star");
+    "∗", (OPINFIX3L, "*");
+    "⇒", (OPINFIX0c, "=>");
+    "≥", (OPINFIX0c, ">=");
+    "≤", (OPINFIX0c, "<=");
+    "≠", (OPINFIX0c, "<>");
+    "≪", (OPINFIX0c, "<<");
+    "◃", (OPINFIX0c, "<|");
+    "±", (OPPREFIX, "±");
+    "∁", (OPPREFIX, "∁");
+    "∂", (OPPREFIX, "∂");
+    "√", (OPPREFIX, "√");
   ]
 
 (* Fixed literal tokens that come first in the sedlex rule list. *)
-let early_literals : list (list SI.t & string) =
+let early_literals : list (list SI.t & token_kind) =
   List.map (fun (s, k) -> (cps s, k)) [
-    "%splice", "SPLICE";
-    "%splice_t", "SPLICET";
-    "`%", "BACKTICK_PERC";
-    "`#", "BACKTICK_HASH";
-    "`@", "BACKTICK_AT";
-    "seq![", "SEQ_BANG_LBRACK";
-    "#show-options", "PRAGMA_SHOW_OPTIONS";
-    "#set-options", "PRAGMA_SET_OPTIONS";
-    "#reset-options", "PRAGMA_RESET_OPTIONS";
-    "#push-options", "PRAGMA_PUSH_OPTIONS";
-    "#pop-options", "PRAGMA_POP_OPTIONS";
-    "#restart-solver", "PRAGMA_RESTART_SOLVER";
-    "#print-effects-graph", "PRAGMA_PRINT_EFFECTS_GRAPH";
-    "#check", "PRAGMA_CHECK";
-    "#eval", "PRAGMA_EVAL";
+    "%splice", SPLICE;
+    "%splice_t", SPLICET;
+    "`%", BACKTICK_PERC;
+    "`#", BACKTICK_HASH;
+    "`@", BACKTICK_AT;
+    "seq![", SEQ_BANG_LBRACK;
+    "#show-options", PRAGMA_SHOW_OPTIONS;
+    "#set-options", PRAGMA_SET_OPTIONS;
+    "#reset-options", PRAGMA_RESET_OPTIONS;
+    "#push-options", PRAGMA_PUSH_OPTIONS;
+    "#pop-options", PRAGMA_POP_OPTIONS;
+    "#restart-solver", PRAGMA_RESTART_SOLVER;
+    "#print-effects-graph", PRAGMA_PRINT_EFFECTS_GRAPH;
+    "#check", PRAGMA_CHECK;
+    "#eval", PRAGMA_EVAL;
   ]
 
 (* "match", "if", ... followed by operator characters *)
-let kw_op_rules : list (list SI.t & string & string) =
+let kw_op_rules : list (list SI.t & token_kind & token_kind) =
   List.map (fun (s, k, kop) -> (cps s, k, kop)) [
-    "match", "MATCH", "MATCH_OP";
-    "if", "IF", "IF_OP";
-    "let", "LET", "LET_OP";
-    "exists", "EXISTS", "EXISTS_OP";
-    "∃", "EXISTS", "EXISTS_OP";
-    "forall", "FORALL", "FORALL_OP";
-    "∀", "FORALL", "FORALL_OP";
-    "and", "AND", "AND_OP";
-    ";", "SEMICOLON", "SEMICOLON_OP";
+    "match", MATCH, MATCH_OP;
+    "if", IF, IF_OP;
+    "let", LET, LET_OP;
+    "exists", EXISTS, EXISTS_OP;
+    "∃", EXISTS, EXISTS_OP;
+    "forall", FORALL, FORALL_OP;
+    "∀", FORALL, FORALL_OP;
+    "and", AND, AND_OP;
+    ";", SEMICOLON, SEMICOLON_OP;
   ]
 
-let mixfix_rules : list (list SI.t & string) =
+let mixfix_rules : list (list SI.t & token_kind) =
   List.map (fun (s, k) -> (cps s, k)) [
-    ".[]<-", "OP_MIXFIX_ASSIGNMENT";
-    ".()<-", "OP_MIXFIX_ASSIGNMENT";
-    ".(||)<-", "OP_MIXFIX_ASSIGNMENT";
-    ".[||]<-", "OP_MIXFIX_ASSIGNMENT";
-    ".[]", "OP_MIXFIX_ACCESS";
-    ".()", "OP_MIXFIX_ACCESS";
-    ".(||)", "OP_MIXFIX_ACCESS";
-    ".[||]", "OP_MIXFIX_ACCESS";
+    ".[]<-", OP_MIXFIX_ASSIGNMENT;
+    ".()<-", OP_MIXFIX_ASSIGNMENT;
+    ".(||)<-", OP_MIXFIX_ASSIGNMENT;
+    ".[||]<-", OP_MIXFIX_ASSIGNMENT;
+    ".[]", OP_MIXFIX_ACCESS;
+    ".()", OP_MIXFIX_ACCESS;
+    ".(||)", OP_MIXFIX_ACCESS;
+    ".[||]", OP_MIXFIX_ACCESS;
   ]
 
 let cps_source_file = cps "__SOURCE_FILE__"
@@ -649,7 +651,7 @@ let no_comment (st:lstate) (i e:t) : ML t =
 (* ---------------------------------------------------------------------- *)
 
 type rule =
-  | REarly of string
+  | REarly of token_kind
   | RTripleBacktick
   | RLang
   | RSourceFile
@@ -660,13 +662,13 @@ type rule =
   | RCharLit
   | RCharLitB
   | RBacktick
-  | RKwOp of t & string & string (* keyword length, plain kind, op kind *)
+  | RKwOp of t & token_kind & token_kind (* keyword length, plain kind, op kind *)
   | RSemiSemi
   | RIdent
   | RConstructor
   | RInt
   | RUInt8
-  | RNumber of string
+  | RNumber of token_kind
   | RReal
   | RBadNumber
   | RCommentStart
@@ -677,16 +679,16 @@ type rule =
   | RPipeLeft
   | RPipeRight
   | RDotDot
-  | ROpToken of string & string
+  | ROpToken of token_kind & string
   | RLt
   | RGt
-  | ROp of string
+  | ROp of token_kind
   | RUOperator
-  | RMixfix of string
+  | RMixfix of token_kind
   | REof
   | RAny
 
-let tok (k:string) (txt:string) (sp ep:R.pos) (n:t) : token =
+let tok (k:token_kind) (txt:string) (sp ep:R.pos) (n:t) : token =
   { kind = k; text = txt; sp = sp; ep = ep; extra = NoExtra; ncom = to_int n }
 
 (* The character denoted by the (escaped) character at [i] *)
@@ -811,7 +813,7 @@ let rec string_lit (st:lstate) (acc:list string) (sp:R.pos) : ML token =
     string_lit st (string_of_cp (unescape st i) :: acc) sp
   end else if c = ch '"' then begin
     st.cur := i + one;
-    tok "STRING" (chunks_to_string acc) sp (cur_pos st) !st.ncomments
+    tok STRING (chunks_to_string acc) sp (cur_pos st) !st.ncomments
   end else if c < zero then
     lex_error st Codes.Fatal_SyntaxError "unterminated string" (cur_pos st) (cur_pos st)
   else begin
@@ -828,7 +830,7 @@ let rec blob (st:lstate) (acc:list string) (name:string) (pos snap:R.pos) : ML t
   if match_lit st (lit_6) i >= zero then begin
     let sp = cur_pos st in
     st.cur := i + of_int 3;
-    { (tok "BLOB" name sp (cur_pos st) !st.ncomments) with
+    { (tok BLOB name sp (cur_pos st) !st.ncomments) with
       extra = Blob (name, chunks_to_string acc, pos, snap) }
   end else if i >= st.len then
     lex_error st Codes.Fatal_SyntaxError "Syntax error: unterminated extension syntax"
@@ -851,7 +853,7 @@ let rec use_lang (st:lstate) (acc:list string) (name:string) (pos snap:R.pos) : 
   let i = !st.cur in
   if i >= st.len then
     let p = cur_pos st in
-    { (tok "USE_LANG_BLOB" name p p !st.ncomments) with
+    { (tok USE_LANG_BLOB name p p !st.ncomments) with
       extra = Blob (name, chunks_to_string acc, pos, snap) }
   else
     let j = run_end st is_newline_char i in
@@ -928,14 +930,14 @@ let select (st:lstate) (i:t) : ML (rule & t) =
   if is_digit c then begin
     try_ RInt (max_list (any_integer_ends st i));
     try_ RUInt8 (max (match_int_usuffix st i (lit_8)) (match_int_suffix st i (lit_9)));
-    try_ (RNumber "INT8") (match_int_suffix st i (lit_8));
-    try_ (RNumber "UINT16") (match_int_usuffix st i (lit_10));
-    try_ (RNumber "INT16") (match_int_suffix st i (lit_10));
-    try_ (RNumber "UINT32") (match_int_usuffix st i (lit_11));
-    try_ (RNumber "INT32") (match_int_suffix st i (lit_11));
-    try_ (RNumber "UINT64") (match_int_usuffix st i (lit_12));
-    try_ (RNumber "INT64") (match_int_suffix st i (lit_12));
-    try_ (RNumber "SIZET") (match_int_suffix st i (lit_13));
+    try_ (RNumber INT8) (match_int_suffix st i (lit_8));
+    try_ (RNumber UINT16) (match_int_usuffix st i (lit_10));
+    try_ (RNumber INT16) (match_int_suffix st i (lit_10));
+    try_ (RNumber UINT32) (match_int_usuffix st i (lit_11));
+    try_ (RNumber INT32) (match_int_suffix st i (lit_11));
+    try_ (RNumber UINT64) (match_int_usuffix st i (lit_12));
+    try_ (RNumber INT64) (match_int_suffix st i (lit_12));
+    try_ (RNumber SIZET) (match_int_suffix st i (lit_13));
     try_ RReal (match_real st i);
     try_ RBadNumber (match_bad_number st i)
   end;
@@ -955,16 +957,16 @@ let select (st:lstate) (i:t) : ML (rule & t) =
     try_ RGt (if c = ch '>' then star st (fun c -> is_symbolchar c) (i + one) else minus_one);
     let sym_after (e:t) : ML t = if e < zero then minus_one else star st (fun c -> is_symbolchar c) e in
     let one_of (chars:list t) : t = if mem_cp c chars then i + one else minus_one in
-    try_ (ROp "OPINFIX3R") (sym_after (match_lit st (lit_18) i));
-    try_ (ROp "OPINFIX4") (sym_after (match_lit st (lit_19) i));
-    try_ (ROp "OPPREFIX") (sym_after (one_of ops_prefix));
-    try_ (ROp "OPINFIX0a") (sym_after (one_of ops_0a));
-    try_ (ROp "OPINFIX0b") (sym_after (one_of ops_0b));
-    try_ (ROp "OPINFIX0c") (sym_after (one_of ops_0c));
-    try_ (ROp "OPINFIX0d") (sym_after (one_of ops_0d));
-    try_ (ROp "OPINFIX1") (sym_after (one_of ops_1));
-    try_ (ROp "OPINFIX2") (sym_after (one_of ops_2));
-    try_ (ROp "OPINFIX3L") (sym_after (one_of ops_3))
+    try_ (ROp OPINFIX3R) (sym_after (match_lit st (lit_18) i));
+    try_ (ROp OPINFIX4) (sym_after (match_lit st (lit_19) i));
+    try_ (ROp OPPREFIX) (sym_after (one_of ops_prefix));
+    try_ (ROp OPINFIX0a) (sym_after (one_of ops_0a));
+    try_ (ROp OPINFIX0b) (sym_after (one_of ops_0b));
+    try_ (ROp OPINFIX0c) (sym_after (one_of ops_0c));
+    try_ (ROp OPINFIX0d) (sym_after (one_of ops_0d));
+    try_ (ROp OPINFIX1) (sym_after (one_of ops_1));
+    try_ (ROp OPINFIX2) (sym_after (one_of ops_2));
+    try_ (ROp OPINFIX3L) (sym_after (one_of ops_3))
   end;
   if c >= ascii_limit then try_ RUOperator (if is_uoperator c then next st i else minus_one);
   List.iter (fun (l, k) -> try_ (RMixfix k) (match_lit st l i)) (lookup mixfix_bucket c);
@@ -974,10 +976,10 @@ let select (st:lstate) (i:t) : ML (rule & t) =
 let rec next_token (st:lstate) : ML token =
   let i = !st.cur in
   let sp = cur_pos st in
-  if i >= st.len then tok "EOF" "" sp sp !st.ncomments
+  if i >= st.len then tok EOF "" sp sp !st.ncomments
   else
   let (r, e) = select st i in
-  let finish (k:string) (txt:string) : ML token =
+  let finish (k:token_kind) (txt:string) : ML token =
     st.cur := e;
     tok k txt sp (cur_pos st) !st.ncomments
   in
@@ -994,17 +996,17 @@ let rec next_token (st:lstate) : ML token =
     st.cur := e;
     let pos = cur_pos st in
     use_lang st [] name pos sp
-  | RSourceFile -> finish "STRING" (Filepath.basename st.fname)
-  | RLine -> finish "INT" (show !st.lnum)
-  | RFileLine -> finish "STRING" (Filepath.basename st.fname ^ "(" ^ show !st.lnum ^ ")")
+  | RSourceFile -> finish STRING (Filepath.basename st.fname)
+  | RLine -> finish INT (show !st.lnum)
+  | RFileLine -> finish STRING (Filepath.basename st.fname ^ "(" ^ show !st.lnum ^ ")")
   | RWhite -> st.cur := e; next_token st
   | RNewline -> st.cur := e; new_line st; next_token st
   | RCharLit
   | RCharLitB ->
     let c = unescape st (i + one) in
-    let t = finish "CHAR" "" in
+    let t = finish CHAR "" in
     { t with extra = CharLit (to_int c) }
-  | RBacktick -> finish "BACKTICK" ""
+  | RBacktick -> finish BACKTICK ""
   | RKwOp (n, k, kop) ->
     let e' = no_comment st i e in
     st.cur := e';
@@ -1012,7 +1014,7 @@ let rec next_token (st:lstate) : ML token =
     let ep = cur_pos st in
     if rest = "" then tok k "" sp ep !st.ncomments
     else tok kop rest sp ep !st.ncomments
-  | RSemiSemi -> finish "SEMICOLON_OP" ""
+  | RSemiSemi -> finish SEMICOLON_OP ""
   | RIdent ->
     let id = s () in
     if U.starts_with id Ident.reserved_prefix then
@@ -1022,21 +1024,21 @@ let rec next_token (st:lstate) : ML token =
     else (match M.try_find keywords id with
           | Some (k, "") -> finish k ""
           | Some (k, t) -> finish k t
-          | None -> finish "IDENT" id)
+          | None -> finish IDENT id)
   | RConstructor ->
     let id = s () in
     (match M.try_find constructors id with
      | Some (k, t) -> finish k t
-     | None -> finish "NAME" id)
-  | RInt -> finish "INT" (clean_number (s ()))
+     | None -> finish NAME id)
+  | RInt -> finish INT (clean_number (s ()))
   | RUInt8 ->
     let c = clean_number (s ()) in
     let cv = U.int_of_string c in
     if Prims.(cv < 0 || cv > 255) then
       lex_error st Codes.Fatal_SyntaxError "Out-of-range character literal" sp (pos_of st e)
-    else finish "UINT8" c
+    else finish UINT8 c
   | RNumber k -> finish k (clean_number (s ()))
-  | RReal -> finish "REAL" (lexeme st i (e - one))
+  | RReal -> finish REAL (lexeme st i (e - one))
   | RBadNumber ->
     lex_error st Codes.Fatal_SyntaxError ("This is not a valid numeric literal: " ^ s ()) sp (pos_of st e)
   | RCommentStart ->
@@ -1053,17 +1055,17 @@ let rec next_token (st:lstate) : ML token =
   | RString ->
     st.cur := e;
     string_lit st [] sp
-  | RBacktickIdent -> finish "IDENT" (lexeme st (i + of_int 2) (e - of_int 2))
-  | RPipeLeft -> finish "PIPE_LEFT" ""
-  | RPipeRight -> finish "PIPE_RIGHT" ""
-  | RDotDot -> finish "DOT_DOT" ""
+  | RBacktickIdent -> finish IDENT (lexeme st (i + of_int 2) (e - of_int 2))
+  | RPipeLeft -> finish PIPE_LEFT ""
+  | RPipeRight -> finish PIPE_RIGHT ""
+  | RDotDot -> finish DOT_DOT ""
   | ROpToken (k, t) -> finish k t
-  | RLt -> finish "OPINFIX0c" "<"
+  | RLt -> finish OPINFIX0c "<"
   | RGt ->
     (* sedlex restarts the match after the '>', so the token starts there *)
     let e' = no_comment st (i + one) e in
     st.cur := e';
-    tok "OPINFIX0c" (">" ^ lexeme st (i + one) e') (pos_of st (i + one)) (cur_pos st) !st.ncomments
+    tok OPINFIX0c (">" ^ lexeme st (i + one) e') (pos_of st (i + one)) (cur_pos st) !st.ncomments
   | ROp k ->
     let e' = no_comment st i e in
     if e' = i then begin
@@ -1078,9 +1080,9 @@ let rec next_token (st:lstate) : ML token =
     let id = s () in
     (match M.try_find uoperators id with
      | Some (k, t) -> finish k t
-     | None -> finish "OPINFIX4" id)
+     | None -> finish OPINFIX4 id)
   | RMixfix k -> finish k (s ())
-  | REof -> tok "EOF" "" sp sp !st.ncomments
+  | REof -> tok EOF "" sp sp !st.ncomments
   | RAny -> lex_error st Codes.Fatal_SyntaxError "unexpected char" sp sp
 
 (* Lex an entire input.  Returns the tokens (ending with EOF or ERROR) and
@@ -1105,9 +1107,9 @@ let lex_all (fname:string) (contents:string) (line col:int)
       try next_token st
       with LexFail (code, msg, r) ->
         let p = cur_pos st in
-        { tok "ERROR" msg p p !st.ncomments with extra = LexError (code, msg, r) }
+        { tok ERROR msg p p !st.ncomments with extra = LexError (code, msg, r) }
     in
-    if t.kind = "EOF" || t.kind = "ERROR" then List.rev (t :: acc)
+    if t.kind = EOF || t.kind = ERROR then List.rev (t :: acc)
     else go (t :: acc)
   in
   let toks = go [] in

@@ -51,6 +51,7 @@ open FStarC.Parser.AST
 open FStarC.Ident
 open FStarC.Const
 open FStarC.Parser.Pratt
+open FStarC.Parser.TokenKind
 module L  = FStarC.Parser.Lexer
 module R  = FStarC.Range
 module RO = FStarC.Range.Ops
@@ -100,7 +101,7 @@ let mk_id_tok (ps:pstate) (t:L.token) (s:string) : ML ident =
 
 (* right_flexible_list(SEP, X): X (SEP X)* SEP?, possibly empty. [stop]
    tells whether the list is over (the next token is the closer). *)
-let rec rflex_rest (#a:Type) (ps:pstate) (sep:string) (closer:string) (x:pstate -> ML a) : ML (list a) =
+let rec rflex_rest (#a:Type) (ps:pstate) (sep:token_kind) (closer:token_kind) (x:pstate -> ML a) : ML (list a) =
   if is ps closer then []
   else begin
     let v = x ps in
@@ -108,21 +109,21 @@ let rec rflex_rest (#a:Type) (ps:pstate) (sep:string) (closer:string) (x:pstate 
     else [v]
   end
 
-let rflex (#a:Type) (ps:pstate) (sep closer:string) (x:pstate -> ML a) : ML (list a) =
+let rflex (#a:Type) (ps:pstate) (sep closer:token_kind) (x:pstate -> ML a) : ML (list a) =
   rflex_rest ps sep closer x
 
-let rflex_nonempty (#a:Type) (ps:pstate) (sep closer:string) (x:pstate -> ML a) : ML (list a) =
+let rflex_nonempty (#a:Type) (ps:pstate) (sep closer:token_kind) (x:pstate -> ML a) : ML (list a) =
   let v = x ps in
   if accept ps sep then v :: rflex_rest ps sep closer x
   else [v]
 
 (* separated_nonempty_list(SEP, X) *)
-let rec sep_nonempty (#a:Type) (ps:pstate) (sep:string) (x:pstate -> ML a) : ML (list a) =
+let rec sep_nonempty (#a:Type) (ps:pstate) (sep:token_kind) (x:pstate -> ML a) : ML (list a) =
   let v = x ps in
   if accept ps sep then v :: sep_nonempty ps sep x
   else [v]
 
-let opt (#a:Type) (ps:pstate) (k:string) (x:pstate -> ML a) : ML (option a) =
+let opt (#a:Type) (ps:pstate) (k:token_kind) (x:pstate -> ML a) : ML (option a) =
   if accept ps k then Some (x ps) else None
 
 (* ---------------------------------------------------------------------- *)
@@ -130,18 +131,18 @@ let opt (#a:Type) (ps:pstate) (k:string) (x:pstate -> ML a) : ML (option a) =
 (* ---------------------------------------------------------------------- *)
 
 let p_lident (ps:pstate) : ML ident =
-  let t = expect ps "IDENT" in
+  let t = expect ps IDENT in
   mk_id_tok ps t t.text
 
 let p_uident (ps:pstate) : ML ident =
-  let t = expect ps "NAME" in
+  let t = expect ps NAME in
   mk_id_tok ps t t.text
 
 let p_ident (ps:pstate) : ML ident =
-  if is ps "IDENT" then p_lident ps else p_uident ps
+  if is ps IDENT then p_lident ps else p_uident ps
 
 let lidentOrUnderscore (ps:pstate) : ML ident =
-  if is ps "UNDERSCORE" then
+  if is ps UNDERSCORE then
     let t = advance ps in
     gen (tok_rng ps t)
   else p_lident ps
@@ -152,13 +153,13 @@ let lidentOrUnderscore (ps:pstate) : ML ident =
 let p_path (ps:pstate) : ML (list ident & bool) =
   let rec go (acc:list ident) : ML (list ident & bool) =
     let t = peek ps in
-    if t.kind = "IDENT" then
+    if t.kind = IDENT then
       (ignore (advance ps); (rev (mk_id_tok ps t t.text :: acc), false))
-    else if t.kind = "NAME" then begin
+    else if t.kind = NAME then begin
       ignore (advance ps);
       let acc = mk_id_tok ps t t.text :: acc in
       let k1 = peek_kind_n ps 1 in
-      if is ps "DOT" && (k1 = "IDENT" || k1 = "NAME") then
+      if is ps DOT && (k1 = IDENT || k1 = NAME) then
         (ignore (advance ps); go acc)
       else (rev acc, true)
     end
@@ -178,30 +179,30 @@ let p_quident (ps:pstate) : ML lident =
 (* Constants                                                              *)
 (* ---------------------------------------------------------------------- *)
 
-let machine_int_kinds : list (string & signedness & width) = [
-  "UINT8",  Unsigned, Int8;
-  "INT8",   Signed,   Int8;
-  "UINT16", Unsigned, Int16;
-  "INT16",  Signed,   Int16;
-  "UINT32", Unsigned, Int32;
-  "INT32",  Signed,   Int32;
-  "UINT64", Unsigned, Int64;
-  "INT64",  Signed,   Int64;
-  "SIZET",  Unsigned, Sizet;
+let machine_int_kinds : list (token_kind & signedness & width) = [
+  UINT8,  Unsigned, Int8;
+  INT8,   Signed,   Int8;
+  UINT16, Unsigned, Int16;
+  INT16,  Signed,   Int16;
+  UINT32, Unsigned, Int32;
+  INT32,  Signed,   Int32;
+  UINT64, Unsigned, Int64;
+  INT64,  Signed,   Int64;
+  SIZET,  Unsigned, Sizet;
 ]
 
-let rec find_machine_int (k:string) (l:list (string & signedness & width))
+let rec find_machine_int (k:token_kind) (l:list (token_kind & signedness & width))
   : option (signedness & width) =
   match l with
   | [] -> None
   | (k', s, w) :: l -> if k = k' then Some (s, w) else find_machine_int k l
 
-let is_constant_kind (k:string) : bool =
+let is_constant_kind (k:token_kind) : bool =
   match k with
-  | "LPAREN_RPAREN" | "INT" | "CHAR" | "STRING" | "TRUE" | "FALSE" | "REAL"
-  | "REIFY" | "RANGE_OF" | "SET_RANGE_OF"
-  | "UINT8" | "INT8" | "UINT16" | "INT16" | "UINT32" | "INT32"
-  | "UINT64" | "INT64" | "SIZET" -> true
+  | LPAREN_RPAREN | INT | CHAR | STRING | TRUE | FALSE | REAL
+  | REIFY | RANGE_OF | SET_RANGE_OF
+  | UINT8 | INT8 | UINT16 | INT16 | UINT32 | INT32
+  | UINT64 | INT64 | SIZET -> true
   | _ -> false
 
 let constant (ps:pstate) : ML sconst =
@@ -210,22 +211,22 @@ let constant (ps:pstate) : ML sconst =
   else begin
     ignore (advance ps);
     match t.kind with
-    | "LPAREN_RPAREN" -> Const_unit
-    | "INT" -> let (v, b) = parse_int_literal t.text in Const_int (v, b)
-    | "CHAR" ->
+    | LPAREN_RPAREN -> Const_unit
+    | INT -> let (v, b) = parse_int_literal t.text in Const_int (v, b)
+    | CHAR ->
       (match t.extra with
        | L.CharLit c -> Const_char (FStarC.Util.char_of_int c)
        | _ -> failwith "impossible: CHAR without payload")
-    | "STRING" -> Const_string (t.text, tok_rng ps t)
-    | "TRUE" -> Const_bool true
-    | "FALSE" -> Const_bool false
-    | "REAL" ->
+    | STRING -> Const_string (t.text, tok_rng ps t)
+    | TRUE -> Const_bool true
+    | FALSE -> Const_bool false
+    | REAL ->
       (match FStarC.Real.of_string t.text with
        | Some r -> Const_real r
        | None -> failwith ("Invalid real literal: " ^ t.text))
-    | "REIFY" -> Const_reify None
-    | "RANGE_OF" -> Const_range_of
-    | "SET_RANGE_OF" -> Const_set_range_of
+    | REIFY -> Const_reify None
+    | RANGE_OF -> Const_range_of
+    | SET_RANGE_OF -> Const_set_range_of
     | k ->
       match find_machine_int k machine_int_kinds with
       | Some (s, w) ->
@@ -241,16 +242,16 @@ let constant (ps:pstate) : ML sconst =
 (* binop_name: the name of an infix operator token, if it is one *)
 let binop_name_of (t:L.token) : option string =
   match t.kind with
-  | "OPINFIX0a" | "OPINFIX0b" | "OPINFIX0c" | "OPINFIX0d"
-  | "OPINFIX1" | "OPINFIX2" | "OPINFIX3L" | "OPINFIX3R" | "OPINFIX4"
-  | "OP_MIXFIX_ASSIGNMENT" | "OP_MIXFIX_ACCESS" -> Some t.text
-  | "EQUALS" -> Some "="
-  | "IMPLIES" -> Some "==>"
-  | "CONJUNCTION" -> Some "/\\"
-  | "DISJUNCTION" -> Some "\\/"
-  | "IFF" -> Some "<==>"
-  | "COLON_EQUALS" -> Some ":="
-  | "COLON_COLON" -> Some "::"
+  | OPINFIX0a | OPINFIX0b | OPINFIX0c | OPINFIX0d
+  | OPINFIX1 | OPINFIX2 | OPINFIX3L | OPINFIX3R | OPINFIX4
+  | OP_MIXFIX_ASSIGNMENT | OP_MIXFIX_ACCESS -> Some t.text
+  | EQUALS -> Some "="
+  | IMPLIES -> Some "==>"
+  | CONJUNCTION -> Some "/\\"
+  | DISJUNCTION -> Some "\\/"
+  | IFF -> Some "<==>"
+  | COLON_EQUALS -> Some ":="
+  | COLON_COLON -> Some "::"
   | _ -> None
 
 let operator_of (t:L.token) : option string =
@@ -258,13 +259,13 @@ let operator_of (t:L.token) : option string =
   | Some s -> Some s
   | None ->
     match t.kind with
-    | "OPPREFIX" -> Some t.text
-    | "TILDE" -> Some t.text
-    | "MINUS" -> Some "-"
-    | "AND_OP" -> Some ("and" ^ t.text)
-    | "LET_OP" -> Some ("let" ^ t.text)
-    | "EXISTS_OP" -> Some ("exists" ^ t.text)
-    | "FORALL_OP" -> Some ("forall" ^ t.text)
+    | OPPREFIX -> Some t.text
+    | TILDE -> Some t.text
+    | MINUS -> Some "-"
+    | AND_OP -> Some ("and" ^ t.text)
+    | LET_OP -> Some ("let" ^ t.text)
+    | EXISTS_OP -> Some ("exists" ^ t.text)
+    | FORALL_OP -> Some ("forall" ^ t.text)
     | _ -> None
 
 let binop_name (ps:pstate) : ML ident =
@@ -281,13 +282,13 @@ let operator (ps:pstate) : ML ident =
 
 (* Is the input LPAREN operator RPAREN? *)
 let is_op_paren (ps:pstate) : ML bool =
-  is ps "LPAREN" && Some? (operator_of (peek_n ps 1)) && peek_kind_n ps 2 = "RPAREN"
+  is ps LPAREN && Some? (operator_of (peek_n ps 1)) && peek_kind_n ps 2 = RPAREN
 
 (* LPAREN operator RPAREN, returning the operator *)
 let op_paren (ps:pstate) : ML ident =
-  ignore (expect ps "LPAREN");
+  ignore (expect ps LPAREN);
   let op = operator ps in
-  ignore (expect ps "RPAREN");
+  ignore (expect ps RPAREN);
   op
 
 let compiled_op_ident (op:ident) : ML ident =
@@ -310,42 +311,42 @@ let qlidentOrOperator (ps:pstate) : ML lident =
 (* ---------------------------------------------------------------------- *)
 
 (* Tokens that can start an atomicTerm *)
-let is_atomic_start_kind (k:string) : bool =
+let is_atomic_start_kind (k:token_kind) : bool =
   match k with
-  | "UNDERSCORE" | "OPPREFIX" | "LPAREN" | "LENS_PAREN_LEFT"
-  | "NAME" | "IDENT" | "BEGIN" | "LBRACK"
-  | "SEQ_BANG_LBRACK" | "PERCENT_LBRACK" | "BANG_LBRACE" -> true
+  | UNDERSCORE | OPPREFIX | LPAREN | LENS_PAREN_LEFT
+  | NAME | IDENT | BEGIN | LBRACK
+  | SEQ_BANG_LBRACK | PERCENT_LBRACK | BANG_LBRACE -> true
   | _ -> is_constant_kind k
 
 let is_atomic_start (ps:pstate) : ML bool = is_atomic_start_kind (peek_kind ps)
 
 (* Tokens that start an onlyTrailingTerm *)
-let is_quantifier_kind (k:string) : bool =
+let is_quantifier_kind (k:token_kind) : bool =
   match k with
-  | "FORALL" | "EXISTS" | "FORALL_OP" | "EXISTS_OP" -> true
+  | FORALL | EXISTS | FORALL_OP | EXISTS_OP -> true
   | _ -> false
 
 let is_only_trailing_start (ps:pstate) : ML bool =
   let k = peek_kind ps in
-  k = "FUN" || is_quantifier_kind k
+  k = FUN || is_quantifier_kind k
 
-let pragma_start_kinds : list string = [
-  "PRAGMA_SHOW_OPTIONS"; "PRAGMA_SET_OPTIONS"; "PRAGMA_RESET_OPTIONS";
-  "PRAGMA_PUSH_OPTIONS"; "PRAGMA_POP_OPTIONS"; "PRAGMA_RESTART_SOLVER";
-  "PRAGMA_PRINT_EFFECTS_GRAPH"; "PRAGMA_CHECK"; "PRAGMA_EVAL";
+let pragma_start_kinds : list token_kind = [
+  PRAGMA_SHOW_OPTIONS; PRAGMA_SET_OPTIONS; PRAGMA_RESET_OPTIONS;
+  PRAGMA_PUSH_OPTIONS; PRAGMA_POP_OPTIONS; PRAGMA_RESTART_SOLVER;
+  PRAGMA_PRINT_EFFECTS_GRAPH; PRAGMA_CHECK; PRAGMA_EVAL;
 ]
 
-let qualifier_kinds : list string = [
-  "ASSUME"; "INLINE"; "UNFOLDABLE"; "INLINE_FOR_EXTRACTION"; "UNFOLD";
-  "IRREDUCIBLE"; "NOEXTRACT"; "TOTAL"; "PRIVATE"; "NOEQUALITY";
-  "UNOPTEQUALITY"; "NEW"; "LOGIC"; "OPAQUE"; "REIFIABLE"; "REFLECTABLE";
+let qualifier_kinds : list token_kind = [
+  ASSUME; INLINE; UNFOLDABLE; INLINE_FOR_EXTRACTION; UNFOLD;
+  IRREDUCIBLE; NOEXTRACT; TOTAL; PRIVATE; NOEQUALITY;
+  UNOPTEQUALITY; NEW; LOGIC; OPAQUE; REIFIABLE; REFLECTABLE;
 ]
 
-let start_of_next_decl_kinds : list string =
+let start_of_next_decl_kinds : list token_kind =
   FStar.List.Tot.append pragma_start_kinds (FStar.List.Tot.append qualifier_kinds [
-    "EOF"; "LBRACK_AT"; "LBRACK_AT_AT"; "CLASS"; "INSTANCE"; "OPEN"; "FRIEND";
-    "INCLUDE"; "MODULE"; "TYPE"; "EFFECT"; "LET"; "VAL"; "SPLICE"; "SPLICET";
-    "EXCEPTION"; "NEW_EFFECT"; "SUB_EFFECT"; "BLOB"; "USE_LANG_BLOB";
+    EOF; LBRACK_AT; LBRACK_AT_AT; CLASS; INSTANCE; OPEN; FRIEND;
+    INCLUDE; MODULE; TYPE; EFFECT; LET; VAL; SPLICE; SPLICET;
+    EXCEPTION; NEW_EFFECT; SUB_EFFECT; BLOB; USE_LANG_BLOB;
   ])
 
 (* ---------------------------------------------------------------------- *)
@@ -436,35 +437,35 @@ let thunk2_at (ps:pstate) (i0:pos) (t:term) : ML term =
 (* ---------------------------------------------------------------------- *)
 
 let semiColonTermList (ps:pstate) : ML (list term) =
-  rflex ps "SEMICOLON" "RBRACK" p_noSeqTerm
+  rflex ps SEMICOLON RBRACK p_noSeqTerm
 
 let is_aqual_start (ps:pstate) : ML bool =
-  match peek_kind ps with "HASH" | "DOLLAR" -> true | _ -> false
+  match peek_kind ps with HASH | DOLLAR -> true | _ -> false
 
 (* aqual: HASH LBRACK thunk(term) RBRACK | HASH | DOLLAR *)
 let p_aqual (ps:pstate) : ML arg_qualifier =
-  if accept ps "DOLLAR" then Equality
+  if accept ps DOLLAR then Equality
   else begin
-    ignore (expect ps "HASH");
-    if accept ps "LBRACK" then begin
+    ignore (expect ps HASH);
+    if accept ps LBRACK then begin
       let i0 = !ps.idx in
       let t = p_term ps in
       let t = thunk_at ps i0 t in
-      ignore (expect ps "RBRACK");
+      ignore (expect ps RBRACK);
       Meta t
     end
     else Implicit
   end
 
 let binderAttributes (ps:pstate) : ML (list term) =
-  ignore (expect ps "LBRACK_AT_AT_AT");
+  ignore (expect ps LBRACK_AT_AT_AT);
   let t = semiColonTermList ps in
-  ignore (expect ps "RBRACK");
+  ignore (expect ps RBRACK);
   t
 
 let aqual_attrs (ps:pstate) : ML (aqual & list term) =
   let aq = if is_aqual_start ps then Some (p_aqual ps) else None in
-  let attrs = if is ps "LBRACK_AT_AT_AT" then binderAttributes ps else [] in
+  let attrs = if is ps LBRACK_AT_AT_AT then binderAttributes ps else [] in
   (aq, attrs)
 
 (* aqualifiedWithAttrs(lidentOrUnderscore) *)
@@ -473,13 +474,13 @@ let aqualified_lidentOrUnderscore (ps:pstate) : ML ((aqual & list term) & ident)
   let x = lidentOrUnderscore ps in
   (qa, x)
 
-let is_aqualified_start_kind (k:string) : bool =
-  k = "HASH" || k = "DOLLAR" || k = "LBRACK_AT_AT_AT"
+let is_aqualified_start_kind (k:token_kind) : bool =
+  k = HASH || k = DOLLAR || k = LBRACK_AT_AT_AT
 
 let refineOpt (ps:pstate) : ML (option term) =
-  if accept ps "LBRACE" then begin
+  if accept ps LBRACE then begin
     let phi = p_formula ps in
-    ignore (expect ps "RBRACE");
+    ignore (expect ps RBRACE);
     Some phi
   end else None
 
@@ -489,24 +490,24 @@ let refineOpt (ps:pstate) : ML (option term) =
 
 let is_atomic_universe_start (ps:pstate) : ML bool =
   let k = peek_kind ps in
-  k = "UNDERSCORE" || k = "INT" || k = "IDENT" || k = "LPAREN"
+  k = UNDERSCORE || k = INT || k = IDENT || k = LPAREN
 
 let rec atomicUniverse (ps:pstate) : ML term =
   let i0 = !ps.idx in
   let t = peek ps in
   match t.kind with
-  | "UNDERSCORE" -> ignore (advance ps); mk_term Wild (loc ps i0) Expr
-  | "INT" ->
+  | UNDERSCORE -> ignore (advance ps); mk_term Wild (loc ps i0) Expr
+  | INT ->
     ignore (advance ps);
     let (v, b) = parse_int_literal t.text in
     mk_term (Const (Const_int (v, b))) (loc ps i0) Expr
-  | "IDENT" ->
+  | IDENT ->
     let u = p_lident ps in
     mk_term (Uvar u) (range_of_id u) Expr
-  | "LPAREN" ->
+  | LPAREN ->
     ignore (advance ps);
     let u = universeFrom ps in
-    ignore (expect ps "RPAREN");
+    ignore (expect ps RPAREN);
     u
   | _ -> fail ps
 
@@ -515,8 +516,8 @@ and universeFrom (ps:pstate) : ML term =
   let u1 =
     let k = peek_kind ps in
     let k1 = peek_kind_n ps 1 in
-    let max_follows = k1 = "UNDERSCORE" || k1 = "INT" || k1 = "IDENT" || k1 = "LPAREN" in
-    if (k = "IDENT" && max_follows) || k = "NAME" then begin
+    let max_follows = k1 = UNDERSCORE || k1 = INT || k1 = IDENT || k1 = LPAREN in
+    if (k = IDENT && max_follows) || k = NAME then begin
       let max = p_ident ps in
       let i1 = !ps.idx in
       let rec args () : ML (list term) =
@@ -537,7 +538,7 @@ and universeFrom (ps:pstate) : ML term =
   universeFrom_rest ps i0 u1
 
 and universeFrom_rest (ps:pstate) (i0:pos) (u1:term) : ML term =
-  if is ps "OPINFIX2" then begin
+  if is ps OPINFIX2 then begin
     let i_u1_end = !ps.idx in
     let t = advance ps in
     let op_plus = t.text in
@@ -546,8 +547,8 @@ and universeFrom_rest (ps:pstate) (i0:pos) (u1:term) : ML term =
       (* the right operand of a left-associative operator *)
       let k = peek_kind ps in
       let k1 = peek_kind_n ps 1 in
-      let max_follows = k1 = "UNDERSCORE" || k1 = "INT" || k1 = "IDENT" || k1 = "LPAREN" in
-      if (k = "IDENT" && max_follows) || k = "NAME" then begin
+      let max_follows = k1 = UNDERSCORE || k1 = INT || k1 = IDENT || k1 = LPAREN in
+      if (k = IDENT && max_follows) || k = NAME then begin
         let max = p_ident ps in
         let i1 = !ps.idx in
         let rec args () : ML (list term) =
@@ -578,24 +579,24 @@ and universeFrom_rest (ps:pstate) (i0:pos) (u1:term) : ML term =
    exactly one dot-operator, for [e.(i) <- v]. *)
 let last_index : ref (pos & pos) = mk_ref (SI.minus_one, SI.minus_one)
 
-let is_dot_operator_kind (k:string) : bool =
-  k = "DOT_LPAREN" || k = "DOT_LBRACK" || k = "DOT_LBRACK_BAR" || k = "DOT_LENS_PAREN_LEFT"
+let is_dot_operator_kind (k:token_kind) : bool =
+  k = DOT_LPAREN || k = DOT_LBRACK || k = DOT_LBRACK_BAR || k = DOT_LENS_PAREN_LEFT
 
-let is_genBinder_start_kind (k:string) : bool =
+let is_genBinder_start_kind (k:token_kind) : bool =
   match k with
-  | "LBRACE_BAR" | "LPAREN" | "DOT_DOT" | "LBRACK" | "LBRACE"
-  | "LENS_PAREN_LEFT" | "MINUS" | "BACKTICK_PERC"
-  | "HASH" | "DOLLAR" | "LBRACK_AT_AT_AT" | "IDENT"
-  | "UNDERSCORE" | "NAME" -> true
+  | LBRACE_BAR | LPAREN | DOT_DOT | LBRACK | LBRACE
+  | LENS_PAREN_LEFT | MINUS | BACKTICK_PERC
+  | HASH | DOLLAR | LBRACK_AT_AT_AT | IDENT
+  | UNDERSCORE | NAME -> true
   | _ -> is_constant_kind k
 
-let is_atomic_pattern_start_kind (k:string) : bool =
-  k <> "LBRACE_BAR" && is_genBinder_start_kind k
+let is_atomic_pattern_start_kind (k:token_kind) : bool =
+  k <> LBRACE_BAR && is_genBinder_start_kind k
 
-let is_multiBinder_start_kind (k:string) : bool =
+let is_multiBinder_start_kind (k:token_kind) : bool =
   match k with
-  | "LBRACE_BAR" | "LPAREN" | "LPAREN_RPAREN" | "HASH"
-  | "DOLLAR" | "LBRACK_AT_AT_AT" | "IDENT" | "UNDERSCORE" -> true
+  | LBRACE_BAR | LPAREN | LPAREN_RPAREN | HASH
+  | DOLLAR | LBRACK_AT_AT_AT | IDENT | UNDERSCORE -> true
   | _ -> false
 
 (* ---------------------------------------------------------------------- *)
@@ -608,13 +609,13 @@ let rec atomic (ps:pstate) : ML (term & bool) =
   let i0 = !ps.idx in
   let t = peek ps in
   match t.kind with
-  | "UNDERSCORE" -> ignore (advance ps); (mk_term Wild (loc ps i0) Un, false)
-  | "OPPREFIX" ->
+  | UNDERSCORE -> ignore (advance ps); (mk_term Wild (loc ps i0) Un, false)
+  | OPPREFIX ->
     ignore (advance ps);
     let op = mk_id_tok ps t t.text in
     let e, q = atomic ps in
     (mk_term (Op (op, [e])) (loc ps i0) Expr, q)
-  | "LPAREN" ->
+  | LPAREN ->
     if is_op_paren ps then begin
       let op = op_paren ps in
       (mk_term (Op (op, [])) (loc ps i0) Un, false)
@@ -622,29 +623,29 @@ let rec atomic (ps:pstate) : ML (term & bool) =
       ignore (advance ps);
       let e = p_term ps in
       let e1 =
-        if accept ps "SUBKIND" then begin
+        if accept ps SUBKIND then begin
           let t = p_typ ps in
-          ignore (expect ps "RPAREN");
+          ignore (expect ps RPAREN);
           mk_term (Ascribed (e, { t with level = Type_level }, None, false)) (loc ps i0) Type_level
-        end else (ignore (expect ps "RPAREN"); e)
+        end else (ignore (expect ps RPAREN); e)
       in
       let e = mk_term (Paren e1) (loc ps i0) e.level in
       (projections ps i0 e, false)
     end
-  | "LENS_PAREN_LEFT" ->
+  | LENS_PAREN_LEFT ->
     ignore (advance ps);
     let e0 = p_tmEq ps in
-    ignore (expect ps "COMMA");
-    let el = sep_nonempty ps "COMMA" p_tmEq in
-    ignore (expect ps "LENS_PAREN_RIGHT");
+    ignore (expect ps COMMA);
+    let el = sep_nonempty ps COMMA p_tmEq in
+    ignore (expect ps LENS_PAREN_RIGHT);
     (mkDTuple (e0 :: el) (loc ps i0), false)
-  | "BEGIN" ->
+  | BEGIN ->
     ignore (advance ps);
     let e = p_term ps in
-    ignore (expect ps "END");
+    ignore (expect ps END);
     (e, false)
-  | "IDENT"
-  | "NAME" ->
+  | IDENT
+  | NAME ->
     let ids, is_name = p_path ps in
     let r_id = loc ps i0 in
     let lid = lid_of_ids ids in
@@ -652,40 +653,40 @@ let rec atomic (ps:pstate) : ML (term & bool) =
       let e = mk_term (if C.is_name lid then Name lid else Var lid) r_id Un in
       (projections ps i0 e, false)
     end
-    else if accept ps "QMARK_DOT" then begin
+    else if accept ps QMARK_DOT then begin
       let id = p_lident ps in
       let e = mk_term (Projector (lid, id)) (loc ps i0) Expr in
       (projections ps i0 e, false)
     end
-    else if accept ps "QMARK" then begin
+    else if accept ps QMARK then begin
       let e = mk_term (Discrim lid) (loc ps i0) Un in
       (projections ps i0 e, false)
     end
-    else if accept ps "DOT_LPAREN" then begin
+    else if accept ps DOT_LPAREN then begin
       let t = p_term ps in
-      ignore (expect ps "RPAREN");
+      ignore (expect ps RPAREN);
       (mk_term (LetOpen (lid, t)) (loc ps i0) Expr, true)
     end
     else (mk_term (Name lid) r_id Un, true)
-  | "LBRACK" ->
+  | LBRACK ->
     ignore (advance ps);
     let es = semiColonTermList ps in
-    ignore (expect ps "RBRACK");
+    ignore (expect ps RBRACK);
     (projections ps i0 (mkListLit (loc ps i0) es), false)
-  | "SEQ_BANG_LBRACK" ->
+  | SEQ_BANG_LBRACK ->
     ignore (advance ps);
     let es = semiColonTermList ps in
-    ignore (expect ps "RBRACK");
+    ignore (expect ps RBRACK);
     (projections ps i0 (mkSeqLit (loc ps i0) es), false)
-  | "PERCENT_LBRACK" ->
+  | PERCENT_LBRACK ->
     ignore (advance ps);
     let es = semiColonTermList ps in
-    ignore (expect ps "RBRACK");
+    ignore (expect ps RBRACK);
     (projections ps i0 (mk_term (LexList es) (loc ps i0) Type_level), false)
-  | "BANG_LBRACE" ->
+  | BANG_LBRACE ->
     ignore (advance ps);
-    let es = rflex ps "COMMA" "RBRACE" app_term_full in
-    ignore (expect ps "RBRACE");
+    let es = rflex ps COMMA RBRACE app_term_full in
+    ignore (expect ps RBRACE);
     let e = mkRefSet (loc ps i0) es in
     (projections ps i0 e, false)
   | k ->
@@ -699,13 +700,13 @@ let rec atomic (ps:pstate) : ML (term & bool) =
 and projections (ps:pstate) (i0:pos) (e:term) : ML term =
   let rec fields () : ML (list lident) =
     let k1 = peek_kind_n ps 1 in
-    if is ps "DOT" && (k1 = "IDENT" || k1 = "NAME") then begin
+    if is ps DOT && (k1 = IDENT || k1 = NAME) then begin
       ignore (advance ps);
       let lid = p_qlident ps in
       lid :: fields ()
     end else begin
       (* Menhir shifts a DOT here before failing; report errors past it *)
-      if is ps "DOT" && SI.(!ps.idx + one > !ps.furthest) then ps.furthest := SI.(!ps.idx + one);
+      if is ps DOT && SI.(!ps.idx + one > !ps.furthest) then ps.furthest := SI.(!ps.idx + one);
       []
     end
   in
@@ -725,10 +726,10 @@ and indexing_term (ps:pstate) : ML (term & bool) =
       let t = peek ps in
       let closer =
         match t.kind with
-        | "DOT_LPAREN" -> Some (".()", "RPAREN")
-        | "DOT_LBRACK" -> Some (".[]", "RBRACK")
-        | "DOT_LBRACK_BAR" -> Some (".[||]", "BAR_RBRACK")
-        | "DOT_LENS_PAREN_LEFT" -> Some (".(||)", "LENS_PAREN_RIGHT")
+        | DOT_LPAREN -> Some (".()", RPAREN)
+        | DOT_LBRACK -> Some (".[]", RBRACK)
+        | DOT_LBRACK_BAR -> Some (".[||]", BAR_RBRACK)
+        | DOT_LENS_PAREN_LEFT -> Some (".(||)", LENS_PAREN_RIGHT)
         | _ -> None
       in
       match closer with
@@ -750,23 +751,23 @@ and indexing_term (ps:pstate) : ML (term & bool) =
 
 (* appTermArgs / appTermArgsNoRecordExp *)
 and app_args (ps:pstate) (noref:bool) : ML (list (term & imp)) =
-  if is ps "UNIV_HASH" then begin
+  if is ps UNIV_HASH then begin
     ignore (advance ps);
     let u = atomicUniverse ps in
     (u, UnivApp) :: app_args ps noref
   end else begin
     let k1 = peek_kind_n ps 1 in
     let hash_arg =
-      is ps "HASH" &&
+      is ps HASH &&
       (is_atomic_start_kind k1 ||
-       (not noref && (k1 = "LBRACE" || k1 = "FUN" || is_quantifier_kind k1)))
+       (not noref && (k1 = LBRACE || k1 = FUN || is_quantifier_kind k1)))
     in
     let h = if hash_arg then (ignore (advance ps); Hash) else Nothing in
     if is_atomic_start ps then begin
       let a, _ = indexing_term ps in
       (a, h) :: app_args ps noref
     end
-    else if not noref && is ps "LBRACE" then begin
+    else if not noref && is ps LBRACE then begin
       let a = record_term ps in
       (a, h) :: app_args ps noref
     end
@@ -791,22 +792,22 @@ and app_term_full (ps:pstate) : ML term =
 
 (* LBRACE recordExp RBRACE *)
 and record_term (ps:pstate) : ML term =
-  ignore (expect ps "LBRACE");
+  ignore (expect ps LBRACE);
   let i1 = !ps.idx in
   let base = attempt ps (fun () ->
     let e = app_term_full ps in
-    ignore (expect ps "WITH");
+    ignore (expect ps WITH);
     e)
   in
-  let fields = rflex_nonempty ps "SEMICOLON" "RBRACE" simpleDef in
+  let fields = rflex_nonempty ps SEMICOLON RBRACE simpleDef in
   let r = loc ps i1 in
-  ignore (expect ps "RBRACE");
+  ignore (expect ps RBRACE);
   mk_term (Record (base, fields)) r Expr
 
 and simpleDef (ps:pstate) : ML (lident & term) =
   let i0 = !ps.idx in
   let lid = qlidentOrOperator ps in
-  if accept ps "EQUALS" then (lid, p_noSeqTerm ps)
+  if accept ps EQUALS then (lid, p_noSeqTerm ps)
   else (lid, mk_term (Var (lid_of_ids [ident_of_lid lid])) (loc ps i0) Un)
 
 (* onlyTrailingTerm *)
@@ -814,24 +815,24 @@ and only_trailing (ps:pstate) : ML term =
   let i0 = !ps.idx in
   let t = advance ps in
   match t.kind with
-  | "FUN" ->
+  | FUN ->
     let rec pats () : ML (list (list pattern)) =
       let p = genBinder ps in
-      if is ps "RARROW" then [p] else p :: pats ()
+      if is ps RARROW then [p] else p :: pats ()
     in
     let pats = pats () in
-    ignore (expect ps "RARROW");
+    ignore (expect ps RARROW);
     let e = p_term ps in
     mk_term (Abs (flatten pats, e)) (loc ps i0) Un
   | k ->
     if not (is_quantifier_kind k) then fail ps else begin
     let bs = binders ps in
-    ignore (expect ps "DOT");
+    ignore (expect ps DOT);
     let i_dot = !ps.idx in
     let trigger =
-      if accept ps "LBRACE_COLON_PATTERN" then begin
-        let pats = sep_nonempty ps "DISJUNCTION" (fun ps -> sep_nonempty ps "SEMICOLON" app_term_full) in
-        ignore (expect ps "RBRACE");
+      if accept ps LBRACE_COLON_PATTERN then begin
+        let pats = sep_nonempty ps DISJUNCTION (fun ps -> sep_nonempty ps SEMICOLON app_term_full) in
+        ignore (expect ps RBRACE);
         pats
       end else []
     in
@@ -843,9 +844,9 @@ and only_trailing (ps:pstate) : ML term =
       let idents = idents_of_binders bs (rng ps i0 i_dot) in
       let q =
         match k with
-        | "FORALL" -> QForall (bs, (idents, trigger), e)
-        | "EXISTS" -> QExists (bs, (idents, trigger), e)
-        | "FORALL_OP" -> QuantOp (mk_id_tok ps t ("forall" ^ t.text), bs, (idents, trigger), e)
+        | FORALL -> QForall (bs, (idents, trigger), e)
+        | EXISTS -> QExists (bs, (idents, trigger), e)
+        | FORALL_OP -> QuantOp (mk_id_tok ps t ("forall" ^ t.text), bs, (idents, trigger), e)
         | _ -> QuantOp (mk_id_tok ps t ("exists" ^ t.text), bs, (idents, trigger), e)
       in
       mk_term q (loc ps i0) Formula
@@ -856,7 +857,7 @@ and atomicPattern (ps:pstate) : ML pattern =
   let i0 = !ps.idx in
   let t = peek ps in
   match t.kind with
-  | "LPAREN" ->
+  | LPAREN ->
     if is_op_paren ps then begin
       let op = op_paren ps in
       mk_pattern (PatOp op) (loc ps i0)
@@ -865,25 +866,25 @@ and atomicPattern (ps:pstate) : ML pattern =
       | [p] -> p
       | _ -> failwith "impossible"
     end
-  | "DOT_DOT" -> ignore (advance ps); mk_pattern PatRest (loc ps i0)
-  | "LBRACK" ->
+  | DOT_DOT -> ignore (advance ps); mk_pattern PatRest (loc ps i0)
+  | LBRACK ->
     ignore (advance ps);
-    let pats = rflex ps "SEMICOLON" "RBRACK" tuplePattern in
-    ignore (expect ps "RBRACK");
+    let pats = rflex ps SEMICOLON RBRACK tuplePattern in
+    ignore (expect ps RBRACK);
     mk_pattern (PatList pats) (loc ps i0)
-  | "LBRACE" ->
+  | LBRACE ->
     ignore (advance ps);
-    let pats = rflex ps "SEMICOLON" "RBRACE" fieldPattern in
-    ignore (expect ps "RBRACE");
+    let pats = rflex ps SEMICOLON RBRACE fieldPattern in
+    ignore (expect ps RBRACE);
     mk_pattern (PatRecord pats) (loc ps i0)
-  | "LENS_PAREN_LEFT" ->
+  | LENS_PAREN_LEFT ->
     ignore (advance ps);
     let p0 = constructorPattern ps in
-    ignore (expect ps "COMMA");
-    let pats = sep_nonempty ps "COMMA" constructorPattern in
-    ignore (expect ps "LENS_PAREN_RIGHT");
+    ignore (expect ps COMMA);
+    let pats = sep_nonempty ps COMMA constructorPattern in
+    ignore (expect ps LENS_PAREN_RIGHT);
     mk_pattern (PatTuple (p0 :: pats, true)) (loc ps i0)
-  | "MINUS" ->
+  | MINUS ->
     ignore (advance ps);
     let c = constant ps in
     let r = loc ps i0 in
@@ -897,11 +898,11 @@ and atomicPattern (ps:pstate) : ML pattern =
       | _ -> syntax_error r "Syntax_error: negative constant that is not an integer"
     in
     mk_pattern (PatConst c) r
-  | "BACKTICK_PERC" ->
+  | BACKTICK_PERC ->
     ignore (advance ps);
     let q = atomicTerm ps in
     mk_pattern (PatVQuote q) (loc ps i0)
-  | "NAME" ->
+  | NAME ->
     let uid = p_quident ps in
     mk_pattern (PatName uid) (loc ps i0)
   | k ->
@@ -909,13 +910,13 @@ and atomicPattern (ps:pstate) : ML pattern =
       let c = constant ps in
       mk_pattern (PatConst c) (loc ps i0)
     end
-    else if k = "IDENT" || k = "UNDERSCORE" || is_aqualified_start_kind k then begin
+    else if k = IDENT || k = UNDERSCORE || is_aqualified_start_kind k then begin
       let aq, attrs = aqual_attrs ps in
-      if is ps "IDENT" then begin
+      if is ps IDENT then begin
         let x = p_lident ps in
         mk_pattern (PatVar (x, aq, attrs)) (loc ps i0)
       end else begin
-        ignore (expect ps "UNDERSCORE");
+        ignore (expect ps UNDERSCORE);
         mk_pattern (PatWild (aq, attrs)) (loc ps i0)
       end
     end
@@ -925,38 +926,38 @@ and atomicPattern (ps:pstate) : ML pattern =
    the constraints being only allowed in a genBinder *)
 and paren_pattern (ps:pstate) (allow_cts:bool) : ML (list pattern) =
   let i0 = !ps.idx in
-  ignore (expect ps "LPAREN");
+  ignore (expect ps LPAREN);
   let i_pat = !ps.idx in
   let pat = tuplePattern ps in
-  if accept ps "COLON" then begin
+  if accept ps COLON then begin
     let t = p_simpleArrow ps in
     let i_t = !ps.idx in
     let r = refineOpt ps in
-    if allow_cts && accept ps "BAR" then begin
-      let cts = rflex_nonempty ps "COMMA" "RPAREN" p_tmEqNoRef in
-      ignore (expect ps "RPAREN");
+    if allow_cts && accept ps BAR then begin
+      let cts = rflex_nonempty ps COMMA RPAREN p_tmEqNoRef in
+      ignore (expect ps RPAREN);
       let p = mkRefinedPattern pat t true r (rng ps i_pat i_t) (loc ps i0) in
       let names = pat_names [p] in
       p :: expand_inline_constraints cts names
     end else begin
-      ignore (expect ps "RPAREN");
+      ignore (expect ps RPAREN);
       [mkRefinedPattern pat t true r (rng ps i_pat i_t) (loc ps i0)]
     end
   end else begin
-    ignore (expect ps "RPAREN");
+    ignore (expect ps RPAREN);
     [pat]
   end
 
 and fieldPattern (ps:pstate) : ML (lident & pattern) =
   let i0 = !ps.idx in
   let lid = p_qlident ps in
-  if accept ps "EQUALS" then (lid, tuplePattern ps)
+  if accept ps EQUALS then (lid, tuplePattern ps)
   else (lid, mk_pattern (PatVar (ident_of_lid lid, None, [])) (loc ps i0))
 
 and constructorPattern (ps:pstate) : ML pattern =
   let i0 = !ps.idx in
   let pat =
-    if is ps "NAME" then begin
+    if is ps NAME then begin
       let uid = p_quident ps in
       let r_uid = loc ps i0 in
       if is_atomic_pattern_start_kind (peek_kind ps) then begin
@@ -972,7 +973,7 @@ and constructorPattern (ps:pstate) : ML pattern =
     end
     else atomicPattern ps
   in
-  if accept ps "COLON_COLON" then begin
+  if accept ps COLON_COLON then begin
     let i_rest = !ps.idx in
     let rest = constructorPattern ps in
     mk_pattern (consPat (loc ps i_rest) pat rest) (loc ps i0)
@@ -981,7 +982,7 @@ and constructorPattern (ps:pstate) : ML pattern =
 
 and tuplePattern (ps:pstate) : ML pattern =
   let i0 = !ps.idx in
-  match sep_nonempty ps "COMMA" constructorPattern with
+  match sep_nonempty ps COMMA constructorPattern with
   | [x] -> x
   | l -> mk_pattern (PatTuple (l, false)) (loc ps i0)
 
@@ -989,9 +990,9 @@ and p_tc_constraint (ps:pstate) : ML tc_constraint =
   let i0 = !ps.idx in
   let k = peek_kind ps in
   let id =
-    if (k = "IDENT" || k = "UNDERSCORE") && peek_kind_n ps 1 = "COLON" then begin
+    if (k = IDENT || k = UNDERSCORE) && peek_kind_n ps 1 = COLON then begin
       let id = lidentOrUnderscore ps in
-      ignore (expect ps "COLON");
+      ignore (expect ps COLON);
       Some id
     end else None
   in
@@ -1001,38 +1002,38 @@ and p_tc_constraint (ps:pstate) : ML tc_constraint =
   { tc_id = id; tc_t = t; tc_r = r }
 
 and tc_constraints (ps:pstate) : ML (list tc_constraint) =
-  rflex_nonempty ps "COMMA" "BAR_RBRACE" p_tc_constraint
+  rflex_nonempty ps COMMA BAR_RBRACE p_tc_constraint
 
 and type_tc_constraints (ps:pstate) : ML (list term) =
-  if accept ps "BAR" then rflex_nonempty ps "COMMA" "RPAREN" p_tmEqNoRef
+  if accept ps BAR then rflex_nonempty ps COMMA RPAREN p_tmEqNoRef
   else []
 
 (* LPAREN aqualifiedWithAttrs(lidentOrUnderscore)+ COLON, the common prefix
    of the multi-identifier binders *)
 and multi_ids (ps:pstate) (min:int) : ML (list ((aqual & list term) & ident)) =
-  ignore (expect ps "LPAREN");
+  ignore (expect ps LPAREN);
   let rec go () : ML (list ((aqual & list term) & ident)) =
     let k = peek_kind ps in
-    if k = "IDENT" || k = "UNDERSCORE" || is_aqualified_start_kind k then begin
+    if k = IDENT || k = UNDERSCORE || is_aqualified_start_kind k then begin
       let q = aqualified_lidentOrUnderscore ps in
       q :: go ()
     end else []
   in
   let ids = go () in
   if length ids < min then fail ps;
-  ignore (expect ps "COLON");
+  ignore (expect ps COLON);
   ids
 
 and genBinder (ps:pstate) : ML (list pattern) =
   let i0 = !ps.idx in
-  if accept ps "LBRACE_BAR" then begin
+  if accept ps LBRACE_BAR then begin
     let cs = tc_constraints ps in
-    ignore (expect ps "BAR_RBRACE");
+    ignore (expect ps BAR_RBRACE);
     map (fun c ->
       let w = mk_pattern (PatVar (c.tc_id, Some TypeClassArg, [])) c.tc_r in
       mk_pattern (PatAscribed (w, (c.tc_t, None))) c.tc_r) cs
   end
-  else if is ps "LPAREN" && not (is_op_paren ps) then begin
+  else if is ps LPAREN && not (is_op_paren ps) then begin
     match attempt ps (fun () -> multi_ids ps 2) with
     | Some qual_ids ->
       let i_t = !ps.idx in
@@ -1040,7 +1041,7 @@ and genBinder (ps:pstate) : ML (list pattern) =
       let r_t = loc ps i_t in
       let r = refineOpt ps in
       let cts = type_tc_constraints ps in
-      ignore (expect ps "RPAREN");
+      ignore (expect ps RPAREN);
       let pos = loc ps i0 in
       let n = length qual_ids in
       let pats = mapi_inorder 0 (fun idx ((aq, attrs), x) ->
@@ -1057,17 +1058,17 @@ and genBinder (ps:pstate) : ML (list pattern) =
 and multiBinder (ps:pstate) : ML (list binder) =
   let i0 = !ps.idx in
   let k = peek_kind ps in
-  if accept ps "LBRACE_BAR" then begin
+  if accept ps LBRACE_BAR then begin
     let cs = tc_constraints ps in
-    ignore (expect ps "BAR_RBRACE");
+    ignore (expect ps BAR_RBRACE);
     map (fun c -> mk_binder (Annotated (c.tc_id, c.tc_t)) c.tc_r Type_level (Some TypeClassArg)) cs
   end
-  else if k = "LPAREN" then begin
+  else if k = LPAREN then begin
     let qual_ids = multi_ids ps 1 in
     let t = p_simpleArrow ps in
     let r = refineOpt ps in
     let cts = type_tc_constraints ps in
-    ignore (expect ps "RPAREN");
+    ignore (expect ps RPAREN);
     let pos = loc ps i0 in
     let n = length qual_ids in
     let bs = mapi_inorder 0 (fun idx ((q, attrs), x) ->
@@ -1078,7 +1079,7 @@ and multiBinder (ps:pstate) : ML (list binder) =
     let cts_binders = map_inorder pattern_must_be_binder (expand_inline_constraints cts names) in
     FStar.List.Tot.append bs cts_binders
   end
-  else if k = "LPAREN_RPAREN" then begin
+  else if k = LPAREN_RPAREN then begin
     ignore (advance ps);
     let r = loc ps i0 in
     let unit_t = unit_type r in
@@ -1101,12 +1102,12 @@ and binders (ps:pstate) : ML (list binder) =
 
 let patternBranch (ps:pstate) : ML (bool & branch) =
   let i0 = !ps.idx in
-  let pats = sep_nonempty ps "BAR" tuplePattern in
+  let pats = sep_nonempty ps BAR tuplePattern in
   let i_p = !ps.idx in
-  let when_opt = if accept ps "WHEN" then Some (p_tmFormula ps) else None in
+  let when_opt = if accept ps WHEN then Some (p_tmFormula ps) else None in
   let focus =
-    if accept ps "RARROW" then false
-    else if accept ps "SQUIGGLY_RARROW" then true
+    if accept ps RARROW then false
+    else if accept ps SQUIGGLY_RARROW then true
     else fail ps
   in
   let e = p_term ps in
@@ -1119,10 +1120,10 @@ let patternBranch (ps:pstate) : ML (bool & branch) =
 
 (* left_flexible_nonempty_list(BAR, patternBranch) *)
 let branches_nonempty (ps:pstate) : ML (list (bool & branch)) =
-  ignore (accept ps "BAR");
+  ignore (accept ps BAR);
   let b = patternBranch ps in
   let rec go () : ML (list (bool & branch)) =
-    if accept ps "BAR" then
+    if accept ps BAR then
       let b = patternBranch ps in
       b :: go ()
     else []
@@ -1131,7 +1132,7 @@ let branches_nonempty (ps:pstate) : ML (list (bool & branch)) =
 
 (* left_flexible_list(BAR, patternBranch) *)
 let branches (ps:pstate) : ML (list (bool & branch)) =
-  if is ps "BAR" || is_atomic_pattern_start_kind (peek_kind ps)
+  if is ps BAR || is_atomic_pattern_start_kind (peek_kind ps)
   then branches_nonempty ps
   else []
 
@@ -1141,10 +1142,10 @@ let trailingTerm (ps:pstate) : ML term =
 
 (* ascribeTyp: COLON tmArrow(tmNoEq) [BY thunk(trailingTerm)] *)
 let ascribeTyp (ps:pstate) : ML (term & option term) =
-  ignore (expect ps "COLON");
+  ignore (expect ps COLON);
   let t = p_tmArrowNoEq ps in
   let tac =
-    if accept ps "BY" then begin
+    if accept ps BY then begin
       let i0 = !ps.idx in
       let tac = trailingTerm ps in
       Some (thunk_at ps i0 tac)
@@ -1154,7 +1155,7 @@ let ascribeTyp (ps:pstate) : ML (term & option term) =
 
 let attribute (ps:pstate) : ML (list term) =
   let i0 = !ps.idx in
-  if accept ps "LBRACK_AT" then begin
+  if accept ps LBRACK_AT then begin
     let rec go () : ML (list term) =
       if is_atomic_start ps then
         let t = atomicTerm ps in
@@ -1162,7 +1163,7 @@ let attribute (ps:pstate) : ML (list term) =
       else []
     in
     let x = go () in
-    ignore (expect ps "RBRACK");
+    ignore (expect ps RBRACK);
     (match x with
      | _ :: _ :: _ ->
        E.log_issue_text (loc ps i0) Codes.Warning_DeprecatedAttributeSyntax
@@ -1170,21 +1171,21 @@ let attribute (ps:pstate) : ML (list term) =
      | _ -> ());
     x
   end else begin
-    ignore (expect ps "LBRACK_AT_AT");
+    ignore (expect ps LBRACK_AT_AT);
     let x = semiColonTermList ps in
-    ignore (expect ps "RBRACK");
+    ignore (expect ps RBRACK);
     x
   end
 
 let is_attribute_start (ps:pstate) : ML bool =
-  is ps "LBRACK_AT" || is ps "LBRACK_AT_AT"
+  is ps LBRACK_AT || is ps LBRACK_AT_AT
 
 let letbinding (ps:pstate) : ML (bool & (pattern & term)) =
   let i_f = !ps.idx in
-  let focus = accept ps "SQUIGGLY_RARROW" in
+  let focus = accept ps SQUIGGLY_RARROW in
   let i_f1 = !ps.idx in
   let form1 =
-    (is ps "IDENT" && is_genBinder_start_kind (peek_kind_n ps 1)) ||
+    (is ps IDENT && is_genBinder_start_kind (peek_kind_n ps 1)) ||
     (is_op_paren ps && is_genBinder_start_kind (peek_kind_n ps 3))
   in
   if form1 then begin
@@ -1198,8 +1199,8 @@ let letbinding (ps:pstate) : ML (bool & (pattern & term)) =
     in
     let lbp = go () in
     let i_lbp1 = !ps.idx in
-    let ascr_opt = if is ps "COLON" then Some (ascribeTyp ps) else None in
-    ignore (expect ps "EQUALS");
+    let ascr_opt = if is ps COLON then Some (ascribeTyp ps) else None in
+    ignore (expect ps EQUALS);
     let i_tm = !ps.idx in
     let tm = p_term ps in
     let pat = mk_pattern (PatVar (lid, None, [])) r_lid in
@@ -1210,15 +1211,15 @@ let letbinding (ps:pstate) : ML (bool & (pattern & term)) =
     | Some t -> (focus, (mk_pattern (PatAscribed (pat, t)) pos, tm))
   end else begin
     let pat = tuplePattern ps in
-    if is ps "COLON" then begin
+    if is ps COLON then begin
       let ascr = ascribeTyp ps in
       let i_eq = !ps.idx in
-      ignore (expect ps "EQUALS");
+      ignore (expect ps EQUALS);
       let r = rng2 ps i_f i_f1 i_eq SI.(i_eq + one) in
       let tm = p_term ps in
       (focus, (mk_pattern (PatAscribed (pat, ascr)) r, tm))
     end else begin
-      ignore (expect ps "EQUALS");
+      ignore (expect ps EQUALS);
       let tm = p_term ps in
       (focus, (pat, tm))
     end
@@ -1228,9 +1229,9 @@ let letoperatorbinding (ps:pstate) : ML (pattern & term) =
   let i0 = !ps.idx in
   let pat = tuplePattern ps in
   let i_a = !ps.idx in
-  let ascr_opt = if is ps "COLON" then Some (ascribeTyp ps) else None in
+  let ascr_opt = if is ps COLON then Some (ascribeTyp ps) else None in
   let i_a1 = !ps.idx in
-  let tm = if accept ps "EQUALS" then Some (p_term ps) else None in
+  let tm = if accept ps EQUALS then Some (p_term ps) else None in
   let h (tm:term) : ML (pattern & term) =
     ((match ascr_opt with
       | None -> pat
@@ -1246,12 +1247,12 @@ let letoperatorbinding (ps:pstate) : ML (pattern & term) =
 
 let match_returning (ps:pstate) : ML (option match_returns_annotation) =
   let k = peek_kind ps in
-  if k = "AS" || k = "RETURNS" || k = "RETURNS_EQ" then begin
-    let as_opt = if accept ps "AS" then Some (p_lident ps) else None in
-    if accept ps "RETURNS" then
+  if k = AS || k = RETURNS || k = RETURNS_EQ then begin
+    let as_opt = if accept ps AS then Some (p_lident ps) else None in
+    if accept ps RETURNS then
       let t = p_typ ps in Some (as_opt, t, false)
     else begin
-      ignore (expect ps "RETURNS_EQ");
+      ignore (expect ps RETURNS_EQ);
       let t = p_typ ps in Some (as_opt, t, true)
     end
   end else None
@@ -1263,9 +1264,9 @@ let calcRel (ps:pstate) : ML term =
     let i = binop_name ps in
     mk_term (Op (i, [])) (loc ps i0) Expr
   | None ->
-    if accept ps "BACKTICK" then begin
+    if accept ps BACKTICK then begin
       let id = p_qlident ps in
-      ignore (expect ps "BACKTICK");
+      ignore (expect ps BACKTICK);
       mk_term (Var id) (loc ps i0) Un
     end
     else atomicTerm ps
@@ -1273,12 +1274,12 @@ let calcRel (ps:pstate) : ML term =
 let calcStep (ps:pstate) : ML calc_step =
   let rel = calcRel ps in
   let i_lb = !ps.idx in
-  ignore (expect ps "LBRACE");
-  let justif = if is ps "RBRACE" then None else Some (p_term ps) in
-  ignore (expect ps "RBRACE");
+  ignore (expect ps LBRACE);
+  let justif = if is ps RBRACE then None else Some (p_term ps) in
+  ignore (expect ps RBRACE);
   let r_j = loc ps i_lb in
   let next = p_noSeqTerm ps in
-  ignore (expect ps "SEMICOLON");
+  ignore (expect ps SEMICOLON);
   let justif =
     match justif with
     | Some t -> t
@@ -1311,9 +1312,9 @@ let trule (name:string) (level lhs_min:int) (guard:pstate -> ctx -> term -> pos 
 let base (ps:pstate) (ctx:ctx) : ML term =
   let i0 = !ps.idx in
   let k = peek_kind ps in
-  if not ctx.noref && (k = "IDENT" || k = "UNDERSCORE") && peek_kind_n ps 1 = "COLON" then begin
+  if not ctx.noref && (k = IDENT || k = UNDERSCORE) && peek_kind_n ps 1 = COLON then begin
     let id = lidentOrUnderscore ps in
-    ignore (expect ps "COLON");
+    ignore (expect ps COLON);
     let e = app_term ps true in
     let i_e = !ps.idx in
     let phi_opt = refineOpt ps in
@@ -1372,15 +1373,15 @@ let r_only_trailing (ps:pstate) (_:ctx) : ML term = only_trailing ps
 let r_domain (ps:pstate) (ctx:ctx) : ML term =
   let i0 = !ps.idx in
   let aq, attrs, dom_tm =
-    if accept ps "LBRACE_BAR" then begin
+    if accept ps LBRACE_BAR then begin
       let t = term_at ps ctx ctx.dom in
-      ignore (expect ps "BAR_RBRACE");
+      ignore (expect ps BAR_RBRACE);
       (Some TypeClassArg, [], t)
     end
-    else if accept ps "LPAREN" then begin
+    else if accept ps LPAREN then begin
       let aq, attrs = aqual_attrs ps in
       let t = term_at ps ctx ctx.dom in
-      ignore (expect ps "RPAREN");
+      ignore (expect ps RPAREN);
       (aq, attrs, t)
     end
     else begin
@@ -1390,7 +1391,7 @@ let r_domain (ps:pstate) (ctx:ctx) : ML term =
     end
   in
   let i_dom = !ps.idx in
-  ignore (expect ps "RARROW");
+  ignore (expect ps RARROW);
   let tgt = term_at ps ctx 30 in
   let r_dom = rng ps i0 i_dom in
   let b =
@@ -1408,8 +1409,8 @@ let paren_domain_guard (ps:pstate) (ctx:ctx) : ML bool =
     ignore (advance ps);
     ignore (aqual_attrs ps);
     ignore (term_at ps ctx ctx.dom);
-    ignore (expect ps "RPAREN");
-    ignore (expect ps "RARROW"))
+    ignore (expect ps RPAREN);
+    ignore (expect ps RARROW))
 
 let r_requires (ps:pstate) (_:ctx) : ML term =
   let i0 = !ps.idx in
@@ -1426,11 +1427,11 @@ let r_ensures (ps:pstate) (_:ctx) : ML term =
 let r_decreases (ps:pstate) (_:ctx) : ML term =
   let i0 = !ps.idx in
   ignore (advance ps);
-  if accept ps "LBRACE_COLON_WELL_FOUNDED" then begin
+  if accept ps LBRACE_COLON_WELL_FOUNDED then begin
     let i_t = !ps.idx in
     let t = p_noSeqTerm ps in
     let r_t = loc ps i_t in
-    ignore (expect ps "RBRACE");
+    ignore (expect ps RBRACE);
     match t.tm with
     | App (t1, t2, _) ->
       let ot = mk_term (WFOrder (t1, t2)) r_t Type_level in
@@ -1441,19 +1442,19 @@ let r_decreases (ps:pstate) (_:ctx) : ML term =
     mk_term (Decreases t) (loc ps i0) Type_level
   end
 
-let op_of_kw (ps:pstate) (t:L.token) (plain:string) : ML (option ident) =
+let op_of_kw (ps:pstate) (t:L.token) (plain:token_kind) : ML (option ident) =
   if t.kind = plain then None
   else Some (mk_id_tok ps t ("let" ^ t.text))
 
 let r_if (ps:pstate) (_:ctx) : ML term =
   let i0 = !ps.idx in
   let t = advance ps in
-  let op = op_of_kw ps t "IF" in
+  let op = op_of_kw ps t IF in
   let e1 = p_noSeqTerm ps in
   let ret_opt = match_returning ps in
-  ignore (expect ps "THEN");
+  ignore (expect ps THEN);
   let e2 = p_noSeqTerm ps in
-  if accept ps "ELSE" then begin
+  if accept ps ELSE then begin
     let e3 = p_noSeqTerm ps in
     mk_term (If (e1, op, ret_opt, e2, e3)) (loc ps i0) Expr
   end else begin
@@ -1465,7 +1466,7 @@ let r_try (ps:pstate) (_:ctx) : ML term =
   let i0 = !ps.idx in
   ignore (advance ps);
   let e1 = p_term ps in
-  ignore (expect ps "WITH");
+  ignore (expect ps WITH);
   let pbs = branches_nonempty ps in
   let branches = focusBranches pbs (loc ps i0) in
   mk_term (TryWith (e1, branches)) (loc ps i0) Expr
@@ -1473,10 +1474,10 @@ let r_try (ps:pstate) (_:ctx) : ML term =
 let r_match (ps:pstate) (_:ctx) : ML term =
   let i0 = !ps.idx in
   let t = advance ps in
-  let op = op_of_kw ps t "MATCH" in
+  let op = op_of_kw ps t MATCH in
   let e = p_term ps in
   let ret_opt = match_returning ps in
-  ignore (expect ps "WITH");
+  ignore (expect ps WITH);
   let pbs = branches ps in
   let branches = focusBranches pbs (loc ps i0) in
   mk_term (Match (e, op, ret_opt, branches)) (loc ps i0) Expr
@@ -1485,12 +1486,12 @@ let r_match (ps:pstate) (_:ctx) : ML term =
 let r_let (ps:pstate) (_:ctx) : ML term =
   let i0 = !ps.idx in
   let attrs = if is_attribute_start ps then Some (attribute ps) else None in
-  ignore (expect ps "LET");
-  if None? attrs && accept ps "OPEN" then begin
+  ignore (expect ps LET);
+  if None? attrs && accept ps OPEN then begin
     let i_t = !ps.idx in
     let t = p_term ps in
     let r_t = loc ps i_t in
-    ignore (expect ps "IN");
+    ignore (expect ps IN);
     let e = p_term ps in
     match t.tm with
     | Ascribed (r, rty, None, _) -> mk_term (LetOpenRecord (r, rty, e)) (loc ps i0) Expr
@@ -1501,23 +1502,23 @@ let r_let (ps:pstate) (_:ctx) : ML term =
   end else begin
     let i_q = !ps.idx in
     let q =
-      if accept ps "REC" then LocalRec
-      else if accept ps "UNFOLD" then LocalUnfold
+      if accept ps REC then LocalRec
+      else if accept ps UNFOLD then LocalUnfold
       else LocalNoLetQualifier
     in
     let i_q1 = !ps.idx in
     let lb = letbinding ps in
     let i_lb1 = !ps.idx in
     let rec more () : ML (list (option attributes_ & (bool & (pattern & term)))) =
-      if is ps "AND" || (is_attribute_start ps) then begin
+      if is ps AND || (is_attribute_start ps) then begin
         let a = if is_attribute_start ps then Some (attribute ps) else None in
-        ignore (expect ps "AND");
+        ignore (expect ps AND);
         let lb = letbinding ps in
         (a, lb) :: more ()
       end else []
     in
     let lbs = more () in
-    ignore (expect ps "IN");
+    ignore (expect ps IN);
     let e = p_term ps in
     let lbs = (attrs, lb) :: lbs in
     let lbs = focusAttrLetBindings lbs (rng2 ps i_q i_q1 i_q i_lb1) in
@@ -1531,7 +1532,7 @@ let r_let_op (ps:pstate) (_:ctx) : ML term =
   let op = mk_id_tok ps t ("let" ^ t.text) in
   let b = letoperatorbinding ps in
   let rec more () : ML (list (ident & (pattern & term))) =
-    if is ps "AND_OP" then begin
+    if is ps AND_OP then begin
       let t = advance ps in
       let op = mk_id_tok ps t ("and" ^ t.text) in
       let b = letoperatorbinding ps in
@@ -1539,7 +1540,7 @@ let r_let_op (ps:pstate) (_:ctx) : ML term =
     end else []
   in
   let lbs = (op, b) :: more () in
-  ignore (expect ps "IN");
+  ignore (expect ps IN);
   let e = p_term ps in
   mk_term (LetOperator (map (fun (op, (pat, tm)) -> (op, pat, tm)) lbs, e)) (loc ps i0) Expr
 
@@ -1561,7 +1562,7 @@ let r_assert (ps:pstate) (_:ctx) : ML term =
   let i0 = !ps.idx in
   let t = advance ps in
   let e = p_noSeqTerm ps in
-  if accept ps "BY" then begin
+  if accept ps BY then begin
     let i_tac = !ps.idx in
     let tac = p_typ ps in
     let tac = thunk2_at ps i_tac tac in
@@ -1575,7 +1576,7 @@ let r_assert (ps:pstate) (_:ctx) : ML term =
 let r_underscore_by (ps:pstate) (_:ctx) : ML term =
   let i0 = !ps.idx in
   let u = advance ps in
-  ignore (expect ps "BY");
+  ignore (expect ps BY);
   let i_tac = !ps.idx in
   let tac = atomicTerm ps in
   let tac = thunk_at ps i_tac tac in
@@ -1593,15 +1594,15 @@ let r_calc (ps:pstate) (_:ctx) : ML term =
   let i0 = !ps.idx in
   ignore (advance ps);
   let rel = atomicTerm ps in
-  ignore (expect ps "LBRACE");
+  ignore (expect ps LBRACE);
   let init = p_noSeqTerm ps in
-  ignore (expect ps "SEMICOLON");
+  ignore (expect ps SEMICOLON);
   let rec steps () : ML (list calc_step) =
-    if is ps "RBRACE" then []
+    if is ps RBRACE then []
     else let s = calcStep ps in s :: steps ()
   in
   let steps = steps () in
-  ignore (expect ps "RBRACE");
+  ignore (expect ps RBRACE);
   mk_term (CalcProof (rel, init, steps)) (loc ps i0) Expr
 
 (* Is [t] the binary operator [op] applied at the top (not in parentheses)? *)
@@ -1613,23 +1614,23 @@ let as_binop (op:string) (t:term) : option (term & term) =
 let r_intro (ps:pstate) (_:ctx) : ML term =
   let i0 = !ps.idx in
   ignore (advance ps);
-  if accept ps "FORALL" then begin
+  if accept ps FORALL then begin
     let bs = binders ps in
-    ignore (expect ps "DOT");
+    ignore (expect ps DOT);
     let p = p_noSeqTerm ps in
-    ignore (expect ps "WITH");
+    ignore (expect ps WITH);
     let e = p_noSeqTerm ps in
     mk_term (IntroForall (bs, p, e)) (loc ps i0) Expr
   end
-  else if accept ps "EXISTS" then begin
+  else if accept ps EXISTS then begin
     let bs = binders ps in
-    ignore (expect ps "DOT");
+    ignore (expect ps DOT);
     let p = p_noSeqTerm ps in
-    ignore (expect ps "WITH");
+    ignore (expect ps WITH);
     let i_vs = !ps.idx in
     let vs = list_atomic ps in
     let r_vs = loc ps i_vs in
-    ignore (expect ps "AND");
+    ignore (expect ps AND);
     let e = p_noSeqTerm ps in
     if length bs <> length vs
     then syntax_error r_vs "Syntax error: expected instantiations for all binders"
@@ -1637,9 +1638,9 @@ let r_intro (ps:pstate) (_:ctx) : ML term =
   end
   else begin
     let p = p_tmArrowFormula ps in
-    if accept ps "IMPLIES" then begin
+    if accept ps IMPLIES then begin
       let q = p_tmFormula ps in
-      ignore (expect ps "WITH");
+      ignore (expect ps WITH);
       let i_e = !ps.idx in
       let e = p_noSeqTerm ps in
       let rec head (t:term) : term =
@@ -1663,8 +1664,8 @@ let r_intro (ps:pstate) (_:ctx) : ML term =
     end
     else match as_binop "\\/" p with
     | Some (p, q) ->
-      ignore (expect ps "WITH");
-      let lr = expect ps "NAME" in
+      ignore (expect ps WITH);
+      let lr = expect ps NAME in
       let e = p_noSeqTerm ps in
       let b =
         if lr.text = "Left" then true
@@ -1675,9 +1676,9 @@ let r_intro (ps:pstate) (_:ctx) : ML term =
     | None ->
       match as_binop "/\\" p with
       | Some (p, q) ->
-        ignore (expect ps "WITH");
+        ignore (expect ps WITH);
         let e1 = p_noSeqTerm ps in
-        ignore (expect ps "AND");
+        ignore (expect ps AND);
         let e2 = p_noSeqTerm ps in
         mk_term (IntroAnd (p, q, e1, e2)) (loc ps i0) Expr
       | None -> fail ps
@@ -1686,80 +1687,80 @@ let r_intro (ps:pstate) (_:ctx) : ML term =
 let r_elim (ps:pstate) (_:ctx) : ML term =
   let i0 = !ps.idx in
   ignore (advance ps);
-  if accept ps "FORALL" then begin
+  if accept ps FORALL then begin
     let xs = binders ps in
-    ignore (expect ps "DOT");
+    ignore (expect ps DOT);
     let p = p_noSeqTerm ps in
-    ignore (expect ps "WITH");
+    ignore (expect ps WITH);
     let vs = list_atomic ps in
     mk_term (ElimForall (xs, p, vs)) (loc ps i0) Expr
   end
-  else if accept ps "EXISTS" then begin
+  else if accept ps EXISTS then begin
     let bs = binders ps in
-    ignore (expect ps "DOT");
+    ignore (expect ps DOT);
     let p = p_noSeqTerm ps in
-    if is ps "RETURNS" then begin
+    if is ps RETURNS then begin
       let i_ret = !ps.idx in
       ignore (advance ps);
       let _q = p_noSeqTerm ps in
-      ignore (expect ps "WITH");
+      ignore (expect ps WITH);
       let _y = binders ps in
-      ignore (expect ps "DOT");
+      ignore (expect ps DOT);
       let _e = p_noSeqTerm ps in
       syntax_error (loc ps i_ret)
         "Syntax error: 'eliminate exists' no longer takes a 'returns' clause nor a name for the hypothesis. Write 'eliminate exists x1...xn. P with e' instead; x1...xn are bound in e, and P is available in the proof context of e."
     end else begin
-      ignore (expect ps "WITH");
+      ignore (expect ps WITH);
       let e = p_noSeqTerm ps in
       mk_term (ElimExists (bs, p, e)) (loc ps i0) Expr
     end
   end
   else begin
     let p = p_tmArrowFormula ps in
-    if accept ps "IMPLIES" then begin
+    if accept ps IMPLIES then begin
       let q = p_tmFormula ps in
-      ignore (expect ps "WITH");
+      ignore (expect ps WITH);
       let e = p_noSeqTerm ps in
       mk_term (ElimImplies (p, q, e)) (loc ps i0) Expr
     end
     else match as_binop "\\/" p with
     | Some (p, q) ->
-      if is ps "RETURNS" then begin
+      if is ps RETURNS then begin
         let i_ret = !ps.idx in
         ignore (advance ps);
         let _r = p_noSeqTerm ps in
-        ignore (expect ps "WITH");
+        ignore (expect ps WITH);
         let _x = binders ps in
-        ignore (expect ps "DOT");
+        ignore (expect ps DOT);
         let _e1 = p_noSeqTerm ps in
-        ignore (expect ps "AND");
+        ignore (expect ps AND);
         let _y = binders ps in
-        ignore (expect ps "DOT");
+        ignore (expect ps DOT);
         let _e2 = p_noSeqTerm ps in
         syntax_error (loc ps i_ret)
           "Syntax error: 'eliminate _ \\/ _' no longer takes a 'returns' clause nor names for the hypotheses. Write 'eliminate P \\/ Q with e1 and e2' instead; P is available in the proof context of e1, and Q in that of e2."
       end else begin
-        ignore (expect ps "WITH");
+        ignore (expect ps WITH);
         let e1 = p_noSeqTerm ps in
-        ignore (expect ps "AND");
+        ignore (expect ps AND);
         let e2 = p_noSeqTerm ps in
         mk_term (ElimOr (p, q, e1, e2)) (loc ps i0) Expr
       end
     | None ->
       match as_binop "/\\" p with
       | Some (p, q) ->
-        if is ps "RETURNS" then begin
+        if is ps RETURNS then begin
           let i_ret = !ps.idx in
           ignore (advance ps);
           let _r = p_noSeqTerm ps in
-          ignore (expect ps "WITH");
+          ignore (expect ps WITH);
           let _xs = binders ps in
-          ignore (expect ps "DOT");
+          ignore (expect ps DOT);
           let _e = p_noSeqTerm ps in
           syntax_error (loc ps i_ret)
             "Syntax error: 'eliminate _ /\\ _' no longer takes a 'returns' clause nor names for the hypotheses. Write 'eliminate P /\\ Q with e' instead; both P and Q are available in the proof context of e."
         end else begin
-          ignore (expect ps "WITH");
+          ignore (expect ps WITH);
           let e = p_noSeqTerm ps in
           mk_term (ElimAnd (p, q, e)) (loc ps i0) Expr
         end
@@ -1770,13 +1771,13 @@ let r_elim (ps:pstate) (_:ctx) : ML term =
 let r_long_left_arrow (ps:pstate) (_:ctx) : ML term =
   let i0 = !ps.idx in
   let x = lidentOrUnderscore ps in
-  ignore (expect ps "LONG_LEFT_ARROW");
+  ignore (expect ps LONG_LEFT_ARROW);
   let e1 = p_noSeqTerm ps in
-  ignore (expect ps "SEMICOLON");
+  ignore (expect ps SEMICOLON);
   let e2 = p_term ps in
   mk_term (Bind (x, e1, e2)) (loc ps i0) Expr
 
-let next_is (k:string) (ps:pstate) (_:ctx) : ML bool = peek_kind_n ps 1 = k
+let next_is (k:token_kind) (ps:pstate) (_:ctx) : ML bool = peek_kind_n ps 1 = k
 
 (* ---------------------------------------------------------------------- *)
 (* Trailing rules                                                         *)
@@ -1796,10 +1797,10 @@ let const_name (s:string) (_:L.token) : string = s
 
 (* Left-associative operators at [l]: lhs at l, rhs at l+1;
    right-associative: lhs at l+1, rhs at l. *)
-let left_op (key:string) (l:int) (name:L.token -> string) (lv:level) : string & trailing_rule =
-  (key, trule key l l tguard (binop name (l + 1) lv))
-let right_op (key:string) (l:int) (name:L.token -> string) (lv:level) : string & trailing_rule =
-  (key, trule key l (l + 1) tguard (binop name l lv))
+let left_op (key:token_kind) (l:int) (name:L.token -> string) (lv:level) : token_kind & trailing_rule =
+  (key, trule "binop" l l tguard (binop name (l + 1) lv))
+let right_op (key:token_kind) (l:int) (name:L.token -> string) (lv:level) : token_kind & trailing_rule =
+  (key, trule "binop" l (l + 1) tguard (binop name l lv))
 
 (* e1; e2 *)
 let t_seq (ps:pstate) (ctx:ctx) (lhs:term) (i0:pos) : ML term =
@@ -1842,7 +1843,7 @@ let t_ascribe (eq:bool) (ps:pstate) (_:ctx) (lhs:term) (i0:pos) : ML term =
   ignore (advance ps);
   let t = p_typ ps in
   let tac, r =
-    if accept ps "BY" then begin
+    if accept ps BY then begin
       let i_t = !ps.idx in
       let tac = p_typ ps in
       Some (thunk_at ps i_t tac), loc ps i0
@@ -1871,7 +1872,7 @@ let t_arrow (ps:pstate) (ctx:ctx) (lhs:term) (i0:pos) : ML term =
 let t_tuple (ps:pstate) (ctx:ctx) (lhs:term) (i0:pos) : ML term =
   let i_e = !ps.idx in
   let rec go () : ML (list term) =
-    if accept ps "COMMA" then
+    if accept ps COMMA then
       let e = term_at ps ctx 71 in
       e :: go ()
     else []
@@ -1906,7 +1907,7 @@ let t_sum (ps:pstate) (ctx:ctx) (lhs:term) (i0:pos) : ML term =
 let t_backtick (ps:pstate) (ctx:ctx) (lhs:term) (i0:pos) : ML term =
   ignore (advance ps);
   let op = term_at ps ctx 86 in
-  ignore (expect ps "BACKTICK");
+  ignore (expect ps BACKTICK);
   let e2 = term_at ps ctx 86 in
   mkApp op [(lhs, Infix); (e2, Nothing)] (loc ps i0)
 
@@ -1914,86 +1915,86 @@ let t_backtick (ps:pstate) (ctx:ctx) (lhs:term) (i0:pos) : ML term =
 (* The grammar of F* terms                                                *)
 (* ---------------------------------------------------------------------- *)
 
-let leading_rules : list (string & leading_rule) = [
-  "MINUS",         lrule "uminus" 80 80 always r_uminus;
-  "QUOTE",         lrule "quote" 80 80 always (r_quote Dynamic);
-  "BACKTICK",      lrule "static_quote" 80 80 always (r_quote Static);
-  "BACKTICK_AT",   lrule "antiquote_quote" 80 80 always r_backtick_at;
-  "BACKTICK_HASH", lrule "antiquote" 80 80 always r_backtick_hash;
-  "BACKTICK_PERC", lrule "vquote" 100 100 always r_backtick_perc;
-  "TILDE",         lrule "tilde" 100 100 always r_tilde;
-  "LBRACE",        lrule "record" 100 100 always r_record;
-  "FUN",           lrule "fun" 100 100 not_noref r_only_trailing;
-  "FORALL",        lrule "forall" 100 100 not_noref r_only_trailing;
-  "EXISTS",        lrule "exists" 100 100 not_noref r_only_trailing;
-  "FORALL_OP",     lrule "forall_op" 100 100 not_noref r_only_trailing;
-  "EXISTS_OP",     lrule "exists_op" 100 100 not_noref r_only_trailing;
-  "LBRACE_BAR",    lrule "tc_arrow" 30 30 always r_domain;
-  "HASH",          lrule "implicit_arrow" 30 30 always r_domain;
-  "DOLLAR",        lrule "equality_arrow" 30 30 always r_domain;
-  "LBRACK_AT_AT_AT", lrule "attr_arrow" 30 30 always r_domain;
-  "LPAREN",        lrule "paren_arrow" 30 30 paren_domain_guard r_domain;
-  "REQUIRES",      lrule "requires" 1 1 always r_requires;
-  "ENSURES",       lrule "ensures" 1 1 always r_ensures;
-  "DECREASES",     lrule "decreases" 1 1 always r_decreases;
-  "IF",            lrule "if" 1 1 always r_if;
-  "IF_OP",         lrule "if_op" 1 1 always r_if;
-  "TRY",           lrule "try" 1 1 always r_try;
-  "MATCH",         lrule "match" 1 1 always r_match;
-  "MATCH_OP",      lrule "match_op" 1 1 always r_match;
-  "LET",           lrule "let" 1 1 always r_let;
-  "LBRACK_AT",     lrule "attr_let" 1 1 always r_let;
-  "LBRACK_AT_AT",  lrule "attr_let" 1 1 always r_let;
-  "LET_OP",        lrule "let_op" 1 1 always r_let_op;
-  "FUNCTION",      lrule "function" 1 1 always r_function;
-  "ASSUME",        lrule "assume" 1 1 always r_assume;
-  "ASSERT",        lrule "assert" 1 1 always r_assert;
-  "UNDERSCORE",    lrule "underscore_by" 1 1 (next_is "BY") r_underscore_by;
-  "SYNTH",         lrule "synth" 1 1 always r_synth;
-  "CALC",          lrule "calc" 1 1 always r_calc;
-  "INTRO",         lrule "introduce" 1 1 always r_intro;
-  "ELIM",          lrule "eliminate" 1 1 always r_elim;
-  "IDENT",         lrule "bind" 0 0 (next_is "LONG_LEFT_ARROW") r_long_left_arrow;
-  "UNDERSCORE",    lrule "bind" 0 0 (next_is "LONG_LEFT_ARROW") r_long_left_arrow;
+let leading_rules : list (token_kind & leading_rule) = [
+  MINUS,         lrule "uminus" 80 80 always r_uminus;
+  QUOTE,         lrule "quote" 80 80 always (r_quote Dynamic);
+  BACKTICK,      lrule "static_quote" 80 80 always (r_quote Static);
+  BACKTICK_AT,   lrule "antiquote_quote" 80 80 always r_backtick_at;
+  BACKTICK_HASH, lrule "antiquote" 80 80 always r_backtick_hash;
+  BACKTICK_PERC, lrule "vquote" 100 100 always r_backtick_perc;
+  TILDE,         lrule "tilde" 100 100 always r_tilde;
+  LBRACE,        lrule "record" 100 100 always r_record;
+  FUN,           lrule "fun" 100 100 not_noref r_only_trailing;
+  FORALL,        lrule "forall" 100 100 not_noref r_only_trailing;
+  EXISTS,        lrule "exists" 100 100 not_noref r_only_trailing;
+  FORALL_OP,     lrule "forall_op" 100 100 not_noref r_only_trailing;
+  EXISTS_OP,     lrule "exists_op" 100 100 not_noref r_only_trailing;
+  LBRACE_BAR,    lrule "tc_arrow" 30 30 always r_domain;
+  HASH,          lrule "implicit_arrow" 30 30 always r_domain;
+  DOLLAR,        lrule "equality_arrow" 30 30 always r_domain;
+  LBRACK_AT_AT_AT, lrule "attr_arrow" 30 30 always r_domain;
+  LPAREN,        lrule "paren_arrow" 30 30 paren_domain_guard r_domain;
+  REQUIRES,      lrule "requires" 1 1 always r_requires;
+  ENSURES,       lrule "ensures" 1 1 always r_ensures;
+  DECREASES,     lrule "decreases" 1 1 always r_decreases;
+  IF,            lrule "if" 1 1 always r_if;
+  IF_OP,         lrule "if_op" 1 1 always r_if;
+  TRY,           lrule "try" 1 1 always r_try;
+  MATCH,         lrule "match" 1 1 always r_match;
+  MATCH_OP,      lrule "match_op" 1 1 always r_match;
+  LET,           lrule "let" 1 1 always r_let;
+  LBRACK_AT,     lrule "attr_let" 1 1 always r_let;
+  LBRACK_AT_AT,  lrule "attr_let" 1 1 always r_let;
+  LET_OP,        lrule "let_op" 1 1 always r_let_op;
+  FUNCTION,      lrule "function" 1 1 always r_function;
+  ASSUME,        lrule "assume" 1 1 always r_assume;
+  ASSERT,        lrule "assert" 1 1 always r_assert;
+  UNDERSCORE,    lrule "underscore_by" 1 1 (next_is BY) r_underscore_by;
+  SYNTH,         lrule "synth" 1 1 always r_synth;
+  CALC,          lrule "calc" 1 1 always r_calc;
+  INTRO,         lrule "introduce" 1 1 always r_intro;
+  ELIM,          lrule "eliminate" 1 1 always r_elim;
+  IDENT,         lrule "bind" 0 0 (next_is LONG_LEFT_ARROW) r_long_left_arrow;
+  UNDERSCORE,    lrule "bind" 0 0 (next_is LONG_LEFT_ARROW) r_long_left_arrow;
 ]
 
-let trailing_rules : list (string & trailing_rule) = [
-  "SEMICOLON",    trule "seq" 0 1 tguard t_seq;
-  "SEMICOLON_OP", trule "seq_op" 0 1 tguard t_seq_op;
-  "LARROW",       trule "larrow" 1 0 larrow_guard t_larrow;
-  "SUBTYPE",      trule "subtype" 5 10 tguard (t_ascribe false);
-  "EQUALTYPE",    trule "equaltype" 5 10 tguard (t_ascribe true);
-  right_op "IFF" 10 (const_name "<==>") Formula;
-  right_op "IMPLIES" 20 (const_name "==>") Formula;
-  "RARROW",       trule "arrow" 30 31 tguard t_arrow;
-  left_op "DISJUNCTION" 40 (const_name "\\/") Formula;
-  left_op "CONJUNCTION" 50 (const_name "/\\") Formula;
-  "COMMA",        trule "tuple" 60 71 tguard t_tuple;
-  ("COLON_EQUALS", trule "COLON_EQUALS" 71 72 tguard (binop (const_name ":=") 72 Un));
-  left_op "OPINFIX0a" 72 tok_text Un;
-  left_op "OPINFIX0b" 73 tok_text Un;
-  left_op "OPINFIX0c" 74 tok_text Un;
-  left_op "EQUALS" 74 (const_name "=") Un;
-  left_op "OPINFIX0d" 75 tok_text Un;
-  left_op "PIPE_RIGHT" 76 (const_name "|>") Un;
-  right_op "PIPE_LEFT" 77 (const_name "<|") Un;
-  right_op "OPINFIX1" 78 tok_text Un;
-  left_op "OPINFIX2" 79 tok_text Un;
-  left_op "MINUS" 79 (const_name "-") Un;
-  "COLON_COLON",  trule "cons" 81 82 tguard t_cons;
-  "AMP",          trule "sum" 82 83 tguard t_sum;
-  left_op "OPINFIX3L" 83 tok_text Un;
-  right_op "OPINFIX3R" 84 tok_text Un;
-  "BACKTICK",     trule "infix_app" 85 85 tguard t_backtick;
-  right_op "OPINFIX4" 86 tok_text Un;
+let trailing_rules : list (token_kind & trailing_rule) = [
+  SEMICOLON,    trule "seq" 0 1 tguard t_seq;
+  SEMICOLON_OP, trule "seq_op" 0 1 tguard t_seq_op;
+  LARROW,       trule "larrow" 1 0 larrow_guard t_larrow;
+  SUBTYPE,      trule "subtype" 5 10 tguard (t_ascribe false);
+  EQUALTYPE,    trule "equaltype" 5 10 tguard (t_ascribe true);
+  right_op IFF 10 (const_name "<==>") Formula;
+  right_op IMPLIES 20 (const_name "==>") Formula;
+  RARROW,       trule "arrow" 30 31 tguard t_arrow;
+  left_op DISJUNCTION 40 (const_name "\\/") Formula;
+  left_op CONJUNCTION 50 (const_name "/\\") Formula;
+  COMMA,        trule "tuple" 60 71 tguard t_tuple;
+  (COLON_EQUALS, trule "COLON_EQUALS" 71 72 tguard (binop (const_name ":=") 72 Un));
+  left_op OPINFIX0a 72 tok_text Un;
+  left_op OPINFIX0b 73 tok_text Un;
+  left_op OPINFIX0c 74 tok_text Un;
+  left_op EQUALS 74 (const_name "=") Un;
+  left_op OPINFIX0d 75 tok_text Un;
+  left_op PIPE_RIGHT 76 (const_name "|>") Un;
+  right_op PIPE_LEFT 77 (const_name "<|") Un;
+  right_op OPINFIX1 78 tok_text Un;
+  left_op OPINFIX2 79 tok_text Un;
+  left_op MINUS 79 (const_name "-") Un;
+  COLON_COLON,  trule "cons" 81 82 tguard t_cons;
+  AMP,          trule "sum" 82 83 tguard t_sum;
+  left_op OPINFIX3L 83 tok_text Un;
+  right_op OPINFIX3R 84 tok_text Un;
+  BACKTICK,     trule "infix_app" 85 85 tguard t_backtick;
+  right_op OPINFIX4 86 tok_text Un;
 ]
 
-let rec add_all_leading (g:grammar) (rs:list (string & leading_rule)) : ML grammar =
+let rec add_all_leading (g:grammar) (rs:list (token_kind & leading_rule)) : ML grammar =
   match rs with
   | [] -> g
   | (k, r) :: rs -> add_all_leading (add_leading g k r) rs
 
-let rec add_all_trailing (g:grammar) (rs:list (string & trailing_rule)) : ML grammar =
+let rec add_all_trailing (g:grammar) (rs:list (token_kind & trailing_rule)) : ML grammar =
   match rs with
   | [] -> g
   | (k, r) :: rs -> add_all_trailing (add_trailing g k r) rs
@@ -2005,23 +2006,23 @@ let fstar_grammar : grammar =
 (* Declarations                                                           *)
 (* ---------------------------------------------------------------------- *)
 
-let p_string (ps:pstate) : ML string = (expect ps "STRING").text
+let p_string (ps:pstate) : ML string = (expect ps STRING).text
 
 let opt_string (ps:pstate) : ML (option string) =
-  if is ps "STRING" then Some (p_string ps) else None
+  if is ps STRING then Some (p_string ps) else None
 
 let p_pragma (ps:pstate) : ML pragma =
   let t = advance ps in
   match t.kind with
-  | "PRAGMA_SHOW_OPTIONS" -> ShowOptions
-  | "PRAGMA_SET_OPTIONS" -> SetOptions (p_string ps)
-  | "PRAGMA_RESET_OPTIONS" -> ResetOptions (opt_string ps)
-  | "PRAGMA_PUSH_OPTIONS" -> PushOptions (opt_string ps)
-  | "PRAGMA_POP_OPTIONS" -> PopOptions
-  | "PRAGMA_RESTART_SOLVER" -> RestartSolver
-  | "PRAGMA_PRINT_EFFECTS_GRAPH" -> PrintEffectsGraph
-  | "PRAGMA_CHECK" -> Check (p_term ps)
-  | "PRAGMA_EVAL" -> Eval (p_term ps)
+  | PRAGMA_SHOW_OPTIONS -> ShowOptions
+  | PRAGMA_SET_OPTIONS -> SetOptions (p_string ps)
+  | PRAGMA_RESET_OPTIONS -> ResetOptions (opt_string ps)
+  | PRAGMA_PUSH_OPTIONS -> PushOptions (opt_string ps)
+  | PRAGMA_POP_OPTIONS -> PopOptions
+  | PRAGMA_RESTART_SOLVER -> RestartSolver
+  | PRAGMA_PRINT_EFFECTS_GRAPH -> PrintEffectsGraph
+  | PRAGMA_CHECK -> Check (p_term ps)
+  | PRAGMA_EVAL -> Eval (p_term ps)
   | _ -> fail ps
 
 let logic_qualifier_deprecation_warning =
@@ -2032,32 +2033,32 @@ let p_qualifier (ps:pstate) : ML qualifier =
   let r = tok_rng ps t in
   let q =
     match t.kind with
-    | "ASSUME" -> Assumption
-    | "INLINE_FOR_EXTRACTION" -> Inline_for_extraction
-    | "UNFOLD" -> Unfold_for_unification_and_vcgen
-    | "IRREDUCIBLE" -> Irreducible
-    | "NOEXTRACT" -> NoExtract
-    | "TOTAL" -> TotalEffect
-    | "PRIVATE" -> Private
-    | "NOEQUALITY" -> Noeq
-    | "UNOPTEQUALITY" -> Unopteq
-    | "NEW" -> New
-    | "LOGIC" -> Logic
-    | "OPAQUE" -> Opaque
-    | "REIFIABLE" -> Reifiable
-    | "REFLECTABLE" -> Reflectable
-    | "INLINE" | "UNFOLDABLE" -> Logic (* handled below *)
+    | ASSUME -> Assumption
+    | INLINE_FOR_EXTRACTION -> Inline_for_extraction
+    | UNFOLD -> Unfold_for_unification_and_vcgen
+    | IRREDUCIBLE -> Irreducible
+    | NOEXTRACT -> NoExtract
+    | TOTAL -> TotalEffect
+    | PRIVATE -> Private
+    | NOEQUALITY -> Noeq
+    | UNOPTEQUALITY -> Unopteq
+    | NEW -> New
+    | LOGIC -> Logic
+    | OPAQUE -> Opaque
+    | REIFIABLE -> Reifiable
+    | REFLECTABLE -> Reflectable
+    | INLINE | UNFOLDABLE -> Logic (* handled below *)
     | _ -> fail ps
   in
   ignore (advance ps);
   match t.kind with
-  | "INLINE" ->
+  | INLINE ->
     E.raise_error_text r Codes.Fatal_InlineRenamedAsUnfold
       "The 'inline' qualifier has been renamed to 'unfold'"
-  | "UNFOLDABLE" ->
+  | UNFOLDABLE ->
     E.raise_error_text r Codes.Fatal_UnfoldableDeprecated
       "The 'unfoldable' qualifier is no longer denotable; it is the default qualifier so just omit it"
-  | "LOGIC" ->
+  | LOGIC ->
     E.log_issue_text r Codes.Warning_logicqualifier logic_qualifier_deprecation_warning;
     Logic
   | _ -> q
@@ -2075,29 +2076,29 @@ let rec decorations (ps:pstate) : ML (list decoration) =
 let recordFieldDecl (ps:pstate) : ML (ident & aqual & list term & term) =
   let (aq, attrs) = aqual_attrs ps in
   let lid = lidentOrOperator ps in
-  ignore (expect ps "COLON");
+  ignore (expect ps COLON);
   let t = p_typ ps in
   (lid, aq, attrs, t)
 
 let recordDefinition (ps:pstate) : ML tycon_record =
-  ignore (expect ps "LBRACE");
-  let fs = rflex_nonempty ps "SEMICOLON" "RBRACE" recordFieldDecl in
-  ignore (expect ps "RBRACE");
+  ignore (expect ps LBRACE);
+  let fs = rflex_nonempty ps SEMICOLON RBRACE recordFieldDecl in
+  ignore (expect ps RBRACE);
   fs
 
 let constructorPayload (ps:pstate) : ML (option constructor_payload) =
-  if accept ps "COLON" then Some (VpArbitrary (p_typ ps))
-  else if accept ps "OF" then Some (VpOfNotation (p_typ ps))
-  else if is ps "LBRACE" then begin
+  if accept ps COLON then Some (VpArbitrary (p_typ ps))
+  else if accept ps OF then Some (VpOfNotation (p_typ ps))
+  else if is ps LBRACE then begin
     let fields = recordDefinition ps in
-    let t = opt ps "COLON" p_typ in
+    let t = opt ps COLON p_typ in
     Some (VpRecord (fields, t))
   end
   else None
 
 let constructorDecl (ps:pstate) : ML (ident & option constructor_payload & list term) =
-  ignore (expect ps "BAR");
-  let attrs = if is ps "LBRACK_AT_AT_AT" then binderAttributes ps else [] in
+  ignore (expect ps BAR);
+  let attrs = if is ps LBRACK_AT_AT_AT then binderAttributes ps else [] in
   let uid = p_uident ps in
   let payload = constructorPayload ps in
   (uid, payload, attrs)
@@ -2106,16 +2107,16 @@ let typeDecl (ps:pstate) : ML tycon =
   let lid = p_ident ps in
   let tparams = binders ps in
   let kopt =
-    if accept ps "COLON" then
+    if accept ps COLON then
       let k = p_tmArrowNoEq ps in
       Some { k with level = Kind }
     else None
   in
-  if accept ps "EQUALS" then begin
+  if accept ps EQUALS then begin
     let k = peek_kind ps in
-    if k = "BAR" then begin
+    if k = BAR then begin
       let rec go () : ML (list (ident & option constructor_payload & list term)) =
-        if is ps "BAR" then
+        if is ps BAR then
           let c = constructorDecl ps in
           c :: go ()
         else []
@@ -2126,9 +2127,9 @@ let typeDecl (ps:pstate) : ML tycon =
     end
     else begin
       let record =
-        if k = "LBRACE" || k = "LBRACK_AT_AT_AT" then
+        if k = LBRACE || k = LBRACK_AT_AT_AT then
           attempt ps (fun () ->
-            let attrs = if is ps "LBRACK_AT_AT_AT" then binderAttributes ps else [] in
+            let attrs = if is ps LBRACK_AT_AT_AT then binderAttributes ps else [] in
             let fs = recordDefinition ps in
             (attrs, fs))
         else None
@@ -2138,7 +2139,7 @@ let typeDecl (ps:pstate) : ML tycon =
         check_id lid;
         TyconRecord (lid, tparams, kopt, attrs, fs)
       | None ->
-        if FStar.List.Tot.mem k start_of_next_decl_kinds || k = "AND" then begin
+        if FStar.List.Tot.mem k start_of_next_decl_kinds || k = AND then begin
           check_id lid;
           TyconVariant (lid, tparams, kopt, [])
         end else begin
@@ -2155,12 +2156,12 @@ let typeDecl (ps:pstate) : ML tycon =
 
 (* effect { M binders with { combinators } } *)
 let effectDefinition (ps:pstate) : ML effect_decl =
-  ignore (expect ps "LBRACE");
+  ignore (expect ps LBRACE);
   let lid = p_uident ps in
   let bs = binders ps in
-  ignore (expect ps "WITH");
+  ignore (expect ps WITH);
   let r = p_tmNoEq ps in
-  ignore (expect ps "RBRACE");
+  ignore (expect ps RBRACE);
   let rec decls (r:term) : ML (list decl) =
     match r.tm with
     | Paren r -> decls r
@@ -2175,32 +2176,32 @@ let effectDefinition (ps:pstate) : ML effect_decl =
 
 let subEffect (ps:pstate) : ML lift =
   let src = p_quident ps in
-  ignore (expect ps "SQUIGGLY_RARROW");
+  ignore (expect ps SQUIGGLY_RARROW);
   let tgt = p_quident ps in
-  let lift_op = opt ps "EQUALS" p_typ in
+  let lift_op = opt ps EQUALS p_typ in
   { msource = src; mdest = tgt; lift_op = lift_op }
 
 let restriction (ps:pstate) : ML SS.restriction =
-  if accept ps "LBRACE" then begin
+  if accept ps LBRACE then begin
     let item (ps:pstate) : ML (ident & option ident) =
       let id = identOrOperator ps in
-      let renamed = opt ps "AS" identOrOperator in
+      let renamed = opt ps AS identOrOperator in
       (id, renamed)
     in
-    let ids = rflex ps "COMMA" "RBRACE" item in
-    ignore (expect ps "RBRACE");
+    let ids = rflex ps COMMA RBRACE item in
+    ignore (expect ps RBRACE);
     SS.AllowList ids
   end
   else SS.Unrestricted
 
 let letqualifier (ps:pstate) : ML let_qualifier =
-  if accept ps "REC" then Rec else NoLetQualifier
+  if accept ps REC then Rec else NoLetQualifier
 
 let val_type (ps:pstate) : ML term =
   let i_bs = !ps.idx in
   let bs = binders ps in
   let i_bs1 = !ps.idx in
-  ignore (expect ps "COLON");
+  ignore (expect ps COLON);
   let i_t = !ps.idx in
   let t = p_typ ps in
   match bs with
@@ -2214,23 +2215,23 @@ let rawDecl (ps:pstate) : ML decl' =
   else begin
     ignore (advance ps);
     match k with
-    | "OPEN" ->
+    | OPEN ->
       let uid = p_quident ps in
       let r = restriction ps in
       Open (uid, r)
-    | "FRIEND" -> Friend (p_quident ps)
-    | "INCLUDE" ->
+    | FRIEND -> Friend (p_quident ps)
+    | INCLUDE ->
       let uid = p_quident ps in
       let r = restriction ps in
       Include (uid, r)
-    | "MODULE" ->
-      if is ps "UNDERSCORE" then begin
+    | MODULE ->
+      if is ps UNDERSCORE then begin
         ignore (advance ps);
-        ignore (expect ps "EQUALS");
+        ignore (expect ps EQUALS);
         let uid = p_quident ps in
         Open (uid, SS.AllowList [])
       end
-      else if is ps "NAME" && peek_kind_n ps 1 = "EQUALS" then begin
+      else if is ps NAME && peek_kind_n ps 1 = EQUALS then begin
         let uid1 = p_uident ps in
         ignore (advance ps);
         let uid2 = p_quident ps in
@@ -2242,21 +2243,21 @@ let rawDecl (ps:pstate) : ML decl' =
         if is_name then TopLevelModule (lid_of_ids ids)
         else syntax_error (loc ps i_q) "Syntax error: expected a module name"
       end
-    | "TYPE" -> Tycon (false, false, sep_nonempty ps "AND" typeDecl)
-    | "EFFECT" ->
-      if is ps "LBRACE" then NewEffect (effectDefinition ps)
+    | TYPE -> Tycon (false, false, sep_nonempty ps AND typeDecl)
+    | EFFECT ->
+      if is ps LBRACE then NewEffect (effectDefinition ps)
       else begin
         let uid = p_uident ps in
         let tparams = binders ps in
-        match opt ps "EQUALS" p_typ with
+        match opt ps EQUALS p_typ with
         | Some t -> Tycon (true, false, [TyconAbbrev (uid, tparams, None, t)])
         | None -> NewEffect (DeclareEffect (uid, tparams))
       end
-    | "LET" ->
+    | LET ->
       let q = letqualifier ps in
-      let lbs = sep_nonempty ps "AND" letbinding in
+      let lbs = sep_nonempty ps AND letbinding in
       TopLevelLet (q, focusLetBindings lbs (loc ps i0))
-    | "VAL" ->
+    | VAL ->
       if is_constant_kind (peek_kind ps) then begin
         ignore (constant ps);
         syntax_error (loc ps i0) "Syntax error: constants are not allowed in val declarations"
@@ -2265,21 +2266,21 @@ let rawDecl (ps:pstate) : ML decl' =
         let t = val_type ps in
         Val (lid, t)
       end
-    | "SPLICE" | "SPLICET" ->
-      ignore (expect ps "LBRACK");
-      let ids = rflex ps "SEMICOLON" "RBRACK" p_ident in
-      ignore (expect ps "RBRACK");
+    | SPLICE | SPLICET ->
+      ignore (expect ps LBRACK);
+      let ids = rflex ps SEMICOLON RBRACK p_ident in
+      ignore (expect ps RBRACK);
       let i_t = !ps.idx in
       let t = atomicTerm ps in
-      if k = "SPLICE" then Splice (false, ids, thunk_at ps i_t t)
+      if k = SPLICE then Splice (false, ids, thunk_at ps i_t t)
       else Splice (true, ids, t)
-    | "EXCEPTION" ->
+    | EXCEPTION ->
       let lid = p_uident ps in
-      let t = opt ps "OF" p_typ in
+      let t = opt ps OF p_typ in
       Exception (lid, t)
-    | "NEW_EFFECT" -> NewEffect (effectDefinition ps)
-    | "SUB_EFFECT" -> SubEffect (subEffect ps)
-    | "BLOB" ->
+    | NEW_EFFECT -> NewEffect (effectDefinition ps)
+    | SUB_EFFECT -> SubEffect (subEffect ps)
+    | BLOB ->
       let t = tok_at ps i0 in
       (match t.extra with
        | L.Blob (name, contents, pos, snap) ->
@@ -2295,12 +2296,12 @@ let tcinstance_attr (r:R.range) : ML term =
 
 let typeclassDecl (ps:pstate) : ML (decl' & list term) =
   let i0 = !ps.idx in
-  if accept ps "CLASS" then begin
+  if accept ps CLASS then begin
     let tc = typeDecl ps in
     (Tycon (false, true, [tc]), [])
   end else begin
-    ignore (expect ps "INSTANCE");
-    if accept ps "VAL" then begin
+    ignore (expect ps INSTANCE);
+    if accept ps VAL then begin
       let lid = lidentOrOperator ps in
       let t = val_type ps in
       (Val (lid, t), [tcinstance_attr (loc ps i0)])
@@ -2316,14 +2317,14 @@ let typeclassDecl (ps:pstate) : ML (decl' & list term) =
 (* noDecorationDecl *)
 let p_no_decoration_decl (ps:pstate) : ML (option (list decl)) =
   let i0 = !ps.idx in
-  if is ps "ASSUME" && peek_kind_n ps 1 = "NAME" then begin
+  if is ps ASSUME && peek_kind_n ps 1 = NAME then begin
     ignore (advance ps);
     let lid = p_uident ps in
-    ignore (expect ps "COLON");
+    ignore (expect ps COLON);
     let phi = p_formula ps in
     Some [mk_decl (Assume (lid, phi)) (loc ps i0) [Qualifier Assumption]]
   end
-  else if is ps "USE_LANG_BLOB" then begin
+  else if is ps USE_LANG_BLOB then begin
     let t = advance ps in
     match t.extra with
     | L.Blob (name, contents, pos, _) ->
@@ -2337,7 +2338,7 @@ let p_no_decoration_decl (ps:pstate) : ML (option (list decl)) =
 (* decoratableDecl, with the decorations [ds] already parsed *)
 let p_decoratable_decl (ps:pstate) (ds:list decoration) : ML (list decl) =
   let i_d = !ps.idx in
-  if is ps "CLASS" || is ps "INSTANCE" then begin
+  if is ps CLASS || is ps INSTANCE then begin
     let (d, extra) = typeclassDecl ps in
     let d = mk_decl d (loc ps i_d) ds in
     [{ d with attrs = FStar.List.Tot.append extra d.attrs }]
@@ -2365,15 +2366,15 @@ let legacy_hint_msg =
 let error_of_failure (ps:pstate) : ML E.error =
   let f = SI.max !ps.furthest !ps.idx in
   let t = tok_at ps f in
-  if t.kind = "ERROR" then raise_lex_error t
+  if t.kind = ERROR then raise_lex_error t
   else begin
-    let k (n:int) : ML string =
+    let k (n:int) : ML token_kind =
       let i = SI.(f - of_int n) in
-      if SI.(i >= zero) then (tok_at ps i).kind else "" in
-    let binder_name (n:int) : ML bool = k n = "IDENT" || k n = "UNDERSCORE" in
+      if SI.(i >= zero) then (tok_at ps i).kind else EOF in
+    let binder_name (n:int) : ML bool = k n = IDENT || k n = UNDERSCORE in
     let hint =
-      (k 0 = "DOT" && binder_name 1 && k 2 = "WITH") ||
-      (k 1 = "DOT" && binder_name 2 && k 3 = "WITH")
+      (k 0 = DOT && binder_name 1 && k 2 = WITH) ||
+      (k 1 = DOT && binder_name 2 && k 3 = WITH)
     in
     let msg = if hint then legacy_hint_msg else "Syntax error" in
     (Codes.Fatal_SyntaxError, FStarC.Errors.Msg.mkmsg msg, R.mk_range ps.fname t.ep t.ep, [])
@@ -2404,7 +2405,7 @@ let start (fname:string) (contents:string) (line col:int) : ML (pstate & list (s
 let parse_decls (ps:pstate) : ML (list decl) =
   let decls = run ps (fun () ->
     let rec go () : ML (list (list decl)) =
-      if is ps "EOF" then []
+      if is ps EOF then []
       else
         let d = p_decl ps in
         d :: go ()
@@ -2426,7 +2427,7 @@ let parse_term (fname:string) (contents:string) (line col:int) : ML term =
   let ps, _ = start fname contents line col in
   run ps (fun () ->
     let t = p_term ps in
-    ignore (expect ps "EOF");
+    ignore (expect ps EOF);
     t)
 
 let rec drop (#a:Type) (n:int) (l:list a) : list a =
@@ -2436,14 +2437,14 @@ let rec drop (#a:Type) (n:int) (l:list a) : list a =
    error. Each declaration must be followed by a token for which
    [next_ok] holds. *)
 let parse_incremental_gen (#a:Type) (g:grammar) (ps:pstate)
-    (p_one:pstate -> ML (list a)) (next_ok:string -> ML bool)
+    (p_one:pstate -> ML (list a)) (next_ok:token_kind -> ML bool)
   : ML (list a & option (Codes.error_code & E.error_message & R.range))
 = let rec go (acc:list a) : ML (list a & option (Codes.error_code & E.error_message & R.range)) =
     GS.reset_gensym ();
     ps.furthest := !ps.idx;
     let res =
       try
-        if is ps "EOF" then Inl None
+        if is ps EOF then Inl None
         else begin
           let ds = run_with g ps (fun () ->
             let ds = p_one ps in

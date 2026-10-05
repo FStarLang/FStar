@@ -33,11 +33,13 @@ open FStarC.Ident
 open FStarC.Parser.AST
 open FStarC.Parser.Pratt
 open FStarC.Parser.Grammar
+open FStarC.Parser.TokenKind
 open PulseSyntaxExtension.Sugar
 module L  = FStarC.Parser.Lexer
 module R  = FStarC.Range
 module E  = FStarC.Errors
 module S  = PulseSyntaxExtension.Sugar
+module TK = FStarC.Parser.TokenKind
 module Pp = FStarC.Pprint
 module Codes = FStarC.Errors.Codes
 
@@ -45,58 +47,56 @@ module Codes = FStarC.Errors.Codes
 (* Keywords                                                               *)
 (* ---------------------------------------------------------------------- *)
 
-let keywords : list (string & string) = [
-  "mut", "MUT";
-  "invariant", "INVARIANT";
-  "predicate", "PREDICATE";
-  "while", "WHILE";
-  "fn", "FN";
-  "divergent", "DIVERGENT";
-  "each", "EACH";
-  "rewrite", "REWRITE";
-  "fold", "FOLD";
-  "atomic", "ATOMIC";
-  "ghost", "GHOST";
-  "unobservable", "UNOBSERVABLE";
-  "opens", "OPENS";
-  "show_proof_state", "SHOW_PROOF_STATE";
-  "norewrite", "NOREWRITE";
-  "preserves", "PRESERVES";
-  "goto", "GOTO";
-  "label", "LABEL";
-  "return", "RETURN";
-  "continue", "CONTINUE";
-  "break", "BREAK";
-  "defer", "DEFER";
+let keywords : list string = [
+  "mut";
+  "invariant";
+  "predicate";
+  "while";
+  "fn";
+  "divergent";
+  "each";
+  "rewrite";
+  "fold";
+  "atomic";
+  "ghost";
+  "unobservable";
+  "opens";
+  "show_proof_state";
+  "norewrite";
+  "preserves";
+  "goto";
+  "label";
+  "return";
+  "continue";
+  "break";
+  "defer";
 ]
 
 let rewrite_token (t:L.token) : ML L.token =
-  if t.kind = "IDENT" then
-    match FStar.List.Tot.assoc t.text keywords with
-    | Some k -> { t with L.kind = k }
-    | None -> t
+  if t.kind = IDENT && FStar.List.Tot.mem t.text keywords
+  then { t with L.kind = KEYWORD t.text }
   else t
 
 (* ---------------------------------------------------------------------- *)
 (* Helpers                                                                *)
 (* ---------------------------------------------------------------------- *)
 
-let is_qual_kind (k:string) : bool =
-  k = "GHOST" || k = "ATOMIC" || k = "UNOBSERVABLE" || k = "DIVERGENT"
+let is_qual_kind (k:token_kind) : bool =
+  k = KEYWORD "ghost" || k = KEYWORD "atomic" || k = KEYWORD "unobservable" || k = KEYWORD "divergent"
 
 (* qual *)
 let p_qual (ps:pstate) : ML st_comp_tag =
   match (advance ps).kind with
-  | "GHOST" -> STGhost
-  | "ATOMIC" -> STAtomic
-  | "UNOBSERVABLE" -> STUnobservable
-  | "DIVERGENT" -> STDiv
+  | KEYWORD "ghost" -> STGhost
+  | KEYWORD "atomic" -> STAtomic
+  | KEYWORD "unobservable" -> STUnobservable
+  | KEYWORD "divergent" -> STDiv
   | _ -> backup ps 1; fail ps
 
 (* qualOptFn *)
 let qual_opt_fn (ps:pstate) : ML (option st_comp_tag) =
   let q = if is_qual_kind (peek_kind ps) then Some (p_qual ps) else None in
-  ignore (expect ps "FN");
+  ignore (expect ps (KEYWORD "fn"));
   q
 
 let with_computation_tag (c:computation_type) (t:option st_comp_tag) : computation_type =
@@ -121,10 +121,10 @@ let p_appTermNoRecordExp (ps:pstate) : ML term = app_term ps true
 let p_tmNoEqNoRef (ps:pstate) : ML term = term_at ps noref_ctx 81
 
 (* Statements end at a closing brace or parenthesis *)
-let at_stmt_end (ps:pstate) : ML bool = is ps "RBRACE" || is ps "RPAREN"
+let at_stmt_end (ps:pstate) : ML bool = is ps RBRACE || is ps RPAREN
 
 let opt_noSeqTerm (ps:pstate) : ML (option term) =
-  if at_stmt_end ps || is ps "SEMICOLON" then None else Some (p_noSeqTerm ps)
+  if at_stmt_end ps || is ps SEMICOLON then None else Some (p_noSeqTerm ps)
 
 (* ---------------------------------------------------------------------- *)
 (* Separation logic propositions and computation types                    *)
@@ -137,12 +137,12 @@ let rec p_slprop (ps:pstate) : ML term =
   if is_quantifier_kind k then begin
     let t = advance ps in
     let bs = binders ps in
-    ignore (expect ps "DOT");
+    ignore (expect ps DOT);
     let i_dot = !ps.idx in
     let trigger =
-      if accept ps "LBRACE_COLON_PATTERN" then begin
-        let pats = sep_nonempty ps "DISJUNCTION" (fun ps -> sep_nonempty ps "SEMICOLON" app_term_full) in
-        ignore (expect ps "RBRACE");
+      if accept ps LBRACE_COLON_PATTERN then begin
+        let pats = sep_nonempty ps DISJUNCTION (fun ps -> sep_nonempty ps SEMICOLON app_term_full) in
+        ignore (expect ps RBRACE);
         pats
       end else []
     in
@@ -154,9 +154,9 @@ let rec p_slprop (ps:pstate) : ML term =
       let idents = idents_of_binders bs (rng ps i0 i_dot) in
       let q =
         match k with
-        | "FORALL" -> QForall (bs, (idents, trigger), e)
-        | "EXISTS" -> QExists (bs, (idents, trigger), e)
-        | "FORALL_OP" -> QuantOp (mk_id_tok ps t ("forall" ^ t.text), bs, (idents, trigger), e)
+        | FORALL -> QForall (bs, (idents, trigger), e)
+        | EXISTS -> QExists (bs, (idents, trigger), e)
+        | FORALL_OP -> QuantOp (mk_id_tok ps t ("forall" ^ t.text), bs, (idents, trigger), e)
         | _ -> QuantOp (mk_id_tok ps t ("exists" ^ t.text), bs, (idents, trigger), e)
       in
       mk_term q (loc ps i0) Formula
@@ -165,28 +165,28 @@ let rec p_slprop (ps:pstate) : ML term =
 
 (* returns *)
 let p_returns (ps:pstate) : ML computation_annot' =
-  ignore (expect ps "RETURNS");
-  if (is ps "IDENT" || is ps "UNDERSCORE") && peek_kind_n ps 1 = "COLON" then begin
+  ignore (expect ps RETURNS);
+  if (is ps IDENT || is ps UNDERSCORE) && peek_kind_n ps 1 = COLON then begin
     let i = lidentOrUnderscore ps in
-    ignore (expect ps "COLON");
+    ignore (expect ps COLON);
     Returns (Some i, p_tmNoEqNoRef ps)
   end
   else Returns (None, p_tmNoEqNoRef ps)
 
 let is_annot_start (ps:pstate) : ML bool =
   let k = peek_kind ps in
-  k = "PRESERVES" || k = "REQUIRES" || k = "ENSURES" || k = "RETURNS" || k = "OPENS"
+  k = KEYWORD "preserves" || k = REQUIRES || k = ENSURES || k = RETURNS || k = KEYWORD "opens"
 
 (* pulseComputationAnnot1 *)
 let p_annot (ps:pstate) : ML computation_annot =
   let i0 = !ps.idx in
   let a =
     match peek_kind ps with
-    | "PRESERVES" -> ignore (advance ps); Preserves (p_slprop ps)
-    | "REQUIRES" -> ignore (advance ps); Requires (p_slprop ps)
-    | "ENSURES" -> ignore (advance ps); Ensures (p_slprop ps)
-    | "RETURNS" -> p_returns ps
-    | "OPENS" -> ignore (advance ps); Opens (p_appTermNoRecordExp ps)
+    | KEYWORD "preserves" -> ignore (advance ps); Preserves (p_slprop ps)
+    | REQUIRES -> ignore (advance ps); Requires (p_slprop ps)
+    | ENSURES -> ignore (advance ps); Ensures (p_slprop ps)
+    | RETURNS -> p_returns ps
+    | KEYWORD "opens" -> ignore (advance ps); Opens (p_appTermNoRecordExp ps)
     | _ -> fail ps
   in
   (a, loc ps i0)
@@ -194,7 +194,7 @@ let p_annot (ps:pstate) : ML computation_annot =
 (* pulseComputationType *)
 let p_comp_type (ps:pstate) : ML computation_type =
   let i0 = !ps.idx in
-  let literally = accept ps "NOREWRITE" in
+  let literally = accept ps (KEYWORD "norewrite") in
   let rec annots () : ML (list computation_annot) =
     if is_annot_start ps then let a = p_annot ps in a :: annots ()
     else []
@@ -207,18 +207,18 @@ let p_comp_type (ps:pstate) : ML computation_type =
 (* ensuresSLProp *)
 let p_ensures_slprop (ps:pstate) : ML ensures_slprop =
   let ret =
-    if accept ps "RETURNS" then begin
+    if accept ps RETURNS then begin
       let i = lidentOrUnderscore ps in
-      ignore (expect ps "COLON");
+      ignore (expect ps COLON);
       Some (i, p_term ps)
     end else None
   in
-  ignore (expect ps "ENSURES");
+  ignore (expect ps ENSURES);
   let s = p_slprop ps in
-  let opens = if accept ps "OPENS" then Some (p_appTermNoRecordExp ps) else None in
+  let opens = if accept ps (KEYWORD "opens") then Some (p_appTermNoRecordExp ps) else None in
   (ret, s, opens)
 
-let is_ensures_start (ps:pstate) : ML bool = is ps "ENSURES" || is ps "RETURNS"
+let is_ensures_start (ps:pstate) : ML bool = is ps ENSURES || is ps RETURNS
 
 let opt_ensures_slprop (ps:pstate) : ML (option ensures_slprop) =
   if is_ensures_start ps then Some (p_ensures_slprop ps) else None
@@ -274,12 +274,12 @@ let r_fn_type (ps:pstate) (_:ctx) : ML term =
 (* In pulseparser.mly, this is a production of both [typ] and
    [simpleArrow]. Here it may start a term at the precedence of arrows
    (so it may also be the codomain of an arrow), and it is a [typ]. *)
-let pulse_leading_rules : list (string & leading_rule) = [
-  "FN",           lrule "fn_type" 30 10 always r_fn_type;
-  "GHOST",        lrule "fn_type" 30 10 (next_is "FN") r_fn_type;
-  "ATOMIC",       lrule "fn_type" 30 10 (next_is "FN") r_fn_type;
-  "UNOBSERVABLE", lrule "fn_type" 30 10 (next_is "FN") r_fn_type;
-  "DIVERGENT",    lrule "fn_type" 30 10 (next_is "FN") r_fn_type;
+let pulse_leading_rules : list (token_kind & leading_rule) = [
+  KEYWORD "fn",           lrule "fn_type" 30 10 always r_fn_type;
+  KEYWORD "ghost",        lrule "fn_type" 30 10 (next_is (KEYWORD "fn")) r_fn_type;
+  KEYWORD "atomic",       lrule "fn_type" 30 10 (next_is (KEYWORD "fn")) r_fn_type;
+  KEYWORD "unobservable", lrule "fn_type" 30 10 (next_is (KEYWORD "fn")) r_fn_type;
+  KEYWORD "divergent",    lrule "fn_type" 30 10 (next_is (KEYWORD "fn")) r_fn_type;
 ]
 
 let pulse_grammar : grammar = add_all_leading fstar_grammar pulse_leading_rules
@@ -289,37 +289,37 @@ let pulse_grammar : grammar = add_all_leading fstar_grammar pulse_leading_rules
 (* ---------------------------------------------------------------------- *)
 
 let with_binders (ps:pstate) : ML (list binder) =
-  ignore (expect ps "WITH");
+  ignore (expect ps WITH);
   let bs = binders ps in
   if Nil? bs then fail ps;
-  ignore (expect ps "DOT");
+  ignore (expect ps DOT);
   bs
 
 let optional_names (ps:pstate) : ML (option (list lident)) =
-  if accept ps "LBRACK" then begin
-    let l = sep_nonempty ps "SEMICOLON" p_qlident in
-    ignore (expect ps "RBRACK");
+  if accept ps LBRACK then begin
+    let l = sep_nonempty ps SEMICOLON p_qlident in
+    ignore (expect ps RBRACK);
     Some l
   end else None
 
 let opt_by (ps:pstate) : ML (option term) =
-  if accept ps "BY" then Some (p_noSeqTerm ps) else None
+  if accept ps BY then Some (p_noSeqTerm ps) else None
 
 (* rewriteBody *)
 let rewrite_body (ps:pstate) : ML hint_type =
-  if accept ps "EACH" then begin
-    let pairs = sep_nonempty ps "COMMA" (fun ps ->
+  if accept ps (KEYWORD "each") then begin
+    let pairs = sep_nonempty ps COMMA (fun ps ->
       let x = app_term_full ps in
-      ignore (expect ps "AS");
+      ignore (expect ps AS);
       let y = app_term_full ps in
       (x, y))
     in
-    let goal = if accept ps "IN" then Some (p_slprop ps) else None in
+    let goal = if accept ps IN then Some (p_slprop ps) else None in
     let tac = opt_by ps in
     RENAME (pairs, goal, tac)
   end else begin
     let p1 = p_slprop ps in
-    ignore (expect ps "AS");
+    ignore (expect ps AS);
     let p2 = p_slprop ps in
     let tac = opt_by ps in
     REWRITE (p1, p2, tac)
@@ -329,12 +329,12 @@ let rewrite_body (ps:pstate) : ML hint_type =
 let proof_hint (ps:pstate) (bs:list binder) : ML stmt' =
   let ht =
     match (advance ps).kind with
-    | "REWRITE" -> rewrite_body ps
-    | "ASSERT" -> ASSERT (p_slprop ps)
-    | "ASSUME" -> ASSUME (p_slprop ps)
-    | "UNFOLD" -> let ns = optional_names ps in UNFOLD (ns, p_slprop ps)
-    | "FOLD" -> let ns = optional_names ps in FOLD (ns, p_slprop ps)
-    | "UNDERSCORE" -> if Nil? bs then (backup ps 1; fail ps) else WILD
+    | KEYWORD "rewrite" -> rewrite_body ps
+    | TK.ASSERT -> ASSERT (p_slprop ps)
+    | TK.ASSUME -> ASSUME (p_slprop ps)
+    | TK.UNFOLD -> let ns = optional_names ps in UNFOLD (ns, p_slprop ps)
+    | KEYWORD "fold" -> let ns = optional_names ps in FOLD (ns, p_slprop ps)
+    | UNDERSCORE -> if Nil? bs then (backup ps 1; fail ps) else WILD
     | _ -> backup ps 1; fail ps
   in
   mk_proof_hint_with_binders ht bs
@@ -351,19 +351,19 @@ and p_stmt_nonempty (ps:pstate) : ML stmt =
   (* A [let] without [norewrite] or a local [fn] without qualifier starts
      with an empty nonterminal in the Menhir grammar *)
   let k = (tok_at ps i0).L.kind in
-  let loc : pstate -> pos -> ML R.range = if k = "LET" || k = "FN" then eps_loc else loc in
+  let loc : pstate -> pos -> ML R.range = if k = LET || k = KEYWORD "fn" then eps_loc else loc in
   let s1 = p_stmt_noseq ps in
   let s1 = mk_stmt s1 (loc ps i0) in
-  if accept ps "SEMICOLON" && not (at_stmt_end ps) then begin
+  if accept ps SEMICOLON && not (at_stmt_end ps) then begin
     let s2 = p_stmt_nonempty ps in
     mk_stmt (mk_sequence s1 s2) (loc ps i0)
   end
   else s1
 
 and p_braced_stmt (ps:pstate) : ML stmt =
-  ignore (expect ps "LBRACE");
+  ignore (expect ps LBRACE);
   let s = p_stmt ps in
-  ignore (expect ps "RBRACE");
+  ignore (expect ps RBRACE);
   s
 
 (* pulseLambda *)
@@ -376,24 +376,24 @@ and p_lambda (ps:pstate) : ML lambda =
 
 (* list(termPulseLambda) *)
 and p_lambda_args (ps:pstate) : ML (list lambda) =
-  if accept ps "FN" then
+  if accept ps (KEYWORD "fn") then
     let l = p_lambda ps in
     l :: p_lambda_args ps
   else []
 
 (* ifStmt *)
 and p_if (ps:pstate) : ML stmt' =
-  ignore (expect ps "IF");
+  ignore (expect ps IF);
   let i_t = !ps.idx in
   let tm = p_appTermNoRecordExp ps in
   let head = mk_stmt (mk_expr tm []) (loc ps i_t) in
-  let req = if accept ps "REQUIRES" then Some (p_slprop ps) else None in
+  let req = if accept ps REQUIRES then Some (p_slprop ps) else None in
   let vp = opt_ensures_slprop ps in
   let th = p_braced_stmt ps in
   let i_e = !ps.idx in
   let els =
-    if accept ps "ELSE" then begin
-      if is ps "IF" then
+    if accept ps ELSE then begin
+      if is ps IF then
         let s = p_if ps in
         Some (mk_stmt s (loc ps i_e))
       else Some (p_braced_stmt ps)
@@ -403,14 +403,14 @@ and p_if (ps:pstate) : ML stmt' =
 
 (* fnBody *)
 and p_fn_body (ps:pstate) : ML (either (computation_type & option term & stmt) (lambda & option term)) =
-  if accept ps "COLON" then begin
-    let typ = if is ps "EQUALS" then None else Some (app_term_full ps) in
-    ignore (expect ps "EQUALS");
+  if accept ps COLON then begin
+    let typ = if is ps EQUALS then None else Some (app_term_full ps) in
+    ignore (expect ps EQUALS);
     let lam = p_lambda ps in
     Inr (lam, typ)
   end else begin
     let asc = p_comp_type ps in
-    let measure = if accept ps "DECREASES" then Some (p_appTermNoRecordExp ps) else None in
+    let measure = if accept ps DECREASES then Some (p_appTermNoRecordExp ps) else None in
     let body = p_braced_stmt ps in
     Inl (asc, measure, body)
   end
@@ -418,19 +418,19 @@ and p_fn_body (ps:pstate) : ML (either (computation_type & option term & stmt) (
 (* letMutInit *)
 and p_let_init (ps:pstate) : ML let_init =
   let i0 = !ps.idx in
-  if accept ps "EQUALS" then begin
-    if is ps "IF" then
+  if accept ps EQUALS then begin
+    if is ps IF then
       match attempt ps (fun () -> p_if ps) with
       | Some s -> Stmt_initializer (mk_stmt s (loc ps i0))
       | None -> default_init ps
-    else if accept ps "LBRACK_BAR" then begin
+    else if accept ps LBRACK_BAR then begin
       let v = p_noSeqTerm ps in
-      if accept ps "SEMICOLON" then begin
+      if accept ps SEMICOLON then begin
         let n = p_noSeqTerm ps in
-        ignore (expect ps "BAR_RBRACK");
+        ignore (expect ps BAR_RBRACK);
         Array_initializer { init = Some v; len = n }
       end else begin
-        ignore (expect ps "BAR_RBRACK");
+        ignore (expect ps BAR_RBRACK);
         Array_initializer { init = None; len = v }
       end
     end
@@ -446,12 +446,12 @@ and default_init (ps:pstate) : ML let_init =
 (* letPattern *)
 and p_let_pattern (ps:pstate) : ML (list term & pattern) =
   let attributed =
-    if is ps "LBRACK_AT_AT_AT" then
+    if is ps LBRACK_AT_AT_AT then
       attempt ps (fun () ->
         let attrs = binderAttributes ps in
-        ignore (expect ps "LPAREN");
+        ignore (expect ps LPAREN);
         let p = tuplePattern ps in
-        ignore (expect ps "RPAREN");
+        ignore (expect ps RPAREN);
         (attrs, p))
     else None
   in
@@ -461,19 +461,19 @@ and p_let_pattern (ps:pstate) : ML (list term & pattern) =
 
 (* pulseMatchBranch *)
 and p_match_branch (ps:pstate) : ML (bool & pattern & stmt) =
-  let norw = accept ps "NOREWRITE" in
+  let norw = accept ps (KEYWORD "norewrite") in
   let pat = tuplePattern ps in
-  ignore (expect ps "RARROW");
+  ignore (expect ps RARROW);
   let e = p_braced_stmt ps in
   (norw, pat, e)
 
 and p_while_invariant (ps:pstate) : ML (list while_invariant1) =
   let inv =
     match peek_kind ps with
-    | "INVARIANT" -> ignore (advance ps); Some (LoopInvariant (p_slprop ps))
-    | "ENSURES" -> ignore (advance ps); Some (LoopEnsures (p_appTermNoRecordExp ps))
-    | "REQUIRES" -> ignore (advance ps); Some (LoopRequires (p_appTermNoRecordExp ps))
-    | "DECREASES" -> ignore (advance ps); Some (Decreases (p_appTermNoRecordExp ps))
+    | KEYWORD "invariant" -> ignore (advance ps); Some (LoopInvariant (p_slprop ps))
+    | ENSURES -> ignore (advance ps); Some (LoopEnsures (p_appTermNoRecordExp ps))
+    | REQUIRES -> ignore (advance ps); Some (LoopRequires (p_appTermNoRecordExp ps))
+    | DECREASES -> ignore (advance ps); Some (Decreases (p_appTermNoRecordExp ps))
     | _ -> None
   in
   match inv with
@@ -484,111 +484,111 @@ and p_while_invariant (ps:pstate) : ML (list while_invariant1) =
 and p_stmt_noseq (ps:pstate) : ML stmt' =
   let i0 = !ps.idx in
   match peek_kind ps with
-  | "OPEN" ->
+  | OPEN ->
     ignore (advance ps);
     mk_open (p_quident ps)
-  | "NOREWRITE"
-  | "LET" ->
-    let norw = accept ps "NOREWRITE" in
-    ignore (expect ps "LET");
-    let q = if accept ps "MUT" then Some MUT else None in
+  | KEYWORD "norewrite"
+  | LET ->
+    let norw = accept ps (KEYWORD "norewrite") in
+    ignore (expect ps LET);
+    let q = if accept ps (KEYWORD "mut") then Some MUT else None in
     let attrs, p = p_let_pattern ps in
-    let typ = if accept ps "COLON" then Some (app_term_full ps) else None in
+    let typ = if accept ps COLON then Some (app_term_full ps) else None in
     let init = p_let_init ps in
     mk_let_binding norw q attrs p typ init
-  | "IF" -> p_if ps
-  | "WHILE" ->
+  | IF -> p_if ps
+  | KEYWORD "while" ->
     ignore (advance ps);
-    ignore (expect ps "LPAREN");
+    ignore (expect ps LPAREN);
     let tm = p_stmt ps in
-    ignore (expect ps "RPAREN");
+    ignore (expect ps RPAREN);
     let inv = p_while_invariant ps in
     let body = p_braced_stmt ps in
     mk_while tm inv body
-  | "INTRO" ->
+  | INTRO ->
     ignore (advance ps);
     let p = p_slprop ps in
-    ignore (expect ps "WITH");
+    ignore (expect ps WITH);
     let rec ws () : ML (list term) =
       let w, _ = indexing_term ps in
       if is_atomic_start ps then w :: ws () else [w]
     in
     mk_intro p (ws ())
-  | "WITH" ->
+  | WITH ->
     let bs = with_binders ps in
     proof_hint ps bs
-  | "REWRITE" | "ASSERT" | "ASSUME" | "UNFOLD" | "FOLD" ->
+  | KEYWORD "rewrite" | TK.ASSERT | TK.ASSUME | TK.UNFOLD | KEYWORD "fold" ->
     proof_hint ps []
-  | "SHOW_PROOF_STATE" ->
+  | KEYWORD "show_proof_state" ->
     let t = advance ps in
     mk_proof_hint_with_binders (SHOW_PROOF_STATE (tok_rng ps t)) []
-  | "CALC" ->
+  | CALC ->
     mk_expr (r_calc ps dflt) []
-  | "LBRACE" ->
+  | LBRACE ->
     let body = p_braced_stmt ps in
-    if is_ensures_start ps || is ps "LABEL" then begin
+    if is_ensures_start ps || is ps (KEYWORD "label") then begin
       let post = opt_ensures_slprop ps in
-      ignore (expect ps "LABEL");
+      ignore (expect ps (KEYWORD "label"));
       let lbl = p_lident ps in
-      ignore (expect ps "COLON");
+      ignore (expect ps COLON);
       mk_forward_jump_label body lbl post
     end
     else mk_block body
-  | "LABEL" ->
+  | KEYWORD "label" ->
     ignore (advance ps);
     let lbl = p_lident ps in
-    ignore (expect ps "COLON");
+    ignore (expect ps COLON);
     let body = p_braced_stmt ps in
     let post = opt_ensures_slprop ps in
     mk_forward_jump_label body lbl post
-  | "MATCH" ->
+  | MATCH ->
     ignore (advance ps);
     let i_t = !ps.idx in
     let tm = p_appTermNoRecordExp ps in
     let head = mk_stmt (mk_expr tm []) (loc ps i_t) in
     let c = opt_ensures_slprop ps in
-    ignore (expect ps "LBRACE");
+    ignore (expect ps LBRACE);
     let rec brs () : ML (list (bool & pattern & stmt)) =
-      if is ps "RBRACE" then []
+      if is ps RBRACE then []
       else let b = p_match_branch ps in b :: brs ()
     in
     let brs = brs () in
-    ignore (expect ps "RBRACE");
+    ignore (expect ps RBRACE);
     mk_match head c brs
-  | "PRAGMA_SET_OPTIONS" ->
+  | PRAGMA_SET_OPTIONS ->
     ignore (advance ps);
-    let options = (expect ps "STRING").text in
+    let options = (expect ps STRING).text in
     let s = p_braced_stmt ps in
     mk_pragma_set_options options s
-  | "GOTO" ->
+  | KEYWORD "goto" ->
     ignore (advance ps);
     let lbl = p_lident ps in
     mk_goto lbl (opt_noSeqTerm ps)
-  | "DEFER" ->
+  | KEYWORD "defer" ->
     ignore (advance ps);
     let pre = p_appTermNoRecordExp ps in
     let h = p_braced_stmt ps in
     mk_defer pre h
-  | "RETURN" ->
+  | KEYWORD "return" ->
     ignore (advance ps);
     mk_return (opt_noSeqTerm ps)
-  | "CONTINUE" -> ignore (advance ps); mk_continue
-  | "BREAK" -> ignore (advance ps); mk_break
+  | KEYWORD "continue" -> ignore (advance ps); mk_continue
+  | KEYWORD "break" -> ignore (advance ps); mk_break
   | k ->
-    if k = "FN" || (is_qual_kind k && peek_kind_n ps 1 = "FN") then begin
+    if k = KEYWORD "fn" || (is_qual_kind k && peek_kind_n ps 1 = KEYWORD "fn") then begin
       (* localFnDefn *)
       let q = qual_opt_fn ps in
       let lid = lidentOrOperator ps in
       let bs = binders ps in
       let body = p_fn_body ps in
-      let r = if k = "FN" then eps_loc ps i0 else loc ps i0 in
+      let r = if k = KEYWORD "fn" then eps_loc ps i0 else loc ps i0 in
       let fndefn = mk_fn_defn' q lid false [] bs body r in
       let pat = mk_pattern (PatVar (lid, None, [])) r in
       mk_let_binding false None [] pat None (Lambda_initializer fndefn)
     end
-    else if lookahead ps (fun () -> ignore (indexing_term ps); ignore (expect ps "LARROW")) then begin
+    else if lookahead ps (fun () -> ignore (indexing_term ps); ignore (expect ps LARROW)) then begin
       let e1, _ = indexing_term ps in
-      ignore (expect ps "LARROW");
+      ignore (expect ps LARROW);
       let e3 = p_noSeqTerm ps in
       match e1.tm with
       | Op (op, [arr; ix]) when string_of_id op = ".()" ->
@@ -608,44 +608,44 @@ and p_stmt_noseq (ps:pstate) : ML stmt' =
 
 let univ_params (ps:pstate) : ML (list ident) =
   let rec go () : ML (list ident) =
-    if accept ps "UNIV_HASH" then let n = p_lident ps in n :: go ()
+    if accept ps UNIV_HASH then let n = p_lident ps in n :: go ()
     else []
   in
   go ()
 
-let start_of_next_pulse_decl (k:string) : bool =
-  FStar.List.Tot.mem k start_of_next_decl_kinds || is_qual_kind k || k = "FN"
+let start_of_next_pulse_decl (k:token_kind) : bool =
+  FStar.List.Tot.mem k start_of_next_decl_kinds || is_qual_kind k || k = KEYWORD "fn"
 
 (* pulseDecl *)
 let p_pulse_decl (ps:pstate) : ML S.decl =
   let i0 = !ps.idx in
-  if accept ps "LET" then begin
-    ignore (expect ps "PREDICATE");
+  if accept ps LET then begin
+    ignore (expect ps (KEYWORD "predicate"));
     let lid = lidentOrOperator ps in
     let bs = binders ps in
-    ignore (expect ps "EQUALS");
+    ignore (expect ps EQUALS);
     let body = p_term ps in
     SlpropDefn (mk_slprop_defn lid bs body [] (loc ps i0))
   end else begin
     let q = qual_opt_fn ps in
-    let is_rec = accept ps "REC" in
+    let is_rec = accept ps REC in
     let lid = lidentOrOperator ps in
     let us = univ_params ps in
     let bs = binders ps in
-    if accept ps "COLON" then begin
+    if accept ps COLON then begin
       let typ =
-        if is ps "EQUALS" || start_of_next_pulse_decl (peek_kind ps) then None
+        if is ps EQUALS || start_of_next_pulse_decl (peek_kind ps) then None
         else Some (app_term_full ps)
       in
-      if accept ps "EQUALS" then begin
+      if accept ps EQUALS then begin
         let lam = p_lambda ps in
         FnDefn (mk_fn_defn' q lid is_rec us bs (Inr (lam, typ)) (loc ps i0))
       end else
         syntax_error (loc ps i0) "Ascriptions of lambdas without bodies are not yet supported"
     end else begin
       let asc = p_comp_type ps in
-      if is ps "DECREASES" || is ps "LBRACE" then begin
-        let measure = if accept ps "DECREASES" then Some (p_appTermNoRecordExp ps) else None in
+      if is ps DECREASES || is ps LBRACE then begin
+        let measure = if accept ps DECREASES then Some (p_appTermNoRecordExp ps) else None in
         let body = p_braced_stmt ps in
         FnDefn (mk_fn_defn' q lid is_rec us bs (Inl (asc, measure, body)) (loc ps i0))
       end else begin
@@ -657,7 +657,7 @@ let p_pulse_decl (ps:pstate) : ML S.decl =
 
 let is_pulse_decl_start (ps:pstate) : ML bool =
   let k = peek_kind ps in
-  k = "FN" || is_qual_kind k || (k = "LET" && peek_kind_n ps 1 = "PREDICATE")
+  k = KEYWORD "fn" || is_qual_kind k || (k = LET && peek_kind_n ps 1 = KEYWORD "predicate")
 
 (* incrementalLangDecl, without the token that follows *)
 let p_lang_decl (ps:pstate) : ML (list (either S.decl FStarC.Parser.AST.decl)) =
@@ -688,7 +688,7 @@ let parse_decl (contents:string) (r:R.range)
     let ps, _ = start_at contents r in
     Inl (run_with pulse_grammar ps (fun () ->
       let d = p_pulse_decl ps in
-      ignore (expect ps "EOF");
+      ignore (expect ps EOF);
       d))
   with
   | E.Error e -> Inr (Some (error_msg e))
@@ -699,7 +699,7 @@ let parse_peek_id (contents:string) (r:R.range)
     let ps, _ = start_at contents r in
     Inl (run_with pulse_grammar ps (fun () ->
       let _ = qual_opt_fn ps in
-      ignore (accept ps "REC");
+      ignore (accept ps REC);
       string_of_id (lidentOrOperator ps)))
   with
   | E.Error e -> Inr (error_msg e)
