@@ -36,6 +36,14 @@ let infer_post #g #ctxt (r:checker_result_t g ctxt NoHint)
 val guard_branch_post (#g:env) (b:term) (then_:bool) (p:post_hint_for_env g)
 : T.Tac (q:post_hint_for_env g { q.effect_annot == p.effect_annot })
 
+(* [join_post], except that what the branches do not agree on is taken from
+   the branch [then_] selects (see [guard_branch_post]) instead of being left
+   under the condition. The result has to be proved of both branches. *)
+val join_post_pick (then_:option bool) #g #hyp #b
+    (p1:post_hint_for_env (g_with_eq g hyp b tm_true))
+    (p2:post_hint_for_env (g_with_eq g hyp b tm_false))
+: T.Tac (post_hint_for_env g)
+
 val join_post #g #hyp #b
     (p1:post_hint_for_env (g_with_eq g hyp b tm_true))
     (p2:post_hint_for_env (g_with_eq g hyp b tm_false))

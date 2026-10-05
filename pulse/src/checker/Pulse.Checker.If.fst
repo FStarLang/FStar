@@ -168,32 +168,34 @@ let check
           let else_ = Pulse.Checker.Prover.prove_post_hint else_ (PostHint post) e2.range in
           (| post, then_, else_ |)
         in
-        (* When the join keeps part of the state under the condition, see
-           first whether one branch's own postcondition is already a common
-           one: the prover may get there from the other branch by the folds
-           and unfolds it applies on its own (`pulse_intro`), e.g. a branch
-           that left a struct unfolded against one that called a function
-           returning it folded. Either branch postcondition is proved of both
-           branches before it is used, so this only ever picks among sound
-           options; if neither works, keep the join. *)
+        (* When the join keeps part of the state under the condition, try
+           taking that part from one branch. The prover may reach it from the
+           other branch by the folds and unfolds it applies on its own
+           (`pulse_intro`), e.g. one branch leaves a struct unfolded and the
+           other calls a function that returns it folded.
+           Only the leftover part is taken from the branch. What the branches
+           agree on is joined as usual. Taking the picked branch's whole
+           postcondition would also fix the values of cells the other
+           branch did not write: e.g. a cell written to a constant in one
+           branch and untouched in the other. The prover then turns that into
+           an SMT equality, which fails only after the attempt has been
+           accepted.
+           Each candidate is proved of both branches before it is used, so
+           this only ever picks among sound options. If neither works, keep
+           the join. *)
         if not (post_keeps_conditional post.post)
         then prove_both post ()
         else (
-          let with_post_of (then_:bool) (p:post_hint_for_env g) ()
-            : T.Tac (ph:post_hint_for_env g &
-                     checker_result_t (g_with_eq tm_true) pre (PostHint ph) &
-                     checker_result_t (g_with_eq tm_false) pre (PostHint ph)) =
-            (* The branch's own pure facts, its path condition among them,
-               hold of the other branch only under this branch's condition. *)
-            let p = J.guard_branch_post b then_ p in
+          let with_leftover_of (then_:bool) () =
+            let p = Pulse.JoinComp.join_post_pick (Some then_) #g #hyp #b post_then post_else in
             let p : post_hint_for_env g =
               { p with effect_annot = post.effect_annot } in
             prove_both p ()
           in
-          match RU.try_quietly (with_post_of false post_else) with
+          match RU.try_quietly (with_leftover_of false) with
           | Some r -> r
           | None ->
-            match RU.try_quietly (with_post_of true post_then) with
+            match RU.try_quietly (with_leftover_of true) with
             | Some r -> r
             | None -> prove_both post ()
         )

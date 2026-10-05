@@ -30,6 +30,35 @@ fn join_hoisted (b:bool) (r x:ref int)
   ()
 }
 
+(* Only one branch stores a term over its hoisted locals; the other stores a
+   constant. The cell's value is generalized at the type the head expects. *)
+fn join_hoisted_vs_const (b:bool) (r x:ref int)
+  requires r |-> 0 ** x |-> 'w
+  ensures exists* v. r |-> v ** x |-> 'w
+{
+  if (b) {
+    r := incr (get_any x);
+  } else {
+    r := 0;
+  };
+  ()
+}
+
+(* As above, at a machine integer type, where the constant's own type is a
+   singleton refinement and so cannot serve as the binder's type. *)
+fn join_hoisted_vs_const_u32 (b:bool) (r:ref FStar.UInt32.t) (x:ref int)
+  requires r |-> 0ul ** x |-> 'w
+  ensures exists* v. r |-> v ** x |-> 'w
+{
+  if (b) {
+    let v = get_any x;
+    r := (if v > 0 then 1ul else 2ul);
+  } else {
+    r := 0ul;
+  };
+  ()
+}
+
 let boxed (r:ref int) : slprop = exists* v. r |-> v
 
 [@@pulse_intro]
@@ -65,6 +94,22 @@ fn join_fold_state (b c:bool) (r:ref int) (out:ref int)
     fold boxed r;
     let v = get_boxed r;
     out := v;
+  };
+  ()
+}
+
+(* As above, but one branch also writes a cell the other leaves alone. Only
+   the part the branches disagree on may come from one branch. Taking all of
+   that branch's postcondition would also fix the cell's value. *)
+fn join_fold_state_write (b c:bool) (r:ref int) (flag:ref int)
+  requires boxed r ** flag |-> 'f
+  ensures boxed r ** (exists* v. flag |-> v)
+{
+  unfold boxed r;
+  if (b && not c) {
+    flag := 1;
+  } else {
+    fold boxed r;
   };
   ()
 }

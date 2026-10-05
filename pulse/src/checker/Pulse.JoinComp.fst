@@ -464,6 +464,44 @@ let same_type_as_binder (g:env) (xs:list var) (b:binder) (t:term) : bool =
      | None -> false
      | Some ty -> T.term_eq ty b.binder_ty)
 
+(* An argument position where the two sides differ in shape, one of them a
+   term over its own branch's hoisted variables and the other a term of the
+   environment. Example: a cell set under a branch-local test to a value read
+   through a branch-local witness, against a cell the other branch left alone
+   or set to a constant. Generalize the position over a fresh binder, typed as
+   the head's parameter at that position (computed from the type of [pre], the
+   head applied to the arguments before it). Both sides are checked against
+   that type when their branches are proved against the joined postcondition,
+   which instantiates the binder with them. Positions of type [slprop] are left
+   alone: generalizing them would forget the resource. *)
+let generalize_arg_by_type (g:env) (xs1 xs2:list var) (pre:R.term) (t1 t2:R.term)
+: T.Tac (option (env & list (universe & binder & var) & R.term))
+= if not ((not (indep_of xs1 t1) && indep_of xs2 t2) ||
+          (indep_of xs1 t1 && not (indep_of xs2 t2)))
+  then None
+  else
+    let param_ty : option R.term =
+      match RU.try_quietly (fun () -> compute_term_type g pre) with
+      | None -> None
+      | Some (| _, _, ty |) ->
+        match R.inspect_ln_unascribe (RU.whnf_lax (elab_env g) ty) with
+        | R.Tv_Arrow b _ -> Some (R.inspect_binder b).sort
+        | _ -> None
+    in
+    match param_ty with
+    | None -> None
+    | Some ty ->
+      if T.term_eq (RU.deep_compress_safe ty) tm_slprop
+      then None
+      else
+        match RU.try_quietly (fun () -> check_universe g ty) with
+        | None -> None
+        | Some u ->
+          let x = fresh g in
+          let b = mk_binder_ppname ty ppname_default in
+          let g = push_binding g x b.binder_ppname ty in
+          Some (g, [(u, b, x)], term_of_no_name_var x)
+
 (* Anti-unify two terms that agree except where each side has one of its own
    hoisted variables, replacing every such position by a single fresh binder,
    returned alongside. Descends through applications, since the interesting
@@ -517,7 +555,7 @@ let rec generalize_term (g:env)
       || not (List.Tot.length args1 = List.Tot.length args2)
       then None
       else (
-        match generalize_args g bs1 bs2 xs1 xs2 args1 args2 with
+        match generalize_args g bs1 bs2 xs1 xs2 hd1 [] args1 args2 with
         | None -> None
         | Some (g, bs, args) -> Some (g, bs, T.mk_app hd1 args)
       )
@@ -525,15 +563,21 @@ let rec generalize_term (g:env)
 and generalize_args (g:env)
                     (bs1 bs2:list (universe & binder & var))
                     (xs1 xs2:list var)
+                    (hd:R.term) (pre:list R.argv)
                     (args1 args2:list R.argv)
 : T.Tac (option (env & list (universe & binder & var) & list R.argv))
 = match args1, args2 with
   | [], [] -> Some (g, [], [])
   | (a1, qual)::args1', (a2, _)::args2' -> (
-    match generalize_term g bs1 bs2 xs1 xs2 a1 a2 with
+    let a =
+      match generalize_term g bs1 bs2 xs1 xs2 a1 a2 with
+      | Some r -> Some r
+      | None -> generalize_arg_by_type g xs1 xs2 (T.mk_app hd pre) a1 a2
+    in
+    match a with
     | None -> None
     | Some (g, bnd, a) -> (
-      match generalize_args g bs1 bs2 xs1 xs2 args1' args2' with
+      match generalize_args g bs1 bs2 xs1 xs2 hd (pre @ [(a, qual)]) args1' args2' with
       | None -> None
       | Some (g, bs, args) -> Some (g, bnd@bs, (a, qual)::args)
     )
@@ -598,21 +642,32 @@ let rec salvage_matches (g:env) (b:term)
         g, newbs, lifted, c1::kept1, c2::kept2
     )
 
-let rec join_slprop g b (ex1 ex2:list (universe & binder)) (p1 p2:slprop)
+(* What the branches do not agree on. With no [pick], it stays under the
+   condition. Otherwise it is the part of the picked branch alone, with that
+   branch's pure facts guarded by its condition. Everything the branches did
+   agree on is joined as usual. A caller that picks must still prove the
+   result of both branches. *)
+let leftover (pick:option bool) (b:term) (p1 p2:slprop) : T.Tac slprop =
+  match pick with
+  | None -> RT.mk_if b p1 p2
+  | Some true -> guard_branch_slprop true b p1
+  | Some false -> guard_branch_slprop false b p2
+
+let rec join_slprop (pick:option bool) g b (ex1 ex2:list (universe & binder)) (p1 p2:slprop)
 : T.Tac slprop
 = match inspect_term p1, inspect_term p2 with
   | Tm_IsUnreachable, _ -> p2
   | _, Tm_IsUnreachable -> p1
 
   | Tm_WithPure pred1 n1 p1, _ ->
-    guard_with_pure true b pred1 n1 <| join_slprop g b ex1 ex1 p1 p2
+    guard_with_pure true b pred1 n1 <| join_slprop pick g b ex1 ex1 p1 p2
   | _, Tm_WithPure pred2 n2 p2 ->
-    guard_with_pure false b pred2 n2 <| join_slprop g b ex1 ex1 p1 p2
+    guard_with_pure false b pred2 n2 <| join_slprop pick g b ex1 ex1 p1 p2
 
   | Tm_ForallSL .., _
   | _, Tm_ForallSL .. ->
     //Not doing anything interesting to share binders
-    RT.mk_if b p1 p2
+    leftover pick b p1 p2
 
   | Tm_ExistsSL .., _
   | _, Tm_ExistsSL .. ->
@@ -641,7 +696,7 @@ let rec join_slprop g b (ex1 ex2:list (universe & binder)) (p1 p2:slprop)
        generalized over a fresh binder -- or goes back into its own branch. *)
     let g2, newbs, lifted, kept1, kept2 = salvage_matches g2 b bs1 bs2 xs1 xs2 matches in
     if Nil? lifted
-    then RT.mk_if b p1 p2 // nothing was salvaged; keep the term as it was
+    then leftover pick b p1 p2 // nothing was salvaged; keep the term as it was
     else
       (* An unmatched conjunct that mentions no bound variable is still
          one-sided, so it is guarded by the branch condition, exactly as in the
@@ -659,7 +714,7 @@ let rec join_slprop g b (ex1 ex2:list (universe & binder)) (p1 p2:slprop)
       let remaining =
         if is_emp rest1 && is_emp rest2
         then []
-        else [RT.mk_if b rest1 rest2]
+        else [leftover pick b rest1 rest2]
       in
       close_hoisted_exists newbs (list_as_slprop (remaining@pures1@pures2@lifted))
 
@@ -680,7 +735,7 @@ let rec join_slprop g b (ex1 ex2:list (universe & binder)) (p1 p2:slprop)
     match p1s, p2s with
     | [], [] -> list_as_slprop (pures1@pures2@matched)
     | _ ->
-      let remaining = RT.mk_if b (list_as_slprop p1s) (list_as_slprop p2s) in
+      let remaining = leftover pick b (list_as_slprop p1s) (list_as_slprop p2s) in
       list_as_slprop (remaining::pures1@pures2@matched)
 
 let rec join_effect_annot g (e1 e2:effect_annot)
@@ -725,7 +780,7 @@ let rec join_effect_annot g (e1 e2:effect_annot)
        text (Printf.sprintf "Effect of then-branch is %s" (show e1));
        text (Printf.sprintf "Effect of else-branch is %s" (show e2))]
 
-let join_post #g #hyp #b
+let join_post_pick (pick:option bool) #g #hyp #b
     (p1:post_hint_for_env (g_with_eq g hyp b tm_true))
     (p2:post_hint_for_env (g_with_eq g hyp b tm_false))
 : T.Tac (post_hint_for_env g)
@@ -748,7 +803,7 @@ let join_post #g #hyp #b
   let p1_post = normalize_slprop g' p1_post true in
   let p2_post = open_term_nv p2.post (ppname_default, x) in
   let p2_post = normalize_slprop g' p2_post true in
-  let joined_post = join_slprop g' b [] [] p1_post p2_post in
+  let joined_post = join_slprop pick g' b [] [] p1_post p2_post in
   let joined_post = close_term joined_post x in
   Pulse.Checker.Util.debug g "pulse.join_comp" (fun _ ->
     Printf.sprintf "Inferred joint postcondition:\n%s\n"
@@ -766,6 +821,7 @@ let join_post #g #hyp #b
   in
   res
 
+let join_post #g #hyp #b p1 p2 = join_post_pick None #g #hyp #b p1 p2
 
 let st_ghost_as_atomic_matches_post_hint
   (c:comp { C_STGhost? c })
