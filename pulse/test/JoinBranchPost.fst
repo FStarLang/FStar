@@ -192,3 +192,36 @@ fn join_with_pure_below_star (b:bool) (r s:ref int)
   r := 2;
   ()
 }
+
+(* The branches own the same cells, of different types, but list them in a
+   different order. Each conjunct must be joined with its identical twin, not
+   with the first conjunct of the other branch that has the same head (any two
+   [cell]s qualify, having no matching keys): that would pair cells of
+   different types under a `match`, which is ill-typed. *)
+let cell (#a:Type0) (r:ref a) : slprop = exists* v. r |-> v
+
+ghost fn touch (#a:Type0) (r:ref a)
+  requires cell r
+  ensures cell r
+{
+  ()
+}
+
+fn join_permuted_cells (b:bool) (r:ref int) (s:ref bool) (t:ref nat)
+  requires cell r ** cell s ** cell t
+  ensures cell r ** cell s ** cell t
+{
+  let x =
+    if (b) {
+      touch r;
+      touch s;
+      touch t;
+      true
+    } else {
+      touch s;
+      touch t;
+      touch r;
+      false
+    };
+  ()
+}

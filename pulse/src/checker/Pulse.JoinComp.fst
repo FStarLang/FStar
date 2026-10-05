@@ -284,9 +284,26 @@ let rec guard_pures then_ b (ps:list slprop)
 
 let may_match g (p:slprop) (q:slprop) = MKeys.eligible_for_smt_equality g p q
 
+(* Pair [p] with a conjunct of [qs]. An identical conjunct is preferred:
+   [may_match] holds for any two applications of a predicate without
+   matching keys, and pairing such a [p] with the first one in [qs] would
+   join, say, [cell r] with [cell s] (whose types may differ) when the other
+   branch lists the same cells in another order. *)
 let find_match g (p:slprop) (qs:list slprop)
 : T.Tac (list (slprop & slprop) & list slprop & list slprop)
-= let rec aux qs rest 
+= let rec exact qs rest
+  : T.Tac (option (slprop & list slprop))
+  = match qs with
+    | [] -> None
+    | q::qs ->
+      if T.term_eq p q
+      then Some (q, rev_acc rest qs)
+      else exact qs (q::rest)
+  in
+  match exact qs [] with
+  | Some (q, rest) -> [p,q], [], rest
+  | None ->
+  let rec aux qs rest 
   : T.Tac (list (slprop & slprop) & list slprop & list slprop)
   = match qs with
     | [] -> [], [p], rest
