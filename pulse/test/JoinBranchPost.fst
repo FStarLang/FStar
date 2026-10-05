@@ -142,3 +142,53 @@ fn join_no_path_condition_then (b:bool) (r:ref int)
   if (b) { () } else { () };
   ()
 }
+
+(* A cell and a predicate over the same hoisted value. Generalizing the
+   cell's value would cut it loose from the predicate, which still names the
+   old witness. The join must take both from the same branch. *)
+assume val pred (v:int) (s:int) : slprop
+
+fn advance (it:ref int)
+  requires it |-> 'v ** pred 'v 's
+  returns b:bool
+  ensures exists* v s. it |-> v ** pred v s
+{
+  true
+}
+
+fn join_linked_witness (c:bool) (it:ref int)
+  requires it |-> 'v ** pred 'v 's
+  ensures exists* v s. it |-> v ** pred v s
+{
+  let r =
+    if (true) {
+      let sc0 = c;
+      let sc1 = if (sc0) { advance it } else { false };
+      sc1
+    } else {
+      false
+    };
+  if (r) { let _ = advance it; () } else { () };
+  ()
+}
+
+(* The branches end with the same guarded state, but list it in a different
+   order and with different cell values. A [with_pure] below a star has to be
+   opened, so that its conjuncts are joined one by one; matched whole, the
+   two would be kept apart under a `match`. *)
+fn join_with_pure_below_star (b:bool) (r s:ref int)
+  requires r |-> 0 ** s |-> 0
+  ensures exists* v. r |-> v ** s |-> 0
+{
+  let x =
+    if (b) {
+      r := 1;
+      assert (with_pure (1 > 0) (fun _ -> r |-> 1 ** s |-> 0));
+      true
+    } else {
+      assert (with_pure (1 > 0) (fun _ -> s |-> 0 ** r |-> 0));
+      false
+    };
+  r := 2;
+  ()
+}

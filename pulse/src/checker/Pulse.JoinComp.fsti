@@ -38,8 +38,11 @@ val guard_branch_post (#g:env) (b:term) (then_:bool) (p:post_hint_for_env g)
 
 (* [join_post], except that what the branches do not agree on is taken from
    the branch [then_] selects (see [guard_branch_post]) instead of being left
-   under the condition. The result has to be proved of both branches. *)
-val join_post_pick (then_:option bool) #g #hyp #b
+   under the condition. The result has to be proved of both branches.
+   With [linked], a conjunct that names a branch's existential witness also
+   named by another of its conjuncts is not generalized out of the leftover,
+   which would cut the two apart; it is taken from the picked branch too. *)
+val join_post_pick (then_:option bool) (linked:bool) #g #hyp #b
     (p1:post_hint_for_env (g_with_eq g hyp b tm_true))
     (p2:post_hint_for_env (g_with_eq g hyp b tm_false))
 : T.Tac (post_hint_for_env g)

@@ -615,10 +615,26 @@ let guard_hoisted_pures (then_:bool) (b:term) (xs:list var) (gs:list (term & ppn
   let guarded, _ = guard_pures then_ b (T.map as_pure liftable) in
   guarded, gs
 
+(* Does [c] mention a hoisted variable that some other conjunct of its branch
+   also mentions? Generalizing [c] would then cut it loose from that conjunct:
+   the new binder says nothing about the variable the other conjunct still
+   names. [all] lists every conjunct of the branch, [c] among them, and its
+   [with_pure] guards: generalizing past a fact about the variable loses the
+   fact as well. *)
+let shares_hoisted (xs:list var) (all:list term) (c:term) : bool =
+  List.Tot.existsb
+    (fun x ->
+      not (indep_of [x] c) &&
+      List.Tot.length (List.Tot.filter (fun t -> not (indep_of [x] t)) all) > 1)
+    xs
+
 (* Split the matched pairs into those that can be taken out of the conditional
    -- combined as usual, or generalized over a fresh binder -- and those that
-   have to go back into the branch they came from. *)
-let rec salvage_matches (g:env) (b:term)
+   have to go back into the branch they came from. With [linked], a pair whose
+   hoisted variables are shared with other conjuncts of its branch is not
+   generalized, so that it stays with them. *)
+let rec salvage_matches (linked:bool) (all1 all2:list term)
+                        (g:env) (b:term)
                         (bs1 bs2:list (universe & binder & var))
                         (xs1 xs2:list var)
                         (matches:list (slprop & slprop))
@@ -626,19 +642,25 @@ let rec salvage_matches (g:env) (b:term)
 = match matches with
   | [] -> g, [], [], [], []
   | (c1, c2)::matches ->
+    let salvage_rest g = salvage_matches linked all1 all2 g b bs1 bs2 xs1 xs2 matches in
     if indep_of xs1 c1 && indep_of xs2 c2
     then (
       let c = combine_terms true g b (c1, c2) in
-      let g, newbs, lifted, kept1, kept2 = salvage_matches g b bs1 bs2 xs1 xs2 matches in
+      let g, newbs, lifted, kept1, kept2 = salvage_rest g in
       g, newbs, c::lifted, kept1, kept2
     )
     else (
-      match generalize_pair g bs1 bs2 xs1 xs2 c1 c2 with
+      let gen =
+        if linked && (shares_hoisted xs1 all1 c1 || shares_hoisted xs2 all2 c2)
+        then None
+        else generalize_pair g bs1 bs2 xs1 xs2 c1 c2
+      in
+      match gen with
       | Some (g, bs, c) ->
-        let g, newbs, lifted, kept1, kept2 = salvage_matches g b bs1 bs2 xs1 xs2 matches in
+        let g, newbs, lifted, kept1, kept2 = salvage_rest g in
         g, bs@newbs, c::lifted, kept1, kept2
       | None ->
-        let g, newbs, lifted, kept1, kept2 = salvage_matches g b bs1 bs2 xs1 xs2 matches in
+        let g, newbs, lifted, kept1, kept2 = salvage_rest g in
         g, newbs, lifted, c1::kept1, c2::kept2
     )
 
@@ -653,16 +675,79 @@ let leftover (pick:option bool) (b:term) (p1 p2:slprop) : T.Tac slprop =
   | Some true -> guard_branch_slprop true b p1
   | Some false -> guard_branch_slprop false b p2
 
-let rec join_slprop (pick:option bool) g b (ex1 ex2:list (universe & binder)) (p1 p2:slprop)
+(* Does a conjunct of [p], below its top-level stars, bind or guard
+   anything? Such a conjunct has to be opened before the two branches can be
+   compared conjunct by conjunct: matched whole, two [with_pure]s that differ
+   in a single conjunct would be kept apart entirely. *)
+let rec needs_hoist (p:slprop) : T.Tac bool =
+  match inspect_term p with
+  | Tm_Star l r -> if needs_hoist l then true else needs_hoist r
+  | Tm_ExistsSL .. | Tm_WithPure .. -> true
+  | _ -> false
+
+let join_hoisted (pick:option bool) (linked:bool) g b (p1 p2:slprop)
+: T.Tac slprop
+= (* At least one branch's postcondition is existentially quantified or
+     guarded by a [with_pure], at the top or below a star. The first is the
+     shape a branch takes as soon as it binds the result of a call. Rather
+     than give up on the whole thing, strip the binders and guards off
+     both sides and salvage what does not depend on them: a conjunct the
+     branch never touched comes straight out, and a conjunct that differs
+     only in a bound value comes out under a single new binder. What is left
+     over -- and only that -- stays under the conditional. *)
+  let g1, bs1, gs1, cs1 = hoist_binders g p1 in
+  let g2, bs2, gs2, cs2 = hoist_binders g1 p2 in
+  let xs1 = List.Tot.map (fun (_, _, x) -> x) bs1 in
+  let xs2 = List.Tot.map (fun (_, _, x) -> x) bs2 in
+  let matches, cs1, cs2 = partition_matches g2 cs1 cs2 in
+  Pulse.Checker.Util.debug g "pulse.join_comp" (fun _ ->
+    Printf.sprintf
+      "Hoisted %d and %d binders.\nMatches: %s\nRemaining ps=%s\nRemaining qs=%s\n"
+        (List.Tot.length bs1)
+        (List.Tot.length bs2)
+        (show matches)
+        (show cs1)
+        (show cs2)
+  );
+  (* Each matched pair either survives the hoisting -- as it stands, or
+     generalized over a fresh binder -- or goes back into its own branch. *)
+  let all1 = List.Tot.map fst gs1 @ cs1 @ List.Tot.map fst matches in
+  let all2 = List.Tot.map fst gs2 @ cs2 @ List.Tot.map snd matches in
+  let g2, newbs, lifted, kept1, kept2 =
+    salvage_matches linked all1 all2 g2 b bs1 bs2 xs1 xs2 matches in
+  if Nil? lifted
+  then leftover pick b p1 p2 // nothing was salvaged; keep the term as it was
+  else
+    (* An unmatched conjunct that mentions no bound variable is still
+       one-sided, so it is guarded by the branch condition, exactly as in the
+       unquantified case. *)
+    let indep1, dep1 = List.Tot.partition (indep_of xs1) (cs1@kept1) in
+    let indep2, dep2 = List.Tot.partition (indep_of xs2) (cs2@kept2) in
+    let gpures1, gs1 = guard_hoisted_pures true b xs1 gs1 in
+    let gpures2, gs2 = guard_hoisted_pures false b xs2 gs2 in
+    let pures1, indep1 = guard_pures true b indep1 in
+    let pures2, indep2 = guard_pures false b indep2 in
+    let pures1 = gpures1@pures1 in
+    let pures2 = gpures2@pures2 in
+    let rest1 = close_hoisted_exists bs1 (rewrap_guards gs1 (list_as_slprop (indep1@dep1))) in
+    let rest2 = close_hoisted_exists bs2 (rewrap_guards gs2 (list_as_slprop (indep2@dep2))) in
+    let remaining =
+      if is_emp rest1 && is_emp rest2
+      then []
+      else [leftover pick b rest1 rest2]
+    in
+    close_hoisted_exists newbs (list_as_slprop (remaining@pures1@pures2@lifted))
+
+let rec join_slprop (pick:option bool) (linked:bool) g b (ex1 ex2:list (universe & binder)) (p1 p2:slprop)
 : T.Tac slprop
 = match inspect_term p1, inspect_term p2 with
   | Tm_IsUnreachable, _ -> p2
   | _, Tm_IsUnreachable -> p1
 
   | Tm_WithPure pred1 n1 p1, _ ->
-    guard_with_pure true b pred1 n1 <| join_slprop pick g b ex1 ex1 p1 p2
+    guard_with_pure true b pred1 n1 <| join_slprop pick linked g b ex1 ex1 p1 p2
   | _, Tm_WithPure pred2 n2 p2 ->
-    guard_with_pure false b pred2 n2 <| join_slprop pick g b ex1 ex1 p1 p2
+    guard_with_pure false b pred2 n2 <| join_slprop pick linked g b ex1 ex1 p1 p2
 
   | Tm_ForallSL .., _
   | _, Tm_ForallSL .. ->
@@ -671,54 +756,12 @@ let rec join_slprop (pick:option bool) g b (ex1 ex2:list (universe & binder)) (p
 
   | Tm_ExistsSL .., _
   | _, Tm_ExistsSL .. ->
-    (* At least one branch's postcondition is existentially quantified at the
-       top, which is the shape a branch takes as soon as it binds the result of
-       a call. Rather than give up on the whole thing, strip the binders off
-       both sides and salvage what does not depend on them: a conjunct the
-       branch never touched comes straight out, and a conjunct that differs
-       only in a bound value comes out under a single new binder. What is left
-       over -- and only that -- stays under the conditional. *)
-    let g1, bs1, gs1, cs1 = hoist_binders g p1 in
-    let g2, bs2, gs2, cs2 = hoist_binders g1 p2 in
-    let xs1 = List.Tot.map (fun (_, _, x) -> x) bs1 in
-    let xs2 = List.Tot.map (fun (_, _, x) -> x) bs2 in
-    let matches, cs1, cs2 = partition_matches g2 cs1 cs2 in
-    Pulse.Checker.Util.debug g "pulse.join_comp" (fun _ ->
-      Printf.sprintf
-        "Hoisted %d and %d binders.\nMatches: %s\nRemaining ps=%s\nRemaining qs=%s\n"
-          (List.Tot.length bs1)
-          (List.Tot.length bs2)
-          (show matches)
-          (show cs1)
-          (show cs2)
-    );
-    (* Each matched pair either survives the hoisting -- as it stands, or
-       generalized over a fresh binder -- or goes back into its own branch. *)
-    let g2, newbs, lifted, kept1, kept2 = salvage_matches g2 b bs1 bs2 xs1 xs2 matches in
-    if Nil? lifted
-    then leftover pick b p1 p2 // nothing was salvaged; keep the term as it was
-    else
-      (* An unmatched conjunct that mentions no bound variable is still
-         one-sided, so it is guarded by the branch condition, exactly as in the
-         unquantified case. *)
-      let indep1, dep1 = List.Tot.partition (indep_of xs1) (cs1@kept1) in
-      let indep2, dep2 = List.Tot.partition (indep_of xs2) (cs2@kept2) in
-      let gpures1, gs1 = guard_hoisted_pures true b xs1 gs1 in
-      let gpures2, gs2 = guard_hoisted_pures false b xs2 gs2 in
-      let pures1, indep1 = guard_pures true b indep1 in
-      let pures2, indep2 = guard_pures false b indep2 in
-      let pures1 = gpures1@pures1 in
-      let pures2 = gpures2@pures2 in
-      let rest1 = close_hoisted_exists bs1 (rewrap_guards gs1 (list_as_slprop (indep1@dep1))) in
-      let rest2 = close_hoisted_exists bs2 (rewrap_guards gs2 (list_as_slprop (indep2@dep2))) in
-      let remaining =
-        if is_emp rest1 && is_emp rest2
-        then []
-        else [leftover pick b rest1 rest2]
-      in
-      close_hoisted_exists newbs (list_as_slprop (remaining@pures1@pures2@lifted))
+    join_hoisted pick linked g b p1 p2
 
   | _ ->
+    if needs_hoist p1 || needs_hoist p2
+    then join_hoisted pick linked g b p1 p2
+    else
     let open Pulse.Show in
     let p1s, p2s = slprop_as_list p1, slprop_as_list p2 in
     let matches, p1s, p2s = partition_matches g p1s p2s in
@@ -780,7 +823,7 @@ let rec join_effect_annot g (e1 e2:effect_annot)
        text (Printf.sprintf "Effect of then-branch is %s" (show e1));
        text (Printf.sprintf "Effect of else-branch is %s" (show e2))]
 
-let join_post_pick (pick:option bool) #g #hyp #b
+let join_post_pick (pick:option bool) (linked:bool) #g #hyp #b
     (p1:post_hint_for_env (g_with_eq g hyp b tm_true))
     (p2:post_hint_for_env (g_with_eq g hyp b tm_false))
 : T.Tac (post_hint_for_env g)
@@ -803,7 +846,7 @@ let join_post_pick (pick:option bool) #g #hyp #b
   let p1_post = normalize_slprop g' p1_post true in
   let p2_post = open_term_nv p2.post (ppname_default, x) in
   let p2_post = normalize_slprop g' p2_post true in
-  let joined_post = join_slprop pick g' b [] [] p1_post p2_post in
+  let joined_post = join_slprop pick linked g' b [] [] p1_post p2_post in
   let joined_post = close_term joined_post x in
   Pulse.Checker.Util.debug g "pulse.join_comp" (fun _ ->
     Printf.sprintf "Inferred joint postcondition:\n%s\n"
@@ -821,7 +864,7 @@ let join_post_pick (pick:option bool) #g #hyp #b
   in
   res
 
-let join_post #g #hyp #b p1 p2 = join_post_pick None #g #hyp #b p1 p2
+let join_post #g #hyp #b p1 p2 = join_post_pick None false #g #hyp #b p1 p2
 
 let st_ghost_as_atomic_matches_post_hint
   (c:comp { C_STGhost? c })

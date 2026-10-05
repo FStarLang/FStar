@@ -145,15 +145,33 @@ let check
     J.infer_post' g g' u t x post
   in
 
+  let extract_nat #g #pre (#ph:post_hint_for_env g) (r:checker_result_t g pre (PostHint ph))
+  : T.Tac (br:st_term { ~(hyp `Set.mem` freevars_st br) } &
+           c:comp_st { comp_pre c == pre /\ comp_res c == ph.ret_ty /\
+                       comp_u c == ph.u /\ comp_post c == ph.post })
+  = let (| br, c |) =
+      let ppname = mk_ppname_no_range "_if_br" in
+      apply_checker_result_k_nohint r ppname
+    in
+    assume not (hyp `Set.mem` freevars_st br);
+    (| br, c |)
+  in
+
   let then_ = check_branch tm_true e1 true in
   let else_ = check_branch tm_false e2 false in
   let joinable : (
-    ph:post_hint_for_env g & 
+    ph:post_hint_for_env g &
     checker_result_t (g_with_eq tm_true) pre (PostHint ph) &
-    checker_result_t (g_with_eq tm_false) pre (PostHint ph)
+    checker_result_t (g_with_eq tm_false) pre (PostHint ph) &
+    option (e1:st_term { ~(hyp `Set.mem` freevars_st e1) } &
+            c1:comp_st { comp_pre c1 == pre /\ comp_res c1 == ph.ret_ty /\
+                         comp_u c1 == ph.u /\ comp_post c1 == ph.post } &
+            e2:st_term { ~(hyp `Set.mem` freevars_st e2) } &
+            c2:comp_st { comp_pre c2 == pre /\ comp_res c2 == ph.ret_ty /\
+                         comp_u c2 == ph.u /\ comp_post c2 == ph.post })
   ) = match branch_hint with
-      | PostHint ph -> 
-        (| ph, then_, else_ |)
+      | PostHint ph ->
+        (| ph, then_, else_, None |)
       | _ ->
         let then_ : checker_result_t _ _ NoHint = retype_checker_result _ then_ in
         let else_ : checker_result_t _ _ NoHint = retype_checker_result _ else_ in
@@ -168,6 +186,15 @@ let check
           let else_ = Pulse.Checker.Prover.prove_post_hint else_ (PostHint post) e2.range in
           (| post, then_, else_ |)
         in
+        (* A candidate is only accepted once both branches have been
+           elaborated against it: the prover leaves some of its checks (e.g.
+           that two cells it matched hold the same value) to elaboration. *)
+        let prove_and_extract (post:post_hint_for_env g) () =
+          let (| post, then_, else_ |) = prove_both post () in
+          let (| e1, c1 |) = extract_nat then_ in
+          let (| e2, c2 |) = extract_nat else_ in
+          (| post, then_, else_, Some (| e1, c1, e2, c2 |) |)
+        in
         (* When the join keeps part of the state under the condition, try
            taking that part from one branch. The prover may reach it from the
            other branch by the folds and unfolds it applies on its own
@@ -177,30 +204,52 @@ let check
            agree on is joined as usual. Taking the picked branch's whole
            postcondition would also fix the values of cells the other
            branch did not write: e.g. a cell written to a constant in one
-           branch and untouched in the other. The prover then turns that into
-           an SMT equality, which fails only after the attempt has been
-           accepted.
-           Each candidate is proved of both branches before it is used, so
-           this only ever picks among sound options. If neither works, keep
-           the join. *)
-        if not (post_keeps_conditional post.post)
-        then prove_both post ()
-        else (
-          let with_leftover_of (then_:bool) () =
-            let p = Pulse.JoinComp.join_post_pick (Some then_) #g #hyp #b post_then post_else in
-            let p : post_hint_for_env g =
-              { p with effect_annot = post.effect_annot } in
-            prove_both p ()
-          in
-          match RU.try_quietly (with_leftover_of false) with
-          | Some r -> r
-          | None ->
-            match RU.try_quietly (with_leftover_of true) with
+           branch and untouched in the other, which the prover can only
+           match by an SMT equality that does not hold.
+           First try without generalizing a cell whose value names a
+           witness the branch's other conjuncts also name: generalizing it
+           cuts the two apart (a pointer to an iterator against the
+           iterator's predicate over the same value). That join can still be
+           proved of both branches, even when it keeps no conditional, but
+           leaves a postcondition the code after the join cannot use. Such a
+           cell is left to the picked branch as well. Only if that fails,
+           generalize it.
+           Each candidate is proved of, and elaborated in, both branches
+           before it is used, so this only ever picks among sound options.
+           If none works, keep the join. *)
+        let linked_post = Pulse.JoinComp.join_post_pick None true #g #hyp #b post_then post_else in
+        let with_leftover_of (linked then_:bool) () =
+          let p = Pulse.JoinComp.join_post_pick (Some then_) linked #g #hyp #b post_then post_else in
+          let p : post_hint_for_env g =
+            { p with effect_annot = post.effect_annot } in
+          prove_and_extract p ()
+        in
+        let rec first (cs:list (bool & bool))
+          : T.Tac (ph:post_hint_for_env g &
+                   checker_result_t (g_with_eq tm_true) pre (PostHint ph) &
+                   checker_result_t (g_with_eq tm_false) pre (PostHint ph) &
+                   option (e1:st_term { ~(hyp `Set.mem` freevars_st e1) } &
+                           c1:comp_st { comp_pre c1 == pre /\ comp_res c1 == ph.ret_ty /\
+                                        comp_u c1 == ph.u /\ comp_post c1 == ph.post } &
+                           e2:st_term { ~(hyp `Set.mem` freevars_st e2) } &
+                           c2:comp_st { comp_pre c2 == pre /\ comp_res c2 == ph.ret_ty /\
+                                        comp_u c2 == ph.u /\ comp_post c2 == ph.post })) =
+          match cs with
+          | [] ->
+            let (| post, then_, else_ |) = prove_both post () in
+            (| post, then_, else_, None |)
+          | (linked, then_)::cs ->
+            match RU.try_quietly (with_leftover_of linked then_) with
             | Some r -> r
-            | None -> prove_both post ()
-        )
+            | None -> first cs
+        in
+        let linked_cs =
+          if post_keeps_conditional linked_post.post then [(true, false); (true, true)] else [] in
+        let unlinked_cs =
+          if post_keeps_conditional post.post then [(false, false); (false, true)] else [] in
+        first (linked_cs @ unlinked_cs)
   in
-  let (| post_hint', then_, else_ |) = joinable in
+  let (| post_hint', then_, else_, extracted |) = joinable in
 
   let assemble (post_final:post_hint_for_env g {
                   PostHint? post_hint ==> PostHint?.v post_hint == post_final })
@@ -247,19 +296,14 @@ let check
     // the whole conditional is divergent (issue #4366). This avoids re-checking
     // any branch.
     //
-    let extract_nat #g #pre (#ph:post_hint_for_env g) (r:checker_result_t g pre (PostHint ph)) (is_then:bool)
-    : T.Tac (br:st_term { ~(hyp `Set.mem` freevars_st br) } &
-             c:comp_st { comp_pre c == pre /\ comp_res c == ph.ret_ty /\
-                         comp_u c == ph.u /\ comp_post c == ph.post })
-    = let (| br, c |) =
-        let ppname = mk_ppname_no_range "_if_br" in
-        apply_checker_result_k_nohint r ppname
-      in
-      assume not (hyp `Set.mem` freevars_st br);
-      (| br, c |)
+    let (| e1, c1, e2, c2 |) =
+      match extracted with
+      | Some r -> r
+      | None ->
+        let (| e1, c1 |) = extract_nat then_ in
+        let (| e2, c2 |) = extract_nat else_ in
+        (| e1, c1, e2, c2 |)
     in
-    let (| e1, c1 |) = extract_nat then_ true in
-    let (| e2, c2 |) = extract_nat else_ false in
     //
     // Inferred branches produce only stt or stt_div; join by letting stt_div
     // dominate.
