@@ -14,13 +14,14 @@
    limitations under the License.
 *)
 
-(* A hand-written lexer for F*, a port of src/ml/FStarC_Parser_LexFStar.ml.
+(* A hand-written lexer for F*, a port of the former sedlex lexer
+   (FStarC_Parser_LexFStar.ml), which stage0 still uses.
 
    It emulates sedlex's longest-match semantics (ties go to the earlier
-   rule) and the position conventions of FStarC_Sedlexing, so that tokens
-   carry exactly the positions the Menhir parser sees.  The whole input is
-   lexed up front; a lexical error becomes an ERROR token, which the parser
-   raises only when it reaches it (as the lazy Menhir lexer would). *)
+   rule) and the position conventions of the former FStarC_Sedlexing, so
+   that tokens carry exactly the positions the Menhir parser saw.  The whole
+   input is lexed up front; a lexical error becomes an ERROR token, which the
+   parser raises only when it reaches it (as the lazy Menhir lexer did). *)
 module FStarC.Parser.Lexer
 
 open FStarC
@@ -1083,7 +1084,7 @@ let rec next_token (st:lstate) : ML token =
   | RAny -> lex_error st Codes.Fatal_SyntaxError "unexpected char" sp sp
 
 (* Lex an entire input.  Returns the tokens (ending with EOF or ERROR) and
-   the comments, most recent first (as FStarC_Parser_Util.flush_comments). *)
+   the comments, most recent first (as FStarC.Parser.AST.Util.flush_comments). *)
 let lex_all (fname:string) (contents:string) (line col:int)
   : ML (list token & list (string & R.range))
 = let st = {

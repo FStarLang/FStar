@@ -57,7 +57,7 @@ let lazy_chooser (k:Syntax.Syntax.lazy_kind) (i:Syntax.Syntax.lazyinfo) : ML Syn
 
 let _ =
   Syntax.DsEnv.ugly_sigelt_to_string_hook := show;
-  Errors.set_parse_warn_error Parser.ParseIt.parse_warn_error;
+  Errors.set_parse_warn_error Parser.Frontend.parse_warn_error;
   Syntax.Syntax.lazy_chooser := Some lazy_chooser;
   Syntax.Util.tts_f := Some show;
   Syntax.Util.ttd_f := Some Class.PP.pp;

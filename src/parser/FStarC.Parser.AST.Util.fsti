@@ -59,9 +59,15 @@ type extension_lang_parser = {
     ML (either error_message (list decl)))
 }
 
+(* The comments read by extension-language parsers. FStarC.Parser.Frontend
+   collects them after parsing a file or fragment. The buffer is most recent
+   first: [add_comments cs] expects [cs] in that order and puts them in front. *)
+val add_comments (cs:list (string & FStarC.Range.t)) : ML unit
+val flush_comments () : ML (list (string & FStarC.Range.t))
+
 (* A one-field record is represented by that field (Custard, section 5.5), so
-   the constructor is not a name the hand-written OCaml realization of the
-   parser can spell.  It builds one through this instead, which extracts to
+   the constructor is not a name hand-written OCaml (e.g. a language-extension
+   plugin) can spell.  It builds one through this instead, which extracts to
    the same thing under either scheme. *)
 val mk_extension_lang_parser
     (f : (contents:string -> p:FStarC.Range.t -> ML (either error_message (list decl))))

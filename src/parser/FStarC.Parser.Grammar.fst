@@ -16,10 +16,10 @@
 
 (* The F* grammar, written with the Pratt engine of FStarC.Parser.Pratt.
 
-   This is a port of FStarC_Parser_Parse.mly, and it is meant to produce
+   This is a port of the former Menhir grammar FStarC_Parser_Parse.mly,
+   which stage0 still uses to parse the compiler. It is meant to produce
    exactly the same ASTs (including ranges and generated names) as the
-   Menhir parser on all inputs that Menhir accepts; this can be checked
-   with --ext parser=compare.
+   Menhir parser on all inputs that Menhir accepts.
 
    Precedences of terms. A term position asks for a minimal precedence;
    the named nonterminals of the Menhir grammar correspond to:

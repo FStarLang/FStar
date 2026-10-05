@@ -3451,7 +3451,8 @@ The record recovery of §5.5 still applies, but not unconditionally: for a
 realized type the question is not what Custard would choose but what the
 *source* said, because that is what a realization mirrors.
 `FStarC.Parser.ParseIt.code_fragment` is `type t = { code; range }` in F\* and
-a record in `FStarC_Parser_ParseIt.ml`; `FStar.Pervasives.dtuple3` is a
+a record in `FStarC_Parser_ParseIt.ml` (since replaced by
+`FStarC.Parser.Frontend`, written in F\*); `FStar.Pervasives.dtuple3` is a
 one-constructor inductive in F\* and a variant in `FStar_Pervasives.ml`.
 Custard represents both as a `TVariant` and would normally make a record of
 either, so the source's own shape is recorded on the declaration as a

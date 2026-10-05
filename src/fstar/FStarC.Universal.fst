@@ -43,7 +43,7 @@ module Util     = FStarC.Syntax.Util
 module Desugar  = FStarC.ToSyntax.ToSyntax
 module SMT      = FStarC.SMTEncoding.Solver
 module Const    = FStarC.Parser.Const
-module Pars     = FStarC.Parser.ParseIt
+module Pars     = FStarC.Parser.Frontend
 module Tc       = FStarC.TypeChecker.Tc
 module TcTerm   = FStarC.TypeChecker.TcTerm
 module BU       = FStarC.Util
@@ -844,7 +844,7 @@ let load_interface_of_current_file (env:TcEnv.env_t) (fn:string) : ML TcEnv.env_
 let scan_and_load_fly_deps
     (filename:string)
     (env:TcEnv.env_t)
-    (input:either (FStarC.Parser.ParseIt.input_frag & lang_decls_t) FStarC.Parser.AST.decl)
+    (input:either (FStarC.Parser.Frontend.input_frag & lang_decls_t) FStarC.Parser.AST.decl)
   : ML _ = let uenv, files = scan_and_load_fly_deps_internal filename (new_uenv env) input in
   tcenv_of_uenv uenv, files
 
@@ -853,7 +853,7 @@ let load_fly_deps_and_tc_one_fragment
     (is_interface:bool)
     (mod:option Syntax.modul)
     (tcenv:TcEnv.env_t)
-    (frag_or_decl:either (FStarC.Parser.ParseIt.input_frag & lang_decls_t) FStarC.Parser.AST.decl)
+    (frag_or_decl:either (FStarC.Parser.Frontend.input_frag & lang_decls_t) FStarC.Parser.AST.decl)
 : ML (option Syntax.modul &
   TcEnv.env &
   lang_decls_t &

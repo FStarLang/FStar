@@ -18,7 +18,7 @@ module FStarC.Parser.Driver
 open FStarC.Effect
 module Range      = FStarC.Range
 module AST        = FStarC.Parser.AST
-module ParseIt    = FStarC.Parser.ParseIt
+module Frontend   = FStarC.Parser.Frontend
 
 val is_cache_file : string -> bool
 
@@ -26,9 +26,9 @@ type fragment =
     | Empty
     | Modul of AST.modul // an entire module or interface -- unspecified
     | Decls of list AST.decl // a partial set of declarations
-    | DeclsWithContent of list (AST.decl & ParseIt.code_fragment)
+    | DeclsWithContent of list (AST.decl & Frontend.code_fragment)
 
-val parse_fragment : ParseIt.lang_opts -> ParseIt.input_frag -> ML fragment
+val parse_fragment : Frontend.lang_opts -> Frontend.input_frag -> ML fragment
 
 (* Returns a non-desugared AST (as in [parser/ast.fs]) or aborts. *)
 val parse_file : string -> ML (AST.file & list (string & Range.t))

@@ -14,12 +14,11 @@
    limitations under the License.
 *)
 
-(* The Pulse grammar for the new parser (FStarC.Parser.Grammar), a port of
-   pulse/src/ml/pulseparser.mly. It extends the F* grammar in two ways:
+(* The Pulse grammar, built on the F* grammar of
+   FStarC.Parser.Grammar, which it extends in two ways:
 
    - the identifiers in [keywords] are keywords: the token stream is
-     rewritten before parsing, as PulseSyntaxExtension_Parser.ml does for
-     Menhir;
+     rewritten before parsing (see [rewrite_token]);
 
    - the type of a Pulse function, [fn (x:t) requires p ensures q], is a
      leading rule of F* terms, so it can be used in any type position.
@@ -672,7 +671,7 @@ let p_lang_decl (ps:pstate) : ML (list (either S.decl FStarC.Parser.AST.decl)) =
       map (fun d -> Inr (FStarC.Parser.AST.add_decorations d ds)) (p_decoratable_decl ps [])
 
 (* ---------------------------------------------------------------------- *)
-(* Entry points: see PulseSyntaxExtension.Parser.fsti                     *)
+(* Entry points, used by PulseSyntaxExtension.ASTBuilder                *)
 (* ---------------------------------------------------------------------- *)
 
 let start_at (contents:string) (r:R.range) : ML (pstate & list (string & R.range)) =
@@ -705,12 +704,12 @@ let parse_peek_id (contents:string) (r:R.range)
   with
   | E.Error e -> Inr (error_msg e)
 
-(* Also returns the comments (most recent first); on an error, only
-   those before the token where parsing stopped. *)
+(* The comments are left in the buffer of FStarC.Parser.AST.Util, where
+   FStarC.Parser.Frontend collects them; on an error, only those before the
+   token where parsing stopped. *)
 let parse_lang (contents:string) (r:R.range)
   : ML (either (list (either S.decl FStarC.Parser.AST.decl) &
-                option (Codes.error_code & E.error_message & R.range) &
-                list (string & R.range))
+                option (Codes.error_code & E.error_message & R.range))
                (option (list Pp.document & R.range)))
 = try
     let ps, comments = start_at contents r in
@@ -722,6 +721,7 @@ let parse_lang (contents:string) (r:R.range)
         let f = FStarC.SmallInt.max !ps.furthest !ps.idx in
         drop (length comments - (tok_at ps f).ncom) comments
     in
-    Inl (ds, err, comments)
+    FStarC.Parser.AST.Util.add_comments comments;
+    Inl (ds, err)
   with
   | E.Error e -> Inr (Some (error_msg e))

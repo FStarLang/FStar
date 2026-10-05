@@ -15,20 +15,20 @@
 *)
 module FStarC.Parser.Driver
 module Range      = FStarC.Range
-module ParseIt    = FStarC.Parser.ParseIt
+module Frontend   = FStarC.Parser.Frontend
 open FStarC.Effect
 
 open FStarC
 open FStarC.Parser
 open FStarC.Parser.AST
-open FStarC.Parser.ParseIt
+open FStarC.Parser.Frontend
 open FStarC.Errors
 open FStarC.Class.Show
 
 let is_cache_file (fn: string) = Filepath.get_file_extension fn = ".cache"
 
-let parse_fragment lang_opt (frag: ParseIt.input_frag) =
-    match ParseIt.parse lang_opt (Toplevel frag) with
+let parse_fragment lang_opt (frag: Frontend.input_frag) =
+    match Frontend.parse lang_opt (Toplevel frag) with
     | ASTFragment (Inl modul, _) -> //interactive mode: module
         Modul modul
     | ASTFragment (Inr [], _) -> //interactive mode: blank space
@@ -54,7 +54,7 @@ let maybe_dump_module (m:modul) : ML unit =
       )
 (* Returns a non-desugared AST (as in [parser/ast.fs]) or aborts. *)
 let parse_file fn =
-    match ParseIt.parse None (Filename fn) with
+    match Frontend.parse None (Filename fn) with
     | ASTFragment (Inl ast, comments) ->
         ast, comments
     | ASTFragment (Inr _ , _) ->

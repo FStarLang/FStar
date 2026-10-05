@@ -1972,7 +1972,7 @@ let collect (all_cmd_line_files: list file_name)
   in
   let all_cmd_line_files =
       all_cmd_line_files |> List.map (fun fn ->
-        if Some? (FStarC.Parser.ParseIt.read_vfs_entry fn) then
+        if Some? (FStarC.Parser.Frontend.read_vfs_entry fn) then
           // This allows the IDE to check files that are not saved yet.
           fn
         else match Find.find_file fn with
