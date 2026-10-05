@@ -22,7 +22,7 @@ open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Errors
 open FStarC.TypeChecker.Env
-open FStarC.Parser.ParseIt
+open FStarC.Parser.Frontend
 open FStarC.Class.Show
 
 module DsEnv = FStarC.Syntax.DsEnv
@@ -220,7 +220,7 @@ let parse_incremental_decls () =
      let >< junk"
   in
 
-  let open FStarC.Parser.ParseIt in
+  let open FStarC.Parser.Frontend in
   let input0 = Incremental { frag_fname = "Demo.fst";
                              frag_text = source0;
                              frag_line = 1;
@@ -290,8 +290,8 @@ let parse_incremental_decls_use_lang () =
      let g x = f x\n\
      #restart-solver"
   in
-  FStarC.Parser.AST.Util.register_extension_lang_parser "somelang" FStarC.Parser.ParseIt.parse_fstar_incrementally;
-  let open FStarC.Parser.ParseIt in
+  FStarC.Parser.AST.Util.register_extension_lang_parser "somelang" FStarC.Parser.Frontend.parse_fstar_incrementally;
+  let open FStarC.Parser.Frontend in
   let input0 = Incremental { frag_fname = "Demo.fst";
                              frag_text = source0;
                              frag_line = 1;

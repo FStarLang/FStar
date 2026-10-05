@@ -24,7 +24,7 @@ module DsEnv   = FStarC.Syntax.DsEnv
 module TcEnv   = FStarC.TypeChecker.Env
 module Syntax  = FStarC.Syntax.Syntax
 module Dep     = FStarC.Parser.Dep
-module ParseIt = FStarC.Parser.ParseIt
+module Frontend = FStarC.Parser.Frontend
 
 type uenv = FStarC.Extraction.ML.UEnv.uenv
 
@@ -44,7 +44,7 @@ val tc_one_fragment :
     is_interface:bool ->
     option Syntax.modul ->
     TcEnv.env_t ->
-    either (FStarC.Parser.ParseIt.input_frag & lang_decls_t) FStarC.Parser.AST.decl ->
+    either (FStarC.Parser.Frontend.input_frag & lang_decls_t) FStarC.Parser.AST.decl ->
     ML (option Syntax.modul & TcEnv.env & lang_decls_t)
 
 (* Loads one file as a dependence. Used in interactive mode when fly_deps is off *)
@@ -72,7 +72,7 @@ val load_fly_deps_and_tc_one_fragment :
     is_interface:bool ->
     option Syntax.modul ->
     TcEnv.env_t ->
-    either (FStarC.Parser.ParseIt.input_frag & lang_decls_t) FStarC.Parser.AST.decl ->
+    either (FStarC.Parser.Frontend.input_frag & lang_decls_t) FStarC.Parser.AST.decl ->
     ML (option Syntax.modul &
     TcEnv.env &
     lang_decls_t &

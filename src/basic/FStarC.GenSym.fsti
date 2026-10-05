@@ -28,6 +28,10 @@ names generated before the reset. Should be used only when it is known
 that freshness across resets is not needed. *)
 val reset_gensym        : unit -> ML unit
 
+(** Save and restore the gensym counter, e.g. for backtracking parsers. *)
+val get_gensym_state    : unit -> ML int
+val set_gensym_state    : int -> ML unit
+
 (** Do something without affecting the gensym. Useful e.g. for printing,
 to make sure there's no side effect. *)
 val with_frozen_gensym  : (unit -> ML 'a) -> ML 'a

@@ -37,7 +37,7 @@ open FStarC.Universal
 open FStarC.TypeChecker.Env
 open FStarC.TypeChecker.Common
 open FStarC.Interactive
-open FStarC.Parser.ParseIt
+open FStarC.Parser.Frontend
 open FStarC.Class.Show
 open FStarC.Json
 

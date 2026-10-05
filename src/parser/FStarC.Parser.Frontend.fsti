@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStarC.Parser.ParseIt
+module FStarC.Parser.Frontend
 
 open FStarC
 open FStarC.Effect
@@ -31,6 +31,8 @@ type input_frag = {
     frag_line:int;
     frag_col:int
 }
+
+val find_file: string -> ML string
 
 val read_vfs_entry : string -> ML (option (time_of_day & string))
 // This lets the ide tell us about edits not (yet) reflected on disk.
@@ -60,13 +62,12 @@ type parse_result =
     | Term of AST.term
     | ParseError of parse_error
 
+(* useful for unit testing and registered as the #lang-fstar parser *)
+val parse_fstar_incrementally : AU.extension_lang_parser
+
 let lang_opts = option string
 val parse (ext_lang:lang_opts)
           (frag:parse_frag)
 : ML parse_result
-val find_file: string -> ML string
 
 val parse_warn_error: string -> ML (option (list FStarC.Errors.error_setting))
-
-(* useful for unit testing and registered a #lang-fstar parser *)
-val parse_fstar_incrementally : AU.extension_lang_parser

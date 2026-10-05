@@ -1319,7 +1319,6 @@ let realized_modules : list (list string) = [
   ["FStarC"; "List"];
   ["FStarC"; "PIMap"];
   ["FStarC"; "PSMap"];
-  ["FStarC"; "Parser"; "ParseIt"];
   ["FStarC"; "Platform"; "Base"];
   ["FStarC"; "Plugins"; "Base"];
   ["FStarC"; "Pprint"];

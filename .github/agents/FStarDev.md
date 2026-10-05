@@ -32,7 +32,7 @@ FStar/
 │   ├── prettyprint/        # A pretty-printer library (François Pottier's pprint)
 │   ├── fstar/              # Top-level driver (FStarC.Main, FStarC.Universal)
 │   ├── tests/              # Compiler unit tests (OCaml)
-│   ├── ml/                 # Hand-written OCaml: lexer, parser (menhir), system utils
+│   ├── ml/                 # Hand-written OCaml: system utils
 │   ├── class/              # Typeclasses used in the compiler
 │   ├── data/               # Data structures used in the compiler
 ├── ulib/                   # F* standard library (verified .fst/.fsti files)
@@ -44,7 +44,7 @@ FStar/
 │   ├── src/checker/        # Pulse typechecker (F* source, extracted to OCaml plugin)
 │   ├── src/extraction/     # Pulse-specific extraction (to C, OCaml)
 │   ├── src/syntax_extension/ # Pulse syntax desugaring
-│   ├── src/ml/             # Hand-written OCaml for Pulse (parser .mly)
+│   ├── src/ml/             # Hand-written OCaml for Pulse (runtime utils)
 │   ├── lib/                # Pulse standard library (common/, pulse/)
 │   ├── mk/                 # Build infrastructure (test.mk, common.mk, locate.mk)
 │   ├── test/               # Pulse tests
@@ -62,10 +62,9 @@ F* compiler modules use the `FStarC.` prefix. The module
 `FStarC.TypeChecker.Tc` lives at `src/typechecker/FStarC.TypeChecker.Tc.fst`.
 Each `.fst` usually has a corresponding `.fsti` interface.
 
-Some modules are implemented directly in OCaml under `src/ml/` (the
-lexer, menhir parser, and certain system utilities that have only an
-`.fsti` in F*). These OCaml files use underscores:
-`FStarC_Parser_Parse.mly`, `FStarC_Parser_LexFStar.ml`, etc.
+Some modules are implemented directly in OCaml under `src/ml/` (certain
+system utilities that have only an `.fsti` in F*). These OCaml files use
+underscores: `FStarC_Util.ml`, `FStarC_Hash.ml`, etc.
 
 ## Multi-Stage Bootstrap Pipeline
 
@@ -219,15 +218,15 @@ also recorded in `CONTRIBUTING.md`):
 
 ### Modifying the Parser
 
-The parser is in `src/ml/FStarC_Parser_Parse.mly` (menhir grammar)
-and the lexer in `src/ml/FStarC_Parser_LexFStar.ml` (sedlex). These
-are pure OCaml files that do not go through the F*→OCaml extraction
-pipeline. Changes take effect via dune rebuild (through the
-`.src.ml.touch` sentinel).
+The lexer and parser are written in F*: `src/parser/FStarC.Parser.Lexer.fst`,
+the Pratt parser engine `FStarC.Parser.Pratt.fst`, the grammar
+`FStarC.Parser.Grammar.fst`, and the interface used by the rest of the
+compiler, `FStarC.Parser.Frontend.fst`. See `src/parser/README`. On base
+F*, the grammar must produce the same ASTs as the Menhir parser of stage0,
+which still parses the compiler sources.
 
-Pulse has its own parser extension in
-`pulse/src/ml/pulseparser.mly` which is merged with the F* parser
-via menhir's `--merge-into` mechanism in `stage3/dune/pulse-plugin/dune`.
+Pulse extends the F* grammar in
+`pulse/src/syntax_extension/PulseSyntaxExtension.Grammar.fst`.
 
 ### Modifying the Typechecker
 
@@ -319,7 +318,7 @@ Libraries:
 - `fstar_plugins` — ulib plugin extraction (tactics, etc.)
 - `pulse_plugin` — Pulse checker/extraction/syntax as OCaml library
 
-PPX preprocessors used: `ppx_deriving.show`, `ppx_deriving_yojson`, `sedlex.ppx`.
+PPX preprocessors used: `ppx_deriving.show`, `ppx_deriving_yojson`.
 
 To run dune directly (rarely needed):
 ```bash

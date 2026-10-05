@@ -26,8 +26,12 @@ FStarC.Hooks
 FStarC.Interactive.Ide
 FStarC.Reflection.V2.Interpreter
 
-# FStarC.Parser.AST and friends: the hand-written grammar in
-# src/ml/FStarC_Parser_Parse.mly builds the surface AST directly.
+# FStarC.Parser.AST and friends: public API for language-extension plugins
+# (e.g. tests/extension-lang/TinyPlugin.ml), which build the surface AST and
+# register parsers from hand-written OCaml.
+FStarC.GenSym.get_gensym_state
+FStarC.GenSym.set_gensym_state
+FStarC.Options.Ext.get
 FStarC.Parser.AST.Util.extension_lang_parser
 FStarC.Parser.AST.Util.mk_extension_lang_parser
 FStarC.Parser.AST.Util.parse_extension_lang
@@ -124,7 +128,7 @@ FStarC.Syntax.Syntax.uvar
 FStarC.Syntax.Syntax.uvars
 FStarC.Syntax.Syntax.var
 
-# Errors: FStarC_Errors is realized in part, and the .mly reports through it.
+# Errors, named by the realizations and by plugins.
 FStar.Errors.Msg.error_message
 FStar.Errors.Msg.mkmsg
 FStarC.Errors.Codes.error_setting
@@ -132,7 +136,6 @@ FStarC.Errors.context_t
 FStarC.Errors.error
 FStarC.Errors.log_issue_text
 FStarC.Errors.raise_error_text
-FStarC.Errors.update_flags
 
 # The ML extraction AST, spelled out by FStarC_Extraction_ML_PrintML.ml.
 FStarC.Extraction.ML.Syntax.metadata
@@ -328,15 +331,6 @@ FStarC.Tactics.V2.Basic.var_retype
 FStarC.Tactics.V2.Basic.with_compat_pre_core
 FStarC.Tactics.V2.Basic.with_error_context
 FStarC.Tactics.V2.Basic.write
-
-# Named by the menhir grammars in src/ml, which are hand-written OCaml and so
-# outside the extracted program: a real literal and an integer literal are both
-# built in a semantic action.  A type mentioned only there is unfolded rather
-# than emitted unless it is a root, and a function called only there is not
-# compiled at all.
-FStarC.Const.parse_int_literal
-FStarC.Real.of_string
-FStarC.Real.real
 
 # Section 34: Custard's own extension point.  A plugin registers a rule by
 # calling this, through no request the extraction can see, so the symbol has

@@ -39,7 +39,7 @@ let parse_decl_name
     FStarC.Range.range ->
     ML (either AU.error_message FStarC.Ident.ident)
   = fun contents r ->
-    match Parser.parse_peek_id contents r with
+    match Grammar.parse_peek_id contents r with
     | Inl s -> Inr (Ident.id_of_text s)
     | Inr (msg, r) -> Inl {
       AU.message = msg;
@@ -86,7 +86,7 @@ let parse_decl
       let tm t = tm t r in
       let str s = str s r in
       let i s = tm (Const (Const_int(s, Dec))) in
-      match Parser.parse_peek_id contents r with
+      match Grammar.parse_peek_id contents r with
       | Inr (err, r) ->
         Inl { message = err; range = r }
 
@@ -135,7 +135,7 @@ let maybe_report_error first_error decls : ML _ =
 open FStarC.Class.Show
 let parse_extension_lang (contents:string) (r:FStarC.Range.range)
 : ML (either AU.error_message (list decl))
-= match Parser.parse_lang contents r with
+= match Grammar.parse_lang contents r with
   | Inr None ->
     Inl { message = [Errors.text "#lang-pulse: Parsing failed"]; range = r }
   | Inr (Some (err,r)) -> 
@@ -263,6 +263,6 @@ let parse_pulse (env:TcEnv.env)
       let p = R.mk_pos line col in
       R.mk_range file_name p p
     in
-    match Parser.parse_decl content range with
+    match Grammar.parse_decl content range with
     | Inl d -> desugar_pulse env namespaces module_abbrevs d
     | Inr e -> Inr e

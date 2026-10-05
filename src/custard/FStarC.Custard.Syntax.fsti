@@ -668,7 +668,7 @@ type flag =
       same way and decides which to emit by layout (section 5.5), so the
       distinction only matters for a [Realized] type: there the OCaml shape is
       the hand-written one, and a realization mirrors what the F* source said
-      -- [FStarC.Parser.ParseIt.code_fragment] is an OCaml record and
+      -- [FStarC.Parser.Frontend.code_fragment] is an OCaml record and
       [FStar.Pervasives.dtuple4] an OCaml variant. *)
   | Existential of string & string
   (** Section 33.4.  The source inductive is an existential package: the

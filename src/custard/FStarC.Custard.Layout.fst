@@ -710,7 +710,7 @@ let record_verdict (dt:dtype) : ML bool =
      which is what a realization mirrors.  [FStar.Pervasives.dtuple4] is a
      one-constructor *variant* in F* and in [FStar_Pervasives.ml]; making a
      record of it would name fields the realization does not have.
-     [FStarC.Parser.ParseIt.code_fragment] is a record in both, and leaving it
+     [FStarC.Parser.Frontend.code_fragment] is a record in both, and leaving it
      a variant would emit a constructor pattern for an OCaml record. *)
   if has_flag dt.dt_flags Realized then has_flag dt.dt_flags SourceRecord else
   match dt.dt_body with

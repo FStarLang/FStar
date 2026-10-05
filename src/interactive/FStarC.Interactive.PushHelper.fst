@@ -26,7 +26,7 @@ open FStarC.List
 open FStarC.Ident
 open FStarC.Errors
 open FStarC.Universal
-open FStarC.Parser.ParseIt
+open FStarC.Parser.Frontend
 open FStarC.TypeChecker.Env
 open FStarC.Interactive.JsonHelper
 open FStarC.Interactive.Ide.Types
@@ -298,7 +298,7 @@ let track_name_changes (env: env_t)
 // Little helper
 let tf_of_fname fname : ML timed_fname =
   { tf_fname = fname;
-    tf_modtime = Parser.ParseIt.get_file_last_modification_time fname }
+    tf_modtime = Parser.Frontend.get_file_last_modification_time fname }
 
 // Little helper: update timestamps in argument task to last modification times.
 let update_task_timestamps (task:repl_task) : ML repl_task =

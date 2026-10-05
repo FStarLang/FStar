@@ -12,6 +12,9 @@ let next_id () =
 
 let reset_gensym () = gensym_st := 0
 
+let get_gensym_state () = !gensym_st
+let set_gensym_state v = gensym_st := v
+
 let with_frozen_gensym f =
   let v = !gensym_st in
   let r =

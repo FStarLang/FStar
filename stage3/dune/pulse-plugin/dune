@@ -6,14 +6,6 @@
  )
  (modes native)
  (wrapped false)
- ; The F* compiler library (fstarcompiler) is now unwrapped, so its
- ; modules (e.g. FStar_Char, referenced by the merged canonical F* parser
- ; in src/ml/FStarC_Parser_Parse.mly) are in scope directly with no
- ; -open needed.
- (preprocess (pps ppx_deriving.show ppx_deriving_yojson sedlex.ppx))
+ (preprocess (pps ppx_deriving.show ppx_deriving_yojson))
  ; ^ Needed for some of the base modules.
 )
-
-(menhir
- (modules ml/pulseparser ml/FStarC_Parser_Parse)
- (merge_into Pulse_FStar_Parser))
