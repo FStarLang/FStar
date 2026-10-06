@@ -193,11 +193,12 @@ type token_kind =
   | VAL
   | WHEN
   | WITH
+  | DOC
   | KEYWORD of string
 
 (* [kind_index] is a bijection between the kinds other than [KEYWORD]
    and [0, num_kinds); it is used to index tables by kind. *)
-let num_kinds : int = 173
+let num_kinds : int = 174
 
 let kind_index (k:token_kind) : int =
   match k with
@@ -374,4 +375,5 @@ let kind_index (k:token_kind) : int =
   | VAL -> 170
   | WHEN -> 171
   | WITH -> 172
-  | KEYWORD _ -> 173
+  | DOC -> 173
+  | KEYWORD _ -> 174
