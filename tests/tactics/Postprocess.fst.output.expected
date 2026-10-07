@@ -314,9 +314,9 @@ visible let  y'  : (z#12:int{(eq2 z@0:(Tm_unknown) (foo 1))}) = (foo 1)
 [@ ((postprocess_for_extraction_with tau)); (postprocess_type)]
 visible let  y''  : (z#12:int{(eq2 z@0:(Tm_unknown) (foo 1))}) = (foo 1)
 [@ ]
-visible private let  uu___0  : (squash (eq2 x (foo 2))) = (_assert (eq2 x (foo 2)))
+visible private let  uu___0  : unit = (_assert (eq2 x (foo 2)))
 [@ ]
-visible private let  uu___1  : (squash (eq2 y (foo 1))) = (_assert (eq2 y (foo 1)))
+visible private let  uu___1  : unit = (_assert (eq2 y (foo 1)))
 [@ ]
 (* Sig_bundle *)[@ ]
 noeq type Postprocess.t1  : Type
