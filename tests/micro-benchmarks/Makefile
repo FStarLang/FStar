@@ -42,3 +42,12 @@ $(OUTPUT_DIR)/ExtFreshen.restarts: ExtFreshen.fst $(FSTAR_EXE)
 	    echo "ERROR: --ext freshen did not restart Z3 ($$on processes, vs $$off without)"; false; \
 	  fi
 	$(Q)touch $@
+
+# NestedMatchResTypePerf.fst nests twelve matches and checks instantly, but
+# only because the result type of a match no longer restates the term of every
+# branch. Without that, the module is 2^12 copies of its own body and the check
+# does not finish; the timeout is what makes the test a test.
+$(CACHE_DIR)/NestedMatchResTypePerf.fst.checked:
+	$(call msg, "CHECK", NestedMatchResTypePerf)
+	$(Q)timeout 120 $(FSTAR) -c NestedMatchResTypePerf.fst -o $@
+	touch -c $@
