@@ -468,7 +468,15 @@ type stack_elt =
  | Arg      of closure & aqual & Range.t
  | UnivArgs of list universe & Range.t // NB: universes must be values already, no bvars allowed
  | MemoLazy of cfg_memo (env & term)
- | Projector of cfg & env & term & args & int & Ident.lident & bool & option int & Range.t
+ | Projector of
+    cfg & env & //cfg and env at the site of the projector/discriminator application
+    term & //the head term of the application, i.e., the projector or discriminator itself
+    args & //all the arguments at the application site
+    int & //the position of the scrutinee among the arguments (< length args)
+    Ident.lident & //the identifier of the *constructor* that the projector/discriminator applies to
+    bool & //true iff this is a discriminator
+    option int & //the position of the projected argument in a constructed term, if it is a projector
+    Range.t //the source range of the projector/discriminator application
  | Match    of env & option match_returns_ascription & branches & option residual_comp & cfg & Range.t
  | Abs      of env & binders & env & option residual_comp & Range.t //the second env is the first one extended with the binders, for reducing the option comp
  | App      of env & term & aqual & Range.t
@@ -2704,16 +2712,27 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
     constructor over the same argument closures, retaining call-by-need
     sharing for subsequent projections. *)
   let rec resume_projector (rev_cargs:list (closure & aqual & Range.t))
-                           (projectee_memos:list closure_memo)
+                           (projectee_memos:list (closure_memo & list (closure & aqual & Range.t)))
                            (st:list stack_elt) : ML (option term) =
     match st with
     | Arg (c, aq, r) :: st ->
       resume_projector ((c, aq, r)::rev_cargs) projectee_memos st
     | MemoLazy memo :: st ->
       (* Once constructor arguments have appeared, these are thunks whose
-         evaluation exposed the whole projectee (rather than just its head). *)
+         evaluation exposed the projectee (rather than just its head).
+
+         The value of such a thunk is [t] applied to the arguments sitting
+         *above* it on the stack --- i.e. exactly those collected so far ---
+         and not necessarily to every argument of the constructor
+         application: a thunk may have evaluated to a *partial* application,
+         with further arguments supplied below it on the stack.  Record the
+         prefix alongside the cell, so each memo is filled with its own
+         value.  (Filling them all with the saturated application is how
+         [let p = Mkr 1 in Mkr?._1 (p b) + Mkr?._1 (p 99)] reduced to
+         [b + b].) *)
       let projectee_memos =
-        if Nil? rev_cargs then projectee_memos else memo :: projectee_memos
+        if Nil? rev_cargs then projectee_memos
+        else (memo, List.rev rev_cargs) :: projectee_memos
       in
       resume_projector rev_cargs projectee_memos st
     | Projector (cfg0, projectee_env, _, args, n_indexed,
@@ -2739,18 +2758,30 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
                projectee.  Closing the constructor here would again erase the
                argument closures; instead cache an open constructor whose
                de Bruijn arguments point into an environment containing those
-               very closures. *)
-            let memo_env =
-              cargs |> List.map (fun (c, _, _) -> (None, c, fresh_memo ()))
-            in
-            let memo_args =
+               very closures.
+
+               The de Bruijn argument terms depend only on the position, so
+               they are built once and shared: a prefix of this list is
+               exactly the list a shorter application would have built.  The
+               *environments* must not be shared across lengths, though --
+               [env_subst] caches the substitution for a whole environment on
+               the memo cell of its head entry, so a 2-element and a
+               3-element environment sharing a head entry would read each
+               other's substitution.  Hence fresh entries per prefix. *)
+            let all_memo_args =
               cargs |> List.mapi (fun i (_, aq, r) ->
                 let x = S.new_bv (Some r) S.tun in
                 (S.bv_to_tm ({x with index=i}), aq))
             in
-            let memo_term = U.mk_app t memo_args in
-            projectee_memos |> List.iter (fun memo ->
-              set_memo cfg memo (memo_env, memo_term));
+            let memo_value (prefix : list (closure & aqual & Range.t)) =
+              let memo_env =
+                prefix |> List.map (fun (c, _, _) -> (None, c, fresh_memo ()))
+              in
+              let memo_args, _ = BU.first_N (List.length prefix) all_memo_args in
+              (memo_env, U.mk_app t memo_args)
+            in
+            projectee_memos |> List.iter (fun (memo, prefix) ->
+              set_memo cfg memo (memo_value prefix));
             let _, rest = BU.first_N (n_indexed + 1) args in
             let stack = push_args cfg0 r projectee_env rest st in
             let resume_closure = function
