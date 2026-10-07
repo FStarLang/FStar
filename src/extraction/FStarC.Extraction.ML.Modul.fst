@@ -449,14 +449,11 @@ let extract_let_rec_type env quals attrs lb
     iface,
     def
 
-(* Implicit [squash] binders carry no computational content and are dropped
-   from a data constructor's ML type (see [Term.is_spec_binder]).  Anything
-   enumerated in parallel with that ML type -- the constructor's argument
-   names, a record's field names -- has to drop them too.
-
-   The mask is computed from the *unnormalized* type, exactly as
-   [Term.term_as_mlty] sees it: normalizing unfolds [squash] and would hide
-   the binder. *)
+(* A [requires] clause on a data constructor's type is a trailing implicit
+   binder tagged with [Prims.spec_binder]; it carries no computational content
+   and is dropped from the constructor's ML type (see [Term.is_spec_binder]).
+   Anything enumerated in parallel with that ML type -- the constructor's
+   argument names, a record's field names -- has to drop it too. *)
 let spec_binder_mask (ctor:data_constructor) : ML (list bool) =
     let bs, _ = U.arrow_formals_comp_strict ctor.dtyp in
     List.map Term.is_spec_binder bs

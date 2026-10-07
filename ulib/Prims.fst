@@ -78,6 +78,18 @@ val do_not_unrefine : attribute
   *)
 assume val strictly_positive : attribute
 
+(** A precondition on an arrow's codomain, [x:t -> M u (requires pre) ...],
+    is desugared into a trailing implicit binder of type [squash pre], and
+    that binder is marked with this attribute.
+
+    The binder carries no computational content, so extraction drops it --
+    together with the argument that matches it -- and a [requires] clause
+    therefore does not change the signature of the extracted function. The
+    attribute is what identifies such a binder: a user-written implicit
+    binder of type [squash p] is an ordinary argument and is extracted as
+    one. *)
+assume val spec_binder : attribute
+
 (** The type of propositions. *)
 assume val prop : Type0
 

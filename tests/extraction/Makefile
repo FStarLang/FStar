@@ -35,8 +35,15 @@ EXTRACT += InstantiatedSpecArgs.fst
 # to agree, so extract, compile and run.
 RUN += SpecFields.fst
 
+# Only the binder a [requires] desugars into is dropped; a user-written
+# implicit [squash] binder is an ordinary argument.  Getting that wrong erased
+# effectful calls (issue #4650) or dropped an argument the callee still
+# expected, so the output is checked against SpecBinderErasure.out.expected.
+RUN += SpecBinderErasure.fst
+
 include $(FSTAR_ROOT)/mk/test.mk
 
+all: $(OUTPUT_DIR)/SpecBinderErasure.out.diff
 all: $(OUTPUT_DIR)/FloatLiteralExtraction.test
 all: $(OUTPUT_DIR)/FloatLiteralInjection.rejected
 all: $(OUTPUT_DIR)/NoExtractNorm.test

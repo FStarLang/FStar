@@ -20,7 +20,7 @@
   - In context:
       x: x: TestHasEq.erasable_t{C_erasable_t? x}
       y: y: TestHasEq.erasable_t{D_erasable_t? y}
-  - See also Prims.fst(91,23-91,30)
+  - See also Prims.fst(103,23-103,30)
 
 * Info at TestHasEq.fst(88,8-89,30):
   - Expected failure:

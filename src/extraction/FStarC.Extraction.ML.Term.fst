@@ -293,18 +293,21 @@ let is_type env t =
 let is_type_binder env x = is_arity env x.binder_bv.sort
 
 (* A precondition is desugared into a trailing implicit binder of type
-   [squash P] (see ToSyntax.desugar_term, the [Product] case).  Such a binder
-   is pure specification: it carries no computational content, and keeping it
-   would change the ABI of every function with a [requires] clause.  So we
-   drop it entirely -- both the binder (in [binders_as_ml_binders]) and the
-   corresponding argument (in the [Tm_app] case of [term_as_mlexpr']).  The
-   two must stay in agreement. *)
+   [squash P], tagged with [Prims.spec_binder] (see ToSyntax.desugar_term,
+   the [Product] case).  Such a binder is pure specification: it carries no
+   computational content, and keeping it would change the ABI of every
+   function with a [requires] clause.  So we drop it entirely -- both the
+   binder (in [binders_as_ml_binders]) and the corresponding argument (in the
+   [Tm_app] case of [term_as_mlexpr']).  The two must stay in agreement.
+
+   The test is the attribute, not the shape of the binder's type: a
+   user-written implicit binder of type [squash p] is an ordinary argument,
+   and [squash] is a type abbreviation, so a syntactic test would also
+   disagree with itself depending on how much the type has been normalized or
+   how it was spelled. *)
 let is_spec_binder (b:binder) : ML bool =
     S.is_bqual_implicit b.binder_qual &&
-    (let hd, _ = U.head_and_args_full (U.unmeta b.binder_bv.sort) in
-     match (SS.compress (U.un_uinst hd)).n with
-     | Tm_fvar fv -> S.fv_eq_lid fv PC.squash_lid
-     | _ -> false)
+    U.has_attribute b.binder_attrs PC.spec_binder_attr
 
 (* Drop the arguments of [args] that correspond to a spec binder in the type
    of [head]. If we cannot determine the type of the head, we leave the
@@ -952,8 +955,8 @@ let mk_MLE_Let top_level (lbs:mlletbinding) (body:mlexpr) =
        | _ -> MLE_Let(lbs, body)
 
 let record_fields (g:uenv) (ty:lident) (fns:list ident) (xs:list 'a) =
-  (* An implicit [squash] field is dropped from the ML record (see
-     [is_spec_binder]), so it has no ML field name and no value in [xs].
+  (* A spec binder is dropped from the ML record (see [is_spec_binder]), so it
+     has no ML field name and no value in [xs].
      Only prune when the two lists disagree, so that a genuinely missing
      field name still raises. *)
   let fns =

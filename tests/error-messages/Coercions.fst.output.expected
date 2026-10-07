@@ -21,7 +21,7 @@
   - In context:
       uu___: Prims.unit
       f: n: FStar.Ghost.erased Prims.nat -> FStar.Ghost.erased Prims.nat
-  - See also Prims.fst(477,18-477,24)
+  - See also Prims.fst(489,18-489,24)
 
 * Info at Coercions.fst(74,49-74,57):
   - Expected failure:
@@ -33,7 +33,7 @@
       x: FStar.Ghost.erased Prims.int
       uu___: Prims.int
       x == _
-  - See also Prims.fst(477,18-477,24)
+  - See also Prims.fst(489,18-489,24)
 
 * Info at Coercions.fst(76,55-76,56):
   - Expected failure:
@@ -42,7 +42,7 @@
   - The SMT solver could not prove the query.
   - Failed to prove: x >= 0
   - In context: x: Prims.int
-  - See also Prims.fst(477,18-477,24)
+  - See also Prims.fst(489,18-489,24)
 
 * Info at Coercions.fst(78,50-78,51):
   - Expected failure:
@@ -54,7 +54,7 @@
       x: FStar.Ghost.erased Prims.int
       uu___: Prims.int
       x == _
-  - See also Prims.fst(477,18-477,24)
+  - See also Prims.fst(489,18-489,24)
 
 * Info at Coercions.fst(80,51-80,52):
   - Expected failure:
@@ -63,5 +63,5 @@
   - The SMT solver could not prove the query.
   - Failed to prove: x >= 0
   - In context: x: Prims.int
-  - See also Prims.fst(477,18-477,24)
+  - See also Prims.fst(489,18-489,24)
 
