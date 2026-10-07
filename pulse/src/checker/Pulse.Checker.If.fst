@@ -189,7 +189,16 @@ let check
         (* A candidate is only accepted once both branches have been
            elaborated against it: the prover leaves some of its checks (e.g.
            that two cells it matched hold the same value) to elaboration. *)
-        let prove_and_extract (post:post_hint_for_env g) () =
+        let prove_and_extract (post:post_hint_for_env g) ()
+          : T.Tac (ph:post_hint_for_env g &
+                   checker_result_t (g_with_eq tm_true) pre (PostHint ph) &
+                   checker_result_t (g_with_eq tm_false) pre (PostHint ph) &
+                   option (e1:st_term { ~(hyp `Set.mem` freevars_st e1) } &
+                           c1:comp_st { comp_pre c1 == pre /\ comp_res c1 == ph.ret_ty /\
+                                        comp_u c1 == ph.u /\ comp_post c1 == ph.post } &
+                           e2:st_term { ~(hyp `Set.mem` freevars_st e2) } &
+                           c2:comp_st { comp_pre c2 == pre /\ comp_res c2 == ph.ret_ty /\
+                                        comp_u c2 == ph.u /\ comp_post c2 == ph.post })) =
           let (| post, then_, else_ |) = prove_both post () in
           let (| e1, c1 |) = extract_nat then_ in
           let (| e2, c2 |) = extract_nat else_ in
@@ -235,13 +244,13 @@ let check
                            c2:comp_st { comp_pre c2 == pre /\ comp_res c2 == ph.ret_ty /\
                                         comp_u c2 == ph.u /\ comp_post c2 == ph.post })) =
           match cs with
-          | [] ->
+          | (linked, then_)::cs ->
+            (match RU.try_quietly (with_leftover_of linked then_) with
+             | Some r -> r
+             | None -> first cs)
+          | _ ->
             let (| post, then_, else_ |) = prove_both post () in
             (| post, then_, else_, None |)
-          | (linked, then_)::cs ->
-            match RU.try_quietly (with_leftover_of linked then_) with
-            | Some r -> r
-            | None -> first cs
         in
         let linked_cs =
           if post_keeps_conditional linked_post.post then [(true, false); (true, true)] else [] in
