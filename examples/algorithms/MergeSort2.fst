@@ -146,6 +146,17 @@ let rec mergesort'_permutation #a l k =
     mergesort'_permutation splt2 k;
     merge'_permutation (mergesort' splt1 k) (mergesort' splt2 k) k
 
+(** Mergesort of a non-empty list is non-empty **)
+val mergesort'_cons: #a:eqtype -> l:list a{Cons? l} -> k:(a -> Tot int) ->
+  Lemma (ensures Cons? (mergesort' l k))
+  (decreases (length l))
+let rec mergesort'_cons #a l k =
+  match l with
+  | [_] -> ()
+  | _::_::_ ->
+    let splt1, splt2 = split_half l in
+    mergesort'_cons splt1 k
+
 (** Mergesort is stable **)
 val mergesort'_stable: #a:eqtype -> l:list a -> k:(a -> Tot int) ->
   Lemma(ensures (stable l (mergesort' l k) k))
@@ -158,6 +169,8 @@ let rec mergesort'_stable #a l k =
     mergesort'_stable splt1 k;
     mergesort'_stable splt2 k;
     stable_append splt1 (mergesort' splt1 k) splt2 (mergesort' splt2 k) k;
+    mergesort'_cons splt1 k;
+    mergesort'_cons splt2 k;
     mergesort'_sorted splt1 k;
     mergesort'_sorted splt2 k;
     merge'_stable (mergesort' splt1 k) (mergesort' splt2 k) k
