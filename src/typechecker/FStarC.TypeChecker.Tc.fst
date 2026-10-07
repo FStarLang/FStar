@@ -388,6 +388,21 @@ let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
         | _ -> typ in
       { lb with lbtyp = rename_in_typ lb.lbdef lb.lbtyp } in
 
+    (*
+     * The names of the let bindings for which the user wrote no type at all,
+     * neither an ascription here nor a separate val declaration. Their types
+     * are inferred, and for those we do not want an incidentally inferred
+     * postcondition to become an ambient fact; see drop_inferred_postcondition
+     * below.
+     *)
+    let unannotated_lbnames =
+      snd lbs |> List.collect (fun lb ->
+        let lbname = Inr?.v lb.lbname in
+        if Tm_unknown? lb.lbtyp.n && None? (Env.try_lookup_val_decl env lbname.fv_name)
+        then [lbname.fv_name]
+        else [])
+    in
+
     (* 1. (a) Annotate each lb in lbs with a type from the corresponding val decl, if there is one
           (b) Generalize the type of lb only if none of the lbs have val decls nor explicit universes
       *)
@@ -532,6 +547,41 @@ let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
       | _ -> failwith "impossible (typechecking should preserve Tm_let)"
     in
     let se = run_postprocess false env' se in
+
+    (*
+     * An unannotated top-level `let _ = lem ()` (or `let _ = assert_norm p`)
+     * gets the inferred type `squash p`, since the postcondition of a Pure
+     * computation is now part of its result type. Recording that as the type
+     * of the binding would publish `p` to the SMT solver as an ambient fact
+     * for the rest of the module, which can badly degrade (or even break)
+     * later queries.
+     *
+     * The user asked for no particular type here, so we record the plain
+     * `unit` instead. Writing `let _ : squash p = ...` (or any other
+     * annotation, e.g. the `let _ : nonempty t = nonempty_intro w` idiom)
+     * still publishes the fact, as intended.
+     *)
+    let se =
+      let is_squashed_unit t =
+        let head, _ = U.head_and_args_full t in
+        match (U.un_uinst head).n with
+        | Tm_fvar fv -> S.fv_eq_lid fv PC.squash_lid
+        | Tm_refine {b={sort={n=Tm_fvar fv}}} -> S.fv_eq_lid fv PC.unit_lid
+        | _ -> false
+      in
+      let drop_inferred_postcondition lb =
+        let lbname = Inr?.v lb.lbname in
+        if Nil? lb.lbunivs
+        && List.existsb (lid_equals lbname.fv_name) unannotated_lbnames
+        && is_squashed_unit lb.lbtyp
+        then { lb with lbtyp = S.t_unit }
+        else lb
+      in
+      match se.sigel with
+      | Sig_let {lbs=(is_rec, lbs); lids} ->
+        { se with sigel = Sig_let {lbs=(is_rec, List.map drop_inferred_postcondition lbs); lids} }
+      | _ -> se
+    in
 
     //
     // if no_subtyping attribute is present, typecheck the signatures with use_eq_strict
