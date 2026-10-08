@@ -2079,8 +2079,25 @@ and term_as_mlexpr'
             else if is_top_level lbs
                  then lbs, e'
                  else let lb = List.hd lbs in
-                      let x = S.freshen_bv (Inl?.v lb.lbname) in
-                      let lb = {lb with lbname=Inl x} in
+                      let x = Inl?.v lb.lbname in
+                      (* Phase 1 leaves an unannotated inner let's [lbtyp] as
+                         [tun] (see TcTerm.check_inner_let), and Pulse extracts
+                         phase-1 elaborated terms, whose binders may have lost
+                         their sorts too. Recover the type. *)
+                      let is_unknown (t:term) = Tm_unknown? (SS.compress t).n in
+                      let lbtyp =
+                        if not (is_unknown lb.lbtyp) then lb.lbtyp
+                        else if not (is_unknown x.sort) then x.sort
+                        else
+                          let tcenv = tcenv_of_uenv g in
+                          match TcTerm.typeof_tot_or_gtot_term_fastpath tcenv lb.lbdef false with
+                          | Some t -> t
+                          | None ->
+                            let tcenv = {tcenv with phase1=true; admit=true} in
+                            let _, t, _ = TcTerm.typeof_tot_or_gtot_term tcenv lb.lbdef false in
+                            t in
+                      let x = S.freshen_bv {x with sort=lbtyp} in
+                      let lb = {lb with lbname=Inl x; lbtyp} in
                       let e' = SS.subst [DB(0, x)] e' in
                       [lb], e' in
           // Save original bodies before extraction normalization, so that
