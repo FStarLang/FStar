@@ -434,25 +434,19 @@ let rec ty (t:cty) : ML string =
   | TFloat Float64 -> "float"
   | TFloat Float32 -> "float32"
   | TFloat fw -> reject_fwidth fw; "float"
-  (* Section 122.14.  A [unit] argument is not an argument: the IR drops such
-     a binder from a definition that has another one, exactly as the C backend
-     drops it from a signature, and an arrow type that kept it would disagree
-     with the definition it describes.  The disagreement is invisible while a
-     function is only called -- a call site consults the definition -- and
-     surfaces the moment one is passed as a value.
-
-     An arrow whose every argument is [unit] keeps one, because a definition
-     with no binders at all is a value rather than a function, and a value is
-     evaluated once. *)
+  (* Section 135.  An arrow is printed with every argument it has.  The IR
+     already decides which [unit] arguments a top-level definition deletes,
+     and a function value keeps all of them, so this matches both the
+     definitions and the closures.  Section 122.14 used to drop every [unit]
+     argument here, which disagreed with a closure applied at a type
+     variable. *)
   | TArrow _ ->
     let rec split (t:cty) : ML (list cty & cty) =
       match t with
       | TArrow (a, _, b) -> let args, r = split b in (a :: args, r)
       | _ -> ([], t) in
     let args, ret = split t in
-    let kept = args |> List.filter (fun a -> not (TUnit? a)) in
-    let kept = if Nil? kept then [TUnit] else kept in
-    "(" ^ String.concat " -> " (List.map ty kept) ^ " -> " ^ ty ret ^ ")"
+    "(" ^ String.concat " -> " (List.map ty args) ^ " -> " ^ ty ret ^ ")"
   | TTuple ts -> "(" ^ String.concat " * " (List.map ty ts) ^ ")"
   (* Section 8.4: a buffer is a .NET array.  Faithful for everything but
      [BufSub], which needs an interior pointer; that one is refused at run
@@ -826,11 +820,9 @@ let rec term (ind:string) (e:expr) : ML string =
   | ECtor (n, args) ->
     join_at ind ("(" ^ ctor_ref n ^ " (") ", " term args ^ "))"
   | ETuple es -> join_at ind "(" ", " term es ^ ")"
-  (* Section 122.14, the call side of the same rule. *)
+  (* Section 135: every argument, as the IR passes it. *)
   | EApp (hd, args) ->
-    let kept = args |> List.filter (fun (a:expr) -> not (TUnit? a.ty)) in
-    let kept = if Nil? kept then args else kept in
-    join_at ind "(" " " term (hd :: kept) ^ ")"
+    join_at ind "(" " " term (hd :: args) ^ ")"
   (* Section 122.10.  Every binder carries its type.  F#'s inference is
      weaker than OCaml's -- it is left-to-right and has no principal types for
      a field access -- so a lambda whose parameter is only used as the subject
@@ -1542,12 +1534,9 @@ let rec mentions_tyvar (t:cty) : ML bool =
    application is not: [a -> ML (b -> c)] expanded past its first arrow would
    run the [ML] part only once [b] arrived.
 
-   The binders follow the arrow-type convention of section 122.14 -- a [unit]
-   argument is dropped unless every argument is one -- because the type every
-   *use* sees is printed by that convention, and the definition has to have
-   that type.  A prefix that would need a lone [unit] binder while the type
-   goes on to take real arguments cannot be spelled consistently, and is left
-   to the refusal. *)
+   The binders are those of the arrow type, every one of them, [unit]
+   included (section 135), because the type every *use* sees is printed that
+   way and the definition has to have that type. *)
 let eta_generic_value (l:dlet) : ML dlet =
   let rec spine (t:cty) : ML (list cty & cty & eff) =
     match t with
@@ -1559,19 +1548,12 @@ let eta_generic_value (l:dlet) : ML dlet =
   let args, ret, ef = spine l.dl_ret in
   let named = args |> List.mapi (fun i a ->
                 (a, (if i = 0 then "custard_eta" else "custard_eta" ^ show i))) in
-  let kept = named |> List.filter (fun (a, _) -> not (TUnit? a)) in
-  if Nil? kept && TArrow? ret then l
-  else
-    let kept = if Nil? kept then [List.hd named] else kept in
-    let bs = kept |> List.map (fun (a, x) -> { b_name = x; b_ty = a }) in
-    let actuals = named |> List.map (fun (a, x) ->
-                    if TUnit? a && not (List.existsb (fun (_, y) -> y = x) kept)
-                    then mk (EConst CUnit) TUnit E_Pure
-                    else mk (EVar x) a E_Pure) in
-    let body = match l.dl_body.e with
-               | EApp (f, xs) -> mk (EApp (f, xs @ actuals)) ret ef
-               | _ -> mk (EApp (l.dl_body, actuals)) ret ef in
-    { l with dl_binders = bs; dl_body = body; dl_ret = ret; dl_eff = ef }
+  let bs = named |> List.map (fun (a, x) -> { b_name = x; b_ty = a }) in
+  let actuals = named |> List.map (fun (a, x) -> mk (EVar x) a E_Pure) in
+  let body = match l.dl_body.e with
+             | EApp (f, xs) -> mk (EApp (f, xs @ actuals)) ret ef
+             | _ -> mk (EApp (l.dl_body, actuals)) ret ef in
+  { l with dl_binders = bs; dl_body = body; dl_ret = ret; dl_eff = ef }
 
 let eta_generic_values (p:program) : ML program =
   p |> List.map (fun d ->

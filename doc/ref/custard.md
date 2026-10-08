@@ -21728,9 +21728,9 @@ The body is then evaluated at every call rather than once, which nothing can
 observe only when reaching the lambda is pure --- the condition §25.3 imposes
 for the same reason.  So the definition has to be pure, and the arrow spine
 is followed only through pure arrows: `a -> ML (b -> c)` is expanded past its
-first arrow and no further.  The binders follow §122.14's convention, a
-`unit` argument dropped unless every argument is one, because that is how
-the type every use sees is printed.  Anything else --- a definition that is
+first arrow and no further.  The binders are those of the arrow, `unit`
+ones included (§135), because that is how the type every use sees is
+printed.  Anything else --- a definition that is
 not a function, or an impure one --- still gets error 370, whose text now
 says which of the two it is.  `FsPointFree` is the regression test.
 
@@ -21784,6 +21784,14 @@ registered only in `C_TESTS`, so nothing in the suite compiled its OCaml
 output, and its OCaml output does not compile.  Adding it to `FS_TESTS`
 is what surfaced it.  The OCaml printer is not changed here --- it needs
 its own fix and its own test --- but the case is now known.
+
+**Superseded by §135.**  Dropping every `unit` argument from every arrow
+was itself a whole-program convention, and it broke a closure applied at a
+type variable: `apply2 (f : a -> b -> c)` passes two arguments to a
+`unit -> int -> int` element whatever its printed type said.  Since §135 the
+IR decides: a top-level definition deletes the `unit` binders its
+`CallArity` records, a function value keeps all of them, and the F# printer
+prints arrows and applications as they are.  `UnitPtr`'s pins now say so.
 
 ### 122.15 What the suite checks
 
@@ -23474,6 +23482,73 @@ nothing.
 
 `tests/custard/CLetField.fst` pins the issue's example and a two-level
 builder.
+
+# 135 Heap closures and the top-level calling convention
+
+FStarLang/FStar#4650.  Deleting an erased binder (§3.1, §5.1) is a calling
+convention, and a convention is only sound if both sides of every call agree
+on it.  For a *function value* they cannot: a `list (unit -> unit -> int)`
+may be consumed by `apply2 (f: a -> b -> c)`, which sees `a -> b -> c` and
+passes two arguments whatever the element's definition deleted.  So on the
+backends with closures (OCaml and F#) there are two conventions:
+
+* A **heap closure** --- any function value: a lambda, a local function used
+  as a value, a record or typeclass field, a constructor argument, what a
+  function returns --- keeps *every* binder its F* type spells.  An erased
+  one, a type binder included, is kept as a `unit` parameter, and every
+  argument passed to an unknown function is passed, as `()` when it is erased.
+  `Extract.ty_of_typ` keeps those arrows, `Tm_abs` keeps those parameters,
+  `heap_args` passes those arguments, and a lifted local `let rec` keeps
+  them too.
+* A **top-level definition** may delete erased parameters, but only among
+  the F* argument positions its emitted parameters consume.  Call that count
+  K.  `extract_letbinding` records, in the
+  `CallArity` flag on the `DLet`, one bit per position below K: is it
+  dropped?  `heap_call` reads it: positions below K are filtered by it, and
+  every position from K on goes to the closure the definition returns, by
+  the heap convention.  A declaration without the flag --- an external, a
+  stub --- is called as `external_ty` compiled it: K is its classified
+  binders, and the non-`Poly` ones are dropped.
+
+The cases this settles:
+
+* **Over-application.** The arguments past K are not filtered by the
+  definition's binders, so `let k (x:int) : unit -> unit -> int` called as
+  `k 1 () ()` passes both units to the closure it returns.
+* **Under-application.** A call that stops in front of a dropped position is
+  not an OCaml partial application, since that would wait for an argument
+  that is never passed.  So it is eta-expanded into a closure taking every
+  remaining argument, dropped ones as `unit`.  The arguments supplied so far
+  are bound first, so they are still evaluated once, at the call.  `heap_call`
+  does this in the IR for definitions; `heap_eta_app` does it in F* for
+  constructors and primitives, whose erased arguments are deleted by their
+  own rules.  A missing `Mono` position is left as it was (§3.2b).
+* **A definition that is not a lambda past an erased binder**, e.g.
+  `let f (#p:squash True) : ML (unit -> ML int) = let r = alloc 0 in ...`.
+  Deleting every parameter would turn `f` into a value evaluated once at
+  initialization, so if all K positions would be dropped and the body is
+  not pure, the last one is kept.  A pure body is the same value every
+  time, so it stays a value: §122.11.1's `small` relies on that.
+
+On C, KrmlC and KrmlRust there are no closures, only function pointers.  A
+record field holding `add (x:U32.t) (#p:squash True) (y:U32.t)` must keep
+being a two-argument C function, so those backends keep deleting erased
+binders everywhere, and §135.1 is all of this section that applies to them.
+
+`tests/custard/HeapClosures.fst` covers the OCaml cases and the issue's
+three examples.  `tests/custard/CHeapArity.fst` covers the C ones.
+
+## 135.1 The unfolding limit
+
+`Mono.arrow_formals_unfold` and `arrow_spine_exact` follow an arrow through
+type abbreviations to find its whole spine.  They used to stop silently after
+eight layers.  Binders they never saw were never classified, so the call site
+passed `()` where the definition, eta-expanded through its own type, had
+deleted the parameter: issue #4650's `t11` failed on OCaml and on C (error
+368).  The fuel is now `Mono.max_arrow_unfold` = 1000 layers, and running out
+of it with an arrow still in hand is `Error_CustardFuelExhausted` (365),
+naming the type and the chain of requests.  It is no longer a guess.
+`tests/custard/ArrowUnfoldLimit.fst` pins the error.
 
 | M | Deliverable | Notes |
 | --- | --- | --- |

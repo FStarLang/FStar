@@ -623,7 +623,14 @@ let interp_term (st:Extract.state) (k:kind) (tac:bool) (fv_lid:Ident.lident)
              (b.binder_bv, S.new_bv None (arg_typ k))) in
   let tys = List.map (fun (b:binder) -> b.binder_bv.sort) bs @ [res] in
   let embs = tys |> List.map (embedding_for st k env) in
-  let f = S.fvar fv_lid None in
+  (* Section 135.  The compiled definition is handed over at the native
+     convention the interpretation functions expect: its type arguments
+     deleted.  Applied to them, the name is a call to the top-level
+     definition, whose dropped type positions are then filled; bare, it would
+     be a heap closure keeping one [unit] parameter per type binder. *)
+  let f = S.mk_Tm_app (S.fvar fv_lid None)
+            (tvs |> List.map (fun (b:binder) -> (S.t_unit, U.aqual_of_binder b)))
+            dummy in
   (* [vs] always ends in the argument list; with type binders the body sees a
      shortened one, and the match that shortens it wraps the whole thing. *)
   let wrap (vs:list bv) (res_ty:typ) (mk:list bv -> ML term) : ML term =

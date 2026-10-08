@@ -731,6 +731,8 @@ let flag_to_doc (f:flag) : ML document =
   | Imported (u, h) ->
     text ("imported[" ^ u ^ (match h with Some m -> "@" ^ m | None -> "") ^ "]")
   | Member (m, f) -> text ("member[" ^ string_of_name m ^ "." ^ f ^ "]")
+  | CallArity fs ->
+    text ("arity[" ^ String.concat "" (List.map (fun b -> if b then "-" else "+") fs) ^ "]")
 
 let flags_to_doc (fs : list flag) : ML document =
   match fs with

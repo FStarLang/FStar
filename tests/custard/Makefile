@@ -374,12 +374,14 @@ FS_TESTS += KrmlBasic Hello Literals LitBase LitStr Floats Exceptions Refs
 FS_TESTS += Recursion Mymon AnyCond AnyException UnitPtr Typeclass
 FS_TESTS += MachineInts Unroll ShortCircuit Union Wide128 Rotate
 
-# Section 122.14.  The unit-argument rule, from the side that only a typed
-# target can see: [j] takes a [unit] and a [UInt32.t], the IR drops the first
-# binder from the definition, and an arrow type that kept it describes a
-# function that does not exist.  Nothing catches it while [j] is only called.
-FSGREP_UnitPtr = "(f : (uint32 -> unit))" "(unitPtr_apply2 unitPtr_j"
-FSNOGREP_UnitPtr = "(unit -> (uint32 -> unit))" "unitPtr_j ()"
+# Sections 122.14 and 135.  The unit-argument rule, from the side that only a
+# typed target can see: [j] takes a [unit] and a [UInt32.t], and the IR drops
+# the first binder from the top-level definition.  A function value keeps it,
+# so [apply2]'s parameter is a two-argument closure, and passing [j] wraps it
+# in one.
+FSGREP_UnitPtr = "(f : (unit -> uint32 -> unit))" "(f () eta)" \
+                 "(unitPtr_apply2 (fun (eta : unit) (eta1 : uint32) -> (unitPtr_j eta1))"
+FSNOGREP_UnitPtr = "unitPtr_j ()"
 
 # Section 122.6.1.  An [obj] scrutinee against constant patterns needs an
 # unbox that [Obj.magic] does not.
@@ -3341,6 +3343,24 @@ GREP_BoxedFields += "BoxedFields_Bar of (bool \* string)" \
                     "BoxedFields_Baz of bool \* string" \
                     "BoxedFields_W of bool \* string"
 NOGREP_BoxedFields += "BoxedFields_Bar of bool \* string"
+
+# Section 135, FStarLang/FStar#4650.  A function value is a heap closure that
+# keeps every binder of its type, erased ones as [unit]; only a call to a
+# top-level name drops arguments, and exactly the ones that definition's
+# parameters consume.  Covers closures in lists and records, partial and over-
+# application across erased arguments, constructors, local recursion, and an
+# arrow behind more abbreviations than the old fuel of eight.
+CUSTARD_TESTS += HeapClosures
+
+# Section 135.1 on C, which keeps dropping erased binders everywhere: the deep
+# abbreviation is unfolded to the end, so definition and call agree.
+C_TESTS += CHeapArity
+FLAGS_CHeapArity = --custard_backend C --custard_entry_module CHeapArity
+
+# Section 135.1.  Past the limit of 1000 abbreviations, an error.
+REJECT_TESTS += ArrowUnfoldLimit
+CODE_ArrowUnfoldLimit := 365
+EGREP_ArrowUnfoldLimit += "gave up unfolding an arrow type after 1000 layers"
 
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
                   $(C_TESTS) $(CXX_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \

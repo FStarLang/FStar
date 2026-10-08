@@ -457,10 +457,21 @@ let erased_binders (env:TcEnv.env) (t:typ) : ML (list bool) =
    same reason -- one unfolding can expose another, and a self-referential
    abbreviation must not spin.  Only a *total* codomain is peeled: an effectful
    one is where the function ends, whatever it abbreviates. *)
+let max_arrow_unfold : int = 1000
+
+let arrow_unfold_exhausted (#a:Type) (env:TcEnv.env) (t:typ) : ML a =
+  FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardFuelExhausted ([
+    Pprint.arbitrary_string
+      ("Custard gave up unfolding an arrow type after " ^ show max_arrow_unfold ^
+       " layers of abbreviations; the remaining arity cannot be determined.");
+    Pprint.arbitrary_string
+      ("The type was: " ^ FStarC.Syntax.Print.term_to_string' (TcEnv.dsenv env) t)
+  ] @ (!chain_reporter) ())
+
 let rec arrow_formals_unfold_aux (fuel:int) (env:TcEnv.env) (t:typ)
   : ML (binders & comp) =
   let bs, c = U.arrow_formals_comp t in
-  if fuel <= 0 || not (U.is_total_comp c) then bs, c
+  if not (U.is_total_comp c) then bs, c
   else
     let env = TcEnv.push_binders env bs in
     let r = norm_bounded env "an arrow spine"
@@ -474,13 +485,17 @@ let rec arrow_formals_unfold_aux (fuel:int) (env:TcEnv.env) (t:typ)
     let r = strip r in
     match r.n with
     | Tm_arrow _ ->
+      (* Section 135.1: running out of fuel with arrows still in hand used to
+         stop silently, and a call site then passed the unseen erased
+         arguments that the definition had deleted (issue #4650). *)
+      if fuel <= 0 then arrow_unfold_exhausted env r;
       let bs', c' = arrow_formals_unfold_aux (fuel - 1) env r in
       bs @ bs', c'
     | _ -> bs, c
 
 let arrow_formals_unfold (env:TcEnv.env) (t:typ) : ML (binders & comp) =
   Prof.timed "Mono.arrow_formals_unfold" (fun () ->
-    arrow_formals_unfold_aux 8 env t)
+    arrow_formals_unfold_aux max_arrow_unfold env t)
 
 (* Whether [arrow_formals_unfold]'s count is the whole of what a call can
    supply.  It walks the same spine with the same fuel, and asks one more
@@ -492,7 +507,7 @@ let arrow_formals_unfold (env:TcEnv.env) (t:typ) : ML (binders & comp) =
    question open. *)
 let rec arrow_spine_exact_aux (fuel:int) (env:TcEnv.env) (t:typ) : ML bool =
   let bs, c = U.arrow_formals_comp t in
-  if fuel <= 0 then false
+  if fuel <= 0 then arrow_unfold_exhausted env t
   else
     let env = TcEnv.push_binders env bs in
     let r = norm_bounded env "an arrow spine"
@@ -511,7 +526,7 @@ let rec arrow_spine_exact_aux (fuel:int) (env:TcEnv.env) (t:typ) : ML bool =
 
 let arrow_spine_exact (env:TcEnv.env) (t:typ) : ML bool =
   Prof.timed "Mono.arrow_spine_exact" (fun () ->
-    arrow_spine_exact_aux 8 env t)
+    arrow_spine_exact_aux max_arrow_unfold env t)
 
 (* {!erased_binders} against the *whole* arrow spine, abbreviations included.
 
