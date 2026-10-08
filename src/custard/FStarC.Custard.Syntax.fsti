@@ -694,6 +694,19 @@ type flag =
       when the upstream unit split its output (section 12.9): a reference then
       has to name that file rather than the unit, and the declaration may be
       spelled by its plain identifier rather than its mangled one. *)
+  | CallArity of list bool
+  (** Section 135.  The calling convention of a top-level definition on the
+      backends with polymorphic closures, OCaml and F#.  One entry per F\*
+      argument position the definition's own parameters consume; [true] marks
+      a position that is not passed at runtime (an erased or monomorphized
+      argument).  A call passes the arguments in these positions filtered by
+      the flags, and every argument past them unfiltered, erased ones as
+      [()]: that is how a function value on the heap is called, and the
+      definition returns one.  A reference that supplies fewer arguments than
+      there are flags, with a dropped one among those missing, is
+      eta-expanded into such a value.  Recorded here rather than recomputed
+      so that a separately compiled unit (section 12) calls the definition
+      the way it was compiled. *)
   | Member of name & string
   (** Section 133.  This declaration is the member named second of the OCaml
       functor instance named first, a [DModule].  It is emitted as nothing;
