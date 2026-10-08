@@ -37,9 +37,27 @@ let h (x:int) : Pure int (requires x >= 0) (ensures fun y -> y == x) = x
 type t_abbrev = x:int -> Pure int (requires x >= 0) (ensures fun _ -> True)
 let use (fn:t_abbrev) : int = fn 3
 
+(* Dropping the binder must not leave the definition with no binder at all.
+   Generalization erases [#a] into a type parameter, so [tock]'s only
+   remaining binder is the one [requires q] desugars into, and deleting that
+   one too turned [tock] into a value whose effect ran once, at module
+   initialization, instead of at each call -- the other half of issue #4650.
+   It is kept a function by thunking it, and the thunk's arrow has to stay
+   *impure*, or the calls below are dead pure code and are dropped again. *)
+assume val q : prop
+assume val pf : squash q
+let tock (#a:Type) : ML unit (requires q) = FStar.IO.print_string "tock\n"
+
+(* The same shape with a pure, total body needs no thunk: [three] is a value
+   either way, so it stays one and its uses pass no argument. *)
+let three (#a:Type) : Pure int (requires q) (ensures fun _ -> True) = 3
+
 let main () : ML unit =
   tick #();
   tick #();
+  tock #int;
+  tock #bool;
+  FStar.IO.print_string (string_of_int (three #int));
   FStar.IO.print_string (string_of_int (f #() 7));
   FStar.IO.print_string (string_of_int (g 1));
   FStar.IO.print_string (string_of_int (h 2));

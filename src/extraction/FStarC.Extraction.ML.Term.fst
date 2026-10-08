@@ -309,6 +309,20 @@ let is_spec_binder (b:binder) : ML bool =
     S.is_bqual_implicit b.binder_qual &&
     U.has_attribute b.binder_attrs PC.spec_binder_attr
 
+(* True when [bs] leaves no ML binder behind: [binders_as_ml_binders] deletes
+   a spec binder outright, so a [bs] that holds nothing else makes an
+   abstraction disappear and turns a definition into a value.  If that value
+   is effectful its effect then runs at module initialization instead of at
+   each call -- the miscompilation of issue #4650, where
+
+       let tick (#a:Type) : ML unit (requires q) = print_string "tick\n"
+
+   lost its type binder to generalization and its spec binder to this, and so
+   both [tick] and its call sites were erased.  The fix is to keep the
+   definition a function by thunking it ([add_unit]), which the ML name's
+   binding records, so the call sites agree without being told. *)
+let no_ml_binders (bs:binders) : ML bool = bs |> List.for_all is_spec_binder
+
 (* Drop the arguments of [args] that correspond to a spec binder in the type
    of [head]. If we cannot determine the type of the head, we leave the
    arguments alone; a head with a spec binder whose type we cannot see is
@@ -1352,7 +1366,20 @@ let rec extract_lb_sig (g:uenv) (lbs:letbindings) (orig_lbdefs: list (option ter
                    let tbinders, eff_body, tbody =
                         match BU.prefix_until (fun x -> not (is_type_binder g x)) bs with
                         | None -> bs, etag_of_comp c, U.comp_result c
-                        | Some (bs, b, rest) -> bs, E_PURE, U.arrow (b::rest) c
+                        | Some (bs, b, rest) ->
+                          (* [b::rest] is the arrow [tbody] stands for, and it
+                             normally carries the effect itself, so nothing is
+                             left to record here.  Not when every one of its
+                             binders is a spec binder: that arrow translates to
+                             a non-arrow ML type, which has nowhere to put an
+                             effect tag, and the [unit] that [add_unit] puts in
+                             front of it is the only arrow left to carry one.
+                             Losing it made the [unit -> unit] of issue #4650's
+                             [tick] pure, so its calls were dropped as dead
+                             pure code even once it was a function again. *)
+                          let eff_body =
+                            if no_ml_binders (b::rest) then etag_of_comp c else E_PURE in
+                          bs, eff_body, U.arrow (b::rest) c
                   in
                    let n_tbinders = List.length tbinders in
                    let lbdef = normalize_abs lbdef |> U.unmeta in
@@ -1379,11 +1406,10 @@ let rec extract_lb_sig (g:uenv) (lbs:letbindings) (orig_lbdefs: list (option ter
                                 // original body ensures consistency with interface extraction,
                                 // which uses always_fail bodies not subject to such inlining.
                                 let default_add_unit () =
-                                  match rest_args with
-                                  | [] ->
-                                    not (is_fstar_value body)
-                                    || not (U.is_pure_comp c)
-                                  | _ -> false
+                                  if no_ml_binders rest_args
+                                  then not (is_fstar_value body)
+                                       || not (U.is_pure_comp c)
+                                  else false
                                 in
                                 match orig_lbdef with
                                 | Some orig_def ->
@@ -1394,10 +1420,10 @@ let rec extract_lb_sig (g:uenv) (lbs:letbindings) (orig_lbdefs: list (option ter
                                     let orig_bs, orig_body = SS.open_term orig_bs orig_body in
                                     if n_tbinders <= List.length orig_bs then
                                       let _, orig_rest = BU.first_N n_tbinders orig_bs in
-                                      (match orig_rest with
-                                       | [] -> not (is_fstar_value orig_body)
-                                              || not (U.is_pure_comp c)
-                                       | _ -> false)
+                                      (if no_ml_binders orig_rest
+                                       then not (is_fstar_value orig_body)
+                                            || not (U.is_pure_comp c)
+                                       else false)
                                     else default_add_unit ()
                                   | _ -> default_add_unit ()
                                   end

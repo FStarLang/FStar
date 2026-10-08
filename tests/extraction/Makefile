@@ -44,6 +44,28 @@ RUN += SpecBinderErasure.fst
 include $(FSTAR_ROOT)/mk/test.mk
 
 all: $(OUTPUT_DIR)/SpecBinderErasure.out.diff
+# ...and again through the *legacy* OCaml backend.  [RUN] above goes through
+# Custard (mk/test.mk's $(OUTPUT_DIR)/%.ml rule), but the spec-binder dropping
+# this test is about lives in FStarC.Extraction.ML.Term, which Custard does not
+# use, so the Custard leg alone would not have caught issue #4650.  Both legs
+# must print the same thing, so they share the one .expected file.
+all: $(OUTPUT_DIR)/SpecBinderErasure.ocaml.diff
+$(OUTPUT_DIR)/SpecBinderErasure.ocaml.diff: $(OUTPUT_DIR)/SpecBinderErasure.ocaml.out \
+                                            SpecBinderErasure.out.expected
+	$(call msg, "DIFF", $<)
+	$(Q)bash $(FSTAR_ROOT)/mk/diff.sh $^
+	$(Q)touch $@
+
+$(OUTPUT_DIR)/SpecBinderErasure.ocaml.out: $(CACHE_DIR)/SpecBinderErasure.fst.checked
+	$(call msg, "EXTRACT (OCaml)", SpecBinderErasure)
+	$(Q)$(FSTAR) --codegen OCaml --extract_module SpecBinderErasure $< \
+	  --odir $(OUTPUT_DIR)/ocaml
+	$(call msg, "OCAMLOPT", SpecBinderErasure)
+	$(Q)$(FSTAR_EXE) --ocamlopt $(OUTPUT_DIR)/ocaml/SpecBinderErasure.ml \
+	  -o $(OUTPUT_DIR)/SpecBinderErasure.ocaml.exe
+	$(call msg, "RUN", SpecBinderErasure)
+	$(Q)$(OUTPUT_DIR)/SpecBinderErasure.ocaml.exe > $@
+
 all: $(OUTPUT_DIR)/FloatLiteralExtraction.test
 all: $(OUTPUT_DIR)/FloatLiteralInjection.rejected
 all: $(OUTPUT_DIR)/NoExtractNorm.test
