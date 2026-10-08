@@ -2,7 +2,7 @@ PULSE_HOME ?= ../../..
 
 all: verify
 
-SRC_DIRS := . class pledge
+SRC_DIRS := . class pledge protocol
 INCLUDE_PATHS += $(PULSE_HOME)/lib/pulse $(PULSE_HOME)/lib/pulse/core
 FSTAR_OPTIONS += --already_cached '*,-Pulse.Lib,-Pulse.Class,-PulseTest'
 
