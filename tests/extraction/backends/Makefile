@@ -30,13 +30,13 @@ NO_OCAML :=
 
 # Closures / partial application are outside Low*, so the C backend rejects
 # them outright ("Warning 11: this expression is not Low*").
-NO_C := ExtBoolHigherOrder
+NO_C := ExtBoolHigherOrder ExtSpecBinderClosures
 
 # The Rust backend refuses mathematical integers altogether ("Warning 15: ...
 # is not Low*; it uses mathematical integers"), so there is nothing to XFAIL:
 # Prims.int is simply out of scope for it.
 NO_RUST := ExtPrimsInt ExtPrimsIntDiv ExtPrimsIntMul ExtPrimsIntBignum \
-           ExtBoolHigherOrder
+           ExtBoolHigherOrder ExtSpecBinderClosures
 
 # --- machine integers -----------------------------------------------------
 
@@ -162,9 +162,10 @@ NO_CUSTARD_C := ExtPrimsInt ExtPrimsIntDiv ExtPrimsIntMul ExtPrimsIntBignum \
 # As for the plain Rust column: the Rust backend refuses mathematical
 # integers, and it cannot translate a closure.
 NO_CUSTARD_KRML_RUST := ExtPrimsInt ExtPrimsIntDiv ExtPrimsIntMul \
-                        ExtPrimsIntBignum ExtBoolHigherOrder
+                        ExtPrimsIntBignum ExtBoolHigherOrder \
+                        ExtSpecBinderClosures
 
-NO_CUSTARD_KRML_C := ExtBoolHigherOrder
+NO_CUSTARD_KRML_C := ExtBoolHigherOrder ExtSpecBinderClosures
 
 # --- shared with the pipeline above ---------------------------------------
 
