@@ -46,7 +46,7 @@ let debug (f:unit -> ML unit) : ML unit = if !dbg then f () else ()
  * ML-extracted compiler wrote, and nothing in the file says so.  Bumped when
  * the compiler's own build switched to Custard.
  *)
-let cache_version_number = 100
+let cache_version_number = 101
 
 (*
  * Abbreviation for what we store in the checked files (stages as described below)

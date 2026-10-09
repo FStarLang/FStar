@@ -265,7 +265,7 @@ let on_sub_comp #m {|d : lvm m |} c : ML (m comp) =
     match c.n with
     | Comp ct -> Comp <$> on_sub_comp_typ ct
   in
-  return <| Syntax.mk cn c.pos
+  return <| Syntax.mk_comp' cn c.pos
 
 let on_sub_residual_comp #m {|d : lvm m |} (rc : residual_comp) : ML (m residual_comp) =
   let  residual_effect = rc.residual_effect in

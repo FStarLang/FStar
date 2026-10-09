@@ -1539,7 +1539,7 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
         let fvs = Free.names t0 |> elems in
         let arg_sorts = List.map (fun _ -> Term_sort) fvs in
         let arg_terms = List.map (lookup_term_var env) fvs in
-        let tkey_hash = FStarC.Hash.string_of_hash_code (FStarC.Syntax.Hash.ext_hash_term t0) in
+        let tkey_hash = FStarC.Hash.string_of_hash_code (FStarC.Syntax.Hash.ext_hash_term (FStarC.Syntax.Compress.deep_compress true true t0)) in
         let f = "Tm_inner_let_rec_" ^ BU.digest_of_string tkey_hash in
         let decl = Term.DeclFun f arg_sorts Term_sort (Some "Inner let rec") in
         mkApp (f, arg_terms), mk_decls f tkey_hash [decl] []

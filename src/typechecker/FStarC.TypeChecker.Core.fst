@@ -360,8 +360,10 @@ let result a = context -> cache_t -> ML (__result (success a))
 
 let equal_term_for_hash t1 t2 =
   FStarC.Profiling.profile (fun _ -> Hash.equal_term t1 t2) None "FStarC.TypeChecker.Core.equal_term_for_hash"
+(* A fast path for relating terms, so up to delayed substitutions and solved
+   uvars: unlike the cache keys, these terms are not deeply compressed. *)
 let equal_term t1 t2 =
-  FStarC.Profiling.profile (fun _ -> Hash.equal_term t1 t2) None "FStarC.TypeChecker.Core.equal_term"
+  FStarC.Profiling.profile (fun _ -> Hash.equal_term_upto_compress t1 t2) None "FStarC.TypeChecker.Core.equal_term"
 let table : tc_table = {
   table = HashTable.create 1048576; //2^20
   guard_table = HashTable.create 1048576; //2^20
@@ -950,7 +952,7 @@ instance showable_side = {
 
 
 let boolean_negation_simp b =
-  if Hash.equal_term b U.exp_false_bool
+  if equal_term b U.exp_false_bool
   then None
   else Some (U.mk_boolean_negation b)
 
@@ -970,7 +972,7 @@ let combine_path_and_branch_condition (path_condition:term)
         match branch_condition with
         | None -> U.exp_false_bool
         | Some bc ->
-          if Hash.equal_term path_condition U.exp_true_bool
+          if equal_term path_condition U.exp_true_bool
           then U.mk_boolean_negation bc
           else U.mk_and path_condition (U.mk_boolean_negation bc)
     in
