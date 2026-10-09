@@ -1,7 +1,6 @@
 SRC := lib/pulse
 CACHE_DIR := build/lib.pulse.checked/
 OUTPUT_DIR := build/lib.pulse.ml/
-CODEGEN := NONE
 PULSE_ROOT ?= .
 include $(PULSE_ROOT)/mk/fstar-tree.mk
 FSTAR_EXE ?= $(FSTAR3_EXE)

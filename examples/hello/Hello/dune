@@ -1,8 +1,13 @@
 ; F* verification rules (generated in sibling Hello-gen/ dir)
 (dynamic_include ../Hello-gen/deps.build.inc)
 
-; F* extraction rules (generated in sibling Hello-gen/ dir)
-(dynamic_include ../Hello-gen/deps.extract.inc)
+; Extraction: Custard compiles the whole program, starting from Hello, into
+; one OCaml file.
+(rule
+ (targets Hello.ml)
+ (deps Hello.fst Hello.fst.checked)
+ (action (run %{env:FSTAR_EXE=fstar.exe} --include . --already_cached "*,"
+   --codegen OCaml --custard_entry_module Hello -o Hello.ml Hello.fst)))
 
 ; Build the Hello executable from extracted OCaml
 (executable

@@ -546,7 +546,7 @@ let mono_advice_for (n:option name) : ML (list string) =
        polymorphic was not held back by an external, and saying so would send
        a reader to change a signature that is not the problem. *)
     match (match n with
-           | _ when Options.custard_backend () <> "OCaml" -> None
+           | _ when Options.codegen () <> Some Options.OCaml -> None
            | None -> None
            | Some n -> HashTable.try_find frozen_by (string_of_name n)) with
     | Some ext ->

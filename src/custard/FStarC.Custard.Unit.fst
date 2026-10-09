@@ -29,7 +29,7 @@ module E   = FStarC.Errors
 module O   = FStarC.Options
 module HashTable = FStarC.HashTable
 
-let current_version = 15
+let current_version = 16
 
 (* The IR is plain first-order data -- no references, no closures, no
    hashconsing -- so the same mechanism that stores checked files stores a
@@ -44,7 +44,7 @@ let layout_options () : ML (list (string & string)) =
      debugging options are deliberately absent: two units built with different
      --custard_dump_ir settings still agree about layout, and refusing to link
      them would be gratuitous. *)
-  [ "custard_backend",            O.custard_backend ();
+  [ "codegen",                    O.codegen_name ();
     "custard_monomorphize_types", string_of_bool (O.custard_monomorphize_types ());
     (* Section 95.  This one changes no IR layout at all -- the IR still says
        [Sizet] -- but it changes the C every struct containing a [size_t] field

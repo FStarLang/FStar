@@ -4,8 +4,7 @@
    -- a read followed by a write, atomic in Pulse's semantics and not atomic
    at all once it is OCaml -- so the compiled spin lock would lock nothing.
 
-   A lock is a Mutex.t, which is what the legacy extraction pipeline also maps
-   it to (pulse/src/extraction/ExtractPulseOCaml.fst).  The C realization is
+   A lock is a Mutex.t.  The C realization is
    Pulse_Lib_SpinLock.c over pthread_mutex_t. *)
 
 type lock = Mutex.t

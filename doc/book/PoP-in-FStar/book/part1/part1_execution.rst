@@ -73,14 +73,16 @@ as shown below:
 
 .. code-block::
 
-   fstar --codegen OCaml --extract Part1.Quicksort --odir out Part1.Quicksort.Generic.fst
+   fstar --codegen OCaml --custard_entry_module Part1.Quicksort.Generic -o out/Part1_Quicksort_Generic.ml Part1.Quicksort.Generic.fst
 
 * The ``--codegen`` option tells F* to produce OCaml code
 
-* The ``--extract`` option tells F* to only extract all modules in the given namespace, i.e., in this case, all modules in ``Part1.Quicksort``
+* The ``--custard_entry_module`` option tells F* to compile the given
+  module as a library: every definition it exports is kept, along with
+  whatever those definitions need
 
-* The ``--odir`` option tells F* to put all the generated files into the specified directory; in this case ``out``
-  
+* The ``-o`` option names the output file
+
 * The last argument is the source file to be checked and extracted
 
 The resulting OCaml code is in the file
@@ -195,10 +197,11 @@ To compile this code to OCaml, along with its dependence on
 
 .. code-block::
 
-   fstar --codegen OCaml --extract Part1.Quicksort --odir out Part1.Quicksort.Main.fst
+   fstar --codegen OCaml --custard_entry_module Part1.Quicksort.Main -o out/Part1_Quicksort_Main.ml Part1.Quicksort.Main.fst
 
-This time, F* extracts both ``Part1.Quicksort.Generic.fst`` (as
-before) and ``Part1.Quicksort.Main.fst`` to OCaml, producing
+F*'s extraction is whole-program: this time the output contains both
+``Part1.Quicksort.Main`` and the parts of ``Part1.Quicksort.Generic``
+that it uses, producing
 `Part1_Quicksort_Main.ml <../code/out/Part1_Quicksort_Main.ml>`_ to
 OCaml.
 
@@ -206,7 +209,7 @@ You can compile this code in OCaml to a native executable by doing:
 
 .. code-block::
 
-   OCAMLPATH=$FSTAR_HOME/lib ocamlbuild -use-ocamlfind -pkg batteries -pkg fstar.lib Part1_Quicksort_Main.native
+   fstar --ocamlopt out/Part1_Quicksort_Main.ml -o Part1_Quicksort_Main.native
 
 And, finally, you can execute Part1_Quicksort_Main.native to see the
 following output:
@@ -221,15 +224,12 @@ Compiling to other languages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 F* also supports compiling programs to F# and, for a subset of the
-language, supports compilation to C.
+language, to C and Rust.
 
-For the F# extraction, use the ``--codegen FSharp`` option. However,
-it is more typical to structure an F* project for use with F# using
-Visual Studio project and solution files. Here are some examples:
-
-  * `A simple example <https://github.com/FStarLang/FStar/tree/master/examples/hello>`_
-
-  * `A more advanced example mixing F* and F# code <https://github.com/FStarLang/FStar/tree/master/ulib/fs>`_
-
-For extraction to C, please see the `tutorial on Low* <https://fstarlang.github.io/lowstar/html/>`_.
+For the F# extraction, use the ``--codegen FSharp`` option. For C, use
+``--codegen C``, or ``--codegen KrmlC`` / ``--codegen KrmlRust`` to go
+through `KaRaMeL <https://github.com/FStarLang/karamel>`_; see also the
+`tutorial on Low* <https://fstarlang.github.io/lowstar/html/>`_.
+The F* repository's ``doc/ref/custard.md`` documents the extractor in
+detail.
 

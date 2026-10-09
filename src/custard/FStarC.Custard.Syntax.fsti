@@ -619,7 +619,7 @@ type flag =
   | Modelled
   (** karamel supplies this declaration itself on the backend being emitted
       for, and recognizes it by its F* name (section 20).
-      [Pulse.Lib.Slice.slice] under [--custard_backend KrmlRust] is the case
+      [Pulse.Lib.Slice.slice] under [--codegen KrmlRust] is the case
       and today the only one: karamel matches
       [TApp ((["Pulse"; "Lib"; "Slice"], "slice"), [t])] and rewrites it to
       Rust's own borrowed slice, and matches each operation as an [ETApp] of

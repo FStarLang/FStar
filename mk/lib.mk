@@ -2,49 +2,6 @@
 FSTAR_OPTIONS += --no_default_includes
 FSTAR_OPTIONS += --include $(SRC)
 
-EXTRACT_NS :=
-EXTRACT_NS += -FStar.Bytes
-EXTRACT_NS += -FStar.Char
-EXTRACT_NS += -FStar.Constructive
-EXTRACT_NS += -FStar.Dyn
-EXTRACT_NS += -FStar.Float32
-EXTRACT_NS += -FStar.Float64
-EXTRACT_NS += -FStar.Ghost
-EXTRACT_NS += -FStar.Int16
-EXTRACT_NS += -FStar.Int32
-EXTRACT_NS += -FStar.Int64
-EXTRACT_NS += -FStar.Int8
-EXTRACT_NS += -FStar.IO
-EXTRACT_NS += -FStar.List
-EXTRACT_NS += -FStar.List.Tot.Base
-EXTRACT_NS += -FStar.Option
-EXTRACT_NS += -FStar.Parse
-EXTRACT_NS += -FStar.Pervasives.Native
-EXTRACT_NS += -FStar.Exn
-EXTRACT_NS += -FStar.String
-EXTRACT_NS += -FStar.UInt16
-EXTRACT_NS += -FStar.UInt32
-EXTRACT_NS += -FStar.UInt64
-EXTRACT_NS += -FStar.UInt8
-EXTRACT_NS += -FStar.Bytes
-EXTRACT_NS += -FStar.Class.Embeddable
-EXTRACT_NS += -FStar.Vector.Base
-EXTRACT_NS += -FStar.Vector.Properties
-EXTRACT_NS += -FStar.Vector
-EXTRACT_NS += -FStar.TSet
-EXTRACT_NS += -FStar.Printf
-EXTRACT_NS += -FStar.Sealed
-EXTRACT_NS += +FStar.List.Pure.Base
-EXTRACT_NS += +FStar.List.Tot.Properties
-EXTRACT_NS += +FStar.Int.Cast.Full
-
-# Tactics/Reflection are not extracted into the app library (fstar.lib);
-# they are extracted into the compiler library via the unified fstarc pass.
-EXTRACT_NS += -FStar.Tactics
-EXTRACT_NS += -FStar.Reflection
-
-EXTRACT := --extract '* $(EXTRACT_NS)'
-
 # Leaving this empty, F* will scan the include path for all fst/fsti
 # files. This will read fstar.include and follow it too.
 # ROOTS :=

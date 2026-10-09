@@ -998,7 +998,7 @@ let rec reduce (x:expr) : ML expr =
        definition uses it, and the copy that would fix that has not been
        propagated yet. *)
     let e2 = reduce e2 in
-    if Options.custard_backend () = "C"
+    if Options.codegen () = Some Options.C
        && EFun? e1.e && count v e2 <= 1 && called_only v e2 then
       let sm : subst = HashTable.create 5 in
       HashTable.add sm v e1;
@@ -3669,7 +3669,7 @@ let coerce_prog (prog:program) : ML program =
    costs nothing where there are none (the direct backend, which is the only
    caller) and stays correct where there are.
 
-   Only for [--custard_backend C].  OCaml has closures and karamel has its own
+   Only for [--codegen C].  OCaml has closures and karamel has its own
    treatment, so lifting there would churn the output to no purpose. *)
 let lift_lambdas (prog:program) : ML program =
   (* Free term variables, minus the ones bound on the way in.  Unlike
@@ -3999,7 +3999,7 @@ let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
   (* Before [dce], which reads the final call graph and would otherwise drop
      every lifted function as unreachable, and before [scc], which orders
      them. *)
-  let prog = if Options.custard_backend () = "C"
+  let prog = if Options.codegen () = Some Options.C
              then pass "lift_lambdas" lift_lambdas prog else prog in
   (* Section 76.  Before [dce], which is what removes the declaration a
      substituted constant made unreachable. *)
@@ -4028,5 +4028,5 @@ let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
      an argument, and a coercion wrapped around the variable this replaces
      would put it back.  karamel-only: the direct backends have no assumption
      to satisfy here. *)
-  if List.mem (Options.custard_backend ()) ["KrmlC"; "KrmlRust"]
+  if List.mem (Options.codegen_name ()) ["KrmlC"; "KrmlRust"]
   then pass "unit_args" unit_args prog else prog

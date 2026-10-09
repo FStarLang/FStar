@@ -85,6 +85,14 @@ depend: .depend
 include .depend
 endif
 
+# The extraction targets of each module M in this directory, named as F*
+# names the OCaml module (dots become underscores).  These rules only give
+# the prerequisite, so that $< in the recipes below is M's checked file.
+define extraction_targets
+$(OUTPUT_DIR)/$(subst .,_,$(1)).ml $(OUTPUT_DIR)/$(subst .,_,$(1)).fs $(OUTPUT_DIR)/$(subst .,_,$(1)).krml: $(CACHE_DIR)/$(1).fst.checked
+endef
+$(foreach f,$(filter %.fst,$(FSTAR_FILES)),$(eval $(call extraction_targets,$(basename $(notdir $(f))))))
+
 endif
 endif
 
@@ -107,19 +115,19 @@ $(OUTPUT_DIR)/%.json_output: %
 	$(call msg, "JSONOUT", $(basename $(notdir $@)))
 	$(FSTAR) --silent --message_format json -f --print_expected_failures --ext pulse:admit_diag $< >$@ 2>&1
 
-$(OUTPUT_DIR)/$(subst .,_,%).ml:
+$(OUTPUT_DIR)/%.ml:
 	$(call msg, "EXTRACT", $(basename $(notdir $@)))
-	$(FSTAR) $< --codegen OCaml
+	$(FSTAR) $< --codegen OCaml --custard_entry_module $(subst .fst.checked,,$(notdir $<)) -o $@
 
-$(OUTPUT_DIR)/$(subst .,_,%).fs:
+$(OUTPUT_DIR)/%.fs:
 	$(call msg, "EXTRACT FS", $(basename $(notdir $@)))
-	$(FSTAR) $< --codegen FSharp
+	$(FSTAR) $< --codegen FSharp --custard_entry_module $(subst .fst.checked,,$(notdir $<)) -o $@
 
-$(OUTPUT_DIR)/$(subst .,_,%).krml:
+$(OUTPUT_DIR)/%.krml:
 	$(call msg, "EXTRACT", $(basename $(notdir $@)))
-	$(FSTAR) $< --codegen krml --extract_module $(subst .fst.checked,,$(notdir $<))
+	$(FSTAR) $< --codegen KrmlC --custard_entry_module $(subst .fst.checked,,$(notdir $<)) -o $@
 
-$(OUTPUT_DIR)/%.c: $(OUTPUT_DIR)/%.krml	$(OUTPUT_DIR)/Pulse_Lib_Pervasives.krml
+$(OUTPUT_DIR)/%.c: $(OUTPUT_DIR)/%.krml
 	$(call msg, "KRML", $(basename $(notdir $@)))
 	if ! which $(KRML_EXE); then echo "krml ($(KRML_EXE)) not found" >&2; false; fi
 	$(KRML_EXE) $(KRML_FLAGS) -skip-makefiles -header=$(PULSE_ROOT)/mk/krmlheader -bundle $*=* -skip-linking $+ -tmpdir $(OUTPUT_DIR)

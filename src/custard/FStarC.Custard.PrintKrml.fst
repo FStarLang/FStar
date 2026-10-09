@@ -22,8 +22,8 @@ open FStarC.Class.Show
 open FStarC.Const
 open FStarC.Custard.Syntax
 
-module K    = FStarC.Extraction.KrmlAst
-module Krml = FStarC.Extraction.Krml
+module K    = FStarC.Custard.KrmlAst
+module Krml = FStarC.Custard.KrmlAst
 module HashTable = FStarC.HashTable
 module BU   = FStarC.Util
 module E    = FStarC.Errors
@@ -278,7 +278,7 @@ let rec_types : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
    every occurrence already prints as the body. *)
 let dead_abbrev_table (p:program) : ML (HashTable.t string bool) =
   let out : HashTable.t string bool = HashTable.create 20 in
-  if Options.custard_backend () <> "KrmlRust" then out
+  if Options.codegen () <> Some Options.KrmlRust then out
   else begin
     let modelled_abbrev (t:dtype) : ML bool =
       match t.dt_body with
@@ -383,12 +383,12 @@ let value_lident_of_name (n:name) : ML K.lident =
 let is_tuple_type_name (n:name) : ML bool =
   n.ns = ["FStar"; "Pervasives"; "Native"] &&
   FStarC.Util.starts_with n.id "tuple" &&
-  Options.custard_backend () = "KrmlRust"
+  Options.codegen () = Some Options.KrmlRust
 
 let is_tuple_ctor_name (n:name) : ML bool =
   n.ns = ["FStar"; "Pervasives"; "Native"] &&
   FStarC.Util.starts_with n.id "Mktuple" &&
-  Options.custard_backend () = "KrmlRust"
+  Options.codegen () = Some Options.KrmlRust
 
 (* Section 92.  A constructor's name inside a variant, without the namespace
    the mangled name carries.  A variant's arms are scoped to the variant --
@@ -424,7 +424,7 @@ let krml_fwidth (fw:fwidth) : ML K.width =
       FStarC.Errors.Msg.text
         "karamel's IR has no 16-bit floating-point width (section 66).";
       FStarC.Errors.Msg.text
-        "Extract with --custard_backend C, which emits these as a two-byte \
+        "Extract with --codegen C, which emits these as a two-byte \
          struct with the arithmetic in the support header." ]
 
 (* Section 43.2.  karamel's [EConstant] carries the literal as text, and what
@@ -437,7 +437,7 @@ let krml_fwidth (fw:fwidth) : ML K.width =
    survives the trip, and decimal for the rest.  A base is for the reader; the
    value is not negotiable. *)
 let krml_int_lit (v:int) (b:int_base) : ML string =
-  if Options.custard_backend () = "KrmlRust" then int_lit_to_string v b
+  if Options.codegen () = Some Options.KrmlRust then int_lit_to_string v b
   else match b with
        | Hex -> int_lit_to_string v Hex
        | _   -> int_lit_to_string v Dec
@@ -466,12 +466,12 @@ let krml_reject_with (#a:Type) (what:string) (where:string) : ML a =
 (* The construct is karamel's limitation alone. *)
 let krml_reject_c_ok (#a:Type) (what:string) : ML a =
   krml_reject_with what
-    "The direct C backend (--custard_backend C) does accept it."
+    "The direct C backend (--codegen C) does accept it."
 
 (* No backend has it; the program has to change. *)
 let krml_reject (#a:Type) (what:string) : ML a =
   krml_reject_with what
-    "The direct C backend (--custard_backend C) has no representation for \
+    "The direct C backend (--codegen C) has no representation for \
      it either."
 
 (* Section 50.2.  A third scope, which the two above cannot express.  karamel
@@ -486,8 +486,8 @@ let krml_reject_rust (#a:Type) (what:string) (why:string) : ML a =
     [text ("Custard: " ^ what ^ " has no representation in karamel's Rust \
             backend.");
      text why;
-     text "Both C routes accept it: --custard_backend KrmlC and \
-           --custard_backend C."]
+     text "Both C routes accept it: --codegen KrmlC and \
+           --codegen C."]
 
 (* Section 43.3.  karamel's C printer has no suffix for [Float32]
    (karamel/lib/PrintC.ml:245 falls through to [empty]), so a binary32 constant
@@ -509,7 +509,7 @@ let krml_float_lit (fw:fwidth) (v:float_lit) : ML string =
    | FLInf _ -> krml_reject_c_ok "an infinity literal"
    | FLNum _ -> ());
   let s = float_lit_to_string v in
-  if Float32? fw && Options.custard_backend () = "KrmlC" then s ^ "f" else s
+  if Float32? fw && Options.codegen () = Some Options.KrmlC then s ^ "f" else s
 
 let krml_width (sw : signedness & iwidth) : ML K.width =
   match sw with
@@ -646,7 +646,7 @@ let rec krml_typ (env:kenv) (t:cty) : ML K.typ =
             16, 16, 16, half, row_major>] is one type and \
             [wmma::fragment<matrix_b, ...>] another, and neither the OCaml \
             nor the karamel type language has anywhere to put the \
-            arguments.  Section 69 is a C-backend feature (--custard_backend \
+            arguments.  Section 69 is a C-backend feature (--codegen \
             C).";
       text "The unparameterized form still works everywhere: a \
             [@@custard_extern] target with no [{0}] placeholder names one \
@@ -661,7 +661,7 @@ let rec krml_typ (env:kenv) (t:cty) : ML K.typ =
             16, 16, 16, half, row_major>] is one type and \
             [wmma::fragment<matrix_b, ...>] another, and neither the OCaml \
             nor the karamel type language has anywhere to put the \
-            arguments.  Section 69 is a C-backend feature (--custard_backend \
+            arguments.  Section 69 is a C-backend feature (--codegen \
             C).";
       text "The unparameterized form still works everywhere: a \
             [@@custard_extern] target with no [{0}] placeholder names one \
@@ -743,7 +743,7 @@ let rec krml_pat (env:kenv) (p:pat) : ML (kenv & K.pattern) =
      and sending the reader to the direct C backend alone would omit the
      nearer answer. *)
   | PConst (CString _) ->
-    if Options.custard_backend () = "KrmlRust"
+    if Options.codegen () = Some Options.KrmlRust
     then krml_reject_rust "a string pattern"
            "A flat string match is compiled to a comparison chain using \
             krmllib's __eq__Prims_string, which is C and has no Rust \
@@ -959,7 +959,7 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
      [s = t] on strings has crashed the Rust path since strings did. *)
   | EOp ({ po_op = o; po_ty = None }, args)
       when (Eq? o || Neq? o) && Cons? args &&
-           Options.custard_backend () = "KrmlRust" &&
+           Options.codegen () = Some Options.KrmlRust &&
            (match args with a :: _ -> is_string_cty a.ty | [] -> false) ->
     krml_reject_rust "string equality"
       "It is realized by krmllib's __eq__Prims_string, a C function with no \
@@ -1008,7 +1008,7 @@ and is_string_match (scrut:expr) (brs:list branch) : ML bool =
      krmllib *C* primitive with no Rust counterpart, so the desugaring is
      C-only.  Ungated it turned a clean refusal into a karamel crash on the
      Rust path. *)
-  Options.custard_backend () = "KrmlC" &&
+  Options.codegen () = Some Options.KrmlC &&
   is_string_cty scrut.ty &&
   Cons? brs &&
   brs |> List.for_all (fun (p, g, _) ->
@@ -1215,7 +1215,7 @@ let krml_decl (env:kenv) (d:decl) : ML (option K.decl) =
       text ("Custard: " ^ string_of_name x.dx_name ^ " is in a module karamel \
             models on this backend, but karamel has no translation for it.");
       text "Only the operations karamel recognizes can be used from a modelled \
-           module; use the F* definition through --custard_backend KrmlC, or \
+           module; use the F* definition through --codegen KrmlC, or \
            extend the model in karamel."
     ];
     (* Section 45.3.  And the header that declares it.  The C backend emits
@@ -1339,7 +1339,7 @@ let reject_target_only_types (p:program) : ML unit =
               ("Its target spelling [" ^ target ^ "] has a placeholder for an \
                 argument, so two instantiations of it are two different \
                 target types; karamel has no such construction.  Section 69 \
-                is a C-backend feature (--custard_backend C).");
+                is a C-backend feature (--codegen C).");
             text
               "The unparameterized form still works everywhere: a \
                [@@custard_extern] target with no [{0}] placeholder names one \
@@ -1357,7 +1357,7 @@ let reject_target_only_types (p:program) : ML unit =
                copy instead would compile and be wrong, which is the exact \
                failure the attribute exists to prevent.";
             text
-              "Section 70.2 is a C-backend feature (--custard_backend C)." ]
+              "Section 70.2 is a C-backend feature (--codegen C)." ]
         | _ -> ())
     | _ -> ())
 

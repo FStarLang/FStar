@@ -68,7 +68,7 @@ let register_rule (l:Ident.lident) (r:rule) : ML unit =
    qualify compile the F* implementation instead, which is not a fallback
    anyone has to write -- it is what they do today. *)
 let int128_enabled () : ML bool =
-  let b = Options.custard_backend () in
+  let b = Options.codegen_name () in
   (b = "C" || b = "FSharp") && Options.custard_int128 ()
 
 let machine_int_of_module (ns : list string) : ML (option (signedness & iwidth)) =
@@ -526,8 +526,8 @@ let float_rule (fw:fwidth) (id:string) : ML (option rule) =
 
    The masking that a narrowing conversion needs is therefore the backend's
    job.  C gets it for free; the OCaml backend, where every width is a
-   different type, prints the coercion as the corresponding [FStar_Int_Cast]
-   function (see [PrintOCaml]). *)
+   different type, reduces the operand modulo the target width
+   inline (see [PrintOCaml]). *)
 let int_cast_rule (id:string) : ML (option rule) =
   match String.split ['_'] id with
   | [src; "to"; dst] ->
@@ -615,11 +615,11 @@ let prims_rule (id:string) : ML (option rule) =
    option: they are specified against Pulse's separation-logic model, which
    has no runtime meaning at all.
 
-   These rules deliberately mirror [ExtractPulse.pulse_translate_expr], the
-   corresponding table of the ML-to-karamel pipeline, so that a Pulse program
-   means the same thing through either.  The argument counts differ, though:
-   the ML pipeline sees the source arity, whereas by the time a rule runs here
-   the erased arguments (the permissions, the ghost sequences, the [small_type]
+   These rules mirror the translation table of the former ML-to-karamel
+   pipeline (Pulse's [ExtractPulse.pulse_translate_expr]), so that Pulse
+   programs keep their meaning.  The argument counts differ, though: the ML
+   pipeline saw the source arity, whereas by the time a rule runs here the
+   erased arguments (the permissions, the ghost sequences, the [small_type]
    dictionaries) are already gone.  *)
 
 let size_lit (n:int) : expr =
@@ -924,7 +924,7 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
      [gvar p] *is* the value it guards -- the slprop is ghost -- so the type is
      its own first type argument, making the variable a plain global; [mk_gvar
      init] is the initializer run, and [read_gvar x] is [x].  These mirror the
-     three rules Pulse's karamel extension registers (ExtractPulse.fst). *)
+     three rules Pulse's former karamel extension registered. *)
   | ["Pulse"; "Lib"; "GlobalVar"], "gvar" ->
     Some (Rule_type (fun tys -> elt_of tys))
   | ["Pulse"; "Lib"; "GlobalVar"], "mk_gvar" ->
@@ -1025,8 +1025,7 @@ let exn_rule (id:string) : ML (option rule) =
         (* A handler that is syntactically [fun e -> match e with | ...]
            becomes the [ETry]'s own branches, and an exception none of them
            matches propagates -- which is what [try] means everywhere else and
-           what the ML backend's own [try_with] case does
-           ([Extraction.ML.Code], [MLE_Try]).  Applying the handler instead
+           what the former ML backend's own [try_with] case did.  Applying the handler instead
            kept the match *inside* a catch-all branch, where a missing pattern
            is a failed match rather than a re-raise: [FStarC.Plugins.dynlink]
            turned every dynlink failure into "Pattern matching failed", and
@@ -1156,9 +1155,9 @@ let rule_of_attributes (attrs : list S.term) : ML (option rule) =
    interfaces one at a time would be a rule about the build expressed in the
    library, and it would still have to be kept in step with the build.  It is
    the set of module names for which [src/ml] or [ulib/ml/plugin] holds a
-   file of the same name, plus [FStar.Pervasives], which is extracted rather
-   than hand-written but whose [either] and [dtuple] types the realizations
-   use in their own signatures.  Listing a module that declares no type is harmless:
+   file of the same name, plus [FStar.Pervasives], whose hand-written
+   [ulib/ml/app/FStar_Pervasives.ml] declares only the types the realizations
+   use in their own signatures ([either], [dtuple], ...).  Listing a module that declares no type is harmless:
    the rule has no effect on values. *)
 (* Section 8.3.  ulib declares the compiler's reflection and tactic API a
    second time, as the [FStar.Stubs.*] modules: abstract types and [assume
@@ -1166,9 +1165,8 @@ let rule_of_attributes (attrs : list S.term) : ML (option rule) =
    separate implementation of anything, and a metaprogram that used them under
    their own names would not link against the engine that runs it -- so the
    namespace is rewritten to the one it is a stub for, and the two views become
-   one set of names.  This is the same rewrite the ML pipeline does in
-   [UEnv.no_fstar_stubs_ns], where it is conditional on [--codegen Plugin];
-   Custard does it unconditionally, because a whole-program compilation of the
+   one set of names.  The former ML pipeline did the same rewrite,
+   conditionally on [--codegen Plugin]; Custard does it unconditionally, because a whole-program compilation of the
    compiler never mentions these modules at all -- the compiler uses the
    [FStarC.*] originals -- so there is no second case to be in.
 
@@ -1309,7 +1307,6 @@ let realized_modules : list (list string) = [
   ["FStarC"; "Array"];
   ["FStarC"; "BaseTypes"];
   ["FStarC"; "Effect"];
-  ["FStarC"; "Extraction"; "ML"; "PrintML"];
   ["FStarC"; "Filepath"];
   ["FStarC"; "Format"];
   ["FStarC"; "Getopt"];
@@ -1358,7 +1355,7 @@ let realized_modules : list (list string) = [
    nothing to rename.  That is why this feeds [is_realized_module] rather than
    being a rule kind of its own.
 
-   Only under [--custard_backend KrmlRust].  On the C path the F* definition
+   Only under [--codegen KrmlRust].  On the C path the F* definition
    is the implementation, and modelling it away would leave the program with
    no slice at all.
 
@@ -1378,7 +1375,7 @@ let is_no_unfold_lid (l : Ident.lident) : ML bool =
   Options.custard_no_unfolds () |> List.existsb (fun m -> m = s)
 
 let is_krml_model (ns : list string) : ML bool =
-  Options.custard_backend () = "KrmlRust" &&
+  Options.codegen () = Some Options.KrmlRust &&
   (builtin_krml_models |> List.existsb (fun m -> m = ns) ||
    Options.custard_krml_models () |> List.existsb (fun m ->
      m = String.concat "." ns))
@@ -1397,7 +1394,7 @@ let is_krml_model (ns : list string) : ML bool =
    the same module and karamel is happy to compile it. *)
 let is_krml_model_name (ns : list string) (id : string) : ML bool =
   is_krml_model ns ||
-  (Options.custard_backend () = "KrmlRust" &&
+  (Options.codegen () = Some Options.KrmlRust &&
    ns = ["FStar"; "Pervasives"; "Native"] &&
    (FStarC.Util.starts_with id "tuple" ||
     FStarC.Util.starts_with id "Mktuple"))
@@ -1547,8 +1544,8 @@ let normalizes_arguments (l : Ident.lident) : ML bool =
    [let list_unref _ l = l] in OCaml, the same in F#, and nothing at all in C.
 
    They need a rule rather than [Rule_realized] because of the [_].  The
-   OCaml realization is shared with the ML backend, which keeps the erased
-   [#p:(a -> prop)] as a dummy parameter; Custard erases it, so a call through
+   OCaml realization was written for the former ML backend, which kept the
+   erased [#p:(a -> prop)] as a dummy parameter; Custard erases it, so a call through
    the realization is one argument short and the realization's own definition
    reads it as the list.  Saying "identity" here settles it for both, and for
    the backends that have no realization to call.

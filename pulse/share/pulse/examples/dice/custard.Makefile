@@ -1,12 +1,12 @@
 # Custard extraction of the DICE example.  Assumes everything has already
 # been verified by the main Makefile: Custard reads .checked files only.
 #
-# Unlike c.Makefile there is no dependency graph to compute and no bundle or
-# library flag to pass: Custard is whole-program, so the entry points are the
+# There is no dependency graph to compute and no bundle or library flag to
+# pass: Custard is whole-program, so the entry points are the
 # only input, and it emits one translation unit.  Both C paths are exercised:
 #
-#   krml  -- Custard emits a .krml file and karamel emits the C, as the
-#            existing pipeline does, but from a monomorphized program;
+#   krml  -- Custard emits a .krml file and karamel emits the C, from a
+#            monomorphized program;
 #   C     -- Custard emits the C itself (section 11).
 #
 # Two of the types the program handles have no F* definition to compile:
@@ -30,7 +30,7 @@ ENTRIES := open_session initialize_context derive_child close_session \
 EXTERN_TYPES := Spec.Hash.Definitions.hash_alg=Spec_Hash_Definitions_hash_alg \
                 FStar.Bytes.bytes=FStar_Bytes_bytes
 
-FSTAR := $(FSTAR_EXE) --ext optimize_let_vc --ext fly_deps --codegen Custard \
+FSTAR := $(FSTAR_EXE) --ext optimize_let_vc --ext fly_deps \
          $(foreach e,$(ENTRIES),--custard_entry DPE.$(e)) \
          --cache_dir _cache --include . --include $(PULSE_LIB) \
          --already_cached ',*' --warn_error -321-274-272-241-342
@@ -47,7 +47,7 @@ all: krml direct
 
 $(OUT)/DPE.krml: dpe/DPE.fst
 	@mkdir -p $(OUT)
-	$(FSTAR) --custard_backend KrmlC \
+	$(FSTAR) --codegen KrmlC \
 	  $(foreach t,$(EXTERN_TYPES),--custard_extern_type $(t)) \
 	  dpe/DPE.fst -o $@
 
@@ -66,7 +66,7 @@ krml: $(OUT)/DPE.krml
 # representation for a type variable.
 $(OUT)/DPE.c: dpe/DPE.fst
 	@mkdir -p $(OUT)
-	$(FSTAR) --custard_backend C --custard_monomorphize_types true \
+	$(FSTAR) --codegen C --custard_monomorphize_types true \
 	  $(foreach t,$(EXTERN_TYPES),--custard_extern_type '$(t)@dice_externs.h') \
 	  dpe/DPE.fst -o $@
 

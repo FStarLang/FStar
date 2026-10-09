@@ -26,8 +26,6 @@ module Syntax  = FStarC.Syntax.Syntax
 module Dep     = FStarC.Parser.Dep
 module Frontend = FStarC.Parser.Frontend
 
-type uenv = FStarC.Extraction.ML.UEnv.uenv
-
 (* Takes a module an returns whether it is an interface or not,
 and an lid for its name. *)
 val module_or_interface_name : Syntax.modul -> bool & lid
@@ -87,4 +85,4 @@ val batch_mode_tc :
     fly_deps:bool ->
     list string ->
     FStarC.Parser.Dep.deps ->
-    ML (list tc_result & uenv & (uenv -> ML uenv))
+    ML (list tc_result & TcEnv.env & (TcEnv.env -> ML TcEnv.env))

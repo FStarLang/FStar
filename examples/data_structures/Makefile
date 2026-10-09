@@ -32,4 +32,4 @@ $(OUTPUT_DIR)/%.exe: $(OUTPUT_DIR)/%.ml
 
 $(OUTPUT_DIR)/RBTreeIntrinsic.ml: $(CACHE_DIR)/RBTreeIntrinsic.fst.checked $(FSTAR_EXE)
 	$(call msg, "EXTRACT", RBTreeIntrinsic.fst)
-	$(FSTAR) --codegen Custard --custard_main RBTreeIntrinsic.test $< -o $@
+	$(FSTAR) --codegen OCaml --custard_main RBTreeIntrinsic.test $< -o $@

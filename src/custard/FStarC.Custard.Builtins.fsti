@@ -144,7 +144,7 @@ val is_no_unfold_lid : Ident.lident -> ML bool
 (** Whether karamel supplies this module itself on the backend being emitted
     for, so that Custard must emit neither its types nor its definitions and
     must leave every use of them under the F* name (section 20).  Only ever
-    true under [--custard_backend KrmlRust], where [Pulse.Lib.Slice] becomes
+    true under [--codegen KrmlRust], where [Pulse.Lib.Slice] becomes
     Rust's own borrowed slice rather than the owning struct its F* definition
     describes. *)
 val is_krml_model : list string -> ML bool

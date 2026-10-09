@@ -6,23 +6,16 @@ runtime result is compared against what F\* proves statically.
 
 ## Backends
 
-| id      | pipeline                                                       |
-|---------|----------------------------------------------------------------|
-| `ocaml` | `fstar.exe --codegen OCaml` + `ocamlfind ocamlopt`             |
-| `c`     | `fstar.exe --codegen krml` + `krml` (C backend) + `cc`         |
-| `rust`  | `fstar.exe --codegen krml` + `krml -backend rust` + `rustc`    |
-| `custard-ocaml`     | `--codegen Custard --custard_backend OCaml` + `ocamlopt` |
-| `custard-c`         | `--codegen Custard --custard_backend C` + `cc`           |
-| `custard-krml-c`    | `--codegen Custard --custard_backend KrmlC` + `krml` + `cc` |
-| `custard-krml-rust` | `--codegen Custard --custard_backend KrmlRust` + `krml -backend rust` + `rustc` |
+| id                  | pipeline                                              |
+|---------------------|-------------------------------------------------------|
+| `custard-ocaml`     | `--codegen OCaml` + `ocamlopt`                        |
+| `custard-c`         | `--codegen C` + `cc`                                  |
+| `custard-krml-c`    | `--codegen KrmlC` + `krml` + `cc`                     |
+| `custard-krml-rust` | `--codegen KrmlRust` + `krml -backend rust` + `rustc` |
 
-The first three go through `FStarC.Extraction`; the last four go through
-Custard (`doc/ref/custard.md`), which is a *different extractor* rather than a
-different backend behind the same one. Running both matters in each direction:
-Custard passes several cells the pipeline above XFAILs, and the F\* -> IR half
-of Custard is a place a bug can hide that no `krml` column would ever see. The
-suite found one such bug (`FINDINGS.md` #18) and three miscompilations in
-Custard's own backends.
+All four go through Custard (`doc/ref/custard.md`). The suite was written for
+the legacy extraction pipeline, which also had `ocaml`, `c` and `rust`
+columns; those are gone with it, but `FINDINGS.md` keeps their analysis.
 
 ## How a test works
 
@@ -92,8 +85,7 @@ F\* still proves `x / y = -3` (the definitions are delta-reducible for the
 solver), but the *backend* has to compute it at runtime. Do not write
 `chk 1l ((-7) / 2 = -3)`: that folds away and tests nothing.
 
-Do not mark these constants `inline_for_extraction`, and do not build the test
-suite with `--cmi`, for the same reason.
+Do not mark these constants `inline_for_extraction`, for the same reason.
 
 ### Why *literal* top-level constants?
 
@@ -137,14 +129,10 @@ The `Makefile` has two kinds of exclusion:
 Every `XFAIL_` entry carries a comment pointing at the relevant section of
 `FINDINGS.md`.
 
-For the first three columns an XFAILed cell must still *extract*: the bug is
-on the backend side, so the F\* step is a prerequisite of the `xfail` rule
-rather than part of what is allowed to fail. Without that, a missing tool or a
-typo in the harness would look like the expected failure. The Custard columns
-use `custard_xfail_rule` instead, whose prerequisite is only the `.checked`
-file, because there Custard *is* the extractor and a bug in it can stop the
-pipeline at the F\* step -- which is exactly what `FINDINGS.md` #18 does. Both
-rules check that the failure was not merely the harness falling over.
+An XFAILed cell's only prerequisite is its `.checked` file: Custard is the
+extractor, so a bug in it can stop the pipeline at the F\* step -- which is
+exactly what `FINDINGS.md` #18 does. The rule checks that the failure was not
+merely the harness falling over (a missing tool, a typo in a flag).
 
 ## Adding a test
 
@@ -168,20 +156,19 @@ that works — several modules here were split for exactly that reason.
 
 ```sh
 make                     # everything
-make ocaml               # only the OCaml column
-make c rust              # only the Karamel columns
-make custard-c           # only Custard's direct-to-C column
-make ExtIntSigned.ocaml  # a single cell of the matrix
-make ExtIntSigned.custard-c
+make custard-ocaml       # only the OCaml column
+make custard-krml-c custard-krml-rust   # only the Karamel columns
+make custard-c           # only the direct-to-C column
+make ExtIntSigned.custard-c   # a single cell of the matrix
 V=1 make ...             # show the commands
 KRML_TIMEOUT=300 make    # two known bugs make krml loop; every krml call is
                          # bounded (120s by default)
 ```
 
 This directory runs unconditionally as part of `make test`, so it degrades
-gracefully on a machine that is missing a toolchain: the `c` column is skipped
+gracefully on a machine that is missing a toolchain: the `custard-krml-c` column is skipped
 if `krml` cannot be found (`$(KRML_EXE)`, then next to `fstar.exe`, then
-`karamel/out/bin/krml`, then `$PATH`), and the `rust` column is skipped if
+`karamel/out/bin/krml`, then `$PATH`), and the `custard-krml-rust` column is skipped if
 either `krml` or `rustc` is missing. Each skip prints a `NOTE:` line.
 
 ```sh
@@ -192,17 +179,13 @@ A failing cell prints the backend, the module, and the tag of the failing
 check, e.g.
 
 ```
-FAIL [c] ExtIntCast: check #23 (grep the module for that tag)
+FAIL [custard-krml-c] ExtIntCast: check #23 (grep the module for that tag)
 ```
 
 ## Notes on the pipelines
 
-* The C column links against `krmllib`, which is built once from the karamel
+* The karamel C column links against `krmllib`, which is built once from the karamel
   distribution that ships with the compiler (`krml -locate-krmllib`).
-* Karamel needs a `.krml` for every type it sees, and the F\* installation ships
-  none for ulib, so `FStar.Pervasives.Native` is extracted on demand for tests
-  that mention `option`, `either` or tuples (`ULIB_KRML_MODS` in the
-  `Makefile`).
 * Karamel emits `pub fn main() -> i32`, which rustc will not accept as a binary
   entry point, so the Rust rule renames it and appends a real `fn main`.
 * krml **exits 0** even when an unhandled exception or a translation error

@@ -1,6 +1,6 @@
 FSTAR_ROOT ?= ../..
 
-# Each of these modules is extracted with --codegen Custard, starting from its
+# Each of these modules is extracted with --codegen OCaml, starting from its
 # 'main' entry point, then compiled and run; the output is compared against
 # the corresponding .out.expected file.
 CUSTARD_TESTS += Hello
@@ -347,7 +347,7 @@ NOGREP_PolyVal = "Obj.magic"
 GREP_Phantom   = "type ('a, 'ph) phantom_tagged" "and ('a, 'ph) phantom_even_t" \
                  "type ('a, 'ph) phantom_odd_t"
 
-# Each of these is extracted with --custard_backend KrmlC, run through karamel
+# Each of these is extracted with --codegen KrmlC, run through karamel
 # to produce C, compiled and run; the program must exit 0.  Skipped when
 # karamel is not installed.
 KRML_TESTS += KrmlBasic
@@ -359,7 +359,7 @@ KRML_TESTS += KrmlBasic
 # testable here.
 KRML_TESTS += KrmlPrims
 
-# Section 122.  Each of these is extracted with --custard_backend FSharp, then
+# Section 122.  Each of these is extracted with --codegen FSharp, then
 # compiled by the .NET 10 SDK with warnings 20 and 58 left on and run; the
 # program must exit 0.  Skipped when no 10.x SDK is installed.
 #
@@ -436,7 +436,7 @@ FSGREP_FsSizet32 = "len : uint32;" "let szWidth_widen (n : uint32) : uint64 =" \
                    "((b).len + (1u))"
 FSNOGREP_FsSizet32 = "len : uint64;" "(uint32 n)"
 
-# Rejections.  Each is extracted with --custard_backend FSharp and must
+# Rejections.  Each is extracted with --codegen FSharp and must
 # produce the numbered diagnostic.
 FSREJECT_TESTS += FSNoReal FSPun
 CODE_FSNoReal = 395
@@ -444,7 +444,7 @@ EGREP_FSNoReal = "has no F\* definition and no F\# realization"
 CODE_FSPun = 395
 EGREP_FSPun = "which .NET cannot express"
 
-# Each of these is extracted with --custard_backend C, then compiled by a C11
+# Each of these is extracted with --codegen C, then compiled by a C11
 # compiler with the warnings on and run; the program must exit 0.  The direct
 # backend has no polymorphism to fall back on, so it always runs with type
 # monomorphization (section 5.0.1).
@@ -897,14 +897,14 @@ CGREP_NoPrefixX += "NoPrefixX_main(void)"
 
 REJECT_TESTS += MonoExtern
 CODE_MonoExtern = 376
-FLAGS_MonoExtern += --custard_backend C --custard_monomorphize_types true
+FLAGS_MonoExtern += --codegen C --custard_monomorphize_types true
 FLAGS_MonoExtern += --custard_entry MonoExtern.go
 EGREP_MonoExtern += "is monomorphized, but"
 EGREP_MonoExtern += "external has no body, so the argument would be discarded"
 
 REJECT_TESTS += ExistAdvice
 CODE_ExistAdvice = 364
-FLAGS_ExistAdvice += --custard_backend C --custard_monomorphize_types true
+FLAGS_ExistAdvice += --codegen C --custard_monomorphize_types true
 FLAGS_ExistAdvice += --custard_entry ExistAdvice.go
 # The advice names the field and says no annotation helps -- it does not tell
 # the reader to write one, which is what it used to do.
@@ -932,7 +932,7 @@ CNOGREP_CLamDef += "CLamDef_go(uint32_t k)"
 # asking for a bug report about a correct rejection.
 REJECT_TESTS += ExistChain
 CODE_ExistChain = 368
-FLAGS_ExistChain += --custard_backend C --custard_monomorphize_types true
+FLAGS_ExistChain += --codegen C --custard_monomorphize_types true
 EGREP_ExistChain += "is an existential package, not an instance of a"
 EGREP_ExistChain += "stores the type ty"
 EGREP_ExistChain += "it is not a Custard"
@@ -946,7 +946,7 @@ NOEGREP_ExistChain += "please report it"
 # no way to tell.  The test is the diagnostic; the program itself is fine.
 REJECT_TESTS += AttrPos
 CODE_AttrPos = 371
-FLAGS_AttrPos += --custard_backend C --custard_monomorphize_types true
+FLAGS_AttrPos += --codegen C --custard_monomorphize_types true
 EGREP_AttrPos += "custard_opaque\] on the field contents of AttrPos.Box"
 EGREP_AttrPos += "custard_compile_time\] on the parameter k of AttrPos.scale"
 EGREP_AttrPos += "custard_inline_field\] on the declaration AttrPos.width"
@@ -962,7 +962,7 @@ EGREP_AttrPos += "has no .@@custard_extern"
 # they may depend on.
 REJECT_TESTS += ExportGen
 CODE_ExportGen = 377
-FLAGS_ExportGen += --custard_backend C --custard_monomorphize_types true
+FLAGS_ExportGen += --codegen C --custard_monomorphize_types true
 FLAGS_ExportGen += --custard_entry ExportGen.mk --custard_entry ExportGen.get
 FLAGS_ExportGen += --custard_c_no_prefix ExportGen
 EGREP_ExportGen += "ExportGen_cell__uint32. is part of this unit's interface"
@@ -972,7 +972,7 @@ EGREP_ExportGen += "typedef it once, in"
 
 REJECT_TESTS += ColB
 CODE_ColB = 374
-FLAGS_ColB += --custard_backend C --custard_monomorphize_types true
+FLAGS_ColB += --codegen C --custard_monomorphize_types true
 FLAGS_ColB += --custard_entry ColA.f --custard_entry ColB.f
 FLAGS_ColB += --custard_c_no_prefix ColA --custard_c_no_prefix ColB
 EGREP_ColB += "would name both"
@@ -986,7 +986,7 @@ CODE_WideChain = 364
 EGREP_WideChain += "chars)"
 REJECT_TESTS += ListC
 CODE_ListC = 368
-FLAGS_ListC = --custard_backend C --custard_monomorphize_types true
+FLAGS_ListC = --codegen C --custard_monomorphize_types true
 # Section 100.  The rejection used to be the frozen-type one: [isEmpty] is
 # realized, so rule 4 held [list] polymorphic and the backend never saw it.
 # Now the type is cloned like any other and rejected for the honest reason,
@@ -1003,10 +1003,10 @@ REJECT_TESTS += CNoInt
 REJECT_TESTS += CNoClosure
 REJECT_TESTS += CLamField
 REJECT_TESTS += CPartialCall
-FLAGS_CNoInt     = --custard_backend C --custard_monomorphize_types true
-FLAGS_CNoClosure = --custard_backend C --custard_monomorphize_types true
-FLAGS_CLamField  = --custard_backend C --custard_monomorphize_types true
-FLAGS_CPartialCall = --custard_backend C --custard_monomorphize_types true
+FLAGS_CNoInt     = --codegen C --custard_monomorphize_types true
+FLAGS_CNoClosure = --codegen C --custard_monomorphize_types true
+FLAGS_CLamField  = --codegen C --custard_monomorphize_types true
+FLAGS_CPartialCall = --codegen C --custard_monomorphize_types true
 CODE_CNoInt      = 368
 CODE_CNoClosure  = 368
 CODE_CLamField   = 368
@@ -1023,7 +1023,7 @@ CODE_WarnAny     = 367
 # definition and the offending argument, rather than falling back to compiling
 # a [list char] into C.
 REJECT_TESTS += CompileTimeBad
-FLAGS_CompileTimeBad = --custard_backend C --custard_entry CompileTimeBad.use
+FLAGS_CompileTimeBad = --codegen C --custard_entry CompileTimeBad.use
 CODE_CompileTimeBad  = 372
 EGREP_CompileTimeBad = "depends on a runtime value"
 
@@ -1031,7 +1031,7 @@ REJECT_TESTS += FieldAttr
 # The program itself extracts (rule 4b of section 30.9 makes the bundle binder
 # Mono, so nothing is left over); the warning is the whole test, so it is
 # promoted to an error rather than looked for in passing output.
-FLAGS_FieldAttr = --custard_backend C --custard_monomorphize_types true \
+FLAGS_FieldAttr = --codegen C --custard_monomorphize_types true \
                   --warn_error @371
 CODE_FieldAttr  = 371
 EGREP_FieldAttr = "on the field pimpl_type"
@@ -1073,7 +1073,7 @@ WARN_ANY = --custard_warn_any --warn_error @367
 # pipeline instead, which is whole-program and hence keyed on an entry point.
 $(OUTPUT_DIR)/%.ml:
 	$(call msg, "CUSTARD", $(basename $(notdir $@)))
-	$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) --custard_main $*.main $< -o $@
+	$(FSTAR) --codegen OCaml $(WARN_ANY) $(FLAGS_$*) --custard_main $*.main $< -o $@
 	$(Q)for p in $(GREP_$*); do \
 	  grep -q -- "$$p" $@ \
 	    || { echo "ERROR: $* output is missing $$p"; exit 1; }; done
@@ -1088,8 +1088,8 @@ $(OUTPUT_DIR)/%.ml:
 $(OUTPUT_DIR)/%.fsout: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-FS", $(basename $(notdir $@)))
 	@mkdir -p $(OUTPUT_DIR)/fs/$*
-	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) \
-	  --custard_backend FSharp --custard_main $*.main $*.fst \
+	$(Q)$(FSTAR) --codegen FSharp $(WARN_ANY) $(FLAGS_$*) \
+	  --custard_main $*.main $*.fst \
 	  -o $(OUTPUT_DIR)/fs/$*/$*.fs
 	$(Q)for p in $(FSGREP_$*); do \
 	  grep -qF -- "$$p" $(OUTPUT_DIR)/fs/$*/$*.fs \
@@ -1122,8 +1122,8 @@ $(OUTPUT_DIR)/%.fsran: $(OUTPUT_DIR)/%.fsout
 $(OUTPUT_DIR)/%.fsrejected: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "REJECT-FS", $(basename $(notdir $@)))
 	@mkdir -p $(OUTPUT_DIR)/fs/$*
-	$(Q)$(FSTAR) --message_format human --codegen Custard $(WARN_ANY) \
-	  $(FLAGS_$*) --custard_backend FSharp --custard_main $*.main $*.fst \
+	$(Q)$(FSTAR) --message_format human --codegen FSharp $(WARN_ANY) \
+	  $(FLAGS_$*) --custard_main $*.main $*.fst \
 	  -o $(OUTPUT_DIR)/fs/$*/$*.fs >$(OUTPUT_DIR)/$*.fserr 2>&1 || true
 	$(Q)grep -qE "(Error|Warning) $(CODE_$*)" $(OUTPUT_DIR)/$*.fserr \
 	  || { echo "ERROR: expected diagnostic $(CODE_$*) from $*"; \
@@ -1137,7 +1137,7 @@ $(OUTPUT_DIR)/%.fsrejected: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 $(OUTPUT_DIR)/%.rejected: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "REJECT", $(basename $(notdir $@)))
 	@mkdir -p $(OUTPUT_DIR)
-	$(Q)$(FSTAR) --message_format human --codegen Custard $(WARN_ANY) $(FLAGS_$*) \
+	$(Q)$(FSTAR) --message_format human --codegen OCaml $(WARN_ANY) $(FLAGS_$*) \
 	  --custard_main $*.main $< >$(OUTPUT_DIR)/$*.err 2>&1 || true
 	@# Section 30.17: a few of these are warnings rather than errors -- the
 	@# product is the diagnostic either way, and which one it is is exactly
@@ -1168,7 +1168,7 @@ $(OUTPUT_DIR)/%.rejected: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 $(OUTPUT_DIR)/%.roots: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "ROOTS", $(basename $(notdir $@)))
 	@mkdir -p $(OUTPUT_DIR)
-	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) \
+	$(Q)$(FSTAR) --codegen OCaml $(WARN_ANY) $(FLAGS_$*) \
 	  $(foreach r,$(ROOTS_$*),--custard_entry $*.$(r)) \
 	  $(patsubst %,%.fst,$*) -o $(OUTPUT_DIR)/$*.ml
 	$(Q)for p in $(GREP_$*); do \
@@ -1181,7 +1181,7 @@ $(OUTPUT_DIR)/%.roots: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 
 $(OUTPUT_DIR)/%.krml:
 	$(call msg, "CUSTARD-KRML", $(basename $(notdir $@)))
-	$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) --custard_backend KrmlC \
+	$(FSTAR) --codegen KrmlC $(WARN_ANY) $(FLAGS_$*) \
 	  --custard_main $*.main $< -o $@
 
 # Section 50.2.  A construct that karamel holds but karamel's *Rust* backend
@@ -1191,8 +1191,8 @@ $(OUTPUT_DIR)/%.krml:
 $(OUTPUT_DIR)/%.rustrejected: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "REJECT-RUST", $(basename $(notdir $@)))
 	@mkdir -p $(OUTPUT_DIR)
-	$(Q)$(FSTAR) --message_format human --codegen Custard $(WARN_ANY) \
-	  $(FLAGS_$*) --custard_backend KrmlRust --custard_main $*.main $< \
+	$(Q)$(FSTAR) --message_format human --codegen KrmlRust $(WARN_ANY) \
+	  $(FLAGS_$*) --custard_main $*.main $< \
 	  -o $(OUTPUT_DIR)/$*.rs >$(OUTPUT_DIR)/$*.rerr 2>&1 || true
 	$(Q)grep -qE "(Error|Warning) $(CODE_$*)" $(OUTPUT_DIR)/$*.rerr \
 	  || { echo "ERROR: expected diagnostic $(CODE_$*) from $* on KrmlRust"; \
@@ -1245,8 +1245,8 @@ $(OUTPUT_DIR)/%.rustrejected: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 $(OUTPUT_DIR)/rust/%.krml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-RUST", $(basename $(notdir $@)))
 	@mkdir -p $(OUTPUT_DIR)/rust
-	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) \
-	  --custard_backend KrmlRust --custard_main $*.main $< -o $@
+	$(Q)$(FSTAR) --codegen KrmlRust $(WARN_ANY) $(FLAGS_$*) \
+	  --custard_main $*.main $< -o $@
 
 $(OUTPUT_DIR)/%.rsran: $(OUTPUT_DIR)/rust/%.krml
 	$(call msg, "KRML-RUST", $(basename $(notdir $@)))
@@ -1301,8 +1301,8 @@ $(OUTPUT_DIR)/%.rsran: $(OUTPUT_DIR)/rust/%.krml
 $(OUTPUT_DIR)/rustsplit/%.krml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-RUST-SPLIT", $(basename $(notdir $@)))
 	@mkdir -p $(OUTPUT_DIR)/rustsplit
-	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) --custard_split \
-	  --custard_backend KrmlRust --custard_main $*.main $< -o $@
+	$(Q)$(FSTAR) --codegen KrmlRust $(WARN_ANY) $(FLAGS_$*) --custard_split \
+	  --custard_main $*.main $< -o $@
 
 $(OUTPUT_DIR)/%.rssplit: $(OUTPUT_DIR)/rustsplit/%.krml
 	$(call msg, "KRML-RUST-SPLIT", $(basename $(notdir $@)))
@@ -1336,8 +1336,8 @@ $(OUTPUT_DIR)/%.rssplit: $(OUTPUT_DIR)/rustsplit/%.krml
 $(OUTPUT_DIR)/csplit/%.krml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-C-SPLIT", $(basename $(notdir $@)))
 	@mkdir -p $(OUTPUT_DIR)/csplit
-	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) --custard_split \
-	  --custard_backend KrmlC --custard_main $*.main $< -o $@
+	$(Q)$(FSTAR) --codegen KrmlC $(WARN_ANY) $(FLAGS_$*) --custard_split \
+	  --custard_main $*.main $< -o $@
 
 $(OUTPUT_DIR)/%.csplit: $(OUTPUT_DIR)/csplit/%.krml
 	$(call msg, "KRML-C-SPLIT", $(basename $(notdir $@)))
@@ -1375,7 +1375,7 @@ CHECKGROUP := $(CURDIR)/checkgroup.py
 $(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-C", $(basename $(notdir $@)))
 	@mkdir -p $(OUTPUT_DIR)
-	$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) --custard_backend C \
+	$(FSTAR) --codegen C $(WARN_ANY) $(FLAGS_$*) \
 	  --custard_monomorphize_types true --custard_main $*.main $*.fst -o $@
 	@# The unit is a header and a source (section 24), so the assertions are
 	@# over both: a type declaration lives in the header now, and an
@@ -1502,7 +1502,7 @@ $(OUTPUT_DIR)/%.cran: $(OUTPUT_DIR)/%.cexe
 $(OUTPUT_DIR)/ExportLib.c: $(CACHE_DIR)/Export.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-C", ExportLib)
 	@mkdir -p $(OUTPUT_DIR)
-	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
+	$(FSTAR) --codegen C $(WARN_ANY) \
 	  --custard_monomorphize_types true $(FLAGS_Export) Export.fst -o $@
 
 $(OUTPUT_DIR)/Export.dcpp: $(OUTPUT_DIR)/ExportLib.c ExportUser.cpp
@@ -1528,7 +1528,7 @@ all: $(OUTPUT_DIR)/Export.dcpp
 $(OUTPUT_DIR)/SepLib.cui: $(CACHE_DIR)/SepLib.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-UNIT", SepLib)
 	@mkdir -p $(OUTPUT_DIR)
-	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_unit SepLib \
+	$(FSTAR) --codegen OCaml $(WARN_ANY) --custard_unit SepLib \
 	  --custard_entry SepLib.sum_areas --custard_entry SepLib.area \
 	  --custard_entry SepLib.bump --custard_entry SepLib.describe \
 	  --odir $(OUTPUT_DIR) SepLib.fst
@@ -1538,7 +1538,7 @@ $(OUTPUT_DIR)/SepLib.ml: $(OUTPUT_DIR)/SepLib.cui
 
 $(OUTPUT_DIR)/SepApp.ml: $(CACHE_DIR)/SepApp.fst.checked $(OUTPUT_DIR)/SepLib.cui $(FSTAR_EXE)
 	$(call msg, "CUSTARD-LINK", SepApp)
-	$(FSTAR) --codegen Custard $(WARN_ANY) \
+	$(FSTAR) --codegen OCaml $(WARN_ANY) \
 	  --custard_link $(OUTPUT_DIR)/SepLib.cui \
 	  --custard_main SepApp.main SepApp.fst -o $@
 	$(Q)for p in $(GREP_SepApp); do \
@@ -1567,7 +1567,7 @@ GREP_SepApp  += "SepLib.SepLib_Rect"
 $(OUTPUT_DIR)/SepLibC.cui: $(CACHE_DIR)/SepLibC.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-UNIT-C", SepLibC)
 	@mkdir -p $(OUTPUT_DIR)
-	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
+	$(FSTAR) --codegen C $(WARN_ANY) \
 	  --custard_monomorphize_types true --custard_unit SepLibC \
 	  --custard_entry SepLibC.scale --custard_entry SepLibC.manhattan \
 	  --custard_entry SepLibC.origin --odir $(OUTPUT_DIR) SepLibC.fst
@@ -1577,7 +1577,7 @@ $(OUTPUT_DIR)/SepLibC.c: $(OUTPUT_DIR)/SepLibC.cui $(FSTAR_EXE)
 
 $(OUTPUT_DIR)/SepAppC.c: $(CACHE_DIR)/SepAppC.fst.checked $(OUTPUT_DIR)/SepLibC.cui $(FSTAR_EXE)
 	$(call msg, "CUSTARD-LINK-C", SepAppC)
-	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
+	$(FSTAR) --codegen C $(WARN_ANY) \
 	  --custard_monomorphize_types true \
 	  --custard_link $(OUTPUT_DIR)/SepLibC.cui \
 	  --custard_main SepAppC.main SepAppC.fst -o $@
@@ -1613,7 +1613,7 @@ CNOGREP_SepAppC += "SepAppC_init_globals"
 $(OUTPUT_DIR)/NoPrefLib.cui: $(CACHE_DIR)/NoPrefLib.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-UNIT-C", NoPrefLib)
 	@mkdir -p $(OUTPUT_DIR)
-	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
+	$(FSTAR) --codegen C $(WARN_ANY) \
 	  --custard_monomorphize_types true --custard_unit NoPrefLib \
 	  --custard_c_no_prefix NoPrefLib \
 	  --custard_entry NoPrefLib.add1 --odir $(OUTPUT_DIR) NoPrefLib.fst
@@ -1626,7 +1626,7 @@ $(OUTPUT_DIR)/NoPrefLib.c: $(OUTPUT_DIR)/NoPrefLib.cui $(FSTAR_EXE)
 $(OUTPUT_DIR)/NoPrefApp.c: $(CACHE_DIR)/NoPrefApp.fst.checked \
                            $(OUTPUT_DIR)/NoPrefLib.cui $(FSTAR_EXE)
 	$(call msg, "CUSTARD-LINK-C", NoPrefApp)
-	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
+	$(FSTAR) --codegen C $(WARN_ANY) \
 	  --custard_monomorphize_types true \
 	  --custard_link $(OUTPUT_DIR)/NoPrefLib.cui \
 	  --custard_main NoPrefApp.main NoPrefApp.fst -o $@
@@ -1654,14 +1654,14 @@ all: $(OUTPUT_DIR)/NoPrefApp.ran
 $(OUTPUT_DIR)/InitBase.cui: $(CACHE_DIR)/InitBase.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-UNIT-C", InitBase)
 	@mkdir -p $(OUTPUT_DIR)
-	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
+	$(FSTAR) --codegen C $(WARN_ANY) \
 	  --custard_monomorphize_types true --custard_unit InitBase \
 	  --custard_entry InitBase.sum --odir $(OUTPUT_DIR) InitBase.fst
 
 $(OUTPUT_DIR)/InitMiddle.cui: $(CACHE_DIR)/InitMiddle.fst.checked \
                               $(OUTPUT_DIR)/InitBase.cui $(FSTAR_EXE)
 	$(call msg, "CUSTARD-UNIT-C", InitMiddle)
-	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
+	$(FSTAR) --codegen C $(WARN_ANY) \
 	  --custard_monomorphize_types true --custard_unit InitMiddle \
 	  --custard_link $(OUTPUT_DIR)/InitBase.cui \
 	  --custard_entry InitMiddle.read --odir $(OUTPUT_DIR) InitMiddle.fst
@@ -1669,7 +1669,7 @@ $(OUTPUT_DIR)/InitMiddle.cui: $(CACHE_DIR)/InitMiddle.fst.checked \
 $(OUTPUT_DIR)/InitApp.c: $(CACHE_DIR)/InitApp.fst.checked \
                          $(OUTPUT_DIR)/InitMiddle.cui $(FSTAR_EXE)
 	$(call msg, "CUSTARD-LINK-C", InitApp)
-	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
+	$(FSTAR) --codegen C $(WARN_ANY) \
 	  --custard_monomorphize_types true \
 	  --custard_link $(OUTPUT_DIR)/InitBase.cui \
 	  --custard_link $(OUTPUT_DIR)/InitMiddle.cui \
@@ -1697,7 +1697,7 @@ all: $(OUTPUT_DIR)/InitApp.ran
 $(OUTPUT_DIR)/PolyLib.cui: $(CACHE_DIR)/PolyLib.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-UNIT-C", PolyLib)
 	@mkdir -p $(OUTPUT_DIR)
-	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
+	$(FSTAR) --codegen C $(WARN_ANY) \
 	  --custard_monomorphize_types true --custard_unit PolyLib \
 	  --custard_entry PolyLib.swap --odir $(OUTPUT_DIR) PolyLib.fst
 	$(Q)grep -qF -- "struct PolyLib_duo__uint32_s" $(OUTPUT_DIR)/PolyLib.h \
@@ -1706,7 +1706,7 @@ $(OUTPUT_DIR)/PolyLib.cui: $(CACHE_DIR)/PolyLib.fst.checked $(FSTAR_EXE)
 $(OUTPUT_DIR)/PolyApp.c: $(CACHE_DIR)/PolyApp.fst.checked \
                          $(OUTPUT_DIR)/PolyLib.cui $(FSTAR_EXE)
 	$(call msg, "CUSTARD-LINK-C", PolyApp)
-	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
+	$(FSTAR) --codegen C $(WARN_ANY) \
 	  --custard_monomorphize_types true \
 	  --custard_link $(OUTPUT_DIR)/PolyLib.cui \
 	  --custard_main PolyApp.main PolyApp.fst -o $@
@@ -1743,7 +1743,7 @@ $(OUTPUT_DIR)/PathApp.checked: $(FSTAR_EXE)
 	$(Q)cd $(OUTPUT_DIR)/path && $(FSTAR_EXE) --cache_dir cache --odir gen \
 	  --cache_checked_modules PathLib.fst > /dev/null
 	$(Q)cd $(OUTPUT_DIR)/path && $(FSTAR_EXE) --cache_dir cache --odir gen \
-	  --codegen Custard --custard_backend C --custard_monomorphize_types true \
+	  --codegen C --custard_monomorphize_types true \
 	  --custard_unit PathLib --custard_entry PathLib.value PathLib.fst > /dev/null
 	@# The very same source, changed.  The unit is now stale.
 	$(Q)printf 'module PathLib\nlet value (_:unit) : FStar.UInt32.t = 2ul\n' \
@@ -1756,7 +1756,7 @@ $(OUTPUT_DIR)/PathApp.checked: $(FSTAR_EXE)
 	$(Q)cd $(OUTPUT_DIR)/path/consumer && \
 	  ! $(FSTAR_EXE) --cache_dir cache --warn_error -321 \
 	      --include .. --include ../cache \
-	      --codegen Custard --custard_backend C \
+	      --codegen C \
 	      --custard_monomorphize_types true \
 	      --custard_link ../gen/PathLib.cui --custard_main PathApp.main \
 	      -o gen.c ../PathApp.fst > out.txt 2>&1 \
@@ -1789,7 +1789,7 @@ $(OUTPUT_DIR)/RelocApp.checked: $(FSTAR_EXE)
 	$(Q)cd $(OUTPUT_DIR)/reloc/producer && $(FSTAR_EXE) --cache_dir cache \
 	  --odir gen --cache_checked_modules RelocLib.fst > /dev/null
 	$(Q)cd $(OUTPUT_DIR)/reloc/producer && $(FSTAR_EXE) --cache_dir cache \
-	  --odir gen --codegen Custard --custard_backend C \
+	  --odir gen --codegen C \
 	  --custard_monomorphize_types true --custard_unit RelocLib \
 	  --custard_entry RelocLib.value RelocLib.fst > /dev/null
 	@# Ship the artifacts and take the build tree away.
@@ -1807,7 +1807,7 @@ $(OUTPUT_DIR)/RelocApp.checked: $(FSTAR_EXE)
 	  --odir gen --include . --cache_checked_modules RelocApp.fst > /dev/null
 	$(Q)cd $(OUTPUT_DIR)/reloc/consumer && \
 	  ! $(FSTAR_EXE) --cache_dir cache --odir gen --include . \
-	      --warn_error -321 --codegen Custard --custard_backend C \
+	      --warn_error -321 --codegen C \
 	      --custard_monomorphize_types true \
 	      --custard_link gen/RelocLib.cui --custard_main RelocApp.main \
 	      -o gen/gen.c RelocApp.fst > out.txt 2>&1 \
@@ -1873,7 +1873,7 @@ all: $(OUTPUT_DIR)/SepAppC.ran
 $(OUTPUT_DIR)/SepLibK.krml: $(CACHE_DIR)/SepLibK.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-UNIT-KRML", SepLibK)
 	@mkdir -p $(OUTPUT_DIR)
-	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend KrmlC \
+	$(FSTAR) --codegen KrmlC $(WARN_ANY) \
 	  --custard_unit SepLibK \
 	  --custard_entry SepLibK.scale --custard_entry SepLibK.manhattan \
 	  --custard_entry SepLibK.origin --odir $(OUTPUT_DIR) SepLibK.fst
@@ -1884,7 +1884,7 @@ $(OUTPUT_DIR)/SepLibK.cui: $(OUTPUT_DIR)/SepLibK.krml
 $(OUTPUT_DIR)/SepAppK.krml: $(CACHE_DIR)/SepAppK.fst.checked \
                             $(OUTPUT_DIR)/SepLibK.cui $(FSTAR_EXE)
 	$(call msg, "CUSTARD-LINK-KRML", SepAppK)
-	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend KrmlC \
+	$(FSTAR) --codegen KrmlC $(WARN_ANY) \
 	  --custard_link $(OUTPUT_DIR)/SepLibK.cui \
 	  --custard_main SepAppK.main SepAppK.fst -o $@
 
@@ -1946,11 +1946,11 @@ $(OUTPUT_DIR)/SepAppK.ran: $(OUTPUT_DIR)/SepLibK.krml $(OUTPUT_DIR)/SepAppK.krml
 $(OUTPUT_DIR)/SepLibK.rustrefused: $(CACHE_DIR)/SepLibK.fst.checked $(FSTAR_EXE)
 	$(call msg, "REJECT-RUST-UNIT", SepLibK)
 	@mkdir -p $(OUTPUT_DIR)
-	$(Q)$(FSTAR) --message_format human --codegen Custard $(WARN_ANY) \
-	  --custard_backend KrmlRust --custard_unit SepLibK \
+	$(Q)$(FSTAR) --message_format human --codegen KrmlRust $(WARN_ANY) \
+	  --custard_unit SepLibK \
 	  --custard_entry SepLibK.scale --odir $(OUTPUT_DIR) SepLibK.fst \
 	  > $(OUTPUT_DIR)/SepLibK.rserr 2>&1 || true
-	$(Q)grep -qF -- "--custard_backend KrmlRust" $(OUTPUT_DIR)/SepLibK.rserr \
+	$(Q)grep -qF -- "--codegen KrmlRust" $(OUTPUT_DIR)/SepLibK.rserr \
 	  || { echo "ERROR: KrmlRust did not refuse --custard_unit"; \
 	       cat $(OUTPUT_DIR)/SepLibK.rserr; exit 1; }
 	$(Q)test ! -e $(OUTPUT_DIR)/SepLibK.cui.rust \
@@ -1980,7 +1980,7 @@ all: $(OUTPUT_DIR)/SepApp.out.diff
 $(OUTPUT_DIR)/SplitHi.ml: $(CACHE_DIR)/SplitHi.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-SPLIT", SplitHi)
 	@mkdir -p $(OUTPUT_DIR)
-	$(FSTAR) --codegen Custard $(WARN_ANY) --custard_split \
+	$(FSTAR) --codegen OCaml $(WARN_ANY) --custard_split \
 	  --custard_main SplitHi.main --custard_entry SplitLo.add_one \
 	  --odir $(OUTPUT_DIR) SplitHi.fst
 	$(Q)test -f $(OUTPUT_DIR)/SplitLo.ml
@@ -2019,7 +2019,7 @@ all: $(OUTPUT_DIR)/SplitHi.out.diff
 $(OUTPUT_DIR)/FsSplitHi.fssplit: $(CACHE_DIR)/FsSplitHi.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-SPLIT-FS", FsSplitHi)
 	@mkdir -p $(OUTPUT_DIR)/fs/FsSplitHi
-	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend FSharp \
+	$(Q)$(FSTAR) --codegen FSharp $(WARN_ANY) \
 	  --custard_split --custard_main FsSplitHi.main \
 	  --odir $(OUTPUT_DIR)/fs/FsSplitHi \
 	  -o $(OUTPUT_DIR)/fs/FsSplitHi/FsSplitHi.fs FsSplitHi.fst
@@ -2143,7 +2143,7 @@ CODE_FloatHole = 368
 EGREP_FloatHole += "FStar.Float32 has no OCaml representation"
 EGREP_FloatHole += "silently compute at double precision"
 # It must name the way out, since Float64 really does work on this backend.
-EGREP_FloatHole += "custard_backend C"
+EGREP_FloatHole += "codegen C"
 
 # Sections 66 and 98.  The two 16-bit formats.  Narrow.fst declares binary16
 # with [@@custard_float 16], BF16Lib.fst declares bfloat16 with the separate
@@ -2261,7 +2261,7 @@ CNOGREP_Template += "tpl_bitset((size_t)64)"
 # than being pasted into a template-id the C++ compiler would reject.
 REJECT_TESTS += TemplateBad
 CODE_TemplateBad = 390
-FLAGS_TemplateBad = --custard_backend C
+FLAGS_TemplateBad = --codegen C
 EGREP_TemplateBad += "does not reduce to a constant"
 EGREP_TemplateBad += "argument has to be a constant"
 
@@ -2269,9 +2269,9 @@ EGREP_TemplateBad += "argument has to be a constant"
 # rather than dropping the arguments.
 REJECT_TESTS += TemplateML
 CODE_TemplateML = 390
-FLAGS_TemplateML = --custard_backend OCaml
+FLAGS_TemplateML = --codegen OCaml
 EGREP_TemplateML += "templates reached the OCaml backend"
-EGREP_TemplateML += "custard_backend C"
+EGREP_TemplateML += "codegen C"
 
 # Section 70.1.  A type abbreviation is a library's published C type surface,
 # and Custard unfolds abbreviations -- so nothing in the extracted code refers
@@ -2335,7 +2335,7 @@ FLAGS_AnyException = --warn_error -367
 # Section 115.  Short-circuit evaluation: [safe 0ul true] divides by zero if
 # the delayed operand is evaluated, so the run is the assertion.
 C_TESTS += CShortCircuit
-FLAGS_CShortCircuit = --custard_backend C
+FLAGS_CShortCircuit = --codegen C
 # The temporary and its branch, rather than a hoisted one.
 CGREP_CShortCircuit += "  if (!"
 
@@ -2343,7 +2343,7 @@ CGREP_CShortCircuit += "  if (!"
 # grep checks that it was computed somewhere the standard defines, which a
 # non-sanitizing build cannot tell apart from the version that was wrong.
 C_TESTS += UInt16Mul
-FLAGS_UInt16Mul = --custard_backend C
+FLAGS_UInt16Mul = --codegen C
 CGREP_UInt16Mul += "(unsigned int)"
 
 # Issue 4612.  A [let] bound to a constant is propagated like one bound to a
@@ -2358,7 +2358,7 @@ CNOGREP_CConstLet = "uint32_t n ="
 # has to be the pointer's, not the arrow's.  Extraction succeeding is half of
 # this test; the [assume val] that keeps it a pointer is realized by the stub.
 C_TESTS += ArrowUnitGlobal
-FLAGS_ArrowUnitGlobal = --custard_backend C
+FLAGS_ArrowUnitGlobal = --codegen C
 CEXTRA_ArrowUnitGlobal = ArrowUnitGlobal_stubs.c
 CGREP_ArrowUnitGlobal += "bool (*ArrowUnitGlobal_selected)(bool);"
 CGREP_ArrowUnitGlobal += "ArrowUnitGlobal_selected(a)"
@@ -2367,14 +2367,14 @@ CGREP_ArrowUnitGlobal += "ArrowUnitGlobal_selected(a)"
 # values; the grep checks that the two members are distinct, which the
 # compiler would have said too -- "duplicate member" -- before the fix.
 C_TESTS += CFields
-FLAGS_CFields = --custard_backend C
+FLAGS_CFields = --codegen C
 CGREP_CFields += "uint32_t switch_;"
 CGREP_CFields += "uint32_t switch__;"
 
 # Section 116.  A generated equality helper against a source function of the
 # name it would have taken.
 C_TESTS += EqHelper
-FLAGS_EqHelper = --custard_backend C --custard_entry EqHelper.pair__eq
+FLAGS_EqHelper = --codegen C --custard_entry EqHelper.pair__eq
 CGREP_EqHelper += "uint32_t EqHelper_pair__eq(uint32_t x);"
 CGREP_EqHelper += "static bool EqHelper_pair__eq_1(EqHelper_pair a, EqHelper_pair b)"
 
@@ -2382,7 +2382,7 @@ CGREP_EqHelper += "static bool EqHelper_pair__eq_1(EqHelper_pair a, EqHelper_pai
 # target name is the one the helper would take.  The external's target is not
 # spelled from an F* name, so a table built with c_name did not contain it.
 C_TESTS += ExtEq
-FLAGS_ExtEq = --custard_backend C
+FLAGS_ExtEq = --codegen C
 CEXTRA_ExtEq = ExtEq_stubs.c
 CGREP_ExtEq += "extern int32_t ExtEq_pair__eq(int32_t);"
 CGREP_ExtEq += "static bool ExtEq_pair__eq_1(ExtEq_pair a, ExtEq_pair b);"
@@ -2427,7 +2427,7 @@ CNOGREP_Union += "} FStar_Pervasives_Native_Some"
 # wrote zeros with no diagnostic anywhere.  A reference binding is C++, so
 # this test runs through the C++ leg.
 CXX_TESTS += RefBind
-FLAGS_RefBind = --custard_backend C
+FLAGS_RefBind = --codegen C
 CGREP_RefBind += "rb_cell &"
 CGREP_RefBind += "rb_get(rb_slot)"
 # A fresh value is a copy of nothing, so that binding is not a reference.
@@ -2437,22 +2437,22 @@ CNOPAIR_RefBind += "rb_cell &@rb_make"
 # type Custard compiles itself.
 REJECT_TESTS += RefBindBad
 CODE_RefBindBad = 392
-FLAGS_RefBindBad = --custard_backend C
+FLAGS_RefBindBad = --codegen C
 EGREP_RefBindBad += "is on RefBindBad.cell, which is not an"
 
 # ... and a reference binding is C++, so the OCaml backend says so rather than
 # emitting a copy that compiles and is wrong.
 REJECT_TESTS += RefBindML
 CODE_RefBindML = 392
-FLAGS_RefBindML = --custard_backend OCaml
+FLAGS_RefBindML = --codegen OCaml
 EGREP_RefBindML += "reached the OCaml backend"
-EGREP_RefBindML += "custard_backend C"
+EGREP_RefBindML += "codegen C"
 
 # ... and the one place a copy can still lose a write -- a parameter of a
 # function Custard compiles itself -- is reported rather than left silent.
 REJECT_TESTS += RefBindCopy
 CODE_RefBindCopy = 391
-FLAGS_RefBindCopy = --custard_backend C
+FLAGS_RefBindCopy = --codegen C
 EGREP_RefBindCopy += "a parameter is a copy"
 EGREP_RefBindCopy += "make the callee external"
 
@@ -2493,7 +2493,7 @@ CEXTRA_Macro = Macro_probe.c
 # emitted as something the preprocessor would paste in unevaluated.
 REJECT_TESTS += MacroBad
 CODE_MacroBad = 389
-FLAGS_MacroBad = --custard_backend C --custard_entry_module MacroBad
+FLAGS_MacroBad = --codegen C --custard_entry_module MacroBad
 EGREP_MacroBad += "but its value is not a constant"
 EGREP_MacroBad += "Drop the attribute"
 
@@ -2611,7 +2611,7 @@ CNOGREP_PatStr += "s == \"a\""
 # half: krml_pat's message must keep pointing at the direct C backend, which
 # does accept a nested string pattern.
 REJECT_TESTS += PatStrNest
-FLAGS_PatStrNest += --custard_backend KrmlC
+FLAGS_PatStrNest += --codegen KrmlC
 CODE_PatStrNest := 368
 EGREP_PatStrNest += "a string pattern has no karamel representation"
 NOEGREP_PatStrNest += "if-chain"
@@ -2821,7 +2821,7 @@ GREP_FloatSpecial    += "Stdlib.neg_infinity"
 # either value, so the crossing is refused -- naming the backend that does
 # accept it, which section 46.3 says is a fact about the site.
 REJECT_TESTS += FloatSpecialKrml
-FLAGS_FloatSpecialKrml += --custard_backend KrmlC
+FLAGS_FloatSpecialKrml += --codegen KrmlC
 CODE_FloatSpecialKrml := 368
 EGREP_FloatSpecialKrml += "a NaN literal has no karamel representation"
 EGREP_FloatSpecialKrml += "does accept it"
@@ -2852,7 +2852,7 @@ CNOGREP_ChrTy += "FStar_Char_char_s"
 # other half of 46.3: the direct C backend refuses an exception handler too,
 # so the diagnostic must not send the reader there.
 REJECT_TESTS += TryOk
-FLAGS_TryOk += --custard_backend KrmlC
+FLAGS_TryOk += --codegen KrmlC
 CODE_TryOk := 368
 EGREP_TryOk += "an exception handler has no karamel representation"
 NOEGREP_TryOk += "does accept it"
@@ -2919,7 +2919,7 @@ CPAIR_DevClosure   += "/*EXCL*/@static uint32_t DevClosure_gk"
 # runtime, so Custard refuses instead of guessing.
 REJECT_TESTS += DevGShare
 CODE_DevGShare := 383
-FLAGS_DevGShare := --custard_backend C --custard_monomorphize_types true
+FLAGS_DevGShare := --codegen C --custard_monomorphize_types true
 EGREP_DevGShare += "the global DevGShare.g is reached from device code"
 EGREP_DevGShare += "__managed__"
 NOEGREP_DevGShare += "please report"
@@ -2932,7 +2932,7 @@ NOEGREP_DevGShare += "please report"
 # declared foreign -- which no C compiler and no linker objects to.
 REJECT_TESTS += ExtOwn
 CODE_ExtOwn := 374
-FLAGS_ExtOwn := --custard_backend C --custard_entry ExtOwn.run
+FLAGS_ExtOwn := --codegen C --custard_entry ExtOwn.run
 EGREP_ExtOwn += "both named \`ExtOwn_helper'"
 EGREP_ExtOwn += "custard_extern"
 
@@ -2940,20 +2940,20 @@ EGREP_ExtOwn += "custard_extern"
 # which is where the rename table has to know the name is taken.
 REJECT_TESTS += ExtNoPfx
 CODE_ExtNoPfx := 374
-FLAGS_ExtNoPfx := --custard_backend C --custard_c_no_prefix ExtNoPfx \
+FLAGS_ExtNoPfx := --codegen C --custard_c_no_prefix ExtNoPfx \
                   --custard_unit ExtNoPfx --custard_entry_module ExtNoPfx
 EGREP_ExtNoPfx += "would name ExtNoPfx.helper \`helper'"
 
 # Section 117.3.  A definition spelled like the generated initializer.
 REJECT_TESTS += InitName
 CODE_InitName := 374
-FLAGS_InitName := --custard_backend C --custard_unit InitName \
+FLAGS_InitName := --codegen C --custard_unit InitName \
                   --custard_entry_module InitName
 EGREP_InitName += "the generated initializer and InitName.init_globals"
 
 REJECT_TESTS += ExtDup
 CODE_ExtDup := 384
-FLAGS_ExtDup := --custard_backend C --custard_monomorphize_types true
+FLAGS_ExtDup := --codegen C --custard_monomorphize_types true
 EGREP_ExtDup += "the external target \`KCALL2' is declared twice"
 EGREP_ExtDup += "custard_c_header"
 NOEGREP_ExtDup += "has no C representation"
@@ -2981,13 +2981,13 @@ KRML_TESTS += ScrutCap
 RUSTREJECT_TESTS += PatStrR
 CODE_PatStrR := 368
 EGREP_PatStrR += "a string pattern has no representation in karamel's Rust"
-EGREP_PatStrR += "--custard_backend KrmlC"
+EGREP_PatStrR += "--codegen KrmlC"
 NOEGREP_PatStrR += "has no karamel representation"
 
 RUSTREJECT_TESTS += StrEqK
 CODE_StrEqK := 368
 EGREP_StrEqK += "__eq__Prims_string"
-EGREP_StrEqK += "--custard_backend KrmlC"
+EGREP_StrEqK += "--codegen KrmlC"
 
 
 # Section 54.1.  The three PrintKrml behaviours that differ between the two
@@ -3103,7 +3103,7 @@ NOGREP_EntryEffect += "(EntryEffect.report"
 # reader to report it as a Custard bug is what sent it to the issue tracker.
 REJECT_TESTS += PolyRootEntry
 CODE_PolyRootEntry = 368
-FLAGS_PolyRootEntry = --custard_backend C --custard_monomorphize_types true \
+FLAGS_PolyRootEntry = --codegen C --custard_monomorphize_types true \
                       --custard_entry PolyRootEntry.pick
 EGREP_PolyRootEntry += "This declaration is a root, and a root has no call site"
 EGREP_PolyRootEntry += "Root a concrete caller of it instead"
@@ -3115,7 +3115,7 @@ NOEGREP_PolyRootEntry += "please report it"
 # is not where the reader has to make a change.
 REJECT_TESTS += TmplRun
 CODE_TmplRun = 390
-FLAGS_TmplRun = --custard_backend C --custard_entry TmplRun.main
+FLAGS_TmplRun = --codegen C --custard_entry TmplRun.main
 EGREP_TmplRun += "It is reached while extracting"
 EGREP_TmplRun += "extracting TmplRun.helper"
 # Section 89.  And which declaration to change, which is not that one.  [n] is
@@ -3219,7 +3219,7 @@ RSGREP_NullArg += "nil_right()"
 # [assume val]'s codomain, which has no body for rule 4c to read.  C++ because
 # the target spelling is a class template.
 CXX_TESTS += TmplMono
-FLAGS_TmplMono = --custard_backend C --custard_entry TmplMono.dispatch
+FLAGS_TmplMono = --codegen C --custard_entry TmplMono.dispatch
 CGREP_TmplMono += "wm::frag<16> f = wm::mk16(rows)"
 CGREP_TmplMono += "TmplMono_g_gemm__uint_to_t_16(wm::frag<16> f"
 # The index reaches the target through the type, and is not also passed at
@@ -3233,29 +3233,29 @@ CNOGREP_TmplMono += "g_gemm__uint_to_t_16(size_t tm"
 # definition is code, so --custard_entry_module does root one.
 
 CXX_TESTS += TmplLet
-FLAGS_TmplLet = --custard_backend C --custard_entry_module TmplLet
+FLAGS_TmplLet = --codegen C --custard_entry_module TmplLet
 CGREP_TmplLet += "wm::nfrag<16> f = wm::nmk16(seed)"
 
 CXX_TESTS += TmplLet2
-FLAGS_TmplLet2 = --custard_backend C --custard_entry_module TmplLet2
+FLAGS_TmplLet2 = --codegen C --custard_entry_module TmplLet2
 CGREP_TmplLet2 += "wm::nfrag<16> f = wm::nmk16(seed)"
 
 CXX_TESTS += TmplLet3
-FLAGS_TmplLet3 = --custard_backend C --custard_entry_module TmplLet3
+FLAGS_TmplLet3 = --codegen C --custard_entry_module TmplLet3
 CGREP_TmplLet3 += "wm::nfrag<16> f = wm::nmk16(seed)"
 
 CXX_TESTS += TmplMonoV
-FLAGS_TmplMonoV = --custard_backend C --custard_entry TmplMonoV.dispatch
+FLAGS_TmplMonoV = --codegen C --custard_entry TmplMonoV.dispatch
 CGREP_TmplMonoV += "wm::frag<16> f = wm::mk16(rows)"
 CGREP_TmplMonoV += "TmplMonoV_g_gemm__uint_to_t_16(wm::frag<16> f"
 
 CXX_TESTS += TmplMonoW
-FLAGS_TmplMonoW = --custard_backend C --custard_entry TmplMonoW.dispatch
+FLAGS_TmplMonoW = --codegen C --custard_entry TmplMonoW.dispatch
 CGREP_TmplMonoW += "wm::frag<16> f = wm::mk16(rows)"
 CGREP_TmplMonoW += "TmplMonoW_g_gemm__uint_to_t_16(wm::frag<16> f"
 
 C_TESTS += HnfSig
-FLAGS_HnfSig = --custard_backend C --custard_entry_module HnfSig --custard_norm_budget 200000
+FLAGS_HnfSig = --codegen C --custard_entry_module HnfSig --custard_norm_budget 200000
 CGREP_HnfSig += "typedef uint32_t HnfSig_t1;"
 CGREP_HnfSig += "typedef bool HnfSig_t2;"
 CGREP_HnfSig += "typedef uint8_t HnfSig_t3;"
@@ -3264,7 +3264,7 @@ CGREP_HnfSig += "typedef uint16_t HnfSig_t4;"
 # Section 95.  The same program twice, once at each width.  SzWidth is the
 # control: it pins that the default has not moved.
 C_TESTS += SzWidth
-FLAGS_SzWidth = --custard_backend C --custard_entry_module SzWidth
+FLAGS_SzWidth = --codegen C --custard_entry_module SzWidth
 CGREP_SzWidth += "size_t len;"
 CGREP_SzWidth += "uint64_t SzWidth_widen(size_t n)"
 CGREP_SzWidth += "size_t SzWidth_of_u32(uint32_t n) {"
@@ -3272,7 +3272,7 @@ CGREP_SzWidth += "return (size_t)n;"
 CNOGREP_SzWidth += "uint32_t len;"
 
 C_TESTS += SzWidth32
-FLAGS_SzWidth32 = --custard_backend C --custard_entry_module SzWidth32 \
+FLAGS_SzWidth32 = --codegen C --custard_entry_module SzWidth32 \
                   --custard_sizet_width 32
 CGREP_SzWidth32 += "uint32_t len;"
 CGREP_SzWidth32 += "uint64_t SzWidth_widen(uint32_t n)"
@@ -3289,7 +3289,7 @@ CNOGREP_SzWidth32 += "size_t"
 # false] must return 2, and under the capture the first falls through to 0 and
 # the second takes the [B] arm.
 C_TESTS += CDangle
-FLAGS_CDangle = --custard_backend C --custard_entry_module CDangle
+FLAGS_CDangle = --codegen C --custard_entry_module CDangle
 CGREP_CDangle += "if (a) {"
 CGREP_CDangle += "else if (x == CDANGLE_G)"
 CNOGREP_CDangle += "if (a) if ("
@@ -3304,7 +3304,7 @@ CNOGREP_CDangle += "if (a) if ("
 # tuple type must not be materialized and the copy must not survive under
 # any name.
 C_TESTS += CLetCopy
-FLAGS_CLetCopy = --custard_backend C --custard_entry_module CLetCopy
+FLAGS_CLetCopy = --codegen C --custard_entry_module CLetCopy
 CGREP_CLetCopy += "uint32_t CLetCopy_combine(uint32_t x) {"
 CNOGREP_CLetCopy += "_letpattern"
 CNOGREP_CLetCopy += "tuple2"
@@ -3313,7 +3313,7 @@ CNOGREP_CLetCopy += "tuple2"
 # [let]: the binding is floated out in front of the match so that iota fires,
 # and no tuple is materialized.
 C_TESTS += CLetField
-FLAGS_CLetField = --custard_backend C --custard_entry_module CLetField
+FLAGS_CLetField = --codegen C --custard_entry_module CLetField
 CGREP_CLetField += "return (x + (y + y));"
 CGREP_CLetField += "return ((major * 8) + ((mm * 2) + ml));"
 CNOGREP_CLetField += "tuple2"
@@ -3355,7 +3355,7 @@ CUSTARD_TESTS += HeapClosures
 # Section 135.1 on C, which keeps dropping erased binders everywhere: the deep
 # abbreviation is unfolded to the end, so definition and call agree.
 C_TESTS += CHeapArity
-FLAGS_CHeapArity = --custard_backend C --custard_entry_module CHeapArity
+FLAGS_CHeapArity = --codegen C --custard_entry_module CHeapArity
 
 # Section 135.1.  Past the limit of 1000 abbreviations, an error.
 REJECT_TESTS += ArrowUnfoldLimit
@@ -3479,10 +3479,10 @@ check-stale:
 	  $(FSTAR_EXE) --cache_checked_modules StaleLib.fsti > /dev/null && \
 	  $(FSTAR_EXE) --cache_checked_modules StaleLib.fst > /dev/null && \
 	  $(FSTAR_EXE) --cache_checked_modules StaleMain.fst > /dev/null && \
-	  $(FSTAR_EXE) --codegen Custard --custard_backend C \
+	  $(FSTAR_EXE) --codegen C \
 	    --custard_entry StaleMain.main StaleMain.fst --odir . > /dev/null && \
 	  printf '\n(* touched *)\n' >> StaleLib.fsti && \
-	  ! $(FSTAR_EXE) --codegen Custard --custard_backend C \
+	  ! $(FSTAR_EXE) --codegen C \
 	    --custard_entry StaleMain.main StaleMain.fst --odir . > stale.out 2>&1 && \
 	  grep -q "Error 317" stale.out && \
 	  grep -q "StaleLib.fsti.checked" stale.out && \

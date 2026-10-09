@@ -63,6 +63,15 @@ depend: .depend
 include .depend
 endif
 
+# The extraction targets of each module M in this directory, named as F*
+# names the OCaml module (dots become underscores).  These rules only give
+# the prerequisite, so that $< in the recipes below is M's checked file;
+# a client can still override the recipe for a given target.
+define extraction_targets
+$(OUTPUT_DIR)/$(subst .,_,$(1)).ml $(OUTPUT_DIR)/$(subst .,_,$(1)).fs $(OUTPUT_DIR)/$(subst .,_,$(1)).krml: $(CACHE_DIR)/$(1).fst.checked
+endef
+$(foreach f,$(filter %.fst,$(FSTAR_FILES)),$(eval $(call extraction_targets,$(basename $(notdir $(f))))))
+
 endif
 endif
 
@@ -97,28 +106,22 @@ $(OUTPUT_DIR)/%.fsti.json_output: %.fsti
 	@mkdir -p $(dir $@)
 	$(FSTAR) --message_format json --silent -f --print_expected_failures $< >$@ 2>&1
 
-# Extraction goes through Custard.  The target keeps its name, because the
-# .depend that supplies its prerequisites is written by --dep and names .ml
-# files; only the recipe changed.
-#
-# --custard_entry_module is what --extract_module was: every top-level
-# definition of the module is a root, and the module's top-level effects run.
-# The whole program lands in one file rather than one file per module, so the
-# ulib .ml targets that .depend also lists are no longer built by anything ---
-# which was already true, since the .exe rule compiles a single file against
-# the installed library.
+# Extraction: --custard_entry_module M makes every top-level definition of M
+# a root and runs M's top-level effects.  The whole program lands in one
+# file, which the .exe rule compiles against the installed library.
 $(OUTPUT_DIR)/%.ml:
 	$(call msg, "EXTRACT", $(basename $(notdir $@)))
-	$(FSTAR) --codegen Custard --custard_entry_module $(subst .fst.checked,,$(notdir $<)) $< -o $@
+	$(FSTAR) --codegen OCaml --custard_entry_module $(subst .fst.checked,,$(notdir $<)) $< -o $@
 
 $(OUTPUT_DIR)/%.fs:
 	$(call msg, "EXTRACT FS", $(basename $(notdir $@)))
-	$(FSTAR) --codegen Custard --custard_backend FSharp \
+	$(FSTAR) --codegen FSharp \
 	  --custard_entry_module $(subst .fst.checked,,$(notdir $<)) $< -o $@
 
-$(OUTPUT_DIR)/$(subst .,_,%).krml:
+$(OUTPUT_DIR)/%.krml:
 	$(call msg, "EXTRACT", $(basename $(notdir $@)))
-	$(FSTAR) $< --codegen krml --extract_module $(subst .fst.checked,,$(notdir $<))
+	$(FSTAR) --codegen KrmlC \
+	  --custard_entry_module $(subst .fst.checked,,$(notdir $<)) $< -o $@
 
 $(OUTPUT_DIR)/%.c: $(OUTPUT_DIR)/%.krml
 	$(call msg, "KRML", $(basename $(notdir $@)))
@@ -200,10 +203,9 @@ __clean:
 	rm -rf $(OUTPUT_DIR) $(CACHE_DIR) .depend
 clean: __clean
 
-# Custard reads the whole program, and --dep records what the *ML* backend
-# reads: for a module whose dependency is abstract in its interface that is
-# the .fsti alone, so the output would otherwise depend on whether the other
-# module's .fst.checked happened to have been built yet
+# The rules above name only the root's own checked file, but Custard reads
+# the whole program, so the output would otherwise depend on which other
+# checked files happened to have been built yet
 # (tests/bug-reports/closed/RemoveUnusedTyparsIFace is that case).  This is
 # the same statement mk/custard-extract.mk makes with $(ALL_CHECKED_FILES).
 #
