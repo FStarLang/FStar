@@ -28,7 +28,8 @@ Guidelines for the changelog:
 
   * Removed options: `--extract`, `--extract_module`, `--extract_namespace`,
     `--no_extract`, `--cmi`, `--codegen-lib`, `--krmloutput`,
-    `--read_krml_file`, `--no_location_info`, `--use_nbe_for_extraction`.
+    `--no_location_info`, `--use_nbe_for_extraction`. (`--read_krml_file`
+    stays, and dumps the `.krml` files Custard writes.)
 
   * `--dep full` no longer emits rules or variables for `.ml`, `.fs` or
     `.krml` files (`ALL_ML_FILES`, `ALL_KRML_FILES`, ...); `--dep dune` only

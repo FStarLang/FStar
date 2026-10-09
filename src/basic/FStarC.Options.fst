@@ -291,6 +291,7 @@ let defaults = [
   ("query_cache"                               , Bool false);
   ("query_stats"                               , Bool false);
   ("read_checked_file"                         , Unset);
+  ("read_krml_file"                            , Unset);
   ("record_options"                            , Bool false);
   ("report_assumes"                            , Unset);
   ("retry"                                     , Bool false);
@@ -536,6 +537,7 @@ let get_quake_keep              ()      = lookup_opt "quake_keep"               
 let get_query_cache             ()      = lookup_opt "query_cache"              as_bool
 let get_query_stats             ()      = lookup_opt "query_stats"              as_bool
 let get_read_checked_file       ()      = lookup_opt "read_checked_file"        (as_option as_string)
+let get_read_krml_file          ()      = lookup_opt "read_krml_file"           (as_option as_string)
 let get_list_plugins            ()      = lookup_opt "list_plugins"             as_bool
 let get_locate                  ()      = lookup_opt "locate"                   as_bool
 let get_locate_lib              ()      = lookup_opt "locate_lib"               as_bool
@@ -1428,6 +1430,11 @@ and reads");
     "read_checked_file",
     PathStr "path",
     text "Read a checked file and dump it to standard output.");
+
+  ( noshort,
+    "read_krml_file",
+    PathStr "path",
+    text "Read a Karamel binary file (e.g. one written by --codegen KrmlC) and dump it to standard output.");
 
   ( noshort,
     "record_options",
@@ -2339,6 +2346,7 @@ let quake_keep                   () = get_quake_keep                  ()
 let query_cache                  () = get_query_cache                 ()
 let query_stats                  () = get_query_stats                 ()
 let read_checked_file            () = get_read_checked_file           ()
+let read_krml_file               () = get_read_krml_file              ()
 let list_plugins                 () = get_list_plugins                ()
 let expand_include               () = get_expand_include              ()
 let locate                       () = get_locate                      ()

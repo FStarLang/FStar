@@ -277,6 +277,24 @@ let go_normal () : ML unit =
         print1 "SMT fvars: %s\n" (show <| tcr.smt_encoding.me_fvbs)
     )
 
+    (* --read_krml_file: read and print a krml file *)
+    | Success when Some? (Options.read_krml_file ()) -> (
+      let path = Some?.v <| Options.read_krml_file () in
+      match load_value_from_file path <: option Custard.KrmlAst.binary_format with
+      | None ->
+        let open FStarC.Pprint in
+        Errors.raise_error0 Errors.Fatal_ModuleOrFileNotFound [
+          Errors.Msg.text "Could not read krml file:" ^/^ doc_of_string path
+        ]
+      | Some (version, files) ->
+        print1 "Karamel format version: %s\n" (show version);
+        (* Just "show decls" would print it, we just format this a bit *)
+        files |> List.iter (fun (name, decls) ->
+          print1 "%s:\n" name;
+          decls |> List.iter (fun d -> print1 "%s\n\n" (show d))
+        )
+    )
+
     (* --list_plugins: emit a list of plugins and exit *)
     | Success when Options.list_plugins () ->
       load_native_tactics ();
