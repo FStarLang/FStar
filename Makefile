@@ -253,8 +253,9 @@ $(FSTAR2_FULL_EXE): .bare2.src.touch .src.ml.touch $(MAYBEFORCE)
 
 # F# tests (Custard's F# backend needs no separate library)
 .PHONY: fsharp-test
-fsharp-test: need_fstar_exe .force
-	+$(MAKE) -C fsharp test
+fsharp-test: override FSTAR_EXE := $(abspath stage3/out/bin/fstar.exe)
+fsharp-test: stage3 .force
+	+$(MAKE) -C fsharp test FSTAR_EXE=$(FSTAR_EXE)
 
 # Stage 2+1 is different, we don't build it, we just check that the
 # extracted OCaml files coincide exactly with stage2. We also do not
