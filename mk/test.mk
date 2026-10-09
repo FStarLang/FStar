@@ -108,7 +108,9 @@ $(OUTPUT_DIR)/%.fsti.json_output: %.fsti
 
 # Extraction: --custard_entry_module M makes every top-level definition of M
 # a root and runs M's top-level effects.  The whole program lands in one
-# file, which the .exe rule compiles against the installed library.
+# file, which the .exe rule compiles against the installed library.  For
+# karamel, --custard_split keeps the F* module names inside that file, so
+# that the .c rule's -bundle M=* has a module M to select.
 $(OUTPUT_DIR)/%.ml:
 	$(call msg, "EXTRACT", $(basename $(notdir $@)))
 	$(FSTAR) --codegen OCaml --custard_entry_module $(subst .fst.checked,,$(notdir $<)) $< -o $@
@@ -120,7 +122,7 @@ $(OUTPUT_DIR)/%.fs:
 
 $(OUTPUT_DIR)/%.krml:
 	$(call msg, "EXTRACT", $(basename $(notdir $@)))
-	$(FSTAR) --codegen KrmlC \
+	$(FSTAR) --codegen KrmlC --custard_split \
 	  --custard_entry_module $(subst .fst.checked,,$(notdir $<)) $< -o $@
 
 $(OUTPUT_DIR)/%.c: $(OUTPUT_DIR)/%.krml
