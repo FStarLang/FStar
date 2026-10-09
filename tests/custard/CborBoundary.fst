@@ -165,6 +165,7 @@ let decode_arg (ai : byte) (l : blist) : ML (option (U64.t & blist)) =
 let rec item (fuel : U64.t) (l : blist) : ML (option blist) =
   if U64.eq fuel 0UL then None
   else
+    let fuel' = U64.sub fuel 1UL in
     match uncons l with
     | None -> None
     | Some (b0, t0) ->
@@ -182,7 +183,7 @@ let rec item (fuel : U64.t) (l : blist) : ML (option blist) =
               Checking before recursing is what stops a 2^64-element header
               from being explored. *)
            (if U64.gt v (len64 rest) then None
-            else items (U64.sub fuel 1UL) v rest)
+            else items fuel' v rest)
          else if U8.eq mt 5uy then
            (* A map of [v] pairs needs at least [2v] bytes.  The doubling is
               itself a boundary and can overflow, so it is written as a
@@ -190,8 +191,8 @@ let rec item (fuel : U64.t) (l : blist) : ML (option blist) =
            (let budget = len64 rest in
             if U64.gt v budget then None
             else if U64.gt v (U64.sub budget v) then None
-            else items (U64.sub fuel 1UL) (U64.mul_mod v 2UL) rest)
-         else if U8.eq mt 6uy then item (U64.sub fuel 1UL) rest
+            else items fuel' (U64.mul_mod v 2UL) rest)
+         else if U8.eq mt 6uy then item fuel' rest
          else
            (* Major type 7.  Additional info 24 must carry a byte >= 32,
               because 0..23 are already expressible in the header itself. *)
@@ -203,9 +204,10 @@ and items (fuel : U64.t) (n : U64.t) (l : blist) : ML (option blist) =
   if U64.eq fuel 0UL then None
   else if U64.eq n 0UL then Some l
   else
-    match item (U64.sub fuel 1UL) l with
+    let fuel' = U64.sub fuel 1UL in
+    match item fuel' l with
     | None -> None
-    | Some rest -> items (U64.sub fuel 1UL) (U64.sub n 1UL) rest
+    | Some rest -> items fuel' (U64.sub n 1UL) rest
 
 let validate (l : blist) : ML bool =
   match item 64UL l with
