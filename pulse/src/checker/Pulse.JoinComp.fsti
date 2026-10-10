@@ -36,21 +36,25 @@ let infer_post #g #ctxt (r:checker_result_t g ctxt NoHint)
 val guard_branch_post (#g:env) (b:term) (then_:bool) (p:post_hint_for_env g)
 : T.Tac (q:post_hint_for_env g { q.effect_annot == p.effect_annot })
 
-(* [join_post], except that what the branches do not agree on is taken from
-   the branch [then_] selects (see [guard_branch_post]) instead of being left
-   under the condition. The result has to be proved of both branches.
-   With [linked], a conjunct that names a branch's existential witness also
-   named by another of its conjuncts is not generalized out of the leftover,
-   which would cut the two apart; it is taken from the picked branch too. *)
-val join_post_pick (then_:option bool) (linked:bool) #g #hyp #b
-    (p1:post_hint_for_env (g_with_eq g hyp b tm_true))
-    (p2:post_hint_for_env (g_with_eq g hyp b tm_false))
-: T.Tac (post_hint_for_env g)
+(* A candidate postcondition for [if b] whose branches have postconditions [p1]
+   and [p2]: an slprop in which bound variable 0 is the result.
 
-val join_post #g #hyp #b
+   UNTRUSTED. Nothing about the result is assumed, not even that it is
+   well-scoped or well-typed. Pulse.Checker.If checks it is a well-typed slprop
+   in [g] (so it cannot mention [hyp] or anything a branch bound), then proves
+   it of both branches and elaborates them, before using it; a wrong candidate
+   is rejected, or skipped for the next one.
+
+   With no [pick], what the branches do not agree on is kept under the
+   condition. With [Some then_], it is taken from the branch [then_] selects
+   (see [guard_branch_post]) instead. With [linked], a conjunct that names a
+   branch's existential witness also named by another of its conjuncts is not
+   generalized out of the leftover, which would cut the two apart; it is taken
+   from the picked branch too. *)
+val join_post_candidate (pick:option bool) (linked:bool) #g #hyp #b
     (p1:post_hint_for_env (g_with_eq g hyp b tm_true))
     (p2:post_hint_for_env (g_with_eq g hyp b tm_false))
-: T.Tac (post_hint_for_env g)
+: T.Tac term
 
 val join_comps
   (g_then:env)

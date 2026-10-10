@@ -61,10 +61,34 @@ let lift_branch_comp (c:comp_st)
 
 #push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 2"
 #restart-solver
+(* The trust boundary for an inferred postcondition.
+
+   Pulse.JoinComp only proposes candidates, as plain terms; nothing it computes
+   is trusted. A candidate becomes the postcondition of the conditional only
+   after
+   (1) [post_hint_of_candidate] core-checks it as an slprop over the result in
+       [g], the context outside the conditional, so that it cannot mention the
+       branch hypothesis or any variable a branch bound; and
+   (2) both branches are proved against it ([prove_post_hint], which also
+       checks the result type) and elaborated ([extract_nat]), since the
+       prover leaves some of its checks to elaboration.
+   A user-written `ensures` on the `if` goes through the same checks. So a
+   wrong candidate is rejected, or skipped for the next one: an inference bug
+   can at worst make a program be rejected, or get a weaker postcondition than
+   it could have. *)
+let post_hint_of_candidate (g:env) (ret_ty:term) (post:term)
+: T.Tac (ph:post_hint_for_env g { ph.ret_ty == ret_ty /\ ph.effect_annot == EffectAnnotSTT })
+= let u = check_universe g ret_ty in
+  let x = fresh g in
+  let g' = push_binding g x ppname_default ret_ty in
+  check_slprop_with_core g' (open_term_nv post (ppname_default, x));
+  { g; effect_annot = EffectAnnotSTT; ret_ty; u; post }
+
 (* Does a joined postcondition still keep something under the branch
-   condition? `Pulse.JoinComp.join_post` leaves what the branches do not agree
-   on as `match b with true -> .. | false -> ..`, which nothing later can take
-   apart unless `b` is a variable that a later test rewrites. *)
+   condition? `Pulse.JoinComp.join_post_candidate` with no pick leaves what the
+   branches do not agree on as `match b with true -> .. | false -> ..`, which
+   nothing later can take apart unless `b` is a variable that a later test
+   rewrites. *)
 let rec post_keeps_conditional (p:slprop) : T.Tac bool =
   match inspect_term p with
   | Tm_Star l r -> if post_keeps_conditional l then true else post_keeps_conditional r
@@ -177,7 +201,18 @@ let check
         let else_ : checker_result_t _ _ NoHint = retype_checker_result _ else_ in
         let post_then = infer_post_branch then_ in
         let post_else = infer_post_branch else_ in
-        let post = Pulse.JoinComp.join_post #g #hyp #b post_then post_else in
+        let ret_ty = post_then.ret_ty in
+        if not (T.term_eq (RU.deep_compress_safe ret_ty) (RU.deep_compress_safe post_else.ret_ty))
+        then
+          Pulse.Typing.Env.fail_doc g (Some (T.range_of_term ret_ty))
+            Pulse.PP.(
+              [text "The branches of a conditional must return the same type";
+               text (Printf.sprintf "The types %s and %s are not equal"
+                       (T.term_to_string ret_ty) (T.term_to_string post_else.ret_ty))]);
+        (* Untrusted: see [post_hint_of_candidate]. *)
+        let candidate (pick:option bool) (linked:bool) : T.Tac term =
+          J.join_post_candidate pick linked #g #hyp #b post_then post_else in
+        let post = post_hint_of_candidate g ret_ty (candidate None false) in
         let prove_both (post:post_hint_for_env g) ()
           : T.Tac (ph:post_hint_for_env g &
                    checker_result_t (g_with_eq tm_true) pre (PostHint ph) &
@@ -226,12 +261,10 @@ let check
            Each candidate is proved of, and elaborated in, both branches
            before it is used, so this only ever picks among sound options.
            If none works, keep the join. *)
-        let linked_post = Pulse.JoinComp.join_post_pick None true #g #hyp #b post_then post_else in
+        (* Only inspected, to decide which candidates to try. *)
+        let linked_post = candidate None true in
         let with_leftover_of (linked then_:bool) () =
-          let p = Pulse.JoinComp.join_post_pick (Some then_) linked #g #hyp #b post_then post_else in
-          let p : post_hint_for_env g =
-            { p with effect_annot = post.effect_annot } in
-          prove_and_extract p ()
+          prove_and_extract (post_hint_of_candidate g ret_ty (candidate (Some then_) linked)) ()
         in
         let rec first (cs:list (bool & bool))
           : T.Tac (ph:post_hint_for_env g &
@@ -253,7 +286,7 @@ let check
             (| post, then_, else_, None |)
         in
         let linked_cs =
-          if post_keeps_conditional linked_post.post then [(true, false); (true, true)] else [] in
+          if post_keeps_conditional linked_post then [(true, false); (true, true)] else [] in
         let unlinked_cs =
           if post_keeps_conditional post.post then [(false, false); (false, true)] else [] in
         first (linked_cs @ unlinked_cs)
