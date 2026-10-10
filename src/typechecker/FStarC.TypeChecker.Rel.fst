@@ -5377,6 +5377,10 @@ let dedup_vc (vc:term) : ML term =
     | Tm_fvar fv -> S.fv_eq_lid fv lid
     | _ -> false
   in
+  (* SynHash.equal_term does not look through delayed substitutions, so push
+     them all the way down: once on the whole VC, and again after opening a
+     binder (as SS.open_term_1 delays its substitution on the body). *)
+  let compress_all (t:term) : ML term = FStarC.Syntax.Visit.visit_term false (fun t -> t) t in
   let rec go (known:SynHash.term_map unit) (t:term) : ML (term & SynHash.term_map unit) =
     let t0 = SS.compress t in
     let hd, args = U.head_and_args_full t0 in
@@ -5400,7 +5404,7 @@ let dedup_vc (vc:term) : ML term =
       (match (SS.compress f).n with
        | Tm_abs {b; body; rc_opt} ->
          let b, body = SS.open_term_1 b body in
-         let body, _ = go known body in
+         let body, _ = go known (compress_all body) in
          let known = SynHash.term_map_add t0 () known in
          if U.is_t_true body
          then U.t_true, known
@@ -5413,7 +5417,7 @@ let dedup_vc (vc:term) : ML term =
 
     | _ -> t0, SynHash.term_map_add t0 () known
   in
-  fst (go (SynHash.term_map_empty #unit) vc)
+  fst (go (SynHash.term_map_empty #unit) (compress_all vc))
 
 let do_discharge_vc use_env_range_msg env vc : ML unit =
   let open FStarC.Pprint in
