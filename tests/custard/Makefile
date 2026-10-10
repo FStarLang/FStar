@@ -1487,11 +1487,17 @@ $(OUTPUT_DIR)/%.chc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) --custard_backend Cherry \
 	  --custard_monomorphize_types true --custard_main $*.main $*.fst -o $@
 
+# The runtime header is not generated; it is the one F* installs, found the
+# way a user would find it.
+CHERRY_INC = $(shell $(FSTAR_EXE) --locate_lib)/ulib/c
+
 $(OUTPUT_DIR)/%.chexe: $(OUTPUT_DIR)/%.chc
 	$(call msg, "CC-ASAN", $(basename $(notdir $@)))
 	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
-	  -fno-sanitize-recover=undefined -I$(OUTPUT_DIR) -x c $< -o $@
-	$(Q)$(CXX) -std=c++17 -Wall -Werror -I$(OUTPUT_DIR) -fsyntax-only -x c++ $<
+	  -fno-sanitize-recover=undefined -I$(OUTPUT_DIR) -I$(CHERRY_INC) \
+	  -x c $< -o $@
+	$(Q)$(CXX) -std=c++17 -Wall -Werror -I$(OUTPUT_DIR) -I$(CHERRY_INC) \
+	  -fsyntax-only -x c++ $<
 
 $(OUTPUT_DIR)/%.chran: $(OUTPUT_DIR)/%.chexe
 	$(call msg, "RUN-ASAN", $(basename $(notdir $@)))

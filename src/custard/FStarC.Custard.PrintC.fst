@@ -3891,53 +3891,6 @@ let record_parents (p:program) : ML unit =
 (* Cherry runtime support and generated helpers                         *)
 (* -------------------------------------------------------------------- *)
 
-(* The runtime of cherry.md, inline.  A reference count is positive while the
-   cell is reachable from one thread only, negative (its magnitude counting
-   the references) once it has been marked shared, and zero for an immortal
-   cell.  A pointer with its low bit set is a constructor without fields, and
-   the rest of it is the tag. *)
-let cherry_support () : ML string =
-  String.concat "" [
-    "typedef struct cherry_obj { int32_t rc; uint32_t tag; } cherry_obj;\n";
-    "#define CHERRY_SCALAR(t) ((cherry_obj *)(((uintptr_t)(t) << 1) | 1u))\n";
-    "static inline bool cherry_is_scalar(const cherry_obj *o) {\n";
-    "  return ((uintptr_t)o & 1u) != 0;\n";
-    "}\n";
-    "static inline uint32_t cherry_tag(const cherry_obj *o) {\n";
-    "  return cherry_is_scalar(o) ? (uint32_t)((uintptr_t)o >> 1) : o->tag;\n";
-    "}\n";
-    "static inline cherry_obj *cherry_alloc(size_t size, uint32_t tag) {\n";
-    "  cherry_obj *o = (cherry_obj *)malloc(size);\n";
-    "  if (o == NULL) abort();\n";
-    "  o->rc = 1;\n";
-    "  o->tag = tag;\n";
-    "  return o;\n";
-    "}\n";
-    "static inline void cherry_inc(cherry_obj *o) {\n";
-    "  if (cherry_is_scalar(o)) return;\n";
-    "  int32_t rc = o->rc;\n";
-    "  if (rc > 0) o->rc = rc + 1;\n";
-    "  else if (rc < 0) __atomic_fetch_sub(&o->rc, 1, __ATOMIC_RELAXED);\n";
-    "}\n";
-    "/* Drop a reference; true when it was the last one and the cell has to be\n";
-    "   freed. */\n";
-    "static inline bool cherry_dec_ref(cherry_obj *o) {\n";
-    "  if (cherry_is_scalar(o)) return false;\n";
-    "  int32_t rc = o->rc;\n";
-    "  if (rc == 1) return true;\n";
-    "  if (rc > 1) { o->rc = rc - 1; return false; }\n";
-    "  if (rc == 0) return false;\n";
-    "  return __atomic_add_fetch(&o->rc, 1, __ATOMIC_ACQ_REL) == 0;\n";
-    "}\n";
-    "/* Mark a cell shared; true when it was not already, so that its fields\n";
-    "   have to be marked too. */\n";
-    "static inline bool cherry_mark_ref(cherry_obj *o) {\n";
-    "  if (cherry_is_scalar(o) || o->rc <= 0) return false;\n";
-    "  o->rc = -o->rc;\n";
-    "  return true;\n";
-    "}\n"
-  ]
-
 (* The constructors, and [inc]/[dec]/[mark] for every non-plain type.  All
    [static inline]: a unit uses some of them, and C warns about an unused
    [static] function that is not [inline]. *)
@@ -4388,7 +4341,8 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   let hdr =
     header ^
   (match includes with [] -> "" | _ -> "\n" ^ String.concat "\n" includes ^ "\n") ^
-    (if Options.custard_cherry () then "\n" ^ cherry_support () else "") ^
+    (* The runtime is not generated: it ships with F* as ulib/c/cherry.h. *)
+    (if Options.custard_cherry () then "\n#include \"cherry.h\"\n" else "") ^
     (if hdr_unit then "\n" ^ unit_support else "") ^
     (if hdr_fspec then "\n" ^ float_special_support else "") ^
     (if hdr_narrow then narrow_support else "") ^
