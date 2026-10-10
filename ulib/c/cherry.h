@@ -238,6 +238,48 @@ cherry_int cherry_str_compare(cherry_string a, cherry_string b);
 cherry_string cherry_string_of_int(cherry_int a);
 void cherry_print_string(cherry_string s);
 
+/* ------------------------------------------------------------------------
+   Function values.  Every value of function type is a closure cell: the
+   entry point, functions to drop and mark the captured values (NULL when
+   there are none), the number of arguments the entry point takes, and then
+   the captured values themselves.  The entry point is called as
+   [R entry(cherry_fn self, A1 a1, ..., An an)] with [self] borrowed and the
+   arguments owned; the generated [apply] helpers handle calls with fewer or
+   more arguments than that.  A top-level function used as a value is a
+   static closure with a reference count of zero. */
+
+#define CHERRY_TAG_CLOSURE 0xFFFFFFF2u
+
+typedef cherry_obj *cherry_fn;
+/* The entry point, cast to the one function pointer type that every other
+   one converts to and from without a warning. */
+typedef void (*cherry_code)(void);
+
+typedef struct cherry_closure {
+  cherry_obj hdr;
+  cherry_code fn;
+  void (*drop)(cherry_obj *);
+  void (*mark)(cherry_obj *);
+  uint32_t arity;
+} cherry_closure;
+
+#define CHERRY_CLOSURE(f) ((cherry_closure *)(f))
+
+#define CHERRY_STATIC_CLOSURE(name, code, n)                               \
+  static CHERRY_UNUSED cherry_closure name =                               \
+    { { 0, CHERRY_TAG_CLOSURE }, (cherry_code)(code), NULL, NULL, n }
+
+static inline void cherry_dec_fn(cherry_fn f) {
+  if (!cherry_dec_ref(f)) return;
+  if (CHERRY_CLOSURE(f)->drop != NULL) CHERRY_CLOSURE(f)->drop(f);
+  free(f);
+}
+
+static inline void cherry_mark_fn(cherry_fn f) {
+  if (cherry_mark_ref(f) && CHERRY_CLOSURE(f)->mark != NULL)
+    CHERRY_CLOSURE(f)->mark(f);
+}
+
 #ifdef __cplusplus
 }
 #endif

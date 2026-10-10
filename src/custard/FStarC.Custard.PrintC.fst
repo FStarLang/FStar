@@ -514,6 +514,8 @@ let is_boxed_ty (t:cty) : ML bool =
 let is_nonplain_ty (t:cty) : ML bool =
   match t with
   | TApp (n, _) -> HashTable.mem !nonplain_tbl (string_of_name n)
+  (* The key {!Cherry.nonplain_types} files every function type under. *)
+  | TArrow _ -> HashTable.mem !nonplain_tbl "->"
   | _ -> false
 
 (* The cell of constructor [cn] of the boxed type [d], and field [f] of it
@@ -538,7 +540,115 @@ let rc_fn (op:string) (t:cty) : ML string =
      generic operations are the whole story. *)
   | TApp (n, _) when Options.custard_cherry () && is_runtime_name n -> "cherry_" ^ op
   | TApp (n, _) -> "cherry_" ^ op ^ "_" ^ c_name n
+  | TArrow _ -> if op = "inc" then "cherry_inc" else "cherry_" ^ op ^ "_fn"
   | _ -> failwith "Custard: reference counting at a plain type"
+
+(* Closures.  A function value is a [cherry_fn] (ulib/c/cherry.h), and the
+   code that builds and calls one is generated on demand: printing a body
+   files a request for each helper it uses, and {!cherry_closure_helpers}
+   generates them -- and whatever those use in turn -- once every body has
+   been printed. *)
+
+(* The program's functions: their parameters and result. *)
+let fn_sigs : ref (HashTable.t string (list binder & cty)) = mk_ref (HashTable.create 0)
+
+type clo_req =
+  | ReqPap   of name & int & cty  (** [f] applied to its first [k] arguments, at type [t] *)
+  | ReqApply of cty & int         (** a call of a closure of this type, with [k] arguments *)
+  | ReqPapc  of cty & int & int   (** a closure of arity [m] given [k < m] arguments *)
+
+let clo_queue : ref (list clo_req) = mk_ref []
+let clo_seen : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
+let arrow_ids : ref (list (cty & int)) = mk_ref []
+
+let fn_sig (n:name) : ML (option (list binder & cty)) =
+  HashTable.try_find !fn_sigs (string_of_name n)
+
+(* A function type, seen through abbreviations. *)
+let rec arrow_view (t:cty) : ML (option (cty & cty)) =
+  match t with
+  | TArrow (a, _, b) -> Some (a, b)
+  | TApp (n, []) ->
+    (match find_type n with
+     | Some { dt_body = TAbbrev t' } -> arrow_view t'
+     | _ -> None)
+  | _ -> None
+
+(* The first [k] parameter types of [t], and what is left. *)
+let rec arrow_take (k:int) (t:cty) : ML (list cty & cty) =
+  if k <= 0 then ([], t) else
+  match arrow_view t with
+  | Some (a, b) -> let as_, r = arrow_take (k - 1) b in (a :: as_, r)
+  | None -> failwith "Custard: a closure applied to more arguments than its type has"
+
+let rec arrow_count (t:cty) : ML int =
+  match arrow_view t with
+  | Some (_, b) -> 1 + arrow_count b
+  | None -> 0
+
+(* How many parameters of [t] are not unit. *)
+let rec nonunit_arrows (t:cty) : ML int =
+  match arrow_view t with
+  | Some (a, b) -> (if TUnit? a then 0 else 1) + nonunit_arrows b
+  | None -> 0
+
+(* The parameters of [t] up to and including its [c]-th that is not unit,
+   with the unit ones right after it, and what is left.  A definition has no
+   unit parameters (Mono's rule 1), so a closure's arity counts only the
+   others, and C has none of them either. *)
+let rec split_nonunit (c:int) (t:cty) : ML (list cty & cty) =
+  match arrow_view t with
+  | Some (a, b) when c > 0 || TUnit? a ->
+    let ds, r = split_nonunit (if TUnit? a then c else c - 1) b in
+    (a :: ds, r)
+  | _ ->
+    if c > 0 then failwith "Custard: a closure taking more arguments than its type has"
+    else ([], t)
+
+let arrow_id (t:cty) : ML string =
+  match List.tryFind (fun (u, _) -> u = t) !arrow_ids with
+  | Some (_, i) -> string_of_int i
+  | None ->
+    let i = List.length !arrow_ids in
+    arrow_ids := !arrow_ids @ [(t, i)];
+    string_of_int i
+
+let clo_key (r:clo_req) : ML string =
+  match r with
+  | ReqPap (n, k, _) -> "pap " ^ string_of_name n ^ " " ^ string_of_int k
+  | ReqApply (t, k) -> "apply " ^ arrow_id t ^ " " ^ string_of_int k
+  | ReqPapc (t, k, m) -> "papc " ^ arrow_id t ^ " " ^ string_of_int k ^ " " ^ string_of_int m
+
+let clo_request (r:clo_req) : ML unit =
+  let key = clo_key r in
+  if not (HashTable.mem !clo_seen key) then begin
+    HashTable.add !clo_seen key true;
+    clo_queue := !clo_queue @ [r]
+  end
+
+(* [lo, ..., hi]. *)
+let rec range (lo hi:int) : ML (list int) =
+  if lo > hi then [] else lo :: range (lo + 1) hi
+
+let static_clo_name (n:name) : ML string = "cherry_clo_" ^ c_name n
+let pap_name (n:name) (k:int) : ML string =
+  "cherry_pap_" ^ c_name n ^ "_" ^ string_of_int k
+let apply_name (t:cty) (k:int) : ML string =
+  "cherry_apply_" ^ arrow_id t ^ "_" ^ string_of_int k
+let papc_name (t:cty) (k m:int) : ML string =
+  "cherry_papc_" ^ arrow_id t ^ "_" ^ string_of_int k ^ "_" ^ string_of_int m
+
+(* An application Cherry compiles as a closure operation rather than a C
+   call: a definition given fewer arguments than it takes, or anything that
+   is not a definition. *)
+let is_closure_app (hd:expr) (args:list expr) : ML bool =
+  Options.custard_cherry () &&
+  (match hd.e with
+   | EQual (n, _) ->
+     (match fn_sig n with
+      | Some (bs, _) -> List.length args < List.length bs
+      | None -> false)
+   | _ -> true)
 
 (* The typed variables pattern [p] binds against a scrutinee of type [t]. *)
 let rec pat_var_tys (p:pat) (t:cty) : ML (list (string & cty)) =
@@ -723,6 +833,8 @@ let rec decl_of (t:cty) (x:string) : ML string =
      data position becomes a function pointer.  Custard has no closures --
      [EFun] in a value position is rejected below -- so the value is always a
      top-level definition, and its name is exactly this pointer. *)
+  | TArrow _ when Options.custard_cherry () ->
+    "cherry_fn" ^ (if x = "" then "" else " " ^ x)
   | TArrow _ ->
     let rec spine (t:cty) (acc:list cty) : ML (list cty & cty) =
       match t with
@@ -1597,6 +1709,10 @@ let reset_program_state () : ML unit =
   keeps := HashTable.create 0;
   void_fns := HashTable.create 0;
   arities := HashTable.create 0;
+  fn_sigs := HashTable.create 0;
+  clo_queue := [];
+  clo_seen := HashTable.create 0;
+  arrow_ids := [];
   void_ret := false;
   eq_queue := [];
   eq_seen := HashTable.create 20;
@@ -1816,10 +1932,26 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
     (* What an uninitialized stack slot holds.  A zero of the right type is a
        legal value of it and is what C would give a static. *)
     "(" ^ ty e.ty ^ "){0}"
+  (* A definition as a value is its static closure. *)
+  | EQual (n, _) when Options.custard_cherry () && Some? (fn_sig n) ->
+    clo_request (ReqPap (n, 0, e.ty));
+    "((cherry_fn)&" ^ static_clo_name n ^ ")"
   | EQual (n, _) ->
     (match HashTable.try_find !externs (string_of_name n) with
      | Some t -> t
      | None -> c_name n)
+  | EApp (hd, args) when is_closure_app hd args ->
+    let k = List.length args in
+    let args = args |> List.filter (fun (a:expr) -> not (TUnit? a.ty))
+                    |> List.map (fun (a:expr) -> c_rvalue out ind a.ty a) in
+    (match hd.e with
+     | EQual (n, _) ->
+       clo_request (ReqPap (n, k, e.ty));
+       pap_name n k ^ "(" ^ String.concat ", " args ^ ")"
+     | _ ->
+       let f = c_expr out ind hd in
+       clo_request (ReqApply (hd.ty, k));
+       apply_name hd.ty k ^ "(" ^ String.concat ", " (f :: args) ^ ")")
   | EApp (hd, args) ->
     (* Drop the arguments that correspond to dropped parameters.  ANF has made
        every operand pure, so nothing is lost by not evaluating them. *)
@@ -1872,7 +2004,16 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
       match hd.e with
       | EQual (n, _) -> None? (HashTable.try_find !externs (string_of_name n))
       | _ -> true in
-    let call = c_expr out ind hd ^ "(" ^
+    (* The head names the function, which is not the same as using it as a
+       value: under Cherry that is a closure. *)
+    let head =
+      match hd.e with
+      | EQual (n, _) ->
+        (match HashTable.try_find !externs (string_of_name n) with
+         | Some t -> t
+         | None -> c_name n)
+      | _ -> c_expr out ind hd in
+    let call = head ^ "(" ^
                String.concat ", "
                  (args |> List.map (fun (a:expr) ->
                     if cast_free_args then c_rvalue out ind a.ty a
@@ -4029,6 +4170,143 @@ let cherry_helpers (p:program) : ML (list string & list string) =
     | _ -> ());
   (!protos, !defs)
 
+(* The closure helpers requested while printing: declarations (the
+   environment structs, prototypes and static closures) and definitions. *)
+let cherry_closure_helpers () : ML (list string & list string) =
+  let protos : ref (list string) = mk_ref [] in
+  let defs : ref (list string) = mk_ref [] in
+  let fn (proto:string) (body:string) : ML unit =
+    protos := !protos @ [proto ^ ";\n"];
+    defs := !defs @ [proto ^ " {\n" ^ body ^ "}\n"] in
+  let nonunit (xs:list (string & cty)) : ML (list (string & cty)) =
+    List.filter (fun (_, t) -> not (TUnit? t)) xs in
+  let named (pfx:string) (from:int) (ts:list cty) : ML (list (string & cty)) =
+    ts |> List.mapi (fun i t -> (pfx ^ string_of_int (from + i), t)) in
+  let params (xs:list (string & cty)) : ML string =
+    String.concat "" (nonunit xs |> List.map (fun (x, t) -> ", " ^ decl_of t x)) in
+  let names (xs:list (string & cty)) : ML (list string) =
+    nonunit xs |> List.map fst in
+  (* The type of a closure's entry point taking [ts], as a cast. *)
+  let code_ty (ret:cty) (ts:list cty) : ML string =
+    "(" ^ decl_of ret ("(*)(cherry_fn" ^
+      String.concat "" (ts |> List.filter (fun t -> not (TUnit? t))
+                           |> List.map (fun t -> ", " ^ decl_of t "")) ^ ")") ^ ")" in
+  let on (op:string) (sel:string) (xs:list (string & cty)) : ML string =
+    String.concat "" (nonunit xs |> List.collect (fun (x, t) ->
+      if is_nonplain_ty t then ["  " ^ rc_fn op t ^ "(" ^ sel ^ x ^ ");\n"] else [])) in
+  (* A closure cell holding [fields], built by [ctor] taking them all owned,
+     whose entry point [entry] is defined by [body]. *)
+  let closure (s:string) (fields:list (string & cty)) (arity:int)
+              (entry:string) (ret:cty) (eparams:list (string & cty)) (body:string)
+              (ctor:string) : ML unit =
+    let fields = nonunit fields in
+    protos := !protos @ ["struct " ^ s ^ " {\n  cherry_closure clo;\n" ^
+      String.concat "" (fields |> List.map (fun (x, t) -> "  " ^ decl_of t x ^ ";\n")) ^ "};\n"];
+    fn ("static inline " ^ decl_of ret (entry ^ "(cherry_fn self" ^ params eparams ^ ")"))
+       ("  struct " ^ s ^ " *env = (struct " ^ s ^ " *)self;\n  (void)env;\n" ^ body);
+    let counted = fields |> List.existsb (fun (_, t) -> is_nonplain_ty t) in
+    let drop, mark =
+      if not counted then "NULL", "NULL" else begin
+        ["dec"; "mark"] |> List.iter (fun op ->
+          fn ("static inline void " ^ s ^ "_" ^ op ^ "(cherry_obj *o)")
+             ("  struct " ^ s ^ " *env = (struct " ^ s ^ " *)o;\n" ^ on op "env->" fields));
+        s ^ "_dec", s ^ "_mark"
+      end in
+    fn ("static inline cherry_fn " ^ ctor ^ "(" ^
+        (match fields with
+         | [] -> "void"
+         | _ -> String.concat ", " (fields |> List.map (fun (x, t) -> decl_of t x))) ^ ")")
+       ("  struct " ^ s ^ " *env = (struct " ^ s ^ " *)cherry_alloc(sizeof(struct " ^ s ^
+        "), CHERRY_TAG_CLOSURE);\n" ^
+        "  env->clo.fn = (cherry_code)" ^ entry ^ ";\n" ^
+        "  env->clo.drop = " ^ drop ^ ";\n" ^
+        "  env->clo.mark = " ^ mark ^ ";\n" ^
+        "  env->clo.arity = " ^ string_of_int arity ^ ";\n" ^
+        String.concat "" (fields |> List.map (fun (x, _) -> "  env->" ^ x ^ " = " ^ x ^ ";\n")) ^
+        "  return (cherry_fn)env;\n") in
+  let ret_of (call:string) (ret:cty) (void:bool) : ML string =
+    if void then "  " ^ call ^ ";\n  return " ^ unit_value ^ ";\n"
+    else "  return " ^ call ^ ";\n" in
+  let gen (r:clo_req) : ML unit =
+    match r with
+    | ReqPap (n, k, _) ->
+      let bs, ret = Some?.v (fn_sig n) in
+      let tys = List.map (fun (b:binder) -> b.b_ty) bs in
+      let captured, rest = List.splitAt k tys in
+      let fields = named "e" 0 captured in
+      let eparams = named "p" k rest in
+      let arity = List.length (nonunit eparams) in
+      let entry = "cherry_entry_" ^ c_name n ^ "_" ^ string_of_int k in
+      let void = Some? (HashTable.try_find !void_fns (string_of_name n)) in
+      let call = c_name n ^ "(" ^
+                 String.concat ", " (List.map (fun x -> "env->" ^ x) (names fields) @
+                                     names eparams) ^ ")" in
+      if k = 0 then begin
+        fn ("static inline " ^ decl_of ret (entry ^ "(cherry_fn self" ^ params eparams ^ ")"))
+           ("  (void)self;\n" ^ ret_of call ret void);
+        protos := !protos @ ["CHERRY_STATIC_CLOSURE(" ^ static_clo_name n ^ ", " ^ entry ^
+                             ", " ^ string_of_int arity ^ ");\n"]
+      end else
+        closure ("cherry_env_" ^ c_name n ^ "_" ^ string_of_int k) fields
+                arity entry ret eparams
+                (on "inc" "env->" fields ^ ret_of call ret void)
+                (pap_name n k)
+    | ReqApply (t, k) ->
+      let doms, rk = arrow_take k t in
+      let args = named "a" 0 doms in
+      let given = nonunit args in
+      let kn = List.length given in
+      let call_code (ret:cty) (f:string) (xs:list (string & cty)) : ML string =
+        "(" ^ code_ty ret (List.map snd xs) ^
+        "CHERRY_CLOSURE(" ^ f ^ ")->fn)(" ^ String.concat ", " (f :: names xs) ^ ")" in
+      (* A closure taking fewer: call it with what it takes, up to the next
+         argument it does not, and apply the result to the rest. *)
+      let under = range 0 (kn - 1) |> List.map (fun m ->
+        let first, _ = List.splitAt m given in
+        let next = fst (List.nth given m) in
+        let cut = List.length (fst (List.span (fun (x, _) -> x <> next) args)) in
+        let _, tm = arrow_take cut t in
+        let rest = snd (List.splitAt cut args) in
+        clo_request (ReqApply (tm, k - cut));
+        "    case " ^ string_of_int m ^ ": {\n" ^
+        "      cherry_fn g = " ^ call_code (TArrow (TUnit, E_Pure, TUnit)) "f" first ^ ";\n" ^
+        "      " ^ decl_of rk "r" ^ " = " ^ apply_name tm (k - cut) ^ "(" ^
+                String.concat ", " ("g" :: names rest) ^ ");\n" ^
+        "      cherry_dec_fn(g);\n" ^
+        "      return r;\n" ^
+        "    }\n") in
+      let exact = "    case " ^ string_of_int kn ^ ": return " ^ call_code rk "f" given ^ ";\n" in
+      (* A closure taking more: what it was given is captured. *)
+      let over = range (kn + 1) (kn + nonunit_arrows rk) |> List.map (fun m ->
+        if kn = 0 then "    case " ^ string_of_int m ^ ": cherry_inc(f); return f;\n" else begin
+          clo_request (ReqPapc (t, k, m));
+          "    case " ^ string_of_int m ^ ": cherry_inc(f); return " ^ papc_name t k m ^ "(" ^
+          String.concat ", " ("f" :: names given) ^ ");\n"
+        end) in
+      fn ("static inline " ^ decl_of rk (apply_name t k ^ "(cherry_fn f" ^ params args ^ ")"))
+         ("  switch (CHERRY_CLOSURE(f)->arity) {\n" ^
+          String.concat "" under ^ exact ^ String.concat "" over ^
+          "    default: abort();\n  }\n")
+    | ReqPapc (t, k, m) ->
+      let doms, rk = arrow_take k t in
+      let fields = nonunit (named "a" 0 doms) in
+      let edoms, rm = split_nonunit (m - List.length fields) rk in
+      let eparams = named "p" k edoms in
+      let call = "(" ^ code_ty rm (List.map snd fields @ List.map snd (nonunit eparams)) ^
+                 "CHERRY_CLOSURE(env->f)->fn)(" ^
+                 String.concat ", " ("env->f" :: List.map (fun x -> "env->" ^ x) (names fields) @
+                                     names eparams) ^ ")" in
+      closure ("cherry_papc_env_" ^ arrow_id t ^ "_" ^ string_of_int k ^ "_" ^ string_of_int m)
+              (("f", t) :: fields) (m - List.length fields) (papc_name t k m ^ "_entry") rm eparams
+              (on "inc" "env->" fields ^ "  return " ^ call ^ ";\n")
+              (papc_name t k m) in
+  let rec drain () : ML unit =
+    match !clo_queue with
+    | [] -> ()
+    | r :: rest -> clo_queue := rest; gen r; drain () in
+  drain ();
+  (!protos, !defs)
+
 let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string) =
   (* Section 42.2.  An imported declaration is in [p] so that the tables below
      see its shape, and out of every list that is emitted: the unit that
@@ -4133,6 +4411,8 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
       if List.existsb (fun b -> not b) flags then HashTable.add kt (string_of_name l.dl_name) flags;
       if TUnit? l.dl_ret && Cons? l.dl_binders then HashTable.add vt (string_of_name l.dl_name) true
       ;
+      if Cons? l.dl_binders then
+        HashTable.add !fn_sigs (string_of_name l.dl_name) (l.dl_binders, l.dl_ret);
       (* A parameterless definition of arrow type is lowered to a *variable*
          of function-pointer type (section 25.3), and a call through it
          supplies every argument at once -- so its arity is the arity of its
@@ -4361,6 +4641,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
      of types actually compared is complete. *)
   let eq_protos, eq_defs = eq_decls () in
   let rc_protos, rc_defs = cherry_helpers p in
+  let clo_protos, clo_defs = cherry_closure_helpers () in
 
   (* The header carries the unit's whole type language rather than only the
      types a public signature mentions.  A [struct] or a [typedef] has no
@@ -4392,6 +4673,8 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   String.concat "" rc_protos ^ (match rc_protos with [] -> "" | _ -> "\n") ^
   String.concat "\n" rc_defs ^ (match rc_defs with [] -> "" | _ -> "\n") ^
   String.concat "" protos ^ (match protos with [] -> "" | _ -> "\n") ^
+  String.concat "" clo_protos ^ (match clo_protos with [] -> "" | _ -> "\n") ^
+  String.concat "\n" clo_defs ^ (match clo_defs with [] -> "" | _ -> "\n") ^
   String.concat "" eq_protos ^ (match eq_protos with [] -> "" | _ -> "\n") ^
   String.concat "\n" eq_defs ^ (match eq_defs with [] -> "" | _ -> "\n") ^
   String.concat "\n" defs ^ "\n" ^ (match inits with [] -> "" | _ -> init_fn) ^

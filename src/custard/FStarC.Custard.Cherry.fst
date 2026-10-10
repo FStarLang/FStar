@@ -43,12 +43,17 @@ let field_types (b:tydef) : ML (list cty) =
   | TVariant cs -> List.collect (fun (_, fs) -> List.map snd fs) cs
   | TAbstract -> []
 
-(* The type names a value of [t] holds by value.  A pointer or a function is
-   a size, and what it reaches is not part of the value. *)
+(* What stands for every function type in the tables below: a function value
+   is a counted closure, whatever its type. *)
+let arrow_key : string = "->"
+
+(* The type names a value of [t] holds by value.  A pointer is a size, and
+   what it reaches is not part of the value. *)
 let rec by_value (t:cty) : ML (list string) =
   match t with
   | TApp (n, args) -> string_of_name n :: List.collect by_value args
   | TTuple ts -> List.collect by_value ts
+  | TArrow _ -> [arrow_key]
   | _ -> []
 
 (* Does a value of [t] contain a value of [target], through any number of
@@ -78,6 +83,7 @@ let nonplain_types (p:program) : ML (list string) =
   let tbl = type_table p in
   let np : HashTable.t string bool = HashTable.create 50 in
   runtime_types |> List.iter (fun k -> HashTable.add np k true);
+  HashTable.add np arrow_key true;
   boxed_types p |> List.iter (fun k -> HashTable.add np k true);
   let rec settle (fuel:int) : ML unit =
     let changed = mk_ref false in
@@ -104,6 +110,10 @@ let ctor_tbl : ref (HashTable.t string (list (string & cty))) = mk_ref (HashTabl
 let record_tbl : ref (HashTable.t string (list (string & cty))) = mk_ref (HashTable.create 0)
 (* For each external, which of its arguments it takes ownership of. *)
 let extern_tbl : ref (HashTable.t string (list bool)) = mk_ref (HashTable.create 0)
+(* The functions this program defines: their parameters and result. *)
+let fn_tbl : ref (HashTable.t string (list binder & cty)) = mk_ref (HashTable.create 0)
+(* How many arguments each external takes. *)
+let extern_arity : ref (HashTable.t string (int & option cty)) = mk_ref (HashTable.create 0)
 let current : ref string = mk_ref ""
 let counter : ref int = mk_ref 0
 
@@ -116,13 +126,16 @@ let rec is_np (t:cty) : ML bool =
   match t with
   | TApp (n, _) -> HashTable.mem !np_tbl (string_of_name n)
   | TTuple ts -> List.existsb is_np ts
+  | TArrow _ -> true
   | _ -> false
 
-(* Does evaluating [e] involve a non-plain value anywhere? *)
+(* Does evaluating [e] involve a non-plain value anywhere?  The function a
+   direct call names is not a value. *)
 let rec touches (e:expr) : ML bool =
   is_np e.ty ||
   (match e.e with
    | ELet (_, t, _, _) when is_np t -> true
+   | EApp ({ e = EQual _ }, args) -> List.existsb touches args
    | _ -> exists_child touches e)
 
 let fresh () : ML string =
@@ -178,6 +191,151 @@ let rec pat_binds (p:pat) (t:cty) : ML (list (string & cty)) =
      | None -> unsupported ("the record " ^ string_of_name tn))
   | PTuple _ -> unsupported "a tuple pattern"
   | POr _ -> unsupported "a pattern disjunction"
+
+(* The typed variables a pattern binds, as far as they can be told; used
+   only to type what a lambda captures. *)
+let rec pat_binds_opt (p:pat) (t:cty) : ML (list (string & cty)) =
+  match p, t with
+  | PVar x, _ -> [(x, t)]
+  | PCtor (cn, ps), _ ->
+    (match HashTable.try_find !ctor_tbl (string_of_name cn) with
+     | Some fs when List.length fs = List.length ps ->
+       List.zip (List.map snd fs) ps |> List.collect (fun (ft, q) -> pat_binds_opt q ft)
+     | _ -> [])
+  | PRecord (tn, fps), _ ->
+    (match HashTable.try_find !record_tbl (string_of_name tn) with
+     | Some fs ->
+       fps |> List.collect (fun (f, q) ->
+         match List.tryFind (fun (g, _) -> g = f) fs with
+         | Some (_, ft) -> pat_binds_opt q ft
+         | None -> [])
+     | None -> [])
+  | PTuple ps, TTuple ts when List.length ps = List.length ts ->
+    List.zip ps ts |> List.collect (fun (q, t) -> pat_binds_opt q t)
+  | POr (q :: _), _ -> pat_binds_opt q t
+  | _ -> []
+
+(* -------------------------------------------------------------------- *)
+(* Closures: every lambda becomes a definition of its own               *)
+(* -------------------------------------------------------------------- *)
+
+(* A lambda becomes a top-level function taking what it captures and then
+   its own parameters, and the lambda itself the partial application of that
+   function to the captured variables -- which is a closure.  A call given
+   more arguments than the function it names takes becomes a call of the
+   function's result.  So afterwards a function value is only ever a
+   function's name, a partial application, or a variable. *)
+
+let lifted : ref (list decl) = mk_ref []
+let lift_parent : ref (option dlet) = mk_ref None
+
+let rec dedup (xs:list string) : ML (list string) =
+  match xs with
+  | [] -> []
+  | x :: rest -> x :: dedup (List.filter (fun y -> y <> x) rest)
+
+let rec arrow_split (n:int) (t:cty) : ML (list cty & cty) =
+  if n <= 0 then ([], t) else
+  match t with
+  | TArrow (a, _, b) -> let ts, r = arrow_split (n - 1) b in (a :: ts, r)
+  | _ -> unsupported "an external whose type has fewer arguments than its arity"
+
+let rec arrows (ts:list cty) (r:cty) : ML cty =
+  match ts with
+  | [] -> r
+  | t :: ts -> TArrow (t, E_Pure, arrows ts r)
+
+let new_fn (bs:list binder) (body:expr) : ML name =
+  let parent = Some?.v !lift_parent in
+  counter := !counter + 1;
+  let n = { parent.dl_name with id = parent.dl_name.id ^ "__clo" ^ string_of_int !counter } in
+  let flags = Private :: (parent.dl_flags |> List.filter Imported?) in
+  let l = { dl_name = n; dl_typars = []; dl_binders = bs; dl_ret = body.ty;
+            dl_eff = body.eff; dl_body = body; dl_flags = flags } in
+  lifted := DLet l :: !lifted;
+  HashTable.add !fn_tbl (string_of_name n) (bs, body.ty);
+  n
+
+(* An external has no closure of its own, so one used as a value, or given
+   fewer arguments than it takes, is wrapped in a definition calling it. *)
+let eta_extern (hd:expr) : ML (option expr) =
+  match hd.e with
+  | EQual (f, _) ->
+    (match HashTable.try_find !extern_arity (string_of_name f) with
+     | Some (n, dty) when n > 0 ->
+       (* The node's own type, which is instantiated, when it is the whole
+          arrow; otherwise the declared one, if that is monomorphic. *)
+       let rec count (t:cty) : ML int = match t with TArrow (_, _, b) -> 1 + count b | _ -> 0 in
+       let t = if count hd.ty >= n then hd.ty
+               else match dty with
+                    | Some t -> t
+                    | None -> unsupported "a polymorphic external used as a value" in
+       let doms, r = arrow_split n t in
+       let hd = { hd with ty = t } in
+       let bs = doms |> List.mapi (fun i t -> { b_name = "cherry_x" ^ string_of_int i; b_ty = t }) in
+       let body = mk (EApp (hd, bs |> List.map (fun b -> mk (EVar b.b_name) b.b_ty E_Pure)))
+                     r E_Impure in
+       Some (mk (EQual (new_fn bs body, [])) t E_Pure)
+     | _ -> None)
+  | _ -> None
+
+let rec lift (env:list (string & cty)) (e:expr) : ML expr =
+  match e.e with
+  | EQual _ when TArrow? e.ty ->
+    (match eta_extern e with Some e' -> e' | None -> e)
+  | ELet (x, t, a, b) ->
+    { e with e = ELet (x, t, lift env a, lift ((x, t) :: env) b) }
+  | EMatch (s, brs) ->
+    { e with e = EMatch (lift env s, List.map (lift_branch env s.ty) brs) }
+  | ETry (s, brs) ->
+    { e with e = ETry (lift env s, List.map (lift_branch env TUnit) brs) }
+  | EFun (bs, body) ->
+    let body = lift (List.map (fun b -> (b.b_name, b.b_ty)) bs @ env) body in
+    let caps = dedup (without (List.map (fun b -> b.b_name) bs) (fv body))
+      |> List.map (fun x ->
+           match List.assoc x env with
+           | Some t -> { b_name = x; b_ty = t }
+           | None -> unsupported ("a lambda capturing " ^ x ^ ", whose type is unknown")) in
+    let n = new_fn (caps @ bs) body in
+    if Nil? caps then mk (EQual (n, [])) e.ty E_Pure
+    else
+      let hd = mk (EQual (n, [])) (arrows (List.map (fun b -> b.b_ty) caps) e.ty) E_Pure in
+      mk (EApp (hd, List.map (fun b -> mk (EVar b.b_name) b.b_ty E_Pure) caps)) e.ty E_Impure
+  | EApp (hd, args) ->
+    let args = List.map (lift env) args in
+    let hd =
+      match hd.e with
+      | EQual (f, _) ->
+        (match HashTable.try_find !extern_arity (string_of_name f) with
+         | Some (n, _) when List.length args < n -> Some?.v (eta_extern hd)
+         | _ -> hd)
+      | _ -> lift env hd in
+    (match hd.e with
+     | EQual (f, _) ->
+       (match HashTable.try_find !fn_tbl (string_of_name f) with
+        | Some (bs, r) when List.length args > List.length bs ->
+          let first, rest = List.splitAt (List.length bs) args in
+          let inner = mk (EApp (hd, first)) r E_Impure in
+          { e with e = EApp (inner, rest) }
+        | _ -> { e with e = EApp (hd, args) })
+     | _ -> { e with e = EApp (hd, args) })
+  | _ -> map_children (lift env) e
+
+and lift_branch (env:list (string & cty)) (st:cty) (br:branch) : ML branch =
+  let p, g, b = br in
+  let env = pat_binds_opt p st @ env in
+  (p, (match g with Some g -> Some (lift env g) | None -> None), lift env b)
+
+let lift_decl (d:decl) : ML (list decl) =
+  match d with
+  | DLet l ->
+    current := string_of_name l.dl_name;
+    lift_parent := Some l;
+    lifted := [];
+    let body = lift (List.map (fun b -> (b.b_name, b.b_ty)) l.dl_binders) l.dl_body in
+    if Cons? !lifted && Cons? l.dl_typars then unsupported "a lambda in a polymorphic definition";
+    List.rev !lifted @ [DLet { l with dl_body = body }]
+  | _ -> [d]
 
 (* -------------------------------------------------------------------- *)
 (* Building blocks                                                      *)
@@ -287,6 +445,8 @@ and rc_live (o:owned) (e:expr) : ML expr =
   match e.e with
   | EVar x ->
     if is_np e.ty && not (is_owned x) then seq (rc_op RcInc x e.ty) e else e
+  (* A function's name, as a value, is a closure that is never freed. *)
+  | EQual (f, _) when TArrow? e.ty && HashTable.mem !fn_tbl (string_of_name f) -> e
   | EQual _ when is_np e.ty -> unsupported "a global of reference-counted type"
   | EConst _ | EQual _ | EAny | EAbort _ -> e
 
@@ -331,12 +491,16 @@ and rc_live (o:owned) (e:expr) : ML expr =
     let sc = if is_np s.ty then Some (x, is_owned x) else None in
     { e with e = EMatch (s, List.map (rc_branch o sc s.ty) brs); eff = E_Impure }
 
-  | EApp (hd, _) when not (EQual? hd.e) && touches hd -> unsupported "a call through a reference-counted closure"
-  | EApp (hd, args) ->
+  | EApp (hd, args) when EQual? hd.e ->
     (match bind_first args with
      | Some (x, a, args') -> rc_live o (let_ x a.ty a { e with e = EApp (hd, args') })
      | None ->
        call o (call_owns hd) args e)
+  (* A call of a closure borrows the closure and takes the arguments. *)
+  | EApp (hd, args) ->
+    (match bind_first (hd :: args) with
+     | Some (x, a, hd' :: args') -> rc_live o (let_ x a.ty a { e with e = EApp (hd', args') })
+     | _ -> call o (Some (false :: List.map (fun _ -> true) args)) (hd :: args) e)
   | ECtor (cn, args) ->
     (match bind_first args with
      | Some (x, a, args') -> rc_live o (let_ x a.ty a { e with e = ECtor (cn, args') })
@@ -387,7 +551,7 @@ and rc_live (o:owned) (e:expr) : ML expr =
     let x = fresh () in
     let_ x e.ty w (decs o (var x e.ty))
 
-  | EFun _ -> unsupported "a lambda capturing a reference-counted value"
+  | EFun _ -> failwith "Cherry: a lambda survived lifting"
   | ETuple _ -> unsupported "an anonymous tuple of reference-counted values"
   | ERaise _ | ETry _ -> unsupported "an exception"
 
@@ -474,6 +638,24 @@ let run (p:program) : ML program =
       HashTable.add xt (string_of_name x.dx_name) owns
     | _ -> ());
   ctor_tbl := ct; record_tbl := rt; extern_tbl := xt;
+  let ft = HashTable.create 50 in
+  p |> List.iter (fun d ->
+    match d with
+    | DLet l when Cons? l.dl_binders ->
+      HashTable.add ft (string_of_name l.dl_name) (l.dl_binders, l.dl_ret)
+    | _ -> ());
+  fn_tbl := ft;
+  let xa = HashTable.create 50 in
+  p |> List.iter (fun d ->
+    match d with
+    | DExternal x ->
+      let rec count (t:cty) : ML int = match t with TArrow (_, _, b) -> 1 + count b | _ -> 0 in
+      HashTable.add xa (string_of_name x.dx_name)
+        (count x.dx_ty, (if Nil? x.dx_typars then Some x.dx_ty else None))
+    | _ -> ());
+  extern_arity := xa;
+  counter := 0;
+  let p = List.collect lift_decl p in
   counter := 0;
   p |> List.map (fun d ->
     match d with
