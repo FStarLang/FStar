@@ -798,6 +798,20 @@ let rec join_slprop (pick:option bool) (linked:bool) g b (ex1 ex2:list (universe
       let remaining = leftover pick b (list_as_slprop p1s) (list_as_slprop p2s) in
       list_as_slprop (remaining::pures1@pures2@matched)
 
+(* Fault injection for testing the trust boundary (see the interface): with
+   `--ext pulse:join_fault=<mode>`, return a deliberately wrong candidate. *)
+let inject_join_fault (hyp:var) (p1 p2 joined:slprop) : T.Tac slprop =
+  match T.ext_getv "pulse:join_fault" with
+  | "" -> joined
+  | "false" -> tm_star joined (tm_pure tm_l_false)
+  | "then" -> p1
+  | "else" -> p2
+  (* [hyp] is a squash, so a unit, in either branch: this is provable in
+     both, but names a variable that is not in scope after the [if]. *)
+  | "hyp" -> tm_star joined (tm_pure (mk_eq2 u0 tm_unit (null_var hyp) unit_const))
+  | "ill_typed" -> tm_star joined (tm_pure (mk_eq2 u0 tm_int tm_true tm_true))
+  | s -> T.fail ("Unknown pulse:join_fault mode: " ^ s)
+
 let join_post_candidate (pick:option bool) (linked:bool) #g #hyp #b
     (p1:post_hint_for_env (g_with_eq g hyp b tm_true))
     (p2:post_hint_for_env (g_with_eq g hyp b tm_false))
@@ -814,6 +828,7 @@ let join_post_candidate (pick:option bool) (linked:bool) #g #hyp #b
   let p2_post = open_term_nv p2.post (ppname_default, x) in
   let p2_post = normalize_slprop g' p2_post true in
   let joined_post = join_slprop pick linked g' b [] [] p1_post p2_post in
+  let joined_post = inject_join_fault hyp p1_post p2_post joined_post in
   let joined_post = close_term joined_post x in
   Pulse.Checker.Util.debug g "pulse.join_comp" (fun _ ->
     Printf.sprintf "Inferred joint postcondition:\n%s\n"

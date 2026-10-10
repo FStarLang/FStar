@@ -50,7 +50,14 @@ val guard_branch_post (#g:env) (b:term) (then_:bool) (p:post_hint_for_env g)
    (see [guard_branch_post]) instead. With [linked], a conjunct that names a
    branch's existential witness also named by another of its conjuncts is not
    generalized out of the leftover, which would cut the two apart; it is taken
-   from the picked branch too. *)
+   from the picked branch too.
+
+   For testing that the checker rejects wrong candidates,
+   `--ext pulse:join_fault=<mode>` makes this return a wrong one:
+   [false] adds `pure False`; [then]/[else] return that branch's postcondition
+   unchanged; [hyp] adds a fact about the branch hypothesis [hyp], which is
+   provable in both branches but out of scope after the [if]; [ill_typed]
+   adds an ill-typed pure fact. *)
 val join_post_candidate (pick:option bool) (linked:bool) #g #hyp #b
     (p1:post_hint_for_env (g_with_eq g hyp b tm_true))
     (p2:post_hint_for_env (g_with_eq g hyp b tm_false))
