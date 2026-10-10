@@ -71,9 +71,13 @@ let boxed_types (p:program) : ML (list string) =
       if field_types dt.dt_body |> List.existsb (reaches tbl k 100) then [k] else []
     | _ -> [])
 
+(* The types the runtime (ulib/c/cherry.h) represents as counted cells. *)
+let runtime_types : list string = ["Prims.int"; "Prims.string"]
+
 let nonplain_types (p:program) : ML (list string) =
   let tbl = type_table p in
   let np : HashTable.t string bool = HashTable.create 50 in
+  runtime_types |> List.iter (fun k -> HashTable.add np k true);
   boxed_types p |> List.iter (fun k -> HashTable.add np k true);
   let rec settle (fuel:int) : ML unit =
     let changed = mk_ref false in
@@ -98,7 +102,8 @@ let nonplain_types (p:program) : ML (list string) =
 let np_tbl : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
 let ctor_tbl : ref (HashTable.t string (list (string & cty))) = mk_ref (HashTable.create 0)
 let record_tbl : ref (HashTable.t string (list (string & cty))) = mk_ref (HashTable.create 0)
-let extern_tbl : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
+(* For each external, which of its arguments it takes ownership of. *)
+let extern_tbl : ref (HashTable.t string (list bool)) = mk_ref (HashTable.create 0)
 let current : ref string = mk_ref ""
 let counter : ref int = mk_ref 0
 
@@ -198,17 +203,54 @@ let incs (o:owned) (e:expr) : ML expr =
 let let_ (x:string) (t:cty) (e1 e2:expr) : expr =
   mk (ELet (x, t, e1, e2)) e2.ty (join_eff e1.eff e2.eff)
 
+(* An integer literal too large to be a small integer on a 32-bit target is
+   a cell, allocated where it is evaluated. *)
+let small_int_bound : int = 1073741824
+
+let is_big_literal (c:constant) : bool =
+  match c with
+  | CInt (v, _, None) -> v >= small_int_bound || v <= - small_int_bound
+  | _ -> false
+
 (* An operand that can stay where it is: a variable, or something whose
    evaluation neither involves a counted value nor does anything. *)
 let is_atom (a:expr) : ML bool =
   match a.e with
-  | EVar _ | EConst _ | EQual _ -> true
+  | EConst c -> not (is_big_literal c)
+  | EVar _ | EQual _ -> true
   | _ -> not (touches a) && is_pure a.eff
 
-let is_extern_head (hd:expr) : ML bool =
+(* Which arguments a call takes ownership of: [None] for all of them, which
+   is what a definition of this program does.  An external borrows, except
+   where the runtime says otherwise. *)
+let call_owns (hd:expr) : ML (option (list bool)) =
   match hd.e with
-  | EQual (n, _) -> HashTable.mem !extern_tbl (string_of_name n)
-  | _ -> false
+  | EQual (n, _) -> HashTable.try_find !extern_tbl (string_of_name n)
+  | _ -> None
+
+(* The externals the runtime implements: the F* name, the C name, and which
+   arguments are taken owned. *)
+let runtime_externals : list (string & string & list bool) = [
+  "Prims.op_Plus",           "cherry_int_add", [];
+  "Prims.op_Minus",          "cherry_int_sub", [];
+  "Prims.op_Star",           "cherry_int_mul", [];
+  "Prims.op_Slash",          "cherry_int_div", [];
+  "Prims.op_Percent",        "cherry_int_mod", [];
+  "Prims.op_Tilde_Minus",    "cherry_int_neg", [];
+  "Prims.op_Minus_Minus",    "cherry_int_neg", [];
+  "Prims.op_Less",           "cherry_int_lt", [];
+  "Prims.op_Less_Equals",    "cherry_int_le", [];
+  "Prims.op_Greater",        "cherry_int_gt", [];
+  "Prims.op_Greater_Equals", "cherry_int_ge", [];
+  "Prims.strcat",            "cherry_str_append", [true];
+  "Prims.string_of_int",     "cherry_string_of_int", [];
+  "FStar.String.strlen",     "cherry_str_length", [];
+  "FStar.String.index",      "cherry_str_index", [];
+  "FStar.String.sub",        "cherry_str_sub", [];
+  "FStar.String.compare",    "cherry_str_compare", [];
+  "FStar.IO.print_string",   "cherry_print_string", [];
+]
+
 
 (* Bind the first operand that is not an atom, and hand the rest of the node
    back to [k] with that operand replaced by its name. *)
@@ -294,16 +336,16 @@ and rc_live (o:owned) (e:expr) : ML expr =
     (match bind_first args with
      | Some (x, a, args') -> rc_live o (let_ x a.ty a { e with e = EApp (hd, args') })
      | None ->
-       if is_extern_head hd then borrow o args e else consume o args e)
+       call o (call_owns hd) args e)
   | ECtor (cn, args) ->
     (match bind_first args with
      | Some (x, a, args') -> rc_live o (let_ x a.ty a { e with e = ECtor (cn, args') })
-     | None -> consume o args e)
+     | None -> call o None args e)
   | ERecord (n, fs) ->
     (match bind_first (List.map snd fs) with
      | Some (x, a, vs) ->
        rc_live o (let_ x a.ty a { e with e = ERecord (n, List.zip (List.map fst fs) vs) })
-     | None -> consume o (List.map snd fs) e)
+     | None -> call o None (List.map snd fs) e)
 
   | EOp ({ po_op = RcInc }, _) | EOp ({ po_op = RcDec }, _) -> e
   | EOp (_, _) when is_np e.ty ->
@@ -311,15 +353,15 @@ and rc_live (o:owned) (e:expr) : ML expr =
   | EOp (op, args) ->
     (match bind_first args with
      | Some (x, a, args') -> rc_live o (let_ x a.ty a { e with e = EOp (op, args') })
-     | None -> borrow o args e)
+     | None -> call o (Some []) args e)
   | EDiscrim (a, cn) ->
     (match bind_first [a] with
      | Some (x, a, [a']) -> rc_live o (let_ x a.ty a { e with e = EDiscrim (a', cn) })
-     | _ -> borrow o [a] e)
+     | _ -> call o (Some []) [a] e)
   | ECast (a, t) ->
     (match bind_first [a] with
      | Some (x, a, [a']) -> rc_live o (let_ x a.ty a { e with e = ECast (a', t) })
-     | _ -> borrow o [a] e)
+     | _ -> call o (Some []) [a] e)
   | ECoerce (a, t) ->
     let a' = rc_live o a in
     { e with e = ECoerce (a', t); eff = join_eff e.eff a'.eff }
@@ -349,31 +391,36 @@ and rc_live (o:owned) (e:expr) : ML expr =
   | ETuple _ -> unsupported "an anonymous tuple of reference-counted values"
   | ERaise _ | ETry _ -> unsupported "an exception"
 
-(* A call that takes ownership of its arguments.  The first occurrence of an
-   owned variable is moved; any other occurrence, and every borrowed one, is a
-   new reference. *)
-and consume (o:owned) (args:list expr) (node:expr) : ML expr =
-  let remaining = mk_ref (names o) in
-  let extra = args |> List.collect (fun (a:expr) ->
+(* A node whose operands are all atoms.  [owns] says which operands it
+   takes ownership of ([None]: every one).  An owned variable in an owned
+   position is moved there, unless it also appears in a borrowed one, which
+   needs it alive throughout; every other counted variable in an owned
+   position is a new reference.  The owned variables not moved are released
+   after the node. *)
+and call (o:owned) (owns:option (list bool)) (args:list expr) (node:expr)
+  : ML expr =
+  let owned_at (i:int) : ML bool =
+    match owns with
+    | None -> true
+    | Some fl -> i < List.length fl && List.nth fl i in
+  let borrowed_vars = args |> List.mapi (fun i (a:expr) ->
     match a.e with
-    | EVar y when is_np a.ty ->
-      if List.mem y !remaining
+    | EVar y when not (owned_at i) -> [y]
+    | _ -> []) |> List.flatten in
+  let remaining = mk_ref (names o) in
+  let extra = args |> List.mapi (fun i (a:expr) ->
+    match a.e with
+    | EVar y when is_np a.ty && owned_at i ->
+      if List.mem y !remaining && not (List.mem y borrowed_vars)
       then (remaining := List.filter (fun z -> z <> y) !remaining; [])
       else [(y, a.ty)]
-    | _ -> []) in
+    | _ -> []) |> List.flatten in
   let left = o |> List.filter (fun (y, _) -> List.mem y !remaining) in
-  let node = { node with eff = E_Impure } in
+  let node = if owns = Some [] then node else { node with eff = E_Impure } in
   let call = incs extra node in
   if Nil? left then call else
   let r = fresh () in
   let_ r node.ty call (decs left (var r node.ty))
-
-(* A call that only reads its arguments: the owned ones are released after
-   it. *)
-and borrow (o:owned) (_args:list expr) (node:expr) : ML expr =
-  if Nil? o then node else
-  let r = fresh () in
-  let_ r node.ty node (decs o (var r node.ty))
 
 (* One branch.  [sc] is the scrutinee when it is a counted variable, and
    whether this match owns it.  Every field the branch uses is given a
@@ -419,11 +466,21 @@ let run (p:program) : ML program =
       cs |> List.iter (fun (c, fs) -> HashTable.add ct (string_of_name c) fs)
     | DType ({ dt_name = n; dt_body = TRecord fs }) ->
       HashTable.add rt (string_of_name n) fs
-    | DExternal x -> HashTable.add xt (string_of_name x.dx_name) true
+    | DExternal x ->
+      let owns = match List.tryFind (fun (n, _, _) -> n = string_of_name x.dx_name)
+                                    runtime_externals with
+                 | Some (_, _, fl) -> fl
+                 | None -> [] in
+      HashTable.add xt (string_of_name x.dx_name) owns
     | _ -> ());
   ctor_tbl := ct; record_tbl := rt; extern_tbl := xt;
   counter := 0;
   p |> List.map (fun d ->
     match d with
     | DLet l -> DLet (run_let l)
+    | DExternal x ->
+      (match List.tryFind (fun (n, _, _) -> n = string_of_name x.dx_name)
+                          runtime_externals with
+       | Some (_, c, _) -> DExternal { x with dx_target = Some c; dx_header = Some "cherry.h" }
+       | None -> d)
     | _ -> d)

@@ -23,13 +23,19 @@
     {!run} inserts the [RcInc]/[RcDec] operations, after every other pass and
     just before {!FStarC.Custard.PrintC}.  This prototype treats every
     parameter as owned and every call to a Custard definition as consuming its
-    arguments; externals and primitive operations borrow theirs. *)
+    arguments; externals and primitive operations borrow theirs, except the
+    runtime's own operations that say otherwise ([Prims.strcat] takes its
+    first argument owned, so that it can append in place). *)
 module FStarC.Custard.Cherry
 
 open FStarC.Effect
 open FStarC.Custard.Syntax
 
 val boxed_types : program -> ML (list string)
+
+(** The types ulib/c/cherry.h implements: [Prims.int] and [Prims.string]. *)
+val runtime_types : list string
+
 val nonplain_types : program -> ML (list string)
 
 val run : program -> ML program

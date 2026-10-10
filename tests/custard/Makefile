@@ -1481,25 +1481,29 @@ $(OUTPUT_DIR)/%.dcran: $(OUTPUT_DIR)/%.dcexe
 	$(Q)$<
 	$(Q)touch $@
 
-$(OUTPUT_DIR)/%.chc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
+# A directory of its own: a unit's header is named after the module, and the
+# direct-C leg writes one of the same name for the same test.
+CHERRY_DIR = $(OUTPUT_DIR)/cherry
+
+$(CHERRY_DIR)/%.chc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CHERRY", $(basename $(notdir $@)))
-	@mkdir -p $(OUTPUT_DIR)
+	@mkdir -p $(CHERRY_DIR)
 	$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) --custard_backend Cherry \
 	  --custard_monomorphize_types true --custard_main $*.main $*.fst -o $@
 
-# The runtime header is not generated; it is the one F* installs, found the
-# way a user would find it.
+# The runtime (cherry.h and the slow paths in cherry.c) is not generated; it
+# is the one F* installs, found the way a user would find it.
 CHERRY_INC = $(shell $(FSTAR_EXE) --locate_lib)/ulib/c
 
-$(OUTPUT_DIR)/%.chexe: $(OUTPUT_DIR)/%.chc
+$(CHERRY_DIR)/%.chexe: $(CHERRY_DIR)/%.chc $$(CEXTRA_$$*)
 	$(call msg, "CC-ASAN", $(basename $(notdir $@)))
 	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
-	  -fno-sanitize-recover=undefined -I$(OUTPUT_DIR) -I$(CHERRY_INC) \
-	  -x c $< -o $@
-	$(Q)$(CXX) -std=c++17 -Wall -Werror -I$(OUTPUT_DIR) -I$(CHERRY_INC) \
+	  -fno-sanitize-recover=undefined -I$(CURDIR) -I$(CHERRY_DIR) -I$(CHERRY_INC) \
+	  -x c $< $(CHERRY_INC)/cherry.c $(CEXTRA_$*) -o $@
+	$(Q)$(CXX) -std=c++17 -Wall -Werror -I$(CURDIR) -I$(CHERRY_DIR) -I$(CHERRY_INC) \
 	  -fsyntax-only -x c++ $<
 
-$(OUTPUT_DIR)/%.chran: $(OUTPUT_DIR)/%.chexe
+$(CHERRY_DIR)/%.chran: $(CHERRY_DIR)/%.chexe
 	$(call msg, "RUN-ASAN", $(basename $(notdir $@)))
 	$(Q)ASAN_OPTIONS=detect_leaks=1 $<
 	$(Q)touch $@
@@ -3388,7 +3392,14 @@ EGREP_ArrowUnfoldLimit += "gave up unfolding an arrow type after 1000 layers"
 # The Cherry backend (cherry.md): C with reference-counted heap cells for the
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
 # is the assertion that every cell allocated is freed exactly once.
-CHERRY_TESTS += CherryList CherryTree CherryOpt
+CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString
+
+# Every direct-C test goes through Cherry too, except the ones Cherry does not
+# cover yet.  These allocate with FStar.Ref/ML-heap [alloc], which neither C
+# backend frees, and the leak checker says so:
+CHERRY_C_SKIP += CRecType CByValue CborBoundary CUnitTy CDangle
+# and this one hands a Prims.string to hand-written C expecting a [const char *]:
+CHERRY_C_SKIP += PatStr
 
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
                   $(C_TESTS) $(CXX_TESTS) $(CHERRY_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \
@@ -3532,7 +3543,9 @@ all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rejected, $(REJECT_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .roots, $(ROOT_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcran, $(C_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcxxran, $(CXX_TESTS)))
-all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .chran, $(CHERRY_TESTS)))
+all: $(addprefix $(CHERRY_DIR)/, $(addsuffix .chran, $(CHERRY_TESTS)))
+all: $(addprefix $(CHERRY_DIR)/, $(addsuffix .chran, \
+       $(filter-out $(CHERRY_C_SKIP), $(C_TESTS))))
 
 # Section 122.  Extraction to F# is always testable; compiling the result
 # needs the .NET 10 SDK, and a consumer who has not got one should see this

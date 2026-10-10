@@ -528,9 +528,15 @@ let cell_new (d:dtype) (cn:name) : ML string =
 (* The generated function performing [op] -- [inc], [dec] or [mark] -- on a
    value of the non-plain type [t].  Taking a reference to a cell is the same
    at every type, so that one is the runtime's. *)
+let is_runtime_name (n:name) : ML bool =
+  List.mem (string_of_name n) Cherry.runtime_types
+
 let rc_fn (op:string) (t:cty) : ML string =
   match t with
   | TApp (n, _) when op = "inc" && is_boxed_name n -> "cherry_inc"
+  (* The runtime's own cells (ulib/c/cherry.h) have no counted fields, so the
+     generic operations are the whole story. *)
+  | TApp (n, _) when Options.custard_cherry () && is_runtime_name n -> "cherry_" ^ op
   | TApp (n, _) -> "cherry_" ^ op ^ "_" ^ c_name n
   | _ -> failwith "Custard: reference counting at a plain type"
 
@@ -668,7 +674,9 @@ let builtin_type (n:name) : ML (option string) =
   match (if Some? n.spec then "" else String.concat "." (n.ns @ [n.id])) with
   | "Prims.unit" -> Some "custard_unit"
   | "Prims.bool" -> Some "bool"
-  | "Prims.string" -> Some "const char *"
+  | "Prims.string" ->
+    Some (if Options.custard_cherry () then "cherry_string" else "const char *")
+  | "Prims.int" when Options.custard_cherry () -> Some "cherry_int"
   | "FStar.Char.char" -> Some "uint32_t"
   | _ -> None
 
@@ -682,6 +690,24 @@ let is_string_ty (t:cty) : ML bool =
   | TApp (n, []) ->
     None? n.spec && String.concat "." (n.ns @ [n.id]) = "Prims.string"
   | _ -> false
+
+(* Under Cherry the runtime compares [Prims.string] and [Prims.int] by
+   contents; [content_eq t a b] is the C test that [a] and [b] are equal,
+   when [t] is one of the two. *)
+let is_int_ty (t:cty) : ML bool =
+  match t with
+  | TApp (n, []) ->
+    None? n.spec && String.concat "." (n.ns @ [n.id]) = "Prims.int"
+  | _ -> false
+
+let content_eq (t:cty) (a b:string) : ML (option string) =
+  if is_string_ty t then
+    Some (if Options.custard_cherry ()
+          then "cherry_str_eq(" ^ a ^ ", " ^ b ^ ")"
+          else "strcmp(" ^ a ^ ", " ^ b ^ ") == 0")
+  else if Options.custard_cherry () && is_int_ty t then
+    Some ("cherry_int_eq(" ^ a ^ ", " ^ b ^ ")")
+  else None
 
 (* C declarations are not "type, then name": the [*] of a pointer and the
    [(...)] of a function bind to the *declarator*, so the name has to be built
@@ -876,7 +902,7 @@ let rec eq_target (t:cty) : ML (option dtype) =
   | TApp (n, []) when None? (builtin_type n) ->
     (match find_type n with
      | Some d when List.existsb Extern? d.dt_flags -> None
-     | Some _ when is_nonplain_ty t ->
+     | Some _ when is_boxed_ty t ->
        reject ("an equality test on " ^ string_of_name n)
          ["Cherry does not compare reference-counted values yet."]
      | Some d ->
@@ -915,8 +941,9 @@ let eq_def (f:string) (d:dtype) : ML string =
   let hd = "static bool " ^ f ^ "(" ^ n ^ " a, " ^ n ^ " b) {\n" in
   (* Section 44.2 again: [const char *] compares by contents. *)
   let cmp (a:string) (b:string) (t:cty) : ML string =
-    if is_string_ty t then "strcmp(" ^ a ^ ", " ^ b ^ ") == 0"
-    else match eq_fn_of t with
+    match content_eq t a b with
+    | Some c -> c
+    | None -> match eq_fn_of t with
          | Some g -> g ^ "(" ^ a ^ ", " ^ b ^ ")"
          | None -> "(" ^ a ^ " == " ^ b ^ ")" in
   let all (pa:string) (pb:string) (fs : list (string & cty)) : ML string =
@@ -1036,11 +1063,20 @@ let escape (s:string) : ML string =
     | '\\' -> "\\\\"
     | c ->
       let i = BU.int_of_char c in
-      if i < 32 || i > 126
-      then "\\" ^ (if i < 8 then "00" else if i < 64 then "0" else "") ^
-           (* C string escapes are octal. *)
-           show ((i / 64) * 100 + ((i / 8) % 8) * 10 + (i % 8))
-      else BU.string_of_char c
+      (* C string escapes are octal; three digits always, so that a digit
+         after one is not read as part of it. *)
+      let oct (b:int) : ML string =
+        "\\" ^ show (b / 64) ^ show ((b / 8) % 8) ^ show (b % 8) in
+      (* An F* string is a sequence of code points, and its C spelling is
+         their UTF-8 encoding, one escape per byte. *)
+      if i < 32 || i = 127 then oct i
+      else if i < 127 then BU.string_of_char c
+      else if i < 0x800 then oct (0xC0 + i / 64) ^ oct (0x80 + i % 64)
+      else if i < 0x10000 then
+        oct (0xE0 + i / 4096) ^ oct (0x80 + (i / 64) % 64) ^ oct (0x80 + i % 64)
+      else
+        oct (0xF0 + i / 262144) ^ oct (0x80 + (i / 4096) % 64) ^
+        oct (0x80 + (i / 64) % 64) ^ oct (0x80 + i % 64)
   in
   String.concat "" (List.map esc (String.list_of_string s))
 
@@ -1205,6 +1241,22 @@ let float_special_support : string =
 let mentions_float_special (s:string) : bool =
   BU.contains s "CUSTARD_NAN" || BU.contains s "CUSTARD_INF"
 
+(* Under Cherry a string literal is a static, immortal cell
+   ([CHERRY_STRING_LIT]), one per distinct literal, defined above the
+   functions. *)
+let string_lits : ref (HashTable.t string string) = mk_ref (HashTable.create 0)
+let string_lit_defs : ref (list string) = mk_ref []
+
+let string_lit (s:string) : ML string =
+  match HashTable.try_find !string_lits s with
+  | Some n -> n
+  | None ->
+    let n = alloc_name "cherry_lit" in
+    HashTable.add !string_lits s n;
+    string_lit_defs := !string_lit_defs @
+      ["CHERRY_STRING_LIT(" ^ n ^ ", \"" ^ escape s ^ "\");\n"];
+    n
+
 let constant (c:constant) : ML string =
   match c with
   | CUnit -> unit_value
@@ -1223,6 +1275,11 @@ let constant (c:constant) : ML string =
        casts because it has to -- so a cast here would only be a second one. *)
     if snd sw = W128 then int_literal sw v b
     else "((" ^ int_type sw ^ ")" ^ int_literal sw v b ^ ")"
+  | CInt (v, _, None) when Options.custard_cherry () ->
+    if v < 1073741824 && v > -1073741824
+    then "CHERRY_INT_SMALL(" ^ show v ^ ")"
+    else "cherry_int_of_decimal(\"" ^ show v ^ "\")"
+  | CString s when Options.custard_cherry () -> "((cherry_string)&" ^ string_lit s ^ ")"
   | CInt (v, b, None) ->
     reject ("the unbounded integer literal " ^ int_lit_to_string v b)
       ["Prims.int has no C representation; use a machine integer type."]
@@ -1543,6 +1600,8 @@ let reset_program_state () : ML unit =
   void_ret := false;
   eq_queue := [];
   eq_seen := HashTable.create 20;
+  string_lits := HashTable.create 20;
+  string_lit_defs := [];
   boxed_tbl := HashTable.create 0;
   nonplain_tbl := HashTable.create 0;
   taken_names := HashTable.create 50;
@@ -1925,9 +1984,16 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
       text "Bind it to a top-level definition and use that name here."]
   (* Section 44.2.  The same comparison in expression position.  [strcmp] is
      declared by the <string.h> the header already includes. *)
-  | EOp (o, [a; b]) when (Eq? o.po_op || Neq? o.po_op) && is_string_ty a.ty ->
+  | EOp (o, [a; b]) when (Eq? o.po_op || Neq? o.po_op) && is_string_ty a.ty &&
+                         not (Options.custard_cherry ()) ->
     "(strcmp(" ^ c_expr out ind a ^ ", " ^ c_expr out ind b ^ ") " ^
     (if Eq? o.po_op then "==" else "!=") ^ " 0)"
+  (* Cherry: the runtime compares by contents. *)
+  | EOp (o, [a; b]) when (Eq? o.po_op || Neq? o.po_op) &&
+                         Some? (content_eq a.ty "" "") ->
+    let c = (match content_eq a.ty (c_expr out ind a) (c_expr out ind b) with
+             | Some c -> c | None -> "") in
+    "(" ^ (if Neq? o.po_op then "!(" ^ c ^ ")" else c) ^ ")"
   (* Section 107.  The same question at every other type C cannot compare
      with [==]: a struct, which is what a record, a tuple and every inductive
      with a payload are here. *)
@@ -2628,8 +2694,10 @@ and pat_tests (path:string) (t:cty) (p:pat)
   (* Section 44.2.  A string pattern is a test on contents, not on address:
      [pat_tests] is handed the type of the path, so it can see the difference
      without looking at the constant. *)
-  | PConst (CString v) when is_string_ty t ->
-    (["strcmp(" ^ path ^ ", " ^ constant (CString v) ^ ") == 0"], [])
+  | PConst c when Some? (content_eq t "" "") ->
+    (match content_eq t path (constant c) with
+     | Some c -> ([c], [])
+     | None -> ([], []))
   (* Section 59.3.  The path carries the type -- [t] is it, and a path is
      never a literal -- so a constant pattern is the one-literal-operand case
      of a comparison and the cast repeats what the scrutinee already says. *)
@@ -3909,7 +3977,8 @@ let cherry_helpers (p:program) : ML (list string & list string) =
     fs |> List.existsb (fun (_, t) -> is_nonplain_ty t) in
   p |> List.iter (fun d ->
     match d with
-    | DType dt when local d && is_nonplain_ty (TApp (dt.dt_name, [])) ->
+    | DType dt when local d && is_nonplain_ty (TApp (dt.dt_name, [])) &&
+                    not (is_runtime_name dt.dt_name) ->
       current := string_of_name dt.dt_name;
       let n = c_name dt.dt_name in
       (match dt.dt_body with
@@ -4123,6 +4192,9 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
           | _ -> [])
       | _ -> []) ) in
   let includes = dedup includes in
+  let includes = if Options.custard_cherry ()
+                 then List.filter (fun i -> i <> "#include \"cherry.h\"") includes
+                 else includes in
 
   let exts_named = p |> List.collect (fun d ->
     if not (local d) then [] else
@@ -4313,8 +4385,10 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   init_proto ^ (match inits with [] -> "" | _ -> "\n") ^
   cpp_close in
 
+  let lits = !string_lit_defs in
   let src_body =
   String.concat "" exts ^ (match exts with [] -> "" | _ -> "\n") ^
+  String.concat "" lits ^ (match lits with [] -> "" | _ -> "\n") ^
   String.concat "" rc_protos ^ (match rc_protos with [] -> "" | _ -> "\n") ^
   String.concat "\n" rc_defs ^ (match rc_defs with [] -> "" | _ -> "\n") ^
   String.concat "" protos ^ (match protos with [] -> "" | _ -> "\n") ^
