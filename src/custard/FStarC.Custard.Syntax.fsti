@@ -396,6 +396,13 @@ type op =
       the C printer in Cherry mode accepts them. *)
   | RcInc
   | RcDec
+  (** Cherry.  The operations on an ML reference ([Cherry.ref t]), which the
+      Cherry pass rewrites the buffer operations on one into: [RefNew v]
+      allocates a cell holding [v], [RefGet r] returns a counted copy of its
+      value, and [RefSet r v] replaces it. *)
+  | RefNew
+  | RefGet
+  | RefSet
 
 (** The machine type a primitive operation works at. *)
 type prim_ty =

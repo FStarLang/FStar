@@ -289,6 +289,34 @@ static inline void cherry_mark_fn(cherry_fn f, int mode) {
     CHERRY_CLOSURE(f)->mark(f, mode);
 }
 
+/* ------------------------------------------------------------------------
+   ML references (FStar.All.ref, FStarC.Effect.ref).  A counted cell holding
+   a spinlock and the value; the generated code defines the cell for each
+   value type and the operations on it (cherry_ref<N>_new/get/set/dec/mark).
+   While the cell is reachable from one thread only, reads and writes leave
+   the lock alone.  Otherwise -- shared, or persistent, since a global is
+   reachable from every thread -- they hold the lock while they copy the
+   value and count the copy, so that a writer cannot free the old value
+   before a reader has taken its reference to it, and the value written is
+   marked shared first. */
+typedef cherry_obj *cherry_ref;
+
+typedef struct cherry_ref_hdr { cherry_obj hdr; int32_t lock; } cherry_ref_hdr;
+
+static inline bool cherry_ref_is_local(cherry_ref r) {
+  return __atomic_load_n(&r->rc, __ATOMIC_RELAXED) > 0;
+}
+
+static inline void cherry_ref_lock(cherry_ref r) {
+  int32_t *l = &((cherry_ref_hdr *)r)->lock;
+  while (__atomic_exchange_n(l, 1, __ATOMIC_ACQUIRE))
+    while (__atomic_load_n(l, __ATOMIC_RELAXED)) {}
+}
+
+static inline void cherry_ref_unlock(cherry_ref r) {
+  __atomic_store_n(&((cherry_ref_hdr *)r)->lock, 0, __ATOMIC_RELEASE);
+}
+
 #ifdef __cplusplus
 }
 #endif

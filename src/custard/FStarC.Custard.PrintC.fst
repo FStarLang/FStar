@@ -533,8 +533,23 @@ let cell_new (d:dtype) (cn:name) : ML string =
 let is_runtime_name (n:name) : ML bool =
   List.mem (string_of_name n) Cherry.runtime_types
 
+(* ML references (cherry.h): the value types whose cell and operations the
+   unit needs, numbered; [cherry_ref_helpers] generates them. *)
+let ref_tys : ref (list cty) = mk_ref []
+let ref_prefix (t:cty) : ML string =
+  let rec find (i:int) (l:list cty) : ML (option int) =
+    match l with
+    | [] -> None
+    | u :: rest -> if u = t then Some i else find (i + 1) rest in
+  let i = match find 0 !ref_tys with
+          | Some i -> i
+          | None -> ref_tys := !ref_tys @ [t]; List.length !ref_tys - 1 in
+  "cherry_ref" ^ string_of_int i
+
 let rc_fn (op:string) (t:cty) : ML string =
   match t with
+  | TApp ({ ns = ["Cherry"]; id = "ref"; spec = None }, [v]) ->
+    if op = "inc" then "cherry_inc" else ref_prefix v ^ "_" ^ op
   | TApp (n, _) when op = "inc" && is_boxed_name n -> "cherry_inc"
   (* The runtime's own cells (ulib/c/cherry.h) have no counted fields, so the
      generic operations are the whole story. *)
@@ -922,6 +937,10 @@ and base_ty (t:cty) : ML string =
             text "The placeholders in a [@@custard_extern] string count the \
                   declaration's binders from zero, all of them, in source \
                   order." ]))
+  (* Every ML reference is the one runtime type; the cells differ, and the
+     generated operations on each know which one theirs is. *)
+  | TApp ({ ns = ["Cherry"]; id = "ref"; spec = None }, [_]) when Options.custard_cherry () ->
+    "cherry_ref"
   | TApp (n, []) ->
     (match builtin_type n with
      | Some s -> s
@@ -1720,6 +1739,7 @@ let reset_program_state () : ML unit =
   arities := HashTable.create 0;
   fn_sigs := HashTable.create 0;
   fn_globals := HashTable.create 0;
+  ref_tys := [];
   clo_queue := [];
   clo_seen := HashTable.create 0;
   arrow_ids := [];
@@ -1744,7 +1764,8 @@ let is_stmt (e:expr) : bool =
      value need a statement to be a statement. *)
   | EOp ({ po_op = BufCreate _ }, _) | EOp ({ po_op = BufWrite }, _)
   | EOp ({ po_op = BufBlit }, _) | EOp ({ po_op = BufFree }, _)
-  | EOp ({ po_op = RcInc }, _) | EOp ({ po_op = RcDec }, _) -> true
+  | EOp ({ po_op = RcInc }, _) | EOp ({ po_op = RcDec }, _)
+  | EOp ({ po_op = RefSet }, _) -> true
   | _ -> false
 
 (* Every variable that occurs anywhere in a term.  Shadowing is ignored, which
@@ -1833,7 +1854,8 @@ let rec is_pure (e:expr) : ML bool =
   | EOp ({ po_op = BufRead }, es) -> all es
   | EOp ({ po_op = BufCreate _ }, _) | EOp ({ po_op = BufWrite }, _)
   | EOp ({ po_op = BufFree }, _) | EOp ({ po_op = BufBlit }, _)
-  | EOp ({ po_op = RcInc }, _) | EOp ({ po_op = RcDec }, _) -> false
+  | EOp ({ po_op = RcInc }, _) | EOp ({ po_op = RcDec }, _)
+  | EOp ({ po_op = RefNew }, _) | EOp ({ po_op = RefGet }, _) | EOp ({ po_op = RefSet }, _) -> false
   | EOp (_, es) | ECtor (_, es) | ETuple es -> all es
   | ELet (_, _, a, b) | ESeq (a, b) -> is_pure a && is_pure b
   | EIf (a, b, c) -> is_pure a && is_pure b && is_pure c
@@ -2099,6 +2121,11 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
     "(" ^ ty e.ty ^ "){ " ^
     String.concat ", " (fs |> List.map (fun (f, v) ->
       "." ^ c_var f ^ " = " ^ c_rvalue out ind v.ty v)) ^ " }"
+  | EOp ({ po_op = RefNew }, [v]) ->
+    let v' = c_rvalue out ind v.ty v in
+    rc_fn "new" e.ty ^ "(" ^ v' ^ ")"
+  | EOp ({ po_op = RefGet }, [r]) ->
+    rc_fn "get" r.ty ^ "(" ^ c_expr out ind r ^ ")"
   | EOp ({ po_op = BufRead }, [b; i]) ->
     (match b.e with
      | EVar y when is_cell y -> lookup_var y
@@ -2604,6 +2631,12 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     ind ^ "/* " ^ before ^ " */\n" ^ ind ^ "/* " ^ after ^ " */\n"
   | EOp ({ po_op = BufCreate lt }, [init; len]) ->
     emit_alloc ind d None lt e.ty init len
+
+  | EOp ({ po_op = RefSet }, [r; v]) ->
+    let out = mk_ref "" in
+    let r' = c_expr out ind r in
+    let v' = c_rvalue out ind v.ty v in
+    !out ^ ind ^ rc_fn "set" r.ty ^ "(" ^ r' ^ ", " ^ v' ^ ");\n" ^ unit_result ind d
 
   | EOp ({ po_op = RcInc }, [a]) | EOp ({ po_op = RcDec }, [a]) ->
     let out = mk_ref "" in
@@ -3183,6 +3216,7 @@ let rec value_deps (t:cty) : ML (list string) =
   match t with
   (* Cherry: a boxed value is a pointer. *)
   | TApp (n, _) when is_boxed_name n -> []
+  | TApp ({ ns = ["Cherry"]; id = "ref" }, _) -> []
   | TApp (n, args) -> string_of_name n :: List.collect value_deps args
   | TTuple ts -> List.collect value_deps ts
   (* A pointer is a size, and a function is a pointer: an incomplete type is
@@ -4194,6 +4228,55 @@ let cherry_helpers (p:program) : ML (list string & list string) =
     | _ -> ());
   (!protos, !defs)
 
+(* The ML reference cells used while printing, and the operations on them
+   (cherry.h): the cell structs and prototypes, and the definitions.  A
+   value type that is itself a reference adds to the list as it goes. *)
+let cherry_ref_helpers () : ML (list string & list string) =
+  let protos = mk_ref [] in
+  let defs = mk_ref [] in
+  let rec go (i:int) : ML unit =
+    if i >= List.length !ref_tys then () else begin
+      let t = List.nth !ref_tys i in
+      let p = "cherry_ref" ^ string_of_int i in
+      let s = "struct " ^ p ^ "_s" in
+      let counted = is_nonplain_ty t in
+      let when_counted (c:string) : string = if counted then c else "" in
+      let sigs = [
+        "static inline cherry_ref " ^ p ^ "_new(" ^ decl_of t "v" ^ ")";
+        "static inline " ^ decl_of t (p ^ "_get(cherry_ref r)");
+        "static inline void " ^ p ^ "_set(cherry_ref r, " ^ decl_of t "v" ^ ")";
+        "static inline void " ^ p ^ "_dec(cherry_ref r)";
+        "static inline void " ^ p ^ "_mark(cherry_ref r, int m)" ] in
+      let op (o:string) (x:string) : ML string =
+        if counted then "  " ^ rc_fn o t ^ "(" ^ x ^ ");\n" else "" in
+      let cell = "  " ^ s ^ " *c = (" ^ s ^ " *)r;\n" in
+      let bodies = [
+        "  " ^ s ^ " *c = (" ^ s ^ " *)cherry_alloc(sizeof(" ^ s ^ "), 0);\n" ^
+        "  c->h.lock = 0;\n  c->v = v;\n  return (cherry_ref)c;\n";
+        cell ^
+        "  if (cherry_ref_is_local(r)) {\n" ^ op "inc" "c->v" ^ "  return c->v;\n  }\n" ^
+        "  cherry_ref_lock(r);\n  " ^ decl_of t "x" ^ " = c->v;\n" ^ op "inc" "x" ^
+        "  cherry_ref_unlock(r);\n  return x;\n";
+        cell ^
+        when_counted ("  " ^ decl_of t "old" ^ " = c->v;\n") ^
+        "  if (cherry_ref_is_local(r)) {\n  c->v = v;\n" ^ op "dec" "old" ^ "  return;\n  }\n" ^
+        (if counted then "  " ^ rc_fn "mark" t ^ "(v, CHERRY_SHARE);\n" else "") ^
+        "  cherry_ref_lock(r);\n" ^
+        when_counted ("  old = c->v;\n") ^
+        "  c->v = v;\n  cherry_ref_unlock(r);\n" ^ op "dec" "old";
+        "  if (!cherry_dec_ref(r)) return;\n" ^
+        (if counted then cell ^ op "dec" "c->v" else "") ^ "  free(r);\n";
+        "  (void)m;\n  if (!cherry_mark_ref(r, m)) return;\n" ^
+        (if counted then cell ^ "  " ^ rc_fn "mark" t ^ "(c->v, m);\n" else "") ] in
+      protos := !protos @
+        [s ^ " { cherry_ref_hdr h; " ^ decl_of t "v" ^ "; };\n" ^
+         String.concat "" (sigs |> List.map (fun g -> g ^ ";\n"))];
+      defs := !defs @ List.map2 (fun g b -> g ^ " {\n" ^ b ^ "}\n") sigs bodies;
+      go (i + 1)
+    end in
+  go 0;
+  (!protos, !defs)
+
 (* The closure helpers requested while printing: declarations (the
    environment structs, prototypes and static closures) and definitions. *)
 let cherry_closure_helpers () : ML (list string & list string) =
@@ -4669,6 +4752,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   let eq_protos, eq_defs = eq_decls () in
   let rc_protos, rc_defs = cherry_helpers p in
   let clo_protos, clo_defs = cherry_closure_helpers () in
+  let ref_protos, ref_defs = cherry_ref_helpers () in
 
   (* The header carries the unit's whole type language rather than only the
      types a public signature mentions.  A [struct] or a [typedef] has no
@@ -4698,10 +4782,12 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   String.concat "" exts ^ (match exts with [] -> "" | _ -> "\n") ^
   String.concat "" lits ^ (match lits with [] -> "" | _ -> "\n") ^
   String.concat "" rc_protos ^ (match rc_protos with [] -> "" | _ -> "\n") ^
+  String.concat "" ref_protos ^ (match ref_protos with [] -> "" | _ -> "\n") ^
   String.concat "\n" rc_defs ^ (match rc_defs with [] -> "" | _ -> "\n") ^
   String.concat "" protos ^ (match protos with [] -> "" | _ -> "\n") ^
   String.concat "" clo_protos ^ (match clo_protos with [] -> "" | _ -> "\n") ^
   String.concat "\n" clo_defs ^ (match clo_defs with [] -> "" | _ -> "\n") ^
+  String.concat "\n" ref_defs ^ (match ref_defs with [] -> "" | _ -> "\n") ^
   String.concat "" eq_protos ^ (match eq_protos with [] -> "" | _ -> "\n") ^
   String.concat "\n" eq_defs ^ (match eq_defs with [] -> "" | _ -> "\n") ^
   String.concat "\n" defs ^ "\n" ^ (match inits with [] -> "" | _ -> init_fn) ^

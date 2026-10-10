@@ -1056,16 +1056,25 @@ let exn_rule (id:string) : ML (option rule) =
   | "exit" -> Some (Rule_extern { x_name = None; x_header = None })
   | _ -> None
 
+(* Under Cherry (cherry.md) a garbage-collected reference is a counted cell,
+   which is not what a Pulse reference is, so it gets a type of its own: the
+   runtime type [Cherry.ref t].  The operations on it are the same nodes. *)
+let cherry_ref_name : name = { ns = ["Cherry"]; id = "ref"; spec = None }
+
+let ml_ref_ty (t:cty) : ML cty =
+  if Options.custard_cherry () then TApp (cherry_ref_name, [t]) else TRef t
+
 let ref_rule (id:string) : ML (option rule) =
-  let rf tys (_ : list expr) : ML cty = TRef (elt_of tys) in
+  let rf tys (_ : list expr) : ML cty = ml_ref_ty (elt_of tys) in
   let unit_ty (_ : list cty) (_ : list expr) : ML cty = TUnit in
   let elt_of_arg (_ : list cty) (args : list expr) : ML cty =
     match args with
     | { ty = TRef t } :: _ -> t
     | { ty = TBuf t } :: _ -> t
+    | { ty = TApp (n, [t]) } :: _ when string_of_name n = "Cherry.ref" -> t
     | _ -> TAny in
   match id with
-  | "ref" -> Some (Rule_type (fun tys -> TRef (elt_of tys)))
+  | "ref" -> Some (Rule_type (fun tys -> ml_ref_ty (elt_of tys)))
   | "alloc" | "mk_ref" ->
     Some (buf_prim 1 (BufCreate LHeap) E_Impure rf
             (fun args -> args @ [size_lit 1]))

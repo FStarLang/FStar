@@ -51,6 +51,7 @@ let arrow_key : string = "->"
    what it reaches is not part of the value. *)
 let rec by_value (t:cty) : ML (list string) =
   match t with
+  | TApp ({ ns = ["Cherry"]; id = "ref" }, _) -> ["Cherry.ref"]
   | TApp (n, args) -> string_of_name n :: List.collect by_value args
   | TTuple ts -> List.collect by_value ts
   | TArrow _ -> [arrow_key]
@@ -77,7 +78,13 @@ let boxed_types (p:program) : ML (list string) =
     | _ -> [])
 
 (* The types the runtime (ulib/c/cherry.h) represents as counted cells. *)
-let runtime_types : list string = ["Prims.int"; "Prims.string"]
+let runtime_types : list string = ["Prims.int"; "Prims.string"; "Cherry.ref"]
+
+(* An ML reference (Builtins.ml_ref_ty). *)
+let is_ml_ref (t:cty) : bool =
+  match t with
+  | TApp ({ ns = ["Cherry"]; id = "ref"; spec = None }, [_]) -> true
+  | _ -> false
 
 let nonplain_types (p:program) : ML (list string) =
   let tbl = type_table p in
@@ -527,6 +534,26 @@ and rc_live (o:owned) (e:expr) : ML expr =
      | None -> call o None (List.map snd fs) e)
 
   | EOp ({ po_op = RcInc }, _) | EOp ({ po_op = RcDec }, _) -> e
+
+  (* An ML reference.  Allocating one takes the value; reading one borrows
+     the reference and returns a counted copy; writing one borrows the
+     reference and takes the value, releasing the one it replaces. *)
+  | EOp ({ po_op = BufCreate _ }, [v; _]) when is_ml_ref e.ty ->
+    rc_live o { e with e = EOp ({ po_op = RefNew; po_ty = None }, [v]) }
+  | EOp ({ po_op = BufRead }, [r; _]) when is_ml_ref r.ty ->
+    rc_live o { e with e = EOp ({ po_op = RefGet; po_ty = None }, [r]) }
+  | EOp ({ po_op = BufWrite }, [r; _; v]) when is_ml_ref r.ty ->
+    rc_live o { e with e = EOp ({ po_op = RefSet; po_ty = None }, [r; v]) }
+  | EOp (op, args) when RefNew? op.po_op || RefGet? op.po_op || RefSet? op.po_op ->
+    (match bind_first args with
+     | Some (x, a, args') -> rc_live o (let_ x a.ty a { e with e = EOp (op, args') })
+     | None ->
+       let owns = (match op.po_op with
+                   | RefNew -> [true] | RefGet -> [false] | _ -> [false; true]) in
+       call o (Some owns) args { e with eff = E_Impure })
+  | EOp ({ po_op = BufCreate _ }, v :: _) | EOp ({ po_op = BufWrite }, [_; _; v])
+      when is_np v.ty ->
+    unsupported "a Pulse reference or array holding a reference-counted value"
   | EOp (_, _) when is_np e.ty ->
     unsupported "a primitive operation returning a reference-counted value"
   | EOp (op, args) ->

@@ -73,6 +73,12 @@ There are two kinds of references. Both are represented as a pointer.
 Pulse references (Pulse.Lib.Reference) are plain: they point to a heap cell containing only the contained value. Ownership, freeing, and thread safety fully rely on Pulse's permission system. Stored values are marked (see above). Reading a value increments its refcount, and after a write the old value must have its refcount decremented.
 ML references (FStar.Ref etc.) point to a heap cell containing the reference count, a spinlock, and the contained value. If the cell is single-threaded, reads and writes do not touch the spinlock: a read is one read of the rc, one read of the value, plus the inc. If the cell is multi-threaded, reads and writes must acquire the spinlock. One, the value may be too large for atomic operations. Two, we need to increment the refcounts in the value while the spinlock is held; otherwise a writer might decrement and free the value before the reader gets to increment it. Values written into a multi-threaded reference are marked.
 
+The prototype implements ML references as follows:
+- Under Cherry, `FStar.All.ref t` and `FStarC.Effect.ref t` extract to the runtime type `Cherry.ref t` rather than to `TRef t`, which stays the plain pointer of Pulse references and boxes. The operations are the usual buffer operations, which the Cherry pass rewrites into `RefNew v` (takes `v`), `RefGet r` (borrows `r`, returns an owned copy of the value) and `RefSet r v` (borrows `r`, takes `v`, releases the old value).
+- In C every ML reference is a `cherry_ref` (`cherry.h`), so the header needs nothing generated. For each value type the printer generates the cell (`struct cherry_refN_s { cherry_ref_hdr h; T v; }`) and `cherry_refN_new/get/set/dec/mark`. A cell whose count is not positive (shared, or persistent because a global reaches it) is accessed under its spinlock, and a value written into one is marked shared first.
+- A reference is a pointer, so a type that reaches itself through one is not boxed, and the C type order ignores what a reference holds.
+- Pulse references and arrays holding counted values are rejected for now.
+
 ## Functions
 
 When extracting with Cherry, all function values are reference counted closures: a heap cell with the reference count, a function pointer, the arity, and the closed over values. The regular C backend still emits function types as function pointers, since tools like EverParse rely on that.
