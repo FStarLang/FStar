@@ -1,0 +1,789 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>calc_sample state machine and layered-log audit map</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f8fa;
+      --panel: #ffffff;
+      --ink: #24292f;
+      --muted: #57606a;
+      --line: #d0d7de;
+      --blue: #0969da;
+      --green: #1a7f37;
+      --orange: #bf8700;
+      --red: #cf222e;
+      --purple: #8250df;
+      --shadow: 0 1px 2px rgba(27, 31, 36, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--bg);
+      font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    header {
+      padding: 32px 40px 24px;
+      color: #ffffff;
+      background: linear-gradient(120deg, #0550ae, #1a7f37);
+    }
+
+    header a {
+      color: #ffffff;
+      text-decoration: underline;
+    }
+
+    header p {
+      max-width: 980px;
+      margin: 8px 0 0;
+      font-size: 16px;
+    }
+
+    main {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    nav a {
+      display: inline-block;
+      padding: 6px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    section, article {
+      margin: 18px 0;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    h1, h2, h3, h4 {
+      margin: 0 0 10px;
+      line-height: 1.25;
+    }
+
+    h1 {
+      font-size: 28px;
+    }
+
+    h2 {
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--line);
+      font-size: 22px;
+    }
+
+    h3 {
+      font-size: 18px;
+    }
+
+    code {
+      padding: 0.12em 0.32em;
+      border-radius: 6px;
+      background: #f6f8fa;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.94em;
+    }
+
+    pre {
+      overflow-x: auto;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f6f8fa;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+    }
+
+    th, td {
+      vertical-align: top;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+    }
+
+    th {
+      background: #f6f8fa;
+      text-align: left;
+    }
+
+    ul, ol {
+      margin: 8px 0 0 20px;
+      padding: 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 12px;
+    }
+
+    .note {
+      color: var(--muted);
+    }
+
+    .diagram-wrap {
+      overflow-x: auto;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #ffffff;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 18px;
+      margin: 8px 0 12px;
+      color: var(--muted);
+    }
+
+    .legend span::before {
+      content: "";
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      margin-right: 6px;
+      border-radius: 50%;
+      vertical-align: -1px;
+      background: var(--blue);
+    }
+
+    .legend .wire::before { background: var(--green); }
+    .legend .success::before { background: var(--blue); }
+    .legend .error::before { background: var(--red); }
+    .legend .log::before { background: var(--purple); }
+    .legend .parse::before { background: var(--orange); }
+
+    svg text {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      pointer-events: none;
+    }
+
+    .state rect {
+      fill: #ffffff;
+      stroke: #57606a;
+      stroke-width: 1.4;
+      rx: 10;
+    }
+
+    .state text {
+      fill: var(--ink);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .state .sub {
+      fill: var(--muted);
+      font-size: 10px;
+      font-weight: 400;
+    }
+
+    .state:hover rect {
+      stroke: var(--blue);
+      stroke-width: 2.2;
+    }
+
+    .edge {
+      fill: none;
+      stroke: var(--blue);
+      stroke-width: 1.9;
+    }
+
+    .edge.wire { stroke: var(--green); }
+    .edge.parse { stroke: var(--orange); stroke-dasharray: 5 4; }
+    .edge.error { stroke: var(--red); stroke-dasharray: 4 3; }
+    .edge.log { stroke: var(--purple); stroke-dasharray: 7 4; }
+
+    .edge-label {
+      fill: var(--ink);
+      font-size: 10.5px;
+      font-weight: 600;
+    }
+
+    .edge-label.small {
+      fill: var(--muted);
+      font-size: 9.5px;
+      font-weight: 500;
+    }
+
+    .edge-hot {
+      fill: none;
+      stroke: transparent;
+      stroke-width: 14;
+    }
+
+    .chip {
+      display: inline-block;
+      padding: 2px 7px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #f6f8fa;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .transition {
+      border-left: 5px solid var(--blue);
+    }
+
+    .transition.error {
+      border-left-color: var(--red);
+    }
+
+    .transition.log {
+      border-left-color: var(--purple);
+    }
+
+    .transition.parse {
+      border-left-color: var(--orange);
+    }
+
+    .transition dl {
+      display: grid;
+      grid-template-columns: 150px 1fr;
+      gap: 6px 14px;
+      margin: 0;
+    }
+
+    .transition dt {
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .transition dd {
+      margin: 0;
+    }
+
+    .code-links {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media print {
+      body { background: #ffffff; }
+      main { max-width: none; }
+      nav { display: none; }
+      section, article {
+        box-shadow: none;
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1><code>calc_sample</code> state machine and layered-log audit map</h1>
+    <p>
+      This clickable artifact documents the verified calculator sample that introduced the raw-byte/message/state
+      proof pattern reused by the TLS client. The authoritative semantic state machine is
+      <a href="../spec/Calc.Spec.fst"><code>Calc.Spec.step</code></a>; the end-to-end proof surface is the Pulse
+      <a href="../impl/Calc.Server.fst"><code>Calc.Server.process_request</code></a> dispatcher plus the
+      <a href="../impl/Calc.Impl.Types.fst"><code>server_exactly</code></a> predicate.
+    </p>
+  </header>
+
+  <main>
+    <nav aria-label="Document sections">
+      <a href="#diagram">Diagram</a>
+      <a href="#wire">Wire format</a>
+      <a href="#state-machine">State machine</a>
+      <a href="#transition-index">Transition index</a>
+      <a href="#log-proof">Layered log theorem</a>
+      <a href="#implementation">Implementation proof surface</a>
+      <a href="#module-boundaries">Module boundaries</a>
+    </nav>
+
+    <section id="overview">
+      <h2>Audit scope</h2>
+      <p>
+        The sample verifies a stack-based calculator over fixed-size request and response frames. Every accepted
+        request consumes exactly one 5-byte request frame and produces exactly one 5-byte response frame.
+        The semantic state is a list-backed stack with maximum size <code>10</code>; implementation state is a
+        Pulse heap vector plus size cell, related to the semantic stack by <code>server_exactly</code>.
+      </p>
+      <p>
+        The key audit claim is not only that each arithmetic operation mutates the stack correctly. Each handler also
+        appends the exact input and output bytes to a monotonic ghost log, proves the new log is consistent, and exposes
+        the single-step relation used by the dispatcher.
+      </p>
+    </section>
+
+    <section id="diagram">
+      <h2>Clickable end-to-end state machine diagram</h2>
+      <div class="legend">
+        <span class="wire">wire bytes</span>
+        <span class="parse">parse/dispatch</span>
+        <span class="success">successful semantic transition</span>
+        <span class="error">error response, stack unchanged</span>
+        <span class="log">ghost log/proof relation</span>
+      </div>
+      <div class="diagram-wrap">
+        <svg width="1180" height="820" viewBox="0 0 1180 820" role="img" aria-labelledby="diagram-title diagram-desc">
+          <title id="diagram-title">calc_sample request processing state machine</title>
+          <desc id="diagram-desc">Clickable diagram from raw request bytes through parsing, dispatch, stack-state transitions, response bytes, and monotonic log consistency.</desc>
+          <defs>
+            <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L0,6 L9,3 z" fill="#0969da"></path>
+            </marker>
+            <marker id="arrow-green" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L0,6 L9,3 z" fill="#1a7f37"></path>
+            </marker>
+            <marker id="arrow-orange" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L0,6 L9,3 z" fill="#bf8700"></path>
+            </marker>
+            <marker id="arrow-red" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L0,6 L9,3 z" fill="#cf222e"></path>
+            </marker>
+            <marker id="arrow-purple" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L0,6 L9,3 z" fill="#8250df"></path>
+            </marker>
+          </defs>
+
+          <a href="#wire">
+            <g class="state" transform="translate(40 60)">
+              <rect width="210" height="70"></rect>
+              <text x="105" y="27" text-anchor="middle">5-byte request frame</text>
+              <text class="sub" x="105" y="45" text-anchor="middle">[tag:1][data:4]</text>
+              <text class="sub" x="105" y="59" text-anchor="middle">tag 0..5 accepted</text>
+            </g>
+          </a>
+
+          <a href="#parse-dispatch">
+            <g class="state" transform="translate(330 60)">
+              <rect width="210" height="70"></rect>
+              <text x="105" y="27" text-anchor="middle">parse_request</text>
+              <text class="sub" x="105" y="45" text-anchor="middle">Push/Peek/Add/Sub/Mul/Div</text>
+              <text class="sub" x="105" y="59" text-anchor="middle">dispatcher selects handler</text>
+            </g>
+          </a>
+
+          <a href="#state-empty">
+            <g class="state" transform="translate(60 250)">
+              <rect width="180" height="62"></rect>
+              <text x="90" y="26" text-anchor="middle">Empty stack</text>
+              <text class="sub" x="90" y="44" text-anchor="middle">s = []</text>
+            </g>
+          </a>
+
+          <a href="#state-one">
+            <g class="state" transform="translate(330 250)">
+              <rect width="180" height="62"></rect>
+              <text x="90" y="26" text-anchor="middle">One element</text>
+              <text class="sub" x="90" y="44" text-anchor="middle">s = [x]</text>
+            </g>
+          </a>
+
+          <a href="#state-two-plus">
+            <g class="state" transform="translate(600 250)">
+              <rect width="200" height="62"></rect>
+              <text x="100" y="26" text-anchor="middle">Two or more</text>
+              <text class="sub" x="100" y="44" text-anchor="middle">s = x :: y :: rest</text>
+            </g>
+          </a>
+
+          <a href="#state-full">
+            <g class="state" transform="translate(900 250)">
+              <rect width="190" height="62"></rect>
+              <text x="95" y="26" text-anchor="middle">Full stack</text>
+              <text class="sub" x="95" y="44" text-anchor="middle">length s >= 10</text>
+            </g>
+          </a>
+
+          <a href="#responses">
+            <g class="state" transform="translate(330 580)">
+              <rect width="230" height="75"></rect>
+              <text x="115" y="27" text-anchor="middle">5-byte response frame</text>
+              <text class="sub" x="115" y="45" text-anchor="middle">Ok = tag 0</text>
+              <text class="sub" x="115" y="59" text-anchor="middle">Result = tag 1, Error = tag 2</text>
+            </g>
+          </a>
+
+          <a href="#log-proof">
+            <g class="state" transform="translate(730 570)">
+              <rect width="300" height="92"></rect>
+              <text x="150" y="26" text-anchor="middle">calc_log monotonic update</text>
+              <text class="sub" x="150" y="44" text-anchor="middle">input_bytes += req_bytes</text>
+              <text class="sub" x="150" y="58" text-anchor="middle">output_bytes += resp_bytes</text>
+              <text class="sub" x="150" y="72" text-anchor="middle">requests/responses/state stay consistent</text>
+            </g>
+          </a>
+
+          <a href="#parse-dispatch">
+            <path class="edge-hot" d="M250,95 L330,95"></path>
+            <path class="edge parse" marker-end="url(#arrow-orange)" d="M250,95 L328,95"></path>
+            <text class="edge-label" x="267" y="84">parse tag</text>
+          </a>
+
+          <a href="#t-push">
+            <path class="edge-hot" d="M450,130 C350,180 245,225 160,250"></path>
+            <path class="edge" marker-end="url(#arrow-blue)" d="M450,130 C350,180 245,225 160,248"></path>
+            <text class="edge-label small" x="268" y="185">Push x, len < 10</text>
+          </a>
+
+          <a href="#t-push">
+            <path class="edge-hot" d="M450,130 C510,170 595,215 680,250"></path>
+            <path class="edge" marker-end="url(#arrow-blue)" d="M450,130 C510,170 595,215 680,248"></path>
+            <text class="edge-label small" x="555" y="185">Push x</text>
+          </a>
+
+          <a href="#t-push-overflow">
+            <path class="edge-hot" d="M990,250 C1075,185 1088,345 996,312"></path>
+            <path class="edge error" marker-end="url(#arrow-red)" d="M990,250 C1075,185 1088,345 996,312"></path>
+            <text class="edge-label small" x="1038" y="243">Push overflow</text>
+          </a>
+
+          <a href="#t-peek">
+            <path class="edge-hot" d="M420,312 C420,375 420,450 420,580"></path>
+            <path class="edge" marker-end="url(#arrow-blue)" d="M420,312 C420,375 420,450 420,578"></path>
+            <text class="edge-label" x="438" y="430">Peek -> Result x</text>
+          </a>
+
+          <a href="#t-underflow">
+            <path class="edge-hot" d="M150,312 C150,420 270,515 360,580"></path>
+            <path class="edge error" marker-end="url(#arrow-red)" d="M150,312 C150,420 270,515 358,578"></path>
+            <text class="edge-label small" x="180" y="450">Peek/Add/Sub/Mul/Div underflow</text>
+          </a>
+
+          <a href="#t-binary-arithmetic">
+            <path class="edge-hot" d="M700,312 C650,400 555,490 500,580"></path>
+            <path class="edge" marker-end="url(#arrow-blue)" d="M700,312 C650,400 555,490 501,578"></path>
+            <text class="edge-label" x="608" y="445">Add/Sub/Mul -> Ok</text>
+          </a>
+
+          <a href="#t-div">
+            <path class="edge-hot" d="M800,300 C875,380 705,520 520,580"></path>
+            <path class="edge" marker-end="url(#arrow-blue)" d="M800,300 C875,380 705,520 522,579"></path>
+            <text class="edge-label" x="766" y="424">Div x != 0 -> Ok</text>
+          </a>
+
+          <a href="#t-div-zero">
+            <path class="edge-hot" d="M800,282 C930,360 855,530 560,610"></path>
+            <path class="edge error" marker-end="url(#arrow-red)" d="M800,282 C930,360 855,530 562,610"></path>
+            <text class="edge-label small" x="880" y="402">Div by zero -> Error</text>
+          </a>
+
+          <a href="#responses">
+            <path class="edge-hot" d="M540,95 C650,180 625,485 520,580"></path>
+            <path class="edge wire" marker-end="url(#arrow-green)" d="M540,95 C650,180 625,485 522,579"></path>
+            <text class="edge-label small" x="618" y="330">handler writes response bytes</text>
+          </a>
+
+          <a href="#log-proof">
+            <path class="edge-hot" d="M560,618 L730,618"></path>
+            <path class="edge log" marker-end="url(#arrow-purple)" d="M560,618 L728,618"></path>
+            <text class="edge-label" x="594" y="607">server_exactly log1</text>
+          </a>
+        </svg>
+      </div>
+    </section>
+
+    <section id="wire">
+      <h2>Wire format and parse/serialize boundary</h2>
+      <div class="grid">
+        <article id="parse-dispatch" class="transition parse">
+          <h3><span class="chip">request bytes</span> <code>parse_request</code></h3>
+          <dl>
+            <dt>Frame shape</dt><dd>Exactly 5 bytes: one-byte tag followed by four big-endian data bytes.</dd>
+            <dt>Accepted tags</dt><dd><code>0 = Push data</code>, <code>1 = Peek</code>, <code>2 = Add</code>, <code>3 = Sub</code>, <code>4 = Mul</code>, <code>5 = Div</code>.</dd>
+            <dt>Rejected tags</dt><dd>Any other tag parses to <code>None</code>. The top-level dispatcher requires <code>parse_request req_bytes <> None</code>, so invalid tags are outside the accepted theorem path.</dd>
+            <dt>Implementation link</dt><dd><code>parse_tag</code> reads byte 0. <code>parse_push_value</code> reconstructs the big-endian U32 payload for <code>Push</code>.</dd>
+          </dl>
+          <p class="code-links">Spec parser: <a href="../spec/Calc.Wire.fst#L48-L61">Calc.Wire L48-L61</a>; Pulse parser: <a href="../impl/Calc.Impl.Parser.fst#L17-L52">Calc.Impl.Parser L17-L52</a>.</p>
+        </article>
+
+        <article id="responses" class="transition parse">
+          <h3><span class="chip">response bytes</span> <code>serialize_response</code></h3>
+          <dl>
+            <dt>Frame shape</dt><dd>Exactly 5 bytes with the same <code>[tag:1][data:4]</code> layout.</dd>
+            <dt>Response tags</dt><dd><code>Ok</code> serializes as tag <code>0</code> with zero data; <code>Result x</code> serializes as tag <code>1</code> with big-endian <code>x</code>; <code>Error</code> serializes as tag <code>2</code> with zero data.</dd>
+            <dt>Proof support</dt><dd>Handler-local write routines prove their concrete bytes equal <code>serialize_response</code> through serialization lemmas.</dd>
+          </dl>
+          <p class="code-links">Serializer: <a href="../spec/Calc.Wire.fst#L63-L73">Calc.Wire L63-L73</a>; serializer lemmas: <a href="../spec/Calc.Wire.fst#L75-L125">Calc.Wire L75-L125</a>; result writer: <a href="../impl/Calc.Impl.Peek.fst#L40-L77">Calc.Impl.Peek L40-L77</a>.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="state-machine">
+      <h2>Authoritative semantic state machine</h2>
+      <p>
+        <code>Calc.Spec.step</code> is total: every parsed request returns a new stack and a response. Error cases are
+        semantic transitions, not precondition failures. This makes the log closed over all accepted protocol messages,
+        including stack underflow, overflow, and divide-by-zero requests.
+      </p>
+      <pre><code>type calc_stack = list int
+let max_stack_size = 10
+
+val step : calc_stack -> request -> calc_stack & response
+val run  : calc_stack -> list request -> calc_stack & list response</code></pre>
+      <p class="code-links">Definitions: <a href="../spec/Calc.Spec.fst#L8-L13">Calc.Spec L8-L13</a>; step function: <a href="../spec/Calc.Spec.fst#L15-L53">Calc.Spec L15-L53</a>; multi-step run: <a href="../spec/Calc.Spec.fst#L55-L63">Calc.Spec L55-L63</a>.</p>
+
+      <table>
+        <tr><th>Abstract state class</th><th>Concrete shape</th><th>Why the diagram groups it this way</th></tr>
+        <tr id="state-empty"><td>Empty</td><td><code>[]</code></td><td>Peek and all binary operations return <code>Error</code> without changing the stack.</td></tr>
+        <tr id="state-one"><td>One element</td><td><code>[x]</code></td><td>Peek succeeds; binary operations still underflow.</td></tr>
+        <tr id="state-two-plus"><td>Two or more</td><td><code>x :: y :: rest</code></td><td>Add/Sub/Mul/Div can consume the top two operands; Div also checks the top operand for zero.</td></tr>
+        <tr id="state-full"><td>Full</td><td><code>L.length s >= max_stack_size</code></td><td>Push returns overflow <code>Error</code> and leaves the stack unchanged.</td></tr>
+      </table>
+    </section>
+
+    <section id="transition-index">
+      <h2>Transition details</h2>
+      <article id="t-push" class="transition">
+        <h3><span class="chip">tag 0</span> Push</h3>
+        <dl>
+          <dt>Guard</dt><dd><code>parse_request req_bytes == Some (Push x)</code>. Semantic success additionally requires <code>L.length s < 10</code>.</dd>
+          <dt>Success update</dt><dd><code>(x :: s, Ok)</code>.</dd>
+          <dt>Implementation update</dt><dd>Write <code>x</code> at concrete stack index <code>csz</code>, increment size, write <code>Ok</code> response bytes.</dd>
+          <dt>Log update</dt><dd><code>step_log_push x req_bytes resp_bytes log0</code> appends request/response bytes and records request <code>Push x</code> plus the spec response.</dd>
+        </dl>
+        <p class="code-links">Spec: <a href="../spec/Calc.Spec.fst#L17-L20">Calc.Spec L17-L20</a>; log step: <a href="../spec/Calc.Log.fst#L89-L102">Calc.Log L89-L102</a>; handler: <a href="../impl/Calc.Impl.Push.fst#L72-L123">Calc.Impl.Push L72-L123</a>.</p>
+      </article>
+
+      <article id="t-push-overflow" class="transition error">
+        <h3><span class="chip">tag 0</span> Push overflow</h3>
+        <dl>
+          <dt>Guard</dt><dd><code>L.length s >= 10</code>.</dd>
+          <dt>Update</dt><dd>Stack is unchanged and response is <code>Error</code>.</dd>
+          <dt>Implementation update</dt><dd>Size and stack vector are preserved; handler writes <code>Error</code> response bytes and updates the ghost log with the failed semantic transition.</dd>
+          <dt>Why important</dt><dd>Overflow is part of the functional protocol behavior, so it still extends the monotonic log.</dd>
+        </dl>
+        <p class="code-links">Spec: <a href="../spec/Calc.Spec.fst#L17-L20">Calc.Spec L17-L20</a>; handler error branch: <a href="../impl/Calc.Impl.Push.fst#L124-L143">Calc.Impl.Push L124-L143</a>.</p>
+      </article>
+
+      <article id="t-peek" class="transition">
+        <h3><span class="chip">tag 1</span> Peek</h3>
+        <dl>
+          <dt>Success guard</dt><dd>Stack is non-empty: <code>x :: _</code>.</dd>
+          <dt>Success update</dt><dd>Stack is unchanged and response is <code>Result x</code>.</dd>
+          <dt>Error guard</dt><dd>Stack is empty.</dd>
+          <dt>Error update</dt><dd>Stack is unchanged and response is <code>Error</code>.</dd>
+          <dt>Implementation update</dt><dd>Successful branch reads top vector element, writes a result response, and proves its bytes serialize <code>Result x</code>.</dd>
+        </dl>
+        <p class="code-links">Spec: <a href="../spec/Calc.Spec.fst#L22-L26">Calc.Spec L22-L26</a>; log step: <a href="../spec/Calc.Log.fst#L104-L117">Calc.Log L104-L117</a>; handler: <a href="../impl/Calc.Impl.Peek.fst#L80-L149">Calc.Impl.Peek L80-L149</a>.</p>
+      </article>
+
+      <article id="t-binary-arithmetic" class="transition">
+        <h3><span class="chip">tags 2,3,4</span> Add, Sub, Mul</h3>
+        <dl>
+          <dt>Success guard</dt><dd>Stack has at least two operands: <code>x :: y :: rest</code>, where <code>x</code> is the top of stack.</dd>
+          <dt>Add update</dt><dd><code>(((x + y) % 4294967296) :: rest, Ok)</code>.</dd>
+          <dt>Sub update</dt><dd><code>(((y - x) % 4294967296) :: rest, Ok)</code>.</dd>
+          <dt>Mul update</dt><dd><code>(((x * y) % 4294967296) :: rest, Ok)</code>.</dd>
+          <dt>Implementation update</dt><dd>Read top two concrete vector cells, write result back to the lower slot, decrement size, write <code>Ok</code> bytes, and update the ghost log.</dd>
+        </dl>
+        <p class="code-links">Spec: <a href="../spec/Calc.Spec.fst#L28-L44">Calc.Spec L28-L44</a>; log steps: <a href="../spec/Calc.Log.fst#L119-L162">Calc.Log L119-L162</a>; Add handler: <a href="../impl/Calc.Impl.Add.fst#L62-L137">Calc.Impl.Add L62-L137</a>; Sub handler: <a href="../impl/Calc.Impl.Sub.fst#L62-L135">Calc.Impl.Sub L62-L135</a>; Mul handler: <a href="../impl/Calc.Impl.Mul.fst#L62-L140">Calc.Impl.Mul L62-L140</a>.</p>
+      </article>
+
+      <article id="t-div" class="transition">
+        <h3><span class="chip">tag 5</span> Div success</h3>
+        <dl>
+          <dt>Guard</dt><dd>Stack has <code>x :: y :: rest</code> and the top operand <code>x <> 0</code>.</dd>
+          <dt>Update</dt><dd><code>((y / x) :: rest, Ok)</code>. Division is integer division and does not wrap.</dd>
+          <dt>Implementation update</dt><dd>Read the same two concrete operands, check top operand non-zero, write <code>U32.div y x</code> to the lower slot, decrement size, and write <code>Ok</code> bytes.</dd>
+          <dt>Log update</dt><dd><code>step_log_div req_bytes resp_bytes log0</code> records the accepted Div request and the spec response.</dd>
+        </dl>
+        <p class="code-links">Spec: <a href="../spec/Calc.Spec.fst#L46-L53">Calc.Spec L46-L53</a>; log step: <a href="../spec/Calc.Log.fst#L164-L177">Calc.Log L164-L177</a>; handler success branch: <a href="../impl/Calc.Impl.Div.fst#L90-L139">Calc.Impl.Div L90-L139</a>.</p>
+      </article>
+
+      <article id="t-div-zero" class="transition error">
+        <h3><span class="chip">tag 5</span> Div by zero</h3>
+        <dl>
+          <dt>Guard</dt><dd>Stack has two operands, but top operand <code>x = 0</code>.</dd>
+          <dt>Update</dt><dd>Stack is unchanged and response is <code>Error</code>.</dd>
+          <dt>Implementation update</dt><dd>The handler checks <code>U32.eq val2 0ul</code>, writes <code>Error</code> bytes, and logs the failed semantic transition.</dd>
+        </dl>
+        <p class="code-links">Spec: <a href="../spec/Calc.Spec.fst#L48-L51">Calc.Spec L48-L51</a>; handler zero branch: <a href="../impl/Calc.Impl.Div.fst#L97-L115">Calc.Impl.Div L97-L115</a>.</p>
+      </article>
+
+      <article id="t-underflow" class="transition error">
+        <h3><span class="chip">error</span> Underflow</h3>
+        <dl>
+          <dt>Peek guard</dt><dd><code>s = []</code>.</dd>
+          <dt>Binary guard</dt><dd>Stack has fewer than two operands for Add/Sub/Mul/Div.</dd>
+          <dt>Update</dt><dd>Stack is unchanged and response is <code>Error</code>.</dd>
+          <dt>Proof point</dt><dd>Underflow is still an accepted, logged request. The log records the request and response and proves <code>run [] requests</code> produces the unchanged state.</dd>
+        </dl>
+        <p class="code-links">Spec underflow cases: <a href="../spec/Calc.Spec.fst#L22-L53">Calc.Spec L22-L53</a>; Div underflow branch: <a href="../impl/Calc.Impl.Div.fst#L140-L158">Calc.Impl.Div L140-L158</a>.</p>
+      </article>
+    </section>
+
+    <section id="log-proof">
+      <h2>Layered log theorem shape</h2>
+      <div class="grid">
+        <article class="transition log">
+          <h3><code>calc_log</code></h3>
+          <p>
+            The ghost log is the central audit object. It stores raw input bytes, raw output bytes, parsed requests,
+            emitted responses, and the current semantic stack. The initial log has empty bytes, empty traces, and an
+            empty stack.
+          </p>
+          <p class="code-links">Type and initial log: <a href="../spec/Calc.Log.fst#L48-L65">Calc.Log L48-L65</a>.</p>
+        </article>
+
+        <article class="transition log">
+          <h3><code>log_consistent</code></h3>
+          <pre><code>log_consistent log =
+  Seq.length log.input_bytes % 5 == 0 /\
+  Seq.length log.output_bytes % 5 == 0 /\
+  all_parse log.input_bytes /\
+  let (state, resps) = run [] log.requests in
+  log.current_state == state /\
+  log.responses == resps /\
+  parse_requests log.input_bytes == log.requests /\
+  serialize_responses log.responses `Seq.equal` log.output_bytes</code></pre>
+          <p class="code-links">Definition: <a href="../spec/Calc.Log.fst#L75-L87">Calc.Log L75-L87</a>.</p>
+        </article>
+
+        <article class="transition log">
+          <h3><code>log_single_step</code> and <code>log_evolves</code></h3>
+          <p>
+            <code>log_single_step</code> is the closed one-request evolution relation: one of the six
+            <code>step_log_*</code> functions relates <code>log0</code> to <code>log1</code>. <code>log_evolves</code>
+            is the reflexive-transitive closure used as the monotonic ghost-reference preorder.
+          </p>
+          <p class="code-links">Single-step relation: <a href="../spec/Calc.Log.fst#L179-L208">Calc.Log L179-L208</a>; consistency preservation lemmas: <a href="../spec/Calc.Log.fst#L343-L624">Calc.Log L343-L624</a>.</p>
+        </article>
+
+        <article class="transition log">
+          <h3>Functional correspondence per request</h3>
+          <p>
+            Each handler proves the same shape: the new log equals the corresponding <code>step_log_*</code> result,
+            input bytes are old input plus the exact request bytes, output bytes are old output plus the exact response
+            bytes, and <code>server_exactly</code> re-folds with a log satisfying <code>log_consistent</code>.
+          </p>
+          <p class="code-links">Dispatcher postcondition: <a href="../impl/Calc.Server.fst#L83-L105">Calc.Server L83-L105</a>; handler postcondition example: <a href="../impl/Calc.Impl.Push.fst#L72-L95">Calc.Impl.Push L72-L95</a>.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="implementation">
+      <h2>Implementation proof surface</h2>
+      <div class="grid">
+        <article class="transition log">
+          <h3><code>server_exactly</code></h3>
+          <p>
+            <code>server_exactly srv log</code> owns the concrete stack vector, size vector, and monotonic ghost log.
+            The vector has length <code>10</code>, the size cell has length <code>1</code>, <code>SZ.v size</code> equals
+            the semantic stack length, concrete stack cells match <code>log.current_state</code> in reverse order, and
+            <code>log_consistent log</code> holds.
+          </p>
+          <p class="code-links">Definition: <a href="../impl/Calc.Impl.Types.fst#L17-L45">Calc.Impl.Types L17-L45</a>.</p>
+        </article>
+
+        <article class="transition log">
+          <h3><code>new_server</code></h3>
+          <p>
+            Allocation starts from empty concrete stack and size <code>0</code>, allocates the monotonic ghost reference
+            at <code>initial_log</code>, proves <code>lemma_initial_log_consistent</code>, and returns
+            <code>server_exactly srv initial_log</code>.
+          </p>
+          <p class="code-links">Implementation: <a href="../impl/Calc.Server.fst#L37-L59">Calc.Server L37-L59</a>.</p>
+        </article>
+
+        <article class="transition log">
+          <h3><code>process_request</code></h3>
+          <p>
+            The top-level Pulse theorem for a single request requires ownership of <code>server_exactly srv log0</code>,
+            one 5-byte request buffer, one 5-byte response buffer, and a parseable request. It returns ownership of
+            <code>server_exactly srv log1</code>, preserves the request buffer, owns the response bytes, and proves
+            <code>log_single_step log0 log1</code> plus exact input/output byte appends.
+          </p>
+          <p class="code-links">Dispatcher: <a href="../impl/Calc.Server.fst#L67-L160">Calc.Server L67-L160</a>.</p>
+        </article>
+
+        <article class="transition parse">
+          <h3>Verification and extraction targets</h3>
+          <p>
+            The local Makefile verifies all spec and implementation modules, checks for admits, extracts the Pulse
+            implementation modules to KaRaMeL, and compiles/runs the C test harness.
+          </p>
+          <p class="code-links">Targets: <a href="../Makefile#L61-L73">Makefile L61-L73</a>; extraction/test: <a href="../Makefile#L147-L190">Makefile L147-L190</a>.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="module-boundaries">
+      <h2>Spec review surface and module boundaries</h2>
+      <table>
+        <tr><th>Module</th><th>Audit role</th><th>References</th></tr>
+        <tr>
+          <td><code>Calc.Wire</code></td>
+          <td>Spec-only request/response types, fixed 5-byte wire format, request parsing, response serialization, and serialization lemmas.</td>
+          <td><a href="../spec/Calc.Wire.fst">source</a></td>
+        </tr>
+        <tr>
+          <td><code>Calc.Spec</code></td>
+          <td>Authoritative total semantic state machine over calculator stacks and parsed requests.</td>
+          <td><a href="../spec/Calc.Spec.fst">source</a></td>
+        </tr>
+        <tr>
+          <td><code>Calc.Log</code></td>
+          <td>Layered ghost log connecting raw bytes, parsed messages, response bytes, and semantic stack evolution.</td>
+          <td><a href="../spec/Calc.Log.fst">source</a></td>
+        </tr>
+        <tr>
+          <td><code>Calc.Wire.Lemmas</code></td>
+          <td>Proof-support module for big-endian arithmetic and concrete parser/serializer correspondence.</td>
+          <td><a href="../spec/Calc.Wire.Lemmas.fst">source</a></td>
+        </tr>
+        <tr>
+          <td><code>Calc.Impl.Types</code></td>
+          <td>Pulse representation predicate tying heap vectors and the monotonic ghost reference to <code>calc_log</code>.</td>
+          <td><a href="../impl/Calc.Impl.Types.fst">source</a></td>
+        </tr>
+        <tr>
+          <td><code>Calc.Impl.Parser</code></td>
+          <td>Pulse parsing helpers for tag and Push payload bytes, linked to <code>Calc.Wire.parse_request</code>.</td>
+          <td><a href="../impl/Calc.Impl.Parser.fst">source</a></td>
+        </tr>
+        <tr>
+          <td><code>Calc.Impl.{Push,Peek,Add,Sub,Mul,Div}</code></td>
+          <td>Operation handlers. Each owns concrete mutation, response serialization, log consistency preservation, and monotonic log update for one request family.</td>
+          <td><a href="../impl/Calc.Impl.Push.fst">Push</a>, <a href="../impl/Calc.Impl.Peek.fst">Peek</a>, <a href="../impl/Calc.Impl.Add.fst">Add</a>, <a href="../impl/Calc.Impl.Sub.fst">Sub</a>, <a href="../impl/Calc.Impl.Mul.fst">Mul</a>, <a href="../impl/Calc.Impl.Div.fst">Div</a></td>
+        </tr>
+        <tr>
+          <td><code>Calc.Server</code></td>
+          <td>Top-level constructor and request dispatcher theorem, composing all handlers into the accepted single-step relation.</td>
+          <td><a href="../impl/Calc.Server.fst">source</a></td>
+        </tr>
+      </table>
+    </section>
+  </main>
+</body>
+</html>
