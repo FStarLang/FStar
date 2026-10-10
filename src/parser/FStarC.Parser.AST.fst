@@ -960,29 +960,36 @@ instance showable_pragma  : showable pragma  = { show = string_of_pragma; }
 instance showable_imp     : showable imp     = { show = imp_to_string; }
 
 let add_decorations d decorations : ML decl =
-  let decorations = 
-    let attrs, quals = List.partition DeclAttributes? decorations in
-    let attrs =
-      match attrs, d.attrs with
-      | attrs, [] -> attrs
-      | [DeclAttributes a], attrs -> [DeclAttributes (a @ attrs)]
-      | [], attrs -> [DeclAttributes attrs]
-      | _ ->
-        raise_error d Fatal_MoreThanOneDeclaration
-          (Format.fmt2
-            "At most one attribute set is allowed on declarations\n got %s;\n and %s"
-            (String.concat ", " (List.map (function DeclAttributes a -> show a | _ -> "") attrs))
-            (String.concat ", " (List.map show d.attrs)))
-    in
-    List.map Qualifier d.quals @
-    quals @
-    attrs
-  in
-  let attributes_ = at_most_one "attribute set" d.drange (
+  let decl_attrs =
     List.choose (function DeclAttributes a -> Some a | _ -> None) decorations
-  ) in
-  let attributes_ = Option.dflt [] attributes_ in
-  let qualifiers = List.choose (function Qualifier q -> Some q | _ -> None) decorations in
+  in
+  let _ =
+    match decl_attrs, d.attrs with
+    | attrs, [] ->
+      ignore (at_most_one "attribute set" d.drange attrs)
+    | [_], _
+    | [], _ ->
+      ()
+    | _ ->
+      raise_error d Fatal_MoreThanOneDeclaration
+        (Format.fmt2
+          "At most one attribute set is allowed on declarations\n got %s;\n and %s"
+          (String.concat ", " (List.map show decl_attrs))
+          (String.concat ", " (List.map show d.attrs)))
+  in
+  let attributes_ =
+    List.collect
+      (function
+       | DeclAttributes a -> a
+       | DocAttribute a -> [a]
+       | Qualifier _ -> [])
+      decorations
+    @ d.attrs
+  in
+  let qualifiers =
+    d.quals
+    @ List.choose (function Qualifier q -> Some q | _ -> None) decorations
+  in
   { d with quals=qualifiers; attrs=attributes_ }
 
 let mk_decl d r decorations : ML decl =

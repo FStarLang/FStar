@@ -277,6 +277,16 @@ let go_normal () : ML unit =
         print1 "SMT fvars: %s\n" (show <| tcr.smt_encoding.me_fvbs)
     )
 
+    (* --export_docs: read a checked file and emit its JSON documentation index *)
+    | Success when Some? (Options.export_docs ()) ->
+      let path = Some?.v <| Options.export_docs () in
+      (* As for --read_checked_file: initialize the environment so that
+         the printers used on the loaded module behave as they do during
+         a normal run. *)
+      let _env = Universal.init_env (Parser.Dep.empty_deps filenames) in
+      FStarC.Docs.export_docs path;
+      report_errors []
+
     (* --read_krml_file: read and print a krml file *)
     | Success when Some? (Options.read_krml_file ()) -> (
       let path = Some?.v <| Options.read_krml_file () in
