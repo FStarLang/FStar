@@ -119,6 +119,20 @@ let with_policy pol (f : unit -> Tac 'a) : Tac 'a =
     set_guard_policy old_pol;
     r
 
+(** Run [f], attaching [msg] to any verification condition it generates, so that
+if one of them cannot be proven the user is told what it was for.
+
+This is meant to replace the pattern of eagerly discharging a VC (with
+[with_policy ForceSMT]) purely in order to report a better message on failure:
+that pattern makes the metaprogram speculate on the success of the SMT solver,
+and forces a separate solver query per obligation. *)
+let with_error_message (msg : string) (f : unit -> Tac 'a) : Tac 'a =
+    let old = get_guard_label () in
+    set_guard_label (if old = "" then msg else old ^ "; " ^ msg);
+    let r = f () in
+    set_guard_label old;
+    r
+
 (** [exact e] will solve a goal [Gamma |- w : t] if [e] has type exactly
 [t] in [Gamma]. *)
 let exact (t : term) : Tac unit =

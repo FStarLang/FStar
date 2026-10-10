@@ -155,6 +155,8 @@ let ops = [
   mk_tac_step_1 0 "change" change change;
   mk_tac_step_1 0 "get_guard_policy" get_guard_policy get_guard_policy;
   mk_tac_step_1 0 "set_guard_policy" set_guard_policy set_guard_policy;
+  mk_tac_step_1 0 "get_guard_label" get_guard_label get_guard_label;
+  mk_tac_step_1 0 "set_guard_label" set_guard_label set_guard_label;
   mk_tac_step_1 0 "lax_on" lax_on lax_on;
 
   mk_tac_step_2 1 "lget"

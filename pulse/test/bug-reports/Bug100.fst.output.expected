@@ -24,9 +24,18 @@
       i: Prims.int
   - See also Prims.fst(477,18-477,24)
 
+* Info at Bug100.fst(25,2-25,9):
+  - Admitting continuation.
+  - Current context:
+      pts_to int a1 s1
+  - In typing environment:
+      s1#294 : Seq.Base.seq nat
+      a1#290 : array int
+
+      goto _return#341 requires emp
+
 * Info at Bug100.fst(23,11-23,27):
   - Expected failure:
-  - Ill-typed term
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_True == (i >= 0 == true)
@@ -34,5 +43,5 @@
       a1: Bug100.array Prims.int
       s1: FStar.Seq.Base.seq Prims.nat
       i: Prims.int
-  - Also see: Prims.fst(188,27-188,38)
+  - See also Prims.fst(188,27-188,38)
 

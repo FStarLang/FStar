@@ -145,7 +145,31 @@ let errors_smt_detail env
                                   else empty)]
                        in
                        e, msg, Env.get_range env, ctx
-                     else e, msg, r, ctx
+                     else
+                       (* Same file. The label's range names the subterm that
+                          failed, which is the right place to point; but that
+                          subterm may belong to some other definition, in which
+                          case it does not say which part of the program under
+                          check is at fault. [Env.get_range env] does. Record it
+                          as the secondary location, exactly as the cross-file
+                          case above does, unless the label already carries one
+                          of its own.
+
+                          A secondary location on the same line as the error
+                          itself shows the user nothing they are not already
+                          looking at, so suppress those: they are usually just
+                          the enclosing expression of the subterm that failed. *)
+                       let env_r = Env.get_range env in
+                       let er = Range.use_range env_r in
+                       let same_line =
+                         Range.line_of_pos (Range.start_of_use_range env_r)
+                         = Range.line_of_pos (Range.start_of_use_range r)
+                       in
+                       if Range.def_range r = Range.use_range r
+                       && er <> Range.use_range r
+                       && not same_line
+                       then e, msg, Range.set_def_range r er, ctx
+                       else e, msg, r, ctx
             in
             e, msg, r, ctx)
     in

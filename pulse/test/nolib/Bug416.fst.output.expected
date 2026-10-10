@@ -1,10 +1,18 @@
+* Info at Bug416.fst(16,2-16,10):
+  - Admitting continuation.
+  - Current context:
+      foo 1
+  - In typing environment:
+      uu___0#105 : squash (ref 1)
+
+
 * Info at Bug416.fst(14,19-14,22):
   - Expected failure:
-  - Ill-typed term
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: Bug416.ref 2
   - In context:
+      Bug416.ref 1
       Bug416.ref 1
       __: Prims.unit
   - See also Bug416.fst(8,23-8,28)

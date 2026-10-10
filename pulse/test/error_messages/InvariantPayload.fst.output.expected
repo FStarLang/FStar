@@ -1,8 +1,8 @@
-* Info at InvariantPayload.fst(13,2-13,16):
+* Info at InvariantPayload.fst(6,47-6,73):
   - Expected failure:
   - Failed to prove pure property: ‘0 > 0’
-  - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
   - In context: r: Pulse.Lib.Reference.ref Prims.int
+  - See also InvariantPayload.fst(10,11-10,21)
 

@@ -626,13 +626,23 @@ let check_prop_validity (g:env) (p:term)
   : T.Tac (Pulse.Typing.prop_validity g p)
   = let _, f = elab_env_with_term_range g p in
     RU.record_stats "Pulse.check_prop_validity" fun _ -> 
-    let t_opt, issues = rtb_check_prop_validity g true f p in
+    let failed_to_prove =
+      let open Pulse.PP in
+      prefix 2 1 (text "Failed to prove pure property:") (fquotes (pp p))
+    in
+    (* [sync:false]: obey the ambient guard policy rather than forcing the query
+       here. Under the default [SMT] policy the obligation is deferred and ends
+       up batched with the rest of the definition's, so the context is encoded
+       once instead of once per pure proof obligation. As a result the failure
+       is reported by the eventual discharge rather than by the [None] branch
+       below, so the explanation has to travel with the obligation. *)
+    let t_opt, issues =
+      T.with_error_message (Pulse.PP.render failed_to_prove)
+                           (fun _ -> rtb_check_prop_validity g false f p)
+    in
     match t_opt with
     | None -> 
-      let open Pulse.PP in
-      fail_doc_with_subissues g (Some <| RU.range_of_term p) issues [
-        prefix 2 1 (text "Failed to prove pure property:") (fquotes (pp p));
-      ]
+      fail_doc_with_subissues g (Some <| RU.range_of_term p) issues [failed_to_prove]
     | Some tok -> tok
 
 let fail_expected_tot_found_ghost (g:env) (t:term) =

@@ -1,7 +1,17 @@
+* Info at Bug266.fst(11,2-11,9):
+  - Admitting continuation.
+  - Current context:
+      emp
+  - In typing environment:
+      __#83 : squash l_False
+      _x3#82 : erased unit
+      uu___0#53 : unit
+
+      goto _return#57 requires emp
+
 * Info at Bug266.fst(10,2-10,14):
   - Expected failure:
   - Failed to prove pure property: ‘l_False’
-  - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
   - In context: uu___0: Prims.unit
