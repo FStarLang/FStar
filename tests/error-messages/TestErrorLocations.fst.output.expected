@@ -34,7 +34,7 @@
   - The SMT solver could not prove the query.
   - Failed to prove: x >= 0
   - In context: x: Prims.int
-  - See also Prims.fst(477,18-477,24)
+  - See also Prims.fst(489,18-489,24)
 
 * Info at TestErrorLocations.fst(48,14-48,19):
   - Expected failure:
@@ -69,7 +69,7 @@
   - The SMT solver could not prove the query.
   - Failed to prove: x >= 0
   - In context: x: Prims.int
-  - See also Prims.fst(477,18-477,24)
+  - See also Prims.fst(489,18-489,24)
 
 * Info at TestErrorLocations.fst(70,25-70,34):
   - Expected failure:

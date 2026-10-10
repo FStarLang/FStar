@@ -58,7 +58,7 @@
         Test.FunctionalExtensionality.f1 ==
       _
       uu___: Prims.int
-  - See also Prims.fst(477,18-477,24)
+  - See also Prims.fst(489,18-489,24)
 
 * Info at Test.FunctionalExtensionality.fst(142,57-142,58):
   - Expected failure:

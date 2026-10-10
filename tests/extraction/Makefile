@@ -35,7 +35,44 @@ EXTRACT += InstantiatedSpecArgs.fst
 # to agree, so extract, compile and run.
 RUN += SpecFields.fst
 
+# Only the binder a [requires] desugars into is dropped; a user-written
+# implicit [squash] binder is an ordinary argument.  Getting that wrong erased
+# effectful calls (issue #4650) or dropped an argument the callee still
+# expected, so the output is checked against SpecBinderErasure.out.expected.
+RUN += SpecBinderErasure.fst
+
+# The same question for *effects*: dropping a binder must not turn an
+# effectful definition into a value whose effect runs at module
+# initialization, or into a pure one whose calls are dropped as dead code.
+# The expected output is ordered, so either shows up as a diff.
+RUN += SpecBinderEffects.fst
+
 include $(FSTAR_ROOT)/mk/test.mk
+
+# ...and again through the *legacy* OCaml backend.  [RUN] above goes through
+# Custard (mk/test.mk's $(OUTPUT_DIR)/%.ml rule), but the spec-binder dropping
+# these tests are about lives in FStarC.Extraction.ML.Term, which Custard does
+# not use, so the Custard leg alone would not have caught issue #4650.  Both
+# legs must print the same thing, so they share the one .expected file.
+OCAML_RUN += SpecBinderErasure
+OCAML_RUN += SpecBinderEffects
+
+all: $(OUTPUT_DIR)/SpecBinderErasure.out.diff
+all: $(OUTPUT_DIR)/SpecBinderEffects.out.diff
+all: $(patsubst %,$(OUTPUT_DIR)/%.ocaml.diff,$(OCAML_RUN))
+
+$(OUTPUT_DIR)/%.ocaml.diff: $(OUTPUT_DIR)/%.ocaml.out %.out.expected
+	$(call msg, "DIFF", $<)
+	$(Q)bash $(FSTAR_ROOT)/mk/diff.sh $^
+	$(Q)touch $@
+
+$(OUTPUT_DIR)/%.ocaml.out: $(CACHE_DIR)/%.fst.checked
+	$(call msg, "EXTRACT (OCaml)", $*)
+	$(Q)$(FSTAR) --codegen OCaml --extract_module $* $< --odir $(OUTPUT_DIR)/ocaml
+	$(call msg, "OCAMLOPT", $*)
+	$(Q)$(FSTAR_EXE) --ocamlopt $(OUTPUT_DIR)/ocaml/$*.ml -o $(OUTPUT_DIR)/$*.ocaml.exe
+	$(call msg, "RUN", $*)
+	$(Q)$(OUTPUT_DIR)/$*.ocaml.exe > $@
 
 all: $(OUTPUT_DIR)/FloatLiteralExtraction.test
 all: $(OUTPUT_DIR)/FloatLiteralInjection.rejected

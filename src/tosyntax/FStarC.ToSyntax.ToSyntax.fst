@@ -1340,12 +1340,20 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
           (* A precondition on the codomain becomes a trailing implicit
              [squash] binder.  It goes last so that it may mention the
              explicit binders, and so that it is in scope as a hypothesis
-             while the codomain's own well-formedness is checked. *)
+             while the codomain's own well-formedness is checked.
+
+             It is tagged with [Prims.spec_binder]: the binder carries no
+             computational content and extraction drops it, together with the
+             argument that matches it, so that a [requires] clause does not
+             change the signature of the extracted function.  The tag is what
+             tells such a binder apart from a user-written implicit binder of
+             type [squash p], which is an ordinary argument. *)
           let bs =
             if U.is_t_true pre then bs
             else
               let x = S.new_bv (Some pre.pos) (U.mk_squash pre) in
-              S.mk_binder_with_attrs x (Some S.imp_tag) None [] :: bs
+              let attr = S.fv_to_tm (S.lid_as_fv C.spec_binder_attr None) in
+              S.mk_binder_with_attrs x (Some S.imp_tag) None [attr] :: bs
           in
           setpos <| U.arrow (List.rev bs) cod, aqs
 
@@ -1659,7 +1667,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
                caller's obligation, exactly as in a [val]: it must become a
                trailing implicit binder of the function, not an assertion in
                its body.  Add the binder here; the ascription below then
-               discharges its own (now redundant) assertion from it. *)
+               discharges its own (now redundant) assertion from it.
+
+               As in the [Product] case of [desugar_term], the binder is tagged
+               with [Prims.spec_binder], which is what tells extraction that it
+               carries no computational content and must be dropped. *)
             let args, result_t =
               match result_t with
               | Some (t, tacopt) when Cons? args && is_comp_type env t ->
@@ -1667,7 +1679,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
                  | Some (p, t') ->
                    let r = p.range in
                    let sq = mkApp (mk_term (Var C.squash_lid) r Expr) [(p, Nothing)] r in
-                   args @ [mk_pattern (PatAscribed (mk_pattern (PatWild (Some Implicit, [])) r,
+                   let attr = mk_term (Var C.spec_binder_attr) r Expr in
+                   args @ [mk_pattern (PatAscribed (mk_pattern (PatWild (Some Implicit, [attr])) r,
                                                     (sq, None))) r],
                    (* the precondition is the binder's now, so drop it from the
                       ascription: re-asserting it would only obscure the type *)

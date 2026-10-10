@@ -90,6 +90,15 @@ let filter_pattern_imp xs : ML _ =
   then xs
   else List.filter (fun (_, is_implicit) -> not is_implicit) xs
 
+(* [Prims.spec_binder] marks the binder a [requires] clause desugars into, so
+   that extraction can tell it from a binder the user wrote (issue #4650).  It
+   is an internal marker on an internal binder, and printing it only puts
+   [#[@@@ spec_binder]_: squash p] in front of every arrow with a precondition
+   that reaches an error message.  Hide it; [--ugly] still shows it, which is
+   where one would go looking. *)
+let filter_binder_attrs (attrs : list S.term) : ML (list S.term) =
+  attrs |> List.filter (fun a -> not (U.is_fvar C.spec_binder_attr a))
+
 let label s t =
   if s = "" then t
   else A.mk_term (A.Labeled (t,s,true)) t.range A.Un
@@ -910,7 +919,7 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
             let q = resugar_bqual env b.binder_qual in
             mk_pat(A.PatVar (bv_as_unique_ident b.binder_bv,
                              q,
-                             b.binder_attrs |> List.map (resugar_term' env)))) in
+                             b.binder_attrs |> filter_binder_attrs |> List.map (resugar_term' env)))) in
           (mk_pat (A.PatApp (pat, args)), resugar_term' env term), (universe_to_string univs)
         else
           (pat, resugar_term' env term), (universe_to_string univs))
@@ -1262,7 +1271,7 @@ and resugar_comp_with_pre (env: DsEnv.env) (pre: option S.term) (c:S.comp) : ML 
 and resugar_binder' env (b:S.binder) r : ML A.binder =
   let imp = resugar_bqual env b.binder_qual in
   let e = resugar_term' env b.binder_bv.sort in
-  let attrs = List.map (resugar_term' env) b.binder_attrs in
+  let attrs = List.map (resugar_term' env) (filter_binder_attrs b.binder_attrs) in
   let b' =
   match (e.tm) with
   | A.Wild ->
@@ -1471,7 +1480,7 @@ let resugar_typ env datacon_ses se : ML (sigelts & A.tycon) =
               let bs = filter_imp_bs bs in
               bs |> List.map (fun b ->
                 let q = resugar_bqual env b.binder_qual in
-                (bv_as_unique_ident b.binder_bv, q, b.binder_attrs |> List.map (resugar_term' env), resugar_term' env b.binder_bv.sort)
+                (bv_as_unique_ident b.binder_bv, q, b.binder_attrs |> filter_binder_attrs |> List.map (resugar_term' env), resugar_term' env b.binder_bv.sort)
               )
             in
             A.TyconRecord (ident_of_lid tylid, bs, None, map (resugar_term' env) se.sigattrs, fields)
