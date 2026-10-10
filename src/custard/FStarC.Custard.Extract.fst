@@ -1613,7 +1613,7 @@ let compile_time_steps : list TcEnv.step = [
    route, and a module realized outside F* is realized there too. *)
 let is_c_backend () : ML bool =
   let b = Options.custard_backend () in
-  b = "C" || b = "KrmlC" || b = "KrmlRust"
+  b = "C" || b = "Cherry" || b = "KrmlC" || b = "KrmlRust"
 
 (* Section 135.  Whether a function value on the heap keeps every binder its
    type has, erased ones as [unit].  OCaml and F\* closures are polymorphic: a
@@ -6563,7 +6563,7 @@ let root_is_erased (st:state) (l:Ident.lident) : ML bool =
 let noextract_to_this_backend (se:S.sigelt) : ML bool =
   let b = Options.custard_backend () in
   let names = "Custard" :: b ::
-              (if b = "KrmlC" || b = "KrmlRust" || b = "C"
+              (if b = "KrmlC" || b = "KrmlRust" || b = "C" || b = "Cherry"
                then ["krml"; "Krml"] else []) in
   se.sigattrs |> List.existsb (fun attr ->
     let hd, args = U.head_and_args_full attr in

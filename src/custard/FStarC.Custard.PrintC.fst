@@ -54,6 +54,7 @@ module HashTable = FStarC.HashTable
 module E      = FStarC.Errors
 module String = FStarC.String
 module Options = FStarC.Options
+module Cherry = FStarC.Custard.Cherry
 module Simplify = FStarC.Custard.Simplify
 
 (* -------------------------------------------------------------------- *)
@@ -496,6 +497,64 @@ let is_enum (d:dtype) : ML bool =
   | _ -> false
 
 (* -------------------------------------------------------------------- *)
+(* Cherry (cherry.md)                                                   *)
+(* -------------------------------------------------------------------- *)
+
+(* Under [--custard_backend Cherry] a *boxed* type -- one that contains
+   itself by value -- is a pointer to a reference-counted cell, and a
+   *non-plain* type is one whose values own references.  Both sets come from
+   {!FStarC.Custard.Cherry} and are empty for every other backend. *)
+let boxed_tbl : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
+let nonplain_tbl : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
+
+let is_boxed_name (n:name) : ML bool = HashTable.mem !boxed_tbl (string_of_name n)
+let is_boxed (d:dtype) : ML bool = is_boxed_name d.dt_name
+let is_boxed_ty (t:cty) : ML bool =
+  match t with TApp (n, _) -> is_boxed_name n | _ -> false
+let is_nonplain_ty (t:cty) : ML bool =
+  match t with
+  | TApp (n, _) -> HashTable.mem !nonplain_tbl (string_of_name n)
+  | _ -> false
+
+(* The cell of constructor [cn] of the boxed type [d], and field [f] of it
+   read off the pointer [v]. *)
+let cell_struct (d:dtype) (cn:name) : ML string =
+  "struct " ^ c_name d.dt_name ^ "_" ^ arm_name cn ^ "_s"
+let cell_field (v:string) (d:dtype) (cn:name) (f:string) : ML string =
+  "((" ^ cell_struct d cn ^ " *)" ^ v ^ ")->" ^ c_var f
+let cell_new (d:dtype) (cn:name) : ML string =
+  "cherry_new_" ^ c_name d.dt_name ^ "_" ^ arm_name cn
+
+(* The generated function performing [op] -- [inc], [dec] or [mark] -- on a
+   value of the non-plain type [t].  Taking a reference to a cell is the same
+   at every type, so that one is the runtime's. *)
+let rc_fn (op:string) (t:cty) : ML string =
+  match t with
+  | TApp (n, _) when op = "inc" && is_boxed_name n -> "cherry_inc"
+  | TApp (n, _) -> "cherry_" ^ op ^ "_" ^ c_name n
+  | _ -> failwith "Custard: reference counting at a plain type"
+
+(* The typed variables pattern [p] binds against a scrutinee of type [t]. *)
+let rec pat_var_tys (p:pat) (t:cty) : ML (list (string & cty)) =
+  match p with
+  | PVar x -> [(x, t)]
+  | PCtor (cn, ps) ->
+    (match find_ctor cn with
+     | Some (_, fs) ->
+       List.zip (List.map snd fs) ps
+       |> List.collect (fun (ft, q) -> pat_var_tys q ft)
+     | None -> [])
+  | PRecord (tn, fps) ->
+    (match find_type tn with
+     | Some ({ dt_body = TRecord fs }) ->
+       fps |> List.collect (fun (f, q) ->
+         match List.tryFind (fun (g, _) -> g = f) fs with
+         | Some (_, ft) -> pat_var_tys q ft
+         | None -> [])
+     | _ -> [])
+  | _ -> []
+
+(* -------------------------------------------------------------------- *)
 (* Types                                                                *)
 (* -------------------------------------------------------------------- *)
 
@@ -817,6 +876,9 @@ let rec eq_target (t:cty) : ML (option dtype) =
   | TApp (n, []) when None? (builtin_type n) ->
     (match find_type n with
      | Some d when List.existsb Extern? d.dt_flags -> None
+     | Some _ when is_nonplain_ty t ->
+       reject ("an equality test on " ^ string_of_name n)
+         ["Cherry does not compare reference-counted values yet."]
      | Some d ->
        (match d.dt_body with
         | TAbbrev u -> eq_target u
@@ -1481,6 +1543,8 @@ let reset_program_state () : ML unit =
   void_ret := false;
   eq_queue := [];
   eq_seen := HashTable.create 20;
+  boxed_tbl := HashTable.create 0;
+  nonplain_tbl := HashTable.create 0;
   taken_names := HashTable.create 50;
   scope := [];
   declared := HashTable.create 0;
@@ -1494,7 +1558,8 @@ let is_stmt (e:expr) : bool =
   (* An allocation needs an initializing loop, and the three that return no
      value need a statement to be a statement. *)
   | EOp ({ po_op = BufCreate _ }, _) | EOp ({ po_op = BufWrite }, _)
-  | EOp ({ po_op = BufBlit }, _) | EOp ({ po_op = BufFree }, _) -> true
+  | EOp ({ po_op = BufBlit }, _) | EOp ({ po_op = BufFree }, _)
+  | EOp ({ po_op = RcInc }, _) | EOp ({ po_op = RcDec }, _) -> true
   | _ -> false
 
 (* Every variable that occurs anywhere in a term.  Shadowing is ignored, which
@@ -1557,7 +1622,9 @@ and mutates_branch (x:string) (br:branch) : ML bool =
 let rec is_stable (e:expr) : ML bool =
   match e.e with
   | EVar x -> not (is_cell x)
-  | EProj (a, _, _) -> is_stable a
+  (* Cherry: a field of a counted value is read out, because the value it is
+     read from may be released before the field is used. *)
+  | EProj (a, _, _) -> is_stable a && not (is_nonplain_ty a.ty)
   | _ -> false
 
 (* Section 70.2.  An expression that names an object, so that a reference can
@@ -1580,7 +1647,8 @@ let rec is_pure (e:expr) : ML bool =
   | EApp _ | EFun _ | EWhile _ | EAbort _ | ERaise _ | ETry _ -> false
   | EOp ({ po_op = BufRead }, es) -> all es
   | EOp ({ po_op = BufCreate _ }, _) | EOp ({ po_op = BufWrite }, _)
-  | EOp ({ po_op = BufFree }, _) | EOp ({ po_op = BufBlit }, _) -> false
+  | EOp ({ po_op = BufFree }, _) | EOp ({ po_op = BufBlit }, _)
+  | EOp ({ po_op = RcInc }, _) | EOp ({ po_op = RcDec }, _) -> false
   | EOp (_, es) | ECtor (_, es) | ETuple es -> all es
   | ELet (_, _, a, b) | ESeq (a, b) -> is_pure a && is_pure b
   | EIf (a, b, c) -> is_pure a && is_pure b && is_pure c
@@ -2002,6 +2070,12 @@ and proj (v:string) (t:cty) (f:string) : ML string =
   match t with
   | TApp (n, _) ->
     (match find_type n with
+     | Some d when is_boxed d && TVariant? d.dt_body ->
+       let cs = (match d.dt_body with TVariant cs -> cs | _ -> []) in
+       (match cs |> List.tryFind (fun (_, fs) ->
+                      fs |> List.existsb (fun (g, _) -> g = f)) with
+        | Some (cn, _) -> cell_field v d cn f
+        | None -> reject ("the field " ^ f) ["No constructor declares it."])
      | Some d when single_ctor d -> v ^ "." ^ c_var f
      | Some ({ dt_body = TRecord _ }) -> v ^ "." ^ c_var f
      | Some d ->
@@ -2020,7 +2094,8 @@ and proj (v:string) (t:cty) (f:string) : ML string =
   | _ -> reject ("the field " ^ f) ["Its owner is not a declared type."]
 
 and tag_of (v:string) (d:dtype) : ML string =
-  if is_enum d then v else v ^ ".tag"
+  if is_boxed d then "cherry_tag(" ^ v ^ ")"
+  else if is_enum d then v else v ^ ".tag"
 
 (* A constructor application.  Three shapes, and each is the natural C for the
    layout its type got: an enum constant, a struct literal, a tagged union
@@ -2044,7 +2119,10 @@ and ctor_lit (out:ref string) (ind:string) (t:cty) (cn:name) (args:list expr) : 
   | Some (d, fields) ->
     let vals = args |> List.map (fun a -> c_rvalue out ind a.ty a) in
     let named = zip_fields fields vals in
-    if is_enum d then c_tag cn
+    if is_boxed d then
+      (if Nil? fields then "CHERRY_SCALAR(" ^ c_tag cn ^ ")"
+       else cell_new d cn ^ "(" ^ String.concat ", " vals ^ ")")
+    else if is_enum d then c_tag cn
     else if single_ctor d then
       "(" ^ c_name d.dt_name ^ "){ " ^
       String.concat ", " (named |> List.map (fun (f, v) -> "." ^ c_var f ^ " = " ^ v)) ^ " }"
@@ -2302,6 +2380,12 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     ind ^ "/* " ^ before ^ " */\n" ^ ind ^ "/* " ^ after ^ " */\n"
   | EOp ({ po_op = BufCreate lt }, [init; len]) ->
     emit_alloc ind d None lt e.ty init len
+
+  | EOp ({ po_op = RcInc }, [a]) | EOp ({ po_op = RcDec }, [a]) ->
+    let out = mk_ref "" in
+    let v = c_expr out ind a in
+    let op = (match e.e with EOp ({ po_op = RcInc }, _) -> "inc" | _ -> "dec") in
+    !out ^ ind ^ rc_fn op a.ty ^ "(" ^ v ^ ");\n" ^ unit_result ind d
 
   | EOp ({ po_op = BufWrite }, [b; i; v]) ->
     let out = mk_ref "" in
@@ -2580,7 +2664,8 @@ and pat_tests (path:string) (t:cty) (p:pat)
        let tests = if single_ctor d then []
                    else [tag_of path d ^ " == " ^ c_tag cn] in
        let sub (f:string) : ML string =
-         if single_ctor d then path ^ "." ^ c_var f
+         if is_boxed d then cell_field path d cn f
+         else if single_ctor d then path ^ "." ^ c_var f
          else path ^ arm_sel cn fields f in
        let rec go (fs : list (string & cty)) (ps : list pat)
                 : ML (list string & list (string & string)) =
@@ -2659,10 +2744,23 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
   let branch_body (bi:string) (p:pat) (b:expr) : ML string =
     let saved = !scope in
     let _, binds = pat_tests x scrut.ty p in
-    binds |> List.iter (fun (v, path) -> bind_alias v path);
+    (* Cherry: the fields a branch uses are read out of the scrutinee before
+       the body runs, since the body may release it (cherry.md). *)
+    let pre =
+      if is_nonplain_ty scrut.ty then
+        let tys = pat_var_tys p scrut.ty in
+        let used = vars_of b in
+        binds |> List.collect (fun (v, path) ->
+          if not (List.mem v used) then [] else
+          match List.tryFind (fun (w, _) -> w = v) tys with
+          | Some (_, t) ->
+            let nm = bind_var v in
+            [bi ^ decl_of t nm ^ " = " ^ path ^ ";\n"]
+          | None -> bind_alias v path; [])
+      else (binds |> List.iter (fun (v, path) -> bind_alias v path); []) in
     let body = emit bi d b in
     scope := saved;
-    body in
+    String.concat "" pre ^ body in
   (* A branch whose body emits nothing is an empty block, which is worth
      removing for the same reason [EIf] already removes an empty arm.  Two
      things make it less free than it looks.  It is sound only at the *end* of
@@ -2775,7 +2873,7 @@ and body_occurs (target:string) (fuel:int) (b:tydef) : ML bool =
   | TAbstract -> false
 
 let check_finite (d:dtype) : ML unit =
-  if body_occurs (string_of_name d.dt_name) 100 d.dt_body then
+  if not (is_boxed d) && body_occurs (string_of_name d.dt_name) 100 d.dt_body then
     reject ("the recursive datatype " ^ string_of_name d.dt_name)
       (["A C struct cannot contain itself by value.";
         "Use an explicit pointer (a Pulse ref, array or box) for the \
@@ -2834,6 +2932,7 @@ let is_struct (d:dtype) : ML bool =
 
 let type_fwd (d:dtype) : ML (option string) =
   if Some? (builtin_type d.dt_name) then None else
+  if is_boxed d then Some ("typedef cherry_obj *" ^ c_name d.dt_name ^ ";\n") else
   if is_struct d
   then let n = c_name d.dt_name in
        Some ("typedef struct " ^ struct_tag n ^ " " ^ n ^ ";\n")
@@ -2856,6 +2955,8 @@ let type_fwd (d:dtype) : ML (option string) =
    made cyclic by [cbor_raw] pointing back, is the reported case. *)
 let rec value_deps (t:cty) : ML (list string) =
   match t with
+  (* Cherry: a boxed value is a pointer. *)
+  | TApp (n, _) when is_boxed_name n -> []
   | TApp (n, args) -> string_of_name n :: List.collect value_deps args
   | TTuple ts -> List.collect value_deps ts
   (* A pointer is a size, and a function is a pointer: an incomplete type is
@@ -2909,6 +3010,22 @@ let type_decl (d:dtype) : ML (option string) =
   match d.dt_body with
   | TAbstract -> None
   | TAbbrev c -> Some ("typedef " ^ decl_of c n ^ ";\n")
+  | TRecord _ when is_boxed d ->
+    reject ("the recursive record " ^ string_of_name d.dt_name)
+      ["Cherry boxes recursive variants only, so far."]
+  (* Cherry: one cell per constructor with fields, each led by the header
+     the runtime counts references in.  A constructor without fields is a
+     scalar and has no cell. *)
+  | TVariant cs when is_boxed d ->
+    Some ("enum " ^ enum_tag n ^ " {\n" ^
+          String.concat ",\n" (cs |> List.map (fun (c, _) -> "  " ^ c_tag c)) ^
+          "\n};\n" ^
+          String.concat "" (cs |> List.collect (fun (c, fs) ->
+            if Nil? fs then [] else
+            [cell_struct d c ^ " {\n  cherry_obj hdr;\n" ^
+             String.concat "" (fs |> List.map (fun (f, t) ->
+               "  " ^ decl_of t (c_var f) ^ ";\n")) ^
+             "};\n"])))
   | TRecord fs ->
     check_finite d;
     Some (open_struct () ^
@@ -3770,6 +3887,126 @@ let record_parents (p:program) : ML unit =
     else []) in
   bfs roots
 
+(* -------------------------------------------------------------------- *)
+(* Cherry runtime support and generated helpers                         *)
+(* -------------------------------------------------------------------- *)
+
+(* The runtime of cherry.md, inline.  A reference count is positive while the
+   cell is reachable from one thread only, negative (its magnitude counting
+   the references) once it has been marked shared, and zero for an immortal
+   cell.  A pointer with its low bit set is a constructor without fields, and
+   the rest of it is the tag. *)
+let cherry_support () : ML string =
+  String.concat "" [
+    "typedef struct cherry_obj { int32_t rc; uint32_t tag; } cherry_obj;\n";
+    "#define CHERRY_SCALAR(t) ((cherry_obj *)(((uintptr_t)(t) << 1) | 1u))\n";
+    "static inline bool cherry_is_scalar(const cherry_obj *o) {\n";
+    "  return ((uintptr_t)o & 1u) != 0;\n";
+    "}\n";
+    "static inline uint32_t cherry_tag(const cherry_obj *o) {\n";
+    "  return cherry_is_scalar(o) ? (uint32_t)((uintptr_t)o >> 1) : o->tag;\n";
+    "}\n";
+    "static inline cherry_obj *cherry_alloc(size_t size, uint32_t tag) {\n";
+    "  cherry_obj *o = (cherry_obj *)malloc(size);\n";
+    "  if (o == NULL) abort();\n";
+    "  o->rc = 1;\n";
+    "  o->tag = tag;\n";
+    "  return o;\n";
+    "}\n";
+    "static inline void cherry_inc(cherry_obj *o) {\n";
+    "  if (cherry_is_scalar(o)) return;\n";
+    "  int32_t rc = o->rc;\n";
+    "  if (rc > 0) o->rc = rc + 1;\n";
+    "  else if (rc < 0) __atomic_fetch_sub(&o->rc, 1, __ATOMIC_RELAXED);\n";
+    "}\n";
+    "/* Drop a reference; true when it was the last one and the cell has to be\n";
+    "   freed. */\n";
+    "static inline bool cherry_dec_ref(cherry_obj *o) {\n";
+    "  if (cherry_is_scalar(o)) return false;\n";
+    "  int32_t rc = o->rc;\n";
+    "  if (rc == 1) return true;\n";
+    "  if (rc > 1) { o->rc = rc - 1; return false; }\n";
+    "  if (rc == 0) return false;\n";
+    "  return __atomic_add_fetch(&o->rc, 1, __ATOMIC_ACQ_REL) == 0;\n";
+    "}\n";
+    "/* Mark a cell shared; true when it was not already, so that its fields\n";
+    "   have to be marked too. */\n";
+    "static inline bool cherry_mark_ref(cherry_obj *o) {\n";
+    "  if (cherry_is_scalar(o) || o->rc <= 0) return false;\n";
+    "  o->rc = -o->rc;\n";
+    "  return true;\n";
+    "}\n"
+  ]
+
+(* The constructors, and [inc]/[dec]/[mark] for every non-plain type.  All
+   [static inline]: a unit uses some of them, and C warns about an unused
+   [static] function that is not [inline]. *)
+let cherry_helpers (p:program) : ML (list string & list string) =
+  let protos : ref (list string) = mk_ref [] in
+  let defs : ref (list string) = mk_ref [] in
+  let fn (proto:string) (body:string) : ML unit =
+    protos := !protos @ [proto ^ ";\n"];
+    defs := !defs @ [proto ^ " {\n" ^ body ^ "}\n"] in
+  (* The statements performing [op] on the counted fields of one value. *)
+  let on_fields (op:string) (ind:string) (fs:list (string & cty))
+                (sel:string -> ML string) : ML string =
+    String.concat "" (fs |> List.collect (fun (f, t) ->
+      if is_nonplain_ty t then [ind ^ rc_fn op t ^ "(" ^ sel f ^ ");\n"] else [])) in
+  let has_counted (fs:list (string & cty)) : ML bool =
+    fs |> List.existsb (fun (_, t) -> is_nonplain_ty t) in
+  p |> List.iter (fun d ->
+    match d with
+    | DType dt when local d && is_nonplain_ty (TApp (dt.dt_name, [])) ->
+      current := string_of_name dt.dt_name;
+      let n = c_name dt.dt_name in
+      (match dt.dt_body with
+       | TVariant cs when is_boxed dt ->
+         cs |> List.iter (fun (c, fs) ->
+           if Cons? fs then begin
+             let cell = cell_struct dt c in
+             let params = fs |> List.mapi (fun i (_, t) -> decl_of t ("a" ^ string_of_int i)) in
+             fn ("static inline " ^ n ^ " " ^ cell_new dt c ^ "(" ^ String.concat ", " params ^ ")")
+                ("  " ^ cell ^ " *c = (" ^ cell ^ " *)cherry_alloc(sizeof(" ^ cell ^ "), " ^
+                 c_tag c ^ ");\n" ^
+                 String.concat "" (fs |> List.mapi (fun i (f, _) ->
+                   "  c->" ^ c_var f ^ " = a" ^ string_of_int i ^ ";\n")) ^
+                 "  return (" ^ n ^ ")c;\n")
+           end);
+         let cases (op:string) : ML string =
+           "  switch (x->tag) {\n" ^
+           String.concat "" (cs |> List.collect (fun (c, fs) ->
+             if not (has_counted fs) then [] else
+             let cell = cell_struct dt c in
+             ["    case " ^ c_tag c ^ ": {\n" ^
+              "      " ^ cell ^ " *c = (" ^ cell ^ " *)x;\n" ^
+              on_fields op "      " fs (fun f -> "c->" ^ c_var f) ^
+              "      break;\n    }\n"])) ^
+           "    default: break;\n  }\n" in
+         fn ("static inline void cherry_dec_" ^ n ^ "(" ^ n ^ " x)")
+            ("  if (!cherry_dec_ref(x)) return;\n" ^ cases "dec" ^ "  free(x);\n");
+         fn ("static inline void cherry_mark_" ^ n ^ "(" ^ n ^ " x)")
+            ("  if (!cherry_mark_ref(x)) return;\n" ^ cases "mark")
+       | _ ->
+         let body (op:string) : ML string =
+           "  (void)x;\n" ^
+           (match dt.dt_body with
+            | TAbbrev t -> "  " ^ rc_fn op t ^ "(x);\n"
+            | TRecord fs -> on_fields op "  " fs (fun f -> "x." ^ c_var f)
+            | TVariant [(_, fs)] -> on_fields op "  " fs (fun f -> "x." ^ c_var f)
+            | TVariant cs ->
+              "  switch (x.tag) {\n" ^
+              String.concat "" (cs |> List.collect (fun (c, fs) ->
+                if not (has_counted fs) then [] else
+                ["    case " ^ c_tag c ^ ":\n" ^
+                 on_fields op "      " fs (fun f -> "x" ^ arm_sel c fs f) ^
+                 "      break;\n"])) ^
+              "    default: break;\n  }\n"
+            | TAbstract -> "") in
+         ["inc"; "dec"; "mark"] |> List.iter (fun op ->
+           fn ("static inline void cherry_" ^ op ^ "_" ^ n ^ "(" ^ n ^ " x)") (body op)))
+    | _ -> ());
+  (!protos, !defs)
+
 let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string) =
   (* Section 42.2.  An imported declaration is in [p] so that the tables below
      see its shape, and out of every list that is emitted: the unit that
@@ -3892,6 +4129,13 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
                              (fun (a:cty) -> not (TUnit? a))))
     | _ -> ());
   types := tt; ctors := ct; externs := xt; keeps := kt; void_fns := vt;
+  (if Options.custard_cherry () then begin
+     let bt = HashTable.create 20 in
+     Cherry.boxed_types p |> List.iter (fun k -> HashTable.add bt k true);
+     let nt = HashTable.create 20 in
+     Cherry.nonplain_types p |> List.iter (fun k -> HashTable.add nt k true);
+     boxed_tbl := bt; nonplain_tbl := nt
+   end);
   build_macros p;
   check_interface_names p;
   check_emitted_names init_name p;
@@ -4091,6 +4335,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   (* Section 107.  After every body has been rendered, which is when the set
      of types actually compared is complete. *)
   let eq_protos, eq_defs = eq_decls () in
+  let rc_protos, rc_defs = cherry_helpers p in
 
   (* The header carries the unit's whole type language rather than only the
      types a public signature mentions.  A [struct] or a [typedef] has no
@@ -4117,6 +4362,8 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
 
   let src_body =
   String.concat "" exts ^ (match exts with [] -> "" | _ -> "\n") ^
+  String.concat "" rc_protos ^ (match rc_protos with [] -> "" | _ -> "\n") ^
+  String.concat "\n" rc_defs ^ (match rc_defs with [] -> "" | _ -> "\n") ^
   String.concat "" protos ^ (match protos with [] -> "" | _ -> "\n") ^
   String.concat "" eq_protos ^ (match eq_protos with [] -> "" | _ -> "\n") ^
   String.concat "\n" eq_defs ^ (match eq_defs with [] -> "" | _ -> "\n") ^
@@ -4141,6 +4388,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   let hdr =
     header ^
   (match includes with [] -> "" | _ -> "\n" ^ String.concat "\n" includes ^ "\n") ^
+    (if Options.custard_cherry () then "\n" ^ cherry_support () else "") ^
     (if hdr_unit then "\n" ^ unit_support else "") ^
     (if hdr_fspec then "\n" ^ float_special_support else "") ^
     (if hdr_narrow then narrow_support else "") ^

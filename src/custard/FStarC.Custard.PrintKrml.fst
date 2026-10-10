@@ -557,6 +557,8 @@ let krml_op (o:op) : ML K.op =
      it never reaches the operator table. *)
   | Commented _ ->
     failwith "Custard: a comment is not a karamel operator"
+  | RcInc | RcDec ->
+    failwith "Custard: reference counting is not a karamel operator"
 
 (* -------------------------------------------------------------------- *)
 (* Types                                                                *)

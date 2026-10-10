@@ -1004,7 +1004,7 @@ compiler lacks the extension, such as MSVC or any 32-bit target.");
 
   ( noshort,
     "custard_backend",
-    EnumStr ["OCaml"; "FSharp"; "KrmlC"; "KrmlRust"; "C"],
+    EnumStr ["OCaml"; "FSharp"; "KrmlC"; "KrmlRust"; "C"; "Cherry"],
     text "Language Custard emits: OCaml source, F# source for .NET, \
 karamel's AST for compilation to C or to Rust, or self-contained C11 source \
 (default OCaml). KrmlC and KrmlRust share a printer but not a program: \
@@ -1012,7 +1012,9 @@ karamel models some modules on the Rust path only, so a .krml built for one \
 target cannot be compiled for the other (section 20). FSharp targets \
 net10.0 and, unlike OCaml, compiles machine integers and floats to .NET's \
 own types rather than to a support library, so it accepts the programs the \
-C backend accepts rather than the ones the OCaml backend does (section 122)");
+C backend accepts rather than the ones the OCaml backend does (section 122). \
+Cherry is the direct-to-C backend extended with reference-counted heap \
+cells for recursive inductive types (experimental, see cherry.md)");
 
   ( noshort,
     "custard_sizet_width",
@@ -2319,6 +2321,9 @@ let custard_backend              () = get_custard_backend ()
 let custard_sizet_32             () = get_custard_sizet_width () = "32"
 let custard_backend_krml         () = let b = get_custard_backend () in
                                       b = "KrmlC" || b = "KrmlRust"
+let custard_backend_c            () = let b = get_custard_backend () in
+                                      b = "C" || b = "Cherry"
+let custard_cherry               () = get_custard_backend () = "Cherry"
 let custard_split                () = get_custard_split ()
 let custard_unit                 () = get_custard_unit ()
 let custard_links                () = get_custard_link ()

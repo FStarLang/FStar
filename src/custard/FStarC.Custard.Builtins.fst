@@ -69,7 +69,7 @@ let register_rule (l:Ident.lident) (r:rule) : ML unit =
    anyone has to write -- it is what they do today. *)
 let int128_enabled () : ML bool =
   let b = Options.custard_backend () in
-  (b = "C" || b = "FSharp") && Options.custard_int128 ()
+  (b = "C" || b = "Cherry" || b = "FSharp") && Options.custard_int128 ()
 
 let machine_int_of_module (ns : list string) : ML (option (signedness & iwidth)) =
   match ns with

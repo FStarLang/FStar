@@ -28,6 +28,7 @@ module E     = FStarC.Errors
 module Dep     = FStarC.Parser.Dep
 module UF      = FStarC.Syntax.Unionfind
 module C       = FStarC.Custard.PrintC
+module Cherry  = FStarC.Custard.Cherry
 module Krml    = FStarC.Custard.PrintKrml
 module Extract = FStarC.Custard.Extract
 module Find    = FStarC.Find
@@ -307,7 +308,7 @@ let unit_entries (keys:list (string & string)) (homes:HashTable.t string string)
        would be a symbol the consumer cannot name.  Types are all kept, since
        the header carries the whole type language -- and because that is what
        keeps two headers from defining one [struct] twice (section 42.2). *)
-    if Options.custard_backend () = "C"
+    if Options.custard_backend_c ()
        && (match d with DLet dl -> not (C.is_public dl) | _ -> false)
     then [] else
     let d, ti =
@@ -489,7 +490,10 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
      written, because a C unit's interface has to record the *name* of the
      header a downstream unit includes, and [-o] is what decides it
      (section 42.2). *)
-  let backend = Options.custard_backend () in
+  (* Cherry is the direct-to-C backend with reference counting inserted
+     just before printing (cherry.md), so from here on it is "C". *)
+  let backend = if Options.custard_cherry () then "C"
+                else Options.custard_backend () in
   (* Section 95.  Only the direct-to-C and F# printers read this, so on any
      other backend it would be silently ignored -- and a flag whose whole
      purpose is to change the width of every index is not one to ignore
@@ -599,7 +603,11 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
      karamel emits the [extern] prototype for it. *)
   | "KrmlC" | "KrmlRust" -> Krml.write_program ofile (List.map fst imports @ prog)
   | "C" ->
-    let hdr, src = C.print_program stem cu (List.map fst imports @ prog) in
+    let all = List.map fst imports @ prog in
+    let all = if Options.custard_cherry ()
+              then phase "cherry" (fun () -> Cherry.run all)
+              else all in
+    let hdr, src = C.print_program stem cu all in
     BU.write_file (FStarC.Filepath.join_paths (FStarC.Filepath.dirname ofile)
                      (stem ^ ".h")) hdr;
     BU.write_file ofile src
@@ -628,8 +636,8 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
   | b ->
     E.raise_error0 E.Fatal_OptionsNotCompatible [
       text ("Unknown --custard_backend " ^ b ^ ".");
-      text "The backends are OCaml (the default), FSharp, KrmlC, KrmlRust \
-            and C."
+      text "The backends are OCaml (the default), FSharp, KrmlC, KrmlRust, \
+            C and Cherry."
     ]
 
 (* [--profile_component FStarC.Custard] prints the phase breakdown.  Custard

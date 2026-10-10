@@ -234,6 +234,9 @@ val custard_int128              : unit    -> ML bool
 val custard_backend             : unit    -> ML string
 val custard_sizet_32            : unit    -> ML bool
 val custard_backend_krml        : unit    -> ML bool
+(* The direct-to-C backend or its reference-counting extension, Cherry. *)
+val custard_backend_c           : unit    -> ML bool
+val custard_cherry              : unit    -> ML bool
 val custard_split               : unit    -> ML bool
 val custard_unit                : unit    -> ML (option string)
 val custard_links               : unit    -> ML (list string)

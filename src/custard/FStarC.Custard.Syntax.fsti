@@ -390,6 +390,12 @@ type op =
       checked for a [*/], because that is where they are still known to have
       come from a literal the author wrote. *)
   | Commented of string & string
+  (** Cherry (cherry.md).  [RcInc x] and [RcDec x] take one more or drop one
+      reference to the value of the variable [x], at [x]'s own type.  Only
+      the Cherry pass inserts them, after every other pass has run, and only
+      the C printer in Cherry mode accepts them. *)
+  | RcInc
+  | RcDec
 
 (** The machine type a primitive operation works at. *)
 type prim_ty =

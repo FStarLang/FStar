@@ -1481,6 +1481,23 @@ $(OUTPUT_DIR)/%.dcran: $(OUTPUT_DIR)/%.dcexe
 	$(Q)$<
 	$(Q)touch $@
 
+$(OUTPUT_DIR)/%.chc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
+	$(call msg, "CHERRY", $(basename $(notdir $@)))
+	@mkdir -p $(OUTPUT_DIR)
+	$(FSTAR) --codegen Custard $(WARN_ANY) $(FLAGS_$*) --custard_backend Cherry \
+	  --custard_monomorphize_types true --custard_main $*.main $*.fst -o $@
+
+$(OUTPUT_DIR)/%.chexe: $(OUTPUT_DIR)/%.chc
+	$(call msg, "CC-ASAN", $(basename $(notdir $@)))
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(OUTPUT_DIR) -x c $< -o $@
+	$(Q)$(CXX) -std=c++17 -Wall -Werror -I$(OUTPUT_DIR) -fsyntax-only -x c++ $<
+
+$(OUTPUT_DIR)/%.chran: $(OUTPUT_DIR)/%.chexe
+	$(call msg, "RUN-ASAN", $(basename $(notdir $@)))
+	$(Q)ASAN_OPTIONS=detect_leaks=1 $<
+	$(Q)touch $@
+
 $(OUTPUT_DIR)/%.cran: $(OUTPUT_DIR)/%.cexe
 	$(call msg, "RUN-C", $(basename $(notdir $@)))
 	$(Q)$<
@@ -3362,8 +3379,13 @@ REJECT_TESTS += ArrowUnfoldLimit
 CODE_ArrowUnfoldLimit := 365
 EGREP_ArrowUnfoldLimit += "gave up unfolding an arrow type after 1000 layers"
 
+# The Cherry backend (cherry.md): C with reference-counted heap cells for the
+# recursive datatypes.  The run is under AddressSanitizer, whose leak checker
+# is the assertion that every cell allocated is freed exactly once.
+CHERRY_TESTS += CherryList CherryTree CherryOpt
+
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
-                  $(C_TESTS) $(CXX_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \
+                  $(C_TESTS) $(CXX_TESTS) $(CHERRY_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \
                   $(RUSTSPLIT_TESTS) $(FS_TESTS) $(FSREJECT_TESTS) \
                   SepApp SepAppC SplitHi SplitLo FsSplitHi FsSplitLo
 
@@ -3504,6 +3526,7 @@ all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rejected, $(REJECT_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .roots, $(ROOT_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcran, $(C_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcxxran, $(CXX_TESTS)))
+all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .chran, $(CHERRY_TESTS)))
 
 # Section 122.  Extraction to F# is always testable; compiling the result
 # needs the .NET 10 SDK, and a consumer who has not got one should see this

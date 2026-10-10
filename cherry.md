@@ -1,0 +1,115 @@
+# Counting cherries in the custard
+
+Cherry is an extension of custard to support reference counted types. It takes inspiration from Ullrich and de Moura's paper "Counting immutable beans" and from Lean's runtime.
+The long-term goal of Cherry is to support extraction of the F* compiler to C, without having to use OCaml.
+
+## Scope and representation
+
+Existing Pulse code will compile and run like now, with no extra overhead. This means that all types are monomorphized and option etc. retain their existing layout without indirection.
+Programs that compile with the C backend today should continue to compile without requiring a runtime. Cherry requires a runtime (big integers, closures, etc.).
+Native compilation is restricted to a subset of F* that can be compiled to efficient code. In particular, polymorphic recursion is not supported (if the compiler uses it, we will eliminate it).
+Some types require reference counting, like pointers to heap cells. This has no effect on their representation, it just means that every type has inc/dec/mark operations and we have to call them when appropriate.
+Function arguments and return values keep their current representation. That means using option or either in the return type does not require allocation.
+A type is called plain if it does not require refcounting. Bool is plain, so is UInt32.t etc.
+Pulse refs/arrays can be allocated uninitialized. This does not work with reference counting, so uninitialized allocation is only allowed for plain types.
+
+## Reference counting
+
+Every heap cell starts with a reference count, using Lean's encoding:
+- rc > 0: the cell is single-threaded (only reachable from one thread); inc/dec are regular reads and writes.
+- rc < 0: the cell is multi-threaded; inc/dec are atomic operations.
+- rc = 0: the cell is immortal (statics, literals); inc/dec do nothing.
+
+So inc/dec is one well-predicted branch on the sign, and the common single-threaded case avoids atomic operations entirely.
+All cells start out single-threaded. Marking turns a cell multi-threaded, and recursively marks everything reachable from it. Marking is one-way and stops at cells that are already multi-threaded (or immortal), so its cost is proportional to the newly published part of the object graph. Every type has a mark function, generated the same way as the dec function.
+Since only the owning thread can publish a single-threaded cell, a thread that observes a single-threaded rc knows that no other thread can access the cell concurrently.
+
+Values must be marked when they become reachable from another thread (publication points):
+- Storing a value into a Pulse container (Pulse references, Pulse arrays). These containers have no refcount, and Pulse permissions allow multiple threads to read from them concurrently (and then inc the read value). Invariant: everything stored in a Pulse container is multi-threaded. As a consequence, mark functions never need to look inside a Pulse container.
+- Storing a value into a mutable cell (reference, mutable array) that is multi-threaded.
+- Arguments to thread spawn / par.
+
+There are no weak references. Reference cycles (e.g. through refs) leak; this is acceptable. Cherry must not create cycles on its own though: local `let rec` closures do not capture themselves, they are lambda-lifted (or receive the closure as an argument) like in Lean.
+The hash code memo reference in terms is being removed, so terms do not need weak references either.
+
+## Calling convention
+
+Ownership and borrowing of function parameters follows the "Counting immutable beans" paper and Lean.
+Every non-plain parameter is either owned (the callee consumes one reference) or borrowed (the caller guarantees the value stays alive for the duration of the call). Plain parameters are neither.
+Return values are always owned. This includes the `either exn a` returns used for exceptions.
+Unboxed values (structs, option, either, etc.) are passed by value as today. Owned/borrowed applies to the whole value; their inc/dec functions act on each field.
+Calls to unknown functions (closures, apply_n) use all-owned parameters. Every function that is used as a value gets a generated `_boxed` wrapper with all-owned parameters, which calls the function with the inferred convention and decrements the borrowed arguments afterwards.
+For externals and runtime primitives the convention is declared, not inferred: parameters are borrowed by default, and `[@@cherry_owned]` on a binder makes them owned. For example, string_append takes its first argument owned so that the in-place update can apply. Regular functions can also use `[@@cherry_owned]` and `[@@cherry_borrowed]` on binders to override inference.
+
+## Borrow inference
+
+Borrow inference runs per monomorphized instance, over the strongly connected components of the call graph, until a fixpoint is reached (Counting immutable beans, section 5):
+1. Initially, all parameters are borrowed.
+2. A parameter is marked owned if:
+   - it may be reset/reused (in-place updates of strings, immutable arrays, constructor cells);
+   - it is passed to an owned parameter;
+   - it is passed to an owned parameter in a tail call. This preserves the tail call, which would otherwise be followed by a dec.
+3. Storing a borrowed parameter into a constructor, closure, reference, or Pulse container costs one inc; this does not force the parameter to be owned.
+
+Mutual recursion cannot span F* modules, so inference proceeds in module dependency order. The inferred conventions are exported in the module's custard interface (Loader/imports) so that callers in other modules agree with them.
+
+Borrowed locals: a projection of a field of an immutable cell is borrowed for as long as the cell is live, so it needs no inc. Reads from mutable cells (ML references, Pulse references, arrays) are always owned, since a callee could overwrite the cell and free the old value.
+
+## Inserting reference counting operations
+
+Reference counting operations are inserted in a separate pass on the ANF'd, monomorphized IR, after layout and simplification and before printing C. Doing this in the emitter would make liveness analysis and reuse awkward.
+1. Insert reset/reuse for heap cell reuse (requires liveness).
+2. Insert inc/dec following the "Counting immutable beans" algorithm: inc when an owned variable is consumed but still live afterwards, dec after its last use if it was not consumed, and in match/if branches dec the variables that are dead at the start of the branch.
+3. Clean up: cancel inc/dec pairs, push decs into branches, and specialize dec for constructors known from an enclosing match.
+
+## The any type
+
+The any type is represented as a fat pointer: a pair of a uintptr_t and an RTTI pointer. The RTTI contains the inc, dec, and mark functions (and maybe some inspection functions for debugging). Types that are small enough to fit into a uintptr_t are stored directly, for larger types we allocate a heap cell with a reference count and store the pointer in the uintptr_t.
+FStar.Dyn.dyn generates the any type. Casting any to any is the identity (undyn is unchecked, so nothing is lost).
+
+## References
+
+There are two kinds of references. Both are represented as a pointer.
+Pulse references (Pulse.Lib.Reference) are plain: they point to a heap cell containing only the contained value. Ownership, freeing, and thread safety fully rely on Pulse's permission system. Stored values are marked (see above). Reading a value increments its refcount, and after a write the old value must have its refcount decremented.
+ML references (FStar.Ref etc.) point to a heap cell containing the reference count, a spinlock, and the contained value. If the cell is single-threaded, reads and writes do not touch the spinlock: a read is one read of the rc, one read of the value, plus the inc. If the cell is multi-threaded, reads and writes must acquire the spinlock. One, the value may be too large for atomic operations. Two, we need to increment the refcounts in the value while the spinlock is held; otherwise a writer might decrement and free the value before the reader gets to increment it. Values written into a multi-threaded reference are marked.
+
+## Functions
+
+When extracting with Cherry, all function values are reference counted closures: a heap cell with the reference count, a function pointer, the arity, and the closed over values. The regular C backend still emits function types as function pointers, since tools like EverParse rely on that.
+Top-level functions used as values become static immortal closures, so they require no allocation. Known saturated calls to top-level functions remain direct calls.
+F* functions are curried; calls to unknown closures go through generic apply_n helpers that compare the number of arguments to the arity and handle partial and over-application (like Lean's lean_apply_n).
+For now, every function type is a reference counted closure; there are no closures whose ownership is tracked by Pulse permissions. Closures are therefore not Pulse containers, but values captured by a closure are marked when the closure itself is marked.
+
+## Inductive types
+
+Inductive types can be tagged as custard_boxed. Then they are allocated on the heap so that they fit in a pointer. Constructors without fields (None, Nil, etc.) are stored directly as scalars without a heap allocation (e.g. `(n << 1) | 1`, like Lean). The other constructors are stored in heap cells, which have different sizes depending on the fields.
+The constructor number is always stored in the heap cell header. Storing it in the pointer tag as well is an optional fast path (there are only 3 low tag bits, and the high bits are not available on 32-bit or with 5-level paging), e.g. for types with few constructors.
+Recursive types are automatically custard_boxed.
+
+## Integers, strings, exceptions
+
+Integers are stored with tagged pointers. Small integers are stored directly. Large integers are stored in a heap cell with a reference count etc.
+Strings follow Lean: a heap cell with the reference count, byte size, capacity, and zero-terminated UTF-8 data. Appends and other updates use the functional-but-in-place optimization: if the string is uniquely owned and has enough capacity, it is modified in place, otherwise a copy with geometrically grown capacity is allocated. This makes repeated appends cheap without source changes, at the cost of some slack memory. String literals are emitted as immortal static cells.
+Zero-terminated C strings with static lifetime (e.g. C.String for the existing C backend) remain a separate F* type.
+Exceptions are out of scope for the initial version. They will be implemented using error returns, probably by returning `either exn a`.
+Values of the exn type are stored as pointers to heap cells containing the reference count, RTTI, and field values. Exn is an open type, so we need RTTI to determine which exception it is and to decrement/mark the fields.
+
+## Arrays
+
+There are three array kinds:
+- Pulse arrays (Pulse.Lib.Array): same memory layout as now, plain, ownership tracked by Pulse permissions. Stored values are marked.
+- Mutable reference counted arrays (FStarC.Array): can grow, stored as rc + capacity + length + data array. Accessed like ML references (spinlock only if multi-threaded).
+- Immutable arrays (FStar.ImmutableArray): stored like strings, as rc + capacity + length + data array. Updates and appends use the functional-but-in-place optimization: if the array is uniquely owned (and, for appends, has enough capacity), it is modified in place, otherwise a copy (with geometrically grown capacity for appends) is allocated.
+
+## Globals
+
+Globals (like `let foo = [1;2]`) are stored as immortal (rc = 0) static cells without requiring an initializer. Since inc/dec never write to immortal cells, immutable globals can be put in .rodata.
+Storing objects in read-only mmapped files (like Lean's .olean files) is out of scope for now.
+
+## Heap cell reuse
+
+Heap cells are reused opportunistically. Due to the nonuniform memory layout, we only reuse cells for the same constructor (with the same monomorphized type). Unlike Lean, we do not add a branch on rc=1 to the IR; instead a variant of the decrement operation returns a pointer to the recyclable heap cell (if uniquely owned, i.e. rc = 1 or rc = -1) without freeing it, or null otherwise. The fields of the recyclable cell are decremented eagerly. The cell is then reused by following allocations where appropriate, and must be freed on paths where it is not reused. Immortal cells are never reused.
+
+## Backend
+
+Cherry is a separate backend, `--custard_backend Cherry`, which shares most of its code with `--custard_backend C`. It is separate because it needs runtime support, extra includes, and generated auxiliary functions (inc/dec/mark functions, RTTI, `_boxed` wrappers, apply_n helpers). Since reference counting operations are inserted in a separate IR pass, the shared emitter needs only minor changes; the generated boilerplate is new code that does not affect the existing C pipeline.

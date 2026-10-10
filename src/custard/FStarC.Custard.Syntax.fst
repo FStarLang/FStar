@@ -446,7 +446,8 @@ let rec is_droppable (e:expr) : ML bool =
   | EApp _ | EFun _ | EWhile _ | EAbort _ | ERaise _ | ETry _ -> false
   | EOp ({ po_op = BufRead }, es) -> all es
   | EOp ({ po_op = BufCreate _ }, _) | EOp ({ po_op = BufWrite }, _)
-  | EOp ({ po_op = BufFree }, _) | EOp ({ po_op = BufBlit }, _) -> false
+  | EOp ({ po_op = BufFree }, _) | EOp ({ po_op = BufBlit }, _)
+  | EOp ({ po_op = RcInc }, _) | EOp ({ po_op = RcDec }, _) -> false
   | EOp (_, es) -> all es
   (* Everything else is deletable exactly when all of it is.  A branch's
      guard and body are children, and its pattern binds nothing that
@@ -504,7 +505,8 @@ let op_to_string (o:prim_op) : string =
    | BufFree -> "free" | BufNull -> "null" | BufIsNull -> "is_null"
    | BufBlit -> "blit"
    | BufLit -> "lit" | BufUnconst -> "unconst"
-   | Commented _ -> "comment") ^
+   | Commented _ -> "comment"
+   | RcInc -> "rc_inc" | RcDec -> "rc_dec") ^
   (match o.po_ty with
    | None -> ""
    | Some (PInt sw) -> width_to_string sw
