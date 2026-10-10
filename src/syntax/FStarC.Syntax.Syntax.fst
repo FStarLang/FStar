@@ -196,6 +196,12 @@ module H = FStarC.Hash
 
 let hc (i:int) : H.hash_code = H.of_int i
 
+(* Fixed-arity mixing, rather than mixing a list literal: this runs on every
+   term construction, and the list would be allocated each time. *)
+let mix3 (a b c:H.hash_code) : H.hash_code = H.mix a (H.mix b c)
+let mix4 (a b c d:H.hash_code) : H.hash_code = H.mix a (H.mix b (H.mix c d))
+let mix5 (a b c d e:H.hash_code) : H.hash_code = H.mix a (H.mix b (H.mix c (H.mix d e)))
+
 let rec mix_all (l:list H.hash_code) : H.hash_code =
   match l with
   | [] -> hc 1229
@@ -273,9 +279,8 @@ let hash_bqual (bq:binder_qualifier) : H.hash_code =
   | Equality -> hc 433
 
 let hash_binder (b:binder) : ML H.hash_code =
-  mix_all [hash_bv b.binder_bv;
-           hash_option hash_bqual b.binder_qual;
-           hash_list hash_of b.binder_attrs]
+  mix3 (hash_bv b.binder_bv) (hash_option hash_bqual b.binder_qual)
+       (hash_list hash_of b.binder_attrs)
 
 let hash_ascription (a:ascription) : ML H.hash_code =
   let tc, tacopt, _ = a in
@@ -293,16 +298,14 @@ let rec hash_pat (p:pat) : ML H.hash_code =
   match p.v with
   | Pat_constant c -> H.mix (hc 89) (hash_constant c)
   | Pat_cons (fv, us, args) ->
-    mix_all [hc 97;
-             hash_fv fv;
-             hash_option (hash_list hash_universe) us;
-             hash_list (fun (pb : pat & bool) -> H.mix (hash_pat (fst pb)) (hash_bool (snd pb))) args]
+    mix4 (hc 97) (hash_fv fv) (hash_option (hash_list hash_universe) us)
+         (hash_list (fun (pb : pat & bool) -> H.mix (hash_pat (fst pb)) (hash_bool (snd pb))) args)
   | Pat_var bv -> H.mix (hc 101) (hash_bv bv)
   | Pat_dot_term t -> H.mix (hc 107) (hash_option hash_of t)
 
 let hash_branch (br:branch) : ML H.hash_code =
   let p, w, t = br in
-  mix_all [hc 83; hash_pat p; hash_option hash_of w; t.hash_code]
+  mix4 (hc 83) (hash_pat p) (hash_option hash_of w) t.hash_code
 
 let hash_lbname (l:lbname) : H.hash_code =
   match l with
@@ -325,9 +328,8 @@ let hash_flag (f:cflag) : ML H.hash_code =
   | DECREASES (Decreases_wf (t0, t1)) -> H.mix (hc 2341) (H.mix t0.hash_code t1.hash_code)
 
 let hash_rc (rc:residual_comp) : ML H.hash_code =
-  mix_all [hash_lid rc.residual_effect;
-           hash_option hash_of rc.residual_typ;
-           hash_list hash_flag rc.residual_flags]
+  mix3 (hash_lid rc.residual_effect) (hash_option hash_of rc.residual_typ)
+       (hash_list hash_flag rc.residual_flags)
 
 let hash_meta_source_info (m:meta_source_info) : H.hash_code =
   match m with
@@ -340,7 +342,7 @@ let hash_meta_source_info (m:meta_source_info) : H.hash_code =
 let hash_meta (m:metadata) : ML H.hash_code =
   match m with
   | Meta_pattern (ts, args) ->
-    mix_all [hc 1019; hash_list hash_of ts; hash_list (hash_list hash_arg) args]
+    mix3 (hc 1019) (hash_list hash_of ts) (hash_list (hash_list hash_arg) args)
   | Meta_named l -> H.mix (hc 1021) (hash_lid l)
   (* The message is not hashed: rendering it would be too costly to do eagerly.
      The range is, as labels that differ only in their range are common (e.g.
@@ -348,10 +350,10 @@ let hash_meta (m:metadata) : ML H.hash_code =
      evict each other in a FStarC.HashMap. Consistent with Range.compare. *)
   | Meta_labeled (_, r, _) ->
     let p = Range.start_of_range r in
-    mix_all [hc 1031; H.of_string (Range.file_of_range r); hc (Range.line_of_pos p); hc (Range.col_of_pos p)]
+    mix4 (hc 1031) (H.of_string (Range.file_of_range r)) (hc (Range.line_of_pos p)) (hc (Range.col_of_pos p))
   | Meta_desugared msi -> H.mix (hc 1033) (hash_meta_source_info msi)
-  | Meta_monadic (m, t) -> mix_all [hc 1039; hash_lid m; t.hash_code]
-  | Meta_monadic_lift (m0, m1, t) -> mix_all [hc 1069; hash_lid m0; hash_lid m1; t.hash_code]
+  | Meta_monadic (m, t) -> mix3 (hc 1039) (hash_lid m) t.hash_code
+  | Meta_monadic_lift (m0, m1, t) -> mix4 (hc 1069) (hash_lid m0) (hash_lid m1) t.hash_code
 
 let hash_quoteinfo (qi:quoteinfo) : ML H.hash_code =
   H.mix (hash_bool (Quote_static? qi.qkind)) (hash_list hash_of (snd qi.antiquotations))
@@ -365,28 +367,25 @@ let hash_term' (t:term') : ML H.hash_code =
   | Tm_constant sc -> H.mix (hc 13) (hash_constant sc)
   | Tm_type u -> H.mix (hc 17) (hash_universe u)
   | Tm_abs {b; body; rc_opt} ->
-    mix_all [hc 19; hash_binder b; body.hash_code; hash_option hash_rc rc_opt]
-  | Tm_arrow {b; comp} -> mix_all [hc 23; hash_binder b; comp.hash_code]
-  | Tm_refine {b; phi} -> mix_all [hc 29; hash_bv b; phi.hash_code]
-  | Tm_app {hd; arg} -> mix_all [hc 31; hd.hash_code; hash_arg arg]
+    mix4 (hc 19) (hash_binder b) body.hash_code (hash_option hash_rc rc_opt)
+  | Tm_arrow {b; comp} -> mix3 (hc 23) (hash_binder b) comp.hash_code
+  | Tm_refine {b; phi} -> mix3 (hc 29) (hash_bv b) phi.hash_code
+  | Tm_app {hd; arg} -> mix3 (hc 31) hd.hash_code (hash_arg arg)
   | Tm_match {scrutinee; ret_opt; brs; rc_opt} ->
-    mix_all [hc 37;
-             hash_option hash_match_returns ret_opt;
-             scrutinee.hash_code;
-             hash_list hash_branch brs;
-             hash_option hash_rc rc_opt]
+    mix5 (hc 37) (hash_option hash_match_returns ret_opt) scrutinee.hash_code
+         (hash_list hash_branch brs) (hash_option hash_rc rc_opt)
   | Tm_ascribed {tm; asc; eff_opt} ->
-    mix_all [hc 43; tm.hash_code; hash_ascription asc; hash_option hash_lid eff_opt]
-  | Tm_let {lbs=(false, [lb]); body} -> mix_all [hc 47; hash_lb lb; body.hash_code]
-  | Tm_let {lbs=(_, lbs); body} -> mix_all [hc 51; hash_list hash_lb lbs; body.hash_code]
+    mix4 (hc 43) tm.hash_code (hash_ascription asc) (hash_option hash_lid eff_opt)
+  | Tm_let {lbs=(false, [lb]); body} -> mix3 (hc 47) (hash_lb lb) body.hash_code
+  | Tm_let {lbs=(_, lbs); body} -> mix3 (hc 51) (hash_list hash_lb lbs) body.hash_code
   | Tm_uvar (ctx_u, _) ->
     let u, _, _ = ctx_u.ctx_uvar_head in
     H.mix (hc 53) (hc (Unionfind.puf_unique_id u))
   (* The substitution is not hashed; it would be too costly to do eagerly. *)
   | Tm_delayed {tm} -> H.mix (hc 59) tm.hash_code
-  | Tm_meta {tm; meta} -> mix_all [hc 61; tm.hash_code; hash_meta meta]
+  | Tm_meta {tm; meta} -> mix3 (hc 61) tm.hash_code (hash_meta meta)
   | Tm_lazy _ -> hc 67
-  | Tm_quoted (t, qi) -> mix_all [hc 71; t.hash_code; hash_quoteinfo qi]
+  | Tm_quoted (t, qi) -> mix3 (hc 71) t.hash_code (hash_quoteinfo qi)
   | Tm_unknown -> hc 73
 
 (* NB: the source effect name is presentation only and not hashed,
@@ -394,10 +393,7 @@ let hash_term' (t:term') : ML H.hash_code =
 let hash_comp' (c:comp') : ML H.hash_code =
   match c with
   | Comp ct ->
-    mix_all [hc 823;
-             hash_lid ct.effect_name;
-             ct.result_typ.hash_code;
-             hash_list hash_flag ct.flags]
+    mix4 (hc 823) (hash_lid ct.effect_name) ct.result_typ.hash_code (hash_list hash_flag ct.flags)
 
 (*********************************************************************************)
 (* Syntax builders *)

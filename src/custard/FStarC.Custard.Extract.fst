@@ -2627,12 +2627,16 @@ and template_index_scan (st:state) (ts:list term) : ML (list bv & list string) =
      term and is scanned again, while the same application reached twice is
      scanned once.  Nothing is lost -- a second scan of an identical term
      contributes exactly what the first one did -- and it is the entire
-     difference between exponential and linear. *)
-  let scanned : HashTable.t string bool = HashTable.create 100 in
+     difference between exponential and linear.
+
+     The key is deeply compressed: term equality is syntactic, and the
+     normalizer leaves delayed substitutions behind that differ between two
+     results of the same reduction. *)
+  let scanned : ref (Hash.term_map unit) = mk_ref (Hash.term_map_empty #unit) in
   let already (t:term) : ML bool =
-    let k = show (Hash.ext_hash_term t) in
-    if Some? (HashTable.try_find scanned k) then true
-    else (HashTable.add scanned k true; false) in
+    let t = Visit.visit_term false (fun t -> t) t in
+    if Hash.term_map_mem t !scanned then true
+    else (scanned := Hash.term_map_add t () !scanned; false) in
   (* Section 88.  The scan is syntactic, and a type abbreviation is exactly
      what makes the syntax it is looking for absent.  [fragment] is an
      [inline_for_extraction] alias for an application of the template, so the
