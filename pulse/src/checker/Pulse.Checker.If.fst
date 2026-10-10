@@ -47,17 +47,77 @@ let set_effect_annot (#g:env) (ph:post_hint_for_env g) (ea:effect_annot)
                              ph'.u == ph.u /\ ph'.effect_annot == ea })
 = { ph with effect_annot = ea }
 
-// Relabel a stt/stt_div computation with the given (stt or stt_div) effect,
-// preserving its state components. Used to lift the branches of an inferred
-// conditional to a common effect once a divergent branch is detected.
-let lift_branch_comp (c:comp_st)
-                     (eff:effect_annot { EffectAnnotSTT? eff \/ EffectAnnotSTTDiv? eff })
-: (c':comp_st { comp_pre c' == comp_pre c /\ comp_res c' == comp_res c /\
-                comp_u c' == comp_u c /\ comp_post c' == comp_post c /\
-                effect_annot_matches c' eff })
-= match eff with
-  | EffectAnnotSTTDiv -> C_STDiv (st_comp_of_comp c)
-  | _ -> C_ST (st_comp_of_comp c)
+(* The effect of a conditional whose postcondition is inferred, from the
+   natural effects of its branches, and each branch lifted to it. This follows
+   the lifts that Pulse.Typing.Combinators.mk_bind applies when composing two
+   computations without a hint: divergence wins over stt, which wins over
+   atomic and ghost; ghost and atomic branches keep their effect, over the
+   join of their invariant names. A ghost branch is only lifted to a
+   non-ghost effect if its result type is non-informative
+   ([lift_ghost_atomic]). *)
+let same_st (c c':comp_st) : prop =
+  comp_pre c' == comp_pre c /\ comp_res c' == comp_res c /\
+  comp_u c' == comp_u c /\ comp_post c' == comp_post c
+
+let lift_ghost (g:env) (e:st_term) (c:comp_st) : T.Tac unit =
+  if C_STGhost? c then lift_ghost_atomic g e c
+
+let with_opens (g:env) (c:comp_st { C_STGhost? c \/ C_STAtomic? c }) (opens:term)
+: T.Tac (c':comp_st { same_st c c' /\
+                      (C_STGhost? c ==> C_STGhost? c') /\
+                      (C_STAtomic? c ==> C_STAtomic? c') /\
+                      comp_inames c' == opens })
+= if not (eq_tm (comp_inames c) opens) then
+    ignore (check_prop_validity g (tm_inames_subset (comp_inames c) opens));
+  match c with
+  | C_STGhost _ sc -> C_STGhost opens sc
+  | C_STAtomic _ obs sc -> C_STAtomic opens obs sc
+
+let join_branch_effects (g:env) (e1 e2:st_term) (c1 c2:comp_st)
+: T.Tac (ea:effect_annot &
+         c1':comp_st { same_st c1 c1' /\ effect_annot_matches c1' ea } &
+         c2':comp_st { same_st c2 c2' /\ effect_annot_matches c2' ea })
+= match c1, c2 with
+  | C_STDiv _, _ | _, C_STDiv _ ->
+    lift_ghost g e1 c1; lift_ghost g e2 c2;
+    (| EffectAnnotSTTDiv, C_STDiv (st_comp_of_comp c1), C_STDiv (st_comp_of_comp c2) |)
+  | C_ST _, _ | _, C_ST _ ->
+    lift_ghost g e1 c1; lift_ghost g e2 c2;
+    (| EffectAnnotSTT, C_ST (st_comp_of_comp c1), C_ST (st_comp_of_comp c2) |)
+  | _ ->
+    let opens = tm_join_inames (comp_inames c1) (comp_inames c2) in
+    let c1 = with_opens g c1 opens in
+    let c2 = with_opens g c2 opens in
+    match c1, c2 with
+    | C_STGhost _ _, C_STGhost _ _ ->
+      (| EffectAnnotGhost { opens }, c1, c2 |)
+    | C_STAtomic _ _ _, C_STAtomic _ _ _ ->
+      (| EffectAnnotAtomic { opens }, c1, c2 |)
+    | _ ->
+      (* One ghost and one atomic branch. Both have the same result type. A
+         ghost branch with an informative result can only be joined with a
+         neutral atomic one, as ghost. *)
+      let neutral (c:comp_st) : bool =
+        match c with
+        | C_STAtomic _ obs _ -> Neutral? obs
+        | _ -> true
+      in
+      if None? (try_get_non_informative_witness g (comp_u c1) (comp_res c1))
+         && neutral c1 && neutral c2
+      then
+        let c1 : comp_st = C_STGhost opens (st_comp_of_comp c1) in
+        let c2 : comp_st = C_STGhost opens (st_comp_of_comp c2) in
+        (| EffectAnnotGhost { opens }, c1, c2 |)
+      else (
+        lift_ghost g e1 c1; lift_ghost g e2 c2;
+        let as_atomic (c:comp_st { C_STGhost? c \/ C_STAtomic? c })
+        : c':comp_st { same_st c c' /\ C_STAtomic? c' /\ comp_inames c' == comp_inames c } =
+          match c with
+          | C_STGhost i sc -> C_STAtomic i Neutral sc
+          | C_STAtomic _ _ _ -> c
+        in
+        (| EffectAnnotAtomic { opens }, as_atomic c1, as_atomic c2 |)
+      )
 
 #push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 2"
 #restart-solver
@@ -75,7 +135,12 @@ let lift_branch_comp (c:comp_st)
    A user-written `ensures` on the `if` goes through the same checks. So a
    wrong candidate is rejected, or skipped for the next one: an inference bug
    can at worst make a program be rejected, or get a weaker postcondition than
-   it could have. *)
+   it could have.
+   A candidate only fixes the result type and the postcondition. Its effect
+   annotation is a placeholder that nothing reads: [prove_post_hint] ignores
+   it, and [extract_nat] elaborates each branch at its own effect. The effect
+   of the conditional is computed from the elaborated branches by
+   [join_branch_effects]. *)
 let post_hint_of_candidate (g:env) (ret_ty:term) (post:term)
 : T.Tac (ph:post_hint_for_env g { ph.ret_ty == ret_ty /\ ph.effect_annot == EffectAnnotSTT })
 = let u = check_universe g ret_ty in
@@ -169,11 +234,17 @@ let check
     J.infer_post' g g' u t x post
   in
 
+  (* Elaborate a branch and read back its natural effect. The trailing return
+     is elaborated against a neutral effect (atomic over no invariants), so
+     that it does not lift the branch: the postcondition proved of the branch
+     fixes its state, not its effect. *)
   let extract_nat #g #pre (#ph:post_hint_for_env g) (r:checker_result_t g pre (PostHint ph))
   : T.Tac (br:st_term { ~(hyp `Set.mem` freevars_st br) } &
            c:comp_st { comp_pre c == pre /\ comp_res c == ph.ret_ty /\
                        comp_u c == ph.u /\ comp_post c == ph.post })
-  = let (| br, c |) =
+  = let neutral = { ph with effect_annot = EffectAnnotAtomicOrGhost { opens = tm_emp_inames } } in
+    let r = retype_checker_result_effect ph neutral r in
+    let (| br, c |) =
       let ppname = mk_ppname_no_range "_if_br" in
       apply_checker_result_k_nohint r ppname
     in
@@ -333,10 +404,10 @@ let check
 
   | _ ->
     //
-    // The postcondition was inferred (tentatively as stt). Read back the natural
-    // effect of each branch with a single check: if either branch is divergent,
-    // the whole conditional is divergent (issue #4366). This avoids re-checking
-    // any branch.
+    // The postcondition was inferred, or annotated without fixing the effect.
+    // Read back the natural effect of each branch, so that e.g. a divergent
+    // branch makes the whole conditional divergent (issue #4366), and a
+    // conditional whose branches are ghost stays ghost.
     //
     let (| e1, c1, e2, c2 |) =
       match extracted with
@@ -347,16 +418,9 @@ let check
         (| e1, c1, e2, c2 |)
     in
     //
-    // Inferred branches produce only stt or stt_div; join by letting stt_div
-    // dominate.
+    // Join the natural effects of the branches (see [join_branch_effects]).
     //
-    let joined_eff : (ea:effect_annot { EffectAnnotSTT? ea \/ EffectAnnotSTTDiv? ea }) =
-      if EffectAnnotSTTDiv? (effect_annot_of_comp c1) || EffectAnnotSTTDiv? (effect_annot_of_comp c2)
-      then EffectAnnotSTTDiv
-      else EffectAnnotSTT
-    in
+    let (| joined_eff, c1, c2 |) = join_branch_effects g e1 e2 c1 c2 in
     let post_final = set_effect_annot post_hint' joined_eff in
-    let c1 = lift_branch_comp c1 joined_eff in
-    let c2 = lift_branch_comp c2 joined_eff in
     assemble post_final e1 c1 e2 c2
   #pop-options
