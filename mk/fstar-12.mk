@@ -2,69 +2,18 @@ FSTAR_OPTIONS += --lax
 FSTAR_OPTIONS += --warn_error -272 # top-level effects
 
 
-# This is a UNIFIED extraction pass: it extracts BOTH the compiler
-# (FStarC.* + FStar.Pervasives) AND the in-tree ulib plugins (the
-# FStar.Tactics.*, FStar.Reflection.*, etc. modules that used to be
-# extracted separately by mk/plugins.mk) AND the ulib plugin-base modules
-# that out-of-tree plugins (e.g. Pulse) need (formerly the fstar_pluginlib
-# library), all into a single OUTPUT_DIR.
-# It is meant to be run with CODEGEN=Plugin so that the [@@plugin]
-# annotations in both the compiler and the plugin modules get their
-# registration code emitted.
-#
-# Rather than allow-listing every ulib namespace, we extract everything
-# under FStarC and FStar that is reachable from the ROOTS below, and then
-# exclude the handful of modules that must NOT be re-extracted because they
-# are realized by the hand-written OCaml support library (fstar.lib:
-# FStar.String, FStar.List, the machine integers, ...) or are compiler
-# builtins (FStar.Stubs.*). Reachability is bounded by the ROOTS, so only
-# modules those roots depend on are ever extracted.
-
-EXTRACT :=
-
-EXTRACT += --extract 'FStarC'
-EXTRACT += --extract '+FStar'
-
-# Modules realized in OCaml (fstar.lib) or provided as compiler builtins:
-# these must NOT be re-extracted.
-EXTRACT += --extract -FStar.All
-EXTRACT += --extract -FStar.Attributes
-EXTRACT += --extract -FStar.Char
-EXTRACT += --extract -FStar.Dyn
-EXTRACT += --extract -FStar.Exn
-EXTRACT += --extract -FStar.Float64
-EXTRACT += --extract -FStar.Ghost
-EXTRACT += --extract -FStar.IO
-EXTRACT += --extract -FStar.ImmutableArray.Base
-EXTRACT += --extract -FStar.Int8
-EXTRACT += --extract -FStar.Int16
-EXTRACT += --extract -FStar.Int32
-EXTRACT += --extract -FStar.Int64
-EXTRACT += --extract -FStar.Issue
-EXTRACT += --extract -FStar.List
-EXTRACT += --extract -FStar.Pervasives.Native
-EXTRACT += --extract -FStar.Pprint
-EXTRACT += --extract -FStar.Prelude
-EXTRACT += --extract +FStar.Range
-EXTRACT += --extract -FStar.Real
-EXTRACT += --extract -FStar.String
-EXTRACT += --extract -FStar.Stubs
-EXTRACT += --extract -FStar.UInt8
-EXTRACT += --extract -FStar.UInt16
-EXTRACT += --extract -FStar.UInt32
-EXTRACT += --extract -FStar.UInt64
-
-# ...but a couple of FStar.List.* modules under the excluded FStar.List
-# namespace ARE needed by the plugins (they are not realized in OCaml).
-# Re-include them; being later, these override the -FStar.List above.
-EXTRACT += --extract +FStar.List.Pure.Base
-EXTRACT += --extract +FStar.List.Tot.Properties
+# The compiler (FStarC.*), the in-tree ulib plugins (FStar.Tactics.*,
+# FStar.Reflection.*, ...) and the ulib modules that out-of-tree plugins
+# (e.g. Pulse) need are all checked here, and extracted into a single
+# OUTPUT_DIR by one whole-program Custard pass (mk/custard-extract.mk).
+# The ROOTS below bound what is *checked*; the Custard entry points at the
+# end bound what is *emitted*.
 
 ROOTS :=
 ROOTS += $(SRC)/fstar/FStarC.Main.fst
 
 # Plugin roots: the files that define plugins in the library, so we make
-# sure to also extract them and link them into F*. (Formerly in mk/plugins.mk.)
+# sure to also extract them and link them into F*.
 ROOTS += ulib/FStar.Tactics.Effect.fsti
 ROOTS += ulib/FStar.Order.fst
 ROOTS += ulib/FStar.Reflection.TermEq.fsti
@@ -176,17 +125,13 @@ ROOTS += ulib/FStar.WellFounded.Util.fst
 ROOTS += ulib/experimental/FStar.Reflection.Typing.fst
 ROOTS += ulib/experimental/FStar.ConstantTime.Integers.fst
 
-# The Custard pipeline (mk/custard-extract.mk) extracts the same program in
-# one whole-program pass instead: the roots above bound what is *checked*,
-# and these entry points bound what is *emitted*.  The two entrypoint files
-# name the definitions a hand-written realization reaches by OCaml name --
-# the compiler's own in src/custard, and Pulse's, because Pulse is built by
-# this repo and loaded into this binary.
+# The two entrypoint files name the definitions a hand-written realization
+# reaches by OCaml name -- the compiler's own in src/custard, and Pulse's,
+# because Pulse is built by this repo and loaded into this binary.
 CUSTARD_UNIT     := fstarc
 CUSTARD_ROOT     := $(SRC)/fstar/FStarC.Main.fst
 CUSTARD_ENTRYFILES := src/custard/entrypoints.txt pulse/src/custard-entrypoints.txt
 CUSTARD_DEPS     := $(CUSTARD_ENTRYFILES)
-CUSTARD_REALIZED := ulib/FStar.Pervasives.fst
 
 CUSTARD_ENTRIES := --custard_entry FStarC.Main.main
 CUSTARD_ENTRIES += $(patsubst %,--custard_entrypoints %,$(CUSTARD_ENTRYFILES))

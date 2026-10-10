@@ -15,14 +15,10 @@
 *)
 
 (** The karamel AST, copy-pasted from karamel's [Ast.ml], together with its
-    pretty-printers.
-
-    This lives in its own module rather than in {!FStarC.Extraction.Krml} so
-    that more than one extraction pipeline can build karamel input: the ML
-    extraction does, and so does Custard ({!FStarC.Custard.PrintKrml}).  Any
-    change here has to be mirrored in karamel and reflected in the version
-    number, which stays in {!FStarC.Extraction.Krml}. *)
-module FStarC.Extraction.KrmlAst
+    pretty-printers and the versioned binary format that
+    {!FStarC.Custard.PrintKrml} writes.  Any change here has to be mirrored
+    in karamel and reflected in [current_version]. *)
+module FStarC.Custard.KrmlAst
 
 open FStarC
 open FStarC.Effect
@@ -35,7 +31,7 @@ open FStarC.Pprint
 (* COPY-PASTED ****************************************************************)
 
 (* This AST is written to a file with [save_value_to_file] and read back by
-   karamel's [InputAst], whose OCaml declarations mirror what the ML
+   karamel's [InputAst], whose OCaml declarations mirror what OCaml
    extraction emits for these ones -- so the layout here is an ABI, not a
    private choice.  Custard would otherwise inline the tuple field of every
    constructor below (doc/ref/custard.md, section 5.7), and a compiler built
@@ -398,3 +394,14 @@ instance pretty_branch : pretty branch = { pp = pp_branch; }
 instance showable_expr : showable expr = showable_from_pretty
 instance showable_decl : showable decl = showable_from_pretty
 instance showable_branch : showable branch = showable_from_pretty
+
+type version = int
+(* Version of the AST type, for binary compatibility with karamel. *)
+let current_version: version = 32
+
+type program = list decl
+type file = string & program
+
+(** Versioned binary writing/reading of ASTs.
+    Serialization/parsing is with output_value/input_value. *)
+type binary_format = version & list file

@@ -61,32 +61,24 @@ captures the behavior, and we invoke the lemma in both the while loops:
 Rust extraction
 ^^^^^^^^^^^^^^^^
 
-Pulse toolchain is accompanied with a tool to extract Pulse programs to Rust.
-The extraction pipeline maps the Pulse syntactic constructs such as ``let mut``,
-``while``, ``if-then-else``, etc. to corresponding Rust constructs. Further,
+Pulse programs are extracted to Rust through `KaRaMeL <https://github.com/FStarLang/karamel>`_'s
+Rust backend. F*'s extractor, Custard, compiles the whole program reachable from the
+entry points you name into a single ``.krml`` file, and KaRaMeL turns it into Rust.
 Pulse libraries are mapped to their Rust counterparts, e.g. ``Pulse.Lib.Vec`` to
-``std::vec``, ``Pulse.Lib.Array`` to Rust slices etc.
-
-To extract a Pulse file to Rust, we first invoke the F* extraction pipeline with
-the command line option ``--codegen Extension``. This emits a ``.ast`` file containing
-an internal AST representation of the file. We then invoke the Rust extraction tool
-that takes as input the ``.ast`` files and outputs the extracted Rust code (by-default
-the output is written to ``stdout``, if an ``-o <file>`` option is provided to the tool,
-the output is written to ``file``). For example, the first command produces the ``.ast``
-file from ``PulseTutorial.Algorithms.fst`` (which contains the Boyer-Moore algorithm implementation),
-and then the second command extracts the Rust code to ``voting.rs``. (These commands are run in the
-``pulse`` root directory, change the location of main.exe according to your setup.)
+``Vec``, ``Pulse.Lib.Slice`` to Rust slices etc. (These commands are run in the
+``pulse`` root directory.)
 
 .. code-block:: shell
 
   $ fstar.exe --include out/lib/pulse/
     --include share/pulse/examples/by-example/ --include share/pulse/examples/_cache/
-    --cmi --load_cmxs pulse  --odir . PulseTutorial.Algorithms.fst
-    --codegen Extension
-  
-  $ ./pulse2rust/main.exe PulseTutorial_Algorithms.ast -o voting.rs
+    PulseTutorial.Algorithms.fst
+    --codegen KrmlRust --custard_entry_module PulseTutorial.Algorithms -o voting.krml
 
-The output Rust code is as shown below:
+  $ ../karamel/krml -backend rust voting.krml
+
+The output below was produced by an earlier, now-retired, Pulse-specific Rust
+extractor; the code KaRaMeL generates differs in detail, but has the same shape:
 
 .. literalinclude:: ../code/pulse/voting.rs
     :language: pulse
@@ -102,34 +94,17 @@ in the repo that can be used):
     :start-after: //majorityrusttest$
     :end-before: //majorityrusttestend$
 
-A few notes about the extracted Rust code:
-
-- The Pulse function and the Rust function are generic in the type of the votes. In Rust,
-  the extracted code required the type argument to implement the ``Clone``, ``Copy``, and
-  ``PartialEq`` traits. Currently we hardcode these traits. We plan to specify these traits
-  in Pulse through attribute mechanism
-
-- The ghost arguments ``p`` and ``s`` appear in the Rust code as ``unit`` arguments, we plan
-  to make it so that these arguments are completely erased.
-
-- Whereas ``majority`` needs only read permission for the ``votes`` array in the Pulse
-  signature, the extracted Rust code specifies the argument as ``&mut``. The Rust extraction
-  pipeline currently passes all the references as ``mut``, we plan to make
-  it more precise by taking into account the permissions from the Pulse signature.
-
 C extraction
 ^^^^^^^^^^^^^
 
-Pulse programs can also be extracted to C. The extraction pipeline is based on the 
-`Karamel <https://github.com/FStarLang/karamel>`_ tool. The process to extract Pulse
-programs to C is similar to that of extracting Low* to C, described in
-`this tutorial <https://fstarlang.github.io/lowstar/html/>`_. In summary, we first generate
-``.krml`` files from using the F* extraction command line option ``--codegen krml``, and then
-run the Karamel tool on those files.
+Pulse programs can also be extracted to C, either directly by F* with
+``--codegen C``, or through `Karamel <https://github.com/FStarLang/karamel>`_ with
+``--codegen KrmlC``. The process is similar to that of extracting Low* to C, described in
+`this tutorial <https://fstarlang.github.io/lowstar/html/>`_.
 
-One catch with extracting our Boyer-Moore implementation to C is that due to the lack
-of support of polymorphism in C, Karamel monomorphizes polymorphic functions based on
-their uses. So, we write a monomorphic version of the ``majority`` function for ``u32``,
+One catch with extracting our Boyer-Moore implementation to C is that C has no
+polymorphism, so polymorphic functions are monomorphized based on their uses.
+So, we write a monomorphic version of the ``majority`` function for ``u32``,
 that internally calls the polymorphic ``majority`` function:
 
 .. literalinclude:: ../code/pulse/PulseTutorial.Algorithms.fst
@@ -143,13 +118,14 @@ Then we extract it to C as follows (the commands are run in the ``pulse`` root d
 
   $ fstar.exe --include out/lib/pulse/
     --include share/pulse/examples/by-example/ --include share/pulse/examples/_cache/
-    --cmi --load_cmxs pulse  --odir . PulseTutorial.Algorithms.fst
-    --extract 'FStar.Pervasives.Native PulseTutorial.Algorithms' --codegen krml
+    PulseTutorial.Algorithms.fst
+    --codegen C --custard_monomorphize_types true
+    --custard_entry PulseTutorial.Algorithms.majority_mono
+    -o PulseTutorial_Algorithms.c
 
-  $ ../karamel/krml -skip-compilation out.krml
-
-This produces ``PulseTutorial_Algorithms.h`` and ``PulseTutorial_Algorithms.c`` files, with the following
-implementation of ``majority``:
+This produces ``PulseTutorial_Algorithms.h`` and ``PulseTutorial_Algorithms.c`` files.
+The listing below, produced by KaRaMeL, shows the implementation of ``majority``;
+the direct C backend's output is similar:
 
 .. literalinclude:: ../code/pulse/PulseTutorial_Algorithms.c
     :language: C
@@ -187,8 +163,9 @@ For the Boyer-Moore example, we can extract the program to OCaml as follows:
 
   $ fstar.exe --include out/lib/pulse/
     --include share/pulse/examples/by-example/ --include share/pulse/examples/_cache/
-    --cmi --load_cmxs pulse  --odir . PulseTutorial.Algorithms.fst
-    --codegen OCaml
+    PulseTutorial.Algorithms.fst
+    --codegen OCaml --custard_entry_module PulseTutorial.Algorithms
+    -o PulseTutorial_Algorithms.ml
 
 and the extracted ``majority`` function looks like:
 

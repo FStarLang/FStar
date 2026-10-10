@@ -32,23 +32,19 @@ CUSTARD_MODULES := $(basename $(wildcard *.fst))
 
 CUSTARD_KRML_C ?=
 
-# Shared by all three backends.  The tests are extracted from .checked files
-# and never re-verify, so warnings that only a checker can raise are off.
-CUSTARD = --codegen Custard
-
 # OCaml.  Overrides the rule in test.mk; the prerequisites still come from
-# .depend, so $< is the module's own .checked file and $* is its underscored
+# test.mk, so $< is the module's own .checked file and $* is its underscored
 # name.
-$(OUTPUT_DIR)/$(subst .,_,%).ml:
+$(OUTPUT_DIR)/%.ml:
 	$(call msg, "CUSTARD", $(basename $(notdir $@)))
-	$(FSTAR) $< $(CUSTARD) \
+	$(FSTAR) $< --codegen OCaml \
 	  --custard_entry_module $(basename $(basename $(notdir $<))) \
 	  $(CUSTARD_FLAGS_$(basename $(basename $(notdir $<)))) -o $@
 
-# karamel's input.  Whole-program, so --extract_module is meaningless here.
-$(OUTPUT_DIR)/$(subst .,_,%).krml:
+# karamel's input.
+$(OUTPUT_DIR)/%.krml:
 	$(call msg, "CUSTARD-KRML", $(basename $(notdir $@)))
-	$(FSTAR) $< $(CUSTARD) --custard_backend KrmlC \
+	$(FSTAR) $< --codegen KrmlC \
 	  --custard_entry_module $(basename $(basename $(notdir $<))) \
 	  $(CUSTARD_FLAGS_$(basename $(basename $(notdir $<)))) -o $@
 
@@ -58,12 +54,12 @@ $(OUTPUT_DIR)/$(subst .,_,%).krml:
 
 # $(1) is the dotted module name.  ALL_CHECKED_FILES is coarse -- a
 # whole-program extraction reads far more than the module's own .checked file,
-# and .depend does not describe a target Custard invented -- but a test suite
+# and test.mk does not describe a target Custard invented -- but a test suite
 # can afford to re-extract when any of its modules changes.
 define custard_c_direct
 $(OUTPUT_DIR)/$(subst .,_,$(1)).c: $(CACHE_DIR)/$(1).fst.checked $$(ALL_CHECKED_FILES)
 	$$(call msg, "CUSTARD-C", $(1))
-	$$(FSTAR) $$< $$(CUSTARD) --custard_backend C \
+	$$(FSTAR) $$< --codegen C \
 	  --custard_monomorphize_types true --custard_entry_module $(1) \
 	  $$(CUSTARD_FLAGS_$(1)) -o $$@
 	$$(Q)$$(call custard_no_empty_blocks,$$@)

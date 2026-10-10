@@ -1,0 +1,79 @@
+(* The OCaml realization of FStar.Pervasives.  Custard pins the types of this
+   module (FStarC.Custard.Builtins.type_only_realized_modules) and compiles
+   its values from F*, but the hand-written realizations, and the compiler's
+   own src/ml, name [either], [result] and the [dtuple]s directly, so they need
+   this file to exist. *)
+type pattern = unit
+
+
+type eqtype_u = unit
+let id (x : 'a) : 'a= x
+type 'a result =
+  | V of 'a 
+  | E of Prims.exn 
+  | Err of Prims.string 
+let uu___is_V (projectee : 'a result) : Prims.bool=
+  match projectee with | V v -> true | uu___ -> false
+let __proj__V__item__v (projectee : 'a result) : 'a=
+  match projectee with | V v -> v
+let uu___is_E (projectee : 'a result) : Prims.bool=
+  match projectee with | E e -> true | uu___ -> false
+let __proj__E__item__e (projectee : 'a result) : Prims.exn=
+  match projectee with | E e -> e
+let uu___is_Err (projectee : 'a result) : Prims.bool=
+  match projectee with | Err msg -> true | uu___ -> false
+let __proj__Err__item__msg (projectee : 'a result) : Prims.string=
+  match projectee with | Err msg -> msg
+type ('a, 'b) either =
+  | Inl of 'a 
+  | Inr of 'b 
+let uu___is_Inl (projectee : ('a, 'b) either) : Prims.bool=
+  match projectee with | Inl v -> true | uu___ -> false
+let __proj__Inl__item__v (projectee : ('a, 'b) either) : 'a=
+  match projectee with | Inl v -> v
+let uu___is_Inr (projectee : ('a, 'b) either) : Prims.bool=
+  match projectee with | Inr v -> true | uu___ -> false
+let __proj__Inr__item__v (projectee : ('a, 'b) either) : 'b=
+  match projectee with | Inr v -> v
+let dfst (t : ('a, 'b) Prims.dtuple2) : 'a=
+  match t with | Prims.Mkdtuple2 (_1, _2) -> _1
+let dsnd (t : ('a, 'b) Prims.dtuple2) : 'b=
+  match t with | Prims.Mkdtuple2 (_1, _2) -> _2
+type ('a, 'b, 'c) dtuple3 =
+  | Mkdtuple3 of 'a * 'b * 'c 
+let uu___is_Mkdtuple3 (projectee : ('a, 'b, 'c) dtuple3) : Prims.bool= true
+let __proj__Mkdtuple3__item___1 (projectee : ('a, 'b, 'c) dtuple3) : 
+  'a= match projectee with | Mkdtuple3 (_1, _2, _3) -> _1
+let __proj__Mkdtuple3__item___2 (projectee : ('a, 'b, 'c) dtuple3) : 
+  'b= match projectee with | Mkdtuple3 (_1, _2, _3) -> _2
+let __proj__Mkdtuple3__item___3 (projectee : ('a, 'b, 'c) dtuple3) : 
+  'c= match projectee with | Mkdtuple3 (_1, _2, _3) -> _3
+type ('a, 'b, 'c, 'd) dtuple4 =
+  | Mkdtuple4 of 'a * 'b * 'c * 'd 
+let uu___is_Mkdtuple4 (projectee : ('a, 'b, 'c, 'd) dtuple4) : Prims.bool=
+  true
+let __proj__Mkdtuple4__item___1 (projectee : ('a, 'b, 'c, 'd) dtuple4) : 
+  'a= match projectee with | Mkdtuple4 (_1, _2, _3, _4) -> _1
+let __proj__Mkdtuple4__item___2 (projectee : ('a, 'b, 'c, 'd) dtuple4) : 
+  'b= match projectee with | Mkdtuple4 (_1, _2, _3, _4) -> _2
+let __proj__Mkdtuple4__item___3 (projectee : ('a, 'b, 'c, 'd) dtuple4) : 
+  'c= match projectee with | Mkdtuple4 (_1, _2, _3, _4) -> _3
+let __proj__Mkdtuple4__item___4 (projectee : ('a, 'b, 'c, 'd) dtuple4) : 
+  'd= match projectee with | Mkdtuple4 (_1, _2, _3, _4) -> _4
+type ('a, 'b, 'c, 'd, 'e) dtuple5 =
+  | Mkdtuple5 of 'a * 'b * 'c * 'd * 'e 
+let uu___is_Mkdtuple5 (projectee : ('a, 'b, 'c, 'd, 'e) dtuple5) :
+  Prims.bool= true
+let __proj__Mkdtuple5__item___1 (projectee : ('a, 'b, 'c, 'd, 'e) dtuple5) :
+  'a= match projectee with | Mkdtuple5 (_1, _2, _3, _4, _5) -> _1
+let __proj__Mkdtuple5__item___2 (projectee : ('a, 'b, 'c, 'd, 'e) dtuple5) :
+  'b= match projectee with | Mkdtuple5 (_1, _2, _3, _4, _5) -> _2
+let __proj__Mkdtuple5__item___3 (projectee : ('a, 'b, 'c, 'd, 'e) dtuple5) :
+  'c= match projectee with | Mkdtuple5 (_1, _2, _3, _4, _5) -> _3
+let __proj__Mkdtuple5__item___4 (projectee : ('a, 'b, 'c, 'd, 'e) dtuple5) :
+  'd= match projectee with | Mkdtuple5 (_1, _2, _3, _4, _5) -> _4
+let __proj__Mkdtuple5__item___5 (projectee : ('a, 'b, 'c, 'd, 'e) dtuple5) :
+  'e= match projectee with | Mkdtuple5 (_1, _2, _3, _4, _5) -> _5
+let rec false_elim : 'uuuuu . unit -> 'uuuuu = fun uu___ -> false_elim ()
+let singleton (x : 'uuuuu) : 'uuuuu= x
+type 'a eqtype_as_type = 'a

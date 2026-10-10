@@ -395,14 +395,15 @@ let int_module (sw : signedness & iwidth) : ML string =
      | W128 | WSizet -> "SizeT")
 
 (* A width as [FStar.Int.Cast] spells it: [uint32], [int8]. *)
-let int_cast_stem (sw : signedness & iwidth) : ML string =
-  let s, w = sw in
-  (match s with Unsigned -> "uint" | Signed -> "int") ^
-  (match w with
-   | W8 -> "8" | W16 -> "16" | W32 -> "32" | W64 -> "64"
-   | W128 ->
-     failwith "Custard: a 128-bit machine integer reached the OCaml backend"
-   | WSizet -> failwith "Custard: FStar.SizeT has no FStar.Int.Cast conversion")
+(* The number of bits a conversion to this width keeps.  [FStar.Int.Cast]
+   specifies a conversion as [v x % pow2 n] (unsigned) or [v x @% pow2 n]
+   (signed), which is [Z.extract] or [Z.signed_extract] of those bits. *)
+let int_cast_bits (w : iwidth) : ML string =
+  match w with
+  | W8 -> "8" | W16 -> "16" | W32 -> "32" | W64 -> "64"
+  | W128 ->
+    failwith "Custard: a 128-bit machine integer reached the OCaml backend"
+  | WSizet -> failwith "Custard: FStar.SizeT has no FStar.Int.Cast conversion"
 
 (* The realization's injection from [Prims.int]: [uint_to_t] at an unsigned
    width, [int_to_t] at a signed one. *)
@@ -444,7 +445,7 @@ let reject_fwidth (fw:fwidth) : ML unit =
        " type to round to, so such a program would silently compute at \
        double precision (sections 38 and 66).");
     FStarC.Errors.Msg.text
-      "Use FStar.Float64, or extract with --custard_backend C." ]
+      "Use FStar.Float64, or extract with --codegen C." ]
 
 let rec ty (t:cty) : ML string =
   match t with
@@ -482,7 +483,7 @@ let rec ty (t:cty) : ML string =
         "[wmma::fragment<matrix_a, 16, 16, 16, half, row_major>] is one type \
          and [wmma::fragment<matrix_b, ...>] another; OCaml has no such \
          construction, so section 69 is a C-backend feature \
-         (--custard_backend C).";
+         (--codegen C).";
       FStarC.Errors.Msg.text
         "The unparameterized form still works everywhere: a \
          [@@custard_extern] target with no [{0}] placeholder names one target \
@@ -539,7 +540,7 @@ let escape (s:string) : ML string =
    [FStar.Seq.Base.slice'] compares against 0 and subtracts 1 per element --
    so this is not constant folding at the margin.
 
-   The ladder is the ML extraction's ([FStarC_Extraction_ML_PrintML.ml]): the
+   The ladder is the former ML extraction's printer's: the
    two values with a shared representation are named, anything that fits in
    OCaml's [int] goes through [Z.of_int], and only a genuine bignum is
    parsed.  The bound is 2^30 rather than 2^62 because [int] is 31 bits wide
@@ -840,7 +841,9 @@ let rec term (ind:string) (e:expr) : ML string =
      gets a coercion between integer types for free; OCaml needs a conversion,
      and a narrowing one needs the masking that the C cast does implicitly.
      Both are exactly what [FStar.Int.Cast] specifies, so between two machine
-     widths that is what we call.  [FStar.SizeT] is not in that module, but its
+     widths we inline that specification (see {!int_cast_bits}) rather than
+     calling an [FStar_Int_Cast] module that no library provides.
+     [FStar.SizeT] is not in that module, but its
      conversions are exact by their own preconditions, so they can go through
      [Prims.int] the way the realization itself does.
 
@@ -858,9 +861,11 @@ let rec term (ind:string) (e:expr) : ML string =
      | TInt sw1, TFloat _ ->
        "(Z.to_float (" ^ int_module sw1 ^ ".v " ^ term ind e1 ^ "))"
      | TFloat _, TFloat _ -> term ind e1
-     | TInt sw1, TInt sw2 when snd sw1 <> WSizet && snd sw2 <> WSizet ->
-       "(FStar_Int_Cast." ^ int_cast_stem sw1 ^ "_to_" ^ int_cast_stem sw2 ^
-       " " ^ term ind e1 ^ ")"
+     | TInt sw1, TInt (sgn2, w2) when snd sw1 <> WSizet && w2 <> WSizet ->
+       "(" ^ int_inj (sgn2, w2) ^ " (Z." ^
+       (match sgn2 with Unsigned -> "extract" | Signed -> "signed_extract") ^
+       " (" ^ int_module sw1 ^ ".v " ^ term ind e1 ^ ") 0 " ^
+       int_cast_bits w2 ^ "))"
      | TInt sw1, TInt sw2 ->
        "(" ^ int_inj sw2 ^ " (" ^ int_module sw1 ^ ".v " ^ term ind e1 ^ "))"
      (* The operand's representation was lost upstream, so there is nothing to
@@ -1412,7 +1417,7 @@ let reject_target_only_types (p:program) : ML unit =
               ("Its target spelling [" ^ target ^ "] has a placeholder for an \
                 argument, so two instantiations of it are two different \
                 target types; OCaml has no such construction.  Section 69 \
-                is a C-backend feature (--custard_backend C).");
+                is a C-backend feature (--codegen C).");
             FStarC.Errors.Msg.text
               "The unparameterized form still works everywhere: a \
                [@@custard_extern] target with no [{0}] placeholder names one \
@@ -1430,7 +1435,7 @@ let reject_target_only_types (p:program) : ML unit =
                copy instead would compile and be wrong, which is the exact \
                failure the attribute exists to prevent.";
             FStarC.Errors.Msg.text
-              "Section 70.2 is a C-backend feature (--custard_backend C)." ]
+              "Section 70.2 is a C-backend feature (--codegen C)." ]
         | _ -> ())
     | _ -> ())
 

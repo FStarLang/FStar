@@ -1,6 +1,6 @@
 # Section 126.8.  The F# run tests, through Custard.
 #
-# These used to go through --codegen FSharp and a hand-written .fsproj that
+# These used to go through the old F# backend and a hand-written .fsproj that
 # named one source and referenced ulibfs.fsproj.  Custard's F# backend emits
 # its own support library and its own project (section 122), so there is
 # nothing left for a hand-written project to say, and the two .fsproj files
@@ -23,7 +23,7 @@ $(patsubst %,$(OUTPUT_DIR)/%.fsout,$(CUSTARD_FS_RUN)): \
   $(OUTPUT_DIR)/%.fsout: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "EXTRACT FS", $(basename $(notdir $@)))
 	@mkdir -p $(OUTPUT_DIR)/fs/$*
-	$(FSTAR) --codegen Custard --custard_backend FSharp \
+	$(FSTAR) --codegen FSharp \
 	  --custard_main $*.main $*.fst -o $(OUTPUT_DIR)/fs/$*/$*.fs
 	@touch $@
 

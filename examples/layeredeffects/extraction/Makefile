@@ -17,7 +17,7 @@ accept: $(addsuffix .accept, $(FILES)) DM4F_layered5_accept
 # module has to have been checked first -- there is no extract-as-you-check
 # mode.  CHECK_ARGS is that first pass.
 CHECK_ARGS=--cache_checked_modules --cache_dir out/cache --warn_error -272-333-330 --include .. --admit_smt_queries true
-FSTAR_ARGS=--codegen Custard --cache_dir out/cache --warn_error -272-333-330 --include .. --admit_smt_queries true
+FSTAR_ARGS=--codegen OCaml --cache_dir out/cache --warn_error -272-333-330 --include .. --admit_smt_queries true
 
 DM4F_layered5_gen: out
 	$(FSTAR) $(CHECK_ARGS) ../DM4F_Utils.fst

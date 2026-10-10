@@ -5,11 +5,10 @@ include $(PULSE_ROOT)/mk/common.mk
 $(call need_exe, FSTAR_EXE, fstar.exe to be used)
 $(call need_dir_mk, CACHE_DIR, directory for checked files)
 $(call need_dir_mk, OUTPUT_DIR, directory for extracted OCaml files)
-$(call need, CODEGEN, backend (OCaml / Plugin))
 $(call need_dir, SRC, source directory)
 $(call need, TAG, a tag for the .depend; to prevent clashes. Sorry.)
 $(call need, ROOTS, a list of roots for the dependency analysis)
-# Optional: EXTRACT, DEPFLAGS
+# Optional: DEPFLAGS
 #
 # TOUCH (optional): pass a file to touch everytime something is
 # performed. We also create it if it does not exist (this simplifies
@@ -23,21 +22,10 @@ maybe_touch=$(if $(TOUCH), touch $(TOUCH))
 EXTENSION := .checked
 MSG := CHECK
 
-ifeq ($(CODEGEN),FSharp)
-EEXT=fs
-else ifeq ($(CODEGEN),krml)
-EEXT=krml
-else
-EEXT=ml
-endif
-
 .PHONY: clean
 clean:
 	rm -rf $(CACHE_DIR)
 	rm -rf $(OUTPUT_DIR)
-
-.PHONY: ocaml
-ocaml: all-ml
 
 .PHONY: verify
 verify: all-checked
@@ -60,17 +48,6 @@ FSTAR := $(FSTAR_EXE) $(SIL) $(FSTAR_OPTIONS)
 	touch -c $@ # update timestamp even if cache hit
 	$(maybe_touch)
 
-%.$(EEXT): FF=$(notdir $<)
-%.$(EEXT):
-	$(call msg, "EXTRACT", $(FF))
-	$(FSTAR) --already_cached '*,' --codegen $(CODEGEN) $< -o $@
-	$(maybe_touch)
-
-%.krml: FF=$(notdir $<)
-%.krml:
-	$(call msg, "EXTRACT", $(FF))
-	$(FSTAR) --already_cached ',*' --codegen krml $< -o $@
-
 DEPSTEM := $(CACHE_DIR)/.depend$(TAG)
 
 # This file's timestamp is updated whenever anything in $(SRC)
@@ -85,7 +62,7 @@ $(DEPSTEM).touch: .force
 
 $(DEPSTEM): $(DEPSTEM).touch
 	$(call msg, "DEPEND", $(SRC))
-	$(FSTAR) --dep full $(ROOTS) $(EXTRACT) $(DEPFLAGS) -o $@
+	$(FSTAR) --dep full $(ROOTS) $(DEPFLAGS) -o $@
 
 depend: $(DEPSTEM)
 include $(DEPSTEM)
@@ -93,24 +70,13 @@ include $(DEPSTEM)
 depgraph: $(DEPSTEM).pdf
 $(DEPSTEM).pdf: $(DEPSTEM) .force
 	$(call msg, "DEPEND GRAPH", $(SRC))
-	$(FSTAR) --dep graph $(ROOTS) $(EXTRACT) $(DEPFLAGS) -o $(DEPSTEM).graph
+	$(FSTAR) --dep graph $(ROOTS) $(DEPFLAGS) -o $(DEPSTEM).graph
 	$(FSTAR_ROOT)/.scripts/simpl_graph.py $(DEPSTEM).graph > $(DEPSTEM).simpl
 	dot -Tpdf -o $@ $(DEPSTEM).simpl
 	echo "Wrote $@"
 
 all-checked: $(ALL_CHECKED_FILES)
 
-all-ml: $(ALL_ML_FILES)
-	@# Remove extraneous .ml files, which can linger after
-	@# module renamings. The realpath is necessary to prevent
-	@# discrepancies between absolute and relative paths, double
-	@# slashes, etc.
-	rm -vf $(filter-out $(realpath $(ALL_ML_FILES)), $(realpath $(wildcard $(OUTPUT_DIR)/*.ml)))
-
-all-fs: $(ALL_FS_FILES)
-	rm -vf $(filter-out $(realpath $(ALL_FS_FILES)), $(realpath $(wildcard $(OUTPUT_DIR)/*.fs)))
-
-# The Custard path: a single whole-program extraction rather than one .ml
-# per module.  Included last, because its rule's prerequisite is the list of
+# Extraction: a single whole-program Custard pass.  Included last, because its rule's prerequisite is the list of
 # checked files the .depend above defines.
 include $(PULSE_ROOT)/mk/custard-extract.mk

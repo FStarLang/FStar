@@ -29,13 +29,14 @@ val check_include_dir : ref (string -> ML unit)
 appears there. *)
 exception NotSettable of string
 
+(* The languages Custard extracts to.  [--codegen Plugin] is OCaml, see
+   [desugar_plugin_codegen]. *)
 type codegen_t =
   | OCaml
   | FSharp
-  | Krml
-  | Plugin
-  | Extension
-  | Custard
+  | KrmlC
+  | KrmlRust
+  | C
 
 //let __test_norm_all = mk_ref false
 
@@ -83,9 +84,9 @@ type opt_type =
 | OpenEnumStr of list string (* suggested values (not exhaustive) *) & string (* label *)
   // --debug …
 | PostProcessed of ((option_val -> ML option_val) (* validator *) & opt_type (* elem spec *))
-  // For options like --extract_module that require post-processing or validation
+  // For options like --odir that require post-processing or validation
 | Accumulated of opt_type (* elem spec *)
-  // For options like --extract_module that can be repeated (LIFO, accumulate the new element via Cons, at the head)
+  // For options like --custard_entry that can be repeated (LIFO, accumulate the new element via Cons, at the head)
 | ReverseAccumulated of opt_type (* elem spec *)
   // For options like --include that can be repeated (FIFO, accumulate the new element via snoc, at the tail)
 | WithSideEffect of ((unit -> ML unit) & opt_type (* elem spec *))
@@ -210,13 +211,13 @@ val cache_off                   : unit    -> ML bool
 
 val print_cache_version         : unit    -> ML bool
 
-val cmi                         : unit    -> ML bool
 
 val parse_codegen               : string  -> option codegen_t
 
 val codegen                     : unit    -> ML (option codegen_t)
+val codegen_krml                : unit    -> ML bool (* KrmlC or KrmlRust *)
+val codegen_name                : unit    -> ML string (* "" if unset *)
 
-val codegen_libs                : unit    -> ML (list (list string))
 val custard_entries             : unit    -> ML (list string)
 val custard_entrypoint_files    : unit    -> ML (list string)
 val custard_entry_modules       : unit    -> ML (list string)
@@ -231,9 +232,7 @@ val custard_max_specializations : unit    -> ML int
 val custard_norm_budget         : unit    -> ML int
 val custard_monomorphize_types  : unit    -> ML bool
 val custard_int128              : unit    -> ML bool
-val custard_backend             : unit    -> ML string
 val custard_sizet_32            : unit    -> ML bool
-val custard_backend_krml        : unit    -> ML bool
 val custard_split               : unit    -> ML bool
 val custard_unit                : unit    -> ML (option string)
 val custard_links               : unit    -> ML (list string)
@@ -315,7 +314,6 @@ val max_ifuel                   : unit    -> ML int
 val normalize_pure_terms_for_extraction
                                 : unit    -> ML bool
 
-val no_location_info            : unit    -> ML bool
 
 val no_prelude                  : unit    -> ML bool
 
@@ -325,7 +323,6 @@ val no_smt                      : unit    -> ML bool
 
 val output_to                   : unit    -> ML (option string)
 
-val krmloutput                  : unit    -> ML (option string)
 
 val output_deps_to              : unit    -> ML (option string)
 
@@ -364,6 +361,7 @@ val query_cache                 : unit    -> ML bool
 val query_stats                 : unit    -> ML bool
 
 val read_checked_file           : unit    -> ML (option string)
+val read_krml_file              : unit    -> ML (option string)
 
 val list_plugins                : unit    -> ML bool
 
@@ -379,7 +377,6 @@ val locate_file                 : unit    -> ML (option string)
 
 val locate_z3                   : unit    -> ML (option string)
 
-val read_krml_file              : unit    -> ML (option string)
 
 
 val record_options              : unit    -> ML bool
@@ -462,7 +459,6 @@ val no_positivity               : unit    -> ML bool
 
 val use_nbe                     : unit    -> ML bool
 
-val use_nbe_for_extraction      : unit    -> ML bool
 
 val trivial_pre_for_unannotated_effectful_fns
                                 : unit    -> ML bool
@@ -476,7 +472,6 @@ val debug_all_modules           : unit    -> ML bool
 
 val with_saved_options          : (unit -> ML 'a) -> ML 'a
 
-val should_extract              : string  -> codegen_t -> ML bool
 
 val should_be_already_cached    : string  -> ML bool
 

@@ -178,7 +178,7 @@ type state = {
    its keep here -- a struct with a slice field must not be cloned
    per-instantiation either, or karamel's lifetime fixpoint would not find the
    [TApp] inside it. *)
-let freeze_realized () : ML bool = Options.custard_backend () = "OCaml"
+let freeze_realized () : ML bool = Options.codegen () = Some Options.OCaml
 
 (* Section 47.2.  An external type's C spelling is a fixed string -- the
    [custard_extern] target, taken verbatim since §45.1 -- and it does not

@@ -46,8 +46,11 @@ which provides agents and skills with prompts for specific features of the langu
 
 By default F* only verifies the input code, it does not compile or execute it.
 To execute F* code one needs to translate it for instance to OCaml or F\#,
-using F\*'s code extraction facility---this is invoked using the
-command line argument `--codegen OCaml` or `--codegen FSharp`.
+using F\*'s code extraction facility, Custard---this is invoked using the
+command line argument `--codegen OCaml` or `--codegen FSharp` together with an
+entry point such as `--custard_main Main.main`. Custard can also produce C
+directly (`--codegen C`) or go through KaRaMeL (`--codegen KrmlC`,
+`--codegen KrmlRust`); see [doc/ref/custard.md](doc/ref/custard.md).
 More details on [executing F\* code via OCaml] on the [F\* wiki].
 
 [executing F\* code via OCaml]: https://github.com/FStarLang/FStar/wiki/Executing-F*-code

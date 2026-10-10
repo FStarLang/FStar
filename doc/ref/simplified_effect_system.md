@@ -880,9 +880,9 @@ Note that `is_tot_comp` keys off the effect name **only**, so a `Tot` carrying a
 
 ### Extraction constraint
 
-`mk/fstar-01.mk` and `mk/fstar-12.mk` carry `EXTRACT += --extract -FStar.Stubs`,
-and `src/extraction/FStarC.Extraction.ML.UEnv.fst` maps
-`"FStar"::"Stubs"::rest when plug ()` to `"FStarC"::rest`. Consequently **every
+`src/custard/FStarC.Custard.Builtins.fst` (`no_fstar_stubs`) maps
+`"FStar"::"Stubs"::rest` to `"FStarC"::rest`, so the compiler never compiles
+the `FStar.Stubs` modules themselves. Consequently **every
 `let`, constructor and type used by `FStar.Stubs.Reflection.V2.Data` must also
 be declared in `src/reflection/FStarC.Reflection.V2.Data.{fsti,fst}`**, with the
 same names and the same definitions. The compiler-side mirror is not optional

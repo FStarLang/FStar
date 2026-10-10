@@ -137,23 +137,6 @@ FStarC.Errors.error
 FStarC.Errors.log_issue_text
 FStarC.Errors.raise_error_text
 
-# The ML extraction AST, spelled out by FStarC_Extraction_ML_PrintML.ml.
-FStarC.Extraction.ML.Syntax.metadata
-FStarC.Extraction.ML.Syntax.mlattribute
-FStarC.Extraction.ML.Syntax.mlbranch
-FStarC.Extraction.ML.Syntax.mlident
-FStarC.Extraction.ML.Syntax.mlidents
-FStarC.Extraction.ML.Syntax.mlletbinding
-FStarC.Extraction.ML.Syntax.mlloc
-FStarC.Extraction.ML.Syntax.mlmodule
-FStarC.Extraction.ML.Syntax.mlmodulebody
-FStarC.Extraction.ML.Syntax.mlpath
-FStarC.Extraction.ML.Syntax.mlsig
-FStarC.Extraction.ML.Syntax.mlsymbol
-FStarC.Extraction.ML.Syntax.mlsymbols
-FStarC.Extraction.ML.Syntax.mltydecl
-FStarC.Extraction.ML.Syntax.mltyscheme
-
 # Typechecker and tactic types named by the plugin and NBE realizations.
 FStarC.Tactics.Monad.tac
 FStarC.Tactics.Types.ref_proofstate
@@ -340,12 +323,11 @@ FStarC.Custard.Builtins.register_post_rule
 FStarC.Custard.Builtins.register_pre_rule
 FStarC.Custard.Builtins.register_rule
 
-# Named by the *ML* extraction's plugin registration code
-# (FStarC.Extraction.ML.RegEmb), which writes OCaml names into a plugin's
-# generated .ml rather than calling them from F*.  The plugin is compiled
-# against the compiler it will be loaded into, so every name it can write has
-# to be in that binary; nothing in the extracted program reaches them, since
-# the compiler's own plugins are registered by Custard's RegEmb instead.
+# Plugin registration helpers that hand-written plugin code (and plugins
+# built for older compilers) name in OCaml rather than calling them from F*.
+# The plugin is compiled against the compiler it will be loaded into, so every
+# such name has to be in that binary; nothing in the extracted program reaches
+# them, since the compiler's own plugins are registered by Custard's RegEmb.
 # FStarC.Tactics.Native's are hand-written OCaml and so are always there.
 FStarC.Ident.lid_of_str
 FStarC.Syntax.Embeddings.debug_wrap

@@ -347,16 +347,17 @@ let load_checked_file_with_tc_result
         let _ = add_and_return checked_fn elt in
         (*
          * if there exists an interface for it, mark that too as valid
-         * this is specially needed for extraction invocations of F* with --cmi flag
+         * this is specially needed for extraction, which reads implementations
+         * across interfaces
          * for example, consider a scenario:
          * A.fst -> B.fsti -> Prims.fst
          *            ^      ^
          *            |     /
          *             B.fst
          *
-         * when all the checked files are present and F* is invoked with --extract A --cmi
+         * when all the checked files are present and F* is invoked to extract A
          * during parsing, all checked files are loaded with tc data statemachine as Unknown
-         * since it is cmi (and say B has an inline_for_extraction symbol), the client
+         * since extraction looks through interfaces, the client
          * then loads B.fst.checked BUT NOT B.fsti.checked
          * this advances the state machine for B.fst, but not for B.fsti
          * so when client loads A.fst.checked, B.fsti -- a dependence of A -- is still in Unknown

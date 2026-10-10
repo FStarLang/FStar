@@ -9,9 +9,8 @@ let raise = raise
 let raise_notrace = raise_notrace
 let exit i = exit (Z.to_int i)
 exception Failure = Failure (* NB: reusing OCaml's native Failure. *)
-(* Normally try_with is desugared by the printer (FStarC_Extraction_ML_PrintML)
-   into native OCaml try...with. This definition exists as a fallback in case
-   the desugaring does not fire. *)
+(* Normally try_with is compiled by Custard into a native OCaml try...with.
+   This definition exists as a fallback in case that does not fire. *)
 let try_with f1 f2 = try f1 () with | e -> f2 e
 (* let failwith x = raise (Failure x) *)
 let failwith (x:string) = raise (Failure x)
