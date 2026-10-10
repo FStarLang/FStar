@@ -3392,7 +3392,7 @@ EGREP_ArrowUnfoldLimit += "gave up unfolding an arrow type after 1000 layers"
 # The Cherry backend (cherry.md): C with reference-counted heap cells for the
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
 # is the assertion that every cell allocated is freed exactly once.
-CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure
+CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal
 
 # Every direct-C test goes through Cherry too, except the ones Cherry does not
 # cover yet.  These allocate with FStar.Ref/ML-heap [alloc], which neither C
@@ -3400,9 +3400,6 @@ CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClo
 CHERRY_C_SKIP += CRecType CByValue CborBoundary CUnitTy CDangle
 # and this one hands a Prims.string to hand-written C expecting a [const char *]:
 CHERRY_C_SKIP += PatStr
-# and these define a global of function type, which is a closure, and Cherry
-# has no counted globals yet:
-CHERRY_C_SKIP += ArrowUnitGlobal CHeapArity CVarArity NameWidth
 
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
                   $(C_TESTS) $(CXX_TESTS) $(CHERRY_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \

@@ -112,6 +112,8 @@ let record_tbl : ref (HashTable.t string (list (string & cty))) = mk_ref (HashTa
 let extern_tbl : ref (HashTable.t string (list bool)) = mk_ref (HashTable.create 0)
 (* The functions this program defines: their parameters and result. *)
 let fn_tbl : ref (HashTable.t string (list binder & cty)) = mk_ref (HashTable.create 0)
+(* The program's globals: definitions without parameters. *)
+let global_tbl : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
 (* How many arguments each external takes. *)
 let extern_arity : ref (HashTable.t string (int & option cty)) = mk_ref (HashTable.create 0)
 let current : ref string = mk_ref ""
@@ -412,10 +414,21 @@ let runtime_externals : list (string & string & list bool) = [
 
 (* Bind the first operand that is not an atom, and hand the rest of the node
    back to [k] with that operand replaced by its name. *)
+(* The type of [e], which for a call of a closure the IR may leave as [any]:
+   it is then what the closure's type returns after the arguments. *)
+let typ_of (e:expr) : ML cty =
+  match e.e, e.ty with
+  | EApp (hd, args), TAny ->
+    let rec drop (n:int) (t:cty) : ML cty =
+      if n = 0 then t else match t with TArrow (_, _, b) -> drop (n - 1) b | _ -> TAny in
+    drop (List.length args) hd.ty
+  | _ -> e.ty
+
 let rec bind_first (args:list expr) : ML (option (string & expr & list expr)) =
   match args with
   | [] -> None
   | a :: rest ->
+    let a = { a with ty = typ_of a } in
     if is_atom a then
       (match bind_first rest with
        | Some (x, b, rest') -> Some (x, b, a :: rest')
@@ -445,8 +458,10 @@ and rc_live (o:owned) (e:expr) : ML expr =
   match e.e with
   | EVar x ->
     if is_np e.ty && not (is_owned x) then seq (rc_op RcInc x e.ty) e else e
-  (* A function's name, as a value, is a closure that is never freed. *)
+  (* A function's name, as a value, is a closure that is never freed, and a
+     global's value is persistent once it is computed: neither is counted. *)
   | EQual (f, _) when TArrow? e.ty && HashTable.mem !fn_tbl (string_of_name f) -> e
+  | EQual (g, _) when HashTable.mem !global_tbl (string_of_name g) -> e
   | EQual _ when is_np e.ty -> unsupported "a global of reference-counted type"
   | EConst _ | EQual _ | EAny | EAbort _ -> e
 
@@ -608,9 +623,6 @@ and rc_branch (o:owned) (sc:option (string & bool)) (st:cty) (br:branch) : ML br
 
 let run_let (l:dlet) : ML dlet =
   current := string_of_name l.dl_name;
-  if Nil? l.dl_binders && is_np l.dl_ret then
-    unsupported "a global of reference-counted type"
-  else
   let o = l.dl_binders |> List.filter (fun b -> is_np b.b_ty)
                        |> List.map (fun b -> (b.b_name, b.b_ty)) in
   if Nil? o && not (touches l.dl_body) then l else
@@ -645,6 +657,12 @@ let run (p:program) : ML program =
       HashTable.add ft (string_of_name l.dl_name) (l.dl_binders, l.dl_ret)
     | _ -> ());
   fn_tbl := ft;
+  let gt = HashTable.create 50 in
+  p |> List.iter (fun d ->
+    match d with
+    | DLet l when Nil? l.dl_binders -> HashTable.add gt (string_of_name l.dl_name) true
+    | _ -> ());
+  global_tbl := gt;
   let xa = HashTable.create 50 in
   p |> List.iter (fun d ->
     match d with

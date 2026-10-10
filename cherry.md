@@ -86,7 +86,7 @@ The prototype implements this as follows:
 - For each partially applied function and number of arguments, the printer generates an environment struct, an entry point (which increments the captured values and calls the function), drop/mark functions and a constructor. For each closure type and number of arguments it generates `cherry_apply_T_k`, which switches on the arity: an exact call, a call followed by applying the result to the remaining arguments, or a new closure capturing the arguments given so far. Helpers are generated on demand from a worklist.
 - Arity counts only the non-unit parameters. Custard drops unit parameters from definitions (Mono's rule 1) while the function types at use sites keep them, so this is the only count on which a definition and its type agree; it is also the one the C backend uses for function pointers.
 - A closure call borrows the closure and takes the arguments owned; a partial application takes its arguments owned.
-- Not yet supported: parameterless globals of function type (they are counted globals, see below).
+- A global of function type holds a closure (persistent, see Globals), so a call through it is a closure call.
 
 ## Inductive types
 
@@ -113,6 +113,8 @@ There are three array kinds:
 
 Globals (like `let foo = [1;2]`) are stored as immortal (rc = 0) static cells without requiring an initializer. Since inc/dec never write to immortal cells, immutable globals can be put in .rodata.
 Storing objects in read-only mmapped files (like Lean's .olean files) is out of scope for now.
+
+The prototype does not build static cells yet. Instead, a global of reference-counted type is computed by the unit's initialization function like any other global, and is then made persistent: `cherry_mark_T(g, CHERRY_PERSIST)` sets the count of every cell reachable from it to 0, stopping at cells that are already immortal. Mark functions therefore take a mode, `CHERRY_SHARE` (make multi-threaded) or `CHERRY_PERSIST`. Reading a global (`EQual` of a global) is then free: the Cherry pass treats it like a function name, as a value that needs no inc and no dec. Building literal globals as static cells at compile time is a later optimization that removes the initialization cost.
 
 ## Heap cell reuse
 

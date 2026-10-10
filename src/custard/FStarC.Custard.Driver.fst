@@ -605,7 +605,12 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
   | "C" ->
     let all = List.map fst imports @ prog in
     let all = if Options.custard_cherry ()
-              then phase "cherry" (fun () -> Cherry.run all)
+              then begin
+                let all = phase "cherry" (fun () -> Cherry.run all) in
+                if Options.custard_dump_ir () then
+                  Format.print_string ("(* After Cherry *)\n" ^ program_to_string all ^ "\n");
+                all
+              end
               else all in
     let hdr, src = C.print_program stem cu all in
     BU.write_file (FStarC.Filepath.join_paths (FStarC.Filepath.dirname ofile)

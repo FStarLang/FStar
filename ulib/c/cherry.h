@@ -61,10 +61,19 @@ static inline bool cherry_dec_ref(cherry_obj *o) {
   return __atomic_add_fetch(&o->rc, 1, __ATOMIC_ACQ_REL) == 0;
 }
 
-/* Mark a cell shared; true when it was not already, so that its fields
-   have to be marked too. */
-static inline bool cherry_mark_ref(cherry_obj *o) {
-  if (cherry_is_scalar(o) || o->rc <= 0) return false;
+/* Marking walks everything a value reaches, in one of two modes: making it
+   shared between threads (a negative reference count, updated atomically),
+   or making it persistent (a reference count of zero: never updated and
+   never freed), which is what a global's value is once it is computed. */
+#define CHERRY_SHARE 0
+#define CHERRY_PERSIST 1
+
+/* Mark a cell; true when that changed it, so that its fields have to be
+   marked too. */
+static inline bool cherry_mark_ref(cherry_obj *o, int mode) {
+  if (cherry_is_scalar(o) || o->rc == 0) return false;
+  if (mode == CHERRY_PERSIST) { o->rc = 0; return true; }
+  if (o->rc < 0) return false;
   o->rc = -o->rc;
   return true;
 }
@@ -77,8 +86,8 @@ static inline void cherry_dec(cherry_obj *o) {
   if (cherry_dec_ref(o)) free(o);
 }
 
-static inline void cherry_mark(cherry_obj *o) {
-  (void)cherry_mark_ref(o);
+static inline void cherry_mark(cherry_obj *o, int mode) {
+  (void)cherry_mark_ref(o, mode);
 }
 
 /* ------------------------------------------------------------------------
@@ -259,7 +268,7 @@ typedef struct cherry_closure {
   cherry_obj hdr;
   cherry_code fn;
   void (*drop)(cherry_obj *);
-  void (*mark)(cherry_obj *);
+  void (*mark)(cherry_obj *, int);
   uint32_t arity;
 } cherry_closure;
 
@@ -275,9 +284,9 @@ static inline void cherry_dec_fn(cherry_fn f) {
   free(f);
 }
 
-static inline void cherry_mark_fn(cherry_fn f) {
-  if (cherry_mark_ref(f) && CHERRY_CLOSURE(f)->mark != NULL)
-    CHERRY_CLOSURE(f)->mark(f);
+static inline void cherry_mark_fn(cherry_fn f, int mode) {
+  if (cherry_mark_ref(f, mode) && CHERRY_CLOSURE(f)->mark != NULL)
+    CHERRY_CLOSURE(f)->mark(f, mode);
 }
 
 #ifdef __cplusplus

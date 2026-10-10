@@ -543,6 +543,11 @@ let rc_fn (op:string) (t:cty) : ML string =
   | TArrow _ -> if op = "inc" then "cherry_inc" else "cherry_" ^ op ^ "_fn"
   | _ -> failwith "Custard: reference counting at a plain type"
 
+(* A call of {!rc_fn}.  Marking takes the mode, which a generated marking
+   function receives as [m] and passes on. *)
+let rc_call (op:string) (t:cty) (x:string) : ML string =
+  rc_fn op t ^ "(" ^ x ^ (if op = "mark" then ", m" else "") ^ ")"
+
 (* Closures.  A function value is a [cherry_fn] (ulib/c/cherry.h), and the
    code that builds and calls one is generated on demand: printing a body
    files a request for each helper it uses, and {!cherry_closure_helpers}
@@ -561,6 +566,9 @@ let clo_queue : ref (list clo_req) = mk_ref []
 let clo_seen : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
 let arrow_ids : ref (list (cty & int)) = mk_ref []
 
+(* Under Cherry, the globals of function type, which hold closures: their
+   types, since the head of an application is typed as its result. *)
+let fn_globals : ref (HashTable.t string cty) = mk_ref (HashTable.create 0)
 let fn_sig (n:name) : ML (option (list binder & cty)) =
   HashTable.try_find !fn_sigs (string_of_name n)
 
@@ -647,7 +655,8 @@ let is_closure_app (hd:expr) (args:list expr) : ML bool =
    | EQual (n, _) ->
      (match fn_sig n with
       | Some (bs, _) -> List.length args < List.length bs
-      | None -> false)
+      (* A global of function type holds a closure. *)
+      | None -> Some? (HashTable.try_find !fn_globals (string_of_name n)))
    | _ -> true)
 
 (* The typed variables pattern [p] binds against a scrutinee of type [t]. *)
@@ -1710,6 +1719,7 @@ let reset_program_state () : ML unit =
   void_fns := HashTable.create 0;
   arities := HashTable.create 0;
   fn_sigs := HashTable.create 0;
+  fn_globals := HashTable.create 0;
   clo_queue := [];
   clo_seen := HashTable.create 0;
   arrow_ids := [];
@@ -1945,13 +1955,20 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
     let args = args |> List.filter (fun (a:expr) -> not (TUnit? a.ty))
                     |> List.map (fun (a:expr) -> c_rvalue out ind a.ty a) in
     (match hd.e with
-     | EQual (n, _) ->
+     | EQual (n, _) when Some? (fn_sig n) ->
        clo_request (ReqPap (n, k, e.ty));
        pap_name n k ^ "(" ^ String.concat ", " args ^ ")"
      | _ ->
        let f = c_expr out ind hd in
-       clo_request (ReqApply (hd.ty, k));
-       apply_name hd.ty k ^ "(" ^ String.concat ", " (f :: args) ^ ")")
+       let ht =
+         match hd.e with
+         | EQual (n, _) ->
+           (match HashTable.try_find !fn_globals (string_of_name n) with
+            | Some t -> t
+            | None -> hd.ty)
+         | _ -> hd.ty in
+       clo_request (ReqApply (ht, k));
+       apply_name ht k ^ "(" ^ String.concat ", " (f :: args) ^ ")")
   | EApp (hd, args) ->
     (* Drop the arguments that correspond to dropped parameters.  ANF has made
        every operand pure, so nothing is lost by not evaluating them. *)
@@ -3506,7 +3523,12 @@ let global_init (l:dlet) : ML string =
   ctr := 0;
   void_ret := false;
   reset_scope ();
-  emit "  " (D_Assign (c_name l.dl_name)) l.dl_body
+  emit "  " (D_Assign (c_name l.dl_name)) l.dl_body ^
+  (* Under Cherry a global's value is made persistent once it is computed:
+     nothing counts references to it again, so reading it is free. *)
+  (if is_nonplain_ty l.dl_ret
+   then "  " ^ rc_fn "mark" l.dl_ret ^ "(" ^ c_name l.dl_name ^ ", CHERRY_PERSIST);\n"
+   else "")
 
 let let_decl (l:dlet) : ML string =
   current := string_of_name l.dl_name;
@@ -4113,7 +4135,7 @@ let cherry_helpers (p:program) : ML (list string & list string) =
   let on_fields (op:string) (ind:string) (fs:list (string & cty))
                 (sel:string -> ML string) : ML string =
     String.concat "" (fs |> List.collect (fun (f, t) ->
-      if is_nonplain_ty t then [ind ^ rc_fn op t ^ "(" ^ sel f ^ ");\n"] else [])) in
+      if is_nonplain_ty t then [ind ^ rc_call op t (sel f) ^ ";\n"] else [])) in
   let has_counted (fs:list (string & cty)) : ML bool =
     fs |> List.existsb (fun (_, t) -> is_nonplain_ty t) in
   p |> List.iter (fun d ->
@@ -4147,13 +4169,13 @@ let cherry_helpers (p:program) : ML (list string & list string) =
            "    default: break;\n  }\n" in
          fn ("static inline void cherry_dec_" ^ n ^ "(" ^ n ^ " x)")
             ("  if (!cherry_dec_ref(x)) return;\n" ^ cases "dec" ^ "  free(x);\n");
-         fn ("static inline void cherry_mark_" ^ n ^ "(" ^ n ^ " x)")
-            ("  if (!cherry_mark_ref(x)) return;\n" ^ cases "mark")
+         fn ("static inline void cherry_mark_" ^ n ^ "(" ^ n ^ " x, int m)")
+            ("  if (!cherry_mark_ref(x, m)) return;\n" ^ cases "mark")
        | _ ->
          let body (op:string) : ML string =
            "  (void)x;\n" ^
            (match dt.dt_body with
-            | TAbbrev t -> "  " ^ rc_fn op t ^ "(x);\n"
+            | TAbbrev t -> "  " ^ rc_call op t "x" ^ ";\n"
             | TRecord fs -> on_fields op "  " fs (fun f -> "x." ^ c_var f)
             | TVariant [(_, fs)] -> on_fields op "  " fs (fun f -> "x." ^ c_var f)
             | TVariant cs ->
@@ -4166,7 +4188,9 @@ let cherry_helpers (p:program) : ML (list string & list string) =
               "    default: break;\n  }\n"
             | TAbstract -> "") in
          ["inc"; "dec"; "mark"] |> List.iter (fun op ->
-           fn ("static inline void cherry_" ^ op ^ "_" ^ n ^ "(" ^ n ^ " x)") (body op)))
+           fn ("static inline void cherry_" ^ op ^ "_" ^ n ^ "(" ^ n ^ " x" ^
+               (if op = "mark" then ", int m" else "") ^ ")")
+              ((if op = "mark" then "  (void)m;\n" else "") ^ body op)))
     | _ -> ());
   (!protos, !defs)
 
@@ -4193,7 +4217,7 @@ let cherry_closure_helpers () : ML (list string & list string) =
                            |> List.map (fun t -> ", " ^ decl_of t "")) ^ ")") ^ ")" in
   let on (op:string) (sel:string) (xs:list (string & cty)) : ML string =
     String.concat "" (nonunit xs |> List.collect (fun (x, t) ->
-      if is_nonplain_ty t then ["  " ^ rc_fn op t ^ "(" ^ sel ^ x ^ ");\n"] else [])) in
+      if is_nonplain_ty t then ["  " ^ rc_call op t (sel ^ x) ^ ";\n"] else [])) in
   (* A closure cell holding [fields], built by [ctor] taking them all owned,
      whose entry point [entry] is defined by [body]. *)
   let closure (s:string) (fields:list (string & cty)) (arity:int)
@@ -4208,7 +4232,8 @@ let cherry_closure_helpers () : ML (list string & list string) =
     let drop, mark =
       if not counted then "NULL", "NULL" else begin
         ["dec"; "mark"] |> List.iter (fun op ->
-          fn ("static inline void " ^ s ^ "_" ^ op ^ "(cherry_obj *o)")
+          fn ("static inline void " ^ s ^ "_" ^ op ^ "(cherry_obj *o" ^
+              (if op = "mark" then ", int m" else "") ^ ")")
              ("  struct " ^ s ^ " *env = (struct " ^ s ^ " *)o;\n" ^ on op "env->" fields));
         s ^ "_dec", s ^ "_mark"
       end in
@@ -4412,7 +4437,9 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
       if TUnit? l.dl_ret && Cons? l.dl_binders then HashTable.add vt (string_of_name l.dl_name) true
       ;
       if Cons? l.dl_binders then
-        HashTable.add !fn_sigs (string_of_name l.dl_name) (l.dl_binders, l.dl_ret);
+        HashTable.add !fn_sigs (string_of_name l.dl_name) (l.dl_binders, l.dl_ret)
+      else if Some? (arrow_view l.dl_ret) then
+        HashTable.add !fn_globals (string_of_name l.dl_name) l.dl_ret;
       (* A parameterless definition of arrow type is lowered to a *variable*
          of function-pointer type (section 25.3), and a call through it
          supplies every argument at once -- so its arity is the arity of its
