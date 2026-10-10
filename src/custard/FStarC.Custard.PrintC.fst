@@ -4349,6 +4349,20 @@ let cherry_closure_helpers () : ML (list string & list string) =
       let call = c_name n ^ "(" ^
                  String.concat ", " (List.map (fun x -> "env->" ^ x) (names fields) @
                                      names eparams) ^ ")" in
+      (* The entry point takes its arguments owned, and the closure holds its
+         fields, while the function's own convention (Cherry's borrow
+         inference) may borrow some of them: a borrowed field is lent as it
+         is, and a borrowed argument is released after the call. *)
+      let owned = match HashTable.try_find !Cherry.param_owned (string_of_name n) with
+                  | Some fl -> fl
+                  | None -> List.map (fun _ -> true) bs in
+      let own_f, own_p = List.splitAt k owned in
+      let fields_owned = List.zip fields own_f |> List.collect (fun (f, o) -> if o then [f] else []) in
+      let borrowed_ps = List.zip eparams own_p |> List.collect (fun (x, o) -> if o then [] else [x]) in
+      let ret_of (call:string) (ret:cty) (void:bool) : ML string =
+        if Nil? (List.filter (fun (_, t) -> is_nonplain_ty t) borrowed_ps) then ret_of call ret void
+        else if void then "  " ^ call ^ ";\n" ^ on "dec" "" borrowed_ps ^ "  return " ^ unit_value ^ ";\n"
+        else "  " ^ decl_of ret "r" ^ " = " ^ call ^ ";\n" ^ on "dec" "" borrowed_ps ^ "  return r;\n" in
       if k = 0 then begin
         fn ("static inline " ^ decl_of ret (entry ^ "(cherry_fn self" ^ params eparams ^ ")"))
            ("  (void)self;\n" ^ ret_of call ret void);
@@ -4357,7 +4371,7 @@ let cherry_closure_helpers () : ML (list string & list string) =
       end else
         closure ("cherry_env_" ^ c_name n ^ "_" ^ string_of_int k) fields
                 arity entry ret eparams
-                (on "inc" "env->" fields ^ ret_of call ret void)
+                (on "inc" "env->" fields_owned ^ ret_of call ret void)
                 (pap_name n k)
     | ReqApply (t, k) ->
       let doms, rk = arrow_take k t in

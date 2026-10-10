@@ -49,11 +49,19 @@ Borrow inference runs per monomorphized instance, over the strongly connected co
    - it may be reset/reused (in-place updates of strings, immutable arrays, constructor cells);
    - it is passed to an owned parameter;
    - it is passed to an owned parameter in a tail call. This preserves the tail call, which would otherwise be followed by a dec.
-3. Storing a borrowed parameter into a constructor, closure, reference, or Pulse container costs one inc; this does not force the parameter to be owned.
+3. Storing a parameter into a constructor, closure, or partial application marks it owned, as in Lean: the stored value is usually consumed, so an owned parameter saves an inc.
 
 Mutual recursion cannot span F* modules, so inference proceeds in module dependency order. The inferred conventions are exported in the module's custard interface (Loader/imports) so that callers in other modules agree with them.
 
 Borrowed locals: a projection of a field of an immutable cell is borrowed for as long as the cell is live, so it needs no inc. Reads from mutable cells (ML references, Pulse references, arrays) are always owned, since a callee could overwrite the cell and free the old value.
+
+Prototype status (`FStarC.Custard.Cherry.infer_borrows`):
+- The fixpoint runs over the whole (monomorphized) program at once rather than per SCC. The result is `Cherry.param_owned`, one flag per binder; plain and unit binders are listed as owned.
+- The rules are rules 2 and 3 (except reset/reuse, which does not exist yet). Records and tuples count as constructors, and passing a value to a closure call marks it owned. In the tail-call rule, any fresh argument (anything other than a variable or a global) counts as owned.
+- Fields bound by a match on a borrowed variable (a borrowed parameter or such a field) are borrowed. They get no inc, and the scrutinee is not dec'd. Record projections (`p.f`) still inc.
+- Definitions whose convention other code relies on are pinned to all-owned: imported definitions, and in `--custard_unit` mode, the non-private ones. Interfaces do not carry conventions yet.
+- The closure entry of a definition (static closures and partial applications) adapts the conventions. Borrowed captured fields are not inc'd. Borrowed arguments are dec'd after the call, since the entry receives them owned. No separate `_boxed` wrapper is needed.
+- Not yet done: `[@@cherry_owned]`/`[@@cherry_borrowed]`, borrowed record projections, and conventions in custard interfaces.
 
 ## Inserting reference counting operations
 

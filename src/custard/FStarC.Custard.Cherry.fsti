@@ -38,4 +38,8 @@ val runtime_types : list string
 
 val nonplain_types : program -> ML (list string)
 
+(** After [run]: for each definition, which parameters it takes owned (the
+    others are borrowed; a plain parameter is listed as owned). *)
+val param_owned : ref (FStarC.HashTable.t string (list bool))
+
 val run : program -> ML program

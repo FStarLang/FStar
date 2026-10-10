@@ -23,6 +23,7 @@ open FStarC.Errors.Msg
 
 module HashTable = FStarC.HashTable
 module E = FStarC.Errors
+module Options = FStarC.Options
 
 (* -------------------------------------------------------------------- *)
 (* Which types are reference counted                                    *)
@@ -387,13 +388,133 @@ let is_atom (a:expr) : ML bool =
   | EVar _ | EQual _ -> true
   | _ -> not (touches a) && is_pure a.eff
 
-(* Which arguments a call takes ownership of: [None] for all of them, which
-   is what a definition of this program does.  An external borrows, except
-   where the runtime says otherwise. *)
-let call_owns (hd:expr) : ML (option (list bool)) =
+(* The calling convention of each definition (cherry.md, "Borrow
+   inference"): for each parameter, whether the callee takes it owned.  A
+   plain parameter is neither, and is listed as owned. *)
+let param_owned : ref (HashTable.t string (list bool)) = mk_ref (HashTable.create 0)
+
+(* Which arguments a call takes ownership of: [None] for all of them.  An
+   external borrows, except where the runtime says otherwise; a saturated
+   call of a definition follows its inferred convention. *)
+let call_owns (hd:expr) (args:list expr) : ML (option (list bool)) =
   match hd.e with
-  | EQual (n, _) -> HashTable.try_find !extern_tbl (string_of_name n)
+  | EQual (n, _) ->
+    (match HashTable.try_find !extern_tbl (string_of_name n) with
+     | Some fl -> Some fl
+     | None ->
+       (* A partial application is a closure, which takes what it is given. *)
+       match HashTable.try_find !fn_tbl (string_of_name n), HashTable.try_find !param_owned (string_of_name n) with
+       | Some (bs, _), Some fl when List.length args = List.length bs -> Some fl
+       | _ -> None)
   | _ -> None
+
+(* Borrow inference.  Every counted parameter starts out borrowed, and is
+   made owned when the body passes it where something is taken owned: to an
+   owned parameter of a call, as an argument of a closure call, or into a
+   constructor, record, tuple or partial application (as in Lean: the value
+   is usually consumed there, and an owned parameter saves the increment).
+   A tail call passing an owned value to a borrowed parameter makes that
+   parameter owned instead, which keeps the call a tail call: otherwise the
+   value would be released after it.  The fields of a borrowed scrutinee are
+   borrowed.  Iterated to a fixpoint over the whole program. *)
+let rec set_nth (i:int) (x:bool) (l:list bool) : ML (list bool) =
+  match l with
+  | [] -> []
+  | y :: rest -> if i = 0 then x :: rest else y :: set_nth (i - 1) x rest
+
+let infer_borrows (p:program) (pinned:string -> ML bool) : ML unit =
+  let tbl : HashTable.t string (list bool) = HashTable.create 50 in
+  let defs = p |> List.collect (fun d ->
+    match d with
+    | DLet l when Cons? l.dl_binders -> [l]
+    | _ -> []) in
+  defs |> List.iter (fun l ->
+    let all = pinned (string_of_name l.dl_name) in
+    HashTable.add tbl (string_of_name l.dl_name)
+      (l.dl_binders |> List.map (fun b -> all || not (is_np b.b_ty))));
+  let changed = mk_ref true in
+  let own (f:string) (i:int) : ML unit =
+    match HashTable.try_find tbl f with
+    | Some fl when i < List.length fl && not (List.nth fl i) ->
+      HashTable.add tbl f (set_nth i true fl); changed := true
+    | _ -> () in
+  let visit (l:dlet) : ML unit =
+    let me = string_of_name l.dl_name in
+    let params = l.dl_binders |> List.mapi (fun i b -> (b.b_name, i)) in
+    let param_ix (y:string) : ML (option int) =
+      match List.tryFind (fun (x, _) -> x = y) params with
+      | Some (_, i) -> Some i
+      | None -> None in
+    (* [bf]: the variables in scope that are fields of a borrowed value. *)
+    let is_owned_var (bf:list string) (y:string) : ML bool =
+      if List.mem y bf then false else
+      match param_ix y with
+      | None -> true
+      | Some i -> (match HashTable.try_find tbl me with
+                   | Some fl -> List.nth fl i
+                   | None -> true) in
+    let own_arg (a:expr) : ML unit =
+      match a.e with
+      | EVar y -> (match param_ix y with Some i -> own me i | None -> ())
+      | _ -> () in
+    let rec go' (bf:list string) (tail:bool) (e:expr) : ML unit =
+      let go = go' bf in
+      match e.e with
+      | EApp (hd, args) ->
+        (match hd.e with
+         | EQual (g, _) ->
+           let gs = string_of_name g in
+           (match HashTable.try_find !extern_tbl gs with
+            | Some fl ->
+              args |> List.iteri (fun i a -> if i < List.length fl && List.nth fl i then own_arg a)
+            | None ->
+              match HashTable.try_find !fn_tbl gs, HashTable.try_find tbl gs with
+              | Some (bs, _), Some fl ->
+                if List.length args = List.length bs then
+                  args |> List.iteri (fun i (a:expr) ->
+                    if List.nth fl i then own_arg a
+                    else if tail && is_np a.ty then
+                      (match a.e with
+                       | EVar y -> if is_owned_var bf y then own gs i
+                       | EQual _ -> ()
+                       | _ -> own gs i))
+                else List.iter own_arg args
+              | _ ->
+                (* A global holding a closure. *)
+                if HashTable.mem !global_tbl gs then List.iter own_arg args)
+         | _ -> List.iter own_arg args; go false hd);
+        List.iter (go false) args
+      | ELet (x, _, a, b) -> go false a; go' (List.filter (fun y -> y <> x) bf) tail b
+      | ESeq (a, b) -> go false a; go tail b
+      | EIf (c, t, f) -> go false c; go tail t; go tail f
+      | EMatch (sc, brs) ->
+        go false sc;
+        let borrowed_sc = (match sc.e with
+                           | EVar y -> is_np sc.ty && not (is_owned_var bf y)
+                           | _ -> false) in
+        brs |> List.iter (fun (p, g, b) ->
+          let vs = pat_vars p in
+          let bf = List.filter (fun y -> not (List.mem y vs)) bf in
+          let bf = if borrowed_sc then vs @ bf else bf in
+          (match g with Some g -> go' bf false g | None -> ()); go' bf tail b)
+      | EWhile (a, b) -> go false a; go false b
+      | EOp (_, es) -> List.iter (go false) es
+      | ECtor (_, es) | ETuple es -> List.iter own_arg es; List.iter (go false) es
+      | ERecord (_, fs) -> fs |> List.iter (fun (_, x) -> own_arg x; go false x)
+      | EProj (a, _, _) | EDiscrim (a, _) | ECast (a, _) | ECoerce (a, _) -> go false a
+      | EFun (_, b) -> go false b
+      | ETry (a, brs) -> go false a; brs |> List.iter (fun (_, _, b) -> go false b)
+      | ERaise a -> go false a
+      | _ -> () in
+    go' [] true l.dl_body in
+  let rec loop (fuel:int) : ML unit =
+    if !changed && fuel > 0 then begin
+      changed := false;
+      List.iter visit defs;
+      loop (fuel - 1)
+    end in
+  loop 10000;
+  param_owned := tbl
 
 (* The externals the runtime implements: the F* name, the C name, and which
    arguments are taken owned. *)
@@ -517,7 +638,7 @@ and rc_live (o:owned) (e:expr) : ML expr =
     (match bind_first args with
      | Some (x, a, args') -> rc_live o (let_ x a.ty a { e with e = EApp (hd, args') })
      | None ->
-       call o (call_owns hd) args e)
+       call o (call_owns hd args) args e)
   (* A call of a closure borrows the closure and takes the arguments. *)
   | EApp (hd, args) ->
     (match bind_first (hd :: args) with
@@ -630,7 +751,8 @@ and call (o:owned) (owns:option (list bool)) (args:list expr) (node:expr)
 
 (* One branch.  [sc] is the scrutinee when it is a counted variable, and
    whether this match owns it.  Every field the branch uses is given a
-   reference of its own before an owned scrutinee is released. *)
+   reference of its own before an owned scrutinee is released; the fields of
+   a borrowed one are borrowed. *)
 and rc_branch (o:owned) (sc:option (string & bool)) (st:cty) (br:branch) : ML branch =
   let p, g, b = br in
   if Some? g then unsupported "a pattern guard" else
@@ -643,15 +765,23 @@ and rc_branch (o:owned) (sc:option (string & bool)) (st:cty) (br:branch) : ML br
   match sc with
   | None ->
     (p, g, decs dead (rc (keep @ fields) b))
-  | Some (x, _) ->
+  (* A borrowed scrutinee outlives the match, and so do its fields: they
+     are borrowed too, and cost nothing. *)
+  | Some (_, false) ->
+    (p, g, decs dead (rc keep b))
+  | Some (x, true) ->
     let dead_x, dead_other = List.partition (fun (y, _) -> y = x) dead in
     let body = rc (keep @ fields) b in
     (p, g, decs dead_other (incs fields (decs dead_x body)))
 
 let run_let (l:dlet) : ML dlet =
   current := string_of_name l.dl_name;
-  let o = l.dl_binders |> List.filter (fun b -> is_np b.b_ty)
-                       |> List.map (fun b -> (b.b_name, b.b_ty)) in
+  let fl = match HashTable.try_find !param_owned (string_of_name l.dl_name) with
+           | Some fl -> fl
+           | None -> List.map (fun _ -> true) l.dl_binders in
+  let o = List.zip l.dl_binders fl
+          |> List.filter (fun (b, ow) -> ow && is_np b.b_ty)
+          |> List.map (fun (b, _) -> (b.b_name, b.b_ty)) in
   if Nil? o && not (touches l.dl_body) then l else
   let body = rc o l.dl_body in
   { l with dl_body = body; dl_eff = join_eff l.dl_eff body.eff }
@@ -701,6 +831,17 @@ let run (p:program) : ML program =
   extern_arity := xa;
   counter := 0;
   let p = List.collect lift_decl p in
+  (* The definitions another unit calls keep the all-owned convention, which
+     is what that unit assumes. *)
+  let pin : HashTable.t string bool = HashTable.create 50 in
+  p |> List.iter (fun d ->
+    match d with
+    | DLet l when List.existsb Imported? l.dl_flags ||
+                  (Some? (Options.custard_unit ()) && not (List.existsb Private? l.dl_flags)) ->
+      HashTable.add pin (string_of_name l.dl_name) true
+    | _ -> ());
+  let pinned (f:string) : ML bool = HashTable.mem pin f in
+  infer_borrows p pinned;
   counter := 0;
   p |> List.map (fun d ->
     match d with
