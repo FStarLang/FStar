@@ -68,13 +68,16 @@ let double_fold_transpose_lemma #c #eq
     = CF.fold cm m0 mk (trans_ofs offset_gen j) in
   let unfold lhs = CF.fold cm m0 mk subfold_lhs_precise in
   let unfold rhs = CF.fold cm n0 nk subfold_rhs_precise in 
+  // aux_lhs/aux_rhs are stated with (i+m0)/(j+n0), not (m0+i)/(n0+j), to
+  // syntactically match the preconditions of fold_offset_elimination_lemma
+  // below; the commuted form made those preconditions flaky.
   let aux_lhs (i: under m) : Lemma 
-    (CF.fold cm n0 nk (offset_gen (m0+i)) == CF.fold cm 0 (n-1) (gen i)) = 
-      CF.fold_offset_irrelevance_lemma cm n0 nk (offset_gen (m0+i)) 0 (n-1) (gen i) in
+    (CF.fold cm n0 nk (offset_gen (i+m0)) == CF.fold cm 0 (n-1) (gen i)) = 
+      CF.fold_offset_irrelevance_lemma cm n0 nk (offset_gen (i+m0)) 0 (n-1) (gen i) in
   let aux_rhs (j: under n) : Lemma 
-    (CF.fold cm m0 mk (trans_ofs offset_gen (n0+j)) == 
+    (CF.fold cm m0 mk (trans_ofs offset_gen (j+n0)) == 
      CF.fold cm 0 (m-1) (trans gen j)) 
-    = CF.fold_offset_irrelevance_lemma cm m0 mk (trans_ofs offset_gen (n0+j)) 
+    = CF.fold_offset_irrelevance_lemma cm m0 mk (trans_ofs offset_gen (j+n0)) 
                                        0 (m-1) (trans gen j) in
   FStar.Classical.forall_intro aux_lhs;    
   FStar.Classical.forall_intro aux_rhs;    

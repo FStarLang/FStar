@@ -338,7 +338,7 @@ let defaults = [
   ("z3rlimit"                                  , Int 5);
   ("z3seed"                                    , Int 0);
   ("z3smtopt"                                  , List []);
-  ("z3version"                                 , String "4.13.3");
+  ("z3version"                                 , String "5.1.0");
 ]
 
 let init () =
@@ -1739,7 +1739,7 @@ and reads");
   ( noshort,
     "z3version",
     SimpleStr "version",
-    text "Set the version of Z3 that is to be used. Default: 4.13.3");
+    text "Set the version of Z3 that is to be used. Default: 5.1.0");
 
   ( noshort,
     "__no_positivity",

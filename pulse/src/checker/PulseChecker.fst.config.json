@@ -7,7 +7,7 @@
     "--ext",
     "fly_deps",
     "--z3version",
-    "4.13.3",
+    "5.1.0",
     "--smtencoding.elim_box",
     "true",
     "--z3smtopt",

@@ -314,7 +314,11 @@ let rec hash_slice_lemma
   (ensures hash x base prime i j == hash y base prime i' j')
   (decreases j - i)
 = if i = j then ()
-  else hash_slice_lemma x y base prime i (j - 1) i' (j' - 1)
+  else (
+    // instantiate eq_sub_seq's quantifier at k = j - 1 - i
+    assert (Seq.index x (i + (j - 1 - i)) == Seq.index y (i' + (j - 1 - i)));
+    hash_slice_lemma x y base prime i (j - 1) i' (j' - 1)
+  )
 
 // A helper predicate to state our main correctness property
 let maybe_found #t (xs pat:str t) (o:option nat) =
