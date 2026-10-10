@@ -171,6 +171,10 @@ val with_ctx : ctx:string -> (f : unit -> ML 'a) -> ML 'a
 (* As above, but only add the context conditionally. *)
 val with_ctx_if : cond:bool -> ctx:string -> (f : unit -> ML 'a) -> ML 'a
 
+(* Run a given function, returning the errors and the other issues it
+logged/raised separately, without adding any of them to the old handler. *)
+val catch_errors_aux (f : unit -> ML 'a) : ML (list issue & list issue & option 'a)
+
 (* Delete all error contexts for this comp. *)
 val no_ctx : (f : unit -> ML 'a) -> ML 'a
 
