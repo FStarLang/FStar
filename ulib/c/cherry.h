@@ -82,6 +82,16 @@ static inline bool cherry_mark_ref(cherry_obj *o, int mode) {
 #define CHERRY_TAG_BIGINT 0xFFFFFFF0u
 #define CHERRY_TAG_STRING 0xFFFFFFF1u
 
+/* Freeing and marking walk values of any depth without recursing on the C
+   stack.  The generated [dec] and [mark] of a type hand the cell whose
+   fields have to be visited to [cherry_defer], with the function that
+   visits them: it runs at once, unless a walk is already under way on this
+   thread, in which case it joins that walk's work list.  A visit function
+   follows a field of its own type in a loop, so a list's spine never
+   reaches the work list. */
+typedef void (*cherry_work_fn)(cherry_obj *, int);
+void cherry_defer(cherry_obj *o, cherry_work_fn f, int mode);
+
 static inline void cherry_dec(cherry_obj *o) {
   if (cherry_dec_ref(o)) free(o);
 }
@@ -278,15 +288,17 @@ typedef struct cherry_closure {
   static CHERRY_UNUSED cherry_closure name =                               \
     { { 0, CHERRY_TAG_CLOSURE }, (cherry_code)(code), NULL, NULL, n }
 
+void cherry_free_closure(cherry_obj *f, int mode);
+
 static inline void cherry_dec_fn(cherry_fn f) {
   if (!cherry_dec_ref(f)) return;
-  if (CHERRY_CLOSURE(f)->drop != NULL) CHERRY_CLOSURE(f)->drop(f);
-  free(f);
+  if (CHERRY_CLOSURE(f)->drop != NULL) cherry_defer(f, cherry_free_closure, 0);
+  else free(f);
 }
 
 static inline void cherry_mark_fn(cherry_fn f, int mode) {
   if (cherry_mark_ref(f, mode) && CHERRY_CLOSURE(f)->mark != NULL)
-    CHERRY_CLOSURE(f)->mark(f, mode);
+    cherry_defer(f, CHERRY_CLOSURE(f)->mark, mode);
 }
 
 /* ------------------------------------------------------------------------

@@ -24,6 +24,11 @@ So inc/dec is one well-predicted branch on the sign, and the common single-threa
 All cells start out single-threaded. Marking turns a cell multi-threaded, and recursively marks everything reachable from it. Marking is one-way and stops at cells that are already multi-threaded (or immortal), so its cost is proportional to the newly published part of the object graph. Every type has a mark function, generated the same way as the dec function.
 Since only the owning thread can publish a single-threaded cell, a thread that observes a single-threaded rc knows that no other thread can access the cell concurrently.
 
+Freeing and marking never recurse on the C stack, so values of any depth (long lists, deep terms) can be dropped and published:
+- A cell is processed by a generated visit function: `cherry_free_T` decs the fields and frees the cell, while `cherry_markf_T` marks the fields. The visit loops on the last field of the cell's own type, so a list spine is walked in place.
+- `cherry_dec_T` and `cherry_mark_T` hand the cell and its visit function to `cherry_defer` (cherry.c). It runs the visit at once, unless a walk is already in progress on this thread. In that case it pushes the cell onto that thread's work list, which the outer walk drains. The same applies to closures (drop/mark of the environment) and references (the value).
+- The work list is per thread and kept between walks.
+
 Values must be marked when they become reachable from another thread (publication points):
 - Storing a value into a Pulse container (Pulse references, Pulse arrays). These containers have no refcount, and Pulse permissions allow multiple threads to read from them concurrently (and then inc the read value). Invariant: everything stored in a Pulse container is multi-threaded. As a consequence, mark functions never need to look inside a Pulse container.
 - Storing a value into a mutable cell (reference, mutable array) that is multi-threaded.

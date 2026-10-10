@@ -1,4 +1,4 @@
-/* Slow paths of the Cherry runtime: big integers and strings.  See cherry.h.
+/* Slow paths of the Cherry runtime: deferred work, big integers and strings.  See cherry.h.
 
    Big integers are sign and magnitude, the magnitude in 32-bit limbs, least
    significant first, with no leading zero limbs.  A result that fits in a
@@ -7,6 +7,40 @@
 
 #include <inttypes.h>
 #include <stdio.h>
+
+/* ------------------------------------------------------------------------
+   Deferred work (cherry.h): one work list per thread, kept between walks. */
+
+typedef struct { cherry_obj *o; cherry_work_fn f; int mode; } job;
+
+static _Thread_local job *jobs;
+static _Thread_local size_t njobs, cap;
+static _Thread_local bool busy;
+
+void cherry_defer(cherry_obj *o, cherry_work_fn f, int mode) {
+  if (busy) {
+    if (njobs == cap) {
+      cap = cap == 0 ? 64 : 2 * cap;
+      jobs = (job *)realloc(jobs, cap * sizeof(job));
+      if (jobs == NULL) abort();
+    }
+    jobs[njobs++] = (job){ o, f, mode };
+    return;
+  }
+  busy = true;
+  f(o, mode);
+  while (njobs > 0) {
+    job j = jobs[--njobs];
+    j.f(j.o, j.mode);
+  }
+  busy = false;
+}
+
+void cherry_free_closure(cherry_obj *f, int mode) {
+  (void)mode;
+  CHERRY_CLOSURE(f)->drop(f);
+  free(f);
+}
 
 typedef struct cherry_bigint {
   cherry_obj hdr;

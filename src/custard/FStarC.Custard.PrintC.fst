@@ -4191,20 +4191,49 @@ let cherry_helpers (p:program) : ML (list string & list string) =
                    "  c->" ^ c_var f ^ " = a" ^ string_of_int i ^ ";\n")) ^
                  "  return (" ^ n ^ ")c;\n")
            end);
+         (* The visit of a cell's fields (cherry.h, [cherry_defer]): [op] on
+            each counted field, except the last one of this very type, which
+            the visit goes on to itself. *)
+         let is_self (t:cty) : ML bool =
+           match t with TApp (m, []) -> c_name m = n | _ -> false in
          let cases (op:string) : ML string =
-           "  switch (x->tag) {\n" ^
+           "    switch (x->tag) {\n" ^
            String.concat "" (cs |> List.collect (fun (c, fs) ->
              if not (has_counted fs) then [] else
              let cell = cell_struct dt c in
-             ["    case " ^ c_tag c ^ ": {\n" ^
-              "      " ^ cell ^ " *c = (" ^ cell ^ " *)x;\n" ^
-              on_fields op "      " fs (fun f -> "c->" ^ c_var f) ^
-              "      break;\n    }\n"])) ^
-           "    default: break;\n  }\n" in
-         fn ("static inline void cherry_dec_" ^ n ^ "(" ^ n ^ " x)")
-            ("  if (!cherry_dec_ref(x)) return;\n" ^ cases "dec" ^ "  free(x);\n");
-         fn ("static inline void cherry_mark_" ^ n ^ "(" ^ n ^ " x, int m)")
-            ("  if (!cherry_mark_ref(x, m)) return;\n" ^ cases "mark")
+             let next = fs |> List.filter (fun (_, t) -> is_self t)
+                           |> List.rev |> List.map fst in
+             let others = (match next with
+                           | f :: _ -> fs |> List.filter (fun (g, _) -> g <> f)
+                           | [] -> fs) in
+             ["      case " ^ c_tag c ^ ": {\n" ^
+              "        " ^ cell ^ " *c = (" ^ cell ^ " *)x;\n" ^
+              on_fields op "        " others (fun f -> "c->" ^ c_var f) ^
+              (match next with
+               | f :: _ -> "        next = c->" ^ c_var f ^ ";\n"
+               | [] -> "") ^
+              "        break;\n      }\n"])) ^
+           "      default: break;\n    }\n" in
+         let counted = cs |> List.existsb (fun (_, fs) -> has_counted fs) in
+         if not counted then begin
+           fn ("static inline void cherry_dec_" ^ n ^ "(" ^ n ^ " x)")
+              "  if (cherry_dec_ref(x)) free(x);\n";
+           fn ("static inline void cherry_mark_" ^ n ^ "(" ^ n ^ " x, int m)")
+              "  (void)cherry_mark_ref(x, m);\n"
+         end else begin
+           fn ("static inline void cherry_free_" ^ n ^ "(cherry_obj *x, int m)")
+              ("  (void)m;\n  for (;;) {\n    " ^ n ^ " next = CHERRY_SCALAR(0);\n" ^
+               cases "dec" ^
+               "    free(x);\n    if (!cherry_dec_ref(next)) return;\n    x = next;\n  }\n");
+           fn ("static inline void cherry_markf_" ^ n ^ "(cherry_obj *x, int m)")
+              ("  for (;;) {\n    " ^ n ^ " next = CHERRY_SCALAR(0);\n" ^
+               cases "mark" ^
+               "    if (!cherry_mark_ref(next, m)) return;\n    x = next;\n  }\n");
+           fn ("static inline void cherry_dec_" ^ n ^ "(" ^ n ^ " x)")
+              ("  if (cherry_dec_ref(x)) cherry_defer(x, cherry_free_" ^ n ^ ", 0);\n");
+           fn ("static inline void cherry_mark_" ^ n ^ "(" ^ n ^ " x, int m)")
+              ("  if (cherry_mark_ref(x, m)) cherry_defer(x, cherry_markf_" ^ n ^ ", m);\n")
+         end
        | _ ->
          let body (op:string) : ML string =
            "  (void)x;\n" ^
@@ -4246,7 +4275,9 @@ let cherry_ref_helpers () : ML (list string & list string) =
         "static inline " ^ decl_of t (p ^ "_get(cherry_ref r)");
         "static inline void " ^ p ^ "_set(cherry_ref r, " ^ decl_of t "v" ^ ")";
         "static inline void " ^ p ^ "_dec(cherry_ref r)";
-        "static inline void " ^ p ^ "_mark(cherry_ref r, int m)" ] in
+        "static inline void " ^ p ^ "_mark(cherry_ref r, int m)";
+        "static inline void " ^ p ^ "_free(cherry_obj *r, int m)";
+        "static inline void " ^ p ^ "_markf(cherry_obj *r, int m)" ] in
       let op (o:string) (x:string) : ML string =
         if counted then "  " ^ rc_fn o t ^ "(" ^ x ^ ");\n" else "" in
       let cell = "  " ^ s ^ " *c = (" ^ s ^ " *)r;\n" in
@@ -4264,9 +4295,12 @@ let cherry_ref_helpers () : ML (list string & list string) =
         "  cherry_ref_lock(r);\n" ^
         when_counted ("  old = c->v;\n") ^
         "  c->v = v;\n  cherry_ref_unlock(r);\n" ^ op "dec" "old";
-        "  if (!cherry_dec_ref(r)) return;\n" ^
-        (if counted then cell ^ op "dec" "c->v" else "") ^ "  free(r);\n";
-        "  (void)m;\n  if (!cherry_mark_ref(r, m)) return;\n" ^
+        (if counted then "  if (cherry_dec_ref(r)) cherry_defer(r, " ^ p ^ "_free, 0);\n"
+         else "  if (cherry_dec_ref(r)) free(r);\n");
+        (if counted then "  if (cherry_mark_ref(r, m)) cherry_defer(r, " ^ p ^ "_markf, m);\n"
+         else "  (void)cherry_mark_ref(r, m);\n");
+        "  (void)m;\n" ^ (if counted then cell ^ op "dec" "c->v" else "") ^ "  free(r);\n";
+        "  (void)r; (void)m;\n" ^
         (if counted then cell ^ "  " ^ rc_fn "mark" t ^ "(c->v, m);\n" else "") ] in
       protos := !protos @
         [s ^ " { cherry_ref_hdr h; " ^ decl_of t "v" ^ "; };\n" ^
