@@ -1042,9 +1042,7 @@ let rec eq_target (t:cty) : ML (option dtype) =
   | TApp (n, []) when None? (builtin_type n) ->
     (match find_type n with
      | Some d when List.existsb Extern? d.dt_flags -> None
-     | Some _ when is_boxed_ty t ->
-       reject ("an equality test on " ^ string_of_name n)
-         ["Cherry does not compare reference-counted values yet."]
+     | Some d when is_boxed_ty t -> Some d
      | Some d ->
        (match d.dt_body with
         | TAbbrev u -> eq_target u
@@ -1097,6 +1095,34 @@ let eq_def (f:string) (d:dtype) : ML string =
     if Nil? fs then hd ^ trivial
     else hd ^ "  return " ^ all "a" "b" fs ^ ";\n}\n" in
   match d.dt_body with
+  (* Cherry: a cell.  The same pointer, or the same scalar, is equal to
+     itself; otherwise both have to be cells with the same tag.  The last
+     field of this very type is compared by going round again rather than
+     by a call, so that two long lists compare in constant stack. *)
+  | TVariant cs when is_boxed d ->
+    let is_self (t:cty) : ML bool =
+      match t with TApp (m, []) -> c_name m = n | _ -> false in
+    hd ^ "  for (;;) {\n" ^
+    "    if (a == b) return true;\n" ^
+    "    if (cherry_is_scalar(a) || cherry_is_scalar(b) || a->tag != b->tag) return false;\n" ^
+    "    switch (a->tag) {\n" ^
+    String.concat "" (cs |> List.collect (fun (cn, fs) ->
+      if Nil? fs then [] else
+      let cell = cell_struct d cn in
+      let next = fs |> List.filter (fun (_, t) -> is_self t) |> List.rev |> List.map fst in
+      let others = (match next with
+                    | f :: _ -> fs |> List.filter (fun (g, _) -> g <> f)
+                    | [] -> fs) in
+      ["      case " ^ c_tag cn ^ ": {\n" ^
+       "        " ^ cell ^ " *x = (" ^ cell ^ " *)a, *y = (" ^ cell ^ " *)b;\n" ^
+       (if Nil? others then ""
+        else "        if (!(" ^ String.concat " && " (others |> List.map (fun (g, t) ->
+               cmp ("x->" ^ c_var g) ("y->" ^ c_var g) t)) ^ ")) return false;\n") ^
+       (match next with
+        | f :: _ -> "        a = x->" ^ c_var f ^ "; b = y->" ^ c_var f ^ ";\n        break;\n"
+        | [] -> "        return true;\n") ^
+       "      }\n"])) ^
+    "      default: return false;\n    }\n  }\n}\n"
   | TRecord fs -> direct fs
   | TVariant cs when single_ctor d -> direct (snd (List.hd cs))
   | TVariant cs ->
@@ -3145,28 +3171,35 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
 (* Would a value of [t] contain a value of the type being defined?  C has no
    way to store that, and karamel's answer -- box the recursive occurrence --
    is a representation decision that belongs in the layout pass, not here. *)
-let rec occurs (target:string) (fuel:int) (t:cty) : ML bool =
-  if fuel <= 0 then false else
-  match t with
-  | TApp (n, _) ->
-    string_of_name n = target ||
-    (match find_type n with
-     | Some d -> body_occurs target (fuel - 1) d.dt_body
-     | None -> false)
-  | TTuple ts -> ts |> List.existsb (occurs target (fuel - 1))
-  (* A pointer is a size; what it points to is not part of this value. *)
-  | _ -> false
-
-and body_occurs (target:string) (fuel:int) (b:tydef) : ML bool =
-  match b with
-  | TAbbrev c -> occurs target fuel c
-  | TRecord fs -> fs |> List.existsb (fun (_, c) -> occurs target fuel c)
-  | TVariant cs ->
-    cs |> List.existsb (fun (_, fs) -> fs |> List.existsb (fun (_, c) -> occurs target fuel c))
-  | TAbstract -> false
+let body_occurs (target:string) (b:tydef) : ML bool =
+  (* Each type is visited once: a type with two fields of a third, recursive,
+     one would otherwise be explored along every path through it. *)
+  let seen : HashTable.t string bool = HashTable.create 20 in
+  let rec occurs (t:cty) : ML bool =
+    match t with
+    | TApp (n, _) ->
+      let k = string_of_name n in
+      k = target ||
+      (if HashTable.mem seen k then false else begin
+         HashTable.add seen k true;
+         match find_type n with
+         | Some d -> body d.dt_body
+         | None -> false
+       end)
+    | TTuple ts -> ts |> List.existsb occurs
+    (* A pointer is a size; what it points to is not part of this value. *)
+    | _ -> false
+  and body (b:tydef) : ML bool =
+    match b with
+    | TAbbrev c -> occurs c
+    | TRecord fs -> fs |> List.existsb (fun (_, c) -> occurs c)
+    | TVariant cs ->
+      cs |> List.existsb (fun (_, fs) -> fs |> List.existsb (fun (_, c) -> occurs c))
+    | TAbstract -> false in
+  body b
 
 let check_finite (d:dtype) : ML unit =
-  if not (is_boxed d) && body_occurs (string_of_name d.dt_name) 100 d.dt_body then
+  if not (is_boxed d) && body_occurs (string_of_name d.dt_name) d.dt_body then
     reject ("the recursive datatype " ^ string_of_name d.dt_name)
       (["A C struct cannot contain itself by value.";
         "Use an explicit pointer (a Pulse ref, array or box) for the \

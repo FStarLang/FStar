@@ -113,6 +113,8 @@ Inductive types can be tagged as custard_boxed. Then they are allocated on the h
 The constructor number is always stored in the heap cell header. Storing it in the pointer tag as well is an optional fast path (there are only 3 low tag bits, and the high bits are not available on 32-bit or with 5-level paging), e.g. for types with few constructors.
 Recursive types are automatically custard_boxed.
 
+Structural equality (`=` at a type with decidable equality) borrows both operands and is generated per type, as in the C backend. For a boxed type, `T__eq` first checks for the same pointer (which also covers equal scalars), then compares tags and the fields of the cell. The last field of the cell's own type is compared by looping rather than by a recursive call, so two long lists compare in constant stack; other recursive fields, such as the left subtree of a tree, still recurse. Integers and strings compare by value through the runtime.
+
 ## Integers, strings, exceptions
 
 Integers are stored with tagged pointers. Small integers are stored directly (`(n << 1) | 1`, 63 bits on 64-bit targets). Large integers are stored in a heap cell with a reference count, a sign, and 32-bit limbs. Values are canonical: a number that fits in a small integer is never a cell, so equality is a pointer comparison unless both are cells. Arithmetic has inline fast paths for two small operands; `/` and `%` are Euclidean, as in F\*. Literals with absolute value below 2^30 are small on every target; larger ones are allocated where they are evaluated (`cherry_int_of_decimal`) and counted like any other value.

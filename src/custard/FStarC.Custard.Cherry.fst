@@ -59,15 +59,21 @@ let rec by_value (t:cty) : ML (list string) =
   | _ -> []
 
 (* Does a value of [t] contain a value of [target], through any number of
-   by-value fields? *)
-let rec reaches (tbl:HashTable.t string dtype) (target:string) (fuel:int) (t:cty)
-  : ML bool =
-  fuel > 0 &&
-  (by_value t |> List.existsb (fun n ->
-     n = target ||
-     (match HashTable.try_find tbl n with
-      | Some d -> field_types d.dt_body |> List.existsb (reaches tbl target (fuel - 1))
-      | None -> false)))
+   by-value fields?
+   Each type is visited once: a type with two fields of a third, recursive,
+   one would otherwise be explored along every path through it. *)
+let reaches (tbl:HashTable.t string dtype) (target:string) (t:cty) : ML bool =
+  let seen : HashTable.t string bool = HashTable.create 20 in
+  let rec go (t:cty) : ML bool =
+    by_value t |> List.existsb (fun n ->
+      n = target ||
+      (if HashTable.mem seen n then false else begin
+         HashTable.add seen n true;
+         match HashTable.try_find tbl n with
+         | Some d -> field_types d.dt_body |> List.existsb go
+         | None -> false
+       end)) in
+  go t
 
 let boxed_types (p:program) : ML (list string) =
   let tbl = type_table p in
@@ -75,7 +81,7 @@ let boxed_types (p:program) : ML (list string) =
     match d with
     | DType dt when (TVariant? dt.dt_body || TRecord? dt.dt_body) ->
       let k = string_of_name dt.dt_name in
-      if field_types dt.dt_body |> List.existsb (reaches tbl k 100) then [k] else []
+      if field_types dt.dt_body |> List.existsb (reaches tbl k) then [k] else []
     | _ -> [])
 
 (* The types the runtime (ulib/c/cherry.h) represents as counted cells. *)
