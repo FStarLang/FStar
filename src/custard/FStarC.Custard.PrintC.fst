@@ -483,6 +483,21 @@ let binds_by_ref (t:cty) : ML bool =
 let find_ctor (n:name) : ML (option (dtype & list (string & cty))) =
   HashTable.try_find !ctors (string_of_name n)
 
+(* Cherry's exceptions (cherry.md, "Exceptions"): each is a cell with the
+   runtime's header, whose fields are [f0], [f1], ... *)
+let exn_ctors : ref (HashTable.t string (list (string & cty))) = mk_ref (HashTable.create 0)
+let find_exn (n:name) : ML (option (list (string & cty))) =
+  HashTable.try_find !exn_ctors (string_of_name n)
+let exn_struct (n:name) : ML string = "struct " ^ c_name n ^ "_exn_s"
+let exn_info (n:name) : ML string = c_name n ^ "_exn_info"
+let exn_new (n:name) : ML string = "cherry_exn_new_" ^ c_name n
+let exn_field (v:string) (n:name) (f:string) : ML string =
+  "((" ^ exn_struct n ^ " *)" ^ v ^ ")->" ^ f
+
+(* The result type of the definition being printed, which leaving it with an
+   exception pending returns a dummy of; [None] in a global's initializer. *)
+let cur_ret : ref (option cty) = mk_ref None
+
 (* A variant with a single constructor needs neither a tag nor a union: it is
    just a struct of that constructor's fields.  This is what keeps a pair from
    costing a discriminator, and it is the shape most patterns in real code
@@ -516,6 +531,7 @@ let is_nonplain_ty (t:cty) : ML bool =
   | TApp (n, _) -> HashTable.mem !nonplain_tbl (string_of_name n)
   (* The key {!Cherry.nonplain_types} files every function type under. *)
   | TArrow _ -> HashTable.mem !nonplain_tbl "->"
+  | TExn -> HashTable.mem !nonplain_tbl "Prims.exn"
   | _ -> false
 
 (* The cell of constructor [cn] of the boxed type [d], and field [f] of it
@@ -577,6 +593,7 @@ let rc_fn (op:string) (t:cty) : ML string =
   | TApp (n, _) when Options.custard_cherry () && is_runtime_name n -> "cherry_" ^ op
   | TApp (n, _) -> "cherry_" ^ op ^ "_" ^ c_name n
   | TArrow _ -> if op = "inc" then "cherry_inc" else "cherry_" ^ op ^ "_fn"
+  | TExn -> if op = "inc" then "cherry_inc" else "cherry_exn_" ^ op
   | _ -> failwith "Custard: reference counting at a plain type"
 
 (* A call of {!rc_fn}.  Marking takes the mode, which a generated marking
@@ -700,7 +717,8 @@ let rec pat_var_tys (p:pat) (t:cty) : ML (list (string & cty)) =
   match p with
   | PVar x -> [(x, t)]
   | PCtor (cn, ps) ->
-    (match find_ctor cn with
+    (match (match find_exn cn with Some fs -> Some ((), fs) | None ->
+            match find_ctor cn with Some (_, fs) -> Some ((), fs) | None -> None) with
      | Some (_, fs) ->
        List.zip (List.map snd fs) ps
        |> List.collect (fun (ft, q) -> pat_var_tys q ft)
@@ -1001,6 +1019,7 @@ and base_ty (t:cty) : ML string =
     reject "a value whose representation is unknown (TAny)"
       ["Run with --custard_warn_any to see where the representation was lost \
         (section 5.9)."]
+  | TExn when Options.custard_cherry () -> "cherry_exn"
   | TExn ->
     reject "an exception type"
       ["C has no exceptions."]
@@ -1820,7 +1839,8 @@ let is_stmt (e:expr) : bool =
   | EOp ({ po_op = BufBlit }, _) | EOp ({ po_op = BufFree }, _)
   | EOp ({ po_op = RcInc }, _) | EOp ({ po_op = RcDec }, _)
   | EOp ({ po_op = RefSet }, _)
-  | EOp ({ po_op = Reset _ }, _) | EOp ({ po_op = ResetFree }, _) -> true
+  | EOp ({ po_op = Reset _ }, _) | EOp ({ po_op = ResetFree }, _)
+  | EOp ({ po_op = ExnRaise }, _) | EOp ({ po_op = ExnExit }, _) -> true
   | _ -> false
 
 (* Every variable that occurs anywhere in a term.  Shadowing is ignored, which
@@ -1912,7 +1932,9 @@ let rec is_pure (e:expr) : ML bool =
   | EOp ({ po_op = RcInc }, _) | EOp ({ po_op = RcDec }, _)
   | EOp ({ po_op = RefNew }, _) | EOp ({ po_op = RefGet }, _) | EOp ({ po_op = RefSet }, _)
   | EOp ({ po_op = Reset _ }, _) | EOp ({ po_op = Reuse _ }, _) | EOp ({ po_op = ResetFree }, _)
-  | EOp ({ po_op = IArr _ }, _) -> false
+  | EOp ({ po_op = IArr _ }, _)
+  | EOp ({ po_op = ExnRaise }, _) | EOp ({ po_op = ExnPending }, _)
+  | EOp ({ po_op = ExnTake }, _) | EOp ({ po_op = ExnExit }, _) -> false
   | EOp (_, es) | ECtor (_, es) | ETuple es -> all es
   | ELet (_, _, a, b) | ESeq (a, b) -> is_pure a && is_pure b
   | EIf (a, b, c) -> is_pure a && is_pure b && is_pure c
@@ -2183,6 +2205,8 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
     rc_fn "new" e.ty ^ "(" ^ v' ^ ")"
   | EOp ({ po_op = RefGet }, [r]) ->
     rc_fn "get" r.ty ^ "(" ^ c_expr out ind r ^ ")"
+  | EOp ({ po_op = ExnPending }, []) -> "CHERRY_EXN_PENDING()"
+  | EOp ({ po_op = ExnTake }, []) -> "cherry_exn_take()"
   | EOp ({ po_op = IArr f }, args) ->
     let elt (t:cty) : ML cty =
       match t with
@@ -2442,6 +2466,10 @@ and c_rvalue (out:ref string) (ind:string) (target:cty) (e:expr) : ML string =
   | _ -> c_expr out ind e
 
 and ctor_lit (out:ref string) (ind:string) (t:cty) (cn:name) (args:list expr) : ML string =
+  match find_exn cn with
+  | Some _ ->
+    exn_new cn ^ "(" ^ String.concat ", " (args |> List.map (fun a -> c_rvalue out ind a.ty a)) ^ ")"
+  | None ->
   match find_ctor cn with
   | None -> reject ("the constructor " ^ string_of_name cn)
               ["It belongs to no type declaration in the program."]
@@ -2740,6 +2768,21 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     let v = c_expr out ind w in
     !out ^ ind ^ "free(" ^ v ^ ");\n" ^ unit_result ind d
 
+  (* Exceptions (cherry.md, "Exceptions"). *)
+  | EOp ({ po_op = ExnRaise }, [a]) ->
+    let out = mk_ref "" in
+    let v = c_expr out ind a in
+    !out ^ ind ^ "cherry_raise(" ^ v ^ ");\n" ^ unit_result ind d
+  | EOp ({ po_op = ExnPending }, []) -> finish ind d "CHERRY_EXN_PENDING()"
+  | EOp ({ po_op = ExnTake }, []) -> finish ind d "cherry_exn_take()"
+  (* Leaving with an exception pending: the result is no value, and the
+     caller, which tests, never reads it. *)
+  | EOp ({ po_op = ExnExit }, []) ->
+    (match !cur_ret with
+     | None -> ind ^ "cherry_exn_uncaught();\n"
+     | Some _ when !void_ret -> ind ^ "return;\n"
+     | Some t -> ind ^ "{ " ^ decl_of t "cherry_dummy" ^ "; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }\n")
+
   | EOp ({ po_op = RcInc }, [a]) | EOp ({ po_op = RcDec }, [a]) ->
     let out = mk_ref "" in
     let v = c_expr out ind a in
@@ -3017,6 +3060,18 @@ and pat_tests (path:string) (t:cty) (p:pat)
          (ts @ t1, bs @ b1)) ([], [])
      | _ -> reject ("the record type " ^ string_of_name tn)
               ["It belongs to no record declaration in the program."])
+  | PCtor (cn, ps) when Some? (find_exn cn) ->
+    let fields = Some?.v (find_exn cn) in
+    let rec go (fs : list (string & cty)) (ps : list pat)
+             : ML (list string & list (string & string)) =
+      match fs, ps with
+      | (f, ft) :: fs, p :: ps ->
+        let t1, b1 = pat_tests (exn_field path cn f) ft p in
+        let t2, b2 = go fs ps in
+        (t1 @ t2, b1 @ b2)
+      | _ -> ([], []) in
+    let ts, bs = go fields ps in
+    (("cherry_exn_is(" ^ path ^ ", &" ^ exn_info cn ^ ")") :: ts, bs)
   | PCtor (cn, ps) ->
     (match find_ctor cn with
      | None -> reject ("the constructor " ^ string_of_name cn)
@@ -3666,6 +3721,7 @@ let global_init (l:dlet) : ML string =
   current := string_of_name l.dl_name;
   ctr := 0;
   void_ret := false;
+  cur_ret := None;
   reset_scope ();
   emit "  " (D_Assign (c_name l.dl_name)) l.dl_body ^
   (* Under Cherry a global's value is made persistent once it is computed:
@@ -3678,6 +3734,7 @@ let let_decl (l:dlet) : ML string =
   current := string_of_name l.dl_name;
   ctr := 0;
   void_ret := TUnit? l.dl_ret;
+  cur_ret := Some l.dl_ret;
   reset_scope ();
   kept_binders l |> List.iter (fun b -> let _ = bind_var b.b_name in ());
   (* Section 53.1.  A dropped parameter is a unit one, so a body that mentions
@@ -4440,6 +4497,42 @@ let cherry_ref_helpers () : ML (list string & list string) =
    type: the cell struct, and the operations on it.  [upd] and [push] take
    the array owned and change it in place when it is unique, growing a full
    one geometrically; otherwise they copy it. *)
+let cherry_exn_helpers (p:program) : ML (list string & list string) =
+  let one (x:dexn) : ML (list string & list string) =
+    let n = x.de_name in
+    let fs = Some?.v (find_exn n) in
+    let cn = c_name n in
+    let st = exn_struct n in
+    let params = fs |> List.map (fun (f, t) -> decl_of t f) in
+    let ctor_sig = "static inline cherry_exn " ^ exn_new n ^ "(" ^
+                   (if Nil? params then "void" else String.concat ", " params) ^ ")" in
+    let on (op:string) : ML string =
+      String.concat "" (fs |> List.collect (fun (f, t) ->
+        if is_nonplain_ty t then ["  " ^ rc_call op t ("c->" ^ f) ^ ";\n"] else [])) in
+    let protos =
+      [st ^ " { cherry_exn_hdr hdr;" ^
+       String.concat "" (fs |> List.map (fun (f, t) -> " " ^ decl_of t f ^ ";")) ^ " };\n";
+       "static void " ^ cn ^ "_exn_free(cherry_obj *x, int m);\n";
+       "static void " ^ cn ^ "_exn_markf(cherry_obj *x, int m);\n";
+       "static const cherry_exn_info " ^ exn_info n ^ " = { \"" ^ string_of_name n ^
+       "\", " ^ cn ^ "_exn_free, " ^ cn ^ "_exn_markf };\n";
+       ctor_sig ^ ";\n"] in
+    let defs =
+      ["static void " ^ cn ^ "_exn_free(cherry_obj *x, int m) {\n" ^
+       "  " ^ st ^ " *c = (" ^ st ^ " *)x;\n  (void)c; (void)m;\n" ^ on "dec" ^ "  free(x);\n}\n";
+       "static void " ^ cn ^ "_exn_markf(cherry_obj *x, int m) {\n" ^
+       "  " ^ st ^ " *c = (" ^ st ^ " *)x;\n  (void)c; (void)m;\n" ^ on "mark" ^ "}\n";
+       ctor_sig ^ " {\n" ^
+       "  " ^ st ^ " *c = (" ^ st ^ " *)cherry_alloc(sizeof(" ^ st ^ "), CHERRY_TAG_EXN);\n" ^
+       "  c->hdr.info = &" ^ exn_info n ^ ";\n" ^
+       String.concat "" (fs |> List.map (fun (f, _) -> "  c->" ^ f ^ " = " ^ f ^ ";\n")) ^
+       "  return (cherry_exn)c;\n}\n"] in
+    protos, defs in
+  let rs = p |> List.collect (fun d -> match d with
+                 | DExn x when Some? (find_exn x.de_name) -> [one x]
+                 | _ -> []) in
+  List.collect fst rs, List.collect snd rs
+
 let cherry_iarr_helpers () : ML (list string & list string) =
   let protos : ref (list string) = mk_ref [] in
   let defs : ref (list string) = mk_ref [] in
@@ -4662,6 +4755,12 @@ let cherry_closure_helpers () : ML (list string & list string) =
         clo_request (ReqApply (tm, k - cut));
         "    case " ^ string_of_int m ^ ": {\n" ^
         "      cherry_fn g = " ^ call_code (TArrow (TUnit, E_Pure, TUnit)) "f" first ^ ";\n" ^
+        (* An exception: [g] is no closure, and the rest goes unused. *)
+        "      if (CHERRY_EXN_PENDING()) {\n" ^
+        String.concat "" (rest |> List.collect (fun (x, xt) ->
+          if is_nonplain_ty xt then ["        " ^ rc_call "dec" xt x ^ ";\n"] else [])) ^
+        "        " ^ decl_of rk "r" ^ ";\n        memset(&r, 0, sizeof r);\n        return r;\n" ^
+        "      }\n" ^
         "      " ^ decl_of rk "r" ^ " = " ^ apply_name tm (k - cut) ^ "(" ^
                 String.concat ", " ("g" :: names rest) ^ ");\n" ^
         "      cherry_dec_fn(g);\n" ^
@@ -4826,6 +4925,12 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
     | _ -> ());
   types := tt; ctors := ct; externs := xt; keeps := kt; void_fns := vt;
   (if Options.custard_cherry () then begin
+     let et = HashTable.create 20 in
+     p |> List.iter (fun d -> match d with
+       | DExn x -> HashTable.add et (string_of_name x.de_name)
+                     (x.de_args |> List.mapi (fun i t -> ("f" ^ string_of_int i, t)))
+       | _ -> ());
+     exn_ctors := et;
      let bt = HashTable.create 20 in
      Cherry.boxed_types p |> List.iter (fun k -> HashTable.add bt k true);
      let nt = HashTable.create 20 in
@@ -4879,6 +4984,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
          let nm = emitted_name (DExternal x) in
          [(nm, string_of_name x.dx_name, s)]
        | None -> [])
+    | DExn _ when Options.custard_cherry () -> []
     | DExn _ ->
       current := "an exception declaration";
       reject "an exception declaration" ["C has no exceptions."]
@@ -5025,6 +5131,14 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
       let calls = (cu.cu_inits |> List.map (fun i -> "  " ^ i ^ "();\n")) @
                   (match inits with [] -> [] | _ -> ["  " ^ init_name ^ "();\n"]) in
       let pre = "int main(void) {\n" ^ String.concat "" calls in
+      (* Cherry: an exception the program let escape. *)
+      if Options.custard_cherry () then
+        let chk = "  if (cherry_exn_slot) cherry_exn_uncaught();\n" in
+        (match l.dl_ret with
+         | TInt _ -> [pre ^ "  int r = (int)" ^ call ^ ";\n" ^ chk ^ "  return r;\n}\n"]
+         | TUnit -> [pre ^ "  " ^ call ^ ";\n" ^ chk ^ "  return 0;\n}\n"]
+         | _ -> [pre ^ "  (void)" ^ call ^ ";\n" ^ chk ^ "  return 0;\n}\n"])
+      else
       (match l.dl_ret with
        | TInt _ -> [pre ^ "  return (int)" ^ call ^ ";\n}\n"]
        | TUnit -> [pre ^ "  " ^ call ^ ";\n  return 0;\n}\n"]
@@ -5038,6 +5152,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   let clo_protos, clo_defs = cherry_closure_helpers () in
   let ref_protos, ref_defs = cherry_ref_helpers () in
   let iarr_protos, iarr_defs = cherry_iarr_helpers () in
+  let exn_protos, exn_defs = cherry_exn_helpers p in
 
   (* The header carries the unit's whole type language rather than only the
      types a public signature mentions.  A [struct] or a [typedef] has no
@@ -5069,12 +5184,14 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   String.concat "" rc_protos ^ (match rc_protos with [] -> "" | _ -> "\n") ^
   String.concat "" ref_protos ^ (match ref_protos with [] -> "" | _ -> "\n") ^
   String.concat "" iarr_protos ^ (match iarr_protos with [] -> "" | _ -> "\n") ^
+  String.concat "" exn_protos ^ (match exn_protos with [] -> "" | _ -> "\n") ^
   String.concat "\n" rc_defs ^ (match rc_defs with [] -> "" | _ -> "\n") ^
   String.concat "" protos ^ (match protos with [] -> "" | _ -> "\n") ^
   String.concat "" clo_protos ^ (match clo_protos with [] -> "" | _ -> "\n") ^
   String.concat "\n" clo_defs ^ (match clo_defs with [] -> "" | _ -> "\n") ^
   String.concat "\n" ref_defs ^ (match ref_defs with [] -> "" | _ -> "\n") ^
   String.concat "\n" iarr_defs ^ (match iarr_defs with [] -> "" | _ -> "\n") ^
+  String.concat "\n" exn_defs ^ (match exn_defs with [] -> "" | _ -> "\n") ^
   String.concat "" eq_protos ^ (match eq_protos with [] -> "" | _ -> "\n") ^
   String.concat "\n" eq_defs ^ (match eq_defs with [] -> "" | _ -> "\n") ^
   String.concat "\n" defs ^ "\n" ^ (match inits with [] -> "" | _ -> init_fn) ^

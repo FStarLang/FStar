@@ -17,6 +17,16 @@ static _Thread_local job *jobs;
 static _Thread_local size_t njobs, cap;
 static _Thread_local bool busy;
 
+_Thread_local cherry_exn cherry_exn_slot;
+
+void cherry_exn_uncaught(void) {
+  cherry_exn e = cherry_exn_take();
+  fflush(stdout);
+  fprintf(stderr, "Uncaught exception: %s\n", ((cherry_exn_hdr *)e)->info->name);
+  cherry_exn_dec(e);
+  exit(2);
+}
+
 void cherry_defer(cherry_obj *o, cherry_work_fn f, int mode) {
   if (busy) {
     if (njobs == cap) {

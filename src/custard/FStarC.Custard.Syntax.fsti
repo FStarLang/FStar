@@ -419,6 +419,17 @@ type op =
       representation of [FStar.ImmutableArray.t]), named as in that module:
       [of_list], [to_list], [length], [index], [upd] or [push]. *)
   | IArr of string
+  (** Cherry: exceptions, as error returns (cherry.md, "Exceptions").  A
+      thread-local slot holds the exception being propagated.  [ExnRaise e]
+      stores [e] there (taking it); [ExnPending] tests whether the slot is
+      full; [ExnTake] empties it, returning the exception; [ExnExit] leaves
+      the function with the exception still pending, returning a dummy value
+      of the function's type (or, in a global's initializer, reports it as
+      uncaught).  Only the Cherry pass inserts them. *)
+  | ExnRaise
+  | ExnPending
+  | ExnTake
+  | ExnExit
 
 (** The machine type a primitive operation works at. *)
 type prim_ty =

@@ -400,6 +400,9 @@ let request_extern (st:state) (n:name) (args:list cty) : ML name =
          :: !st.ext_clones);
     nm
 
+(* Exception constructors' field types, which are monomorphic. *)
+let exn_fields : ref (HashTable.t string (list cty)) = mk_ref (HashTable.create 0)
+
 let ctor_fields (st:state) (owner:name) (args:list cty) (cn:name) : ML (list cty) =
   match HashTable.try_find st.types (string_of_name owner) with
   | Some ({ dt_body = TVariant cs; dt_params = ps }) ->
@@ -458,7 +461,10 @@ let rec mono_pat (st:state) (t:cty) (p:pat) : ML (pat & env) =
     let fields =
       match shape_of st t with
       | Some (n, args) -> ctor_fields st n args cn
-      | None -> [] in
+      | None ->
+        (match HashTable.try_find !exn_fields (string_of_name cn) with
+         | Some fs -> fs
+         | None -> []) in
     let cn' =
       match resolve_owner st t with
       | Some (owner, args) -> with_spec (request_inst st owner args) cn
@@ -614,8 +620,10 @@ let run (prog:program) : ML program =
              ext_names  = HashTable.create 20;
              ext_bare   = HashTable.create 20;
              ext_clones = mk_ref [] } in
+  exn_fields := HashTable.create 20;
   prog |> List.iter (fun d ->
     match d with
+    | DExn x -> HashTable.add !exn_fields (string_of_name x.de_name) x.de_args
     | DType t ->
       HashTable.add st.types (string_of_name t.dt_name) t;
       HashTable.add st.taken (string_of_name t.dt_name) true
@@ -651,7 +659,9 @@ let run (prog:program) : ML program =
   prog |> List.iter (fun d ->
     match d with
     | DExternal x when freeze_realized () -> freeze 100 x.dx_ty
-    | DExn e -> e.de_args |> List.iter (freeze 100)
+    (* Cherry clones an exception's field types like any other: its
+       constructors are local, and their layout is the clones'. *)
+    | DExn e when not (Options.custard_cherry ()) -> e.de_args |> List.iter (freeze 100)
     | DType t when t.dt_flags |> List.existsb (function
                      | Modelled -> true | _ -> false) ->
       freeze 100 (TApp (t.dt_name, []))

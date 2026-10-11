@@ -557,7 +557,8 @@ let krml_op (o:op) : ML K.op =
      it never reaches the operator table. *)
   | Commented _ ->
     failwith "Custard: a comment is not a karamel operator"
-  | RcInc | RcDec | RefNew | RefGet | RefSet | Reset _ | Reuse _ | ResetFree | IArr _ ->
+  | RcInc | RcDec | RefNew | RefGet | RefSet | Reset _ | Reuse _ | ResetFree | IArr _
+  | ExnRaise | ExnPending | ExnTake | ExnExit ->
     failwith "Custard: reference counting is not a karamel operator"
 
 (* -------------------------------------------------------------------- *)

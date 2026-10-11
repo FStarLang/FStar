@@ -616,7 +616,8 @@ let op_name (o:prim_op) : ML string =
         operand. *)
      | Commented _ ->
        failwith "Custard: a comment is not an OCaml operator"
-     | RcInc | RcDec | RefNew | RefGet | RefSet | Reset _ | Reuse _ | ResetFree | IArr _ ->
+     | RcInc | RcDec | RefNew | RefGet | RefSet | Reset _ | Reuse _ | ResetFree | IArr _
+     | ExnRaise | ExnPending | ExnTake | ExnExit ->
        failwith "Custard: reference counting is not an OCaml operator")
   | None ->
     (match o.po_op with
@@ -638,7 +639,8 @@ let op_name (o:prim_op) : ML string =
         operand. *)
      | Commented _ ->
        failwith "Custard: a comment is not an OCaml operator"
-     | RcInc | RcDec | RefNew | RefGet | RefSet | Reset _ | Reuse _ | ResetFree | IArr _ ->
+     | RcInc | RcDec | RefNew | RefGet | RefSet | Reset _ | Reuse _ | ResetFree | IArr _
+     | ExnRaise | ExnPending | ExnTake | ExnExit ->
        failwith "Custard: reference counting is not an OCaml operator")
 
 (* OCaml has no integer pattern that means what the IR's [PConst (CInt _)]

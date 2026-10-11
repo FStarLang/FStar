@@ -282,6 +282,60 @@ static inline size_t cherry_iarray_pos(cherry_int i) {
 }
 
 /* ------------------------------------------------------------------------
+   Exceptions (cherry.md, "Exceptions"), as error returns.  [raise] stores
+   the exception in a thread-local slot and returns; every call that may
+   raise is followed by a test of the slot, which on a pending exception
+   releases what the caller holds and returns in turn, and a [try] takes it
+   out again.  An exception is a cell whose constructor is told by its
+   [cherry_exn_info], which also says how to free and mark its fields: the
+   type is open, so no switch on a tag could. */
+
+#ifdef __cplusplus
+#define CHERRY_THREAD_LOCAL thread_local
+#else
+#define CHERRY_THREAD_LOCAL _Thread_local
+#endif
+
+#define CHERRY_TAG_EXN 0xFFFFFFF4u
+
+typedef cherry_obj *cherry_exn;
+
+typedef struct cherry_exn_info {
+  const char *name;
+  cherry_work_fn free;
+  cherry_work_fn mark;
+} cherry_exn_info;
+
+typedef struct cherry_exn_hdr { cherry_obj hdr; const cherry_exn_info *info; } cherry_exn_hdr;
+
+extern CHERRY_THREAD_LOCAL cherry_exn cherry_exn_slot;
+
+static inline void cherry_raise(cherry_exn e) { cherry_exn_slot = e; }
+
+#define CHERRY_EXN_PENDING() __builtin_expect(cherry_exn_slot != NULL, 0)
+
+static inline cherry_exn cherry_exn_take(void) {
+  cherry_exn e = cherry_exn_slot;
+  cherry_exn_slot = NULL;
+  return e;
+}
+
+static inline bool cherry_exn_is(cherry_exn e, const cherry_exn_info *info) {
+  return ((cherry_exn_hdr *)e)->info == info;
+}
+
+static inline void cherry_exn_dec(cherry_exn e) {
+  if (cherry_dec_ref(e)) cherry_defer(e, ((cherry_exn_hdr *)e)->info->free, 0);
+}
+
+static inline void cherry_exn_mark(cherry_exn e, int mode) {
+  if (cherry_mark_ref(e, mode)) cherry_defer(e, ((cherry_exn_hdr *)e)->info->mark, mode);
+}
+
+/* An exception nothing caught: reported, and the process exits. */
+void cherry_exn_uncaught(void);
+
+/* ------------------------------------------------------------------------
    Function values.  Every value of function type is a closure cell: the
    entry point, functions to drop and mark the captured values (NULL when
    there are none), the number of arguments the entry point takes, and then

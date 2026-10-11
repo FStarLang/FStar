@@ -41,7 +41,7 @@ The hash code memo reference in terms is being removed, so terms do not need wea
 
 Ownership and borrowing of function parameters follows the "Counting immutable beans" paper and Lean.
 Every non-plain parameter is either owned (the callee consumes one reference) or borrowed (the caller guarantees the value stays alive for the duration of the call). Plain parameters are neither.
-Return values are always owned. This includes the `either exn a` returns used for exceptions.
+Return values are always owned. A function that returns with an exception pending (see "Exceptions") returns no value: its result is never read or released.
 Unboxed values (structs, option, either, etc.) are passed by value as today. Owned/borrowed applies to the whole value; their inc/dec functions act on each field.
 Calls to unknown functions (closures, apply_n) use all-owned parameters. Every function that is used as a value gets a generated `_boxed` wrapper with all-owned parameters, which calls the function with the inferred convention and decrements the borrowed arguments afterwards.
 For externals and runtime primitives the convention is declared, not inferred: parameters are borrowed by default, and `[@@cherry_owned]` on a binder makes them owned. For example, string_append takes its first argument owned so that the in-place update can apply. Regular functions can also use `[@@cherry_owned]` and `[@@cherry_borrowed]` on binders to override inference.
@@ -120,8 +120,27 @@ Structural equality (`=` at a type with decidable equality) borrows both operand
 Integers are stored with tagged pointers. Small integers are stored directly (`(n << 1) | 1`, 63 bits on 64-bit targets). Large integers are stored in a heap cell with a reference count, a sign, and 32-bit limbs. Values are canonical: a number that fits in a small integer is never a cell, so equality is a pointer comparison unless both are cells. Arithmetic has inline fast paths for two small operands; `/` and `%` are Euclidean, as in F\*. Literals with absolute value below 2^30 are small on every target; larger ones are allocated where they are evaluated (`cherry_int_of_decimal`) and counted like any other value.
 Strings follow Lean: a heap cell with the reference count, byte size, capacity, and zero-terminated UTF-8 data. Appends and other updates use the functional-but-in-place optimization: if the string is uniquely owned and has enough capacity, it is modified in place, otherwise a copy with geometrically grown capacity is allocated. This makes repeated appends cheap without source changes, at the cost of some slack memory. String literals are emitted as immortal static cells. `String.length`, `index` and `sub` count code points, so they walk the UTF-8 data.
 Zero-terminated C strings with static lifetime (e.g. C.String for the existing C backend) remain a separate F* type.
-Exceptions are out of scope for the initial version. They will be implemented using error returns, probably by returning `either exn a`.
 Values of the exn type are stored as pointers to heap cells containing the reference count, RTTI, and field values. Exn is an open type, so we need RTTI to determine which exception it is and to decrement/mark the fields.
+
+### Exceptions
+
+Exceptions use error returns. Instead of returning `either exn a`, which would change every signature and box every result, a raise stores the exception in a thread-local slot (`cherry_exn_slot`) and returns. The function's result is a dummy that is never read or released.
+- A call that may raise is followed by a test of the slot, marked unlikely. If an exception is pending, the caller releases the owned references it holds and returns in turn. These include the references held by enclosing `let` continuations, not only the call's own operands.
+- A call in tail position is not tested: the dummy result is passed on, and the caller tests.
+- `try e with brs` becomes a call of `e`'s body, lifted into its own function with its free variables as parameters. If the slot is set after the call, the exception is taken out of it and matched against `brs`, plus a final branch that raises it again.
+
+A fixpoint over the program finds the definitions that may raise. A definition may raise if it is not total and it raises, has a `try` (which can re-raise), or calls something that may raise. Calls that may raise are those to impure imported definitions and to impure closures. Total definitions and calls to externals are never tested.
+A heap cell reuse token whose reuse comes after a possible raise is freed on that exit path.
+
+Each exception constructor gets a cell `{ header, info, f0, f1, ... }`. The info is a static `cherry_exn_info` with the name, a free function and a mark function, so the runtime can release and mark exceptions of any constructor. A handler pattern compares the `info` pointer. Nullary exceptions are cells too, so every exception has an info. The closure `apply` helpers test the slot between the partial calls of an over-application. An exception that reaches `main`, or escapes a global's initializer, prints `Uncaught exception: Name` and exits with status 2.
+
+Prototype status: implemented as above. Exceptions declared in other units and `failwith` (which still aborts) are not handled yet. `tests/custard/CherryExn.fst` covers:
+- raises through deep non-tail recursion that holds lists;
+- re-raising through nested handlers, and raising from a handler;
+- raises through closures and over-application;
+- reuse tokens on raising paths;
+- references mutated before a raise;
+- a global's initializer.
 
 ## Arrays
 

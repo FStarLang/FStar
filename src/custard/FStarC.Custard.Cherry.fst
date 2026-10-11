@@ -48,6 +48,9 @@ let field_types (b:tydef) : ML (list cty) =
    is a counted closure, whatever its type. *)
 let arrow_key : string = "->"
 
+(* And every exception: a counted cell (cherry.md, "Exceptions"). *)
+let exn_key : string = "Prims.exn"
+
 (* The type names a value of [t] holds by value.  A pointer is a size, and
    what it reaches is not part of the value. *)
 let rec by_value (t:cty) : ML (list string) =
@@ -57,6 +60,7 @@ let rec by_value (t:cty) : ML (list string) =
   | TApp (n, args) -> string_of_name n :: List.collect by_value args
   | TTuple ts -> List.collect by_value ts
   | TArrow _ -> [arrow_key]
+  | TExn -> [exn_key]
   | _ -> []
 
 (* Does a value of [t] contain a value of [target], through any number of
@@ -108,6 +112,7 @@ let nonplain_types (p:program) : ML (list string) =
   let np : HashTable.t string bool = HashTable.create 50 in
   runtime_types |> List.iter (fun k -> HashTable.add np k true);
   HashTable.add np arrow_key true;
+  HashTable.add np exn_key true;
   boxed_types p |> List.iter (fun k -> HashTable.add np k true);
   let rec settle (fuel:int) : ML unit =
     let changed = mk_ref false in
@@ -153,16 +158,28 @@ let rec is_np (t:cty) : ML bool =
   match t with
   | TApp (n, _) -> HashTable.mem !np_tbl (string_of_name n)
   | TTuple ts -> List.existsb is_np ts
-  | TArrow _ -> true
+  | TArrow _ | TExn -> true
   | _ -> false
 
-(* Does evaluating [e] involve a non-plain value anywhere?  The function a
-   direct call names is not a value. *)
+(* The definitions that may return with an exception pending. *)
+let raise_tbl : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
+
+(* May this node, once its operands are atoms, return with an exception
+   pending?  A closure call may if it has an effect: its target is unknown. *)
+let may_raise (node:expr) : ML bool =
+  match node.e with
+  | EApp ({ e = EQual (f, _) }, _) -> HashTable.mem !raise_tbl (string_of_name f)
+  | EApp _ -> not (is_pure node.eff)
+  | _ -> false
+
+(* Does evaluating [e] involve a non-plain value anywhere, or an exception?
+   The function a direct call names is not a value. *)
 let rec touches (e:expr) : ML bool =
   is_np e.ty ||
   (match e.e with
    | ELet (_, t, _, _) when is_np t -> true
-   | EApp ({ e = EQual _ }, args) -> List.existsb touches args
+   | ERaise _ | ETry _ -> true
+   | EApp ({ e = EQual _ }, args) -> may_raise e || List.existsb touches args
    | _ -> exists_child touches e)
 
 let fresh () : ML string =
@@ -314,8 +331,29 @@ let rec lift (env:list (string & cty)) (e:expr) : ML expr =
     { e with e = ELet (x, t, lift env a, lift ((x, t) :: env) b) }
   | EMatch (s, brs) ->
     { e with e = EMatch (lift env s, List.map (lift_branch env s.ty) brs) }
+  (* The body of a [try] becomes a function of its own (cherry.md,
+     "Exceptions"): an exception raised in it leaves that function, and the
+     [try] is a call followed by a test. *)
   | ETry (s, brs) ->
-    { e with e = ETry (lift env s, List.map (lift_branch env TUnit) brs) }
+    let s = lift env s in
+    (* A body that only raises has whatever type it is used at, which a
+       handler may know better than the [try]. *)
+    let t = (s.ty :: e.ty :: List.map (fun (_, _, b) -> b.ty) brs)
+            |> List.tryFind (fun t -> not (TAny? t)) in
+    let t = (match t with Some t -> t | None -> e.ty) in
+    let e = { e with ty = t } in
+    let s = { s with ty = t } in
+    let caps = dedup (fv s) |> List.map (fun x ->
+                 match List.assoc x env with
+                 | Some t -> { b_name = x; b_ty = t }
+                 | None -> unsupported ("a try capturing " ^ x ^ ", whose type is unknown")) in
+    let caps, args =
+      if Nil? caps then [{ b_name = "cherry_unit"; b_ty = TUnit }], [unit_expr]
+      else caps, List.map (fun b -> mk (EVar b.b_name) b.b_ty E_Pure) caps in
+    let n = new_fn caps s in
+    let hd = mk (EQual (n, [])) (arrows (List.map (fun b -> b.b_ty) caps) s.ty) E_Pure in
+    { e with e = ETry (mk (EApp (hd, args)) s.ty E_Impure,
+                       List.map (lift_branch env TExn) brs) }
   | EFun (bs, body) ->
     let body = lift (List.map (fun b -> (b.b_name, b.b_ty)) bs @ env) body in
     let caps = dedup (without (List.map (fun b -> b.b_name) bs) (fv body))
@@ -619,6 +657,50 @@ let rec bind_first (args:list expr) : ML (option (string & expr & list expr)) =
       Some (x, a, var x a.ty :: rest)
 
 (* -------------------------------------------------------------------- *)
+(* Exceptions (cherry.md, "Exceptions")                                 *)
+(* -------------------------------------------------------------------- *)
+
+(* The fixpoint.  A definition raises if it raises or re-raises itself
+   (a [try] re-raises what it does not catch), or makes a call that may.
+   An imported definition with an effect is assumed to. *)
+let infer_raises (p:program) : ML unit =
+  let tbl : HashTable.t string bool = HashTable.create 50 in
+  let rec raises (e:expr) : ML bool =
+    match e.e with
+    | ERaise _ | ETry _ -> true
+    | EApp (hd, args) -> may_raise_in tbl e hd || List.existsb raises args
+    | _ -> exists_child raises e
+  and may_raise_in (tbl:HashTable.t string bool) (e hd:expr) : ML bool =
+    match hd.e with
+    | EQual (f, _) -> HashTable.mem tbl (string_of_name f)
+    | _ -> not (is_pure e.eff) in
+  p |> List.iter (fun d ->
+    match d with
+    | DLet l when List.existsb Imported? l.dl_flags && not (is_pure l.dl_eff) ->
+      HashTable.add tbl (string_of_name l.dl_name) true
+    | _ -> ());
+  let rec settle () : ML unit =
+    let changed = mk_ref false in
+    p |> List.iter (fun d ->
+      match d with
+      (* A total definition raises nothing, whatever it calls. *)
+      | DLet l when not (is_pure l.dl_eff) &&
+                    not (HashTable.mem tbl (string_of_name l.dl_name)) && raises l.dl_body ->
+        HashTable.add tbl (string_of_name l.dl_name) true; changed := true
+      | _ -> ());
+    if !changed then settle () in
+  settle ();
+  raise_tbl := tbl
+
+(* [e] with every exit through which an exception leaves also freeing the
+   reuse token [w]: the exits before the cell that reuses it. *)
+let rec free_on_exit (w:string) (wt:cty) (e:expr) : ML expr =
+  match e.e with
+  | EOp ({ po_op = ExnExit }, []) ->
+    seq (mk (EOp ({ po_op = ResetFree; po_ty = None }, [mk (EVar w) wt E_Pure])) TUnit E_Impure) e
+  | _ -> map_children (free_on_exit w wt) e
+
+(* -------------------------------------------------------------------- *)
 (* Heap cell reuse                                                      *)
 (* -------------------------------------------------------------------- *)
 
@@ -638,14 +720,14 @@ let rec reuse_in (w:string) (wt:cty) (old:name) (e:expr) : ML (option expr) =
      | Some e1' -> Some { e with e = ELet (y, t, e1', e2); eff = E_Impure }
      | None ->
        match reuse_in w wt old e2 with
-       | Some e2' -> Some { e with e = ELet (y, t, e1, e2'); eff = E_Impure }
+       | Some e2' -> Some { e with e = ELet (y, t, free_on_exit w wt e1, e2'); eff = E_Impure }
        | None -> None)
   | ESeq (a, b) ->
     (match reuse_in w wt old a with
      | Some a' -> Some { e with e = ESeq (a', b); eff = E_Impure }
      | None ->
        match reuse_in w wt old b with
-       | Some b' -> Some { e with e = ESeq (a, b'); eff = E_Impure }
+       | Some b' -> Some { e with e = ESeq (free_on_exit w wt a, b'); eff = E_Impure }
        | None -> None)
   | EIf (c, t, f) ->
     (match reuse_in w wt old t, reuse_in w wt old f with
@@ -667,6 +749,32 @@ let rec reuse_in (w:string) (wt:cty) (old:name) (e:expr) : ML (option expr) =
 (* -------------------------------------------------------------------- *)
 (* The pass                                                             *)
 (* -------------------------------------------------------------------- *)
+
+(* Exceptions.  [held] are the owned references the enclosing
+   continuations hold, which an exception leaving the function from inside
+   the current expression has to release along with the ones [rc] is given;
+   [tail] says that the current expression is the function's result, so that
+   a call there needs no test: the caller tests. *)
+let held : ref owned = mk_ref []
+let tail : ref bool = mk_ref true
+
+let exn_exit (o:owned) (t:cty) : ML expr =
+  decs (o @ !held) (mk (EOp ({ po_op = ExnExit; po_ty = None }, [])) t E_Impure)
+
+let exn_pending : expr =
+  mk (EOp ({ po_op = ExnPending; po_ty = None }, []))
+     (TApp ({ ns = ["Prims"]; id = "bool"; spec = None }, [])) E_Pure
+
+(* Run [f] in a non-tail position, with [o] held by its continuation. *)
+let inner (#a:Type) (o:owned) (f:unit -> ML a) : ML a =
+  let h = !held in
+  let t = !tail in
+  held := o @ h;
+  tail := false;
+  let r = f () in
+  held := h;
+  tail := t;
+  r
 
 (* [rc o e]: [e] with reference counting made explicit.  [o] are the owned
    references live on entry; the result consumes each exactly once, and the
@@ -697,7 +805,7 @@ and rc_live (o:owned) (e:expr) : ML expr =
     let fv1 = fv e1 in
     let o1, o2 = List.partition (fun (y, _) ->
                    List.mem y fv1 && not (List.mem y fv2)) o in
-    let e1' = rc o1 e1 in
+    let e1' = inner o2 (fun () -> rc o1 e1) in
     let o2 = if is_np t then (x, t) :: o2 else o2 in
     let_ x t e1' (rc o2 e2)
 
@@ -705,7 +813,8 @@ and rc_live (o:owned) (e:expr) : ML expr =
   | ESeq (a, b) ->
     let fvb = fv b in
     let o1, o2 = List.partition (fun (y, _) -> not (List.mem y fvb)) o in
-    seq (rc o1 a) (rc o2 b)
+    let a' = inner o2 (fun () -> rc o1 a) in
+    seq a' (rc o2 b)
 
   | EIf (c, t, f) when not (is_atom c) ->
     let x = fresh () in
@@ -781,6 +890,7 @@ and rc_live (o:owned) (e:expr) : ML expr =
   | EOp ({ po_op = BufCreate _ }, v :: _) | EOp ({ po_op = BufWrite }, [_; _; v])
       when is_np v.ty ->
     unsupported "a Pulse reference or array holding a reference-counted value"
+  | EOp ({ po_op = ExnTake }, []) -> call o (Some []) [] { e with eff = E_Impure }
   | EOp (_, _) when is_np e.ty ->
     unsupported "a primitive operation returning a reference-counted value"
   | EOp (op, args) ->
@@ -815,14 +925,44 @@ and rc_live (o:owned) (e:expr) : ML expr =
      reads it borrows, and what it allocates it releases before it goes round
      again.  The references it was given are released after it. *)
   | EWhile (c, b) ->
-    let w = { e with e = EWhile (rc [] c, rc [] b); eff = E_Impure } in
+    let w = inner o (fun () -> { e with e = EWhile (rc [] c, rc [] b); eff = E_Impure }) in
     if Nil? o then w else
     let x = fresh () in
     let_ x e.ty w (decs o (var x e.ty))
 
   | EFun _ -> failwith "Cherry: a lambda survived lifting"
   | ETuple _ -> unsupported "an anonymous tuple of reference-counted values"
-  | ERaise _ | ETry _ -> unsupported "an exception"
+  (* [raise e] stores [e], releases everything held, and leaves. *)
+  | ERaise a ->
+    (match bind_first [a] with
+     | Some (x, a, [a']) -> rc_live o (let_ x a.ty a { e with e = ERaise a' })
+     | _ ->
+       let set = mk (EOp ({ po_op = ExnRaise; po_ty = None }, [a])) TUnit E_Impure in
+       let t = !tail in
+       tail := true;
+       let s = call o None [a] set in
+       tail := t;
+       seq s (exn_exit [] e.ty))
+  (* [try s with brs], where [s] calls the body's function: the call, and
+     then, if an exception is pending, a match on it, which raises it again
+     when no branch takes it. *)
+  | ETry (s, brs) ->
+    let r = fresh () in
+    let ex = fresh () in
+    let exv = var ex TExn in
+    let again = mk (ERaise exv) e.ty E_Impure in
+    let handler = mk (EMatch (exv, brs @ [(PWild, None, again)])) e.ty E_Impure in
+    let take = mk (EOp ({ po_op = ExnTake; po_ty = None }, [])) TExn E_Impure in
+    let caught = let_ ex TExn take handler in
+    (* The call itself is not tested like other calls: the test follows.
+       On an exception its result is no value, so only the other branch
+       owns it. *)
+    let fvk = fv caught in
+    let o1, o2 = List.partition (fun (y, _) -> not (List.mem y fvk)) o in
+    let s' = inner o2 (fun () -> tail := true; rc o1 s) in
+    let ro = if is_np e.ty then (r, e.ty) :: o2 else o2 in
+    let_ r e.ty s'
+      (mk (EIf (exn_pending, rc o2 caught, rc ro (var r e.ty))) e.ty E_Impure)
 
 (* A node whose operands are all atoms.  [owns] says which operands it
    takes ownership of ([None]: every one).  An owned variable in an owned
@@ -849,8 +989,19 @@ and call (o:owned) (owns:option (list bool)) (args:list expr) (node:expr)
       else [(y, a.ty)]
     | _ -> []) |> List.flatten in
   let left = o |> List.filter (fun (y, _) -> List.mem y !remaining) in
+  let raises = may_raise node in
   let node = if owns = Some [] then node else { node with eff = E_Impure } in
   let call = incs extra node in
+  (* A call that may raise is tested, unless it is the function's result,
+     which its caller tests: on an exception what the call did not take is
+     released, the result (which is no value) is not, and the function
+     leaves. *)
+  if raises && not !tail then
+    let r = fresh () in
+    let_ r node.ty call
+      (mk (EIf (exn_pending, exn_exit left node.ty, decs left (var r node.ty)))
+          node.ty E_Impure)
+  else
   if Nil? left then call else
   let r = fresh () in
   let_ r node.ty call (decs left (var r node.ty))
@@ -914,7 +1065,10 @@ let run_let (l:dlet) : ML dlet =
   let o = List.zip l.dl_binders fl
           |> List.filter (fun (b, ow) -> ow && is_np b.b_ty)
           |> List.map (fun (b, _) -> (b.b_name, b.b_ty)) in
-  if Nil? o && not (touches l.dl_body) then l else
+  held := [];
+  (* A global's initializer has no caller to test for it. *)
+  tail := Cons? l.dl_binders;
+  if Nil? o && not (touches l.dl_body) && not (HashTable.mem !raise_tbl (string_of_name l.dl_name)) then l else
   let body = rc o l.dl_body in
   { l with dl_body = body; dl_eff = join_eff l.dl_eff body.eff }
 
@@ -932,6 +1086,9 @@ let run (p:program) : ML program =
     match d with
     | DType ({ dt_body = TVariant cs }) ->
       cs |> List.iter (fun (c, fs) -> HashTable.add ct (string_of_name c) fs)
+    | DExn x ->
+      HashTable.add ct (string_of_name x.de_name)
+        (x.de_args |> List.mapi (fun i t -> ("f" ^ string_of_int i, t)))
     | DType ({ dt_name = n; dt_body = TRecord fs }) ->
       HashTable.add rt (string_of_name n) fs
     | DExternal x ->
@@ -977,6 +1134,7 @@ let run (p:program) : ML program =
     | _ -> ());
   let pinned (f:string) : ML bool = HashTable.mem pin f in
   infer_borrows p pinned;
+  infer_raises p;
   counter := 0;
   p |> List.map (fun d ->
     match d with
