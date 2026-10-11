@@ -546,10 +546,31 @@ let ref_prefix (t:cty) : ML string =
           | None -> ref_tys := !ref_tys @ [t]; List.length !ref_tys - 1 in
   "cherry_ref" ^ string_of_int i
 
+(* Immutable arrays (cherry.h), the same way: the element types, numbered,
+   and for each the list type its [of_list] and [to_list] convert from and
+   to, once one is used; [cherry_iarr_helpers] generates them. *)
+let iarr_tys : ref (list cty) = mk_ref []
+let iarr_lists : ref (list (int & cty)) = mk_ref []
+let iarr_index (t:cty) : ML int =
+  let rec find (i:int) (l:list cty) : ML (option int) =
+    match l with
+    | [] -> None
+    | u :: rest -> if u = t then Some i else find (i + 1) rest in
+  match find 0 !iarr_tys with
+  | Some i -> i
+  | None -> iarr_tys := !iarr_tys @ [t]; List.length !iarr_tys - 1
+let iarr_prefix (t:cty) : ML string = "cherry_iarr" ^ string_of_int (iarr_index t)
+let iarr_list (t:cty) (l:cty) : ML unit =
+  let i = iarr_index t in
+  if not (List.existsb (fun (j, _) -> j = i) !iarr_lists) then
+    iarr_lists := !iarr_lists @ [(i, l)]
+
 let rc_fn (op:string) (t:cty) : ML string =
   match t with
   | TApp ({ ns = ["Cherry"]; id = "ref"; spec = None }, [v]) ->
     if op = "inc" then "cherry_inc" else ref_prefix v ^ "_" ^ op
+  | TApp ({ ns = ["Cherry"]; id = "iarray"; spec = None }, [v]) ->
+    if op = "inc" then "cherry_inc" else iarr_prefix v ^ "_" ^ op
   | TApp (n, _) when op = "inc" && is_boxed_name n -> "cherry_inc"
   (* The runtime's own cells (ulib/c/cherry.h) have no counted fields, so the
      generic operations are the whole story. *)
@@ -941,6 +962,8 @@ and base_ty (t:cty) : ML string =
      generated operations on each know which one theirs is. *)
   | TApp ({ ns = ["Cherry"]; id = "ref"; spec = None }, [_]) when Options.custard_cherry () ->
     "cherry_ref"
+  | TApp ({ ns = ["Cherry"]; id = "iarray"; spec = None }, [_]) when Options.custard_cherry () ->
+    "cherry_iarray"
   | TApp (n, []) ->
     (match builtin_type n with
      | Some s -> s
@@ -1039,6 +1062,9 @@ let alloc_name (base:string) : ML string =
 
 let rec eq_target (t:cty) : ML (option dtype) =
   match t with
+  | TApp ({ ns = ["Cherry"]; id = "iarray" }, _) ->
+    reject "an equality test on an immutable array"
+      ["Cherry does not compare immutable arrays yet."]
   | TApp (n, []) when None? (builtin_type n) ->
     (match find_type n with
      | Some d when List.existsb Extern? d.dt_flags -> None
@@ -1766,6 +1792,8 @@ let reset_program_state () : ML unit =
   fn_sigs := HashTable.create 0;
   fn_globals := HashTable.create 0;
   ref_tys := [];
+  iarr_tys := [];
+  iarr_lists := [];
   clo_queue := [];
   clo_seen := HashTable.create 0;
   arrow_ids := [];
@@ -1883,7 +1911,8 @@ let rec is_pure (e:expr) : ML bool =
   | EOp ({ po_op = BufFree }, _) | EOp ({ po_op = BufBlit }, _)
   | EOp ({ po_op = RcInc }, _) | EOp ({ po_op = RcDec }, _)
   | EOp ({ po_op = RefNew }, _) | EOp ({ po_op = RefGet }, _) | EOp ({ po_op = RefSet }, _)
-  | EOp ({ po_op = Reset _ }, _) | EOp ({ po_op = Reuse _ }, _) | EOp ({ po_op = ResetFree }, _) -> false
+  | EOp ({ po_op = Reset _ }, _) | EOp ({ po_op = Reuse _ }, _) | EOp ({ po_op = ResetFree }, _)
+  | EOp ({ po_op = IArr _ }, _) -> false
   | EOp (_, es) | ECtor (_, es) | ETuple es -> all es
   | ELet (_, _, a, b) | ESeq (a, b) -> is_pure a && is_pure b
   | EIf (a, b, c) -> is_pure a && is_pure b && is_pure c
@@ -2154,6 +2183,19 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
     rc_fn "new" e.ty ^ "(" ^ v' ^ ")"
   | EOp ({ po_op = RefGet }, [r]) ->
     rc_fn "get" r.ty ^ "(" ^ c_expr out ind r ^ ")"
+  | EOp ({ po_op = IArr f }, args) ->
+    let elt (t:cty) : ML cty =
+      match t with
+      | TApp ({ ns = ["Cherry"]; id = "iarray" }, [v]) -> v
+      | _ -> failwith "Cherry: an immutable array operation on something else" in
+    let vals = args |> List.map (fun a -> c_rvalue out ind a.ty a) in
+    let call (p:string) : string = p ^ "_" ^ f ^ "(" ^ String.concat ", " vals ^ ")" in
+    (match f, args with
+     | "length", _ -> "cherry_iarray_length(" ^ String.concat ", " vals ^ ")"
+     | "of_list", [l] -> let v = elt e.ty in iarr_list v l.ty; call (iarr_prefix v)
+     | "to_list", [a] -> let v = elt a.ty in iarr_list v e.ty; call (iarr_prefix v)
+     | _, a :: _ -> call (iarr_prefix (elt a.ty))
+     | _ -> failwith "Cherry: an immutable array operation without operands")
   | EOp ({ po_op = Reuse (old, cn) }, w :: args) ->
     (match find_ctor old, find_ctor cn with
      | Some (d0, _), Some (d, _) ->
@@ -3284,6 +3326,7 @@ let rec value_deps (t:cty) : ML (list string) =
   (* Cherry: a boxed value is a pointer. *)
   | TApp (n, _) when is_boxed_name n -> []
   | TApp ({ ns = ["Cherry"]; id = "ref" }, _) -> []
+  | TApp ({ ns = ["Cherry"]; id = "iarray" }, _) -> []
   | TApp (n, args) -> string_of_name n :: List.collect value_deps args
   | TTuple ts -> List.collect value_deps ts
   (* A pointer is a size, and a function is a pointer: an incomplete type is
@@ -4393,6 +4436,117 @@ let cherry_ref_helpers () : ML (list string & list string) =
   go 0;
   (!protos, !defs)
 
+(* The immutable arrays used while printing (cherry.h), one per element
+   type: the cell struct, and the operations on it.  [upd] and [push] take
+   the array owned and change it in place when it is unique, growing a full
+   one geometrically; otherwise they copy it. *)
+let cherry_iarr_helpers () : ML (list string & list string) =
+  let protos : ref (list string) = mk_ref [] in
+  let defs : ref (list string) = mk_ref [] in
+  let fn (proto:string) (body:string) : ML unit =
+    protos := !protos @ [proto ^ ";\n"];
+    defs := !defs @ [proto ^ " {\n" ^ body ^ "}\n"] in
+  (* An element type that is itself an array adds to the list as it goes. *)
+  let rec go (i:int) : ML unit =
+    if i >= List.length !iarr_tys then () else begin
+    let t = List.nth !iarr_tys i in
+    let p = "cherry_iarr" ^ string_of_int i in
+    let s = "struct " ^ p ^ "_s" in
+    let counted = is_nonplain_ty t in
+    let op (o:string) (x:string) : ML string =
+      if counted then rc_call o t x ^ ";" else "" in
+    let cell (x:string) : string = s ^ " *" ^ x in
+    let copy =
+      "  for (size_t j = 0; j < n; j++) { d->data[j] = c->data[j]; " ^ op "inc" "d->data[j]" ^ " }\n" in
+    protos := !protos @ [s ^ " { cherry_iarray_hdr h; " ^ decl_of t "data[]" ^ "; };\n"];
+    fn ("static inline cherry_iarray " ^ p ^ "_alloc(size_t n, size_t cap)")
+       ("  " ^ cell "c" ^ " = (" ^ s ^ " *)cherry_alloc(sizeof(" ^ s ^ ") + cap * sizeof(c->data[0]), CHERRY_TAG_IARRAY);\n" ^
+        "  c->h.size = n;\n  c->h.cap = cap;\n  return (cherry_iarray)c;\n");
+    fn ("static inline void " ^ p ^ "_free(cherry_obj *a, int m)")
+       ("  (void)m;\n" ^
+        (if counted then
+           "  " ^ cell "c" ^ " = (" ^ s ^ " *)a;\n" ^
+           "  for (size_t j = 0; j < c->h.size; j++) " ^ op "dec" "c->data[j]" ^ "\n"
+         else "") ^
+        "  free(a);\n");
+    fn ("static inline void " ^ p ^ "_markf(cherry_obj *a, int m)")
+       ("  (void)a; (void)m;\n" ^
+        (if counted then
+           "  " ^ cell "c" ^ " = (" ^ s ^ " *)a;\n" ^
+           "  for (size_t j = 0; j < c->h.size; j++) " ^ op "mark" "c->data[j]" ^ "\n"
+         else ""));
+    fn ("static inline void " ^ p ^ "_dec(cherry_iarray a)")
+       ("  if (cherry_dec_ref(a)) " ^
+        (if counted then "cherry_defer(a, " ^ p ^ "_free, 0);\n" else "free(a);\n"));
+    fn ("static inline void " ^ p ^ "_mark(cherry_iarray a, int m)")
+       (if counted then "  if (cherry_mark_ref(a, m)) cherry_defer(a, " ^ p ^ "_markf, m);\n"
+        else "  (void)cherry_mark_ref(a, m);\n");
+    fn ("static inline " ^ decl_of t (p ^ "_index(cherry_iarray a, cherry_int i)"))
+       ("  " ^ decl_of t "x" ^ " = ((" ^ s ^ " *)a)->data[cherry_iarray_pos(i)];\n" ^
+        (if counted then "  " ^ op "inc" "x" ^ "\n" else "") ^ "  return x;\n");
+    (* A shared or persistent array is copied, as is one with another
+       reference: the copy takes a reference to every element, and the
+       original is released after, so that no element dies in between. *)
+    let unique_or_copy (cap:string) : string =
+      "  " ^ cell "c" ^ " = (" ^ s ^ " *)a;\n" ^
+      "  size_t n = c->h.size;\n" ^
+      "  if (a->rc != 1) {\n" ^
+      "    " ^ cell "d" ^ " = (" ^ s ^ " *)" ^ p ^ "_alloc(n, " ^ cap ^ ");\n" ^
+      "  " ^ copy ^
+      "    " ^ p ^ "_dec(a);\n    c = d;\n  }\n" in
+    fn ("static inline cherry_iarray " ^ p ^ "_upd(cherry_iarray a, cherry_int i, " ^ decl_of t "v" ^ ")")
+       (unique_or_copy "n" ^
+        "  size_t k = cherry_iarray_pos(i);\n" ^
+        (if counted then "  " ^ decl_of t "old" ^ " = c->data[k];\n" else "") ^
+        "  c->data[k] = v;\n" ^
+        (if counted then "  " ^ op "dec" "old" ^ "\n" else "") ^
+        "  return (cherry_iarray)c;\n");
+    fn ("static inline cherry_iarray " ^ p ^ "_push(cherry_iarray a, " ^ decl_of t "v" ^ ")")
+       (unique_or_copy "2 * n + 1" ^
+        "  if (n == c->h.cap) {\n" ^
+        "    size_t cap = 2 * n + 1;\n" ^
+        "    c = (" ^ s ^ " *)realloc(c, sizeof(" ^ s ^ ") + cap * sizeof(c->data[0]));\n" ^
+        "    if (c == NULL) abort();\n" ^
+        "    c->h.cap = cap;\n  }\n" ^
+        "  c->data[n] = v;\n  c->h.size = n + 1;\n  return (cherry_iarray)c;\n");
+    (* Conversions from and to the list type, when one was used. *)
+    (match List.tryFind (fun (j, _) -> j = i) !iarr_lists with
+     | Some (_, lt) ->
+       let ln = (match lt with
+                 | TApp (ln, []) -> ln
+                 | _ -> failwith "Cherry: an immutable array converted from or to a non-list type") in
+       (match find_type ln with
+        | Some d when TVariant? d.dt_body ->
+          let cs = TVariant?._0 d.dt_body in
+          let nil = cs |> List.tryFind (fun (_, fs) -> Nil? fs) in
+          let cons = cs |> List.tryFind (fun (_, fs) -> List.length fs = 2) in
+          (match nil, cons with
+           | Some (nc, _), Some (cc, [(hd, _); (tl, _)]) ->
+             let l = ty lt in
+             let cs = cell_struct d cc in
+             fn ("static inline cherry_iarray " ^ p ^ "_of_list(" ^ l ^ " l)")
+                ("  size_t n = 0;\n" ^
+                 "  for (" ^ l ^ " q = l; !cherry_is_scalar(q); q = ((" ^ cs ^ " *)q)->" ^ c_var tl ^ ") n++;\n" ^
+                 "  " ^ cell "d" ^ " = (" ^ s ^ " *)" ^ p ^ "_alloc(n, n);\n" ^
+                 "  size_t j = 0;\n" ^
+                 "  for (" ^ l ^ " q = l; !cherry_is_scalar(q); q = ((" ^ cs ^ " *)q)->" ^ c_var tl ^ ") {\n" ^
+                 "    d->data[j] = ((" ^ cs ^ " *)q)->" ^ c_var hd ^ ";\n" ^
+                 (if counted then "    " ^ op "inc" "d->data[j]" ^ "\n" else "") ^
+                 "    j++;\n  }\n  return (cherry_iarray)d;\n");
+             fn ("static inline " ^ l ^ " " ^ p ^ "_to_list(cherry_iarray a)")
+                ("  " ^ cell "c" ^ " = (" ^ s ^ " *)a;\n" ^
+                 "  " ^ l ^ " r = CHERRY_SCALAR(" ^ c_tag nc ^ ");\n" ^
+                 "  for (size_t j = c->h.size; j-- > 0;) {\n" ^
+                 (if counted then "    " ^ op "inc" "c->data[j]" ^ "\n" else "") ^
+                 "    r = " ^ cell_new d cc ^ "(c->data[j], r);\n  }\n  return r;\n")
+           | _ -> failwith "Cherry: a list type without Nil and Cons")
+        | _ -> failwith "Cherry: an immutable array converted from or to an unknown list type")
+     | _ -> ());
+    go (i + 1)
+    end in
+  go 0;
+  (!protos, !defs)
+
 (* The closure helpers requested while printing: declarations (the
    environment structs, prototypes and static closures) and definitions. *)
 let cherry_closure_helpers () : ML (list string & list string) =
@@ -4883,6 +5037,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   let rc_protos, rc_defs = cherry_helpers p in
   let clo_protos, clo_defs = cherry_closure_helpers () in
   let ref_protos, ref_defs = cherry_ref_helpers () in
+  let iarr_protos, iarr_defs = cherry_iarr_helpers () in
 
   (* The header carries the unit's whole type language rather than only the
      types a public signature mentions.  A [struct] or a [typedef] has no
@@ -4913,11 +5068,13 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   String.concat "" lits ^ (match lits with [] -> "" | _ -> "\n") ^
   String.concat "" rc_protos ^ (match rc_protos with [] -> "" | _ -> "\n") ^
   String.concat "" ref_protos ^ (match ref_protos with [] -> "" | _ -> "\n") ^
+  String.concat "" iarr_protos ^ (match iarr_protos with [] -> "" | _ -> "\n") ^
   String.concat "\n" rc_defs ^ (match rc_defs with [] -> "" | _ -> "\n") ^
   String.concat "" protos ^ (match protos with [] -> "" | _ -> "\n") ^
   String.concat "" clo_protos ^ (match clo_protos with [] -> "" | _ -> "\n") ^
   String.concat "\n" clo_defs ^ (match clo_defs with [] -> "" | _ -> "\n") ^
   String.concat "\n" ref_defs ^ (match ref_defs with [] -> "" | _ -> "\n") ^
+  String.concat "\n" iarr_defs ^ (match iarr_defs with [] -> "" | _ -> "\n") ^
   String.concat "" eq_protos ^ (match eq_protos with [] -> "" | _ -> "\n") ^
   String.concat "\n" eq_defs ^ (match eq_defs with [] -> "" | _ -> "\n") ^
   String.concat "\n" defs ^ "\n" ^ (match inits with [] -> "" | _ -> init_fn) ^

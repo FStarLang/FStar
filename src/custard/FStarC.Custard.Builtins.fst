@@ -1574,6 +1574,26 @@ let list_coercion_rule (id:string) : ML (option rule) =
       | _ -> failwith ("Custard: " ^ id ^ " applied to the wrong arity")))
   | _ -> None
 
+(* Under Cherry (cherry.md, "Arrays") an immutable array is a counted cell
+   updated in place when unique: the runtime type [Cherry.iarray t], whose
+   operations are [IArr] nodes. *)
+let cherry_iarray_name : name = { ns = ["Cherry"]; id = "iarray"; spec = None }
+
+let iarray_rule (id:string) : ML (option rule) =
+  let prims (id:string) (ts:list cty) : cty = TApp ({ ns = ["Prims"]; id = id; spec = None }, ts) in
+  let arr tys (_ : list expr) : ML cty = TApp (cherry_iarray_name, [elt_of tys]) in
+  let prim (n:int) (ret : list cty -> list expr -> ML cty) : option rule =
+    Some (buf_prim n (IArr id) E_Pure ret (fun args -> args)) in
+  match id with
+  | "t" -> Some (Rule_type (fun tys -> TApp (cherry_iarray_name, [elt_of tys])))
+  | "of_list" -> prim 1 arr
+  | "upd" -> prim 3 arr
+  | "push" -> prim 2 arr
+  | "to_list" -> prim 1 (fun tys _ -> prims "list" [elt_of tys])
+  | "length" -> prim 1 (fun _ _ -> prims "int" [])
+  | "index" -> prim 2 (fun tys _ -> elt_of tys)
+  | _ -> None
+
 let builtin_rule (l:Ident.lident) : ML rule =
   let r =
     match HashTable.try_find table (Ident.string_of_lid l) with
@@ -1614,6 +1634,11 @@ let builtin_rule (l:Ident.lident) : ML rule =
            else if ns = ["FStar"; "List"; "Tot"; "Base"] &&
                    Some? (list_coercion_rule id)
            then list_coercion_rule id
+           else if Options.custard_cherry () &&
+                   (ns = ["FStar"; "ImmutableArray"; "Base"] ||
+                    ns = ["FStar"; "ImmutableArray"]) &&
+                   Some? (iarray_rule id)
+           then iarray_rule id
            else if is_realized_module ns then Some Rule_realized
            else pulse_rule ns id)
       | [] -> None

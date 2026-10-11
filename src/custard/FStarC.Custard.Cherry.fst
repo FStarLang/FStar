@@ -53,6 +53,7 @@ let arrow_key : string = "->"
 let rec by_value (t:cty) : ML (list string) =
   match t with
   | TApp ({ ns = ["Cherry"]; id = "ref" }, _) -> ["Cherry.ref"]
+  | TApp ({ ns = ["Cherry"]; id = "iarray" }, _) -> ["Cherry.iarray"]
   | TApp (n, args) -> string_of_name n :: List.collect by_value args
   | TTuple ts -> List.collect by_value ts
   | TArrow _ -> [arrow_key]
@@ -85,7 +86,16 @@ let boxed_types (p:program) : ML (list string) =
     | _ -> [])
 
 (* The types the runtime (ulib/c/cherry.h) represents as counted cells. *)
-let runtime_types : list string = ["Prims.int"; "Prims.string"; "Cherry.ref"]
+let runtime_types : list string = ["Prims.int"; "Prims.string"; "Cherry.ref"; "Cherry.iarray"]
+
+(* The operands an immutable array operation (Syntax.IArr) takes owned: the
+   array an update or a push changes in place when it can, and the value it
+   stores. *)
+let iarr_owns (f:string) : list bool =
+  match f with
+  | "upd" -> [true; false; true]
+  | "push" -> [true; true]
+  | _ -> []
 
 (* An ML reference (Builtins.ml_ref_ty). *)
 let is_ml_ref (t:cty) : bool =
@@ -537,6 +547,10 @@ let infer_borrows (p:program) (pinned:string -> ML bool) : ML unit =
           let bf = if borrowed_sc then vs @ bf else bf in
           (match g with Some g -> go' bf false g | None -> ()); go' bf tail b)
       | EWhile (a, b) -> go false a; go false b
+      | EOp ({ po_op = IArr f }, es) ->
+        let fl = iarr_owns f in
+        es |> List.iteri (fun i a -> if i < List.length fl && List.nth fl i then own_arg a);
+        List.iter (go false) es
       | EOp (_, es) -> List.iter (go false) es
       | ECtor (_, es) | ETuple es -> List.iter own_arg es; List.iter (go false) es
       | ERecord (_, fs) -> fs |> List.iter (fun (_, x) -> own_arg x; go false x)
@@ -757,6 +771,13 @@ and rc_live (o:owned) (e:expr) : ML expr =
        let owns = (match op.po_op with
                    | RefNew -> [true] | RefGet -> [false] | _ -> [false; true]) in
        call o (Some owns) args { e with eff = E_Impure })
+  (* An immutable array: the operations borrow the array, except the two
+     that update it, which take it so that a unique one is changed in place
+     (cherry.md, "Arrays"). *)
+  | EOp (op, args) when IArr? op.po_op ->
+    (match bind_first args with
+     | Some (x, a, args') -> rc_live o (let_ x a.ty a { e with e = EOp (op, args') })
+     | None -> call o (Some (iarr_owns (IArr?._0 op.po_op))) args { e with eff = E_Impure })
   | EOp ({ po_op = BufCreate _ }, v :: _) | EOp ({ po_op = BufWrite }, [_; _; v])
       when is_np v.ty ->
     unsupported "a Pulse reference or array holding a reference-counted value"

@@ -415,6 +415,10 @@ type op =
   | Reset of name & list bool
   | Reuse of name & name
   | ResetFree
+  (** Cherry: an operation on an immutable array ([Cherry.iarray t], the
+      representation of [FStar.ImmutableArray.t]), named as in that module:
+      [of_list], [to_list], [length], [index], [upd] or [push]. *)
+  | IArr of string
 
 (** The machine type a primitive operation works at. *)
 type prim_ty =

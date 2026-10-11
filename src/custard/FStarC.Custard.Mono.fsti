@@ -155,6 +155,11 @@ val erased_binders_unfold (env:TcEnv.env) (t:typ) : ML (list bool)
     binders introduced when a primitive has to be eta-expanded. *)
 val retained_sorts (env:TcEnv.env) (t:typ) : ML (list typ)
 
+(** [retained_sorts_inst env t args] is [retained_sorts env t] with the leading
+    binders of [t] instantiated by [args], the arguments a partial application
+    supplies before erasure. *)
+val retained_sorts_inst (env:TcEnv.env) (t:typ) (args:list term) : ML (list typ)
+
 (** [retained_names env t] is those same binders' [ppname]s, in the same
     order, so an eta-expanded primitive can name its parameters after the
     declaration rather than [eta], [eta1] (section 96). *)

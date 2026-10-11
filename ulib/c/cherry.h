@@ -258,6 +258,30 @@ cherry_string cherry_string_of_int(cherry_int a);
 void cherry_print_string(cherry_string s);
 
 /* ------------------------------------------------------------------------
+   Immutable arrays (FStar.ImmutableArray.t).  A cell with the number of
+   elements, the capacity, and then the elements; the generated code defines
+   the cell for each element type and the operations on it
+   (cherry_iarr<N>_of_list/to_list/index/upd/push/dec/mark).  An update or a
+   push changes a uniquely referenced array in place, as an append does a
+   string, and copies any other. */
+
+#define CHERRY_TAG_IARRAY 0xFFFFFFF3u
+
+typedef cherry_obj *cherry_iarray;
+
+typedef struct cherry_iarray_hdr { cherry_obj hdr; size_t size; size_t cap; } cherry_iarray_hdr;
+
+static inline cherry_int cherry_iarray_length(cherry_iarray a) {
+  return CHERRY_INT_SMALL(((cherry_iarray_hdr *)a)->size);
+}
+
+/* An index, which F* has checked is a natural number below the length, so
+   it is a small integer. */
+static inline size_t cherry_iarray_pos(cherry_int i) {
+  return (size_t)cherry_int_val(i);
+}
+
+/* ------------------------------------------------------------------------
    Function values.  Every value of function type is a closure cell: the
    entry point, functions to drop and mark the captured values (NULL when
    there are none), the number of arguments the entry point takes, and then

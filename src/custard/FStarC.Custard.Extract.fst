@@ -3950,6 +3950,7 @@ and erasable_result (st:state) (ty:typ) (args:args) : ML bool =
    under-applied use has to be eta-expanded rather than passed along. *)
 and prim_app (st:state) (l:Ident.lident) (n:int)
              (f : list cty -> list expr -> ML expr) (args:args) : ML expr =
+  let args0 = List.map fst args in
   let decl_ty = match lookup_lid_typ st l with
                 | Some ((_, ty), _) -> Some ty
                 | None -> None in
@@ -4077,7 +4078,7 @@ and prim_app (st:state) (l:Ident.lident) (n:int)
     (* The eta binders stand for the arguments the source did not supply, so
        their types are the primitive's own remaining binder sorts. *)
     let sorts = match decl_ty with
-                | Some ty -> Mono.retained_sorts (tcenv st) ty
+                | Some ty -> Mono.retained_sorts_inst (tcenv st) ty args0
                 | None -> [] in
     (* Section 96.  And their names, for the same reason and from the same
        place: a binder the rule invents is one the reader has to carry, and
