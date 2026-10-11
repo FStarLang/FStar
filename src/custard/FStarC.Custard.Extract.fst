@@ -6609,7 +6609,7 @@ let noextract_to_this_backend (se:S.sigelt) : ML bool =
    is meant to be consumed by other C code; there it means the same thing
    here, and the whole module is the surface again. *)
 let is_krml_private (st:state) (m:Ident.lident) (se:S.sigelt) : ML bool =
-  Dep.module_has_interface st.deps m &&
+  Dep.module_has_interface st.deps (Options.codegen_target ()) m &&
   se.sigattrs |> List.existsb (fun attr ->
     match (SS.compress attr).n with
     | Tm_constant (Const_string ("KrmlPrivate", _)) -> true

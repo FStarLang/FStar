@@ -437,7 +437,7 @@ let go_normal () : ML unit =
                        dependence on a module, and the interface of this very
                        module (checked first) may depend on those modules too. *)
                     FStarC.Parser.Dep.set_root_friends (friends_of_implementation fn);
-                    match FStarC.Parser.Dep.interface_of deps m with
+                    match FStarC.Parser.Dep.interface_of deps (FStarC.Parser.Dep.module_key_of_file fn) with
                     | None -> [fn]
                     | Some iface ->
                       (* If the interface already has a usable checked file, do

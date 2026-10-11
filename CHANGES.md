@@ -11,6 +11,15 @@ Guidelines for the changelog:
   possibly with details in the PR or links to sample fixes (for example, changes
   to F*'s test suite).
 
+## Compilation targets
+
+  * A module can have target-specific interfaces and implementations, written
+    `A-ocaml.fst`, `A-c.fst`, `A-model.fst`, ...  Common files see only common
+    files; a file for target `t` also sees files for `t`.  Extraction picks
+    the target from `--codegen`.  Files whose names contain a dash followed
+    by a lowercase identifier are now read this way.  See
+    `doc/ref/targets.md`.
+
 ## Custard is the only extraction backend
 
   * The legacy extraction pipeline (`src/extraction`: the per-module OCaml,

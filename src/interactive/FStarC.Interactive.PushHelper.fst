@@ -325,10 +325,14 @@ let add_module_completions this_fname deps table : ML CTable.table =
     psmap_find_default loaded_mods_set modname false in
   let this_mod_key =
     Parser.Dep.lowercase_module_name this_fname in
+  let this_tgt = Parser.Dep.target_of_file this_fname in
   List.fold_left (fun table (modname, mod_path) ->
-      // modname is the filename part of mod_path
+      // modname is the filename part of mod_path, possibly with a target
+      let modname, tgt = FStarC.Target.split_target modname in
       let mod_key = String.lowercase modname in
-      if this_mod_key = mod_key then
+      if Some? tgt && tgt <> this_tgt then
+        table // Not visible from this file's target
+      else if this_mod_key = mod_key then
         table // Exclude current module from completion
       else
         let ns_query = Util.split (capitalize modname) "." in
