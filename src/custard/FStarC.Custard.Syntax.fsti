@@ -403,6 +403,18 @@ type op =
   | RefNew
   | RefGet
   | RefSet
+  (** Cherry: heap cell reuse (cherry.md).  [Reset (c, kept) x] takes the
+      owned cell [x], built with constructor [c], whose fields the branch
+      has read; [kept] says which of them the branch goes on to use.  If
+      [x] is unique, the fields not kept are released and [x]'s memory is
+      returned as a token; otherwise the kept fields are counted, [x] is
+      released, and the token is null.  [Reuse (c, c') (w :: args)] builds
+      constructor [c'] in the memory of token [w] (from a cell of
+      constructor [c]) if there is one and it fits, and allocates otherwise.
+      [ResetFree w] frees a token that no constructor reuses. *)
+  | Reset of name & list bool
+  | Reuse of name & name
+  | ResetFree
 
 (** The machine type a primitive operation works at. *)
 type prim_ty =

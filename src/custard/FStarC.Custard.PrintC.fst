@@ -1765,7 +1765,8 @@ let is_stmt (e:expr) : bool =
   | EOp ({ po_op = BufCreate _ }, _) | EOp ({ po_op = BufWrite }, _)
   | EOp ({ po_op = BufBlit }, _) | EOp ({ po_op = BufFree }, _)
   | EOp ({ po_op = RcInc }, _) | EOp ({ po_op = RcDec }, _)
-  | EOp ({ po_op = RefSet }, _) -> true
+  | EOp ({ po_op = RefSet }, _)
+  | EOp ({ po_op = Reset _ }, _) | EOp ({ po_op = ResetFree }, _) -> true
   | _ -> false
 
 (* Every variable that occurs anywhere in a term.  Shadowing is ignored, which
@@ -1855,7 +1856,8 @@ let rec is_pure (e:expr) : ML bool =
   | EOp ({ po_op = BufCreate _ }, _) | EOp ({ po_op = BufWrite }, _)
   | EOp ({ po_op = BufFree }, _) | EOp ({ po_op = BufBlit }, _)
   | EOp ({ po_op = RcInc }, _) | EOp ({ po_op = RcDec }, _)
-  | EOp ({ po_op = RefNew }, _) | EOp ({ po_op = RefGet }, _) | EOp ({ po_op = RefSet }, _) -> false
+  | EOp ({ po_op = RefNew }, _) | EOp ({ po_op = RefGet }, _) | EOp ({ po_op = RefSet }, _)
+  | EOp ({ po_op = Reset _ }, _) | EOp ({ po_op = Reuse _ }, _) | EOp ({ po_op = ResetFree }, _) -> false
   | EOp (_, es) | ECtor (_, es) | ETuple es -> all es
   | ELet (_, _, a, b) | ESeq (a, b) -> is_pure a && is_pure b
   | EIf (a, b, c) -> is_pure a && is_pure b && is_pure c
@@ -2126,6 +2128,14 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
     rc_fn "new" e.ty ^ "(" ^ v' ^ ")"
   | EOp ({ po_op = RefGet }, [r]) ->
     rc_fn "get" r.ty ^ "(" ^ c_expr out ind r ^ ")"
+  | EOp ({ po_op = Reuse (old, cn) }, w :: args) ->
+    (match find_ctor old, find_ctor cn with
+     | Some (d0, _), Some (d, _) ->
+       let w' = c_expr out ind w in
+       let vals = args |> List.map (fun a -> c_rvalue out ind a.ty a) in
+       "cherry_reuse_" ^ c_name d.dt_name ^ "_" ^ arm_name cn ^ "(" ^
+       String.concat ", " (w' :: ("sizeof(" ^ cell_struct d0 old ^ ")") :: vals) ^ ")"
+     | _ -> failwith "Cherry: reuse of an unknown constructor")
   | EOp ({ po_op = BufRead }, [b; i]) ->
     (match b.e with
      | EVar y when is_cell y -> lookup_var y
@@ -2637,6 +2647,30 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     let r' = c_expr out ind r in
     let v' = c_rvalue out ind v.ty v in
     !out ^ ind ^ rc_fn "set" r.ty ^ "(" ^ r' ^ ", " ^ v' ^ ");\n" ^ unit_result ind d
+
+  (* Cherry: the reset of a cell a constructor reuses (cherry.md, "Heap cell
+     reuse"). *)
+  | EOp ({ po_op = Reset (cn, kept) }, [a]) ->
+    (match find_ctor cn with
+     | Some (dt, fs) ->
+       let out = mk_ref "" in
+       let x = c_expr out ind a in
+       let fl = List.zip fs (if List.length kept = List.length fs then kept
+                             else List.map (fun _ -> false) fs) in
+       let on (op:string) (want:bool) : ML string =
+         String.concat "" (fl |> List.collect (fun ((f, t), k) ->
+           if is_nonplain_ty t && k = want
+           then [ind' ^ rc_call op t (cell_field x dt cn f) ^ ";\n"] else [])) in
+       !out ^
+       ind ^ "if (" ^ x ^ "->rc == 1) {\n" ^ on "dec" false ^ finish ind' d x ^
+       ind ^ "} else {\n" ^ on "inc" true ^
+       ind' ^ rc_call "dec" a.ty x ^ ";\n" ^ finish ind' d "NULL" ^
+       ind ^ "}\n"
+     | None -> failwith "Cherry: reset of an unknown constructor")
+  | EOp ({ po_op = ResetFree }, [w]) ->
+    let out = mk_ref "" in
+    let v = c_expr out ind w in
+    !out ^ ind ^ "free(" ^ v ^ ");\n" ^ unit_result ind d
 
   | EOp ({ po_op = RcInc }, [a]) | EOp ({ po_op = RcDec }, [a]) ->
     let out = mk_ref "" in
@@ -4187,6 +4221,21 @@ let cherry_helpers (p:program) : ML (list string & list string) =
              fn ("static inline " ^ n ^ " " ^ cell_new dt c ^ "(" ^ String.concat ", " params ^ ")")
                 ("  " ^ cell ^ " *c = (" ^ cell ^ " *)cherry_alloc(sizeof(" ^ cell ^ "), " ^
                  c_tag c ^ ");\n" ^
+                 String.concat "" (fs |> List.mapi (fun i (f, _) ->
+                   "  c->" ^ c_var f ^ " = a" ^ string_of_int i ^ ";\n")) ^
+                 "  return (" ^ n ^ ")c;\n");
+             (* Constructor [c] in the memory of a token from a cell of
+                [cap] bytes, if there is one and it fits (cherry.md). *)
+             fn ("static inline " ^ n ^ " cherry_reuse_" ^ n ^ "_" ^ arm_name c ^
+                 "(cherry_obj *w, size_t cap, " ^ String.concat ", " params ^ ")")
+                ("  " ^ cell ^ " *c;\n" ^
+                 "  if (w != NULL && sizeof(" ^ cell ^ ") <= cap) {\n" ^
+                 "    c = (" ^ cell ^ " *)w;\n" ^
+                 "    ((cherry_obj *)c)->tag = " ^ c_tag c ^ ";\n" ^
+                 "  } else {\n" ^
+                 "    free(w);\n" ^
+                 "    c = (" ^ cell ^ " *)cherry_alloc(sizeof(" ^ cell ^ "), " ^ c_tag c ^ ");\n" ^
+                 "  }\n" ^
                  String.concat "" (fs |> List.mapi (fun i (f, _) ->
                    "  c->" ^ c_var f ^ " = a" ^ string_of_int i ^ ";\n")) ^
                  "  return (" ^ n ^ ")c;\n")

@@ -137,7 +137,21 @@ The prototype does not build static cells yet. Instead, a global of reference-co
 
 ## Heap cell reuse
 
-Heap cells are reused opportunistically. Due to the nonuniform memory layout, we only reuse cells for the same constructor (with the same monomorphized type). Unlike Lean, we do not add a branch on rc=1 to the IR; instead a variant of the decrement operation returns a pointer to the recyclable heap cell (if uniquely owned, i.e. rc = 1 or rc = -1) without freeing it, or null otherwise. The fields of the recyclable cell are decremented eagerly. The cell is then reused by following allocations where appropriate, and must be freed on paths where it is not reused. Immortal cells are never reused.
+Heap cells are reused as in Lean (Counting immutable beans, section 4). When a branch of a match on an owned cell `x` no longer needs `x`, and builds a cell of the same type on some path, the Cherry pass:
+- binds a token `w = reset x` at the start of the branch;
+- builds the first such cell on each path with `reuse w`;
+- frees the token on the paths that build none.
+
+A loop body is not searched, since it may build any number of cells.
+
+- `reset x`: if `x` is unique (rc = 1), the fields the branch uses are moved out of it (no inc), the others are released, and `x`'s memory becomes the token. Otherwise the used fields are inc'd, `x` is dec'd, and the token is null. A shared cell (rc < 0) is never reused, because its fields are shared too and the rebuilt cell's would not be. Immortal cells (rc = 0) are never reused either.
+- `reuse w` builds any constructor of the same monomorphized type. If the token is non-null and the new cell fits in the old one (a `sizeof` comparison that the C compiler folds), the cell is updated in place: tag and fields. Otherwise the token is freed and a new cell is allocated.
+- Borrow inference makes a parameter owned when such a branch could reuse it (rule 2).
+- The fields of `x` must be bound by variables, or by patterns that bind none (e.g. `Node Leaf s Leaf`), so that the reset can tell which fields are kept.
+
+On a microbenchmark (repeatedly mapping over a list of 10^6 elements), reuse is about 2.3x faster than allocating.
+
+Not done yet: reuse of boxed records, reusing a cell for a constructor of another type of the same size, and reuse without a match (Lean's reuse of a dead variable that was not matched on).
 
 ## Backend
 

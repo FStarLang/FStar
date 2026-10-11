@@ -114,6 +114,7 @@ let nonplain_types (p:program) : ML (list string) =
 (* -------------------------------------------------------------------- *)
 
 let np_tbl : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
+let boxed_tbl : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
 let ctor_tbl : ref (HashTable.t string (list (string & cty))) = mk_ref (HashTable.create 0)
 let record_tbl : ref (HashTable.t string (list (string & cty))) = mk_ref (HashTable.create 0)
 (* For each external, which of its arguments it takes ownership of. *)
@@ -417,6 +418,27 @@ let call_owns (hd:expr) (args:list expr) : ML (option (list bool)) =
    parameter owned instead, which keeps the call a tail call: otherwise the
    value would be released after it.  The fields of a borrowed scrutinee are
    borrowed.  Iterated to a fixpoint over the whole program. *)
+let same_boxed (a b:cty) : ML bool =
+  match a, b with
+  | TApp (m, []), TApp (n, []) ->
+    string_of_name m = string_of_name n && HashTable.mem !boxed_tbl (string_of_name m)
+  | _ -> false
+
+(* Whether [e] builds a cell of the boxed type [t] outside a loop: a cell a
+   dead scrutinee of type [t] could be reused for. *)
+let rec builds (t:cty) (e:expr) : ML bool =
+  let any (es:list expr) : ML bool = List.existsb (builds t) es in
+  match e.e with
+  | ECtor (_, args) -> (Cons? args && same_boxed e.ty t) || any args
+  | ELet (_, _, a, b) | ESeq (a, b) -> builds t a || builds t b
+  | EIf (c, a, b) -> any [c; a; b]
+  | EMatch (sc, brs) -> builds t sc || brs |> List.existsb (fun (_, _, b) -> builds t b)
+  | EApp (hd, args) -> any (hd :: args)
+  | EOp (_, es) | ETuple es -> any es
+  | ERecord (_, fs) -> any (List.map snd fs)
+  | EProj (a, _, _) | EDiscrim (a, _) | ECast (a, _) | ECoerce (a, _) -> builds t a
+  | _ -> false
+
 let rec set_nth (i:int) (x:bool) (l:list bool) : ML (list bool) =
   match l with
   | [] -> []
@@ -489,6 +511,17 @@ let infer_borrows (p:program) (pinned:string -> ML bool) : ML unit =
       | EIf (c, t, f) -> go false c; go tail t; go tail f
       | EMatch (sc, brs) ->
         go false sc;
+        (* A parameter matched in a branch that no longer needs it and
+           builds a cell of its type is owned, so that the cell can be
+           reused. *)
+        (match sc.e with
+         | EVar y when Some? (param_ix y) && HashTable.mem !boxed_tbl
+                         (match sc.ty with TApp (n, []) -> string_of_name n | _ -> "") ->
+           if brs |> List.existsb (fun (p, _, b) ->
+                (match p with PCtor (_, _ :: _) -> true | _ -> false) &&
+                not (List.mem y (fv b)) && builds sc.ty b)
+           then own_arg sc
+         | _ -> ());
         let borrowed_sc = (match sc.e with
                            | EVar y -> is_np sc.ty && not (is_owned_var bf y)
                            | _ -> false) in
@@ -564,6 +597,52 @@ let rec bind_first (args:list expr) : ML (option (string & expr & list expr)) =
     else
       let x = fresh () in
       Some (x, a, var x a.ty :: rest)
+
+(* -------------------------------------------------------------------- *)
+(* Heap cell reuse                                                      *)
+(* -------------------------------------------------------------------- *)
+
+(* [e], with reference counting already made explicit, building its first
+   cell of type [wt] on each path in the memory of token [w] (from a cell of
+   constructor [old]), and freeing [w] on the paths that build none; [None]
+   when no path builds one.  A loop is not entered: it builds any number. *)
+let rec reuse_in (w:string) (wt:cty) (old:name) (e:expr) : ML (option expr) =
+  let free_tok (b:expr) : expr =
+    seq (mk (EOp ({ po_op = ResetFree; po_ty = None }, [var w wt])) TUnit E_Impure) b in
+  match e.e with
+  | ECtor (cn, args) when Cons? args && same_boxed e.ty wt ->
+    Some { e with e = EOp ({ po_op = Reuse (old, cn); po_ty = None }, var w wt :: args);
+                  eff = E_Impure }
+  | ELet (y, t, e1, e2) ->
+    (match reuse_in w wt old e1 with
+     | Some e1' -> Some { e with e = ELet (y, t, e1', e2); eff = E_Impure }
+     | None ->
+       match reuse_in w wt old e2 with
+       | Some e2' -> Some { e with e = ELet (y, t, e1, e2'); eff = E_Impure }
+       | None -> None)
+  | ESeq (a, b) ->
+    (match reuse_in w wt old a with
+     | Some a' -> Some { e with e = ESeq (a', b); eff = E_Impure }
+     | None ->
+       match reuse_in w wt old b with
+       | Some b' -> Some { e with e = ESeq (a, b'); eff = E_Impure }
+       | None -> None)
+  | EIf (c, t, f) ->
+    (match reuse_in w wt old t, reuse_in w wt old f with
+     | None, None -> None
+     | t', f' ->
+       let t = (match t' with Some t -> t | None -> free_tok t) in
+       let f = (match f' with Some f -> f | None -> free_tok f) in
+       Some { e with e = EIf (c, t, f); eff = E_Impure })
+  | EMatch (sc, brs) ->
+    let rs = brs |> List.map (fun (p, g, b) -> (p, g, b, reuse_in w wt old b)) in
+    if rs |> List.for_all (fun (_, _, _, r) -> None? r) then None else
+    Some { e with e = EMatch (sc, rs |> List.map (fun (p, g, b, r) ->
+                               match r with
+                               | Some b' -> (p, g, b')
+                               | None -> (p, g, free_tok b)));
+                  eff = E_Impure }
+  | _ -> None
 
 (* -------------------------------------------------------------------- *)
 (* The pass                                                             *)
@@ -771,8 +850,34 @@ and rc_branch (o:owned) (sc:option (string & bool)) (st:cty) (br:branch) : ML br
     (p, g, decs dead (rc keep b))
   | Some (x, true) ->
     let dead_x, dead_other = List.partition (fun (y, _) -> y = x) dead in
+    (* A constructor without fields of a boxed type is not a cell. *)
+    let dead_x = (match p with
+                  | PCtor (_, []) when HashTable.mem !boxed_tbl
+                      (match st with TApp (n, []) -> string_of_name n | _ -> "") -> []
+                  | _ -> dead_x) in
     let body = rc (keep @ fields) b in
-    (p, g, decs dead_other (incs fields (decs dead_x body)))
+    let plain () : ML branch = (p, g, decs dead_other (incs fields (decs dead_x body))) in
+    (* The scrutinee dies here: a cell this branch builds can reuse its memory
+       (cherry.md, "Heap cell reuse").  Each field is bound by a variable or
+       by a pattern binding none, so that the reset can tell the kept ones
+       apart. *)
+    (match p with
+     | PCtor (c, ps) when Cons? dead_x && Cons? ps &&
+                          ps |> List.for_all (fun q -> PVar? q || Nil? (pat_vars q)) &&
+                          HashTable.mem !boxed_tbl (match st with
+                                                    | TApp (n, []) -> string_of_name n
+                                                    | _ -> "") ->
+       let w = fresh () in
+       (match reuse_in w st c body with
+        | Some body' ->
+          let kept = ps |> List.map (fun q ->
+                       match q with
+                       | PVar v -> List.mem v (names fields)
+                       | _ -> false) in
+          let reset = mk (EOp ({ po_op = Reset (c, kept); po_ty = None }, [var x st])) st E_Impure in
+          (p, g, decs dead_other (let_ w st reset body'))
+        | None -> plain ())
+     | _ -> plain ())
 
 let run_let (l:dlet) : ML dlet =
   current := string_of_name l.dl_name;
@@ -790,6 +895,9 @@ let run (p:program) : ML program =
   let np = HashTable.create 50 in
   nonplain_types p |> List.iter (fun k -> HashTable.add np k true);
   np_tbl := np;
+  let bx = HashTable.create 50 in
+  boxed_types p |> List.iter (fun k -> HashTable.add bx k true);
+  boxed_tbl := bx;
   let ct = HashTable.create 50 in
   let rt = HashTable.create 50 in
   let xt = HashTable.create 50 in
