@@ -217,6 +217,9 @@ val parse_codegen               : string  -> option codegen_t
 val codegen                     : unit    -> ML (option codegen_t)
 val codegen_krml                : unit    -> ML bool (* KrmlC or KrmlRust *)
 val codegen_name                : unit    -> ML string (* "" if unset *)
+(* The compilation target of the backend: the [tgt] of [A-tgt.fst] files
+   whose implementation is extracted.  See [FStarC.Parser.Dep]. *)
+val codegen_target              : unit    -> ML (option string)
 
 val custard_entries             : unit    -> ML (list string)
 val custard_entrypoint_files    : unit    -> ML (list string)

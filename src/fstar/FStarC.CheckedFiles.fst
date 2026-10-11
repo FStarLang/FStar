@@ -194,12 +194,9 @@ let hash_dependences (deps:Dep.deps) (fn:string) (deps_of_fn:list string): ML (e
   in
   let module_name = Dep.lowercase_module_name fn in
   let source_hash = BU.digest_of_file fn in
-  let has_interface = Some? (Dep.interface_of deps module_name) in
   let interface_source_file_name =
     if Dep.is_implementation fn
-    && has_interface
-    then module_name
-      |> Dep.interface_of deps
+    then Dep.interface_of deps (Dep.module_key_of_file fn)
     else None
   in
   let binary_deps = deps_of_fn
@@ -368,7 +365,7 @@ let load_checked_file_with_tc_result
          * is in Unknown state, it could call load_checked_file_with_tc_result
          *)
         let validate_iface_cache () =
-          let iface = fn |> Dep.lowercase_module_name |> Dep.interface_of deps in
+          let iface = fn |> Dep.module_key_of_file |> Dep.interface_of deps in
           match iface with
           | None -> ()
           | Some iface ->
@@ -515,7 +512,7 @@ let load_module_from_cache_internal =
 
     let i_fn_opt = Dep.interface_of
       deps
-      (Dep.lowercase_module_name fn) in
+      (Dep.module_key_of_file fn) in
 
     if Dep.is_implementation fn
     && (i_fn_opt |> Some?)
@@ -591,7 +588,7 @@ let store_module_to_cache env fn parsing_data_and_direct_deps tc_result : ML uni
       //otherwise dependence hashing will fail
       let i_fn_opt = Dep.interface_of
           (TcEnv.dep_graph env)
-          (Dep.lowercase_module_name fn) in
+          (Dep.module_key_of_file fn) in
       match i_fn_opt with
       | None -> ()
       | Some iface ->

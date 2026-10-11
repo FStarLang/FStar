@@ -52,9 +52,19 @@ val is_implementation: string -> ML bool
  *)
 val parsing_data : Type0  //cached in the checked files
 
+(* Compilation targets: a file [A.B-tgt.fst] (or [.fsti]) is a
+   target-specific file of module [A.B] for target [tgt]; a file without a
+   target suffix is a common file.  Common files only see common files;
+   target-specific files see the common files and those of their own target.
+   Module names never include the target. *)
 val maybe_module_name_of_file : string -> ML (option string)
+val target_of_file : string -> ML (option string)
 val module_name_of_file : string -> ML string
 val lowercase_module_name : string -> ML string
+(* The key of the file's module in the dependence graph: its lowercase module
+   name, followed by [-tgt] for a target-specific file.  [interface_of] and
+   [implementation_of] take such keys. *)
+val module_key_of_file : string -> ML module_name
 val str_of_parsing_data (p:parsing_data) : ML string
 val friends (p:parsing_data) : ML (list lident)
 val empty_parsing_data: parsing_data  //for legacy ide
@@ -99,6 +109,9 @@ val populate_parsing_data: filename:string -> FStarC.Parser.AST.modul -> dep_gra
 val print_digest: list (string & string) -> ML string
 val print_raw: out_channel -> deps -> ML unit
 val print : deps -> ML unit
-val module_has_interface: deps -> module_name:Ident.lident -> ML bool
-val deps_has_implementation: deps -> module_name:Ident.lident -> ML bool
+(* The following take the target of the file asking, if any. *)
+val module_has_interface: deps -> target:option string -> module_name:Ident.lident -> ML bool
+val deps_has_implementation: deps -> target:option string -> module_name:Ident.lident -> ML bool
+(* The key of module [m] as seen from target [target]. *)
+val module_key_for_target: deps -> target:option string -> m:module_name -> ML module_name
 val all_files: deps -> ML (list string)

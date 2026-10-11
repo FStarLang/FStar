@@ -2004,6 +2004,7 @@ let desugar_plugin_codegen () : ML unit =
          only the source extension left the module called
          [CanonCommSemiring.fst.checked]. *)
       Filepath.basename f |> drop ".checked" |> drop ".fsti" |> drop ".fst"
+      |> Target.split_target |> fst
     in
     let mods = !file_list_ |> List.map module_name_of_file in
     set_option' ("codegen", String "OCaml");
@@ -2219,6 +2220,14 @@ let codegen_name                 () =
   match codegen () with
   | Some c -> print_codegen c
   | None -> ""
+
+let codegen_target               () =
+  match codegen () with
+  | Some C | Some KrmlC -> Some "c"
+  | Some KrmlRust -> Some "rust"
+  | Some OCaml -> Some "ocaml"
+  | Some FSharp -> Some "fsharp"
+  | None -> None
 
 let custard_entries              () = get_custard_entry ()
 let custard_entrypoint_files     () = get_custard_entrypoints ()
