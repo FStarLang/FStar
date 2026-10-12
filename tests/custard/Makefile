@@ -3406,6 +3406,44 @@ CHERRY_CFLAGS_CherryExn = -O2
 CHERRY_RUN_CherryExn = ulimit -s 1024 &&
 CHERRY_CFLAGS_CherryDyn = -O2
 
+# Separate compilation under Cherry: a library unit and an application linked
+# against it, as SepLibC/SepAppC are for C.  Each unit has its own counting
+# helpers for the library's types, and its own copy of each exception's and
+# each dynamic type's information, which the runtime identifies by name.
+$(CHERRY_DIR)/CherrySepLib.cui: $(CACHE_DIR)/CherrySepLib.fst.checked $(FSTAR_EXE)
+	$(call msg, "CHERRY-UNIT", CherrySepLib)
+	@mkdir -p $(CHERRY_DIR)
+	$(FSTAR) --codegen Custard $(WARN_ANY) --warn_error -377 --custard_backend Cherry \
+	  --custard_monomorphize_types true --custard_unit CherrySepLib \
+	  $(foreach e,mk g gd boom wrap map protect adder cell arr same,--custard_entry CherrySepLib.$(e)) \
+	  --odir $(CHERRY_DIR) CherrySepLib.fst
+
+$(CHERRY_DIR)/CherrySepLib.c: $(CHERRY_DIR)/CherrySepLib.cui $(FSTAR_EXE)
+	$(Q)test -f $@
+
+$(CHERRY_DIR)/CherrySepApp.c: $(CACHE_DIR)/CherrySepApp.fst.checked \
+                              $(CHERRY_DIR)/CherrySepLib.cui $(FSTAR_EXE)
+	$(call msg, "CHERRY-LINK", CherrySepApp)
+	$(FSTAR) --codegen Custard $(WARN_ANY) --warn_error -377 --custard_backend Cherry \
+	  --custard_monomorphize_types true \
+	  --custard_link $(CHERRY_DIR)/CherrySepLib.cui \
+	  --custard_main CherrySepApp.main CherrySepApp.fst -o $@
+
+$(CHERRY_DIR)/CherrySepApp.chran: $(CHERRY_DIR)/CherrySepLib.c $(CHERRY_DIR)/CherrySepApp.c
+	$(call msg, "CC-ASAN", CherrySepApp)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -O2 -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(CHERRY_DIR) -I$(CHERRY_INC) \
+	  $(CHERRY_DIR)/CherrySepLib.c $(CHERRY_DIR)/CherrySepApp.c $(CHERRY_INC)/cherry.c \
+	  -o $(CHERRY_DIR)/CherrySepApp.chexe
+	$(Q)for f in CherrySepLib CherrySepApp; do \
+	  $(CXX) -std=c++17 -Wall -Werror -I$(CHERRY_DIR) -I$(CHERRY_INC) \
+	    -fsyntax-only -x c++ $(CHERRY_DIR)/$$f.c || exit 1; done
+	$(call msg, "RUN-ASAN", CherrySepApp)
+	$(Q)ASAN_OPTIONS=detect_leaks=1 $(CHERRY_DIR)/CherrySepApp.chexe
+	$(Q)touch $@
+
+all: $(CHERRY_DIR)/CherrySepApp.chran
+
 # Every direct-C test goes through Cherry too, except the ones Cherry does not
 # cover yet.  This one hands a Prims.string to hand-written C expecting a
 # [const char *], and this one has hand-written C hand back raw memory as an
@@ -3415,7 +3453,7 @@ CHERRY_C_SKIP += PatStr ExtPtr
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
                   $(C_TESTS) $(CXX_TESTS) $(CHERRY_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \
                   $(RUSTSPLIT_TESTS) $(FS_TESTS) $(FSREJECT_TESTS) \
-                  SepApp SepAppC SplitHi SplitLo FsSplitHi FsSplitLo
+                  SepApp SepAppC CherrySepLib CherrySepApp SplitHi SplitLo FsSplitHi FsSplitLo
 
 # Section 35.3.  A setting whose name matches no registered test.
 #

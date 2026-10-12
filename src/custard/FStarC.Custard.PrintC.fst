@@ -4364,7 +4364,9 @@ let cherry_helpers (p:program) : ML (list string & list string) =
     fs |> List.existsb (fun (_, t) -> is_nonplain_ty t) in
   p |> List.iter (fun d ->
     match d with
-    | DType dt when local d && is_nonplain_ty (TApp (dt.dt_name, [])) &&
+    (* An imported type too: its cell structs and tags are in its unit's
+       header, and the helpers are [static], so each unit has its own. *)
+    | DType dt when is_nonplain_ty (TApp (dt.dt_name, [])) &&
                     not (is_runtime_name dt.dt_name) ->
       current := string_of_name dt.dt_name;
       let n = c_name dt.dt_name in

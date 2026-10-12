@@ -324,8 +324,12 @@ static inline cherry_exn cherry_exn_take(void) {
   return e;
 }
 
+/* Every unit that raises or matches an exception has its own copy of its
+   info, so identity is the name, which is the F* name and so unique in the
+   program; the pointer comparison is the fast path within a unit. */
 static inline bool cherry_exn_is(cherry_exn e, const cherry_exn_info *info) {
-  return ((cherry_exn_hdr *)e)->info == info;
+  const cherry_exn_info *have = ((cherry_exn_hdr *)e)->info;
+  return have == info || strcmp(have->name, info->name) == 0;
 }
 
 static inline void cherry_exn_dec(cherry_exn e) {
@@ -361,7 +365,9 @@ static inline void cherry_any_inc(cherry_any a) { if (a.rtti->inc) a.rtti->inc(a
 static inline void cherry_any_dec(cherry_any a) { if (a.rtti->dec) a.rtti->dec(a.v); }
 static inline void cherry_any_mark(cherry_any a, int mode) { if (a.rtti->mark) a.rtti->mark(a.v, mode); }
 
-/* [undyn] at a type the value does not have. */
+/* [undyn] where the type information is not this unit's for the type:
+   another unit's for the same type, which is identified by its C name (the
+   payload layout is the same), or a mismatch, which aborts. */
 void cherry_any_mismatch(const cherry_rtti *have, const char *want);
 
 /* ------------------------------------------------------------------------

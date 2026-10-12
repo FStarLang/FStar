@@ -80,7 +80,7 @@ Reference counting operations are inserted in a separate pass on the ANF'd, mono
 The any type is represented as a fat pointer: a pair of a uintptr_t and an RTTI pointer. The RTTI contains the inc, dec, and mark functions (and maybe some inspection functions for debugging). Types that are small enough to fit into a uintptr_t are stored directly, for larger types we allocate a heap cell with a reference count and store the pointer in the uintptr_t.
 FStar.Dyn.dyn generates the any type. Casting any to any is the identity (undyn is unchecked, so nothing is lost).
 
-Prototype status: `dyn` maps to `cherry_any` (`{uintptr_t v; const cherry_rtti *rtti}`), and `mkdyn`/`undyn` become ops that are monomorphized per payload type. Each payload type gets `cherry_anyN_mk`/`_get` helpers and a static `cherry_rtti`. The RTTI holds the payload's name and its inc, dec and mark functions. For plain payloads these are NULL, and the runtime's `cherry_any_inc/dec/mark` skip them. `mkdyn` takes its operand owned and `undyn` borrows. A payload with `sizeof(T) <= sizeof(uintptr_t)` is stored inline; a larger one is stored in a counted cell. The prototype keeps undyn checked: `_get` compares the RTTI pointer and aborts with both type names on a mismatch. Because RTTIs are per-unit statics, a `dyn` cannot cross units yet. `FStar.Dyn.fst` models `dyn` as an arrow abbreviation, so extraction keeps the folded codomain of a definition's type, and a global or result of type `dyn` stays `dyn`. Test: `tests/custard/CherryDyn.fst`.
+Prototype status: `dyn` maps to `cherry_any` (`{uintptr_t v; const cherry_rtti *rtti}`), and `mkdyn`/`undyn` become ops that are monomorphized per payload type. Each payload type gets `cherry_anyN_mk`/`_get` helpers and a static `cherry_rtti`. The RTTI holds the payload's name and its inc, dec and mark functions. For plain payloads these are NULL, and the runtime's `cherry_any_inc/dec/mark` skip them. `mkdyn` takes its operand owned and `undyn` borrows. A payload with `sizeof(T) <= sizeof(uintptr_t)` is stored inline; a larger one is stored in a counted cell. The prototype keeps undyn checked: `_get` compares the RTTI pointer and aborts with both type names on a mismatch. RTTIs are per-unit statics, so a `dyn` made in another unit carries that unit's RTTI; `_get` then falls back to comparing the C type names (see "Separate compilation"). `FStar.Dyn.fst` models `dyn` as an arrow abbreviation, so extraction keeps the folded codomain of a definition's type, and a global or result of type `dyn` stays `dyn`. Test: `tests/custard/CherryDyn.fst`.
 
 ## References
 
@@ -137,7 +137,7 @@ A heap cell reuse token whose reuse comes after a possible raise is freed on tha
 Each exception constructor gets a cell `{ header, info, f0, f1, ... }`. The info is a static `cherry_exn_info` with the name, a free function and a mark function, so the runtime can release and mark exceptions of any constructor. A handler pattern compares the `info` pointer. Nullary exceptions are cells too, so every exception has an info. The closure `apply` helpers test the slot between the partial calls of an over-application. An exception that reaches `main`, or escapes a global's initializer, prints `Uncaught exception: Name` and exits with status 2. If the exception's first field is a string, the message is printed too, as in `Uncaught exception: FStar.All.Failure("msg")`.
 `failwith s` (from `FStar.All` or `FStarC.Effect`) raises `Failure s`, so it can be caught like any other exception. If the program has no declaration of `Failure`, one is added.
 
-Prototype status: implemented as above. Exceptions declared in other units are not handled yet: each unit has its own static info for a constructor, so two units would not agree on it. `tests/custard/CherryExn.fst` covers:
+Prototype status: implemented as above. Each unit has its own static info for every exception it raises or matches, so `cherry_exn_is` compares the info pointer first and the F\* name second (see "Separate compilation"). A `raise` is typed at the type F\* instantiated it at, so a lambda whose body is just a `raise` keeps its result type. `tests/custard/CherryExn.fst` covers:
 - raises through deep non-tail recursion that holds lists;
 - re-raising through nested handlers, and raising from a handler;
 - raises through closures and over-application;
@@ -179,6 +179,16 @@ A loop body is not searched, since it may build any number of cells.
 On a microbenchmark (repeatedly mapping over a list of 10^6 elements), reuse is about 2.3x faster than allocating.
 
 Not done yet: reuse of boxed records, reusing a cell for a constructor of another type of the same size, and reuse without a match (Lean's reuse of a dead variable that was not matched on).
+
+## Separate compilation
+
+Cherry supports `--custard_unit`/`--custard_link` like the C backend. A unit's header exposes the cell structs and constructor tags of its types. Every helper Cherry generates (inc/dec/mark/free, constructors, reuse, equality, exception and any helpers) is `static`, so a consumer generates its own copy for each imported type it uses rather than importing one. All copies agree because they are generated from the same layout. Calling conventions across the boundary are all-owned (see "Borrow inference"), and a consumer assumes every imported impure function may raise.
+
+Two kinds of runtime identity are per unit, and the runtime matches them by name:
+- **Exception info:** every unit that raises or matches an exception has its own `cherry_exn_info`. `cherry_exn_is` compares the pointers and then the F\* names, which are unique in a program. No single unit owns `FStar.All.Failure`, so an owning unit would not work.
+- **`dyn` RTTI:** `cherry_anyN_get` compares the RTTI pointer, then the C type names (a monomorphized type has one C name program-wide) before aborting.
+
+The slow path costs a `strcmp`, only when values cross units, and only when matching exceptions or reading a `dyn`. Test: `tests/custard/CherrySepLib.fst` and `CherrySepApp.fst`, which pass lists, globals, closures in both directions, exceptions raised through the other unit, refs, immutable arrays, equality on imported types and `dyn` values across the boundary.
 
 ## Backend
 

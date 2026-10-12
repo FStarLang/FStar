@@ -20,6 +20,7 @@ static _Thread_local bool busy;
 _Thread_local cherry_exn cherry_exn_slot;
 
 void cherry_any_mismatch(const cherry_rtti *have, const char *want) {
+  if (strcmp(have->name, want) == 0) return;
   fflush(stdout);
   fprintf(stderr, "undyn: a value of type %s read at type %s\n", have->name, want);
   abort();

@@ -1013,9 +1013,12 @@ let exn_rule (id:string) : ML (option rule) =
     | _ -> mk (EApp (f, [unit_expr])) TAny E_Impure in
   match id with
   | "raise" ->
-    Some (Rule_prim (1, fun _ args ->
+    (* At the type F* instantiated it at: a lambda whose body is a [raise]
+       takes its result type from it. *)
+    Some (Rule_prim (1, fun tys args ->
+      let t = (match tys with [t] -> t | _ -> TAny) in
       match args with
-      | [e] -> mk (ERaise e) TAny E_Impure
+      | [e] -> mk (ERaise e) t E_Impure
       | _ -> failwith "Custard: raise applied to the wrong number of arguments"))
   | "try_with" ->
     Some (Rule_prim (2, fun _ args ->
