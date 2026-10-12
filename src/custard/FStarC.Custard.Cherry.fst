@@ -90,7 +90,10 @@ let boxed_types (p:program) : ML (list string) =
     | _ -> [])
 
 (* The types the runtime (ulib/c/cherry.h) represents as counted cells. *)
-let runtime_types : list string = ["Prims.int"; "Prims.string"; "Cherry.ref"; "Cherry.iarray"]
+let runtime_types : list string = ["Prims.int"; "Prims.string"; "Cherry.ref"; "Cherry.iarray"; "Cherry.any"]
+
+(* The operands a [Dyn] operation takes owned: the value [mk] wraps. *)
+let dyn_owns (f:string) : list bool = if f = "mk" then [true] else []
 
 (* The operands an immutable array operation (Syntax.IArr) takes owned: the
    array an update or a push changes in place when it can, and the value it
@@ -585,8 +588,8 @@ let infer_borrows (p:program) (pinned:string -> ML bool) : ML unit =
           let bf = if borrowed_sc then vs @ bf else bf in
           (match g with Some g -> go' bf false g | None -> ()); go' bf tail b)
       | EWhile (a, b) -> go false a; go false b
-      | EOp ({ po_op = IArr f }, es) ->
-        let fl = iarr_owns f in
+      | EOp ({ po_op = IArr f }, es) | EOp ({ po_op = Dyn f }, es) ->
+        let fl = (match e.e with EOp ({ po_op = Dyn _ }, _) -> dyn_owns f | _ -> iarr_owns f) in
         es |> List.iteri (fun i a -> if i < List.length fl && List.nth fl i then own_arg a);
         List.iter (go false) es
       | EOp (_, es) -> List.iter (go false) es
@@ -883,6 +886,17 @@ and rc_live (o:owned) (e:expr) : ML expr =
   (* An immutable array: the operations borrow the array, except the two
      that update it, which take it so that a unique one is changed in place
      (cherry.md, "Arrays"). *)
+  (* [mkdyn] at [dyn] itself is the identity (cherry.md, "The any type"),
+     and so is [undyn]: a [dyn] of a [dyn] is the [dyn]. *)
+  | EOp ({ po_op = Dyn _ }, [a])
+    when (match a.ty, e.ty with
+          | TApp ({ ns = ["Cherry"]; id = "any" }, []), TApp ({ ns = ["Cherry"]; id = "any" }, []) -> true
+          | _ -> false) ->
+    rc_live o a
+  | EOp (op, args) when Dyn? op.po_op ->
+    (match bind_first args with
+     | Some (x, a, args') -> rc_live o (let_ x a.ty a { e with e = EOp (op, args') })
+     | None -> call o (Some (dyn_owns (Dyn?._0 op.po_op))) args { e with eff = E_Impure })
   | EOp (op, args) when IArr? op.po_op ->
     (match bind_first args with
      | Some (x, a, args') -> rc_live o (let_ x a.ty a { e with e = EOp (op, args') })

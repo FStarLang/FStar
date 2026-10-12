@@ -3393,7 +3393,7 @@ EGREP_ArrowUnfoldLimit += "gave up unfolding an arrow type after 1000 layers"
 # The Cherry backend (cherry.md): C with reference-counted heap cells for the
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
 # is the assertion that every cell allocated is freed exactly once.
-CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn
+CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn
 
 # Freeing, marking and comparing deep values with a 1 MB stack.
 CHERRY_CFLAGS_CherryDeep = -O2
@@ -3404,6 +3404,7 @@ CHERRY_CFLAGS_CherryIArray = -O2
 CHERRY_RUN_CherryIArray = ulimit -s 1024 &&
 CHERRY_CFLAGS_CherryExn = -O2
 CHERRY_RUN_CherryExn = ulimit -s 1024 &&
+CHERRY_CFLAGS_CherryDyn = -O2
 
 # Every direct-C test goes through Cherry too, except the ones Cherry does not
 # cover yet.  This one hands a Prims.string to hand-written C expecting a

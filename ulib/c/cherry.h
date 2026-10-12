@@ -340,6 +340,31 @@ static inline void cherry_exn_mark(cherry_exn e, int mode) {
 void cherry_exn_uncaught(void);
 
 /* ------------------------------------------------------------------------
+   The any type (cherry.md, "The any type"): [FStar.Dyn.dyn].  A word and
+   the type information that says how to count and mark it.  A value that
+   fits in the word is stored in it; a larger one is boxed in a counted cell
+   (CHERRY_TAG_ANY), which the word points to.  A plain type has no
+   operations.  The type information is generated, one per type. */
+
+#define CHERRY_TAG_ANY 0xFFFFFFF5u
+
+typedef struct cherry_rtti {
+  const char *name;
+  void (*inc)(uintptr_t);
+  void (*dec)(uintptr_t);
+  void (*mark)(uintptr_t, int);
+} cherry_rtti;
+
+typedef struct cherry_any { uintptr_t v; const cherry_rtti *rtti; } cherry_any;
+
+static inline void cherry_any_inc(cherry_any a) { if (a.rtti->inc) a.rtti->inc(a.v); }
+static inline void cherry_any_dec(cherry_any a) { if (a.rtti->dec) a.rtti->dec(a.v); }
+static inline void cherry_any_mark(cherry_any a, int mode) { if (a.rtti->mark) a.rtti->mark(a.v, mode); }
+
+/* [undyn] at a type the value does not have. */
+void cherry_any_mismatch(const cherry_rtti *have, const char *want);
+
+/* ------------------------------------------------------------------------
    Function values.  Every value of function type is a closure cell: the
    entry point, functions to drop and mark the captured values (NULL when
    there are none), the number of arguments the entry point takes, and then

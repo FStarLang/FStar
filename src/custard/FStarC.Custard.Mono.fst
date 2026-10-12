@@ -497,6 +497,26 @@ let arrow_formals_unfold (env:TcEnv.env) (t:typ) : ML (binders & comp) =
   Prof.timed "Mono.arrow_formals_unfold" (fun () ->
     arrow_formals_unfold_aux max_arrow_unfold env t)
 
+let arrow_formals_unfold_folded (env:TcEnv.env) (t:typ)
+  : ML (binders & comp & int & comp) =
+  Prof.timed "Mono.arrow_formals_unfold" (fun () ->
+    let bs, c = U.arrow_formals_comp t in
+    let n = List.length bs in
+    if not (U.is_total_comp c) then bs, c, n, c
+    else
+      let env' = TcEnv.push_binders env bs in
+      let r = norm_bounded env' "an arrow spine"
+                [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
+                 TcEnv.Beta; TcEnv.Weak; TcEnv.HNF;
+                 TcEnv.UnfoldUntil delta_constant]
+                (U.comp_result c) in
+      let r = strip r in
+      match r.n with
+      | Tm_arrow _ ->
+        let bs', c' = arrow_formals_unfold_aux (max_arrow_unfold - 1) env' r in
+        bs @ bs', c', n, c
+      | _ -> bs, c, n, c)
+
 (* Whether [arrow_formals_unfold]'s count is the whole of what a call can
    supply.  It walks the same spine with the same fuel, and asks one more
    thing where that one stops: is there any way for the codomain to be a

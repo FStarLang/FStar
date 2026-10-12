@@ -581,8 +581,21 @@ let iarr_list (t:cty) (l:cty) : ML unit =
   if not (List.existsb (fun (j, _) -> j = i) !iarr_lists) then
     iarr_lists := !iarr_lists @ [(i, l)]
 
+(* The any type (cherry.h), the same way: the value types made into one. *)
+let any_tys : ref (list cty) = mk_ref []
+let any_prefix (t:cty) : ML string =
+  let rec find (i:int) (l:list cty) : ML (option int) =
+    match l with
+    | [] -> None
+    | u :: rest -> if u = t then Some i else find (i + 1) rest in
+  let i = match find 0 !any_tys with
+          | Some i -> i
+          | None -> any_tys := !any_tys @ [t]; List.length !any_tys - 1 in
+  "cherry_any" ^ string_of_int i
+
 let rc_fn (op:string) (t:cty) : ML string =
   match t with
+  | TApp ({ ns = ["Cherry"]; id = "any"; spec = None }, []) -> "cherry_any_" ^ op
   | TApp ({ ns = ["Cherry"]; id = "ref"; spec = None }, [v]) ->
     if op = "inc" then "cherry_inc" else ref_prefix v ^ "_" ^ op
   | TApp ({ ns = ["Cherry"]; id = "iarray"; spec = None }, [v]) ->
@@ -982,6 +995,8 @@ and base_ty (t:cty) : ML string =
     "cherry_ref"
   | TApp ({ ns = ["Cherry"]; id = "iarray"; spec = None }, [_]) when Options.custard_cherry () ->
     "cherry_iarray"
+  | TApp ({ ns = ["Cherry"]; id = "any"; spec = None }, []) when Options.custard_cherry () ->
+    "cherry_any"
   | TApp (n, []) ->
     (match builtin_type n with
      | Some s -> s
@@ -1084,6 +1099,9 @@ let rec eq_target (t:cty) : ML (option dtype) =
   | TApp ({ ns = ["Cherry"]; id = "iarray" }, _) ->
     reject "an equality test on an immutable array"
       ["Cherry does not compare immutable arrays yet."]
+  | TApp ({ ns = ["Cherry"]; id = "any" }, _) ->
+    reject "an equality test on a dyn"
+      ["Its type is not known statically."]
   | TApp (n, []) when None? (builtin_type n) ->
     (match find_type n with
      | Some d when List.existsb Extern? d.dt_flags -> None
@@ -1813,6 +1831,7 @@ let reset_program_state () : ML unit =
   ref_tys := [];
   iarr_tys := [];
   iarr_lists := [];
+  any_tys := [];
   clo_queue := [];
   clo_seen := HashTable.create 0;
   arrow_ids := [];
@@ -1932,7 +1951,7 @@ let rec is_pure (e:expr) : ML bool =
   | EOp ({ po_op = RcInc }, _) | EOp ({ po_op = RcDec }, _)
   | EOp ({ po_op = RefNew }, _) | EOp ({ po_op = RefGet }, _) | EOp ({ po_op = RefSet }, _)
   | EOp ({ po_op = Reset _ }, _) | EOp ({ po_op = Reuse _ }, _) | EOp ({ po_op = ResetFree }, _)
-  | EOp ({ po_op = IArr _ }, _)
+  | EOp ({ po_op = IArr _ }, _) | EOp ({ po_op = Dyn _ }, _)
   | EOp ({ po_op = ExnRaise }, _) | EOp ({ po_op = ExnPending }, _)
   | EOp ({ po_op = ExnTake }, _) | EOp ({ po_op = ExnExit }, _) -> false
   | EOp (_, es) | ECtor (_, es) | ETuple es -> all es
@@ -2207,6 +2226,9 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
     rc_fn "get" r.ty ^ "(" ^ c_expr out ind r ^ ")"
   | EOp ({ po_op = ExnPending }, []) -> "CHERRY_EXN_PENDING()"
   | EOp ({ po_op = ExnTake }, []) -> "cherry_exn_take()"
+  | EOp ({ po_op = Dyn f }, [a]) ->
+    let t = if f = "mk" then a.ty else e.ty in
+    any_prefix t ^ "_" ^ f ^ "(" ^ c_rvalue out ind a.ty a ^ ")"
   | EOp ({ po_op = IArr f }, args) ->
     let elt (t:cty) : ML cty =
       match t with
@@ -3382,6 +3404,7 @@ let rec value_deps (t:cty) : ML (list string) =
   | TApp (n, _) when is_boxed_name n -> []
   | TApp ({ ns = ["Cherry"]; id = "ref" }, _) -> []
   | TApp ({ ns = ["Cherry"]; id = "iarray" }, _) -> []
+  | TApp ({ ns = ["Cherry"]; id = "any" }, _) -> []
   | TApp (n, args) -> string_of_name n :: List.collect value_deps args
   | TTuple ts -> List.collect value_deps ts
   (* A pointer is a size, and a function is a pointer: an incomplete type is
@@ -4537,6 +4560,71 @@ let cherry_exn_helpers (p:program) : ML (list string & list string) =
                  | _ -> []) in
   List.collect fst rs, List.collect snd rs
 
+(* For each type a [dyn] is made of or read at: its type information, and
+   [mk] and [get].  Whether the value fits in the word is the C compiler's
+   to decide, as a constant condition. *)
+let cherry_any_helpers () : ML (list string & list string) =
+  let one (i:int) (t:cty) : ML (list string & list string) =
+    let p = "cherry_any" ^ string_of_int i in
+    let ct = decl_of t "" in
+    let cell = "struct " ^ p ^ "_s" in
+    let small = "(sizeof(" ^ ct ^ ") <= sizeof(uintptr_t))" in
+    let np = is_nonplain_ty t in
+    let op (o:string) (x:string) : ML string = rc_call o t x in
+    let unpack = "    " ^ decl_of t "x" ^ ";\n    memcpy(&x, &v, sizeof x);\n" in
+    let protos =
+      [cell ^ " { cherry_obj h; " ^ decl_of t "v" ^ "; };\n"] @
+      (if np then
+        ["static void " ^ p ^ "_inc(uintptr_t v);\n";
+         "static void " ^ p ^ "_dec(uintptr_t v);\n";
+         "static void " ^ p ^ "_mark(uintptr_t v, int m);\n"]
+       else
+        ["static void " ^ p ^ "_dec(uintptr_t v);\n"]) @
+      ["static const cherry_rtti " ^ p ^ "_rtti = { \"" ^ ct ^ "\", " ^
+       (if np then p ^ "_inc, " ^ p ^ "_dec, " ^ p ^ "_mark" else "NULL, " ^ p ^ "_dec, NULL") ^ " };\n";
+       "static inline cherry_any " ^ p ^ "_mk(" ^ decl_of t "x" ^ ");\n";
+       "static inline " ^ decl_of t (p ^ "_get(cherry_any a)") ^ ";\n"] in
+    (* A plain value in a box still has the box to free. *)
+    let free_body =
+      "static void " ^ p ^ "_free(cherry_obj *o, int m) {\n  (void)m;\n" ^
+      (if np then "  " ^ op "dec" ("((" ^ cell ^ " *)o)->v") ^ ";\n" else "") ^
+      "  free(o);\n}\n" in
+    let defs =
+      [free_body;
+       "static void " ^ p ^ "_dec(uintptr_t v) {\n" ^
+       "  if " ^ small ^ " {\n" ^
+       (if np then unpack ^ "    " ^ op "dec" "x" ^ ";\n" else "") ^
+       "  } else {\n" ^
+       "    cherry_obj *o = (cherry_obj *)v;\n" ^
+       "    if (cherry_dec_ref(o)) cherry_defer(o, " ^ p ^ "_free, 0);\n  }\n}\n"] @
+      (if np then
+        ["static void " ^ p ^ "_inc(uintptr_t v) {\n" ^
+         "  if " ^ small ^ " {\n" ^ unpack ^ "    " ^ op "inc" "x" ^ ";\n" ^
+         "  } else cherry_inc((cherry_obj *)v);\n}\n";
+         "static void " ^ p ^ "_markf(cherry_obj *o, int m) {\n" ^
+         "  " ^ op "mark" ("((" ^ cell ^ " *)o)->v") ^ ";\n}\n";
+         "static void " ^ p ^ "_mark(uintptr_t v, int m) {\n" ^
+         "  if " ^ small ^ " {\n" ^ unpack ^ "    " ^ op "mark" "x" ^ ";\n" ^
+         "  } else {\n    cherry_obj *o = (cherry_obj *)v;\n" ^
+         "    if (cherry_mark_ref(o, m)) cherry_defer(o, " ^ p ^ "_markf, m);\n  }\n}\n"]
+       else []) @
+      ["static inline cherry_any " ^ p ^ "_mk(" ^ decl_of t "x" ^ ") {\n" ^
+       "  cherry_any a;\n  a.rtti = &" ^ p ^ "_rtti;\n" ^
+       "  if " ^ small ^ " {\n    a.v = 0;\n    memcpy(&a.v, &x, sizeof x);\n" ^
+       "  } else {\n" ^
+       "    " ^ cell ^ " *c = (" ^ cell ^ " *)cherry_alloc(sizeof(" ^ cell ^ "), CHERRY_TAG_ANY);\n" ^
+       "    c->v = x;\n    a.v = (uintptr_t)c;\n  }\n  return a;\n}\n";
+       "static inline " ^ decl_of t (p ^ "_get(cherry_any a)") ^ " {\n" ^
+       "  if (__builtin_expect(a.rtti != &" ^ p ^ "_rtti, 0)) cherry_any_mismatch(a.rtti, \"" ^ ct ^ "\");\n" ^
+       "  " ^ decl_of t "x" ^ ";\n" ^
+       "  if " ^ small ^ " memcpy(&x, &a.v, sizeof x);\n" ^
+       "  else x = ((" ^ cell ^ " *)a.v)->v;\n" ^
+       (if np then "  " ^ op "inc" "x" ^ ";\n" else "") ^
+       "  return x;\n}\n"] in
+    protos, defs in
+  let rs = !any_tys |> List.mapi one in
+  List.collect fst rs, List.collect snd rs
+
 let cherry_iarr_helpers () : ML (list string & list string) =
   let protos : ref (list string) = mk_ref [] in
   let defs : ref (list string) = mk_ref [] in
@@ -5157,6 +5245,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   let ref_protos, ref_defs = cherry_ref_helpers () in
   let iarr_protos, iarr_defs = cherry_iarr_helpers () in
   let exn_protos, exn_defs = cherry_exn_helpers p in
+  let any_protos, any_defs = cherry_any_helpers () in
 
   (* The header carries the unit's whole type language rather than only the
      types a public signature mentions.  A [struct] or a [typedef] has no
@@ -5189,6 +5278,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   String.concat "" ref_protos ^ (match ref_protos with [] -> "" | _ -> "\n") ^
   String.concat "" iarr_protos ^ (match iarr_protos with [] -> "" | _ -> "\n") ^
   String.concat "" exn_protos ^ (match exn_protos with [] -> "" | _ -> "\n") ^
+  String.concat "" any_protos ^ (match any_protos with [] -> "" | _ -> "\n") ^
   String.concat "\n" rc_defs ^ (match rc_defs with [] -> "" | _ -> "\n") ^
   String.concat "" protos ^ (match protos with [] -> "" | _ -> "\n") ^
   String.concat "" clo_protos ^ (match clo_protos with [] -> "" | _ -> "\n") ^
@@ -5196,6 +5286,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   String.concat "\n" ref_defs ^ (match ref_defs with [] -> "" | _ -> "\n") ^
   String.concat "\n" iarr_defs ^ (match iarr_defs with [] -> "" | _ -> "\n") ^
   String.concat "\n" exn_defs ^ (match exn_defs with [] -> "" | _ -> "\n") ^
+  String.concat "\n" any_defs ^ (match any_defs with [] -> "" | _ -> "\n") ^
   String.concat "" eq_protos ^ (match eq_protos with [] -> "" | _ -> "\n") ^
   String.concat "\n" eq_defs ^ (match eq_defs with [] -> "" | _ -> "\n") ^
   String.concat "\n" defs ^ "\n" ^ (match inits with [] -> "" | _ -> init_fn) ^

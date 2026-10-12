@@ -5877,7 +5877,7 @@ and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int 
      binder survived into the emitted signature, so the definition took one
      more parameter than every call supplied, and the argument the
      specialization was keyed on was still a variable in its body. *)
-  let bs, c = Mono.arrow_formals_unfold (tcenv st) ty in
+  let bs, c, n_folded, folded_c = Mono.arrow_formals_unfold_folded (tcenv st) ty in
   (* How far the spine may run.  A value may be duplicated freely, so it takes
      the whole arrow; anything else only takes the binders its own lambdas
      absorb.  A [Mono] argument past that point has to be substituted all the
@@ -5926,9 +5926,19 @@ and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int 
     | _ :: _ when i >= cut ->
       (* The residual arrow becomes the result type: the declaration is emitted
          as a value of function type and its callers apply it, which is what
-         the source said. *)
-      (List.rev spine, List.rev poly, List.rev polycs,
-       S.mk_Total (U.arrow (SS.subst_binders subst bs) (SS.subst_comp subst c)))
+         the source said.  Within the folded prefix, it is rebuilt from the
+         folded codomain: an abbreviation that unfolds to an arrow -- realized
+         [FStar.Dyn.dyn] is [unit -> value_type_bundle] in its model -- has
+         to stay the name the target gives a representation of its own. *)
+      let res =
+        if i <= n_folded then
+          let rest, _ = List.splitAt (n_folded - i) bs in
+          (match rest with
+           | [] -> SS.subst_comp subst folded_c
+           | _ -> S.mk_Total (U.arrow (SS.subst_binders subst rest)
+                                       (SS.subst_comp subst folded_c)))
+        else S.mk_Total (U.arrow (SS.subst_binders subst bs) (SS.subst_comp subst c)) in
+      (List.rev spine, List.rev poly, List.rev polycs, res)
     | b :: bs' ->
       let cls, cs' = match cs with
                      | [] -> Poly, []

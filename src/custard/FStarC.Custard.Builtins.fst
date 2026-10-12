@@ -1594,6 +1594,22 @@ let iarray_rule (id:string) : ML (option rule) =
   | "index" -> prim 2 (fun tys _ -> elt_of tys)
   | _ -> None
 
+(* Under Cherry (cherry.md, "The any type") [FStar.Dyn.dyn] is the runtime
+   type [Cherry.any], a value with the type information that releases it;
+   [mkdyn] and [undyn] are [Dyn] nodes at the value's type. *)
+let cherry_any_ty : cty = TApp ({ ns = ["Cherry"]; id = "any"; spec = None }, [])
+
+let dyn_rule (id:string) : ML (option rule) =
+  let prim (f:string) (ret : cty -> cty) : option rule =
+    Some (Rule_prim (1, fun tys args ->
+      let t = elt_of tys in
+      mk (EOp ({ po_op = Dyn f; po_ty = None }, args)) (ret t) E_Pure)) in
+  match id with
+  | "dyn" -> Some (Rule_type (fun _ -> cherry_any_ty))
+  | "mkdyn" -> prim "mk" (fun _ -> cherry_any_ty)
+  | "undyn" -> prim "get" (fun t -> t)
+  | _ -> None
+
 let builtin_rule (l:Ident.lident) : ML rule =
   let r =
     match HashTable.try_find table (Ident.string_of_lid l) with
@@ -1639,6 +1655,9 @@ let builtin_rule (l:Ident.lident) : ML rule =
                     ns = ["FStar"; "ImmutableArray"]) &&
                    Some? (iarray_rule id)
            then iarray_rule id
+           else if Options.custard_cherry () && ns = ["FStar"; "Dyn"] &&
+                   Some? (dyn_rule id)
+           then dyn_rule id
            else if is_realized_module ns then Some Rule_realized
            else pulse_rule ns id)
       | [] -> None

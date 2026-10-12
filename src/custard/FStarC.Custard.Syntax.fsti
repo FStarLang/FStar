@@ -419,6 +419,10 @@ type op =
       representation of [FStar.ImmutableArray.t]), named as in that module:
       [of_list], [to_list], [length], [index], [upd] or [push]. *)
   | IArr of string
+  (** Cherry: [FStar.Dyn] (cherry.md, "The any type").  [Dyn "mk"] makes a
+      [Cherry.any] of its operand, taking it; [Dyn "get"] reads the
+      value back out of one at the node's type, borrowing it. *)
+  | Dyn of string
   (** Cherry: exceptions, as error returns (cherry.md, "Exceptions").  A
       thread-local slot holds the exception being propagated.  [ExnRaise e]
       stores [e] there (taking it); [ExnPending] tests whether the slot is

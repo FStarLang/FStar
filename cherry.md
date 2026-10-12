@@ -80,6 +80,8 @@ Reference counting operations are inserted in a separate pass on the ANF'd, mono
 The any type is represented as a fat pointer: a pair of a uintptr_t and an RTTI pointer. The RTTI contains the inc, dec, and mark functions (and maybe some inspection functions for debugging). Types that are small enough to fit into a uintptr_t are stored directly, for larger types we allocate a heap cell with a reference count and store the pointer in the uintptr_t.
 FStar.Dyn.dyn generates the any type. Casting any to any is the identity (undyn is unchecked, so nothing is lost).
 
+Prototype status: `dyn` maps to `cherry_any` (`{uintptr_t v; const cherry_rtti *rtti}`), and `mkdyn`/`undyn` become ops that are monomorphized per payload type. Each payload type gets `cherry_anyN_mk`/`_get` helpers and a static `cherry_rtti`. The RTTI holds the payload's name and its inc, dec and mark functions. For plain payloads these are NULL, and the runtime's `cherry_any_inc/dec/mark` skip them. `mkdyn` takes its operand owned and `undyn` borrows. A payload with `sizeof(T) <= sizeof(uintptr_t)` is stored inline; a larger one is stored in a counted cell. The prototype keeps undyn checked: `_get` compares the RTTI pointer and aborts with both type names on a mismatch. Because RTTIs are per-unit statics, a `dyn` cannot cross units yet. `FStar.Dyn.fst` models `dyn` as an arrow abbreviation, so extraction keeps the folded codomain of a definition's type, and a global or result of type `dyn` stays `dyn`. Test: `tests/custard/CherryDyn.fst`.
+
 ## References
 
 There are two kinds of references. Both are represented as a pointer.
