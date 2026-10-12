@@ -132,6 +132,7 @@ and expr =
   | EBufNull of typ
   | EBufDiff of expr & expr
   | ESizeof of typ
+  | EZeroForDeref of width // Zero requesting dereference syntax as a buffer index
   | EGFor of expr & expr & expr & expr // C-style for loops: init, cond, incr, body
 
 and op =
