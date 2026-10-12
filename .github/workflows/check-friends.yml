@@ -188,9 +188,9 @@ jobs:
       # Clone the repo here and point Everparse to it.
       - uses: actions/checkout@master
         with:
-          path: /tmp/FStar
+          path: FStar-dice
           submodules: true
-      - run: echo "DICE_HOME=/tmp/FStar/pulse/share/pulse/examples/dice" >> $GITHUB_ENV
+      - run: echo "DICE_HOME=$(pwd)/FStar-dice/pulse/share/pulse/examples/dice" >> $GITHUB_ENV
 
       - name: Test
         # NOTE: We do not check against the expected C/Rust
