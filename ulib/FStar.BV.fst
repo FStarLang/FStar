@@ -31,6 +31,8 @@ let bv_extract
   (i: nat{i < n})
   (j: nat{j <= i})
   : Tot (bv_t (i - j + 1)) =
+  // Bitvectors store the MSB at index 0; convert inclusive LSB-based bounds
+  // to a half-open sequence slice.
   S.slice a (n - 1 - i) (n - j)
 
 let int2bv = U.to_vec
