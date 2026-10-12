@@ -747,6 +747,11 @@ let flag_to_doc (f:flag) : ML document =
   | Member (m, f) -> text ("member[" ^ string_of_name m ^ "." ^ f ^ "]")
   | CallArity fs ->
     text ("arity[" ^ String.concat "" (List.map (fun b -> if b then "-" else "+") fs) ^ "]")
+  | CherryMode fs ->
+    text ("cherry_mode[" ^ String.concat "" (List.map (fun b ->
+            match b with Some true -> "o" | Some false -> "b" | None -> "?") fs) ^ "]")
+  | CherryConv fs ->
+    text ("cherry_conv[" ^ String.concat "" (List.map (fun b -> if b then "o" else "b") fs) ^ "]")
 
 let flags_to_doc (fs : list flag) : ML document =
   match fs with

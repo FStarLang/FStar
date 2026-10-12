@@ -767,6 +767,17 @@ type flag =
       functor instance named first, a [DModule].  It is emitted as nothing;
       a use is spelled as the module's member, and the declaration depends on
       the module so that the module is emitted first and kept alive. *)
+  | CherryConv of list bool
+  (** Cherry: the [[@@@cherry_owned]] ([Some true]) and
+      [[@@@cherry_borrowed]] ([Some false]) attributes on the definition's
+      leading parameters, which borrow inference does not change. *)
+  | CherryMode of list (option bool)
+  (** Cherry (cherry.md, "Calling convention").  For each parameter, whether
+      the definition takes it owned; a plain parameter is listed as owned.
+      Set on the exported definitions of a unit built with the Cherry
+      backend, from its borrow inference, so that a unit linked against it
+      calls them the way they were compiled.  A definition imported without
+      it is taken to own every parameter. *)
 
 type tydef =
   | TAbbrev  of cty

@@ -35,7 +35,20 @@ let main () : ML U32.t =
   let eq1 = L.same s1 (L.Poly [1]) && not (L.same s1 (L.Circle 1)) && s1 = L.Poly [1] in
   assume (dyn_has_ty L.gd L.shape);
   let gs : L.shape = undyn L.gd in
+  (* [count] borrows its list and [append] its first one, so both stay the
+     application's; called directly and as closures. *)
+  let xs = hide [1; 2; 3] in
+  let t1 = L.count xs + L.count xs in
+  let ys = L.append xs xs in
+  let tf = hide L.count in
+  let t2 = tf ys + sum xs in
+  let af = hide L.append in
+  let t3 = L.count (af xs ys) in
+  (* [keep] borrows and [peek] owns, by attribute. *)
+  let ks = L.keep xs in
+  let t4 = L.peek ks + L.peek (L.keep ks) + (hide L.peek) (hide L.keep xs) in
   let ok = a = 16 && b = 1 && sum l = 5 && sum m = 18 && m2 = 104 &&
            p1 = "caught cb" && p2 = "mine" && f 5 = 15 && sum !r = 6 &&
-           IA.index ia 1 = 3 && eq1 && gs = L.Poly [7; 8] in
+           IA.index ia 1 = 3 && eq1 && gs = L.Poly [7; 8] &&
+           t1 = 12 && t2 = 18 && t3 = 18 && t4 = 21 && L.count ks = 6 in
   if ok then 0ul else 1ul

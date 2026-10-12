@@ -3415,7 +3415,7 @@ $(CHERRY_DIR)/CherrySepLib.cui: $(CACHE_DIR)/CherrySepLib.fst.checked $(FSTAR_EX
 	@mkdir -p $(CHERRY_DIR)
 	$(FSTAR) --codegen Custard $(WARN_ANY) --warn_error -377 --custard_backend Cherry \
 	  --custard_monomorphize_types true --custard_unit CherrySepLib \
-	  $(foreach e,mk g gd boom wrap map protect adder cell arr same,--custard_entry CherrySepLib.$(e)) \
+	  $(foreach e,mk g gd boom wrap map protect adder cell arr same count append keep peek,--custard_entry CherrySepLib.$(e)) \
 	  --odir $(CHERRY_DIR) CherrySepLib.fst
 
 $(CHERRY_DIR)/CherrySepLib.c: $(CHERRY_DIR)/CherrySepLib.cui $(FSTAR_EXE)

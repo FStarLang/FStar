@@ -43,3 +43,8 @@ val nonplain_types : program -> ML (list string)
 val param_owned : ref (FStarC.HashTable.t string (list bool))
 
 val run : program -> ML program
+
+(** After [run]: the definitions of [p], each marked with the calling
+    convention [run] chose for it ([Syntax.CherryConv]), for the unit's
+    interface. *)
+val record_conventions : p:program -> ML program

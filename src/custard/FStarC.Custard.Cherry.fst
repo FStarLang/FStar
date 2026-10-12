@@ -516,18 +516,36 @@ let rec set_nth (i:int) (x:bool) (l:list bool) : ML (list bool) =
   | [] -> []
   | y :: rest -> if i = 0 then x :: rest else y :: set_nth (i - 1) x rest
 
-let infer_borrows (p:program) (pinned:string -> ML bool) : ML unit =
+let infer_borrows (p:program) (pinned:dlet -> ML (option (list bool))) : ML unit =
   let tbl : HashTable.t string (list bool) = HashTable.create 50 in
+  (* The parameters whose convention is given rather than inferred. *)
+  let fixed : HashTable.t string (list bool) = HashTable.create 50 in
   let defs = p |> List.collect (fun d ->
     match d with
     | DLet l when Cons? l.dl_binders -> [l]
     | _ -> []) in
   defs |> List.iter (fun l ->
-    let all = pinned (string_of_name l.dl_name) in
-    HashTable.add tbl (string_of_name l.dl_name)
-      (l.dl_binders |> List.map (fun b -> all || not (is_np b.b_ty))));
+    let f = string_of_name l.dl_name in
+    match pinned l with
+    | Some fl when List.length fl = List.length l.dl_binders ->
+      HashTable.add fixed f (List.map (fun _ -> true) fl); HashTable.add tbl f fl
+    | Some _ -> unsupported ("an imported calling convention that does not match " ^ f)
+    | None ->
+      (* [[@@@cherry_owned]] and [[@@@cherry_borrowed]] on the leading
+         parameters (Syntax.CherryMode). *)
+      let modes = (match List.tryFind CherryMode? l.dl_flags with
+                   | Some (CherryMode ms) -> ms
+                   | _ -> []) in
+      let mode (i:int) : option bool = if i < List.length modes then List.nth modes i else None in
+      let bs = List.mapi (fun i b -> (i, b)) l.dl_binders in
+      HashTable.add fixed f (bs |> List.map (fun (i, b) -> is_np b.b_ty && Some? (mode i)));
+      HashTable.add tbl f (bs |> List.map (fun (i, b) ->
+        not (is_np b.b_ty) || (match mode i with Some o -> o | None -> false))));
   let changed = mk_ref true in
   let own (f:string) (i:int) : ML unit =
+    if (match HashTable.try_find fixed f with
+        | Some fx -> i < List.length fx && List.nth fx i
+        | None -> false) then () else
     match HashTable.try_find tbl f with
     | Some fl when i < List.length fl && not (List.nth fl i) ->
       HashTable.add tbl f (set_nth i true fl); changed := true
@@ -1227,16 +1245,15 @@ let run (p:program) : ML program =
   extern_arity := xa;
   counter := 0;
   let p = List.collect lift_decl p in
-  (* The definitions another unit calls keep the all-owned convention, which
-     is what that unit assumes. *)
-  let pin : HashTable.t string bool = HashTable.create 50 in
-  p |> List.iter (fun d ->
-    match d with
-    | DLet l when List.existsb Imported? l.dl_flags ||
-                  (Some? (Options.custard_unit ()) && not (List.existsb Private? l.dl_flags)) ->
-      HashTable.add pin (string_of_name l.dl_name) true
-    | _ -> ());
-  let pinned (f:string) : ML bool = HashTable.mem pin f in
+  (* An imported definition is called the way its unit compiled it, which
+     its interface records (Syntax.CherryConv); one without the record owns
+     every parameter.  The definitions this unit exports are inferred like
+     any other, and {!conventions} records theirs for its interface. *)
+  let pinned (l:dlet) : ML (option (list bool)) =
+    if not (List.existsb Imported? l.dl_flags) then None else
+    match List.tryFind CherryConv? l.dl_flags with
+    | Some (CherryConv fl) -> Some fl
+    | _ -> Some (List.map (fun _ -> true) l.dl_binders) in
   infer_borrows p pinned;
   infer_raises p;
   counter := 0;
@@ -1247,5 +1264,15 @@ let run (p:program) : ML program =
       (match List.tryFind (fun (n, _, _) -> n = string_of_name x.dx_name)
                           runtime_externals with
        | Some (_, c, _) -> DExternal { x with dx_target = Some c; dx_header = Some "cherry.h" }
+       | None -> d)
+    | _ -> d)
+
+let record_conventions (p:program) : ML program =
+  p |> List.map (fun d ->
+    match d with
+    | DLet l when Cons? l.dl_binders ->
+      (match HashTable.try_find !param_owned (string_of_name l.dl_name) with
+       | Some fl ->
+         DLet { l with dl_flags = CherryConv fl :: List.filter (fun f -> not (CherryConv? f)) l.dl_flags }
        | None -> d)
     | _ -> d)

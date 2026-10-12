@@ -6150,6 +6150,21 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
                     | None -> [] in
   let dropped_binders = keep_flagged flags bs in
   let bs = drop_flagged flags bs in
+  (* Cherry's [[@@@cherry_owned]] and [[@@@cherry_borrowed]] (cherry.md,
+     "Calling convention"), by position: later passes only ever add
+     parameters after these. *)
+  let cherry_modes = bs |> List.map (fun (b:S.binder) ->
+    let o = U.has_attribute b.binder_attrs PC.cherry_owned_attr in
+    let br = U.has_attribute b.binder_attrs PC.cherry_borrowed_attr in
+    if o && br then begin
+      report_attr "cherry_owned" ("the parameter " ^ Ident.string_of_id b.binder_bv.ppname)
+        "It also has [@@@cherry_borrowed], and a parameter cannot be both: \
+         both are ignored.";
+      None
+    end
+    else if o then Some true else if br then Some false else None) in
+  let cherry_mode_flags =
+    if List.existsb Some? cherry_modes then [CherryMode cherry_modes] else [] in
   (* An *erased* binder that survived [drop_flagged] is the one
      {!Mono.keep_thunk} put back so that the definition does not become a
      value.  It carries nothing at runtime and its callers pass [()]
@@ -6321,7 +6336,7 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
        kernel -- and is the only answer available anyway, since the attribute
        is on the source and the source is what was specialized. *)
     dl_flags   = (if is_rec then [Rec [nm]] else []) @ c_decoration_flags src_attrs
-                 @ arity_flags;
+                 @ arity_flags @ cherry_mode_flags;
   }
 
 (* A field whose contents belong in the constructor rather than behind a

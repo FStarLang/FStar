@@ -47,6 +47,16 @@ type pair = { fst: list string; snd: string }
 let swap (p: pair) : pair = { fst = p.snd :: p.fst; snd = "s" }
 let pfst (p: pair) : list string = match p with { fst = f } -> f
 
+(* Conventions given by attributes rather than inferred: a borrowed parameter
+   that is stored (an inc at the store), an owned one that is only read (a
+   dec at the end), and a mix with an inferred parameter. *)
+let cons_b ([@@@cherry_borrowed] x: string) ([@@@cherry_borrowed] l: list string) : list string =
+  x :: l
+let len_o ([@@@cherry_owned] l: list string) : nat = 1 + length l
+let rec app_bo ([@@@cherry_borrowed] a: list string) ([@@@cherry_owned] b: list string) (s: string)
+  : list string =
+  match a with [] -> s :: b | x :: t -> x :: app_bo t b s
+
 let main () : U32.t =
   let l = ["a"; "b"; "c"; "d"] in
   let r = rev_onto l [] in
@@ -55,8 +65,13 @@ let main () : U32.t =
   let c = concat "" (app (evens l) (odds r)) in
   let k = sum_map (count_in r) ["a"; "z"; "c"] in
   let p = swap { fst = l; snd = "x" } in
+  let cb = cons_b "z" l in
+  let lo = len_o cb + len_o (cons_b "y" []) in
+  let ab = app_bo l (app_bo r [] "m") "n" in
+  let fb = sum_map (fun s -> len_o (cons_b s l)) ["a"; "b"] in
   let ok =
     length l = 4 && mem "c" r && not (mem "q" l) &&
     last2 ll = "none" && last2 [r; ["y"]] = "y" &&
-    concat "" h = "ad-" && c = "acca" && k = 2 && length (pfst p) = 5 in
+    concat "" h = "ad-" && c = "acca" && k = 2 && length (pfst p) = 5 &&
+    lo = 8 && concat "" ab = "abcdndcbam" && fb = 12 && length l = 4 in
   if ok then 0ul else 1ul

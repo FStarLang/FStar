@@ -576,11 +576,18 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
      | _ -> ());
   (* After [Rename], because the names a `.cui` exports are the names the
      generated source actually spells. *)
+  (* Cherry runs before the interface is written, which records the calling
+     convention borrow inference chose for each exported definition. *)
+  let cherried =
+    if backend = "C" && Options.custard_cherry ()
+    then Some (phase "cherry" (fun () -> Cherry.run (List.map fst imports @ prog)))
+    else None in
   phase "iface" (fun () ->
     let hdr_file, init =
       if backend = "C"
       then Some (stem ^ ".h"), C.init_globals_name cu (List.map fst imports @ prog)
       else None, None in
+    let prog = if Some? cherried then Cherry.record_conventions prog else prog in
     write_unit_iface st homes hdr_file init prog infos);
   if Options.custard_dump_ir () then
     Format.print_string (program_to_string prog ^ "\n");
@@ -603,15 +610,12 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
      karamel emits the [extern] prototype for it. *)
   | "KrmlC" | "KrmlRust" -> Krml.write_program ofile (List.map fst imports @ prog)
   | "C" ->
-    let all = List.map fst imports @ prog in
-    let all = if Options.custard_cherry ()
-              then begin
-                let all = phase "cherry" (fun () -> Cherry.run all) in
-                if Options.custard_dump_ir () then
-                  Format.print_string ("(* After Cherry *)\n" ^ program_to_string all ^ "\n");
-                all
-              end
-              else all in
+    let all = (match cherried with
+               | Some all ->
+                 if Options.custard_dump_ir () then
+                   Format.print_string ("(* After Cherry *)\n" ^ program_to_string all ^ "\n");
+                 all
+               | None -> List.map fst imports @ prog) in
     let hdr, src = C.print_program stem cu all in
     BU.write_file (FStarC.Filepath.join_paths (FStarC.Filepath.dirname ofile)
                      (stem ^ ".h")) hdr;

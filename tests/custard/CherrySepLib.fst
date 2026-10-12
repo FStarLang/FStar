@@ -32,3 +32,11 @@ let adder (n: int) : int -> int = fun x -> x + n
 let cell (l: list int) : ML (ref (list int)) = alloc l
 let arr (l: list int) : IA.t int = IA.of_list l
 let same (a b: shape) : bool = a = b
+
+(* Borrow inference makes these parameters borrowed, and the interface says
+   so (Syntax.CherryConv): the application keeps the values it passes. *)
+let rec count (l: list int) : int = match l with [] -> 0 | x :: t -> x + count t
+let rec append (l m: list int) : list int = match l with [] -> m | x :: t -> x :: append t m
+(* Conventions from attributes, which the application must follow. *)
+let keep ([@@@cherry_borrowed] l: list int) : list int = 0 :: l
+let peek ([@@@cherry_owned] l: list int) : int = 1 + count l

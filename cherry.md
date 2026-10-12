@@ -44,7 +44,7 @@ Every non-plain parameter is either owned (the callee consumes one reference) or
 Return values are always owned. A function that returns with an exception pending (see "Exceptions") returns no value: its result is never read or released.
 Unboxed values (structs, option, either, etc.) are passed by value as today. Owned/borrowed applies to the whole value; their inc/dec functions act on each field.
 Calls to unknown functions (closures, apply_n) use all-owned parameters. Every function that is used as a value gets a generated `_boxed` wrapper with all-owned parameters, which calls the function with the inferred convention and decrements the borrowed arguments afterwards.
-For externals and runtime primitives the convention is declared, not inferred: parameters are borrowed by default, and `[@@cherry_owned]` on a binder makes them owned. For example, string_append takes its first argument owned so that the in-place update can apply. Regular functions can also use `[@@cherry_owned]` and `[@@cherry_borrowed]` on binders to override inference.
+For externals and runtime primitives the convention is declared, not inferred: parameters are borrowed by default, and `[@@cherry_owned]` on a binder makes them owned. For example, string_append takes its first argument owned so that the in-place update can apply. Regular functions can also use `[@@@cherry_owned]` and `[@@@cherry_borrowed]` (from `FStar.Attributes`) on binders to override inference, e.g. `let push ([@@@cherry_owned] l: list int) = ...`.
 
 ## Borrow inference
 
@@ -64,9 +64,10 @@ Prototype status (`FStarC.Custard.Cherry.infer_borrows`):
 - The fixpoint runs over the whole (monomorphized) program at once rather than per SCC. The result is `Cherry.param_owned`, one flag per binder; plain and unit binders are listed as owned.
 - The rules are rules 2 and 3 (except reset/reuse, which does not exist yet). Records and tuples count as constructors, and passing a value to a closure call marks it owned. In the tail-call rule, any fresh argument (anything other than a variable or a global) counts as owned.
 - Fields bound by a match on a borrowed variable (a borrowed parameter or such a field) are borrowed. They get no inc, and the scrutinee is not dec'd. Record projections (`p.f`) still inc.
-- Definitions whose convention other code relies on are pinned to all-owned: imported definitions, and in `--custard_unit` mode, the non-private ones. Interfaces do not carry conventions yet.
+- Imported definitions are pinned to the convention recorded in their unit's interface: the `.cui` gives each definition a `CherryConv` flag, one owned/borrowed bit per binder, after inference. An imported definition without the flag (a unit compiled for plain C) is taken as all-owned. A unit's exported definitions are inferred like any other.
+- `[@@@cherry_owned]`/`[@@@cherry_borrowed]` on a binder fix that parameter's convention (Extract records them positionally as a `CherryMode` flag), and the fixpoint never changes it. Both are always sound, since the rc pass incs a borrowed parameter where it is stored and decs an owned one where it dies. Both on one binder is warning 371, and both are ignored. They still feed inference elsewhere: an owned parameter passed on in a tail call makes the callee's parameter owned.
 - The closure entry of a definition (static closures and partial applications) adapts the conventions. Borrowed captured fields are not inc'd. Borrowed arguments are dec'd after the call, since the entry receives them owned. No separate `_boxed` wrapper is needed.
-- Not yet done: `[@@cherry_owned]`/`[@@cherry_borrowed]`, borrowed record projections, and conventions in custard interfaces.
+- Not yet done: borrowed record projections, and the attributes on externals (whose conventions come from the runtime's table).
 
 ## Inserting reference counting operations
 
@@ -188,7 +189,7 @@ Not done yet: reuse of boxed records, reusing a cell for a constructor of anothe
 
 ## Separate compilation
 
-Cherry supports `--custard_unit`/`--custard_link` like the C backend. A unit's header exposes the cell structs and constructor tags of its types. Every helper Cherry generates (inc/dec/mark/free, constructors, reuse, equality, exception and any helpers) is `static`, so a consumer generates its own copy for each imported type it uses rather than importing one. All copies agree because they are generated from the same layout. Calling conventions across the boundary are all-owned (see "Borrow inference"), and a consumer assumes every imported impure function may raise.
+Cherry supports `--custard_unit`/`--custard_link` like the C backend. A unit's header exposes the cell structs and constructor tags of its types. Every helper Cherry generates (inc/dec/mark/free, constructors, reuse, equality, exception and any helpers) is `static`, so a consumer generates its own copy for each imported type it uses rather than importing one. All copies agree because they are generated from the same layout. Calling conventions across the boundary are the inferred ones, recorded in the unit's `.cui` (see "Borrow inference"), and a consumer assumes every imported impure function may raise.
 
 Two kinds of runtime identity are per unit, and the runtime matches them by name:
 - **Exception info:** every unit that raises or matches an exception has its own `cherry_exn_info`. `cherry_exn_is` compares the pointers and then the F\* names, which are unique in a program. No single unit owns `FStar.All.Failure`, so an owning unit would not work.
