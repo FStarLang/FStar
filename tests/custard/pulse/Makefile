@@ -510,6 +510,18 @@ CGREP_PulseBlit += "2 * sizeof(uint8_t)"
 CNOGREP_PulseBlit += "(((size_t)2ULL))"
 CNOGREP_PulseBlit += "(2) * sizeof"
 
+# The Cherry backend (cherry.md, "References"): Pulse references and
+# arrays holding reference-counted values, on the stack and on the heap,
+# freed where they were made and elsewhere, written, read and blitted.  Run
+# under AddressSanitizer with leak detection, as in ../Makefile.
+CHERRY_TESTS += CherryPulse
+
+# An uninitialized allocation of counted values has nothing to count.
+REJECT_TESTS += CherryPulseUninit
+CODE_CherryPulseUninit = 368
+FLAGS_CherryPulseUninit = --custard_backend Cherry --warn_error -288
+EGREP_CherryPulseUninit += "an uninitialized Pulse reference or array"
+
 # Section 5.6, escalated: neither of these -- and PulseHashTable in particular,
 # which is the repr-over-erased-index style section 5.4 is about -- may lose
 # the representation of a value.
@@ -638,6 +650,29 @@ $(OUTPUT_DIR)/%.dcran: $(OUTPUT_DIR)/%.dcexe
 	$(Q)$<
 	$(Q)touch $@
 
+CHERRY_DIR = $(OUTPUT_DIR)/cherry
+CHERRY_INC = $(shell $(FSTAR_EXE) --locate_lib)/ulib/c
+
+$(CHERRY_DIR)/%.chc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
+	$(call msg, "CHERRY", $(basename $(notdir $@)))
+	@mkdir -p $(CHERRY_DIR)
+	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend Cherry \
+	  --custard_monomorphize_types true --custard_main $*.main \
+	  $(EXTRA_$*) $*.fst -o $@
+
+$(CHERRY_DIR)/%.chexe: $(CHERRY_DIR)/%.chc
+	$(call msg, "CC-ASAN", $(basename $(notdir $@)))
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(CURDIR) -I$(CHERRY_DIR) -I$(CHERRY_INC) \
+	  -x c $< $(CHERRY_INC)/cherry.c -o $@
+	$(Q)$(CXX) -std=c++17 -Wall -Werror -I$(CURDIR) -I$(CHERRY_DIR) -I$(CHERRY_INC) \
+	  -fsyntax-only -x c++ $<
+
+$(CHERRY_DIR)/%.chran: $(CHERRY_DIR)/%.chexe
+	$(call msg, "RUN-ASAN", $(basename $(notdir $@)))
+	$(Q)ASAN_OPTIONS=detect_leaks=1 $<
+	$(Q)touch $@
+
 $(OUTPUT_DIR)/%.cexe: $(OUTPUT_DIR)/%.custard.krml
 	$(call msg, "KRML", $(basename $(notdir $@)))
 	$(Q)$(KRML_EXE) -silent -skip-linking -tmpdir $(OUTPUT_DIR)/$*_c $<
@@ -695,7 +730,7 @@ $(OUTPUT_DIR)/%.rejected: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(Q)touch $@
 
 ALL_TEST_NAMES := $(GREP_TESTS) $(OCAML_TESTS) $(C_TESTS) \
-                  $(KRML_TESTS) $(RUST_TESTS) $(REJECT_TESTS)
+                  $(KRML_TESTS) $(RUST_TESTS) $(REJECT_TESTS) $(CHERRY_TESTS)
 
 # Section 35.3.  A setting whose name matches no registered test.
 #
@@ -729,5 +764,7 @@ ifneq ($(shell command -v rustc 2>/dev/null),)
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rsran, $(RUST_TESTS)))
 
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rejected, $(REJECT_TESTS)))
+# Every direct-C test goes through Cherry too.
+all: $(addprefix $(CHERRY_DIR)/, $(addsuffix .chran, $(CHERRY_TESTS) $(C_TESTS)))
 endif
 endif

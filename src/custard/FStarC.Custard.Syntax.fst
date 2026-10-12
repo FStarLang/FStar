@@ -450,7 +450,7 @@ let rec is_droppable (e:expr) : ML bool =
   | EOp ({ po_op = RcInc }, _) | EOp ({ po_op = RcDec }, _)
   | EOp ({ po_op = RefNew }, _) | EOp ({ po_op = RefGet }, _) | EOp ({ po_op = RefSet }, _)
   | EOp ({ po_op = Reset _ }, _) | EOp ({ po_op = Reuse _ }, _) | EOp ({ po_op = ResetFree }, _)
-  | EOp ({ po_op = IArr _ }, _) | EOp ({ po_op = Dyn _ }, _)
+  | EOp ({ po_op = IArr _ }, _) | EOp ({ po_op = Dyn _ }, _) | EOp ({ po_op = PBuf _ }, _)
   | EOp ({ po_op = ExnRaise }, _) | EOp ({ po_op = ExnPending }, _)
   | EOp ({ po_op = ExnTake }, _) | EOp ({ po_op = ExnExit }, _) -> false
   | EOp (_, es) -> all es
@@ -516,6 +516,7 @@ let op_to_string (o:prim_op) : string =
    | Reset _ -> "reset" | Reuse _ -> "reuse" | ResetFree -> "reset_free"
    | IArr f -> "iarray_" ^ f
    | Dyn f -> "dyn_" ^ f
+   | PBuf f -> "pbuf_" ^ f
    | ExnRaise -> "exn_raise" | ExnPending -> "exn_pending"
    | ExnTake -> "exn_take" | ExnExit -> "exn_exit") ^
   (match o.po_ty with

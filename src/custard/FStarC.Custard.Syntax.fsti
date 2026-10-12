@@ -423,6 +423,17 @@ type op =
       [Cherry.any] of its operand, taking it; [Dyn "get"] reads the
       value back out of one at the node's type, borrowing it. *)
   | Dyn of string
+  (** Cherry: a Pulse reference or array ([TRef t] or [TBuf t]) holding
+      counted values (cherry.md, "References").  Everything stored in one is
+      marked shared first.  [PBuf "alloc" [v; n]] allocates on the heap,
+      taking [v]: the length goes in a header, so that [PBuf "free" [b]] can
+      release the elements.  [PBuf "read" [b; i]] returns a counted copy;
+      [PBuf "write" [b; i; v]] takes [v] and releases the value it replaces;
+      [PBuf "blit"] is a counting [BufBlit].  A stack allocation stays a
+      [BufCreate], with no initializer: [PBuf "init" [b; v; n]] fills it,
+      taking [v], and [PBuf "drop" [b; n]] releases it at the end of its
+      scope. *)
+  | PBuf of string
   (** Cherry: exceptions, as error returns (cherry.md, "Exceptions").  A
       thread-local slot holds the exception being propagated.  [ExnRaise e]
       stores [e] there (taking it); [ExnPending] tests whether the slot is

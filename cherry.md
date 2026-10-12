@@ -92,7 +92,13 @@ The prototype implements ML references as follows:
 - Under Cherry, `FStar.All.ref t` and `FStarC.Effect.ref t` extract to the runtime type `Cherry.ref t` rather than to `TRef t`, which stays the plain pointer of Pulse references and boxes. The operations are the usual buffer operations, which the Cherry pass rewrites into `RefNew v` (takes `v`), `RefGet r` (borrows `r`, returns an owned copy of the value) and `RefSet r v` (borrows `r`, takes `v`, releases the old value).
 - In C every ML reference is a `cherry_ref` (`cherry.h`), so the header needs nothing generated. For each value type the printer generates the cell (`struct cherry_refN_s { cherry_ref_hdr h; T v; }`) and `cherry_refN_new/get/set/dec/mark`. A cell whose count is not positive (shared, or persistent because a global reaches it) is accessed under its spinlock, and a value written into one is marked shared first.
 - A reference is a pointer, so a type that reaches itself through one is not boxed, and the C type order ignores what a reference holds.
-- Pulse references and arrays holding counted values are rejected for now.
+
+The prototype implements Pulse references and arrays holding counted values (`TRef t` and `TBuf t` with `t` counted) as follows:
+- The Cherry pass rewrites their buffer operations into `PBuf` nodes, and the printer generates `cherry_pbufN_{alloc,init,read,write,free,drop,blit}` for each element type. `read` borrows the container and returns an owned copy. `write` takes the value, marks it shared, and releases the old one. `blit` (`Pulse.Lib.ArrayPtr.memcpy`) increments the source range before it releases the destination range, so overlapping ranges are safe. A value is marked shared whenever it is stored, so reads only need an atomic inc and never take a lock.
+- A heap allocation (`Box.alloc`, `Vec.alloc`, an `Array.alloc` that escapes) puts the length in a header in front of the elements (`cherry_pbuf_new` in `cherry.h`). That way `free` can release the elements wherever the container ends up being freed. The pointer Pulse sees is to the first element, so the layout is otherwise unchanged.
+- A stack allocation (`let mut`, `[| v; n |]`, an `alloc`/`free` pair promoted to the stack) is declared without an initializer and filled by `init`, which takes the value. `drop` releases the cells when the scope ends. Pulse code does not raise, so nothing leaves the scope early.
+- Uninitialized allocation (`Reference.alloc_uninit`, `Array.mask_alloc`) of counted values is rejected, and so is a constant array of them.
+- `tests/custard/pulse/CherryPulse.fst` covers stack and heap references, boxes, arrays and vectors freed in another function, zero-length arrays, `memcpy` and `ArrayPtr.memcpy`. `CherryPulseUninit.fst` covers the rejection. The Pulse suite also runs every direct-C test through Cherry under ASan.
 
 ## Functions
 
@@ -149,7 +155,7 @@ Prototype status: implemented as above. Each unit has its own static info for ev
 ## Arrays
 
 There are three array kinds:
-- Pulse arrays (Pulse.Lib.Array): same memory layout as now, plain, ownership tracked by Pulse permissions. Stored values are marked.
+- Pulse arrays (Pulse.Lib.Array): same memory layout as now, plain, ownership tracked by Pulse permissions. Stored values are marked. A heap array of counted values carries its length in a header in front of the elements (see "References").
 - Mutable reference counted arrays (FStarC.Array): can grow, stored as rc + capacity + length + data array. Accessed like ML references (spinlock only if multi-threaded).
 - Immutable arrays (FStar.ImmutableArray): stored like strings, as rc + capacity + length + data array. Updates and appends use the functional-but-in-place optimization: if the array is uniquely owned (and, for appends, has enough capacity), it is modified in place, otherwise a copy (with geometrically grown capacity for appends) is allocated.
 

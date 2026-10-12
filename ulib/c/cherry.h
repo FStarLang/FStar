@@ -283,6 +283,29 @@ static inline size_t cherry_iarray_pos(cherry_int i) {
 }
 
 /* ------------------------------------------------------------------------
+   Pulse references and arrays of counted values (cherry.md,
+   "References").  They are not counted themselves: Pulse's permissions say
+   who may read, write and free one.  What they hold is, and is marked shared
+   when it is stored, since a Pulse container may be read from several
+   threads at once.  A heap allocation keeps its length in a header in front
+   of the elements, so that freeing it can release them; the generated
+   helpers (cherry_pbuf<N>_alloc/read/write/free/init/drop/blit) do the
+   rest. */
+
+typedef union cherry_pbuf_hdr { size_t n; long double d; void *p; } cherry_pbuf_hdr;
+
+static inline void *cherry_pbuf_new(size_t n, size_t size) {
+  cherry_pbuf_hdr *h = (cherry_pbuf_hdr *)malloc(sizeof(cherry_pbuf_hdr) + n * size);
+  if (h == NULL) abort();
+  h->n = n;
+  return (void *)(h + 1);
+}
+
+static inline size_t cherry_pbuf_len(void *b) { return ((cherry_pbuf_hdr *)b - 1)->n; }
+
+static inline void cherry_pbuf_release(void *b) { free((cherry_pbuf_hdr *)b - 1); }
+
+/* ------------------------------------------------------------------------
    Exceptions (cherry.md, "Exceptions"), as error returns.  [raise] stores
    the exception in a thread-local slot and returns; every call that may
    raise is followed by a test of the slot, which on a pending exception

@@ -562,6 +562,19 @@ let ref_prefix (t:cty) : ML string =
           | None -> ref_tys := !ref_tys @ [t]; List.length !ref_tys - 1 in
   "cherry_ref" ^ string_of_int i
 
+(* Pulse references and arrays of counted values (cherry.h), the same way:
+   the element types, numbered; [cherry_pbuf_helpers] generates them. *)
+let pbuf_tys : ref (list cty) = mk_ref []
+let pbuf_prefix (t:cty) : ML string =
+  let rec find (i:int) (l:list cty) : ML (option int) =
+    match l with
+    | [] -> None
+    | u :: rest -> if u = t then Some i else find (i + 1) rest in
+  let i = match find 0 !pbuf_tys with
+          | Some i -> i
+          | None -> pbuf_tys := !pbuf_tys @ [t]; List.length !pbuf_tys - 1 in
+  "cherry_pbuf" ^ string_of_int i
+
 (* Immutable arrays (cherry.h), the same way: the element types, numbered,
    and for each the list type its [of_list] and [to_list] convert from and
    to, once one is used; [cherry_iarr_helpers] generates them. *)
@@ -1830,6 +1843,7 @@ let reset_program_state () : ML unit =
   fn_globals := HashTable.create 0;
   ref_tys := [];
   iarr_tys := [];
+  pbuf_tys := [];
   iarr_lists := [];
   any_tys := [];
   clo_queue := [];
@@ -1860,6 +1874,7 @@ let is_stmt (e:expr) : bool =
   | EOp ({ po_op = RefSet }, _)
   | EOp ({ po_op = Reset _ }, _) | EOp ({ po_op = ResetFree }, _)
   | EOp ({ po_op = ExnRaise }, _) | EOp ({ po_op = ExnExit }, _) -> true
+  | EOp ({ po_op = PBuf f }, _) -> f <> "read" && f <> "alloc"
   | _ -> false
 
 (* Every variable that occurs anywhere in a term.  Shadowing is ignored, which
@@ -1951,7 +1966,7 @@ let rec is_pure (e:expr) : ML bool =
   | EOp ({ po_op = RcInc }, _) | EOp ({ po_op = RcDec }, _)
   | EOp ({ po_op = RefNew }, _) | EOp ({ po_op = RefGet }, _) | EOp ({ po_op = RefSet }, _)
   | EOp ({ po_op = Reset _ }, _) | EOp ({ po_op = Reuse _ }, _) | EOp ({ po_op = ResetFree }, _)
-  | EOp ({ po_op = IArr _ }, _) | EOp ({ po_op = Dyn _ }, _)
+  | EOp ({ po_op = IArr _ }, _) | EOp ({ po_op = Dyn _ }, _) | EOp ({ po_op = PBuf _ }, _)
   | EOp ({ po_op = ExnRaise }, _) | EOp ({ po_op = ExnPending }, _)
   | EOp ({ po_op = ExnTake }, _) | EOp ({ po_op = ExnExit }, _) -> false
   | EOp (_, es) | ECtor (_, es) | ETuple es -> all es
@@ -2229,6 +2244,8 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
   | EOp ({ po_op = Dyn f }, [a]) ->
     let t = if f = "mk" then a.ty else e.ty in
     any_prefix t ^ "_" ^ f ^ "(" ^ c_rvalue out ind a.ty a ^ ")"
+  | EOp ({ po_op = PBuf f }, args) ->
+    pbuf_call out ind f args
   | EOp ({ po_op = IArr f }, args) ->
     let elt (t:cty) : ML cty =
       match t with
@@ -2486,6 +2503,17 @@ and c_rvalue (out:ref string) (ind:string) (target:cty) (e:expr) : ML string =
      | Some s -> s
      | None -> c_expr out ind e)
   | _ -> c_expr out ind e
+
+(* Cherry: a call of a Pulse container helper ([PBuf]).  The first operand
+   is the container, except in an allocation. *)
+and pbuf_call (out:ref string) (ind:string) (f:string) (args:list expr) : ML string =
+  let a = (match args with a :: _ -> a | [] -> failwith "Cherry: a Pulse container operation without operands") in
+  let t = if f = "alloc" then a.ty else
+          (match a.ty with
+           | TRef u | TBuf u -> u
+           | _ -> failwith "Cherry: a Pulse container operation on something else") in
+  let vals = args |> List.map (fun a -> c_rvalue out ind a.ty a) in
+  pbuf_prefix t ^ "_" ^ f ^ "(" ^ String.concat ", " vals ^ ")"
 
 and ctor_lit (out:ref string) (ind:string) (t:cty) (cn:name) (args:list expr) : ML string =
   match find_exn cn with
@@ -2759,6 +2787,11 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     ind ^ "/* " ^ before ^ " */\n" ^ ind ^ "/* " ^ after ^ " */\n"
   | EOp ({ po_op = BufCreate lt }, [init; len]) ->
     emit_alloc ind d None lt e.ty init len
+
+  | EOp ({ po_op = PBuf f }, args) when f <> "read" && f <> "alloc" ->
+    let out = mk_ref "" in
+    let c = pbuf_call out ind f args in
+    !out ^ ind ^ c ^ ";\n" ^ unit_result ind d
 
   | EOp ({ po_op = RefSet }, [r; v]) ->
     let out = mk_ref "" in
@@ -4627,6 +4660,44 @@ let cherry_any_helpers () : ML (list string & list string) =
   let rs = !any_tys |> List.mapi one in
   List.collect fst rs, List.collect snd rs
 
+(* The helpers for the Pulse containers [pbuf_tys] lists (cherry.h, "Pulse
+   references and arrays").  A value is marked shared when it is stored. *)
+let cherry_pbuf_helpers () : ML (list string & list string) =
+  let protos : ref (list string) = mk_ref [] in
+  let defs : ref (list string) = mk_ref [] in
+  let fn (proto:string) (body:string) : ML unit =
+    protos := !protos @ [proto ^ ";\n"];
+    defs := !defs @ [proto ^ " {\n" ^ body ^ "}\n"] in
+  !pbuf_tys |> List.iteri (fun i t ->
+    let p = "cherry_pbuf" ^ string_of_int i in
+    let b = decl_of (TBuf t) "b" in
+    let op (o:string) (x:string) : ML string = rc_fn o t ^ "(" ^ x ^ ");" in
+    let share = "  " ^ rc_fn "mark" t ^ "(v, CHERRY_SHARE);\n" in
+    let fill =
+      share ^
+      "  if (n == 0) { " ^ op "dec" "v" ^ " return; }\n" ^
+      "  for (size_t j = 0; j < n; j++) b[j] = v;\n" ^
+      "  for (size_t j = 1; j < n; j++) " ^ op "inc" "v" ^ "\n" in
+    let drop = "  for (size_t j = 0; j < n; j++) " ^ op "dec" "b[j]" ^ "\n" in
+    fn ("static inline void " ^ p ^ "_init(" ^ b ^ ", " ^ decl_of t "v" ^ ", size_t n)") fill;
+    fn ("static inline " ^ decl_of (TBuf t) (p ^ "_alloc(" ^ decl_of t "v" ^ ", size_t n)"))
+       ("  " ^ b ^ " = (" ^ ty (TBuf t) ^ ")cherry_pbuf_new(n, sizeof(b[0]));\n" ^
+        "  " ^ p ^ "_init(b, v, n);\n  return b;\n");
+    fn ("static inline " ^ decl_of t (p ^ "_read(" ^ b ^ ", size_t i)"))
+       ("  " ^ decl_of t "x" ^ " = b[i];\n  " ^ op "inc" "x" ^ "\n  return x;\n");
+    fn ("static inline void " ^ p ^ "_write(" ^ b ^ ", size_t i, " ^ decl_of t "v" ^ ")")
+       (share ^ "  " ^ decl_of t "old" ^ " = b[i];\n  b[i] = v;\n  " ^ op "dec" "old" ^ "\n");
+    fn ("static inline void " ^ p ^ "_drop(" ^ b ^ ", size_t n)") drop;
+    fn ("static inline void " ^ p ^ "_free(" ^ b ^ ")")
+       ("  size_t n = cherry_pbuf_len((void *)b);\n" ^ drop ^ "  cherry_pbuf_release((void *)b);\n");
+    (* The source range gains its references before the destination range
+       loses its own, so that an overlap never frees what is copied. *)
+    fn ("static inline void " ^ p ^ "_blit(" ^ decl_of (TBuf t) "s" ^ ", size_t si, " ^ b ^ ", size_t di, size_t n)")
+       ("  for (size_t j = 0; j < n; j++) " ^ op "inc" "s[si + j]" ^ "\n" ^
+        "  for (size_t j = 0; j < n; j++) " ^ op "dec" "b[di + j]" ^ "\n" ^
+        "  memmove(&b[di], &s[si], n * sizeof(b[0]));\n"));
+  !protos, !defs
+
 let cherry_iarr_helpers () : ML (list string & list string) =
   let protos : ref (list string) = mk_ref [] in
   let defs : ref (list string) = mk_ref [] in
@@ -5244,6 +5315,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   let eq_protos, eq_defs = eq_decls () in
   let rc_protos, rc_defs = cherry_helpers p in
   let clo_protos, clo_defs = cherry_closure_helpers () in
+  let pbuf_protos, pbuf_defs = cherry_pbuf_helpers () in
   let ref_protos, ref_defs = cherry_ref_helpers () in
   let iarr_protos, iarr_defs = cherry_iarr_helpers () in
   let exn_protos, exn_defs = cherry_exn_helpers p in
@@ -5281,6 +5353,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   String.concat "" iarr_protos ^ (match iarr_protos with [] -> "" | _ -> "\n") ^
   String.concat "" exn_protos ^ (match exn_protos with [] -> "" | _ -> "\n") ^
   String.concat "" any_protos ^ (match any_protos with [] -> "" | _ -> "\n") ^
+  String.concat "" pbuf_protos ^ (match pbuf_protos with [] -> "" | _ -> "\n") ^
   String.concat "\n" rc_defs ^ (match rc_defs with [] -> "" | _ -> "\n") ^
   String.concat "" protos ^ (match protos with [] -> "" | _ -> "\n") ^
   String.concat "" clo_protos ^ (match clo_protos with [] -> "" | _ -> "\n") ^
@@ -5289,6 +5362,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   String.concat "\n" iarr_defs ^ (match iarr_defs with [] -> "" | _ -> "\n") ^
   String.concat "\n" exn_defs ^ (match exn_defs with [] -> "" | _ -> "\n") ^
   String.concat "\n" any_defs ^ (match any_defs with [] -> "" | _ -> "\n") ^
+  String.concat "\n" pbuf_defs ^ (match pbuf_defs with [] -> "" | _ -> "\n") ^
   String.concat "" eq_protos ^ (match eq_protos with [] -> "" | _ -> "\n") ^
   String.concat "\n" eq_defs ^ (match eq_defs with [] -> "" | _ -> "\n") ^
   String.concat "\n" defs ^ "\n" ^ (match inits with [] -> "" | _ -> init_fn) ^

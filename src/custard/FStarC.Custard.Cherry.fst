@@ -104,6 +104,15 @@ let iarr_owns (f:string) : list bool =
   | "push" -> [true; true]
   | _ -> []
 
+(* The operands a Pulse container operation (Syntax.PBuf) takes owned: the
+   value stored. *)
+let pbuf_owns (f:string) : list bool =
+  match f with
+  | "alloc" -> [true; false]
+  | "init" -> [false; true; false]
+  | "write" -> [false; false; true]
+  | _ -> []
+
 (* An ML reference (Builtins.ml_ref_ty). *)
 let is_ml_ref (t:cty) : bool =
   match t with
@@ -164,6 +173,12 @@ let rec is_np (t:cty) : ML bool =
   | TArrow _ | TExn -> true
   | _ -> false
 
+(* A Pulse reference or array of counted values (Syntax.PBuf). *)
+let is_pbuf (t:cty) : ML bool =
+  match t with
+  | TRef u | TBuf u -> is_np u
+  | _ -> false
+
 (* The definitions that may return with an exception pending. *)
 let raise_tbl : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
 
@@ -178,7 +193,7 @@ let may_raise (node:expr) : ML bool =
 (* Does evaluating [e] involve a non-plain value anywhere, or an exception?
    The function a direct call names is not a value. *)
 let rec touches (e:expr) : ML bool =
-  is_np e.ty ||
+  is_np e.ty || is_pbuf e.ty ||
   (match e.e with
    | ELet (_, t, _, _) when is_np t -> true
    | ERaise _ | ETry _ -> true
@@ -592,6 +607,10 @@ let infer_borrows (p:program) (pinned:string -> ML bool) : ML unit =
         let fl = (match e.e with EOp ({ po_op = Dyn _ }, _) -> dyn_owns f | _ -> iarr_owns f) in
         es |> List.iteri (fun i a -> if i < List.length fl && List.nth fl i then own_arg a);
         List.iter (go false) es
+      | EOp ({ po_op = BufCreate _ }, v :: _)
+      | EOp ({ po_op = BufWrite }, [_; _; v]) ->
+        own_arg v;
+        (match e.e with EOp (_, es) -> List.iter (go false) es | _ -> ())
       | EOp (_, es) -> List.iter (go false) es
       | ECtor (_, es) | ETuple es -> List.iter own_arg es; List.iter (go false) es
       | ERecord (_, fs) -> fs |> List.iter (fun (_, x) -> own_arg x; go false x)
@@ -803,6 +822,28 @@ and rc_live (o:owned) (e:expr) : ML expr =
   | EQual _ when is_np e.ty -> unsupported "a global of reference-counted type"
   | EConst _ | EQual _ | EAny | EAbort _ -> e
 
+  (* A Pulse stack reference or array of counted values (cherry.md,
+     "References").  The cells are declared empty and filled by [PBuf "init"],
+     which takes the value; their references are released when the scope
+     ends.  Pulse code does not raise, so nothing leaves the scope early. *)
+  | ELet (x, t, { e = EOp ({ po_op = BufCreate LStack }, [v; n]) }, e2) when is_pbuf t ->
+    let e1 = (match e.e with ELet (_, _, e1, _) -> e1 | _ -> e) in
+    let op = (match e1.e with EOp (op, _) -> op | _ -> { po_op = BufCreate LStack; po_ty = None }) in
+    if EAny? v.e then unsupported "an uninitialized Pulse reference or array of reference-counted values" else
+    if not (is_atom n) then
+      let nx = fresh () in
+      rc_live o (let_ nx n.ty n { e with e = ELet (x, t, { e1 with e = EOp (op, [v; var nx n.ty]) }, e2) })
+    else
+    let unit_ty = TUnit in
+    let pop (f:string) (args:list expr) : expr =
+      mk (EOp ({ po_op = PBuf f; po_ty = None }, args)) unit_ty E_Impure in
+    let r = fresh () in
+    let body =
+      seq (pop "init" [var x t; v; n])
+        (let_ r e2.ty e2 (seq (pop "drop" [var x t; n]) (var r e2.ty))) in
+    let create = { e1 with e = EOp (op, [{ v with e = EAny }; n]) } in
+    { e with e = ELet (x, t, create, rc o body) }
+
   | ELet (x, t, e1, e2) ->
     let fv2 = without [x] (fv e2) in
     let fv1 = fv e1 in
@@ -901,9 +942,27 @@ and rc_live (o:owned) (e:expr) : ML expr =
     (match bind_first args with
      | Some (x, a, args') -> rc_live o (let_ x a.ty a { e with e = EOp (op, args') })
      | None -> call o (Some (iarr_owns (IArr?._0 op.po_op))) args { e with eff = E_Impure })
-  | EOp ({ po_op = BufCreate _ }, v :: _) | EOp ({ po_op = BufWrite }, [_; _; v])
-      when is_np v.ty ->
-    unsupported "a Pulse reference or array holding a reference-counted value"
+  (* A Pulse reference or array of counted values (cherry.md,
+     "References"). *)
+  | EOp ({ po_op = BufCreate LStack }, _) when is_pbuf e.ty ->
+    unsupported "a Pulse stack allocation of reference-counted values outside a let"
+  | EOp ({ po_op = BufCreate _ }, [v; n]) when is_pbuf e.ty ->
+    if EAny? v.e then unsupported "an uninitialized Pulse reference or array of reference-counted values" else
+    rc_live o { e with e = EOp ({ po_op = PBuf "alloc"; po_ty = None }, [v; n]) }
+  | EOp ({ po_op = BufRead }, [b; i]) when is_pbuf b.ty ->
+    rc_live o { e with e = EOp ({ po_op = PBuf "read"; po_ty = None }, [b; i]) }
+  | EOp ({ po_op = BufWrite }, [b; i; v]) when is_pbuf b.ty ->
+    rc_live o { e with e = EOp ({ po_op = PBuf "write"; po_ty = None }, [b; i; v]) }
+  | EOp ({ po_op = BufFree }, [b]) when is_pbuf b.ty ->
+    rc_live o { e with e = EOp ({ po_op = PBuf "free"; po_ty = None }, [b]) }
+  | EOp ({ po_op = BufBlit }, [s; si; d; di; n]) when is_pbuf s.ty ->
+    rc_live o { e with e = EOp ({ po_op = PBuf "blit"; po_ty = None }, [s; si; d; di; n]) }
+  | EOp ({ po_op = BufLit }, es) when List.existsb (fun (a:expr) -> is_np a.ty) es ->
+    unsupported "a constant array of reference-counted values"
+  | EOp (op, args) when PBuf? op.po_op ->
+    (match bind_first args with
+     | Some (x, a, args') -> rc_live o (let_ x a.ty a { e with e = EOp (op, args') })
+     | None -> call o (Some (pbuf_owns (PBuf?._0 op.po_op))) args { e with eff = E_Impure })
   | EOp ({ po_op = ExnTake }, []) -> call o (Some []) [] { e with eff = E_Impure }
   | EOp (_, _) when is_np e.ty ->
     unsupported "a primitive operation returning a reference-counted value"
