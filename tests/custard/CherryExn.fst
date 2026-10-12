@@ -75,6 +75,12 @@ let nested (n: int) : ML string =
   | Plain -> "plain"
   | e -> raise e
 
+(* [failwith] raises [Failure], which can be caught. *)
+let pick (l: list string) : ML string = match l with x :: _ -> x | [] -> failwith ("empty " ^ "list")
+
+let fails (l: list string) : ML string =
+  try pick l with Failure m -> "failure: " ^ m | e -> raise e
+
 (* A global's initializer. *)
 let glob : string = try (let _ = k (hide 1) in "no") with Boom _ -> "global" | e -> raise e
 
@@ -87,4 +93,5 @@ let main () : ML U32.t =
             over k (hide 0) (hide "a" ^ "b") = "ab!" && over k (hide 1) (hide "a" ^ "b") = "over" in
   let ok4 = loop (hide 4) = "it" && loop (hide 40) = "done" &&
             nested (hide 1) = "plain" && nested (hide 0) = "z" && glob = "global" in
-  if ok1 && ok2 && ok3 && ok4 then 0ul else 1ul
+  let ok5 = fails (hide ["a"]) = "a" && fails (hide []) = "failure: empty list" in
+  if ok1 && ok2 && ok3 && ok4 && ok5 then 0ul else 1ul

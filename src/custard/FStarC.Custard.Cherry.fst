@@ -1072,7 +1072,38 @@ let run_let (l:dlet) : ML dlet =
   let body = rc o l.dl_body in
   { l with dl_body = body; dl_eff = join_eff l.dl_eff body.eff }
 
+(* [failwith s] raises [Failure s] (cherry.md, "Exceptions"), so that it can
+   be caught: the support modules' [failwith] is an external, and their
+   [Failure] is declared beside it. *)
+let failure_of (f:name) : option name =
+  if f.id = "failwith" && (f.ns = ["FStar"; "All"] || f.ns = ["FStarC"; "Effect"])
+  then Some { f with id = "Failure"; spec = None }
+  else None
+
+let raise_failures (p:program) : ML program =
+  let used : ref (list (name & cty)) = mk_ref [] in
+  let rec go (e:expr) : ML expr =
+    match e.e with
+    | EApp ({ e = EQual (f, _) }, [s]) when Some? (failure_of f) ->
+      let x = Some?.v (failure_of f) in
+      let s = go s in
+      if not (List.existsb (fun (y, _) -> string_of_name y = string_of_name x) !used) then
+        used := (x, s.ty) :: !used;
+      mk (ERaise (mk (ECtor (x, [s])) TExn E_Pure)) e.ty E_Impure
+    | _ -> map_children go e in
+  let p = p |> List.map (fun d ->
+    match d with
+    | DLet l -> DLet { l with dl_body = go l.dl_body }
+    | d -> d) in
+  let declared (x:name) : ML bool =
+    p |> List.existsb (fun d -> match d with
+      | DExn y -> string_of_name y.de_name = string_of_name x
+      | _ -> false) in
+  let missing = !used |> List.filter (fun (x, _) -> not (declared x)) in
+  (missing |> List.map (fun (x, t) -> DExn { de_name = x; de_args = [t]; de_flags = [] })) @ p
+
 let run (p:program) : ML program =
+  let p = raise_failures p in
   let np = HashTable.create 50 in
   nonplain_types p |> List.iter (fun k -> HashTable.add np k true);
   np_tbl := np;

@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -304,6 +305,9 @@ typedef struct cherry_exn_info {
   const char *name;
   cherry_work_fn free;
   cherry_work_fn mark;
+  /* The offset of a string field to report if the exception escapes, as
+     for [Failure]; 0 if there is none. */
+  size_t msg;
 } cherry_exn_info;
 
 typedef struct cherry_exn_hdr { cherry_obj hdr; const cherry_exn_info *info; } cherry_exn_hdr;

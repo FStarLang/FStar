@@ -22,7 +22,12 @@ _Thread_local cherry_exn cherry_exn_slot;
 void cherry_exn_uncaught(void) {
   cherry_exn e = cherry_exn_take();
   fflush(stdout);
-  fprintf(stderr, "Uncaught exception: %s\n", ((cherry_exn_hdr *)e)->info->name);
+  const cherry_exn_info *info = ((cherry_exn_hdr *)e)->info;
+  if (info->msg != 0)
+    fprintf(stderr, "Uncaught exception: %s(\"%s\")\n", info->name,
+            cherry_str_data(*(cherry_string *)((char *)e + info->msg)));
+  else
+    fprintf(stderr, "Uncaught exception: %s\n", info->name);
   cherry_exn_dec(e);
   exit(2);
 }

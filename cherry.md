@@ -132,15 +132,17 @@ Exceptions use error returns. Instead of returning `either exn a`, which would c
 A fixpoint over the program finds the definitions that may raise. A definition may raise if it is not total and it raises, has a `try` (which can re-raise), or calls something that may raise. Calls that may raise are those to impure imported definitions and to impure closures. Total definitions and calls to externals are never tested.
 A heap cell reuse token whose reuse comes after a possible raise is freed on that exit path.
 
-Each exception constructor gets a cell `{ header, info, f0, f1, ... }`. The info is a static `cherry_exn_info` with the name, a free function and a mark function, so the runtime can release and mark exceptions of any constructor. A handler pattern compares the `info` pointer. Nullary exceptions are cells too, so every exception has an info. The closure `apply` helpers test the slot between the partial calls of an over-application. An exception that reaches `main`, or escapes a global's initializer, prints `Uncaught exception: Name` and exits with status 2.
+Each exception constructor gets a cell `{ header, info, f0, f1, ... }`. The info is a static `cherry_exn_info` with the name, a free function and a mark function, so the runtime can release and mark exceptions of any constructor. A handler pattern compares the `info` pointer. Nullary exceptions are cells too, so every exception has an info. The closure `apply` helpers test the slot between the partial calls of an over-application. An exception that reaches `main`, or escapes a global's initializer, prints `Uncaught exception: Name` and exits with status 2. If the exception's first field is a string, the message is printed too, as in `Uncaught exception: FStar.All.Failure("msg")`.
+`failwith s` (from `FStar.All` or `FStarC.Effect`) raises `Failure s`, so it can be caught like any other exception. If the program has no declaration of `Failure`, one is added.
 
-Prototype status: implemented as above. Exceptions declared in other units and `failwith` (which still aborts) are not handled yet. `tests/custard/CherryExn.fst` covers:
+Prototype status: implemented as above. Exceptions declared in other units are not handled yet: each unit has its own static info for a constructor, so two units would not agree on it. `tests/custard/CherryExn.fst` covers:
 - raises through deep non-tail recursion that holds lists;
 - re-raising through nested handlers, and raising from a handler;
 - raises through closures and over-application;
 - reuse tokens on raising paths;
 - references mutated before a raise;
-- a global's initializer.
+- a global's initializer;
+- `failwith` caught as `Failure`.
 
 ## Arrays
 

@@ -4515,7 +4515,11 @@ let cherry_exn_helpers (p:program) : ML (list string & list string) =
        "static void " ^ cn ^ "_exn_free(cherry_obj *x, int m);\n";
        "static void " ^ cn ^ "_exn_markf(cherry_obj *x, int m);\n";
        "static const cherry_exn_info " ^ exn_info n ^ " = { \"" ^ string_of_name n ^
-       "\", " ^ cn ^ "_exn_free, " ^ cn ^ "_exn_markf };\n";
+       "\", " ^ cn ^ "_exn_free, " ^ cn ^ "_exn_markf, " ^
+       (match fs with
+        | (f, TApp ({ ns = ["Prims"]; id = "string" }, [])) :: _ ->
+          "offsetof(" ^ st ^ ", " ^ f ^ ")"
+        | _ -> "0") ^ " };\n";
        ctor_sig ^ ";\n"] in
     let defs =
       ["static void " ^ cn ^ "_exn_free(cherry_obj *x, int m) {\n" ^
