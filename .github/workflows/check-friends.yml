@@ -141,7 +141,6 @@ jobs:
         with:
           repository: project-everest/everparse
           path: everparse/
-          ref: fstar2
 
       - name: Build
         run: make -C everparse -skj$(nproc) all
