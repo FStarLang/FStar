@@ -189,7 +189,8 @@ jobs:
       - uses: actions/checkout@master
         with:
           path: FStar-dice
-          submodules: true
+          sparse-checkout: |
+            pulse/share/pulse/examples/dice
       - run: echo "DICE_HOME=$(pwd)/FStar-dice/pulse/share/pulse/examples/dice" >> $GITHUB_ENV
 
       - name: Test
