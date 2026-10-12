@@ -79,6 +79,7 @@ val mkBvModUnsafe  : int -> term & term -> ML term
 val mkBvMul'   : int -> term & term -> ML term
 val mkBvUlt    : term & term -> ML term
 val mkBvUext   : int -> term -> ML term
+val mkBvExtract : int -> int -> term -> ML term
 val mkBvNot    : term -> ML term
 val mkBvToNat  : term -> ML term
 

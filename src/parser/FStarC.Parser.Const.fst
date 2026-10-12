@@ -242,6 +242,7 @@ let bv_rotate_right'_lid=bvconst "bvror'"
 
 let bv_ult_lid         = bvconst "bvult"
 let bv_uext_lid        = bvconst "bv_uext"
+let bv_extract_lid     = bvconst "bv_extract"
 let bv_not_lid         = bvconst "bvnot"
 
 (* Array constants *)

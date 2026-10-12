@@ -25,6 +25,14 @@ let bv_t (n : nat) = B.bv_t n
 let bv_uext #n #i a =
   Seq.append (Seq.create i false) a
 
+let bv_extract
+  (#n: pos)
+  (a: bv_t n)
+  (i: nat{i < n})
+  (j: nat{j <= i})
+  : Tot (bv_t (i - j + 1)) =
+  S.slice a (n - 1 - i) (n - j)
+
 let int2bv = U.to_vec
 let bv2int = U.from_vec
 

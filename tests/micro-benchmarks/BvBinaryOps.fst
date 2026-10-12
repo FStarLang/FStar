@@ -54,6 +54,32 @@ let lemma_bvnot_test (bv: BV.bv_t 64) : unit =
   assert (not2 == bv);
   assert (not1 <> bv)
 
+(** Tests for bv_extract *)
+
+let lemma_bv_extract_constant () : unit =
+  assert (BV.bv_extract #8 (BV.int2bv #8 0b10110110) 5 2
+          == BV.int2bv #4 0b1101)
+
+let lemma_bv_extract_single_bit () : unit =
+  assert (BV.bv_extract #8 (BV.int2bv #8 0b10110110) 4 4
+          == BV.int2bv #1 1)
+
+let lemma_bv_extract_full_width (bv: BV.bv_t 8) : unit =
+  assert (BV.bv_extract #8 bv 7 0 == bv)
+
+let lemma_bv_extract_composition (bv: BV.bv_t 16) : unit =
+  assert (BV.bv_extract #8 (BV.bv_extract #16 bv 11 4) 5 2
+          == BV.bv_extract #16 bv 9 6)
+
+let lemma_bv_extract_symbolic_bounds
+  (bv: BV.bv_t 8)
+  (i: nat{i < 8})
+  (j: nat{j <= i})
+  (expected: BV.bv_t (i - j + 1))
+  (h: expected == BV.bv_extract #8 bv i j)
+  : unit =
+  assert (BV.bv_extract #8 bv i j == expected)
+
 (** Tests for bvrol / bvror *)
 
 // rotate left by 0 is identity

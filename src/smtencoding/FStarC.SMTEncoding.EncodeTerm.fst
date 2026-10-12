@@ -341,6 +341,11 @@ let getInteger (tm : Syntax.term) : ML _ =
    if there is a concrete/constant size argument given*)
 let is_BitVector_primitive head args : ML bool =
     match head.n, args with
+    | Tm_fvar fv, [(sz_arg, _); _; (i_arg, _); (j_arg, _)] ->
+      S.fv_eq_lid fv Const.bv_extract_lid &&
+      isInteger sz_arg &&
+      isInteger i_arg &&
+      isInteger j_arg
     | Tm_fvar fv, [(sz_arg, _);_;_] ->
       (S.fv_eq_lid fv Const.bv_and_lid
       || S.fv_eq_lid fv Const.bv_xor_lid
@@ -538,28 +543,36 @@ and encode_arith_term env head args_e : ML _ =
       in
       decls@mk_decls "" sz_key (t_decls@[typing_inversion]) []
     in
-    (* we need to treat the size argument for zero_extend specially*)
-    let arg_tms, ext_sz =
+    (* Width-changing operators have non-value arguments that are not encoded
+       as SMT terms. *)
+    let arg_tms, ext_sz, extract_bounds =
         match head.n, args_e with
         | Tm_fvar fv, [_;(sz_arg, _);_] when
             (S.fv_eq_lid fv Const.bv_uext_lid &&
                 (isInteger sz_arg)) ->
-                (List.tail (List.tail args_e), Some (getInteger sz_arg))
+                (List.tail (List.tail args_e), Some (getInteger sz_arg), None)
         | Tm_fvar fv, [_;(sz_arg, _);_] when
             (S.fv_eq_lid fv Const.bv_uext_lid) ->
             (*fail if extension size is not a constant*)
             failwith (FStarC.Format.fmt1 "Not a constant bitvector extend size: %s"
                             (show sz_arg))
-        | _  -> (List.tail args_e, None)
+        | Tm_fvar fv, [_; arg; (i_arg, _); (j_arg, _)] when
+            S.fv_eq_lid fv Const.bv_extract_lid ->
+            ([arg], None, Some (getInteger i_arg, getInteger j_arg))
+        | _  -> (List.tail args_e, None, None)
     in
 
-    (* The result of bv_uext has the extended size, so its boxing functions
-       must be declared too. *)
+    let result_sz =
+      match ext_sz, extract_bounds with
+      | Some ext, _ -> sz + ext
+      | _, Some (i, j) -> i - j + 1
+      | _ -> sz
+    in
+    (* Some operations change the bitvector width, so their result boxing
+       functions must be declared too. *)
     let sz_decls =
       bv_size_decls sz
-      @ (match ext_sz with
-         | Some ext -> bv_size_decls (sz + ext)
-         | None -> [])
+      @ (if result_sz = sz then [] else bv_size_decls result_sz)
     in
     let arg_tms, decls = encode_args arg_tms env in
     let head_fv =
@@ -610,7 +623,14 @@ and encode_arith_term env head args_e : ML _ =
     let bv_ult  = mk_bv Util.mkBvUlt binary Term.boxBool in
     let bv_uext arg_tms =
            mk_bv (Util.mkBvUext (match ext_sz with | Some x -> x | None -> failwith "impossible")) unary
-                         (Term.boxBitVec (sz +  (match ext_sz with | Some x -> x | None -> failwith "impossible"))) arg_tms in
+                         (Term.boxBitVec result_sz) arg_tms in
+    let bv_extract arg_tms =
+           let i, j =
+             match extract_bounds with
+             | Some bounds -> bounds
+             | None -> failwith "impossible"
+           in
+           mk_bv (Util.mkBvExtract i j) unary (Term.boxBitVec result_sz) arg_tms in
     let bv_not  = mk_bv Util.mkBvNot unary (Term.boxBitVec sz) in
     let to_int  = mk_bv Util.mkBvToNat unary Term.boxInt in
     let bv_to   = mk_bv (Util.mkNatToBv sz) unary_arith (Term.boxBitVec sz) in
@@ -637,6 +657,7 @@ and encode_arith_term env head args_e : ML _ =
          (Const.bv_ult_lid, bv_ult);
          (Const.bv_not_lid, bv_not);
          (Const.bv_uext_lid, bv_uext);
+         (Const.bv_extract_lid, bv_extract);
          (Const.bv_to_nat_lid, to_int);
          (Const.nat_to_bv_lid, bv_to)]
     in

@@ -84,6 +84,7 @@ let mkBvModUnsafe = Term.mkBvModUnsafe
 let mkBvMul' = Term.mkBvMul'
 let mkBvUlt = Term.mkBvUlt
 let mkBvUext = Term.mkBvUext
+let mkBvExtract = Term.mkBvExtract
 let mkBvNot = Term.mkBvNot
 let mkBvToNat = Term.mkBvToNat
 let mkITE = Term.mkITE

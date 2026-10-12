@@ -269,6 +269,7 @@ let op_to_string : op -> ML string = function
   | BvRor n -> Format.fmt1 "(_ rotate_right %s)" (show n)
   | BvToNat -> "bv2int"
   | BvUext n -> Format.fmt1 "(_ zero_extend %s)" (show n)
+  | BvExtract (i, j) -> Format.fmt2 "(_ extract %s %s)" (show i) (show j)
   | BvNot -> "bvnot"
   | NatToBv n -> Format.fmt1 "(_ int2bv %s)" (show n)
   | Var s -> s
@@ -381,6 +382,7 @@ let mk_bin_op op (t1,t2) = mkApp'(op, [t1;t2])
 let mkMinus t = mkApp'(Minus, [t])
 let mkNatToBv sz t = mkApp'(NatToBv sz, [t])
 let mkBvUext sz t = mkApp'(BvUext sz, [t])
+let mkBvExtract i j t = mkApp'(BvExtract (i, j), [t])
 let mkBvNot  t = mkApp'(BvNot, [t])
 let mkBvToNat t = mkApp'(BvToNat, [t])
 let mkBvAnd = mk_bin_op BvAnd
@@ -498,6 +500,7 @@ let check_pattern_ok (t:term) : option term =
                 | BvMul
                 | BvUlt
                 | BvUext _
+                | BvExtract _
                 | BvNot
                 | NatToBv _
                 | BvToNat

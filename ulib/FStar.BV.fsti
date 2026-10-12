@@ -59,6 +59,15 @@ val bv_t (n: nat) : eqtype
     [m+n], filling the extra bits with 0 *)
 val bv_uext (#n #m: pos) (a: bv_t n) : Tot (bv_t (m + n))
 
+(** Extract bits [i] through [j], inclusive, where bit 0 is the
+    least-significant bit *)
+val bv_extract
+  (#n: pos)
+  (a: bv_t n)
+  (i: nat{i < n})
+  (j: nat{j <= i})
+  : Tot (bv_t (i - j + 1))
+
 (**** Relating unsigned integers to bitvectors *)
 
 (** Mapping a bounded unsigned integer of size [< 2^n], to a n-length
@@ -352,4 +361,3 @@ val int2bv_mul':
     #z: bv_t n ->
     squash (bvmul' #n (int2bv #n x) (int2bv #n y) == z)
   -> Lemma (int2bv #n (mul_mod #n x y) == z)
-

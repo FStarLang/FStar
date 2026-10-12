@@ -70,6 +70,7 @@ type op =
   | BvRol of int
   | BvRor of int
   | BvUext of int
+  | BvExtract of int & int
   | BvNot
   | NatToBv of int
   | BvToNat
@@ -240,6 +241,7 @@ val mkImp :  ((term & term) -> ML term)
 val mkMinus: term -> ML term
 val mkNatToBv : (int -> term -> ML term)
 val mkBvUext  : (int -> term -> ML term)
+val mkBvExtract : (int -> int -> term -> ML term)
 val mkBvNot   : (term -> ML term)
 val mkBvToNat : (term -> ML term)
 val mkBvAnd   : ((term & term) -> ML term)
