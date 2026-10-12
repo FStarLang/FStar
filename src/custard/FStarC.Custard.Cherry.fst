@@ -596,7 +596,18 @@ let infer_borrows (p:program) (pinned:dlet -> ML (option (list bool))) : ML unit
                 if HashTable.mem !global_tbl gs then List.iter own_arg args)
          | _ -> List.iter own_arg args; go false hd);
         List.iter (go false) args
-      | ELet (x, _, a, b) -> go false a; go' (List.filter (fun y -> y <> x) bf) tail b
+      | ELet (x, t, a, b) ->
+        go false a;
+        let bf = List.filter (fun y -> y <> x) bf in
+        (* A field of a borrowed value is borrowed, as in [rc_live]. *)
+        let rec root (a:expr) : option string =
+          match a.e with
+          | EProj (b, _, _) -> (match b.e with EVar y -> Some y | _ -> root b)
+          | _ -> None in
+        let bf = (match root a with
+                  | Some y when is_np t && not (is_owned_var bf y) -> x :: bf
+                  | _ -> bf) in
+        go' bf tail b
       | ESeq (a, b) -> go false a; go tail b
       | EIf (c, t, f) -> go false c; go tail t; go tail f
       | EMatch (sc, brs) ->
@@ -861,6 +872,16 @@ and rc_live (o:owned) (e:expr) : ML expr =
         (let_ r e2.ty e2 (seq (pop "drop" [var x t; n]) (var r e2.ty))) in
     let create = { e1 with e = EOp (op, [{ v with e = EAny }; n]) } in
     { e with e = ELet (x, t, create, rc o body) }
+
+  (* A field of a borrowed value is borrowed for as long as the value, which
+     outlives this scope, as the fields a match binds are. *)
+  | ELet (x, t, { e = EProj ({ e = EVar y }, _, _) }, e2) when is_np t && not (is_owned y) ->
+    let e1 = (match e.e with ELet (_, _, e1, _) -> e1 | _ -> e) in
+    let_ x t e1 (rc o e2)
+  | ELet (x, t, { e = EProj (a, tn, f) }, e2) when is_np t && EProj? a.e ->
+    let e1 = (match e.e with ELet (_, _, e1, _) -> e1 | _ -> e) in
+    let z = fresh () in
+    rc_live o (let_ z a.ty a { e with e = ELet (x, t, { e1 with e = EProj (var z a.ty, tn, f) }, e2) })
 
   | ELet (x, t, e1, e2) ->
     let fv2 = without [x] (fv e2) in

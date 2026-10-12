@@ -63,11 +63,11 @@ Borrowed locals: a projection of a field of an immutable cell is borrowed for as
 Prototype status (`FStarC.Custard.Cherry.infer_borrows`):
 - The fixpoint runs over the whole (monomorphized) program at once rather than per SCC. The result is `Cherry.param_owned`, one flag per binder; plain and unit binders are listed as owned.
 - The rules are rules 2 and 3 (except reset/reuse, which does not exist yet). Records and tuples count as constructors, and passing a value to a closure call marks it owned. In the tail-call rule, any fresh argument (anything other than a variable or a global) counts as owned.
-- Fields bound by a match on a borrowed variable (a borrowed parameter or such a field) are borrowed. They get no inc, and the scrutinee is not dec'd. Record projections (`p.f`) still inc.
+- Fields bound by a match on a borrowed variable (a borrowed parameter or such a field) are borrowed. They get no inc, and the scrutinee is not dec'd. Likewise a let-bound record projection (`let x = p.f`, or a chain `p.f.g`) of a borrowed variable is borrowed; projections in argument position are let-bound first, so `length p.f` costs nothing. A projection is inc'd only where it is stored or returned.
 - Imported definitions are pinned to the convention recorded in their unit's interface: the `.cui` gives each definition a `CherryConv` flag, one owned/borrowed bit per binder, after inference. An imported definition without the flag (a unit compiled for plain C) is taken as all-owned. A unit's exported definitions are inferred like any other.
 - `[@@@cherry_owned]`/`[@@@cherry_borrowed]` on a binder fix that parameter's convention (Extract records them positionally as a `CherryMode` flag), and the fixpoint never changes it. Both are always sound, since the rc pass incs a borrowed parameter where it is stored and decs an owned one where it dies. Both on one binder is warning 371, and both are ignored. They still feed inference elsewhere: an owned parameter passed on in a tail call makes the callee's parameter owned.
 - The closure entry of a definition (static closures and partial applications) adapts the conventions. Borrowed captured fields are not inc'd. Borrowed arguments are dec'd after the call, since the entry receives them owned. No separate `_boxed` wrapper is needed.
-- Not yet done: borrowed record projections, and the attributes on externals (whose conventions come from the runtime's table).
+- Not yet done: the attributes on externals (whose conventions come from the runtime's table).
 
 ## Inserting reference counting operations
 

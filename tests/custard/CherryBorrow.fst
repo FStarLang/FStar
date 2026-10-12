@@ -57,6 +57,15 @@ let rec app_bo ([@@@cherry_borrowed] a: list string) ([@@@cherry_owned] b: list 
   : list string =
   match a with [] -> s :: b | x :: t -> x :: app_bo t b s
 
+(* Record projections of a borrowed value are borrowed: read, chained,
+   returned, stored, and from a record held in a ref's cell. *)
+type wrap = { inner: pair; tag: string }
+let plen (p: pair) : nat = length p.fst + (if mem p.snd p.fst then 1 else 0)
+let wlen (w: wrap) : nat = plen w.inner + length w.inner.fst
+let wfst (w: wrap) : list string = w.inner.fst
+let wcons (w: wrap) : list string = w.tag :: w.inner.fst
+let rec wsum (ws: list wrap) : nat = match ws with [] -> 0 | w :: t -> wlen w + wsum t
+
 let main () : U32.t =
   let l = ["a"; "b"; "c"; "d"] in
   let r = rev_onto l [] in
@@ -68,10 +77,15 @@ let main () : U32.t =
   let cb = cons_b "z" l in
   let lo = len_o cb + len_o (cons_b "y" []) in
   let ab = app_bo l (app_bo r [] "m") "n" in
+  let w = { inner = { fst = l; snd = "c" }; tag = "t" } in
+  let ws = wsum [w; { w with tag = "u" }] in
+  let wf = wfst w in
+  let wc = wcons { inner = { fst = r; snd = "q" }; tag = "t" } in
   let fb = sum_map (fun s -> len_o (cons_b s l)) ["a"; "b"] in
   let ok =
     length l = 4 && mem "c" r && not (mem "q" l) &&
     last2 ll = "none" && last2 [r; ["y"]] = "y" &&
     concat "" h = "ad-" && c = "acca" && k = 2 && length (pfst p) = 5 &&
-    lo = 8 && concat "" ab = "abcdndcbam" && fb = 12 && length l = 4 in
+    lo = 8 && concat "" ab = "abcdndcbam" && fb = 12 && length l = 4 &&
+    ws = 18 && length wf = 4 && concat "" wc = "tdcba" in
   if ok then 0ul else 1ul
