@@ -566,14 +566,15 @@ let int_cast_rule (id:string) : ML (option rule) =
    it becomes a 368 about [Prims.int] instead -- an unrepresentable *return*
    type for a function that never returns.
 
-   [EAbort] at [TAny] is what [magic] and [admit] already get, and it is right
-   here for the same reason: [TAny] stands where a value of any type is
-   wanted, so the C backend stops caring what the result type was. *)
+   [TAny] stands where a value of any type is wanted, so the C backend stops
+   caring what the result type was.  Unlike [magic] and [admit] below, the
+   [squash False] argument is a proof, so this is an [EUnreachable] and the
+   branch that leads to it may be pruned. *)
 let pervasives_rule (id:string) : ML (option rule) =
   match id with
   | "false_elim" ->
     Some (Rule_prim (1, fun _ _ ->
-            mk (EAbort "FStar.Pervasives.false_elim") TAny E_Impure))
+            mk (EUnreachable "FStar.Pervasives.false_elim") TAny E_Impure))
   | _ -> None
 
 let prims_rule (id:string) : ML (option rule) =
@@ -595,12 +596,14 @@ let prims_rule (id:string) : ML (option rule) =
      own, so there is no layout to derive and nothing to instantiate.  Only
      OCaml has a representation for it (section 8.5). *)
   | "exn" -> Some (Rule_type (fun _ -> TExn))
-  (* [magic] and [admit] only typecheck because the caller has proved the
-     point unreachable -- either outright, or, as in
-     [FStar.Stubs.Tactics.V2.Builtins.raise], through a [False]
-     postcondition.  There is no value of the result type to produce and no
-     reason to produce one, so this aborts like [Pulse.Lib.Dv.unreachable].
-     [TAny] is what lets it stand where a value of any type is wanted. *)
+  (* [magic] and [admit] are placeholders: they typecheck without anyone
+     having proved anything (FStarLang/FStar#4661).  There is no value of the
+     result type to produce, so they abort at run time -- but as an [EAbort],
+     not an [EUnreachable]: control may well get here, and pruning the branch
+     that leads to it would silently turn [if b then 1ul else admit ()] into
+     [1ul].  An [admit] in a *proof* never gets this far; it is erased with
+     the proof.  [TAny] is what lets it stand where a value of any type is
+     wanted. *)
   | "magic" | "admit" ->
     Some (Rule_prim (1, fun _ _ -> mk (EAbort ("Prims." ^ id)) TAny E_Impure))
   | _ -> None
@@ -918,7 +921,7 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
   (* Pulse proved this branch dead; its argument is the proof. *)
   | ["Pulse"; "Lib"; "Dv"], "unreachable" ->
     Some (Rule_prim (1, fun _ _ ->
-      mk (EAbort "Pulse.Lib.Dv.unreachable") TAny E_Impure))
+      mk (EUnreachable "Pulse.Lib.Dv.unreachable") TAny E_Impure))
 
   (* [mk_gvar]/[read_gvar] are the two halves of a global initializer.  A
      [gvar p] *is* the value it guards -- the slprop is ghost -- so the type is

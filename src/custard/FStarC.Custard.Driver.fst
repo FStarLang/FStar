@@ -123,7 +123,7 @@ let warn_any (prog:program) : ML unit =
      | _ -> ());
     let sub (es:list expr) : ML unit = es |> List.iter go in
     match x.e with
-    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> ()
+    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ | EUnreachable _ -> ()
     | ELet (v, t, e1, e2) -> at ("binding of '" ^ v ^ "'") t; sub [e1; e2]
     | EApp (h, es) -> sub (h :: es)
     | EFun (bs, b) ->

@@ -103,7 +103,7 @@ let anf_expr (x0:expr) : ML expr =
       let c = norm c in
       let b = norm b in
       { x with e = EWhile (c, b) }
-    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
+    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ | EUnreachable _ -> x
 
     (* Everything else has operand positions, so it needs an accumulator. *)
     | _ ->
@@ -282,7 +282,7 @@ let rec sub (sm:subst) (x:expr) : ML expr =
      | Some ({ e = EVar v' ; ty = TAny }) -> { x with e = EVar v' }
      | Some e -> e
      | None -> x)
-  | EConst _ | EQual _ | EAny | EAbort _ -> x
+  | EConst _ | EQual _ | EAny | EAbort _ | EUnreachable _ -> x
   | ELet (v, ty, e1, e2) ->
     let v' = rename v in
     let e1 = g e1 in
@@ -973,7 +973,7 @@ let rec reduce (x:expr) : ML expr =
        | _ -> reduce r)
     else { x with e = EMatch (scrut, brs |> List.map reduce_branch) })
 
-  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
+  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ | EUnreachable _ -> x
   (* Section 3.1: the backends have no closures, so a let-bound lambda that is
      only ever *called* has to reach its call, where beta can fire.  A lambda
      is a value, so moving it duplicates no work, and a single occurrence
@@ -2063,11 +2063,17 @@ let scc (prog:program) : ML program =
 (* Unreachable branches                                                 *)
 (* -------------------------------------------------------------------- *)
 
-(* [EAbort] says control does not reach here, and it means it: the only rule
-   that introduces one is Pulse's [unreachable] (section 8.3), whose
-   precondition F* has already proved false.  A branch whose body is nothing
-   but an abort therefore contributes nothing to the value of the match, and
-   testing for it is wasted work at run time and noise in the output.
+(* [EUnreachable] says control does not reach here, and it means it: the only
+   rules that introduce one are Pulse's [unreachable] (section 8.3) and
+   [FStar.Pervasives.false_elim], whose preconditions F* has already proved
+   false.  A branch whose body is nothing but one therefore contributes
+   nothing to the value of the match, and testing for it is wasted work at run
+   time and noise in the output.
+
+   [EAbort] is deliberately not treated this way.  It is what [Prims.admit]
+   and [Prims.magic] compile to, and those are placeholders, not proofs:
+   pruning the branch would make [if b then 1ul else admit ()] return [1ul]
+   unconditionally instead of aborting when [b] is false (FStarLang/FStar#4661).
 
    This was a C-backend peephole first, where dropping the branch also lets the
    one before it become unconditional.  But the reasoning has nothing to do
@@ -2089,10 +2095,10 @@ let rec prune (x:expr) : ML expr =
   | EMatch (s, brs) ->
     let s = g s in
     let brs = brs |> List.map prune_branch in
-    let live = brs |> List.filter (fun (_, _, b) -> not (EAbort? b.e)) in
-    (* A match all of whose branches abort cannot be entered at all, so there
-       is nothing to choose between them: it is just the abort, with the
-       scrutinee kept only if evaluating it is observable. *)
+    let live = brs |> List.filter (fun (_, _, b) -> not (EUnreachable? b.e)) in
+    (* A match all of whose branches are unreachable cannot be entered at
+       all, so there is nothing to choose between them: it is just the first
+       of them, with the scrutinee kept only if evaluating it is observable. *)
     (match live, brs with
      | [], (_, _, b) :: _ -> take x s b
      (* One live branch is the same situation one step on: the match was
@@ -2116,8 +2122,8 @@ let rec prune (x:expr) : ML expr =
     let c = g c in
     let a = g a in
     let b = g b in
-    if EAbort? b.e && not (EAbort? a.e) then take x c a
-    else if EAbort? a.e && not (EAbort? b.e) then take x c b
+    if EUnreachable? b.e && not (EUnreachable? a.e) then take x c a
+    else if EUnreachable? a.e && not (EUnreachable? b.e) then take x c b
     else { x with e = EIf (c, a, b) }
 
   | _ -> map_children g x
@@ -3048,7 +3054,7 @@ let rec unit_args_expr (x:expr) : ML expr =
     if not (TUnit? e.ty) then e
     else match e.e with
          | EConst CUnit -> e
-         | EAbort _ -> e
+         | EAbort _ | EUnreachable _ -> e
          | _ ->
            if is_pure e.eff then { e with e = EConst CUnit }
            else begin
@@ -3440,7 +3446,7 @@ let coerce_prog (prog:program) : ML program =
   and go (env:cenv) (exp:option cty) (x:expr) : ML expr =
     let same (e':expr') : expr = { x with e = e' } in
     match x.e with
-    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
+    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ | EUnreachable _ -> x
     | ECast (e1, t) -> same (ECast (go env None e1, t))
     | ECoerce (e1, t) -> same (ECoerce (go env None e1, t))
     (* A comparison's operands all have the one type, so an operand of unknown
