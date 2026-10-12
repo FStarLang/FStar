@@ -938,7 +938,7 @@ let rec term (ind:string) (e:expr) : ML string =
   | EOp (op, args) ->
     "(" ^ op_name op ^ " " ^ String.concat " " (List.map (term ind) args) ^ ")"
   | EAny -> "(Obj.magic 0)"
-  | EAbort s -> "(failwith \"" ^ escape s ^ "\")"
+  | EAbort s | EUnreachable s -> "(failwith \"" ^ escape s ^ "\")"
   | EWhile (c, body) ->
     "(while " ^ term ind c ^ " do " ^ term ind body ^ " done)"
   | ERaise e1 -> "(raise " ^ term ind e1 ^ ")"

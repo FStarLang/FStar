@@ -142,7 +142,7 @@ let rec rn_expr (fields:HashTable.t string string) (ts:scope) (s:scope) (x:expr)
     match x.e with
     | EConst _
     | EAny
-    | EAbort _ -> x.e
+    | EAbort _ | EUnreachable _ -> x.e
 
     | EVar v -> EVar (lookup s v)
     | EQual (n, args) -> EQual (n, args |> List.map (rn_cty ts))

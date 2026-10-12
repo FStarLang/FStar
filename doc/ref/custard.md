@@ -2054,16 +2054,24 @@ representation-compatible.
 
 ### 5.6 Unreachable branches
 
-`EAbort` says control does not reach here, and it means it: the only rule that
-introduces one is Pulse's `unreachable` (§8.3), whose precondition F\* has
-already proved false.  A branch whose body is nothing but an abort therefore
-contributes nothing to the value of the match, and testing for it is wasted
-work at run time and noise in the output.  `prune` drops such branches, and
-rewrites `if c then e else abort` (and its mirror) to `e`, keeping `c` as a
+`EUnreachable` says control does not reach here, and it means it: the only rules
+that introduce one are Pulse's `unreachable` (§8.3) and
+`FStar.Pervasives.false_elim`, whose preconditions F\* has already proved false.
+A branch whose body is nothing but an `EUnreachable` therefore contributes
+nothing to the value of the match, and testing for it is wasted work at run time
+and noise in the output.  `prune` drops such branches, and rewrites
+`if c then e else unreachable` (and its mirror) to `e`, keeping `c` as a
 statement if evaluating it is observable.
 
-A match *all* of whose branches abort is left alone: it cannot be entered, and
-there is no value to give it.
+`EAbort` is *not* pruned.  It aborts at run time too, but it is what
+placeholders compile to — `Prims.admit`, `Prims.magic`, a body Custard could
+not extract — and a placeholder proves nothing.  Pruning it turned
+`if b then 1ul else admit ()` into an unconditional `return 1` (#4661).  An
+`admit` inside a *proof* never reaches the IR: it is erased with the proof, so
+a change to a proof cannot change the code.
+
+A match *all* of whose branches are unreachable cannot be entered, and becomes
+the first of them.
 
 This started as a C-backend peephole, where dropping a branch also lets the one
 before it become the unconditional one.  But the reasoning has nothing to do
@@ -3690,7 +3698,8 @@ build `TBuf t` (and `BufNull`).  `Extract.prim_app` collects them with
 
 Four IR additions come with this: `TBuf` and `TRef` (§2.2), `EAny` for karamel's
 `EAny`, and `EAbort of string` for `Pulse.Lib.Dv.unreachable` -- a `Dv`
-function that Pulse emits where the proof says control never arrives.  It
+function that Pulse emits where the proof says control never arrives (now
+`EUnreachable`, §5.6, so that it can be told apart from an `admit`).  It
 prints as `failwith` in OCaml and as karamel's `EAbortS`.  In the karamel
 backend a `TBuf` is a real C pointer, so a Pulse `let mut` scalarizes into a
 plain local and a `Vec.alloc` becomes `KRML_HOST_MALLOC`.  `FStar.SizeT` is a
@@ -8598,9 +8607,12 @@ The second half of the report's question is what `false_elim` becomes, and the
 answer was: worse than it should be.
 
 `Prims.magic` and `Prims.admit` have had a builtin rule since M2 mapping them
-to `EAbort` at `TAny` -- they typecheck only because the caller has proved the
-point unreachable, there is no value of the result type to produce, and `TAny`
-lets the abort stand where a value of any type is wanted.  `false_elim` is the
+to `EAbort` at `TAny` -- there is no value of the result type to produce, and
+`TAny` lets the abort stand where a value of any type is wanted.  (This section
+used to say they typecheck "only because the caller has proved the point
+unreachable"; they do not, they are placeholders, and §5.6 no longer prunes
+them -- #4661.  `false_elim` does carry a proof, and is an `EUnreachable`.)
+`false_elim` is the
 same construct in a third spelling and had no rule, so Custard extracted its
 *definition*:
 

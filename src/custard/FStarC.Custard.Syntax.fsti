@@ -458,8 +458,16 @@ and expr' =
   (** An arbitrary value of the node's type: what an uninitialized stack
       allocation is filled with.  Only a rule may introduce it. *)
   | EAbort   of string
-  (** Control never reaches here; the string says why.  Only a rule may
-      introduce it (Pulse's [unreachable], section 8.3). *)
+  (** Abort at run time; the string says why.  This is what a placeholder
+      compiles to -- [Prims.admit], [Prims.magic], a body Custard could not
+      extract -- so nothing has been proved about whether control reaches
+      it, and no pass may assume that it does not. *)
+  | EUnreachable of string
+  (** Control provably never reaches here; the string says why.  Only a rule
+      may introduce it, and only for a primitive whose precondition F* has
+      proved false (Pulse's [unreachable], section 8.3, and
+      [FStar.Pervasives.false_elim]).  It aborts like [EAbort] if reached, but
+      unlike [EAbort] the passes may delete the branches that lead to it. *)
   | EOp      of prim_op & list expr
   | EWhile   of expr & expr
   | ERaise   of expr
