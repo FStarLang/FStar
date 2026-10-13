@@ -197,6 +197,31 @@ Two kinds of runtime identity are per unit, and the runtime matches them by name
 
 The slow path costs a `strcmp`, only when values cross units, and only when matching exceptions or reading a `dyn`. Test: `tests/custard/CherrySepLib.fst` and `CherrySepApp.fst`, which pass lists, globals, closures in both directions, exceptions raised through the other unit, refs, immutable arrays, equality on imported types and `dyn` values across the boundary.
 
+## Benchmarks
+
+`tests/custard/bench` builds the same F* programs with Cherry (`gcc -O2`, system malloc), the OCaml backend (OCaml 5.3, no flambda) and the F# backend (.NET 10, Release), and times them: `make bench` (`RUNS`, `BACKENDS`, `BENCHES` select). It is not part of `make test`. Each program checks its own result. Every run gets a 1 GB stack, OCaml 5's default limit, because some of the recursion is not tail calls. All arithmetic is on `Prims.int`, as in the compiler: Cherry uses tagged small ints, OCaml uses Zarith, and F# uses BigInteger.
+
+The programs:
+- RBMap: Koka/Lean red-black tree, 10^6 inserts.
+- BinaryTrees: Benchmarks Game, depth 20.
+- CFold: Koka constant folding, 16 expressions of depth 16.
+- NQueens: Koka, n = 13, all solutions as shared lists.
+- Strings: number formatting, and joining by `acc ^ x`.
+- Closures: map, filter and fold over closures.
+
+First results (72-core x86-64; median of 5 runs, peak RSS):
+
+| Benchmark | Cherry (s) | OCaml (s) | F# (s) | OCaml/Cherry | F#/Cherry | Cherry RSS (MB) | OCaml RSS (MB) | F# RSS (MB) |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| RBMap | 0.571 | 0.349 | 3.430 | 0.61x | 6.00x | 62 | 53 | 108 |
+| BinaryTrees | 14.852 | 5.815 | 44.249 | 0.39x | 2.98x | 129 | 143 | 288 |
+| CFold | 0.237 | 0.209 | 1.317 | 0.88x | 5.56x | 14 | 20 | 88 |
+| NQueens | 2.130 | 7.128 | 12.698 | 3.35x | 5.96x | 127 | 183 | 369 |
+| Strings | 0.106 | 0.958 | 0.895 | 9.06x | 8.47x | 2 | 11 | 42 |
+| Closures | 0.597 | 0.523 | 0.713 | 0.88x | 1.19x | 1 | 7 | 41 |
+
+Cherry wins where values are reused in place (Strings, where `acc ^ x` appends to a unique string) or where many cells are shared and long-lived (NQueens, where OCaml's major GC keeps rescanning them). It loses where cells are allocated and freed at a high rate (BinaryTrees, RBMap). There the cost is glibc's `malloc`/`free`: about 60% of BinaryTrees' time is in libc. With jemalloc preloaded the time drops from 14.8 s to 8.9 s. A size-class free-list allocator in the runtime, like Lean's small-object allocator, is the obvious next step. The UTF-8 `String.strlen`/`String.sub` of the OCaml library are linear, so the Strings benchmark avoids them.
+
 ## Backend
 
 Cherry is a separate backend, `--custard_backend Cherry`, which shares most of its code with `--custard_backend C`. It is separate because it needs runtime support, extra includes, and generated auxiliary functions (inc/dec/mark functions, RTTI, `_boxed` wrappers, apply_n helpers). Since reference counting operations are inserted in a separate IR pass, the shared emitter needs only minor changes; the generated boilerplate is new code that does not affect the existing C pipeline. The runtime itself (cell header, inc/dec/mark primitives, integers, strings, closures) is not generated: it is the hand-written `ulib/c/cherry.h` (types and inline fast paths) and `ulib/c/cherry.c` (slow paths: big integer arithmetic, string operations), distributed with F\*. Generated units `#include "cherry.h"`; users add `$(fstar.exe --locate_lib)/ulib/c` to the include path and compile and link `cherry.c` with the program.
