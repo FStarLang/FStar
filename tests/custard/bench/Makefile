@@ -46,7 +46,7 @@ CHERRY_INC = $(shell $(FSTAR_EXE) --locate_lib)/ulib/c
 $(OUTPUT_DIR)/cherry/%.c: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CHERRY", $*)
 	@mkdir -p $(dir $@)
-	$(FSTAR) --codegen Custard --custard_backend Cherry \
+	$(FSTAR) --codegen Cherry \
 	  --custard_monomorphize_types true --custard_main $*.main $*.fst -o $@
 
 $(OUTPUT_DIR)/cherry/%.exe: $(OUTPUT_DIR)/cherry/%.c
@@ -56,7 +56,7 @@ $(OUTPUT_DIR)/cherry/%.exe: $(OUTPUT_DIR)/cherry/%.c
 $(OUTPUT_DIR)/ocaml/%.ml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD", $*)
 	@mkdir -p $(dir $@)
-	$(FSTAR) --codegen Custard --custard_main $*.main $*.fst -o $@
+	$(FSTAR) --codegen OCaml --custard_main $*.main $*.fst -o $@
 
 $(OUTPUT_DIR)/ocaml/%.exe: $(OUTPUT_DIR)/ocaml/%.ml
 	$(call msg, "OCAMLOPT", $*)
@@ -66,7 +66,7 @@ $(OUTPUT_DIR)/ocaml/%.exe: $(OUTPUT_DIR)/ocaml/%.ml
 $(OUTPUT_DIR)/fs/%.built: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-FS", $*)
 	@mkdir -p $(OUTPUT_DIR)/fs/$*
-	$(FSTAR) --codegen Custard --custard_backend FSharp \
+	$(FSTAR) --codegen FSharp \
 	  --custard_main $*.main $*.fst -o $(OUTPUT_DIR)/fs/$*/$*.fs
 	$(call msg, "DOTNET", $*)
 	$(Q)cd $(OUTPUT_DIR)/fs/$* && DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1 \

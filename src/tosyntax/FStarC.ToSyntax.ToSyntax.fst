@@ -1126,7 +1126,7 @@ and desugar_machine_integer env (repr:int) (base:int_base) (_sw_:(FStarC.Const.s
         | Tm_fvar fv ->
           let private_lid = lid_of_path (path_of_text private_intro_nm) range in
           let private_fv = S.lid_and_dd_as_fv private_lid fv.fv_qual in
-          {intro_term with n=Tm_fvar private_fv}
+          S.mk (Tm_fvar private_fv) intro_term.pos
         | _ ->
           failwith ("Unexpected non-fvar for " ^ intro_nm)
       end

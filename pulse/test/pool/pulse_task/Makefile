@@ -6,7 +6,6 @@ OTHERFLAGS += --include $(PULSE_ROOT)/share/pulse/examples
 
 CACHE_DIR  := _cache
 OUTPUT_DIR := _output
-CODEGEN    := Custard
 SRC        := .
 ROOTS      := Quicksort.Task.fst
 TAG        := pool
@@ -24,7 +23,7 @@ all: test
 $(OUTPUT_DIR)/Quicksort_Task.ml: $(ALL_CHECKED_FILES)
 	$(call msg, "CUSTARD", Quicksort.Task)
 	$(Q)mkdir -p $(OUTPUT_DIR)
-	$(Q)$(FSTAR) --already_cached '*,' --codegen Custard \
+	$(Q)$(FSTAR) --already_cached '*,' --codegen OCaml \
 	  --custard_entry Quicksort.Task.quicksort \
 	  $(CACHE_DIR)/Quicksort.Task.fst.checked -o $@
 

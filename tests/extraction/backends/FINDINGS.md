@@ -19,6 +19,13 @@ the same as generating code the backend compiler rejects: no usable output.
 
 Backends: **ml** = OCaml, **c** = C via Karamel, **rs** = Rust via Karamel.
 
+The **ml**, **c** and **rs** columns belonged to the legacy extraction
+pipeline (`FStarC.Extraction`, `--codegen krml`), which has since been
+removed; the Makefile now runs only the Custard columns below. The legacy
+table and the analysis of its bugs are kept as a record of what the suite
+found, and because several of the bugs are in karamel and krmllib, which the
+Custard krml columns still go through.
+
 ---
 
 ## Summary

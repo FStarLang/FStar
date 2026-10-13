@@ -1,4 +1,4 @@
-/* Runtime support for F* code extracted with --custard_backend Cherry.
+/* Runtime support for F* code extracted with --codegen Cherry.
    See cherry.md.  Generated units include this header; put the directory
    $(fstar.exe --locate_lib)/ulib/c on the C include path.
 

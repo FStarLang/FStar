@@ -1,7 +1,5 @@
 FSTAR_ROOT ?= ../..
 
-SUBDIRS += cmi
-
 # Cross-backend matrix: every language feature and specially-handled
 # primitive, extracted, compiled and *run* on OCaml, C and Rust. The C and
 # Rust columns need krml and rustc respectively; each is skipped (with a
@@ -62,7 +60,7 @@ all: $(OUTPUT_DIR)/NoExtractNormPerf.test
 # no unbounded integer to compute it with.
 $(OUTPUT_DIR)/NoExtractNorm.test: $(CACHE_DIR)/NoExtractNorm.fst.checked $(FSTAR_EXE)
 	@mkdir -p $(OUTPUT_DIR)
-	$(Q)$(FSTAR) $< --codegen Custard --custard_entry_module NoExtractNorm \
+	$(Q)$(FSTAR) $< --codegen OCaml --custard_entry_module NoExtractNorm \
 	  -o $(OUTPUT_DIR)/NoExtractNorm.nx.ml
 	@grep -q "noExtractNorm_kept" $(OUTPUT_DIR)/NoExtractNorm.nx.ml
 	@grep -q "noExtractNorm_dropped_to_krml" $(OUTPUT_DIR)/NoExtractNorm.nx.ml
@@ -78,7 +76,7 @@ $(OUTPUT_DIR)/NoExtractNorm.test: $(CACHE_DIR)/NoExtractNorm.fst.checked $(FSTAR
 # makes the test a test.
 $(OUTPUT_DIR)/NoExtractNormPerf.test: $(CACHE_DIR)/NoExtractNormPerf.fst.checked $(FSTAR_EXE)
 	@mkdir -p $(OUTPUT_DIR)
-	$(Q)timeout 60 $(FSTAR) $< --codegen Custard \
+	$(Q)timeout 60 $(FSTAR) $< --codegen OCaml \
 	  --custard_entry_module NoExtractNormPerf -o $(OUTPUT_DIR)/NoExtractNormPerf.ml
 	@touch $@
 
@@ -88,7 +86,7 @@ $(OUTPUT_DIR)/NoExtractNormPerf.test: $(CACHE_DIR)/NoExtractNormPerf.fst.checked
 # refuses (error 380, section 39.2), so there is no output to inspect.
 $(OUTPUT_DIR)/FloatLiteralInjection.rejected: $(CACHE_DIR)/FloatLiteralInjection.fst.checked $(FSTAR_EXE)
 	@mkdir -p $(OUTPUT_DIR)
-	@$(FSTAR) $< --codegen Custard --custard_backend C \
+	@$(FSTAR) $< --codegen C \
 	  --custard_entry_module FloatLiteralInjection \
 	  -o $(OUTPUT_DIR)/FloatLiteralInjection.c \
 	  >$(OUTPUT_DIR)/FloatLiteralInjection.out 2>&1 || true
@@ -100,7 +98,7 @@ $(OUTPUT_DIR)/FloatLiteralInjection.rejected: $(CACHE_DIR)/FloatLiteralInjection
 # uses FStar.Float32 and OCaml has no binary32 (error 368, section 38).
 $(OUTPUT_DIR)/FloatLiteralExtraction.test: $(CACHE_DIR)/FloatLiteralExtraction.fst.checked $(FSTAR_EXE)
 	@mkdir -p $(OUTPUT_DIR)
-	$(Q)$(FSTAR) $< --codegen Custard --custard_backend C \
+	$(Q)$(FSTAR) $< --codegen C \
 	  --custard_entry_module FloatLiteralExtraction \
 	  -o $(OUTPUT_DIR)/FloatLiteralExtraction.c
 	@grep -q -- "-1250.0" $(OUTPUT_DIR)/FloatLiteralExtraction.c
@@ -114,36 +112,3 @@ $(OUTPUT_DIR)/Div.out: $(OUTPUT_DIR)/Div.exe
 	  RC=$$? ;\
 	  if ! [ $$RC -eq 124 ]; then echo "ERROR: Div.exe terminated!?!?!"; false; fi
 	$(Q)touch $@
-
-# all: inline_let all_cmi Eta_expand.test Div.test ExtractAs.test
-
-# %.exe: %.fst
-#         $(FSTAR) --codegen OCaml $<
-#         $(OCAMLOPT) -package fstar.lib -linkpkg $(OUTPUT_DIR)/$(patsubst %.fst,%.ml,$<) -o $@
-
-# %.test: %.exe
-#         $(call msg,RUN,$<)
-#         $(Q)./$<
-#         $(Q)touch $@
-
-# Div.test: Div.exe
-#         $(call msg,TIMEOUT,$<)
-#         $(Q)timeout 1 ./Div.exe ; \
-#           RC=$$? ;\
-#           if ! [ $$RC -eq 124 ]; then echo "ERROR: Div.exe terminated!?!?!"; false; fi
-#         $(Q)touch $@
-
-# inline_let: InlineLet.fst
-#         $(FSTAR) --codegen OCaml InlineLet.fst
-#         egrep -A 10 test $(OUTPUT_DIR)/InlineLet.ml | grep -qs "17"
-#         @touch $@
-
-# all_cmi:
-#         +$(MAKE) -C cmi all
-
-# clean:
-#         rm -rf out
-#         rm -f *.exe
-#         rm -f *~
-#         rm -f *.exe *.test
-#         rm -f inline_let

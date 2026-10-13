@@ -1704,7 +1704,7 @@ let topological_dependences_of'
 
        To handle this, we compute the file list in several phases:
 
-        1. If --cmi and codegen is true, then we need to inline across
+        1. If codegen is set, then we need to inline across
            interface boundaries for modules M that are in the
            interfaces_needing_inlining list. So, we transform the
            dependence graph updating every interface dependence on
@@ -1773,8 +1773,7 @@ let phase1
     if !dbg
     then Format.print_string "==============Phase1==================\n";
     let widened = false in
-    if Options.cmi()
-    && for_extraction
+    if for_extraction
     then widen_deps interfaces_needing_inlining dep_graph file_system_map widened
     else widened, dep_graph
 
@@ -2299,61 +2298,10 @@ let print_raw (outc : out_channel) (deps:deps) =
     format.
 
      -- The dependences are among the .checked files
-
-     -- We also print dependences for producing .ml files from .checked files
-        This takes care of renaming A.B.C.fst to A_B_C.ml
   *)
 let print_full (outc : out_channel) (deps:deps) : ML unit =
     let pre_tag = Options.Ext.get "dep_pretag" in
     //let (Mk (deps, file_system_map, all_cmd_line_files, all_files)) = deps in
-    let sort_output_files (orig_output_file_map:HashTable.t string string) =
-        let order : ref (list string) = mk_ref [] in
-        let remaining_output_files = HashTable.copy orig_output_file_map in
-        let visited_other_modules = HashTable.create 41 in
-        let should_visit lc_module_name =
-            Some? (HashTable.try_find remaining_output_files lc_module_name)
-            || None? (HashTable.try_find visited_other_modules lc_module_name)
-        in
-        let mark_visiting lc_module_name =
-            let ml_file_opt = HashTable.try_find remaining_output_files lc_module_name in
-            HashTable.remove remaining_output_files lc_module_name;
-            HashTable.add visited_other_modules lc_module_name true;
-            ml_file_opt
-        in
-        let emit_output_file_opt ml_file_opt =
-            match ml_file_opt with
-            | None -> ()
-            | Some ml_file -> order := ml_file :: !order
-        in
-        let rec aux (ms: list string) : ML unit = match ms with
-            | [] -> ()
-            | lc_module_name::modules_to_extract ->
-              let visit_file file_opt =
-                match file_opt with
-                | None -> ()
-                | Some file_name ->
-                  match deps_try_find deps.dep_graph file_name with
-                  | None -> failwith (Format.fmt2 "Impossible: module %s: %s not found" lc_module_name file_name)
-                  | Some ({edges=immediate_deps}) ->
-                    let immediate_deps =
-                        List.map (fun x -> String.lowercase (module_name_of_dep x)) immediate_deps
-                    in
-                    aux immediate_deps
-              in
-              if should_visit lc_module_name then begin
-                 let ml_file_opt = mark_visiting lc_module_name in
-                 //visit all its dependences
-                 visit_file (implementation_of deps lc_module_name);
-                 visit_file (interface_of deps lc_module_name);
-                 //and then emit this one's ML file
-                 emit_output_file_opt ml_file_opt
-              end;
-              aux modules_to_extract
-        in
-        let all_extracted_modules = HashTable.keys orig_output_file_map in
-        aux all_extracted_modules;
-        List.rev !order
-    in
     let sb = FStarC.StringBuffer.create 10000 in
     let pr str = ignore <| FStarC.StringBuffer.add str sb in
     let norm_path s = replace_chars (replace_chars s '\\' "/") ' ' "\\ " in
@@ -2371,37 +2319,7 @@ let print_full (outc : out_channel) (deps:deps) : ML unit =
         pr "\n\n"
     in
     let keys = deps_keys deps.dep_graph in
-    let no_fstar_stubs_file (s:string) : ML string =
-      (* If the original filename begins with FStar.Stubs, then remove that,
-      consistent with what extraction will actually do.
-
-      This is VERY IMPORTANT for krml extraction, since we will generate
-      the krml file even if we're not extracting these files (they are stubs!)
-      per se. Make sure to run karamel tests (or a check-world) if you change this. *)
-      let s1 = "FStar.Stubs." in
-      let s2 = "FStar." in
-      let l1 = String.length s1 in
-      if String.length s >= l1 then
-        let pfx = String.substring s 0 l1 in
-        if pfx = s1 then
-          s2 ^ String.substring s l1 (String.length s - l1)
-        else
-          s
-      else
-        s
-    in
-    let output_file ext fst_file =
-        let basename = Option.must (check_and_strip_suffix (Filepath.basename fst_file)) in
-        let basename = no_fstar_stubs_file basename in
-        let ml_base_name = replace_chars basename '.' "_" in
-        Find.prepend_output_dir (ml_base_name ^ ext)
-    in
-    let output_fs_file   f = norm_path <| output_file ".fs" f in
-    let output_ml_file   f = norm_path <| output_file ".ml" f in
-    let output_krml_file f = norm_path <| output_file ".krml" f in
-    let output_cmx_file  f = norm_path <| output_file ".cmx" f in
     let cache_file       f = norm_path <| cache_file_name f in
-    let widened, dep_graph = phase1 deps.file_system_map deps.dep_graph deps.interfaces_with_inlining true in
     let all_checked_files =
         keys |>
         List.fold_left
@@ -2460,110 +2378,7 @@ let print_full (outc : out_channel) (deps:deps) : ML unit =
                       cache_file_name::all_checked_files)
                 else all_checked_files
             in
-
-            //And, if this is not an interface, we also print out the dependences among the .ml files
-            // excluding files in ulib, since these are packaged in fstar_lib.cmxa
-          let all_fst_files_dep, widened =
-              if Options.cmi()
-              then profile
-                   (fun () ->
-                     topological_dependences_of'
-                     deps.file_system_map
-                     (dep_graph_copy dep_graph)
-                     deps.interfaces_with_inlining
-                     [file_name]
-                     widened)
-                    "FStarC.Parser.Dep.topological_dependences_of_2"
-              else
-                   let maybe_widen_deps (f_deps:dependences) =
-                      List.map
-                        (fun dep ->
-                          file_of_dep_aux false deps.file_system_map deps.cmd_line_files dep)
-                        f_deps
-                   in
-                   let fst_files = maybe_widen_deps dep_node.edges in
-                   let fst_files_from_iface =
-                        match iface_deps with
-                        | None -> []
-                        | Some iface_deps -> maybe_widen_deps iface_deps
-                   in
-                   remove_dups_fast (fst_files @ fst_files_from_iface),
-                   false
-          in
-          let all_checked_fst_dep_files = all_fst_files_dep |> List.map cache_file in
-          let _ =
-            if is_implementation file_name
-            then begin
-              if Options.cmi()
-              && widened
-              then begin
-                     let mname = lowercase_module_name file_name in
-
-                     print_entry
-                        (output_ml_file file_name)
-                        (cache_file_name :: all_checked_fst_dep_files);
-
-                     if Options.should_extract mname Options.FSharp
-                     then print_entry
-                            (output_fs_file file_name)
-                            (cache_file_name :: all_checked_fst_dep_files);
-
-                     print_entry
-                        (output_krml_file file_name)
-                        (cache_file_name :: all_checked_fst_dep_files)
-              end
-              else begin
-                     let mname = lowercase_module_name file_name in
-
-                     print_entry
-                        (output_ml_file file_name)
-                        [cache_file_name];
-
-                     if Options.should_extract mname Options.FSharp
-                     then print_entry
-                            (output_fs_file file_name)
-                            [cache_file_name];
-
-                     print_entry
-                        (output_krml_file file_name)
-                        [cache_file_name]
-              end;
-              let cmx_files =
-                  let extracted_fst_files =
-                      all_fst_files_dep |>
-                      List.filter
-                        (fun df ->
-                           let mn_df = lowercase_module_name df in
-                           let mn_fn = lowercase_module_name file_name in
-                           mn_df <> mn_fn //avoid circular deps on f's own cmx
-                           && Options.should_extract mn_df Options.OCaml)
-                  in
-                  extracted_fst_files |> List.map output_cmx_file
-              in
-              if Options.should_extract (lowercase_module_name file_name) Options.OCaml
-              then
-                print_entry
-                    (output_cmx_file file_name)
-                    (output_ml_file file_name :: cmx_files)
-
-            end
-            else if not(has_implementation deps.file_system_map (lowercase_module_name file_name))
-                 && is_interface file_name
-            then begin
-                // .krml files can be produced using just an interface, unlike .ml files
-                if Options.cmi()
-                && (widened || true)
-                then
-                    print_entry
-                        (output_krml_file file_name)
-                        (cache_file_name :: all_checked_fst_dep_files)
-                else
-                   print_entry
-                    (output_krml_file file_name)
-                    [cache_file_name]
-            end
-          in
-          all_checked_files
+            all_checked_files
         in
         profile process_one_key "FStarC.Parser.Dep.process_one_key")
         []
@@ -2575,33 +2390,6 @@ let print_full (outc : out_channel) (deps:deps) : ML unit =
     let all_fsti_files =
       keys |> List.filter is_interface
            |> Util.sort_with String.compare
-    in
-    let all_ml_files =
-        let ml_file_map = HashTable.create 41 in
-        all_fst_files
-        |> List.iter (fun fst_file ->
-                       let mname = lowercase_module_name fst_file in
-                       if Options.should_extract mname Options.OCaml
-                       then HashTable.add ml_file_map mname (output_ml_file fst_file));
-        sort_output_files ml_file_map
-    in
-    let all_fs_files =
-        let fs_file_map = HashTable.create 41 in
-        all_fst_files
-        |> List.iter (fun fst_file ->
-                       let mname = lowercase_module_name fst_file in
-                       if Options.should_extract mname Options.FSharp
-                       then HashTable.add fs_file_map mname (output_fs_file fst_file));
-        sort_output_files fs_file_map
-    in
-    let all_krml_files =
-        let krml_file_map = HashTable.create 41 in
-        keys
-        |> List.iter (fun fst_file ->
-                       let mname = lowercase_module_name fst_file in
-                       if Options.should_extract mname Options.Krml
-                       then HashTable.add krml_file_map mname (output_krml_file fst_file));
-        sort_output_files krml_file_map
     in
     all_fsti_files
     |> List.iter
@@ -2617,17 +2405,14 @@ let print_full (outc : out_channel) (deps:deps) : ML unit =
     print_all "ALL_FST_FILES" all_fst_files;
     print_all "ALL_FSTI_FILES" all_fsti_files;
     print_all "ALL_CHECKED_FILES" all_checked_files;
-    print_all "ALL_FS_FILES" all_fs_files;
-    print_all "ALL_ML_FILES" all_ml_files;
-    print_all "ALL_KRML_FILES" all_krml_files;
 
     FStarC.StringBuffer.output_channel outc sb
 
-(** Print the dependencies in dune format.
-    When --output_ext is set, controls what targets are emitted:
-    - Extensions ending in "checked": build/check rules (.fst → .fst.checked)
-    - Other extensions (ml, krml): extraction rules (.fst.checked → .ml)
-    When --output_ext is not set: mixed rules (backward compat).
+(** Print the dependencies in dune format: one rule per file, checking it.
+    --output_ext names the target (it must end in "checked"); without it the
+    target is the file's .checked in the current directory.  Extraction is
+    not per-module, so it is not part of these rules: a project adds one
+    rule running --codegen on its entry point.
   *)
 let print_dune (outc : out_channel) (deps:deps) : ML unit =
     let sb = FStarC.StringBuffer.create 10000 in
@@ -2635,12 +2420,13 @@ let print_dune (outc : out_channel) (deps:deps) : ML unit =
     
     let output_ext = Options.output_ext () in
     
-    (* Is this an extraction phase? (output-ext is ml, krml, etc.) *)
-    let is_extract_phase =
-        match output_ext with
-        | Some ext -> not (BU.ends_with ext "checked")
-        | None -> false
-    in
+    (match output_ext with
+     | Some ext when not (BU.ends_with ext "checked") ->
+       raise_error0 Errors.Fatal_OptionsNotCompatible [
+         Errors.Msg.text (Format.fmt1 "--output_ext %s: with --dep dune, the extension must end in \"checked\"." ext);
+         Errors.Msg.text "Extraction is not per-module; add a rule running --codegen on the program's entry point."
+       ]
+     | _ -> ());
     
     (* Replace the F* source suffix (.fst/.fsti) with a new extension *)
     let replace_suffix (f:string) (new_ext:string) : ML string =
@@ -2692,30 +2478,10 @@ let print_dune (outc : out_channel) (deps:deps) : ML unit =
         Filepath.basename f
     in
     
-    (* Compute the extraction target for a source file, if codegen is set.
-       Used only in default mixed mode (no --output_ext). *)
-    let extraction_target (source : string) : ML (option string) =
-        match Options.codegen () with
-        | Some Options.OCaml ->
-            let basename = Option.must (check_and_strip_suffix (Filepath.basename source)) in
-            let ml_base_name = replace_chars basename '.' "_" in
-            if is_implementation source then Some (ml_base_name ^ ".ml")
-            else None
-        | Some Options.Krml ->
-            let basename = Option.must (check_and_strip_suffix (Filepath.basename source)) in
-            let ml_base_name = replace_chars basename '.' "_" in
-            if is_implementation source then Some (ml_base_name ^ ".krml")
-            else None
-        | _ -> None
-    in
-    
-    (* Print a rule for default mixed mode: checking and optionally extracting *)
+    (* Print a rule for default mode: checking into the current directory *)
     let print_mixed_rule (target : string) (source : string) (all_deps : list string) : ML unit =
-        let extra_target = extraction_target source in
         pr "(rule\n";
-        pr " (targets "; pr target;
-        (match extra_target with | Some t -> pr " "; pr t | None -> ());
-        pr ")\n";
+        pr " (targets "; pr target; pr ")\n";
         pr " (deps"; 
         all_deps |> List.iter (fun f -> pr " "; pr (format_dep f));
         pr ")\n";
@@ -2740,44 +2506,12 @@ let print_dune (outc : out_channel) (deps:deps) : ML unit =
         pr (Filepath.basename source); pr ")))\n\n"
     in
     
-    (* Print a rule for the extraction phase: checked → ml/krml *)
-    let print_extract_rule (source : string) (all_deps : list string) : ML unit =
-        let ext = Option.must output_ext in
-        let target = replace_suffix source ext in
-        (* Convert all source deps to their checked versions *)
-        let checked_deps =
-            (source :: all_deps) |> List.map (fun f ->
-                let base = Filepath.basename f in
-                if BU.ends_with base ".checked"
-                then base
-                else local_cache_file f
-            )
-        in
-        (* Deps: source file + checked source + checked transitive deps *)
-        let all_dep_strs = format_dep source :: checked_deps in
-        pr "(rule\n";
-        pr " (targets "; pr target; pr ")\n";
-        pr " (deps";
-        (remove_dups_fast all_dep_strs) |> List.iter (fun f -> pr " "; pr f);
-        pr ")\n";
-        pr " (action (run %{env:FSTAR_EXE=fstar.exe}";
-        pr forwarded_flags;
-        pr " --include . --already_cached \"*,\" -c ";
-        pr (Filepath.basename source); pr ")))\n\n"
-    in
-    
-    let widened, dep_graph = phase1 deps.file_system_map deps.dep_graph deps.interfaces_with_inlining true in
-    
     (* Collect all target files *)
     let all_target_files =
         keys |>
         List.fold_left
         (fun all_target_files file_name ->
           let process_one_key () =
-            (* In extract phase, skip non-implementation files *)
-            if is_extract_phase && not (is_implementation file_name) then
-              all_target_files
-            else begin
             let dep_node = deps_try_find deps.dep_graph file_name |> Option.must in
             let iface_fn, iface_deps =
                 if is_interface file_name
@@ -2841,9 +2575,7 @@ let print_dune (outc : out_channel) (deps:deps) : ML unit =
             let all_target_files =
                 if not (Options.should_be_already_cached (module_name_of_file file_name))
                 then begin
-                  if is_extract_phase then
-                    print_extract_rule file_name files
-                  else if Some? output_ext then
+                  if Some? output_ext then
                     print_build_rule file_name (file_name :: files)
                   else
                     print_mixed_rule (local_cache_file file_name) file_name (file_name :: files);
@@ -2853,7 +2585,6 @@ let print_dune (outc : out_channel) (deps:deps) : ML unit =
             in
 
             all_target_files
-            end
           in
           profile process_one_key "FStarC.Parser.Dep.print_dune.process_one_key")
           []

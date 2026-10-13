@@ -360,8 +360,10 @@ let result a = context -> cache_t -> ML (__result (success a))
 
 let equal_term_for_hash t1 t2 =
   FStarC.Profiling.profile (fun _ -> Hash.equal_term t1 t2) None "FStarC.TypeChecker.Core.equal_term_for_hash"
+(* A fast path for relating terms, so up to delayed substitutions and solved
+   uvars: unlike the cache keys, these terms are not deeply compressed. *)
 let equal_term t1 t2 =
-  FStarC.Profiling.profile (fun _ -> Hash.equal_term t1 t2) None "FStarC.TypeChecker.Core.equal_term"
+  FStarC.Profiling.profile (fun _ -> Hash.equal_term_upto_compress t1 t2) None "FStarC.TypeChecker.Core.equal_term"
 let table : tc_table = {
   table = HashTable.create 1048576; //2^20
   guard_table = HashTable.create 1048576; //2^20
@@ -735,19 +737,26 @@ let insert_guard (g:env) (guard:typ)
   = let! cache = get_cache () in
     put_cache {cache with guard_map = FStarC.Syntax.Hash.term_map_add guard { ge_gamma = g.tcenv.gamma } cache.guard_map }
 
+(* The cache is keyed by syntactic equality (FStarC.Syntax.Hash.equal_term),
+   which does not look through delayed substitutions or solved uvars, so the
+   keys are deeply compressed. *)
+let cache_key (t:term) : ML term = FStarC.Syntax.Compress.deep_compress true true t
+
 let guard (g:env) (guard:typ)
   : result unit
-  = match! raw_lookup_guard guard with
-    | Some ge ->
-      if ge.ge_gamma `context_included` g.tcenv.gamma
-      then return () //cache hit 
-      else (
-        insert_guard g guard ;!
-        return_with_guard () (Some guard)
-      )
-    | _ ->
-      insert_guard g guard ;!
-      return_with_guard () (Some guard)
+  = fun ctx cache ->
+    let guard = cache_key guard in
+    (match! raw_lookup_guard guard with
+     | Some ge ->
+       if ge.ge_gamma `context_included` g.tcenv.gamma
+       then return () //cache hit 
+       else (
+         insert_guard g guard ;!
+         return_with_guard () (Some guard)
+       )
+     | _ ->
+       insert_guard g guard ;!
+       return_with_guard () (Some guard)) ctx cache
 
 
 let with_binders (#a:Type) (initial_env:env) (xs:binders) (us:universes) (f:result a)
@@ -950,7 +959,7 @@ instance showable_side = {
 
 
 let boolean_negation_simp b =
-  if Hash.equal_term b U.exp_false_bool
+  if equal_term b U.exp_false_bool
   then None
   else Some (U.mk_boolean_negation b)
 
@@ -970,7 +979,7 @@ let combine_path_and_branch_condition (path_condition:term)
         match branch_condition with
         | None -> U.exp_false_bool
         | Some bc ->
-          if Hash.equal_term path_condition U.exp_true_bool
+          if equal_term path_condition U.exp_true_bool
           then U.mk_boolean_negation bc
           else U.mk_and path_condition (U.mk_boolean_negation bc)
     in
@@ -1474,11 +1483,12 @@ and is_prop (g:env) (t:term) : ML (result unit) =
 
 and memo_check (g:env) (e:term)
   : ML (result (tot_or_ghost & typ))
-  = let check_then_memo g e =
+  = let key = cache_key e in
+    let check_then_memo g e =
       with_guard (do_check_and_promote g e)
       (function
       | Inl (res, guard) ->
-        insert g e (res, guard);!
+        insert g key (res, guard);!
         return_with_guard res guard
 
       | Inr err ->
@@ -1487,7 +1497,7 @@ and memo_check (g:env) (e:term)
     if not g.should_read_cache
     then check_then_memo g e
     else (
-      with_guard (lookup g e)
+      with_guard (lookup g key)
       (function
       | Inr _ ->
         check_then_memo g e

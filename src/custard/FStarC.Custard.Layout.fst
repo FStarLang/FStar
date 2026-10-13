@@ -500,7 +500,7 @@ let rec rw_expr (t:tbl) (x:expr) : ML expr =
   let ty = resolve t 100 x.ty in
   let x = { x with ty = ty } in
   match x.e with
-  | EConst _ | EVar _ | EAny | EAbort _ -> x
+  | EConst _ | EVar _ | EAny | EAbort _ | EUnreachable _ -> x
   | EQual (n, cs) -> { x with e = EQual (n, cs |> List.map (resolve t 100)) }
   | ELet (v, c, e1, e2) ->
     { x with e = ELet (v, resolve t 100 c, rw_expr t e1, rw_expr t e2) }

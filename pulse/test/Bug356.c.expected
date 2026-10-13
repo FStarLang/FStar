@@ -2,13 +2,19 @@
 #include "Bug356.h"
 
 uint32_t Bug356_test(bool b) {
-  (void)b;
-  return 1;
+  if (b) return 1;
+  else {
+    /* Prims.admit */
+    abort();
+  }
 }
 
 uint32_t Bug356_test_final_admit(bool b) {
-  (void)b;
-  return 1;
+  if (b) return 1;
+  else {
+    /* Prims.admit */
+    abort();
+  }
 }
 
 void Bug356_test_unit_admit(bool x) {

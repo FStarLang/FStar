@@ -1049,7 +1049,7 @@ and readback_comp cfg (c: comp) : ML S.comp =
   let c' =
     match c with
     | Comp ctyp -> S.Comp (readback_comp_typ cfg ctyp)
-   in S.mk c' Range.dummyRange
+   in S.mk_comp' c' Range.dummyRange
 
 and translate_comp_typ cfg bs (c:S.comp_typ) : ML comp_typ =
   let { S.effect_name = effect_name
