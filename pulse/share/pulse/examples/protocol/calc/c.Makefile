@@ -1,4 +1,4 @@
-# Extraction of the calc server to C. Assumes everything is already verified
+# Custard extraction of the calc server to C. Assumes everything is already verified
 # (see Makefile). Uses a separate makefile since the extraction roots differ
 # from the verification roots.
 
@@ -7,10 +7,8 @@ SRC=.
 CACHE_DIR=_cache
 OTHERFLAGS += --include spec --include impl
 OUTPUT_DIR=_output
-CODEGEN=krml
 TAG=calcc
 ROOTS=impl/Calc.Server.EndpointRunner.fst
-DEPFLAGS=--extract '* -FStar.Tactics -FStar.Reflection -Pulse -PulseCore +Pulse.Lib.Protocol +Pulse.Lib.TCP'
 include $(PULSE_ROOT)/mk/boot.mk
 
 .DEFAULT_GOAL := myall
@@ -26,7 +24,24 @@ myall: test
 
 extract: $(OUTPUT_DIR)/.extract.touch
 
-$(OUTPUT_DIR)/.extract.touch: $(ALL_KRML_FILES)
+# Custard (F*'s whole-program extractor) reads the checked files and extracts
+# the functions test_main.c call, plus everything they reach.  --custard_split
+# keeps one karamel module per F* module so that the bundles below can name
+# them.  Pulse.Lib.TCP's abstract types are defined by the C runtime
+# (Pulse_Lib_TCP_runtime.h), so no declaration is emitted for them.
+CUSTARD_ENTRIES = \
+  Calc.Server.EndpointRunner.run_channel_endpoint
+CUSTARD_EXTERN_TYPES = Pulse.Lib.TCP.channel Pulse.Lib.TCP.listener
+
+$(OUTPUT_DIR)/Custard.krml: $(ALL_CHECKED_FILES)
+	$(call msg, "CUSTARD", "calc")
+	mkdir -p $(OUTPUT_DIR)
+	$(FSTAR) --already_cached ',*' --codegen KrmlC --custard_split \
+	  $(addprefix --custard_entry ,$(CUSTARD_ENTRIES)) \
+	  $(addprefix --custard_extern_type ,$(CUSTARD_EXTERN_TYPES)) \
+	  impl/Calc.Server.EndpointRunner.fst
+
+$(OUTPUT_DIR)/.extract.touch: $(OUTPUT_DIR)/Custard.krml
 	$(call msg, "KRML")
 	$(KRML) -skip-compilation -warn-error @4+9 -tmpdir $(OUTPUT_DIR) \
 	  -library Pulse.Lib.TCP \

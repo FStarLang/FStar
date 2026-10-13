@@ -45,13 +45,17 @@ is in [`share/pulse/runtime`](../../../../share/pulse/runtime).
 
 ## Extraction
 Most modules are specifications or generic code meant to be specialised and
-extracted together with their clients. When extracting a client to C with
-KaRaMeL:
+extracted together with their clients. Extract a client with Custard
+(`--codegen KrmlC`), rooted at the functions your C code calls
+(`--custard_entry`); Custard pulls in whatever library code they reach.
+Then:
 
-* treat the externs as libraries:
+* declare the TCP runtime's abstract types as external:
+  `--custard_extern_type Pulse.Lib.TCP.channel --custard_extern_type Pulse.Lib.TCP.listener`;
+* treat the externs as libraries in KaRaMeL:
   `-library Pulse.Lib.TCP,Pulse.Lib.Memmove -add-include '"Pulse_Lib_TCP_runtime.h"'`;
 * compile and link `Pulse_Lib_TCP_runtime.c`, `pulse_tcp_sockets.c` and
-  `Pulse_Lib_Memmove_runtime.c` from `share/pulse/runtime`;
-* if your `--extract` setting excludes `Pulse`, add these modules back
-  explicitly, for example
-  `+Pulse.Lib.BufferedTCP,+Pulse.Lib.BufferedTCP.Internal,+Pulse.Lib.BufferedStream,+Pulse.Lib.Protocol`.
+  `Pulse_Lib_Memmove_runtime.c` from `share/pulse/runtime`.
+
+The `c.Makefile`s of the examples in `share/pulse/examples/protocol` show the
+whole pipeline.
