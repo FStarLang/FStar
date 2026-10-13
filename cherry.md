@@ -209,18 +209,18 @@ The programs:
 - Strings: number formatting, and joining by `acc ^ x`.
 - Closures: map, filter and fold over closures.
 
-First results (72-core x86-64; median of 5 runs, peak RSS):
+Results on a 72-core x86-64 machine: median of 5 runs, with the ratio to OCaml (lower is faster), and peak RSS in MB. `make bench` also runs Cherry's executables with mimalloc (3.2) and jemalloc (5.3) through `LD_PRELOAD` when they are installed.
 
-| Benchmark | Cherry (s) | OCaml (s) | F# (s) | OCaml/Cherry | F#/Cherry | Cherry RSS (MB) | OCaml RSS (MB) | F# RSS (MB) |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| RBMap | 0.571 | 0.349 | 3.430 | 0.61x | 6.00x | 62 | 53 | 108 |
-| BinaryTrees | 14.852 | 5.815 | 44.249 | 0.39x | 2.98x | 129 | 143 | 288 |
-| CFold | 0.237 | 0.209 | 1.317 | 0.88x | 5.56x | 14 | 20 | 88 |
-| NQueens | 2.130 | 7.128 | 12.698 | 3.35x | 5.96x | 127 | 183 | 369 |
-| Strings | 0.106 | 0.958 | 0.895 | 9.06x | 8.47x | 2 | 11 | 42 |
-| Closures | 0.597 | 0.523 | 0.713 | 0.88x | 1.19x | 1 | 7 | 41 |
+| Benchmark | Cherry (s) | Cherry (mimalloc) (s) | Cherry (jemalloc) (s) | OCaml (s) | F# (s) | Cherry RSS | Cherry (mimalloc) RSS | Cherry (jemalloc) RSS | OCaml RSS | F# RSS |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| RBMap | 0.567 (1.69x) | 0.475 (1.41x) | 0.472 (1.41x) | 0.336 | 3.249 (9.68x) | 62 | 48 | 51 | 53 | 108 |
+| BinaryTrees | 14.279 (2.48x) | 6.364 (1.10x) | 8.991 (1.56x) | 5.762 | 45.059 (7.82x) | 129 | 161 | 151 | 143 | 290 |
+| CFold | 0.241 (1.11x) | 0.149 (0.69x) | 0.206 (0.95x) | 0.218 | 1.314 (6.04x) | 14 | 14 | 16 | 20 | 87 |
+| NQueens | 2.165 (0.30x) | 1.949 (0.27x) | 1.968 (0.28x) | 7.109 | 12.430 (1.75x) | 127 | 130 | 134 | 183 | 370 |
+| Strings | 0.105 (0.11x) | 0.079 (0.08x) | 0.101 (0.11x) | 0.942 | 0.889 (0.94x) | 2 | 7 | 7 | 11 | 42 |
+| Closures | 0.592 (1.13x) | 0.470 (0.90x) | 0.520 (1.00x) | 0.522 | 0.699 (1.34x) | 1 | 7 | 7 | 7 | 40 |
 
-Cherry wins where values are reused in place (Strings, where `acc ^ x` appends to a unique string) or where many cells are shared and long-lived (NQueens, where OCaml's major GC keeps rescanning them). It loses where cells are allocated and freed at a high rate (BinaryTrees, RBMap). There the cost is glibc's `malloc`/`free`: about 60% of BinaryTrees' time is in libc. With jemalloc preloaded the time drops from 14.8 s to 8.9 s. A size-class free-list allocator in the runtime, like Lean's small-object allocator, is the obvious next step. The UTF-8 `String.strlen`/`String.sub` of the OCaml library are linear, so the Strings benchmark avoids them.
+Cherry wins where values are reused in place (Strings, where `acc ^ x` appends to a unique string) or where many cells are shared and long-lived (NQueens, where OCaml's major GC keeps rescanning them). Where cells are allocated and freed at a high rate (BinaryTrees, RBMap), the cost is mostly the allocator. With glibc's `malloc`, about 60% of BinaryTrees' time is in libc and it takes 2.5x OCaml's time; with mimalloc it takes 1.1x. mimalloc is the best of the three everywhere, so the runtime should link it or a size-class free-list allocator of its own, like Lean's small-object allocator. RBMap stays 1.4x slower than OCaml with every allocator. Its inserts rebuild a path whose old cells are freed one by one, and they do not reuse them in place yet, because the balance functions match nested cells. The UTF-8 `String.strlen`/`String.sub` of the OCaml library are linear, so the Strings benchmark avoids them.
 
 ## Backend
 

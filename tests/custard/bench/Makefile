@@ -3,7 +3,8 @@
 #
 #   make            build every benchmark with every backend
 #   make bench      build, then time them (RUNS=5 runs each; median time
-#                   and peak RSS), printing a markdown table
+#                   and peak RSS), printing a markdown table; Cherry also
+#                   runs with mimalloc and jemalloc where installed
 #
 # BACKENDS selects a subset (cherry ocaml fsharp); F# is left out when no
 # .NET 10 SDK is installed.  Each program checks its own result and exits
@@ -19,6 +20,17 @@ BACKENDS ?= cherry ocaml
 else
 BACKENDS ?= cherry ocaml fsharp
 endif
+
+# Cherry is also run with these mallocs, when they are installed, through
+# LD_PRELOAD: the runtime allocates every cell with malloc, so the allocator
+# is a large part of its time.
+LIBDIRS = /usr/lib/x86_64-linux-gnu /usr/lib64 /usr/lib /usr/local/lib
+MIMALLOC ?= $(firstword $(wildcard $(addsuffix /libmimalloc.so*,$(LIBDIRS))))
+JEMALLOC ?= $(firstword $(wildcard $(addsuffix /libjemalloc.so*,$(LIBDIRS))))
+PRELOADS = $(if $(MIMALLOC),mimalloc=$(MIMALLOC)) $(if $(JEMALLOC),jemalloc=$(JEMALLOC))
+RUN_BACKENDS ?= $(filter cherry,$(BACKENDS)) \
+  $(if $(filter cherry,$(BACKENDS)),$(foreach p,$(PRELOADS),cherry+$(firstword $(subst =, ,$(p))))) \
+  $(filter-out cherry,$(BACKENDS))
 
 RUNS ?= 5
 comma := ,
@@ -74,7 +86,8 @@ all: build
 
 bench: build
 	$(Q)python3 bench.py --runs $(RUNS) --outdir $(OUTPUT_DIR) \
-	  --backends $(subst $(space),$(comma),$(strip $(BACKENDS))) $(BENCHES)
+	  --backends $(subst $(space),$(comma),$(strip $(RUN_BACKENDS))) \
+	  $(foreach p,$(PRELOADS),--preload $(p)) $(BENCHES)
 
 clean:
 	rm -rf $(OUTPUT_DIR) $(CACHE_DIR) .depend
