@@ -3466,6 +3466,14 @@ realization's own unmangled name qualified by the support module —
 is fixed outside F\*, so `Realized` also implies no erasure, no newtype
 collapse and no inline-field expansion.
 
+Which modules are realized is decided as it was for ML extraction: on the
+OCaml and F\# backends, a module that has an interface and no implementation
+on the include path is realized (`Builtins.is_interface_only_module`), so a
+new one needs no change to the compiler.  `Builtins.realized_modules` lists
+only the realized modules that also have an F\* implementation (`Prims`,
+`FStar.Pervasives`, the machine integers, ...) and the `FStar.Stubs.*`
+modules reached under an `FStarC` name that has no interface of its own.
+
 The record recovery of §5.5 still applies, but not unconditionally: for a
 realized type the question is not what Custard would choose but what the
 *source* said, because that is what a realization mirrors.
