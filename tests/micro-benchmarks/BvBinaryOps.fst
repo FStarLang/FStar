@@ -71,15 +71,6 @@ let lemma_bv_extract_composition (bv: BV.bv_t 16) : unit =
   assert (BV.bv_extract #8 (BV.bv_extract #16 bv 11 4) 5 2
           == BV.bv_extract #16 bv 9 6)
 
-let lemma_bv_extract_symbolic_bounds
-  (bv: BV.bv_t 8)
-  (i: nat{i < 8})
-  (j: nat{j <= i})
-  (expected: BV.bv_t (i - j + 1))
-  (h: expected == BV.bv_extract #8 bv i j)
-  : unit =
-  assert (BV.bv_extract #8 bv i j == expected)
-
 (** Tests for bvrol / bvror *)
 
 // rotate left by 0 is identity

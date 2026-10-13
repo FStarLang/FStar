@@ -361,3 +361,4 @@ val int2bv_mul':
     #z: bv_t n ->
     squash (bvmul' #n (int2bv #n x) (int2bv #n y) == z)
   -> Lemma (int2bv #n (mul_mod #n x y) == z)
+

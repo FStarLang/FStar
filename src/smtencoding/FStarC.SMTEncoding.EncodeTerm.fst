@@ -543,8 +543,8 @@ and encode_arith_term env head args_e : ML _ =
       in
       decls@mk_decls "" sz_key (t_decls@[typing_inversion]) []
     in
-    (* Width-changing operators have non-value arguments that are not encoded
-       as SMT terms. *)
+    (* The size, extension, and bound arguments (#n, #m, i, j) are consumed
+       as constants rather than encoded as terms. *)
     let arg_tms, ext_sz, extract_bounds =
         match head.n, args_e with
         | Tm_fvar fv, [_;(sz_arg, _);_] when
