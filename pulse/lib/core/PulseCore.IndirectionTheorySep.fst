@@ -1119,6 +1119,8 @@ let read_inv_age f' (is: mem { level_ is > 0 /\ iname_ok f' is }) (w: premem { 1
   let l = indefinite_description fun l -> on l (later p) w in
   assert p (age1_ (set_loc_ w l)); reveal_slprop_ok (); assert p (age1_ (age1_ (set_loc_ w l)));
   eq_at_elim (level_ is - 1) p p' (age1_ (age1_ (set_loc_ w l)));
+  set_loc__age1 w l;
+  assert on l (later p') (age1_ w);
   assert_norm (somewhere (later p') (age1_ w) == exists l. on l (later p') (age1_ w));
   assert somewhere (later p') (age1_ w);
   assert read_inv f' (age1 is) (age1_ w)
