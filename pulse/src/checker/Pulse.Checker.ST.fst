@@ -69,6 +69,18 @@ let check
     let allow_ambiguous = should_allow_ambiguous e in
     let (| g', ctxt', k |) = prove (RU.range_of_term e) g ctxt (comp_pre c0) allow_ambiguous in
 
+    (* Last resort before reporting unresolved holes: a hole at a product type
+       is solved by neither the prover (which needs a `pure` goal mentioning it)
+       nor F*'s uni-valued rule (which only handles `unit`). Refining it to a
+       pair of fresh holes is structural, not a guess, and it lets the
+       uni-valued rule reach components that *are* uniquely determined, e.g. a
+       hole at `unit & unit`. Firing only here means nothing that already
+       verifies can regress: the alternative at this point is an error. *)
+    if not (RU.no_uvars_in_term e) then begin
+      let leaves = Pulse.Eta.eta_expand_term_uvars g e in
+      RU.try_solve_single_valued_implicits (elab_env g) leaves
+    end;
+
     if not (RU.no_uvars_in_term e) then
       fail_doc g (Some range) [
         text "Unexpected unresolved uvars in the term:";
