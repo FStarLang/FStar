@@ -1603,13 +1603,11 @@ let builtin_rule (l:Ident.lident) : ML rule =
            else if ns = ["FStar"; "List"; "Tot"; "Base"] &&
                    Some? (list_coercion_rule id)
            then list_coercion_rule id
-           (* [pulse_rule] first: [Pulse.Lib.Dv] is interface-only, and so
-              realized, but [while_] is still a builtin. *)
-           else (match pulse_rule ns id with
-                 | Some r -> Some r
-                 | None ->
-                   if is_realized_module ns then Some Rule_realized
-                   else None))
+           (* A rule for one name beats the module-wide [Rule_realized], as
+              for every family above. *)
+           else if Some? (pulse_rule ns id) then pulse_rule ns id
+           else if is_realized_module ns then Some Rule_realized
+           else None)
       | [] -> None
   in
   match r with
