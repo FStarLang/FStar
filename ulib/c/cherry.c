@@ -401,7 +401,7 @@ cherry_string cherry_str_append(cherry_string a, cherry_string b) {
   cherry_string_cell *x = (cherry_string_cell *)a;
   const cherry_string_cell *y = (const cherry_string_cell *)b;
   size_t ys = y->size, n = x->size + ys;
-  if (x->hdr.rc == 1) {
+  if (cherry_is_unique(&x->hdr)) {
     /* Functional but in place: nobody else can see [a] -- except [b], which
        may be [a] itself, borrowed, and moves with it. */
     bool same = x == y;
@@ -455,6 +455,9 @@ uint32_t cherry_str_index(cherry_string s, cherry_int i) {
   if (off >= c->size) abort();
   const unsigned char *p = (const unsigned char *)c->data + off;
   if (p[0] < 0x80) return p[0];
+  /* A sequence cut short by the end of the string is not read past it. */
+  size_t len = p[0] < 0xE0 ? 2 : p[0] < 0xF0 ? 3 : 4;
+  if (len > c->size - off) return 0xFFFD;
   if (p[0] < 0xE0) return ((uint32_t)(p[0] & 0x1F) << 6) | (p[1] & 0x3F);
   if (p[0] < 0xF0)
     return ((uint32_t)(p[0] & 0x0F) << 12) | ((uint32_t)(p[1] & 0x3F) << 6) | (p[2] & 0x3F);

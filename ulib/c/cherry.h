@@ -37,18 +37,38 @@ static inline uint32_t cherry_tag(const cherry_obj *o) {
   return cherry_is_scalar(o) ? (uint32_t)((uintptr_t)o >> 1) : o->tag;
 }
 
+/* The count of a shared cell is updated by other threads at the same time,
+   so every access to a count is atomic.  Relaxed loads and stores are plain
+   moves on x86 and ARM; they are only there to keep the program free of
+   data races in the C11 sense (and quiet under ThreadSanitizer).  A count
+   that is positive is this thread's alone, and stays so until this thread
+   marks the cell, so it is read and written without read-modify-write. */
+static inline int32_t cherry_rc_load(const cherry_obj *o) {
+  return __atomic_load_n(&o->rc, __ATOMIC_RELAXED);
+}
+
+static inline void cherry_rc_store(cherry_obj *o, int32_t rc) {
+  __atomic_store_n(&o->rc, rc, __ATOMIC_RELAXED);
+}
+
+/* Whether this thread holds the only reference, so that the cell can be
+   updated or reused in place.  A shared or persistent cell never is. */
+static inline bool cherry_is_unique(const cherry_obj *o) {
+  return cherry_rc_load(o) == 1;
+}
+
 static inline cherry_obj *cherry_alloc(size_t size, uint32_t tag) {
   cherry_obj *o = (cherry_obj *)malloc(size);
   if (o == NULL) abort();
-  o->rc = 1;
+  cherry_rc_store(o, 1);
   o->tag = tag;
   return o;
 }
 
 static inline void cherry_inc(cherry_obj *o) {
   if (cherry_is_scalar(o)) return;
-  int32_t rc = o->rc;
-  if (rc > 0) o->rc = rc + 1;
+  int32_t rc = cherry_rc_load(o);
+  if (rc > 0) cherry_rc_store(o, rc + 1);
   else if (rc < 0) __atomic_fetch_sub(&o->rc, 1, __ATOMIC_RELAXED);
 }
 
@@ -56,9 +76,9 @@ static inline void cherry_inc(cherry_obj *o) {
    freed. */
 static inline bool cherry_dec_ref(cherry_obj *o) {
   if (cherry_is_scalar(o)) return false;
-  int32_t rc = o->rc;
+  int32_t rc = cherry_rc_load(o);
   if (rc == 1) return true;
-  if (rc > 1) { o->rc = rc - 1; return false; }
+  if (rc > 1) { cherry_rc_store(o, rc - 1); return false; }
   if (rc == 0) return false;
   return __atomic_add_fetch(&o->rc, 1, __ATOMIC_ACQ_REL) == 0;
 }
@@ -71,12 +91,16 @@ static inline bool cherry_dec_ref(cherry_obj *o) {
 #define CHERRY_PERSIST 1
 
 /* Mark a cell; true when that changed it, so that its fields have to be
-   marked too. */
+   marked too.  Only a cell of this thread's own (a positive count) changes.
+   A shared one is left shared even when persisting: other threads may be
+   counting it already, so zeroing its count would race with them.  It is
+   kept alive all the same, by the reference the global never drops, and
+   what it reaches is already shared. */
 static inline bool cherry_mark_ref(cherry_obj *o, int mode) {
-  if (cherry_is_scalar(o) || o->rc == 0) return false;
-  if (mode == CHERRY_PERSIST) { o->rc = 0; return true; }
-  if (o->rc < 0) return false;
-  o->rc = -o->rc;
+  if (cherry_is_scalar(o)) return false;
+  int32_t rc = cherry_rc_load(o);
+  if (rc <= 0) return false;
+  cherry_rc_store(o, mode == CHERRY_PERSIST ? 0 : -rc);
   return true;
 }
 
@@ -314,6 +338,7 @@ static inline size_t cherry_iarray_pos(cherry_int i) {
 typedef union cherry_pbuf_hdr { size_t n; long double d; void *p; } cherry_pbuf_hdr;
 
 static inline void *cherry_pbuf_new(size_t n, size_t size) {
+  if (size != 0 && n > (SIZE_MAX - sizeof(cherry_pbuf_hdr)) / size) abort();
   cherry_pbuf_hdr *h = (cherry_pbuf_hdr *)malloc(sizeof(cherry_pbuf_hdr) + n * size);
   if (h == NULL) abort();
   h->n = n;

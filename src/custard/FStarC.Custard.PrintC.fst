@@ -2892,7 +2892,7 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
            if is_nonplain_ty t && k = want
            then [ind' ^ rc_call op t (cell_field x dt cn f) ^ ";\n"] else [])) in
        !out ^
-       ind ^ "if (" ^ x ^ "->rc == 1) {\n" ^ on "dec" false ^ finish ind' d x ^
+       ind ^ "if (cherry_is_unique(" ^ x ^ ")) {\n" ^ on "dec" false ^ finish ind' d x ^
        ind ^ "} else {\n" ^ on "inc" true ^
        ind' ^ rc_call "dec" a.ty x ^ ";\n" ^ finish ind' d "NULL" ^
        ind ^ "}\n"
@@ -4629,9 +4629,12 @@ let cherry_ref_helpers () : ML (list string & list string) =
         "  if (cherry_ref_is_local(r)) {\n" ^ op "inc" "c->v" ^ "  return c->v;\n  }\n" ^
         "  cherry_ref_lock(r);\n  " ^ decl_of t "x" ^ " = c->v;\n" ^ op "inc" "x" ^
         "  cherry_ref_unlock(r);\n  return x;\n";
+        (* The old value is read only where no other thread can write it:
+           in a local cell, or under the lock. *)
         cell ^
-        when_counted ("  " ^ decl_of t "old" ^ " = c->v;\n") ^
-        "  if (cherry_ref_is_local(r)) {\n  c->v = v;\n" ^ op "dec" "old" ^ "  return;\n  }\n" ^
+        when_counted ("  " ^ decl_of t "old" ^ ";\n") ^
+        "  if (cherry_ref_is_local(r)) {\n" ^ when_counted ("  old = c->v;\n") ^
+        "  c->v = v;\n" ^ op "dec" "old" ^ "  return;\n  }\n" ^
         (if counted then "  " ^ rc_fn "mark" t ^ "(v, CHERRY_SHARE);\n" else "") ^
         "  cherry_ref_lock(r);\n" ^
         when_counted ("  old = c->v;\n") ^
@@ -4823,7 +4826,8 @@ let cherry_iarr_helpers () : ML (list string & list string) =
       "  for (size_t j = 0; j < n; j++) { d->data[j] = c->data[j]; " ^ op "inc" "d->data[j]" ^ " }\n" in
     protos := !protos @ [s ^ " { cherry_iarray_hdr h; " ^ decl_of t "data[]" ^ "; };\n"];
     fn ("static inline cherry_iarray " ^ p ^ "_alloc(size_t n, size_t cap)")
-       ("  " ^ cell "c" ^ " = (" ^ s ^ " *)cherry_alloc(sizeof(" ^ s ^ ") + cap * sizeof(c->data[0]), CHERRY_TAG_IARRAY);\n" ^
+       ("  if (cap > (SIZE_MAX - sizeof(" ^ s ^ ")) / sizeof(((" ^ s ^ " *)0)->data[0])) abort();\n" ^
+        "  " ^ cell "c" ^ " = (" ^ s ^ " *)cherry_alloc(sizeof(" ^ s ^ ") + cap * sizeof(c->data[0]), CHERRY_TAG_IARRAY);\n" ^
         "  c->h.size = n;\n  c->h.cap = cap;\n  return (cherry_iarray)c;\n");
     fn ("static inline void " ^ p ^ "_free(cherry_obj *a, int m)")
        ("  (void)m;\n" ^
@@ -4853,7 +4857,7 @@ let cherry_iarr_helpers () : ML (list string & list string) =
     let unique_or_copy (cap:string) : string =
       "  " ^ cell "c" ^ " = (" ^ s ^ " *)a;\n" ^
       "  size_t n = c->h.size;\n" ^
-      "  if (a->rc != 1) {\n" ^
+      "  if (!cherry_is_unique(a)) {\n" ^
       "    " ^ cell "d" ^ " = (" ^ s ^ " *)" ^ p ^ "_alloc(n, " ^ cap ^ ");\n" ^
       "  " ^ copy ^
       "    " ^ p ^ "_dec(a);\n    c = d;\n  }\n" in

@@ -574,10 +574,15 @@ and arm_to (t:cty) (a:expr) : ML expr =
     if a.ty <> t && (t = TAny || a.ty = TAny || (TArrow? t && TArrow? a.ty))
     then coerce_any a t else a
 
-(* A guarded branch becomes an unguarded one whose guard picks between its
-   body and the branches after it, which a wildcard also falls through to:
-   [match x with p when g -> b | rest] is
-   [match x with p -> if g then b else (match x with rest) | _ -> match x with rest]. *)
+(* A guarded branch becomes an unguarded one.  The branches after it are
+   reached both when the pattern does not match and when the guard fails, so
+   the guard is tested on its own first, and those branches appear once
+   (copying them into both places would double the size per guard):
+   [match x with pre | p when g -> b | rest] is
+   [match x with pre | _ -> if (match x with p -> g | _ -> false)
+                             then (match x with p -> b) else (match x with rest)].
+   The earlier branches [pre] have no guard and come first, so they keep
+   their priority; [x] is a variable, so matching it again is cheap. *)
 let rec unguard (e:expr) : ML expr =
   let e = map_children unguard e in
   match e.e with
@@ -594,8 +599,18 @@ let rec unguard (e:expr) : ML expr =
         else mk (EMatch (scv, brs)) e.ty e.eff
       | Some (pre, p, g, b, rest) ->
         let after = go scv rest in
-        let guarded = mk (EIf (g, b, after)) e.ty e.eff in
-        mk (EMatch (scv, pre @ [(p, None, guarded); (PWild, None, after)])) e.ty e.eff in
+        let irrefutable = (match p with PVar _ | PWild -> true | _ -> false) in
+        let test =
+          if irrefutable then mk (EMatch (scv, [(p, None, g)])) g.ty g.eff
+          else mk (EMatch (scv, [(p, None, g);
+                                 (PWild, None, mk (EConst (CBool false)) g.ty E_Pure)])) g.ty g.eff in
+        let hit =
+          if irrefutable then mk (EMatch (scv, [(p, None, b)])) e.ty b.eff
+          else mk (EMatch (scv, [(p, None, b);
+                                 (PWild, None, mk (EUnreachable "guard") e.ty E_Pure)])) e.ty b.eff in
+        let k = mk (EIf (test, hit, after)) e.ty e.eff in
+        if Nil? pre then k
+        else mk (EMatch (scv, pre @ [(PWild, None, k)])) e.ty e.eff in
     (match sc.e with
      | EVar _ -> go sc brs
      | _ ->
@@ -607,7 +622,7 @@ let lower_any_decl (d:decl) : ML decl =
   match d with
   | DLet l ->
     let b = lower_any l.dl_body in
-    let b = if Cons? l.dl_binders && b.ty <> l.dl_ret && (mentions_any b.ty || mentions_any l.dl_ret)
+    let b = if b.ty <> l.dl_ret && (mentions_any b.ty || mentions_any l.dl_ret)
             then coerce_any b l.dl_ret else b in
     DLet { l with dl_body = b }
   | _ -> d
@@ -1503,7 +1518,9 @@ let rec tv_any_expr (e:expr) : ML expr =
 
 let tv_any_decl (d:decl) : ML decl =
   match d with
-  | DLet l when has_tv l.dl_ret || List.existsb (fun (b:binder) -> has_tv b.b_ty) l.dl_binders ->
+  (* The body too when the signature has none: a local binding or a type
+     argument inside it may still mention one. *)
+  | DLet l ->
     DLet { l with dl_ret = tv_any l.dl_ret;
                   dl_binders = List.map (fun (b:binder) -> { b with b_ty = tv_any b.b_ty }) l.dl_binders;
                   dl_body = tv_any_expr l.dl_body }

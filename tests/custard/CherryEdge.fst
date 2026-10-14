@@ -67,6 +67,19 @@ let self_append () : ML bool =
   let t = s ^ s in
   t = "abcabc"
 
+(* A parameterless global of a polymorphic type whose body is retyped. *)
+let id_poly (#a: Type) (x: a) : a = x
+let gid : list int -> list int = id_poly #(list int -> list int) (fun l -> l)
+
+(* A type parameter that only occurs in the body. *)
+let len_of (#a: Type) (n: int) : int =
+  let l : list (option a) = [None; None] in
+  n + List.Tot.length l
+
+let globals_and_params () : ML bool =
+  gid (hide [1; 2]) = [1; 2] && len_of #string (hide 1) = 3
+
 let main () : ML U32.t =
   if dyn_pair () && global_raise () && big_patterns () && wide () && self_append ()
+     && globals_and_params ()
   then 0ul else 1ul
