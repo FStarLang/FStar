@@ -4765,8 +4765,12 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
 
             A [false] here is not conclusive (the heads may compute to equal
             terms from different arguments), so we then fall through to
-            [equal] and [equal_by_full_norm] as before. *)
-         let rec congruent t1 t2 : ML bool =
+            [equal] and [equal_by_full_norm] as before.
+
+            At the root, when the heads differ, the reduce-and-compare step
+            would be exactly [equal]'s first step, so a failure there would
+            repeat it. Leave that case to [equal]. *)
+         let rec congruent (root:bool) t1 t2 : ML bool =
            match TEQ.eq_tm env t1 t2 with
            | TEQ.Equal -> true
            | TEQ.NotEqual -> false
@@ -4776,14 +4780,15 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
              if not (Nil? args1)
                 && List.length args1 = List.length args2
                 && TEQ.eq_tm env h1 h2 = TEQ.Equal
-             then List.forall2 (fun (a1, _) (a2, _) -> congruent a1 a2) args1 args2
+             then List.forall2 (fun (a1, _) (a2, _) -> congruent false a1 a2) args1 args2
+             else if root then false
              else
                let t1 = hnf env t1 in
                let t2 = hnf env t2 in
                TEQ.eq_tm env t1 t2 = TEQ.Equal || U.term_eq t1 t2
          in
          let equal t1 t2 : ML bool =
-           (wl.eq_norm_heuristic_ok && congruent t1 t2)
+           (wl.eq_norm_heuristic_ok && congruent true t1 t2)
            || equal env t1 t2
            || (wl.eq_norm_heuristic_ok && equal_by_full_norm t1 t2)
          in
