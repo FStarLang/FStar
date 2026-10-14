@@ -220,6 +220,7 @@ Tests:
 - `tests/custard/pulse` runs the Pulse tests through Cherry.
 - `make run-cherry` in `tests/extraction`, `tests/bug-reports/closed`, `examples/printf` and `examples/algorithms` runs every test those directories run on OCaml through Cherry and diffs against the same expected output (`mk/test.mk`; `NO_CHERRY` lists exclusions).
 - `tests/extraction/backends` has a Cherry column.
+- `pulse/test/pool/pulse_task` builds the parallel quicksort on Pulse's task pool (`Pulse.Lib.Task`) with Cherry as well as OCaml (`make run-cherry`, part of `make test`), and runs it under ASan and UBSan with 32 worker threads. Its C realizations are in `c/`. `Pulse_Lib_Core_fork_core` marks the closure shared (`cherry_mark_fn(f, CHERRY_SHARE)`), takes a reference to it for the new thread, and runs it on a detached pthread, which calls it with `cherry_call_thunk` (cherry.h) and then drops it. The spin lock is the C realization of `Pulse.Lib.SpinLock` from the DICE example. Every task closure and result goes through a Pulse box, so it is marked when it is stored and counted atomically from then on.
 
 ## Benchmarks
 
@@ -257,7 +258,7 @@ The prototype runs every test in `tests/custard` and `tests/custard/pulse` throu
 
 - **Library implementations.** The C runtime implements only what the tests use (see "Programs and tests"). Every other module with an OCaml implementation (`Builtins.realized_modules`) has no C counterpart: `FStar.Char`, the rest of `FStar.String`, and all of the compiler's `FStarC.*` support modules (`Util`, `PSMap`/`PIMap`, `Hash`, `Json`, `Getopt`, `Filepath`, `Format`, `Pprint`, ...).
 - **Mutable reference-counted arrays.** `FStarC.Array` (see "Arrays") is designed but not implemented.
-- **Threads.** Marking, persistent cells and the multi-threaded paths of references are implemented, but there is no spawn or `par` primitive that publishes values, so the multi-threaded paths are reached only through Pulse containers and globals. Nothing tests real concurrency yet, e.g. under ThreadSanitizer.
+- **Threads.** The only spawn primitive is Pulse's `fork_core`, realized in C for the task-pool test (see "Programs and tests"); there is no `par`. ThreadSanitizer has not been run, because it cannot run in the development container (it fails to disable ASLR).
 - **Unsupported constructs.** The Cherry pass rejects disjunctive patterns, tuple patterns, anonymous tuples of counted values, lambdas in polymorphic definitions, primitive operations that return counted values, and polymorphic externals used as values. Some of these may never reach the backend; this has to be checked against real code.
 - **Matching out of `any`.** Constructor patterns on an `any` scrutinee need the monomorphic instance the value was built at, which only the pattern variables' uses determine (`tests/custard/AnyPat`). An impure effect whose box type is a function (`tests/custard/Effects`) is typed as a non-function in the IR.
 - **Globals** are computed at startup and then made persistent, rather than emitted as static cells (see "Globals").

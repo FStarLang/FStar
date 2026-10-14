@@ -457,6 +457,21 @@ static inline void cherry_mark_fn(cherry_fn f, int mode) {
     cherry_defer(f, CHERRY_CLOSURE(f)->mark, mode);
 }
 
+#ifndef CUSTARD_UNIT_DEFINED
+#define CUSTARD_UNIT_DEFINED
+typedef uint8_t custard_unit;
+#endif
+
+/* Run a closure of type [unit -> unit] from hand-written C: how a
+   realization (a thread's body, say) calls back into F*.  Borrows [f].  An
+   exception that escapes it is uncaught. */
+static inline void cherry_call_thunk(cherry_fn f) {
+  uint32_t a = CHERRY_CLOSURE(f)->arity;
+  if (a != 0 && a != CHERRY_ARITY_UNITS) abort();
+  (void)((custard_unit (*)(cherry_fn))CHERRY_CLOSURE(f)->fn)(f);
+  if (CHERRY_EXN_PENDING()) cherry_exn_uncaught();
+}
+
 /* ------------------------------------------------------------------------
    ML references (FStar.All.ref, FStarC.Effect.ref).  A counted cell holding
    a spinlock and the value; the generated code defines the cell for each
