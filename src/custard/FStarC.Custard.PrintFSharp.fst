@@ -1022,7 +1022,7 @@ let rec term (ind:string) (e:expr) : ML string =
      that nothing downstream has to infer it -- which at a type variable it
      could not. *)
   | EAny -> "(Unchecked.defaultof<" ^ ty e.ty ^ ">)"
-  | EAbort s -> "(failwith \"" ^ escape s ^ "\")"
+  | EAbort s | EUnreachable s -> "(failwith \"" ^ escape s ^ "\")"
   | EWhile (c, body) ->
     let pre = "(while " in
     let hd = pre ^ term (after ind pre) c ^ " do\n" in

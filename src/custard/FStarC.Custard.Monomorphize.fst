@@ -520,7 +520,7 @@ let rec mono_expr (st:state) (env:env) (x:expr) : ML expr =
   let go = mono_expr st env in
   let e' =
     match x.e with
-    | EConst _ | EVar _ | EAny | EAbort _ -> x.e
+    | EConst _ | EVar _ | EAny | EAbort _ | EUnreachable _ -> x.e
     | EQual (n, args) ->
       let args = args |> List.map (mono_cty st) in
       (* Section 64.  The type arguments are on the node either way; what

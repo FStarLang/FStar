@@ -566,14 +566,15 @@ let int_cast_rule (id:string) : ML (option rule) =
    it becomes a 368 about [Prims.int] instead -- an unrepresentable *return*
    type for a function that never returns.
 
-   [EAbort] at [TAny] is what [magic] and [admit] already get, and it is right
-   here for the same reason: [TAny] stands where a value of any type is
-   wanted, so the C backend stops caring what the result type was. *)
+   [TAny] stands where a value of any type is wanted, so the C backend stops
+   caring what the result type was.  Unlike [magic] and [admit] below, the
+   [squash False] argument is a proof, so this is an [EUnreachable] and the
+   branch that leads to it may be pruned. *)
 let pervasives_rule (id:string) : ML (option rule) =
   match id with
   | "false_elim" ->
     Some (Rule_prim (1, fun _ _ ->
-            mk (EAbort "FStar.Pervasives.false_elim") TAny E_Impure))
+            mk (EUnreachable "FStar.Pervasives.false_elim") TAny E_Impure))
   | _ -> None
 
 let prims_rule (id:string) : ML (option rule) =
@@ -595,12 +596,14 @@ let prims_rule (id:string) : ML (option rule) =
      own, so there is no layout to derive and nothing to instantiate.  Only
      OCaml has a representation for it (section 8.5). *)
   | "exn" -> Some (Rule_type (fun _ -> TExn))
-  (* [magic] and [admit] only typecheck because the caller has proved the
-     point unreachable -- either outright, or, as in
-     [FStar.Stubs.Tactics.V2.Builtins.raise], through a [False]
-     postcondition.  There is no value of the result type to produce and no
-     reason to produce one, so this aborts like [Pulse.Lib.Dv.unreachable].
-     [TAny] is what lets it stand where a value of any type is wanted. *)
+  (* [magic] and [admit] are placeholders: they typecheck without anyone
+     having proved anything (FStarLang/FStar#4661).  There is no value of the
+     result type to produce, so they abort at run time -- but as an [EAbort],
+     not an [EUnreachable]: control may well get here, and pruning the branch
+     that leads to it would silently turn [if b then 1ul else admit ()] into
+     [1ul].  An [admit] in a *proof* never gets this far; it is erased with
+     the proof.  [TAny] is what lets it stand where a value of any type is
+     wanted. *)
   | "magic" | "admit" ->
     Some (Rule_prim (1, fun _ _ -> mk (EAbort ("Prims." ^ id)) TAny E_Impure))
   | _ -> None
@@ -918,7 +921,7 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
   (* Pulse proved this branch dead; its argument is the proof. *)
   | ["Pulse"; "Lib"; "Dv"], "unreachable" ->
     Some (Rule_prim (1, fun _ _ ->
-      mk (EAbort "Pulse.Lib.Dv.unreachable") TAny E_Impure))
+      mk (EUnreachable "Pulse.Lib.Dv.unreachable") TAny E_Impure))
 
   (* [mk_gvar]/[read_gvar] are the two halves of a global initializer.  A
      [gvar p] *is* the value it guards -- the slprop is ghost -- so the type is
@@ -1268,26 +1271,18 @@ let extern_type_of_lid (l:Ident.lident) : ML (option extern) =
   | x :: _ -> Some x
   | [] -> extern_types |> List.tryPick (fun (k, x) -> if k = s then Some x else None)
 
+(* Section 8.2.  The modules realized by hand that have an F* implementation
+   too, so that {!is_interface_only_module} cannot tell.  A module with only an
+   interface needs no entry here. *)
 let realized_modules : list (list string) = [
-  ["FStar"; "All"];
-  ["FStar"; "Bytes"];
-  ["FStar"; "Char"];
   ["FStar"; "Dyn"];
-  ["FStar"; "Exception"];
   ["FStar"; "Exn"];
-  ["FStar"; "IO"];
-  ["FStar"; "ImmutableArray"];
-  ["FStar"; "ImmutableArray"; "Base"];
-  ["FStar"; "Issue"];
   ["FStar"; "List"];
   ["FStar"; "List"; "Tot"; "Base"];
   ["FStar"; "Option"];
   ["FStar"; "Parse"];
   ["FStar"; "Pervasives"];
   ["FStar"; "Pervasives"; "Native"];
-  ["FStar"; "Pprint"];
-  ["FStar"; "Sealed"];
-  ["FStar"; "String"];
   (* The machine integers.  [machine_int_rule] above already turns every
      operation the modules *declare* into a builtin, so nothing normally
      reaches their F* definitions; [eq_mask] and [gte_mask] have no rule,
@@ -1304,33 +1299,11 @@ let realized_modules : list (list string) = [
   ["FStar"; "UInt16"];
   ["FStar"; "UInt32"];
   ["FStar"; "UInt64"];
-  ["FStarC"; "Array"];
-  ["FStarC"; "BaseTypes"];
-  ["FStarC"; "Effect"];
-  ["FStarC"; "Filepath"];
-  ["FStarC"; "Format"];
-  ["FStarC"; "Getopt"];
-  ["FStarC"; "Hash"];
-  ["FStarC"; "Int"; "Extra"];
-  ["FStarC"; "Json"];
-  ["FStarC"; "List"];
-  ["FStarC"; "PIMap"];
-  ["FStarC"; "PSMap"];
-  ["FStarC"; "Platform"; "Base"];
-  ["FStarC"; "Plugins"; "Base"];
-  ["FStarC"; "Pprint"];
-  ["FStarC"; "Range"];
-  (* Reached under their [FStar.Stubs.*] names; see {!no_fstar_stubs}. *)
+  (* Reached under their [FStar.Stubs.*] names; see {!no_fstar_stubs}.  The
+     [FStarC] name has no interface of its own on the include path. *)
   ["FStarC"; "Reflection"; "Types"];
   ["FStarC"; "Tactics"; "Unseal"];
   ["FStarC"; "Tactics"; "V2"; "Builtins"];
-  ["FStarC"; "String"];
-  ["FStarC"; "StringBuffer"];
-  ["FStarC"; "Tactics"; "Native"];
-  ["FStarC"; "Time"];
-  ["FStarC"; "Timing"];
-  ["FStarC"; "Unionfind"];
-  ["FStarC"; "Util"];
   ["Prims"];
   (* Section 128.  Pulse's lock, which must never be compiled from its F*
      source: [Pulse.Lib.Primitives.cas] is a *specification* -- a read
@@ -1447,9 +1420,37 @@ let is_known_krml_model_op (ns : list string) (id : string) : ML bool =
   | Some (_, ops) ->
     let _, id = krml_compat_name ns id in
     ops |> List.existsb (fun o -> o = id)
+
+(* The dependency graph of the program being extracted, for
+   {!is_interface_only_module}.  Set by [Extract.init]. *)
+let realized_deps : ref (option FStarC.Parser.Dep.deps) = mk_ref None
+
+let set_deps (d : FStarC.Parser.Dep.deps) : ML unit = realized_deps := Some d
+
+(* Section 8.2.  A module with an interface and no implementation is realized
+   by hand, as it was for ML extraction: there is no F* code to compile, so
+   its values can only come from a hand-written [.ml] (or [.fs]).  So a new
+   realized module needs no entry in {!realized_modules} (though the compiler's
+   own still need a stage0 that has this rule).
+
+   Only the ML backends.  On the C and karamel backends an interface-only
+   module is not realized: its values are externals whatever this says, and
+   its types are Custard's to lay out.  A module that is not on the include
+   path at all is not interface-only either: nothing is known about it. *)
+let is_interface_only_module (ns : list string) : ML bool =
+  (Options.codegen () = Some Options.OCaml ||
+   Options.codegen () = Some Options.FSharp) &&
+  (match !realized_deps with
+   | None -> false
+   | Some d ->
+     let key = String.lowercase (String.concat "." ns) in
+     Some? (FStarC.Parser.Dep.interface_of d key) &&
+     None? (FStarC.Parser.Dep.implementation_of d key))
+
 let is_realized_module (ns : list string) : ML bool =
   realized_modules |> List.existsb (fun m -> m = ns)
   || is_krml_model ns
+  || is_interface_only_module ns
 
 
 (* A realization *replaces* the F* module, values included: where there is a
@@ -1602,8 +1603,11 @@ let builtin_rule (l:Ident.lident) : ML rule =
            else if ns = ["FStar"; "List"; "Tot"; "Base"] &&
                    Some? (list_coercion_rule id)
            then list_coercion_rule id
+           (* A rule for one name beats the module-wide [Rule_realized], as
+              for every family above. *)
+           else if Some? (pulse_rule ns id) then pulse_rule ns id
            else if is_realized_module ns then Some Rule_realized
-           else pulse_rule ns id)
+           else None)
       | [] -> None
   in
   match r with

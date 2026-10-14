@@ -986,7 +986,7 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
   | EWhile (c, body) -> K.EWhile (krml_expr env c, krml_expr env body)
 
   | EAny -> K.EAny
-  | EAbort s -> K.EAbortS s
+  | EAbort s | EUnreachable s -> K.EAbortS s
 
   (* Section 46.3.  These were one [EAbortS], which is a *translation*, not a
      refusal -- and for [ETry] a translation that discards the expression it
