@@ -263,15 +263,43 @@ let op_to_string : op -> ML string = function
   | BvMod -> "bvurem"
   | BvMul -> "bvmul"
   | BvUlt -> "bvult"
+  | BvConcat -> "concat"
+  | BvRepeat n -> Format.fmt1 "(_ repeat %s)" (show n)
   | BvExtRol -> "ext_rotate_left"
   | BvExtRor -> "ext_rotate_right"
   | BvRol n -> Format.fmt1 "(_ rotate_left %s)" (show n)
   | BvRor n -> Format.fmt1 "(_ rotate_right %s)" (show n)
   | BvToNat -> "bv2int"
   | BvUext n -> Format.fmt1 "(_ zero_extend %s)" (show n)
+  | BvSext n -> Format.fmt1 "(_ sign_extend %s)" (show n)
   | BvExtract (i, j) -> Format.fmt2 "(_ extract %s %s)" (show i) (show j)
   | BvNot -> "bvnot"
+  | BvNeg -> "bvneg"
+  | BvNand -> "bvnand"
+  | BvNor -> "bvnor"
+  | BvXnor -> "bvxnor"
+  | BvComp -> "bvcomp"
+  | BvUle -> "bvule"
+  | BvUgt -> "bvugt"
+  | BvUge -> "bvuge"
+  | BvSlt -> "bvslt"
+  | BvSle -> "bvsle"
+  | BvSgt -> "bvsgt"
+  | BvSge -> "bvsge"
+  | BvSdiv -> "bvsdiv"
+  | BvSrem -> "bvsrem"
+  | BvSmod -> "bvsmod"
+  | BvAshr -> "bvashr"
+  | BvNego -> "bvnego"
+  | BvUaddo -> "bvuaddo"
+  | BvSaddo -> "bvsaddo"
+  | BvUmulo -> "bvumulo"
+  | BvSmulo -> "bvsmulo"
+  | BvUsubo -> "bvusubo"
+  | BvSsubo -> "bvssubo"
+  | BvSdivo -> "bvsdivo"
   | NatToBv n -> Format.fmt1 "(_ int2bv %s)" (show n)
+  | SBvToInt -> "sbv_to_int"
   | Var s -> s
 
 let weightToSmtStr : option int -> ML string = function
@@ -382,12 +410,21 @@ let mk_bin_op op (t1,t2) = mkApp'(op, [t1;t2])
 let mkMinus t = mkApp'(Minus, [t])
 let mkNatToBv sz t = mkApp'(NatToBv sz, [t])
 let mkBvUext sz t = mkApp'(BvUext sz, [t])
+let mkBvSext sz t = mkApp'(BvSext sz, [t])
 let mkBvExtract i j t = mkApp'(BvExtract (i, j), [t])
+let mkBvRepeat n t = mkApp'(BvRepeat n, [t])
+let mkBvConcat = mk_bin_op BvConcat
 let mkBvNot  t = mkApp'(BvNot, [t])
+let mkBvNeg  t = mkApp'(BvNeg, [t])
 let mkBvToNat t = mkApp'(BvToNat, [t])
+let mkSBvToInt t = mkApp'(SBvToInt, [t])
 let mkBvAnd = mk_bin_op BvAnd
 let mkBvXor = mk_bin_op BvXor
 let mkBvOr = mk_bin_op BvOr
+let mkBvNand = mk_bin_op BvNand
+let mkBvNor = mk_bin_op BvNor
+let mkBvXnor = mk_bin_op BvXnor
+let mkBvComp = mk_bin_op BvComp
 let mkBvAdd = mk_bin_op BvAdd
 let mkBvSub = mk_bin_op BvSub
 let mkBvShl sz (t1, t2) = mkApp'(BvShl, [t1;(mkNatToBv sz t2)])
@@ -419,6 +456,25 @@ let mkBvMul' sz (t1, t2) = mkApp' (BvMul, [t1;t2])
 let mkBvUdivUnsafe sz (t1, t2) = mkApp'(BvUdiv, [t1;t2])
 let mkBvModUnsafe sz (t1, t2) = mkApp'(BvMod, [t1;t2])
 let mkBvUlt = mk_bin_op BvUlt
+let mkBvUle = mk_bin_op BvUle
+let mkBvUgt = mk_bin_op BvUgt
+let mkBvUge = mk_bin_op BvUge
+let mkBvSlt = mk_bin_op BvSlt
+let mkBvSle = mk_bin_op BvSle
+let mkBvSgt = mk_bin_op BvSgt
+let mkBvSge = mk_bin_op BvSge
+let mkBvSdiv = mk_bin_op BvSdiv
+let mkBvSrem = mk_bin_op BvSrem
+let mkBvSmod = mk_bin_op BvSmod
+let mkBvAshr = mk_bin_op BvAshr
+let mkBvNego t = mkApp'(BvNego, [t])
+let mkBvUaddo = mk_bin_op BvUaddo
+let mkBvSaddo = mk_bin_op BvSaddo
+let mkBvUmulo = mk_bin_op BvUmulo
+let mkBvSmulo = mk_bin_op BvSmulo
+let mkBvUsubo = mk_bin_op BvUsubo
+let mkBvSsubo = mk_bin_op BvSsubo
+let mkBvSdivo = mk_bin_op BvSdivo
 let mkIff = mk_bin_op Iff
 let mkEq (t1, t2) = match t1, t2 with
     | App (Var f1) [s1] _, App (Var f2) [s2] _ when f1 = f2 && isInjective f1 ->
@@ -499,11 +555,39 @@ let check_pattern_ok (t:term) : option term =
                 | BvMod
                 | BvMul
                 | BvUlt
+                | BvConcat
+                | BvRepeat _
                 | BvUext _
+                | BvSext _
                 | BvExtract _
                 | BvNot
+                | BvNeg
+                | BvNand
+                | BvNor
+                | BvXnor
+                | BvComp
+                | BvUle
+                | BvUgt
+                | BvUge
+                | BvSlt
+                | BvSle
+                | BvSgt
+                | BvSge
+                | BvSdiv
+                | BvSrem
+                | BvSmod
+                | BvAshr
+                | BvNego
+                | BvUaddo
+                | BvSaddo
+                | BvUmulo
+                | BvSmulo
+                | BvUsubo
+                | BvSsubo
+                | BvSdivo
                 | NatToBv _
                 | BvToNat
+                | SBvToInt
                 | ITE -> false
             in
             if not head_ok then Some t
