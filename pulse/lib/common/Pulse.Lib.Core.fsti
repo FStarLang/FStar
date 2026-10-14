@@ -317,6 +317,8 @@ val lift_stt_div
   (e:stt a pre post)
 : stt_div a pre post
 
+inline_for_extraction
+[@@extract_as (`(fun (#a:Type0) (#pre #post: unit) (f: unit -> Dv a) -> f ()))]
 val hide_div #a #pre #post (f:unit -> Dv (stt_div a pre post))
 : stt_div a pre post
 

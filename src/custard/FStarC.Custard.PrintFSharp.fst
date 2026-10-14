@@ -452,7 +452,7 @@ let rec ty (t:cty) : ML string =
      [BufSub], which needs an interior pointer; that one is refused at run
      time rather than mistranslated. *)
   | TBuf t -> "(" ^ ty t ^ ")[]"
-  | TRef t -> "(" ^ ty t ^ " ref)"
+  | TRef (_, t) -> "(" ^ ty t ^ " ref)"
   | TInline _ ->
     failwith "Custard: an inline-field marker reached the F# backend"
   | TConst _ ->
@@ -500,8 +500,8 @@ let rec erased_pun (a:cty) (b:cty) : bool =
   | TApp (n1, a1), TApp (n2, a2) ->
     (Cons? a1 || Cons? a2) && not (n1 = n2 && a1 = a2)
   | TBuf t1, TBuf t2 -> not (t1 = t2)
-  | TRef t1, TRef t2 -> not (t1 = t2)
-  | TBuf t1, TRef t2 | TRef t1, TBuf t2 -> erased_pun t1 t2
+  | TRef (_, t1), TRef (_, t2) -> not (t1 = t2)
+  | TBuf t1, TRef (_, t2) | TRef (_, t1), TBuf t2 -> erased_pun t1 t2
   | _ -> false
 
 let reject_coercion (a:cty) (b:cty) : ML string =
@@ -1515,7 +1515,7 @@ let rec mentions_tyvar (t:cty) : ML bool =
   | TVar _ -> true
   | TArrow (a, _, b) -> mentions_tyvar a || mentions_tyvar b
   | TTuple ts -> ts |> List.existsb mentions_tyvar
-  | TBuf t | TRef t | TInline t -> mentions_tyvar t
+  | TBuf t | TRef (_, t) | TInline t -> mentions_tyvar t
   | TApp (_, args) -> args |> List.existsb mentions_tyvar
   | _ -> false
 

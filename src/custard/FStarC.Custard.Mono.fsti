@@ -136,6 +136,14 @@ val erased_binders (env:TcEnv.env) (t:typ) : ML (list bool)
     measure the same spine. *)
 val arrow_formals_unfold (env:TcEnv.env) (t:typ) : ML (binders & comp)
 
+(** [arrow_formals_unfold_folded env t] is [arrow_formals_unfold env t]
+    together with the length of the folded prefix and the folded comp, which
+    is stated over that same prefix.  A residual type that starts within the
+    prefix can then keep the codomain the source named instead of the
+    arrow its abbreviation unfolds to. *)
+val arrow_formals_unfold_folded (env:TcEnv.env) (t:typ)
+  : ML (binders & comp & int & comp)
+
 (** [arrow_spine_exact env t] holds when the codomain [arrow_formals_unfold]
     stops at cannot be a function: it normalizes to something headed by a type
     constant, rather than an arrow, a type variable, or an effectful codomain
@@ -154,6 +162,11 @@ val erased_binders_unfold (env:TcEnv.env) (t:typ) : ML (list bool)
     in order: exactly what a caller still has to supply.  Used to type the
     binders introduced when a primitive has to be eta-expanded. *)
 val retained_sorts (env:TcEnv.env) (t:typ) : ML (list typ)
+
+(** [retained_sorts_inst env t args] is [retained_sorts env t] with the leading
+    binders of [t] instantiated by [args], the arguments a partial application
+    supplies before erasure. *)
+val retained_sorts_inst (env:TcEnv.env) (t:typ) (args:list term) : ML (list typ)
 
 (** [retained_names env t] is those same binders' [ppname]s, in the same
     order, so an eta-expanded primitive can name its parameters after the

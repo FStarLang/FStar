@@ -51,6 +51,9 @@ command line argument `--codegen OCaml` or `--codegen FSharp` together with an
 entry point such as `--custard_main Main.main`. Custard can also produce C
 directly (`--codegen C`) or go through KaRaMeL (`--codegen KrmlC`,
 `--codegen KrmlRust`); see [doc/ref/custard.md](doc/ref/custard.md).
+The experimental `--codegen Cherry` adds reference counting to the C backend,
+so that ML code (closures, recursive datatypes, `Prims.int`, strings) can be
+compiled to C; see [doc/ref/cherry.md](doc/ref/cherry.md).
 More details on [executing F\* code via OCaml] on the [F\* wiki].
 
 [executing F\* code via OCaml]: https://github.com/FStarLang/FStar/wiki/Executing-F*-code

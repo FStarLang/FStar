@@ -838,7 +838,7 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
 
   ( noshort,
     "codegen",
-    EnumStr ["OCaml"; "FSharp"; "KrmlC"; "KrmlRust"; "C"; "Plugin"],
+    EnumStr ["OCaml"; "FSharp"; "KrmlC"; "KrmlRust"; "C"; "Cherry"; "Plugin"],
     text "Extract the program with Custard, to the given language: OCaml \
 source, F# source for .NET, karamel's AST for compilation to C or to Rust, or \
 self-contained C11 source. KrmlC and KrmlRust share a printer but not a \
@@ -847,6 +847,8 @@ for one target cannot be compiled for the other (section 20). FSharp targets \
 net10.0 and, unlike OCaml, compiles machine integers and floats to .NET's \
 own types rather than to a support library, so it accepts the programs the \
 C backend accepts rather than the ones the OCaml backend does (section 122). \
+Cherry is the C backend extended with reference-counted heap cells for \
+recursive inductive types (experimental, see doc/ref/cherry.md). \
 Plugin builds a compiler plugin: OCaml, with the plugin's own modules as \
 entry points, linked against the compiler's unit (section 13.6)");
 
@@ -898,7 +900,9 @@ over rather than reported, unlike --custard_entry.");
     "custard_main",
     SimpleStr "long_name",
     text "The definition to invoke when the extracted program starts. It is \
-also a root of the extraction, so --custard_entry need not repeat it. Omit it \
+also a root of the extraction, so --custard_entry need not repeat it. A module \
+name may be given instead, and then the program is that module's top-level \
+effects, as for an OCaml executable. Omit it \
 to extract a program that is meant to be driven by a hand-written wrapper.");
 
   ( noshort,
@@ -2194,6 +2198,7 @@ let parse_codegen =
   | "KrmlC" -> Some KrmlC
   | "KrmlRust" -> Some KrmlRust
   | "C" -> Some C
+  | "Cherry" -> Some Cherry
   (* Desugared to OCaml by [desugar_plugin_codegen]. *)
   | "Plugin" -> Some OCaml
   | _ -> None
@@ -2205,6 +2210,7 @@ let print_codegen =
   | KrmlC -> "KrmlC"
   | KrmlRust -> "KrmlRust"
   | C -> "C"
+  | Cherry -> "Cherry"
 
 let codegen                      () =
     Option.map (fun s -> parse_codegen s |> Some?.v)
@@ -2235,6 +2241,10 @@ let custard_norm_budget          () = get_custard_norm_budget ()
 let custard_monomorphize_types   () = get_custard_monomorphize_types ()
 let custard_int128               () = get_custard_int128 ()
 let custard_sizet_32             () = get_custard_sizet_width () = "32"
+let codegen_c                    () = match codegen () with
+                                      | Some C | Some Cherry -> true
+                                      | _ -> false
+let custard_cherry               () = codegen () = Some Cherry
 let custard_split                () = get_custard_split ()
 let custard_unit                 () = get_custard_unit ()
 let custard_links                () = get_custard_link ()

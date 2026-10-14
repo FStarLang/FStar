@@ -548,6 +548,17 @@ val custard_opaque : unit
     [noeq type wrap = | W : [@@@custard_inline_field] p:pair -> wrap] *)
 val custard_inline_field : unit
 
+(** Cherry (cherry.md, "Calling convention"): the function takes this
+    parameter owned, consuming one reference to it, whatever borrow
+    inference would have chosen.  Written on the parameter's binder:
+    [let push ([@@@cherry_owned] l: list int) = ...] *)
+val cherry_owned : unit
+
+(** Cherry: the function borrows this parameter: its caller keeps the
+    reference, and the function takes one of its own only where it stores
+    the value.  Overrides borrow inference, like [cherry_owned]. *)
+val cherry_borrowed : unit
+
 (** Custard: keep every field of this type's constructors boxed, that is, lay
     the type out the way the ML extraction does.  It turns off the automatic
     inlining of tuple fields that [custard_inline_field] describes, so

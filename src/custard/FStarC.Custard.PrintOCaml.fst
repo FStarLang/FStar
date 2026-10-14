@@ -467,7 +467,7 @@ let rec ty (t:cty) : ML string =
   (* A reference points at one value, so it is an OCaml [ref] rather than a
      one-element array.  The buffer operations are shared with [TBuf], so the
      spelling of each one is chosen from the type of its pointer argument. *)
-  | TRef t -> "(" ^ ty t ^ " ref)"
+  | TRef (_, t) -> "(" ^ ty t ^ " ref)"
   (* Section 49.1.  Removed by [Simplify.inline_fields]; see the same case in
      [PrintC.decl_of]. *)
   | TInline _ ->
@@ -616,7 +616,10 @@ let op_name (o:prim_op) : ML string =
      (* Section 120.  Handled at the [EOp] site, as a comment around the
         operand. *)
      | Commented _ ->
-       failwith "Custard: a comment is not an OCaml operator")
+       failwith "Custard: a comment is not an OCaml operator"
+     | RcInc | RcDec | RefNew | RefGet | RefSet | Reset _ | Reuse _ | ResetFree | IArr _ | Dyn _ | PBuf _
+     | ExnRaise | ExnPending | ExnTake | ExnExit ->
+       failwith "Custard: reference counting is not an OCaml operator")
   | None ->
     (match o.po_op with
      | Add -> "Prims.op_Plus" | AddW -> "Prims.op_Plus"
@@ -636,7 +639,10 @@ let op_name (o:prim_op) : ML string =
      (* Section 120.  Handled at the [EOp] site, as a comment around the
         operand. *)
      | Commented _ ->
-       failwith "Custard: a comment is not an OCaml operator")
+       failwith "Custard: a comment is not an OCaml operator"
+     | RcInc | RcDec | RefNew | RefGet | RefSet | Reset _ | Reuse _ | ResetFree | IArr _ | Dyn _ | PBuf _
+     | ExnRaise | ExnPending | ExnTake | ExnExit ->
+       failwith "Custard: reference counting is not an OCaml operator")
 
 (* OCaml has no integer pattern that means what the IR's [PConst (CInt _)]
    means: [Prims.int] is a [Z.t], whose literals are calls to

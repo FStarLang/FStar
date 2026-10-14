@@ -1,4 +1,8 @@
 module ExtFlag
+#lang-pulse
+open Pulse
+open FStar.Attributes
+module I32 = FStar.Int32
 
 (* Section 61.2.  An extern's name is one *preprocessing* token, not one.
 
@@ -25,19 +29,23 @@ module ExtFlag
    with an empty then-branch is what forces the first, and it is the same
    lesson as ExtBuf: the obvious spelling tests the wrong site. *)
 
-module I32 = FStar.Int32
-open FStar.All
-open FStar.Attributes
-
 [@@custard_extern "EXT_FLAG"; custard_c_header "ExtFlag_stubs.h"]
 assume val ext_flag : bool
 
-let expr_site () : ML I32.t = if not ext_flag then 0l else 1l
+let expr_site () : I32.t = if not ext_flag then 0l else 1l
 
-let cond_site () : ML I32.t =
-  let r : ref I32.t = alloc 1l in
-  if ext_flag then () else r := 0l;
+fn cond_site ()
+  returns res : I32.t
+{
+  let mut r = 1l;
+  if ext_flag { () } else { r := 0l };
   !r
+}
 
-let main () : ML I32.t =
-  if I32.eq (expr_site ()) 1l && I32.eq (cond_site ()) 1l then 0l else 1l
+fn main ()
+  returns res : I32.t
+{
+  let a = expr_site ();
+  let b = cond_site ();
+  if (I32.eq a 1l && I32.eq b 1l) { 0l } else { 1l }
+}
