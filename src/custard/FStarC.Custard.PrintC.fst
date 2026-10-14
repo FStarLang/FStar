@@ -2238,11 +2238,16 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
     (match e1.ty, t with
      | TInt a, TInt b when a = b -> c_expr out ind e1
      (* Cherry: [Prims.int] is a tagged pointer, not a number. *)
-     | _, TInt (sg, _) when Options.custard_cherry () && is_int_ty e1.ty ->
-       "(" ^ ty t ^ ")cherry_int_to_" ^ (if Signed? sg then "i64(" else "u64(") ^
+     (* Through the 64-bit conversions, or the 128-bit ones for a 128-bit
+        integer, which would otherwise be truncated. *)
+     | _, TInt (sg, w) when Options.custard_cherry () && is_int_ty e1.ty ->
+       let bits = if w = W128 then "128(" else "64(" in
+       "(" ^ ty t ^ ")cherry_int_to_" ^ (if Signed? sg then "i" else "u") ^ bits ^
        c_expr out ind e1 ^ ")"
-     | TInt (sg, _), _ when Options.custard_cherry () && is_int_ty t ->
-       (if Signed? sg then "cherry_int_of_i64((int64_t)" else "cherry_int_of_u64((uint64_t)") ^
+     | TInt (sg, w), _ when Options.custard_cherry () && is_int_ty t ->
+       let bits = if w = W128 then "128" else "64" in
+       (if Signed? sg then "cherry_int_of_i" ^ bits ^ "((" ^ (if w = W128 then "cherry_i128" else "int64_t") ^ ")"
+        else "cherry_int_of_u" ^ bits ^ "((" ^ (if w = W128 then "cherry_u128" else "uint64_t") ^ ")") ^
        c_rvalue out ind e1.ty e1 ^ ")"
      (* Section 66.  A struct is not castable, so a conversion at a narrow
         width is a call.  Both directions, and between the two narrow formats
@@ -3162,6 +3167,12 @@ and pat_tests (path:string) (t:cty) (p:pat)
   (* Section 44.2.  A string pattern is a test on contents, not on address:
      [pat_tests] is handed the type of the path, so it can see the difference
      without looking at the constant. *)
+  (* A Cherry integer literal that is not a small integer is a cell: the
+     test builds and releases it rather than leaving it to leak. *)
+  | PConst (CInt (v, _, None))
+    when Options.custard_cherry () &&
+         not (v < 1073741824 && v > -1073741824) ->
+    (["cherry_int_eq_decimal(" ^ path ^ ", \"" ^ show v ^ "\")"], [])
   | PConst c when Some? (content_eq t "" "") ->
     (match content_eq t path (constant c) with
      | Some c -> ([c], [])
@@ -4698,15 +4709,12 @@ let cherry_any_helpers () : ML (list string & list string) =
     let op (o:string) (x:string) : ML string = rc_call o t x in
     let unpack = "    " ^ decl_of t "x" ^ ";\n    memcpy(&x, &v, sizeof x);\n" in
     let protos =
-      [cell ^ " { cherry_obj h; " ^ decl_of t "v" ^ "; };\n"] @
-      (if np then
-        ["static void " ^ p ^ "_inc(uintptr_t v);\n";
-         "static void " ^ p ^ "_dec(uintptr_t v);\n";
-         "static void " ^ p ^ "_mark(uintptr_t v, int m);\n"]
-       else
-        ["static void " ^ p ^ "_dec(uintptr_t v);\n"]) @
-      ["static const cherry_rtti " ^ p ^ "_rtti = { \"" ^ ct ^ "\", " ^
-       (if np then p ^ "_inc, " ^ p ^ "_dec, " ^ p ^ "_mark" else "NULL, " ^ p ^ "_dec, NULL") ^ " };\n";
+      [cell ^ " { cherry_obj h; " ^ decl_of t "v" ^ "; };\n";
+       "static void " ^ p ^ "_inc(uintptr_t v);\n";
+       "static void " ^ p ^ "_dec(uintptr_t v);\n";
+       "static void " ^ p ^ "_mark(uintptr_t v, int m);\n";
+       "static const cherry_rtti " ^ p ^ "_rtti = { \"" ^ ct ^ "\", " ^
+       p ^ "_inc, " ^ p ^ "_dec, " ^ p ^ "_mark };\n";
        "static inline cherry_any " ^ p ^ "_mk(" ^ decl_of t "x" ^ ");\n";
        "static inline " ^ decl_of t (p ^ "_get(cherry_any a)") ^ ";\n"] in
     (* A plain value in a box still has the box to free. *)
@@ -4722,17 +4730,24 @@ let cherry_any_helpers () : ML (list string & list string) =
        "  } else {\n" ^
        "    cherry_obj *o = (cherry_obj *)v;\n" ^
        "    if (cherry_dec_ref(o)) cherry_defer(o, " ^ p ^ "_free, 0);\n  }\n}\n"] @
+      (* A plain payload too big for the word is still in a counted box,
+         which has to be counted and marked even though its contents are
+         not. *)
+      ["static void " ^ p ^ "_inc(uintptr_t v) {\n" ^
+       "  if " ^ small ^ " {\n" ^
+       (if np then unpack ^ "    " ^ op "inc" "x" ^ ";\n" else "") ^
+       "  } else cherry_inc((cherry_obj *)v);\n}\n"] @
       (if np then
-        ["static void " ^ p ^ "_inc(uintptr_t v) {\n" ^
-         "  if " ^ small ^ " {\n" ^ unpack ^ "    " ^ op "inc" "x" ^ ";\n" ^
-         "  } else cherry_inc((cherry_obj *)v);\n}\n";
-         "static void " ^ p ^ "_markf(cherry_obj *o, int m) {\n" ^
-         "  " ^ op "mark" ("((" ^ cell ^ " *)o)->v") ^ ";\n}\n";
-         "static void " ^ p ^ "_mark(uintptr_t v, int m) {\n" ^
-         "  if " ^ small ^ " {\n" ^ unpack ^ "    " ^ op "mark" "x" ^ ";\n" ^
-         "  } else {\n    cherry_obj *o = (cherry_obj *)v;\n" ^
-         "    if (cherry_mark_ref(o, m)) cherry_defer(o, " ^ p ^ "_markf, m);\n  }\n}\n"]
+        ["static void " ^ p ^ "_markf(cherry_obj *o, int m) {\n" ^
+         "  " ^ op "mark" ("((" ^ cell ^ " *)o)->v") ^ ";\n}\n"]
        else []) @
+      ["static void " ^ p ^ "_mark(uintptr_t v, int m) {\n" ^
+       "  if " ^ small ^ " {\n" ^
+       (if np then unpack ^ "    " ^ op "mark" "x" ^ ";\n" else "    (void)m;\n") ^
+       "  } else {\n    cherry_obj *o = (cherry_obj *)v;\n" ^
+       (if np then "    if (cherry_mark_ref(o, m)) cherry_defer(o, " ^ p ^ "_markf, m);\n"
+        else "    (void)cherry_mark_ref(o, m);\n") ^
+       "  }\n}\n"] @
       ["static inline cherry_any " ^ p ^ "_mk(" ^ decl_of t "x" ^ ") {\n" ^
        "  cherry_any a;\n  a.rtti = &" ^ p ^ "_rtti;\n" ^
        "  if " ^ small ^ " {\n    a.v = 0;\n    memcpy(&a.v, &x, sizeof x);\n" ^

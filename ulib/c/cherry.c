@@ -373,6 +373,13 @@ cherry_int cherry_int_of_decimal(const char *s) {
   return r;
 }
 
+bool cherry_int_eq_decimal(cherry_int a, const char *s) {
+  cherry_int b = cherry_int_of_decimal(s);
+  bool r = cherry_int_eq(a, b);
+  cherry_dec(b);
+  return r;
+}
+
 /* ---- strings ---- */
 
 static cherry_string_cell *str_alloc(size_t size, size_t cap) {
@@ -393,16 +400,18 @@ cherry_string cherry_str_of_bytes(const char *p, size_t n) {
 cherry_string cherry_str_append(cherry_string a, cherry_string b) {
   cherry_string_cell *x = (cherry_string_cell *)a;
   const cherry_string_cell *y = (const cherry_string_cell *)b;
-  size_t n = x->size + y->size;
+  size_t ys = y->size, n = x->size + ys;
   if (x->hdr.rc == 1) {
-    /* Functional but in place: nobody else can see [a]. */
+    /* Functional but in place: nobody else can see [a] -- except [b], which
+       may be [a] itself, borrowed, and moves with it. */
+    bool same = x == y;
     if (n + 1 > x->cap) {
       size_t cap = 2 * n + 1;
       x = (cherry_string_cell *)realloc(x, sizeof(cherry_string_cell) + cap);
       if (x == NULL) abort();
       x->cap = cap;
     }
-    memmove(x->data + x->size, y->data, y->size);
+    memmove(x->data + x->size, same ? x->data : y->data, ys);
     x->size = n;
     x->data[n] = 0;
     return (cherry_string)x;
@@ -551,6 +560,37 @@ cherry_int cherry_int_of_u64(uint64_t v) {
   return cherry_int_of_decimal(buf);
 }
 
+#ifdef __SIZEOF_INT128__
+cherry_u128 cherry_int_to_u128(cherry_int x) {
+  if (cherry_is_scalar(x)) return (cherry_u128)(cherry_i128)cherry_int_val(x);
+  view a;
+  view_of(x, &a);
+  cherry_u128 r = 0;
+  for (uint32_t i = 0; i < a.len && i < 4; i++) r |= (cherry_u128)a.d[i] << (32 * i);
+  return a.neg ? (cherry_u128)0 - r : r;
+}
+
+cherry_i128 cherry_int_to_i128(cherry_int x) { return (cherry_i128)cherry_int_to_u128(x); }
+
+static cherry_int of_mag128(bool neg, cherry_u128 m) {
+  uint32_t d[4], len = 0;
+  for (; m != 0; m >>= 32) d[len++] = (uint32_t)m;
+  return big_from(neg, d, len);
+}
+
+cherry_int cherry_int_of_u128(cherry_u128 v) {
+  if (v <= (cherry_u128)CHERRY_INT_MAX) return CHERRY_INT_SMALL((intptr_t)v);
+  return of_mag128(false, v);
+}
+
+cherry_int cherry_int_of_i128(cherry_i128 v) {
+  if (v >= -(cherry_i128)CHERRY_INT_MAX && v <= (cherry_i128)CHERRY_INT_MAX)
+    return CHERRY_INT_SMALL((intptr_t)v);
+  return v < 0 ? of_mag128(true, (cherry_u128)0 - (cherry_u128)v)
+               : of_mag128(false, (cherry_u128)v);
+}
+#endif
+
 #define CHERRY_MACHINE_INT(M, T, FMT, OF)                                   \
   CHERRY_WEAK cherry_int FStar_##M##_v(T x) { return OF(x); }                \
   CHERRY_WEAK cherry_string FStar_##M##_to_string(T x) {                     \
@@ -567,6 +607,20 @@ CHERRY_MACHINE_INT(UInt8, uint8_t, PRIu8, cherry_int_of_u64)
 CHERRY_MACHINE_INT(UInt16, uint16_t, PRIu16, cherry_int_of_u64)
 CHERRY_MACHINE_INT(UInt32, uint32_t, PRIu32, cherry_int_of_u64)
 CHERRY_MACHINE_INT(UInt64, uint64_t, PRIu64, cherry_int_of_u64)
+
+#ifdef __SIZEOF_INT128__
+/* printf has no 128-bit format: [to_string] goes through [Prims.int]. */
+#define CHERRY_MACHINE_INT128(M, T, OF)                                      \
+  CHERRY_WEAK cherry_int FStar_##M##_v(T x) { return OF(x); }                \
+  CHERRY_WEAK cherry_string FStar_##M##_to_string(T x) {                     \
+    cherry_int i = OF(x);                                                    \
+    cherry_string s = cherry_string_of_int(i);                               \
+    cherry_dec(i);                                                           \
+    return s;                                                                \
+  }
+CHERRY_MACHINE_INT128(Int128, cherry_i128, cherry_int_of_i128)
+CHERRY_MACHINE_INT128(UInt128, cherry_u128, cherry_int_of_u128)
+#endif
 
 CHERRY_WEAK void FStar_IO_print_newline(void) {
   putchar('\n');

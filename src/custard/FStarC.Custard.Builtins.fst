@@ -1456,10 +1456,53 @@ let is_interface_only_module (ns : list string) : ML bool =
      Some? (FStarC.Parser.Dep.interface_of d key) &&
      None? (FStarC.Parser.Dep.implementation_of d key))
 
+(* Cherry realizes modules by hand too (ulib/c/cherry.c), but not every
+   interface-only one: Pulse's ([Pulse.Lib.Core], ...) stay externals with no
+   header of their own.  So rather than {!is_interface_only_module}, Cherry
+   lists its realized interface-only modules. *)
+let cherry_realized_modules : list (list string) = [
+  ["FStar"; "All"];
+  ["FStar"; "Bytes"];
+  ["FStar"; "Char"];
+  ["FStar"; "Exception"];
+  ["FStar"; "IO"];
+  ["FStar"; "ImmutableArray"];
+  ["FStar"; "ImmutableArray"; "Base"];
+  ["FStar"; "Issue"];
+  ["FStar"; "Pprint"];
+  ["FStar"; "Sealed"];
+  ["FStar"; "String"];
+  ["FStarC"; "Array"];
+  ["FStarC"; "BaseTypes"];
+  ["FStarC"; "Effect"];
+  ["FStarC"; "Filepath"];
+  ["FStarC"; "Format"];
+  ["FStarC"; "Getopt"];
+  ["FStarC"; "Hash"];
+  ["FStarC"; "Int"; "Extra"];
+  ["FStarC"; "Json"];
+  ["FStarC"; "List"];
+  ["FStarC"; "PIMap"];
+  ["FStarC"; "PSMap"];
+  ["FStarC"; "Platform"; "Base"];
+  ["FStarC"; "Plugins"; "Base"];
+  ["FStarC"; "Pprint"];
+  ["FStarC"; "Range"];
+  ["FStarC"; "String"];
+  ["FStarC"; "StringBuffer"];
+  ["FStarC"; "Tactics"; "Native"];
+  ["FStarC"; "Time"];
+  ["FStarC"; "Timing"];
+  ["FStarC"; "Unionfind"];
+  ["FStarC"; "Util"];
+]
+
 let is_realized_module (ns : list string) : ML bool =
   realized_modules |> List.existsb (fun m -> m = ns)
   || is_krml_model ns
   || is_interface_only_module ns
+  || (Options.custard_cherry () &&
+      cherry_realized_modules |> List.existsb (fun m -> m = ns))
 
 
 (* A realization *replaces* the F* module, values included: where there is a

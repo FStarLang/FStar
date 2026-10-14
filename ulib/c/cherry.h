@@ -135,11 +135,23 @@ cherry_int cherry_big_neg(cherry_int a);
 int cherry_big_cmp(cherry_int a, cherry_int b);
 /* A literal too large for CHERRY_INT_SMALL on every platform. */
 cherry_int cherry_int_of_decimal(const char *s);
+/* Whether [a] is the integer literal [s] (a constant pattern too large to
+   be a small integer), without keeping the literal. */
+bool cherry_int_eq_decimal(cherry_int a, const char *s);
 /* Conversions to and from the machine integers; [to] wraps modulo 2^64. */
 cherry_int cherry_int_of_i64(int64_t v);
 cherry_int cherry_int_of_u64(uint64_t v);
 int64_t cherry_int_to_i64(cherry_int x);
 uint64_t cherry_int_to_u64(cherry_int x);
+#ifdef __SIZEOF_INT128__
+/* The same at 128 bits, for --custard_int128; [to] wraps modulo 2^128. */
+__extension__ typedef unsigned __int128 cherry_u128;
+__extension__ typedef __int128 cherry_i128;
+cherry_int cherry_int_of_i128(cherry_i128 v);
+cherry_int cherry_int_of_u128(cherry_u128 v);
+cherry_i128 cherry_int_to_i128(cherry_int x);
+cherry_u128 cherry_int_to_u128(cherry_int x);
+#endif
 
 static inline cherry_int cherry_int_add(cherry_int a, cherry_int b) {
   if (cherry_int_both_small(a, b)) {

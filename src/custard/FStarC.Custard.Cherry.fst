@@ -197,10 +197,14 @@ let is_pbuf (t:cty) : ML bool =
 let raise_tbl : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
 
 (* May this node, once its operands are atoms, return with an exception
-   pending?  A closure call may if it has an effect: its target is unknown. *)
+   pending?  A closure call may if it has an effect: its target is unknown.
+   So is a call through a global, which holds a closure: its initializer
+   raising nothing says nothing about the closure. *)
 let may_raise (node:expr) : ML bool =
   match node.e with
-  | EApp ({ e = EQual (f, _) }, _) -> HashTable.mem !raise_tbl (string_of_name f)
+  | EApp ({ e = EQual (f, _) }, _)
+    when not (HashTable.mem !global_tbl (string_of_name f)) ->
+    HashTable.mem !raise_tbl (string_of_name f)
   | EApp _ -> not (is_pure node.eff)
   | _ -> false
 
@@ -921,7 +925,8 @@ let infer_raises (p:program) : ML unit =
     | _ -> exists_child raises e
   and may_raise_in (tbl:HashTable.t string bool) (e hd:expr) : ML bool =
     match hd.e with
-    | EQual (f, _) -> HashTable.mem tbl (string_of_name f)
+    | EQual (f, _) when not (HashTable.mem !global_tbl (string_of_name f)) ->
+      HashTable.mem tbl (string_of_name f)
     | _ -> not (is_pure e.eff) in
   p |> List.iter (fun d ->
     match d with
