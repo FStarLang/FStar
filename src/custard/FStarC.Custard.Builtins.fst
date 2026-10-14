@@ -723,7 +723,7 @@ let comment_text (which:string) (role:string) (x:expr) : ML string =
 
 let pulse_rule (ns : list string) (id : string) : ML (option rule) =
   let buf tys (_ : list expr) : ML cty = TBuf (elt_of tys) in
-  let rf tys (_ : list expr) : ML cty = TRef (elt_of tys) in
+  let rf tys (_ : list expr) : ML cty = TRef (RManual, elt_of tys) in
   let unit_ty (_ : list cty) (_ : list expr) : ML cty = TUnit in
   let bool_ty (_ : list cty) (_ : list expr) : ML cty = TApp (bool_name, []) in
   (* The element type of a buffer we are given rather than creating: the
@@ -731,14 +731,14 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
   let elt_of_arg (_ : list cty) (args : list expr) : ML cty =
     match args with
     | { ty = TBuf t } :: _ -> t
-    | { ty = TRef t } :: _ -> t
+    | { ty = TRef (_, t) } :: _ -> t
     | _ -> TAny in
   (* [to_array_mask] and [array_at] view a reference as a one-element run.
      The two are the same pointer in C, but not the same OCaml value, so the
      node has to say which one it is. *)
   let as_buf (_ : list cty) (args : list expr) : ML cty =
     match args with
-    | { ty = TRef t } :: _ -> TBuf t
+    | { ty = TRef (_, t) } :: _ -> TBuf t
     | a :: _ -> a.ty
     | _ -> TAny in
   let self (_ : list cty) (args : list expr) : ML cty =
@@ -757,7 +757,7 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
      array (section 8.4). *)
   | ["Pulse"; "Lib"; "Reference"], "ref"
   | ["Pulse"; "Lib"; "Box"], "box" ->
-    Some (Rule_type (fun tys -> TRef (elt_of tys)))
+    Some (Rule_type (fun tys -> TRef (RManual, elt_of tys)))
 
   (* A reference is a one-element stack allocation. *)
   | ["Pulse"; "Lib"; "Reference"], "alloc" ->
@@ -768,7 +768,7 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
       let t = elt_of tys in
       mk (EOp ({ po_op = BufCreate LStack; po_ty = None },
                [mk EAny t E_Pure; size_lit 1]))
-         (TRef t) E_Impure))
+         (TRef (RManual, t)) E_Impure))
   | ["Pulse"; "Lib"; "Reference"], "free" -> Some (unit_rule 1)
   | ["Pulse"; "Lib"; "Reference"], "read"
   | ["Pulse"; "Lib"; "Reference"], "op_Bang" ->
@@ -895,7 +895,7 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
   | ["Pulse"; "Lib"; "Reference"], "null"
   | ["Pulse"; "Lib"; "Box"], "null" ->
     Some (Rule_prim (0, fun tys _ ->
-      mk (EOp ({ po_op = BufNull; po_ty = None }, [])) (TRef (elt_of tys)) E_Pure))
+      mk (EOp ({ po_op = BufNull; po_ty = None }, [])) (TRef (RManual, elt_of tys)) E_Pure))
   | ["Pulse"; "Lib"; "Array"; "Core"], "null"
   | ["Pulse"; "Lib"; "ArrayPtr"], "null" ->
     Some (Rule_prim (0, fun tys _ ->
@@ -987,10 +987,11 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
 (* [FStar.All] is the ulib reference API and [FStarC.Effect] the compiler's
    own; they are the same API under two names, and neither has a [free],
    because both are realized by OCaml's [ref].  So a reference here is a
-   [TRef] holding a *heap* cell: the OCaml backend prints [TRef] as [t ref]
-   and [BufCreate] into one as [ref x] (PrintOCaml.fst:359), which is exactly
-   right, while the C backend would emit a [malloc] that nothing frees --
-   correct, but a leak, and section 8.4 says so.
+   [TRef (RGc, t)] holding a *heap* cell: the OCaml backend prints [TRef] as
+   [t ref] and [BufCreate] into one as [ref x], which is exactly right.  The
+   C and karamel backends have no collector, so they reject an [RGc]
+   reference rather than emit a [malloc] that nothing frees; Cherry counts
+   it (cherry.md, "References").
 
    [read]/[write] index at 0 for the same reason [Pulse.Lib.Reference] does:
    the IR has one memory-access node, and a reference is the one-element case
@@ -1061,22 +1062,18 @@ let exn_rule (id:string) : ML (option rule) =
   | "exit" -> Some (Rule_extern { x_name = None; x_header = None })
   | _ -> None
 
-(* Under Cherry (cherry.md) a garbage-collected reference is a counted cell,
-   which is not what a Pulse reference is, so it gets a type of its own: the
-   runtime type [Cherry.ref t].  The operations on it are the same nodes. *)
-let cherry_ref_name : name = { ns = ["Cherry"]; id = "ref"; spec = None }
-
-let ml_ref_ty (t:cty) : ML cty =
-  if Options.custard_cherry () then TApp (cherry_ref_name, [t]) else TRef t
+(* A garbage-collected reference is a [TRef (RGc, t)] on every backend: OCaml
+   and F# print it as their own [ref], Cherry as a counted cell (cherry.md),
+   and the C and karamel backends, which have no collector, reject it. *)
+let ml_ref_ty (t:cty) : cty = TRef (RGc, t)
 
 let ref_rule (id:string) : ML (option rule) =
   let rf tys (_ : list expr) : ML cty = ml_ref_ty (elt_of tys) in
   let unit_ty (_ : list cty) (_ : list expr) : ML cty = TUnit in
   let elt_of_arg (_ : list cty) (args : list expr) : ML cty =
     match args with
-    | { ty = TRef t } :: _ -> t
+    | { ty = TRef (_, t) } :: _ -> t
     | { ty = TBuf t } :: _ -> t
-    | { ty = TApp (n, [t]) } :: _ when string_of_name n = "Cherry.ref" -> t
     | _ -> TAny in
   match id with
   | "ref" -> Some (Rule_type (fun tys -> ml_ref_ty (elt_of tys)))
@@ -1578,17 +1575,17 @@ let list_coercion_rule (id:string) : ML (option rule) =
   | _ -> None
 
 (* Under Cherry (cherry.md, "Arrays") an immutable array is a counted cell
-   updated in place when unique: the runtime type [Cherry.iarray t], whose
-   operations are [IArr] nodes. *)
-let cherry_iarray_name : name = { ns = ["Cherry"]; id = "iarray"; spec = None }
+   updated in place when unique.  Its type keeps its own name,
+   [FStar.ImmutableArray.Base.t], and its operations are [IArr] nodes. *)
+let iarray_name : name = { ns = ["FStar"; "ImmutableArray"; "Base"]; id = "t"; spec = None }
 
 let iarray_rule (id:string) : ML (option rule) =
   let prims (id:string) (ts:list cty) : cty = TApp ({ ns = ["Prims"]; id = id; spec = None }, ts) in
-  let arr tys (_ : list expr) : ML cty = TApp (cherry_iarray_name, [elt_of tys]) in
+  let arr tys (_ : list expr) : ML cty = TApp (iarray_name, [elt_of tys]) in
   let prim (n:int) (ret : list cty -> list expr -> ML cty) : option rule =
     Some (buf_prim n (IArr id) E_Pure ret (fun args -> args)) in
   match id with
-  | "t" -> Some (Rule_type (fun tys -> TApp (cherry_iarray_name, [elt_of tys])))
+  | "t" -> Some (Rule_type (fun tys -> TApp (iarray_name, [elt_of tys])))
   | "of_list" -> prim 1 arr
   | "upd" -> prim 3 arr
   | "push" -> prim 2 arr
@@ -1597,10 +1594,9 @@ let iarray_rule (id:string) : ML (option rule) =
   | "index" -> prim 2 (fun tys _ -> elt_of tys)
   | _ -> None
 
-(* Under Cherry (cherry.md, "The any type") [FStar.Dyn.dyn] is the runtime
-   type [Cherry.any], a value with the type information that releases it;
+(* Under Cherry (cherry.md, "The any type") [FStar.Dyn.dyn] is [TAny], as it
+   is [Obj.t] on OCaml: a value with the type information that releases it.
    [mkdyn] and [undyn] are [Dyn] nodes at the value's type. *)
-let cherry_any_ty : cty = TApp ({ ns = ["Cherry"]; id = "any"; spec = None }, [])
 
 let dyn_rule (id:string) : ML (option rule) =
   let prim (f:string) (ret : cty -> cty) : option rule =
@@ -1608,8 +1604,8 @@ let dyn_rule (id:string) : ML (option rule) =
       let t = elt_of tys in
       mk (EOp ({ po_op = Dyn f; po_ty = None }, args)) (ret t) E_Pure)) in
   match id with
-  | "dyn" -> Some (Rule_type (fun _ -> cherry_any_ty))
-  | "mkdyn" -> prim "mk" (fun _ -> cherry_any_ty)
+  | "dyn" -> Some (Rule_type (fun _ -> TAny))
+  | "mkdyn" -> prim "mk" (fun _ -> TAny)
   | "undyn" -> prim "get" (fun t -> t)
   | _ -> None
 

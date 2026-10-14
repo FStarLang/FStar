@@ -51,12 +51,24 @@ let arrow_key : string = "->"
 (* And every exception: a counted cell (cherry.md, "Exceptions"). *)
 let exn_key : string = "Prims.exn"
 
+(* And every ML reference, [TRef (RGc, _)], and every [TAny], the
+   representation of [FStar.Dyn.dyn]: the runtime's counted cells, which no
+   type name can spell. *)
+let ref_key : string = "<ref>"
+let any_key : string = "<any>"
+
+(* An immutable array, [FStar.ImmutableArray.Base.t] (cherry.md, "Arrays"). *)
+let iarray_key : string = "FStar.ImmutableArray.Base.t"
+let is_iarray_name (n:name) : bool =
+  n.ns = ["FStar"; "ImmutableArray"; "Base"] && n.id = "t"
+
 (* The type names a value of [t] holds by value.  A pointer is a size, and
    what it reaches is not part of the value. *)
 let rec by_value (t:cty) : ML (list string) =
   match t with
-  | TApp ({ ns = ["Cherry"]; id = "ref" }, _) -> ["Cherry.ref"]
-  | TApp ({ ns = ["Cherry"]; id = "iarray" }, _) -> ["Cherry.iarray"]
+  | TRef (RGc, _) -> [ref_key]
+  | TAny -> [any_key]
+  | TApp (n, _) when is_iarray_name n -> [iarray_key]
   | TApp (n, args) -> string_of_name n :: List.collect by_value args
   | TTuple ts -> List.collect by_value ts
   | TArrow _ -> [arrow_key]
@@ -90,7 +102,7 @@ let boxed_types (p:program) : ML (list string) =
     | _ -> [])
 
 (* The types the runtime (ulib/c/cherry.h) represents as counted cells. *)
-let runtime_types : list string = ["Prims.int"; "Prims.string"; "Cherry.ref"; "Cherry.iarray"; "Cherry.any"]
+let runtime_types : list string = ["Prims.int"; "Prims.string"; iarray_key]
 
 (* The operands a [Dyn] operation takes owned: the value [mk] wraps. *)
 let dyn_owns (f:string) : list bool = if f = "mk" then [true] else []
@@ -116,13 +128,15 @@ let pbuf_owns (f:string) : list bool =
 (* An ML reference (Builtins.ml_ref_ty). *)
 let is_ml_ref (t:cty) : bool =
   match t with
-  | TApp ({ ns = ["Cherry"]; id = "ref"; spec = None }, [_]) -> true
+  | TRef (RGc, _) -> true
   | _ -> false
 
 let nonplain_types (p:program) : ML (list string) =
   let tbl = type_table p in
   let np : HashTable.t string bool = HashTable.create 50 in
   runtime_types |> List.iter (fun k -> HashTable.add np k true);
+  HashTable.add np ref_key true;
+  HashTable.add np any_key true;
   HashTable.add np arrow_key true;
   HashTable.add np exn_key true;
   boxed_types p |> List.iter (fun k -> HashTable.add np k true);
@@ -170,13 +184,13 @@ let rec is_np (t:cty) : ML bool =
   match t with
   | TApp (n, _) -> HashTable.mem !np_tbl (string_of_name n)
   | TTuple ts -> List.existsb is_np ts
-  | TArrow _ | TExn -> true
+  | TArrow _ | TExn | TRef (RGc, _) | TAny -> true
   | _ -> false
 
 (* A Pulse reference or array of counted values (Syntax.PBuf). *)
 let is_pbuf (t:cty) : ML bool =
   match t with
-  | TRef u | TBuf u -> is_np u
+  | TRef (RManual, u) | TBuf u -> is_np u
   | _ -> false
 
 (* The definitions that may return with an exception pending. *)
@@ -849,7 +863,7 @@ and rc_live (o:owned) (e:expr) : ML expr =
   | EQual (f, _) when TArrow? e.ty && HashTable.mem !fn_tbl (string_of_name f) -> e
   | EQual (g, _) when HashTable.mem !global_tbl (string_of_name g) -> e
   | EQual _ when is_np e.ty -> unsupported "a global of reference-counted type"
-  | EConst _ | EQual _ | EAny | EAbort _ -> e
+  | EConst _ | EQual _ | EAny | EAbort _ | EUnreachable _ -> e
 
   (* A Pulse stack reference or array of counted values (cherry.md,
      "References").  The cells are declared empty and filled by [PBuf "init"],
@@ -970,7 +984,7 @@ and rc_live (o:owned) (e:expr) : ML expr =
      and so is [undyn]: a [dyn] of a [dyn] is the [dyn]. *)
   | EOp ({ po_op = Dyn _ }, [a])
     when (match a.ty, e.ty with
-          | TApp ({ ns = ["Cherry"]; id = "any" }, []), TApp ({ ns = ["Cherry"]; id = "any" }, []) -> true
+          | TAny, TAny -> true
           | _ -> false) ->
     rc_live o a
   | EOp (op, args) when Dyn? op.po_op ->

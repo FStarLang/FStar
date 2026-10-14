@@ -187,6 +187,16 @@ type constant =
   | CChar   of char
   | CString of string
 
+(** Who frees what a [TRef] points at. *)
+type ref_kind =
+  | RManual
+  (** The program, explicitly: a Pulse reference, whose permissions say when
+      it is freed and by whom. *)
+  | RGc
+  (** The runtime: an ML reference, garbage-collected on OCaml and F#,
+      reference-counted under Cherry, and rejected by the C and karamel
+      backends. *)
+
 type cty =
   | TVar   of string
   | TInt   of signedness & iwidth
@@ -220,11 +230,13 @@ type cty =
       record type's fields take the place of it (section 5.7).  [Extract] puts
       it there, [Simplify.inline_fields] takes every one of them away again;
       no later pass and no backend ever sees one. *)
-  | TRef   of cty
-  (** A pointer to a single mutable value: Pulse's [ref] and [box].  C makes no
-      distinction -- both are [t*], and the buffer operations apply to either
-      -- but OCaml does, and a [t ref] is both the honest translation and a
-      far better one than a one-element array (section 8.4). *)
+  | TRef   of ref_kind & cty
+  (** A pointer to a single mutable value: Pulse's [ref] and [box]
+      ([RManual]), or an ML reference from [FStar.All] or [FStarC.Effect]
+      ([RGc]).  C makes no distinction between a [TRef (RManual, _)] and a
+      [TBuf] -- both are [t*], and the buffer operations apply to either --
+      but OCaml does, and a [t ref] is both the honest translation and a far
+      better one than a one-element array (section 8.4). *)
   | TExn
   (** [Prims.exn], the one extensible variant.  It has no parameters and no
       layout to derive: its constructors arrive one at a time, as [DExn]
@@ -396,7 +408,7 @@ type op =
       the C printer in Cherry mode accepts them. *)
   | RcInc
   | RcDec
-  (** Cherry.  The operations on an ML reference ([Cherry.ref t]), which the
+  (** Cherry.  The operations on an ML reference ([TRef (RGc, t)]), which the
       Cherry pass rewrites the buffer operations on one into: [RefNew v]
       allocates a cell holding [v], [RefGet r] returns a counted copy of its
       value, and [RefSet r v] replaces it. *)
@@ -415,15 +427,15 @@ type op =
   | Reset of name & list bool
   | Reuse of name & name
   | ResetFree
-  (** Cherry: an operation on an immutable array ([Cherry.iarray t], the
-      representation of [FStar.ImmutableArray.t]), named as in that module:
+  (** Cherry: an operation on an immutable array ([FStar.ImmutableArray.Base.t],
+      which Cherry represents as a counted cell), named as in that module:
       [of_list], [to_list], [length], [index], [upd] or [push]. *)
   | IArr of string
   (** Cherry: [FStar.Dyn] (cherry.md, "The any type").  [Dyn "mk"] makes a
-      [Cherry.any] of its operand, taking it; [Dyn "get"] reads the
+      [TAny] of its operand, taking it; [Dyn "get"] reads the
       value back out of one at the node's type, borrowing it. *)
   | Dyn of string
-  (** Cherry: a Pulse reference or array ([TRef t] or [TBuf t]) holding
+  (** Cherry: a Pulse reference or array ([TRef (RManual, t)] or [TBuf t]) holding
       counted values (cherry.md, "References").  Everything stored in one is
       marked shared first.  [PBuf "alloc" [v; n]] allocates on the heap,
       taking [v]: the length goes in a header, so that [PBuf "free" [b]] can

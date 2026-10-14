@@ -283,7 +283,7 @@ let rec subst_cty (s:list (string & cty)) (c:cty) : ML cty =
   | TArrow (a, e, b) -> TArrow (subst_cty s a, e, subst_cty s b)
   | TTuple cs -> TTuple (cs |> List.map (subst_cty s))
   | TBuf c -> TBuf (subst_cty s c)
-  | TRef c -> TRef (subst_cty s c)
+  | TRef (k, c) -> TRef (k, subst_cty s c)
   | TInline c -> TInline (subst_cty s c)
   | TApp (n, args) -> TApp (n, args |> List.map (subst_cty s))
   | c -> c
@@ -324,7 +324,7 @@ let rec type_names_of_cty (c : cty) : ML (list string) =
   match c with
   | TArrow (a, _, b) -> type_names_of_cty a @ type_names_of_cty b
   | TTuple cs -> cs |> List.collect type_names_of_cty
-  | TBuf c | TRef c | TInline c -> type_names_of_cty c
+  | TBuf c | TRef (_, c) | TInline c -> type_names_of_cty c
   | TApp (n, args) -> string_of_name n :: (args |> List.collect type_names_of_cty)
   | _ -> []
 
@@ -579,8 +579,9 @@ let rec cty_to_doc' (prec:int) (t:cty) : ML document =
              sep_by (comma ^^ space) (List.map (cty_to_doc' 0) args) ^^ rangle)
   | TBuf t ->
     parens_if (prec >= 2) <| group (text "buf" ^/^ cty_to_doc' 2 t)
-  | TRef t ->
-    parens_if (prec >= 2) <| group (text "ref" ^/^ cty_to_doc' 2 t)
+  | TRef (k, t) ->
+    parens_if (prec >= 2) <|
+      group (text (if RGc? k then "gcref" else "ref") ^/^ cty_to_doc' 2 t)
   | TInline t ->
     parens_if (prec >= 2) <| group (text "inline" ^/^ cty_to_doc' 2 t)
   | TTuple ts ->

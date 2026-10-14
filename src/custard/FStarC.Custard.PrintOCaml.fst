@@ -467,7 +467,7 @@ let rec ty (t:cty) : ML string =
   (* A reference points at one value, so it is an OCaml [ref] rather than a
      one-element array.  The buffer operations are shared with [TBuf], so the
      spelling of each one is chosen from the type of its pointer argument. *)
-  | TRef t -> "(" ^ ty t ^ " ref)"
+  | TRef (_, t) -> "(" ^ ty t ^ " ref)"
   (* Section 49.1.  Removed by [Simplify.inline_fields]; see the same case in
      [PrintC.decl_of]. *)
   | TInline _ ->

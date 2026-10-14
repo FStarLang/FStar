@@ -532,6 +532,8 @@ let is_nonplain_ty (t:cty) : ML bool =
   (* The key {!Cherry.nonplain_types} files every function type under. *)
   | TArrow _ -> HashTable.mem !nonplain_tbl "->"
   | TExn -> HashTable.mem !nonplain_tbl "Prims.exn"
+  | TRef (RGc, _) -> HashTable.mem !nonplain_tbl Cherry.ref_key
+  | TAny -> HashTable.mem !nonplain_tbl Cherry.any_key
   | _ -> false
 
 (* The cell of constructor [cn] of the boxed type [d], and field [f] of it
@@ -608,10 +610,10 @@ let any_prefix (t:cty) : ML string =
 
 let rc_fn (op:string) (t:cty) : ML string =
   match t with
-  | TApp ({ ns = ["Cherry"]; id = "any"; spec = None }, []) -> "cherry_any_" ^ op
-  | TApp ({ ns = ["Cherry"]; id = "ref"; spec = None }, [v]) ->
+  | TAny -> "cherry_any_" ^ op
+  | TRef (RGc, v) ->
     if op = "inc" then "cherry_inc" else ref_prefix v ^ "_" ^ op
-  | TApp ({ ns = ["Cherry"]; id = "iarray"; spec = None }, [v]) ->
+  | TApp ({ ns = ["FStar"; "ImmutableArray"; "Base"]; id = "t"; spec = None }, [v]) ->
     if op = "inc" then "cherry_inc" else iarr_prefix v ^ "_" ^ op
   | TApp (n, _) when op = "inc" && is_boxed_name n -> "cherry_inc"
   (* The runtime's own cells (ulib/c/cherry.h) have no counted fields, so the
@@ -917,7 +919,15 @@ let content_eq (t:cty) (a b:string) : ML (option string) =
    out right without special cases at each use. *)
 let rec decl_of (t:cty) (x:string) : ML string =
   match t with
-  | TBuf e | TRef e -> decl_of e ("*" ^ x)
+  (* Every ML reference is the one runtime type; the cells differ, and the
+     generated operations on each know which one theirs is. *)
+  | TRef (RGc, _) when Options.custard_cherry () ->
+    "cherry_ref" ^ (if x = "" then "" else " " ^ x)
+  | TRef (RGc, _) ->
+    reject "a garbage-collected reference (FStar.All.ref or FStarC.Effect.ref)"
+      ["C has no garbage collector: use a Pulse reference, which is freed \
+        explicitly, or --codegen Cherry, which counts references."]
+  | TBuf e | TRef (_, e) -> decl_of e ("*" ^ x)
   (* A function cannot be stored, only a pointer to one, so a [TArrow] in a
      data position becomes a function pointer.  Custard has no closures --
      [EFun] in a value position is rejected below -- so the value is always a
@@ -1002,14 +1012,8 @@ and base_ty (t:cty) : ML string =
             text "The placeholders in a [@@custard_extern] string count the \
                   declaration's binders from zero, all of them, in source \
                   order." ]))
-  (* Every ML reference is the one runtime type; the cells differ, and the
-     generated operations on each know which one theirs is. *)
-  | TApp ({ ns = ["Cherry"]; id = "ref"; spec = None }, [_]) when Options.custard_cherry () ->
-    "cherry_ref"
-  | TApp ({ ns = ["Cherry"]; id = "iarray"; spec = None }, [_]) when Options.custard_cherry () ->
+  | TApp ({ ns = ["FStar"; "ImmutableArray"; "Base"]; id = "t"; spec = None }, [_]) when Options.custard_cherry () ->
     "cherry_iarray"
-  | TApp ({ ns = ["Cherry"]; id = "any"; spec = None }, []) when Options.custard_cherry () ->
-    "cherry_any"
   | TApp (n, []) ->
     (match builtin_type n with
      | Some s -> s
@@ -1043,6 +1047,9 @@ and base_ty (t:cty) : ML string =
     reject "an anonymous tuple type"
       ["Tuples reach the backend as FStar.Pervasives.Native.tupleN, which is \
         an ordinary inductive; a bare TTuple means a rule introduced one."]
+  (* Cherry: [FStar.Dyn.dyn], a value with the type information that
+     releases it (cherry.md, "The any type"). *)
+  | TAny when Options.custard_cherry () -> "cherry_any"
   | TAny ->
     reject "a value whose representation is unknown (TAny)"
       ["Run with --custard_warn_any to see where the representation was lost \
@@ -1051,7 +1058,7 @@ and base_ty (t:cty) : ML string =
   | TExn ->
     reject "an exception type"
       ["C has no exceptions."]
-  | TBuf _ | TRef _ | TArrow _ -> decl_of t ""
+  | TBuf _ | TRef (_, _) | TArrow _ -> decl_of t ""
 
 (* The abstract declarator: a type as a cast or a compound literal spells it. *)
 let ty (t:cty) : ML string = decl_of t ""
@@ -1107,14 +1114,19 @@ let alloc_name (base:string) : ML string =
   HashTable.add !taken_names f true;
   f
 
+let rec mentions_any (t:cty) : ML bool =
+  match t with
+  | TAny -> true
+  | TArrow (a, _, b) -> mentions_any a || mentions_any b
+  | TApp (_, ts) | TTuple ts -> List.existsb mentions_any ts
+  | TBuf c | TRef (_, c) | TInline c -> mentions_any c
+  | _ -> false
+
 let rec eq_target (t:cty) : ML (option dtype) =
   match t with
-  | TApp ({ ns = ["Cherry"]; id = "iarray" }, _) ->
+  | TApp ({ ns = ["FStar"; "ImmutableArray"; "Base"]; id = "t" }, _) ->
     reject "an equality test on an immutable array"
       ["Cherry does not compare immutable arrays yet."]
-  | TApp ({ ns = ["Cherry"]; id = "any" }, _) ->
-    reject "an equality test on a dyn"
-      ["Its type is not known statically."]
   | TApp (n, []) when None? (builtin_type n) ->
     (match find_type n with
      | Some d when List.existsb Extern? d.dt_flags -> None
@@ -2221,6 +2233,12 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
      | _ -> "(" ^ ty t ^ ")" ^ c_rvalue out ind e1.ty e1)
   | ECoerce (e1, t) ->
     if e1.ty = t then c_expr out ind e1
+    (* Under Cherry a [TAny] is a [dyn], whose value carries its type
+       information: only [Dyn] nodes make or read one, and a cast cannot. *)
+    else if Options.custard_cherry () && (mentions_any e1.ty || mentions_any t)
+    then reject ("a coercion from " ^ show e1.ty ^ " to " ^ show t)
+           ["Under Cherry the unknown representation is FStar.Dyn.dyn, \
+             which only mkdyn and undyn convert to and from."]
     else "(" ^ ty t ^ ")" ^ c_expr out ind e1
   | EProj (e1, _, f) -> proj (c_expr out ind e1) e1.ty f
   | EDiscrim (e1, cn) ->
@@ -2249,7 +2267,7 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
   | EOp ({ po_op = IArr f }, args) ->
     let elt (t:cty) : ML cty =
       match t with
-      | TApp ({ ns = ["Cherry"]; id = "iarray" }, [v]) -> v
+      | TApp ({ ns = ["FStar"; "ImmutableArray"; "Base"]; id = "t" }, [v]) -> v
       | _ -> failwith "Cherry: an immutable array operation on something else" in
     let vals = args |> List.map (fun a -> c_rvalue out ind a.ty a) in
     let call (p:string) : string = p ^ "_" ^ f ^ "(" ^ String.concat ", " vals ^ ")" in
@@ -2510,7 +2528,7 @@ and pbuf_call (out:ref string) (ind:string) (f:string) (args:list expr) : ML str
   let a = (match args with a :: _ -> a | [] -> failwith "Cherry: a Pulse container operation without operands") in
   let t = if f = "alloc" then a.ty else
           (match a.ty with
-           | TRef u | TBuf u -> u
+           | TRef (RManual, u) | TBuf u -> u
            | _ -> failwith "Cherry: a Pulse container operation on something else") in
   let vals = args |> List.map (fun a -> c_rvalue out ind a.ty a) in
   pbuf_prefix t ^ "_" ^ f ^ "(" ^ String.concat ", " vals ^ ")"
@@ -2617,12 +2635,12 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     !out ^ s2
 
   (* Section 19.8: written, never read.  The writes go with the cell. *)
-  | ELet (x, TRef t, { e = EOp ({ po_op = BufCreate LStack }, [init; len]) }, e2)
+  | ELet (x, TRef (RManual, t), { e = EOp ({ po_op = BufCreate LStack }, [init; len]) }, e2)
   | ELet (x, TBuf t, { e = EOp ({ po_op = BufCreate LStack }, [init; len]) }, e2)
       when is_one len && is_droppable init && cell_dead x e2 ->
     emit ind d (drop_writes x e2)
 
-  | ELet (x, TRef t, { e = EOp ({ po_op = BufCreate LStack }, [init; len]) }, e2)
+  | ELet (x, TRef (RManual, t), { e = EOp ({ po_op = BufCreate LStack }, [init; len]) }, e2)
   | ELet (x, TBuf t, { e = EOp ({ po_op = BufCreate LStack }, [init; len]) }, e2)
       when is_one len ->
     let out = mk_ref "" in
@@ -2868,7 +2886,7 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
   | EOp ({ po_op = BufBlit }, [src; si; dst; di; len]) ->
     let out = mk_ref "" in
     let elt = match dst.ty with
-              | TBuf e | TRef e -> ty e
+              | TBuf e | TRef (_, e) -> ty e
               | _ -> reject "a blit whose destination is not a pointer" [] in
     let srcv = c_expr out ind src in
     (* Section 59.  The two offsets are added to a pointer and the length is
@@ -2940,7 +2958,7 @@ and emit_alloc (ind:string) (d:dest) (nm:option string)
      operator with one literal operand. *)
   let lv = c_rvalue out ind len.ty len in
   let elt = match t with
-            | TBuf e | TRef e -> ty e
+            | TBuf e | TRef (_, e) -> ty e
             | _ -> reject "an allocation whose result is not a pointer" [] in
   (* Section 97.  [nm] is the name the binding this allocation initializes is
      about to get.  Using it as the array's own name is what removes the
@@ -2950,7 +2968,10 @@ and emit_alloc (ind:string) (d:dest) (nm:option string)
   let done_ (s:string) : ML string =
     match nm with Some _ -> "" | None -> finish ind d s in
   let i = fresh "i" in
-  let elt_of = match t with TBuf e | TRef e -> e | _ -> t in
+  let elt_of = match t with
+               | TRef (RGc, _) -> ignore (decl_of t ""); t
+               | TBuf e | TRef (_, e) -> e
+               | _ -> t in
   (* Section 94.5.  [EAny] is *defined* as what an uninitialized allocation is
      filled with, so a fill that is [EAny] asks for the value every cell
      already has and a declaration on its own delivers it.  Writing it out
@@ -2972,7 +2993,7 @@ and emit_alloc (ind:string) (d:dest) (nm:option string)
      [-Wmissing-braces] having anything to say about it. *)
   let scalar_elt =
     match elt_of with
-    | TInt _ | TFloat _ | TBuf _ | TRef _ -> true
+    | TInt _ | TFloat _ | TBuf _ | TRef (_, _) -> true
     | TApp (n, []) -> Some "bool" = builtin_type n
     | _ -> false in
   let const_len =
@@ -3436,14 +3457,12 @@ let rec value_deps (t:cty) : ML (list string) =
   match t with
   (* Cherry: a boxed value is a pointer. *)
   | TApp (n, _) when is_boxed_name n -> []
-  | TApp ({ ns = ["Cherry"]; id = "ref" }, _) -> []
-  | TApp ({ ns = ["Cherry"]; id = "iarray" }, _) -> []
-  | TApp ({ ns = ["Cherry"]; id = "any" }, _) -> []
+  | TApp ({ ns = ["FStar"; "ImmutableArray"; "Base"]; id = "t" }, _) -> []
   | TApp (n, args) -> string_of_name n :: List.collect value_deps args
   | TTuple ts -> List.collect value_deps ts
   (* A pointer is a size, and a function is a pointer: an incomplete type is
      enough to declare either. *)
-  | TBuf _ | TRef _ | TArrow _ -> []
+  | TBuf _ | TRef (_, _) | TArrow _ -> []
   | _ -> []
 
 let body_value_deps (b:tydef) : ML (list string) =
@@ -4225,7 +4244,7 @@ let check_interface_names (p:program) : ML unit =
     match c with
     | TArrow (a, _, b) -> spec_names a @ spec_names b
     | TTuple cs -> cs |> List.collect spec_names
-    | TBuf c | TRef c | TInline c -> spec_names c
+    | TBuf c | TRef (_, c) | TInline c -> spec_names c
     | TApp (n, args) ->
       (if Some? n.spec then [n] else []) @ (args |> List.collect spec_names)
     | _ -> [] in
@@ -4356,7 +4375,7 @@ let record_parents (p:program) : ML unit =
     | TApp (n, args) ->
       List.fold_right ty_names args (string_of_name n :: acc)
     | TArrow (a, _, b) -> ty_names a (ty_names b acc)
-    | TBuf e | TRef e | TInline e -> ty_names e acc
+    | TBuf e | TRef (_, e) | TInline e -> ty_names e acc
     | TTuple ts -> List.fold_right ty_names ts acc
     | _ -> acc in
   let _ = p |> List.iter (fun d ->

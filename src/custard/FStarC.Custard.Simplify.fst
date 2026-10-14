@@ -1503,7 +1503,7 @@ let rec cty_deps (c:cty) : ML (list string) =
   | TApp (n, args) -> string_of_name n :: List.collect cty_deps args
   | TArrow (a, _, b) -> cty_deps a @ cty_deps b
   | TTuple cs -> List.collect cty_deps cs
-  | TBuf c | TRef c | TInline c -> cty_deps c
+  | TBuf c | TRef (_, c) | TInline c -> cty_deps c
   | _ -> []
 
 let rec pat_deps (p:pat) : ML (list string) =
@@ -1747,7 +1747,7 @@ let rec spellable (c:cty) : ML bool =
   | TAny | TExn -> false
   | TApp (_, args) | TTuple args -> args |> List.for_all spellable
   | TArrow (a, _, b) -> spellable a && spellable b
-  | TBuf c | TRef c | TInline c -> spellable c
+  | TBuf c | TRef (_, c) | TInline c -> spellable c
   | _ -> true
 
 let revive_abbrevs (prog:program) (live : HashTable.t string bool) : ML unit =
@@ -3148,7 +3148,7 @@ let rec cty_mismatch (a b : cty) : ML bool =
   | TApp (n, xs), TApp (m, ys) ->
     string_of_name n = string_of_name m && ctys_mismatch xs ys
   | TBuf x, TBuf y
-  | TRef x, TRef y
+  | TRef (_, x), TRef (_, y)
   | TInline x, TInline y -> cty_mismatch x y
   | TTuple xs, TTuple ys -> ctys_mismatch xs ys
   | _ -> false
@@ -3287,7 +3287,7 @@ let coerce_prog (prog:program) : ML program =
     | TArrow (a, _, b) -> has_any a || has_any b
     | TApp (_, args) -> args |> List.existsb has_any
     | TTuple cs -> cs |> List.existsb has_any
-    | TBuf c | TRef c | TInline c -> has_any c
+    | TBuf c | TRef (_, c) | TInline c -> has_any c
     | TVar _ | TInt _ | TFloat _ | TUnit | TExn | TConst _ -> false in
   let trust (c:cty) : ML (option cty) = if has_any c then None else Some c in
   (* Does this term obviously have *some* representation, whatever it is?  When
@@ -3343,7 +3343,7 @@ let coerce_prog (prog:program) : ML program =
     | TTuple ps, TTuple qs ->
       if List.length ps = List.length qs then unify_ctys ps qs acc else acc
     | TBuf p1, TBuf a1
-    | TRef p1, TRef a1
+    | TRef (_, p1), TRef (_, a1)
     | TInline p1, TInline a1 -> unify_cty p1 a1 acc
     | _ -> acc
   and unify_ctys (ps qs : list cty) (acc:list (string & cty)) : ML (list (string & cty)) =
@@ -3786,7 +3786,7 @@ let narrow_rets (prog:program) : ML program =
     | TArrow (a, _, b) -> has_any a || has_any b
     | TApp (_, args) -> args |> List.existsb has_any
     | TTuple cs -> cs |> List.existsb has_any
-    | TBuf c | TRef c | TInline c -> has_any c
+    | TBuf c | TRef (_, c) | TInline c -> has_any c
     | TVar _ | TInt _ | TFloat _ | TUnit | TExn | TConst _ -> false in
   (* Name -> the whole type, arguments included, so that a use of a name in
      head position can be peeled the same way [coerce_prog] peels it. *)

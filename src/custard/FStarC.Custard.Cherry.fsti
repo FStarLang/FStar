@@ -31,10 +31,16 @@ module FStarC.Custard.Cherry
 open FStarC.Effect
 open FStarC.Custard.Syntax
 
+(** The keys {!nonplain_types} files [TRef (RGc, _)] and [TAny] under. *)
+val ref_key : string
+val any_key : string
+
 val boxed_types : program -> ML (list string)
 
-(** The types ulib/c/cherry.h implements: [Prims.int] and [Prims.string]. *)
+(** The named types ulib/c/cherry.h implements: [Prims.int], [Prims.string]
+    and [FStar.ImmutableArray.Base.t]. *)
 val runtime_types : list string
+
 
 val nonplain_types : program -> ML (list string)
 

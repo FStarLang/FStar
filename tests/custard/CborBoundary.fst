@@ -1,8 +1,11 @@
 module CborBoundary
 
 (* A reduced deterministic-CBOR well-formedness checker, in pure F* -- no
-   Pulse, no LowParse, no krmllib -- so that Custard's direct-to-C backend
-   can extract it as part of the every-push [tests/custard] suite.
+   Pulse, no LowParse, no krmllib -- so that Custard's Cherry backend
+   can extract it as part of the every-push [tests/custard] suite.  Its
+   input is linked through ML references, which are garbage-collected, so
+   plain direct-to-C rejects it; [pulse/CborBoundarySlice.fst] is the copy
+   that goes through C.
 
    It is deliberately *not* the real EverParse parser.  It exists to keep
    exercising the four classes of behaviour that the curated CBOR corpus was

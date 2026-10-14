@@ -160,7 +160,7 @@ let rec by_value_vars (tbl:HashTable.t string (list bool)) (c:cty) : ML (list st
         if by_value then by_value_vars tbl a else [])
            |> List.flatten
   | TInline c -> by_value_vars tbl c
-  | TBuf _ | TRef _ | TArrow _ -> []
+  | TBuf _ | TRef (_, _) | TArrow _ -> []
   | _ -> []
 
 let by_value_param_table (p:program) : ML (HashTable.t string (list bool)) =
@@ -204,7 +204,7 @@ let rec by_value_names (tbl:HashTable.t string (list bool)) (c:cty) : ML (list s
         if by_value then by_value_names tbl a else [])
                                 |> List.flatten)
   | TInline c -> by_value_names tbl c
-  | TBuf _ | TRef _ | TArrow _ -> []
+  | TBuf _ | TRef (_, _) | TArrow _ -> []
   | _ -> []
 
 let rec_type_table (p:program) : ML (HashTable.t string bool) =
@@ -635,8 +635,14 @@ let rec krml_typ (env:kenv) (t:cty) : ML K.typ =
   | TArrow (a, _, b) -> K.TArrow (krml_typ env a, krml_typ env b)
   | TTuple ts -> K.TTuple (ts |> List.map (krml_typ env))
   (* karamel has no separate reference type: a [ref] is a one-element buffer,
-     which is exactly what the operations on it already say. *)
-  | TBuf t | TRef t -> K.TBuf (krml_typ env t)
+     which is exactly what the operations on it already say.  But nothing
+     would free an ML reference's buffer. *)
+  | TRef (RGc, _) ->
+    krml_reject_with "a garbage-collected reference (FStar.All.ref or \
+                      FStarC.Effect.ref)"
+      "Nothing would free it: use a Pulse reference, which is freed \
+       explicitly, or --codegen Cherry, which counts references."
+  | TBuf t | TRef (_, t) -> K.TBuf (krml_typ env t)
   (* Section 49.1.  Removed by [Simplify.inline_fields]; see the same case in
      [PrintC.decl_of]. *)
   | TInline _ ->
@@ -867,7 +873,7 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
        otherwise have every reference to it captured by this binder. *)
     let x = fresh_local env "discarded" in
     let t = match e1.ty with
-            | TBuf _ | TRef _ -> krml_typ env e1.ty
+            | TBuf _ | TRef (_, _) -> krml_typ env e1.ty
             | _ -> K.TAny in
     let b = { K.name = x; K.typ = t; K.mut = false; K.meta = [] } in
     K.ELet (b, krml_expr env e1, krml_expr (extend env x) e2)
@@ -914,7 +920,7 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
     K.EBufSub (krml_expr env b, krml_expr env i)
   | EOp ({ po_op = BufFree }, [b]) -> K.EBufFree (krml_expr env b)
   | EOp ({ po_op = BufNull }, []) ->
-    K.EBufNull (match e.ty with TBuf t | TRef t -> krml_typ env t | _ -> K.TAny)
+    K.EBufNull (match e.ty with TBuf t | TRef (_, t) -> krml_typ env t | _ -> K.TAny)
   | EOp ({ po_op = BufIsNull }, [b]) ->
     (* karamel has no [is_null], so compare against a null of the same type.
        Equality on pointers is the *polymorphic* one, and karamel types that
@@ -922,7 +928,7 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
        the [Eq]/[Neq] case below does.  Left as a bare [EOp (Eq, Bool)] the
        checker reads the width as the operand type, decides the arguments
        should be booleans, and drops the whole declaration as not Low\*. *)
-    let t = match b.ty with TBuf t | TRef t -> krml_typ env t | _ -> K.TAny in
+    let t = match b.ty with TBuf t | TRef (_, t) -> krml_typ env t | _ -> K.TAny in
     let pt = K.TBuf t in
     K.EApp (K.ETypApp (K.EOp (K.Eq, K.Bool), [pt]),
             [krml_expr env b; K.EBufNull t])

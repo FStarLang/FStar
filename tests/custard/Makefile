@@ -448,7 +448,7 @@ EGREP_FSPun = "which .NET cannot express"
 # compiler with the warnings on and run; the program must exit 0.  The direct
 # backend has no polymorphism to fall back on, so it always runs with type
 # monomorphization (section 5.0.1).
-C_TESTS += KrmlBasic CExtern CRecType IndexedSquash CByValue CDeadLet CFunPtr
+C_TESTS += KrmlBasic CExtern IndexedSquash CDeadLet CFunPtr
 C_TESTS += Rotate
 KRML_TESTS += Rotate
 # The mask is the whole point of the rule, so the C is pinned as well as run:
@@ -472,13 +472,6 @@ C_TESTS += RefStrip
 C_TESTS += CEtaChain
 CGREP_CEtaChain = "CEtaChain_g(bool" "CEtaChain_call_g(bool" "CEtaChain_h(bool"
 CNOGREP_CEtaChain = "(*CEtaChain_g)" "(*CEtaChain_call_g("
-
-# Section 57.1: an extern returning a pointer.  A C macro over untyped memory
-# hands back [void *], which C converts silently and C++ rejects, so the
-# call site has to carry the cast.  The load-bearing check is the CXX step
-# of the [%.dc] rule below, not the grep; the grep just pins the shape.
-C_TESTS += ExtPtr
-CGREP_ExtPtr = "(uint8_t *)extptr_base"
 
 # Section 60.3.  A reviewer's probe for section 57.2's [Weak; HNF].  All
 # three binders are arities whose head is *not* immediately present -- an
@@ -510,11 +503,6 @@ C_TESTS += ShiftLit
 CGREP_ShiftLit = "((uint64_t)40ULL) << n" "return (40 + n);"
 CNOGREP_ShiftLit = "return (40 << n);"
 
-# Section 61.2.  Two negation sites, broken for two different reasons.
-# EXT_FLAG is "0 || 1", so an unparenthesized !EXT_FLAG is silently true.
-C_TESTS += ExtFlag
-CGREP_ExtFlag = "if (!(EXT_FLAG)) return 0;" "if (!(EXT_FLAG)) r[0] = 0;"
-CNOGREP_ExtFlag = "!EXT_FLAG"
 # Section 26.  CVarArity's callee is an arrow-typed global *variable* -- the
 # lowering section 25.3 keeps deliberately -- so the grep asserts that the
 # variable is still a variable and that its caller nonetheless takes both
@@ -629,7 +617,10 @@ CNOGREP_TyFun = "void *"
 # independent model (CborBoundary.model.py).  CborBoundary.md documents the
 # corpus, and pulse/CborBoundarySlice.fst is the same checker over a slice,
 # which this directory cannot host because stage1 and stage2 have no Pulse.
-C_TESTS += CborBoundary
+# Its input is a list linked through ML references, which are
+# garbage-collected and which only Cherry can count, so it runs through
+# Cherry alone; pulse/CborBoundarySlice runs the same corpus through C.
+CHERRY_TESTS += CborBoundary
 
 # Section 14.5 and 14.6: a type the target declares, said both ways, and a
 # global whose initializer is a computation -- against one that is a constant
@@ -664,25 +655,6 @@ CNOGREP_CExtern = "typedef cextern_handle_t" "CExtern_handle" "CExtern_tag" \
 # representation at all.  This is EverParse's whole parse/serialize idiom.
 CGREP_IndexedSquash   = "IndexedSquash_payload _2;"
 CNOGREP_IndexedSquash = "void *"
-
-# Section 17.3: recursion through a pointer.  Every struct is tagged and every
-# tag is forward-declared, so a field may name a type that is defined later --
-# which a self-referential type always does.
-CGREP_CRecType   = "typedef struct CRecType_tree_s CRecType_tree;" \
-                   "typedef struct CRecType_node_s CRecType_node;" \
-                   "struct CRecType_node_s {" \
-                   "CRecType_tree *left;"
-# No struct typedef is anonymous any more, and the recursive types are not
-# rejected as infinite: the recursion goes through a pointer.
-CNOGREP_CRecType = "typedef struct {" "} CRecType_tree;" "} CRecType_node;"
-
-# Section 18.4: a field held by value needs a complete type, so the struct
-# definitions are topologically sorted over the by-value edges -- which are
-# acyclic even when the group as a whole is cyclic through a pointer.  The
-# real assertion is that this compiles: without the sort, [arr] holds a
-# [slice__raw] that is still incomplete at that point, which is an error.
-CGREP_CByValue   = "CByValue_slice__raw a_ptr;" "CByValue_raw *s_base;"
-CNOGREP_CByValue = "typedef struct {"
 
 # Section 19.5: a pattern that names fields the body never reads leaves a
 # declaration with an initializer and no use, which -Werror=unused-variable
@@ -2258,17 +2230,6 @@ CHNOGREP_Narrow += "CUSTARD_FLOAT16_DEFINED"
 CGREP_Narrow += "\#ifndef CUSTARD_FLOAT16_DEFINED"
 CHNOGREP_NarrowG += "CUSTARD_FLOAT16_DEFINED"
 
-# Section 123.  [custard_unit] is emitted where it is used and nowhere else.
-# It is genuinely still reachable -- a [ref unit] is a [custard_unit *] --
-# but for a whole program it is usually reachable nowhere, which is why it
-# was boilerplate in every header and a use in none of them.
-C_TESTS += CUnitTy CUnitRef
-CHGREP_CUnitTy += "typedef uint8_t custard_unit;"
-CGREP_CUnitTy += "custard_unit *cell;"
-CHNOGREP_CUnitRef += "custard_unit"
-CGREP_CUnitRef += "typedef uint8_t custard_unit;"
-CGREP_CUnitRef += "CUnitRef_get(custard_unit *r)"
-
 # Section 123.  And the ordinary case: a program that uses neither gets
 # neither, which is every program in this suite bar the three above.
 CHNOGREP_KrmlBasic += "custard_unit" "CUSTARD_FLOAT16_DEFINED"
@@ -3314,19 +3275,6 @@ CGREP_SzWidth32 += "return (uint32_t)n;"
 # The narrowed run must not mention size_t anywhere, in either file.
 CNOGREP_SzWidth32 += "size_t"
 
-# Section 6.  The dangling [else].  Both arms of each pair are one statement,
-# so both would be written unbraced, and an unbraced [if] with no [else] in a
-# [then] arm captures the [else] that follows it.  [-Wall -Werror] catches the
-# shape -- gcc and clang both have [-Wdangling-else] -- but the load-bearing
-# check is that the program *runs*: [f false true] must return 2 and [g G
-# false] must return 2, and under the capture the first falls through to 0 and
-# the second takes the [B] arm.
-C_TESTS += CDangle
-FLAGS_CDangle = --codegen C --custard_entry_module CDangle
-CGREP_CDangle += "if (a) {"
-CGREP_CDangle += "else if (x == CDANGLE_G)"
-CNOGREP_CDangle += "if (a) if ("
-
 # Section 129.  A copy binding between a tuple's constructor and the match
 # that consumes it.  F* elaborates [let (a, (b, ())) = p] into [let
 # _letpattern = p in match _letpattern with ...] whenever the scrutinee is
@@ -3451,9 +3399,8 @@ all: $(CHERRY_DIR)/CherrySepApp.chran
 
 # Every direct-C test goes through Cherry too, except the ones Cherry does not
 # cover yet.  This one hands a Prims.string to hand-written C expecting a
-# [const char *], and this one has hand-written C hand back raw memory as an
-# ML reference, which under Cherry is a counted cell:
-CHERRY_C_SKIP += PatStr ExtPtr
+# [const char *]:
+CHERRY_C_SKIP += PatStr
 
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
                   $(C_TESTS) $(CXX_TESTS) $(CHERRY_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \

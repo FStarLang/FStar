@@ -107,13 +107,16 @@ let lost_cast (e:expr) (t:cty) : bool =
 let warn_any (prog:program) : ML unit =
   let sites : ref (list string) = mk_ref [] in
   let note (s:string) : ML unit = sites := s :: !sites in
+  (* Under Cherry a [TAny] is [FStar.Dyn.dyn], whose value carries its type
+     information, so nothing is lost; PrintC rejects a coercion into one. *)
+  let cherry = Options.custard_cherry () in
   let rec any_cty (c:cty) : ML bool =
     match c with
-    | TAny -> true
+    | TAny -> not cherry
     | TArrow (a, _, b) -> any_cty a || any_cty b
     | TApp (_, args) -> args |> List.existsb any_cty
     | TTuple cs -> cs |> List.existsb any_cty
-    | TBuf c | TRef c | TInline c -> any_cty c
+    | TBuf c | TRef (_, c) | TInline c -> any_cty c
     | TVar _ | TInt _ | TFloat _ | TUnit | TExn | TConst _ -> false in
   let at (where:string) (c:cty) : ML unit =
     if any_cty c then note ("the " ^ where ^ " has type " ^ show c) in
