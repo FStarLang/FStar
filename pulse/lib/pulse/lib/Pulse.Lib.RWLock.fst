@@ -774,6 +774,13 @@ fn rec acquire_reader (#pred : perm -> slprop) {| fractional pred |} (#perm_lock
 //
 
 /// Try to release reader with expected count
+// Like `slice_swap_aux` in Pulse.Lib.Swap.Slice, the obligation at the end of
+// this function got substantially more expensive once Pulse proof obligations
+// started being batched into a single shared SMT query per definition: it is
+// now discharged with its sibling goals asserted in the same solver context.
+// Measured cost of the hardest goal: 0.04 rlimit before batching, ~3.2 after,
+// i.e. ~65% of the default budget of 5. Bumped to keep a real margin.
+#push-options "--z3rlimit 20"
 fn try_release_reader_at (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred) (#f:perm)
                          (expected : (n:U32.t{U32.v n > 0 /\ U32.v n < U32.v writer_sentinel}))
   preserves is_rwlock l #perm_lock
@@ -935,6 +942,7 @@ fn try_release_reader_at (#pred : perm -> slprop) {| fractional pred |} (#perm_l
     false
   }
 }
+#pop-options
 
 /// Release reader: spin until successful
 /// Reads current counter and tries to decrement

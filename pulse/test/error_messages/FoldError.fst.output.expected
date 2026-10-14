@@ -1,8 +1,8 @@
-* Info at FoldError.fst(13,2-13,22):
+* Info at FoldError.fst(5,67-5,68):
   - Expected failure:
   - Failed to prove pure property: ‘false’
-  - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
   - In context: r: Pulse.Lib.Reference.ref Prims.int
+  - See also FoldError.fst(10,11-10,24)
 

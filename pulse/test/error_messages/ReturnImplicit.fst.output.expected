@@ -1,9 +1,8 @@
 * Info at ReturnImplicit.fst(12,2-12,4):
   - Expected failure:
-  - Ill-typed term
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
   - In context: uu___0: Prims.unit
-  - Also see: Prims.fst(477,18-477,24)
+  - See also Prims.fst(477,18-477,24)
 

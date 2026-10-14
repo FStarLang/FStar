@@ -1,11 +1,10 @@
 * Info at Bug94.fst(9,16-9,18):
   - Expected failure:
-  - Ill-typed term
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
   - In context: uu___0: Prims.unit
-  - Also see: Prims.fst(477,18-477,24)
+  - See also Prims.fst(477,18-477,24)
 
 * Info at Bug94.fst(16,16-16,17):
   - Expected failure:
@@ -13,7 +12,6 @@
 
 * Info at Bug94.fst(30,18-30,27):
   - Expected failure:
-  - Ill-typed term
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
@@ -24,4 +22,5 @@
           -> Prims.GTot (FStar.Ghost.erased Prims.int)
       hundred == Bug94.divide 100
       __: Prims.unit
+  - See also Bug94.fst(22,19-22,32)
 

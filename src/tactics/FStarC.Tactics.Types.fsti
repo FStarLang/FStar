@@ -78,6 +78,10 @@ type proofstate = {
     psc          : PO.psc;       //primitive step context where we started execution
     entry_range  : Range.t;  //position of entry, set by the use
     guard_policy : guard_policy; //guard policy: what to do with guards arising during tactic exec
+    guard_label  : string;       //label attached to goals arising from guards during tactic exec,
+                                 //so a metaprogram can explain what an SMT obligation it generated
+                                 //is for, without having to discharge it eagerly to find out
+                                 //whether it succeeds (see [with_error_message])
     freshness    : int;          //a simple freshness counter for the fresh tactic
     tac_verb_dbg : bool;         //whether to print verbose debugging messages
 

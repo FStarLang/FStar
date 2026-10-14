@@ -299,13 +299,16 @@ let parse_guard_policy (s:string) : Tac guard_policy =
   | _ -> Tactics.fail ("Unknown guard policy: " ^ s)
 
 let main t pre : RT.dsl_tac_t = fun (g, expected_t) ->
-  (* We use the ForceSMT policy by default, to discharge guards
-  immediately when they show, allowing SMT. This
-  proofstate and discharge them all at the end, potentially joining
-  them (see below).
-  This can be overriden to others by `--ext pulse:guard_policy=<guard>`
-  where <guard> is one of of the above (see parse_guard_policy). *)
-  set_guard_policy ForceSMT;
+  (* Guards are handed to the proofstate and discharged together at the end of
+  the definition, rather than forced one at a time as they arise. Obligations
+  that share a context are then merged into a single query by
+  [TypeChecker.Rel.combine_goals], so the context is encoded once instead of
+  once per obligation.
+
+  This can be overriden by `--ext pulse:guard_policy=<guard>` where <guard> is
+  one of the above (see parse_guard_policy); in particular `ForceSMT` restores
+  the old eager behaviour. *)
+  set_guard_policy SMT;
   if ext_getv "pulse:guard_policy" <> "" then
     set_guard_policy (parse_guard_policy (ext_getv "pulse:guard_policy"));
 

@@ -362,19 +362,18 @@ let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) : T.Tac 
       
       let b = mk_binder "res" range_0 c2.res in
       let phi = tm_inames_subset j i in
-      // Or:
-      // let typing = core_check_tot_term g phi tm_prop in
-      let tok = T.with_policy T.ForceSMT (fun () -> try_check_prop_validity g phi) in
-      if None? tok then (
+      (* Don't speculate on the SMT solver: hand the obligation over with an
+         explanation attached, so that it is batched with the rest of this
+         definition's obligations and still reports this message if it fails. *)
+      let msg =
         let open Pulse.PP in
-        fail_doc g (Some (RU.range_of_term i)) [
+        render (
           prefix 4 1 (text "Annotated effect expects only invariants in") (fquotes (pp i)) ^/^
           prefix 4 1 (text "to be opened; but computed effect claims that invariants") (fquotes (pp j)) ^/^
           text "are opened"
-        ]
-      );
-
-      let Some tok = tok in
+        )
+      in
+      let _ = T.with_error_message msg (fun () -> check_prop_validity g phi) in
 
       c
 

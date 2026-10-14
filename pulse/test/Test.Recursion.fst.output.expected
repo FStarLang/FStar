@@ -1,6 +1,5 @@
-* Info at Test.Recursion.fst(86,2-86,20):
+* Info at Test.Recursion.fst(84,12-84,14):
   - Expected failure:
-  - Ill-typed term
   - Could not prove termination
   - The SMT solver could not prove the query.
   - Failed to prove: () << ()
@@ -16,10 +15,10 @@
           -> ghost fn
                requires Pulse.Lib.Core.emp
                ensures Pulse.Lib.Core.emp
+  - See also Test.Recursion.fst(86,2-86,20)
 
-* Info at Test.Recursion.fst(130,4-130,22):
+* Info at Test.Recursion.fst(127,12-127,13):
   - Expected failure:
-  - Ill-typed term
   - Could not prove termination
   - The SMT solver could not prove the query.
   - Failed to prove: z - 1 << z
@@ -39,4 +38,5 @@
                ensures Pulse.Lib.Core.emp
       (z <> 0 && y <> 0) == true
       y - 1 >= 0
+  - See also Test.Recursion.fst(130,4-130,22)
 

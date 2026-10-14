@@ -53,6 +53,7 @@
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
   - In context: uu___: Prims.unit
+  - See also TestErrorLocations.fst(58,15-58,17)
 
 * Info at TestErrorLocations.fst(62,15-62,17):
   - Expected failure:

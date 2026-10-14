@@ -59,6 +59,15 @@ val clear_memo_table (_:unit)
   : ML unit
 
 val empty_token : guard_commit_token_cb
+
+(* How many times the core checker's cache has been committed into the global
+   memo table. A caller that discards work which may have committed -- the
+   tactic monad's [catch], say -- can compare this across the discarded region
+   and clear the memo table if it moved. Committing is an undertaking to prove
+   a guard, and dropping the goal that carried that undertaking while keeping
+   the memoized typing would let a later identical guard be silently discarded. *)
+val commit_count : unit -> ML int
+
 val commit_guard (tok:guard_commit_token_cb) : ML unit
 val commit_guard_and_tok_opt (_: option guard_and_tok_t) : ML unit
 
