@@ -1280,26 +1280,18 @@ let extern_type_of_lid (l:Ident.lident) : ML (option extern) =
   | x :: _ -> Some x
   | [] -> extern_types |> List.tryPick (fun (k, x) -> if k = s then Some x else None)
 
+(* Section 8.2.  The modules realized by hand that have an F* implementation
+   too, so that {!is_interface_only_module} cannot tell.  A module with only an
+   interface needs no entry here. *)
 let realized_modules : list (list string) = [
-  ["FStar"; "All"];
-  ["FStar"; "Bytes"];
-  ["FStar"; "Char"];
   ["FStar"; "Dyn"];
-  ["FStar"; "Exception"];
   ["FStar"; "Exn"];
-  ["FStar"; "IO"];
-  ["FStar"; "ImmutableArray"];
-  ["FStar"; "ImmutableArray"; "Base"];
-  ["FStar"; "Issue"];
   ["FStar"; "List"];
   ["FStar"; "List"; "Tot"; "Base"];
   ["FStar"; "Option"];
   ["FStar"; "Parse"];
   ["FStar"; "Pervasives"];
   ["FStar"; "Pervasives"; "Native"];
-  ["FStar"; "Pprint"];
-  ["FStar"; "Sealed"];
-  ["FStar"; "String"];
   (* The machine integers.  [machine_int_rule] above already turns every
      operation the modules *declare* into a builtin, so nothing normally
      reaches their F* definitions; [eq_mask] and [gte_mask] have no rule,
@@ -1316,33 +1308,11 @@ let realized_modules : list (list string) = [
   ["FStar"; "UInt16"];
   ["FStar"; "UInt32"];
   ["FStar"; "UInt64"];
-  ["FStarC"; "Array"];
-  ["FStarC"; "BaseTypes"];
-  ["FStarC"; "Effect"];
-  ["FStarC"; "Filepath"];
-  ["FStarC"; "Format"];
-  ["FStarC"; "Getopt"];
-  ["FStarC"; "Hash"];
-  ["FStarC"; "Int"; "Extra"];
-  ["FStarC"; "Json"];
-  ["FStarC"; "List"];
-  ["FStarC"; "PIMap"];
-  ["FStarC"; "PSMap"];
-  ["FStarC"; "Platform"; "Base"];
-  ["FStarC"; "Plugins"; "Base"];
-  ["FStarC"; "Pprint"];
-  ["FStarC"; "Range"];
-  (* Reached under their [FStar.Stubs.*] names; see {!no_fstar_stubs}. *)
+  (* Reached under their [FStar.Stubs.*] names; see {!no_fstar_stubs}.  The
+     [FStarC] name has no interface of its own on the include path. *)
   ["FStarC"; "Reflection"; "Types"];
   ["FStarC"; "Tactics"; "Unseal"];
   ["FStarC"; "Tactics"; "V2"; "Builtins"];
-  ["FStarC"; "String"];
-  ["FStarC"; "StringBuffer"];
-  ["FStarC"; "Tactics"; "Native"];
-  ["FStarC"; "Time"];
-  ["FStarC"; "Timing"];
-  ["FStarC"; "Unionfind"];
-  ["FStarC"; "Util"];
   ["Prims"];
   (* Section 128.  Pulse's lock, which must never be compiled from its F*
      source: [Pulse.Lib.Primitives.cas] is a *specification* -- a read
@@ -1459,9 +1429,37 @@ let is_known_krml_model_op (ns : list string) (id : string) : ML bool =
   | Some (_, ops) ->
     let _, id = krml_compat_name ns id in
     ops |> List.existsb (fun o -> o = id)
+
+(* The dependency graph of the program being extracted, for
+   {!is_interface_only_module}.  Set by [Extract.init]. *)
+let realized_deps : ref (option FStarC.Parser.Dep.deps) = mk_ref None
+
+let set_deps (d : FStarC.Parser.Dep.deps) : ML unit = realized_deps := Some d
+
+(* Section 8.2.  A module with an interface and no implementation is realized
+   by hand, as it was for ML extraction: there is no F* code to compile, so
+   its values can only come from a hand-written [.ml] (or [.fs]).  So a new
+   realized module needs no entry in {!realized_modules} (though the compiler's
+   own still need a stage0 that has this rule).
+
+   Only the ML backends.  On the C and karamel backends an interface-only
+   module is not realized: its values are externals whatever this says, and
+   its types are Custard's to lay out.  A module that is not on the include
+   path at all is not interface-only either: nothing is known about it. *)
+let is_interface_only_module (ns : list string) : ML bool =
+  (Options.codegen () = Some Options.OCaml ||
+   Options.codegen () = Some Options.FSharp) &&
+  (match !realized_deps with
+   | None -> false
+   | Some d ->
+     let key = String.lowercase (String.concat "." ns) in
+     Some? (FStarC.Parser.Dep.interface_of d key) &&
+     None? (FStarC.Parser.Dep.implementation_of d key))
+
 let is_realized_module (ns : list string) : ML bool =
   realized_modules |> List.existsb (fun m -> m = ns)
   || is_krml_model ns
+  || is_interface_only_module ns
 
 
 (* A realization *replaces* the F* module, values included: where there is a
@@ -1669,10 +1667,13 @@ let builtin_rule (l:Ident.lident) : ML rule =
            else if Options.custard_cherry () && ns = ["FStar"; "Dyn"] &&
                    Some? (dyn_rule id)
            then dyn_rule id
+           (* A rule for one name beats the module-wide [Rule_realized], as
+              for every family above. *)
+           else if Some? (pulse_rule ns id) then pulse_rule ns id
            else if is_realized_module ns &&
                    not (Options.custard_cherry () && is_cherry_source_module ns)
            then Some Rule_realized
-           else pulse_rule ns id)
+           else None)
       | [] -> None
   in
   match r with

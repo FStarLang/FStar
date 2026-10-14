@@ -175,11 +175,17 @@ val krml_compat_name : list string -> string -> list string & string
     assertion and is taken at its word. *)
 val is_known_krml_model_op : list string -> string -> ML bool
 
+(** The dependency graph {!is_realized_module} consults to find the
+    interface-only modules. *)
+val set_deps : FStarC.Parser.Dep.deps -> ML unit
+
 (** Whether a module is realized by hand in OCaml (section 8.2), and so has a
     [.ml] of its own in [src/ml] or [ulib/ml] that Custard must neither
     compile over nor write a file on top of, or is one karamel models itself
-    ({!is_krml_model}).  Takes a namespace that has already been through
-    {!no_fstar_stubs}. *)
+    ({!is_krml_model}).  On the ML backends every module that has an
+    interface and no implementation is realized, as it was for ML extraction;
+    the ones that have both are listed.  Takes a namespace that has already
+    been through {!no_fstar_stubs}. *)
 val is_realized_module : list string -> ML bool
 
 (** Whether a realized module is realized for its *types only*, so that its

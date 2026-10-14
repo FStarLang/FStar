@@ -465,6 +465,7 @@ let float_probe_of_env (env : ref TcEnv.env) (ns : list string) : ML (option fwi
 let init (deps:Dep.deps) (env:TcEnv.env) : ML state =
   let envr = mk_ref env in
   Builtins.set_float_probe (float_probe_of_env envr);
+  Builtins.set_deps deps;
   {
   deps    = deps;
   env     = envr;
