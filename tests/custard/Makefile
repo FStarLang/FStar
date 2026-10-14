@@ -542,11 +542,16 @@ FLAGS_CInitTrap = --custard_entry CInitTrap.use --custard_entry CInitTrap.direct
 CGREP_CInitTrap = "CInitTrap_wrapped(bool a, bool b)" \
                   "return CInitTrap_band(a, b);" \
                   "CInitTrap_picked(bool"
-# `FStar.Pervasives.false_elim` becomes EAbort, like magic and admit: an
-# abort() rather than the loop it is defined as, which on C was a hard 368.
+# `FStar.Pervasives.false_elim` becomes EUnreachable (magic and admit get EAbort):
+# an abort() rather than the loop it is defined as, which on C was a hard 368.
 C_TESTS += CFalseElim
 CGREP_CFalseElim = "FStar.Pervasives.false_elim" "abort();"
 CNOGREP_CFalseElim = "FStar_Pervasives_false_elim"
+# FStarLang/FStar#4661.  An [admit] is a placeholder and its branch is kept;
+# a [false_elim] under a proof of [False] is unreachable and is pruned.
+C_TESTS += CAdmitKept
+CGREP_CAdmitKept = "Prims.admit" "abort();"
+CNOGREP_CAdmitKept = "FStar.Pervasives.false_elim"
 CNOGREP_CInitTrap = "(*CInitTrap_wrapped)" "(*CInitTrap_picked)" \
                     "custard_init_globals" "CInitTrap_id_fn" "CInitTrap_snd_fn"
 # Section 30.5.  A Type0 *field* projected in a type position, inside a

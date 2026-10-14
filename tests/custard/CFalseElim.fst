@@ -16,7 +16,8 @@ module CFalseElim
    on it became a 368 about the *return* type of a function that never
    returns.
 
-   `EAbort` at `TAny` fixes both: `TAny` stands where a value of any type is
+   An abort at `TAny` fixes both (an `EUnreachable`, since unlike `magic` and
+   `admit` the `squash False` argument is a proof): `TAny` stands where a value of any type is
    wanted, so the C backend stops caring what the result type was.
 
    [g] is reachable but not taken, so the test compiles, runs, and returns 0;
