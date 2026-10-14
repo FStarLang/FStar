@@ -67,7 +67,7 @@ Prototype status (`FStarC.Custard.Cherry.infer_borrows`):
 - Imported definitions are pinned to the convention recorded in their unit's interface: the `.cui` gives each definition a `CherryConv` flag, one owned/borrowed bit per binder, after inference. An imported definition without the flag (a unit compiled for plain C) is taken as all-owned. A unit's exported definitions are inferred like any other.
 - `[@@@cherry_owned]`/`[@@@cherry_borrowed]` on a binder fix that parameter's convention (Extract records them positionally as a `CherryMode` flag), and the fixpoint never changes it. Both are always sound, since the rc pass incs a borrowed parameter where it is stored and decs an owned one where it dies. Both on one binder is warning 371, and both are ignored. They still feed inference elsewhere: an owned parameter passed on in a tail call makes the callee's parameter owned.
 - The closure entry of a definition (static closures and partial applications) adapts the conventions. Borrowed captured fields are not inc'd. Borrowed arguments are dec'd after the call, since the entry receives them owned. No separate `_boxed` wrapper is needed.
-- Not yet done: the attributes on externals (whose conventions come from the runtime's table).
+- Externals borrow every argument by default. The runtime's own externals take their conventions from a table in `Cherry.runtime_externals`; any other external can say `[@@@cherry_owned]` on a binder of its type (`assume val f : ([@@@cherry_owned] s: string) -> ML t`), and then the C function receives a reference it must release. Test: `tests/custard/CherryExtOwn.fst`, whose owned stub calls `cherry_dec`.
 
 ## Inserting reference counting operations
 
@@ -82,6 +82,15 @@ The any type is represented as a fat pointer: a pair of a uintptr_t and an RTTI 
 FStar.Dyn.dyn generates the any type. Casting any to any is the identity (undyn is unchecked, so nothing is lost).
 
 Prototype status: under Cherry, `dyn` extracts to the IR's `TAny` (the type of values whose representation was lost elsewhere), which prints as `cherry_any` (`{uintptr_t v; const cherry_rtti *rtti}`), and `mkdyn`/`undyn` become ops that are monomorphized per payload type. Each payload type gets `cherry_anyN_mk`/`_get` helpers and a static `cherry_rtti`. The RTTI holds the payload's name and its inc, dec and mark functions. For plain payloads these are NULL, and the runtime's `cherry_any_inc/dec/mark` skip them. `mkdyn` takes its operand owned and `undyn` borrows. A payload with `sizeof(T) <= sizeof(uintptr_t)` is stored inline; a larger one is stored in a counted cell. The prototype keeps undyn checked: `_get` compares the RTTI pointer and aborts with both type names on a mismatch. RTTIs are per-unit statics, so a `dyn` made in another unit carries that unit's RTTI; `_get` then falls back to comparing the C type names (see "Separate compilation"). `FStar.Dyn.fst` models `dyn` as an arrow abbreviation, so extraction keeps the folded codomain of a definition's type, and a global or result of type `dyn` stays `dyn`. Test: `tests/custard/CherryDyn.fst`.
+
+Extraction also produces `TAny` where OCaml would use `Obj.t`: dependent types (`if b then int else bool`), type-level computations (a printf whose type is computed from its format), and method types that are polymorphic in their own right. OCaml can ignore the mismatch between `any` and the real type, but C cannot. The Cherry pass therefore lowers every coercion between `any` and a concrete type to `Dyn mk`/`get` (`lower_any`), and makes the IR's types agree first:
+- A type variable that monomorphization left standing (e.g. the `'a` of `ret : #a:Type -> a -> m a`) becomes `any`.
+- A pattern variable bound from an `any` field is typed `any` in its branch, so that the coercion out of it is not taken for a no-op.
+- An application is typed by its head. Where the head returns `any` and extraction typed the call concretely, the result is coerced. Where extraction typed the call `any` and the head knows better, the call keeps the head's type and its consumer coerces it.
+- The arms of an `if` or `match` typed `any` are coerced to `any`, and a function body to its declared result type.
+- A closure stored in `any` is stored at its uniform type, with every parameter and the result `any`. A coercion between arrow types builds an adapting lambda that coerces each argument and the result. If the source arrow takes fewer parameters than the target, the adapter applies the source to the first ones and adapts the closure it returns to the rest.
+
+`tests/custard/AnyLambda`, `AnyCond`, `HigherKind`, `RetArity` and `Combinators` cover these.
 
 ## References
 
@@ -112,7 +121,10 @@ The prototype implements this as follows:
 - The Cherry pass lambda-lifts every lambda to a private top-level function taking the captured variables first, and the lambda becomes the partial application of that function to them. Externals used as values or partially applied get a wrapper definition the same way, and over-applications of known functions are split into a saturated call followed by a closure call. Afterwards a function value is a function's name (a static closure), a partial application of a known function, or a variable.
 - `cherry.h` defines the closure cell (`cherry_closure`: header, entry point, drop and mark functions, arity, then the environment). The entry point takes the closure borrowed and the arguments owned.
 - For each partially applied function and number of arguments, the printer generates an environment struct, an entry point (which increments the captured values and calls the function), drop/mark functions and a constructor. For each closure type and number of arguments it generates `cherry_apply_T_k`, which switches on the arity: an exact call, a call followed by applying the result to the remaining arguments, or a new closure capturing the arguments given so far. Helpers are generated on demand from a worklist.
-- Arity counts only the non-unit parameters. Custard drops unit parameters from definitions (Mono's rule 1) while the function types at use sites keep them, so this is the only count on which a definition and its type agree; it is also the one the C backend uses for function pointers.
+- Arity counts only the non-unit parameters. Custard drops unit parameters from definitions (Mono's rule 1) while the function types at use sites keep them, so this is the only count on which a definition and its type agree; it is also the one the C backend uses for function pointers. A call site counts a unit parameter as supplied when the next argument is not a unit, and skips a unit argument that has no parameter.
+- A closure whose remaining parameters are all units (a thunk, or a partial application that leaves only units) gets the arity `CHERRY_ARITY_UNITS`, not 0. Applying it to no further arguments returns it unchanged if the type says that more arrows follow, and runs it otherwise. With arity 0, a partial application `f x` of `f x ()` would run `f` early.
+- As on OCaml, closures are polymorphic, so erased binders stay in a lambda as unit parameters (`heap_closures` in Extract). Otherwise the same closure would have different arities at different types.
+- A self tail call in a definition becomes a jump to its start (`goto custard_tail`), so tail-recursive loops run in constant stack.
 - A closure call borrows the closure and takes the arguments owned; a partial application takes its arguments owned.
 - A global of function type holds a closure (persistent, see Globals), so a call through it is a closure call.
 
@@ -121,6 +133,7 @@ The prototype implements this as follows:
 Inductive types can be tagged as custard_boxed. Then they are allocated on the heap so that they fit in a pointer. Constructors without fields (None, Nil, etc.) are stored directly as scalars without a heap allocation (e.g. `(n << 1) | 1`, like Lean). The other constructors are stored in heap cells, which have different sizes depending on the fields.
 The constructor number is always stored in the heap cell header. Storing it in the pointer tag as well is an optional fast path (there are only 3 low tag bits, and the high bits are not available on 32-bit or with 5-level paging), e.g. for types with few constructors.
 Recursive types are automatically custard_boxed.
+Custard turns every single-constructor type into a record. A recursive record (e.g. `type tree = Node : int -> forest -> tree`) is boxed as a variant with the single constructor `Mk_tree`, so it shares the code path of other boxed types. Projections out of it read the cell's field.
 
 Structural equality (`=` at a type with decidable equality) borrows both operands and is generated per type, as in the C backend. For a boxed type, `T__eq` first checks for the same pointer (which also covers equal scalars), then compares tags and the fields of the cell. The last field of the cell's own type is compared by looping rather than by a recursive call, so two long lists compare in constant stack; other recursive fields, such as the left subtree of a tree, still recurse. Integers and strings compare by value through the runtime.
 
@@ -197,6 +210,17 @@ Two kinds of runtime identity are per unit, and the runtime matches them by name
 
 The slow path costs a `strcmp`, only when values cross units, and only when matching exceptions or reading a `dyn`. Test: `tests/custard/CherrySepLib.fst` and `CherrySepApp.fst`, which pass lists, globals, closures in both directions, exceptions raised through the other unit, refs, immutable arrays, equality on imported types and `dyn` values across the boundary.
 
+## Programs and tests
+
+`--custard_main M.main` makes the program's `main` call `M.main` after the units are initialized. A module whose top-level effects (`let _ = ...`) run code gets a `main` that runs them.
+F\* modules that the OCaml backend links as hand-written realizations, but whose F\* source is good enough, are compiled from source under Cherry (`Builtins.cherry_source_modules`: `FStar.List`, `FStar.List.Tot.Base`, `FStar.Option`). The rest are implemented in `cherry.c`: the `Prims.int` and `Prims.string` primitives, `string_of_bool`, `FStar.IO.print_newline`, `FStar.Parse`, the machine integers' `v`/`to_string`, and the conversions between `Prims.int` and the machine integers. A guarded branch `p when g -> b` becomes `p -> if g then b else rest`, where `rest` is the match on the remaining branches, followed by a `_ -> rest` branch.
+
+Tests:
+- `tests/custard` runs its Cherry tests (`CHERRY_TESTS`) and the direct-C tests through Cherry under ASan and UBSan. It also runs each OCaml-run test (`CUSTARD_TESTS`) through Cherry and compares the output with the same `.out.expected` (`.chdiff`). Nine of those are skipped (`CHERRY_OCAML_SKIP`): they use OCaml functors, realizations written only for OCaml, `reify`, an effect whose box type is a function, or a constructor matched out of `any` at an instance that only its uses determine.
+- `tests/custard/pulse` runs the Pulse tests through Cherry.
+- `make run-cherry` in `tests/extraction`, `tests/bug-reports/closed`, `examples/printf` and `examples/algorithms` runs every test those directories run on OCaml through Cherry and diffs against the same expected output (`mk/test.mk`; `NO_CHERRY` lists exclusions).
+- `tests/extraction/backends` has a Cherry column.
+
 ## Benchmarks
 
 `tests/custard/bench` builds the same F* programs with Cherry (`gcc -O2`, system malloc), the OCaml backend (OCaml 5.3, no flambda) and the F# backend (.NET 10, Release), and times them: `make bench` (`RUNS`, `BACKENDS`, `BENCHES` select). It is not part of `make test`. Each program checks its own result. Every run gets a 1 GB stack, OCaml 5's default limit, because some of the recursion is not tail calls. All arithmetic is on `Prims.int`, as in the compiler: Cherry uses tagged small ints, OCaml uses Zarith, and F# uses BigInteger.
@@ -226,3 +250,17 @@ Cherry wins where values are reused in place (Strings, where `acc ^ x` appends t
 
 Cherry is a separate backend, `--codegen Cherry`, which shares most of its code with `--codegen C`. It is separate because it needs runtime support, extra includes, and generated auxiliary functions (inc/dec/mark functions, RTTI, `_boxed` wrappers, apply_n helpers). Since reference counting operations are inserted in a separate IR pass, the shared emitter needs only minor changes; the generated boilerplate is new code that does not affect the existing C pipeline. The runtime itself (cell header, inc/dec/mark primitives, integers, strings, closures) is not generated: it is the hand-written `ulib/c/cherry.h` (types and inline fast paths) and `ulib/c/cherry.c` (slow paths: big integer arithmetic, string operations), distributed with F\*. Generated units `#include "cherry.h"`; users add `$(fstar.exe --locate_lib)/ulib/c` to the include path and compile and link `cherry.c` with the program.
 The Cherry pass maps the F\* primitives on `Prims.int` and `Prims.string` (arithmetic, comparisons, `strcat`, `string_of_int`, `FStar.String.{strlen,index,sub,compare}`, `FStar.IO.print_string`) to runtime functions, with per-argument ownership: they borrow their arguments, except `strcat`, which takes its first argument owned so that it can append in place.
+
+## Known gaps
+
+The prototype runs every test in `tests/custard` and `tests/custard/pulse` through Cherry, but it is not yet a complete backend. The goal for an initial release, running the OCaml extraction tests that exist today, is met except for the skipped tests listed in "Programs and tests". Compiling the F\* compiler itself is a later goal, because it needs C implementations of the modules that are now implemented in OCaml, and porting those is out of scope for now.
+
+- **Library implementations.** The C runtime implements only what the tests use (see "Programs and tests"). Every other module with an OCaml implementation (`Builtins.realized_modules`) has no C counterpart: `FStar.Char`, the rest of `FStar.String`, and all of the compiler's `FStarC.*` support modules (`Util`, `PSMap`/`PIMap`, `Hash`, `Json`, `Getopt`, `Filepath`, `Format`, `Pprint`, ...).
+- **Mutable reference-counted arrays.** `FStarC.Array` (see "Arrays") is designed but not implemented.
+- **Threads.** Marking, persistent cells and the multi-threaded paths of references are implemented, but there is no spawn or `par` primitive that publishes values, so the multi-threaded paths are reached only through Pulse containers and globals. Nothing tests real concurrency yet, e.g. under ThreadSanitizer.
+- **Unsupported constructs.** The Cherry pass rejects disjunctive patterns, tuple patterns, anonymous tuples of counted values, lambdas in polymorphic definitions, primitive operations that return counted values, and polymorphic externals used as values. Some of these may never reach the backend; this has to be checked against real code.
+- **Matching out of `any`.** Constructor patterns on an `any` scrutinee need the monomorphic instance the value was built at, which only the pattern variables' uses determine (`tests/custard/AnyPat`). An impure effect whose box type is a function (`tests/custard/Effects`) is typed as a non-function in the IR.
+- **Globals** are computed at startup and then made persistent, rather than emitted as static cells (see "Globals").
+- **Allocation.** Cherry uses `malloc`/`free` directly. The benchmarks show that the allocator dominates allocation-heavy programs (BinaryTrees is 2.5x slower than OCaml with glibc malloc and 1.1x with mimalloc), so a small-object allocator with per-thread free lists (as in Lean) is probably needed.
+- **Reuse** does not yet cover boxed records, reusing a cell for a constructor of another type of the same size, or reusing a dead variable that was not matched on (see "Heap cell reuse").
+- **Scale.** The largest programs compiled so far are the tests and benchmarks. Nothing the size of a compiler component has been compiled yet.

@@ -3346,7 +3346,7 @@ EGREP_ArrowUnfoldLimit += "gave up unfolding an arrow type after 1000 layers"
 # The Cherry backend (cherry.md): C with reference-counted heap cells for the
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
 # is the assertion that every cell allocated is freed exactly once.
-CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn
+CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn
 
 # Freeing, marking and comparing deep values with a 1 MB stack.
 CHERRY_CFLAGS_CherryDeep = -O2
@@ -3547,6 +3547,23 @@ all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcxxran, $(CXX_TESTS)))
 all: $(addprefix $(CHERRY_DIR)/, $(addsuffix .chran, $(CHERRY_TESTS)))
 all: $(addprefix $(CHERRY_DIR)/, $(addsuffix .chran, \
        $(filter-out $(CHERRY_C_SKIP), $(C_TESTS))))
+
+# The tests run on OCaml run on Cherry too, against the same expected output.
+# Skipped: what only OCaml has -- functors (FunctorHashtbl, FunctorClass),
+# realizations written for OCaml (Externs, KeyNames, BytesFS, ExnName), reify
+# (Reify), an impure effect whose box is a function (Effects), and a
+# constructor matched out of any at an instance only its uses say (AnyPat).
+CHERRY_OCAML_SKIP = Externs KeyNames FunctorHashtbl FunctorClass Reify \
+  BytesFS ExnName Effects AnyPat
+
+$(CHERRY_DIR)/%.chdiff: $(CHERRY_DIR)/%.chexe %.out.expected
+	$(call msg, "DIFF-ASAN", $(basename $(notdir $@)))
+	$(Q)ASAN_OPTIONS=detect_leaks=1 $< > $(CHERRY_DIR)/$*.chout
+	$(Q)diff -u $*.out.expected $(CHERRY_DIR)/$*.chout
+	$(Q)touch $@
+
+all: $(addprefix $(CHERRY_DIR)/, $(addsuffix .chdiff, \
+       $(filter-out $(CHERRY_OCAML_SKIP), $(CUSTARD_TESTS))))
 
 # Section 122.  Extraction to F# is always testable; compiling the result
 # needs the .NET 10 SDK, and a consumer who has not got one should see this

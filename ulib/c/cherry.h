@@ -1,6 +1,7 @@
 /* Runtime support for F* code extracted with --codegen Cherry.
-   See cherry.md.  Generated units include this header; put the directory
-   $(fstar.exe --locate_lib)/ulib/c on the C include path.
+   See doc/ref/cherry.md in the F* repository.  Generated units include
+   this header; put the directory $(fstar.exe --locate_lib)/ulib/c on the C
+   include path.
 
    A cell starts with a [cherry_obj] header.  Its reference count is positive
    while the cell is reachable from one thread only, negative (its magnitude
@@ -134,6 +135,11 @@ cherry_int cherry_big_neg(cherry_int a);
 int cherry_big_cmp(cherry_int a, cherry_int b);
 /* A literal too large for CHERRY_INT_SMALL on every platform. */
 cherry_int cherry_int_of_decimal(const char *s);
+/* Conversions to and from the machine integers; [to] wraps modulo 2^64. */
+cherry_int cherry_int_of_i64(int64_t v);
+cherry_int cherry_int_of_u64(uint64_t v);
+int64_t cherry_int_to_i64(cherry_int x);
+uint64_t cherry_int_to_u64(cherry_int x);
 
 static inline cherry_int cherry_int_add(cherry_int a, cherry_int b) {
   if (cherry_int_both_small(a, b)) {
@@ -256,6 +262,7 @@ uint32_t cherry_str_index(cherry_string s, cherry_int i);
 cherry_string cherry_str_sub(cherry_string s, cherry_int i, cherry_int l);
 cherry_int cherry_str_compare(cherry_string a, cherry_string b);
 cherry_string cherry_string_of_int(cherry_int a);
+cherry_string cherry_string_of_bool(bool b);
 void cherry_print_string(cherry_string s);
 
 /* ------------------------------------------------------------------------
@@ -420,17 +427,30 @@ typedef struct cherry_closure {
 
 #define CHERRY_CLOSURE(f) ((cherry_closure *)(f))
 
+/* The arity of a closure that has only unit parameters left and returns a
+   value: it runs when the type it is applied at has no arrow left. */
+#define CHERRY_ARITY_UNITS 0x7fffffffu
+
 #define CHERRY_STATIC_CLOSURE(name, code, n)                               \
   static CHERRY_UNUSED cherry_closure name =                               \
     { { 0, CHERRY_TAG_CLOSURE }, (cherry_code)(code), NULL, NULL, n }
 
 void cherry_free_closure(cherry_obj *f, int mode);
 
+/* A static closure is persistent, so it never reaches [free]; GCC cannot
+   tell once it inlines one into this. */
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfree-nonheap-object"
+#endif
 static inline void cherry_dec_fn(cherry_fn f) {
   if (!cherry_dec_ref(f)) return;
   if (CHERRY_CLOSURE(f)->drop != NULL) cherry_defer(f, cherry_free_closure, 0);
   else free(f);
 }
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
 static inline void cherry_mark_fn(cherry_fn f, int mode) {
   if (cherry_mark_ref(f, mode) && CHERRY_CLOSURE(f)->mark != NULL)

@@ -423,6 +423,189 @@ and lift_branch (env:list (string & cty)) (st:cty) (br:branch) : ML branch =
   let env = pat_binds_opt p st @ env in
   (p, (match g with Some g -> Some (lift env g) | None -> None), lift env b)
 
+(* -------------------------------------------------------------------- *)
+(* Coercions through any                                                *)
+(* -------------------------------------------------------------------- *)
+
+(* Where the ML extraction writes [Obj.magic], Custard leaves an [ECoerce].
+   Under Cherry a [TAny] is a [dyn] (cherry.md, "The any type"), so a value
+   enters one by [mkdyn] and leaves by [undyn], and a function is wrapped in
+   one that converts its arguments and result.  Runs before lambda lifting,
+   which turns the wrapper into a closure. *)
+let rec mentions_any (t:cty) : ML bool =
+  match t with
+  | TAny -> true
+  | TArrow (a, _, b) -> mentions_any a || mentions_any b
+  | TApp (_, ts) | TTuple ts -> List.existsb mentions_any ts
+  | TBuf c | TRef (_, c) | TInline c -> mentions_any c
+  | _ -> false
+
+let co_counter : ref int = mk_ref 0
+let co_fresh () : ML string =
+  co_counter := !co_counter + 1;
+  "cherry_co" ^ string_of_int !co_counter
+
+let rec arrow_parts (t:cty) : list (cty & eff) & cty =
+  match t with
+  | TArrow (a, f, b) -> let (xs, r) = arrow_parts b in ((a, f) :: xs, r)
+  | _ -> ([], t)
+
+let uniform_arrow (t:cty) : ML cty =
+  let ps, _ = arrow_parts t in
+  List.fold_right (fun ((_:cty), (ef:eff)) r -> TArrow (TAny, ef, r)) ps TAny
+
+let rec coerce_any (a:expr) (t:cty) : ML expr =
+  (* A definition used as a value is a closure of its signature's type,
+     whatever it was typed at. *)
+  let a = match a.e with
+          | EQual (n, _) ->
+            (match HashTable.try_find !fn_tbl (string_of_name n) with
+             | Some (bs, r) ->
+               { a with ty = List.fold_right (fun (b:binder) r -> TArrow (b.b_ty, E_Impure, r)) bs r }
+             | None -> a)
+          | _ -> a in
+  if a.ty = t then a else
+  match a.e with
+  | EOp ({ po_op = Dyn "mk" }, [x]) when x.ty = t -> x
+  | _ ->
+  match a.ty, t with
+  (* A closure goes into any at its uniform type, every parameter and the
+     result any, so that what takes it out knows what it holds. *)
+  | TArrow _, TAny ->
+    let u = uniform_arrow a.ty in
+    let a = if a.ty = u then a else coerce_any a u in
+    mk (EOp ({ po_op = Dyn "mk"; po_ty = None }, [a])) TAny a.eff
+  | TAny, TArrow _ ->
+    let u = uniform_arrow t in
+    coerce_any (mk (EOp ({ po_op = Dyn "get"; po_ty = None }, [a])) u a.eff) t
+  | s, TAny when not (mentions_any s) ->
+    mk (EOp ({ po_op = Dyn "mk"; po_ty = None }, [a])) TAny a.eff
+  | TAny, s when not (mentions_any s) ->
+    mk (EOp ({ po_op = Dyn "get"; po_ty = None }, [a])) s a.eff
+  | TArrow _, TArrow _ ->
+    let (ss, sr) = arrow_parts a.ty in
+    let (ts, tr) = arrow_parts t in
+    if List.length ss < List.length ts then begin
+      (* The source returns, after fewer arguments, what takes the rest. *)
+      let f = co_fresh () in
+      let fv = mk (EVar f) a.ty E_Pure in
+      let bs = ts |> List.map (fun (ty, _) -> { b_name = co_fresh (); b_ty = ty }) in
+      let first, rest = List.splitAt (List.length ss) bs in
+      let args = List.map2 (fun (b:binder) ((s:cty), _) ->
+                   coerce_any (mk (EVar b.b_name) b.b_ty E_Pure) s) first ss in
+      let rest_ty = List.fold_right (fun ((x:cty), (ef:eff)) r -> TArrow (x, ef, r))
+                      (snd (List.splitAt (List.length ss) ts)) tr in
+      let g = coerce_any (mk (EApp (fv, args)) sr E_Impure) rest_ty in
+      let call = mk (EApp (g, List.map (fun (b:binder) -> mk (EVar b.b_name) b.b_ty E_Pure) rest)) tr E_Impure in
+      let lam = mk (EFun (bs, call)) t E_Pure in
+      mk (ELet (f, a.ty, a, lam)) t a.eff
+    end else
+    if List.length ss <> List.length ts then mk (ECoerce (a, t)) t a.eff else
+    let f = co_fresh () in
+    let fv = mk (EVar f) a.ty E_Pure in
+    let bs = ts |> List.map (fun (ty, _) -> { b_name = co_fresh (); b_ty = ty }) in
+    let args = List.map2 (fun (b:binder) ((s:cty), _) ->
+                 coerce_any (mk (EVar b.b_name) b.b_ty E_Pure) s) bs ss in
+    let call = mk (EApp (fv, args)) sr E_Impure in
+    let lam = mk (EFun (bs, coerce_any call tr)) t E_Pure in
+    mk (ELet (f, a.ty, a, lam)) t a.eff
+  | _ -> mk (ECoerce (a, t)) t a.eff
+
+(* A pattern variable's uses are typed at what the branch reads it as; one
+   bound from a field of type any is retyped any, so that its coercion out of
+   any is not mistaken for a no-op. *)
+let rec retype_vars (env:list (string & cty)) (e:expr) : ML expr =
+  match e.e with
+  | EVar x ->
+    (match List.tryFind (fun (y, _) -> y = x) env with
+     | Some (_, t) -> { e with ty = t }
+     | None -> e)
+  | _ -> map_children (retype_vars env) e
+
+let retype_branch (st:cty) (br:branch) : ML branch =
+  let p, g, b = br in
+  let env = pat_binds_opt p st |> List.filter (fun (_, t) -> mentions_any t) in
+  if Nil? env then br
+  else (p, (match g with Some g -> Some (retype_vars env g) | None -> None), retype_vars env b)
+
+let rec lower_any (e:expr) : ML expr =
+  let e = match e.e with
+          | EMatch (sc, brs) -> { e with e = EMatch (sc, List.map (retype_branch sc.ty) brs) }
+          | _ -> e in
+  let e = map_children lower_any e in
+  match e.e with
+  | ECoerce (a, t) when a.ty <> t && (mentions_any a.ty || mentions_any t) ->
+    coerce_any a t
+  (* An application is typed by its head's arrow; where extraction typed it
+     otherwise, through any, it is coerced back. *)
+  | EApp (hd, args) ->
+    let rec peel (n:int) (t:cty) : option cty =
+      if n = 0 then Some t else
+      match t with
+      | TArrow (_, _, b) -> peel (n - 1) b
+      | _ -> None in
+    (match peel (List.length args) hd.ty with
+     | None -> e
+     | Some r ->
+       if r = e.ty then e
+       else if mentions_any r then coerce_any { e with ty = r } e.ty
+       (* Typed any where the head says what it is: what it is, for the
+          consumer to coerce if it wants any. *)
+       else if e.ty = TAny then { e with ty = r }
+       else e)
+  (* Arms typed otherwise than the conditional they belong to, through any,
+     are coerced to it. *)
+  | EIf (c, a, b) when mentions_any e.ty ->
+    { e with e = EIf (c, arm_to e.ty a, arm_to e.ty b) }
+  | EMatch (sc, brs) when mentions_any e.ty ->
+    { e with e = EMatch (sc, List.map (fun (p, g, b) -> (p, g, arm_to e.ty b)) brs) }
+  | _ -> e
+
+and arm_to (t:cty) (a:expr) : ML expr =
+  match a.e with
+  | EAbort _ | EUnreachable _ | ERaise _ -> a
+  | _ ->
+    if a.ty <> t && (t = TAny || a.ty = TAny || (TArrow? t && TArrow? a.ty))
+    then coerce_any a t else a
+
+(* A guarded branch becomes an unguarded one whose guard picks between its
+   body and the branches after it, which a wildcard also falls through to:
+   [match x with p when g -> b | rest] is
+   [match x with p -> if g then b else (match x with rest) | _ -> match x with rest]. *)
+let rec unguard (e:expr) : ML expr =
+  let e = map_children unguard e in
+  match e.e with
+  | EMatch (sc, brs) when List.existsb (fun (_, g, _) -> Some? g) brs ->
+    let rec go (scv:expr) (brs:list branch) : ML expr =
+      let rec split (pre:list branch) (brs:list branch) =
+        match brs with
+        | [] -> None
+        | (p, Some g, b) :: rest -> Some (List.rev pre, p, g, b, rest)
+        | br :: rest -> split (br :: pre) rest in
+      match split [] brs with
+      | None ->
+        if Nil? brs then mk (EAbort "match failure") e.ty E_Impure
+        else mk (EMatch (scv, brs)) e.ty e.eff
+      | Some (pre, p, g, b, rest) ->
+        let after = go scv rest in
+        let guarded = mk (EIf (g, b, after)) e.ty e.eff in
+        mk (EMatch (scv, pre @ [(p, None, guarded); (PWild, None, after)])) e.ty e.eff in
+    (match sc.e with
+     | EVar _ -> go sc brs
+     | _ ->
+       let x = co_fresh () in
+       mk (ELet (x, sc.ty, sc, go (mk (EVar x) sc.ty E_Pure) brs)) e.ty e.eff)
+  | _ -> e
+
+let lower_any_decl (d:decl) : ML decl =
+  match d with
+  | DLet l ->
+    let b = lower_any l.dl_body in
+    let b = if Cons? l.dl_binders && b.ty <> l.dl_ret && (mentions_any b.ty || mentions_any l.dl_ret)
+            then coerce_any b l.dl_ret else b in
+    DLet { l with dl_body = b }
+  | _ -> d
+
 let lift_decl (d:decl) : ML (list decl) =
   match d with
   | DLet l ->
@@ -688,6 +871,7 @@ let runtime_externals : list (string & string & list bool) = [
   "Prims.op_Greater_Equals", "cherry_int_ge", [];
   "Prims.strcat",            "cherry_str_append", [true];
   "Prims.string_of_int",     "cherry_string_of_int", [];
+  "Prims.string_of_bool",    "cherry_string_of_bool", [];
   "FStar.String.strlen",     "cherry_str_length", [];
   "FStar.String.index",      "cherry_str_index", [];
   "FStar.String.sub",        "cherry_str_sub", [];
@@ -1228,14 +1412,107 @@ let raise_failures (p:program) : ML program =
   let missing = !used |> List.filter (fun (x, _) -> not (declared x)) in
   (missing |> List.map (fun (x, t) -> DExn { de_name = x; de_args = [t]; de_flags = [] })) @ p
 
+(* A recursive record is boxed, and is boxed the way a recursive variant is:
+   as a variant of one constructor, [Mk_] and the type's name. *)
+let derecord (bx:HashTable.t string bool) (p:program) : ML program =
+  let recs = p |> List.collect (fun d ->
+    match d with
+    | DType ({ dt_name = n; dt_body = TRecord fs })
+        when HashTable.mem bx (string_of_name n) -> [(string_of_name n, (n, fs))]
+    | _ -> []) in
+  if Nil? recs then p else
+  let mkn (n:name) : name = { n with id = "Mk_" ^ n.id } in
+  let find (n:name) = List.tryFind (fun (k, _) -> k = string_of_name n) recs in
+  let rec rpat (q:pat) : ML pat =
+    match q with
+    | PRecord (n, fps) ->
+      (match find n with
+       | Some (_, (_, fs)) ->
+         PCtor (mkn n, fs |> List.map (fun (f, _) ->
+           match List.tryFind (fun (g, _) -> g = f) fps with
+           | Some (_, q) -> rpat q
+           | None -> PWild))
+       | None -> PRecord (n, List.map (fun (f, q) -> (f, rpat q)) fps))
+    | PCtor (c, qs) -> PCtor (c, List.map rpat qs)
+    | PTuple qs -> PTuple (List.map rpat qs)
+    | POr qs -> POr (List.map rpat qs)
+    | q -> q in
+  let br (x:branch) : ML branch = let (q, g, b) = x in (rpat q, g, b) in
+  let rec go (e:expr) : ML expr =
+    let e = map_children go e in
+    match e.e with
+    | ERecord (n, fes) ->
+      (match find n with
+       | Some (_, (_, fs)) ->
+         { e with e = ECtor (mkn n, fs |> List.map (fun (f, _) ->
+             match List.tryFind (fun (g, _) -> g = f) fes with
+             | Some (_, x) -> x
+             | None -> failwith ("Cherry: record field " ^ f ^ " missing"))) }
+       | None -> e)
+    | EMatch (sc, brs) -> { e with e = EMatch (sc, List.map br brs) }
+    | ETry (b, brs) -> { e with e = ETry (b, List.map br brs) }
+    | _ -> e in
+  p |> List.map (fun d ->
+    match d with
+    | DType dt ->
+      (match find dt.dt_name with
+       | Some (_, (n, fs)) -> DType { dt with dt_body = TVariant [(mkn n, fs)] }
+       | None -> d)
+    | DLet l -> DLet { l with dl_body = go l.dl_body }
+    | d -> d)
+
+(* A type variable monomorphization left standing -- a method polymorphic in
+   its own right, say -- is a value whose type nobody here knows, and Cherry
+   has a type for that: [any], as OCaml's uniform representation would. *)
+let rec tv_any (t:cty) : ML cty =
+  match t with
+  | TVar _ -> TAny
+  | TArrow (a, f, b) -> TArrow (tv_any a, f, tv_any b)
+  | TApp (n, ts) -> TApp (n, List.map tv_any ts)
+  | TTuple ts -> TTuple (List.map tv_any ts)
+  | TBuf c -> TBuf (tv_any c)
+  | TRef (k, c) -> TRef (k, tv_any c)
+  | TInline c -> TInline (tv_any c)
+  | t -> t
+
+let rec has_tv (t:cty) : ML bool =
+  match t with
+  | TVar _ -> true
+  | TArrow (a, _, b) -> has_tv a || has_tv b
+  | TApp (_, ts) | TTuple ts -> List.existsb has_tv ts
+  | TBuf c | TRef (_, c) | TInline c -> has_tv c
+  | _ -> false
+
+let rec tv_any_expr (e:expr) : ML expr =
+  let e = map_children tv_any_expr e in
+  let bnd (b:binder) : ML binder = { b with b_ty = tv_any b.b_ty } in
+  let e' = match e.e with
+           | ELet (x, t, a, b) -> ELet (x, tv_any t, a, b)
+           | EFun (bs, b) -> EFun (List.map bnd bs, b)
+           | ECoerce (a, t) -> ECoerce (a, tv_any t)
+           | EQual (n, ts) -> EQual (n, List.map tv_any ts)
+           | x -> x in
+  { e with e = e'; ty = tv_any e.ty }
+
+let tv_any_decl (d:decl) : ML decl =
+  match d with
+  | DLet l when has_tv l.dl_ret || List.existsb (fun (b:binder) -> has_tv b.b_ty) l.dl_binders ->
+    DLet { l with dl_ret = tv_any l.dl_ret;
+                  dl_binders = List.map (fun (b:binder) -> { b with b_ty = tv_any b.b_ty }) l.dl_binders;
+                  dl_body = tv_any_expr l.dl_body }
+  | _ -> d
+
 let run (p:program) : ML program =
+  co_counter := 0;
   let p = raise_failures p in
+  let p = List.map tv_any_decl p in
   let np = HashTable.create 50 in
   nonplain_types p |> List.iter (fun k -> HashTable.add np k true);
   np_tbl := np;
   let bx = HashTable.create 50 in
   boxed_types p |> List.iter (fun k -> HashTable.add bx k true);
   boxed_tbl := bx;
+  let p = derecord bx p in
   let ct = HashTable.create 50 in
   let rt = HashTable.create 50 in
   let xt = HashTable.create 50 in
@@ -1252,7 +1529,12 @@ let run (p:program) : ML program =
       let owns = match List.tryFind (fun (n, _, _) -> n = string_of_name x.dx_name)
                                     runtime_externals with
                  | Some (_, _, fl) -> fl
-                 | None -> [] in
+                 | None ->
+                   (* An external borrows its arguments unless a binder says
+                      [[@@@cherry_owned]] (Syntax.CherryMode). *)
+                   match List.tryFind CherryMode? x.dx_flags with
+                   | Some (CherryMode ms) -> ms |> List.map (fun m -> m = Some true)
+                   | _ -> [] in
       HashTable.add xt (string_of_name x.dx_name) owns
     | _ -> ());
   ctor_tbl := ct; record_tbl := rt; extern_tbl := xt;
@@ -1279,6 +1561,10 @@ let run (p:program) : ML program =
     | _ -> ());
   extern_arity := xa;
   counter := 0;
+  let p = p |> List.map (fun d -> match d with
+                                  | DLet l -> DLet { l with dl_body = unguard l.dl_body }
+                                  | _ -> d) in
+  let p = List.map lower_any_decl p in
   let p = List.collect lift_decl p in
   (* An imported definition is called the way its unit compiled it, which
      its interface records (Syntax.CherryConv); one without the record owns

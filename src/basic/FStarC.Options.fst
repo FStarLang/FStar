@@ -848,7 +848,7 @@ net10.0 and, unlike OCaml, compiles machine integers and floats to .NET's \
 own types rather than to a support library, so it accepts the programs the \
 C backend accepts rather than the ones the OCaml backend does (section 122). \
 Cherry is the C backend extended with reference-counted heap cells for \
-recursive inductive types (experimental, see cherry.md). \
+recursive inductive types (experimental, see doc/ref/cherry.md). \
 Plugin builds a compiler plugin: OCaml, with the plugin's own modules as \
 entry points, linked against the compiler's unit (section 13.6)");
 
@@ -900,7 +900,9 @@ over rather than reported, unlike --custard_entry.");
     "custard_main",
     SimpleStr "long_name",
     text "The definition to invoke when the extracted program starts. It is \
-also a root of the extraction, so --custard_entry need not repeat it. Omit it \
+also a root of the extraction, so --custard_entry need not repeat it. A module \
+name may be given instead, and then the program is that module's top-level \
+effects, as for an OCaml executable. Omit it \
 to extract a program that is meant to be driven by a hand-written wrapper.");
 
   ( noshort,

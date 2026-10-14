@@ -37,7 +37,7 @@ type codegen_t =
   | KrmlC
   | KrmlRust
   | C
-  (* C with reference counting (experimental, cherry.md). *)
+  (* C with reference counting (experimental, doc/ref/cherry.md). *)
   | Cherry
 
 //let __test_norm_all = mk_ref false

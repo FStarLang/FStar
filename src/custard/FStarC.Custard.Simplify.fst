@@ -698,7 +698,8 @@ let beta (bs : list binder) (body:expr) (args:list expr) (at:expr) : ML expr =
   if List.length args < n then at
   else
     let given, extra = List.splitAt n args in
-    let r = inline_call bs body given at in
+    (* With a surplus, the inlined body has the body's type, not the call's. *)
+    let r = inline_call bs body given (if Nil? extra then at else { at with ty = body.ty }) in
     match extra with
     | [] -> r
     | _ -> { at with e = EApp (r, extra) }
@@ -1068,7 +1069,7 @@ let rec inline_expr (tbl : HashTable.t string (list binder & expr)) (used : Hash
         function, so every use of it is applied to one argument too many. *)
      | Some (bs, body) when List.length bs <= List.length args ->
        let given, extra = List.splitAt (List.length bs) args in
-       let r = inline_call bs body given x in
+       let r = inline_call bs body given (if Nil? extra then x else { x with ty = body.ty }) in
        (match extra with
         | [] -> r
         | _ -> { x with e = EApp (r, extra) })

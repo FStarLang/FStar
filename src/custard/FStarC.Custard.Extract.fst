@@ -1132,6 +1132,21 @@ let report_attr (nm:string) (site:string) (why:string) : ML unit =
     text why;
     text (attr_home nm) ]
 
+(* Cherry's [[@@@cherry_owned]] and [[@@@cherry_borrowed]] (cherry.md,
+   "Calling convention") on a list of value binders, by position. *)
+let cherry_mode_flags (bs:binders) : ML (list flag) =
+  let modes = bs |> List.map (fun (b:S.binder) ->
+    let o = U.has_attribute b.binder_attrs PC.cherry_owned_attr in
+    let br = U.has_attribute b.binder_attrs PC.cherry_borrowed_attr in
+    if o && br then begin
+      report_attr "cherry_owned" ("the parameter " ^ Ident.string_of_id b.binder_bv.ppname)
+        "It also has [@@@cherry_borrowed], and a parameter cannot be both: \
+         both are ignored.";
+      None
+    end
+    else if o then Some true else if br then Some false else None) in
+  if List.existsb Some? modes then [CherryMode modes] else []
+
 (* The binders of a declaration, from both routes: section 19.4's argument
    that the lambda and the arrow each know something the other does not
    applies here too, and an attribute written on either should be seen.  The
@@ -1622,8 +1637,8 @@ let is_c_backend () : ML bool =
    type spells.  Only a call to a top-level name may drop arguments, and then
    only the ones that definition's own parameters consume (see [CallArity]).
    The C backends have no polymorphic closures and keep dropping erased
-   binders everywhere. *)
-let heap_closures () : ML bool = not (is_c_backend ())
+   binders everywhere -- except Cherry, whose closures are OCaml's. *)
+let heap_closures () : ML bool = not (is_c_backend ()) || Options.custard_cherry ()
 
 let c_realized_header (l:Ident.lident) : ML (option string) =
   Builtins.c_realization_header
@@ -4980,10 +4995,10 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
     (* Section 8.1, kind 4: the F* "definition" is a specification (often
        literally [admit ()]); the real one lives in a hand-written .ml or .c
        file, and all we owe the backend is the type. *)
-    let typars, ty = external_ty st l margs in
+    let typars, ty, cf = external_ty st l margs in
     DExternal { dx_name = nm; dx_typars = typars; dx_ty = ty;
                 dx_target = x.Builtins.x_name; dx_header = x.Builtins.x_header;
-                dx_flags = [] }
+                dx_flags = cf }
   | _ ->
   let is_opaque = (match rule with Some Builtins.Rule_opaque -> true | _ -> false) in
   let is_realized = (match rule with Some Builtins.Rule_realized -> true | _ -> false) in
@@ -5016,10 +5031,10 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
          a type declaration, and there is no such thing as an external one.
          A realized module's genuine types are handled by [with_realized]
          below. *)
-    let typars, ty = external_ty st l margs in
+    let typars, ty, cf = external_ty st l margs in
     DExternal { dx_name = nm; dx_typars = typars; dx_ty = ty; dx_target = None;
                 dx_header = (if is_c_backend () then c_realized_header l else None);
-                dx_flags = if is_modelled_lid l then [Modelled] else [] }
+                dx_flags = (if is_modelled_lid l then [Modelled] else []) @ cf }
   | Some se ->
     let d = Prof.timed "extract_sigelt"
               (fun () -> extract_sigelt st l nm margs n_holes se) in
@@ -5312,9 +5327,9 @@ and is_modelled_lid (l:Ident.lident) : ML bool =
    exactly as [specialize] does for a definition; the [Poly] binders stay, and
    erasure handles them as usual. *)
 and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
-  : ML (list string & cty) =
+  : ML (list string & cty & list flag) =
   match lookup_lid_typ st l with
-  | None -> ([], TAny)
+  | None -> ([], TAny, [])
   | Some ((_, ty), _) ->
     let cs = binder_classes st l in
     (* The *unfolded* spine, because that is the one [cs] is indexed against
@@ -5557,7 +5572,8 @@ and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
       | [] -> res
       | [b] -> TArrow (bty b, e, res)
       | b :: bs -> TArrow (bty b, E_Pure, build bs) in
-    (typars, subst_cty (anys |> List.map (fun a -> (a, TAny))) (build vs))
+    (typars, subst_cty (anys |> List.map (fun a -> (a, TAny))) (build vs),
+     cherry_mode_flags vs)
 
 and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
                    (n_holes:int) (se:sigelt)
@@ -5653,7 +5669,7 @@ and extract_sigelt_body (st:state) (l:Ident.lident) (nm:name) (margs:list (int &
             is external because a rule said so, because its module is
             realized, or because F* only ever saw a [val], the same code
             decides what its signature is. *)
-         let typars, ty = external_ty st l margs in
+         let typars, ty, cf = external_ty st l margs in
          (* An [assume val] in a module this run is *compiling* has nowhere to
             be external to.  An external is a reference to [M.f] in the target
             language, and for OCaml that names the file Custard is writing:
@@ -5695,7 +5711,7 @@ and extract_sigelt_body (st:state) (l:Ident.lident) (nm:name) (margs:list (int &
             defines. *)
          DExternal { dx_name = nm; dx_typars = typars; dx_ty = ty;
                      dx_target = None; dx_header = None;
-                     dx_flags = c_decoration_flags (source_attrs se l) })
+                     dx_flags = c_decoration_flags (source_attrs se l) @ cf })
 
   | Sig_inductive_typ {params} ->
     let d = Prof.timed "inductive" (fun () -> extract_inductive st l nm params) in
@@ -6157,18 +6173,7 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
   (* Cherry's [[@@@cherry_owned]] and [[@@@cherry_borrowed]] (cherry.md,
      "Calling convention"), by position: later passes only ever add
      parameters after these. *)
-  let cherry_modes = bs |> List.map (fun (b:S.binder) ->
-    let o = U.has_attribute b.binder_attrs PC.cherry_owned_attr in
-    let br = U.has_attribute b.binder_attrs PC.cherry_borrowed_attr in
-    if o && br then begin
-      report_attr "cherry_owned" ("the parameter " ^ Ident.string_of_id b.binder_bv.ppname)
-        "It also has [@@@cherry_borrowed], and a parameter cannot be both: \
-         both are ignored.";
-      None
-    end
-    else if o then Some true else if br then Some false else None) in
-  let cherry_mode_flags =
-    if List.existsb Some? cherry_modes then [CherryMode cherry_modes] else [] in
+  let cherry_mode_flags = cherry_mode_flags bs in
   (* An *erased* binder that survived [drop_flagged] is the one
      {!Mono.keep_thunk} put back so that the definition does not become a
      value.  It carries nothing at runtime and its callers pass [()]
@@ -6802,7 +6807,12 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
     Builtins.registered_roots () |> List.iter (fun l ->
       if not (root_is_erased st l) then mark Root l));
   Prof.timed "run.main" (fun () ->
-    match main with Some l -> mark Entrypoint l | None -> ());
+    (* [--custard_main M] may name a module, whose top-level effects are then
+       the program: it is already a root, and there is no definition to mark. *)
+    match main with
+    | Some l when Cons? (Loader.candidate_files st.deps (Ident.string_of_lid l)) -> ()
+    | Some l -> mark Entrypoint l
+    | None -> ());
   (* A top-level [let] whose definiens is *effectful* is a module initializer:
      [let _ = clear ()] in [FStarC.Options], [let _ = register_pass ...] in
      [FStarC.Syntax.Resugar].  Nothing in the program refers to it, so the

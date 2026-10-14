@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-(** Cherry: reference counting for the direct-to-C backend (cherry.md).
+(** Cherry: reference counting for the direct-to-C backend (doc/ref/cherry.md).
 
     A *boxed* type is a variant that contains itself by value; its values are
     reference-counted heap cells.  A *non-plain* type is a boxed type or one

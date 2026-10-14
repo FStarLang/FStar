@@ -1493,6 +1493,18 @@ let type_only_realized_modules : list (list string) = [
 let is_type_only_realized_module (ns : list string) : ML bool =
   type_only_realized_modules |> List.existsb (fun m -> m = ns)
 
+(* Realized modules whose OCaml realization is only an optimization of the F*
+   source, which is complete.  Cherry has no OCaml to link, so it compiles them
+   from source rather than leaving the C runtime to reimplement them. *)
+let cherry_source_modules : list (list string) = [
+  ["FStar"; "List"];
+  ["FStar"; "List"; "Tot"; "Base"];
+  ["FStar"; "Option"];
+]
+
+let is_cherry_source_module (ns : list string) : ML bool =
+  cherry_source_modules |> List.existsb (fun m -> m = ns)
+
 (* Section 128.2.  A realization is hand-written *OCaml* (section 8.2), so a
    realized module's types keep their F* shape on the C backends: [Prims.list]
    and [FStar.Pervasives.Native.tuple2] are realized modules, and a C program
@@ -1657,7 +1669,9 @@ let builtin_rule (l:Ident.lident) : ML rule =
            else if Options.custard_cherry () && ns = ["FStar"; "Dyn"] &&
                    Some? (dyn_rule id)
            then dyn_rule id
-           else if is_realized_module ns then Some Rule_realized
+           else if is_realized_module ns &&
+                   not (Options.custard_cherry () && is_cherry_source_module ns)
+           then Some Rule_realized
            else pulse_rule ns id)
       | [] -> None
   in

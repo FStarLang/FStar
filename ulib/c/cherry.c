@@ -509,6 +509,115 @@ cherry_string cherry_string_of_int(cherry_int x) {
   return r;
 }
 
+cherry_string cherry_string_of_bool(bool b) {
+  return b ? cherry_str_of_bytes("true", 4) : cherry_str_of_bytes("false", 5);
+}
+
 void cherry_print_string(cherry_string s) {
   fwrite(cherry_str_data(s), 1, cherry_str_size(s), stdout);
+}
+
+/* ------------------------------------------------------------------------
+   Realizations of ulib functions that OCaml realizes by hand and that have no
+   F* definition to compile (doc/ref/cherry.md, "Library realizations").  The
+   names are the ones Custard gives the externals; weak, so that a program may
+   supply its own. */
+
+#define CHERRY_WEAK __attribute__((weak))
+
+uint64_t cherry_int_to_u64(cherry_int x) {
+  if (cherry_is_scalar(x)) return (uint64_t)(int64_t)cherry_int_val(x);
+  view a;
+  view_of(x, &a);
+  uint64_t r = 0;
+  for (uint32_t i = 0; i < a.len && i < 2; i++) r |= (uint64_t)a.d[i] << (32 * i);
+  return a.neg ? (uint64_t)0 - r : r;
+}
+
+int64_t cherry_int_to_i64(cherry_int x) { return (int64_t)cherry_int_to_u64(x); }
+
+cherry_int cherry_int_of_i64(int64_t v) {
+  if (cherry_int_fits((intptr_t)v) && (int64_t)(intptr_t)v == v)
+    return CHERRY_INT_SMALL((intptr_t)v);
+  char buf[32];
+  snprintf(buf, sizeof buf, "%" PRId64, v);
+  return cherry_int_of_decimal(buf);
+}
+
+cherry_int cherry_int_of_u64(uint64_t v) {
+  if (v <= (uint64_t)CHERRY_INT_MAX) return CHERRY_INT_SMALL((intptr_t)v);
+  char buf[32];
+  snprintf(buf, sizeof buf, "%" PRIu64, v);
+  return cherry_int_of_decimal(buf);
+}
+
+#define CHERRY_MACHINE_INT(M, T, FMT, OF)                                   \
+  CHERRY_WEAK cherry_int FStar_##M##_v(T x) { return OF(x); }                \
+  CHERRY_WEAK cherry_string FStar_##M##_to_string(T x) {                     \
+    char buf[32];                                                            \
+    int n = snprintf(buf, sizeof buf, "%" FMT, x);                           \
+    return cherry_str_of_bytes(buf, (size_t)n);                              \
+  }
+
+CHERRY_MACHINE_INT(Int8, int8_t, PRId8, cherry_int_of_i64)
+CHERRY_MACHINE_INT(Int16, int16_t, PRId16, cherry_int_of_i64)
+CHERRY_MACHINE_INT(Int32, int32_t, PRId32, cherry_int_of_i64)
+CHERRY_MACHINE_INT(Int64, int64_t, PRId64, cherry_int_of_i64)
+CHERRY_MACHINE_INT(UInt8, uint8_t, PRIu8, cherry_int_of_u64)
+CHERRY_MACHINE_INT(UInt16, uint16_t, PRIu16, cherry_int_of_u64)
+CHERRY_MACHINE_INT(UInt32, uint32_t, PRIu32, cherry_int_of_u64)
+CHERRY_MACHINE_INT(UInt64, uint64_t, PRIu64, cherry_int_of_u64)
+
+CHERRY_WEAK void FStar_IO_print_newline(void) {
+  putchar('\n');
+  fflush(stdout);
+}
+
+/* [option int] and [option bool], laid out as Custard lays out a monomorphic
+   [option]: the tag ([None] first) and then the payload. */
+typedef struct { int tag; union { cherry_int v; } val; } cherry_option_int;
+typedef struct { int tag; union { bool v; } val; } cherry_option_bool;
+
+CHERRY_WEAK cherry_option_bool FStar_Parse_bool_of_string(cherry_string s) {
+  cherry_option_bool r = { 0 };
+  size_t n = cherry_str_size(s);
+  const char *p = cherry_str_data(s);
+  if (n == 4 && memcmp(p, "true", 4) == 0) { r.tag = 1; r.val.v = true; }
+  else if (n == 5 && memcmp(p, "false", 5) == 0) { r.tag = 1; r.val.v = false; }
+  return r;
+}
+
+/* As Zarith's [Z.of_string]: an optional sign, an optional 0x/0o/0b prefix,
+   and at least one digit. */
+CHERRY_WEAK cherry_option_int FStar_Parse_int_of_string(cherry_string s) {
+  cherry_option_int r = { 0 };
+  size_t n = cherry_str_size(s), i = 0;
+  const char *p = cherry_str_data(s);
+  bool neg = false;
+  if (i < n && (p[i] == '-' || p[i] == '+')) neg = p[i++] == '-';
+  int base = 10;
+  if (i + 1 < n && p[i] == '0') {
+    char c = p[i + 1];
+    if (c == 'x' || c == 'X') base = 16;
+    else if (c == 'o' || c == 'O') base = 8;
+    else if (c == 'b' || c == 'B') base = 2;
+    if (base != 10) i += 2;
+  }
+  if (i == n) return r;
+  cherry_int acc = CHERRY_INT_SMALL(0), b = CHERRY_INT_SMALL(base);
+  for (; i < n; i++) {
+    char c = p[i];
+    int d = c >= '0' && c <= '9' ? c - '0'
+          : c >= 'a' && c <= 'f' ? c - 'a' + 10
+          : c >= 'A' && c <= 'F' ? c - 'A' + 10 : 99;
+    if (d >= base) { cherry_dec(acc); return r; }
+    cherry_int m = cherry_int_mul(acc, b);
+    cherry_dec(acc);
+    acc = cherry_int_add(m, CHERRY_INT_SMALL(d));
+    cherry_dec(m);
+  }
+  if (neg) { cherry_int t = cherry_int_neg(acc); cherry_dec(acc); acc = t; }
+  r.tag = 1;
+  r.val.v = acc;
+  return r;
 }

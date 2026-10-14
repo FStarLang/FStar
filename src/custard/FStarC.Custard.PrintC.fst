@@ -454,6 +454,13 @@ let arities : ref (HashTable.t string int) = mk_ref (HashTable.create 0)
 (* Whether the definition currently being printed returns [void]. *)
 let void_ret : ref bool = mk_ref false
 
+(* Cherry: self tail calls become a jump back to the top of the function, as
+   OCaml's would, since ML code loops by recursion and C does not promise to
+   eliminate the call.  [tail_self] holds the definition's kept parameters
+   when the transformation is allowed, and [tail_used] whether it happened. *)
+let tail_self : ref (option (string & list binder)) = mk_ref None
+let tail_used : ref bool = mk_ref false
+
 let rec filter_by (#a:Type) (flags:list bool) (xs:list a) : list a =
   match flags, xs with
   | b :: flags, x :: xs -> (if b then [x] else []) @ filter_by flags xs
@@ -2099,6 +2106,7 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
      | None -> c_name n)
   | EApp (hd, args) when is_closure_app hd args ->
     let k = List.length args in
+    let eargs = args in
     let args = args |> List.filter (fun (a:expr) -> not (TUnit? a.ty))
                     |> List.map (fun (a:expr) -> c_rvalue out ind a.ty a) in
     (match hd.e with
@@ -2114,6 +2122,17 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
             | Some t -> t
             | None -> hd.ty)
          | _ -> hd.ty in
+       (* The arrow's domains these arguments fill: an argument for a unit
+           parameter may have been dropped already. *)
+       let rec consume (t:cty) (xs:list cty) : ML int =
+         match xs, arrow_view t with
+         | [], _ -> 0
+         | x :: rest, Some (d, b) ->
+           if TUnit? d && not (TUnit? x) then 1 + consume b xs
+           else if TUnit? x && not (TUnit? d) then consume t rest
+           else 1 + consume b rest
+         | x :: rest, None -> if TUnit? x then consume t rest else List.length xs in
+       let k = consume ht (List.map (fun (a:expr) -> a.ty) eargs) in
        clo_request (ReqApply (ht, k));
        apply_name ht k ^ "(" ^ String.concat ", " (f :: args) ^ ")")
   | EApp (hd, args) ->
@@ -2218,6 +2237,13 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
   | ECast (e1, t) ->
     (match e1.ty, t with
      | TInt a, TInt b when a = b -> c_expr out ind e1
+     (* Cherry: [Prims.int] is a tagged pointer, not a number. *)
+     | _, TInt (sg, _) when Options.custard_cherry () && is_int_ty e1.ty ->
+       "(" ^ ty t ^ ")cherry_int_to_" ^ (if Signed? sg then "i64(" else "u64(") ^
+       c_expr out ind e1 ^ ")"
+     | TInt (sg, _), _ when Options.custard_cherry () && is_int_ty t ->
+       (if Signed? sg then "cherry_int_of_i64((int64_t)" else "cherry_int_of_u64((uint64_t)") ^
+       c_rvalue out ind e1.ty e1 ^ ")"
      (* Section 66.  A struct is not castable, so a conversion at a narrow
         width is a call.  Both directions, and between the two narrow formats
         via [float], which is exact for either of them and so rounds once --
@@ -2488,6 +2514,7 @@ and proj (v:string) (t:cty) (f:string) : ML string =
         | None -> reject ("the field " ^ f) ["No constructor declares it."])
      | Some d when single_ctor d -> v ^ "." ^ c_var f
      | Some ({ dt_body = TRecord _ }) -> v ^ "." ^ c_var f
+     | Some ({ dt_body = TAbbrev c }) -> proj v c f
      | Some d ->
        (* A projector on a multi-constructor variant: F* only generates one
           when the field is unambiguous, so the case is determined by the
@@ -2736,6 +2763,34 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     s1 ^ s2
 
   | ESeq (e1, e2) -> emit ind D_Ignore e1 ^ emit ind d e2
+
+  | EApp ({ e = EQual (n, _) }, args)
+      when D_Return? d &&
+           (match !tail_self with
+            | Some (f, bs) ->
+              f = string_of_name n &&
+              List.length (match HashTable.try_find !keeps f with
+                           | Some flags -> filter_by flags args
+                           | None -> args) = List.length bs
+            | None -> false) ->
+    let bs = snd (Some?.v !tail_self) in
+    let f = fst (Some?.v !tail_self) in
+    let args = match HashTable.try_find !keeps f with
+               | Some flags -> filter_by flags args
+               | None -> args in
+    let out = mk_ref "" in
+    let vals = List.map2 (fun (b:binder) (a:expr) -> (b, c_rvalue out ind b.b_ty a)) bs args in
+    (* Every argument is read before any parameter is written. *)
+    let moves = vals |> List.filter (fun ((b:binder), v) -> v <> lookup_var b.b_name) in
+    let tmps = moves |> List.map (fun ((b:binder), v) ->
+      let t = fresh "tail" in
+      (b, t, ind ^ "  " ^ decl_of b.b_ty t ^ " = " ^ v ^ ";\n")) in
+    tail_used := true;
+    !out ^ ind ^ "{\n" ^
+    String.concat "" (tmps |> List.map (fun (_, _, s) -> s)) ^
+    String.concat "" (tmps |> List.map (fun ((b:binder), t, _) ->
+      ind ^ "  " ^ lookup_var b.b_name ^ " = " ^ t ^ ";\n")) ^
+    ind ^ "  goto custard_tail;\n" ^ ind ^ "}\n"
 
   | EIf (c, t, f) ->
     let out = mk_ref "" in
@@ -3806,6 +3861,13 @@ let global_init (l:dlet) : ML string =
    then "  " ^ rc_fn "mark" l.dl_ret ^ "(" ^ c_name l.dl_name ^ ", CHERRY_PERSIST);\n"
    else "")
 
+(* A pointer to a stack slot could be among the arguments of a tail call,
+   and the jump would reuse the slot it points to. *)
+let rec stack_allocates (e:expr) : ML bool =
+  match e.e with
+  | EOp ({ po_op = BufCreate LStack }, _) -> true
+  | _ -> exists_child stack_allocates e
+
 let let_decl (l:dlet) : ML string =
   current := string_of_name l.dl_name;
   ctr := 0;
@@ -3829,7 +3891,15 @@ let let_decl (l:dlet) : ML string =
   let voids = String.concat "" (kept_binders l |> List.collect (fun b ->
     if List.existsb (fun y -> y = b.b_name) used then []
     else ["  (void)" ^ lookup_var b.b_name ^ ";\n"])) in
-  signature l ^ " {\n" ^ voids ^ emit "  " D_Return l.dl_body ^ "}\n"
+  tail_used := false;
+  tail_self :=
+    (if Options.custard_cherry () && not (stack_allocates l.dl_body)
+     then Some (string_of_name l.dl_name, kept_binders l)
+     else None);
+  let body = emit "  " D_Return l.dl_body in
+  tail_self := None;
+  signature l ^ " {\n" ^ voids ^
+  (if !tail_used then "custard_tail:;\n" else "") ^ body ^ "}\n"
 
 (* An external is a symbol someone else defines.  When it comes with a header
    we include the header and say nothing more; otherwise we declare it from
@@ -4851,7 +4921,7 @@ let cherry_closure_helpers () : ML (list string & list string) =
       if is_nonplain_ty t then ["  " ^ rc_call op t (sel ^ x) ^ ";\n"] else [])) in
   (* A closure cell holding [fields], built by [ctor] taking them all owned,
      whose entry point [entry] is defined by [body]. *)
-  let closure (s:string) (fields:list (string & cty)) (arity:int)
+  let closure (s:string) (fields:list (string & cty)) (arity:string)
               (entry:string) (ret:cty) (eparams:list (string & cty)) (body:string)
               (ctor:string) : ML unit =
     let fields = nonunit fields in
@@ -4877,7 +4947,7 @@ let cherry_closure_helpers () : ML (list string & list string) =
         "  env->clo.fn = (cherry_code)" ^ entry ^ ";\n" ^
         "  env->clo.drop = " ^ drop ^ ";\n" ^
         "  env->clo.mark = " ^ mark ^ ";\n" ^
-        "  env->clo.arity = " ^ string_of_int arity ^ ";\n" ^
+        "  env->clo.arity = " ^ arity ^ ";\n" ^
         String.concat "" (fields |> List.map (fun (x, _) -> "  env->" ^ x ^ " = " ^ x ^ ";\n")) ^
         "  return (cherry_fn)env;\n") in
   let ret_of (call:string) (ret:cty) (void:bool) : ML string =
@@ -4885,13 +4955,19 @@ let cherry_closure_helpers () : ML (list string & list string) =
     else "  return " ^ call ^ ";\n" in
   let gen (r:clo_req) : ML unit =
     match r with
-    | ReqPap (n, k, _) ->
+    | ReqPap (n, k, vty) ->
       let bs, ret = Some?.v (fn_sig n) in
       let tys = List.map (fun (b:binder) -> b.b_ty) bs in
       let captured, rest = List.splitAt k tys in
       let fields = named "e" 0 captured in
       let eparams = named "p" k rest in
-      let arity = List.length (nonunit eparams) in
+      (* Only unit parameters left, and a value, not a closure, returned:
+         such a closure runs once its type has no arrow left, however many
+         unit arguments that took -- Mono may have dropped some of its unit
+         binders, and a call site some of their arguments. *)
+      let arity =
+        if Nil? (nonunit eparams) && None? (arrow_view ret) then "CHERRY_ARITY_UNITS"
+        else string_of_int (List.length (nonunit eparams)) in
       let entry = "cherry_entry_" ^ c_name n ^ "_" ^ string_of_int k in
       let void = Some? (HashTable.try_find !void_fns (string_of_name n)) in
       let call = c_name n ^ "(" ^
@@ -4915,7 +4991,7 @@ let cherry_closure_helpers () : ML (list string & list string) =
         fn ("static inline " ^ decl_of ret (entry ^ "(cherry_fn self" ^ params eparams ^ ")"))
            ("  (void)self;\n" ^ ret_of call ret void);
         protos := !protos @ ["CHERRY_STATIC_CLOSURE(" ^ static_clo_name n ^ ", " ^ entry ^
-                             ", " ^ string_of_int arity ^ ");\n"]
+                             ", " ^ arity ^ ");\n"]
       end else
         closure ("cherry_env_" ^ c_name n ^ "_" ^ string_of_int k) fields
                 arity entry ret eparams
@@ -4924,6 +5000,10 @@ let cherry_closure_helpers () : ML (list string & list string) =
     | ReqApply (t, k) ->
       let doms, rk = arrow_take k t in
       let args = named "a" 0 doms in
+      (* A closure's arity counts the parameters that are not unit, since C
+         has none of the others and a call site may have dropped their
+         arguments -- unless its type has nothing else, when they are all
+         that tells [f ()] over [unit -> unit -> unit] from a call of it. *)
       let given = nonunit args in
       let kn = List.length given in
       let call_code (ret:cty) (f:string) (xs:list (string & cty)) : ML string =
@@ -4952,6 +5032,10 @@ let cherry_closure_helpers () : ML (list string & list string) =
         "      return r;\n" ^
         "    }\n") in
       let exact = "    case " ^ string_of_int kn ^ ": return " ^ call_code rk "f" given ^ ";\n" in
+      let units =
+        if kn > 0 then ""
+        else if Some? (arrow_view rk) then "    case CHERRY_ARITY_UNITS: cherry_inc(f); return f;\n"
+        else "    case CHERRY_ARITY_UNITS: return " ^ call_code rk "f" [] ^ ";\n" in
       (* A closure taking more: what it was given is captured. *)
       let over = range (kn + 1) (kn + nonunit_arrows rk) |> List.map (fun m ->
         if kn = 0 then "    case " ^ string_of_int m ^ ": cherry_inc(f); return f;\n" else begin
@@ -4961,19 +5045,21 @@ let cherry_closure_helpers () : ML (list string & list string) =
         end) in
       fn ("static inline " ^ decl_of rk (apply_name t k ^ "(cherry_fn f" ^ params args ^ ")"))
          ("  switch (CHERRY_CLOSURE(f)->arity) {\n" ^
-          String.concat "" under ^ exact ^ String.concat "" over ^
+          (if kn > 0 then "    case CHERRY_ARITY_UNITS:\n" else "") ^
+          String.concat "" under ^ exact ^ units ^ String.concat "" over ^
           "    default: abort();\n  }\n")
     | ReqPapc (t, k, m) ->
       let doms, rk = arrow_take k t in
       let fields = nonunit (named "a" 0 doms) in
-      let edoms, rm = split_nonunit (m - List.length fields) rk in
+      let left = m - List.length fields in
+      let edoms, rm = split_nonunit left rk in
       let eparams = named "p" k edoms in
       let call = "(" ^ code_ty rm (List.map snd fields @ List.map snd (nonunit eparams)) ^
                  "CHERRY_CLOSURE(env->f)->fn)(" ^
                  String.concat ", " ("env->f" :: List.map (fun x -> "env->" ^ x) (names fields) @
                                      names eparams) ^ ")" in
       closure ("cherry_papc_env_" ^ arrow_id t ^ "_" ^ string_of_int k ^ "_" ^ string_of_int m)
-              (("f", t) :: fields) (m - List.length fields) (papc_name t k m ^ "_entry") rm eparams
+              (("f", t) :: fields) (string_of_int left) (papc_name t k m ^ "_entry") rm eparams
               (on "inc" "env->" fields ^ "  return " ^ call ^ ";\n")
               (papc_name t k m) in
   let rec drain () : ML unit =
@@ -5329,6 +5415,17 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
        | TUnit -> [pre ^ "  " ^ call ^ ";\n  return 0;\n}\n"]
        | _ -> [pre ^ "  (void)" ^ call ^ ";\n  return 0;\n}\n"])
     | _ -> []) in
+  (* [--custard_main M] naming a module: running the program is running the
+     initializers, as it is for an OCaml executable. *)
+  let mains =
+    match mains, Options.custard_main () with
+    | [], Some m when cu.cu_name = None || cu.cu_name = Some m ->
+      let calls = (cu.cu_inits |> List.map (fun i -> "  " ^ i ^ "();\n")) @
+                  (match inits with [] -> [] | _ -> ["  " ^ init_name ^ "();\n"]) in
+      let chk = if Options.custard_cherry ()
+                then "  if (cherry_exn_slot) cherry_exn_uncaught();\n" else "" in
+      ["int main(void) {\n" ^ String.concat "" calls ^ chk ^ "  return 0;\n}\n"]
+    | _ -> mains in
 
   (* Section 107.  After every body has been rendered, which is when the set
      of types actually compared is complete. *)
