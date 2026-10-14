@@ -558,10 +558,12 @@ let rec lower_any (e:expr) : ML expr =
        else if e.ty = TAny then { e with ty = r }
        else e)
   (* Arms typed otherwise than the conditional they belong to, through any,
-     are coerced to it. *)
-  | EIf (c, a, b) when mentions_any e.ty ->
+     are coerced to it: when the conditional is typed through any, or when
+     an arm is -- a nested conditional typed any under one that is not. *)
+  | EIf (c, a, b) when mentions_any e.ty || mentions_any a.ty || mentions_any b.ty ->
     { e with e = EIf (c, arm_to e.ty a, arm_to e.ty b) }
-  | EMatch (sc, brs) when mentions_any e.ty ->
+  | EMatch (sc, brs)
+    when mentions_any e.ty || List.existsb (fun (_, _, (b:expr)) -> mentions_any b.ty) brs ->
     { e with e = EMatch (sc, List.map (fun (p, g, b) -> (p, g, arm_to e.ty b)) brs) }
   | _ -> e
 
