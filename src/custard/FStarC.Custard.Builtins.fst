@@ -1279,7 +1279,6 @@ let realized_modules : list (list string) = [
   ["FStar"; "Exn"];
   ["FStar"; "List"];
   ["FStar"; "List"; "Tot"; "Base"];
-  ["FStar"; "Option"];
   ["FStar"; "Parse"];
   ["FStar"; "Pervasives"];
   ["FStar"; "Pervasives"; "Native"];
