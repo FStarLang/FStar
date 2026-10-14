@@ -198,6 +198,7 @@ let defaults = [
   ("custard_entry_module"                      , List []);
   ("custard_c_no_prefix"                       , List []);
   ("custard_main"                              , Unset);
+  ("target"                                    , Unset);
   ("custard_dump_ir"                           , Bool false);
   ("custard_dump_specializations"              , Bool false);
   ("custard_dump_layouts"                     , Bool false);
@@ -468,6 +469,7 @@ let get_custard_entrypoints     ()      = lookup_opt "custard_entrypoints"      
 let get_custard_entry_module    ()      = lookup_opt "custard_entry_module"     (as_list as_string)
 let get_custard_c_no_prefix     ()      = lookup_opt "custard_c_no_prefix"      (as_list as_string)
 let get_custard_main            ()      = lookup_opt "custard_main"             (as_option as_string)
+let get_target                  ()      = lookup_opt "target"                   (as_option as_string)
 let get_custard_dump_ir         ()      = lookup_opt "custard_dump_ir"          as_bool
 let get_custard_dump_specializations () = lookup_opt "custard_dump_specializations" as_bool
 let get_custard_dump_layouts ()          = lookup_opt "custard_dump_layouts"          as_bool
@@ -893,6 +895,14 @@ test of a module's generated code wants: a definition added to the module is \
 extracted without anyone having to name it. A definition with nothing to \
 extract -- a specification, a proof, an [inline_for_extraction] -- is passed \
 over rather than reported, unlike --custard_entry.");
+
+  ( noshort,
+    "target",
+    SimpleStr "tag",
+    text "The configuration to extract for, as a '-'-separated list of atoms \
+such as s3.silicon or s2.qemu-debug (see doc/ref/targets.md). The language \
+of --codegen (c, rust, ocaml or fsharp) is added to it. Each module is \
+extracted from its most specific file whose tag the configuration implies.");
 
   ( noshort,
     "custard_main",
@@ -2222,12 +2232,23 @@ let codegen_name                 () =
   | None -> ""
 
 let codegen_target               () =
-  match codegen () with
-  | Some C | Some KrmlC -> Some "c"
-  | Some KrmlRust -> Some "rust"
-  | Some OCaml -> Some "ocaml"
-  | Some FSharp -> Some "fsharp"
-  | None -> None
+  let lang =
+    match codegen () with
+    | Some C | Some KrmlC -> Some "c"
+    | Some KrmlRust -> Some "rust"
+    | Some OCaml -> Some "ocaml"
+    | Some FSharp -> Some "fsharp"
+    | None -> None
+  in
+  let user =
+    match get_target () with
+    | None -> None
+    | Some s ->
+      match Target.parse_tag s with
+      | Some t -> t
+      | None -> failwith ("--target: not a valid tag: " ^ s)
+  in
+  Target.join user lang
 
 let custard_entries              () = get_custard_entry ()
 let custard_entrypoint_files     () = get_custard_entrypoints ()

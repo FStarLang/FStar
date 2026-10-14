@@ -1,54 +1,83 @@
 # Compilation targets
 
-A module can have several implementations (and interfaces), one per
-*target*.  The target is written after a dash in the file name:
+A module can have several interfaces and implementations, each with a
+*tag* written after the first dash of the file name:
 
-    FStar.HashTable.fsti          common interface
-    FStar.HashTable-model.fst     pure model implementation
-    FStar.HashTable-ocaml.fst     OCaml implementation
-    FStar.HashTable-c.fst         C implementation
+    Uart.fsti                common interface
+    Uart.fst                 fallback implementation
+    Uart-model.fst           pure model implementation
+    Uart-s2.fst              for any S2 board
+    Uart-s2.qemu.fst         for S2 under QEMU
+    Uart-s3-c.fst            for S3 boards, extracted to C
 
-A target name matches `[a-z][a-z0-9_]*`.  All of these files declare
-`module FStar.HashTable`.  Files without a target are *common* files.
+All of these files declare `module Uart`.  Files without a tag are *common*
+files.
 
-## Visibility
+## Tags
 
-- A common file sees only common files.
-- A file for target `t` sees common files and other files for target `t`.
-  When it resolves a module `M`, it looks for `M-t` first and then for `M`.
+A tag is a set of *atoms* separated by `-`.  An atom is a dotted path of
+names matching `[a-z][a-z0-9_]*`.  Atoms are hierarchical: `s2.qemu`
+implies `s2`.  The order of the atoms does not matter, so `Uart-c-s3.fst`
+and `Uart-s3-c.fst` have the same tag (and may not coexist).  Atoms do not
+have to be declared anywhere.
 
-So `A-foo.fst` can never be a dependency of `B-bar.fst` or `C.fst`, but
-`B-foo.fst` can depend on, or friend, `A-foo.fst`.
+A tag `T` *implies* a tag `U` if every atom of `U` is implied by an atom of
+`T`.  The empty tag (a common file) is implied by every tag.
 
-## Rules
+## Selection
 
-- A module may not have both a common implementation and a target-specific
-  one (`A.fst` together with `A-ocaml.fst`).  The same applies to
-  interfaces.  Either case is a hard error.
-- `friend A` in a common file requires `A.fst`.  `friend A` in a file for
-  target `t` requires `A.fst` or `A-t.fst`.
-- Checked files keep the target: `A-ocaml.fst.checked`.
+A file `F` with tag `T` that refers to module `M` sees, separately for the
+interface and for the implementation, the most specific file of `M` whose
+tag is implied by `T`.  Common files are the fallback.  If several files
+apply and none of them is more specific than the others (say `Amb-c.fst`
+and `Amb-s2.fst`, seen from `UseAmb-c-s2.fst`), that is an error; add a
+file whose tag combines theirs (`Amb-c-s2.fst`).
+
+Only the interface is used, unless `M` has no interface or `F` friends `M`.
+A file can only friend a module if an implementation applies to it.
+
+## Stability
+
+Every file is verified once, for its own tag, but is extracted for any
+configuration that implies its tag.  So the files it sees must be the same
+in all those configurations.  It is an error if a file uses a file of `M`
+while a strictly more specific file of `M` (of the same kind) exists whose
+tag is *compatible* with `T`.  Two tags are incompatible only if they have
+atoms that diverge below a common root: `s2.qemu` and `s2.silicon` are
+incompatible, while `s2` and `s3`, or `s2` and `c`, are compatible.
+
+For example, with `Uart-s2.fst` and `Uart-s2.qemu.fst` but no `Uart.fsti`,
+`Spy-s2.fst` cannot use `Uart`: verification would see `Uart-s2.fst`, but
+extraction for `s2.qemu` would use `Uart-s2.qemu.fst`.  With a common
+`Uart.fsti`, `Spy-s2.fst` only sees the interface and is fine (unless it
+friends `Uart`).  `Spy-s2.silicon.fst` may friend `Uart`: the `s2.qemu`
+file is incompatible with its tag.
+
+The rule also applies to the interface of the file's own module.
 
 ## Verification and extraction
 
-`fstar.exe --dep full *.fst*` lists every target, so verifying all of its
-files checks each implementation, including the model ones.
+`fstar.exe --dep full *.fst*` lists all the files, so verifying all of them
+checks every implementation, including the model ones.  Checked files keep
+the tag: `Uart-s2.fst.checked`.
 
-Extraction picks the target from `--codegen`:
+Extraction uses the configuration given by `--target <tag>` together with
+an atom for the language, picked from `--codegen`:
 
-| `--codegen`   | target  |
-|---------------|---------|
-| `OCaml`       | `ocaml` |
-| `Plugin`      | `ocaml` |
-| `FSharp`      | `fsharp`|
-| `C`, `KrmlC`  | `c`     |
-| `KrmlRust`    | `rust`  |
+| `--codegen`   | atom     |
+|---------------|----------|
+| `OCaml`       | `ocaml`  |
+| `Plugin`      | `ocaml`  |
+| `FSharp`      | `fsharp` |
+| `C`, `KrmlC`  | `c`      |
+| `KrmlRust`    | `rust`   |
 
-The two C printers share the `-c` files.
+For example, `--codegen C --target s3.silicon` extracts in configuration
+`s3.silicon-c`, and selects `Uart-s3-c.fst` above.  Because of the
+stability rule, no further checks are needed at extraction time.
 
 `--codegen Plugin A-ocaml.fst` builds the plugin for module `A` (unit `A`,
 loaded with `--load_cmxs A`).  IDE module completion lists module names
-without the target and only offers modules visible from the current file.
+without the tag and only offers modules visible from the current file.
 
-There is no fallback yet: a module with only target-specific implementations
-cannot be extracted for a target it lacks.  See `tests/targets`.
+See `tests/targets`.

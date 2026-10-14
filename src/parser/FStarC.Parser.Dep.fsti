@@ -52,17 +52,18 @@ val is_implementation: string -> ML bool
  *)
 val parsing_data : Type0  //cached in the checked files
 
-(* Compilation targets: a file [A.B-tgt.fst] (or [.fsti]) is a
-   target-specific file of module [A.B] for target [tgt]; a file without a
-   target suffix is a common file.  Common files only see common files;
-   target-specific files see the common files and those of their own target.
-   Module names never include the target. *)
+(* Compilation targets (doc/ref/targets.md): a file [A.B-s2.qemu-c.fst] (or
+   [.fsti]) is a file of module [A.B] with tag [s2.qemu-c]; a file without a
+   tag is a common file.  A file sees, for each module, the most specific file
+   whose tag its own tag implies, and that file must not be replaceable by a
+   more specific one in a more specific context.  Module names never include
+   the tag; [target_of_file] returns the canonical tag. *)
 val maybe_module_name_of_file : string -> ML (option string)
 val target_of_file : string -> ML (option string)
 val module_name_of_file : string -> ML string
 val lowercase_module_name : string -> ML string
 (* The key of the file's module in the dependence graph: its lowercase module
-   name, followed by [-tgt] for a target-specific file.  [interface_of] and
+   name, followed by [-tag] for a file with a tag.  [interface_of] and
    [implementation_of] take such keys. *)
 val module_key_of_file : string -> ML module_name
 val str_of_parsing_data (p:parsing_data) : ML string
@@ -109,9 +110,10 @@ val populate_parsing_data: filename:string -> FStarC.Parser.AST.modul -> dep_gra
 val print_digest: list (string & string) -> ML string
 val print_raw: out_channel -> deps -> ML unit
 val print : deps -> ML unit
-(* The following take the target of the file asking, if any. *)
+(* The following take the context (a canonical tag) asking. *)
 val module_has_interface: deps -> target:option string -> module_name:Ident.lident -> ML bool
 val deps_has_implementation: deps -> target:option string -> module_name:Ident.lident -> ML bool
-(* The key of module [m] as seen from target [target]. *)
+(* The key of module [m] in context [target]; fails if the selection is
+   ambiguous. *)
 val module_key_for_target: deps -> target:option string -> m:module_name -> ML module_name
 val all_files: deps -> ML (list string)

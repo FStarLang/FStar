@@ -162,7 +162,8 @@ let friends_of_implementation (fn:string) : ML (list Ident.lident) =
   FStarC.Parser.AST.decls_of_modul ast |> List.collect (fun d ->
     match d.FStarC.Parser.AST.d with
     | FStarC.Parser.AST.Friend l ->
-      [FStarC.String.lowercase (Ident.string_of_lid l) |> Ident.lid_of_str]
+      [Ident.set_lid_range (FStarC.String.lowercase (Ident.string_of_lid l) |> Ident.lid_of_str)
+                          (Ident.range_of_lid l)]
     | _ -> [])
 
 (* Normal mode with some flags, files, etc *)

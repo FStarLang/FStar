@@ -330,7 +330,7 @@ let add_module_completions this_fname deps table : ML CTable.table =
       // modname is the filename part of mod_path, possibly with a target
       let modname, tgt = FStarC.Target.split_target modname in
       let mod_key = String.lowercase modname in
-      if Some? tgt && tgt <> this_tgt then
+      if not (FStarC.Target.implies this_tgt tgt) then
         table // Not visible from this file's target
       else if this_mod_key = mod_key then
         table // Exclude current module from completion

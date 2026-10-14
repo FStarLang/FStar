@@ -12,17 +12,21 @@ FSTAR = $(FSTAR_EXE) --cache_dir $(CACHE_DIR) --include .. --include ../_cache \
 
 all: verify
 
-# Common code can neither befriend a module that only has target-specific
-# implementations, nor see a module that only exists for some target.  A
-# module cannot have both a common and a target-specific implementation.
+# Each file is expected to fail with the given message (matched after joining
+# wrapped lines).
+define expect_error
+	! $(FSTAR) $(1) > $(CACHE_DIR)/$(basename $(1)).log 2>&1
+	tr -s ' \n' '  ' < $(CACHE_DIR)/$(basename $(1)).log | grep -q '$(2)'
+endef
+
 verify:
 	mkdir -p $(CACHE_DIR)
-	! $(FSTAR) BadFriend.fst > $(CACHE_DIR)/BadFriend.log 2>&1
-	grep -q 'Expected an implementation of module counter' $(CACHE_DIR)/BadFriend.log
-	! $(FSTAR) UseTargetOnly.fst > $(CACHE_DIR)/UseTargetOnly.log 2>&1
-	grep -q 'OcamlOnly' $(CACHE_DIR)/UseTargetOnly.log
-	! $(FSTAR) --dep full conflict/Dup.fst conflict/Dup-ocaml.fst > $(CACHE_DIR)/Dup.log 2>&1
-	grep -q 'has both a common implementation' $(CACHE_DIR)/Dup.log
+	$(call expect_error,BadFriend.fst,BadFriend.fst (a common file) uses the implementation of module Counter. but none applies)
+	$(call expect_error,UseTargetOnly.fst,OcamlOnly)
+	$(call expect_error,UseUnfixed-s2.fst,Unfixed-s2.qemu.fst would apply in target s2.qemu)
+	$(call expect_error,FriendUart-s2.fst,FriendUart-s2.fst (target s2) uses the implementation of module Uart from Uart-s2.fst.*Uart-s2.qemu.fst would apply in target s2.qemu)
+	$(call expect_error,UseAmb-c-s2.fst,implementation of module Amb is ambiguous)
+	$(call expect_error,Own-s2.fst,Own-s2.qemu.fsti would apply in target s2.qemu)
 
 accept depend:
 

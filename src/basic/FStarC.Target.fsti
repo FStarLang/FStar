@@ -17,11 +17,38 @@ module FStarC.Target
 
 open FStarC.Effect
 
-(* Compilation targets, see doc/ref/targets.md.  A file [A.B-foo.fst] belongs
-   to module [A.B] and target [foo].  A target name starts with a lowercase
-   letter and contains only lowercase letters, digits and '_'. *)
-val is_target_name : string -> ML bool
+(* Compilation targets, see doc/ref/targets.md.
 
-(* Split a file stem (a module name, possibly followed by [-target]) into the
-   module name and the target. *)
-val split_target : string -> ML (string & option string)
+   A file [A.B-s2.qemu-c.fst] belongs to module [A.B] and has the tag
+   [s2.qemu-c]: a set of atoms separated by '-'.  An atom is a dotted path of
+   names matching [a-z][a-z0-9_]*; [s2.qemu] implies [s2].
+
+   Tags are represented by their canonical string: atoms implied by another
+   atom of the tag are dropped, and the rest are sorted.  [None] is the empty
+   tag of common files. *)
+type tag = option string
+
+(* Canonical form of a '-'-separated list of atoms; [None] if it is not
+   valid. *)
+val parse_tag : string -> ML (option tag)
+
+(* Split a file stem into the module name and its canonical tag.  A stem
+   whose suffix is not a valid tag is returned unchanged. *)
+val split_target : string -> ML (string & tag)
+
+(* The canonical tag with the atoms of both. *)
+val join : tag -> tag -> ML tag
+
+(* [implies ctx t]: every atom of [t] is implied by an atom of [ctx], i.e. a
+   file tagged [t] applies in context [ctx]. *)
+val implies : tag -> tag -> ML bool
+
+(* [compatible t1 t2]: no atom of [t1] diverges from an atom of [t2] below a
+   common root (as [s2.qemu] and [s2.silicon] do), so some context may imply
+   both. *)
+val compatible : tag -> tag -> ML bool
+
+(* All tags implied by a context, most specific (most atoms) first. *)
+val applicable_tags : tag -> ML (list tag)
+
+val show_tag : tag -> string
