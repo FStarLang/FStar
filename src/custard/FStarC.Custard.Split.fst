@@ -311,7 +311,7 @@ let run (deps:Dep.deps) (foreign:list string) (prog:program)
      name is not parity but a collision, and the realization is the thing it
      would shadow. *)
   let want_empties =
-    List.mem (Options.custard_backend ()) ["KrmlC"; "KrmlRust"] in
+    List.mem (Options.codegen_name ()) ["KrmlC"; "KrmlRust"] in
   let empties =
     if not want_empties then []
     else Dep.topological_order deps (fun m -> m) |> List.collect (fun m ->

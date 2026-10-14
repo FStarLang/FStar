@@ -152,5 +152,5 @@ let rec maybe_reify (env:TcEnv.env) (t:term) (l:Ident.lident) : ML term =
           env lbs in
       let body = maybe_reify env' body l in
       let lbs, body = SS.close_let_rec lbs body in
-      { t with n = Tm_let {lbs=(true, lbs); body} }
+      S.mk (Tm_let {lbs=(true, lbs); body}) t.pos
     | _ -> TcUtil.norm_reify env reify_steps (U.mk_reify t (Some l))

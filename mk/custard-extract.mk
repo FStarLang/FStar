@@ -1,12 +1,10 @@
 # Whole-program extraction of the compiler with Custard.
 #
-# See doc/ref/custard.md, section 12.10.  The ML backend extracts one module
-# at a time, so the generic rules above give one rule per .ml file and the
-# dependency analysis decides which of them to re-run.  Custard is
-# whole-program: it reads the checked files of the entire program at once and
-# writes one .ml per F* module plus a .cui describing the unit, so there is a
-# single rule, its prerequisite is every checked file, and it rewrites the
-# whole output directory.
+# See doc/ref/custard.md, section 12.10.  Custard is whole-program: it reads
+# the checked files of the entire program at once and writes one .ml per F*
+# module plus a .cui describing the unit, so there is a single rule, its
+# prerequisite is every checked file, and it rewrites the whole output
+# directory.
 #
 # Rewriting is not as expensive as it sounds: dune keys recompilation on the
 # contents of a file rather than on its timestamp, so the modules the change
@@ -19,19 +17,13 @@
 # and optionally:
 #   CUSTARD_LINK     -- .cui files of the units this one is loaded into,
 #                       in dependency order (section 13)
-#   CUSTARD_REALIZED -- F* files to *also* extract with the ML backend, see
-#                       below
 #   CUSTARD_DEPS     -- extra files the extraction depends on
-
-# Custard does not emit the modules it realizes (FStarC.Custard.Builtins'
-# `realized_modules'), and FStar.Pervasives is one of them: its OCaml is the
-# hand-written one every extraction has always used.  It lives in fstar.lib,
-# which a staged build does not link into the compiler, so the staged build
-# extracts that one module with the ML backend and drops it in beside the
-# split -- exactly what the unified ML pass used to produce.
+#   CUSTARD_CODEGEN  -- the flags selecting the OCaml backend, for a
+#                       stage0 that spells them differently
 
 CUSTARD_FLAGS += --lax
-CUSTARD_FLAGS += --codegen Custard
+CUSTARD_CODEGEN ?= --codegen OCaml
+CUSTARD_FLAGS += $(CUSTARD_CODEGEN)
 CUSTARD_FLAGS += --custard_split
 CUSTARD_FLAGS += --custard_unit $(CUSTARD_UNIT)
 CUSTARD_FLAGS += $(CUSTARD_ENTRIES)
@@ -48,9 +40,6 @@ $(CUSTARD_STAMP): $(ALL_CHECKED_FILES) $(CUSTARD_LINK) $(CUSTARD_DEPS)
 	rm -rf $(OUTPUT_DIR)
 	mkdir -p $(OUTPUT_DIR)
 	$(FSTAR) --already_cached ',*' $(CUSTARD_FLAGS) $(CUSTARD_ROOT)
-	for f in $(CUSTARD_REALIZED); do \
-	  $(FSTAR) --already_cached ',*' --codegen OCaml $$f || exit 1; \
-	done
 	touch $@
 	$(maybe_touch)
 

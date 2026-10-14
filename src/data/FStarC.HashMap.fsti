@@ -1,9 +1,8 @@
 module FStarC.HashMap
 
-(* NOTE: THIS IS A CACHE. COLLISIONS WILL BE DROPPED/OVERWRITTEN.
-
-However you should not get a wrong value from lookup/get as we store the key
-in the map too and compare it before returning the value. *)
+(* A finite map keyed by hash code. Keys with colliding hash codes are kept
+apart (and compared with the deq instance), so this is an exact map, as long
+as keys that are equal according to deq have equal hash codes. *)
 
 open FStarC.Effect
 open FStarC.Class.Deq

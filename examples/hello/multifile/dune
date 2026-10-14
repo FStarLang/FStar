@@ -1,8 +1,13 @@
 ; F* verification rules (generated in sibling multifile-gen/ dir)
 (dynamic_include ../multifile-gen/deps.build.inc)
 
-; F* extraction rules (generated in sibling multifile-gen/ dir)
-(dynamic_include ../multifile-gen/deps.extract.inc)
+; Extraction: Custard compiles the whole program, starting from Main, into
+; one OCaml file.
+(rule
+ (targets Main.ml)
+ (deps A.fst A.fst.checked B.fst B.fst.checked Main.fst Main.fst.checked)
+ (action (run %{env:FSTAR_EXE=fstar.exe} --include . --already_cached "*,"
+   --codegen OCaml --custard_entry_module Main -o Main.ml Main.fst)))
 
 ; Build the Main executable from extracted OCaml
 (executable

@@ -11,6 +11,41 @@ Guidelines for the changelog:
   possibly with details in the PR or links to sample fixes (for example, changes
   to F*'s test suite).
 
+## Custard is the only extraction backend
+
+  * The legacy extraction pipeline (`src/extraction`: the per-module OCaml,
+    F#, plugin and krml backends, and `--codegen Extension`) has been removed.
+    All extraction now goes through Custard, the whole-program compiler
+    described in `doc/ref/custard.md`.
+
+  * `--custard_backend` is renamed to `--codegen`, which now takes `OCaml`,
+    `FSharp`, `KrmlC`, `KrmlRust`, `C` or `Plugin` (an OCaml plugin linked
+    against the compiler). `--codegen Custard` and `--codegen krml` are gone:
+    replace `--codegen Custard --custard_backend X` by `--codegen X`, and
+    `--codegen krml` by `--codegen KrmlC` (or `KrmlRust`). Every extraction
+    run needs an entry point: `--custard_main`, `--custard_entry` or
+    `--custard_entry_module`.
+
+  * Removed options: `--extract`, `--extract_module`, `--extract_namespace`,
+    `--no_extract`, `--cmi`, `--codegen-lib`, `--krmloutput`,
+    `--no_location_info`, `--use_nbe_for_extraction`. (`--read_krml_file`
+    stays, and dumps the `.krml` files Custard writes.)
+
+  * `--dep full` no longer emits rules or variables for `.ml`, `.fs` or
+    `.krml` files (`ALL_ML_FILES`, `ALL_KRML_FILES`, ...); `--dep dune` only
+    emits checking rules. Write one explicit extraction rule per program
+    instead; see `examples/hello` and `mk/test.mk`.
+
+  * The F# library (`fsharp/base`, `ulibfs`) and Pulse's `pulse2rust` are
+    removed. The F# backend still exists (`--codegen FSharp`).
+
+  * The OCaml library `fstar.lib` no longer contains OCaml extracted from
+    ulib; it holds only the hand-written realizations in `ulib/ml/app`
+    (now including `FStar_SizeT`). Custard compiles the rest of ulib into
+    each program. OCaml code that linked against an extracted ulib module
+    (e.g. `FStar_Int_Cast`, `FStar_Seq_Base`) must now be produced by Custard
+    as part of the program.
+
 ## New `Nd` effect for nondeterministic, but terminating, computations
 
   * `Nd` (an instance of the new primitive effect `NDET`) sits strictly

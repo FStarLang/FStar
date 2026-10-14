@@ -20,7 +20,7 @@ ifneq ($(KRML_FOUND),)
   override KRML_EXE := $(KRML_FOUND)
 endif
 
-# Each of these is extracted with --codegen Custard from its 'main'; the
+# Each of these is extracted with --codegen OCaml from its 'main'; the
 # generated OCaml must contain every GREP_<name> pattern and none of the
 # NOGREP_<name> ones.  We check the shape of the output rather than running
 # it: Pulse has no I/O library, so a Pulse program cannot print anything.
@@ -452,7 +452,7 @@ CNOGREP_PulseGhostFn += "(justif()"
 # is refused rather than built at startup behind the programmer's back.
 REJECT_TESTS += PulseGlobalArrayOpaque
 CODE_PulseGlobalArrayOpaque = 393
-FLAGS_PulseGlobalArrayOpaque = --custard_backend C --custard_entry PulseGlobalArrayOpaque.tbl
+FLAGS_PulseGlobalArrayOpaque = --codegen C --custard_entry PulseGlobalArrayOpaque.tbl
 EGREP_PulseGlobalArrayOpaque += "known at compile time"
 # The message names the shape it got, since a rule has no request chain to
 # print and the shape is what identifies the culprit.
@@ -461,14 +461,14 @@ EGREP_PulseGlobalArrayOpaque += "reference to PulseGlobalArrayOpaque.opaque_list
 # would be no address to hand out either.
 REJECT_TESTS += PulseGlobalArrayEmpty
 CODE_PulseGlobalArrayEmpty = 393
-FLAGS_PulseGlobalArrayEmpty = --custard_backend C --custard_entry PulseGlobalArrayEmpty.tbl
+FLAGS_PulseGlobalArrayEmpty = --codegen C --custard_entry PulseGlobalArrayEmpty.tbl
 EGREP_PulseGlobalArrayEmpty += "is an empty static array"
 # A braced initializer is not an expression in C.  The other two backends
 # accept this same program, which is why the refusal is in PrintC and not in
 # the rule.
 REJECT_TESTS += PulseGlobalArrayLocal
 CODE_PulseGlobalArrayLocal = 393
-FLAGS_PulseGlobalArrayLocal = --custard_backend C
+FLAGS_PulseGlobalArrayLocal = --codegen C
 EGREP_PulseGlobalArrayLocal += "uses a static array where C needs an"
 EGREP_PulseGlobalArrayLocal += "Bind it to a top-level definition"
 
@@ -494,13 +494,13 @@ CNOGREP_PulseComment += "Pulse_Lib_Comment"
 # Section 120.  The two ways the text is not usable as a comment.
 REJECT_TESTS += PulseCommentEnd
 CODE_PulseCommentEnd = 394
-FLAGS_PulseCommentEnd = --custard_backend C
+FLAGS_PulseCommentEnd = --codegen C
 EGREP_PulseCommentEnd += "the text given to Pulse.Lib.Comment.comment contains"
 EGREP_PulseCommentEnd += "would end the comment it is emitted into"
 
 REJECT_TESTS += PulseCommentDyn
 CODE_PulseCommentDyn = 394
-FLAGS_PulseCommentDyn = --custard_backend C
+FLAGS_PulseCommentDyn = --codegen C
 EGREP_PulseCommentDyn += "has to be a string literal, and after"
 EGREP_PulseCommentDyn += "there is nowhere to evaluate"
 
@@ -522,7 +522,7 @@ WARN_ANY = --custard_warn_any --warn_error @367
 $(OUTPUT_DIR)/%.custard.ml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD", $(basename $(notdir $@)))
 	$(Q)mkdir -p $(OUTPUT_DIR)
-	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_main $*.main $*.fst -o $@
+	$(Q)$(FSTAR) --codegen OCaml $(WARN_ANY) --custard_main $*.main $*.fst -o $@
 
 $(OUTPUT_DIR)/%.grepped: $(OUTPUT_DIR)/%.custard.ml
 	$(call msg, "GREP", $(basename $(notdir $@)))
@@ -544,7 +544,7 @@ $(OUTPUT_DIR)/%.mlchecked: $(OUTPUT_DIR)/%.custard.ml
 $(OUTPUT_DIR)/%.custard.krml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-KRML", $(basename $(notdir $@)))
 	$(Q)mkdir -p $(OUTPUT_DIR)
-	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend KrmlC $(KRML_FLAGS_$*) \
+	$(Q)$(FSTAR) --codegen KrmlC $(WARN_ANY)  $(KRML_FLAGS_$*) \
 	  --custard_main $*.main $*.fst -o $@
 
 # Section 20.  KrmlRust is a different backend and not a flag on this one: it
@@ -553,7 +553,7 @@ $(OUTPUT_DIR)/%.custard.krml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 $(OUTPUT_DIR)/%.custard.rust.krml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-KRML-RUST", $(basename $(notdir $@)))
 	$(Q)mkdir -p $(OUTPUT_DIR)
-	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend KrmlRust --custard_main $*.main \
+	$(Q)$(FSTAR) --codegen KrmlRust $(WARN_ANY) --custard_main $*.main \
 	  $(RUST_FLAGS_$*) $*.fst -o $@
 
 # -fkeep-tuples is not optional here and is part of what section 20 documents:
@@ -592,7 +592,7 @@ $(OUTPUT_DIR)/%.rsran: $(OUTPUT_DIR)/%.rs
 $(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-C", $(basename $(notdir $@)))
 	$(Q)mkdir -p $(OUTPUT_DIR)
-	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
+	$(Q)$(FSTAR) --codegen C $(WARN_ANY) \
 	  --custard_monomorphize_types true --custard_main $*.main \
 	  $(EXTRA_$*) $*.fst -o $@
 	@# Section 35.3.  These were set here for two rounds and consulted by
@@ -653,7 +653,7 @@ $(OUTPUT_DIR)/%.cexe: $(OUTPUT_DIR)/%.custard.krml
 $(OUTPUT_DIR)/PulseSpecRoot.specroot: $(CACHE_DIR)/PulseSpecRoot.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-C", PulseSpecRoot)
 	$(Q)mkdir -p $(OUTPUT_DIR)
-	$(Q)$(FSTAR) --codegen Custard --custard_backend C \
+	$(Q)$(FSTAR) --codegen C \
 	  --custard_entry_module PulseSpecRoot PulseSpecRoot.fst \
 	  -o $(OUTPUT_DIR)/PulseSpecRoot.c
 	$(Q)grep -q 'PulseSpecRoot_size' $(OUTPUT_DIR)/PulseSpecRoot.c \
@@ -663,7 +663,7 @@ $(OUTPUT_DIR)/PulseSpecRoot.specroot: $(CACHE_DIR)/PulseSpecRoot.fst.checked $(F
 	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -c -x c \
 	  $(OUTPUT_DIR)/PulseSpecRoot.c -o $(OUTPUT_DIR)/PulseSpecRoot.o
 	$(Q)for e in rep rep_abs; do \
-	  $(FSTAR) --codegen Custard --custard_backend C \
+	  $(FSTAR) --codegen C \
 	    --custard_entry PulseSpecRoot.$$e PulseSpecRoot.fst \
 	    -o $(OUTPUT_DIR)/PulseSpecRoot_$$e.c > $(OUTPUT_DIR)/$$e.out 2>&1; \
 	  grep -q 'is a specification, not code' $(OUTPUT_DIR)/$$e.out \
@@ -677,7 +677,7 @@ specification:"; cat $(OUTPUT_DIR)/$$e.out; exit 1; }; done
 $(OUTPUT_DIR)/%.rejected: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "REJECT", $(basename $(notdir $@)))
 	@mkdir -p $(OUTPUT_DIR)
-	$(Q)$(FSTAR) --message_format human --codegen Custard $(WARN_ANY) \
+	$(Q)$(FSTAR) --message_format human --codegen OCaml $(WARN_ANY) \
 	  $(FLAGS_$*) --custard_main $*.main $*.fst \
 	  >$(OUTPUT_DIR)/$*.err 2>&1 || true
 	$(Q)grep -qE "(Error|Warning) $(CODE_$*)" $(OUTPUT_DIR)/$*.err \

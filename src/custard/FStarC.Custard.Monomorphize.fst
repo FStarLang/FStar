@@ -178,7 +178,7 @@ type state = {
    its keep here -- a struct with a slice field must not be cloned
    per-instantiation either, or karamel's lifetime fixpoint would not find the
    [TApp] inside it. *)
-let freeze_realized () : ML bool = Options.custard_backend () = "OCaml"
+let freeze_realized () : ML bool = Options.codegen () = Some Options.OCaml
 
 (* Section 47.2.  An external type's C spelling is a fixed string -- the
    [custard_extern] target, taken verbatim since §45.1 -- and it does not
@@ -520,7 +520,7 @@ let rec mono_expr (st:state) (env:env) (x:expr) : ML expr =
   let go = mono_expr st env in
   let e' =
     match x.e with
-    | EConst _ | EVar _ | EAny | EAbort _ -> x.e
+    | EConst _ | EVar _ | EAny | EAbort _ | EUnreachable _ -> x.e
     | EQual (n, args) ->
       let args = args |> List.map (mono_cty st) in
       (* Section 64.  The type arguments are on the node either way; what

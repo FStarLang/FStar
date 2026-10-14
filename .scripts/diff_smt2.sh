@@ -104,7 +104,6 @@ phase_verify() {
     FSTAR_EXE="$fstar_exe" \
     CACHE_DIR="$dir/_diff_cache/ulib.checked/" \
     OUTPUT_DIR="$dir/_diff_cache/ulib.ml/" \
-    CODEGEN=OCaml \
     TAG=lib \
     OTHERFLAGS="--log_queries" \
     TOUCH="$dir/_diff_cache/.ulib.touch" \

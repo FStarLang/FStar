@@ -192,8 +192,6 @@ let defaults = [
   ("already_cached"                            , Unset);
   ("cache_checked_modules"                     , Bool false);
   ("cache_off"                                 , Bool false);
-  ("no_cmi"                                     , Bool false);
-  ("codegen-lib"                               , List []);
   ("codegen"                                   , Unset);
   ("custard_entry"                             , List []);
   ("custard_entrypoints"                       , List []);
@@ -209,7 +207,6 @@ let defaults = [
   ("custard_norm_budget"                       , Int 10000000);
   ("custard_monomorphize_types"                , Bool false);
   ("custard_int128"                            , Bool true);
-  ("custard_backend"                           , String "OCaml");
   ("custard_sizet_width"                       , String "native");
   ("custard_split"                             , Bool false);
   ("custard_unit"                              , Unset);
@@ -232,10 +229,6 @@ let defaults = [
   ("error_contexts"                            , Bool false);
   ("expand_include"                            , Unset);
   ("expose_interfaces"                         , Bool false);
-  ("extract_all"                               , Bool false);
-  ("extract_module"                            , List []);
-  ("extract_namespace"                         , List []);
-  ("extract"                                   , Unset);
   ("ext"                                       , Unset);
   ("force"                                     , Bool false);
   ("fuel"                                      , Unset);
@@ -248,7 +241,6 @@ let defaults = [
   ("initial_fuel"                              , Int 2);
   ("initial_ifuel"                             , Int 1);
   ("keep_query_captions"                       , Bool true);
-  ("krmloutput"                                , Unset);
   ("lang_extensions"                           , List []);
   ("lax"                                       , Bool false);
   ("list_plugins"                              , Bool false);
@@ -265,8 +257,6 @@ let defaults = [
   ("max_fuel"                                  , Int 8);
   ("max_ifuel"                                 , Int 2);
   ("message_format"                            , String "auto");
-  ("no_extract"                                , List []);
-  ("no_location_info"                          , Bool false);
   ("no_plugins"                                , Bool false);
   ("__no_positivity"                           , Bool false);
   ("no_prelude"                                , Bool false);
@@ -327,7 +317,6 @@ let defaults = [
   ("use_eq_at_higher_order"                    , Bool false);
   ("use_native_tactics"                        , Unset);
   ("use_nbe"                                   , Bool false);
-  ("use_nbe_for_extraction"                    , Bool false);
   ("using_facts_from"                          , Unset);
   ("verify_module"                             , List []);
   ("warn_default_effects"                      , Bool false);
@@ -473,9 +462,7 @@ let get_already_cached          ()      = lookup_opt "already_cached"           
 let get_cache_checked_modules   ()      = lookup_opt "cache_checked_modules"    as_bool
 let get_cache_off               ()      = lookup_opt "cache_off"                as_bool
 let get_print_cache_version     ()      = lookup_opt "print_cache_version"      as_bool
-let get_no_cmi                  ()      = lookup_opt "no_cmi"                   as_bool
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
-let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
 let get_custard_entry           ()      = lookup_opt "custard_entry"            (as_list as_string)
 let get_custard_entrypoints     ()      = lookup_opt "custard_entrypoints"      (as_list as_string)
 let get_custard_entry_module    ()      = lookup_opt "custard_entry_module"     (as_list as_string)
@@ -490,7 +477,6 @@ let get_custard_max_specializations () = lookup_opt "custard_max_specializations
 let get_custard_norm_budget     ()      = lookup_opt "custard_norm_budget"      as_int
 let get_custard_monomorphize_types () = lookup_opt "custard_monomorphize_types" as_bool
 let get_custard_int128          ()      = lookup_opt "custard_int128"           as_bool
-let get_custard_backend         ()      = lookup_opt "custard_backend"          as_string
 let get_custard_sizet_width     ()      = lookup_opt "custard_sizet_width"      as_string
 let get_custard_split           ()      = lookup_opt "custard_split"           as_bool
 let get_custard_unit            ()      = lookup_opt "custard_unit"            (as_option as_string)
@@ -507,9 +493,6 @@ let get_eager_subtyping         ()      = lookup_opt "eager_subtyping"          
 let get_error_contexts          ()      = lookup_opt "error_contexts"           as_bool
 let get_expose_interfaces       ()      = lookup_opt "expose_interfaces"        as_bool
 let get_message_format          ()      = lookup_opt "message_format"           as_string
-let get_extract                 ()      = lookup_opt "extract"                  (as_option (as_list as_string))
-let get_extract_module          ()      = lookup_opt "extract_module"           (as_list as_string)
-let get_extract_namespace       ()      = lookup_opt "extract_namespace"        (as_list as_string)
 let get_force                   ()      = lookup_opt "force"                    as_bool
 let get_help                    ()      = lookup_opt "help"                     as_bool
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
@@ -529,15 +512,12 @@ let get_log_failing_queries     ()      = lookup_opt "log_failing_queries"      
 let get_log_types               ()      = lookup_opt "log_types"                as_bool
 let get_max_fuel                ()      = lookup_opt "max_fuel"                 as_int
 let get_max_ifuel               ()      = lookup_opt "max_ifuel"                as_int
-let get_no_extract              ()      = lookup_opt "no_extract"               (as_list as_string)
-let get_no_location_info        ()      = lookup_opt "no_location_info"         as_bool
 let get_no_prelude              ()      = lookup_opt "no_prelude"               as_bool
 let get_no_plugins              ()      = lookup_opt "no_plugins"               as_bool
 let get_no_smt                  ()      = lookup_opt "no_smt"                   as_bool
 let get_normalize_pure_terms_for_extraction
                                 ()      = lookup_opt "normalize_pure_terms_for_extraction" as_bool
 let get_output_to               ()      = lookup_opt "output_to"                (as_option as_string)
-let get_krmloutput              ()      = lookup_opt "krmloutput"               (as_option as_string)
 let get_output_deps_to          ()      = lookup_opt "output_deps_to"           (as_option as_string)
 let get_output_ext              ()      = lookup_opt "output_ext"               (as_option as_string)
 let get_ugly                    ()      = lookup_opt "ugly"                     as_bool
@@ -602,7 +582,6 @@ let get_z3version               ()      = lookup_opt "z3version"                
 let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
 let get_warn_error              ()      = lookup_opt "warn_error"               (as_list as_string)
 let get_use_nbe                 ()      = lookup_opt "use_nbe"                  as_bool
-let get_use_nbe_for_extraction  ()      = lookup_opt "use_nbe_for_extraction"                  as_bool
 let get_trivial_pre_for_unannotated_effectful_fns
                                 ()      = lookup_opt "trivial_pre_for_unannotated_effectful_fns"    as_bool
 let get_profile                 ()      = lookup_opt "profile"                  (as_option (as_list as_string))
@@ -689,12 +668,6 @@ let reverse_accumulated_option name value =
 let accumulate_string name post_processor value =
     set_option name (accumulated_option name (String (post_processor value)))
 
-let add_extract_module s =
-    accumulate_string "extract_module" String.lowercase s
-
-let add_extract_namespace s =
-    accumulate_string "extract_namespace" String.lowercase s
-
 let add_verify_module s =
     accumulate_string "verify_module" String.lowercase s
 
@@ -704,7 +677,7 @@ exception InvalidArgument of string // option name
 
 For example, to parse the value "OCaml" for the option "--codegen", this
 function is called as ``parse_opt_val "codegen" (EnumStr ["OCaml"; "FSharp";
-"krml"]) "OCaml"`` and returns ``String "OCaml"``.
+"C"]) "OCaml"`` and returns ``String "OCaml"``.
 
 `opt_name` is only used in error messages. **)
 let rec parse_opt_val (opt_name: string) (typ: opt_type) (str_val: string) : ML option_val =
@@ -761,9 +734,6 @@ let pp_validate_dir p =
   let pp = as_string p in
   mkdir (*clean=*)false (*mkparents=*)true pp;
   p
-
-let pp_lowercase s =
-  String (String.lowercase (as_string s))
 
 let abort_counter : ref int =
     mk_ref 0
@@ -867,24 +837,23 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
     text "Print the version for .checked files and exit.");
 
   ( noshort,
-    "no_cmi",
-    Const (Bool true),
-    text "Disable inlining across module interfaces during extraction (aka. cross-module inlining). Enabled by default.");
-
-  ( noshort,
     "codegen",
-    EnumStr ["OCaml"; "FSharp"; "krml"; "Plugin"; "Extension"; "Custard"],
-    text "Generate code for further compilation to executable code, or build a compiler plugin");
-
-  ( noshort,
-    "codegen-lib",
-    Accumulated (SimpleStr "namespace"),
-    text "External runtime library (i.e. M.N.x extracts to M.N.X instead of M_N.x)");
+    EnumStr ["OCaml"; "FSharp"; "KrmlC"; "KrmlRust"; "C"; "Plugin"],
+    text "Extract the program with Custard, to the given language: OCaml \
+source, F# source for .NET, karamel's AST for compilation to C or to Rust, or \
+self-contained C11 source. KrmlC and KrmlRust share a printer but not a \
+program: karamel models some modules on the Rust path only, so a .krml built \
+for one target cannot be compiled for the other (section 20). FSharp targets \
+net10.0 and, unlike OCaml, compiles machine integers and floats to .NET's \
+own types rather than to a support library, so it accepts the programs the \
+C backend accepts rather than the ones the OCaml backend does (section 122). \
+Plugin builds a compiler plugin: OCaml, with the plugin's own modules as \
+entry points, linked against the compiler's unit (section 13.6)");
 
   ( noshort,
     "custard_entry",
     Accumulated (SimpleStr "long_name"),
-    text "Entry point for whole-program extraction with --codegen Custard. \
+    text "Entry point for whole-program extraction with --codegen. \
 May be repeated; every occurrence is a root of the extraction. Custard only \
 compiles the definitions reachable from these roots. It does *not* make them \
 run: use --custard_main for that. A module name may be given instead of a \
@@ -903,7 +872,7 @@ build reads it alongside its own.");
   ( noshort,
     "custard_c_no_prefix",
     Accumulated (SimpleStr "module_name"),
-    text "With --custard_backend C, emit the public definitions of the named \
+    text "With --codegen C, emit the public definitions of the named \
 module under their unqualified names, as krml's -no-prefix does. May be \
 repeated. This applies only to definitions that are already part of the \
 translation unit's interface -- those named by --custard_entry or \
@@ -918,8 +887,7 @@ share an unqualified name is an error.");
     "custard_entry_module",
     Accumulated (SimpleStr "module_name"),
     text "Every top-level definition of the named module is a root of the \
-extraction with --codegen Custard, as --extract_module does for the other \
-backends. May be repeated. This is how a module is compiled as a library \
+extraction. May be repeated. This is how a module is compiled as a library \
 rather than as the program reachable from one entry point, and it is what a \
 test of a module's generated code wants: a definition added to the module is \
 extracted without anyone having to name it. A definition with nothing to \
@@ -998,21 +966,9 @@ binders explicitly marked [@@monomorphize] (default false)");
     text "Compile FStar.UInt128 and FStar.Int128 to C's unsigned __int128 \
 and __int128, and FStar.UInt128/FStar.Int128 to .NET's System.UInt128 and \
 System.Int128, rather than to their F* implementations (default true). Only \
---custard_backend C and --custard_backend FSharp are affected; the other \
+--codegen C and --codegen FSharp are affected; the other \
 backends have no 128-bit machine integer. Set to false for a target whose \
 compiler lacks the extension, such as MSVC or any 32-bit target.");
-
-  ( noshort,
-    "custard_backend",
-    EnumStr ["OCaml"; "FSharp"; "KrmlC"; "KrmlRust"; "C"],
-    text "Language Custard emits: OCaml source, F# source for .NET, \
-karamel's AST for compilation to C or to Rust, or self-contained C11 source \
-(default OCaml). KrmlC and KrmlRust share a printer but not a program: \
-karamel models some modules on the Rust path only, so a .krml built for one \
-target cannot be compiled for the other (section 20). FSharp targets \
-net10.0 and, unlike OCaml, compiles machine integers and floats to .NET's \
-own types rather than to a support library, so it accepts the programs the \
-C backend accepts rather than the ones the OCaml backend does (section 122)");
 
   ( noshort,
     "custard_sizet_width",
@@ -1029,10 +985,10 @@ backends have it; karamel decides this for itself");
     "custard_split",
     Const (Bool true),
     text "Write one output file per F* source module instead of one file for \
-the whole program. This is still a single whole-program run. For --custard_backend \
+the whole program. This is still a single whole-program run. For --codegen \
 OCaml it exists because F*'s hand-written OCaml realizations reference modules \
 Custard compiles, and a single output file would make those references circular; \
---odir names the directory the files are written to. For --custard_backend FSharp \
+--odir names the directory the files are written to. For --codegen FSharp \
 it does the same and additionally lists the files, in compile order, in the \
 generated project. For the karamel backends it \
 splits the single .krml into one karamel module per F* module, which is what \
@@ -1073,7 +1029,7 @@ attribute, such as one declared in a library the program does not own.");
   ( noshort,
     "custard_krml_model",
     Accumulated (SimpleStr "Module"),
-    text "Treat a module as one karamel models itself: emit neither its type declarations nor its definitions, and leave every use of them under the F* name, which is what karamel's Rust backend matches on. May be repeated. Only under --custard_backend KrmlRust; Pulse.Lib.Slice is registered already. See section 20 of doc/ref/custard.md.");
+    text "Treat a module as one karamel models itself: emit neither its type declarations nor its definitions, and leave every use of them under the F* name, which is what karamel's Rust backend matches on. May be repeated. Only under --codegen KrmlRust; Pulse.Lib.Slice is registered already. See section 20 of doc/ref/custard.md.");
 
   ( noshort,
     "custard_no_unfold",
@@ -1183,30 +1139,6 @@ and reads");
           These options are typically interpreted by extensions. \
           Any later use of --ext over the same key overrides the old value. \
           An entry 'e' that is not of the form 'a=b' is treated as 'e=1', i.e., 'e' associated with string \"1\".");
-
-  ( noshort,
-    "extract",
-    Accumulated (SimpleStr "One or more semicolon separated occurrences of '[TargetName:]ModuleSelector'"),
-    text "Extract only those modules whose names or namespaces match the provided options. \
-     'TargetName' ranges over {OCaml, krml, FSharp, Plugin, Extension, Custard}. \
-     A 'ModuleSelector' is a space or comma-separated list of '[+|-]( * | namespace | module)'. \
-     For example --extract 'OCaml:A -A.B' --extract 'krml:A -A.C' --extract '*' means \
-     for OCaml, extract everything in the A namespace only except A.B; \
-     for krml, extract everything in the A namespace only except A.C; \
-     for everything else, extract everything. \
-     Note, the '+' is optional: --extract '+A' and --extract 'A' mean the same thing. \
-     Note also that '--extract A' applies both to a module named 'A' and to any module in the 'A' namespace \
-     Multiple uses of this option accumulate, e.g., --extract A --extract B is interpreted as --extract 'A B'.");
-
-  ( noshort,
-    "extract_module",
-    Accumulated (PostProcessed (pp_lowercase, (SimpleStr "module_name"))),
-    text "Deprecated: use --extract instead; Only extract the specified modules (instead of the possibly-partial dependency graph)");
-
-  ( noshort,
-    "extract_namespace",
-    Accumulated (PostProcessed (pp_lowercase, (SimpleStr "namespace name"))),
-    text "Deprecated: use --extract instead; Only extract modules in the specified namespace");
 
   ( noshort,
     "expose_interfaces",
@@ -1362,16 +1294,6 @@ and reads");
     text "Ignore the default module search paths");
 
   ( noshort,
-    "no_extract",
-    Accumulated (PathStr "module name"),
-    text "Deprecated: use --extract instead; Do not extract code from this module");
-
-  ( noshort,
-    "no_location_info",
-    Const (Bool true),
-    text "Suppress location information in the generated OCaml output (only relevant with --codegen OCaml)");
-
-  ( noshort,
     "no_prelude",
     Const (Bool true),
     text "Do not include the prelude module (FStar.Prelude) when checking the files \
@@ -1394,12 +1316,6 @@ and reads");
     text "Write output (checked file, depend file, extracted output, etc) to this file.");
 
   ( noshort,
-    "krmloutput",
-    PathStr "filename",
-    text "[Deprecated: use -o instead.] Place KaRaMeL extraction output in file <filename>. The path can be relative or absolute and does not depend\
-    on the --odir option.");
-
-  ( noshort,
     "odir",
     PostProcessed ((fun (Path s) ->
       (* Stateful, does not go to optionstate. *)
@@ -1417,7 +1333,8 @@ and reads");
     SimpleStr "ext",
     text "When used with --dep dune, controls the target file extension in generated rules. \
          The source file's extension is replaced by this value. \
-         For example, --output-ext fst.checked turns Hello.fst into Hello.fst.checked.");
+         For example, --output_ext fst.checked turns Hello.fst into Hello.fst.checked. \
+         The generated rules only check files, so the extension must end in \"checked\".");
 
   ( noshort,
     "prims",
@@ -1517,7 +1434,7 @@ and reads");
   ( noshort,
     "read_krml_file",
     PathStr "path",
-    text "Read a Karamel binary file and dump it to standard output.");
+    text "Read a Karamel binary file (e.g. one written by --codegen KrmlC) and dump it to standard output.");
 
   ( noshort,
     "record_options",
@@ -1763,11 +1680,6 @@ and reads");
     text "Use normalization by evaluation as the default normalization strategy (default 'false')");
 
   ( noshort,
-    "use_nbe_for_extraction",
-    BoolStr,
-    text "Use normalization by evaluation for normalizing terms before extraction (default 'false')");
-
-  ( noshort,
    "trivial_pre_for_unannotated_effectful_fns",
     BoolStr,
     text "Enforce trivial preconditions for unannotated effectful functions (default 'true')" );
@@ -1801,14 +1713,14 @@ and reads");
     Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module | identifier)'"),
     text "Specific source locations in the compiler are instrumented with profiling counters. \
           Pass `--profile_component FStarC.TypeChecker` to enable all counters in the FStarC.TypeChecker namespace. \
-          This option is a module or namespace selector, like many other options (e.g., `--extract`)");
+          This option is a module or namespace selector, like many other options (e.g., `--using_facts_from`)");
 
   ( noshort,
     "profile",
     Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module)'"),
     text "Profiling can be enabled when the compiler is processing a given set of source modules. \
           Pass `--profile FStar.Pervasives` to enable profiling when the compiler is processing any module in FStar.Pervasives. \
-          This option is a module or namespace selector, like many other options (e.g., `--extract`)");
+          This option is a module or namespace selector, like many other options (e.g., `--using_facts_from`)");
 
   ( 'h',
     "help", Const (Bool true),
@@ -2048,13 +1960,13 @@ let rec parse_filename_arg specs enable_filenames arg : ML parse_cmdline_res =
 so we can reset back to it. *)
 let parsed_args_state : ref (option history1) = mk_ref None
 
-(* Section 13.6.  [--codegen Plugin] is a Custard extraction.
+(* Section 13.6.  [--codegen Plugin] is an OCaml extraction set up as a plugin.
 
    A plugin is OCaml that is dynlinked into this very compiler, so it has to
    agree with the compiler's own extraction about every name and every data
    layout it shares.  A Custard-extracted compiler makes those decisions for
    the program it compiled, and records them in its unit interface; an
-   independently ML-extracted plugin would make different ones and the two
+   independently extracted plugin would make different ones and the two
    would disagree silently.  So the plugin is compiled as a Custard unit
    linked against [fstarc.cui]: a definition the compiler already emitted is
    called, and anything else -- a library module the compiler never reached,
@@ -2065,11 +1977,11 @@ let parsed_args_state : ref (option history1) = mk_ref None
    The plugin's own modules are the roots, twice over: as [--custard_entry],
    which is what makes their [@@plugin] definitions get registrations
    (section 13.3), and as [--custard_entry_module], which emits the rest of
-   what they define -- matching what the ML backend's [--codegen Plugin]
-   produced, since a hand-written fixup or another plugin may call any of it.
+   what they define, since a hand-written fixup or another plugin may call
+   any of it.
 
-   The unit is named after the first file, in the mangled spelling the ML
-   backend used for its output file, so that a Makefile saying [-o Foo.cmxs
+   The unit is named after the first file, in the mangled spelling
+   [Foo_Bar] (dots replaced by underscores), so that a Makefile saying [-o Foo.cmxs
    Foo.ml] keeps working.  A user who passes [--custard_unit] is taken at
    their word.
 
@@ -2094,7 +2006,7 @@ let desugar_plugin_codegen () : ML unit =
       Filepath.basename f |> drop ".checked" |> drop ".fsti" |> drop ".fst"
     in
     let mods = !file_list_ |> List.map module_name_of_file in
-    set_option' ("codegen", String "Custard");
+    set_option' ("codegen", String "OCaml");
     if None? (get_custard_unit ()) then
       (match mods with
        | m :: _ -> set_option' ("custard_unit", String (Util.replace_chars m '.' "_"))
@@ -2217,7 +2129,6 @@ let custom_prims () = get_prims()
 
 //Used to parse the options of
 //   --using_facts_from
-//   --extract
 //   --already_cached
 let path_of_text text = String.split ['.'] text
 
@@ -2275,32 +2186,40 @@ let disallow_unification_guards  () = get_disallow_unification_guards    ()
 let cache_checked_modules        () = get_cache_checked_modules       ()
 let cache_off                    () = get_cache_off                   ()
 let print_cache_version          () = get_print_cache_version         ()
-let cmi                          () = not (get_no_cmi                  ())
 
 let parse_codegen =
   function
   | "OCaml" -> Some OCaml
   | "FSharp" -> Some FSharp
-  | "krml" -> Some Krml
-  | "Plugin" -> Some Plugin
-  | "Extension" -> Some Extension
-  | "Custard" -> Some Custard
+  | "KrmlC" -> Some KrmlC
+  | "KrmlRust" -> Some KrmlRust
+  | "C" -> Some C
+  (* Desugared to OCaml by [desugar_plugin_codegen]. *)
+  | "Plugin" -> Some OCaml
   | _ -> None
 
 let print_codegen =
   function
   | OCaml -> "OCaml"
   | FSharp -> "FSharp"
-  | Krml -> "krml"
-  | Plugin -> "Plugin"
-  | Extension -> "Extension"
-  | Custard -> "Custard"
+  | KrmlC -> "KrmlC"
+  | KrmlRust -> "KrmlRust"
+  | C -> "C"
 
 let codegen                      () =
     Option.map (fun s -> parse_codegen s |> Some?.v)
                (get_codegen())
 
-let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
+let codegen_krml                 () =
+  match codegen () with
+  | Some KrmlC | Some KrmlRust -> true
+  | _ -> false
+
+let codegen_name                 () =
+  match codegen () with
+  | Some c -> print_codegen c
+  | None -> ""
+
 let custard_entries              () = get_custard_entry ()
 let custard_entrypoint_files     () = get_custard_entrypoints ()
 let custard_entry_modules        () = get_custard_entry_module ()
@@ -2315,10 +2234,7 @@ let custard_max_specializations  () = get_custard_max_specializations ()
 let custard_norm_budget          () = get_custard_norm_budget ()
 let custard_monomorphize_types   () = get_custard_monomorphize_types ()
 let custard_int128               () = get_custard_int128 ()
-let custard_backend              () = get_custard_backend ()
 let custard_sizet_32             () = get_custard_sizet_width () = "32"
-let custard_backend_krml         () = let b = get_custard_backend () in
-                                      b = "KrmlC" || b = "KrmlRust"
 let custard_split                () = get_custard_split ()
 let custard_unit                 () = get_custard_unit ()
 let custard_links                () = get_custard_link ()
@@ -2385,10 +2301,8 @@ let keep_query_captions          () =
 let log_types                    () = get_log_types                   ()
 let max_fuel                     () = get_max_fuel                    ()
 let max_ifuel                    () = get_max_ifuel                   ()
-let no_extract                   s  = get_no_extract() |> List.existsb (module_name_eq s)
 let normalize_pure_terms_for_extraction
                                  () = get_normalize_pure_terms_for_extraction ()
-let no_location_info             () = get_no_location_info            ()
 let no_prelude                   () = get_no_prelude                  ()
 let no_plugins                   () = get_no_plugins                  ()
 let no_smt                       () = get_no_smt                      ()
@@ -2399,7 +2313,6 @@ let ( ||| ) o x =
   | Some _ -> o
 
 let output_to                    () = get_output_to                   ()
-let krmloutput                   () = get_krmloutput                  () ||| output_to ()
 let output_deps_to               () = get_output_deps_to              () ||| output_to ()
 let output_ext                   () = get_output_ext                  ()
 
@@ -2433,6 +2346,7 @@ let quake_keep                   () = get_quake_keep                  ()
 let query_cache                  () = get_query_cache                 ()
 let query_stats                  () = get_query_stats                 ()
 let read_checked_file            () = get_read_checked_file           ()
+let read_krml_file               () = get_read_krml_file              ()
 let list_plugins                 () = get_list_plugins                ()
 let expand_include               () = get_expand_include              ()
 let locate                       () = get_locate                      ()
@@ -2440,7 +2354,6 @@ let locate_lib                   () = get_locate_lib                  ()
 let locate_ocaml                 () = get_locate_ocaml                ()
 let locate_file                  () = get_locate_file                 ()
 let locate_z3                    () = get_locate_z3                   ()
-let read_krml_file               () = get_read_krml_file              ()
 let record_options               () = get_record_options              ()
 let retry                        () = get_retry                       ()
 let report_assumes               () = get_report_assumes              ()
@@ -2483,7 +2396,6 @@ let z3_seed                      () = get_z3seed                      ()
 let z3_version                   () = get_z3version                   ()
 let no_positivity                () = get_no_positivity               ()
 let use_nbe                      () = get_use_nbe                     ()
-let use_nbe_for_extraction       () = get_use_nbe_for_extraction      ()
 let trivial_pre_for_unannotated_effectful_fns
                                  () = get_trivial_pre_for_unannotated_effectful_fns ()
 
@@ -2530,167 +2442,6 @@ let matches_namespace_filter_opt m =
   function
   | None -> false
   | Some filter -> module_matches_namespace_filter m filter
-
-type parsed_extract_setting = {
-  target_specific_settings: list (codegen_t & string);
-  default_settings:option string
-}
-
-let print_pes pes =
-  Format.fmt2 "{ target_specific_settings = %s;\n\t
-               default_settings = %s }"
-            (List.map (fun (tgt, s) ->
-                         Format.fmt2 "(%s, %s)"
-                           (print_codegen tgt)
-                           s)
-                      pes.target_specific_settings
-             |> String.concat "; ")
-            (match pes.default_settings with
-             | None -> "None"
-             | Some s -> s)
-
-let find_setting_for_target tgt (s:list (codegen_t & string))
-  : ML (option string)
-  = match Util.try_find (fun (x, _) -> x = tgt) s with
-    | Some (_, s) -> Some s
-    | _ -> None
-
-let extract_settings
-  : unit -> ML (option parsed_extract_setting)
-  = let memo:ref (option parsed_extract_setting & bool) = mk_ref (None, false) in
-    let merge_parsed_extract_settings p0 p1 : ML parsed_extract_setting =
-      let merge_setting s0 s1 =
-        match s0, s1 with
-        | None, None -> None
-        | Some p, None
-        | None, Some p -> Some p
-        | Some p0, Some p1 -> Some (p0 ^ "," ^ p1)
-      in
-      let merge_target tgt =
-        match
-          merge_setting
-            (find_setting_for_target tgt p0.target_specific_settings)
-            (find_setting_for_target tgt p1.target_specific_settings)
-        with
-        | None -> []
-        | Some x -> [tgt,x]
-      in
-      {
-        target_specific_settings = List.collect merge_target [OCaml;FSharp;Krml;Plugin;Extension;Custard];
-        default_settings = merge_setting p0.default_settings p1.default_settings
-      }
-    in
-    fun _ ->
-      let result, set = !memo in
-      let fail msg =
-           display_usage();
-           failwith (Format.fmt1 "Could not parse ‘%s’ passed to the --extract option" msg)
-      in
-      if set then result
-      else match get_extract () with
-           | None ->
-             memo := (None, true);
-             None
-
-           | Some extract_settings ->
-             let parse_one_setting extract_setting =
-               // T1:setting1; T2:setting2; ... or
-               // setting <-- applies to all other targets
-               let tgt_specific_settings = Util.split extract_setting ";" in
-               let split_one t_setting =
-                   match Util.split t_setting ":" with
-                   | [default_setting] ->
-                     Inr (Util.trim_string default_setting)
-                   | [target; setting] ->
-                     let target = Util.trim_string target in
-                     match parse_codegen target with
-                     | None -> fail target
-                     | Some tgt -> Inl (tgt, Util.trim_string setting)
-                   | _ -> fail t_setting
-               in
-               let settings = List.map split_one tgt_specific_settings in
-               let fail_duplicate msg tgt =
-                   display_usage();
-                   failwith
-                     (Format.fmt2
-                       "Could not parse ‘%s’; multiple setting for %s target"
-                       msg tgt)
-               in
-               let pes =
-                 List.fold_right
-                   (fun setting out ->
-                     match setting with
-                     | Inr def ->
-                       (match out.default_settings with
-                         | None -> { out with default_settings = Some def }
-                         | Some _ ->  fail_duplicate def "default")
-                     | Inl (target, setting) ->
-                       (match Util.try_find (fun (x, _) -> x = target) out.target_specific_settings with
-                         | None -> { out with target_specific_settings = (target, setting):: out.target_specific_settings }
-                         | Some _ -> fail_duplicate setting (print_codegen target)))
-                   settings
-                   ({ target_specific_settings = []; default_settings = None })
-               in
-               pes
-             in
-             let empty_pes = { target_specific_settings = []; default_settings = None } in
-             let pes =
-               //the left-most settings on the command line are at the end of the list
-               //so fold_right
-               List.fold_right
-                 (fun setting pes -> merge_parsed_extract_settings pes (parse_one_setting setting))
-                 extract_settings
-                 empty_pes
-             in
-             memo := (Some pes, true);
-             Some pes
-
-let should_extract (m:string) (tgt:codegen_t) : ML bool =
-    let m = String.lowercase m in
-    if m = "prims" then false
-    else
-    match extract_settings() with
-    | Some pes -> //new option, using --extract 'OCaml:* -FStar' etc.
-      let _ =
-        match get_no_extract(),
-              get_extract_namespace(),
-              get_extract_module ()
-        with
-        | [], [], [] -> ()
-        | _ -> failwith "Incompatible options: \
-                        --extract cannot be used with \
-                        --no_extract, --extract_namespace or --extract_module"
-      in
-      let tsetting =
-        match find_setting_for_target tgt pes.target_specific_settings with
-        | Some s -> s
-        | None ->
-          match pes.default_settings with
-          | Some s -> s
-          | None -> "*" //extract everything, by default
-      in
-      module_matches_namespace_filter m [tsetting]
-    | None -> //old
-        let should_extract_namespace m =
-            match get_extract_namespace () with
-            | [] -> false
-            | ns -> ns |> Util.for_some (fun n -> Util.starts_with m (String.lowercase n))
-        in
-        let should_extract_module m =
-            match get_extract_module () with
-            | [] -> false
-            | l -> l |> Util.for_some (fun n -> String.lowercase n = m)
-        in
-        not (no_extract m) &&
-        (match get_extract_namespace (), get_extract_module() with
-        | [], [] ->
-          // Neither is set; extract only files given in the command line.
-          // Except for krml: there we retain the behavior of extracting everything
-          // into a single krml output file.
-          if tgt = Krml
-          then true
-          else should_check m
-        | _ -> should_extract_namespace m || should_extract_module m)
 
 let should_be_already_cached m =
   (* should_check is true for files in the command line,

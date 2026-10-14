@@ -327,19 +327,19 @@ let is_arithmetic_primitive head args =
 
     | _ -> false
 
-let isInteger (tm: Syntax.term') : bool =
-    match tm with
+let isInteger (tm: Syntax.term) : ML bool =
+    match (SS.compress tm).n with
     | Tm_constant (Const_int _) -> true
     | _ -> false
 
-let getInteger (tm : Syntax.term') =
-    match tm with
+let getInteger (tm : Syntax.term) : ML _ =
+    match (SS.compress tm).n with
     | Tm_constant (Const_int (n, _)) -> n
     | _ -> failwith "Expected an Integer term"
 
 (* We only want to encode a term as a bitvector term (not an uninterpreted function)
    if there is a concrete/constant size argument given*)
-let is_BitVector_primitive head args =
+let is_BitVector_primitive head args : ML bool =
     match head.n, args with
     | Tm_fvar fv, [(sz_arg, _);_;_] ->
       (S.fv_eq_lid fv Const.bv_and_lid
@@ -363,12 +363,12 @@ let is_BitVector_primitive head args =
       || S.fv_eq_lid fv Const.bv_mul'_lid
       || S.fv_eq_lid fv Const.bv_ult_lid
       || S.fv_eq_lid fv Const.bv_uext_lid) &&
-      (isInteger sz_arg.n)
+      (isInteger sz_arg)
     | Tm_fvar fv, [(sz_arg, _); _] ->
         (S.fv_eq_lid fv Const.nat_to_bv_lid
          || S.fv_eq_lid fv Const.bv_not_lid
          || S.fv_eq_lid fv Const.bv_to_nat_lid) &&
-        (isInteger sz_arg.n)
+        (isInteger sz_arg)
 
     | _ -> false
 
@@ -513,7 +513,7 @@ and encode_arith_term env head args_e : ML _ =
     (*first argument should be the implicit vector size
       we do not want to encode this*)
     let (tm_sz, _) : arg = List.hd args_e in
-    let sz = getInteger tm_sz.n in
+    let sz = getInteger tm_sz in
     (* Declarations for the boxing/unboxing functions of bitvectors of size n *)
     let bv_size_decls (n:int) : ML decls_t =
       let sz_key = FStarC.Format.fmt1 "BitVector_%s" (show n) in
@@ -543,8 +543,8 @@ and encode_arith_term env head args_e : ML _ =
         match head.n, args_e with
         | Tm_fvar fv, [_;(sz_arg, _);_] when
             (S.fv_eq_lid fv Const.bv_uext_lid &&
-                (isInteger sz_arg.n)) ->
-                (List.tail (List.tail args_e), Some (getInteger sz_arg.n))
+                (isInteger sz_arg)) ->
+                (List.tail (List.tail args_e), Some (getInteger sz_arg))
         | Tm_fvar fv, [_;(sz_arg, _);_] when
             (S.fv_eq_lid fv Const.bv_uext_lid) ->
             (*fail if extension size is not a constant*)
@@ -1539,7 +1539,7 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
         let fvs = Free.names t0 |> elems in
         let arg_sorts = List.map (fun _ -> Term_sort) fvs in
         let arg_terms = List.map (lookup_term_var env) fvs in
-        let tkey_hash = FStarC.Hash.string_of_hash_code (FStarC.Syntax.Hash.ext_hash_term t0) in
+        let tkey_hash = FStarC.Hash.string_of_hash_code (FStarC.Syntax.Hash.ext_hash_term (FStarC.Syntax.Compress.deep_compress true true t0)) in
         let f = "Tm_inner_let_rec_" ^ BU.digest_of_string tkey_hash in
         let decl = Term.DeclFun f arg_sorts Term_sort (Some "Inner let rec") in
         mkApp (f, arg_terms), mk_decls f tkey_hash [decl] []

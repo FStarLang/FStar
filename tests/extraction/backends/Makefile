@@ -1,9 +1,5 @@
 FSTAR_ROOT ?= ../../..
 
-# NOTE: deliberately *not* passing --cmi here. These tests rely on extraction
-# not unfolding top-level names in order to keep their operands opaque; see
-# README.md.
-
 include $(FSTAR_ROOT)/mk/test.mk
 
 # Splitting a query to localize an error is fine here; these modules bundle
@@ -26,121 +22,16 @@ TESTS := $(basename $(wildcard Ext*.fst))
 # being buggy), and are simply not built.
 # --------------------------------------------------------------------------
 
-NO_OCAML :=
-
-# Closures / partial application are outside Low*, so the C backend rejects
-# them outright ("Warning 11: this expression is not Low*").
-NO_C := ExtBoolHigherOrder
-
-# The Rust backend refuses mathematical integers altogether ("Warning 15: ...
-# is not Low*; it uses mathematical integers"), so there is nothing to XFAIL:
-# Prims.int is simply out of scope for it.
-NO_RUST := ExtPrimsInt ExtPrimsIntDiv ExtPrimsIntMul ExtPrimsIntBignum \
-           ExtBoolHigherOrder
-
-# --- machine integers -----------------------------------------------------
-
-# `mk_op` (src/extraction/FStarC.Extraction.Krml.fst:494) maps `eq` to the
-# Krml `Eq` opcode but has no case for `ne`, even though the AST already has a
-# `Neq` opcode. `FStar.UInt8`'s hand-written OCaml realization is missing `ne`
-# too. See FINDINGS.md #1.
-XFAIL_OCAML += ExtIntNe
-XFAIL_C     += ExtIntNe
-XFAIL_RUST  += ExtIntNe
-
-# `shift_arithmetic_right` is not a Krml opcode either. C gets away with it
-# thanks to the hand-written definitions in karamel/include/krml/fstar_int.h
-# whitelisted in karamel/lib/Helpers.ml, but Rust has no such fallback and
-# dies with `unexpected: [type] no casts in Low* -> Rust`. FINDINGS.md #2.
-XFAIL_RUST += ExtIntShiftArith
-
-# The comparison peephole in `mk_arith` (karamel/lib/AstToCStar.ml) strips
-# *any* cast from an atomic comparison operand, not just the UInt8/UInt16
-# upcasts it inserted itself, so a narrowing FStar.Int.Cast inside `=` is
-# dropped and the comparison happens at the wider type. FINDINGS.md #4 has a
-# verified one-line fix; it lives in the karamel submodule, so it is not
-# applied here.
-XFAIL_C += ExtIntCast
-
-# `FStar.UInt8`'s hand-written OCaml realization forgets to truncate `lognot`
-# back to 8 bits, so `UInt8.lognot 0uy` evaluates to -1 instead of 255uy.
-# FINDINGS.md #3.
-XFAIL_OCAML += ExtUInt8Lognot
-
-# --- Prims.int ------------------------------------------------------------
-
-# krmllib's Prims_op_Division / Prims_op_Modulus hand the operation straight
-# to C, which truncates towards zero; F* specifies Euclidean division, so
-# every negative dividend is silently wrong. FINDINGS.md #5.
-XFAIL_C += ExtPrimsIntDiv
-
-# `Prims_int` is `int32_t` in C. Operations trap via RETURN_OR, but literals
-# are printed verbatim and truncated by the C compiler. FINDINGS.md #7.
-XFAIL_C += ExtPrimsIntBignum
-
-# --- datatypes ------------------------------------------------------------
-
-# Low* has no heap-allocated inductives, and karamel does not diagnose it: it
-# lays the recursive occurrence out by value and lets the C compiler complain
-# about an incomplete type. FINDINGS.md #8.
-XFAIL_C += ExtDatatypesRec ExtDatatypesMutual
-
-# krml does not terminate on a module containing two recursive datatypes, in
-# a phase shared by both backends (FINDINGS.md #9 has a 9-line repro), so
-# ExtDatatypesRec times out for C and Rust alike. The Rust backend separately
-# fails to box mutually recursive types: `recursive type 'expr' has infinite
-# size`.
-XFAIL_RUST += ExtDatatypesRec ExtDatatypesMutual
-
-# The Rust backend emits `crate::lowstar::ignore::ignore(...)` for an unused
-# binder but never emits the `lowstar` module, so the crate does not compile.
-# FINDINGS.md #10.
-XFAIL_RUST += ExtDatatypesRecord ExtDatatypesVariant
-
-# The Rust backend has no notion of a 128-bit integer: every function touching
-# FStar.UInt128/FStar.Int128 fails with
-#   Failure("unexpected: [type] no casts in Low* -> Rust")
-# and krml then dies with an uncaught `Not_found` while emitting the crate.
-# FINDINGS.md #14.
-XFAIL_RUST += ExtUInt128 ExtInt128
-
-# krmllib realizes FStar.UInt128 (fstar_uint128_gcc64.h, ..._msvc.h,
-# FStar_UInt128_Verified.h) but ships *nothing* for FStar.Int128. Karamel
-# happily emits references to the type `FStar_Int128_t` and to
-# `FStar_Int128_{mul_wide,add,sub,mul,div,rem,eq,lt,gt,...}`, none of which
-# exist, so the generated C does not compile. FINDINGS.md #15.
-XFAIL_C += ExtInt128
-
-# krmllib *declares* but never *defines* FStar_U?Int{8,16,32,64}_rotate_left
-# and _rotate_right (dist/minimal/FStar_UInt_8_16_32_64.h), so any program that
-# rotates extracts to C that compiles but does not link. The same holds for
-# `minus`, `ne` and `of_string`. FINDINGS.md #16.
-XFAIL_C += ExtUIntRotate
-
-# The Rust backend rejects rotates, eq_mask/gte_mask and minus with
-#   Failure("unexpected: [type] no casts in Low* -> Rust")
-# (AstToMiniRust.ml:541, the TAny case of translate_type) and then dies with an
-# uncaught `Not_found`. FINDINGS.md #14 and #17.
-XFAIL_RUST += ExtUIntRotate ExtUIntMask
-
 # --------------------------------------------------------------------------
-# Custard.
+# Columns.
 #
-# Custard is the whole-program monomorphizing pipeline (doc/ref/custard.md).
-# It is a *different extractor*, not a different backend behind the same one,
-# so it gets its own columns rather than sharing the ones above -- and the
-# point of running it here is exactly that the two disagree: several cells
-# that are XFAIL for the pipeline above pass under Custard, and the F* -> IR
-# half of Custard is itself a place a bug can hide that no `krml` column would
-# see.
+# Custard (doc/ref/custard.md) is the extractor; it has four code generators,
+# and so this directory has four columns:
 #
-# Custard has three backends, and its `Krml` one feeds both of karamel's, so
-# there are four columns:
-#
-#   custard-ocaml       --custard_backend OCaml + ocamlfind ocamlopt
-#   custard-c           --custard_backend C     + cc      (no karamel at all)
-#   custard-krml-c      --custard_backend KrmlC    + krml    + cc
-#   custard-krml-rust   --custard_backend KrmlRust + krml -backend rust + rustc
+#   custard-ocaml       --codegen OCaml    + ocamlfind ocamlopt
+#   custard-c           --codegen C        + cc      (no karamel at all)
+#   custard-krml-c      --codegen KrmlC    + krml    + cc
+#   custard-krml-rust   --codegen KrmlRust + krml -backend rust + rustc
 #
 # Every module here has `main : unit -> Int32.t`, which is what
 # --custard_main wants: Custard calls it from the generated code and makes its
@@ -152,21 +43,19 @@ XFAIL_RUST += ExtUIntRotate ExtUIntMask
 NO_CUSTARD_OCAML :=
 
 # The direct C backend diagnoses what C cannot represent (error 368) instead
-# of mistranslating it, which is the same judgement NO_ records for the other
-# columns: an unbounded Prims.int, a closure, and an inductive that contains
+# of mistranslating it, which is the judgement NO_ records: an unbounded Prims.int, a closure, and an inductive that contains
 # itself by value have no C representation.
 NO_CUSTARD_C := ExtPrimsInt ExtPrimsIntDiv ExtPrimsIntMul ExtPrimsIntBignum \
                 ExtBoolHigherOrder ExtDatatypesRec ExtDatatypesMutual \
                 ExtInt128
 
-# As for the plain Rust column: the Rust backend refuses mathematical
-# integers, and it cannot translate a closure.
+# karamel's Rust backend refuses mathematical integers, and it cannot translate a closure.
 NO_CUSTARD_KRML_RUST := ExtPrimsInt ExtPrimsIntDiv ExtPrimsIntMul \
                         ExtPrimsIntBignum ExtBoolHigherOrder
 
 NO_CUSTARD_KRML_C := ExtBoolHigherOrder
 
-# --- shared with the pipeline above ---------------------------------------
+# --- known bugs ----------------------------------------------------------
 
 # FINDINGS.md #18: FStar.{U,}Int{8,16,32,64} are not realized modules for
 # Custard the way FStar.UInt8 is, and only the operations with a primitive
@@ -188,12 +77,11 @@ XFAIL_CUSTARD_OCAML     += ExtIntNe
 # C backend, which is where the fix went.
 
 # FINDINGS.md #3: `FStar.UInt8` *is* a realized module for Custard, so its
-# OCaml column inherits the realization's untruncated `lognot` exactly as the
-# plain OCaml column does.
+# OCaml column inherits the realization's untruncated `lognot`.
 XFAIL_CUSTARD_OCAML += ExtUInt8Lognot
 
-# FINDINGS.md #5, #7: the krml C column shares krmllib's Prims.int with the
-# plain C column, and so shares its bugs.
+# FINDINGS.md #5, #7: the krml C column uses krmllib's Prims.int, and so
+# inherits its bugs.
 XFAIL_CUSTARD_KRML_C += ExtPrimsIntDiv ExtPrimsIntBignum
 
 # FINDINGS.md #8, #9: heap-allocated inductives, and krml not terminating on
@@ -207,18 +95,13 @@ XFAIL_CUSTARD_KRML_C    += ExtInt128 ExtUInt128
 XFAIL_CUSTARD_KRML_RUST += ExtInt128
 
 # FINDINGS.md #4: karamel's C backend drops a narrowing cast inside a
-# comparison. Custard emits the cast, karamel then removes it, exactly as in
-# the plain `c` column.
+# comparison. Custard emits the cast, and karamel then removes it.
 XFAIL_CUSTARD_KRML_C    += ExtIntCast
 
 CUSTARD_OCAML_TESTS     := $(filter-out $(NO_CUSTARD_OCAML)     $(XFAIL_CUSTARD_OCAML),$(TESTS))
 CUSTARD_C_TESTS         := $(filter-out $(NO_CUSTARD_C)         $(XFAIL_CUSTARD_C),$(TESTS))
 CUSTARD_KRML_C_TESTS    := $(filter-out $(NO_CUSTARD_KRML_C)    $(XFAIL_CUSTARD_KRML_C),$(TESTS))
 CUSTARD_KRML_RUST_TESTS := $(filter-out $(NO_CUSTARD_KRML_RUST) $(XFAIL_CUSTARD_KRML_RUST),$(TESTS))
-
-OCAML_TESTS := $(filter-out $(NO_OCAML) $(XFAIL_OCAML),$(TESTS))
-C_TESTS     := $(filter-out $(NO_C)     $(XFAIL_C),$(TESTS))
-RUST_TESTS  := $(filter-out $(NO_RUST)  $(XFAIL_RUST),$(TESTS))
 
 # --------------------------------------------------------------------------
 # Which columns can we actually run?
@@ -248,7 +131,7 @@ ifeq ($(HAVE_KRML),)
   ifeq ($(REQUIRE_BACKENDS),1)
     $(error krml not found (looked in $(KRML_CANDIDATES) and on PATH), and REQUIRE_BACKENDS=1)
   endif
-  $(info NOTE: krml not found, skipping the C and Rust extraction tests.)
+  $(info NOTE: krml not found, skipping the karamel extraction tests.)
   $(info       Looked in: $(KRML_CANDIDATES) and on PATH.)
 endif
 ifeq ($(HAVE_RUSTC),)
@@ -280,93 +163,33 @@ TIMEOUT      := timeout $(KRML_TIMEOUT)
 # call them through implicit declarations (an error under -Werror).
 KRML_C_FLAGS = -ccopt -I$(abspath $(KRMLLIB_DIR)) -add-include '"FStar_String.h"'
 
-# Karamel needs a .krml for every type it sees, and the F* installation does
-# not ship .krml files for ulib. A test that mentions `option`, `either`, or a
-# tuple therefore needs FStar.Pervasives.Native extracted alongside it, or
-# krml stops with "Reference to undefined type". We build those on demand and
-# pass them to every krml invocation.
-ULIB_DIR       := $(shell $(FSTAR_EXE) --locate_lib)/ulib
-ULIB_KRML_MODS := FStar.Pervasives.Native
-ULIB_KRML      := $(patsubst %,$(OUTPUT_DIR)/%.krml,$(subst .,_,$(ULIB_KRML_MODS)))
-
 CC ?= cc
 
-all: ocaml c rust
 all: custard-ocaml custard-c custard-krml-c custard-krml-rust
-
-ocaml: $(patsubst %,$(OUTPUT_DIR)/ml/%.ok,$(OCAML_TESTS))
-ocaml: $(patsubst %,$(OUTPUT_DIR)/ml/%.xfail,$(XFAIL_OCAML))
 
 custard-ocaml: $(patsubst %,$(OUTPUT_DIR)/cml/%.ok,$(CUSTARD_OCAML_TESTS))
 custard-ocaml: $(patsubst %,$(OUTPUT_DIR)/cml/%.xfail,$(XFAIL_CUSTARD_OCAML))
 custard-c: $(patsubst %,$(OUTPUT_DIR)/cc/%.ok,$(CUSTARD_C_TESTS))
 custard-c: $(patsubst %,$(OUTPUT_DIR)/cc/%.xfail,$(XFAIL_CUSTARD_C))
 ifeq ($(HAVE_KRML),1)
-c:     $(patsubst %,$(OUTPUT_DIR)/c/%.ok,$(C_TESTS))
-c:     $(patsubst %,$(OUTPUT_DIR)/c/%.xfail,$(XFAIL_C))
 custard-krml-c: $(patsubst %,$(OUTPUT_DIR)/ckc/%.ok,$(CUSTARD_KRML_C_TESTS))
 custard-krml-c: $(patsubst %,$(OUTPUT_DIR)/ckc/%.xfail,$(XFAIL_CUSTARD_KRML_C))
 ifeq ($(HAVE_RUSTC),1)
-rust:  $(patsubst %,$(OUTPUT_DIR)/rs/%.ok,$(RUST_TESTS))
-rust:  $(patsubst %,$(OUTPUT_DIR)/rs/%.xfail,$(XFAIL_RUST))
 custard-krml-rust: $(patsubst %,$(OUTPUT_DIR)/ckr/%.ok,$(CUSTARD_KRML_RUST_TESTS))
 custard-krml-rust: $(patsubst %,$(OUTPUT_DIR)/ckr/%.xfail,$(XFAIL_CUSTARD_KRML_RUST))
 endif
 endif
-.PHONY: all ocaml c rust custard-ocaml custard-c custard-krml-c custard-krml-rust
+.PHONY: all custard-ocaml custard-c custard-krml-c custard-krml-rust
 
-# Convenience: `make ExtFoo.ocaml`, `make ExtFoo.c`, `make ExtFoo.rust`.
-%.ocaml: $(OUTPUT_DIR)/ml/%.ok ; @true
-%.c:     $(OUTPUT_DIR)/c/%.ok  ; @true
-%.rust:  $(OUTPUT_DIR)/rs/%.ok ; @true
+# Convenience: `make ExtFoo.custard-ocaml`, and so on.
 %.custard-ocaml:     $(OUTPUT_DIR)/cml/%.ok ; @true
 %.custard-c:         $(OUTPUT_DIR)/cc/%.ok  ; @true
 %.custard-krml-c:    $(OUTPUT_DIR)/ckc/%.ok ; @true
 %.custard-krml-rust: $(OUTPUT_DIR)/ckr/%.ok ; @true
 
-###############
-# OCaml       #
-###############
-
-# This column is the *legacy* extractor, and it extracts here rather than
-# through mk/test.mk's $(OUTPUT_DIR)/%.ml, which now runs Custard: the whole
-# point of this directory is that the ml and cml columns are two different
-# pipelines compiling the same program, and sharing a rule would make them one
-# column reported twice.  It stays until the legacy pipeline is deleted.
-# A static pattern rule rather than an implicit one, because
-# $(OUTPUT_DIR)/ml/%.ml also matches mk/test.mk's $(OUTPUT_DIR)/%.ml and an
-# implicit rule does not reliably win against another implicit rule.  A static
-# pattern rule is an explicit rule for each of its targets, so it does.
-#
-# The driver is appended to the extracted module itself: it is in scope of
-# `main`, so no separate compilation unit (and no module resolution) is
-# needed.
-$(patsubst %,$(OUTPUT_DIR)/ml/%.ml,$(TESTS)): $(OUTPUT_DIR)/ml/%.ml: $(CACHE_DIR)/%.fst.checked
-	$(call msg, "EXTRACT ml", $*)
-	$(Q)mkdir -p $(dir $@)
-	$(Q)$(FSTAR) --codegen OCaml $< -o $@
-	$(Q)echo 'let _ = Stdlib.exit (Stdint.Int32.to_int (main ()))' >> $@
-
-$(OUTPUT_DIR)/ml/%.exe: $(OUTPUT_DIR)/ml/%.ml
-	$(call msg, "OCAMLOPT", $*)
-	$(Q)$(FSTAR_EXE) --ocamlopt $< -o $@
-
-$(OUTPUT_DIR)/ml/%.ok: $(OUTPUT_DIR)/ml/%.exe
-	$(call msg, "RUN ocaml", $*)
-	$(Q)./$< || { echo "FAIL [ocaml] $*: check #$$? (grep the module for that tag)"; exit 1; }
-	$(Q)touch $@
-
-###############
-# C (Karamel) #
-###############
-
-# ulib modules have no .fst in this directory, so mk/test.mk's generic rule
-# does not apply; extract them straight from the installed library.
-$(OUTPUT_DIR)/FStar_%.krml:
-	$(call msg, "EXTRACT ULIB", $(subst _,.,FStar_$*))
-	$(Q)mkdir -p $(OUTPUT_DIR)
-	$(Q)$(FSTAR) --codegen krml --extract_module $(subst _,.,FStar_$*) \
-	    --cache_dir $(ULIB_DIR)/.cache $(ULIB_DIR)/$(subst _,.,FStar_$*).fst >/dev/null
+#############
+# krmllib   #
+#############
 
 $(KRMLLIB):
 	$(call msg, "KRMLLIB", $(KRML_DIST))
@@ -375,53 +198,6 @@ $(KRMLLIB):
 	@# Karamel's Makefile.basic relies on the builtin %.o: %.c rule, which
 	@# mk/common.mk disables; clear MAKEFLAGS for the sub-make.
 	$(Q)MAKEFLAGS= $(MAKE) -C $(KRMLLIB_DIR) -f Makefile.basic KRML_EXE=$(KRML_EXE) >/dev/null
-
-# krml compiles the generated .c itself, with -Wall -Werror: that is what
-# catches "extraction succeeded but the C does not compile" bugs.
-$(OUTPUT_DIR)/c/%.exe: $(OUTPUT_DIR)/%.krml $(ULIB_KRML) $(KRMLLIB)
-	$(call msg, "KRML C", $*)
-	$(Q)rm -rf $(OUTPUT_DIR)/c/$*
-	$(Q)$(TIMEOUT) $(KRML_EXE) $(KRML_FLAGS) $(KRML_COMMON) $(KRML_C_FLAGS) -skip-linking -skip-makefiles \
-	    -no-prefix $* -bundle $*=\* -tmpdir $(OUTPUT_DIR)/c/$* $(ULIB_KRML) $<
-	@# krml exits 0 even when an unhandled exception stops it from writing
-	@# anything; do not let that look like a successful extraction.
-	$(Q)ls $(OUTPUT_DIR)/c/$*/*.o >/dev/null 2>&1 || \
-	    { echo "FAIL [c] $*: krml produced no object file"; exit 1; }
-	$(call msg, "CC", $*)
-	$(Q)$(CC) -o $@ $(OUTPUT_DIR)/c/$*/*.o $(KRMLLIB)
-
-$(OUTPUT_DIR)/c/%.ok: $(OUTPUT_DIR)/c/%.exe
-	$(call msg, "RUN c", $*)
-	$(Q)./$< || { echo "FAIL [c] $*: check #$$? (grep the module for that tag)"; exit 1; }
-	$(Q)touch $@
-
-##################
-# Rust (Karamel) #
-##################
-
-# Karamel emits a library crate whose entry point is `pub fn main() -> i32`,
-# which Rust will not accept as a binary entry point. Rename it and append a
-# real `fn main`.
-$(OUTPUT_DIR)/rs/%.rs: $(OUTPUT_DIR)/%.krml $(ULIB_KRML)
-	$(call msg, "KRML RUST", $*)
-	$(Q)rm -rf $(OUTPUT_DIR)/rs/$*
-	$(Q)$(TIMEOUT) $(KRML_EXE) $(KRML_FLAGS) $(KRML_COMMON) -backend rust \
-	    -bundle $*=\* -tmpdir $(OUTPUT_DIR)/rs/$* $(ULIB_KRML) $<
-	$(Q)sed 's/^pub fn main()/pub fn krml_main()/' $(OUTPUT_DIR)/rs/$*/*.rs > $@
-	@# Karamel prints an error but still writes the file when it cannot
-	@# translate a definition; a silently truncated crate must not pass.
-	$(Q)grep -q '^pub fn krml_main()' $@ || \
-	    { echo "FAIL [rust] $*: krml did not emit 'main' in the generated crate"; exit 1; }
-	$(Q)echo 'fn main() { std::process::exit(krml_main()) }' >> $@
-
-$(OUTPUT_DIR)/rs/%.exe: $(OUTPUT_DIR)/rs/%.rs
-	$(call msg, "RUSTC", $*)
-	$(Q)rustc --edition 2021 -A warnings -o $@ $<
-
-$(OUTPUT_DIR)/rs/%.ok: $(OUTPUT_DIR)/rs/%.exe
-	$(call msg, "RUN rust", $*)
-	$(Q)./$< || { echo "FAIL [rust] $*: check #$$? (grep the module for that tag)"; exit 1; }
-	$(Q)touch $@
 
 ###########
 # Custard #
@@ -437,19 +213,19 @@ $(OUTPUT_DIR)/rs/%.ok: $(OUTPUT_DIR)/rs/%.exe
 #
 # --custard_main names `main` as *the* entry point, which is what makes the
 # generated code call it and turn its Int32 result into the exit status.
-CUSTARD = --codegen Custard --custard_main $*.main
+CUSTARD = --custard_main $*.main
 
 $(OUTPUT_DIR)/custard/%.ml: $(CACHE_DIR)/%.fst.checked
 	$(call msg, "CUSTARD ml", $*)
 	$(Q)mkdir -p $(dir $@)
-	$(Q)$(FSTAR) $< $(CUSTARD) -o $@
+	$(Q)$(FSTAR) $< $(CUSTARD) --codegen OCaml -o $@
 
 # Type monomorphization (section 5.0.1) is a prerequisite for the direct C
 # backend: without it the program still has type variables, which have no size.
 $(OUTPUT_DIR)/custard/%.c: $(CACHE_DIR)/%.fst.checked
 	$(call msg, "CUSTARD c", $*)
 	$(Q)mkdir -p $(dir $@)
-	$(Q)$(FSTAR) $< $(CUSTARD) --custard_backend C \
+	$(Q)$(FSTAR) $< $(CUSTARD) --codegen C \
 	    --custard_monomorphize_types true -o $@
 	@# The invariant of tests/custard and pulse/test: a block with nothing in
 	@# it is a branch the backend failed to notice was empty.
@@ -466,12 +242,12 @@ $(OUTPUT_DIR)/custard/%.c: $(CACHE_DIR)/%.fst.checked
 $(OUTPUT_DIR)/custard/%.krmlc.krml: $(CACHE_DIR)/%.fst.checked
 	$(call msg, "CUSTARD krml-c", $*)
 	$(Q)mkdir -p $(dir $@)
-	$(Q)$(FSTAR) $< $(CUSTARD) --custard_backend KrmlC -o $@
+	$(Q)$(FSTAR) $< $(CUSTARD) --codegen KrmlC -o $@
 
 $(OUTPUT_DIR)/custard/%.krmlrust.krml: $(CACHE_DIR)/%.fst.checked
 	$(call msg, "CUSTARD krml-rust", $*)
 	$(Q)mkdir -p $(dir $@)
-	$(Q)$(FSTAR) $< $(CUSTARD) --custard_backend KrmlRust -o $@
+	$(Q)$(FSTAR) $< $(CUSTARD) --codegen KrmlRust -o $@
 
 # --- custard-ocaml --------------------------------------------------------
 
@@ -545,7 +321,8 @@ $(OUTPUT_DIR)/ckc/%.ok: $(OUTPUT_DIR)/ckc/%.exe
 # --- custard-krml-rust ----------------------------------------------------
 
 # karamel's Rust backend flattens the F* prefix away, so here `main` really is
-# `main` and the rename of the plain Rust column applies unchanged.
+# `main`; rename it and append a real `fn main`, since Rust will not accept
+# `pub fn main() -> i32` as a binary entry point.
 $(OUTPUT_DIR)/ckr/%.rs: $(OUTPUT_DIR)/custard/%.krmlrust.krml
 	$(call msg, "KRML RUST", $*)
 	$(Q)mkdir -p $(dir $@)
@@ -573,44 +350,12 @@ $(OUTPUT_DIR)/ckr/%.ok: $(OUTPUT_DIR)/ckr/%.exe
 # Build the cell in a sub-make and require it to fail. The point is to notice
 # when a known bug gets fixed, so that the entry can be removed from XFAIL_*.
 #
-# The F* side is a *prerequisite*, not part of the sub-make: every bug we XFAIL
-# is on the backend side, so extraction itself must still succeed. Without
-# that, any breakage in the harness (a missing tool, a bad flag, an error in
-# mk/test.mk) would look like the expected failure and the cell would "pass"
-# for entirely the wrong reason.
-define xfail_rule
-$$(OUTPUT_DIR)/$(1)/%.xfail: $$(OUTPUT_DIR)/$(4)
-	$$(call msg, "XFAIL $(2)", $$*)
-	$$(Q)mkdir -p $$(dir $$@)
-	$$(Q)if $$(MAKE) $$(OUTPUT_DIR)/$(1)/$$*.ok >$$@.log 2>&1; then \
-	  echo "UNEXPECTED PASS [$(2)] $$*: this cell is listed in XFAIL_$(3) but it"; \
-	  echo "  now works. Please remove it from the Makefile and FINDINGS.md."; \
-	  exit 1; \
-	fi
-	@# A cell must fail because of the bug it documents, not because the
-	@# harness fell over. Missing tools and make-level breakage are not
-	@# expected failures.
-	$$(Q)if grep -qE "(command not found|No such file or directory: (krml|rustc|cc)|not found$$$$|takes an argument but has none)" $$@.log; then \
-	  echo "BROKEN XFAIL [$(2)] $$*: the cell failed, but not because of the"; \
-	  echo "  documented bug. See $$@.log:"; \
-	  sed 's/^/    /' $$@.log | tail -n 5; \
-	  exit 1; \
-	fi
-	$$(Q)touch $$@
-endef
-
-$(eval $(call xfail_rule,ml,ocaml,OCAML,ml/%.ml))
-$(eval $(call xfail_rule,c,c,C,%.krml))
-$(eval $(call xfail_rule,rs,rust,RUST,%.krml))
-
-# The Custard columns need their own version of the same rule, because for
-# them extraction is *not* a prerequisite that must succeed: Custard is the
-# extractor, so a bug in it can stop the pipeline at the F* step, and cell
-# #18 below is exactly such a case. The failure is required to be a failure of
-# the pipeline, not of the harness -- which the grep at the end of the rule
-# above already checks -- but it may happen at any stage of it.
+# Custard is the extractor, so a bug in it can stop the pipeline at the F*
+# step; the failure may happen at any stage. It is required to be a failure of
+# the pipeline, not of the harness: missing tools and make-level breakage are
+# not expected failures.
 #
-# The prerequisite is therefore the .checked file: a cell that cannot even be
+# The prerequisite is the .checked file: a cell that cannot even be
 # type-checked is broken in a way this directory does not mean to record.
 define custard_xfail_rule
 $$(OUTPUT_DIR)/$(1)/%.xfail: $$(CACHE_DIR)/%.fst.checked

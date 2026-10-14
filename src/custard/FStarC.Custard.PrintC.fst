@@ -546,7 +546,7 @@ let mono_advice_for (n:option name) : ML (list string) =
        polymorphic was not held back by an external, and saying so would send
        a reader to change a signature that is not the problem. *)
     match (match n with
-           | _ when Options.custard_backend () <> "OCaml" -> None
+           | _ when Options.codegen () <> Some Options.OCaml -> None
            | None -> None
            | Some n -> HashTable.try_find frozen_by (string_of_name n)) with
     | Some ext ->
@@ -1490,7 +1490,7 @@ let reset_program_state () : ML unit =
    forms [c_expr] has to hoist and [emit] compiles directly. *)
 let is_stmt (e:expr) : bool =
   match e.e with
-  | ELet _ | EMatch _ | EIf _ | ESeq _ | EWhile _ | EAbort _ -> true
+  | ELet _ | EMatch _ | EIf _ | ESeq _ | EWhile _ | EAbort _ | EUnreachable _ -> true
   (* An allocation needs an initializing loop, and the three that return no
      value need a statement to be a statement. *)
   | EOp ({ po_op = BufCreate _ }, _) | EOp ({ po_op = BufWrite }, _)
@@ -1506,7 +1506,7 @@ let is_stmt (e:expr) : bool =
 let rec vars_of (e:expr) : ML (list string) =
   match e.e with
   | EVar x -> [x]
-  | EConst _ | EQual _ | EAny | EAbort _ -> []
+  | EConst _ | EQual _ | EAny | EAbort _ | EUnreachable _ -> []
   | ELet (_, _, a, b) -> vars_of a @ vars_of b
   | EApp (h, es) -> vars_of h @ List.collect vars_of es
   | EFun (_, b) -> vars_of b
@@ -1533,7 +1533,7 @@ let rec mutates (x:string) (e:expr) : ML bool =
   match e.e with
   | EVar y -> y = x
   | EOp ({ po_op = BufRead }, [{ e = EVar y }; i]) when y = x -> mutates x i
-  | EConst _ | EQual _ | EAny | EAbort _ -> false
+  | EConst _ | EQual _ | EAny | EAbort _ | EUnreachable _ -> false
   | ELet (_, _, a, b) -> mutates x a || mutates x b
   | EApp (h, es) -> mutates x h || any es
   | EFun (_, b) -> mutates x b
@@ -1577,7 +1577,7 @@ let rec is_pure (e:expr) : ML bool =
   let all (es:list expr) : ML bool = List.for_all is_pure es in
   match e.e with
   | EConst _ | EVar _ | EQual _ | EAny -> true
-  | EApp _ | EFun _ | EWhile _ | EAbort _ | ERaise _ | ETry _ -> false
+  | EApp _ | EFun _ | EWhile _ | EAbort _ | EUnreachable _ | ERaise _ | ETry _ -> false
   | EOp ({ po_op = BufRead }, es) -> all es
   | EOp ({ po_op = BufCreate _ }, _) | EOp ({ po_op = BufWrite }, _)
   | EOp ({ po_op = BufFree }, _) | EOp ({ po_op = BufBlit }, _) -> false
@@ -1613,7 +1613,7 @@ let rec cell_dead (x:string) (e:expr) : ML bool =
   | EVar y -> y <> x
   | EOp ({ po_op = BufWrite }, [{ e = EVar y }; i; v]) when y = x ->
     is_droppable i && is_droppable v
-  | EConst _ | EQual _ | EAny | EAbort _ -> true
+  | EConst _ | EQual _ | EAny | EAbort _ | EUnreachable _ -> true
   | ELet (_, _, a, b) | ESeq (a, b) | EWhile (a, b) -> cell_dead x a && cell_dead x b
   | EApp (h, es) -> cell_dead x h && all es
   | EFun (_, b) | ERaise b -> cell_dead x b
@@ -1639,7 +1639,7 @@ let rec drop_writes (x:string) (e:expr) : ML expr =
   let e' =
     match e.e with
     | EOp ({ po_op = BufWrite }, [{ e = EVar y }; _; _]) when y = x -> EConst CUnit
-    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> e.e
+    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ | EUnreachable _ -> e.e
     | ELet (n, t, a, b) -> ELet (n, t, go a, go b)
     | ESeq (a, b) -> ESeq (go a, go b)
     | EWhile (a, b) -> EWhile (go a, go b)
@@ -2281,7 +2281,8 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
 
   (* Control does not reach here.  [abort] is [_Noreturn], so no [return]
      has to follow it even in a value position. *)
-  | EAbort s -> ind ^ "/* " ^ escape s ^ " */\n" ^ ind ^ "abort();\n"
+  | EAbort s | EUnreachable s ->
+    ind ^ "/* " ^ escape s ^ " */\n" ^ ind ^ "abort();\n"
 
   (* Section 120.  A comment in statement position.  The standalone form --
      an empty [after] on a unit operand, which is what

@@ -465,6 +465,7 @@ let float_probe_of_env (env : ref TcEnv.env) (ns : list string) : ML (option fwi
 let init (deps:Dep.deps) (env:TcEnv.env) : ML state =
   let envr = mk_ref env in
   Builtins.set_float_probe (float_probe_of_env envr);
+  Builtins.set_deps deps;
   {
   deps    = deps;
   env     = envr;
@@ -1612,7 +1613,7 @@ let compile_time_steps : list TcEnv.step = [
    one is included because it reaches the same declarations by the same
    route, and a module realized outside F* is realized there too. *)
 let is_c_backend () : ML bool =
-  let b = Options.custard_backend () in
+  let b = Options.codegen_name () in
   b = "C" || b = "KrmlC" || b = "KrmlRust"
 
 (* Section 135.  Whether a function value on the heap keeps every binder its
@@ -1854,7 +1855,7 @@ and functor_instance (st:state) (scrut:term) : ML (option name) =
     match HashTable.try_find st.names key with
     | Some nm -> Some nm
     | None ->
-      if Options.custard_backend () <> "OCaml" then
+      if Options.codegen () <> Some Options.OCaml then
         custard_error st E.Error_CustardBadFunctor [
           text ("Custard: " ^ Ident.string_of_lid fl ^ " is an OCaml functor \
                  (" ^ path ^ "), and functors exist only on the OCaml \
@@ -2627,12 +2628,16 @@ and template_index_scan (st:state) (ts:list term) : ML (list bv & list string) =
      term and is scanned again, while the same application reached twice is
      scanned once.  Nothing is lost -- a second scan of an identical term
      contributes exactly what the first one did -- and it is the entire
-     difference between exponential and linear. *)
-  let scanned : HashTable.t string bool = HashTable.create 100 in
+     difference between exponential and linear.
+
+     The key is deeply compressed: term equality is syntactic, and the
+     normalizer leaves delayed substitutions behind that differ between two
+     results of the same reduction. *)
+  let scanned : ref (Hash.term_map unit) = mk_ref (Hash.term_map_empty #unit) in
   let already (t:term) : ML bool =
-    let k = show (Hash.ext_hash_term t) in
-    if Some? (HashTable.try_find scanned k) then true
-    else (HashTable.add scanned k true; false) in
+    let t = Visit.visit_term false (fun t -> t) t in
+    if Hash.term_map_mem t !scanned then true
+    else (scanned := Hash.term_map_add t () !scanned; false) in
   (* Section 88.  The scan is syntactic, and a type abbreviation is exactly
      what makes the syntax it is looking for absent.  [fragment] is an
      [inline_for_extraction] alias for an application of the template, so the
@@ -5653,7 +5658,7 @@ and extract_sigelt_body (st:state) (l:Ident.lident) (nm:name) (margs:list (int &
             be external to.  An external is a reference to [M.f] in the target
             language, and for OCaml that names the file Custard is writing:
             [Bug1485.err_exn] emitted into [Bug1485.ml] is a reference to
-            itself, which does not compile.  The ML backend has always emitted
+            itself, which does not compile.  The former ML backend always emitted
             a stub for this case -- [failwith "Not yet implemented: M.f"] --
             and a stub is the honest translation: the program says the
             definition does not exist, so a call to it is a failure, and the
@@ -6550,7 +6555,7 @@ let root_is_erased (st:state) (l:Ident.lident) : ML bool =
 
 (* Section 126.3.  [@@noextract_to "krml"] is the backend-specific half of
    [noextract], and the string it carries is a codegen name.  Custard's own
-   names are its [--custard_backend] values; "krml" is accepted for every
+   names are its [--codegen] values; "krml" is accepted for every
    backend that produces C or Rust, because that is what the attribute has
    always meant in the wild -- FStar.UInt128, FStar.SizeT and FStar.Endianness
    use it to say "this one has a hand-written C implementation", and Custard's
@@ -6561,7 +6566,7 @@ let root_is_erased (st:state) (l:Ident.lident) : ML bool =
    there is no second pipeline downstream to drop the body later, so the
    definition is simply not a root here. *)
 let noextract_to_this_backend (se:S.sigelt) : ML bool =
-  let b = Options.custard_backend () in
+  let b = Options.codegen_name () in
   let names = "Custard" :: b ::
               (if b = "KrmlC" || b = "KrmlRust" || b = "C"
                then ["krml"; "Krml"] else []) in
