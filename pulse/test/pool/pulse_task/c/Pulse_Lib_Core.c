@@ -24,10 +24,6 @@ void Pulse_Lib_Core_fork_core(cherry_fn f) {
   pthread_detach(t);
 }
 
-void Pulse_Lib_Core_hide_div__unit(cherry_fn f) {
-  cherry_call_thunk(f);
-}
-
 void Pulse_Lib_Sleep_sleep_ms(cherry_int ms) {
   int64_t n = cherry_int_to_i64(ms);
   struct timespec ts = { (time_t)(n / 1000), (long)(n % 1000) * 1000000L };

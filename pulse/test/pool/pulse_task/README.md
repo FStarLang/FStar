@@ -13,6 +13,6 @@ See `doc/ref/custard.md` section 128.
 `make run-cherry` (part of `make test` unless `NOCHERRY=1`) builds the
 same program with Cherry (`--codegen Cherry`, see `doc/ref/cherry.md`),
 the reference-counted C backend: `c/` has the C realizations of
-`fork_core` (a detached pthread), `hide_div` and `sleep_ms` and the
+`fork_core` (a detached pthread) and `sleep_ms` and the
 driver, and the spin lock is the C realization in
 `share/pulse/examples/dice/external/c/hacl`.
