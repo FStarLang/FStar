@@ -396,20 +396,54 @@ let ext_hash_term_no_memo (t:term)
     let (h, _) = r false in
     h
 
+(* Do the hashes of [t1] and [t2] differ? Only looks at hashes that are
+   already memoized: computing a hash is linear in the size of the term. *)
+let memo_hashes_differ (t1 t2:term) : ML bool =
+  match !t1.hash_code, !t2.hash_code with
+  | Some h1, Some h2 -> h1 <> h2
+  | _ -> false
+
+let equal_hash (t1 t2:term) : ML bool =
+  ext_hash_term t1 = ext_hash_term t2
+
+(* [equal_term t1 t2] holds iff the terms are structurally equal (as defined
+   below) and their hashes are equal; the hash check is a fast way to rule
+   out unequal terms.
+
+   We used to check [ext_hash_term t1 = ext_hash_term t2] upfront at every
+   node. But the subterms of a term with a delayed substitution are fresh
+   nodes, created by each call to [SS.compress], so their hashes are never
+   memoized, and (re)hashing them at every node made comparing such terms
+   quadratic (O(size * depth)); this dominated the cost of lookups in the
+   Core memo table for large terms (e.g. in big Pulse functions).
+
+   Instead, we now compare the hashes upfront only when both are memoized,
+   and otherwise rely on the structural comparison, which compares every
+   component that the hash depends on, so that structural equality implies
+   hash equality: for leaves (whose hashes are cheap), the hashes are
+   compared explicitly; for the other nodes, it follows from the equality of
+   their components, which is the case for all of them, except for a few
+   components which the structural comparison used to ignore or compare more
+   coarsely than the hash, and which it now also compares (see equal_comp,
+   equal_lbname, equal_meta, equal_pat). Hence [equal_term t1 t2] implies
+   that it held with the previous definition. The converse holds unless the
+   hashes collide on terms that differ in such a component, in which case
+   we now (conservatively) answer false. *)
 let rec equal_term (t1 t2:term)
   : ML bool
   = if physical_equality t1 t2 then true else
     if physical_equality t1.n t2.n then true else
-    if ext_hash_term t1 <> ext_hash_term t2 then false else
+    if memo_hashes_differ t1 t2 then false else
     match (SS.compress t1).n, (SS.compress t2).n with
-    | Tm_bvar x, Tm_bvar y -> x.index = y.index
-    | Tm_name x, Tm_name y -> x.index = y.index
-    | Tm_fvar f, Tm_fvar g -> equal_fv f g
-    | Tm_uinst (t1, u1), Tm_uinst (t2, u2) ->
-      equal_term t1 t2 &&
+    | Tm_bvar x, Tm_bvar y -> x.index = y.index && equal_hash t1 t2
+    | Tm_name x, Tm_name y -> x.index = y.index && equal_hash t1 t2
+    | Tm_fvar f, Tm_fvar g -> equal_fv f g && equal_hash t1 t2
+    | Tm_uinst (t1', u1), Tm_uinst (t2', u2) ->
+      equal_hash t1 t2 &&
+      equal_term t1' t2' &&
       equal_list equal_universe u1 u2
-    | Tm_constant c1, Tm_constant c2 -> equal_constant c1 c2
-    | Tm_type u1, Tm_type u2 -> equal_universe u1 u2
+    | Tm_constant c1, Tm_constant c2 -> equal_hash t1 t2 && equal_constant c1 c2
+    | Tm_type u1, Tm_type u2 -> equal_hash t1 t2 && equal_universe u1 u2
     | Tm_abs {b=b1; body=t1; rc_opt=rc1}, Tm_abs {b=b2; body=t2; rc_opt=rc2} ->
       equal_binder b1 b2 &&
       equal_term t1 t2 &&
@@ -441,17 +475,19 @@ let rec equal_term (t1 t2:term)
       equal_list equal_letbinding lbs1 lbs2 &&
       equal_term t1 t2
     | Tm_uvar u1, Tm_uvar u2 ->
+      equal_hash t1 t2 &&
       equal_uvar u1 u2
     | Tm_meta {tm=t1; meta=m1}, Tm_meta {tm=t2; meta=m2} ->
       equal_term t1 t2 &&
       equal_meta m1 m2
     | Tm_lazy l1, Tm_lazy l2 ->
+      equal_hash t1 t2 &&
       equal_lazyinfo l1 l2
     | Tm_quoted (t1, q1), Tm_quoted (t2, q2) ->
       equal_term t1 t2 &&
       equal_quoteinfo q1 q2
     | Tm_unknown, Tm_unknown ->
-      true
+      equal_hash t1 t2
     | _ -> false
 
 and equal_comp c1 c2
@@ -461,6 +497,8 @@ and equal_comp c1 c2
   match c1.n, c2.n with
   | Comp ct1, Comp ct2 ->
     Ident.lid_equals ct1.effect_name ct2.effect_name &&
+    (* the hash depends on it; see equal_term *)
+    Ident.lid_equals ct1.source_effect_name ct2.source_effect_name &&
     equal_term ct1.result_typ ct2.result_typ &&
     equal_list equal_flag ct1.flags ct2.flags
 
@@ -602,10 +640,15 @@ and equal_pat p1 p2
   if physical_equality p1 p2 then true else
   match p1.v, p2.v with
   | Pat_constant c1, Pat_constant c2 ->
-    equal_constant c1 c2
+    equal_constant c1 c2 &&
+    (* the hash depends on it; see equal_term *)
+    fst (hash_constant c1 false) = fst (hash_constant c2 false)
   | Pat_cons(fv1, us1, args1), Pat_cons(fv2, us2, args2) ->
     equal_fv fv1 fv2 &&
     equal_opt (equal_list equal_universe) us1 us2 &&
+    (* the hash depends on it; see equal_term *)
+    fst (hash_option (hash_list hash_universe) us1 false) =
+      fst (hash_option (hash_list hash_universe) us2 false) &&
     equal_list (equal_pair equal_pat equal_poly) args1 args2
   | Pat_var bv1, Pat_var bv2 ->
     equal_bv bv1 bv2
@@ -624,7 +667,9 @@ and equal_meta m1 m2
     Ident.lid_equals l1 l2
   | Meta_labeled (s1, r1, _), Meta_labeled (s2, r2, _) ->
     s1 = s2 &&
-    Range.compare r1 r2 = 0
+    Range.compare r1 r2 = 0 &&
+    (* the hash depends on it; see equal_term *)
+    Range.string_of_range r1 = Range.string_of_range r2
   | Meta_desugared msi1, Meta_desugared msi2 ->
     msi1 = msi2
   | Meta_monadic(m1, t1), Meta_monadic(m2, t2) ->
@@ -691,7 +736,10 @@ and equal_lbname l1 l2
   : ML bool
   =
   match l1, l2 with
-  | Inl b1, Inl b2 -> Ident.ident_equals b1.ppname b2.ppname
+  | Inl b1, Inl b2 ->
+    Ident.ident_equals b1.ppname b2.ppname &&
+    (* the hash depends on it; see equal_term *)
+    equal_term b1.sort b2.sort
   | Inr f1, Inr f2 -> Ident.lid_equals f1.fv_name f2.fv_name
   | _ -> false
 
