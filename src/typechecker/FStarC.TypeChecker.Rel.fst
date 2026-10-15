@@ -108,6 +108,57 @@ let term_is_uvar (uv:ctx_uvar) (t:term) : ML bool =
 let binders_as_bv_set (bs:binders) : ML (FlatSet.t bv) =
   Setlike.from_list (List.map (fun b -> b.binder_bv) bs)
 
+(* The binder lists below are typically uvar contexts, which can be very
+   long (hundreds of binders in big Pulse functions). Building a FlatSet
+   from them with [binders_as_bv_set] is quadratic (FlatSet.from_list
+   dedups with a linear scan per element), and so is [FlatSet.subset]
+   against such a set. The helpers below answer the same membership
+   questions in O(n log n) using an RBSet (ordered by bv index, i.e. the
+   same equality as [S.bv_eq] / the [ord_bv] instance used by FlatSet), or
+   in linear time for the common cases. *)
+let binders_as_bv_rbset (bs:binders) : ML (RBSet.t bv) =
+  List.fold_left (fun s b -> add b.binder_bv s) (Setlike.empty ()) bs
+
+(* Is every name in [fvs] in the RBSet [s]? *)
+let names_subset_rbset (fvs:FlatSet.t bv) (s:RBSet.t bv) : ML bool =
+  List.for_all (fun x -> mem x s) (elems fvs)
+
+(* [names_subset_binders fvs bs] is [subset fvs (binders_as_bv_set bs)] *)
+let names_subset_binders (fvs:FlatSet.t bv) (bs:binders) : ML bool =
+  match elems fvs with
+  | [] -> true
+  | xs ->
+    if List.length xs <= 8
+    then (* few names: linear scans of bs are cheaper than building a set *)
+      List.for_all (fun x -> List.existsb (fun b -> S.bv_eq x b.binder_bv) bs) xs
+    else names_subset_rbset fvs (binders_as_bv_rbset bs)
+
+(* Is [bs1] a prefix of [bs2] (comparing binders by their bv)? *)
+let rec binders_prefix_of (bs1 bs2:binders) : ML bool =
+  match bs1, bs2 with
+  | [], _ -> true
+  | b1::bs1, b2::bs2 -> S.bv_eq b1.binder_bv b2.binder_bv && binders_prefix_of bs1 bs2
+  | _ -> false
+
+(* [binders_included bs1 bs2 s2] is
+     [subset (binders_as_bv_set bs1) (binders_as_bv_set bs2)],
+   where [s2 ()] must return [binders_as_bv_rbset bs2] (it is only called
+   when needed, so callers can cache it). The fast path covers the common
+   case of a context [bs1] that is a prefix of the context [bs2]. *)
+let binders_included (bs1 bs2:binders) (s2:unit -> ML (RBSet.t bv)) : ML bool =
+  BU.physical_equality bs1 bs2 ||
+  binders_prefix_of bs1 bs2 ||
+  (let s2 = s2 () in
+   List.for_all (fun b -> mem b.binder_bv s2) bs1)
+
+(* A memoizing thunk *)
+let memo_thunk (f:unit -> ML 'a) : ML (unit -> ML 'a) =
+  let r = mk_ref None in
+  fun () ->
+    match !r with
+    | Some x -> x
+    | None -> let x = f () in r := Some x; x
+
 (* lazy string, for error reporting *)
 type lstring = Thunk.t string
 
@@ -1268,10 +1319,10 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : ML worklist
       let _, kept =
         List.fold_left
           (fun (scope, kept) (b:binder) ->
-            if subset (Free.names b.binder_bv.sort) scope
+            if names_subset_rbset (Free.names b.binder_bv.sort) scope
             then add b.binder_bv scope, b::kept
             else scope, kept)
-          (binders_as_bv_set pfx, [])
+          (binders_as_bv_rbset pfx, [])
           bs
       in
       List.rev kept
@@ -1290,11 +1341,10 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : ML worklist
 let restrict_all_uvars env (tgt:ctx_uvar) (bs:binders) (sources:list ctx_uvar) wl : ML worklist =
   match bs with
   | [] ->
-    let ctx_tgt = binders_as_bv_set tgt.ctx_uvar_binders in
+    let ctx_tgt = memo_thunk (fun () -> binders_as_bv_rbset tgt.ctx_uvar_binders) in
     List.fold_right 
       (fun (src:ctx_uvar) wl ->
-        let ctx_src = binders_as_bv_set src.ctx_uvar_binders in
-        if subset ctx_src ctx_tgt
+        if binders_included src.ctx_uvar_binders tgt.ctx_uvar_binders ctx_tgt
         then wl // no need to restrict source, it's context is included in the context of the tgt
         else restrict_ctx env tgt [] src wl)
       sources
@@ -3048,18 +3098,17 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
           let uvars, occurs_ok, msg = occurs_check ctx_u rhs in
           if not occurs_ok
           then Inl ("quasi-pattern, occurs-check failed: " ^ (Option.must msg)), wl
-          else let fvs_lhs = binders_as_bv_set (ctx_u.ctx_uvar_binders@bs) in
-               let fvs_rhs = Free.names rhs in
-               if not (subset fvs_rhs fvs_lhs)
+          else let fvs_rhs = Free.names rhs in
+               if not (names_subset_binders fvs_rhs (ctx_u.ctx_uvar_binders@bs))
                then Inl ("quasi-pattern, free names on the RHS are not included in the LHS"), wl
                (* Restrict the RHS uvars *over* bs (as in the pattern case), so
                   that they can still depend on the variables that
                   the solution abstracts over. Uvars whose context is already
                   included in the LHS's context need no restriction. *)
                else
-                 let ctx_lhs = binders_as_bv_set ctx_u.ctx_uvar_binders in
+                 let ctx_lhs = memo_thunk (fun () -> binders_as_bv_rbset ctx_u.ctx_uvar_binders) in
                  let uvars = uvars |> List.filter (fun (src:ctx_uvar) ->
-                   not (subset (binders_as_bv_set src.ctx_uvar_binders) ctx_lhs)) in
+                   not (binders_included src.ctx_uvar_binders ctx_u.ctx_uvar_binders ctx_lhs)) in
                  Inr (mk_solution env lhs bs rhs), restrict_all_uvars env ctx_u bs uvars wl
     in
 
@@ -3239,7 +3288,7 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
         let uvars_head, occurs_ok, _ = occurs_check ctx_uv head in
         if not occurs_ok
         then inapplicable "occurs check failed" None
-        else if not (Free.names head `subset` binders_as_bv_set ctx_uv.ctx_uvar_binders)
+        else if not (names_subset_binders (Free.names head) ctx_uv.ctx_uvar_binders)
         then inapplicable "free name inclusion failed" None
         else (
           let t_head, _ =
@@ -3326,7 +3375,7 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
         match fst subst with
         | [] | [[]] -> true
         | _ -> 
-          Free.names rhs `subset` binders_as_bv_set ctx_uv.ctx_uvar_binders &&
+          names_subset_binders (Free.names rhs) ctx_uv.ctx_uvar_binders &&
           FStarC.Syntax.Util.term_eq rhs (SS.subst' subst rhs)
       in
       let lhs, wl =
@@ -3341,7 +3390,7 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
         if !dbg_Rel then
           Format.print_string "it's a pattern\n";
         let rhs = sn env rhs in
-        let fvs1 = binders_as_bv_set (ctx_uv.ctx_uvar_binders @ lhs_binders) in
+        let lhs_ctx = ctx_uv.ctx_uvar_binders @ lhs_binders in
         let fvs2 = Free.names rhs in
         //if !dbg_Rel then
         //  Format.print4 "lhs \t= %s\n\
@@ -3376,7 +3425,7 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
         then giveup_or_defer orig wl
                Deferred_occur_check_failed
                (Thunk.mkv <| "occurs-check failed: " ^ (Option.must msg))
-        else if subset fvs2 fvs1
+        else if names_subset_binders fvs2 lhs_ctx
         then let sol = mk_solution env lhs lhs_binders rhs in
              let wl = restrict_all_uvars env ctx_uv lhs_binders uvars wl in
              solve (solve_prob orig None sol wl)
@@ -3385,8 +3434,8 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
           let msg = mklstr (fun () ->
                                 Format.fmt3 "free names in the RHS {%s} are out of scope for the LHS: {%s}, {%s}"
                                            (show fvs2)
-                                           (show fvs1)
-                                           (show (ctx_uv.ctx_uvar_binders @ lhs_binders))) in
+                                           (show (binders_as_bv_set lhs_ctx))
+                                           (show lhs_ctx)) in
           giveup_or_defer orig wl Deferred_free_names_check_failed msg
         else imitate orig env wl lhs rhs
 
@@ -3529,7 +3578,7 @@ let rec solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : ML solution =
             else
               let uvars_o, occurs_ok, _ = occurs_check u_b t_o in
               if not occurs_ok then None
-              else if not (Free.names t_o `subset` binders_as_bv_set u_b.ctx_uvar_binders)
+              else if not (names_subset_binders (Free.names t_o) u_b.ctx_uvar_binders)
               then None
               else Some ([TERM(u_b, t_o)], restrict_all_uvars env u_b [] uvars_o wl)
           in
