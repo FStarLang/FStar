@@ -1451,9 +1451,10 @@ let is_interface_only_module (ns : list string) : ML bool =
   (match !realized_deps with
    | None -> false
    | Some d ->
-     let key = String.lowercase (String.concat "." ns) in
-     Some? (FStarC.Parser.Dep.interface_of d key) &&
-     None? (FStarC.Parser.Dep.implementation_of d key))
+     let lid = FStarC.Ident.lid_of_path ns FStarC.Range.dummyRange in
+     let tgt = Options.codegen_target () in
+     FStarC.Parser.Dep.module_has_interface d tgt lid &&
+     not (FStarC.Parser.Dep.deps_has_implementation d tgt lid))
 
 (* Cherry realizes modules by hand too (ulib/c/cherry.c), but not every
    interface-only one: Pulse's ([Pulse.Lib.Core], ...) stay externals with no

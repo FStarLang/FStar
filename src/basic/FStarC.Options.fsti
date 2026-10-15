@@ -219,6 +219,9 @@ val parse_codegen               : string  -> option codegen_t
 val codegen                     : unit    -> ML (option codegen_t)
 val codegen_krml                : unit    -> ML bool (* KrmlC or KrmlRust *)
 val codegen_name                : unit    -> ML string (* "" if unset *)
+(* The configuration extracted for: --target joined with the language of
+   --codegen, as a canonical tag (see [FStarC.Target]). *)
+val codegen_target              : unit    -> ML (option string)
 
 val custard_entries             : unit    -> ML (list string)
 val custard_entrypoint_files    : unit    -> ML (list string)

@@ -11,6 +11,17 @@ Guidelines for the changelog:
   possibly with details in the PR or links to sample fixes (for example, changes
   to F*'s test suite).
 
+## Compilation targets
+
+  * A module can have tagged interfaces and implementations, written
+    `A-ocaml.fst`, `A-s2.qemu.fst`, `A-s3-c.fst`, ...  Tags are sets of
+    hierarchical atoms (`s2.qemu` implies `s2`).  A file sees, for each
+    module, the most specific file whose tag its own tag implies; common
+    files are the fallback.  Extraction selects files for `--target` plus a
+    language atom picked from `--codegen`.  Files whose names contain a dash
+    followed by a valid tag are now read this way.  See
+    `doc/ref/targets.md`.
+
 ## Custard is the only extraction backend
 
   * The legacy extraction pipeline (`src/extraction`: the per-module OCaml,
