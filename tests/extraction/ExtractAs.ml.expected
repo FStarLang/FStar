@@ -2,7 +2,7 @@
 [@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
 
 let extractAs_fail_unless (b : bool) : string =
-  "ok"
+  (if b then "ok" else (failwith "Prims.magic"))
 
 let extractAs_frob (y : Prims.int) : Prims.int =
   (Prims.op_Plus y (Prims.of_int (10)))

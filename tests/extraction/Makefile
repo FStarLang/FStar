@@ -112,3 +112,10 @@ $(OUTPUT_DIR)/Div.out: $(OUTPUT_DIR)/Div.exe
 	  RC=$$? ;\
 	  if ! [ $$RC -eq 124 ]; then echo "ERROR: Div.exe terminated!?!?!"; false; fi
 	$(Q)touch $@
+
+$(OUTPUT_DIR)/Div.cherry-out: $(OUTPUT_DIR)/Div.cherry-exe
+	$(call msg,TIMEOUT,$<)
+	$(Q)timeout 1 $(OUTPUT_DIR)/Div.cherry-exe ; \
+	  RC=$$? ;\
+	  if ! [ $$RC -eq 124 ]; then echo "ERROR: Div.cherry-exe terminated!?!?!"; false; fi
+	$(Q)touch $@

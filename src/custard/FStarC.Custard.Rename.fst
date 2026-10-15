@@ -82,7 +82,7 @@ let rec rn_cty (ts:scope) (c:cty) : ML cty =
   | TArrow (a, e, b) -> TArrow (rn_cty ts a, e, rn_cty ts b)
   | TApp (n, args) -> TApp (n, args |> List.map (rn_cty ts))
   | TBuf t -> TBuf (rn_cty ts t)
-  | TRef t -> TRef (rn_cty ts t)
+  | TRef (k, t) -> TRef (k, rn_cty ts t)
   | TInline t -> TInline (rn_cty ts t)
   | TTuple cs -> TTuple (cs |> List.map (rn_cty ts))
   | c -> c
@@ -142,7 +142,7 @@ let rec rn_expr (fields:HashTable.t string string) (ts:scope) (s:scope) (x:expr)
     match x.e with
     | EConst _
     | EAny
-    | EAbort _ -> x.e
+    | EAbort _ | EUnreachable _ -> x.e
 
     | EVar v -> EVar (lookup s v)
     | EQual (n, args) -> EQual (n, args |> List.map (rn_cty ts))

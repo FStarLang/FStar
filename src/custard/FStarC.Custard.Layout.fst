@@ -89,7 +89,7 @@ let rec cty_erased (t:tbl) (c:cty) : ML bool =
   | TTuple cs -> cs |> List.for_all (fun c -> cty_erased t c)
   (* A pointer is a machine word whether or not its contents are erased, and
      the allocation that produced it is an observable effect. *)
-  | TBuf _ | TRef _ -> false
+  | TBuf _ | TRef (_, _) -> false
   | TInline c -> cty_erased t c
   | TApp (n, _) ->
     (match HashTable.try_find t.erased (key n) with
@@ -174,7 +174,7 @@ let rec names_of_cty (c:cty) : ML (list string) =
   match c with
   | TArrow (a, _, b) -> names_of_cty a @ names_of_cty b
   | TTuple cs -> cs |> List.collect names_of_cty
-  | TBuf c | TRef c | TInline c -> names_of_cty c
+  | TBuf c | TRef (_, c) | TInline c -> names_of_cty c
   | TApp (n, args) -> key n :: (args |> List.collect names_of_cty)
   | _ -> []
 
@@ -282,7 +282,7 @@ let rec resolve (t:tbl) (fuel:int) (c:cty) : ML cty =
     | TArrow (a, e, b) -> TArrow (resolve t fuel a, e, resolve t fuel b)
     | TTuple cs -> TTuple (cs |> List.map (resolve t fuel))
     | TBuf c -> TBuf (resolve t fuel c)
-    | TRef c -> TRef (resolve t fuel c)
+    | TRef (k, c) -> TRef (k, resolve t fuel c)
     | TInline c -> TInline (resolve t fuel c)
     | TApp (n, args) ->
       let args = args |> List.map (resolve t fuel) in
@@ -500,7 +500,7 @@ let rec rw_expr (t:tbl) (x:expr) : ML expr =
   let ty = resolve t 100 x.ty in
   let x = { x with ty = ty } in
   match x.e with
-  | EConst _ | EVar _ | EAny | EAbort _ -> x
+  | EConst _ | EVar _ | EAny | EAbort _ | EUnreachable _ -> x
   | EQual (n, cs) -> { x with e = EQual (n, cs |> List.map (resolve t 100)) }
   | ELet (v, c, e1, e2) ->
     { x with e = ELet (v, resolve t 100 c, rw_expr t e1, rw_expr t e2) }
@@ -613,7 +613,7 @@ let rec cty_vars (c:cty) : ML (list string) =
   | TVar x -> [x]
   | TArrow (a, _, b) -> cty_vars a @ cty_vars b
   | TApp (_, args) -> List.collect cty_vars args
-  | TBuf c | TInline c | TRef c -> cty_vars c
+  | TBuf c | TInline c | TRef (_, c) -> cty_vars c
   | TTuple cs -> List.collect cty_vars cs
   | _ -> []
 
@@ -622,7 +622,7 @@ let rec cty_names (c:cty) : ML (list string) =
   match c with
   | TArrow (a, _, b) -> cty_names a @ cty_names b
   | TApp (n, args) -> key n :: List.collect cty_names args
-  | TBuf c | TInline c | TRef c -> cty_names c
+  | TBuf c | TInline c | TRef (_, c) -> cty_names c
   | TTuple cs -> List.collect cty_names cs
   | _ -> []
 
@@ -852,7 +852,7 @@ let close_fields (d:decl) : ML decl =
       | TArrow (a, e, b) -> TArrow (close a, e, close b)
       | TTuple cs -> TTuple (List.map close cs)
       | TBuf c -> TBuf (close c)
-      | TRef c -> TRef (close c)
+      | TRef (k, c) -> TRef (k, close c)
       | TInline c -> TInline (close c)
       | c -> c in
     let fields (fs : list (string & cty)) : ML (list (string & cty)) =
