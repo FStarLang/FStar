@@ -7,6 +7,9 @@ SUBDIRS_ALL += neg plugin
 SUBDIRS_CLEAN += neg plugin
 
 RUN += Main.fst
+# Main prints the name of the target it was extracted for, which is "c" (not
+# "ocaml") under Cherry; Board.grep covers target selection for Cherry.
+NO_CHERRY += Main.fst
 
 FSTAR_ROOT ?= ../..
 include $(FSTAR_ROOT)/mk/test.mk
@@ -35,4 +38,6 @@ $(OUTPUT_DIR)/Board.grep: $(CACHE_DIR)/Board.fst.checked | $(ALL_CHECKED_FILES)
 	grep -q '"generic"' $(OUTPUT_DIR)/board_s3ocaml.ml
 	$(FSTAR) --codegen C --target s3.silicon --custard_entry_module Board $< -o $(OUTPUT_DIR)/board_s3c.c
 	grep -q '"s3-c"' $(OUTPUT_DIR)/board_s3c.c
+	$(FSTAR) --codegen Cherry --target s3.silicon --custard_entry_module Board $< -o $(OUTPUT_DIR)/board_s3cherry.c
+	grep -q '"s3-c"' $(OUTPUT_DIR)/board_s3cherry.c
 	touch $@

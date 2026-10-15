@@ -2241,6 +2241,8 @@ let codegen_target               () =
   let lang =
     match codegen () with
     | Some C | Some KrmlC -> Some "c"
+    (* Cherry extends C, so it falls back to the C files. *)
+    | Some Cherry -> Some "c.cherry"
     | Some KrmlRust -> Some "rust"
     | Some OCaml -> Some "ocaml"
     | Some FSharp -> Some "fsharp"

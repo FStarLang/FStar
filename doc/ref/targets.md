@@ -70,10 +70,12 @@ an atom for the language, picked from `--codegen`:
 | `Plugin`      | `ocaml`  |
 | `FSharp`      | `fsharp` |
 | `C`, `KrmlC`  | `c`      |
+| `Cherry`      | `c.cherry` |
 | `KrmlRust`    | `rust`   |
 
 For example, `--codegen C --target s3.silicon` extracts in configuration
-`s3.silicon-c`, and selects `Uart-s3-c.fst` above.  Because of the
+`s3.silicon-c`, and selects `Uart-s3-c.fst` above.  Cherry extends the C
+backend, so it uses the `c` files unless a `c.cherry` file is more specific.  Because of the
 stability rule, no further checks are needed at extraction time.
 
 `--codegen Plugin A-ocaml.fst` builds the plugin for module `A` (unit `A`,
