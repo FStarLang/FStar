@@ -316,13 +316,25 @@ let split_goals_under use_env_msg  //when present, provides an alternate error m
              and given its typing hypothesis.  Note the constants are FreeV,
              which prints exactly like a constant but keeps the hash-consed
              encodings of refinements parameterized over them. *)
+          let squash_binders = Options.Ext.enabled "smt_squash_binders" in
           let vars, guards, env', decls, names =
             bs |> List.fold_left (fun (vars, guards, env, decls, names) (b, sort) ->
               let x = (b <: S.binder).binder_bv in
               let fv = mk_fv (fresh_name "@sk_", Term_sort) in
               let env' = push_term_var env x (mkFreeV fv) in
               let sort = match sort with Some t -> t | None -> norm env x.sort in
-              let g, decls' = encode_term_pred None sort env (mkFreeV fv) in
+              let g, decls' =
+                match (if squash_binders then U.un_squash sort else None) with
+                | Some p ->
+                  (* [HasType x (squash p)] holds iff [x = Tm_unit /\ Valid p]
+                     (refinement_interpretation, unit_inversion, unit_typing).
+                     Stating the right-hand side directly spares the solver
+                     the chain of axioms that derives it, at every one of the
+                     hundreds of precondition binders in a Pulse context. *)
+                  let pt, decls' = encode_term p env in
+                  mkAnd (mkEq (mkFreeV fv, mk_Term_unit), mk_Valid pt), decls'
+                | None -> encode_term_pred None sort env (mkFreeV fv)
+              in
               fv::vars, g::guards, env', decls@decls', x::names)
               ([], [], env, [], [])
           in
