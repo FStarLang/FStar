@@ -593,6 +593,36 @@ let check_arg_qual (a:aqual) (b:bqual)
       | _ -> return ()
       end
 
+(* The fixed-width machine-integer coercions that integer literals desugar
+   to (FStar.UInt32.__uint_to_t, which unfolds to FStar.UInt32.uint_to_t,
+   etc.), with the signedness and width of their argument's refinement.
+   FStar.SizeT is not included: its range is platform-dependent. *)
+let machine_int_literal_heads : list (string & (Const.signedness & Const.width)) =
+  let open FStarC.Const in
+  let u m w = [("FStar." ^ m ^ ".uint_to_t", (Unsigned, w));
+               ("FStar." ^ m ^ ".__uint_to_t", (Unsigned, w))] in
+  let s m w = [("FStar." ^ m ^ ".int_to_t", (Signed, w));
+               ("FStar." ^ m ^ ".__int_to_t", (Signed, w))] in
+  u "UInt8" Int8 @ u "UInt16" Int16 @ u "UInt32" Int32 @ u "UInt64" Int64 @
+  s "Int8" Int8 @ s "Int16" Int16 @ s "Int32" Int32 @ s "Int64" Int64
+
+(* [hd c] is a machine-integer literal: [c] is an [int] constant
+   ([Const_int]; suffixed literals are [Const_machine_int]), and
+   [within_bounds] -- the check that TcTerm.tc_constant makes authoritative
+   for literals -- decides its range. *)
+let is_checked_machine_int_literal (hd:term) (args:args) : ML bool =
+  match args with
+  | [(arg, None)] ->
+    begin match (Subst.compress (U.un_uinst hd)).n, (Subst.compress arg).n with
+    | Tm_fvar fv, Tm_constant (Const.Const_int (c, _)) ->
+      begin match List.assoc (I.string_of_lid fv.fv_name) machine_int_literal_heads with
+      | Some (sw, w) -> Const.within_bounds c sw w
+      | None -> false
+      end
+    | _ -> false
+    end
+  | _ -> false
+
 let check_bqual (b0 b1:bqual)
   : ML (result unit)
   = if U.bqual_compat b0 b1
@@ -1635,6 +1665,14 @@ and do_check (g:env) (e:term)
     in
     let hd, args = U.head_and_args_full e in
     match args with
+    | [(arg, _)] when is_checked_machine_int_literal hd args ->
+      (* A literal such as [FStar.UInt32.uint_to_t 4096]: the argument's
+         refinement [size 4096 32] holds by computation, so do not emit it
+         as a guard (Pulse unfolds [__uint_to_t] in the terms it checks, and
+         each such guard would otherwise be an SMT query). *)
+      let! eff_hd, t_hd = check "app head" g hd in
+      let! x, eff_arr, t' = is_arrow g t_hd in
+      return (join_eff eff_hd eff_arr, Subst.subst [NT(x.binder_bv, arg)] t')
     | [(t1, _); (t2, _)] when TcUtil.short_circuit_head hd ->
       let! eff_hd, t_hd = check "app head" g hd in
       let! x, eff_arr1, s1 = is_arrow g t_hd in
