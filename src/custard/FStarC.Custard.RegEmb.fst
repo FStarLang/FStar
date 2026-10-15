@@ -32,7 +32,7 @@ module N       = FStarC.TypeChecker.Normalize
 module PC      = FStarC.Parser.Const
 module RC      = FStarC.Reflection.V2.Constants
 module S       = FStarC.Syntax.Syntax
-module SMap    = FStarC.SMap
+module HashTable = FStarC.HashTable
 module SS      = FStarC.Syntax.Subst
 module TcEnv   = FStarC.TypeChecker.Env
 module U       = FStarC.Syntax.Util
@@ -623,7 +623,14 @@ let interp_term (st:Extract.state) (k:kind) (tac:bool) (fv_lid:Ident.lident)
              (b.binder_bv, S.new_bv None (arg_typ k))) in
   let tys = List.map (fun (b:binder) -> b.binder_bv.sort) bs @ [res] in
   let embs = tys |> List.map (embedding_for st k env) in
-  let f = S.fvar fv_lid None in
+  (* Section 135.  The compiled definition is handed over at the native
+     convention the interpretation functions expect: its type arguments
+     deleted.  Applied to them, the name is a call to the top-level
+     definition, whose dropped type positions are then filled; bare, it would
+     be a heap closure keeping one [unit] parameter per type binder. *)
+  let f = S.mk_Tm_app (S.fvar fv_lid None)
+            (tvs |> List.map (fun (b:binder) -> (S.t_unit, U.aqual_of_binder b)))
+            dummy in
   (* [vs] always ends in the argument list; with type binders the body sees a
      shortened one, and the match that shortens it wraps the whole thing. *)
   let wrap (vs:list bv) (res_ty:typ) (mk:list bv -> ML term) : ML term =
@@ -763,12 +770,21 @@ let handle_sigelt (st:Extract.state) (arity_opt:option int) (se:sigelt) : ML uni
   match se.sigel with
   | Sig_let {lbs=(_, lbs)} ->
     lbs |> List.iter (fun lb ->
+      let name () =
+        match lb.lbname with
+        | Inr fv -> Ident.string_of_lid (S.lid_of_fv fv)
+        | Inl bv -> Ident.string_of_id bv.ppname in
       try registration st arity_opt se.sigrng lb with
-      | NoEmbedding msg ->
-        warn_not_implemented se.sigrng
-          (match lb.lbname with
-           | Inr fv -> Ident.string_of_lid (S.lid_of_fv fv)
-           | Inl bv -> Ident.string_of_id bv.ppname) msg)
+      | NoEmbedding msg -> warn_not_implemented se.sigrng (name ()) msg
+      (* An exception this does not name is not the plugin machinery's to
+         interpret, but the message it carries says nothing about which
+         plugin was being registered when it was raised.  Say so, and
+         re-raise. *)
+      | e ->
+        let open FStarC.Errors.Msg in
+        E.log_issue se.sigrng E.Warning_PluginNotImplemented
+          [text (Format.fmt1 "While registering plugin `%s':" (name ()))];
+        raise e)
   | _ -> ()
 
 (* Only a module the *program* asked for by name gets registrations.

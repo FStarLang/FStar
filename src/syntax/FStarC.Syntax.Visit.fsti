@@ -11,7 +11,7 @@ application, binder types, bv sorts, effect args, decreases clauses,
 etc). If something is not covered, that is a bug.
 
 NOTE: no binders are opened nor closed in this traversal. The traversal
-preserves ranges but discards memoized info (vars and hash_code).
+preserves ranges; hash codes are recomputed for the rebuilt nodes.
 
 The `f` function should handle only the cases are interesting to it,
 defaulting to returning the original term elsewhere. For instance, this

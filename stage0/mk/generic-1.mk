@@ -107,3 +107,8 @@ all-ml: $(ALL_ML_FILES)
 
 all-fs: $(ALL_FS_FILES)
 	rm -vf $(filter-out $(realpath $(ALL_FS_FILES)), $(realpath $(wildcard $(OUTPUT_DIR)/*.fs)))
+
+# The Custard path: a single whole-program extraction rather than one .ml
+# per module.  Included last, because its rule's prerequisite is the list of
+# checked files the .depend above defines.
+include mk/custard-extract.mk

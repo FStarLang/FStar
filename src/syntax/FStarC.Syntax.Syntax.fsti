@@ -375,7 +375,11 @@ and freenames = FlatSet.t bv
 and syntax 'a = {
     n:'a;
     pos:range;
-    hash_code:memo FStarC.Hash.hash_code
+    (* A structural hash, computed eagerly by mk/mk_Comp from the hashes of
+       the immediate subterms. See FStarC.Syntax.Syntax.hash_term'. Do not
+       build or update syntax records directly: use mk/mk_Comp so that the
+       hash stays consistent with n. *)
+    hash_code:FStarC.Hash.hash_code
 }
 and bv = {
     ppname:ident;  //programmer-provided name for pretty-printing
@@ -731,8 +735,9 @@ type subst_t = list subst_elt
 
 val withinfo: 'a -> range -> withinfo_t 'a
 
-(* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
-val mk: 'a -> range -> ML (syntax 'a)
+(* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node,
+   i.e. the hash code. Computations are built with mk_Comp or mk_comp'. *)
+val mk: term' -> range -> ML term
 
 val mk_lb :         (lbname & list univ_name & lident & typ & term & list attribute & range) -> letbinding
 val default_sigmeta: sig_metadata
@@ -756,6 +761,8 @@ val extend_app_n:   term -> args -> range -> ML term
 val extend_app:     term -> arg -> range -> ML term
 val mk_Tm_delayed:  (term & subst_ts) -> range -> ML term
 val mk_Comp:        comp_typ -> ML comp
+(* Like mk_Comp, at an explicit range. *)
+val mk_comp':       comp' -> range -> ML comp
 val mk_Total:       typ -> ML comp
 val mk_GTotal:      typ -> ML comp
 

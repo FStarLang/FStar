@@ -22,19 +22,19 @@ module BU = FStarC.Util
 
 open FStarC.Class.Show
 
-let cached_fun #a (cache : SMap.t a) (f : string -> ML a) : string -> ML a =
+let cached_fun #a (cache : HashTable.t string a) (f : string -> ML a) : string -> ML a =
   fun s ->
-    match SMap.try_find cache s with
+    match HashTable.try_find cache s with
     | Some v -> v
     | None ->
       let v = f s in
-      SMap.add cache s v;
+      HashTable.add cache s v;
       v
 
 (* caches *)
 let _full_include : ref (option (list string)) = mk_ref None
 let _module_include_paths_normalized : ref (option (list module_include_path)) = mk_ref None
-let find_file_cache : SMap.t (option string) = SMap.create 100
+let find_file_cache : HashTable.t string (option string) = HashTable.create 100
 
 (* Bumped every time the include path (or anything else affecting file
 resolution) changes. Clients that cache results derived from the include path
@@ -42,7 +42,7 @@ can use this to invalidate their own caches. *)
 let _epoch : ref int = mk_ref 0
 
 let clear () : ML unit =
-  SMap.clear find_file_cache;
+  HashTable.clear find_file_cache;
   _full_include := None;
   _module_include_paths_normalized := None;
   _epoch := !_epoch + 1;
@@ -276,6 +276,16 @@ let locate_lib () : ML _ =
 let locate_ocaml () : ML _ =
   // This is correct right now, but probably should change.
   Util.get_exec_dir () ^ "/../lib" |> Filepath.normalize_file_path
+
+(* The compiler's own Custard unit interface, installed by mk/stage.mk next to
+   the compiler sources it describes.  It is absent from a compiler that was
+   not extracted by Custard, and from one whose installation did not include
+   the fstarc directory, which is why this is an option: the caller falls back
+   to compiling everything the plugin needs from source. *)
+let locate_fstarc_cui () : ML (option string) =
+  let f = Filepath.canonicalize <|
+          fstar_bin_directory ^ "/../lib/fstar/fstarc/fstarc.cui" in
+  if Filepath.file_exists f then Some f else None
 
 
 (* When reading checked files, we could obtain ranges where the

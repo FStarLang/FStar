@@ -42,7 +42,7 @@ val decl_deps : decl -> ML (list string)
 
 (** Each constructor's type, as [string_of_name] keys.  A reference to a
     constructor is a reference to its declaration. *)
-val ctor_owners : program -> ML (FStarC.SMap.t string)
+val ctor_owners : program -> ML (FStarC.HashTable.t string string)
 
 (** Drop unused pure let-bindings, turn unused impure ones into sequencing,
     and contract [let x = e in x] to [e]. *)

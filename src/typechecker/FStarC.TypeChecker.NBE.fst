@@ -147,8 +147,8 @@ let let_rec_arity (b:letbinding) : ML (int & list bool) =
 let debug_term (t : term) =
   Format.print1 "%s\n" (show t)
 
-let debug_sigmap (m : SMap.t sigelt) =
-  SMap.fold m (fun k v u -> Format.print2 "%s -> %%s\n" k (P.sigelt_to_string_short v)) ()
+let debug_sigmap (m : HashTable.t string sigelt) =
+  HashTable.fold m (fun k v u -> Format.print2 "%s -> %%s\n" k (P.sigelt_to_string_short v)) ()
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -156,11 +156,11 @@ let debug_sigmap (m : SMap.t sigelt) =
 ////////////////////////////////////////////////////////////////////////////////
 type config = {
   core_cfg:Cfg.cfg;
-  fv_cache:SMap.t t
+  fv_cache:HashTable.t string t
 }
 let new_config (cfg:Cfg.cfg) = {
   core_cfg = cfg;
-  fv_cache = SMap.create 51
+  fv_cache = HashTable.create 51
 }
 let reifying_false (cfg:config) =
   if cfg.core_cfg.reifying
@@ -179,10 +179,10 @@ let zeta_false (cfg:config) =
     else cfg
 let cache_add (cfg:config) (fv:fv) (v:t) =
   let lid = fv.fv_name in
-  SMap.add cfg.fv_cache (string_of_lid lid) v
+  HashTable.add cfg.fv_cache (string_of_lid lid) v
 let try_in_cache (cfg:config) (fv:fv) : ML (option t) =
   let lid = fv.fv_name in
-  SMap.try_find cfg.fv_cache (string_of_lid lid)
+  HashTable.try_find cfg.fv_cache (string_of_lid lid)
 let debug cfg f = log_nbe cfg.core_cfg f
 
 
@@ -1049,7 +1049,7 @@ and readback_comp cfg (c: comp) : ML S.comp =
   let c' =
     match c with
     | Comp ctyp -> S.Comp (readback_comp_typ cfg ctyp)
-   in S.mk c' Range.dummyRange
+   in S.mk_comp' c' Range.dummyRange
 
 and translate_comp_typ cfg bs (c:S.comp_typ) : ML comp_typ =
   let { S.effect_name = effect_name

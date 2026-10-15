@@ -20,7 +20,7 @@ open FStarC.Effect
 module List = FStarC.List
 open FStarC.Options
 module BU = FStarC.Util
-module SMap = FStarC.SMap
+module HashTable = FStarC.HashTable
 open FStarC.Json
 open FStarC.Class.Show
 
@@ -55,15 +55,15 @@ let new_counter cid = {
 }
 
 (* A table of all profiling counters, indexed by their cids *)
-let all_counters : SMap.smap counter = SMap.smap_create 20
+let all_counters : HashTable.t string counter = HashTable.create 20
 
 (* Returns the current counter for cid *)
 let create_or_lookup_counter cid =
-  match SMap.smap_try_find all_counters cid with
+  match HashTable.try_find all_counters cid with
   | Some c -> c
   | None ->
     let c = new_counter cid in
-    SMap.add all_counters cid c;
+    HashTable.add all_counters cid c;
     c
 
 (* Time an operation, if the the profiler is enabled *)
@@ -118,9 +118,9 @@ let report tag c =
 (* Report all profiles and clear all counters *)
 let report_and_clear tag : ML _ =
     let ctrs = //all the counters as a list
-      SMap.fold all_counters (fun _ v l -> v :: l) []
+      HashTable.fold all_counters (fun _ v l -> v :: l) []
     in
-    SMap.clear all_counters; //remove them all
+    HashTable.clear all_counters; //remove them all
     let ctrs = //sort counters in descending order by elapsed time
       BU.sort_with (fun c1 c2 -> !c2.total_time - !c1.total_time) ctrs
     in

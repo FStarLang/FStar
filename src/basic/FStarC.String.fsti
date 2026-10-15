@@ -45,3 +45,14 @@ val index: string -> int -> ML char
 val list_of_string : string -> list char
 val string_of_list: list char -> string
 val (^) : string -> string -> string
+
+(* Byte-level access to the UTF-8 encoding of a string, with native
+   integers; offsets are in bytes.  Out-of-bounds accesses return -1. *)
+val byte_length : string -> Tot FStarC.SmallInt.t
+val byte_at : string -> FStarC.SmallInt.t -> Tot FStarC.SmallInt.t
+(* The code point whose encoding starts at the given offset *)
+val code_point_at : string -> FStarC.SmallInt.t -> Tot FStarC.SmallInt.t
+(* The offset of the next code point (at most the byte length) *)
+val next_code_point : string -> FStarC.SmallInt.t -> Tot FStarC.SmallInt.t
+(* The bytes in [i, j), clamped to the string *)
+val byte_substring : string -> i:FStarC.SmallInt.t -> j:FStarC.SmallInt.t -> Tot string

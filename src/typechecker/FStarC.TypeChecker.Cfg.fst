@@ -314,15 +314,15 @@ let log_nbe cfg (f: unit -> ML unit) : ML unit =
     if cfg.debug.debug_nbe then f ()
 
 (* Profiling the time each different primitive step consumes *)
-let primop_time_map : SMap.t int = SMap.create 50
+let primop_time_map : HashTable.t string int = HashTable.create 50
 
 let primop_time_reset () : ML unit =
-    SMap.clear primop_time_map
+    HashTable.clear primop_time_map
 
 let primop_time_count (nm : string) (ns : int) : ML unit =
-    match SMap.try_find primop_time_map nm with
-    | None     -> SMap.add primop_time_map nm ns
-    | Some ns0 -> SMap.add primop_time_map nm (ns0 + ns)
+    match HashTable.try_find primop_time_map nm with
+    | None     -> HashTable.add primop_time_map nm ns
+    | Some ns0 -> HashTable.add primop_time_map nm (ns0 + ns)
 
 let fixto n s : ML string =
     if String.length s < n
@@ -330,7 +330,7 @@ let fixto n s : ML string =
     else s
 
 let primop_time_report () : ML string =
-    let pairs = SMap.fold primop_time_map (fun nm ns rest -> (nm, ns)::rest) [] in
+    let pairs = HashTable.fold primop_time_map (fun nm ns rest -> (nm, ns)::rest) [] in
     let pairs = BU.sort_with (fun (_, t1) (_, t2) -> t1 - t2) pairs in
     List.fold_right (fun (nm, ns) rest -> (Format.fmt2 "%sms --- %s\n" (fixto 10 (show (ns / 1000000))) nm) ^ rest) pairs ""
 

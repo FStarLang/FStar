@@ -21,7 +21,7 @@ open FStarC.Effect
 open FStarC.Util
 open FStarC.Range
 open FStarC.Class.Show
-module PI = FStarC.Parser.ParseIt
+module PI = FStarC.Parser.Frontend
 module TcEnv = FStarC.TypeChecker.Env
 module CTable = FStarC.Interactive.CompletionTable
 

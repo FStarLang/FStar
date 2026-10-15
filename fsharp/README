@@ -1,10 +1,6 @@
-This directory contains all that's needed to build an F# version of the
-F* application library (alib) in order to build F# applications.
-
-Run `make fsharp-lib` from the top level to extract the library,
-build it, and run the F# tests.
-
 The `tests/` subdirectory contains small F* programs that are extracted
-to F#, compiled, and run.
+to F# with `--codegen FSharp`, compiled, and run.  Custard's F# backend
+emits its own support library and project, so no separate F# library is
+needed.
 
-The output of the library build goes into the bin/ and obj/ subdirectories.
+Run `make fsharp-test` from the top level to run them.

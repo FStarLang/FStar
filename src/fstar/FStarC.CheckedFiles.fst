@@ -19,7 +19,7 @@ open FStarC.TypeChecker.Env
 open FStarC.Syntax
 open FStarC
 open FStarC.Effect
-open FStarC.SMap
+module HashTable = FStarC.HashTable
 
 open FStarC.Class.Show
 
@@ -37,8 +37,16 @@ let debug (f:unit -> ML unit) : ML unit = if !dbg then f () else ()
 (*
  * We write this version number to the cache files, and
  * detect when loading the cache that the version number is same
+ *
+ * A checked file is a Marshal dump of the compiler's own data types, so it
+ * can only be read back by a binary that lays those types out exactly as the
+ * writer did.  That is not only a matter of the types' F* definitions: the
+ * two extractions lay the same definition out differently (doc/ref/custard.md,
+ * section 5), so a compiler built by Custard cannot read a checked file an
+ * ML-extracted compiler wrote, and nothing in the file says so.  Bumped when
+ * the compiler's own build switched to Custard.
  *)
-let cache_version_number = 99
+let cache_version_number = 101
 
 (*
  * Abbreviation for what we store in the checked files (stages as described below)
@@ -122,12 +130,12 @@ type cache_t =
   either string Dep.parsing_data
 
 //Internal cache
-let mcache : smap cache_t = SMap.create 50
+let mcache : HashTable.t string cache_t = HashTable.create 50
 let add_and_return checked_fn elt = 
-  SMap.add mcache checked_fn elt; elt
-let try_find_in_cache checked_fn = SMap.try_find mcache checked_fn
+  HashTable.add mcache checked_fn elt; elt
+let try_find_in_cache checked_fn = HashTable.try_find mcache checked_fn
 let dump_cache_keys tag = 
-  if !dbg then Format.print2 "(%s) Cache contains %s\n" tag (show (SMap.keys mcache))
+  if !dbg then Format.print2 "(%s) Cache contains %s\n" tag (show (HashTable.keys mcache))
  
 
 (*
@@ -186,12 +194,9 @@ let hash_dependences (deps:Dep.deps) (fn:string) (deps_of_fn:list string): ML (e
   in
   let module_name = Dep.lowercase_module_name fn in
   let source_hash = BU.digest_of_file fn in
-  let has_interface = Some? (Dep.interface_of deps module_name) in
   let interface_source_file_name =
     if Dep.is_implementation fn
-    && has_interface
-    then module_name
-      |> Dep.interface_of deps
+    then Dep.interface_of deps (Dep.module_key_of_file fn)
     else None
   in
   let binary_deps = deps_of_fn
@@ -339,16 +344,17 @@ let load_checked_file_with_tc_result
         let _ = add_and_return checked_fn elt in
         (*
          * if there exists an interface for it, mark that too as valid
-         * this is specially needed for extraction invocations of F* with --cmi flag
+         * this is specially needed for extraction, which reads implementations
+         * across interfaces
          * for example, consider a scenario:
          * A.fst -> B.fsti -> Prims.fst
          *            ^      ^
          *            |     /
          *             B.fst
          *
-         * when all the checked files are present and F* is invoked with --extract A --cmi
+         * when all the checked files are present and F* is invoked to extract A
          * during parsing, all checked files are loaded with tc data statemachine as Unknown
-         * since it is cmi (and say B has an inline_for_extraction symbol), the client
+         * since extraction looks through interfaces, the client
          * then loads B.fst.checked BUT NOT B.fsti.checked
          * this advances the state machine for B.fst, but not for B.fsti
          * so when client loads A.fst.checked, B.fsti -- a dependence of A -- is still in Unknown
@@ -359,7 +365,7 @@ let load_checked_file_with_tc_result
          * is in Unknown state, it could call load_checked_file_with_tc_result
          *)
         let validate_iface_cache () =
-          let iface = fn |> Dep.lowercase_module_name |> Dep.interface_of deps in
+          let iface = fn |> Dep.module_key_of_file |> Dep.interface_of deps in
           match iface with
           | None -> ()
           | Some iface ->
@@ -506,7 +512,7 @@ let load_module_from_cache_internal =
 
     let i_fn_opt = Dep.interface_of
       deps
-      (Dep.lowercase_module_name fn) in
+      (Dep.module_key_of_file fn) in
 
     if Dep.is_implementation fn
     && (i_fn_opt |> Some?)
@@ -582,7 +588,7 @@ let store_module_to_cache env fn parsing_data_and_direct_deps tc_result : ML uni
       //otherwise dependence hashing will fail
       let i_fn_opt = Dep.interface_of
           (TcEnv.dep_graph env)
-          (Dep.lowercase_module_name fn) in
+          (Dep.module_key_of_file fn) in
       match i_fn_opt with
       | None -> ()
       | Some iface ->

@@ -26,7 +26,7 @@ open FStarC.Interactive.Ide.Types
 type fragment_progress =
    | FullBufferStarted
    | FragmentStarted of decl
-   | FragmentSuccess of (decl & FStarC.Parser.ParseIt.code_fragment & push_kind)
+   | FragmentSuccess of (decl & FStarC.Parser.Frontend.code_fragment & push_kind)
    | FragmentFailed of decl
    | FragmentError of list issue
    | FullBufferFinished

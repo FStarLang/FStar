@@ -262,6 +262,21 @@ let non_info_norm_weak env t =
   in
   non_informative env (N.normalize steps env t)
 
+(* Does the declared type [t] describe a type or a type family, i.e. is it of
+the shape x1:t1 -> ... -> xn:tn -> Type, possibly through abbreviations?
+Only then can the body of the definition be a (non-informative) type; for any
+other definition, [non_info_norm_weak] is pointless and, since it reduces the
+body to head normal form with delta, iota and zeta, may run an arbitrary
+computation, e.g. unrolling a recursive fold. *)
+let rec is_arity env (t:typ) : ML bool =
+  let t = U.unrefine (N.unfold_whnf' [AllowUnboundUniverses] env t) in
+  match (Subst.compress t).n with
+  | Tm_type _ -> true
+  | Tm_arrow _ ->
+    let bs, c = U.arrow_formals_comp t in
+    is_arity (Env.push_binders env bs) (U.comp_result c)
+  | _ -> false
+
 let check_erasable env quals (r:Range.t) se =
   let lids = U.lids_of_sigelt se in
   let val_exists =
@@ -292,8 +307,10 @@ let check_erasable env quals (r:Range.t) se =
       let val_decl = Env.try_lookup_val_decl env lbname.fv_name in
       if has_iface_val && Some? val_decl then
         let _, body, _ = U.abs_formals lb.lbdef in
-          let Some ((us, t), _) = val_decl in
-        if non_info_norm_weak env body then
+        let Some ((us, t), _) = val_decl in
+        let us, t = Subst.open_univ_vars us t in
+        let defines_type = is_arity (Env.push_univ_vars env us) t in
+        if defines_type && non_info_norm_weak env body then
           log_issue lbname Error_MustEraseMissing [
             text (Format.fmt1 "Values of type ‘%s’ will be erased during extraction, \
                   but its interface hides this fact." (show lbname));

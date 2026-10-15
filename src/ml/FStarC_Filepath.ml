@@ -57,7 +57,13 @@ let normalize_file_path (path_str:string) =
   (* Normalize *)
   to_string (normalize_in_tree path)
 
-let basename = Filename.basename
+(* Called for every range; remember the last result *)
+let basename =
+  let last = ref ("", "") in
+  fun s ->
+    let (s', b) = !last in
+    if s == s' then b
+    else (let b = Filename.basename s in last := (s, b); b)
 let dirname = Filename.dirname
 
 let getcwd = Sys.getcwd

@@ -616,6 +616,32 @@ let close_layered_comp_with_substitutions env bvs tms (c:comp) (g:guard_t) : ML 
   SS.subst_comp substs c,
   g |> Env.close_guard env bs |> close_guard_implicits env false bs
 
+(* A match on a scrutinee the solver cannot reduce.
+ *
+ * Such a term is a dead end for an equation [x == e]: the solver can take
+ * nothing out of it, exactly as for an irreducible head symbol (condition (c)
+ * of [should_return]).  Whatever the branches do establish is already recorded
+ * in the match's result type by [combine_branch_res_typs], and that type is in
+ * scope wherever the equation would be.
+ *
+ * Restating it is not merely useless but expensive: a match is ascribed with
+ * its own result type (see [mk_match] in TcTerm), so a type that mentions a
+ * nested match mentions that match's type too, and the two grow into each
+ * other -- doubling at every level of nesting.
+ *)
+let rec is_stuck_match (e:term) : ML bool =
+  match (SS.compress (U.unmeta e)).n with
+  | Tm_ascribed {tm} -> is_stuck_match tm
+  | Tm_match {scrutinee} ->
+    let hd, _ = U.head_and_args_full scrutinee in
+    (match (U.un_uinst (SS.compress (U.unmeta hd))).n with
+     (* A constructor or a literal scrutinee does pick a branch, so the match
+        reduces and the equation is worth stating. *)
+     | Tm_fvar fv -> None? fv.fv_qual
+     | Tm_constant _ -> false
+     | _ -> true)
+  | _ -> false
+
 (* should_return env (Some e) lc:
  * We will "return" e, adding an equality to the VC, if all of the following conditions hold
  * (a) e is a pure or ghost term
@@ -623,6 +649,7 @@ let close_layered_comp_with_substitutions env bvs tms (c:comp) (g:guard_t) : ML 
  *     An exception is made for reifiable effects -- they are useful even if they return unit -- except when it is an layered effect, we never return layered effects
  * (c) Its head symbol is not marked irreducible (in this case inlining is not going to help, it is equivalent to having a bound variable)
  * (d) It does not mention a name bound by the [let rec] being checked, since such a name cannot appear in a type that outlives it
+ * (e) It is not a match the solver cannot reduce (see [is_stuck_match])
  *)
 let should_return env eopt lc : ML _ =
   let lc_is_unit_or_effectful =
@@ -642,7 +669,8 @@ let should_return env eopt lc : ML _ =
      match (U.un_uinst head).n with
      | Tm_fvar fv ->  not (Env.is_irreducible env (lid_of_fv fv))  //condition (c)
      | _ -> true)                                                  &&
-    not (Env.mentions_rec_name env e)      //condition (d), see [Env.mentions_rec_name]
+    not (Env.mentions_rec_name env e) &&    //condition (d), see [Env.mentions_rec_name]
+    not (is_stuck_match e)                  //condition (e)
 
 (*
  * Sequential composition in the simplified effect system.

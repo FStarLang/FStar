@@ -2240,7 +2240,7 @@ let t_commute_applied_match () : ML (tac unit) = wrap_err "t_commute_applied_mat
   )
 
 let string_to_term (e: Env.env) (s: string): ML (tac term)
-  = let open FStarC.Parser.ParseIt in
+  = let open FStarC.Parser.Frontend in
     let frag_of_text s = { frag_fname= "<string_of_term>"
                          ; frag_line = 1 ; frag_col  = 0
                          ; frag_text = s } in

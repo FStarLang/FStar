@@ -19,7 +19,6 @@ stage1/dune/fstar-plugins/plugins.ml
 stage1/dune/fstarc-full/main.ml
 stage1/dune/libapp/app
 stage1/dune/libapp/app-extra
-stage1/dune/libapp/ulib.ml
 stage1/dune/libplugin/app
 stage1/dune/libplugin/app-extra
 stage1/dune/libplugin/full
@@ -39,7 +38,6 @@ stage2/dune/fstar-plugins/plugins.ml
 stage2/dune/fstarc-full/main.ml
 stage2/dune/libapp/app
 stage2/dune/libapp/app-extra
-stage2/dune/libapp/ulib.ml
 stage2/dune/libplugin/app
 stage2/dune/libplugin/app-extra
 stage2/dune/libplugin/full

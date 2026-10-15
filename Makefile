@@ -130,10 +130,11 @@ stage0/out/bin/fstar.exe: .stage0.touch
 	$(MAKE) -C stage0 install_bin # build: only fstar.exe
 	$(MAKE) -C stage0 trim # We don't need OCaml build files.
 
-# Unified extraction pass: extracts BOTH the compiler (FStarC* +
-# FStar.Pervasives) AND the in-tree ulib plugins into stage1/fstarc.ml/.
-# Uses CODEGEN=Plugin so plugin-registration code is emitted for the
-# [@@plugin] annotations in both the compiler and the plugin modules.
+# Whole-program extraction with Custard (doc/ref/custard.md, section 12.10):
+# the compiler (FStarC*) AND the in-tree ulib plugins AND the plugin-base
+# modules out-of-tree plugins need, from one entry point, into
+# stage1/fstarc.ml/.  Plugin registrations are emitted for the [@@plugin]
+# annotations; the entry points decide what is emitted.
 .bare1.src.touch: $(FSTAR0_EXE) .force
 	$(call bold_msg, "EXTRACT", "STAGE 1 FSTARC")
 	env \
@@ -142,10 +143,9 @@ stage0/out/bin/fstar.exe: .stage0.touch
 	  FSTAR_LIB=$(abspath ulib) \
 	  CACHE_DIR=stage1/fstarc.checked/ \
 	  OUTPUT_DIR=stage1/fstarc.ml/ \
-	  CODEGEN=Plugin \
 	  TAG=fstarc \
 	  TOUCH=$@ \
-	  $(MAKE) -f mk/fstar-01.mk ocaml
+	  $(MAKE) -f mk/fstar-01.mk custard
 
 .tests1.src.touch: .bare1.src.touch $(FSTAR0_EXE) .force
 	$(call bold_msg, "EXTRACT", "STAGE 1 TESTS")
@@ -155,10 +155,9 @@ stage0/out/bin/fstar.exe: .stage0.touch
 	  FSTAR_LIB=$(abspath ulib) \
 	  CACHE_DIR=stage1/tests.checked/ \
 	  OUTPUT_DIR=stage1/tests.ml/ \
-	  CODEGEN=Plugin \
 	  TAG=fstarc \
 	  TOUCH=$@ \
-	  $(MAKE) -f mk/tests-1.mk ocaml
+	  $(MAKE) -f mk/tests-1.mk custard
 
 # These files are regenerated as soon as *any* ml file reachable from
 # stage*/dune changes. This makes sure we trigger dune rebuilds when we
@@ -181,17 +180,15 @@ $(FSTAR1_FULL_EXE): .bare1.src.touch .src.ml.touch $(MAYBEFORCE)
 	touch -c $@
 
 .alib1.src.touch: $(FSTAR1_FULL_EXE) .force
-	$(call bold_msg, "EXTRACT", "STAGE 1 LIB")
+	$(call bold_msg, "CHECK", "STAGE 1 LIB")
 	+env \
 	  SRC=ulib/ \
 	  FSTAR_EXE=$(FSTAR1_FULL_EXE) \
 	  CACHE_DIR=stage1/ulib.checked/ \
 	  OUTPUT_DIR=stage1/ulib.ml/ \
-	  CODEGEN=OCaml \
 	  TAG=lib \
 	  TOUCH=$@ \
-	  $(MAKE) -f mk/lib.mk ocaml verify
-	# ^ NB: also verify files we don't extract
+	  $(MAKE) -f mk/lib.mk verify
 
 .alib1.touch: .alib1.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 1 LIB")
@@ -201,17 +198,17 @@ $(FSTAR1_FULL_EXE): .bare1.src.touch .src.ml.touch $(MAYBEFORCE)
 .bare2.src.touch: $(FSTAR1_FULL_EXE) .force
 	$(call bold_msg, "EXTRACT", "STAGE 2 FSTARC")
 	# NOTE: see the explanation for FSTAR_LIB near top of file.
-	# Unified extraction pass: compiler + in-tree plugins into stage2/fstarc.ml/.
+	# Whole-program Custard pass: compiler + in-tree plugins into
+	# stage2/fstarc.ml/.
 	env \
 	  SRC=src/ \
 	  FSTAR_LIB=$(abspath ulib) \
 	  FSTAR_EXE=$(FSTAR1_FULL_EXE) \
 	  CACHE_DIR=stage2/fstarc.checked/ \
 	  OUTPUT_DIR=stage2/fstarc.ml/ \
-	  CODEGEN=Plugin \
 	  TAG=fstarc \
 	  TOUCH=$@ \
-	  $(MAKE) -f mk/fstar-12.mk ocaml
+	  $(MAKE) -f mk/fstar-12.mk custard
 
 .tests2.src.touch: .bare2.src.touch $(FSTAR1_FULL_EXE) .force
 	$(call bold_msg, "EXTRACT", "STAGE 2 TESTS")
@@ -221,10 +218,9 @@ $(FSTAR1_FULL_EXE): .bare1.src.touch .src.ml.touch $(MAYBEFORCE)
 	  FSTAR_LIB=$(abspath ulib) \
 	  CACHE_DIR=stage2/tests.checked/ \
 	  OUTPUT_DIR=stage2/tests.ml/ \
-	  CODEGEN=Plugin \
 	  TAG=fstarc \
 	  TOUCH=$@ \
-	  $(MAKE) -f mk/tests-2.mk ocaml
+	  $(MAKE) -f mk/tests-2.mk custard
 
 $(TESTS2_EXE): .tests2.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 2 TESTS")
@@ -240,50 +236,26 @@ $(FSTAR2_FULL_EXE): .bare2.src.touch .src.ml.touch $(MAYBEFORCE)
 	touch -c $@
 
 .alib2.src.touch: $(FSTAR2_FULL_EXE) .force
-	$(call bold_msg, "EXTRACT", "STAGE 2 LIB")
+	$(call bold_msg, "CHECK", "STAGE 2 LIB")
 	env \
 	  SRC=ulib/ \
 	  FSTAR_EXE=$(FSTAR2_FULL_EXE) \
 	  CACHE_DIR=stage2/ulib.checked/ \
 	  OUTPUT_DIR=stage2/ulib.ml/ \
-	  CODEGEN=OCaml \
 	  TAG=lib \
 	  TOUCH=$@ \
-	  $(MAKE) -f mk/lib.mk ocaml verify
-	# ^ NB: also verify files we don't extract
+	  $(MAKE) -f mk/lib.mk verify
 
 .alib2.touch: .alib2.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 2 LIB")
 	$(MAKE) -C stage2/ libapp FSTAR_DUNE_RELEASE=1
 	touch $@
 
-# F# library
-fsharp-lib.src: export FSTAR_EXE := $(INSTALLED_FSTAR3_FULL_EXE)
-fsharp-lib.src: .force stage3
-	# NB: shares checked files from .alib2.src,
-	# hence the dependency, though it is not quite precise.
-	$(call bold_msg, "EXTRACT", "FSHARP LIB")
-	# Note: FStar.Map and FStar.Set are special-cased
-	# Also note: we explicitly add an include for F*'s own library so it can
-	# find the checked files for it, and make this run about extraction
-	# only. The lib.mk makefile passes --no_default_includes.
-	env \
-	  SRC=ulib/ \
-	  OUTPUT_DIR=fsharp/extracted/ \
-	  CACHE_DIR=fsharp/_cached/ \
-	  CODEGEN=FSharp \
-	  TAG=fsharplib \
-	  DEPFLAGS='--extract -FStar.Map,-FStar.Set --already_cached Prims,FStar' \
-	  OTHERFLAGS='--include $(shell $(FSTAR_EXE) --locate_lib)' \
-	  $(MAKE) -f mk/lib.mk all-fs
-
-.PHONY: fsharp-lib
-fsharp-lib: fsharp-lib.src
-	+$(MAKE) -C fsharp lib
-
-.PHONY: fsharp-all
-fsharp-all: fsharp-lib
-	+$(MAKE) -C fsharp all
+# F# tests (Custard's F# backend needs no separate library)
+.PHONY: fsharp-test
+fsharp-test: override FSTAR_EXE := $(abspath stage3/out/bin/fstar.exe)
+fsharp-test: stage3 .force
+	+$(MAKE) -C fsharp test FSTAR_EXE=$(FSTAR_EXE)
 
 # Stage 2+1 is different, we don't build it, we just check that the
 # extracted OCaml files coincide exactly with stage2. We also do not
@@ -294,21 +266,20 @@ fsharp-all: fsharp-lib
 boot-src-bare: $(FSTAR2_FULL_EXE) .force
 	$(call bold_msg, "EXTRACT", "STAGE 2+1 FSTARC")
 	# NOTE: see the explanation for FSTAR_LIB near top of file.
-	# Uses the same unified pass/codegen as .bare2 so the diff matches.
+	# Uses the same whole-program pass as .bare2 so the diff matches.
 	env \
 	  SRC=src/ \
 	  FSTAR_EXE=$(FSTAR2_FULL_EXE) \
 	  FSTAR_LIB=$(abspath ulib) \
 	  CACHE_DIR=boot-diff/fstarc.checked/ \
 	  OUTPUT_DIR=boot-diff/fstarc.ml/ \
-	  CODEGEN=Plugin \
 	  TAG=fstarc \
-	  $(MAKE) -f mk/fstar-12.mk ocaml
+	  $(MAKE) -f mk/fstar-12.mk custard
 
 boot-diff: boot-src-bare .force
 	$(call bold_msg, "DIFF", "STAGE 2 vs STAGE 2+1")
-	@# Ignore ramon files, if any
-	diff -r -x '*.ramon' stage2/fstarc.ml boot-diff/fstarc.ml
+	@# Ignore ramon files, if any, and the extraction's own stamp file.
+	diff -r -x '*.ramon' -x '.custard.touch' stage2/fstarc.ml boot-diff/fstarc.ml
 
 ifeq ($(shell uname),Linux)
 LINK_OK=1
@@ -586,7 +557,7 @@ _examples: need_fstar_exe karamel .force
 
 ci: .force
 	+$(MAKE) 2
-	+$(MAKE) test fsharp-all boot-diff test-2-bare stage2-unit-tests
+	+$(MAKE) test fsharp-test boot-diff test-2-bare stage2-unit-tests
 
 save: stage0_new
 
@@ -594,7 +565,6 @@ save: stage0_new
 define do-stage0-snapshot
 	$(call bold_msg, "SNAPSHOT", "$(TO)")
 	rm -rf "$(TO)"
-	mkdir -p "$(1)"/ulib.ml  # rsync fails with dangling symlinks
 	.scripts/src-install.sh "$(1)" "$(TO)"
 	# Trim it a bit...
 	rm -rf "$(TO)/src"            # no need for compiler F* sources
@@ -602,6 +572,11 @@ define do-stage0-snapshot
 	rm -rf "$(TO)/dune/libapp"    # we won't even build apps
 	rm -rf "$(TO)/dune/tests"     # we won't build tests
 	rm -rf "$(TO)/karamel"        # only needed in source packages
+	# Custard's own build products: the stamp its single rule touches, and
+	# the unit interface, which is 3MB and describes a unit nothing links
+	# against -- stage0 is compiled straight from the .ml by dune.
+	rm -f "$(TO)"/dune/fstar-guts/*/.custard.touch
+	rm -f "$(TO)"/dune/fstar-guts/*/*.cui
 endef
 
 stage0_new: TO=stage0_new
@@ -654,49 +629,6 @@ watch:
 	done
 
 
-### CUSTARD
-#
-# An F* compiler extracted by Custard instead of by the ML extraction
-# (doc/ref/custard.md section 12.10).  Needs a stage2 compiler, for the
-# extraction itself and for its checked files.
-
-.PHONY: custard custard-smoke custard-plugin custard-pulse-plugin clean-custard
-
-custard: 2.full
-	$(call bold_msg, "CUSTARD", "FSTAR")
-	+env \
-	  FSTAR_EXE=$(abspath $(INSTALLED_FSTAR2_FULL_EXE)) \
-	  ULIB_CHECKED=stage2/ulib.checked \
-	  FSTARC_CHECKED=stage2/fstarc.checked \
-	  $(MAKE) -f mk/custard.mk all
-
-custard-smoke: 2.full
-	+env \
-	  FSTAR_EXE=$(abspath $(INSTALLED_FSTAR2_FULL_EXE)) \
-	  ULIB_CHECKED=stage2/ulib.checked \
-	  FSTARC_CHECKED=stage2/fstarc.checked \
-	  $(MAKE) -f mk/custard.mk smoke
-
-# Section 12.13: Pulse's three units, compiled by Custard, linked into one
-# .cmxs and loaded into the Custard-built compiler.  Needs pulse/build/*.checked,
-# which `make 3.full' (or `make pulse') writes.
-custard-pulse-plugin: 2.full
-	+env \
-	  FSTAR_EXE=$(abspath $(INSTALLED_FSTAR2_FULL_EXE)) \
-	  ULIB_CHECKED=stage2/ulib.checked \
-	  FSTARC_CHECKED=stage2/fstarc.checked \
-	  $(MAKE) -f mk/custard.mk pulse-plugin
-
-custard-plugin: 2.full
-	+env \
-	  FSTAR_EXE=$(abspath $(INSTALLED_FSTAR2_FULL_EXE)) \
-	  ULIB_CHECKED=stage2/ulib.checked \
-	  FSTARC_CHECKED=stage2/fstarc.checked \
-	  $(MAKE) -f mk/custard.mk plugin
-
-clean-custard: .force
-	rm -rf stagec
-
 ### CLEAN
 
 clean-depend: .force
@@ -732,11 +664,12 @@ clean-3: .force
 	$(call bold_msg, "CLEAN", "STAGE 3")
 	$(MAKE) -C stage3 clean
 	rm -f stage3/.fstarlock
-	rm -rf stage3/fstarc.ml
+	@# Not stage3/fstarc.ml: unlike stage1's and stage2's, it is a checked-in
+	@# symlink to stage2/fstarc.ml, which clean-2 empties.  Removing it makes
+	@# the next `make' fail in `install' with no fstarc.cui to copy.
 	rm -rf stage3/ulib.ml
 	rm -rf stage3/ulib.pluginml
 	rm -rf pulse/build/checker.checked pulse/build/checker.ml
-	rm -rf pulse/build/extraction.checked pulse/build/extraction.ml
 	rm -rf pulse/build/syntax_extension.checked pulse/build/syntax_extension.ml
 	rm -rf pulse/build/lib.pulse.checked pulse/build/lib.pulse.ml
 	rm -rf pulse/build/lib.core.checked pulse/build/lib.core.ml
@@ -792,10 +725,6 @@ help:
 	echo "  package-src-2      create an OCaml source distribution for the stage 2 build"
 	echo "  package-src-3      create an OCaml source distribution for the stage 3 build (= package-src)"
 	echo "  all-packages       build the four previous rules"
-	echo "  custard            build an fstar.exe extracted by Custard (into stagec/)"
-	echo "  custard-smoke      build it and check a ulib module with it"
-	echo "  custard-plugin     build it and load a Custard-compiled plugin into it"
-	echo "  custard-pulse-plugin  ... and the Pulse plugin, which is the real one"
 	echo "  clean-depend       remove all .depend files, useful when files change name"
 	echo "  trim               clean some buildfiles, but retain any installed F* in out"
 	echo "  distclean          remove every generated file"

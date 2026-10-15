@@ -29,9 +29,9 @@ open FStarC.Universal
 open FStarC.TypeChecker.Env
 open FStarC.TypeChecker.Common
 open FStarC.Interactive
-open FStarC.Parser.ParseIt
+open FStarC.Parser.Frontend
 open FStarC.Interactive.Ide.Types
-module P = FStarC.Parser.ParseIt
+module P = FStarC.Parser.Frontend
 module BU = FStarC.Util
 open FStarC.Parser.AST
 open FStarC.Parser.AST.Util
@@ -285,7 +285,7 @@ let run_full_buffer (st:repl_state)
       Format.print1 "run_full_buffer: repl_stack=%s\n"
           (show (!repl_stack))
     );
-    FStarC.Parser.ParseIt.add_vfs_entry st.repl_fname code;
+    FStarC.Parser.Frontend.add_vfs_entry st.repl_fname code;
     let parse_result = parse_code st None code in
     let log_syntax_issues err =
       match err with

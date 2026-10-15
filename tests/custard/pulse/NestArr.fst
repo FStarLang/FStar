@@ -14,9 +14,14 @@ module NestArr
 module A = Pulse.Lib.Array
 module U32 = FStar.UInt32
 
+
+(* A projection of our own: [fst] and [snd] are [inline_for_extraction],
+   so they would leave no specialization behind to check. *)
+let pfst (x : 'a & 'b) : 'a = fst x
+
 let fst_both (x : U32.t & option (A.array U32.t))
              (y : U32.t & option (A.array bool)) : U32.t =
-  U32.add_mod (fst x) (fst y)
+  U32.add_mod (pfst x) (pfst y)
 
 let opt_arr (o : option (A.array U32.t)) : bool =
   match o with
@@ -35,7 +40,7 @@ noeq type box (a:Type0) = { v : a }
 
 let plain_both (x : U32.t & option (box U32.t))
                (y : U32.t & option (box bool)) : U32.t =
-  U32.add_mod (fst x) (fst y)
+  U32.add_mod (pfst x) (pfst y)
 
 let main () : FStar.All.ML FStar.Int32.t =
   let a : option (A.array U32.t) = None in

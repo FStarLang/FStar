@@ -16,6 +16,12 @@ module TupAlias
 module U = FStar.UInt32
 module A = Pulse.Lib.Array
 
+
+(* A projection of our own: [fst] and [snd] are [inline_for_extraction],
+   so they would leave no specialization behind to check. *)
+let pfst (x : 'a & 'b) : 'a = fst x
+let psnd (x : 'a & 'b) : 'b = snd x
+
 type element =
   | First
   | Second
@@ -23,22 +29,22 @@ type element =
 type pack (a:Type0) = option (A.array a)
 
 let fst_both (x : U.t & pack element) (y : U.t & pack bool) : U.t =
-  U.add_mod (fst x) (fst y)
+  U.add_mod (pfst x) (pfst y)
 
 let snd_both (x : pack element & U.t) (y : pack bool & U.t) : U.t =
-  U.add_mod (snd x) (snd y)
+  U.add_mod (psnd x) (psnd y)
 
 (* The same types with the abbreviation spelled out: the control that worked
    throughout, and still must. *)
 let explicit_control (x : U.t & option (A.array element))
                      (y : U.t & option (A.array bool)) : U.t =
-  U.add_mod (fst x) (fst y)
+  U.add_mod (pfst x) (pfst y)
 
 (* A chain of two abbreviations, which is what the fuel is for. *)
 type packed (a:Type0) = pack a
 
 let chain_both (x : U.t & packed element) (y : U.t & packed bool) : U.t =
-  U.add_mod (fst x) (fst y)
+  U.add_mod (pfst x) (pfst y)
 
 let main () : FStar.All.ML FStar.Int32.t =
   let e : pack element = None in

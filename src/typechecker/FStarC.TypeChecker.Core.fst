@@ -342,10 +342,10 @@ type __result a =
   | Success of a & cache_t
   | Error of error
 
-module THT = FStarC.Syntax.TermHashTable
+module HashTable = FStarC.HashTable
 type tc_table = {
-  table:THT.hashtable hash_entry;
-  guard_table:THT.hashtable guard_entry;
+  table:HashTable.t term hash_entry;
+  guard_table:HashTable.t term guard_entry;
   counter:ref int //version counter
 }
 
@@ -360,11 +360,13 @@ let result a = context -> cache_t -> ML (__result (success a))
 
 let equal_term_for_hash t1 t2 =
   FStarC.Profiling.profile (fun _ -> Hash.equal_term t1 t2) None "FStarC.TypeChecker.Core.equal_term_for_hash"
+(* A fast path for relating terms, so up to delayed substitutions and solved
+   uvars: unlike the cache keys, these terms are not deeply compressed. *)
 let equal_term t1 t2 =
-  FStarC.Profiling.profile (fun _ -> Hash.equal_term t1 t2) None "FStarC.TypeChecker.Core.equal_term"
+  FStarC.Profiling.profile (fun _ -> Hash.equal_term_upto_compress t1 t2) None "FStarC.TypeChecker.Core.equal_term"
 let table : tc_table = {
-  table = THT.create 1048576; //2^20
-  guard_table = THT.create 1048576; //2^20
+  table = HashTable.create 1048576; //2^20
+  guard_table = HashTable.create 1048576; //2^20
   counter = mk_ref 0
 } 
 type cache_stats_t = { hits : int; misses : int }
@@ -379,8 +381,8 @@ let reset_cache_stats () =
     cache_stats := { hits = 0; misses = 0 }
 let report_cache_stats () = !cache_stats
 let clear_memo_table () = 
-  THT.clear table.table;
-  THT.clear table.guard_table;
+  HashTable.clear table.table;
+  HashTable.clear table.guard_table;
   table.counter := !table.counter + 1
 
 type guard_commit_token = {
@@ -406,11 +408,11 @@ let commit_guard_core (g:guard_commit_token) : ML unit =
     | Some cache ->
       g.guard_cache := None; //invalidate the cache in the token
       FStarC.Syntax.Hash.term_map_fold
-        (fun term hash_entry _ -> THT.insert term hash_entry table.table)
+        (fun term hash_entry _ -> HashTable.add table.table term hash_entry)
         cache.term_map
         ();
       FStarC.Syntax.Hash.term_map_fold
-        (fun term guard_entry _ -> THT.insert term guard_entry table.guard_table)
+        (fun term guard_entry _ -> HashTable.add table.guard_table term guard_entry)
         cache.guard_map
         ()
   )
@@ -720,7 +722,7 @@ let raw_lookup (e:term) : result (option hash_entry) =
   | Some he ->
     return (Some he)
   | None ->
-    return (THT.lookup e table.table)
+    return (HashTable.try_find table.table e)
 
 let raw_lookup_guard (e:term) : result (option guard_entry) =
   let! cache = get_cache() in
@@ -728,26 +730,33 @@ let raw_lookup_guard (e:term) : result (option guard_entry) =
   | Some he ->
     return (Some he)
   | None ->
-    return (THT.lookup e table.guard_table)
+    return (HashTable.try_find table.guard_table e)
 
 let insert_guard (g:env) (guard:typ)
   : result unit
   = let! cache = get_cache () in
     put_cache {cache with guard_map = FStarC.Syntax.Hash.term_map_add guard { ge_gamma = g.tcenv.gamma } cache.guard_map }
 
+(* The cache is keyed by syntactic equality (FStarC.Syntax.Hash.equal_term),
+   which does not look through delayed substitutions or solved uvars, so the
+   keys are deeply compressed. *)
+let cache_key (t:term) : ML term = FStarC.Syntax.Compress.deep_compress true true t
+
 let guard (g:env) (guard:typ)
   : result unit
-  = match! raw_lookup_guard guard with
-    | Some ge ->
-      if ge.ge_gamma `context_included` g.tcenv.gamma
-      then return () //cache hit 
-      else (
-        insert_guard g guard ;!
-        return_with_guard () (Some guard)
-      )
-    | _ ->
-      insert_guard g guard ;!
-      return_with_guard () (Some guard)
+  = fun ctx cache ->
+    let guard = cache_key guard in
+    (match! raw_lookup_guard guard with
+     | Some ge ->
+       if ge.ge_gamma `context_included` g.tcenv.gamma
+       then return () //cache hit 
+       else (
+         insert_guard g guard ;!
+         return_with_guard () (Some guard)
+       )
+     | _ ->
+       insert_guard g guard ;!
+       return_with_guard () (Some guard)) ctx cache
 
 
 let with_binders (#a:Type) (initial_env:env) (xs:binders) (us:universes) (f:result a)
@@ -950,7 +959,7 @@ instance showable_side = {
 
 
 let boolean_negation_simp b =
-  if Hash.equal_term b U.exp_false_bool
+  if equal_term b U.exp_false_bool
   then None
   else Some (U.mk_boolean_negation b)
 
@@ -970,7 +979,7 @@ let combine_path_and_branch_condition (path_condition:term)
         match branch_condition with
         | None -> U.exp_false_bool
         | Some bc ->
-          if Hash.equal_term path_condition U.exp_true_bool
+          if equal_term path_condition U.exp_true_bool
           then U.mk_boolean_negation bc
           else U.mk_and path_condition (U.mk_boolean_negation bc)
     in
@@ -1474,11 +1483,12 @@ and is_prop (g:env) (t:term) : ML (result unit) =
 
 and memo_check (g:env) (e:term)
   : ML (result (tot_or_ghost & typ))
-  = let check_then_memo g e =
+  = let key = cache_key e in
+    let check_then_memo g e =
       with_guard (do_check_and_promote g e)
       (function
       | Inl (res, guard) ->
-        insert g e (res, guard);!
+        insert g key (res, guard);!
         return_with_guard res guard
 
       | Inr err ->
@@ -1487,7 +1497,7 @@ and memo_check (g:env) (e:term)
     if not g.should_read_cache
     then check_then_memo g e
     else (
-      with_guard (lookup g e)
+      with_guard (lookup g key)
       (function
       | Inr _ ->
         check_then_memo g e
@@ -2162,7 +2172,6 @@ let check_term_top g e topt (must_tot:bool)
                    (show (get_goal_ctr()))
                    (show e) 
                    (show topt));
-    THT.reset_counters table.table;
     reset_cache_stats();
     let ctx = { unfolding_ok = true; no_guard = false; error_context = [("Top", None)] } in
     let res =
@@ -2214,7 +2223,7 @@ let check_term_top g e topt (must_tot:bool)
     in
     if !dbg_Eq
     then (
-      THT.print_stats table.table;
+      Format.print1 "THT Statistics { num_bindings = %s }\n" (show (HashTable.size table.table));
       let cs = report_cache_stats() in
       Format.print2 "Cache_stats { hits = %s; misses = %s }\n"
                      (show cs.hits)

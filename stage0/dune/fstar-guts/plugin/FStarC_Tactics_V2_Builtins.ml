@@ -1,7 +1,6 @@
 open Prims
 open FStar_Pervasives_Native
 open FStar_Pervasives
-open FStarC_Tactics_Result
 open FStarC_Tactics_Types
 
 module B        = FStarC_Tactics_V2_Basic
@@ -145,7 +144,9 @@ let log_issues                   = from_tac_1 "B.log_issues" B.log_issues
 
 (* The handlers need to "embed" their argument. *)
 let catch   (t: unit -> 'a __tac): ((exn, 'a) either) __tac = from_tac_1 "TM.catch" TM.catch   (to_tac_0 (t ()))
-let raise_core = from_tac_1 "TM.raise" TM.traise
+(* Eta-expanded: the result type is polymorphic, and a partial application
+   would fall foul of the value restriction and be fixed at its first use. *)
+let raise_core (e:exn) : 'a __tac = from_tac_1 "TM.raise" TM.traise e
 
 let ctrl_rewrite
     (d : direction)
