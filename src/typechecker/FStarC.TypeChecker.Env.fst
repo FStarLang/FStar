@@ -1436,7 +1436,22 @@ let bound_vars_of_bindings bs =
         | Binding_univ _ -> [])
 
 let binders_of_bindings bs = bound_vars_of_bindings bs |> List.map Syntax.mk_binder |> List.rev
-let all_binders env = binders_of_bindings env.gamma
+
+(* all_binders is called on every new uvar and every new problem (e.g. every
+   teq), with a gamma that can be very long (hundreds of bindings in big
+   Pulse functions), and typically many times in a row with the same gamma.
+   Cache the last result, keyed on the physical identity of gamma (an
+   immutable list), so repeated calls return the same (immutable) binders.
+   Besides saving the linear rebuild, this makes the ctx_uvar_binders of uvars
+   created in the same environment physically shared. *)
+let all_binders_cache : ref (option (list binding & binders)) = mk_ref None
+let all_binders env =
+  match !all_binders_cache with
+  | Some (g, bs) when BU.physical_equality g env.gamma -> bs
+  | _ ->
+    let bs = binders_of_bindings env.gamma in
+    all_binders_cache := Some (env.gamma, bs);
+    bs
 let bound_vars env = bound_vars_of_bindings env.gamma
 
 instance hasBinders_env : hasBinders env = {
