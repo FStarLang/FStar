@@ -2390,6 +2390,40 @@ let encode_modul_from_cache tcenv tcmod (me:module_encoding) =
     if Debug.medium () then Format.print1 "Done encoding externals from cache for %s\n" name
 
 open FStarC.SMTEncoding.Z3
+
+(* The sorts of the local variables, normalized as [encode_query] needs them:
+   once for the binders the query is closed over, and once more, by
+   [EncodeTerm.norm], for their typing hypotheses.  Consecutive queries share
+   most of their context, so both are memoized, by the index of the variable
+   and the physical identity of its sort.  Normalizing a sort without
+   unification variables depends only on the sort and on the definitions in
+   scope, which only grow; a sort with unification variables may change as
+   they are solved, so it is not memoized. *)
+let gamma_sorts : IMap.t (S.term & S.term & S.term) = IMap.create 1024
+let gamma_sorts_size = mk_ref 0
+let gamma_sorts_module = mk_ref ""
+
+let norm_gamma_sort (env:env_t) (x:S.bv) : ML (S.term & S.term) =
+  let m = string_of_lid (Env.current_module env.tcenv) in
+  if m <> !gamma_sorts_module || !gamma_sorts_size > 100000
+  then (IMap.clear gamma_sorts; gamma_sorts_size := 0; gamma_sorts_module := m);
+  match IMap.try_find gamma_sorts x.index with
+  | Some (s, t1, t2) when BU.physical_equality s x.sort -> t1, t2
+  | _ ->
+    let t =
+        match (Syntax.Formula.destruct_typ_as_formula x.sort) with
+        | Some _ ->
+          U.refine (S.new_bv None t_unit) x.sort
+          //add a squash to trigger the shallow embedding,
+          //if the assumption is of the form x:(forall y. P) etc.
+        | _ ->
+          x.sort in
+    let t1 = norm_with_steps [Env.Eager_unfolding; Env.Beta; Env.Simplify; Env.Primops] env.tcenv t in
+    let t2 = norm env t1 in
+    if Class.Setlike.is_empty (Free.uvars t1) && Class.Setlike.is_empty (Free.univs t1)
+    then (IMap.add gamma_sorts x.index (x.sort, t1, t2); gamma_sorts_size := !gamma_sorts_size + 1);
+    t1, t2
+
 let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
   : ML (list decl  //prelude, translation of  tcenv
   & ErrorReporting.goal_tree) //the goals of the query
@@ -2401,23 +2435,15 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
         let rec aux bindings : ML _ = match bindings with
             | S.Binding_var x::rest ->
                 let out, rest = aux rest in
-                let t =
-                    match (Syntax.Formula.destruct_typ_as_formula x.sort) with
-                    | Some _ ->
-                      U.refine (S.new_bv None t_unit) x.sort
-                      //add a squash to trigger the shallow embedding,
-                      //if the assumption is of the form x:(forall y. P) etc.
-                    | _ ->
-                      x.sort in
-                let t = norm_with_steps [Env.Eager_unfolding; Env.Beta; Env.Simplify; Env.Primops] env.tcenv t in
-                Syntax.mk_binder ({x with sort=t})::out, rest
+                let t1, t2 = norm_gamma_sort env x in
+                (Syntax.mk_binder ({x with sort=t1}), t2)::out, rest
             | _ -> [], bindings in
         let closing, bindings = aux tcenv.gamma in
         List.rev closing, bindings
     in
     (* The query is [forall closing. q]. [split_goals_under] works on the open
        [q]; the closed formula is only built to be printed. *)
-    let closed_q () = U.close_forall_no_univs closing q in
+    let closed_q () = U.close_forall_no_univs (List.map fst closing) q in
     let env_decls, env = encode_env_bindings env bindings in
     if Debug.medium () || !dbg_SMTEncoding
     then Format.print1 "Encoding query formula {: %s\n" (show (closed_q ()));
