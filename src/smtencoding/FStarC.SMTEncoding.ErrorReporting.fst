@@ -134,6 +134,39 @@ let rec collect_conjuncts (q:S.term) : ML (list S.term) =
       collect_conjuncts p1 @ collect_conjuncts p2
     | _ -> [q]
 
+(* The atomic facts of a hypothesis, looking through labels, [squash] and
+   conjunctions. *)
+let rec hyp_conjuncts (q:S.term) : ML (list S.term) =
+  match destruct_label q with
+  | Some (phi, _, _) -> hyp_conjuncts phi
+  | None ->
+  match destruct_transparent q with
+  | Some phi -> hyp_conjuncts phi
+  | None ->
+  match destruct_typ_as_formula q with
+  | Some (BaseConn (lid, [(p1, _); (p2, _)])) when lid_equals lid Const.and_lid ->
+    hyp_conjuncts p1 @ hyp_conjuncts p2
+  | _ -> [U.unascribe q]
+
+(* Syntactic equality of formulas, ignoring the qualifiers of application
+   arguments.  An argument's qualifier (implicit or explicit, its attributes)
+   does not change what the application denotes, and the SMT encoding ignores
+   it; yet the same formula often reaches us once with an implicit argument
+   marked and once without.  Anything but an application, a variable or a
+   constant is compared by [U.term_eq]. *)
+let rec eq_mod_aquals (t1 t2:S.term) : ML bool =
+  let t1 = U.unmeta_safe t1 in
+  let t2 = U.unmeta_safe t2 in
+  match t1.n, t2.n with
+  | S.Tm_app {hd=h1; arg=(a1, _)}, S.Tm_app {hd=h2; arg=(a2, _)} ->
+    eq_mod_aquals a1 a2 && eq_mod_aquals h1 h2
+  | S.Tm_fvar f1, S.Tm_fvar f2 -> S.fv_eq f1 f2
+  | S.Tm_name x1, S.Tm_name x2 -> x1.index = x2.index
+  | S.Tm_uinst (f1, us1), S.Tm_uinst (f2, us2) ->
+    U.eq_univs_list us1 us2 && eq_mod_aquals f1 f2
+  | S.Tm_constant c1, S.Tm_constant c2 -> FStarC.Const.eq_const c1 c2
+  | _ -> U.term_eq t1 t2
+
 let split_goals_under use_env_msg  //when present, provides an alternate error message,
                              //usually "could not check implicit argument",
                              //        "could not prove post-condition"
@@ -191,6 +224,7 @@ let split_goals_under use_env_msg  //when present, provides an alternate error m
     let rec aux (env:env_t)
                 (default_msg : Errors.error_message) //the error message to report for a leaf
                 (ropt:option Range.t)                //position of the enclosing Labeled node, if any
+                (hyps:list S.term)                   //atomic facts in scope: the goal's hypotheses
                 (q:S.term)                           //the formula being split
      : ML (goal_tree & decls_t & bool)
      =
@@ -205,11 +239,11 @@ let split_goals_under use_env_msg  //when present, provides an alternate error m
                     | [d] when Errors.Msg.renderdoc d = "Could not prove post-condition" -> default_msg
                     | _ -> msg
           in
-          aux env msg (Some r) phi
+          aux env msg (Some r) hyps phi
 
         | None ->
         match destruct_transparent q with
-        | Some phi -> aux env default_msg ropt phi
+        | Some phi -> aux env default_msg ropt hyps phi
 
         | None ->
         match destruct_typ_as_formula q with
@@ -221,13 +255,13 @@ let split_goals_under use_env_msg  //when present, provides an alternate error m
              of the preceding conjuncts.  This is sound, and it is what keeps
              the terms occurring in the earlier conjuncts available to the
              solver -- in a single monolithic query they were all in scope. *)
-          let rec seq (cs:list S.term) : ML (goal_tree & decls_t & bool) =
+          let rec seq (hyps:list S.term) (cs:list S.term) : ML (goal_tree & decls_t & bool) =
             match cs with
             | [] -> GTrivial, [], true
-            | [c] -> aux env default_msg ropt c
+            | [c] -> aux env default_msg ropt hyps c
             | c::cs ->
-              let t, decls, ok = aux env default_msg ropt c in
-              let rest, decls', ok' = seq cs in
+              let t, decls, ok = aux env default_msg ropt hyps c in
+              let rest, decls', ok' = seq (if ok then hyp_conjuncts c @ hyps else hyps) cs in
               let rest, decls'' =
                 if ok && not (GTrivial? rest)
                 then let e, decls'' = encode_formula c env in
@@ -238,10 +272,10 @@ let split_goals_under use_env_msg  //when present, provides an alternate error m
               in
               gbranch [t; rest], decls@decls'@decls'', ok && ok'
           in
-          seq (collect_conjuncts q)
+          seq hyps (collect_conjuncts q)
 
         | Some (BaseConn (lid, [(lhs, _); (rhs, _)])) when lid_equals lid Const.imp_lid ->
-          let t, decls, ok = aux env default_msg ropt rhs in
+          let t, decls, ok = aux env default_msg ropt (hyp_conjuncts lhs @ hyps) rhs in
           (match t with
            | GTrivial -> GTrivial, decls, ok
            | _ ->
@@ -249,8 +283,8 @@ let split_goals_under use_env_msg  //when present, provides an alternate error m
              gctx [hyp l] [CHyp lhs] t, decls@decls', ok)
 
         | Some (BaseConn (lid, [(g, _); (th, _); (el, _)])) when lid_equals lid Const.ite_lid ->
-          let t1, decls1, ok1 = aux env default_msg ropt th in
-          let t2, decls2, ok2 = aux env default_msg ropt el in
+          let t1, decls1, ok1 = aux env default_msg ropt (hyp_conjuncts g @ hyps) th in
+          let t2, decls2, ok2 = aux env default_msg ropt (U.mk_neg g :: hyps) el in
           (match t1, t2 with
            | GTrivial, GTrivial -> GTrivial, decls1@decls2, ok1 && ok2
            | _ ->
@@ -260,7 +294,7 @@ let split_goals_under use_env_msg  //when present, provides an alternate error m
              decls1@decls2@decls3, ok1 && ok2)
 
         | Some (QAll (bs, _pats, body)) ->
-          split_forall env default_msg ropt (List.map (fun b -> b, None) bs) body
+          split_forall env default_msg ropt hyps (List.map (fun b -> b, None) bs) body
 
         | _ ->
         match (SS.compress q).n with
@@ -278,7 +312,7 @@ let split_goals_under use_env_msg  //when present, provides an alternate error m
             | [] -> GTrivial, [], false
             | b::brs ->
               let guard, p, br, envb, declsb = encode_branch_pattern env' scr' b in
-              let t, declst, ok = aux envb default_msg ropt br in
+              let t, declst, ok = aux envb default_msg ropt hyps br in
               let rest, declsr, ok' = go (mkNot guard :: negs) brs in
               gbranch [ gctx [hyp (mk_and_l (List.rev (guard :: negs)))] [CMatch e p] t; rest ],
               declsb@declst@declsr, ok && ok'
@@ -293,21 +327,27 @@ let split_goals_under use_env_msg  //when present, provides an alternate error m
           let xs, e2 = SS.open_term [S.mk_binder x] e2 in
           let x = (List.hd xs).binder_bv in
           let env' = push_term_var env x ee1 in
-          let t, decls2, ok = aux env' default_msg ropt e2 in
+          let t, decls2, ok = aux env' default_msg ropt hyps e2 in
           gctx [] [CDef x e1] t, decls1@decls2, ok
 
         | S.Tm_meta {tm} ->
-          aux env default_msg ropt tm
+          aux env default_msg ropt hyps tm
 
         (* Everything else is an atomic goal: existentials, disjunctions,
            equalities, applications of uninterpreted predicates, ... *)
         | _ ->
+          (* A goal that is literally one of its hypotheses, as in the
+             [squash p -> p] guards Pulse emits, needs no query. *)
+          if List.existsb (eq_mod_aquals q) hyps
+          then GTrivial, [], true
+          else
           let t, decls = mk_leaf env default_msg ropt q in
           t, decls, true
 
     and split_forall (env:env_t)
                      (default_msg : Errors.error_message)
                      (ropt:option Range.t)
+                     (hyps:list S.term)
                      (bs:list (S.binder & option S.term)) //each with its sort, if already normalized
                      (body:S.term)
      : ML (goal_tree & decls_t & bool)
@@ -317,8 +357,8 @@ let split_goals_under use_env_msg  //when present, provides an alternate error m
              which prints exactly like a constant but keeps the hash-consed
              encodings of refinements parameterized over them. *)
           let squash_binders = Options.Ext.enabled "smt_squash_binders" in
-          let vars, guards, env', decls, names =
-            bs |> List.fold_left (fun (vars, guards, env, decls, names) (b, sort) ->
+          let vars, guards, env', decls, names, facts =
+            bs |> List.fold_left (fun (vars, guards, env, decls, names, facts) (b, sort) ->
               let x = (b <: S.binder).binder_bv in
               let fv = mk_fv (fresh_name "@sk_", Term_sort) in
               let env' = push_term_var env x (mkFreeV fv) in
@@ -335,11 +375,14 @@ let split_goals_under use_env_msg  //when present, provides an alternate error m
                   mkAnd (mkEq (mkFreeV fv, mk_Term_unit), mk_Valid pt), decls'
                 | None -> encode_term_pred None sort env (mkFreeV fv)
               in
-              fv::vars, g::guards, env', decls@decls', x::names)
-              ([], [], env, [], [])
+              let facts = match U.un_squash sort with
+                          | Some p -> hyp_conjuncts p @ facts
+                          | None -> facts in
+              fv::vars, g::guards, env', decls@decls', x::names, facts)
+              ([], [], env, [], [], hyps)
           in
           let vars, guards, names = List.rev vars, List.rev guards, List.rev names in
-          let t, decls', ok = aux env' default_msg ropt body in
+          let t, decls', ok = aux env' default_msg ropt facts body in
           let ds = (vars |> List.map (fun fv -> DeclFun (fv_name fv) [] (fv_sort fv) None))
                  @ (guards |> List.filter (function App TrueOp [] _ -> false | _ -> true) |> List.map hyp) in
           gctx ds (names |> List.map (fun (x:S.bv) ->
@@ -386,11 +429,11 @@ let split_goals_under use_env_msg  //when present, provides an alternate error m
        binder under another name, which the encoding's environment would not. *)
     let t, decls, _ =
       match List.filter (fun (b, _) -> not (S.is_null_binder b)) gamma_bs with
-      | [] -> aux env msg None q
+      | [] -> aux env msg None [] q
       | gamma_bs ->
         let gamma_bs, q = reopen gamma_bs q in
         let bs, _pats, body = destruct_forall_continuation q in
-        split_forall env msg None (gamma_bs @ List.map (fun b -> b, None) bs) body
+        split_forall env msg None [] (gamma_bs @ List.map (fun b -> b, None) bs) body
     in
     t, decls
 
