@@ -7,7 +7,7 @@ FSTAR_EXE := $(abspath $(FSTAR_EXE))
 
 CACHE_DIR := _cache
 
-FSTAR = $(FSTAR_EXE) --cache_dir $(CACHE_DIR) --include .. --include ../_cache \
+FSTAR = $(FSTAR_EXE) --message_format human --cache_dir $(CACHE_DIR) --include .. --include ../_cache \
 	--already_cached Prims,FStar $(OTHERFLAGS)
 
 all: verify

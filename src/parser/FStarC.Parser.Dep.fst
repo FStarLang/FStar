@@ -929,6 +929,11 @@ let build_map fs_map valid_ns_map (filenames: list string): ML unit =
     let m, t = split_target key in
     let cur = match HashTable.try_find idx m with Some l -> l | None -> [] in
     HashTable.add idx m ({ v_tag = t; v_intf = intf; v_impl = impl } :: cur));
+  (* Sort by tag, so that error messages do not depend on hashing order. *)
+  HashTable.keys idx |> List.iter (fun m ->
+    let tag_str (v:variant) = match v.v_tag with Some t -> t | None -> "" in
+    HashTable.add idx m (List.sortWith (fun v1 v2 -> String.compare (tag_str v1) (tag_str v2))
+                           (Option.must (HashTable.try_find idx m))));
   module_variants := idx;
   HashTable.keys fs_map |> List.iter (fun key ->
     match split_target key with
