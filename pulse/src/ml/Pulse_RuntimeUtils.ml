@@ -1,6 +1,6 @@
-type context = ((string * FStarC_Range.range option) list) (* FStar_Sealed.sealed *)
-type range = FStarC_Range.range
-let extend_context (s:string) (r:FStarC_Range.range option) (c:context) = (s,r)::c
+type context = ((string * FStarC_Range_Type.range option) list) (* FStar_Sealed.sealed *)
+type range = FStarC_Range_Type.range
+let extend_context (s:string) (r:FStarC_Range_Type.range option) (c:context) = (s,r)::c
 
 type 'a utac = 'a FStarC_Tactics_Monad.tac
 
@@ -8,7 +8,7 @@ let ctxt_elt_as_string (s, r) =
     match r with
     | None -> s
     | Some r ->
-      "@" ^ FStarC_Range.string_of_range r ^ ": " ^ s
+      "@" ^ FStarC_Range_Ops.string_of_range r ^ ": " ^ s
 let rec print_context (c:context) : string utac =
   fun ps ->
     String.concat "\n>" (List.map ctxt_elt_as_string c)
@@ -85,7 +85,7 @@ let with_context (c:context) (f: unit -> 'a utac) : 'a utac =
       match r with
       | Ok x -> x
       | Error ex -> raise ex
-let with_error_bound (r:FStarC_Range.range) (f: unit -> 'a utac) : 'a utac =
+let with_error_bound (r:FStarC_Range_Type.range) (f: unit -> 'a utac) : 'a utac =
   fun ps ->
     FStarC_Errors.with_error_bound r (fun _ -> f () ps)
 exception Quiet_failure
@@ -101,7 +101,7 @@ let try_quietly (f: unit -> 'a utac) : 'a option utac =
     match FStarC_Tactics_Monad.catch attempt ps with
     | FStar_Pervasives.Inr x -> Some x
     | FStar_Pervasives.Inl _ -> None
-let get_error_bound () : FStarC_Range.range option utac =
+let get_error_bound () : FStarC_Range_Type.range option utac =
   fun _ps ->
     FStarC_Effect.op_Bang FStarC_Errors.error_range_bound
 let with_extv (k:string) (v:string) (f: unit -> 'a utac) : 'a utac =
@@ -126,23 +126,23 @@ let debug_at_level (g:FStarC_Reflection_Types.env) (s:string) =
   !r
 
 let next_id () = FStarC_GenSym.next_id ()
-let bv_set_range (bv:FStarC_Syntax_Syntax.bv) (r:FStarC_Range.range) = FStarC_Syntax_Syntax.set_range_of_bv bv r
+let bv_set_range (bv:FStarC_Syntax_Syntax.bv) (r:FStarC_Range_Type.range) = FStarC_Syntax_Syntax.set_range_of_bv bv r
 let bv_range (bv:FStarC_Syntax_Syntax.bv) = FStarC_Syntax_Syntax.range_of_bv bv
-let binder_set_range (b:FStarC_Syntax_Syntax.binder) (r:FStarC_Range.range) =
+let binder_set_range (b:FStarC_Syntax_Syntax.binder) (r:FStarC_Range_Type.range) =
     { b with FStarC_Syntax_Syntax.binder_bv = (bv_set_range b.FStarC_Syntax_Syntax.binder_bv r) }
 let binder_range (b:FStarC_Syntax_Syntax.binder) = bv_range b.FStarC_Syntax_Syntax.binder_bv
-let start_of_range (r:FStarC_Range.range) =
-  let open FStarC_Range in
+let start_of_range (r:FStarC_Range_Type.range) =
+  let open FStarC_Range_Type in let open FStarC_Range_Ops in
   mk_range (file_of_range r) (start_of_range r) (start_of_range r)
-  let set_range (t:FStarC_Syntax_Syntax.term) (r:FStarC_Range.range) = { t with FStarC_Syntax_Syntax.pos = r}
-let set_use_range (t:FStarC_Syntax_Syntax.term) (r:FStarC_Range.range) = FStarC_Syntax_Subst.set_use_range r t
+  let set_range (t:FStarC_Syntax_Syntax.term) (r:FStarC_Range_Type.range) = { t with FStarC_Syntax_Syntax.pos = r}
+let set_use_range (t:FStarC_Syntax_Syntax.term) (r:FStarC_Range_Type.range) = FStarC_Syntax_Subst.set_use_range r t
 let error_code_uninstantiated_variable () = FStarC_Errors.errno FStarC_Errors_Codes.Error_UninstantiatedUnificationVarInTactic
-let is_range_zero (r:FStarC_Range.range) = r = FStarC_Range.dummyRange
-let union_ranges (r0:FStarC_Range.range) (r1:FStarC_Range.range) = FStarC_Range.union_ranges r0 r1
+let is_range_zero (r:FStarC_Range_Type.range) = r = FStarC_Range_Type.dummyRange
+let union_ranges (r0:FStarC_Range_Type.range) (r1:FStarC_Range_Type.range) = FStarC_Range_Ops.union_ranges r0 r1
 let range_of_term (t:FStarC_Syntax_Syntax.term) = t.FStarC_Syntax_Syntax.pos
 let env_get_range (e:FStarC_Reflection_Types.env) =
   FStarC_TypeChecker_Env.get_range e
-let env_set_range (e:FStarC_Reflection_Types.env) (r:FStarC_Range.range) =
+let env_set_range (e:FStarC_Reflection_Types.env) (r:FStarC_Range_Type.range) =
    FStarC_TypeChecker_Env.set_range e r
 
 let is_pulse_option_set (x:string) : bool =
@@ -211,7 +211,7 @@ module TcEnv = FStarC_TypeChecker_Env
 module Free = FStarC_Syntax_Free
 module FlatSet = FStarC_FlatSet
 
-let new_implicit_var (reason: string) (r:FStarC_Range.range) (g:TcEnv.env) (e:S.typ) (unrefine:bool) : S.term =
+let new_implicit_var (reason: string) (r:FStarC_Range_Type.range) (g:TcEnv.env) (e:S.typ) (unrefine:bool) : S.term =
   let g = {g with phase1=true; admit=true} in
   let uvar, _, _ = FStarC_TypeChecker_Util.new_implicit_var reason r g e unrefine in
   uvar
@@ -370,4 +370,4 @@ let universe_of_well_typed_term g t
       None
 
 let try_lookup_lid g lid =
-  FStarC_TypeChecker_Env.try_lookup_lid g (FStarC_Ident.lid_of_path lid FStarC_Range.dummyRange)
+  FStarC_TypeChecker_Env.try_lookup_lid g (FStarC_Ident.lid_of_path lid FStarC_Range_Type.dummyRange)

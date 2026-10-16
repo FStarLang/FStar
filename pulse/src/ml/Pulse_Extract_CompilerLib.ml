@@ -33,10 +33,10 @@ let unit_ty = S.t_unit
 let mk_return (t:term) : term =
   S.mk
     (S.Tm_meta {tm=t; meta=S.Meta_monadic_lift (C.primitive_pure_lid, C.primitive_div_lid, S.tun)})
-    FStarC_Range.dummyRange
+    FStarC_Range_Type.dummyRange
 let mk_meta_monadic (t: term): term =
   S.mk (S.Tm_meta {tm=t; meta=S.Meta_monadic (C.primitive_div_lid, S.tun)})
-    FStarC_Range.dummyRange
+    FStarC_Range_Type.dummyRange
 
 (* Pulse's ANF hoisting (Pulse.Checker.Base.bind_st_term) tags the binders it
    generates with a synthetic attribute `Pulse.Lib.Core.__anf<n>_binder__`,
@@ -51,22 +51,22 @@ let is_anf_binder_attr (t:term) : bool =
   | _ -> false
 
 let lbattrs_of_binder (b:binder) : term list =
-  FStarC_List.filter (fun a -> not (is_anf_binder_attr a)) b.binder_attrs
+  List.filter (fun a -> not (is_anf_binder_attr a)) b.binder_attrs
 
 let mk_pure_let (b:binder) (head:term) (body:term) : term =
   let lb = U.mk_letbinding
-    (Inl b.binder_bv) [] b.binder_bv.sort C.primitive_pure_lid head (lbattrs_of_binder b) FStarC_Range.dummyRange in
-  S.mk (S.Tm_let {lbs=false; lbs1=[lb]; body=body}) FStarC_Range.dummyRange
+    (Inl b.binder_bv) [] b.binder_bv.sort C.primitive_pure_lid head (lbattrs_of_binder b) FStarC_Range_Type.dummyRange in
+  S.mk (S.Tm_let {lbs=false; lbs1=[lb]; body=body}) FStarC_Range_Type.dummyRange
 let mk_let (b:binder) (head:term) (body:term) : term =
   let lb = U.mk_letbinding
-    (Inl b.binder_bv) [] b.binder_bv.sort C.primitive_div_lid head (lbattrs_of_binder b) FStarC_Range.dummyRange in
+    (Inl b.binder_bv) [] b.binder_bv.sort C.primitive_div_lid head (lbattrs_of_binder b) FStarC_Range_Type.dummyRange in
   let tm_let =
-    S.mk (S.Tm_let {lbs=false; lbs1=[lb]; body=body}) FStarC_Range.dummyRange in
-  S.mk (S.Tm_meta {tm=tm_let; meta=S.Meta_monadic (C.primitive_div_lid, S.tun)}) FStarC_Range.dummyRange
+    S.mk (S.Tm_let {lbs=false; lbs1=[lb]; body=body}) FStarC_Range_Type.dummyRange in
+  S.mk (S.Tm_meta {tm=tm_let; meta=S.Meta_monadic (C.primitive_div_lid, S.tun)}) FStarC_Range_Type.dummyRange
 let mk_if (b:term) (then_:term) (else_:term) : term =
   U.if_then_else b then_ else_
 
 let mk_extracted_as_attr (impl: term) : term =
   S.mk_Tm_app (S.tconst FStarC_Parser_Const_ExtractAs.extract_as_lid)
-    [S.mk (S.Tm_quoted (impl, {qkind=S.Quote_static; antiquotations=Prims.int_zero; antiquotations1=[]})) FStarC_Range.dummyRange, None]
-    FStarC_Range.dummyRange
+    [S.mk (S.Tm_quoted (impl, {qkind=S.Quote_static; antiquotations=Prims.int_zero; antiquotations1=[]})) FStarC_Range_Type.dummyRange, None]
+    FStarC_Range_Type.dummyRange

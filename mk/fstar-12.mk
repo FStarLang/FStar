@@ -16,6 +16,10 @@ ROOTS += $(SRC)/fstar/FStarC.Main.fst
 # only follows untagged files, so the target-specific ones are listed here.
 ROOTS += $(wildcard $(SRC)/*/*-ocaml.fst ulib/*-ocaml.fst ulib/experimental/*-ocaml.fst)
 
+# The implementation of FStar.Stubs.Tactics.V2.Builtins for compiled
+# metaprograms; nothing in the compiler refers to it.
+ROOTS += $(SRC)/tactics/FStarC.Tactics.V2.Builtins.fst
+
 # Plugin roots: the files that define plugins in the library, so we make
 # sure to also extract them and link them into F*.
 ROOTS += ulib/FStar.Tactics.Effect.fsti
