@@ -2715,7 +2715,7 @@ Emission:
   than a puzzle at some use site much later.
 
   A `DExternal` produces no declaration at all: it is a reference to a
-  hand-written realization (`FStar_IO.print_string`), so it is printed at each
+  hand-written realization (`FStar_List.map`), so it is printed at each
   of its uses.  Binding it to a local alias first would only add a layer of
   names to see through.
 
@@ -3473,6 +3473,21 @@ new one needs no change to the compiler.  `Builtins.realized_modules` lists
 only the realized modules that also have an F\* implementation (`Prims`,
 `FStar.Pervasives`, the machine integers, ...) and the `FStar.Stubs.*`
 modules reached under an `FStarC` name that has no interface of its own.
+
+Most foreign functions are not realized modules any more.  A module that wraps
+an OCaml library (`FStar.String`, `FStar.IO`, `FStar.Pprint`, `FStarC.Util`,
+...) has an implementation file tagged for the target, `FStar.String-ocaml.fst`
+(see targets.md), which the OCaml backend compiles like any other module.  Its
+foreign definitions carry `[@@custard_extern "..."]` with the OCaml text, which
+is printed at each use, and everything else in it is ordinary F\*.  The
+`@@custard_extern` attribute belongs only in such `-ocaml.fst` files, so that
+the other backends see the module's interface and nothing OCaml-specific.
+The hand-written files left in `ulib/ml/app` and `src/ml` are the ones that
+pin a type or an effect (`Prims`, `FStar.Pervasives`, `FStar.All`,
+`FStarC.Effect`, the machine integers), or whose OCaml implementation is
+faster than the F\* definition that specifications rely on (`FStar.List`,
+`FStar.List.Tot.Base`).  `FStar.Dyn` has no file at all: `Builtins.dyn_rule`
+turns `mkdyn` and `undyn` into coercions to and from `TAny`.
 
 The record recovery of §5.5 still applies, but not unconditionally: for a
 realized type the question is not what Custard would choose but what the
@@ -21908,18 +21923,20 @@ away from the change.
 ones a user should expect to be realized.  The rule is this one, and it
 is a rule about *specifications*, not about `ulib/ml`:
 
-> A module under `ulib/ml/app` is mirrored when its F\* interface
-> describes a value that .NET has, and is not mirrored when the
-> interface describes OCaml.
+> A module F\* implements in OCaml (under `ulib/ml/app`, or in a
+> `-ocaml.fst` file) is mirrored when its F\* interface describes a
+> value that .NET has, and is not mirrored when the interface describes
+> OCaml.
 
 The distinction is the whole of §122.1.  `FStar.String`, `FStar.Char`,
 `FStar.IO`, `FStar.Exn`, `FStar.All`, `FStar.List.Tot.Base`,
 `FStar.Option`, `Prims` and the integer modules all describe something
 .NET has under a different name, so the backend supplies the name and
-the program is unchanged.  `FStar.Dyn`, `FStar.Parse`, `FStar.Pprint`
-and `FStar.ImmutableArray` describe an OCaml library --- `Obj.magic`
-plus OCaml's own representation, an OCaml lexer, an OCaml pretty
-printer, `Stdlib.Array` --- and a .NET program that wanted them would
+the program is unchanged.  `FStar.Dyn` is not a library at all but a
+builtin rule, and on .NET it is `box` and `unbox`.  `FStar.Parse`,
+`FStar.Pprint` and `FStar.ImmutableArray` describe an OCaml library ---
+an OCaml lexer, an OCaml pretty printer, `Stdlib.Array` --- and a .NET
+program that wanted them would
 want a different interface, so they are refused with error 395 and the
 message points at `--codegen OCaml`.
 
