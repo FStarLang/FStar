@@ -20,6 +20,13 @@
 # installs a SIGTERM handler before it calls FStarC.Main.main, so it is a
 # realization like any other in src/ml and its callees are roots.
 FStarC.Platform.unix
+FStarC.Util.kill_all
+
+# Called from Pulse's hand-written OCaml (pulse/src/ml).
+FStarC.Util.ends_with
+FStarC.Util.float_of_string
+FStarC.Util.stack_dump
+FStarC.Util.starts_with
 
 # Modules kept for their initializers alone.
 FStarC.Hooks
