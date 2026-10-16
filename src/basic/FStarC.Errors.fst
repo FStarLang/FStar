@@ -19,6 +19,7 @@ open FStarC.Json {json}
 module Range = FStarC.Range
 include FStarC.Errors.Codes
 include FStarC.Errors.Msg
+include FStarC.Errors.Issue
 open FStarC.Class.HasRange
 open FStar.String
 open FStarC
@@ -147,18 +148,6 @@ let issue_message (i:issue) : ML (list PP.document) =
   let open FStarC.Pprint in
   i.issue_msg @ [ctx_doc i.issue_ctx]
 
-let string_of_issue_level il =
-    match il with
-    | EInfo -> "Info"
-    | EWarning -> "Warning"
-    | EError -> "Error"
-    | ENotImplemented -> "Feature not yet implemented: "
-let issue_level_of_string =
-  function
-  | "Info" -> EInfo
-  | "Warning" -> EWarning
-  | "Error" -> EError
-  | _ -> ENotImplemented
 
 let optional_def (f : 'a -> ML PP.document) (def : PP.document) (o : option 'a) : ML PP.document =
   match o with

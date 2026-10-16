@@ -195,20 +195,17 @@ FStar.Tactics.V2.Logic
 FStar.Tactics.V2.SyntaxHelpers
 FStar.Tactics.Visit
 
+# Callees of [@@custard_extern] targets in the OCaml target files
+# (*-ocaml.fst).  A target is OCaml text that Custard prints verbatim, so it
+# does not see what the target calls.
+
+FStarC.Errors.format_issue
+FStarC.Errors.issue_to_doc'
+
 # Callees of the plugin realizations in ulib/ml/plugin.  These wrappers are
 # what a metaprogram's builtins bottom out in; nothing the extracted program
 # does reaches them, so each one has to be named.
 
-FStar.Pprint.arbitrary_string
-FStar.Pprint.document
-FStarC.Errors.format_issue
-FStarC.Errors.issue
-FStarC.Errors.issue_level
-FStarC.Errors.issue_to_doc'
-FStarC.Ident.mk_ident
-FStarC.Range.Type.range
-FStarC.Range.Type.dummyRange
-FStarC.Syntax.Subst.subst
 FStarC.Tactics.CtrlRewrite.ctrl_rewrite
 FStarC.Tactics.Monad.catch
 FStarC.Tactics.Monad.get

@@ -63,21 +63,10 @@ exception Error   of error
 exception Stop
 exception Empty_frag
 
-type issue_level =
-  | ENotImplemented
-  | EInfo
-  | EWarning
-  | EError
+include FStarC.Errors.Issue
 
 val json_of_issue_level: issue_level -> json
 
-type issue = {
-    issue_msg: error_message;
-    issue_level: issue_level;
-    issue_range: option Range.t;
-    issue_number: option int;
-    issue_ctx: list string;
-}
 
 val json_of_issue: issue -> ML json
 
@@ -90,8 +79,6 @@ type error_handler = {
 }
 
 val issue_message : issue -> ML error_message
-val string_of_issue_level : issue_level -> string
-val issue_level_of_string : string -> issue_level
 val format_issue' : bool -> issue -> ML string
 val format_issue : issue -> ML string
 val print_issue : issue -> ML unit
