@@ -1,5 +1,7 @@
 #!/bin/bash
 
+shopt -s nullglob
+
 PREFIX="$1"
 mkdir -p "$PREFIX"
 PREFIX="$(realpath "$PREFIX")"
