@@ -15,10 +15,13 @@
 *)
 module FStar.Parse
 
+(* The OCaml implementation.  The definitions marked [custard_extern] are not
+   compiled, their uses refer to the OCaml symbol directly. *)
+
 (** A primitive parser for booleans *)
-assume
-val bool_of_string: string -> Tot (option bool)
+[@@custard_extern "(function \"true\" -> Some true | \"false\" -> Some false | _ -> None)"]
+let bool_of_string _ = admit ()
 
 (** A primitive parser for [int] *)
-assume
-val int_of_string: string -> Tot (option int)
+[@@custard_extern "(fun s -> if String.length s = 0 then None else try Some (Z.of_string s) with Invalid_argument _ -> None)"]
+let int_of_string _ = admit ()

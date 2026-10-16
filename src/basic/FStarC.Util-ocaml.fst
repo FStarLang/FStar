@@ -665,7 +665,7 @@ let take #a p l =
 let rec fold_flatten f acc l =
   match l with
   | [] -> acc
-  | x :: xs -> let acc, xs' = f acc x in fold_flatten f acc (xs' @ xs)
+  | x :: xs -> let acc, xs' = f acc x in fold_flatten f acc (List.Tot.append xs' xs)
 
 let first_N #a n l =
   let rec aux (acc:list a) (i:int) (l:list a) : Tot (list a & list a) (decreases l) =
@@ -1010,10 +1010,10 @@ let unmarshal _ = admit ()
 [@@custard_extern "(fun f s -> let ls = Array.fold_left (fun out a -> f a :: out) [] s in Printf.sprintf \"[| %s |]\" (String.concat \"; \" (List.rev ls)))"]
 let print_array _ _ = admit ()
 
-[@@custard_extern "FStar_ImmutableArray_Base.length"]
+[@@custard_extern "(fun a -> Z.of_int (Array.length a))"]
 let array_length _ = admit ()
 
-[@@custard_extern "FStar_ImmutableArray_Base.index"]
+[@@custard_extern "(fun a i -> Array.get a (Z.to_int i))"]
 let array_index _ _ = admit ()
 
 [@@custard_extern "Unix.putenv"]

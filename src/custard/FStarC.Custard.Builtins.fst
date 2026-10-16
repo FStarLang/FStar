@@ -1297,10 +1297,8 @@ let extern_type_of_lid (l:Ident.lident) : ML (option extern) =
    interface needs no entry here. *)
 let realized_modules : list (list string) = [
   ["FStar"; "Dyn"];
-  ["FStar"; "Exn"];
   ["FStar"; "List"];
   ["FStar"; "List"; "Tot"; "Base"];
-  ["FStar"; "Parse"];
   ["FStar"; "Pervasives"];
   ["FStar"; "Pervasives"; "Native"];
   (* The machine integers.  [machine_int_rule] above already turns every
@@ -1480,6 +1478,7 @@ let cherry_realized_modules : list (list string) = [
   ["FStar"; "ImmutableArray"];
   ["FStar"; "ImmutableArray"; "Base"];
   ["FStar"; "Issue"];
+  ["FStar"; "Parse"];
   ["FStar"; "Pprint"];
   ["FStar"; "Sealed"];
   ["FStar"; "String"];
