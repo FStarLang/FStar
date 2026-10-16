@@ -136,7 +136,7 @@ let all1_explicit (args : ((FStarC_Parser_AST.term * FStarC_Parser_AST.imp)) lis
   )) args) else false)
 
 type token =
-  | StartsWith of FStar_Char.char
+  | StartsWith of int
   | Exact of string
   | UnicodeOperator
 
@@ -204,7 +204,7 @@ let max (x : Prims.int) (y : Prims.int) : Prims.int =
 
 let token_to_string (tmp : token) : string =
   (match tmp with
-    | (StartsWith (c)) -> (Prims.strcat (FStarC_Util.string_of_char c) ".*")
+    | (StartsWith (c)) -> (Prims.strcat ((fun i -> BatUTF8.init 1 (fun _ -> BatUChar.chr i)) c) ".*")
     | (Exact (s)) -> s
     | UnicodeOperator -> "<unicode-op>"
   )
@@ -220,7 +220,7 @@ let max_level (l : (('tmp * (token) list)) list) : Prims.int =
       | None -> (let tmp1 = (BatList.map token_to_string (match level with
             | (u__1, u__2) -> u__2
           )) in
-        let tmp2 = (FStarC_String.concat "," tmp1) in
+        let tmp2 = (BatString.concat "," tmp1) in
         let tmp3 = (FStarC_Format.fmt1 "Undefined associativity level %s" tmp2) in
         (FStarC_Effect.failwith tmp3))
     ))) in
@@ -229,15 +229,15 @@ let max_level (l : (('tmp * (token) list)) list) : Prims.int =
 let operatorInfix0ad12 : ((associativity * (token) list)) list =
   (opinfix0a :: (opinfix0b :: (opinfix0c :: (opinfix0d :: (opinfix1 :: (opinfix2 :: []))))))
 
-let is_non_latin_char (s : FStar_Char.char) : bool =
-  (Prims.op_Greater (FStarC_Util.int_of_char s) (Prims.of_int (0x24f)))
+let is_non_latin_char (s : int) : bool =
+  (Prims.op_Greater (Z.of_int s) (Prims.of_int (0x24f)))
 
 let matches_token (s : string) (tmp : token) : bool =
   (match tmp with
-    | (StartsWith (c)) -> (let tmp1 = (FStarC_String.get s Prims.int_zero) in
+    | (StartsWith (c)) -> (let tmp1 = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) s Prims.int_zero) in
       ((=) tmp1 c))
     | (Exact (s')) -> ((=) s s')
-    | UnicodeOperator -> (let tmp1 = (FStarC_String.get s Prims.int_zero) in
+    | UnicodeOperator -> (let tmp1 = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) s Prims.int_zero) in
       (is_non_latin_char tmp1))
   )
 
@@ -316,7 +316,7 @@ let rec head_and_args_full__aux (e : FStarC_Parser_AST.term) (acc : ((FStarC_Par
 let head_and_args_full (e : FStarC_Parser_AST.term) : (FStarC_Parser_AST.term * ((FStarC_Parser_AST.term * FStarC_Parser_AST.imp)) list) =
   (head_and_args_full__aux e [])
 
-let p_char_literal' (quote_char : FStar_Char.char) (c : FStar_Char.char) : PPrint.document =
+let p_char_literal' (quote_char : int) (c : int) : PPrint.document =
   (str (match c with
     | 8 -> "\\b"
     | 12 -> "\\f"
@@ -325,15 +325,15 @@ let p_char_literal' (quote_char : FStar_Char.char) (c : FStar_Char.char) : PPrin
     | 13 -> "\\r"
     | 11 -> "\\v"
     | 0 -> "\\0"
-    | c1 -> (let s = (FStarC_Util.string_of_char c1) in
+    | c1 -> (let s = ((fun i -> BatUTF8.init 1 (fun _ -> BatUChar.chr i)) c1) in
       (if ((=) quote_char c1) then (Prims.strcat "\\" s) else s))
   ))
 
-let p_char_literal (c : FStar_Char.char) : PPrint.document =
+let p_char_literal (c : int) : PPrint.document =
   (PPrint.squotes (p_char_literal' 39 c))
 
 let p_string_literal (s : string) : PPrint.document =
-  (let tmp = (FStarC_Pprint.concat_map (p_char_literal' 34) (FStar_String.list_of_string s)) in
+  (let tmp = (FStarC_Pprint.concat_map (p_char_literal' 34) ((fun s -> BatList.init (BatUTF8.length s) (fun i -> BatUChar.code (BatUTF8.get s i))) s)) in
   (PPrint.dquotes tmp))
 
 let text_of_lid_or_underscore (lid : FStarC_Ident.lident) : PPrint.document =
@@ -429,7 +429,7 @@ let p_universe (u : FStarC_Parser_AST.term) : PPrint.document =
 
 let is_general_prefix_op (op : FStarC_Ident.ident) : bool =
   (let op_s = (FStarC_Ident.string_of_id op) in
-  let op_starting_char = (FStarC_Util.char_at op_s Prims.int_zero) in
+  let op_starting_char = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) op_s Prims.int_zero) in
   ((((=) op_starting_char 33) || ((=) op_starting_char 63)) || ((((=) op_starting_char 126) && ((<>) op_s "~")) && ((<>) op_s "~-"))))
 
 let is_dtuple_constructor (f : FStarC_Ident.lident) : bool =
@@ -1021,9 +1021,9 @@ and p_projectionLHS (e : FStarC_Parser_AST.term) : PPrint.document =
     | tmp when (is_ref_set e) -> (let es = (extract_from_ref_set e) in
       let tmp1 = (separate_map_or_flow (PPrint.(^^) PPrint.comma break1) p_appTerm es) in
       (FStar_Pprint.surround (Prims.of_int (2)) Prims.int_zero (PPrint.(^^) PPrint.bang PPrint.lbrace) tmp1 PPrint.rbrace))
-    | (FStarC_Parser_AST.Labeled ({ FStarC_Parser_AST.tm = FStarC_Parser_AST.Wild; range = tmp; level = tmp1; _ }, s, tmp2)) -> (let s1 = (FStarC_Util.replace_chars (FStarC_Util.trim_string s) 10 "\\n") in
+    | (FStarC_Parser_AST.Labeled ({ FStarC_Parser_AST.tm = FStarC_Parser_AST.Wild; range = tmp; level = tmp1; _ }, s, tmp2)) -> (let s1 = ((fun s c by -> BatString.replace_chars (fun x -> if Char.equal x (Char.chr c) then by else BatString.of_char x) s) (FStarC_Util.trim_string s) 10 "\\n") in
       (str (Prims.strcat "(*" (Prims.strcat s1 "*)_"))))
-    | (FStarC_Parser_AST.Labeled (e1, s, b)) -> (let s1 = (FStarC_Util.replace_chars (FStarC_Util.trim_string s) 10 "\\n") in
+    | (FStarC_Parser_AST.Labeled (e1, s, b)) -> (let s1 = ((fun s c by -> BatString.replace_chars (fun x -> if Char.equal x (Char.chr c) then by else BatString.of_char x) s) (FStarC_Util.trim_string s) 10 "\\n") in
       let tmp = (p_term false false e1) in
       let tmp1 = (PPrint.(^/^) (str (Prims.strcat "(* " (Prims.strcat s1 " *)"))) tmp) in
       (PPrint.group tmp1))
@@ -2326,7 +2326,7 @@ let p_rawDecl (d : FStarC_Parser_AST.decl) : PPrint.document =
       let tmp3 = (PPrint.(^^) PPrint.space tmp2) in
       let tmp4 = (PPrint.(^^) (str "val") tmp3) in
       (PPrint.group tmp4))
-    | (FStarC_Parser_AST.Assume (id, t)) -> (let tmp = (FStarC_Util.char_at (FStarC_Ident.string_of_id id) Prims.int_zero) in
+    | (FStarC_Parser_AST.Assume (id, t)) -> (let tmp = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) (FStarC_Ident.string_of_id id) Prims.int_zero) in
       let tmp1 = (FStarC_Util.is_upper tmp) in
       let decl_keyword = (if tmp1 then PPrint.empty else (PPrint.(^^) (str "val") PPrint.space)) in
       let tmp2 = (p_ident id) in
@@ -2362,7 +2362,7 @@ let p_rawDecl (d : FStarC_Parser_AST.decl) : PPrint.document =
 
 let p_decl (d : FStarC_Parser_AST.decl) : PPrint.document =
   (let qualifiers = (match ((d).FStarC_Parser_AST.quals, (d).FStarC_Parser_AST.d) with
-      | ((FStarC_Parser_AST.Assumption :: []), (FStarC_Parser_AST.Assume (id, tmp))) -> (let tmp1 = (FStarC_Util.char_at (FStarC_Ident.string_of_id id) Prims.int_zero) in
+      | ((FStarC_Parser_AST.Assumption :: []), (FStarC_Parser_AST.Assume (id, tmp))) -> (let tmp1 = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) (FStarC_Ident.string_of_id id) Prims.int_zero) in
         let tmp2 = (FStarC_Util.is_upper tmp1) in
         (if tmp2 then (let tmp3 = (p_qualifier FStarC_Parser_AST.Assumption) in
         (PPrint.(^^) tmp3 PPrint.space)) else (p_qualifiers (d).FStarC_Parser_AST.quals)))

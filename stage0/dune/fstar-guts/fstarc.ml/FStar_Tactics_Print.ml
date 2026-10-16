@@ -69,7 +69,7 @@ let const_to_ast_string (c : FStarC_Reflection_V2_Data.vconst) : ((FStarC_Tactic
     | (FStarC_Reflection_V2_Data.C_Reflect (name)) -> (let tmp1 = (FStarC_Reflection_V2_Builtins.implode_qn name) in
       (Prims.strcat "C_Reflect " tmp1))
     | (FStarC_Reflection_V2_Data.C_Real (r)) -> (Prims.strcat "C_Real \"" (Prims.strcat (FStar_RealLiteral.to_string r) "\""))
-    | (FStarC_Reflection_V2_Data.C_Char (c1)) -> (Prims.strcat "C_Char '" (Prims.strcat (FStar_String.make Prims.int_one c1) "'"))
+    | (FStarC_Reflection_V2_Data.C_Char (c1)) -> (Prims.strcat "C_Char '" (Prims.strcat ((fun i c -> BatUTF8.init (Z.to_int i) (fun _ -> BatUChar.chr c)) Prims.int_one c1) "'"))
   ))
 
 let rec comp_to_ast_string (c : FStarC_Reflection_V2_Data.comp_view) : ((FStarC_Tactics_Types.proofstate ref) -> string) =

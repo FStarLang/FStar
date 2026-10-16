@@ -132,8 +132,8 @@ let max (x : Prims.int) (y : Prims.int) : Prims.int =
   (if (Prims.op_Greater x y) then x else y)
 
 let lpad (len : Prims.int) (s : string) : string =
-  (let l = (FStarC_String.length s) in
-  (if (Prims.op_Greater_Equals l len) then s else (let tmp = (FStarC_String.make (Prims.op_Minus len l) 32) in
+  (let l = ((fun s -> Z.of_int (BatUTF8.length s)) s) in
+  (if (Prims.op_Greater_Equals l len) then s else (let tmp = ((fun i c -> BatUTF8.init (Z.to_int i) (fun _ -> BatUChar.chr c)) (Prims.op_Minus len l) 32) in
   (Prims.strcat tmp s))))
 
 let print_all (tmp : unit) : string =
@@ -148,7 +148,7 @@ let print_all (tmp : unit) : string =
     (k, tmp3))) keys) in
   let points1 = (fStarC_Class_Ord_sort_by__tuple2_string_stat points) in
   let longest_key = (BatList.fold_left (fun acc tmp1 -> (match tmp1 with
-      | (k, tmp2) -> (max acc (FStarC_String.length k))
+      | (k, tmp2) -> (max acc ((fun s -> Z.of_int (BatUTF8.length s)) k))
     )) (Prims.of_int (20)) points1) in
   let pr1 = (fun p -> (match p with
       | (k, st_) -> (let tmp1 = (lpad longest_key k) in
@@ -169,7 +169,7 @@ let print_all (tmp : unit) : string =
   let tmp5 = (lpad (Prims.of_int (9)) "exn") in
   let tmp6 = (FStarC_Format.fmt5 "  %s  %s %s %s %s" tmp1 tmp2 tmp3 tmp4 tmp5) in
   let tmp7 = (BatList.map pr1 points1) in
-  let tmp8 = (FStarC_String.concat "\n" tmp7) in
+  let tmp8 = (BatString.concat "\n" tmp7) in
   let tmp9 = (Prims.strcat "\n" tmp8) in
   (Prims.strcat tmp6 tmp9))
 

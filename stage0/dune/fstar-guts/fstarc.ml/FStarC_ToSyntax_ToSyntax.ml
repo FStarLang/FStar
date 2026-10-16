@@ -814,7 +814,7 @@ and desugar_binder_aq (env : FStarC_Syntax_DsEnv.env) (b : FStarC_Parser_AST.bin
         | (ty, aqs) -> ((None, ty, attrs), aqs)
       ))
     | (FStarC_Parser_AST.Variable (x)) -> (let ident_is_ticked = (fun id -> (let nm = (FStarC_Ident.string_of_id id) in
-        (if (Prims.op_Greater (FStarC_String.length nm) Prims.int_zero) then (let tmp = (FStarC_String.get nm Prims.int_zero) in
+        (if (Prims.op_Greater ((fun s -> Z.of_int (BatUTF8.length s)) nm) Prims.int_zero) then (let tmp = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) nm Prims.int_zero) in
         ((=) tmp 39)) else false))) in
       let tmp = (ident_is_ticked x) in
       (if tmp then (let tmp1 = (FStarC_Syntax_Syntax.fStarC_Class_HasRange_setPos__syntax_term' (FStarC_Ident.range_of_id x) FStarC_Syntax_Util.ktype) in
@@ -2207,7 +2207,7 @@ and desugar_term_maybe_top (top_level : bool) (env : FStarC_Syntax_DsEnv.env) (t
           let fvs = (FStarC_Syntax_Free.names tm1) in
           let tmp2 = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_is_empty__bv_list_bv fvs) in
           let tmp3 = (not tmp2) in
-          (if tmp3 then (let tmp4 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_bv_122 fvs) in
+          (if tmp3 then (let tmp4 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_bv_118 fvs) in
           let tmp5 = (FStarC_Format.fmt1 "Static quotation refers to external variables: %s" tmp4) in
           (FStarC_Parser_AST.fStarC_Errors_raise_error__term_string e FStarC_Errors_Codes.Fatal_MissingFieldInRecord tmp5)) else ());
           let qi = { FStarC_Syntax_Syntax.qkind = FStarC_Syntax_Syntax.Quote_static;

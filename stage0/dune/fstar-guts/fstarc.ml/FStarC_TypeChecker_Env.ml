@@ -67,7 +67,7 @@ type solver_t = {
   snapshot : (string -> ((Prims.int * Prims.int * Prims.int) * unit));
   rollback : (string -> (((Prims.int * Prims.int * Prims.int)) option -> unit));
   encode_sig : (env -> (FStarC_Syntax_Syntax.sigelt -> unit));
-  preprocess : (env -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> (bool * ((env * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Options.option_val) FStarC_PSMap.t)) list)));
+  preprocess : (env -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> (bool * ((env * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (string, FStarC_Options.option_val) FStarC_AVLMap.tree)) list)));
   handle_smt_goal : (env -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> ((env * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) list));
   solve : (((unit -> string)) option -> (env -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> unit)));
   solve_sync : (((unit -> string)) option -> (env -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> bool)));
@@ -1082,79 +1082,70 @@ type splice_t = (env -> ((FStarC_Syntax_Syntax.qualifier) list -> (((FStarC_Synt
 
 type tcenv_depth_t = (Prims.int * Prims.int * (Prims.int * Prims.int * Prims.int) * Prims.int)
 
-let fStarC_Errors_raise_error__env_string (pos : env) (code : FStarC_Errors_Codes.error_code) (msg : string) : 'u___a =
-  (let rng = (fStarC_Class_HasRange_pos__env pos) in
-  let tmp = (FStarC_Errors.fixup_issue_range (Some (rng))) in
-  (match tmp with
-    | (Some (rng1)) -> (let msg1 = (FStarC_Errors_Msg.fStarC_Errors_Msg_to_doc_list__string msg) in
-      let tmp1 = (FStarC_Errors.maybe_add_backtrace msg1) in
-      let tmp2 = ((FStarC_Errors.error_context).FStarC_Errors.get ()) in
-      let tmp3 = (code, tmp1, rng1, tmp2) in
-      let tmp4 = (FStarC_Errors.Error (tmp3)) in
-      (raise tmp4))
-  ))
+let dsenv (env : env) : FStarC_Syntax_DsEnv.env =
+  (env).dsenv
 
-let expected_typ (env : env) : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * bool)) option =
-  (env).expected_typ
+let cons_proof_ns (b : bool) (e : env) (path : (string) list) : env =
+  { solver = (e).solver;
+    range = (e).range;
+    curmodule = (e).curmodule;
+    gamma = (e).gamma;
+    gamma_sig = (e).gamma_sig;
+    gamma_cache = (e).gamma_cache;
+    modules = (e).modules;
+    expected_typ = (e).expected_typ;
+    sigtab = (e).sigtab;
+    attrtab = (e).attrtab;
+    instantiate_imp = (e).instantiate_imp;
+    effects = (e).effects;
+    generalize = (e).generalize;
+    letrecs = (e).letrecs;
+    rec_names = (e).rec_names;
+    top_level = (e).top_level;
+    check_uvars = (e).check_uvars;
+    use_eq_strict = (e).use_eq_strict;
+    is_iface = (e).is_iface;
+    admit = (e).admit;
+    phase1 = (e).phase1;
+    failhard = (e).failhard;
+    flychecking = (e).flychecking;
+    uvar_subtyping = (e).uvar_subtyping;
+    intactics = (e).intactics;
+    nocoerce = (e).nocoerce;
+    tc_term = (e).tc_term;
+    typeof_tot_or_gtot_term = (e).typeof_tot_or_gtot_term;
+    universe_of = (e).universe_of;
+    typeof_well_typed_tot_or_gtot_term = (e).typeof_well_typed_tot_or_gtot_term;
+    teq_nosmt_force = (e).teq_nosmt_force;
+    subtype_nosmt_force = (e).subtype_nosmt_force;
+    qtbl_name_and_index = (e).qtbl_name_and_index;
+    qtbl_name_and_index1 = (e).qtbl_name_and_index1;
+    fv_delta_depths = (e).fv_delta_depths;
+    proof_ns = ((path, b) :: (e).proof_ns);
+    synth_hook = (e).synth_hook;
+    try_solve_implicits_hook = (e).try_solve_implicits_hook;
+    splice = (e).splice;
+    mpreprocess = (e).mpreprocess;
+    postprocess = (e).postprocess;
+    identifier_info = (e).identifier_info;
+    tc_hooks = (e).tc_hooks;
+    dsenv = (e).dsenv;
+    nbe = (e).nbe;
+    strict_args_tab = (e).strict_args_tab;
+    disc_proj_tab = (e).disc_proj_tab;
+    erasable_types_tab = (e).erasable_types_tab;
+    enable_defer_to_tac = (e).enable_defer_to_tac;
+    unif_allow_ref_guards = (e).unif_allow_ref_guards;
+    erase_erasable_args = (e).erase_erasable_args;
+    core_check = (e).core_check;
+    missing_decl = (e).missing_decl;
+    iface_todo = (e).iface_todo;
+    iface_hidden = (e).iface_hidden;
+    iface_lids = (e).iface_lids;
+    iface_val_lids = (e).iface_val_lids }
 
-let clear_expected_typ (env_ : env) : (env * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * bool)) option) =
-  ({ solver = (env_).solver;
-    range = (env_).range;
-    curmodule = (env_).curmodule;
-    gamma = (env_).gamma;
-    gamma_sig = (env_).gamma_sig;
-    gamma_cache = (env_).gamma_cache;
-    modules = (env_).modules;
-    expected_typ = None;
-    sigtab = (env_).sigtab;
-    attrtab = (env_).attrtab;
-    instantiate_imp = (env_).instantiate_imp;
-    effects = (env_).effects;
-    generalize = (env_).generalize;
-    letrecs = (env_).letrecs;
-    rec_names = (env_).rec_names;
-    top_level = (env_).top_level;
-    check_uvars = (env_).check_uvars;
-    use_eq_strict = (env_).use_eq_strict;
-    is_iface = (env_).is_iface;
-    admit = (env_).admit;
-    phase1 = (env_).phase1;
-    failhard = (env_).failhard;
-    flychecking = (env_).flychecking;
-    uvar_subtyping = (env_).uvar_subtyping;
-    intactics = (env_).intactics;
-    nocoerce = (env_).nocoerce;
-    tc_term = (env_).tc_term;
-    typeof_tot_or_gtot_term = (env_).typeof_tot_or_gtot_term;
-    universe_of = (env_).universe_of;
-    typeof_well_typed_tot_or_gtot_term = (env_).typeof_well_typed_tot_or_gtot_term;
-    teq_nosmt_force = (env_).teq_nosmt_force;
-    subtype_nosmt_force = (env_).subtype_nosmt_force;
-    qtbl_name_and_index = (env_).qtbl_name_and_index;
-    qtbl_name_and_index1 = (env_).qtbl_name_and_index1;
-    fv_delta_depths = (env_).fv_delta_depths;
-    proof_ns = (env_).proof_ns;
-    synth_hook = (env_).synth_hook;
-    try_solve_implicits_hook = (env_).try_solve_implicits_hook;
-    splice = (env_).splice;
-    mpreprocess = (env_).mpreprocess;
-    postprocess = (env_).postprocess;
-    identifier_info = (env_).identifier_info;
-    tc_hooks = (env_).tc_hooks;
-    dsenv = (env_).dsenv;
-    nbe = (env_).nbe;
-    strict_args_tab = (env_).strict_args_tab;
-    disc_proj_tab = (env_).disc_proj_tab;
-    erasable_types_tab = (env_).erasable_types_tab;
-    enable_defer_to_tac = (env_).enable_defer_to_tac;
-    unif_allow_ref_guards = (env_).unif_allow_ref_guards;
-    erase_erasable_args = (env_).erase_erasable_args;
-    core_check = (env_).core_check;
-    missing_decl = (env_).missing_decl;
-    iface_todo = (env_).iface_todo;
-    iface_hidden = (env_).iface_hidden;
-    iface_lids = (env_).iface_lids;
-    iface_val_lids = (env_).iface_val_lids }, (expected_typ env_))
+let add_proof_ns (e : env) (path : (string) list) : env =
+  (cons_proof_ns true e path)
 
 let binders_of_bindings (bs : (FStarC_Syntax_Syntax.binding) list) : (FStarC_Syntax_Syntax.binder) list =
   (let tmp = (bound_vars_of_bindings bs) in
@@ -1163,66 +1154,6 @@ let binders_of_bindings (bs : (FStarC_Syntax_Syntax.binding) list) : (FStarC_Syn
 
 let all_binders (env : env) : (FStarC_Syntax_Syntax.binder) list =
   (binders_of_bindings (env).gamma)
-
-let dbg_ImplicitTrace : (bool ref) =
-  (FStarC_Debug.get_toggle "ImplicitTrace")
-
-let trivial_guard : FStarC_TypeChecker_Common.guard_t =
-  FStarC_TypeChecker_Common.trivial_guard
-
-let new_tac_implicit_var (reason : string) (r : FStarC_Range_Type.range) (env : env) (uvar_typ : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (should_check : FStarC_Syntax_Syntax.should_check_uvar) (uvar_typedness_deps : (FStarC_Syntax_Syntax.ctx_uvar) list) (meta : (FStarC_Syntax_Syntax.ctx_uvar_meta_t) option) (unrefine : bool) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.ctx_uvar * FStarC_Range_Type.range) * FStarC_TypeChecker_Common.guard_t) =
-  (let binders = (all_binders env) in
-  let gamma = (env).gamma in
-  let decoration = { FStarC_Syntax_Syntax.uvar_decoration_typ = uvar_typ;
-      uvar_decoration_typedness_depends_on = uvar_typedness_deps;
-      uvar_decoration_should_check = should_check;
-      uvar_decoration_should_unrefine = unrefine } in
-  let tmp = (FStarC_Syntax_Unionfind.fresh decoration r) in
-  let ctx_uvar = { FStarC_Syntax_Syntax.ctx_uvar_head = (match tmp with (custard_tup, _, _) -> custard_tup);
-      ctx_uvar_head1 = (match tmp with (_, custard_tup, _) -> custard_tup);
-      ctx_uvar_head2 = (match tmp with (_, _, custard_tup) -> custard_tup);
-      ctx_uvar_gamma = gamma;
-      ctx_uvar_binders = binders;
-      ctx_uvar_reason = reason;
-      ctx_uvar_range = r;
-      ctx_uvar_meta = meta } in
-  (FStarC_TypeChecker_Common.check_uvar_ctx_invariant reason r true gamma binders);
-  let t = (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_uvar (ctx_uvar, ([], FStarC_Syntax_Syntax.NoUseRange))) r) in
-  let imp = { FStarC_TypeChecker_Common.imp_reason = reason;
-      imp_uvar = ctx_uvar;
-      imp_tm = t;
-      imp_range = r } in
-  let tmp1 = (!(dbg_ImplicitTrace)) in
-  (if tmp1 then (let tmp2 = (FStarC_Syntax_Print.fStarC_Class_Show_show__tuple3_p_uvar_tuple2_version_range ((ctx_uvar).FStarC_Syntax_Syntax.ctx_uvar_head, (ctx_uvar).FStarC_Syntax_Syntax.ctx_uvar_head1, (ctx_uvar).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
-  (FStarC_Format.print1 "Just created uvar for implicit {%s}\n" tmp2)) else ());
-  let g = { FStarC_TypeChecker_Common.guard_f = (trivial_guard).FStarC_TypeChecker_Common.guard_f;
-      deferred_to_tac = (trivial_guard).FStarC_TypeChecker_Common.deferred_to_tac;
-      deferred = (trivial_guard).FStarC_TypeChecker_Common.deferred;
-      univ_ineqs = (trivial_guard).FStarC_TypeChecker_Common.univ_ineqs;
-      univ_ineqs1 = (trivial_guard).FStarC_TypeChecker_Common.univ_ineqs1;
-      implicits = (FStarC_TypeChecker_Common.fStarC_Class_Listlike_cons__implicit_clist_implicit imp FStarC_TypeChecker_Common.fStarC_Class_Listlike_empty__implicit_clist_implicit) } in
-  (t, (ctx_uvar, r), g))
-
-let new_implicit_var_aux (reason : string) (r : FStarC_Range_Type.range) (env : env) (uvar_typ : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (should_check : FStarC_Syntax_Syntax.should_check_uvar) (meta : (FStarC_Syntax_Syntax.ctx_uvar_meta_t) option) (unrefine : bool) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.ctx_uvar * FStarC_Range_Type.range) * FStarC_TypeChecker_Common.guard_t) =
-  (new_tac_implicit_var reason r env uvar_typ should_check [] meta unrefine)
-
-let attrtab (env : env) : ((FStarC_Syntax_Syntax.sigelt) list) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
-  (env).attrtab
-
-let lookup_attr_all (env : env) (attr : string) : (FStarC_Syntax_Syntax.sigelt) list =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (attrtab env) attr) in
-  (match tmp with
-    | (Some (ses)) -> ses
-    | None -> []
-  ))
-
-let lookup_attr (env : env) (attr : string) : (FStarC_Syntax_Syntax.sigelt) list =
-  (let ses = (lookup_attr_all env attr) in
-  (if (match (env).iface_todo with
-    | [] -> true
-    | tmp -> false
-  ) then ses else (BatList.filter (fun se -> (let tmp = (FStarC_Util.for_some (fun l -> (FStarC_RBSet.fStarC_Class_Setlike_mem__lident_rbset_lident l (env).iface_hidden)) (FStarC_Syntax_Util.lids_of_sigelt se)) in
-  (not tmp))) ses)))
 
 let unbound_vars (e : env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.bv) list =
   (let tmp = (FStarC_Syntax_Free.names t) in
@@ -1295,73 +1226,142 @@ let pop_bv (env : env) : ((FStarC_Syntax_Syntax.bv * env)) option =
     | tmp -> None
   )
 
-let dsenv (env : env) : FStarC_Syntax_DsEnv.env =
-  (env).dsenv
+let expected_typ (env : env) : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * bool)) option =
+  (env).expected_typ
+
+let clear_expected_typ (env_ : env) : (env * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * bool)) option) =
+  ({ solver = (env_).solver;
+    range = (env_).range;
+    curmodule = (env_).curmodule;
+    gamma = (env_).gamma;
+    gamma_sig = (env_).gamma_sig;
+    gamma_cache = (env_).gamma_cache;
+    modules = (env_).modules;
+    expected_typ = None;
+    sigtab = (env_).sigtab;
+    attrtab = (env_).attrtab;
+    instantiate_imp = (env_).instantiate_imp;
+    effects = (env_).effects;
+    generalize = (env_).generalize;
+    letrecs = (env_).letrecs;
+    rec_names = (env_).rec_names;
+    top_level = (env_).top_level;
+    check_uvars = (env_).check_uvars;
+    use_eq_strict = (env_).use_eq_strict;
+    is_iface = (env_).is_iface;
+    admit = (env_).admit;
+    phase1 = (env_).phase1;
+    failhard = (env_).failhard;
+    flychecking = (env_).flychecking;
+    uvar_subtyping = (env_).uvar_subtyping;
+    intactics = (env_).intactics;
+    nocoerce = (env_).nocoerce;
+    tc_term = (env_).tc_term;
+    typeof_tot_or_gtot_term = (env_).typeof_tot_or_gtot_term;
+    universe_of = (env_).universe_of;
+    typeof_well_typed_tot_or_gtot_term = (env_).typeof_well_typed_tot_or_gtot_term;
+    teq_nosmt_force = (env_).teq_nosmt_force;
+    subtype_nosmt_force = (env_).subtype_nosmt_force;
+    qtbl_name_and_index = (env_).qtbl_name_and_index;
+    qtbl_name_and_index1 = (env_).qtbl_name_and_index1;
+    fv_delta_depths = (env_).fv_delta_depths;
+    proof_ns = (env_).proof_ns;
+    synth_hook = (env_).synth_hook;
+    try_solve_implicits_hook = (env_).try_solve_implicits_hook;
+    splice = (env_).splice;
+    mpreprocess = (env_).mpreprocess;
+    postprocess = (env_).postprocess;
+    identifier_info = (env_).identifier_info;
+    tc_hooks = (env_).tc_hooks;
+    dsenv = (env_).dsenv;
+    nbe = (env_).nbe;
+    strict_args_tab = (env_).strict_args_tab;
+    disc_proj_tab = (env_).disc_proj_tab;
+    erasable_types_tab = (env_).erasable_types_tab;
+    enable_defer_to_tac = (env_).enable_defer_to_tac;
+    unif_allow_ref_guards = (env_).unif_allow_ref_guards;
+    erase_erasable_args = (env_).erase_erasable_args;
+    core_check = (env_).core_check;
+    missing_decl = (env_).missing_decl;
+    iface_todo = (env_).iface_todo;
+    iface_hidden = (env_).iface_hidden;
+    iface_lids = (env_).iface_lids;
+    iface_val_lids = (env_).iface_val_lids }, (expected_typ env_))
+
+let dbg_ImplicitTrace : (bool ref) =
+  (FStarC_Debug.get_toggle "ImplicitTrace")
+
+let trivial_guard : FStarC_TypeChecker_Common.guard_t =
+  FStarC_TypeChecker_Common.trivial_guard
+
+let new_tac_implicit_var (reason : string) (r : FStarC_Range_Type.range) (env : env) (uvar_typ : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (should_check : FStarC_Syntax_Syntax.should_check_uvar) (uvar_typedness_deps : (FStarC_Syntax_Syntax.ctx_uvar) list) (meta : (FStarC_Syntax_Syntax.ctx_uvar_meta_t) option) (unrefine : bool) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.ctx_uvar * FStarC_Range_Type.range) * FStarC_TypeChecker_Common.guard_t) =
+  (let binders = (all_binders env) in
+  let gamma = (env).gamma in
+  let decoration = { FStarC_Syntax_Syntax.uvar_decoration_typ = uvar_typ;
+      uvar_decoration_typedness_depends_on = uvar_typedness_deps;
+      uvar_decoration_should_check = should_check;
+      uvar_decoration_should_unrefine = unrefine } in
+  let tmp = (FStarC_Syntax_Unionfind.fresh decoration r) in
+  let ctx_uvar = { FStarC_Syntax_Syntax.ctx_uvar_head = (match tmp with (custard_tup, _, _) -> custard_tup);
+      ctx_uvar_head1 = (match tmp with (_, custard_tup, _) -> custard_tup);
+      ctx_uvar_head2 = (match tmp with (_, _, custard_tup) -> custard_tup);
+      ctx_uvar_gamma = gamma;
+      ctx_uvar_binders = binders;
+      ctx_uvar_reason = reason;
+      ctx_uvar_range = r;
+      ctx_uvar_meta = meta } in
+  (FStarC_TypeChecker_Common.check_uvar_ctx_invariant reason r true gamma binders);
+  let t = (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_uvar (ctx_uvar, ([], FStarC_Syntax_Syntax.NoUseRange))) r) in
+  let imp = { FStarC_TypeChecker_Common.imp_reason = reason;
+      imp_uvar = ctx_uvar;
+      imp_tm = t;
+      imp_range = r } in
+  let tmp1 = (!(dbg_ImplicitTrace)) in
+  (if tmp1 then (let tmp2 = (FStarC_Syntax_Print.fStarC_Class_Show_show__tuple3_p_uvar_rec_tuple2_version_range ((ctx_uvar).FStarC_Syntax_Syntax.ctx_uvar_head, (ctx_uvar).FStarC_Syntax_Syntax.ctx_uvar_head1, (ctx_uvar).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
+  (FStarC_Format.print1 "Just created uvar for implicit {%s}\n" tmp2)) else ());
+  let g = { FStarC_TypeChecker_Common.guard_f = (trivial_guard).FStarC_TypeChecker_Common.guard_f;
+      deferred_to_tac = (trivial_guard).FStarC_TypeChecker_Common.deferred_to_tac;
+      deferred = (trivial_guard).FStarC_TypeChecker_Common.deferred;
+      univ_ineqs = (trivial_guard).FStarC_TypeChecker_Common.univ_ineqs;
+      univ_ineqs1 = (trivial_guard).FStarC_TypeChecker_Common.univ_ineqs1;
+      implicits = (FStarC_TypeChecker_Common.fStarC_Class_Listlike_cons__implicit_clist_implicit imp FStarC_TypeChecker_Common.fStarC_Class_Listlike_empty__implicit_clist_implicit) } in
+  (t, (ctx_uvar, r), g))
+
+let new_implicit_var_aux (reason : string) (r : FStarC_Range_Type.range) (env : env) (uvar_typ : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (should_check : FStarC_Syntax_Syntax.should_check_uvar) (meta : (FStarC_Syntax_Syntax.ctx_uvar_meta_t) option) (unrefine : bool) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.ctx_uvar * FStarC_Range_Type.range) * FStarC_TypeChecker_Common.guard_t) =
+  (new_tac_implicit_var reason r env uvar_typ should_check [] meta unrefine)
+
+let fStarC_Errors_raise_error__env_string (pos : env) (code : FStarC_Errors_Codes.error_code) (msg : string) : 'u___a =
+  (let rng = (fStarC_Class_HasRange_pos__env pos) in
+  let tmp = (FStarC_Errors.fixup_issue_range (Some (rng))) in
+  (match tmp with
+    | (Some (rng1)) -> (let msg1 = (FStarC_Errors_Msg.fStarC_Errors_Msg_to_doc_list__string msg) in
+      let tmp1 = (FStarC_Errors.maybe_add_backtrace msg1) in
+      let tmp2 = ((FStarC_Errors.error_context).FStarC_Errors.get ()) in
+      let tmp3 = (code, tmp1, rng1, tmp2) in
+      let tmp4 = (FStarC_Errors.Error (tmp3)) in
+      (raise tmp4))
+  ))
+
+let attrtab (env : env) : ((FStarC_Syntax_Syntax.sigelt) list) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
+  (env).attrtab
+
+let lookup_attr_all (env : env) (attr : string) : (FStarC_Syntax_Syntax.sigelt) list =
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (attrtab env) attr) in
+  (match tmp with
+    | (Some (ses)) -> ses
+    | None -> []
+  ))
+
+let lookup_attr (env : env) (attr : string) : (FStarC_Syntax_Syntax.sigelt) list =
+  (let ses = (lookup_attr_all env attr) in
+  (if (match (env).iface_todo with
+    | [] -> true
+    | tmp -> false
+  ) then ses else (BatList.filter (fun se -> (let tmp = (FStarC_Util.for_some (fun l -> (FStarC_RBSet.fStarC_Class_Setlike_mem__lident_rbset_lident l (env).iface_hidden)) (FStarC_Syntax_Util.lids_of_sigelt se)) in
+  (not tmp))) ses)))
 
 let push_binders (env : env) (eta : (FStarC_Syntax_Syntax.binder) list) : env =
   (BatList.fold_left (fun env1 b -> (push_bv env1 (b).FStarC_Syntax_Syntax.binder_bv)) env eta)
-
-let cons_proof_ns (b : bool) (e : env) (path : (string) list) : env =
-  { solver = (e).solver;
-    range = (e).range;
-    curmodule = (e).curmodule;
-    gamma = (e).gamma;
-    gamma_sig = (e).gamma_sig;
-    gamma_cache = (e).gamma_cache;
-    modules = (e).modules;
-    expected_typ = (e).expected_typ;
-    sigtab = (e).sigtab;
-    attrtab = (e).attrtab;
-    instantiate_imp = (e).instantiate_imp;
-    effects = (e).effects;
-    generalize = (e).generalize;
-    letrecs = (e).letrecs;
-    rec_names = (e).rec_names;
-    top_level = (e).top_level;
-    check_uvars = (e).check_uvars;
-    use_eq_strict = (e).use_eq_strict;
-    is_iface = (e).is_iface;
-    admit = (e).admit;
-    phase1 = (e).phase1;
-    failhard = (e).failhard;
-    flychecking = (e).flychecking;
-    uvar_subtyping = (e).uvar_subtyping;
-    intactics = (e).intactics;
-    nocoerce = (e).nocoerce;
-    tc_term = (e).tc_term;
-    typeof_tot_or_gtot_term = (e).typeof_tot_or_gtot_term;
-    universe_of = (e).universe_of;
-    typeof_well_typed_tot_or_gtot_term = (e).typeof_well_typed_tot_or_gtot_term;
-    teq_nosmt_force = (e).teq_nosmt_force;
-    subtype_nosmt_force = (e).subtype_nosmt_force;
-    qtbl_name_and_index = (e).qtbl_name_and_index;
-    qtbl_name_and_index1 = (e).qtbl_name_and_index1;
-    fv_delta_depths = (e).fv_delta_depths;
-    proof_ns = ((path, b) :: (e).proof_ns);
-    synth_hook = (e).synth_hook;
-    try_solve_implicits_hook = (e).try_solve_implicits_hook;
-    splice = (e).splice;
-    mpreprocess = (e).mpreprocess;
-    postprocess = (e).postprocess;
-    identifier_info = (e).identifier_info;
-    tc_hooks = (e).tc_hooks;
-    dsenv = (e).dsenv;
-    nbe = (e).nbe;
-    strict_args_tab = (e).strict_args_tab;
-    disc_proj_tab = (e).disc_proj_tab;
-    erasable_types_tab = (e).erasable_types_tab;
-    enable_defer_to_tac = (e).enable_defer_to_tac;
-    unif_allow_ref_guards = (e).unif_allow_ref_guards;
-    erase_erasable_args = (e).erase_erasable_args;
-    core_check = (e).core_check;
-    missing_decl = (e).missing_decl;
-    iface_todo = (e).iface_todo;
-    iface_hidden = (e).iface_hidden;
-    iface_lids = (e).iface_lids;
-    iface_val_lids = (e).iface_val_lids }
-
-let add_proof_ns (e : env) (path : (string) list) : env =
-  (cons_proof_ns true e path)
 
 let set_range (e : env) (r : FStarC_Range_Type.range) : env =
   (if ((=) r FStarC_Range_Type.dummyRange) then e else { solver = (e).solver;
@@ -1458,7 +1458,7 @@ let guard_of_guard_formula (g : FStarC_TypeChecker_Common.guard_formula) : FStar
     deferred_to_tac = FStarC_TypeChecker_Common.fStarC_Class_Listlike_empty__tuple3_deferred_reason_string_prob;
     deferred = FStarC_TypeChecker_Common.fStarC_Class_Listlike_empty__tuple3_deferred_reason_string_prob;
     univ_ineqs = FStarC_CList.fStarC_Class_Listlike_empty__universe_clist_universe;
-    univ_ineqs1 = FStarC_CList.fStarC_Class_Listlike_empty__tuple2_universe_universe_5;
+    univ_ineqs1 = FStarC_CList.fStarC_Class_Listlike_empty__tuple2_universe_universe;
     implicits = FStarC_TypeChecker_Common.fStarC_Class_Listlike_empty__implicit_clist_implicit }
 
 let set_expected_typ (env : env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : env =
@@ -2069,20 +2069,20 @@ let uvars_in_env (env : env) : (FStarC_Syntax_Syntax.ctx_uvar) list =
   (let no_uvs = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_empty__ctx_uvar_list_ctx_uvar ()) in
   (uvars_in_env__aux no_uvs (env).gamma))
 
-let rec univ_vars__aux (out : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) (g : (FStarC_Syntax_Syntax.binding) list) : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list =
+let rec univ_vars__aux (out : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) (g : (FStarC_Syntax_Syntax.binding) list) : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list =
   (match g with
     | [] -> out
     | ((FStarC_Syntax_Syntax.Binding_univ (tmp)) :: tl) -> (univ_vars__aux out tl)
     | ((FStarC_Syntax_Syntax.Binding_lid (tmp, (tmp1, t))) :: tl) -> (let tmp2 = (FStarC_Syntax_Free.univs t) in
-      let out1 = (FStarC_Syntax_Unionfind.fStarC_Class_Setlike_union__tuple3_p_uvar_option_version_range out tmp2) in
+      let out1 = (FStarC_Syntax_Unionfind.fStarC_Class_Setlike_union__tuple3_p_uvar_rec_option_version_range out tmp2) in
       (univ_vars__aux out1 tl))
     | ((FStarC_Syntax_Syntax.Binding_var ({ FStarC_Syntax_Syntax.ppname = tmp; index = tmp1; sort = t; _ })) :: tl) -> (let tmp2 = (FStarC_Syntax_Free.univs t) in
-      let out1 = (FStarC_Syntax_Unionfind.fStarC_Class_Setlike_union__tuple3_p_uvar_option_version_range out tmp2) in
+      let out1 = (FStarC_Syntax_Unionfind.fStarC_Class_Setlike_union__tuple3_p_uvar_rec_option_version_range out tmp2) in
       (univ_vars__aux out1 tl))
   )
 
-let univ_vars (env : env) : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list =
-  (let no_univs = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_empty__tuple3_p_uvar_option_version_range ()) in
+let univ_vars (env : env) : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list =
+  (let no_univs = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_empty__tuple3_p_uvar_rec_option_version_range ()) in
   (univ_vars__aux no_univs (env).gamma))
 
 let get_lid_valued_effect_attr (env : env) (eff_lid : FStarC_Ident.lident) (attr_name_lid : FStarC_Ident.lident) (default_if_attr_has_no_arg : (FStarC_Ident.lident) option) : (FStarC_Ident.lident) option =
@@ -2170,13 +2170,13 @@ let lookup_and_inst_datacon (env : env) (us : (FStarC_Syntax_Syntax.universe) li
     | tmp1 -> (name_not_found env lid)
   ))
 
-let rem_proof_ns (e : env) (path : (string) list) : env =
-  (cons_proof_ns false e path)
-
 let promote_id_info (env : env) (ty_map : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) : unit =
   (let tmp = (!((env).identifier_info)) in
   let tmp1 = (FStarC_TypeChecker_Common.id_info_promote tmp ty_map) in
   (((env).identifier_info) := tmp1))
+
+let rem_proof_ns (e : env) (path : (string) list) : env =
+  (cons_proof_ns false e path)
 
 let check_trivial (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : FStarC_TypeChecker_Common.guard_formula =
   (FStarC_TypeChecker_Common.check_trivial t)
@@ -2184,7 +2184,7 @@ let check_trivial (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)
 let rec should_enc_path__str_i_prefix (xs : (string) list) (ys : (string) list) : bool =
   (match (xs, ys) with
     | ([], tmp) -> true
-    | ((x :: xs1), (y :: ys1)) -> (((=) (FStarC_String.lowercase x) (FStarC_String.lowercase y)) && (should_enc_path__str_i_prefix xs1 ys1))
+    | ((x :: xs1), (y :: ys1)) -> (((=) (BatString.lowercase_ascii x) (BatString.lowercase_ascii y)) && (should_enc_path__str_i_prefix xs1 ys1))
     | (tmp, tmp1) -> false
   )
 
@@ -2585,7 +2585,7 @@ let rollback (solver : solver_t) (msg : string) (depth : ((Prims.int * Prims.int
       (rollback_query_indices query_indices_depth);
       let tcenv = (rollback_stack stack_depth) in
       let dsenv_ = (FStarC_Syntax_DsEnv.rollback dsenv_depth) in
-      (FStarC_Common.runtime_assert (FStarC_Util.physical_equality (tcenv).dsenv dsenv_) "Inconsistent stack state");
+      (FStarC_Common.runtime_assert ((==) (tcenv).dsenv dsenv_) "Inconsistent stack state");
       tcenv)
   ))))
 
@@ -3491,7 +3491,7 @@ let push_sigelt (env : env) (s : FStarC_Syntax_Syntax.sigelt) : env =
 let print_effects_graph (env : env) : string =
   (let eff_name = (fun lid -> (FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid lid))) in
   let path_str = (fun path -> (let tmp = (BatList.map eff_name path) in
-    (FStarC_String.concat ";" tmp))) in
+    (BatString.concat ";" tmp))) in
   let lifts = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (20)))) in
   (BatList.iter (fun tmp -> (let key = (eff_name (tmp).msource) in
   let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt lifts key) in
@@ -3508,7 +3508,7 @@ let print_effects_graph (env : env) : string =
       (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace m (eff_name (tmp).mtarget) tmp3))
   ))) ((env).effects).order);
   let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun src m s -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun tgt path s1 -> ((FStarC_Format.fmt3 "%s -> %s [label=\"%s\"]" src tgt path) :: s1)) m s)) lifts []) in
-  let tmp1 = (FStarC_String.concat "\n" tmp) in
+  let tmp1 = (BatString.concat "\n" tmp) in
   (FStarC_Format.fmt1 "digraph {\nlabel=\"Effects ordering\"\nsubgraph cluster_lifts {\nlabel = \"Lifts\"\n\n      %s\n}}\n" tmp1))
 
 let preprocess (env : env) (eta : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (eta1 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =

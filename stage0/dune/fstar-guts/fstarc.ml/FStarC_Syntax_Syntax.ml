@@ -38,7 +38,7 @@ type universe =
   | U_max of (universe) list
   | U_bvar of Prims.int
   | U_name of FStarC_Ident.ident
-  | U_unif of ((universe) option) FStarC_Unionfind.p_uvar * version * FStarC_Range_Type.range
+  | U_unif of int * version * FStarC_Range_Type.range
   | U_unknown
   [@@deriving yojson]
 
@@ -51,14 +51,6 @@ type 'u___a withinfo_t = {
   v : 'u___a;
   p : FStarC_Range_Type.range;
 } [@@deriving yojson]
-
-type should_check_uvar =
-  | Allow_unresolved of string
-  | Allow_untyped of string
-  | Allow_ghost of string
-  | Strict
-  | Already_checked
-  [@@deriving yojson]
 
 type maybe_set_use_range =
   | NoUseRange
@@ -191,13 +183,6 @@ and term'__Tm_let__payload = {
   body : (term') syntax;
 }
 
-and uvar_decoration = {
-  uvar_decoration_typ : (term') syntax;
-  uvar_decoration_typedness_depends_on : (ctx_uvar) list;
-  uvar_decoration_should_check : should_check_uvar;
-  uvar_decoration_should_unrefine : bool;
-}
-
 and binding =
   | Binding_var of bv
   | Binding_lid of FStarC_Ident.lident * ((FStarC_Ident.ident) list * (term') syntax)
@@ -210,7 +195,7 @@ and ctx_uvar_meta_t =
 
 
 and ctx_uvar = {
-  ctx_uvar_head : ((((term') syntax) option * uvar_decoration)) FStarC_Unionfind.p_uvar;
+  ctx_uvar_head : int;
   ctx_uvar_head1 : version;
   ctx_uvar_head2 : FStarC_Range_Type.range;
   ctx_uvar_gamma : (binding) list;
@@ -316,6 +301,21 @@ type universes = (universe) list [@@deriving yojson]
 type sconst = FStarC_Const.sconst [@@deriving yojson]
 
 type univ_name = FStarC_Ident.ident [@@deriving yojson]
+
+type should_check_uvar =
+  | Allow_unresolved of string
+  | Allow_untyped of string
+  | Allow_ghost of string
+  | Strict
+  | Already_checked
+  [@@deriving yojson]
+
+type uvar_decoration = {
+  uvar_decoration_typ : (term') syntax;
+  uvar_decoration_typedness_depends_on : (ctx_uvar) list;
+  uvar_decoration_should_check : should_check_uvar;
+  uvar_decoration_should_unrefine : bool;
+}
 
 type univ_names = (FStarC_Ident.ident) list [@@deriving yojson]
 
@@ -605,7 +605,7 @@ let mk (t : term') (r : FStarC_Range_Type.range) : (term') syntax =
   (let tmp = (hash_term' t) in
   { n = t; pos = r; hash_code = tmp })
 
-type uvar = (((((term') syntax) option * uvar_decoration)) FStarC_Unionfind.p_uvar * version * FStarC_Range_Type.range)
+type uvar = (int * version * FStarC_Range_Type.range)
 
 type subst_ts = (((subst_elt) list) list * maybe_set_use_range)
 
@@ -652,7 +652,7 @@ let bv_to_tm (bv : bv) : (term') syntax =
 let bv_to_name (bv : bv) : (term') syntax =
   (mk (Tm_name (bv)) (range_of_bv bv))
 
-type universe_uvar = (((universe) option) FStarC_Unionfind.p_uvar * version * FStarC_Range_Type.range) [@@deriving yojson]
+type universe_uvar = (int * version * FStarC_Range_Type.range) [@@deriving yojson]
 
 let hash_comp' (c : comp_typ) : int =
   (let tmp = (hash_list hash_flag (c).flags) in
@@ -941,7 +941,7 @@ type delta_depth =
   [@@deriving yojson]
 
 let order_fv (x : FStarC_Ident.lident) (y : FStarC_Ident.lident) : Prims.int =
-  (FStarC_String.compare (FStarC_Ident.string_of_lid x) (FStarC_Ident.string_of_lid y))
+  ((fun x y -> Z.of_int (BatString.compare x y)) (FStarC_Ident.string_of_lid x) (FStarC_Ident.string_of_lid y))
 
 let fStarC_Class_Deq_op_Equals_Question__lident (tmp : FStarC_Ident.lident) (tmp1 : FStarC_Ident.lident) : bool =
   (FStarC_Order.eq (FStarC_Order.order_from_int (order_fv tmp tmp1)))
@@ -1137,7 +1137,7 @@ let rec emb_typ_to_string (e : emb_typ) : string =
     | ET_abstract -> "abstract"
     | (ET_app (h, [])) -> h
     | (ET_app (h, args)) -> (let tmp = (BatList.map emb_typ_to_string args) in
-      let tmp1 = (FStarC_String.concat " " tmp) in
+      let tmp1 = (BatString.concat " " tmp) in
       let tmp2 = (Prims.strcat tmp1 ")") in
       let tmp3 = (Prims.strcat " " tmp2) in
       let tmp4 = (Prims.strcat h tmp3) in
@@ -1239,7 +1239,7 @@ let fStarC_Class_Show_show__option_delta_depth (tmp : (delta_depth) option) : st
 type free_vars = {
   free_names : (bv) list;
   free_uvars : (ctx_uvar) list;
-  free_univs : ((((universe) option) FStarC_Unionfind.p_uvar * version * FStarC_Range_Type.range)) list;
+  free_univs : ((int * version * FStarC_Range_Type.range)) list;
   free_univ_names : (FStarC_Ident.ident) list;
 }
 
@@ -1261,7 +1261,7 @@ let fStarC_Class_Setlike_union__bv_list_bv (tmp : (bv) list) (eta : (bv) list) :
   (fStarC_FlatSet_union__bv tmp eta)
 
 let order_ident (x : FStarC_Ident.ident) (y : FStarC_Ident.ident) : Prims.int =
-  (FStarC_String.compare (FStarC_Ident.string_of_id x) (FStarC_Ident.string_of_id y))
+  ((fun x y -> Z.of_int (BatString.compare x y)) (FStarC_Ident.string_of_id x) (FStarC_Ident.string_of_id y))
 
 let fStarC_Class_Deq_op_Equals_Question__ident (tmp : FStarC_Ident.ident) (tmp1 : FStarC_Ident.ident) : bool =
   (FStarC_Order.eq (FStarC_Order.order_from_int (order_ident tmp tmp1)))
@@ -1286,7 +1286,7 @@ let fStarC_Class_Setlike_empty__bv_list_bv (tmp : unit) : (bv) list =
 let fStarC_Class_Setlike_empty__ctx_uvar_list_ctx_uvar (tmp : unit) : (ctx_uvar) list =
   (FStarC_FlatSet.empty ())
 
-let fStarC_Class_Setlike_empty__tuple3_p_uvar_option_version_range (tmp : unit) : ((((universe) option) FStarC_Unionfind.p_uvar * version * FStarC_Range_Type.range)) list =
+let fStarC_Class_Setlike_empty__tuple3_p_uvar_rec_option_version_range (tmp : unit) : ((int * version * FStarC_Range_Type.range)) list =
   (FStarC_FlatSet.empty ())
 
 let fStarC_FlatSet_singleton__bv (x : bv) : (bv) list =
@@ -1301,11 +1301,11 @@ let fStarC_FlatSet_singleton__ctx_uvar (x : ctx_uvar) : (ctx_uvar) list =
 let fStarC_Class_Setlike_singleton__ctx_uvar_list_ctx_uvar (tmp : ctx_uvar) : (ctx_uvar) list =
   (fStarC_FlatSet_singleton__ctx_uvar tmp)
 
-let fStarC_FlatSet_singleton__tuple3_p_uvar_option_version_range (x : (((universe) option) FStarC_Unionfind.p_uvar * version * FStarC_Range_Type.range)) : ((((universe) option) FStarC_Unionfind.p_uvar * version * FStarC_Range_Type.range)) list =
+let fStarC_FlatSet_singleton__tuple3_p_uvar_rec_option_version_range (x : (int * version * FStarC_Range_Type.range)) : ((int * version * FStarC_Range_Type.range)) list =
   (x :: [])
 
-let fStarC_Class_Setlike_singleton__tuple3_p_uvar_option_version_range (tmp : (((universe) option) FStarC_Unionfind.p_uvar * version * FStarC_Range_Type.range)) : ((((universe) option) FStarC_Unionfind.p_uvar * version * FStarC_Range_Type.range)) list =
-  (fStarC_FlatSet_singleton__tuple3_p_uvar_option_version_range tmp)
+let fStarC_Class_Setlike_singleton__tuple3_p_uvar_rec_option_version_range (tmp : (int * version * FStarC_Range_Type.range)) : ((int * version * FStarC_Range_Type.range)) list =
+  (fStarC_FlatSet_singleton__tuple3_p_uvar_rec_option_version_range tmp)
 
 let mk_binder (a : bv) : binder =
   (mk_binder_with_attrs a None None [])
@@ -1389,7 +1389,7 @@ let fStarC_Class_Deq_op_Equals_Question__option_list_lident (tmp : ((FStarC_Iden
   )
 
 let order_univ_name (x : FStarC_Ident.ident) (y : FStarC_Ident.ident) : Prims.int =
-  (FStarC_String.compare (FStarC_Ident.string_of_id x) (FStarC_Ident.string_of_id y))
+  ((fun x y -> Z.of_int (BatString.compare x y)) (FStarC_Ident.string_of_id x) (FStarC_Ident.string_of_id y))
 
 let fStarC_Class_Deq_op_Equals_Question__ident_23 (tmp : FStarC_Ident.ident) (tmp1 : FStarC_Ident.ident) : bool =
   (FStarC_Order.eq (FStarC_Order.order_from_int (order_univ_name tmp tmp1)))
@@ -1537,8 +1537,8 @@ type tycon = (FStarC_Ident.lident * (binder) list * (term') syntax)
 
 type uvars = (ctx_uvar) list
 
-let fStarC_Class_HasRange_pos__ctx_uvar (tmp : ctx_uvar) : FStarC_Range_Type.range =
-  (tmp).ctx_uvar_range
+let fStarC_Class_HasRange_pos__bv (tmp : bv) : FStarC_Range_Type.range =
+  (range_of_bv tmp)
 
 let rec fStarC_FlatSet_remove__bv (x : bv) (s : (bv) list) : (bv) list =
   (match s with
@@ -1554,8 +1554,8 @@ let fStarC_Class_Setlike_remove__bv_list_bv (tmp : bv) (s : (bv) list) : (bv) li
 let fStarC_Class_Setlike_is_empty__bv_list_bv (tmp : (bv) list) : bool =
   (FStarC_FlatSet.is_empty tmp)
 
-let fStarC_Class_HasRange_pos__bv (tmp : bv) : FStarC_Range_Type.range =
-  (range_of_bv tmp)
+let fStarC_Class_HasRange_pos__ctx_uvar (tmp : ctx_uvar) : FStarC_Range_Type.range =
+  (tmp).ctx_uvar_range
 
 let fStarC_Class_Show_show__should_check_uvar (tmp : should_check_uvar) : string =
   (match tmp with
@@ -1646,7 +1646,7 @@ let imp_tag : binder_qualifier =
 let as_bqual_implicit (tmp : bool) : (binder_qualifier) option =
   (if tmp then (Some (imp_tag)) else None)
 
-let fStarC_Class_Setlike_is_empty__tuple3_p_uvar_option_version_range (tmp : ((((universe) option) FStarC_Unionfind.p_uvar * version * FStarC_Range_Type.range)) list) : bool =
+let fStarC_Class_Setlike_is_empty__tuple3_p_uvar_rec_option_version_range (tmp : ((int * version * FStarC_Range_Type.range)) list) : bool =
   (FStarC_FlatSet.is_empty tmp)
 
 let binders_to_names (bs : (binder) list) : ((term') syntax) list =

@@ -18,7 +18,7 @@ let u__already_warned_solver_mismatch : (bool ref) =
 let u__already_warned_version_mismatch : (bool ref) =
   (ref false)
 
-let check_z3version (p : FStarC_Util.proc) : unit =
+let check_z3version (p : FStarC_Util.proc_rec) : unit =
   (let getinfo = (fun arg -> (let s = (FStarC_Util.ask_process p (FStarC_Format.fmt1 "(get-info :%s)\n(echo \"Done!\")\n" arg) (fun tmp -> "Killed") (warn_handler [])) in
     (if (FStarC_Util.starts_with s (Prims.strcat "(:" arg)) then (let ss = (FStarC_String.split (34 :: []) s) in
     ((fun l i -> BatList.nth l (Z.to_int i)) ss Prims.int_one)) else ((warn_handler [] s);
@@ -44,13 +44,13 @@ let check_z3version (p : FStarC_Util.proc) : unit =
   ((u__already_warned_version_mismatch) := true)) else ());
   ())
 
-let new_z3proc (id : string) (cmd_and_args : (string * (string) list)) : FStarC_Util.proc =
+let new_z3proc (id : string) (cmd_and_args : (string * (string) list)) : FStarC_Util.proc_rec =
   (let proc = (try (FStarC_Util.start_process id (match cmd_and_args with
       | (u__1, u__2) -> u__1
     ) (match cmd_and_args with
       | (u__1, u__2) -> u__2
     ) (fun s -> ((=) s "Done!"))) with
-      | u__cexn -> (let tmp = (FStarC_Util.print_exn u__cexn) in
+      | u__cexn -> (let tmp = (Printexc.to_string u__cexn) in
         let tmp1 = (PPrint.arbitrary_string tmp) in
         let tmp2 = (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "Exception:") tmp1) in
         let tmp3 = (tmp2 :: []) in
@@ -63,7 +63,7 @@ let new_z3proc (id : string) (cmd_and_args : (string * (string) list)) : FStarC_
   (check_z3version proc);
   proc)
 
-let new_z3proc_with_id : ((string * (string) list) -> FStarC_Util.proc) =
+let new_z3proc_with_id : ((string * (string) list) -> FStarC_Util.proc_rec) =
   (let ctr = (ref (Prims.of_int (-1))) in
   (fun cmd_and_args -> ((FStarC_Util.incr ctr);
   let tmp = (!(ctr)) in
@@ -121,7 +121,7 @@ let query_logging : query_log =
     (FStarC_Format.fmt1 "queries-%s.smt2" file_name))) in
   let new_log_file = (fun tmp -> (let file_name = (next_file_name ()) in
     ((current_file_name) := (Some (file_name)));
-    let c = (FStarC_Util.open_file_for_writing file_name) in
+    let c = (Stdlib.open_out_bin file_name) in
     ((log_file_opt) := (Some ((c, file_name))));
     (c, file_name))) in
   let get_log_file = (fun tmp -> (let tmp1 = (!(log_file_opt)) in
@@ -141,7 +141,7 @@ let query_logging : query_log =
   let close_log = (fun tmp -> (let tmp1 = (!(log_file_opt)) in
     (match tmp1 with
       | None -> ()
-      | (Some ((c, tmp2))) -> ((FStarC_Util.close_out_channel c);
+      | (Some ((c, tmp2))) -> ((Stdlib.close_out c);
         ((log_file_opt) := None))
     ))) in
   { get_module_name = get_module_name;
@@ -288,7 +288,7 @@ let z3_options (ver : string) : string =
   let tmp = (FStarC_Misc.version_ge ver "4.12.3") in
   let tmp1 = (if tmp then ("(set-option :rewriter.enable_der false)" :: ("(set-option :rewriter.sort_disjunctions false)" :: ("(set-option :pi.decompose_patterns false)" :: ("(set-option :smt.arith.solver 6)" :: [])))) else ("(set-option :smt.arith.solver 2)" :: [])) in
   let opts1 = (BatList.append opts tmp1) in
-  (Prims.strcat (FStarC_String.concat "\n" opts1) "\n"))
+  (Prims.strcat (BatString.concat "\n" opts1) "\n"))
 
 let context_profile (theory : (FStarC_SMTEncoding_Term.decl) list) : unit =
   (let tmp = (BatList.fold_left (fun tmp d -> (match tmp with
@@ -327,13 +327,13 @@ let mk_input (fresh : bool) (theory : (FStarC_SMTEncoding_Term.decl) list) : (st
   let tmp6 = (FStarC_Format.fmt1 "(set-option :smt.random-seed %s)\n" tmp5) in
   let options1 = (Prims.strcat options tmp6) in
   let tmp7 = (FStarC_Options.z3_smtopt ()) in
-  let tmp8 = (FStarC_String.concat "\n" tmp7) in
+  let tmp8 = (BatString.concat "\n" tmp7) in
   let tmp9 = (Prims.strcat tmp8 "\n\n") in
   let options2 = (Prims.strcat options1 tmp9) in
   let tmp10 = (FStarC_Options.print_z3_statistics ()) in
   (if tmp10 then (context_profile theory1) else ());
   let tmp11 = (BatList.map (FStarC_SMTEncoding_Term.declToSmt options2) theory1) in
-  let r = (FStarC_String.concat "\n" tmp11) in
+  let r = (BatString.concat "\n" tmp11) in
   let tmp12 = (FStarC_Options.log_queries ()) in
   let log_file_name = (if tmp12 then (let tmp13 = ((query_logging).write_to_log fresh r) in
     (Some (tmp13))) else None) in
@@ -358,7 +358,7 @@ let warn_unexpected (log_file : (string) option) (lines : (string) list) : unit 
   (let tmp = (BatList.filter (fun l -> ((((<>) l "") && ((<>) l "Done!")) && ((<>) l "killed"))) lines) in
   (match tmp with
     | [] -> ()
-    | remaining -> (let msg = (FStarC_String.concat "\n" remaining) in
+    | remaining -> (let msg = (BatString.concat "\n" remaining) in
       let suf = (match log_file with
           | (Some (log_file1)) -> ((PPrint.(^/^) (FStarC_Errors_Msg.text "Log file:") (PPrint.string log_file1)) :: [])
           | None -> []
@@ -399,7 +399,7 @@ let smt_output_sections (log_file : (string) option) (r : FStarC_Range_Type.rang
     | (initial_stats_opt, lines1) -> (let tmp1 = (find_section "result" lines1) in
       (match tmp1 with
         | (result_opt, lines2) -> (let result = (match result_opt with
-              | None -> (FStarC_Effect.failwith (FStarC_Format.fmt1 "Unexpected output from Z3: no result section found:\n%s" (FStarC_String.concat "\n" lines2)))
+              | None -> (FStarC_Effect.failwith (FStarC_Format.fmt1 "Unexpected output from Z3: no result section found:\n%s" (BatString.concat "\n" lines2)))
               | (Some (result)) -> result
             ) in
           let tmp2 = (find_section "reason-unknown" lines2) in
@@ -425,12 +425,12 @@ let parse_stats (smt_stats : ((string) list) option) : (string) FStarC_HashTable
           | ("(" :: (entry :: [])) -> (let tokens = (FStarC_Util.split entry " ") in
             let key = (BatList.hd tokens) in
             let ltok = ((fun l i -> BatList.nth l (Z.to_int i)) tokens (Prims.op_Minus ((fun l -> Z.of_int (BatList.length l)) tokens) Prims.int_one)) in
-            let value = (if (FStarC_Util.ends_with ltok ")") then (FStarC_Util.substring ltok Prims.int_zero (Prims.op_Minus (FStarC_String.length ltok) Prims.int_one)) else ltok) in
+            let value = (if (FStarC_Util.ends_with ltok ")") then ((fun s i j -> BatString.sub s (Z.to_int i) (Z.to_int j)) ltok Prims.int_zero (Prims.op_Minus ((fun s -> Z.of_int (BatUTF8.length s)) ltok) Prims.int_one)) else ltok) in
             (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace statistics key value))
           | ("" :: (entry :: [])) -> (let tokens = (FStarC_Util.split entry " ") in
             let key = (BatList.hd tokens) in
             let ltok = ((fun l i -> BatList.nth l (Z.to_int i)) tokens (Prims.op_Minus ((fun l -> Z.of_int (BatList.length l)) tokens) Prims.int_one)) in
-            let value = (if (FStarC_Util.ends_with ltok ")") then (FStarC_Util.substring ltok Prims.int_zero (Prims.op_Minus (FStarC_String.length ltok) Prims.int_one)) else ltok) in
+            let value = (if (FStarC_Util.ends_with ltok ")") then ((fun s i j -> BatString.sub s (Z.to_int i) (Z.to_int j)) ltok Prims.int_zero (Prims.op_Minus ((fun s -> Z.of_int (BatUTF8.length s)) ltok) Prims.int_one)) else ltok) in
             (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace statistics key value))
           | tmp -> ()
         ))) in
@@ -476,11 +476,11 @@ let doZ3Exe (log_file : (string) option) (r : FStarC_Range_Type.range) (fresh : 
         (BatList.map (fun chunk -> (let smt_output = (smt_output_sections log_file r chunk) in
         let initial_statistics = (parse_stats (smt_output).smt_initial_statistics) in
         let statistics = (parse_stats (smt_output).smt_statistics) in
-        let reason_unknown = (FStarC_Option.map (fun x -> (let ru = (FStarC_String.concat " " x) in
-          (if (FStarC_Util.starts_with ru "(:reason-unknown \"") then (let reason = (FStarC_Util.substring_from ru (FStarC_String.length "(:reason-unknown \"")) in
-          (FStarC_String.substring reason Prims.int_zero (Prims.op_Minus (FStarC_String.length reason) (Prims.of_int (2))))) else ru))) (smt_output).smt_reason_unknown) in
+        let reason_unknown = (FStarC_Option.map (fun x -> (let ru = (BatString.concat " " x) in
+          (if (FStarC_Util.starts_with ru "(:reason-unknown \"") then (let reason = ((fun s i -> BatString.tail s (Z.to_int i)) ru ((fun s -> Z.of_int (BatUTF8.length s)) "(:reason-unknown \"")) in
+          ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) reason Prims.int_zero (Prims.op_Minus ((fun s -> Z.of_int (BatUTF8.length s)) reason) (Prims.of_int (2))))) else ru))) (smt_output).smt_reason_unknown) in
         let tmp1 = (FStarC_Debug.any ()) in
-        (if tmp1 then (FStarC_Format.print1 "Z3 says: %s\n" (FStarC_String.concat "\n" (smt_output).smt_result)) else ());
+        (if tmp1 then (FStarC_Format.print1 "Z3 says: %s\n" (BatString.concat "\n" (smt_output).smt_result)) else ());
         let status = (match (smt_output).smt_result with
             | ("unsat" :: []) -> UNSAT
             | ("sat" :: []) -> (SAT (reason_unknown))
@@ -489,7 +489,7 @@ let doZ3Exe (log_file : (string) option) (r : FStarC_Range_Type.range) (fresh : 
             | ("killed" :: []) -> (let tmp2 = (!(bg_z3_proc)) in
               ((tmp2).restart ());
               KILLED)
-            | tmp2 -> (FStarC_Effect.failwith (FStarC_Format.fmt1 "Unexpected output from Z3: got output result: %s\n" (FStarC_String.concat "\n" (smt_output).smt_result)))
+            | tmp2 -> (FStarC_Effect.failwith (FStarC_Format.fmt1 "Unexpected output from Z3: got output result: %s\n" (BatString.concat "\n" (smt_output).smt_result)))
           ) in
         (status, initial_statistics, statistics))) chunks))
     ))) in
@@ -507,9 +507,9 @@ let doZ3Exe (log_file : (string) option) (r : FStarC_Range_Type.range) (fresh : 
   let kill_handler = (fun tmp1 -> "\nkilled\n") in
   let out = (FStarC_Util.ask_process proc input kill_handler (warn_handler [])) in
   let r1 = (parse (FStarC_Util.trim_string out)) in
-  (log_result (fun fname s -> (let h = (FStarC_Util.open_file_for_appending fname) in
+  (log_result (fun fname s -> (let h = ((fun fn -> Stdlib.open_out_gen [Stdlib.Open_append; Stdlib.Open_wronly; Stdlib.Open_creat; Stdlib.Open_binary] 0o644 fn) fname) in
   (FStarC_Util.append_to_file h s);
-  (FStarC_Util.close_out_channel h))) r1);
+  (Stdlib.close_out h))) r1);
   (FStarC_Util.kill_process proc);
   r1) else (let tmp = (!(bg_z3_proc)) in
   let out = ((tmp).ask input) in

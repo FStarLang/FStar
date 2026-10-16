@@ -132,7 +132,7 @@ let is_template_type (st : state) (n : FStarC_Custard_Syntax.name) : bool =
 let key_of (n : FStarC_Custard_Syntax.name) (args : (FStarC_Custard_Syntax.cty) list) : string =
   (let tmp = (FStarC_Custard_Syntax.string_of_name n) in
   let tmp1 = (BatList.map FStarC_Custard_Syntax.fStarC_Class_Show_show__cty args) in
-  let tmp2 = (FStarC_String.concat "," tmp1) in
+  let tmp2 = (BatString.concat "," tmp1) in
   let tmp3 = (Prims.strcat tmp2 ">") in
   let tmp4 = (Prims.strcat "<" tmp3) in
   (Prims.strcat tmp tmp4))
@@ -161,7 +161,7 @@ let rec hint_of_cty (fuel : Prims.int) (c : FStarC_Custard_Syntax.cty) : string 
         | None -> (n).FStarC_Custard_Syntax.id
       )
     | (FStarC_Custard_Syntax.TApp (n, args)) -> (let tmp = (BatList.map sub args) in
-      let tmp1 = (FStarC_String.concat "_" tmp) in
+      let tmp1 = (BatString.concat "_" tmp) in
       let tmp2 = (Prims.strcat "_" tmp1) in
       (Prims.strcat (n).FStarC_Custard_Syntax.id tmp2))
     | (FStarC_Custard_Syntax.TBuf (c1)) -> (let tmp = (sub c1) in
@@ -170,7 +170,7 @@ let rec hint_of_cty (fuel : Prims.int) (c : FStarC_Custard_Syntax.cty) : string 
       (Prims.strcat tmp1 "_ref"))
     | (FStarC_Custard_Syntax.TInline (c1)) -> (hint_of_cty fuel c1)
     | (FStarC_Custard_Syntax.TTuple (cs)) -> (let tmp = (BatList.map sub cs) in
-      let tmp1 = (FStarC_String.concat "_" tmp) in
+      let tmp1 = (BatString.concat "_" tmp) in
       (Prims.strcat "tup" tmp1))
     | FStarC_Custard_Syntax.TUnit -> "unit"
     | FStarC_Custard_Syntax.TExn -> "exn"
@@ -188,7 +188,7 @@ let hint_width : Prims.int =
   (Prims.of_int (48))
 
 let clip (s : string) : string =
-  (if (Prims.op_Less_Equals (FStarC_String.length s) hint_width) then s else (FStarC_String.substring s Prims.int_zero hint_width))
+  (if (Prims.op_Less_Equals ((fun s -> Z.of_int (BatUTF8.length s)) s) hint_width) then s else ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) s Prims.int_zero hint_width))
 
 let rec request__pick (st : state) (n : FStarC_Custard_Syntax.name) (base : string) (i : Prims.int) : string =
   (let cand = (if ((=) i Prims.int_zero) then base else (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
@@ -212,7 +212,7 @@ let request (st : state) (n : FStarC_Custard_Syntax.name) (args : (FStarC_Custar
   (match tmp with
     | (Some (nm)) -> nm
     | None -> (let tmp1 = (BatList.map (hint_of_cty hint_depth) args) in
-      let hint = (FStarC_String.concat "_" tmp1) in
+      let hint = (BatString.concat "_" tmp1) in
       let base = (clip (Prims.strcat (match (n).FStarC_Custard_Syntax.spec with
           | (Some (s)) -> (Prims.strcat s "_")
           | None -> ""
@@ -321,7 +321,7 @@ let request_extern (st : state) (n : FStarC_Custard_Syntax.name) (args : (FStarC
   (match tmp with
     | (Some (nm)) -> nm
     | None -> (let tmp1 = (BatList.map (hint_of_cty hint_depth) args) in
-      let hint = (FStarC_String.concat "_" tmp1) in
+      let hint = (BatString.concat "_" tmp1) in
       let base = (clip (Prims.strcat (match (n).FStarC_Custard_Syntax.spec with
           | (Some (s)) -> (Prims.strcat s "_")
           | None -> ""

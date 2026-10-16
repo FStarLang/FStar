@@ -93,7 +93,7 @@ let builtin_type (n : FStarC_Custard_Syntax.name) : (string) option =
   (match (if (match (n).FStarC_Custard_Syntax.spec with
     | (Some (v)) -> true
     | tmp -> false
-  ) then "" else (FStarC_String.concat "." (BatList.append (n).FStarC_Custard_Syntax.ns ((n).FStarC_Custard_Syntax.id :: [])))) with
+  ) then "" else (BatString.concat "." (BatList.append (n).FStarC_Custard_Syntax.ns ((n).FStarC_Custard_Syntax.id :: [])))) with
     | "Prims.unit" -> (Some ("unit"))
     | "Prims.bool" -> (Some ("bool"))
     | "Prims.string" -> (Some ("string"))
@@ -157,7 +157,7 @@ let reject_unrealized (p : (FStarC_Custard_Syntax.decl) list) : unit =
     (match tmp with
       | None -> true
       | tmp1 -> false
-    )) else false) -> (let m = (FStarC_String.concat "." ((e).FStarC_Custard_Syntax.dx_name).FStarC_Custard_Syntax.ns) in
+    )) else false) -> (let m = (BatString.concat "." ((e).FStarC_Custard_Syntax.dx_name).FStarC_Custard_Syntax.ns) in
       let tmp = (FStarC_Custard_Syntax.string_of_name (e).FStarC_Custard_Syntax.dx_name) in
       let tmp1 = (Prims.strcat tmp " has no F* definition and no F# realization.") in
       let tmp2 = (Prims.strcat "Custard: " tmp1) in
@@ -171,17 +171,17 @@ let is_alpha (i : Prims.int) : bool =
   (((Prims.op_Greater_Equals i (Prims.of_int (97))) && (Prims.op_Less_Equals i (Prims.of_int (122)))) || ((Prims.op_Greater_Equals i (Prims.of_int (65))) && (Prims.op_Less_Equals i (Prims.of_int (90)))))
 
 let sanitize (s : string) : string =
-  (let ok = (fun c -> (let i = (FStarC_Util.int_of_char c) in
+  (let ok = (fun c -> (let i = (Z.of_int c) in
     ((((is_alpha i) || ((Prims.op_Greater_Equals i (Prims.of_int (48))) && (Prims.op_Less_Equals i (Prims.of_int (57))))) || ((=) i (Prims.of_int (95)))) || ((=) i (Prims.of_int (39)))))) in
   let tmp = (BatList.map (fun c -> (let tmp = (ok c) in
-    (if tmp then (FStarC_Util.string_of_char c) else "_"))) (FStarC_String.list_of_string s)) in
-  (FStarC_String.concat "" tmp))
+    (if tmp then ((fun i -> BatUTF8.init 1 (fun _ -> BatUChar.chr i)) c) else "_"))) ((fun s -> List.rev (BatUTF8.fold (fun acc c -> BatUChar.code c :: acc) [] s)) s)) in
+  (BatString.concat "" tmp))
 
 let lowercase_first (s : string) : string =
-  (if ((=) s "") then "x" else (let i = (FStarC_Util.int_of_char (BatList.hd (FStarC_String.list_of_string s))) in
-  let tl = (FStarC_String.substring s Prims.int_one (Prims.op_Minus (FStarC_String.length s) Prims.int_one)) in
-  (if ((Prims.op_Greater_Equals i (Prims.of_int (65))) && (Prims.op_Less_Equals i (Prims.of_int (90)))) then (let tmp = (FStarC_String.substring s Prims.int_zero Prims.int_one) in
-  let tmp1 = (FStarC_String.lowercase tmp) in
+  (if ((=) s "") then "x" else (let i = (Z.of_int (BatList.hd ((fun s -> List.rev (BatUTF8.fold (fun acc c -> BatUChar.code c :: acc) [] s)) s))) in
+  let tl = ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) s Prims.int_one (Prims.op_Minus ((fun s -> Z.of_int (BatUTF8.length s)) s) Prims.int_one)) in
+  (if ((Prims.op_Greater_Equals i (Prims.of_int (65))) && (Prims.op_Less_Equals i (Prims.of_int (90)))) then (let tmp = ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) s Prims.int_zero Prims.int_one) in
+  let tmp1 = (BatString.lowercase_ascii tmp) in
   (Prims.strcat tmp1 tl)) else (if ((Prims.op_Greater_Equals i (Prims.of_int (97))) && (Prims.op_Less_Equals i (Prims.of_int (122)))) then s else (Prims.strcat "u_" s)))))
 
 let fsharp_keywords : (string) list =
@@ -190,12 +190,12 @@ let fsharp_keywords : (string) list =
 let fsharp_tyvar (x : string) : string =
   (let tmp = (sanitize x) in
   let s = (lowercase_first tmp) in
-  let tmp1 = (BatList.map (fun c -> (match (FStarC_Util.int_of_char c) with
+  let tmp1 = (BatList.map (fun c -> (match (Z.of_int c) with
       | u__iconst0 when u__iconst0 = (Prims.of_int (39)) -> "_"
       | u__iconst0 when u__iconst0 = (Prims.of_int (95)) -> "__"
-      | tmp1 -> (FStarC_Util.string_of_char c)
-    )) (FStarC_String.list_of_string s)) in
-  let s1 = (FStarC_String.concat "" tmp1) in
+      | tmp1 -> ((fun i -> BatUTF8.init 1 (fun _ -> BatUChar.chr i)) c)
+    )) ((fun s -> List.rev (BatUTF8.fold (fun acc c -> BatUChar.code c :: acc) [] s)) s)) in
+  let s1 = (BatString.concat "" tmp1) in
   let tmp2 = (BatList.exists (fun k -> ((=) k s1)) fsharp_keywords) in
   let tmp3 = (if tmp2 then (Prims.strcat s1 "_q") else s1) in
   (Prims.strcat "'" tmp3))
@@ -318,7 +318,7 @@ let rec ty (t : FStarC_Custard_Syntax.cty) : string =
     | (FStarC_Custard_Syntax.TArrow (u__1, u__2, u__3)) -> (let tmp = (ty__split t) in
       (match tmp with
         | (args, ret) -> (let tmp1 = (BatList.map ty args) in
-          let tmp2 = (FStarC_String.concat " -> " tmp1) in
+          let tmp2 = (BatString.concat " -> " tmp1) in
           let tmp3 = (ty ret) in
           let tmp4 = (Prims.strcat tmp3 ")") in
           let tmp5 = (Prims.strcat " -> " tmp4) in
@@ -326,7 +326,7 @@ let rec ty (t : FStarC_Custard_Syntax.cty) : string =
           (Prims.strcat "(" tmp6))
       ))
     | (FStarC_Custard_Syntax.TTuple (ts)) -> (let tmp = (BatList.map ty ts) in
-      let tmp1 = (FStarC_String.concat " * " tmp) in
+      let tmp1 = (BatString.concat " * " tmp) in
       let tmp2 = (Prims.strcat tmp1 ")") in
       (Prims.strcat "(" tmp2))
     | (FStarC_Custard_Syntax.TBuf (t1)) -> (let tmp = (ty t1) in
@@ -342,7 +342,7 @@ let rec ty (t : FStarC_Custard_Syntax.cty) : string =
       | (hd :: tl) -> true
       | tmp1 -> false
     ) else false)) -> (let tmp = (BatList.map ty args) in
-      let tmp1 = (FStarC_String.concat " * " tmp) in
+      let tmp1 = (BatString.concat " * " tmp) in
       let tmp2 = (Prims.strcat tmp1 ")") in
       (Prims.strcat "(" tmp2))
     | (FStarC_Custard_Syntax.TApp (n, [])) -> (let tmp = (builtin_type n) in
@@ -358,7 +358,7 @@ let rec ty (t : FStarC_Custard_Syntax.cty) : string =
             (qualify n tmp1))
         ) in
       let tmp1 = (BatList.map ty args) in
-      let tmp2 = (FStarC_String.concat ", " tmp1) in
+      let tmp2 = (BatString.concat ", " tmp1) in
       let tmp3 = (Prims.strcat tmp2 ">") in
       let tmp4 = (Prims.strcat "<" tmp3) in
       (Prims.strcat hd tmp4))
@@ -392,10 +392,10 @@ let reject_all (p : (FStarC_Custard_Syntax.decl) list) : unit =
   (reject_generic_values p))
 
 let uppercase_first (s : string) : string =
-  (if ((=) s "") then "X" else (let i = (FStarC_Util.int_of_char (BatList.hd (FStarC_String.list_of_string s))) in
-  let tmp = (FStarC_String.substring s Prims.int_zero Prims.int_one) in
-  let hd = (FStarC_String.uppercase tmp) in
-  let tl = (FStarC_String.substring s Prims.int_one (Prims.op_Minus (FStarC_String.length s) Prims.int_one)) in
+  (if ((=) s "") then "X" else (let i = (Z.of_int (BatList.hd ((fun s -> List.rev (BatUTF8.fold (fun acc c -> BatUChar.code c :: acc) [] s)) s))) in
+  let tmp = ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) s Prims.int_zero Prims.int_one) in
+  let hd = (BatString.uppercase_ascii tmp) in
+  let tl = ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) s Prims.int_one (Prims.op_Minus ((fun s -> Z.of_int (BatUTF8.length s)) s) Prims.int_one)) in
   (if (is_alpha i) then (Prims.strcat hd tl) else (Prims.strcat "U" s))))
 
 let module_name_of_unit (u : string) : string =
@@ -403,7 +403,7 @@ let module_name_of_unit (u : string) : string =
   (uppercase_first tmp))
 
 let label_key (n : FStarC_Custard_Syntax.name) (f : string) : string =
-  (Prims.strcat (FStarC_String.concat "." (n).FStarC_Custard_Syntax.ns) (Prims.strcat "|" f))
+  (Prims.strcat (BatString.concat "." (n).FStarC_Custard_Syntax.ns) (Prims.strcat "|" f))
 
 let externals : ((string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
   (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
@@ -494,7 +494,7 @@ let build_tables (homes : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_mak
         let tmp3 = (if (match (x).FStarC_Custard_Syntax.spec with
             | None -> true
             | tmp3 -> false
-          ) then (let tmp3 = (module_name_of_unit (FStarC_String.concat "." (x).FStarC_Custard_Syntax.ns)) in
+          ) then (let tmp3 = (module_name_of_unit (BatString.concat "." (x).FStarC_Custard_Syntax.ns)) in
           ((=) tmp3 m)) else false) in
         (if tmp3 then (let tmp4 = (FStarC_Custard_Syntax.string_of_name x) in
         (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace home tmp4 ())) else ()))) in
@@ -551,7 +551,7 @@ let params (ps : (string) list) : string =
   (match ps with
     | [] -> ""
     | tmp -> (let tmp1 = (BatList.map fsharp_tyvar ps) in
-      let tmp2 = (FStarC_String.concat ", " tmp1) in
+      let tmp2 = (BatString.concat ", " tmp1) in
       let tmp3 = (Prims.strcat tmp2 ">") in
       (Prims.strcat "<" tmp3))
   )
@@ -565,7 +565,7 @@ let builtin_ctor (n : FStarC_Custard_Syntax.name) : (string) option =
   (match (if (match (n).FStarC_Custard_Syntax.spec with
     | (Some (v)) -> true
     | tmp -> false
-  ) then "" else (FStarC_String.concat "." (BatList.append (n).FStarC_Custard_Syntax.ns ((n).FStarC_Custard_Syntax.id :: [])))) with
+  ) then "" else (BatString.concat "." (BatList.append (n).FStarC_Custard_Syntax.ns ((n).FStarC_Custard_Syntax.id :: [])))) with
     | "Prims.Nil" -> (Some ("[]"))
     | "Prims.Cons" -> (Some ("::"))
     | "FStar.Pervasives.Native.None" -> (Some ("None"))
@@ -636,15 +636,15 @@ let hexd (i : Prims.int) : string =
   (let d = ("0" :: ("1" :: ("2" :: ("3" :: ("4" :: ("5" :: ("6" :: ("7" :: ("8" :: ("9" :: ("a" :: ("b" :: ("c" :: ("d" :: ("e" :: ("f" :: [])))))))))))))))) in
   ((fun l i -> BatList.nth l (Z.to_int i)) d i))
 
-let char_literal (c : FStar_Char.char) : string =
-  (let i = (FStarC_Util.int_of_char c) in
+let char_literal (c : int) : string =
+  (let i = (Z.of_int c) in
   (if (Prims.op_Greater i (Prims.of_int (65535))) then (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Error_CustardNoCRepresentation ((text (Prims.strcat "Custard: the character literal U+" (Prims.strcat (hexd (Prims.op_Percent (Prims.op_Slash i (Prims.of_int (65536))) (Prims.of_int (16)))) (Prims.strcat (hexd (Prims.op_Percent (Prims.op_Slash i (Prims.of_int (4096))) (Prims.of_int (16)))) (Prims.strcat (hexd (Prims.op_Percent (Prims.op_Slash i (Prims.of_int (256))) (Prims.of_int (16)))) (Prims.strcat (hexd (Prims.op_Percent (Prims.op_Slash i (Prims.of_int (16))) (Prims.of_int (16)))) (Prims.strcat (hexd (Prims.op_Percent i (Prims.of_int (16)))) " has no F# representation."))))))) :: ((text "An F# char is a UTF-16 code unit and so cannot hold a code point above the Basic Multilingual Plane (section 122.9).") :: []))) else (let body = (match c with
       | 10 -> "\\n"
       | 9 -> "\\t"
       | 13 -> "\\r"
       | 39 -> "\\'"
       | 92 -> "\\\\"
-      | c1 -> (if ((Prims.op_Less i (Prims.of_int (32))) || (Prims.op_Greater i (Prims.of_int (126)))) then (Prims.strcat "\\u" (Prims.strcat (hexd (Prims.op_Percent (Prims.op_Slash i (Prims.of_int (4096))) (Prims.of_int (16)))) (Prims.strcat (hexd (Prims.op_Percent (Prims.op_Slash i (Prims.of_int (256))) (Prims.of_int (16)))) (Prims.strcat (hexd (Prims.op_Percent (Prims.op_Slash i (Prims.of_int (16))) (Prims.of_int (16)))) (hexd (Prims.op_Percent i (Prims.of_int (16)))))))) else (FStarC_Util.string_of_char c1))
+      | c1 -> (if ((Prims.op_Less i (Prims.of_int (32))) || (Prims.op_Greater i (Prims.of_int (126)))) then (Prims.strcat "\\u" (Prims.strcat (hexd (Prims.op_Percent (Prims.op_Slash i (Prims.of_int (4096))) (Prims.of_int (16)))) (Prims.strcat (hexd (Prims.op_Percent (Prims.op_Slash i (Prims.of_int (256))) (Prims.of_int (16)))) (Prims.strcat (hexd (Prims.op_Percent (Prims.op_Slash i (Prims.of_int (16))) (Prims.of_int (16)))) (hexd (Prims.op_Percent i (Prims.of_int (16)))))))) else ((fun i -> BatUTF8.init 1 (fun _ -> BatUChar.chr i)) c1))
     ) in
   (Prims.strcat "'" (Prims.strcat body "'")))))
 
@@ -655,11 +655,11 @@ let escape (s : string) : string =
       | 13 -> "\\r"
       | 34 -> "\\\""
       | 92 -> "\\\\"
-      | c1 -> (let i = (FStarC_Util.int_of_char c1) in
-        (if ((Prims.op_Less i (Prims.of_int (32))) || ((=) i (Prims.of_int (127)))) then (Prims.strcat "\\u00" (Prims.strcat (hexd (Prims.op_Percent (Prims.op_Slash i (Prims.of_int (16))) (Prims.of_int (16)))) (hexd (Prims.op_Percent i (Prims.of_int (16)))))) else (FStarC_Util.string_of_char c1)))
+      | c1 -> (let i = (Z.of_int c1) in
+        (if ((Prims.op_Less i (Prims.of_int (32))) || ((=) i (Prims.of_int (127)))) then (Prims.strcat "\\u00" (Prims.strcat (hexd (Prims.op_Percent (Prims.op_Slash i (Prims.of_int (16))) (Prims.of_int (16)))) (hexd (Prims.op_Percent i (Prims.of_int (16)))))) else ((fun i -> BatUTF8.init 1 (fun _ -> BatUChar.chr i)) c1)))
     )) in
-  let tmp = (BatList.map esc (FStarC_String.list_of_string s)) in
-  (FStarC_String.concat "" tmp))
+  let tmp = (BatList.map esc ((fun s -> List.rev (BatUTF8.fold (fun acc c -> BatUChar.code c :: acc) [] s)) s)) in
+  (BatString.concat "" tmp))
 
 let constant (c : FStarC_Custard_Syntax.constant) : string =
   (match c with
@@ -698,16 +698,16 @@ let external_target (n : FStarC_Custard_Syntax.name) : (string) option =
   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt tmp tmp1))
 
 let rec col_after__go (c : Prims.int) (s : string) (n : Prims.int) (i : Prims.int) : Prims.int =
-  (if (Prims.op_Less_Equals i Prims.int_zero) then (Prims.op_Plus c n) else (let tmp = (FStarC_String.get s (Prims.op_Minus i Prims.int_one)) in
+  (if (Prims.op_Less_Equals i Prims.int_zero) then (Prims.op_Plus c n) else (let tmp = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) s (Prims.op_Minus i Prims.int_one)) in
   let tmp1 = ((=) tmp 10) in
   (if tmp1 then (Prims.op_Minus n i) else ((col_after__go c s n) (Prims.op_Minus i Prims.int_one)))))
 
 let col_after (c : Prims.int) (s : string) : Prims.int =
-  (let n = (FStarC_String.length s) in
+  (let n = ((fun s -> Z.of_int (BatUTF8.length s)) s) in
   ((col_after__go c s n) n))
 
 let spaces (n : Prims.int) : string =
-  (if (Prims.op_Less_Equals n Prims.int_zero) then "" else (FStarC_String.make n 32))
+  (if (Prims.op_Less_Equals n Prims.int_zero) then "" else ((fun i c -> BatUTF8.init (Z.to_int i) (fun _ -> BatUChar.chr c)) n 32))
 
 let rec join_at_aux (acc : (string) list) (col : Prims.int) (sep : string) (f : (string -> ('a -> string))) (xs : ('a) list) : (string) list =
   (match xs with
@@ -723,10 +723,10 @@ let rec join_at_aux (acc : (string) list) (col : Prims.int) (sep : string) (f : 
   )
 
 let join_at (ind : string) (pre : string) (sep : string) (f : (string -> ('a -> string))) (xs : ('a) list) : string =
-  (let col = (col_after (FStarC_String.length ind) pre) in
+  (let col = (col_after ((fun s -> Z.of_int (BatUTF8.length s)) ind) pre) in
   let tmp = (join_at_aux (pre :: []) col sep f xs) in
   let tmp1 = (BatList.rev tmp) in
-  (FStarC_String.concat "" tmp1))
+  (BatString.concat "" tmp1))
 
 let tuple_arity (n : FStarC_Custard_Syntax.name) : (Prims.int) option =
   (if (match (n).FStarC_Custard_Syntax.spec with
@@ -737,7 +737,7 @@ let tuple_arity (n : FStarC_Custard_Syntax.name) : (Prims.int) option =
   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt tmp tmp1)))
 
 let after (ind : string) (s : string) : string =
-  (let tmp = (col_after (FStarC_String.length ind) s) in
+  (let tmp = (col_after ((fun s -> Z.of_int (BatUTF8.length s)) ind) s) in
   (spaces tmp))
 
 let rec pat_scalar_ty (p : FStarC_Custard_Syntax.pat) : (string) option =
@@ -809,10 +809,10 @@ and defer_ints (n : Prims.int) (p : FStarC_Custard_Syntax.pat) : (Prims.int * FS
   )
 
 let tuple_index (f : string) : Prims.int =
-  (let tmp = (if (Prims.op_Greater (FStarC_String.strlen f) Prims.int_zero) then (let tmp = (FStarC_String.substring f Prims.int_zero Prims.int_one) in
+  (let tmp = (if (Prims.op_Greater ((fun s -> Z.of_int (BatUTF8.length s)) f) Prims.int_zero) then (let tmp = ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) f Prims.int_zero Prims.int_one) in
     ((=) tmp "_")) else false) in
-  let s = (if tmp then (FStarC_String.substring f Prims.int_one (Prims.op_Minus (FStarC_String.strlen f) Prims.int_one)) else f) in
-  (match (FStarC_Util.safe_int_of_string s) with
+  let s = (if tmp then ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) f Prims.int_one (Prims.op_Minus ((fun s -> Z.of_int (BatUTF8.length s)) f) Prims.int_one)) else f) in
+  (match ((fun x -> if String.equal x "" then None else try Some (Z.of_string x) with Invalid_argument _ -> None) s) with
     | (Some (i)) -> i
     | None -> Prims.int_zero
   ))
@@ -860,12 +860,12 @@ let rec pattern (p : FStarC_Custard_Syntax.pat) : string =
       | (Some (v)) -> true
       | tmp1 -> false
     )) -> (let tmp = (BatList.map pattern ps) in
-      let tmp1 = (FStarC_String.concat ", " tmp) in
+      let tmp1 = (BatString.concat ", " tmp) in
       let tmp2 = (Prims.strcat tmp1 ")") in
       (Prims.strcat "(" tmp2))
     | (FStarC_Custard_Syntax.PCtor (n, ps)) -> (let tmp = (ctor_ref n) in
       let tmp1 = (BatList.map pattern ps) in
-      let tmp2 = (FStarC_String.concat ", " tmp1) in
+      let tmp2 = (BatString.concat ", " tmp1) in
       let tmp3 = (Prims.strcat tmp2 "))") in
       let tmp4 = (Prims.strcat " (" tmp3) in
       let tmp5 = (Prims.strcat tmp tmp4) in
@@ -883,7 +883,7 @@ let rec pattern (p : FStarC_Custard_Syntax.pat) : string =
             (f, tmp2))
         )) fs) in
       let tmp2 = (by_position k "_" tmp1) in
-      let tmp3 = (FStarC_String.concat ", " tmp2) in
+      let tmp3 = (BatString.concat ", " tmp2) in
       let tmp4 = (Prims.strcat tmp3 ")") in
       (Prims.strcat "(" tmp4))
     | (FStarC_Custard_Syntax.PRecord (n, fs)) -> (let tmp = ((fun f l -> BatList.mapi (fun i x -> f (Z.of_int i) x) l) (fun i tmp -> (match tmp with
@@ -892,15 +892,15 @@ let rec pattern (p : FStarC_Custard_Syntax.pat) : string =
             let tmp3 = (Prims.strcat " = " tmp2) in
             (Prims.strcat tmp1 tmp3))
         )) fs) in
-      let tmp1 = (FStarC_String.concat "; " tmp) in
+      let tmp1 = (BatString.concat "; " tmp) in
       let tmp2 = (Prims.strcat tmp1 " }") in
       (Prims.strcat "{ " tmp2))
     | (FStarC_Custard_Syntax.PTuple (ps)) -> (let tmp = (BatList.map pattern ps) in
-      let tmp1 = (FStarC_String.concat ", " tmp) in
+      let tmp1 = (BatString.concat ", " tmp) in
       let tmp2 = (Prims.strcat tmp1 ")") in
       (Prims.strcat "(" tmp2))
     | (FStarC_Custard_Syntax.POr (ps)) -> (let tmp = (BatList.map pattern ps) in
-      let tmp1 = (FStarC_String.concat " | " tmp) in
+      let tmp1 = (BatString.concat " | " tmp) in
       let tmp2 = (Prims.strcat tmp1 ")") in
       (Prims.strcat "(" tmp2))
   )
@@ -934,7 +934,7 @@ let ascribe_record (n : FStarC_Custard_Syntax.name) (f : string) (s : string) : 
   (match tmp4 with
     | None -> s
     | (Some (k)) -> (let args = (if ((=) k Prims.int_zero) then "" else (let tmp5 = (fStarC_Custard_PrintFSharp_ascribe_record__wilds__1 k) in
-        let tmp6 = (FStarC_String.concat ", " tmp5) in
+        let tmp6 = (BatString.concat ", " tmp5) in
         let tmp7 = (Prims.strcat tmp6 ">") in
         (Prims.strcat "<" tmp7))) in
       let tmp5 = (fsharp_type_name n) in
@@ -1119,7 +1119,7 @@ and case (ind : string) (br : (FStarC_Custard_Syntax.pat * (FStarC_Custard_Synta
           let pre = (Prims.strcat ind tmp3) in
           let pre1 = (match (conds, g) with
               | ([], None) -> (Prims.strcat pre " -> ")
-              | tmp4 -> (let pre1 = (Prims.strcat pre (Prims.strcat " when " (FStarC_String.concat " && " conds))) in
+              | tmp4 -> (let pre1 = (Prims.strcat pre (Prims.strcat " when " (BatString.concat " && " conds))) in
                 (match g with
                   | None -> (Prims.strcat pre1 " -> ")
                   | (Some (g1)) -> (let pre2 = (Prims.strcat pre1 (if ((=) conds []) then "" else " && ")) in
@@ -1216,7 +1216,7 @@ and term (ind : string) (e : FStarC_Custard_Syntax.expr) : string =
         let tmp3 = (Prims.strcat " : " tmp2) in
         let tmp4 = (Prims.strcat tmp tmp3) in
         (Prims.strcat "(" tmp4))) bs) in
-      let tmp1 = (FStarC_String.concat " " tmp) in
+      let tmp1 = (BatString.concat " " tmp) in
       let tmp2 = (Prims.strcat tmp1 " -> ") in
       let pre = (Prims.strcat "(fun " tmp2) in
       let tmp3 = (after ind pre) in
@@ -1261,7 +1261,7 @@ and term (ind : string) (e : FStarC_Custard_Syntax.expr) : string =
       let hd = (Prims.strcat pre tmp2) in
       let ind' = (Prims.strcat ind " ") in
       let tmp3 = (BatList.map (case ind') brs) in
-      let tmp4 = (FStarC_String.concat "\n" tmp3) in
+      let tmp4 = (BatString.concat "\n" tmp3) in
       let tmp5 = (Prims.strcat tmp4 ")") in
       (Prims.strcat hd tmp5))
     | (FStarC_Custard_Syntax.ERecord (n, fs)) when (let tmp = (tuple_arity n) in
@@ -1291,10 +1291,10 @@ and term (ind : string) (e : FStarC_Custard_Syntax.expr) : string =
             let tmp3 = (term tmp2 e1) in
             (Prims.strcat pre tmp3))
         )) fs) in
-      let one = (Prims.strcat "{ " (Prims.strcat (FStarC_String.concat "; " parts) " }")) in
-      let tmp = (if (Prims.op_Less_Equals (Prims.op_Plus (FStarC_String.length ind) (FStarC_String.length one)) line_width) then (let tmp = (BatList.exists (fun c -> ((=) c 10)) (FStarC_String.list_of_string one)) in
+      let one = (Prims.strcat "{ " (Prims.strcat (BatString.concat "; " parts) " }")) in
+      let tmp = (if (Prims.op_Less_Equals (Prims.op_Plus ((fun s -> Z.of_int (BatUTF8.length s)) ind) ((fun s -> Z.of_int (BatUTF8.length s)) one)) line_width) then (let tmp = (BatList.exists (fun c -> ((=) c 10)) ((fun s -> List.rev (BatUTF8.fold (fun acc c -> BatUChar.code c :: acc) [] s)) one)) in
         (not tmp)) else false) in
-      (if tmp then one else (Prims.strcat "{ " (Prims.strcat (FStarC_String.concat (Prims.strcat ";\n" ind') parts) " }"))))
+      (if tmp then one else (Prims.strcat "{ " (Prims.strcat (BatString.concat (Prims.strcat ";\n" ind') parts) " }"))))
     | (FStarC_Custard_Syntax.EProj (e1, n, f)) when (let tmp = (tuple_arity n) in
     (match tmp with
       | (Some (v)) -> true
@@ -1307,7 +1307,7 @@ and term (ind : string) (e : FStarC_Custard_Syntax.expr) : string =
       let tmp1 = (after ind pre) in
       let tmp2 = (term tmp1 e1) in
       let tmp3 = (by_position k "_" ((f, "custard_tup") :: [])) in
-      let tmp4 = (FStarC_String.concat ", " tmp3) in
+      let tmp4 = (BatString.concat ", " tmp3) in
       let tmp5 = (Prims.strcat tmp4 ") -> custard_tup)") in
       let tmp6 = (Prims.strcat " with (" tmp5) in
       let tmp7 = (Prims.strcat tmp2 tmp6) in
@@ -1576,7 +1576,7 @@ and term (ind : string) (e : FStarC_Custard_Syntax.expr) : string =
       let hd = (Prims.strcat pre tmp2) in
       let ind' = (Prims.strcat ind " ") in
       let tmp3 = (BatList.map (case ind') brs) in
-      let tmp4 = (FStarC_String.concat "\n" tmp3) in
+      let tmp4 = (BatString.concat "\n" tmp3) in
       let tmp5 = (Prims.strcat tmp4 ")") in
       (Prims.strcat hd tmp5))
   )
@@ -1603,7 +1603,7 @@ let print_decl (first : bool) (d : FStarC_Custard_Syntax.decl) : (string) option
                 let tmp10 = (Prims.strcat tmp6 tmp9) in
                 (Prims.strcat "  " tmp10))
             )) fs) in
-          let tmp6 = (FStarC_String.concat "" tmp5) in
+          let tmp6 = (BatString.concat "" tmp5) in
           let tmp7 = (Prims.strcat tmp6 "}") in
           let tmp8 = (Prims.strcat " = {\n" tmp7) in
           let tmp9 = (Prims.strcat hd tmp8) in
@@ -1615,14 +1615,14 @@ let print_decl (first : bool) (d : FStarC_Custard_Syntax.decl) : (string) option
                     | tmp7 -> (let tmp8 = (BatList.map (fun tmp8 -> (match tmp8 with
                           | (tmp9, t1) -> (ty t1)
                         )) fs) in
-                      let tmp9 = (FStarC_String.concat " * " tmp8) in
+                      let tmp9 = (BatString.concat " * " tmp8) in
                       (Prims.strcat " of " tmp9))
                   ) in
                 let tmp8 = (Prims.strcat tmp7 "\n") in
                 let tmp9 = (Prims.strcat tmp6 tmp8) in
                 (Prims.strcat "  | " tmp9))
             )) cs) in
-          let tmp6 = (FStarC_String.concat "" tmp5) in
+          let tmp6 = (BatString.concat "" tmp5) in
           let tmp7 = (Prims.strcat " =\n" tmp6) in
           let tmp8 = (Prims.strcat hd tmp7) in
           (Some (tmp8)))
@@ -1633,7 +1633,7 @@ let print_decl (first : bool) (d : FStarC_Custard_Syntax.decl) : (string) option
       let tmp1 = (match (e).FStarC_Custard_Syntax.de_args with
           | [] -> ""
           | args -> (let tmp1 = (BatList.map ty args) in
-            let tmp2 = (FStarC_String.concat " * " tmp1) in
+            let tmp2 = (BatString.concat " * " tmp1) in
             (Prims.strcat " of " tmp2))
         ) in
       let tmp2 = (Prims.strcat tmp tmp1) in
@@ -1645,7 +1645,7 @@ let print_decl (first : bool) (d : FStarC_Custard_Syntax.decl) : (string) option
         let tmp3 = (Prims.strcat " : " tmp2) in
         let tmp4 = (Prims.strcat tmp tmp3) in
         (Prims.strcat " (" tmp4))) (l).FStarC_Custard_Syntax.dl_binders) in
-      let bs = (FStarC_String.concat "" tmp) in
+      let bs = (BatString.concat "" tmp) in
       let tmp1 = (BatList.exists FStarC_Custard_Syntax.uu___is_Rec (l).FStarC_Custard_Syntax.dl_flags) in
       let rc = (if tmp1 then "rec " else "") in
       let kw = (if first then (Prims.strcat "let " rc) else "and ") in
@@ -1699,7 +1699,7 @@ let entry_calls (p : (FStarC_Custard_Syntax.decl) list) : (string) list =
   (match tmp with
     | [] -> []
     | ls -> (let body = (BatList.map (fun l -> (let tmp1 = (BatList.map (fun tmp1 -> "()") (l).FStarC_Custard_Syntax.dl_binders) in
-        let args = (FStarC_String.concat " " tmp1) in
+        let args = (BatString.concat " " tmp1) in
         let tmp2 = (fsharp_value_name (l).FStarC_Custard_Syntax.dl_name) in
         let tmp3 = (qualify (l).FStarC_Custard_Syntax.dl_name tmp2) in
         let tmp4 = (Prims.strcat tmp3 (Prims.strcat " " (Prims.strcat args ")"))) in
@@ -1710,7 +1710,7 @@ let entry_calls (p : (FStarC_Custard_Syntax.decl) list) : (string) list =
           | tmp5 -> (Prims.strcat "  (ignore " (Prims.strcat call ")\n  0"))
         ))) ls) in
       let tmp1 = (entry_name ()) in
-      let tmp2 = (Prims.strcat tmp1 (Prims.strcat " (_argv : string[]) : int =\n" (FStarC_String.concat "\n" body))) in
+      let tmp2 = (Prims.strcat tmp1 (Prims.strcat " (_argv : string[]) : int =\n" (BatString.concat "\n" body))) in
       let tmp3 = (Prims.strcat "[<EntryPoint>]\nlet " tmp2) in
       (tmp3 :: []))
   ))
@@ -1719,7 +1719,7 @@ let header (m : string) : string =
   (Prims.strcat "// Generated by F* Custard extraction. Do not edit.\nmodule " (Prims.strcat m "\n#nowarn \"25\" \"26\" \"40\" \"49\" \"64\" \"1182\" \"3220\"\nopen FStarCustard\n"))
 
 let assemble (m : string) (ds : (string) list) : string =
-  (Prims.strcat (header m) (Prims.strcat "\n" (Prims.strcat (FStarC_String.concat "\n\n" ds) "\n")))
+  (Prims.strcat (header m) (Prims.strcat "\n" (Prims.strcat (BatString.concat "\n\n" ds) "\n")))
 
 let print_split (files : ((string * (FStarC_Custard_Syntax.decl) list)) list) : ((string * string)) list =
   (let files1 = (BatList.map (fun tmp -> (match tmp with
@@ -1771,7 +1771,7 @@ let target_framework : string =
 
 let project_source (stem : string) (exe : bool) (srcs : (string) list) : string =
   (let tmp = (BatList.map (fun f -> (Prims.strcat "    <Compile Include=\"" (Prims.strcat f "\" />\n"))) srcs) in
-  let tmp1 = (FStarC_String.concat "" tmp) in
+  let tmp1 = (BatString.concat "" tmp) in
   let tmp2 = (Prims.strcat tmp1 "  </ItemGroup>\n</Project>\n") in
   let tmp3 = (Prims.strcat "</TargetFramework>\n    <Nullable>disable</Nullable>\n    <InvariantGlobalization>true</InvariantGlobalization>\n    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>\n    <GenerateDocumentationFile>false</GenerateDocumentationFile>\n  </PropertyGroup>\n  <ItemGroup>\n    <Compile Include=\"FStarCustard.fs\" />\n" tmp2) in
   let tmp4 = (Prims.strcat target_framework tmp3) in

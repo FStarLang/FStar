@@ -2,7 +2,7 @@
 [@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
 
 type pstate = {
-  toks : (FStarC_Parser_Lexer.token) FStar_ImmutableArray_Base.t;
+  toks : (FStarC_Parser_Lexer.token) array;
   ntoks : int;
   idx : (int ref);
   furthest : (int ref);
@@ -11,7 +11,7 @@ type pstate = {
 }
 
 let mk_pstate (fname : string) (start_pos : Prims.int) (toks : (FStarC_Parser_Lexer.token) list) : pstate =
-  (let arr = (FStar_ImmutableArray_Base.of_list toks) in
+  (let arr = (Array.of_list toks) in
   let tmp = (ref 0) in
   let tmp1 = (ref 0) in
   { toks = arr;
@@ -36,8 +36,8 @@ type leading_rule = {
 }
 
 type 'a rules = {
-  by_kind : (('a) list) FStar_ImmutableArray_Base.t;
-  by_keyword : (('a) list) FStarC_PSMap.t;
+  by_kind : (('a) list) array;
+  by_keyword : (string, ('a) list) FStarC_AVLMap.tree;
 }
 
 type trailing_rule = {
@@ -95,7 +95,7 @@ let add_to (rs : ('a) rules) (k : FStarC_Parser_TokenKind.token_kind) (x : 'a) :
       { by_kind = (rs).by_kind;
         by_keyword = (FStarC_PSMap.add (rs).by_keyword s (FStar_List_Tot_Base.append l (x :: []))) })
     | tmp -> (let i = (FStarC_Parser_TokenKind.kind_index k) in
-      { by_kind = (FStar_ImmutableArray_Base.of_list ((add_to__go rs x i) Prims.int_zero));
+      { by_kind = (Array.of_list ((add_to__go rs x i) Prims.int_zero));
         by_keyword = (rs).by_keyword })
   )
 
@@ -110,7 +110,7 @@ let rec empty_rules__go (n : Prims.int) : (('a) list) list =
   (if (Prims.op_Less_Equals n Prims.int_zero) then [] else ([] :: (empty_rules__go (Prims.op_Minus n Prims.int_one))))
 
 let empty_rules (a : unit) : ('a) rules =
-  { by_kind = (FStar_ImmutableArray_Base.of_list (empty_rules__go FStarC_Parser_TokenKind.num_kinds));
+  { by_kind = (Array.of_list (empty_rules__go FStarC_Parser_TokenKind.num_kinds));
     by_keyword = (FStarC_PSMap.empty ()) }
 
 let empty_grammar (base : (pstate -> (ctx -> FStarC_Parser_AST.term))) (base_level : Prims.int) : grammar =

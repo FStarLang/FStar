@@ -36,7 +36,7 @@ let filter_imp (aq : (FStarC_Syntax_Syntax.binder_qualifier) option) : bool =
 let filter_imp_binders (bs : (FStarC_Syntax_Syntax.binder) list) : (FStarC_Syntax_Syntax.binder) list =
   (BatList.filter (fun b -> (filter_imp (b).FStarC_Syntax_Syntax.binder_qual)) bs)
 
-let uvar_to_string (u : (((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * FStarC_Syntax_Syntax.uvar_decoration)) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : string =
+let uvar_to_string (u : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : string =
   (let tmp = (FStarC_Options.hide_uvar_nums ()) in
   (if tmp then "?" else (let tmp1 = (FStarC_Syntax_Unionfind.uvar_id u) in
   let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int tmp1) in
@@ -47,7 +47,7 @@ let version_to_string (v : FStarC_Syntax_Syntax.version) : string =
   let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int (v).FStarC_Syntax_Syntax.minor) in
   (FStarC_Format.fmt2 "%s.%s" tmp tmp1))
 
-let univ_uvar_to_string (u : (((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : string =
+let univ_uvar_to_string (u : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : string =
   (let tmp = (FStarC_Options.hide_uvar_nums ()) in
   (if tmp then "?" else (let tmp1 = (FStarC_Syntax_Unionfind.univ_uvar_id u) in
   let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int tmp1) in
@@ -83,7 +83,7 @@ let rec univ_to_string (u : FStarC_Syntax_Syntax.universe) : string =
           (FStarC_Format.fmt2 "(%s + %s)" tmp3 tmp4))
       ))
     | (FStarC_Syntax_Syntax.U_max (us)) -> (let tmp2 = (BatList.map univ_to_string us) in
-      let tmp3 = (FStarC_String.concat ", " tmp2) in
+      let tmp3 = (BatString.concat ", " tmp2) in
       (FStarC_Format.fmt1 "(max %s)" tmp3))
     | FStarC_Syntax_Syntax.U_unknown -> "unknown"
   ))))
@@ -125,12 +125,12 @@ let qual_to_string (x : FStarC_Syntax_Syntax.qualifier) : string =
     | (FStarC_Syntax_Syntax.RecordType (ns, fns)) -> (let tmp = (FStarC_Ident.path_of_ns ns) in
       let tmp1 = (FStarC_Ident.text_of_path tmp) in
       let tmp2 = (BatList.map FStarC_Ident.string_of_id fns) in
-      let tmp3 = (FStarC_String.concat ", " tmp2) in
+      let tmp3 = (BatString.concat ", " tmp2) in
       (FStarC_Format.fmt2 "(RecordType %s %s)" tmp1 tmp3))
     | (FStarC_Syntax_Syntax.RecordConstructor (ns, fns)) -> (let tmp = (FStarC_Ident.path_of_ns ns) in
       let tmp1 = (FStarC_Ident.text_of_path tmp) in
       let tmp2 = (BatList.map FStarC_Ident.string_of_id fns) in
-      let tmp3 = (FStarC_String.concat ", " tmp2) in
+      let tmp3 = (BatString.concat ", " tmp2) in
       (FStarC_Format.fmt2 "(RecordConstructor %s %s)" tmp1 tmp3))
     | (FStarC_Syntax_Syntax.Action (eff_lid)) -> (let tmp = (lid_to_string eff_lid) in
       (FStarC_Format.fmt1 "(Action %s)" tmp))
@@ -146,7 +146,7 @@ let quals_to_string (quals : (FStarC_Syntax_Syntax.qualifier) list) : string =
   (match quals with
     | [] -> ""
     | tmp -> (let tmp1 = (BatList.map qual_to_string quals) in
-      (FStarC_String.concat " " tmp1))
+      (BatString.concat " " tmp1))
   )
 
 let quals_to_string' (quals : (FStarC_Syntax_Syntax.qualifier) list) : string =
@@ -167,11 +167,11 @@ let lbname_to_string (x : (FStarC_Syntax_Syntax.bv, FStarC_Syntax_Syntax.fv) FSt
 
 let univ_names_to_string (us : (FStarC_Ident.ident) list) : string =
   (let tmp = (BatList.map (fun x -> (FStarC_Ident.string_of_id x)) us) in
-  (FStarC_String.concat ", " tmp))
+  (BatString.concat ", " tmp))
 
 let univs_to_string (us : (FStarC_Syntax_Syntax.universe) list) : string =
   (let tmp = (BatList.map univ_to_string us) in
-  (FStarC_String.concat ", " tmp))
+  (BatString.concat ", " tmp))
 
 let rec arrow_binder_to_string (b : FStarC_Syntax_Syntax.binder) : string =
   (binder_to_string' true b)
@@ -180,8 +180,8 @@ and binders_to_string (sep : string) (bs : (FStarC_Syntax_Syntax.binder) list) :
   (let tmp = (FStarC_Options.print_implicits ()) in
   let bs1 = (if tmp then bs else (filter_imp_binders bs)) in
   (if ((=) sep " -> ") then (let tmp1 = (BatList.map arrow_binder_to_string bs1) in
-  (FStarC_String.concat sep tmp1)) else (let tmp1 = (BatList.map binder_to_string bs1) in
-  (FStarC_String.concat sep tmp1))))
+  (BatString.concat sep tmp1)) else (let tmp1 = (BatList.map binder_to_string bs1) in
+  (BatString.concat sep tmp1))))
 
 and ctx_uvar_to_string_aux (print_reason : bool) (ctx_uvar : FStarC_Syntax_Syntax.ctx_uvar) : string =
   (let reason_string = (if print_reason then (FStarC_Format.fmt1 "(* %s *)\n" (ctx_uvar).FStarC_Syntax_Syntax.ctx_uvar_reason) else (let tmp = (FStarC_Range_Ops.string_of_pos (FStarC_Range_Ops.start_of_range (ctx_uvar).FStarC_Syntax_Syntax.ctx_uvar_range)) in
@@ -224,7 +224,7 @@ and subst_elt_to_string (x : FStarC_Syntax_Syntax.subst_elt) : string =
 
 and subst_to_string (s : (FStarC_Syntax_Syntax.subst_elt) list) : string =
   (let tmp = (BatList.map subst_elt_to_string s) in
-  (FStarC_String.concat "; " tmp))
+  (BatString.concat "; " tmp))
 
 and cflag_to_string (c : FStarC_Syntax_Syntax.cflag) : string =
   (match c with
@@ -290,7 +290,7 @@ and comp_to_string (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syn
         )
       | tmp3 -> []
     )) (c1).FStarC_Syntax_Syntax.flags) in
-  let dec = (FStarC_String.concat " " tmp2) in
+  let dec = (BatString.concat " " tmp2) in
   (FStarC_Format.fmt2 "%s%s" basic dec))))
 
 and formula_to_string (phi : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : string =
@@ -306,14 +306,14 @@ and args_to_string (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.s
   (let tmp = (FStarC_Options.print_implicits ()) in
   let args1 = (if tmp then args else (filter_imp_args args)) in
   let tmp1 = (BatList.map arg_to_string args1) in
-  (FStarC_String.concat " " tmp1))
+  (BatString.concat " " tmp1))
 
 and attrs_to_string (l : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) : string =
   (match l with
     | [] -> ""
     | tms -> (let tmp = (BatList.map (fun t -> (let tmp = (term_to_string t) in
         (paren tmp))) tms) in
-      let tmp1 = (FStarC_String.concat "; " tmp) in
+      let tmp1 = (BatString.concat "; " tmp) in
       (FStarC_Format.fmt1 "[@ %s]" tmp1))
   )
 
@@ -343,14 +343,14 @@ and pat_to_string (x : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo
       let tmp3 = (if tmp2 then " " else (match us_opt with
           | None -> " "
           | (Some (us)) -> (let tmp3 = (BatList.map univ_to_string us) in
-            let tmp4 = (FStarC_String.concat " " tmp3) in
+            let tmp4 = (BatString.concat " " tmp3) in
             (FStarC_Format.fmt1 " %s " tmp4))
         )) in
       let tmp4 = (BatList.map (fun tmp4 -> (match tmp4 with
           | (x1, b) -> (let p = (pat_to_string x1) in
             (if b then (Prims.strcat "#" p) else p))
         )) pats) in
-      let tmp5 = (FStarC_String.concat " " tmp4) in
+      let tmp5 = (BatString.concat " " tmp4) in
       (FStarC_Format.fmt3 "(%s%s%s)" tmp tmp3 tmp5))
     | (FStarC_Syntax_Syntax.Pat_dot_term (topt)) -> (let tmp = (FStarC_Options.print_bound_var_types ()) in
       (if tmp then (let tmp1 = (if ((=) topt None) then "_" else (let tmp1 = (FStarC_Option.must topt) in
@@ -403,8 +403,8 @@ and term_to_string (x : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax
     | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t; meta = (FStarC_Syntax_Syntax.Meta_pattern (tmp2, ps)); _ })) -> (let tmp3 = (BatList.map (fun args -> (let tmp3 = (BatList.map (fun tmp3 -> (match tmp3 with
             | (t1, tmp4) -> (term_to_string t1)
           )) args) in
-        (FStarC_String.concat "; " tmp3))) ps) in
-      let pats = (FStarC_String.concat "\\/" tmp3) in
+        (BatString.concat "; " tmp3))) ps) in
+      let pats = (BatString.concat "\\/" tmp3) in
       let tmp4 = (term_to_string t) in
       (FStarC_Format.fmt2 "{:pattern %s} %s" pats tmp4))
     | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t; meta = (FStarC_Syntax_Syntax.Meta_monadic (m, t')); _ })) -> (let tmp2 = (sli m) in
@@ -451,7 +451,7 @@ and term_to_string (x : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax
       let tmp5 = (BatList.map subst_to_string (match s with
           | (u__1, u__2) -> u__1
         )) in
-      let tmp6 = (FStarC_String.concat "; " tmp5) in
+      let tmp6 = (BatString.concat "; " tmp5) in
       (FStarC_Format.fmt2 "(%s @ %s)" tmp4 tmp6)) else (let tmp4 = (FStarC_Syntax_Unionfind.uvar_id ((u).FStarC_Syntax_Syntax.ctx_uvar_head, (u).FStarC_Syntax_Syntax.ctx_uvar_head1, (u).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
       let tmp5 = (FStarC_Class_Show.fStarC_Class_Show_show__int tmp4) in
       (Prims.strcat "?" tmp5))))
@@ -550,7 +550,7 @@ and binder_attrs_to_string (l : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Synt
     | [] -> ""
     | tms -> (let tmp = (BatList.map (fun t -> (let tmp = (term_to_string t) in
         (paren tmp))) tms) in
-      let tmp1 = (FStarC_String.concat "; " tmp) in
+      let tmp1 = (BatString.concat "; " tmp) in
       (FStarC_Format.fmt1 "[@@@ %s]" tmp1))
   )
 
@@ -688,12 +688,12 @@ let rec sigelt_to_string (x : FStarC_Syntax_Syntax.sigelt) : string =
           ), tmp1) in
         (lbs_to_string (x).FStarC_Syntax_Syntax.sigquals lbs1))
       | (FStarC_Syntax_Syntax.Sig_bundle ({ FStarC_Syntax_Syntax.ses = ses; lids = tmp; _ })) -> (let tmp1 = (BatList.map sigelt_to_string ses) in
-        let tmp2 = (FStarC_String.concat "\n" tmp1) in
+        let tmp2 = (BatString.concat "\n" tmp1) in
         (Prims.strcat "(* Sig_bundle *)" tmp2))
       | (FStarC_Syntax_Syntax.Sig_fail ({ FStarC_Syntax_Syntax.errs = errs; rng = tmp; fail_in_lax = lax; ses = ses; _ })) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__bool lax) in
         let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__list_int errs) in
         let tmp3 = (BatList.map sigelt_to_string ses) in
-        let tmp4 = (FStarC_String.concat "\n" tmp3) in
+        let tmp4 = (BatString.concat "\n" tmp3) in
         (FStarC_Format.fmt3 "(* Sig_fail %s %s *)\n%s\n(* / Sig_fail*)\n" tmp1 tmp2 tmp4))
       | (FStarC_Syntax_Syntax.Sig_new_effect (ed)) -> (let tmp = (quals_to_string' (x).FStarC_Syntax_Syntax.sigquals) in
         let tmp1 = (eff_decl_to_string ed) in
@@ -703,7 +703,7 @@ let rec sigelt_to_string (x : FStarC_Syntax_Syntax.sigelt) : string =
         let tmp1 = (sli root) in
         (FStarC_Format.fmt2 "effect %s = %s" tmp tmp1))
       | (FStarC_Syntax_Syntax.Sig_splice ({ FStarC_Syntax_Syntax.is_typed = is_typed; lids = lids; tac = t; _ })) -> (let tmp = (BatList.map FStarC_Ident.fStarC_Class_Show_show__lident lids) in
-        let tmp1 = (FStarC_String.concat "; " tmp) in
+        let tmp1 = (BatString.concat "; " tmp) in
         let tmp2 = (term_to_string t) in
         (FStarC_Format.fmt3 "splice%s[%s] (%s)" (if is_typed then "_t" else "") tmp1 tmp2))
     ) in

@@ -252,7 +252,7 @@ let ctor_table (p : (FStarC_Custard_Syntax.decl) list) : (Prims.int) FStarC_Hash
   t)
 
 let krml_file_name (m : string) : string =
-  (FStarC_String.concat "_" (FStarC_String.split (46 :: []) m))
+  (BatString.concat "_" (FStarC_String.split (46 :: []) m))
 
 let import_file (d : FStarC_Custard_Syntax.decl) : string =
   (let tmp = (FStarC_Custard_Syntax.imported_home d) in
@@ -311,7 +311,7 @@ let prim_type (n : FStarC_Custard_Syntax.name) : (FStarC_Custard_KrmlAst.typ) op
   (match (if (match (n).FStarC_Custard_Syntax.spec with
     | (Some (v)) -> true
     | tmp -> false
-  ) then "" else (FStarC_String.concat "." (BatList.append (n).FStarC_Custard_Syntax.ns ((n).FStarC_Custard_Syntax.id :: [])))) with
+  ) then "" else (BatString.concat "." (BatList.append (n).FStarC_Custard_Syntax.ns ((n).FStarC_Custard_Syntax.id :: [])))) with
     | "Prims.unit" -> (Some (FStarC_Custard_KrmlAst.TUnit))
     | "Prims.bool" -> (Some (FStarC_Custard_KrmlAst.TBool))
     | "Prims.int" -> (Some ((FStarC_Custard_KrmlAst.TInt (FStarC_Custard_KrmlAst.CInt))))
@@ -538,7 +538,7 @@ let is_string_cty (t : FStarC_Custard_Syntax.cty) : bool =
     | (FStarC_Custard_Syntax.TApp (n, [])) -> ((match (n).FStarC_Custard_Syntax.spec with
         | None -> true
         | tmp -> false
-      ) && ((=) (FStarC_String.concat "." (BatList.append (n).FStarC_Custard_Syntax.ns ((n).FStarC_Custard_Syntax.id :: []))) "Prims.string"))
+      ) && ((=) (BatString.concat "." (BatList.append (n).FStarC_Custard_Syntax.ns ((n).FStarC_Custard_Syntax.id :: []))) "Prims.string"))
     | tmp -> false
   )
 
@@ -985,7 +985,7 @@ and krml_expr (env : kenv) (e : FStarC_Custard_Syntax.expr) : FStarC_Custard_Krm
 let karamel_declares (n : FStarC_Custard_Syntax.name) : bool =
   (let tmp = (lident_of_name n) in
   (match tmp with
-    | (ns, id) -> (match (FStarC_String.concat "." (BatList.append ns (id :: []))) with
+    | (ns, id) -> (match (BatString.concat "." (BatList.append ns (id :: []))) with
         | "Prims.op_Addition" -> true
         | "Prims.op_Subtraction" -> true
         | "Prims.op_Multiply" -> true

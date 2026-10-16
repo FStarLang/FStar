@@ -8,7 +8,7 @@ type scope = {
 
 let preferred (x : string) : string =
   (let b = (FStarC_Custard_Syntax.base_name x) in
-  let tmp = (if (Prims.op_Greater_Equals (FStarC_String.length b) (Prims.of_int (4))) then (let tmp = (FStarC_String.substring b Prims.int_zero (Prims.of_int (4))) in
+  let tmp = (if (Prims.op_Greater_Equals ((fun s -> Z.of_int (BatUTF8.length s)) b) (Prims.of_int (4))) then (let tmp = ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) b Prims.int_zero (Prims.of_int (4))) in
     ((=) tmp "uu__")) else false) in
   let b1 = (if tmp then "tmp" else b) in
   (if ((=) b1 "") then "x" else b1))

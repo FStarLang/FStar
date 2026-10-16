@@ -10,19 +10,19 @@ type option_val =
   | Unset
 
 
-type optionstate = (option_val) FStarC_PSMap.t
+type optionstate = (string, option_val) FStarC_AVLMap.tree
 
-let fstar_options : ((option_val) FStarC_PSMap.t ref) =
+let fstar_options : ((string, option_val) FStarC_AVLMap.tree ref) =
   (ref (FStarC_PSMap.empty ()))
 
-let peek (tmp : unit) : (option_val) FStarC_PSMap.t =
+let peek (tmp : unit) : (string, option_val) FStarC_AVLMap.tree =
   (!(fstar_options))
 
 let get_option (s : string) : option_val =
   (let tmp = (peek ()) in
   let tmp1 = (FStarC_PSMap.try_find tmp s) in
   (match tmp1 with
-    | None -> (FStarC_Effect.failwith (FStarC_String.op_Hat "Impossible: option " (FStarC_String.op_Hat s " not found")))
+    | None -> (FStarC_Effect.failwith ((^) "Impossible: option " ((^) s " not found")))
     | (Some (s1)) -> s1
   ))
 
@@ -126,7 +126,7 @@ let get_warn_error (tmp : unit) : (string) list =
 
 let warn_error (tmp : unit) : string =
   (let tmp1 = (get_warn_error ()) in
-  (FStarC_String.concat " " tmp1))
+  (BatString.concat " " tmp1))
 
 let uu___2 : (((unit -> FStarC_Getopt.parse_cmdline_res) -> unit) * (unit -> FStarC_Getopt.parse_cmdline_res)) =
   (let callback = (ref None) in
@@ -196,7 +196,7 @@ let message_format (tmp : unit) : message_format_t =
   (let tmp1 = (get_message_format ()) in
   (match tmp1 with
     | "auto" -> (let tmp2 = (interactive ()) in
-      (if tmp2 then Human else (let tmp3 = (FStarC_Util.expand_environment_variable "GITHUB_ACTIONS") in
+      (if tmp2 then Human else (let tmp3 = ((fun x -> try Some (Sys.getenv x) with Not_found -> None) "GITHUB_ACTIONS") in
       (match tmp3 with
         | None -> Human
         | (Some ("")) -> Human
@@ -205,7 +205,7 @@ let message_format (tmp : unit) : message_format_t =
     | "human" -> Human
     | "json" -> Json
     | "github" -> Github
-    | illegal -> (FStarC_Effect.failwith (FStarC_String.op_Hat "print_issue: option `message_format` was expected to be `human` or `json`, not `" (FStarC_String.op_Hat illegal "`. This should be impossible: `message_format` was supposed to be validated.")))
+    | illegal -> (FStarC_Effect.failwith ((^) "print_issue: option `message_format` was expected to be `human` or `json`, not `" ((^) illegal "`. This should be impossible: `message_format` was supposed to be validated.")))
   ))
 
 let abort_counter : (Prims.int ref) =
@@ -240,12 +240,12 @@ let parse_settings (ns : (string) list) : (((string) list * bool)) list =
         (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace cache s res);
         res)
     ))) in
-  let parse_one_setting = (fun s -> (if ((=) s "*") then ([], true) else (if ((=) s "-*") then ([], false) else (if (FStarC_Util.starts_with s "-") then (let tmp = (FStarC_Util.substring_from s Prims.int_one) in
+  let parse_one_setting = (fun s -> (if ((=) s "*") then ([], true) else (if ((=) s "-*") then ([], false) else (if (FStarC_Util.starts_with s "-") then (let tmp = ((fun s i -> BatString.tail s (Z.to_int i)) s Prims.int_one) in
     let path = (path_of_text tmp) in
-    (path, false)) else (let s1 = (if (FStarC_Util.starts_with s "+") then (FStarC_Util.substring_from s Prims.int_one) else s) in
+    (path, false)) else (let s1 = (if (FStarC_Util.starts_with s "+") then ((fun s i -> BatString.tail s (Z.to_int i)) s Prims.int_one) else s) in
     ((path_of_text s1), true)))))) in
   let tmp = ((fun f l -> BatList.flatten (BatList.map f l)) (fun s -> (let s1 = (FStarC_Util.trim_string s) in
-    (if ((=) s1 "") then [] else (with_cache (fun s2 -> (let s3 = (FStarC_Util.replace_char s2 32 44) in
+    (if ((=) s1 "") then [] else (with_cache (fun s2 -> (let s3 = ((fun s c1 c2 -> let c1 = BatUChar.chr c1 and c2 = BatUChar.chr c2 in BatUTF8.map (fun x -> if BatUChar.eq x c1 then c2 else x) s) s2 32 44) in
     let tmp = ((fun f l -> BatList.flatten (BatList.map f l)) (fun s4 -> (FStarC_Util.split s4 ",")) (FStarC_Util.splitlines s3)) in
     let tmp1 = (BatList.filter (fun s4 -> ((<>) s4 "")) tmp) in
     (BatList.map parse_one_setting tmp1))) s1)))) ns) in
@@ -254,12 +254,12 @@ let parse_settings (ns : (string) list) : (((string) list * bool)) list =
 let rec module_matches_namespace_filter__matches_path (m_components : (string) list) (path : (string) list) : bool =
   (match (m_components, path) with
     | (tmp, []) -> true
-    | ((m :: ms), (p :: ps)) -> (((=) m (FStarC_String.lowercase p)) && (module_matches_namespace_filter__matches_path ms ps))
+    | ((m :: ms), (p :: ps)) -> (((=) m (BatString.lowercase_ascii p)) && (module_matches_namespace_filter__matches_path ms ps))
     | tmp -> false
   )
 
 let module_matches_namespace_filter (m : string) (filter : (string) list) : bool =
-  (let m1 = (FStarC_String.lowercase m) in
+  (let m1 = (BatString.lowercase_ascii m) in
   let setting = (parse_settings filter) in
   let m_components = (path_of_text m1) in
   let tmp = (FStarC_Util.try_find (fun tmp -> (match tmp with
@@ -290,7 +290,7 @@ let get_verify_module (tmp : unit) : (string) list =
 
 let should_check (m : string) : bool =
   (let l = (get_verify_module ()) in
-  (BatList.mem (FStarC_String.lowercase m) l))
+  (BatList.mem (BatString.lowercase_ascii m) l))
 
 let profile_enabled (module_name : (string) option) (profile_phase : string) : bool =
   (match module_name with
@@ -354,17 +354,16 @@ let get_no_prelude (tmp : unit) : bool =
 let no_prelude (tmp : unit) : bool =
   (get_no_prelude ())
 
-let set_option (k : string) (v : option_val) : unit =
-  (let map = (peek ()) in
-  (if ((=) k "report_assumes") then (match (FStarC_PSMap.try_find map k) with
-    | (Some ((String ("error")))) -> ()
-    | tmp -> ((fstar_options) := (FStarC_PSMap.add map k v))
-  ) else ((fstar_options) := (FStarC_PSMap.add map k v))))
+let get_silent (tmp : unit) : bool =
+  (lookup_opt "silent" as_bool)
 
-let history : ((((FStarC_Debug.saved_state * (string) FStarC_PSMap.t * bool * (option_val) FStarC_PSMap.t)) list) list ref) =
+let silent (tmp : unit) : bool =
+  (get_silent ())
+
+let history : ((((FStarC_Debug.saved_state * (string, string) FStarC_AVLMap.tree * bool * (string, option_val) FStarC_AVLMap.tree)) list) list ref) =
   (ref [])
 
-let snapshot_all (tmp : unit) : (FStarC_Debug.saved_state * (string) FStarC_PSMap.t * bool * (option_val) FStarC_PSMap.t) =
+let snapshot_all (tmp : unit) : (FStarC_Debug.saved_state * (string, string) FStarC_AVLMap.tree * bool * (string, option_val) FStarC_AVLMap.tree) =
   (let tmp1 = (FStarC_Debug.snapshot ()) in
   let tmp2 = (FStarC_Options_Ext.save ()) in
   let tmp3 = (!(FStarC_Stats.enabled)) in
@@ -378,7 +377,7 @@ let internal_push (tmp : unit) : unit =
       ((history) := ((newhd :: lev1) :: rest)))
   ))
 
-let restore_all (h : (FStarC_Debug.saved_state * (string) FStarC_PSMap.t * bool * (option_val) FStarC_PSMap.t)) : unit =
+let restore_all (h : (FStarC_Debug.saved_state * (string, string) FStarC_AVLMap.tree * bool * (string, option_val) FStarC_AVLMap.tree)) : unit =
   (match h with
     | (dbg, ext, stats, opts) -> ((FStarC_Debug.restore dbg);
       (FStarC_Options_Ext.restore ext);
@@ -435,11 +434,12 @@ let with_saved_options (f : (unit -> 'u___a)) : 'u___a =
   (pop ());
   retv)))
 
-let get_silent (tmp : unit) : bool =
-  (lookup_opt "silent" as_bool)
-
-let silent (tmp : unit) : bool =
-  (get_silent ())
+let set_option (k : string) (v : option_val) : unit =
+  (let map = (peek ()) in
+  (if ((=) k "report_assumes") then (match (FStarC_PSMap.try_find map k) with
+    | (Some ((String ("error")))) -> ()
+    | tmp -> ((fstar_options) := (FStarC_PSMap.add map k v))
+  ) else ((fstar_options) := (FStarC_PSMap.add map k v))))
 
 let get_tactic_raw_binders (tmp : unit) : bool =
   (lookup_opt "tactic_raw_binders" as_bool)
@@ -558,7 +558,7 @@ type opt_type =
 
 
 let interp_quake_arg (s : string) : (Prims.int * Prims.int * bool) =
-  (let ios = FStarC_Util.int_of_string in
+  (let ios = Z.of_string in
   (match (FStarC_Util.split s "/") with
     | (f :: []) -> (let tmp = (ios f) in
       let tmp1 = (ios f) in
@@ -576,8 +576,8 @@ let interp_quake_arg (s : string) : (Prims.int * Prims.int * bool) =
 
 let display_debug_keys (tmp : unit) : unit =
   (let keys = (FStarC_Debug.list_all_toggles ()) in
-  let tmp1 = ((fun f l -> BatList.sort (fun x y -> Z.to_int (f x y)) l) FStarC_String.compare keys) in
-  (BatList.iter (fun s -> (FStarC_Format.print_string (FStarC_String.op_Hat s "\n"))) tmp1))
+  let tmp1 = ((fun f l -> BatList.sort (fun x y -> Z.to_int (f x y)) l) (fun x y -> Z.of_int (BatString.compare x y)) keys) in
+  (BatList.iter (fun s -> (FStarC_Format.print_string ((^) s "\n"))) tmp1))
 
 let option_warning_callback : (string -> unit) =
   (match uu___1 with
@@ -620,7 +620,7 @@ let as_comma_string_list (tmp : option_val) : (string) list =
     | tmp1 -> (FStarC_Effect.failwith "Impos: expected String (comma list)")
   )
 
-let specs_with_types (warn_unsafe : bool) : ((FStar_Char.char * string * opt_type * PPrint.document)) list =
+let specs_with_types (warn_unsafe : bool) : ((int * string * opt_type * PPrint.document)) list =
   (let text = (fun s -> (PPrint.flow (FStar_Pprint.break_ Prims.int_one) (PPrint.words s))) in
   let tmp = (FStarC_Errors_Msg.bulleted ((text "if 'no', no checks are performed") :: ((text "if 'warn', checks are performed and raise a warning when they fail") :: ((text "if 'error, like 'warn', but the compiler raises a hard error instead") :: ((text "if 'abort, like 'warn', but the compiler immediately aborts on an error") :: []))))) in
   let tmp1 = (PPrint.(^/^) tmp (text "(default 'no')")) in
@@ -751,7 +751,7 @@ let specs_with_types (warn_unsafe : bool) : ((FStar_Char.char * string * opt_typ
   let tmp93 = ((FStarC_Getopt.noshort, "initial_ifuel", (IntStr ("non-negative integer")), (text "Number of unrolling of inductive datatypes to try at first (default 1)")) :: tmp92) in
   let tmp94 = ((FStarC_Getopt.noshort, "initial_fuel", (IntStr ("non-negative integer")), (text "Number of unrolling of recursive functions to try initially (default 2)")) :: tmp93) in
   let tmp95 = ((FStarC_Getopt.noshort, "ifuel", (PostProcessed ((fun tmp95 -> (match tmp95 with
-      | (String (s)) -> (let p = (fun f -> (let tmp96 = (FStarC_Util.int_of_string f) in
+      | (String (s)) -> (let p = (fun f -> (let tmp96 = (Z.of_string f) in
           (Int (tmp96)))) in
         let tmp96 = (match (FStarC_Util.split s ",") with
             | (f :: []) -> (f, f)
@@ -768,7 +768,7 @@ let specs_with_types (warn_unsafe : bool) : ((FStar_Char.char * string * opt_typ
       | tmp96 -> (FStarC_Effect.failwith "impos")
     )), (SimpleStr ("non-negative integer or pair of non-negative integers")))), (text "Set initial_ifuel and max_ifuel at once")) :: tmp94) in
   let tmp96 = ((FStarC_Getopt.noshort, "fuel", (PostProcessed ((fun tmp96 -> (match tmp96 with
-      | (String (s)) -> (let p = (fun f -> (let tmp97 = (FStarC_Util.int_of_string f) in
+      | (String (s)) -> (let p = (fun f -> (let tmp97 = (Z.of_string f) in
           (Int (tmp97)))) in
         let tmp97 = (match (FStarC_Util.split s ",") with
             | (f :: []) -> (f, f)
@@ -879,7 +879,7 @@ let reverse_accumulated_option (name : string) (value : option_val) : option_val
 let rec parse_opt_val (opt_name : string) (typ : opt_type) (str_val : string) : option_val =
   (try (match typ with
     | (Const (c)) -> c
-    | (IntStr (tmp)) -> (match (FStarC_Util.safe_int_of_string str_val) with
+    | (IntStr (tmp)) -> (match ((fun x -> if String.equal x "" then None else try Some (Z.of_string x) with Invalid_argument _ -> None) str_val) with
         | (Some (v)) -> (Int (v))
         | None -> (raise (InvalidArgument (opt_name)))
       )
@@ -902,7 +902,7 @@ let rec parse_opt_val (opt_name : string) (typ : opt_type) (str_val : string) : 
   )
 
 let rec desc_of_opt_type (typ : opt_type) : (string) option =
-  (let desc_of_enum = (fun cases -> (Some ((FStarC_String.concat "|" cases)))) in
+  (let desc_of_enum = (fun cases -> (Some ((BatString.concat "|" cases)))) in
   (match typ with
     | (Const (c)) -> None
     | (IntStr (desc)) -> (Some (desc))
@@ -918,28 +918,28 @@ let rec desc_of_opt_type (typ : opt_type) : (string) option =
   ))
 
 let arg_spec_of_opt_type (opt_name : string) (typ : opt_type) : (option_val) FStarC_Getopt.opt_variant =
-  (let wrap = (fun s -> (FStarC_String.op_Hat "<" (FStarC_String.op_Hat s ">"))) in
+  (let wrap = (fun s -> ((^) "<" ((^) s ">"))) in
   let parser = (parse_opt_val opt_name typ) in
   (match (desc_of_opt_type typ) with
     | None -> (FStarC_Getopt.ZeroArgs ((fun tmp -> (parser ""))))
     | (Some (desc)) -> (let desc1 = (wrap desc) in
-      (FStarC_Getopt.OneArg ((parser, desc1))))
+      (FStarC_Getopt.OneArg (parser, desc1)))
   ))
 
-let mk_spec (o : (FStar_Char.char * string * (option_val) FStarC_Getopt.opt_variant)) : FStarC_Getopt.opt =
+let mk_spec (o : (int * string * (option_val) FStarC_Getopt.opt_variant)) : (int * string * (unit) FStarC_Getopt.opt_variant) =
   (match o with
     | (ns, name, arg) -> (let arg1 = (match arg with
           | (FStarC_Getopt.ZeroArgs (f)) -> (let g = (fun tmp -> (let tmp1 = (f ()) in
               (set_option name tmp1))) in
             (FStarC_Getopt.ZeroArgs (g)))
-          | (FStarC_Getopt.OneArg ((f, d))) -> (let g = (fun x -> (let tmp = (f x) in
+          | (FStarC_Getopt.OneArg (f, d)) -> (let g = (fun x -> (let tmp = (f x) in
               (set_option name tmp))) in
-            (FStarC_Getopt.OneArg ((g, d))))
+            (FStarC_Getopt.OneArg (g, d)))
         ) in
       (ns, name, arg1))
   )
 
-let specs (warn_unsafe : bool) : ((FStarC_Getopt.opt * PPrint.document)) list =
+let specs (warn_unsafe : bool) : (((int * string * (unit) FStarC_Getopt.opt_variant) * PPrint.document)) list =
   (let tmp = (specs_with_types warn_unsafe) in
   (BatList.map (fun tmp1 -> (match tmp1 with
     | (short, long, typ, doc) -> (let tmp2 = (arg_spec_of_opt_type long typ) in
@@ -948,14 +948,14 @@ let specs (warn_unsafe : bool) : ((FStarC_Getopt.opt * PPrint.document)) list =
       (tmp4, doc))
   )) tmp))
 
-let all_specs : ((FStarC_Getopt.opt * PPrint.document)) list =
+let all_specs : (((int * string * (unit) FStarC_Getopt.opt_variant) * PPrint.document)) list =
   (specs true)
 
-let settable_specs : (((FStar_Char.char * string * (unit) FStarC_Getopt.opt_variant) * PPrint.document)) list =
+let settable_specs : (((int * string * (unit) FStarC_Getopt.opt_variant) * PPrint.document)) list =
   (BatList.map (fun spec -> (match spec with
     | ((c, x, h), doc) -> (if (settable x) then spec else (let h' = (match h with
           | (FStarC_Getopt.ZeroArgs (tmp)) -> (FStarC_Getopt.ZeroArgs ((fun tmp1 -> (raise (NotSettable (x))))))
-          | (FStarC_Getopt.OneArg ((tmp, k))) -> (FStarC_Getopt.OneArg (((fun s -> (raise (NotSettable (x)))), k)))
+          | (FStarC_Getopt.OneArg (tmp, k)) -> (FStarC_Getopt.OneArg ((fun s -> (raise (NotSettable (x)))), k))
         ) in
       ((c, x, h'), doc)))
   )) all_specs)
@@ -972,12 +972,12 @@ let set_options (s : string) : FStarC_Getopt.parse_cmdline_res =
       | (u__1, u__2) -> u__1
     )) settable_specs) in
   let res = (FStarC_Getopt.parse_string settable_specs_ (fun s1 -> ((raise (File_argument (s1)));
-    (FStarC_Getopt.Error (("set_options with file argument", ""))))) s) in
+    (FStarC_Getopt.Error ("set_options with file argument", "")))) s) in
   (if ((=) res FStarC_Getopt.Success) then (set_error_flags ()) else res))) with
-    | (File_argument (s1)) -> (FStarC_Getopt.Error (((FStarC_Format.fmt1 "File %s is not a valid option" s1), "")))
+    | (File_argument (s1)) -> (FStarC_Getopt.Error ((FStarC_Format.fmt1 "File %s is not a valid option" s1), ""))
   )
 
-let set (o : (option_val) FStarC_PSMap.t) : unit =
+let set (o : (string, option_val) FStarC_AVLMap.tree) : unit =
   ((fstar_options) := o)
 
 let get_admit_smt_queries (tmp : unit) : bool =
@@ -1004,7 +1004,7 @@ type overload_mode_t =
 
 let overload_mode (tmp : unit) : overload_mode_t =
   (let tmp1 = (FStarC_Options_Ext.get "fstar:overload") in
-  let tmp2 = (FStarC_String.lowercase tmp1) in
+  let tmp2 = (BatString.lowercase_ascii tmp1) in
   (match tmp2 with
     | "" -> Overload_compat
     | "compat" -> Overload_compat
@@ -1015,7 +1015,7 @@ let overload_mode (tmp : unit) : overload_mode_t =
     | "false" -> Overload_off
     | "0" -> Overload_off
     | "strict" -> Overload_strict
-    | illegal -> (FStarC_Effect.failwith (FStarC_String.op_Hat "Option `--ext fstar:overload` expects one of `off`, `compat` or `strict`, but got `" (FStarC_String.op_Hat illegal "`")))
+    | illegal -> (FStarC_Effect.failwith ((^) "Option `--ext fstar:overload` expects one of `off`, `compat` or `strict`, but got `" ((^) illegal "`")))
   ))
 
 let get_eager_subtyping (tmp : unit) : bool =
@@ -1327,12 +1327,12 @@ let codegen_target (tmp : unit) : (string) option =
       | (Some (s)) -> (let tmp3 = (FStarC_Target.parse_tag s) in
         (match tmp3 with
           | (Some (t)) -> t
-          | None -> (FStarC_Effect.failwith (FStarC_String.op_Hat "--target: not a valid tag: " s))
+          | None -> (FStarC_Effect.failwith ((^) "--target: not a valid tag: " s))
         ))
     ) in
   (FStarC_Target.join user lang))
 
-let all_specs_getopt : (FStarC_Getopt.opt) list =
+let all_specs_getopt : ((int * string * (unit) FStarC_Getopt.opt_variant)) list =
   (BatList.map (fun x -> (match x with
     | (u__1, u__2) -> u__1
   )) all_specs)
@@ -1340,8 +1340,8 @@ let all_specs_getopt : (FStarC_Getopt.opt) list =
 let file_list_ : ((string) list ref) =
   (ref [])
 
-let rec parse_filename_arg (specs_ : (FStarC_Getopt.opt) list) (enable_filenames : bool) (arg : string) : FStarC_Getopt.parse_cmdline_res =
-  (if (FStarC_Util.starts_with arg "@") then (let filename = (FStarC_Util.substring_from arg Prims.int_one) in
+let rec parse_filename_arg (specs_ : ((int * string * (unit) FStarC_Getopt.opt_variant)) list) (enable_filenames : bool) (arg : string) : FStarC_Getopt.parse_cmdline_res =
+  (if (FStarC_Util.starts_with arg "@") then (let filename = ((fun s i -> BatString.tail s (Z.to_int i)) arg Prims.int_one) in
   let lines = (FStarC_Util.file_get_lines filename) in
   (FStarC_Getopt.parse_list specs_ (parse_filename_arg specs_ enable_filenames) lines)) else ((if enable_filenames then (let tmp = (!(file_list_)) in
   let tmp1 = (BatList.append tmp (arg :: [])) in
@@ -1365,7 +1365,7 @@ let get_already_cached (tmp : unit) : ((string) list) option =
 let desugar_plugin_codegen (tmp : unit) : unit =
   (let tmp1 = (get_codegen ()) in
   let tmp2 = ((=) tmp1 (Some ("Plugin"))) in
-  (if tmp2 then (let module_name_of_file = (fun f -> (let drop = (fun suffix s -> (if (FStarC_Util.ends_with s suffix) then (FStarC_Util.substring s Prims.int_zero (Prims.op_Minus (FStarC_String.length s) (FStarC_String.length suffix))) else s)) in
+  (if tmp2 then (let module_name_of_file = (fun f -> (let drop = (fun suffix s -> (if (FStarC_Util.ends_with s suffix) then ((fun s i j -> BatString.sub s (Z.to_int i) (Z.to_int j)) s Prims.int_zero (Prims.op_Minus ((fun s -> Z.of_int (BatUTF8.length s)) s) ((fun s -> Z.of_int (BatUTF8.length s)) suffix))) else s)) in
     let tmp3 = (drop ".checked" (FStarC_Filepath.basename f)) in
     let tmp4 = (drop ".fsti" tmp3) in
     let tmp5 = (drop ".fst" tmp4) in
@@ -1382,7 +1382,7 @@ let desugar_plugin_codegen (tmp : unit) : unit =
       | tmp5 -> false
     ) in
   (if tmp5 then (match mods with
-    | (m :: tmp6) -> (set_option' ("custard_unit", (String ((FStarC_Util.replace_chars m 46 "_")))))
+    | (m :: tmp6) -> (set_option' ("custard_unit", (String (((fun s c by -> BatString.replace_chars (fun x -> if Char.equal x (Char.chr c) then by else BatString.of_char x) s) m 46 "_")))))
     | [] -> ()
   ) else ());
   let add = (fun k xs -> (let tmp6 = (get_option k) in
@@ -1402,8 +1402,8 @@ let desugar_plugin_codegen (tmp : unit) : unit =
   (FStarC_Find.set_with_fstarc true);
   let tmp7 = (FStarC_Find.lib_root ()) in
   (match tmp7 with
-    | (Some (lib)) -> (let checked = (FStarC_String.op_Hat lib "/ulib.checked") in
-      (if (FStarC_Filepath.file_exists checked) then (let tmp8 = (FStarC_Find.get_include_path ()) in
+    | (Some (lib)) -> (let checked = ((^) lib "/ulib.checked") in
+      (if (Sys.file_exists checked) then (let tmp8 = (FStarC_Find.get_include_path ()) in
       let tmp9 = (BatList.append tmp8 (checked :: [])) in
       (FStarC_Find.set_include_path tmp9)) else ()))
     | None -> ()
@@ -1419,7 +1419,7 @@ let desugar_plugin_codegen (tmp : unit) : unit =
   let tmp12 = ("already_cached", tmp11) in
   (set_option' tmp12)) else ()))
 
-let parsed_args_state : (((FStarC_Debug.saved_state * (string) FStarC_PSMap.t * bool * (option_val) FStarC_PSMap.t)) option ref) =
+let parsed_args_state : (((FStarC_Debug.saved_state * (string, string) FStarC_AVLMap.tree * bool * (string, option_val) FStarC_AVLMap.tree)) option ref) =
   (ref None)
 
 let parse_cmd_line (tmp : unit) : (FStarC_Getopt.parse_cmdline_res * (string) list) =
@@ -1458,24 +1458,24 @@ let bold_doc (d : PPrint.document) : PPrint.document =
   let tmp1 = ((=) tmp (Some (true))) in
   (if tmp1 then (PPrint.(^^) (FStar_Pprint.fancystring "\027[39;1m" Prims.int_zero) (PPrint.(^^) d (FStar_Pprint.fancystring "\027[0m" Prims.int_zero))) else d))
 
-let usage_for (o : (FStarC_Getopt.opt * PPrint.document)) : PPrint.document =
+let usage_for (o : ((int * string * (unit) FStarC_Getopt.opt_variant) * PPrint.document)) : PPrint.document =
   (match o with
     | ((short, flag, p), explain) -> (let arg = (match p with
           | (FStarC_Getopt.ZeroArgs (tmp)) -> PPrint.empty
-          | (FStarC_Getopt.OneArg ((tmp, argname))) -> (PPrint.(^^) (FStar_Pprint.blank Prims.int_one) (PPrint.string argname))
+          | (FStarC_Getopt.OneArg (tmp, argname)) -> (PPrint.(^^) (FStar_Pprint.blank Prims.int_one) (PPrint.string argname))
         ) in
-      let short_opt = (if ((<>) short FStarC_Getopt.noshort) then (let tmp = (FStarC_String.make Prims.int_one short) in
-        let tmp1 = (FStarC_String.op_Hat "-" tmp) in
+      let short_opt = (if ((<>) short FStarC_Getopt.noshort) then (let tmp = ((fun i c -> BatUTF8.init (Z.to_int i) (fun _ -> BatUChar.chr c)) Prims.int_one short) in
+        let tmp1 = ((^) "-" tmp) in
         let tmp2 = (PPrint.string tmp1) in
         let tmp3 = (PPrint.(^^) tmp2 arg) in
         (tmp3 :: [])) else []) in
-      let long_opt = (if ((<>) flag "") then ((PPrint.(^^) (PPrint.string (FStarC_String.op_Hat "--" flag)) arg) :: []) else []) in
+      let long_opt = (if ((<>) flag "") then ((PPrint.(^^) (PPrint.string ((^) "--" flag)) arg) :: []) else []) in
       let tmp = (bold_doc (PPrint.separate (PPrint.(^^) PPrint.comma (FStar_Pprint.blank Prims.int_one)) (BatList.append short_opt long_opt))) in
       let tmp1 = (PPrint.group tmp) in
       (PPrint.(^^) tmp1 (PPrint.(^^) PPrint.hardline (PPrint.(^^) (PPrint.group (PPrint.(^^) (FStar_Pprint.blank (Prims.of_int (4))) (PPrint.align explain))) PPrint.hardline))))
   )
 
-let display_usage_aux (specs_ : ((FStarC_Getopt.opt * PPrint.document)) list) : unit =
+let display_usage_aux (specs_ : (((int * string * (unit) FStarC_Getopt.opt_variant) * PPrint.document)) list) : unit =
   (let tmp = (BatList.fold_right (fun o rest -> (let tmp = (usage_for o) in
     (PPrint.(^^) tmp rest))) specs_ PPrint.empty) in
   let tmp1 = (PPrint.(^/^) (PPrint.string (FStarC_Format.fmt1 "  %srespfile: read command-line options from respfile\n" (FStarC_Format.colorize_bold "@"))) tmp) in
@@ -1539,7 +1539,7 @@ let accumulate_string (name : string) (post_processor : ('tmp -> string)) (value
   (set_option name tmp))
 
 let add_verify_module (s : string) : unit =
-  (accumulate_string "verify_module" FStarC_String.lowercase s)
+  (accumulate_string "verify_module" BatString.lowercase_ascii s)
 
 let get_output_deps_to (tmp : unit) : (string) option =
   (lookup_opt "output_deps_to" (as_option as_string))
@@ -1784,7 +1784,7 @@ let set_ide_filename : (string -> unit) =
 let defaults : ((string * option_val)) list =
   (("abort_on", (Int (Prims.int_zero))) :: (("admit_except", Unset) :: (("admit_smt_queries", (Bool (false))) :: (("already_cached", Unset) :: (("cache_checked_modules", (Bool (false))) :: (("cache_off", (Bool (false))) :: (("codegen", Unset) :: (("custard_entry", (List ([]))) :: (("custard_entrypoints", (List ([]))) :: (("custard_entry_module", (List ([]))) :: (("custard_c_no_prefix", (List ([]))) :: (("custard_main", Unset) :: (("target", Unset) :: (("custard_dump_ir", (Bool (false))) :: (("custard_dump_specializations", (Bool (false))) :: (("custard_dump_layouts", (Bool (false))) :: (("custard_warn_any", (Bool (false))) :: (("custard_fuel", (Int ((Prims.of_int (100000))))) :: (("custard_max_specializations", (Int ((Prims.of_int (1000))))) :: (("custard_norm_budget", (Int ((Prims.of_int (10000000))))) :: (("custard_monomorphize_types", (Bool (false))) :: (("custard_int128", (Bool (true))) :: (("custard_sizet_width", (String ("native"))) :: (("custard_split", (Bool (false))) :: (("custard_unit", Unset) :: (("custard_link", (List ([]))) :: (("custard_extern_type", (List ([]))) :: (("custard_krml_model", (List ([]))) :: (("custard_no_unfold", (List ([]))) :: (("custard_dump_cui", (Bool (false))) :: (("compat_pre_core", Unset) :: (("compat_pre_typed_indexed_effects", (Bool (false))) :: (("debug_all", (Bool (false))) :: (("debug_all_modules", (Bool (false))) :: (("debug", (List ([]))) :: (("defensive", (String ("no"))) :: (("dep", Unset) :: (("disallow_unification_guards", (Bool (false))) :: (("dump_ast", (Bool (false))) :: (("dump_module", (List ([]))) :: (("eager_subtyping", (Bool (false))) :: (("error_contexts", (Bool (false))) :: (("expand_include", Unset) :: (("expose_interfaces", (Bool (false))) :: (("ext", Unset) :: (("force", (Bool (false))) :: (("fuel", Unset) :: (("help", (Bool (false))) :: (("hide_uvar_nums", (Bool (false))) :: (("ide", (Bool (false))) :: (("ide_id_info_off", (Bool (false))) :: (("ifuel", Unset) :: (("include", (List ([]))) :: (("initial_fuel", (Int ((Prims.of_int (2))))) :: (("initial_ifuel", (Int (Prims.int_one))) :: (("keep_query_captions", (Bool (true))) :: (("lang_extensions", (List ([]))) :: (("lax", (Bool (false))) :: (("list_plugins", (Bool (false))) :: (("load_cmxs", (List ([]))) :: (("load", (List ([]))) :: (("locate", (Bool (false))) :: (("locate_file", Unset) :: (("locate_lib", (Bool (false))) :: (("locate_ocaml", (Bool (false))) :: (("locate_z3", Unset) :: (("log_failing_queries", (Bool (false))) :: (("log_queries", (Bool (false))) :: (("log_types", (Bool (false))) :: (("max_fuel", (Int ((Prims.of_int (8))))) :: (("max_ifuel", (Int ((Prims.of_int (2))))) :: (("message_format", (String ("auto"))) :: (("no_plugins", (Bool (false))) :: (("__no_positivity", (Bool (false))) :: (("no_prelude", (Bool (false))) :: (("normalize_pure_terms_for_extraction", (Bool (false))) :: (("no_smt", (Bool (false))) :: (("no_tactics", (Bool (false))) :: (("output_deps_to", Unset) :: (("output_ext", Unset) :: (("output_to", Unset) :: (("pretype", (Bool (true))) :: (("prims_ref", Unset) :: (("prims", Unset) :: (("print", (Bool (false))) :: (("print_bound_var_types", (Bool (false))) :: (("print_cache_version", (Bool (false))) :: (("print_effect_args", (Bool (false))) :: (("print_expected_failures", (Bool (false))) :: (("print_full_names", (Bool (false))) :: (("print_implicits", (Bool (false))) :: (("print_in_place", (Bool (false))) :: (("print_universes", (Bool (false))) :: (("print_z3_statistics", (Bool (false))) :: (("prn", (Bool (false))) :: (("profile_component", Unset) :: (("profile_group_by_decl", (Bool (false))) :: (("profile", Unset) :: (("proof_recovery", (Bool (false))) :: (("quake_hi", (Int (Prims.int_one))) :: (("quake", (Int (Prims.int_zero))) :: (("quake_keep", (Bool (false))) :: (("quake_lo", (Int (Prims.int_one))) :: (("query_cache", (Bool (false))) :: (("query_stats", (Bool (false))) :: (("read_checked_file", Unset) :: (("read_krml_file", Unset) :: (("record_options", (Bool (false))) :: (("report_assumes", Unset) :: (("retry", (Bool (false))) :: (("silent", (Bool (false))) :: (("smtencoding.elim_box", (Bool (false))) :: (("smtencoding.l_arith_repr", (String ("boxwrap"))) :: (("smtencoding.nl_arith_repr", (String ("boxwrap"))) :: (("smt", Unset) :: (("stats", (Bool (false))) :: (("tactic_raw_binders", (Bool (false))) :: (("tactics_failhard", (Bool (false))) :: (("tactics_info", (Bool (false))) :: (("__tactics_nbe", (Bool (false))) :: (("tactic_trace", (Bool (false))) :: (("tactic_trace_d", (Int (Prims.int_zero))) :: (("tcnorm", (Bool (true))) :: (("timing", (Bool (false))) :: (("trace_error", (Bool (false))) :: (("trivial_pre_for_unannotated_effectful_fns", (Bool (true))) :: (("ugly", (Bool (false))) :: (("unsafe_tactic_exec", (Bool (false))) :: (("unthrottle_inductives", (Bool (false))) :: (("use_eq_at_higher_order", (Bool (false))) :: (("use_native_tactics", Unset) :: (("use_nbe", (Bool (false))) :: (("using_facts_from", Unset) :: (("verify_module", (List ([]))) :: (("warn_default_effects", (Bool (false))) :: (("warn_error", (List ([]))) :: (("z3cliopt", (List ([]))) :: (("z3refresh", (Bool (false))) :: (("z3rlimit_factor", (Int (Prims.int_one))) :: (("z3rlimit", (Int ((Prims.of_int (5))))) :: (("z3seed", (Int (Prims.int_zero))) :: (("z3smtopt", (List ([]))) :: (("z3version", (String ("4.13.3"))) :: [])))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
 
-let all_specs_with_types : ((FStar_Char.char * string * opt_type * PPrint.document)) list =
+let all_specs_with_types : ((int * string * opt_type * PPrint.document)) list =
   (specs_with_types true)
 
 let rollback (depth_ : (Prims.int) option) : unit =
@@ -1824,7 +1824,7 @@ let print_expected_failures (tmp : unit) : bool =
   (get_print_expected_failures ())
 
 let module_name_eq (m1 : string) (m2 : string) : bool =
-  ((=) (FStarC_String.lowercase m1) (FStarC_String.lowercase m2))
+  ((=) (BatString.lowercase_ascii m1) (BatString.lowercase_ascii m2))
 
 let dump_module (s : string) : bool =
   (let tmp = (get_dump_module ()) in
@@ -1891,12 +1891,12 @@ let fStarC_Class_Deq_op_Equals_Question__option_option_val (tmp : (option_val) o
 
 let rec show_options__show_optionval (v : option_val) : string =
   (match v with
-    | (String (s)) -> (FStarC_String.op_Hat "\"" (FStarC_String.op_Hat s "\""))
+    | (String (s)) -> ((^) "\"" ((^) s "\""))
     | (Bool (b)) -> (FStarC_Class_Show.fStarC_Class_Show_show__bool b)
     | (Int (i)) -> (FStarC_Class_Show.fStarC_Class_Show_show__int i)
     | (Path (s)) -> s
     | (List (s)) -> (let tmp = (BatList.map show_options__show_optionval s) in
-      (FStarC_String.concat "," tmp))
+      (BatString.concat "," tmp))
     | Unset -> "<unset>"
   )
 
@@ -1914,7 +1914,7 @@ let show_options (tmp : unit) : string =
         (FStarC_Format.fmt2 "--%s %s" k tmp3))
     )) in
   let tmp2 = (BatList.map show1 kvs) in
-  (FStarC_String.concat "\n" tmp2))
+  (BatString.concat "\n" tmp2))
 
 let get_log_types (tmp : unit) : bool =
   (lookup_opt "log_types" as_bool)
@@ -1941,7 +1941,7 @@ let force (tmp : unit) : bool =
   (get_force ())
 
 let should_write_checked_file (fn : string) : bool =
-  (let base = (fun f -> (FStarC_String.lowercase (FStarC_Filepath.basename f))) in
+  (let base = (fun f -> (BatString.lowercase_ascii (FStarC_Filepath.basename f))) in
   let tmp = (file_list ()) in
   (BatList.exists (fun f -> ((=) (base f) (base fn))) tmp))
 

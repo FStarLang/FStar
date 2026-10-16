@@ -1729,7 +1729,7 @@ let encode_top_level_let (env : FStarC_SMTEncoding_Env.env_t) (tmp : (bool * (FS
           (if tmp4 then (decls1, env_decls) else (if (not is_rec) then (encode_non_rec_lbdef bindings typs1 toks_fvbs env1) else (encode_rec_lbdefs bindings typs1 toks_fvbs env1))))
       )))) with
         | Let_rec_unencodeable -> (let tmp1 = (BatList.map (fun lb -> (FStarC_Syntax_Print.fStarC_Class_Show_show__either_bv_fv (lb).FStarC_Syntax_Syntax.lbname)) bindings) in
-          let msg = (FStarC_String.concat " and " tmp1) in
+          let msg = (BatString.concat " and " tmp1) in
           let decl = (FStarC_SMTEncoding_Term.Caption ((Prims.strcat "let rec unencodeable: Skipping: " msg))) in
           let tmp2 = (FStarC_SMTEncoding_Term.mk_decls_trivial (decl :: [])) in
           (tmp2, env))
@@ -2877,7 +2877,7 @@ let encode_query (use_env_msg : ((unit -> string)) option) (tcenv : FStarC_TypeC
                 let tmp11 = (Prims.strcat "Encoding query formula : " tmp10) in
                 let tmp12 = (FStarC_SMTEncoding_Term.Caption (tmp11)) in
                 let tmp13 = (FStarC_Errors.get_ctx ()) in
-                let tmp14 = (FStarC_String.concat "\n" tmp13) in
+                let tmp14 = (BatString.concat "\n" tmp13) in
                 let tmp15 = (Prims.strcat "Context: " tmp14) in
                 let tmp16 = (FStarC_SMTEncoding_Term.Caption (tmp15)) in
                 let tmp17 = (tmp16 :: []) in

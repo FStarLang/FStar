@@ -2804,7 +2804,7 @@ let rec dce__visit (resolve : (string -> string)) (defs : (FStarC_Custard_Syntax
   )) else ()))
 
 let entry_module (n : FStarC_Custard_Syntax.name) : bool =
-  (let m = (FStarC_String.concat "." (n).FStarC_Custard_Syntax.ns) in
+  (let m = (BatString.concat "." (n).FStarC_Custard_Syntax.ns) in
   let tmp = (FStarC_Options.custard_entry_modules ()) in
   (BatList.exists (fun e -> ((=) e m)) tmp))
 

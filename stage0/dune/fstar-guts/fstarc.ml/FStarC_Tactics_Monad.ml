@@ -17,84 +17,38 @@ let fStarC_Class_Monad_op_let_Bang__fn (tmp : ((FStarC_Tactics_Types.proofstate 
 let get (ps : (FStarC_Tactics_Types.proofstate ref)) : FStarC_Tactics_Types.proofstate =
   (!(ps))
 
-let set (ps : FStarC_Tactics_Types.proofstate) (ps_ref : (FStarC_Tactics_Types.proofstate ref)) : unit =
-  ((ps_ref) := ps)
-
-let set_goals (gs : (FStarC_Tactics_Types.goal) list) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (bind get (fun ps -> (set { FStarC_Tactics_Types.main_context = (ps).FStarC_Tactics_Types.main_context;
-    all_implicits = (ps).FStarC_Tactics_Types.all_implicits;
-    goals = gs;
-    smt_goals = (ps).FStarC_Tactics_Types.smt_goals;
-    splice_quals = (ps).FStarC_Tactics_Types.splice_quals;
-    splice_attrs = (ps).FStarC_Tactics_Types.splice_attrs;
-    depth = (ps).FStarC_Tactics_Types.depth;
-    u___dump = (ps).FStarC_Tactics_Types.u___dump;
-    psc = (ps).FStarC_Tactics_Types.psc;
-    entry_range = (ps).FStarC_Tactics_Types.entry_range;
-    guard_policy = (ps).FStarC_Tactics_Types.guard_policy;
-    freshness = (ps).FStarC_Tactics_Types.freshness;
-    tac_verb_dbg = (ps).FStarC_Tactics_Types.tac_verb_dbg;
-    local_state = (ps).FStarC_Tactics_Types.local_state;
-    urgency = (ps).FStarC_Tactics_Types.urgency;
-    dump_on_failure = (ps).FStarC_Tactics_Types.dump_on_failure })))
-
-let dismiss_all : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (set_goals [])
-
 let ret (x : 'u___a) (tmp : (FStarC_Tactics_Types.proofstate ref)) : 'u___a =
   x
 
-let if_verbose_tac (f : (unit -> ((FStarC_Tactics_Types.proofstate ref) -> unit))) (ps : (FStarC_Tactics_Types.proofstate ref)) : unit =
-  (bind get (Obj.magic ((fun ps1 -> (if (ps1).FStarC_Tactics_Types.tac_verb_dbg then (f ()) else (ret ()))))) ps)
+let cur_goals : ((FStarC_Tactics_Types.proofstate ref) -> (FStarC_Tactics_Types.goal) list) =
+  (bind get (fun ps -> (ret (ps).FStarC_Tactics_Types.goals)))
 
-let if_verbose (f : (unit -> unit)) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (if_verbose_tac (fun tmp -> ((f ());
-  (ret ()))))
+let dbg_TacFail : (bool ref) =
+  (FStarC_Debug.get_toggle "TacFail")
 
-let fStarC_Class_Monad_return__fn (tmp : 'a) : ((FStarC_Tactics_Types.proofstate ref) -> 'a) =
-  (ret tmp)
+let fail_doc (msg : (PPrint.document) list) (ps : (FStarC_Tactics_Types.proofstate ref)) : 'u___a =
+  (let tmp = (!(dbg_TacFail)) in
+  (if tmp then (let tmp1 = (!(ps)) in
+  let tmp2 = (FStarC_Errors_Msg.renderdoc (BatList.hd msg)) in
+  let tmp3 = (Prims.strcat "TACTIC FAILING: " tmp2) in
+  (FStarC_Tactics_Printing.do_dump_proofstate tmp1 tmp3)) else ());
+  (raise (FStarC_Tactics_Common.TacticFailure ((msg, None)))))
 
-let goal_typedness_deps (g : FStarC_Tactics_Types.goal) : (FStarC_Syntax_Syntax.ctx_uvar) list =
-  (FStarC_Syntax_Util.ctx_uvar_typedness_deps (g).FStarC_Tactics_Types.goal_ctx_uvar)
+let fail (msg : string) : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a) =
+  (fail_doc ((FStarC_Errors_Msg.text msg) :: []))
 
-let add_implicits (i : (FStarC_TypeChecker_Common.implicit) list) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (bind get (fun ps -> (set { FStarC_Tactics_Types.main_context = (ps).FStarC_Tactics_Types.main_context;
-    all_implicits = (BatList.append i (ps).FStarC_Tactics_Types.all_implicits);
-    goals = (ps).FStarC_Tactics_Types.goals;
-    smt_goals = (ps).FStarC_Tactics_Types.smt_goals;
-    splice_quals = (ps).FStarC_Tactics_Types.splice_quals;
-    splice_attrs = (ps).FStarC_Tactics_Types.splice_attrs;
-    depth = (ps).FStarC_Tactics_Types.depth;
-    u___dump = (ps).FStarC_Tactics_Types.u___dump;
-    psc = (ps).FStarC_Tactics_Types.psc;
-    entry_range = (ps).FStarC_Tactics_Types.entry_range;
-    guard_policy = (ps).FStarC_Tactics_Types.guard_policy;
-    freshness = (ps).FStarC_Tactics_Types.freshness;
-    tac_verb_dbg = (ps).FStarC_Tactics_Types.tac_verb_dbg;
-    local_state = (ps).FStarC_Tactics_Types.local_state;
-    urgency = (ps).FStarC_Tactics_Types.urgency;
-    dump_on_failure = (ps).FStarC_Tactics_Types.dump_on_failure })))
-
-let new_uvar (reason : string) (env : FStarC_TypeChecker_Env.env) (typ : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (sc_opt : (FStarC_Syntax_Syntax.should_check_uvar) option) (uvar_typedness_deps : (FStarC_Syntax_Syntax.ctx_uvar) list) (rng : FStarC_Range_Type.range) : ((FStarC_Tactics_Types.proofstate ref) -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * FStarC_Syntax_Syntax.ctx_uvar)) =
-  (let should_check = (match sc_opt with
-      | (Some (sc)) -> sc
-      | tmp -> FStarC_Syntax_Syntax.Strict
-    ) in
-  (bind (ret ()) (fun tmp -> (let tmp1 = (FStarC_TypeChecker_Env.new_tac_implicit_var reason rng env typ should_check uvar_typedness_deps None false) in
-  (match tmp1 with
-    | (u, ctx_uvar, g_u) -> (let tmp2 = (FStarC_TypeChecker_Common.fStarC_Class_Listlike_to_list__implicit_clist_implicit (g_u).FStarC_TypeChecker_Common.implicits) in
-      let tmp3 = (add_implicits tmp2) in
-      (bind tmp3 (fun tmp4 -> (ret (u, (match ctx_uvar with
-        | (u__1, u__2) -> u__1
-      ))))))
+let cur_goal : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Tactics_Types.goal) =
+  (bind cur_goals (Obj.magic ((fun tmp -> (match tmp with
+    | [] -> (fail "No more goals")
+    | (hd :: tl) -> (let tmp1 = (FStarC_Tactics_Types.check_goal_solved' hd) in
+      (match tmp1 with
+        | None -> (ret hd)
+        | (Some (t)) -> (let tmp2 = (FStarC_Tactics_Printing.goal_to_string_verbose hd) in
+          let tmp3 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' t) in
+          (FStarC_Format.print2 "!!!!!!!!!!!! GOAL IS ALREADY SOLVED! %s\nsol is %s\n" tmp2 tmp3);
+          (ret hd))
+      ))
   )))))
-
-let mk_irrelevant_goal (reason : string) (env : FStarC_TypeChecker_Env.env) (phi : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (sc_opt : (FStarC_Syntax_Syntax.should_check_uvar) option) (rng : FStarC_Range_Type.range) (opts : (FStarC_Options.option_val) FStarC_PSMap.t) (label : string) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Tactics_Types.goal) =
-  (bind (ret ()) (fun tmp -> (let typ = (FStarC_Syntax_Util.mk_squash phi) in
-  (bind (new_uvar reason env typ sc_opt [] rng) (fun tmp1 -> (match tmp1 with
-    | (tmp2, ctx_uvar) -> (let goal = (FStarC_Tactics_Types.mk_goal env ctx_uvar opts false label) in
-      (ret goal))
-  ))))))
 
 exception Bad of string
 
@@ -136,9 +90,268 @@ let check_valid_goal (g : FStarC_Tactics_Types.goal) : unit =
       ((nwarn) := tmp7)) else ()))
   ) else ()))
 
+let set (ps : FStarC_Tactics_Types.proofstate) (ps_ref : (FStarC_Tactics_Types.proofstate ref)) : unit =
+  ((ps_ref) := ps)
+
+let replace_cur (g : FStarC_Tactics_Types.goal) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (bind get (fun ps -> ((check_valid_goal g);
+  (set { FStarC_Tactics_Types.main_context = (ps).FStarC_Tactics_Types.main_context;
+    all_implicits = (ps).FStarC_Tactics_Types.all_implicits;
+    goals = (g :: (BatList.tl (ps).FStarC_Tactics_Types.goals));
+    smt_goals = (ps).FStarC_Tactics_Types.smt_goals;
+    splice_quals = (ps).FStarC_Tactics_Types.splice_quals;
+    splice_attrs = (ps).FStarC_Tactics_Types.splice_attrs;
+    depth = (ps).FStarC_Tactics_Types.depth;
+    u___dump = (ps).FStarC_Tactics_Types.u___dump;
+    psc = (ps).FStarC_Tactics_Types.psc;
+    entry_range = (ps).FStarC_Tactics_Types.entry_range;
+    guard_policy = (ps).FStarC_Tactics_Types.guard_policy;
+    freshness = (ps).FStarC_Tactics_Types.freshness;
+    tac_verb_dbg = (ps).FStarC_Tactics_Types.tac_verb_dbg;
+    local_state = (ps).FStarC_Tactics_Types.local_state;
+    urgency = (ps).FStarC_Tactics_Types.urgency;
+    dump_on_failure = (ps).FStarC_Tactics_Types.dump_on_failure }))))
+
+let fStarC_Class_Monad_return__fn (tmp : 'a) : ((FStarC_Tactics_Types.proofstate ref) -> 'a) =
+  (ret tmp)
+
+let run (t : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a)) (ps : FStarC_Tactics_Types.proofstate) : ('u___a * FStarC_Tactics_Types.proofstate) =
+  (let ps1 = (ref ps) in
+  let x = (t ps1) in
+  let tmp = (!(ps1)) in
+  (x, tmp))
+
+let run_safe (t : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a)) (ps : FStarC_Tactics_Types.proofstate) : ('u___a * FStarC_Tactics_Types.proofstate) =
+  (run t ps)
+
+let mark_uvar_with_should_check_tag (u : FStarC_Syntax_Syntax.ctx_uvar) (sc : FStarC_Syntax_Syntax.should_check_uvar) : unit =
+  (let dec = (FStarC_Syntax_Unionfind.find_decoration ((u).FStarC_Syntax_Syntax.ctx_uvar_head, (u).FStarC_Syntax_Syntax.ctx_uvar_head1, (u).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
+  (FStarC_Syntax_Unionfind.change_decoration ((u).FStarC_Syntax_Syntax.ctx_uvar_head, (u).FStarC_Syntax_Syntax.ctx_uvar_head1, (u).FStarC_Syntax_Syntax.ctx_uvar_head2) { FStarC_Syntax_Syntax.uvar_decoration_typ = (dec).FStarC_Syntax_Syntax.uvar_decoration_typ;
+    uvar_decoration_typedness_depends_on = (dec).FStarC_Syntax_Syntax.uvar_decoration_typedness_depends_on;
+    uvar_decoration_should_check = sc;
+    uvar_decoration_should_unrefine = (dec).FStarC_Syntax_Syntax.uvar_decoration_should_unrefine }))
+
+let mark_uvar_as_already_checked (u : FStarC_Syntax_Syntax.ctx_uvar) : unit =
+  (mark_uvar_with_should_check_tag u FStarC_Syntax_Syntax.Already_checked)
+
+let mark_goal_implicit_already_checked (g : FStarC_Tactics_Types.goal) : unit =
+  (mark_uvar_as_already_checked (g).FStarC_Tactics_Types.goal_ctx_uvar)
+
+let get_phi (g : FStarC_Tactics_Types.goal) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
+  (let tmp = (FStarC_Tactics_Types.goal_type g) in
+  let tmp1 = (FStarC_TypeChecker_Normalize.unfold_whnf (FStarC_Tactics_Types.goal_env g) tmp) in
+  (FStarC_Syntax_Util.un_squash tmp1))
+
+let is_irrelevant (g : FStarC_Tactics_Types.goal) : bool =
+  (let tmp = (get_phi g) in
+  (match tmp with
+    | (Some (v)) -> true
+    | tmp1 -> false
+  ))
+
+let mk_tac (f : (FStarC_Tactics_Types.proofstate -> ('u___a * FStarC_Tactics_Types.proofstate))) (ps : (FStarC_Tactics_Types.proofstate ref)) : 'u___a =
+  (let tmp = (!(ps)) in
+  let tmp1 = (f tmp) in
+  (match tmp1 with
+    | (x, ps') -> (((ps) := ps');
+      x)
+  ))
+
+let catch (t : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a)) : ((FStarC_Tactics_Types.proofstate ref) -> (exn, 'u___a) FStar_Pervasives.either) =
+  (mk_tac (fun ps -> (let idtable = (!(((ps).FStarC_Tactics_Types.main_context).FStarC_TypeChecker_Env.identifier_info)) in
+  let tx = (FStarC_Syntax_Unionfind.new_transaction ()) in
+  (try (let tmp = (run t ps) in
+  (match tmp with
+    | (a, q) -> ((FStar_Pervasives.Inr (a)), q)
+  )) with
+    | u__cexn -> ((FStarC_Syntax_Unionfind.rollback tx);
+      ((((ps).FStarC_Tactics_Types.main_context).FStarC_TypeChecker_Env.identifier_info) := idtable);
+      ((FStar_Pervasives.Inl (u__cexn)), ps))
+  ))))
+
+let if_verbose_tac (f : (unit -> ((FStarC_Tactics_Types.proofstate ref) -> unit))) (ps : (FStarC_Tactics_Types.proofstate ref)) : unit =
+  (bind get (Obj.magic ((fun ps1 -> (if (ps1).FStarC_Tactics_Types.tac_verb_dbg then (f ()) else (ret ()))))) ps)
+
+let if_verbose (f : (unit -> unit)) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (if_verbose_tac (fun tmp -> ((f ());
+  (ret ()))))
+
+let do_log (ps : FStarC_Tactics_Types.proofstate) (f : (unit -> unit)) : unit =
+  (if (ps).FStarC_Tactics_Types.tac_verb_dbg then (f ()) else ())
+
+let log (f : (unit -> unit)) (ps : (FStarC_Tactics_Types.proofstate ref)) : unit =
+  (let tmp = (!(ps)) in
+  (do_log tmp f))
+
+let add_implicits (i : (FStarC_TypeChecker_Common.implicit) list) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (bind get (fun ps -> (set { FStarC_Tactics_Types.main_context = (ps).FStarC_Tactics_Types.main_context;
+    all_implicits = (BatList.append i (ps).FStarC_Tactics_Types.all_implicits);
+    goals = (ps).FStarC_Tactics_Types.goals;
+    smt_goals = (ps).FStarC_Tactics_Types.smt_goals;
+    splice_quals = (ps).FStarC_Tactics_Types.splice_quals;
+    splice_attrs = (ps).FStarC_Tactics_Types.splice_attrs;
+    depth = (ps).FStarC_Tactics_Types.depth;
+    u___dump = (ps).FStarC_Tactics_Types.u___dump;
+    psc = (ps).FStarC_Tactics_Types.psc;
+    entry_range = (ps).FStarC_Tactics_Types.entry_range;
+    guard_policy = (ps).FStarC_Tactics_Types.guard_policy;
+    freshness = (ps).FStarC_Tactics_Types.freshness;
+    tac_verb_dbg = (ps).FStarC_Tactics_Types.tac_verb_dbg;
+    local_state = (ps).FStarC_Tactics_Types.local_state;
+    urgency = (ps).FStarC_Tactics_Types.urgency;
+    dump_on_failure = (ps).FStarC_Tactics_Types.dump_on_failure })))
+
+let set_uvar_expected_typ (u : FStarC_Syntax_Syntax.ctx_uvar) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : unit =
+  (let dec = (FStarC_Syntax_Unionfind.find_decoration ((u).FStarC_Syntax_Syntax.ctx_uvar_head, (u).FStarC_Syntax_Syntax.ctx_uvar_head1, (u).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
+  (FStarC_Syntax_Unionfind.change_decoration ((u).FStarC_Syntax_Syntax.ctx_uvar_head, (u).FStarC_Syntax_Syntax.ctx_uvar_head1, (u).FStarC_Syntax_Syntax.ctx_uvar_head2) { FStarC_Syntax_Syntax.uvar_decoration_typ = t;
+    uvar_decoration_typedness_depends_on = (dec).FStarC_Syntax_Syntax.uvar_decoration_typedness_depends_on;
+    uvar_decoration_should_check = (dec).FStarC_Syntax_Syntax.uvar_decoration_should_check;
+    uvar_decoration_should_unrefine = (dec).FStarC_Syntax_Syntax.uvar_decoration_should_unrefine }))
+
+let goal_with_type (g : FStarC_Tactics_Types.goal) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : FStarC_Tactics_Types.goal =
+  (let u = (g).FStarC_Tactics_Types.goal_ctx_uvar in
+  (set_uvar_expected_typ u t);
+  g)
+
 let check_valid_goals (gs : (FStarC_Tactics_Types.goal) list) : unit =
   (let tmp = (FStarC_Options.defensive ()) in
   (if tmp then (BatList.iter check_valid_goal gs) else ()))
+
+let push_goals (gs : (FStarC_Tactics_Types.goal) list) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (bind get (fun ps -> ((check_valid_goals gs);
+  (set { FStarC_Tactics_Types.main_context = (ps).FStarC_Tactics_Types.main_context;
+    all_implicits = (ps).FStarC_Tactics_Types.all_implicits;
+    goals = (BatList.append (ps).FStarC_Tactics_Types.goals gs);
+    smt_goals = (ps).FStarC_Tactics_Types.smt_goals;
+    splice_quals = (ps).FStarC_Tactics_Types.splice_quals;
+    splice_attrs = (ps).FStarC_Tactics_Types.splice_attrs;
+    depth = (ps).FStarC_Tactics_Types.depth;
+    u___dump = (ps).FStarC_Tactics_Types.u___dump;
+    psc = (ps).FStarC_Tactics_Types.psc;
+    entry_range = (ps).FStarC_Tactics_Types.entry_range;
+    guard_policy = (ps).FStarC_Tactics_Types.guard_policy;
+    freshness = (ps).FStarC_Tactics_Types.freshness;
+    tac_verb_dbg = (ps).FStarC_Tactics_Types.tac_verb_dbg;
+    local_state = (ps).FStarC_Tactics_Types.local_state;
+    urgency = (ps).FStarC_Tactics_Types.urgency;
+    dump_on_failure = (ps).FStarC_Tactics_Types.dump_on_failure }))))
+
+let trytac (t : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a)) : ((FStarC_Tactics_Types.proofstate ref) -> ('u___a) option) =
+  (bind (catch t) (fun r -> (match r with
+    | (FStar_Pervasives.Inr (v)) -> (ret (Some (v)))
+    | (FStar_Pervasives.Inl (tmp)) -> (ret None)
+  )))
+
+let cur_goal_maybe_solved : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Tactics_Types.goal) =
+  (bind cur_goals (Obj.magic ((fun tmp -> (match tmp with
+    | [] -> (fail "No more goals")
+    | (hd :: tl) -> (ret hd)
+  )))))
+
+let getopts : ((FStarC_Tactics_Types.proofstate ref) -> (string, FStarC_Options.option_val) FStarC_AVLMap.tree) =
+  (bind (trytac cur_goal_maybe_solved) (fun tmp -> (match tmp with
+    | (Some (g)) -> (ret (g).FStarC_Tactics_Types.opts)
+    | None -> (let tmp1 = (FStarC_Options.peek ()) in
+      (ret tmp1))
+  )))
+
+let new_uvar (reason : string) (env : FStarC_TypeChecker_Env.env) (typ : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (sc_opt : (FStarC_Syntax_Syntax.should_check_uvar) option) (uvar_typedness_deps : (FStarC_Syntax_Syntax.ctx_uvar) list) (rng : FStarC_Range_Type.range) : ((FStarC_Tactics_Types.proofstate ref) -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * FStarC_Syntax_Syntax.ctx_uvar)) =
+  (let should_check = (match sc_opt with
+      | (Some (sc)) -> sc
+      | tmp -> FStarC_Syntax_Syntax.Strict
+    ) in
+  (bind (ret ()) (fun tmp -> (let tmp1 = (FStarC_TypeChecker_Env.new_tac_implicit_var reason rng env typ should_check uvar_typedness_deps None false) in
+  (match tmp1 with
+    | (u, ctx_uvar, g_u) -> (let tmp2 = (FStarC_TypeChecker_Common.fStarC_Class_Listlike_to_list__implicit_clist_implicit_3 (g_u).FStarC_TypeChecker_Common.implicits) in
+      let tmp3 = (add_implicits tmp2) in
+      (bind tmp3 (fun tmp4 -> (ret (u, (match ctx_uvar with
+        | (u__1, u__2) -> u__1
+      ))))))
+  )))))
+
+let mk_irrelevant_goal (reason : string) (env : FStarC_TypeChecker_Env.env) (phi : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (sc_opt : (FStarC_Syntax_Syntax.should_check_uvar) option) (rng : FStarC_Range_Type.range) (opts : (string, FStarC_Options.option_val) FStarC_AVLMap.tree) (label : string) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Tactics_Types.goal) =
+  (bind (ret ()) (fun tmp -> (let typ = (FStarC_Syntax_Util.mk_squash phi) in
+  (bind (new_uvar reason env typ sc_opt [] rng) (fun tmp1 -> (match tmp1 with
+    | (tmp2, ctx_uvar) -> (let goal = (FStarC_Tactics_Types.mk_goal env ctx_uvar opts false label) in
+      (ret goal))
+  ))))))
+
+let goal_of_guard (reason : string) (e : FStarC_TypeChecker_Env.env) (f : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (sc_opt : (FStarC_Syntax_Syntax.should_check_uvar) option) (rng : FStarC_Range_Type.range) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Tactics_Types.goal) =
+  (bind getopts (fun opts -> (bind (mk_irrelevant_goal reason e f sc_opt rng opts "") (fun goal -> (let goal1 = { FStarC_Tactics_Types.goal_main_env = (goal).FStarC_Tactics_Types.goal_main_env;
+      goal_ctx_uvar = (goal).FStarC_Tactics_Types.goal_ctx_uvar;
+      opts = (goal).FStarC_Tactics_Types.opts;
+      is_guard = true;
+      label = (goal).FStarC_Tactics_Types.label } in
+  (ret goal1))))))
+
+let push_smt_goals (gs : (FStarC_Tactics_Types.goal) list) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (bind get (fun ps -> ((check_valid_goals gs);
+  (set { FStarC_Tactics_Types.main_context = (ps).FStarC_Tactics_Types.main_context;
+    all_implicits = (ps).FStarC_Tactics_Types.all_implicits;
+    goals = (ps).FStarC_Tactics_Types.goals;
+    smt_goals = (BatList.append (ps).FStarC_Tactics_Types.smt_goals gs);
+    splice_quals = (ps).FStarC_Tactics_Types.splice_quals;
+    splice_attrs = (ps).FStarC_Tactics_Types.splice_attrs;
+    depth = (ps).FStarC_Tactics_Types.depth;
+    u___dump = (ps).FStarC_Tactics_Types.u___dump;
+    psc = (ps).FStarC_Tactics_Types.psc;
+    entry_range = (ps).FStarC_Tactics_Types.entry_range;
+    guard_policy = (ps).FStarC_Tactics_Types.guard_policy;
+    freshness = (ps).FStarC_Tactics_Types.freshness;
+    tac_verb_dbg = (ps).FStarC_Tactics_Types.tac_verb_dbg;
+    local_state = (ps).FStarC_Tactics_Types.local_state;
+    urgency = (ps).FStarC_Tactics_Types.urgency;
+    dump_on_failure = (ps).FStarC_Tactics_Types.dump_on_failure }))))
+
+let rec iter_tac (f : ('u___a -> ((FStarC_Tactics_Types.proofstate ref) -> unit))) (l : ('u___a) list) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (mk_tac (fun ps -> (match l with
+    | [] -> (run (ret ()) ps)
+    | (hd :: tl) -> (let t = (f hd) in
+      (run (bind t (fun tmp -> (iter_tac f tl))) ps))
+  )))
+
+let traise (e : exn) (tmp : (FStarC_Tactics_Types.proofstate ref)) : 'u___a =
+  (raise e)
+
+let wrap_err_doc (pref : (PPrint.document) list) (t : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a)) (ps : (FStarC_Tactics_Types.proofstate ref)) : 'u___a =
+  (mk_tac (fun ps1 -> (try (run t ps1) with
+    | (FStarC_Tactics_Common.TacticFailure ((msg, r))) -> (raise (FStarC_Tactics_Common.TacticFailure (((BatList.append pref msg), r))))
+    | (FStarC_Errors.Error ((err, msg, r, ctx))) -> (raise (FStarC_Errors.Error ((err, (BatList.append pref msg), r, ctx))))
+    | e -> (raise e)
+  )) ps)
+
+let wrap_err (pref : string) (t : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a)) : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a) =
+  (wrap_err_doc ((FStarC_Errors_Msg.text (Prims.strcat "‘" (Prims.strcat pref "’ failed"))) :: []) t)
+
+let rec fold_right (f : ('u___a -> ('u___b -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___b)))) (l : ('u___a) list) (x : 'u___b) : ((FStarC_Tactics_Types.proofstate ref) -> 'u___b) =
+  (mk_tac (fun ps -> (match l with
+    | [] -> (run (ret x) ps)
+    | (hd :: tl) -> (run (bind (fold_right f tl x) (fun r -> (f hd r))) ps)
+  )))
+
+let goal_typedness_deps (g : FStarC_Tactics_Types.goal) : (FStarC_Syntax_Syntax.ctx_uvar) list =
+  (FStarC_Syntax_Util.ctx_uvar_typedness_deps (g).FStarC_Tactics_Types.goal_ctx_uvar)
+
+let set_goals (gs : (FStarC_Tactics_Types.goal) list) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (bind get (fun ps -> (set { FStarC_Tactics_Types.main_context = (ps).FStarC_Tactics_Types.main_context;
+    all_implicits = (ps).FStarC_Tactics_Types.all_implicits;
+    goals = gs;
+    smt_goals = (ps).FStarC_Tactics_Types.smt_goals;
+    splice_quals = (ps).FStarC_Tactics_Types.splice_quals;
+    splice_attrs = (ps).FStarC_Tactics_Types.splice_attrs;
+    depth = (ps).FStarC_Tactics_Types.depth;
+    u___dump = (ps).FStarC_Tactics_Types.u___dump;
+    psc = (ps).FStarC_Tactics_Types.psc;
+    entry_range = (ps).FStarC_Tactics_Types.entry_range;
+    guard_policy = (ps).FStarC_Tactics_Types.guard_policy;
+    freshness = (ps).FStarC_Tactics_Types.freshness;
+    tac_verb_dbg = (ps).FStarC_Tactics_Types.tac_verb_dbg;
+    local_state = (ps).FStarC_Tactics_Types.local_state;
+    urgency = (ps).FStarC_Tactics_Types.urgency;
+    dump_on_failure = (ps).FStarC_Tactics_Types.dump_on_failure })))
+
+let dismiss_all : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (set_goals [])
 
 let add_goals (gs : (FStarC_Tactics_Types.goal) list) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
   (bind get (fun ps -> ((check_valid_goals gs);
@@ -159,28 +372,11 @@ let add_goals (gs : (FStarC_Tactics_Types.goal) list) : ((FStarC_Tactics_Types.p
     urgency = (ps).FStarC_Tactics_Types.urgency;
     dump_on_failure = (ps).FStarC_Tactics_Types.dump_on_failure }))))
 
-let add_irrelevant_goal' (reason : string) (env : FStarC_TypeChecker_Env.env) (phi : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (sc_opt : (FStarC_Syntax_Syntax.should_check_uvar) option) (rng : FStarC_Range_Type.range) (opts : (FStarC_Options.option_val) FStarC_PSMap.t) (label : string) (ps : (FStarC_Tactics_Types.proofstate ref)) : unit =
+let add_irrelevant_goal' (reason : string) (env : FStarC_TypeChecker_Env.env) (phi : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (sc_opt : (FStarC_Syntax_Syntax.should_check_uvar) option) (rng : FStarC_Range_Type.range) (opts : (string, FStarC_Options.option_val) FStarC_AVLMap.tree) (label : string) (ps : (FStarC_Tactics_Types.proofstate ref)) : unit =
   (bind (mk_irrelevant_goal reason env phi sc_opt rng opts label) (fun goal -> (add_goals (goal :: []))) ps)
 
 let add_irrelevant_goal (base_goal : FStarC_Tactics_Types.goal) (reason : string) (env : FStarC_TypeChecker_Env.env) (phi : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (sc_opt : (FStarC_Syntax_Syntax.should_check_uvar) option) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
   (add_irrelevant_goal' reason env phi sc_opt ((base_goal).FStarC_Tactics_Types.goal_ctx_uvar).FStarC_Syntax_Syntax.ctx_uvar_range (base_goal).FStarC_Tactics_Types.opts (base_goal).FStarC_Tactics_Types.label)
-
-let dbg_TacFail : (bool ref) =
-  (FStarC_Debug.get_toggle "TacFail")
-
-let fail_doc (msg : (PPrint.document) list) (ps : (FStarC_Tactics_Types.proofstate ref)) : 'u___a =
-  (let tmp = (!(dbg_TacFail)) in
-  (if tmp then (let tmp1 = (!(ps)) in
-  let tmp2 = (FStarC_Errors_Msg.renderdoc (BatList.hd msg)) in
-  let tmp3 = (Prims.strcat "TACTIC FAILING: " tmp2) in
-  (FStarC_Tactics_Printing.do_dump_proofstate tmp1 tmp3)) else ());
-  (raise (FStarC_Tactics_Common.TacticFailure ((msg, None)))))
-
-let fail (msg : string) : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a) =
-  (fail_doc ((FStarC_Errors_Msg.text msg) :: []))
-
-let cur_goals : ((FStarC_Tactics_Types.proofstate ref) -> (FStarC_Tactics_Types.goal) list) =
-  (bind get (fun ps -> (ret (ps).FStarC_Tactics_Types.goals)))
 
 let remove_solved_goals : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
   (bind cur_goals (fun gs -> (let gs1 = (BatList.filter (fun g -> (let tmp = (FStarC_Tactics_Types.check_goal_solved g) in
@@ -248,214 +444,6 @@ let focus (f : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a)) : ((FStarC_Tac
     | (a, tmp1) -> (ret a)
   )))
 
-let mk_tac (f : (FStarC_Tactics_Types.proofstate -> ('u___a * FStarC_Tactics_Types.proofstate))) (ps : (FStarC_Tactics_Types.proofstate ref)) : 'u___a =
-  (let tmp = (!(ps)) in
-  let tmp1 = (f tmp) in
-  (match tmp1 with
-    | (x, ps') -> (((ps) := ps');
-      x)
-  ))
-
-let run (t : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a)) (ps : FStarC_Tactics_Types.proofstate) : ('u___a * FStarC_Tactics_Types.proofstate) =
-  (let ps1 = (ref ps) in
-  let x = (t ps1) in
-  let tmp = (!(ps1)) in
-  (x, tmp))
-
-let catch (t : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a)) : ((FStarC_Tactics_Types.proofstate ref) -> (exn, 'u___a) FStar_Pervasives.either) =
-  (mk_tac (fun ps -> (let idtable = (!(((ps).FStarC_Tactics_Types.main_context).FStarC_TypeChecker_Env.identifier_info)) in
-  let tx = (FStarC_Syntax_Unionfind.new_transaction ()) in
-  (try (let tmp = (run t ps) in
-  (match tmp with
-    | (a, q) -> ((FStar_Pervasives.Inr (a)), q)
-  )) with
-    | u__cexn -> ((FStarC_Syntax_Unionfind.rollback tx);
-      ((((ps).FStarC_Tactics_Types.main_context).FStarC_TypeChecker_Env.identifier_info) := idtable);
-      ((FStar_Pervasives.Inl (u__cexn)), ps))
-  ))))
-
-let traise (e : exn) (tmp : (FStarC_Tactics_Types.proofstate ref)) : 'u___a =
-  (raise e)
-
-let push_goals (gs : (FStarC_Tactics_Types.goal) list) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (bind get (fun ps -> ((check_valid_goals gs);
-  (set { FStarC_Tactics_Types.main_context = (ps).FStarC_Tactics_Types.main_context;
-    all_implicits = (ps).FStarC_Tactics_Types.all_implicits;
-    goals = (BatList.append (ps).FStarC_Tactics_Types.goals gs);
-    smt_goals = (ps).FStarC_Tactics_Types.smt_goals;
-    splice_quals = (ps).FStarC_Tactics_Types.splice_quals;
-    splice_attrs = (ps).FStarC_Tactics_Types.splice_attrs;
-    depth = (ps).FStarC_Tactics_Types.depth;
-    u___dump = (ps).FStarC_Tactics_Types.u___dump;
-    psc = (ps).FStarC_Tactics_Types.psc;
-    entry_range = (ps).FStarC_Tactics_Types.entry_range;
-    guard_policy = (ps).FStarC_Tactics_Types.guard_policy;
-    freshness = (ps).FStarC_Tactics_Types.freshness;
-    tac_verb_dbg = (ps).FStarC_Tactics_Types.tac_verb_dbg;
-    local_state = (ps).FStarC_Tactics_Types.local_state;
-    urgency = (ps).FStarC_Tactics_Types.urgency;
-    dump_on_failure = (ps).FStarC_Tactics_Types.dump_on_failure }))))
-
-let set_uvar_expected_typ (u : FStarC_Syntax_Syntax.ctx_uvar) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : unit =
-  (let dec = (FStarC_Syntax_Unionfind.find_decoration ((u).FStarC_Syntax_Syntax.ctx_uvar_head, (u).FStarC_Syntax_Syntax.ctx_uvar_head1, (u).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
-  (FStarC_Syntax_Unionfind.change_decoration ((u).FStarC_Syntax_Syntax.ctx_uvar_head, (u).FStarC_Syntax_Syntax.ctx_uvar_head1, (u).FStarC_Syntax_Syntax.ctx_uvar_head2) { FStarC_Syntax_Syntax.uvar_decoration_typ = t;
-    uvar_decoration_typedness_depends_on = (dec).FStarC_Syntax_Syntax.uvar_decoration_typedness_depends_on;
-    uvar_decoration_should_check = (dec).FStarC_Syntax_Syntax.uvar_decoration_should_check;
-    uvar_decoration_should_unrefine = (dec).FStarC_Syntax_Syntax.uvar_decoration_should_unrefine }))
-
-let goal_with_type (g : FStarC_Tactics_Types.goal) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : FStarC_Tactics_Types.goal =
-  (let u = (g).FStarC_Tactics_Types.goal_ctx_uvar in
-  (set_uvar_expected_typ u t);
-  g)
-
-let wrap_err_doc (pref : (PPrint.document) list) (t : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a)) (ps : (FStarC_Tactics_Types.proofstate ref)) : 'u___a =
-  (mk_tac (fun ps1 -> (try (run t ps1) with
-    | (FStarC_Tactics_Common.TacticFailure ((msg, r))) -> (raise (FStarC_Tactics_Common.TacticFailure (((BatList.append pref msg), r))))
-    | (FStarC_Errors.Error ((err, msg, r, ctx))) -> (raise (FStarC_Errors.Error ((err, (BatList.append pref msg), r, ctx))))
-    | e -> (raise e)
-  )) ps)
-
-let wrap_err (pref : string) (t : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a)) : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a) =
-  (wrap_err_doc ((FStarC_Errors_Msg.text (Prims.strcat "‘" (Prims.strcat pref "’ failed"))) :: []) t)
-
-let set_smt_goals (gs : (FStarC_Tactics_Types.goal) list) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (bind get (fun ps -> (set { FStarC_Tactics_Types.main_context = (ps).FStarC_Tactics_Types.main_context;
-    all_implicits = (ps).FStarC_Tactics_Types.all_implicits;
-    goals = (ps).FStarC_Tactics_Types.goals;
-    smt_goals = gs;
-    splice_quals = (ps).FStarC_Tactics_Types.splice_quals;
-    splice_attrs = (ps).FStarC_Tactics_Types.splice_attrs;
-    depth = (ps).FStarC_Tactics_Types.depth;
-    u___dump = (ps).FStarC_Tactics_Types.u___dump;
-    psc = (ps).FStarC_Tactics_Types.psc;
-    entry_range = (ps).FStarC_Tactics_Types.entry_range;
-    guard_policy = (ps).FStarC_Tactics_Types.guard_policy;
-    freshness = (ps).FStarC_Tactics_Types.freshness;
-    tac_verb_dbg = (ps).FStarC_Tactics_Types.tac_verb_dbg;
-    local_state = (ps).FStarC_Tactics_Types.local_state;
-    urgency = (ps).FStarC_Tactics_Types.urgency;
-    dump_on_failure = (ps).FStarC_Tactics_Types.dump_on_failure })))
-
-let cur_goal : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Tactics_Types.goal) =
-  (bind cur_goals (Obj.magic ((fun tmp -> (match tmp with
-    | [] -> (fail "No more goals")
-    | (hd :: tl) -> (let tmp1 = (FStarC_Tactics_Types.check_goal_solved' hd) in
-      (match tmp1 with
-        | None -> (ret hd)
-        | (Some (t)) -> (let tmp2 = (FStarC_Tactics_Printing.goal_to_string_verbose hd) in
-          let tmp3 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' t) in
-          (FStarC_Format.print2 "!!!!!!!!!!!! GOAL IS ALREADY SOLVED! %s\nsol is %s\n" tmp2 tmp3);
-          (ret hd))
-      ))
-  )))))
-
-let replace_cur (g : FStarC_Tactics_Types.goal) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (bind get (fun ps -> ((check_valid_goal g);
-  (set { FStarC_Tactics_Types.main_context = (ps).FStarC_Tactics_Types.main_context;
-    all_implicits = (ps).FStarC_Tactics_Types.all_implicits;
-    goals = (g :: (BatList.tl (ps).FStarC_Tactics_Types.goals));
-    smt_goals = (ps).FStarC_Tactics_Types.smt_goals;
-    splice_quals = (ps).FStarC_Tactics_Types.splice_quals;
-    splice_attrs = (ps).FStarC_Tactics_Types.splice_attrs;
-    depth = (ps).FStarC_Tactics_Types.depth;
-    u___dump = (ps).FStarC_Tactics_Types.u___dump;
-    psc = (ps).FStarC_Tactics_Types.psc;
-    entry_range = (ps).FStarC_Tactics_Types.entry_range;
-    guard_policy = (ps).FStarC_Tactics_Types.guard_policy;
-    freshness = (ps).FStarC_Tactics_Types.freshness;
-    tac_verb_dbg = (ps).FStarC_Tactics_Types.tac_verb_dbg;
-    local_state = (ps).FStarC_Tactics_Types.local_state;
-    urgency = (ps).FStarC_Tactics_Types.urgency;
-    dump_on_failure = (ps).FStarC_Tactics_Types.dump_on_failure }))))
-
-let run_safe (t : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a)) (ps : FStarC_Tactics_Types.proofstate) : ('u___a * FStarC_Tactics_Types.proofstate) =
-  (run t ps)
-
-let mark_uvar_with_should_check_tag (u : FStarC_Syntax_Syntax.ctx_uvar) (sc : FStarC_Syntax_Syntax.should_check_uvar) : unit =
-  (let dec = (FStarC_Syntax_Unionfind.find_decoration ((u).FStarC_Syntax_Syntax.ctx_uvar_head, (u).FStarC_Syntax_Syntax.ctx_uvar_head1, (u).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
-  (FStarC_Syntax_Unionfind.change_decoration ((u).FStarC_Syntax_Syntax.ctx_uvar_head, (u).FStarC_Syntax_Syntax.ctx_uvar_head1, (u).FStarC_Syntax_Syntax.ctx_uvar_head2) { FStarC_Syntax_Syntax.uvar_decoration_typ = (dec).FStarC_Syntax_Syntax.uvar_decoration_typ;
-    uvar_decoration_typedness_depends_on = (dec).FStarC_Syntax_Syntax.uvar_decoration_typedness_depends_on;
-    uvar_decoration_should_check = sc;
-    uvar_decoration_should_unrefine = (dec).FStarC_Syntax_Syntax.uvar_decoration_should_unrefine }))
-
-let mark_uvar_as_already_checked (u : FStarC_Syntax_Syntax.ctx_uvar) : unit =
-  (mark_uvar_with_should_check_tag u FStarC_Syntax_Syntax.Already_checked)
-
-let mark_goal_implicit_already_checked (g : FStarC_Tactics_Types.goal) : unit =
-  (mark_uvar_as_already_checked (g).FStarC_Tactics_Types.goal_ctx_uvar)
-
-let get_phi (g : FStarC_Tactics_Types.goal) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
-  (let tmp = (FStarC_Tactics_Types.goal_type g) in
-  let tmp1 = (FStarC_TypeChecker_Normalize.unfold_whnf (FStarC_Tactics_Types.goal_env g) tmp) in
-  (FStarC_Syntax_Util.un_squash tmp1))
-
-let is_irrelevant (g : FStarC_Tactics_Types.goal) : bool =
-  (let tmp = (get_phi g) in
-  (match tmp with
-    | (Some (v)) -> true
-    | tmp1 -> false
-  ))
-
-let do_log (ps : FStarC_Tactics_Types.proofstate) (f : (unit -> unit)) : unit =
-  (if (ps).FStarC_Tactics_Types.tac_verb_dbg then (f ()) else ())
-
-let log (f : (unit -> unit)) (ps : (FStarC_Tactics_Types.proofstate ref)) : unit =
-  (let tmp = (!(ps)) in
-  (do_log tmp f))
-
-let trytac (t : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a)) : ((FStarC_Tactics_Types.proofstate ref) -> ('u___a) option) =
-  (bind (catch t) (fun r -> (match r with
-    | (FStar_Pervasives.Inr (v)) -> (ret (Some (v)))
-    | (FStar_Pervasives.Inl (tmp)) -> (ret None)
-  )))
-
-let cur_goal_maybe_solved : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Tactics_Types.goal) =
-  (bind cur_goals (Obj.magic ((fun tmp -> (match tmp with
-    | [] -> (fail "No more goals")
-    | (hd :: tl) -> (ret hd)
-  )))))
-
-let getopts : ((FStarC_Tactics_Types.proofstate ref) -> (FStarC_Options.option_val) FStarC_PSMap.t) =
-  (bind (trytac cur_goal_maybe_solved) (fun tmp -> (match tmp with
-    | (Some (g)) -> (ret (g).FStarC_Tactics_Types.opts)
-    | None -> (let tmp1 = (FStarC_Options.peek ()) in
-      (ret tmp1))
-  )))
-
-let goal_of_guard (reason : string) (e : FStarC_TypeChecker_Env.env) (f : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (sc_opt : (FStarC_Syntax_Syntax.should_check_uvar) option) (rng : FStarC_Range_Type.range) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Tactics_Types.goal) =
-  (bind getopts (fun opts -> (bind (mk_irrelevant_goal reason e f sc_opt rng opts "") (fun goal -> (let goal1 = { FStarC_Tactics_Types.goal_main_env = (goal).FStarC_Tactics_Types.goal_main_env;
-      goal_ctx_uvar = (goal).FStarC_Tactics_Types.goal_ctx_uvar;
-      opts = (goal).FStarC_Tactics_Types.opts;
-      is_guard = true;
-      label = (goal).FStarC_Tactics_Types.label } in
-  (ret goal1))))))
-
-let push_smt_goals (gs : (FStarC_Tactics_Types.goal) list) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (bind get (fun ps -> ((check_valid_goals gs);
-  (set { FStarC_Tactics_Types.main_context = (ps).FStarC_Tactics_Types.main_context;
-    all_implicits = (ps).FStarC_Tactics_Types.all_implicits;
-    goals = (ps).FStarC_Tactics_Types.goals;
-    smt_goals = (BatList.append (ps).FStarC_Tactics_Types.smt_goals gs);
-    splice_quals = (ps).FStarC_Tactics_Types.splice_quals;
-    splice_attrs = (ps).FStarC_Tactics_Types.splice_attrs;
-    depth = (ps).FStarC_Tactics_Types.depth;
-    u___dump = (ps).FStarC_Tactics_Types.u___dump;
-    psc = (ps).FStarC_Tactics_Types.psc;
-    entry_range = (ps).FStarC_Tactics_Types.entry_range;
-    guard_policy = (ps).FStarC_Tactics_Types.guard_policy;
-    freshness = (ps).FStarC_Tactics_Types.freshness;
-    tac_verb_dbg = (ps).FStarC_Tactics_Types.tac_verb_dbg;
-    local_state = (ps).FStarC_Tactics_Types.local_state;
-    urgency = (ps).FStarC_Tactics_Types.urgency;
-    dump_on_failure = (ps).FStarC_Tactics_Types.dump_on_failure }))))
-
-let rec iter_tac (f : ('u___a -> ((FStarC_Tactics_Types.proofstate ref) -> unit))) (l : ('u___a) list) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (mk_tac (fun ps -> (match l with
-    | [] -> (run (ret ()) ps)
-    | (hd :: tl) -> (let t = (f hd) in
-      (run (bind t (fun tmp -> (iter_tac f tl))) ps))
-  )))
-
 let dismiss : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
   (bind get (fun ps -> (set { FStarC_Tactics_Types.main_context = (ps).FStarC_Tactics_Types.main_context;
     all_implicits = (ps).FStarC_Tactics_Types.all_implicits;
@@ -474,11 +462,23 @@ let dismiss : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
     urgency = (ps).FStarC_Tactics_Types.urgency;
     dump_on_failure = (ps).FStarC_Tactics_Types.dump_on_failure })))
 
-let rec fold_right (f : ('u___a -> ('u___b -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___b)))) (l : ('u___a) list) (x : 'u___b) : ((FStarC_Tactics_Types.proofstate ref) -> 'u___b) =
-  (mk_tac (fun ps -> (match l with
-    | [] -> (run (ret x) ps)
-    | (hd :: tl) -> (run (bind (fold_right f tl x) (fun r -> (f hd r))) ps)
-  )))
+let set_smt_goals (gs : (FStarC_Tactics_Types.goal) list) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (bind get (fun ps -> (set { FStarC_Tactics_Types.main_context = (ps).FStarC_Tactics_Types.main_context;
+    all_implicits = (ps).FStarC_Tactics_Types.all_implicits;
+    goals = (ps).FStarC_Tactics_Types.goals;
+    smt_goals = gs;
+    splice_quals = (ps).FStarC_Tactics_Types.splice_quals;
+    splice_attrs = (ps).FStarC_Tactics_Types.splice_attrs;
+    depth = (ps).FStarC_Tactics_Types.depth;
+    u___dump = (ps).FStarC_Tactics_Types.u___dump;
+    psc = (ps).FStarC_Tactics_Types.psc;
+    entry_range = (ps).FStarC_Tactics_Types.entry_range;
+    guard_policy = (ps).FStarC_Tactics_Types.guard_policy;
+    freshness = (ps).FStarC_Tactics_Types.freshness;
+    tac_verb_dbg = (ps).FStarC_Tactics_Types.tac_verb_dbg;
+    local_state = (ps).FStarC_Tactics_Types.local_state;
+    urgency = (ps).FStarC_Tactics_Types.urgency;
+    dump_on_failure = (ps).FStarC_Tactics_Types.dump_on_failure })))
 
 let dbg_CoreEq : (bool ref) =
   (FStarC_Debug.get_toggle "CoreEq")

@@ -22,7 +22,7 @@ let op_Plus_Plus (f1 : (FStarC_Syntax_Syntax.free_vars * (FStarC_Ident.lident) F
         | (u__1, u__2) -> u__1
       ) in
     (scrut).FStarC_Syntax_Syntax.free_uvars)) in
-  let tmp2 = (FStarC_Syntax_Unionfind.fStarC_Class_Setlike_union__tuple3_p_uvar_option_version_range (let scrut = (match f1 with
+  let tmp2 = (FStarC_Syntax_Unionfind.fStarC_Class_Setlike_union__tuple3_p_uvar_rec_option_version_range (let scrut = (match f1 with
         | (u__1, u__2) -> u__1
       ) in
     (scrut).FStarC_Syntax_Syntax.free_univs) (let scrut = (match f2 with
@@ -50,7 +50,7 @@ let op_Plus_Plus (f1 : (FStarC_Syntax_Syntax.free_vars * (FStarC_Ident.lident) F
 let no_free_vars : (FStarC_Syntax_Syntax.free_vars * (FStarC_Ident.lident) FStarC_RBSet.rbset) =
   (let tmp = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_empty__bv_list_bv ()) in
   let tmp1 = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_empty__ctx_uvar_list_ctx_uvar ()) in
-  let tmp2 = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_empty__tuple3_p_uvar_option_version_range ()) in
+  let tmp2 = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_empty__tuple3_p_uvar_rec_option_version_range ()) in
   let tmp3 = (FStarC_Ident.fStarC_Class_Setlike_empty__ident_list_ident ()) in
   let tmp4 = { FStarC_Syntax_Syntax.free_names = tmp;
       free_uvars = tmp1;
@@ -102,11 +102,11 @@ let singleton_univ_name (x : FStarC_Ident.ident) : (FStarC_Syntax_Syntax.free_va
     | (u__1, u__2) -> u__2
   )))
 
-let singleton_univ (x : (((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : (FStarC_Syntax_Syntax.free_vars * (FStarC_Ident.lident) FStarC_RBSet.rbset) =
+let singleton_univ (x : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : (FStarC_Syntax_Syntax.free_vars * (FStarC_Ident.lident) FStarC_RBSet.rbset) =
   (let tmp = (match no_free_vars with
       | (u__1, u__2) -> u__1
     ) in
-  let tmp1 = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_singleton__tuple3_p_uvar_option_version_range x) in
+  let tmp1 = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_singleton__tuple3_p_uvar_rec_option_version_range x) in
   let tmp2 = { FStarC_Syntax_Syntax.free_names = (tmp).FStarC_Syntax_Syntax.free_names;
       free_uvars = (tmp).FStarC_Syntax_Syntax.free_uvars;
       free_univs = tmp1;
@@ -299,12 +299,12 @@ let ord_ctx_uvar : (FStarC_Syntax_Syntax.ctx_uvar) FStarC_Class_Ord.ord =
     let tmp1 = (FStarC_Syntax_Unionfind.uvar_id ((v).FStarC_Syntax_Syntax.ctx_uvar_head, (v).FStarC_Syntax_Syntax.ctx_uvar_head1, (v).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
     (FStarC_Class_Ord.fStarC_Class_Ord_cmp__int_1 tmp tmp1))) }
 
-let deq_univ_uvar : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range) -> ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range) -> bool)) =
+let deq_univ_uvar : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range) -> ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range) -> bool)) =
   (fun u v -> (let tmp = (FStarC_Syntax_Unionfind.univ_uvar_id u) in
   let tmp1 = (FStarC_Syntax_Unionfind.univ_uvar_id v) in
   (FStarC_Class_Deq.fStarC_Class_Deq_op_Equals_Question__int tmp tmp1)))
 
-let ord_univ_uvar : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) FStarC_Class_Ord.ord =
+let ord_univ_uvar : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) FStarC_Class_Ord.ord =
   { FStarC_Class_Ord.super = deq_univ_uvar;
     cmp = (fun u v -> (let tmp = (FStarC_Syntax_Unionfind.univ_uvar_id u) in
     let tmp1 = (FStarC_Syntax_Unionfind.univ_uvar_id v) in
@@ -344,7 +344,7 @@ let univnames (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (
     ) in
   (tmp1).FStarC_Syntax_Syntax.free_univ_names)
 
-let univs (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list =
+let univs (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list =
   (let tmp = (free_names_and_uvars t Def) in
   let tmp1 = (match tmp with
       | (u__1, u__2) -> u__1

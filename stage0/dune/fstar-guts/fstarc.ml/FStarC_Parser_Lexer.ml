@@ -32,7 +32,7 @@ type lstate = {
 }
 
 let byte (st : lstate) (eta : int) : int =
-  (FStarC_String.byte_at (st).buf eta)
+  ((fun s i -> if i >= 0 && i < String.length s then Char.code (String.unsafe_get s i) else -1) (st).buf eta)
 
 let rec count_chars (st : lstate) (i : int) (j : int) (n : int) : int =
   (if ((>=) i j) then n else (let b = (byte st i) in
@@ -112,11 +112,11 @@ type rule =
   | RAny
 
 
-let get (st : lstate) (eta : int) : int =
-  (FStarC_String.code_point_at (st).buf eta)
+let get (st : lstate) (i : int) : int =
+  (FStarC_String.code_point_at (st).buf i)
 
-let next (st : lstate) (eta : int) : int =
-  (FStarC_String.next_code_point (st).buf eta)
+let next (st : lstate) (i : int) : int =
+  (FStarC_String.next_code_point (st).buf i)
 
 let rec star (st : lstate) (f : (int -> bool)) (i : int) : int =
   (let tmp = (f (get st i)) in
@@ -139,8 +139,8 @@ let match_newline (st : lstate) (i : int) : int =
   (let c = (get st i) in
   (if (((=) c (FStarC_SmallInt.of_char 13)) && ((=) (byte st ((+) i 1)) (FStarC_SmallInt.of_char 10))) then ((+) i (FStarC_SmallInt.of_int (Prims.of_int (2)))) else (if (is_newline_char c) then (next st i) else (-1))))
 
-let lookup (b : ((('a) list) FStar_ImmutableArray_Base.t * ('a) list)) (c : int) : ('a) list =
-  (if ((<) c 0) then [] else (if ((<) c ascii_limit) then (FStarC_Util.array_index (match b with
+let lookup (b : ((('a) list) array * ('a) list)) (c : int) : ('a) list =
+  (if ((<) c 0) then [] else (if ((<) c ascii_limit) then ((fun a i -> Array.get a (Z.to_int i)) (match b with
     | (u__1, u__2) -> u__1
   ) (Z.of_int c)) else (match b with
     | (u__1, u__2) -> u__2
@@ -149,9 +149,9 @@ let lookup (b : ((('a) list) FStar_ImmutableArray_Base.t * ('a) list)) (c : int)
 let rec upto (n : int) (k : int) : (int) list =
   (if ((>=) k n) then [] else (k :: (upto n ((+) k 1))))
 
-let bucket (first : ('a -> int)) (l : ('a) list) : ((('a) list) FStar_ImmutableArray_Base.t * ('a) list) =
+let bucket (first : ('a -> int)) (l : ('a) list) : ((('a) list) array * ('a) list) =
   (let tmp = (BatList.map (fun c -> (BatList.filter (fun x -> ((=) (first x) c)) l)) (upto ascii_limit 0)) in
-  let tmp1 = (FStar_ImmutableArray_Base.of_list tmp) in
+  let tmp1 = (Array.of_list tmp) in
   let tmp2 = (BatList.filter (fun x -> ((>=) (first x) ascii_limit)) l) in
   (tmp1, tmp2))
 
@@ -162,7 +162,7 @@ let first_cp (l : (int) list) : int =
   )
 
 let rec cps__go (s : string) (i : int) : (int) list =
-  (let b = (FStarC_String.byte_at s i) in
+  (let b = ((fun s i -> if i >= 0 && i < String.length s then Char.code (String.unsafe_get s i) else -1) s i) in
   (if ((<) b 0) then [] else (b :: ((cps__go s) ((+) i 1)))))
 
 let cps (s : string) : (int) list =
@@ -173,7 +173,7 @@ let early_literals : (((int) list * FStarC_Parser_TokenKind.token_kind)) list =
     | (s, k) -> ((cps s), k)
   )) (("%splice", FStarC_Parser_TokenKind.SPLICE) :: (("%splice_t", FStarC_Parser_TokenKind.SPLICET) :: (("`%", FStarC_Parser_TokenKind.BACKTICK_PERC) :: (("`#", FStarC_Parser_TokenKind.BACKTICK_HASH) :: (("`@", FStarC_Parser_TokenKind.BACKTICK_AT) :: (("seq![", FStarC_Parser_TokenKind.SEQ_BANG_LBRACK) :: (("#show-options", FStarC_Parser_TokenKind.PRAGMA_SHOW_OPTIONS) :: (("#set-options", FStarC_Parser_TokenKind.PRAGMA_SET_OPTIONS) :: (("#reset-options", FStarC_Parser_TokenKind.PRAGMA_RESET_OPTIONS) :: (("#push-options", FStarC_Parser_TokenKind.PRAGMA_PUSH_OPTIONS) :: (("#pop-options", FStarC_Parser_TokenKind.PRAGMA_POP_OPTIONS) :: (("#restart-solver", FStarC_Parser_TokenKind.PRAGMA_RESTART_SOLVER) :: (("#print-effects-graph", FStarC_Parser_TokenKind.PRAGMA_PRINT_EFFECTS_GRAPH) :: (("#check", FStarC_Parser_TokenKind.PRAGMA_CHECK) :: (("#eval", FStarC_Parser_TokenKind.PRAGMA_EVAL) :: []))))))))))))))))
 
-let early_bucket : (((((int) list * FStarC_Parser_TokenKind.token_kind)) list) FStar_ImmutableArray_Base.t * (((int) list * FStarC_Parser_TokenKind.token_kind)) list) =
+let early_bucket : (((((int) list * FStarC_Parser_TokenKind.token_kind)) list) array * (((int) list * FStarC_Parser_TokenKind.token_kind)) list) =
   (bucket (fun tmp -> (match tmp with
     | (l, tmp1) -> (first_cp l)
   )) early_literals)
@@ -255,16 +255,16 @@ let kw_op_rules : (((int) list * FStarC_Parser_TokenKind.token_kind * FStarC_Par
     | (s, k, kop) -> ((cps s), k, kop)
   )) (("match", FStarC_Parser_TokenKind.MATCH, FStarC_Parser_TokenKind.MATCH_OP) :: (("if", FStarC_Parser_TokenKind.IF, FStarC_Parser_TokenKind.IF_OP) :: (("let", FStarC_Parser_TokenKind.LET, FStarC_Parser_TokenKind.LET_OP) :: (("exists", FStarC_Parser_TokenKind.EXISTS, FStarC_Parser_TokenKind.EXISTS_OP) :: (("∃", FStarC_Parser_TokenKind.EXISTS, FStarC_Parser_TokenKind.EXISTS_OP) :: (("forall", FStarC_Parser_TokenKind.FORALL, FStarC_Parser_TokenKind.FORALL_OP) :: (("∀", FStarC_Parser_TokenKind.FORALL, FStarC_Parser_TokenKind.FORALL_OP) :: (("and", FStarC_Parser_TokenKind.AND, FStarC_Parser_TokenKind.AND_OP) :: ((";", FStarC_Parser_TokenKind.SEMICOLON, FStarC_Parser_TokenKind.SEMICOLON_OP) :: []))))))))))
 
-let kw_op_bucket : (((((int) list * FStarC_Parser_TokenKind.token_kind * FStarC_Parser_TokenKind.token_kind)) list) FStar_ImmutableArray_Base.t * (((int) list * FStarC_Parser_TokenKind.token_kind * FStarC_Parser_TokenKind.token_kind)) list) =
+let kw_op_bucket : (((((int) list * FStarC_Parser_TokenKind.token_kind * FStarC_Parser_TokenKind.token_kind)) list) array * (((int) list * FStarC_Parser_TokenKind.token_kind * FStarC_Parser_TokenKind.token_kind)) list) =
   (bucket (fun tmp -> (match tmp with
     | (l, tmp1, tmp2) -> (first_cp l)
   )) kw_op_rules)
 
-let in_table (tbl : (bool) FStar_ImmutableArray_Base.t) (c : int) : bool =
-  (if (((>=) c 0) && ((<) c ascii_limit)) then (FStarC_Util.array_index tbl (Z.of_int c)) else false)
+let in_table (tbl : (bool) array) (c : int) : bool =
+  (if (((>=) c 0) && ((<) c ascii_limit)) then ((fun a i -> Array.get a (Z.to_int i)) tbl (Z.of_int c)) else false)
 
-let ascii_table (l : (int) list) : (bool) FStar_ImmutableArray_Base.t =
-  (FStar_ImmutableArray_Base.of_list (FStar_List_Tot_Base.map (fun c -> (mem_cp c l)) (upto ascii_limit 0)))
+let ascii_table (l : (int) list) : (bool) array =
+  (Array.of_list (FStar_List_Tot_Base.map (fun c -> (mem_cp c l)) (upto ascii_limit 0)))
 
 let lit_0 : (int) list =
   (cps "!$%&*+-.<>=?^|~:@#\\/")
@@ -272,7 +272,7 @@ let lit_0 : (int) list =
 let op_char_cps : (int) list =
   lit_0
 
-let op_char_tab : (bool) FStar_ImmutableArray_Base.t =
+let op_char_tab : (bool) array =
   (ascii_table op_char_cps)
 
 let is_op_char (c : int) : bool =
@@ -418,7 +418,7 @@ let op_token_cps : (((int) list * FStarC_Parser_TokenKind.token_kind * string)) 
     | (s, k, t) -> ((cps s), k, t)
   )) op_tokens)
 
-let op_token_bucket : (((((int) list * FStarC_Parser_TokenKind.token_kind * string)) list) FStar_ImmutableArray_Base.t * (((int) list * FStarC_Parser_TokenKind.token_kind * string)) list) =
+let op_token_bucket : (((((int) list * FStarC_Parser_TokenKind.token_kind * string)) list) array * (((int) list * FStarC_Parser_TokenKind.token_kind * string)) list) =
   (bucket (fun tmp -> (match tmp with
     | (l, tmp1, tmp2) -> (first_cp l)
   )) op_token_cps)
@@ -429,7 +429,7 @@ let lit_1 : (int) list =
 let symbolchar_cps : (int) list =
   lit_1
 
-let symbolchar_tab : (bool) FStar_ImmutableArray_Base.t =
+let symbolchar_tab : (bool) array =
   (ascii_table symbolchar_cps)
 
 let is_symbolchar (c : int) : bool =
@@ -473,7 +473,7 @@ let mixfix_rules : (((int) list * FStarC_Parser_TokenKind.token_kind)) list =
     | (s, k) -> ((cps s), k)
   )) ((".[]<-", FStarC_Parser_TokenKind.OP_MIXFIX_ASSIGNMENT) :: ((".()<-", FStarC_Parser_TokenKind.OP_MIXFIX_ASSIGNMENT) :: ((".(||)<-", FStarC_Parser_TokenKind.OP_MIXFIX_ASSIGNMENT) :: ((".[||]<-", FStarC_Parser_TokenKind.OP_MIXFIX_ASSIGNMENT) :: ((".[]", FStarC_Parser_TokenKind.OP_MIXFIX_ACCESS) :: ((".()", FStarC_Parser_TokenKind.OP_MIXFIX_ACCESS) :: ((".(||)", FStarC_Parser_TokenKind.OP_MIXFIX_ACCESS) :: ((".[||]", FStarC_Parser_TokenKind.OP_MIXFIX_ACCESS) :: [])))))))))
 
-let mixfix_bucket : (((((int) list * FStarC_Parser_TokenKind.token_kind)) list) FStar_ImmutableArray_Base.t * (((int) list * FStarC_Parser_TokenKind.token_kind)) list) =
+let mixfix_bucket : (((((int) list * FStarC_Parser_TokenKind.token_kind)) list) array * (((int) list * FStarC_Parser_TokenKind.token_kind)) list) =
   (bucket (fun tmp -> (match tmp with
     | (l, tmp1) -> (first_cp l)
   )) mixfix_rules)
@@ -614,10 +614,10 @@ let select (st : lstate) (i : int) : (rule * int) =
   (tmp7, tmp8)))))
 
 let lexeme (st : lstate) (eta : int) (eta1 : int) : string =
-  (FStarC_String.byte_substring (st).buf eta eta1)
+  ((fun s i j -> let n = String.length s in let i = if i > 0 then i else 0 and j = if j < n then j else n in if j <= i then "" else String.sub s i (j - i)) (st).buf eta eta1)
 
 let chunks_to_string (l : (string) list) : string =
-  (FStarC_String.concat "" (BatList.rev l))
+  (BatString.concat "" (BatList.rev l))
 
 exception LexFail of (FStarC_Errors_Codes.error_code * string * FStarC_Range_Type.range)
 
@@ -697,7 +697,7 @@ let unescape (st : lstate) (i : int) : int =
   (if ((<>) (byte st i) (FStarC_SmallInt.of_char 92)) then (get st i) else (let c = (byte st ((+) i 1)) in
   (if ((=) c (FStarC_SmallInt.of_char 48)) then 0 else (if ((=) c (FStarC_SmallInt.of_char 98)) then (FStarC_SmallInt.of_int (Prims.of_int (8))) else (if ((=) c (FStarC_SmallInt.of_char 116)) then (FStarC_SmallInt.of_int (Prims.of_int (9))) else (if ((=) c (FStarC_SmallInt.of_char 110)) then (FStarC_SmallInt.of_int (Prims.of_int (10))) else (if ((=) c (FStarC_SmallInt.of_char 118)) then (FStarC_SmallInt.of_int (Prims.of_int (11))) else (if ((=) c (FStarC_SmallInt.of_char 102)) then (FStarC_SmallInt.of_int (Prims.of_int (12))) else (if ((=) c (FStarC_SmallInt.of_char 114)) then (FStarC_SmallInt.of_int (Prims.of_int (13))) else (if (((=) c (FStarC_SmallInt.of_char 117)) || ((=) c (FStarC_SmallInt.of_char 120))) then (let n = (if ((=) c (FStarC_SmallInt.of_char 117)) then (FStarC_SmallInt.of_int (Prims.of_int (4))) else (FStarC_SmallInt.of_int (Prims.of_int (2)))) in
   let k = ((+) i (FStarC_SmallInt.of_int (Prims.of_int (2)))) in
-  let tmp = (FStarC_Util.int_of_string (Prims.strcat "0x" (lexeme st k ((+) k n)))) in
+  let tmp = (Z.of_string (Prims.strcat "0x" (lexeme st k ((+) k n)))) in
   (FStarC_SmallInt.of_int tmp)) else (get st ((+) i 1))))))))))))
 
 let rec no_comment__go (st : lstate) (e : int) (j : int) : int =
@@ -706,11 +706,11 @@ let rec no_comment__go (st : lstate) (e : int) (j : int) : int =
 let no_comment (st : lstate) (i : int) (e : int) : int =
   ((no_comment__go st e) i)
 
-let keywords : ((FStarC_Parser_TokenKind.token_kind * string)) FStarC_PSMap.t =
+let keywords : (string, (FStarC_Parser_TokenKind.token_kind * string)) FStarC_AVLMap.tree =
   (let kw = (fun k -> (k, "")) in
   (FStarC_PSMap.of_list (("noeq", (kw FStarC_Parser_TokenKind.NOEQUALITY)) :: (("unopteq", (kw FStarC_Parser_TokenKind.UNOPTEQUALITY)) :: (("and", (kw FStarC_Parser_TokenKind.AND)) :: (("assert", (kw FStarC_Parser_TokenKind.ASSERT)) :: (("assume", (kw FStarC_Parser_TokenKind.ASSUME)) :: (("begin", (kw FStarC_Parser_TokenKind.BEGIN)) :: (("by", (kw FStarC_Parser_TokenKind.BY)) :: (("calc", (kw FStarC_Parser_TokenKind.CALC)) :: (("class", (kw FStarC_Parser_TokenKind.CLASS)) :: (("decreases", (kw FStarC_Parser_TokenKind.DECREASES)) :: (("effect", (kw FStarC_Parser_TokenKind.EFFECT)) :: (("eliminate", (kw FStarC_Parser_TokenKind.ELIM)) :: (("else", (kw FStarC_Parser_TokenKind.ELSE)) :: (("end", (kw FStarC_Parser_TokenKind.END)) :: (("ensures", (kw FStarC_Parser_TokenKind.ENSURES)) :: (("exception", (kw FStarC_Parser_TokenKind.EXCEPTION)) :: (("exists", (kw FStarC_Parser_TokenKind.EXISTS)) :: (("false", (kw FStarC_Parser_TokenKind.FALSE)) :: (("friend", (kw FStarC_Parser_TokenKind.FRIEND)) :: (("forall", (kw FStarC_Parser_TokenKind.FORALL)) :: (("fun", (kw FStarC_Parser_TokenKind.FUN)) :: (("λ", (kw FStarC_Parser_TokenKind.FUN)) :: (("function", (kw FStarC_Parser_TokenKind.FUNCTION)) :: (("if", (kw FStarC_Parser_TokenKind.IF)) :: (("in", (kw FStarC_Parser_TokenKind.IN)) :: (("include", (kw FStarC_Parser_TokenKind.INCLUDE)) :: (("inline", (kw FStarC_Parser_TokenKind.INLINE)) :: (("inline_for_extraction", (kw FStarC_Parser_TokenKind.INLINE_FOR_EXTRACTION)) :: (("instance", (kw FStarC_Parser_TokenKind.INSTANCE)) :: (("introduce", (kw FStarC_Parser_TokenKind.INTRO)) :: (("irreducible", (kw FStarC_Parser_TokenKind.IRREDUCIBLE)) :: (("let", (kw FStarC_Parser_TokenKind.LET)) :: (("logic", (kw FStarC_Parser_TokenKind.LOGIC)) :: (("match", (kw FStarC_Parser_TokenKind.MATCH)) :: (("returns", (kw FStarC_Parser_TokenKind.RETURNS)) :: (("as", (kw FStarC_Parser_TokenKind.AS)) :: (("module", (kw FStarC_Parser_TokenKind.MODULE)) :: (("new", (kw FStarC_Parser_TokenKind.NEW)) :: (("new_effect", (kw FStarC_Parser_TokenKind.NEW_EFFECT)) :: (("noextract", (kw FStarC_Parser_TokenKind.NOEXTRACT)) :: (("of", (kw FStarC_Parser_TokenKind.OF)) :: (("open", (kw FStarC_Parser_TokenKind.OPEN)) :: (("opaque", (kw FStarC_Parser_TokenKind.OPAQUE)) :: (("private", (kw FStarC_Parser_TokenKind.PRIVATE)) :: (("quote", (kw FStarC_Parser_TokenKind.QUOTE)) :: (("range_of", (kw FStarC_Parser_TokenKind.RANGE_OF)) :: (("rec", (kw FStarC_Parser_TokenKind.REC)) :: (("reifiable", (kw FStarC_Parser_TokenKind.REIFIABLE)) :: (("reify", (kw FStarC_Parser_TokenKind.REIFY)) :: (("reflectable", (kw FStarC_Parser_TokenKind.REFLECTABLE)) :: (("requires", (kw FStarC_Parser_TokenKind.REQUIRES)) :: (("set_range_of", (kw FStarC_Parser_TokenKind.SET_RANGE_OF)) :: (("sub_effect", (kw FStarC_Parser_TokenKind.SUB_EFFECT)) :: (("synth", (kw FStarC_Parser_TokenKind.SYNTH)) :: (("then", (kw FStarC_Parser_TokenKind.THEN)) :: (("total", (kw FStarC_Parser_TokenKind.TOTAL)) :: (("true", (kw FStarC_Parser_TokenKind.TRUE)) :: (("try", (kw FStarC_Parser_TokenKind.TRY)) :: (("type", (kw FStarC_Parser_TokenKind.TYPE)) :: (("unfold", (kw FStarC_Parser_TokenKind.UNFOLD)) :: (("unfoldable", (kw FStarC_Parser_TokenKind.UNFOLDABLE)) :: (("val", (kw FStarC_Parser_TokenKind.VAL)) :: (("when", (kw FStarC_Parser_TokenKind.WHEN)) :: (("with", (kw FStarC_Parser_TokenKind.WITH)) :: (("_", (kw FStarC_Parser_TokenKind.UNDERSCORE)) :: (("α", (FStarC_Parser_TokenKind.IDENT, "'a")) :: (("β", (FStarC_Parser_TokenKind.IDENT, "'b")) :: (("γ", (FStarC_Parser_TokenKind.IDENT, "'c")) :: (("δ", (FStarC_Parser_TokenKind.IDENT, "'d")) :: (("ε", (FStarC_Parser_TokenKind.IDENT, "'e")) :: (("φ", (FStarC_Parser_TokenKind.IDENT, "'f")) :: (("χ", (FStarC_Parser_TokenKind.IDENT, "'g")) :: (("η", (FStarC_Parser_TokenKind.IDENT, "'h")) :: (("ι", (FStarC_Parser_TokenKind.IDENT, "'i")) :: (("κ", (FStarC_Parser_TokenKind.IDENT, "'k")) :: (("μ", (FStarC_Parser_TokenKind.IDENT, "'m")) :: (("ν", (FStarC_Parser_TokenKind.IDENT, "'n")) :: (("π", (FStarC_Parser_TokenKind.IDENT, "'p")) :: (("θ", (FStarC_Parser_TokenKind.IDENT, "'q")) :: (("ρ", (FStarC_Parser_TokenKind.IDENT, "'r")) :: (("σ", (FStarC_Parser_TokenKind.IDENT, "'s")) :: (("τ", (FStarC_Parser_TokenKind.IDENT, "'t")) :: (("ψ", (FStarC_Parser_TokenKind.IDENT, "'u")) :: (("ω", (FStarC_Parser_TokenKind.IDENT, "'w")) :: (("ξ", (FStarC_Parser_TokenKind.IDENT, "'x")) :: (("ζ", (FStarC_Parser_TokenKind.IDENT, "'z")) :: []))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
 
-let constructors : ((FStarC_Parser_TokenKind.token_kind * string)) FStarC_PSMap.t =
+let constructors : (string, (FStarC_Parser_TokenKind.token_kind * string)) FStarC_AVLMap.tree =
   (FStarC_PSMap.of_list (("ℕ", (FStarC_Parser_TokenKind.IDENT, "nat")) :: (("ℤ", (FStarC_Parser_TokenKind.IDENT, "int")) :: (("𝔹", (FStarC_Parser_TokenKind.IDENT, "bool")) :: []))))
 
 let cps_number_strip : (int) list =
@@ -723,24 +723,24 @@ let rec clean_number__right (strip : (int -> bool)) (j : int) : int =
   (if (((>) j 0) && (strip ((-) j 1))) then ((clean_number__right strip) ((-) j 1)) else j)
 
 let clean_number (s : string) : string =
-  (let n = (FStarC_String.byte_length s) in
-  let strip = (fun i -> (mem_cp (FStarC_String.byte_at s i) cps_number_strip)) in
+  (let n = (String.length s) in
+  let strip = (fun i -> (mem_cp ((fun s i -> if i >= 0 && i < String.length s then Char.code (String.unsafe_get s i) else -1) s i) cps_number_strip)) in
   let tmp = ((clean_number__left n strip) 0) in
   let tmp1 = ((clean_number__right strip) n) in
-  (FStarC_String.byte_substring s tmp tmp1))
+  ((fun s i j -> let n = String.length s in let i = if i > 0 then i else 0 and j = if j < n then j else n in if j <= i then "" else String.sub s i (j - i)) s tmp tmp1))
 
 let rec maybe_trim_lines__aux (k : int) (s : string) (j : int) (i : int) : int =
-  (if ((>) i j) then k else (if ((<>) (FStarC_String.byte_at s i) (FStarC_SmallInt.of_char 32)) then i else ((maybe_trim_lines__aux k s j) ((+) i 1))))
+  (if ((>) i j) then k else (if ((<>) ((fun s i -> if i >= 0 && i < String.length s then Char.code (String.unsafe_get s i) else -1) s i) (FStarC_SmallInt.of_char 32)) then i else ((maybe_trim_lines__aux k s j) ((+) i 1))))
 
 let maybe_trim_lines (start_column : int) (comment_ : string) : string =
   (if ((=) start_column 0) then comment_ else (let lines = (FStarC_String.split (10 :: []) comment_) in
-  let ensures_empty_prefix = (fun k s -> (let j = (FStarC_SmallInt.min k ((-) (FStarC_String.byte_length s) 1)) in
+  let ensures_empty_prefix = (fun k s -> (let j = (FStarC_SmallInt.min k ((-) (String.length s) 1)) in
     ((maybe_trim_lines__aux k s j) 0))) in
   let trim_width = (BatList.fold_left ensures_empty_prefix start_column lines) in
-  let tail = (fun s -> (let n = (FStarC_String.byte_length s) in
-    (if ((>=) trim_width n) then "" else (FStarC_String.byte_substring s trim_width n)))) in
+  let tail = (fun s -> (let n = (String.length s) in
+    (if ((>=) trim_width n) then "" else ((fun s i j -> let n = String.length s in let i = if i > 0 then i else 0 and j = if j < n then j else n in if j <= i then "" else String.sub s i (j - i)) s trim_width n)))) in
   let tmp = (BatList.map tail lines) in
-  (FStarC_String.concat "\n" tmp)))
+  (BatString.concat "\n" tmp)))
 
 let add_comment (st : lstate) (s : string) (r : FStarC_Range_Type.range) : unit =
   (let tmp = (!((st).comments)) in
@@ -799,7 +799,7 @@ let string_stop (c : int) : bool =
   ((((=) c (FStarC_SmallInt.of_char 92)) || ((=) c (FStarC_SmallInt.of_char 34))) || (is_newline_char c))
 
 let string_of_cp (c : int) : string =
-  (FStarC_String.string_of_list ((FStarC_Util.char_of_int (Z.of_int c)) :: []))
+  ((fun l -> let b = BatUTF8.Buf.create 16 in List.iter (fun c -> BatUTF8.Buf.add_char b (BatUChar.chr c)) l; BatUTF8.Buf.contents b) ((Z.to_int (Z.of_int c)) :: []))
 
 let rec string_lit (st : lstate) (acc : (string) list) (sp : Prims.int) : token =
   (let i = (!((st).cur)) in
@@ -827,7 +827,7 @@ let rec string_lit (st : lstate) (acc : (string) list) (sp : Prims.int) : token 
   (lex_error st FStarC_Errors_Codes.Fatal_SyntaxError "unterminated string" tmp tmp1)) else ((((st).cur) := ((+) i 1));
   (string_lit st ((lexeme st i ((+) i 1)) :: acc) sp))))))))))))
 
-let uoperators : ((FStarC_Parser_TokenKind.token_kind * string)) FStarC_PSMap.t =
+let uoperators : (string, (FStarC_Parser_TokenKind.token_kind * string)) FStarC_AVLMap.tree =
   (FStarC_PSMap.of_list (("∀", (FStarC_Parser_TokenKind.FORALL, "")) :: (("∃", (FStarC_Parser_TokenKind.EXISTS, "")) :: (("⊤", (FStarC_Parser_TokenKind.NAME, "True")) :: (("⊥", (FStarC_Parser_TokenKind.NAME, "False")) :: (("⟹", (FStarC_Parser_TokenKind.IMPLIES, "")) :: (("⟺", (FStarC_Parser_TokenKind.IFF, "")) :: (("→", (FStarC_Parser_TokenKind.RARROW, "")) :: (("←", (FStarC_Parser_TokenKind.LARROW, "")) :: (("⟵", (FStarC_Parser_TokenKind.LONG_LEFT_ARROW, "")) :: (("↝", (FStarC_Parser_TokenKind.SQUIGGLY_RARROW, "")) :: (("≔", (FStarC_Parser_TokenKind.COLON_EQUALS, "")) :: (("∧", (FStarC_Parser_TokenKind.CONJUNCTION, "")) :: (("∨", (FStarC_Parser_TokenKind.DISJUNCTION, "")) :: (("¬", (FStarC_Parser_TokenKind.TILDE, "~")) :: (("⸬", (FStarC_Parser_TokenKind.COLON_COLON, "")) :: (("▹", (FStarC_Parser_TokenKind.PIPE_RIGHT, "")) :: (("÷", (FStarC_Parser_TokenKind.OPINFIX3L, "÷")) :: (("‖", (FStarC_Parser_TokenKind.OPINFIX0a, "||")) :: (("×", (FStarC_Parser_TokenKind.IDENT, "op_Star")) :: (("∗", (FStarC_Parser_TokenKind.OPINFIX3L, "*")) :: (("⇒", (FStarC_Parser_TokenKind.OPINFIX0c, "=>")) :: (("≥", (FStarC_Parser_TokenKind.OPINFIX0c, ">=")) :: (("≤", (FStarC_Parser_TokenKind.OPINFIX0c, "<=")) :: (("≠", (FStarC_Parser_TokenKind.OPINFIX0c, "<>")) :: (("≪", (FStarC_Parser_TokenKind.OPINFIX0c, "<<")) :: (("◃", (FStarC_Parser_TokenKind.OPINFIX0c, "<|")) :: (("±", (FStarC_Parser_TokenKind.OPPREFIX, "±")) :: (("∁", (FStarC_Parser_TokenKind.OPPREFIX, "∁")) :: (("∂", (FStarC_Parser_TokenKind.OPPREFIX, "∂")) :: (("√", (FStarC_Parser_TokenKind.OPPREFIX, "√")) :: [])))))))))))))))))))))))))))))))
 
 let rec next_token (st : lstate) : token =
@@ -908,7 +908,7 @@ let rec next_token (st : lstate) : token =
           (finish FStarC_Parser_TokenKind.INT tmp2))
         | RUInt8 -> (let tmp1 = (s ()) in
           let c = (clean_number tmp1) in
-          let cv = (FStarC_Util.int_of_string c) in
+          let cv = (Z.of_string c) in
           (if ((Prims.op_Less cv Prims.int_zero) || (Prims.op_Greater cv (Prims.of_int (255)))) then (let tmp2 = (pos_of st e) in
           (lex_error st FStarC_Errors_Codes.Fatal_SyntaxError "Out-of-range character literal" sp tmp2)) else (finish FStarC_Parser_TokenKind.UINT8 c)))
         | (RNumber (k)) -> (let tmp1 = (s ()) in
@@ -987,7 +987,7 @@ let lex_all (fname : string) (contents : string) (line : Prims.int) (col : Prims
   let tmp6 = (ref []) in
   let tmp7 = (ref 0) in
   let st = { buf = contents;
-      len = (FStarC_String.byte_length contents);
+      len = (String.length contents);
       fname = fname;
       cur = tmp;
       lnum = tmp1;

@@ -460,12 +460,12 @@ and iapp (cfg : config) (f : FStarC_TypeChecker_NBETerm.t) (args : ((FStarC_Type
       (match tmp2 with
         | (should_reduce, tmp3, tmp4) -> (if (not should_reduce) then (mk (FStarC_TypeChecker_NBETerm.LocalLetRec (i, lb, mutual_lbs, local_env, args1, Prims.int_zero, decreases_list))) else (let env = (make_rec_env mutual_lbs local_env) in
           (debug cfg (fun tmp5 -> (let tmp6 = (BatList.map FStarC_TypeChecker_NBETerm.t_to_string env) in
-          let tmp7 = (FStarC_String.concat ",\n\t " tmp6) in
+          let tmp7 = (BatString.concat ",\n\t " tmp6) in
           (FStarC_Format.print1 "LocalLetRec Env = {\n\t%s\n}\n" tmp7);
           let tmp8 = (BatList.map (fun tmp8 -> (match tmp8 with
               | (t, tmp9) -> (FStarC_TypeChecker_NBETerm.t_to_string t)
             )) args1) in
-          let tmp9 = (FStarC_String.concat ",\n\t " tmp8) in
+          let tmp9 = (BatString.concat ",\n\t " tmp8) in
           (FStarC_Format.print1 "LocalLetRec Args = {\n\t%s\n}\n" tmp9))));
           let tmp5 = (translate cfg env (lb).FStarC_Syntax_Syntax.lbdef) in
           (iapp cfg tmp5 args1)))
@@ -992,12 +992,12 @@ and translate (cfg : config) (bs : (FStarC_TypeChecker_NBETerm.t) list) (e : (FS
     | (FStarC_Syntax_Syntax.Tm_bvar (db)) -> (if (Prims.op_Less (db).FStarC_Syntax_Syntax.index ((fun l -> Z.of_int (BatList.length l)) bs)) then (let t = ((fun l i -> BatList.nth l (Z.to_int i)) bs (db).FStarC_Syntax_Syntax.index) in
       (debug_ (fun tmp2 -> (let tmp3 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
       let tmp4 = (BatList.map FStarC_TypeChecker_NBETerm.t_to_string bs) in
-      let tmp5 = (FStarC_String.concat "; " tmp4) in
+      let tmp5 = (BatString.concat "; " tmp4) in
       (FStarC_Format.print2 "Resolved bvar to %s\n\tcontext is [%s]\n" tmp3 tmp5))));
       t) else (FStarC_Effect.failwith "de Bruijn index out of bounds"))
     | (FStarC_Syntax_Syntax.Tm_uinst (t, us)) -> ((debug_ (fun tmp2 -> (let tmp3 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' t) in
       let tmp4 = (BatList.map FStarC_Syntax_Print.fStarC_Class_Show_show__universe us) in
-      let tmp5 = (FStarC_String.concat ", " tmp4) in
+      let tmp5 = (BatString.concat ", " tmp4) in
       (FStarC_Format.print2 "Uinst term : %s\nUnivs : %s\n" tmp3 tmp5))));
       let tmp2 = (translate cfg bs t) in
       let tmp3 = (BatList.map (fun x -> (let tmp3 = (translate_univ cfg bs x) in
@@ -1204,7 +1204,7 @@ and translate (cfg : config) (bs : (FStarC_TypeChecker_NBETerm.t) list) (e : (FS
                   | tmp5 -> false
                 ) then "#" else "") tmp4))
             )) args) in
-          let tmp4 = (FStarC_String.concat "; " tmp3) in
+          let tmp4 = (BatString.concat "; " tmp3) in
           (FStarC_Format.print1 "Match args: %s\n" tmp4))));
           let tmp2 = (pickBranch cfg scrut2 branches) in
           (match tmp2 with

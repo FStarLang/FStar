@@ -41,7 +41,7 @@ let deps_and_repl_ld_tasks_of_our_file (filename : string) : ((string) list * (F
                 let tmp8 = (FStarC_Interactive_Ide_Types.LDInterfaceOfCurrentFile (tmp7)) in
                 (tmp8 :: []))
               | (impl :: []) -> []
-              | tmp2 -> (let mods_str = (FStarC_String.concat " " same_name) in
+              | tmp2 -> (let mods_str = (BatString.concat " " same_name) in
                 let message = "Too many or too few files matching %s: %s" in
                 (FStarC_Errors.fStarC_Errors_raise_error0__string FStarC_Errors_Codes.Fatal_TooManyOrTooFewFileMatch (FStarC_Format.fmt message (our_mod_name :: (mods_str :: []))));
                 [])
@@ -73,7 +73,7 @@ let pop_repl (msg : string) (st : FStarC_Interactive_Ide_Types.repl_state) : FSt
     | [] -> (FStarC_Effect.failwith "(pop_repl) Too many pops")
     | ((depth, (p, st')) :: stack_tl) -> (let env = (rollback_env ((st).FStarC_Interactive_Ide_Types.repl_env).FStarC_TypeChecker_Env.solver msg depth) in
       ((repl_stack) := stack_tl);
-      (FStarC_Common.runtime_assert (FStarC_Util.physical_equality env (st').FStarC_Interactive_Ide_Types.repl_env) "Inconsistent stack state");
+      (FStarC_Common.runtime_assert ((==) env (st').FStarC_Interactive_Ide_Types.repl_env) "Inconsistent stack state");
       (if (should_reset p) then ((((st').FStarC_Interactive_Ide_Types.repl_env).FStarC_TypeChecker_Env.solver).FStarC_TypeChecker_Env.refresh None) else ());
       { FStarC_Interactive_Ide_Types.repl_line = (st').FStarC_Interactive_Ide_Types.repl_line;
         repl_column = (st').FStarC_Interactive_Ide_Types.repl_column;
@@ -325,9 +325,9 @@ let commit_name_tracking (st : FStarC_Interactive_Ide_Types.repl_state) (name_ev
     repl_lang = (st).FStarC_Interactive_Ide_Types.repl_lang })
 
 let add_module_completions (this_fname : string) (deps : (string) list) (table : FStarC_Interactive_CompletionTable.table) : FStarC_Interactive_CompletionTable.table =
-  (let capitalize = (fun str -> (if ((=) str "") then str else (let first = (FStarC_String.substring str Prims.int_zero Prims.int_one) in
-    let tmp = (FStarC_String.substring str Prims.int_one (Prims.op_Minus (FStarC_String.length str) Prims.int_one)) in
-    (Prims.strcat (FStarC_String.uppercase first) tmp)))) in
+  (let capitalize = (fun str -> (if ((=) str "") then str else (let first = ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) str Prims.int_zero Prims.int_one) in
+    let tmp = ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) str Prims.int_one (Prims.op_Minus ((fun s -> Z.of_int (BatUTF8.length s)) str) Prims.int_one)) in
+    (Prims.strcat (BatString.uppercase_ascii first) tmp)))) in
   let mods = (FStarC_Parser_Dep.build_inclusion_candidates_list ()) in
   let loaded_mods_set = (BatList.fold_left (fun acc dep -> (let tmp = (FStarC_Parser_Dep.lowercase_module_name dep) in
     (FStarC_PSMap.add acc tmp true))) (FStarC_PSMap.empty ()) deps) in
@@ -337,7 +337,7 @@ let add_module_completions (this_fname : string) (deps : (string) list) (table :
   (BatList.fold_left (fun table1 tmp -> (match tmp with
     | (modname, mod_path) -> (let tmp1 = (FStarC_Target.split_target modname) in
       (match tmp1 with
-        | (modname1, tgt) -> (let mod_key = (FStarC_String.lowercase modname1) in
+        | (modname1, tgt) -> (let mod_key = (BatString.lowercase_ascii modname1) in
           let tmp2 = (FStarC_Target.implies this_tgt tgt) in
           let tmp3 = (not tmp2) in
           (if tmp3 then table1 else (if ((=) this_mod_key mod_key) then table1 else (let tmp4 = (capitalize modname1) in

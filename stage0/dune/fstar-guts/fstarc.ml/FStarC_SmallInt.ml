@@ -4,11 +4,11 @@
 let of_int (x : Prims.int) : int =
   (if (Obj.is_int (Obj.repr x)) then (Obj.magic x) else (Z.to_int x))
 
-let of_char (c : FStar_Char.char) : int =
-  (Obj.magic c)
-
 let max (a : int) (b : int) : int =
   (if ((>=) a b) then a else b)
+
+let of_char (c : int) : int =
+  (Obj.magic c)
 
 let min (a : int) (b : int) : int =
   (if ((<=) a b) then a else b)

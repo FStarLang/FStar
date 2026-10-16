@@ -44,10 +44,10 @@ let empty : table =
   { tbl_lids = (trie_empty ()); tbl_mods = (trie_empty ()) }
 
 let query_to_string (q : (string) list) : string =
-  (FStarC_String.concat "." q)
+  (BatString.concat "." q)
 
 let string_compare (s1 : string) (eta : string) : Prims.int =
-  (FStarC_String.compare s1 eta)
+  ((fun x y -> Z.of_int (BatString.compare x y)) s1 eta)
 
 let rec btree_find_exact (bt : ('u___a) btree) (k : string) : ('u___a) option =
   (match bt with
@@ -150,7 +150,7 @@ let register_module_path (tbl : table) (loaded : bool) (mod_path : string) (mod_
       | ((Some (tmp)), tmp1) -> bindings
     )) in
   let ins_mod = (fun id bindings full_name loaded1 -> (names_insert bindings id (Module ({ mod_name = full_name; mod_path = mod_path; mod_loaded = loaded1 })))) in
-  let name_of_revq = (fun query -> (FStarC_String.concat "." (BatList.rev query))) in
+  let name_of_revq = (fun query -> (BatString.concat "." (BatList.rev query))) in
   let ins = (fun id q revq bindings loaded1 -> (let name = (name_of_revq (id :: revq)) in
     (match q with
       | [] -> (ins_mod id bindings name loaded1)
@@ -331,18 +331,18 @@ let trie_find_prefix (tr : ('u___a) trie) (query : (string) list) : (((path_elem
 let match_length_of_path (path : (path_elem) list) : Prims.int =
   (let tmp = (BatList.fold_left (fun acc elem -> (match acc with
       | (acc_len, tmp) -> (match ((elem).segment).prefix with
-          | (Some (prefix)) -> (let completion_len = (FStarC_String.length ((elem).segment).completion) in
+          | (Some (prefix)) -> (let completion_len = ((fun s -> Z.of_int (BatUTF8.length s)) ((elem).segment).completion) in
             ((Prims.op_Plus (Prims.op_Plus acc_len Prims.int_one) completion_len), (prefix, completion_len)))
           | None -> acc
         )
     )) (Prims.int_zero, ("", Prims.int_zero)) path) in
   (match tmp with
-    | (length, (last_prefix, last_completion_length)) -> (Prims.op_Plus (Prims.op_Minus (Prims.op_Minus length Prims.int_one) last_completion_length) (FStarC_String.length last_prefix))
+    | (length, (last_prefix, last_completion_length)) -> (Prims.op_Plus (Prims.op_Minus (Prims.op_Minus length Prims.int_one) last_completion_length) ((fun s -> Z.of_int (BatUTF8.length s)) last_prefix))
   ))
 
 let string_of_path (path : (path_elem) list) : string =
   (let tmp = (BatList.map (fun el -> ((el).segment).completion) path) in
-  (FStarC_String.concat "." tmp))
+  (BatString.concat "." tmp))
 
 let completion_result_of_mod (annot : string) (loaded : bool) (path : (path_elem) list) : completion_result =
   (let tmp = (match_length_of_path path) in

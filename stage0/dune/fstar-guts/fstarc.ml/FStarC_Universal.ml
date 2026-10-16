@@ -195,7 +195,7 @@ let tc_one_fragment (is_interface : bool) (curmod : (FStarC_Syntax_Syntax.modul)
     (BatList.hd tmp))) in
   let acceptable_mod_name = (fun ast_modul -> (let tmp = (fname env) in
     let tmp1 = (FStarC_Parser_Dep.lowercase_module_name tmp) in
-    ((=) tmp1 (FStarC_String.lowercase (FStarC_Ident.string_of_lid (FStarC_Parser_AST.lid_of_modul ast_modul)))))) in
+    ((=) tmp1 (BatString.lowercase_ascii (FStarC_Ident.string_of_lid (FStarC_Parser_AST.lid_of_modul ast_modul)))))) in
   let range_of_first_mod_decl = (fun modul -> (match modul with
       | (FStarC_Parser_AST.Module ({ FStarC_Parser_AST.no_prelude = tmp; mname = tmp1; decls = (d :: tmp2); _ })) -> (d).FStarC_Parser_AST.drange
       | (FStarC_Parser_AST.Interface ({ FStarC_Parser_AST.no_prelude = tmp; mname = tmp1; decls = (d :: tmp2); admitted = tmp3; _ })) -> (d).FStarC_Parser_AST.drange
@@ -712,10 +712,10 @@ let dbg_dep : (bool ref) =
 let batch_mode_tc (fly_deps : bool) (filenames : (string) list) (dep_graph : FStarC_Parser_Dep.deps) : ((FStarC_CheckedFiles.tc_result) list * FStarC_TypeChecker_Env.env * (FStarC_TypeChecker_Env.env -> FStarC_TypeChecker_Env.env)) =
   (let tmp = (!(dbg_dep)) in
   (if tmp then ((FStarC_Format.print_string "Auto-deps kicked in; here's some info.\n");
-  (FStarC_Format.print1 "Here's the list of filenames we will process: %s\n" (FStarC_String.concat " " filenames));
+  (FStarC_Format.print1 "Here's the list of filenames we will process: %s\n" (BatString.concat " " filenames));
   let tmp1 = (BatList.filter (fun fn -> (let tmp1 = (FStarC_Parser_Dep.module_name_of_file fn) in
     (FStarC_Options.should_verify tmp1))) filenames) in
-  let tmp2 = (FStarC_String.concat " " tmp1) in
+  let tmp2 = (BatString.concat " " tmp1) in
   (FStarC_Format.print1 "Here's the list of modules we will verify: %s\n" tmp2)) else ());
   let env = (init_env dep_graph) in
   let tmp1 = (tc_fold_interleave fly_deps None ([], env) filenames) in

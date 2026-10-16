@@ -22,6 +22,6 @@ let flow_map (sep : PPrint.document) (f : ('u___a -> PPrint.document)) (docs : (
   (let tmp = (BatList.map f docs) in
   (PPrint.flow sep tmp))
 
-let pretty_out_channel (rfrac : float) (width : Prims.int) (eta : PPrint.document) (eta1 : FStarC_Util.out_channel) : unit =
+let pretty_out_channel (rfrac : float) (width : Prims.int) (eta : PPrint.document) (eta1 : Stdlib.out_channel) : unit =
   ((fun rfrac width doc ch -> PPrint.ToChannel.pretty rfrac width ch doc; Stdlib.flush ch) rfrac (Z.to_int width) eta eta1)
 

@@ -40,7 +40,7 @@ let load_checked_file (fn : string) (checked_fn : string) : (tc_result_t * (stri
     | (Some (v)) -> true
     | tmp -> false
   ) then (FStarC_Option.must elt) else (let add_and_return_ = (add_and_return checked_fn) in
-  (if (not (FStarC_Filepath.file_exists checked_fn)) then (let msg = (FStarC_Format.fmt1 "checked file %s does not exist" checked_fn) in
+  (if (not (Sys.file_exists checked_fn)) then (let msg = (FStarC_Format.fmt1 "checked file %s does not exist" checked_fn) in
   (add_and_return_ ((Invalid (msg)), (FStar_Pervasives.Inl (msg))))) else (let entry = (FStarC_Util.load_1value_from_file3 checked_fn) in
   (match entry with
     | None -> (let msg = (FStarC_Format.fmt1 "checked file %s is corrupt" checked_fn) in
@@ -160,7 +160,7 @@ let hash_dependences (deps : FStarC_Parser_Dep.deps) (fn : string) (deps_of_fn :
     (not tmp4))) deps_of_fn) in
   let binary_deps1 = ((fun f l -> BatList.sort (fun x y -> Z.to_int (f x y)) l) (fun fn11 fn2 -> (let tmp3 = (FStarC_Parser_Dep.lowercase_module_name fn11) in
     let tmp4 = (FStarC_Parser_Dep.lowercase_module_name fn2) in
-    (FStarC_String.compare tmp3 tmp4))) binary_deps) in
+    ((fun x y -> Z.of_int (BatString.compare x y)) tmp3 tmp4))) binary_deps) in
   let maybe_add_iface_hash = (fun out -> (match interface_source_file_name with
       | None -> (FStar_Pervasives.Inr ((("source", source_hash) :: out)))
       | (Some (iface)) -> (let tmp3 = (FStarC_Find.find_file iface) in

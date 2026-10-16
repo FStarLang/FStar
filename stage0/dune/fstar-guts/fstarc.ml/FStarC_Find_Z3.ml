@@ -21,7 +21,7 @@ let do_locate_z3 (v : string) : (string) option =
   let in_lib = (fun tmp -> (let tmp1 = (FStarC_Find.lib_root ()) in
     (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp1 (fun root -> (let path = (FStarC_Platform.exe (Prims.strcat root (Prims.strcat "/z3-" (Prims.strcat v "/bin/z3")))) in
     let path1 = (FStarC_Filepath.normalize_file_path path) in
-    (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option (guard (FStarC_Filepath.file_exists path1)) (fun tmp2 -> (Some (path1))))))))) in
+    (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option (guard (Sys.file_exists path1)) (fun tmp2 -> (Some (path1))))))))) in
   let from_path = (fun cmd tmp -> (let cmd1 = (FStarC_Platform.exe cmd) in
     let tmp1 = (z3_inpath cmd1) in
     let tmp2 = (guard tmp1) in

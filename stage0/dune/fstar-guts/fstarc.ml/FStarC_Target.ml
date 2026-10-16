@@ -2,9 +2,9 @@
 [@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
 
 let is_segment (s : string) : bool =
-  (match (FStarC_String.list_of_string s) with
-    | (c :: cs) -> (let is_lower = (fun c1 -> ((FStarC_Util.is_letter c1) && ((=) (FStarC_String.lowercase (FStarC_String.string_of_char c1)) (FStarC_String.string_of_char c1)))) in
-      (if (is_lower c) then (BatList.for_all (fun c1 -> (((is_lower c1) || (FStarC_Util.is_digit c1)) || ((=) c1 95))) cs) else false))
+  (match ((fun s -> List.rev (BatUTF8.fold (fun acc c -> BatUChar.code c :: acc) [] s)) s) with
+    | (c :: cs) -> (let is_lower = (fun c1 -> (((fun c -> c <= 255 && BatChar.is_letter (Char.chr c)) c1) && ((=) (BatString.lowercase_ascii ((fun c -> BatString.of_char (Char.chr c)) c1)) ((fun c -> BatString.of_char (Char.chr c)) c1)))) in
+      (if (is_lower c) then (BatList.for_all (fun c1 -> (((is_lower c1) || ((fun c -> c <= 255 && BatChar.is_digit (Char.chr c)) c1)) || ((=) c1 95))) cs) else false))
     | [] -> false
   )
 
@@ -18,10 +18,10 @@ let canonical (xs : (string) list) : (string) option =
   (let xs1 = (BatList.filter (fun a -> (let tmp = (BatList.exists (fun b -> (if ((<>) b a) then (atom_implied_by a b) else false)) xs) in
     (not tmp))) xs) in
   let tmp = ((fun f l -> BatList.unique ~eq:f l) (fun a b -> ((=) a b)) xs1) in
-  let tmp1 = (FStarC_Util.sort_with FStarC_String.compare tmp) in
+  let tmp1 = (FStarC_Util.sort_with (fun x y -> Z.of_int (BatString.compare x y)) tmp) in
   (match tmp1 with
     | [] -> None
-    | xs2 -> (Some ((FStarC_String.concat "-" xs2)))
+    | xs2 -> (Some ((BatString.concat "-" xs2)))
   ))
 
 let parse_tag (s : string) : ((string) option) option =
@@ -47,7 +47,7 @@ let split_target (stem : string) : (string * (string) option) =
     | (m :: rest) when (match rest with
       | (hd :: tl) -> true
       | tmp -> false
-    ) -> (let tmp = (parse_tag (FStarC_String.concat "-" rest)) in
+    ) -> (let tmp = (parse_tag (BatString.concat "-" rest)) in
       (match tmp with
         | (Some (t)) -> (m, t)
         | None -> (stem, None)

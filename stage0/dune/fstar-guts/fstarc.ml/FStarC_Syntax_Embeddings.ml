@@ -147,7 +147,7 @@ let e_list (ea : ('u___a) FStarC_Syntax_Embeddings_Base.embedding) : (('u___a) l
     let tmp3 = ((FStarC_Ident.string_of_lid FStarC_Parser_Const.list_lid), tmp2) in
     (FStarC_Syntax_Syntax.ET_app ((match tmp3 with (custard_tup, _) -> custard_tup), (match tmp3 with (_, custard_tup) -> custard_tup))))) in
   let printer = (fun l -> (let tmp = (BatList.map (FStarC_Syntax_Embeddings_Base.printer_of ea) l) in
-    let tmp1 = (FStarC_String.concat "; " tmp) in
+    let tmp1 = (BatString.concat "; " tmp) in
     let tmp2 = (Prims.strcat tmp1 "]") in
     (Prims.strcat "[" tmp2))) in
   (FStarC_Syntax_Embeddings_Base.mk_emb_full (e_list__em ea typ emb_t_list_a printer) (e_list__un ea typ emb_t_list_a printer) typ printer emb_t_list_a))
@@ -162,7 +162,7 @@ let e_int : (Prims.int) FStarC_Syntax_Embeddings_Base.embedding =
     )))) in
   (FStarC_Syntax_Embeddings_Base.mk_emb_full em un (fun tmp -> ty) FStarC_Class_Show.fStarC_Class_Show_show__int (fun tmp -> emb_t_int)))
 
-let e_char : (FStar_Char.char) FStarC_Syntax_Embeddings_Base.embedding =
+let e_char : (int) FStarC_Syntax_Embeddings_Base.embedding =
   (let em = (fun c rng u__shadow u__norm -> (let t = (FStarC_Syntax_Util.exp_char c) in
     { FStarC_Syntax_Syntax.n = (t).FStarC_Syntax_Syntax.n;
       pos = rng;
@@ -173,7 +173,7 @@ let e_char : (FStar_Char.char) FStarC_Syntax_Embeddings_Base.embedding =
       | (FStarC_Syntax_Syntax.Tm_constant ((FStarC_Const.Const_char (c)))) -> (Some (c))
       | tmp2 -> None
     ))) in
-  (FStarC_Syntax_Embeddings_Base.mk_emb_full em un (fun tmp -> FStarC_Syntax_Syntax.t_char) FStarC_Util.string_of_char (fun tmp -> (FStarC_Syntax_Syntax.ET_app ((FStarC_Ident.string_of_lid FStarC_Parser_Const.char_lid), [])))))
+  (FStarC_Syntax_Embeddings_Base.mk_emb_full em un (fun tmp -> FStarC_Syntax_Syntax.t_char) (fun i -> BatUTF8.init 1 (fun _ -> BatUChar.chr i)) (fun tmp -> (FStarC_Syntax_Syntax.ET_app ((FStarC_Ident.string_of_lid FStarC_Parser_Const.char_lid), [])))))
 
 let e_range : (FStarC_Range_Type.range) FStarC_Syntax_Embeddings_Base.embedding =
   (let em = (fun r rng u__shadow u__norm -> (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_constant ((FStarC_Const.Const_range (r)))) rng)) in

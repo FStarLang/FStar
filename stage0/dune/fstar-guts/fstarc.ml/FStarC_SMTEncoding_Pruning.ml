@@ -24,11 +24,11 @@ type assumption_remaining_triggers = {
 }
 
 type pruning_state = {
-  defs_and_decls_map : (pdef) FStarC_PSMap.t;
-  macro_freenames : ((string) list) FStarC_PSMap.t;
-  trigger_to_assumption : ((passumption) list) FStarC_PSMap.t;
-  assumption_to_triggers : (assumption_remaining_triggers) FStarC_PSMap.t;
-  assumption_name_map : (passumption) FStarC_PSMap.t;
+  defs_and_decls_map : (string, pdef) FStarC_AVLMap.tree;
+  macro_freenames : (string, (string) list) FStarC_AVLMap.tree;
+  trigger_to_assumption : (string, (passumption) list) FStarC_AVLMap.tree;
+  assumption_to_triggers : (string, assumption_remaining_triggers) FStarC_AVLMap.tree;
+  assumption_name_map : (string, passumption) FStarC_AVLMap.tree;
   ambients : (string) list;
   extra_roots : (passumption) list;
   pruned_ambients : (string) list;
@@ -56,7 +56,7 @@ type decl_summary =
   | Sum_other of FStarC_SMTEncoding_Term.decl
 
 
-let init_macro_freenames : ((string) list) FStarC_PSMap.t =
+let init_macro_freenames : (string, (string) list) FStarC_AVLMap.tree =
   (FStarC_PSMap.of_list (("is-BoxBool", ("BoxBool" :: [])) :: (("is-BoxInt", ("BoxInt" :: [])) :: (("is-BoxString", ("BoxString" :: [])) :: (("is-BoxReal", ("BoxReal" :: [])) :: (("is-BoxProp", ("BoxProp" :: [])) :: []))))))
 
 let init : pruning_state =
@@ -184,7 +184,7 @@ let name_of_decl (d : FStarC_SMTEncoding_Term.decl) : string =
     | tmp -> "<none>"
   )
 
-let rec add_decls__add (m : (FStarC_SMTEncoding_Term.decl) FStarC_PSMap.t) (d : FStarC_SMTEncoding_Term.decl) : (FStarC_SMTEncoding_Term.decl) FStarC_PSMap.t =
+let rec add_decls__add (m : (string, FStarC_SMTEncoding_Term.decl) FStarC_AVLMap.tree) (d : FStarC_SMTEncoding_Term.decl) : (string, FStarC_SMTEncoding_Term.decl) FStarC_AVLMap.tree =
   (match d with
     | (FStarC_SMTEncoding_Term.Module (tmp, ds)) -> (BatList.fold_left add_decls__add m ds)
     | (FStarC_SMTEncoding_Term.Assume (tmp)) -> (let tmp1 = (name_of_decl d) in
@@ -246,13 +246,13 @@ let maybe_add_ambient (a : FStarC_SMTEncoding_Term.assumption) : asum_kind =
       (if tmp1 then (Sum_ambient (true)) else (add_assumption_with_triggers triggers)))
     | (FStarC_SMTEncoding_Term.App ((FStarC_SMTEncoding_Term.Var ("Valid")), ((FStarC_SMTEncoding_Term.App ((FStarC_SMTEncoding_Term.Var ("ApplyTT")), ((FStarC_SMTEncoding_Term.FreeV ({ FStarC_SMTEncoding_Term.u__0 = "__uu__PartialApp"; u__1 = tmp; u__2 = tmp1; _ })) :: (term :: [])), tmp2)) :: []), tmp3)) -> (let triggers = (match term with
           | (FStarC_SMTEncoding_Term.FreeV ({ FStarC_SMTEncoding_Term.u__0 = token; u__1 = tmp4; u__2 = tmp5; _ })) -> (if (FStarC_Util.ends_with token "@tok") then (let tmp6 = (FStarC_RBSet.fStarC_Class_Setlike_singleton__string_rbset_string token) in
-            let tmp7 = (FStarC_Util.substring token Prims.int_zero (Prims.op_Minus (FStarC_String.length token) (Prims.of_int (4)))) in
+            let tmp7 = ((fun s i j -> BatString.sub s (Z.to_int i) (Z.to_int j)) token Prims.int_zero (Prims.op_Minus ((fun s -> Z.of_int (BatUTF8.length s)) token) (Prims.of_int (4)))) in
             let tmp8 = (FStarC_RBSet.fStarC_Class_Setlike_singleton__string_rbset_string tmp7) in
             let tmp9 = (tmp8 :: []) in
             (tmp6 :: tmp9)) else (let tmp6 = (FStarC_RBSet.fStarC_Class_Setlike_singleton__string_rbset_string token) in
             (tmp6 :: [])))
           | (FStarC_SMTEncoding_Term.App ((FStarC_SMTEncoding_Term.Var (token)), [], tmp4)) -> (if (FStarC_Util.ends_with token "@tok") then (let tmp5 = (FStarC_RBSet.fStarC_Class_Setlike_singleton__string_rbset_string token) in
-            let tmp6 = (FStarC_Util.substring token Prims.int_zero (Prims.op_Minus (FStarC_String.length token) (Prims.of_int (4)))) in
+            let tmp6 = ((fun s i j -> BatString.sub s (Z.to_int i) (Z.to_int j)) token Prims.int_zero (Prims.op_Minus ((fun s -> Z.of_int (BatUTF8.length s)) token) (Prims.of_int (4)))) in
             let tmp7 = (FStarC_RBSet.fStarC_Class_Setlike_singleton__string_rbset_string tmp6) in
             let tmp8 = (tmp7 :: []) in
             (tmp5 :: tmp8)) else (let tmp5 = (FStarC_RBSet.fStarC_Class_Setlike_singleton__string_rbset_string token) in
@@ -262,13 +262,13 @@ let maybe_add_ambient (a : FStarC_SMTEncoding_Term.assumption) : asum_kind =
       (add_assumption_with_triggers triggers))
     | (FStarC_SMTEncoding_Term.App ((FStarC_SMTEncoding_Term.Var ("Valid")), ((FStarC_SMTEncoding_Term.App ((FStarC_SMTEncoding_Term.Var ("ApplyTT")), ((FStarC_SMTEncoding_Term.App ((FStarC_SMTEncoding_Term.Var ("__uu__PartialApp")), tmp, tmp1)) :: (term :: [])), tmp2)) :: []), tmp3)) -> (let triggers = (match term with
           | (FStarC_SMTEncoding_Term.FreeV ({ FStarC_SMTEncoding_Term.u__0 = token; u__1 = tmp4; u__2 = tmp5; _ })) -> (if (FStarC_Util.ends_with token "@tok") then (let tmp6 = (FStarC_RBSet.fStarC_Class_Setlike_singleton__string_rbset_string token) in
-            let tmp7 = (FStarC_Util.substring token Prims.int_zero (Prims.op_Minus (FStarC_String.length token) (Prims.of_int (4)))) in
+            let tmp7 = ((fun s i j -> BatString.sub s (Z.to_int i) (Z.to_int j)) token Prims.int_zero (Prims.op_Minus ((fun s -> Z.of_int (BatUTF8.length s)) token) (Prims.of_int (4)))) in
             let tmp8 = (FStarC_RBSet.fStarC_Class_Setlike_singleton__string_rbset_string tmp7) in
             let tmp9 = (tmp8 :: []) in
             (tmp6 :: tmp9)) else (let tmp6 = (FStarC_RBSet.fStarC_Class_Setlike_singleton__string_rbset_string token) in
             (tmp6 :: [])))
           | (FStarC_SMTEncoding_Term.App ((FStarC_SMTEncoding_Term.Var (token)), [], tmp4)) -> (if (FStarC_Util.ends_with token "@tok") then (let tmp5 = (FStarC_RBSet.fStarC_Class_Setlike_singleton__string_rbset_string token) in
-            let tmp6 = (FStarC_Util.substring token Prims.int_zero (Prims.op_Minus (FStarC_String.length token) (Prims.of_int (4)))) in
+            let tmp6 = ((fun s i j -> BatString.sub s (Z.to_int i) (Z.to_int j)) token Prims.int_zero (Prims.op_Minus ((fun s -> Z.of_int (BatUTF8.length s)) token) (Prims.of_int (4)))) in
             let tmp7 = (FStarC_RBSet.fStarC_Class_Setlike_singleton__string_rbset_string tmp6) in
             let tmp8 = (tmp7 :: []) in
             (tmp5 :: tmp8)) else (let tmp5 = (FStarC_RBSet.fStarC_Class_Setlike_singleton__string_rbset_string token) in
@@ -518,7 +518,7 @@ let print_reached_names_and_reasons (ctxt : ctxt) (names : (string) list) : stri
         (FStarC_Format.fmt2 "%s {triggered by %s}" name tmp))
     )) in
   let tmp = (BatList.map print_one names) in
-  (FStarC_String.concat "\n\t" tmp))
+  (BatString.concat "\n\t" tmp))
 
 let prune (p : pruning_state) (roots : (FStarC_SMTEncoding_Term.decl) list) : (FStarC_SMTEncoding_Term.decl) list =
   (let tmp = ((fun f l -> BatList.flatten (BatList.map f l)) assumptions_of_decl roots) in

@@ -856,19 +856,6 @@ let close_let_rec (lbs : (FStarC_Syntax_Syntax.letbinding) list) (t : (FStarC_Sy
       ))
   ))
 
-let closing_of_binders (bs : (FStarC_Syntax_Syntax.binder) list) : (FStarC_Syntax_Syntax.subst_elt) list =
-  (closing_subst bs)
-
-let subst_residual_comp (s : (FStarC_Syntax_Syntax.subst_elt) list) (rc : FStarC_Syntax_Syntax.residual_comp) : FStarC_Syntax_Syntax.residual_comp =
-  (match (rc).FStarC_Syntax_Syntax.residual_typ with
-    | None -> rc
-    | (Some (t)) -> (let tmp = (subst s t) in
-      let tmp1 = (Some (tmp)) in
-      { FStarC_Syntax_Syntax.residual_effect = (rc).FStarC_Syntax_Syntax.residual_effect;
-        residual_typ = tmp1;
-        residual_flags = (rc).FStarC_Syntax_Syntax.residual_flags })
-  )
-
 let open_term_1 (b : FStarC_Syntax_Syntax.binder) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.binder * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
   (let tmp = (open_term (b :: []) t) in
   (match tmp with
@@ -881,6 +868,19 @@ let subst_binder (s : (FStarC_Syntax_Syntax.subst_elt) list) (b : FStarC_Syntax_
 
 let subst_decreasing_order (s : (FStarC_Syntax_Syntax.subst_elt) list) (tmp : FStarC_Syntax_Syntax.decreases_order) : FStarC_Syntax_Syntax.decreases_order =
   (subst_dec_order' ((s :: []), FStarC_Syntax_Syntax.NoUseRange) tmp)
+
+let closing_of_binders (bs : (FStarC_Syntax_Syntax.binder) list) : (FStarC_Syntax_Syntax.subst_elt) list =
+  (closing_subst bs)
+
+let subst_residual_comp (s : (FStarC_Syntax_Syntax.subst_elt) list) (rc : FStarC_Syntax_Syntax.residual_comp) : FStarC_Syntax_Syntax.residual_comp =
+  (match (rc).FStarC_Syntax_Syntax.residual_typ with
+    | None -> rc
+    | (Some (t)) -> (let tmp = (subst s t) in
+      let tmp1 = (Some (tmp)) in
+      { FStarC_Syntax_Syntax.residual_effect = (rc).FStarC_Syntax_Syntax.residual_effect;
+        residual_typ = tmp1;
+        residual_flags = (rc).FStarC_Syntax_Syntax.residual_flags })
+  )
 
 let compress_subst (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
   (match (t).FStarC_Syntax_Syntax.n with

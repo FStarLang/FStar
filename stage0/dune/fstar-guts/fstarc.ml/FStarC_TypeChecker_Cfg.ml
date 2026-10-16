@@ -58,7 +58,7 @@ type cfg = {
   tcenv : FStarC_TypeChecker_Env.env;
   debug : debug_switches;
   delta_level : (FStarC_TypeChecker_Env.delta_level) list;
-  primitive_steps : (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t;
+  primitive_steps : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree;
   strong : bool;
   memoize_lazy : bool;
   normalize_pure_lets : bool;
@@ -1454,22 +1454,22 @@ let add_nbe (s : fsteps) : fsteps =
     tactics = (s).tactics;
     reduce_projections = (s).reduce_projections } else s))
 
-type prim_step_set = (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t
+type prim_step_set = (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree
 
-let empty_prim_steps (tmp : unit) : (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t =
+let empty_prim_steps (tmp : unit) : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree =
   (FStarC_PSMap.empty ())
 
-let add_step (s : FStarC_TypeChecker_Primops_Base.primitive_step) (ss : (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t) : (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t =
+let add_step (s : FStarC_TypeChecker_Primops_Base.primitive_step) (ss : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree) : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree =
   (FStarC_PSMap.add ss (FStarC_Ident.string_of_lid (s).FStarC_TypeChecker_Primops_Base.name) s)
 
-let add_steps (m : (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t) (l : (FStarC_TypeChecker_Primops_Base.primitive_step) list) : (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t =
+let add_steps (m : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree) (l : (FStarC_TypeChecker_Primops_Base.primitive_step) list) : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree =
   (BatList.fold_right add_step l m)
 
-let prim_from_list (l : (FStarC_TypeChecker_Primops_Base.primitive_step) list) : (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t =
+let prim_from_list (l : (FStarC_TypeChecker_Primops_Base.primitive_step) list) : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree =
   (let tmp = (empty_prim_steps ()) in
   (add_steps tmp l))
 
-let env_dependent_ops (env : FStarC_TypeChecker_Env.env) : (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t =
+let env_dependent_ops (env : FStarC_TypeChecker_Env.env) : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree =
   (let tmp = (FStarC_TypeChecker_Primops.env_dependent_ops env) in
   (prim_from_list tmp))
 
@@ -1478,9 +1478,9 @@ let extendable_primops_dirty : (bool ref) =
 
 type register_prim_step_t = (FStarC_TypeChecker_Primops_Base.primitive_step -> unit)
 
-type retrieve_prim_step_t = (unit -> (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t)
+type retrieve_prim_step_t = (unit -> (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree)
 
-let mk_extendable_primop_set (tmp : unit) : ((FStarC_TypeChecker_Primops_Base.primitive_step -> unit) * (unit -> (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t)) =
+let mk_extendable_primop_set (tmp : unit) : ((FStarC_TypeChecker_Primops_Base.primitive_step -> unit) * (unit -> (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree)) =
   (let tmp1 = (empty_prim_steps ()) in
   let steps = (ref tmp1) in
   let register = (fun p -> (((extendable_primops_dirty) := true);
@@ -1490,30 +1490,30 @@ let mk_extendable_primop_set (tmp : unit) : ((FStarC_TypeChecker_Primops_Base.pr
   let retrieve = (fun tmp2 -> (!(steps))) in
   (register, retrieve))
 
-let plugins : ((FStarC_TypeChecker_Primops_Base.primitive_step -> unit) * (unit -> (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t)) =
+let plugins : ((FStarC_TypeChecker_Primops_Base.primitive_step -> unit) * (unit -> (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree)) =
   (mk_extendable_primop_set ())
 
-let retrieve_plugins (tmp : unit) : (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t =
+let retrieve_plugins (tmp : unit) : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree =
   (let tmp1 = (FStarC_Options.no_plugins ()) in
   (if tmp1 then (empty_prim_steps ()) else ((match plugins with
     | (u__1, u__2) -> u__2
   ) ())))
 
-let extra_steps : ((FStarC_TypeChecker_Primops_Base.primitive_step -> unit) * (unit -> (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t)) =
+let extra_steps : ((FStarC_TypeChecker_Primops_Base.primitive_step -> unit) * (unit -> (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree)) =
   (mk_extendable_primop_set ())
 
-let retrieve_extra_steps (tmp : unit) : (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t =
+let retrieve_extra_steps (tmp : unit) : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree =
   ((match extra_steps with
     | (u__1, u__2) -> u__2
   ) ())
 
-let merge_steps (s1 : (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t) (eta : (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t) : (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t =
-  (FStarC_PSMap.merge s1 eta)
+let merge_steps (s1 : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree) (acc : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree) : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree =
+  (FStarC_PSMap.merge s1 acc)
 
-let built_in_primitive_steps : (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t =
+let built_in_primitive_steps : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree =
   (prim_from_list FStarC_TypeChecker_Primops.built_in_primitive_steps_list)
 
-let cached_steps : (unit -> (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t) =
+let cached_steps : (unit -> (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree) =
   (let tmp = (empty_prim_steps ()) in
   let memo = (ref tmp) in
   (fun tmp1 -> (let tmp2 = (!(extendable_primops_dirty)) in
@@ -1700,7 +1700,7 @@ let fStarC_Class_Show_show__cfg (tmp : cfg) : string =
   let tmp5 = (tmp4 :: ("}" :: [])) in
   let tmp6 = (tmp2 :: tmp5) in
   let tmp7 = ("{" :: tmp6) in
-  (FStarC_String.concat "\n" tmp7))
+  (BatString.concat "\n" tmp7))
 
 let log_nbe (cfg : cfg) (f : (unit -> unit)) : unit =
   (if ((cfg).debug).debug_nbe then (f ()) else ())
@@ -1759,7 +1759,7 @@ let find_prim_step (cfg : cfg) (fv : FStarC_Syntax_Syntax.fv) : (FStarC_TypeChec
 let log_primops (cfg : cfg) (f : (unit -> unit)) : unit =
   (if ((cfg).debug).primop then (f ()) else ())
 
-let simplification_steps (env : FStarC_TypeChecker_Env.env) : (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t =
+let simplification_steps (env : FStarC_TypeChecker_Env.env) : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree =
   (let tmp = (FStarC_TypeChecker_Primops.simplification_ops_list env) in
   (prim_from_list tmp))
 

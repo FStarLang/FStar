@@ -265,7 +265,7 @@ let getprop (e : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') F
   (let tn = (FStarC_TypeChecker_Normalize.normalize (FStarC_TypeChecker_Env.Weak :: (FStarC_TypeChecker_Env.HNF :: ((FStarC_TypeChecker_Env.UnfoldUntil (FStarC_Syntax_Syntax.delta_constant)) :: []))) e t) in
   (FStarC_Syntax_Util.un_squash tn))
 
-let preprocess (env : FStarC_TypeChecker_Env.env) (goal : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (bool * ((FStarC_TypeChecker_Env.env * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Options.option_val) FStarC_PSMap.t)) list) =
+let preprocess (env : FStarC_TypeChecker_Env.env) (goal : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (bool * ((FStarC_TypeChecker_Env.env * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (string, FStarC_Options.option_val) FStarC_AVLMap.tree)) list) =
   (FStarC_Errors.with_ctx "While preprocessing VC with a tactic" (fun tmp -> (let tmp1 = (!(dbg_Tac)) in
   (if tmp1 then (let tmp2 = (FStarC_TypeChecker_Env.all_binders env) in
   let tmp3 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_binder tmp2) in

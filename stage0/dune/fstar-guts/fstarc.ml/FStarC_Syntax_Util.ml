@@ -190,7 +190,7 @@ let rec compare_univs__compare_kernel (uk1 : FStarC_Syntax_Syntax.universe) (uk2
     | (FStarC_Syntax_Syntax.U_zero, FStarC_Syntax_Syntax.U_zero) -> Prims.int_zero
     | (FStarC_Syntax_Syntax.U_zero, tmp3) -> (Prims.of_int (-1))
     | (tmp3, FStarC_Syntax_Syntax.U_zero) -> Prims.int_one
-    | ((FStarC_Syntax_Syntax.U_name (u1)), (FStarC_Syntax_Syntax.U_name (u2))) -> (FStarC_String.compare (FStarC_Ident.string_of_id u1) (FStarC_Ident.string_of_id u2))
+    | ((FStarC_Syntax_Syntax.U_name (u1)), (FStarC_Syntax_Syntax.U_name (u2))) -> ((fun x y -> Z.of_int (BatString.compare x y)) (FStarC_Ident.string_of_id u1) (FStarC_Ident.string_of_id u2))
     | ((FStarC_Syntax_Syntax.U_name (tmp3)), tmp4) -> (Prims.of_int (-1))
     | (tmp3, (FStarC_Syntax_Syntax.U_name (tmp4))) -> Prims.int_one
     | ((FStarC_Syntax_Syntax.U_unif (u__1, u__2, u__3)), (FStarC_Syntax_Syntax.U_unif (u__11, u__21, u__31))) -> (let tmp3 = (FStarC_Syntax_Unionfind.univ_uvar_id (u__1, u__2, u__3)) in
@@ -286,7 +286,7 @@ let unlazy_emb (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : 
     | tmp2 -> t
   ))
 
-let exp_char (c : FStar_Char.char) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+let exp_char (c : int) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
   (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_constant ((FStarC_Const.Const_char (c)))) FStarC_Range_Type.dummyRange)
 
 let mk_field_projector_name (lid : FStarC_Ident.lident) (x : FStarC_Syntax_Syntax.bv) (i : Prims.int) : FStarC_Ident.lident =
@@ -1285,7 +1285,7 @@ let tts (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : string 
     | (Some (f)) -> (f t)
   ))
 
-let set_uvar (uv : (((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * FStarC_Syntax_Syntax.uvar_decoration)) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : unit =
+let set_uvar (uv : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : unit =
   (let tmp = (FStarC_Syntax_Unionfind.find uv) in
   (match tmp with
     | (Some (t')) -> (let tmp1 = (FStarC_Syntax_Unionfind.uvar_id uv) in
@@ -1326,24 +1326,6 @@ let lid_of_sigelt (se : FStarC_Syntax_Syntax.sigelt) : (FStarC_Ident.lident) opt
     | (l :: []) -> (Some (l))
     | tmp -> None
   )
-
-let ctx_uvar_typedness_deps (u : FStarC_Syntax_Syntax.ctx_uvar) : (FStarC_Syntax_Syntax.ctx_uvar) list =
-  (let tmp = (FStarC_Syntax_Unionfind.find_decoration ((u).FStarC_Syntax_Syntax.ctx_uvar_head, (u).FStarC_Syntax_Syntax.ctx_uvar_head1, (u).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
-  (tmp).FStarC_Syntax_Syntax.uvar_decoration_typedness_depends_on)
-
-let mk_squash (p : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (let sq = (FStarC_Syntax_Syntax.fvar_with_dd FStarC_Parser_Const.squash_lid None) in
-  (mk_app sq ((FStarC_Syntax_Syntax.as_arg p) :: [])))
-
-let abs_ln (bs : (FStarC_Syntax_Syntax.binder) list) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (lopt : (FStarC_Syntax_Syntax.residual_comp) option) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (FStarC_Syntax_Syntax.mk_Tm_abs bs t lopt (t).FStarC_Syntax_Syntax.pos)
-
-let is_bare_tot_or_gtot_comp (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : bool =
-  (let ct = (c).FStarC_Syntax_Syntax.n in
-  ((FStarC_Parser_Const.is_tot_or_gtot_lid (ct).FStarC_Syntax_Syntax.effect_name) && (match (ct).FStarC_Syntax_Syntax.flags with
-    | [] -> true
-    | tmp -> false
-  )))
 
 let timp : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
   (FStarC_Syntax_Syntax.fvar_with_dd FStarC_Parser_Const.imp_lid None)
@@ -1458,6 +1440,10 @@ let mk_b2t (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FSt
   (let tmp = (FStarC_Syntax_Syntax.fvar_with_dd FStarC_Parser_Const.b2t_lid None) in
   (mk_app tmp ((FStarC_Syntax_Syntax.as_arg t) :: [])))
 
+let mk_squash (p : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (let sq = (FStarC_Syntax_Syntax.fvar_with_dd FStarC_Parser_Const.squash_lid None) in
+  (mk_app sq ((FStarC_Syntax_Syntax.as_arg p) :: [])))
+
 let t_bool : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
   (fvar_const FStarC_Parser_Const.bool_lid)
 
@@ -1546,6 +1532,13 @@ let remove_inacc (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) 
           (FStarC_Syntax_Syntax.mk_Tm_arrow tmp2 c (t).FStarC_Syntax_Syntax.pos))
       )
   ))
+
+let is_bare_tot_or_gtot_comp (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : bool =
+  (let ct = (c).FStarC_Syntax_Syntax.n in
+  ((FStarC_Parser_Const.is_tot_or_gtot_lid (ct).FStarC_Syntax_Syntax.effect_name) && (match (ct).FStarC_Syntax_Syntax.flags with
+    | [] -> true
+    | tmp -> false
+  )))
 
 let get_repr_universe (ed : FStarC_Syntax_Syntax.eff_decl) : (((FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) option =
   (match (ed).FStarC_Syntax_Syntax.combinators with
@@ -1950,6 +1943,13 @@ let mk_boolean_negation (b : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.s
   (let tmp = (fvar_const FStarC_Parser_Const.op_Not) in
   (FStarC_Syntax_Syntax.mk_Tm_app tmp ((FStarC_Syntax_Syntax.as_arg b) :: []) (b).FStarC_Syntax_Syntax.pos))
 
+let ctx_uvar_typedness_deps (u : FStarC_Syntax_Syntax.ctx_uvar) : (FStarC_Syntax_Syntax.ctx_uvar) list =
+  (let tmp = (FStarC_Syntax_Unionfind.find_decoration ((u).FStarC_Syntax_Syntax.ctx_uvar_head, (u).FStarC_Syntax_Syntax.ctx_uvar_head1, (u).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
+  (tmp).FStarC_Syntax_Syntax.uvar_decoration_typedness_depends_on)
+
+let abs_ln (bs : (FStarC_Syntax_Syntax.binder) list) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (lopt : (FStarC_Syntax_Syntax.residual_comp) option) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (FStarC_Syntax_Syntax.mk_Tm_abs bs t lopt (t).FStarC_Syntax_Syntax.pos)
+
 let unb2t (e : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (let tmp = (head_and_args_full e) in
   (match tmp with
@@ -2089,7 +2089,7 @@ let process_pragma (p : FStarC_Syntax_Syntax.pragma) (r : FStarC_Range_Type.rang
   let set_options = (fun s -> (try (let tmp = (FStarC_Options.set_options s) in
     (match tmp with
       | FStarC_Getopt.Success -> ()
-      | (FStarC_Getopt.Error ((s1, opt))) -> (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document r FStarC_Errors_Codes.Fatal_FailToProcessPragma ((FStarC_Errors_Msg.text (Prims.strcat "Failed to process pragma: " s1)) :: []))
+      | (FStarC_Getopt.Error (s1, opt)) -> (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document r FStarC_Errors_Codes.Fatal_FailToProcessPragma ((FStarC_Errors_Msg.text (Prims.strcat "Failed to process pragma: " s1)) :: []))
     )) with
       | (FStarC_Options.NotSettable (x)) -> (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document r FStarC_Errors_Codes.Fatal_FailToProcessPragma ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Option ‘%s’ is not settable via a pragma." x)) :: []))
     )) in

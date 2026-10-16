@@ -90,7 +90,7 @@ let debug_positivity (env : FStarC_TypeChecker_Env.env) (msg : (unit -> string))
 
 let string_of_lids (lids : (FStarC_Ident.lident) list) : string =
   (let tmp = (BatList.map FStarC_Ident.string_of_lid lids) in
-  (FStarC_String.concat ", " tmp))
+  (BatString.concat ", " tmp))
 
 let rec term_as_fv_or_name (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (((FStarC_Syntax_Syntax.fv * (FStarC_Syntax_Syntax.universe) list), FStarC_Syntax_Syntax.bv) FStar_Pervasives.either) option =
   (let tmp = (FStarC_Syntax_Subst.compress t) in
@@ -1563,7 +1563,7 @@ let max_uniformly_recursive_parameters (env : FStarC_TypeChecker_Env.env) (mutua
       | tmp2 -> false
     ))) in
   let params_to_string = (fun tmp -> (let tmp1 = (BatList.map FStarC_Syntax_Print.fStarC_Class_Show_show__bv params) in
-    (FStarC_String.concat ", " tmp1))) in
+    (BatString.concat ", " tmp1))) in
   (debug_positivity env (fun tmp -> (let tmp1 = (params_to_string ()) in
   let tmp2 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' ty1) in
   (FStarC_Format.fmt2 "max_uniformly_recursive_parameters? params=%s in %s" tmp1 tmp2))));

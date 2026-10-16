@@ -324,7 +324,7 @@ let float_of_module (ns : (string) list) : (FStarC_Custard_Syntax.fwidth) option
   (match ns with
     | ("FStar" :: ("Float32" :: [])) -> (Some (FStarC_Custard_Syntax.Float32))
     | ("FStar" :: ("Float64" :: [])) -> (Some (FStarC_Custard_Syntax.Float64))
-    | tmp -> (let key = (FStarC_String.concat "." ns) in
+    | tmp -> (let key = (BatString.concat "." ns) in
       let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt float_modules key) in
       (match tmp1 with
         | (Some (fw)) -> (Some (fw))
@@ -580,7 +580,7 @@ let describe_shape (x : FStarC_Custard_Syntax.expr) : string =
 let comment_text (which : string) (role : string) (x : FStarC_Custard_Syntax.expr) : string =
   (let what = (Prims.strcat "Pulse.Lib.Comment." (Prims.strcat which (if ((=) role "") then "" else (Prims.strcat "'s " (Prims.strcat role " argument"))))) in
   (match (x).FStarC_Custard_Syntax.e with
-    | (FStarC_Custard_Syntax.EConst ((FStarC_Custard_Syntax.CString (s)))) -> (if (FStarC_Util.contains s "*/") then (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Error_CustardBadComment ((FStarC_Errors_Msg.text (Prims.strcat "Custard: the text given to " (Prims.strcat what " contains */, which would end the comment it is emitted into."))) :: ((FStarC_Errors_Msg.text (Prims.strcat "The text is: " s)) :: []))) else s)
+    | (FStarC_Custard_Syntax.EConst ((FStarC_Custard_Syntax.CString (s)))) -> (if (BatString.exists s "*/") then (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Error_CustardBadComment ((FStarC_Errors_Msg.text (Prims.strcat "Custard: the text given to " (Prims.strcat what " contains */, which would end the comment it is emitted into."))) :: ((FStarC_Errors_Msg.text (Prims.strcat "The text is: " s)) :: []))) else s)
     | tmp -> (let tmp1 = (describe_shape x) in
       let tmp2 = (Prims.strcat tmp1 ".") in
       let tmp3 = (Prims.strcat " has to be a string literal, and after reduction this one is " tmp2) in
@@ -776,9 +776,13 @@ let iarray_rule (id : string) : (rule) option =
   ))
 
 let dyn_rule (id : string) : (rule) option =
-  (let prim = (fun f ret -> (Some ((Rule_prim (Prims.int_one, (fun tys args -> (let t = (elt_of tys) in
-    (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = (FStarC_Custard_Syntax.Dyn (f));
-      po_ty = None }, args)) (ret t) FStarC_Custard_Syntax.E_Pure)))))))) in
+  (let prim = (fun f ret -> (Some ((Rule_prim (Prims.int_one, (fun tys args -> (let t = (ret (elt_of tys)) in
+    let tmp = (FStarC_Options.custard_cherry ()) in
+    (if tmp then (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = (FStarC_Custard_Syntax.Dyn (f));
+      po_ty = None }, args)) t FStarC_Custard_Syntax.E_Pure) else (match args with
+      | (a :: []) -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.ECoerce (a, t)) t (a).FStarC_Custard_Syntax.eff)
+      | tmp1 -> (FStarC_Effect.failwith "FStar.Dyn applied to the wrong number of arguments")
+    ))))))))) in
   (match id with
     | "dyn" -> (Some ((Rule_type ((fun tmp -> FStarC_Custard_Syntax.TAny)))))
     | "mkdyn" -> (prim "mk" (fun tmp -> FStarC_Custard_Syntax.TAny))
@@ -787,7 +791,7 @@ let dyn_rule (id : string) : (rule) option =
   ))
 
 let realized_modules : ((string) list) list =
-  (("FStar" :: ("Dyn" :: [])) :: (("FStar" :: ("Exn" :: [])) :: (("FStar" :: ("List" :: [])) :: (("FStar" :: ("List" :: ("Tot" :: ("Base" :: [])))) :: (("FStar" :: ("Parse" :: [])) :: (("FStar" :: ("Pervasives" :: [])) :: (("FStar" :: ("Pervasives" :: ("Native" :: []))) :: (("FStar" :: ("Int8" :: [])) :: (("FStar" :: ("Int16" :: [])) :: (("FStar" :: ("Int32" :: [])) :: (("FStar" :: ("Int64" :: [])) :: (("FStar" :: ("UInt8" :: [])) :: (("FStar" :: ("UInt16" :: [])) :: (("FStar" :: ("UInt32" :: [])) :: (("FStar" :: ("UInt64" :: [])) :: (("FStarC" :: ("Reflection" :: ("Types" :: []))) :: (("FStarC" :: ("Tactics" :: ("Unseal" :: []))) :: (("Prims" :: []) :: (("Pulse" :: ("Lib" :: ("SpinLock" :: []))) :: [])))))))))))))))))))
+  (("FStar" :: ("Dyn" :: [])) :: (("FStar" :: ("List" :: [])) :: (("FStar" :: ("List" :: ("Tot" :: ("Base" :: [])))) :: (("FStar" :: ("Pervasives" :: [])) :: (("FStar" :: ("Pervasives" :: ("Native" :: []))) :: (("FStar" :: ("Int8" :: [])) :: (("FStar" :: ("Int16" :: [])) :: (("FStar" :: ("Int32" :: [])) :: (("FStar" :: ("Int64" :: [])) :: (("FStar" :: ("UInt8" :: [])) :: (("FStar" :: ("UInt16" :: [])) :: (("FStar" :: ("UInt32" :: [])) :: (("FStar" :: ("UInt64" :: [])) :: (("FStarC" :: ("Reflection" :: ("Types" :: []))) :: (("FStarC" :: ("Tactics" :: ("Unseal" :: []))) :: (("Prims" :: []) :: (("Pulse" :: ("Lib" :: ("SpinLock" :: []))) :: [])))))))))))))))))
 
 let builtin_krml_models : ((string) list) list =
   (("Pulse" :: ("Lib" :: ("Slice" :: []))) :: [])
@@ -797,7 +801,7 @@ let is_krml_model (ns : (string) list) : bool =
   let tmp1 = ((=) tmp (Some (FStarC_Options.KrmlRust))) in
   (if tmp1 then (let tmp2 = (BatList.exists (fun m -> ((=) m ns)) builtin_krml_models) in
   (if tmp2 then true else (let tmp3 = (FStarC_Options.custard_krml_models ()) in
-  (BatList.exists (fun m -> ((=) m (FStarC_String.concat "." ns))) tmp3)))) else false))
+  (BatList.exists (fun m -> ((=) m (BatString.concat "." ns))) tmp3)))) else false))
 
 let realized_deps : ((FStarC_Parser_Dep.deps) option ref) =
   (ref None)
@@ -818,7 +822,7 @@ let is_interface_only_module (ns : (string) list) : bool =
   )) else false))
 
 let cherry_realized_modules : ((string) list) list =
-  (("FStar" :: ("All" :: [])) :: (("FStar" :: ("Bytes" :: [])) :: (("FStar" :: ("Char" :: [])) :: (("FStar" :: ("Exception" :: [])) :: (("FStar" :: ("IO" :: [])) :: (("FStar" :: ("ImmutableArray" :: [])) :: (("FStar" :: ("ImmutableArray" :: ("Base" :: []))) :: (("FStar" :: ("Issue" :: [])) :: (("FStar" :: ("Pprint" :: [])) :: (("FStar" :: ("Sealed" :: [])) :: (("FStar" :: ("String" :: [])) :: (("FStarC" :: ("Array" :: [])) :: (("FStarC" :: ("BaseTypes" :: [])) :: (("FStarC" :: ("Effect" :: [])) :: (("FStarC" :: ("Filepath" :: [])) :: (("FStarC" :: ("Format" :: [])) :: (("FStarC" :: ("Getopt" :: [])) :: (("FStarC" :: ("Hash" :: [])) :: (("FStarC" :: ("Int" :: ("Extra" :: []))) :: (("FStarC" :: ("Json" :: [])) :: (("FStarC" :: ("List" :: [])) :: (("FStarC" :: ("PIMap" :: [])) :: (("FStarC" :: ("PSMap" :: [])) :: (("FStarC" :: ("Platform" :: ("Base" :: []))) :: (("FStarC" :: ("Plugins" :: ("Base" :: []))) :: (("FStarC" :: ("Pprint" :: [])) :: (("FStarC" :: ("Range" :: [])) :: (("FStarC" :: ("String" :: [])) :: (("FStarC" :: ("StringBuffer" :: [])) :: (("FStarC" :: ("Tactics" :: ("Native" :: []))) :: (("FStarC" :: ("Time" :: [])) :: (("FStarC" :: ("Timing" :: [])) :: (("FStarC" :: ("Unionfind" :: [])) :: (("FStarC" :: ("Util" :: [])) :: []))))))))))))))))))))))))))))))))))
+  (("FStar" :: ("All" :: [])) :: (("FStar" :: ("Bytes" :: [])) :: (("FStar" :: ("Char" :: [])) :: (("FStar" :: ("Exception" :: [])) :: (("FStar" :: ("IO" :: [])) :: (("FStar" :: ("ImmutableArray" :: [])) :: (("FStar" :: ("ImmutableArray" :: ("Base" :: []))) :: (("FStar" :: ("Issue" :: [])) :: (("FStar" :: ("Parse" :: [])) :: (("FStar" :: ("Pprint" :: [])) :: (("FStar" :: ("Sealed" :: [])) :: (("FStar" :: ("String" :: [])) :: (("FStarC" :: ("Array" :: [])) :: (("FStarC" :: ("BaseTypes" :: [])) :: (("FStarC" :: ("Effect" :: [])) :: (("FStarC" :: ("Filepath" :: [])) :: (("FStarC" :: ("Format" :: [])) :: (("FStarC" :: ("Getopt" :: [])) :: (("FStarC" :: ("Hash" :: [])) :: (("FStarC" :: ("Int" :: ("Extra" :: []))) :: (("FStarC" :: ("Json" :: [])) :: (("FStarC" :: ("List" :: [])) :: (("FStarC" :: ("PIMap" :: [])) :: (("FStarC" :: ("PSMap" :: [])) :: (("FStarC" :: ("Platform" :: ("Base" :: []))) :: (("FStarC" :: ("Plugins" :: ("Base" :: []))) :: (("FStarC" :: ("Pprint" :: [])) :: (("FStarC" :: ("Range" :: [])) :: (("FStarC" :: ("String" :: [])) :: (("FStarC" :: ("StringBuffer" :: [])) :: (("FStarC" :: ("Tactics" :: ("Native" :: []))) :: (("FStarC" :: ("Time" :: [])) :: (("FStarC" :: ("Timing" :: [])) :: (("FStarC" :: ("Unionfind" :: [])) :: (("FStarC" :: ("Util" :: [])) :: [])))))))))))))))))))))))))))))))))))
 
 let is_realized_module (ns : (string) list) : bool =
   (let tmp = (BatList.exists (fun m -> ((=) m ns)) realized_modules) in
@@ -873,23 +877,21 @@ let builtin_rule (l : FStarC_Ident.lident) : rule =
                         | (Some (v)) -> true
                         | tmp8 -> false
                       )) else false) in
-                    (if tmp7 then (iarray_rule id) else (let tmp8 = (FStarC_Options.custard_cherry ()) in
-                    let tmp9 = (if tmp8 then ((=) ns ("FStar" :: ("Dyn" :: []))) else false) in
-                    let tmp10 = (if tmp9 then (let tmp10 = (dyn_rule id) in
-                      (match tmp10 with
+                    (if tmp7 then (iarray_rule id) else (let tmp8 = (if ((=) ns ("FStar" :: ("Dyn" :: []))) then (let tmp8 = (dyn_rule id) in
+                      (match tmp8 with
                         | (Some (v)) -> true
-                        | tmp11 -> false
+                        | tmp9 -> false
                       )) else false) in
-                    (if tmp10 then (dyn_rule id) else (let tmp11 = (pulse_rule ns id) in
-                    let tmp12 = (match tmp11 with
+                    (if tmp8 then (dyn_rule id) else (let tmp9 = (pulse_rule ns id) in
+                    let tmp10 = (match tmp9 with
                         | (Some (v)) -> true
-                        | tmp12 -> false
+                        | tmp10 -> false
                       ) in
-                    (if tmp12 then (pulse_rule ns id) else (let tmp13 = (is_realized_module ns) in
-                    let tmp14 = (if tmp13 then (let tmp14 = (FStarC_Options.custard_cherry ()) in
-                      let tmp15 = (if tmp14 then (is_cherry_source_module ns) else false) in
-                      (not tmp15)) else false) in
-                    (if tmp14 then (Some (Rule_realized)) else None)))))))))))))))))
+                    (if tmp10 then (pulse_rule ns id) else (let tmp11 = (is_realized_module ns) in
+                    let tmp12 = (if tmp11 then (let tmp12 = (FStarC_Options.custard_cherry ()) in
+                      let tmp13 = (if tmp12 then (is_cherry_source_module ns) else false) in
+                      (not tmp13)) else false) in
+                    (if tmp12 then (Some (Rule_realized)) else None)))))))))))))))))
                 ))
             ))
           | [] -> None
@@ -1005,7 +1007,7 @@ let c_realized_modules : ((string) list) list =
 
 let c_realization_header (ns : (string) list) : (string) option =
   (let tmp = (BatList.exists (fun m -> ((=) m ns)) c_realized_modules) in
-  (if tmp then (Some ((Prims.strcat (FStarC_String.concat "_" ns) ".h"))) else None))
+  (if tmp then (Some ((Prims.strcat (BatString.concat "_" ns) ".h"))) else None))
 
 let is_krml_model_name (ns : (string) list) (id : string) : bool =
   (let tmp = (is_krml_model ns) in

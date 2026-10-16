@@ -89,7 +89,7 @@ and repl_state = {
   repl_deps_stack : ((((Prims.int * Prims.int * (Prims.int * Prims.int * Prims.int) * Prims.int) * Prims.int) * (repl_task * repl_state))) list;
   repl_curmod : (FStarC_Syntax_Syntax.modul) option;
   repl_env : FStarC_TypeChecker_Env.env;
-  repl_stdin : FStarC_Util.stream_reader;
+  repl_stdin : BatIO.input;
   repl_names : FStarC_Interactive_CompletionTable.table;
   repl_buffered_input_queries : (query) list;
   repl_lang : (FStarC_Parser_AST.decl) list;
@@ -224,7 +224,7 @@ let query_to_string (q : query) : string =
             let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int j) in
             (FStarC_Format.fmt3 "(%s, %s, %s)" f tmp tmp1))
         ) in
-      (FStarC_Format.fmt3 "(Lookup %s %s [%s])" s tmp (FStarC_String.concat "; " features)))
+      (FStarC_Format.fmt3 "(Lookup %s %s [%s])" s tmp (BatString.concat "; " features)))
     | (Compute (u__1, u__2)) -> "Compute"
     | (Search (tmp)) -> "Search"
     | (GenericError (tmp)) -> "GenericError"
@@ -297,7 +297,7 @@ let string_of_repl_stack_entry (x : (((Prims.int * Prims.int * (Prims.int * Prim
 
 let string_of_repl_stack (s : ((((Prims.int * Prims.int * (Prims.int * Prims.int * Prims.int) * Prims.int) * Prims.int) * (repl_task * repl_state))) list) : string =
   (let tmp = (BatList.map string_of_repl_stack_entry s) in
-  (FStarC_String.concat ";\n\t\t" tmp))
+  (BatString.concat ";\n\t\t" tmp))
 
 let repl_state_to_string (r : repl_state) : string =
   (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int (r).repl_line) in

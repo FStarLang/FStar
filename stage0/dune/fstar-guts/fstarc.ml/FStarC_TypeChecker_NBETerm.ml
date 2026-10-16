@@ -6,7 +6,7 @@ type constant =
   | Bool of bool
   | Int of Prims.int
   | String of string * FStarC_Range_Type.range
-  | Char of FStar_Char.char
+  | Char of int
   | Range of FStarC_Range_Type.range
   | SConst of FStarC_Const.sconst
   | Real of FStar_RealLiteral.real_literal_repr
@@ -352,7 +352,7 @@ let e_int : (Prims.int) embedding =
     )) in
   (mk_emb' em un (fun tmp -> (lid_as_typ FStarC_Parser_Const.int_lid [] [])) (FStarC_Syntax_Embeddings_Base.emb_typ_of FStarC_Syntax_Embeddings.e_int)))
 
-let e_char : (FStar_Char.char) embedding =
+let e_char : (int) embedding =
   (let em = (fun u__cb c -> (Constant ((Char (c))))) in
   let un = (fun u__cb c -> (match c with
       | (Constant ((Char (a)))) -> (Some (a))
@@ -657,7 +657,7 @@ let constant_to_string (c : constant) : string =
     | Unit -> "Unit"
     | (Bool (b)) -> (if b then "Bool true" else "Bool false")
     | (Int (i)) -> (FStarC_Class_Show.fStarC_Class_Show_show__int i)
-    | (Char (c1)) -> (FStarC_Format.fmt1 "'%s'" (FStarC_Util.string_of_char c1))
+    | (Char (c1)) -> (FStarC_Format.fmt1 "'%s'" ((fun i -> BatUTF8.init 1 (fun _ -> BatUChar.chr i)) c1))
     | (String (s, tmp)) -> (FStarC_Format.fmt1 "\"%s\"" s)
     | (Range (r)) -> (let tmp = (FStarC_Range_Ops.string_of_range r) in
       (FStarC_Format.fmt1 "Range %s" tmp))
@@ -691,18 +691,18 @@ and t_to_string (x : t) : string =
       let tmp1 = (BatList.map (fun x1 -> (t_to_string (match x1 with
           | (u__1, u__2) -> u__1
         ))) l) in
-      let tmp2 = (FStarC_String.concat "; " tmp1) in
+      let tmp2 = (BatString.concat "; " tmp1) in
       let tmp3 = (Prims.strcat tmp2 ")") in
       let tmp4 = (Prims.strcat ") (" tmp3) in
       let tmp5 = (Prims.strcat tmp tmp4) in
       (Prims.strcat "Accu (" tmp5))
     | (Construct (fv, us, l)) -> (let tmp = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__fv fv) in
       let tmp1 = (BatList.map FStarC_Syntax_Print.fStarC_Class_Show_show__universe us) in
-      let tmp2 = (FStarC_String.concat "; " tmp1) in
+      let tmp2 = (BatString.concat "; " tmp1) in
       let tmp3 = (BatList.map (fun x1 -> (t_to_string (match x1 with
           | (u__1, u__2) -> u__1
         ))) l) in
-      let tmp4 = (FStarC_String.concat "; " tmp3) in
+      let tmp4 = (BatString.concat "; " tmp3) in
       let tmp5 = (Prims.strcat tmp4 "]") in
       let tmp6 = (Prims.strcat "] [" tmp5) in
       let tmp7 = (Prims.strcat tmp2 tmp6) in
@@ -711,11 +711,11 @@ and t_to_string (x : t) : string =
       (Prims.strcat "Construct (" tmp9))
     | (FV (fv, us, l)) -> (let tmp = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__fv fv) in
       let tmp1 = (BatList.map FStarC_Syntax_Print.fStarC_Class_Show_show__universe us) in
-      let tmp2 = (FStarC_String.concat "; " tmp1) in
+      let tmp2 = (BatString.concat "; " tmp1) in
       let tmp3 = (BatList.map (fun x1 -> (t_to_string (match x1 with
           | (u__1, u__2) -> u__1
         ))) l) in
-      let tmp4 = (FStarC_String.concat "; " tmp3) in
+      let tmp4 = (BatString.concat "; " tmp3) in
       let tmp5 = (Prims.strcat tmp4 "]") in
       let tmp6 = (Prims.strcat "] [" tmp5) in
       let tmp7 = (Prims.strcat tmp2 tmp6) in
@@ -776,7 +776,7 @@ let arg_to_string (a : (t * (FStarC_Syntax_Syntax.arg_qualifier) option)) : stri
 
 let args_to_string (args : ((t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : string =
   (let tmp = (BatList.map arg_to_string args) in
-  (FStarC_String.concat " " tmp))
+  (BatString.concat " " tmp))
 
 let fStarC_Class_Show_show__list_tuple2_t_option (tmp : ((t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : string =
   (args_to_string tmp)

@@ -12,7 +12,7 @@ let with_policy (pol : FStarC_Tactics_Types.guard_policy) (f : (unit -> ((FStarC
   x1)
 
 let exact (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (with_policy FStarC_Tactics_Types.SMT (fun tmp -> (FStarC_Tactics_V2_Builtins.t_exact true false t)))
+  (with_policy FStarC_Tactics_Types.SMT (Obj.magic ((fun tmp -> (FStarC_Tactics_V2_Builtins.t_exact true false t)))))
 
 let map_optRO (f : ('u___a -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___b))) (x : ('u___a) option) : ((FStarC_Tactics_Types.proofstate ref) -> ('u___b) option) =
   (match x with
@@ -141,7 +141,7 @@ let cur_env (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Refl
   (FStarC_Tactics_Types.goal_env x)))))
 
 let norm_term (s : (FStarC_NormSteps.norm_step) list) (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_Types.term) =
-  (Obj.magic ((fun ps -> (let x = (try_with (fun tmp -> (cur_env ())) (fun tmp -> (FStarC_Tactics_V2_Builtins.top_env ())) ps) in
+  (Obj.magic ((fun ps -> (let x = (try_with (fun tmp -> (cur_env ())) (Obj.magic ((fun tmp -> (FStarC_Tactics_V2_Builtins.top_env ())))) ps) in
   (FStarC_Tactics_V2_Builtins.norm_term_env x s t ps)))))
 
 let cur_goal (tmp : unit) (ps : (FStarC_Tactics_Types.proofstate ref)) : FStarC_Reflection_Types.typ =
@@ -335,7 +335,7 @@ let fresh_uvar (o : (FStarC_Reflection_Types.typ) option) (ps : (FStarC_Tactics_
   (FStarC_Tactics_V2_Builtins.uvar_env x o ps))
 
 let exact_with_ref (t : FStarC_Reflection_Types.term) (ps : (FStarC_Tactics_Types.proofstate ref)) : unit =
-  (with_policy FStarC_Tactics_Types.SMT (fun tmp -> (FStarC_Tactics_V2_Builtins.t_exact true true t)) ps)
+  (with_policy FStarC_Tactics_Types.SMT (Obj.magic ((fun tmp -> (FStarC_Tactics_V2_Builtins.t_exact true true t)))) ps)
 
 let fail_doc (m : (PPrint.document) list) (ps : (FStarC_Tactics_Types.proofstate ref)) : 'a =
   ((ignore (FStarC_Tactics_V2_Builtins.raise_core (FStarC_Tactics_Common.TacticFailure ((m, None))) ps));

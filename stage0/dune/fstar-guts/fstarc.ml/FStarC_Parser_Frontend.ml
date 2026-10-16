@@ -56,7 +56,7 @@ let find_file (filename : string) : string =
   ))
 
 let read_physical_file (filename : string) : string =
-  (try (FStarC_Util.file_get_contents filename) with
+  (try ((fun f -> let ic = Stdlib.open_in_bin f in let s = Stdlib.really_input_string ic (Stdlib.in_channel_length ic) in Stdlib.close_in ic; s) filename) with
     | u__cexn -> (FStarC_Errors.raise_error_text FStarC_Range_Type.dummyRange FStarC_Errors_Codes.Fatal_UnableToReadFile (FStarC_Format.fmt1 "Unable to read file %s\n" filename))
   )
 
@@ -89,10 +89,10 @@ let frag_of (fn : parse_frag) : input_frag =
 
 let contents_at (contents : string) : (FStarC_Range_Type.range -> code_fragment) =
   (let lines = (FStarC_Util.splitlines contents) in
-  let split_line_at_col = (fun line col -> (if (Prims.op_Greater col Prims.int_zero) then (let chars = (FStarC_String.list_of_string line) in
+  let split_line_at_col = (fun line col -> (if (Prims.op_Greater col Prims.int_zero) then (let chars = ((fun s -> List.rev (BatUTF8.fold (fun acc c -> BatUChar.code c :: acc) [] s)) line) in
     (if (Prims.op_Less_Equals col ((fun l -> Z.of_int (BatList.length l)) chars)) then (let tmp = (FStarC_Util.first_N col chars) in
     (match tmp with
-      | (prefix, suffix) -> (Some (((FStarC_String.string_of_list prefix), (FStarC_String.string_of_list suffix))))
+      | (prefix, suffix) -> (Some ((((fun l -> let b = BatUTF8.Buf.create 16 in List.iter (fun c -> BatUTF8.Buf.add_char b (BatUChar.chr c)) l; BatUTF8.Buf.contents b) prefix), ((fun l -> let b = BatUTF8.Buf.create 16 in List.iter (fun c -> BatUTF8.Buf.add_char b (BatUChar.chr c)) l; BatUTF8.Buf.contents b) suffix))))
     )) else None)) else None)) in
   let line_from_col = (fun line pos -> (match (split_line_at_col line pos) with
       | None -> None
@@ -131,7 +131,7 @@ let contents_at (contents : string) : (FStarC_Range_Type.range -> code_fragment)
             )
           | tmp1 -> text1
         ) in
-      { code = (FStarC_String.concat "\n" text2); range = range })
+      { code = (BatString.concat "\n" text2); range = range })
   ))))
 
 let parse_lang (lang : string) (fn : parse_frag) : parse_result =
@@ -233,7 +233,7 @@ let parse_no_lang (fn : parse_frag) : parse_result =
 let bench (fn : parse_frag) : parse_result =
   (match fn with
     | (Filename (f)) -> (let tmp = (FStarC_Options_Ext.get "parser_bench_iters") in
-      let tmp1 = (FStarC_Util.safe_int_of_string tmp) in
+      let tmp1 = ((fun x -> if String.equal x "" then None else try Some (Z.of_string x) with Invalid_argument _ -> None) tmp) in
       let iters = (match tmp1 with
           | (Some (n)) -> (if (Prims.op_Greater n Prims.int_zero) then n else (Prims.of_int (10)))
           | None -> (Prims.of_int (10))
@@ -355,7 +355,7 @@ let rec parse_warn_error_tokens (ts : (warn_error_token) list) : (((FStarC_Error
   ))
 
 let parse_warn_error (s : string) : (((FStarC_Errors_Codes.error_code * FStarC_Errors_Codes.error_flag * Prims.int)) list) option =
-  (let cs = (BatList.map FStarC_Util.int_of_char (FStarC_String.list_of_string s)) in
+  (let cs = (BatList.map Z.of_int ((fun s -> List.rev (BatUTF8.fold (fun acc c -> BatUChar.code c :: acc) [] s)) s)) in
   (match (lex_warn_error cs) with
     | None -> None
     | (Some (ts)) -> (match (parse_warn_error_tokens ts) with

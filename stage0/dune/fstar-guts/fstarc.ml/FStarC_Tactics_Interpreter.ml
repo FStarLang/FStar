@@ -7,7 +7,7 @@ let dbg_Tac : (bool ref) =
 let report_implicits (rng : FStarC_Range_Type.range) (is : ((FStarC_TypeChecker_Common.implicit * FStarC_TypeChecker_Rel.implicit_checking_status)) list) : unit =
   ((BatList.iter (fun tmp -> (match tmp with
     | (imp, tag) -> (match tag with
-        | FStarC_TypeChecker_Rel.Implicit_unresolved -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__tuple3_p_uvar_tuple2_version_range (((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head, ((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head1, ((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
+        | FStarC_TypeChecker_Rel.Implicit_unresolved -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__tuple3_p_uvar_rec_tuple2_version_range (((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head, ((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head1, ((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
           let tmp2 = (PPrint.(^/^) (FStarC_Errors_Msg.text "Tactic left uninstantiated unification variable:") tmp1) in
           let tmp3 = (FStarC_Syntax_Util.ctx_uvar_typ (imp).FStarC_TypeChecker_Common.imp_uvar) in
           let tmp4 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' tmp3) in
@@ -15,7 +15,7 @@ let report_implicits (rng : FStarC_Range_Type.range) (is : ((FStarC_TypeChecker_
           let tmp6 = (tmp5 :: ((PPrint.(^/^) (FStarC_Errors_Msg.text "Reason:") (PPrint.dquotes (PPrint.string (imp).FStarC_TypeChecker_Common.imp_reason))) :: [])) in
           let tmp7 = (tmp2 :: tmp6) in
           (FStarC_Errors.fStarC_Errors_log_issue__range_list_ocaml_document rng FStarC_Errors_Codes.Error_UninstantiatedUnificationVarInTactic tmp7))
-        | FStarC_TypeChecker_Rel.Implicit_checking_defers_univ_constraint -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__tuple3_p_uvar_tuple2_version_range (((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head, ((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head1, ((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
+        | FStarC_TypeChecker_Rel.Implicit_checking_defers_univ_constraint -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__tuple3_p_uvar_rec_tuple2_version_range (((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head, ((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head1, ((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
           let tmp2 = (PPrint.(^/^) (FStarC_Errors_Msg.text "Tactic left uninstantiated unification variable:") tmp1) in
           let tmp3 = (FStarC_Syntax_Util.ctx_uvar_typ (imp).FStarC_TypeChecker_Common.imp_uvar) in
           let tmp4 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' tmp3) in
@@ -23,7 +23,7 @@ let report_implicits (rng : FStarC_Range_Type.range) (is : ((FStarC_TypeChecker_
           let tmp6 = (tmp5 :: ((PPrint.(^/^) (FStarC_Errors_Msg.text "Reason:") (PPrint.dquotes (PPrint.string (imp).FStarC_TypeChecker_Common.imp_reason))) :: [])) in
           let tmp7 = (tmp2 :: tmp6) in
           (FStarC_Errors.fStarC_Errors_log_issue__range_list_ocaml_document rng FStarC_Errors_Codes.Error_UninstantiatedUnificationVarInTactic tmp7))
-        | (FStarC_TypeChecker_Rel.Implicit_has_typing_guard (tm, ty)) -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__tuple3_p_uvar_tuple2_version_range (((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head, ((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head1, ((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
+        | (FStarC_TypeChecker_Rel.Implicit_has_typing_guard (tm, ty)) -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__tuple3_p_uvar_rec_tuple2_version_range (((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head, ((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head1, ((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
           let tmp2 = (PPrint.(^/^) (FStarC_Errors_Msg.text "Tactic solved goal:") tmp1) in
           let tmp3 = (FStarC_Syntax_Util.ctx_uvar_typ (imp).FStarC_TypeChecker_Common.imp_uvar) in
           let tmp4 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' tmp3) in
@@ -247,7 +247,7 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.range) (rng_goal :
           | e2 -> (let issue = (FStarC_Errors.issue_of_exn e2) in
             (match issue with
               | (Some ({ FStarC_Errors_Issue.issue_msg = issue_msg; issue_level = tmp1; issue_range = issue_range; issue_number = tmp2; issue_ctx = tmp3; _ })) -> (issue_msg, issue_range)
-              | None -> (let tmp1 = (FStarC_Util.message_of_exn e2) in
+              | None -> (let tmp1 = (Printexc.to_string e2) in
                 let tmp2 = (PPrint.arbitrary_string tmp1) in
                 let tmp3 = (tmp2 :: []) in
                 (tmp3, None))

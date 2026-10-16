@@ -149,7 +149,7 @@ let unit_const (r : FStarC_Range_Type.range) : term =
 
 let to_string_l (sep : string) (f : ('tmp -> string)) (l : ('tmp) list) : string =
   (let tmp = (BatList.map f l) in
-  (FStarC_String.concat sep tmp))
+  (BatString.concat sep tmp))
 
 let imp_to_string (tmp : imp) : string =
   (match tmp with
@@ -236,7 +236,7 @@ let rec attrs_opt_to_string (o : ((term) list) option) : string =
   (match o with
     | None -> ""
     | (Some (attrs)) -> (let tmp = (BatList.map term_to_string attrs) in
-      let tmp1 = (FStarC_String.concat "; " tmp) in
+      let tmp1 = (BatString.concat "; " tmp) in
       (FStarC_Format.fmt1 "[@ %s]" tmp1))
   )
 
@@ -344,7 +344,7 @@ and calc_step_to_string (cs : (term * term * term)) : string =
 
 and binders_to_string (sep : string) (bs : (binder) list) : string =
   (let tmp = (BatList.map binder_to_string bs) in
-  (FStarC_String.concat sep tmp))
+  (BatString.concat sep tmp))
 
 and term_to_string (x : term) : string =
   (match (x).tm with
@@ -370,7 +370,7 @@ and term_to_string (x : term) : string =
       (FStarC_Format.fmt2 "(labeled %s %s)" l tmp1))
     | (Const (c)) -> (FStarC_Parser_Const.const_to_string c)
     | (Op (s, xs)) -> (let tmp = (BatList.map (fun x1 -> (term_to_string x1)) xs) in
-      let tmp1 = (FStarC_String.concat ", " tmp) in
+      let tmp1 = (BatString.concat ", " tmp) in
       (FStarC_Format.fmt2 "%s(%s)" (FStarC_Ident.string_of_id s) tmp1))
     | (Uvar (id)) -> (FStarC_Ident.string_of_id id)
     | (Var (l)) -> (FStarC_Ident.string_of_lid l)
@@ -487,7 +487,7 @@ and term_to_string (x : term) : string =
           | (FStar_Pervasives.Inl (b)) -> (binder_to_string b)
           | (FStar_Pervasives.Inr (t1)) -> (term_to_string t1)
         )) (BatList.append binders ((FStar_Pervasives.Inr (t)) :: []))) in
-      (FStarC_String.concat " & " tmp))
+      (BatString.concat " & " tmp))
     | (QForall (bs, (tmp, pats), t)) -> (let tmp1 = (to_string_l " " binder_to_string bs) in
       let tmp2 = (to_string_l " \\/ " (to_string_l "; " term_to_string) pats) in
       let tmp3 = (term_to_string t) in
@@ -511,7 +511,7 @@ and term_to_string (x : term) : string =
     | (Paren (t)) -> (let tmp = (term_to_string t) in
       (FStarC_Format.fmt1 "(%s)" tmp))
     | (Product (bs, t)) -> (let tmp = (BatList.map binder_to_string bs) in
-      let tmp1 = (FStarC_String.concat "," tmp) in
+      let tmp1 = (BatString.concat "," tmp) in
       let tmp2 = (term_to_string t) in
       (FStarC_Format.fmt2 "Unidentified product: [%s] %s" tmp1 tmp2))
     | (Discrim (lid)) -> (FStarC_Format.fmt1 "%s?" (FStarC_Ident.string_of_lid lid))
@@ -526,12 +526,12 @@ and term_to_string (x : term) : string =
     | (CalcProof (rel, init, steps)) -> (let tmp = (term_to_string rel) in
       let tmp1 = (term_to_string init) in
       let tmp2 = (BatList.map calc_step_to_string steps) in
-      let tmp3 = (FStarC_String.concat " " tmp2) in
+      let tmp3 = (BatString.concat " " tmp2) in
       (FStarC_Format.fmt3 "calc (%s) { %s %s }" tmp tmp1 tmp3))
     | (ElimForall (bs, t, vs)) -> (let tmp = (binders_to_string " " bs) in
       let tmp1 = (term_to_string t) in
       let tmp2 = (BatList.map term_to_string vs) in
-      let tmp3 = (FStarC_String.concat " " tmp2) in
+      let tmp3 = (BatString.concat " " tmp2) in
       (FStarC_Format.fmt3 "_elim_ forall %s. %s using %s" tmp tmp1 tmp3))
     | (ElimExists (bs, p, e)) -> (let tmp = (binders_to_string " " bs) in
       let tmp1 = (term_to_string p) in
@@ -557,7 +557,7 @@ and term_to_string (x : term) : string =
     | (IntroExists (xs, t, vs, e)) -> (let tmp = (binders_to_string " " xs) in
       let tmp1 = (term_to_string t) in
       let tmp2 = (BatList.map term_to_string vs) in
-      let tmp3 = (FStarC_String.concat " " tmp2) in
+      let tmp3 = (BatString.concat " " tmp2) in
       let tmp4 = (term_to_string e) in
       (FStarC_Format.fmt4 "_intro_ exists %s. %s using %s with %s" tmp tmp1 tmp3 tmp4))
     | (IntroImplies (p, q, e)) -> (let tmp = (term_to_string p) in
@@ -613,11 +613,11 @@ let string_to_op (s : string) : (string) option =
       | "and" -> (Some (s1))
       | "forall" -> (Some (s1))
       | "exists" -> (Some (s1))
-      | s2 -> (if (FStarC_Util.starts_with s2 "u") then (let tmp = (FStarC_Util.substring_from s2 Prims.int_one) in
-        let tmp1 = (FStarC_Util.safe_int_of_string tmp) in
-        (FStarC_Option.map (fun c -> (FStarC_Util.string_of_char (FStarC_Util.char_of_int c))) tmp1)) else None)
+      | s2 -> (if (FStarC_Util.starts_with s2 "u") then (let tmp = ((fun s i -> BatString.tail s (Z.to_int i)) s2 Prims.int_one) in
+        let tmp1 = ((fun x -> if String.equal x "" then None else try Some (Z.of_string x) with Invalid_argument _ -> None) tmp) in
+        (FStarC_Option.map (fun c -> ((fun i -> BatUTF8.init 1 (fun _ -> BatUChar.chr i)) (Z.to_int c))) tmp1)) else None)
     )) in
-  (if (FStarC_Util.starts_with s "op_") then (let tmp = (FStarC_Util.substring_from s (FStarC_String.length "op_")) in
+  (if (FStarC_Util.starts_with s "op_") then (let tmp = ((fun s i -> BatString.tail s (Z.to_int i)) s ((fun s -> Z.of_int (BatUTF8.length s)) "op_")) in
   let frags = (FStarC_Util.split tmp "_") in
   (BatList.fold_left (fun acc frag -> (let tmp1 = (name_of_op frag) in
   let tmp2 = (acc, tmp1) in
@@ -627,7 +627,7 @@ let string_to_op (s : string) : (string) option =
   ))) (Some ("")) frags)) else None))
 
 let strip_prefix (prefix : string) (s : string) : (string) option =
-  (if (FStarC_Util.starts_with s prefix) then (let tmp = (FStarC_Util.substring_from s (FStarC_String.length prefix)) in
+  (if (FStarC_Util.starts_with s prefix) then (let tmp = ((fun s i -> BatString.tail s (Z.to_int i)) s ((fun s -> Z.of_int (BatUTF8.length s)) prefix)) in
   (Some (tmp))) else None)
 
 type attributes_ = (term) list
@@ -836,12 +836,12 @@ let as_frag (ds : (decl) list) : (modul, (decl) list) FStar_Pervasives.either =
 type branch = (pattern * (term) option * term)
 
 let check_id (id : FStarC_Ident.ident) : unit =
-  (let first_char = (FStarC_String.substring (FStarC_Ident.string_of_id id) Prims.int_zero Prims.int_one) in
-  (if (not ((=) (FStarC_String.lowercase first_char) first_char)) then (let tmp = (FStarC_Ident.fStarC_Class_Show_show__ident id) in
+  (let first_char = ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) (FStarC_Ident.string_of_id id) Prims.int_zero Prims.int_one) in
+  (if (not ((=) (BatString.lowercase_ascii first_char) first_char)) then (let tmp = (FStarC_Ident.fStarC_Class_Show_show__ident id) in
   let tmp1 = (FStarC_Format.fmt1 "Invalid identifer ‘%s’; expected a symbol that begins with a lower-case character" tmp) in
   (FStarC_Errors.fStarC_Errors_raise_error__ident_string id FStarC_Errors_Codes.Fatal_InvalidIdentifier tmp1)) else ()))
 
-let name_of_char (c : FStar_Char.char) : string =
+let name_of_char (c : int) : string =
   (match c with
     | 38 -> "Amp"
     | 64 -> "At"
@@ -867,21 +867,21 @@ let name_of_char (c : FStar_Char.char) : string =
     | 93 -> "Rbrack"
     | 40 -> "Lparen"
     | 41 -> "Rparen"
-    | c1 -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int (FStarC_Util.int_of_char c1)) in
+    | c1 -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int (Z.of_int c1)) in
       (Prims.strcat "u" tmp))
   )
 
 let compile_op (s : string) (r : FStarC_Range_Type.range) : string =
-  (let tmp = (if ((FStarC_Util.starts_with s "let") || (FStarC_Util.starts_with s "and")) then (let tmp = (FStarC_Util.substring s Prims.int_zero (Prims.of_int (3))) in
+  (let tmp = (if ((FStarC_Util.starts_with s "let") || (FStarC_Util.starts_with s "and")) then (let tmp = ((fun s i j -> BatString.sub s (Z.to_int i) (Z.to_int j)) s Prims.int_zero (Prims.of_int (3))) in
     let tmp1 = (Prims.strcat tmp "_") in
-    let tmp2 = (FStarC_Util.substring_from s (Prims.of_int (3))) in
-    (tmp1, tmp2)) else (if ((FStarC_Util.starts_with s "exists") || (FStarC_Util.starts_with s "forall")) then (let tmp = (FStarC_Util.substring s Prims.int_zero (Prims.of_int (6))) in
+    let tmp2 = ((fun s i -> BatString.tail s (Z.to_int i)) s (Prims.of_int (3))) in
+    (tmp1, tmp2)) else (if ((FStarC_Util.starts_with s "exists") || (FStarC_Util.starts_with s "forall")) then (let tmp = ((fun s i j -> BatString.sub s (Z.to_int i) (Z.to_int j)) s Prims.int_zero (Prims.of_int (6))) in
     let tmp1 = (Prims.strcat tmp "_") in
-    let tmp2 = (FStarC_Util.substring_from s (Prims.of_int (6))) in
+    let tmp2 = ((fun s i -> BatString.tail s (Z.to_int i)) s (Prims.of_int (6))) in
     (tmp1, tmp2)) else ("", s))) in
   (match tmp with
-    | (prefix, s1) -> (let tmp1 = (BatList.map name_of_char (FStarC_String.list_of_string s1)) in
-      let tmp2 = (FStarC_String.concat "_" tmp1) in
+    | (prefix, s1) -> (let tmp1 = (BatList.map name_of_char ((fun s -> List.rev (BatUTF8.fold (fun acc c -> BatUChar.code c :: acc) [] s)) s1)) in
+      let tmp2 = (BatString.concat "_" tmp1) in
       let tmp3 = (Prims.strcat prefix tmp2) in
       (Prims.strcat "op_" tmp3))
   ))
@@ -1108,9 +1108,9 @@ let add_decorations (d : decl) (decorations : (decoration) list) : decl =
                   | (DeclAttributes (a)) -> (fStarC_Class_Show_show__list_term a)
                   | tmp3 -> ""
                 )) attrs) in
-              let tmp3 = (FStarC_String.concat ", " tmp2) in
+              let tmp3 = (BatString.concat ", " tmp2) in
               let tmp4 = (BatList.map fStarC_Class_Show_show__term (d).attrs) in
-              let tmp5 = (FStarC_String.concat ", " tmp4) in
+              let tmp5 = (BatString.concat ", " tmp4) in
               let tmp6 = (FStarC_Format.fmt2 "At most one attribute set is allowed on declarations\n got %s;\n and %s" tmp3 tmp5) in
               (fStarC_Errors_raise_error__decl_string d FStarC_Errors_Codes.Fatal_MoreThanOneDeclaration tmp6))
           ) in
@@ -2545,7 +2545,7 @@ let restriction_to_string (r : FStarC_Syntax_Syntax.restriction) : string =
             let tmp2 = (FStarC_Option.dflt "" tmp1) in
             (Prims.strcat (FStarC_Ident.string_of_id id) tmp2))
         )) allow_list) in
-      let tmp1 = (FStarC_String.concat ", " tmp) in
+      let tmp1 = (BatString.concat ", " tmp) in
       let tmp2 = (Prims.strcat tmp1 "}") in
       (Prims.strcat " {" tmp2))
   )
@@ -2575,18 +2575,18 @@ let decl'_to_string (d : decl') : string =
             let tmp4 = (Prims.strcat " = " tmp3) in
             (Prims.strcat tmp2 tmp4))
         )) pats) in
-      let tmp2 = (FStarC_String.concat ", " tmp1) in
+      let tmp2 = (BatString.concat ", " tmp1) in
       (Prims.strcat "let " tmp2))
     | (Assume (i, tmp)) -> (Prims.strcat "assume " (FStarC_Ident.string_of_id i))
     | (Tycon (tmp, tmp1, tys)) -> (let tmp2 = (BatList.map id_of_tycon tys) in
-      let tmp3 = (FStarC_String.concat ", " tmp2) in
+      let tmp3 = (BatString.concat ", " tmp2) in
       (Prims.strcat "type " tmp3))
     | (Val (i, tmp)) -> (Prims.strcat "val " (FStarC_Ident.string_of_id i))
     | (Exception (i, tmp)) -> (Prims.strcat "exception " (FStarC_Ident.string_of_id i))
     | (NewEffect ((DeclareEffect (i, tmp)))) -> (Prims.strcat "effect " (FStarC_Ident.string_of_id i))
     | (NewEffect ((DefineEffect (i, tmp, tmp1)))) -> (Prims.strcat "effect " (FStarC_Ident.string_of_id i))
     | (Splice (is_typed, ids, t)) -> (let tmp = (BatList.map (fun i -> (FStarC_Ident.string_of_id i)) ids) in
-      let tmp1 = (FStarC_String.concat ";" tmp) in
+      let tmp1 = (BatString.concat ";" tmp) in
       let tmp2 = (term_to_string t) in
       let tmp3 = (Prims.strcat tmp2 ")") in
       let tmp4 = (Prims.strcat "] (" tmp3) in

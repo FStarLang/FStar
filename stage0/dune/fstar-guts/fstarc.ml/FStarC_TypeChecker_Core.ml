@@ -33,8 +33,8 @@ type hash_entry = {
 }
 
 type cache_t = {
-  term_map : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * hash_entry)) list) FStarC_PIMap.t;
-  guard_map : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.binding) list)) list) FStarC_PIMap.t;
+  term_map : (Prims.int, (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * hash_entry)) list) FStarC_AVLMap.tree;
+  guard_map : (Prims.int, (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.binding) list)) list) FStarC_AVLMap.tree;
 }
 
 type 'a u___result =
@@ -221,7 +221,7 @@ let raw_lookup_guard (e : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.synt
   ))
 
 let rec context_included (g0 : (FStarC_Syntax_Syntax.binding) list) (g1 : (FStarC_Syntax_Syntax.binding) list) : bool =
-  (if (FStarC_Util.physical_equality g0 g1) then true else (match (g0, g1) with
+  (if ((==) g0 g1) then true else (match (g0, g1) with
     | ([], tmp) -> true
     | ((b0 :: g0'), (b1 :: g1')) -> (match (b0, b1) with
         | ((FStarC_Syntax_Syntax.Binding_var (x0)), (FStarC_Syntax_Syntax.Binding_var (x1))) -> (if ((=) (x0).FStarC_Syntax_Syntax.index (x1).FStarC_Syntax_Syntax.index) then (let tmp = (equal_term (x0).FStarC_Syntax_Syntax.sort (x1).FStarC_Syntax_Syntax.sort) in
@@ -3796,13 +3796,6 @@ let check_term (g : FStarC_TypeChecker_Env.env) (e : (FStarC_Syntax_Syntax.term'
     | (Error (err)) -> (FStar_Pervasives.Inr (err))
   ))
 
-let open_binders_in_comp (g : FStarC_TypeChecker_Env.env) (bs : (FStarC_Syntax_Syntax.binder) list) (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : (FStarC_TypeChecker_Env.env * (FStarC_Syntax_Syntax.binder) list * (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) =
-  (let g1 = (initial_env g) in
-  let tmp = (open_comp_binders g1 bs c) in
-  (match tmp with
-    | (g', bs1, c1) -> ((g').tcenv, bs1, c1)
-  ))
-
 let empty_token (tmp : unit) : unit =
   ()
 
@@ -3867,6 +3860,13 @@ let compute_term_type (g : FStarC_TypeChecker_Env.env) (e : (FStarC_Syntax_Synta
       let tmp2 = (eff, ty, tmp1) in
       (FStar_Pervasives.Inl (tmp2)))
     | (Error (err)) -> (FStar_Pervasives.Inr (err))
+  ))
+
+let open_binders_in_comp (g : FStarC_TypeChecker_Env.env) (bs : (FStarC_Syntax_Syntax.binder) list) (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : (FStarC_TypeChecker_Env.env * (FStarC_Syntax_Syntax.binder) list * (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) =
+  (let g1 = (initial_env g) in
+  let tmp = (open_comp_binders g1 bs c) in
+  (match tmp with
+    | (g', bs1, c1) -> ((g').tcenv, bs1, c1)
   ))
 
 let fStarC_Class_Show_show__side (tmp : side) : string =

@@ -461,7 +461,7 @@ let constant (ps : FStarC_Parser_Pratt.pstate) : FStarC_Const.sconst =
         | (v, b) -> (FStarC_Const.Const_int (v, b))
       ))
     | FStarC_Parser_TokenKind.CHAR -> (match (t).FStarC_Parser_Lexer.extra with
-        | (FStarC_Parser_Lexer.CharLit (c)) -> (FStarC_Const.Const_char ((FStarC_Util.char_of_int c)))
+        | (FStarC_Parser_Lexer.CharLit (c)) -> (FStarC_Const.Const_char ((Z.to_int c)))
         | tmp -> (FStarC_Effect.failwith "impossible: CHAR without payload")
       )
     | FStarC_Parser_TokenKind.STRING -> (FStarC_Const.Const_string ((t).FStarC_Parser_Lexer.text, (FStarC_Parser_Pratt.tok_rng ps t)))

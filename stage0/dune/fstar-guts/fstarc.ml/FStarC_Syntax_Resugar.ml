@@ -413,7 +413,7 @@ let resugar_pragma (env : FStarC_Syntax_DsEnv.env) (tmp : FStarC_Syntax_Syntax.p
 let universe_to_string (univs : (FStarC_Ident.ident) list) : string =
   (let tmp = (FStarC_Options.print_universes ()) in
   (if tmp then (let tmp1 = (BatList.map (fun x -> (FStarC_Ident.string_of_id x)) univs) in
-  (FStarC_String.concat ", " tmp1)) else ""))
+  (BatString.concat ", " tmp1)) else ""))
 
 let label (s : string) (t : FStarC_Parser_AST.term) : FStarC_Parser_AST.term =
   (if ((=) s "") then t else (FStarC_Parser_AST.mk_term (FStarC_Parser_AST.Labeled (t, s, true)) (t).FStarC_Parser_AST.range FStarC_Parser_AST.Un))
@@ -799,8 +799,8 @@ let rec resugar_term_as_op (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Synta
   let tmp = (FStarC_Syntax_Subst.compress t) in
   let tmp1 = (tmp).FStarC_Syntax_Syntax.n in
   (match tmp1 with
-    | (FStarC_Syntax_Syntax.Tm_fvar (fv)) -> (let length = (FStarC_String.length (FStarC_Ident.nsstr (fv).FStarC_Syntax_Syntax.fv_name)) in
-      let s = (if ((=) length Prims.int_zero) then (FStarC_Ident.string_of_lid (fv).FStarC_Syntax_Syntax.fv_name) else (FStarC_Util.substring_from (FStarC_Ident.string_of_lid (fv).FStarC_Syntax_Syntax.fv_name) (Prims.op_Plus length Prims.int_one))) in
+    | (FStarC_Syntax_Syntax.Tm_fvar (fv)) -> (let length = ((fun s -> Z.of_int (BatUTF8.length s)) (FStarC_Ident.nsstr (fv).FStarC_Syntax_Syntax.fv_name)) in
+      let s = (if ((=) length Prims.int_zero) then (FStarC_Ident.string_of_lid (fv).FStarC_Syntax_Syntax.fv_name) else ((fun s i -> BatString.tail s (Z.to_int i)) (FStarC_Ident.string_of_lid (fv).FStarC_Syntax_Syntax.fv_name) (Prims.op_Plus length Prims.int_one))) in
       let tmp2 = (FStarC_Parser_AST.string_to_op s) in
       (match tmp2 with
         | (Some (t1)) -> (Some ((t1, None)))
@@ -1030,13 +1030,13 @@ let resugar_term_base' (env : FStarC_Syntax_DsEnv.env) (t : (FStarC_Syntax_Synta
       let l = (FStarC_Ident.lid_of_ids tmp3) in
       (mk (FStarC_Parser_AST.Var (l))))
     | (FStarC_Syntax_Syntax.Tm_fvar (fv)) -> (let a = (fv).FStarC_Syntax_Syntax.fv_name in
-      let length = (FStarC_String.length (FStarC_Ident.nsstr (fv).FStarC_Syntax_Syntax.fv_name)) in
-      let s = (if ((=) length Prims.int_zero) then (FStarC_Ident.string_of_lid a) else (FStarC_Util.substring_from (FStarC_Ident.string_of_lid a) (Prims.op_Plus length Prims.int_one))) in
+      let length = ((fun s -> Z.of_int (BatUTF8.length s)) (FStarC_Ident.nsstr (fv).FStarC_Syntax_Syntax.fv_name)) in
+      let s = (if ((=) length Prims.int_zero) then (FStarC_Ident.string_of_lid a) else ((fun s i -> BatString.tail s (Z.to_int i)) (FStarC_Ident.string_of_lid a) (Prims.op_Plus length Prims.int_one))) in
       let is_prefix = (Prims.strcat FStarC_Ident.reserved_prefix "is_") in
-      (if (FStarC_Util.starts_with s is_prefix) then (let rest = (FStarC_Util.substring_from s (FStarC_String.length is_prefix)) in
+      (if (FStarC_Util.starts_with s is_prefix) then (let rest = ((fun s i -> BatString.tail s (Z.to_int i)) s ((fun s -> Z.of_int (BatUTF8.length s)) is_prefix)) in
       let tmp2 = (FStarC_Ident.lid_of_path (rest :: []) (t).FStarC_Syntax_Syntax.pos) in
       let tmp3 = (FStarC_Parser_AST.Discrim (tmp2)) in
-      (mk tmp3)) else (if (FStarC_Util.starts_with s FStarC_Syntax_Util.field_projector_prefix) then (let rest = (FStarC_Util.substring_from s (FStarC_String.length FStarC_Syntax_Util.field_projector_prefix)) in
+      (mk tmp3)) else (if (FStarC_Util.starts_with s FStarC_Syntax_Util.field_projector_prefix) then (let rest = ((fun s i -> BatString.tail s (Z.to_int i)) s ((fun s -> Z.of_int (BatUTF8.length s)) FStarC_Syntax_Util.field_projector_prefix)) in
       let r = (FStarC_Util.split rest FStarC_Syntax_Util.field_projector_sep) in
       (match r with
         | (fst :: (snd :: [])) -> (let l = (FStarC_Ident.lid_of_path (fst :: []) (t).FStarC_Syntax_Syntax.pos) in
@@ -1047,9 +1047,9 @@ let resugar_term_base' (env : FStarC_Syntax_DsEnv.env) (t : (FStarC_Syntax_Synta
       let tmp3 = (FStarC_Parser_AST.Var (tmp2)) in
       (mk tmp3)) else (if (FStarC_Ident.lid_equals a FStarC_Parser_Const.smtpatOr_lid) then (let tmp2 = (FStarC_Ident.id_as_lid (FStarC_Ident.mk_ident ("SMTPatOr", (FStarC_Ident.range_of_lid a)))) in
       let tmp3 = (FStarC_Parser_AST.Var (tmp2)) in
-      (mk tmp3)) else (let tmp2 = (if ((FStarC_Ident.lid_equals a FStarC_Parser_Const.assert_lid) || (FStarC_Ident.lid_equals a FStarC_Parser_Const.assume_lid)) then true else (let tmp2 = (FStarC_String.get s Prims.int_zero) in
-        let tmp3 = (FStar_Char.uppercase tmp2) in
-        let tmp4 = (FStarC_String.get s Prims.int_zero) in
+      (mk tmp3)) else (let tmp2 = (if ((FStarC_Ident.lid_equals a FStarC_Parser_Const.assert_lid) || (FStarC_Ident.lid_equals a FStarC_Parser_Const.assume_lid)) then true else (let tmp2 = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) s Prims.int_zero) in
+        let tmp3 = ((fun x -> try Char.code (Char.uppercase_ascii (Char.chr x)) with _ -> x) tmp2) in
+        let tmp4 = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) s Prims.int_zero) in
         ((<>) tmp3 tmp4))) in
       (if tmp2 then (let tmp3 = (maybe_shorten_fv env fv) in
       let tmp4 = (FStarC_Parser_AST.Var (tmp3)) in
@@ -1181,9 +1181,9 @@ let resugar_term_base' (env : FStarC_Syntax_DsEnv.env) (t : (FStarC_Syntax_Synta
             let tmp6 = (tmp5).FStarC_Syntax_Syntax.n in
             (match tmp6 with
               | (FStarC_Syntax_Syntax.Tm_fvar (fv)) -> (let a = (fv).FStarC_Syntax_Syntax.fv_name in
-                let length = (FStarC_String.length (FStarC_Ident.nsstr (fv).FStarC_Syntax_Syntax.fv_name)) in
-                let s = (if ((=) length Prims.int_zero) then (FStarC_Ident.string_of_lid a) else (FStarC_Util.substring_from (FStarC_Ident.string_of_lid a) (Prims.op_Plus length Prims.int_one))) in
-                (if (FStarC_Util.starts_with s FStarC_Syntax_Util.field_projector_prefix) then (let rest = (FStarC_Util.substring_from s (FStarC_String.length FStarC_Syntax_Util.field_projector_prefix)) in
+                let length = ((fun s -> Z.of_int (BatUTF8.length s)) (FStarC_Ident.nsstr (fv).FStarC_Syntax_Syntax.fv_name)) in
+                let s = (if ((=) length Prims.int_zero) then (FStarC_Ident.string_of_lid a) else ((fun s i -> BatString.tail s (Z.to_int i)) (FStarC_Ident.string_of_lid a) (Prims.op_Plus length Prims.int_one))) in
+                (if (FStarC_Util.starts_with s FStarC_Syntax_Util.field_projector_prefix) then (let rest = ((fun s i -> BatString.tail s (Z.to_int i)) s ((fun s -> Z.of_int (BatUTF8.length s)) FStarC_Syntax_Util.field_projector_prefix)) in
                 let r = (FStarC_Util.split rest FStarC_Syntax_Util.field_projector_sep) in
                 (match r with
                   | (fst :: (snd :: [])) -> (let l = (FStarC_Ident.lid_of_path (fst :: []) (t2).FStarC_Syntax_Syntax.pos) in

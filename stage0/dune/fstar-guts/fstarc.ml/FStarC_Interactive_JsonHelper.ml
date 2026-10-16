@@ -2,8 +2,8 @@
 [@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
 
 let write_json (js : FStarC_Json.json) : unit =
-  ((FStarC_Format.print_raw (FStarC_Json.string_of_json js));
-  (FStarC_Format.print_raw "\n"))
+  (((fun s -> Stdlib.set_binary_mode_out Stdlib.stdout true; Stdlib.print_string s; Stdlib.flush Stdlib.stdout) (FStarC_Json.string_of_json js));
+  ((fun s -> Stdlib.set_binary_mode_out Stdlib.stdout true; Stdlib.print_string s; Stdlib.flush Stdlib.stdout) "\n"))
 
 let try_assoc (key : string) (d : ((string * FStarC_Json.json)) list) : (FStarC_Json.json) option =
   (let tmp = (FStarC_Util.try_find (fun tmp -> (match tmp with

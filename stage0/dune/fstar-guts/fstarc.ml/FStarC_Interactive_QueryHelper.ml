@@ -87,7 +87,7 @@ let symlookup (tcenv : FStarC_TypeChecker_Env.env) (symbol : string) (pos_opt : 
                 )
               | tmp1 -> (let tmp2 = (FStarC_TypeChecker_Overload.candidates_doc tcenv ovl_candidates) in
                 let cands = (BatList.map FStarC_Errors_Msg.renderdoc tmp2) in
-                (Some ((FStarC_String.concat "\n" ("This name is overloaded, and the answer above is only what scope order gives. Which candidate an occurrence denotes is decided by typechecking it, so ask again at the exact position of the occurrence once its definition has been checked. Candidates:" :: cands)))))
+                (Some ((BatString.concat "\n" ("This name is overloaded, and the answer above is only what scope order gives. Which candidate an occurrence denotes is decided by typechecking it, so ask again at the exact position of the occurrence once its definition has been checked. Candidates:" :: cands)))))
             ) in
           let def_str = (match name_or_lid with
               | (FStar_Pervasives.Inr (lid)) when (BatList.mem "definition" requested_info) -> (def_of_lid lid)

@@ -321,7 +321,7 @@ let rec encode_const (c : FStarC_Const.sconst) (env : FStarC_SMTEncoding_Env.env
       (tmp1, []))
     | (FStarC_Const.Const_bool (false)) -> (let tmp1 = (FStarC_SMTEncoding_Term.boxBool FStarC_SMTEncoding_Util.mkFalse) in
       (tmp1, []))
-    | (FStarC_Const.Const_char (c1)) -> (let tmp1 = (FStarC_SMTEncoding_Util.mkInteger' (FStarC_Util.int_of_char c1)) in
+    | (FStarC_Const.Const_char (c1)) -> (let tmp1 = (FStarC_SMTEncoding_Util.mkInteger' (Z.of_int c1)) in
       let tmp2 = (FStarC_SMTEncoding_Term.boxInt tmp1) in
       let tmp3 = (tmp2 :: []) in
       let tmp4 = ("FStar.Char.__char_of_int", tmp3) in
@@ -1339,7 +1339,7 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
                           let cvar_sorts = (BatList.map FStarC_SMTEncoding_Term.fv_sort cvars1) in
                           let tmp21 = (FStarC_Options.log_queries ()) in
                           let caption = (if tmp21 then (let tmp22 = (FStarC_TypeChecker_Normalize.term_to_string (env).FStarC_SMTEncoding_Env.tcenv t1) in
-                            let tmp23 = (FStarC_Util.replace_char tmp22 10 32) in
+                            let tmp23 = ((fun s c1 c2 -> let c1 = BatUChar.chr c1 and c2 = BatUChar.chr c2 in BatUTF8.map (fun x -> if BatUChar.eq x c1 then c2 else x) s) tmp22 10 32) in
                             (Some (tmp23))) else None) in
                           let tdecl = (FStarC_SMTEncoding_Term.DeclFun (tsym, cvar_sorts, FStarC_SMTEncoding_Term.Term_sort, caption)) in
                           let tmp22 = (BatList.map FStarC_SMTEncoding_Util.mkFreeV cvars1) in
@@ -1743,7 +1743,7 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
                               let tkey_hash = (FStarC_SMTEncoding_Term.hash_of_term tkey) in
                               let tmp15 = (!(dbg_PartialApp)) in
                               (if tmp15 then (let tmp16 = (BatList.map FStarC_SMTEncoding_Term.fv_name vars) in
-                              let tmp17 = (FStarC_String.concat ", " tmp16) in
+                              let tmp17 = (BatString.concat ", " tmp16) in
                               let tmp18 = (FStarC_SMTEncoding_Term.print_smt_term body2) in
                               (FStarC_Format.print2 "Checking eta expansion of\n\tvars={%s}\n\tbody=%s\n" tmp17 tmp18)) else ());
                               let cvar_sorts = (BatList.map FStarC_SMTEncoding_Term.fv_sort cvars1) in

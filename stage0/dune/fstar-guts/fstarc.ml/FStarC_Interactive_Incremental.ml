@@ -240,7 +240,7 @@ let run_full_buffer (st : FStarC_Interactive_Ide_Types.repl_state) (qid : string
             | (queries, issues) -> ((if ((<>) full FStarC_Interactive_Ide_Types.Cache) then (log_syntax_issues err_opt) else ());
               let tmp7 = (!(dbg)) in
               (if tmp7 then (let tmp8 = (BatList.map FStarC_Interactive_Ide_Types.query_to_string queries) in
-              let tmp9 = (FStarC_String.concat "\n" tmp8) in
+              let tmp9 = (BatString.concat "\n" tmp8) in
               (FStarC_Format.print1 "Generating queries\n%s\n" tmp9)) else ());
               (if ((<>) full FStarC_Interactive_Ide_Types.Cache) then (queries, issues) else ([], issues)))
           ))
@@ -265,7 +265,7 @@ let format_code (st : FStarC_Interactive_Ide_Types.repl_state) (code : string) :
             ))
         )) ([], (BatList.rev comments)) decls) in
       (match tmp with
-        | (formatted_code_rev, leftover_comments) -> (let code1 = (FStarC_String.concat "\n\n" (BatList.rev formatted_code_rev)) in
+        | (formatted_code_rev, leftover_comments) -> (let code1 = (BatString.concat "\n\n" (BatList.rev formatted_code_rev)) in
           let formatted_code = (match leftover_comments with
               | [] -> code1
               | tmp1 -> (let doc = (FStarC_Parser_ToDocument.comments_to_document leftover_comments) in

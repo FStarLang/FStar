@@ -120,7 +120,7 @@ let json_of_def_range (r : FStarC_Range_Type.range) : FStarC_Json.json =
   (json_of_range_fields (file_of_range r) (start_of_range r) (end_of_range r))
 
 let compare_rng (r1 : FStarC_Range_Type.rng) (r2 : FStarC_Range_Type.rng) : Prims.int =
-  (let fcomp = (FStar_String.compare (r1).FStarC_Range_Type.file_name (r2).FStarC_Range_Type.file_name) in
+  (let fcomp = ((fun x y -> Z.of_int (BatString.compare x y)) (r1).FStarC_Range_Type.file_name (r2).FStarC_Range_Type.file_name) in
   (if ((=) fcomp Prims.int_zero) then (Prims.op_Minus (r1).FStarC_Range_Type.start_pos (r2).FStarC_Range_Type.start_pos) else fcomp))
 
 let compare (r1 : FStarC_Range_Type.range) (r2 : FStarC_Range_Type.range) : Prims.int =

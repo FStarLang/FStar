@@ -241,7 +241,7 @@ let type_matches_class (cfv : FStarC_Reflection_Types.fv) (t : FStarC_Reflection
 
 let skip (st : st_t) (s : string) : ((FStarC_Tactics_Types.proofstate ref) -> 'a) =
   (Obj.magic ((fun ps -> (let tmp = (if (st).dbg then (FStarC_Tactics_V2_Builtins.print (Prims.strcat "skip: " s)) else (fun tmp -> ())) in
-  (ignore (tmp ps));
+  (tmp ps);
   (ignore (FStarC_Tactics_V2_Builtins.raise_core Next ps));
   (failwith "Prims.magic")))))
 
@@ -379,7 +379,7 @@ let fquotes (d : PPrint.document) : PPrint.document =
 
 let u___tcresolve (dbg : bool) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
   (fun ps -> (let tmp = (if dbg then (FStarC_Tactics_V2_Builtins.dump "tcresolve entry point") else (fun tmp -> ())) in
-  (ignore (tmp ps));
+  (tmp ps);
   let x = (FStar_Tactics_V2_Derived.cur_witness () ps) in
   (ignore (FStarC_Tactics_V2_Builtins.set_dump_on_failure false ps));
   (maybe_intros () ps);
@@ -445,7 +445,7 @@ let filter_no_method_binders (bs : (FStar_Tactics_NamedView.binder) list) (ps : 
     let tmp1 = (FStar_Reflection_TermEq_Simple.term_eq tmp) in
     (FStar_List_Tot_Base.existsb tmp1 (b).FStar_Tactics_NamedView.attrs))) in
   (FStar_Tactics_Util.filter (fun b -> (fun ps1 -> (let x1 = (FStarC_Tactics_Unseal.unseal (b).FStar_Tactics_NamedView.ppname ps1) in
-  (if ((=) (FStar_String.index x1 Prims.int_zero) 95) then false else (not (x b)))))) bs ps))
+  (if ((=) ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) x1 Prims.int_zero) 95) then false else (not (x b)))))) bs ps))
 
 let binder_set_meta (b : FStar_Tactics_NamedView.binder) (t : FStarC_Reflection_Types.term) : FStar_Tactics_NamedView.binder =
   ({ FStar_Tactics_NamedView.uniq = (b).FStar_Tactics_NamedView.uniq;

@@ -247,7 +247,7 @@ let generalize_and_inst_within (env : FStarC_TypeChecker_Env.env) (tcs : ((FStar
   (match tmp2 with
     | (uvs, t1) -> (let tmp3 = (!(dbg_GenUniverses)) in
       (if tmp3 then (let tmp4 = (BatList.map (fun u -> (FStarC_Ident.string_of_id u)) uvs) in
-      let tmp5 = (FStarC_String.concat ", " tmp4) in
+      let tmp5 = (BatString.concat ", " tmp4) in
       let tmp6 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' t1) in
       (FStarC_Format.print2 "@@@@@@Generalized to (%s, %s)\n" tmp5 tmp6)) else ());
       let tmp4 = (FStarC_Syntax_Subst.open_univ_vars uvs t1) in

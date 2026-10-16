@@ -234,8 +234,8 @@ let inspect_fv (fv : FStarC_Syntax_Syntax.fv) : (string) list =
 let pack_fv (ns : (string) list) : FStarC_Syntax_Syntax.fv =
   (let lid = (FStarC_Parser_Const.p2l ns) in
   let fallback = (fun tmp -> (let id = (FStarC_Ident.ident_of_lid lid) in
-    let c = (FStarC_String.get (FStarC_Ident.string_of_id id) Prims.int_zero) in
-    let quals = (if ((<>) (FStar_Char.lowercase c) c) then (Some (FStarC_Syntax_Syntax.Data_ctor)) else None) in
+    let c = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) (FStarC_Ident.string_of_id id) Prims.int_zero) in
+    let quals = (if ((<>) ((fun x -> try Char.code (Char.lowercase_ascii (Char.chr x)) with _ -> x) c) c) then (Some (FStarC_Syntax_Syntax.Data_ctor)) else None) in
     let tmp1 = (FStarC_Parser_Const.p2l ns) in
     (FStarC_Syntax_Syntax.lid_as_fv tmp1 quals))) in
   let tmp = (!(FStarC_TypeChecker_Normalize.reflection_env_hook)) in
@@ -738,13 +738,13 @@ let env_open_modules (e : FStarC_TypeChecker_Env.env) : ((string) list) list =
   )) (FStarC_Syntax_DsEnv.open_modules (e).FStarC_TypeChecker_Env.dsenv))
 
 let implode_qn (ns : (string) list) : string =
-  (FStarC_String.concat "." ns)
+  (BatString.concat "." ns)
 
 let explode_qn (s : string) : (string) list =
   (FStarC_String.split (46 :: []) s)
 
 let compare_string (s1 : string) : (string -> Prims.int) =
-  (FStarC_String.compare s1)
+  ((fun x y -> Z.of_int (BatString.compare x y)) s1)
 
 let push_namedv (e : FStarC_TypeChecker_Env.env) (b : FStarC_Syntax_Syntax.bv) : FStarC_TypeChecker_Env.env =
   (FStarC_TypeChecker_Env.push_binders e ((FStarC_Syntax_Syntax.mk_binder b) :: []))

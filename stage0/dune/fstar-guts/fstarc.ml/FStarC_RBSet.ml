@@ -84,6 +84,9 @@ let rec fStarC_RBSet_mem__string (x : string) (s : (string) rbset) : bool =
 let fStarC_Class_Setlike_mem__string_rbset_string (tmp : string) (s : (string) rbset) : bool =
   (fStarC_RBSet_mem__string tmp s)
 
+let fStarC_Class_Setlike_empty__ctx_uvar_rbset_ctx_uvar (tmp : unit) : (FStarC_Syntax_Syntax.ctx_uvar) rbset =
+  (empty ())
+
 let rec fStarC_RBSet_add__add'__ctx_uvar (x : FStarC_Syntax_Syntax.ctx_uvar) (s : (FStarC_Syntax_Syntax.ctx_uvar) rbset) : (FStarC_Syntax_Syntax.ctx_uvar) rbset =
   (match s with
     | L -> (N (R, L, x, L))
@@ -103,9 +106,6 @@ let fStarC_RBSet_from_list__ctx_uvar (xs : (FStarC_Syntax_Syntax.ctx_uvar) list)
 
 let fStarC_Class_Setlike_from_list__ctx_uvar_rbset_ctx_uvar (tmp : (FStarC_Syntax_Syntax.ctx_uvar) list) : (FStarC_Syntax_Syntax.ctx_uvar) rbset =
   (fStarC_RBSet_from_list__ctx_uvar tmp)
-
-let fStarC_Class_Setlike_empty__ctx_uvar_rbset_ctx_uvar (tmp : unit) : (FStarC_Syntax_Syntax.ctx_uvar) rbset =
-  (empty ())
 
 let rec elems (s : ('u___a) rbset) : ('u___a) list =
   (match s with

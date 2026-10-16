@@ -3231,7 +3231,7 @@ and tc_pat__check_nested_pattern (p0 : (FStarC_Syntax_Syntax.pat') FStarC_Syntax
                   let tmp11 = (Prims.strcat " : " tmp10) in
                   let tmp12 = (Prims.strcat tmp8 tmp11) in
                   (Prims.strcat "(" tmp12))) simple_bvs1) in
-                let tmp9 = (FStarC_String.concat " " tmp8) in
+                let tmp9 = (BatString.concat " " tmp8) in
                 (FStarC_Format.print3 "$$$$$$$$$$$$Checked simple pattern %s at type %s with bvs=%s\n" tmp6 tmp7 tmp9)) else ());
                 (simple_pat_e1, simple_bvs1, guard3, erasable))
             ) in
@@ -3440,7 +3440,7 @@ and fStarC_TypeChecker_TcTerm_tc_pat__check_nested_pattern__1 (p0 : (FStarC_Synt
                   let tmp11 = (Prims.strcat " : " tmp10) in
                   let tmp12 = (Prims.strcat tmp8 tmp11) in
                   (Prims.strcat "(" tmp12))) simple_bvs1) in
-                let tmp9 = (FStarC_String.concat " " tmp8) in
+                let tmp9 = (BatString.concat " " tmp8) in
                 (FStarC_Format.print3 "$$$$$$$$$$$$Checked simple pattern %s at type %s with bvs=%s\n" tmp6 tmp7 tmp9)) else ());
                 (simple_pat_e1, simple_bvs1, guard3, erasable))
             ) in
@@ -3842,7 +3842,7 @@ and tc_pat (env : FStarC_TypeChecker_Env.env) (pat_t : (FStarC_Syntax_Syntax.ter
                     let tmp14 = (Prims.strcat " : " tmp13) in
                     let tmp15 = (Prims.strcat tmp11 tmp14) in
                     (Prims.strcat "(" tmp15))) simple_bvs1) in
-                  let tmp12 = (FStarC_String.concat " " tmp11) in
+                  let tmp12 = (BatString.concat " " tmp11) in
                   (FStarC_Format.print3 "$$$$$$$$$$$$Checked simple pattern %s at type %s with bvs=%s\n" tmp9 tmp10 tmp12)) else ());
                   (simple_pat_e1, simple_bvs1, guard3, erasable))
               ) in

@@ -294,9 +294,9 @@ let div_with_decimals (ndec : Prims.int) (x : Prims.int) (y : Prims.int) : strin
   let intg = (Prims.op_Slash x y) in
   let frac = (Prims.op_Percent (Prims.op_Slash (Prims.op_Star mul x) y) mul) in
   let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int frac) in
-  let len = (FStarC_String.length tmp) in
+  let len = ((fun s -> Z.of_int (BatUTF8.length s)) tmp) in
   let pad = (Prims.op_Minus ndec len) in
-  let tmp1 = (FStarC_String.make pad 48) in
+  let tmp1 = ((fun i c -> BatUTF8.init (Z.to_int i) (fun _ -> BatUChar.chr c)) pad 48) in
   let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int frac) in
   let frac1 = (Prims.strcat tmp1 tmp2) in
   let tmp3 = (FStarC_Class_Show.fStarC_Class_Show_show__int intg) in
@@ -320,12 +320,12 @@ let query_info (settings : query_settings) (g : FStarC_SMTEncoding_ErrorReportin
     let tmp4 = (match tmp3 with
         | (Some (v)) -> v
       ) in
-    let r0 = (FStarC_Util.int_of_string tmp4) in
+    let r0 = (Z.of_string tmp4) in
     let tmp5 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (z3result).FStarC_SMTEncoding_Z3.z3result_statistics "rlimit-count") in
     let tmp6 = (match tmp5 with
         | (Some (v)) -> v
       ) in
-    let r1 = (FStarC_Util.int_of_string tmp6) in
+    let r1 = (Z.of_string tmp6) in
     let used = (Prims.op_Minus r1 r0) in
     let tmp7 = (convert_rlimit Prims.int_one) in
     (div_with_decimals (Prims.of_int (3)) used tmp7)) with
@@ -649,7 +649,7 @@ let errors_to_report (tried_recovery : bool) (settings : query_settings) (gst : 
   let smt_error = (if tmp then (let tmp1 = (BatList.map error_to_short_string (gst).gs_errors) in
     let tmp2 = (BatList.map PPrint.string tmp1) in
     (format_smt_error tmp2)) else (let tmp1 = (BatList.fold_left (fun tmp1 err -> (match tmp1 with
-        | (ic, cc, uc, bc) -> (let err1 = (if (FStarC_Util.starts_with (err).error_reason "unknown because ") then (FStarC_Util.substring_from (err).error_reason (FStarC_String.length "unknown because ")) else (err).error_reason) in
+        | (ic, cc, uc, bc) -> (let err1 = (if (FStarC_Util.starts_with (err).error_reason "unknown because ") then ((fun s i -> BatString.tail s (Z.to_int i)) (err).error_reason ((fun s -> Z.of_int (BatUTF8.length s)) "unknown because ")) else (err).error_reason) in
           (match () with
             | tmp2 when (FStarC_Util.starts_with err1 "(incomplete") -> ((Prims.op_Plus ic Prims.int_one), cc, uc, bc)
             | tmp2 when (((FStarC_Util.starts_with err1 "canceled") || (FStarC_Util.starts_with err1 "(resource")) || (FStarC_Util.starts_with err1 "timeout")) -> (ic, (Prims.op_Plus cc Prims.int_one), uc, bc)

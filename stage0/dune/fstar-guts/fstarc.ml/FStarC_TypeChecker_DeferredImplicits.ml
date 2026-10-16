@@ -318,7 +318,7 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env) (g : FStar
     )) in
   let tmp = (FStarC_TypeChecker_Common.fStarC_Class_Listlike_to_list__tuple3_deferred_reason_string_prob (g).FStarC_TypeChecker_Common.deferred_to_tac) in
   let eqs = (BatList.map prob_as_implicit tmp) in
-  let tmp1 = (FStarC_TypeChecker_Common.fStarC_Class_Listlike_to_list__implicit_clist_implicit (g).FStarC_TypeChecker_Common.implicits) in
+  let tmp1 = (FStarC_TypeChecker_Common.fStarC_Class_Listlike_to_list__implicit_clist_implicit_3 (g).FStarC_TypeChecker_Common.implicits) in
   let tmp2 = (BatList.fold_right (fun imp tmp2 -> (match tmp2 with
       | (more, imps) -> (let tmp3 = (FStarC_Syntax_Unionfind.find (((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head, ((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head1, ((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
         (match tmp3 with

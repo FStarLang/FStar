@@ -168,7 +168,7 @@ let e_exn : (exn) FStarC_Syntax_Embeddings_Base.embedding =
       | e1 -> (let tmp2 = (FStarC_Errors.issue_of_exn e1) in
         let tmp3 = (match tmp2 with
             | (Some ({ FStarC_Errors_Issue.issue_msg = issue_msg; issue_level = tmp3; issue_range = issue_range; issue_number = tmp4; issue_ctx = tmp5; _ })) -> (issue_msg, issue_range)
-            | None -> (let tmp3 = (FStarC_Util.message_of_exn e1) in
+            | None -> (let tmp3 = (Printexc.to_string e1) in
               let tmp4 = (PPrint.arbitrary_string tmp3) in
               let tmp5 = (tmp4 :: []) in
               (tmp5, None))
@@ -203,7 +203,7 @@ let e_exn_nbe : (exn) FStarC_TypeChecker_NBETerm.embedding =
         let tmp2 = (tmp1 :: []) in
         (mkConstruct (fstar_tactics_TacticFailure).fv [] tmp2))
       | FStarC_Tactics_Common.SKIP -> (mkConstruct (fstar_tactics_SKIP).fv [] [])
-      | tmp -> (let tmp1 = (FStarC_Util.message_of_exn e) in
+      | tmp -> (let tmp1 = (Printexc.to_string e) in
         let tmp2 = (FStarC_Format.fmt1 "cannot embed exn (NBE) : %s" tmp1) in
         (FStarC_Effect.failwith tmp2))
     )) in

@@ -5,7 +5,7 @@ let fStarC_Class_Ord_cmp__int_1 (tmp : Prims.int) (j : Prims.int) : FStarC_Order
   (FStarC_Order.compare_int tmp j)
 
 let fStarC_Class_Ord_cmp__string (tmp : string) (tmp1 : string) : FStarC_Order.order =
-  (FStarC_Order.order_from_int (FStarC_String.compare tmp tmp1))
+  (FStarC_Order.order_from_int ((fun x y -> Z.of_int (BatString.compare x y)) tmp tmp1))
 
 let fStarC_Class_Ord_op_Less_Question__string (x : string) (y : string) : bool =
   (let tmp = (fStarC_Class_Ord_cmp__string x y) in

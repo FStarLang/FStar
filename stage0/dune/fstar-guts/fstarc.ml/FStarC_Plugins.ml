@@ -69,15 +69,15 @@ let compile_modules (dir : string) (ms : (string) list) : unit =
     let tmp2 = (FStar_List_Tot_Base.op_At ("-w" :: ("-8-11-20-21-26-28" :: [])) tmp1) in
     let tmp3 = (FStar_List_Tot_Base.op_At ("-I" :: (dir :: [])) tmp2) in
     let args = (FStar_List_Tot_Base.op_At ("ocamlopt" :: ("-shared" :: [])) tmp3) in
-    let tmp4 = (FStarC_Util.expand_environment_variable "OCAMLPATH") in
+    let tmp4 = ((fun x -> try Some (Sys.getenv x) with Not_found -> None) "OCAMLPATH") in
     let old_ocamlpath = (match tmp4 with
         | (Some (s)) -> s
         | None -> ""
       ) in
     let tmp5 = (FStarC_Find.locate_ocaml ()) in
     let env_setter = (FStarC_Format.fmt3 "env OCAMLPATH=\"%s%s%s\"" tmp5 FStarC_Platform.ocamlpath_sep old_ocamlpath) in
-    let cmd = (FStarC_String.concat " " (env_setter :: ("ocamlfind" :: args))) in
-    let rc = (FStarC_Util.system_run cmd) in
+    let cmd = (BatString.concat " " (env_setter :: ("ocamlfind" :: args))) in
+    let rc = ((fun cmd -> Z.of_int (Sys.command cmd)) cmd) in
     (if ((<>) rc Prims.int_zero) then (let tmp6 = (FStarC_Class_Show.fStarC_Class_Show_show__int rc) in
     let tmp7 = (FStarC_Format.fmt2 "Command\n‘%s’\nreturned with exit code %s" cmd tmp6) in
     let tmp8 = (FStarC_Errors_Msg.text tmp7) in
@@ -86,7 +86,7 @@ let compile_modules (dir : string) (ms : (string) list) : unit =
     (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_FailToCompileNativeTactic tmp10)) else ()))) in
   (try (let tmp = (BatList.map (fun m -> (Prims.strcat dir (Prims.strcat "/" m))) ms) in
   (BatList.iter compile tmp)) with
-    | u__cexn -> (let tmp = (FStarC_Util.print_exn u__cexn) in
+    | u__cexn -> (let tmp = (Printexc.to_string u__cexn) in
       let tmp1 = (FStarC_Format.fmt1 "Failed to load native tactic: %s\n" tmp) in
       (perr tmp1);
       (raise u__cexn))
@@ -96,8 +96,8 @@ let load_plugins (tacs : (string) list) : unit =
   (BatList.iter load_plugin tacs)
 
 let load_plugins_dir (dir : string) : unit =
-  (let tmp = (FStarC_Filepath.readdir dir) in
-  let tmp1 = (BatList.filter (fun s -> ((Prims.op_Greater_Equals (FStarC_String.length s) (Prims.of_int (5))) && ((=) (FStar_String.sub s (Prims.op_Minus (FStarC_String.length s) (Prims.of_int (5))) (Prims.of_int (5))) ".cmxs"))) tmp) in
+  (let tmp = ((fun dir -> Array.to_list (Sys.readdir dir)) dir) in
+  let tmp1 = (BatList.filter (fun s -> ((Prims.op_Greater_Equals ((fun s -> Z.of_int (BatUTF8.length s)) s) (Prims.of_int (5))) && ((=) ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) s (Prims.op_Minus ((fun s -> Z.of_int (BatUTF8.length s)) s) (Prims.of_int (5))) (Prims.of_int (5))) ".cmxs"))) tmp) in
   let tmp2 = (BatList.map (fun s -> (Prims.strcat dir (Prims.strcat "/" s))) tmp1) in
   (load_plugins tmp2))
 

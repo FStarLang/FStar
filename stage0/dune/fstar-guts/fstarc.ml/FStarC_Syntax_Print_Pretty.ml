@@ -34,14 +34,6 @@ let comp_to_string (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syn
   let d = (FStarC_Parser_ToDocument.term_to_document e) in
   (pp d))))
 
-let comp_to_doc' (env : FStarC_Syntax_DsEnv.env) (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : PPrint.document =
-  (FStarC_GenSym.with_frozen_gensym (fun tmp -> (let e = (FStarC_Syntax_Resugar.resugar_comp' env c) in
-  (FStarC_Parser_ToDocument.term_to_document e))))
-
-let comp_to_string' (env : FStarC_Syntax_DsEnv.env) (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : string =
-  (FStarC_GenSym.with_frozen_gensym (fun tmp -> (let d = (comp_to_doc' env c) in
-  (pp d))))
-
 let term_to_doc' (env : FStarC_Syntax_DsEnv.env) (tm : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : PPrint.document =
   (FStarC_GenSym.with_frozen_gensym (fun tmp -> (let e = (FStarC_Syntax_Resugar.resugar_term' env tm) in
   (FStarC_Parser_ToDocument.term_to_document e))))
@@ -53,6 +45,14 @@ let term_to_string' (env : FStarC_Syntax_DsEnv.env) (tm : (FStarC_Syntax_Syntax.
 let comp_to_doc (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : PPrint.document =
   (FStarC_GenSym.with_frozen_gensym (fun tmp -> (let e = (FStarC_Syntax_Resugar.resugar_comp c) in
   (FStarC_Parser_ToDocument.term_to_document e))))
+
+let comp_to_doc' (env : FStarC_Syntax_DsEnv.env) (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : PPrint.document =
+  (FStarC_GenSym.with_frozen_gensym (fun tmp -> (let e = (FStarC_Syntax_Resugar.resugar_comp' env c) in
+  (FStarC_Parser_ToDocument.term_to_document e))))
+
+let comp_to_string' (env : FStarC_Syntax_DsEnv.env) (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : string =
+  (FStarC_GenSym.with_frozen_gensym (fun tmp -> (let d = (comp_to_doc' env c) in
+  (pp d))))
 
 let sigelt_to_string (se : FStarC_Syntax_Syntax.sigelt) : string =
   (FStarC_GenSym.with_frozen_gensym (fun tmp -> (let tmp1 = (FStarC_Syntax_Resugar.resugar_sigelt se) in

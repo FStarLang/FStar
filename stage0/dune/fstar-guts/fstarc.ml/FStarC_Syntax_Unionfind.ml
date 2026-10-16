@@ -2,8 +2,8 @@
 [@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
 
 type uf = {
-  term_graph : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * FStarC_Syntax_Syntax.uvar_decoration)) FStarC_Unionfind.puf;
-  univ_graph : ((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.puf;
+  term_graph : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * FStarC_Syntax_Syntax.uvar_decoration)) FStarC_Unionfind.puf_rec;
+  univ_graph : ((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.puf_rec;
   version : FStarC_Syntax_Syntax.version;
   ro : bool;
 }
@@ -39,7 +39,7 @@ let state : (uf ref) =
 let get (tmp : unit) : uf =
   (!(state))
 
-let get_term_graph (tmp : unit) : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * FStarC_Syntax_Syntax.uvar_decoration)) FStarC_Unionfind.puf =
+let get_term_graph (tmp : unit) : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * FStarC_Syntax_Syntax.uvar_decoration)) FStarC_Unionfind.puf_rec =
   (let tmp1 = (get ()) in
   (tmp1).term_graph)
 
@@ -52,7 +52,7 @@ let version_to_string (v : FStarC_Syntax_Syntax.version) : string =
   let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int (v).FStarC_Syntax_Syntax.minor) in
   (FStarC_Format.fmt2 "%s.%s" tmp tmp1))
 
-let chk_v_t (su : (((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * FStarC_Syntax_Syntax.uvar_decoration)) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * FStarC_Syntax_Syntax.uvar_decoration)) FStarC_Unionfind.p_uvar =
+let chk_v_t (su : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : int =
   (match su with
     | (u, v, rng) -> (let uvar_to_string = (fun u1 -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int (FStarC_Unionfind.puf_unique_id u1)) in
         (Prims.strcat "?" tmp))) in
@@ -72,22 +72,22 @@ let chk_v_t (su : (((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) 
       (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document rng FStarC_Errors_Codes.Fatal_BadUvar tmp11))))
   )
 
-let find_core (u : (((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * FStarC_Syntax_Syntax.uvar_decoration)) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * FStarC_Syntax_Syntax.uvar_decoration) =
+let find_core (u : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * FStarC_Syntax_Syntax.uvar_decoration) =
   (let tmp = (get_term_graph ()) in
   let tmp1 = (chk_v_t u) in
   (FStarC_Unionfind.puf_find tmp tmp1))
 
-let find (u : (((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * FStarC_Syntax_Syntax.uvar_decoration)) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
+let find (u : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (let tmp = (find_core u) in
   (match tmp with
     | (u__1, u__2) -> u__1
   ))
 
-let get_univ_graph (tmp : unit) : ((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.puf =
+let get_univ_graph (tmp : unit) : ((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.puf_rec =
   (let tmp1 = (get ()) in
   (tmp1).univ_graph)
 
-let chk_v_u (x : (('tmp) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : ('tmp) FStarC_Unionfind.p_uvar =
+let chk_v_u (x : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : int =
   (match x with
     | (u, v, rng) -> (let uvar_to_string = (fun u1 -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int (FStarC_Unionfind.puf_unique_id u1)) in
         (Prims.strcat "?" tmp))) in
@@ -107,28 +107,28 @@ let chk_v_u (x : (('tmp) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version 
       (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document rng FStarC_Errors_Codes.Fatal_BadUvar tmp11))))
   )
 
-let univ_find (u : (((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : (FStarC_Syntax_Syntax.universe) option =
+let univ_find (u : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : (FStarC_Syntax_Syntax.universe) option =
   (let tmp = (get_univ_graph ()) in
   let tmp1 = (chk_v_u u) in
   (FStarC_Unionfind.puf_find tmp tmp1))
 
-let uvar_id (u : (((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * FStarC_Syntax_Syntax.uvar_decoration)) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : Prims.int =
+let uvar_id (u : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : Prims.int =
   (let tmp = (get_term_graph ()) in
   let tmp1 = (chk_v_t u) in
   (FStarC_Unionfind.puf_id tmp tmp1))
 
-let find_decoration (u : (((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * FStarC_Syntax_Syntax.uvar_decoration)) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : FStarC_Syntax_Syntax.uvar_decoration =
+let find_decoration (u : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : FStarC_Syntax_Syntax.uvar_decoration =
   (let tmp = (find_core u) in
   (match tmp with
     | (u__1, u__2) -> u__2
   ))
 
-let univ_uvar_id (u : (((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : Prims.int =
+let univ_uvar_id (u : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : Prims.int =
   (let tmp = (get_univ_graph ()) in
   let tmp1 = (chk_v_u u) in
   (FStarC_Unionfind.puf_id tmp tmp1))
 
-let equiv (u : (((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * FStarC_Syntax_Syntax.uvar_decoration)) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (v : (((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * FStarC_Syntax_Syntax.uvar_decoration)) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : bool =
+let equiv (u : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (v : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : bool =
   (let tmp = (get_term_graph ()) in
   let tmp1 = (chk_v_t u) in
   let tmp2 = (chk_v_t v) in
@@ -153,53 +153,64 @@ let fStarC_FlatSet_union__ctx_uvar (s1 : (FStarC_Syntax_Syntax.ctx_uvar) list) (
 let fStarC_Class_Setlike_union__ctx_uvar_list_ctx_uvar (tmp : (FStarC_Syntax_Syntax.ctx_uvar) list) (eta : (FStarC_Syntax_Syntax.ctx_uvar) list) : (FStarC_Syntax_Syntax.ctx_uvar) list =
   (fStarC_FlatSet_union__ctx_uvar tmp eta)
 
-let fStarC_Class_Deq_op_Equals_Question__tuple3_p_uvar_option_version_range (tmp : (((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (tmp1 : (((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : bool =
+let fStarC_Class_Deq_op_Equals_Question__tuple3_p_uvar_rec_option_version_range (tmp : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (tmp1 : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : bool =
   (let tmp2 = (univ_uvar_id tmp) in
   let tmp3 = (univ_uvar_id tmp1) in
   (FStarC_Class_Deq.fStarC_Class_Deq_op_Equals_Question__int tmp2 tmp3))
 
-let rec fStarC_FlatSet_add__tuple3_p_uvar_option_version_range (x : (((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (s : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list =
+let rec fStarC_FlatSet_add__tuple3_p_uvar_rec_option_version_range (x : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (s : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list =
   (match s with
     | [] -> (x :: [])
-    | (y :: yy) -> (let r = (fStarC_Class_Deq_op_Equals_Question__tuple3_p_uvar_option_version_range x y) in
-      (if r then s else (let tmp = (fStarC_FlatSet_add__tuple3_p_uvar_option_version_range x yy) in
+    | (y :: yy) -> (let r = (fStarC_Class_Deq_op_Equals_Question__tuple3_p_uvar_rec_option_version_range x y) in
+      (if r then s else (let tmp = (fStarC_FlatSet_add__tuple3_p_uvar_rec_option_version_range x yy) in
       (y :: tmp))))
   )
 
-let fStarC_FlatSet_union__tuple3_p_uvar_option_version_range (s1 : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) (eta : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list =
-  (BatList.fold_left (fun s x -> (fStarC_FlatSet_add__tuple3_p_uvar_option_version_range x s)) s1 eta)
+let fStarC_FlatSet_union__tuple3_p_uvar_rec_option_version_range (s1 : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) (eta : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list =
+  (BatList.fold_left (fun s x -> (fStarC_FlatSet_add__tuple3_p_uvar_rec_option_version_range x s)) s1 eta)
 
-let fStarC_Class_Setlike_union__tuple3_p_uvar_option_version_range (tmp : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) (eta : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list =
-  (fStarC_FlatSet_union__tuple3_p_uvar_option_version_range tmp eta)
+let fStarC_Class_Setlike_union__tuple3_p_uvar_rec_option_version_range (tmp : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) (eta : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list =
+  (fStarC_FlatSet_union__tuple3_p_uvar_rec_option_version_range tmp eta)
 
 let fail_if_ro (tmp : unit) : unit =
   (let tmp1 = (get ()) in
   let tmp2 = (tmp1).ro in
   (if tmp2 then (FStarC_Errors.fStarC_Errors_raise_error0__string FStarC_Errors_Codes.Fatal_BadUvar "Internal error: UF graph was in read-only mode") else ()))
 
-let univ_fresh (rng : FStarC_Range_Type.range) : (((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range) =
+let univ_fresh (rng : FStarC_Range_Type.range) : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range) =
   ((fail_if_ro ());
   let tmp = (get_univ_graph ()) in
   let tmp1 = (FStarC_Unionfind.puf_fresh tmp None) in
   let tmp2 = (get_version ()) in
   (tmp1, tmp2, rng))
 
-let fStarC_Class_Ord_cmp__ctx_uvar (tmp : FStarC_Syntax_Syntax.ctx_uvar) (tmp1 : FStarC_Syntax_Syntax.ctx_uvar) : FStarC_Order.order =
-  (let tmp2 = (uvar_id ((tmp).FStarC_Syntax_Syntax.ctx_uvar_head, (tmp).FStarC_Syntax_Syntax.ctx_uvar_head1, (tmp).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
-  let tmp3 = (uvar_id ((tmp1).FStarC_Syntax_Syntax.ctx_uvar_head, (tmp1).FStarC_Syntax_Syntax.ctx_uvar_head1, (tmp1).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
-  (FStarC_Class_Ord.fStarC_Class_Ord_cmp__int_1 tmp2 tmp3))
-
-let fStarC_Class_Ord_op_Less_Question__ctx_uvar (x : FStarC_Syntax_Syntax.ctx_uvar) (y : FStarC_Syntax_Syntax.ctx_uvar) : bool =
-  (let tmp = (fStarC_Class_Ord_cmp__ctx_uvar x y) in
-  ((=) tmp FStarC_Order.Lt))
-
-let fStarC_Class_Ord_op_Greater_Question__ctx_uvar (x : FStarC_Syntax_Syntax.ctx_uvar) (y : FStarC_Syntax_Syntax.ctx_uvar) : bool =
-  (let tmp = (fStarC_Class_Ord_cmp__ctx_uvar x y) in
-  ((=) tmp FStarC_Order.Gt))
+let fresh (decoration : FStarC_Syntax_Syntax.uvar_decoration) (rng : FStarC_Range_Type.range) : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range) =
+  ((fail_if_ro ());
+  let tmp = (get_term_graph ()) in
+  let tmp1 = (FStarC_Unionfind.puf_fresh tmp (None, decoration)) in
+  let tmp2 = (get_version ()) in
+  (tmp1, tmp2, rng))
 
 let set (u : uf) : unit =
   ((fail_if_ro ());
   ((state) := u))
+
+let set_term_graph (tg : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * FStarC_Syntax_Syntax.uvar_decoration)) FStarC_Unionfind.puf_rec) : unit =
+  (let tmp = (get ()) in
+  let tmp1 = { term_graph = tg;
+      univ_graph = (tmp).univ_graph;
+      version = (tmp).version;
+      ro = (tmp).ro } in
+  (set tmp1))
+
+let change_decoration (u : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (d : FStarC_Syntax_Syntax.uvar_decoration) : unit =
+  (let tmp = (find_core u) in
+  (match tmp with
+    | (t, tmp1) -> (let tmp2 = (get_term_graph ()) in
+      let tmp3 = (chk_v_t u) in
+      let tmp4 = (FStarC_Unionfind.puf_change tmp2 tmp3 (t, d)) in
+      (set_term_graph tmp4))
+  ))
 
 let new_transaction (tmp : unit) : uf =
   (let tx = (get ()) in
@@ -215,13 +226,26 @@ let new_transaction (tmp : unit) : uf =
 let rollback (t : uf) : unit =
   (set t)
 
-let univ_equiv (u : (((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (v : (((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : bool =
+let fStarC_Class_Ord_cmp__ctx_uvar (tmp : FStarC_Syntax_Syntax.ctx_uvar) (tmp1 : FStarC_Syntax_Syntax.ctx_uvar) : FStarC_Order.order =
+  (let tmp2 = (uvar_id ((tmp).FStarC_Syntax_Syntax.ctx_uvar_head, (tmp).FStarC_Syntax_Syntax.ctx_uvar_head1, (tmp).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
+  let tmp3 = (uvar_id ((tmp1).FStarC_Syntax_Syntax.ctx_uvar_head, (tmp1).FStarC_Syntax_Syntax.ctx_uvar_head1, (tmp1).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
+  (FStarC_Class_Ord.fStarC_Class_Ord_cmp__int_1 tmp2 tmp3))
+
+let fStarC_Class_Ord_op_Less_Question__ctx_uvar (x : FStarC_Syntax_Syntax.ctx_uvar) (y : FStarC_Syntax_Syntax.ctx_uvar) : bool =
+  (let tmp = (fStarC_Class_Ord_cmp__ctx_uvar x y) in
+  ((=) tmp FStarC_Order.Lt))
+
+let fStarC_Class_Ord_op_Greater_Question__ctx_uvar (x : FStarC_Syntax_Syntax.ctx_uvar) (y : FStarC_Syntax_Syntax.ctx_uvar) : bool =
+  (let tmp = (fStarC_Class_Ord_cmp__ctx_uvar x y) in
+  ((=) tmp FStarC_Order.Gt))
+
+let univ_equiv (u : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (v : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : bool =
   (let tmp = (get_univ_graph ()) in
   let tmp1 = (chk_v_u u) in
   let tmp2 = (chk_v_u v) in
   (FStarC_Unionfind.puf_equivalent tmp tmp1 tmp2))
 
-let set_univ_graph (ug : ((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.puf) : unit =
+let set_univ_graph (ug : ((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.puf_rec) : unit =
   (let tmp = (get ()) in
   let tmp1 = { term_graph = (tmp).term_graph;
       univ_graph = ug;
@@ -229,37 +253,20 @@ let set_univ_graph (ug : ((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfi
       ro = (tmp).ro } in
   (set tmp1))
 
-let univ_union (u : (((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (v : (((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : unit =
+let univ_union (u : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (v : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : unit =
   (let tmp = (get_univ_graph ()) in
   let tmp1 = (chk_v_u u) in
   let tmp2 = (chk_v_u v) in
   let tmp3 = (FStarC_Unionfind.puf_union tmp tmp1 tmp2) in
   (set_univ_graph tmp3))
 
-let univ_change (u : (((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (t : FStarC_Syntax_Syntax.universe) : unit =
+let univ_change (u : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (t : FStarC_Syntax_Syntax.universe) : unit =
   (let tmp = (get_univ_graph ()) in
   let tmp1 = (chk_v_u u) in
   let tmp2 = (FStarC_Unionfind.puf_change tmp tmp1 (Some (t))) in
   (set_univ_graph tmp2))
 
-let set_term_graph (tg : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * FStarC_Syntax_Syntax.uvar_decoration)) FStarC_Unionfind.puf) : unit =
-  (let tmp = (get ()) in
-  let tmp1 = { term_graph = tg;
-      univ_graph = (tmp).univ_graph;
-      version = (tmp).version;
-      ro = (tmp).ro } in
-  (set tmp1))
-
-let change_decoration (u : (((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * FStarC_Syntax_Syntax.uvar_decoration)) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (d : FStarC_Syntax_Syntax.uvar_decoration) : unit =
-  (let tmp = (find_core u) in
-  (match tmp with
-    | (t, tmp1) -> (let tmp2 = (get_term_graph ()) in
-      let tmp3 = (chk_v_t u) in
-      let tmp4 = (FStarC_Unionfind.puf_change tmp2 tmp3 (t, d)) in
-      (set_term_graph tmp4))
-  ))
-
-let change (u : (((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * FStarC_Syntax_Syntax.uvar_decoration)) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : unit =
+let change (u : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : unit =
   (let tmp = (find_core u) in
   (match tmp with
     | (tmp1, dec) -> (let tmp2 = (get_term_graph ()) in
@@ -267,13 +274,6 @@ let change (u : (((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) op
       let tmp4 = (FStarC_Unionfind.puf_change tmp2 tmp3 ((Some (t)), dec)) in
       (set_term_graph tmp4))
   ))
-
-let fresh (decoration : FStarC_Syntax_Syntax.uvar_decoration) (rng : FStarC_Range_Type.range) : (((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * FStarC_Syntax_Syntax.uvar_decoration)) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range) =
-  ((fail_if_ro ());
-  let tmp = (get_term_graph ()) in
-  let tmp1 = (FStarC_Unionfind.puf_fresh tmp (None, decoration)) in
-  let tmp2 = (get_version ()) in
-  (tmp1, tmp2, rng))
 
 let fStarC_FlatSet_mem__ctx_uvar (x : FStarC_Syntax_Syntax.ctx_uvar) (eta : (FStarC_Syntax_Syntax.ctx_uvar) list) : bool =
   (BatList.exists (fun y -> (fStarC_Class_Deq_op_Equals_Question__ctx_uvar x y)) eta)
@@ -285,62 +285,58 @@ let fStarC_FlatSet_diff__ctx_uvar (s1 : (FStarC_Syntax_Syntax.ctx_uvar) list) (s
 let fStarC_Class_Setlike_diff__ctx_uvar_list_ctx_uvar (tmp : (FStarC_Syntax_Syntax.ctx_uvar) list) (s2 : (FStarC_Syntax_Syntax.ctx_uvar) list) : (FStarC_Syntax_Syntax.ctx_uvar) list =
   (fStarC_FlatSet_diff__ctx_uvar tmp s2)
 
-let fStarC_Class_Ord_cmp__tuple3_p_uvar_option_version_range (tmp : (((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (tmp1 : (((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : FStarC_Order.order =
+let fStarC_Class_Ord_cmp__tuple3_p_uvar_rec_option_version_range (tmp : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (tmp1 : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : FStarC_Order.order =
   (let tmp2 = (univ_uvar_id tmp) in
   let tmp3 = (univ_uvar_id tmp1) in
   (FStarC_Class_Ord.fStarC_Class_Ord_cmp__int_1 tmp2 tmp3))
 
-let fStarC_Class_Ord_op_Less_Equals_Question__tuple3_p_uvar_option_version_range (x : (((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (y : (((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : bool =
-  (let tmp = (fStarC_Class_Ord_cmp__tuple3_p_uvar_option_version_range x y) in
+let fStarC_Class_Ord_op_Less_Equals_Question__tuple3_p_uvar_rec_option_version_range (x : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (y : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : bool =
+  (let tmp = (fStarC_Class_Ord_cmp__tuple3_p_uvar_rec_option_version_range x y) in
   ((<>) tmp FStarC_Order.Gt))
 
-let rec fStarC_Class_Ord_sort__insert__tuple3_p_uvar_option_version_range (x : (((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (xs : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list =
+let rec fStarC_Class_Ord_sort__insert__tuple3_p_uvar_rec_option_version_range (x : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (xs : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list =
   (match xs with
     | [] -> (x :: [])
-    | (y :: ys) -> (let tmp = (fStarC_Class_Ord_op_Less_Equals_Question__tuple3_p_uvar_option_version_range x y) in
-      (if tmp then (x :: (y :: ys)) else (let tmp1 = (fStarC_Class_Ord_sort__insert__tuple3_p_uvar_option_version_range x ys) in
+    | (y :: ys) -> (let tmp = (fStarC_Class_Ord_op_Less_Equals_Question__tuple3_p_uvar_rec_option_version_range x y) in
+      (if tmp then (x :: (y :: ys)) else (let tmp1 = (fStarC_Class_Ord_sort__insert__tuple3_p_uvar_rec_option_version_range x ys) in
       (y :: tmp1))))
   )
 
-let rec fStarC_Class_Ord_sort__tuple3_p_uvar_option_version_range (xs : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list =
+let rec fStarC_Class_Ord_sort__tuple3_p_uvar_rec_option_version_range (xs : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list =
   (match xs with
     | [] -> []
-    | (x :: xs1) -> (let tmp = (fStarC_Class_Ord_sort__tuple3_p_uvar_option_version_range xs1) in
-      (fStarC_Class_Ord_sort__insert__tuple3_p_uvar_option_version_range x tmp))
+    | (x :: xs1) -> (let tmp = (fStarC_Class_Ord_sort__tuple3_p_uvar_rec_option_version_range xs1) in
+      (fStarC_Class_Ord_sort__insert__tuple3_p_uvar_rec_option_version_range x tmp))
   )
 
-let rec fStarC_Class_Deq_eqList__tuple3_p_uvar_option_version_range (xs : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) (ys : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : bool =
+let rec fStarC_Class_Deq_eqList__tuple3_p_uvar_rec_option_version_range (xs : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) (ys : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : bool =
   (match (xs, ys) with
     | ([], []) -> true
-    | ((x :: xs1), (y :: ys1)) -> (let tmp = (fStarC_Class_Deq_op_Equals_Question__tuple3_p_uvar_option_version_range x y) in
-      (if tmp then (fStarC_Class_Deq_eqList__tuple3_p_uvar_option_version_range xs1 ys1) else false))
+    | ((x :: xs1), (y :: ys1)) -> (let tmp = (fStarC_Class_Deq_op_Equals_Question__tuple3_p_uvar_rec_option_version_range x y) in
+      (if tmp then (fStarC_Class_Deq_eqList__tuple3_p_uvar_rec_option_version_range xs1 ys1) else false))
     | (tmp, tmp1) -> false
   )
 
-let fStarC_Class_Deq_op_Equals_Question__list_tuple3_p_uvar_version_range (tmp : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) (ys : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : bool =
-  (fStarC_Class_Deq_eqList__tuple3_p_uvar_option_version_range tmp ys)
+let fStarC_Class_Deq_op_Equals_Question__list_tuple3_p_uvar_rec_version_range (tmp : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) (ys : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : bool =
+  (fStarC_Class_Deq_eqList__tuple3_p_uvar_rec_option_version_range tmp ys)
 
-let fStarC_FlatSet_equal__tuple3_p_uvar_option_version_range (s1 : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) (s2 : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : bool =
-  (let tmp = (fStarC_Class_Ord_sort__tuple3_p_uvar_option_version_range s1) in
-  let tmp1 = (fStarC_Class_Ord_sort__tuple3_p_uvar_option_version_range s2) in
-  (fStarC_Class_Deq_op_Equals_Question__list_tuple3_p_uvar_version_range tmp tmp1))
+let fStarC_FlatSet_equal__tuple3_p_uvar_rec_option_version_range (s1 : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) (s2 : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : bool =
+  (let tmp = (fStarC_Class_Ord_sort__tuple3_p_uvar_rec_option_version_range s1) in
+  let tmp1 = (fStarC_Class_Ord_sort__tuple3_p_uvar_rec_option_version_range s2) in
+  (fStarC_Class_Deq_op_Equals_Question__list_tuple3_p_uvar_rec_version_range tmp tmp1))
 
-let fStarC_Class_Setlike_equal__tuple3_p_uvar_option_version_range (tmp : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) (s2 : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : bool =
-  (fStarC_FlatSet_equal__tuple3_p_uvar_option_version_range tmp s2)
+let fStarC_Class_Setlike_equal__tuple3_p_uvar_rec_option_version_range (tmp : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) (s2 : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : bool =
+  (fStarC_FlatSet_equal__tuple3_p_uvar_rec_option_version_range tmp s2)
 
-let fStarC_FlatSet_mem__tuple3_p_uvar_option_version_range (x : (((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (eta : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : bool =
-  (BatList.exists (fun y -> (fStarC_Class_Deq_op_Equals_Question__tuple3_p_uvar_option_version_range x y)) eta)
+let fStarC_FlatSet_mem__tuple3_p_uvar_rec_option_version_range (x : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (eta : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : bool =
+  (BatList.exists (fun y -> (fStarC_Class_Deq_op_Equals_Question__tuple3_p_uvar_rec_option_version_range x y)) eta)
 
-let fStarC_FlatSet_diff__tuple3_p_uvar_option_version_range (s1 : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) (s2 : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list =
-  (BatList.filter (fun y -> (let r = (fStarC_FlatSet_mem__tuple3_p_uvar_option_version_range y s2) in
+let fStarC_FlatSet_diff__tuple3_p_uvar_rec_option_version_range (s1 : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) (s2 : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list =
+  (BatList.filter (fun y -> (let r = (fStarC_FlatSet_mem__tuple3_p_uvar_rec_option_version_range y s2) in
   (not r))) s1)
 
-let fStarC_Class_Setlike_diff__tuple3_p_uvar_option_version_range (tmp : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) (s2 : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list =
-  (fStarC_FlatSet_diff__tuple3_p_uvar_option_version_range tmp s2)
-
-let uvar_unique_id (u : (((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * FStarC_Syntax_Syntax.uvar_decoration)) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : Prims.int =
-  (let tmp = (chk_v_t u) in
-  (FStarC_Unionfind.puf_unique_id tmp))
+let fStarC_Class_Setlike_diff__tuple3_p_uvar_rec_option_version_range (tmp : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) (s2 : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list =
+  (fStarC_FlatSet_diff__tuple3_p_uvar_rec_option_version_range tmp s2)
 
 let fStarC_Class_Setlike_mem__ctx_uvar_list_ctx_uvar (tmp : FStarC_Syntax_Syntax.ctx_uvar) (eta : (FStarC_Syntax_Syntax.ctx_uvar) list) : bool =
   (fStarC_FlatSet_mem__ctx_uvar tmp eta)
@@ -382,6 +378,10 @@ let fStarC_FlatSet_equal__ctx_uvar (s1 : (FStarC_Syntax_Syntax.ctx_uvar) list) (
 
 let fStarC_Class_Setlike_equal__ctx_uvar_list_ctx_uvar (tmp : (FStarC_Syntax_Syntax.ctx_uvar) list) (s2 : (FStarC_Syntax_Syntax.ctx_uvar) list) : bool =
   (fStarC_FlatSet_equal__ctx_uvar tmp s2)
+
+let uvar_unique_id (u : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : Prims.int =
+  (let tmp = (chk_v_t u) in
+  (FStarC_Unionfind.puf_unique_id tmp))
 
 let set_ro (tmp : unit) : unit =
   (let s = (get ()) in

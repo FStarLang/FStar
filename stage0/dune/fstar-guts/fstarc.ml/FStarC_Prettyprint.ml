@@ -15,9 +15,9 @@ let generate (m : printing_mode) (filenames : (string) list) : unit =
     (match tmp with
       | (modul, comments) -> (let outf = (match m1 with
             | FromTempToStdout -> None
-            | FromTempToFile -> (let outf = (FStarC_Util.open_file_for_writing filename) in
+            | FromTempToFile -> (let outf = (Stdlib.open_out_bin filename) in
               (Some (outf)))
-            | ToTempFile -> (let outf = (FStarC_Util.open_file_for_writing (temp_file_name filename)) in
+            | ToTempFile -> (let outf = (Stdlib.open_out_bin (temp_file_name filename)) in
               (Some (outf)))
           ) in
         let comments1 = (BatList.rev comments) in
@@ -25,7 +25,7 @@ let generate (m : printing_mode) (filenames : (string) list) : unit =
         let leftover_comments = (match tmp1 with
             | (doc, comments2) -> ((match outf with
                 | (Some (f)) -> (FStarC_Util.append_to_file f (FStarC_Pprint.pretty_string (FStarC_Util.float_of_string "1.0") (Prims.of_int (100)) doc))
-                | None -> (FStarC_Pprint.pretty_out_channel (FStarC_Util.float_of_string "1.0") (Prims.of_int (100)) doc FStarC_Util.stdout)
+                | None -> (FStarC_Pprint.pretty_out_channel (FStarC_Util.float_of_string "1.0") (Prims.of_int (100)) doc Stdlib.stdout)
               );
               comments2)
           ) in
@@ -35,9 +35,9 @@ let generate (m : printing_mode) (filenames : (string) list) : unit =
           let tmp5 = (PPrint.hardline :: tmp4) in
           (PPrint.concat tmp5)) else (if ((=) m1 FromTempToStdout) then (PPrint.concat (PPrint.hardline :: (PPrint.hardline :: []))) else PPrint.empty)) in
         (match outf with
-          | None -> (FStarC_Pprint.pretty_out_channel (FStarC_Util.float_of_string "1.0") (Prims.of_int (100)) left_over_doc FStarC_Util.stdout)
+          | None -> (FStarC_Pprint.pretty_out_channel (FStarC_Util.float_of_string "1.0") (Prims.of_int (100)) left_over_doc Stdlib.stdout)
           | (Some (outf1)) -> ((FStarC_Util.append_to_file outf1 (FStarC_Pprint.pretty_string (FStarC_Util.float_of_string "1.0") (Prims.of_int (100)) left_over_doc));
-            (FStarC_Util.close_out_channel outf1))
+            (Stdlib.close_out outf1))
         ))
     ))) in
   (BatList.iter (parse_and_prettyprint m) filenames))

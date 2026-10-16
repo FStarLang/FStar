@@ -4,12 +4,12 @@
 let defaults : ((string * string)) list =
   (("context_pruning", "true") :: (("prune_decls", "true") :: (("fly_deps", "true") :: [])))
 
-let init : (string) FStarC_PSMap.t =
+let init : (string, string) FStarC_AVLMap.tree =
   (BatList.fold_right (fun tmp m -> (match tmp with
     | (k, v) -> (FStarC_PSMap.add m k v)
   )) defaults (FStarC_PSMap.empty ()))
 
-let cur_state : ((string) FStarC_PSMap.t ref) =
+let cur_state : ((string, string) FStarC_AVLMap.tree ref) =
   (ref init)
 
 let get (k : string) : string =
@@ -22,13 +22,13 @@ let get (k : string) : string =
 
 let enabled (k : string) : bool =
   (let v = (get k) in
-  let v1 = (FStarC_String.lowercase v) in
+  let v1 = (BatString.lowercase_ascii v) in
   (((<>) v1 "") && (not ((((=) v1 "off") || ((=) v1 "false")) || ((=) v1 "0")))))
 
-let save (tmp : unit) : (string) FStarC_PSMap.t =
+let save (tmp : unit) : (string, string) FStarC_AVLMap.tree =
   (!(cur_state))
 
-let restore (s : (string) FStarC_PSMap.t) : unit =
+let restore (s : (string, string) FStarC_AVLMap.tree) : unit =
   (((cur_state) := s);
   ())
 
@@ -43,9 +43,9 @@ let set (k : string) (v : string) : unit =
   ((cur_state) := tmp1))
 
 let is_prefix (s1 : string) (s2 : string) : bool =
-  (let l1 = (FStarC_String.length s1) in
-  let l2 = (FStarC_String.length s2) in
-  (if (Prims.op_Greater_Equals l2 l1) then (let tmp = (FStarC_String.substring s2 Prims.int_zero l1) in
+  (let l1 = ((fun s -> Z.of_int (BatUTF8.length s)) s1) in
+  let l2 = ((fun s -> Z.of_int (BatUTF8.length s)) s2) in
+  (if (Prims.op_Greater_Equals l2 l1) then (let tmp = ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) s2 Prims.int_zero l1) in
   ((=) tmp s1)) else false))
 
 let getns (ns : string) : ((string * string)) list =

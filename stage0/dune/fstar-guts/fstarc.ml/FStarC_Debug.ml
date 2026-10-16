@@ -11,7 +11,7 @@ let any (tmp : unit) : bool =
   (let tmp1 = (!(anyref)) in
   (if tmp1 then true else (!(u__debug_all))))
 
-let toggle_list : (((bool ref)) FStarC_PSMap.t ref) =
+let toggle_list : ((string, (bool ref)) FStarC_AVLMap.tree ref) =
   (ref (FStarC_PSMap.empty ()))
 
 let register_toggle (k : string) : (bool ref) =
@@ -103,9 +103,9 @@ let enable_toggles (keys : (string) list) : unit =
     | "Medium" -> (set_level_medium ())
     | "High" -> (set_level_high ())
     | "Extreme" -> (set_level_extreme ())
-    | tmp -> (let tmp1 = (if (Prims.op_Greater (FStarC_String.length k) Prims.int_zero) then (let tmp1 = (FStarC_String.get k Prims.int_zero) in
+    | tmp -> (let tmp1 = (if (Prims.op_Greater ((fun s -> Z.of_int (BatUTF8.length s)) k) Prims.int_zero) then (let tmp1 = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) k Prims.int_zero) in
         ((=) tmp1 45)) else false) in
-      (if tmp1 then (let k1 = (FStarC_String.substring k Prims.int_one (Prims.op_Minus (FStarC_String.length k) Prims.int_one)) in
+      (if tmp1 then (let k1 = ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) k Prims.int_one (Prims.op_Minus ((fun s -> Z.of_int (BatUTF8.length s)) k) Prims.int_one)) in
       let t = (get_toggle k1) in
       ((t) := false)) else (let t = (get_toggle k) in
       ((t) := true))))

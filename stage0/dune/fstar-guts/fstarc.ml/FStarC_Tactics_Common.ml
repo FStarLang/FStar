@@ -3,7 +3,7 @@
 
 exception TacticFailure of ((PPrint.document) list * (FStarC_Range_Type.range) option)
 
-exception SKIP
-
 exception EExn of (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax
+
+exception SKIP
 

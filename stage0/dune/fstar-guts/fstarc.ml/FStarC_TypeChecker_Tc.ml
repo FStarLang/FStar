@@ -1257,7 +1257,7 @@ let tc_sig_let (env : FStarC_TypeChecker_Env.env) (r : FStarC_Range_Type.range) 
                 (FStarC_Format.fmt2 "let %s : %s" tmp15 tmp16)) else ""))) (match lbs1 with
                   | (u__1, u__2) -> u__2
                 )) in
-              let tmp15 = (FStarC_String.concat "\n" tmp14) in
+              let tmp15 = (BatString.concat "\n" tmp14) in
               (FStarC_Format.print1 "%s\n" tmp15)) else ());
               ((se3 :: []), [], env))
           ))
@@ -1340,7 +1340,7 @@ let tc_decl' (env0 : FStarC_TypeChecker_Env.env) (se : FStarC_Syntax_Syntax.sige
       let env'1 = (FStarC_TypeChecker_Env.push env' "expect_failure") in
       let tmp2 = (FStarC_Debug.low ()) in
       (if tmp2 then (let tmp3 = (BatList.map FStarC_Class_Show.fStarC_Class_Show_show__int expected_errors) in
-      let tmp4 = (FStarC_String.concat "; " tmp3) in
+      let tmp4 = (BatString.concat "; " tmp3) in
       (FStarC_Format.print1 ">> Expecting errors: [%s]\n" tmp4)) else ());
       let tmp3 = (FStarC_Errors.catch_errors (fun tmp3 -> (FStarC_Options.with_saved_options (fun tmp4 -> (let tmp5 = (!(tc_decls_knot)) in
         let tmp6 = (match tmp5 with
@@ -1858,7 +1858,7 @@ let tc_decl' (env0 : FStarC_TypeChecker_Env.env) (se : FStarC_Syntax_Syntax.sige
           iface_val_lids = (env0).FStarC_TypeChecker_Env.iface_val_lids } in
       let tmp4 = (FStarC_Debug.low ()) in
       (if tmp4 then (let tmp5 = (BatList.map FStarC_Syntax_Print.fStarC_Class_Show_show__sigelt ses3) in
-      let tmp6 = (FStarC_String.concat "\n" tmp5) in
+      let tmp6 = (BatString.concat "\n" tmp5) in
       (FStarC_Format.print1 "Splice returned sigelts {\n%s\n}\n" tmp6)) else ());
       ([], ses3, env))
     | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = lbs; lids = lids; _ })) -> (FStarC_Profiling.profile (fun tmp2 -> (tc_sig_let env0 r se2 lbs lids)) (Some ((FStarC_Ident.string_of_lid (FStarC_TypeChecker_Env.current_module env0)))) "FStarC.TypeChecker.Tc.tc_sig_let")

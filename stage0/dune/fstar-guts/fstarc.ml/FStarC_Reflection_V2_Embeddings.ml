@@ -528,7 +528,7 @@ let e_comp_view : (FStarC_Reflection_V2_Data.comp_view) FStarC_Syntax_Embeddings
 let e_ident : (FStarC_Ident.ident) FStarC_Syntax_Embeddings_Base.embedding =
   (FStarC_Syntax_Embeddings_Base.e_lazy FStarC_Syntax_Syntax.Lazy_ident FStarC_Reflection_V2_Constants.fstar_refl_ident)
 
-let e_universe_uvar : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) FStarC_Syntax_Embeddings_Base.embedding =
+let e_universe_uvar : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) FStarC_Syntax_Embeddings_Base.embedding =
   (FStarC_Syntax_Embeddings_Base.e_lazy FStarC_Syntax_Syntax.Lazy_universe_uvar FStarC_Reflection_V2_Constants.fstar_refl_universe_uvar)
 
 let e_universe_view : (FStarC_Reflection_V2_Data.universe_view) FStarC_Syntax_Embeddings_Base.embedding =

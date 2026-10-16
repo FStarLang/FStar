@@ -42,7 +42,7 @@ let build_initial_repl_state (filename : string) : FStarC_Interactive_Ide_Types.
   let tmp2 = (FStarC_Interactive_Ide_Types.initial_range filename) in
   let env1 = (FStarC_TypeChecker_Env.set_range env tmp2) in
   (FStarC_Options.set_ide_filename filename);
-  let tmp3 = (FStarC_Util.open_stdin ()) in
+  let tmp3 = ((fun () -> BatIO.stdin) ()) in
   { FStarC_Interactive_Ide_Types.repl_line = Prims.int_one;
     repl_column = Prims.int_zero;
     repl_fname = filename;
@@ -235,7 +235,7 @@ let parse_interactive_query (st : FStarC_Interactive_Ide_Types.repl_state) (quer
 
 let read_interactive_query (st : FStarC_Interactive_Ide_Types.repl_state) : ((FStarC_Interactive_Ide_Types.query * FStarC_Interactive_Ide_Types.repl_state)) option =
   (match (st).FStarC_Interactive_Ide_Types.repl_buffered_input_queries with
-    | [] -> (let tmp = (FStarC_Util.read_line (st).FStarC_Interactive_Ide_Types.repl_stdin) in
+    | [] -> (let tmp = ((fun s -> try Some (BatIO.read_line s) with _ -> None) (st).FStarC_Interactive_Ide_Types.repl_stdin) in
       (match tmp with
         | None -> ((FStarC_Util.kill_all ());
           None)
@@ -342,7 +342,7 @@ let fstar_options_list_cache : (fstar_option) list =
           opt_documentation = tmp3;
           opt_permission_level = (if (FStarC_Options.settable name) then OptSet else OptReadOnly) })) tmp1))
     )) FStarC_Options.all_specs_with_types) in
-  ((fun f l -> BatList.sort (fun x y -> Z.to_int (f x y)) l) (fun o1 o2 -> (FStarC_String.compare (FStarC_String.lowercase (o1).opt_name) (FStarC_String.lowercase (o2).opt_name))) tmp))
+  ((fun f l -> BatList.sort (fun x y -> Z.to_int (f x y)) l) (fun o1 o2 -> ((fun x y -> Z.of_int (BatString.compare x y)) (BatString.lowercase_ascii (o1).opt_name) (BatString.lowercase_ascii (o2).opt_name))) tmp))
 
 let update_option (opt : fstar_option) : fstar_option =
   (let tmp = (FStarC_Options.get_option (opt).opt_name) in
@@ -439,7 +439,7 @@ let run_generic_error (st : 'tmp) (message : string) : ((FStarC_Interactive_Ide_
 let run_protocol_violation (st : 'tmp) (message : string) : ((FStarC_Interactive_Ide_Types.query_status * FStarC_Json.json) * ('tmp, 'tmp1) FStar_Pervasives.either) =
   ((FStarC_Interactive_Ide_Types.QueryViolatesProtocol, (FStarC_Json.JsonStr (message))), (FStar_Pervasives.Inl (st)))
 
-let with_captured_errors' (env : FStarC_TypeChecker_Env.env) (sigint_handler : FStarC_Util.sigint_handler) (f : (FStarC_TypeChecker_Env.env -> ('u___a) option)) : ('u___a) option =
+let with_captured_errors' (env : FStarC_TypeChecker_Env.env) (sigint_handler : Sys.signal_behavior) (f : (FStarC_TypeChecker_Env.env -> ('u___a) option)) : ('u___a) option =
   (try (FStarC_Util.with_sigint_handler sigint_handler (fun tmp -> (f env))) with
     | (FStarC_Effect.Failure (msg)) -> (let msg1 = (Prims.strcat "ASSERTION FAILURE: " (Prims.strcat msg "\nF* may be in an inconsistent state.\nPlease file a bug report, ideally with a minimized version of the program that triggered the error.")) in
       (FStarC_TypeChecker_Env.fStarC_Errors_log_issue__env_string env FStarC_Errors_Codes.Error_IDEAssertionFailure msg1);
@@ -451,7 +451,7 @@ let with_captured_errors' (env : FStarC_TypeChecker_Env.env) (sigint_handler : F
     | FStarC_Errors.Stop -> None
   )
 
-let with_captured_errors (env : FStarC_TypeChecker_Env.env) (sigint_handler : FStarC_Util.sigint_handler) (f : (FStarC_TypeChecker_Env.env -> ('u___a) option)) : ('u___a) option =
+let with_captured_errors (env : FStarC_TypeChecker_Env.env) (sigint_handler : Sys.signal_behavior) (f : (FStarC_TypeChecker_Env.env -> ('u___a) option)) : ('u___a) option =
   (let tmp = (FStarC_Options.trace_error ()) in
   (if tmp then (f env) else (with_captured_errors' env sigint_handler f)))
 
@@ -475,7 +475,7 @@ let run_segment (st : FStarC_Interactive_Ide_Types.repl_state) (code : string) :
       | (FStarC_Parser_Driver.Modul ((FStarC_Parser_AST.Module ({ FStarC_Parser_AST.no_prelude = tmp2; mname = tmp3; decls = decls; _ })))) -> decls
       | (FStarC_Parser_Driver.Modul ((FStarC_Parser_AST.Interface ({ FStarC_Parser_AST.no_prelude = tmp2; mname = tmp3; decls = decls; admitted = tmp4; _ })))) -> decls
     ))) in
-  let tmp = (with_captured_errors (st).FStarC_Interactive_Ide_Types.repl_env FStarC_Util.sigint_ignore (fun tmp -> (let tmp1 = (collect_decls ()) in
+  let tmp = (with_captured_errors (st).FStarC_Interactive_Ide_Types.repl_env Sys.Signal_ignore (fun tmp -> (let tmp1 = (collect_decls ()) in
     (Some (tmp1))))) in
   (match tmp with
     | None -> (let tmp1 = (collect_errors ()) in
@@ -611,7 +611,7 @@ let write_repl_ld_task_progress (task : FStarC_Interactive_Ide_Types.repl_task) 
   )
 
 let load_deps (st : FStarC_Interactive_Ide_Types.repl_state) : ((FStarC_Interactive_Ide_Types.repl_state * (string) list), FStarC_Interactive_Ide_Types.repl_state) FStar_Pervasives.either =
-  (let tmp = (with_captured_errors (st).FStarC_Interactive_Ide_Types.repl_env FStarC_Util.sigint_ignore (fun u__env -> (let tmp = (FStarC_Interactive_PushHelper.deps_and_repl_ld_tasks_of_our_file (st).FStarC_Interactive_Ide_Types.repl_fname) in
+  (let tmp = (with_captured_errors (st).FStarC_Interactive_Ide_Types.repl_env Sys.Signal_ignore (fun u__env -> (let tmp = (FStarC_Interactive_PushHelper.deps_and_repl_ld_tasks_of_our_file (st).FStarC_Interactive_Ide_Types.repl_fname) in
     (Some (tmp))))) in
   (match tmp with
     | None -> (FStar_Pervasives.Inr (st))
@@ -928,9 +928,9 @@ let rec buffer_input_queries__aux (qs : (FStarC_Interactive_Ide_Types.query) lis
       repl_names = (st1).FStarC_Interactive_Ide_Types.repl_names;
       repl_buffered_input_queries = (BatList.append (st1).FStarC_Interactive_Ide_Types.repl_buffered_input_queries (BatList.rev qs1));
       repl_lang = (st1).FStarC_Interactive_Ide_Types.repl_lang }) in
-  let tmp = (FStarC_Util.poll_stdin (FStarC_Util.float_of_string "0.0")) in
+  let tmp = ((fun f -> try (match Unix.select [Unix.stdin] [] [] f with ([], _, _) -> false | _ -> true) with _ -> false) (FStarC_Util.float_of_string "0.0")) in
   let tmp1 = (not tmp) in
-  (if tmp1 then (done_ qs st) else (let tmp2 = (FStarC_Util.read_line (st).FStarC_Interactive_Ide_Types.repl_stdin) in
+  (if tmp1 then (done_ qs st) else (let tmp2 = ((fun s -> try Some (BatIO.read_line s) with _ -> None) (st).FStarC_Interactive_Ide_Types.repl_stdin) in
   (match tmp2 with
     | None -> (done_ qs st)
     | (Some (line)) -> (let q = (parse_interactive_query st line) in
@@ -1018,7 +1018,7 @@ let run_code_autocomplete (st : FStarC_Interactive_Ide_Types.repl_state) (search
 
 let trim_option_name (opt_name : string) : (string * string) =
   (let opt_prefix = "--" in
-  (if (FStarC_Util.starts_with opt_name opt_prefix) then (let tmp = (FStarC_Util.substring_from opt_name (FStarC_String.length opt_prefix)) in
+  (if (FStarC_Util.starts_with opt_name opt_prefix) then (let tmp = ((fun s i -> BatString.tail s (Z.to_int i)) opt_name ((fun s -> Z.of_int (BatUTF8.length s)) opt_prefix)) in
   (opt_prefix, tmp)) else ("", opt_name)))
 
 let candidates_of_fstar_option (match_len : Prims.int) (is_reset : 'tmp) (opt : fstar_option) : (FStarC_Interactive_CompletionTable.completion_result) list =
@@ -1039,7 +1039,7 @@ let run_option_autocomplete (st : 'tmp) (search_term : string) (is_reset : 'tmp1
   (match tmp with
     | ("--", trimmed_name) -> (let matcher = (fun opt -> (FStarC_Util.starts_with (opt).opt_name trimmed_name)) in
       let options = (current_fstar_options matcher) in
-      let match_len = (FStarC_String.length search_term) in
+      let match_len = ((fun s -> Z.of_int (BatUTF8.length s)) search_term) in
       let collect_candidates = (candidates_of_fstar_option match_len is_reset) in
       let results = ((fun f l -> BatList.flatten (BatList.map f l)) collect_candidates options) in
       let json = (BatList.map FStarC_Interactive_CompletionTable.json_of_completion_result results) in
@@ -1271,7 +1271,7 @@ exception InvalidSearch of string
 
 let st_cost (tmp : search_term') : Prims.int =
   (match tmp with
-    | (NameContainsStr (str)) -> (Prims.op_Tilde_Minus (FStarC_String.length str))
+    | (NameContainsStr (str)) -> (Prims.op_Tilde_Minus ((fun s -> Z.of_int (BatUTF8.length s)) str))
     | (TypeContainsLid (lid)) -> Prims.int_one
   )
 
@@ -1293,16 +1293,16 @@ let json_of_search_result (tcenv : FStarC_TypeChecker_Env.env) (sc : search_cand
 let run_search (st : FStarC_Interactive_Ide_Types.repl_state) (search_str : string) : ((FStarC_Interactive_Ide_Types.query_status * FStarC_Json.json) * (FStarC_Interactive_Ide_Types.repl_state, 'tmp) FStar_Pervasives.either) =
   (let tcenv = (st).FStarC_Interactive_Ide_Types.repl_env in
   let st_matches = (fun candidate term -> (let found = (match (term).st_term with
-        | (NameContainsStr (str)) -> (FStarC_Util.contains (FStarC_Ident.string_of_lid (candidate).sc_lid) str)
+        | (NameContainsStr (str)) -> (BatString.exists (FStarC_Ident.string_of_lid (candidate).sc_lid) str)
         | (TypeContainsLid (lid)) -> (let tmp = (sc_fvars tcenv candidate) in
           (FStarC_RBSet.fStarC_Class_Setlike_mem__lident_rbset_lident_7 lid tmp))
       ) in
     ((<>) found (term).st_negate))) in
   let parse = (fun search_str1 -> (let parse_one = (fun term -> (let negate = (FStarC_Util.starts_with term "-") in
-      let term1 = (if negate then (FStarC_Util.substring_from term Prims.int_one) else term) in
+      let term1 = (if negate then ((fun s i -> BatString.tail s (Z.to_int i)) term Prims.int_one) else term) in
       let beg_quote = (FStarC_Util.starts_with term1 "\"") in
       let end_quote = (FStarC_Util.ends_with term1 "\"") in
-      let strip_quotes = (fun str -> (if (Prims.op_Less (FStarC_String.length str) (Prims.of_int (2))) then (raise (InvalidSearch ("Empty search term"))) else (FStarC_Util.substring str Prims.int_one (Prims.op_Minus (FStarC_String.length term1) (Prims.of_int (2)))))) in
+      let strip_quotes = (fun str -> (if (Prims.op_Less ((fun s -> Z.of_int (BatUTF8.length s)) str) (Prims.of_int (2))) then (raise (InvalidSearch ("Empty search term"))) else ((fun s i j -> BatString.sub s (Z.to_int i) (Z.to_int j)) str Prims.int_one (Prims.op_Minus ((fun s -> Z.of_int (BatUTF8.length s)) term1) (Prims.of_int (2)))))) in
       let parsed = (if ((<>) beg_quote end_quote) then (raise (InvalidSearch ((FStarC_Format.fmt1 "Improperly quoted search term: %s" term1)))) else (if beg_quote then (let tmp = (strip_quotes term1) in
         (NameContainsStr (tmp))) else (let lid = (FStarC_Ident.lid_of_str term1) in
         let tmp = (FStarC_Syntax_DsEnv.resolve_to_fully_qualified_name (tcenv).FStarC_TypeChecker_Env.dsenv lid) in
@@ -1322,7 +1322,7 @@ let run_search (st : FStarC_Interactive_Ide_Types.repl_state) (search_str : stri
     let all_lidents = (FStarC_TypeChecker_Env.lidents tcenv) in
     let all_candidates = (BatList.map sc_of_lid all_lidents) in
     let matches_all = (fun candidate -> (BatList.for_all (st_matches candidate) terms)) in
-    let cmp = (fun r1 r2 -> (FStarC_Util.compare (FStarC_Ident.string_of_lid (r1).sc_lid) (FStarC_Ident.string_of_lid (r2).sc_lid))) in
+    let cmp = (fun r1 r2 -> ((fun s1 s2 -> Z.of_int (BatString.compare s1 s2)) (FStarC_Ident.string_of_lid (r1).sc_lid) (FStarC_Ident.string_of_lid (r2).sc_lid))) in
     let results = (BatList.filter matches_all all_candidates) in
     let sorted = (FStarC_Util.sort_with cmp results) in
     let js = (BatList.map (json_of_search_result tcenv) sorted) in
@@ -1420,7 +1420,7 @@ let interactive_mode' (init_st : FStarC_Interactive_Ide_Types.repl_state) : unit
 
 let interactive_mode (filename : string) : unit =
   ((install_ide_mode_hooks FStarC_Interactive_JsonHelper.write_json);
-  (FStarC_Util.set_sigint_handler FStarC_Util.sigint_ignore);
+  (FStarC_Util.set_sigint_handler Sys.Signal_ignore);
   let tmp = (FStarC_Options.codegen ()) in
   let tmp1 = (match tmp with
       | (Some (v)) -> true

@@ -896,7 +896,7 @@ let record_verdict (dt : FStarC_Custard_Syntax.dtype) : bool =
   )))
 
 let positional (f : string) : bool =
-  (if (Prims.op_Greater (FStarC_String.strlen f) Prims.int_one) then (let tmp = (FStarC_String.substring f Prims.int_zero Prims.int_one) in
+  (if (Prims.op_Greater ((fun s -> Z.of_int (BatUTF8.length s)) f) Prims.int_one) then (let tmp = ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) f Prims.int_zero Prims.int_one) in
   ((=) tmp "_")) else false)
 
 let record_body (look : (FStarC_Custard_Syntax.name -> (FStarC_Custard_Syntax.dtype) option)) (n : FStarC_Custard_Syntax.name) : (((string) list * (FStarC_Custard_Syntax.name) option * ((string * FStarC_Custard_Syntax.cty)) list)) option =

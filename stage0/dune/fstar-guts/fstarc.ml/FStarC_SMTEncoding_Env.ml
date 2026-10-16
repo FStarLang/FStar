@@ -13,8 +13,8 @@ type fvar_binding = {
 }
 
 type env_t = {
-  bvar_bindings : (((FStarC_Syntax_Syntax.bv * FStarC_SMTEncoding_Term.term)) FStarC_PIMap.t) FStarC_PSMap.t;
-  fvar_bindings : (fvar_binding) FStarC_PSMap.t;
+  bvar_bindings : (string, (Prims.int, (FStarC_Syntax_Syntax.bv * FStarC_SMTEncoding_Term.term)) FStarC_AVLMap.tree) FStarC_AVLMap.tree;
+  fvar_bindings : (string, fvar_binding) FStarC_AVLMap.tree;
   fvar_bindings1 : (fvar_binding) list;
   depth : Prims.int;
   tcenv : FStarC_TypeChecker_Env.env;
@@ -42,7 +42,7 @@ type varops_t = {
 }
 
 let escape (s : string) : string =
-  (FStarC_Util.replace_char s 39 95)
+  ((fun s c1 c2 -> let c1 = BatUChar.chr c1 and c2 = BatUChar.chr c2 in BatUTF8.map (fun x -> if BatUChar.eq x c1 then c2 else x) s) s 39 95)
 
 let dbg_Snapshot : (bool ref) =
   (FStarC_Debug.get_toggle "Snapshot")
@@ -156,7 +156,7 @@ let mk_fvb (lid : FStarC_Ident.lident) (fname : string) (arity : Prims.int) (uni
   (check_valid_fvb fvb);
   fvb)
 
-let add_fvar_binding (fvb : fvar_binding) (tmp : ((fvar_binding) FStarC_PSMap.t * (fvar_binding) list)) : ((fvar_binding) FStarC_PSMap.t * (fvar_binding) list) =
+let add_fvar_binding (fvb : fvar_binding) (tmp : ((string, fvar_binding) FStarC_AVLMap.tree * (fvar_binding) list)) : ((string, fvar_binding) FStarC_AVLMap.tree * (fvar_binding) list) =
   (match tmp with
     | (fvb_map, fvb_list) -> ((FStarC_PSMap.add fvb_map (FStarC_Ident.string_of_lid (fvb).fvar_lid) fvb), (fvb :: fvb_list))
   )
@@ -194,7 +194,7 @@ let new_term_constant_and_tok_from_lid (env : env_t) (x : FStarC_Ident.lident) (
 let mk_term_projector_name (lid : FStarC_Ident.lident) (a : FStarC_Syntax_Syntax.bv) : string =
   (escape (FStarC_Format.fmt2 "%s_@%s" (FStarC_Ident.string_of_lid lid) (FStarC_Ident.string_of_id (a).FStarC_Syntax_Syntax.ppname)))
 
-let add_bvar_binding (bvb : (FStarC_Syntax_Syntax.bv * FStarC_SMTEncoding_Term.term)) (bvbs : (((FStarC_Syntax_Syntax.bv * FStarC_SMTEncoding_Term.term)) FStarC_PIMap.t) FStarC_PSMap.t) : (((FStarC_Syntax_Syntax.bv * FStarC_SMTEncoding_Term.term)) FStarC_PIMap.t) FStarC_PSMap.t =
+let add_bvar_binding (bvb : (FStarC_Syntax_Syntax.bv * FStarC_SMTEncoding_Term.term)) (bvbs : (string, (Prims.int, (FStarC_Syntax_Syntax.bv * FStarC_SMTEncoding_Term.term)) FStarC_AVLMap.tree) FStarC_AVLMap.tree) : (string, (Prims.int, (FStarC_Syntax_Syntax.bv * FStarC_SMTEncoding_Term.term)) FStarC_AVLMap.tree) FStarC_AVLMap.tree =
   (FStarC_PSMap.modify bvbs (FStarC_Ident.string_of_id (let scrut = (match bvb with
       | (u__1, u__2) -> u__1
     ) in

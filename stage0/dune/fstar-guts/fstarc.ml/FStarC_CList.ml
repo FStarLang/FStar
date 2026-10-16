@@ -7,6 +7,12 @@ type 'a clist =
   | CCat of ('a) clist * ('a) clist
 
 
+let fStarC_Class_Listlike_empty__universe_clist_universe : (FStarC_Syntax_Syntax.universe) clist =
+  CNil
+
+let fStarC_Class_Listlike_empty__tuple2_universe_universe : ((FStarC_Syntax_Syntax.universe * FStarC_Syntax_Syntax.universe)) clist =
+  CNil
+
 let rec view (l : ('a) clist) : ('a, ('a) clist) FStarC_Class_Listlike.view_t =
   (match l with
     | CNil -> FStarC_Class_Listlike.VNil
@@ -16,6 +22,15 @@ let rec view (l : ('a) clist) : ('a, ('a) clist) FStarC_Class_Listlike.view_t =
         | FStarC_Class_Listlike.VNil -> (view ys)
         | (FStarC_Class_Listlike.VCons (x, xs')) -> (FStarC_Class_Listlike.VCons (x, (CCat (xs', ys))))
       )
+  )
+
+let fStarC_Class_Listlike_view__tuple2_universe_universe (tmp : ((FStarC_Syntax_Syntax.universe * FStarC_Syntax_Syntax.universe)) clist) : ((FStarC_Syntax_Syntax.universe * FStarC_Syntax_Syntax.universe), ((FStarC_Syntax_Syntax.universe * FStarC_Syntax_Syntax.universe)) clist) FStarC_Class_Listlike.view_t =
+  (view tmp)
+
+let fStarC_Class_Listlike_is_empty__tuple2_universe_universe (l : ((FStarC_Syntax_Syntax.universe * FStarC_Syntax_Syntax.universe)) clist) : bool =
+  (match (fStarC_Class_Listlike_view__tuple2_universe_universe l) with
+    | FStarC_Class_Listlike.VNil -> true
+    | (FStarC_Class_Listlike.VCons (tmp, tmp1)) -> false
   )
 
 let ccat (xs : ('a) clist) (ys : ('a) clist) : ('a) clist =
@@ -46,6 +61,20 @@ let rec fStarC_Class_Listlike_to_list__string_clist_string (l : (string) clist) 
       (x :: tmp))
   )
 
+let fStarC_Class_Show_show__clist_string (tmp : (string) clist) : string =
+  (let tmp1 = (fStarC_Class_Listlike_to_list__string_clist_string tmp) in
+  (FStarC_Class_Show.fStarC_Class_Show_show__list_string tmp1))
+
+let fStarC_Class_Listlike_view__universe_clist_universe (tmp : (FStarC_Syntax_Syntax.universe) clist) : (FStarC_Syntax_Syntax.universe, (FStarC_Syntax_Syntax.universe) clist) FStarC_Class_Listlike.view_t =
+  (view tmp)
+
+let rec fStarC_Class_Listlike_to_list__universe_clist_universe (l : (FStarC_Syntax_Syntax.universe) clist) : (FStarC_Syntax_Syntax.universe) list =
+  (match (fStarC_Class_Listlike_view__universe_clist_universe l) with
+    | FStarC_Class_Listlike.VNil -> []
+    | (FStarC_Class_Listlike.VCons (x, xs)) -> (let tmp = (fStarC_Class_Listlike_to_list__universe_clist_universe xs) in
+      (x :: tmp))
+  )
+
 let rec collect (f : ('u___a -> ('u___b) clist)) (l : ('u___a) clist) : ('u___b) clist =
   (match l with
     | CNil -> CNil
@@ -66,30 +95,17 @@ let rec existsb (p : ('a -> bool)) (l : ('a) clist) : bool =
       (if tmp then true else (existsb p ys)))
   )
 
-let fStarC_Class_Listlike_empty__universe_clist_universe : (FStarC_Syntax_Syntax.universe) clist =
-  CNil
-
 let fStarC_Class_Listlike_cons__universe_clist_universe (tmp : FStarC_Syntax_Syntax.universe) (tmp1 : (FStarC_Syntax_Syntax.universe) clist) : (FStarC_Syntax_Syntax.universe) clist =
   (CCons (tmp, tmp1))
-
-let fStarC_Class_Listlike_view__universe_clist_universe (tmp : (FStarC_Syntax_Syntax.universe) clist) : (FStarC_Syntax_Syntax.universe, (FStarC_Syntax_Syntax.universe) clist) FStarC_Class_Listlike.view_t =
-  (view tmp)
-
-let rec fStarC_Class_Listlike_to_list__universe_clist_universe (l : (FStarC_Syntax_Syntax.universe) clist) : (FStarC_Syntax_Syntax.universe) list =
-  (match (fStarC_Class_Listlike_view__universe_clist_universe l) with
-    | FStarC_Class_Listlike.VNil -> []
-    | (FStarC_Class_Listlike.VCons (x, xs)) -> (let tmp = (fStarC_Class_Listlike_to_list__universe_clist_universe xs) in
-      (x :: tmp))
-  )
 
 let fStarC_Class_Listlike_cons__tuple2_universe_universe (tmp : (FStarC_Syntax_Syntax.universe * FStarC_Syntax_Syntax.universe)) (tmp1 : ((FStarC_Syntax_Syntax.universe * FStarC_Syntax_Syntax.universe)) clist) : ((FStarC_Syntax_Syntax.universe * FStarC_Syntax_Syntax.universe)) clist =
   (CCons (tmp, tmp1))
 
-let fStarC_Class_Listlike_empty__tuple2_universe_universe : ((FStarC_Syntax_Syntax.universe * FStarC_Syntax_Syntax.universe)) clist =
+let fStarC_Class_Listlike_empty__tuple2_universe_universe_5 : ((FStarC_Syntax_Syntax.universe * FStarC_Syntax_Syntax.universe)) clist =
   CNil
 
 let fStarC_Class_Listlike_singleton__tuple2_universe_universe (x : (FStarC_Syntax_Syntax.universe * FStarC_Syntax_Syntax.universe)) : ((FStarC_Syntax_Syntax.universe * FStarC_Syntax_Syntax.universe)) clist =
-  (fStarC_Class_Listlike_cons__tuple2_universe_universe x fStarC_Class_Listlike_empty__tuple2_universe_universe)
+  (fStarC_Class_Listlike_cons__tuple2_universe_universe x fStarC_Class_Listlike_empty__tuple2_universe_universe_5)
 
 let rec for_all (p : ('a -> bool)) (l : ('a) clist) : bool =
   (match l with
@@ -98,22 +114,6 @@ let rec for_all (p : ('a -> bool)) (l : ('a) clist) : bool =
       (if tmp then (for_all p xs) else false))
     | (CCat (xs, ys)) -> (let tmp = (for_all p xs) in
       (if tmp then (for_all p ys) else false))
-  )
-
-let fStarC_Class_Show_show__clist_string (tmp : (string) clist) : string =
-  (let tmp1 = (fStarC_Class_Listlike_to_list__string_clist_string tmp) in
-  (FStarC_Class_Show.fStarC_Class_Show_show__list_string tmp1))
-
-let fStarC_Class_Listlike_empty__tuple2_universe_universe_5 : ((FStarC_Syntax_Syntax.universe * FStarC_Syntax_Syntax.universe)) clist =
-  CNil
-
-let fStarC_Class_Listlike_view__tuple2_universe_universe (tmp : ((FStarC_Syntax_Syntax.universe * FStarC_Syntax_Syntax.universe)) clist) : ((FStarC_Syntax_Syntax.universe * FStarC_Syntax_Syntax.universe), ((FStarC_Syntax_Syntax.universe * FStarC_Syntax_Syntax.universe)) clist) FStarC_Class_Listlike.view_t =
-  (view tmp)
-
-let fStarC_Class_Listlike_is_empty__tuple2_universe_universe (l : ((FStarC_Syntax_Syntax.universe * FStarC_Syntax_Syntax.universe)) clist) : bool =
-  (match (fStarC_Class_Listlike_view__tuple2_universe_universe l) with
-    | FStarC_Class_Listlike.VNil -> true
-    | (FStarC_Class_Listlike.VCons (tmp, tmp1)) -> false
   )
 
 let fStarC_Class_Monoid_mplus__clist_universe (tmp : (FStarC_Syntax_Syntax.universe) clist) (ys : (FStarC_Syntax_Syntax.universe) clist) : (FStarC_Syntax_Syntax.universe) clist =

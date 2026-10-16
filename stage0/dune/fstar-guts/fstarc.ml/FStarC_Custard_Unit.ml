@@ -84,7 +84,7 @@ let read_iface (fn : string) : iface =
       ))
   )) mine);
   (BatList.iter (fun tmp1 -> (match tmp1 with
-    | (f, d) -> (let found = (if (FStarC_Filepath.file_exists f) then (Some (f)) else (FStarC_Find.find_file (FStarC_Filepath.basename f))) in
+    | (f, d) -> (let found = (if (Sys.file_exists f) then (Some (f)) else (FStarC_Find.find_file (FStarC_Filepath.basename f))) in
       (match found with
         | (Some (g)) when (let tmp2 = (FStarC_Util.digest_of_file g) in
         ((<>) tmp2 d)) -> (bad fn ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "It was built from a different version of %s." (if ((=) g f) then f else (FStarC_Format.fmt2 "%s (found here as %s)" f g)))) :: ((FStarC_Errors_Msg.text "Rebuild the unit.") :: [])))
@@ -94,7 +94,7 @@ let read_iface (fn : string) : iface =
   i)
 
 let is_type_key (k : string) : bool =
-  (if (Prims.op_Greater_Equals (FStarC_String.length k) (Prims.of_int (6))) then (let tmp = (FStarC_String.substring k Prims.int_zero (Prims.of_int (6))) in
+  (if (Prims.op_Greater_Equals ((fun s -> Z.of_int (BatUTF8.length s)) k) (Prims.of_int (6))) then (let tmp = ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) k Prims.int_zero (Prims.of_int (6))) in
   ((=) tmp "<type>")) else false)
 
 let load_links (fns : (string) list) : links =
@@ -192,18 +192,18 @@ let iface_to_string (i : iface) : string =
   let tmp1 = (BatList.map (fun tmp1 -> (match tmp1 with
       | (k, v) -> (Prims.strcat k (Prims.strcat "=" v))
     )) (h).uh_options) in
-  let tmp2 = (FStarC_String.concat ", " tmp1) in
+  let tmp2 = (BatString.concat ", " tmp1) in
   let tmp3 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) (h).uh_digests)) in
   let tmp4 = (BatList.map entry_to_string (i).ui_entries) in
-  let tmp5 = (FStarC_String.concat "" tmp4) in
+  let tmp5 = (BatString.concat "" tmp4) in
   let tmp6 = (FStarC_Format.fmt3 "  options: %s\n  %s checked files\n\n%s" tmp2 tmp3 tmp5) in
   let tmp7 = (Prims.strcat "\n" tmp6) in
   let tmp8 = (Prims.strcat (opt "init" (h).uh_init) tmp7) in
   let tmp9 = (Prims.strcat (opt "header" (h).uh_header) tmp8) in
   (FStarC_Format.fmt4 "unit %s (format %s, backend %s)%s" (h).uh_name tmp (h).uh_backend tmp9))
 
-let write_iface (fn : string) (eta : iface) : unit =
-  (FStarC_Util.save_value_to_file fn eta)
+let write_iface (fn : string) (value : iface) : unit =
+  (FStarC_Util.save_value_to_file fn value)
 
 let empty_links : links =
   (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_one)) in

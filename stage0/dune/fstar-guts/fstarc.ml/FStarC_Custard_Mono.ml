@@ -521,7 +521,7 @@ let classes_to_string (env : FStarC_TypeChecker_Env.env) (bs : (FStarC_Syntax_Sy
     (if tmp1 then "unit" else (let tmp2 = (is_dropped_binder env b) in
     (if tmp2 then "erased" else "?"))))))) in
   let tmp = ((classes_to_string__go why) bs cs) in
-  (FStarC_String.concat "; " tmp))
+  (BatString.concat "; " tmp))
 
 let rec existential_of_lid__first__pick (bs : (FStarC_Syntax_Syntax.binder) list) : (FStarC_Ident.lident) option =
   (match bs with

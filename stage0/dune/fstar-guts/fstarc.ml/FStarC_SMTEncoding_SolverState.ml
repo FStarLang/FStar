@@ -14,7 +14,7 @@ type given_decls =
 
 type decls_at_level = {
   pruning_state : FStarC_SMTEncoding_Pruning.pruning_state;
-  given_decl_names : (bool) FStarC_PSMap.t;
+  given_decl_names : (string, bool) FStarC_AVLMap.tree;
   all_decls_at_level_rev : (given_decls) list;
   given_some_decls : bool;
   to_flush_rev : ((FStarC_SMTEncoding_Term.decl) list) list;
@@ -25,10 +25,10 @@ type solver_state = {
   levels : (decls_at_level) list;
   pending_flushes_rev : (FStarC_SMTEncoding_Term.decl) list;
   using_facts_from : ((((string) list * bool)) list) option;
-  retain_assumptions : (bool) FStarC_PSMap.t;
+  retain_assumptions : (string, bool) FStarC_AVLMap.tree;
 }
 
-let empty_decl_names : (bool) FStarC_PSMap.t =
+let empty_decl_names : (string, bool) FStarC_AVLMap.tree =
   (FStarC_PSMap.empty ())
 
 let init_given_decls_at_level : decls_at_level =
@@ -53,7 +53,7 @@ let peek (s : solver_state) : (decls_at_level * (decls_at_level) list) =
     | (hd :: tl) -> (hd, tl)
   )
 
-let add_name (x : string) (s : (bool) FStarC_PSMap.t) : (bool) FStarC_PSMap.t =
+let add_name (x : string) (s : (string, bool) FStarC_AVLMap.tree) : (string, bool) FStarC_AVLMap.tree =
   (FStarC_PSMap.add s x true)
 
 let add_retain_names (names : ((string) list) list) (s : solver_state) : solver_state =
@@ -168,13 +168,13 @@ let give_delay_assumptions (resetting : bool) (g : given_decls) (s : solver_stat
       ))
   )
 
-let decl_names_contains (x : string) (s : (bool) FStarC_PSMap.t) : bool =
+let decl_names_contains (x : string) (s : (string, bool) FStarC_AVLMap.tree) : bool =
   (match (FStarC_PSMap.try_find s x) with
     | (Some (v)) -> true
     | tmp -> false
   )
 
-let filter_using_facts_from (using_facts_from : ((((string) list * bool)) list) option) (retain_assumptions : (bool) FStarC_PSMap.t) (already_given_decl_ : (string -> bool)) (ds : (FStarC_SMTEncoding_Term.decl) list) : (FStarC_SMTEncoding_Term.decl) list =
+let filter_using_facts_from (using_facts_from : ((((string) list * bool)) list) option) (retain_assumptions : (string, bool) FStarC_AVLMap.tree) (already_given_decl_ : (string -> bool)) (ds : (FStarC_SMTEncoding_Term.decl) list) : (FStarC_SMTEncoding_Term.decl) list =
   (match using_facts_from with
     | None -> ds
     | (Some ((([], true) :: []))) -> ds
@@ -397,9 +397,9 @@ let decl_rank (d : FStarC_SMTEncoding_Term.decl) : Prims.int =
 let compare_decls (d0 : FStarC_SMTEncoding_Term.decl) (d1 : FStarC_SMTEncoding_Term.decl) : Prims.int =
   (let r = (Prims.op_Minus (decl_rank d0) (decl_rank d1)) in
   (if ((<>) r Prims.int_zero) then r else (match (d0, d1) with
-    | ((FStarC_SMTEncoding_Term.DeclFun (a0, tmp, tmp1, tmp2)), (FStarC_SMTEncoding_Term.DeclFun (a1, tmp3, tmp4, tmp5))) -> (FStarC_Util.compare a0 a1)
-    | ((FStarC_SMTEncoding_Term.DefineFun (a0, tmp, tmp1, tmp2, tmp3)), (FStarC_SMTEncoding_Term.DefineFun (a1, tmp4, tmp5, tmp6, tmp7))) -> (FStarC_Util.compare a0 a1)
-    | ((FStarC_SMTEncoding_Term.Assume ({ FStarC_SMTEncoding_Term.assumption_term = tmp; assumption_caption = tmp1; assumption_name = a0; assumption_fact_ids = tmp2; _ })), (FStarC_SMTEncoding_Term.Assume ({ FStarC_SMTEncoding_Term.assumption_term = tmp3; assumption_caption = tmp4; assumption_name = a1; assumption_fact_ids = tmp5; _ }))) -> (FStarC_Util.compare a0 a1)
+    | ((FStarC_SMTEncoding_Term.DeclFun (a0, tmp, tmp1, tmp2)), (FStarC_SMTEncoding_Term.DeclFun (a1, tmp3, tmp4, tmp5))) -> ((fun s1 s2 -> Z.of_int (BatString.compare s1 s2)) a0 a1)
+    | ((FStarC_SMTEncoding_Term.DefineFun (a0, tmp, tmp1, tmp2, tmp3)), (FStarC_SMTEncoding_Term.DefineFun (a1, tmp4, tmp5, tmp6, tmp7))) -> ((fun s1 s2 -> Z.of_int (BatString.compare s1 s2)) a0 a1)
+    | ((FStarC_SMTEncoding_Term.Assume ({ FStarC_SMTEncoding_Term.assumption_term = tmp; assumption_caption = tmp1; assumption_name = a0; assumption_fact_ids = tmp2; _ })), (FStarC_SMTEncoding_Term.Assume ({ FStarC_SMTEncoding_Term.assumption_term = tmp3; assumption_caption = tmp4; assumption_name = a1; assumption_fact_ids = tmp5; _ }))) -> ((fun s1 s2 -> Z.of_int (BatString.compare s1 s2)) a0 a1)
     | tmp -> Prims.int_zero
   )))
 

@@ -7,7 +7,7 @@ let ext_hash_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)
 let fStarC_Class_Hashable_hash__syntax_term' (tmp : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : int =
   (ext_hash_term tmp)
 
-let fStarC_HashMap_bucket__syntax_term' (key : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (m : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'v)) list) FStarC_PIMap.t) : (Prims.int * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'v)) list) =
+let fStarC_HashMap_bucket__syntax_term' (key : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (m : (Prims.int, (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'v)) list) FStarC_AVLMap.tree) : (Prims.int * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'v)) list) =
   (let tmp = (fStarC_Class_Hashable_hash__syntax_term' key) in
   let h = (Z.of_int tmp) in
   (h, (match (FStarC_PIMap.try_find m h) with
@@ -16,7 +16,7 @@ let fStarC_HashMap_bucket__syntax_term' (key : (FStarC_Syntax_Syntax.term') FSta
   )))
 
 let equal_fv (c : bool) (f1 : FStarC_Syntax_Syntax.fv) (f2 : FStarC_Syntax_Syntax.fv) : bool =
-  (if (FStarC_Util.physical_equality f1 f2) then true else (FStarC_Ident.lid_equals (f1).FStarC_Syntax_Syntax.fv_name (f2).FStarC_Syntax_Syntax.fv_name))
+  (if ((==) f1 f2) then true else (FStarC_Ident.lid_equals (f1).FStarC_Syntax_Syntax.fv_name (f2).FStarC_Syntax_Syntax.fv_name))
 
 let rec equal_list (f : ('u___a -> ('u___a -> bool))) (l1 : ('u___a) list) (l2 : ('u___a) list) : bool =
   (match (l1, l2) with
@@ -26,13 +26,13 @@ let rec equal_list (f : ('u___a -> ('u___a -> bool))) (l1 : ('u___a) list) (l2 :
     | tmp -> false
   )
 
-let uvar_unique_id (u : (('u___a) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : Prims.int =
+let uvar_unique_id (u : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : Prims.int =
   (match u with
     | (p, tmp, tmp1) -> (FStarC_Unionfind.puf_unique_id p)
   )
 
 let rec equal_universe (c : bool) (u1 : FStarC_Syntax_Syntax.universe) (u2 : FStarC_Syntax_Syntax.universe) : bool =
-  (if (FStarC_Util.physical_equality u1 u2) then true else (let tmp = (if c then (let tmp = (FStarC_Syntax_Subst.compress_univ u1) in
+  (if ((==) u1 u2) then true else (let tmp = (if c then (let tmp = (FStarC_Syntax_Subst.compress_univ u1) in
     let tmp1 = (FStarC_Syntax_Subst.compress_univ u2) in
     (tmp, tmp1)) else (u1, u2)) in
   (match tmp with
@@ -49,7 +49,7 @@ let rec equal_universe (c : bool) (u1 : FStarC_Syntax_Syntax.universe) (u2 : FSt
   )))
 
 let equal_constant (c : bool) (c1 : FStarC_Const.sconst) (c2 : FStarC_Const.sconst) : bool =
-  (if (FStarC_Util.physical_equality c1 c2) then true else (match (c1, c2) with
+  (if ((==) c1 c2) then true else (match (c1, c2) with
     | (FStarC_Const.Const_effect, FStarC_Const.Const_effect) -> true
     | (FStarC_Const.Const_unit, FStarC_Const.Const_unit) -> true
     | ((FStarC_Const.Const_bool (b1)), (FStarC_Const.Const_bool (b2))) -> ((=) b1 b2)
@@ -96,7 +96,7 @@ let equal_lbname (c : bool) (l1 : (FStarC_Syntax_Syntax.bv, FStarC_Syntax_Syntax
   )
 
 let equal_lazyinfo (c : bool) (l1 : FStarC_Syntax_Syntax.lazyinfo) (l2 : FStarC_Syntax_Syntax.lazyinfo) : bool =
-  ((FStarC_Util.physical_equality (l1).FStarC_Syntax_Syntax.blob (l2).FStarC_Syntax_Syntax.blob) && (match ((l1).FStarC_Syntax_Syntax.lkind, (l2).FStarC_Syntax_Syntax.lkind) with
+  (((==) (l1).FStarC_Syntax_Syntax.blob (l2).FStarC_Syntax_Syntax.blob) && (match ((l1).FStarC_Syntax_Syntax.lkind, (l2).FStarC_Syntax_Syntax.lkind) with
     | ((FStarC_Syntax_Syntax.Lazy_embedding (e1, tmp)), (FStarC_Syntax_Syntax.Lazy_embedding (e2, tmp1))) -> ((=) e1 e2)
     | ((FStarC_Syntax_Syntax.Lazy_embedding (u__1, u__2)), tmp) -> false
     | (tmp, (FStarC_Syntax_Syntax.Lazy_embedding (u__1, u__2))) -> false
@@ -104,7 +104,7 @@ let equal_lazyinfo (c : bool) (l1 : FStarC_Syntax_Syntax.lazyinfo) (l2 : FStarC_
   ))
 
 let rec equal_bv (c : bool) (b1 : FStarC_Syntax_Syntax.bv) (b2 : FStarC_Syntax_Syntax.bv) : bool =
-  (if (FStarC_Util.physical_equality b1 b2) then true else (if (FStarC_Ident.ident_equals (b1).FStarC_Syntax_Syntax.ppname (b2).FStarC_Syntax_Syntax.ppname) then (equal_term_c c (b1).FStarC_Syntax_Syntax.sort (b2).FStarC_Syntax_Syntax.sort) else false))
+  (if ((==) b1 b2) then true else (if (FStarC_Ident.ident_equals (b1).FStarC_Syntax_Syntax.ppname (b2).FStarC_Syntax_Syntax.ppname) then (equal_term_c c (b1).FStarC_Syntax_Syntax.sort (b2).FStarC_Syntax_Syntax.sort) else false))
 
 and equal_binder_qualifier (c : bool) (b1 : FStarC_Syntax_Syntax.binder_qualifier) (b2 : FStarC_Syntax_Syntax.binder_qualifier) : bool =
   (match (b1, b2) with
@@ -118,7 +118,7 @@ and equal_bqual (c : bool) (o1 : (FStarC_Syntax_Syntax.binder_qualifier) option)
   (equal_opt (equal_binder_qualifier c) o1 o2)
 
 and equal_binder (c : bool) (b1 : FStarC_Syntax_Syntax.binder) (b2 : FStarC_Syntax_Syntax.binder) : bool =
-  (if (FStarC_Util.physical_equality b1 b2) then true else (let tmp = (equal_bv c (b1).FStarC_Syntax_Syntax.binder_bv (b2).FStarC_Syntax_Syntax.binder_bv) in
+  (if ((==) b1 b2) then true else (let tmp = (equal_bv c (b1).FStarC_Syntax_Syntax.binder_bv (b2).FStarC_Syntax_Syntax.binder_bv) in
   let tmp1 = (if tmp then (equal_bqual c (b1).FStarC_Syntax_Syntax.binder_qual (b2).FStarC_Syntax_Syntax.binder_qual) else false) in
   (if tmp1 then (equal_list (equal_term_c c) (b1).FStarC_Syntax_Syntax.binder_attrs (b2).FStarC_Syntax_Syntax.binder_attrs) else false)))
 
@@ -142,7 +142,7 @@ and equal_rc (c : bool) (r1 : FStarC_Syntax_Syntax.residual_comp) (r2 : FStarC_S
   (if tmp then (equal_list (equal_flag c) (r1).FStarC_Syntax_Syntax.residual_flags (r2).FStarC_Syntax_Syntax.residual_flags) else false))
 
 and equal_comp (c : bool) (c1 : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) (c2 : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : bool =
-  (if (FStarC_Util.physical_equality c1 c2) then true else (if ((not c) && ((<>) (c1).FStarC_Syntax_Syntax.hash_code (c2).FStarC_Syntax_Syntax.hash_code)) then false else (let ct1 = (c1).FStarC_Syntax_Syntax.n in
+  (if ((==) c1 c2) then true else (if ((not c) && ((<>) (c1).FStarC_Syntax_Syntax.hash_code (c2).FStarC_Syntax_Syntax.hash_code)) then false else (let ct1 = (c1).FStarC_Syntax_Syntax.n in
   let ct2 = (c2).FStarC_Syntax_Syntax.n in
   let tmp = (if (FStarC_Ident.lid_equals (ct1).FStarC_Syntax_Syntax.effect_name (ct2).FStarC_Syntax_Syntax.effect_name) then (equal_term_c c (ct1).FStarC_Syntax_Syntax.result_typ (ct2).FStarC_Syntax_Syntax.result_typ) else false) in
   (if tmp then (equal_list (equal_flag c) (ct1).FStarC_Syntax_Syntax.flags (ct2).FStarC_Syntax_Syntax.flags) else false))))
@@ -151,7 +151,7 @@ and equal_arg_qualifier (c : bool) (a1 : FStarC_Syntax_Syntax.arg_qualifier) (a2
   (if ((=) (a1).FStarC_Syntax_Syntax.aqual_implicit (a2).FStarC_Syntax_Syntax.aqual_implicit) then (equal_list (equal_term_c c) (a1).FStarC_Syntax_Syntax.aqual_attributes (a2).FStarC_Syntax_Syntax.aqual_attributes) else false)
 
 and equal_arg (c : bool) (arg1 : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) (arg2 : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) : bool =
-  (if (FStarC_Util.physical_equality arg1 arg2) then true else (match arg1 with
+  (if ((==) arg1 arg2) then true else (match arg1 with
     | (t1, a1) -> (match arg2 with
         | (t2, a2) -> (let tmp = (equal_term_c c t1 t2) in
           (if tmp then (equal_opt (equal_arg_qualifier c) a1 a2) else false))
@@ -159,7 +159,7 @@ and equal_arg (c : bool) (arg1 : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syn
   ))
 
 and equal_ascription (c : bool) (x1 : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax, (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * bool)) (x2 : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax, (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * bool)) : bool =
-  (if (FStarC_Util.physical_equality x1 x2) then true else (match x1 with
+  (if ((==) x1 x2) then true else (match x1 with
     | (a1, t1, b1) -> (match x2 with
         | (a2, t2, b2) -> (let tmp = (match (a1, a2) with
               | ((FStar_Pervasives.Inl (t11)), (FStar_Pervasives.Inl (t21))) -> (equal_term_c c t11 t21)
@@ -180,7 +180,7 @@ and equal_match_returns (c : bool) (x1 : (FStarC_Syntax_Syntax.binder * (((FStar
   )
 
 and equal_pat (c : bool) (p1 : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) (p2 : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) : bool =
-  (if (FStarC_Util.physical_equality p1 p2) then true else (match ((p1).FStarC_Syntax_Syntax.v, (p2).FStarC_Syntax_Syntax.v) with
+  (if ((==) p1 p2) then true else (match ((p1).FStarC_Syntax_Syntax.v, (p2).FStarC_Syntax_Syntax.v) with
     | ((FStarC_Syntax_Syntax.Pat_constant (c1)), (FStarC_Syntax_Syntax.Pat_constant (c2))) -> (equal_constant c c1 c2)
     | ((FStarC_Syntax_Syntax.Pat_cons (fv1, us1, args1)), (FStarC_Syntax_Syntax.Pat_cons (fv2, us2, args2))) -> (let tmp = (equal_fv c fv1 fv2) in
       let tmp1 = (if tmp then (equal_opt (equal_list (equal_universe c)) us1 us2) else false) in
@@ -200,7 +200,7 @@ and equal_branch (c : bool) (x1 : ((FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syn
   )
 
 and equal_letbinding (c : bool) (l1 : FStarC_Syntax_Syntax.letbinding) (l2 : FStarC_Syntax_Syntax.letbinding) : bool =
-  (if (FStarC_Util.physical_equality l1 l2) then true else (let tmp = (equal_lbname c (l1).FStarC_Syntax_Syntax.lbname (l2).FStarC_Syntax_Syntax.lbname) in
+  (if ((==) l1 l2) then true else (let tmp = (equal_lbname c (l1).FStarC_Syntax_Syntax.lbname (l2).FStarC_Syntax_Syntax.lbname) in
   let tmp1 = (if tmp then (equal_list FStarC_Ident.ident_equals (l1).FStarC_Syntax_Syntax.lbunivs (l2).FStarC_Syntax_Syntax.lbunivs) else false) in
   let tmp2 = (if tmp1 then (equal_term_c c (l1).FStarC_Syntax_Syntax.lbtyp (l2).FStarC_Syntax_Syntax.lbtyp) else false) in
   let tmp3 = (if tmp2 then (FStarC_Ident.lid_equals (l1).FStarC_Syntax_Syntax.lbeff (l2).FStarC_Syntax_Syntax.lbeff) else false) in
@@ -256,7 +256,7 @@ and equal_quoteinfo (c : bool) (q1 : FStarC_Syntax_Syntax.quoteinfo) (q2 : FStar
   )) else false)
 
 and equal_term_c (c : bool) (t1 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (t2 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
-  (if (FStarC_Util.physical_equality t1 t2) then true else (if (FStarC_Util.physical_equality (t1).FStarC_Syntax_Syntax.n (t2).FStarC_Syntax_Syntax.n) then true else (if ((not c) && ((<>) (ext_hash_term t1) (ext_hash_term t2))) then false else (let tmp = (if c then (let tmp = (FStarC_Syntax_Subst.compress t1) in
+  (if ((==) t1 t2) then true else (if ((==) (t1).FStarC_Syntax_Syntax.n (t2).FStarC_Syntax_Syntax.n) then true else (if ((not c) && ((<>) (ext_hash_term t1) (ext_hash_term t2))) then false else (let tmp = (if c then (let tmp = (FStarC_Syntax_Subst.compress t1) in
     let tmp1 = (FStarC_Syntax_Subst.compress t2) in
     (tmp, tmp1)) else (t1, t2)) in
   (match tmp with
@@ -305,7 +305,7 @@ let equal_term (t0 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
 let fStarC_Class_Deq_op_Equals_Question__syntax_term' (tmp : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (t2 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
   (equal_term tmp t2)
 
-let fStarC_HashMap_lookup__syntax_term' (key : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (m : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'v)) list) FStarC_PIMap.t) : ('v) option =
+let fStarC_HashMap_lookup__syntax_term' (key : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (m : (Prims.int, (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'v)) list) FStarC_AVLMap.tree) : ('v) option =
   (let tmp = (fStarC_HashMap_bucket__syntax_term' key m) in
   (match tmp with
     | (tmp1, b) -> (let tmp2 = (List.find_opt (fun tmp2 -> (match tmp2 with
@@ -317,17 +317,17 @@ let fStarC_HashMap_lookup__syntax_term' (key : (FStarC_Syntax_Syntax.term') FSta
       ))
   ))
 
-let fStarC_HashMap_mem__syntax_term' (key : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (m : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'v)) list) FStarC_PIMap.t) : bool =
+let fStarC_HashMap_mem__syntax_term' (key : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (m : (Prims.int, (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'v)) list) FStarC_AVLMap.tree) : bool =
   (let tmp = (fStarC_HashMap_lookup__syntax_term' key m) in
   (match tmp with
     | (Some (v)) -> true
     | tmp1 -> false
   ))
 
-let term_map_mem (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (m : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'a)) list) FStarC_PIMap.t) : bool =
+let term_map_mem (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (m : (Prims.int, (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'a)) list) FStarC_AVLMap.tree) : bool =
   (fStarC_HashMap_mem__syntax_term' t m)
 
-let fStarC_HashMap_add__syntax_term' (key : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (value : 'v) (m : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'v)) list) FStarC_PIMap.t) : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'v)) list) FStarC_PIMap.t =
+let fStarC_HashMap_add__syntax_term' (key : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (value : 'v) (m : (Prims.int, (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'v)) list) FStarC_AVLMap.tree) : (Prims.int, (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'v)) list) FStarC_AVLMap.tree =
   (let tmp = (fStarC_HashMap_bucket__syntax_term' key m) in
   (match tmp with
     | (h, b) -> (let tmp1 = (BatList.filter (fun tmp1 -> (match tmp1 with
@@ -338,16 +338,16 @@ let fStarC_HashMap_add__syntax_term' (key : (FStarC_Syntax_Syntax.term') FStarC_
       (FStarC_PIMap.add m h tmp2))
   ))
 
-let term_map_add (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (value : 'a) (m : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'a)) list) FStarC_PIMap.t) : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'a)) list) FStarC_PIMap.t =
+let term_map_add (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (value : 'a) (m : (Prims.int, (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'a)) list) FStarC_AVLMap.tree) : (Prims.int, (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'a)) list) FStarC_AVLMap.tree =
   (fStarC_HashMap_add__syntax_term' t value m)
 
-let term_map_empty (a : unit) : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'a)) list) FStarC_PIMap.t =
+let term_map_empty (a : unit) : (Prims.int, (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'a)) list) FStarC_AVLMap.tree =
   (FStarC_HashMap.empty ())
 
 let equal_term_upto_compress (t0 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (t2 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
   (equal_term_c true t0 t2)
 
-let term_map_lookup (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (m : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'a)) list) FStarC_PIMap.t) : ('a) option =
+let term_map_lookup (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (m : (Prims.int, (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'a)) list) FStarC_AVLMap.tree) : ('a) option =
   (fStarC_HashMap_lookup__syntax_term' t m)
 
 let fStarC_HashTable_hashtbl_make__arg_equal__1 (tmp : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (t2 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
@@ -362,8 +362,8 @@ module FStarC_HashTable_hashtbl_make__1 = Hashtbl.Make (struct
   let hash = fStarC_HashTable_hashtbl_make__arg_hash__1
 end)
 
-let term_map_fold (f : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> ('a -> ('b -> 'b)))) (m : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'a)) list) FStarC_PIMap.t) (eta : 'b) : 'b =
-  (FStarC_HashMap.fStarC_HashMap_fold__syntax_term' f m eta)
+let term_map_fold (f : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> ('a -> ('b -> 'b)))) (m : (Prims.int, (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'a)) list) FStarC_AVLMap.tree) (acc : 'b) : 'b =
+  (FStarC_HashMap.fStarC_HashMap_fold__syntax_term' f m acc)
 
 let fStarC_Class_Hashable_hash__binding (tmp : FStarC_Syntax_Syntax.binding) : int =
   (match tmp with

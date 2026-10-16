@@ -49,7 +49,7 @@ let generate_down (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> unit)
   (fun ps -> (let x = (FStarC_Tactics_V2_Builtins.intro () ps) in
   let x1 = (FStarC_Tactics_V2_Builtins.t_destruct (FStar_Tactics_V2_SyntaxCoercions.binding_to_term x) ps) in
   (FStar_Tactics_Util.iteri (fun i tmp1 -> (match tmp1 with
-    | (c, n) -> (fun ps1 -> (let x2 = (FStar_Tactics_Util.repeatn n (fun tmp2 -> (FStarC_Tactics_V2_Builtins.intro ())) ps1) in
+    | (c, n) -> (fun ps1 -> (let x2 = (FStar_Tactics_Util.repeatn n (Obj.magic ((fun tmp2 -> (FStarC_Tactics_V2_Builtins.intro ())))) ps1) in
       (ignore (FStarC_Tactics_V2_Builtins.intro () ps1));
       let x3 = (FStar_Tactics_Util.fold_right (fun b acc -> (fun tmp2 -> (mktuple2_ (FStar_Tactics_V2_SyntaxCoercions.binding_to_term b) acc))) x2 unitv_ ps1) in
       (ignore (FStar_Tactics_Util.repeatn i (fun tmp2 -> (let tmp3 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp3 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Pervasives" :: ("Inr" :: [])))) in

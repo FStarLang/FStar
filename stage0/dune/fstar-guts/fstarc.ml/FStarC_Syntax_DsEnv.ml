@@ -11,11 +11,11 @@ type record_or_dc = {
 }
 
 type scope_mod =
-  | Local_bindings of ((FStarC_Ident.ident * FStarC_Syntax_Syntax.bv * (bool ref))) FStarC_PSMap.t
+  | Local_bindings of (string, (FStarC_Ident.ident * FStarC_Syntax_Syntax.bv * (bool ref))) FStarC_AVLMap.tree
   | Rec_binding of (FStarC_Ident.ident * FStarC_Ident.lident * (bool ref))
   | Module_abbrev of (FStarC_Ident.ident * FStarC_Ident.lident)
   | Open_module_or_namespace of (FStarC_Ident.lident * FStarC_Syntax_Syntax.open_kind * FStarC_Syntax_Syntax.restriction) * bool
-  | Top_level_defs of (unit) FStarC_PSMap.t
+  | Top_level_defs of (string, unit) FStarC_AVLMap.tree
   | Record_or_dc of record_or_dc
 
 
@@ -1214,7 +1214,7 @@ let fail_or (env : env) (lookup : (FStarC_Ident.lident -> ('u___a) option)) (lid
           let tmp8 = ((FStarC_Errors_Msg.text "Module name") :: tmp7) in
           let tmp9 = (PPrint.flow (FStar_Pprint.break_ Prims.int_one) tmp8) in
           let tmp10 = (FStarC_Debug.any ()) in
-          let tmp11 = (if tmp10 then (PPrint.(^/^) (FStarC_Errors_Msg.text "Opened modules =") (FStarC_Errors_Msg.text (FStarC_String.concat ", " opened_modules))) else PPrint.empty) in
+          let tmp11 = (if tmp10 then (PPrint.(^/^) (FStarC_Errors_Msg.text "Opened modules =") (FStarC_Errors_Msg.text (BatString.concat ", " opened_modules))) else PPrint.empty) in
           let tmp12 = (tmp11 :: []) in
           let tmp13 = (tmp9 :: tmp12) in
           (FStarC_Errors.fStarC_Errors_raise_error__lident_list_ocaml_document modul1 FStarC_Errors_Codes.Fatal_IdentifierNotFound tmp13))

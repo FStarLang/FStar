@@ -3,7 +3,7 @@
 
 let ident_is_ticked (id : FStarC_Ident.ident) : bool =
   (let nm = (FStarC_Ident.string_of_id id) in
-  (if (Prims.op_Greater (FStarC_String.length nm) Prims.int_zero) then (let tmp = (FStarC_String.get nm Prims.int_zero) in
+  (if (Prims.op_Greater ((fun s -> Z.of_int (BatUTF8.length s)) nm) Prims.int_zero) then (let tmp = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) nm Prims.int_zero) in
   ((=) tmp 39)) else false))
 
 let lident_is_ticked (id : FStarC_Ident.lident) : bool =

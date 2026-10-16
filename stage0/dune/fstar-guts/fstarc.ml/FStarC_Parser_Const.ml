@@ -47,7 +47,7 @@ let const_to_string (x : FStarC_Const.sconst) : string =
     | (FStarC_Const.Const_string (s, tmp)) -> (FStarC_Format.fmt1 "\"%s\"" s)
     | (FStarC_Const.Const_int (v, b)) -> (FStarC_Const.string_of_int_literal v b)
     | (FStarC_Const.Const_machine_int (v, b, tmp, tmp1)) -> (FStarC_Const.string_of_int_literal v b)
-    | (FStarC_Const.Const_char (c)) -> (Prims.strcat "'" (Prims.strcat (FStarC_Util.string_of_char c) "'"))
+    | (FStarC_Const.Const_char (c)) -> (Prims.strcat "'" (Prims.strcat ((fun i -> BatUTF8.init 1 (fun _ -> BatUChar.chr i)) c) "'"))
     | (FStarC_Const.Const_range (r)) -> (FStarC_Range_Ops.string_of_range r)
     | FStarC_Const.Const_range_of -> "range_of"
     | FStarC_Const.Const_set_range_of -> "set_range_of"
@@ -567,7 +567,7 @@ let assert_by_tactic_lid : FStarC_Ident.lident =
   (fstar_tactics_lid' ("Effect" :: ("assert_by_tactic" :: [])))
 
 let is_name (lid : FStarC_Ident.lident) : bool =
-  (let c = (FStarC_Util.char_at (FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid lid)) Prims.int_zero) in
+  (let c = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) (FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid lid)) Prims.int_zero) in
   (FStarC_Util.is_upper c))
 
 let resolve_implicits_attr_string : FStarC_Ident.lident =
@@ -575,12 +575,6 @@ let resolve_implicits_attr_string : FStarC_Ident.lident =
 
 let override_resolve_implicits_handler_lid : FStarC_Ident.lident =
   (attr "override_resolve_implicits_handler")
-
-let do_not_unrefine_attr : FStarC_Ident.lident =
-  (pconst "do_not_unrefine")
-
-let is_tot_or_gtot_lid (l : FStarC_Ident.lident) : bool =
-  ((is_tot_lid l) || (is_gtot_lid l))
 
 let tac_lid : FStarC_Ident.lident =
   (fstar_tactics_lid' ("Effect" :: ("tac" :: [])))
@@ -639,6 +633,9 @@ let uint64_lid : FStarC_Ident.lident =
 let sizet_lid : FStarC_Ident.lident =
   (p2l ("FStar" :: ("SizeT" :: ("t" :: []))))
 
+let is_tot_or_gtot_lid (l : FStarC_Ident.lident) : bool =
+  ((is_tot_lid l) || (is_gtot_lid l))
+
 let well_founded_relation_lid : FStarC_Ident.lident =
   (p2l ("FStar" :: ("WellFounded" :: ("well_founded_relation" :: []))))
 
@@ -689,6 +686,9 @@ let pure_wp_monotonic_lid : FStarC_Ident.lident =
 
 let pure_wp_monotonic0_lid : FStarC_Ident.lident =
   (pconst "pure_wp_monotonic0")
+
+let do_not_unrefine_attr : FStarC_Ident.lident =
+  (pconst "do_not_unrefine")
 
 let desugar_of_variant_record_lid : FStarC_Ident.lident =
   (attr "desugar_of_variant_record")

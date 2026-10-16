@@ -13,7 +13,7 @@ let main_entry (tmp : unit) : (FStarC_Ident.lident) option =
   ))
 
 let entrypoints_of_file (f : string) : (string) list =
-  (if (not (FStarC_Filepath.file_exists f)) then (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Error_CustardEntryNotFound ((FStarC_Errors_Msg.text (Prims.strcat "Custard cannot read the entry-point file " (Prims.strcat f "."))) :: [])) else (let tmp = (FStarC_Util.file_get_lines f) in
+  (if (not (Sys.file_exists f)) then (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Error_CustardEntryNotFound ((FStarC_Errors_Msg.text (Prims.strcat "Custard cannot read the entry-point file " (Prims.strcat f "."))) :: [])) else (let tmp = (FStarC_Util.file_get_lines f) in
   ((fun f l -> BatList.flatten (BatList.map f l)) (fun line -> (let line1 = (FStarC_Util.trim_string (BatList.hd (FStarC_Util.split line "#"))) in
   (if ((=) line1 "") then [] else (line1 :: [])))) tmp)))
 
@@ -277,7 +277,7 @@ let warn_any (prog : (FStarC_Custard_Syntax.decl) list) : unit =
         | tmp -> false
       ) -> (let tmp = (FStarC_Custard_Syntax.string_of_name (x).FStarC_Custard_Syntax.dx_name) in
         let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) (x).FStarC_Custard_Syntax.dx_typars)) in
-        let tmp2 = (Prims.strcat tmp1 (Prims.strcat " type parameter(s): " (Prims.strcat (FStarC_String.concat ", " (x).FStarC_Custard_Syntax.dx_typars) "."))) in
+        let tmp2 = (Prims.strcat tmp1 (Prims.strcat " type parameter(s): " (Prims.strcat (BatString.concat ", " (x).FStarC_Custard_Syntax.dx_typars) "."))) in
         let tmp3 = (Prims.strcat "' is external and polymorphic, in " tmp2) in
         let tmp4 = (Prims.strcat tmp tmp3) in
         let tmp5 = (Prims.strcat "'" tmp4) in
@@ -400,7 +400,7 @@ let run_phases (deps : FStarC_Parser_Dep.deps) (env : FStarC_TypeChecker_Env.env
             ) in
           let b = (FStarC_Filepath.basename ofile) in
           let parts = (FStarC_String.split (46 :: []) b) in
-          let stem = (if (Prims.op_Less_Equals ((fun l -> Z.of_int (BatList.length l)) parts) Prims.int_one) then b else (FStarC_String.concat "." (BatList.rev (BatList.tl (BatList.rev parts))))) in
+          let stem = (if (Prims.op_Less_Equals ((fun l -> Z.of_int (BatList.length l)) parts) Prims.int_one) then b else (BatString.concat "." (BatList.rev (BatList.tl (BatList.rev parts))))) in
           let cu = (if ((<>) backend "C") then FStarC_Custard_PrintC.no_unit else (let tmp17 = (FStarC_Options.custard_unit ()) in
             let tmp18 = (FStarC_Custard_Extract.link_headers st) in
             let tmp19 = (FStarC_Custard_Extract.link_inits st) in
@@ -509,7 +509,7 @@ let run_phases (deps : FStarC_Parser_Dep.deps) (env : FStarC_TypeChecker_Env.env
                 ) in
               let tmp20 = (FStarC_Custard_PrintC.print_program stem cu all) in
               (match tmp20 with
-                | (hdr, src) -> ((FStarC_Util.write_file (FStarC_Filepath.join_paths (FStarC_Filepath.dirname ofile) (Prims.strcat stem ".h")) hdr);
+                | (hdr, src) -> ((FStarC_Util.write_file ((fun path_str0 path_str1 -> let module P = BatPathGen.OfString in P.to_string (P.Operators.(//@) (P.of_string path_str0) (P.of_string path_str1))) (Filename.dirname ofile) (Prims.strcat stem ".h")) hdr);
                   (FStarC_Util.write_file ofile src))
               ))
             | "OCaml" -> (let tmp20 = (BatList.map (fun x -> (match x with
@@ -548,7 +548,7 @@ let run_phases (deps : FStarC_Parser_Dep.deps) (env : FStarC_TypeChecker_Env.env
               (FStarC_Util.write_file ofile tmp21);
               let tmp22 = (FStarC_Custard_PrintFSharp.project_files stem p ((FStarC_Filepath.basename ofile) :: [])) in
               (BatList.iter (fun tmp23 -> (match tmp23 with
-                | (f, src) -> (FStarC_Util.write_file (FStarC_Filepath.join_paths (FStarC_Filepath.dirname ofile) f) src)
+                | (f, src) -> (FStarC_Util.write_file ((fun path_str0 path_str1 -> let module P = BatPathGen.OfString in P.to_string (P.Operators.(//@) (P.of_string path_str0) (P.of_string path_str1))) (Filename.dirname ofile) f) src)
               )) tmp22))
             | b1 -> (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_OptionsNotCompatible ((FStarC_Errors_Msg.text (Prims.strcat "Unknown --codegen " (Prims.strcat b1 "."))) :: ((FStarC_Errors_Msg.text "The backends are OCaml, FSharp, KrmlC, KrmlRust, C and Cherry.") :: [])))
           ))

@@ -97,8 +97,8 @@ let chain_entry_width : Prims.int =
   (Prims.of_int (200))
 
 let clip_chain_entry (s : string) : string =
-  (if (Prims.op_Less_Equals (FStarC_String.length s) chain_entry_width) then s else (let tmp = (FStarC_String.substring s Prims.int_zero chain_entry_width) in
-  let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 (FStarC_String.length s)) in
+  (if (Prims.op_Less_Equals ((fun s -> Z.of_int (BatUTF8.length s)) s) chain_entry_width) then s else (let tmp = ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) s Prims.int_zero chain_entry_width) in
+  let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun s -> Z.of_int (BatUTF8.length s)) s)) in
   let tmp2 = (Prims.strcat tmp1 " chars)") in
   let tmp3 = (Prims.strcat " ... (" tmp2) in
   (Prims.strcat tmp tmp3)))
@@ -141,7 +141,7 @@ let key_of_const (c : FStarC_Const.sconst) : string =
     | FStarC_Const.Const_unit -> "()"
     | (FStarC_Const.Const_bool (b)) -> (if b then "true" else "false")
     | (FStarC_Const.Const_real (r)) -> (Prims.strcat (FStarC_Real.to_string r) "R")
-    | (FStarC_Const.Const_char (c1)) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int (FStarC_Util.int_of_char c1)) in
+    | (FStarC_Const.Const_char (c1)) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int (Z.of_int c1)) in
       let tmp1 = (Prims.strcat tmp "'") in
       (Prims.strcat "'" tmp1))
     | (FStarC_Const.Const_string (s, tmp)) -> (let tmp1 = (FStarC_Custard_Syntax.escape_string s) in
@@ -338,7 +338,7 @@ let string_of_key (k : spec_key) : string =
   )) (k).sk_args);
   let tmp3 = (!(acc)) in
   let tmp4 = (BatList.rev tmp3) in
-  (FStarC_String.concat "" tmp4))))
+  (BatString.concat "" tmp4))))
 
 let tcenv (st : state) : FStarC_TypeChecker_Env.env =
   (!((st).env))
@@ -363,7 +363,7 @@ let unstub_lid (st : state) (l : FStarC_Ident.lident) : FStarC_Ident.lident =
       | None -> ((FStarC_Custard_Builtins.no_fstar_stubs ns), (FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid l)))
     ) in
   (match tmp1 with
-    | (ns1, nm) -> (let m = (FStarC_String.concat "." ns1) in
+    | (ns1, nm) -> (let m = (BatString.concat "." ns1) in
       let tmp2 = (tcenv st) in
       let tmp3 = (FStarC_Custard_Loader.module_is_loaded (st).deps tmp2 m) in
       let tmp4 = (if tmp3 then true else (let tmp4 = (FStarC_Custard_Loader.candidate_files (st).deps m) in
@@ -514,7 +514,7 @@ let rec hint_of_term (st : state) (fuel : Prims.int) (t : (FStarC_Syntax_Syntax.
             )) args) in
           let tmp5 = (sub tmp4) in
           let tmp6 = (h :: tmp5) in
-          let tmp7 = (FStarC_String.concat "_" tmp6) in
+          let tmp7 = (BatString.concat "_" tmp6) in
           (Some (tmp7)))
         | (FStarC_Syntax_Syntax.Tm_constant (c)) -> (match c with
             | (FStarC_Const.Const_int (v, tmp4)) -> (let tmp5 = (FStarC_Class_Show.fStarC_Class_Show_show__int v) in
@@ -567,13 +567,13 @@ let hint_width : Prims.int =
   (Prims.of_int (48))
 
 let truncate_hint (h : string) : string =
-  (if (Prims.op_Less_Equals (FStarC_String.length h) hint_width) then h else (FStarC_String.substring h Prims.int_zero hint_width))
+  (if (Prims.op_Less_Equals ((fun s -> Z.of_int (BatUTF8.length s)) h) hint_width) then h else ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) h Prims.int_zero hint_width))
 
 let rec fit (budget : Prims.int) (hs : (string) list) : (string) list =
   (match hs with
     | [] -> []
     | (h :: hs1) -> (let h1 = (if (Prims.op_Less budget Prims.int_zero) then (truncate_hint h) else h) in
-      let n = (FStarC_String.length h1) in
+      let n = ((fun s -> Z.of_int (BatUTF8.length s)) h1) in
       (if ((Prims.op_Greater_Equals budget Prims.int_zero) && (Prims.op_Greater n budget)) then [] else (let tmp = (fit (Prims.op_Minus (Prims.op_Minus (if (Prims.op_Less budget Prims.int_zero) then hint_width else budget) n) Prims.int_one) hs1) in
       (h1 :: tmp))))
   )
@@ -587,7 +587,7 @@ let hint_of_args (st : state) (args : ((Prims.int * (FStarC_Syntax_Syntax.term')
     | [] -> None
     | hs -> (let tmp2 = (dedup [] hs) in
       let tmp3 = (fit (Prims.of_int (-1)) tmp2) in
-      let tmp4 = (FStarC_String.concat "_" tmp3) in
+      let tmp4 = (BatString.concat "_" tmp3) in
       (Some (tmp4)))
   ))
 
@@ -765,7 +765,7 @@ let key_of_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) :
   (key_into acc t);
   let tmp = (!(acc)) in
   let tmp1 = (BatList.rev tmp) in
-  (FStarC_String.concat "" tmp1))
+  (BatString.concat "" tmp1))
 
 let compile_time_head (st : state) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Ident.lident) option =
   (let tmp = (FStarC_Syntax_Util.head_and_args_full t) in
@@ -784,8 +784,8 @@ let compile_time_head (st : state) (t : (FStarC_Syntax_Syntax.term') FStarC_Synt
   ))
 
 let truncate_msg (s : string) : string =
-  (if (Prims.op_Less_Equals (FStarC_String.length s) (Prims.of_int (600))) then s else (let tmp = (FStarC_String.substring s Prims.int_zero (Prims.of_int (600))) in
-  let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 (FStarC_String.length s)) in
+  (if (Prims.op_Less_Equals ((fun s -> Z.of_int (BatUTF8.length s)) s) (Prims.of_int (600))) then s else (let tmp = ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) s Prims.int_zero (Prims.of_int (600))) in
+  let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun s -> Z.of_int (BatUTF8.length s)) s)) in
   let tmp2 = (Prims.strcat tmp1 " chars)") in
   let tmp3 = (Prims.strcat " ... (" tmp2) in
   (Prims.strcat tmp tmp3)))
@@ -1720,7 +1720,7 @@ let specialize (st : state) (ty : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syn
           let tmp16 = (BatList.map (fun tmp16 -> (match tmp16 with
               | (j, tmp17) -> (FStarC_Class_Show.fStarC_Class_Show_show__int j)
             )) margs1) in
-          let tmp17 = (FStarC_String.concat "; " tmp16) in
+          let tmp17 = (BatString.concat "; " tmp16) in
           (FStarC_Format.print2 "  classes=[%s] mono_args=[%s]\n" tmp15 tmp17)) else ());
           let tmp5 = ((specialize__go margs1 c n_folded folded_c cut) Prims.int_zero bs cs [] [] [] []) in
           (match tmp5 with
@@ -2908,12 +2908,12 @@ let template_scan_diagnosis (st : state) (l : FStarC_Ident.lident) (a : (FStarC_
     | tmp1 -> false
   ) then [] else (let dedup_ = (fun xs -> (BatList.fold_left (fun acc x -> (if (BatList.mem x acc) then acc else (BatList.append acc (x :: [])))) [] xs)) in
   let tmp1 = (dedup_ free) in
-  let names = (FStarC_String.concat ", " tmp1) in
+  let names = (BatString.concat ", " tmp1) in
   let scan_line = (fun who apps -> (if (match apps with
       | [] -> true
       | tmp2 -> false
     ) then (FStarC_Errors_Msg.text (Prims.strcat "Rule 4d's scan of " (Prims.strcat who " found no application of an external template at all, so it had nothing to demand from."))) else (let tmp2 = (dedup_ apps) in
-    let tmp3 = (FStarC_String.concat "; " tmp2) in
+    let tmp3 = (BatString.concat "; " tmp2) in
     let tmp4 = (Prims.strcat tmp3 ".") in
     let tmp5 = (Prims.strcat " found: " tmp4) in
     let tmp6 = (Prims.strcat who tmp5) in
@@ -2942,7 +2942,7 @@ let template_scan_diagnosis (st : state) (l : FStarC_Ident.lident) (a : (FStarC_
             | (hd :: tl) -> true
             | tmp4 -> false
           ) then (let tmp4 = (dedup_ orphan) in
-          let tmp5 = (FStarC_String.concat ", " tmp4) in
+          let tmp5 = (BatString.concat ", " tmp4) in
           let tmp6 = (Prims.strcat tmp5 (Prims.strcat ", which is a parameter of neither " (Prims.strcat (FStarC_Ident.string_of_lid cur) (Prims.strcat " nor " (Prims.strcat (match dl with
               | (Some (d)) -> (Prims.strcat "the declaration whose type is being compiled, " (FStarC_Ident.string_of_lid d))
               | None -> "any other declaration: nothing else is being compiled here"
@@ -2957,7 +2957,7 @@ let template_scan_diagnosis (st : state) (l : FStarC_Ident.lident) (a : (FStarC_
             | (hd :: tl) -> true
             | tmp4 -> false
           ) then (let tmp4 = (dedup_ inext) in
-          let tmp5 = (FStarC_String.concat ", " tmp4) in
+          let tmp5 = (BatString.concat ", " tmp4) in
           let tmp6 = (Prims.strcat tmp5 (Prims.strcat ", which is a parameter of " (Prims.strcat (match dl with
               | (Some (d)) -> (FStarC_Ident.string_of_lid d)
               | None -> "?"
@@ -2973,7 +2973,7 @@ let template_scan_diagnosis (st : state) (l : FStarC_Ident.lident) (a : (FStarC_
           ) then (let tmp4 = (scan_line (FStarC_Ident.string_of_lid cur) apps) in
           let tmp5 = (tmp4 :: ((FStarC_Errors_Msg.text "So this declaration is monomorphic in it, and the value that is not constant was supplied by a caller rather than left behind here.  The request chain below is where to look.") :: [])) in
           ((FStarC_Errors_Msg.text (Prims.strcat "The index mentions " (Prims.strcat names (Prims.strcat ", which rule 4d did demand as compile-time known in " (Prims.strcat (FStarC_Ident.string_of_lid cur) "."))))) :: tmp5)) else (let tmp4 = (dedup_ missing) in
-          let tmp5 = (FStarC_String.concat ", " tmp4) in
+          let tmp5 = (BatString.concat ", " tmp4) in
           let tmp6 = (Prims.strcat tmp5 (Prims.strcat ", which rule 4d did not demand as compile-time known in " (Prims.strcat (FStarC_Ident.string_of_lid cur) "."))) in
           let tmp7 = (Prims.strcat "The index mentions " tmp6) in
           let tmp8 = (FStarC_Errors_Msg.text tmp7) in
@@ -3726,7 +3726,7 @@ and expr_of_term (st : state) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Sy
         let tmp3 = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_is_empty__bv_list_bv free) in
         let tmp4 = (not tmp3) in
         (if tmp4 then (let tmp5 = (BatList.map (fun b -> (FStarC_Ident.fStarC_Class_Show_show__ident (b).FStarC_Syntax_Syntax.ppname)) free) in
-        let tmp6 = (FStarC_String.concat ", " tmp5) in
+        let tmp6 = (BatString.concat ", " tmp5) in
         let tmp7 = (Prims.strcat tmp6 ".") in
         let tmp8 = (Prims.strcat "The attribute is a promise that every application is known at extraction time; this one is not, because it mentions " tmp7) in
         let tmp9 = (FStarC_Errors_Msg.text tmp8) in
@@ -4505,7 +4505,7 @@ and external_ty (st : state) (l : FStarC_Ident.lident) (margs : ((Prims.int * (F
                 | (hd :: tl) -> true
                 | tmp15 -> false
               ) then (let tmp15 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) dropped1)) in
-              let tmp16 = (Prims.strcat tmp15 (Prims.strcat " parameter(s) of the external " (Prims.strcat (FStarC_Ident.string_of_lid l) (Prims.strcat ": " (Prims.strcat (FStarC_String.concat ", " dropped1) "."))))) in
+              let tmp16 = (Prims.strcat tmp15 (Prims.strcat " parameter(s) of the external " (Prims.strcat (FStarC_Ident.string_of_lid l) (Prims.strcat ": " (Prims.strcat (BatString.concat ", " dropped1) "."))))) in
               let tmp17 = (Prims.strcat "Custard erased " tmp16) in
               let tmp18 = (FStarC_Errors_Msg.text tmp17) in
               let tmp19 = (tmp18 :: ((FStarC_Errors_Msg.text "An external's prototype is fixed outside F*, so the generated call now has fewer arguments than the C declaration it is checked against.") :: ((FStarC_Errors_Msg.text "A pure function-typed parameter is the usual cause: [unit -> unit] is a specification and is erased, while [unit -> FStar.All.ML unit] is a computation and is kept.") :: ((FStarC_Errors_Msg.text "If the parameter really carries nothing, write its type as [erased t], which says so and silences this.") :: [])))) in

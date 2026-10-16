@@ -83,7 +83,7 @@ let rollback (msg : string) (pop : (unit -> 'u___a)) (stackref : (('u___c) list 
   (FStarC_Format.print1 " depth is %s\n " tmp5)) else ());
   (FStarC_Util.atomically (fun tmp3 -> ((rollback__aux pop) n))))
 
-let psmap_values (m : ('u___a) FStarC_PSMap.t) : ('u___a) list =
+let psmap_values (m : (string, 'u___a) FStarC_AVLMap.tree) : ('u___a) list =
   (FStarC_PSMap.fold m (fun k v a -> (v :: a)) [])
 
 let raise_failed_assertion (msg : string) : 'tmp =
@@ -98,7 +98,7 @@ let list_of_option (o : ('u___a) option) : ('u___a) list =
     | (Some (x)) -> (x :: [])
   )
 
-let psmap_keys (m : ('u___a) FStarC_PSMap.t) : (string) list =
+let psmap_keys (m : (string, 'u___a) FStarC_AVLMap.tree) : (string) list =
   (FStarC_PSMap.fold m (fun k v a -> (k :: a)) [])
 
 let rec max_suffix__aux (f : ('u___a -> bool)) (acc : ('u___a) list) (xs : ('u___a) list) : (('u___a) list * ('u___a) list) =

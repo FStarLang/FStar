@@ -24,10 +24,10 @@ let groups (prog : (FStarC_Custard_Syntax.decl) list) : ((FStarC_Custard_Syntax.
   (groups__go [] None prog)
 
 let rank_key (m : string) : string =
-  (match (FStarC_String.split (46 :: []) (FStarC_String.lowercase m)) with
-    | ("fstar" :: ("normsteps" :: rest)) -> (FStarC_String.concat "." ("fstarc" :: ("normsteps" :: rest)))
-    | ("fstar" :: ("stubs" :: rest)) -> (FStarC_String.concat "." ("fstarc" :: rest))
-    | tmp -> (FStarC_String.lowercase m)
+  (match (FStarC_String.split (46 :: []) (BatString.lowercase_ascii m)) with
+    | ("fstar" :: ("normsteps" :: rest)) -> (BatString.concat "." ("fstarc" :: ("normsteps" :: rest)))
+    | ("fstar" :: ("stubs" :: rest)) -> (BatString.concat "." ("fstarc" :: rest))
+    | tmp -> (BatString.lowercase_ascii m)
   )
 
 let source_ranks (deps : FStarC_Parser_Dep.deps) : (Prims.int) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
@@ -44,7 +44,7 @@ let source_ranks (deps : FStarC_Parser_Dep.deps) : (Prims.int) FStarC_HashTable.
 let module_of (n : FStarC_Custard_Syntax.name) : string =
   (match (n).FStarC_Custard_Syntax.ns with
     | [] -> "Custard"
-    | ns -> (FStarC_String.concat "." ns)
+    | ns -> (BatString.concat "." ns)
   )
 
 let rec sccs__go__pop (onstack : (bool) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (stack : ((string) list ref)) (v : string) (acc : (string) list) : (string) list =

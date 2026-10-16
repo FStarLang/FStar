@@ -34,7 +34,7 @@ let load_native_tactics (tmp : unit) : unit =
   let tmp2 = (FStarC_Options.load_cmxs ()) in
   let cmxs_to_load = (BatList.map FStarC_Ident.lid_of_str tmp2) in
   let ml_module_name = (fun m -> (let tmp3 = (BatList.map FStarC_Ident.string_of_id (FStarC_Ident.ids_of_lid m)) in
-    (FStarC_String.concat "_" tmp3))) in
+    (BatString.concat "_" tmp3))) in
   let ml_file = (fun m -> (let tmp3 = (ml_module_name m) in
     (Prims.strcat tmp3 ".ml"))) in
   let cmxs_file = (fun m -> (let tmp3 = (ml_module_name m) in
@@ -51,7 +51,7 @@ let load_native_tactics (tmp : unit) : unit =
             let tmp10 = (tmp9 :: []) in
             let tmp11 = ((FStarC_Errors_Msg.text "Failed to compile native tactic.") :: tmp10) in
             (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_FailToCompileNativeTactic tmp11))
-          | (Some (ml)) -> (let dir = (FStarC_Filepath.dirname ml) in
+          | (Some (ml)) -> (let dir = (Filename.dirname ml) in
             let tmp7 = (ml_module_name m) in
             let tmp8 = (tmp7 :: []) in
             (FStarC_Plugins.compile_modules dir tmp8);
@@ -98,7 +98,7 @@ let friends_of_implementation (fn : string) : (FStarC_Ident.lident) list =
   (let tmp = (FStarC_Parser_Driver.parse_file fn) in
   (match tmp with
     | (ast, tmp1) -> ((fun f l -> BatList.flatten (BatList.map f l)) (fun d -> (match (d).FStarC_Parser_AST.d with
-        | (FStarC_Parser_AST.Friend (l)) -> (let tmp2 = (FStarC_Ident.lid_of_str (FStarC_String.lowercase (FStarC_Ident.string_of_lid l))) in
+        | (FStarC_Parser_AST.Friend (l)) -> (let tmp2 = (FStarC_Ident.lid_of_str (BatString.lowercase_ascii (FStarC_Ident.string_of_lid l))) in
           let tmp3 = (FStarC_Ident.set_lid_range tmp2 (FStarC_Ident.range_of_lid l)) in
           (tmp3 :: []))
         | tmp2 -> []
@@ -121,10 +121,10 @@ let go_normal (tmp : unit) : unit =
         (not tmp5)) else false) in
       let tmp5 = (if tmp4 then (Prims.op_Greater ((fun l -> Z.of_int (BatList.length l)) filenames0) Prims.int_one) else false) in
       (if tmp5 then (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_OptionsNotCompatible ((FStarC_Errors_Msg.text "When using -o, you can only provide a single file in the\n        command line (except for dependency analysis).") :: [])) else ());
-      let chopsuf = (fun suf s -> (if (FStarC_Util.ends_with s suf) then (let tmp6 = (FStarC_String.substring s Prims.int_zero (Prims.op_Minus (FStarC_String.length s) (FStarC_String.length suf))) in
+      let chopsuf = (fun suf s -> (if (FStarC_Util.ends_with s suf) then (let tmp6 = ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) s Prims.int_zero (Prims.op_Minus ((fun s -> Z.of_int (BatUTF8.length s)) s) ((fun s -> Z.of_int (BatUTF8.length s)) suf))) in
         (Some (tmp6))) else None)) in
       let checked_of = (fun f -> (chopsuf ".checked" f)) in
-      let filenames = (BatList.map (fun f -> (if (not (FStarC_Filepath.file_exists f)) then f else (let tmp6 = (checked_of f) in
+      let filenames = (BatList.map (fun f -> (if (not (Sys.file_exists f)) then f else (let tmp6 = (checked_of f) in
         (match tmp6 with
           | (Some (f')) -> (let tmp7 = (FStarC_Debug.any ()) in
             (if tmp7 then (FStarC_Format.print1 "Rewriting argument file %s to its source file\n" f) else ());
@@ -159,7 +159,7 @@ let go_normal (tmp : unit) : unit =
           (FStarC_Format.print1 "Usage: %s [options] file.fst\n" FStarC_Util.argv0);
           (FStarC_Format.print_string "Use `--help` to see all available options.\n");
           (FStarC_Effect.exit Prims.int_one))
-        | (FStarC_Getopt.Error ((msg, opt))) -> ((FStarC_Format.print_error (Prims.strcat "error: " msg));
+        | (FStarC_Getopt.Error (msg, opt)) -> ((FStarC_Format.print_error (Prims.strcat "error: " msg));
           (print_help_for opt);
           (FStarC_Effect.exit Prims.int_one))
         | FStarC_Getopt.Success when (FStarC_Options.print_cache_version ()) -> (let tmp10 = (FStarC_Class_Show.fStarC_Class_Show_show__int FStarC_CheckedFiles.cache_version_number) in
@@ -225,11 +225,11 @@ let go_normal (tmp : unit) : unit =
           let ts = (FStarC_Tactics_Interpreter.native_tactics_steps ()) in
           let tmp10 = (BatList.map (fun p -> (let tmp10 = (FStarC_Ident.fStarC_Class_Show_show__lident (p).FStarC_TypeChecker_Primops_Base.name) in
             (Prims.strcat "  " tmp10))) ps) in
-          let tmp11 = (FStarC_String.concat "\n" tmp10) in
+          let tmp11 = (BatString.concat "\n" tmp10) in
           (FStarC_Format.print1 "Registered plugins:\n%s\n" tmp11);
           let tmp12 = (BatList.map (fun p -> (let tmp12 = (FStarC_Ident.fStarC_Class_Show_show__lident (p).FStarC_TypeChecker_Primops_Base.name) in
             (Prims.strcat "  " tmp12))) ts) in
-          let tmp13 = (FStarC_String.concat "\n" tmp12) in
+          let tmp13 = (BatString.concat "\n" tmp12) in
           (FStarC_Format.print1 "Registered tactic plugins:\n%s\n" tmp13);
           ())
         | FStarC_Getopt.Success when (let tmp10 = (FStarC_Options.expand_include ()) in
@@ -239,7 +239,7 @@ let go_normal (tmp : unit) : unit =
         )) -> (let tmp10 = (FStarC_Options.expand_include ()) in
           (match tmp10 with
             | (Some (d)) -> (let ds = (FStarC_Find.expand_include_d d) in
-              (BatList.iter (fun s -> (FStarC_Format.print_string (Prims.strcat (FStarC_Filepath.canonicalize s) "\n"))) ds);
+              (BatList.iter (fun s -> (FStarC_Format.print_string (Prims.strcat ((fun path_str -> let module P = BatPathGen.OfString in P.to_string (P.normalize_in_tree (P.of_string path_str))) s) "\n"))) ds);
               (FStarC_Effect.exit Prims.int_zero))
           ))
         | FStarC_Getopt.Success when (FStarC_Options.locate ()) -> ((check_no_filenames "--locate");
@@ -377,7 +377,7 @@ let go_normal (tmp : unit) : unit =
   ))
 
 let go (tmp : unit) : unit =
-  (let args = (FStarC_Util.get_cmd_args ()) in
+  (let args = ((fun () -> Array.to_list Sys.argv) ()) in
   (match args with
     | (tmp1 :: ("--ocamlenv" :: [])) -> (let new_ocamlpath = (FStarC_OCaml.new_ocamlpath ()) in
       (FStarC_Format.print1 "OCAMLPATH='%s'; export OCAMLPATH;\n" (FStarC_OCaml.shellescape new_ocamlpath));
@@ -390,10 +390,10 @@ let go (tmp : unit) : unit =
   ))
 
 let handle_error (e : exn) : unit =
-  ((if (FStarC_Errors.handleable e) then (FStarC_Errors.err_exn e) else (let tmp = (FStarC_Util.message_of_exn e) in
+  ((if (FStarC_Errors.handleable e) then (FStarC_Errors.err_exn e) else (let tmp = (Printexc.to_string e) in
   (FStarC_Format.print1_error "Unexpected error: %s\n" tmp);
   let tmp1 = (FStarC_Options.trace_error ()) in
-  (if tmp1 then (let tmp2 = (FStarC_Util.trace_of_exn e) in
+  (if tmp1 then (let tmp2 = ((fun _ -> Printexc.get_backtrace ()) e) in
   (FStarC_Format.print1_error "Trace:\n%s\n" tmp2)) else (FStarC_Format.print_error "Please file a bug report, ideally with a minimized version of the source program that triggered the error.\n"))));
   (report_errors []))
 
@@ -403,7 +403,7 @@ let main (tmp : unit) : unit =
     | (tmp2, time) -> (let tmp3 = (FStarC_Options.query_stats ()) in
       (if tmp3 then (let tmp4 = (FStarC_Class_Show.fStarC_Class_Show_show__int time) in
       let tmp5 = (FStarC_Getopt.cmdline ()) in
-      let tmp6 = (FStarC_String.concat " " tmp5) in
+      let tmp6 = (BatString.concat " " tmp5) in
       (FStarC_Format.print2_error "TOTAL TIME %s ms: %s\n" tmp4 tmp6)) else ());
       (print_stats ());
       (cleanup ());

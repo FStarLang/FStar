@@ -37,10 +37,10 @@ let fstar_bin_directory : string =
 
 let lib_root (tmp : unit) : (string) option =
   (let tmp1 = (!(u__no_default_includes)) in
-  (if tmp1 then None else (let tmp2 = (FStarC_Util.expand_environment_variable "FSTAR_LIB") in
+  (if tmp1 then None else (let tmp2 = ((fun x -> try Some (Sys.getenv x) with Not_found -> None) "FSTAR_LIB") in
   (match tmp2 with
     | (Some (s)) -> (Some (s))
-    | None -> (Some ((FStarC_Filepath.canonicalize (Prims.strcat fstar_bin_directory "/../lib/fstar"))))
+    | None -> (Some (((fun path_str -> let module P = BatPathGen.OfString in P.to_string (P.normalize_in_tree (P.of_string path_str))) (Prims.strcat fstar_bin_directory "/../lib/fstar"))))
   ))))
 
 let u__with_fstarc : (bool ref) =
@@ -48,7 +48,7 @@ let u__with_fstarc : (bool ref) =
 
 let fstarc_roots (tmp : unit) : (string) list =
   (let tmp1 = (!(u__with_fstarc)) in
-  (if tmp1 then ((FStarC_Filepath.canonicalize (Prims.strcat fstar_bin_directory "/../lib/fstar/fstarc")) :: []) else []))
+  (if tmp1 then (((fun path_str -> let module P = BatPathGen.OfString in P.to_string (P.normalize_in_tree (P.of_string path_str))) (Prims.strcat fstar_bin_directory "/../lib/fstar/fstarc")) :: []) else []))
 
 let lib_roots (tmp : unit) : (string) list =
   (let tmp1 = (lib_root ()) in
@@ -57,12 +57,12 @@ let lib_roots (tmp : unit) : (string) list =
   (FStar_List_Tot_Base.op_At tmp2 tmp3))
 
 let has_fstar_include (dirname : string) : bool =
-  (FStarC_Filepath.file_exists (Prims.strcat dirname "/fstar.include"))
+  (Sys.file_exists (Prims.strcat dirname "/fstar.include"))
 
 let read_fstar_include (fn : string) : ((string) list) option =
-  (try (let s = (FStarC_Util.file_get_contents fn) in
+  (try (let s = ((fun f -> let ic = Stdlib.open_in_bin f in let s = Stdlib.really_input_string ic (Stdlib.in_channel_length ic) in Stdlib.close_in ic; s) fn) in
   let tmp = (BatList.map FStarC_Util.trim_string (FStarC_String.split (13 :: (10 :: [])) s)) in
-  let subdirs = (BatList.filter (fun s1 -> (if ((<>) s1 "") then (let tmp1 = (FStarC_String.get s1 Prims.int_zero) in
+  let subdirs = (BatList.filter (fun s1 -> (if ((<>) s1 "") then (let tmp1 = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) s1 Prims.int_zero) in
     let tmp2 = ((=) tmp1 35) in
     (not tmp2)) else false)) tmp) in
   (Some (subdirs))) with
@@ -95,7 +95,7 @@ let u__file_list : ((string) list ref) =
   (ref [])
 
 let rec path_is_at_or_below (root : string) (path : string) : bool =
-  (if ((=) root path) then true else (let parent = (FStarC_Filepath.dirname path) in
+  (if ((=) root path) then true else (let parent = (Filename.dirname path) in
   (if ((<>) parent path) then (path_is_at_or_below root parent) else false)))
 
 let module_include_covers_path (inc : module_include_path) (path : string) : bool =
@@ -110,8 +110,8 @@ let command_line_include_roots (tmp : unit) : (string) list =
   (let files = (!(u__file_list)) in
   let tmp1 = (!(u__include)) in
   let explicit_includes = (expand_module_include_paths Recursive tmp1) in
-  let file_roots = ((fun f l -> BatList.flatten (BatList.map f l)) (fun file -> (let root = (FStarC_Filepath.normalize_file_path (FStarC_Filepath.dirname file)) in
-    let is_dir = (FStarC_Filepath.is_directory file) in
+  let file_roots = ((fun f l -> BatList.flatten (BatList.map f l)) (fun file -> (let root = (FStarC_Filepath.normalize_file_path (Filename.dirname file)) in
+    let is_dir = ((fun f -> try Sys.is_directory f with Sys_error _ -> false) file) in
     (if is_dir then [] else (root :: [])))) files) in
   (BatList.filter (fun root -> (let tmp2 = (BatList.exists (fun inc -> (module_include_covers_path inc root)) explicit_includes) in
   (not tmp2))) file_roots))
@@ -150,8 +150,8 @@ let full_include_path (tmp : unit) : (string) list =
   ))
 
 let do_find (paths : (string) list) (filename : string) : (string) option =
-  (if (FStarC_Filepath.is_path_absolute filename) then (if (FStarC_Filepath.file_exists filename) then (Some (filename)) else None) else (try (FStarC_Util.find_map (BatList.rev paths) (fun p -> (let path = (if ((=) p ".") then filename else (FStarC_Filepath.join_paths p filename)) in
-  (if (FStarC_Filepath.file_exists path) then (Some (path)) else None)))) with
+  (if (FStarC_Filepath.is_path_absolute filename) then (if (Sys.file_exists filename) then (Some (filename)) else None) else (try (FStarC_Util.find_map (BatList.rev paths) (fun p -> (let path = (if ((=) p ".") then filename else ((fun path_str0 path_str1 -> let module P = BatPathGen.OfString in P.to_string (P.Operators.(//@) (P.of_string path_str0) (P.of_string path_str1))) p filename)) in
+  (if (Sys.file_exists path) then (Some (path)) else None)))) with
     | u__cexn -> None
   ))
 
@@ -233,8 +233,8 @@ let set_file_list (files : (string) list) : unit =
   ((u__file_list) := files))
 
 let locate_fstarc_cui (tmp : unit) : (string) option =
-  (let f = (FStarC_Filepath.canonicalize (Prims.strcat fstar_bin_directory "/../lib/fstar/fstarc/fstarc.cui")) in
-  (if (FStarC_Filepath.file_exists f) then (Some (f)) else None))
+  (let f = ((fun path_str -> let module P = BatPathGen.OfString in P.to_string (P.normalize_in_tree (P.of_string path_str))) (Prims.strcat fstar_bin_directory "/../lib/fstar/fstarc/fstarc.cui")) in
+  (if (Sys.file_exists f) then (Some (f)) else None))
 
 let get_odir (tmp : unit) : (string) option =
   (!(u__odir))
@@ -260,7 +260,7 @@ let prepend_cache_dir (fpath : string) : string =
   (let tmp = (!(u__cache_dir)) in
   (match tmp with
     | None -> fpath
-    | (Some (x)) -> (FStarC_Filepath.join_paths x (FStarC_Filepath.basename fpath))
+    | (Some (x)) -> ((fun path_str0 path_str1 -> let module P = BatPathGen.OfString in P.to_string (P.Operators.(//@) (P.of_string path_str0) (P.of_string path_str1))) x (FStarC_Filepath.basename fpath))
   ))
 
 let locate (tmp : unit) : string =
@@ -275,6 +275,6 @@ let prepend_output_dir (fname : string) : string =
   (let tmp = (!(u__odir)) in
   (match tmp with
     | None -> fname
-    | (Some (x)) -> (FStarC_Filepath.join_paths x fname)
+    | (Some (x)) -> ((fun path_str0 path_str1 -> let module P = BatPathGen.OfString in P.to_string (P.Operators.(//@) (P.of_string path_str0) (P.of_string path_str1))) x fname)
   ))
 
