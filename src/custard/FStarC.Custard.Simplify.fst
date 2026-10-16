@@ -103,7 +103,7 @@ let anf_expr (x0:expr) : ML expr =
       let c = norm c in
       let b = norm b in
       { x with e = EWhile (c, b) }
-    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
+    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ | EUnreachable _ -> x
 
     (* Everything else has operand positions, so it needs an accumulator. *)
     | _ ->
@@ -282,7 +282,7 @@ let rec sub (sm:subst) (x:expr) : ML expr =
      | Some ({ e = EVar v' ; ty = TAny }) -> { x with e = EVar v' }
      | Some e -> e
      | None -> x)
-  | EConst _ | EQual _ | EAny | EAbort _ -> x
+  | EConst _ | EQual _ | EAny | EAbort _ | EUnreachable _ -> x
   | ELet (v, ty, e1, e2) ->
     let v' = rename v in
     let e1 = g e1 in
@@ -698,7 +698,8 @@ let beta (bs : list binder) (body:expr) (args:list expr) (at:expr) : ML expr =
   if List.length args < n then at
   else
     let given, extra = List.splitAt n args in
-    let r = inline_call bs body given at in
+    (* With a surplus, the inlined body has the body's type, not the call's. *)
+    let r = inline_call bs body given (if Nil? extra then at else { at with ty = body.ty }) in
     match extra with
     | [] -> r
     | _ -> { at with e = EApp (r, extra) }
@@ -973,7 +974,7 @@ let rec reduce (x:expr) : ML expr =
        | _ -> reduce r)
     else { x with e = EMatch (scrut, brs |> List.map reduce_branch) })
 
-  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
+  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ | EUnreachable _ -> x
   (* Section 3.1: the backends have no closures, so a let-bound lambda that is
      only ever *called* has to reach its call, where beta can fire.  A lambda
      is a value, so moving it duplicates no work, and a single occurrence
@@ -998,7 +999,7 @@ let rec reduce (x:expr) : ML expr =
        definition uses it, and the copy that would fix that has not been
        propagated yet. *)
     let e2 = reduce e2 in
-    if Options.custard_backend () = "C"
+    if Options.codegen_c ()
        && EFun? e1.e && count v e2 <= 1 && called_only v e2 then
       let sm : subst = HashTable.create 5 in
       HashTable.add sm v e1;
@@ -1068,7 +1069,7 @@ let rec inline_expr (tbl : HashTable.t string (list binder & expr)) (used : Hash
         function, so every use of it is applied to one argument too many. *)
      | Some (bs, body) when List.length bs <= List.length args ->
        let given, extra = List.splitAt (List.length bs) args in
-       let r = inline_call bs body given x in
+       let r = inline_call bs body given (if Nil? extra then x else { x with ty = body.ty }) in
        (match extra with
         | [] -> r
         | _ -> { x with e = EApp (r, extra) })
@@ -1503,7 +1504,7 @@ let rec cty_deps (c:cty) : ML (list string) =
   | TApp (n, args) -> string_of_name n :: List.collect cty_deps args
   | TArrow (a, _, b) -> cty_deps a @ cty_deps b
   | TTuple cs -> List.collect cty_deps cs
-  | TBuf c | TRef c | TInline c -> cty_deps c
+  | TBuf c | TRef (_, c) | TInline c -> cty_deps c
   | _ -> []
 
 let rec pat_deps (p:pat) : ML (list string) =
@@ -1747,7 +1748,7 @@ let rec spellable (c:cty) : ML bool =
   | TAny | TExn -> false
   | TApp (_, args) | TTuple args -> args |> List.for_all spellable
   | TArrow (a, _, b) -> spellable a && spellable b
-  | TBuf c | TRef c | TInline c -> spellable c
+  | TBuf c | TRef (_, c) | TInline c -> spellable c
   | _ -> true
 
 let revive_abbrevs (prog:program) (live : HashTable.t string bool) : ML unit =
@@ -2063,11 +2064,17 @@ let scc (prog:program) : ML program =
 (* Unreachable branches                                                 *)
 (* -------------------------------------------------------------------- *)
 
-(* [EAbort] says control does not reach here, and it means it: the only rule
-   that introduces one is Pulse's [unreachable] (section 8.3), whose
-   precondition F* has already proved false.  A branch whose body is nothing
-   but an abort therefore contributes nothing to the value of the match, and
-   testing for it is wasted work at run time and noise in the output.
+(* [EUnreachable] says control does not reach here, and it means it: the only
+   rules that introduce one are Pulse's [unreachable] (section 8.3) and
+   [FStar.Pervasives.false_elim], whose preconditions F* has already proved
+   false.  A branch whose body is nothing but one therefore contributes
+   nothing to the value of the match, and testing for it is wasted work at run
+   time and noise in the output.
+
+   [EAbort] is deliberately not treated this way.  It is what [Prims.admit]
+   and [Prims.magic] compile to, and those are placeholders, not proofs:
+   pruning the branch would make [if b then 1ul else admit ()] return [1ul]
+   unconditionally instead of aborting when [b] is false (FStarLang/FStar#4661).
 
    This was a C-backend peephole first, where dropping the branch also lets the
    one before it become unconditional.  But the reasoning has nothing to do
@@ -2089,10 +2096,10 @@ let rec prune (x:expr) : ML expr =
   | EMatch (s, brs) ->
     let s = g s in
     let brs = brs |> List.map prune_branch in
-    let live = brs |> List.filter (fun (_, _, b) -> not (EAbort? b.e)) in
-    (* A match all of whose branches abort cannot be entered at all, so there
-       is nothing to choose between them: it is just the abort, with the
-       scrutinee kept only if evaluating it is observable. *)
+    let live = brs |> List.filter (fun (_, _, b) -> not (EUnreachable? b.e)) in
+    (* A match all of whose branches are unreachable cannot be entered at
+       all, so there is nothing to choose between them: it is just the first
+       of them, with the scrutinee kept only if evaluating it is observable. *)
     (match live, brs with
      | [], (_, _, b) :: _ -> take x s b
      (* One live branch is the same situation one step on: the match was
@@ -2116,8 +2123,8 @@ let rec prune (x:expr) : ML expr =
     let c = g c in
     let a = g a in
     let b = g b in
-    if EAbort? b.e && not (EAbort? a.e) then take x c a
-    else if EAbort? a.e && not (EAbort? b.e) then take x c b
+    if EUnreachable? b.e && not (EUnreachable? a.e) then take x c a
+    else if EUnreachable? a.e && not (EUnreachable? b.e) then take x c b
     else { x with e = EIf (c, a, b) }
 
   | _ -> map_children g x
@@ -3048,7 +3055,7 @@ let rec unit_args_expr (x:expr) : ML expr =
     if not (TUnit? e.ty) then e
     else match e.e with
          | EConst CUnit -> e
-         | EAbort _ -> e
+         | EAbort _ | EUnreachable _ -> e
          | _ ->
            if is_pure e.eff then { e with e = EConst CUnit }
            else begin
@@ -3142,7 +3149,7 @@ let rec cty_mismatch (a b : cty) : ML bool =
   | TApp (n, xs), TApp (m, ys) ->
     string_of_name n = string_of_name m && ctys_mismatch xs ys
   | TBuf x, TBuf y
-  | TRef x, TRef y
+  | TRef (_, x), TRef (_, y)
   | TInline x, TInline y -> cty_mismatch x y
   | TTuple xs, TTuple ys -> ctys_mismatch xs ys
   | _ -> false
@@ -3281,7 +3288,7 @@ let coerce_prog (prog:program) : ML program =
     | TArrow (a, _, b) -> has_any a || has_any b
     | TApp (_, args) -> args |> List.existsb has_any
     | TTuple cs -> cs |> List.existsb has_any
-    | TBuf c | TRef c | TInline c -> has_any c
+    | TBuf c | TRef (_, c) | TInline c -> has_any c
     | TVar _ | TInt _ | TFloat _ | TUnit | TExn | TConst _ -> false in
   let trust (c:cty) : ML (option cty) = if has_any c then None else Some c in
   (* Does this term obviously have *some* representation, whatever it is?  When
@@ -3337,7 +3344,7 @@ let coerce_prog (prog:program) : ML program =
     | TTuple ps, TTuple qs ->
       if List.length ps = List.length qs then unify_ctys ps qs acc else acc
     | TBuf p1, TBuf a1
-    | TRef p1, TRef a1
+    | TRef (_, p1), TRef (_, a1)
     | TInline p1, TInline a1 -> unify_cty p1 a1 acc
     | _ -> acc
   and unify_ctys (ps qs : list cty) (acc:list (string & cty)) : ML (list (string & cty)) =
@@ -3440,7 +3447,7 @@ let coerce_prog (prog:program) : ML program =
   and go (env:cenv) (exp:option cty) (x:expr) : ML expr =
     let same (e':expr') : expr = { x with e = e' } in
     match x.e with
-    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
+    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ | EUnreachable _ -> x
     | ECast (e1, t) -> same (ECast (go env None e1, t))
     | ECoerce (e1, t) -> same (ECoerce (go env None e1, t))
     (* A comparison's operands all have the one type, so an operand of unknown
@@ -3669,7 +3676,7 @@ let coerce_prog (prog:program) : ML program =
    costs nothing where there are none (the direct backend, which is the only
    caller) and stays correct where there are.
 
-   Only for [--custard_backend C].  OCaml has closures and karamel has its own
+   Only for [--codegen C].  OCaml has closures and karamel has its own
    treatment, so lifting there would churn the output to no purpose. *)
 let lift_lambdas (prog:program) : ML program =
   (* Free term variables, minus the ones bound on the way in.  Unlike
@@ -3780,7 +3787,7 @@ let narrow_rets (prog:program) : ML program =
     | TArrow (a, _, b) -> has_any a || has_any b
     | TApp (_, args) -> args |> List.existsb has_any
     | TTuple cs -> cs |> List.existsb has_any
-    | TBuf c | TRef c | TInline c -> has_any c
+    | TBuf c | TRef (_, c) | TInline c -> has_any c
     | TVar _ | TInt _ | TFloat _ | TUnit | TExn | TConst _ -> false in
   (* Name -> the whole type, arguments included, so that a use of a name in
      head position can be peeled the same way [coerce_prog] peels it. *)
@@ -3999,7 +4006,7 @@ let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
   (* Before [dce], which reads the final call graph and would otherwise drop
      every lifted function as unreachable, and before [scc], which orders
      them. *)
-  let prog = if Options.custard_backend () = "C"
+  let prog = if Options.codegen_c ()
              then pass "lift_lambdas" lift_lambdas prog else prog in
   (* Section 76.  Before [dce], which is what removes the declaration a
      substituted constant made unreachable. *)
@@ -4028,5 +4035,5 @@ let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
      an argument, and a coercion wrapped around the variable this replaces
      would put it back.  karamel-only: the direct backends have no assumption
      to satisfy here. *)
-  if List.mem (Options.custard_backend ()) ["KrmlC"; "KrmlRust"]
+  if List.mem (Options.codegen_name ()) ["KrmlC"; "KrmlRust"]
   then pass "unit_args" unit_args prog else prog

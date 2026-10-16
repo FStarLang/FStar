@@ -25,7 +25,6 @@ FStar/
 │   ├── tosyntax/           # Desugaring: surface AST → core AST
 │   ├── typechecker/        # Type inference, checking, normalization, NBE
 │   ├── smtencoding/        # Encoding to SMT (Z3) queries
-│   ├── extraction/         # Code generation: OCaml, F#, krml (C via KaRaMeL)
 │   ├── tactics/            # Tactic engine, metaprogramming primitives
 │   ├── reflection/         # Reflection API builtins
 │   ├── interactive/        # IDE protocol, incremental checking
@@ -42,7 +41,6 @@ FStar/
 ├── stage3/                 # Stage2 + Pulse plugin linked in
 ├── pulse/                  # Pulse language implementation
 │   ├── src/checker/        # Pulse typechecker (F* source, extracted to OCaml plugin)
-│   ├── src/extraction/     # Pulse-specific extraction (to C, OCaml)
 │   ├── src/syntax_extension/ # Pulse syntax desugaring
 │   ├── src/ml/             # Hand-written OCaml for Pulse (runtime utils)
 │   ├── lib/                # Pulse standard library (common/, pulse/)
@@ -79,7 +77,7 @@ stage1 (dune build of extracted OCaml)
   │  checks and extracts src/ and ulib/ plugins → OCaml
   ▼
 stage2 (dune build of extracted OCaml)
-  │  + Pulse checker/extraction/syntax_extension extracted → OCaml
+  │  + Pulse checker/syntax_extension extracted → OCaml
   ▼
 stage3 = stage2 compiler + Pulse plugin (dune-linked)
   │  checks Pulse library (lib-common, lib-core, lib-pulse)
@@ -244,12 +242,14 @@ Key files:
 
 ### Modifying Extraction
 
-Key files:
-- `FStarC.Extraction.ML.Term.fst` — F* terms → ML expressions
-- `FStarC.Extraction.ML.Modul.fst` — Module-level extraction
-- `FStarC.Extraction.ML.Syntax.fst` — ML AST definition
-- `FStarC.Extraction.ML.Code.fst` — ML AST → OCaml source text
-- `FStarC.Extraction.Krml.fst` — extraction to .krml (for KaRaMeL/C)
+Extraction is Custard, a whole-program compiler selected with `--codegen
+OCaml|FSharp|KrmlC|KrmlRust|C` (design doc: `doc/ref/custard.md`). Key files
+in `src/custard/`:
+- `FStarC.Custard.Driver.fst` — entry point, option checks, output files
+- `FStarC.Custard.Extract.fst` — F* terms → Custard IR, reachability
+- `FStarC.Custard.Builtins.fst` — primitives and realized modules
+- `FStarC.Custard.PrintOCaml.fst`, `PrintFSharp.fst`, `PrintC.fst`,
+  `PrintKrml.fst` — the backends
 
 ### Modifying SMT Encoding
 
@@ -267,7 +267,6 @@ native OCaml plugin. The build flow:
 1. **Stage 2** is installed with ulib checked files.
 2. **Pulse plugin source** is checked+extracted by the stage 2 compiler:
    - `pulse/src/checker/` → `stage3/checker.ml/`
-   - `pulse/src/extraction/` → `stage3/extraction.ml/`
    - `pulse/src/syntax_extension/` → `stage3/syntax_extension.ml/`
 3. **Dune links** the extracted plugin OCaml with the stage 2
    compiler to produce `fstarc3_full.exe` (see
@@ -280,7 +279,7 @@ native OCaml plugin. The build flow:
 
 ### Modifying the Pulse Checker
 
-Edit files in `pulse/src/checker/`, `pulse/src/extraction/`, or
+Edit files in `pulse/src/checker/` or
 `pulse/src/syntax_extension/`. Then:
 
 ```bash
@@ -316,7 +315,7 @@ key executables:
 Libraries:
 - `fstarcompiler` — the compiler as a library
 - `fstar_plugins` — ulib plugin extraction (tactics, etc.)
-- `pulse_plugin` — Pulse checker/extraction/syntax as OCaml library
+- `pulse_plugin` — Pulse checker and syntax extension as OCaml library
 
 PPX preprocessors used: `ppx_deriving.show`, `ppx_deriving_yojson`.
 

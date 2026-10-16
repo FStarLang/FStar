@@ -11,8 +11,6 @@ In all cases (user or developer), please first read `README.md`
   its other subdirectories. It does not require loading the Pulse
   plugin (which makes sense, since the checker itself is part of the
   plugin.)
-* In `src/extraction`: The krml extraction rules for Pulse and
-  PulseC. This F* code typechecks against the F* sources.
 * In `src/syntax-extension`: A top-level parser hook for the custom
   syntax of pulse. This F* code typechecks against the F* sources.
 * In `src/ml`: Base OCaml files for the checker.

@@ -55,7 +55,7 @@ $(CACHE_DIR)/%.checked:
 # --extract_module meant.  A program with a [main] would say
 # --custard_main Test.main instead.
 $(OUT_DIR)/test.ml: $(ALL_CHECKED_FILES) | $(OUT_DIR)
-	$(FSTAR) --codegen Custard --custard_entry_module Test $(ROOTS) -o $@
+	$(FSTAR) --codegen OCaml --custard_entry_module Test $(ROOTS) -o $@
 
 $(OUT_DIR):
 	mkdir -p $(OUT_DIR)

@@ -79,8 +79,37 @@ val mkBvModUnsafe  : int -> term & term -> ML term
 val mkBvMul'   : int -> term & term -> ML term
 val mkBvUlt    : term & term -> ML term
 val mkBvUext   : int -> term -> ML term
+val mkBvSext   : int -> term -> ML term
+val mkBvExtract : int -> int -> term -> ML term
+val mkBvRepeat : int -> term -> ML term
+val mkBvConcat : term & term -> ML term
 val mkBvNot    : term -> ML term
+val mkBvNeg    : term -> ML term
 val mkBvToNat  : term -> ML term
+val mkSBvToInt : term -> ML term
+val mkBvNand   : term & term -> ML term
+val mkBvNor    : term & term -> ML term
+val mkBvXnor   : term & term -> ML term
+val mkBvComp   : term & term -> ML term
+val mkBvUle    : term & term -> ML term
+val mkBvUgt    : term & term -> ML term
+val mkBvUge    : term & term -> ML term
+val mkBvSlt    : term & term -> ML term
+val mkBvSle    : term & term -> ML term
+val mkBvSgt    : term & term -> ML term
+val mkBvSge    : term & term -> ML term
+val mkBvSdiv   : term & term -> ML term
+val mkBvSrem   : term & term -> ML term
+val mkBvSmod   : term & term -> ML term
+val mkBvAshr   : term & term -> ML term
+val mkBvNego   : term -> ML term
+val mkBvUaddo  : term & term -> ML term
+val mkBvSaddo  : term & term -> ML term
+val mkBvUmulo  : term & term -> ML term
+val mkBvSmulo  : term & term -> ML term
+val mkBvUsubo  : term & term -> ML term
+val mkBvSsubo  : term & term -> ML term
+val mkBvSdivo  : term & term -> ML term
 
 val mkITE : term & term & term -> ML term
 val mkCases : list term -> ML term

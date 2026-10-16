@@ -381,7 +381,7 @@ let reject_fwidth (fw:fwidth) : ML unit =
            narrower that arithmetic is defined on, so such a program would \
            compute at a width it did not ask for (sections 38 and 122.5).");
     text "Use FStar.Float32 or FStar.Float64, or extract with \
-          --custard_backend C." ]
+          --codegen C." ]
 
 (* Types F# already has.  Emitting a declaration for one of these would
    shadow the real thing; a monomorphized clone carries a [spec] suffix and is
@@ -452,7 +452,7 @@ let rec ty (t:cty) : ML string =
      [BufSub], which needs an interior pointer; that one is refused at run
      time rather than mistranslated. *)
   | TBuf t -> "(" ^ ty t ^ ")[]"
-  | TRef t -> "(" ^ ty t ^ " ref)"
+  | TRef (_, t) -> "(" ^ ty t ^ " ref)"
   | TInline _ ->
     failwith "Custard: an inline-field marker reached the F# backend"
   | TConst _ ->
@@ -462,7 +462,7 @@ let rec ty (t:cty) : ML string =
       text "[wmma::fragment<matrix_a, 16, 16, 16, half, row_major>] is one \
             type and [wmma::fragment<matrix_b, ...>] another; F# has no such \
             construction, so section 69 is a C-backend feature \
-            (--custard_backend C).";
+            (--codegen C).";
       text "The unparameterized form still works everywhere: a \
             [@@custard_extern] target with no [{0}] placeholder names one \
             target type, and its arguments are dropped." ]
@@ -500,8 +500,8 @@ let rec erased_pun (a:cty) (b:cty) : bool =
   | TApp (n1, a1), TApp (n2, a2) ->
     (Cons? a1 || Cons? a2) && not (n1 = n2 && a1 = a2)
   | TBuf t1, TBuf t2 -> not (t1 = t2)
-  | TRef t1, TRef t2 -> not (t1 = t2)
-  | TBuf t1, TRef t2 | TRef t1, TBuf t2 -> erased_pun t1 t2
+  | TRef (_, t1), TRef (_, t2) -> not (t1 = t2)
+  | TBuf t1, TRef (_, t2) | TRef (_, t1), TBuf t2 -> erased_pun t1 t2
   | _ -> false
 
 let reject_coercion (a:cty) (b:cty) : ML string =
@@ -515,7 +515,7 @@ let reject_coercion (a:cty) (b:cty) : ML string =
           (section 122.6.2).";
     text "The change is under a type constructor rather than at the top of \
           the type, which is where an erased field can be.  Extract this \
-          program with --custard_backend OCaml, or give the declaration a \
+          program with --codegen OCaml, or give the declaration a \
           type whose erased part is a field rather than a parameter." ]
 
 (* -------------------------------------------------------------------- *)
@@ -1022,7 +1022,7 @@ let rec term (ind:string) (e:expr) : ML string =
      that nothing downstream has to infer it -- which at a type variable it
      could not. *)
   | EAny -> "(Unchecked.defaultof<" ^ ty e.ty ^ ">)"
-  | EAbort s -> "(failwith \"" ^ escape s ^ "\")"
+  | EAbort s | EUnreachable s -> "(failwith \"" ^ escape s ^ "\")"
   | EWhile (c, body) ->
     let pre = "(while " in
     let hd = pre ^ term (after ind pre) c ^ " do\n" in
@@ -1444,7 +1444,7 @@ let reject_unrealized (p:program) : ML unit =
                backend accepts (section 122).");
         text "Give it a target with [@@custard_extern \"...\"] and supply \
               that name yourself, or extract this program with \
-              --custard_backend OCaml." ]
+              --codegen OCaml." ]
     | _ -> ())
 
 (* A realized *type* is the same situation one level up.  The ones .NET
@@ -1463,7 +1463,7 @@ let reject_realized_types (p:program) : ML unit =
         text ("Its declaration says what shape the type has, but not what it \
                is: the definition is in ulib/ml, and there is no F# \
                counterpart of that library (section 122.9).");
-        text "Extract this program with --custard_backend OCaml, or keep it \
+        text "Extract this program with --codegen OCaml, or keep it \
               to the fragment the C backend compiles." ]
     | _ -> ())
 
@@ -1482,7 +1482,7 @@ let reject_target_only_types (p:program) : ML unit =
             text ("Its target spelling [" ^ target ^ "] has a placeholder for \
                    an argument, so two instantiations of it are two different \
                    target types; F# has no such construction.  Section 69 is \
-                   a C-backend feature (--custard_backend C).") ]
+                   a C-backend feature (--codegen C).") ]
         | CReference ->
           E.raise_error0 E.Error_CustardBadReference [
             text ("Custard: the type " ^ string_of_name t.dt_name ^
@@ -1491,7 +1491,7 @@ let reject_target_only_types (p:program) : ML unit =
             text "The attribute says that values of the type are handles, so \
                   a binding of one has to alias rather than copy, which is \
                   C++ [T &x = ...] and F# has no way to spell.  Section 70.2 \
-                  is a C-backend feature (--custard_backend C)." ]
+                  is a C-backend feature (--codegen C)." ]
         | _ -> ())
     | _ -> ())
 
@@ -1515,7 +1515,7 @@ let rec mentions_tyvar (t:cty) : ML bool =
   | TVar _ -> true
   | TArrow (a, _, b) -> mentions_tyvar a || mentions_tyvar b
   | TTuple ts -> ts |> List.existsb mentions_tyvar
-  | TBuf t | TRef t | TInline t -> mentions_tyvar t
+  | TBuf t | TRef (_, t) | TInline t -> mentions_tyvar t
   | TApp (_, args) -> args |> List.existsb mentions_tyvar
   | _ -> false
 
@@ -1581,7 +1581,7 @@ let reject_generic_values (p:program) : ML unit =
         text ("F#'s value restriction does not generalize such a definition, \
                so it cannot be written at all (section 122.11).  " ^ why);
         text "Give it a parameter, specialize it at the type it is wanted at, \
-              or extract with --custard_backend OCaml." ]
+              or extract with --codegen OCaml." ]
     | _ -> ())
 
 (* -------------------------------------------------------------------- *)

@@ -6,7 +6,7 @@ include $(PULSE_ROOT)/mk/test.mk
 # Extra tests
 .PHONY: test-c
 test-c: verify # reuses cache, needs to run after verify
-	+$(MAKE) -f c.Makefile
+	+$(MAKE) -f custard.Makefile
 
 .PHONY: test-cbor
 test-cbor: verify

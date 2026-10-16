@@ -15,6 +15,10 @@ open FStarC.Class.Show
 
 open FStarC.MachineInts
 module E = FStarC.Int.Extra
+module EMB = FStarC.Syntax.Embeddings
+module NBE = FStarC.TypeChecker.NBETerm
+module S = FStarC.Syntax.Syntax
+module U = FStarC.Syntax.Util
 
 (* NB: Eta expanding trips typeclass resolution *)
 let mymon = writer (list primitive_step)
@@ -98,3 +102,42 @@ let ops : list primitive_step =
         mk1 0 PC.char_u32_of_char (fun (c : char) -> let n = Util.int_of_char c in
                                                         MachineInts.mk #UInt32 n None);
    ])
+
+(* Simplification steps (see [Cfg.simplification_steps]) deciding the range
+   predicates [FStar.UInt.size x n] and [FStar.Int.size x n] when [x] and [n]
+   are integer constants.  A machine-integer literal such as [4096ul] is
+   [FStar.UInt32.uint_to_t 4096] once its [unfold] wrapper is unfolded, and
+   typing that application leaves the guard [FStar.UInt.size 4096 32]: these
+   steps decide such guards without the SMT solver.
+
+   Being simplification steps, they do not make [size] a primitive, so they
+   do not stop it from being unfolded.  The ranges are compared through bit
+   lengths, so as not to compute [pow2 n] for a large constant [n]. *)
+let rec bit_length (x:int) : int = if x <= 0 then 0 else 1 + bit_length (x / 2)
+
+(* [FStar.UInt.fits x n]: [0 <= x <= pow2 n - 1] *)
+let uint_fits (x n : int) : option bool =
+  if n < 0 then None
+  else Some (x >= 0 && bit_length x <= n)
+
+(* [FStar.Int.fits x n]: [-(pow2 (n-1)) <= x <= pow2 (n-1) - 1] *)
+let int_fits (x n : int) : option bool =
+  if n <= 0 then None
+  else if x >= 0 then Some (bit_length x <= n - 1)
+  else Some (bit_length (- x - 1) <= n - 1)
+
+let size_step (lid : Ident.lid) (fits : int -> int -> option bool) : primitive_step =
+  let as_prop (b:bool) : EMB.abstract_term =
+    EMB.Abstract (if b then U.t_true else U.t_false)
+  in
+  let as_nbe_prop (b:bool) : NBE.abstract_nbe_term =
+    NBE.AbstractNBE (NBE.mkFV (S.lid_as_fv (if b then PC.true_lid else PC.false_lid) None) [] [])
+  in
+  mk2' 0 lid
+    (fun (x n : int) -> Option.map as_prop (fits x n))
+    (fun (x n : int) -> Option.map as_nbe_prop (fits x n))
+
+let simplify_ops : list primitive_step = [
+  size_step (PC.p2l ["FStar"; "UInt"; "size"]) uint_fits;
+  size_step (PC.p2l ["FStar"; "Int"; "size"]) int_fits;
+]

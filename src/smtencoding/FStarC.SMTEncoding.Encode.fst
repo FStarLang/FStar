@@ -2397,7 +2397,7 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
   Errors.with_ctx "While encoding a query" (fun () ->
     Z3.query_logging.set_module_name (string_of_lid (TypeChecker.Env.current_module tcenv));
     let env = get_env (Env.current_module tcenv) tcenv in
-    let q, bindings =
+    let closing, bindings =
         let rec aux bindings : ML _ = match bindings with
             | S.Binding_var x::rest ->
                 let out, rest = aux rest in
@@ -2413,17 +2413,20 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
                 Syntax.mk_binder ({x with sort=t})::out, rest
             | _ -> [], bindings in
         let closing, bindings = aux tcenv.gamma in
-        U.close_forall_no_univs (List.rev closing) q, bindings
+        List.rev closing, bindings
     in
+    (* The query is [forall closing. q]. [split_goals_under] works on the open
+       [q]; the closed formula is only built to be printed. *)
+    let closed_q () = U.close_forall_no_univs closing q in
     let env_decls, env = encode_env_bindings env bindings in
     if Debug.medium () || !dbg_SMTEncoding
-    then Format.print1 "Encoding query formula {: %s\n" (show q);
-    let (goals, qdecls), ms = Timing.record_ms (fun () -> ErrorReporting.split_goals use_env_msg env q) in
+    then Format.print1 "Encoding query formula {: %s\n" (show (closed_q ()));
+    let (goals, qdecls), ms = Timing.record_ms (fun () -> ErrorReporting.split_goals_under use_env_msg env closing q) in
     let caption =
       (* If these options are off, the Captions will be dropped anyway,
       but by checking here we can skip the printing. *)
       if Options.log_queries () || Options.log_failing_queries ()
-      then [Caption ("Encoding query formula : " ^ (show q));
+      then [Caption ("Encoding query formula : " ^ (show (closed_q ())));
             Caption ("Context: " ^ String.concat "\n" (Errors.get_ctx ()))]
       else []
     in

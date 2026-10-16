@@ -28,6 +28,7 @@ module E     = FStarC.Errors
 module Dep     = FStarC.Parser.Dep
 module UF      = FStarC.Syntax.Unionfind
 module C       = FStarC.Custard.PrintC
+module Cherry  = FStarC.Custard.Cherry
 module Krml    = FStarC.Custard.PrintKrml
 module Extract = FStarC.Custard.Extract
 module Find    = FStarC.Find
@@ -106,13 +107,16 @@ let lost_cast (e:expr) (t:cty) : bool =
 let warn_any (prog:program) : ML unit =
   let sites : ref (list string) = mk_ref [] in
   let note (s:string) : ML unit = sites := s :: !sites in
+  (* Under Cherry a [TAny] is [FStar.Dyn.dyn], whose value carries its type
+     information, so nothing is lost; PrintC rejects a coercion into one. *)
+  let cherry = Options.custard_cherry () in
   let rec any_cty (c:cty) : ML bool =
     match c with
-    | TAny -> true
+    | TAny -> not cherry
     | TArrow (a, _, b) -> any_cty a || any_cty b
     | TApp (_, args) -> args |> List.existsb any_cty
     | TTuple cs -> cs |> List.existsb any_cty
-    | TBuf c | TRef c | TInline c -> any_cty c
+    | TBuf c | TRef (_, c) | TInline c -> any_cty c
     | TVar _ | TInt _ | TFloat _ | TUnit | TExn | TConst _ -> false in
   let at (where:string) (c:cty) : ML unit =
     if any_cty c then note ("the " ^ where ^ " has type " ^ show c) in
@@ -123,7 +127,7 @@ let warn_any (prog:program) : ML unit =
      | _ -> ());
     let sub (es:list expr) : ML unit = es |> List.iter go in
     match x.e with
-    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> ()
+    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ | EUnreachable _ -> ()
     | ELet (v, t, e1, e2) -> at ("binding of '" ^ v ^ "'") t; sub [e1; e2]
     | EApp (h, es) -> sub (h :: es)
     | EFun (bs, b) ->
@@ -307,7 +311,7 @@ let unit_entries (keys:list (string & string)) (homes:HashTable.t string string)
        would be a symbol the consumer cannot name.  Types are all kept, since
        the header carries the whole type language -- and because that is what
        keeps two headers from defining one [struct] twice (section 42.2). *)
-    if Options.custard_backend () = "C"
+    if Options.codegen_c ()
        && (match d with DLet dl -> not (C.is_public dl) | _ -> false)
     then [] else
     let d, ti =
@@ -351,7 +355,7 @@ let write_unit_iface (st:Extract.state) (homes:HashTable.t string string)
       Unit.ui_header = {
         Unit.uh_version = Unit.current_version;
         Unit.uh_name    = u;
-        Unit.uh_backend = Options.custard_backend ();
+        Unit.uh_backend = Options.codegen_name ();
         Unit.uh_options = Unit.layout_options ();
         (* Section 115.  The files this unit's IR was extracted from.
            {!Extract.loaded_digests} covers what the loader pulled in on
@@ -391,7 +395,7 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
   let roots = entrypoints () @ (match main with Some l -> [l] | None -> []) in
   if Nil? roots && Nil? (Options.custard_entry_modules ()) then
     E.raise_error0 E.Fatal_OptionsNotCompatible [
-      text "--codegen Custard requires at least one --custard_entry, \
+      text "--codegen requires at least one --custard_entry, \
             --custard_entry_module or --custard_main.";
       text "Custard is a whole-program compiler: it extracts exactly the \
                    definitions reachable from the entry points."
@@ -408,15 +412,15 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
      none of the two units involved.  Refusing here says which flag and which
      unit. *)
   if (Some? (Options.custard_unit ()) || Cons? (Options.custard_links ()))
-     && Options.custard_backend () = "KrmlRust" then
+     && Options.codegen () = Some Options.KrmlRust then
     E.raise_error0 E.Fatal_OptionsNotCompatible [
       text "Separate compilation (--custard_unit, --custard_link) is not \
-            implemented for --custard_backend KrmlRust.";
+            implemented for --codegen KrmlRust.";
       text "karamel's Rust backend has no form for a declaration without a \
             definition: it assumes a function is defined elsewhere in the \
             crate and emits nothing for it, and it cannot translate a global \
             at all.";
-      text "Use --custard_backend KrmlC, OCaml or C, or compile the whole \
+      text "Use --codegen KrmlC, OCaml or C, or compile the whole \
             program at once."
     ];
   (* Looking definitions up in the environment instantiates their universes,
@@ -473,7 +477,7 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
      program that has collapsed to a single file. *)
   let split_backends = ["OCaml"; "FSharp"; "KrmlC"; "KrmlRust"] in
   let files = if Options.custard_split ()
-                 && List.mem (Options.custard_backend ()) split_backends
+                 && List.mem (Options.codegen_name ()) split_backends
               then Some (phase "split" (fun () ->
                      Split.run deps (Extract.link_homes st)
                                (List.map fst imports @ prog)))
@@ -489,7 +493,10 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
      written, because a C unit's interface has to record the *name* of the
      header a downstream unit includes, and [-o] is what decides it
      (section 42.2). *)
-  let backend = Options.custard_backend () in
+  (* Cherry is the direct-to-C backend with reference counting inserted
+     just before printing (cherry.md), so from here on it is "C". *)
+  let backend = if Options.custard_cherry () then "C"
+                else Options.codegen_name () in
   (* Section 95.  Only the direct-to-C and F# printers read this, so on any
      other backend it would be silently ignored -- and a flag whose whole
      purpose is to change the width of every index is not one to ignore
@@ -497,7 +504,7 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
   if Options.custard_sizet_32 () && backend <> "C" && backend <> "FSharp" then
     E.raise_error0 E.Fatal_OptionsNotCompatible [
       text ("--custard_sizet_width 32 is an option of the direct-to-C and F# \
-             backends, but this run uses --custard_backend " ^ backend ^ ".");
+             backends, but this run uses --codegen " ^ backend ^ ".");
       text "karamel decides the width of size_t for itself, and the OCaml \
             backend has no say in it at all."
     ];
@@ -507,7 +514,7 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
      got the other shape would have no way to tell. *)
   if backend = "FSharp" && Some? (Options.custard_unit ()) then
     E.raise_error0 E.Fatal_OptionsNotCompatible [
-      text "--custard_unit is not implemented for --custard_backend FSharp.";
+      text "--custard_unit is not implemented for --codegen FSharp.";
       text "Linking two separately extracted units means one .NET assembly \
             referencing another, which the generated project would have to \
             express; the F# backend compiles one whole program today \
@@ -526,7 +533,7 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
                              else OCaml.module_name_of_unit u
                  | None -> "Custard" in
       Find.prepend_output_dir
-        (if Options.custard_backend_krml () then base ^ ".krml"
+        (if Options.codegen_krml () then base ^ ".krml"
          else match backend with
          | "C" -> base ^ ".c"
          | "FSharp" -> base ^ ".fs"
@@ -572,11 +579,18 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
      | _ -> ());
   (* After [Rename], because the names a `.cui` exports are the names the
      generated source actually spells. *)
+  (* Cherry runs before the interface is written, which records the calling
+     convention borrow inference chose for each exported definition. *)
+  let cherried =
+    if backend = "C" && Options.custard_cherry ()
+    then Some (phase "cherry" (fun () -> Cherry.run (List.map fst imports @ prog)))
+    else None in
   phase "iface" (fun () ->
     let hdr_file, init =
       if backend = "C"
       then Some (stem ^ ".h"), C.init_globals_name cu (List.map fst imports @ prog)
       else None, None in
+    let prog = if Some? cherried then Cherry.record_conventions prog else prog in
     write_unit_iface st homes hdr_file init prog infos);
   if Options.custard_dump_ir () then
     Format.print_string (program_to_string prog ^ "\n");
@@ -599,7 +613,13 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
      karamel emits the [extern] prototype for it. *)
   | "KrmlC" | "KrmlRust" -> Krml.write_program ofile (List.map fst imports @ prog)
   | "C" ->
-    let hdr, src = C.print_program stem cu (List.map fst imports @ prog) in
+    let all = (match cherried with
+               | Some all ->
+                 if Options.custard_dump_ir () then
+                   Format.print_string ("(* After Cherry *)\n" ^ program_to_string all ^ "\n");
+                 all
+               | None -> List.map fst imports @ prog) in
+    let hdr, src = C.print_program stem cu all in
     BU.write_file (FStarC.Filepath.join_paths (FStarC.Filepath.dirname ofile)
                      (stem ^ ".h")) hdr;
     BU.write_file ofile src
@@ -627,9 +647,9 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
                           (FStarC.Filepath.dirname ofile) f) src)
   | b ->
     E.raise_error0 E.Fatal_OptionsNotCompatible [
-      text ("Unknown --custard_backend " ^ b ^ ".");
-      text "The backends are OCaml (the default), FSharp, KrmlC, KrmlRust \
-            and C."
+      text ("Unknown --codegen " ^ b ^ ".");
+      text "The backends are OCaml, FSharp, KrmlC, KrmlRust, C \
+            and Cherry."
     ]
 
 (* [--profile_component FStarC.Custard] prints the phase breakdown.  Custard
