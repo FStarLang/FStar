@@ -148,3 +148,4 @@ let simplification_ops_list (env:Env.env_t) : ML (list primitive_step) =
   Primops.Eq.prop_eq_ops env
   @ Primops.Real.simplify_ops
   @ Primops.Erased.simplify_ops
+  @ Primops.MachineInts.simplify_ops
