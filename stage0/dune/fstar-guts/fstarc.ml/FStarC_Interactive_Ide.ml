@@ -324,9 +324,12 @@ let sig_of_fstar_option (name : string) (typ : FStarC_Options.opt_type) : string
   ))
 
 let fstar_options_list_cache : (fstar_option) list =
-  (let defaults = (FStarC_SMap.of_list FStarC_Options.defaults) in
+  (let m = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (FStarC_List.length FStarC_Options.defaults))) in
+  (FStarC_List.iter (fun tmp -> (match tmp with
+    | (key, value) -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace m key value)
+  )) FStarC_Options.defaults);
   let tmp = (FStarC_List.filter_map (fun tmp -> (match tmp with
-      | (u__shortname, name, typ, doc) -> (let tmp1 = (FStarC_SMap.try_find defaults name) in
+      | (u__shortname, name, typ, doc) -> (let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt m name) in
         (FStarC_Option.map (fun default_value -> (let tmp2 = (snippets_of_fstar_option name typ) in
         let tmp3 = (if ((=) doc FStar_Pprint.empty) then None else (let tmp3 = (FStarC_Errors_Msg.renderdoc doc) in
           (Some (tmp3)))) in
@@ -461,7 +464,7 @@ let json_of_issue (tmp : FStarC_Errors.issue) : FStarC_Json.json =
   (FStarC_Interactive_Ide_Types.json_of_issue tmp)
 
 let run_segment (st : FStarC_Interactive_Ide_Types.repl_state) (code : string) : ((FStarC_Interactive_Ide_Types.query_status * FStarC_Json.json) * (FStarC_Interactive_Ide_Types.repl_state, 'tmp) FStar_Pervasives.either) =
-  (let frag = { FStarC_Parser_ParseIt.frag_fname = (st).FStarC_Interactive_Ide_Types.repl_fname;
+  (let frag = { FStarC_Parser_Frontend.frag_fname = (st).FStarC_Interactive_Ide_Types.repl_fname;
       frag_text = code;
       frag_line = Prims.int_one;
       frag_col = Prims.int_zero } in
@@ -486,7 +489,7 @@ let run_segment (st : FStarC_Interactive_Ide_Types.repl_state) (code : string) :
 
 let run_vfs_add (st : FStarC_Interactive_Ide_Types.repl_state) (opt_fname : (string) option) (contents : string) : ((FStarC_Interactive_Ide_Types.query_status * FStarC_Json.json) * (FStarC_Interactive_Ide_Types.repl_state, 'tmp) FStar_Pervasives.either) =
   (let fname = (FStarC_Option.dflt (st).FStarC_Interactive_Ide_Types.repl_fname opt_fname) in
-  (FStarC_Parser_ParseIt.add_vfs_entry fname contents);
+  (FStarC_Parser_Frontend.add_vfs_entry fname contents);
   ((FStarC_Interactive_Ide_Types.QueryOK, FStarC_Json.JsonNull), (FStar_Pervasives.Inl (st))))
 
 let nothing_left_to_pop (st : FStarC_Interactive_Ide_Types.repl_state) : bool =
@@ -571,7 +574,11 @@ let rec run_repl_ld_transactions__aux (progress_callback : (FStarC_Interactive_I
           ((run_repl_ld_transactions__aux progress_callback debug) tmp3 tasks1 [])) else (FStar_Pervasives.Inr (st1)))
       ))
     | ((task :: tasks1), (prev :: previous1)) -> (let tmp = (FStarC_Interactive_PushHelper.update_task_timestamps task) in
-      let tmp1 = ((=) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd prev)) tmp) in
+      let tmp1 = ((=) (match (match prev with
+          | (u__1, u__2) -> u__2
+        ) with
+          | (u__1, u__2) -> u__1
+        ) tmp) in
       (if tmp1 then ((debug "Skipping" task);
       ((run_repl_ld_transactions__aux progress_callback debug) st tasks1 previous1)) else (let tmp2 = ((run_repl_ld_transactions__revert_many debug) st (prev :: previous1)) in
       ((run_repl_ld_transactions__aux progress_callback debug) tmp2 (task :: tasks1) []))))
@@ -644,11 +651,11 @@ let json_of_response (qid : string) (status : FStarC_Interactive_Ide_Types.query
   (FStarC_Json.JsonAssoc ((("kind", (FStarC_Json.JsonStr ("response"))) :: (("query-id", qid1) :: (("status", status1) :: (("response", response) :: [])))))))
 
 let write_full_buffer_fragment_progress (di : FStarC_Interactive_Incremental.fragment_progress) : unit =
-  (let json_of_code_fragment = (fun cf -> (let tmp = (FStarC_Util.digest_of_string (cf).FStarC_Parser_ParseIt.code) in
+  (let json_of_code_fragment = (fun cf -> (let tmp = (FStarC_Util.digest_of_string (cf).FStarC_Parser_Frontend.code) in
     let tmp1 = (FStarC_Json.JsonStr (tmp)) in
     let tmp2 = ("code-digest", tmp1) in
     let tmp3 = (tmp2 :: []) in
-    let tmp4 = (("range", (FStarC_Range_Ops.json_of_def_range (cf).FStarC_Parser_ParseIt.range)) :: tmp3) in
+    let tmp4 = (("range", (FStarC_Range_Ops.json_of_def_range (cf).FStarC_Parser_Frontend.range)) :: tmp3) in
     (FStarC_Json.JsonAssoc (tmp4)))) in
   (match di with
     | FStarC_Interactive_Incremental.FullBufferStarted -> (write_progress (Some ("full-buffer-started")) [])
@@ -747,7 +754,7 @@ let run_push_without_deps (st : FStarC_Interactive_Ide_Types.repl_state) (query 
   let tmp = (FStarC_Options.ide_id_info_off ()) in
   (if tmp then (FStarC_TypeChecker_Env.toggle_id_info (st).FStarC_Interactive_Ide_Types.repl_env false) else (FStarC_TypeChecker_Env.toggle_id_info (st).FStarC_Interactive_Ide_Types.repl_env true));
   let frag = (match (query).FStarC_Interactive_Ide_Types.push_code_or_decl with
-      | (FStar_Pervasives.Inl (text)) -> (FStar_Pervasives.Inl ({ FStarC_Parser_ParseIt.frag_fname = (st).FStarC_Interactive_Ide_Types.repl_fname;
+      | (FStar_Pervasives.Inl (text)) -> (FStar_Pervasives.Inl ({ FStarC_Parser_Frontend.frag_fname = (st).FStarC_Interactive_Ide_Types.repl_fname;
           frag_text = text;
           frag_line = (query).FStarC_Interactive_Ide_Types.push_line;
           frag_col = (query).FStarC_Interactive_Ide_Types.push_column }))
@@ -1094,15 +1101,15 @@ let run_module_lookup (st : FStarC_Interactive_Ide_Types.repl_state) (symbol : s
     | (Some ((FStarC_Interactive_CompletionTable.Namespace (ns_info)))) -> (FStar_Pervasives.Inr (("namespace", (FStarC_Interactive_CompletionTable.alist_of_ns_info ns_info))))
   ))
 
-let fstar_options_map_cache : (fstar_option) FStarC_SMap.t =
-  (let cache = (FStarC_SMap.create (Prims.of_int (50))) in
-  (FStarC_List.iter (fun opt -> (FStarC_SMap.add cache (opt).opt_name opt)) fstar_options_list_cache);
+let fstar_options_map_cache : (fstar_option) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
+  (let cache = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (50)))) in
+  (FStarC_List.iter (fun opt -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace cache (opt).opt_name opt)) fstar_options_list_cache);
   cache)
 
 let run_option_lookup (opt_name : string) : (string, (string * ((string * FStarC_Json.json)) list)) FStar_Pervasives.either =
   (let tmp = (trim_option_name opt_name) in
   (match tmp with
-    | (tmp1, trimmed_name) -> (let tmp2 = (FStarC_SMap.try_find fstar_options_map_cache trimmed_name) in
+    | (tmp1, trimmed_name) -> (let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt fstar_options_map_cache trimmed_name) in
       (match tmp2 with
         | None -> (FStar_Pervasives.Inl ((Prims.strcat "Unknown option:" opt_name)))
         | (Some (opt)) -> (let tmp3 = (update_option opt) in
@@ -1158,7 +1165,7 @@ let run_and_rewind (st : FStarC_Interactive_Ide_Types.repl_state) (sigint_defaul
 
 let run_with_parsed_and_tc_term (st : FStarC_Interactive_Ide_Types.repl_state) (term : string) (line : 'tmp) (column : 'tmp1) (continuation : (FStarC_TypeChecker_Env.env -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> (FStarC_Interactive_Ide_Types.query_status * FStarC_Json.json)))) : ((FStarC_Interactive_Ide_Types.query_status * FStarC_Json.json) * (FStarC_Interactive_Ide_Types.repl_state, 'tmp2) FStar_Pervasives.either) =
   (let dummy_let_fragment = (fun term1 -> (let dummy_decl = (FStarC_Format.fmt1 "let __compute_dummy__ = (%s)" term1) in
-    { FStarC_Parser_ParseIt.frag_fname = " input";
+    { FStarC_Parser_Frontend.frag_fname = " input";
       frag_text = dummy_decl;
       frag_line = Prims.int_zero;
       frag_col = Prims.int_zero })) in
@@ -1166,15 +1173,19 @@ let run_with_parsed_and_tc_term (st : FStarC_Interactive_Ide_Types.repl_state) (
       | ({ FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (tmp, ({ FStarC_Syntax_Syntax.lbname = tmp1; lbunivs = univs; lbtyp = tmp2; lbeff = tmp3; lbdef = def; lbattrs = tmp4; lbpos = tmp5; _ } :: [])); lids = tmp6; _ })); sigrng = tmp7; sigquals = tmp8; sigmeta = tmp9; sigattrs = tmp10; sigopens_and_abbrevs = tmp11; sigopts = tmp12; _ } :: []) -> (Some ((univs, def)))
       | tmp -> None
     )) in
-  let parse = (fun frag -> (let tmp = (FStarC_Parser_ParseIt.parse None (FStarC_Parser_ParseIt.Incremental (frag))) in
+  let parse = (fun frag -> (let tmp = (FStarC_Parser_Frontend.parse None (FStarC_Parser_Frontend.Incremental (frag))) in
     (match tmp with
-      | (FStarC_Parser_ParseIt.IncrementalFragment ((decls, tmp1, u__err))) -> (let tmp2 = (FStarC_List.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst decls) in
+      | (FStarC_Parser_Frontend.IncrementalFragment ((decls, tmp1, u__err))) -> (let tmp2 = (FStarC_List.map (fun x -> (match x with
+            | (u__1, u__2) -> u__1
+          )) decls) in
         (Some (tmp2)))
       | tmp1 -> None
     ))) in
   let desugar = (fun env decls -> (let tmp = (FStarC_ToSyntax_ToSyntax.decls_to_sigelts decls) in
     let tmp1 = (tmp (env).FStarC_TypeChecker_Env.dsenv) in
-    (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp1))) in
+    (match tmp1 with
+      | (u__1, u__2) -> u__1
+    ))) in
   let typecheck = (fun tcenv decls -> (let tmp = (FStarC_TypeChecker_Tc.tc_decls tcenv decls) in
     (match tmp with
       | (ses, tmp1) -> ses
@@ -1284,7 +1295,7 @@ let run_search (st : FStarC_Interactive_Ide_Types.repl_state) (search_str : stri
   let st_matches = (fun candidate term -> (let found = (match (term).st_term with
         | (NameContainsStr (str)) -> (FStarC_Util.contains (FStarC_Ident.string_of_lid (candidate).sc_lid) str)
         | (TypeContainsLid (lid)) -> (let tmp = (sc_fvars tcenv candidate) in
-          (FStarC_RBSet.fStarC_Class_Setlike_mem__lident_rbset_lident_8 lid tmp))
+          (FStarC_RBSet.fStarC_Class_Setlike_mem__lident_rbset_lident_7 lid tmp))
       ) in
     ((<>) found (term).st_negate))) in
   let parse = (fun search_str1 -> (let parse_one = (fun term -> (let negate = (FStarC_Util.starts_with term "-") in

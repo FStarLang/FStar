@@ -16,25 +16,25 @@ type extension_parser = {
   parse_decl : (open_namespaces_and_abbreviations -> (string -> (FStarC_Range_Type.range -> (error_message, FStarC_Parser_AST.decl) FStar_Pervasives.either)));
 }
 
-let extension_parser_table : (extension_parser) FStarC_SMap.t =
-  (FStarC_SMap.create (Prims.of_int (20)))
+let extension_parser_table : (extension_parser) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (20))))
 
 let register_extension_parser (extension_name : string) (eta : extension_parser) : unit =
-  (FStarC_SMap.add extension_parser_table extension_name eta)
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace extension_parser_table extension_name eta)
 
 type extension_lang_parser = (string -> (FStarC_Range_Type.range -> (error_message, (FStarC_Parser_AST.decl) list) FStar_Pervasives.either))
 
 let mk_extension_lang_parser (f : (string -> (FStarC_Range_Type.range -> (error_message, (FStarC_Parser_AST.decl) list) FStar_Pervasives.either))) : (string -> (FStarC_Range_Type.range -> (error_message, (FStarC_Parser_AST.decl) list) FStar_Pervasives.either)) =
   f
 
-let extension_lang_parser_table : ((string -> (FStarC_Range_Type.range -> (error_message, (FStarC_Parser_AST.decl) list) FStar_Pervasives.either))) FStarC_SMap.t =
-  (FStarC_SMap.create (Prims.of_int (20)))
+let extension_lang_parser_table : ((string -> (FStarC_Range_Type.range -> (error_message, (FStarC_Parser_AST.decl) list) FStar_Pervasives.either))) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (20))))
 
 let lookup_extension_lang_parser (extension_name : string) : ((string -> (FStarC_Range_Type.range -> (error_message, (FStarC_Parser_AST.decl) list) FStar_Pervasives.either))) option =
-  (let r = (FStarC_SMap.try_find extension_lang_parser_table extension_name) in
+  (let r = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt extension_lang_parser_table extension_name) in
   (match r with
     | None -> (let tmp = (FStarC_Plugins.autoload_plugin extension_name) in
-      (if tmp then (FStarC_SMap.try_find extension_lang_parser_table extension_name) else None))
+      (if tmp then (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt extension_lang_parser_table extension_name) else None))
     | tmp -> r
   ))
 
@@ -50,10 +50,18 @@ let parse_extension_lang (lang_name : string) (raw_text : string) (raw_text_pos 
   ))
 
 let register_extension_lang_parser (extension_name : string) (eta : (string -> (FStarC_Range_Type.range -> (error_message, (FStarC_Parser_AST.decl) list) FStar_Pervasives.either))) : unit =
-  (FStarC_SMap.add extension_lang_parser_table extension_name eta)
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace extension_lang_parser_table extension_name eta)
+
+let comments : (((string * FStarC_Range_Type.range)) list ref) =
+  (ref [])
+
+let flush_comments (tmp : unit) : ((string * FStarC_Range_Type.range)) list =
+  (let cs = (!(comments)) in
+  ((comments) := []);
+  cs)
 
 let lookup_extension_parser (extension_name : string) : (extension_parser) option =
-  (let do_ = (fun tmp -> (FStarC_SMap.try_find extension_parser_table extension_name)) in
+  (let do_ = (fun tmp -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt extension_parser_table extension_name)) in
   let r = (do_ ()) in
   (match r with
     | None -> (let tmp = (FStarC_Plugins.autoload_plugin extension_name) in
@@ -355,4 +363,9 @@ and lidents_of_decl (t : FStarC_Parser_AST.decl) : (FStarC_Ident.lident) list =
     | (FStarC_Parser_AST.DeclSyntaxExtension (u__1, u__2, u__3, u__4)) -> []
     | (FStarC_Parser_AST.DeclToBeDesugared (tmp)) -> []
   )
+
+let add_comments (cs : ((string * FStarC_Range_Type.range)) list) : unit =
+  (let tmp = (!(comments)) in
+  let tmp1 = (FStarC_List.op_At cs tmp) in
+  ((comments) := tmp1))
 

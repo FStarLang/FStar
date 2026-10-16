@@ -8,30 +8,50 @@ type use_cache_t =
 
 
 let op_Plus_Plus (f1 : (FStarC_Syntax_Syntax.free_vars * (FStarC_Ident.lident) FStarC_RBSet.rbset)) (f2 : (FStarC_Syntax_Syntax.free_vars * (FStarC_Ident.lident) FStarC_RBSet.rbset)) : (FStarC_Syntax_Syntax.free_vars * (FStarC_Ident.lident) FStarC_RBSet.rbset) =
-  (let tmp = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_union__bv_list_bv (let scrut = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst f1) in
-    (scrut).FStarC_Syntax_Syntax.free_names) (let scrut = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst f2) in
+  (let tmp = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_union__bv_list_bv (let scrut = (match f1 with
+        | (u__1, u__2) -> u__1
+      ) in
+    (scrut).FStarC_Syntax_Syntax.free_names) (let scrut = (match f2 with
+        | (u__1, u__2) -> u__1
+      ) in
     (scrut).FStarC_Syntax_Syntax.free_names)) in
-  let tmp1 = (FStarC_Syntax_Unionfind.fStarC_Class_Setlike_union__ctx_uvar_list_ctx_uvar (let scrut = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst f1) in
-    (scrut).FStarC_Syntax_Syntax.free_uvars) (let scrut = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst f2) in
+  let tmp1 = (FStarC_Syntax_Unionfind.fStarC_Class_Setlike_union__ctx_uvar_list_ctx_uvar (let scrut = (match f1 with
+        | (u__1, u__2) -> u__1
+      ) in
+    (scrut).FStarC_Syntax_Syntax.free_uvars) (let scrut = (match f2 with
+        | (u__1, u__2) -> u__1
+      ) in
     (scrut).FStarC_Syntax_Syntax.free_uvars)) in
-  let tmp2 = (FStarC_Syntax_Unionfind.fStarC_Class_Setlike_union__tuple3_p_uvar_option_version_range (let scrut = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst f1) in
-    (scrut).FStarC_Syntax_Syntax.free_univs) (let scrut = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst f2) in
+  let tmp2 = (FStarC_Syntax_Unionfind.fStarC_Class_Setlike_union__tuple3_p_uvar_option_version_range (let scrut = (match f1 with
+        | (u__1, u__2) -> u__1
+      ) in
+    (scrut).FStarC_Syntax_Syntax.free_univs) (let scrut = (match f2 with
+        | (u__1, u__2) -> u__1
+      ) in
     (scrut).FStarC_Syntax_Syntax.free_univs)) in
-  let tmp3 = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_union__ident_list_ident (let scrut = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst f1) in
-    (scrut).FStarC_Syntax_Syntax.free_univ_names) (let scrut = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst f2) in
+  let tmp3 = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_union__ident_list_ident (let scrut = (match f1 with
+        | (u__1, u__2) -> u__1
+      ) in
+    (scrut).FStarC_Syntax_Syntax.free_univ_names) (let scrut = (match f2 with
+        | (u__1, u__2) -> u__1
+      ) in
     (scrut).FStarC_Syntax_Syntax.free_univ_names)) in
   let tmp4 = { FStarC_Syntax_Syntax.free_names = tmp;
       free_uvars = tmp1;
       free_univs = tmp2;
       free_univ_names = tmp3 } in
-  let tmp5 = (FStarC_RBSet.fStarC_Class_Setlike_union__lident_rbset_lident (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd f1) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd f2)) in
+  let tmp5 = (FStarC_RBSet.fStarC_Class_Setlike_union__lident_rbset_lident (match f1 with
+      | (u__1, u__2) -> u__2
+    ) (match f2 with
+      | (u__1, u__2) -> u__2
+    )) in
   (tmp4, tmp5))
 
 let no_free_vars : (FStarC_Syntax_Syntax.free_vars * (FStarC_Ident.lident) FStarC_RBSet.rbset) =
   (let tmp = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_empty__bv_list_bv ()) in
   let tmp1 = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_empty__ctx_uvar_list_ctx_uvar ()) in
   let tmp2 = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_empty__tuple3_p_uvar_option_version_range ()) in
-  let tmp3 = (FStarC_FlatSet.fStarC_Class_Setlike_empty__ident_list_ident ()) in
+  let tmp3 = (FStarC_Ident.fStarC_Class_Setlike_empty__ident_list_ident ()) in
   let tmp4 = { FStarC_Syntax_Syntax.free_names = tmp;
       free_uvars = tmp1;
       free_univs = tmp2;
@@ -40,44 +60,60 @@ let no_free_vars : (FStarC_Syntax_Syntax.free_vars * (FStarC_Ident.lident) FStar
   (tmp4, tmp5))
 
 let singleton_bv (x : FStarC_Syntax_Syntax.bv) : (FStarC_Syntax_Syntax.free_vars * (FStarC_Ident.lident) FStarC_RBSet.rbset) =
-  (let tmp = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst no_free_vars) in
+  (let tmp = (match no_free_vars with
+      | (u__1, u__2) -> u__1
+    ) in
   let tmp1 = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_singleton__bv_list_bv x) in
   let tmp2 = { FStarC_Syntax_Syntax.free_names = tmp1;
       free_uvars = (tmp).FStarC_Syntax_Syntax.free_uvars;
       free_univs = (tmp).FStarC_Syntax_Syntax.free_univs;
       free_univ_names = (tmp).FStarC_Syntax_Syntax.free_univ_names } in
-  (tmp2, (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd no_free_vars)))
+  (tmp2, (match no_free_vars with
+    | (u__1, u__2) -> u__2
+  )))
 
 let singleton_uv (x : FStarC_Syntax_Syntax.ctx_uvar) : (FStarC_Syntax_Syntax.free_vars * (FStarC_Ident.lident) FStarC_RBSet.rbset) =
-  (let tmp = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst no_free_vars) in
+  (let tmp = (match no_free_vars with
+      | (u__1, u__2) -> u__1
+    ) in
   let tmp1 = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_singleton__ctx_uvar_list_ctx_uvar x) in
   let tmp2 = { FStarC_Syntax_Syntax.free_names = (tmp).FStarC_Syntax_Syntax.free_names;
       free_uvars = tmp1;
       free_univs = (tmp).FStarC_Syntax_Syntax.free_univs;
       free_univ_names = (tmp).FStarC_Syntax_Syntax.free_univ_names } in
-  (tmp2, (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd no_free_vars)))
+  (tmp2, (match no_free_vars with
+    | (u__1, u__2) -> u__2
+  )))
 
 let ctx_uvar_typ (u : FStarC_Syntax_Syntax.ctx_uvar) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
   (let tmp = (FStarC_Syntax_Unionfind.find_decoration ((u).FStarC_Syntax_Syntax.ctx_uvar_head, (u).FStarC_Syntax_Syntax.ctx_uvar_head1, (u).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
   (tmp).FStarC_Syntax_Syntax.uvar_decoration_typ)
 
 let singleton_univ_name (x : FStarC_Ident.ident) : (FStarC_Syntax_Syntax.free_vars * (FStarC_Ident.lident) FStarC_RBSet.rbset) =
-  (let tmp = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst no_free_vars) in
-  let tmp1 = (FStarC_FlatSet.fStarC_Class_Setlike_singleton__ident_list_ident x) in
+  (let tmp = (match no_free_vars with
+      | (u__1, u__2) -> u__1
+    ) in
+  let tmp1 = (FStarC_Ident.fStarC_Class_Setlike_singleton__ident_list_ident x) in
   let tmp2 = { FStarC_Syntax_Syntax.free_names = (tmp).FStarC_Syntax_Syntax.free_names;
       free_uvars = (tmp).FStarC_Syntax_Syntax.free_uvars;
       free_univs = (tmp).FStarC_Syntax_Syntax.free_univs;
       free_univ_names = tmp1 } in
-  (tmp2, (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd no_free_vars)))
+  (tmp2, (match no_free_vars with
+    | (u__1, u__2) -> u__2
+  )))
 
 let singleton_univ (x : (((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : (FStarC_Syntax_Syntax.free_vars * (FStarC_Ident.lident) FStarC_RBSet.rbset) =
-  (let tmp = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst no_free_vars) in
+  (let tmp = (match no_free_vars with
+      | (u__1, u__2) -> u__1
+    ) in
   let tmp1 = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_singleton__tuple3_p_uvar_option_version_range x) in
   let tmp2 = { FStarC_Syntax_Syntax.free_names = (tmp).FStarC_Syntax_Syntax.free_names;
       free_uvars = (tmp).FStarC_Syntax_Syntax.free_uvars;
       free_univs = tmp1;
       free_univ_names = (tmp).FStarC_Syntax_Syntax.free_univ_names } in
-  (tmp2, (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd no_free_vars)))
+  (tmp2, (match no_free_vars with
+    | (u__1, u__2) -> u__2
+  )))
 
 let rec free_univs (u : FStarC_Syntax_Syntax.universe) : (FStarC_Syntax_Syntax.free_vars * (FStarC_Ident.lident) FStarC_RBSet.rbset) =
   (let tmp = (FStarC_Syntax_Subst.compress_univ u) in
@@ -95,7 +131,9 @@ let rec free_univs (u : FStarC_Syntax_Syntax.universe) : (FStarC_Syntax_Syntax.f
 let singleton_fvar (fv : FStarC_Syntax_Syntax.fv) : (FStarC_Syntax_Syntax.free_vars * (FStarC_Ident.lident) FStarC_RBSet.rbset) =
   (let tmp = (FStarC_RBSet.fStarC_Class_Setlike_empty__lident_rbset_lident ()) in
   let tmp1 = (FStarC_RBSet.fStarC_Class_Setlike_add__lident_rbset_lident (fv).FStarC_Syntax_Syntax.fv_name tmp) in
-  ((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst no_free_vars), tmp1))
+  ((match no_free_vars with
+    | (u__1, u__2) -> u__1
+  ), tmp1))
 
 let rec free_names_and_uvars_binders (bs : (FStarC_Syntax_Syntax.binder) list) (use_cache : use_cache_t) : (FStarC_Syntax_Syntax.free_vars * (FStarC_Ident.lident) FStarC_RBSet.rbset) =
   (FStarC_List.fold_left (fun n b -> (let tmp = (free_names_and_uvars ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort use_cache) in
@@ -216,10 +254,14 @@ and free_names_and_uvs' (tm : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.
       (FStarC_List.fold_left (fun n lb -> (let tmp1 = (free_names_and_uvars (lb).FStarC_Syntax_Syntax.lbtyp use_cache) in
       let tmp2 = (op_Plus_Plus n tmp1) in
       let tmp3 = (free_names_and_uvars (lb).FStarC_Syntax_Syntax.lbdef use_cache) in
-      (op_Plus_Plus tmp2 tmp3))) tmp (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd (u__1, u__2))))
+      (op_Plus_Plus tmp2 tmp3))) tmp (match (u__1, u__2) with
+        | (u__11, u__21) -> u__21
+      )))
     | (FStarC_Syntax_Syntax.Tm_quoted (tm1, qi)) -> (match (qi).FStarC_Syntax_Syntax.qkind with
         | FStarC_Syntax_Syntax.Quote_static -> (FStarC_List.fold_left (fun n t1 -> (let tmp = (free_names_and_uvars t1 use_cache) in
-          (op_Plus_Plus n tmp))) no_free_vars (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd ((qi).FStarC_Syntax_Syntax.antiquotations, (qi).FStarC_Syntax_Syntax.antiquotations1)))
+          (op_Plus_Plus n tmp))) no_free_vars (match ((qi).FStarC_Syntax_Syntax.antiquotations, (qi).FStarC_Syntax_Syntax.antiquotations1) with
+            | (u__1, u__2) -> u__2
+          ))
         | FStarC_Syntax_Syntax.Quote_dynamic -> (free_names_and_uvars tm1 use_cache)
       )
     | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t1; meta = m; _ })) -> (let u1 = (free_names_and_uvars t1 use_cache) in
@@ -241,7 +283,9 @@ and free_names_and_uvars (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.
 
 let names (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.bv) list =
   (let tmp = (free_names_and_uvars t Def) in
-  let tmp1 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp) in
+  let tmp1 = (match tmp with
+      | (u__1, u__2) -> u__1
+    ) in
   (tmp1).FStarC_Syntax_Syntax.free_names)
 
 let deq_ctx_uvar : (FStarC_Syntax_Syntax.ctx_uvar -> (FStarC_Syntax_Syntax.ctx_uvar -> bool)) =
@@ -268,35 +312,49 @@ let ord_univ_uvar : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.
 
 let uvars (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.ctx_uvar) list =
   (let tmp = (free_names_and_uvars t Def) in
-  let tmp1 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp) in
+  let tmp1 = (match tmp with
+      | (u__1, u__2) -> u__1
+    ) in
   (tmp1).FStarC_Syntax_Syntax.free_uvars)
 
 let uvars_uncached (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.ctx_uvar) list =
   (let tmp = (free_names_and_uvars t NoCache) in
-  let tmp1 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp) in
+  let tmp1 = (match tmp with
+      | (u__1, u__2) -> u__1
+    ) in
   (tmp1).FStarC_Syntax_Syntax.free_uvars)
 
 let names_comp (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.bv) list =
   (let tmp = (free_names_and_uvars_comp c Def) in
-  let tmp1 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp) in
+  let tmp1 = (match tmp with
+      | (u__1, u__2) -> u__1
+    ) in
   (tmp1).FStarC_Syntax_Syntax.free_names)
 
 let fvars (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Ident.lident) FStarC_RBSet.rbset =
   (let tmp = (free_names_and_uvars t NoCache) in
-  (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd tmp))
+  (match tmp with
+    | (u__1, u__2) -> u__2
+  ))
 
 let univnames (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Ident.ident) list =
   (let tmp = (free_names_and_uvars t Def) in
-  let tmp1 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp) in
+  let tmp1 = (match tmp with
+      | (u__1, u__2) -> u__1
+    ) in
   (tmp1).FStarC_Syntax_Syntax.free_univ_names)
 
 let univs (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list =
   (let tmp = (free_names_and_uvars t Def) in
-  let tmp1 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp) in
+  let tmp1 = (match tmp with
+      | (u__1, u__2) -> u__1
+    ) in
   (tmp1).FStarC_Syntax_Syntax.free_univs)
 
 let uvars_full (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.ctx_uvar) list =
   (let tmp = (free_names_and_uvars t Full) in
-  let tmp1 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp) in
+  let tmp1 = (match tmp with
+      | (u__1, u__2) -> u__1
+    ) in
   (tmp1).FStarC_Syntax_Syntax.free_uvars)
 

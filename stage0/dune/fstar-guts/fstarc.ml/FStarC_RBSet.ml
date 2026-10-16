@@ -391,12 +391,6 @@ let fStarC_RBSet_add__hash_code (x : FStarC_Hash.hash_code) (s : (FStarC_Hash.ha
 let fStarC_Class_Setlike_add__hash_code_rbset_hash_code (tmp : FStarC_Hash.hash_code) (s : (FStarC_Hash.hash_code) rbset) : (FStarC_Hash.hash_code) rbset =
   (fStarC_RBSet_add__hash_code tmp s)
 
-let fStarC_Class_Setlike_add__string_rbset_string_6 (tmp : string) (s : (string) rbset) : (string) rbset =
-  (fStarC_RBSet_add__string tmp s)
-
-let fStarC_Class_Setlike_mem__string_rbset_string_6 (tmp : string) (s : (string) rbset) : bool =
-  (fStarC_RBSet_mem__string tmp s)
-
 let rec fStarC_RBSet_filter__aux__string (predicate : (string -> bool)) (acc : (string) rbset) (s : (string) rbset) : (string) rbset =
   (match s with
     | L -> acc
@@ -438,7 +432,7 @@ let fStarC_RBSet_from_list__lident (xs : (FStarC_Ident.lident) list) : (FStarC_I
 let fStarC_Class_Setlike_from_list__lident_rbset_lident (tmp : (FStarC_Ident.lident) list) : (FStarC_Ident.lident) rbset =
   (fStarC_RBSet_from_list__lident tmp)
 
-let fStarC_Class_Setlike_add__lident_rbset_lident_8 (tmp : FStarC_Ident.lident) (s : (FStarC_Ident.lident) rbset) : (FStarC_Ident.lident) rbset =
+let fStarC_Class_Setlike_add__lident_rbset_lident_7 (tmp : FStarC_Ident.lident) (s : (FStarC_Ident.lident) rbset) : (FStarC_Ident.lident) rbset =
   (fStarC_RBSet_add__lident tmp s)
 
 let rec fStarC_RBSet_extract_min__lident (t : (FStarC_Ident.lident) rbset) : ((FStarC_Ident.lident) rbset * FStarC_Ident.lident) =
@@ -472,7 +466,7 @@ let fStarC_Class_Setlike_remove__lident_rbset_lident (tmp : FStarC_Ident.lident)
 let fStarC_Class_Setlike_elems__lident_rbset_lident (tmp : (FStarC_Ident.lident) rbset) : (FStarC_Ident.lident) list =
   (elems tmp)
 
-let fStarC_Class_Setlike_mem__lident_rbset_lident_8 (tmp : FStarC_Ident.lident) (s : (FStarC_Ident.lident) rbset) : bool =
+let fStarC_Class_Setlike_mem__lident_rbset_lident_7 (tmp : FStarC_Ident.lident) (s : (FStarC_Ident.lident) rbset) : bool =
   (fStarC_RBSet_mem__lident tmp s)
 
 let rec for_any (p : ('u___a -> bool)) (s : ('u___a) rbset) : bool =

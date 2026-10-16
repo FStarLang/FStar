@@ -79,7 +79,9 @@ let find_core (u : (((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)
 
 let find (u : (((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * FStarC_Syntax_Syntax.uvar_decoration)) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (let tmp = (find_core u) in
-  (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp))
+  (match tmp with
+    | (u__1, u__2) -> u__1
+  ))
 
 let get_univ_graph (tmp : unit) : ((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.puf =
   (let tmp1 = (get ()) in
@@ -117,7 +119,9 @@ let uvar_id (u : (((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) o
 
 let find_decoration (u : (((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * FStarC_Syntax_Syntax.uvar_decoration)) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : FStarC_Syntax_Syntax.uvar_decoration =
   (let tmp = (find_core u) in
-  (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd tmp))
+  (match tmp with
+    | (u__1, u__2) -> u__2
+  ))
 
 let univ_uvar_id (u : (((FStarC_Syntax_Syntax.universe) option) FStarC_Unionfind.p_uvar * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : Prims.int =
   (let tmp = (get_univ_graph ()) in
@@ -393,6 +397,16 @@ let set_rw (tmp : unit) : unit =
     version = (s).version;
     ro = false }))
 
+let reset (tmp : unit) : unit =
+  ((fail_if_ro ());
+  let v = ((vops).next_major ()) in
+  let tmp1 = (empty v) in
+  let tmp2 = { term_graph = (tmp1).term_graph;
+      univ_graph = (tmp1).univ_graph;
+      version = (tmp1).version;
+      ro = false } in
+  (set tmp2))
+
 let with_uf_enabled (f : (unit -> 'u___a)) : 'u___a =
   (let s = (get ()) in
   (set_rw ());
@@ -404,14 +418,4 @@ let with_uf_enabled (f : (unit -> 'u___a)) : 'u___a =
     )) in
   (restore ());
   r)
-
-let reset (tmp : unit) : unit =
-  ((fail_if_ro ());
-  let v = ((vops).next_major ()) in
-  let tmp1 = (empty v) in
-  let tmp2 = { term_graph = (tmp1).term_graph;
-      univ_graph = (tmp1).univ_graph;
-      version = (tmp1).version;
-      ro = false } in
-  (set tmp2))
 

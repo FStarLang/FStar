@@ -30,7 +30,9 @@ let with_comment_sep (printer : ('tmp -> 'tmp1)) (tm : 'tmp) (tmrange : FStarC_R
     | (comments, has_lookahead) -> (let printed_e = (printer tm) in
       let comments1 = (if has_lookahead then (let pos = (FStarC_Range_Ops.end_of_range tmrange) in
         let tmp1 = (with_comment_sep__comments_before_pos comments pos pos) in
-        (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp1)) else comments) in
+        (match tmp1 with
+          | (u__1, u__2) -> u__1
+        )) else comments) in
       (comments1, printed_e))
   ))
 
@@ -115,7 +117,9 @@ let with_comment (printer : ('tmp -> FStar_Pprint.document)) (tm : 'tmp) (tmrang
     | (comments, has_lookahead) -> (let printed_e = (printer tm) in
       let comments1 = (if has_lookahead then (let pos = (FStarC_Range_Ops.end_of_range tmrange) in
         let tmp1 = (with_comment__comments_before_pos comments pos pos) in
-        (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp1)) else comments) in
+        (match tmp1 with
+          | (u__1, u__2) -> u__1
+        )) else comments) in
       (if ((=) comments1 FStar_Pprint.empty) then printed_e else (FStar_Pprint.group (FStar_Pprint.op_Hat_Hat comments1 printed_e))))
   ))
 
@@ -207,11 +211,15 @@ let token_to_string (tmp : token) : string =
 
 let max_level (l : (('tmp * (token) list)) list) : Prims.int =
   (let find_level_and_max = (fun n level -> (let tmp = (FStarC_List.tryFind (fun tmp -> (match tmp with
-        | (tmp1, tokens) -> ((=) tokens (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd level))
+        | (tmp1, tokens) -> ((=) tokens (match level with
+            | (u__1, u__2) -> u__2
+          ))
       )) level_table) in
     (match tmp with
       | (Some (((tmp1, l1, tmp2), tmp3))) -> (max n l1)
-      | None -> (let tmp1 = (FStarC_List.map token_to_string (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd level)) in
+      | None -> (let tmp1 = (FStarC_List.map token_to_string (match level with
+            | (u__1, u__2) -> u__2
+          )) in
         let tmp2 = (FStarC_String.concat "," tmp1) in
         let tmp3 = (FStarC_Format.fmt1 "Undefined associativity level %s" tmp2) in
         (FStarC_Effect.failwith tmp3))
@@ -1202,7 +1210,9 @@ and p_appTerm (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
     | (FStarC_Parser_AST.App (u__1, u__2, u__3)) when (is_general_application e) -> (let tmp = (head_and_args_full e) in
       (match tmp with
         | (head, args) -> (match args with
-            | (e1 :: (e2 :: [])) when ((=) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd e1) FStarC_Parser_AST.Infix) -> (let tmp1 = (p_argTerm e1) in
+            | (e1 :: (e2 :: [])) when ((=) (match e1 with
+              | (u__11, u__21) -> u__21
+            ) FStarC_Parser_AST.Infix) -> (let tmp1 = (p_argTerm e1) in
               let tmp2 = (p_indexingTerm head) in
               let tmp3 = (FStar_Pprint.op_Hat_Hat tmp2 (str "`")) in
               let tmp4 = (FStar_Pprint.op_Hat_Hat (str "`") tmp3) in
@@ -1997,7 +2007,9 @@ let separate_map_with_comments (prefix : FStar_Pprint.document) (sep : FStar_Ppr
       let tmp2 = (FStar_Pprint.op_Hat_Hat prefix tmp1) in
       let init = ((FStarC_Range_Ops.line_of_pos (FStarC_Range_Ops.end_of_range (meta_decl).r)), tmp2) in
       let tmp3 = (FStarC_List.fold_left fold_fun init xs1) in
-      (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd tmp3))
+      (match tmp3 with
+        | (u__1, u__2) -> u__2
+      ))
   ))
 
 let p_qualifier (tmp : FStarC_Parser_AST.qualifier) : FStar_Pprint.document =
@@ -2189,7 +2201,9 @@ let separate_map_with_comments_kw (prefix : 'tmp) (sep : 'tmp) (f : ('tmp -> ('t
       let tmp1 = (f prefix x) in
       let init = ((FStarC_Range_Ops.line_of_pos (FStarC_Range_Ops.end_of_range (meta_decl).r)), tmp1) in
       let tmp2 = (FStarC_List.fold_left fold_fun init xs1) in
-      (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd tmp2))
+      (match tmp2 with
+        | (u__1, u__2) -> u__2
+      ))
   ))
 
 let p_letbinding (kw : FStar_Pprint.document) (pat_e : (FStarC_Parser_AST.pattern * FStarC_Parser_AST.term)) : FStar_Pprint.document =

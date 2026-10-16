@@ -224,17 +224,23 @@ let by_tactic_interp (pol : pol) (e : FStarC_TypeChecker_Env.env) (t : (FStarC_S
         | ((FStarC_Syntax_Syntax.Tm_fvar (fv)), ((assertion, None) :: [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.spinoff_lid) -> (match pol with
             | StrictlyPositive -> (let tmp4 = (FStarC_Syntax_Util.mk_squash assertion) in
               let tmp5 = (FStarC_Tactics_Types.goal_of_goal_ty e tmp4) in
-              let g = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp5) in
+              let g = (match tmp5 with
+                  | (u__1, u__2) -> u__1
+                ) in
               let g1 = (FStarC_Tactics_Types.set_label "spun-off assertion" g) in
               (Simplified (FStarC_Syntax_Util.t_true, (g1 :: []))))
             | Pos -> (let tmp4 = (FStarC_Syntax_Util.mk_squash assertion) in
               let tmp5 = (FStarC_Tactics_Types.goal_of_goal_ty e tmp4) in
-              let g = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp5) in
+              let g = (match tmp5 with
+                  | (u__1, u__2) -> u__1
+                ) in
               let g1 = (FStarC_Tactics_Types.set_label "spun-off assertion" g) in
               (Simplified (FStarC_Syntax_Util.t_true, (g1 :: []))))
             | Both -> (let tmp4 = (FStarC_Syntax_Util.mk_squash assertion) in
               let tmp5 = (FStarC_Tactics_Types.goal_of_goal_ty e tmp4) in
-              let g = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp5) in
+              let g = (match tmp5 with
+                  | (u__1, u__2) -> u__1
+                ) in
               let g1 = (FStarC_Tactics_Types.set_label "spun-off assertion" g) in
               (Dual (assertion, FStarC_Syntax_Util.t_true, (g1 :: []))))
             | Neg -> (Simplified (assertion, []))
@@ -416,7 +422,7 @@ let splice (env : FStarC_TypeChecker_Env.env) (quals : (FStarC_Syntax_Syntax.qua
           local_state = (ps).FStarC_Tactics_Types.local_state;
           urgency = (ps).FStarC_Tactics_Types.urgency;
           dump_on_failure = (ps).FStarC_Tactics_Types.dump_on_failure } in
-      let tmp3 = (if is_typed then (if (Prims.op_Greater (FStarC_List.length lids) Prims.int_one) then (let tmp3 = (FStarC_Ident.fStarC_Class_Show_show__list_lident_87 lids) in
+      let tmp3 = (if is_typed then (if (Prims.op_Greater (FStarC_List.length lids) Prims.int_one) then (let tmp3 = (FStarC_Ident.fStarC_Class_Show_show__list_lident_86 lids) in
         let tmp4 = (FStarC_Format.fmt1 "Typed splice: unexpected lids length (> 1) (%s)" tmp3) in
         (FStarC_Errors.fStarC_Errors_raise_error__range_string rng FStarC_Errors_Codes.Error_BadSplice tmp4)) else (let tmp3 = (if (match lids with
             | [] -> true
@@ -569,7 +575,7 @@ let splice (env : FStarC_TypeChecker_Env.env) (quals : (FStarC_Syntax_Syntax.qua
           (FStarC_List.iter (fun lid -> (let tmp4 = (FStarC_List.tryFind (FStarC_Ident.lid_equals lid) lids') in
           (match tmp4 with
             | None when (not (env).FStarC_TypeChecker_Env.flychecking) -> (let tmp5 = (FStarC_Ident.fStarC_Class_Show_show__lident lid) in
-              let tmp6 = (FStarC_Ident.fStarC_Class_Show_show__list_lident_87 lids') in
+              let tmp6 = (FStarC_Ident.fStarC_Class_Show_show__list_lident_86 lids') in
               let tmp7 = (FStarC_Format.fmt2 "Splice declared the name %s but it was not defined.\nThose defined were: %s" tmp5 tmp6) in
               (FStarC_Errors.fStarC_Errors_raise_error__range_string rng FStarC_Errors_Codes.Fatal_SplicedUndef tmp7))
             | tmp5 -> ()

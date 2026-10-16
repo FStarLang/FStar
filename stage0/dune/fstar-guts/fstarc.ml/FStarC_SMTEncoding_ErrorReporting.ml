@@ -122,13 +122,13 @@ let rec collect_conjuncts (q : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax
     | tmp4 -> (q :: [])
   ))))
 
-let rec split_goals__aux__seq (fresh_name : (string -> string)) (hyp : (FStarC_SMTEncoding_Term.term -> FStarC_SMTEncoding_Term.decl)) (mk_leaf : (FStarC_SMTEncoding_Env.env_t -> ((FStar_Pprint.document) list -> ((FStarC_Range_Type.range) option -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> (goal_tree * (FStarC_SMTEncoding_Term.decls_elt) list)))))) (env : FStarC_SMTEncoding_Env.env_t) (default_msg : (FStar_Pprint.document) list) (ropt : (FStarC_Range_Type.range) option) (cs : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) : (goal_tree * (FStarC_SMTEncoding_Term.decls_elt) list * bool) =
+let rec split_goals_under__aux__seq (fresh_name : (string -> string)) (hyp : (FStarC_SMTEncoding_Term.term -> FStarC_SMTEncoding_Term.decl)) (mk_leaf : (FStarC_SMTEncoding_Env.env_t -> ((FStar_Pprint.document) list -> ((FStarC_Range_Type.range) option -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> (goal_tree * (FStarC_SMTEncoding_Term.decls_elt) list)))))) (env : FStarC_SMTEncoding_Env.env_t) (default_msg : (FStar_Pprint.document) list) (ropt : (FStarC_Range_Type.range) option) (cs : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) : (goal_tree * (FStarC_SMTEncoding_Term.decls_elt) list * bool) =
   (match cs with
     | [] -> (GTrivial, [], true)
-    | (c :: []) -> ((split_goals__aux fresh_name hyp mk_leaf) env default_msg ropt c)
-    | (c :: cs1) -> (let tmp = ((split_goals__aux fresh_name hyp mk_leaf) env default_msg ropt c) in
+    | (c :: []) -> ((split_goals_under__aux fresh_name hyp mk_leaf) env default_msg ropt c)
+    | (c :: cs1) -> (let tmp = ((split_goals_under__aux fresh_name hyp mk_leaf) env default_msg ropt c) in
       (match tmp with
-        | (t, decls, ok) -> (let tmp1 = ((split_goals__aux__seq fresh_name hyp mk_leaf env default_msg ropt) cs1) in
+        | (t, decls, ok) -> (let tmp1 = ((split_goals_under__aux__seq fresh_name hyp mk_leaf env default_msg ropt) cs1) in
           (match tmp1 with
             | (rest, decls', ok') -> (let tmp2 = (if (ok && (not (match rest with
                   | GTrivial -> true
@@ -149,16 +149,16 @@ let rec split_goals__aux__seq (fresh_name : (string -> string)) (hyp : (FStarC_S
       ))
   )
 
-and split_goals__aux__go (fresh_name : (string -> string)) (hyp : (FStarC_SMTEncoding_Term.term -> FStarC_SMTEncoding_Term.decl)) (mk_leaf : (FStarC_SMTEncoding_Env.env_t -> ((FStar_Pprint.document) list -> ((FStarC_Range_Type.range) option -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> (goal_tree * (FStarC_SMTEncoding_Term.decls_elt) list)))))) (default_msg : (FStar_Pprint.document) list) (ropt : (FStarC_Range_Type.range) option) (e : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (scr' : FStarC_SMTEncoding_Term.term) (env' : FStarC_SMTEncoding_Env.env_t) (negs : (FStarC_SMTEncoding_Term.term) list) (brs : (((FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) list) : (goal_tree * (FStarC_SMTEncoding_Term.decls_elt) list * bool) =
+and split_goals_under__aux__go (fresh_name : (string -> string)) (hyp : (FStarC_SMTEncoding_Term.term -> FStarC_SMTEncoding_Term.decl)) (mk_leaf : (FStarC_SMTEncoding_Env.env_t -> ((FStar_Pprint.document) list -> ((FStarC_Range_Type.range) option -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> (goal_tree * (FStarC_SMTEncoding_Term.decls_elt) list)))))) (default_msg : (FStar_Pprint.document) list) (ropt : (FStarC_Range_Type.range) option) (e : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (scr' : FStarC_SMTEncoding_Term.term) (env' : FStarC_SMTEncoding_Env.env_t) (negs : (FStarC_SMTEncoding_Term.term) list) (brs : (((FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) list) : (goal_tree * (FStarC_SMTEncoding_Term.decls_elt) list * bool) =
   (match brs with
     | [] -> (GTrivial, [], false)
     | (b :: brs1) -> (let tmp = (FStarC_SMTEncoding_EncodeTerm.encode_branch_pattern env' scr' b) in
       (match tmp with
-        | (guard, p, br, envb, declsb) -> (let tmp1 = ((split_goals__aux fresh_name hyp mk_leaf) envb default_msg ropt br) in
+        | (guard, p, br, envb, declsb) -> (let tmp1 = ((split_goals_under__aux fresh_name hyp mk_leaf) envb default_msg ropt br) in
           (match tmp1 with
             | (t, declst, ok) -> (let tmp2 = (FStarC_SMTEncoding_Util.mkNot guard) in
               let tmp3 = (tmp2 :: negs) in
-              let tmp4 = ((split_goals__aux__go fresh_name hyp mk_leaf default_msg ropt e scr' env') tmp3 brs1) in
+              let tmp4 = ((split_goals_under__aux__go fresh_name hyp mk_leaf default_msg ropt e scr' env') tmp3 brs1) in
               (match tmp4 with
                 | (rest, declsr, ok') -> (let tmp5 = (FStarC_SMTEncoding_Util.mk_and_l (FStarC_List.rev (guard :: negs))) in
                   let tmp6 = (hyp tmp5) in
@@ -172,7 +172,7 @@ and split_goals__aux__go (fresh_name : (string -> string)) (hyp : (FStarC_SMTEnc
       ))
   )
 
-and split_goals__aux (fresh_name : (string -> string)) (hyp : (FStarC_SMTEncoding_Term.term -> FStarC_SMTEncoding_Term.decl)) (mk_leaf : (FStarC_SMTEncoding_Env.env_t -> ((FStar_Pprint.document) list -> ((FStarC_Range_Type.range) option -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> (goal_tree * (FStarC_SMTEncoding_Term.decls_elt) list)))))) (env : FStarC_SMTEncoding_Env.env_t) (default_msg : (FStar_Pprint.document) list) (ropt : (FStarC_Range_Type.range) option) (q : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (goal_tree * (FStarC_SMTEncoding_Term.decls_elt) list * bool) =
+and split_goals_under__aux (fresh_name : (string -> string)) (hyp : (FStarC_SMTEncoding_Term.term -> FStarC_SMTEncoding_Term.decl)) (mk_leaf : (FStarC_SMTEncoding_Env.env_t -> ((FStar_Pprint.document) list -> ((FStarC_Range_Type.range) option -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> (goal_tree * (FStarC_SMTEncoding_Term.decls_elt) list)))))) (env : FStarC_SMTEncoding_Env.env_t) (default_msg : (FStar_Pprint.document) list) (ropt : (FStarC_Range_Type.range) option) (q : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (goal_tree * (FStarC_SMTEncoding_Term.decls_elt) list * bool) =
   (let q1 = (FStarC_Syntax_Util.unascribe q) in
   let tmp = (destruct_label q1) in
   (match tmp with
@@ -181,16 +181,16 @@ and split_goals__aux (fresh_name : (string -> string)) (hyp : (FStarC_SMTEncodin
           ((=) tmp1 "Could not prove post-condition")) -> default_msg
           | tmp1 -> msg
         ) in
-      ((split_goals__aux fresh_name hyp mk_leaf) env msg1 (Some (r)) phi))
+      ((split_goals_under__aux fresh_name hyp mk_leaf) env msg1 (Some (r)) phi))
     | None -> (let tmp1 = (destruct_transparent q1) in
       (match tmp1 with
-        | (Some (phi)) -> ((split_goals__aux fresh_name hyp mk_leaf) env default_msg ropt phi)
+        | (Some (phi)) -> ((split_goals_under__aux fresh_name hyp mk_leaf) env default_msg ropt phi)
         | None -> (let tmp2 = (FStarC_Syntax_Formula.destruct_typ_as_formula q1) in
           (match tmp2 with
             | (Some ((FStarC_Syntax_Formula.BaseConn (lid, [])))) when (FStarC_Ident.lid_equals lid FStarC_Parser_Const.true_lid) -> (GTrivial, [], true)
             | (Some ((FStarC_Syntax_Formula.BaseConn (lid, (tmp3 :: (tmp4 :: [])))))) when (FStarC_Ident.lid_equals lid FStarC_Parser_Const.and_lid) -> (let tmp5 = (collect_conjuncts q1) in
-              ((split_goals__aux__seq fresh_name hyp mk_leaf env default_msg ropt) tmp5))
-            | (Some ((FStarC_Syntax_Formula.BaseConn (lid, ((lhs, tmp3) :: ((rhs, tmp4) :: [])))))) when (FStarC_Ident.lid_equals lid FStarC_Parser_Const.imp_lid) -> (let tmp5 = ((split_goals__aux fresh_name hyp mk_leaf) env default_msg ropt rhs) in
+              ((split_goals_under__aux__seq fresh_name hyp mk_leaf env default_msg ropt) tmp5))
+            | (Some ((FStarC_Syntax_Formula.BaseConn (lid, ((lhs, tmp3) :: ((rhs, tmp4) :: [])))))) when (FStarC_Ident.lid_equals lid FStarC_Parser_Const.imp_lid) -> (let tmp5 = ((split_goals_under__aux fresh_name hyp mk_leaf) env default_msg ropt rhs) in
               (match tmp5 with
                 | (t, decls, ok) -> (match t with
                     | GTrivial -> (GTrivial, decls, ok)
@@ -203,9 +203,9 @@ and split_goals__aux (fresh_name : (string -> string)) (hyp : (FStarC_SMTEncodin
                       ))
                   )
               ))
-            | (Some ((FStarC_Syntax_Formula.BaseConn (lid, ((g, tmp3) :: ((th, tmp4) :: ((el, tmp5) :: []))))))) when (FStarC_Ident.lid_equals lid FStarC_Parser_Const.ite_lid) -> (let tmp6 = ((split_goals__aux fresh_name hyp mk_leaf) env default_msg ropt th) in
+            | (Some ((FStarC_Syntax_Formula.BaseConn (lid, ((g, tmp3) :: ((th, tmp4) :: ((el, tmp5) :: []))))))) when (FStarC_Ident.lid_equals lid FStarC_Parser_Const.ite_lid) -> (let tmp6 = ((split_goals_under__aux fresh_name hyp mk_leaf) env default_msg ropt th) in
               (match tmp6 with
-                | (t1, decls1, ok1) -> (let tmp7 = ((split_goals__aux fresh_name hyp mk_leaf) env default_msg ropt el) in
+                | (t1, decls1, ok1) -> (let tmp7 = ((split_goals_under__aux fresh_name hyp mk_leaf) env default_msg ropt el) in
                   (match tmp7 with
                     | (t2, decls2, ok2) -> (match (t1, t2) with
                         | (GTrivial, GTrivial) -> (GTrivial, (FStarC_List.op_At decls1 decls2), (ok1 && ok2))
@@ -229,42 +229,7 @@ and split_goals__aux (fresh_name : (string -> string)) (hyp : (FStarC_SMTEncodin
                       )
                   ))
               ))
-            | (Some ((FStarC_Syntax_Formula.QAll (bs, u__pats, body)))) -> (let tmp3 = (FStarC_List.fold_left (fun tmp3 b -> (match tmp3 with
-                  | (vars, guards, env1, decls, names) -> (let x = (b).FStarC_Syntax_Syntax.binder_bv in
-                    let tmp4 = (fresh_name "@sk_") in
-                    let tmp5 = (tmp4, FStarC_SMTEncoding_Term.Term_sort) in
-                    let fv = (FStarC_SMTEncoding_Term.mk_fv tmp5) in
-                    let tmp6 = (FStarC_SMTEncoding_Util.mkFreeV fv) in
-                    let env' = (FStarC_SMTEncoding_Env.push_term_var env1 x tmp6) in
-                    let tmp7 = (FStarC_SMTEncoding_EncodeTerm.norm env1 (x).FStarC_Syntax_Syntax.sort) in
-                    let tmp8 = (FStarC_SMTEncoding_Util.mkFreeV fv) in
-                    let tmp9 = (FStarC_SMTEncoding_EncodeTerm.encode_term_pred None tmp7 env1 tmp8) in
-                    (match tmp9 with
-                      | (g, decls') -> ((fv :: vars), (g :: guards), env', (FStarC_List.op_At decls decls'), (x :: names))
-                    ))
-                )) ([], [], env, [], []) bs) in
-              (match tmp3 with
-                | (vars, guards, env', decls, names) -> (let tmp4 = ((FStarC_List.rev vars), (FStarC_List.rev guards), (FStarC_List.rev names)) in
-                  (match tmp4 with
-                    | (vars1, guards1, names1) -> (let tmp5 = ((split_goals__aux fresh_name hyp mk_leaf) env' default_msg ropt body) in
-                      (match tmp5 with
-                        | (t, decls', ok) -> (let tmp6 = (FStarC_List.map (fun fv -> (FStarC_SMTEncoding_Term.DeclFun ((FStarC_SMTEncoding_Term.fv_name fv), [], (FStarC_SMTEncoding_Term.fv_sort fv), None))) vars1) in
-                          let tmp7 = (FStarC_List.filter (fun tmp7 -> (match tmp7 with
-                              | (FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.TrueOp, [], tmp8)) -> false
-                              | tmp8 -> true
-                            )) guards1) in
-                          let tmp8 = (FStarC_List.map hyp tmp7) in
-                          let ds = (FStarC_List.op_At tmp6 tmp8) in
-                          let tmp9 = (FStarC_List.map (fun x -> (let tmp9 = (FStarC_Syntax_Util.un_squash (x).FStarC_Syntax_Syntax.sort) in
-                            (match tmp9 with
-                              | (Some (p)) -> (CHyp (p))
-                              | None -> (CVar (x))
-                            ))) names1) in
-                          let tmp10 = (gctx ds tmp9 t) in
-                          (tmp10, (FStarC_List.op_At decls decls'), ok))
-                      ))
-                  ))
-              ))
+            | (Some ((FStarC_Syntax_Formula.QAll (bs, u__pats, body)))) -> ((split_goals_under__split_forall fresh_name hyp mk_leaf) env default_msg ropt bs body)
             | tmp3 -> (let tmp4 = (FStarC_Syntax_Subst.compress q1) in
               let tmp5 = (tmp4).FStarC_Syntax_Syntax.n in
               (match tmp5 with
@@ -272,7 +237,7 @@ and split_goals__aux (fresh_name : (string -> string)) (hyp : (FStarC_SMTEncodin
                   let scr' = (FStarC_SMTEncoding_Util.mkFreeV (FStarC_SMTEncoding_Term.mk_fv (scrsym, FStarC_SMTEncoding_Term.Term_sort))) in
                   let tmp8 = (FStarC_SMTEncoding_EncodeTerm.encode_term e env) in
                   (match tmp8 with
-                    | (scr, decls0) -> (let tmp9 = ((split_goals__aux__go fresh_name hyp mk_leaf default_msg ropt e scr' env) [] brs) in
+                    | (scr, decls0) -> (let tmp9 = ((split_goals_under__aux__go fresh_name hyp mk_leaf default_msg ropt e scr' env) [] brs) in
                       (match tmp9 with
                         | (t, decls, ok) -> (let tmp10 = (FStarC_SMTEncoding_Util.mkEq (scr', scr)) in
                           let tmp11 = (hyp tmp10) in
@@ -290,13 +255,13 @@ and split_goals__aux (fresh_name : (string -> string)) (hyp : (FStarC_SMTEncodin
                         | (xs, e21) -> (let scrut = (FStarC_List.hd xs) in
                           let x1 = (scrut).FStarC_Syntax_Syntax.binder_bv in
                           let env' = (FStarC_SMTEncoding_Env.push_term_var env x1 ee1) in
-                          let tmp13 = ((split_goals__aux fresh_name hyp mk_leaf) env' default_msg ropt e21) in
+                          let tmp13 = ((split_goals_under__aux fresh_name hyp mk_leaf) env' default_msg ropt e21) in
                           (match tmp13 with
                             | (t, decls2, ok) -> ((gctx [] ((CDef (x1, e1)) :: []) t), (FStarC_List.op_At decls1 decls2), ok)
                           ))
                       ))
                   ))
-                | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = tm; meta = tmp6; _ })) -> ((split_goals__aux fresh_name hyp mk_leaf) env default_msg ropt tm)
+                | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = tm; meta = tmp6; _ })) -> ((split_goals_under__aux fresh_name hyp mk_leaf) env default_msg ropt tm)
                 | tmp6 -> (let tmp7 = (mk_leaf env default_msg ropt q1) in
                   (match tmp7 with
                     | (t, decls) -> (t, decls, true)
@@ -306,7 +271,61 @@ and split_goals__aux (fresh_name : (string -> string)) (hyp : (FStarC_SMTEncodin
       ))
   ))
 
-let split_goals (use_env_msg : ((unit -> string)) option) (env : FStarC_SMTEncoding_Env.env_t) (q : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (goal_tree * (FStarC_SMTEncoding_Term.decls_elt) list) =
+and split_goals_under__split_forall (fresh_name : (string -> string)) (hyp : (FStarC_SMTEncoding_Term.term -> FStarC_SMTEncoding_Term.decl)) (mk_leaf : (FStarC_SMTEncoding_Env.env_t -> ((FStar_Pprint.document) list -> ((FStarC_Range_Type.range) option -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> (goal_tree * (FStarC_SMTEncoding_Term.decls_elt) list)))))) (env : FStarC_SMTEncoding_Env.env_t) (default_msg : (FStar_Pprint.document) list) (ropt : (FStarC_Range_Type.range) option) (bs : (FStarC_Syntax_Syntax.binder) list) (body : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (goal_tree * (FStarC_SMTEncoding_Term.decls_elt) list * bool) =
+  (let tmp = (FStarC_List.fold_left (fun tmp b -> (match tmp with
+      | (vars, guards, env1, decls, names) -> (let x = (b).FStarC_Syntax_Syntax.binder_bv in
+        let tmp1 = (fresh_name "@sk_") in
+        let tmp2 = (tmp1, FStarC_SMTEncoding_Term.Term_sort) in
+        let fv = (FStarC_SMTEncoding_Term.mk_fv tmp2) in
+        let tmp3 = (FStarC_SMTEncoding_Util.mkFreeV fv) in
+        let env' = (FStarC_SMTEncoding_Env.push_term_var env1 x tmp3) in
+        let tmp4 = (FStarC_SMTEncoding_EncodeTerm.norm env1 (x).FStarC_Syntax_Syntax.sort) in
+        let tmp5 = (FStarC_SMTEncoding_Util.mkFreeV fv) in
+        let tmp6 = (FStarC_SMTEncoding_EncodeTerm.encode_term_pred None tmp4 env1 tmp5) in
+        (match tmp6 with
+          | (g, decls') -> ((fv :: vars), (g :: guards), env', (FStarC_List.op_At decls decls'), (x :: names))
+        ))
+    )) ([], [], env, [], []) bs) in
+  (match tmp with
+    | (vars, guards, env', decls, names) -> (let tmp1 = ((FStarC_List.rev vars), (FStarC_List.rev guards), (FStarC_List.rev names)) in
+      (match tmp1 with
+        | (vars1, guards1, names1) -> (let tmp2 = ((split_goals_under__aux fresh_name hyp mk_leaf) env' default_msg ropt body) in
+          (match tmp2 with
+            | (t, decls', ok) -> (let tmp3 = (FStarC_List.map (fun fv -> (FStarC_SMTEncoding_Term.DeclFun ((FStarC_SMTEncoding_Term.fv_name fv), [], (FStarC_SMTEncoding_Term.fv_sort fv), None))) vars1) in
+              let tmp4 = (FStarC_List.filter (fun tmp4 -> (match tmp4 with
+                  | (FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.TrueOp, [], tmp5)) -> false
+                  | tmp5 -> true
+                )) guards1) in
+              let tmp5 = (FStarC_List.map hyp tmp4) in
+              let ds = (FStarC_List.op_At tmp3 tmp5) in
+              let tmp6 = (FStarC_List.map (fun x -> (let tmp6 = (FStarC_Syntax_Util.un_squash (x).FStarC_Syntax_Syntax.sort) in
+                (match tmp6 with
+                  | (Some (p)) -> (CHyp (p))
+                  | None -> (CVar (x))
+                ))) names1) in
+              let tmp7 = (gctx ds tmp6 t) in
+              (tmp7, (FStarC_List.op_At decls decls'), ok))
+          ))
+      ))
+  ))
+
+let rec split_goals_under__go (q : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (n : Prims.int) (ren : ((FStarC_Syntax_Syntax.subst_elt) list -> ((FStarC_Syntax_Syntax.subst_elt) list -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)))) (i : Prims.int) (closing : (FStarC_Syntax_Syntax.subst_elt) list) (opening : (FStarC_Syntax_Syntax.subst_elt) list) (bs : (FStarC_Syntax_Syntax.binder) list) (out : (FStarC_Syntax_Syntax.binder) list) : ((FStarC_Syntax_Syntax.binder) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
+  (match bs with
+    | [] -> (let tmp = (ren closing opening q) in
+      ((FStarC_List.rev out), tmp))
+    | (b :: bs1) -> (let tmp = (FStarC_Syntax_Syntax.freshen_bv (b).FStarC_Syntax_Syntax.binder_bv) in
+      let tmp1 = (ren closing opening ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
+      let x' = { FStarC_Syntax_Syntax.ppname = (tmp).FStarC_Syntax_Syntax.ppname;
+          index = (tmp).FStarC_Syntax_Syntax.index;
+          sort = tmp1 } in
+      let tmp2 = (FStarC_Syntax_Subst.subst_bqual closing (b).FStarC_Syntax_Syntax.binder_qual) in
+      let imp = (FStarC_Syntax_Subst.subst_bqual opening tmp2) in
+      let attrs = (FStarC_List.map (ren closing opening) (b).FStarC_Syntax_Syntax.binder_attrs) in
+      let b' = (FStarC_Syntax_Syntax.mk_binder_with_attrs x' imp (b).FStarC_Syntax_Syntax.binder_positivity attrs) in
+      ((split_goals_under__go q n ren) (Prims.op_Plus i Prims.int_one) ((FStarC_Syntax_Syntax.NM ((b).FStarC_Syntax_Syntax.binder_bv, (Prims.op_Minus (Prims.op_Minus n Prims.int_one) i))) :: closing) ((FStarC_Syntax_Syntax.DB ((Prims.op_Minus (Prims.op_Minus n Prims.int_one) i), x')) :: opening) bs1 (b' :: out)))
+  )
+
+let split_goals_under (use_env_msg : ((unit -> string)) option) (env : FStarC_SMTEncoding_Env.env_t) (bs : (FStarC_Syntax_Syntax.binder) list) (q : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (goal_tree * (FStarC_SMTEncoding_Term.decls_elt) list) =
   (let ctr = (ref Prims.int_zero) in
   let name_ctr = (ref Prims.int_zero) in
   let fresh_name = (fun prefix -> (let tmp = (!(name_ctr)) in
@@ -349,9 +368,24 @@ let split_goals (use_env_msg : ((unit -> string)) option) (env : FStarC_SMTEncod
                 (tmp7, decls))
             )
         ))) in
-      let tmp1 = ((split_goals__aux fresh_name hyp mk_leaf) env (FStarC_Errors_Msg.mkmsg "Assertion failed") None q) in
-      (match tmp1 with
-        | (t, decls, tmp2) -> (t, decls)
+      let msg = (FStarC_Errors_Msg.mkmsg "Assertion failed") in
+      let reopen = (fun bs1 q1 -> (let n = (FStarC_List.length bs1) in
+        let ren = (fun closing opening t -> (let tmp1 = (FStarC_Syntax_Subst.subst closing t) in
+          (FStarC_Syntax_Subst.subst opening tmp1))) in
+        ((split_goals_under__go q1 n ren) Prims.int_zero [] [] bs1 []))) in
+      let tmp1 = (FStarC_List.filter (fun b -> (not (FStarC_Syntax_Syntax.is_null_binder b))) bs) in
+      let tmp2 = (match tmp1 with
+          | [] -> ((split_goals_under__aux fresh_name hyp mk_leaf) env msg None q)
+          | gamma_bs -> (let tmp2 = (reopen gamma_bs q) in
+            (match tmp2 with
+              | (gamma_bs1, q1) -> (let tmp3 = (FStarC_Syntax_Formula.destruct_forall_continuation q1) in
+                (match tmp3 with
+                  | (bs1, u__pats, body) -> ((split_goals_under__split_forall fresh_name hyp mk_leaf) env msg None (FStarC_List.op_At gamma_bs1 bs1) body)
+                ))
+            ))
+        ) in
+      (match tmp2 with
+        | (t, decls, tmp3) -> (t, decls)
       ))
   ))
 

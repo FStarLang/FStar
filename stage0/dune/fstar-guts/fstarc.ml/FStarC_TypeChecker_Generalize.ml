@@ -58,7 +58,7 @@ let gen (env : FStarC_TypeChecker_Env.env) (is_rec : bool) (lecs : (((FStarC_Syn
         let uvs = (gen_uvars uvt) in
         let tmp4 = (!(dbg_Gen)) in
         (if tmp4 then (let tmp5 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_tuple3_p_uvar_version_range univs1) in
-        let tmp6 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_ctx_uvar_90 uvs) in
+        let tmp6 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_ctx_uvar_89 uvs) in
         (FStarC_Format.print2 "^^^^\n\tFree univs = %s\n\tgen_uvars = %s\n" tmp5 tmp6)) else ());
         (univs1, uvs, (lbname, e, c1)))
     )) in

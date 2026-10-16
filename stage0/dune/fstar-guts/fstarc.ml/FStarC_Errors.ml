@@ -388,7 +388,7 @@ let warn_unsafe_options (rng_opt : (FStarC_Range_Type.range) option) (msg : stri
 
 let uu___0 : (((string -> (((FStarC_Errors_Codes.error_code * FStarC_Errors_Codes.error_flag * Prims.int)) list) option) -> unit) * (unit -> ((FStarC_Errors_Codes.error_code * FStarC_Errors_Codes.error_flag * Prims.int)) list)) =
   (let parser_callback = (ref None) in
-  let error_flags_ = (FStarC_SMap.create (Prims.of_int (10))) in
+  let error_flags_ = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (10)))) in
   let set_error_flags = (fun tmp -> (let parse = (fun s -> (let tmp1 = (!(parser_callback)) in
       (match tmp1 with
         | None -> (FStarC_Effect.failwith "Callback for parsing warn_error strings is not set")
@@ -398,14 +398,14 @@ let uu___0 : (((string -> (((FStarC_Errors_Codes.error_code * FStarC_Errors_Code
     (try (let r = (parse we) in
     (match r with
       | None -> (raise (Invalid_warn_error_setting ("Parsing of warn_error string failed")))
-      | (Some (r1)) -> ((FStarC_SMap.add error_flags_ we (Some (r1)));
+      | (Some (r1)) -> ((FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace error_flags_ we (Some (r1)));
         FStarC_Getopt.Success)
     )) with
-      | (Invalid_warn_error_setting (msg)) -> ((FStarC_SMap.add error_flags_ we None);
+      | (Invalid_warn_error_setting (msg)) -> ((FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace error_flags_ we None);
         (FStarC_Getopt.Error (((Prims.strcat "Invalid --warn_error setting: " (Prims.strcat msg "\n")), "warn_error"))))
     ))) in
   let get_error_flags = (fun tmp -> (let we = (FStarC_Options.warn_error ()) in
-    let tmp1 = (FStarC_SMap.try_find error_flags_ we) in
+    let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt error_flags_ we) in
     (match tmp1 with
       | (Some ((Some (w)))) -> w
       | tmp2 -> FStarC_Errors_Codes.default_settings
@@ -583,56 +583,6 @@ let log_issue_text (rng : FStarC_Range_Type.range) (code : FStarC_Errors_Codes.e
 
 let raise_error_text (rng : FStarC_Range_Type.range) (code : FStarC_Errors_Codes.error_code) (msg : string) : 'u___a =
   (fStarC_Errors_raise_error__range_string rng code msg)
-
-let lookup_error_range (settings : (('tmp * 'tmp1 * Prims.int)) list) (tmp : (Prims.int * Prims.int)) : (('tmp * 'tmp1 * Prims.int)) list =
-  (match tmp with
-    | (l, h) -> (let tmp1 = (FStarC_List.partition (fun tmp1 -> (match tmp1 with
-          | (tmp2, tmp3, i) -> ((Prims.op_Less_Equals l i) && (Prims.op_Less_Equals i h))
-        )) settings) in
-      (match tmp1 with
-        | (matches, tmp2) -> matches
-      ))
-  )
-
-let update_flags (l : ((FStarC_Errors_Codes.error_flag * (Prims.int * Prims.int))) list) : ((FStarC_Errors_Codes.error_code * FStarC_Errors_Codes.error_flag * Prims.int)) list =
-  (let set_one_flag = (fun i flag default_flag -> (match (flag, default_flag) with
-      | (FStarC_Errors_Codes.CWarning, FStarC_Errors_Codes.CAlwaysError) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
-        let tmp1 = (FStarC_Format.fmt1 "cannot turn error %s into warning" tmp) in
-        let tmp2 = (Invalid_warn_error_setting (tmp1)) in
-        (raise tmp2))
-      | (FStarC_Errors_Codes.CError, FStarC_Errors_Codes.CAlwaysError) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
-        let tmp1 = (FStarC_Format.fmt1 "cannot turn error %s into warning" tmp) in
-        let tmp2 = (Invalid_warn_error_setting (tmp1)) in
-        (raise tmp2))
-      | (FStarC_Errors_Codes.CSilent, FStarC_Errors_Codes.CAlwaysError) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
-        let tmp1 = (FStarC_Format.fmt1 "cannot silence error %s" tmp) in
-        let tmp2 = (Invalid_warn_error_setting (tmp1)) in
-        (raise tmp2))
-      | (FStarC_Errors_Codes.CSilent, FStarC_Errors_Codes.CFatal) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
-        let tmp1 = (FStarC_Format.fmt1 "cannot change the error level of fatal error %s" tmp) in
-        let tmp2 = (Invalid_warn_error_setting (tmp1)) in
-        (raise tmp2))
-      | (FStarC_Errors_Codes.CWarning, FStarC_Errors_Codes.CFatal) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
-        let tmp1 = (FStarC_Format.fmt1 "cannot change the error level of fatal error %s" tmp) in
-        let tmp2 = (Invalid_warn_error_setting (tmp1)) in
-        (raise tmp2))
-      | (FStarC_Errors_Codes.CError, FStarC_Errors_Codes.CFatal) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
-        let tmp1 = (FStarC_Format.fmt1 "cannot change the error level of fatal error %s" tmp) in
-        let tmp2 = (Invalid_warn_error_setting (tmp1)) in
-        (raise tmp2))
-      | (FStarC_Errors_Codes.CAlwaysError, FStarC_Errors_Codes.CFatal) -> FStarC_Errors_Codes.CFatal
-      | tmp -> flag
-    )) in
-  let set_flag_for_range = (fun tmp -> (match tmp with
-      | (flag, range) -> (let errs = (lookup_error_range FStarC_Errors_Codes.default_settings range) in
-        (FStarC_List.map (fun tmp1 -> (match tmp1 with
-          | (v, default_flag, i) -> (let tmp2 = (set_one_flag i flag default_flag) in
-            (v, tmp2, i))
-        )) errs))
-    )) in
-  let error_range_settings = (FStarC_List.rev l) in
-  let tmp = (FStarC_List.collect set_flag_for_range error_range_settings) in
-  (FStarC_List.op_At tmp FStarC_Errors_Codes.default_settings))
 
 let fStarC_Errors_raise_error__ctx_uvar_list_document (pos : FStarC_Syntax_Syntax.ctx_uvar) (code : FStarC_Errors_Codes.error_code) (msg : (FStar_Pprint.document) list) : 'u___a =
   (let rng = (FStarC_Syntax_Syntax.fStarC_Class_HasRange_pos__ctx_uvar pos) in
@@ -871,24 +821,6 @@ let set_handler (handler : error_handler) : unit =
   ((current_handler) := handler);
   (add_many issues))
 
-let call_to_erased_errno : Prims.int =
-  (errno FStarC_Errors_Codes.Error_CallToErased)
-
-let fStarC_Errors_raise_error__sigelt_string (pos : FStarC_Syntax_Syntax.sigelt) (code : FStarC_Errors_Codes.error_code) (msg : string) : 'u___a =
-  (let rng = (FStarC_Syntax_Syntax.fStarC_Class_HasRange_pos__sigelt pos) in
-  let tmp = (fixup_issue_range (Some (rng))) in
-  (match tmp with
-    | (Some (rng1)) -> (let msg1 = (FStarC_Errors_Msg.fStarC_Errors_Msg_to_doc_list__string msg) in
-      let tmp1 = (maybe_add_backtrace msg1) in
-      let tmp2 = ((error_context).get ()) in
-      let tmp3 = (code, tmp1, rng1, tmp2) in
-      let tmp4 = (Error (tmp3)) in
-      (raise tmp4))
-  ))
-
-let set_option_warning_callback_range (ropt : (FStarC_Range_Type.range) option) : unit =
-  (FStarC_Options.set_option_warning_callback (warn_unsafe_options ropt))
-
 let catch_errors (f : (unit -> 'u___a)) : ((issue) list * ('u___a) option) =
   (let tmp = (catch_errors_aux f) in
   (match tmp with
@@ -897,6 +829,9 @@ let catch_errors (f : (unit -> 'u___a)) : ((issue) list * ('u___a) option) =
       (FStarC_List.iter tmp2 rest);
       (errs, r))
   ))
+
+let set_option_warning_callback_range (ropt : (FStarC_Range_Type.range) option) : unit =
+  (FStarC_Options.set_option_warning_callback (warn_unsafe_options ropt))
 
 let print_expected_failures (issues : (issue) list) : unit =
   (let issues1 = (FStarC_List.map (fun i -> { issue_msg = ((FStarC_Errors_Msg.text "Expected failure:") :: (i).issue_msg);
@@ -950,6 +885,18 @@ let fStarC_Errors_log_issue__sigelt_list_document (pos : FStarC_Syntax_Syntax.si
   let ctx = ((error_context).get ()) in
   (log_issue_ctx rng (code, msg) ctx))
 
+let fStarC_Errors_raise_error__sigelt_string (pos : FStarC_Syntax_Syntax.sigelt) (code : FStarC_Errors_Codes.error_code) (msg : string) : 'u___a =
+  (let rng = (FStarC_Syntax_Syntax.fStarC_Class_HasRange_pos__sigelt pos) in
+  let tmp = (fixup_issue_range (Some (rng))) in
+  (match tmp with
+    | (Some (rng1)) -> (let msg1 = (FStarC_Errors_Msg.fStarC_Errors_Msg_to_doc_list__string msg) in
+      let tmp1 = (maybe_add_backtrace msg1) in
+      let tmp2 = ((error_context).get ()) in
+      let tmp3 = (code, tmp1, rng1, tmp2) in
+      let tmp4 = (Error (tmp3)) in
+      (raise tmp4))
+  ))
+
 let t_set_parse_warn_error : ((string -> (((FStarC_Errors_Codes.error_code * FStarC_Errors_Codes.error_flag * Prims.int)) list) option) -> unit) =
   (match uu___0 with
     | (t_set_parse_warn_error_, error_flags_) -> t_set_parse_warn_error_
@@ -957,6 +904,59 @@ let t_set_parse_warn_error : ((string -> (((FStarC_Errors_Codes.error_code * FSt
 
 let set_parse_warn_error (tmp : (string -> (((FStarC_Errors_Codes.error_code * FStarC_Errors_Codes.error_flag * Prims.int)) list) option)) : unit =
   (t_set_parse_warn_error tmp)
+
+let lookup_error_range (settings : (('tmp * 'tmp1 * Prims.int)) list) (tmp : (Prims.int * Prims.int)) : (('tmp * 'tmp1 * Prims.int)) list =
+  (match tmp with
+    | (l, h) -> (let tmp1 = (FStarC_List.partition (fun tmp1 -> (match tmp1 with
+          | (tmp2, tmp3, i) -> ((Prims.op_Less_Equals l i) && (Prims.op_Less_Equals i h))
+        )) settings) in
+      (match tmp1 with
+        | (matches, tmp2) -> matches
+      ))
+  )
+
+let update_flags (l : ((FStarC_Errors_Codes.error_flag * (Prims.int * Prims.int))) list) : ((FStarC_Errors_Codes.error_code * FStarC_Errors_Codes.error_flag * Prims.int)) list =
+  (let set_one_flag = (fun i flag default_flag -> (match (flag, default_flag) with
+      | (FStarC_Errors_Codes.CWarning, FStarC_Errors_Codes.CAlwaysError) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
+        let tmp1 = (FStarC_Format.fmt1 "cannot turn error %s into warning" tmp) in
+        let tmp2 = (Invalid_warn_error_setting (tmp1)) in
+        (raise tmp2))
+      | (FStarC_Errors_Codes.CError, FStarC_Errors_Codes.CAlwaysError) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
+        let tmp1 = (FStarC_Format.fmt1 "cannot turn error %s into warning" tmp) in
+        let tmp2 = (Invalid_warn_error_setting (tmp1)) in
+        (raise tmp2))
+      | (FStarC_Errors_Codes.CSilent, FStarC_Errors_Codes.CAlwaysError) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
+        let tmp1 = (FStarC_Format.fmt1 "cannot silence error %s" tmp) in
+        let tmp2 = (Invalid_warn_error_setting (tmp1)) in
+        (raise tmp2))
+      | (FStarC_Errors_Codes.CSilent, FStarC_Errors_Codes.CFatal) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
+        let tmp1 = (FStarC_Format.fmt1 "cannot change the error level of fatal error %s" tmp) in
+        let tmp2 = (Invalid_warn_error_setting (tmp1)) in
+        (raise tmp2))
+      | (FStarC_Errors_Codes.CWarning, FStarC_Errors_Codes.CFatal) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
+        let tmp1 = (FStarC_Format.fmt1 "cannot change the error level of fatal error %s" tmp) in
+        let tmp2 = (Invalid_warn_error_setting (tmp1)) in
+        (raise tmp2))
+      | (FStarC_Errors_Codes.CError, FStarC_Errors_Codes.CFatal) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
+        let tmp1 = (FStarC_Format.fmt1 "cannot change the error level of fatal error %s" tmp) in
+        let tmp2 = (Invalid_warn_error_setting (tmp1)) in
+        (raise tmp2))
+      | (FStarC_Errors_Codes.CAlwaysError, FStarC_Errors_Codes.CFatal) -> FStarC_Errors_Codes.CFatal
+      | tmp -> flag
+    )) in
+  let set_flag_for_range = (fun tmp -> (match tmp with
+      | (flag, range) -> (let errs = (lookup_error_range FStarC_Errors_Codes.default_settings range) in
+        (FStarC_List.map (fun tmp1 -> (match tmp1 with
+          | (v, default_flag, i) -> (let tmp2 = (set_one_flag i flag default_flag) in
+            (v, tmp2, i))
+        )) errs))
+    )) in
+  let error_range_settings = (FStarC_List.rev l) in
+  let tmp = (FStarC_List.collect set_flag_for_range error_range_settings) in
+  (FStarC_List.op_At tmp FStarC_Errors_Codes.default_settings))
+
+let call_to_erased_errno : Prims.int =
+  (errno FStarC_Errors_Codes.Error_CallToErased)
 
 let uu___1 : unit =
   ((FStarC_Options.check_include_dir) := (fun s -> (if (not (FStarC_Filepath.is_directory s)) then (fStarC_Errors_log_issue__range_list_document FStarC_Range_Type.dummyRange FStarC_Errors_Codes.Fatal_NotValidIncludeDirectory ((FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "Not a valid include directory:") (FStar_Pprint.doc_of_string s)) :: [])) else ())))

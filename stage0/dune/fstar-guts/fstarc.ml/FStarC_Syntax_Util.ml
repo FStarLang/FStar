@@ -426,6 +426,15 @@ and unbound_variables (tm : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.sy
       (FStarC_List.op_At tmp tmp1))
   ))
 
+let aqual_is_erasable (aq : (FStarC_Syntax_Syntax.arg_qualifier) option) : bool =
+  (match aq with
+    | None -> false
+    | (Some (aq1)) -> (FStarC_Util.for_some (is_fvar FStarC_Parser_Const.erasable_attr) (aq1).FStarC_Syntax_Syntax.aqual_attributes)
+  )
+
+let exp_unit : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_constant (FStarC_Const.Const_unit)) FStarC_Range_Type.dummyRange)
+
 let rec pre_typ (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
   (let t1 = (FStarC_Syntax_Subst.compress t) in
   (match (t1).FStarC_Syntax_Syntax.n with
@@ -638,7 +647,11 @@ and antiquotations_eq_dbg (dbg : bool) (a1 : ((FStarC_Syntax_Syntax.term') FStar
   )
 
 and quote_info_eq_dbg (dbg : bool) (q1 : FStarC_Syntax_Syntax.quoteinfo) (q2 : FStarC_Syntax_Syntax.quoteinfo) : bool =
-  (if ((<>) (q1).FStarC_Syntax_Syntax.qkind (q2).FStarC_Syntax_Syntax.qkind) then false else (antiquotations_eq_dbg dbg (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd ((q1).FStarC_Syntax_Syntax.antiquotations, (q1).FStarC_Syntax_Syntax.antiquotations1)) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd ((q2).FStarC_Syntax_Syntax.antiquotations, (q2).FStarC_Syntax_Syntax.antiquotations1))))
+  (if ((<>) (q1).FStarC_Syntax_Syntax.qkind (q2).FStarC_Syntax_Syntax.qkind) then false else (antiquotations_eq_dbg dbg (match ((q1).FStarC_Syntax_Syntax.antiquotations, (q1).FStarC_Syntax_Syntax.antiquotations1) with
+    | (u__1, u__2) -> u__2
+  ) (match ((q2).FStarC_Syntax_Syntax.antiquotations, (q2).FStarC_Syntax_Syntax.antiquotations1) with
+    | (u__1, u__2) -> u__2
+  )))
 
 and term_eq_dbg (dbg : bool) (t1 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (t2 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
   (let tmp = (unmeta_safe t1) in
@@ -1165,15 +1178,6 @@ let rec incr_delta_depth (d : FStarC_Syntax_Syntax.delta_depth) : FStarC_Syntax_
 
 let has_attribute (attrs : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) (attr : FStarC_Ident.lident) : bool =
   (FStarC_Util.for_some (is_fvar attr) attrs)
-
-let aqual_is_erasable (aq : (FStarC_Syntax_Syntax.arg_qualifier) option) : bool =
-  (match aq with
-    | None -> false
-    | (Some (aq1)) -> (FStarC_Util.for_some (is_fvar FStarC_Parser_Const.erasable_attr) (aq1).FStarC_Syntax_Syntax.aqual_attributes)
-  )
-
-let exp_unit : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_constant (FStarC_Const.Const_unit)) FStarC_Range_Type.dummyRange)
 
 let arrow_formals_comp (k : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((FStarC_Syntax_Syntax.binder) list * (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) =
   (let tmp = (arrow_formals_comp_ln k) in
@@ -2077,31 +2081,8 @@ let name_binders (bs : (FStarC_Syntax_Syntax.binder) list) : (FStarC_Syntax_Synt
 let t_dsl_tac_typ : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
   (FStarC_Syntax_Syntax.fvar FStarC_Parser_Const.dsl_tac_typ_lid None)
 
-let is_fun (e : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
-  (let tmp = (FStarC_Syntax_Subst.compress e) in
-  let tmp1 = (tmp).FStarC_Syntax_Syntax.n in
-  (match tmp1 with
-    | (FStarC_Syntax_Syntax.Tm_abs (tmp2)) -> true
-    | tmp2 -> false
-  ))
-
-let rec extract_attr'__aux (attr_lid : FStarC_Ident.lident) (acc : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) (attrs : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list)) option =
-  (match attrs with
-    | [] -> None
-    | (h :: t) -> (let tmp = (head_and_args_full h) in
-      (match tmp with
-        | (head, args) -> (let tmp1 = (FStarC_Syntax_Subst.compress head) in
-          let tmp2 = (tmp1).FStarC_Syntax_Syntax.n in
-          (match tmp2 with
-            | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv attr_lid) -> (let attrs' = (FStarC_List.rev_acc acc t) in
-              (Some ((attrs', args))))
-            | tmp3 -> ((extract_attr'__aux attr_lid) (h :: acc) t)
-          ))
-      ))
-  )
-
-let extract_attr' (attr_lid : FStarC_Ident.lident) (eta : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list)) option =
-  ((extract_attr'__aux attr_lid) [] eta)
+let deduplicate_terms (l : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list =
+  (FStarC_List.deduplicate (fun x y -> (term_eq x y)) l)
 
 let process_pragma (p : FStarC_Syntax_Syntax.pragma) (r : FStarC_Range_Type.range) : unit =
   ((FStarC_Errors.set_option_warning_callback_range (Some (r)));
@@ -2133,9 +2114,6 @@ let process_pragma (p : FStarC_Syntax_Syntax.pragma) (r : FStarC_Range_Type.rang
     | (FStarC_Syntax_Syntax.Check (tmp)) -> ()
     | (FStarC_Syntax_Syntax.Eval (tmp)) -> ()
   ))
-
-let deduplicate_terms (l : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list =
-  (FStarC_List.deduplicate (fun x y -> (term_eq x y)) l)
 
 let rec name_function_binders_from (i : Prims.int) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
   (match (t).FStarC_Syntax_Syntax.n with
@@ -2214,6 +2192,24 @@ let check_mutual_universes (lbs : (FStarC_Syntax_Syntax.letbinding) list) : unit
       let tmp1 = (not tmp) in
       (if tmp1 then (FStarC_Errors.fStarC_Errors_raise_error__range_string (lb1).FStarC_Syntax_Syntax.lbpos FStarC_Errors_Codes.Fatal_IncompatibleUniverse "Mutually recursive definitions do not abstract over the same universes") else ())))) lbs1))
   )
+
+let rec extract_attr'__aux (attr_lid : FStarC_Ident.lident) (acc : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) (attrs : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list)) option =
+  (match attrs with
+    | [] -> None
+    | (h :: t) -> (let tmp = (head_and_args_full h) in
+      (match tmp with
+        | (head, args) -> (let tmp1 = (FStarC_Syntax_Subst.compress head) in
+          let tmp2 = (tmp1).FStarC_Syntax_Syntax.n in
+          (match tmp2 with
+            | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv attr_lid) -> (let attrs' = (FStarC_List.rev_acc acc t) in
+              (Some ((attrs', args))))
+            | tmp3 -> ((extract_attr'__aux attr_lid) (h :: acc) t)
+          ))
+      ))
+  )
+
+let extract_attr' (attr_lid : FStarC_Ident.lident) (eta : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list)) option =
+  ((extract_attr'__aux attr_lid) [] eta)
 
 let t_ctx_uvar_and_sust : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
   (fvar_const FStarC_Parser_Const.ctx_uvar_and_subst_lid)

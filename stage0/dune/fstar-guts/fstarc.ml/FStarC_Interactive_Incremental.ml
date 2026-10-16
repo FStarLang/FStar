@@ -4,7 +4,7 @@
 type fragment_progress =
   | FullBufferStarted
   | FragmentStarted of FStarC_Parser_AST.decl
-  | FragmentSuccess of FStarC_Parser_AST.decl * FStarC_Parser_ParseIt.code_fragment * FStarC_Interactive_Ide_Types.push_kind
+  | FragmentSuccess of FStarC_Parser_AST.decl * FStarC_Parser_Frontend.code_fragment * FStarC_Interactive_Ide_Types.push_kind
   | FragmentFailed of FStarC_Parser_AST.decl
   | FragmentError of (FStarC_Errors.issue) list
   | FullBufferFinished
@@ -13,9 +13,9 @@ type fragment_progress =
 let dbg : (bool ref) =
   (FStarC_Debug.get_toggle "IDE")
 
-let parse_code (st : FStarC_Interactive_Ide_Types.repl_state) (lang : FStarC_Parser_ParseIt.lang_opts) (code : string) : FStarC_Parser_ParseIt.parse_result =
+let parse_code (st : FStarC_Interactive_Ide_Types.repl_state) (lang : (string) option) (code : string) : FStarC_Parser_Frontend.parse_result =
   (let rng = (FStarC_Interactive_Ide_Types.initial_range (st).FStarC_Interactive_Ide_Types.repl_fname) in
-  (FStarC_Parser_ParseIt.parse lang (FStarC_Parser_ParseIt.Incremental ({ FStarC_Parser_ParseIt.frag_fname = (FStarC_Range_Ops.file_of_range rng);
+  (FStarC_Parser_Frontend.parse lang (FStarC_Parser_Frontend.Incremental ({ FStarC_Parser_Frontend.frag_fname = (FStarC_Range_Ops.file_of_range rng);
     frag_text = code;
     frag_line = (FStarC_Range_Ops.line_of_pos (FStarC_Range_Ops.start_of_range rng));
     frag_col = (FStarC_Range_Ops.col_of_pos (FStarC_Range_Ops.start_of_range rng)) }))))
@@ -52,7 +52,11 @@ let op_let_Bang (f : (((string * Prims.int) * FStarC_Interactive_Ide_Types.repl_
   )
 
 let shift_qid (q : (string * Prims.int)) (i : Prims.int) : (string * Prims.int) =
-  ((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst q), (Prims.op_Plus (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd q) i))
+  ((match q with
+    | (u__1, u__2) -> u__1
+  ), (Prims.op_Plus (match q with
+    | (u__1, u__2) -> u__2
+  ) i))
 
 let next_qid (tmp : ((string * Prims.int) * FStarC_Interactive_Ide_Types.repl_state)) : ((string * Prims.int) * (string * Prims.int)) =
   (match tmp with
@@ -110,7 +114,7 @@ let dump_symbols (d : FStarC_Parser_AST.decl) : (((string * Prims.int) * FStarC_
   (let ls = (FStarC_Parser_AST_Util.lidents_of_decl d) in
   (map dump_symbols_for_lid ls))
 
-let push_decl (push_kind : FStarC_Interactive_Ide_Types.push_kind) (with_symbols : bool) (write_full_buffer_fragment_progress : (fragment_progress -> unit)) (ds : (FStarC_Parser_AST.decl * FStarC_Parser_ParseIt.code_fragment)) : (((string * Prims.int) * FStarC_Interactive_Ide_Types.repl_state) -> ((FStarC_Interactive_Ide_Types.query) list * (string * Prims.int))) =
+let push_decl (push_kind : FStarC_Interactive_Ide_Types.push_kind) (with_symbols : bool) (write_full_buffer_fragment_progress : (fragment_progress -> unit)) (ds : (FStarC_Parser_AST.decl * FStarC_Parser_Frontend.code_fragment)) : (((string * Prims.int) * FStarC_Interactive_Ide_Types.repl_state) -> ((FStarC_Interactive_Ide_Types.query) list * (string * Prims.int))) =
   (match ds with
     | (d, s) -> (let pq = { FStarC_Interactive_Ide_Types.push_kind = push_kind;
           push_line = (FStarC_Range_Ops.line_of_pos (FStarC_Range_Ops.start_of_range (d).FStarC_Parser_AST.drange));
@@ -125,9 +129,11 @@ let push_decl (push_kind : FStarC_Interactive_Ide_Types.push_kind) (with_symbols
 
 let run_qst (f : (((string * Prims.int) * FStarC_Interactive_Ide_Types.repl_state) -> ('u___a * (string * Prims.int)))) (q : string) (st : FStarC_Interactive_Ide_Types.repl_state) : 'u___a =
   (let tmp = (f ((q, Prims.int_zero), st)) in
-  (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp))
+  (match tmp with
+    | (u__1, u__2) -> u__1
+  ))
 
-let push_decls (push_kind : FStarC_Interactive_Ide_Types.push_kind) (with_symbols : bool) (write_full_buffer_fragment_progress : (fragment_progress -> unit)) (ds : ((FStarC_Parser_AST.decl * FStarC_Parser_ParseIt.code_fragment)) list) : (((string * Prims.int) * FStarC_Interactive_Ide_Types.repl_state) -> ((FStarC_Interactive_Ide_Types.query) list * (string * Prims.int))) =
+let push_decls (push_kind : FStarC_Interactive_Ide_Types.push_kind) (with_symbols : bool) (write_full_buffer_fragment_progress : (fragment_progress -> unit)) (ds : ((FStarC_Parser_AST.decl * FStarC_Parser_Frontend.code_fragment)) list) : (((string * Prims.int) * FStarC_Interactive_Ide_Types.repl_state) -> ((FStarC_Interactive_Ide_Types.query) list * (string * Prims.int))) =
   (let tmp = (map (push_decl push_kind with_symbols write_full_buffer_fragment_progress) ds) in
   (op_let_Bang tmp (fun qs -> (return (FStarC_List.flatten qs)))))
 
@@ -141,7 +147,7 @@ let push_kind_geq (pk1 : FStarC_Interactive_Ide_Types.push_kind) (pk2 : FStarC_I
     | tmp -> false
   ))
 
-let rec inspect_repl_stack__matching_prefix (push_kind : FStarC_Interactive_Ide_Types.push_kind) (with_symbols : bool) (write_full_buffer_fragment_progress : (fragment_progress -> unit)) (push_decls_ : (((FStarC_Parser_AST.decl * FStarC_Parser_ParseIt.code_fragment)) list -> (((string * Prims.int) * FStarC_Interactive_Ide_Types.repl_state) -> ((FStarC_Interactive_Ide_Types.query) list * (string * Prims.int))))) (accum : (FStarC_Json.json) list) (lookups : (FStarC_Interactive_Ide_Types.query) list) (entries : ((((Prims.int * Prims.int * (Prims.int * Prims.int * Prims.int) * Prims.int) * Prims.int) * (FStarC_Interactive_Ide_Types.repl_task * FStarC_Interactive_Ide_Types.repl_state))) list) (ds : ((FStarC_Parser_AST.decl * FStarC_Parser_ParseIt.code_fragment)) list) : (((string * Prims.int) * FStarC_Interactive_Ide_Types.repl_state) -> (((FStarC_Interactive_Ide_Types.query) list * (FStarC_Json.json) list) * (string * Prims.int))) =
+let rec inspect_repl_stack__matching_prefix (push_kind : FStarC_Interactive_Ide_Types.push_kind) (with_symbols : bool) (write_full_buffer_fragment_progress : (fragment_progress -> unit)) (push_decls_ : (((FStarC_Parser_AST.decl * FStarC_Parser_Frontend.code_fragment)) list -> (((string * Prims.int) * FStarC_Interactive_Ide_Types.repl_state) -> ((FStarC_Interactive_Ide_Types.query) list * (string * Prims.int))))) (accum : (FStarC_Json.json) list) (lookups : (FStarC_Interactive_Ide_Types.query) list) (entries : ((((Prims.int * Prims.int * (Prims.int * Prims.int * Prims.int) * Prims.int) * Prims.int) * (FStarC_Interactive_Ide_Types.repl_task * FStarC_Interactive_Ide_Types.repl_state))) list) (ds : ((FStarC_Parser_AST.decl * FStarC_Parser_Frontend.code_fragment)) list) : (((string * Prims.int) * FStarC_Interactive_Ide_Types.repl_state) -> (((FStarC_Interactive_Ide_Types.query) list * (FStarC_Json.json) list) * (string * Prims.int))) =
   (match (entries, ds) with
     | ([], []) -> (return (lookups, accum))
     | ((e :: entries1), (d :: ds1)) -> (match (repl_task_of_entry e) with
@@ -149,7 +155,9 @@ let rec inspect_repl_stack__matching_prefix (push_kind : FStarC_Interactive_Ide_
         | (FStarC_Interactive_Ide_Types.PushFragment ((FStar_Pervasives.Inl (frag)), tmp, tmp1, tmp2)) -> (let tmp3 = (pop_entries (e :: entries1)) in
           (op_let_Bang tmp3 (fun pops -> (let tmp4 = (push_decls_ (d :: ds1)) in
           (op_let_Bang tmp4 (fun pushes -> (return ((FStarC_List.op_At lookups (FStarC_List.op_At pops pushes)), accum))))))))
-        | (FStarC_Interactive_Ide_Types.PushFragment ((FStar_Pervasives.Inr (d')), pk, issues, tmp)) -> (let tmp1 = (FStarC_Parser_AST_Diff.eq_decl (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst d) d') in
+        | (FStarC_Interactive_Ide_Types.PushFragment ((FStar_Pervasives.Inr (d')), pk, issues, tmp)) -> (let tmp1 = (FStarC_Parser_AST_Diff.eq_decl (match d with
+              | (u__1, u__2) -> u__1
+            ) d') in
           let tmp2 = (if tmp1 then (push_kind_geq pk push_kind) else false) in
           (if tmp2 then (match d with
             | (d1, s) -> ((write_full_buffer_fragment_progress (FragmentSuccess (d1, s, pk)));
@@ -166,7 +174,7 @@ let rec inspect_repl_stack__matching_prefix (push_kind : FStarC_Interactive_Ide_
       (op_let_Bang tmp (fun pops -> (return ((FStarC_List.op_At lookups pops), accum)))))
   )
 
-let inspect_repl_stack (s : ((((Prims.int * Prims.int * (Prims.int * Prims.int * Prims.int) * Prims.int) * Prims.int) * (FStarC_Interactive_Ide_Types.repl_task * FStarC_Interactive_Ide_Types.repl_state))) list) (ds : ((FStarC_Parser_AST.decl * FStarC_Parser_ParseIt.code_fragment)) list) (push_kind : FStarC_Interactive_Ide_Types.push_kind) (with_symbols : bool) (write_full_buffer_fragment_progress : (fragment_progress -> unit)) : (((string * Prims.int) * FStarC_Interactive_Ide_Types.repl_state) -> (((FStarC_Interactive_Ide_Types.query) list * (FStarC_Json.json) list) * (string * Prims.int))) =
+let inspect_repl_stack (s : ((((Prims.int * Prims.int * (Prims.int * Prims.int * Prims.int) * Prims.int) * Prims.int) * (FStarC_Interactive_Ide_Types.repl_task * FStarC_Interactive_Ide_Types.repl_state))) list) (ds : ((FStarC_Parser_AST.decl * FStarC_Parser_Frontend.code_fragment)) list) (push_kind : FStarC_Interactive_Ide_Types.push_kind) (with_symbols : bool) (write_full_buffer_fragment_progress : (fragment_progress -> unit)) : (((string * Prims.int) * FStarC_Interactive_Ide_Types.repl_state) -> (((FStarC_Interactive_Ide_Types.query) list * (FStarC_Json.json) list) * (string * Prims.int))) =
   (let entries = (FStarC_List.rev s) in
   let push_decls_ = (push_decls push_kind with_symbols write_full_buffer_fragment_progress) in
   let tmp = (FStarC_Util.prefix_until (fun tmp -> (match tmp with
@@ -190,7 +198,7 @@ let run_full_buffer (st : FStarC_Interactive_Ide_Types.repl_state) (qid : string
   let tmp2 = (!(FStarC_Interactive_PushHelper.repl_stack)) in
   let tmp3 = (FStarC_Interactive_Ide_Types.fStarC_Class_Show_show__list_tuple2_tuple2_tuple2 tmp2) in
   (FStarC_Format.print1 "run_full_buffer: repl_stack=%s\n" tmp3)) else ());
-  (FStarC_Parser_ParseIt.add_vfs_entry (st).FStarC_Interactive_Ide_Types.repl_fname code);
+  (FStarC_Parser_Frontend.add_vfs_entry (st).FStarC_Interactive_Ide_Types.repl_fname code);
   let parse_result = (parse_code st None code) in
   let log_syntax_issues = (fun err -> (match err with
       | None -> ()
@@ -211,7 +219,7 @@ let run_full_buffer (st : FStarC_Interactive_Ide_Types.repl_state) (qid : string
       | tmp1 -> decls
     )) in
   (match parse_result with
-    | (FStarC_Parser_ParseIt.IncrementalFragment ((decls, tmp1, err_opt))) -> (let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 (FStarC_List.length decls)) in
+    | (FStarC_Parser_Frontend.IncrementalFragment ((decls, tmp1, err_opt))) -> (let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 (FStarC_List.length decls)) in
       (FStarC_Format.print1 "Parsed %s declarations\n" tmp2);
       (match (full, decls) with
         | (FStarC_Interactive_Ide_Types.ReloadDeps, (d :: tmp3)) -> (let tmp4 = (!(FStarC_Interactive_PushHelper.repl_stack)) in
@@ -237,7 +245,7 @@ let run_full_buffer (st : FStarC_Interactive_Ide_Types.repl_state) (qid : string
               (if ((<>) full FStarC_Interactive_Ide_Types.Cache) then (queries, issues) else ([], issues)))
           ))
       ))
-    | (FStarC_Parser_ParseIt.ParseError (err)) -> ((if ((=) full FStarC_Interactive_Ide_Types.Full) then (log_syntax_issues (Some (err))) else ());
+    | (FStarC_Parser_Frontend.ParseError (err)) -> ((if ((=) full FStarC_Interactive_Ide_Types.Full) then (log_syntax_issues (Some (err))) else ());
       ([], []))
     | tmp1 -> (FStarC_Effect.failwith "Unexpected parse result")
   ))
@@ -249,7 +257,7 @@ let format_code (st : FStarC_Interactive_Ide_Types.repl_state) (code : string) :
     ) in
   let parse_result = (parse_code st maybe_lang code) in
   (match parse_result with
-    | (FStarC_Parser_ParseIt.IncrementalFragment ((decls, comments, None))) -> (let doc_to_string = (fun doc -> (FStarC_Pprint.pretty_string (FStarC_Util.float_of_string "1.0") (Prims.of_int (100)) doc)) in
+    | (FStarC_Parser_Frontend.IncrementalFragment ((decls, comments, None))) -> (let doc_to_string = (fun doc -> (FStarC_Pprint.pretty_string (FStarC_Util.float_of_string "1.0") (Prims.of_int (100)) doc)) in
       let tmp = (FStarC_List.fold_left (fun tmp tmp1 -> (match (tmp, tmp1) with
           | ((out, comments1), (d, tmp2)) -> (let tmp3 = (FStarC_Parser_ToDocument.decl_with_comments_to_document d comments1) in
             (match tmp3 with
@@ -265,10 +273,10 @@ let format_code (st : FStarC_Interactive_Ide_Types.repl_state) (code : string) :
             ) in
           (FStar_Pervasives.Inl (formatted_code)))
       ))
-    | (FStarC_Parser_ParseIt.IncrementalFragment ((tmp, tmp1, (Some (err))))) -> (let tmp2 = (syntax_issue err) in
+    | (FStarC_Parser_Frontend.IncrementalFragment ((tmp, tmp1, (Some (err))))) -> (let tmp2 = (syntax_issue err) in
       let tmp3 = (tmp2 :: []) in
       (FStar_Pervasives.Inr (tmp3)))
-    | (FStarC_Parser_ParseIt.ParseError (err)) -> (let tmp = (syntax_issue err) in
+    | (FStarC_Parser_Frontend.ParseError (err)) -> (let tmp = (syntax_issue err) in
       let tmp1 = (tmp :: []) in
       (FStar_Pervasives.Inr (tmp1)))
     | tmp -> (FStarC_Effect.failwith "Unexpected parse result")

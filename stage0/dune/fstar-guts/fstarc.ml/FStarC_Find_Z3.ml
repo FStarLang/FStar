@@ -46,12 +46,12 @@ let do_locate_z3 (v : string) : (string) option =
   path)
 
 let locate_z3 : (string -> (string) option) =
-  (let cache = (FStarC_SMap.create (Prims.of_int (5))) in
-  (fun v -> (let find_or = (fun k f -> (let tmp = (FStarC_SMap.try_find cache k) in
+  (let cache = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (5)))) in
+  (fun v -> (let find_or = (fun k f -> (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt cache k) in
     (match tmp with
       | (Some (v1)) -> v1
       | None -> (let v1 = (f k) in
-        (FStarC_SMap.add cache k v1);
+        (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace cache k v1);
         v1)
     ))) in
   (find_or v do_locate_z3))))

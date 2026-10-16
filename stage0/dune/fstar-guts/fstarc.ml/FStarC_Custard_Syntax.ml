@@ -44,6 +44,11 @@ type eff =
   | E_Impure
 
 
+type ref_kind =
+  | RManual
+  | RGc
+
+
 type cty =
   | TVar of string
   | TInt of FStarC_Const.signedness * iwidth
@@ -53,7 +58,7 @@ type cty =
   | TConst of constant
   | TBuf of cty
   | TInline of cty
-  | TRef of cty
+  | TRef of ref_kind * cty
   | TExn
   | TTuple of (cty) list
   | TUnit
@@ -116,6 +121,21 @@ type op =
   | BufLit
   | BufUnconst
   | Commented of string * string
+  | RcInc
+  | RcDec
+  | RefNew
+  | RefGet
+  | RefSet
+  | Reset of name * (bool) list
+  | Reuse of name * name
+  | ResetFree
+  | IArr of string
+  | Dyn of string
+  | PBuf of string
+  | ExnRaise
+  | ExnPending
+  | ExnTake
+  | ExnExit
 
 
 type prim_ty =
@@ -147,6 +167,7 @@ type expr' =
   | ECast of expr * cty
   | EAny
   | EAbort of string
+  | EUnreachable of string
   | EOp of prim_op * (expr) list
   | EWhile of expr * expr
   | ERaise of expr
@@ -288,6 +309,7 @@ type flag =
   | Epilogue of string
   | ClosurePrologue of string * string
   | CMacro
+  | CIfDef
   | CReference
   | CInline
   | Deriving of string
@@ -298,7 +320,10 @@ type flag =
   | SourceRecord
   | Existential of string * string
   | Imported of string * (string) option
+  | CallArity of (bool) list
   | Member of name * string
+  | CherryConv of (bool) list
+  | CherryMode of ((bool) option) list
 
 
 type dtype = {
@@ -492,8 +517,9 @@ let rec subst_cty (s : ((string * cty)) list) (c : cty) : cty =
       (TTuple (tmp)))
     | (TBuf (c1)) -> (let tmp = (subst_cty s c1) in
       (TBuf (tmp)))
-    | (TRef (c1)) -> (let tmp = (subst_cty s c1) in
-      (TRef (tmp)))
+    | (TRef (k, c1)) -> (let tmp = (subst_cty s c1) in
+      let tmp1 = (k, tmp) in
+      (TRef ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))))
     | (TInline (c1)) -> (let tmp = (subst_cty s c1) in
       (TInline (tmp)))
     | (TApp (n, args)) -> (let tmp = (FStarC_List.map (subst_cty s) args) in
@@ -517,6 +543,7 @@ let children (x : expr) : (expr) list =
     | (EQual (u__1, u__2)) -> []
     | EAny -> []
     | (EAbort (tmp)) -> []
+    | (EUnreachable (tmp)) -> []
     | (ELet (tmp, tmp1, e1, e2)) -> (e1 :: (e2 :: []))
     | (EApp (h, es)) -> (h :: es)
     | (EFun (tmp, b)) -> (b :: [])
@@ -527,7 +554,9 @@ let children (x : expr) : (expr) list =
     | (ECtor (tmp, es)) -> es
     | (ETuple (es)) -> es
     | (EOp (tmp, es)) -> es
-    | (ERecord (tmp, fs)) -> (FStarC_List.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd fs)
+    | (ERecord (tmp, fs)) -> (FStarC_List.map (fun x1 -> (match x1 with
+        | (u__1, u__2) -> u__2
+      )) fs)
     | (EProj (e1, tmp, tmp1)) -> (e1 :: [])
     | (EDiscrim (e1, tmp)) -> (e1 :: [])
     | (ECoerce (e1, tmp)) -> (e1 :: [])
@@ -672,8 +701,11 @@ let rec cty_to_doc' (prec : Prims.int) (t : cty) : FStar_Pprint.document =
       let tmp1 = (FStar_Pprint.op_Hat_Slash_Hat (text "buf") tmp) in
       let tmp2 = (FStar_Pprint.group tmp1) in
       (parens_if (Prims.op_Greater_Equals prec (Prims.of_int (2))) tmp2))
-    | (TRef (t1)) -> (let tmp = (cty_to_doc' (Prims.of_int (2)) t1) in
-      let tmp1 = (FStar_Pprint.op_Hat_Slash_Hat (text "ref") tmp) in
+    | (TRef (k, t1)) -> (let tmp = (cty_to_doc' (Prims.of_int (2)) t1) in
+      let tmp1 = (FStar_Pprint.op_Hat_Slash_Hat (text (if (match k with
+          | RGc -> true
+          | tmp1 -> false
+        ) then "gcref" else "ref")) tmp) in
       let tmp2 = (FStar_Pprint.group tmp1) in
       (parens_if (Prims.op_Greater_Equals prec (Prims.of_int (2))) tmp2))
     | (TInline (t1)) -> (let tmp = (cty_to_doc' (Prims.of_int (2)) t1) in
@@ -694,6 +726,12 @@ let cty_to_string (t : cty) : string =
 
 let fStarC_Class_Show_show__cty (tmp : cty) : string =
   (cty_to_string tmp)
+
+let uu___is_CallArity (projectee : flag) : bool =
+  (match projectee with
+    | (CallArity (u__0)) -> true
+    | tmp -> false
+  )
 
 let is_pure (e : eff) : bool =
   (match e with
@@ -720,6 +758,7 @@ let map_children (g : (expr -> expr)) (x : expr) : expr =
     | (EQual (u__1, u__2)) -> x
     | EAny -> x
     | (EAbort (tmp)) -> x
+    | (EUnreachable (tmp)) -> x
     | (ELet (v, ty, e1, e2)) -> (let tmp = (g e1) in
       let tmp1 = (g e2) in
       let tmp2 = (v, ty, tmp, tmp1) in
@@ -833,8 +872,8 @@ let imported_unit (d : decl) : (string) option =
   )) (decl_flags d))
 
 type verdicts = {
-  vd_records : (name) FStarC_SMap.t;
-  vd_plans : (((string * string * (expansion) option)) list) FStarC_SMap.t;
+  vd_records : (name) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t;
+  vd_plans : (((string * string * (expansion) option)) list) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t;
 }
 
 let base_name (s : string) : string =
@@ -889,6 +928,7 @@ let rec is_droppable (e : expr) : bool =
     | (EFun (u__1, u__2)) -> false
     | (EWhile (u__1, u__2)) -> false
     | (EAbort (tmp)) -> false
+    | (EUnreachable (tmp)) -> false
     | (ERaise (tmp)) -> false
     | (ETry (u__1, u__2)) -> false
     | (EOp ({ po_op = BufRead; po_ty = tmp; _ }, es)) -> (all es)
@@ -896,6 +936,21 @@ let rec is_droppable (e : expr) : bool =
     | (EOp ({ po_op = BufWrite; po_ty = tmp; _ }, tmp1)) -> false
     | (EOp ({ po_op = BufFree; po_ty = tmp; _ }, tmp1)) -> false
     | (EOp ({ po_op = BufBlit; po_ty = tmp; _ }, tmp1)) -> false
+    | (EOp ({ po_op = RcInc; po_ty = tmp; _ }, tmp1)) -> false
+    | (EOp ({ po_op = RcDec; po_ty = tmp; _ }, tmp1)) -> false
+    | (EOp ({ po_op = RefNew; po_ty = tmp; _ }, tmp1)) -> false
+    | (EOp ({ po_op = RefGet; po_ty = tmp; _ }, tmp1)) -> false
+    | (EOp ({ po_op = RefSet; po_ty = tmp; _ }, tmp1)) -> false
+    | (EOp ({ po_op = (Reset (u__1, u__2)); po_ty = tmp; _ }, tmp1)) -> false
+    | (EOp ({ po_op = (Reuse (u__1, u__2)); po_ty = tmp; _ }, tmp1)) -> false
+    | (EOp ({ po_op = ResetFree; po_ty = tmp; _ }, tmp1)) -> false
+    | (EOp ({ po_op = (IArr (tmp)); po_ty = tmp1; _ }, tmp2)) -> false
+    | (EOp ({ po_op = (Dyn (tmp)); po_ty = tmp1; _ }, tmp2)) -> false
+    | (EOp ({ po_op = (PBuf (tmp)); po_ty = tmp1; _ }, tmp2)) -> false
+    | (EOp ({ po_op = ExnRaise; po_ty = tmp; _ }, tmp1)) -> false
+    | (EOp ({ po_op = ExnPending; po_ty = tmp; _ }, tmp1)) -> false
+    | (EOp ({ po_op = ExnTake; po_ty = tmp; _ }, tmp1)) -> false
+    | (EOp ({ po_op = ExnExit; po_ty = tmp; _ }, tmp1)) -> false
     | (EOp (tmp, es)) -> (all es)
     | (ECtor (u__1, u__2)) -> (for_all_children is_droppable e)
     | (ETuple (tmp)) -> (for_all_children is_droppable e)
@@ -947,6 +1002,24 @@ let uu___is_ClosurePrologue (projectee : flag) : bool =
 let uu___is_Prologue (projectee : flag) : bool =
   (match projectee with
     | (Prologue (u__0)) -> true
+    | tmp -> false
+  )
+
+let uu___is_CherryMode (projectee : flag) : bool =
+  (match projectee with
+    | (CherryMode (u__0)) -> true
+    | tmp -> false
+  )
+
+let uu___is_Imported (projectee : flag) : bool =
+  (match projectee with
+    | (Imported (u__1, u__2)) -> true
+    | tmp -> false
+  )
+
+let uu___is_CherryConv (projectee : flag) : bool =
+  (match projectee with
+    | (CherryConv (u__0)) -> true
     | tmp -> false
   )
 
@@ -1005,6 +1078,7 @@ let flag_to_doc (f : flag) : FStar_Pprint.document =
     | (Epilogue (s)) -> (text (Prims.strcat "epilogue " s))
     | (ClosurePrologue (a, b)) -> (text (Prims.strcat "closure_prologue " (Prims.strcat a (Prims.strcat " / " b))))
     | CMacro -> (text "c_macro")
+    | CIfDef -> (text "c_ifdef")
     | CReference -> (text "c_reference")
     | CInline -> (text "c_inline")
     | (Deriving (s)) -> (text (Prims.strcat "deriving " s))
@@ -1028,6 +1102,25 @@ let flag_to_doc (f : flag) : FStar_Pprint.document =
       let tmp1 = (Prims.strcat tmp (Prims.strcat "." (Prims.strcat f1 "]"))) in
       let tmp2 = (Prims.strcat "member[" tmp1) in
       (text tmp2))
+    | (CallArity (fs)) -> (let tmp = (FStarC_List.map (fun b -> (if b then "-" else "+")) fs) in
+      let tmp1 = (FStarC_String.concat "" tmp) in
+      let tmp2 = (Prims.strcat tmp1 "]") in
+      let tmp3 = (Prims.strcat "arity[" tmp2) in
+      (text tmp3))
+    | (CherryMode (fs)) -> (let tmp = (FStarC_List.map (fun b -> (match b with
+          | (Some (true)) -> "o"
+          | (Some (false)) -> "b"
+          | None -> "?"
+        )) fs) in
+      let tmp1 = (FStarC_String.concat "" tmp) in
+      let tmp2 = (Prims.strcat tmp1 "]") in
+      let tmp3 = (Prims.strcat "cherry_mode[" tmp2) in
+      (text tmp3))
+    | (CherryConv (fs)) -> (let tmp = (FStarC_List.map (fun b -> (if b then "o" else "b")) fs) in
+      let tmp1 = (FStarC_String.concat "" tmp) in
+      let tmp2 = (Prims.strcat tmp1 "]") in
+      let tmp3 = (Prims.strcat "cherry_conv[" tmp2) in
+      (text tmp3))
   )
 
 let flags_to_doc (fs : (flag) list) : FStar_Pprint.document =
@@ -1173,6 +1266,21 @@ let op_to_string (o : prim_op) : string =
     | BufLit -> "lit"
     | BufUnconst -> "unconst"
     | (Commented (u__1, u__2)) -> "comment"
+    | RcInc -> "rc_inc"
+    | RcDec -> "rc_dec"
+    | RefNew -> "ref_new"
+    | RefGet -> "ref_get"
+    | RefSet -> "ref_set"
+    | (Reset (u__1, u__2)) -> "reset"
+    | (Reuse (u__1, u__2)) -> "reuse"
+    | ResetFree -> "reset_free"
+    | (IArr (f)) -> (Prims.strcat "iarray_" f)
+    | (Dyn (f)) -> (Prims.strcat "dyn_" f)
+    | (PBuf (f)) -> (Prims.strcat "pbuf_" f)
+    | ExnRaise -> "exn_raise"
+    | ExnPending -> "exn_pending"
+    | ExnTake -> "exn_take"
+    | ExnExit -> "exn_exit"
   ) (match (o).po_ty with
     | None -> ""
     | (Some ((PInt (u__1, u__2)))) -> (width_to_string (u__1, u__2))
@@ -1339,6 +1447,7 @@ and expr_to_doc' (prec : Prims.int) (e : expr) : FStar_Pprint.document =
       (parens_if (Prims.op_Greater_Equals prec Prims.int_one) tmp11))
     | EAny -> (text "any")
     | (EAbort (s)) -> (FStar_Pprint.group (FStar_Pprint.op_Hat_Slash_Hat (text "abort") (FStar_Pprint.dquotes (text s))))
+    | (EUnreachable (s)) -> (FStar_Pprint.group (FStar_Pprint.op_Hat_Slash_Hat (text "unreachable") (FStar_Pprint.dquotes (text s))))
     | (ERaise (e1)) -> (let tmp = (expr_to_doc' Prims.int_one e1) in
       let tmp1 = (FStar_Pprint.op_Hat_Slash_Hat (text "raise") tmp) in
       (FStar_Pprint.group tmp1))

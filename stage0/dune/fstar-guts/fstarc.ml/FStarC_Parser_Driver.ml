@@ -2,31 +2,31 @@
 [@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
 
 let parse_file (fn : string) : (FStarC_Parser_AST.modul * ((string * FStarC_Range_Type.range)) list) =
-  (let tmp = (FStarC_Parser_ParseIt.parse None (FStarC_Parser_ParseIt.Filename (fn))) in
+  (let tmp = (FStarC_Parser_Frontend.parse None (FStarC_Parser_Frontend.Filename (fn))) in
   (match tmp with
-    | (FStarC_Parser_ParseIt.ASTFragment (((FStar_Pervasives.Inl (ast)), comments))) -> (ast, comments)
-    | (FStarC_Parser_ParseIt.ASTFragment (((FStar_Pervasives.Inr (tmp1)), tmp2))) -> (let msg = (FStarC_Format.fmt1 "%s: expected a module\n" fn) in
+    | (FStarC_Parser_Frontend.ASTFragment ((FStar_Pervasives.Inl (ast)), comments)) -> (ast, comments)
+    | (FStarC_Parser_Frontend.ASTFragment ((FStar_Pervasives.Inr (tmp1)), tmp2)) -> (let msg = (FStarC_Format.fmt1 "%s: expected a module\n" fn) in
       let r = FStarC_Range_Type.dummyRange in
       (FStarC_Errors.fStarC_Errors_raise_error__range_string r FStarC_Errors_Codes.Fatal_ModuleExpected msg))
-    | (FStarC_Parser_ParseIt.ParseError ((e, msg, r))) -> (FStarC_Errors.fStarC_Errors_raise_error__range_list_document r e msg)
-    | (FStarC_Parser_ParseIt.Term (tmp1)) -> (FStarC_Effect.failwith "Impossible: parsing a Filename always results in an ASTFragment")
+    | (FStarC_Parser_Frontend.ParseError ((e, msg, r))) -> (FStarC_Errors.fStarC_Errors_raise_error__range_list_document r e msg)
+    | (FStarC_Parser_Frontend.Term (tmp1)) -> (FStarC_Effect.failwith "Impossible: parsing a Filename always results in an ASTFragment")
   ))
 
 type fragment =
   | Empty
   | Modul of FStarC_Parser_AST.modul
   | Decls of (FStarC_Parser_AST.decl) list
-  | DeclsWithContent of ((FStarC_Parser_AST.decl * FStarC_Parser_ParseIt.code_fragment)) list
+  | DeclsWithContent of ((FStarC_Parser_AST.decl * FStarC_Parser_Frontend.code_fragment)) list
 
 
-let parse_fragment (lang_opt : FStarC_Parser_ParseIt.lang_opts) (frag : FStarC_Parser_ParseIt.input_frag) : fragment =
-  (let tmp = (FStarC_Parser_ParseIt.parse lang_opt (FStarC_Parser_ParseIt.Toplevel (frag))) in
+let parse_fragment (lang_opt : (string) option) (frag : FStarC_Parser_Frontend.input_frag) : fragment =
+  (let tmp = (FStarC_Parser_Frontend.parse lang_opt (FStarC_Parser_Frontend.Toplevel (frag))) in
   (match tmp with
-    | (FStarC_Parser_ParseIt.ASTFragment (((FStar_Pervasives.Inl (modul)), tmp1))) -> (Modul (modul))
-    | (FStarC_Parser_ParseIt.ASTFragment (((FStar_Pervasives.Inr ([])), tmp1))) -> Empty
-    | (FStarC_Parser_ParseIt.ASTFragment (((FStar_Pervasives.Inr (decls)), tmp1))) -> (Decls (decls))
-    | (FStarC_Parser_ParseIt.IncrementalFragment ((decls, tmp1, tmp2))) -> (DeclsWithContent (decls))
-    | (FStarC_Parser_ParseIt.ParseError ((e, msg, r))) -> (FStarC_Errors.fStarC_Errors_raise_error__range_list_document r e msg)
-    | (FStarC_Parser_ParseIt.Term (tmp1)) -> (FStarC_Effect.failwith "Impossible: parsing a Toplevel always results in an ASTFragment")
+    | (FStarC_Parser_Frontend.ASTFragment ((FStar_Pervasives.Inl (modul)), tmp1)) -> (Modul (modul))
+    | (FStarC_Parser_Frontend.ASTFragment ((FStar_Pervasives.Inr ([])), tmp1)) -> Empty
+    | (FStarC_Parser_Frontend.ASTFragment ((FStar_Pervasives.Inr (decls)), tmp1)) -> (Decls (decls))
+    | (FStarC_Parser_Frontend.IncrementalFragment ((decls, tmp1, tmp2))) -> (DeclsWithContent (decls))
+    | (FStarC_Parser_Frontend.ParseError ((e, msg, r))) -> (FStarC_Errors.fStarC_Errors_raise_error__range_list_document r e msg)
+    | (FStarC_Parser_Frontend.Term (tmp1)) -> (FStarC_Effect.failwith "Impossible: parsing a Toplevel always results in an ASTFragment")
   ))
 

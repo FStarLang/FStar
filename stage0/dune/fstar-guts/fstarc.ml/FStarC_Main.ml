@@ -33,7 +33,8 @@ let load_native_tactics (tmp : unit) : unit =
   let modules_to_load = (FStarC_List.map FStarC_Ident.lid_of_str tmp1) in
   let tmp2 = (FStarC_Options.load_cmxs ()) in
   let cmxs_to_load = (FStarC_List.map FStarC_Ident.lid_of_str tmp2) in
-  let ml_module_name = (fun m -> (FStarC_Extraction_ML_Util.ml_module_name_of_lid m)) in
+  let ml_module_name = (fun m -> (let tmp3 = (FStarC_List.map FStarC_Ident.string_of_id (FStarC_Ident.ids_of_lid m)) in
+    (FStarC_String.concat "_" tmp3))) in
   let ml_file = (fun m -> (let tmp3 = (ml_module_name m) in
     (Prims.strcat tmp3 ".ml"))) in
   let cmxs_file = (fun m -> (let tmp3 = (ml_module_name m) in
@@ -98,7 +99,8 @@ let friends_of_implementation (fn : string) : (FStarC_Ident.lident) list =
   (match tmp with
     | (ast, tmp1) -> (FStarC_List.collect (fun d -> (match (d).FStarC_Parser_AST.d with
         | (FStarC_Parser_AST.Friend (l)) -> (let tmp2 = (FStarC_Ident.lid_of_str (FStarC_String.lowercase (FStarC_Ident.string_of_lid l))) in
-          (tmp2 :: []))
+          let tmp3 = (FStarC_Ident.set_lid_range tmp2 (FStarC_Ident.range_of_lid l)) in
+          (tmp3 :: []))
         | tmp2 -> []
       )) (FStarC_Parser_AST.decls_of_modul ast))
   ))
@@ -214,7 +216,7 @@ let go_normal (tmp : unit) : unit =
               (FStarC_Format.print1 "Karamel format version: %s\n" tmp12);
               (FStarC_List.iter (fun tmp13 -> (match tmp13 with
                 | (name, decls) -> ((FStarC_Format.print1 "%s:\n" name);
-                  (FStarC_List.iter (fun d -> (let tmp14 = (FStarC_Extraction_KrmlAst.fStarC_Class_Show_show__decl_157 d) in
+                  (FStarC_List.iter (fun d -> (let tmp14 = (FStarC_Custard_KrmlAst.fStarC_Class_Show_show__decl_157 d) in
                   (FStarC_Format.print1 "%s\n\n" tmp14))) decls))
               )) files))
           ))
@@ -334,20 +336,21 @@ let go_normal (tmp : unit) : unit =
                   let tmp14 = (FStarC_Parser_Dep.is_implementation fn) in
                   let filenames1 = (if tmp14 then (let tmp15 = (friends_of_implementation fn) in
                     (FStarC_Parser_Dep.set_root_friends tmp15);
-                    let tmp16 = (FStarC_Parser_Dep.interface_of deps m) in
-                    (match tmp16 with
+                    let tmp16 = (FStarC_Parser_Dep.module_key_of_file fn) in
+                    let tmp17 = (FStarC_Parser_Dep.interface_of deps tmp16) in
+                    (match tmp17 with
                       | None -> (fn :: [])
-                      | (Some (iface)) -> (let tmp17 = (FStarC_Options.output_to ()) in
-                        let tmp18 = (match tmp17 with
+                      | (Some (iface)) -> (let tmp18 = (FStarC_Options.output_to ()) in
+                        let tmp19 = (match tmp18 with
                             | None -> true
-                            | tmp18 -> false
+                            | tmp19 -> false
                           ) in
-                        let tmp19 = (if tmp18 then (let tmp19 = (FStarC_CheckedFiles.scan_deps_and_check_cache_validity iface) in
-                          (match tmp19 with
+                        let tmp20 = (if tmp19 then (let tmp20 = (FStarC_CheckedFiles.scan_deps_and_check_cache_validity iface) in
+                          (match tmp20 with
                             | (Some (v)) -> true
-                            | tmp20 -> false
+                            | tmp21 -> false
                           )) else false) in
-                        (if tmp19 then (fn :: []) else (iface :: (fn :: []))))
+                        (if tmp20 then (fn :: []) else (iface :: (fn :: []))))
                     )) else (fn :: [])) in
                   (filenames1, deps, true))) in
                 let tmp13 = (FStarC_Options.force ()) in

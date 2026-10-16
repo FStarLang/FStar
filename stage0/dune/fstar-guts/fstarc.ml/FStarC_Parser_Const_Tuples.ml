@@ -75,14 +75,6 @@ let mk_dtuple_lid (arity : Prims.int) (r : FStarC_Range_Type.range) : FStarC_Ide
 let lid_dtuple2 : FStarC_Ident.lident =
   (mk_dtuple_lid (Prims.of_int (2)) FStarC_Range_Type.dummyRange)
 
-let get_tuple_tycon_arity (s : string) : (Prims.int) option =
-  (match (FStar_List_Tot_Base.find (fun tmp -> (match tmp with
-    | (tmp1, s', tmp2) -> ((=) s s')
-  )) tuple_table) with
-    | (Some ((n, tmp, tmp1))) -> (Some (n))
-    | None -> None
-  )
-
 let mk_dtuple_data_lid (arity : Prims.int) (r : FStarC_Range_Type.range) : FStarC_Ident.lident =
   (let tmp = (lookup_dtuple arity) in
   (match tmp with
@@ -107,18 +99,18 @@ let lid_tuple3 : FStarC_Ident.lident =
 let lid_Mktuple3 : FStarC_Ident.lident =
   (mk_tuple_data_lid (Prims.of_int (3)) FStarC_Range_Type.dummyRange)
 
-let get_tuple_datacon_arity (s : string) : (Prims.int) option =
-  (match (FStar_List_Tot_Base.find (fun tmp -> (match tmp with
-    | (tmp1, tmp2, s') -> ((=) s s')
-  )) tuple_table) with
-    | (Some ((n, tmp, tmp1))) -> (Some (n))
-    | None -> None
-  )
-
 let get_dtuple_tycon_arity (s : string) : (Prims.int) option =
   (match (FStar_List_Tot_Base.find (fun tmp -> (match tmp with
     | (tmp1, s', tmp2) -> ((=) s s')
   )) dtuple_table) with
+    | (Some ((n, tmp, tmp1))) -> (Some (n))
+    | None -> None
+  )
+
+let get_tuple_tycon_arity (s : string) : (Prims.int) option =
+  (match (FStar_List_Tot_Base.find (fun tmp -> (match tmp with
+    | (tmp1, s', tmp2) -> ((=) s s')
+  )) tuple_table) with
     | (Some ((n, tmp, tmp1))) -> (Some (n))
     | None -> None
   )

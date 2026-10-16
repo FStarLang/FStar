@@ -153,8 +153,12 @@ let with_extra_args (n : Prims.int) (s : primitive_step) : primitive_step =
     requires_binder_substitution = (s).requires_binder_substitution;
     renorm_after = (s).renorm_after;
     unrepresentable_result = (s).unrepresentable_result;
-    interpretation = (fun psc cb us args -> ((s).interpretation psc cb us (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst (FStarC_List.splitAt a0 args))));
-    interpretation_nbe = (fun cb us args -> ((s).interpretation_nbe cb us (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst (FStarC_List.splitAt a0 args)))) }))
+    interpretation = (fun psc cb us args -> ((s).interpretation psc cb us (match (FStarC_List.splitAt a0 args) with
+      | (u__1, u__2) -> u__1
+    )));
+    interpretation_nbe = (fun cb us args -> ((s).interpretation_nbe cb us (match (FStarC_List.splitAt a0 args) with
+      | (u__1, u__2) -> u__1
+    ))) }))
 
 let fStarC_Writer_emit__list_primitive_step (x : (primitive_step) list) : ((primitive_step) list * unit) =
   (x, ())

@@ -57,7 +57,31 @@ let eq_cmp (x : 'a) (y : 'a) : u__cmpres =
 let ident_cmp (i1 : FStarC_Reflection_Types.ident) (i2 : FStarC_Reflection_Types.ident) : u__cmpres =
   (let iv1 = (FStarC_Reflection_V2_Builtins.inspect_ident i1) in
   let iv2 = (FStarC_Reflection_V2_Builtins.inspect_ident i2) in
-  (co ((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst iv1), (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd iv1)) ((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst iv2), (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd iv2)) i1 i2 (op_Amp_Amp_Amp (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst iv1) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst iv2) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd iv1) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd iv2) (eq_cmp (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst iv1) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst iv2)) (eq_cmp (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd iv1) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd iv2)))))
+  (co ((match iv1 with
+    | (u__1, u__2) -> u__1
+  ), (match iv1 with
+    | (u__1, u__2) -> u__2
+  )) ((match iv2 with
+    | (u__1, u__2) -> u__1
+  ), (match iv2 with
+    | (u__1, u__2) -> u__2
+  )) i1 i2 (op_Amp_Amp_Amp (match iv1 with
+    | (u__1, u__2) -> u__1
+  ) (match iv2 with
+    | (u__1, u__2) -> u__1
+  ) (match iv1 with
+    | (u__1, u__2) -> u__2
+  ) (match iv2 with
+    | (u__1, u__2) -> u__2
+  ) (eq_cmp (match iv1 with
+    | (u__1, u__2) -> u__1
+  ) (match iv2 with
+    | (u__1, u__2) -> u__1
+  )) (eq_cmp (match iv1 with
+    | (u__1, u__2) -> u__2
+  ) (match iv2 with
+    | (u__1, u__2) -> u__2
+  )))))
 
 let rec univ_cmp (u1 : FStarC_Reflection_Types.universe) (u2 : FStarC_Reflection_Types.universe) : u__cmpres =
   (let uv1 = (FStarC_Reflection_V2_Builtins.inspect_universe u1) in
@@ -202,7 +226,31 @@ and pat_cmp (p1 : FStarC_Reflection_V2_Data.pattern) (p2 : FStarC_Reflection_V2_
   )
 
 and br_cmp (br1 : (FStarC_Reflection_V2_Data.pattern * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (br2 : (FStarC_Reflection_V2_Data.pattern * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) : u__cmpres =
-  (co ((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst br1), (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd br1)) ((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst br2), (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd br2)) br1 br2 (op_Amp_Amp_Amp (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst br1) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst br2) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd br1) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd br2) (pat_cmp (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst br1) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst br2)) (term_cmp (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd br1) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd br2))))
+  (co ((match br1 with
+    | (u__1, u__2) -> u__1
+  ), (match br1 with
+    | (u__1, u__2) -> u__2
+  )) ((match br2 with
+    | (u__1, u__2) -> u__1
+  ), (match br2 with
+    | (u__1, u__2) -> u__2
+  )) br1 br2 (op_Amp_Amp_Amp (match br1 with
+    | (u__1, u__2) -> u__1
+  ) (match br2 with
+    | (u__1, u__2) -> u__1
+  ) (match br1 with
+    | (u__1, u__2) -> u__2
+  ) (match br2 with
+    | (u__1, u__2) -> u__2
+  ) (pat_cmp (match br1 with
+    | (u__1, u__2) -> u__1
+  ) (match br2 with
+    | (u__1, u__2) -> u__1
+  )) (term_cmp (match br1 with
+    | (u__1, u__2) -> u__2
+  ) (match br2 with
+    | (u__1, u__2) -> u__2
+  ))))
 
 and term_cmp (t1 : FStarC_Reflection_Types.term) (t2 : FStarC_Reflection_Types.term) : u__cmpres =
   (let tv1 = (FStarC_Reflection_V2_Builtins.inspect_ln t1) in

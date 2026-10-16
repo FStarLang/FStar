@@ -327,9 +327,13 @@ and lbs_to_string (quals : (FStarC_Syntax_Syntax.qualifier) list) (lbs : (bool *
       (Prims.strcat "<" tmp5)) else "") in
     let tmp5 = (term_to_string (lb).FStarC_Syntax_Syntax.lbtyp) in
     let tmp6 = (term_to_string (lb).FStarC_Syntax_Syntax.lbdef) in
-    (FStarC_Format.fmt5 "%s%s %s : %s = %s" tmp1 tmp2 tmp4 tmp5 tmp6))) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd lbs)) in
+    (FStarC_Format.fmt5 "%s%s %s : %s = %s" tmp1 tmp2 tmp4 tmp5 tmp6))) (match lbs with
+      | (u__1, u__2) -> u__2
+    )) in
   let tmp2 = (FStarC_Util.concat_l "\n and " tmp1) in
-  (FStarC_Format.fmt3 "%slet %s %s" tmp (if (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst lbs) then "rec" else "") tmp2))
+  (FStarC_Format.fmt3 "%slet %s %s" tmp (if (match lbs with
+    | (u__1, u__2) -> u__1
+  ) then "rec" else "") tmp2))
 
 and pat_to_string (x : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) : string =
   (match (x).FStarC_Syntax_Syntax.v with
@@ -389,7 +393,9 @@ and term_to_string (x : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax
       (Prims.strcat "[lazy:" tmp6))
     | (FStarC_Syntax_Syntax.Tm_quoted (tm, qi)) -> (match (qi).FStarC_Syntax_Syntax.qkind with
         | FStarC_Syntax_Syntax.Quote_static -> (let tmp2 = (term_to_string tm) in
-          let tmp3 = (FStarC_Common.string_of_list term_to_string (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd ((qi).FStarC_Syntax_Syntax.antiquotations, (qi).FStarC_Syntax_Syntax.antiquotations1))) in
+          let tmp3 = (FStarC_Common.string_of_list term_to_string (match ((qi).FStarC_Syntax_Syntax.antiquotations, (qi).FStarC_Syntax_Syntax.antiquotations1) with
+              | (u__1, u__2) -> u__2
+            )) in
           (FStarC_Format.fmt2 "`(%s)%s" tmp2 tmp3))
         | FStarC_Syntax_Syntax.Quote_dynamic -> (let tmp2 = (term_to_string tm) in
           (FStarC_Format.fmt1 "quote (%s)" tmp2))
@@ -442,7 +448,9 @@ and term_to_string (x : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax
     | (FStarC_Syntax_Syntax.Tm_uvar (u, s)) -> (let tmp2 = (FStarC_Options.print_bound_var_types ()) in
       let tmp3 = (if tmp2 then (FStarC_Options.print_effect_args ()) else false) in
       (if tmp3 then (let tmp4 = (ctx_uvar_to_string_aux true u) in
-      let tmp5 = (FStarC_List.map subst_to_string (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst s)) in
+      let tmp5 = (FStarC_List.map subst_to_string (match s with
+          | (u__1, u__2) -> u__1
+        )) in
       let tmp6 = (FStarC_String.concat "; " tmp5) in
       (FStarC_Format.fmt2 "(%s @ %s)" tmp4 tmp6)) else (let tmp4 = (FStarC_Syntax_Unionfind.uvar_id ((u).FStarC_Syntax_Syntax.ctx_uvar_head, (u).FStarC_Syntax_Syntax.ctx_uvar_head1, (u).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
       let tmp5 = (FStarC_Class_Show.fStarC_Class_Show_show__int tmp4) in
@@ -672,8 +680,12 @@ let rec sigelt_to_string (x : FStarC_Syntax_Syntax.sigelt) : string =
             lbeff = (lb).FStarC_Syntax_Syntax.lbeff;
             lbdef = (lb).FStarC_Syntax_Syntax.lbdef;
             lbattrs = [];
-            lbpos = (lb).FStarC_Syntax_Syntax.lbpos }) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd lbs)) in
-        let lbs1 = ((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst lbs), tmp1) in
+            lbpos = (lb).FStarC_Syntax_Syntax.lbpos }) (match lbs with
+            | (u__1, u__2) -> u__2
+          )) in
+        let lbs1 = ((match lbs with
+            | (u__1, u__2) -> u__1
+          ), tmp1) in
         (lbs_to_string (x).FStarC_Syntax_Syntax.sigquals lbs1))
       | (FStarC_Syntax_Syntax.Sig_bundle ({ FStarC_Syntax_Syntax.ses = ses; lids = tmp; _ })) -> (let tmp1 = (FStarC_List.map sigelt_to_string ses) in
         let tmp2 = (FStarC_String.concat "\n" tmp1) in

@@ -16,7 +16,7 @@ type unit_ref = {
 }
 
 type links = {
-  lk_tbl : ((string * entry)) FStarC_SMap.t;
+  lk_tbl : ((string * entry)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t;
   lk_units : (unit_ref) list;
 }
 
@@ -40,11 +40,11 @@ let bad (fn : string) (msg : (FStar_Pprint.document) list) : 'a =
   (FStarC_Errors.fStarC_Errors_raise_error0__list_document FStarC_Errors_Codes.Error_CustardBadUnitInterface ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Cannot link the Custard unit interface %s." fn)) :: msg))
 
 let current_version : Prims.int =
-  (Prims.of_int (14))
+  (Prims.of_int (18))
 
 let layout_options (tmp : unit) : ((string * string)) list =
-  (let tmp1 = (FStarC_Options.custard_backend ()) in
-  let tmp2 = ("custard_backend", tmp1) in
+  (let tmp1 = (FStarC_Options.codegen_name ()) in
+  let tmp2 = ("codegen", tmp1) in
   let tmp3 = (FStarC_Options.custard_monomorphize_types ()) in
   let tmp4 = (Prims.string_of_bool tmp3) in
   let tmp5 = ("custard_monomorphize_types", tmp4) in
@@ -98,14 +98,14 @@ let is_type_key (k : string) : bool =
   ((=) tmp "<type>")) else false)
 
 let load_links (fns : (string) list) : links =
-  (let tbl = (FStarC_SMap.create (Prims.of_int (1000))) in
+  (let tbl = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (1000)))) in
   let units = (FStarC_List.map (fun fn -> (let i = (read_iface fn) in
     let u = ((i).ui_header).uh_name in
-    (FStarC_List.iter (fun e -> (let tmp = (FStarC_SMap.try_find tbl (e).ue_key) in
+    (FStarC_List.iter (fun e -> (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt tbl (e).ue_key) in
     (match tmp with
       | (Some (tmp1)) when (is_type_key (e).ue_key) -> ()
       | (Some ((u', tmp1))) when ((<>) u' u) -> (bad fn ((FStarC_Errors_Msg.text (FStarC_Format.fmt2 "Both %s and %s export a definition for the same specialization key." u' u)) :: ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "The key is: %s" (e).ue_key)) :: ((FStarC_Errors_Msg.text "Link only one of them, or merge the two units.") :: []))))
-      | tmp1 -> (FStarC_SMap.add tbl (e).ue_key (u, e))
+      | tmp1 -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace tbl (e).ue_key (u, e))
     ))) (i).ui_entries);
     { ur_name = u;
       ur_header = ((i).ui_header).uh_header;
@@ -113,26 +113,26 @@ let load_links (fns : (string) list) : links =
       ur_no_prefix = ((i).ui_header).uh_no_prefix })) fns) in
   let tmp = (FStarC_Options.custard_dump_cui ()) in
   let tmp1 = (if tmp then ((<>) fns []) else false) in
-  (if tmp1 then (let tmp2 = (FStarC_SMap.keys tbl) in
+  (if tmp1 then (let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun key tmp2 acc -> (key :: acc)) tbl []) in
   let tmp3 = (FStarC_List.length tmp2) in
   let tmp4 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 tmp3) in
   (FStarC_Format.print1 "Custard: linked %s specializations.\n" tmp4)) else ());
   { lk_tbl = tbl; lk_units = units })
 
 let lookup (l : links) (eta : string) : ((string * entry)) option =
-  (FStarC_SMap.try_find (l).lk_tbl eta)
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (l).lk_tbl eta)
 
 let type_key (n : FStarC_Custard_Syntax.name) : string =
   (let tmp = (FStarC_Custard_Syntax.string_of_name n) in
   (Prims.strcat "<type>" tmp))
 
 let link_homes (l : links) : (string) list =
-  (FStarC_SMap.fold (l).lk_tbl (fun tmp tmp1 acc -> (match tmp1 with
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun tmp tmp1 acc -> (match tmp1 with
     | (tmp2, e) -> (match (e).ue_home with
         | (Some (h)) -> (if (FStarC_List.mem h acc) then acc else (h :: acc))
         | None -> acc
       )
-  )) [])
+  )) (l).lk_tbl [])
 
 let link_headers (l : links) : (string) list =
   (FStarC_List.collect (fun u -> (match (u).ur_header with
@@ -206,6 +206,6 @@ let write_iface (fn : string) (eta : iface) : unit =
   (FStarC_Util.save_value_to_file fn eta)
 
 let empty_links : links =
-  (let tmp = (FStarC_SMap.create Prims.int_one) in
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int Prims.int_one)) in
   { lk_tbl = tmp; lk_units = [] })
 

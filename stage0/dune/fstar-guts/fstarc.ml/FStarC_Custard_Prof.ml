@@ -18,17 +18,17 @@ type counter = {
   c_calls : (Prims.int ref);
 }
 
-let counters : (counter) FStarC_SMap.t =
-  (FStarC_SMap.create (Prims.of_int (50)))
+let counters : (counter) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (50))))
 
 let get (name : string) : counter =
-  (let tmp = (FStarC_SMap.try_find counters name) in
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt counters name) in
   (match tmp with
     | (Some (c)) -> c
     | None -> (let tmp1 = (ref Prims.int_zero) in
       let tmp2 = (ref Prims.int_zero) in
       let c = { c_time = tmp1; c_calls = tmp2 } in
-      (FStarC_SMap.add counters name c);
+      (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace counters name c);
       c)
   ))
 
@@ -58,7 +58,7 @@ let timed (name : string) (f : (unit -> 'u___a)) : 'u___a =
 let report (tmp : unit) : unit =
   (let tmp1 = (is_enabled ()) in
   let tmp2 = (not tmp1) in
-  (if tmp2 then () else (let rows = (FStarC_SMap.fold counters (fun k v acc -> ((k, v) :: acc)) []) in
+  (if tmp2 then () else (let rows = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun k v acc -> ((k, v) :: acc)) counters []) in
   let rows1 = (FStarC_Util.sort_with (fun tmp3 tmp4 -> (match (tmp3, tmp4) with
       | ((tmp5, a), (tmp6, b)) -> (let tmp7 = (!((b).c_time)) in
         let tmp8 = (!((a).c_time)) in
@@ -73,5 +73,5 @@ let report (tmp : unit) : unit =
       let tmp8 = (FStarC_Class_Show.fStarC_Class_Show_show__int tmp7) in
       (FStarC_Format.print3 "  %s ms\t%s\t(%s calls)\n" tmp6 k tmp8))
   )) rows1);
-  (FStarC_SMap.clear counters))))
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.clear counters))))
 

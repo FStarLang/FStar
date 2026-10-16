@@ -16,8 +16,9 @@ let rec close_fields__close (bound : (string -> bool)) (c : FStarC_Custard_Synta
       (FStarC_Custard_Syntax.TTuple (tmp)))
     | (FStarC_Custard_Syntax.TBuf (c1)) -> (let tmp = ((close_fields__close bound) c1) in
       (FStarC_Custard_Syntax.TBuf (tmp)))
-    | (FStarC_Custard_Syntax.TRef (c1)) -> (let tmp = ((close_fields__close bound) c1) in
-      (FStarC_Custard_Syntax.TRef (tmp)))
+    | (FStarC_Custard_Syntax.TRef (k, c1)) -> (let tmp = ((close_fields__close bound) c1) in
+      let tmp1 = (k, tmp) in
+      (FStarC_Custard_Syntax.TRef ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.TInline (c1)) -> (let tmp = ((close_fields__close bound) c1) in
       (FStarC_Custard_Syntax.TInline (tmp)))
     | c1 -> c1
@@ -51,11 +52,11 @@ let close_fields (d : FStarC_Custard_Syntax.decl) : FStarC_Custard_Syntax.decl =
   )
 
 type tbl = {
-  types : (FStarC_Custard_Syntax.dtype) FStarC_SMap.t;
-  erased : (bool) FStarC_SMap.t;
-  layouts : (FStarC_Custard_Syntax.layout) FStarC_SMap.t;
-  ctors : ((string * FStarC_Custard_Syntax.ctor_layout)) FStarC_SMap.t;
-  pinned : (unit) FStarC_SMap.t;
+  types : (FStarC_Custard_Syntax.dtype) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t;
+  erased : (bool) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t;
+  layouts : (FStarC_Custard_Syntax.layout) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t;
+  ctors : ((string * FStarC_Custard_Syntax.ctor_layout)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t;
+  pinned : (unit) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t;
   fresh : (Prims.int ref);
 }
 
@@ -74,10 +75,10 @@ let rec cty_erased (t : tbl) (c : FStarC_Custard_Syntax.cty) : bool =
     | (FStarC_Custard_Syntax.TArrow (tmp, e, r)) -> (if (FStarC_Custard_Syntax.is_pure e) then (cty_erased t r) else false)
     | (FStarC_Custard_Syntax.TTuple (cs)) -> (FStarC_List.for_all (fun c1 -> (cty_erased t c1)) cs)
     | (FStarC_Custard_Syntax.TBuf (tmp)) -> false
-    | (FStarC_Custard_Syntax.TRef (tmp)) -> false
+    | (FStarC_Custard_Syntax.TRef (tmp, tmp1)) -> false
     | (FStarC_Custard_Syntax.TInline (c1)) -> (cty_erased t c1)
     | (FStarC_Custard_Syntax.TApp (n, tmp)) -> (let tmp1 = (key n) in
-      let tmp2 = (FStarC_SMap.try_find (t).erased tmp1) in
+      let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (t).erased tmp1) in
       (match tmp2 with
         | (Some (b)) -> b
         | None -> false
@@ -106,21 +107,21 @@ let rec erasure_fixpoint__loop (step : (unit -> bool)) (fuel : Prims.int) : unit
 
 let erasure_fixpoint (t : tbl) : unit =
   (let step = (fun tmp -> (let changed = (ref false) in
-    (FStarC_SMap.iter (t).types (fun k d -> (let tmp1 = (FStarC_SMap.try_find (t).erased k) in
+    (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.iter (fun k d -> (let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (t).erased k) in
     let old = (match tmp1 with
         | (Some (b)) -> b
         | None -> false
       ) in
-    let tmp2 = (FStarC_SMap.try_find (t).pinned k) in
+    let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (t).pinned k) in
     let tmp3 = (match tmp2 with
         | (Some (v)) -> true
         | tmp3 -> false
       ) in
     (if tmp3 then () else (let nw = (dtype_erased t d) in
     (if ((<>) nw old) then (((changed) := true);
-    (FStarC_SMap.add (t).erased k nw)) else ()))))));
+    (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace (t).erased k nw)) else ()))))) (t).types);
     (!(changed)))) in
-  let tmp = (FStarC_SMap.fold (t).types (fun tmp tmp1 n -> (Prims.op_Plus n Prims.int_one)) Prims.int_one) in
+  let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun tmp tmp1 n -> (Prims.op_Plus n Prims.int_one)) (t).types Prims.int_one) in
   ((erasure_fixpoint__loop step) tmp))
 
 let ctors_of_tydef (d : FStarC_Custard_Syntax.dtype) : ((FStarC_Custard_Syntax.name * ((string * FStarC_Custard_Syntax.cty)) list)) list =
@@ -166,7 +167,7 @@ let rec names_of_cty (c : FStarC_Custard_Syntax.cty) : (string) list =
       (FStarC_List.op_At tmp1 tmp2))
     | (FStarC_Custard_Syntax.TTuple (cs)) -> (FStarC_List.collect names_of_cty cs)
     | (FStarC_Custard_Syntax.TBuf (c1)) -> (names_of_cty c1)
-    | (FStarC_Custard_Syntax.TRef (c1)) -> (names_of_cty c1)
+    | (FStarC_Custard_Syntax.TRef (tmp, c1)) -> (names_of_cty c1)
     | (FStarC_Custard_Syntax.TInline (c1)) -> (names_of_cty c1)
     | (FStarC_Custard_Syntax.TApp (n, args)) -> (let tmp = (key n) in
       let tmp1 = (FStarC_List.collect names_of_cty args) in
@@ -174,14 +175,14 @@ let rec names_of_cty (c : FStarC_Custard_Syntax.cty) : (string) list =
     | tmp -> []
   )
 
-let rec acyclic_candidates__go (cands : (FStarC_Custard_Syntax.cty) FStarC_SMap.t) (k : string) (seen : (bool) FStarC_SMap.t) (work : (string) list) : bool =
+let rec acyclic_candidates__go (cands : (FStarC_Custard_Syntax.cty) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (k : string) (seen : (bool) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (work : (string) list) : bool =
   (match work with
     | [] -> false
-    | (m :: rest) -> (if ((=) m k) then true else (let tmp = (FStarC_SMap.try_find seen m) in
+    | (m :: rest) -> (if ((=) m k) then true else (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt seen m) in
       (match tmp with
         | (Some (tmp1)) -> ((acyclic_candidates__go cands k seen) rest)
-        | None -> ((FStarC_SMap.add seen m true);
-          let tmp1 = (FStarC_SMap.try_find cands m) in
+        | None -> ((FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace seen m true);
+          let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt cands m) in
           (match tmp1 with
             | (Some (rep')) -> (let tmp2 = (names_of_cty rep') in
               let tmp3 = (FStarC_List.op_At tmp2 rest) in
@@ -191,44 +192,44 @@ let rec acyclic_candidates__go (cands : (FStarC_Custard_Syntax.cty) FStarC_SMap.
       )))
   )
 
-let acyclic_candidates (cands : (FStarC_Custard_Syntax.cty) FStarC_SMap.t) : (FStarC_Custard_Syntax.cty) FStarC_SMap.t =
-  (let ok = (FStarC_SMap.create (Prims.of_int (20))) in
-  (FStarC_SMap.iter cands (fun k rep -> (let seen = (FStarC_SMap.create (Prims.of_int (10))) in
+let acyclic_candidates (cands : (FStarC_Custard_Syntax.cty) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) : (FStarC_Custard_Syntax.cty) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
+  (let ok = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (20)))) in
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.iter (fun k rep -> (let seen = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (10)))) in
   let tmp = (names_of_cty rep) in
   let tmp1 = ((acyclic_candidates__go cands k seen) tmp) in
   let tmp2 = (not tmp1) in
-  (if tmp2 then (FStarC_SMap.add ok k rep) else ()))));
+  (if tmp2 then (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace ok k rep) else ()))) cands);
   ok)
 
 let compute_layouts (t : tbl) : unit =
-  (let cands = (FStarC_SMap.create (Prims.of_int (20))) in
-  (FStarC_SMap.iter (t).types (fun k d -> (let tmp = (FStarC_SMap.try_find (t).pinned k) in
+  (let cands = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (20)))) in
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.iter (fun k d -> (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (t).pinned k) in
   let tmp1 = (match tmp with
       | (Some (v)) -> true
       | tmp1 -> false
     ) in
-  (if tmp1 then () else (let tmp2 = (FStarC_SMap.try_find (t).erased k) in
+  (if tmp1 then () else (let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (t).erased k) in
   let erased = (match tmp2 with
       | (Some (b)) -> b
       | None -> false
     ) in
-  (if erased then (FStarC_SMap.add (t).layouts k FStarC_Custard_Syntax.L_erased) else (match (d).FStarC_Custard_Syntax.dt_body with
-    | FStarC_Custard_Syntax.TAbstract -> (FStarC_SMap.add (t).layouts k FStarC_Custard_Syntax.L_opaque)
-    | (FStarC_Custard_Syntax.TAbbrev (c)) -> (FStarC_SMap.add (t).layouts k (FStarC_Custard_Syntax.L_abbrev (c)))
+  (if erased then (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace (t).layouts k FStarC_Custard_Syntax.L_erased) else (match (d).FStarC_Custard_Syntax.dt_body with
+    | FStarC_Custard_Syntax.TAbstract -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace (t).layouts k FStarC_Custard_Syntax.L_opaque)
+    | (FStarC_Custard_Syntax.TAbbrev (c)) -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace (t).layouts k (FStarC_Custard_Syntax.L_abbrev (c)))
     | tmp3 -> (let cls = (ctor_layouts t d) in
-      (FStarC_SMap.add (t).layouts k (FStarC_Custard_Syntax.L_struct (cls)));
+      (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace (t).layouts k (FStarC_Custard_Syntax.L_struct (cls)));
       let tmp4 = (FStarC_Custard_Syntax.has_flag (d).FStarC_Custard_Syntax.dt_flags FStarC_Custard_Syntax.NoNewtype) in
       let tmp5 = (not tmp4) in
       (if tmp5 then (match cls with
         | (cl :: []) -> (if ((=) (cl).FStarC_Custard_Syntax.cl_arity Prims.int_one) then (match (cl).FStarC_Custard_Syntax.cl_fields with
-            | ((tmp6, c) :: []) -> (FStarC_SMap.add cands k (uninline c))
+            | ((tmp6, c) :: []) -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace cands k (uninline c))
             | tmp6 -> ()
           ) else ())
         | tmp6 -> ()
       ) else ()))
-  )))))));
+  )))))) (t).types);
   let cands1 = (acyclic_candidates cands) in
-  (FStarC_SMap.iter cands1 (fun k tmp -> (let tmp1 = (FStarC_SMap.try_find (t).layouts k) in
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.iter (fun k tmp -> (let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (t).layouts k) in
   (match tmp1 with
     | (Some ((FStarC_Custard_Syntax.L_struct ((cl :: []))))) -> (let tmp2 = (FStarC_List.fold_left (fun tmp2 s -> (match tmp2 with
           | (i, found) -> (match (s, found) with
@@ -236,26 +237,28 @@ let compute_layouts (t : tbl) : unit =
               | tmp3 -> ((Prims.op_Plus i Prims.int_one), found)
             )
         )) (Prims.int_zero, None) (cl).FStarC_Custard_Syntax.cl_slots) in
-      let idx = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd tmp2) in
+      let idx = (match tmp2 with
+          | (u__1, u__2) -> u__2
+        ) in
       (match (idx, (cl).FStarC_Custard_Syntax.cl_fields) with
-        | ((Some (i)), ((f, c) :: [])) -> (FStarC_SMap.add (t).layouts k (FStarC_Custard_Syntax.L_newtype ({ FStarC_Custard_Syntax.nt_ctor = (cl).FStarC_Custard_Syntax.cl_name;
+        | ((Some (i)), ((f, c) :: [])) -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace (t).layouts k (FStarC_Custard_Syntax.L_newtype ({ FStarC_Custard_Syntax.nt_ctor = (cl).FStarC_Custard_Syntax.cl_name;
             nt_field = f;
             nt_index = i;
             nt_ty = (uninline c) })))
         | tmp3 -> ()
       ))
     | tmp2 -> ()
-  )))))
+  ))) cands1))
 
 let register_ctors (t : tbl) : unit =
-  (FStarC_SMap.iter (t).types (fun k d -> (let tmp = (FStarC_SMap.try_find (t).pinned k) in
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.iter (fun k d -> (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (t).pinned k) in
   let tmp1 = (match tmp with
       | (Some (v)) -> true
       | tmp1 -> false
     ) in
   (if tmp1 then () else (let tmp2 = (ctor_layouts t d) in
   (FStarC_List.iter (fun cl -> (let tmp3 = (key (cl).FStarC_Custard_Syntax.cl_name) in
-  (FStarC_SMap.add (t).ctors tmp3 (k, cl)))) tmp2))))))
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace (t).ctors tmp3 (k, cl)))) tmp2))))) (t).types)
 
 let rec eta_ctors__drop (n : Prims.int) (xs : ('a) list) : ('a) list =
   (if (Prims.op_Less_Equals n Prims.int_zero) then xs else (match xs with
@@ -263,14 +266,14 @@ let rec eta_ctors__drop (n : Prims.int) (xs : ('a) list) : ('a) list =
     | (tmp :: xs1) -> (eta_ctors__drop (Prims.op_Minus n Prims.int_one) xs1)
   ))
 
-let rec eta_ctors__go (fields : (((string * FStarC_Custard_Syntax.cty)) list) FStarC_SMap.t) (fresh : (unit -> string)) (x : FStarC_Custard_Syntax.expr) : FStarC_Custard_Syntax.expr =
+let rec eta_ctors__go (fields : (((string * FStarC_Custard_Syntax.cty)) list) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (fresh : (unit -> string)) (x : FStarC_Custard_Syntax.expr) : FStarC_Custard_Syntax.expr =
   (match (x).FStarC_Custard_Syntax.e with
     | (FStarC_Custard_Syntax.ECtor (cn, es)) -> (let es1 = (FStarC_List.map (eta_ctors__go fields fresh) es) in
       let alt = { FStarC_Custard_Syntax.e = (FStarC_Custard_Syntax.ECtor (cn, es1));
           ty = (x).FStarC_Custard_Syntax.ty;
           eff = (x).FStarC_Custard_Syntax.eff } in
       let tmp = (key cn) in
-      let tmp1 = (FStarC_SMap.try_find fields tmp) in
+      let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt fields tmp) in
       (match tmp1 with
         | (Some (fs)) when (Prims.op_Less (FStarC_List.length es1) (FStarC_List.length fs)) -> (let tmp2 = (eta_ctors__drop (FStarC_List.length es1) fs) in
           let bs = (FStarC_List.map (fun tmp3 -> (match tmp3 with
@@ -288,13 +291,13 @@ let rec eta_ctors__go (fields : (((string * FStarC_Custard_Syntax.cty)) list) FS
   )
 
 let eta_ctors (t : tbl) (prog : (FStarC_Custard_Syntax.decl) list) : (FStarC_Custard_Syntax.decl) list =
-  (let fields = (FStarC_SMap.create (Prims.of_int (100))) in
+  (let fields = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (100)))) in
   let add = (fun d -> (let tmp = (ctors_of_tydef d) in
     (FStarC_List.iter (fun tmp1 -> (match tmp1 with
       | (cn, fs) -> (let tmp2 = (key cn) in
-        (FStarC_SMap.add fields tmp2 fs))
+        (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace fields tmp2 fs))
     )) tmp))) in
-  (FStarC_SMap.iter (t).types (fun tmp d -> (add d)));
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.iter (fun tmp d -> (add d)) (t).types);
   let fresh = (fun tmp -> (let tmp1 = (!((t).fresh)) in
     let tmp2 = (Prims.op_Plus tmp1 Prims.int_one) in
     (((t).fresh) := tmp2);
@@ -340,17 +343,18 @@ let rec resolve (t : tbl) (fuel : Prims.int) (c : FStarC_Custard_Syntax.cty) : F
       (FStarC_Custard_Syntax.TTuple (tmp)))
     | (FStarC_Custard_Syntax.TBuf (c1)) -> (let tmp = (resolve t fuel c1) in
       (FStarC_Custard_Syntax.TBuf (tmp)))
-    | (FStarC_Custard_Syntax.TRef (c1)) -> (let tmp = (resolve t fuel c1) in
-      (FStarC_Custard_Syntax.TRef (tmp)))
+    | (FStarC_Custard_Syntax.TRef (k, c1)) -> (let tmp = (resolve t fuel c1) in
+      let tmp1 = (k, tmp) in
+      (FStarC_Custard_Syntax.TRef ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.TInline (c1)) -> (let tmp = (resolve t fuel c1) in
       (FStarC_Custard_Syntax.TInline (tmp)))
     | (FStarC_Custard_Syntax.TApp (n, args)) -> (let args1 = (FStarC_List.map (resolve t fuel) args) in
       let tmp = (key n) in
-      let tmp1 = (FStarC_SMap.try_find (t).layouts tmp) in
+      let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (t).layouts tmp) in
       (match tmp1 with
         | (Some (FStarC_Custard_Syntax.L_erased)) -> FStarC_Custard_Syntax.TUnit
         | (Some ((FStarC_Custard_Syntax.L_newtype (nt)))) -> (let tmp2 = (key n) in
-          let tmp3 = (FStarC_SMap.try_find (t).types tmp2) in
+          let tmp3 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (t).types tmp2) in
           let params = (match tmp3 with
               | (Some (d)) -> (d).FStarC_Custard_Syntax.dt_params
               | None -> []
@@ -361,7 +365,7 @@ let rec resolve (t : tbl) (fuel : Prims.int) (c : FStarC_Custard_Syntax.cty) : F
           let tmp4 = (FStarC_Custard_Syntax.subst_cty s (nt).FStarC_Custard_Syntax.nt_ty) in
           (resolve t (Prims.op_Minus fuel Prims.int_one) tmp4))
         | tmp2 -> (let tmp3 = (key n) in
-          let tmp4 = (FStarC_SMap.try_find (t).types tmp3) in
+          let tmp4 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (t).types tmp3) in
           (match tmp4 with
             | (Some (d)) when (FStarC_Custard_Syntax.has_flag (d).FStarC_Custard_Syntax.dt_flags FStarC_Custard_Syntax.Realized) -> (FStarC_Custard_Syntax.TApp (n, args1))
             | (Some (d)) when (FStarC_Custard_Syntax.has_flag (d).FStarC_Custard_Syntax.dt_flags FStarC_Custard_Syntax.NoUnfold) -> (FStarC_Custard_Syntax.TApp (n, args1))
@@ -397,7 +401,7 @@ let rec cty_vars (c : FStarC_Custard_Syntax.cty) : (string) list =
     | (FStarC_Custard_Syntax.TApp (tmp, args)) -> (FStarC_List.collect cty_vars args)
     | (FStarC_Custard_Syntax.TBuf (c1)) -> (cty_vars c1)
     | (FStarC_Custard_Syntax.TInline (c1)) -> (cty_vars c1)
-    | (FStarC_Custard_Syntax.TRef (c1)) -> (cty_vars c1)
+    | (FStarC_Custard_Syntax.TRef (tmp, c1)) -> (cty_vars c1)
     | (FStarC_Custard_Syntax.TTuple (cs)) -> (FStarC_List.collect cty_vars cs)
     | tmp -> []
   )
@@ -412,7 +416,7 @@ let rec cty_names (c : FStarC_Custard_Syntax.cty) : (string) list =
       (tmp :: tmp1))
     | (FStarC_Custard_Syntax.TBuf (c1)) -> (cty_names c1)
     | (FStarC_Custard_Syntax.TInline (c1)) -> (cty_names c1)
-    | (FStarC_Custard_Syntax.TRef (c1)) -> (cty_names c1)
+    | (FStarC_Custard_Syntax.TRef (tmp, c1)) -> (cty_names c1)
     | (FStarC_Custard_Syntax.TTuple (cs)) -> (FStarC_List.collect cty_names cs)
     | tmp -> []
   )
@@ -431,10 +435,10 @@ let collapsed_abbrev (dt : FStarC_Custard_Syntax.dtype) (payload : FStarC_Custar
 
 let ctor_owner (t : tbl) (n : FStarC_Custard_Syntax.name) : ((FStarC_Custard_Syntax.layout * FStarC_Custard_Syntax.ctor_layout)) option =
   (let tmp = (key n) in
-  let tmp1 = (FStarC_SMap.try_find (t).ctors tmp) in
+  let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (t).ctors tmp) in
   (match tmp1 with
     | None -> None
-    | (Some ((owner, cl))) -> (let tmp2 = (FStarC_SMap.try_find (t).layouts owner) in
+    | (Some ((owner, cl))) -> (let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (t).layouts owner) in
       (match tmp2 with
         | None -> None
         | (Some (l)) -> (Some ((l, cl)))
@@ -476,8 +480,12 @@ let keep_by_slots (slots : (FStarC_Custard_Syntax.slot) list) (xs : ('a) list) :
 
 let rec rw_pat (t : tbl) (p : FStarC_Custard_Syntax.pat) : (FStarC_Custard_Syntax.pat * (string) list) =
   (let many = (fun ps -> (let ps1 = (FStarC_List.map (rw_pat t) ps) in
-    let tmp = (FStarC_List.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst ps1) in
-    let tmp1 = (FStarC_List.collect Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd ps1) in
+    let tmp = (FStarC_List.map (fun x -> (match x with
+        | (u__1, u__2) -> u__1
+      )) ps1) in
+    let tmp1 = (FStarC_List.collect (fun x -> (match x with
+        | (u__1, u__2) -> u__2
+      )) ps1) in
     (tmp, tmp1))) in
   (match p with
     | (FStarC_Custard_Syntax.PCtor (n, ps)) -> (let tmp = (many ps) in
@@ -522,7 +530,7 @@ let rec rw_pat (t : tbl) (p : FStarC_Custard_Syntax.pat) : (FStarC_Custard_Synta
             (if tmp1 then [] else (pat_vars q)))
         )) fs1)) in
       let tmp = (key n) in
-      let tmp1 = (FStarC_SMap.try_find (t).layouts tmp) in
+      let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (t).layouts tmp) in
       (match tmp1 with
         | (Some (FStarC_Custard_Syntax.L_erased)) -> (let tmp2 = (others (fun tmp2 -> false)) in
           let tmp3 = (FStarC_List.op_At freed tmp2) in
@@ -596,6 +604,7 @@ and rw_expr (t : tbl) (x : FStarC_Custard_Syntax.expr) : FStarC_Custard_Syntax.e
     | (FStarC_Custard_Syntax.EVar (tmp)) -> x1
     | FStarC_Custard_Syntax.EAny -> x1
     | (FStarC_Custard_Syntax.EAbort (tmp)) -> x1
+    | (FStarC_Custard_Syntax.EUnreachable (tmp)) -> x1
     | (FStarC_Custard_Syntax.EQual (n, cs)) -> (let tmp = (FStarC_List.map (resolve t (Prims.of_int (100))) cs) in
       let tmp1 = (n, tmp) in
       let tmp2 = (FStarC_Custard_Syntax.EQual ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
@@ -710,9 +719,11 @@ and rw_expr (t : tbl) (x : FStarC_Custard_Syntax.expr) : FStarC_Custard_Syntax.e
             (f, tmp1))
         )) fs) in
       let tmp = (key n) in
-      let tmp1 = (FStarC_SMap.try_find (t).layouts tmp) in
+      let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (t).layouts tmp) in
       (match tmp1 with
-        | (Some (FStarC_Custard_Syntax.L_erased)) -> (let tmp2 = (FStarC_List.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd fs1) in
+        | (Some (FStarC_Custard_Syntax.L_erased)) -> (let tmp2 = (FStarC_List.map (fun x2 -> (match x2 with
+              | (u__1, u__2) -> u__2
+            )) fs1) in
           (hoist tmp2 { FStarC_Custard_Syntax.e = (FStarC_Custard_Syntax.unit_expr).FStarC_Custard_Syntax.e;
             ty = (FStarC_Custard_Syntax.unit_expr).FStarC_Custard_Syntax.ty;
             eff = (x1).FStarC_Custard_Syntax.eff }))
@@ -724,7 +735,9 @@ and rw_expr (t : tbl) (x : FStarC_Custard_Syntax.expr) : FStarC_Custard_Syntax.e
                   | (f, e) -> (if ((=) f (nt).FStarC_Custard_Syntax.nt_field) then [] else (e :: []))
                 )) fs1) in
               (hoist tmp4 payload))
-            | None -> (let tmp3 = (FStarC_List.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd fs1) in
+            | None -> (let tmp3 = (FStarC_List.map (fun x2 -> (match x2 with
+                  | (u__1, u__2) -> u__2
+                )) fs1) in
               (hoist tmp3 { FStarC_Custard_Syntax.e = (FStarC_Custard_Syntax.unit_expr).FStarC_Custard_Syntax.e;
                 ty = (FStarC_Custard_Syntax.unit_expr).FStarC_Custard_Syntax.ty;
                 eff = (x1).FStarC_Custard_Syntax.eff }))
@@ -790,7 +803,7 @@ and rw_expr (t : tbl) (x : FStarC_Custard_Syntax.expr) : FStarC_Custard_Syntax.e
 let rw_decl (t : tbl) (d : FStarC_Custard_Syntax.decl) : (FStarC_Custard_Syntax.decl) list =
   (match d with
     | (FStarC_Custard_Syntax.DType (dt)) -> (let k = (key (dt).FStarC_Custard_Syntax.dt_name) in
-      let tmp = (FStarC_SMap.try_find (t).layouts k) in
+      let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (t).layouts k) in
       (match tmp with
         | (Some (FStarC_Custard_Syntax.L_erased)) -> []
         | (Some ((FStarC_Custard_Syntax.L_newtype (nt)))) -> (let tmp1 = (resolve t (Prims.of_int (100)) (nt).FStarC_Custard_Syntax.nt_ty) in
@@ -940,13 +953,13 @@ and ctor_plan (look : (FStarC_Custard_Syntax.name -> (FStarC_Custard_Syntax.dtyp
   (let allpos = (FStarC_List.for_all (fun tmp -> (match tmp with
       | (f, tmp1) -> (positional f)
     )) fs) in
-  let next = (FStarC_SMap.create Prims.int_one) in
-  let fresh = (fun f g -> (if allpos then (let tmp = (FStarC_SMap.try_find next "n") in
+  let next = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int Prims.int_one)) in
+  let fresh = (fun f g -> (if allpos then (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt next "n") in
     let i = (match tmp with
         | (Some (i)) -> i
         | None -> Prims.int_zero
       ) in
-    (FStarC_SMap.add next "n" (Prims.op_Plus i Prims.int_one));
+    (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace next "n" (Prims.op_Plus i Prims.int_one));
     (Prims.strcat "_" (Prims.string_of_int i))) else (if ((=) g "") then f else (Prims.strcat f (Prims.strcat "_" g))))) in
   (FStarC_List.map (fun tmp -> (match tmp with
     | (f, c) -> (match c with
@@ -995,11 +1008,11 @@ let ctor_plans (look : (FStarC_Custard_Syntax.name -> (FStarC_Custard_Syntax.dty
 
 let run (imports : ((FStarC_Custard_Syntax.dtype * FStarC_Custard_Syntax.type_info)) list) (prog : (FStarC_Custard_Syntax.decl) list) : ((FStarC_Custard_Syntax.decl) list * ((FStarC_Custard_Syntax.name * FStarC_Custard_Syntax.type_info)) list * FStarC_Custard_Syntax.verdicts) =
   (let prog1 = (FStarC_List.map close_fields prog) in
-  let tmp = (FStarC_SMap.create (Prims.of_int (100))) in
-  let tmp1 = (FStarC_SMap.create (Prims.of_int (100))) in
-  let tmp2 = (FStarC_SMap.create (Prims.of_int (100))) in
-  let tmp3 = (FStarC_SMap.create (Prims.of_int (100))) in
-  let tmp4 = (FStarC_SMap.create (Prims.of_int (10))) in
+  let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (100)))) in
+  let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (100)))) in
+  let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (100)))) in
+  let tmp3 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (100)))) in
+  let tmp4 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (10)))) in
   let tmp5 = (ref Prims.int_zero) in
   let t = { types = tmp;
       erased = tmp1;
@@ -1009,16 +1022,16 @@ let run (imports : ((FStarC_Custard_Syntax.dtype * FStarC_Custard_Syntax.type_in
       fresh = tmp5 } in
   (FStarC_List.iter (fun d -> (match d with
     | (FStarC_Custard_Syntax.DType (dt)) -> (let tmp6 = (key (dt).FStarC_Custard_Syntax.dt_name) in
-      (FStarC_SMap.add (t).types tmp6 dt))
+      (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace (t).types tmp6 dt))
     | tmp6 -> ()
   )) prog1);
   (FStarC_List.iter (fun tmp6 -> (match tmp6 with
     | (dt, ti) -> (let k = (key (dt).FStarC_Custard_Syntax.dt_name) in
-      (FStarC_SMap.add (t).pinned k ());
-      (FStarC_SMap.add (t).erased k (ti).FStarC_Custard_Syntax.ti_erased);
-      (FStarC_SMap.add (t).layouts k (ti).FStarC_Custard_Syntax.ti_layout);
+      (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace (t).pinned k ());
+      (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace (t).erased k (ti).FStarC_Custard_Syntax.ti_erased);
+      (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace (t).layouts k (ti).FStarC_Custard_Syntax.ti_layout);
       (FStarC_List.iter (fun cl -> (let tmp7 = (key (cl).FStarC_Custard_Syntax.cl_name) in
-      (FStarC_SMap.add (t).ctors tmp7 (k, cl)))) (ti).FStarC_Custard_Syntax.ti_ctors))
+      (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace (t).ctors tmp7 (k, cl)))) (ti).FStarC_Custard_Syntax.ti_ctors))
   )) imports);
   (FStarC_Custard_Prof.timed "l.erasure" (fun tmp6 -> (erasure_fixpoint t)));
   (FStarC_Custard_Prof.timed "l.layouts" (fun tmp6 -> (compute_layouts t)));
@@ -1026,76 +1039,76 @@ let run (imports : ((FStarC_Custard_Syntax.dtype * FStarC_Custard_Syntax.type_in
   let prog2 = (FStarC_Custard_Prof.timed "l.eta_ctors" (fun tmp6 -> (eta_ctors t prog1))) in
   let tmp6 = (FStarC_Options.custard_dump_layouts ()) in
   (if tmp6 then ((FStarC_Format.print_string "Custard layouts:\n");
-  (FStarC_SMap.iter (t).layouts (fun k l -> (let tmp7 = (layout_to_string l) in
-  (FStarC_Format.print2 "  %s : %s\n" k tmp7))))) else ());
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.iter (fun k l -> (let tmp7 = (layout_to_string l) in
+  (FStarC_Format.print2 "  %s : %s\n" k tmp7))) (t).layouts)) else ());
   let prog' = (FStarC_Custard_Prof.timed "l.rewrite" (fun tmp7 -> (FStarC_List.collect (rw_decl t) prog2))) in
-  let final = (FStarC_SMap.create (Prims.of_int (100))) in
+  let final = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (100)))) in
   (FStarC_List.iter (fun tmp7 -> (match tmp7 with
     | (dt, tmp8) -> (let tmp9 = (key (dt).FStarC_Custard_Syntax.dt_name) in
-      (FStarC_SMap.add final tmp9 dt))
+      (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace final tmp9 dt))
   )) imports);
   (FStarC_List.iter (fun d -> (match d with
     | (FStarC_Custard_Syntax.DType (dt)) -> (let tmp7 = (key (dt).FStarC_Custard_Syntax.dt_name) in
-      (FStarC_SMap.add final tmp7 dt))
+      (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace final tmp7 dt))
     | tmp7 -> ()
   )) prog');
   let look = (fun n -> (let tmp7 = (key n) in
-    (FStarC_SMap.try_find final tmp7))) in
-  let tmp7 = (FStarC_SMap.create (Prims.of_int (50))) in
-  let tmp8 = (FStarC_SMap.create (Prims.of_int (50))) in
+    (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt final tmp7))) in
+  let tmp7 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (50)))) in
+  let tmp8 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (50)))) in
   let vd = { FStarC_Custard_Syntax.vd_records = tmp7; vd_plans = tmp8 } in
   (FStarC_List.iter (fun tmp9 -> (match tmp9 with
     | (dt, ti) -> ((if (ti).FStarC_Custard_Syntax.ti_record then (match ((dt).FStarC_Custard_Syntax.dt_body, (ti).FStarC_Custard_Syntax.ti_ctors) with
         | ((FStarC_Custard_Syntax.TRecord (tmp10)), (cl :: [])) -> (let tmp11 = (key (cl).FStarC_Custard_Syntax.cl_name) in
-          (FStarC_SMap.add (vd).FStarC_Custard_Syntax.vd_records tmp11 (dt).FStarC_Custard_Syntax.dt_name))
+          (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace (vd).FStarC_Custard_Syntax.vd_records tmp11 (dt).FStarC_Custard_Syntax.dt_name))
         | ((FStarC_Custard_Syntax.TVariant (((cn, tmp10) :: []))), tmp11) -> (let tmp12 = (key cn) in
-          (FStarC_SMap.add (vd).FStarC_Custard_Syntax.vd_records tmp12 (dt).FStarC_Custard_Syntax.dt_name))
+          (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace (vd).FStarC_Custard_Syntax.vd_records tmp12 (dt).FStarC_Custard_Syntax.dt_name))
         | tmp10 -> ()
       ) else ());
       (FStarC_List.iter (fun tmp10 -> (match tmp10 with
         | (cn, pl) -> (let tmp11 = (key cn) in
-          (FStarC_SMap.add (vd).FStarC_Custard_Syntax.vd_plans tmp11 pl))
+          (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace (vd).FStarC_Custard_Syntax.vd_plans tmp11 pl))
       )) (ti).FStarC_Custard_Syntax.ti_plans))
   )) imports);
-  let derived = (FStarC_SMap.create (Prims.of_int (50))) in
+  let derived = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (50)))) in
   (FStarC_List.iter (fun d -> (match d with
     | (FStarC_Custard_Syntax.DType (dt)) when (let tmp9 = (key (dt).FStarC_Custard_Syntax.dt_name) in
-    let tmp10 = (FStarC_SMap.try_find (t).pinned tmp9) in
+    let tmp10 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (t).pinned tmp9) in
     (match tmp10 with
       | None -> true
       | tmp11 -> false
     )) -> (let is_rec = (record_verdict dt) in
       let plans = (ctor_plans look dt) in
       let tmp9 = (key (dt).FStarC_Custard_Syntax.dt_name) in
-      (FStarC_SMap.add derived tmp9 (is_rec, plans));
+      (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace derived tmp9 (is_rec, plans));
       (match (dt).FStarC_Custard_Syntax.dt_body with
         | (FStarC_Custard_Syntax.TVariant (((cn, tmp10) :: []))) when is_rec -> (let tmp11 = (key cn) in
-          (FStarC_SMap.add (vd).FStarC_Custard_Syntax.vd_records tmp11 (dt).FStarC_Custard_Syntax.dt_name))
+          (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace (vd).FStarC_Custard_Syntax.vd_records tmp11 (dt).FStarC_Custard_Syntax.dt_name))
         | tmp10 -> ()
       );
       (FStarC_List.iter (fun tmp10 -> (match tmp10 with
         | (cn, pl) -> (let tmp11 = (key cn) in
-          (FStarC_SMap.add (vd).FStarC_Custard_Syntax.vd_plans tmp11 pl))
+          (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace (vd).FStarC_Custard_Syntax.vd_plans tmp11 pl))
       )) plans))
     | tmp9 -> ()
   )) prog');
-  let tmp9 = (FStarC_SMap.keys (t).types) in
-  let infos = (FStarC_List.collect (fun k -> (let tmp10 = (FStarC_SMap.try_find (t).pinned k) in
+  let tmp9 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun key_ tmp9 acc -> (key_ :: acc)) (t).types []) in
+  let infos = (FStarC_List.collect (fun k -> (let tmp10 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (t).pinned k) in
     let tmp11 = (match tmp10 with
         | (Some (v)) -> true
         | tmp11 -> false
       ) in
-    (if tmp11 then [] else (let tmp12 = (FStarC_SMap.try_find (t).types k) in
-    let tmp13 = (FStarC_SMap.try_find (t).layouts k) in
+    (if tmp11 then [] else (let tmp12 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (t).types k) in
+    let tmp13 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (t).layouts k) in
     let tmp14 = (tmp12, tmp13) in
     (match tmp14 with
-      | ((Some (d)), (Some (l))) -> (let tmp15 = (FStarC_SMap.try_find derived k) in
+      | ((Some (d)), (Some (l))) -> (let tmp15 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt derived k) in
         let tmp16 = (match tmp15 with
             | (Some (v)) -> v
             | None -> (false, [])
           ) in
         (match tmp16 with
-          | (is_rec, plans) -> (let tmp17 = (FStarC_SMap.try_find (t).erased k) in
+          | (is_rec, plans) -> (let tmp17 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (t).erased k) in
             let tmp18 = (match tmp17 with
                 | (Some (b)) -> b
                 | None -> false

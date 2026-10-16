@@ -87,5 +87,7 @@ let ops : (FStarC_TypeChecker_Primops_Base.primitive_step) list =
   (let tmp = (FStarC_TypeChecker_Primops_Base.fStarC_Class_Monad_iterM__writer_list_primitive_step bounded_arith_ops_for FStarC_MachineInts.all_machint_kinds) in
   let tmp1 = (FStarC_TypeChecker_Primops_Base.fStarC_Class_Monad_op_let_Bang__writer_list_primitive_step tmp (fun tmp1 -> (FStarC_TypeChecker_Primops_Base.fStarC_Writer_emit__list_primitive_step ((FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero FStarC_Parser_Const.char_u32_of_char FStarC_Syntax_Embeddings.e_char FStarC_TypeChecker_NBETerm.e_char (FStarC_MachineInts.e_machint FStarC_MachineInts.UInt32) (FStarC_MachineInts.nbe_machint FStarC_MachineInts.UInt32) (fun c -> (let n = (FStarC_Util.int_of_char c) in
     (FStarC_MachineInts.mk FStarC_MachineInts.UInt32 n None)))) :: [])))) in
-  (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp1))
+  (match tmp1 with
+    | (u__1, u__2) -> u__1
+  ))
 

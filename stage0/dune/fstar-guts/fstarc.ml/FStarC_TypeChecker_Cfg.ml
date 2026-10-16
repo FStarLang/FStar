@@ -1495,13 +1495,17 @@ let plugins : ((FStarC_TypeChecker_Primops_Base.primitive_step -> unit) * (unit 
 
 let retrieve_plugins (tmp : unit) : (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t =
   (let tmp1 = (FStarC_Options.no_plugins ()) in
-  (if tmp1 then (empty_prim_steps ()) else (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd plugins ())))
+  (if tmp1 then (empty_prim_steps ()) else ((match plugins with
+    | (u__1, u__2) -> u__2
+  ) ())))
 
 let extra_steps : ((FStarC_TypeChecker_Primops_Base.primitive_step -> unit) * (unit -> (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t)) =
   (mk_extendable_primop_set ())
 
 let retrieve_extra_steps (tmp : unit) : (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t =
-  (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd extra_steps ())
+  ((match extra_steps with
+    | (u__1, u__2) -> u__2
+  ) ())
 
 let merge_steps (s1 : (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t) (eta : (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t) : (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t =
   (FStarC_PSMap.merge s1 eta)
@@ -1710,19 +1714,6 @@ let log (cfg : cfg) (f : (unit -> unit)) : unit =
 let log_cfg (cfg : cfg) (f : (unit -> unit)) : unit =
   (if ((cfg).debug).cfg then (f ()) else ())
 
-let find_prim_step (cfg : cfg) (fv : FStarC_Syntax_Syntax.fv) : (FStarC_TypeChecker_Primops_Base.primitive_step) option =
-  (match (FStarC_PSMap.try_find (cfg).primitive_steps (FStarC_Ident.string_of_lid (fv).FStarC_Syntax_Syntax.fv_name)) with
-    | (Some (ps)) when ((ps).FStarC_TypeChecker_Primops_Base.unrepresentable_result && (not ((cfg).steps).unrepresentable_primops)) -> None
-    | r -> r
-  )
-
-let log_primops (cfg : cfg) (f : (unit -> unit)) : unit =
-  (if ((cfg).debug).primop then (f ()) else ())
-
-let simplification_steps (env : FStarC_TypeChecker_Env.env) : (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t =
-  (let tmp = (FStarC_TypeChecker_Primops.simplification_ops_list env) in
-  (prim_from_list tmp))
-
 let fStarC_Class_Deq_op_Equals_Question__fsteps (tmp : fsteps) (tmp1 : fsteps) : bool =
   (let tmp2 = (FStarC_Class_Deq.fStarC_Class_Deq_op_Equals_Question__bool (tmp).beta (tmp1).beta) in
   let tmp3 = (if tmp2 then (FStarC_Class_Deq.fStarC_Class_Deq_op_Equals_Question__bool (tmp).iota (tmp1).iota) else false) in
@@ -1758,6 +1749,19 @@ let fStarC_Class_Deq_op_Equals_Question__fsteps (tmp : fsteps) (tmp1 : fsteps) :
   let tmp33 = (if tmp32 then (FStarC_Class_Deq.fStarC_Class_Deq_op_Equals_Question__bool (tmp).default_univs_to_zero (tmp1).default_univs_to_zero) else false) in
   let tmp34 = (if tmp33 then (FStarC_Class_Deq.fStarC_Class_Deq_op_Equals_Question__bool (tmp).tactics (tmp1).tactics) else false) in
   (if tmp34 then (FStarC_Class_Deq.fStarC_Class_Deq_op_Equals_Question__bool (tmp).reduce_projections (tmp1).reduce_projections) else false))
+
+let find_prim_step (cfg : cfg) (fv : FStarC_Syntax_Syntax.fv) : (FStarC_TypeChecker_Primops_Base.primitive_step) option =
+  (match (FStarC_PSMap.try_find (cfg).primitive_steps (FStarC_Ident.string_of_lid (fv).FStarC_Syntax_Syntax.fv_name)) with
+    | (Some (ps)) when ((ps).FStarC_TypeChecker_Primops_Base.unrepresentable_result && (not ((cfg).steps).unrepresentable_primops)) -> None
+    | r -> r
+  )
+
+let log_primops (cfg : cfg) (f : (unit -> unit)) : unit =
+  (if ((cfg).debug).primop then (f ()) else ())
+
+let simplification_steps (env : FStarC_TypeChecker_Env.env) : (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t =
+  (let tmp = (FStarC_TypeChecker_Primops.simplification_ops_list env) in
+  (prim_from_list tmp))
 
 let dbg_unfolding : (bool ref) =
   (FStarC_Debug.get_toggle "Unfolding")
@@ -1821,7 +1825,9 @@ let should_reduce_local_let (cfg : cfg) (lb : FStarC_Syntax_Syntax.letbinding) :
   (if tmp2 then true else ((FStarC_Syntax_Util.is_ghost_effect n) && (not ((cfg).steps).pure_subterms_within_computations)))))))))
 
 let register_plugin (p : FStarC_TypeChecker_Primops_Base.primitive_step) : unit =
-  (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst plugins p)
+  ((match plugins with
+    | (u__1, u__2) -> u__1
+  ) p)
 
 let is_built_in_primop (fv : FStarC_Syntax_Syntax.fv) : bool =
   (match (FStarC_PSMap.try_find built_in_primitive_steps (FStarC_Ident.string_of_lid (fv).FStarC_Syntax_Syntax.fv_name)) with
@@ -1834,8 +1840,10 @@ let list_plugins (tmp : unit) : (FStarC_TypeChecker_Primops_Base.primitive_step)
   (FStarC_Common.psmap_values tmp1))
 
 let register_extra_step (p : FStarC_TypeChecker_Primops_Base.primitive_step) : unit =
-  (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst extra_steps p)
+  ((match extra_steps with
+    | (u__1, u__2) -> u__1
+  ) p)
 
-let primop_time_map : (Prims.int) FStarC_SMap.t =
-  (FStarC_SMap.create (Prims.of_int (50)))
+let primop_time_map : (Prims.int) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (50))))
 

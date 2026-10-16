@@ -656,9 +656,13 @@ let e_tuple2 (ea : ('u___a) FStarC_Syntax_Embeddings_Base.embedding) (eb : ('u__
     let tmp4 = (FStarC_Syntax_Syntax.iarg tmp3) in
     let tmp5 = (FStarC_Syntax_Embeddings_Base.type_of eb) in
     let tmp6 = (FStarC_Syntax_Syntax.iarg tmp5) in
-    let tmp7 = (FStarC_Syntax_Embeddings_Base.embed ea (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst x) rng shadow_a norm) in
+    let tmp7 = (FStarC_Syntax_Embeddings_Base.embed ea (match x with
+        | (u__1, u__2) -> u__1
+      ) rng shadow_a norm) in
     let tmp8 = (FStarC_Syntax_Syntax.as_arg tmp7) in
-    let tmp9 = (FStarC_Syntax_Embeddings_Base.embed eb (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd x) rng shadow_b norm) in
+    let tmp9 = (FStarC_Syntax_Embeddings_Base.embed eb (match x with
+        | (u__1, u__2) -> u__2
+      ) rng shadow_b norm) in
     let tmp10 = (FStarC_Syntax_Syntax.as_arg tmp9) in
     let tmp11 = (tmp10 :: []) in
     let tmp12 = (tmp8 :: tmp11) in

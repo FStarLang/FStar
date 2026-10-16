@@ -79,9 +79,7 @@ let rec maybe_reify (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Synta
           let body2 = (maybe_reify env' body1 l) in
           let tmp5 = (FStarC_Syntax_Subst.close_let_rec lbs1 body2) in
           (match tmp5 with
-            | (lbs2, body3) -> { FStarC_Syntax_Syntax.n = (FStarC_Syntax_Syntax.Tm_let (({ FStarC_Syntax_Syntax.lbs = true; lbs1 = lbs2; body = body3 } : FStarC_Syntax_Syntax.term'__Tm_let__payload)));
-                pos = (t).FStarC_Syntax_Syntax.pos;
-                hash_code = (t).FStarC_Syntax_Syntax.hash_code }
+            | (lbs2, body3) -> (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_let (({ FStarC_Syntax_Syntax.lbs = true; lbs1 = lbs2; body = body3 } : FStarC_Syntax_Syntax.term'__Tm_let__payload))) (t).FStarC_Syntax_Syntax.pos)
           ))
       ))
     | tmp4 -> (let tmp5 = (FStarC_Syntax_Util.mk_reify t (Some (l))) in

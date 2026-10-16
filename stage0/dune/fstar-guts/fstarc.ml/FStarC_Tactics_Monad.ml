@@ -84,7 +84,9 @@ let new_uvar (reason : string) (env : FStarC_TypeChecker_Env.env) (typ : (FStarC
   (match tmp1 with
     | (u, ctx_uvar, g_u) -> (let tmp2 = (FStarC_TypeChecker_Common.fStarC_Class_Listlike_to_list__implicit_clist_implicit (g_u).FStarC_TypeChecker_Common.implicits) in
       let tmp3 = (add_implicits tmp2) in
-      (bind tmp3 (fun tmp4 -> (ret (u, (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst ctx_uvar))))))
+      (bind tmp3 (fun tmp4 -> (ret (u, (match ctx_uvar with
+        | (u__1, u__2) -> u__1
+      ))))))
   )))))
 
 let mk_irrelevant_goal (reason : string) (env : FStarC_TypeChecker_Env.env) (phi : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (sc_opt : (FStarC_Syntax_Syntax.should_check_uvar) option) (rng : FStarC_Range_Type.range) (opts : (FStarC_Options.option_val) FStarC_PSMap.t) (label : string) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Tactics_Types.goal) =

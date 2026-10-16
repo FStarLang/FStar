@@ -212,8 +212,16 @@ let binop_guard (f : (guard_formula -> (guard_formula -> guard_formula))) (g1 : 
   (let tmp = (f (g1).guard_f (g2).guard_f) in
   let tmp1 = (fStarC_Class_Monoid_op_Plus_Plus__clist_tuple3_deferred_reason_string_prob (g1).deferred_to_tac (g2).deferred_to_tac) in
   let tmp2 = (fStarC_Class_Monoid_op_Plus_Plus__clist_tuple3_deferred_reason_string_prob (g1).deferred (g2).deferred) in
-  let tmp3 = (FStarC_CList.fStarC_Class_Monoid_op_Plus_Plus__clist_universe (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst ((g1).univ_ineqs, (g1).univ_ineqs1)) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst ((g2).univ_ineqs, (g2).univ_ineqs1))) in
-  let tmp4 = (FStarC_CList.fStarC_Class_Monoid_op_Plus_Plus__clist_tuple2_universe_universe (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd ((g1).univ_ineqs, (g1).univ_ineqs1)) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd ((g2).univ_ineqs, (g2).univ_ineqs1))) in
+  let tmp3 = (FStarC_CList.fStarC_Class_Monoid_op_Plus_Plus__clist_universe (match ((g1).univ_ineqs, (g1).univ_ineqs1) with
+      | (u__1, u__2) -> u__1
+    ) (match ((g2).univ_ineqs, (g2).univ_ineqs1) with
+      | (u__1, u__2) -> u__1
+    )) in
+  let tmp4 = (FStarC_CList.fStarC_Class_Monoid_op_Plus_Plus__clist_tuple2_universe_universe (match ((g1).univ_ineqs, (g1).univ_ineqs1) with
+      | (u__1, u__2) -> u__2
+    ) (match ((g2).univ_ineqs, (g2).univ_ineqs1) with
+      | (u__1, u__2) -> u__2
+    )) in
   let tmp5 = (tmp3, tmp4) in
   let tmp6 = (fStarC_Class_Monoid_op_Plus_Plus__clist_implicit (g1).implicits (g2).implicits) in
   { guard_f = tmp;

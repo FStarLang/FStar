@@ -4,20 +4,6 @@
 let fStarC_Class_Hashable_hash__string (tmp : string) : FStarC_Hash.hash_code =
   (FStarC_Hash.of_string tmp)
 
-let fStarC_Class_Hashable_hash__lident (tmp : FStarC_Ident.lident) : FStarC_Hash.hash_code =
-  (fStarC_Class_Hashable_hash__string (FStarC_Ident.string_of_lid tmp))
-
-let fStarC_Class_Hashable_hash__ident (tmp : FStarC_Ident.ident) : FStarC_Hash.hash_code =
-  (fStarC_Class_Hashable_hash__string (FStarC_Ident.string_of_id tmp))
-
-let fStarC_Class_Hashable_hash__list_ident (tmp : (FStarC_Ident.ident) list) : FStarC_Hash.hash_code =
-  (FStarC_List.fold_left (fun h x -> (let tmp1 = (fStarC_Class_Hashable_hash__ident x) in
-  (FStarC_Hash.mix h tmp1))) (FStarC_Hash.of_int Prims.int_zero) tmp)
-
-let fStarC_Class_Hashable_hash__list_lident (tmp : (FStarC_Ident.lident) list) : FStarC_Hash.hash_code =
-  (FStarC_List.fold_left (fun h x -> (let tmp1 = (fStarC_Class_Hashable_hash__lident x) in
-  (FStarC_Hash.mix h tmp1))) (FStarC_Hash.of_int Prims.int_zero) tmp)
-
 let fStarC_Class_Hashable_hash__int (tmp : Prims.int) : FStarC_Hash.hash_code =
   (FStarC_Hash.of_int tmp)
 
@@ -30,9 +16,6 @@ let fStarC_Class_Hashable_hash__option_int (tmp : (Prims.int) option) : FStarC_H
 
 let fStarC_Class_Hashable_hash__bool (tmp : bool) : FStarC_Hash.hash_code =
   (if tmp then (FStarC_Hash.of_int Prims.int_one) else (FStarC_Hash.of_int (Prims.of_int (2))))
-
-let fStarC_Class_Hashable_hash__fv (tmp : FStarC_Syntax_Syntax.fv) : FStarC_Hash.hash_code =
-  (fStarC_Class_Hashable_hash__lident (tmp).FStarC_Syntax_Syntax.fv_name)
 
 let fStarC_Class_Hashable_hash__option_string (tmp : (string) option) : FStarC_Hash.hash_code =
   (match tmp with

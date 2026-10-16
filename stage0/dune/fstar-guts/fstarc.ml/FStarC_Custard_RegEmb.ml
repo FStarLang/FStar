@@ -249,7 +249,9 @@ let rec whnf__go (st : FStarC_Custard_Extract.state) (head_lid : ((FStarC_Syntax
 
 let whnf (st : FStarC_Custard_Extract.state) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
   (let head_lid = (fun t1 -> (let tmp = (FStarC_Syntax_Util.head_and_args_full t1) in
-    let tmp1 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp) in
+    let tmp1 = (match tmp with
+        | (u__1, u__2) -> u__1
+      ) in
     let tmp2 = (FStarC_Syntax_Util.un_uinst tmp1) in
     let tmp3 = (FStarC_Syntax_Subst.compress tmp2) in
     let tmp4 = (tmp3).FStarC_Syntax_Syntax.n in
@@ -526,7 +528,9 @@ and generate_one (st : FStarC_Custard_Extract.state) (g : gen_emb) : unit =
     | (tmp1, cs) -> (let ctors = (FStarC_List.map (fun c -> (let tmp2 = (FStarC_TypeChecker_Env.lookup_sigelt env c) in
         (match tmp2 with
           | (Some ({ FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_datacon ({ FStarC_Syntax_Syntax.lid = tmp3; us = tmp4; t = t; ty_lid = tmp5; num_ty_params = tmp6; mutuals = tmp7; injective_type_params = tmp8; proj_disc_lids = tmp9; _ })); sigrng = tmp10; sigquals = tmp11; sigmeta = tmp12; sigattrs = tmp13; sigopens_and_abbrevs = tmp14; sigopts = tmp15; _ })) -> (let tmp16 = (FStarC_Syntax_Util.arrow_formals t) in
-            let tmp17 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp16) in
+            let tmp17 = (match tmp16 with
+                | (u__1, u__2) -> u__1
+              ) in
             (c, tmp17))
           | tmp3 -> (raise (NoEmbedding ((Prims.strcat "no declaration for constructor " (FStarC_Ident.string_of_lid c)))))
         ))) cs) in
@@ -639,7 +643,9 @@ and embedding_for (st : FStarC_Custard_Extract.state) (k : kind) (env : ((FStarC
       ))
     | (FStarC_Syntax_Syntax.Tm_app (tmp)) -> (let tmp1 = (FStarC_Syntax_Util.head_and_args_full t1) in
       (match tmp1 with
-        | (head, args) -> (let tys = (FStarC_List.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst args) in
+        | (head, args) -> (let tys = (FStarC_List.map (fun x -> (match x with
+              | (u__1, u__2) -> u__1
+            )) args) in
           let tmp2 = (embedding_head st k head) in
           (match tmp2 with
             | (Some (f)) -> (let tmp3 = (FStarC_List.map (embedding_for st k env) tys) in
@@ -755,7 +761,9 @@ let signature_of (st : FStarC_Custard_Extract.state) (f : FStarC_Ident.lident) (
 let last_binders (n : Prims.int) (bs : (FStarC_Syntax_Syntax.binder) list) : (FStarC_Syntax_Syntax.binder) list =
   (let k = (FStarC_List.length bs) in
   (if (Prims.op_Less k n) then (raise (NoEmbedding ("interpretation function has too few binders"))) else ());
-  (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd (FStarC_List.splitAt (Prims.op_Minus k n) bs)))
+  (match (FStarC_List.splitAt (Prims.op_Minus k n) bs) with
+    | (u__1, u__2) -> u__2
+  ))
 
 let fresh_bvs (bs : (FStarC_Syntax_Syntax.binder) list) : (FStarC_Syntax_Syntax.bv) list =
   (FStarC_List.map (fun b -> (FStarC_Syntax_Syntax.new_bv None ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort)) bs)
@@ -767,61 +775,65 @@ let interp_term (st : FStarC_Custard_Extract.state) (k : kind) (tac : bool) (fv_
   let tmp = (FStarC_List.map (fun b -> ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) bs) in
   let tys = (FStarC_List.op_At tmp (res :: [])) in
   let embs = (FStarC_List.map (embedding_for st k env) tys) in
-  let f = (FStarC_Syntax_Syntax.fvar fv_lid None) in
+  let tmp1 = (FStarC_Syntax_Syntax.fvar fv_lid None) in
+  let tmp2 = (FStarC_List.map (fun b -> (FStarC_Syntax_Syntax.t_unit, (FStarC_Syntax_Util.aqual_of_binder b))) tvs) in
+  let f = (FStarC_Syntax_Syntax.mk_Tm_app tmp1 tmp2 dummy) in
   let wrap = (fun vs res_ty mk -> (match env with
       | [] -> (mk vs)
-      | tmp1 -> (let tmp2 = (FStarC_Util.prefix vs) in
-        (match tmp2 with
+      | tmp3 -> (let tmp4 = (FStarC_Util.prefix vs) in
+        (match tmp4 with
           | (pre, args_bv) -> (let rest = (FStarC_Syntax_Syntax.new_bv None (args_bv).FStarC_Syntax_Syntax.sort) in
-            let tmp3 = (FStarC_List.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd env) in
-            let tmp4 = (mk (FStarC_List.op_At pre (rest :: []))) in
-            (peel_type_args st args_bv tmp3 rest res_ty tmp4))
+            let tmp5 = (FStarC_List.map (fun x -> (match x with
+                | (u__1, u__2) -> u__2
+              )) env) in
+            let tmp6 = (mk (FStarC_List.op_At pre (rest :: []))) in
+            (peel_type_args st args_bv tmp5 rest res_ty tmp6))
         ))
     )) in
-  (if tac then (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
-  let tmp2 = (Prims.strcat "FStarC.Tactics.InterpFuns.mk_tactic_interpretation_" tmp1) in
-  let h = (lid tmp2) in
+  (if tac then (let tmp3 = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
+  let tmp4 = (Prims.strcat "FStarC.Tactics.InterpFuns.mk_tactic_interpretation_" tmp3) in
+  let h = (lid tmp4) in
+  let tmp5 = (signature_of st h tys) in
+  (match tmp5 with
+    | (hbs, hres) -> (let tmp6 = (last_binders (Prims.of_int (4)) hbs) in
+      let vs = (fresh_bvs tmp6) in
+      let body = (wrap vs hres (fun vs1 -> (let tmp7 = (str (Prims.strcat (FStarC_Ident.string_of_lid fv_lid) " (plugin)")) in
+        let tmp8 = (tmp7 :: (f :: [])) in
+        let tmp9 = (FStarC_List.map FStarC_Syntax_Syntax.bv_to_name vs1) in
+        let tmp10 = (FStarC_List.op_At embs tmp9) in
+        let tmp11 = (FStarC_List.op_At tmp8 tmp10) in
+        (call h tys tmp11)))) in
+      let tmp7 = (FStarC_List.map FStarC_Syntax_Syntax.mk_binder vs) in
+      (FStarC_Syntax_Util.abs tmp7 body None))
+  )) else (let h = (match k with
+      | SyntaxTerm -> (let tmp3 = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
+        let tmp4 = (Prims.strcat "FStarC.Syntax.Embeddings.arrow_as_prim_step_" tmp3) in
+        (lid tmp4))
+      | NBETerm -> (let tmp3 = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
+        let tmp4 = (Prims.strcat "FStarC.TypeChecker.NBETerm.arrow_as_prim_step_" tmp3) in
+        (lid tmp4))
+    ) in
   let tmp3 = (signature_of st h tys) in
   (match tmp3 with
-    | (hbs, hres) -> (let tmp4 = (last_binders (Prims.of_int (4)) hbs) in
+    | (hbs, hres) -> (let tmp4 = (last_binders (Prims.of_int (3)) hbs) in
       let vs = (fresh_bvs tmp4) in
-      let body = (wrap vs hres (fun vs1 -> (let tmp5 = (str (Prims.strcat (FStarC_Ident.string_of_lid fv_lid) " (plugin)")) in
-        let tmp6 = (tmp5 :: (f :: [])) in
-        let tmp7 = (FStarC_List.map FStarC_Syntax_Syntax.bv_to_name vs1) in
-        let tmp8 = (FStarC_List.op_At embs tmp7) in
-        let tmp9 = (FStarC_List.op_At tmp6 tmp8) in
-        (call h tys tmp9)))) in
-      let tmp5 = (FStarC_List.map FStarC_Syntax_Syntax.mk_binder vs) in
-      (FStarC_Syntax_Util.abs tmp5 body None))
-  )) else (let h = (match k with
-      | SyntaxTerm -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
-        let tmp2 = (Prims.strcat "FStarC.Syntax.Embeddings.arrow_as_prim_step_" tmp1) in
-        (lid tmp2))
-      | NBETerm -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
-        let tmp2 = (Prims.strcat "FStarC.TypeChecker.NBETerm.arrow_as_prim_step_" tmp1) in
-        (lid tmp2))
-    ) in
-  let tmp1 = (signature_of st h tys) in
-  (match tmp1 with
-    | (hbs, hres) -> (let tmp2 = (last_binders (Prims.of_int (3)) hbs) in
-      let vs = (fresh_bvs tmp2) in
-      let tmp3 = (lid "FStarC.Ident.lid_of_str") in
-      let tmp4 = (str (FStarC_Ident.string_of_lid fv_lid)) in
-      let tmp5 = (tmp4 :: []) in
-      let lid_of_str = (call tmp3 [] tmp5) in
-      let body = (wrap vs hres (fun vs1 -> (let tmp6 = (FStarC_List.map FStarC_Syntax_Syntax.bv_to_name vs1) in
-        let tmp7 = (FStarC_List.op_At (f :: (lid_of_str :: [])) tmp6) in
-        let tmp8 = (FStarC_List.op_At embs tmp7) in
-        (call h tys tmp8)))) in
+      let tmp5 = (lid "FStarC.Ident.lid_of_str") in
+      let tmp6 = (str (FStarC_Ident.string_of_lid fv_lid)) in
+      let tmp7 = (tmp6 :: []) in
+      let lid_of_str = (call tmp5 [] tmp7) in
+      let body = (wrap vs hres (fun vs1 -> (let tmp8 = (FStarC_List.map FStarC_Syntax_Syntax.bv_to_name vs1) in
+        let tmp9 = (FStarC_List.op_At (f :: (lid_of_str :: [])) tmp8) in
+        let tmp10 = (FStarC_List.op_At embs tmp9) in
+        (call h tys tmp10)))) in
       let vs1 = (match k with
           | NBETerm -> vs
-          | SyntaxTerm -> (let tmp6 = (lid "FStarC.TypeChecker.Primops.Base.psc") in
-            let tmp7 = (FStarC_Syntax_Syntax.fvar tmp6 None) in
-            let tmp8 = (FStarC_Syntax_Syntax.new_bv None tmp7) in
-            (tmp8 :: vs))
+          | SyntaxTerm -> (let tmp8 = (lid "FStarC.TypeChecker.Primops.Base.psc") in
+            let tmp9 = (FStarC_Syntax_Syntax.fvar tmp8 None) in
+            let tmp10 = (FStarC_Syntax_Syntax.new_bv None tmp9) in
+            (tmp10 :: vs))
         ) in
-      let tmp6 = (FStarC_List.map FStarC_Syntax_Syntax.mk_binder vs1) in
-      (FStarC_Syntax_Util.abs tmp6 body None))
+      let tmp8 = (FStarC_List.map FStarC_Syntax_Syntax.mk_binder vs1) in
+      (FStarC_Syntax_Util.abs tmp8 body None))
   ))))
 
 let native_lid (s : string) : FStarC_Custard_Syntax.name =

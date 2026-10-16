@@ -24,7 +24,7 @@ type env_t = {
   encode_non_total_function_typ : bool;
   current_module_name : string;
   encoding_quantifier : bool;
-  global_cache : (((string) list * FStarC_Ident.lident)) FStarC_SMap.t;
+  global_cache : (((string) list * FStarC_Ident.lident)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t;
 }
 
 type varops_t = {
@@ -49,13 +49,13 @@ let dbg_Snapshot : (bool ref) =
 
 let varops : varops_t =
   (let ctr = (ref (Prims.of_int (100))) in
-  let new_scope = (fun tmp -> (FStarC_SMap.create (Prims.of_int (100)))) in
+  let new_scope = (fun tmp -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (100))))) in
   let tmp = (new_scope ()) in
   let tmp1 = (tmp :: []) in
   let scopes = (ref tmp1) in
   let mk_unique = (fun y -> (let y1 = (escape y) in
     let tmp2 = (!(scopes)) in
-    let tmp3 = (FStarC_Util.find_map tmp2 (fun names -> (FStarC_SMap.try_find names y1))) in
+    let tmp3 = (FStarC_Util.find_map tmp2 (fun names -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt names y1))) in
     let y2 = (match tmp3 with
         | None -> y1
         | (Some (tmp4)) -> ((FStarC_Util.incr ctr);
@@ -66,7 +66,7 @@ let varops : varops_t =
       ) in
     let tmp4 = (!(scopes)) in
     let top_scope = (FStarC_List.hd tmp4) in
-    (FStarC_SMap.add top_scope y2 true);
+    (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace top_scope y2 true);
     y2)) in
   let new_var = (fun pp rn -> (let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int rn) in
     let tmp3 = (Prims.strcat "__" tmp2) in
@@ -195,8 +195,12 @@ let mk_term_projector_name (lid : FStarC_Ident.lident) (a : FStarC_Syntax_Syntax
   (escape (FStarC_Format.fmt2 "%s_@%s" (FStarC_Ident.string_of_lid lid) (FStarC_Ident.string_of_id (a).FStarC_Syntax_Syntax.ppname)))
 
 let add_bvar_binding (bvb : (FStarC_Syntax_Syntax.bv * FStarC_SMTEncoding_Term.term)) (bvbs : (((FStarC_Syntax_Syntax.bv * FStarC_SMTEncoding_Term.term)) FStarC_PIMap.t) FStarC_PSMap.t) : (((FStarC_Syntax_Syntax.bv * FStarC_SMTEncoding_Term.term)) FStarC_PIMap.t) FStarC_PSMap.t =
-  (FStarC_PSMap.modify bvbs (FStarC_Ident.string_of_id (let scrut = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst bvb) in
-  (scrut).FStarC_Syntax_Syntax.ppname)) (fun pimap_opt -> (FStarC_PIMap.add (FStarC_Option.dflt (FStarC_PIMap.empty ()) pimap_opt) (let scrut = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst bvb) in
+  (FStarC_PSMap.modify bvbs (FStarC_Ident.string_of_id (let scrut = (match bvb with
+      | (u__1, u__2) -> u__1
+    ) in
+  (scrut).FStarC_Syntax_Syntax.ppname)) (fun pimap_opt -> (FStarC_PIMap.add (FStarC_Option.dflt (FStarC_PIMap.empty ()) pimap_opt) (let scrut = (match bvb with
+      | (u__1, u__2) -> u__1
+    ) in
   (scrut).FStarC_Syntax_Syntax.index) bvb)))
 
 let gen_term_var (env : env_t) (x : FStarC_Syntax_Syntax.bv) : (string * FStarC_SMTEncoding_Term.term * env_t) =
@@ -229,13 +233,15 @@ let print_env (e : env_t) : string =
       | (x, u__term) -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__bv x) in
         (tmp1 :: acc1))
     )) acc)) []) in
-  let allvars = (FStarC_PSMap.fold (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst ((e).fvar_bindings, (e).fvar_bindings1)) (fun u__k fvb acc -> ((fvb).fvar_lid :: acc)) []) in
+  let allvars = (FStarC_PSMap.fold (match ((e).fvar_bindings, (e).fvar_bindings1) with
+      | (u__1, u__2) -> u__1
+    ) (fun u__k fvb acc -> ((fvb).fvar_lid :: acc)) []) in
   (ignore (match (FStarC_List.rev allvars) with
     | [] -> ""
     | (l :: tmp) -> (let tmp1 = (FStarC_Ident.fStarC_Class_Show_show__lident l) in
       (Prims.strcat "...," tmp1))
   ));
-  let tmp = (FStarC_Ident.fStarC_Class_Show_show__list_lident_87 allvars) in
+  let tmp = (FStarC_Ident.fStarC_Class_Show_show__list_lident_86 allvars) in
   let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string bvars) in
   (FStarC_Format.fmt2 "{allvars=%s; bvars=%s }" tmp tmp1))
 
@@ -249,7 +255,9 @@ let lookup_term_var (env : env_t) (a : FStarC_Syntax_Syntax.bv) : FStarC_SMTEnco
   )
 
 let lookup_fvar_binding (env : env_t) (lid : FStarC_Ident.lident) : (fvar_binding) option =
-  (FStarC_PSMap.try_find (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst ((env).fvar_bindings, (env).fvar_bindings1)) (FStarC_Ident.string_of_lid lid))
+  (FStarC_PSMap.try_find (match ((env).fvar_bindings, (env).fvar_bindings1) with
+    | (u__1, u__2) -> u__1
+  ) (FStarC_Ident.string_of_lid lid))
 
 let fail_fvar_lookup (env : env_t) (a : FStarC_Ident.lident) : 'u___a =
   (let q = (FStarC_TypeChecker_Env.lookup_qname (env).tcenv a) in
@@ -529,7 +537,9 @@ let fStarC_Class_Show_show__list_fvar_binding (tmp : (fvar_binding) list) : stri
 
 let reset_current_module_fvbs (env : env_t) : env_t =
   { bvar_bindings = (env).bvar_bindings;
-    fvar_bindings = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst ((env).fvar_bindings, (env).fvar_bindings1));
+    fvar_bindings = (match ((env).fvar_bindings, (env).fvar_bindings1) with
+      | (u__1, u__2) -> u__1
+    );
     fvar_bindings1 = [];
     depth = (env).depth;
     tcenv = (env).tcenv;
@@ -542,7 +552,9 @@ let reset_current_module_fvbs (env : env_t) : env_t =
     global_cache = (env).global_cache }
 
 let get_current_module_fvbs (env : env_t) : (fvar_binding) list =
-  (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd ((env).fvar_bindings, (env).fvar_bindings1))
+  (match ((env).fvar_bindings, (env).fvar_bindings1) with
+    | (u__1, u__2) -> u__2
+  )
 
 let is_empty_encoding (me : module_encoding) : bool =
   ((match (me).me_index with

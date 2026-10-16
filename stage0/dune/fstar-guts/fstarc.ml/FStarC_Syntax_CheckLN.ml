@@ -116,7 +116,9 @@ and is_ln' (n : Prims.int) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Synta
     | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = tm; meta = tmp2; _ })) -> (is_ln' n tm)
     | (FStarC_Syntax_Syntax.Tm_let ({ FStarC_Syntax_Syntax.lbs = u__1; lbs1 = u__2; body = body; _ })) -> (let lbs = (u__1, u__2) in
       let tmp2 = (is_ln'_letbindings n lbs) in
-      (if tmp2 then (is_ln' (Prims.op_Plus n (FStarC_List.length (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd lbs))) body) else false))
+      (if tmp2 then (is_ln' (Prims.op_Plus n (FStarC_List.length (match lbs with
+        | (u__11, u__21) -> u__21
+      ))) body) else false))
     | tmp2 -> true
   ))
 

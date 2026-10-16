@@ -338,6 +338,12 @@ let string_index_of_lid : FStarC_Ident.lident =
 let string_sub_lid : FStarC_Ident.lident =
   (s2l "sub")
 
+let attr (s : string) : FStarC_Ident.lident =
+  (p2l ("FStar" :: ("Attributes" :: (s :: []))))
+
+let erasable_attr : FStarC_Ident.lident =
+  (attr "erasable")
+
 let fext_lid (s : string) : FStarC_Ident.lident =
   (FStarC_Ident.lid_of_path ("FStar" :: ("FunctionalExtensionality" :: (s :: []))) FStarC_Range_Type.dummyRange)
 
@@ -449,9 +455,6 @@ let effect_TAC_lid : FStarC_Ident.lident =
 let primitive_div_lid : FStarC_Ident.lident =
   effect_Div_lid
 
-let attr (s : string) : FStarC_Ident.lident =
-  (p2l ("FStar" :: ("Attributes" :: (s :: []))))
-
 let commute_nested_matches_lid : FStarC_Ident.lident =
   (attr "commute_nested_matches")
 
@@ -544,9 +547,6 @@ let steps_unfoldfully : FStarC_Ident.lident =
 
 let tac_opaque_attr : FStarC_Ident.lident =
   (pconst "tac_opaque")
-
-let erasable_attr : FStarC_Ident.lident =
-  (attr "erasable")
 
 let inline_let_attr : FStarC_Ident.lident =
   (attr "inline_let")
@@ -693,6 +693,9 @@ let pure_wp_monotonic0_lid : FStarC_Ident.lident =
 let desugar_of_variant_record_lid : FStarC_Ident.lident =
   (attr "desugar_of_variant_record")
 
+let tcinstance_lid : FStarC_Ident.lident =
+  (fstar_tactics_lid' ("Typeclasses" :: ("tcinstance" :: [])))
+
 let list_tot_append_lid : FStarC_Ident.lident =
   (p2l ("FStar" :: ("List" :: ("Tot" :: ("Base" :: ("append" :: []))))))
 
@@ -807,6 +810,12 @@ let real_op_Slash : FStarC_Ident.lident =
 let bvconst (s : string) : FStarC_Ident.lident =
   (p2l ("FStar" :: ("BV" :: (s :: []))))
 
+let bv_extract_lid : FStarC_Ident.lident =
+  (bvconst "bv_extract")
+
+let bv_concat_lid : FStarC_Ident.lident =
+  (bvconst "bv_concat")
+
 let bv_and_lid : FStarC_Ident.lident =
   (bvconst "bvand")
 
@@ -867,8 +876,80 @@ let bv_mul'_lid : FStarC_Ident.lident =
 let bv_ult_lid : FStarC_Ident.lident =
   (bvconst "bvult")
 
+let bv_ule_lid : FStarC_Ident.lident =
+  (bvconst "bvule")
+
+let bv_ugt_lid : FStarC_Ident.lident =
+  (bvconst "bvugt")
+
+let bv_uge_lid : FStarC_Ident.lident =
+  (bvconst "bvuge")
+
+let bv_slt_lid : FStarC_Ident.lident =
+  (bvconst "bvslt")
+
+let bv_sle_lid : FStarC_Ident.lident =
+  (bvconst "bvsle")
+
+let bv_sgt_lid : FStarC_Ident.lident =
+  (bvconst "bvsgt")
+
+let bv_sge_lid : FStarC_Ident.lident =
+  (bvconst "bvsge")
+
+let bv_nand_lid : FStarC_Ident.lident =
+  (bvconst "bvnand")
+
+let bv_nor_lid : FStarC_Ident.lident =
+  (bvconst "bvnor")
+
+let bv_xnor_lid : FStarC_Ident.lident =
+  (bvconst "bvxnor")
+
+let bv_comp_lid : FStarC_Ident.lident =
+  (bvconst "bvcomp")
+
+let bv_sdiv_lid : FStarC_Ident.lident =
+  (bvconst "bvsdiv")
+
+let bv_srem_lid : FStarC_Ident.lident =
+  (bvconst "bvsrem")
+
+let bv_smod_lid : FStarC_Ident.lident =
+  (bvconst "bvsmod")
+
+let bv_ashr_lid : FStarC_Ident.lident =
+  (bvconst "bvashr")
+
+let bv_uaddo_lid : FStarC_Ident.lident =
+  (bvconst "bvuaddo")
+
+let bv_saddo_lid : FStarC_Ident.lident =
+  (bvconst "bvsaddo")
+
+let bv_umulo_lid : FStarC_Ident.lident =
+  (bvconst "bvumulo")
+
+let bv_smulo_lid : FStarC_Ident.lident =
+  (bvconst "bvsmulo")
+
+let bv_usubo_lid : FStarC_Ident.lident =
+  (bvconst "bvusubo")
+
+let bv_ssubo_lid : FStarC_Ident.lident =
+  (bvconst "bvssubo")
+
+let bv_sdivo_lid : FStarC_Ident.lident =
+  (bvconst "bvsdivo")
+
 let bv_uext_lid : FStarC_Ident.lident =
   (bvconst "bv_uext")
+
+let bv_sext_lid : FStarC_Ident.lident =
+  (bvconst "bv_sext")
+
+let bv_repeat_lid : FStarC_Ident.lident =
+  (bvconst "bv_repeat")
 
 let nat_to_bv_lid : FStarC_Ident.lident =
   (bvconst "int2bv")
@@ -876,8 +957,17 @@ let nat_to_bv_lid : FStarC_Ident.lident =
 let bv_not_lid : FStarC_Ident.lident =
   (bvconst "bvnot")
 
+let bv_neg_lid : FStarC_Ident.lident =
+  (bvconst "bvneg")
+
+let bv_nego_lid : FStarC_Ident.lident =
+  (bvconst "bvnego")
+
 let bv_to_nat_lid : FStarC_Ident.lident =
   (bvconst "bv2int")
+
+let sbv_to_int_lid : FStarC_Ident.lident =
+  (bvconst "sbv_to_int")
 
 let bv_t_lid : FStarC_Ident.lident =
   (bvconst "bv_t")
@@ -899,45 +989,6 @@ let dsl_tac_typ_lid : FStarC_Ident.lident =
 
 let decls_lid : FStarC_Ident.lident =
   (p2l ("FStar" :: ("Stubs" :: ("Reflection" :: ("Types" :: ("decls" :: []))))))
-
-let failwith_lid (tmp : unit) : FStarC_Ident.lident =
-  (p2l (FStarC_List.op_At (ef_base ()) ("failwith" :: [])))
-
-let noextract_to_attr : FStarC_Ident.lident =
-  (attr "noextract_to")
-
-let remove_unused_type_parameters_lid : FStarC_Ident.lident =
-  (psconst "remove_unused_type_parameters")
-
-let vconfig_lid : FStarC_Ident.lident =
-  (p2l ("FStar" :: ("VConfig" :: ("vconfig" :: []))))
-
-let postprocess_extr_with : FStarC_Ident.lident =
-  (p2l ("FStar" :: ("Tactics" :: ("Effect" :: ("postprocess_for_extraction_with" :: [])))))
-
-let postprocess_with : FStarC_Ident.lident =
-  (p2l ("FStar" :: ("Tactics" :: ("Effect" :: ("postprocess_with" :: [])))))
-
-let postprocess_type : FStarC_Ident.lident =
-  (p2l ("FStar" :: ("Tactics" :: ("Effect" :: ("postprocess_type" :: [])))))
-
-let normalize_for_extraction_lid : FStarC_Ident.lident =
-  (psconst "normalize_for_extraction")
-
-let normalize_for_extraction_type_lid : FStarC_Ident.lident =
-  (psconst "normalize_for_extraction_type")
-
-let tac_bind_lid : FStarC_Ident.lident =
-  (fstar_tactics_lid' ("Effect" :: ("tac_bind" :: [])))
-
-let lift_div_tac_lid : FStarC_Ident.lident =
-  (fstar_tactics_lid' ("Effect" :: ("lift_div_tac" :: [])))
-
-let rename_let_attr : FStarC_Ident.lident =
-  (attr "rename_let")
-
-let c_inline_attr : FStarC_Ident.lident =
-  (attr "CInline")
 
 let fail_attr : FStarC_Ident.lident =
   (attr "expect_failure")
@@ -966,6 +1017,9 @@ let check_with_lid : FStarC_Ident.lident =
 let mkvconfig_lid : FStarC_Ident.lident =
   (p2l ("FStar" :: ("VConfig" :: ("Mkvconfig" :: []))))
 
+let vconfig_lid : FStarC_Ident.lident =
+  (p2l ("FStar" :: ("VConfig" :: ("vconfig" :: []))))
+
 let eqtype_lid : FStarC_Ident.lident =
   (pconst "eqtype")
 
@@ -978,8 +1032,14 @@ let projector_attr : FStarC_Ident.lident =
 let preprocess_with : FStarC_Ident.lident =
   (p2l ("FStar" :: ("Tactics" :: ("Effect" :: ("preprocess_with" :: [])))))
 
-let tcinstance_lid : FStarC_Ident.lident =
-  (fstar_tactics_lid' ("Typeclasses" :: ("tcinstance" :: [])))
+let postprocess_extr_with : FStarC_Ident.lident =
+  (p2l ("FStar" :: ("Tactics" :: ("Effect" :: ("postprocess_for_extraction_with" :: [])))))
+
+let postprocess_with : FStarC_Ident.lident =
+  (p2l ("FStar" :: ("Tactics" :: ("Effect" :: ("postprocess_with" :: [])))))
+
+let postprocess_type : FStarC_Ident.lident =
+  (p2l ("FStar" :: ("Tactics" :: ("Effect" :: ("postprocess_type" :: [])))))
 
 let custard_bfloat16_attr : FStarC_Ident.lident =
   (attr "custard_bfloat16")
@@ -1005,6 +1065,12 @@ let custard_functor_attr : FStarC_Ident.lident =
 let custard_compile_time_attr : FStarC_Ident.lident =
   (attr "custard_compile_time")
 
+let normalize_for_extraction_lid : FStarC_Ident.lident =
+  (psconst "normalize_for_extraction")
+
+let normalize_for_extraction_type_lid : FStarC_Ident.lident =
+  (psconst "normalize_for_extraction_type")
+
 let custard_c_reference_attr : FStarC_Ident.lident =
   (attr "custard_c_reference")
 
@@ -1020,8 +1086,20 @@ let custard_boxed_fields_attr : FStarC_Ident.lident =
 let monomorphize_attr : FStarC_Ident.lident =
   (attr "monomorphize")
 
+let cherry_owned_attr : FStarC_Ident.lident =
+  (attr "cherry_owned")
+
+let cherry_borrowed_attr : FStarC_Ident.lident =
+  (attr "cherry_borrowed")
+
 let tcmethod_lid : FStarC_Ident.lident =
   (fstar_tactics_lid' ("Typeclasses" :: ("tcmethod" :: [])))
+
+let rename_let_attr : FStarC_Ident.lident =
+  (attr "rename_let")
+
+let noextract_to_attr : FStarC_Ident.lident =
+  (attr "noextract_to")
 
 let ctx_uvar_and_subst_lid : FStarC_Ident.lident =
   (p2l ("FStar" :: ("Stubs" :: ("Reflection" :: ("Types" :: ("ctx_uvar_and_subst" :: []))))))
@@ -1031,9 +1109,6 @@ let universe_uvar_lid : FStarC_Ident.lident =
 
 let order_lid : FStarC_Ident.lident =
   (p2l ("FStar" :: ("Order" :: ("order" :: []))))
-
-let steel_memory_inv_lid : FStarC_Ident.lident =
-  (FStarC_Ident.lid_of_path ("Steel" :: ("Memory" :: ("inv" :: []))) FStarC_Range_Type.dummyRange)
 
 let tref_lid : FStarC_Ident.lident =
   (p2l ("FStar" :: ("Stubs" :: ("Tactics" :: ("Types" :: ("tref" :: []))))))
@@ -1155,6 +1230,9 @@ let range_0 : FStarC_Ident.lident =
 let comment_attr : FStarC_Ident.lident =
   (attr "Comment")
 
+let c_inline_attr : FStarC_Ident.lident =
+  (attr "CInline")
+
 let ite_soundness_by_attr : FStarC_Ident.lident =
   (attr "ite_soundness_by")
 
@@ -1167,12 +1245,21 @@ let effect_parameter_attr : FStarC_Ident.lident =
 let bind_has_range_args_attr : FStarC_Ident.lident =
   (attr "bind_has_range_args")
 
+let remove_unused_type_parameters_lid : FStarC_Ident.lident =
+  (psconst "remove_unused_type_parameters")
+
 let gen_reset : ((unit -> Prims.int) * (unit -> unit)) =
   (let x = (ref Prims.int_zero) in
   let gen = (fun tmp -> ((FStarC_Util.incr x);
     (FStarC_Util.read x))) in
   let reset = (fun tmp -> (FStarC_Util.write x Prims.int_zero)) in
   (gen, reset))
+
+let tac_bind_lid : FStarC_Ident.lident =
+  (fstar_tactics_lid' ("Effect" :: ("tac_bind" :: [])))
+
+let lift_div_tac_lid : FStarC_Ident.lident =
+  (fstar_tactics_lid' ("Effect" :: ("lift_div_tac" :: [])))
 
 let exists_elim_lid : FStarC_Ident.lident =
   (classical_sugar_lid "exists_elim")
@@ -1182,6 +1269,9 @@ let or_elim_lid : FStarC_Ident.lident =
 
 let and_elim_lid : FStarC_Ident.lident =
   (classical_sugar_lid "and_elim")
+
+let steel_memory_inv_lid : FStarC_Ident.lident =
+  (FStarC_Ident.lid_of_path ("Steel" :: ("Memory" :: ("inv" :: []))) FStarC_Range_Type.dummyRange)
 
 let steel_new_invariant_lid : FStarC_Ident.lident =
   (FStarC_Ident.lid_of_path ("Steel" :: ("Effect" :: ("Atomic" :: ("new_invariant" :: [])))) FStarC_Range_Type.dummyRange)

@@ -928,7 +928,9 @@ let focusAttrLetBindings (lbs : ((((term) list) option * (bool * (pattern * term
   (if should_filter then ((FStarC_Errors.fStarC_Errors_log_issue__range_string r FStarC_Errors_Codes.Warning_Filtered "Focusing on only some cases in this (mutually) recursive definition");
   (FStarC_List.map (fun tmp -> (match tmp with
     | (attr, (f, lb)) -> (if f then (attr, lb) else (let tmp1 = (mkAdmitMagic r) in
-      let tmp2 = ((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst lb), tmp1) in
+      let tmp2 = ((match lb with
+          | (u__1, u__2) -> u__1
+        ), tmp1) in
       (attr, tmp2)))
   )) lbs)) else (FStarC_List.map (fun tmp -> (match tmp with
     | (attr, (tmp1, lb)) -> (attr, lb)
@@ -939,21 +941,35 @@ let mkWildAdmitMagic (r : FStarC_Range_Type.range) : (pattern * (term) option * 
   ((mk_pattern (PatWild (None, [])) r), None, tmp))
 
 let focusBranches (branches : ((bool * (pattern * (term) option * term))) list) (r : FStarC_Range_Type.range) : ((pattern * (term) option * term)) list =
-  (let should_filter = (FStarC_Util.for_some Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst branches) in
+  (let should_filter = (FStarC_Util.for_some (fun x -> (match x with
+      | (u__1, u__2) -> u__1
+    )) branches) in
   (if should_filter then ((FStarC_Errors.fStarC_Errors_log_issue__range_string r FStarC_Errors_Codes.Warning_Filtered "Focusing on only some cases");
-  let tmp = (FStarC_List.filter Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst branches) in
-  let focussed = (FStarC_List.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd tmp) in
+  let tmp = (FStarC_List.filter (fun x -> (match x with
+      | (u__1, u__2) -> u__1
+    )) branches) in
+  let focussed = (FStarC_List.map (fun x -> (match x with
+      | (u__1, u__2) -> u__2
+    )) tmp) in
   let tmp1 = (mkWildAdmitMagic r) in
   let tmp2 = (tmp1 :: []) in
-  (FStarC_List.op_At focussed tmp2)) else (FStarC_List.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd branches)))
+  (FStarC_List.op_At focussed tmp2)) else (FStarC_List.map (fun x -> (match x with
+    | (u__1, u__2) -> u__2
+  )) branches)))
 
 let focusLetBindings (lbs : ((bool * (pattern * term))) list) (r : FStarC_Range_Type.range) : ((pattern * term)) list =
-  (let should_filter = (FStarC_Util.for_some Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst lbs) in
+  (let should_filter = (FStarC_Util.for_some (fun x -> (match x with
+      | (u__1, u__2) -> u__1
+    )) lbs) in
   (if should_filter then ((FStarC_Errors.fStarC_Errors_log_issue__range_string r FStarC_Errors_Codes.Warning_Filtered "Focusing on only some cases in this (mutually) recursive definition");
   (FStarC_List.map (fun tmp -> (match tmp with
     | (f, lb) -> (if f then lb else (let tmp1 = (mkAdmitMagic r) in
-      ((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst lb), tmp1)))
-  )) lbs)) else (FStarC_List.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd lbs)))
+      ((match lb with
+        | (u__1, u__2) -> u__1
+      ), tmp1)))
+  )) lbs)) else (FStarC_List.map (fun x -> (match x with
+    | (u__1, u__2) -> u__2
+  )) lbs)))
 
 let ident_of_binder (r : FStarC_Range_Type.range) (b : binder) : FStarC_Ident.ident =
   (match (b).b with
@@ -1053,8 +1069,75 @@ let unit_type (r : FStarC_Range_Type.range) : term =
   let tmp1 = (Var (tmp)) in
   (mk_term tmp1 r Expr))
 
+let mk_function (branches : ((pattern * (term) option * term)) list) (r1 : FStarC_Range_Type.range) (r2 : FStarC_Range_Type.range) : term =
+  (mk_term (Function (branches, r1)) r2 Expr)
+
 let fStarC_Class_Show_show__term (tmp : term) : string =
   (term_to_string tmp)
+
+let rec fStarC_Class_Show_show__show_list_aux__list_term (l : (term) list) : string =
+  (match l with
+    | [] -> ""
+    | (x :: []) -> (fStarC_Class_Show_show__term x)
+    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__term x) in
+      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_term xs) in
+      let tmp2 = (Prims.strcat ", " tmp1) in
+      (Prims.strcat tmp tmp2))
+  )
+
+let fStarC_Class_Show_show__list_term (tmp : (term) list) : string =
+  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_term tmp) in
+  let tmp2 = (Prims.strcat tmp1 "]") in
+  (Prims.strcat "[" tmp2))
+
+let at_most_one (s : string) (r : FStarC_Range_Type.range) (l : ('tmp) list) : ('tmp) option =
+  (match l with
+    | (x :: []) -> (Some (x))
+    | [] -> None
+    | tmp -> (FStarC_Errors.fStarC_Errors_raise_error__range_string r FStarC_Errors_Codes.Fatal_MoreThanOneDeclaration (FStarC_Format.fmt1 "At most one %s is allowed on declarations" s))
+  )
+
+let add_decorations (d : decl) (decorations : (decoration) list) : decl =
+  (let tmp = (FStarC_List.partition uu___is_DeclAttributes decorations) in
+  let decorations1 = (match tmp with
+      | (attrs, quals) -> (let attrs1 = (match (attrs, (d).attrs) with
+            | (attrs1, []) -> attrs1
+            | (((DeclAttributes (a)) :: []), attrs1) -> ((DeclAttributes ((FStarC_List.op_At a attrs1))) :: [])
+            | ([], attrs1) -> ((DeclAttributes (attrs1)) :: [])
+            | tmp1 -> (let tmp2 = (FStarC_List.map (fun tmp2 -> (match tmp2 with
+                  | (DeclAttributes (a)) -> (fStarC_Class_Show_show__list_term a)
+                  | tmp3 -> ""
+                )) attrs) in
+              let tmp3 = (FStarC_String.concat ", " tmp2) in
+              let tmp4 = (FStarC_List.map fStarC_Class_Show_show__term (d).attrs) in
+              let tmp5 = (FStarC_String.concat ", " tmp4) in
+              let tmp6 = (FStarC_Format.fmt2 "At most one attribute set is allowed on declarations\n got %s;\n and %s" tmp3 tmp5) in
+              (fStarC_Errors_raise_error__decl_string d FStarC_Errors_Codes.Fatal_MoreThanOneDeclaration tmp6))
+          ) in
+        let tmp1 = (FStarC_List.map (fun u__eta -> (Qualifier (u__eta))) (d).quals) in
+        (FStarC_List.op_At tmp1 (FStarC_List.op_At quals attrs1)))
+    ) in
+  let tmp1 = (FStarC_List.choose (fun tmp1 -> (match tmp1 with
+      | (DeclAttributes (a)) -> (Some (a))
+      | tmp2 -> None
+    )) decorations1) in
+  let attributes_ = (at_most_one "attribute set" (d).drange tmp1) in
+  let attributes_1 = (FStarC_Option.dflt [] attributes_) in
+  let qualifiers = (FStarC_List.choose (fun tmp2 -> (match tmp2 with
+      | (Qualifier (q)) -> (Some (q))
+      | tmp3 -> None
+    )) decorations1) in
+  { d = (d).d; drange = (d).drange; quals = qualifiers; attrs = attributes_1 })
+
+let mk_decl (d : decl') (r : FStarC_Range_Type.range) (decorations : (decoration) list) : decl =
+  (let d1 = { d = d; drange = r; quals = []; attrs = [] } in
+  (add_decorations d1 decorations))
+
+let as_interface (m : modul) : modul =
+  (match m with
+    | (Module ({ no_prelude = no_prelude; mname = mname; decls = decls; _ })) -> (Interface (({ no_prelude = no_prelude; mname = mname; decls = decls; admitted = true } : modul__Interface__payload)))
+    | i -> i
+  )
 
 let fStarC_Class_HasRange_pos__term (tmp : term) : FStarC_Range_Type.range =
   (tmp).range
@@ -1140,9 +1223,6 @@ let un_curry_abs (ps : (pattern) list) (body : term) : term' =
     | tmp -> (Abs (ps, body))
   )
 
-let mk_function (branches : ((pattern * (term) option * term)) list) (r1 : FStarC_Range_Type.range) (r2 : FStarC_Range_Type.range) : term =
-  (mk_term (Function (branches, r1)) r2 Expr)
-
 let fStarC_Class_HasRange_pos__binder_13 (tmp : binder) : FStarC_Range_Type.range =
   (tmp).brange
 
@@ -1180,7 +1260,7 @@ let fStarC_Class_PP_pp__imp (tmp : imp) : FStar_Pprint.document =
   (let tmp1 = (fStarC_Class_Show_show__imp tmp) in
   (FStar_Pprint.arbitrary_string tmp1))
 
-let fStarC_Class_Show_show__option_arg_qualifier_162 (tmp : (arg_qualifier) option) : string =
+let fStarC_Class_Show_show__option_arg_qualifier_163 (tmp : (arg_qualifier) option) : string =
   (match tmp with
     | None -> "None"
     | (Some (x)) -> (let tmp1 = (fStarC_Class_Show_show__arg_qualifier x) in
@@ -1220,7 +1300,7 @@ and fStarC_Parser_AST_pp_list'__tuple3_pattern_option_term_term (xs : ((pattern 
   (FStarC_Class_PP.gbrackets tmp))
 
 and fStarC_Parser_AST_pp_list'__pattern (xs : (pattern) list) : FStar_Pprint.document =
-  (let tmp = (FStarC_Pprint.flow_map (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__pattern_43 xs) in
+  (let tmp = (FStarC_Pprint.flow_map (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__pattern_41 xs) in
   (FStarC_Class_PP.gbrackets tmp))
 
 and fStarC_Class_PP_pp__tuple2_option_list_tuple2_pattern_term (tmp : (((term) list) option * (pattern * term))) : FStar_Pprint.document =
@@ -1264,7 +1344,7 @@ and fStarC_Parser_AST_pp_list'__tuple2_lident_term (xs : ((FStarC_Ident.lident *
   (let tmp = (FStarC_Pprint.flow_map (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__tuple2_lident_term xs) in
   (FStarC_Class_PP.gbrackets tmp))
 
-and fStarC_Class_PP_pp__binder_52 (tmp : binder) : FStar_Pprint.document =
+and fStarC_Class_PP_pp__binder_50 (tmp : binder) : FStar_Pprint.document =
   (match (tmp).b with
     | (Variable (i)) -> (let tmp1 = (FStarC_Ident.fStarC_Class_PP_pp__ident i) in
       let tmp2 = (tmp1 :: []) in
@@ -1280,7 +1360,7 @@ and fStarC_Class_PP_pp__binder_52 (tmp : binder) : FStar_Pprint.document =
   )
 
 and fStarC_Parser_AST_pp_list'__binder (xs : (binder) list) : FStar_Pprint.document =
-  (let tmp = (FStarC_Pprint.flow_map (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__binder_52 xs) in
+  (let tmp = (FStarC_Pprint.flow_map (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__binder_50 xs) in
   (FStarC_Class_PP.gbrackets tmp))
 
 and pp_binder (b : binder) : FStar_Pprint.document =
@@ -2127,7 +2207,7 @@ and pp_pattern (p : pattern) : FStar_Pprint.document =
       (ctor "PatApp" tmp3))
     | (PatVar (i, aq, attrs)) -> (let pp_attrs = (fStarC_Parser_AST_pp_list'__term attrs) in
       let tmp = (FStarC_Ident.fStarC_Class_PP_pp__ident i) in
-      let tmp1 = (fStarC_Class_Show_show__option_arg_qualifier_162 aq) in
+      let tmp1 = (fStarC_Class_Show_show__option_arg_qualifier_163 aq) in
       let tmp2 = (FStar_Pprint.doc_of_string tmp1) in
       let tmp3 = (tmp2 :: (pp_attrs :: [])) in
       let tmp4 = (tmp :: tmp3) in
@@ -2167,7 +2247,7 @@ and pp_pattern (p : pattern) : FStar_Pprint.document =
     | PatRest -> (ctor "PatRest" [])
   )
 
-and fStarC_Class_PP_pp__pattern_43 (tmp : pattern) : FStar_Pprint.document =
+and fStarC_Class_PP_pp__pattern_41 (tmp : pattern) : FStar_Pprint.document =
   (pp_pattern tmp)
 
 let string_of_let_qualifier (tmp : let_qualifier) : string =
@@ -2181,7 +2261,7 @@ let fStarC_Class_Show_show__let_qualifier (tmp : let_qualifier) : string =
 
 let fStarC_Class_PP_pp__tuple2_pattern_term (tmp : (pattern * term)) : FStar_Pprint.document =
   (match tmp with
-    | (p, t) -> (let tmp1 = (fStarC_Class_PP_pp__pattern_43 p) in
+    | (p, t) -> (let tmp1 = (fStarC_Class_PP_pp__pattern_41 p) in
       let tmp2 = (fStarC_Class_PP_pp__term t) in
       let tmp3 = (tmp2 :: []) in
       let tmp4 = (tmp1 :: tmp3) in
@@ -2192,8 +2272,8 @@ let fStarC_Parser_AST_pp_list'__tuple2_pattern_term (xs : ((pattern * term)) lis
   (let tmp = (FStarC_Pprint.flow_map (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__tuple2_pattern_term xs) in
   (FStarC_Class_PP.gbrackets tmp))
 
-let fStarC_Class_PP_pp__list_binder_60 (tmp : (binder) list) : FStar_Pprint.document =
-  (let tmp1 = (FStarC_Pprint.flow_map (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__binder_52 tmp) in
+let fStarC_Class_PP_pp__list_binder_58 (tmp : (binder) list) : FStar_Pprint.document =
+  (let tmp1 = (FStarC_Pprint.flow_map (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__binder_50 tmp) in
   (FStarC_Class_PP.gbrackets tmp1))
 
 let fStarC_Class_PP_pp__option_term (tmp : (term) option) : FStar_Pprint.document =
@@ -2205,7 +2285,7 @@ let fStarC_Class_PP_pp__option_term (tmp : (term) option) : FStar_Pprint.documen
     | None -> (FStar_Pprint.doc_of_string "None")
   )
 
-let fStarC_Class_PP_pp__option_arg_qualifier_62 (tmp : (arg_qualifier) option) : FStar_Pprint.document =
+let fStarC_Class_PP_pp__option_arg_qualifier_60 (tmp : (arg_qualifier) option) : FStar_Pprint.document =
   (match tmp with
     | (Some (v)) -> (let tmp1 = (fStarC_Class_PP_pp__arg_qualifier v) in
       let tmp2 = (FStar_Pprint.op_Hat_Slash_Hat (FStar_Pprint.doc_of_string "Some") tmp1) in
@@ -2214,15 +2294,15 @@ let fStarC_Class_PP_pp__option_arg_qualifier_62 (tmp : (arg_qualifier) option) :
     | None -> (FStar_Pprint.doc_of_string "None")
   )
 
-let fStarC_Class_PP_pp__list_term_63 (tmp : (term) list) : FStar_Pprint.document =
+let fStarC_Class_PP_pp__list_term_61 (tmp : (term) list) : FStar_Pprint.document =
   (let tmp1 = (FStarC_Pprint.flow_map (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__term tmp) in
   (FStarC_Class_PP.gbrackets tmp1))
 
 let fStarC_Class_PP_pp__tuple4_ident_option_arg_qualifier_list_term_term (tmp : (FStarC_Ident.ident * (arg_qualifier) option * (term) list * term)) : FStar_Pprint.document =
   (match tmp with
     | (id, q, attrs, tm) -> (let tmp1 = (FStarC_Ident.fStarC_Class_PP_pp__ident id) in
-      let tmp2 = (fStarC_Class_PP_pp__option_arg_qualifier_62 q) in
-      let tmp3 = (fStarC_Class_PP_pp__list_term_63 attrs) in
+      let tmp2 = (fStarC_Class_PP_pp__option_arg_qualifier_60 q) in
+      let tmp3 = (fStarC_Class_PP_pp__list_term_61 attrs) in
       let tmp4 = (pp_term tm) in
       let tmp5 = (tmp4 :: []) in
       let tmp6 = (tmp3 :: tmp5) in
@@ -2235,7 +2315,7 @@ let fStarC_Parser_AST_pp_list'__tuple4_ident_option_arg_qualifier_list_term_term
   (let tmp = (FStarC_Pprint.flow_map (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__tuple4_ident_option_arg_qualifier_list_term_term xs) in
   (FStarC_Class_PP.gbrackets tmp))
 
-let fStarC_Class_PP_pp__option_term_67 (tmp : (term) option) : FStar_Pprint.document =
+let fStarC_Class_PP_pp__option_term_65 (tmp : (term) option) : FStar_Pprint.document =
   (match tmp with
     | (Some (v)) -> (let tmp1 = (fStarC_Class_PP_pp__term v) in
       let tmp2 = (FStar_Pprint.op_Hat_Slash_Hat (FStar_Pprint.doc_of_string "Some") tmp1) in
@@ -2253,7 +2333,7 @@ let pp_constructor_payload (cp : constructor_payload) : FStar_Pprint.document =
       let tmp1 = (tmp :: []) in
       (ctor "VpArbitrary" tmp1))
     | (VpRecord (fields, tyopt)) -> (let tmp = (fStarC_Parser_AST_pp_list'__tuple4_ident_option_arg_qualifier_list_term_term fields) in
-      let tmp1 = (fStarC_Class_PP_pp__option_term_67 tyopt) in
+      let tmp1 = (fStarC_Class_PP_pp__option_term_65 tyopt) in
       let tmp2 = (tmp1 :: []) in
       let tmp3 = (tmp :: tmp2) in
       (ctor "VpRecord" tmp3))
@@ -2275,7 +2355,7 @@ let fStarC_Class_PP_pp__tuple3_ident_option_constructor_payload_list_ter (tmp : 
   (match tmp with
     | (id, payload, attrs) -> (let tmp1 = (FStarC_Ident.fStarC_Class_PP_pp__ident id) in
       let tmp2 = (fStarC_Class_PP_pp__option_constructor_payload payload) in
-      let tmp3 = (fStarC_Class_PP_pp__list_term_63 attrs) in
+      let tmp3 = (fStarC_Class_PP_pp__list_term_61 attrs) in
       let tmp4 = (tmp3 :: []) in
       let tmp5 = (tmp2 :: tmp4) in
       let tmp6 = (tmp1 :: tmp5) in
@@ -2289,23 +2369,23 @@ let fStarC_Parser_AST_pp_list'__tuple3_ident_option_constructor_payload_list_ter
 let pp_tycon (tc : tycon) : FStar_Pprint.document =
   (match tc with
     | (TyconAbstract (i, bs, knd)) -> (let tmp = (FStarC_Ident.fStarC_Class_PP_pp__ident i) in
-      let tmp1 = (fStarC_Class_PP_pp__list_binder_60 bs) in
+      let tmp1 = (fStarC_Class_PP_pp__list_binder_58 bs) in
       let tmp2 = (fStarC_Class_PP_pp__option_term knd) in
       let tmp3 = (tmp2 :: []) in
       let tmp4 = (tmp1 :: tmp3) in
       let tmp5 = (tmp :: tmp4) in
       (ctor "TyconAbstract" tmp5))
     | (TyconAbbrev (i, bs, knd, t)) -> (let tmp = (FStarC_Ident.fStarC_Class_PP_pp__ident i) in
-      let tmp1 = (fStarC_Class_PP_pp__list_binder_60 bs) in
+      let tmp1 = (fStarC_Class_PP_pp__list_binder_58 bs) in
       let tmp2 = (fStarC_Class_PP_pp__option_term knd) in
       let tmp3 = (tmp2 :: ((FStar_Pprint.doc_of_string "_") :: [])) in
       let tmp4 = (tmp1 :: tmp3) in
       let tmp5 = (tmp :: tmp4) in
       (ctor "TyconAbbrev" tmp5))
     | (TyconRecord (i, bs, knd, attrs, fields)) -> (let tmp = (FStarC_Ident.fStarC_Class_PP_pp__ident i) in
-      let tmp1 = (fStarC_Class_PP_pp__list_binder_60 bs) in
+      let tmp1 = (fStarC_Class_PP_pp__list_binder_58 bs) in
       let tmp2 = (fStarC_Class_PP_pp__option_term knd) in
-      let tmp3 = (fStarC_Class_PP_pp__list_term_63 attrs) in
+      let tmp3 = (fStarC_Class_PP_pp__list_term_61 attrs) in
       let tmp4 = (fStarC_Parser_AST_pp_list'__tuple4_ident_option_arg_qualifier_list_term_term fields) in
       let tmp5 = (tmp4 :: []) in
       let tmp6 = (tmp3 :: tmp5) in
@@ -2314,7 +2394,7 @@ let pp_tycon (tc : tycon) : FStar_Pprint.document =
       let tmp9 = (tmp :: tmp8) in
       (ctor "TyconRecord" tmp9))
     | (TyconVariant (i, bs, knd, ctors)) -> (let tmp = (FStarC_Ident.fStarC_Class_PP_pp__ident i) in
-      let tmp1 = (fStarC_Class_PP_pp__list_binder_60 bs) in
+      let tmp1 = (fStarC_Class_PP_pp__list_binder_58 bs) in
       let tmp2 = (fStarC_Class_PP_pp__option_term knd) in
       let tmp3 = (fStarC_Parser_AST_pp_list'__tuple3_ident_option_constructor_payload_list_ter ctors) in
       let tmp4 = (tmp3 :: []) in
@@ -2346,11 +2426,11 @@ let string_of_pragma (p : pragma) : string =
       (Prims.strcat "eval " tmp))
   )
 
-let fStarC_Class_Show_show__pragma_164 (tmp : pragma) : string =
+let fStarC_Class_Show_show__pragma_165 (tmp : pragma) : string =
   (string_of_pragma tmp)
 
 let fStarC_Class_PP_pp__pragma (tmp : pragma) : FStar_Pprint.document =
-  (let tmp1 = (fStarC_Class_Show_show__pragma_164 tmp) in
+  (let tmp1 = (fStarC_Class_Show_show__pragma_165 tmp) in
   (FStar_Pprint.arbitrary_string tmp1))
 
 let pp_decl' (d : decl') : FStar_Pprint.document =
@@ -2437,11 +2517,11 @@ let pp_decl' (d : decl') : FStar_Pprint.document =
 let pp_decl (d : decl) : FStar_Pprint.document =
   (pp_decl' (d).d)
 
-let fStarC_Class_PP_pp__decl_42 (tmp : decl) : FStar_Pprint.document =
+let fStarC_Class_PP_pp__decl_40 (tmp : decl) : FStar_Pprint.document =
   (pp_decl tmp)
 
 let fStarC_Class_PP_pp__list_decl (tmp : (decl) list) : FStar_Pprint.document =
-  (let tmp1 = (FStarC_Pprint.flow_map (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__decl_42 tmp) in
+  (let tmp1 = (FStarC_Pprint.flow_map (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__decl_40 tmp) in
   (FStarC_Class_PP.gbrackets tmp1))
 
 let pp_modul (m : modul) : FStar_Pprint.document =
@@ -2528,7 +2608,7 @@ let decl'_to_string (d : decl') : string =
 let decl_to_string (d : decl) : string =
   (decl'_to_string (d).d)
 
-let fStarC_Class_Show_show__decl_167 (tmp : decl) : string =
+let fStarC_Class_Show_show__decl_168 (tmp : decl) : string =
   (decl_to_string tmp)
 
 let lid_of_modul (m : modul) : FStarC_Ident.lident =
@@ -2548,88 +2628,24 @@ let fStarC_Errors_raise_error__decl_list_document (pos : decl) (code : FStarC_Er
       (raise tmp4))
   ))
 
-let rec fStarC_Class_Show_show__show_list_aux__list_term (l : (term) list) : string =
-  (match l with
-    | [] -> ""
-    | (x :: []) -> (fStarC_Class_Show_show__term x)
-    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__term x) in
-      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_term xs) in
-      let tmp2 = (Prims.strcat ", " tmp1) in
-      (Prims.strcat tmp tmp2))
-  )
-
-let fStarC_Class_Show_show__list_term (tmp : (term) list) : string =
-  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_term tmp) in
-  let tmp2 = (Prims.strcat tmp1 "]") in
-  (Prims.strcat "[" tmp2))
-
-let at_most_one (s : string) (r : FStarC_Range_Type.range) (l : ('tmp) list) : ('tmp) option =
-  (match l with
-    | (x :: []) -> (Some (x))
-    | [] -> None
-    | tmp -> (FStarC_Errors.fStarC_Errors_raise_error__range_string r FStarC_Errors_Codes.Fatal_MoreThanOneDeclaration (FStarC_Format.fmt1 "At most one %s is allowed on declarations" s))
-  )
-
-let add_decorations (d : decl) (decorations : (decoration) list) : decl =
-  (let tmp = (FStarC_List.partition uu___is_DeclAttributes decorations) in
-  let decorations1 = (match tmp with
-      | (attrs, quals) -> (let attrs1 = (match (attrs, (d).attrs) with
-            | (attrs1, []) -> attrs1
-            | (((DeclAttributes (a)) :: []), attrs1) -> ((DeclAttributes ((FStarC_List.op_At a attrs1))) :: [])
-            | ([], attrs1) -> ((DeclAttributes (attrs1)) :: [])
-            | tmp1 -> (let tmp2 = (FStarC_List.map (fun tmp2 -> (match tmp2 with
-                  | (DeclAttributes (a)) -> (fStarC_Class_Show_show__list_term a)
-                  | tmp3 -> ""
-                )) attrs) in
-              let tmp3 = (FStarC_String.concat ", " tmp2) in
-              let tmp4 = (FStarC_List.map fStarC_Class_Show_show__term (d).attrs) in
-              let tmp5 = (FStarC_String.concat ", " tmp4) in
-              let tmp6 = (FStarC_Format.fmt2 "At most one attribute set is allowed on declarations\n got %s;\n and %s" tmp3 tmp5) in
-              (fStarC_Errors_raise_error__decl_string d FStarC_Errors_Codes.Fatal_MoreThanOneDeclaration tmp6))
-          ) in
-        let tmp1 = (FStarC_List.map (fun u__eta -> (Qualifier (u__eta))) (d).quals) in
-        (FStarC_List.op_At tmp1 (FStarC_List.op_At quals attrs1)))
-    ) in
-  let tmp1 = (FStarC_List.choose (fun tmp1 -> (match tmp1 with
-      | (DeclAttributes (a)) -> (Some (a))
-      | tmp2 -> None
-    )) decorations1) in
-  let attributes_ = (at_most_one "attribute set" (d).drange tmp1) in
-  let attributes_1 = (FStarC_Option.dflt [] attributes_) in
-  let qualifiers = (FStarC_List.choose (fun tmp2 -> (match tmp2 with
-      | (Qualifier (q)) -> (Some (q))
-      | tmp3 -> None
-    )) decorations1) in
-  { d = (d).d; drange = (d).drange; quals = qualifiers; attrs = attributes_1 })
-
-let mk_decl (d : decl') (r : FStarC_Range_Type.range) (decorations : (decoration) list) : decl =
-  (let d1 = { d = d; drange = r; quals = []; attrs = [] } in
-  (add_decorations d1 decorations))
-
 let decls_of_modul (m : modul) : (decl) list =
   (match m with
     | (Module ({ no_prelude = tmp; mname = tmp1; decls = decls; _ })) -> decls
     | (Interface ({ no_prelude = tmp; mname = tmp1; decls = decls; admitted = tmp2; _ })) -> decls
   )
 
-let rec fStarC_Class_Show_show__show_list_aux__list_decl_178 (l : (decl) list) : string =
+let rec fStarC_Class_Show_show__show_list_aux__list_decl_170 (l : (decl) list) : string =
   (match l with
     | [] -> ""
-    | (x :: []) -> (fStarC_Class_Show_show__decl_167 x)
-    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__decl_167 x) in
-      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_decl_178 xs) in
+    | (x :: []) -> (fStarC_Class_Show_show__decl_168 x)
+    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__decl_168 x) in
+      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_decl_170 xs) in
       let tmp2 = (Prims.strcat ", " tmp1) in
       (Prims.strcat tmp tmp2))
   )
 
-let fStarC_Class_Show_show__list_decl_178 (tmp : (decl) list) : string =
-  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_decl_178 tmp) in
+let fStarC_Class_Show_show__list_decl_170 (tmp : (decl) list) : string =
+  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_decl_170 tmp) in
   let tmp2 = (Prims.strcat tmp1 "]") in
   (Prims.strcat "[" tmp2))
-
-let as_interface (m : modul) : modul =
-  (match m with
-    | (Module ({ no_prelude = no_prelude; mname = mname; decls = decls; _ })) -> (Interface (({ no_prelude = no_prelude; mname = mname; decls = decls; admitted = true } : modul__Interface__payload)))
-    | i -> i
-  )
 

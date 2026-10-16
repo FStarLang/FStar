@@ -265,8 +265,8 @@ let rec emit_goals (pending : (Prims.int -> bool)) (settings : query_settings) (
   )
 
 let killed_result (tmp : unit) : FStarC_SMTEncoding_Z3.z3result =
-  (let tmp1 = (FStarC_SMap.create Prims.int_zero) in
-  let tmp2 = (FStarC_SMap.create Prims.int_zero) in
+  (let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int Prims.int_zero)) in
+  let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int Prims.int_zero)) in
   { FStarC_SMTEncoding_Z3.z3result_status = FStarC_SMTEncoding_Z3.KILLED;
     z3result_time = Prims.int_zero;
     z3result_initial_statistics = tmp1;
@@ -316,12 +316,12 @@ let query_info (settings : query_settings) (g : FStarC_SMTEncoding_ErrorReportin
   let tmp1 = (FStarC_Range_Ops.fStarC_Class_Show_show__range (g).FStarC_SMTEncoding_ErrorReporting.goal_range) in
   let tmp2 = (Prims.strcat tmp1 (Prims.strcat at_log_file ")")) in
   let range = (Prims.strcat "(" tmp2) in
-  let used_rlimit_str = (try (let tmp3 = (FStarC_SMap.try_find (z3result).FStarC_SMTEncoding_Z3.z3result_initial_statistics "rlimit-count") in
+  let used_rlimit_str = (try (let tmp3 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (z3result).FStarC_SMTEncoding_Z3.z3result_initial_statistics "rlimit-count") in
     let tmp4 = (match tmp3 with
         | (Some (v)) -> v
       ) in
     let r0 = (FStarC_Util.int_of_string tmp4) in
-    let tmp5 = (FStarC_SMap.try_find (z3result).FStarC_SMTEncoding_Z3.z3result_statistics "rlimit-count") in
+    let tmp5 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (z3result).FStarC_SMTEncoding_Z3.z3result_statistics "rlimit-count") in
     let tmp6 = (match tmp5 with
         | (Some (v)) -> v
       ) in
@@ -331,7 +331,7 @@ let query_info (settings : query_settings) (g : FStarC_SMTEncoding_ErrorReportin
     (div_with_decimals (Prims.of_int (3)) used tmp7)) with
       | u__cexn -> "unknown"
     ) in
-  let tmp3 = (FStarC_SMap.try_find (z3result).FStarC_SMTEncoding_Z3.z3result_statistics "time") in
+  let tmp3 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (z3result).FStarC_SMTEncoding_Z3.z3result_statistics "time") in
   let time_str = (match tmp3 with
       | (Some (t)) -> t
       | None -> "0.00"

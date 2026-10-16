@@ -14,8 +14,8 @@ type rule =
   | Rule_realized
 
 
-let table : (rule) FStarC_SMap.t =
-  (FStarC_SMap.create (Prims.of_int (100)))
+let table : (rule) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (100))))
 
 let no_fstar_stubs (ns : (string) list) : (string) list =
   (match ns with
@@ -25,8 +25,8 @@ let no_fstar_stubs (ns : (string) list) : (string) list =
   )
 
 let int128_enabled (tmp : unit) : bool =
-  (let b = (FStarC_Options.custard_backend ()) in
-  (if (((=) b "C") || ((=) b "FSharp")) then (FStarC_Options.custard_int128 ()) else false))
+  (let b = (FStarC_Options.codegen_name ()) in
+  (if ((((=) b "C") || ((=) b "Cherry")) || ((=) b "FSharp")) then (FStarC_Options.custard_int128 ()) else false))
 
 let machine_int_of_module (ns : (string) list) : ((FStarC_Const.signedness * FStarC_Custard_Syntax.iwidth)) option =
   (match ns with
@@ -89,8 +89,12 @@ let i128_op (sw : (FStarC_Const.signedness * FStarC_Custard_Syntax.iwidth)) (o :
     po_ty = (Some ((FStarC_Custard_Syntax.PInt ((match sw with (custard_tup, _) -> custard_tup), (match sw with (_, custard_tup) -> custard_tup))))) }, args)) (FStarC_Custard_Syntax.TInt ((match sw with (custard_tup, _) -> custard_tup), (match sw with (_, custard_tup) -> custard_tup))) tmp))
 
 let rotate_rule (sw : (FStarC_Const.signedness * FStarC_Custard_Syntax.iwidth)) (left : bool) : rule =
-  (let n = (FStarC_Custard_Syntax.width_bits (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd sw)) in
-  let uw = (FStarC_Const.Unsigned, (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd sw)) in
+  (let n = (FStarC_Custard_Syntax.width_bits (match sw with
+      | (u__1, u__2) -> u__2
+    )) in
+  let uw = (FStarC_Const.Unsigned, (match sw with
+      | (u__1, u__2) -> u__2
+    )) in
   let cnt = (FStarC_Const.Unsigned, FStarC_Custard_Syntax.W32) in
   let cnt_ty = (FStarC_Custard_Syntax.TInt ((match cnt with (custard_tup, _) -> custard_tup), (match cnt with (_, custard_tup) -> custard_tup))) in
   let ua = (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EVar ("custard_rot_a")) (FStarC_Custard_Syntax.TInt ((match uw with (custard_tup, _) -> custard_tup), (match uw with (_, custard_tup) -> custard_tup))) FStarC_Custard_Syntax.E_Pure) in
@@ -105,12 +109,16 @@ let rotate_rule (sw : (FStarC_Const.signedness * FStarC_Custard_Syntax.iwidth)) 
   (match tmp with
     | (near_op, far_op) -> (let body = (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BOr;
           po_ty = (Some ((FStarC_Custard_Syntax.PInt ((match uw with (custard_tup, _) -> custard_tup), (match uw with (_, custard_tup) -> custard_tup))))) }, ((shift near_op us) :: ((shift far_op far) :: [])))) (FStarC_Custard_Syntax.TInt ((match uw with (custard_tup, _) -> custard_tup), (match uw with (_, custard_tup) -> custard_tup))) FStarC_Custard_Syntax.E_Pure) in
-      let result = (if (match (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst sw) with
+      let result = (if (match (match sw with
+          | (u__1, u__2) -> u__1
+        ) with
           | FStarC_Const.Unsigned -> true
           | tmp1 -> false
         ) then body else (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.ECast (body, (FStarC_Custard_Syntax.TInt ((match sw with (custard_tup, _) -> custard_tup), (match sw with (_, custard_tup) -> custard_tup))))) (FStarC_Custard_Syntax.TInt ((match sw with (custard_tup, _) -> custard_tup), (match sw with (_, custard_tup) -> custard_tup))) (body).FStarC_Custard_Syntax.eff)) in
       (Rule_prim ((Prims.of_int (2)), (fun tmp1 args -> (match args with
-        | (a :: (s :: [])) -> (let a1 = (if (match (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst sw) with
+        | (a :: (s :: [])) -> (let a1 = (if (match (match sw with
+              | (u__1, u__2) -> u__1
+            ) with
               | FStarC_Const.Unsigned -> true
               | tmp2 -> false
             ) then a else (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.ECast (a, (FStarC_Custard_Syntax.TInt ((match uw with (custard_tup, _) -> custard_tup), (match uw with (_, custard_tup) -> custard_tup))))) (FStarC_Custard_Syntax.TInt ((match uw with (custard_tup, _) -> custard_tup), (match uw with (_, custard_tup) -> custard_tup))) (a).FStarC_Custard_Syntax.eff)) in
@@ -201,77 +209,113 @@ let machine_int_rule (sw : (FStarC_Const.signedness * FStarC_Custard_Syntax.iwid
         | "to_string_hex" -> (Some ((Rule_extern ({ x_name = None; x_header = None }))))
         | "to_string_hex_pad" -> (Some ((Rule_extern ({ x_name = None; x_header = None }))))
         | "of_string" -> (Some ((Rule_extern ({ x_name = None; x_header = None }))))
-        | "uint16_to_sizet" when ((=) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd sw) FStarC_Custard_Syntax.WSizet) -> (Some ((Rule_prim (Prims.int_one, (fun tmp args -> (match args with
+        | "uint16_to_sizet" when ((=) (match sw with
+          | (u__1, u__2) -> u__2
+        ) FStarC_Custard_Syntax.WSizet) -> (Some ((Rule_prim (Prims.int_one, (fun tmp args -> (match args with
             | (a :: []) -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.ECast (a, (FStarC_Custard_Syntax.TInt ((match sw with (custard_tup, _) -> custard_tup), (match sw with (_, custard_tup) -> custard_tup))))) (FStarC_Custard_Syntax.TInt ((match sw with (custard_tup, _) -> custard_tup), (match sw with (_, custard_tup) -> custard_tup))) (a).FStarC_Custard_Syntax.eff)
             | tmp1 -> (FStarC_Effect.failwith "Custard: SizeT conversion applied to the wrong arity")
           ))))))
-        | "uint32_to_sizet" when ((=) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd sw) FStarC_Custard_Syntax.WSizet) -> (Some ((Rule_prim (Prims.int_one, (fun tmp args -> (match args with
+        | "uint32_to_sizet" when ((=) (match sw with
+          | (u__1, u__2) -> u__2
+        ) FStarC_Custard_Syntax.WSizet) -> (Some ((Rule_prim (Prims.int_one, (fun tmp args -> (match args with
             | (a :: []) -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.ECast (a, (FStarC_Custard_Syntax.TInt ((match sw with (custard_tup, _) -> custard_tup), (match sw with (_, custard_tup) -> custard_tup))))) (FStarC_Custard_Syntax.TInt ((match sw with (custard_tup, _) -> custard_tup), (match sw with (_, custard_tup) -> custard_tup))) (a).FStarC_Custard_Syntax.eff)
             | tmp1 -> (FStarC_Effect.failwith "Custard: SizeT conversion applied to the wrong arity")
           ))))))
-        | "uint64_to_sizet" when ((=) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd sw) FStarC_Custard_Syntax.WSizet) -> (Some ((Rule_prim (Prims.int_one, (fun tmp args -> (match args with
+        | "uint64_to_sizet" when ((=) (match sw with
+          | (u__1, u__2) -> u__2
+        ) FStarC_Custard_Syntax.WSizet) -> (Some ((Rule_prim (Prims.int_one, (fun tmp args -> (match args with
             | (a :: []) -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.ECast (a, (FStarC_Custard_Syntax.TInt ((match sw with (custard_tup, _) -> custard_tup), (match sw with (_, custard_tup) -> custard_tup))))) (FStarC_Custard_Syntax.TInt ((match sw with (custard_tup, _) -> custard_tup), (match sw with (_, custard_tup) -> custard_tup))) (a).FStarC_Custard_Syntax.eff)
             | tmp1 -> (FStarC_Effect.failwith "Custard: SizeT conversion applied to the wrong arity")
           ))))))
-        | "of_u32" when ((=) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd sw) FStarC_Custard_Syntax.WSizet) -> (Some ((Rule_prim (Prims.int_one, (fun tmp args -> (match args with
+        | "of_u32" when ((=) (match sw with
+          | (u__1, u__2) -> u__2
+        ) FStarC_Custard_Syntax.WSizet) -> (Some ((Rule_prim (Prims.int_one, (fun tmp args -> (match args with
             | (a :: []) -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.ECast (a, (FStarC_Custard_Syntax.TInt ((match sw with (custard_tup, _) -> custard_tup), (match sw with (_, custard_tup) -> custard_tup))))) (FStarC_Custard_Syntax.TInt ((match sw with (custard_tup, _) -> custard_tup), (match sw with (_, custard_tup) -> custard_tup))) (a).FStarC_Custard_Syntax.eff)
             | tmp1 -> (FStarC_Effect.failwith "Custard: SizeT conversion applied to the wrong arity")
           ))))))
-        | "of_u64" when ((=) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd sw) FStarC_Custard_Syntax.WSizet) -> (Some ((Rule_prim (Prims.int_one, (fun tmp args -> (match args with
+        | "of_u64" when ((=) (match sw with
+          | (u__1, u__2) -> u__2
+        ) FStarC_Custard_Syntax.WSizet) -> (Some ((Rule_prim (Prims.int_one, (fun tmp args -> (match args with
             | (a :: []) -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.ECast (a, (FStarC_Custard_Syntax.TInt ((match sw with (custard_tup, _) -> custard_tup), (match sw with (_, custard_tup) -> custard_tup))))) (FStarC_Custard_Syntax.TInt ((match sw with (custard_tup, _) -> custard_tup), (match sw with (_, custard_tup) -> custard_tup))) (a).FStarC_Custard_Syntax.eff)
             | tmp1 -> (FStarC_Effect.failwith "Custard: SizeT conversion applied to the wrong arity")
           ))))))
-        | "sizet_to_uint32" when ((=) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd sw) FStarC_Custard_Syntax.WSizet) -> (let target = (if ((=) id "sizet_to_uint32") then (FStarC_Const.Unsigned, FStarC_Custard_Syntax.W32) else (FStarC_Const.Unsigned, FStarC_Custard_Syntax.W64)) in
+        | "sizet_to_uint32" when ((=) (match sw with
+          | (u__1, u__2) -> u__2
+        ) FStarC_Custard_Syntax.WSizet) -> (let target = (if ((=) id "sizet_to_uint32") then (FStarC_Const.Unsigned, FStarC_Custard_Syntax.W32) else (FStarC_Const.Unsigned, FStarC_Custard_Syntax.W64)) in
           (Some ((Rule_prim (Prims.int_one, (fun tmp args -> (match args with
             | (a :: []) -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.ECast (a, (FStarC_Custard_Syntax.TInt ((match target with (custard_tup, _) -> custard_tup), (match target with (_, custard_tup) -> custard_tup))))) (FStarC_Custard_Syntax.TInt ((match target with (custard_tup, _) -> custard_tup), (match target with (_, custard_tup) -> custard_tup))) (a).FStarC_Custard_Syntax.eff)
             | tmp1 -> (FStarC_Effect.failwith "Custard: SizeT conversion applied to the wrong arity")
           )))))))
-        | "sizet_to_uint64" when ((=) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd sw) FStarC_Custard_Syntax.WSizet) -> (let target = (if ((=) id "sizet_to_uint32") then (FStarC_Const.Unsigned, FStarC_Custard_Syntax.W32) else (FStarC_Const.Unsigned, FStarC_Custard_Syntax.W64)) in
+        | "sizet_to_uint64" when ((=) (match sw with
+          | (u__1, u__2) -> u__2
+        ) FStarC_Custard_Syntax.WSizet) -> (let target = (if ((=) id "sizet_to_uint32") then (FStarC_Const.Unsigned, FStarC_Custard_Syntax.W32) else (FStarC_Const.Unsigned, FStarC_Custard_Syntax.W64)) in
           (Some ((Rule_prim (Prims.int_one, (fun tmp args -> (match args with
             | (a :: []) -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.ECast (a, (FStarC_Custard_Syntax.TInt ((match target with (custard_tup, _) -> custard_tup), (match target with (_, custard_tup) -> custard_tup))))) (FStarC_Custard_Syntax.TInt ((match target with (custard_tup, _) -> custard_tup), (match target with (_, custard_tup) -> custard_tup))) (a).FStarC_Custard_Syntax.eff)
             | tmp1 -> (FStarC_Effect.failwith "Custard: SizeT conversion applied to the wrong arity")
           )))))))
-        | "uint64_to_uint128" when ((=) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd sw) FStarC_Custard_Syntax.W128) -> (Some ((Rule_prim (Prims.int_one, (fun tmp args -> (match args with
+        | "uint64_to_uint128" when ((=) (match sw with
+          | (u__1, u__2) -> u__2
+        ) FStarC_Custard_Syntax.W128) -> (Some ((Rule_prim (Prims.int_one, (fun tmp args -> (match args with
             | (a :: []) -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.ECast (a, (FStarC_Custard_Syntax.TInt ((match sw with (custard_tup, _) -> custard_tup), (match sw with (_, custard_tup) -> custard_tup))))) (FStarC_Custard_Syntax.TInt ((match sw with (custard_tup, _) -> custard_tup), (match sw with (_, custard_tup) -> custard_tup))) (a).FStarC_Custard_Syntax.eff)
             | tmp1 -> (FStarC_Effect.failwith "Custard: 128-bit conversion applied to the wrong arity")
           ))))))
-        | "uint128_to_uint64" when ((=) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd sw) FStarC_Custard_Syntax.W128) -> (Some ((Rule_prim (Prims.int_one, (fun tmp args -> (match args with
+        | "uint128_to_uint64" when ((=) (match sw with
+          | (u__1, u__2) -> u__2
+        ) FStarC_Custard_Syntax.W128) -> (Some ((Rule_prim (Prims.int_one, (fun tmp args -> (match args with
             | (a :: []) -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.ECast (a, (FStarC_Custard_Syntax.TInt (FStarC_Const.Unsigned, FStarC_Custard_Syntax.W64)))) (FStarC_Custard_Syntax.TInt (FStarC_Const.Unsigned, FStarC_Custard_Syntax.W64)) (a).FStarC_Custard_Syntax.eff)
             | tmp1 -> (FStarC_Effect.failwith "Custard: 128-bit conversion applied to the wrong arity")
           ))))))
-        | "mul_wide" when ((=) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd sw) FStarC_Custard_Syntax.W128) -> (Some ((Rule_prim ((Prims.of_int (2)), (fun tmp args -> (match args with
+        | "mul_wide" when ((=) (match sw with
+          | (u__1, u__2) -> u__2
+        ) FStarC_Custard_Syntax.W128) -> (Some ((Rule_prim ((Prims.of_int (2)), (fun tmp args -> (match args with
             | (a :: (b :: [])) -> (let wide = (fun e -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.ECast (e, (FStarC_Custard_Syntax.TInt ((match sw with (custard_tup, _) -> custard_tup), (match sw with (_, custard_tup) -> custard_tup))))) (FStarC_Custard_Syntax.TInt ((match sw with (custard_tup, _) -> custard_tup), (match sw with (_, custard_tup) -> custard_tup))) (e).FStarC_Custard_Syntax.eff)) in
               (i128_op sw FStarC_Custard_Syntax.Mult ((wide a) :: ((wide b) :: []))))
             | tmp1 -> (FStarC_Effect.failwith "Custard: mul_wide applied to the wrong arity")
           ))))))
-        | "mul32" when ((=) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd sw) FStarC_Custard_Syntax.W128) -> (Some ((Rule_prim ((Prims.of_int (2)), (fun tmp args -> (match args with
+        | "mul32" when ((=) (match sw with
+          | (u__1, u__2) -> u__2
+        ) FStarC_Custard_Syntax.W128) -> (Some ((Rule_prim ((Prims.of_int (2)), (fun tmp args -> (match args with
             | (a :: (b :: [])) -> (let wide = (fun e -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.ECast (e, (FStarC_Custard_Syntax.TInt ((match sw with (custard_tup, _) -> custard_tup), (match sw with (_, custard_tup) -> custard_tup))))) (FStarC_Custard_Syntax.TInt ((match sw with (custard_tup, _) -> custard_tup), (match sw with (_, custard_tup) -> custard_tup))) (e).FStarC_Custard_Syntax.eff)) in
               (i128_op sw FStarC_Custard_Syntax.Mult ((wide a) :: ((wide b) :: []))))
             | tmp1 -> (FStarC_Effect.failwith "Custard: mul_wide applied to the wrong arity")
           ))))))
-        | "shift_arithmetic_right" when (match (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst sw) with
+        | "shift_arithmetic_right" when (match (match sw with
+          | (u__1, u__2) -> u__1
+        ) with
           | FStarC_Const.Signed -> true
           | tmp -> false
         ) -> (Some ((Rule_prim ((Prims.of_int (2)), (fun tmp args -> (let tmp1 = (FStarC_List.fold_left (fun a e -> (FStarC_Custard_Syntax.join_eff a (e).FStarC_Custard_Syntax.eff)) FStarC_Custard_Syntax.E_Pure args) in
           (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BShiftR;
             po_ty = (Some ((FStarC_Custard_Syntax.PInt ((match sw with (custard_tup, _) -> custard_tup), (match sw with (_, custard_tup) -> custard_tup))))) }, args)) (FStarC_Custard_Syntax.TInt ((match sw with (custard_tup, _) -> custard_tup), (match sw with (_, custard_tup) -> custard_tup))) tmp1)))))))
-        | "rotate_left" when (((<>) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd sw) FStarC_Custard_Syntax.W128) && ((<>) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd sw) FStarC_Custard_Syntax.WSizet)) -> (let tmp = (rotate_rule sw ((=) id "rotate_left")) in
+        | "rotate_left" when (((<>) (match sw with
+          | (u__1, u__2) -> u__2
+        ) FStarC_Custard_Syntax.W128) && ((<>) (match sw with
+          | (u__1, u__2) -> u__2
+        ) FStarC_Custard_Syntax.WSizet)) -> (let tmp = (rotate_rule sw ((=) id "rotate_left")) in
           (Some (tmp)))
-        | "rotate_right" when (((<>) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd sw) FStarC_Custard_Syntax.W128) && ((<>) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd sw) FStarC_Custard_Syntax.WSizet)) -> (let tmp = (rotate_rule sw ((=) id "rotate_left")) in
+        | "rotate_right" when (((<>) (match sw with
+          | (u__1, u__2) -> u__2
+        ) FStarC_Custard_Syntax.W128) && ((<>) (match sw with
+          | (u__1, u__2) -> u__2
+        ) FStarC_Custard_Syntax.WSizet)) -> (let tmp = (rotate_rule sw ((=) id "rotate_left")) in
           (Some (tmp)))
-        | "eq_mask" when ((=) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd sw) FStarC_Custard_Syntax.W128) -> (let tmp = (i128_masks sw id) in
+        | "eq_mask" when ((=) (match sw with
+          | (u__1, u__2) -> u__2
+        ) FStarC_Custard_Syntax.W128) -> (let tmp = (i128_masks sw id) in
           (Some (tmp)))
-        | "gte_mask" when ((=) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd sw) FStarC_Custard_Syntax.W128) -> (let tmp = (i128_masks sw id) in
+        | "gte_mask" when ((=) (match sw with
+          | (u__1, u__2) -> u__2
+        ) FStarC_Custard_Syntax.W128) -> (let tmp = (i128_masks sw id) in
           (Some (tmp)))
         | tmp -> None
       )
   )
 
-let float_modules : (FStarC_Custard_Syntax.fwidth) FStarC_SMap.t =
-  (FStarC_SMap.create (Prims.of_int (10)))
+let float_modules : (FStarC_Custard_Syntax.fwidth) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (10))))
 
-let float_probed : (bool) FStarC_SMap.t =
-  (FStarC_SMap.create (Prims.of_int (10)))
+let float_probed : (bool) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (10))))
 
 let float_probe : (((string) list -> (FStarC_Custard_Syntax.fwidth) option) ref) =
   (ref (fun tmp -> None))
@@ -281,19 +325,19 @@ let float_of_module (ns : (string) list) : (FStarC_Custard_Syntax.fwidth) option
     | ("FStar" :: ("Float32" :: [])) -> (Some (FStarC_Custard_Syntax.Float32))
     | ("FStar" :: ("Float64" :: [])) -> (Some (FStarC_Custard_Syntax.Float64))
     | tmp -> (let key = (FStarC_String.concat "." ns) in
-      let tmp1 = (FStarC_SMap.try_find float_modules key) in
+      let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt float_modules key) in
       (match tmp1 with
         | (Some (fw)) -> (Some (fw))
-        | None -> (let tmp2 = (FStarC_SMap.try_find float_probed key) in
+        | None -> (let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt float_probed key) in
           let tmp3 = (match tmp2 with
               | (Some (v)) -> true
               | tmp3 -> false
             ) in
-          (if tmp3 then None else ((FStarC_SMap.add float_probed key true);
+          (if tmp3 then None else ((FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace float_probed key true);
           let tmp4 = (!(float_probe)) in
           let tmp5 = (tmp4 ns) in
           (match tmp5 with
-            | (Some (fw)) -> ((FStarC_SMap.add float_modules key fw);
+            | (Some (fw)) -> ((FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace float_modules key fw);
               (Some (fw)))
             | None -> None
           ))))
@@ -374,7 +418,7 @@ let prims_rule (id : string) : (rule) option =
 
 let pervasives_rule (id : string) : (rule) option =
   (match id with
-    | "false_elim" -> (Some ((Rule_prim (Prims.int_one, (fun tmp tmp1 -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EAbort ("FStar.Pervasives.false_elim")) FStarC_Custard_Syntax.TAny FStarC_Custard_Syntax.E_Impure))))))
+    | "false_elim" -> (Some ((Rule_prim (Prims.int_one, (fun tmp tmp1 -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EUnreachable ("FStar.Pervasives.false_elim")) FStarC_Custard_Syntax.TAny FStarC_Custard_Syntax.E_Impure))))))
     | tmp -> None
   )
 
@@ -410,6 +454,9 @@ let int_cast_rule (id : string) : (rule) option =
     | tmp -> None
   )
 
+let ml_ref_ty (t : FStarC_Custard_Syntax.cty) : FStarC_Custard_Syntax.cty =
+  (FStarC_Custard_Syntax.TRef (FStarC_Custard_Syntax.RGc, t))
+
 let elt_of (tys : (FStarC_Custard_Syntax.cty) list) : FStarC_Custard_Syntax.cty =
   (match tys with
     | (t :: tmp) -> t
@@ -427,15 +474,15 @@ let size_lit (n : Prims.int) : FStarC_Custard_Syntax.expr =
   (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EConst ((FStarC_Custard_Syntax.CInt (n, FStar_IntegerLiteral.Dec, (Some ((FStarC_Const.Unsigned, FStarC_Custard_Syntax.WSizet))))))) (FStarC_Custard_Syntax.TInt (FStarC_Const.Unsigned, FStarC_Custard_Syntax.WSizet)) FStarC_Custard_Syntax.E_Pure)
 
 let ref_rule (id : string) : (rule) option =
-  (let rf = (fun tys tmp -> (FStarC_Custard_Syntax.TRef ((elt_of tys)))) in
+  (let rf = (fun tys tmp -> (ml_ref_ty (elt_of tys))) in
   let unit_ty = (fun tmp tmp1 -> FStarC_Custard_Syntax.TUnit) in
   let elt_of_arg = (fun tmp args -> (match args with
-      | ({ FStarC_Custard_Syntax.e = tmp1; ty = (FStarC_Custard_Syntax.TRef (t)); eff = tmp2; _ } :: tmp3) -> t
+      | ({ FStarC_Custard_Syntax.e = tmp1; ty = (FStarC_Custard_Syntax.TRef (tmp2, t)); eff = tmp3; _ } :: tmp4) -> t
       | ({ FStarC_Custard_Syntax.e = tmp1; ty = (FStarC_Custard_Syntax.TBuf (t)); eff = tmp2; _ } :: tmp3) -> t
       | tmp1 -> FStarC_Custard_Syntax.TAny
     )) in
   (match id with
-    | "ref" -> (Some ((Rule_type ((fun tys -> (FStarC_Custard_Syntax.TRef ((elt_of tys))))))))
+    | "ref" -> (Some ((Rule_type ((fun tys -> (ml_ref_ty (elt_of tys)))))))
     | "alloc" -> (Some ((buf_prim Prims.int_one (FStarC_Custard_Syntax.BufCreate (FStarC_Custard_Syntax.LHeap)) FStarC_Custard_Syntax.E_Impure rf (fun args -> (FStarC_List.op_At args ((size_lit Prims.int_one) :: []))))))
     | "mk_ref" -> (Some ((buf_prim Prims.int_one (FStarC_Custard_Syntax.BufCreate (FStarC_Custard_Syntax.LHeap)) FStarC_Custard_Syntax.E_Impure rf (fun args -> (FStarC_List.op_At args ((size_lit Prims.int_one) :: []))))))
     | "read" -> (Some ((buf_prim Prims.int_one FStarC_Custard_Syntax.BufRead FStarC_Custard_Syntax.E_Impure elt_of_arg (fun args -> (FStarC_List.op_At args ((size_lit Prims.int_zero) :: []))))))
@@ -460,10 +507,14 @@ let exn_rule (id : string) : (rule) option =
       | tmp -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EApp (f, (FStarC_Custard_Syntax.unit_expr :: []))) FStarC_Custard_Syntax.TAny FStarC_Custard_Syntax.E_Impure)
     )) in
   (match id with
-    | "raise" -> (Some ((Rule_prim (Prims.int_one, (fun tmp args -> (match args with
-        | (e :: []) -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.ERaise (e)) FStarC_Custard_Syntax.TAny FStarC_Custard_Syntax.E_Impure)
-        | tmp1 -> (FStarC_Effect.failwith "Custard: raise applied to the wrong number of arguments")
-      ))))))
+    | "raise" -> (Some ((Rule_prim (Prims.int_one, (fun tys args -> (let t = (match tys with
+          | (t :: []) -> t
+          | tmp -> FStarC_Custard_Syntax.TAny
+        ) in
+      (match args with
+        | (e :: []) -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.ERaise (e)) t FStarC_Custard_Syntax.E_Impure)
+        | tmp -> (FStarC_Effect.failwith "Custard: raise applied to the wrong number of arguments")
+      )))))))
     | "try_with" -> (Some ((Rule_prim ((Prims.of_int (2)), (fun tmp args -> (match args with
         | (f :: (h :: [])) -> (let body = (force f) in
           let branches = (match (h).FStarC_Custard_Syntax.e with
@@ -542,16 +593,16 @@ let comment_text (which : string) (role : string) (x : FStarC_Custard_Syntax.exp
 
 let pulse_rule (ns : (string) list) (id : string) : (rule) option =
   (let buf = (fun tys tmp -> (FStarC_Custard_Syntax.TBuf ((elt_of tys)))) in
-  let rf = (fun tys tmp -> (FStarC_Custard_Syntax.TRef ((elt_of tys)))) in
+  let rf = (fun tys tmp -> (FStarC_Custard_Syntax.TRef (FStarC_Custard_Syntax.RManual, (elt_of tys)))) in
   let unit_ty = (fun tmp tmp1 -> FStarC_Custard_Syntax.TUnit) in
   let bool_ty = (fun tmp tmp1 -> (FStarC_Custard_Syntax.TApp (bool_name, []))) in
   let elt_of_arg = (fun tmp args -> (match args with
       | ({ FStarC_Custard_Syntax.e = tmp1; ty = (FStarC_Custard_Syntax.TBuf (t)); eff = tmp2; _ } :: tmp3) -> t
-      | ({ FStarC_Custard_Syntax.e = tmp1; ty = (FStarC_Custard_Syntax.TRef (t)); eff = tmp2; _ } :: tmp3) -> t
+      | ({ FStarC_Custard_Syntax.e = tmp1; ty = (FStarC_Custard_Syntax.TRef (tmp2, t)); eff = tmp3; _ } :: tmp4) -> t
       | tmp1 -> FStarC_Custard_Syntax.TAny
     )) in
   let as_buf = (fun tmp args -> (match args with
-      | ({ FStarC_Custard_Syntax.e = tmp1; ty = (FStarC_Custard_Syntax.TRef (t)); eff = tmp2; _ } :: tmp3) -> (FStarC_Custard_Syntax.TBuf (t))
+      | ({ FStarC_Custard_Syntax.e = tmp1; ty = (FStarC_Custard_Syntax.TRef (tmp2, t)); eff = tmp3; _ } :: tmp4) -> (FStarC_Custard_Syntax.TBuf (t))
       | (a :: tmp1) -> (a).FStarC_Custard_Syntax.ty
       | tmp1 -> FStarC_Custard_Syntax.TAny
     )) in
@@ -563,12 +614,12 @@ let pulse_rule (ns : (string) list) (id : string) : (rule) option =
     | (("Pulse" :: ("Lib" :: ("Vec" :: []))), "vec") -> (Some ((Rule_type ((fun tys -> (FStarC_Custard_Syntax.TBuf ((elt_of tys))))))))
     | (("Pulse" :: ("Lib" :: ("Array" :: ("Core" :: [])))), "array") -> (Some ((Rule_type ((fun tys -> (FStarC_Custard_Syntax.TBuf ((elt_of tys))))))))
     | (("Pulse" :: ("Lib" :: ("ArrayPtr" :: []))), "ptr") -> (Some ((Rule_type ((fun tys -> (FStarC_Custard_Syntax.TBuf ((elt_of tys))))))))
-    | (("Pulse" :: ("Lib" :: ("Reference" :: []))), "ref") -> (Some ((Rule_type ((fun tys -> (FStarC_Custard_Syntax.TRef ((elt_of tys))))))))
-    | (("Pulse" :: ("Lib" :: ("Box" :: []))), "box") -> (Some ((Rule_type ((fun tys -> (FStarC_Custard_Syntax.TRef ((elt_of tys))))))))
+    | (("Pulse" :: ("Lib" :: ("Reference" :: []))), "ref") -> (Some ((Rule_type ((fun tys -> (FStarC_Custard_Syntax.TRef (FStarC_Custard_Syntax.RManual, (elt_of tys))))))))
+    | (("Pulse" :: ("Lib" :: ("Box" :: []))), "box") -> (Some ((Rule_type ((fun tys -> (FStarC_Custard_Syntax.TRef (FStarC_Custard_Syntax.RManual, (elt_of tys))))))))
     | (("Pulse" :: ("Lib" :: ("Reference" :: []))), "alloc") -> (Some ((buf_prim Prims.int_one (FStarC_Custard_Syntax.BufCreate (FStarC_Custard_Syntax.LStack)) FStarC_Custard_Syntax.E_Impure rf (fun args -> (FStarC_List.op_At args ((size_lit Prims.int_one) :: []))))))
     | (("Pulse" :: ("Lib" :: ("Reference" :: []))), "alloc_uninit") -> (Some ((Rule_prim (Prims.int_one, (fun tys tmp -> (let t = (elt_of tys) in
       (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = (FStarC_Custard_Syntax.BufCreate (FStarC_Custard_Syntax.LStack));
-        po_ty = None }, ((FStarC_Custard_Syntax.mk FStarC_Custard_Syntax.EAny t FStarC_Custard_Syntax.E_Pure) :: ((size_lit Prims.int_one) :: [])))) (FStarC_Custard_Syntax.TRef (t)) FStarC_Custard_Syntax.E_Impure)))))))
+        po_ty = None }, ((FStarC_Custard_Syntax.mk FStarC_Custard_Syntax.EAny t FStarC_Custard_Syntax.E_Pure) :: ((size_lit Prims.int_one) :: [])))) (FStarC_Custard_Syntax.TRef (FStarC_Custard_Syntax.RManual, t)) FStarC_Custard_Syntax.E_Impure)))))))
     | (("Pulse" :: ("Lib" :: ("Reference" :: []))), "free") -> (Some ((unit_rule Prims.int_one)))
     | (("Pulse" :: ("Lib" :: ("Reference" :: []))), "read") -> (Some ((buf_prim Prims.int_one FStarC_Custard_Syntax.BufRead FStarC_Custard_Syntax.E_Impure elt_of_arg (fun args -> (FStarC_List.op_At args ((size_lit Prims.int_zero) :: []))))))
     | (("Pulse" :: ("Lib" :: ("Reference" :: []))), "op_Bang") -> (Some ((buf_prim Prims.int_one FStarC_Custard_Syntax.BufRead FStarC_Custard_Syntax.E_Impure elt_of_arg (fun args -> (FStarC_List.op_At args ((size_lit Prims.int_zero) :: []))))))
@@ -640,9 +691,9 @@ let pulse_rule (ns : (string) list) (id : string) : (rule) option =
       )))))))
     | (("Pulse" :: ("Lib" :: ("GlobalArray" :: []))), "array_of_static_array") -> (Some ((buf_prim Prims.int_one FStarC_Custard_Syntax.BufUnconst FStarC_Custard_Syntax.E_Pure self (fun args -> args))))
     | (("Pulse" :: ("Lib" :: ("Reference" :: []))), "null") -> (Some ((Rule_prim (Prims.int_zero, (fun tys tmp -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufNull;
-        po_ty = None }, [])) (FStarC_Custard_Syntax.TRef ((elt_of tys))) FStarC_Custard_Syntax.E_Pure))))))
+        po_ty = None }, [])) (FStarC_Custard_Syntax.TRef (FStarC_Custard_Syntax.RManual, (elt_of tys))) FStarC_Custard_Syntax.E_Pure))))))
     | (("Pulse" :: ("Lib" :: ("Box" :: []))), "null") -> (Some ((Rule_prim (Prims.int_zero, (fun tys tmp -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufNull;
-        po_ty = None }, [])) (FStarC_Custard_Syntax.TRef ((elt_of tys))) FStarC_Custard_Syntax.E_Pure))))))
+        po_ty = None }, [])) (FStarC_Custard_Syntax.TRef (FStarC_Custard_Syntax.RManual, (elt_of tys))) FStarC_Custard_Syntax.E_Pure))))))
     | (("Pulse" :: ("Lib" :: ("Array" :: ("Core" :: [])))), "null") -> (Some ((Rule_prim (Prims.int_zero, (fun tys tmp -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufNull;
         po_ty = None }, [])) (FStarC_Custard_Syntax.TBuf ((elt_of tys))) FStarC_Custard_Syntax.E_Pure))))))
     | (("Pulse" :: ("Lib" :: ("ArrayPtr" :: []))), "null") -> (Some ((Rule_prim (Prims.int_zero, (fun tys tmp -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufNull;
@@ -655,7 +706,7 @@ let pulse_rule (ns : (string) list) (id : string) : (rule) option =
         | ({ FStarC_Custard_Syntax.e = (FStarC_Custard_Syntax.EFun (tmp1, cond)); ty = tmp2; eff = tmp3; _ } :: ({ FStarC_Custard_Syntax.e = (FStarC_Custard_Syntax.EFun (tmp4, body)); ty = tmp5; eff = tmp6; _ } :: [])) -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EWhile (cond, body)) FStarC_Custard_Syntax.TUnit FStarC_Custard_Syntax.E_Impure)
         | tmp1 -> (FStarC_Effect.failwith "Custard: Pulse.Lib.Dv.while_ applied to something other than two thunks")
       ))))))
-    | (("Pulse" :: ("Lib" :: ("Dv" :: []))), "unreachable") -> (Some ((Rule_prim (Prims.int_one, (fun tmp tmp1 -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EAbort ("Pulse.Lib.Dv.unreachable")) FStarC_Custard_Syntax.TAny FStarC_Custard_Syntax.E_Impure))))))
+    | (("Pulse" :: ("Lib" :: ("Dv" :: []))), "unreachable") -> (Some ((Rule_prim (Prims.int_one, (fun tmp tmp1 -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EUnreachable ("Pulse.Lib.Dv.unreachable")) FStarC_Custard_Syntax.TAny FStarC_Custard_Syntax.E_Impure))))))
     | (("Pulse" :: ("Lib" :: ("GlobalVar" :: []))), "gvar") -> (Some ((Rule_type ((fun tys -> (elt_of tys))))))
     | (("Pulse" :: ("Lib" :: ("GlobalVar" :: []))), "mk_gvar") -> (Some ((Rule_prim (Prims.int_one, (fun tys args -> (match args with
         | (init :: tmp) -> (let ret = (match (init).FStarC_Custard_Syntax.ty with
@@ -704,27 +755,88 @@ let list_coercion_rule (id : string) : (rule) option =
     | tmp -> None
   )
 
+let iarray_name : FStarC_Custard_Syntax.name =
+  { FStarC_Custard_Syntax.ns = ("FStar" :: ("ImmutableArray" :: ("Base" :: [])));
+    id = "t";
+    spec = None }
+
+let iarray_rule (id : string) : (rule) option =
+  (let prims = (fun id1 ts -> (FStarC_Custard_Syntax.TApp ({ FStarC_Custard_Syntax.ns = ("Prims" :: []); id = id1; spec = None }, ts))) in
+  let arr = (fun tys tmp -> (FStarC_Custard_Syntax.TApp (iarray_name, ((elt_of tys) :: [])))) in
+  let prim = (fun n ret -> (Some ((buf_prim n (FStarC_Custard_Syntax.IArr (id)) FStarC_Custard_Syntax.E_Pure ret (fun args -> args))))) in
+  (match id with
+    | "t" -> (Some ((Rule_type ((fun tys -> (FStarC_Custard_Syntax.TApp (iarray_name, ((elt_of tys) :: []))))))))
+    | "of_list" -> (prim Prims.int_one arr)
+    | "upd" -> (prim (Prims.of_int (3)) arr)
+    | "push" -> (prim (Prims.of_int (2)) arr)
+    | "to_list" -> (prim Prims.int_one (fun tys tmp -> (prims "list" ((elt_of tys) :: []))))
+    | "length" -> (prim Prims.int_one (fun tmp tmp1 -> (prims "int" [])))
+    | "index" -> (prim (Prims.of_int (2)) (fun tys tmp -> (elt_of tys)))
+    | tmp -> None
+  ))
+
+let dyn_rule (id : string) : (rule) option =
+  (let prim = (fun f ret -> (Some ((Rule_prim (Prims.int_one, (fun tys args -> (let t = (elt_of tys) in
+    (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = (FStarC_Custard_Syntax.Dyn (f));
+      po_ty = None }, args)) (ret t) FStarC_Custard_Syntax.E_Pure)))))))) in
+  (match id with
+    | "dyn" -> (Some ((Rule_type ((fun tmp -> FStarC_Custard_Syntax.TAny)))))
+    | "mkdyn" -> (prim "mk" (fun tmp -> FStarC_Custard_Syntax.TAny))
+    | "undyn" -> (prim "get" (fun t -> t))
+    | tmp -> None
+  ))
+
 let realized_modules : ((string) list) list =
-  (("FStar" :: ("All" :: [])) :: (("FStar" :: ("Bytes" :: [])) :: (("FStar" :: ("Char" :: [])) :: (("FStar" :: ("Dyn" :: [])) :: (("FStar" :: ("Exception" :: [])) :: (("FStar" :: ("Exn" :: [])) :: (("FStar" :: ("IO" :: [])) :: (("FStar" :: ("ImmutableArray" :: [])) :: (("FStar" :: ("ImmutableArray" :: ("Base" :: []))) :: (("FStar" :: ("Issue" :: [])) :: (("FStar" :: ("List" :: [])) :: (("FStar" :: ("List" :: ("Tot" :: ("Base" :: [])))) :: (("FStar" :: ("Option" :: [])) :: (("FStar" :: ("Parse" :: [])) :: (("FStar" :: ("Pervasives" :: [])) :: (("FStar" :: ("Pervasives" :: ("Native" :: []))) :: (("FStar" :: ("Pprint" :: [])) :: (("FStar" :: ("Sealed" :: [])) :: (("FStar" :: ("String" :: [])) :: (("FStar" :: ("Int8" :: [])) :: (("FStar" :: ("Int16" :: [])) :: (("FStar" :: ("Int32" :: [])) :: (("FStar" :: ("Int64" :: [])) :: (("FStar" :: ("UInt8" :: [])) :: (("FStar" :: ("UInt16" :: [])) :: (("FStar" :: ("UInt32" :: [])) :: (("FStar" :: ("UInt64" :: [])) :: (("FStarC" :: ("Array" :: [])) :: (("FStarC" :: ("BaseTypes" :: [])) :: (("FStarC" :: ("Effect" :: [])) :: (("FStarC" :: ("Extraction" :: ("ML" :: ("PrintML" :: [])))) :: (("FStarC" :: ("Filepath" :: [])) :: (("FStarC" :: ("Format" :: [])) :: (("FStarC" :: ("Getopt" :: [])) :: (("FStarC" :: ("Hash" :: [])) :: (("FStarC" :: ("Hints" :: [])) :: (("FStarC" :: ("IMap" :: [])) :: (("FStarC" :: ("Int" :: ("Extra" :: []))) :: (("FStarC" :: ("Json" :: [])) :: (("FStarC" :: ("List" :: [])) :: (("FStarC" :: ("PIMap" :: [])) :: (("FStarC" :: ("PSMap" :: [])) :: (("FStarC" :: ("Parser" :: ("ParseIt" :: []))) :: (("FStarC" :: ("Platform" :: ("Base" :: []))) :: (("FStarC" :: ("Plugins" :: ("Base" :: []))) :: (("FStarC" :: ("Pprint" :: [])) :: (("FStarC" :: ("Range" :: [])) :: (("FStarC" :: ("Reflection" :: ("Types" :: []))) :: (("FStarC" :: ("Tactics" :: ("Unseal" :: []))) :: (("FStarC" :: ("Tactics" :: ("V2" :: ("Builtins" :: [])))) :: (("FStarC" :: ("SMap" :: [])) :: (("FStarC" :: ("String" :: [])) :: (("FStarC" :: ("StringBuffer" :: [])) :: (("FStarC" :: ("Syntax" :: ("TermHashTable" :: []))) :: (("FStarC" :: ("Tactics" :: ("Native" :: []))) :: (("FStarC" :: ("Time" :: [])) :: (("FStarC" :: ("Timing" :: [])) :: (("FStarC" :: ("Unionfind" :: [])) :: (("FStarC" :: ("Util" :: [])) :: (("Prims" :: []) :: (("Pulse" :: ("Lib" :: ("SpinLock" :: []))) :: [])))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+  (("FStar" :: ("Dyn" :: [])) :: (("FStar" :: ("Exn" :: [])) :: (("FStar" :: ("List" :: [])) :: (("FStar" :: ("List" :: ("Tot" :: ("Base" :: [])))) :: (("FStar" :: ("Parse" :: [])) :: (("FStar" :: ("Pervasives" :: [])) :: (("FStar" :: ("Pervasives" :: ("Native" :: []))) :: (("FStar" :: ("Int8" :: [])) :: (("FStar" :: ("Int16" :: [])) :: (("FStar" :: ("Int32" :: [])) :: (("FStar" :: ("Int64" :: [])) :: (("FStar" :: ("UInt8" :: [])) :: (("FStar" :: ("UInt16" :: [])) :: (("FStar" :: ("UInt32" :: [])) :: (("FStar" :: ("UInt64" :: [])) :: (("FStarC" :: ("Reflection" :: ("Types" :: []))) :: (("FStarC" :: ("Tactics" :: ("Unseal" :: []))) :: (("FStarC" :: ("Tactics" :: ("V2" :: ("Builtins" :: [])))) :: (("Prims" :: []) :: (("Pulse" :: ("Lib" :: ("SpinLock" :: []))) :: []))))))))))))))))))))
 
 let builtin_krml_models : ((string) list) list =
   (("Pulse" :: ("Lib" :: ("Slice" :: []))) :: [])
 
 let is_krml_model (ns : (string) list) : bool =
-  (let tmp = (FStarC_Options.custard_backend ()) in
-  let tmp1 = ((=) tmp "KrmlRust") in
+  (let tmp = (FStarC_Options.codegen ()) in
+  let tmp1 = ((=) tmp (Some (FStarC_Options.KrmlRust))) in
   (if tmp1 then (let tmp2 = (FStarC_List.existsb (fun m -> ((=) m ns)) builtin_krml_models) in
   (if tmp2 then true else (let tmp3 = (FStarC_Options.custard_krml_models ()) in
   (FStarC_List.existsb (fun m -> ((=) m (FStarC_String.concat "." ns))) tmp3)))) else false))
 
+let realized_deps : ((FStarC_Parser_Dep.deps) option ref) =
+  (ref None)
+
+let is_interface_only_module (ns : (string) list) : bool =
+  (let tmp = (FStarC_Options.codegen ()) in
+  let tmp1 = ((=) tmp (Some (FStarC_Options.OCaml))) in
+  let tmp2 = (if tmp1 then true else (let tmp2 = (FStarC_Options.codegen ()) in
+    ((=) tmp2 (Some (FStarC_Options.FSharp))))) in
+  (if tmp2 then (let tmp3 = (!(realized_deps)) in
+  (match tmp3 with
+    | None -> false
+    | (Some (d)) -> (let lid = (FStarC_Ident.lid_of_path ns FStarC_Range_Type.dummyRange) in
+      let tgt = (FStarC_Options.codegen_target ()) in
+      let tmp4 = (FStarC_Parser_Dep.module_has_interface d tgt lid) in
+      (if tmp4 then (let tmp5 = (FStarC_Parser_Dep.deps_has_implementation d tgt lid) in
+      (not tmp5)) else false))
+  )) else false))
+
+let cherry_realized_modules : ((string) list) list =
+  (("FStar" :: ("All" :: [])) :: (("FStar" :: ("Bytes" :: [])) :: (("FStar" :: ("Char" :: [])) :: (("FStar" :: ("Exception" :: [])) :: (("FStar" :: ("IO" :: [])) :: (("FStar" :: ("ImmutableArray" :: [])) :: (("FStar" :: ("ImmutableArray" :: ("Base" :: []))) :: (("FStar" :: ("Issue" :: [])) :: (("FStar" :: ("Pprint" :: [])) :: (("FStar" :: ("Sealed" :: [])) :: (("FStar" :: ("String" :: [])) :: (("FStarC" :: ("Array" :: [])) :: (("FStarC" :: ("BaseTypes" :: [])) :: (("FStarC" :: ("Effect" :: [])) :: (("FStarC" :: ("Filepath" :: [])) :: (("FStarC" :: ("Format" :: [])) :: (("FStarC" :: ("Getopt" :: [])) :: (("FStarC" :: ("Hash" :: [])) :: (("FStarC" :: ("Int" :: ("Extra" :: []))) :: (("FStarC" :: ("Json" :: [])) :: (("FStarC" :: ("List" :: [])) :: (("FStarC" :: ("PIMap" :: [])) :: (("FStarC" :: ("PSMap" :: [])) :: (("FStarC" :: ("Platform" :: ("Base" :: []))) :: (("FStarC" :: ("Plugins" :: ("Base" :: []))) :: (("FStarC" :: ("Pprint" :: [])) :: (("FStarC" :: ("Range" :: [])) :: (("FStarC" :: ("String" :: [])) :: (("FStarC" :: ("StringBuffer" :: [])) :: (("FStarC" :: ("Tactics" :: ("Native" :: []))) :: (("FStarC" :: ("Time" :: [])) :: (("FStarC" :: ("Timing" :: [])) :: (("FStarC" :: ("Unionfind" :: [])) :: (("FStarC" :: ("Util" :: [])) :: []))))))))))))))))))))))))))))))))))
+
 let is_realized_module (ns : (string) list) : bool =
   (let tmp = (FStarC_List.existsb (fun m -> ((=) m ns)) realized_modules) in
-  (if tmp then true else (is_krml_model ns)))
+  let tmp1 = (if tmp then true else (is_krml_model ns)) in
+  let tmp2 = (if tmp1 then true else (is_interface_only_module ns)) in
+  (if tmp2 then true else (let tmp3 = (FStarC_Options.custard_cherry ()) in
+  (if tmp3 then (FStarC_List.existsb (fun m -> ((=) m ns)) cherry_realized_modules) else false))))
+
+let cherry_source_modules : ((string) list) list =
+  (("FStar" :: ("List" :: [])) :: (("FStar" :: ("List" :: ("Tot" :: ("Base" :: [])))) :: (("FStar" :: ("Option" :: [])) :: [])))
+
+let is_cherry_source_module (ns : (string) list) : bool =
+  (FStarC_List.existsb (fun m -> ((=) m ns)) cherry_source_modules)
 
 exception No_custard_rule
 
 let builtin_rule (l : FStarC_Ident.lident) : rule =
-  (let tmp = (FStarC_SMap.try_find table (FStarC_Ident.string_of_lid l)) in
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt table (FStarC_Ident.string_of_lid l)) in
   let r = (match tmp with
       | (Some (r)) -> (Some (r))
       | None -> (let path = (FStarC_Ident.path_of_lid l) in
@@ -754,8 +866,30 @@ let builtin_rule (l : FStarC_Ident.lident) : rule =
                         | (Some (v)) -> true
                         | tmp5 -> false
                       )) else false) in
-                    (if tmp4 then (list_coercion_rule id) else (let tmp5 = (is_realized_module ns) in
-                    (if tmp5 then (Some (Rule_realized)) else (pulse_rule ns id))))))))))))
+                    (if tmp4 then (list_coercion_rule id) else (let tmp5 = (FStarC_Options.custard_cherry ()) in
+                    let tmp6 = (if tmp5 then (((=) ns ("FStar" :: ("ImmutableArray" :: ("Base" :: [])))) || ((=) ns ("FStar" :: ("ImmutableArray" :: [])))) else false) in
+                    let tmp7 = (if tmp6 then (let tmp7 = (iarray_rule id) in
+                      (match tmp7 with
+                        | (Some (v)) -> true
+                        | tmp8 -> false
+                      )) else false) in
+                    (if tmp7 then (iarray_rule id) else (let tmp8 = (FStarC_Options.custard_cherry ()) in
+                    let tmp9 = (if tmp8 then ((=) ns ("FStar" :: ("Dyn" :: []))) else false) in
+                    let tmp10 = (if tmp9 then (let tmp10 = (dyn_rule id) in
+                      (match tmp10 with
+                        | (Some (v)) -> true
+                        | tmp11 -> false
+                      )) else false) in
+                    (if tmp10 then (dyn_rule id) else (let tmp11 = (pulse_rule ns id) in
+                    let tmp12 = (match tmp11 with
+                        | (Some (v)) -> true
+                        | tmp12 -> false
+                      ) in
+                    (if tmp12 then (pulse_rule ns id) else (let tmp13 = (is_realized_module ns) in
+                    let tmp14 = (if tmp13 then (let tmp14 = (FStarC_Options.custard_cherry ()) in
+                      let tmp15 = (if tmp14 then (is_cherry_source_module ns) else false) in
+                      (not tmp15)) else false) in
+                    (if tmp14 then (Some (Rule_realized)) else None)))))))))))))))))
                 ))
             ))
           | [] -> None
@@ -782,7 +916,7 @@ let register_pre_rule (f : (FStarC_Ident.lident -> rule)) : unit =
   ))))
 
 let register_rule (l : FStarC_Ident.lident) (eta : rule) : unit =
-  (FStarC_SMap.add table (FStarC_Ident.string_of_lid l) eta)
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace table (FStarC_Ident.string_of_lid l) eta)
 
 let set_float_probe (f : ((string) list -> (FStarC_Custard_Syntax.fwidth) option)) : unit =
   ((float_probe) := f)
@@ -802,6 +936,9 @@ let fwidth_of_attributes (attrs : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Sy
       ))
     | tmp2 -> None
   ))))
+
+let set_deps (d : FStarC_Parser_Dep.deps) : unit =
+  ((realized_deps) := (Some (d)))
 
 let is_stub_module (ns : (string) list) : bool =
   (match ns with
@@ -872,8 +1009,8 @@ let c_realization_header (ns : (string) list) : (string) option =
 
 let is_krml_model_name (ns : (string) list) (id : string) : bool =
   (let tmp = (is_krml_model ns) in
-  (if tmp then true else (let tmp1 = (FStarC_Options.custard_backend ()) in
-  let tmp2 = ((=) tmp1 "KrmlRust") in
+  (if tmp then true else (let tmp1 = (FStarC_Options.codegen ()) in
+  let tmp2 = ((=) tmp1 (Some (FStarC_Options.KrmlRust))) in
   let tmp3 = (if tmp2 then ((=) ns ("FStar" :: ("Pervasives" :: ("Native" :: [])))) else false) in
   (if tmp3 then ((FStarC_Util.starts_with id "tuple") || (FStarC_Util.starts_with id "Mktuple")) else false))))
 

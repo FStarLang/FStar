@@ -50,14 +50,43 @@ type op =
   | BvMod
   | BvMul
   | BvUlt
+  | BvConcat
+  | BvRepeat of Prims.int
   | BvExtRol
   | BvExtRor
   | BvRol of Prims.int
   | BvRor of Prims.int
   | BvUext of Prims.int
+  | BvSext of Prims.int
+  | BvExtract of Prims.int * Prims.int
   | BvNot
+  | BvNeg
+  | BvNand
+  | BvNor
+  | BvXnor
+  | BvComp
+  | BvUle
+  | BvUgt
+  | BvUge
+  | BvSlt
+  | BvSle
+  | BvSgt
+  | BvSge
+  | BvSdiv
+  | BvSrem
+  | BvSmod
+  | BvAshr
+  | BvNego
+  | BvUaddo
+  | BvSaddo
+  | BvUmulo
+  | BvSmulo
+  | BvUsubo
+  | BvSsubo
+  | BvSdivo
   | NatToBv of Prims.int
   | BvToNat
+  | SBvToInt
   | ITE
   | Var of string
 
@@ -205,6 +234,9 @@ let op_to_string (tmp : op) : string =
     | BvMod -> "bvurem"
     | BvMul -> "bvmul"
     | BvUlt -> "bvult"
+    | BvConcat -> "concat"
+    | (BvRepeat (n)) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
+      (FStarC_Format.fmt1 "(_ repeat %s)" tmp1))
     | BvExtRol -> "ext_rotate_left"
     | BvExtRor -> "ext_rotate_right"
     | (BvRol (n)) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
@@ -214,9 +246,39 @@ let op_to_string (tmp : op) : string =
     | BvToNat -> "bv2int"
     | (BvUext (n)) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
       (FStarC_Format.fmt1 "(_ zero_extend %s)" tmp1))
+    | (BvSext (n)) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
+      (FStarC_Format.fmt1 "(_ sign_extend %s)" tmp1))
+    | (BvExtract (i, j)) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
+      let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int j) in
+      (FStarC_Format.fmt2 "(_ extract %s %s)" tmp1 tmp2))
     | BvNot -> "bvnot"
+    | BvNeg -> "bvneg"
+    | BvNand -> "bvnand"
+    | BvNor -> "bvnor"
+    | BvXnor -> "bvxnor"
+    | BvComp -> "bvcomp"
+    | BvUle -> "bvule"
+    | BvUgt -> "bvugt"
+    | BvUge -> "bvuge"
+    | BvSlt -> "bvslt"
+    | BvSle -> "bvsle"
+    | BvSgt -> "bvsgt"
+    | BvSge -> "bvsge"
+    | BvSdiv -> "bvsdiv"
+    | BvSrem -> "bvsrem"
+    | BvSmod -> "bvsmod"
+    | BvAshr -> "bvashr"
+    | BvNego -> "bvnego"
+    | BvUaddo -> "bvuaddo"
+    | BvSaddo -> "bvsaddo"
+    | BvUmulo -> "bvumulo"
+    | BvSmulo -> "bvsmulo"
+    | BvUsubo -> "bvusubo"
+    | BvSsubo -> "bvssubo"
+    | BvSdivo -> "bvsdivo"
     | (NatToBv (n)) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
       (FStarC_Format.fmt1 "(_ int2bv %s)" tmp1))
+    | SBvToInt -> "sbv_to_int"
     | (Var (s)) -> s
   )
 
@@ -336,7 +398,11 @@ let boxBoolFun : (string * string) =
   (mkBoxFunctions "BoxBool")
 
 let boxBool (t : term) : term =
-  (maybe_elim_box (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst boxBoolFun) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd boxBoolFun) t)
+  (maybe_elim_box (match boxBoolFun with
+    | (u__1, u__2) -> u__1
+  ) (match boxBoolFun with
+    | (u__1, u__2) -> u__2
+  ) t)
 
 let isInjective (s : string) : bool =
   (if (Prims.op_Greater_Equals (FStar_String.strlen s) (Prims.of_int (3))) then (let tmp = (FStarC_String.substring s Prims.int_zero (Prims.of_int (3))) in
@@ -412,10 +478,39 @@ let rec check_pattern_ok__aux (t : term) : (term) option =
           | BvMod -> false
           | BvMul -> false
           | BvUlt -> false
+          | BvConcat -> false
+          | (BvRepeat (tmp1)) -> false
           | (BvUext (tmp1)) -> false
+          | (BvSext (tmp1)) -> false
+          | (BvExtract (u__1, u__2)) -> false
           | BvNot -> false
+          | BvNeg -> false
+          | BvNand -> false
+          | BvNor -> false
+          | BvXnor -> false
+          | BvComp -> false
+          | BvUle -> false
+          | BvUgt -> false
+          | BvUge -> false
+          | BvSlt -> false
+          | BvSle -> false
+          | BvSgt -> false
+          | BvSge -> false
+          | BvSdiv -> false
+          | BvSrem -> false
+          | BvSmod -> false
+          | BvAshr -> false
+          | BvNego -> false
+          | BvUaddo -> false
+          | BvSaddo -> false
+          | BvUmulo -> false
+          | BvSmulo -> false
+          | BvUsubo -> false
+          | BvSsubo -> false
+          | BvSdivo -> false
           | (NatToBv (tmp1)) -> false
           | BvToNat -> false
+          | SBvToInt -> false
           | ITE -> false
         ) in
       (if (not head_ok) then (Some (t)) else (check_pattern_ok__aux_l terms)))
@@ -658,7 +753,11 @@ let boxIntFun : (string * string) =
   (mkBoxFunctions "BoxInt")
 
 let unboxInt (t : term) : term =
-  (maybe_elim_box (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd boxIntFun) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst boxIntFun) t)
+  (maybe_elim_box (match boxIntFun with
+    | (u__1, u__2) -> u__2
+  ) (match boxIntFun with
+    | (u__1, u__2) -> u__1
+  ) t)
 
 let mkLTE (tmp : (term * term)) : term =
   (mk_bin_op LTE tmp)
@@ -673,7 +772,11 @@ let mkGT (tmp : (term * term)) : term =
   (mk_bin_op GT tmp)
 
 let unboxBool (t : term) : term =
-  (maybe_elim_box (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd boxBoolFun) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst boxBoolFun) t)
+  (maybe_elim_box (match boxBoolFun with
+    | (u__1, u__2) -> u__2
+  ) (match boxBoolFun with
+    | (u__1, u__2) -> u__1
+  ) t)
 
 let mkAnd (tmp : (term * term)) : term =
   (match tmp with
@@ -705,7 +808,9 @@ let mkOr (tmp : (term * term)) : term =
 
 let getBoxedInteger (t : term) : (Prims.int) option =
   (match t with
-    | (App ((Var (s)), (t2 :: []), tmp)) when ((=) s (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst boxIntFun)) -> (match t2 with
+    | (App ((Var (s)), (t2 :: []), tmp)) when ((=) s (match boxIntFun with
+      | (u__1, u__2) -> u__1
+    )) -> (match t2 with
         | (Integer (n)) -> (let tmp1 = (FStarC_Util.int_of_string n) in
           (Some (tmp1)))
         | tmp1 -> None
@@ -720,9 +825,13 @@ let boxBitVecFun (sz : Prims.int) : (string * string) =
 
 let unboxBitVec (sz : Prims.int) (t : term) : term =
   (let tmp = (boxBitVecFun sz) in
-  let tmp1 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd tmp) in
+  let tmp1 = (match tmp with
+      | (u__1, u__2) -> u__2
+    ) in
   let tmp2 = (boxBitVecFun sz) in
-  let tmp3 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp2) in
+  let tmp3 = (match tmp2 with
+      | (u__1, u__2) -> u__1
+    ) in
   (elim_box true tmp1 tmp3 t))
 
 let mkBvUlt (tmp : (term * term)) : term =
@@ -805,18 +914,22 @@ let mk_Valid (t : term) : term =
 let mk_decls (name : string) (key : string) (decls : (decl) list) (aux_decls : (decls_elt) list) : (decls_elt) list =
   (let tmp = (FStarC_Util.digest_of_string key) in
   let tmp1 = (Some (tmp)) in
-  let sm = (FStarC_SMap.create (Prims.of_int (20))) in
-  (FStarC_List.iter (fun elt -> (FStarC_List.iter (fun s -> (FStarC_SMap.add sm s "0")) (elt).a_names)) aux_decls);
+  let sm = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (20)))) in
+  (FStarC_List.iter (fun elt -> (FStarC_List.iter (fun s -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace sm s "0")) (elt).a_names)) aux_decls);
   (FStarC_List.iter (fun d -> (match d with
-    | (Assume (a)) -> (FStarC_SMap.add sm (a).assumption_name "0")
+    | (Assume (a)) -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace sm (a).assumption_name "0")
     | tmp2 -> ()
   )) decls);
-  let tmp2 = (FStarC_SMap.keys sm) in
+  let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun key1 tmp2 acc -> (key1 :: acc)) sm []) in
   let tmp3 = { sym_name = (Some (name)); key = tmp1; decls = decls; a_names = tmp2 } in
   (tmp3 :: []))
 
 let boxInt (t : term) : term =
-  (maybe_elim_box (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst boxIntFun) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd boxIntFun) t)
+  (maybe_elim_box (match boxIntFun with
+    | (u__1, u__2) -> u__1
+  ) (match boxIntFun with
+    | (u__1, u__2) -> u__2
+  ) t)
 
 let mk_String_const (s : string) : term =
   (mkApp ("FString_const", ((String (s)) :: [])))
@@ -825,7 +938,11 @@ let boxStringFun : (string * string) =
   (mkBoxFunctions "BoxString")
 
 let boxString (t : term) : term =
-  (maybe_elim_box (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst boxStringFun) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd boxStringFun) t)
+  (maybe_elim_box (match boxStringFun with
+    | (u__1, u__2) -> u__1
+  ) (match boxStringFun with
+    | (u__1, u__2) -> u__2
+  ) t)
 
 let u___range_c : (Prims.int ref) =
   (ref Prims.int_zero)
@@ -847,7 +964,11 @@ let boxRealFun : (string * string) =
   (mkBoxFunctions "BoxReal")
 
 let boxReal (t : term) : term =
-  (maybe_elim_box (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst boxRealFun) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd boxRealFun) t)
+  (maybe_elim_box (match boxRealFun with
+    | (u__1, u__2) -> u__1
+  ) (match boxRealFun with
+    | (u__1, u__2) -> u__2
+  ) t)
 
 let mk_HasType (v : term) (t : term) : term =
   (let tmp = (mkApp ("HasType", (v :: (t :: [])))) in
@@ -987,7 +1108,11 @@ let mkMod (tmp : (term * term)) : term =
   (mk_bin_op Mod tmp)
 
 let unboxReal (t : term) : term =
-  (maybe_elim_box (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd boxRealFun) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst boxRealFun) t)
+  (maybe_elim_box (match boxRealFun with
+    | (u__1, u__2) -> u__2
+  ) (match boxRealFun with
+    | (u__1, u__2) -> u__1
+  ) t)
 
 let mkRealDiv (tmp : (term * term)) : term =
   (mk_bin_op RealDiv tmp)
@@ -1148,9 +1273,13 @@ let constructor_to_decl (rng : FStarC_Range_Type.range) (constr : constructor_t)
 
 let mkBvConstructor (sz : Prims.int) : ((decl) list * string * string) =
   (let tmp = (boxBitVecFun sz) in
-  let tmp1 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp) in
+  let tmp1 = (match tmp with
+      | (u__1, u__2) -> u__1
+    ) in
   let tmp2 = (boxBitVecFun sz) in
-  let tmp3 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd tmp2) in
+  let tmp3 = (match tmp2 with
+      | (u__1, u__2) -> u__2
+    ) in
   let tmp4 = { field_name = tmp3;
       field_sort = (BitVec_sort (sz));
       field_projectible = true } in
@@ -1168,9 +1297,13 @@ let mkBvAnd (tmp : (term * term)) : term =
 
 let boxBitVec (sz : Prims.int) (t : term) : term =
   (let tmp = (boxBitVecFun sz) in
-  let tmp1 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp) in
+  let tmp1 = (match tmp with
+      | (u__1, u__2) -> u__1
+    ) in
   let tmp2 = (boxBitVecFun sz) in
-  let tmp3 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd tmp2) in
+  let tmp3 = (match tmp2 with
+      | (u__1, u__2) -> u__2
+    ) in
   (elim_box true tmp1 tmp3 t))
 
 let mkBvXor (tmp : (term * term)) : term =
@@ -1178,6 +1311,18 @@ let mkBvXor (tmp : (term * term)) : term =
 
 let mkBvOr (tmp : (term * term)) : term =
   (mk_bin_op BvOr tmp)
+
+let mkBvNand (tmp : (term * term)) : term =
+  (mk_bin_op BvNand tmp)
+
+let mkBvNor (tmp : (term * term)) : term =
+  (mk_bin_op BvNor tmp)
+
+let mkBvXnor (tmp : (term * term)) : term =
+  (mk_bin_op BvXnor tmp)
+
+let mkBvComp (tmp : (term * term)) : term =
+  (mk_bin_op BvComp tmp)
 
 let mkBvAdd (tmp : (term * term)) : term =
   (mk_bin_op BvAdd tmp)
@@ -1306,14 +1451,89 @@ let mkBvMul' (sz : Prims.int) (tmp : (term * term)) : term =
     | (t1, t2) -> (mkApp' (BvMul, (t1 :: (t2 :: []))))
   )
 
+let mkBvUle (tmp : (term * term)) : term =
+  (mk_bin_op BvUle tmp)
+
+let mkBvUgt (tmp : (term * term)) : term =
+  (mk_bin_op BvUgt tmp)
+
+let mkBvUge (tmp : (term * term)) : term =
+  (mk_bin_op BvUge tmp)
+
+let mkBvSlt (tmp : (term * term)) : term =
+  (mk_bin_op BvSlt tmp)
+
+let mkBvSle (tmp : (term * term)) : term =
+  (mk_bin_op BvSle tmp)
+
+let mkBvSgt (tmp : (term * term)) : term =
+  (mk_bin_op BvSgt tmp)
+
+let mkBvSge (tmp : (term * term)) : term =
+  (mk_bin_op BvSge tmp)
+
+let mkBvSdiv (tmp : (term * term)) : term =
+  (mk_bin_op BvSdiv tmp)
+
+let mkBvSrem (tmp : (term * term)) : term =
+  (mk_bin_op BvSrem tmp)
+
+let mkBvSmod (tmp : (term * term)) : term =
+  (mk_bin_op BvSmod tmp)
+
+let mkBvAshr (tmp : (term * term)) : term =
+  (mk_bin_op BvAshr tmp)
+
+let mkBvNego (t : term) : term =
+  (mkApp' (BvNego, (t :: [])))
+
+let mkBvUaddo (tmp : (term * term)) : term =
+  (mk_bin_op BvUaddo tmp)
+
+let mkBvSaddo (tmp : (term * term)) : term =
+  (mk_bin_op BvSaddo tmp)
+
+let mkBvUmulo (tmp : (term * term)) : term =
+  (mk_bin_op BvUmulo tmp)
+
+let mkBvSmulo (tmp : (term * term)) : term =
+  (mk_bin_op BvSmulo tmp)
+
+let mkBvUsubo (tmp : (term * term)) : term =
+  (mk_bin_op BvUsubo tmp)
+
+let mkBvSsubo (tmp : (term * term)) : term =
+  (mk_bin_op BvSsubo tmp)
+
+let mkBvSdivo (tmp : (term * term)) : term =
+  (mk_bin_op BvSdivo tmp)
+
+let mkBvConcat (tmp : (term * term)) : term =
+  (mk_bin_op BvConcat tmp)
+
+let mkBvRepeat (n : Prims.int) (t : term) : term =
+  (mkApp' ((BvRepeat (n)), (t :: [])))
+
 let mkBvUext (sz : Prims.int) (t : term) : term =
   (mkApp' ((BvUext (sz)), (t :: [])))
+
+let mkBvSext (sz : Prims.int) (t : term) : term =
+  (mkApp' ((BvSext (sz)), (t :: [])))
+
+let mkBvExtract (i : Prims.int) (j : Prims.int) (t : term) : term =
+  (mkApp' ((BvExtract (i, j)), (t :: [])))
 
 let mkBvNot (t : term) : term =
   (mkApp' (BvNot, (t :: [])))
 
+let mkBvNeg (t : term) : term =
+  (mkApp' (BvNeg, (t :: [])))
+
 let mkBvToNat (t : term) : term =
   (mkApp' (BvToNat, (t :: [])))
+
+let mkSBvToInt (t : term) : term =
+  (mkApp' (SBvToInt, (t :: [])))
 
 let mk_LexCons (x1 : term) (x2 : term) (x3 : term) : term =
   (mkApp ("LexCons", (x1 :: (x2 :: (x3 :: [])))))
@@ -1337,7 +1557,11 @@ let boxPropFun : (string * string) =
   (mkBoxFunctions "BoxProp")
 
 let boxProp (t : term) : term =
-  (elim_box true (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst boxPropFun) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd boxPropFun) t)
+  (elim_box true (match boxPropFun with
+    | (u__1, u__2) -> u__1
+  ) (match boxPropFun with
+    | (u__1, u__2) -> u__2
+  ) t)
 
 let rec n_fuel (n : Prims.int) : term =
   (if ((=) n Prims.int_zero) then (mkApp ("ZFuel", [])) else (let tmp = (n_fuel (Prims.op_Minus n Prims.int_one)) in
@@ -1509,18 +1733,18 @@ let mk_tag (f : FStar_Pprint.document) (attrs : (FStar_Pprint.document) list) : 
 let binder (fn : string) (b : FStar_Pprint.document) (args : (FStar_Pprint.document) list) : FStar_Pprint.document =
   (form_core ((FStar_Pprint.nest Prims.int_one (FStar_Pprint.group (FStar_Pprint.op_Hat_Slash_Hat (FStar_Pprint.doc_of_string fn) b))) :: args))
 
-let rec termToSmt__aux' (string_id_counter : (Prims.int ref)) (string_cache : (string) FStarC_SMap.t) (next_qid : (unit -> string)) (remove_guard_free : (((term) list) list -> ((term) list) list)) (depth : Prims.int) (n : Prims.int) (names : (fv) list) (t : term) : FStar_Pprint.document =
+let rec termToSmt__aux' (string_id_counter : (Prims.int ref)) (string_cache : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (next_qid : (unit -> string)) (remove_guard_free : (((term) list) list -> ((term) list) list)) (depth : Prims.int) (n : Prims.int) (names : (fv) list) (t : term) : FStar_Pprint.document =
   (let aux = ((termToSmt__aux string_id_counter string_cache next_qid remove_guard_free) (Prims.op_Plus depth Prims.int_one)) in
   (match t with
     | (Integer (i)) -> (FStar_Pprint.doc_of_string i)
     | (Real (r)) -> (FStar_Pprint.doc_of_string (FStarC_Real.to_smt_string r))
-    | (String (s)) -> (let id_opt = (FStarC_SMap.try_find string_cache s) in
+    | (String (s)) -> (let id_opt = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt string_cache s) in
       let tmp = (match id_opt with
           | (Some (id)) -> id
           | None -> (let tmp = (!(string_id_counter)) in
             let id = (FStarC_Class_Show.fStarC_Class_Show_show__int tmp) in
             (FStarC_Util.incr string_id_counter);
-            (FStarC_SMap.add string_cache s id);
+            (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace string_cache s id);
             id)
         ) in
       (FStar_Pprint.doc_of_string tmp))
@@ -1567,12 +1791,12 @@ let rec termToSmt__aux' (string_id_counter : (Prims.int ref)) (string_cache : (s
       ))
   ))
 
-and termToSmt__aux (string_id_counter : (Prims.int ref)) (string_cache : (string) FStarC_SMap.t) (next_qid : (unit -> string)) (remove_guard_free : (((term) list) list -> ((term) list) list)) : (Prims.int -> (Prims.int -> ((fv) list -> (term -> FStar_Pprint.document)))) =
+and termToSmt__aux (string_id_counter : (Prims.int ref)) (string_cache : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (next_qid : (unit -> string)) (remove_guard_free : (((term) list) list -> ((term) list) list)) : (Prims.int -> (Prims.int -> ((fv) list -> (term -> FStar_Pprint.document)))) =
   (termToSmt__aux' string_id_counter string_cache next_qid remove_guard_free)
 
 let termToSmt : (bool -> (string -> (term -> FStar_Pprint.document))) =
   (let string_id_counter = (ref Prims.int_zero) in
-  let string_cache = (FStarC_SMap.create (Prims.of_int (20))) in
+  let string_cache = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (20)))) in
   (fun print_ranges enclosing_name t -> (let ctr = (ref Prims.int_zero) in
   let next_qid = (fun depth -> (let n = (!(ctr)) in
     (FStarC_Util.incr ctr);
@@ -1605,7 +1829,27 @@ let rec mkPrelude (z3options : string) : string =
           constr_id = (Some (id));
           constr_base = false })
     )) in
-  let constrs = (FStarC_List.map as_constr (("FString_const", (("FString_const_proj_0", Int_sort, true) :: []), String_sort, Prims.int_zero, true) :: (("Tm_type", (("Tm_type_0", (Sort ("Universe")), true) :: []), Term_sort, (Prims.of_int (2)), true) :: (("Tm_arrow", (("Tm_arrow_id", Int_sort, true) :: []), Term_sort, (Prims.of_int (3)), false) :: (("Tm_unit", [], Term_sort, (Prims.of_int (6)), true) :: (((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst boxIntFun), (((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd boxIntFun), Int_sort, true) :: []), Term_sort, (Prims.of_int (7)), true) :: (((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst boxBoolFun), (((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd boxBoolFun), Bool_sort, true) :: []), Term_sort, (Prims.of_int (8)), true) :: (((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst boxStringFun), (((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd boxStringFun), String_sort, true) :: []), Term_sort, (Prims.of_int (9)), true) :: (((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst boxRealFun), (((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd boxRealFun), (Sort ("Real")), true) :: []), Term_sort, (Prims.of_int (10)), true) :: (("LexCons", (("LexCons_0", Term_sort, true) :: (("LexCons_1", Term_sort, true) :: (("LexCons_2", Term_sort, true) :: []))), Term_sort, (Prims.of_int (11)), true) :: (((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst boxPropFun), (((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd boxPropFun), Bool_sort, true) :: []), Term_sort, (Prims.of_int (12)), true) :: []))))))))))) in
+  let constrs = (FStarC_List.map as_constr (("FString_const", (("FString_const_proj_0", Int_sort, true) :: []), String_sort, Prims.int_zero, true) :: (("Tm_type", (("Tm_type_0", (Sort ("Universe")), true) :: []), Term_sort, (Prims.of_int (2)), true) :: (("Tm_arrow", (("Tm_arrow_id", Int_sort, true) :: []), Term_sort, (Prims.of_int (3)), false) :: (("Tm_unit", [], Term_sort, (Prims.of_int (6)), true) :: (((match boxIntFun with
+      | (u__1, u__2) -> u__1
+    ), (((match boxIntFun with
+      | (u__1, u__2) -> u__2
+    ), Int_sort, true) :: []), Term_sort, (Prims.of_int (7)), true) :: (((match boxBoolFun with
+      | (u__1, u__2) -> u__1
+    ), (((match boxBoolFun with
+      | (u__1, u__2) -> u__2
+    ), Bool_sort, true) :: []), Term_sort, (Prims.of_int (8)), true) :: (((match boxStringFun with
+      | (u__1, u__2) -> u__1
+    ), (((match boxStringFun with
+      | (u__1, u__2) -> u__2
+    ), String_sort, true) :: []), Term_sort, (Prims.of_int (9)), true) :: (((match boxRealFun with
+      | (u__1, u__2) -> u__1
+    ), (((match boxRealFun with
+      | (u__1, u__2) -> u__2
+    ), (Sort ("Real")), true) :: []), Term_sort, (Prims.of_int (10)), true) :: (("LexCons", (("LexCons_0", Term_sort, true) :: (("LexCons_1", Term_sort, true) :: (("LexCons_2", Term_sort, true) :: []))), Term_sort, (Prims.of_int (11)), true) :: (((match boxPropFun with
+      | (u__1, u__2) -> u__1
+    ), (((match boxPropFun with
+      | (u__1, u__2) -> u__2
+    ), Bool_sort, true) :: []), Term_sort, (Prims.of_int (12)), true) :: []))))))))))) in
   let tmp = (FStarC_List.collect (constructor_to_decl norng) constrs) in
   let tmp1 = (FStarC_List.map (declToSmt z3options) tmp) in
   let bcons = (FStarC_String.concat "\n" tmp1) in

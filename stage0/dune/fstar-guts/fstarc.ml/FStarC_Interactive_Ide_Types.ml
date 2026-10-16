@@ -15,7 +15,7 @@ type push_kind =
 type repl_task =
   | LDSingle of timed_fname
   | LDInterfaceOfCurrentFile of timed_fname
-  | PushFragment of (FStarC_Parser_ParseIt.input_frag, FStarC_Parser_AST.decl) FStar_Pervasives.either * push_kind * (FStarC_Json.json) list * (string) list
+  | PushFragment of (FStarC_Parser_Frontend.input_frag, FStarC_Parser_AST.decl) FStar_Pervasives.either * push_kind * (FStarC_Json.json) list * (string) list
   | Noop
 
 
@@ -24,7 +24,7 @@ type push_query = {
   push_line : Prims.int;
   push_column : Prims.int;
   push_peek_only : bool;
-  push_code_or_decl : (string, (FStarC_Parser_AST.decl * FStarC_Parser_ParseIt.code_fragment)) FStar_Pervasives.either;
+  push_code_or_decl : (string, (FStarC_Parser_AST.decl * FStarC_Parser_Frontend.code_fragment)) FStar_Pervasives.either;
 }
 
 type completion_context =
@@ -193,7 +193,7 @@ let fStarC_Class_Show_show__push_kind (tmp : push_kind) : string =
 let push_query_to_string (pq : push_query) : string =
   (let code_or_decl = (match (pq).push_code_or_decl with
       | (FStar_Pervasives.Inl (code)) -> code
-      | (FStar_Pervasives.Inr ((u__decl, code))) -> (code).FStarC_Parser_ParseIt.code
+      | (FStar_Pervasives.Inr ((u__decl, code))) -> (code).FStarC_Parser_Frontend.code
     ) in
   let tmp = (fStarC_Class_Show_show__push_kind (pq).push_kind) in
   let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int (pq).push_line) in
@@ -279,8 +279,8 @@ let string_of_repl_task (t : repl_task) : string =
       (FStarC_Format.fmt1 "LDSingle %s" tmp))
     | (LDInterfaceOfCurrentFile (intf)) -> (let tmp = (string_of_timed_fname intf) in
       (FStarC_Format.fmt1 "LDInterfaceOfCurrentFile %s" tmp))
-    | (PushFragment ((FStar_Pervasives.Inl (frag)), tmp, tmp1, tmp2)) -> (FStarC_Format.fmt1 "PushFragment { code = %s }" (frag).FStarC_Parser_ParseIt.frag_text)
-    | (PushFragment ((FStar_Pervasives.Inr (d)), tmp, tmp1, deps)) -> (let tmp2 = (FStarC_Parser_AST.fStarC_Class_Show_show__decl_167 d) in
+    | (PushFragment ((FStar_Pervasives.Inl (frag)), tmp, tmp1, tmp2)) -> (FStarC_Format.fmt1 "PushFragment { code = %s }" (frag).FStarC_Parser_Frontend.frag_text)
+    | (PushFragment ((FStar_Pervasives.Inr (d)), tmp, tmp1, deps)) -> (let tmp2 = (FStarC_Parser_AST.fStarC_Class_Show_show__decl_168 d) in
       let tmp3 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string deps) in
       (FStarC_Format.fmt2 "PushFragment { decl = %s; deps=%s }" tmp2 tmp3))
     | Noop -> "Noop {}"

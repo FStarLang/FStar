@@ -11,8 +11,6 @@ module POB = FStarC_TypeChecker_Primops_Base
    compiler and ulib (cf. tactics meeting of 2017-08-03). *)
 type 'a __tac = 'a FStarC_Tactics_Monad.tac
 
-let r = dummyRange
-
 type itac =
     POB.psc -> FStarC_Syntax_Embeddings_Base.norm_cb -> universes -> args -> term option
 type nbe_itac =
@@ -24,7 +22,6 @@ type native_primitive_step =
       strong_reduction_ok: bool;
       tactic: itac}
 
-let perr  s   = if FStarC_Debug.any () then FStarC_Format.print_error s
 let perr1 s x = if FStarC_Debug.any () then FStarC_Format.print1_error s x
 
 let compiled_tactics: native_primitive_step list ref = ref []

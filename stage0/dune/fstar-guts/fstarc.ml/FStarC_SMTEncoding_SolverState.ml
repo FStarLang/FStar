@@ -185,9 +185,9 @@ let filter_using_facts_from (using_facts_from : ((((string) list * bool)) list) 
               | tmp2 -> false
             )) (a).FStarC_SMTEncoding_Term.assumption_fact_ids))
         )) in
-      let already_given_map = (FStarC_SMap.create (Prims.of_int (1000))) in
-      let add_assumption = (fun a -> (FStarC_SMap.add already_given_map (a).FStarC_SMTEncoding_Term.assumption_name true)) in
-      let already_given = (fun a -> (let tmp = (FStarC_SMap.try_find already_given_map (a).FStarC_SMTEncoding_Term.assumption_name) in
+      let already_given_map = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (1000)))) in
+      let add_assumption = (fun a -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace already_given_map (a).FStarC_SMTEncoding_Term.assumption_name true)) in
+      let already_given = (fun a -> (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt already_given_map (a).FStarC_SMTEncoding_Term.assumption_name) in
         let tmp1 = (match tmp with
             | (Some (v)) -> true
             | tmp1 -> false
@@ -342,7 +342,9 @@ let reset (using_facts_from : ((((string) list * bool)) list) option) (s : solve
         )))
     ))) in
   let tmp = ((reset__rebuild rebuild_level) (s).levels s_new1) in
-  (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp))
+  (match tmp with
+    | (u__1, u__2) -> u__1
+  ))
 
 let start_query (msg : string) (roots : (FStarC_SMTEncoding_Term.decl) list) (qry : (FStarC_SMTEncoding_Term.decl) list) (s : solver_state) : solver_state =
   (let tmp = (peek s) in

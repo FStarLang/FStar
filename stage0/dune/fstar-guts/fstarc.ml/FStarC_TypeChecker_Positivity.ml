@@ -116,7 +116,9 @@ let rec apply_constr_arrow__aux (dlid : FStarC_Ident.lident) (dt : (FStarC_Synta
     | ((Some ((b, c))), (a :: args1)) -> (let tail = (FStarC_Syntax_Util.comp_result c) in
       let tmp2 = (FStarC_Syntax_Subst.open_term_1 b tail) in
       (match tmp2 with
-        | (b1, tail1) -> (let tail2 = (FStarC_Syntax_Subst.subst ((FStarC_Syntax_Syntax.NT ((b1).FStarC_Syntax_Syntax.binder_bv, (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst a))) :: []) tail1) in
+        | (b1, tail1) -> (let tail2 = (FStarC_Syntax_Subst.subst ((FStarC_Syntax_Syntax.NT ((b1).FStarC_Syntax_Syntax.binder_bv, (match a with
+              | (u__1, u__2) -> u__1
+            ))) :: []) tail1) in
           ((apply_constr_arrow__aux dlid dt all_params) tail2 args1))
       ))
     | (None, tmp2) -> (let tmp3 = (FStarC_Syntax_Print.args_to_string all_params) in
@@ -218,13 +220,19 @@ let rec check_no_index_occurrences_in_arities__aux (env : FStarC_TypeChecker_Env
     | (tmp, []) -> ()
     | ((f :: formals1), (i :: indices1)) -> (let f_t = (FStarC_Syntax_Subst.subst subst ((f).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
       let tmp = (may_be_an_arity env f_t) in
-      (if tmp then ((debug_positivity env (fun tmp1 -> (let tmp2 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst i)) in
+      (if tmp then ((debug_positivity env (fun tmp1 -> (let tmp2 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' (match i with
+          | (u__1, u__2) -> u__1
+        )) in
       let tmp3 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' f_t) in
       (FStarC_Format.fmt2 "Checking %s : %s (arity)" tmp2 tmp3))));
-      (no_occurrence_in_index (fv).FStarC_Syntax_Syntax.fv_name mutuals i)) else (debug_positivity env (fun tmp1 -> (let tmp2 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst i)) in
+      (no_occurrence_in_index (fv).FStarC_Syntax_Syntax.fv_name mutuals i)) else (debug_positivity env (fun tmp1 -> (let tmp2 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' (match i with
+          | (u__1, u__2) -> u__1
+        )) in
       let tmp3 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' f_t) in
       (FStarC_Format.fmt2 "Skipping %s : %s (non-arity)" tmp2 tmp3)))));
-      let subst1 = ((FStarC_Syntax_Syntax.NT ((f).FStarC_Syntax_Syntax.binder_bv, (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst i))) :: subst) in
+      let subst1 = ((FStarC_Syntax_Syntax.NT ((f).FStarC_Syntax_Syntax.binder_bv, (match i with
+          | (u__1, u__2) -> u__1
+        ))) :: subst) in
       ((check_no_index_occurrences_in_arities__aux env mutuals no_occurrence_in_index no_occurrence_in_indexes fv) subst1 formals1 indices1))
     | ([], tmp) -> (no_occurrence_in_indexes (fv).FStarC_Syntax_Syntax.fv_name mutuals indices)
   )
@@ -282,8 +290,14 @@ let check_no_index_occurrences_in_arities (env : FStarC_TypeChecker_Env.env) (mu
 let already_unfolded (ilid : FStarC_Ident.lident) (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) (unfolded : (((FStarC_Ident.lident * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list * Prims.int)) list ref)) (env : FStarC_TypeChecker_Env.env) : bool =
   (let tmp = (!(unfolded)) in
   (FStarC_List.existsML (fun tmp1 -> (match tmp1 with
-    | (lid, l, n) -> (if ((FStarC_Ident.lid_equals lid ilid) && (Prims.op_Greater_Equals (FStarC_List.length args) n)) then (let args1 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst (FStarC_List.splitAt n args)) in
-      (FStarC_List.fold_left2 (fun b a a' -> (if b then (FStarC_TypeChecker_Rel.teq_nosmt_force env (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst a) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst a')) else false)) true args1 l)) else false)
+    | (lid, l, n) -> (if ((FStarC_Ident.lid_equals lid ilid) && (Prims.op_Greater_Equals (FStarC_List.length args) n)) then (let args1 = (match (FStarC_List.splitAt n args) with
+          | (u__1, u__2) -> u__1
+        ) in
+      (FStarC_List.fold_left2 (fun b a a' -> (if b then (FStarC_TypeChecker_Rel.teq_nosmt_force env (match a with
+        | (u__1, u__2) -> u__1
+      ) (match a' with
+        | (u__1, u__2) -> u__1
+      )) else false)) true args1 l)) else false)
   )) tmp))
 
 let rec ty_strictly_positive_in_args__aux (env : FStarC_TypeChecker_Env.env) (mutuals : (FStarC_Ident.lident) list) (unfolded : (((FStarC_Ident.lident * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list * Prims.int)) list ref)) (bs : (FStarC_Syntax_Syntax.binder) list) (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : bool =
@@ -442,7 +456,9 @@ and ty_strictly_positive_in_type (env : FStarC_TypeChecker_Env.env) (mutuals : (
       ))
     | (FStarC_Syntax_Syntax.Tm_arrow (tmp3)) -> ((debug_positivity env (fun tmp4 -> "Checking strict positivity in Tm_arrow"));
       let tmp4 = (FStarC_Syntax_Util.arrow_formals_comp_ln_strict in_type1) in
-      let c = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd tmp4) in
+      let c = (match tmp4 with
+          | (u__1, u__2) -> u__2
+        ) in
       let tmp5 = (FStarC_Syntax_Util.is_pure_or_ghost_comp c) in
       let check_comp = (if tmp5 then true else (let tmp6 = (FStarC_TypeChecker_Env.lookup_effect_quals env (FStarC_Syntax_Util.comp_effect_name c)) in
         (FStarC_List.contains FStarC_Syntax_Syntax.TotalEffect tmp6))) in
@@ -1538,7 +1554,9 @@ let rec fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__1
 let max_uniformly_recursive_parameters (env : FStarC_TypeChecker_Env.env) (mutuals : (FStarC_Ident.lident) list) (params : (FStarC_Syntax_Syntax.bv) list) (ty : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : Prims.int =
   (let ty1 = (normalize env ty) in
   let n_params = (FStarC_List.length params) in
-  let compare_name_bv = (fun x y -> (let tmp = (FStarC_Syntax_Subst.compress (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst x)) in
+  let compare_name_bv = (fun x y -> (let tmp = (FStarC_Syntax_Subst.compress (match x with
+        | (u__1, u__2) -> u__1
+      )) in
     let tmp1 = (tmp).FStarC_Syntax_Syntax.n in
     (match tmp1 with
       | (FStarC_Syntax_Syntax.Tm_name (x1)) -> (FStarC_Syntax_Syntax.bv_eq x1 y)
@@ -1635,7 +1653,9 @@ let mark_uniform_type_parameters (env : FStarC_TypeChecker_Env.env) (sig_ : FSta
                       let dt1 = (FStarC_Syntax_Subst.subst tmp10 dt) in
                       let tmp11 = (apply_constr_arrow d_lid dt1 ty_param_args) in
                       let tmp12 = (FStarC_Syntax_Util.arrow_formals tmp11) in
-                      let tmp13 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp12) in
+                      let tmp13 = (match tmp12 with
+                          | (u__1, u__2) -> u__1
+                        ) in
                       (Some (tmp13))) else None)
                     | tmp5 -> None
                   )) datas) in
@@ -1731,7 +1751,9 @@ let check_strict_positivity (env : FStarC_TypeChecker_Env.env) (mutuals : (FStar
       let tmp1 = (FStarC_List.existsML (FStarC_Ident.lid_equals ty_lid) mutuals1) in
       let mutuals2 = (if tmp1 then mutuals1 else (ty_lid :: mutuals1)) in
       let tmp2 = (FStarC_TypeChecker_Env.datacons_of_typ env1 ty_lid) in
-      let datacons = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd tmp2) in
+      let datacons = (match tmp2 with
+          | (u__1, u__2) -> u__2
+        ) in
       let us = (FStarC_List.map (fun u__eta -> (FStarC_Syntax_Syntax.U_name (u__eta))) ty_us) in
       (FStarC_List.for_all (fun d -> (ty_strictly_positive_in_datacon_decl env1 mutuals2 d ty_params us unfolded_inductives)) datacons))
   ))

@@ -9,11 +9,11 @@ let dbg_NBE : (bool ref) =
 
 type config = {
   core_cfg : FStarC_TypeChecker_Cfg.cfg;
-  fv_cache : (FStarC_TypeChecker_NBETerm.t) FStarC_SMap.t;
+  fv_cache : (FStarC_TypeChecker_NBETerm.t) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t;
 }
 
 let new_config (cfg : FStarC_TypeChecker_Cfg.cfg) : config =
-  (let tmp = (FStarC_SMap.create (Prims.of_int (51))) in
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (51)))) in
   { core_cfg = cfg; fv_cache = tmp })
 
 let debug (cfg : config) : ((unit -> unit) -> unit) =
@@ -103,7 +103,7 @@ let map_rev (f : ('u___a -> 'u___b)) (l : ('u___a) list) : ('u___b) list =
 
 let try_in_cache (cfg : config) (fv : FStarC_Syntax_Syntax.fv) : (FStarC_TypeChecker_NBETerm.t) option =
   (let lid = (fv).FStarC_Syntax_Syntax.fv_name in
-  (FStarC_SMap.try_find (cfg).fv_cache (FStarC_Ident.string_of_lid lid)))
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (cfg).fv_cache (FStarC_Ident.string_of_lid lid)))
 
 let is_constr (q : (((((FStarC_Syntax_Syntax.universe) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax), (FStarC_Syntax_Syntax.sigelt * ((FStarC_Syntax_Syntax.universe) list) option)) FStar_Pervasives.either * FStarC_Range_Type.range)) option) : bool =
   (match q with
@@ -132,7 +132,7 @@ let let_rec_arity (b : FStarC_Syntax_Syntax.letbinding) : (Prims.int * (bool) li
 
 let cache_add (cfg : config) (fv : FStarC_Syntax_Syntax.fv) (v : FStarC_TypeChecker_NBETerm.t) : unit =
   (let lid = (fv).FStarC_Syntax_Syntax.fv_name in
-  (FStarC_SMap.add (cfg).fv_cache (FStarC_Ident.string_of_lid lid) v))
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace (cfg).fv_cache (FStarC_Ident.string_of_lid lid) v))
 
 let reifying_false (cfg : config) : config =
   (if ((cfg).core_cfg).FStarC_TypeChecker_Cfg.reifying then (new_config (let tmp = (cfg).core_cfg in
@@ -300,7 +300,9 @@ let rec should_reduce_recursive_definition__aux (ts : ((FStarC_TypeChecker_NBETe
   (match (ts, ar_list) with
     | (tmp, []) -> (true, acc, ts)
     | ([], (tmp :: tmp1)) -> (false, acc, [])
-    | ((t :: ts1), (in_decreases_clause :: bs)) -> (if (in_decreases_clause && (FStarC_TypeChecker_NBETerm.isAccu (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst t))) then (false, (FStarC_List.rev_append ts1 acc), []) else (should_reduce_recursive_definition__aux ts1 bs (t :: acc)))
+    | ((t :: ts1), (in_decreases_clause :: bs)) -> (if (in_decreases_clause && (FStarC_TypeChecker_NBETerm.isAccu (match t with
+        | (u__1, u__2) -> u__1
+      ))) then (false, (FStarC_List.rev_append ts1 acc), []) else (should_reduce_recursive_definition__aux ts1 bs (t :: acc)))
   )
 
 let should_reduce_recursive_definition (arguments : ((FStarC_TypeChecker_NBETerm.t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) (formals_in_decreases : (bool) list) : (bool * ((FStarC_TypeChecker_NBETerm.t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list * ((FStarC_TypeChecker_NBETerm.t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) =
@@ -316,7 +318,9 @@ let rec reduce_disc_proj (cfg : config) (h : FStarC_Syntax_Syntax.fv) (args : ((
           | (FStarC_Syntax_Syntax.Discriminator (d)) -> d
           | tmp1 -> (FStarC_Effect.failwith "reduce_disc_proj: impossible")
         ) in
-      (if (Prims.op_Less_Equals (FStarC_List.length args) n_indexed) then None else (let scrutinee = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst (FStarC_List.nth args n_indexed)) in
+      (if (Prims.op_Less_Equals (FStarC_List.length args) n_indexed) then None else (let scrutinee = (match (FStarC_List.nth args n_indexed) with
+          | (u__1, u__2) -> u__1
+        ) in
       let tmp1 = (FStarC_List.splitAt (Prims.op_Plus n_indexed Prims.int_one) args) in
       (match tmp1 with
         | (tmp2, rest) -> (let reapply = (fun x -> (if (match rest with
@@ -333,7 +337,9 @@ let rec reduce_disc_proj (cfg : config) (h : FStarC_Syntax_Syntax.fv) (args : ((
                 | tmp6 -> (if (not same) then None else (match idx with
                     | None -> None
                     | (Some (i)) -> (let cargs = (FStarC_List.rev cargs_rev) in
-                      (if (Prims.op_Less_Equals (FStarC_List.length cargs) i) then None else (let tmp7 = (reapply (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst (FStarC_List.nth cargs i))) in
+                      (if (Prims.op_Less_Equals (FStarC_List.length cargs) i) then None else (let tmp7 = (reapply (match (FStarC_List.nth cargs i) with
+                          | (u__1, u__2) -> u__1
+                        )) in
                       (Some (tmp7)))))
                   ))
               ))
@@ -356,7 +362,9 @@ and iapp (cfg : config) (f : FStarC_TypeChecker_NBETerm.t) (args : ((FStarC_Type
             ))
           | (FStarC_TypeChecker_NBETerm.Lam_bs (ctx, xs, rc)) -> (let tmp2 = (FStarC_List.splitAt m xs) in
             (match tmp2 with
-              | (tmp3, xs1) -> (let tmp4 = (FStarC_List.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst arg_values_rev) in
+              | (tmp3, xs1) -> (let tmp4 = (FStarC_List.map (fun x -> (match x with
+                    | (u__1, u__2) -> u__1
+                  )) arg_values_rev) in
                 let ctx1 = (FStarC_List.append tmp4 ctx) in
                 (FStarC_TypeChecker_NBETerm.Lam_bs (ctx1, xs1, rc)))
             ))
@@ -407,7 +415,9 @@ and iapp (cfg : config) (f : FStarC_TypeChecker_NBETerm.t) (args : ((FStarC_Type
               let tmp8 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' body) in
               let tmp9 = (FStarC_TypeChecker_NBETerm.fStarC_Class_Show_show__list_tuple2_t_option args_rev2) in
               (FStarC_Format.print3 "Reducing body of %s = %s,\n\twith args = %s\n" tmp7 tmp8 tmp9))));
-              let tmp6 = (FStarC_List.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst args_rev2) in
+              let tmp6 = (FStarC_List.map (fun x -> (match x with
+                  | (u__1, u__2) -> u__1
+                )) args_rev2) in
               let t = (translate cfg tmp6 body) in
               (match extra with
                 | [] -> t
@@ -415,7 +425,9 @@ and iapp (cfg : config) (f : FStarC_TypeChecker_NBETerm.t) (args : ((FStarC_Type
               ))
           )) else (let tmp5 = (FStarC_Util.first_N (Prims.op_Minus n_args_rev n_univs) args_rev1) in
           (match tmp5 with
-            | (extra, univs) -> (let tmp6 = (FStarC_List.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst univs) in
+            | (extra, univs) -> (let tmp6 = (FStarC_List.map (fun x -> (match x with
+                  | (u__1, u__2) -> u__1
+                )) univs) in
               let tmp7 = (translate cfg tmp6 (lb).FStarC_Syntax_Syntax.lbdef) in
               (iapp cfg tmp7 (FStarC_List.rev extra)))
           )))
@@ -434,7 +446,9 @@ and iapp (cfg : config) (f : FStarC_TypeChecker_NBETerm.t) (args : ((FStarC_Type
           (FStarC_Format.print1 "Yes, Decided to unfold recursive definition %s\n" tmp6))));
           let tmp5 = (FStarC_Util.first_N (FStarC_List.length (lb).FStarC_Syntax_Syntax.lbunivs) args1) in
           (match tmp5 with
-            | (univs, rest) -> (let tmp6 = (FStarC_List.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst univs) in
+            | (univs, rest) -> (let tmp6 = (FStarC_List.map (fun x -> (match x with
+                  | (u__1, u__2) -> u__1
+                )) univs) in
               let tmp7 = (FStarC_List.rev tmp6) in
               let tmp8 = (translate cfg tmp7 (lb).FStarC_Syntax_Syntax.lbdef) in
               (iapp cfg tmp8 rest))
@@ -533,7 +547,7 @@ and readback_comp_typ (cfg : config) (c : FStarC_TypeChecker_NBETerm.comp_typ) :
 
 and readback_comp (cfg : config) (c : FStarC_TypeChecker_NBETerm.comp_typ) : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax =
   (let c' = (readback_comp_typ cfg c) in
-  (FStarC_Syntax_Syntax.mk c' FStarC_Range_Type.dummyRange))
+  (FStarC_Syntax_Syntax.mk_comp' c' FStarC_Range_Type.dummyRange))
 
 and readback (cfg : config) (x : FStarC_TypeChecker_NBETerm.t) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
   (let debug_ = (debug cfg) in
@@ -620,9 +634,13 @@ and readback (cfg : config) (x : FStarC_TypeChecker_NBETerm.t) : (FStarC_Syntax_
           (with_range body))
       )
     | (FStarC_TypeChecker_NBETerm.Refinement (f, targ)) -> (if (((cfg).core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction then (let tmp = (targ ()) in
-      let tmp1 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp) in
+      let tmp1 = (match tmp with
+          | (u__1, u__2) -> u__1
+        ) in
       (readback cfg tmp1)) else (let tmp = (targ ()) in
-      let tmp1 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp) in
+      let tmp1 = (match tmp with
+          | (u__1, u__2) -> u__1
+        ) in
       let tmp2 = (readback cfg tmp1) in
       let x1 = (FStarC_Syntax_Syntax.new_bv None tmp2) in
       let tmp3 = (f (FStarC_TypeChecker_NBETerm.mkAccuVar x1)) in
@@ -739,7 +757,9 @@ and readback (cfg : config) (x : FStarC_TypeChecker_NBETerm.t) : (FStarC_Syntax_
       let n_args = (FStarC_List.length args_rev) in
       let tmp = (FStarC_Util.first_N (Prims.op_Minus n_args n_univs) args_rev) in
       (match tmp with
-        | (args_rev1, univs) -> (let tmp1 = (FStarC_List.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst univs) in
+        | (args_rev1, univs) -> (let tmp1 = (FStarC_List.map (fun x1 -> (match x1 with
+              | (u__1, u__2) -> u__1
+            )) univs) in
           let tmp2 = (translate cfg tmp1 (lb).FStarC_Syntax_Syntax.lbdef) in
           let tmp3 = (iapp cfg tmp2 (FStarC_List.rev args_rev1)) in
           (readback cfg tmp3))
@@ -1044,7 +1064,9 @@ and translate (cfg : config) (bs : (FStarC_TypeChecker_NBETerm.t) list) (e : (FS
     | (FStarC_Syntax_Syntax.Tm_name (x)) -> (FStarC_TypeChecker_NBETerm.mkAccuVar x)
     | (FStarC_Syntax_Syntax.Tm_abs (tmp2)) -> (let tmp3 = (FStarC_Syntax_Util.abs_formals_ln e) in
       (match tmp3 with
-        | (xs, body, resc) -> (mk_t_ (FStarC_TypeChecker_NBETerm.Lam ({ FStarC_TypeChecker_NBETerm.interp = (fun ys -> (let tmp4 = (FStarC_List.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst ys) in
+        | (xs, body, resc) -> (mk_t_ (FStarC_TypeChecker_NBETerm.Lam ({ FStarC_TypeChecker_NBETerm.interp = (fun ys -> (let tmp4 = (FStarC_List.map (fun x -> (match x with
+                | (u__1, u__2) -> u__1
+              )) ys) in
             let tmp5 = (FStarC_List.append tmp4 bs) in
             (translate cfg tmp5 body)));
             shape = (FStarC_TypeChecker_NBETerm.Lam_bs (bs, xs, resc));
@@ -1063,39 +1085,69 @@ and translate (cfg : config) (bs : (FStarC_TypeChecker_NBETerm.t) list) (e : (FS
           (match tmp6 with
             | ((FStarC_Syntax_Syntax.Tm_constant ((FStarC_Const.Const_reify (tmp7)))), (arg :: (more :: args1))) -> (let tmp8 = (FStarC_Syntax_Syntax.mk_Tm_app head (arg :: []) (e).FStarC_Syntax_Syntax.pos) in
               let h = (translate cfg bs tmp8) in
-              let tmp9 = (FStarC_List.map (fun x -> (let tmp9 = (translate cfg bs (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst x)) in
-                (tmp9, (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd x)))) (more :: args1)) in
+              let tmp9 = (FStarC_List.map (fun x -> (let tmp9 = (translate cfg bs (match x with
+                    | (u__1, u__2) -> u__1
+                  )) in
+                (tmp9, (match x with
+                  | (u__1, u__2) -> u__2
+                )))) (more :: args1)) in
               (iapp cfg h tmp9))
             | ((FStarC_Syntax_Syntax.Tm_constant ((FStarC_Const.Const_reflect (tmp7)))), (arg :: (more :: args1))) -> (let tmp8 = (FStarC_Syntax_Syntax.mk_Tm_app head (arg :: []) (e).FStarC_Syntax_Syntax.pos) in
               let h = (translate cfg bs tmp8) in
-              let tmp9 = (FStarC_List.map (fun x -> (let tmp9 = (translate cfg bs (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst x)) in
-                (tmp9, (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd x)))) (more :: args1)) in
+              let tmp9 = (FStarC_List.map (fun x -> (let tmp9 = (translate cfg bs (match x with
+                    | (u__1, u__2) -> u__1
+                  )) in
+                (tmp9, (match x with
+                  | (u__1, u__2) -> u__2
+                )))) (more :: args1)) in
               (iapp cfg h tmp9))
             | ((FStarC_Syntax_Syntax.Tm_constant ((FStarC_Const.Const_reflect (tmp7)))), (arg :: [])) when ((cfg).core_cfg).FStarC_TypeChecker_Cfg.reifying -> (let cfg1 = (reifying_false cfg) in
-              (translate cfg1 bs (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst arg)))
-            | ((FStarC_Syntax_Syntax.Tm_constant ((FStarC_Const.Const_reflect (tmp7)))), (arg :: [])) -> (let tmp8 = (translate cfg bs (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst arg)) in
+              (translate cfg1 bs (match arg with
+                | (u__1, u__2) -> u__1
+              )))
+            | ((FStarC_Syntax_Syntax.Tm_constant ((FStarC_Const.Const_reflect (tmp7)))), (arg :: [])) -> (let tmp8 = (translate cfg bs (match arg with
+                  | (u__1, u__2) -> u__1
+                )) in
               let tmp9 = (FStarC_TypeChecker_NBETerm.Reflect (tmp8)) in
               (mk_t_ tmp9))
             | ((FStarC_Syntax_Syntax.Tm_constant ((FStarC_Const.Const_reify (tmp7)))), (arg :: [])) when (((cfg).core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.reify_ -> (let cfg1 = (reifying_true cfg) in
-              (translate cfg1 bs (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst arg)))
-            | ((FStarC_Syntax_Syntax.Tm_constant ((FStarC_Const.Const_reflect (tmp7)))), (arg :: [])) -> (let tmp8 = (translate cfg bs (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst arg)) in
+              (translate cfg1 bs (match arg with
+                | (u__1, u__2) -> u__1
+              )))
+            | ((FStarC_Syntax_Syntax.Tm_constant ((FStarC_Const.Const_reflect (tmp7)))), (arg :: [])) -> (let tmp8 = (translate cfg bs (match arg with
+                  | (u__1, u__2) -> u__1
+                )) in
               let tmp9 = (FStarC_TypeChecker_NBETerm.Reflect (tmp8)) in
               (mk_t_ tmp9))
             | ((FStarC_Syntax_Syntax.Tm_fvar (fv)), (tmp7 :: [])) when ((FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.assert_lid) || (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.assert_norm_lid)) -> ((debug_ (fun tmp8 -> (FStarC_Format.print_string "Eliminated assertion\n")));
               (mk_t_ (FStarC_TypeChecker_NBETerm.Constant (FStarC_TypeChecker_NBETerm.Unit))))
             | tmp7 -> (if (((let scrut = (FStarC_TypeChecker_Cfg.cfg_env (cfg).core_cfg) in
               (scrut).FStarC_TypeChecker_Env.erase_erasable_args) || (((cfg).core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction) || (((cfg).core_cfg).FStarC_TypeChecker_Cfg.debug).FStarC_TypeChecker_Cfg.erase_erasable_args) then (let tmp8 = (translate cfg bs head) in
-              let tmp9 = (FStarC_List.map (fun x -> (let tmp9 = (FStarC_Syntax_Util.aqual_is_erasable (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd x)) in
-                (if tmp9 then ((debug_ (fun tmp10 -> (let tmp11 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst x)) in
+              let tmp9 = (FStarC_List.map (fun x -> (let tmp9 = (FStarC_Syntax_Util.aqual_is_erasable (match x with
+                    | (u__1, u__2) -> u__2
+                  )) in
+                (if tmp9 then ((debug_ (fun tmp10 -> (let tmp11 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' (match x with
+                    | (u__1, u__2) -> u__1
+                  )) in
                 (FStarC_Format.print1 "Erasing %s\n" tmp11))));
-                ((mk_t_ (FStarC_TypeChecker_NBETerm.Constant (FStarC_TypeChecker_NBETerm.Unit))), (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd x))) else (let tmp10 = (translate cfg bs (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst x)) in
-                (tmp10, (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd x)))))) args) in
+                ((mk_t_ (FStarC_TypeChecker_NBETerm.Constant (FStarC_TypeChecker_NBETerm.Unit))), (match x with
+                  | (u__1, u__2) -> u__2
+                ))) else (let tmp10 = (translate cfg bs (match x with
+                    | (u__1, u__2) -> u__1
+                  )) in
+                (tmp10, (match x with
+                  | (u__1, u__2) -> u__2
+                )))))) args) in
               (iapp cfg tmp8 tmp9)) else ((debug_ (fun tmp8 -> (let tmp9 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' head) in
               let tmp10 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_tuple2_syntax_option args) in
               (FStarC_Format.print2 "Application: %s @ %s\n" tmp9 tmp10))));
               let tmp8 = (translate cfg bs head) in
-              let tmp9 = (FStarC_List.map (fun x -> (let tmp9 = (translate cfg bs (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst x)) in
-                (tmp9, (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd x)))) args) in
+              let tmp9 = (FStarC_List.map (fun x -> (let tmp9 = (translate cfg bs (match x with
+                    | (u__1, u__2) -> u__1
+                  )) in
+                (tmp9, (match x with
+                  | (u__1, u__2) -> u__2
+                )))) args) in
               (iapp cfg tmp8 tmp9)))
           ))
       ))

@@ -460,9 +460,6 @@ let mk_tactic_interpretation_20 (name : string) (t : ('u___t1 -> ('u___t2 -> ('u
     | tmp -> None
   )
 
-let max_tac_arity : Prims.int =
-  (Prims.of_int (20))
-
 let types_lid (nm : string) : FStarC_Ident.lident =
   (FStarC_Parser_Const.fstar_stubs_tactics_lid' ("Types" :: (nm :: [])))
 

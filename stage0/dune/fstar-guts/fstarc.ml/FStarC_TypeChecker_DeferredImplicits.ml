@@ -290,7 +290,9 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env) (g : FStar
                     let tmp8 = (FStarC_TypeChecker_Env.new_implicit_var_aux reason ((tp).FStarC_TypeChecker_Common.lhs).FStarC_Syntax_Syntax.pos env2 goal_ty FStarC_Syntax_Syntax.Strict None false) in
                     (match tmp8 with
                       | (goal, ctx_uvar, tmp9) -> (let imp = { FStarC_TypeChecker_Common.imp_reason = "";
-                            imp_uvar = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst ctx_uvar);
+                            imp_uvar = (match ctx_uvar with
+                              | (u__1, u__2) -> u__1
+                            );
                             imp_tm = goal;
                             imp_range = ((tp).FStarC_TypeChecker_Common.lhs).FStarC_Syntax_Syntax.pos } in
                         let tmp10 = (is_flex (tp).FStarC_TypeChecker_Common.lhs) in
@@ -329,20 +331,20 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env) (g : FStar
         ))
     )) tmp1 ([], [])) in
   (match tmp2 with
-    | (more, imps) -> (let bucketize = (fun is -> (let map = (FStarC_SMap.create (Prims.of_int (17))) in
+    | (more, imps) -> (let bucketize = (fun is -> (let map = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (17)))) in
         (FStarC_List.iter (fun tmp3 -> (match tmp3 with
           | (i, s) -> (match (FStarC_Syntax_Util.lid_of_sigelt s) with
               | None -> (FStarC_Effect.failwith "Unexpected: tactic without a name")
               | (Some (l)) -> (let lstr = (FStarC_Ident.string_of_lid l) in
-                let tmp4 = (FStarC_SMap.try_find map lstr) in
+                let tmp4 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt map lstr) in
                 (match tmp4 with
-                  | None -> (FStarC_SMap.add map lstr ((i :: []), s))
-                  | (Some ((is1, s1))) -> ((FStarC_SMap.remove map lstr);
-                    (FStarC_SMap.add map lstr ((i :: is1), s1)))
+                  | None -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace map lstr ((i :: []), s))
+                  | (Some ((is1, s1))) -> ((FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.remove map lstr);
+                    (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace map lstr ((i :: is1), s1)))
                 ))
             )
         )) is);
-        (FStarC_SMap.fold map (fun tmp3 is1 out -> (is1 :: out)) []))) in
+        (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun tmp3 is1 out -> (is1 :: out)) map []))) in
       let buckets = (bucketize (FStarC_List.op_At eqs more)) in
       (FStarC_List.iter (fun tmp3 -> (match tmp3 with
         | (imps1, sigel) -> (solve_goals_with_tac env g imps1 sigel)

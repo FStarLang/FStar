@@ -9,7 +9,9 @@ let try_assoc (key : string) (d : ((string * FStarC_Json.json)) list) : (FStarC_
   (let tmp = (FStarC_Util.try_find (fun tmp -> (match tmp with
       | (k, tmp1) -> ((=) k key)
     )) d) in
-  (FStarC_Option.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd tmp))
+  (FStarC_Option.map (fun x -> (match x with
+    | (u__1, u__2) -> u__2
+  )) tmp))
 
 exception InvalidQuery of string
 

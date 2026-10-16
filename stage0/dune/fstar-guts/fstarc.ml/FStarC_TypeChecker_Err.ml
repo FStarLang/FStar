@@ -86,7 +86,9 @@ let u___expected_eff_expression (effname : string) (rng : FStarC_Range_Type.rang
   (let tmp = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' e) in
   let tmp1 = (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "Got an expression") tmp) in
   let tmp2 = (name_and_result c) in
-  let tmp3 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp2) in
+  let tmp3 = (match tmp2 with
+      | (u__1, u__2) -> u__1
+    ) in
   let tmp4 = (FStar_Pprint.doc_of_string tmp3) in
   let tmp5 = (FStarC_Errors_Msg.fquotes tmp4) in
   let tmp6 = (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "with effect") tmp5) in

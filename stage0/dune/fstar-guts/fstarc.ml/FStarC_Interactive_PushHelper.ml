@@ -88,7 +88,7 @@ let pop_repl (msg : string) (st : FStarC_Interactive_Ide_Types.repl_state) : FSt
   ))
 
 let tf_of_fname (fname : string) : FStarC_Interactive_Ide_Types.timed_fname =
-  (let tmp = (FStarC_Parser_ParseIt.get_file_last_modification_time fname) in
+  (let tmp = (FStarC_Parser_Frontend.get_file_last_modification_time fname) in
   { FStarC_Interactive_Ide_Types.tf_fname = fname; tf_modtime = tmp })
 
 let update_task_timestamps (task : FStarC_Interactive_Ide_Types.repl_task) : FStarC_Interactive_Ide_Types.repl_task =
@@ -333,11 +333,17 @@ let add_module_completions (this_fname : string) (deps : (string) list) (table :
     (FStarC_PSMap.add acc tmp true))) (FStarC_PSMap.empty ()) deps) in
   let loaded = (fun modname -> (FStarC_PSMap.find_default loaded_mods_set modname false)) in
   let this_mod_key = (FStarC_Parser_Dep.lowercase_module_name this_fname) in
+  let this_tgt = (FStarC_Parser_Dep.target_of_file this_fname) in
   (FStarC_List.fold_left (fun table1 tmp -> (match tmp with
-    | (modname, mod_path) -> (let mod_key = (FStarC_String.lowercase modname) in
-      (if ((=) this_mod_key mod_key) then table1 else (let tmp1 = (capitalize modname) in
-      let ns_query = (FStarC_Util.split tmp1 ".") in
-      (FStarC_Interactive_CompletionTable.register_module_path table1 (loaded mod_key) mod_path ns_query))))
+    | (modname, mod_path) -> (let tmp1 = (FStarC_Target.split_target modname) in
+      (match tmp1 with
+        | (modname1, tgt) -> (let mod_key = (FStarC_String.lowercase modname1) in
+          let tmp2 = (FStarC_Target.implies this_tgt tgt) in
+          let tmp3 = (not tmp2) in
+          (if tmp3 then table1 else (if ((=) this_mod_key mod_key) then table1 else (let tmp4 = (capitalize modname1) in
+          let ns_query = (FStarC_Util.split tmp4 ".") in
+          (FStarC_Interactive_CompletionTable.register_module_path table1 (loaded mod_key) mod_path ns_query)))))
+      ))
   )) table (FStarC_List.rev mods)))
 
 let add_issues_to_push_fragment (issues : (FStarC_Json.json) list) : unit =

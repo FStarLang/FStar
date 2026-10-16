@@ -355,8 +355,12 @@ let pack_sigelt (sv : FStarC_Reflection_V2_Data.sigelt_view) : FStarC_Syntax_Syn
         (check_lid lid);
         (lid, lb))) in
       let packed = (FStarC_List.map pack_letbinding lbs) in
-      let lbs1 = (FStarC_List.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd packed) in
-      let lids = (FStarC_List.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst packed) in
+      let lbs1 = (FStarC_List.map (fun x -> (match x with
+          | (u__1, u__2) -> u__2
+        )) packed) in
+      let lids = (FStarC_List.map (fun x -> (match x with
+          | (u__1, u__2) -> u__1
+        )) packed) in
       (FStarC_Syntax_Syntax.mk_sigelt (FStarC_Syntax_Syntax.Sig_let (({ FStarC_Syntax_Syntax.lbs = (r, lbs1); lids = lids } : FStarC_Syntax_Syntax.sigelt'__Sig_let__payload)))))
     | (FStarC_Reflection_V2_Data.Sg_Inductive (nm, us_names, param_bs, ty, ctors)) -> (let ind_lid = (FStarC_Ident.lid_of_path nm FStarC_Range_Type.dummyRange) in
       (check_lid ind_lid);

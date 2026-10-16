@@ -165,7 +165,9 @@ let tc_data (env : FStarC_TypeChecker_Env.env) (tcs : ((FStarC_Syntax_Syntax.sig
                                   let g = (FStarC_List.fold_left2 (fun g tmp15 u_x -> (let tmp16 = (FStarC_TypeChecker_Rel.universe_inequality u_x u_tc) in
                                     (FStarC_TypeChecker_Env.conj_guard g tmp16))) g_uvs arguments1 us) in
                                   (FStarC_Errors.stop_if_err ());
-                                  let p_args = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst (FStarC_Util.first_N (FStarC_List.length tps) args)) in
+                                  let p_args = (match (FStarC_Util.first_N (FStarC_List.length tps) args) with
+                                      | (u__1, u__2) -> u__1
+                                    ) in
                                   (FStarC_List.iter2 (fun tmp15 tmp16 -> (match (tmp15, tmp16) with
                                     | ({ FStarC_Syntax_Syntax.binder_bv = bv; binder_qual = tmp17; binder_positivity = tmp18; binder_attrs = tmp19; _ }, (t3, tmp20)) -> (let tmp21 = (FStarC_Syntax_Subst.compress t3) in
                                       let tmp22 = (tmp21).FStarC_Syntax_Syntax.n in
@@ -378,7 +380,9 @@ let check_sig_inductive_injectivity_on_params (tcenv : FStarC_TypeChecker_Env.en
                       (match tmp10 with
                         | (tps2, env_tps, tmp11, us) -> (let tmp12 = (FStarC_Syntax_Syntax.fvar ((dd : FStarC_Syntax_Syntax.sigelt'__Sig_inductive_typ__payload)).FStarC_Syntax_Syntax.lid None) in
                           let tmp13 = (FStarC_Syntax_Util.args_of_binders tps2) in
-                          let tmp14 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd tmp13) in
+                          let tmp14 = (match tmp13 with
+                              | (u__1, u__2) -> u__2
+                            ) in
                           let tmp15 = (FStarC_Syntax_Syntax.mk_Tm_app tmp12 tmp14 (FStarC_Ident.range_of_lid ((dd : FStarC_Syntax_Syntax.sigelt'__Sig_inductive_typ__payload)).FStarC_Syntax_Syntax.lid)) in
                           let u_k = (FStarC_TypeChecker_TcTerm.level_of_type env_tps tmp15 k2) in
                           let u_leq_u_k = (fun u -> (let u1 = (FStarC_TypeChecker_Normalize.normalize_universe env_tps u) in
@@ -464,9 +468,13 @@ let check_inductive_well_typedness (env : FStarC_TypeChecker_Env.env) (ses : (FS
                 ))
             )) datas ([], g1)) in
           (match tmp3 with
-            | (datas1, g2) -> (let tc_universe_vars = (FStarC_List.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd tcs) in
+            | (datas1, g2) -> (let tc_universe_vars = (FStarC_List.map (fun x -> (match x with
+                  | (u__1, u__2) -> u__2
+                )) tcs) in
               let tmp4 = (FStarC_CList.fStarC_Class_Listlike_from_list__universe_clist_universe tc_universe_vars) in
-              let tmp5 = (tmp4, (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd ((g2).FStarC_TypeChecker_Common.univ_ineqs, (g2).FStarC_TypeChecker_Common.univ_ineqs1))) in
+              let tmp5 = (tmp4, (match ((g2).FStarC_TypeChecker_Common.univ_ineqs, (g2).FStarC_TypeChecker_Common.univ_ineqs1) with
+                  | (u__1, u__2) -> u__2
+                )) in
               let g3 = { FStarC_TypeChecker_Common.guard_f = (g2).FStarC_TypeChecker_Common.guard_f;
                   deferred_to_tac = (g2).FStarC_TypeChecker_Common.deferred_to_tac;
                   deferred = (g2).FStarC_TypeChecker_Common.deferred;
@@ -480,7 +488,9 @@ let check_inductive_well_typedness (env : FStarC_TypeChecker_Env.env) (ses : (FS
               let tmp7 = (if (match univs with
                   | [] -> true
                   | tmp7 -> false
-                ) then (generalize_and_inst_within env tcs datas1) else (let tmp7 = (FStarC_List.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tcs) in
+                ) then (generalize_and_inst_within env tcs datas1) else (let tmp7 = (FStarC_List.map (fun x -> (match x with
+                    | (u__1, u__2) -> u__1
+                  )) tcs) in
                 (tmp7, datas1))) in
               (match tmp7 with
                 | (tcs1, datas2) -> (let tcs2 = (FStarC_List.map (fun se -> (match (se).FStarC_Syntax_Syntax.sigel with
@@ -492,7 +502,9 @@ let check_inductive_well_typedness (env : FStarC_TypeChecker_Env.env) (ses : (FS
                           let tmp14 = (tmp10 :: tmp13) in
                           (FStarC_Errors.fStarC_Errors_raise_error__sigelt_list_document se FStarC_Errors_Codes.Fatal_UnexpectedInductiveType tmp14))) in
                         let copy_binder_attrs_from_val = (fun binders1 expected -> (let tmp9 = (FStarC_TypeChecker_Normalize.get_n_binders env1 (FStarC_List.length binders1) expected) in
-                          let tmp10 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp9) in
+                          let tmp10 = (match tmp9 with
+                              | (u__1, u__2) -> u__1
+                            ) in
                           let expected_attrs = (FStarC_List.map (fun tmp11 -> ((tmp11).FStarC_Syntax_Syntax.binder_attrs, (tmp11).FStarC_Syntax_Syntax.binder_positivity)) tmp10) in
                           (if ((<>) (FStarC_List.length expected_attrs) (FStarC_List.length binders1)) then (let tmp11 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 (FStarC_List.length binders1)) in
                           let tmp12 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' expected) in
@@ -513,11 +525,17 @@ let check_inductive_well_typedness (env : FStarC_TypeChecker_Env.env) (ses : (FS
                         let tmp9 = (FStarC_TypeChecker_Env.try_lookup_val_decl env l) in
                         (match tmp9 with
                           | None -> se
-                          | (Some ((expected_typ, tmp10))) -> (if ((=) (FStarC_List.length univs1) (FStarC_List.length (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst expected_typ))) then (let tmp11 = (FStarC_Syntax_Subst.open_univ_vars univs1 (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd expected_typ)) in
+                          | (Some ((expected_typ, tmp10))) -> (if ((=) (FStarC_List.length univs1) (FStarC_List.length (match expected_typ with
+                              | (u__1, u__2) -> u__1
+                            ))) then (let tmp11 = (FStarC_Syntax_Subst.open_univ_vars univs1 (match expected_typ with
+                                | (u__1, u__2) -> u__2
+                              )) in
                             (match tmp11 with
                               | (tmp12, expected) -> (let binders1 = (copy_binder_attrs_from_val binders expected) in
                                 let inferred_typ = (inferred_typ_with_binders binders1) in
-                                let tmp13 = (FStarC_Syntax_Subst.open_univ_vars univs1 (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd inferred_typ)) in
+                                let tmp13 = (FStarC_Syntax_Subst.open_univ_vars univs1 (match inferred_typ with
+                                    | (u__1, u__2) -> u__2
+                                  )) in
                                 (match tmp13 with
                                   | (tmp14, inferred) -> (let tmp15 = (FStarC_TypeChecker_Rel.teq_nosmt_force env inferred expected) in
                                     (if tmp15 then { FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_inductive_typ (({ FStarC_Syntax_Syntax.lid = l;
@@ -870,7 +888,9 @@ let rec unoptimized_haseq_data__is_mutual (mutuals : (FStarC_Ident.lident) list)
     | (FStarC_Syntax_Syntax.Tm_app (tmp2)) -> (let tmp3 = (FStarC_Syntax_Util.head_and_args_full t) in
       (match tmp3 with
         | (t', args) -> (let tmp4 = ((unoptimized_haseq_data__is_mutual mutuals) t') in
-          (if tmp4 then true else (let tmp5 = (FStarC_List.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst args) in
+          (if tmp4 then true else (let tmp5 = (FStarC_List.map (fun x -> (match x with
+              | (u__1, u__2) -> u__1
+            )) args) in
           ((unoptimized_haseq_data__exists_mutual mutuals) tmp5))))
       ))
     | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t'; meta = tmp2; _ })) -> ((unoptimized_haseq_data__is_mutual mutuals) t')
@@ -892,7 +912,9 @@ let unoptimized_haseq_data (usubst : (FStarC_Syntax_Syntax.subst_elt) list) (bs 
   (match tmp1 with
     | (FStarC_Syntax_Syntax.Tm_arrow (tmp2)) -> (let tmp3 = (FStarC_Syntax_Util.arrow_formals_ln dt1) in
       (match tmp3 with
-        | (dbs, tmp4) -> (let dbs1 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd (FStarC_List.splitAt (FStarC_List.length bs) dbs)) in
+        | (dbs, tmp4) -> (let dbs1 = (match (FStarC_List.splitAt (FStarC_List.length bs) dbs) with
+              | (u__1, u__2) -> u__2
+            ) in
           let tmp5 = (FStarC_Syntax_Subst.opening_of_binders bs) in
           let dbs2 = (FStarC_Syntax_Subst.subst_binders tmp5 dbs1) in
           let dbs3 = (FStarC_Syntax_Subst.open_binders dbs2) in
@@ -1032,7 +1054,9 @@ let get_optimized_haseq_axiom (en : FStarC_TypeChecker_Env.env) (ty : FStarC_Syn
           let ind2 = (FStarC_Syntax_Syntax.mk_Tm_app ind1 tmp8 FStarC_Range_Type.dummyRange) in
           let haseq_ind = (FStarC_Syntax_Syntax.mk_Tm_app FStarC_Syntax_Util.t_haseq ((FStarC_Syntax_Syntax.as_arg ind2) :: []) FStarC_Range_Type.dummyRange) in
           let bs' = (FStarC_List.filter (fun b -> (let tmp9 = (FStarC_Syntax_Util.type_u ()) in
-            let tmp10 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp9) in
+            let tmp10 = (match tmp9 with
+                | (u__1, u__2) -> u__1
+              ) in
             (FStarC_TypeChecker_Rel.subtype_nosmt_force en ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort tmp10))) bs2) in
           let haseq_bs = (FStarC_List.fold_left (fun t3 b -> (let tmp9 = (FStarC_Syntax_Syntax.bv_to_name (b).FStarC_Syntax_Syntax.binder_bv) in
             let tmp10 = (FStarC_Syntax_Syntax.as_arg tmp9) in
@@ -1071,7 +1095,9 @@ let optimized_haseq_soundness_for_data (ty_lid : FStarC_Ident.lident) (data : FS
   (match tmp1 with
     | (FStarC_Syntax_Syntax.Tm_arrow (tmp2)) -> (let tmp3 = (FStarC_Syntax_Util.arrow_formals_ln dt1) in
       (match tmp3 with
-        | (dbs, tmp4) -> (let dbs1 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd (FStarC_List.splitAt (FStarC_List.length bs) dbs)) in
+        | (dbs, tmp4) -> (let dbs1 = (match (FStarC_List.splitAt (FStarC_List.length bs) dbs) with
+              | (u__1, u__2) -> u__2
+            ) in
           let tmp5 = (FStarC_Syntax_Subst.opening_of_binders bs) in
           let dbs2 = (FStarC_Syntax_Subst.subst_binders tmp5 dbs1) in
           let dbs3 = (FStarC_Syntax_Subst.open_binders dbs2) in

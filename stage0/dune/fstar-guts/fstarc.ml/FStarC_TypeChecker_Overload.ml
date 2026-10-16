@@ -315,7 +315,9 @@ let resolve (env : FStarC_TypeChecker_Env.env) (speculate : ((FStarC_Syntax_Synt
           | FStarC_Options.Overload_strict -> true
           | tmp4 -> false
         ) in
-      (if tmp4 then (let tmp5 = (FStarC_List.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst cands3) in
+      (if tmp4 then (let tmp5 = (FStarC_List.map (fun x -> (match x with
+          | (u__1, u__2) -> u__1
+        )) cands3) in
       let tmp6 = (already_reported (FStarC_Syntax_Syntax.lid_of_fv primary) tmp5) in
       let tmp7 = (not tmp6) in
       (if tmp7 then (let tmp8 = (FStarC_Ident.fStarC_Class_PP_pp__ident (FStarC_Ident.ident_of_lid (FStarC_Syntax_Syntax.lid_of_fv primary))) in
@@ -324,7 +326,9 @@ let resolve (env : FStarC_TypeChecker_Env.env) (speculate : ((FStarC_Syntax_Synt
       let tmp11 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "The name") tmp10) in
       let tmp12 = (FStar_Pprint.group tmp11) in
       let tmp13 = (tmp12 :: []) in
-      let tmp14 = (FStarC_List.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst cands3) in
+      let tmp14 = (FStarC_List.map (fun x -> (match x with
+          | (u__1, u__2) -> u__1
+        )) cands3) in
       let tmp15 = (candidates_doc env tmp14) in
       let tmp16 = (FStarC_List.op_At tmp13 tmp15) in
       (FStarC_Errors.fStarC_Errors_log_issue__lident_list_document (FStarC_Syntax_Syntax.lid_of_fv primary) FStarC_Errors_Codes.Error_AmbiguousName tmp16)) else ());

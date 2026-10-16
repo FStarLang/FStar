@@ -325,7 +325,7 @@ let fStarC_Syntax_VisitM_on_sub_comp__id_dyn_lvm (tmp : lvm) (c : (FStarC_Syntax
   (let ct = (c).FStarC_Syntax_Syntax.n in
   let tmp1 = (fStarC_Syntax_VisitM_on_sub_comp_typ__id_dyn_lvm tmp ct) in
   let tmp2 = (fStarC_Class_Monad_op_Less_Dollar_Greater__id___proj__Mklvm__item__lvm_monad_id_dyn tmp (fun u__eta -> u__eta) tmp1) in
-  (fStarC_Class_Monad_op_let_Bang__id___proj__Mklvm__item__lvm_monad_id_dyn tmp tmp2 (fun cn -> (let tmp3 = (FStarC_Syntax_Syntax.mk cn (c).FStarC_Syntax_Syntax.pos) in
+  (fStarC_Class_Monad_op_let_Bang__id___proj__Mklvm__item__lvm_monad_id_dyn tmp tmp2 (fun cn -> (let tmp3 = (FStarC_Syntax_Syntax.mk_comp' cn (c).FStarC_Syntax_Syntax.pos) in
   (fStarC_Class_Monad_return__id___proj__Mklvm__item__lvm_monad_id_dyn tmp tmp3)))))
 
 let fStarC_Syntax_VisitM_f_comp__1 (tmp : bool) (tmp1 : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (tmp2 : (FStarC_Syntax_Syntax.universe -> FStarC_Syntax_Syntax.universe)) : ((FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax -> (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) =
@@ -696,7 +696,7 @@ let fStarC_Syntax_VisitM_on_sub_comp__option_dyn_lvm (tmp : lvm) (c : (FStarC_Sy
   (let ct = (c).FStarC_Syntax_Syntax.n in
   let tmp1 = (fStarC_Syntax_VisitM_on_sub_comp_typ__option_dyn_lvm tmp ct) in
   let tmp2 = (fStarC_Class_Monad_op_Less_Dollar_Greater__option___proj__Mklvm__item__lvm_monad_option_dyn tmp (fun u__eta -> u__eta) tmp1) in
-  (fStarC_Class_Monad_op_let_Bang__option___proj__Mklvm__item__lvm_monad_option_dyn tmp tmp2 (fun cn -> (let tmp3 = (FStarC_Syntax_Syntax.mk cn (c).FStarC_Syntax_Syntax.pos) in
+  (fStarC_Class_Monad_op_let_Bang__option___proj__Mklvm__item__lvm_monad_option_dyn tmp tmp2 (fun cn -> (let tmp3 = (FStarC_Syntax_Syntax.mk_comp' cn (c).FStarC_Syntax_Syntax.pos) in
   (fStarC_Class_Monad_return__option___proj__Mklvm__item__lvm_monad_option_dyn tmp tmp3)))))
 
 let fStarC_Syntax_VisitM_f_comp__3 (tmp : bool) (tmp1 : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) (tmp2 : (FStarC_Syntax_Syntax.universe -> (FStarC_Syntax_Syntax.universe) option)) : ((FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax -> ((FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) option) =

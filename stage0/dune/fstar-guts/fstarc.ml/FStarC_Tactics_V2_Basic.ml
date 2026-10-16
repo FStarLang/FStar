@@ -1697,10 +1697,14 @@ let u___refl_typing_builtin_wrapper (f : (unit -> ('u___a * ((FStarC_TypeChecker
           | (e, (g, tok)) -> (let tmp2 = (FStarC_Syntax_Compress.deep_compress false true g) in
             let tmp3 = (tmp2, tok) in
             (e, tmp3))
-        )) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd (match r with
+        )) (match (match r with
           | (Some (v)) -> v
-        ))) else []) in
-      let r1 = (FStarC_Option.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst r) in
+        ) with
+          | (u__1, u__2) -> u__2
+        )) else []) in
+      let r1 = (FStarC_Option.map (fun x -> (match x with
+          | (u__1, u__2) -> u__1
+        )) r) in
       (FStarC_Tactics_Monad.fStarC_Class_Monad_op_let_Bang__fn FStarC_Tactics_Monad.get (fun ps -> ((FStarC_TypeChecker_Env.promote_id_info (ps).FStarC_Tactics_Types.main_context (FStarC_TypeChecker_Tc.compress_and_norm (ps).FStarC_Tactics_Types.main_context));
       (FStarC_Syntax_Unionfind.rollback tx);
       (if (match errs with
@@ -1711,7 +1715,9 @@ let u___refl_typing_builtin_wrapper (f : (unit -> ('u___a * ((FStarC_TypeChecker
           let tmp4 = (FStarC_Tactics_Monad.catch tmp3) in
           (FStarC_Tactics_Monad.fStarC_Class_Monad_op_let_Bang__fn tmp4 (fun tmp5 -> (match tmp5 with
             | (FStar_Pervasives.Inr (())) -> (FStarC_Tactics_Monad.fStarC_Class_Monad_return__fn (ok, errs1))
-            | (FStar_Pervasives.Inl (e1)) -> (let tmp6 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst g)) in
+            | (FStar_Pervasives.Inl (e1)) -> (let tmp6 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' (match g with
+                  | (u__1, u__2) -> u__1
+                )) in
               let tmp7 = (FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string "g = ") tmp6) in
               let tmp8 = (FStarC_Tactics_Types.fStarC_Class_PP_pp__guard_policy (ps).FStarC_Tactics_Types.guard_policy) in
               let tmp9 = (FStar_Pprint.op_Hat_Slash_Hat (FStar_Pprint.doc_of_string "Guard policy is") tmp8) in
@@ -1816,11 +1822,173 @@ let refl_check_match_complete (g : FStarC_TypeChecker_Env.env) (sc : (FStarC_Syn
       (tmp5, []))
   ))))
 
+let rec univs_have_uvar (us : (FStarC_Syntax_Syntax.universe) list) : bool =
+  (match us with
+    | [] -> false
+    | (u :: us1) -> (let tmp = (univ_has_uvar u) in
+      (if tmp then true else (univs_have_uvar us1)))
+  )
+
+and univ_has_uvar (u : FStarC_Syntax_Syntax.universe) : bool =
+  (let tmp = (FStarC_Syntax_Subst.compress_univ u) in
+  (match tmp with
+    | (FStarC_Syntax_Syntax.U_unif (u__1, u__2, u__3)) -> true
+    | (FStarC_Syntax_Syntax.U_succ (u1)) -> (univ_has_uvar u1)
+    | (FStarC_Syntax_Syntax.U_max (us)) -> (univs_have_uvar us)
+    | tmp1 -> false
+  ))
+
+let rec terms_have_uvar (check_tm : bool) (ts : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) : bool =
+  (match ts with
+    | [] -> false
+    | (t :: ts1) -> (let tmp = (term_has_uvar check_tm t) in
+      (if tmp then true else (terms_have_uvar check_tm ts1)))
+  )
+
+and dec_order_has_uvar (check_tm : bool) (d : FStarC_Syntax_Syntax.decreases_order) : bool =
+  (match d with
+    | (FStarC_Syntax_Syntax.Decreases_lex (l)) -> (terms_have_uvar check_tm l)
+    | (FStarC_Syntax_Syntax.Decreases_wf (rel, e)) -> (let tmp = (term_has_uvar check_tm rel) in
+      (if tmp then true else (term_has_uvar check_tm e)))
+  )
+
+and comp_has_uvar (check_tm : bool) (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : bool =
+  (let ct = (c).FStarC_Syntax_Syntax.n in
+  let tmp = (term_has_uvar check_tm (ct).FStarC_Syntax_Syntax.result_typ) in
+  let tmp1 = (if tmp then true else (let tmp1 = (FStarC_List.tryFind (fun tmp1 -> (match tmp1 with
+        | (FStarC_Syntax_Syntax.DECREASES (tmp2)) -> true
+        | tmp2 -> false
+      )) (ct).FStarC_Syntax_Syntax.flags) in
+    (match tmp1 with
+      | (Some ((FStarC_Syntax_Syntax.DECREASES (dec_order)))) -> (dec_order_has_uvar check_tm dec_order)
+      | tmp2 -> false
+    ))) in
+  (if tmp1 then true else (let tmp2 = (FStarC_List.tryFind (fun tmp2 -> (match tmp2 with
+      | (FStarC_Syntax_Syntax.SMTPAT (tmp3)) -> true
+      | tmp3 -> false
+    )) (ct).FStarC_Syntax_Syntax.flags) in
+  (match tmp2 with
+    | (Some ((FStarC_Syntax_Syntax.SMTPAT (p)))) -> (term_has_uvar check_tm p)
+    | tmp3 -> false
+  ))))
+
+and ascription_has_uvar (check_tm : bool) (asc : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax, (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * bool)) : bool =
+  (match asc with
+    | (asc1, tacopt, tmp) -> (let tmp1 = (match asc1 with
+          | (FStar_Pervasives.Inl (t)) -> (term_has_uvar check_tm t)
+          | (FStar_Pervasives.Inr (c)) -> (comp_has_uvar check_tm c)
+        ) in
+      (if tmp1 then true else (match tacopt with
+        | None -> false
+        | (Some (tac)) -> (term_has_uvar check_tm tac)
+      )))
+  )
+
+and bv_sorts_have_uvar (check_tm : bool) (bvs : (FStarC_Syntax_Syntax.bv) list) : bool =
+  (match bvs with
+    | [] -> false
+    | (x :: bvs1) -> (let tmp = (term_has_uvar check_tm (x).FStarC_Syntax_Syntax.sort) in
+      (if tmp then true else (bv_sorts_have_uvar check_tm bvs1)))
+  )
+
+and branches_have_uvar (check_tm : bool) (brs : (((FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) list) : bool =
+  (match brs with
+    | [] -> false
+    | ((p, wopt, t) :: brs1) -> (let tmp = (FStarC_Syntax_Syntax.pat_bvs p) in
+      let tmp1 = (bv_sorts_have_uvar check_tm tmp) in
+      let tmp2 = (if tmp1 then true else (match wopt with
+          | None -> false
+          | (Some (w)) -> (term_has_uvar check_tm w)
+        )) in
+      let tmp3 = (if tmp2 then true else (term_has_uvar check_tm t)) in
+      (if tmp3 then true else (branches_have_uvar check_tm brs1)))
+  )
+
+and lbs_have_uvar (check_tm : bool) (lbs : (FStarC_Syntax_Syntax.letbinding) list) : bool =
+  (match lbs with
+    | [] -> false
+    | (lb :: lbs1) -> (let tmp = (term_has_uvar check_tm (lb).FStarC_Syntax_Syntax.lbtyp) in
+      let tmp1 = (if tmp then true else (term_has_uvar check_tm (lb).FStarC_Syntax_Syntax.lbdef)) in
+      (if tmp1 then true else (lbs_have_uvar check_tm lbs1)))
+  )
+
+and args_have_uvar (check_tm : bool) (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : bool =
+  (match args with
+    | [] -> false
+    | ((a, tmp) :: args1) -> (let tmp1 = (term_has_uvar check_tm a) in
+      (if tmp1 then true else (args_have_uvar check_tm args1)))
+  )
+
+and args_list_have_uvar (check_tm : bool) (l : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) list) : bool =
+  (match l with
+    | [] -> false
+    | (args :: l1) -> (let tmp = (args_have_uvar check_tm args) in
+      (if tmp then true else (args_list_have_uvar check_tm l1)))
+  )
+
+and term_has_uvar (check_tm : bool) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
+  (let t1 = (FStarC_Syntax_Subst.compress t) in
+  (match (t1).FStarC_Syntax_Syntax.n with
+    | (FStarC_Syntax_Syntax.Tm_delayed (tmp)) -> (FStarC_Effect.failwith "Impossible")
+    | (FStarC_Syntax_Syntax.Tm_uvar (u__1, u__2)) -> check_tm
+    | (FStarC_Syntax_Syntax.Tm_type (u)) -> (univ_has_uvar u)
+    | (FStarC_Syntax_Syntax.Tm_name (tmp)) -> false
+    | (FStarC_Syntax_Syntax.Tm_bvar (tmp)) -> false
+    | (FStarC_Syntax_Syntax.Tm_fvar (tmp)) -> false
+    | (FStarC_Syntax_Syntax.Tm_constant (tmp)) -> false
+    | (FStarC_Syntax_Syntax.Tm_lazy (tmp)) -> false
+    | FStarC_Syntax_Syntax.Tm_unknown -> false
+    | (FStarC_Syntax_Syntax.Tm_uinst (t2, us)) -> (let tmp = (term_has_uvar check_tm t2) in
+      (if tmp then true else (univs_have_uvar us)))
+    | (FStarC_Syntax_Syntax.Tm_abs ({ FStarC_Syntax_Syntax.b = b; body = body; rc_opt = rc_opt; _ })) -> (let tmp = (term_has_uvar check_tm ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
+      let tmp1 = (if tmp then true else (term_has_uvar check_tm body)) in
+      (if tmp1 then true else (match rc_opt with
+        | (Some ({ FStarC_Syntax_Syntax.residual_effect = tmp2; residual_typ = (Some (t2)); residual_flags = tmp3; _ })) -> (term_has_uvar check_tm t2)
+        | tmp2 -> false
+      )))
+    | (FStarC_Syntax_Syntax.Tm_arrow ({ FStarC_Syntax_Syntax.b = b; comp = comp; _ })) -> (let tmp = (term_has_uvar check_tm ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
+      (if tmp then true else (comp_has_uvar check_tm comp)))
+    | (FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = b; phi = phi; _ })) -> (let tmp = (term_has_uvar check_tm (b).FStarC_Syntax_Syntax.sort) in
+      (if tmp then true else (term_has_uvar check_tm phi)))
+    | (FStarC_Syntax_Syntax.Tm_app ({ FStarC_Syntax_Syntax.hd = hd; arg = a; arg1 = tmp; _ })) -> (let tmp1 = (term_has_uvar check_tm hd) in
+      (if tmp1 then true else (term_has_uvar check_tm a)))
+    | (FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = scrutinee; ret_opt = ret_opt; brs = brs; rc_opt = rc_opt; _ })) -> (let tmp = (match rc_opt with
+          | (Some ({ FStarC_Syntax_Syntax.residual_effect = tmp; residual_typ = (Some (t2)); residual_flags = tmp1; _ })) -> (term_has_uvar check_tm t2)
+          | tmp -> false
+        ) in
+      let tmp1 = (if tmp then true else (term_has_uvar check_tm scrutinee)) in
+      let tmp2 = (if tmp1 then true else (match ret_opt with
+          | None -> false
+          | (Some ((b, asc))) -> (let tmp2 = (term_has_uvar check_tm ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
+            (if tmp2 then true else (ascription_has_uvar check_tm asc)))
+        )) in
+      (if tmp2 then true else (branches_have_uvar check_tm brs)))
+    | (FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = tm; asc = u__1; asc1 = u__2; asc2 = u__3; eff_opt = tmp; _ })) -> (let tmp1 = (term_has_uvar check_tm tm) in
+      (if tmp1 then true else (ascription_has_uvar check_tm (u__1, u__2, u__3))))
+    | (FStarC_Syntax_Syntax.Tm_let ({ FStarC_Syntax_Syntax.lbs = u__1; lbs1 = u__2; body = body; _ })) -> (let tmp = (term_has_uvar check_tm body) in
+      (if tmp then true else (lbs_have_uvar check_tm (match (u__1, u__2) with
+        | (u__11, u__21) -> u__21
+      ))))
+    | (FStarC_Syntax_Syntax.Tm_quoted (tm, qi)) -> (match (qi).FStarC_Syntax_Syntax.qkind with
+        | FStarC_Syntax_Syntax.Quote_static -> (terms_have_uvar check_tm (match ((qi).FStarC_Syntax_Syntax.antiquotations, (qi).FStarC_Syntax_Syntax.antiquotations1) with
+            | (u__1, u__2) -> u__2
+          ))
+        | FStarC_Syntax_Syntax.Quote_dynamic -> (term_has_uvar check_tm tm)
+      )
+    | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = tm; meta = meta; _ })) -> (let tmp = (term_has_uvar check_tm tm) in
+      (if tmp then true else (match meta with
+        | (FStarC_Syntax_Syntax.Meta_pattern (tmp1, args)) -> (args_list_have_uvar check_tm args)
+        | (FStarC_Syntax_Syntax.Meta_monadic (tmp1, t')) -> (term_has_uvar check_tm t')
+        | (FStarC_Syntax_Syntax.Meta_monadic_lift (tmp1, tmp2, t')) -> (term_has_uvar check_tm t')
+        | (FStarC_Syntax_Syntax.Meta_labeled (u__1, u__2, u__3)) -> false
+        | (FStarC_Syntax_Syntax.Meta_desugared (tmp1)) -> false
+        | (FStarC_Syntax_Syntax.Meta_named (tmp1)) -> false
+      )))
+  ))
+
 let no_uvars_in_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
-  (let tmp = (FStarC_Syntax_Free.uvars t) in
-  let tmp1 = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_is_empty__ctx_uvar_list_ctx_uvar tmp) in
-  (if tmp1 then (let tmp2 = (FStarC_Syntax_Free.univs t) in
-  (FStarC_Syntax_Syntax.fStarC_Class_Setlike_is_empty__tuple3_p_uvar_option_version_range tmp2)) else false))
+  (let tmp = (term_has_uvar true t) in
+  (not tmp))
 
 let no_uvars_in_g (g : FStarC_TypeChecker_Env.env) : bool =
   (FStarC_Util.for_all (fun tmp -> (match tmp with
@@ -1979,8 +2147,8 @@ let refl_core_compute_term_type (g : FStarC_TypeChecker_Env.env) (e : (FStarC_Sy
   (FStarC_Tactics_Monad.fStarC_Class_Monad_return__fn tmp4))))
 
 let no_univ_uvars_in_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
-  (let tmp = (FStarC_Syntax_Free.univs t) in
-  (FStarC_Syntax_Syntax.fStarC_Class_Setlike_is_empty__tuple3_p_uvar_option_version_range tmp))
+  (let tmp = (term_has_uvar false t) in
+  (not tmp))
 
 let refl_instantiate_implicits (g : FStarC_TypeChecker_Env.env) (e : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (expected_typ : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option) (inst_extra : bool) : ((FStarC_Tactics_Types.proofstate ref) -> (((((FStarC_Syntax_Syntax.bv * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) option * (FStarC_Errors.issue) list)) =
   (let tmp = (no_uvars_in_g g) in
@@ -1990,7 +2158,9 @@ let refl_instantiate_implicits (g : FStarC_TypeChecker_Env.env) (e : (FStarC_Syn
   (FStarC_Format.fmt1 "refl_instantiate_implicits: %s\n" tmp4))));
   (dbg_refl g1 (fun tmp3 -> "refl_instantiate_implicits: starting tc {\n"));
   let g2 = (match expected_typ with
-      | None -> (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst (FStarC_TypeChecker_Env.clear_expected_typ g1))
+      | None -> (match (FStarC_TypeChecker_Env.clear_expected_typ g1) with
+          | (u__1, u__2) -> u__1
+        )
       | (Some (typ)) -> (FStarC_TypeChecker_Env.set_expected_typ g1 typ)
     ) in
   let g3 = { FStarC_TypeChecker_Env.solver = (g2).FStarC_TypeChecker_Env.solver;
@@ -2329,7 +2499,9 @@ let refl_try_unify (g : FStarC_TypeChecker_Env.env) (uvs : ((FStarC_Syntax_Synta
   (let tmp = (no_uvars_in_g g) in
   let tmp1 = (if tmp then (no_uvars_in_term t0) else false) in
   let tmp2 = (if tmp1 then (no_uvars_in_term t1) else false) in
-  let tmp3 = (if tmp2 then (let tmp3 = (FStarC_List.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd uvs) in
+  let tmp3 = (if tmp2 then (let tmp3 = (FStarC_List.map (fun x -> (match x with
+        | (u__1, u__2) -> u__2
+      )) uvs) in
     (FStarC_List.for_all no_uvars_in_term tmp3)) else false) in
   (if tmp3 then (refl_typing_builtin_wrapper "refl_try_unify" (fun tmp4 -> ((dbg_refl g (fun tmp5 -> (let tmp6 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' t0) in
   let tmp7 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' t1) in
@@ -2431,7 +2603,7 @@ let refl_try_unify (g : FStarC_TypeChecker_Env.env) (uvs : ((FStarC_Syntax_Synta
                     ))
                 )) [])))
             ) in
-          (dbg_refl g2 (fun tmp9 -> (let tmp10 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_tuple2_bv_syntax_116 l) in
+          (dbg_refl g2 (fun tmp9 -> (let tmp10 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_tuple2_bv_syntax_115 l) in
           (FStarC_Format.fmt1 "} refl_try_unify, substitution is: %s\n" tmp10))));
           (l, []))
       ))
@@ -2703,13 +2875,13 @@ let stats_record (a : 'u___a) (wp : 'u___b) (s : string) (f : ((FStarC_Tactics_T
   (FStarC_Tactics_Monad.mk_tac (fun ps -> (FStarC_Stats.record s (fun tmp -> (FStarC_Tactics_Monad.run f ps)))))
 
 let string_to_term (e : FStarC_TypeChecker_Env.env) (s : string) : ((FStarC_Tactics_Types.proofstate ref) -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
-  (let frag_of_text = (fun s1 -> { FStarC_Parser_ParseIt.frag_fname = "<string_of_term>";
+  (let frag_of_text = (fun s1 -> { FStarC_Parser_Frontend.frag_fname = "<string_of_term>";
       frag_text = s1;
       frag_line = Prims.int_one;
       frag_col = Prims.int_zero }) in
-  let tmp = (FStarC_Parser_ParseIt.parse None (FStarC_Parser_ParseIt.Fragment ((frag_of_text s)))) in
+  let tmp = (FStarC_Parser_Frontend.parse None (FStarC_Parser_Frontend.Fragment ((frag_of_text s)))) in
   (match tmp with
-    | (FStarC_Parser_ParseIt.Term (t)) -> (let dsenv = (FStarC_Syntax_DsEnv.set_current_module (e).FStarC_TypeChecker_Env.dsenv (FStarC_TypeChecker_Env.current_module e)) in
+    | (FStarC_Parser_Frontend.Term (t)) -> (let dsenv = (FStarC_Syntax_DsEnv.set_current_module (e).FStarC_TypeChecker_Env.dsenv (FStarC_TypeChecker_Env.current_module e)) in
       (try (let tmp1 = (FStarC_ToSyntax_ToSyntax.desugar_term dsenv t) in
       (FStarC_Tactics_Monad.fStarC_Class_Monad_return__fn tmp1)) with
         | (FStarC_Errors.Error ((tmp1, e1, tmp2, tmp3))) -> (let tmp4 = (FStarC_Errors_Msg.rendermsg e1) in
@@ -2717,8 +2889,8 @@ let string_to_term (e : FStarC_TypeChecker_Env.env) (s : string) : ((FStarC_Tact
           (FStarC_Tactics_Monad.fail tmp5))
         | tmp1 -> (FStarC_Tactics_Monad.fail "string_to_term: Unknown error")
       ))
-    | (FStarC_Parser_ParseIt.ASTFragment (tmp1)) -> (FStarC_Tactics_Monad.fail "string_to_term: expected a Term as a result, got an ASTFragment")
-    | (FStarC_Parser_ParseIt.ParseError ((tmp1, err, tmp2))) -> (let tmp3 = (FStarC_Errors_Msg.rendermsg err) in
+    | (FStarC_Parser_Frontend.ASTFragment (u__1, u__2)) -> (FStarC_Tactics_Monad.fail "string_to_term: expected a Term as a result, got an ASTFragment")
+    | (FStarC_Parser_Frontend.ParseError ((tmp1, err, tmp2))) -> (let tmp3 = (FStarC_Errors_Msg.rendermsg err) in
       let tmp4 = (Prims.strcat "string_to_term: got error " tmp3) in
       (FStarC_Tactics_Monad.fail tmp4))
   ))
@@ -3087,7 +3259,9 @@ let t_commute_applied_match (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref
                     (match tmp7 with
                       | (bs, c) -> (let tmp8 = (FStarC_Syntax_Subst.open_comp bs c) in
                         (match tmp8 with
-                          | (bs1, c1) -> (let ss = (FStarC_List.map2 (fun b a -> (FStarC_Syntax_Syntax.NT ((b).FStarC_Syntax_Syntax.binder_bv, (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst a)))) bs1 las) in
+                          | (bs1, c1) -> (let ss = (FStarC_List.map2 (fun b a -> (FStarC_Syntax_Syntax.NT ((b).FStarC_Syntax_Syntax.binder_bv, (match a with
+                                | (u__1, u__2) -> u__1
+                              )))) bs1 las) in
                             let c2 = (FStarC_Syntax_Subst.subst_comp ss c1) in
                             (FStarC_Syntax_Util.comp_result c2))
                         ))
@@ -3775,14 +3949,18 @@ let unshelve (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((
 let uvar_env (env : FStarC_TypeChecker_Env.env) (ty : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option) : ((FStarC_Tactics_Types.proofstate ref) -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
   (let tmp = (FStarC_Tactics_Monad.fStarC_Class_Monad_op_let_Bang__fn FStarC_Tactics_Monad.get (fun ps -> (let tmp = (match ty with
         | (Some (ty1)) -> (let tmp = (FStarC_Syntax_Util.type_u ()) in
-          let tmp1 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp) in
+          let tmp1 = (match tmp with
+              | (u__1, u__2) -> u__1
+            ) in
           let env1 = (FStarC_TypeChecker_Env.set_expected_typ env tmp1) in
           let tmp2 = (u___tc_ghost env1 ty1) in
           (FStarC_Tactics_Monad.fStarC_Class_Monad_op_let_Bang__fn tmp2 (fun tmp3 -> (match tmp3 with
             | (ty2, tmp4, g) -> (FStarC_Tactics_Monad.fStarC_Class_Monad_return__fn (ty2, g, (ty2).FStarC_Syntax_Syntax.pos))
           ))))
         | None -> (let tmp = (FStarC_Syntax_Util.type_u ()) in
-          let tmp1 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp) in
+          let tmp1 = (match tmp with
+              | (u__1, u__2) -> u__1
+            ) in
           let tmp2 = (FStarC_Tactics_Monad.new_uvar "uvar_env.2" env tmp1 None [] (ps).FStarC_Tactics_Types.entry_range) in
           (FStarC_Tactics_Monad.fStarC_Class_Monad_op_let_Bang__fn tmp2 (fun tmp3 -> (match tmp3 with
             | (typ, uvar_typ) -> (FStarC_Tactics_Monad.fStarC_Class_Monad_return__fn (typ, FStarC_TypeChecker_Env.trivial_guard, FStarC_Range_Type.dummyRange))
@@ -3881,7 +4059,9 @@ let unquote (ty : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (tm 
 
 let fresh_universe_uvar (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
   (let tmp1 = (FStarC_Syntax_Util.type_u ()) in
-  let tmp2 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp1) in
+  let tmp2 = (match tmp1 with
+      | (u__1, u__2) -> u__1
+    ) in
   (FStarC_Tactics_Monad.fStarC_Class_Monad_return__fn tmp2))
 
 let lget (ty : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (k : string) : ((FStarC_Tactics_Types.proofstate ref) -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =

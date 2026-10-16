@@ -2,7 +2,7 @@
 [@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
 
 let cache_version_number : Prims.int =
-  (Prims.of_int (100))
+  (Prims.of_int (102))
 
 type tc_result_t =
   | Unknown of string
@@ -17,14 +17,14 @@ let debug (f : (unit -> unit)) : unit =
   (let tmp = (!(dbg)) in
   (if tmp then (f ()) else ()))
 
-let mcache : ((tc_result_t * (string, FStarC_Parser_Dep.parsing_data) FStar_Pervasives.either)) FStarC_SMap.t =
-  (FStarC_SMap.create (Prims.of_int (50)))
+let mcache : ((tc_result_t * (string, FStarC_Parser_Dep.parsing_data) FStar_Pervasives.either)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (50))))
 
 let try_find_in_cache (checked_fn : string) : ((tc_result_t * (string, FStarC_Parser_Dep.parsing_data) FStar_Pervasives.either)) option =
-  (FStarC_SMap.try_find mcache checked_fn)
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt mcache checked_fn)
 
 let add_and_return (checked_fn : string) (elt : (tc_result_t * (string, FStarC_Parser_Dep.parsing_data) FStar_Pervasives.either)) : (tc_result_t * (string, FStarC_Parser_Dep.parsing_data) FStar_Pervasives.either) =
-  ((FStarC_SMap.add mcache checked_fn elt);
+  ((FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace mcache checked_fn elt);
   elt)
 
 type checked_file_entry_stage1 = {
@@ -151,33 +151,28 @@ let hash_dependences (deps : FStarC_Parser_Dep.deps) (fn : string) (deps_of_fn :
     ) in
   let module_name = (FStarC_Parser_Dep.lowercase_module_name fn1) in
   let source_hash = (FStarC_Util.digest_of_file fn1) in
-  let tmp2 = (FStarC_Parser_Dep.interface_of deps module_name) in
-  let has_interface = (match tmp2 with
-      | (Some (v)) -> true
-      | tmp3 -> false
-    ) in
-  let tmp3 = (FStarC_Parser_Dep.is_implementation fn1) in
-  let tmp4 = (if tmp3 then has_interface else false) in
-  let interface_source_file_name = (if tmp4 then (FStarC_Parser_Dep.interface_of deps module_name) else None) in
-  let binary_deps = (FStarC_List.filter (fun fn2 -> (let tmp5 = (FStarC_Parser_Dep.is_interface fn2) in
-    let tmp6 = (if tmp5 then (let tmp6 = (FStarC_Parser_Dep.lowercase_module_name fn2) in
-      ((=) tmp6 module_name)) else false) in
-    (not tmp6))) deps_of_fn) in
-  let binary_deps1 = (FStarC_List.sortWith (fun fn11 fn2 -> (let tmp5 = (FStarC_Parser_Dep.lowercase_module_name fn11) in
-    let tmp6 = (FStarC_Parser_Dep.lowercase_module_name fn2) in
-    (FStarC_String.compare tmp5 tmp6))) binary_deps) in
+  let tmp2 = (FStarC_Parser_Dep.is_implementation fn1) in
+  let interface_source_file_name = (if tmp2 then (let tmp3 = (FStarC_Parser_Dep.module_key_of_file fn1) in
+    (FStarC_Parser_Dep.interface_of deps tmp3)) else None) in
+  let binary_deps = (FStarC_List.filter (fun fn2 -> (let tmp3 = (FStarC_Parser_Dep.is_interface fn2) in
+    let tmp4 = (if tmp3 then (let tmp4 = (FStarC_Parser_Dep.lowercase_module_name fn2) in
+      ((=) tmp4 module_name)) else false) in
+    (not tmp4))) deps_of_fn) in
+  let binary_deps1 = (FStarC_List.sortWith (fun fn11 fn2 -> (let tmp3 = (FStarC_Parser_Dep.lowercase_module_name fn11) in
+    let tmp4 = (FStarC_Parser_Dep.lowercase_module_name fn2) in
+    (FStarC_String.compare tmp3 tmp4))) binary_deps) in
   let maybe_add_iface_hash = (fun out -> (match interface_source_file_name with
       | None -> (FStar_Pervasives.Inr ((("source", source_hash) :: out)))
-      | (Some (iface)) -> (let tmp5 = (FStarC_Find.find_file iface) in
-        let iface1 = (match tmp5 with
+      | (Some (iface)) -> (let tmp3 = (FStarC_Find.find_file iface) in
+        let iface1 = (match tmp3 with
             | (Some (f)) -> f
             | None -> iface
           ) in
-        let tmp6 = (FStarC_Util.digest_of_file iface1) in
-        let tmp7 = ("interface", tmp6) in
-        let tmp8 = (tmp7 :: out) in
-        let tmp9 = (("source", source_hash) :: tmp8) in
-        (FStar_Pervasives.Inr (tmp9)))
+        let tmp4 = (FStarC_Util.digest_of_file iface1) in
+        let tmp5 = ("interface", tmp4) in
+        let tmp6 = (tmp5 :: out) in
+        let tmp7 = (("source", source_hash) :: tmp6) in
+        (FStar_Pervasives.Inr (tmp7)))
     )) in
   ((hash_dependences__hash_deps module_name maybe_add_iface_hash) [] binary_deps1))))
 
@@ -207,7 +202,7 @@ let load_checked_file_with_tc_result (deps : FStarC_Parser_Dep.deps) (fn : strin
               let tmp3 = (if ((=) deps_dig deps_dig') then true else (FStarC_Options.should_be_already_cached module_name)) in
               (if tmp3 then (let elt1 = ((Valid (checked_digest)), parsing_data) in
               (ignore (add_and_return checked_fn elt1));
-              let validate_iface_cache = (fun tmp4 -> (let tmp5 = (FStarC_Parser_Dep.lowercase_module_name fn) in
+              let validate_iface_cache = (fun tmp4 -> (let tmp5 = (FStarC_Parser_Dep.module_key_of_file fn) in
                 let iface = (FStarC_Parser_Dep.interface_of deps tmp5) in
                 (match iface with
                   | None -> ()
@@ -258,7 +253,7 @@ let load_module_from_cache_internal : (bool -> (FStarC_Parser_Dep.deps -> (strin
         (Some (tc_result)))
     ))) in
   let load_with_profiling = (fun fn1 -> (FStarC_Profiling.profile (load_it fn1) None "FStarC.CheckedFiles")) in
-  let tmp1 = (FStarC_Parser_Dep.lowercase_module_name fn) in
+  let tmp1 = (FStarC_Parser_Dep.module_key_of_file fn) in
   let i_fn_opt = (FStarC_Parser_Dep.interface_of deps tmp1) in
   let tmp2 = (FStarC_Parser_Dep.is_implementation fn) in
   let tmp3 = (if tmp2 then (match i_fn_opt with
@@ -288,7 +283,7 @@ let store_module_to_cache (env : FStarC_TypeChecker_Env.env) (file_name : string
   (if tmp1 then ((debug (fun tmp2 -> (let tmp3 = (FStarC_Parser_Dep.fStarC_Class_Show_show__tuple2_parsing_data_list_string parsing_data_and_direct_deps) in
   (FStarC_Format.print2 "Storing checked file for %s with %s dependences\n" file_name tmp3))));
   let tmp2 = (FStarC_Parser_Dep.fly_deps_enabled ()) in
-  (if tmp2 then (let tmp3 = (FStarC_Parser_Dep.lowercase_module_name file_name) in
+  (if tmp2 then (let tmp3 = (FStarC_Parser_Dep.module_key_of_file file_name) in
   let i_fn_opt = (FStarC_Parser_Dep.interface_of (FStarC_TypeChecker_Env.dep_graph env) tmp3) in
   (match i_fn_opt with
     | None -> ()

@@ -159,6 +159,21 @@ let check_sigelt_quals_pre (env : FStarC_TypeChecker_Env.env) (se : FStarC_Synta
     | tmp2 -> ()
   )) else ())))
 
+let rec is_arity (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
+  (let tmp = (FStarC_TypeChecker_Normalize.unfold_whnf' (FStarC_TypeChecker_Env.AllowUnboundUniverses :: []) env t) in
+  let t1 = (FStarC_Syntax_Util.unrefine tmp) in
+  let tmp1 = (FStarC_Syntax_Subst.compress t1) in
+  let tmp2 = (tmp1).FStarC_Syntax_Syntax.n in
+  (match tmp2 with
+    | (FStarC_Syntax_Syntax.Tm_type (tmp3)) -> true
+    | (FStarC_Syntax_Syntax.Tm_arrow (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.arrow_formals_comp t1) in
+      (match tmp4 with
+        | (bs, c) -> (let tmp5 = (FStarC_TypeChecker_Env.push_binders env bs) in
+          (is_arity tmp5 (FStarC_Syntax_Util.comp_result c)))
+      ))
+    | tmp3 -> false
+  ))
+
 let non_info_norm_weak (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
   (let steps = ((FStarC_TypeChecker_Env.UnfoldUntil (FStarC_Syntax_Syntax.delta_constant)) :: (FStarC_TypeChecker_Env.AllowUnboundUniverses :: (FStarC_TypeChecker_Env.EraseUniverses :: (FStarC_TypeChecker_Env.Primops :: (FStarC_TypeChecker_Env.Beta :: (FStarC_TypeChecker_Env.Iota :: (FStarC_TypeChecker_Env.HNF :: (FStarC_TypeChecker_Env.Weak :: (FStarC_TypeChecker_Env.Unascribe :: (FStarC_TypeChecker_Env.ForExtraction :: [])))))))))) in
   let tmp = (FStarC_TypeChecker_Normalize.normalize steps env t) in
@@ -193,16 +208,21 @@ let check_erasable (env : FStarC_TypeChecker_Env.env) (quals : (FStarC_Syntax_Sy
           )) then (let tmp3 = (FStarC_Syntax_Util.abs_formals (lb).FStarC_Syntax_Syntax.lbdef) in
           (match tmp3 with
             | (tmp4, body, tmp5) -> (match val_decl with
-                | (Some (((us, t), tmp6))) -> (let tmp7 = (non_info_norm_weak env body) in
-                  (if tmp7 then (let tmp8 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__fv lbname) in
-                  let tmp9 = (FStarC_Format.fmt1 "Values of type ‘%s’ will be erased during extraction, but its interface hides this fact." tmp8) in
-                  let tmp10 = (FStarC_Errors_Msg.text tmp9) in
-                  let tmp11 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__fv lbname) in
-                  let tmp12 = (FStarC_Format.fmt1 "Add the ‘erasable’ attribute to the ‘val %s’ declaration for this symbol in the interface" tmp11) in
-                  let tmp13 = (FStarC_Errors_Msg.text tmp12) in
-                  let tmp14 = (tmp13 :: []) in
-                  let tmp15 = (tmp10 :: tmp14) in
-                  (FStarC_Errors.fStarC_Errors_log_issue__fv_list_document lbname FStarC_Errors_Codes.Error_MustEraseMissing tmp15)) else ()))
+                | (Some (((us, t), tmp6))) -> (let tmp7 = (FStarC_Syntax_Subst.open_univ_vars us t) in
+                  (match tmp7 with
+                    | (us1, t1) -> (let tmp8 = (FStarC_TypeChecker_Env.push_univ_vars env us1) in
+                      let defines_type = (is_arity tmp8 t1) in
+                      let tmp9 = (if defines_type then (non_info_norm_weak env body) else false) in
+                      (if tmp9 then (let tmp10 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__fv lbname) in
+                      let tmp11 = (FStarC_Format.fmt1 "Values of type ‘%s’ will be erased during extraction, but its interface hides this fact." tmp10) in
+                      let tmp12 = (FStarC_Errors_Msg.text tmp11) in
+                      let tmp13 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__fv lbname) in
+                      let tmp14 = (FStarC_Format.fmt1 "Add the ‘erasable’ attribute to the ‘val %s’ declaration for this symbol in the interface" tmp13) in
+                      let tmp15 = (FStarC_Errors_Msg.text tmp14) in
+                      let tmp16 = (tmp15 :: []) in
+                      let tmp17 = (tmp12 :: tmp16) in
+                      (FStarC_Errors.fStarC_Errors_log_issue__fv_list_document lbname FStarC_Errors_Codes.Error_MustEraseMissing tmp17)) else ()))
+                  ))
               )
           )) else ()))
       ))

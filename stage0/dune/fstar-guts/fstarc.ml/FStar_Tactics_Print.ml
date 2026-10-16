@@ -37,7 +37,9 @@ let rec universe_to_ast_string (u : FStarC_Reflection_Types.universe) : ((FStarC
     | (FStar_Tactics_NamedView.Uv_Max (us)) -> (let x1 = (print_list universe_to_ast_string us ps) in
       (Prims.strcat "Uv_Max" x1))
     | (FStar_Tactics_NamedView.Uv_BVar (n)) -> (Prims.strcat "Uv_BVar" (paren (Prims.string_of_int n)))
-    | (FStar_Tactics_NamedView.Uv_Name (i)) -> (Prims.strcat "Uv_Name" (paren (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst i)))
+    | (FStar_Tactics_NamedView.Uv_Name (i)) -> (Prims.strcat "Uv_Name" (paren (match i with
+        | (u__1, u__2) -> u__1
+      )))
     | (FStar_Tactics_NamedView.Uv_Unif (tmp)) -> "Uv_Unif"
     | FStar_Tactics_NamedView.Uv_Unk -> "Uv_Unk"
   )))))

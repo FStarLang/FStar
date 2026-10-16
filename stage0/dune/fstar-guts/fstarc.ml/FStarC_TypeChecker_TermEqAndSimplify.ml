@@ -204,7 +204,9 @@ let simplify (debug : bool) (env : FStarC_TypeChecker_Env.env) (tm : (FStarC_Syn
     ))) in
   let maybe_auto_squash = (fun t -> t) in
   let squashed_head_un_auto_squash_args = (fun t -> t) in
-  let simplify_ = (fun arg -> (let tmp = (simp_t (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst arg)) in
+  let simplify_ = (fun arg -> (let tmp = (simp_t (match arg with
+        | (u__1, u__2) -> u__1
+      )) in
     (tmp, arg))) in
   let tmp = (FStarC_Syntax_Subst.compress tm) in
   let tmp1 = (tmp).FStarC_Syntax_Syntax.n in
@@ -313,7 +315,9 @@ let simplify (debug : bool) (env : FStarC_TypeChecker_Env.env) (tm : (FStarC_Syn
                   | (FStarC_Syntax_Syntax.Tm_fvar (fv1)) when (FStarC_List.existsb (fun l -> (FStarC_Syntax_Syntax.fv_eq_lid fv1 l)) haseq_lids) -> true
                   | tmp8 -> false
                 ))) in
-              (if ((=) (FStarC_List.length args) Prims.int_one) then (let t = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst (FStarC_List.hd args)) in
+              (if ((=) (FStarC_List.length args) Prims.int_one) then (let t = (match (FStarC_List.hd args) with
+                  | (u__1, u__2) -> u__1
+                ) in
               let tmp6 = (t_has_eq_for_sure t) in
               (if tmp6 then (w FStarC_Syntax_Util.t_true) else (let tmp7 = (FStarC_Syntax_Subst.compress t) in
               let tmp8 = (tmp7).FStarC_Syntax_Syntax.n in

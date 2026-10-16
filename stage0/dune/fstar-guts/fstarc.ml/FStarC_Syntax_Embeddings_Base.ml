@@ -141,7 +141,9 @@ let mk_extracted_embedding (name : string) (u : ((string * ((FStarC_Syntax_Synta
             | (FStarC_Syntax_Syntax.Tm_fvar (fv)) -> (Some ((fv).FStarC_Syntax_Syntax.fv_name))
             | tmp4 -> None
           ) in
-        (op_let_Question tmp4 (fun hd_lid -> (let tmp5 = (FStarC_List.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst args) in
+        (op_let_Question tmp4 (fun hd_lid -> (let tmp5 = (FStarC_List.map (fun x -> (match x with
+            | (u__1, u__2) -> u__1
+          )) args) in
         let tmp6 = ((FStarC_Ident.string_of_lid hd_lid), tmp5) in
         (u tmp6)))))
     ))) in

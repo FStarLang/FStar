@@ -144,24 +144,6 @@ let norm_term (s : (FStarC_NormSteps.norm_step) list) (t : FStarC_Reflection_Typ
   (Obj.magic ((fun ps -> (let x = (try_with (fun tmp -> (cur_env ())) (fun tmp -> (FStarC_Tactics_V2_Builtins.top_env ())) ps) in
   (FStarC_Tactics_V2_Builtins.norm_term_env x s t ps)))))
 
-let rec repeat (t : (unit -> ((FStarC_Tactics_Types.proofstate ref) -> 'a))) (ps : (FStarC_Tactics_Types.proofstate ref)) : ('a) list =
-  (let x = (FStarC_Tactics_V2_Builtins.catch t ps) in
-  (match x with
-    | (FStar_Pervasives.Inl (tmp)) -> []
-    | (FStar_Pervasives.Inr (x1)) -> (let x2 = (repeat t ps) in
-      (x1 :: x2))
-  ))
-
-let smt (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (Obj.magic ((fun ps -> (let x = (goals () ps) in
-  let x1 = (smt_goals () ps) in
-  let x2 = (x, x1) in
-  (match x2 with
-    | ([], tmp1) -> ((fail "smt: no active goals") ps)
-    | ((g :: gs), gs') -> ((ignore (FStarC_Tactics_V2_Builtins.set_goals gs ps));
-      (FStarC_Tactics_V2_Builtins.set_smt_goals (g :: gs') ps))
-  )))))
-
 let cur_goal (tmp : unit) (ps : (FStarC_Tactics_Types.proofstate ref)) : FStarC_Reflection_Types.typ =
   (let x = (u__cur_goal () ps) in
   (FStarC_Tactics_Types.goal_type x))
@@ -227,6 +209,24 @@ let rec iterAll (t : (unit -> ((FStarC_Tactics_Types.proofstate ref) -> unit))) 
 let seq (f : (unit -> ((FStarC_Tactics_Types.proofstate ref) -> unit))) (g : (unit -> ((FStarC_Tactics_Types.proofstate ref) -> unit))) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
   (focus (fun tmp -> (fun ps -> ((f () ps);
   (iterAll g ps)))))
+
+let smt (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (Obj.magic ((fun ps -> (let x = (goals () ps) in
+  let x1 = (smt_goals () ps) in
+  let x2 = (x, x1) in
+  (match x2 with
+    | ([], tmp1) -> ((fail "smt: no active goals") ps)
+    | ((g :: gs), gs') -> ((ignore (FStarC_Tactics_V2_Builtins.set_goals gs ps));
+      (FStarC_Tactics_V2_Builtins.set_smt_goals (g :: gs') ps))
+  )))))
+
+let rec repeat (t : (unit -> ((FStarC_Tactics_Types.proofstate ref) -> 'a))) (ps : (FStarC_Tactics_Types.proofstate ref)) : ('a) list =
+  (let x = (FStarC_Tactics_V2_Builtins.catch t ps) in
+  (match x with
+    | (FStar_Pervasives.Inl (tmp)) -> []
+    | (FStar_Pervasives.Inr (x1)) -> (let x2 = (repeat t ps) in
+      (x1 :: x2))
+  ))
 
 let intro_as (s : string) (ps : (FStarC_Tactics_Types.proofstate ref)) : FStarC_Reflection_V2_Data.binding =
   (let x = (FStarC_Tactics_V2_Builtins.intro () ps) in
