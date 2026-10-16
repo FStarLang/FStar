@@ -20,8 +20,8 @@ module FStarC.SmallInt
    code such as the lexer, where [int] (arbitrary-precision Zarith
    integers) is a lot slower. *)
 
-[@@custard_extern "FStarC_SmallInt.t"]
-type t : eqtype
+new
+val t : eqtype
 
 (* Fails if the argument does not fit *)
 val of_int : int -> t
