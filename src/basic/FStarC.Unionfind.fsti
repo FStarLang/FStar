@@ -27,7 +27,6 @@ val puf_find: puf 'a -> p_uvar 'a -> ML 'a
 val puf_union: puf 'a -> p_uvar 'a -> p_uvar 'a -> ML (puf 'a)
 val puf_equivalent: puf 'a -> p_uvar 'a -> p_uvar 'a -> ML bool
 val puf_change: puf 'a -> p_uvar 'a -> 'a -> ML (puf 'a)
-val puf_test: unit -> ML unit
 
 //
 // Returns the unique id of the input uvar

@@ -19,3 +19,18 @@ module FStarC.Array
 private assume new type ocaml_array : Type -> Type0
 
 type array (a:Type) = ocaml_array a
+
+[@@custard_extern "Array.make"]
+let make _ _ = admit ()
+
+[@@custard_extern "Array.length"]
+let length _ = admit ()
+
+[@@custard_extern "Array.get"]
+let get _ _ = admit ()
+
+[@@custard_extern "Array.set"]
+let set _ _ _ = admit ()
+
+[@@custard_extern "Array.append"]
+let append _ _ = admit ()
