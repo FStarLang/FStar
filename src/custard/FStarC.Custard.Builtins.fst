@@ -1323,7 +1323,6 @@ let realized_modules : list (list string) = [
      [FStarC] name has no interface of its own on the include path. *)
   ["FStarC"; "Reflection"; "Types"];
   ["FStarC"; "Tactics"; "Unseal"];
-  ["FStarC"; "Tactics"; "V2"; "Builtins"];
   ["Prims"];
   (* Section 128.  Pulse's lock, which must never be compiled from its F*
      source: [Pulse.Lib.Primitives.cas] is a *specification* -- a read
