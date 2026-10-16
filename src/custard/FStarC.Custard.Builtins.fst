@@ -1657,15 +1657,22 @@ let iarray_rule (id:string) : ML (option rule) =
   | "index" -> prim 2 (fun tys _ -> elt_of tys)
   | _ -> None
 
-(* Under Cherry (cherry.md, "The any type") [FStar.Dyn.dyn] is [TAny], as it
-   is [Obj.t] on OCaml: a value with the type information that releases it.
-   [mkdyn] and [undyn] are [Dyn] nodes at the value's type. *)
+(* [FStar.Dyn.dyn] is [TAny] on every backend: [Obj.t] on OCaml, [obj] on
+   F#.  There [mkdyn] and [undyn] are coercions, which is all the realization
+   [FStar_Dyn.ml] used to do ([Obj.repr] and [Obj.obj]).  Under Cherry
+   (cherry.md, "The any type") a [TAny] is a value with the type information
+   that releases it, so [mkdyn] and [undyn] are [Dyn] nodes at the value's
+   type. *)
 
 let dyn_rule (id:string) : ML (option rule) =
   let prim (f:string) (ret : cty -> cty) : option rule =
     Some (Rule_prim (1, fun tys args ->
-      let t = elt_of tys in
-      mk (EOp ({ po_op = Dyn f; po_ty = None }, args)) (ret t) E_Pure)) in
+      let t = ret (elt_of tys) in
+      if Options.custard_cherry ()
+      then mk (EOp ({ po_op = Dyn f; po_ty = None }, args)) t E_Pure
+      else match args with
+           | [a] -> mk (ECoerce (a, t)) t a.eff
+           | _ -> failwith "FStar.Dyn applied to the wrong number of arguments")) in
   match id with
   | "dyn" -> Some (Rule_type (fun _ -> TAny))
   | "mkdyn" -> prim "mk" (fun _ -> TAny)
@@ -1717,8 +1724,7 @@ let builtin_rule (l:Ident.lident) : ML rule =
                     ns = ["FStar"; "ImmutableArray"]) &&
                    Some? (iarray_rule id)
            then iarray_rule id
-           else if Options.custard_cherry () && ns = ["FStar"; "Dyn"] &&
-                   Some? (dyn_rule id)
+           else if ns = ["FStar"; "Dyn"] && Some? (dyn_rule id)
            then dyn_rule id
            (* A rule for one name beats the module-wide [Rule_realized], as
               for every family above. *)
