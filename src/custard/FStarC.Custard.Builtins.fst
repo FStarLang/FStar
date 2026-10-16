@@ -1296,6 +1296,7 @@ let extern_type_of_lid (l:Ident.lident) : ML (option extern) =
    too, so that {!is_interface_only_module} cannot tell.  A module with only an
    interface needs no entry here. *)
 let realized_modules : list (list string) = [
+  (* No hand-written file: {!dyn_rule} implements every name. *)
   ["FStar"; "Dyn"];
   ["FStar"; "List"];
   ["FStar"; "List"; "Tot"; "Base"];
@@ -1519,8 +1520,8 @@ let is_realized_module (ns : list string) : ML bool =
    hand-written [.ml] the F* definitions are a model, and a model that
    disagrees with the realization is exactly the sort of thing extraction
    must not silently pick between.  [FStar.Dyn] is the case that makes it
-   concrete -- [dyn] is [unit -> Dv value_type_bundle] in F* and [Obj.t] in
-   [FStar_Dyn.ml], so [undyn]'s body forces a thunk that is not one -- but the
+   concrete -- [dyn] is [unit -> Dv value_type_bundle] in F* and [TAny] under
+   {!dyn_rule}, so [undyn]'s body forces a thunk that is not one -- but the
    rule is not about that one module: if a realization does not implement the
    whole interface, that is a bug in the realization, and the OCaml linker
    says so.
@@ -1658,8 +1659,9 @@ let iarray_rule (id:string) : ML (option rule) =
   | _ -> None
 
 (* [FStar.Dyn.dyn] is [TAny] on every backend: [Obj.t] on OCaml, [obj] on
-   F#.  There [mkdyn] and [undyn] are coercions, which is all the realization
-   [FStar_Dyn.ml] used to do ([Obj.repr] and [Obj.obj]).  Under Cherry
+   F#.  There [mkdyn] and [undyn] are coercions ([Obj.magic], [box]/[unbox]).
+   [FStar.Dyn] stays in {!realized_modules} so that its F* model is never
+   compiled.  Under Cherry
    (cherry.md, "The any type") a [TAny] is a value with the type information
    that releases it, so [mkdyn] and [undyn] are [Dyn] nodes at the value's
    type. *)
