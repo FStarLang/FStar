@@ -22,18 +22,18 @@ type code_fragment = {
 
 type parse_result =
   | ASTFragment of (FStarC_Parser_AST.modul, (FStarC_Parser_AST.decl) list) FStar_Pervasives.either * ((string * FStarC_Range_Type.range)) list
-  | IncrementalFragment of (((FStarC_Parser_AST.decl * code_fragment)) list * ((string * FStarC_Range_Type.range)) list * ((FStarC_Errors_Codes.error_code * (FStar_Pprint.document) list * FStarC_Range_Type.range)) option)
+  | IncrementalFragment of (((FStarC_Parser_AST.decl * code_fragment)) list * ((string * FStarC_Range_Type.range)) list * ((FStarC_Errors_Codes.error_code * (PPrint.document) list * FStarC_Range_Type.range)) option)
   | Term of FStarC_Parser_AST.term
-  | ParseError of (FStarC_Errors_Codes.error_code * (FStar_Pprint.document) list * FStarC_Range_Type.range)
+  | ParseError of (FStarC_Errors_Codes.error_code * (PPrint.document) list * FStarC_Range_Type.range)
 
 
 let fst_extensions (tmp : unit) : (string) list =
   (let tmp1 = (FStarC_Options.lang_extensions ()) in
-  let tmp2 = (FStarC_List.collect (fun x -> ((Prims.strcat "." x) :: ((Prims.strcat "." (Prims.strcat x "i")) :: []))) tmp1) in
-  (FStarC_List.op_At (".fst" :: (".fsti" :: [])) tmp2))
+  let tmp2 = ((fun f l -> BatList.flatten (BatList.map f l)) (fun x -> ((Prims.strcat "." x) :: ((Prims.strcat "." (Prims.strcat x "i")) :: []))) tmp1) in
+  (BatList.append (".fst" :: (".fsti" :: [])) tmp2))
 
 let has_extension (file : string) (eta : (string) list) : bool =
-  (FStarC_List.existsb (FStarC_Util.ends_with file) eta)
+  (BatList.exists (FStarC_Util.ends_with file) eta)
 
 let check_extension (fn : string) : unit =
   (let tmp = (fst_extensions ()) in
@@ -41,10 +41,10 @@ let check_extension (fn : string) : unit =
   let tmp2 = (not tmp1) in
   (if tmp2 then (FStarC_Errors.raise_error_text FStarC_Range_Type.dummyRange FStarC_Errors_Codes.Fatal_UnrecognizedExtension (FStarC_Format.fmt1 "Unrecognized extension ‘%s’" fn)) else ()))
 
-let vfs_entries : ((FStarC_Time.time_of_day * string)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
-  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int Prims.int_one))
+let vfs_entries : ((float * string)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_one))
 
-let read_vfs_entry (fname : string) : ((FStarC_Time.time_of_day * string)) option =
+let read_vfs_entry (fname : string) : ((float * string)) option =
   (let tmp = (FStarC_Filepath.normalize_file_path fname) in
   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt vfs_entries tmp))
 
@@ -90,7 +90,7 @@ let frag_of (fn : parse_frag) : input_frag =
 let contents_at (contents : string) : (FStarC_Range_Type.range -> code_fragment) =
   (let lines = (FStarC_Util.splitlines contents) in
   let split_line_at_col = (fun line col -> (if (Prims.op_Greater col Prims.int_zero) then (let chars = (FStarC_String.list_of_string line) in
-    (if (Prims.op_Less_Equals col (FStarC_List.length chars)) then (let tmp = (FStarC_Util.first_N col chars) in
+    (if (Prims.op_Less_Equals col ((fun l -> Z.of_int (BatList.length l)) chars)) then (let tmp = (FStarC_Util.first_N col chars) in
     (match tmp with
       | (prefix, suffix) -> (Some (((FStarC_String.string_of_list prefix), (FStarC_String.string_of_list suffix))))
     )) else None)) else None)) in
@@ -126,7 +126,7 @@ let contents_at (contents : string) : (FStarC_Range_Type.range -> code_fragment)
                       | None -> (last1 :: [])
                       | (Some (l)) -> (l :: [])
                     )
-                  | tmp2 -> (FStarC_List.op_At text1 (last1 :: []))
+                  | tmp2 -> (BatList.append text1 (last1 :: []))
                 )
             )
           | tmp1 -> text1
@@ -148,7 +148,7 @@ let parse_lang (lang : string) (fn : parse_frag) : parse_result =
     | (Toplevel (tmp)) -> (let tmp1 = (FStarC_Parser_AST.as_frag decls) in
       let tmp2 = (tmp1, comments) in
       (ASTFragment ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))))
-    | (Incremental (tmp)) -> (let decls1 = (FStarC_List.map (fun d -> (let tmp1 = (contents_at_ (d).FStarC_Parser_AST.drange) in
+    | (Incremental (tmp)) -> (let decls1 = (BatList.map (fun d -> (let tmp1 = (contents_at_ (d).FStarC_Parser_AST.drange) in
         (d, tmp1))) decls) in
       (IncrementalFragment ((decls1, comments, None))))
     | (Fragment (tmp)) -> (ASTFragment ((FStar_Pervasives.Inr (decls)), comments))
@@ -158,7 +158,7 @@ let parse_lang (lang : string) (fn : parse_frag) : parse_result =
 
 let take_lang_extension (file : string) : (string) option =
   (let tmp = (FStarC_Options.lang_extensions ()) in
-  (FStarC_List.tryFind (fun x -> (FStarC_Util.ends_with file (Prims.strcat "." x))) tmp))
+  (List.find_opt (fun x -> (FStarC_Util.ends_with file (Prims.strcat "." x))) tmp))
 
 let rec bench__go (k : (unit -> unit)) (g0 : Prims.int) (n : Prims.int) : unit =
   (if (Prims.op_Greater n Prims.int_zero) then ((FStarC_GenSym.set_gensym_state g0);
@@ -177,7 +177,7 @@ let show_ms (ns : Prims.int) : string =
 
 let interface_extensions (tmp : unit) : (string) list =
   (let tmp1 = (FStarC_Options.lang_extensions ()) in
-  let tmp2 = (FStarC_List.map (fun x -> (Prims.strcat "." (Prims.strcat x "i"))) tmp1) in
+  let tmp2 = (BatList.map (fun x -> (Prims.strcat "." (Prims.strcat x "i"))) tmp1) in
   (".fsti" :: tmp2))
 
 let parse_no_lang (fn : parse_frag) : parse_result =
@@ -196,7 +196,7 @@ let parse_no_lang (fn : parse_frag) : parse_result =
               | tmp2 -> frag1
             ) in
           let tmp2 = (FStarC_Parser_AST_Util.flush_comments ()) in
-          let tmp3 = (FStarC_List.op_At tmp2 comments) in
+          let tmp3 = (BatList.append tmp2 comments) in
           let tmp4 = (frag2, tmp3) in
           (ASTFragment ((match tmp4 with (custard_tup, _) -> custard_tup), (match tmp4 with (_, custard_tup) -> custard_tup))))
       ))
@@ -209,17 +209,17 @@ let parse_no_lang (fn : parse_frag) : parse_result =
               | tmp2 -> frag1
             ) in
           let tmp2 = (FStarC_Parser_AST_Util.flush_comments ()) in
-          let tmp3 = (FStarC_List.op_At tmp2 comments) in
+          let tmp3 = (BatList.append tmp2 comments) in
           let tmp4 = (frag2, tmp3) in
           (ASTFragment ((match tmp4 with (custard_tup, _) -> custard_tup), (match tmp4 with (_, custard_tup) -> custard_tup))))
       ))
     | (Incremental (tmp)) -> (let tmp1 = (FStarC_Parser_Grammar.parse_incremental filename contents line col) in
       (match tmp1 with
         | (decls, comments, err_opt) -> (let contents_at_ = (contents_at contents) in
-          let decls1 = (FStarC_List.map (fun d -> (let tmp2 = (contents_at_ (d).FStarC_Parser_AST.drange) in
+          let decls1 = (BatList.map (fun d -> (let tmp2 = (contents_at_ (d).FStarC_Parser_AST.drange) in
             (d, tmp2))) decls) in
           let tmp2 = (FStarC_Parser_AST_Util.flush_comments ()) in
-          let tmp3 = (FStarC_List.op_At tmp2 comments) in
+          let tmp3 = (BatList.append tmp2 comments) in
           let tmp4 = (decls1, tmp3, err_opt) in
           (IncrementalFragment (tmp4)))
       ))
@@ -242,9 +242,9 @@ let bench (fn : parse_frag) : parse_result =
       (match tmp2 with
         | (f', contents) -> (let only = (FStarC_Options_Ext.get "parser_bench_only") in
           let time = (fun name k -> (if (((=) only "") || ((=) only name)) then (let g0 = (FStarC_GenSym.get_gensym_state ()) in
-            let t0 = (FStarC_Timing.now_ns ()) in
+            let t0 = (Mtime_clock.now_ns ()) in
             ((bench__go k g0) iters);
-            let tmp3 = (FStarC_Timing.now_ns ()) in
+            let tmp3 = (Mtime_clock.now_ns ()) in
             let tmp4 = (FStarC_Timing.diff_ns t0 tmp3) in
             let t = (Prims.op_Slash tmp4 iters) in
             let tmp5 = (show_ms t) in
@@ -285,15 +285,15 @@ let parse (ext_lang : (string) option) (frag : parse_frag) : parse_result =
 
 let add_vfs_entry (fname : string) (contents : string) : unit =
   (let tmp = (FStarC_Filepath.normalize_file_path fname) in
-  let tmp1 = (FStarC_Time.get_time_of_day ()) in
+  let tmp1 = (BatUnix.gettimeofday ()) in
   let tmp2 = (tmp1, contents) in
   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace vfs_entries tmp tmp2))
 
-let get_file_last_modification_time (fname : string) : FStarC_Time.time_of_day =
+let get_file_last_modification_time (fname : string) : float =
   (let tmp = (read_vfs_entry fname) in
   (match tmp with
     | (Some ((mtime, u__contents))) -> mtime
-    | None -> (FStarC_Time.get_file_last_modification_time fname)
+    | None -> ((fun f -> (BatUnix.stat f).BatUnix.st_mtime) fname)
   ))
 
 type warn_error_token =
@@ -355,7 +355,7 @@ let rec parse_warn_error_tokens (ts : (warn_error_token) list) : (((FStarC_Error
   ))
 
 let parse_warn_error (s : string) : (((FStarC_Errors_Codes.error_code * FStarC_Errors_Codes.error_flag * Prims.int)) list) option =
-  (let cs = (FStarC_List.map FStarC_Util.int_of_char (FStarC_String.list_of_string s)) in
+  (let cs = (BatList.map FStarC_Util.int_of_char (FStarC_String.list_of_string s)) in
   (match (lex_warn_error cs) with
     | None -> None
     | (Some (ts)) -> (match (parse_warn_error_tokens ts) with
@@ -374,7 +374,7 @@ let parse_fstar_incrementally_aux (s : string) (r : FStarC_Range_Type.range) : (
         | None -> (FStar_Pervasives.Inr (decls))
         | (Some ((tmp1, tmp2, r1))) -> (let tmp3 = (FStarC_Parser_AST.mk_decl FStarC_Parser_AST.Unparseable r1 []) in
           let tmp4 = (tmp3 :: []) in
-          let tmp5 = (FStarC_List.op_At decls tmp4) in
+          let tmp5 = (BatList.append decls tmp4) in
           (FStar_Pervasives.Inr (tmp5)))
       ))
   )) with

@@ -201,11 +201,11 @@ let rec check_trivial (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syn
       ))
   ))
 
-let fStarC_Class_PP_pp__guard_t (tmp : guard_t) : FStar_Pprint.document =
+let fStarC_Class_PP_pp__guard_t (tmp : guard_t) : PPrint.document =
   (match (tmp).guard_f with
-    | Trivial -> (FStar_Pprint.doc_of_string "Trivial")
+    | Trivial -> (PPrint.string "Trivial")
     | (NonTrivial (f)) -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' f) in
-      (FStar_Pprint.op_Hat_Slash_Hat (FStar_Pprint.doc_of_string "NonTrivial") tmp1))
+      (PPrint.(^/^) (PPrint.string "NonTrivial") tmp1))
   )
 
 let binop_guard (f : (guard_formula -> (guard_formula -> guard_formula))) (g1 : guard_t) (g2 : guard_t) : guard_t =
@@ -243,7 +243,7 @@ let conj_guard (g1 : guard_t) : (guard_t -> guard_t) =
   (binop_guard conj_guard_f g1)
 
 let fStarC_Class_Monoid_mplus__list_implicit (tmp : (implicit) list) (eta : (implicit) list) : (implicit) list =
-  (FStarC_List.op_At tmp eta)
+  (BatList.append tmp eta)
 
 let fStarC_Class_Monoid_op_Plus_Plus__list_implicit (tmp : (implicit) list) (eta : (implicit) list) : (implicit) list =
   (fStarC_Class_Monoid_mplus__list_implicit tmp eta)
@@ -296,7 +296,7 @@ let weaken_guard_formula (g : guard_t) (fml : (FStarC_Syntax_Syntax.term') FStar
   )))
 
 let conj_guards (gs : (guard_t) list) : guard_t =
-  (FStarC_List.fold_left conj_guard trivial_guard gs)
+  (BatList.fold_left conj_guard trivial_guard gs)
 
 let id_info_insert (table : id_info_table) (id : (FStarC_Syntax_Syntax.bv, FStarC_Syntax_Syntax.fv) FStar_Pervasives.either) (ty : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (range : FStarC_Range_Type.range) : id_info_table =
   (let info = { identifier = id; identifier_ty = ty; identifier_range = range } in
@@ -311,7 +311,7 @@ let id_info_insert_fv (table : id_info_table) (fv : FStarC_Syntax_Syntax.fv) (ty
   (if (table).id_info_enabled then (id_info_insert table (FStar_Pervasives.Inr (fv)) ty (FStarC_Syntax_Syntax.range_of_fv fv)) else table)
 
 let fStarC_Class_Monoid_msum__guard_t (xs : (guard_t) list) : guard_t =
-  (FStarC_List.fold_left fStarC_Class_Monoid_mplus__guard_t fStarC_Class_Monoid_mzero__guard_t xs)
+  (BatList.fold_left fStarC_Class_Monoid_mplus__guard_t fStarC_Class_Monoid_mzero__guard_t xs)
 
 let fStarC_Class_Listlike_cons__tuple3_deferred_reason_string_prob (tmp : (deferred_reason * string * prob)) (tmp1 : ((deferred_reason * string * prob)) FStarC_CList.clist) : ((deferred_reason * string * prob)) FStarC_CList.clist =
   (FStarC_CList.CCons (tmp, tmp1))
@@ -425,7 +425,7 @@ let rec insert_col_info____insert (col : Prims.int) (info : identifier_info) (au
 let insert_col_info (col : Prims.int) (info : identifier_info) (col_infos : ((Prims.int * identifier_info)) list) : ((Prims.int * identifier_info)) list =
   (let tmp = ((insert_col_info____insert col info) [] col_infos) in
   (match tmp with
-    | (l, r) -> (FStarC_List.op_At (FStarC_List.rev l) r)
+    | (l, r) -> (BatList.append (BatList.rev l) r)
   ))
 
 let id_info__insert (ty_map : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) (db : ((((Prims.int * identifier_info)) list) FStarC_PIMap.t) FStarC_PSMap.t) (info : identifier_info) : ((((Prims.int * identifier_info)) list) FStarC_PIMap.t) FStarC_PSMap.t =
@@ -453,7 +453,7 @@ let id_info__insert (ty_map : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax
   ))
 
 let id_info_promote (table : id_info_table) (ty_map : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) : id_info_table =
-  (let tmp = (FStarC_List.fold_left (id_info__insert ty_map) (table).id_info_db (table).id_info_buffer) in
+  (let tmp = (BatList.fold_left (id_info__insert ty_map) (table).id_info_db (table).id_info_buffer) in
   { id_info_enabled = (table).id_info_enabled;
     id_info_db = tmp;
     id_info_buffer = [] })

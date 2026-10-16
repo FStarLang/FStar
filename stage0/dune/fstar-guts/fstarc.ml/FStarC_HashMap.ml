@@ -5,7 +5,7 @@ let empty (v : unit) : ((('k * 'v)) list) FStarC_PIMap.t =
   (FStarC_PIMap.empty ())
 
 let fStarC_HashMap_fold__syntax_term' (f : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> ('v -> ('u___a -> 'u___a)))) (m : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'v)) list) FStarC_PIMap.t) (eta : 'u___a) : 'u___a =
-  (FStarC_PIMap.fold m (fun tmp b a -> (FStarC_List.fold_left (fun a1 tmp1 -> (match tmp1 with
+  (FStarC_PIMap.fold m (fun tmp b a -> (BatList.fold_left (fun a1 tmp1 -> (match tmp1 with
     | (k, v) -> (f k v a1)
   )) a b)) eta)
 

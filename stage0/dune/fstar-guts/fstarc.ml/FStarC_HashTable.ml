@@ -4,7 +4,7 @@
 let fStarC_HashTable_hashtbl_make__arg_equal__0 (tmp : string) (tmp1 : string) : bool =
   (FStarC_Class_Deq.fStarC_Class_Deq_op_Equals_Question__string tmp tmp1)
 
-let fStarC_HashTable_hashtbl_make__arg_hash__0 (tmp : string) : FStarC_Hash.hash_code =
+let fStarC_HashTable_hashtbl_make__arg_hash__0 (tmp : string) : int =
   (FStarC_Class_Hashable.fStarC_Class_Hashable_hash__string tmp)
 
 module FStarC_HashTable_hashtbl_make__0 = Hashtbl.Make (struct
@@ -16,7 +16,7 @@ end)
 let fStarC_HashTable_hashtbl_make__arg_equal__2 (tmp : Prims.int) (tmp1 : Prims.int) : bool =
   (FStarC_Class_Deq.fStarC_Class_Deq_op_Equals_Question__int tmp tmp1)
 
-let fStarC_HashTable_hashtbl_make__arg_hash__2 (tmp : Prims.int) : FStarC_Hash.hash_code =
+let fStarC_HashTable_hashtbl_make__arg_hash__2 (tmp : Prims.int) : int =
   (FStarC_Class_Hashable.fStarC_Class_Hashable_hash__int tmp)
 
 module FStarC_HashTable_hashtbl_make__2 = Hashtbl.Make (struct

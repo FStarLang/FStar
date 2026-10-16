@@ -7,8 +7,8 @@ let z3url : string =
 let packaged_z3_versions : (string) list =
   ("4.8.5" :: ("4.13.3" :: ("4.15.3" :: [])))
 
-let z3_install_suggestion (v : string) : (FStar_Pprint.document) list =
-  ((FStar_Pprint.op_Hat_Slash_Hat (FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one (FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Please download version %s of Z3 from" v)) (FStar_Pprint.url z3url)) (FStar_Pprint.group (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "and install it into your $PATH as") (FStar_Pprint.op_Hat_Hat (FStarC_Errors_Msg.fquotes (FStar_Pprint.doc_of_string (FStarC_Platform.exe (Prims.strcat "z3-" v)))) FStar_Pprint.dot)))) :: ((if (FStarC_List.mem v packaged_z3_versions) then (FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Version %s of Z3 should be included in binary packages of F*. If you are using a binary package and are seeing\n              this error, please file a bug report." v)) else FStar_Pprint.empty) :: []))
+let z3_install_suggestion (v : string) : (PPrint.document) list =
+  ((PPrint.(^/^) (FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one (FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Please download version %s of Z3 from" v)) (PPrint.url z3url)) (PPrint.group (PPrint.(^/^) (FStarC_Errors_Msg.text "and install it into your $PATH as") (PPrint.(^^) (FStarC_Errors_Msg.fquotes (PPrint.string (FStarC_Platform.exe (Prims.strcat "z3-" v)))) PPrint.dot)))) :: ((if (BatList.mem v packaged_z3_versions) then (FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Version %s of Z3 should be included in binary packages of F*. If you are using a binary package and are seeing\n              this error, please file a bug report." v)) else PPrint.empty) :: []))
 
 let z3_inpath (path : string) : bool =
   (try (let s = (FStarC_Util.run_process "z3_pathtest" path ("-version" :: []) None) in
@@ -46,7 +46,7 @@ let do_locate_z3 (v : string) : (string) option =
   path)
 
 let locate_z3 : (string -> (string) option) =
-  (let cache = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (5)))) in
+  (let cache = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (5)))) in
   (fun v -> (let find_or = (fun k f -> (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt cache k) in
     (match tmp with
       | (Some (v1)) -> v1

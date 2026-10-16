@@ -15,7 +15,7 @@ type stat = {
 }
 
 let st : (((bool ref) * stat)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
-  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (10))))
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (10))))
 
 let fStarC_Class_Monoid_mzero__stat : stat =
   { ns_tree = Prims.int_zero;
@@ -58,16 +58,16 @@ let do_record (key : string) (f : (unit -> 'u___a)) : 'u___a =
   let running = (r_running key) in
   let was_running = (!(running)) in
   ((running) := true);
-  let t0 = (FStarC_Timing.now_ns ()) in
+  let t0 = (Mtime_clock.now_ns ()) in
   let resexn = (try (let tmp2 = (f ()) in
     (FStar_Pervasives.Inr (tmp2))) with
       | u__cexn -> (FStar_Pervasives.Inl (u__cexn))
     ) in
   ((running) := was_running);
-  let t1 = (FStarC_Timing.now_ns ()) in
+  let t1 = (Mtime_clock.now_ns ()) in
   let ns = (FStarC_Timing.diff_ns t0 t1) in
   let tmp2 = (!(stack)) in
-  let tmp3 = (FStarC_List.tl tmp2) in
+  let tmp3 = (BatList.tl tmp2) in
   ((stack) := tmp3);
   (if (not was_running) then ((add key { ns_tree = ns;
     ns_exn = (fStarC_Class_Monoid_mzero__stat).ns_exn;
@@ -138,7 +138,7 @@ let lpad (len : Prims.int) (s : string) : string =
 
 let print_all (tmp : unit) : string =
   (let keys = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun key tmp1 acc -> (key :: acc)) st []) in
-  let points = (FStarC_List.map (fun k -> (let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt st k) in
+  let points = (BatList.map (fun k -> (let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt st k) in
     let tmp2 = (match tmp1 with
         | (Some (v)) -> v
       ) in
@@ -147,7 +147,7 @@ let print_all (tmp : unit) : string =
       ) in
     (k, tmp3))) keys) in
   let points1 = (fStarC_Class_Ord_sort_by__tuple2_string_stat points) in
-  let longest_key = (FStarC_List.fold_left (fun acc tmp1 -> (match tmp1 with
+  let longest_key = (BatList.fold_left (fun acc tmp1 -> (match tmp1 with
       | (k, tmp2) -> (max acc (FStarC_String.length k))
     )) (Prims.of_int (20)) points1) in
   let pr1 = (fun p -> (match p with
@@ -168,7 +168,7 @@ let print_all (tmp : unit) : string =
   let tmp4 = (lpad (Prims.of_int (9)) "point") in
   let tmp5 = (lpad (Prims.of_int (9)) "exn") in
   let tmp6 = (FStarC_Format.fmt5 "  %s  %s %s %s %s" tmp1 tmp2 tmp3 tmp4 tmp5) in
-  let tmp7 = (FStarC_List.map pr1 points1) in
+  let tmp7 = (BatList.map pr1 points1) in
   let tmp8 = (FStarC_String.concat "\n" tmp7) in
   let tmp9 = (Prims.strcat "\n" tmp8) in
   (Prims.strcat tmp6 tmp9))

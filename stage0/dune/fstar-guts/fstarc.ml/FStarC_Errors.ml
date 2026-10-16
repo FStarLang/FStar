@@ -33,10 +33,10 @@ let error_context : error_context_t =
   let set = (fun c -> ((ctxs) := c)) in
   { push = push; pop = pop; clear = clear_; get = get; set = set })
 
-let ctx_doc (ctx : (string) list) : FStar_Pprint.document =
+let ctx_doc (ctx : (string) list) : PPrint.document =
   (let tmp = (FStarC_Options.error_contexts ()) in
-  (if tmp then (let tmp1 = (FStarC_List.map (fun s -> (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline (FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string "> ") (FStar_Pprint.doc_of_string s)))) ctx) in
-  (FStar_Pprint.concat tmp1)) else FStar_Pprint.empty))
+  (if tmp then (let tmp1 = (BatList.map (fun s -> (PPrint.(^^) PPrint.hardline (PPrint.(^^) (PPrint.string "> ") (PPrint.string s)))) ctx) in
+  (PPrint.concat tmp1)) else PPrint.empty))
 
 let with_ctx (ctx : string) (f : (unit -> 'u___a)) : 'u___a =
   (((error_context).push ctx);
@@ -91,19 +91,19 @@ let fixup_issue_range (rng : (FStarC_Range_Type.range) option) : (FStarC_Range_T
     ) in
   (FStarC_Option.map maybe_bound_range rng1))
 
-let maybe_add_backtrace (msg : (FStar_Pprint.document) list) : (FStar_Pprint.document) list =
+let maybe_add_backtrace (msg : (PPrint.document) list) : (PPrint.document) list =
   (let tmp = (FStarC_Options.trace_error ()) in
   (if tmp then (let tmp1 = (FStarC_Errors_Msg.backtrace_doc ()) in
   let tmp2 = (tmp1 :: []) in
-  (FStarC_List.op_At msg tmp2)) else msg))
+  (BatList.append msg tmp2)) else msg))
 
 type context_t = (string) list
 
-type error = (FStarC_Errors_Codes.error_code * (FStar_Pprint.document) list * FStarC_Range_Type.range * (string) list)
+type error = (FStarC_Errors_Codes.error_code * (PPrint.document) list * FStarC_Range_Type.range * (string) list)
 
-exception Error of (FStarC_Errors_Codes.error_code * (FStar_Pprint.document) list * FStarC_Range_Type.range * (string) list)
+exception Error of (FStarC_Errors_Codes.error_code * (PPrint.document) list * FStarC_Range_Type.range * (string) list)
 
-let fStarC_Errors_raise_error__range_list_document (pos : FStarC_Range_Type.range) (code : FStarC_Errors_Codes.error_code) (msg : (FStar_Pprint.document) list) : 'u___a =
+let fStarC_Errors_raise_error__range_list_ocaml_document (pos : FStarC_Range_Type.range) (code : FStarC_Errors_Codes.error_code) (msg : (PPrint.document) list) : 'u___a =
   (let tmp = (fixup_issue_range (Some (pos))) in
   (match tmp with
     | (Some (rng)) -> (let tmp1 = (maybe_add_backtrace msg) in
@@ -129,146 +129,114 @@ let fStarC_Errors_raise_error0__string (e : FStarC_Errors_Codes.error_code) (msg
 
 exception Invalid_warn_error_setting of string
 
-type issue_level =
-  | ENotImplemented
-  | EInfo
-  | EWarning
-  | EError
-
-
-type issue = {
-  issue_msg : (FStar_Pprint.document) list;
-  issue_level : issue_level;
-  issue_range : (FStarC_Range_Type.range) option;
-  issue_number : (Prims.int) option;
-  issue_ctx : (string) list;
-}
-
 type error_handler = {
   eh_name : string;
-  eh_add_one : (issue -> unit);
+  eh_add_one : (FStarC_Errors_Issue.issue -> unit);
   eh_count_errors : (unit -> Prims.int);
-  eh_report : (unit -> (issue) list);
+  eh_report : (unit -> (FStarC_Errors_Issue.issue) list);
   eh_clear : (unit -> unit);
 }
 
-let u___proj__Mkissue__item__issue_range (projectee : issue) : (FStarC_Range_Type.range) option =
-  (projectee).issue_range
-
-let string_of_issue_level (il : issue_level) : string =
-  (match il with
-    | EInfo -> "Info"
-    | EWarning -> "Warning"
-    | EError -> "Error"
-    | ENotImplemented -> "Feature not yet implemented: "
-  )
-
-let optional_def (f : ('u___a -> FStar_Pprint.document)) (def : FStar_Pprint.document) (o : ('u___a) option) : FStar_Pprint.document =
+let optional_def (f : ('u___a -> PPrint.document)) (def : PPrint.document) (o : ('u___a) option) : PPrint.document =
   (match o with
     | (Some (x)) -> (f x)
     | None -> def
   )
 
-let u___proj__Mkissue__item__issue_ctx (projectee : issue) : (string) list =
-  (projectee).issue_ctx
-
-let u___proj__Mkissue__item__issue_msg (projectee : issue) : (FStar_Pprint.document) list =
-  (projectee).issue_msg
-
-let issue_to_doc' (print_hdr : bool) (issue : issue) : FStar_Pprint.document =
-  (let r = (FStarC_Option.map FStarC_Range_Ops.refind_range (issue).issue_range) in
-  let hdr = (if print_hdr then (let level_header = (FStar_Pprint.doc_of_string (string_of_issue_level (issue).issue_level)) in
-    let num_opt = (if (((=) (issue).issue_level EError) || ((=) (issue).issue_level EWarning)) then (let tmp = (optional_def (fun n -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
-        (FStar_Pprint.doc_of_string tmp))) (FStar_Pprint.doc_of_string "<unknown>") (issue).issue_number) in
-      (FStar_Pprint.op_Hat_Hat (FStar_Pprint.blank Prims.int_one) tmp)) else FStar_Pprint.empty) in
+let issue_to_doc' (print_hdr : bool) (issue : FStarC_Errors_Issue.issue) : PPrint.document =
+  (let r = (FStarC_Option.map FStarC_Range_Ops.refind_range (issue).FStarC_Errors_Issue.issue_range) in
+  let hdr = (if print_hdr then (let level_header = (PPrint.string (FStarC_Errors_Issue.string_of_issue_level (issue).FStarC_Errors_Issue.issue_level)) in
+    let num_opt = (if (((=) (issue).FStarC_Errors_Issue.issue_level FStarC_Errors_Issue.EError) || ((=) (issue).FStarC_Errors_Issue.issue_level FStarC_Errors_Issue.EWarning)) then (let tmp = (optional_def (fun n -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
+        (PPrint.string tmp))) (PPrint.string "<unknown>") (issue).FStarC_Errors_Issue.issue_number) in
+      (PPrint.(^^) (FStar_Pprint.blank Prims.int_one) tmp)) else PPrint.empty) in
     let atrng = (match r with
         | (Some (r1)) when ((<>) r1 FStarC_Range_Type.dummyRange) -> (let tmp = (FStarC_Range_Ops.string_of_use_range r1) in
-          let tmp1 = (FStar_Pprint.doc_of_string tmp) in
-          let tmp2 = (FStar_Pprint.op_Hat_Hat (FStar_Pprint.blank Prims.int_one) tmp1) in
-          let tmp3 = (FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string "at") tmp2) in
-          (FStar_Pprint.op_Hat_Hat (FStar_Pprint.blank Prims.int_one) tmp3))
-        | tmp -> FStar_Pprint.empty
+          let tmp1 = (PPrint.string tmp) in
+          let tmp2 = (PPrint.(^^) (FStar_Pprint.blank Prims.int_one) tmp1) in
+          let tmp3 = (PPrint.(^^) (PPrint.string "at") tmp2) in
+          (PPrint.(^^) (FStar_Pprint.blank Prims.int_one) tmp3))
+        | tmp -> PPrint.empty
       ) in
-    (FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string "*") (FStar_Pprint.op_Hat_Hat (FStar_Pprint.blank Prims.int_one) (FStar_Pprint.op_Hat_Hat level_header (FStar_Pprint.op_Hat_Hat num_opt (FStar_Pprint.op_Hat_Hat atrng (FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string ":") FStar_Pprint.hardline))))))) else FStar_Pprint.empty) in
+    (PPrint.(^^) (PPrint.string "*") (PPrint.(^^) (FStar_Pprint.blank Prims.int_one) (PPrint.(^^) level_header (PPrint.(^^) num_opt (PPrint.(^^) atrng (PPrint.(^^) (PPrint.string ":") PPrint.hardline))))))) else PPrint.empty) in
   let seealso = (match r with
       | (Some (r1)) when (((<>) (FStarC_Range_Type.def_range r1) (FStarC_Range_Type.use_range r1)) && ((<>) (FStarC_Range_Type.def_range r1) (FStarC_Range_Type.def_range FStarC_Range_Type.dummyRange))) -> (let tmp = (FStarC_Range_Ops.string_of_range r1) in
-        let tmp1 = (FStar_Pprint.doc_of_string tmp) in
-        let tmp2 = (FStar_Pprint.op_Hat_Hat (FStar_Pprint.blank Prims.int_one) tmp1) in
-        (FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string "See also") tmp2))
-      | tmp -> FStar_Pprint.empty
+        let tmp1 = (PPrint.string tmp) in
+        let tmp2 = (PPrint.(^^) (FStar_Pprint.blank Prims.int_one) tmp1) in
+        (PPrint.(^^) (PPrint.string "See also") tmp2))
+      | tmp -> PPrint.empty
     ) in
-  let ctx = (match (issue).issue_ctx with
-      | (h :: t) when (FStarC_Options.error_contexts ()) -> (let d1 = (fun s -> (FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string "> ") (FStar_Pprint.doc_of_string s))) in
-        (FStarC_List.fold_left (fun l r1 -> (FStar_Pprint.op_Hat_Hat l (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline (d1 r1)))) (d1 h) t))
-      | tmp -> FStar_Pprint.empty
+  let ctx = (match (issue).FStarC_Errors_Issue.issue_ctx with
+      | (h :: t) when (FStarC_Options.error_contexts ()) -> (let d1 = (fun s -> (PPrint.(^^) (PPrint.string "> ") (PPrint.string s))) in
+        (BatList.fold_left (fun l r1 -> (PPrint.(^^) l (PPrint.(^^) PPrint.hardline (d1 r1)))) (d1 h) t))
+      | tmp -> PPrint.empty
     ) in
   let subdoc = (FStarC_Errors_Msg.subdoc' print_hdr) in
-  let tmp = (FStarC_List.map (fun d -> (subdoc (FStar_Pprint.group d))) (issue).issue_msg) in
-  let mainmsg = (FStar_Pprint.concat tmp) in
-  (FStar_Pprint.op_Hat_Hat hdr (FStar_Pprint.op_Hat_Hat mainmsg (FStar_Pprint.op_Hat_Hat (subdoc seealso) (subdoc ctx)))))
+  let tmp = (BatList.map (fun d -> (subdoc (PPrint.group d))) (issue).FStarC_Errors_Issue.issue_msg) in
+  let mainmsg = (PPrint.concat tmp) in
+  (PPrint.(^^) hdr (PPrint.(^^) mainmsg (PPrint.(^^) (subdoc seealso) (subdoc ctx)))))
 
-let format_issue' (print_hdr : bool) (issue : issue) : string =
+let format_issue' (print_hdr : bool) (issue : FStarC_Errors_Issue.issue) : string =
   (let tmp = (issue_to_doc' print_hdr issue) in
   (FStarC_Errors_Msg.renderdoc tmp))
 
-let format_issue (issue : issue) : string =
+let format_issue (issue : FStarC_Errors_Issue.issue) : string =
   (format_issue' true issue)
 
-let print_issue_rendered (issue : issue) : unit =
+let print_issue_rendered (issue : FStarC_Errors_Issue.issue) : unit =
   (let tmp = (format_issue issue) in
   let msg = (Prims.strcat tmp "\n") in
-  (match (issue).issue_level with
-    | EInfo -> (FStarC_Format.print_string (FStarC_Format.colorize_cyan msg))
-    | EWarning -> (FStarC_Format.print_warning msg)
-    | EError -> (FStarC_Format.print_error msg)
-    | ENotImplemented -> (FStarC_Format.print_error msg)
+  (match (issue).FStarC_Errors_Issue.issue_level with
+    | FStarC_Errors_Issue.EInfo -> (FStarC_Format.print_string (FStarC_Format.colorize_cyan msg))
+    | FStarC_Errors_Issue.EWarning -> (FStarC_Format.print_warning msg)
+    | FStarC_Errors_Issue.EError -> (FStarC_Format.print_error msg)
+    | FStarC_Errors_Issue.ENotImplemented -> (FStarC_Format.print_error msg)
   ))
 
-let json_of_issue_level (level : issue_level) : FStarC_Json.json =
+let json_of_issue_level (level : FStarC_Errors_Issue.issue_level) : FStarC_Json.json =
   (FStarC_Json.JsonStr ((match level with
-    | ENotImplemented -> "NotImplemented"
-    | EInfo -> "Info"
-    | EWarning -> "Warning"
-    | EError -> "Error"
+    | FStarC_Errors_Issue.ENotImplemented -> "NotImplemented"
+    | FStarC_Errors_Issue.EInfo -> "Info"
+    | FStarC_Errors_Issue.EWarning -> "Warning"
+    | FStarC_Errors_Issue.EError -> "Error"
   )))
 
-let json_of_issue (issue : issue) : FStarC_Json.json =
-  (let tmp = (FStarC_Errors_Msg.json_of_error_message (issue).issue_msg) in
+let json_of_issue (issue : FStarC_Errors_Issue.issue) : FStarC_Json.json =
+  (let tmp = (FStarC_Errors_Msg.json_of_error_message (issue).FStarC_Errors_Issue.issue_msg) in
   let tmp1 = ("msg", tmp) in
-  let tmp2 = (FStarC_Option.map FStarC_Range_Ops.refind_range (issue).issue_range) in
+  let tmp2 = (FStarC_Option.map FStarC_Range_Ops.refind_range (issue).FStarC_Errors_Issue.issue_range) in
   let tmp3 = (FStarC_Class_Monad.fStarC_Class_Monad_op_Less_Dollar_Greater__option FStarC_Range_Type.json_of_range tmp2) in
   let tmp4 = (FStarC_Option.dflt FStarC_Json.JsonNull tmp3) in
   let tmp5 = ("range", tmp4) in
-  let tmp6 = (FStarC_Class_Monad.fStarC_Class_Monad_op_Less_Dollar_Greater__option (fun u__eta -> (FStarC_Json.JsonInt (u__eta))) (issue).issue_number) in
+  let tmp6 = (FStarC_Class_Monad.fStarC_Class_Monad_op_Less_Dollar_Greater__option (fun u__eta -> (FStarC_Json.JsonInt (u__eta))) (issue).FStarC_Errors_Issue.issue_number) in
   let tmp7 = (FStarC_Option.dflt FStarC_Json.JsonNull tmp6) in
   let tmp8 = ("number", tmp7) in
-  let tmp9 = (FStarC_Class_Monad.fStarC_Class_Monad_op_Less_Dollar_Greater__list (fun u__eta -> (FStarC_Json.JsonStr (u__eta))) (issue).issue_ctx) in
+  let tmp9 = (FStarC_Class_Monad.fStarC_Class_Monad_op_Less_Dollar_Greater__list (fun u__eta -> (FStarC_Json.JsonStr (u__eta))) (issue).FStarC_Errors_Issue.issue_ctx) in
   let tmp10 = (FStarC_Json.JsonList (tmp9)) in
   let tmp11 = ("ctx", tmp10) in
   let tmp12 = (tmp11 :: []) in
   let tmp13 = (tmp8 :: tmp12) in
   let tmp14 = (tmp5 :: tmp13) in
-  let tmp15 = (("level", (json_of_issue_level (issue).issue_level)) :: tmp14) in
+  let tmp15 = (("level", (json_of_issue_level (issue).FStarC_Errors_Issue.issue_level)) :: tmp14) in
   let tmp16 = (tmp1 :: tmp15) in
   (FStarC_Json.JsonAssoc (tmp16)))
 
-let print_issue_json (issue : issue) : unit =
+let print_issue_json (issue : FStarC_Errors_Issue.issue) : unit =
   (let tmp = (json_of_issue issue) in
   let tmp1 = (FStarC_Json.string_of_json tmp) in
   (FStarC_Format.print1_error "%s\n" tmp1))
 
-let print_issue_github (issue : issue) : unit =
-  (match (issue).issue_level with
-    | ENotImplemented -> ()
-    | EInfo -> ()
-    | EError -> (let level = (if (match (issue).issue_level with
-          | EError -> true
+let print_issue_github (issue : FStarC_Errors_Issue.issue) : unit =
+  (match (issue).FStarC_Errors_Issue.issue_level with
+    | FStarC_Errors_Issue.ENotImplemented -> ()
+    | FStarC_Errors_Issue.EInfo -> ()
+    | FStarC_Errors_Issue.EError -> (let level = (if (match (issue).FStarC_Errors_Issue.issue_level with
+          | FStarC_Errors_Issue.EError -> true
           | tmp -> false
         ) then "error" else "warning") in
-      let rng = (FStarC_Option.dflt FStarC_Range_Type.dummyRange (issue).issue_range) in
+      let rng = (FStarC_Option.dflt FStarC_Range_Type.dummyRange (issue).FStarC_Errors_Issue.issue_range) in
       let msg = (format_issue' true issue) in
       let msg1 = (FStarC_String.concat "%0A" (FStarC_Util.splitlines msg)) in
-      let num = (match (issue).issue_number with
+      let num = (match (issue).FStarC_Errors_Issue.issue_number with
           | None -> ""
           | (Some (n)) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
             (FStarC_Format.fmt1 "(%s) " tmp))
@@ -277,14 +245,14 @@ let print_issue_github (issue : issue) : unit =
       let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int (FStarC_Range_Ops.line_of_pos (FStarC_Range_Ops.end_of_range rng))) in
       let tmp2 = (FStarC_Format.fmt6 "::%s file=%s,line=%s,endLine=%s::%s%s\n" level (FStarC_Range_Ops.file_of_range rng) tmp tmp1 num msg1) in
       (FStarC_Format.print_warning tmp2))
-    | EWarning -> (let level = (if (match (issue).issue_level with
-          | EError -> true
+    | FStarC_Errors_Issue.EWarning -> (let level = (if (match (issue).FStarC_Errors_Issue.issue_level with
+          | FStarC_Errors_Issue.EError -> true
           | tmp -> false
         ) then "error" else "warning") in
-      let rng = (FStarC_Option.dflt FStarC_Range_Type.dummyRange (issue).issue_range) in
+      let rng = (FStarC_Option.dflt FStarC_Range_Type.dummyRange (issue).FStarC_Errors_Issue.issue_range) in
       let msg = (format_issue' true issue) in
       let msg1 = (FStarC_String.concat "%0A" (FStarC_Util.splitlines msg)) in
-      let num = (match (issue).issue_number with
+      let num = (match (issue).FStarC_Errors_Issue.issue_number with
           | None -> ""
           | (Some (n)) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
             (FStarC_Format.fmt1 "(%s) " tmp))
@@ -295,7 +263,7 @@ let print_issue_github (issue : issue) : unit =
       (FStarC_Format.print_warning tmp2))
   )
 
-let print_issue (issue : issue) : unit =
+let print_issue (issue : FStarC_Errors_Issue.issue) : unit =
   (let tmp = (FStarC_Options.message_format ()) in
   (match tmp with
     | FStarC_Options.Human -> (print_issue_rendered issue)
@@ -326,18 +294,18 @@ let defensive_errno : Prims.int =
 
 let mk_default_handler (tmp : unit) : error_handler =
   (let err_count = (ref Prims.int_zero) in
-  let add_one_ = (fun e -> ((if ((=) (e).issue_level EError) then (let tmp1 = (!(err_count)) in
+  let add_one_ = (fun e -> ((if ((=) (e).FStarC_Errors_Issue.issue_level FStarC_Errors_Issue.EError) then (let tmp1 = (!(err_count)) in
     let tmp2 = (Prims.op_Plus Prims.int_one tmp1) in
     ((err_count) := tmp2)) else ());
     (print_issue e);
-    (if ((<>) (e).issue_level EInfo) then (let tmp1 = (!(FStarC_Options.abort_counter)) in
+    (if ((<>) (e).FStarC_Errors_Issue.issue_level FStarC_Errors_Issue.EInfo) then (let tmp1 = (!(FStarC_Options.abort_counter)) in
     let tmp2 = (Prims.op_Minus tmp1 Prims.int_one) in
     ((FStarC_Options.abort_counter) := tmp2);
     let tmp3 = (!(FStarC_Options.abort_counter)) in
     let tmp4 = ((=) tmp3 Prims.int_zero) in
     (if tmp4 then (FStarC_Effect.failwith "Aborting due to --abort_on") else ())) else ());
     let tmp1 = (FStarC_Options.defensive_abort ()) in
-    let tmp2 = (if tmp1 then ((=) (e).issue_number (Some (defensive_errno))) else false) in
+    let tmp2 = (if tmp1 then ((=) (e).FStarC_Errors_Issue.issue_number (Some (defensive_errno))) else false) in
     (if tmp2 then (FStarC_Effect.failwith "Aborting due to --defensive abort") else ());
     ())) in
   let count_errors = (fun tmp1 -> (!(err_count))) in
@@ -355,21 +323,21 @@ let default_handler : error_handler =
 let current_handler : (error_handler ref) =
   (ref default_handler)
 
-let wrapped_eh_add_one (h : error_handler) (issue : issue) : unit =
-  (let tmp = (fixup_issue_range (issue).issue_range) in
-  let issue1 = { issue_msg = (issue).issue_msg;
-      issue_level = (issue).issue_level;
+let wrapped_eh_add_one (h : error_handler) (issue : FStarC_Errors_Issue.issue) : unit =
+  (let tmp = (fixup_issue_range (issue).FStarC_Errors_Issue.issue_range) in
+  let issue1 = { FStarC_Errors_Issue.issue_msg = (issue).FStarC_Errors_Issue.issue_msg;
+      issue_level = (issue).FStarC_Errors_Issue.issue_level;
       issue_range = tmp;
-      issue_number = (issue).issue_number;
-      issue_ctx = (issue).issue_ctx } in
+      issue_number = (issue).FStarC_Errors_Issue.issue_number;
+      issue_ctx = (issue).FStarC_Errors_Issue.issue_ctx } in
   ((h).eh_add_one issue1))
 
-let add_one (issue : issue) : unit =
+let add_one (issue : FStarC_Errors_Issue.issue) : unit =
   (FStarC_Util.atomically (fun tmp -> (let tmp1 = (!(current_handler)) in
   (wrapped_eh_add_one tmp1 issue))))
 
-let mk_issue (level : issue_level) (range : (FStarC_Range_Type.range) option) (msg : (FStar_Pprint.document) list) (n : (Prims.int) option) (ctx : (string) list) : issue =
-  { issue_msg = msg;
+let mk_issue (level : FStarC_Errors_Issue.issue_level) (range : (FStarC_Range_Type.range) option) (msg : (PPrint.document) list) (n : (Prims.int) option) (ctx : (string) list) : FStarC_Errors_Issue.issue =
+  { FStarC_Errors_Issue.issue_msg = msg;
     issue_level = level;
     issue_range = range;
     issue_number = n;
@@ -381,14 +349,14 @@ let warn_on_use_errno : Prims.int =
 let warn_unsafe_options (rng_opt : (FStarC_Range_Type.range) option) (msg : string) : unit =
   (let tmp = (FStarC_Options.report_assumes ()) in
   (match tmp with
-    | (Some ("warn")) -> (add_one (mk_issue EWarning rng_opt (FStarC_Errors_Msg.mkmsg (Prims.strcat "Every use of this option triggers a warning: " msg)) (Some (warn_on_use_errno)) []))
-    | (Some ("error")) -> (add_one (mk_issue EError rng_opt (FStarC_Errors_Msg.mkmsg (Prims.strcat "Every use of this option triggers an error: " msg)) (Some (warn_on_use_errno)) []))
+    | (Some ("warn")) -> (add_one (mk_issue FStarC_Errors_Issue.EWarning rng_opt (FStarC_Errors_Msg.mkmsg (Prims.strcat "Every use of this option triggers a warning: " msg)) (Some (warn_on_use_errno)) []))
+    | (Some ("error")) -> (add_one (mk_issue FStarC_Errors_Issue.EError rng_opt (FStarC_Errors_Msg.mkmsg (Prims.strcat "Every use of this option triggers an error: " msg)) (Some (warn_on_use_errno)) []))
     | tmp1 -> ()
   ))
 
 let uu___0 : (((string -> (((FStarC_Errors_Codes.error_code * FStarC_Errors_Codes.error_flag * Prims.int)) list) option) -> unit) * (unit -> ((FStarC_Errors_Codes.error_code * FStarC_Errors_Codes.error_flag * Prims.int)) list)) =
   (let parser_callback = (ref None) in
-  let error_flags_ = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (10)))) in
+  let error_flags_ = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (10)))) in
   let set_error_flags = (fun tmp -> (let parse = (fun s -> (let tmp1 = (!(parser_callback)) in
       (match tmp1 with
         | None -> (FStarC_Effect.failwith "Callback for parsing warn_error strings is not set")
@@ -447,17 +415,17 @@ let lookup (err : FStarC_Errors_Codes.error_code) : (FStarC_Errors_Codes.error_c
       ))
   ))
 
-let log_issue_ctx (r : FStarC_Range_Type.range) (tmp : (FStarC_Errors_Codes.error_code * (FStar_Pprint.document) list)) (ctx : (string) list) : unit =
+let log_issue_ctx (r : FStarC_Range_Type.range) (tmp : (FStarC_Errors_Codes.error_code * (PPrint.document) list)) (ctx : (string) list) : unit =
   (match tmp with
     | (e, msg) -> (let msg1 = (maybe_add_backtrace msg) in
       let r1 = (fixup_issue_range (Some (r))) in
       let tmp1 = (lookup e) in
       (match tmp1 with
-        | (tmp2, FStarC_Errors_Codes.CAlwaysError, errno_) -> (add_one (mk_issue EError r1 msg1 (Some (errno_)) ctx))
-        | (tmp2, FStarC_Errors_Codes.CError, errno_) -> (add_one (mk_issue EError r1 msg1 (Some (errno_)) ctx))
-        | (tmp2, FStarC_Errors_Codes.CWarning, errno_) -> (add_one (mk_issue EWarning r1 msg1 (Some (errno_)) ctx))
+        | (tmp2, FStarC_Errors_Codes.CAlwaysError, errno_) -> (add_one (mk_issue FStarC_Errors_Issue.EError r1 msg1 (Some (errno_)) ctx))
+        | (tmp2, FStarC_Errors_Codes.CError, errno_) -> (add_one (mk_issue FStarC_Errors_Issue.EError r1 msg1 (Some (errno_)) ctx))
+        | (tmp2, FStarC_Errors_Codes.CWarning, errno_) -> (add_one (mk_issue FStarC_Errors_Issue.EWarning r1 msg1 (Some (errno_)) ctx))
         | (tmp2, FStarC_Errors_Codes.CSilent, tmp3) -> ()
-        | (tmp2, FStarC_Errors_Codes.CFatal, errno_) -> (let i = (mk_issue EError r1 msg1 (Some (errno_)) ctx) in
+        | (tmp2, FStarC_Errors_Codes.CFatal, errno_) -> (let i = (mk_issue FStarC_Errors_Issue.EError r1 msg1 (Some (errno_)) ctx) in
           let tmp3 = (FStarC_Options.ide ()) in
           (if tmp3 then (add_one i) else (let tmp4 = (format_issue i) in
           let tmp5 = (Prims.strcat "don't use log_issue to report fatal error, should use raise_error: " tmp4) in
@@ -479,24 +447,16 @@ let fStarC_Errors_log_issue__range_string (pos : FStarC_Range_Type.range) (code 
 let fStarC_Errors_log_issue0__string (e : FStarC_Errors_Codes.error_code) (msg : string) : unit =
   (fStarC_Errors_log_issue__range_string FStarC_Range_Type.dummyRange e msg)
 
-let fStarC_Errors_log_issue__syntax_term'_list_document (pos : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (code : FStarC_Errors_Codes.error_code) (msg : (FStar_Pprint.document) list) : unit =
+let fStarC_Errors_log_issue__syntax_term'_list_ocaml_document (pos : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (code : FStarC_Errors_Codes.error_code) (msg : (PPrint.document) list) : unit =
   (let rng = (FStarC_Syntax_Syntax.fStarC_Class_HasRange_pos__syntax_term' pos) in
   let ctx = ((error_context).get ()) in
   (log_issue_ctx rng (code, msg) ctx))
 
-let issue_level_of_string (tmp : string) : issue_level =
-  (match tmp with
-    | "Info" -> EInfo
-    | "Warning" -> EWarning
-    | "Error" -> EError
-    | tmp1 -> ENotImplemented
-  )
-
-let fStarC_Errors_log_issue__range_list_document (pos : FStarC_Range_Type.range) (code : FStarC_Errors_Codes.error_code) (msg : (FStar_Pprint.document) list) : unit =
+let fStarC_Errors_log_issue__range_list_ocaml_document (pos : FStarC_Range_Type.range) (code : FStarC_Errors_Codes.error_code) (msg : (PPrint.document) list) : unit =
   (let ctx = ((error_context).get ()) in
   (log_issue_ctx pos (code, msg) ctx))
 
-let fStarC_Errors_raise_error__lident_list_document (pos : FStarC_Ident.lident) (code : FStarC_Errors_Codes.error_code) (msg : (FStar_Pprint.document) list) : 'u___a =
+let fStarC_Errors_raise_error__lident_list_ocaml_document (pos : FStarC_Ident.lident) (code : FStarC_Errors_Codes.error_code) (msg : (PPrint.document) list) : 'u___a =
   (let rng = (FStarC_Ident.fStarC_Class_HasRange_pos__lident pos) in
   let tmp = (fixup_issue_range (Some (rng))) in
   (match tmp with
@@ -540,18 +500,18 @@ let fStarC_Errors_log_issue__fv_string (pos : FStarC_Syntax_Syntax.fv) (code : F
 let get_ctx (tmp : unit) : (string) list =
   ((error_context).get ())
 
-let fStarC_Errors_info__range_list_document (pos : FStarC_Range_Type.range) (msg : (FStar_Pprint.document) list) : unit =
+let fStarC_Errors_info__range_list_ocaml_document (pos : FStarC_Range_Type.range) (msg : (PPrint.document) list) : unit =
   (let rng = (fixup_issue_range (Some (pos))) in
   let msg1 = (maybe_add_backtrace msg) in
   let ctx = (get_ctx ()) in
-  (add_one (mk_issue EInfo rng msg1 None ctx)))
+  (add_one (mk_issue FStarC_Errors_Issue.EInfo rng msg1 None ctx)))
 
-let fStarC_Errors_diag__range_list_document (pos : FStarC_Range_Type.range) (msg : (FStar_Pprint.document) list) : unit =
+let fStarC_Errors_diag__range_list_ocaml_document (pos : FStarC_Range_Type.range) (msg : (PPrint.document) list) : unit =
   (let tmp = (FStarC_Debug.any ()) in
-  (if tmp then (fStarC_Errors_info__range_list_document pos msg) else ()))
+  (if tmp then (fStarC_Errors_info__range_list_ocaml_document pos msg) else ()))
 
-let fStarC_Errors_log_issue0__list_document (e : FStarC_Errors_Codes.error_code) (msg : (FStar_Pprint.document) list) : unit =
-  (fStarC_Errors_log_issue__range_list_document FStarC_Range_Type.dummyRange e msg)
+let fStarC_Errors_log_issue0__list_ocaml_document (e : FStarC_Errors_Codes.error_code) (msg : (PPrint.document) list) : unit =
+  (fStarC_Errors_log_issue__range_list_ocaml_document FStarC_Range_Type.dummyRange e msg)
 
 let get_err_count (tmp : unit) : Prims.int =
   (let tmp1 = (!(current_handler)) in
@@ -584,7 +544,7 @@ let log_issue_text (rng : FStarC_Range_Type.range) (code : FStarC_Errors_Codes.e
 let raise_error_text (rng : FStarC_Range_Type.range) (code : FStarC_Errors_Codes.error_code) (msg : string) : 'u___a =
   (fStarC_Errors_raise_error__range_string rng code msg)
 
-let fStarC_Errors_raise_error__ctx_uvar_list_document (pos : FStarC_Syntax_Syntax.ctx_uvar) (code : FStarC_Errors_Codes.error_code) (msg : (FStar_Pprint.document) list) : 'u___a =
+let fStarC_Errors_raise_error__ctx_uvar_list_ocaml_document (pos : FStarC_Syntax_Syntax.ctx_uvar) (code : FStarC_Errors_Codes.error_code) (msg : (PPrint.document) list) : 'u___a =
   (let rng = (FStarC_Syntax_Syntax.fStarC_Class_HasRange_pos__ctx_uvar pos) in
   let tmp = (fixup_issue_range (Some (rng))) in
   (match tmp with
@@ -598,7 +558,7 @@ let fStarC_Errors_raise_error__ctx_uvar_list_document (pos : FStarC_Syntax_Synta
 let mk_catch_handler (tmp : unit) : error_handler =
   (let issues = (ref []) in
   let err_count = (ref Prims.int_zero) in
-  let add_one_ = (fun e -> ((if ((=) (e).issue_level EError) then (let tmp1 = (!(err_count)) in
+  let add_one_ = (fun e -> ((if ((=) (e).FStarC_Errors_Issue.issue_level FStarC_Errors_Issue.EError) then (let tmp1 = (!(err_count)) in
     let tmp2 = (Prims.op_Plus Prims.int_one tmp1) in
     ((err_count) := tmp2)) else ());
     let tmp1 = (!(issues)) in
@@ -622,12 +582,12 @@ let handleable (tmp : exn) : bool =
     | tmp1 -> false
   )
 
-let issue_of_exn (e : exn) : (issue) option =
+let issue_of_exn (e : exn) : (FStarC_Errors_Issue.issue) option =
   (match e with
     | (Error ((e1, msg, r, ctx))) -> (let tmp = (lookup e1) in
       let errno_ = (error_number tmp) in
       let r1 = (fixup_issue_range (Some (r))) in
-      (Some ((mk_issue EError r1 msg (Some (errno_)) ctx))))
+      (Some ((mk_issue FStarC_Errors_Issue.EError r1 msg (Some (errno_)) ctx))))
     | tmp -> None
   )
 
@@ -638,13 +598,13 @@ let err_exn (exn : exn) : unit =
     | None -> (raise exn)
   )))
 
-let catch_errors_aux (f : (unit -> 'u___a)) : ((issue) list * (issue) list * ('u___a) option) =
+let catch_errors_aux (f : (unit -> 'u___a)) : ((FStarC_Errors_Issue.issue) list * (FStarC_Errors_Issue.issue) list * ('u___a) option) =
   (let newh = (mk_catch_handler ()) in
   let old = (!(current_handler)) in
   ((current_handler) := newh);
   let finally_restore = (fun tmp -> (let all_issues = ((newh).eh_report ()) in
     ((current_handler) := old);
-    (FStarC_List.partition (fun i -> ((=) (i).issue_level EError)) all_issues))) in
+    (BatList.partition (fun i -> ((=) (i).FStarC_Errors_Issue.issue_level FStarC_Errors_Issue.EError)) all_issues))) in
   let r = (try (let tmp = (f ()) in
     (Some (tmp))) with
       | ex when (handleable ex) -> ((err_exn ex);
@@ -657,17 +617,17 @@ let catch_errors_aux (f : (unit -> 'u___a)) : ((issue) list * (issue) list * ('u
     | (errs, rest) -> (errs, rest, r)
   ))
 
-let catch_errors_and_ignore_rest (f : (unit -> 'u___a)) : ((issue) list * ('u___a) option) =
+let catch_errors_and_ignore_rest (f : (unit -> 'u___a)) : ((FStarC_Errors_Issue.issue) list * ('u___a) option) =
   (let tmp = (catch_errors_aux f) in
   (match tmp with
     | (errs, rest, r) -> (let tmp1 = (!(current_handler)) in
       let tmp2 = (tmp1).eh_add_one in
-      let tmp3 = (FStarC_List.filter (fun i -> ((=) (i).issue_level EInfo)) rest) in
-      (FStarC_List.iter tmp2 tmp3);
+      let tmp3 = (BatList.filter (fun i -> ((=) (i).FStarC_Errors_Issue.issue_level FStarC_Errors_Issue.EInfo)) rest) in
+      (BatList.iter tmp2 tmp3);
       (errs, r))
   ))
 
-let fStarC_Errors_raise_error__syntax_term'_list_document (pos : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (code : FStarC_Errors_Codes.error_code) (msg : (FStar_Pprint.document) list) : 'u___a =
+let fStarC_Errors_raise_error__syntax_term'_list_ocaml_document (pos : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (code : FStarC_Errors_Codes.error_code) (msg : (PPrint.document) list) : 'u___a =
   (let rng = (FStarC_Syntax_Syntax.fStarC_Class_HasRange_pos__syntax_term' pos) in
   let tmp = (fixup_issue_range (Some (rng))) in
   (match tmp with
@@ -678,7 +638,7 @@ let fStarC_Errors_raise_error__syntax_term'_list_document (pos : (FStarC_Syntax_
       (raise tmp4))
   ))
 
-let fStarC_Errors_log_issue__lident_list_document (pos : FStarC_Ident.lident) (code : FStarC_Errors_Codes.error_code) (msg : (FStar_Pprint.document) list) : unit =
+let fStarC_Errors_log_issue__lident_list_ocaml_document (pos : FStarC_Ident.lident) (code : FStarC_Errors_Codes.error_code) (msg : (PPrint.document) list) : unit =
   (let rng = (FStarC_Ident.fStarC_Class_HasRange_pos__lident pos) in
   let ctx = ((error_context).get ()) in
   (log_issue_ctx rng (code, msg) ctx))
@@ -695,7 +655,7 @@ let fStarC_Errors_raise_error__fv_string (pos : FStarC_Syntax_Syntax.fv) (code :
       (raise tmp4))
   ))
 
-let fStarC_Errors_raise_error__bv_list_document (pos : FStarC_Syntax_Syntax.bv) (code : FStarC_Errors_Codes.error_code) (msg : (FStar_Pprint.document) list) : 'u___a =
+let fStarC_Errors_raise_error__bv_list_ocaml_document (pos : FStarC_Syntax_Syntax.bv) (code : FStarC_Errors_Codes.error_code) (msg : (PPrint.document) list) : 'u___a =
   (let rng = (FStarC_Syntax_Syntax.fStarC_Class_HasRange_pos__bv pos) in
   let tmp = (fixup_issue_range (Some (rng))) in
   (match tmp with
@@ -730,7 +690,7 @@ let fStarC_Errors_raise_error__binder_string (pos : FStarC_Syntax_Syntax.binder)
       (raise tmp4))
   ))
 
-let fStarC_Errors_raise_error__withinfo_t_pat'_list_document (pos : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) (code : FStarC_Errors_Codes.error_code) (msg : (FStar_Pprint.document) list) : 'u___a =
+let fStarC_Errors_raise_error__withinfo_t_pat'_list_ocaml_document (pos : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) (code : FStarC_Errors_Codes.error_code) (msg : (PPrint.document) list) : 'u___a =
   (let rng = (FStarC_Syntax_Syntax.fStarC_Class_HasRange_pos__withinfo_t_pat' pos) in
   let tmp = (fixup_issue_range (Some (rng))) in
   (match tmp with
@@ -741,15 +701,15 @@ let fStarC_Errors_raise_error__withinfo_t_pat'_list_document (pos : (FStarC_Synt
       (raise tmp4))
   ))
 
-let add_many (issues : (issue) list) : unit =
+let add_many (issues : (FStarC_Errors_Issue.issue) list) : unit =
   (FStarC_Util.atomically (fun tmp -> (let tmp1 = (!(current_handler)) in
   let tmp2 = (wrapped_eh_add_one tmp1) in
-  (FStarC_List.iter tmp2 issues))))
+  (BatList.iter tmp2 issues))))
 
-let add_issues (issues : (issue) list) : unit =
+let add_issues (issues : (FStarC_Errors_Issue.issue) list) : unit =
   (add_many issues)
 
-let fStarC_Errors_raise_error__ident_list_document (pos : FStarC_Ident.ident) (code : FStarC_Errors_Codes.error_code) (msg : (FStar_Pprint.document) list) : 'u___a =
+let fStarC_Errors_raise_error__ident_list_ocaml_document (pos : FStarC_Ident.ident) (code : FStarC_Errors_Codes.error_code) (msg : (PPrint.document) list) : 'u___a =
   (let rng = (FStarC_Ident.fStarC_Class_HasRange_pos__ident pos) in
   let tmp = (fixup_issue_range (Some (rng))) in
   (match tmp with
@@ -760,7 +720,7 @@ let fStarC_Errors_raise_error__ident_list_document (pos : FStarC_Ident.ident) (c
       (raise tmp4))
   ))
 
-let fStarC_Errors_log_issue__ident_list_document (pos : FStarC_Ident.ident) (code : FStarC_Errors_Codes.error_code) (msg : (FStar_Pprint.document) list) : unit =
+let fStarC_Errors_log_issue__ident_list_ocaml_document (pos : FStarC_Ident.ident) (code : FStarC_Errors_Codes.error_code) (msg : (PPrint.document) list) : unit =
   (let rng = (FStarC_Ident.fStarC_Class_HasRange_pos__ident pos) in
   let ctx = ((error_context).get ()) in
   (log_issue_ctx rng (code, msg) ctx))
@@ -771,8 +731,8 @@ let fStarC_Errors_log_issue__ident_string (pos : FStarC_Ident.ident) (code : FSt
   let ctx = ((error_context).get ()) in
   (log_issue_ctx rng (code, msg1) ctx))
 
-let fStarC_Errors_raise_error0__list_document (e : FStarC_Errors_Codes.error_code) (msg : (FStar_Pprint.document) list) : 'u___a =
-  (fStarC_Errors_raise_error__range_list_document FStarC_Range_Type.dummyRange e msg)
+let fStarC_Errors_raise_error0__list_ocaml_document (e : FStarC_Errors_Codes.error_code) (msg : (PPrint.document) list) : 'u___a =
+  (fStarC_Errors_raise_error__range_list_ocaml_document FStarC_Range_Type.dummyRange e msg)
 
 let fStarC_Errors_log_issue__lident_string (pos : FStarC_Ident.lident) (code : FStarC_Errors_Codes.error_code) (msg : string) : unit =
   (let rng = (FStarC_Ident.fStarC_Class_HasRange_pos__lident pos) in
@@ -780,11 +740,11 @@ let fStarC_Errors_log_issue__lident_string (pos : FStarC_Ident.lident) (code : F
   let ctx = ((error_context).get ()) in
   (log_issue_ctx rng (code, msg1) ctx))
 
-let report_all (tmp : unit) : (issue) list =
+let report_all (tmp : unit) : (FStarC_Errors_Issue.issue) list =
   (let tmp1 = (!(current_handler)) in
   ((tmp1).eh_report ()))
 
-let fStarC_Errors_log_issue__fv_list_document (pos : FStarC_Syntax_Syntax.fv) (code : FStarC_Errors_Codes.error_code) (msg : (FStar_Pprint.document) list) : unit =
+let fStarC_Errors_log_issue__fv_list_ocaml_document (pos : FStarC_Syntax_Syntax.fv) (code : FStarC_Errors_Codes.error_code) (msg : (PPrint.document) list) : unit =
   (let rng = (FStarC_Syntax_Syntax.fStarC_Class_HasRange_pos__fv pos) in
   let ctx = ((error_context).get ()) in
   (log_issue_ctx rng (code, msg) ctx))
@@ -795,8 +755,8 @@ let fStarC_Errors_log_issue__sigelt_string (pos : FStarC_Syntax_Syntax.sigelt) (
   let ctx = ((error_context).get ()) in
   (log_issue_ctx rng (code, msg1) ctx))
 
-let add_errors (errs : ((FStarC_Errors_Codes.error_code * (FStar_Pprint.document) list * FStarC_Range_Type.range * (string) list)) list) : unit =
-  (FStarC_Util.atomically (fun tmp -> (FStarC_List.iter (fun tmp1 -> (match tmp1 with
+let add_errors (errs : ((FStarC_Errors_Codes.error_code * (PPrint.document) list * FStarC_Range_Type.range * (string) list)) list) : unit =
+  (FStarC_Util.atomically (fun tmp -> (BatList.iter (fun tmp1 -> (match tmp1 with
     | (e, msg, r, ctx) -> (log_issue_ctx r (e, msg) ctx)
   )) errs)))
 
@@ -805,7 +765,7 @@ let fStarC_Errors_info__range_string (pos : FStarC_Range_Type.range) (msg : stri
   let msg1 = (FStarC_Errors_Msg.fStarC_Errors_Msg_to_doc_list__string msg) in
   let msg2 = (maybe_add_backtrace msg1) in
   let ctx = (get_ctx ()) in
-  (add_one (mk_issue EInfo rng msg2 None ctx)))
+  (add_one (mk_issue FStarC_Errors_Issue.EInfo rng msg2 None ctx)))
 
 let fStarC_Errors_diag__range_string (pos : FStarC_Range_Type.range) (msg : string) : unit =
   (let tmp = (FStarC_Debug.any ()) in
@@ -821,30 +781,30 @@ let set_handler (handler : error_handler) : unit =
   ((current_handler) := handler);
   (add_many issues))
 
-let catch_errors (f : (unit -> 'u___a)) : ((issue) list * ('u___a) option) =
+let catch_errors (f : (unit -> 'u___a)) : ((FStarC_Errors_Issue.issue) list * ('u___a) option) =
   (let tmp = (catch_errors_aux f) in
   (match tmp with
     | (errs, rest, r) -> (let tmp1 = (!(current_handler)) in
       let tmp2 = (tmp1).eh_add_one in
-      (FStarC_List.iter tmp2 rest);
+      (BatList.iter tmp2 rest);
       (errs, r))
   ))
 
 let set_option_warning_callback_range (ropt : (FStarC_Range_Type.range) option) : unit =
   (FStarC_Options.set_option_warning_callback (warn_unsafe_options ropt))
 
-let print_expected_failures (issues : (issue) list) : unit =
-  (let issues1 = (FStarC_List.map (fun i -> { issue_msg = ((FStarC_Errors_Msg.text "Expected failure:") :: (i).issue_msg);
-      issue_level = EInfo;
-      issue_range = (i).issue_range;
-      issue_number = (i).issue_number;
-      issue_ctx = (i).issue_ctx }) issues) in
+let print_expected_failures (issues : (FStarC_Errors_Issue.issue) list) : unit =
+  (let issues1 = (BatList.map (fun i -> { FStarC_Errors_Issue.issue_msg = ((FStarC_Errors_Msg.text "Expected failure:") :: (i).FStarC_Errors_Issue.issue_msg);
+      issue_level = FStarC_Errors_Issue.EInfo;
+      issue_range = (i).FStarC_Errors_Issue.issue_range;
+      issue_number = (i).FStarC_Errors_Issue.issue_number;
+      issue_ctx = (i).FStarC_Errors_Issue.issue_ctx }) issues) in
   (add_issues issues1))
 
-let rec find_multiset_discrepancy__collect (l : ('u___a) list) : (('u___a * Prims.int)) list =
+let rec find_multiset_discrepancy__collect (u_'a : unit) (l : ('u___a) list) : (('u___a * Prims.int)) list =
   (match l with
     | [] -> []
-    | (hd :: tl) -> (match (find_multiset_discrepancy__collect tl) with
+    | (hd :: tl) -> (match (find_multiset_discrepancy__collect () tl) with
         | [] -> ((hd, Prims.int_one) :: [])
         | ((h, n) :: t) -> (if ((=) h hd) then ((h, (Prims.op_Plus n Prims.int_one)) :: t) else ((hd, Prims.int_one) :: ((h, n) :: t)))
       )
@@ -859,17 +819,17 @@ let rec find_multiset_discrepancy__aux (l1 : ((Prims.int * Prims.int)) list) (l2
   )
 
 let find_multiset_discrepancy (l1 : (Prims.int) list) (l2 : (Prims.int) list) : ((Prims.int * Prims.int * Prims.int)) option =
-  (let sort = (FStarC_List.sortWith (fun x y -> (Prims.op_Minus x y))) in
+  (let sort = ((fun f l -> BatList.sort (fun x y -> Z.to_int (f x y)) l) (fun x y -> (Prims.op_Minus x y))) in
   let tmp = (sort l1) in
-  let l11 = (find_multiset_discrepancy__collect tmp) in
+  let l11 = (find_multiset_discrepancy__collect () tmp) in
   let tmp1 = (sort l2) in
-  let l21 = (find_multiset_discrepancy__collect tmp1) in
+  let l21 = (find_multiset_discrepancy__collect () tmp1) in
   (find_multiset_discrepancy__aux l11 l21))
 
 let with_ctx_if (cond : bool) (ctx : string) (f : (unit -> 'u___a)) : 'u___a =
   (if cond then (with_ctx ctx f) else (f ()))
 
-let fStarC_Errors_raise_error__sigelt_list_document (pos : FStarC_Syntax_Syntax.sigelt) (code : FStarC_Errors_Codes.error_code) (msg : (FStar_Pprint.document) list) : 'u___a =
+let fStarC_Errors_raise_error__sigelt_list_ocaml_document (pos : FStarC_Syntax_Syntax.sigelt) (code : FStarC_Errors_Codes.error_code) (msg : (PPrint.document) list) : 'u___a =
   (let rng = (FStarC_Syntax_Syntax.fStarC_Class_HasRange_pos__sigelt pos) in
   let tmp = (fixup_issue_range (Some (rng))) in
   (match tmp with
@@ -880,7 +840,7 @@ let fStarC_Errors_raise_error__sigelt_list_document (pos : FStarC_Syntax_Syntax.
       (raise tmp4))
   ))
 
-let fStarC_Errors_log_issue__sigelt_list_document (pos : FStarC_Syntax_Syntax.sigelt) (code : FStarC_Errors_Codes.error_code) (msg : (FStar_Pprint.document) list) : unit =
+let fStarC_Errors_log_issue__sigelt_list_ocaml_document (pos : FStarC_Syntax_Syntax.sigelt) (code : FStarC_Errors_Codes.error_code) (msg : (PPrint.document) list) : unit =
   (let rng = (FStarC_Syntax_Syntax.fStarC_Class_HasRange_pos__sigelt pos) in
   let ctx = ((error_context).get ()) in
   (log_issue_ctx rng (code, msg) ctx))
@@ -907,7 +867,7 @@ let set_parse_warn_error (tmp : (string -> (((FStarC_Errors_Codes.error_code * F
 
 let lookup_error_range (settings : (('tmp * 'tmp1 * Prims.int)) list) (tmp : (Prims.int * Prims.int)) : (('tmp * 'tmp1 * Prims.int)) list =
   (match tmp with
-    | (l, h) -> (let tmp1 = (FStarC_List.partition (fun tmp1 -> (match tmp1 with
+    | (l, h) -> (let tmp1 = (BatList.partition (fun tmp1 -> (match tmp1 with
           | (tmp2, tmp3, i) -> ((Prims.op_Less_Equals l i) && (Prims.op_Less_Equals i h))
         )) settings) in
       (match tmp1 with
@@ -946,18 +906,18 @@ let update_flags (l : ((FStarC_Errors_Codes.error_flag * (Prims.int * Prims.int)
     )) in
   let set_flag_for_range = (fun tmp -> (match tmp with
       | (flag, range) -> (let errs = (lookup_error_range FStarC_Errors_Codes.default_settings range) in
-        (FStarC_List.map (fun tmp1 -> (match tmp1 with
+        (BatList.map (fun tmp1 -> (match tmp1 with
           | (v, default_flag, i) -> (let tmp2 = (set_one_flag i flag default_flag) in
             (v, tmp2, i))
         )) errs))
     )) in
-  let error_range_settings = (FStarC_List.rev l) in
-  let tmp = (FStarC_List.collect set_flag_for_range error_range_settings) in
-  (FStarC_List.op_At tmp FStarC_Errors_Codes.default_settings))
+  let error_range_settings = (BatList.rev l) in
+  let tmp = ((fun f l -> BatList.flatten (BatList.map f l)) set_flag_for_range error_range_settings) in
+  (BatList.append tmp FStarC_Errors_Codes.default_settings))
 
 let call_to_erased_errno : Prims.int =
   (errno FStarC_Errors_Codes.Error_CallToErased)
 
 let uu___1 : unit =
-  ((FStarC_Options.check_include_dir) := (fun s -> (if (not (FStarC_Filepath.is_directory s)) then (fStarC_Errors_log_issue__range_list_document FStarC_Range_Type.dummyRange FStarC_Errors_Codes.Fatal_NotValidIncludeDirectory ((FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "Not a valid include directory:") (FStar_Pprint.doc_of_string s)) :: [])) else ())))
+  ((FStarC_Options.check_include_dir) := (fun s -> (if (not (FStarC_Filepath.is_directory s)) then (fStarC_Errors_log_issue__range_list_ocaml_document FStarC_Range_Type.dummyRange FStarC_Errors_Codes.Fatal_NotValidIncludeDirectory ((FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "Not a valid include directory:") (PPrint.string s)) :: [])) else ())))
 

@@ -374,8 +374,8 @@ let rec tcresolve' (st : st_t) : ((FStarC_Tactics_Types.proofstate ref) -> unit)
   ()) else ()));
   (run (op_Greater_Greater_Greater (op_Greater_Greater_Greater (try_trivial x tcresolve') (try_instances st tcresolve')) (try_unrefining st tcresolve')) ps)))
 
-let fquotes (d : FStar_Pprint.document) : FStar_Pprint.document =
-  (FStar_Pprint.enclose (FStar_Pprint.utf8string "‘") (FStar_Pprint.utf8string "’") d)
+let fquotes (d : PPrint.document) : PPrint.document =
+  (PPrint.enclose (PPrint.utf8string "‘") (PPrint.utf8string "’") d)
 
 let u___tcresolve (dbg : bool) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
   (fun ps -> (let tmp = (if dbg then (FStarC_Tactics_V2_Builtins.dump "tcresolve entry point") else (fun tmp -> ())) in

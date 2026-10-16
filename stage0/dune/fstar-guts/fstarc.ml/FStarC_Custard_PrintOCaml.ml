@@ -7,12 +7,12 @@ let is_alpha (i : Prims.int) : bool =
 let sanitize (s : string) : string =
   (let ok = (fun c -> (let i = (FStarC_Util.int_of_char c) in
     ((((is_alpha i) || ((Prims.op_Greater_Equals i (Prims.of_int (48))) && (Prims.op_Less_Equals i (Prims.of_int (57))))) || ((=) i (Prims.of_int (95)))) || ((=) i (Prims.of_int (39)))))) in
-  let tmp = (FStarC_List.map (fun c -> (let tmp = (ok c) in
+  let tmp = (BatList.map (fun c -> (let tmp = (ok c) in
     (if tmp then (FStarC_Util.string_of_char c) else "_"))) (FStarC_String.list_of_string s)) in
   (FStarC_String.concat "" tmp))
 
 let uppercase_first (s : string) : string =
-  (if ((=) s "") then "X" else (let i = (FStarC_Util.int_of_char (FStarC_List.hd (FStarC_String.list_of_string s))) in
+  (if ((=) s "") then "X" else (let i = (FStarC_Util.int_of_char (BatList.hd (FStarC_String.list_of_string s))) in
   let tmp = (FStarC_String.substring s Prims.int_zero Prims.int_one) in
   let hd = (FStarC_String.uppercase tmp) in
   let tl = (FStarC_String.substring s Prims.int_one (Prims.op_Minus (FStarC_String.length s) Prims.int_one)) in
@@ -23,28 +23,28 @@ let module_name_of_unit (u : string) : string =
   (uppercase_first tmp))
 
 let reject_target_only_types (p : (FStarC_Custard_Syntax.decl) list) : unit =
-  (FStarC_List.iter (fun d -> (match d with
-    | (FStarC_Custard_Syntax.DType (ty_)) -> (FStarC_List.iter (fun f -> (match f with
+  (BatList.iter (fun d -> (match d with
+    | (FStarC_Custard_Syntax.DType (ty_)) -> (BatList.iter (fun f -> (match f with
         | (FStarC_Custard_Syntax.Extern ((Some (target)), tmp)) when (let tmp1 = (FStarC_Custard_Syntax.template_of_string target) in
         (FStarC_Custard_Syntax.is_template tmp1)) -> (let tmp1 = (FStarC_Custard_Syntax.string_of_name (ty_).FStarC_Custard_Syntax.dt_name) in
           let tmp2 = (Prims.strcat tmp1 " has a template target, and templates reached the OCaml backend.") in
           let tmp3 = (Prims.strcat "Custard: the external type " tmp2) in
           let tmp4 = (FStarC_Errors_Msg.text tmp3) in
           let tmp5 = (tmp4 :: ((FStarC_Errors_Msg.text (Prims.strcat "Its target spelling [" (Prims.strcat target "] has a placeholder for an argument, so two instantiations of it are two different target types; OCaml has no such construction.  Section 69 is a C-backend feature (--codegen C)."))) :: ((FStarC_Errors_Msg.text "The unparameterized form still works everywhere: a [@@custard_extern] target with no [{0}] placeholder names one target type, and its arguments are dropped.") :: []))) in
-          (FStarC_Errors.fStarC_Errors_raise_error0__list_document FStarC_Errors_Codes.Error_CustardBadTemplateArg tmp5))
+          (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Error_CustardBadTemplateArg tmp5))
         | FStarC_Custard_Syntax.CReference -> (let tmp = (FStarC_Custard_Syntax.string_of_name (ty_).FStarC_Custard_Syntax.dt_name) in
           let tmp1 = (Prims.strcat tmp " is [@@custard_c_reference], and reference bindings reached the OCaml backend.") in
           let tmp2 = (Prims.strcat "Custard: the external type " tmp1) in
           let tmp3 = (FStarC_Errors_Msg.text tmp2) in
           let tmp4 = (tmp3 :: ((FStarC_Errors_Msg.text "The attribute says that values of the type are handles, so a binding of one has to alias rather than copy -- which is C++ [T &x = ...], and OCaml has no way to spell it.  Emitting a copy instead would compile and be wrong, which is the exact failure the attribute exists to prevent.") :: ((FStarC_Errors_Msg.text "Section 70.2 is a C-backend feature (--codegen C).") :: []))) in
-          (FStarC_Errors.fStarC_Errors_raise_error0__list_document FStarC_Errors_Codes.Error_CustardBadReference tmp4))
+          (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Error_CustardBadReference tmp4))
         | tmp -> ()
       )) (ty_).FStarC_Custard_Syntax.dt_flags)
     | tmp -> ()
   )) p)
 
 let lowercase_first (s : string) : string =
-  (if ((=) s "") then "x" else (let i = (FStarC_Util.int_of_char (FStarC_List.hd (FStarC_String.list_of_string s))) in
+  (if ((=) s "") then "x" else (let i = (FStarC_Util.int_of_char (BatList.hd (FStarC_String.list_of_string s))) in
   let tl = (FStarC_String.substring s Prims.int_one (Prims.op_Minus (FStarC_String.length s) Prims.int_one)) in
   (if ((Prims.op_Greater_Equals i (Prims.of_int (65))) && (Prims.op_Less_Equals i (Prims.of_int (90)))) then (let tmp = (FStarC_String.substring s Prims.int_zero Prims.int_one) in
   let tmp1 = (FStarC_String.lowercase tmp) in
@@ -61,7 +61,7 @@ let realization_of (n : FStarC_Custard_Syntax.name) : string =
   )
 
 let at_home : ((unit) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int Prims.int_zero)) in
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
   (ref tmp))
 
 let is_at_home (n : FStarC_Custard_Syntax.name) : bool =
@@ -87,7 +87,7 @@ let ocaml_keywords : (string) list =
   ("and" :: ("as" :: ("assert" :: ("begin" :: ("class" :: ("constraint" :: ("do" :: ("done" :: ("downto" :: ("else" :: ("end" :: ("exception" :: ("external" :: ("false" :: ("for" :: ("fun" :: ("function" :: ("functor" :: ("if" :: ("in" :: ("include" :: ("inherit" :: ("initializer" :: ("lazy" :: ("let" :: ("match" :: ("method" :: ("module" :: ("mutable" :: ("new" :: ("nonrec" :: ("object" :: ("of" :: ("open" :: ("or" :: ("private" :: ("rec" :: ("sig" :: ("struct" :: ("then" :: ("to" :: ("true" :: ("try" :: ("type" :: ("val" :: ("virtual" :: ("when" :: ("while" :: ("with" :: ("asr" :: ("land" :: ("lor" :: ("lsl" :: ("lsr" :: ("lxor" :: ("mod" :: []))))))))))))))))))))))))))))))))))))))))))))))))))))))))
 
 let escape_keyword (s : string) : string =
-  (let tmp = (FStarC_List.existsb (fun k -> (let tmp = (escape_keyword__strip s) in
+  (let tmp = (BatList.exists (fun k -> (let tmp = (escape_keyword__strip s) in
     ((=) k tmp))) ocaml_keywords) in
   (if tmp then (Prims.strcat s "_") else s))
 
@@ -110,11 +110,11 @@ let label_key (n : FStarC_Custard_Syntax.name) (f : string) : string =
   (Prims.strcat (FStarC_String.concat "." (n).FStarC_Custard_Syntax.ns) (Prims.strcat "|" f))
 
 let externals : ((string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int Prims.int_zero)) in
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
   (ref tmp))
 
 let qualifiers : ((string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int Prims.int_zero)) in
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
   (ref tmp))
 
 let ocaml_module_ident (n : FStarC_Custard_Syntax.name) : string =
@@ -150,31 +150,31 @@ let ocaml_module_path (n : FStarC_Custard_Syntax.name) : string =
   (qualify n tmp))
 
 let extern_types : ((string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int Prims.int_zero)) in
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
   (ref tmp))
 
 let realized : ((unit) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int Prims.int_zero)) in
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
   (ref tmp))
 
 let tuples : ((Prims.int) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int Prims.int_zero)) in
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
   (ref tmp))
 
 let record_params : ((Prims.int) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int Prims.int_zero)) in
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
   (ref tmp))
 
 let record_labels : ((Prims.int) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int Prims.int_zero)) in
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
   (ref tmp))
 
 let exn_idents : ((string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int Prims.int_zero)) in
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
   (ref tmp))
 
 let extern_exn (e : FStarC_Custard_Syntax.dexn) : (string) option =
-  (FStarC_List.tryPick (fun tmp -> (match tmp with
+  (List.find_map (fun tmp -> (match tmp with
     | (FStarC_Custard_Syntax.Extern ((Some (x)), tmp1)) -> (Some (x))
     | tmp1 -> None
   )) (e).FStarC_Custard_Syntax.de_flags)
@@ -209,16 +209,16 @@ let predefined_ctors : (string) list =
   ("Out_of_memory" :: ("Sys_error" :: ("Failure" :: ("Invalid_argument" :: ("End_of_file" :: ("Division_by_zero" :: ("Not_found" :: ("Match_failure" :: ("Stack_overflow" :: ("Sys_blocked_io" :: ("Assert_failure" :: ("Undefined_recursive_module" :: ("Exit" :: ("None" :: ("Some" :: ("Nil" :: ("Cons" :: [])))))))))))))))))
 
 let extern_ctors : ((string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int Prims.int_zero)) in
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
   (ref tmp))
 
 let build_tables (homes : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (p : (FStarC_Custard_Syntax.decl) list) : unit =
-  (let tbl = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (50)))) in
-  let quals = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (50)))) in
-  let real = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (20)))) in
-  let tups = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (20)))) in
-  let home = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (50)))) in
-  let tmp = (FStarC_List.collect (fun d -> (let tmp = (FStarC_Custard_Syntax.imported_home d) in
+  (let tbl = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (50)))) in
+  let quals = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (50)))) in
+  let real = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (20)))) in
+  let tups = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (20)))) in
+  let home = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (50)))) in
+  let tmp = ((fun f l -> BatList.flatten (BatList.map f l)) (fun d -> (let tmp = (FStarC_Custard_Syntax.imported_home d) in
     (match tmp with
       | (Some (m)) -> (let tmp1 = (FStarC_Custard_Syntax.string_of_name (FStarC_Custard_Syntax.name_of_decl d)) in
         let tmp2 = (tmp1, m) in
@@ -228,13 +228,13 @@ let build_tables (homes : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_mak
   let homes1 = (match tmp with
       | [] -> homes
       | hs -> (let homes' = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.copy homes) in
-        (FStarC_List.iter (fun tmp1 -> (match tmp1 with
+        (BatList.iter (fun tmp1 -> (match tmp1 with
           | (n, m) -> (let tmp2 = (module_name_of_unit m) in
             (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace homes' n tmp2))
         )) hs);
         homes')
     ) in
-  (FStarC_List.iter (fun d -> (let tmp1 = (FStarC_Custard_Syntax.imported_unit d) in
+  (BatList.iter (fun d -> (let tmp1 = (FStarC_Custard_Syntax.imported_unit d) in
   (match tmp1 with
     | (Some (tmp2)) when (let tmp3 = (FStarC_Custard_Syntax.imported_home d) in
     (match tmp3 with
@@ -265,7 +265,7 @@ let build_tables (homes : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_mak
         | (FStarC_Custard_Syntax.DType (t)) -> (let tmp2 = (FStarC_Custard_Syntax.string_of_name (t).FStarC_Custard_Syntax.dt_name) in
           (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace quals tmp2 m);
           (match (t).FStarC_Custard_Syntax.dt_body with
-            | (FStarC_Custard_Syntax.TVariant (cs)) -> (FStarC_List.iter (fun tmp3 -> (match tmp3 with
+            | (FStarC_Custard_Syntax.TVariant (cs)) -> (BatList.iter (fun tmp3 -> (match tmp3 with
                 | (cn, tmp4) -> (let tmp5 = (FStarC_Custard_Syntax.string_of_name cn) in
                   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace quals tmp5 m))
               )) cs)
@@ -284,7 +284,7 @@ let build_tables (homes : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_mak
         | tmp2 -> ()
       )
   ))) p);
-  (FStarC_List.iter (fun d -> (let n = (FStarC_Custard_Syntax.name_of_decl d) in
+  (BatList.iter (fun d -> (let n = (FStarC_Custard_Syntax.name_of_decl d) in
   let tmp1 = (FStarC_Custard_Syntax.string_of_name n) in
   let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt homes1 tmp1) in
   (match tmp2 with
@@ -301,7 +301,7 @@ let build_tables (homes : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_mak
       (mark n);
       (match d with
         | (FStarC_Custard_Syntax.DType (t)) -> (match (t).FStarC_Custard_Syntax.dt_body with
-            | (FStarC_Custard_Syntax.TVariant (cs)) -> (FStarC_List.iter (fun tmp3 -> (match tmp3 with
+            | (FStarC_Custard_Syntax.TVariant (cs)) -> (BatList.iter (fun tmp3 -> (match tmp3 with
                 | (cn, tmp4) -> (mark cn)
               )) cs)
             | tmp3 -> ()
@@ -309,7 +309,7 @@ let build_tables (homes : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_mak
         | tmp3 -> ()
       ))
   ))) p);
-  (FStarC_List.iter (fun d -> (match d with
+  (BatList.iter (fun d -> (match d with
     | (FStarC_Custard_Syntax.DExn (e)) when (FStarC_Custard_Syntax.has_flag (e).FStarC_Custard_Syntax.de_flags FStarC_Custard_Syntax.Realized) -> (let tmp1 = (FStarC_Custard_Syntax.string_of_name (e).FStarC_Custard_Syntax.de_name) in
       (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace real tmp1 ());
       let tmp2 = (FStarC_Custard_Syntax.string_of_name (e).FStarC_Custard_Syntax.de_name) in
@@ -321,30 +321,30 @@ let build_tables (homes : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_mak
         (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace quals tmp2 m))) in
       (mark (t).FStarC_Custard_Syntax.dt_name);
       (match (t).FStarC_Custard_Syntax.dt_body with
-        | (FStarC_Custard_Syntax.TVariant (cs)) -> (FStarC_List.iter (fun tmp1 -> (match tmp1 with
+        | (FStarC_Custard_Syntax.TVariant (cs)) -> (BatList.iter (fun tmp1 -> (match tmp1 with
             | (cn, tmp2) -> (mark cn)
           )) cs)
         | tmp1 -> ()
       );
       let tmp1 = (is_tuple_type (t).FStarC_Custard_Syntax.dt_name) in
       (if tmp1 then (let arity = (fun fs -> (let tmp2 = (FStarC_Custard_Syntax.string_of_name (t).FStarC_Custard_Syntax.dt_name) in
-        (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace tups tmp2 (FStarC_List.length fs)))) in
+        (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace tups tmp2 ((fun l -> Z.of_int (BatList.length l)) fs)))) in
       (match (t).FStarC_Custard_Syntax.dt_body with
         | (FStarC_Custard_Syntax.TRecord (fs)) -> (arity fs)
         | (FStarC_Custard_Syntax.TVariant (((cn, fs) :: []))) -> ((arity fs);
           let tmp2 = (FStarC_Custard_Syntax.string_of_name cn) in
-          (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace tups tmp2 (FStarC_List.length fs)))
+          (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace tups tmp2 ((fun l -> Z.of_int (BatList.length l)) fs)))
         | tmp2 -> ()
       )) else ()))
     | tmp1 -> ()
   )) p);
-  let recs = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (100)))) in
-  let labels = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (100)))) in
-  (FStarC_List.iter (fun d -> (match d with
+  let recs = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100)))) in
+  let labels = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100)))) in
+  (BatList.iter (fun d -> (match d with
     | (FStarC_Custard_Syntax.DType (t)) -> (match (t).FStarC_Custard_Syntax.dt_body with
         | (FStarC_Custard_Syntax.TRecord (fs)) -> (let tmp1 = (FStarC_Custard_Syntax.string_of_name (t).FStarC_Custard_Syntax.dt_name) in
-          (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace recs tmp1 (FStarC_List.length (t).FStarC_Custard_Syntax.dt_params));
-          (FStarC_List.iter (fun tmp2 -> (match tmp2 with
+          (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace recs tmp1 ((fun l -> Z.of_int (BatList.length l)) (t).FStarC_Custard_Syntax.dt_params));
+          (BatList.iter (fun tmp2 -> (match tmp2 with
             | (f, tmp3) -> (let k = (label_key (t).FStarC_Custard_Syntax.dt_name f) in
               let tmp4 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt labels k) in
               let tmp5 = (match tmp4 with
@@ -361,8 +361,8 @@ let build_tables (homes : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_mak
   ((externals) := tbl);
   ((qualifiers) := quals);
   ((at_home) := home);
-  let ext_tys = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (20)))) in
-  (FStarC_List.iter (fun d -> (let tmp1 = (FStarC_Custard_Syntax.member_of (FStarC_Custard_Syntax.decl_flags d)) in
+  let ext_tys = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (20)))) in
+  (BatList.iter (fun d -> (let tmp1 = (FStarC_Custard_Syntax.member_of (FStarC_Custard_Syntax.decl_flags d)) in
   (match tmp1 with
     | (Some ((m, f))) -> (let tmp2 = (ocaml_module_path m) in
       let path = (Prims.strcat tmp2 (Prims.strcat "." f)) in
@@ -374,7 +374,7 @@ let build_tables (homes : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_mak
         | tmp3 -> ()
       ))
     | None -> (match d with
-        | (FStarC_Custard_Syntax.DType (t)) -> (let tmp2 = (FStarC_List.tryPick (fun tmp2 -> (match tmp2 with
+        | (FStarC_Custard_Syntax.DType (t)) -> (let tmp2 = (List.find_map (fun tmp2 -> (match tmp2 with
               | (FStarC_Custard_Syntax.Extern ((Some (x)), tmp3)) -> (Some (x))
               | tmp3 -> None
             )) (t).FStarC_Custard_Syntax.dt_flags) in
@@ -393,9 +393,9 @@ let build_tables (homes : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_mak
   ((tuples) := tups);
   ((record_params) := recs);
   ((record_labels) := labels);
-  let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int Prims.int_zero)) in
+  let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
   ((exn_idents) := tmp1);
-  let exns = (FStarC_List.collect (fun d -> (match d with
+  let exns = ((fun f l -> BatList.flatten (BatList.map f l)) (fun d -> (match d with
       | (FStarC_Custard_Syntax.DExn (e)) when (let tmp2 = (if (match ((e).FStarC_Custard_Syntax.de_name).FStarC_Custard_Syntax.spec with
           | None -> true
           | tmp2 -> false
@@ -412,10 +412,10 @@ let build_tables (homes : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_mak
     )) p) in
   let short = (fun n -> (let tmp2 = (sanitize (n).FStarC_Custard_Syntax.id) in
     (uppercase_first tmp2))) in
-  let taken = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (50)))) in
-  (FStarC_List.iter (fun d -> (match d with
+  let taken = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (50)))) in
+  (BatList.iter (fun d -> (match d with
     | (FStarC_Custard_Syntax.DType (t)) -> (match (t).FStarC_Custard_Syntax.dt_body with
-        | (FStarC_Custard_Syntax.TVariant (cs)) -> (FStarC_List.iter (fun tmp2 -> (match tmp2 with
+        | (FStarC_Custard_Syntax.TVariant (cs)) -> (BatList.iter (fun tmp2 -> (match tmp2 with
             | (cn, tmp3) -> (let tmp4 = (ocaml_ctor_ident cn) in
               (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace taken tmp4 ()))
           )) cs)
@@ -426,7 +426,7 @@ let build_tables (homes : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_mak
       | (Some (v)) -> true
       | tmp3 -> false
     )) -> ()
-    | (FStarC_Custard_Syntax.DExn (e)) -> (let tmp2 = (FStarC_List.existsb (fun x -> (let tmp2 = (FStarC_Custard_Syntax.string_of_name x) in
+    | (FStarC_Custard_Syntax.DExn (e)) -> (let tmp2 = (BatList.exists (fun x -> (let tmp2 = (FStarC_Custard_Syntax.string_of_name x) in
         let tmp3 = (FStarC_Custard_Syntax.string_of_name (e).FStarC_Custard_Syntax.de_name) in
         ((=) tmp2 tmp3))) exns) in
       let tmp3 = (not tmp2) in
@@ -434,8 +434,8 @@ let build_tables (homes : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_mak
       (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace taken tmp4 ())) else ()))
     | tmp2 -> ()
   )) p);
-  let counts = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (20)))) in
-  (FStarC_List.iter (fun n -> (let k = (short n) in
+  let counts = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (20)))) in
+  (BatList.iter (fun n -> (let k = (short n) in
   let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt counts k) in
   let tmp3 = (match tmp2 with
       | (Some (i)) -> i
@@ -443,8 +443,8 @@ let build_tables (homes : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_mak
     ) in
   let tmp4 = (Prims.op_Plus Prims.int_one tmp3) in
   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace counts k tmp4))) exns);
-  let exn_tbl = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (20)))) in
-  (FStarC_List.iter (fun n -> (let k = (short n) in
+  let exn_tbl = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (20)))) in
+  (BatList.iter (fun n -> (let k = (short n) in
   let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt counts k) in
   let tmp3 = ((=) tmp2 (Some (Prims.int_one))) in
   let tmp4 = (if tmp3 then (let tmp4 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt taken k) in
@@ -452,11 +452,11 @@ let build_tables (homes : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_mak
       | None -> true
       | tmp5 -> false
     )) else false) in
-  let tmp5 = (if tmp4 then (not (FStarC_List.mem k predefined_ctors)) else false) in
+  let tmp5 = (if tmp4 then (not (BatList.mem k predefined_ctors)) else false) in
   (if tmp5 then (let tmp6 = (FStarC_Custard_Syntax.string_of_name n) in
   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace exn_tbl tmp6 k)) else ()))) exns);
-  let ext_ctors = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (5)))) in
-  (FStarC_List.iter (fun d -> (match d with
+  let ext_ctors = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (5)))) in
+  (BatList.iter (fun d -> (match d with
     | (FStarC_Custard_Syntax.DExn (e)) -> (let tmp2 = (extern_exn e) in
       (match tmp2 with
         | (Some (x)) -> (let tmp3 = (FStarC_Custard_Syntax.string_of_name (e).FStarC_Custard_Syntax.de_name) in
@@ -472,7 +472,7 @@ let reserved_top : ((string) list ref) =
   (ref [])
 
 let reserve_top (p : (FStarC_Custard_Syntax.decl) list) : unit =
-  (let tmp = (FStarC_List.collect (fun d -> (match d with
+  (let tmp = ((fun f l -> BatList.flatten (BatList.map f l)) (fun d -> (match d with
       | (FStarC_Custard_Syntax.DLet (l)) -> (let tmp = (ocaml_value_name (l).FStarC_Custard_Syntax.dl_name) in
         (tmp :: []))
       | (FStarC_Custard_Syntax.DExternal (e)) -> (let tmp = (ocaml_value_name (e).FStarC_Custard_Syntax.dx_name) in
@@ -482,9 +482,9 @@ let reserve_top (p : (FStarC_Custard_Syntax.decl) list) : unit =
   ((reserved_top) := tmp))
 
 let group_of (d : FStarC_Custard_Syntax.decl) : ((string) list) option =
-  (let tmp = (FStarC_List.tryFind FStarC_Custard_Syntax.uu___is_Rec (FStarC_Custard_Syntax.decl_flags d)) in
+  (let tmp = (List.find_opt FStarC_Custard_Syntax.uu___is_Rec (FStarC_Custard_Syntax.decl_flags d)) in
   (match tmp with
-    | (Some ((FStarC_Custard_Syntax.Rec (ns)))) -> (let tmp1 = (FStarC_List.map FStarC_Custard_Syntax.string_of_name ns) in
+    | (Some ((FStarC_Custard_Syntax.Rec (ns)))) -> (let tmp1 = (BatList.map FStarC_Custard_Syntax.string_of_name ns) in
       (Some (tmp1)))
     | tmp1 -> None
   ))
@@ -493,7 +493,7 @@ let builtin_type (n : FStarC_Custard_Syntax.name) : (string) option =
   (match (if (match (n).FStarC_Custard_Syntax.spec with
     | (Some (v)) -> true
     | tmp -> false
-  ) then "" else (FStarC_String.concat "." (FStarC_List.op_At (n).FStarC_Custard_Syntax.ns ((n).FStarC_Custard_Syntax.id :: [])))) with
+  ) then "" else (FStarC_String.concat "." (BatList.append (n).FStarC_Custard_Syntax.ns ((n).FStarC_Custard_Syntax.id :: [])))) with
     | "Prims.unit" -> (Some ("unit"))
     | "Prims.bool" -> (Some ("bool"))
     | "Prims.string" -> (Some ("string"))
@@ -520,7 +520,7 @@ let extern_type (n : FStarC_Custard_Syntax.name) : (string) option =
 let ocaml_tyvar (x : string) : string =
   (let tmp = (sanitize x) in
   let s = (lowercase_first tmp) in
-  let tmp1 = (FStarC_List.map (fun c -> (match (FStarC_Util.int_of_char c) with
+  let tmp1 = (BatList.map (fun c -> (match (FStarC_Util.int_of_char c) with
       | u__iconst0 when u__iconst0 = (Prims.of_int (39)) -> "_"
       | u__iconst0 when u__iconst0 = (Prims.of_int (95)) -> "__"
       | tmp1 -> (FStarC_Util.string_of_char c)
@@ -534,7 +534,7 @@ let params (ps : (string) list) : string =
     | [] -> ""
     | (p :: []) -> (let tmp = (ocaml_tyvar p) in
       (Prims.strcat tmp " "))
-    | tmp -> (let tmp1 = (FStarC_List.map ocaml_tyvar ps) in
+    | tmp -> (let tmp1 = (BatList.map ocaml_tyvar ps) in
       let tmp2 = (FStarC_String.concat ", " tmp1) in
       let tmp3 = (Prims.strcat tmp2 ") ") in
       (Prims.strcat "(" tmp3))
@@ -551,7 +551,7 @@ let ocaml_type_name (n : FStarC_Custard_Syntax.name) : string =
   (escape_keyword tmp4))))))
 
 let deriving_attr (fs : (FStarC_Custard_Syntax.flag) list) : string =
-  (let tmp = (FStarC_List.collect (fun tmp -> (match tmp with
+  (let tmp = ((fun f l -> BatList.flatten (BatList.map f l)) (fun tmp -> (match tmp with
       | (FStarC_Custard_Syntax.Deriving (s)) -> (s :: [])
       | tmp1 -> []
     )) fs) in
@@ -596,7 +596,7 @@ let reject_fwidth (fw : FStarC_Custard_Syntax.fwidth) : unit =
       | FStarC_Custard_Syntax.Float32 -> "FStar.Float32"
       | tmp -> format
     ) in
-  (FStarC_Errors.fStarC_Errors_raise_error0__list_document FStarC_Errors_Codes.Error_CustardNoCRepresentation ((FStarC_Errors_Msg.text (Prims.strcat "Custard: " (Prims.strcat what " has no OCaml representation."))) :: ((FStarC_Errors_Msg.text (Prims.strcat "OCaml's float is IEEE 754 binary64 and there is no " (Prims.strcat format " type to round to, so such a program would silently compute at double precision (sections 38 and 66)."))) :: ((FStarC_Errors_Msg.text "Use FStar.Float64, or extract with --codegen C.") :: []))))))
+  (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Error_CustardNoCRepresentation ((FStarC_Errors_Msg.text (Prims.strcat "Custard: " (Prims.strcat what " has no OCaml representation."))) :: ((FStarC_Errors_Msg.text (Prims.strcat "OCaml's float is IEEE 754 binary64 and there is no " (Prims.strcat format " type to round to, so such a program would silently compute at double precision (sections 38 and 66)."))) :: ((FStarC_Errors_Msg.text "Use FStar.Float64, or extract with --codegen C.") :: []))))))
 
 let rec ty (t : FStarC_Custard_Syntax.cty) : string =
   (match t with
@@ -615,7 +615,7 @@ let rec ty (t : FStarC_Custard_Syntax.cty) : string =
       let tmp4 = (Prims.strcat " -> " tmp3) in
       let tmp5 = (Prims.strcat tmp1 tmp4) in
       (Prims.strcat "(" tmp5))
-    | (FStarC_Custard_Syntax.TTuple (ts)) -> (let tmp = (FStarC_List.map ty ts) in
+    | (FStarC_Custard_Syntax.TTuple (ts)) -> (let tmp = (BatList.map ty ts) in
       let tmp1 = (FStarC_String.concat " * " tmp) in
       let tmp2 = (Prims.strcat tmp1 ")") in
       (Prims.strcat "(" tmp2))
@@ -626,12 +626,12 @@ let rec ty (t : FStarC_Custard_Syntax.cty) : string =
       let tmp2 = (Prims.strcat tmp1 " ref)") in
       (Prims.strcat "(" tmp2))
     | (FStarC_Custard_Syntax.TInline (tmp)) -> (FStarC_Effect.failwith "Custard: an inline-field marker reached the OCaml backend")
-    | (FStarC_Custard_Syntax.TConst (tmp)) -> (FStarC_Errors.fStarC_Errors_raise_error0__list_document FStarC_Errors_Codes.Error_CustardBadTemplateArg ((FStarC_Errors_Msg.text "Custard: an external type with a template target reached the OCaml backend.") :: ((FStarC_Errors_Msg.text "[wmma::fragment<matrix_a, 16, 16, 16, half, row_major>] is one type and [wmma::fragment<matrix_b, ...>] another; OCaml has no such construction, so section 69 is a C-backend feature (--codegen C).") :: ((FStarC_Errors_Msg.text "The unparameterized form still works everywhere: a [@@custard_extern] target with no [{0}] placeholder names one target type, and its arguments are dropped.") :: []))))
+    | (FStarC_Custard_Syntax.TConst (tmp)) -> (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Error_CustardBadTemplateArg ((FStarC_Errors_Msg.text "Custard: an external type with a template target reached the OCaml backend.") :: ((FStarC_Errors_Msg.text "[wmma::fragment<matrix_a, 16, 16, 16, half, row_major>] is one type and [wmma::fragment<matrix_b, ...>] another; OCaml has no such construction, so section 69 is a C-backend feature (--codegen C).") :: ((FStarC_Errors_Msg.text "The unparameterized form still works everywhere: a [@@custard_extern] target with no [{0}] placeholder names one target type, and its arguments are dropped.") :: []))))
     | (FStarC_Custard_Syntax.TApp (n, args)) when (let tmp = (is_tuple_type n) in
     (if tmp then (match args with
       | (hd :: tl) -> true
       | tmp1 -> false
-    ) else false)) -> (let tmp = (FStarC_List.map ty args) in
+    ) else false)) -> (let tmp = (BatList.map ty args) in
       let tmp1 = (FStarC_String.concat " * " tmp) in
       let tmp2 = (Prims.strcat tmp1 ")") in
       (Prims.strcat "(" tmp2))
@@ -653,7 +653,7 @@ let rec ty (t : FStarC_Custard_Syntax.cty) : string =
           | (None, None) -> (let tmp3 = (ocaml_type_name n) in
             (qualify n tmp3))
         ) in
-      let tmp3 = (FStarC_List.map ty args) in
+      let tmp3 = (BatList.map ty args) in
       let tmp4 = (FStarC_String.concat ", " tmp3) in
       let tmp5 = (Prims.strcat tmp4 (Prims.strcat ") " hd)) in
       (Prims.strcat "(" tmp5))
@@ -668,7 +668,7 @@ let builtin_ctor (n : FStarC_Custard_Syntax.name) : (string) option =
   (match (if (match (n).FStarC_Custard_Syntax.spec with
     | (Some (v)) -> true
     | tmp -> false
-  ) then "" else (FStarC_String.concat "." (FStarC_List.op_At (n).FStarC_Custard_Syntax.ns ((n).FStarC_Custard_Syntax.id :: [])))) with
+  ) then "" else (FStarC_String.concat "." (BatList.append (n).FStarC_Custard_Syntax.ns ((n).FStarC_Custard_Syntax.id :: [])))) with
     | "Prims.Nil" -> (Some ("[]"))
     | "Prims.Cons" -> (Some ("::"))
     | "FStar.Pervasives.Native.None" -> (Some ("None"))
@@ -714,7 +714,7 @@ let external_target (n : FStarC_Custard_Syntax.name) : (string) option =
 let ocaml_local (x : string) : string =
   (let s = (ocaml_var x) in
   let tmp = (!(reserved_top)) in
-  let tmp1 = (FStarC_List.existsb (fun k -> ((=) k s)) tmp) in
+  let tmp1 = (BatList.exists (fun k -> ((=) k s)) tmp) in
   (if tmp1 then (Prims.strcat s "_") else s))
 
 let prims_int_lit (v : Prims.int) (b : FStar_IntegerLiteral.int_base) : string =
@@ -741,7 +741,7 @@ let escape (s : string) : string =
         let tmp1 = (Prims.strcat (if (Prims.op_Less i (Prims.of_int (10))) then "00" else "0") tmp) in
         (Prims.strcat "\\" tmp1)) else (FStarC_Util.string_of_char c1)))
     )) in
-  let tmp = (FStarC_List.map esc (FStarC_String.list_of_string s)) in
+  let tmp = (BatList.map esc (FStarC_String.list_of_string s)) in
   (FStarC_String.concat "" tmp))
 
 let constant (c : FStarC_Custard_Syntax.constant) : string =
@@ -779,7 +779,7 @@ let rec defer_ints_list (n : Prims.int) (ps : (FStarC_Custard_Syntax.pat) list) 
       (match tmp with
         | (n1, p1, eqs) -> (let tmp1 = (defer_ints_list n1 ps1) in
           (match tmp1 with
-            | (n2, ps2, eqs') -> (n2, (p1 :: ps2), (FStarC_List.op_At eqs eqs'))
+            | (n2, ps2, eqs') -> (n2, (p1 :: ps2), (BatList.append eqs eqs'))
           ))
       ))
   )
@@ -791,7 +791,7 @@ and defer_ints_fields (n : Prims.int) (fs : ((string * FStarC_Custard_Syntax.pat
       (match tmp with
         | (n1, p1, eqs) -> (let tmp1 = (defer_ints_fields n1 fs1) in
           (match tmp1 with
-            | (n2, fs2, eqs') -> (n2, ((f, p1) :: fs2), (FStarC_List.op_At eqs eqs'))
+            | (n2, fs2, eqs') -> (n2, ((f, p1) :: fs2), (BatList.append eqs eqs'))
           ))
       ))
   )
@@ -833,7 +833,7 @@ let rec by_position__go (k : Prims.int) (at : (Prims.int -> string)) (i : Prims.
   (tmp :: tmp1)))
 
 let by_position (k : Prims.int) (dflt : string) (fs : ((string * string)) list) : (string) list =
-  (let at = (fun i -> (let tmp = (FStarC_List.tryPick (fun tmp -> (match tmp with
+  (let at = (fun i -> (let tmp = (List.find_map (fun tmp -> (match tmp with
         | (f, s) -> (let tmp1 = (tuple_index f) in
           let tmp2 = ((=) tmp1 i) in
           (if tmp2 then (Some (s)) else None))
@@ -861,12 +861,12 @@ let rec pattern (p : FStarC_Custard_Syntax.pat) : string =
     (match tmp with
       | (Some (v)) -> true
       | tmp1 -> false
-    )) -> (let tmp = (FStarC_List.map pattern ps) in
+    )) -> (let tmp = (BatList.map pattern ps) in
       let tmp1 = (FStarC_String.concat ", " tmp) in
       let tmp2 = (Prims.strcat tmp1 ")") in
       (Prims.strcat "(" tmp2))
     | (FStarC_Custard_Syntax.PCtor (n, ps)) -> (let tmp = (ctor_ref n) in
-      let tmp1 = (FStarC_List.map pattern ps) in
+      let tmp1 = (BatList.map pattern ps) in
       let tmp2 = (FStarC_String.concat ", " tmp1) in
       let tmp3 = (Prims.strcat tmp2 "))") in
       let tmp4 = (Prims.strcat " (" tmp3) in
@@ -880,7 +880,7 @@ let rec pattern (p : FStarC_Custard_Syntax.pat) : string =
       let k = (match tmp with
           | (Some (v)) -> v
         ) in
-      let tmp1 = (FStarC_List.map (fun tmp1 -> (match tmp1 with
+      let tmp1 = (BatList.map (fun tmp1 -> (match tmp1 with
           | (f, p1) -> (let tmp2 = (pattern p1) in
             (f, tmp2))
         )) fs) in
@@ -888,7 +888,7 @@ let rec pattern (p : FStarC_Custard_Syntax.pat) : string =
       let tmp3 = (FStarC_String.concat ", " tmp2) in
       let tmp4 = (Prims.strcat tmp3 ")") in
       (Prims.strcat "(" tmp4))
-    | (FStarC_Custard_Syntax.PRecord (n, fs)) -> (let tmp = (FStarC_List.mapi (fun i tmp -> (match tmp with
+    | (FStarC_Custard_Syntax.PRecord (n, fs)) -> (let tmp = ((fun f l -> BatList.mapi (fun i x -> f (Z.of_int i) x) l) (fun i tmp -> (match tmp with
           | (f, p1) -> (let tmp1 = (if ((=) i Prims.int_zero) then (let tmp1 = (ocaml_var f) in
               (qualify n tmp1)) else (ocaml_var f)) in
             let tmp2 = (pattern p1) in
@@ -901,11 +901,11 @@ let rec pattern (p : FStarC_Custard_Syntax.pat) : string =
           | tmp2 -> false
         ) then "; _ }" else "_ }")) in
       (Prims.strcat "{ " tmp2))
-    | (FStarC_Custard_Syntax.PTuple (ps)) -> (let tmp = (FStarC_List.map pattern ps) in
+    | (FStarC_Custard_Syntax.PTuple (ps)) -> (let tmp = (BatList.map pattern ps) in
       let tmp1 = (FStarC_String.concat ", " tmp) in
       let tmp2 = (Prims.strcat tmp1 ")") in
       (Prims.strcat "(" tmp2))
-    | (FStarC_Custard_Syntax.POr (ps)) -> (let tmp = (FStarC_List.map pattern ps) in
+    | (FStarC_Custard_Syntax.POr (ps)) -> (let tmp = (BatList.map pattern ps) in
       let tmp1 = (FStarC_String.concat " | " tmp) in
       let tmp2 = (Prims.strcat tmp1 ")") in
       (Prims.strcat "(" tmp2))
@@ -931,7 +931,7 @@ let ascribe_record (n : FStarC_Custard_Syntax.name) (fs : (string) list) (s : st
   let tmp1 = (FStarC_Custard_Syntax.string_of_name n) in
   let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt tmp tmp1) in
   (match tmp2 with
-    | tmp3 when (let tmp4 = (FStarC_List.existsb (ambiguous_label n) fs) in
+    | tmp3 when (let tmp4 = (BatList.exists (ambiguous_label n) fs) in
     (not tmp4)) -> s
     | None -> s
     | (Some (k)) -> (let args = (if ((=) k Prims.int_zero) then "" else (if ((=) k Prims.int_one) then "_ " else (let tmp3 = (ascribe_record__wilds k) in
@@ -1125,7 +1125,7 @@ and case (ind : string) (br : (FStarC_Custard_Syntax.pat * (FStarC_Custard_Synta
   (match br with
     | (p, g, b) -> (let tmp = (defer_ints Prims.int_zero p) in
       (match tmp with
-        | (tmp1, p1, eqs) -> (let conds = (FStarC_List.map (fun tmp2 -> (match tmp2 with
+        | (tmp1, p1, eqs) -> (let conds = (BatList.map (fun tmp2 -> (match tmp2 with
               | (x, c) -> (let tmp3 = (ocaml_local x) in
                 let tmp4 = (constant c) in
                 let tmp5 = (Prims.strcat " = " tmp4) in
@@ -1135,7 +1135,7 @@ and case (ind : string) (br : (FStarC_Custard_Syntax.pat * (FStarC_Custard_Synta
               | None -> conds
               | (Some (g1)) -> (let tmp2 = (term ind g1) in
                 let tmp3 = (tmp2 :: []) in
-                (FStarC_List.op_At conds tmp3))
+                (BatList.append conds tmp3))
             ) in
           let guard = (if ((=) conds1 []) then "" else (Prims.strcat " when " (FStarC_String.concat " && " conds1))) in
           let tmp2 = (pattern p1) in
@@ -1217,29 +1217,29 @@ and term (ind : string) (e : FStarC_Custard_Syntax.expr) : string =
     (match tmp with
       | (Some (v)) -> true
       | tmp1 -> false
-    )) -> (let tmp = (FStarC_List.map (term ind) args) in
+    )) -> (let tmp = (BatList.map (term ind) args) in
       let tmp1 = (FStarC_String.concat ", " tmp) in
       let tmp2 = (Prims.strcat tmp1 ")") in
       (Prims.strcat "(" tmp2))
     | (FStarC_Custard_Syntax.ECtor (n, args)) -> (let tmp = (ctor_ref n) in
-      let tmp1 = (FStarC_List.map (term ind) args) in
+      let tmp1 = (BatList.map (term ind) args) in
       let tmp2 = (FStarC_String.concat ", " tmp1) in
       let tmp3 = (Prims.strcat tmp2 "))") in
       let tmp4 = (Prims.strcat " (" tmp3) in
       let tmp5 = (Prims.strcat tmp tmp4) in
       (Prims.strcat "(" tmp5))
-    | (FStarC_Custard_Syntax.ETuple (es)) -> (let tmp = (FStarC_List.map (term ind) es) in
+    | (FStarC_Custard_Syntax.ETuple (es)) -> (let tmp = (BatList.map (term ind) es) in
       let tmp1 = (FStarC_String.concat ", " tmp) in
       let tmp2 = (Prims.strcat tmp1 ")") in
       (Prims.strcat "(" tmp2))
     | (FStarC_Custard_Syntax.EApp (hd, args)) -> (let tmp = (term ind hd) in
-      let tmp1 = (FStarC_List.map (term ind) args) in
+      let tmp1 = (BatList.map (term ind) args) in
       let tmp2 = (FStarC_String.concat " " tmp1) in
       let tmp3 = (Prims.strcat tmp2 ")") in
       let tmp4 = (Prims.strcat " " tmp3) in
       let tmp5 = (Prims.strcat tmp tmp4) in
       (Prims.strcat "(" tmp5))
-    | (FStarC_Custard_Syntax.EFun (bs, body)) -> (let tmp = (FStarC_List.map (fun b -> (ocaml_local (b).FStarC_Custard_Syntax.b_name)) bs) in
+    | (FStarC_Custard_Syntax.EFun (bs, body)) -> (let tmp = (BatList.map (fun b -> (ocaml_local (b).FStarC_Custard_Syntax.b_name)) bs) in
       let tmp1 = (FStarC_String.concat " " tmp) in
       let tmp2 = (term ind body) in
       let tmp3 = (Prims.strcat tmp2 ")") in
@@ -1263,7 +1263,7 @@ and term (ind : string) (e : FStarC_Custard_Syntax.expr) : string =
       (Prims.strcat "(if " tmp7))
     | (FStarC_Custard_Syntax.EMatch (scrut, brs)) -> (let ind' = (Prims.strcat ind "  ") in
       let tmp = (term ind scrut) in
-      let tmp1 = (FStarC_List.map (case ind') brs) in
+      let tmp1 = (BatList.map (case ind') brs) in
       let tmp2 = (FStarC_String.concat "" tmp1) in
       let tmp3 = (Prims.strcat tmp2 (Prims.strcat ind ")")) in
       let tmp4 = (Prims.strcat " with\n" tmp3) in
@@ -1277,7 +1277,7 @@ and term (ind : string) (e : FStarC_Custard_Syntax.expr) : string =
       let k = (match tmp with
           | (Some (v)) -> v
         ) in
-      let tmp1 = (FStarC_List.map (fun tmp1 -> (match tmp1 with
+      let tmp1 = (BatList.map (fun tmp1 -> (match tmp1 with
           | (f, e1) -> (let tmp2 = (term ind e1) in
             (f, tmp2))
         )) fs) in
@@ -1286,7 +1286,7 @@ and term (ind : string) (e : FStarC_Custard_Syntax.expr) : string =
       let tmp4 = (Prims.strcat tmp3 ")") in
       (Prims.strcat "(" tmp4))
     | (FStarC_Custard_Syntax.ERecord (n, fs)) -> (let ind' = (Prims.strcat ind "  ") in
-      let parts = (FStarC_List.mapi (fun i tmp -> (match tmp with
+      let parts = ((fun f l -> BatList.mapi (fun i x -> f (Z.of_int i) x) l) (fun i tmp -> (match tmp with
           | (f, e1) -> (let tmp1 = (if ((=) i Prims.int_zero) then (let tmp1 = (ocaml_var f) in
               (qualify n tmp1)) else (ocaml_var f)) in
             let tmp2 = (term ind' e1) in
@@ -1294,10 +1294,10 @@ and term (ind : string) (e : FStarC_Custard_Syntax.expr) : string =
             (Prims.strcat tmp1 tmp3))
         )) fs) in
       let one = (Prims.strcat "{ " (Prims.strcat (FStarC_String.concat "; " parts) " }")) in
-      let tmp = (if (Prims.op_Less_Equals (Prims.op_Plus (FStarC_String.length ind) (FStarC_String.length one)) line_width) then (let tmp = (FStarC_List.existsb (fun c -> ((=) c 10)) (FStarC_String.list_of_string one)) in
+      let tmp = (if (Prims.op_Less_Equals (Prims.op_Plus (FStarC_String.length ind) (FStarC_String.length one)) line_width) then (let tmp = (BatList.exists (fun c -> ((=) c 10)) (FStarC_String.list_of_string one)) in
         (not tmp)) else false) in
       let body = (if tmp then one else (Prims.strcat "{ " (Prims.strcat (FStarC_String.concat (Prims.strcat ";\n" ind') parts) " }"))) in
-      let tmp1 = (FStarC_List.map (fun x -> (match x with
+      let tmp1 = (BatList.map (fun x -> (match x with
           | (u__1, u__2) -> u__1
         )) fs) in
       (ascribe_record n tmp1 body))
@@ -1443,7 +1443,7 @@ and term (ind : string) (e : FStarC_Custard_Syntax.expr) : string =
       let tmp14 = (Prims.strcat tmp1 tmp13) in
       (Prims.strcat "(Array.blit " tmp14))
     | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufSub; po_ty = tmp; _ }, tmp1)) -> "(failwith \"Custard: pointer arithmetic has no OCaml representation\")"
-    | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufLit; po_ty = tmp; _ }, elems)) -> (let tmp1 = (FStarC_List.map (term ind) elems) in
+    | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufLit; po_ty = tmp; _ }, elems)) -> (let tmp1 = (BatList.map (term ind) elems) in
       let tmp2 = (FStarC_String.concat "; " tmp1) in
       let tmp3 = (Prims.strcat tmp2 " |]") in
       (Prims.strcat "[| " tmp3))
@@ -1467,7 +1467,7 @@ and term (ind : string) (e : FStarC_Custard_Syntax.expr) : string =
       let tmp4 = (Prims.strcat tmp tmp3) in
       (Prims.strcat "(" tmp4))
     | (FStarC_Custard_Syntax.EOp (op, args)) -> (let tmp = (op_name op) in
-      let tmp1 = (FStarC_List.map (term ind) args) in
+      let tmp1 = (BatList.map (term ind) args) in
       let tmp2 = (FStarC_String.concat " " tmp1) in
       let tmp3 = (Prims.strcat tmp2 ")") in
       let tmp4 = (Prims.strcat " " tmp3) in
@@ -1491,7 +1491,7 @@ and term (ind : string) (e : FStarC_Custard_Syntax.expr) : string =
       (Prims.strcat "(raise " tmp1))
     | (FStarC_Custard_Syntax.ETry (e1, brs)) -> (let ind' = (Prims.strcat ind "  ") in
       let tmp = (term ind e1) in
-      let tmp1 = (FStarC_List.map (case ind') brs) in
+      let tmp1 = (BatList.map (case ind') brs) in
       let tmp2 = (FStarC_String.concat "" tmp1) in
       let tmp3 = (Prims.strcat tmp2 (Prims.strcat ind ")")) in
       let tmp4 = (Prims.strcat " with\n" tmp3) in
@@ -1521,7 +1521,7 @@ let print_decl (first : bool) (d : FStarC_Custard_Syntax.decl) : (string) option
           let tmp8 = (Prims.strcat hd tmp7) in
           let tmp9 = (after " " tmp8) in
           (Some (tmp9)))
-        | (FStarC_Custard_Syntax.TRecord (fs)) -> (let tmp6 = (FStarC_List.map (fun tmp6 -> (match tmp6 with
+        | (FStarC_Custard_Syntax.TRecord (fs)) -> (let tmp6 = (BatList.map (fun tmp6 -> (match tmp6 with
               | (f, c) -> (let tmp7 = (ocaml_var f) in
                 let tmp8 = (ty c) in
                 let tmp9 = (Prims.strcat tmp8 ";\n") in
@@ -1535,11 +1535,11 @@ let print_decl (first : bool) (d : FStarC_Custard_Syntax.decl) : (string) option
           let tmp10 = (Prims.strcat hd tmp9) in
           let tmp11 = (after " " tmp10) in
           (Some (tmp11)))
-        | (FStarC_Custard_Syntax.TVariant (cs)) -> (let tmp6 = (FStarC_List.map (fun tmp6 -> (match tmp6 with
+        | (FStarC_Custard_Syntax.TVariant (cs)) -> (let tmp6 = (BatList.map (fun tmp6 -> (match tmp6 with
               | (c, fs) -> (let tmp7 = (ctor_ref c) in
                 let tmp8 = (match fs with
                     | [] -> ""
-                    | tmp8 -> (let tmp9 = (FStarC_List.map (fun tmp9 -> (match tmp9 with
+                    | tmp8 -> (let tmp9 = (BatList.map (fun tmp9 -> (match tmp9 with
                           | (tmp10, t1) -> (ty t1)
                         )) fs) in
                       let tmp10 = (FStarC_String.concat " * " tmp9) in
@@ -1556,13 +1556,13 @@ let print_decl (first : bool) (d : FStarC_Custard_Syntax.decl) : (string) option
           (Some (tmp10)))
       ))))
     | (FStarC_Custard_Syntax.DExternal (tmp)) -> None
-    | (FStarC_Custard_Syntax.DModule (m)) -> (let tys = (FStarC_List.map (fun tmp -> (match tmp with
+    | (FStarC_Custard_Syntax.DModule (m)) -> (let tys = (BatList.map (fun tmp -> (match tmp with
           | (f, c) -> (let tmp1 = (ty c) in
             let tmp2 = (Prims.strcat " = " tmp1) in
             let tmp3 = (Prims.strcat f tmp2) in
             (Prims.strcat " type " tmp3))
         )) (m).FStarC_Custard_Syntax.dm_types) in
-      let vals = (FStarC_List.map (fun tmp -> (match tmp with
+      let vals = (BatList.map (fun tmp -> (match tmp with
           | (f, n) -> (let tmp1 = (external_target n) in
             let tmp2 = (match tmp1 with
                 | (Some (t)) -> t
@@ -1574,7 +1574,7 @@ let print_decl (first : bool) (d : FStarC_Custard_Syntax.decl) : (string) option
             (Prims.strcat " let " tmp4))
         )) (m).FStarC_Custard_Syntax.dm_values) in
       let tmp = (ocaml_module_ident (m).FStarC_Custard_Syntax.dm_name) in
-      let tmp1 = (FStarC_List.map (fun s -> (Prims.strcat "\n " s)) (FStarC_List.op_At tys vals)) in
+      let tmp1 = (BatList.map (fun s -> (Prims.strcat "\n " s)) (BatList.append tys vals)) in
       let tmp2 = (FStarC_String.concat "" tmp1) in
       let tmp3 = (Prims.strcat tmp2 "\nend)") in
       let tmp4 = (Prims.strcat " (struct" tmp3) in
@@ -1592,21 +1592,21 @@ let print_decl (first : bool) (d : FStarC_Custard_Syntax.decl) : (string) option
     | (FStarC_Custard_Syntax.DExn (e)) -> (let tmp = (ocaml_ctor_ident (e).FStarC_Custard_Syntax.de_name) in
       let tmp1 = (match (e).FStarC_Custard_Syntax.de_args with
           | [] -> ""
-          | args -> (let tmp1 = (FStarC_List.map ty args) in
+          | args -> (let tmp1 = (BatList.map ty args) in
             let tmp2 = (FStarC_String.concat " * " tmp1) in
             (Prims.strcat " of " tmp2))
         ) in
       let tmp2 = (Prims.strcat tmp tmp1) in
       let tmp3 = (Prims.strcat "exception " tmp2) in
       (Some (tmp3)))
-    | (FStarC_Custard_Syntax.DLet (l)) -> (let tmp = (FStarC_List.map (fun b -> (let tmp = (ocaml_local (b).FStarC_Custard_Syntax.b_name) in
+    | (FStarC_Custard_Syntax.DLet (l)) -> (let tmp = (BatList.map (fun b -> (let tmp = (ocaml_local (b).FStarC_Custard_Syntax.b_name) in
         let tmp1 = (ty (b).FStarC_Custard_Syntax.b_ty) in
         let tmp2 = (Prims.strcat tmp1 ")") in
         let tmp3 = (Prims.strcat " : " tmp2) in
         let tmp4 = (Prims.strcat tmp tmp3) in
         (Prims.strcat " (" tmp4))) (l).FStarC_Custard_Syntax.dl_binders) in
       let bs = (FStarC_String.concat "" tmp) in
-      let tmp1 = (FStarC_List.existsb FStarC_Custard_Syntax.uu___is_Rec (l).FStarC_Custard_Syntax.dl_flags) in
+      let tmp1 = (BatList.exists FStarC_Custard_Syntax.uu___is_Rec (l).FStarC_Custard_Syntax.dl_flags) in
       let rc = (if tmp1 then "rec " else "") in
       let kw = (if first then (Prims.strcat "let " rc) else "and ") in
       let tmp2 = (ocaml_value_name (l).FStarC_Custard_Syntax.dl_name) in
@@ -1623,7 +1623,7 @@ let print_decl (first : bool) (d : FStarC_Custard_Syntax.decl) : (string) option
 
 let print_decls (p : (FStarC_Custard_Syntax.decl) list) : (string) list =
   (let prev = (ref None) in
-  (FStarC_List.collect (fun d -> (let tmp = (FStarC_Custard_Syntax.imported_unit d) in
+  ((fun f l -> BatList.flatten (BatList.map f l)) (fun d -> (let tmp = (FStarC_Custard_Syntax.imported_unit d) in
   let tmp1 = (match tmp with
       | (Some (v)) -> true
       | tmp1 -> false
@@ -1642,12 +1642,12 @@ let print_decls (p : (FStarC_Custard_Syntax.decl) list) : (string) list =
   ))))) p))
 
 let entry_calls (p : (FStarC_Custard_Syntax.decl) list) : (string) list =
-  (FStarC_List.collect (fun d -> (match d with
-    | (FStarC_Custard_Syntax.DLet (l)) when (let tmp = (FStarC_List.existsb FStarC_Custard_Syntax.uu___is_Entrypoint (l).FStarC_Custard_Syntax.dl_flags) in
-    (if tmp then (FStarC_List.for_all (fun b -> (match (b).FStarC_Custard_Syntax.b_ty with
+  ((fun f l -> BatList.flatten (BatList.map f l)) (fun d -> (match d with
+    | (FStarC_Custard_Syntax.DLet (l)) when (let tmp = (BatList.exists FStarC_Custard_Syntax.uu___is_Entrypoint (l).FStarC_Custard_Syntax.dl_flags) in
+    (if tmp then (BatList.for_all (fun b -> (match (b).FStarC_Custard_Syntax.b_ty with
       | FStarC_Custard_Syntax.TUnit -> true
       | tmp1 -> false
-    )) (l).FStarC_Custard_Syntax.dl_binders) else false)) -> (let tmp = (FStarC_List.map (fun tmp -> "()") (l).FStarC_Custard_Syntax.dl_binders) in
+    )) (l).FStarC_Custard_Syntax.dl_binders) else false)) -> (let tmp = (BatList.map (fun tmp -> "()") (l).FStarC_Custard_Syntax.dl_binders) in
       let args = (FStarC_String.concat " " tmp) in
       let tmp1 = (ocaml_value_name (l).FStarC_Custard_Syntax.dl_name) in
       let tmp2 = (qualify (l).FStarC_Custard_Syntax.dl_name tmp1) in
@@ -1669,21 +1669,21 @@ let assemble (ds : (string) list) : string =
   (Prims.strcat header (Prims.strcat "\n" (Prims.strcat (FStarC_String.concat "\n\n" ds) "\n")))
 
 let print_split (files : ((string * (FStarC_Custard_Syntax.decl) list)) list) : ((string * string)) list =
-  (let tmp = (FStarC_List.collect (fun x -> (match x with
+  (let tmp = ((fun f l -> BatList.flatten (BatList.map f l)) (fun x -> (match x with
       | (u__1, u__2) -> u__2
     )) files) in
   (reject_target_only_types tmp);
-  let homes = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (100)))) in
-  (FStarC_List.iter (fun tmp1 -> (match tmp1 with
+  let homes = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100)))) in
+  (BatList.iter (fun tmp1 -> (match tmp1 with
     | (m, ds) -> (let m1 = (module_name_of_unit m) in
-      (FStarC_List.iter (fun d -> (let tmp2 = (FStarC_Custard_Syntax.string_of_name (FStarC_Custard_Syntax.name_of_decl d)) in
+      (BatList.iter (fun d -> (let tmp2 = (FStarC_Custard_Syntax.string_of_name (FStarC_Custard_Syntax.name_of_decl d)) in
       (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace homes tmp2 m1))) ds))
   )) files);
-  (FStarC_Custard_Prof.timed "p.tables" (fun tmp1 -> (let tmp2 = (FStarC_List.collect (fun x -> (match x with
+  (FStarC_Custard_Prof.timed "p.tables" (fun tmp1 -> (let tmp2 = ((fun f l -> BatList.flatten (BatList.map f l)) (fun x -> (match x with
       | (u__1, u__2) -> u__2
     )) files) in
   (build_tables homes tmp2))));
-  let rendered = (FStarC_List.map (fun tmp1 -> (match tmp1 with
+  let rendered = (BatList.map (fun tmp1 -> (match tmp1 with
       | (m, ds) -> (let m1 = (module_name_of_unit m) in
         ((current_module) := (Some (m1)));
         (reserve_top ds);
@@ -1692,35 +1692,35 @@ let print_split (files : ((string * (FStarC_Custard_Syntax.decl) list)) list) : 
         ((current_module) := None);
         r)
     )) files) in
-  let rendered1 = (FStarC_List.filter (fun tmp1 -> (match tmp1 with
+  let rendered1 = (BatList.filter (fun tmp1 -> (match tmp1 with
       | (tmp2, ds) -> (match ds with
           | (hd :: tl) -> true
           | tmp3 -> false
         )
     )) rendered) in
-  let n = (FStarC_List.length rendered1) in
-  let last = (if ((=) n Prims.int_zero) then None else (Some ((match (FStarC_List.last rendered1) with
+  let n = ((fun l -> Z.of_int (BatList.length l)) rendered1) in
+  let last = (if ((=) n Prims.int_zero) then None else (Some ((match (BatList.last rendered1) with
       | (u__1, u__2) -> u__1
     )))) in
   ((current_module) := last);
-  let tmp1 = (FStarC_List.collect (fun x -> (match x with
+  let tmp1 = ((fun f l -> BatList.flatten (BatList.map f l)) (fun x -> (match x with
       | (u__1, u__2) -> u__2
     )) files) in
   let calls = (entry_calls tmp1) in
   ((current_module) := None);
-  (FStarC_List.mapi (fun i tmp2 -> (match tmp2 with
-    | (m, ds) -> (let tmp3 = (FStarC_Custard_Prof.timed "p.render" (fun tmp3 -> (assemble (if ((=) i (Prims.op_Minus n Prims.int_one)) then (FStarC_List.op_At ds calls) else ds)))) in
+  ((fun f l -> BatList.mapi (fun i x -> f (Z.of_int i) x) l) (fun i tmp2 -> (match tmp2 with
+    | (m, ds) -> (let tmp3 = (FStarC_Custard_Prof.timed "p.render" (fun tmp3 -> (assemble (if ((=) i (Prims.op_Minus n Prims.int_one)) then (BatList.append ds calls) else ds)))) in
       (m, tmp3))
   )) rendered1))
 
 let print_program (p : (FStarC_Custard_Syntax.decl) list) : string =
   ((reject_target_only_types p);
-  let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int Prims.int_zero)) in
+  let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
   (build_tables tmp p);
   ((current_module) := None);
   (reserve_top p);
   let tmp1 = (print_decls p) in
   let tmp2 = (entry_calls p) in
-  let tmp3 = (FStarC_List.op_At tmp1 tmp2) in
+  let tmp3 = (BatList.append tmp1 tmp2) in
   (assemble tmp3))
 

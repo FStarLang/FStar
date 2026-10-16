@@ -26,11 +26,11 @@ let rec mapM_opt (f : ('u___a -> ('u___b) option)) (l : ('u___a) list) : (('u___
 
 let rec e_term_aq__unembed_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (let apply_antiquotations = (fun t1 aq -> (match aq with
-      | (shift, aqs) -> (let aqs1 = (FStarC_List.rev aqs) in
+      | (shift, aqs) -> (let aqs1 = (BatList.rev aqs) in
         let tmp = (mapM_opt e_term_aq__unembed_term aqs1) in
-        (FStarC_Option.bind tmp (fun aq_ts -> (let tmp1 = (FStarC_List.mapi (fun i at -> (let x = (FStarC_Syntax_Syntax.new_bv None FStarC_Syntax_Syntax.t_term) in
+        (FStarC_Option.bind tmp (fun aq_ts -> (let tmp1 = ((fun f l -> BatList.mapi (fun i x -> f (Z.of_int i) x) l) (fun i at -> (let x = (FStarC_Syntax_Syntax.new_bv None FStarC_Syntax_Syntax.t_term) in
           ((FStarC_Syntax_Syntax.DB ((Prims.op_Plus shift i), x)), (FStarC_Syntax_Syntax.NT (x, at))))) aq_ts) in
-        let tmp2 = (FStarC_List.unzip tmp1) in
+        let tmp2 = (BatList.split tmp1) in
         (match tmp2 with
           | (subst_open, subst) -> (let tmp3 = (FStarC_Syntax_Subst.subst subst_open t1) in
             let tmp4 = (FStarC_Syntax_Subst.subst subst tmp3) in

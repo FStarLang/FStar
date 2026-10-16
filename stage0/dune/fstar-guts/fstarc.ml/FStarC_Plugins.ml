@@ -24,13 +24,13 @@ let do_dynlink (fname : string) : unit =
       let tmp4 = (tmp3 :: []) in
       let tmp5 = ((FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "Reason:") (FStarC_Errors_Msg.text e)) :: tmp4) in
       let tmp6 = ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Failed to load plugin file %s" fname)) :: tmp5) in
-      (FStarC_Errors.fStarC_Errors_log_issue0__list_document FStarC_Errors_Codes.Error_PluginDynlink tmp6);
+      (FStarC_Errors.fStarC_Errors_log_issue0__list_ocaml_document FStarC_Errors_Codes.Error_PluginDynlink tmp6);
       (FStarC_Errors.stop_if_err ()))
   )
 
 let dynlink (fname : string) : unit =
   (let tmp = (!(loaded)) in
-  let tmp1 = (FStarC_List.mem fname tmp) in
+  let tmp1 = (BatList.mem fname tmp) in
   (if tmp1 then (pout1 "Plugin %s already loaded, skipping\n" fname) else ((pout (Prims.strcat "Attempting to load " (Prims.strcat fname "\n")));
   (do_dynlink fname);
   let tmp2 = (!(loaded)) in
@@ -49,7 +49,7 @@ let autoload_plugin (ext : string) : bool =
   let tmp2 = (FStarC_Find.find_file (Prims.strcat ext ".cmxs")) in
   (match tmp2 with
     | (Some (fn)) -> (let tmp3 = (!(loaded)) in
-      let tmp4 = (FStarC_List.mem fn tmp3) in
+      let tmp4 = (BatList.mem fn tmp3) in
       (if tmp4 then false else (let tmp5 = (!(dbg_Plugin)) in
       (if tmp5 then (FStarC_Format.print1 "Autoloading plugin %s ...\n" fn) else ());
       (load_plugin fn);
@@ -64,7 +64,7 @@ let perr (s : string) : unit =
 let compile_modules (dir : string) (ms : (string) list) : unit =
   (let compile = (fun m -> (let packages = ("fstar.compiler" :: []) in
     let pkg = (fun pname -> (Prims.strcat "-package " pname)) in
-    let tmp = (FStarC_List.map pkg packages) in
+    let tmp = (BatList.map pkg packages) in
     let tmp1 = (FStar_List_Tot_Base.op_At tmp ("-o" :: ((Prims.strcat m ".cmxs") :: ((Prims.strcat m ".ml") :: [])))) in
     let tmp2 = (FStar_List_Tot_Base.op_At ("-w" :: ("-8-11-20-21-26-28" :: [])) tmp1) in
     let tmp3 = (FStar_List_Tot_Base.op_At ("-I" :: (dir :: [])) tmp2) in
@@ -83,9 +83,9 @@ let compile_modules (dir : string) (ms : (string) list) : unit =
     let tmp8 = (FStarC_Errors_Msg.text tmp7) in
     let tmp9 = (tmp8 :: []) in
     let tmp10 = ((FStarC_Errors_Msg.text "Failed to compile native tactic.") :: tmp9) in
-    (FStarC_Errors.fStarC_Errors_raise_error0__list_document FStarC_Errors_Codes.Fatal_FailToCompileNativeTactic tmp10)) else ()))) in
-  (try (let tmp = (FStarC_List.map (fun m -> (Prims.strcat dir (Prims.strcat "/" m))) ms) in
-  (FStarC_List.iter compile tmp)) with
+    (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_FailToCompileNativeTactic tmp10)) else ()))) in
+  (try (let tmp = (BatList.map (fun m -> (Prims.strcat dir (Prims.strcat "/" m))) ms) in
+  (BatList.iter compile tmp)) with
     | u__cexn -> (let tmp = (FStarC_Util.print_exn u__cexn) in
       let tmp1 = (FStarC_Format.fmt1 "Failed to load native tactic: %s\n" tmp) in
       (perr tmp1);
@@ -93,11 +93,11 @@ let compile_modules (dir : string) (ms : (string) list) : unit =
   ))
 
 let load_plugins (tacs : (string) list) : unit =
-  (FStarC_List.iter load_plugin tacs)
+  (BatList.iter load_plugin tacs)
 
 let load_plugins_dir (dir : string) : unit =
   (let tmp = (FStarC_Filepath.readdir dir) in
-  let tmp1 = (FStarC_List.filter (fun s -> ((Prims.op_Greater_Equals (FStarC_String.length s) (Prims.of_int (5))) && ((=) (FStar_String.sub s (Prims.op_Minus (FStarC_String.length s) (Prims.of_int (5))) (Prims.of_int (5))) ".cmxs"))) tmp) in
-  let tmp2 = (FStarC_List.map (fun s -> (Prims.strcat dir (Prims.strcat "/" s))) tmp1) in
+  let tmp1 = (BatList.filter (fun s -> ((Prims.op_Greater_Equals (FStarC_String.length s) (Prims.of_int (5))) && ((=) (FStar_String.sub s (Prims.op_Minus (FStarC_String.length s) (Prims.of_int (5))) (Prims.of_int (5))) ".cmxs"))) tmp) in
+  let tmp2 = (BatList.map (fun s -> (Prims.strcat dir (Prims.strcat "/" s))) tmp1) in
   (load_plugins tmp2))
 

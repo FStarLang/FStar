@@ -16,7 +16,7 @@ let rec unmeta_monadic (f : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.sy
   ))
 
 let lookup_arity_lid (table : ((Prims.int * ((FStarC_Ident.lident * FStarC_Ident.lident)) list)) list) (target_lid : FStarC_Ident.lident) (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : (connective) option =
-  (let arg_len = (FStarC_List.length args) in
+  (let arg_len = ((fun l -> Z.of_int (BatList.length l)) args) in
   let aux = (fun tmp -> (match tmp with
       | (arity, lids) -> (if ((=) arg_len arity) then (FStarC_Util.find_map lids (fun tmp1 -> (match tmp1 with
           | (lid, out_lid) -> (if (FStarC_Ident.lid_equals target_lid lid) then (Some ((BaseConn (out_lid, args)))) else None)
@@ -52,7 +52,7 @@ let rec q_conn_aux (qopt : (bool) option) (out : (FStarC_Syntax_Syntax.binder) l
   let flat = (fun t1 -> (let tmp = (FStarC_Syntax_Util.head_and_args_full t1) in
     (match tmp with
       | (t2, args) -> (let tmp1 = (FStarC_Syntax_Util.un_uinst t2) in
-        let tmp2 = (FStarC_List.map (fun tmp2 -> (match tmp2 with
+        let tmp2 = (BatList.map (fun tmp2 -> (match tmp2 with
             | (t3, imp) -> (let tmp3 = (FStarC_Syntax_Util.unascribe t3) in
               (tmp3, imp))
           )) args) in
@@ -68,7 +68,7 @@ let rec q_conn_aux (qopt : (bool) option) (out : (FStarC_Syntax_Syntax.binder) l
       (match (qopt, (hd).FStarC_Syntax_Syntax.n, body_of_last_abs) with
         | ((Some (fa)), (FStarC_Syntax_Syntax.Tm_fvar (tc)), (Some ((b, t2)))) when (is_q fa tc) -> (q_conn_aux qopt (b :: out) t2)
         | (None, (FStarC_Syntax_Syntax.Tm_fvar (tc)), (Some ((b, t2)))) when (FStarC_Syntax_Util.is_qlid (tc).FStarC_Syntax_Syntax.fv_name) -> (q_conn_aux (Some ((FStarC_Syntax_Util.is_forall (tc).FStarC_Syntax_Syntax.fv_name))) (b :: out) t2)
-        | ((Some (b)), tmp1, tmp2) -> (let bs = (FStarC_List.rev out) in
+        | ((Some (b)), tmp1, tmp2) -> (let bs = (BatList.rev out) in
           let tmp3 = (FStarC_Syntax_Subst.open_term bs t) in
           (match tmp3 with
             | (bs1, t1) -> (let tmp4 = (patterns t1) in
@@ -131,12 +131,12 @@ and maybe_collect (f : (connective) option) : (connective) option =
   (match f with
     | (Some ((QAll (bs, pats, phi)))) -> (let tmp = (destruct_sq_forall phi) in
       (match tmp with
-        | (Some ((QAll (bs', pats', psi)))) -> (Some ((QAll ((FStarC_List.op_At bs bs'), (FStarC_List.op_At pats pats'), psi))))
+        | (Some ((QAll (bs', pats', psi)))) -> (Some ((QAll ((BatList.append bs bs'), (BatList.append pats pats'), psi))))
         | tmp1 -> f
       ))
     | (Some ((QEx (bs, pats, phi)))) -> (let tmp = (destruct_sq_exists phi) in
       (match tmp with
-        | (Some ((QEx (bs', pats', psi)))) -> (Some ((QEx ((FStarC_List.op_At bs bs'), (FStarC_List.op_At pats pats'), psi))))
+        | (Some ((QEx (bs', pats', psi)))) -> (Some ((QEx ((BatList.append bs bs'), (BatList.append pats pats'), psi))))
         | tmp1 -> f
       ))
     | tmp -> f

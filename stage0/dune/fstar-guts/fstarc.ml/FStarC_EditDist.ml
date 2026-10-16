@@ -17,7 +17,7 @@ let rec edit_distance__go (s1 : string) (s2 : string) (lookup : (Prims.int -> (P
   ))))
 
 let edit_distance (s1 : string) (s2 : string) : Prims.int =
-  (let cache = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__2.create (Z.to_int (Prims.of_int (10)))) in
+  (let cache = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__2.create (FStarC_SmallInt.of_int (Prims.of_int (10)))) in
   let lookup = (fun i j -> (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__2.find_opt cache i) in
     (match tmp with
       | (Some (m)) -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__2.find_opt m j)
@@ -26,7 +26,7 @@ let edit_distance (s1 : string) (s2 : string) : Prims.int =
   let set = (fun i j d -> (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__2.find_opt cache i) in
     let m = (match tmp with
         | (Some (m)) -> m
-        | None -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__2.create (Z.to_int (Prims.of_int (10))))
+        | None -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__2.create (FStarC_SmallInt.of_int (Prims.of_int (10))))
       ) in
     (FStarC_HashTable.FStarC_HashTable_hashtbl_make__2.replace m j d);
     (FStarC_HashTable.FStarC_HashTable_hashtbl_make__2.replace cache i m))) in

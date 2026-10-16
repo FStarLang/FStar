@@ -5,35 +5,35 @@ let dbg_Tac : (bool ref) =
   (FStarC_Debug.get_toggle "Tac")
 
 let report_implicits (rng : FStarC_Range_Type.range) (is : ((FStarC_TypeChecker_Common.implicit * FStarC_TypeChecker_Rel.implicit_checking_status)) list) : unit =
-  ((FStarC_List.iter (fun tmp -> (match tmp with
+  ((BatList.iter (fun tmp -> (match tmp with
     | (imp, tag) -> (match tag with
         | FStarC_TypeChecker_Rel.Implicit_unresolved -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__tuple3_p_uvar_tuple2_version_range (((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head, ((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head1, ((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
-          let tmp2 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Tactic left uninstantiated unification variable:") tmp1) in
+          let tmp2 = (PPrint.(^/^) (FStarC_Errors_Msg.text "Tactic left uninstantiated unification variable:") tmp1) in
           let tmp3 = (FStarC_Syntax_Util.ctx_uvar_typ (imp).FStarC_TypeChecker_Common.imp_uvar) in
           let tmp4 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' tmp3) in
-          let tmp5 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Type:") tmp4) in
-          let tmp6 = (tmp5 :: ((FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Reason:") (FStar_Pprint.dquotes (FStar_Pprint.doc_of_string (imp).FStarC_TypeChecker_Common.imp_reason))) :: [])) in
+          let tmp5 = (PPrint.(^/^) (FStarC_Errors_Msg.text "Type:") tmp4) in
+          let tmp6 = (tmp5 :: ((PPrint.(^/^) (FStarC_Errors_Msg.text "Reason:") (PPrint.dquotes (PPrint.string (imp).FStarC_TypeChecker_Common.imp_reason))) :: [])) in
           let tmp7 = (tmp2 :: tmp6) in
-          (FStarC_Errors.fStarC_Errors_log_issue__range_list_document rng FStarC_Errors_Codes.Error_UninstantiatedUnificationVarInTactic tmp7))
+          (FStarC_Errors.fStarC_Errors_log_issue__range_list_ocaml_document rng FStarC_Errors_Codes.Error_UninstantiatedUnificationVarInTactic tmp7))
         | FStarC_TypeChecker_Rel.Implicit_checking_defers_univ_constraint -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__tuple3_p_uvar_tuple2_version_range (((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head, ((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head1, ((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
-          let tmp2 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Tactic left uninstantiated unification variable:") tmp1) in
+          let tmp2 = (PPrint.(^/^) (FStarC_Errors_Msg.text "Tactic left uninstantiated unification variable:") tmp1) in
           let tmp3 = (FStarC_Syntax_Util.ctx_uvar_typ (imp).FStarC_TypeChecker_Common.imp_uvar) in
           let tmp4 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' tmp3) in
-          let tmp5 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Type:") tmp4) in
-          let tmp6 = (tmp5 :: ((FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Reason:") (FStar_Pprint.dquotes (FStar_Pprint.doc_of_string (imp).FStarC_TypeChecker_Common.imp_reason))) :: [])) in
+          let tmp5 = (PPrint.(^/^) (FStarC_Errors_Msg.text "Type:") tmp4) in
+          let tmp6 = (tmp5 :: ((PPrint.(^/^) (FStarC_Errors_Msg.text "Reason:") (PPrint.dquotes (PPrint.string (imp).FStarC_TypeChecker_Common.imp_reason))) :: [])) in
           let tmp7 = (tmp2 :: tmp6) in
-          (FStarC_Errors.fStarC_Errors_log_issue__range_list_document rng FStarC_Errors_Codes.Error_UninstantiatedUnificationVarInTactic tmp7))
+          (FStarC_Errors.fStarC_Errors_log_issue__range_list_ocaml_document rng FStarC_Errors_Codes.Error_UninstantiatedUnificationVarInTactic tmp7))
         | (FStarC_TypeChecker_Rel.Implicit_has_typing_guard (tm, ty)) -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__tuple3_p_uvar_tuple2_version_range (((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head, ((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head1, ((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
-          let tmp2 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Tactic solved goal:") tmp1) in
+          let tmp2 = (PPrint.(^/^) (FStarC_Errors_Msg.text "Tactic solved goal:") tmp1) in
           let tmp3 = (FStarC_Syntax_Util.ctx_uvar_typ (imp).FStarC_TypeChecker_Common.imp_uvar) in
           let tmp4 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' tmp3) in
-          let tmp5 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Type:") tmp4) in
+          let tmp5 = (PPrint.(^/^) (FStarC_Errors_Msg.text "Type:") tmp4) in
           let tmp6 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' tm) in
-          let tmp7 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "To the term:") tmp6) in
+          let tmp7 = (PPrint.(^/^) (FStarC_Errors_Msg.text "To the term:") tmp6) in
           let tmp8 = (tmp7 :: ((FStarC_Errors_Msg.text "But it has a non-trivial typing guard. Use gather_or_solve_explicit_guards_for_resolved_goals to inspect and prove these goals") :: [])) in
           let tmp9 = (tmp5 :: tmp8) in
           let tmp10 = (tmp2 :: tmp9) in
-          (FStarC_Errors.fStarC_Errors_log_issue__range_list_document rng FStarC_Errors_Codes.Error_UninstantiatedUnificationVarInTactic tmp10))
+          (FStarC_Errors.fStarC_Errors_log_issue__range_list_ocaml_document rng FStarC_Errors_Codes.Error_UninstantiatedUnificationVarInTactic tmp10))
       )
   )) is);
   (FStarC_Errors.stop_if_err ()))
@@ -196,8 +196,8 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.range) (rng_goal :
   (match res with
     | (FStar_Pervasives.Inr ((ret, ps3))) -> (let tmp1 = (!(dbg_Tac)) in
       (if tmp1 then (FStarC_Tactics_Printing.do_dump_proofstate ps3 "at the finish line") else ());
-      let remaining_smt_goals = (FStarC_List.op_At (ps3).FStarC_Tactics_Types.goals (ps3).FStarC_Tactics_Types.smt_goals) in
-      (FStarC_List.iter (fun g -> ((FStarC_Tactics_Monad.mark_goal_implicit_already_checked g);
+      let remaining_smt_goals = (BatList.append (ps3).FStarC_Tactics_Types.goals (ps3).FStarC_Tactics_Types.smt_goals) in
+      (BatList.iter (fun g -> ((FStarC_Tactics_Monad.mark_goal_implicit_already_checked g);
       let tmp2 = (FStarC_Tactics_Monad.is_irrelevant g) in
       (if tmp2 then (let tmp3 = (!(dbg_Tac)) in
       (if tmp3 then (let tmp4 = (FStarC_Tactics_Types.goal_witness g) in
@@ -221,34 +221,34 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.range) (rng_goal :
           implicits = tmp4 } in
       let g1 = (FStarC_TypeChecker_Rel.solve_deferred_constraints env g) in
       let tmp5 = (!(dbg_Tac)) in
-      (if tmp5 then (let tmp6 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 (FStarC_List.length (ps3).FStarC_Tactics_Types.all_implicits)) in
+      (if tmp5 then (let tmp6 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) (ps3).FStarC_Tactics_Types.all_implicits)) in
       let tmp7 = (FStarC_TypeChecker_Common.fStarC_Class_Show_show__list_implicit (ps3).FStarC_Tactics_Types.all_implicits) in
       (FStarC_Format.print2 "Checked %s implicits (1): %s\n" tmp6 tmp7)) else ());
       let tagged_implicits = (FStarC_TypeChecker_Rel.resolve_implicits_tac env g1) in
       let tmp6 = (!(dbg_Tac)) in
-      (if tmp6 then (let tmp7 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 (FStarC_List.length (ps3).FStarC_Tactics_Types.all_implicits)) in
+      (if tmp6 then (let tmp7 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) (ps3).FStarC_Tactics_Types.all_implicits)) in
       let tmp8 = (FStarC_TypeChecker_Common.fStarC_Class_Show_show__list_implicit (ps3).FStarC_Tactics_Types.all_implicits) in
       (FStarC_Format.print2 "Checked %s implicits (2): %s\n" tmp7 tmp8)) else ());
       (report_implicits rng_goal tagged_implicits))));
       (remaining_smt_goals, ret))
-    | (FStar_Pervasives.Inl ((FStarC_Errors.Error ((code, msg, rng, ctx))))) -> (let msg1 = ((FStar_Pprint.doc_of_string "Tactic failed") :: msg) in
+    | (FStar_Pervasives.Inl ((FStarC_Errors.Error ((code, msg, rng, ctx))))) -> (let msg1 = ((PPrint.string "Tactic failed") :: msg) in
       (raise (FStarC_Errors.Error ((code, msg1, rng, ctx)))))
     | (FStar_Pervasives.Inl (FStarC_Errors.Stop)) -> (let tmp1 = (FStarC_Errors.get_err_count ()) in
       let tmp2 = (Prims.op_Greater tmp1 Prims.int_zero) in
-      (if tmp2 then (raise FStarC_Errors.Stop) else (FStarC_Errors.fStarC_Errors_raise_error__range_list_document (ps2).FStarC_Tactics_Types.entry_range FStarC_Errors_Codes.Fatal_UserTacticFailure ((FStarC_Errors_Msg.text "A tactic raised the Stop exception but did not log errors.") :: ((FStarC_Errors_Msg.text "Failing anyway.") :: [])))))
+      (if tmp2 then (raise FStarC_Errors.Stop) else (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document (ps2).FStarC_Tactics_Types.entry_range FStarC_Errors_Codes.Fatal_UserTacticFailure ((FStarC_Errors_Msg.text "A tactic raised the Stop exception but did not log errors.") :: ((FStarC_Errors_Msg.text "Failing anyway.") :: [])))))
     | (FStar_Pervasives.Inl (e)) -> ((if (ps2).FStarC_Tactics_Types.dump_on_failure then (FStarC_Tactics_Printing.do_dump_proofstate ps2 "at the time of failure") else ());
       let texn_to_doc = (fun e1 -> (match e1 with
           | (FStarC_Tactics_Common.TacticFailure (msg)) -> msg
           | (FStarC_Tactics_Common.EExn (t)) -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' t) in
             let tmp2 = (Prims.strcat "Uncaught exception: " tmp1) in
-            let tmp3 = (FStar_Pprint.doc_of_string tmp2) in
+            let tmp3 = (PPrint.string tmp2) in
             let tmp4 = (tmp3 :: []) in
             (tmp4, None))
           | e2 -> (let issue = (FStarC_Errors.issue_of_exn e2) in
             (match issue with
-              | (Some ({ FStarC_Errors.issue_msg = issue_msg; issue_level = tmp1; issue_range = issue_range; issue_number = tmp2; issue_ctx = tmp3; _ })) -> (issue_msg, issue_range)
+              | (Some ({ FStarC_Errors_Issue.issue_msg = issue_msg; issue_level = tmp1; issue_range = issue_range; issue_number = tmp2; issue_ctx = tmp3; _ })) -> (issue_msg, issue_range)
               | None -> (let tmp1 = (FStarC_Util.message_of_exn e2) in
-                let tmp2 = (FStar_Pprint.arbitrary_string tmp1) in
+                let tmp2 = (PPrint.arbitrary_string tmp1) in
                 let tmp3 = (tmp2 :: []) in
                 (tmp3, None))
             ))
@@ -262,7 +262,7 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.range) (rng_goal :
               | (Some (r)) -> r
               | tmp2 -> (ps2).FStarC_Tactics_Types.entry_range
             )) in
-          (FStarC_Errors.fStarC_Errors_raise_error__range_list_document rng1 FStarC_Errors_Codes.Fatal_UserTacticFailure (FStarC_List.op_At (if (ps2).FStarC_Tactics_Types.dump_on_failure then ((FStar_Pprint.doc_of_string "Tactic failed") :: []) else []) doc)))
+          (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document rng1 FStarC_Errors_Codes.Fatal_UserTacticFailure (BatList.append (if (ps2).FStarC_Tactics_Types.dump_on_failure then ((PPrint.string "Tactic failed") :: []) else []) doc)))
       ))
   ))
 
@@ -281,7 +281,7 @@ let native_tactics_steps (tmp : unit) : (FStarC_TypeChecker_Primops_Base.primiti
       interpretation = (s).FStarC_Tactics_Native.tactic;
       interpretation_nbe = (fun u__cb u__us -> (FStarC_TypeChecker_NBETerm.dummy_interp (s).FStarC_Tactics_Native.name)) }) in
   let tmp1 = (FStarC_Tactics_Native.list_all ()) in
-  (FStarC_List.map step_from_native_step tmp1))
+  (BatList.map step_from_native_step tmp1))
 
 let u___primitive_steps_ref : ((FStarC_TypeChecker_Primops_Base.primitive_step) list ref) =
   (ref [])
@@ -289,7 +289,7 @@ let u___primitive_steps_ref : ((FStarC_TypeChecker_Primops_Base.primitive_step) 
 let primitive_steps (tmp : unit) : (FStarC_TypeChecker_Primops_Base.primitive_step) list =
   (let tmp1 = (native_tactics_steps ()) in
   let tmp2 = (!(u___primitive_steps_ref)) in
-  (FStarC_List.op_At tmp1 tmp2))
+  (BatList.append tmp1 tmp2))
 
 let unembed (tmp : ('u___a) FStarC_Syntax_Embeddings_Base.embedding) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (n : ((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) : ('u___a) option =
   (FStarC_Syntax_Embeddings_Base.unembed tmp t n)
@@ -340,12 +340,12 @@ let unembed_tactic_0 (eb : ('u___b) FStarC_Syntax_Embeddings_Base.embedding) (em
       let maybe_admit_tip = (if (match r with
           | None -> true
           | tmp3 -> false
-        ) then (FStar_Pprint.doc_of_string "The term contains an `admit`, which will not reduce. Did you mean `tadmit()`?") else FStar_Pprint.empty) in
+        ) then (PPrint.string "The term contains an `admit`, which will not reduce. Did you mean `tadmit()`?") else PPrint.empty) in
       let tmp3 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' h_result) in
-      let tmp4 = (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStar_Pprint.doc_of_string "Reduction stopped at:") tmp3) in
+      let tmp4 = (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (PPrint.string "Reduction stopped at:") tmp3) in
       let tmp5 = (tmp4 :: (maybe_admit_tip :: [])) in
-      let tmp6 = ((FStar_Pprint.doc_of_string "Tactic got stuck!") :: tmp5) in
-      (FStarC_TypeChecker_Env.fStarC_Errors_raise_error__env_list_document (ps0).FStarC_Tactics_Types.main_context FStarC_Errors_Codes.Fatal_TacticGotStuck tmp6))
+      let tmp6 = ((PPrint.string "Tactic got stuck!") :: tmp5) in
+      (FStarC_TypeChecker_Env.fStarC_Errors_raise_error__env_list_ocaml_document (ps0).FStarC_Tactics_Types.main_context FStarC_Errors_Codes.Fatal_TacticGotStuck tmp6))
   ))
 
 let unembed_tactic_1 (ea : ('u___a) FStarC_Syntax_Embeddings_Base.embedding) (er : ('u___r) FStarC_Syntax_Embeddings_Base.embedding) (f : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (ncb : ((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (x : 'u___a) (ps : (FStarC_Tactics_Types.proofstate ref)) : 'u___r =
@@ -410,12 +410,12 @@ let unembed_tactic_nbe_0 (eb : ('u___b) FStarC_TypeChecker_NBETerm.embedding) (c
   (match res with
     | (Some (b)) -> b
     | None -> (let tmp3 = (FStarC_TypeChecker_NBETerm.t_to_string result) in
-      let tmp4 = (FStar_Pprint.arbitrary_string tmp3) in
-      let tmp5 = (FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string "Result = ") tmp4) in
+      let tmp4 = (PPrint.arbitrary_string tmp3) in
+      let tmp5 = (PPrint.(^^) (PPrint.string "Result = ") tmp4) in
       let tmp6 = (tmp5 :: []) in
       let tmp7 = ((FStarC_Errors_Msg.text "Please file a bug report with a minimal reproduction of this issue.") :: tmp6) in
-      let tmp8 = ((FStar_Pprint.doc_of_string "Tactic got stuck (in NBE)!") :: tmp7) in
-      (FStarC_TypeChecker_Env.fStarC_Errors_raise_error__env_list_document (ps0).FStarC_Tactics_Types.main_context FStarC_Errors_Codes.Fatal_TacticGotStuck tmp8))
+      let tmp8 = ((PPrint.string "Tactic got stuck (in NBE)!") :: tmp7) in
+      (FStarC_TypeChecker_Env.fStarC_Errors_raise_error__env_list_ocaml_document (ps0).FStarC_Tactics_Types.main_context FStarC_Errors_Codes.Fatal_TacticGotStuck tmp8))
   ))
 
 let unembed_tactic_nbe_1 (ea : ('u___a) FStarC_TypeChecker_NBETerm.embedding) (er : ('u___r) FStarC_TypeChecker_NBETerm.embedding) (cb : FStarC_TypeChecker_NBETerm.nbe_cbs) (f : FStarC_TypeChecker_NBETerm.t) (x : 'u___a) (ps : (FStarC_Tactics_Types.proofstate ref)) : 'u___r =

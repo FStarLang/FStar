@@ -21,7 +21,7 @@ let map_optRO (f : ('u___a -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___b))
       (Some (x2))))
   )
 
-let fail_doc_at (m : (FStar_Pprint.document) list) (r : (FStarC_Range_Type.range) option) : ((FStarC_Tactics_Types.proofstate ref) -> 'a) =
+let fail_doc_at (m : (PPrint.document) list) (r : (FStarC_Range_Type.range) option) : ((FStarC_Tactics_Types.proofstate ref) -> 'a) =
   (Obj.magic ((fun ps -> (let x = (map_optRO FStarC_Tactics_V2_Builtins.fixup_range r ps) in
   (ignore (FStarC_Tactics_V2_Builtins.raise_core (FStarC_Tactics_Common.TacticFailure ((m, x))) ps));
   (failwith "Prims.magic")))))
@@ -337,7 +337,7 @@ let fresh_uvar (o : (FStarC_Reflection_Types.typ) option) (ps : (FStarC_Tactics_
 let exact_with_ref (t : FStarC_Reflection_Types.term) (ps : (FStarC_Tactics_Types.proofstate ref)) : unit =
   (with_policy FStarC_Tactics_Types.SMT (fun tmp -> (FStarC_Tactics_V2_Builtins.t_exact true true t)) ps)
 
-let fail_doc (m : (FStar_Pprint.document) list) (ps : (FStarC_Tactics_Types.proofstate ref)) : 'a =
+let fail_doc (m : (PPrint.document) list) (ps : (FStarC_Tactics_Types.proofstate ref)) : 'a =
   ((ignore (FStarC_Tactics_V2_Builtins.raise_core (FStarC_Tactics_Common.TacticFailure ((m, None))) ps));
   (failwith "Prims.magic"))
 

@@ -54,7 +54,7 @@ let snapshot (tmp : unit) : saved_state =
 let restore (s : saved_state) : unit =
   (let tmp = (!(toggle_list)) in
   (FStarC_PSMap.iter tmp (fun k r -> ((r) := false)));
-  (FStarC_List.iter (fun tmp1 -> (match tmp1 with
+  (BatList.iter (fun tmp1 -> (match tmp1 with
     | (k, b) -> (let r = (get_toggle k) in
       ((r) := b))
   )) (s).toggles);
@@ -98,7 +98,7 @@ let enable_toggles (keys : (string) list) : unit =
     | (hd :: tl) -> true
     | tmp -> false
   ) then (enable ()) else ());
-  (FStarC_List.iter (fun k -> (match k with
+  (BatList.iter (fun k -> (match k with
     | "Low" -> (set_level_low ())
     | "Medium" -> (set_level_medium ())
     | "High" -> (set_level_high ())

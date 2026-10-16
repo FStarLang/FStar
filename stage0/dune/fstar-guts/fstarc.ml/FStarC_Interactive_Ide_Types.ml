@@ -3,7 +3,7 @@
 
 type timed_fname = {
   tf_fname : string;
-  tf_modtime : FStarC_Time.time_of_day;
+  tf_modtime : float;
 }
 
 type push_kind =
@@ -236,41 +236,41 @@ let query_to_string (q : query) : string =
     | (Cancel (tmp)) -> "Cancel"
   )
 
-let json_of_issue_level (i : FStarC_Errors.issue_level) : FStarC_Json.json =
+let json_of_issue_level (i : FStarC_Errors_Issue.issue_level) : FStarC_Json.json =
   (FStarC_Json.JsonStr ((match i with
-    | FStarC_Errors.ENotImplemented -> "not-implemented"
-    | FStarC_Errors.EInfo -> "info"
-    | FStarC_Errors.EWarning -> "warning"
-    | FStarC_Errors.EError -> "error"
+    | FStarC_Errors_Issue.ENotImplemented -> "not-implemented"
+    | FStarC_Errors_Issue.EInfo -> "info"
+    | FStarC_Errors_Issue.EWarning -> "warning"
+    | FStarC_Errors_Issue.EError -> "error"
   )))
 
-let json_of_issue (issue : FStarC_Errors.issue) : FStarC_Json.json =
-  (let r = (FStarC_Option.map FStarC_Range_Ops.refind_range (issue).FStarC_Errors.issue_range) in
-  let tmp = (json_of_issue_level (issue).FStarC_Errors.issue_level) in
+let json_of_issue (issue : FStarC_Errors_Issue.issue) : FStarC_Json.json =
+  (let r = (FStarC_Option.map FStarC_Range_Ops.refind_range (issue).FStarC_Errors_Issue.issue_range) in
+  let tmp = (json_of_issue_level (issue).FStarC_Errors_Issue.issue_level) in
   let tmp1 = ("level", tmp) in
   let tmp2 = (tmp1 :: []) in
   let tmp3 = (FStarC_Errors.format_issue' false issue) in
   let tmp4 = (FStarC_Json.JsonStr (tmp3)) in
   let tmp5 = ("message", tmp4) in
-  let tmp6 = (tmp5 :: (("ranges", (FStarC_Json.JsonList ((FStarC_List.op_At (match r with
+  let tmp6 = (tmp5 :: (("ranges", (FStarC_Json.JsonList ((BatList.append (match r with
       | None -> []
       | (Some (r1)) -> ((FStarC_Range_Ops.json_of_use_range r1) :: [])
     ) (match r with
       | (Some (r1)) when ((<>) (FStarC_Range_Type.def_range r1) (FStarC_Range_Type.use_range r1)) -> ((FStarC_Range_Ops.json_of_def_range r1) :: [])
       | tmp6 -> []
     ))))) :: [])) in
-  let tmp7 = (FStarC_List.op_At (match (issue).FStarC_Errors.issue_number with
+  let tmp7 = (BatList.append (match (issue).FStarC_Errors_Issue.issue_number with
       | None -> []
       | (Some (n)) -> (("number", (FStarC_Json.JsonInt (n))) :: [])
     ) tmp6) in
-  let tmp8 = (FStarC_List.op_At tmp2 tmp7) in
+  let tmp8 = (BatList.append tmp2 tmp7) in
   (FStarC_Json.JsonAssoc (tmp8)))
 
-let t0 : FStarC_Time.time_of_day =
-  (FStarC_Time.get_time_of_day ())
+let t0 : float =
+  (BatUnix.gettimeofday ())
 
 let string_of_timed_fname (x : timed_fname) : string =
-  (if ((=) (x).tf_modtime t0) then (FStarC_Format.fmt1 "{ %s }" (x).tf_fname) else (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__time_of_day (x).tf_modtime) in
+  (if ((=) (x).tf_modtime t0) then (FStarC_Format.fmt1 "{ %s }" (x).tf_fname) else (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__ocaml_float (x).tf_modtime) in
   (FStarC_Format.fmt2 "{ %s; %s }" (x).tf_fname tmp)))
 
 let string_of_repl_task (t : repl_task) : string =
@@ -296,14 +296,14 @@ let string_of_repl_stack_entry (x : (((Prims.int * Prims.int * (Prims.int * Prim
   )
 
 let string_of_repl_stack (s : ((((Prims.int * Prims.int * (Prims.int * Prims.int * Prims.int) * Prims.int) * Prims.int) * (repl_task * repl_state))) list) : string =
-  (let tmp = (FStarC_List.map string_of_repl_stack_entry s) in
+  (let tmp = (BatList.map string_of_repl_stack_entry s) in
   (FStarC_String.concat ";\n\t\t" tmp))
 
 let repl_state_to_string (r : repl_state) : string =
   (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int (r).repl_line) in
   let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int (r).repl_column) in
   let tmp2 = (string_of_repl_stack (r).repl_deps_stack) in
-  let tmp3 = (FStarC_List.map (fun q -> (q).qid) (r).repl_buffered_input_queries) in
+  let tmp3 = (BatList.map (fun q -> (q).qid) (r).repl_buffered_input_queries) in
   let tmp4 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string tmp3) in
   let tmp5 = (tmp4 :: []) in
   let tmp6 = (tmp2 :: tmp5) in

@@ -174,9 +174,9 @@ let goal_of_ctx_uvar (g : goal) (ctx_u : FStarC_Syntax_Syntax.ctx_uvar) : goal =
     is_guard = (g).is_guard;
     label = (g).label }
 
-let fStarC_Class_PP_pp__guard_policy (tmp : guard_policy) : FStar_Pprint.document =
+let fStarC_Class_PP_pp__guard_policy (tmp : guard_policy) : PPrint.document =
   (let tmp1 = (fStarC_Class_Show_show__guard_policy tmp) in
-  (FStar_Pprint.arbitrary_string tmp1))
+  (PPrint.arbitrary_string tmp1))
 
 let set_ps_psc (psc : FStarC_TypeChecker_Primops_Base.psc) (ps : proofstate) : proofstate =
   { main_context = (ps).main_context;

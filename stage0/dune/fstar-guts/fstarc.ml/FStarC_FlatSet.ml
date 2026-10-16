@@ -8,7 +8,7 @@ let elems (s : ('a) list) : ('a) list =
   s
 
 let for_all (p : ('a -> bool)) (s : ('a) list) : bool =
-  (FStarC_List.for_all p s)
+  (BatList.for_all p s)
 
 let is_empty (s : ('a) list) : bool =
   (match s with
@@ -17,5 +17,5 @@ let is_empty (s : ('a) list) : bool =
   )
 
 let for_any (p : ('a -> bool)) (s : ('a) list) : bool =
-  (FStarC_List.existsb p s)
+  (BatList.exists p s)
 

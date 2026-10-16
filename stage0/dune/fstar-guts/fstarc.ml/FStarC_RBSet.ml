@@ -99,7 +99,7 @@ let fStarC_RBSet_add__ctx_uvar (x : FStarC_Syntax_Syntax.ctx_uvar) (s : (FStarC_
   (blackroot tmp))
 
 let fStarC_RBSet_from_list__ctx_uvar (xs : (FStarC_Syntax_Syntax.ctx_uvar) list) : (FStarC_Syntax_Syntax.ctx_uvar) rbset =
-  (FStarC_List.fold_left (fun s e -> (fStarC_RBSet_add__ctx_uvar e s)) L xs)
+  (BatList.fold_left (fun s e -> (fStarC_RBSet_add__ctx_uvar e s)) L xs)
 
 let fStarC_Class_Setlike_from_list__ctx_uvar_rbset_ctx_uvar (tmp : (FStarC_Syntax_Syntax.ctx_uvar) list) : (FStarC_Syntax_Syntax.ctx_uvar) rbset =
   (fStarC_RBSet_from_list__ctx_uvar tmp)
@@ -110,7 +110,7 @@ let fStarC_Class_Setlike_empty__ctx_uvar_rbset_ctx_uvar (tmp : unit) : (FStarC_S
 let rec elems (s : ('u___a) rbset) : ('u___a) list =
   (match s with
     | L -> []
-    | (N (tmp, a, x, b)) -> (FStarC_List.op_At (elems a) (FStarC_List.op_At (x :: []) (elems b)))
+    | (N (tmp, a, x, b)) -> (BatList.append (elems a) (BatList.append (x :: []) (elems b)))
   )
 
 let fStarC_Class_Setlike_elems__string_rbset_string (tmp : (string) rbset) : (string) list =
@@ -286,7 +286,7 @@ let fStarC_Class_Setlike_add__string_rbset_string (tmp : string) (s : (string) r
   (fStarC_RBSet_add__string tmp s)
 
 let fStarC_RBSet_from_list__string (xs : (string) list) : (string) rbset =
-  (FStarC_List.fold_left (fun s e -> (fStarC_RBSet_add__string e s)) L xs)
+  (BatList.fold_left (fun s e -> (fStarC_RBSet_add__string e s)) L xs)
 
 let fStarC_Class_Setlike_from_list__string_rbset_string (tmp : (string) list) : (string) rbset =
   (fStarC_RBSet_from_list__string tmp)
@@ -360,36 +360,36 @@ let fStarC_Class_Show_show__rbset_string (tmp : (string) rbset) : string =
   (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string (elems tmp)) in
   (Prims.strcat "RBSet " tmp1))
 
-let fStarC_Class_Setlike_empty__hash_code_rbset_hash_code (tmp : unit) : (FStarC_Hash.hash_code) rbset =
+let fStarC_Class_Setlike_empty__ocaml_int_rbset_ocaml_int (tmp : unit) : (int) rbset =
   (empty ())
 
-let rec fStarC_RBSet_mem__hash_code (x : FStarC_Hash.hash_code) (s : (FStarC_Hash.hash_code) rbset) : bool =
+let rec fStarC_RBSet_mem__ocaml_int (x : int) (s : (int) rbset) : bool =
   (match s with
     | L -> false
-    | (N (tmp, a, y, b)) -> (let tmp1 = (FStarC_Class_Ord.fStarC_Class_Ord_op_Less_Question__hash_code x y) in
-      (if tmp1 then (fStarC_RBSet_mem__hash_code x a) else (let tmp2 = (FStarC_Class_Ord.fStarC_Class_Ord_op_Greater_Question__hash_code x y) in
-      (if tmp2 then (fStarC_RBSet_mem__hash_code x b) else true))))
+    | (N (tmp, a, y, b)) -> (let tmp1 = (FStarC_Class_Ord.fStarC_Class_Ord_op_Less_Question__ocaml_int x y) in
+      (if tmp1 then (fStarC_RBSet_mem__ocaml_int x a) else (let tmp2 = (FStarC_Class_Ord.fStarC_Class_Ord_op_Greater_Question__ocaml_int x y) in
+      (if tmp2 then (fStarC_RBSet_mem__ocaml_int x b) else true))))
   )
 
-let fStarC_Class_Setlike_mem__hash_code_rbset_hash_code (tmp : FStarC_Hash.hash_code) (s : (FStarC_Hash.hash_code) rbset) : bool =
-  (fStarC_RBSet_mem__hash_code tmp s)
+let fStarC_Class_Setlike_mem__ocaml_int_rbset_ocaml_int (tmp : int) (s : (int) rbset) : bool =
+  (fStarC_RBSet_mem__ocaml_int tmp s)
 
-let rec fStarC_RBSet_add__add'__hash_code (x : FStarC_Hash.hash_code) (s : (FStarC_Hash.hash_code) rbset) : (FStarC_Hash.hash_code) rbset =
+let rec fStarC_RBSet_add__add'__ocaml_int (x : int) (s : (int) rbset) : (int) rbset =
   (match s with
     | L -> (N (R, L, x, L))
-    | (N (c, a, y, b)) -> (let tmp = (FStarC_Class_Ord.fStarC_Class_Ord_op_Less_Question__hash_code x y) in
-      (if tmp then (let tmp1 = ((fStarC_RBSet_add__add'__hash_code x) a) in
-      (balance c tmp1 y b)) else (let tmp1 = (FStarC_Class_Ord.fStarC_Class_Ord_op_Greater_Question__hash_code x y) in
-      (if tmp1 then (let tmp2 = ((fStarC_RBSet_add__add'__hash_code x) b) in
+    | (N (c, a, y, b)) -> (let tmp = (FStarC_Class_Ord.fStarC_Class_Ord_op_Less_Question__ocaml_int x y) in
+      (if tmp then (let tmp1 = ((fStarC_RBSet_add__add'__ocaml_int x) a) in
+      (balance c tmp1 y b)) else (let tmp1 = (FStarC_Class_Ord.fStarC_Class_Ord_op_Greater_Question__ocaml_int x y) in
+      (if tmp1 then (let tmp2 = ((fStarC_RBSet_add__add'__ocaml_int x) b) in
       (balance c a y tmp2)) else s))))
   )
 
-let fStarC_RBSet_add__hash_code (x : FStarC_Hash.hash_code) (s : (FStarC_Hash.hash_code) rbset) : (FStarC_Hash.hash_code) rbset =
-  (let tmp = ((fStarC_RBSet_add__add'__hash_code x) s) in
+let fStarC_RBSet_add__ocaml_int (x : int) (s : (int) rbset) : (int) rbset =
+  (let tmp = ((fStarC_RBSet_add__add'__ocaml_int x) s) in
   (blackroot tmp))
 
-let fStarC_Class_Setlike_add__hash_code_rbset_hash_code (tmp : FStarC_Hash.hash_code) (s : (FStarC_Hash.hash_code) rbset) : (FStarC_Hash.hash_code) rbset =
-  (fStarC_RBSet_add__hash_code tmp s)
+let fStarC_Class_Setlike_add__ocaml_int_rbset_ocaml_int (tmp : int) (s : (int) rbset) : (int) rbset =
+  (fStarC_RBSet_add__ocaml_int tmp s)
 
 let rec fStarC_RBSet_filter__aux__string (predicate : (string -> bool)) (acc : (string) rbset) (s : (string) rbset) : (string) rbset =
   (match s with
@@ -427,7 +427,7 @@ let fStarC_Class_Setlike_union__string_rbset_string_9 (tmp : (string) rbset) (s2
   (fStarC_RBSet_union__string tmp s2)
 
 let fStarC_RBSet_from_list__lident (xs : (FStarC_Ident.lident) list) : (FStarC_Ident.lident) rbset =
-  (FStarC_List.fold_left (fun s e -> (fStarC_RBSet_add__lident e s)) L xs)
+  (BatList.fold_left (fun s e -> (fStarC_RBSet_add__lident e s)) L xs)
 
 let fStarC_Class_Setlike_from_list__lident_rbset_lident (tmp : (FStarC_Ident.lident) list) : (FStarC_Ident.lident) rbset =
   (fStarC_RBSet_from_list__lident tmp)

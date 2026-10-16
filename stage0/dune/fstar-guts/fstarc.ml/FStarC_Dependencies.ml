@@ -7,7 +7,7 @@ let find_deps_if_needed (files : (string) list) (get_parsing_data_from_cache : (
     | (all_files, deps) -> (match all_files with
         | [] -> ((FStarC_Errors.fStarC_Errors_log_issue0__string FStarC_Errors_Codes.Error_DependencyAnalysisFailed "Dependency analysis failed; reverting to using only the files provided");
           (files, deps))
-        | tmp1 -> ((FStarC_List.rev all_files), deps)
+        | tmp1 -> ((BatList.rev all_files), deps)
       )
   ))
 

@@ -11,7 +11,7 @@ let cached_fun (cache : ('a) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t
   ))
 
 let find_file_cache : ((string) option) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
-  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (100))))
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100))))
 
 let u__full_include : (((string) list) option ref) =
   (ref None)
@@ -61,8 +61,8 @@ let has_fstar_include (dirname : string) : bool =
 
 let read_fstar_include (fn : string) : ((string) list) option =
   (try (let s = (FStarC_Util.file_get_contents fn) in
-  let tmp = (FStarC_List.map FStarC_Util.trim_string (FStarC_String.split (13 :: (10 :: [])) s)) in
-  let subdirs = (FStarC_List.filter (fun s1 -> (if ((<>) s1 "") then (let tmp1 = (FStarC_String.get s1 Prims.int_zero) in
+  let tmp = (BatList.map FStarC_Util.trim_string (FStarC_String.split (13 :: (10 :: [])) s)) in
+  let subdirs = (BatList.filter (fun s1 -> (if ((<>) s1 "") then (let tmp1 = (FStarC_String.get s1 Prims.int_zero) in
     let tmp2 = ((=) tmp1 35) in
     (not tmp2)) else false)) tmp) in
   (Some (subdirs))) with
@@ -78,11 +78,11 @@ let rec expand_module_include_path (root_kind : module_include_path_kind) (dirna
       | (Some (v)) -> v
     ) in
   let go = (fun subd -> (expand_module_include_path Recursive (Prims.strcat dirname (Prims.strcat "/" subd)))) in
-  let tmp2 = (FStarC_List.collect go subdirs) in
+  let tmp2 = ((fun f l -> BatList.flatten (BatList.map f l)) go subdirs) in
   ({ dir = dirname; kind = Flat } :: tmp2)) else ({ dir = dirname; kind = root_kind } :: [])))
 
 let expand_module_include_paths (root_kind : module_include_path_kind) (eta : (string) list) : (module_include_path) list =
-  (FStarC_List.collect (expand_module_include_path root_kind) eta)
+  ((fun f l -> BatList.flatten (BatList.map f l)) (expand_module_include_path root_kind) eta)
 
 let lib_paths (tmp : unit) : (module_include_path) list =
   (let tmp1 = (lib_roots ()) in
@@ -110,10 +110,10 @@ let command_line_include_roots (tmp : unit) : (string) list =
   (let files = (!(u__file_list)) in
   let tmp1 = (!(u__include)) in
   let explicit_includes = (expand_module_include_paths Recursive tmp1) in
-  let file_roots = (FStarC_List.collect (fun file -> (let root = (FStarC_Filepath.normalize_file_path (FStarC_Filepath.dirname file)) in
+  let file_roots = ((fun f l -> BatList.flatten (BatList.map f l)) (fun file -> (let root = (FStarC_Filepath.normalize_file_path (FStarC_Filepath.dirname file)) in
     let is_dir = (FStarC_Filepath.is_directory file) in
     (if is_dir then [] else (root :: [])))) files) in
-  (FStarC_List.filter (fun root -> (let tmp2 = (FStarC_List.existsb (fun inc -> (module_include_covers_path inc root)) explicit_includes) in
+  (BatList.filter (fun root -> (let tmp2 = (BatList.exists (fun inc -> (module_include_covers_path inc root)) explicit_includes) in
   (not tmp2))) file_roots))
 
 let command_line_include_paths (tmp : unit) : (module_include_path) list =
@@ -137,7 +137,7 @@ let module_include_paths (tmp : unit) : (module_include_path) list =
   (FStar_List_Tot_Base.op_At cache_dir tmp9))
 
 let include_dirs (paths : (module_include_path) list) : (string) list =
-  (FStarC_List.map (fun path -> (path).dir) paths)
+  (BatList.map (fun path -> (path).dir) paths)
 
 let full_include_path (tmp : unit) : (string) list =
   (let tmp1 = (!(u__full_include)) in
@@ -150,7 +150,7 @@ let full_include_path (tmp : unit) : (string) list =
   ))
 
 let do_find (paths : (string) list) (filename : string) : (string) option =
-  (if (FStarC_Filepath.is_path_absolute filename) then (if (FStarC_Filepath.file_exists filename) then (Some (filename)) else None) else (try (FStarC_Util.find_map (FStarC_List.rev paths) (fun p -> (let path = (if ((=) p ".") then filename else (FStarC_Filepath.join_paths p filename)) in
+  (if (FStarC_Filepath.is_path_absolute filename) then (if (FStarC_Filepath.file_exists filename) then (Some (filename)) else None) else (try (FStarC_Util.find_map (BatList.rev paths) (fun p -> (let path = (if ((=) p ".") then filename else (FStarC_Filepath.join_paths p filename)) in
   (if (FStarC_Filepath.file_exists path) then (Some (path)) else None)))) with
     | u__cexn -> None
   ))
@@ -207,7 +207,7 @@ let module_include_paths_normalized (tmp : unit) : (module_include_path) list =
   (match tmp1 with
     | (Some (paths)) -> paths
     | None -> (let tmp2 = (module_include_paths ()) in
-      let paths = (FStarC_List.map (fun path -> (let tmp3 = (FStarC_Filepath.normalize_file_path (path).dir) in
+      let paths = (BatList.map (fun path -> (let tmp3 = (FStarC_Filepath.normalize_file_path (path).dir) in
         { dir = tmp3; kind = (path).kind })) tmp2) in
       ((u__module_include_paths_normalized) := (Some (paths)));
       paths)

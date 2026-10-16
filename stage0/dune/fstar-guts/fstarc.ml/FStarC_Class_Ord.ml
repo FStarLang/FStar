@@ -46,19 +46,19 @@ let rec fStarC_Class_Ord_sort__tuple2_int_string (xs : ((Prims.int * string)) li
   )
 
 let fStarC_Class_Ord_dedup__tuple2_int_string (xs : ((Prims.int * string)) list) : ((Prims.int * string)) list =
-  (let out = (FStarC_List.fold_left (fun out x -> (let tmp = (FStarC_List.existsb (fun y -> (FStarC_Class_Deq.fStarC_Class_Deq_op_Equals_Question__tuple2_int_string x y)) out) in
+  (let out = (BatList.fold_left (fun out x -> (let tmp = (BatList.exists (fun y -> (FStarC_Class_Deq.fStarC_Class_Deq_op_Equals_Question__tuple2_int_string x y)) out) in
     (if tmp then out else (x :: out)))) [] xs) in
-  (FStarC_List.rev out))
+  (BatList.rev out))
 
-let fStarC_Class_Ord_cmp__hash_code (tmp : FStarC_Hash.hash_code) (tmp1 : FStarC_Hash.hash_code) : FStarC_Order.order =
-  (FStarC_Order.order_from_int (FStarC_Hash.cmp_hash tmp tmp1))
+let fStarC_Class_Ord_cmp__ocaml_int (tmp : int) (tmp1 : int) : FStarC_Order.order =
+  (FStarC_Order.order_from_int ((fun (x:int) y -> Z.of_int (x - y)) tmp tmp1))
 
-let fStarC_Class_Ord_op_Less_Question__hash_code (x : FStarC_Hash.hash_code) (y : FStarC_Hash.hash_code) : bool =
-  (let tmp = (fStarC_Class_Ord_cmp__hash_code x y) in
+let fStarC_Class_Ord_op_Less_Question__ocaml_int (x : int) (y : int) : bool =
+  (let tmp = (fStarC_Class_Ord_cmp__ocaml_int x y) in
   ((=) tmp FStarC_Order.Lt))
 
-let fStarC_Class_Ord_op_Greater_Question__hash_code (x : FStarC_Hash.hash_code) (y : FStarC_Hash.hash_code) : bool =
-  (let tmp = (fStarC_Class_Ord_cmp__hash_code x y) in
+let fStarC_Class_Ord_op_Greater_Question__ocaml_int (x : int) (y : int) : bool =
+  (let tmp = (fStarC_Class_Ord_cmp__ocaml_int x y) in
   ((=) tmp FStarC_Order.Gt))
 
 let fStarC_Class_Ord_op_Less_Equals_Question__int_5 (x : Prims.int) (y : Prims.int) : bool =

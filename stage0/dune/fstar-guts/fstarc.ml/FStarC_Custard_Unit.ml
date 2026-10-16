@@ -36,8 +36,8 @@ type iface = {
   ui_entries : (entry) list;
 }
 
-let bad (fn : string) (msg : (FStar_Pprint.document) list) : 'a =
-  (FStarC_Errors.fStarC_Errors_raise_error0__list_document FStarC_Errors_Codes.Error_CustardBadUnitInterface ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Cannot link the Custard unit interface %s." fn)) :: msg))
+let bad (fn : string) (msg : (PPrint.document) list) : 'a =
+  (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Error_CustardBadUnitInterface ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Cannot link the Custard unit interface %s." fn)) :: msg))
 
 let current_version : Prims.int =
   (Prims.of_int (18))
@@ -73,8 +73,8 @@ let read_iface (fn : string) : iface =
   let tmp5 = (tmp4 :: ((FStarC_Errors_Msg.text "Rebuild the unit.") :: [])) in
   (bad fn tmp5)) else ());
   let mine = (layout_options ()) in
-  (FStarC_List.iter (fun tmp1 -> (match tmp1 with
-    | (k, v) -> (let tmp2 = (FStarC_List.tryFind (fun tmp2 -> (match tmp2 with
+  (BatList.iter (fun tmp1 -> (match tmp1 with
+    | (k, v) -> (let tmp2 = (List.find_opt (fun tmp2 -> (match tmp2 with
           | (k', tmp3) -> ((=) k k')
         )) (h).uh_options) in
       (match tmp2 with
@@ -83,7 +83,7 @@ let read_iface (fn : string) : iface =
         | None -> (bad fn ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "It records no value for --%s." k)) :: []))
       ))
   )) mine);
-  (FStarC_List.iter (fun tmp1 -> (match tmp1 with
+  (BatList.iter (fun tmp1 -> (match tmp1 with
     | (f, d) -> (let found = (if (FStarC_Filepath.file_exists f) then (Some (f)) else (FStarC_Find.find_file (FStarC_Filepath.basename f))) in
       (match found with
         | (Some (g)) when (let tmp2 = (FStarC_Util.digest_of_file g) in
@@ -98,10 +98,10 @@ let is_type_key (k : string) : bool =
   ((=) tmp "<type>")) else false)
 
 let load_links (fns : (string) list) : links =
-  (let tbl = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (1000)))) in
-  let units = (FStarC_List.map (fun fn -> (let i = (read_iface fn) in
+  (let tbl = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (1000)))) in
+  let units = (BatList.map (fun fn -> (let i = (read_iface fn) in
     let u = ((i).ui_header).uh_name in
-    (FStarC_List.iter (fun e -> (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt tbl (e).ue_key) in
+    (BatList.iter (fun e -> (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt tbl (e).ue_key) in
     (match tmp with
       | (Some (tmp1)) when (is_type_key (e).ue_key) -> ()
       | (Some ((u', tmp1))) when ((<>) u' u) -> (bad fn ((FStarC_Errors_Msg.text (FStarC_Format.fmt2 "Both %s and %s export a definition for the same specialization key." u' u)) :: ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "The key is: %s" (e).ue_key)) :: ((FStarC_Errors_Msg.text "Link only one of them, or merge the two units.") :: []))))
@@ -114,7 +114,7 @@ let load_links (fns : (string) list) : links =
   let tmp = (FStarC_Options.custard_dump_cui ()) in
   let tmp1 = (if tmp then ((<>) fns []) else false) in
   (if tmp1 then (let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun key tmp2 acc -> (key :: acc)) tbl []) in
-  let tmp3 = (FStarC_List.length tmp2) in
+  let tmp3 = ((fun l -> Z.of_int (BatList.length l)) tmp2) in
   let tmp4 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 tmp3) in
   (FStarC_Format.print1 "Custard: linked %s specializations.\n" tmp4)) else ());
   { lk_tbl = tbl; lk_units = units })
@@ -129,31 +129,31 @@ let type_key (n : FStarC_Custard_Syntax.name) : string =
 let link_homes (l : links) : (string) list =
   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun tmp tmp1 acc -> (match tmp1 with
     | (tmp2, e) -> (match (e).ue_home with
-        | (Some (h)) -> (if (FStarC_List.mem h acc) then acc else (h :: acc))
+        | (Some (h)) -> (if (BatList.mem h acc) then acc else (h :: acc))
         | None -> acc
       )
   )) (l).lk_tbl [])
 
 let link_headers (l : links) : (string) list =
-  (FStarC_List.collect (fun u -> (match (u).ur_header with
+  ((fun f l -> BatList.flatten (BatList.map f l)) (fun u -> (match (u).ur_header with
     | (Some (h)) -> (h :: [])
     | None -> []
   )) (l).lk_units)
 
 let link_inits (l : links) : (string) list =
-  (FStarC_List.collect (fun u -> (match (u).ur_init with
+  ((fun f l -> BatList.flatten (BatList.map f l)) (fun u -> (match (u).ur_init with
     | (Some (i)) -> (i :: [])
     | None -> []
   )) (l).lk_units)
 
 let link_no_prefix (l : links) : (string) list =
-  (FStarC_List.collect (fun u -> (u).ur_no_prefix) (l).lk_units)
+  ((fun f l -> BatList.flatten (BatList.map f l)) (fun u -> (u).ur_no_prefix) (l).lk_units)
 
 let type_info_to_string (ti : FStarC_Custard_Syntax.type_info) : string =
   (let l = (match (ti).FStarC_Custard_Syntax.ti_layout with
       | FStarC_Custard_Syntax.L_erased -> "erased"
       | (FStarC_Custard_Syntax.L_newtype (nt)) -> (FStarC_Format.fmt1 "newtype(%s)" (nt).FStarC_Custard_Syntax.nt_field)
-      | (FStarC_Custard_Syntax.L_struct (cls)) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 (FStarC_List.length cls)) in
+      | (FStarC_Custard_Syntax.L_struct (cls)) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) cls)) in
         (FStarC_Format.fmt1 "struct(%s ctors)" tmp))
       | (FStarC_Custard_Syntax.L_abbrev (tmp)) -> "abbrev"
       | FStarC_Custard_Syntax.L_opaque -> "opaque"
@@ -189,12 +189,12 @@ let iface_to_string (i : iface) : string =
       | None -> ""
     )) in
   let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int (h).uh_version) in
-  let tmp1 = (FStarC_List.map (fun tmp1 -> (match tmp1 with
+  let tmp1 = (BatList.map (fun tmp1 -> (match tmp1 with
       | (k, v) -> (Prims.strcat k (Prims.strcat "=" v))
     )) (h).uh_options) in
   let tmp2 = (FStarC_String.concat ", " tmp1) in
-  let tmp3 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 (FStarC_List.length (h).uh_digests)) in
-  let tmp4 = (FStarC_List.map entry_to_string (i).ui_entries) in
+  let tmp3 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) (h).uh_digests)) in
+  let tmp4 = (BatList.map entry_to_string (i).ui_entries) in
   let tmp5 = (FStarC_String.concat "" tmp4) in
   let tmp6 = (FStarC_Format.fmt3 "  options: %s\n  %s checked files\n\n%s" tmp2 tmp3 tmp5) in
   let tmp7 = (Prims.strcat "\n" tmp6) in
@@ -206,6 +206,6 @@ let write_iface (fn : string) (eta : iface) : unit =
   (FStarC_Util.save_value_to_file fn eta)
 
 let empty_links : links =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int Prims.int_one)) in
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_one)) in
   { lk_tbl = tmp; lk_units = [] })
 

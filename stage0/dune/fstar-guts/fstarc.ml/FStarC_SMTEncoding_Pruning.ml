@@ -73,7 +73,7 @@ let no_ambients (tmp : unit) : bool =
   (FStarC_Options_Ext.enabled "context_pruning_no_ambients")
 
 let triggers_as_triggers_set (ts : ((string) list) list) : ((string) FStarC_RBSet.rbset) list =
-  (FStarC_List.map FStarC_RBSet.fStarC_Class_Setlike_from_list__string_rbset_string_4 ts)
+  (BatList.map FStarC_RBSet.fStarC_Class_Setlike_from_list__string_rbset_string_4 ts)
 
 let mk_remaining_triggers (ts : ((string) FStarC_RBSet.rbset) list) : assumption_remaining_triggers =
   { remaining_triggers = ts; already_triggered = [] }
@@ -149,11 +149,11 @@ let add_assumption_summary (asum : assumption_summary) (resolve : (string -> (FS
           ambients = (p1).ambients;
           extra_roots = (p1).extra_roots;
           pruned_ambients = (p1).pruned_ambients } in
-      (FStarC_List.fold_left (FStarC_List.fold_left (add_trigger_to_assumption a)) p2 trigs))
+      (BatList.fold_left (BatList.fold_left (add_trigger_to_assumption a)) p2 trigs))
   ))
 
 let add_summaries (sums : (decl_summary) list) (resolve : (string -> (FStarC_SMTEncoding_Term.decl) option)) (p : pruning_state) : pruning_state =
-  (FStarC_List.fold_left (fun p1 sum -> (match sum with
+  (BatList.fold_left (fun p1 sum -> (match sum with
     | (Sum_assume (asum)) -> (add_assumption_summary asum resolve p1)
     | (Sum_definefun (macro, free_names)) -> { defs_and_decls_map = (FStarC_PSMap.add (p1).defs_and_decls_map macro { pd_is_declfun = false; pd_resolve = (fun tmp -> (resolve macro)) });
         macro_freenames = (FStarC_PSMap.add (p1).macro_freenames macro free_names);
@@ -186,7 +186,7 @@ let name_of_decl (d : FStarC_SMTEncoding_Term.decl) : string =
 
 let rec add_decls__add (m : (FStarC_SMTEncoding_Term.decl) FStarC_PSMap.t) (d : FStarC_SMTEncoding_Term.decl) : (FStarC_SMTEncoding_Term.decl) FStarC_PSMap.t =
   (match d with
-    | (FStarC_SMTEncoding_Term.Module (tmp, ds)) -> (FStarC_List.fold_left add_decls__add m ds)
+    | (FStarC_SMTEncoding_Term.Module (tmp, ds)) -> (BatList.fold_left add_decls__add m ds)
     | (FStarC_SMTEncoding_Term.Assume (tmp)) -> (let tmp1 = (name_of_decl d) in
       (FStarC_PSMap.add m tmp1 d))
     | (FStarC_SMTEncoding_Term.DeclFun (tmp, tmp1, tmp2, tmp3)) -> (let tmp4 = (name_of_decl d) in
@@ -205,8 +205,8 @@ let free_top_level_names (t : FStarC_SMTEncoding_Term.term) : (string) FStarC_RB
 
 let rec triggers_of_term__aux (t : FStarC_SMTEncoding_Term.term) : ((string) FStarC_RBSet.rbset) list =
   (match t with
-    | (FStarC_SMTEncoding_Term.Quant (FStarC_SMTEncoding_Term.Forall, triggers, tmp, tmp1, tmp2, tmp3)) -> (FStarC_List.map (fun disjunct -> (let tmp4 = (FStarC_RBSet.fStarC_Class_Setlike_empty__string_rbset_string_11 ()) in
-      (FStarC_List.fold_left (fun out t1 -> (let tmp5 = (free_top_level_names t1) in
+    | (FStarC_SMTEncoding_Term.Quant (FStarC_SMTEncoding_Term.Forall, triggers, tmp, tmp1, tmp2, tmp3)) -> (BatList.map (fun disjunct -> (let tmp4 = (FStarC_RBSet.fStarC_Class_Setlike_empty__string_rbset_string_11 ()) in
+      (BatList.fold_left (fun out t1 -> (let tmp5 = (free_top_level_names t1) in
       (FStarC_RBSet.fStarC_Class_Setlike_union__string_rbset_string out tmp5))) tmp4 disjunct))) triggers)
     | (FStarC_SMTEncoding_Term.Labeled (t1, tmp, tmp1)) -> (triggers_of_term__aux t1)
     | tmp -> []
@@ -216,7 +216,7 @@ let triggers_of_term (t : FStarC_SMTEncoding_Term.term) : ((string) FStarC_RBSet
   (triggers_of_term__aux t)
 
 let maybe_add_ambient (a : FStarC_SMTEncoding_Term.assumption) : asum_kind =
-  (let add_assumption_with_triggers = (fun triggers -> (let tmp = (FStarC_List.map FStarC_RBSet.fStarC_Class_Setlike_elems__string_rbset_string triggers) in
+  (let add_assumption_with_triggers = (fun triggers -> (let tmp = (BatList.map FStarC_RBSet.fStarC_Class_Setlike_elems__string_rbset_string triggers) in
     (Sum_triggers (tmp)))) in
   let is_empty = (fun triggers -> (match triggers with
       | [] -> true
@@ -291,7 +291,7 @@ let maybe_add_ambient (a : FStarC_SMTEncoding_Term.assumption) : asum_kind =
     | (FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Eq, (tmp :: ((FStarC_SMTEncoding_Term.App ((FStarC_SMTEncoding_Term.Var ("Term_constr_id")), (term :: []), tmp1)) :: [])), tmp2)) -> (let tmp3 = (free_top_level_names term) in
       let tmp4 = (tmp3 :: []) in
       (add_assumption_with_triggers tmp4))
-    | (FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.And, tms, tmp)) -> (let t1 = (FStarC_List.collect triggers_of_term tms) in
+    | (FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.And, tms, tmp)) -> (let t1 = ((fun f l -> BatList.flatten (BatList.map f l)) triggers_of_term tms) in
       (add_assumption_with_triggers t1))
     | (FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Eq, (t0 :: (t1 :: [])), tmp)) when (FStarC_Util.starts_with (a).FStarC_SMTEncoding_Term.assumption_name "equation_") -> (let t01 = (free_top_level_names t0) in
       (add_assumption_with_triggers (t01 :: [])))
@@ -316,7 +316,7 @@ let summarize_assumption (a : FStarC_SMTEncoding_Term.assumption) : assumption_s
   (let tmp = (triggers_of_term (a).FStarC_SMTEncoding_Term.assumption_term) in
   let kind = (match tmp with
       | [] -> (maybe_add_ambient a)
-      | ts -> (let tmp1 = (FStarC_List.map FStarC_RBSet.fStarC_Class_Setlike_elems__string_rbset_string ts) in
+      | ts -> (let tmp1 = (BatList.map FStarC_RBSet.fStarC_Class_Setlike_elems__string_rbset_string ts) in
         (Sum_triggers (tmp1)))
     ) in
   let tmp1 = (assumption_free_names a) in
@@ -331,7 +331,7 @@ let rec summarize_decl (d : FStarC_SMTEncoding_Term.decl) : (decl_summary) list 
     | (FStarC_SMTEncoding_Term.Assume (a)) -> (let tmp = (summarize_assumption a) in
       let tmp1 = (Sum_assume (tmp)) in
       (tmp1 :: []))
-    | (FStarC_SMTEncoding_Term.Module (tmp, ds)) -> (FStarC_List.collect summarize_decl ds)
+    | (FStarC_SMTEncoding_Term.Module (tmp, ds)) -> ((fun f l -> BatList.flatten (BatList.map f l)) summarize_decl ds)
     | (FStarC_SMTEncoding_Term.DefineFun (macro, tmp, tmp1, body, tmp2)) -> (let tmp3 = (free_top_level_names body) in
       let tmp4 = (FStarC_RBSet.fStarC_Class_Setlike_elems__string_rbset_string tmp3) in
       let tmp5 = (macro, tmp4) in
@@ -345,17 +345,17 @@ let rec summarize_decl (d : FStarC_SMTEncoding_Term.decl) : (decl_summary) list 
   )
 
 let summarize_decls (ds : (FStarC_SMTEncoding_Term.decl) list) : (decl_summary) list =
-  (FStarC_List.collect summarize_decl ds)
+  ((fun f l -> BatList.flatten (BatList.map f l)) summarize_decl ds)
 
 let add_decls (ds : (FStarC_SMTEncoding_Term.decl) list) (p : pruning_state) : pruning_state =
-  (let map = (FStarC_List.fold_left add_decls__add (FStarC_PSMap.empty ()) ds) in
+  (let map = (BatList.fold_left add_decls__add (FStarC_PSMap.empty ()) ds) in
   let tmp = (summarize_decls ds) in
   (add_summaries tmp (FStarC_PSMap.try_find map) p))
 
 let rec assumptions_of_decl (d : FStarC_SMTEncoding_Term.decl) : (FStarC_SMTEncoding_Term.assumption) list =
   (match d with
     | (FStarC_SMTEncoding_Term.Assume (a)) -> (a :: [])
-    | (FStarC_SMTEncoding_Term.Module (tmp, ds)) -> (FStarC_List.collect assumptions_of_decl ds)
+    | (FStarC_SMTEncoding_Term.Module (tmp, ds)) -> ((fun f l -> BatList.flatten (BatList.map f l)) assumptions_of_decl ds)
     | d1 -> []
   )
 
@@ -424,7 +424,7 @@ let mark_trigger_reached (x : sym) : (ctxt -> (unit * ctxt)) =
 let remove_trigger_for_assumption (p : pruning_state) (trig : sym) (aname : string) : (pruning_state * bool * (sym) list) =
   (match (FStarC_PSMap.try_find (p).assumption_to_triggers aname) with
     | None -> (p, false, [])
-    | (Some (l)) -> (let tmp = (FStarC_List.map (fun ts -> (FStarC_RBSet.fStarC_Class_Setlike_remove__string_rbset_string (trig).sym_name ts)) (l).remaining_triggers) in
+    | (Some (l)) -> (let tmp = (BatList.map (fun ts -> (FStarC_RBSet.fStarC_Class_Setlike_remove__string_rbset_string (trig).sym_name ts)) (l).remaining_triggers) in
       let l1 = { remaining_triggers = tmp;
           already_triggered = (trig :: (l).already_triggered) } in
       let eligible = (FStarC_Util.for_some FStarC_RBSet.fStarC_Class_Setlike_is_empty__string_rbset_string (l1).remaining_triggers) in
@@ -471,12 +471,12 @@ let rec scan (ds : (passumption) list) : (ctxt -> (unit * ctxt)) =
   (fStarC_Class_Monad_op_let_Bang__fn_10 get (fun ctxt -> (let mk_sym = (fun assumption_name l -> { sym_name = l; sym_provenance = assumption_name }) in
   let macro_expand = (fun s -> (match (FStarC_PSMap.try_find ((ctxt).p).macro_freenames (s).sym_name) with
       | None -> (s :: [])
-      | (Some (l)) -> (let tmp = (FStarC_List.map (mk_sym (s).sym_provenance) l) in
+      | (Some (l)) -> (let tmp = (BatList.map (mk_sym (s).sym_provenance) l) in
         (s :: tmp))
     )) in
-  let new_syms = (FStarC_List.collect (fun a -> (let tmp = (FStarC_RBSet.fStarC_Class_Setlike_elems__string_rbset_string (a).pa_free_names) in
-    let tmp1 = (FStarC_List.map (mk_sym (a).pa_name) tmp) in
-    (FStarC_List.collect macro_expand tmp1))) ds) in
+  let new_syms = ((fun f l -> BatList.flatten (BatList.map f l)) (fun a -> (let tmp = (FStarC_RBSet.fStarC_Class_Setlike_elems__string_rbset_string (a).pa_free_names) in
+    let tmp1 = (BatList.map (mk_sym (a).pa_name) tmp) in
+    ((fun f l -> BatList.flatten (BatList.map f l)) macro_expand tmp1))) ds) in
   let tmp = (trigger_pending_assumptions new_syms) in
   (fStarC_Class_Monad_op_let_Bang__fn_10 tmp (fun tmp1 -> (match tmp1 with
     | [] -> (fStarC_Class_Monad_return__fn_10 ())
@@ -517,12 +517,12 @@ let print_reached_names_and_reasons (ctxt : ctxt) (names : (string) list) : stri
       | (Some (l)) -> (let tmp = (fStarC_Class_Show_show__list_sym (l).already_triggered) in
         (FStarC_Format.fmt2 "%s {triggered by %s}" name tmp))
     )) in
-  let tmp = (FStarC_List.map print_one names) in
+  let tmp = (BatList.map print_one names) in
   (FStarC_String.concat "\n\t" tmp))
 
 let prune (p : pruning_state) (roots : (FStarC_SMTEncoding_Term.decl) list) : (FStarC_SMTEncoding_Term.decl) list =
-  (let tmp = (FStarC_List.collect assumptions_of_decl roots) in
-  let root_assumptions = (FStarC_List.map passumption_of_assumption tmp) in
+  (let tmp = ((fun f l -> BatList.flatten (BatList.map f l)) assumptions_of_decl roots) in
+  let root_assumptions = (BatList.map passumption_of_assumption tmp) in
   let tmp1 = (FStarC_RBSet.fStarC_Class_Setlike_empty__string_rbset_string_11 ()) in
   let init_ = { p = p; reached = tmp1 } in
   let tmp2 = (no_ambients ()) in
@@ -537,26 +537,26 @@ let prune (p : pruning_state) (roots : (FStarC_SMTEncoding_Term.decl) list) : (F
       (match tmp9 with
         | (tmp10, ctxt') -> (let tmp11 = (FStarC_RBSet.fStarC_Class_Setlike_diff__string_rbset_string (ctxt').reached (ctxt).reached) in
           let extra_reached = (FStarC_RBSet.fStarC_Class_Setlike_elems__string_rbset_string tmp11) in
-          let tmp12 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 (FStarC_List.length (p).pruned_ambients)) in
-          let tmp13 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 (FStarC_List.length extra_reached)) in
+          let tmp12 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) (p).pruned_ambients)) in
+          let tmp13 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) extra_reached)) in
           let tmp14 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string (p).pruned_ambients) in
           let tmp15 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string extra_reached) in
           (FStarC_Format.print4 "Debug context pruning: Excluded %s ambients resulted in pruning %s assumptions\nambients %s\npruned assumptions %s\n" tmp12 tmp13 tmp14 tmp15))
       )))) else ());
-      let reached_assumptions = (FStarC_List.collect (fun name -> (match (FStarC_PSMap.try_find ((ctxt).p).assumption_name_map name) with
+      let reached_assumptions = ((fun f l -> BatList.flatten (BatList.map f l)) (fun name -> (match (FStarC_PSMap.try_find ((ctxt).p).assumption_name_map name) with
           | None -> []
           | (Some (a)) -> (a :: [])
         )) (FStar_List_Tot_Base.op_At reached_names (p).ambients)) in
-      (debug (fun tmp7 -> (let tmp8 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 (FStarC_List.length reached_assumptions)) in
+      (debug (fun tmp7 -> (let tmp8 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) reached_assumptions)) in
       let tmp9 = (print_reached_names_and_reasons ctxt (FStar_List_Tot_Base.op_At reached_names (p).ambients)) in
       (FStarC_Format.print2 "Debug context pruning: Retained %s assumptions\n%s\n" tmp8 tmp9))));
       let tmp7 = (FStarC_Options_Ext.enabled "prune_decls") in
       let tmp8 = (not tmp7) in
       let decls_and_defs = (if tmp8 then [] else (let tmp9 = (FStarC_RBSet.fStarC_Class_Setlike_empty__string_rbset_string_11 ()) in
         let tmp10 = (tmp9, []) in
-        let tmp11 = (FStarC_List.fold_left (fun tmp11 a -> (match tmp11 with
+        let tmp11 = (BatList.fold_left (fun tmp11 a -> (match tmp11 with
             | (included_decl_names, defs_and_decls) -> (let tmp12 = (FStarC_RBSet.fStarC_Class_Setlike_elems__string_rbset_string (a).pa_free_names) in
-              (FStarC_List.fold_left (fun tmp13 name -> (match tmp13 with
+              (BatList.fold_left (fun tmp13 name -> (match tmp13 with
                 | (included_decl_names1, defs_and_decls1) -> (let tmp14 = (FStarC_RBSet.fStarC_Class_Setlike_mem__string_rbset_string name included_decl_names1) in
                   (if tmp14 then (included_decl_names1, defs_and_decls1) else (match (FStarC_PSMap.try_find (p).defs_and_decls_map name) with
                     | None -> (included_decl_names1, defs_and_decls1)
@@ -566,16 +566,16 @@ let prune (p : pruning_state) (roots : (FStarC_SMTEncoding_Term.decl) list) : (F
               )) (included_decl_names, defs_and_decls) tmp12))
           )) tmp10 (FStar_List_Tot_Base.op_At reached_assumptions root_assumptions)) in
         (match tmp11 with
-          | (tmp12, defs_and_decls) -> (let tmp13 = (FStarC_List.partition (fun d -> (d).pd_is_declfun) defs_and_decls) in
+          | (tmp12, defs_and_decls) -> (let tmp13 = (BatList.partition (fun d -> (d).pd_is_declfun) defs_and_decls) in
             (match tmp13 with
-              | (decls, defs) -> (FStarC_List.collect (fun d -> (let tmp14 = ((d).pd_resolve ()) in
+              | (decls, defs) -> ((fun f l -> BatList.flatten (BatList.map f l)) (fun d -> (let tmp14 = ((d).pd_resolve ()) in
                 (match tmp14 with
                   | None -> []
                   | (Some (d1)) -> (d1 :: [])
                 ))) (FStar_List_Tot_Base.op_At defs decls))
             ))
         ))) in
-      let reached_decls = (FStarC_List.collect (fun a -> (let tmp9 = ((a).pa_resolve ()) in
+      let reached_decls = ((fun f l -> BatList.flatten (BatList.map f l)) (fun a -> (let tmp9 = ((a).pa_resolve ()) in
         (match tmp9 with
           | None -> []
           | (Some (d)) -> (d :: [])
@@ -583,9 +583,9 @@ let prune (p : pruning_state) (roots : (FStarC_SMTEncoding_Term.decl) list) : (F
       let print_assumption = (fun a -> (let tmp9 = (FStarC_Class_Show.fStarC_Class_Show_show__string (a).pa_name) in
         let tmp10 = (FStarC_RBSet.fStarC_Class_Show_show__rbset_string (a).pa_free_names) in
         (FStarC_Format.fmt2 "{name=%s; freevars={%s}}" tmp9 tmp10))) in
-      (debug (fun tmp9 -> (let tmp10 = (FStarC_List.map print_assumption roots1) in
+      (debug (fun tmp9 -> (let tmp10 = (BatList.map print_assumption roots1) in
       let tmp11 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string tmp10) in
-      let tmp12 = (FStarC_List.map name_of_decl decls_and_defs) in
+      let tmp12 = (BatList.map name_of_decl decls_and_defs) in
       let tmp13 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string tmp12) in
       (FStarC_Format.print2 "Debug context pruning: roots %s, retained decls and defs %s\n" tmp11 tmp13))));
       (FStar_List_Tot_Base.op_At reached_decls decls_and_defs))
@@ -598,7 +598,7 @@ type elt_summary = {
 }
 
 let summarize_elts (ds : (FStarC_SMTEncoding_Term.decls_elt) list) : (elt_summary) list =
-  (FStarC_List.map (fun elt -> (let tmp = (summarize_decls (elt).FStarC_SMTEncoding_Term.decls) in
+  (BatList.map (fun elt -> (let tmp = (summarize_decls (elt).FStarC_SMTEncoding_Term.decls) in
   { elts_key = (elt).FStarC_SMTEncoding_Term.key;
     elts_a_names = (elt).FStarC_SMTEncoding_Term.a_names;
     elts_sums = tmp })) ds)

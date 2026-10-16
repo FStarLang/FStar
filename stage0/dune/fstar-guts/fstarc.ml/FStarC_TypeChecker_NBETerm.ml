@@ -194,17 +194,17 @@ and eq_t (env : FStarC_TypeChecker_Env.env) (t1 : t) (t2 : t) : FStarC_TypeCheck
     | ((Lam (tmp)), (Lam (tmp1))) -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
     | ((Accu (a1, as1)), (Accu (a2, as2))) -> (let tmp = (eq_atom a1 a2) in
       (eq_and tmp (fun tmp1 -> (eq_args env as1 as2))))
-    | ((Construct (v1, us1, args1)), (Construct (v2, us2, args2))) -> (if (FStarC_Syntax_Syntax.fv_eq v1 v2) then ((if ((<>) (FStarC_List.length args1) (FStarC_List.length args2)) then (FStarC_Effect.failwith "eq_t, different number of args on Construct") else ());
+    | ((Construct (v1, us1, args1)), (Construct (v2, us2, args2))) -> (if (FStarC_Syntax_Syntax.fv_eq v1 v2) then ((if ((<>) ((fun l -> Z.of_int (BatList.length l)) args1) ((fun l -> Z.of_int (BatList.length l)) args2)) then (FStarC_Effect.failwith "eq_t, different number of args on Construct") else ());
       let tmp = (FStarC_TypeChecker_Env.num_datacon_non_injective_ty_params env (FStarC_Syntax_Syntax.lid_of_fv v1)) in
       (match tmp with
         | None -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
-        | (Some (n)) -> (if (Prims.op_Less_Equals n (FStarC_List.length args1)) then (let eq_args_ = (fun as1 as2 -> (FStarC_List.fold_left2 (fun acc tmp1 tmp2 -> (match (tmp1, tmp2) with
+        | (Some (n)) -> (if (Prims.op_Less_Equals n ((fun l -> Z.of_int (BatList.length l)) args1)) then (let eq_args_ = (fun as1 as2 -> (BatList.fold_left2 (fun acc tmp1 tmp2 -> (match (tmp1, tmp2) with
               | ((a1, tmp3), (a2, tmp4)) -> (let tmp5 = (eq_t env a1 a2) in
                 (eq_inj acc tmp5))
             )) FStarC_TypeChecker_TermEqAndSimplify.Equal as1 as2)) in
-          let tmp1 = (FStarC_List.splitAt n args1) in
+          let tmp1 = ((fun n l -> BatList.split_at (Z.to_int n) l) n args1) in
           (match tmp1 with
-            | (parms1, args11) -> (let tmp2 = (FStarC_List.splitAt n args2) in
+            | (parms1, args11) -> (let tmp2 = ((fun n l -> BatList.split_at (Z.to_int n) l) n args2) in
               (match tmp2 with
                 | (parms2, args21) -> (eq_args_ args11 args21)
               ))
@@ -243,7 +243,7 @@ let e_string : (string) embedding =
     )) in
   (mk_emb' em un (fun tmp -> (lid_as_typ FStarC_Parser_Const.string_lid [] [])) (FStarC_Syntax_Embeddings_Base.emb_typ_of FStarC_Syntax_Embeddings.e_string)))
 
-let e_document : (FStar_Pprint.document) embedding =
+let e_document : (PPrint.document) embedding =
   (let t_document = (FStarC_Syntax_Embeddings_Base.type_of FStarC_Syntax_Embeddings.e_document) in
   let li = (fun blob rng -> ({ FStarC_Syntax_Syntax.blob = (FStar_Dyn.mkdyn blob);
       lkind = FStarC_Syntax_Syntax.Lazy_doc;
@@ -338,7 +338,7 @@ let e_list (ea : ('a) embedding) : (('a) list) embedding =
       let tmp4 = (tmp3 :: (typ :: [])) in
       let tmp5 = ((as_arg tl) :: tmp4) in
       (lid_as_constr FStarC_Parser_Const.cons_lid (FStarC_Syntax_Syntax.U_zero :: []) tmp5))) in
-    (FStarC_List.fold_right cons l nil))))) in
+    (BatList.fold_right cons l nil))))) in
   (mk_emb em (fStarC_TypeChecker_NBETerm_e_list__un__1 ea etyp) (fun tmp -> (let tmp1 = (type_of ea) in
   let tmp2 = (as_arg tmp1) in
   let tmp3 = (tmp2 :: []) in
@@ -525,7 +525,7 @@ let arg_as_int (a : (t * (FStarC_Syntax_Syntax.arg_qualifier) option)) : (Prims.
     | (u__1, u__2) -> u__1
   ))
 
-let e_issue : (FStarC_Errors.issue) embedding =
+let e_issue : (FStarC_Errors_Issue.issue) embedding =
   (let t_issue = (FStarC_Syntax_Embeddings_Base.type_of FStarC_Syntax_Embeddings.e_issue) in
   let li = (fun blob rng -> ({ FStarC_Syntax_Syntax.blob = (FStar_Dyn.mkdyn blob);
       lkind = FStarC_Syntax_Syntax.Lazy_issue;
@@ -688,7 +688,7 @@ and t_to_string (x : t) : string =
     | (Lam ({ interp = b; shape = tmp; arity = arity; _ })) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int arity) in
       (FStarC_Format.fmt1 "Lam (_, %s args)" tmp1))
     | (Accu (a, l)) -> (let tmp = (atom_to_string a) in
-      let tmp1 = (FStarC_List.map (fun x1 -> (t_to_string (match x1 with
+      let tmp1 = (BatList.map (fun x1 -> (t_to_string (match x1 with
           | (u__1, u__2) -> u__1
         ))) l) in
       let tmp2 = (FStarC_String.concat "; " tmp1) in
@@ -697,9 +697,9 @@ and t_to_string (x : t) : string =
       let tmp5 = (Prims.strcat tmp tmp4) in
       (Prims.strcat "Accu (" tmp5))
     | (Construct (fv, us, l)) -> (let tmp = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__fv fv) in
-      let tmp1 = (FStarC_List.map FStarC_Syntax_Print.fStarC_Class_Show_show__universe us) in
+      let tmp1 = (BatList.map FStarC_Syntax_Print.fStarC_Class_Show_show__universe us) in
       let tmp2 = (FStarC_String.concat "; " tmp1) in
-      let tmp3 = (FStarC_List.map (fun x1 -> (t_to_string (match x1 with
+      let tmp3 = (BatList.map (fun x1 -> (t_to_string (match x1 with
           | (u__1, u__2) -> u__1
         ))) l) in
       let tmp4 = (FStarC_String.concat "; " tmp3) in
@@ -710,9 +710,9 @@ and t_to_string (x : t) : string =
       let tmp9 = (Prims.strcat tmp tmp8) in
       (Prims.strcat "Construct (" tmp9))
     | (FV (fv, us, l)) -> (let tmp = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__fv fv) in
-      let tmp1 = (FStarC_List.map FStarC_Syntax_Print.fStarC_Class_Show_show__universe us) in
+      let tmp1 = (BatList.map FStarC_Syntax_Print.fStarC_Class_Show_show__universe us) in
       let tmp2 = (FStarC_String.concat "; " tmp1) in
-      let tmp3 = (FStarC_List.map (fun x1 -> (t_to_string (match x1 with
+      let tmp3 = (BatList.map (fun x1 -> (t_to_string (match x1 with
           | (u__1, u__2) -> u__1
         ))) l) in
       let tmp4 = (FStarC_String.concat "; " tmp3) in
@@ -775,7 +775,7 @@ let arg_to_string (a : (t * (FStarC_Syntax_Syntax.arg_qualifier) option)) : stri
   ))
 
 let args_to_string (args : ((t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : string =
-  (let tmp = (FStarC_List.map arg_to_string args) in
+  (let tmp = (BatList.map arg_to_string args) in
   (FStarC_String.concat " " tmp))
 
 let fStarC_Class_Show_show__list_tuple2_t_option (tmp : ((t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : string =
@@ -797,7 +797,7 @@ let isAccu (trm : t) : bool =
   )
 
 let arrow_as_prim_step_1 (ea : ('u___a) embedding) (eb : ('u___b) embedding) (f : ('u___a -> 'u___b)) (repr_f : FStarC_Ident.lident) (cb : nbe_cbs) (u__us : (FStarC_Syntax_Syntax.universe) list) (args : ((t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : (t) option =
-  (let tmp = (FStarC_List.hd args) in
+  (let tmp = (BatList.hd args) in
   (match tmp with
     | (x, tmp1) -> (let tmp2 = (unembed ea cb x) in
       (FStarC_Option.map (fun x1 -> (let tmp3 = (f x1) in
@@ -805,9 +805,9 @@ let arrow_as_prim_step_1 (ea : ('u___a) embedding) (eb : ('u___b) embedding) (f 
   ))
 
 let arrow_as_prim_step_2 (ea : ('u___a) embedding) (eb : ('u___b) embedding) (ec : ('u___c) embedding) (f : ('u___a -> ('u___b -> 'u___c))) (repr_f : FStarC_Ident.lident) (cb : nbe_cbs) (u__us : (FStarC_Syntax_Syntax.universe) list) (args : ((t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : (t) option =
-  (let tmp = (FStarC_List.hd args) in
+  (let tmp = (BatList.hd args) in
   (match tmp with
-    | (x, tmp1) -> (let tmp2 = (FStarC_List.hd (FStarC_List.tl args)) in
+    | (x, tmp1) -> (let tmp2 = (BatList.hd (BatList.tl args)) in
       (match tmp2 with
         | (y, tmp3) -> (let tmp4 = (unembed ea cb x) in
           (FStarC_Option.bind tmp4 (fun x1 -> (let tmp5 = (unembed eb cb y) in
@@ -819,11 +819,11 @@ let arrow_as_prim_step_2 (ea : ('u___a) embedding) (eb : ('u___b) embedding) (ec
   ))
 
 let arrow_as_prim_step_3 (ea : ('u___a) embedding) (eb : ('u___b) embedding) (ec : ('u___c) embedding) (ed : ('u___d) embedding) (f : ('u___a -> ('u___b -> ('u___c -> 'u___d)))) (repr_f : FStarC_Ident.lident) (cb : nbe_cbs) (u__us : (FStarC_Syntax_Syntax.universe) list) (args : ((t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : (t) option =
-  (let tmp = (FStarC_List.hd args) in
+  (let tmp = (BatList.hd args) in
   (match tmp with
-    | (x, tmp1) -> (let tmp2 = (FStarC_List.hd (FStarC_List.tl args)) in
+    | (x, tmp1) -> (let tmp2 = (BatList.hd (BatList.tl args)) in
       (match tmp2 with
-        | (y, tmp3) -> (let tmp4 = (FStarC_List.hd (FStarC_List.tl (FStarC_List.tl args))) in
+        | (y, tmp3) -> (let tmp4 = (BatList.hd (BatList.tl (BatList.tl args))) in
           (match tmp4 with
             | (z, tmp5) -> (let tmp6 = (unembed ea cb x) in
               (FStarC_Option.bind tmp6 (fun x1 -> (let tmp7 = (unembed eb cb y) in

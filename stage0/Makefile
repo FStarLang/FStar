@@ -178,5 +178,5 @@ package:
 	.scripts/bin-install.sh pkgtmp/fstar
 	.scripts/mk-package.sh pkgtmp fstar$(FSTAR_TAG)
 ## LINES BELOW ADDED BY src-install.sh
-export FSTAR_COMMITDATE=2026-10-16 05:43:07 +0000
-export FSTAR_COMMIT=b69f25e95c9283d2b4bd1088844e5a1f3a451190
+export FSTAR_COMMITDATE=2026-10-16 19:49:06 +0000
+export FSTAR_COMMIT=a77690726e8b525ca18100013f35162185c926a5

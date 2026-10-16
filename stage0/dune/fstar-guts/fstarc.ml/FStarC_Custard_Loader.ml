@@ -2,10 +2,10 @@
 [@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
 
 let iface_only : (unit) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
-  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (10))))
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (10))))
 
 let loaded_memo : (unit) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
-  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (100))))
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100))))
 
 let loaded (env : FStarC_TypeChecker_Env.env) (m : string) (want_impl : bool) : bool =
   (let m1 = (FStarC_String.lowercase m) in
@@ -13,7 +13,7 @@ let loaded (env : FStarC_TypeChecker_Env.env) (m : string) (want_impl : bool) : 
   let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt loaded_memo key) in
   (match tmp with
     | (Some (())) -> true
-    | None -> (let b = (FStarC_List.existsb (fun md -> (((=) (FStarC_String.lowercase (FStarC_Ident.string_of_lid (md).FStarC_Syntax_Syntax.name)) m1) && (not (want_impl && (md).FStarC_Syntax_Syntax.is_interface)))) (FStarC_TypeChecker_Env.modules env)) in
+    | None -> (let b = (BatList.exists (fun md -> (((=) (FStarC_String.lowercase (FStarC_Ident.string_of_lid (md).FStarC_Syntax_Syntax.name)) m1) && (not (want_impl && (md).FStarC_Syntax_Syntax.is_interface)))) (FStarC_TypeChecker_Env.modules env)) in
       (if b then (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace loaded_memo key ()) else ());
       b)
   ))
@@ -50,10 +50,10 @@ let candidate_files (deps : FStarC_Parser_Dep.deps) (m : string) : (string) list
   ))
 
 let loading : (unit) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
-  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (100))))
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100))))
 
 let cache_primed : (unit) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
-  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (100))))
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100))))
 
 let rec prime_cache (deps : FStarC_Parser_Dep.deps) (env : FStarC_TypeChecker_Env.env) (fn : string) : unit =
   (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt cache_primed fn) in
@@ -68,14 +68,14 @@ let rec prime_cache (deps : FStarC_Parser_Dep.deps) (env : FStarC_TypeChecker_En
         | None -> ()
       )) else ());
       let tmp2 = (FStarC_Parser_Dep.deps_of deps fn) in
-      (FStarC_List.iter (prime_cache deps env) tmp2);
+      (BatList.iter (prime_cache deps env) tmp2);
       (FStarC_Custard_Prof.timed "cachefile" (fun tmp3 -> ((ignore (FStarC_CheckedFiles.load_module_from_cache env fn));
       ()))))
   ))
 
 let rec ensure_loaded__first_usable (deps : FStarC_Parser_Dep.deps) (env : FStarC_TypeChecker_Env.env) (m : string) (fns : (string) list) : (string * FStarC_CheckedFiles.tc_result) =
   (match fns with
-    | [] -> (FStarC_Errors.fStarC_Errors_raise_error0__list_document FStarC_Errors_Codes.Error_CustardEntryNotFound ((FStarC_Errors_Msg.text (Prims.strcat "Custard needs module " (Prims.strcat m ", but no usable checked file for it is in the dependency graph."))) :: ((FStarC_Errors_Msg.text "Verify the module first, or pass --already_cached appropriately.") :: [])))
+    | [] -> (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Error_CustardEntryNotFound ((FStarC_Errors_Msg.text (Prims.strcat "Custard needs module " (Prims.strcat m ", but no usable checked file for it is in the dependency graph."))) :: ((FStarC_Errors_Msg.text "Verify the module first, or pass --already_cached appropriately.") :: [])))
     | (fn :: fns1) -> ((prime_cache deps env fn);
       let tmp = (FStarC_Custard_Prof.timed "cachefile" (fun tmp -> (FStarC_CheckedFiles.load_module_from_cache env fn))) in
       (match tmp with
@@ -85,7 +85,7 @@ let rec ensure_loaded__first_usable (deps : FStarC_Parser_Dep.deps) (env : FStar
   )
 
 let loaded_files : (unit) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
-  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (100))))
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100))))
 
 let rec ensure_loaded (deps : FStarC_Parser_Dep.deps) (env : FStarC_TypeChecker_Env.env) (m : string) : FStarC_TypeChecker_Env.env =
   (let tmp = (module_is_loaded deps env m) in
@@ -100,7 +100,7 @@ let rec ensure_loaded (deps : FStarC_Parser_Dep.deps) (env : FStarC_TypeChecker_
     | (fn, tcr) -> ((FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace loaded_files fn ());
       (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace loading (FStarC_String.lowercase m) ());
       let tmp5 = (FStarC_Parser_Dep.deps_of deps fn) in
-      let env1 = (FStarC_List.fold_left (fun env1 dfn -> (let dm = (FStarC_Parser_Dep.module_name_of_file dfn) in
+      let env1 = (BatList.fold_left (fun env1 dfn -> (let dm = (FStarC_Parser_Dep.module_name_of_file dfn) in
         (if ((=) (FStarC_String.lowercase dm) (FStarC_String.lowercase m)) then env1 else (ensure_loaded deps env1 dm)))) env tmp5) in
       (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.remove loading (FStarC_String.lowercase m));
       let tmp6 = (FStarC_Parser_Dep.is_implementation fn) in
@@ -109,7 +109,7 @@ let rec ensure_loaded (deps : FStarC_Parser_Dep.deps) (env : FStarC_TypeChecker_
       let tmp8 = (FStarC_Parser_Dep.is_implementation fn) in
       let tmp9 = (not tmp8) in
       let tmp10 = (if tmp9 then (loaded env1 m false) else false) in
-      (if tmp10 then env1 else (let tmp11 = (FStarC_List.existsb (fun tmp11 -> (match tmp11 with
+      (if tmp10 then env1 else (let tmp11 = (BatList.exists (fun tmp11 -> (match tmp11 with
           | (l, tmp12) -> ((=) (FStarC_String.lowercase (FStarC_Ident.string_of_lid l)) (FStarC_String.lowercase m))
         )) (FStarC_Syntax_DsEnv.open_modules (env1).FStarC_TypeChecker_Env.dsenv)) in
       let dsenv = (if tmp11 then (env1).FStarC_TypeChecker_Env.dsenv else (let tmp12 = (FStarC_ToSyntax_ToSyntax.add_modul_to_env (tcr).FStarC_CheckedFiles.checked_module (tcr).FStarC_CheckedFiles.mii) in
@@ -174,14 +174,14 @@ let rec ensure_loaded (deps : FStarC_Parser_Dep.deps) (env : FStarC_TypeChecker_
           iface_hidden = (env1).FStarC_TypeChecker_Env.iface_hidden;
           iface_lids = (env1).FStarC_TypeChecker_Env.iface_lids;
           iface_val_lids = (env1).FStarC_TypeChecker_Env.iface_val_lids } (tcr).FStarC_CheckedFiles.checked_module) in
-      (if ((tcr).FStarC_CheckedFiles.checked_module).FStarC_Syntax_Syntax.is_interface then env2 else (FStarC_List.fold_left (fun env3 se -> (let env4 = (FStarC_TypeChecker_Env.push_sigelt_force env3 se) in
-      (FStarC_List.iter (fun l -> ((ignore (FStarC_TypeChecker_Env.lookup_sigelt env4 l));
+      (if ((tcr).FStarC_CheckedFiles.checked_module).FStarC_Syntax_Syntax.is_interface then env2 else (BatList.fold_left (fun env3 se -> (let env4 = (FStarC_TypeChecker_Env.push_sigelt_force env3 se) in
+      (BatList.iter (fun l -> ((ignore (FStarC_TypeChecker_Env.lookup_sigelt env4 l));
       ())) (FStarC_Syntax_Util.lids_of_sigelt se));
       env4)) env2 ((tcr).FStarC_CheckedFiles.checked_module).FStarC_Syntax_Syntax.declarations)))))
   ))))))
 
 let loaded_digests (tmp : unit) : ((string * string)) list =
   (let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun key tmp1 acc -> (key :: acc)) loaded_files []) in
-  (FStarC_List.map (fun fn -> (let tmp2 = (FStarC_Util.digest_of_file fn) in
+  (BatList.map (fun fn -> (let tmp2 = (FStarC_Util.digest_of_file fn) in
   (fn, tmp2))) tmp1))
 

@@ -540,7 +540,7 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps =
         unrepresentable_primops = (fs).unrepresentable_primops;
         do_not_unfold_pure_lets = (fs).do_not_unfold_pure_lets;
         unfold_until = (fs).unfold_until;
-        unfold_only = (Some ((FStarC_List.op_At (optlist (fs).unfold_only) lids)));
+        unfold_only = (Some ((BatList.append (optlist (fs).unfold_only) lids)));
         unfold_once = (fs).unfold_once;
         unfold_fully = (fs).unfold_fully;
         unfold_attr = (fs).unfold_attr;
@@ -576,7 +576,7 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps =
         do_not_unfold_pure_lets = (fs).do_not_unfold_pure_lets;
         unfold_until = (fs).unfold_until;
         unfold_only = (fs).unfold_only;
-        unfold_once = (Some ((FStarC_List.op_At (optlist (fs).unfold_once) lids)));
+        unfold_once = (Some ((BatList.append (optlist (fs).unfold_once) lids)));
         unfold_fully = (fs).unfold_fully;
         unfold_attr = (fs).unfold_attr;
         unfold_qual = (fs).unfold_qual;
@@ -612,7 +612,7 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps =
         unfold_until = (fs).unfold_until;
         unfold_only = (fs).unfold_only;
         unfold_once = (fs).unfold_once;
-        unfold_fully = (Some ((FStarC_List.op_At (optlist (fs).unfold_fully) lids)));
+        unfold_fully = (Some ((BatList.append (optlist (fs).unfold_fully) lids)));
         unfold_attr = (fs).unfold_attr;
         unfold_qual = (fs).unfold_qual;
         unfold_namespace = (fs).unfold_namespace;
@@ -648,7 +648,7 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps =
         unfold_only = (fs).unfold_only;
         unfold_once = (fs).unfold_once;
         unfold_fully = (fs).unfold_fully;
-        unfold_attr = (Some ((FStarC_List.op_At (optlist (fs).unfold_attr) lids)));
+        unfold_attr = (Some ((BatList.append (optlist (fs).unfold_attr) lids)));
         unfold_qual = (fs).unfold_qual;
         unfold_namespace = (fs).unfold_namespace;
         dont_unfold_attr = (fs).dont_unfold_attr;
@@ -686,7 +686,7 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps =
         unfold_attr = (fs).unfold_attr;
         unfold_qual = (fs).unfold_qual;
         unfold_namespace = (fs).unfold_namespace;
-        dont_unfold_attr = (Some ((FStarC_List.op_At (optlist (fs).dont_unfold_attr) lids)));
+        dont_unfold_attr = (Some ((BatList.append (optlist (fs).dont_unfold_attr) lids)));
         pure_subterms_within_computations = (fs).pure_subterms_within_computations;
         simplify = (fs).simplify;
         erase_universes = (fs).erase_universes;
@@ -740,7 +740,7 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps =
           default_univs_to_zero = (fs).default_univs_to_zero;
           tactics = (fs).tactics;
           reduce_projections = (fs).reduce_projections } in
-      (if (FStarC_List.contains "pure_subterms_within_computations" strs) then { beta = (fs1).beta;
+      (if (BatList.mem "pure_subterms_within_computations" strs) then { beta = (fs1).beta;
         iota = (fs1).iota;
         zeta = (fs1).zeta;
         zeta_full = (fs1).zeta_full;
@@ -775,7 +775,7 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps =
         default_univs_to_zero = (fs1).default_univs_to_zero;
         tactics = (fs1).tactics;
         reduce_projections = (fs1).reduce_projections } else fs1))
-    | (FStarC_TypeChecker_Env.UnfoldNamespace (strs)) -> (let tmp = (FStarC_List.map (fun s1 -> ((FStarC_Ident.path_of_text s1), true)) strs) in
+    | (FStarC_TypeChecker_Env.UnfoldNamespace (strs)) -> (let tmp = (BatList.map (fun s1 -> ((FStarC_Ident.path_of_text s1), true)) strs) in
       let tmp1 = (tmp, false) in
       let tmp2 = (Some (tmp1)) in
       { beta = (fs).beta;
@@ -1414,7 +1414,7 @@ let default_steps : fsteps =
     reduce_projections = false }
 
 let to_fsteps (s : (FStarC_TypeChecker_Env.step) list) : fsteps =
-  (FStarC_List.fold_right fstep_add_one s default_steps)
+  (BatList.fold_right fstep_add_one s default_steps)
 
 let add_nbe (s : fsteps) : fsteps =
   (let tmp = (FStarC_Options.use_nbe ()) in
@@ -1463,7 +1463,7 @@ let add_step (s : FStarC_TypeChecker_Primops_Base.primitive_step) (ss : (FStarC_
   (FStarC_PSMap.add ss (FStarC_Ident.string_of_lid (s).FStarC_TypeChecker_Primops_Base.name) s)
 
 let add_steps (m : (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t) (l : (FStarC_TypeChecker_Primops_Base.primitive_step) list) : (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t =
-  (FStarC_List.fold_right add_step l m)
+  (BatList.fold_right add_step l m)
 
 let prim_from_list (l : (FStarC_TypeChecker_Primops_Base.primitive_step) list) : (FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_PSMap.t =
   (let tmp = (empty_prim_steps ()) in
@@ -1559,15 +1559,15 @@ let dbg_UNSOUND_EraseErasableArgs : (bool ref) =
   (FStarC_Debug.get_toggle "UNSOUND_EraseErasableArgs")
 
 let config' (psteps : (FStarC_TypeChecker_Primops_Base.primitive_step) list) (s : (FStarC_TypeChecker_Env.step) list) (e : FStarC_TypeChecker_Env.env) : cfg =
-  (let tmp = (FStarC_List.collect (fun tmp -> (match tmp with
+  (let tmp = ((fun f l -> BatList.flatten (BatList.map f l)) (fun tmp -> (match tmp with
       | (FStarC_TypeChecker_Env.UnfoldUntil (k)) -> ((FStarC_TypeChecker_Env.Unfold (k)) :: [])
       | FStarC_TypeChecker_Env.Eager_unfolding -> (FStarC_TypeChecker_Env.Eager_unfolding_only :: [])
-      | (FStarC_TypeChecker_Env.UnfoldQual (l)) when (FStarC_List.contains "unfold" l) -> (FStarC_TypeChecker_Env.Eager_unfolding_only :: [])
+      | (FStarC_TypeChecker_Env.UnfoldQual (l)) when (BatList.mem "unfold" l) -> (FStarC_TypeChecker_Env.Eager_unfolding_only :: [])
       | FStarC_TypeChecker_Env.Inlining -> (FStarC_TypeChecker_Env.InliningDelta :: [])
-      | (FStarC_TypeChecker_Env.UnfoldQual (l)) when (FStarC_List.contains "inline_for_extraction" l) -> (FStarC_TypeChecker_Env.InliningDelta :: [])
+      | (FStarC_TypeChecker_Env.UnfoldQual (l)) when (BatList.mem "inline_for_extraction" l) -> (FStarC_TypeChecker_Env.InliningDelta :: [])
       | tmp1 -> []
     )) s) in
-  let d = (FStarC_List.unique tmp) in
+  let d = ((fun l -> BatList.unique l) tmp) in
   let d1 = (match d with
       | [] -> (FStarC_TypeChecker_Env.NoDelta :: [])
       | tmp1 -> d
@@ -1578,7 +1578,7 @@ let config' (psteps : (FStarC_TypeChecker_Primops_Base.primitive_step) list) (s 
   let tmp3 = (cached_steps ()) in
   let tmp4 = (merge_steps tmp2 tmp3) in
   let psteps1 = (add_steps tmp4 psteps) in
-  let dbg_flag = (FStarC_List.contains FStarC_TypeChecker_Env.NormDebug s) in
+  let dbg_flag = (BatList.mem FStarC_TypeChecker_Env.NormDebug s) in
   let tmp5 = (!(dbg_Norm)) in
   let tmp6 = (if tmp5 then true else dbg_flag) in
   let tmp7 = (!(dbg_NormTop)) in
@@ -1782,19 +1782,19 @@ let translate_norm_step (s : FStarC_NormSteps.norm_step) : (FStarC_TypeChecker_E
     | FStarC_NormSteps.Primops -> (FStarC_TypeChecker_Env.Primops :: [])
     | FStarC_NormSteps.Reify -> (FStarC_TypeChecker_Env.Reify :: [])
     | FStarC_NormSteps.NormDebug -> (FStarC_TypeChecker_Env.NormDebug :: [])
-    | (FStarC_NormSteps.UnfoldOnly (names)) -> (let tmp = (FStarC_List.map FStarC_Ident.lid_of_str names) in
+    | (FStarC_NormSteps.UnfoldOnly (names)) -> (let tmp = (BatList.map FStarC_Ident.lid_of_str names) in
       let tmp1 = (FStarC_TypeChecker_Env.UnfoldOnly (tmp)) in
       let tmp2 = (tmp1 :: []) in
       ((FStarC_TypeChecker_Env.UnfoldUntil (FStarC_Syntax_Syntax.delta_constant)) :: tmp2))
-    | (FStarC_NormSteps.UnfoldOnce (names)) -> (let tmp = (FStarC_List.map FStarC_Ident.lid_of_str names) in
+    | (FStarC_NormSteps.UnfoldOnce (names)) -> (let tmp = (BatList.map FStarC_Ident.lid_of_str names) in
       let tmp1 = (FStarC_TypeChecker_Env.UnfoldOnce (tmp)) in
       let tmp2 = (tmp1 :: []) in
       ((FStarC_TypeChecker_Env.UnfoldUntil (FStarC_Syntax_Syntax.delta_constant)) :: tmp2))
-    | (FStarC_NormSteps.UnfoldFully (names)) -> (let tmp = (FStarC_List.map FStarC_Ident.lid_of_str names) in
+    | (FStarC_NormSteps.UnfoldFully (names)) -> (let tmp = (BatList.map FStarC_Ident.lid_of_str names) in
       let tmp1 = (FStarC_TypeChecker_Env.UnfoldFully (tmp)) in
       let tmp2 = (tmp1 :: []) in
       ((FStarC_TypeChecker_Env.UnfoldUntil (FStarC_Syntax_Syntax.delta_constant)) :: tmp2))
-    | (FStarC_NormSteps.UnfoldAttr (names)) -> (let tmp = (FStarC_List.map FStarC_Ident.lid_of_str names) in
+    | (FStarC_NormSteps.UnfoldAttr (names)) -> (let tmp = (BatList.map FStarC_Ident.lid_of_str names) in
       let tmp1 = (FStarC_TypeChecker_Env.UnfoldAttr (tmp)) in
       let tmp2 = (tmp1 :: []) in
       ((FStarC_TypeChecker_Env.UnfoldUntil (FStarC_Syntax_Syntax.delta_constant)) :: tmp2))
@@ -1807,7 +1807,7 @@ let translate_norm_step (s : FStarC_NormSteps.norm_step) : (FStarC_TypeChecker_E
   )
 
 let translate_norm_steps (s : (FStarC_NormSteps.norm_step) list) : (FStarC_TypeChecker_Env.step) list =
-  (let s1 = (FStarC_List.concatMap translate_norm_step s) in
+  (let s1 = ((fun f l -> BatList.flatten (BatList.map f l)) translate_norm_step s) in
   let add_exclude = (fun s2 z -> (let tmp = (FStarC_Util.for_some (FStarC_TypeChecker_Env.fStarC_Class_Deq_op_Equals_Question__step z) s2) in
     (if tmp then s2 else ((FStarC_TypeChecker_Env.Exclude (z)) :: s2)))) in
   let s2 = (FStarC_TypeChecker_Env.Beta :: s1) in
@@ -1845,5 +1845,5 @@ let register_extra_step (p : FStarC_TypeChecker_Primops_Base.primitive_step) : u
   ) p)
 
 let primop_time_map : (Prims.int) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
-  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (50))))
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (50))))
 

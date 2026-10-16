@@ -66,7 +66,7 @@ let u___int_to_t_lid_for (k : machint_kind) : FStarC_Ident.lident =
   (FStarC_Ident.lid_of_path path FStarC_Range_Type.dummyRange))
 
 let explicit_args (args : (('a * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : (('a * (FStarC_Syntax_Syntax.arg_qualifier) option)) list =
-  (FStarC_List.filter (fun tmp -> (match tmp with
+  (BatList.filter (fun tmp -> (match tmp with
     | (tmp1, q) -> (not (FStarC_Syntax_Syntax.is_aqual_implicit q))
   )) args)
 

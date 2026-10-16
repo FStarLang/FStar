@@ -14,8 +14,8 @@ type lvm = {
 }
 
 let fStarC_Syntax_VisitM_novfs__id : lvm =
-  { lvm_monad = { FStarC_Class_Monad.return = (Obj.magic ((fun a -> a)));
-      bind = (Obj.magic ((fun tmp f -> (f tmp)))) };
+  { lvm_monad = { FStarC_Class_Monad.return = (Obj.magic ((fun a a1 -> a1)));
+      bind = (Obj.magic ((fun a b tmp f -> (f tmp)))) };
     f_term = (Obj.magic (FStarC_Class_Monad.fStarC_Class_Monad_return__id));
     f_binder = (Obj.magic (FStarC_Class_Monad.fStarC_Class_Monad_return__id));
     f_binding_bv = (Obj.magic (FStarC_Class_Monad.fStarC_Class_Monad_return__id));
@@ -36,19 +36,19 @@ let rec compress (tm : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)
   ))
 
 let fStarC_Class_Monad_return__id___proj__Mklvm__item__lvm_monad_id_dyn (tmp : lvm) (eta : 'a) : 'a =
-  (Obj.magic ((((tmp).lvm_monad).FStarC_Class_Monad.return (Obj.magic (eta)))))
+  (Obj.magic ((((tmp).lvm_monad).FStarC_Class_Monad.return () (Obj.magic (eta)))))
 
 let fStarC_Syntax_VisitM_f_term__id_dyn_lvm (tmp : lvm) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
   (Obj.magic ((tmp).f_term))
 
 let fStarC_Class_Monad_bind__id (tmp : lvm) : ('a -> (('a -> 'b) -> 'b)) =
-  (Obj.magic (((tmp).lvm_monad).FStarC_Class_Monad.bind))
+  (Obj.magic ((((tmp).lvm_monad).FStarC_Class_Monad.bind () ())))
 
 let fStarC_Class_Monad_op_let_Bang__id___proj__Mklvm__item__lvm_monad_id_dyn (tmp : lvm) : ('a -> (('a -> 'b) -> 'b)) =
   (fStarC_Class_Monad_bind__id tmp)
 
 let fStarC_Class_Monad_return__id_2 (tmp : lvm) (eta : 'a) : 'a =
-  (Obj.magic ((((tmp).lvm_monad).FStarC_Class_Monad.return (Obj.magic (eta)))))
+  (Obj.magic ((((tmp).lvm_monad).FStarC_Class_Monad.return () (Obj.magic (eta)))))
 
 let fStarC_Class_Monad_op_let_Bang__id (tmp : lvm) : ('a -> (('a -> 'b) -> 'b)) =
   (fStarC_Class_Monad_bind__id tmp)
@@ -358,8 +358,8 @@ let fStarC_Syntax_VisitM_on_sub_univ__id_dyn_lvm (tmp : lvm) (u : FStarC_Syntax_
 
 let fStarC_Syntax_VisitM_tie_bu__0 (tmp : bool) (tmp1 : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (tmp2 : (FStarC_Syntax_Syntax.universe -> FStarC_Syntax_Syntax.universe)) : lvm =
   (let r = (ref fStarC_Syntax_VisitM_novfs__id) in
-  ((r) := { lvm_monad = { FStarC_Class_Monad.return = (Obj.magic ((fun a -> a)));
-      bind = (Obj.magic ((fun tmp3 f -> (f tmp3)))) };
+  ((r) := { lvm_monad = { FStarC_Class_Monad.return = (Obj.magic ((fun a a1 -> a1)));
+      bind = (Obj.magic ((fun a b tmp3 f -> (f tmp3)))) };
     f_term = (Obj.magic ((fun x -> (let e = (!(r)) in
     let tmp3 = (fStarC_Syntax_VisitM_on_sub_term__id_dyn_lvm e x) in
     (Obj.magic ((fStarC_Syntax_VisitM_op_Less_Less_Bar__id tmp1 tmp3)))))));
@@ -392,8 +392,8 @@ let fStarC_Syntax_VisitM_visitM_term__id (proc_quotes : bool) (v : ((FStarC_Synt
   (fStarC_Syntax_VisitM_visitM_term_univs__id true v FStarC_Class_Monad.fStarC_Class_Monad_return__id t)
 
 let fStarC_Syntax_VisitM_novfs__option : lvm =
-  { lvm_monad = { FStarC_Class_Monad.return = (Obj.magic ((fun x -> (Obj.magic ((Some ((Obj.magic (x)))))))));
-      bind = (Obj.magic ((fun o f -> (match (Obj.magic (o)) with
+  { lvm_monad = { FStarC_Class_Monad.return = (Obj.magic ((fun a x -> (Obj.magic ((Some ((Obj.magic (x)))))))));
+      bind = (Obj.magic ((fun a b o f -> (match (Obj.magic (o)) with
         | None -> (Obj.magic (None))
         | (Some (v)) -> (f v)
       )))) };
@@ -407,19 +407,19 @@ let fStarC_Syntax_VisitM_novfs__option : lvm =
     proc_quotes = false }
 
 let fStarC_Class_Monad_return__option___proj__Mklvm__item__lvm_monad_option_dyn (tmp : lvm) (eta : 'a) : ('a) option =
-  (Obj.magic ((((tmp).lvm_monad).FStarC_Class_Monad.return (Obj.magic (eta)))))
+  (Obj.magic ((((tmp).lvm_monad).FStarC_Class_Monad.return () (Obj.magic (eta)))))
 
 let fStarC_Syntax_VisitM_f_term__option_dyn_lvm (tmp : lvm) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option) =
   (Obj.magic ((tmp).f_term))
 
 let fStarC_Class_Monad_bind__option_6 (tmp : lvm) : (('a) option -> (('a -> ('b) option) -> ('b) option)) =
-  (Obj.magic (((tmp).lvm_monad).FStarC_Class_Monad.bind))
+  (Obj.magic ((((tmp).lvm_monad).FStarC_Class_Monad.bind () ())))
 
 let fStarC_Class_Monad_op_let_Bang__option___proj__Mklvm__item__lvm_monad_option_dyn (tmp : lvm) : (('a) option -> (('a -> ('b) option) -> ('b) option)) =
   (fStarC_Class_Monad_bind__option_6 tmp)
 
 let fStarC_Class_Monad_return__option_8 (tmp : lvm) (eta : 'a) : ('a) option =
-  (Obj.magic ((((tmp).lvm_monad).FStarC_Class_Monad.return (Obj.magic (eta)))))
+  (Obj.magic ((((tmp).lvm_monad).FStarC_Class_Monad.return () (Obj.magic (eta)))))
 
 let fStarC_Class_Monad_op_let_Bang__option_8 (tmp : lvm) : (('a) option -> (('a -> ('b) option) -> ('b) option)) =
   (fStarC_Class_Monad_bind__option_6 tmp)
@@ -729,8 +729,8 @@ let fStarC_Syntax_VisitM_on_sub_univ__option_dyn_lvm (tmp : lvm) (u : FStarC_Syn
 
 let fStarC_Syntax_VisitM_tie_bu__1 (tmp : bool) (tmp1 : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) (tmp2 : (FStarC_Syntax_Syntax.universe -> (FStarC_Syntax_Syntax.universe) option)) : lvm =
   (let r = (ref fStarC_Syntax_VisitM_novfs__option) in
-  ((r) := { lvm_monad = { FStarC_Class_Monad.return = (Obj.magic ((fun x -> (Obj.magic ((Some ((Obj.magic (x)))))))));
-      bind = (Obj.magic ((fun o f -> (match (Obj.magic (o)) with
+  ((r) := { lvm_monad = { FStarC_Class_Monad.return = (Obj.magic ((fun a x -> (Obj.magic ((Some ((Obj.magic (x)))))))));
+      bind = (Obj.magic ((fun a b o f -> (match (Obj.magic (o)) with
         | None -> (Obj.magic (None))
         | (Some (v)) -> (f v)
       )))) };

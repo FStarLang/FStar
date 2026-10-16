@@ -46,7 +46,7 @@ let js_bool (tmp : FStarC_Json.json) : bool =
 
 let js_list (k : (FStarC_Json.json -> 'u___a)) (tmp : FStarC_Json.json) : ('u___a) list =
   (match tmp with
-    | (FStarC_Json.JsonList (l)) -> (FStarC_List.map k l)
+    | (FStarC_Json.JsonList (l)) -> (BatList.map k l)
     | other -> (js_fail "list" other)
   )
 

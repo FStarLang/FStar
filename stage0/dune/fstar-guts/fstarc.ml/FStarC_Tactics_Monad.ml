@@ -59,7 +59,7 @@ let goal_typedness_deps (g : FStarC_Tactics_Types.goal) : (FStarC_Syntax_Syntax.
 
 let add_implicits (i : (FStarC_TypeChecker_Common.implicit) list) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
   (bind get (fun ps -> (set { FStarC_Tactics_Types.main_context = (ps).FStarC_Tactics_Types.main_context;
-    all_implicits = (FStarC_List.op_At i (ps).FStarC_Tactics_Types.all_implicits);
+    all_implicits = (BatList.append i (ps).FStarC_Tactics_Types.all_implicits);
     goals = (ps).FStarC_Tactics_Types.goals;
     smt_goals = (ps).FStarC_Tactics_Types.smt_goals;
     splice_quals = (ps).FStarC_Tactics_Types.splice_quals;
@@ -138,13 +138,13 @@ let check_valid_goal (g : FStarC_Tactics_Types.goal) : unit =
 
 let check_valid_goals (gs : (FStarC_Tactics_Types.goal) list) : unit =
   (let tmp = (FStarC_Options.defensive ()) in
-  (if tmp then (FStarC_List.iter check_valid_goal gs) else ()))
+  (if tmp then (BatList.iter check_valid_goal gs) else ()))
 
 let add_goals (gs : (FStarC_Tactics_Types.goal) list) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
   (bind get (fun ps -> ((check_valid_goals gs);
   (set { FStarC_Tactics_Types.main_context = (ps).FStarC_Tactics_Types.main_context;
     all_implicits = (ps).FStarC_Tactics_Types.all_implicits;
-    goals = (FStarC_List.op_At gs (ps).FStarC_Tactics_Types.goals);
+    goals = (BatList.append gs (ps).FStarC_Tactics_Types.goals);
     smt_goals = (ps).FStarC_Tactics_Types.smt_goals;
     splice_quals = (ps).FStarC_Tactics_Types.splice_quals;
     splice_attrs = (ps).FStarC_Tactics_Types.splice_attrs;
@@ -168,10 +168,10 @@ let add_irrelevant_goal (base_goal : FStarC_Tactics_Types.goal) (reason : string
 let dbg_TacFail : (bool ref) =
   (FStarC_Debug.get_toggle "TacFail")
 
-let fail_doc (msg : (FStar_Pprint.document) list) (ps : (FStarC_Tactics_Types.proofstate ref)) : 'u___a =
+let fail_doc (msg : (PPrint.document) list) (ps : (FStarC_Tactics_Types.proofstate ref)) : 'u___a =
   (let tmp = (!(dbg_TacFail)) in
   (if tmp then (let tmp1 = (!(ps)) in
-  let tmp2 = (FStarC_Errors_Msg.renderdoc (FStarC_List.hd msg)) in
+  let tmp2 = (FStarC_Errors_Msg.renderdoc (BatList.hd msg)) in
   let tmp3 = (Prims.strcat "TACTIC FAILING: " tmp2) in
   (FStarC_Tactics_Printing.do_dump_proofstate tmp1 tmp3)) else ());
   (raise (FStarC_Tactics_Common.TacticFailure ((msg, None)))))
@@ -183,12 +183,12 @@ let cur_goals : ((FStarC_Tactics_Types.proofstate ref) -> (FStarC_Tactics_Types.
   (bind get (fun ps -> (ret (ps).FStarC_Tactics_Types.goals)))
 
 let remove_solved_goals : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (bind cur_goals (fun gs -> (let gs1 = (FStarC_List.filter (fun g -> (let tmp = (FStarC_Tactics_Types.check_goal_solved g) in
+  (bind cur_goals (fun gs -> (let gs1 = (BatList.filter (fun g -> (let tmp = (FStarC_Tactics_Types.check_goal_solved g) in
     (not tmp))) gs) in
   (set_goals gs1))))
 
 let divide (n : Prims.int) (l : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a)) (r : ((FStarC_Tactics_Types.proofstate ref) -> 'u___b)) : ((FStarC_Tactics_Types.proofstate ref) -> ('u___a * 'u___b)) =
-  (bind get (fun p -> (let tmp = (try (ret (FStarC_List.splitAt n (p).FStarC_Tactics_Types.goals)) with
+  (bind get (fun p -> (let tmp = (try (ret ((fun n l -> BatList.split_at (Z.to_int n) l) n (p).FStarC_Tactics_Types.goals)) with
       | u__cexn -> (fail "divide: not enough goals")
     ) in
   (bind tmp (fun tmp1 -> (match tmp1 with
@@ -226,8 +226,8 @@ let divide (n : Prims.int) (l : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a
           dump_on_failure = (lp').FStarC_Tactics_Types.dump_on_failure } in
       (bind (set rp) (fun tmp3 -> (bind r (fun b -> (bind get (fun rp' -> (let p' = { FStarC_Tactics_Types.main_context = (rp').FStarC_Tactics_Types.main_context;
           all_implicits = (rp').FStarC_Tactics_Types.all_implicits;
-          goals = (FStarC_List.op_At (lp').FStarC_Tactics_Types.goals (rp').FStarC_Tactics_Types.goals);
-          smt_goals = (FStarC_List.op_At (lp').FStarC_Tactics_Types.smt_goals (FStarC_List.op_At (rp').FStarC_Tactics_Types.smt_goals (p).FStarC_Tactics_Types.smt_goals));
+          goals = (BatList.append (lp').FStarC_Tactics_Types.goals (rp').FStarC_Tactics_Types.goals);
+          smt_goals = (BatList.append (lp').FStarC_Tactics_Types.smt_goals (BatList.append (rp').FStarC_Tactics_Types.smt_goals (p).FStarC_Tactics_Types.smt_goals));
           splice_quals = (rp').FStarC_Tactics_Types.splice_quals;
           splice_attrs = (rp').FStarC_Tactics_Types.splice_attrs;
           depth = (rp').FStarC_Tactics_Types.depth;
@@ -281,7 +281,7 @@ let push_goals (gs : (FStarC_Tactics_Types.goal) list) : ((FStarC_Tactics_Types.
   (bind get (fun ps -> ((check_valid_goals gs);
   (set { FStarC_Tactics_Types.main_context = (ps).FStarC_Tactics_Types.main_context;
     all_implicits = (ps).FStarC_Tactics_Types.all_implicits;
-    goals = (FStarC_List.op_At (ps).FStarC_Tactics_Types.goals gs);
+    goals = (BatList.append (ps).FStarC_Tactics_Types.goals gs);
     smt_goals = (ps).FStarC_Tactics_Types.smt_goals;
     splice_quals = (ps).FStarC_Tactics_Types.splice_quals;
     splice_attrs = (ps).FStarC_Tactics_Types.splice_attrs;
@@ -308,10 +308,10 @@ let goal_with_type (g : FStarC_Tactics_Types.goal) (t : (FStarC_Syntax_Syntax.te
   (set_uvar_expected_typ u t);
   g)
 
-let wrap_err_doc (pref : (FStar_Pprint.document) list) (t : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a)) (ps : (FStarC_Tactics_Types.proofstate ref)) : 'u___a =
+let wrap_err_doc (pref : (PPrint.document) list) (t : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a)) (ps : (FStarC_Tactics_Types.proofstate ref)) : 'u___a =
   (mk_tac (fun ps1 -> (try (run t ps1) with
-    | (FStarC_Tactics_Common.TacticFailure ((msg, r))) -> (raise (FStarC_Tactics_Common.TacticFailure (((FStarC_List.op_At pref msg), r))))
-    | (FStarC_Errors.Error ((err, msg, r, ctx))) -> (raise (FStarC_Errors.Error ((err, (FStarC_List.op_At pref msg), r, ctx))))
+    | (FStarC_Tactics_Common.TacticFailure ((msg, r))) -> (raise (FStarC_Tactics_Common.TacticFailure (((BatList.append pref msg), r))))
+    | (FStarC_Errors.Error ((err, msg, r, ctx))) -> (raise (FStarC_Errors.Error ((err, (BatList.append pref msg), r, ctx))))
     | e -> (raise e)
   )) ps)
 
@@ -337,7 +337,7 @@ let set_smt_goals (gs : (FStarC_Tactics_Types.goal) list) : ((FStarC_Tactics_Typ
     dump_on_failure = (ps).FStarC_Tactics_Types.dump_on_failure })))
 
 let cur_goal : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Tactics_Types.goal) =
-  (bind cur_goals (fun tmp -> (match tmp with
+  (bind cur_goals (Obj.magic ((fun tmp -> (match tmp with
     | [] -> (fail "No more goals")
     | (hd :: tl) -> (let tmp1 = (FStarC_Tactics_Types.check_goal_solved' hd) in
       (match tmp1 with
@@ -347,13 +347,13 @@ let cur_goal : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Tactics_Types.go
           (FStarC_Format.print2 "!!!!!!!!!!!! GOAL IS ALREADY SOLVED! %s\nsol is %s\n" tmp2 tmp3);
           (ret hd))
       ))
-  )))
+  )))))
 
 let replace_cur (g : FStarC_Tactics_Types.goal) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
   (bind get (fun ps -> ((check_valid_goal g);
   (set { FStarC_Tactics_Types.main_context = (ps).FStarC_Tactics_Types.main_context;
     all_implicits = (ps).FStarC_Tactics_Types.all_implicits;
-    goals = (g :: (FStarC_List.tl (ps).FStarC_Tactics_Types.goals));
+    goals = (g :: (BatList.tl (ps).FStarC_Tactics_Types.goals));
     smt_goals = (ps).FStarC_Tactics_Types.smt_goals;
     splice_quals = (ps).FStarC_Tactics_Types.splice_quals;
     splice_attrs = (ps).FStarC_Tactics_Types.splice_attrs;
@@ -410,10 +410,10 @@ let trytac (t : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a)) : ((FStarC_Ta
   )))
 
 let cur_goal_maybe_solved : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Tactics_Types.goal) =
-  (bind cur_goals (fun tmp -> (match tmp with
+  (bind cur_goals (Obj.magic ((fun tmp -> (match tmp with
     | [] -> (fail "No more goals")
     | (hd :: tl) -> (ret hd)
-  )))
+  )))))
 
 let getopts : ((FStarC_Tactics_Types.proofstate ref) -> (FStarC_Options.option_val) FStarC_PSMap.t) =
   (bind (trytac cur_goal_maybe_solved) (fun tmp -> (match tmp with
@@ -435,7 +435,7 @@ let push_smt_goals (gs : (FStarC_Tactics_Types.goal) list) : ((FStarC_Tactics_Ty
   (set { FStarC_Tactics_Types.main_context = (ps).FStarC_Tactics_Types.main_context;
     all_implicits = (ps).FStarC_Tactics_Types.all_implicits;
     goals = (ps).FStarC_Tactics_Types.goals;
-    smt_goals = (FStarC_List.op_At (ps).FStarC_Tactics_Types.smt_goals gs);
+    smt_goals = (BatList.append (ps).FStarC_Tactics_Types.smt_goals gs);
     splice_quals = (ps).FStarC_Tactics_Types.splice_quals;
     splice_attrs = (ps).FStarC_Tactics_Types.splice_attrs;
     depth = (ps).FStarC_Tactics_Types.depth;
@@ -459,7 +459,7 @@ let rec iter_tac (f : ('u___a -> ((FStarC_Tactics_Types.proofstate ref) -> unit)
 let dismiss : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
   (bind get (fun ps -> (set { FStarC_Tactics_Types.main_context = (ps).FStarC_Tactics_Types.main_context;
     all_implicits = (ps).FStarC_Tactics_Types.all_implicits;
-    goals = (FStarC_List.tl (ps).FStarC_Tactics_Types.goals);
+    goals = (BatList.tl (ps).FStarC_Tactics_Types.goals);
     smt_goals = (ps).FStarC_Tactics_Types.smt_goals;
     splice_quals = (ps).FStarC_Tactics_Types.splice_quals;
     splice_attrs = (ps).FStarC_Tactics_Types.splice_attrs;
@@ -486,7 +486,7 @@ let dbg_CoreEq : (bool ref) =
 let is_goal_safe_as_well_typed (g : FStarC_Tactics_Types.goal) : bool =
   (let uv = (g).FStarC_Tactics_Types.goal_ctx_uvar in
   let tmp = (FStarC_Syntax_Util.ctx_uvar_typedness_deps uv) in
-  (FStarC_List.for_all (fun uv1 -> (let tmp1 = (FStarC_Syntax_Unionfind.find ((uv1).FStarC_Syntax_Syntax.ctx_uvar_head, (uv1).FStarC_Syntax_Syntax.ctx_uvar_head1, (uv1).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
+  (BatList.for_all (fun uv1 -> (let tmp1 = (FStarC_Syntax_Unionfind.find ((uv1).FStarC_Syntax_Syntax.ctx_uvar_head, (uv1).FStarC_Syntax_Syntax.ctx_uvar_head1, (uv1).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
   (match tmp1 with
     | (Some (t)) -> (let tmp2 = (FStarC_Syntax_Free.uvars t) in
       (FStarC_Syntax_Syntax.fStarC_Class_Setlike_is_empty__ctx_uvar_list_ctx_uvar tmp2))

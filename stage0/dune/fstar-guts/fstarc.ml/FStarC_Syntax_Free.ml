@@ -123,7 +123,7 @@ let rec free_univs (u : FStarC_Syntax_Syntax.universe) : (FStarC_Syntax_Syntax.f
     | FStarC_Syntax_Syntax.U_unknown -> no_free_vars
     | (FStarC_Syntax_Syntax.U_name (uname)) -> (singleton_univ_name uname)
     | (FStarC_Syntax_Syntax.U_succ (u1)) -> (free_univs u1)
-    | (FStarC_Syntax_Syntax.U_max (us)) -> (FStarC_List.fold_left (fun out x -> (let tmp1 = (free_univs x) in
+    | (FStarC_Syntax_Syntax.U_max (us)) -> (BatList.fold_left (fun out x -> (let tmp1 = (free_univs x) in
       (op_Plus_Plus out tmp1))) no_free_vars us)
     | (FStarC_Syntax_Syntax.U_unif (u__1, u__2, u__3)) -> (singleton_univ (u__1, u__2, u__3))
   ))
@@ -136,12 +136,12 @@ let singleton_fvar (fv : FStarC_Syntax_Syntax.fv) : (FStarC_Syntax_Syntax.free_v
   ), tmp1))
 
 let rec free_names_and_uvars_binders (bs : (FStarC_Syntax_Syntax.binder) list) (use_cache : use_cache_t) : (FStarC_Syntax_Syntax.free_vars * (FStarC_Ident.lident) FStarC_RBSet.rbset) =
-  (FStarC_List.fold_left (fun n b -> (let tmp = (free_names_and_uvars ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort use_cache) in
+  (BatList.fold_left (fun n b -> (let tmp = (free_names_and_uvars ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort use_cache) in
   (op_Plus_Plus n tmp))) no_free_vars bs)
 
 and free_names_and_uvars_dec_order (dec_order : FStarC_Syntax_Syntax.decreases_order) (use_cache : use_cache_t) : (FStarC_Syntax_Syntax.free_vars * (FStarC_Ident.lident) FStarC_RBSet.rbset) =
   (match dec_order with
-    | (FStarC_Syntax_Syntax.Decreases_lex (l)) -> (FStarC_List.fold_left (fun acc t -> (let tmp = (free_names_and_uvars t use_cache) in
+    | (FStarC_Syntax_Syntax.Decreases_lex (l)) -> (BatList.fold_left (fun acc t -> (let tmp = (free_names_and_uvars t use_cache) in
       (op_Plus_Plus acc tmp))) no_free_vars l)
     | (FStarC_Syntax_Syntax.Decreases_wf (rel, e)) -> (let tmp = (free_names_and_uvars rel use_cache) in
       let tmp1 = (free_names_and_uvars e use_cache) in
@@ -150,7 +150,7 @@ and free_names_and_uvars_dec_order (dec_order : FStarC_Syntax_Syntax.decreases_o
 
 and free_names_and_uvars_comp (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) (use_cache : use_cache_t) : (FStarC_Syntax_Syntax.free_vars * (FStarC_Ident.lident) FStarC_RBSet.rbset) =
   (let ct = (c).FStarC_Syntax_Syntax.n in
-  let tmp = (FStarC_List.tryFind (fun tmp -> (match tmp with
+  let tmp = (List.find_opt (fun tmp -> (match tmp with
       | (FStarC_Syntax_Syntax.DECREASES (tmp1)) -> true
       | tmp1 -> false
     )) (ct).FStarC_Syntax_Syntax.flags) in
@@ -158,7 +158,7 @@ and free_names_and_uvars_comp (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax
       | None -> no_free_vars
       | (Some ((FStarC_Syntax_Syntax.DECREASES (dec_order)))) -> (free_names_and_uvars_dec_order dec_order use_cache)
     ) in
-  let tmp1 = (FStarC_List.tryFind (fun tmp1 -> (match tmp1 with
+  let tmp1 = (List.find_opt (fun tmp1 -> (match tmp1 with
       | (FStarC_Syntax_Syntax.SMTPAT (tmp2)) -> true
       | tmp2 -> false
     )) (ct).FStarC_Syntax_Syntax.flags) in
@@ -171,7 +171,7 @@ and free_names_and_uvars_comp (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax
   (op_Plus_Plus tmp3 pat_vars))
 
 and free_names_and_uvars_args (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) (acc : (FStarC_Syntax_Syntax.free_vars * (FStarC_Ident.lident) FStarC_RBSet.rbset)) (use_cache : use_cache_t) : (FStarC_Syntax_Syntax.free_vars * (FStarC_Ident.lident) FStarC_RBSet.rbset) =
-  (FStarC_List.fold_left (fun n tmp -> (match tmp with
+  (BatList.fold_left (fun n tmp -> (match tmp with
     | (x, tmp1) -> (let tmp2 = (free_names_and_uvars x use_cache) in
       (op_Plus_Plus n tmp2))
   )) acc args)
@@ -207,7 +207,7 @@ and free_names_and_uvs' (tm : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.
     | (FStarC_Syntax_Syntax.Tm_lazy (tmp)) -> no_free_vars
     | FStarC_Syntax_Syntax.Tm_unknown -> no_free_vars
     | (FStarC_Syntax_Syntax.Tm_uinst (t1, us)) -> (let f = (free_names_and_uvars t1 use_cache) in
-      (FStarC_List.fold_left (fun out u -> (let tmp = (free_univs u) in
+      (BatList.fold_left (fun out u -> (let tmp = (free_univs u) in
       (op_Plus_Plus out tmp))) f us))
     | (FStarC_Syntax_Syntax.Tm_abs ({ FStarC_Syntax_Syntax.b = b; body = t1; rc_opt = ropt; _ })) -> (let tmp = (free_names_and_uvars t1 use_cache) in
       let tmp1 = (aux_binders (b :: []) tmp) in
@@ -234,14 +234,14 @@ and free_names_and_uvs' (tm : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.
             (op_Plus_Plus tmp2 tmp3))
         ) in
       let tmp3 = (op_Plus_Plus tmp1 tmp2) in
-      let tmp4 = (FStarC_List.fold_left (fun n tmp4 -> (match tmp4 with
+      let tmp4 = (BatList.fold_left (fun n tmp4 -> (match tmp4 with
           | (p, wopt, t2) -> (let n1 = (match wopt with
                 | None -> no_free_vars
                 | (Some (w)) -> (free_names_and_uvars w use_cache)
               ) in
             let n2 = (free_names_and_uvars t2 use_cache) in
             let tmp5 = (FStarC_Syntax_Syntax.pat_bvs p) in
-            let n3 = (FStarC_List.fold_left (fun n3 x -> (let tmp6 = (free_names_and_uvars (x).FStarC_Syntax_Syntax.sort use_cache) in
+            let n3 = (BatList.fold_left (fun n3 x -> (let tmp6 = (free_names_and_uvars (x).FStarC_Syntax_Syntax.sort use_cache) in
               (op_Plus_Plus n3 tmp6))) n tmp5) in
             let tmp6 = (op_Plus_Plus n3 n1) in
             (op_Plus_Plus tmp6 n2))
@@ -251,14 +251,14 @@ and free_names_and_uvs' (tm : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.
       let tmp2 = (free_names_and_uvars_ascription (u__1, u__2, u__3) use_cache) in
       (op_Plus_Plus tmp1 tmp2))
     | (FStarC_Syntax_Syntax.Tm_let ({ FStarC_Syntax_Syntax.lbs = u__1; lbs1 = u__2; body = t1; _ })) -> (let tmp = (free_names_and_uvars t1 use_cache) in
-      (FStarC_List.fold_left (fun n lb -> (let tmp1 = (free_names_and_uvars (lb).FStarC_Syntax_Syntax.lbtyp use_cache) in
+      (BatList.fold_left (fun n lb -> (let tmp1 = (free_names_and_uvars (lb).FStarC_Syntax_Syntax.lbtyp use_cache) in
       let tmp2 = (op_Plus_Plus n tmp1) in
       let tmp3 = (free_names_and_uvars (lb).FStarC_Syntax_Syntax.lbdef use_cache) in
       (op_Plus_Plus tmp2 tmp3))) tmp (match (u__1, u__2) with
         | (u__11, u__21) -> u__21
       )))
     | (FStarC_Syntax_Syntax.Tm_quoted (tm1, qi)) -> (match (qi).FStarC_Syntax_Syntax.qkind with
-        | FStarC_Syntax_Syntax.Quote_static -> (FStarC_List.fold_left (fun n t1 -> (let tmp = (free_names_and_uvars t1 use_cache) in
+        | FStarC_Syntax_Syntax.Quote_static -> (BatList.fold_left (fun n t1 -> (let tmp = (free_names_and_uvars t1 use_cache) in
           (op_Plus_Plus n tmp))) no_free_vars (match ((qi).FStarC_Syntax_Syntax.antiquotations, (qi).FStarC_Syntax_Syntax.antiquotations1) with
             | (u__1, u__2) -> u__2
           ))
@@ -266,7 +266,7 @@ and free_names_and_uvs' (tm : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.
       )
     | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t1; meta = m; _ })) -> (let u1 = (free_names_and_uvars t1 use_cache) in
       (match m with
-        | (FStarC_Syntax_Syntax.Meta_pattern (tmp, args)) -> (FStarC_List.fold_right (fun a acc -> (free_names_and_uvars_args a acc use_cache)) args u1)
+        | (FStarC_Syntax_Syntax.Meta_pattern (tmp, args)) -> (BatList.fold_right (fun a acc -> (free_names_and_uvars_args a acc use_cache)) args u1)
         | (FStarC_Syntax_Syntax.Meta_monadic (tmp, t')) -> (let tmp1 = (free_names_and_uvars t' use_cache) in
           (op_Plus_Plus u1 tmp1))
         | (FStarC_Syntax_Syntax.Meta_monadic_lift (tmp, tmp1, t')) -> (let tmp2 = (free_names_and_uvars t' use_cache) in

@@ -5,7 +5,7 @@ let defaults : ((string * string)) list =
   (("context_pruning", "true") :: (("prune_decls", "true") :: (("fly_deps", "true") :: [])))
 
 let init : (string) FStarC_PSMap.t =
-  (FStarC_List.fold_right (fun tmp m -> (match tmp with
+  (BatList.fold_right (fun tmp m -> (match tmp with
     | (k, v) -> (FStarC_PSMap.add m k v)
   )) defaults (FStarC_PSMap.empty ()))
 

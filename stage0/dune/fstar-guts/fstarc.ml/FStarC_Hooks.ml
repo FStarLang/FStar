@@ -34,6 +34,6 @@ let uu___0 : unit =
   ((FStarC_Syntax_Util.tts_f) := (Some (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term')));
   ((FStarC_Syntax_Util.ttd_f) := (Some (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term')));
   ((FStarC_TypeChecker_Normalize.unembed_binder_knot) := (Some (FStarC_Reflection_V2_Embeddings.e_binder)));
-  (FStarC_List.iter FStarC_Tactics_Interpreter.register_tactic_primitive_step FStarC_Tactics_V2_Primops.ops);
+  (BatList.iter FStarC_Tactics_Interpreter.register_tactic_primitive_step FStarC_Tactics_V2_Primops.ops);
   ())
 

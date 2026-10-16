@@ -28,7 +28,7 @@ type constant =
   | CBool of bool
   | CInt of Prims.int * FStar_IntegerLiteral.int_base * ((FStarC_Const.signedness * iwidth)) option
   | CFloat of float_lit * fwidth
-  | CChar of FStarC_BaseTypes.char
+  | CChar of FStar_Char.char
   | CString of string
 
 
@@ -269,8 +269,8 @@ let float_lit_of_string (s : string) : (float_lit) option =
                     ) in
                   (match tmp4 with
                     | (expo, cs4) -> (match (expo, cs4) with
-                        | ((Some (expo1)), []) -> (let m = (value (FStarC_List.op_At ipart fpart)) in
-                          (Some ((FLNum (neg, (FStarC_Real.mk m (Prims.op_Minus expo1 (FStarC_List.length fpart))))))))
+                        | ((Some (expo1)), []) -> (let m = (value (BatList.append ipart fpart)) in
+                          (Some ((FLNum (neg, (FStarC_Real.mk m (Prims.op_Minus expo1 ((fun l -> Z.of_int (BatList.length l)) fpart))))))))
                         | tmp5 -> None
                       )
                   )))
@@ -283,7 +283,7 @@ let unit_expr : expr =
   (mk (EConst (CUnit)) TUnit E_Pure)
 
 let string_of_name (n : name) : string =
-  (let base = (FStarC_String.concat "." (FStarC_List.op_At (n).ns ((n).id :: []))) in
+  (let base = (FStarC_String.concat "." (BatList.append (n).ns ((n).id :: []))) in
   (match (n).spec with
     | None -> base
     | (Some (s)) -> (Prims.strcat base (Prims.strcat "@" s))
@@ -418,7 +418,7 @@ type type_info = {
   ti_plans : ((name * ((string * string * (expansion) option)) list)) list;
 }
 
-let escape_char (c : FStarC_BaseTypes.char) : string =
+let escape_char (c : FStar_Char.char) : string =
   (match c with
     | 10 -> "\\n"
     | 9 -> "\\t"
@@ -429,7 +429,7 @@ let escape_char (c : FStarC_BaseTypes.char) : string =
   )
 
 let escape_string (s : string) : string =
-  (let tmp = (FStarC_List.map escape_char (FStarC_String.list_of_string s)) in
+  (let tmp = (BatList.map escape_char (FStarC_String.list_of_string s)) in
   (FStarC_String.concat "" tmp))
 
 let name_of_decl (d : decl) : name =
@@ -460,20 +460,20 @@ type tmpl_piece =
   | TP_arg of Prims.int
 
 
-let rec template_of_string__go__digits (cs : (FStarC_BaseTypes.char) list) (ds : (FStarC_BaseTypes.char) list) : ((Prims.int * (FStarC_BaseTypes.char) list)) option =
+let rec template_of_string__go__digits (cs : (FStar_Char.char) list) (ds : (FStar_Char.char) list) : ((Prims.int * (FStar_Char.char) list)) option =
   (match cs with
     | (125 :: rest) -> (match ds with
         | [] -> None
-        | tmp -> (let n = (FStarC_List.fold_left (fun acc d -> (Prims.op_Plus (Prims.op_Star acc (Prims.of_int (10))) (Prims.op_Minus (FStarC_Util.int_of_char d) (Prims.of_int (48))))) Prims.int_zero (FStarC_List.rev ds)) in
+        | tmp -> (let n = (BatList.fold_left (fun acc d -> (Prims.op_Plus (Prims.op_Star acc (Prims.of_int (10))) (Prims.op_Minus (FStarC_Util.int_of_char d) (Prims.of_int (48))))) Prims.int_zero (BatList.rev ds)) in
           (Some ((n, rest))))
       )
     | (c :: rest) when ((Prims.op_Greater_Equals (FStarC_Util.int_of_char c) (Prims.of_int (48))) && (Prims.op_Less_Equals (FStarC_Util.int_of_char c) (Prims.of_int (57)))) -> (template_of_string__go__digits rest (c :: ds))
     | tmp -> None
   )
 
-let rec template_of_string__go (flush : ((FStarC_BaseTypes.char) list -> ((tmpl_piece) list -> (tmpl_piece) list))) (cs : (FStarC_BaseTypes.char) list) (acc : (FStarC_BaseTypes.char) list) (out : (tmpl_piece) list) : (tmpl_piece) list =
+let rec template_of_string__go (flush : ((FStar_Char.char) list -> ((tmpl_piece) list -> (tmpl_piece) list))) (cs : (FStar_Char.char) list) (acc : (FStar_Char.char) list) (out : (tmpl_piece) list) : (tmpl_piece) list =
   (match cs with
-    | [] -> (FStarC_List.rev (flush acc out))
+    | [] -> (BatList.rev (flush acc out))
     | (123 :: (123 :: rest)) -> ((template_of_string__go flush) rest (123 :: acc) out)
     | (123 :: rest) -> (let tmp = (template_of_string__go__digits rest []) in
       (match tmp with
@@ -487,7 +487,7 @@ let template_of_string (s : string) : (tmpl_piece) list =
   (let cs = (FStarC_String.list_of_string s) in
   let flush = (fun acc out -> (match acc with
       | [] -> out
-      | tmp -> ((TP_lit ((FStarC_String.string_of_list (FStarC_List.rev acc)))) :: out)
+      | tmp -> ((TP_lit ((FStarC_String.string_of_list (BatList.rev acc)))) :: out)
     )) in
   ((template_of_string__go flush) cs [] []))
 
@@ -498,11 +498,11 @@ let uu___is_TP_arg (projectee : tmpl_piece) : bool =
   )
 
 let is_template (ps : (tmpl_piece) list) : bool =
-  (FStarC_List.existsb uu___is_TP_arg ps)
+  (BatList.exists uu___is_TP_arg ps)
 
 let rec subst_cty (s : ((string * cty)) list) (c : cty) : cty =
   (match c with
-    | (TVar (v)) -> (let tmp = (FStarC_List.tryFind (fun tmp -> (match tmp with
+    | (TVar (v)) -> (let tmp = (List.find_opt (fun tmp -> (match tmp with
           | (p, tmp1) -> ((=) p v)
         )) s) in
       (match tmp with
@@ -513,7 +513,7 @@ let rec subst_cty (s : ((string * cty)) list) (c : cty) : cty =
       let tmp1 = (subst_cty s b) in
       let tmp2 = (tmp, e, tmp1) in
       (TArrow ((match tmp2 with (custard_tup, _, _) -> custard_tup), (match tmp2 with (_, custard_tup, _) -> custard_tup), (match tmp2 with (_, _, custard_tup) -> custard_tup))))
-    | (TTuple (cs)) -> (let tmp = (FStarC_List.map (subst_cty s) cs) in
+    | (TTuple (cs)) -> (let tmp = (BatList.map (subst_cty s) cs) in
       (TTuple (tmp)))
     | (TBuf (c1)) -> (let tmp = (subst_cty s c1) in
       (TBuf (tmp)))
@@ -522,7 +522,7 @@ let rec subst_cty (s : ((string * cty)) list) (c : cty) : cty =
       (TRef ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))))
     | (TInline (c1)) -> (let tmp = (subst_cty s c1) in
       (TInline (tmp)))
-    | (TApp (n, args)) -> (let tmp = (FStarC_List.map (subst_cty s) args) in
+    | (TApp (n, args)) -> (let tmp = (BatList.map (subst_cty s) args) in
       let tmp1 = (n, tmp) in
       (TApp ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))))
     | c1 -> c1
@@ -530,7 +530,7 @@ let rec subst_cty (s : ((string * cty)) list) (c : cty) : cty =
 
 let branch_children (br : (pat * (expr) option * expr)) : (expr) list =
   (match br with
-    | (tmp, g, b) -> (FStarC_List.op_At (match g with
+    | (tmp, g, b) -> (BatList.append (match g with
         | (Some (g1)) -> (g1 :: [])
         | None -> []
       ) (b :: []))
@@ -547,14 +547,14 @@ let children (x : expr) : (expr) list =
     | (ELet (tmp, tmp1, e1, e2)) -> (e1 :: (e2 :: []))
     | (EApp (h, es)) -> (h :: es)
     | (EFun (tmp, b)) -> (b :: [])
-    | (EMatch (s, brs)) -> (let tmp = (FStarC_List.collect branch_children brs) in
+    | (EMatch (s, brs)) -> (let tmp = ((fun f l -> BatList.flatten (BatList.map f l)) branch_children brs) in
       (s :: tmp))
     | (EIf (c, a, b)) -> (c :: (a :: (b :: [])))
     | (ESeq (a, b)) -> (a :: (b :: []))
     | (ECtor (tmp, es)) -> es
     | (ETuple (es)) -> es
     | (EOp (tmp, es)) -> es
-    | (ERecord (tmp, fs)) -> (FStarC_List.map (fun x1 -> (match x1 with
+    | (ERecord (tmp, fs)) -> (BatList.map (fun x1 -> (match x1 with
         | (u__1, u__2) -> u__2
       )) fs)
     | (EProj (e1, tmp, tmp1)) -> (e1 :: [])
@@ -563,13 +563,13 @@ let children (x : expr) : (expr) list =
     | (ECast (e1, tmp)) -> (e1 :: [])
     | (ERaise (e1)) -> (e1 :: [])
     | (EWhile (a, b)) -> (a :: (b :: []))
-    | (ETry (a, brs)) -> (let tmp = (FStarC_List.collect branch_children brs) in
+    | (ETry (a, brs)) -> (let tmp = ((fun f l -> BatList.flatten (BatList.map f l)) branch_children brs) in
       (a :: tmp))
   )
 
 let exists_child (f : (expr -> bool)) (x : expr) : bool =
   (let tmp = (children x) in
-  (FStarC_List.existsb f tmp))
+  (BatList.exists f tmp))
 
 let rec occurs (v : string) (x : expr) : bool =
   (match (x).e with
@@ -584,17 +584,17 @@ let uu___is_Rec (projectee : flag) : bool =
   )
 
 let has_flag (fs : (flag) list) (f : flag) : bool =
-  (FStarC_List.existsb (fun f' -> ((=) f' f)) fs)
+  (BatList.exists (fun f' -> ((=) f' f)) fs)
 
 let mangled_name (n : name) : string =
-  (let base = (FStarC_String.concat "_" (FStarC_List.op_At (n).ns ((n).id :: []))) in
+  (let base = (FStarC_String.concat "_" (BatList.append (n).ns ((n).id :: []))) in
   (match (n).spec with
     | None -> base
     | (Some (s)) -> (Prims.strcat base (Prims.strcat "__" s))
   ))
 
-let text (s : string) : FStar_Pprint.document =
-  (FStar_Pprint.doc_of_string s)
+let text (s : string) : PPrint.document =
+  (PPrint.string s)
 
 let iwidth_to_string (w : iwidth) : string =
   (match w with
@@ -642,7 +642,7 @@ let float_lit_to_string (f : float_lit) : string =
       )) else (Prims.strcat sign plain)))
   )
 
-let constant_to_doc (c : constant) : FStar_Pprint.document =
+let constant_to_doc (c : constant) : PPrint.document =
   (match c with
     | CUnit -> (text "()")
     | (CBool (b)) -> (text (if b then "true" else "false"))
@@ -655,20 +655,20 @@ let constant_to_doc (c : constant) : FStar_Pprint.document =
     | (CChar (c1)) -> (text (Prims.strcat "'" (Prims.strcat (escape_char c1) "'")))
     | (CString (s)) -> (let tmp = (escape_string s) in
       let tmp1 = (text tmp) in
-      (FStar_Pprint.dquotes tmp1))
+      (PPrint.dquotes tmp1))
   )
 
-let parens_if (b : bool) (d : FStar_Pprint.document) : FStar_Pprint.document =
-  (if b then (FStar_Pprint.parens d) else d)
+let parens_if (b : bool) (d : PPrint.document) : PPrint.document =
+  (if b then (PPrint.parens d) else d)
 
-let name_to_doc (n : name) : FStar_Pprint.document =
+let name_to_doc (n : name) : PPrint.document =
   (let tmp = (string_of_name n) in
   (text tmp))
 
-let sep_by (s : FStar_Pprint.document) (eta : (FStar_Pprint.document) list) : FStar_Pprint.document =
-  (FStar_Pprint.separate s eta)
+let sep_by (s : PPrint.document) (eta : (PPrint.document) list) : PPrint.document =
+  (PPrint.separate s eta)
 
-let rec cty_to_doc' (prec : Prims.int) (t : cty) : FStar_Pprint.document =
+let rec cty_to_doc' (prec : Prims.int) (t : cty) : PPrint.document =
   (match t with
     | (TVar (x)) -> (text (Prims.strcat "'" x))
     | (TInt (u__1, u__2)) -> (text (width_to_string (u__1, u__2)))
@@ -684,40 +684,40 @@ let rec cty_to_doc' (prec : Prims.int) (t : cty) : FStar_Pprint.document =
         ) in
       let tmp = (cty_to_doc' Prims.int_one t1) in
       let tmp1 = (cty_to_doc' Prims.int_zero t2) in
-      let tmp2 = (FStar_Pprint.op_Hat_Slash_Hat arrow tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Slash_Hat tmp tmp2) in
-      let tmp4 = (FStar_Pprint.group tmp3) in
+      let tmp2 = (PPrint.(^/^) arrow tmp1) in
+      let tmp3 = (PPrint.(^/^) tmp tmp2) in
+      let tmp4 = (PPrint.group tmp3) in
       (parens_if (Prims.op_Greater_Equals prec Prims.int_one) tmp4))
     | (TApp (n, [])) -> (name_to_doc n)
     | (TApp (n, args)) -> (let tmp = (name_to_doc n) in
-      let tmp1 = (FStarC_List.map (cty_to_doc' Prims.int_zero) args) in
-      let tmp2 = (sep_by (FStar_Pprint.op_Hat_Hat FStar_Pprint.comma FStar_Pprint.space) tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat tmp2 FStar_Pprint.rangle) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.langle tmp3) in
-      let tmp5 = (FStar_Pprint.op_Hat_Hat tmp tmp4) in
-      let tmp6 = (FStar_Pprint.group tmp5) in
+      let tmp1 = (BatList.map (cty_to_doc' Prims.int_zero) args) in
+      let tmp2 = (sep_by (PPrint.(^^) PPrint.comma PPrint.space) tmp1) in
+      let tmp3 = (PPrint.(^^) tmp2 PPrint.rangle) in
+      let tmp4 = (PPrint.(^^) PPrint.langle tmp3) in
+      let tmp5 = (PPrint.(^^) tmp tmp4) in
+      let tmp6 = (PPrint.group tmp5) in
       (parens_if (Prims.op_Greater_Equals prec (Prims.of_int (2))) tmp6))
     | (TBuf (t1)) -> (let tmp = (cty_to_doc' (Prims.of_int (2)) t1) in
-      let tmp1 = (FStar_Pprint.op_Hat_Slash_Hat (text "buf") tmp) in
-      let tmp2 = (FStar_Pprint.group tmp1) in
+      let tmp1 = (PPrint.(^/^) (text "buf") tmp) in
+      let tmp2 = (PPrint.group tmp1) in
       (parens_if (Prims.op_Greater_Equals prec (Prims.of_int (2))) tmp2))
     | (TRef (k, t1)) -> (let tmp = (cty_to_doc' (Prims.of_int (2)) t1) in
-      let tmp1 = (FStar_Pprint.op_Hat_Slash_Hat (text (if (match k with
+      let tmp1 = (PPrint.(^/^) (text (if (match k with
           | RGc -> true
           | tmp1 -> false
         ) then "gcref" else "ref")) tmp) in
-      let tmp2 = (FStar_Pprint.group tmp1) in
+      let tmp2 = (PPrint.group tmp1) in
       (parens_if (Prims.op_Greater_Equals prec (Prims.of_int (2))) tmp2))
     | (TInline (t1)) -> (let tmp = (cty_to_doc' (Prims.of_int (2)) t1) in
-      let tmp1 = (FStar_Pprint.op_Hat_Slash_Hat (text "inline") tmp) in
-      let tmp2 = (FStar_Pprint.group tmp1) in
+      let tmp1 = (PPrint.(^/^) (text "inline") tmp) in
+      let tmp2 = (PPrint.group tmp1) in
       (parens_if (Prims.op_Greater_Equals prec (Prims.of_int (2))) tmp2))
-    | (TTuple (ts)) -> (let tmp = (FStarC_List.map (cty_to_doc' Prims.int_one) ts) in
-      let tmp1 = (sep_by (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat (text "*") FStar_Pprint.space)) tmp) in
-      (FStar_Pprint.parens tmp1))
+    | (TTuple (ts)) -> (let tmp = (BatList.map (cty_to_doc' Prims.int_one) ts) in
+      let tmp1 = (sep_by (PPrint.(^^) PPrint.space (PPrint.(^^) (text "*") PPrint.space)) tmp) in
+      (PPrint.parens tmp1))
   )
 
-let cty_to_doc (t : cty) : FStar_Pprint.document =
+let cty_to_doc (t : cty) : PPrint.document =
   (cty_to_doc' Prims.int_zero t)
 
 let cty_to_string (t : cty) : string =
@@ -765,7 +765,7 @@ let map_children (g : (expr -> expr)) (x : expr) : expr =
       let tmp3 = (ELet ((match tmp2 with (custard_tup, _, _, _) -> custard_tup), (match tmp2 with (_, custard_tup, _, _) -> custard_tup), (match tmp2 with (_, _, custard_tup, _) -> custard_tup), (match tmp2 with (_, _, _, custard_tup) -> custard_tup))) in
       { e = tmp3; ty = (x).ty; eff = (x).eff })
     | (EApp (h, es)) -> (let tmp = (g h) in
-      let tmp1 = (FStarC_List.map g es) in
+      let tmp1 = (BatList.map g es) in
       let tmp2 = (tmp, tmp1) in
       let tmp3 = (EApp ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))) in
       { e = tmp3; ty = (x).ty; eff = (x).eff })
@@ -774,7 +774,7 @@ let map_children (g : (expr -> expr)) (x : expr) : expr =
       let tmp2 = (EFun ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
       { e = tmp2; ty = (x).ty; eff = (x).eff })
     | (EMatch (s, brs)) -> (let tmp = (g s) in
-      let tmp1 = (FStarC_List.map (map_branch g) brs) in
+      let tmp1 = (BatList.map (map_branch g) brs) in
       let tmp2 = (tmp, tmp1) in
       let tmp3 = (EMatch ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))) in
       { e = tmp3; ty = (x).ty; eff = (x).eff })
@@ -789,18 +789,18 @@ let map_children (g : (expr -> expr)) (x : expr) : expr =
       let tmp2 = (tmp, tmp1) in
       let tmp3 = (ESeq ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))) in
       { e = tmp3; ty = (x).ty; eff = (x).eff })
-    | (ECtor (n, es)) -> (let tmp = (FStarC_List.map g es) in
+    | (ECtor (n, es)) -> (let tmp = (BatList.map g es) in
       let tmp1 = (n, tmp) in
       let tmp2 = (ECtor ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
       { e = tmp2; ty = (x).ty; eff = (x).eff })
-    | (ETuple (es)) -> (let tmp = (FStarC_List.map g es) in
+    | (ETuple (es)) -> (let tmp = (BatList.map g es) in
       let tmp1 = (ETuple (tmp)) in
       { e = tmp1; ty = (x).ty; eff = (x).eff })
-    | (EOp (o, es)) -> (let tmp = (FStarC_List.map g es) in
+    | (EOp (o, es)) -> (let tmp = (BatList.map g es) in
       let tmp1 = (o, tmp) in
       let tmp2 = (EOp ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
       { e = tmp2; ty = (x).ty; eff = (x).eff })
-    | (ERecord (n, fs)) -> (let tmp = (FStarC_List.map (fun tmp -> (match tmp with
+    | (ERecord (n, fs)) -> (let tmp = (BatList.map (fun tmp -> (match tmp with
           | (f, e) -> (let tmp1 = (g e) in
             (f, tmp1))
         )) fs) in
@@ -832,7 +832,7 @@ let map_children (g : (expr -> expr)) (x : expr) : expr =
       let tmp3 = (EWhile ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))) in
       { e = tmp3; ty = (x).ty; eff = (x).eff })
     | (ETry (a, brs)) -> (let tmp = (g a) in
-      let tmp1 = (FStarC_List.map (map_branch g) brs) in
+      let tmp1 = (BatList.map (map_branch g) brs) in
       let tmp2 = (tmp, tmp1) in
       let tmp3 = (ETry ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))) in
       { e = tmp3; ty = (x).ty; eff = (x).eff })
@@ -845,7 +845,7 @@ let uu___is_Extern (projectee : flag) : bool =
   )
 
 let extern_template_of_flags (fs : (flag) list) : ((tmpl_piece) list) option =
-  (let tmp = (FStarC_List.tryPick (fun f -> (match f with
+  (let tmp = (List.find_map (fun f -> (match f with
       | (Extern (t, tmp)) -> t
       | tmp -> None
     )) fs) in
@@ -866,7 +866,7 @@ let decl_flags (d : decl) : (flag) list =
   )
 
 let imported_unit (d : decl) : (string) option =
-  (FStarC_List.tryPick (fun tmp -> (match tmp with
+  (List.find_map (fun tmp -> (match tmp with
     | (Imported (u, tmp1)) -> (Some (u))
     | tmp1 -> None
   )) (decl_flags d))
@@ -889,14 +889,14 @@ let uu___is_Inline (projectee : flag) : bool =
   )
 
 let member_of (fs : (flag) list) : ((name * string)) option =
-  (FStarC_List.tryPick (fun tmp -> (match tmp with
+  (List.find_map (fun tmp -> (match tmp with
     | (Member (m, f)) -> (Some ((m, f)))
     | tmp1 -> None
   )) fs)
 
 let fold_children (f : ('a -> (expr -> 'a))) (init : 'a) (x : expr) : 'a =
   (let tmp = (children x) in
-  (FStarC_List.fold_left f init tmp))
+  (BatList.fold_left f init tmp))
 
 let uu___is_Root (projectee : flag) : bool =
   (match projectee with
@@ -912,10 +912,10 @@ let const_eq (c1 : constant) (c2 : constant) : bool =
 
 let for_all_children (f : (expr -> bool)) (x : expr) : bool =
   (let tmp = (children x) in
-  (FStarC_List.for_all f tmp))
+  (BatList.for_all f tmp))
 
 let rec is_droppable (e : expr) : bool =
-  (let all = (fun es -> (FStarC_List.for_all is_droppable es)) in
+  (let all = (fun es -> (BatList.for_all is_droppable es)) in
   (if (match (e).e with
     | (EOp ({ po_op = (Commented (u__1, u__2)); po_ty = tmp; _ }, tmp1)) -> true
     | tmp -> false
@@ -985,7 +985,7 @@ let float_lit_of_int (fw : fwidth) (n : Prims.int) : (float_lit) option =
 
 let iter_children (f : (expr -> unit)) (x : expr) : unit =
   (let tmp = (children x) in
-  (FStarC_List.iter f tmp))
+  (BatList.iter f tmp))
 
 let uu___is_CMacro (projectee : flag) : bool =
   (match projectee with
@@ -1060,9 +1060,9 @@ let uu___is_Private (projectee : flag) : bool =
 let fStarC_Class_Show_show__name (tmp : name) : string =
   (string_of_name tmp)
 
-let flag_to_doc (f : flag) : FStar_Pprint.document =
+let flag_to_doc (f : flag) : PPrint.document =
   (match f with
-    | (Rec (ns)) -> (let tmp = (FStarC_List.map string_of_name ns) in
+    | (Rec (ns)) -> (let tmp = (BatList.map string_of_name ns) in
       let tmp1 = (FStarC_String.concat "," tmp) in
       let tmp2 = (Prims.strcat tmp1 "]") in
       let tmp3 = (Prims.strcat "rec[" tmp2) in
@@ -1102,12 +1102,12 @@ let flag_to_doc (f : flag) : FStar_Pprint.document =
       let tmp1 = (Prims.strcat tmp (Prims.strcat "." (Prims.strcat f1 "]"))) in
       let tmp2 = (Prims.strcat "member[" tmp1) in
       (text tmp2))
-    | (CallArity (fs)) -> (let tmp = (FStarC_List.map (fun b -> (if b then "-" else "+")) fs) in
+    | (CallArity (fs)) -> (let tmp = (BatList.map (fun b -> (if b then "-" else "+")) fs) in
       let tmp1 = (FStarC_String.concat "" tmp) in
       let tmp2 = (Prims.strcat tmp1 "]") in
       let tmp3 = (Prims.strcat "arity[" tmp2) in
       (text tmp3))
-    | (CherryMode (fs)) -> (let tmp = (FStarC_List.map (fun b -> (match b with
+    | (CherryMode (fs)) -> (let tmp = (BatList.map (fun b -> (match b with
           | (Some (true)) -> "o"
           | (Some (false)) -> "b"
           | None -> "?"
@@ -1116,79 +1116,79 @@ let flag_to_doc (f : flag) : FStar_Pprint.document =
       let tmp2 = (Prims.strcat tmp1 "]") in
       let tmp3 = (Prims.strcat "cherry_mode[" tmp2) in
       (text tmp3))
-    | (CherryConv (fs)) -> (let tmp = (FStarC_List.map (fun b -> (if b then "o" else "b")) fs) in
+    | (CherryConv (fs)) -> (let tmp = (BatList.map (fun b -> (if b then "o" else "b")) fs) in
       let tmp1 = (FStarC_String.concat "" tmp) in
       let tmp2 = (Prims.strcat tmp1 "]") in
       let tmp3 = (Prims.strcat "cherry_conv[" tmp2) in
       (text tmp3))
   )
 
-let flags_to_doc (fs : (flag) list) : FStar_Pprint.document =
+let flags_to_doc (fs : (flag) list) : PPrint.document =
   (match fs with
-    | [] -> FStar_Pprint.empty
-    | tmp -> (let tmp1 = (FStarC_List.map flag_to_doc fs) in
-      let tmp2 = (sep_by (FStar_Pprint.op_Hat_Hat FStar_Pprint.comma FStar_Pprint.space) tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat tmp2 (FStar_Pprint.op_Hat_Hat (text "]") FStar_Pprint.hardline)) in
-      (FStar_Pprint.op_Hat_Hat (text "[@@") tmp3))
+    | [] -> PPrint.empty
+    | tmp -> (let tmp1 = (BatList.map flag_to_doc fs) in
+      let tmp2 = (sep_by (PPrint.(^^) PPrint.comma PPrint.space) tmp1) in
+      let tmp3 = (PPrint.(^^) tmp2 (PPrint.(^^) (text "]") PPrint.hardline)) in
+      (PPrint.(^^) (text "[@@") tmp3))
   )
 
-let params_to_doc (ps : (string) list) : FStar_Pprint.document =
+let params_to_doc (ps : (string) list) : PPrint.document =
   (match ps with
-    | [] -> FStar_Pprint.empty
-    | tmp -> (let tmp1 = (FStarC_List.map (fun p -> (text (Prims.strcat "'" p))) ps) in
-      let tmp2 = (FStar_Pprint.separate (FStar_Pprint.op_Hat_Hat FStar_Pprint.comma FStar_Pprint.space) tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat tmp2 FStar_Pprint.rangle) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.langle tmp3) in
-      (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp4))
+    | [] -> PPrint.empty
+    | tmp -> (let tmp1 = (BatList.map (fun p -> (text (Prims.strcat "'" p))) ps) in
+      let tmp2 = (PPrint.separate (PPrint.(^^) PPrint.comma PPrint.space) tmp1) in
+      let tmp3 = (PPrint.(^^) tmp2 PPrint.rangle) in
+      let tmp4 = (PPrint.(^^) PPrint.langle tmp3) in
+      (PPrint.(^^) PPrint.space tmp4))
   )
 
-let tydef_to_doc (d : tydef) : FStar_Pprint.document =
+let tydef_to_doc (d : tydef) : PPrint.document =
   (match d with
-    | TAbstract -> (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (text "<abstract>"))
+    | TAbstract -> (PPrint.(^^) PPrint.space (text "<abstract>"))
     | (TAbbrev (t)) -> (let tmp = (cty_to_doc t) in
-      (FStar_Pprint.op_Hat_Hat (FStar_Pprint.break_ Prims.int_one) tmp))
-    | (TRecord (fs)) -> (let tmp = (FStarC_List.map (fun tmp -> (match tmp with
+      (PPrint.(^^) (FStar_Pprint.break_ Prims.int_one) tmp))
+    | (TRecord (fs)) -> (let tmp = (BatList.map (fun tmp -> (match tmp with
           | (f, t) -> (let tmp1 = (cty_to_doc t) in
-            let tmp2 = (FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon tmp1) in
-            let tmp3 = (FStar_Pprint.op_Hat_Hat (text f) tmp2) in
-            (FStar_Pprint.group tmp3))
+            let tmp2 = (PPrint.(^/^) PPrint.colon tmp1) in
+            let tmp3 = (PPrint.(^^) (text f) tmp2) in
+            (PPrint.group tmp3))
         )) fs) in
-      let tmp1 = (sep_by (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi (FStar_Pprint.break_ Prims.int_one)) tmp) in
-      let tmp2 = (FStar_Pprint.op_Hat_Hat (FStar_Pprint.break_ Prims.int_one) tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.lbrace tmp2) in
+      let tmp1 = (sep_by (PPrint.(^^) PPrint.semi (FStar_Pprint.break_ Prims.int_one)) tmp) in
+      let tmp2 = (PPrint.(^^) (FStar_Pprint.break_ Prims.int_one) tmp1) in
+      let tmp3 = (PPrint.(^^) PPrint.lbrace tmp2) in
       let tmp4 = (FStar_Pprint.nest (Prims.of_int (2)) tmp3) in
-      let tmp5 = (FStar_Pprint.op_Hat_Hat tmp4 (FStar_Pprint.op_Hat_Hat (FStar_Pprint.break_ Prims.int_one) FStar_Pprint.rbrace)) in
-      let tmp6 = (FStar_Pprint.group tmp5) in
-      (FStar_Pprint.op_Hat_Hat (FStar_Pprint.break_ Prims.int_one) tmp6))
+      let tmp5 = (PPrint.(^^) tmp4 (PPrint.(^^) (FStar_Pprint.break_ Prims.int_one) PPrint.rbrace)) in
+      let tmp6 = (PPrint.group tmp5) in
+      (PPrint.(^^) (FStar_Pprint.break_ Prims.int_one) tmp6))
     | (TVariant (cs)) -> (let ctor_to_doc = (fun cf -> (match cf with
           | (c, fs) -> (match fs with
               | [] -> (name_to_doc c)
               | tmp -> (let tmp1 = (name_to_doc c) in
-                let tmp2 = (FStarC_List.map (fun tmp2 -> (match tmp2 with
+                let tmp2 = (BatList.map (fun tmp2 -> (match tmp2 with
                     | (f, t) -> (let tmp3 = (cty_to_doc t) in
-                      let tmp4 = (FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon tmp3) in
-                      let tmp5 = (FStar_Pprint.op_Hat_Hat (text f) tmp4) in
-                      (FStar_Pprint.group tmp5))
+                      let tmp4 = (PPrint.(^/^) PPrint.colon tmp3) in
+                      let tmp5 = (PPrint.(^^) (text f) tmp4) in
+                      (PPrint.group tmp5))
                   )) fs) in
-                let tmp3 = (sep_by (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat (text "&") FStar_Pprint.space)) tmp2) in
-                let tmp4 = (FStar_Pprint.op_Hat_Slash_Hat (text "of") tmp3) in
-                let tmp5 = (FStar_Pprint.op_Hat_Slash_Hat tmp1 tmp4) in
-                (FStar_Pprint.group tmp5))
+                let tmp3 = (sep_by (PPrint.(^^) PPrint.space (PPrint.(^^) (text "&") PPrint.space)) tmp2) in
+                let tmp4 = (PPrint.(^/^) (text "of") tmp3) in
+                let tmp5 = (PPrint.(^/^) tmp1 tmp4) in
+                (PPrint.group tmp5))
             )
         )) in
-      let tmp = (FStarC_List.map (fun c -> (let tmp = (ctor_to_doc c) in
-        let tmp1 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp) in
-        let tmp2 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.bar tmp1) in
-        (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline tmp2))) cs) in
-      (FStar_Pprint.concat tmp))
+      let tmp = (BatList.map (fun c -> (let tmp = (ctor_to_doc c) in
+        let tmp1 = (PPrint.(^^) PPrint.space tmp) in
+        let tmp2 = (PPrint.(^^) PPrint.bar tmp1) in
+        (PPrint.(^^) PPrint.hardline tmp2))) cs) in
+      (PPrint.concat tmp))
   )
 
-let binder_to_doc (b : binder) : FStar_Pprint.document =
+let binder_to_doc (b : binder) : PPrint.document =
   (let tmp = (cty_to_doc (b).b_ty) in
-  let tmp1 = (FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon tmp) in
-  let tmp2 = (FStar_Pprint.op_Hat_Hat (text (b).b_name) tmp1) in
-  let tmp3 = (FStar_Pprint.group tmp2) in
-  (FStar_Pprint.parens tmp3))
+  let tmp1 = (PPrint.(^/^) PPrint.colon tmp) in
+  let tmp2 = (PPrint.(^^) (text (b).b_name) tmp1) in
+  let tmp3 = (PPrint.group tmp2) in
+  (PPrint.parens tmp3))
 
 let eff_to_string (e : eff) : string =
   (match e with
@@ -1197,35 +1197,35 @@ let eff_to_string (e : eff) : string =
     | E_Impure -> "Impure"
   )
 
-let eff_to_doc (e : eff) : FStar_Pprint.document =
+let eff_to_doc (e : eff) : PPrint.document =
   (text (eff_to_string e))
 
-let rec pat_to_doc (p : pat) : FStar_Pprint.document =
+let rec pat_to_doc (p : pat) : PPrint.document =
   (match p with
-    | PWild -> FStar_Pprint.underscore
+    | PWild -> PPrint.underscore
     | (PVar (x)) -> (text x)
     | (PConst (c)) -> (constant_to_doc c)
     | (PCtor (n, [])) -> (name_to_doc n)
     | (PCtor (n, ps)) -> (let tmp = (name_to_doc n) in
-      let tmp1 = (FStarC_List.map pat_to_doc ps) in
-      let tmp2 = (sep_by (FStar_Pprint.op_Hat_Hat FStar_Pprint.comma FStar_Pprint.space) tmp1) in
-      let tmp3 = (FStar_Pprint.parens tmp2) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat tmp tmp3) in
-      (FStar_Pprint.group tmp4))
-    | (PRecord (tmp, fs)) -> (let tmp1 = (FStarC_List.map (fun tmp1 -> (match tmp1 with
+      let tmp1 = (BatList.map pat_to_doc ps) in
+      let tmp2 = (sep_by (PPrint.(^^) PPrint.comma PPrint.space) tmp1) in
+      let tmp3 = (PPrint.parens tmp2) in
+      let tmp4 = (PPrint.(^^) tmp tmp3) in
+      (PPrint.group tmp4))
+    | (PRecord (tmp, fs)) -> (let tmp1 = (BatList.map (fun tmp1 -> (match tmp1 with
           | (f, q) -> (let tmp2 = (pat_to_doc q) in
-            let tmp3 = (FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.equals tmp2) in
-            let tmp4 = (FStar_Pprint.op_Hat_Slash_Hat (text f) tmp3) in
-            (FStar_Pprint.group tmp4))
+            let tmp3 = (PPrint.(^/^) PPrint.equals tmp2) in
+            let tmp4 = (PPrint.(^/^) (text f) tmp3) in
+            (PPrint.group tmp4))
         )) fs) in
-      let tmp2 = (sep_by (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi FStar_Pprint.space) tmp1) in
-      (FStar_Pprint.braces tmp2))
-    | (PTuple (ps)) -> (let tmp = (FStarC_List.map pat_to_doc ps) in
-      let tmp1 = (sep_by (FStar_Pprint.op_Hat_Hat FStar_Pprint.comma FStar_Pprint.space) tmp) in
-      (FStar_Pprint.parens tmp1))
-    | (POr (ps)) -> (let tmp = (FStarC_List.map pat_to_doc ps) in
-      let tmp1 = (sep_by (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat FStar_Pprint.bar FStar_Pprint.space)) tmp) in
-      (FStar_Pprint.group tmp1))
+      let tmp2 = (sep_by (PPrint.(^^) PPrint.semi PPrint.space) tmp1) in
+      (PPrint.braces tmp2))
+    | (PTuple (ps)) -> (let tmp = (BatList.map pat_to_doc ps) in
+      let tmp1 = (sep_by (PPrint.(^^) PPrint.comma PPrint.space) tmp) in
+      (PPrint.parens tmp1))
+    | (POr (ps)) -> (let tmp = (BatList.map pat_to_doc ps) in
+      let tmp1 = (sep_by (PPrint.(^^) PPrint.space (PPrint.(^^) PPrint.bar PPrint.space)) tmp) in
+      (PPrint.group tmp1))
   )
 
 let op_to_string (o : prim_op) : string =
@@ -1287,299 +1287,299 @@ let op_to_string (o : prim_op) : string =
     | (Some ((PFloat (fw)))) -> (fwidth_to_string fw)
   ))
 
-let rec branch_to_doc (br : (pat * (expr) option * expr)) : FStar_Pprint.document =
+let rec branch_to_doc (br : (pat * (expr) option * expr)) : PPrint.document =
   (match br with
     | (p, guard, body) -> (let g = (match guard with
-          | None -> FStar_Pprint.empty
+          | None -> PPrint.empty
           | (Some (g)) -> (let tmp = (expr_to_doc' Prims.int_one g) in
-            let tmp1 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp) in
-            let tmp2 = (FStar_Pprint.op_Hat_Hat (text "when") tmp1) in
-            (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp2))
+            let tmp1 = (PPrint.(^^) PPrint.space tmp) in
+            let tmp2 = (PPrint.(^^) (text "when") tmp1) in
+            (PPrint.(^^) PPrint.space tmp2))
         ) in
       let tmp = (pat_to_doc p) in
       let tmp1 = (expr_to_doc' Prims.int_zero body) in
-      let tmp2 = (FStar_Pprint.op_Hat_Slash_Hat (text "->") tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Slash_Hat g tmp2) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat tmp tmp3) in
-      let tmp5 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp4) in
-      let tmp6 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.bar tmp5) in
+      let tmp2 = (PPrint.(^/^) (text "->") tmp1) in
+      let tmp3 = (PPrint.(^/^) g tmp2) in
+      let tmp4 = (PPrint.(^^) tmp tmp3) in
+      let tmp5 = (PPrint.(^^) PPrint.space tmp4) in
+      let tmp6 = (PPrint.(^^) PPrint.bar tmp5) in
       let tmp7 = (FStar_Pprint.nest (Prims.of_int (2)) tmp6) in
-      let tmp8 = (FStar_Pprint.group tmp7) in
-      (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline tmp8))
+      let tmp8 = (PPrint.group tmp7) in
+      (PPrint.(^^) PPrint.hardline tmp8))
   )
 
-and expr_to_doc' (prec : Prims.int) (e : expr) : FStar_Pprint.document =
+and expr_to_doc' (prec : Prims.int) (e : expr) : PPrint.document =
   (match (e).e with
     | (EConst (c)) -> (constant_to_doc c)
     | (EVar (x)) -> (text x)
     | (EQual (n, [])) -> (name_to_doc n)
     | (EQual (n, tys)) -> (let tmp = (name_to_doc n) in
-      let tmp1 = (FStarC_List.map cty_to_doc tys) in
-      let tmp2 = (sep_by (FStar_Pprint.op_Hat_Hat FStar_Pprint.comma FStar_Pprint.space) tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat tmp2 FStar_Pprint.rangle) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.langle tmp3) in
-      let tmp5 = (FStar_Pprint.op_Hat_Hat tmp tmp4) in
-      (FStar_Pprint.group tmp5))
+      let tmp1 = (BatList.map cty_to_doc tys) in
+      let tmp2 = (sep_by (PPrint.(^^) PPrint.comma PPrint.space) tmp1) in
+      let tmp3 = (PPrint.(^^) tmp2 PPrint.rangle) in
+      let tmp4 = (PPrint.(^^) PPrint.langle tmp3) in
+      let tmp5 = (PPrint.(^^) tmp tmp4) in
+      (PPrint.group tmp5))
     | (ELet (x, t, e1, e2)) -> (let tmp = (cty_to_doc t) in
       let tmp1 = (expr_to_doc' Prims.int_zero e1) in
-      let tmp2 = (FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.equals tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Slash_Hat tmp tmp2) in
-      let tmp4 = (FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon tmp3) in
-      let tmp5 = (FStar_Pprint.op_Hat_Hat (text x) tmp4) in
-      let tmp6 = (FStar_Pprint.op_Hat_Slash_Hat (text "let") tmp5) in
+      let tmp2 = (PPrint.(^/^) PPrint.equals tmp1) in
+      let tmp3 = (PPrint.(^/^) tmp tmp2) in
+      let tmp4 = (PPrint.(^/^) PPrint.colon tmp3) in
+      let tmp5 = (PPrint.(^^) (text x) tmp4) in
+      let tmp6 = (PPrint.(^/^) (text "let") tmp5) in
       let tmp7 = (FStar_Pprint.nest (Prims.of_int (2)) tmp6) in
-      let tmp8 = (FStar_Pprint.group tmp7) in
-      let tmp9 = (FStar_Pprint.op_Hat_Slash_Hat tmp8 (text "in")) in
-      let tmp10 = (FStar_Pprint.group tmp9) in
+      let tmp8 = (PPrint.group tmp7) in
+      let tmp9 = (PPrint.(^/^) tmp8 (text "in")) in
+      let tmp10 = (PPrint.group tmp9) in
       let tmp11 = (expr_to_doc' Prims.int_zero e2) in
-      let tmp12 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline tmp11) in
-      let tmp13 = (FStar_Pprint.op_Hat_Hat tmp10 tmp12) in
+      let tmp12 = (PPrint.(^^) PPrint.hardline tmp11) in
+      let tmp13 = (PPrint.(^^) tmp10 tmp12) in
       (parens_if (Prims.op_Greater_Equals prec Prims.int_one) tmp13))
     | (EApp (h, args)) -> (let tmp = (expr_to_doc' Prims.int_one h) in
-      let tmp1 = (FStarC_List.map (expr_to_doc' Prims.int_one) args) in
+      let tmp1 = (BatList.map (expr_to_doc' Prims.int_one) args) in
       let tmp2 = (sep_by (FStar_Pprint.break_ Prims.int_one) tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Slash_Hat tmp tmp2) in
+      let tmp3 = (PPrint.(^/^) tmp tmp2) in
       let tmp4 = (FStar_Pprint.nest (Prims.of_int (2)) tmp3) in
-      let tmp5 = (FStar_Pprint.group tmp4) in
+      let tmp5 = (PPrint.group tmp4) in
       (parens_if (Prims.op_Greater_Equals prec Prims.int_one) tmp5))
-    | (EFun (bs, body)) -> (let tmp = (FStarC_List.map binder_to_doc bs) in
+    | (EFun (bs, body)) -> (let tmp = (BatList.map binder_to_doc bs) in
       let tmp1 = (sep_by (FStar_Pprint.break_ Prims.int_one) tmp) in
       let tmp2 = (expr_to_doc' Prims.int_zero body) in
-      let tmp3 = (FStar_Pprint.op_Hat_Slash_Hat (text "->") tmp2) in
-      let tmp4 = (FStar_Pprint.op_Hat_Slash_Hat tmp1 tmp3) in
-      let tmp5 = (FStar_Pprint.op_Hat_Slash_Hat (text "fun") tmp4) in
+      let tmp3 = (PPrint.(^/^) (text "->") tmp2) in
+      let tmp4 = (PPrint.(^/^) tmp1 tmp3) in
+      let tmp5 = (PPrint.(^/^) (text "fun") tmp4) in
       let tmp6 = (FStar_Pprint.nest (Prims.of_int (2)) tmp5) in
-      let tmp7 = (FStar_Pprint.group tmp6) in
+      let tmp7 = (PPrint.group tmp6) in
       (parens_if (Prims.op_Greater_Equals prec Prims.int_one) tmp7))
     | (EMatch (scrut, brs)) -> (let tmp = (expr_to_doc' Prims.int_zero scrut) in
-      let tmp1 = (FStar_Pprint.op_Hat_Slash_Hat tmp (text "with")) in
-      let tmp2 = (FStar_Pprint.op_Hat_Slash_Hat (text "match") tmp1) in
-      let tmp3 = (FStar_Pprint.group tmp2) in
-      let tmp4 = (FStarC_List.map branch_to_doc brs) in
-      let tmp5 = (FStar_Pprint.concat tmp4) in
-      let tmp6 = (FStar_Pprint.op_Hat_Hat tmp3 tmp5) in
-      let tmp7 = (FStar_Pprint.group tmp6) in
+      let tmp1 = (PPrint.(^/^) tmp (text "with")) in
+      let tmp2 = (PPrint.(^/^) (text "match") tmp1) in
+      let tmp3 = (PPrint.group tmp2) in
+      let tmp4 = (BatList.map branch_to_doc brs) in
+      let tmp5 = (PPrint.concat tmp4) in
+      let tmp6 = (PPrint.(^^) tmp3 tmp5) in
+      let tmp7 = (PPrint.group tmp6) in
       (parens_if (Prims.op_Greater_Equals prec Prims.int_one) tmp7))
     | (EIf (c, t, e2)) -> (let tmp = (expr_to_doc' Prims.int_zero c) in
-      let tmp1 = (FStar_Pprint.op_Hat_Slash_Hat (text "if") tmp) in
+      let tmp1 = (PPrint.(^/^) (text "if") tmp) in
       let tmp2 = (FStar_Pprint.nest (Prims.of_int (2)) tmp1) in
-      let tmp3 = (FStar_Pprint.group tmp2) in
+      let tmp3 = (PPrint.group tmp2) in
       let tmp4 = (expr_to_doc' Prims.int_one t) in
-      let tmp5 = (FStar_Pprint.op_Hat_Slash_Hat (text "then") tmp4) in
+      let tmp5 = (PPrint.(^/^) (text "then") tmp4) in
       let tmp6 = (FStar_Pprint.nest (Prims.of_int (2)) tmp5) in
-      let tmp7 = (FStar_Pprint.group tmp6) in
+      let tmp7 = (PPrint.group tmp6) in
       let tmp8 = (expr_to_doc' Prims.int_one e2) in
-      let tmp9 = (FStar_Pprint.op_Hat_Slash_Hat (text "else") tmp8) in
+      let tmp9 = (PPrint.(^/^) (text "else") tmp8) in
       let tmp10 = (FStar_Pprint.nest (Prims.of_int (2)) tmp9) in
-      let tmp11 = (FStar_Pprint.group tmp10) in
-      let tmp12 = (FStar_Pprint.op_Hat_Slash_Hat tmp7 tmp11) in
-      let tmp13 = (FStar_Pprint.op_Hat_Slash_Hat tmp3 tmp12) in
-      let tmp14 = (FStar_Pprint.group tmp13) in
+      let tmp11 = (PPrint.group tmp10) in
+      let tmp12 = (PPrint.(^/^) tmp7 tmp11) in
+      let tmp13 = (PPrint.(^/^) tmp3 tmp12) in
+      let tmp14 = (PPrint.group tmp13) in
       (parens_if (Prims.op_Greater_Equals prec Prims.int_one) tmp14))
     | (ESeq (e1, e2)) -> (let tmp = (expr_to_doc' Prims.int_one e1) in
       let tmp1 = (expr_to_doc' Prims.int_zero e2) in
-      let tmp2 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi tmp2) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat tmp tmp3) in
+      let tmp2 = (PPrint.(^^) PPrint.hardline tmp1) in
+      let tmp3 = (PPrint.(^^) PPrint.semi tmp2) in
+      let tmp4 = (PPrint.(^^) tmp tmp3) in
       (parens_if (Prims.op_Greater_Equals prec Prims.int_one) tmp4))
     | (ECtor (n, [])) -> (name_to_doc n)
     | (ECtor (n, args)) -> (let tmp = (name_to_doc n) in
-      let tmp1 = (FStarC_List.map (expr_to_doc' Prims.int_zero) args) in
-      let tmp2 = (sep_by (FStar_Pprint.op_Hat_Hat FStar_Pprint.comma FStar_Pprint.space) tmp1) in
-      let tmp3 = (FStar_Pprint.parens tmp2) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat tmp tmp3) in
-      (FStar_Pprint.group tmp4))
-    | (ETuple (es)) -> (let tmp = (FStarC_List.map (expr_to_doc' Prims.int_zero) es) in
-      let tmp1 = (sep_by (FStar_Pprint.op_Hat_Hat FStar_Pprint.comma FStar_Pprint.space) tmp) in
-      (FStar_Pprint.parens tmp1))
+      let tmp1 = (BatList.map (expr_to_doc' Prims.int_zero) args) in
+      let tmp2 = (sep_by (PPrint.(^^) PPrint.comma PPrint.space) tmp1) in
+      let tmp3 = (PPrint.parens tmp2) in
+      let tmp4 = (PPrint.(^^) tmp tmp3) in
+      (PPrint.group tmp4))
+    | (ETuple (es)) -> (let tmp = (BatList.map (expr_to_doc' Prims.int_zero) es) in
+      let tmp1 = (sep_by (PPrint.(^^) PPrint.comma PPrint.space) tmp) in
+      (PPrint.parens tmp1))
     | (ERecord (n, fs)) -> (let tmp = (name_to_doc n) in
-      let tmp1 = (FStarC_List.map (fun tmp1 -> (match tmp1 with
+      let tmp1 = (BatList.map (fun tmp1 -> (match tmp1 with
           | (f, e1) -> (let tmp2 = (expr_to_doc' Prims.int_zero e1) in
-            let tmp3 = (FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.equals tmp2) in
-            let tmp4 = (FStar_Pprint.op_Hat_Slash_Hat (text f) tmp3) in
-            (FStar_Pprint.group tmp4))
+            let tmp3 = (PPrint.(^/^) PPrint.equals tmp2) in
+            let tmp4 = (PPrint.(^/^) (text f) tmp3) in
+            (PPrint.group tmp4))
         )) fs) in
-      let tmp2 = (sep_by (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi FStar_Pprint.space) tmp1) in
-      let tmp3 = (FStar_Pprint.braces tmp2) in
-      let tmp4 = (FStar_Pprint.op_Hat_Slash_Hat tmp tmp3) in
-      (FStar_Pprint.group tmp4))
+      let tmp2 = (sep_by (PPrint.(^^) PPrint.semi PPrint.space) tmp1) in
+      let tmp3 = (PPrint.braces tmp2) in
+      let tmp4 = (PPrint.(^/^) tmp tmp3) in
+      (PPrint.group tmp4))
     | (EProj (e1, n, f)) -> (let tmp = (expr_to_doc' Prims.int_one e1) in
       let tmp1 = (name_to_doc n) in
-      let tmp2 = (FStar_Pprint.op_Hat_Hat tmp1 (FStar_Pprint.op_Hat_Hat FStar_Pprint.dot (text f))) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.dot tmp2) in
-      (FStar_Pprint.op_Hat_Hat tmp tmp3))
+      let tmp2 = (PPrint.(^^) tmp1 (PPrint.(^^) PPrint.dot (text f))) in
+      let tmp3 = (PPrint.(^^) PPrint.dot tmp2) in
+      (PPrint.(^^) tmp tmp3))
     | (EDiscrim (e1, n)) -> (let tmp = (name_to_doc n) in
       let tmp1 = (expr_to_doc' Prims.int_zero e1) in
-      let tmp2 = (FStar_Pprint.parens tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat (text "?") tmp2) in
-      (FStar_Pprint.op_Hat_Hat tmp tmp3))
+      let tmp2 = (PPrint.parens tmp1) in
+      let tmp3 = (PPrint.(^^) (text "?") tmp2) in
+      (PPrint.(^^) tmp tmp3))
     | (ECoerce (e1, t)) -> (let tmp = (expr_to_doc' Prims.int_zero e1) in
       let tmp1 = (cty_to_doc t) in
-      let tmp2 = (FStar_Pprint.op_Hat_Slash_Hat (text "<:") tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Slash_Hat tmp tmp2) in
+      let tmp2 = (PPrint.(^/^) (text "<:") tmp1) in
+      let tmp3 = (PPrint.(^/^) tmp tmp2) in
       let tmp4 = (FStar_Pprint.nest (Prims.of_int (2)) tmp3) in
-      let tmp5 = (FStar_Pprint.parens tmp4) in
-      (FStar_Pprint.group tmp5))
+      let tmp5 = (PPrint.parens tmp4) in
+      (PPrint.group tmp5))
     | (ECast (e1, t)) -> (let tmp = (expr_to_doc' Prims.int_zero e1) in
       let tmp1 = (cty_to_doc t) in
-      let tmp2 = (FStar_Pprint.op_Hat_Slash_Hat (text ":>") tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Slash_Hat tmp tmp2) in
+      let tmp2 = (PPrint.(^/^) (text ":>") tmp1) in
+      let tmp3 = (PPrint.(^/^) tmp tmp2) in
       let tmp4 = (FStar_Pprint.nest (Prims.of_int (2)) tmp3) in
-      let tmp5 = (FStar_Pprint.parens tmp4) in
-      (FStar_Pprint.group tmp5))
-    | (EOp (op, args)) -> (let tmp = (FStarC_List.map (expr_to_doc' Prims.int_zero) args) in
-      let tmp1 = (sep_by (FStar_Pprint.op_Hat_Hat FStar_Pprint.comma FStar_Pprint.space) tmp) in
-      let tmp2 = (FStar_Pprint.parens tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat (text (Prims.strcat "`" (Prims.strcat (op_to_string op) "`"))) tmp2) in
-      (FStar_Pprint.group tmp3))
+      let tmp5 = (PPrint.parens tmp4) in
+      (PPrint.group tmp5))
+    | (EOp (op, args)) -> (let tmp = (BatList.map (expr_to_doc' Prims.int_zero) args) in
+      let tmp1 = (sep_by (PPrint.(^^) PPrint.comma PPrint.space) tmp) in
+      let tmp2 = (PPrint.parens tmp1) in
+      let tmp3 = (PPrint.(^^) (text (Prims.strcat "`" (Prims.strcat (op_to_string op) "`"))) tmp2) in
+      (PPrint.group tmp3))
     | (EWhile (c, body)) -> (let tmp = (expr_to_doc' Prims.int_one c) in
-      let tmp1 = (FStar_Pprint.op_Hat_Slash_Hat (text "while") tmp) in
+      let tmp1 = (PPrint.(^/^) (text "while") tmp) in
       let tmp2 = (FStar_Pprint.nest (Prims.of_int (2)) tmp1) in
-      let tmp3 = (FStar_Pprint.group tmp2) in
+      let tmp3 = (PPrint.group tmp2) in
       let tmp4 = (expr_to_doc' Prims.int_zero body) in
-      let tmp5 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline tmp4) in
-      let tmp6 = (FStar_Pprint.op_Hat_Hat (text "{") tmp5) in
+      let tmp5 = (PPrint.(^^) PPrint.hardline tmp4) in
+      let tmp6 = (PPrint.(^^) (text "{") tmp5) in
       let tmp7 = (FStar_Pprint.nest (Prims.of_int (2)) tmp6) in
-      let tmp8 = (FStar_Pprint.group tmp7) in
-      let tmp9 = (FStar_Pprint.op_Hat_Hat tmp8 (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline (text "}"))) in
-      let tmp10 = (FStar_Pprint.op_Hat_Slash_Hat tmp3 tmp9) in
-      let tmp11 = (FStar_Pprint.group tmp10) in
+      let tmp8 = (PPrint.group tmp7) in
+      let tmp9 = (PPrint.(^^) tmp8 (PPrint.(^^) PPrint.hardline (text "}"))) in
+      let tmp10 = (PPrint.(^/^) tmp3 tmp9) in
+      let tmp11 = (PPrint.group tmp10) in
       (parens_if (Prims.op_Greater_Equals prec Prims.int_one) tmp11))
     | EAny -> (text "any")
-    | (EAbort (s)) -> (FStar_Pprint.group (FStar_Pprint.op_Hat_Slash_Hat (text "abort") (FStar_Pprint.dquotes (text s))))
-    | (EUnreachable (s)) -> (FStar_Pprint.group (FStar_Pprint.op_Hat_Slash_Hat (text "unreachable") (FStar_Pprint.dquotes (text s))))
+    | (EAbort (s)) -> (PPrint.group (PPrint.(^/^) (text "abort") (PPrint.dquotes (text s))))
+    | (EUnreachable (s)) -> (PPrint.group (PPrint.(^/^) (text "unreachable") (PPrint.dquotes (text s))))
     | (ERaise (e1)) -> (let tmp = (expr_to_doc' Prims.int_one e1) in
-      let tmp1 = (FStar_Pprint.op_Hat_Slash_Hat (text "raise") tmp) in
-      (FStar_Pprint.group tmp1))
+      let tmp1 = (PPrint.(^/^) (text "raise") tmp) in
+      (PPrint.group tmp1))
     | (ETry (e1, brs)) -> (let tmp = (expr_to_doc' Prims.int_zero e1) in
-      let tmp1 = (FStar_Pprint.op_Hat_Slash_Hat (text "try") tmp) in
+      let tmp1 = (PPrint.(^/^) (text "try") tmp) in
       let tmp2 = (FStar_Pprint.nest (Prims.of_int (2)) tmp1) in
-      let tmp3 = (FStar_Pprint.group tmp2) in
-      let tmp4 = (FStarC_List.map branch_to_doc brs) in
-      let tmp5 = (FStar_Pprint.concat tmp4) in
-      let tmp6 = (FStar_Pprint.op_Hat_Hat (text "with") tmp5) in
-      let tmp7 = (FStar_Pprint.op_Hat_Slash_Hat tmp3 tmp6) in
-      let tmp8 = (FStar_Pprint.group tmp7) in
+      let tmp3 = (PPrint.group tmp2) in
+      let tmp4 = (BatList.map branch_to_doc brs) in
+      let tmp5 = (PPrint.concat tmp4) in
+      let tmp6 = (PPrint.(^^) (text "with") tmp5) in
+      let tmp7 = (PPrint.(^/^) tmp3 tmp6) in
+      let tmp8 = (PPrint.group tmp7) in
       (parens_if (Prims.op_Greater_Equals prec Prims.int_one) tmp8))
   )
 
-let expr_to_doc (e : expr) : FStar_Pprint.document =
+let expr_to_doc (e : expr) : PPrint.document =
   (expr_to_doc' Prims.int_zero e)
 
-let decl_to_doc (d : decl) : FStar_Pprint.document =
+let decl_to_doc (d : decl) : PPrint.document =
   (match d with
     | (DType (t)) -> (let tmp = (flags_to_doc (t).dt_flags) in
       let tmp1 = (name_to_doc (t).dt_name) in
       let tmp2 = (params_to_doc (t).dt_params) in
       let tmp3 = (tydef_to_doc (t).dt_body) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.equals tmp3) in
-      let tmp5 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp4) in
-      let tmp6 = (FStar_Pprint.op_Hat_Hat tmp2 tmp5) in
-      let tmp7 = (FStar_Pprint.op_Hat_Hat tmp1 tmp6) in
-      let tmp8 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp7) in
-      let tmp9 = (FStar_Pprint.op_Hat_Hat (text "type") tmp8) in
+      let tmp4 = (PPrint.(^^) PPrint.equals tmp3) in
+      let tmp5 = (PPrint.(^^) PPrint.space tmp4) in
+      let tmp6 = (PPrint.(^^) tmp2 tmp5) in
+      let tmp7 = (PPrint.(^^) tmp1 tmp6) in
+      let tmp8 = (PPrint.(^^) PPrint.space tmp7) in
+      let tmp9 = (PPrint.(^^) (text "type") tmp8) in
       let tmp10 = (FStar_Pprint.nest (Prims.of_int (2)) tmp9) in
-      let tmp11 = (FStar_Pprint.group tmp10) in
-      (FStar_Pprint.op_Hat_Hat tmp tmp11))
+      let tmp11 = (PPrint.group tmp10) in
+      (PPrint.(^^) tmp tmp11))
     | (DLet (l)) -> (let tmp = (flags_to_doc (l).dl_flags) in
       let tmp1 = (name_to_doc (l).dl_name) in
       let tmp2 = (params_to_doc (l).dl_typars) in
       let tmp3 = (match (l).dl_binders with
-          | [] -> FStar_Pprint.empty
-          | bs -> (let tmp3 = (FStarC_List.map binder_to_doc bs) in
+          | [] -> PPrint.empty
+          | bs -> (let tmp3 = (BatList.map binder_to_doc bs) in
             let tmp4 = (sep_by (FStar_Pprint.break_ Prims.int_one) tmp3) in
-            (FStar_Pprint.op_Hat_Hat (FStar_Pprint.break_ Prims.int_one) tmp4))
+            (PPrint.(^^) (FStar_Pprint.break_ Prims.int_one) tmp4))
         ) in
       let tmp4 = (cty_to_doc (l).dl_ret) in
       let tmp5 = (eff_to_doc (l).dl_eff) in
-      let tmp6 = (FStar_Pprint.brackets tmp5) in
-      let tmp7 = (FStar_Pprint.op_Hat_Slash_Hat tmp6 FStar_Pprint.equals) in
-      let tmp8 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp7) in
-      let tmp9 = (FStar_Pprint.op_Hat_Hat tmp4 tmp8) in
-      let tmp10 = (FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon tmp9) in
-      let tmp11 = (FStar_Pprint.op_Hat_Slash_Hat tmp3 tmp10) in
-      let tmp12 = (FStar_Pprint.op_Hat_Hat tmp2 tmp11) in
-      let tmp13 = (FStar_Pprint.op_Hat_Hat tmp1 tmp12) in
-      let tmp14 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp13) in
-      let tmp15 = (FStar_Pprint.op_Hat_Hat (text "let") tmp14) in
+      let tmp6 = (PPrint.brackets tmp5) in
+      let tmp7 = (PPrint.(^/^) tmp6 PPrint.equals) in
+      let tmp8 = (PPrint.(^^) PPrint.space tmp7) in
+      let tmp9 = (PPrint.(^^) tmp4 tmp8) in
+      let tmp10 = (PPrint.(^/^) PPrint.colon tmp9) in
+      let tmp11 = (PPrint.(^/^) tmp3 tmp10) in
+      let tmp12 = (PPrint.(^^) tmp2 tmp11) in
+      let tmp13 = (PPrint.(^^) tmp1 tmp12) in
+      let tmp14 = (PPrint.(^^) PPrint.space tmp13) in
+      let tmp15 = (PPrint.(^^) (text "let") tmp14) in
       let tmp16 = (FStar_Pprint.nest (Prims.of_int (2)) tmp15) in
-      let tmp17 = (FStar_Pprint.group tmp16) in
+      let tmp17 = (PPrint.group tmp16) in
       let tmp18 = (expr_to_doc (l).dl_body) in
       let tmp19 = (FStar_Pprint.nest (Prims.of_int (2)) tmp18) in
-      let tmp20 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline tmp19) in
-      let tmp21 = (FStar_Pprint.op_Hat_Hat tmp17 tmp20) in
-      let tmp22 = (FStar_Pprint.group tmp21) in
-      (FStar_Pprint.op_Hat_Hat tmp tmp22))
+      let tmp20 = (PPrint.(^^) PPrint.hardline tmp19) in
+      let tmp21 = (PPrint.(^^) tmp17 tmp20) in
+      let tmp22 = (PPrint.group tmp21) in
+      (PPrint.(^^) tmp tmp22))
     | (DExternal (e)) -> (let tmp = (flags_to_doc (e).dx_flags) in
       let tmp1 = (name_to_doc (e).dx_name) in
       let tmp2 = (cty_to_doc (e).dx_ty) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat tmp2 (match (e).dx_target with
-          | None -> FStar_Pprint.empty
-          | (Some (t)) -> (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.equals (FStar_Pprint.dquotes (text t))))
+      let tmp3 = (PPrint.(^^) tmp2 (match (e).dx_target with
+          | None -> PPrint.empty
+          | (Some (t)) -> (PPrint.(^^) PPrint.space (PPrint.(^/^) PPrint.equals (PPrint.dquotes (text t))))
         )) in
-      let tmp4 = (FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon tmp3) in
-      let tmp5 = (FStar_Pprint.op_Hat_Slash_Hat tmp1 tmp4) in
-      let tmp6 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp5) in
-      let tmp7 = (FStar_Pprint.op_Hat_Hat (text "external") tmp6) in
+      let tmp4 = (PPrint.(^/^) PPrint.colon tmp3) in
+      let tmp5 = (PPrint.(^/^) tmp1 tmp4) in
+      let tmp6 = (PPrint.(^^) PPrint.space tmp5) in
+      let tmp7 = (PPrint.(^^) (text "external") tmp6) in
       let tmp8 = (FStar_Pprint.nest (Prims.of_int (2)) tmp7) in
-      let tmp9 = (FStar_Pprint.group tmp8) in
-      (FStar_Pprint.op_Hat_Hat tmp tmp9))
+      let tmp9 = (PPrint.group tmp8) in
+      (PPrint.(^^) tmp tmp9))
     | (DExn (e)) -> (let tmp = (flags_to_doc (e).de_flags) in
       let tmp1 = (name_to_doc (e).de_name) in
       let tmp2 = (match (e).de_args with
-          | [] -> FStar_Pprint.empty
-          | args -> (let tmp2 = (FStarC_List.map cty_to_doc args) in
-            let tmp3 = (sep_by (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat (text "&") FStar_Pprint.space)) tmp2) in
-            let tmp4 = (FStar_Pprint.op_Hat_Slash_Hat (text "of") tmp3) in
-            (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp4))
+          | [] -> PPrint.empty
+          | args -> (let tmp2 = (BatList.map cty_to_doc args) in
+            let tmp3 = (sep_by (PPrint.(^^) PPrint.space (PPrint.(^^) (text "&") PPrint.space)) tmp2) in
+            let tmp4 = (PPrint.(^/^) (text "of") tmp3) in
+            (PPrint.(^^) PPrint.space tmp4))
         ) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat tmp1 tmp2) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp3) in
-      let tmp5 = (FStar_Pprint.op_Hat_Hat (text "exception") tmp4) in
+      let tmp3 = (PPrint.(^^) tmp1 tmp2) in
+      let tmp4 = (PPrint.(^^) PPrint.space tmp3) in
+      let tmp5 = (PPrint.(^^) (text "exception") tmp4) in
       let tmp6 = (FStar_Pprint.nest (Prims.of_int (2)) tmp5) in
-      let tmp7 = (FStar_Pprint.group tmp6) in
-      (FStar_Pprint.op_Hat_Hat tmp tmp7))
+      let tmp7 = (PPrint.group tmp6) in
+      (PPrint.(^^) tmp tmp7))
     | (DModule (m)) -> (let tmp = (flags_to_doc (m).dm_flags) in
       let tmp1 = (name_to_doc (m).dm_name) in
-      let tmp2 = (FStarC_List.map (fun tmp2 -> (match tmp2 with
+      let tmp2 = (BatList.map (fun tmp2 -> (match tmp2 with
           | (f, c) -> (let tmp3 = (cty_to_doc c) in
-            let tmp4 = (FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.equals tmp3) in
-            let tmp5 = (FStar_Pprint.op_Hat_Slash_Hat (text f) tmp4) in
-            let tmp6 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp5) in
-            let tmp7 = (FStar_Pprint.op_Hat_Hat (text "type") tmp6) in
-            (FStar_Pprint.group tmp7))
+            let tmp4 = (PPrint.(^/^) PPrint.equals tmp3) in
+            let tmp5 = (PPrint.(^/^) (text f) tmp4) in
+            let tmp6 = (PPrint.(^^) PPrint.space tmp5) in
+            let tmp7 = (PPrint.(^^) (text "type") tmp6) in
+            (PPrint.group tmp7))
         )) (m).dm_types) in
-      let tmp3 = (FStarC_List.map (fun tmp3 -> (match tmp3 with
+      let tmp3 = (BatList.map (fun tmp3 -> (match tmp3 with
           | (f, n) -> (let tmp4 = (name_to_doc n) in
-            let tmp5 = (FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.equals tmp4) in
-            let tmp6 = (FStar_Pprint.op_Hat_Slash_Hat (text f) tmp5) in
-            let tmp7 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp6) in
-            let tmp8 = (FStar_Pprint.op_Hat_Hat (text "let") tmp7) in
-            (FStar_Pprint.group tmp8))
+            let tmp5 = (PPrint.(^/^) PPrint.equals tmp4) in
+            let tmp6 = (PPrint.(^/^) (text f) tmp5) in
+            let tmp7 = (PPrint.(^^) PPrint.space tmp6) in
+            let tmp8 = (PPrint.(^^) (text "let") tmp7) in
+            (PPrint.group tmp8))
         )) (m).dm_values) in
-      let tmp4 = (FStarC_List.op_At tmp2 tmp3) in
-      let tmp5 = (sep_by (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi (FStar_Pprint.break_ Prims.int_one)) tmp4) in
-      let tmp6 = (FStar_Pprint.op_Hat_Hat tmp5 FStar_Pprint.rparen) in
-      let tmp7 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.lparen tmp6) in
-      let tmp8 = (FStar_Pprint.op_Hat_Slash_Hat (text (m).dm_functor) tmp7) in
-      let tmp9 = (FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.equals tmp8) in
-      let tmp10 = (FStar_Pprint.op_Hat_Slash_Hat tmp1 tmp9) in
-      let tmp11 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp10) in
-      let tmp12 = (FStar_Pprint.op_Hat_Hat (text "module") tmp11) in
+      let tmp4 = (BatList.append tmp2 tmp3) in
+      let tmp5 = (sep_by (PPrint.(^^) PPrint.semi (FStar_Pprint.break_ Prims.int_one)) tmp4) in
+      let tmp6 = (PPrint.(^^) tmp5 PPrint.rparen) in
+      let tmp7 = (PPrint.(^^) PPrint.lparen tmp6) in
+      let tmp8 = (PPrint.(^/^) (text (m).dm_functor) tmp7) in
+      let tmp9 = (PPrint.(^/^) PPrint.equals tmp8) in
+      let tmp10 = (PPrint.(^/^) tmp1 tmp9) in
+      let tmp11 = (PPrint.(^^) PPrint.space tmp10) in
+      let tmp12 = (PPrint.(^^) (text "module") tmp11) in
       let tmp13 = (FStar_Pprint.nest (Prims.of_int (2)) tmp12) in
-      let tmp14 = (FStar_Pprint.group tmp13) in
-      (FStar_Pprint.op_Hat_Hat tmp tmp14))
+      let tmp14 = (PPrint.group tmp13) in
+      (PPrint.(^^) tmp tmp14))
   )
 
-let program_to_doc (p : (decl) list) : FStar_Pprint.document =
-  (FStarC_Pprint.separate_map (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline FStar_Pprint.hardline) decl_to_doc p)
+let program_to_doc (p : (decl) list) : PPrint.document =
+  (FStarC_Pprint.separate_map (PPrint.(^^) PPrint.hardline PPrint.hardline) decl_to_doc p)
 
 let program_to_string (p : (decl) list) : string =
   (let tmp = (program_to_doc p) in
   (FStar_Pprint.render tmp))
 
 let imported_home (d : decl) : (string) option =
-  (FStarC_List.tryPick (fun tmp -> (match tmp with
+  (List.find_map (fun tmp -> (match tmp with
     | (Imported (tmp1, h)) -> h
     | tmp1 -> None
   )) (decl_flags d))

@@ -41,7 +41,7 @@ let of_lid (env : FStarC_TypeChecker_Env.env) (l : FStarC_Ident.lident) : FStarC
   (let tmp = (if ((FStarC_Ident.lid_equals l FStarC_Parser_Const.effect_GHOST_lid) || (FStarC_Ident.lid_equals l FStarC_Parser_Const.effect_Ghost_lid)) then true else (FStarC_TypeChecker_Env.is_erasable_effect env l)) in
   (if tmp then FStarC_Custard_Syntax.E_Ghost else (if (((FStarC_Ident.lid_equals l FStarC_Parser_Const.effect_PURE_lid) || (FStarC_Ident.lid_equals l FStarC_Parser_Const.effect_Pure_lid)) || (FStarC_Ident.lid_equals l FStarC_Parser_Const.effect_Tot_lid)) then FStarC_Custard_Syntax.E_Pure else (let tmp1 = (FStarC_TypeChecker_Util.effect_extraction_mode env l) in
   (match tmp1 with
-    | (FStarC_Syntax_Syntax.Extract_none (reason)) -> (FStarC_Errors.fStarC_Errors_raise_error0__list_document FStarC_Errors_Codes.Error_CustardUnextractableEffect ((FStarC_Errors_Msg.text (Prims.strcat "Custard cannot extract the effect " (Prims.strcat (FStarC_Ident.string_of_lid l) "."))) :: ((FStarC_Errors_Msg.text reason) :: [])))
+    | (FStarC_Syntax_Syntax.Extract_none (reason)) -> (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Error_CustardUnextractableEffect ((FStarC_Errors_Msg.text (Prims.strcat "Custard cannot extract the effect " (Prims.strcat (FStarC_Ident.string_of_lid l) "."))) :: ((FStarC_Errors_Msg.text reason) :: [])))
     | tmp2 -> FStarC_Custard_Syntax.E_Impure
   )))))
 
@@ -72,7 +72,7 @@ let rec maybe_reify (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Synta
   (match tmp3 with
     | (FStarC_Syntax_Syntax.Tm_let ({ FStarC_Syntax_Syntax.lbs = true; lbs1 = lbs; body = body; _ })) -> (let tmp4 = (FStarC_Syntax_Subst.open_let_rec lbs body) in
       (match tmp4 with
-        | (lbs1, body1) -> (let env' = (FStarC_List.fold_left (fun env1 lb -> (match (lb).FStarC_Syntax_Syntax.lbname with
+        | (lbs1, body1) -> (let env' = (BatList.fold_left (fun env1 lb -> (match (lb).FStarC_Syntax_Syntax.lbname with
               | (FStar_Pervasives.Inl (bv)) -> (FStarC_TypeChecker_Env.push_bv env1 bv)
               | (FStar_Pervasives.Inr (tmp5)) -> env1
             )) env lbs1) in

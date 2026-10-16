@@ -2,7 +2,7 @@
 [@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
 
 let mkFV (fv : FStarC_Syntax_Syntax.fv) (us : (FStarC_Syntax_Syntax.universe) list) (ts : ((FStarC_TypeChecker_NBETerm.t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : FStarC_TypeChecker_NBETerm.t =
-  (FStarC_TypeChecker_NBETerm.mkFV fv (FStarC_List.rev us) (FStarC_List.rev ts))
+  (FStarC_TypeChecker_NBETerm.mkFV fv (BatList.rev us) (BatList.rev ts))
 
 let fv_as_emb_typ (fv : FStarC_Syntax_Syntax.fv) : FStarC_Syntax_Syntax.emb_typ =
   (FStarC_Syntax_Syntax.ET_app ((FStarC_Ident.string_of_lid (fv).FStarC_Syntax_Syntax.fv_name), []))
@@ -50,7 +50,7 @@ let e_fv : (FStarC_Syntax_Syntax.fv) FStarC_TypeChecker_NBETerm.embedding =
   (mk_emb' embed_fv unembed_fv FStarC_Reflection_V2_Constants.fstar_refl_fv_fv))
 
 let mkConstruct (fv : FStarC_Syntax_Syntax.fv) (us : (FStarC_Syntax_Syntax.universe) list) (ts : ((FStarC_TypeChecker_NBETerm.t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : FStarC_TypeChecker_NBETerm.t =
-  (FStarC_TypeChecker_NBETerm.mkConstruct fv (FStarC_List.rev us) (FStarC_List.rev ts))
+  (FStarC_TypeChecker_NBETerm.mkConstruct fv (BatList.rev us) (BatList.rev ts))
 
 let e_bv : (FStarC_Syntax_Syntax.bv) FStarC_TypeChecker_NBETerm.embedding =
   (let embed_bv = (fun cb bv -> (mk_lazy cb bv FStarC_Reflection_V2_Constants.fstar_refl_bv FStarC_Syntax_Syntax.Lazy_bv)) in

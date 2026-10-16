@@ -2,22 +2,22 @@
 [@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
 
 let group_of (d : FStarC_Custard_Syntax.decl) : ((string) list) option =
-  (let tmp = (FStarC_List.tryFind FStarC_Custard_Syntax.uu___is_Rec (FStarC_Custard_Syntax.decl_flags d)) in
+  (let tmp = (List.find_opt FStarC_Custard_Syntax.uu___is_Rec (FStarC_Custard_Syntax.decl_flags d)) in
   (match tmp with
-    | (Some ((FStarC_Custard_Syntax.Rec (ns)))) -> (let tmp1 = (FStarC_List.map FStarC_Custard_Syntax.string_of_name ns) in
+    | (Some ((FStarC_Custard_Syntax.Rec (ns)))) -> (let tmp1 = (BatList.map FStarC_Custard_Syntax.string_of_name ns) in
       (Some (tmp1)))
     | tmp1 -> None
   ))
 
 let rec groups__go (acc : (FStarC_Custard_Syntax.decl) list) (g : ((string) list) option) (ds : (FStarC_Custard_Syntax.decl) list) : ((FStarC_Custard_Syntax.decl) list) list =
   (match ds with
-    | [] -> (if ((=) acc []) then [] else ((FStarC_List.rev acc) :: []))
+    | [] -> (if ((=) acc []) then [] else ((BatList.rev acc) :: []))
     | (d :: rest) -> (let g' = (group_of d) in
       (if ((((<>) acc []) && (match g' with
         | (Some (v)) -> true
         | tmp -> false
       )) && ((=) g' g)) then (groups__go (d :: acc) g' rest) else (let tmp = (groups__go (d :: []) g' rest) in
-      (FStar_List_Tot_Base.append (if ((=) acc []) then [] else ((FStarC_List.rev acc) :: [])) tmp))))
+      (FStar_List_Tot_Base.append (if ((=) acc []) then [] else ((BatList.rev acc) :: [])) tmp))))
   )
 
 let groups (prog : (FStarC_Custard_Syntax.decl) list) : ((FStarC_Custard_Syntax.decl) list) list =
@@ -31,10 +31,10 @@ let rank_key (m : string) : string =
   )
 
 let source_ranks (deps : FStarC_Parser_Dep.deps) : (Prims.int) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
-  (let rank = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (100)))) in
+  (let rank = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100)))) in
   let n = (ref Prims.int_zero) in
   let tmp = (FStarC_Parser_Dep.topological_order deps rank_key) in
-  (FStarC_List.iter (fun m -> (let tmp1 = (!(n)) in
+  (BatList.iter (fun m -> (let tmp1 = (!(n)) in
   let tmp2 = (Prims.op_Plus tmp1 Prims.int_one) in
   ((n) := tmp2);
   let tmp3 = (!(n)) in
@@ -69,7 +69,7 @@ let rec sccs__go (succ : (string -> (string) list)) (index : (Prims.int) FStarC_
   ((stack) := tmp5);
   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace onstack v true);
   let tmp6 = (succ v) in
-  (FStarC_List.iter (fun w -> (let tmp7 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt index w) in
+  (BatList.iter (fun w -> (let tmp7 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt index w) in
   let tmp8 = (match tmp7 with
       | None -> true
       | tmp8 -> false
@@ -95,9 +95,9 @@ let rec sccs__go (succ : (string -> (string) list)) (index : (Prims.int) FStarC_
   ((out) := tmp12)) else ()))
 
 let sccs (nodes : (string) list) (succ : (string -> (string) list)) : ((string) list) list =
-  (let index = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (100)))) in
-  let low = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (100)))) in
-  let onstack = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (100)))) in
+  (let index = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100)))) in
+  let low = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100)))) in
+  let onstack = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100)))) in
   let stack = (ref []) in
   let next = (ref Prims.int_zero) in
   let out = (ref []) in
@@ -106,14 +106,14 @@ let sccs (nodes : (string) list) (succ : (string -> (string) list)) : ((string) 
       | (Some (v)) -> v
       | None -> Prims.int_zero
     ))) in
-  (FStarC_List.iter (fun v -> (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt index v) in
+  (BatList.iter (fun v -> (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt index v) in
   let tmp1 = (match tmp with
       | None -> true
       | tmp1 -> false
     ) in
   (if tmp1 then ((sccs__go succ index low onstack stack next out get) v) else ()))) nodes);
   let tmp = (!(out)) in
-  (FStarC_List.rev tmp))
+  (BatList.rev tmp))
 
 let module_ranks (deps : FStarC_Parser_Dep.deps) (prog : (FStarC_Custard_Syntax.decl) list) : (Prims.int) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
   (let src = (source_ranks deps) in
@@ -123,9 +123,9 @@ let module_ranks (deps : FStarC_Parser_Dep.deps) (prog : (FStarC_Custard_Syntax.
       | (Some (r)) -> r
       | None -> Prims.int_zero
     ))) in
-  let owner = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (100)))) in
+  let owner = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100)))) in
   let ctors = (FStarC_Custard_Simplify.ctor_owners prog) in
-  (FStarC_List.iter (fun d -> (let tmp = (FStarC_Custard_Syntax.string_of_name (FStarC_Custard_Syntax.name_of_decl d)) in
+  (BatList.iter (fun d -> (let tmp = (FStarC_Custard_Syntax.string_of_name (FStarC_Custard_Syntax.name_of_decl d)) in
   let tmp1 = (module_of (FStarC_Custard_Syntax.name_of_decl d)) in
   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace owner tmp tmp1))) prog);
   let owner_of = (fun n -> (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt ctors n) in
@@ -134,8 +134,8 @@ let module_ranks (deps : FStarC_Parser_Dep.deps) (prog : (FStarC_Custard_Syntax.
         | None -> n
       ) in
     (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt owner n1))) in
-  let succ = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (100)))) in
-  let seen = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (100)))) in
+  let succ = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100)))) in
+  let seen = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100)))) in
   let node = (fun m -> (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt seen m) in
     let tmp1 = (match tmp with
         | None -> true
@@ -143,10 +143,10 @@ let module_ranks (deps : FStarC_Parser_Dep.deps) (prog : (FStarC_Custard_Syntax.
       ) in
     (if tmp1 then ((FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace seen m true);
     (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace succ m [])) else ()))) in
-  (FStarC_List.iter (fun d -> (let m = (module_of (FStarC_Custard_Syntax.name_of_decl d)) in
+  (BatList.iter (fun d -> (let m = (module_of (FStarC_Custard_Syntax.name_of_decl d)) in
   (node m);
   let tmp = (FStarC_Custard_Simplify.decl_deps d) in
-  (FStarC_List.iter (fun n -> (let tmp1 = (owner_of n) in
+  (BatList.iter (fun n -> (let tmp1 = (owner_of n) in
   (match tmp1 with
     | (Some (m')) -> (if ((<>) m' m) then ((node m');
       let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt succ m) in
@@ -154,7 +154,7 @@ let module_ranks (deps : FStarC_Parser_Dep.deps) (prog : (FStarC_Custard_Syntax.
           | (Some (es)) -> es
           | None -> []
         ) in
-      (if (not (FStarC_List.mem m' es)) then (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace succ m (m' :: es)) else ())) else ())
+      (if (not (BatList.mem m' es)) then (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace succ m (m' :: es)) else ())) else ())
     | None -> ()
   ))) tmp))) prog);
   let by_source = (fun a b -> (let tmp = (src_of a) in
@@ -167,18 +167,18 @@ let module_ranks (deps : FStarC_Parser_Dep.deps) (prog : (FStarC_Custard_Syntax.
       | (Some (es)) -> (FStarC_Util.sort_with by_source es)
       | None -> []
     ))) in
-  let rank = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (100)))) in
+  let rank = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100)))) in
   let n = (ref Prims.int_zero) in
   let tmp1 = (sccs nodes succ_of) in
-  (FStarC_List.iter (fun comp -> (let tmp2 = (FStarC_Util.sort_with by_source comp) in
-  (FStarC_List.iter (fun m -> (let tmp3 = (!(n)) in
+  (BatList.iter (fun comp -> (let tmp2 = (FStarC_Util.sort_with by_source comp) in
+  (BatList.iter (fun m -> (let tmp3 = (!(n)) in
   let tmp4 = (Prims.op_Plus tmp3 Prims.int_one) in
   ((n) := tmp4);
   let tmp5 = (!(n)) in
   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace rank m tmp5))) tmp2))) tmp1);
   let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun key tmp2 acc -> (key :: acc)) src []) in
   let tmp3 = (FStarC_Util.sort_with by_source tmp2) in
-  (FStarC_List.iter (fun m -> (let tmp4 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt rank m) in
+  (BatList.iter (fun m -> (let tmp4 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt rank m) in
   let tmp5 = (match tmp4 with
       | None -> true
       | tmp5 -> false
@@ -204,7 +204,7 @@ let emits (d : FStarC_Custard_Syntax.decl) : bool =
   ) else false))
 
 let rec avoid__go (foreign : (string) list) (f : string) (fuel : Prims.int) : string =
-  (if (((=) fuel Prims.int_zero) || (not (FStarC_List.mem f foreign))) then f else ((avoid__go foreign) (Prims.strcat "Custard." f) (Prims.op_Minus fuel Prims.int_one)))
+  (if (((=) fuel Prims.int_zero) || (not (BatList.mem f foreign))) then f else ((avoid__go foreign) (Prims.strcat "Custard." f) (Prims.op_Minus fuel Prims.int_one)))
 
 let file_of (m : string) : string =
   (let tmp = (FStarC_Custard_Builtins.is_realized_module (FStarC_String.split (46 :: []) m)) in
@@ -233,8 +233,8 @@ let run (deps : FStarC_Parser_Dep.deps) (foreign : (string) list) (prog : (FStar
       | (Some (o)) -> o
       | None -> n
     ))) in
-  let home = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (100)))) in
-  let chunks = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (100)))) in
+  let home = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100)))) in
+  let chunks = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100)))) in
   let emit = (fun m ds -> (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt chunks m) in
     let r = (match tmp with
         | (Some (r)) -> r
@@ -243,13 +243,13 @@ let run (deps : FStarC_Parser_Dep.deps) (foreign : (string) list) (prog : (FStar
           r)
       ) in
     let tmp1 = (!(r)) in
-    let tmp2 = (FStar_List_Tot_Base.append (FStarC_List.rev ds) tmp1) in
+    let tmp2 = (FStar_List_Tot_Base.append (BatList.rev ds) tmp1) in
     ((r) := tmp2))) in
-  (FStarC_List.iter (fun g -> (let owns = (FStarC_List.collect (fun d -> (let tmp = (emits d) in
+  (BatList.iter (fun g -> (let owns = ((fun f l -> BatList.flatten (BatList.map f l)) (fun d -> (let tmp = (emits d) in
     (if tmp then (let tmp1 = (module_of (FStarC_Custard_Syntax.name_of_decl d)) in
     (tmp1 :: [])) else []))) g) in
-  let tmp = (FStarC_List.collect (fun d -> (let tmp = (FStarC_Custard_Simplify.decl_deps d) in
-    (FStarC_List.collect (fun n -> (let tmp1 = (resolve n) in
+  let tmp = ((fun f l -> BatList.flatten (BatList.map f l)) (fun d -> (let tmp = (FStarC_Custard_Simplify.decl_deps d) in
+    ((fun f l -> BatList.flatten (BatList.map f l)) (fun n -> (let tmp1 = (resolve n) in
     let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt home tmp1) in
     (match tmp2 with
       | (Some (m)) -> (m :: [])
@@ -258,9 +258,9 @@ let run (deps : FStarC_Parser_Dep.deps) (foreign : (string) list) (prog : (FStar
   let cands = (FStar_List_Tot_Base.append owns tmp) in
   let own1 = (match owns with
       | (m :: tmp1) -> m
-      | [] -> (module_of (FStarC_Custard_Syntax.name_of_decl (FStarC_List.hd g)))
+      | [] -> (module_of (FStarC_Custard_Syntax.name_of_decl (BatList.hd g)))
     ) in
-  let top = (FStarC_List.fold_left (fun acc m -> (let tmp1 = (rank_of m) in
+  let top = (BatList.fold_left (fun acc m -> (let tmp1 = (rank_of m) in
     let tmp2 = (rank_of acc) in
     let tmp3 = (Prims.op_Greater tmp1 tmp2) in
     (if tmp3 then m else acc))) own1 cands) in
@@ -268,7 +268,7 @@ let run (deps : FStarC_Parser_Dep.deps) (foreign : (string) list) (prog : (FStar
   let tmp2 = (rank_of top) in
   let tmp3 = (Prims.op_Greater_Equals tmp1 tmp2) in
   let best = (if tmp3 then own1 else top) in
-  (FStarC_List.iter (fun d -> (let tmp4 = (emits d) in
+  (BatList.iter (fun d -> (let tmp4 = (emits d) in
   (if tmp4 then (let tmp5 = (FStarC_Custard_Syntax.string_of_name (FStarC_Custard_Syntax.name_of_decl d)) in
   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace home tmp5 best)) else ()))) g);
   (emit best g))) gs);
@@ -276,28 +276,28 @@ let run (deps : FStarC_Parser_Dep.deps) (foreign : (string) list) (prog : (FStar
   let names1 = (FStarC_Util.sort_with (fun a b -> (let tmp = (rank_of a) in
     let tmp1 = (rank_of b) in
     (Prims.op_Minus tmp tmp1))) names) in
-  let files = (FStarC_List.collect (fun m -> (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt chunks m) in
+  let files = ((fun f l -> BatList.flatten (BatList.map f l)) (fun m -> (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt chunks m) in
     let ds = (match tmp with
         | (Some (r)) -> (let tmp1 = (!(r)) in
-          (FStarC_List.rev tmp1))
+          (BatList.rev tmp1))
         | None -> []
       ) in
     (if ((=) ds []) then [] else (let tmp1 = (avoid foreign m) in
     let tmp2 = (tmp1, ds) in
     (tmp2 :: []))))) names1) in
-  let have = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (100)))) in
-  (FStarC_List.iter (fun tmp -> (match tmp with
+  let have = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100)))) in
+  (BatList.iter (fun tmp -> (match tmp with
     | (m, tmp1) -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace have m true)
   )) files);
   let tmp = (FStarC_Options.codegen_name ()) in
-  let want_empties = (FStarC_List.mem tmp ("KrmlC" :: ("KrmlRust" :: []))) in
+  let want_empties = (BatList.mem tmp ("KrmlC" :: ("KrmlRust" :: []))) in
   let empties = (if (not want_empties) then [] else (let tmp1 = (FStarC_Parser_Dep.topological_order deps (fun m -> m)) in
-    (FStarC_List.collect (fun m -> (let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt have m) in
+    ((fun f l -> BatList.flatten (BatList.map f l)) (fun m -> (let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt have m) in
     let tmp3 = (match tmp2 with
         | (Some (v)) -> true
         | tmp3 -> false
       ) in
-    let tmp4 = (if tmp3 then true else (FStarC_List.mem m foreign)) in
+    let tmp4 = (if tmp3 then true else (BatList.mem m foreign)) in
     let tmp5 = (if tmp4 then true else (FStarC_Custard_Builtins.is_realized_module (FStarC_String.split (46 :: []) m))) in
     (if tmp5 then [] else ((FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace have m true);
     ((m, []) :: []))))) tmp1))) in

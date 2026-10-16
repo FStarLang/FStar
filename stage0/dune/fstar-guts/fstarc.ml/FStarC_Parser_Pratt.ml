@@ -3,19 +3,19 @@
 
 type pstate = {
   toks : (FStarC_Parser_Lexer.token) FStar_ImmutableArray_Base.t;
-  ntoks : FStarC_SmallInt.t;
-  idx : (FStarC_SmallInt.t ref);
-  furthest : (FStarC_SmallInt.t ref);
+  ntoks : int;
+  idx : (int ref);
+  furthest : (int ref);
   fname : string;
   start_pos : Prims.int;
 }
 
 let mk_pstate (fname : string) (start_pos : Prims.int) (toks : (FStarC_Parser_Lexer.token) list) : pstate =
   (let arr = (FStar_ImmutableArray_Base.of_list toks) in
-  let tmp = (ref FStarC_SmallInt.zero) in
-  let tmp1 = (ref FStarC_SmallInt.zero) in
+  let tmp = (ref 0) in
+  let tmp1 = (ref 0) in
   { toks = arr;
-    ntoks = (FStarC_SmallInt.array_length arr);
+    ntoks = (Array.length arr);
     idx = tmp;
     furthest = tmp1;
     fname = fname;
@@ -44,8 +44,8 @@ type trailing_rule = {
   t_name : string;
   t_level : Prims.int;
   t_lhs_min : Prims.int;
-  t_guard : (pstate -> (ctx -> (FStarC_Parser_AST.term -> (FStarC_SmallInt.t -> bool))));
-  t_run : (pstate -> (ctx -> (FStarC_Parser_AST.term -> (FStarC_SmallInt.t -> FStarC_Parser_AST.term))));
+  t_guard : (pstate -> (ctx -> (FStarC_Parser_AST.term -> (int -> bool))));
+  t_run : (pstate -> (ctx -> (FStarC_Parser_AST.term -> (int -> FStarC_Parser_AST.term))));
 }
 
 type grammar = {
@@ -70,11 +70,11 @@ let with_grammar (g : grammar) (f : (unit -> 'a)) : 'a =
 
 exception Fail
 
-let last_idx (ps : pstate) : FStarC_SmallInt.t =
-  (FStarC_SmallInt.op_Minus (ps).ntoks FStarC_SmallInt.one)
+let last_idx (ps : pstate) : int =
+  ((-) (ps).ntoks 1)
 
-let tok_at (ps : pstate) (i : FStarC_SmallInt.t) : FStarC_Parser_Lexer.token =
-  (FStarC_SmallInt.array_index (ps).toks (if (FStarC_SmallInt.op_Less i (ps).ntoks) then i else (last_idx ps)))
+let tok_at (ps : pstate) (i : int) : FStarC_Parser_Lexer.token =
+  (Array.unsafe_get (ps).toks (if ((<) i (ps).ntoks) then i else (last_idx ps)))
 
 let raise_lex_error (t : FStarC_Parser_Lexer.token) : 'a =
   (match (t).FStarC_Parser_Lexer.extra with
@@ -83,7 +83,7 @@ let raise_lex_error (t : FStarC_Parser_Lexer.token) : 'a =
   )
 
 let rec add_to__go (rs : ('a) rules) (x : 'a) (i : Prims.int) (j : Prims.int) : (('a) list) list =
-  (if (Prims.op_Greater_Equals j FStarC_Parser_TokenKind.num_kinds) then [] else (let l = (FStarC_SmallInt.array_index (rs).by_kind (FStarC_SmallInt.of_int j)) in
+  (if (Prims.op_Greater_Equals j FStarC_Parser_TokenKind.num_kinds) then [] else (let l = (Array.unsafe_get (rs).by_kind (FStarC_SmallInt.of_int j)) in
   ((if ((=) j i) then (FStar_List_Tot_Base.append l (x :: [])) else l) :: ((add_to__go rs x i) (Prims.op_Plus j Prims.int_one)))))
 
 let add_to (rs : ('a) rules) (k : FStarC_Parser_TokenKind.token_kind) (x : 'a) : ('a) rules =
@@ -121,7 +121,7 @@ let empty_grammar (base : (pstate -> (ctx -> FStarC_Parser_AST.term))) (base_lev
 
 let peek (ps : pstate) : FStarC_Parser_Lexer.token =
   (let i = (!((ps).idx)) in
-  (if (FStarC_SmallInt.op_Less i (last_idx ps)) then (FStarC_SmallInt.array_index (ps).toks i) else (let t = (FStarC_SmallInt.array_index (ps).toks (last_idx ps)) in
+  (if ((<) i (last_idx ps)) then (Array.unsafe_get (ps).toks i) else (let t = (Array.unsafe_get (ps).toks (last_idx ps)) in
   (if ((=) (t).FStarC_Parser_Lexer.kind FStarC_Parser_TokenKind.ERROR) then (raise_lex_error t) else t))))
 
 let peek_kind (ps : pstate) : FStarC_Parser_TokenKind.token_kind =
@@ -130,7 +130,7 @@ let peek_kind (ps : pstate) : FStarC_Parser_TokenKind.token_kind =
 
 let peek_n (ps : pstate) (n : Prims.int) : FStarC_Parser_Lexer.token =
   (let tmp = (!((ps).idx)) in
-  let tmp1 = (FStarC_SmallInt.op_Plus tmp (FStarC_SmallInt.of_int n)) in
+  let tmp1 = ((+) tmp (FStarC_SmallInt.of_int n)) in
   (tok_at ps tmp1))
 
 let peek_kind_n (ps : pstate) (n : Prims.int) : FStarC_Parser_TokenKind.token_kind =
@@ -144,9 +144,9 @@ let is (ps : pstate) (k : FStarC_Parser_TokenKind.token_kind) : bool =
 let advance (ps : pstate) : FStarC_Parser_Lexer.token =
   (let t = (peek ps) in
   let tmp = (!((ps).idx)) in
-  let tmp1 = (FStarC_SmallInt.op_Less tmp (last_idx ps)) in
+  let tmp1 = ((<) tmp (last_idx ps)) in
   (if tmp1 then (let tmp2 = (!((ps).idx)) in
-  let tmp3 = (FStarC_SmallInt.op_Plus tmp2 FStarC_SmallInt.one) in
+  let tmp3 = ((+) tmp2 1) in
   (((ps).idx) := tmp3)) else ());
   t)
 
@@ -156,7 +156,7 @@ let tok_rng (ps : pstate) (t : FStarC_Parser_Lexer.token) : FStarC_Range_Type.ra
 let fail (ps : pstate) : 'a =
   (let tmp = (!((ps).idx)) in
   let tmp1 = (!((ps).furthest)) in
-  let tmp2 = (FStarC_SmallInt.op_Greater tmp tmp1) in
+  let tmp2 = ((>) tmp tmp1) in
   (if tmp2 then (let tmp3 = (!((ps).idx)) in
   (((ps).furthest) := tmp3)) else ());
   (FStarC_Effect.raise_notrace Fail))
@@ -165,22 +165,22 @@ let expect (ps : pstate) (k : FStarC_Parser_TokenKind.token_kind) : FStarC_Parse
   (let tmp = (is ps k) in
   (if tmp then (advance ps) else (fail ps)))
 
-let prev_end (ps : pstate) (i : FStarC_SmallInt.t) : Prims.int =
-  (if (FStarC_SmallInt.op_Less_Equals i FStarC_SmallInt.zero) then (ps).start_pos else (let scrut = (tok_at ps (FStarC_SmallInt.op_Minus i FStarC_SmallInt.one)) in
+let prev_end (ps : pstate) (i : int) : Prims.int =
+  (if ((<=) i 0) then (ps).start_pos else (let scrut = (tok_at ps ((-) i 1)) in
   (scrut).FStarC_Parser_Lexer.ep))
 
-let span_start (ps : pstate) (i0 : FStarC_SmallInt.t) (i1 : FStarC_SmallInt.t) : Prims.int =
-  (if (FStarC_SmallInt.op_Greater i1 i0) then (let scrut = (tok_at ps i0) in
+let span_start (ps : pstate) (i0 : int) (i1 : int) : Prims.int =
+  (if ((>) i1 i0) then (let scrut = (tok_at ps i0) in
   (scrut).FStarC_Parser_Lexer.sp) else (prev_end ps i0))
 
-let span_end (ps : pstate) (i0 : FStarC_SmallInt.t) (i1 : FStarC_SmallInt.t) : Prims.int =
-  (if (FStarC_SmallInt.op_Greater i1 i0) then (let scrut = (tok_at ps (FStarC_SmallInt.op_Minus i1 FStarC_SmallInt.one)) in
+let span_end (ps : pstate) (i0 : int) (i1 : int) : Prims.int =
+  (if ((>) i1 i0) then (let scrut = (tok_at ps ((-) i1 1)) in
   (scrut).FStarC_Parser_Lexer.ep) else (prev_end ps i0))
 
-let rng (ps : pstate) (i0 : FStarC_SmallInt.t) (i1 : FStarC_SmallInt.t) : FStarC_Range_Type.range =
+let rng (ps : pstate) (i0 : int) (i1 : int) : FStarC_Range_Type.range =
   (FStarC_Range_Type.mk_range (ps).fname (span_start ps i0 i1) (span_end ps i0 i1))
 
-let loc (ps : pstate) (i0 : FStarC_SmallInt.t) : FStarC_Range_Type.range =
+let loc (ps : pstate) (i0 : int) : FStarC_Range_Type.range =
   (let tmp = (!((ps).idx)) in
   (rng ps i0 tmp))
 
@@ -197,7 +197,7 @@ let lookup (rs : ('a) rules) (t : FStarC_Parser_Lexer.token) : ('a) list =
         | (Some (l)) -> l
         | None -> []
       )
-    | k -> (FStarC_SmallInt.array_index (rs).by_kind (FStarC_SmallInt.of_int (FStarC_Parser_TokenKind.kind_index k)))
+    | k -> (Array.unsafe_get (rs).by_kind (FStarC_SmallInt.of_int (FStarC_Parser_TokenKind.kind_index k)))
   )
 
 let in_gap (ctx : ctx) (l : Prims.int) : bool =
@@ -210,14 +210,14 @@ let rec find_leading (ps : pstate) (ctx : ctx) (min : Prims.int) (rs : (leading_
       (if tmp then (Some (r)) else (find_leading ps ctx min rs1)))
   )
 
-let rec find_trailing (ps : pstate) (ctx : ctx) (min : Prims.int) (lvl : Prims.int) (lhs : FStarC_Parser_AST.term) (i0 : FStarC_SmallInt.t) (rs : (trailing_rule) list) : (trailing_rule) option =
+let rec find_trailing (ps : pstate) (ctx : ctx) (min : Prims.int) (lvl : Prims.int) (lhs : FStarC_Parser_AST.term) (i0 : int) (rs : (trailing_rule) list) : (trailing_rule) option =
   (match rs with
     | [] -> None
     | (r :: rs1) -> (let tmp = (if (((Prims.op_Less_Equals min (r).t_level) && (Prims.op_Greater_Equals lvl (r).t_lhs_min)) && (not (in_gap ctx (r).t_level))) then ((r).t_guard ps ctx lhs i0) else false) in
       (if tmp then (Some (r)) else (find_trailing ps ctx min lvl lhs i0 rs1)))
   )
 
-let rec trailing_loop (ps : pstate) (ctx : ctx) (min : Prims.int) (i0 : FStarC_SmallInt.t) (lhs : FStarC_Parser_AST.term) (lvl : Prims.int) : FStarC_Parser_AST.term =
+let rec trailing_loop (ps : pstate) (ctx : ctx) (min : Prims.int) (i0 : int) (lhs : FStarC_Parser_AST.term) (lvl : Prims.int) : FStarC_Parser_AST.term =
   (let g = (get_grammar ()) in
   let tmp = (peek ps) in
   let tmp1 = (lookup (g).trailing tmp) in
@@ -249,7 +249,7 @@ let accept (ps : pstate) (k : FStarC_Parser_TokenKind.token_kind) : bool =
   (if tmp then ((ignore (advance ps));
   true) else false))
 
-let eps_loc (ps : pstate) (i0 : FStarC_SmallInt.t) : FStarC_Range_Type.range =
+let eps_loc (ps : pstate) (i0 : int) : FStarC_Range_Type.range =
   (let tmp = (!((ps).idx)) in
   let tmp1 = (span_end ps i0 tmp) in
   (FStarC_Range_Type.mk_range (ps).fname (prev_end ps i0) tmp1))
@@ -277,7 +277,7 @@ let lookahead (ps : pstate) (f : (unit -> unit)) : bool =
   (FStarC_GenSym.set_gensym_state g);
   ok)
 
-let rng2 (ps : pstate) (a0 : FStarC_SmallInt.t) (a1 : FStarC_SmallInt.t) (b0 : FStarC_SmallInt.t) (b1 : FStarC_SmallInt.t) : FStarC_Range_Type.range =
+let rng2 (ps : pstate) (a0 : int) (a1 : int) (b0 : int) (b1 : int) : FStarC_Range_Type.range =
   (FStarC_Range_Type.mk_range (ps).fname (span_start ps a0 a1) (span_end ps b0 b1))
 
 let add_trailing (g : grammar) (k : FStarC_Parser_TokenKind.token_kind) (r : trailing_rule) : grammar =

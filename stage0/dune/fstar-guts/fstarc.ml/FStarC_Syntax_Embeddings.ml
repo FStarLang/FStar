@@ -35,7 +35,7 @@ let e_string : (string) FStarC_Syntax_Embeddings_Base.embedding =
     ))) in
   (FStarC_Syntax_Embeddings_Base.mk_emb_full em un (fun tmp -> FStarC_Syntax_Syntax.t_string) (fun x -> (Prims.strcat "\"" (Prims.strcat x "\""))) (fun tmp -> emb_t_string)))
 
-let e_document : (FStar_Pprint.document) FStarC_Syntax_Embeddings_Base.embedding =
+let e_document : (PPrint.document) FStarC_Syntax_Embeddings_Base.embedding =
   (let tmp = (FStarC_Syntax_Syntax.fvar FStarC_Parser_Const.document_lid None) in
   (FStarC_Syntax_Embeddings_Base.e_lazy FStarC_Syntax_Syntax.Lazy_doc tmp))
 
@@ -146,7 +146,7 @@ let e_list (ea : ('u___a) FStarC_Syntax_Embeddings_Base.embedding) : (('u___a) l
     let tmp2 = (tmp1 :: []) in
     let tmp3 = ((FStarC_Ident.string_of_lid FStarC_Parser_Const.list_lid), tmp2) in
     (FStarC_Syntax_Syntax.ET_app ((match tmp3 with (custard_tup, _) -> custard_tup), (match tmp3 with (_, custard_tup) -> custard_tup))))) in
-  let printer = (fun l -> (let tmp = (FStarC_List.map (FStarC_Syntax_Embeddings_Base.printer_of ea) l) in
+  let printer = (fun l -> (let tmp = (BatList.map (FStarC_Syntax_Embeddings_Base.printer_of ea) l) in
     let tmp1 = (FStarC_String.concat "; " tmp) in
     let tmp2 = (Prims.strcat tmp1 "]") in
     (Prims.strcat "[" tmp2))) in
@@ -340,7 +340,7 @@ let e_sealed (ea : ('u___a) FStarC_Syntax_Embeddings_Base.embedding) : ('u___a) 
     ))) in
   (FStarC_Syntax_Embeddings_Base.mk_emb_full em un typ printer emb_ty_a))
 
-let e_issue : (FStarC_Errors.issue) FStarC_Syntax_Embeddings_Base.embedding =
+let e_issue : (FStarC_Errors_Issue.issue) FStarC_Syntax_Embeddings_Base.embedding =
   (let tmp = (FStarC_Syntax_Syntax.fvar FStarC_Parser_Const.issue_lid None) in
   (FStarC_Syntax_Embeddings_Base.e_lazy FStarC_Syntax_Syntax.Lazy_issue tmp))
 

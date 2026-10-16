@@ -106,9 +106,9 @@ let union_ranges (r1 : FStarC_Range_Type.range) (r2 : FStarC_Range_Type.range) :
   let tmp1 = (union_rng (r1).FStarC_Range_Type.use_range (r2).FStarC_Range_Type.use_range) in
   { FStarC_Range_Type.def_range = tmp; use_range = tmp1 })
 
-let fStarC_Class_PP_pp__range (tmp : FStarC_Range_Type.range) : FStar_Pprint.document =
+let fStarC_Class_PP_pp__range (tmp : FStarC_Range_Type.range) : PPrint.document =
   (let tmp1 = (string_of_range tmp) in
-  (FStar_Pprint.doc_of_string tmp1))
+  (PPrint.string tmp1))
 
 let json_of_pos (pos : Prims.int) : FStarC_Json.json =
   (FStarC_Json.JsonList (((FStarC_Json.JsonInt ((line_of_pos pos))) :: ((FStarC_Json.JsonInt ((col_of_pos pos))) :: []))))

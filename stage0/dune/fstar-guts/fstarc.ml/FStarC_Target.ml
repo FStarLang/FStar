@@ -4,20 +4,20 @@
 let is_segment (s : string) : bool =
   (match (FStarC_String.list_of_string s) with
     | (c :: cs) -> (let is_lower = (fun c1 -> ((FStarC_Util.is_letter c1) && ((=) (FStarC_String.lowercase (FStarC_String.string_of_char c1)) (FStarC_String.string_of_char c1)))) in
-      (if (is_lower c) then (FStarC_List.for_all (fun c1 -> (((is_lower c1) || (FStarC_Util.is_digit c1)) || ((=) c1 95))) cs) else false))
+      (if (is_lower c) then (BatList.for_all (fun c1 -> (((is_lower c1) || (FStarC_Util.is_digit c1)) || ((=) c1 95))) cs) else false))
     | [] -> false
   )
 
 let is_atom (a : string) : bool =
-  (FStarC_List.for_all is_segment (FStarC_String.split (46 :: []) a))
+  (BatList.for_all is_segment (FStarC_String.split (46 :: []) a))
 
 let atom_implied_by (a : string) (b : string) : bool =
   (((=) a b) || (FStarC_Util.starts_with b (Prims.strcat a ".")))
 
 let canonical (xs : (string) list) : (string) option =
-  (let xs1 = (FStarC_List.filter (fun a -> (let tmp = (FStarC_List.existsb (fun b -> (if ((<>) b a) then (atom_implied_by a b) else false)) xs) in
+  (let xs1 = (BatList.filter (fun a -> (let tmp = (BatList.exists (fun b -> (if ((<>) b a) then (atom_implied_by a b) else false)) xs) in
     (not tmp))) xs) in
-  let tmp = (FStarC_List.deduplicate (fun a b -> ((=) a b)) xs1) in
+  let tmp = ((fun f l -> BatList.unique ~eq:f l) (fun a b -> ((=) a b)) xs1) in
   let tmp1 = (FStarC_Util.sort_with FStarC_String.compare tmp) in
   (match tmp1 with
     | [] -> None
@@ -26,7 +26,7 @@ let canonical (xs : (string) list) : (string) option =
 
 let parse_tag (s : string) : ((string) option) option =
   (let xs = (FStarC_String.split (45 :: []) s) in
-  let tmp = (FStarC_List.for_all is_atom xs) in
+  let tmp = (BatList.for_all is_atom xs) in
   (if tmp then (let tmp1 = (canonical xs) in
   (Some (tmp1))) else None))
 
@@ -39,7 +39,7 @@ let atoms (t : (string) option) : (string) list =
 let join (t1 : (string) option) (t2 : (string) option) : (string) option =
   (let tmp = (atoms t1) in
   let tmp1 = (atoms t2) in
-  let tmp2 = (FStarC_List.op_At tmp tmp1) in
+  let tmp2 = (BatList.append tmp tmp1) in
   (canonical tmp2))
 
 let split_target (stem : string) : (string * (string) option) =
@@ -58,7 +58,7 @@ let split_target (stem : string) : (string * (string) option) =
 let implies (ctx : (string) option) (t : (string) option) : bool =
   (let cs = (atoms ctx) in
   let tmp = (atoms t) in
-  (FStarC_List.for_all (fun a -> (FStarC_List.existsb (atom_implied_by a) cs)) tmp))
+  (BatList.for_all (fun a -> (BatList.exists (atom_implied_by a) cs)) tmp))
 
 let show_tag (t : (string) option) : string =
   (match t with
@@ -78,7 +78,7 @@ let diverge (a : string) (b : string) : bool =
 let compatible (t1 : (string) option) (t2 : (string) option) : bool =
   (let bs = (atoms t2) in
   let tmp = (atoms t1) in
-  (FStarC_List.for_all (fun a -> (let tmp1 = (FStarC_List.existsb (diverge a) bs) in
+  (BatList.for_all (fun a -> (let tmp1 = (BatList.exists (diverge a) bs) in
   (not tmp1))) tmp))
 
 let rec prefixes__go (acc : (string) list) (cur : string) (segs : (string) list) : (string) list =
@@ -95,20 +95,20 @@ let rec applicable_tags__subsets (xs : (string) list) : ((string) list) list =
   (match xs with
     | [] -> ([] :: [])
     | (x :: xs1) -> (let s = (applicable_tags__subsets xs1) in
-      let tmp = (FStarC_List.map (fun l -> (x :: l)) s) in
-      (FStarC_List.op_At tmp s))
+      let tmp = (BatList.map (fun l -> (x :: l)) s) in
+      (BatList.append tmp s))
   )
 
 let applicable_tags (ctx : (string) option) : ((string) option) list =
   (let tmp = (atoms ctx) in
-  let tmp1 = (FStarC_List.collect prefixes tmp) in
-  let closure = (FStarC_List.deduplicate (fun a b -> ((=) a b)) tmp1) in
+  let tmp1 = ((fun f l -> BatList.flatten (BatList.map f l)) prefixes tmp) in
+  let closure = ((fun f l -> BatList.unique ~eq:f l) (fun a b -> ((=) a b)) tmp1) in
   let tmp2 = (applicable_tags__subsets closure) in
-  let tmp3 = (FStarC_List.map canonical tmp2) in
-  let tags = (FStarC_List.deduplicate (fun a b -> ((=) a b)) tmp3) in
+  let tmp3 = (BatList.map canonical tmp2) in
+  let tags = ((fun f l -> BatList.unique ~eq:f l) (fun a b -> ((=) a b)) tmp3) in
   (FStarC_Util.sort_with (fun a b -> (let tmp4 = (atoms b) in
-  let tmp5 = (FStarC_List.length tmp4) in
+  let tmp5 = ((fun l -> Z.of_int (BatList.length l)) tmp4) in
   let tmp6 = (atoms a) in
-  let tmp7 = (FStarC_List.length tmp6) in
+  let tmp7 = ((fun l -> Z.of_int (BatList.length l)) tmp6) in
   (Prims.op_Minus tmp5 tmp7))) tags))
 

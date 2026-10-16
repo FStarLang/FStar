@@ -202,6 +202,6 @@ let fStarC_Class_Show_show__tuple2_list_string_string (tmp : ((string) list * st
       (Prims.strcat "(" tmp5))
   )
 
-let fStarC_Class_Show_show__time_of_day (tmp : FStarC_Time.time_of_day) : string =
-  (FStarC_Time.string_of_time_of_day tmp)
+let fStarC_Class_Show_show__ocaml_float (tmp : float) : string =
+  (string_of_float tmp)
 

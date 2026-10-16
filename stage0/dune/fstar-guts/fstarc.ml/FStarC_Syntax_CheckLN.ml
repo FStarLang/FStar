@@ -6,7 +6,7 @@ let rec is_ln'_univ (n : Prims.int) (u : FStarC_Syntax_Syntax.universe) : bool =
   (match tmp with
     | FStarC_Syntax_Syntax.U_zero -> true
     | (FStarC_Syntax_Syntax.U_succ (u1)) -> (is_ln'_univ n u1)
-    | (FStarC_Syntax_Syntax.U_max (us)) -> (FStarC_List.for_all (is_ln'_univ n) us)
+    | (FStarC_Syntax_Syntax.U_max (us)) -> (BatList.for_all (is_ln'_univ n) us)
     | (FStarC_Syntax_Syntax.U_unif (u__1, u__2, u__3)) -> true
     | (FStarC_Syntax_Syntax.U_bvar (i)) -> (Prims.op_Less i n)
     | (FStarC_Syntax_Syntax.U_name (tmp1)) -> true
@@ -14,12 +14,12 @@ let rec is_ln'_univ (n : Prims.int) (u : FStarC_Syntax_Syntax.universe) : bool =
   ))
 
 let is_ln'_univs (n : Prims.int) (eta : (FStarC_Syntax_Syntax.universe) list) : bool =
-  (FStarC_List.for_all (is_ln'_univ n) eta)
+  (BatList.for_all (is_ln'_univ n) eta)
 
 let rec pat_depth (p : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) : Prims.int =
   (match (p).FStarC_Syntax_Syntax.v with
     | (FStarC_Syntax_Syntax.Pat_constant (tmp)) -> Prims.int_zero
-    | (FStarC_Syntax_Syntax.Pat_cons (p1, u__us_opt, ps)) -> (FStarC_List.fold_left (fun d tmp -> (match tmp with
+    | (FStarC_Syntax_Syntax.Pat_cons (p1, u__us_opt, ps)) -> (BatList.fold_left (fun d tmp -> (match tmp with
         | (p2, tmp1) -> (let tmp2 = (pat_depth p2) in
           (Prims.op_Plus d tmp2))
       )) Prims.int_zero ps)
@@ -43,7 +43,7 @@ and is_ln'_binders (n : Prims.int) (bs : (FStarC_Syntax_Syntax.binder) list) : b
 and is_ln'_flag (n : Prims.int) (f : FStarC_Syntax_Syntax.cflag) : bool =
   (match f with
     | (FStarC_Syntax_Syntax.SMTPAT (t)) -> (is_ln' n t)
-    | (FStarC_Syntax_Syntax.DECREASES ((FStarC_Syntax_Syntax.Decreases_lex (ts)))) -> (FStarC_List.for_all (is_ln' n) ts)
+    | (FStarC_Syntax_Syntax.DECREASES ((FStarC_Syntax_Syntax.Decreases_lex (ts)))) -> (BatList.for_all (is_ln' n) ts)
     | (FStarC_Syntax_Syntax.DECREASES ((FStarC_Syntax_Syntax.Decreases_wf (rel, e)))) -> (let tmp = (is_ln' n rel) in
       (if tmp then (is_ln' n e) else false))
     | tmp -> true
@@ -51,7 +51,7 @@ and is_ln'_flag (n : Prims.int) (f : FStarC_Syntax_Syntax.cflag) : bool =
 
 and is_ln'_comp_typ (n : Prims.int) (ct : FStarC_Syntax_Syntax.comp_typ) : bool =
   (let tmp = (is_ln' n (ct).FStarC_Syntax_Syntax.result_typ) in
-  (if tmp then (FStarC_List.for_all (is_ln'_flag n) (ct).FStarC_Syntax_Syntax.flags) else false))
+  (if tmp then (BatList.for_all (is_ln'_flag n) (ct).FStarC_Syntax_Syntax.flags) else false))
 
 and is_ln'_comp (n : Prims.int) (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : bool =
   (let ct = (c).FStarC_Syntax_Syntax.n in
@@ -76,7 +76,7 @@ and is_ln'_letbinding (n : Prims.int) (lb : FStarC_Syntax_Syntax.letbinding) : b
 
 and is_ln'_letbindings (n : Prims.int) (lbs : (bool * (FStarC_Syntax_Syntax.letbinding) list)) : bool =
   (match lbs with
-    | (isrec, lbs1) -> (FStarC_List.for_all (fun lb -> (is_ln'_letbinding n lb)) lbs1)
+    | (isrec, lbs1) -> (BatList.for_all (fun lb -> (is_ln'_letbinding n lb)) lbs1)
   )
 
 and is_ln' (n : Prims.int) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
@@ -106,7 +106,7 @@ and is_ln' (n : Prims.int) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Synta
           | (Some ((b, asc))) -> (let tmp3 = (is_ln'_binder n b) in
             (if tmp3 then (is_ln'_ascription (Prims.op_Plus n Prims.int_one) asc) else false))
         ) else false) in
-      (if tmp3 then (FStarC_List.for_all (fun tmp4 -> (match tmp4 with
+      (if tmp3 then (BatList.for_all (fun tmp4 -> (match tmp4 with
         | (p, tmp5, t1) -> (let tmp6 = (pat_depth p) in
           let tmp7 = (Prims.op_Plus n tmp6) in
           (is_ln' tmp7 t1))
@@ -116,7 +116,7 @@ and is_ln' (n : Prims.int) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Synta
     | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = tm; meta = tmp2; _ })) -> (is_ln' n tm)
     | (FStarC_Syntax_Syntax.Tm_let ({ FStarC_Syntax_Syntax.lbs = u__1; lbs1 = u__2; body = body; _ })) -> (let lbs = (u__1, u__2) in
       let tmp2 = (is_ln'_letbindings n lbs) in
-      (if tmp2 then (is_ln' (Prims.op_Plus n (FStarC_List.length (match lbs with
+      (if tmp2 then (is_ln' (Prims.op_Plus n ((fun l -> Z.of_int (BatList.length l)) (match lbs with
         | (u__11, u__21) -> u__21
       ))) body) else false))
     | tmp2 -> true

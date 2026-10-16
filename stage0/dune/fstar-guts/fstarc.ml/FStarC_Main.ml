@@ -14,7 +14,7 @@ let set_error_trap (tmp : unit) : unit =
   let h' = (fun s -> ((FStarC_Util.kill_all ());
     (FStarC_Debug.enable ());
     (FStarC_Options.set_option "error_contexts" (FStarC_Options.Bool (true)));
-    (FStarC_Errors.fStarC_Errors_diag__range_list_document FStarC_Range_Type.dummyRange ((FStarC_Errors_Msg.text "GOT SIGINT! Exiting") :: []));
+    (FStarC_Errors.fStarC_Errors_diag__range_list_ocaml_document FStarC_Range_Type.dummyRange ((FStarC_Errors_Msg.text "GOT SIGINT! Exiting") :: []));
     (print_stats ());
     (FStarC_Effect.exit Prims.int_one))) in
   (FStarC_Util.set_sigint_handler (FStarC_Util.sigint_handler_f h')))
@@ -30,10 +30,10 @@ let print_help_for (o : string) : unit =
 
 let load_native_tactics (tmp : unit) : unit =
   (let tmp1 = (FStarC_Options.load ()) in
-  let modules_to_load = (FStarC_List.map FStarC_Ident.lid_of_str tmp1) in
+  let modules_to_load = (BatList.map FStarC_Ident.lid_of_str tmp1) in
   let tmp2 = (FStarC_Options.load_cmxs ()) in
-  let cmxs_to_load = (FStarC_List.map FStarC_Ident.lid_of_str tmp2) in
-  let ml_module_name = (fun m -> (let tmp3 = (FStarC_List.map FStarC_Ident.string_of_id (FStarC_Ident.ids_of_lid m)) in
+  let cmxs_to_load = (BatList.map FStarC_Ident.lid_of_str tmp2) in
+  let ml_module_name = (fun m -> (let tmp3 = (BatList.map FStarC_Ident.string_of_id (FStarC_Ident.ids_of_lid m)) in
     (FStarC_String.concat "_" tmp3))) in
   let ml_file = (fun m -> (let tmp3 = (ml_module_name m) in
     (Prims.strcat tmp3 ".ml"))) in
@@ -42,7 +42,7 @@ let load_native_tactics (tmp : unit) : unit =
     let tmp4 = (FStarC_Find.find_file_odir cmxs) in
     (match tmp4 with
       | (Some (f)) -> f
-      | None -> (if (FStarC_List.contains m cmxs_to_load) then (FStarC_Errors.fStarC_Errors_raise_error0__string FStarC_Errors_Codes.Fatal_FailToCompileNativeTactic (FStarC_Format.fmt1 "Could not find %s to load" cmxs)) else (let tmp5 = (ml_file m) in
+      | None -> (if (BatList.mem m cmxs_to_load) then (FStarC_Errors.fStarC_Errors_raise_error0__string FStarC_Errors_Codes.Fatal_FailToCompileNativeTactic (FStarC_Format.fmt1 "Could not find %s to load" cmxs)) else (let tmp5 = (ml_file m) in
         let tmp6 = (FStarC_Find.find_file_odir tmp5) in
         (match tmp6 with
           | None -> (let tmp7 = (ml_file m) in
@@ -50,19 +50,19 @@ let load_native_tactics (tmp : unit) : unit =
             let tmp9 = (FStarC_Errors_Msg.text tmp8) in
             let tmp10 = (tmp9 :: []) in
             let tmp11 = ((FStarC_Errors_Msg.text "Failed to compile native tactic.") :: tmp10) in
-            (FStarC_Errors.fStarC_Errors_raise_error0__list_document FStarC_Errors_Codes.Fatal_FailToCompileNativeTactic tmp11))
+            (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_FailToCompileNativeTactic tmp11))
           | (Some (ml)) -> (let dir = (FStarC_Filepath.dirname ml) in
             let tmp7 = (ml_module_name m) in
             let tmp8 = (tmp7 :: []) in
             (FStarC_Plugins.compile_modules dir tmp8);
             let tmp9 = (FStarC_Find.find_file_odir cmxs) in
             (match tmp9 with
-              | None -> (FStarC_Errors.fStarC_Errors_raise_error0__list_document FStarC_Errors_Codes.Fatal_FailToCompileNativeTactic ((FStarC_Errors_Msg.text "Failed to compile native tactic.") :: ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Compilation seemingly succeeded, but compiled object %s not found." cmxs)) :: [])))
+              | None -> (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_FailToCompileNativeTactic ((FStarC_Errors_Msg.text "Failed to compile native tactic.") :: ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Compilation seemingly succeeded, but compiled object %s not found." cmxs)) :: [])))
               | (Some (f)) -> f
             ))
         )))
     ))) in
-  let cmxs_files = (FStarC_List.map cmxs_file (FStarC_List.op_At modules_to_load cmxs_to_load)) in
+  let cmxs_files = (BatList.map cmxs_file (BatList.append modules_to_load cmxs_to_load)) in
   (FStarC_Plugins.load_plugins cmxs_files);
   let tmp3 = (FStarC_Options.use_native_tactics ()) in
   (FStarC_Option.iter FStarC_Plugins.load_plugins_dir tmp3);
@@ -72,7 +72,7 @@ let finished_message (fmods : ((bool * FStarC_Ident.lident)) list) (errs : Prims
   (let print_to = (if (Prims.op_Greater errs Prims.int_zero) then FStarC_Format.print_error else FStarC_Format.print_string) in
   let tmp = (FStarC_Options.silent ()) in
   let tmp1 = (not tmp) in
-  (if tmp1 then ((FStarC_List.iter (fun tmp2 -> (match tmp2 with
+  (if tmp1 then ((BatList.iter (fun tmp2 -> (match tmp2 with
     | (iface, name) -> (let tag = (if iface then "i'face (or impl+i'face)" else "module") in
       let tmp3 = (FStarC_Options.should_print_message (FStarC_Ident.string_of_lid name)) in
       (if tmp3 then (print_to (FStarC_Format.fmt2 "Verified %s: %s\n" tag (FStarC_Ident.string_of_lid name))) else ()))
@@ -97,7 +97,7 @@ let fstar_files : (((string) list) option ref) =
 let friends_of_implementation (fn : string) : (FStarC_Ident.lident) list =
   (let tmp = (FStarC_Parser_Driver.parse_file fn) in
   (match tmp with
-    | (ast, tmp1) -> (FStarC_List.collect (fun d -> (match (d).FStarC_Parser_AST.d with
+    | (ast, tmp1) -> ((fun f l -> BatList.flatten (BatList.map f l)) (fun d -> (match (d).FStarC_Parser_AST.d with
         | (FStarC_Parser_AST.Friend (l)) -> (let tmp2 = (FStarC_Ident.lid_of_str (FStarC_String.lowercase (FStarC_Ident.string_of_lid l))) in
           let tmp3 = (FStarC_Ident.set_lid_range tmp2 (FStarC_Ident.range_of_lid l)) in
           (tmp3 :: []))
@@ -119,12 +119,12 @@ let go_normal (tmp : unit) : unit =
             | tmp5 -> false
           ) in
         (not tmp5)) else false) in
-      let tmp5 = (if tmp4 then (Prims.op_Greater (FStarC_List.length filenames0) Prims.int_one) else false) in
-      (if tmp5 then (FStarC_Errors.fStarC_Errors_raise_error0__list_document FStarC_Errors_Codes.Fatal_OptionsNotCompatible ((FStarC_Errors_Msg.text "When using -o, you can only provide a single file in the\n        command line (except for dependency analysis).") :: [])) else ());
+      let tmp5 = (if tmp4 then (Prims.op_Greater ((fun l -> Z.of_int (BatList.length l)) filenames0) Prims.int_one) else false) in
+      (if tmp5 then (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_OptionsNotCompatible ((FStarC_Errors_Msg.text "When using -o, you can only provide a single file in the\n        command line (except for dependency analysis).") :: [])) else ());
       let chopsuf = (fun suf s -> (if (FStarC_Util.ends_with s suf) then (let tmp6 = (FStarC_String.substring s Prims.int_zero (Prims.op_Minus (FStarC_String.length s) (FStarC_String.length suf))) in
         (Some (tmp6))) else None)) in
       let checked_of = (fun f -> (chopsuf ".checked" f)) in
-      let filenames = (FStarC_List.map (fun f -> (if (not (FStarC_Filepath.file_exists f)) then f else (let tmp6 = (checked_of f) in
+      let filenames = (BatList.map (fun f -> (if (not (FStarC_Filepath.file_exists f)) then f else (let tmp6 = (checked_of f) in
         (match tmp6 with
           | (Some (f')) -> (let tmp7 = (FStarC_Debug.any ()) in
             (if tmp7 then (FStarC_Format.print1 "Rewriting argument file %s to its source file\n" f) else ());
@@ -188,7 +188,7 @@ let go_normal (tmp : unit) : unit =
           (ignore (FStarC_Universal.init_env tmp11));
           let res1 = (FStarC_CheckedFiles.load_tc_result path) in
           (match res1 with
-            | None -> (FStarC_Errors.fStarC_Errors_raise_error0__list_document FStarC_Errors_Codes.Fatal_ModuleOrFileNotFound ((FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Could not read checked file:") (FStar_Pprint.doc_of_string path)) :: []))
+            | None -> (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_ModuleOrFileNotFound ((PPrint.(^/^) (FStarC_Errors_Msg.text "Could not read checked file:") (PPrint.string path)) :: []))
             | (Some ((deps, tcr))) -> (let tmp12 = (FStarC_Class_Show.fStarC_Class_Show_show__list_tuple2_string_string deps) in
               (FStarC_Format.print1 "Deps: %s\n" tmp12);
               let tmp13 = (FStarC_Syntax_DsEnv.fStarC_Class_Show_show__module_inclusion_info (tcr).FStarC_CheckedFiles.mii) in
@@ -211,23 +211,23 @@ let go_normal (tmp : unit) : unit =
             ) in
           let tmp11 = (FStarC_Util.load_value_from_file path) in
           (match tmp11 with
-            | None -> (FStarC_Errors.fStarC_Errors_raise_error0__list_document FStarC_Errors_Codes.Fatal_ModuleOrFileNotFound ((FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Could not read krml file:") (FStar_Pprint.doc_of_string path)) :: []))
+            | None -> (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_ModuleOrFileNotFound ((PPrint.(^/^) (FStarC_Errors_Msg.text "Could not read krml file:") (PPrint.string path)) :: []))
             | (Some ((version, files))) -> (let tmp12 = (FStarC_Class_Show.fStarC_Class_Show_show__int version) in
               (FStarC_Format.print1 "Karamel format version: %s\n" tmp12);
-              (FStarC_List.iter (fun tmp13 -> (match tmp13 with
+              (BatList.iter (fun tmp13 -> (match tmp13 with
                 | (name, decls) -> ((FStarC_Format.print1 "%s:\n" name);
-                  (FStarC_List.iter (fun d -> (let tmp14 = (FStarC_Custard_KrmlAst.fStarC_Class_Show_show__decl_157 d) in
+                  (BatList.iter (fun d -> (let tmp14 = (FStarC_Custard_KrmlAst.fStarC_Class_Show_show__decl_157 d) in
                   (FStarC_Format.print1 "%s\n\n" tmp14))) decls))
               )) files))
           ))
         | FStarC_Getopt.Success when (FStarC_Options.list_plugins ()) -> ((load_native_tactics ());
           let ps = (FStarC_TypeChecker_Cfg.list_plugins ()) in
           let ts = (FStarC_Tactics_Interpreter.native_tactics_steps ()) in
-          let tmp10 = (FStarC_List.map (fun p -> (let tmp10 = (FStarC_Ident.fStarC_Class_Show_show__lident (p).FStarC_TypeChecker_Primops_Base.name) in
+          let tmp10 = (BatList.map (fun p -> (let tmp10 = (FStarC_Ident.fStarC_Class_Show_show__lident (p).FStarC_TypeChecker_Primops_Base.name) in
             (Prims.strcat "  " tmp10))) ps) in
           let tmp11 = (FStarC_String.concat "\n" tmp10) in
           (FStarC_Format.print1 "Registered plugins:\n%s\n" tmp11);
-          let tmp12 = (FStarC_List.map (fun p -> (let tmp12 = (FStarC_Ident.fStarC_Class_Show_show__lident (p).FStarC_TypeChecker_Primops_Base.name) in
+          let tmp12 = (BatList.map (fun p -> (let tmp12 = (FStarC_Ident.fStarC_Class_Show_show__lident (p).FStarC_TypeChecker_Primops_Base.name) in
             (Prims.strcat "  " tmp12))) ts) in
           let tmp13 = (FStarC_String.concat "\n" tmp12) in
           (FStarC_Format.print1 "Registered tactic plugins:\n%s\n" tmp13);
@@ -239,7 +239,7 @@ let go_normal (tmp : unit) : unit =
         )) -> (let tmp10 = (FStarC_Options.expand_include ()) in
           (match tmp10 with
             | (Some (d)) -> (let ds = (FStarC_Find.expand_include_d d) in
-              (FStarC_List.iter (fun s -> (FStarC_Format.print_string (Prims.strcat (FStarC_Filepath.canonicalize s) "\n"))) ds);
+              (BatList.iter (fun s -> (FStarC_Format.print_string (Prims.strcat (FStarC_Filepath.canonicalize s) "\n"))) ds);
               (FStarC_Effect.exit Prims.int_zero))
           ))
         | FStarC_Getopt.Success when (FStarC_Options.locate ()) -> ((check_no_filenames "--locate");
@@ -286,13 +286,13 @@ let go_normal (tmp : unit) : unit =
             ) in
           let tmp11 = (FStarC_Find_Z3.locate_z3 v) in
           (match tmp11 with
-            | None -> ((FStarC_Errors.fStarC_Errors_log_issue0__list_document FStarC_Errors_Codes.Error_Z3InvocationError (FStarC_List.op_At ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Z3 version ‘%s’ was not found." v)) :: []) (FStarC_Find_Z3.z3_install_suggestion v)));
+            | None -> ((FStarC_Errors.fStarC_Errors_log_issue0__list_ocaml_document FStarC_Errors_Codes.Error_Z3InvocationError (BatList.append ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Z3 version ‘%s’ was not found." v)) :: []) (FStarC_Find_Z3.z3_install_suggestion v)));
               (report_errors []);
               (FStarC_Effect.exit Prims.int_one))
             | (Some (fn)) -> ((FStarC_Format.print1 "%s\n" fn);
               (FStarC_Effect.exit Prims.int_zero))
           ))
-        | FStarC_Getopt.Success when (FStarC_Options.dump_ast ()) -> ((FStarC_List.iter (fun fn -> (let tmp10 = (FStarC_Parser_Driver.parse_file fn) in
+        | FStarC_Getopt.Success when (FStarC_Options.dump_ast ()) -> ((BatList.iter (fun fn -> (let tmp10 = (FStarC_Parser_Driver.parse_file fn) in
           (match tmp10 with
             | (ast, tmp11) -> (let tmp12 = (FStarC_Parser_AST.fStarC_Class_PP_pp__modul ast) in
               let tmp13 = (FStar_Pprint.render tmp12) in
@@ -303,7 +303,7 @@ let go_normal (tmp : unit) : unit =
           let tmp10 = (FStarC_Debug.any ()) in
           (if tmp10 then (let tmp11 = (!(FStarC_Options.u__version)) in
           let tmp12 = (!(FStarC_Options.u__commit)) in
-          let tmp13 = (FStarC_Platform_Base.kernel ()) in
+          let tmp13 = ((fun () -> try List.hd (Process.read_stdout "uname" [| |]) with _ -> Sys.os_type) ()) in
           (FStarC_Format.print3 "- F* version %s -- %s (on %s)\n" tmp11 tmp12 tmp13);
           (FStarC_Format.print1 "- Executable: %s\n" FStarC_Util.exec_name);
           let tmp14 = (FStarC_Find.lib_root ()) in
@@ -368,7 +368,7 @@ let go_normal (tmp : unit) : unit =
             | (filenames1, dep_graph, fly_deps) -> (let tmp14 = (FStarC_Universal.batch_mode_tc fly_deps filenames1 dep_graph) in
               (match tmp14 with
                 | (tcrs, env, cleanup_) -> ((ignore (cleanup_ env));
-                  let module_names = (FStarC_List.map (fun tcr -> (FStarC_Universal.module_or_interface_name (tcr).FStarC_CheckedFiles.checked_module)) tcrs) in
+                  let module_names = (BatList.map (fun tcr -> (FStarC_Universal.module_or_interface_name (tcr).FStarC_CheckedFiles.checked_module)) tcrs) in
                   (report_errors module_names);
                   (finished_message module_names Prims.int_zero))
               ))

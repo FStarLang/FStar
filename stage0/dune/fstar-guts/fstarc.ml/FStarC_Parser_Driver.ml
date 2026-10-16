@@ -8,7 +8,7 @@ let parse_file (fn : string) : (FStarC_Parser_AST.modul * ((string * FStarC_Rang
     | (FStarC_Parser_Frontend.ASTFragment ((FStar_Pervasives.Inr (tmp1)), tmp2)) -> (let msg = (FStarC_Format.fmt1 "%s: expected a module\n" fn) in
       let r = FStarC_Range_Type.dummyRange in
       (FStarC_Errors.fStarC_Errors_raise_error__range_string r FStarC_Errors_Codes.Fatal_ModuleExpected msg))
-    | (FStarC_Parser_Frontend.ParseError ((e, msg, r))) -> (FStarC_Errors.fStarC_Errors_raise_error__range_list_document r e msg)
+    | (FStarC_Parser_Frontend.ParseError ((e, msg, r))) -> (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document r e msg)
     | (FStarC_Parser_Frontend.Term (tmp1)) -> (FStarC_Effect.failwith "Impossible: parsing a Filename always results in an ASTFragment")
   ))
 
@@ -26,7 +26,7 @@ let parse_fragment (lang_opt : (string) option) (frag : FStarC_Parser_Frontend.i
     | (FStarC_Parser_Frontend.ASTFragment ((FStar_Pervasives.Inr ([])), tmp1)) -> Empty
     | (FStarC_Parser_Frontend.ASTFragment ((FStar_Pervasives.Inr (decls)), tmp1)) -> (Decls (decls))
     | (FStarC_Parser_Frontend.IncrementalFragment ((decls, tmp1, tmp2))) -> (DeclsWithContent (decls))
-    | (FStarC_Parser_Frontend.ParseError ((e, msg, r))) -> (FStarC_Errors.fStarC_Errors_raise_error__range_list_document r e msg)
+    | (FStarC_Parser_Frontend.ParseError ((e, msg, r))) -> (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document r e msg)
     | (FStarC_Parser_Frontend.Term (tmp1)) -> (FStarC_Effect.failwith "Impossible: parsing a Toplevel always results in an ASTFragment")
   ))
 

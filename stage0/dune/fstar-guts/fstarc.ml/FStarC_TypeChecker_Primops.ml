@@ -59,7 +59,7 @@ let simple_ops : (FStarC_TypeChecker_Primops_Base.primitive_step) list =
   (Some (tmp))))) :: [])))))))))))))))))))))))))))
 
 let built_in_primitive_steps_list : (FStarC_TypeChecker_Primops_Base.primitive_step) list =
-  (let tmp = (FStarC_List.map (fun s -> { FStarC_TypeChecker_Primops_Base.name = (s).FStarC_TypeChecker_Primops_Base.name;
+  (let tmp = (BatList.map (fun s -> { FStarC_TypeChecker_Primops_Base.name = (s).FStarC_TypeChecker_Primops_Base.name;
       arity = (s).FStarC_TypeChecker_Primops_Base.arity;
       univ_arity = (s).FStarC_TypeChecker_Primops_Base.univ_arity;
       auto_reflect = (s).FStarC_TypeChecker_Primops_Base.auto_reflect;
@@ -68,16 +68,16 @@ let built_in_primitive_steps_list : (FStarC_TypeChecker_Primops_Base.primitive_s
       renorm_after = (s).FStarC_TypeChecker_Primops_Base.renorm_after;
       unrepresentable_result = true;
       interpretation = (s).FStarC_TypeChecker_Primops_Base.interpretation;
-      interpretation_nbe = (s).FStarC_TypeChecker_Primops_Base.interpretation_nbe }) (FStarC_List.op_At FStarC_TypeChecker_Primops_Docs.ops FStarC_TypeChecker_Primops_Errors_Msg.ops)) in
-  let tmp1 = (FStarC_List.op_At tmp (FStarC_List.op_At FStarC_TypeChecker_Primops_MachineInts.ops (FStarC_List.op_At FStarC_TypeChecker_Primops_Range.ops FStarC_TypeChecker_Primops_Real.ops))) in
-  let tmp2 = (FStarC_List.op_At FStarC_TypeChecker_Primops_Erased.ops tmp1) in
-  let tmp3 = (FStarC_List.op_At FStarC_TypeChecker_Primops_Sealed.ops tmp2) in
-  let tmp4 = (FStarC_List.op_At FStarC_TypeChecker_Primops_Array.ops tmp3) in
-  let tmp5 = (FStarC_List.op_At FStarC_TypeChecker_Primops_Issue.ops tmp4) in
-  let tmp6 = (FStarC_List.op_At short_circuit_ops tmp5) in
-  (FStarC_List.op_At simple_ops tmp6))
+      interpretation_nbe = (s).FStarC_TypeChecker_Primops_Base.interpretation_nbe }) (BatList.append FStarC_TypeChecker_Primops_Docs.ops FStarC_TypeChecker_Primops_Errors_Msg.ops)) in
+  let tmp1 = (BatList.append tmp (BatList.append FStarC_TypeChecker_Primops_MachineInts.ops (BatList.append FStarC_TypeChecker_Primops_Range.ops FStarC_TypeChecker_Primops_Real.ops))) in
+  let tmp2 = (BatList.append FStarC_TypeChecker_Primops_Erased.ops tmp1) in
+  let tmp3 = (BatList.append FStarC_TypeChecker_Primops_Sealed.ops tmp2) in
+  let tmp4 = (BatList.append FStarC_TypeChecker_Primops_Array.ops tmp3) in
+  let tmp5 = (BatList.append FStarC_TypeChecker_Primops_Issue.ops tmp4) in
+  let tmp6 = (BatList.append short_circuit_ops tmp5) in
+  (BatList.append simple_ops tmp6))
 
 let simplification_ops_list (env : FStarC_TypeChecker_Env.env) : (FStarC_TypeChecker_Primops_Base.primitive_step) list =
   (let tmp = (FStarC_TypeChecker_Primops_Eq.prop_eq_ops env) in
-  (FStarC_List.op_At tmp (FStarC_List.op_At FStarC_TypeChecker_Primops_Real.simplify_ops FStarC_TypeChecker_Primops_Erased.simplify_ops)))
+  (BatList.append tmp (BatList.append FStarC_TypeChecker_Primops_Real.simplify_ops FStarC_TypeChecker_Primops_Erased.simplify_ops)))
 

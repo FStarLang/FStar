@@ -49,7 +49,7 @@ let dbg_Snapshot : (bool ref) =
 
 let varops : varops_t =
   (let ctr = (ref (Prims.of_int (100))) in
-  let new_scope = (fun tmp -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (100))))) in
+  let new_scope = (fun tmp -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100))))) in
   let tmp = (new_scope ()) in
   let tmp1 = (tmp :: []) in
   let scopes = (ref tmp1) in
@@ -65,7 +65,7 @@ let varops : varops_t =
           (Prims.strcat y1 tmp7))
       ) in
     let tmp4 = (!(scopes)) in
-    let top_scope = (FStarC_List.hd tmp4) in
+    let top_scope = (BatList.hd tmp4) in
     (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace top_scope y2 true);
     y2)) in
   let new_var = (fun pp rn -> (let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int rn) in
@@ -88,12 +88,12 @@ let varops : varops_t =
   let pop = (fun tmp2 -> (let tmp3 = (!(dbg_Snapshot)) in
     (if tmp3 then (FStarC_Format.print_string "SMTEncoding.scopes.pop\n") else ());
     let tmp4 = (!(scopes)) in
-    let tmp5 = (FStarC_List.tl tmp4) in
+    let tmp5 = (BatList.tl tmp4) in
     ((scopes) := tmp5))) in
   let snapshot = (fun tmp2 -> (FStarC_Common.snapshot "SMTEncoding.scopes" push scopes ())) in
   let rollback = (fun depth -> (match depth with
       | (Some (n)) when (let tmp2 = (!(scopes)) in
-      let tmp3 = (FStarC_List.length tmp2) in
+      let tmp3 = ((fun l -> Z.of_int (BatList.length l)) tmp2) in
       (Prims.op_Less_Equals tmp3 n)) -> ()
       | tmp2 -> (FStarC_Common.rollback "SMTEncoding.scopes" pop scopes depth)
     )) in
@@ -236,7 +236,7 @@ let print_env (e : env_t) : string =
   let allvars = (FStarC_PSMap.fold (match ((e).fvar_bindings, (e).fvar_bindings1) with
       | (u__1, u__2) -> u__1
     ) (fun u__k fvb acc -> ((fvb).fvar_lid :: acc)) []) in
-  (ignore (match (FStarC_List.rev allvars) with
+  (ignore (match (BatList.rev allvars) with
     | [] -> ""
     | (l :: tmp) -> (let tmp1 = (FStarC_Ident.fStarC_Class_Show_show__lident l) in
       (Prims.strcat "...," tmp1))
@@ -269,7 +269,7 @@ let fail_fvar_lookup (env : env_t) (a : FStarC_Ident.lident) : 'u___a =
       (if ((match quals with
         | (Some (v)) -> true
         | tmp1 -> false
-      ) && (FStarC_List.contains FStarC_Syntax_Syntax.Unfold_for_unification_and_vcgen (match quals with
+      ) && (BatList.mem FStarC_Syntax_Syntax.Unfold_for_unification_and_vcgen (match quals with
         | (Some (v)) -> v
       ))) then (let tmp1 = (FStarC_Ident.fStarC_Class_Show_show__lident a) in
       let tmp2 = (FStarC_Format.fmt1 "Name %s not found in the smtencoding env (the symbol is marked unfold, expected it to reduce)" tmp1) in
@@ -347,12 +347,12 @@ let kick_partial_app (fvb : fvar_binding) : (FStarC_SMTEncoding_Term.term) optio
       let tmp5 = (FStarC_SMTEncoding_Term.mk_Valid tmp4) in
       (Some (tmp5))) else (let vars = (list_of (Prims.op_Plus (fvb).smt_arity (fvb).univ_arity) (fun i -> (let sort = (if (Prims.op_Less i (fvb).univ_arity) then FStarC_SMTEncoding_Term.univ_sort else FStarC_SMTEncoding_Term.Term_sort) in
         (FStarC_SMTEncoding_Term.mk_fv ((Prims.strcat "@u" (Prims.string_of_int i)), sort))))) in
-      let var_terms = (FStarC_List.map FStarC_SMTEncoding_Util.mkFreeV vars) in
+      let var_terms = (BatList.map FStarC_SMTEncoding_Util.mkFreeV vars) in
       let vapp = (FStarC_SMTEncoding_Util.mkApp ((fvb).smt_id, var_terms)) in
-      let tmp3 = (FStarC_List.splitAt (fvb).univ_arity var_terms) in
+      let tmp3 = ((fun n l -> BatList.split_at (Z.to_int n) l) (fvb).univ_arity var_terms) in
       (match tmp3 with
         | (univs, rest) -> (let tmp4 = (FStarC_SMTEncoding_Util.mkApp (tok, univs)) in
-          let vtok_app = (FStarC_List.fold_left FStarC_SMTEncoding_Util.mk_ApplyTT tmp4 rest) in
+          let vtok_app = (BatList.fold_left FStarC_SMTEncoding_Util.mk_ApplyTT tmp4 rest) in
           let tmp5 = (FStarC_SMTEncoding_Util.mkEq (vapp, vtok_app)) in
           let tmp6 = (((vapp :: []) :: []), vars, tmp5) in
           let tmp7 = (FStarC_SMTEncoding_Term.mkForall FStarC_Range_Type.dummyRange tmp6) in
@@ -364,12 +364,12 @@ let kick_partial_app (fvb : fvar_binding) : (FStarC_SMTEncoding_Term.term) optio
       let tmp5 = (FStarC_SMTEncoding_Term.mk_Valid tmp4) in
       (Some (tmp5))) else (let vars = (list_of (Prims.op_Plus (fvb).smt_arity (fvb).univ_arity) (fun i -> (let sort = (if (Prims.op_Less i (fvb).univ_arity) then FStarC_SMTEncoding_Term.univ_sort else FStarC_SMTEncoding_Term.Term_sort) in
         (FStarC_SMTEncoding_Term.mk_fv ((Prims.strcat "@u" (Prims.string_of_int i)), sort))))) in
-      let var_terms = (FStarC_List.map FStarC_SMTEncoding_Util.mkFreeV vars) in
+      let var_terms = (BatList.map FStarC_SMTEncoding_Util.mkFreeV vars) in
       let vapp = (FStarC_SMTEncoding_Util.mkApp ((fvb).smt_id, var_terms)) in
-      let tmp3 = (FStarC_List.splitAt (fvb).univ_arity var_terms) in
+      let tmp3 = ((fun n l -> BatList.split_at (Z.to_int n) l) (fvb).univ_arity var_terms) in
       (match tmp3 with
         | (univs, rest) -> (let tmp4 = (FStarC_SMTEncoding_Util.mkApp (tok, univs)) in
-          let vtok_app = (FStarC_List.fold_left FStarC_SMTEncoding_Util.mk_ApplyTT tmp4 rest) in
+          let vtok_app = (BatList.fold_left FStarC_SMTEncoding_Util.mk_ApplyTT tmp4 rest) in
           let tmp5 = (FStarC_SMTEncoding_Util.mkEq (vapp, vtok_app)) in
           let tmp6 = (((vapp :: []) :: []), vars, tmp5) in
           let tmp7 = (FStarC_SMTEncoding_Term.mkForall FStarC_Range_Type.dummyRange tmp6) in
@@ -391,7 +391,7 @@ let primitive_projector_by_pos (env : FStarC_TypeChecker_Env.env) (lid : FStarC_
       (match tmp3 with
         | (FStarC_Syntax_Syntax.Tm_arrow (tmp4)) -> (let tmp5 = (FStarC_Syntax_Util.arrow_node_formals_comp t) in
           (match tmp5 with
-            | (binders, tmp6) -> (if ((Prims.op_Less i Prims.int_zero) || (Prims.op_Greater_Equals i (FStarC_List.length binders))) then (fail ()) else (let b = (FStarC_List.nth binders i) in
+            | (binders, tmp6) -> (if ((Prims.op_Less i Prims.int_zero) || (Prims.op_Greater_Equals i ((fun l -> Z.of_int (BatList.length l)) binders))) then (fail ()) else (let b = ((fun l i -> BatList.nth l (Z.to_int i)) binders i) in
               (mk_term_projector_name lid (b).FStarC_Syntax_Syntax.binder_bv)))
           ))
         | tmp4 -> (fail ())

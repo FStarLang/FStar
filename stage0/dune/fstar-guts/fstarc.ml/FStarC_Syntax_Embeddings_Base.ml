@@ -108,17 +108,17 @@ let unembed (e : ('u___a) embedding) (t : (FStarC_Syntax_Syntax.term') FStarC_Sy
     | tmp -> false
   ) then (let tmp = (type_of e) in
   let tmp1 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' tmp) in
-  let tmp2 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Unembedding failed for type") tmp1) in
+  let tmp2 = (PPrint.(^/^) (FStarC_Errors_Msg.text "Unembedding failed for type") tmp1) in
   let tmp3 = (emb_typ_of e ()) in
   let tmp4 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__emb_typ tmp3) in
-  let tmp5 = (FStar_Pprint.doc_of_string tmp4) in
-  let tmp6 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "emb_typ = ") tmp5) in
+  let tmp5 = (PPrint.string tmp4) in
+  let tmp6 = (PPrint.(^/^) (FStarC_Errors_Msg.text "emb_typ = ") tmp5) in
   let tmp7 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' t) in
-  let tmp8 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Term =") tmp7) in
+  let tmp8 = (PPrint.(^/^) (FStarC_Errors_Msg.text "Term =") tmp7) in
   let tmp9 = (tmp8 :: []) in
   let tmp10 = (tmp6 :: tmp9) in
   let tmp11 = (tmp2 :: tmp10) in
-  (FStarC_Errors.fStarC_Errors_log_issue__syntax_term'_list_document t FStarC_Errors_Codes.Warning_NotEmbedded tmp11)) else ());
+  (FStarC_Errors.fStarC_Errors_log_issue__syntax_term'_list_ocaml_document t FStarC_Errors_Codes.Warning_NotEmbedded tmp11)) else ());
   r)
 
 let set_type (ty : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (e : ('u___a) embedding) : ('u___a) embedding =
@@ -141,7 +141,7 @@ let mk_extracted_embedding (name : string) (u : ((string * ((FStarC_Syntax_Synta
             | (FStarC_Syntax_Syntax.Tm_fvar (fv)) -> (Some ((fv).FStarC_Syntax_Syntax.fv_name))
             | tmp4 -> None
           ) in
-        (op_let_Question tmp4 (fun hd_lid -> (let tmp5 = (FStarC_List.map (fun x -> (match x with
+        (op_let_Question tmp4 (fun hd_lid -> (let tmp5 = (BatList.map (fun x -> (match x with
             | (u__1, u__2) -> u__1
           )) args) in
         let tmp6 = ((FStarC_Ident.string_of_lid hd_lid), tmp5) in

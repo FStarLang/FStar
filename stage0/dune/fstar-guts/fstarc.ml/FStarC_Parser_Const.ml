@@ -2,7 +2,7 @@
 [@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
 
 let fstar_tactics_lid' (s : (string) list) : FStarC_Ident.lident =
-  (FStarC_Ident.lid_of_path (FStarC_List.op_At ("FStar" :: ("Tactics" :: [])) s) FStarC_Range_Type.dummyRange)
+  (FStarC_Ident.lid_of_path (BatList.append ("FStar" :: ("Tactics" :: [])) s) FStarC_Range_Type.dummyRange)
 
 let tcresolve_lid : FStarC_Ident.lident =
   (fstar_tactics_lid' ("Typeclasses" :: ("tcresolve" :: [])))
@@ -102,7 +102,7 @@ let ef_base (tmp : unit) : (string) list =
   ("FStar" :: ("All" :: []))
 
 let effect_ML_lid (tmp : unit) : FStarC_Ident.lident =
-  (p2l (FStarC_List.op_At (ef_base ()) ("ML" :: [])))
+  (p2l (BatList.append (ef_base ()) ("ML" :: [])))
 
 let psconst (s : string) : FStarC_Ident.lident =
   (p2l ("FStar" :: ("Pervasives" :: (s :: []))))
@@ -589,7 +589,7 @@ let has_type_lid : FStarC_Ident.lident =
   (pconst "has_type")
 
 let effect_ALL_lid (tmp : unit) : FStarC_Ident.lident =
-  (p2l (FStarC_List.op_At (ef_base ()) ("ALL" :: [])))
+  (p2l (BatList.append (ef_base ()) ("ALL" :: [])))
 
 let t2b_lid : FStarC_Ident.lident =
   (pconst "t2b")
@@ -676,7 +676,7 @@ let admit_termination_lid : FStarC_Ident.lident =
   (attr "admit_termination")
 
 let fstar_stubs_tactics_lid' (s : (string) list) : FStarC_Ident.lident =
-  (FStarC_Ident.lid_of_path (FStarC_List.op_At ("FStar" :: ("Stubs" :: ("Tactics" :: []))) s) FStarC_Range_Type.dummyRange)
+  (FStarC_Ident.lid_of_path (BatList.append ("FStar" :: ("Stubs" :: ("Tactics" :: []))) s) FStarC_Range_Type.dummyRange)
 
 let binder_strictly_positive_attr : FStarC_Ident.lident =
   (pconst "strictly_positive")

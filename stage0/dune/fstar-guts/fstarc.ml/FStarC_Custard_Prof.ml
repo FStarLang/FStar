@@ -19,7 +19,7 @@ type counter = {
 }
 
 let counters : (counter) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
-  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (50))))
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (50))))
 
 let get (name : string) : counter =
   (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt counters name) in
@@ -65,7 +65,7 @@ let report (tmp : unit) : unit =
         (Prims.op_Minus tmp7 tmp8))
     )) rows) in
   (FStarC_Format.print_string "Custard, exclusive time by counter:\n");
-  (FStarC_List.iter (fun tmp3 -> (match tmp3 with
+  (BatList.iter (fun tmp3 -> (match tmp3 with
     | (k, c) -> (let tmp4 = (!((c).c_time)) in
       let tmp5 = (Prims.op_Slash tmp4 (Prims.of_int (1000000))) in
       let tmp6 = (FStarC_Class_Show.fStarC_Class_Show_show__int tmp5) in

@@ -72,7 +72,7 @@ let as_list' (tmp : option_val) : (option_val) list =
 
 let as_list (as_t : (option_val -> 'u___a)) (x : option_val) : ('u___a) list =
   (let tmp = (as_list' x) in
-  (FStarC_List.map as_t tmp))
+  (BatList.map as_t tmp))
 
 let as_string (tmp : option_val) : string =
   (match tmp with
@@ -232,7 +232,7 @@ let path_of_text (text : string) : (string) list =
   (FStarC_String.split (46 :: []) text)
 
 let parse_settings (ns : (string) list) : (((string) list * bool)) list =
-  (let cache = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (31)))) in
+  (let cache = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (31)))) in
   let with_cache = (fun f s -> (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt cache s) in
     (match tmp with
       | (Some (s1)) -> s1
@@ -244,12 +244,12 @@ let parse_settings (ns : (string) list) : (((string) list * bool)) list =
     let path = (path_of_text tmp) in
     (path, false)) else (let s1 = (if (FStarC_Util.starts_with s "+") then (FStarC_Util.substring_from s Prims.int_one) else s) in
     ((path_of_text s1), true)))))) in
-  let tmp = (FStarC_List.collect (fun s -> (let s1 = (FStarC_Util.trim_string s) in
+  let tmp = ((fun f l -> BatList.flatten (BatList.map f l)) (fun s -> (let s1 = (FStarC_Util.trim_string s) in
     (if ((=) s1 "") then [] else (with_cache (fun s2 -> (let s3 = (FStarC_Util.replace_char s2 32 44) in
-    let tmp = (FStarC_List.concatMap (fun s4 -> (FStarC_Util.split s4 ",")) (FStarC_Util.splitlines s3)) in
-    let tmp1 = (FStarC_List.filter (fun s4 -> ((<>) s4 "")) tmp) in
-    (FStarC_List.map parse_one_setting tmp1))) s1)))) ns) in
-  (FStarC_List.rev tmp))
+    let tmp = ((fun f l -> BatList.flatten (BatList.map f l)) (fun s4 -> (FStarC_Util.split s4 ",")) (FStarC_Util.splitlines s3)) in
+    let tmp1 = (BatList.filter (fun s4 -> ((<>) s4 "")) tmp) in
+    (BatList.map parse_one_setting tmp1))) s1)))) ns) in
+  (BatList.rev tmp))
 
 let rec module_matches_namespace_filter__matches_path (m_components : (string) list) (path : (string) list) : bool =
   (match (m_components, path) with
@@ -290,7 +290,7 @@ let get_verify_module (tmp : unit) : (string) list =
 
 let should_check (m : string) : bool =
   (let l = (get_verify_module ()) in
-  (FStarC_List.contains (FStarC_String.lowercase m) l))
+  (BatList.mem (FStarC_String.lowercase m) l))
 
 let profile_enabled (module_name : (string) option) (profile_phase : string) : bool =
   (match module_name with
@@ -576,8 +576,8 @@ let interp_quake_arg (s : string) : (Prims.int * Prims.int * bool) =
 
 let display_debug_keys (tmp : unit) : unit =
   (let keys = (FStarC_Debug.list_all_toggles ()) in
-  let tmp1 = (FStarC_List.sortWith FStarC_String.compare keys) in
-  (FStarC_List.iter (fun s -> (FStarC_Format.print_string (FStarC_String.op_Hat s "\n"))) tmp1))
+  let tmp1 = ((fun f l -> BatList.sort (fun x y -> Z.to_int (f x y)) l) FStarC_String.compare keys) in
+  (BatList.iter (fun s -> (FStarC_Format.print_string (FStarC_String.op_Hat s "\n"))) tmp1))
 
 let option_warning_callback : (string -> unit) =
   (match uu___1 with
@@ -614,24 +614,24 @@ let set_admit_smt_queries (b : bool) : unit =
 
 let as_comma_string_list (tmp : option_val) : (string) list =
   (match tmp with
-    | (List (ls)) -> (let tmp1 = (FStarC_List.map (fun l -> (let tmp1 = (as_string l) in
+    | (List (ls)) -> (let tmp1 = (BatList.map (fun l -> (let tmp1 = (as_string l) in
         (FStarC_Util.split tmp1 ","))) ls) in
-      (FStarC_List.flatten tmp1))
+      (BatList.flatten tmp1))
     | tmp1 -> (FStarC_Effect.failwith "Impos: expected String (comma list)")
   )
 
-let specs_with_types (warn_unsafe : bool) : ((FStarC_BaseTypes.char * string * opt_type * FStar_Pprint.document)) list =
-  (let text = (fun s -> (FStar_Pprint.flow (FStar_Pprint.break_ Prims.int_one) (FStar_Pprint.words s))) in
+let specs_with_types (warn_unsafe : bool) : ((FStar_Char.char * string * opt_type * PPrint.document)) list =
+  (let text = (fun s -> (PPrint.flow (FStar_Pprint.break_ Prims.int_one) (PPrint.words s))) in
   let tmp = (FStarC_Errors_Msg.bulleted ((text "if 'no', no checks are performed") :: ((text "if 'warn', checks are performed and raise a warning when they fail") :: ((text "if 'error, like 'warn', but the compiler raises a hard error instead") :: ((text "if 'abort, like 'warn', but the compiler immediately aborts on an error") :: []))))) in
-  let tmp1 = (FStar_Pprint.op_Hat_Slash_Hat tmp (text "(default 'no')")) in
-  let tmp2 = (FStar_Pprint.op_Hat_Hat (text "Enable several internal sanity checks, useful to track bugs and report issues.") tmp1) in
+  let tmp1 = (PPrint.(^/^) tmp (text "(default 'no')")) in
+  let tmp2 = (PPrint.(^^) (text "Enable several internal sanity checks, useful to track bugs and report issues.") tmp1) in
   let tmp3 = (FStarC_Getopt.noshort, "defensive", (EnumStr (("no" :: ("warn" :: ("error" :: ("abort" :: [])))))), tmp2) in
   let tmp4 = (FStarC_Errors_Msg.bulleted ((text "'graph': a format suitable the 'dot' tool from 'GraphViz'") :: ((text "'full': a format suitable for 'make', including dependences for producing .ml and .krml files") :: ((text "'make': (deprecated) a format suitable for 'make', including only dependences among source files") :: ((text "'dune': a format suitable for 'dune', outputting (rule ...) stanzas") :: []))))) in
-  let tmp5 = (FStar_Pprint.op_Hat_Hat (text "Output the transitive closure of the full dependency graph in several formats:") tmp4) in
+  let tmp5 = (PPrint.(^^) (text "Output the transitive closure of the full dependency graph in several formats:") tmp4) in
   let tmp6 = (FStarC_Getopt.noshort, "dep", (EnumStr (("make" :: ("graph" :: ("full" :: ("raw" :: ("dune" :: []))))))), tmp5) in
   let tmp7 = (FStarC_Errors_Msg.bulleted ((text "--quake N/M repeats each query checks that it succeeds at least N out of M times, aborting early if possible") :: ((text "--quake N/M/k works as above, except it will unconditionally run M times") :: ((text "--quake N is an alias for --quake N/N") :: ((text "--quake N/k is an alias for --quake N/N/k") :: []))))) in
-  let tmp8 = (FStar_Pprint.op_Hat_Hat tmp7 (text "Using --quake disables --retry. Queries from the smt_sync tactic are not quake-tested.")) in
-  let tmp9 = (FStar_Pprint.op_Hat_Hat (text "Repeats SMT queries to check for robustness") tmp8) in
+  let tmp8 = (PPrint.(^^) tmp7 (text "Using --quake disables --retry. Queries from the smt_sync tactic are not quake-tested.")) in
+  let tmp9 = (PPrint.(^^) (text "Repeats SMT queries to check for robustness") tmp8) in
   let tmp10 = (FStarC_Getopt.noshort, "quake", (PostProcessed ((fun tmp10 -> (match tmp10 with
       | (String (s)) -> (let tmp11 = (interp_quake_arg s) in
         (match tmp11 with
@@ -644,15 +644,15 @@ let specs_with_types (warn_unsafe : bool) : ((FStarC_BaseTypes.char * string * o
       | tmp11 -> (FStarC_Effect.failwith "impos")
     )), (SimpleStr ("positive integer or pair of positive integers")))), tmp9) in
   let tmp11 = (FStarC_Errors_Msg.bulleted ((text "if 'boxwrap' use 'Prims.op_Star, Prims.op_Slash, Prims.op_Percent'") :: ((text "if 'native' use '*, div, mod'") :: ((text "if 'wrapped' use '_mul, _div, _mod : Int*Int -> Int'") :: [])))) in
-  let tmp12 = (FStar_Pprint.op_Hat_Hat tmp11 (text "(default 'boxwrap')")) in
-  let tmp13 = (FStar_Pprint.op_Hat_Hat (text "Control the representation of non-linear arithmetic functions in the SMT encoding:") tmp12) in
+  let tmp12 = (PPrint.(^^) tmp11 (text "(default 'boxwrap')")) in
+  let tmp13 = (PPrint.(^^) (text "Control the representation of non-linear arithmetic functions in the SMT encoding:") tmp12) in
   let tmp14 = (FStarC_Getopt.noshort, "smtencoding.nl_arith_repr", (EnumStr (("native" :: ("wrapped" :: ("boxwrap" :: []))))), tmp13) in
   let tmp15 = (FStarC_Errors_Msg.bulleted ((text "if 'boxwrap', use 'Prims.op_Plus, Prims.op_Minus, Prims.op_Minus'") :: ((text "if 'native', use '+, -, -'") :: []))) in
-  let tmp16 = (FStar_Pprint.op_Hat_Hat tmp15 (text "(default 'boxwrap')")) in
-  let tmp17 = (FStar_Pprint.op_Hat_Hat (text "Toggle the representation of linear arithmetic functions in the SMT encoding:") tmp16) in
+  let tmp16 = (PPrint.(^^) tmp15 (text "(default 'boxwrap')")) in
+  let tmp17 = (PPrint.(^^) (text "Toggle the representation of linear arithmetic functions in the SMT encoding:") tmp16) in
   let tmp18 = (FStarC_Getopt.noshort, "smtencoding.l_arith_repr", (EnumStr (("native" :: ("boxwrap" :: [])))), tmp17) in
   let tmp19 = (FStarC_Errors_Msg.bulleted ((text "[r] is a range of warnings (either a number [n], or a range [n..n])") :: ((text "[-r] silences range [r]") :: ((text "[+r] enables range [r] as warnings (NOTE: \"enabling\" an error will downgrade it to a warning)") :: ((text "[@r] makes range [r] fatal.") :: []))))) in
-  let tmp20 = (FStar_Pprint.op_Hat_Hat (text "The [-warn_error] option follows the OCaml syntax, namely:") tmp19) in
+  let tmp20 = (PPrint.(^^) (text "The [-warn_error] option follows the OCaml syntax, namely:") tmp19) in
   let tmp21 = (FStarC_Getopt.noshort, "warn_error", (ReverseAccumulated ((SimpleStr ("")))), tmp20) in
   let tmp22 = (tmp21 :: ((FStarC_Getopt.noshort, "use_nbe", BoolStr, (text "Use normalization by evaluation as the default normalization strategy (default 'false')")) :: ((FStarC_Getopt.noshort, "trivial_pre_for_unannotated_effectful_fns", BoolStr, (text "Enforce trivial preconditions for unannotated effectful functions (default 'true')")) :: ((FStarC_Getopt.noshort, "with_fstarc", (WithSideEffect ((fun tmp22 -> (FStarC_Find.set_with_fstarc true)), (Const ((Bool (true)))))), (text "Expose compiler internal modules (FStarC namespace). Only for advanced plugins you should probably not use it.")) :: ((FStarC_Getopt.noshort, "__debug_embedding", (WithSideEffect ((fun tmp22 -> ((debug_embedding) := true)), (Const ((Bool (true)))))), (text "Debug messages for embeddings/unembeddings of natively compiled terms")) :: ((FStarC_Getopt.noshort, "eager_embedding", (WithSideEffect ((fun tmp22 -> ((eager_embedding) := true)), (Const ((Bool (true)))))), (text "Eagerly embed and unembed terms to primitive operations and plugins: not recommended except for benchmarking")) :: ((FStarC_Getopt.noshort, "profile_group_by_decl", (Const ((Bool (true)))), (text "Emit profiles grouped by declaration rather than by module")) :: ((FStarC_Getopt.noshort, "profile_component", (Accumulated ((SimpleStr ("One or more space-separated occurrences of '[+|-]( * | namespace | module | identifier)'")))), (text "Specific source locations in the compiler are instrumented with profiling counters. Pass `--profile_component FStarC.TypeChecker` to enable all counters in the FStarC.TypeChecker namespace. This option is a module or namespace selector, like many other options (e.g., `--using_facts_from`)")) :: ((FStarC_Getopt.noshort, "profile", (Accumulated ((SimpleStr ("One or more space-separated occurrences of '[+|-]( * | namespace | module)'")))), (text "Profiling can be enabled when the compiler is processing a given set of source modules. Pass `--profile FStar.Pervasives` to enable profiling when the compiler is processing any module in FStar.Pervasives. This option is a module or namespace selector, like many other options (e.g., `--using_facts_from`)")) :: ((104, "help", (Const ((Bool (true)))), (text "Display this information")) :: ((FStarC_Getopt.noshort, "list_debug_keys", (WithSideEffect ((fun tmp22 -> ((display_debug_keys ());
     (FStarC_Effect.exit Prims.int_zero))), (Const ((Bool (true)))))), (text "List all debug keys and exit")) :: ((FStarC_Getopt.noshort, "expand_include", (SimpleStr ("directory")), (text "Print all directories that would be transitively included (due to fstar.include files) by including the given directory.")) :: ((FStarC_Getopt.noshort, "list_plugins", (Const ((Bool (true)))), (text "List all registered plugins and exit")) :: ((FStarC_Getopt.noshort, "locate", (Const ((Bool (true)))), (text "Print the root of the F* installation and exit")) :: ((FStarC_Getopt.noshort, "locate_lib", (Const ((Bool (true)))), (text "Print the root of the F* library and exit")) :: ((FStarC_Getopt.noshort, "locate_ocaml", (Const ((Bool (true)))), (text "Print the root of the built OCaml F* library and exit")) :: ((FStarC_Getopt.noshort, "locate_file", (SimpleStr ("basename")), (text "Find a file in F*'s include path and print its absolute path, then exit")) :: ((FStarC_Getopt.noshort, "locate_z3", (SimpleStr ("version")), (text "Locate the executable for a given Z3 version, then exit. The output is either an absolute path, or a name that was found in the PATH. Note: this is the Z3 executable that F* will attempt to call for the given version, but the version check is not performed at this point.")) :: ((FStarC_Getopt.noshort, "ocamlenv", (WithSideEffect ((fun tmp22 -> ((FStarC_Format.print_error "--ocamlenv must be the first argument, see fstar.exe --help for details\n");
@@ -794,13 +794,13 @@ let specs_with_types (warn_unsafe : bool) : ((FStarC_BaseTypes.char * string * o
   let tmp104 = ((FStarC_Getopt.noshort, "message_format", (EnumStr (("human" :: ("json" :: ("github" :: ("auto" :: [])))))), (text "Format of the messages emitted by F*. Using 'auto' will use human messages unless the variable GITHUB_ACTIONS is non-empty, in which case 'github' is used (default `auto`).")) :: tmp103) in
   let tmp105 = ((FStarC_Getopt.noshort, "expose_interfaces", (Const ((Bool (true)))), (text "Explicitly break the abstraction imposed by the interface of any implementation file that appears on the command line (use with care!)")) :: tmp104) in
   let tmp106 = ((FStarC_Getopt.noshort, "ext", (PostProcessed ((fun o -> (let parse_ext = (fun s -> (let exts = (FStarC_Util.split s ";") in
-      (FStarC_List.collect (fun s1 -> (match (FStarC_Util.split s1 "=") with
+      ((fun f l -> BatList.flatten (BatList.map f l)) (fun s1 -> (match (FStarC_Util.split s1 "=") with
         | (k :: (v :: [])) -> ((k, v) :: [])
         | tmp106 -> ((s1, "1") :: [])
       )) exts))) in
     let tmp106 = (as_comma_string_list o) in
-    let tmp107 = (FStarC_List.collect parse_ext tmp106) in
-    (FStarC_List.iter (fun tmp108 -> (match tmp108 with
+    let tmp107 = ((fun f l -> BatList.flatten (BatList.map f l)) parse_ext tmp106) in
+    (BatList.iter (fun tmp108 -> (match tmp108 with
       | (k, v) -> (FStarC_Options_Ext.set k v)
     )) tmp107);
     o)), (ReverseAccumulated ((SimpleStr ("extension knobs")))))), (text "These options are set in extensions option map. Keys are usually namespaces separated by \":\". E.g., 'pulse:verbose=1;my:extension:option=xyz;foo:bar=baz'. These options are typically interpreted by extensions. Any later use of --ext over the same key overrides the old value. An entry 'e' that is not of the form 'a=b' is treated as 'e=1', i.e., 'e' associated with string \"1\".")) :: tmp105) in
@@ -874,7 +874,7 @@ let accumulated_option (name : string) (value : option_val) : option_val =
 let reverse_accumulated_option (name : string) (value : option_val) : option_val =
   (let tmp = (lookup_opt name (as_option as_list')) in
   let prev_values = (FStarC_Option.dflt [] tmp) in
-  (List ((FStarC_List.op_At prev_values (value :: [])))))
+  (List ((BatList.append prev_values (value :: [])))))
 
 let rec parse_opt_val (opt_name : string) (typ : opt_type) (str_val : string) : option_val =
   (try (match typ with
@@ -887,7 +887,7 @@ let rec parse_opt_val (opt_name : string) (typ : opt_type) (str_val : string) : 
       (Bool (tmp)))
     | (PathStr (tmp)) -> (Path (str_val))
     | (SimpleStr (tmp)) -> (String (str_val))
-    | (EnumStr (strs)) -> (if (FStarC_List.mem str_val strs) then (String (str_val)) else (raise (InvalidArgument (opt_name))))
+    | (EnumStr (strs)) -> (if (BatList.mem str_val strs) then (String (str_val)) else (raise (InvalidArgument (opt_name))))
     | (OpenEnumStr (u__1, u__2)) -> (String (str_val))
     | (PostProcessed (pp, elem_spec)) -> (let tmp = (parse_opt_val opt_name elem_spec str_val) in
       (pp tmp))
@@ -910,7 +910,7 @@ let rec desc_of_opt_type (typ : opt_type) : (string) option =
     | (PathStr (desc)) -> (Some (desc))
     | (SimpleStr (desc)) -> (Some (desc))
     | (EnumStr (strs)) -> (desc_of_enum strs)
-    | (OpenEnumStr (strs, desc)) -> (desc_of_enum (FStarC_List.op_At strs (desc :: [])))
+    | (OpenEnumStr (strs, desc)) -> (desc_of_enum (BatList.append strs (desc :: [])))
     | (PostProcessed (tmp, elem_spec)) -> (desc_of_opt_type elem_spec)
     | (Accumulated (elem_spec)) -> (desc_of_opt_type elem_spec)
     | (ReverseAccumulated (elem_spec)) -> (desc_of_opt_type elem_spec)
@@ -926,7 +926,7 @@ let arg_spec_of_opt_type (opt_name : string) (typ : opt_type) : (option_val) FSt
       (FStarC_Getopt.OneArg ((parser, desc1))))
   ))
 
-let mk_spec (o : (FStarC_BaseTypes.char * string * (option_val) FStarC_Getopt.opt_variant)) : FStarC_Getopt.opt =
+let mk_spec (o : (FStar_Char.char * string * (option_val) FStarC_Getopt.opt_variant)) : FStarC_Getopt.opt =
   (match o with
     | (ns, name, arg) -> (let arg1 = (match arg with
           | (FStarC_Getopt.ZeroArgs (f)) -> (let g = (fun tmp -> (let tmp1 = (f ()) in
@@ -939,23 +939,23 @@ let mk_spec (o : (FStarC_BaseTypes.char * string * (option_val) FStarC_Getopt.op
       (ns, name, arg1))
   )
 
-let specs (warn_unsafe : bool) : ((FStarC_Getopt.opt * FStar_Pprint.document)) list =
+let specs (warn_unsafe : bool) : ((FStarC_Getopt.opt * PPrint.document)) list =
   (let tmp = (specs_with_types warn_unsafe) in
-  (FStarC_List.map (fun tmp1 -> (match tmp1 with
+  (BatList.map (fun tmp1 -> (match tmp1 with
     | (short, long, typ, doc) -> (let tmp2 = (arg_spec_of_opt_type long typ) in
       let tmp3 = (short, long, tmp2) in
       let tmp4 = (mk_spec tmp3) in
       (tmp4, doc))
   )) tmp))
 
-let all_specs : ((FStarC_Getopt.opt * FStar_Pprint.document)) list =
+let all_specs : ((FStarC_Getopt.opt * PPrint.document)) list =
   (specs true)
 
-let settable_specs : (((FStarC_BaseTypes.char * string * (unit) FStarC_Getopt.opt_variant) * FStar_Pprint.document)) list =
-  (FStarC_List.map (fun spec -> (match spec with
+let settable_specs : (((FStar_Char.char * string * (unit) FStarC_Getopt.opt_variant) * PPrint.document)) list =
+  (BatList.map (fun spec -> (match spec with
     | ((c, x, h), doc) -> (if (settable x) then spec else (let h' = (match h with
-          | (FStarC_Getopt.ZeroArgs (tmp)) -> (FStarC_Getopt.ZeroArgs ((Obj.magic ((fun tmp1 -> (raise (NotSettable (x))))))))
-          | (FStarC_Getopt.OneArg ((tmp, k))) -> (FStarC_Getopt.OneArg (((Obj.magic ((fun s -> (raise (NotSettable (x)))))), k)))
+          | (FStarC_Getopt.ZeroArgs (tmp)) -> (FStarC_Getopt.ZeroArgs ((fun tmp1 -> (raise (NotSettable (x))))))
+          | (FStarC_Getopt.OneArg ((tmp, k))) -> (FStarC_Getopt.OneArg (((fun s -> (raise (NotSettable (x)))), k)))
         ) in
       ((c, x, h'), doc)))
   )) all_specs)
@@ -968,10 +968,10 @@ let set_error_flags : (unit -> FStarC_Getopt.parse_cmdline_res) =
   )
 
 let set_options (s : string) : FStarC_Getopt.parse_cmdline_res =
-  (try (if ((=) s "") then FStarC_Getopt.Success else (let settable_specs_ = (FStarC_List.map (fun x -> (match x with
+  (try (if ((=) s "") then FStarC_Getopt.Success else (let settable_specs_ = (BatList.map (fun x -> (match x with
       | (u__1, u__2) -> u__1
     )) settable_specs) in
-  let res = (FStarC_Getopt.parse_string settable_specs_ (fun s1 -> ((ignore (raise (File_argument (s1))));
+  let res = (FStarC_Getopt.parse_string settable_specs_ (fun s1 -> ((raise (File_argument (s1)));
     (FStarC_Getopt.Error (("set_options with file argument", ""))))) s) in
   (if ((=) res FStarC_Getopt.Success) then (set_error_flags ()) else res))) with
     | (File_argument (s1)) -> (FStarC_Getopt.Error (((FStarC_Format.fmt1 "File %s is not a valid option" s1), "")))
@@ -1211,10 +1211,10 @@ let set_vconfig (vcfg : FStar_VConfig.vconfig) : unit =
   (set_option "tcnorm" (Bool ((vcfg).FStar_VConfig.tcnorm)));
   (set_option "no_plugins" (Bool ((vcfg).FStar_VConfig.no_plugins)));
   (set_option "no_tactics" (Bool ((vcfg).FStar_VConfig.no_tactics)));
-  let tmp = (FStarC_List.map (fun u__eta -> (String (u__eta))) (vcfg).FStar_VConfig.z3cliopt) in
+  let tmp = (BatList.map (fun u__eta -> (String (u__eta))) (vcfg).FStar_VConfig.z3cliopt) in
   let tmp1 = (List (tmp)) in
   (set_option "z3cliopt" tmp1);
-  let tmp2 = (FStarC_List.map (fun u__eta -> (String (u__eta))) (vcfg).FStar_VConfig.z3smtopt) in
+  let tmp2 = (BatList.map (fun u__eta -> (String (u__eta))) (vcfg).FStar_VConfig.z3smtopt) in
   let tmp3 = (List (tmp2)) in
   (set_option "z3smtopt" tmp3);
   (set_option "z3refresh" (Bool ((vcfg).FStar_VConfig.z3refresh)));
@@ -1333,7 +1333,7 @@ let codegen_target (tmp : unit) : (string) option =
   (FStarC_Target.join user lang))
 
 let all_specs_getopt : (FStarC_Getopt.opt) list =
-  (FStarC_List.map (fun x -> (match x with
+  (BatList.map (fun x -> (match x with
     | (u__1, u__2) -> u__1
   )) all_specs)
 
@@ -1344,7 +1344,7 @@ let rec parse_filename_arg (specs_ : (FStarC_Getopt.opt) list) (enable_filenames
   (if (FStarC_Util.starts_with arg "@") then (let filename = (FStarC_Util.substring_from arg Prims.int_one) in
   let lines = (FStarC_Util.file_get_lines filename) in
   (FStarC_Getopt.parse_list specs_ (parse_filename_arg specs_ enable_filenames) lines)) else ((if enable_filenames then (let tmp = (!(file_list_)) in
-  let tmp1 = (FStarC_List.op_At tmp (arg :: [])) in
+  let tmp1 = (BatList.append tmp (arg :: [])) in
   ((file_list_) := tmp1)) else ());
   FStarC_Getopt.Success))
 
@@ -1374,7 +1374,7 @@ let desugar_plugin_codegen (tmp : unit) : unit =
       | (u__1, u__2) -> u__1
     ))) in
   let tmp3 = (!(file_list_)) in
-  let mods = (FStarC_List.map module_name_of_file tmp3) in
+  let mods = (BatList.map module_name_of_file tmp3) in
   (set_option' ("codegen", (String ("OCaml"))));
   let tmp4 = (get_custard_unit ()) in
   let tmp5 = (match tmp4 with
@@ -1387,8 +1387,8 @@ let desugar_plugin_codegen (tmp : unit) : unit =
   ) else ());
   let add = (fun k xs -> (let tmp6 = (get_option k) in
     let tmp7 = (as_list' tmp6) in
-    let tmp8 = (FStarC_List.map (fun u__eta -> (String (u__eta))) xs) in
-    let tmp9 = (FStarC_List.op_At tmp7 tmp8) in
+    let tmp8 = (BatList.map (fun u__eta -> (String (u__eta))) xs) in
+    let tmp9 = (BatList.append tmp7 tmp8) in
     let tmp10 = (List (tmp9)) in
     let tmp11 = (k, tmp10) in
     (set_option' tmp11))) in
@@ -1404,7 +1404,7 @@ let desugar_plugin_codegen (tmp : unit) : unit =
   (match tmp7 with
     | (Some (lib)) -> (let checked = (FStarC_String.op_Hat lib "/ulib.checked") in
       (if (FStarC_Filepath.file_exists checked) then (let tmp8 = (FStarC_Find.get_include_path ()) in
-      let tmp9 = (FStarC_List.op_At tmp8 (checked :: [])) in
+      let tmp9 = (BatList.append tmp8 (checked :: [])) in
       (FStarC_Find.set_include_path tmp9)) else ()))
     | None -> ()
   );
@@ -1413,7 +1413,7 @@ let desugar_plugin_codegen (tmp : unit) : unit =
       | None -> []
       | (Some (xs)) -> xs
     ) in
-  let tmp9 = (FStarC_List.map (fun u__eta -> (String (u__eta))) cached) in
+  let tmp9 = (BatList.map (fun u__eta -> (String (u__eta))) cached) in
   let tmp10 = ((String ("*")) :: tmp9) in
   let tmp11 = (List (tmp10)) in
   let tmp12 = ("already_cached", tmp11) in
@@ -1427,10 +1427,10 @@ let parse_cmd_line (tmp : unit) : (FStarC_Getopt.parse_cmdline_res * (string) li
   let res1 = (if ((=) res FStarC_Getopt.Success) then (set_error_flags ()) else res) in
   let tmp1 = (get_option "include") in
   let paths = (as_list as_string tmp1) in
-  (FStarC_List.iter (fun p -> (let tmp2 = (!(check_include_dir)) in
+  (BatList.iter (fun p -> (let tmp2 = (!(check_include_dir)) in
   (tmp2 p))) paths);
   let tmp2 = (FStarC_Find.get_include_path ()) in
-  let tmp3 = (FStarC_List.op_At tmp2 paths) in
+  let tmp3 = (BatList.append tmp2 paths) in
   (FStarC_Find.set_include_path tmp3);
   let tmp4 = (!(file_list_)) in
   (FStarC_Find.set_file_list tmp4);
@@ -1453,40 +1453,40 @@ let get_help (tmp : unit) : bool =
 let help (tmp : unit) : bool =
   (get_help ())
 
-let bold_doc (d : FStar_Pprint.document) : FStar_Pprint.document =
+let bold_doc (d : PPrint.document) : PPrint.document =
   (let tmp = (FStarC_Format.stdout_isatty ()) in
   let tmp1 = ((=) tmp (Some (true))) in
-  (if tmp1 then (FStar_Pprint.op_Hat_Hat (FStar_Pprint.fancystring "\027[39;1m" Prims.int_zero) (FStar_Pprint.op_Hat_Hat d (FStar_Pprint.fancystring "\027[0m" Prims.int_zero))) else d))
+  (if tmp1 then (PPrint.(^^) (FStar_Pprint.fancystring "\027[39;1m" Prims.int_zero) (PPrint.(^^) d (FStar_Pprint.fancystring "\027[0m" Prims.int_zero))) else d))
 
-let usage_for (o : (FStarC_Getopt.opt * FStar_Pprint.document)) : FStar_Pprint.document =
+let usage_for (o : (FStarC_Getopt.opt * PPrint.document)) : PPrint.document =
   (match o with
     | ((short, flag, p), explain) -> (let arg = (match p with
-          | (FStarC_Getopt.ZeroArgs (tmp)) -> FStar_Pprint.empty
-          | (FStarC_Getopt.OneArg ((tmp, argname))) -> (FStar_Pprint.op_Hat_Hat (FStar_Pprint.blank Prims.int_one) (FStar_Pprint.doc_of_string argname))
+          | (FStarC_Getopt.ZeroArgs (tmp)) -> PPrint.empty
+          | (FStarC_Getopt.OneArg ((tmp, argname))) -> (PPrint.(^^) (FStar_Pprint.blank Prims.int_one) (PPrint.string argname))
         ) in
       let short_opt = (if ((<>) short FStarC_Getopt.noshort) then (let tmp = (FStarC_String.make Prims.int_one short) in
         let tmp1 = (FStarC_String.op_Hat "-" tmp) in
-        let tmp2 = (FStar_Pprint.doc_of_string tmp1) in
-        let tmp3 = (FStar_Pprint.op_Hat_Hat tmp2 arg) in
+        let tmp2 = (PPrint.string tmp1) in
+        let tmp3 = (PPrint.(^^) tmp2 arg) in
         (tmp3 :: [])) else []) in
-      let long_opt = (if ((<>) flag "") then ((FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string (FStarC_String.op_Hat "--" flag)) arg) :: []) else []) in
-      let tmp = (bold_doc (FStar_Pprint.separate (FStar_Pprint.op_Hat_Hat FStar_Pprint.comma (FStar_Pprint.blank Prims.int_one)) (FStarC_List.op_At short_opt long_opt))) in
-      let tmp1 = (FStar_Pprint.group tmp) in
-      (FStar_Pprint.op_Hat_Hat tmp1 (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline (FStar_Pprint.op_Hat_Hat (FStar_Pprint.group (FStar_Pprint.op_Hat_Hat (FStar_Pprint.blank (Prims.of_int (4))) (FStar_Pprint.align explain))) FStar_Pprint.hardline))))
+      let long_opt = (if ((<>) flag "") then ((PPrint.(^^) (PPrint.string (FStarC_String.op_Hat "--" flag)) arg) :: []) else []) in
+      let tmp = (bold_doc (PPrint.separate (PPrint.(^^) PPrint.comma (FStar_Pprint.blank Prims.int_one)) (BatList.append short_opt long_opt))) in
+      let tmp1 = (PPrint.group tmp) in
+      (PPrint.(^^) tmp1 (PPrint.(^^) PPrint.hardline (PPrint.(^^) (PPrint.group (PPrint.(^^) (FStar_Pprint.blank (Prims.of_int (4))) (PPrint.align explain))) PPrint.hardline))))
   )
 
-let display_usage_aux (specs_ : ((FStarC_Getopt.opt * FStar_Pprint.document)) list) : unit =
-  (let tmp = (FStarC_List.fold_right (fun o rest -> (let tmp = (usage_for o) in
-    (FStar_Pprint.op_Hat_Hat tmp rest))) specs_ FStar_Pprint.empty) in
-  let tmp1 = (FStar_Pprint.op_Hat_Slash_Hat (FStar_Pprint.doc_of_string (FStarC_Format.fmt1 "  %srespfile: read command-line options from respfile\n" (FStarC_Format.colorize_bold "@"))) tmp) in
-  let d = (FStar_Pprint.op_Hat_Slash_Hat (FStar_Pprint.doc_of_string "fstar.exe [options] file[s] [@respfile...]") tmp1) in
+let display_usage_aux (specs_ : ((FStarC_Getopt.opt * PPrint.document)) list) : unit =
+  (let tmp = (BatList.fold_right (fun o rest -> (let tmp = (usage_for o) in
+    (PPrint.(^^) tmp rest))) specs_ PPrint.empty) in
+  let tmp1 = (PPrint.(^/^) (PPrint.string (FStarC_Format.fmt1 "  %srespfile: read command-line options from respfile\n" (FStarC_Format.colorize_bold "@"))) tmp) in
+  let d = (PPrint.(^/^) (PPrint.string "fstar.exe [options] file[s] [@respfile...]") tmp1) in
   (FStarC_Format.print_string (FStarC_Pprint.pretty_string (FStarC_Util.float_of_string "1.0") (Prims.of_int (80)) d)))
 
 let display_usage (tmp : unit) : unit =
   (display_usage_aux all_specs)
 
-let help_for_option (s : string) : (FStar_Pprint.document) option =
-  (let tmp = (FStarC_List.filter (fun tmp -> (match tmp with
+let help_for_option (s : string) : (PPrint.document) option =
+  (let tmp = (BatList.filter (fun tmp -> (match tmp with
       | ((tmp1, x, tmp2), tmp3) -> ((=) x s)
     )) all_specs) in
   (match tmp with
@@ -1784,7 +1784,7 @@ let set_ide_filename : (string -> unit) =
 let defaults : ((string * option_val)) list =
   (("abort_on", (Int (Prims.int_zero))) :: (("admit_except", Unset) :: (("admit_smt_queries", (Bool (false))) :: (("already_cached", Unset) :: (("cache_checked_modules", (Bool (false))) :: (("cache_off", (Bool (false))) :: (("codegen", Unset) :: (("custard_entry", (List ([]))) :: (("custard_entrypoints", (List ([]))) :: (("custard_entry_module", (List ([]))) :: (("custard_c_no_prefix", (List ([]))) :: (("custard_main", Unset) :: (("target", Unset) :: (("custard_dump_ir", (Bool (false))) :: (("custard_dump_specializations", (Bool (false))) :: (("custard_dump_layouts", (Bool (false))) :: (("custard_warn_any", (Bool (false))) :: (("custard_fuel", (Int ((Prims.of_int (100000))))) :: (("custard_max_specializations", (Int ((Prims.of_int (1000))))) :: (("custard_norm_budget", (Int ((Prims.of_int (10000000))))) :: (("custard_monomorphize_types", (Bool (false))) :: (("custard_int128", (Bool (true))) :: (("custard_sizet_width", (String ("native"))) :: (("custard_split", (Bool (false))) :: (("custard_unit", Unset) :: (("custard_link", (List ([]))) :: (("custard_extern_type", (List ([]))) :: (("custard_krml_model", (List ([]))) :: (("custard_no_unfold", (List ([]))) :: (("custard_dump_cui", (Bool (false))) :: (("compat_pre_core", Unset) :: (("compat_pre_typed_indexed_effects", (Bool (false))) :: (("debug_all", (Bool (false))) :: (("debug_all_modules", (Bool (false))) :: (("debug", (List ([]))) :: (("defensive", (String ("no"))) :: (("dep", Unset) :: (("disallow_unification_guards", (Bool (false))) :: (("dump_ast", (Bool (false))) :: (("dump_module", (List ([]))) :: (("eager_subtyping", (Bool (false))) :: (("error_contexts", (Bool (false))) :: (("expand_include", Unset) :: (("expose_interfaces", (Bool (false))) :: (("ext", Unset) :: (("force", (Bool (false))) :: (("fuel", Unset) :: (("help", (Bool (false))) :: (("hide_uvar_nums", (Bool (false))) :: (("ide", (Bool (false))) :: (("ide_id_info_off", (Bool (false))) :: (("ifuel", Unset) :: (("include", (List ([]))) :: (("initial_fuel", (Int ((Prims.of_int (2))))) :: (("initial_ifuel", (Int (Prims.int_one))) :: (("keep_query_captions", (Bool (true))) :: (("lang_extensions", (List ([]))) :: (("lax", (Bool (false))) :: (("list_plugins", (Bool (false))) :: (("load_cmxs", (List ([]))) :: (("load", (List ([]))) :: (("locate", (Bool (false))) :: (("locate_file", Unset) :: (("locate_lib", (Bool (false))) :: (("locate_ocaml", (Bool (false))) :: (("locate_z3", Unset) :: (("log_failing_queries", (Bool (false))) :: (("log_queries", (Bool (false))) :: (("log_types", (Bool (false))) :: (("max_fuel", (Int ((Prims.of_int (8))))) :: (("max_ifuel", (Int ((Prims.of_int (2))))) :: (("message_format", (String ("auto"))) :: (("no_plugins", (Bool (false))) :: (("__no_positivity", (Bool (false))) :: (("no_prelude", (Bool (false))) :: (("normalize_pure_terms_for_extraction", (Bool (false))) :: (("no_smt", (Bool (false))) :: (("no_tactics", (Bool (false))) :: (("output_deps_to", Unset) :: (("output_ext", Unset) :: (("output_to", Unset) :: (("pretype", (Bool (true))) :: (("prims_ref", Unset) :: (("prims", Unset) :: (("print", (Bool (false))) :: (("print_bound_var_types", (Bool (false))) :: (("print_cache_version", (Bool (false))) :: (("print_effect_args", (Bool (false))) :: (("print_expected_failures", (Bool (false))) :: (("print_full_names", (Bool (false))) :: (("print_implicits", (Bool (false))) :: (("print_in_place", (Bool (false))) :: (("print_universes", (Bool (false))) :: (("print_z3_statistics", (Bool (false))) :: (("prn", (Bool (false))) :: (("profile_component", Unset) :: (("profile_group_by_decl", (Bool (false))) :: (("profile", Unset) :: (("proof_recovery", (Bool (false))) :: (("quake_hi", (Int (Prims.int_one))) :: (("quake", (Int (Prims.int_zero))) :: (("quake_keep", (Bool (false))) :: (("quake_lo", (Int (Prims.int_one))) :: (("query_cache", (Bool (false))) :: (("query_stats", (Bool (false))) :: (("read_checked_file", Unset) :: (("read_krml_file", Unset) :: (("record_options", (Bool (false))) :: (("report_assumes", Unset) :: (("retry", (Bool (false))) :: (("silent", (Bool (false))) :: (("smtencoding.elim_box", (Bool (false))) :: (("smtencoding.l_arith_repr", (String ("boxwrap"))) :: (("smtencoding.nl_arith_repr", (String ("boxwrap"))) :: (("smt", Unset) :: (("stats", (Bool (false))) :: (("tactic_raw_binders", (Bool (false))) :: (("tactics_failhard", (Bool (false))) :: (("tactics_info", (Bool (false))) :: (("__tactics_nbe", (Bool (false))) :: (("tactic_trace", (Bool (false))) :: (("tactic_trace_d", (Int (Prims.int_zero))) :: (("tcnorm", (Bool (true))) :: (("timing", (Bool (false))) :: (("trace_error", (Bool (false))) :: (("trivial_pre_for_unannotated_effectful_fns", (Bool (true))) :: (("ugly", (Bool (false))) :: (("unsafe_tactic_exec", (Bool (false))) :: (("unthrottle_inductives", (Bool (false))) :: (("use_eq_at_higher_order", (Bool (false))) :: (("use_native_tactics", Unset) :: (("use_nbe", (Bool (false))) :: (("using_facts_from", Unset) :: (("verify_module", (List ([]))) :: (("warn_default_effects", (Bool (false))) :: (("warn_error", (List ([]))) :: (("z3cliopt", (List ([]))) :: (("z3refresh", (Bool (false))) :: (("z3rlimit_factor", (Int (Prims.int_one))) :: (("z3rlimit", (Int ((Prims.of_int (5))))) :: (("z3seed", (Int (Prims.int_zero))) :: (("z3smtopt", (List ([]))) :: (("z3version", (String ("4.13.3"))) :: [])))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
 
-let all_specs_with_types : ((FStarC_BaseTypes.char * string * opt_type * FStar_Pprint.document)) list =
+let all_specs_with_types : ((FStar_Char.char * string * opt_type * PPrint.document)) list =
   (specs_with_types true)
 
 let rollback (depth_ : (Prims.int) option) : unit =
@@ -1794,7 +1794,7 @@ let init (tmp : unit) : unit =
   ((FStarC_Debug.disable_all ());
   (FStarC_Options_Ext.reset ());
   ((fstar_options) := (FStarC_PSMap.empty ()));
-  (FStarC_List.iter set_option' defaults))
+  (BatList.iter set_option' defaults))
 
 let clear (tmp : unit) : unit =
   (((history) := ([] :: []));
@@ -1807,7 +1807,7 @@ let restore_cmd_line_options (should_clear : bool) : FStarC_Getopt.parse_cmdline
   (match tmp with
     | None -> (FStarC_Effect.failwith "impossible: restore_cmd_line_options before initial parsing")
     | (Some (h)) -> ((restore_all h);
-      let tmp1 = (FStarC_List.map (fun u__eta -> (String (u__eta))) old_verify_module) in
+      let tmp1 = (BatList.map (fun u__eta -> (String (u__eta))) old_verify_module) in
       let tmp2 = (List (tmp1)) in
       let tmp3 = ("verify_module", tmp2) in
       (set_option' tmp3);
@@ -1828,7 +1828,7 @@ let module_name_eq (m1 : string) (m2 : string) : bool =
 
 let dump_module (s : string) : bool =
   (let tmp = (get_dump_module ()) in
-  (FStarC_List.existsb (module_name_eq s) tmp))
+  (BatList.exists (module_name_eq s) tmp))
 
 let get_profile_group_by_decl (tmp : unit) : bool =
   (lookup_opt "profile_group_by_decl" as_bool)
@@ -1895,7 +1895,7 @@ let rec show_options__show_optionval (v : option_val) : string =
     | (Bool (b)) -> (FStarC_Class_Show.fStarC_Class_Show_show__bool b)
     | (Int (i)) -> (FStarC_Class_Show.fStarC_Class_Show_show__int i)
     | (Path (s)) -> s
-    | (List (s)) -> (let tmp = (FStarC_List.map show_options__show_optionval s) in
+    | (List (s)) -> (let tmp = (BatList.map show_options__show_optionval s) in
       (FStarC_String.concat "," tmp))
     | Unset -> "<unset>"
   )
@@ -1913,7 +1913,7 @@ let show_options (tmp : unit) : string =
       | (k, v) -> (let tmp3 = (show_options__show_optionval v) in
         (FStarC_Format.fmt2 "--%s %s" k tmp3))
     )) in
-  let tmp2 = (FStarC_List.map show1 kvs) in
+  let tmp2 = (BatList.map show1 kvs) in
   (FStarC_String.concat "\n" tmp2))
 
 let get_log_types (tmp : unit) : bool =
@@ -1925,7 +1925,7 @@ let log_types (tmp : unit) : bool =
 let depth (tmp : unit) : Prims.int =
   (let tmp1 = (!(history)) in
   (match tmp1 with
-    | (lev :: tmp2) -> (FStarC_List.length lev)
+    | (lev :: tmp2) -> ((fun l -> Z.of_int (BatList.length l)) lev)
   ))
 
 let get_cache_off (tmp : unit) : bool =
@@ -1943,7 +1943,7 @@ let force (tmp : unit) : bool =
 let should_write_checked_file (fn : string) : bool =
   (let base = (fun f -> (FStarC_String.lowercase (FStarC_Filepath.basename f))) in
   let tmp = (file_list ()) in
-  (FStarC_List.existsb (fun f -> ((=) (base f) (base fn))) tmp))
+  (BatList.exists (fun f -> ((=) (base f) (base fn))) tmp))
 
 let get_cache_checked_modules (tmp : unit) : bool =
   (lookup_opt "cache_checked_modules" as_bool)

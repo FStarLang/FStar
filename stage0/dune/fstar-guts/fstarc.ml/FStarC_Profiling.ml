@@ -9,7 +9,7 @@ type counter = {
 }
 
 let all_counters : (counter) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
-  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (20))))
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (20))))
 
 let new_counter (cid : string) : counter =
   (let tmp = (ref Prims.int_zero) in
@@ -86,5 +86,5 @@ let report_and_clear (tag : string) : unit =
   let ctrs1 = (FStarC_Util.sort_with (fun c1 c2 -> (let tmp = (!((c2).total_time)) in
     let tmp1 = (!((c1).total_time)) in
     (Prims.op_Minus tmp tmp1))) ctrs) in
-  (FStarC_List.iter (report tag) ctrs1))
+  (BatList.iter (report tag) ctrs1))
 

@@ -2,7 +2,7 @@
 [@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
 
 type error_message = {
-  message : (FStar_Pprint.document) list;
+  message : (PPrint.document) list;
   range : FStarC_Range_Type.range;
 }
 
@@ -17,7 +17,7 @@ type extension_parser = {
 }
 
 let extension_parser_table : (extension_parser) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
-  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (20))))
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (20))))
 
 let register_extension_parser (extension_name : string) (eta : extension_parser) : unit =
   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace extension_parser_table extension_name eta)
@@ -28,7 +28,7 @@ let mk_extension_lang_parser (f : (string -> (FStarC_Range_Type.range -> (error_
   f
 
 let extension_lang_parser_table : ((string -> (FStarC_Range_Type.range -> (error_message, (FStarC_Parser_AST.decl) list) FStar_Pervasives.either))) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
-  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (Z.to_int (Prims.of_int (20))))
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (20))))
 
 let lookup_extension_lang_parser (extension_name : string) : ((string -> (FStarC_Range_Type.range -> (error_message, (FStarC_Parser_AST.decl) list) FStar_Pervasives.either))) option =
   (let r = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt extension_lang_parser_table extension_name) in
@@ -44,7 +44,7 @@ let parse_extension_lang (lang_name : string) (raw_text : string) (raw_text_pos 
     | None -> (FStarC_Errors.fStarC_Errors_raise_error__range_string raw_text_pos FStarC_Errors_Codes.Fatal_SyntaxError (FStarC_Format.fmt1 "Unknown language extension %s" lang_name))
     | (Some (parser)) -> (let tmp = (parser raw_text raw_text_pos) in
       (match tmp with
-        | (FStar_Pervasives.Inl (error)) -> (FStarC_Errors.fStarC_Errors_raise_error__range_list_document (error).range FStarC_Errors_Codes.Fatal_SyntaxError (error).message)
+        | (FStar_Pervasives.Inl (error)) -> (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document (error).range FStarC_Errors_Codes.Fatal_SyntaxError (error).message)
         | (FStar_Pervasives.Inr (ds)) -> ds
       ))
   ))
@@ -70,7 +70,7 @@ let lookup_extension_parser (extension_name : string) : (extension_parser) optio
   ))
 
 let concat_map (tmp : ('tmp -> ('tmp1) list)) (eta : ('tmp) list) : ('tmp1) list =
-  (FStarC_List.collect tmp eta)
+  ((fun f l -> BatList.flatten (BatList.map f l)) tmp eta)
 
 let opt_map (f : ('u___a -> ('u___b) list)) (x : ('u___a) option) : ('u___b) list =
   (match x with
@@ -82,7 +82,7 @@ let rec lidents_of_branch (b : (FStarC_Parser_AST.pattern * (FStarC_Parser_AST.t
   (match b with
     | (p, tmp, t) -> (let tmp1 = (lidents_of_pattern p) in
       let tmp2 = (lidents_of_term t) in
-      (FStarC_List.op_At tmp1 tmp2))
+      (BatList.append tmp1 tmp2))
   )
 
 and lidents_of_binder (b : FStarC_Parser_AST.binder) : (FStarC_Ident.lident) list =
@@ -97,8 +97,8 @@ and lidents_of_calc_step (x : (FStarC_Parser_AST.term * FStarC_Parser_AST.term *
     | (t1, t2, t3) -> (let tmp = (lidents_of_term t1) in
       let tmp1 = (lidents_of_term t2) in
       let tmp2 = (lidents_of_term t3) in
-      let tmp3 = (FStarC_List.op_At tmp1 tmp2) in
-      (FStarC_List.op_At tmp tmp3))
+      let tmp3 = (BatList.append tmp1 tmp2) in
+      (BatList.append tmp tmp3))
   )
 
 and lidents_of_term' (t : FStarC_Parser_AST.term') : (FStarC_Ident.lident) list =
@@ -117,66 +117,66 @@ and lidents_of_term' (t : FStarC_Parser_AST.term') : (FStarC_Ident.lident) list 
     | (FStarC_Parser_AST.Function (brs, tmp)) -> (concat_map lidents_of_branch brs)
     | (FStarC_Parser_AST.Abs (ps, t1)) -> (let tmp = (concat_map lidents_of_pattern ps) in
       let tmp1 = (lidents_of_term t1) in
-      (FStarC_List.op_At tmp tmp1))
+      (BatList.append tmp tmp1))
     | (FStarC_Parser_AST.App (t1, t2, tmp)) -> (let tmp1 = (lidents_of_term t1) in
       let tmp2 = (lidents_of_term t2) in
-      (FStarC_List.op_At tmp1 tmp2))
+      (BatList.append tmp1 tmp2))
     | (FStarC_Parser_AST.Let (tmp, lbs, t1)) -> (let tmp1 = (concat_map (fun tmp1 -> (match tmp1 with
           | (tmp2, (p, t2)) -> (let tmp3 = (lidents_of_pattern p) in
             let tmp4 = (lidents_of_term t2) in
-            (FStarC_List.op_At tmp3 tmp4))
+            (BatList.append tmp3 tmp4))
         )) lbs) in
       let tmp2 = (lidents_of_term t1) in
-      (FStarC_List.op_At tmp1 tmp2))
+      (BatList.append tmp1 tmp2))
     | (FStarC_Parser_AST.LetOperator (lbs, t1)) -> (let tmp = (concat_map (fun tmp -> (match tmp with
           | (tmp1, p, t2) -> (let tmp2 = (lidents_of_pattern p) in
             let tmp3 = (lidents_of_term t2) in
-            (FStarC_List.op_At tmp2 tmp3))
+            (BatList.append tmp2 tmp3))
         )) lbs) in
       let tmp1 = (lidents_of_term t1) in
-      (FStarC_List.op_At tmp tmp1))
+      (BatList.append tmp tmp1))
     | (FStarC_Parser_AST.LetOpen (lid, t1)) -> (let tmp = (lidents_of_term t1) in
       (lid :: tmp))
     | (FStarC_Parser_AST.LetOpenRecord (t1, t2, t3)) -> (let tmp = (lidents_of_term t1) in
       let tmp1 = (lidents_of_term t2) in
       let tmp2 = (lidents_of_term t3) in
-      let tmp3 = (FStarC_List.op_At tmp1 tmp2) in
-      (FStarC_List.op_At tmp tmp3))
+      let tmp3 = (BatList.append tmp1 tmp2) in
+      (BatList.append tmp tmp3))
     | (FStarC_Parser_AST.Seq (t1, t2)) -> (let tmp = (lidents_of_term t1) in
       let tmp1 = (lidents_of_term t2) in
-      (FStarC_List.op_At tmp tmp1))
+      (BatList.append tmp tmp1))
     | (FStarC_Parser_AST.Bind (tmp, t1, t2)) -> (let tmp1 = (lidents_of_term t1) in
       let tmp2 = (lidents_of_term t2) in
-      (FStarC_List.op_At tmp1 tmp2))
+      (BatList.append tmp1 tmp2))
     | (FStarC_Parser_AST.If (t1, tmp, tmp1, t2, t3)) -> (let tmp2 = (lidents_of_term t1) in
       let tmp3 = (lidents_of_term t2) in
       let tmp4 = (lidents_of_term t3) in
-      let tmp5 = (FStarC_List.op_At tmp3 tmp4) in
-      (FStarC_List.op_At tmp2 tmp5))
+      let tmp5 = (BatList.append tmp3 tmp4) in
+      (BatList.append tmp2 tmp5))
     | (FStarC_Parser_AST.Match (t1, tmp, tmp1, bs)) -> (let tmp2 = (lidents_of_term t1) in
       let tmp3 = (concat_map lidents_of_branch bs) in
-      (FStarC_List.op_At tmp2 tmp3))
+      (BatList.append tmp2 tmp3))
     | (FStarC_Parser_AST.TryWith (t1, bs)) -> (let tmp = (lidents_of_term t1) in
       let tmp1 = (concat_map lidents_of_branch bs) in
-      (FStarC_List.op_At tmp tmp1))
+      (BatList.append tmp tmp1))
     | (FStarC_Parser_AST.Ascribed (t1, t2, tmp, tmp1)) -> (let tmp2 = (lidents_of_term t1) in
       let tmp3 = (lidents_of_term t2) in
-      (FStarC_List.op_At tmp2 tmp3))
+      (BatList.append tmp2 tmp3))
     | (FStarC_Parser_AST.Record (t1, ts)) -> (let tmp = (concat_map (fun tmp -> (match tmp with
           | (tmp1, t2) -> (lidents_of_term t2)
         )) ts) in
       let tmp1 = (opt_map lidents_of_term t1) in
-      (FStarC_List.op_At tmp tmp1))
+      (BatList.append tmp tmp1))
     | (FStarC_Parser_AST.Project (t1, tmp)) -> (lidents_of_term t1)
     | (FStarC_Parser_AST.Product (ts, t1)) -> (let tmp = (concat_map lidents_of_binder ts) in
       let tmp1 = (lidents_of_term t1) in
-      (FStarC_List.op_At tmp tmp1))
+      (BatList.append tmp tmp1))
     | (FStarC_Parser_AST.Sum (ts, t1)) -> (let tmp = (concat_map (fun tmp -> (match tmp with
           | (FStar_Pervasives.Inl (b)) -> (lidents_of_binder b)
           | (FStar_Pervasives.Inr (t2)) -> (lidents_of_term t2)
         )) ts) in
       let tmp1 = (lidents_of_term t1) in
-      (FStarC_List.op_At tmp tmp1))
+      (BatList.append tmp tmp1))
     | (FStarC_Parser_AST.QForall (bs, u__pats, t1)) -> (lidents_of_term t1)
     | (FStarC_Parser_AST.QExists (bs, u__pats, t1)) -> (lidents_of_term t1)
     | (FStarC_Parser_AST.QuantOp (i, bs, pats, t1)) -> (lidents_of_term t1)
@@ -188,7 +188,7 @@ and lidents_of_term' (t : FStarC_Parser_AST.term') : (FStarC_Ident.lident) list 
     | (FStarC_Parser_AST.LexList (ts)) -> (concat_map lidents_of_term ts)
     | (FStarC_Parser_AST.WFOrder (t1, t2)) -> (let tmp = (lidents_of_term t1) in
       let tmp1 = (lidents_of_term t2) in
-      (FStarC_List.op_At tmp tmp1))
+      (BatList.append tmp tmp1))
     | (FStarC_Parser_AST.Decreases (t1)) -> (lidents_of_term t1)
     | (FStarC_Parser_AST.Labeled (t1, tmp, tmp1)) -> (lidents_of_term t1)
     | (FStarC_Parser_AST.Discrim (lid)) -> (lid :: [])
@@ -198,60 +198,60 @@ and lidents_of_term' (t : FStarC_Parser_AST.term') : (FStarC_Ident.lident) list 
     | (FStarC_Parser_AST.CalcProof (t1, t2, ts)) -> (let tmp = (lidents_of_term t1) in
       let tmp1 = (lidents_of_term t2) in
       let tmp2 = (concat_map lidents_of_calc_step ts) in
-      let tmp3 = (FStarC_List.op_At tmp1 tmp2) in
-      (FStarC_List.op_At tmp tmp3))
+      let tmp3 = (BatList.append tmp1 tmp2) in
+      (BatList.append tmp tmp3))
     | (FStarC_Parser_AST.IntroForall (bs, t1, t2)) -> (let tmp = (lidents_of_term t1) in
       let tmp1 = (lidents_of_term t2) in
-      (FStarC_List.op_At tmp tmp1))
+      (BatList.append tmp tmp1))
     | (FStarC_Parser_AST.IntroExists (bs, t1, ts, t2)) -> (let tmp = (lidents_of_term t1) in
       let tmp1 = (concat_map lidents_of_term ts) in
       let tmp2 = (lidents_of_term t2) in
-      let tmp3 = (FStarC_List.op_At tmp1 tmp2) in
-      (FStarC_List.op_At tmp tmp3))
+      let tmp3 = (BatList.append tmp1 tmp2) in
+      (BatList.append tmp tmp3))
     | (FStarC_Parser_AST.IntroImplies (t1, t2, t3)) -> (let tmp = (lidents_of_term t1) in
       let tmp1 = (lidents_of_term t2) in
       let tmp2 = (lidents_of_term t3) in
-      let tmp3 = (FStarC_List.op_At tmp1 tmp2) in
-      (FStarC_List.op_At tmp tmp3))
+      let tmp3 = (BatList.append tmp1 tmp2) in
+      (BatList.append tmp tmp3))
     | (FStarC_Parser_AST.IntroOr (b, t1, t2, t3)) -> (let tmp = (lidents_of_term t1) in
       let tmp1 = (lidents_of_term t2) in
       let tmp2 = (lidents_of_term t3) in
-      let tmp3 = (FStarC_List.op_At tmp1 tmp2) in
-      (FStarC_List.op_At tmp tmp3))
+      let tmp3 = (BatList.append tmp1 tmp2) in
+      (BatList.append tmp tmp3))
     | (FStarC_Parser_AST.IntroAnd (t1, t2, t3, t4)) -> (let tmp = (lidents_of_term t1) in
       let tmp1 = (lidents_of_term t2) in
       let tmp2 = (lidents_of_term t3) in
       let tmp3 = (lidents_of_term t4) in
-      let tmp4 = (FStarC_List.op_At tmp2 tmp3) in
-      let tmp5 = (FStarC_List.op_At tmp1 tmp4) in
-      (FStarC_List.op_At tmp tmp5))
+      let tmp4 = (BatList.append tmp2 tmp3) in
+      let tmp5 = (BatList.append tmp1 tmp4) in
+      (BatList.append tmp tmp5))
     | (FStarC_Parser_AST.ElimForall (bs, t1, ts)) -> (let tmp = (concat_map lidents_of_binder bs) in
       let tmp1 = (lidents_of_term t1) in
       let tmp2 = (concat_map lidents_of_term ts) in
-      let tmp3 = (FStarC_List.op_At tmp1 tmp2) in
-      (FStarC_List.op_At tmp tmp3))
+      let tmp3 = (BatList.append tmp1 tmp2) in
+      (BatList.append tmp tmp3))
     | (FStarC_Parser_AST.ElimExists (bs, t1, t2)) -> (let tmp = (concat_map lidents_of_binder bs) in
       let tmp1 = (lidents_of_term t1) in
       let tmp2 = (lidents_of_term t2) in
-      let tmp3 = (FStarC_List.op_At tmp1 tmp2) in
-      (FStarC_List.op_At tmp tmp3))
+      let tmp3 = (BatList.append tmp1 tmp2) in
+      (BatList.append tmp tmp3))
     | (FStarC_Parser_AST.ElimImplies (t1, t2, t3)) -> (let tmp = (lidents_of_term t1) in
       let tmp1 = (lidents_of_term t2) in
       let tmp2 = (lidents_of_term t3) in
-      let tmp3 = (FStarC_List.op_At tmp1 tmp2) in
-      (FStarC_List.op_At tmp tmp3))
+      let tmp3 = (BatList.append tmp1 tmp2) in
+      (BatList.append tmp tmp3))
     | (FStarC_Parser_AST.ElimOr (t1, t2, t3, t4)) -> (let tmp = (lidents_of_term t1) in
       let tmp1 = (lidents_of_term t2) in
       let tmp2 = (lidents_of_term t3) in
       let tmp3 = (lidents_of_term t4) in
-      let tmp4 = (FStarC_List.op_At tmp2 tmp3) in
-      let tmp5 = (FStarC_List.op_At tmp1 tmp4) in
-      (FStarC_List.op_At tmp tmp5))
+      let tmp4 = (BatList.append tmp2 tmp3) in
+      let tmp5 = (BatList.append tmp1 tmp4) in
+      (BatList.append tmp tmp5))
     | (FStarC_Parser_AST.ElimAnd (t1, t2, t3)) -> (let tmp = (lidents_of_term t1) in
       let tmp1 = (lidents_of_term t2) in
       let tmp2 = (lidents_of_term t3) in
-      let tmp3 = (FStarC_List.op_At tmp1 tmp2) in
-      (FStarC_List.op_At tmp tmp3))
+      let tmp3 = (BatList.append tmp1 tmp2) in
+      (BatList.append tmp tmp3))
     | (FStarC_Parser_AST.ListLiteral (ts)) -> (concat_map lidents_of_term ts)
     | (FStarC_Parser_AST.SeqLiteral (ts)) -> (concat_map lidents_of_term ts)
   )
@@ -265,7 +265,7 @@ and lidents_of_pattern (p : FStarC_Parser_AST.pattern) : (FStarC_Ident.lident) l
     | (FStarC_Parser_AST.PatConst (tmp)) -> []
     | (FStarC_Parser_AST.PatApp (p1, ps)) -> (let tmp = (lidents_of_pattern p1) in
       let tmp1 = (concat_map lidents_of_pattern ps) in
-      (FStarC_List.op_At tmp tmp1))
+      (BatList.append tmp tmp1))
     | (FStarC_Parser_AST.PatVar (i, tmp, tmp1)) -> (let tmp2 = (FStarC_Ident.lid_of_ids (i :: [])) in
       (tmp2 :: []))
     | (FStarC_Parser_AST.PatName (lid)) -> (lid :: [])
@@ -277,8 +277,8 @@ and lidents_of_pattern (p : FStarC_Parser_AST.pattern) : (FStarC_Ident.lident) l
     | (FStarC_Parser_AST.PatAscribed (p1, (t1, t2))) -> (let tmp = (lidents_of_pattern p1) in
       let tmp1 = (lidents_of_term t1) in
       let tmp2 = (opt_map lidents_of_term t2) in
-      let tmp3 = (FStarC_List.op_At tmp1 tmp2) in
-      (FStarC_List.op_At tmp tmp3))
+      let tmp3 = (BatList.append tmp1 tmp2) in
+      (BatList.append tmp tmp3))
     | (FStarC_Parser_AST.PatOr (ps)) -> (concat_map lidents_of_pattern ps)
     | (FStarC_Parser_AST.PatOp (tmp)) -> []
     | (FStarC_Parser_AST.PatVQuote (t)) -> (lidents_of_term t)
@@ -297,7 +297,7 @@ let lidents_of_constructor_payload (t : FStarC_Parser_AST.constructor_payload) :
     | (FStarC_Parser_AST.VpRecord (tc, None)) -> (concat_map lidents_of_tycon_record tc)
     | (FStarC_Parser_AST.VpRecord (tc, (Some (t1)))) -> (let tmp = (concat_map lidents_of_tycon_record tc) in
       let tmp1 = (lidents_of_term t1) in
-      (FStarC_List.op_At tmp tmp1))
+      (BatList.append tmp tmp1))
   )
 
 let lidents_of_tycon_variant (tc : (FStarC_Ident.ident * (FStarC_Parser_AST.constructor_payload) option * (FStarC_Parser_AST.term) list)) : (FStarC_Ident.lident) list =
@@ -310,22 +310,22 @@ let lidents_of_tycon (tc : FStarC_Parser_AST.tycon) : (FStarC_Ident.lident) list
   (match tc with
     | (FStarC_Parser_AST.TyconAbstract (tmp, bs, k)) -> (let tmp1 = (concat_map lidents_of_binder bs) in
       let tmp2 = (opt_map lidents_of_term k) in
-      (FStarC_List.op_At tmp1 tmp2))
+      (BatList.append tmp1 tmp2))
     | (FStarC_Parser_AST.TyconAbbrev (tmp, bs, k, t)) -> (let tmp1 = (concat_map lidents_of_binder bs) in
       let tmp2 = (opt_map lidents_of_term k) in
       let tmp3 = (lidents_of_term t) in
-      let tmp4 = (FStarC_List.op_At tmp2 tmp3) in
-      (FStarC_List.op_At tmp1 tmp4))
+      let tmp4 = (BatList.append tmp2 tmp3) in
+      (BatList.append tmp1 tmp4))
     | (FStarC_Parser_AST.TyconRecord (tmp, bs, k, tmp1, tcs)) -> (let tmp2 = (concat_map lidents_of_binder bs) in
       let tmp3 = (opt_map lidents_of_term k) in
       let tmp4 = (concat_map lidents_of_tycon_record tcs) in
-      let tmp5 = (FStarC_List.op_At tmp3 tmp4) in
-      (FStarC_List.op_At tmp2 tmp5))
+      let tmp5 = (BatList.append tmp3 tmp4) in
+      (BatList.append tmp2 tmp5))
     | (FStarC_Parser_AST.TyconVariant (tmp, bs, k, tcs)) -> (let tmp1 = (concat_map lidents_of_binder bs) in
       let tmp2 = (opt_map lidents_of_term k) in
       let tmp3 = (concat_map lidents_of_tycon_variant tcs) in
-      let tmp4 = (FStarC_List.op_At tmp2 tmp3) in
-      (FStarC_List.op_At tmp1 tmp4))
+      let tmp4 = (BatList.append tmp2 tmp3) in
+      (BatList.append tmp1 tmp4))
   )
 
 let lidents_of_lift (l : FStarC_Parser_AST.lift) : (FStarC_Ident.lident) list =
@@ -336,7 +336,7 @@ let rec lidents_of_effect_decl (ed : FStarC_Parser_AST.effect_decl) : (FStarC_Id
     | (FStarC_Parser_AST.DeclareEffect (tmp, bs)) -> (concat_map lidents_of_binder bs)
     | (FStarC_Parser_AST.DefineEffect (tmp, bs, ds)) -> (let tmp1 = (concat_map lidents_of_binder bs) in
       let tmp2 = (concat_map lidents_of_decl ds) in
-      (FStarC_List.op_At tmp1 tmp2))
+      (BatList.append tmp1 tmp2))
   )
 
 and lidents_of_decl (t : FStarC_Parser_AST.decl) : (FStarC_Ident.lident) list =
@@ -349,7 +349,7 @@ and lidents_of_decl (t : FStarC_Parser_AST.decl) : (FStarC_Ident.lident) list =
     | (FStarC_Parser_AST.TopLevelLet (u__q, lbs)) -> (concat_map (fun tmp -> (match tmp with
         | (p, t1) -> (let tmp1 = (lidents_of_pattern p) in
           let tmp2 = (lidents_of_term t1) in
-          (FStarC_List.op_At tmp1 tmp2))
+          (BatList.append tmp1 tmp2))
       )) lbs)
     | (FStarC_Parser_AST.Tycon (tmp, tmp1, tcs)) -> (concat_map lidents_of_tycon tcs)
     | (FStarC_Parser_AST.Val (tmp, t1)) -> (lidents_of_term t1)
@@ -366,6 +366,6 @@ and lidents_of_decl (t : FStarC_Parser_AST.decl) : (FStarC_Ident.lident) list =
 
 let add_comments (cs : ((string * FStarC_Range_Type.range)) list) : unit =
   (let tmp = (!(comments)) in
-  let tmp1 = (FStarC_List.op_At cs tmp) in
+  let tmp1 = (BatList.append cs tmp) in
   ((comments) := tmp1))
 

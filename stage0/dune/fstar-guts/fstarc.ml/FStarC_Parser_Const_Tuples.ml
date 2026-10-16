@@ -24,7 +24,7 @@ let is_dtuple_datacon_lid (f : FStarC_Ident.lident) : bool =
   (is_dtuple_datacon_string (FStarC_Ident.string_of_lid f))
 
 let lookup_tuple (n : Prims.int) : (Prims.int * string * string) =
-  (let tmp = (FStarC_List.tryFind (fun tmp -> (match tmp with
+  (let tmp = (List.find_opt (fun tmp -> (match tmp with
       | (n', tmp1, tmp2) -> ((=) n n')
     )) tuple_table) in
   (match tmp with
@@ -55,7 +55,7 @@ let lid_Mktuple5 : FStarC_Ident.lident =
   (mk_tuple_data_lid (Prims.of_int (5)) FStarC_Range_Type.dummyRange)
 
 let lookup_dtuple (n : Prims.int) : (Prims.int * string * string) =
-  (let tmp = (FStarC_List.tryFind (fun tmp -> (match tmp with
+  (let tmp = (List.find_opt (fun tmp -> (match tmp with
       | (n', tmp1, tmp2) -> ((=) n n')
     )) dtuple_table) in
   (match tmp with

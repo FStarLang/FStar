@@ -180,7 +180,7 @@ let is_iface_of (fn : string) (root : (string) option) : bool =
   ) else false))
 
 let parse_frag (frag : FStarC_Parser_Frontend.input_frag) (lang_decls : (FStarC_Parser_AST.decl) list) : FStarC_Parser_Driver.fragment =
-  (let use_lang_decl = (fun ds -> (FStarC_List.tryFind (fun d -> (match (d).FStarC_Parser_AST.d with
+  (let use_lang_decl = (fun ds -> (List.find_opt (fun d -> (match (d).FStarC_Parser_AST.d with
       | (FStarC_Parser_AST.UseLangDecls (u__0)) -> true
       | tmp -> false
     )) ds)) in
@@ -192,7 +192,7 @@ let parse_frag (frag : FStarC_Parser_Frontend.input_frag) (lang_decls : (FStarC_
 
 let tc_one_fragment (is_interface : bool) (curmod : (FStarC_Syntax_Syntax.modul) option) (env : FStarC_TypeChecker_Env.env) (frag : ((FStarC_Parser_Frontend.input_frag * (FStarC_Parser_AST.decl) list), FStarC_Parser_AST.decl) FStar_Pervasives.either) : ((FStarC_Syntax_Syntax.modul) option * FStarC_TypeChecker_Env.env * (FStarC_Parser_AST.decl) list) =
   (let fname = (fun env1 -> (let tmp = (FStarC_Options.file_list ()) in
-    (FStarC_List.hd tmp))) in
+    (BatList.hd tmp))) in
   let acceptable_mod_name = (fun ast_modul -> (let tmp = (fname env) in
     let tmp1 = (FStarC_Parser_Dep.lowercase_module_name tmp) in
     ((=) tmp1 (FStarC_String.lowercase (FStarC_Ident.string_of_lid (FStarC_Parser_AST.lid_of_modul ast_modul)))))) in
@@ -222,11 +222,11 @@ let tc_one_fragment (is_interface : bool) (curmod : (FStarC_Syntax_Syntax.modul)
             | (FStarC_Parser_AST.Module ({ FStarC_Parser_AST.no_prelude = tmp3; mname = tmp4; decls = decls; _ })) -> decls
             | (FStarC_Parser_AST.Interface ({ FStarC_Parser_AST.no_prelude = tmp3; mname = tmp4; decls = decls; admitted = tmp5; _ })) -> decls
           ) in
-        let lang_decls = (FStarC_List.filter filter_lang_decls decls) in
+        let lang_decls = (BatList.filter filter_lang_decls decls) in
         ((Some (modul)), env1, lang_decls))
     ))) in
   let check_decls = (fun ast_decls -> (match curmod with
-      | None -> (let tmp = (FStarC_List.hd ast_decls) in
+      | None -> (let tmp = (BatList.hd ast_decls) in
         (FStarC_Errors.fStarC_Errors_raise_error__range_string (tmp).FStarC_Parser_AST.drange FStarC_Errors_Codes.Fatal_ModuleFirstStatement "First statement must be a module declaration"))
       | (Some (modul)) -> (let tmp = (if (FStarC_Syntax_DsEnv.syntax_only (env).FStarC_TypeChecker_Env.dsenv) then (let tmp = (FStarC_ToSyntax_ToSyntax.decls_to_sigelts ast_decls) in
           let tmp1 = (with_dsenv_of_tcenv env tmp) in
@@ -240,7 +240,7 @@ let tc_one_fragment (is_interface : bool) (curmod : (FStarC_Syntax_Syntax.modul)
             | (ses, env1) -> (FStarC_TypeChecker_Tc.tc_more_partial_modul env1 modul ses)
           ))) in
         (match tmp with
-          | (modul1, tmp1, env1) -> (let tmp2 = (FStarC_List.filter filter_lang_decls ast_decls) in
+          | (modul1, tmp1, env1) -> (let tmp2 = (BatList.filter filter_lang_decls ast_decls) in
             ((Some (modul1)), env1, tmp2))
         ))
     )) in
@@ -250,7 +250,7 @@ let tc_one_fragment (is_interface : bool) (curmod : (FStarC_Syntax_Syntax.modul)
       (FStarC_Format.print1 "tc_one_fragment: %s\n" tmp1)) else ());
       (match (d).FStarC_Parser_AST.d with
         | (FStarC_Parser_AST.TopLevelModule (lid)) -> (let tmp1 = (FStarC_Options.no_prelude ()) in
-          let no_prelude = (if tmp1 then true else (FStarC_List.existsb (fun tmp2 -> (match (tmp2).FStarC_Parser_AST.tm with
+          let no_prelude = (if tmp1 then true else (BatList.exists (fun tmp2 -> (match (tmp2).FStarC_Parser_AST.tm with
               | (FStarC_Parser_AST.Const ((FStarC_Const.Const_string ("no_prelude", tmp3)))) -> true
               | tmp3 -> false
             )) (d).FStarC_Parser_AST.attrs)) in
@@ -272,7 +272,7 @@ let tc_one_fragment (is_interface : bool) (curmod : (FStarC_Syntax_Syntax.modul)
 
 let record_encoded_modul (m : FStarC_Syntax_Syntax.modul) (smt_decls : FStarC_SMTEncoding_Env.module_encoding) : unit =
   (let tmp = (!(iface_solver_frames)) in
-  let tmp1 = (FStarC_List.map (fun tmp1 -> (match tmp1 with
+  let tmp1 = (BatList.map (fun tmp1 -> (match tmp1 with
       | (depth, pending) -> (depth, ((m, smt_decls) :: pending))
     )) tmp) in
   ((iface_solver_frames) := tmp1))
@@ -286,10 +286,10 @@ let pop_iface_solver_frame (tcenv : FStarC_TypeChecker_Env.env) (name : string) 
       let tmp1 = (FStarC_Options.interactive ()) in
       let tmp2 = (not tmp1) in
       (if tmp2 then ((FStarC_SMTEncoding_Env.varops).FStarC_SMTEncoding_Env.reset_scope ()) else ());
-      (FStarC_List.iter (fun tmp3 -> (match tmp3 with
+      (BatList.iter (fun tmp3 -> (match tmp3 with
         | (tcmod, smt_decls) -> ((if (not (FStarC_SMTEncoding_Env.is_empty_encoding smt_decls)) then (FStarC_SMTEncoding_Encode.encode_modul_from_cache tcenv tcmod smt_decls) else ());
           (record_encoded_modul tcmod smt_decls))
-      )) (FStarC_List.rev pending)))
+      )) (BatList.rev pending)))
   ))
 
 let rec tc_one_file_from_remaining (fly_deps : bool) (root : (string) option) (remaining : (string) list) (env : FStarC_TypeChecker_Env.env) : ((string) list * FStarC_CheckedFiles.tc_result * FStarC_TypeChecker_Env.env) =
@@ -323,7 +323,7 @@ and tc_fold_interleave (fly_deps : bool) (root : (string) option) (acc : ((FStar
             | (remaining1, nmod, env) -> (let tmp2 = (FStarC_Options.profile_group_by_decl ()) in
               let tmp3 = (not tmp2) in
               (if tmp3 then (FStarC_Profiling.report_and_clear (FStarC_Ident.string_of_lid ((nmod).FStarC_CheckedFiles.checked_module).FStarC_Syntax_Syntax.name)) else ());
-              (tc_fold_interleave fly_deps root ((FStarC_List.op_At mods (nmod :: [])), env) remaining1))
+              (tc_fold_interleave fly_deps root ((BatList.append mods (nmod :: [])), env) remaining1))
           ))
       )
   )
@@ -423,21 +423,21 @@ and scan_and_load_fly_deps_internal (filename : string) (env : FStarC_TypeChecke
     (FStarC_Format.print1 "Decls scanned: %s\n" tmp4);
     let tmp5 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string filenames_to_load) in
     (FStarC_Format.print1 "Additional files to load: %s\n" tmp5)) else ());
-    let filenames = (FStarC_List.filter (fun fn -> ((<>) fn filename)) (FStarC_List.rev filenames_to_load)) in
+    let filenames = (BatList.filter (fun fn -> ((<>) fn filename)) (BatList.rev filenames_to_load)) in
     let already_loaded = (fun fn -> (let mname = (FStarC_Parser_Dep.module_name_of_file fn) in
-      (FStarC_List.filter (fun m -> ((=) mname (FStarC_Ident.string_of_lid (m).FStarC_Syntax_Syntax.name))) (env2).FStarC_TypeChecker_Env.modules))) in
-    let filenames1 = (FStarC_List.filter (fun fn -> (let tmp2 = (already_loaded fn) in
+      (BatList.filter (fun m -> ((=) mname (FStarC_Ident.string_of_lid (m).FStarC_Syntax_Syntax.name))) (env2).FStarC_TypeChecker_Env.modules))) in
+    let filenames1 = (BatList.filter (fun fn -> (let tmp2 = (already_loaded fn) in
       (match tmp2 with
         | [] -> true
         | ms -> (let tmp3 = (FStarC_Parser_Dep.is_implementation fn) in
-          let tmp4 = (if tmp3 then (let tmp4 = (FStarC_List.existsb (fun m -> (not (m).FStarC_Syntax_Syntax.is_interface)) ms) in
+          let tmp4 = (if tmp3 then (let tmp4 = (BatList.exists (fun m -> (not (m).FStarC_Syntax_Syntax.is_interface)) ms) in
             (not tmp4)) else false) in
           (if tmp4 then (let tmp5 = (FStarC_Parser_Dep.module_name_of_file fn) in
           let tmp6 = (FStarC_Format.fmt1 "A non-friend dependence was already found on module %s." tmp5) in
           let tmp7 = (FStarC_Errors_Msg.text tmp6) in
           let tmp8 = (tmp7 :: []) in
           let tmp9 = ((FStarC_Errors_Msg.text "Friend dependences must be declared as the first dependence on a module.") :: tmp8) in
-          (FStarC_Errors.fStarC_Errors_raise_error__range_list_document (FStarC_TypeChecker_Env.get_range env2) FStarC_Errors_Codes.Fatal_CyclicDependence tmp9)) else false))
+          (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document (FStarC_TypeChecker_Env.get_range env2) FStarC_Errors_Codes.Fatal_CyclicDependence tmp9)) else false))
       ))) filenames) in
     (filenames1, env2))) in
   let tmp = (scan_fragment_deps env frag_or_decl) in
@@ -458,14 +458,14 @@ and fly_deps_check (filename : string) (env : FStarC_TypeChecker_Env.env) (ast_m
   (FStarC_Format.print1 "Before fly load deps: %s\n" tmp2)) else ());
   (FStarC_Parser_Dep.populate_parsing_data filename ast_mod (FStarC_Syntax_DsEnv.dep_graph (env).FStarC_TypeChecker_Env.dsenv));
   let is_interface = (FStarC_Parser_Dep.is_interface filename) in
-  let env1 = (FStarC_List.fold_left (fun env1 d -> (match (d).FStarC_Parser_AST.d with
+  let env1 = (BatList.fold_left (fun env1 d -> (match (d).FStarC_Parser_AST.d with
       | (FStarC_Parser_AST.Friend (tmp1)) -> (let tmp2 = (scan_and_load_fly_deps_internal filename env1 (FStar_Pervasives.Inr (d))) in
         (match tmp2 with
           | (u__1, u__2) -> u__1
         ))
       | tmp1 -> env1
     )) env decls) in
-  let tmp1 = (FStarC_List.fold_left (fun tmp1 decl -> (match tmp1 with
+  let tmp1 = (BatList.fold_left (fun tmp1 decl -> (match tmp1 with
       | (mod_, env2) -> (let tmp2 = (FStarC_Parser_Dep.debug_fly_deps ()) in
         (if tmp2 then (let tmp3 = (FStarC_Parser_AST.fStarC_Class_PP_pp__decl_40 decl) in
         let tmp4 = (FStar_Pprint.render tmp3) in
@@ -615,7 +615,7 @@ and tc_one_file_no_frame (fly_deps : bool) (skip_solver : bool) (env : FStarC_Ty
       let tmp9 = (FStarC_Options.should_be_already_cached tmp8) in
       let tmp10 = (if tmp9 then (let tmp10 = (FStarC_Options.force ()) in
         (not tmp10)) else false) in
-      (if tmp10 then (FStarC_Errors.fStarC_Errors_raise_error0__list_document FStarC_Errors_Codes.Error_AlreadyCachedAssertionFailure (FStarC_List.op_At ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Expected %s to already be checked." fn)) :: []) why)) else ());
+      (if tmp10 then (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Error_AlreadyCachedAssertionFailure (BatList.append ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Expected %s to already be checked." fn)) :: []) why)) else ());
       let tmp11 = (FStarC_Options.codegen ()) in
       let tmp12 = (match tmp11 with
           | (Some (v)) -> true
@@ -623,7 +623,7 @@ and tc_one_file_no_frame (fly_deps : bool) (skip_solver : bool) (env : FStarC_Ty
         ) in
       let tmp13 = (if tmp12 then (let tmp13 = (FStarC_Options.force ()) in
         (not tmp13)) else false) in
-      (if tmp13 then (FStarC_Errors.fStarC_Errors_raise_error0__list_document FStarC_Errors_Codes.Error_AlreadyCachedAssertionFailure (FStarC_List.op_At ((FStarC_Errors_Msg.text "Cross-module inlining expects all modules to be checked first.") :: ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Module %s was not checked." fn)) :: [])) why)) else ());
+      (if tmp13 then (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Error_AlreadyCachedAssertionFailure (BatList.append ((FStarC_Errors_Msg.text "Cross-module inlining expects all modules to be checked first.") :: ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Module %s was not checked." fn)) :: [])) why)) else ());
       let tmp14 = (tc_source_file ()) in
       (match tmp14 with
         | (parsing_data, tc_result, env1) -> (let tmp15 = (FStarC_Errors.get_err_count ()) in
@@ -700,9 +700,9 @@ let load_fly_deps_and_tc_one_fragment (filename : string) (is_interface : bool) 
         ))
     )) (tcenv, mod_) ast_decls) in
   (match tmp with
-    | ((tcenv1, curmod), langs_filenames) -> (let tmp1 = (FStarC_List.unzip langs_filenames) in
+    | ((tcenv1, curmod), langs_filenames) -> (let tmp1 = (BatList.split langs_filenames) in
       (match tmp1 with
-        | (langs_l, filenames_l) -> (curmod, tcenv1, (FStarC_List.flatten langs_l), (FStarC_List.flatten filenames_l))
+        | (langs_l, filenames_l) -> (curmod, tcenv1, (BatList.flatten langs_l), (BatList.flatten filenames_l))
       ))
   ))
 
@@ -713,7 +713,7 @@ let batch_mode_tc (fly_deps : bool) (filenames : (string) list) (dep_graph : FSt
   (let tmp = (!(dbg_dep)) in
   (if tmp then ((FStarC_Format.print_string "Auto-deps kicked in; here's some info.\n");
   (FStarC_Format.print1 "Here's the list of filenames we will process: %s\n" (FStarC_String.concat " " filenames));
-  let tmp1 = (FStarC_List.filter (fun fn -> (let tmp1 = (FStarC_Parser_Dep.module_name_of_file fn) in
+  let tmp1 = (BatList.filter (fun fn -> (let tmp1 = (FStarC_Parser_Dep.module_name_of_file fn) in
     (FStarC_Options.should_verify tmp1))) filenames) in
   let tmp2 = (FStarC_String.concat " " tmp1) in
   (FStarC_Format.print1 "Here's the list of modules we will verify: %s\n" tmp2)) else ());

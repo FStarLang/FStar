@@ -66,13 +66,13 @@ and eq_comp (env : FStarC_TypeChecker_Env.env) (t1 : (FStarC_Syntax_Syntax.comp_
 and eq_tm (env : FStarC_TypeChecker_Env.env) (t1 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (t2 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : eq_result =
   (let t11 = (FStarC_Syntax_Util.canon_app t1) in
   let t21 = (FStarC_Syntax_Util.canon_app t2) in
-  let equal_data = (fun f1 args1 f2 args2 n_parms -> (if (FStarC_Syntax_Syntax.fv_eq f1 f2) then (let n1 = (FStarC_List.length args1) in
-    let n2 = (FStarC_List.length args2) in
-    (if (((=) n1 n2) && (Prims.op_Less_Equals n_parms n1)) then (let tmp = (FStarC_List.splitAt n_parms args1) in
+  let equal_data = (fun f1 args1 f2 args2 n_parms -> (if (FStarC_Syntax_Syntax.fv_eq f1 f2) then (let n1 = ((fun l -> Z.of_int (BatList.length l)) args1) in
+    let n2 = ((fun l -> Z.of_int (BatList.length l)) args2) in
+    (if (((=) n1 n2) && (Prims.op_Less_Equals n_parms n1)) then (let tmp = ((fun n l -> BatList.split_at (Z.to_int n) l) n_parms args1) in
     (match tmp with
-      | (parms1, args11) -> (let tmp1 = (FStarC_List.splitAt n_parms args2) in
+      | (parms1, args11) -> (let tmp1 = ((fun n l -> BatList.split_at (Z.to_int n) l) n_parms args2) in
         (match tmp1 with
-          | (parms2, args21) -> (let eq_arg_list = (fun as1 as2 -> (FStarC_List.fold_left2 (fun acc tmp2 tmp3 -> (match (tmp2, tmp3) with
+          | (parms2, args21) -> (let eq_arg_list = (fun as1 as2 -> (BatList.fold_left2 (fun acc tmp2 tmp3 -> (match (tmp2, tmp3) with
                 | ((a1, q1), (a2, q2)) -> (let tmp4 = (eq_tm env a1 a2) in
                   (eq_inj acc tmp4))
               )) Equal as1 as2)) in
@@ -140,14 +140,14 @@ and eq_tm (env : FStarC_TypeChecker_Env.env) (t1 : (FStarC_Syntax_Syntax.term') 
       let tmp5 = (tmp4).FStarC_Syntax_Syntax.n in
       let tmp6 = (tmp3, tmp5) in
       (match tmp6 with
-        | ((FStarC_Syntax_Syntax.Tm_fvar (f1)), (FStarC_Syntax_Syntax.Tm_fvar (f2))) when ((FStarC_Syntax_Syntax.fv_eq f1 f2) && (FStarC_List.mem (FStarC_Ident.string_of_lid (FStarC_Syntax_Syntax.lid_of_fv f1)) injectives)) -> (equal_data f1 ((u__1, u__2) :: []) f2 ((u__11, u__21) :: []) Prims.int_zero)
+        | ((FStarC_Syntax_Syntax.Tm_fvar (f1)), (FStarC_Syntax_Syntax.Tm_fvar (f2))) when ((FStarC_Syntax_Syntax.fv_eq f1 f2) && (BatList.mem (FStarC_Ident.string_of_lid (FStarC_Syntax_Syntax.lid_of_fv f1)) injectives)) -> (equal_data f1 ((u__1, u__2) :: []) f2 ((u__11, u__21) :: []) Prims.int_zero)
         | tmp7 -> (let tmp8 = (eq_tm env h1 h2) in
           (eq_and tmp8 (fun tmp9 -> (eq_args env ((u__1, u__2) :: []) ((u__11, u__21) :: [])))))
       ))
-    | ((FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = t13; ret_opt = tmp2; brs = bs1; rc_opt = tmp3; _ })), (FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = t23; ret_opt = tmp4; brs = bs2; rc_opt = tmp5; _ }))) -> (if ((=) (FStarC_List.length bs1) (FStarC_List.length bs2)) then (let tmp6 = (eq_tm env t13 t23) in
-      (FStarC_List.fold_right (fun tmp7 a -> (match tmp7 with
+    | ((FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = t13; ret_opt = tmp2; brs = bs1; rc_opt = tmp3; _ })), (FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = t23; ret_opt = tmp4; brs = bs2; rc_opt = tmp5; _ }))) -> (if ((=) ((fun l -> Z.of_int (BatList.length l)) bs1) ((fun l -> Z.of_int (BatList.length l)) bs2)) then (let tmp6 = (eq_tm env t13 t23) in
+      (BatList.fold_right (fun tmp7 a -> (match tmp7 with
         | (b1, b2) -> (eq_and a (fun tmp8 -> (branch_matches env b1 b2)))
-      )) (FStarC_List.zip bs1 bs2) tmp6)) else Unknown)
+      )) (BatList.combine bs1 bs2) tmp6)) else Unknown)
     | ((FStarC_Syntax_Syntax.Tm_type (u)), (FStarC_Syntax_Syntax.Tm_type (v))) -> (let tmp2 = (FStarC_Syntax_Util.eq_univs u v) in
       (equal_if tmp2))
     | ((FStarC_Syntax_Syntax.Tm_quoted (t13, q1)), (FStarC_Syntax_Syntax.Tm_quoted (t23, q2))) -> Unknown
@@ -193,7 +193,7 @@ let simplify (debug : bool) (env : FStarC_TypeChecker_Env.env) (tm : (FStarC_Syn
           | (tmp5, tmp6, e) -> (let tmp7 = (simp_t e) in
             (match tmp7 with
               | None -> None
-              | (Some (b)) -> (let tmp8 = (FStarC_List.for_all (fun tmp8 -> (match tmp8 with
+              | (Some (b)) -> (let tmp8 = (BatList.for_all (fun tmp8 -> (match tmp8 with
                     | (tmp9, tmp10, e') -> (let tmp11 = (simp_t e') in
                       ((=) tmp11 (Some (b))))
                   )) brs) in
@@ -216,21 +216,21 @@ let simplify (debug : bool) (env : FStarC_TypeChecker_Env.env) (tm : (FStarC_Syn
         | (head, args) -> (let tmp4 = (FStarC_Syntax_Util.un_uinst head) in
           let tmp5 = (tmp4).FStarC_Syntax_Syntax.n in
           (match tmp5 with
-            | (FStarC_Syntax_Syntax.Tm_fvar (fv)) -> (if (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.squash_lid) then (squashed_head_un_auto_squash_args tm) else (if (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.and_lid) then (let tmp6 = (FStarC_List.map simplify_ args) in
+            | (FStarC_Syntax_Syntax.Tm_fvar (fv)) -> (if (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.squash_lid) then (squashed_head_un_auto_squash_args tm) else (if (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.and_lid) then (let tmp6 = (BatList.map simplify_ args) in
               (match tmp6 with
                 | (((Some (true)), tmp7) :: ((tmp8, (arg, tmp9)) :: [])) -> (maybe_auto_squash arg)
                 | ((tmp7, (arg, tmp8)) :: (((Some (true)), tmp9) :: [])) -> (maybe_auto_squash arg)
                 | (((Some (false)), tmp7) :: (tmp8 :: [])) -> (w FStarC_Syntax_Util.t_false)
                 | (tmp7 :: (((Some (false)), tmp8) :: [])) -> (w FStarC_Syntax_Util.t_false)
                 | tmp7 -> (squashed_head_un_auto_squash_args tm)
-              )) else (if (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.or_lid) then (let tmp6 = (FStarC_List.map simplify_ args) in
+              )) else (if (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.or_lid) then (let tmp6 = (BatList.map simplify_ args) in
               (match tmp6 with
                 | (((Some (true)), tmp7) :: (tmp8 :: [])) -> (w FStarC_Syntax_Util.t_true)
                 | (tmp7 :: (((Some (true)), tmp8) :: [])) -> (w FStarC_Syntax_Util.t_true)
                 | (((Some (false)), tmp7) :: ((tmp8, (arg, tmp9)) :: [])) -> (maybe_auto_squash arg)
                 | ((tmp7, (arg, tmp8)) :: (((Some (false)), tmp9) :: [])) -> (maybe_auto_squash arg)
                 | tmp7 -> (squashed_head_un_auto_squash_args tm)
-              )) else (if (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.imp_lid) then (let tmp6 = (FStarC_List.map simplify_ args) in
+              )) else (if (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.imp_lid) then (let tmp6 = (BatList.map simplify_ args) in
               (match tmp6 with
                 | (tmp7 :: (((Some (true)), tmp8) :: [])) -> (w FStarC_Syntax_Util.t_true)
                 | (((Some (false)), tmp7) :: (tmp8 :: [])) -> (w FStarC_Syntax_Util.t_true)
@@ -238,7 +238,7 @@ let simplify (debug : bool) (env : FStarC_TypeChecker_Env.env) (tm : (FStarC_Syn
                 | ((tmp7, (p, tmp8)) :: ((tmp9, (q, tmp10)) :: [])) -> (let tmp11 = (FStarC_Syntax_Util.term_eq p q) in
                   (if tmp11 then (w FStarC_Syntax_Util.t_true) else (squashed_head_un_auto_squash_args tm)))
                 | tmp7 -> (squashed_head_un_auto_squash_args tm)
-              )) else (if (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.iff_lid) then (let tmp6 = (FStarC_List.map simplify_ args) in
+              )) else (if (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.iff_lid) then (let tmp6 = (BatList.map simplify_ args) in
               (match tmp6 with
                 | (((Some (true)), tmp7) :: (((Some (true)), tmp8) :: [])) -> (w FStarC_Syntax_Util.t_true)
                 | (((Some (false)), tmp7) :: (((Some (false)), tmp8) :: [])) -> (w FStarC_Syntax_Util.t_true)
@@ -253,7 +253,7 @@ let simplify (debug : bool) (env : FStarC_TypeChecker_Env.env) (tm : (FStarC_Syn
                 | ((tmp7, (p, tmp8)) :: ((tmp9, (q, tmp10)) :: [])) -> (let tmp11 = (FStarC_Syntax_Util.term_eq p q) in
                   (if tmp11 then (w FStarC_Syntax_Util.t_true) else (squashed_head_un_auto_squash_args tm)))
                 | tmp7 -> (squashed_head_un_auto_squash_args tm)
-              )) else (if (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.not_lid) then (let tmp6 = (FStarC_List.map simplify_ args) in
+              )) else (if (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.not_lid) then (let tmp6 = (BatList.map simplify_ args) in
               (match tmp6 with
                 | (((Some (true)), tmp7) :: []) -> (w FStarC_Syntax_Util.t_false)
                 | (((Some (false)), tmp7) :: []) -> (w FStarC_Syntax_Util.t_true)
@@ -312,10 +312,10 @@ let simplify (debug : bool) (env : FStarC_TypeChecker_Env.env) (tm : (FStarC_Syn
                 let tmp6 = (FStarC_Syntax_Subst.compress t) in
                 let tmp7 = (tmp6).FStarC_Syntax_Syntax.n in
                 (match tmp7 with
-                  | (FStarC_Syntax_Syntax.Tm_fvar (fv1)) when (FStarC_List.existsb (fun l -> (FStarC_Syntax_Syntax.fv_eq_lid fv1 l)) haseq_lids) -> true
+                  | (FStarC_Syntax_Syntax.Tm_fvar (fv1)) when (BatList.exists (fun l -> (FStarC_Syntax_Syntax.fv_eq_lid fv1 l)) haseq_lids) -> true
                   | tmp8 -> false
                 ))) in
-              (if ((=) (FStarC_List.length args) Prims.int_one) then (let t = (match (FStarC_List.hd args) with
+              (if ((=) ((fun l -> Z.of_int (BatList.length l)) args) Prims.int_one) then (let t = (match (BatList.hd args) with
                   | (u__1, u__2) -> u__1
                 ) in
               let tmp6 = (t_has_eq_for_sure t) in

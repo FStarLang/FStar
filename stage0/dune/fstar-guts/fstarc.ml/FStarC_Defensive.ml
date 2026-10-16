@@ -7,20 +7,20 @@ let fStarC_Defensive___def_check_scoped__list_bv_syntax_term' (rng : FStarC_Rang
   let tmp = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_subset__bv_list_bv free scope) in
   let tmp1 = (not tmp) in
   (if tmp1 then (let tmp2 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' thing) in
-  let tmp3 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "t =") tmp2) in
+  let tmp3 = (PPrint.(^/^) (FStarC_Errors_Msg.text "t =") tmp2) in
   let tmp4 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__list_bv free) in
-  let tmp5 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "FVs =") tmp4) in
+  let tmp5 = (PPrint.(^/^) (FStarC_Errors_Msg.text "FVs =") tmp4) in
   let tmp6 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__list_bv scope) in
-  let tmp7 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Scope =") tmp6) in
+  let tmp7 = (PPrint.(^/^) (FStarC_Errors_Msg.text "Scope =") tmp6) in
   let tmp8 = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_diff__bv_list_bv free scope) in
   let tmp9 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__list_bv tmp8) in
-  let tmp10 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Diff =") tmp9) in
+  let tmp10 = (PPrint.(^/^) (FStarC_Errors_Msg.text "Diff =") tmp9) in
   let tmp11 = (tmp10 :: []) in
   let tmp12 = (tmp7 :: tmp11) in
   let tmp13 = (tmp5 :: tmp12) in
   let tmp14 = (tmp3 :: tmp13) in
-  let tmp15 = ((FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Internal: term is not well-scoped ") (FStar_Pprint.parens (FStar_Pprint.doc_of_string msg))) :: tmp14) in
-  (FStarC_Errors.fStarC_Errors_log_issue__range_list_document rng FStarC_Errors_Codes.Warning_Defensive tmp15)) else ()))
+  let tmp15 = ((PPrint.(^/^) (FStarC_Errors_Msg.text "Internal: term is not well-scoped ") (PPrint.parens (PPrint.string msg))) :: tmp14) in
+  (FStarC_Errors.fStarC_Errors_log_issue__range_list_ocaml_document rng FStarC_Errors_Codes.Warning_Defensive tmp15)) else ()))
 
 let fStarC_Defensive_def_check_scoped__list_bv_syntax_term' (rng : FStarC_Range_Type.range) (msg : string) (env : (FStarC_Syntax_Syntax.bv) list) (thing : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : unit =
   (let tmp = (FStarC_Options.defensive ()) in

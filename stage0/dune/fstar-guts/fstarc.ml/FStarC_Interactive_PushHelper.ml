@@ -14,7 +14,7 @@ let rec repl_ld_tasks_of_deps__aux (wrap : (string -> FStarC_Interactive_Ide_Typ
   )
 
 let repl_ld_tasks_of_deps (deps : (string) list) (final_tasks : (FStarC_Interactive_Ide_Types.repl_task) list) : (FStarC_Interactive_Ide_Types.repl_task) list =
-  (let wrap = (fun fname -> (let tmp = (FStarC_Time.get_time_of_day ()) in
+  (let wrap = (fun fname -> (let tmp = (BatUnix.gettimeofday ()) in
     { FStarC_Interactive_Ide_Types.tf_fname = fname; tf_modtime = tmp })) in
   ((repl_ld_tasks_of_deps__aux wrap) deps final_tasks))
 
@@ -26,7 +26,7 @@ let deps_and_repl_ld_tasks_of_our_file (filename : string) : ((string) list * (F
   let parse_data_cache = FStarC_CheckedFiles.load_parsing_data_from_cache in
   let tmp = (FStarC_Dependencies.find_deps_if_needed (filename :: []) parse_data_cache) in
   (match tmp with
-    | (deps, dep_graph) -> (let tmp1 = (FStarC_List.partition has_our_mod_name deps) in
+    | (deps, dep_graph) -> (let tmp1 = (BatList.partition has_our_mod_name deps) in
       (match tmp1 with
         | (same_name, real_deps) -> (let intf_tasks = (match same_name with
               | (intf :: (impl :: [])) -> (let tmp2 = (FStarC_Parser_Dep.is_interface intf) in
@@ -35,7 +35,7 @@ let deps_and_repl_ld_tasks_of_our_file (filename : string) : ((string) list * (F
                 let tmp4 = (FStarC_Parser_Dep.is_implementation impl) in
                 let tmp5 = (not tmp4) in
                 (if tmp5 then (FStarC_Errors.fStarC_Errors_raise_error0__string FStarC_Errors_Codes.Fatal_MissingImplementation (FStarC_Format.fmt1 "Expecting an implementation, got %s" impl)) else ());
-                let tmp6 = (FStarC_Time.get_time_of_day ()) in
+                let tmp6 = (BatUnix.gettimeofday ()) in
                 let tmp7 = { FStarC_Interactive_Ide_Types.tf_fname = intf;
                     tf_modtime = tmp6 } in
                 let tmp8 = (FStarC_Interactive_Ide_Types.LDInterfaceOfCurrentFile (tmp7)) in
@@ -235,7 +235,7 @@ let track_name_changes (env : FStarC_TypeChecker_Env.env) : (FStarC_TypeChecker_
         | (events, new_dshooks, new_tchooks) -> (let tmp2 = (set_hooks new_dshooks new_tchooks env) in
           (tmp2, (fun env1 -> (let tmp3 = (set_hooks old_dshooks old_tchooks env1) in
           let tmp4 = (!(events)) in
-          let tmp5 = (FStarC_List.rev tmp4) in
+          let tmp5 = (BatList.rev tmp4) in
           (tmp3, tmp5)))))
       ))
   ))
@@ -250,7 +250,7 @@ let adjust_topmost_push_frag (f : (FStarC_Interactive_Ide_Types.repl_task -> FSt
 
 let add_filenames_to_push_fragment (deps : (string) list) : unit =
   (let adjust = (fun t -> (match t with
-      | (FStarC_Interactive_Ide_Types.PushFragment (frag, push_kind, i, deps')) -> (FStarC_Interactive_Ide_Types.PushFragment (frag, push_kind, i, (FStarC_List.op_At deps deps')))
+      | (FStarC_Interactive_Ide_Types.PushFragment (frag, push_kind, i, deps')) -> (FStarC_Interactive_Ide_Types.PushFragment (frag, push_kind, i, (BatList.append deps deps')))
       | x -> x
     )) in
   (adjust_topmost_push_frag adjust))
@@ -279,10 +279,10 @@ let run_repl_task (repl_fname : string) (curmod : (FStarC_Syntax_Syntax.modul) o
   )
 
 let query_of_ids (ids : (FStarC_Ident.ident) list) : (string) list =
-  (FStarC_List.map FStarC_Ident.string_of_id ids)
+  (BatList.map FStarC_Ident.string_of_id ids)
 
 let query_of_lid (lid : FStarC_Ident.lident) : (string) list =
-  (query_of_ids (FStarC_List.op_At (FStarC_Ident.ns_of_lid lid) ((FStarC_Ident.ident_of_lid lid) :: [])))
+  (query_of_ids (BatList.append (FStarC_Ident.ns_of_lid lid) ((FStarC_Ident.ident_of_lid lid) :: [])))
 
 let update_names_from_event (cur_mod_str : string) (table : FStarC_Interactive_CompletionTable.table) (evt : name_tracking_event) : FStarC_Interactive_CompletionTable.table =
   (let is_cur_mod = (fun lid -> ((=) (FStarC_Ident.string_of_lid lid) cur_mod_str)) in
@@ -299,7 +299,7 @@ let update_names_from_event (cur_mod_str : string) (table : FStarC_Interactive_C
           | (FStar_Pervasives.Inr ((lids, tmp))) -> lids
           | tmp -> []
         ) in
-      (FStarC_List.fold_left (fun tbl lid -> (let ns_query = (if ((=) (FStarC_Ident.nsstr lid) cur_mod_str) then [] else (query_of_ids (FStarC_Ident.ns_of_lid lid))) in
+      (BatList.fold_left (fun tbl lid -> (let ns_query = (if ((=) (FStarC_Ident.nsstr lid) cur_mod_str) then [] else (query_of_ids (FStarC_Ident.ns_of_lid lid))) in
       (FStarC_Interactive_CompletionTable.insert tbl ns_query (FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid lid)) lid))) table lids))
   ))
 
@@ -309,7 +309,7 @@ let commit_name_tracking' (cur_mod : (FStarC_Syntax_Syntax.modul) option) (names
       | (Some (md)) -> (FStarC_Ident.string_of_lid (FStarC_Syntax_Syntax.mod_name md))
     ) in
   let updater = (update_names_from_event cur_mod_str) in
-  (FStarC_List.fold_left updater names name_events))
+  (BatList.fold_left updater names name_events))
 
 let commit_name_tracking (st : FStarC_Interactive_Ide_Types.repl_state) (name_events : (name_tracking_event) list) : FStarC_Interactive_Ide_Types.repl_state =
   (let names = (commit_name_tracking' (st).FStarC_Interactive_Ide_Types.repl_curmod (st).FStarC_Interactive_Ide_Types.repl_names name_events) in
@@ -329,12 +329,12 @@ let add_module_completions (this_fname : string) (deps : (string) list) (table :
     let tmp = (FStarC_String.substring str Prims.int_one (Prims.op_Minus (FStarC_String.length str) Prims.int_one)) in
     (Prims.strcat (FStarC_String.uppercase first) tmp)))) in
   let mods = (FStarC_Parser_Dep.build_inclusion_candidates_list ()) in
-  let loaded_mods_set = (FStarC_List.fold_left (fun acc dep -> (let tmp = (FStarC_Parser_Dep.lowercase_module_name dep) in
+  let loaded_mods_set = (BatList.fold_left (fun acc dep -> (let tmp = (FStarC_Parser_Dep.lowercase_module_name dep) in
     (FStarC_PSMap.add acc tmp true))) (FStarC_PSMap.empty ()) deps) in
   let loaded = (fun modname -> (FStarC_PSMap.find_default loaded_mods_set modname false)) in
   let this_mod_key = (FStarC_Parser_Dep.lowercase_module_name this_fname) in
   let this_tgt = (FStarC_Parser_Dep.target_of_file this_fname) in
-  (FStarC_List.fold_left (fun table1 tmp -> (match tmp with
+  (BatList.fold_left (fun table1 tmp -> (match tmp with
     | (modname, mod_path) -> (let tmp1 = (FStarC_Target.split_target modname) in
       (match tmp1 with
         | (modname1, tgt) -> (let mod_key = (FStarC_String.lowercase modname1) in
@@ -344,11 +344,11 @@ let add_module_completions (this_fname : string) (deps : (string) list) (table :
           let ns_query = (FStarC_Util.split tmp4 ".") in
           (FStarC_Interactive_CompletionTable.register_module_path table1 (loaded mod_key) mod_path ns_query)))))
       ))
-  )) table (FStarC_List.rev mods)))
+  )) table (BatList.rev mods)))
 
 let add_issues_to_push_fragment (issues : (FStarC_Json.json) list) : unit =
   (let adjust = (fun t -> (match t with
-      | (FStarC_Interactive_Ide_Types.PushFragment (frag, push_kind, i, deps)) -> (FStarC_Interactive_Ide_Types.PushFragment (frag, push_kind, (FStarC_List.op_At issues i), deps))
+      | (FStarC_Interactive_Ide_Types.PushFragment (frag, push_kind, i, deps)) -> (FStarC_Interactive_Ide_Types.PushFragment (frag, push_kind, (BatList.append issues i), deps))
       | x -> x
     )) in
   (adjust_topmost_push_frag adjust))
