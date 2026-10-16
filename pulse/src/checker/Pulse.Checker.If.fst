@@ -310,28 +310,111 @@ let check
           let (| e2, c2 |) = extract_nat else_ in
           (| post, then_, else_, Some (| e1, c1, e2, c2 |) |)
         in
-        (* When the join keeps part of the state under the condition, try
-           taking that part from one branch. The prover may reach it from the
-           other branch by the folds and unfolds it applies on its own
-           (`pulse_intro`), e.g. one branch leaves a struct unfolded and the
-           other calls a function that returns it folded.
-           Only the leftover part is taken from the branch. What the branches
-           agree on is joined as usual. Taking the picked branch's whole
-           postcondition would also fix the values of cells the other
-           branch did not write: e.g. a cell written to a constant in one
-           branch and untouched in the other, which the prover can only
-           match by an SMT equality that does not hold.
-           First try without generalizing a cell whose value names a
-           witness the branch's other conjuncts also name: generalizing it
-           cuts the two apart (a pointer to an iterator against the
-           iterator's predicate over the same value). That join can still be
-           proved of both branches, even when it keeps no conditional, but
-           leaves a postcondition the code after the join cannot use. Such a
-           cell is left to the picked branch as well. Only if that fails,
-           generalize it.
-           Each candidate is proved of, and elaborated in, both branches
-           before it is used, so this only ever picks among sound options.
-           If none works, keep the join. *)
+        (* Search for a useful common postcondition, not just an entailed one.
+           [post] is the default, unlinked join [candidate None false].
+           [linked_post = candidate None true] is only a shape probe: it shows
+           what would remain conditional if we refused to generalize a
+           witness shared by several conjuncts. We do not accept that term
+           merely because of its shape.
+
+           A no-pick join leaves unmatched resources under the condition.
+           Picking replaces only that leftover with one branch's version;
+           matched resources are still joined. The prover may establish the
+           picked version in the other branch using its automatic folds and
+           unfolds (`pulse_intro`).
+
+           For example, suppose [boxed r] abbreviates the folded resource
+           [exists* v. r |-> v], and the branches leave:
+
+             p_then = r |-> v ** flag |-> 1
+             p_else = boxed r ** flag |-> f
+
+           The no-pick join keeps:
+
+             (if b then r |-> v else boxed r) **
+             flag |-> (if b then 1 else f)
+
+           Picking the else leftover instead proposes:
+
+             boxed r ** flag |-> (if b then 1 else f)
+
+           Folding can prove this of the then-branch too. Taking the WHOLE
+           else postcondition would instead require [flag |-> f] in the
+           then-branch, which generally fails: that branch wrote [1].
+
+           Prefer linked picks, which keep a cell with other conjuncts naming
+           its existential witness. An unlinked join can be provable, and
+           contain no conditional, yet lose a connection needed by later code.
+           For example, for an opaque [P:int -> slprop] whose applications
+           match without requiring equal arguments:
+
+             p_then = exists* x. r |-> x ** P x
+             p_else = exists* y. r |-> y ** P y
+
+           [post] can generalize the two matched conjuncts independently:
+
+             exists* u v. r |-> u ** P v
+
+           But [linked_post] keeps [if b then p_then else p_else]. Picking
+           either linked leftover recovers [exists* x. r |-> x ** P x].
+           This is why testing only [post] for a conditional would miss useful
+           alternatives: the unlinked join already erased the connection.
+
+           Preferring linked candidates does not guarantee precision. For
+           example, let [Q] be another opaque predicate like [P], with a
+           distinct head, and suppose:
+
+             p_then = exists* x y. r |-> x ** P x ** Q y
+             p_else = exists* x y. r |-> x ** P y ** Q x
+
+           Here neither linked pick is generally provable of both branches:
+           the cell's value is tied to [P] in one branch and [Q] in the other.
+           The unlinked join instead forgets both connections:
+
+             exists* u v w. r |-> u ** P v ** Q w
+
+           It has no conditional, so the unlinked picks are skipped and this
+           weaker [post] is accepted as the fallback. A subsequent call whose
+           precondition is:
+
+             exists* u v w. r |-> u ** P v ** Q w **
+               pure (u == v \/ u == w)
+
+           would be justified by either original branch (the left equality
+           holds in the then-branch, the right in the else-branch), but cannot
+           in general be proved from the inferred postcondition. Thus a valid
+           join can cause verification to fail later in the continuation.
+           The same loss can occur in a picked unlinked candidate: picking
+           does not restore the connections already lost by generalization.
+           We search using only the two branches, not the continuation, and
+           do not retry alternatives if the continuation later fails. An
+           explicit [ensures] on the [if] can retain the common fact needed
+           downstream instead of relying on this inference heuristic.
+
+           The search order is:
+           (1) If [linked_post] keeps a conditional, try [Some false, true],
+               then [Some true, true] (arguments are [pick, linked]).
+           (2) If [post] keeps a conditional, try [Some false, false],
+               then [Some true, false], allowing witness links to be lost.
+           (3) If no pick succeeds, prove both branches against [post].
+           Else-first is just the order in which we try the two leftovers;
+           success still requires the candidate to work for BOTH branches.
+
+           [post_keeps_conditional] is a syntactic heuristic for a leftover:
+           it finds a match at slprop position under [**], [exists*], or
+           [with_pure], not a conditional value inside a resource such as
+           [flag |-> (if b then 1 else f)]. Without such a leftover in the
+           corresponding no-pick join, there is nothing extra to select by
+           picking. In particular, if [linked_post] has none, we skip only
+           (1), not the separate test in (2). If keeping links has blocked no
+           generalization, the two no-pick joins agree up to fresh binder names;
+           there is no reason to validate [linked_post] separately from [post].
+
+           These shape tests only schedule attempts; they prove no entailment
+           and do not guarantee that later code can use a candidate. Every
+           picked candidate is core-checked, proved of both branches, and
+           elaborated before acceptance. The fallback [post] is also checked
+           and proved, with elaboration below; if it fails, inference fails. *)
         (* Only inspected, to decide which candidates to try. *)
         let linked_post = candidate None true in
         let with_leftover_of (linked then_:bool) () =
