@@ -31,6 +31,9 @@ let string_of_list_of_string _ = admit ()
 
 let list_of_string_of_list _ = admit ()
 
+[@@custard_extern "(fun s -> Z.of_int (BatUTF8.length s))"]
+let length _ = admit ()
+
 [@@custard_extern "(fun i c -> BatUTF8.init (Z.to_int i) (fun _ -> BatUChar.chr c))"]
 let make _ _ = admit ()
 
