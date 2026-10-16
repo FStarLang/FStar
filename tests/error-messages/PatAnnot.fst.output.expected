@@ -3,10 +3,7 @@
   - Assertion failed
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
-  - In context:
-      uu___: Prims.unit
-      x: Prims.unit
-      PatAnnot.f () == (_, x)
+  - In context: PatAnnot.f () == ((), ())
   - See also PatAnnot.fst(25,19-25,24)
 
 * Info at PatAnnot.fst(29,10-29,11):
@@ -17,14 +14,14 @@
   - In context:
       uu___: Prims.unit & Prims.unit
       PatAnnot.f () == _
-      uu___: Prims.unit
-      x: Prims.unit
-      _ == (_, x)
+      _ == ((), ())
   - See also PatAnnot.fst(29,17-29,22)
 
-* Info at PatAnnot.fst(33,0-35,14):
+* Info at PatAnnot.fst(34,10-34,11):
   - Expected failure:
-  - Assertion failed
+  - Subtyping check failed
+  - Expected type l: Prims.list Prims.int {Prims.l_False}
+    got type Prims.list Prims.int
   - The SMT solver could not prove the query.
   - Failed to prove: Prims.l_False
   - In context:
@@ -33,6 +30,7 @@
       uu___: Prims.list Prims.int
       l: Prims.list Prims.int
       _ == (_, l)
+  - See also PatAnnot.fst(34,21-34,26)
 
 * Info at PatAnnot.fst(39,10-39,12):
   - Expected failure:

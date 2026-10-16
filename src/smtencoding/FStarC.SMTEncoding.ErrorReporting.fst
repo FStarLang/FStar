@@ -261,14 +261,24 @@ let split_goals use_env_msg  //when present, provides an alternate error message
           (* Skolemize: each bound variable becomes a fresh constant, declared
              and given its typing hypothesis.  Note the constants are FreeV,
              which prints exactly like a constant but keeps the hash-consed
-             encodings of refinements parameterized over them. *)
+             encodings of refinements parameterized over them.
+             A variable of unit refinement type needs no constant at all: it
+             is bound to the unit constant, and only its refinement is kept
+             as a hypothesis. *)
           let vars, guards, env', decls, names =
             bs |> List.fold_left (fun (vars, guards, env, decls, names) b ->
               let x = (b <: S.binder).binder_bv in
-              let fv = mk_fv (fresh_name "@sk_", Term_sort) in
-              let env' = push_term_var env x (mkFreeV fv) in
-              let g, decls' = encode_term_pred None (norm env x.sort) env (mkFreeV fv) in
-              fv::vars, g::guards, env', decls@decls', x::names)
+              let t = norm env x.sort in
+              match unit_refinements env t with
+              | Some fs ->
+                let env' = push_term_var env x mk_Term_unit in
+                let g, decls' = encode_unit_refinements env fs in
+                vars, g::guards, env', decls@decls', x::names
+              | None ->
+                let fv = mk_fv (fresh_name "@sk_", Term_sort) in
+                let env' = push_term_var env x (mkFreeV fv) in
+                let g, decls' = encode_term_pred_inline_refinements None t env (mkFreeV fv) in
+                fv::vars, g::guards, env', decls@decls', x::names)
               ([], [], env, [], [])
           in
           let vars, guards, names = List.rev vars, List.rev guards, List.rev names in

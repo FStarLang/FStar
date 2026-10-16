@@ -584,12 +584,20 @@ val add_mod_small: n: nat -> m:nat -> k1:pos -> k2:pos ->
                   (n + k1 * m) % (k1 * k2)))
 #restart-solver
 let add_mod_small n m k1 k2 =
-  assert (k1 * k2 > 0);
+  let k = k1 * k2 in
+  assert (k > 0);
   assert (k1 * m >= 0);
   assert (n + k1 * m >= 0);
-  mod_spec (k1 * m) (k1 * k2);
-  mod_spec (n + k1 * m) (k1 * k2);
-  div_add_small n m k1 k2
+  mod_spec (k1 * m) k;
+  mod_spec (n + k1 * m) k;
+  div_add_small n m k1 k2;
+  (* Both remainders are taken around the *same* quotient. Naming it keeps the
+     last step linear in the atom [q * k]; leaving the two `/` terms distinct
+     makes Z3 search nonlinearly for the equality it was just handed. *)
+  let q = k1 * m / k in
+  assert ((n + k1 * m) / k == q);
+  assert ((k1 * m) % k == k1 * m - q * k);
+  assert ((n + k1 * m) % k == n + k1 * m - q * k)
 
 let mod_then_mul_64 (n:nat) : Lemma (n % pow2 64 * pow2 64 == n * pow2 64 % pow2 128) =
   Math.pow2_plus 64 64;
@@ -1198,10 +1206,12 @@ let sum_shift_carry a b k =
   add_mod_then_mod b a k;
   Math.lemma_mod_spec (a+b) k
 
+#push-options "--z3rlimit_factor 4"
 let mul_wide_high_ok (x y: U64.t) :
   Lemma ((U64.v x * U64.v y) / pow2 64 == mul_wide_high x y) =
   product_high_expand x y;
   sum_shift_carry (phl x y + pll_h x y) (plh x y) (pow2 32)
+#pop-options
 
 let product_div_bound (#n:pos) (x y: UInt.uint_t n) :
   Lemma (x * y / pow2 n < pow2 n) =

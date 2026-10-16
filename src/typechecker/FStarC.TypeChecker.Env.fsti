@@ -53,6 +53,7 @@ type step =
   | DontUnfoldAttr of list lid
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
+  | UnitBinders     //Rewrites `forall (x:unit{p}). q` to `p ==> q`; only sound to *print*/encode, so it is not part of Simplify
   | EraseUniverses
   | AllowUnboundUniverses //we erase universes as we encode to SMT; so, sometimes when printing, it's ok to have some unbound universe variables
   | Reify

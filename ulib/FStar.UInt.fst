@@ -368,7 +368,7 @@ let rotate_left_full_identity #n a = nth_lemma (rotate_left #n a n) a
 
 let rotate_right_full_identity #n a = nth_lemma (rotate_right #n a n) a
 
-#push-options "--z3rlimit_factor 4"
+#push-options "--z3rlimit_factor 8"
 let rotate_left_right_inverse #n a s = nth_lemma (rotate_right #n (rotate_left #n a s) s) a
 
 let rotate_right_left_inverse #n a s = nth_lemma (rotate_left #n (rotate_right #n a s) s) a

@@ -307,6 +307,7 @@ ghost fn pcm_rw u#a (#t: Type u#a)
   fold pts_to_mask a2 #p2 s2 m2;
 }
 
+#push-options "--z3rlimit_factor 4"
 ghost fn pcm_share u#a (#t: Type u#a) #l
     (a: array t) p s m
     (a1: array t) p1 s1 m1
@@ -351,6 +352,7 @@ ghost fn pcm_share u#a (#t: Type u#a) #l
   fold pts_to_mask a1 #p1 s1 m1;
   fold pts_to_mask a2 #p2 s2 m2;
 }
+#pop-options
 
 ghost fn pcm_gather u#a (#t: Type u#a) #l
     (a: array t) p s m
