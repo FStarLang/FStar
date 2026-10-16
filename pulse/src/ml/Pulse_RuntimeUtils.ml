@@ -22,6 +22,19 @@ let rec with_context (c:context) (f: unit -> 'a utac) : 'a utac =
 let with_error_bound (r:FStarC_Range.range) (f: unit -> 'a utac) : 'a utac =
   fun ps ->
     FStarC_Errors.with_error_bound r (fun _ -> f () ps)
+exception Quiet_failure
+let try_quietly (f: unit -> 'a utac) : 'a option utac =
+  fun ps ->
+    let attempt : 'a utac = fun ps ->
+      let errs, rest, r =
+        FStarC_Errors.catch_errors_aux (fun () -> f () ps) in
+      match errs, r with
+      | [], Some x -> FStarC_Errors.add_issues rest; x
+      | _ -> raise Quiet_failure
+    in
+    match FStarC_Tactics_Monad.catch attempt ps with
+    | FStar_Pervasives.Inr x -> Some x
+    | FStar_Pervasives.Inl _ -> None
 let get_error_bound () : FStarC_Range.range option utac =
   fun _ps ->
     FStarC_Effect.op_Bang FStarC_Errors.error_range_bound

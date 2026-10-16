@@ -25,6 +25,7 @@ open Pulse.Checker.Base
 module T = FStar.Tactics.V2
 module J = Pulse.JoinComp
 module RU = Pulse.RuntimeUtils
+module R = FStar.Reflection.V2
 #set-options "--z3rlimit 40"
 
 
@@ -46,20 +47,121 @@ let set_effect_annot (#g:env) (ph:post_hint_for_env g) (ea:effect_annot)
                              ph'.u == ph.u /\ ph'.effect_annot == ea })
 = { ph with effect_annot = ea }
 
-// Relabel a stt/stt_div computation with the given (stt or stt_div) effect,
-// preserving its state components. Used to lift the branches of an inferred
-// conditional to a common effect once a divergent branch is detected.
-let lift_branch_comp (c:comp_st)
-                     (eff:effect_annot { EffectAnnotSTT? eff \/ EffectAnnotSTTDiv? eff })
-: (c':comp_st { comp_pre c' == comp_pre c /\ comp_res c' == comp_res c /\
-                comp_u c' == comp_u c /\ comp_post c' == comp_post c /\
-                effect_annot_matches c' eff })
-= match eff with
-  | EffectAnnotSTTDiv -> C_STDiv (st_comp_of_comp c)
-  | _ -> C_ST (st_comp_of_comp c)
+(* The effect of a conditional whose postcondition is inferred, from the
+   natural effects of its branches, and each branch lifted to it. This follows
+   the lifts that Pulse.Typing.Combinators.mk_bind applies when composing two
+   computations without a hint: divergence wins over stt, which wins over
+   atomic and ghost; ghost and atomic branches keep their effect, over the
+   join of their invariant names. A ghost branch is only lifted to a
+   non-ghost effect if its result type is non-informative
+   ([lift_ghost_atomic]). *)
+let same_st (c c':comp_st) : prop =
+  comp_pre c' == comp_pre c /\ comp_res c' == comp_res c /\
+  comp_u c' == comp_u c /\ comp_post c' == comp_post c
+
+let lift_ghost (g:env) (e:st_term) (c:comp_st) : T.Tac unit =
+  if C_STGhost? c then lift_ghost_atomic g e c
+
+let with_opens (g:env) (c:comp_st { C_STGhost? c \/ C_STAtomic? c }) (opens:term)
+: T.Tac (c':comp_st { same_st c c' /\
+                      (C_STGhost? c ==> C_STGhost? c') /\
+                      (C_STAtomic? c ==> C_STAtomic? c') /\
+                      comp_inames c' == opens })
+= if not (eq_tm (comp_inames c) opens) then
+    ignore (check_prop_validity g (tm_inames_subset (comp_inames c) opens));
+  match c with
+  | C_STGhost _ sc -> C_STGhost opens sc
+  | C_STAtomic _ obs sc -> C_STAtomic opens obs sc
+
+let join_branch_effects (g:env) (e1 e2:st_term) (c1 c2:comp_st)
+: T.Tac (ea:effect_annot &
+         c1':comp_st { same_st c1 c1' /\ effect_annot_matches c1' ea } &
+         c2':comp_st { same_st c2 c2' /\ effect_annot_matches c2' ea })
+= match c1, c2 with
+  | C_STDiv _, _ | _, C_STDiv _ ->
+    lift_ghost g e1 c1; lift_ghost g e2 c2;
+    (| EffectAnnotSTTDiv, C_STDiv (st_comp_of_comp c1), C_STDiv (st_comp_of_comp c2) |)
+  | C_ST _, _ | _, C_ST _ ->
+    lift_ghost g e1 c1; lift_ghost g e2 c2;
+    (| EffectAnnotSTT, C_ST (st_comp_of_comp c1), C_ST (st_comp_of_comp c2) |)
+  | _ ->
+    let opens = tm_join_inames (comp_inames c1) (comp_inames c2) in
+    let c1 = with_opens g c1 opens in
+    let c2 = with_opens g c2 opens in
+    match c1, c2 with
+    | C_STGhost _ _, C_STGhost _ _ ->
+      (| EffectAnnotGhost { opens }, c1, c2 |)
+    | C_STAtomic _ _ _, C_STAtomic _ _ _ ->
+      (| EffectAnnotAtomic { opens }, c1, c2 |)
+    | _ ->
+      (* One ghost and one atomic branch. Both have the same result type. A
+         ghost branch with an informative result can only be joined with a
+         neutral atomic one, as ghost. *)
+      let neutral (c:comp_st) : bool =
+        match c with
+        | C_STAtomic _ obs _ -> Neutral? obs
+        | _ -> true
+      in
+      if None? (try_get_non_informative_witness g (comp_u c1) (comp_res c1))
+         && neutral c1 && neutral c2
+      then
+        let c1 : comp_st = C_STGhost opens (st_comp_of_comp c1) in
+        let c2 : comp_st = C_STGhost opens (st_comp_of_comp c2) in
+        (| EffectAnnotGhost { opens }, c1, c2 |)
+      else (
+        lift_ghost g e1 c1; lift_ghost g e2 c2;
+        let as_atomic (c:comp_st { C_STGhost? c \/ C_STAtomic? c })
+        : c':comp_st { same_st c c' /\ C_STAtomic? c' /\ comp_inames c' == comp_inames c } =
+          match c with
+          | C_STGhost i sc -> C_STAtomic i Neutral sc
+          | C_STAtomic _ _ _ -> c
+        in
+        (| EffectAnnotAtomic { opens }, as_atomic c1, as_atomic c2 |)
+      )
 
 #push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 2"
 #restart-solver
+(* The trust boundary for an inferred postcondition.
+
+   Pulse.JoinComp only proposes candidates, as plain terms; nothing it computes
+   is trusted. A candidate becomes the postcondition of the conditional only
+   after
+   (1) [post_hint_of_candidate] core-checks it as an slprop over the result in
+       [g], the context outside the conditional, so that it cannot mention the
+       branch hypothesis or any variable a branch bound; and
+   (2) both branches are proved against it ([prove_post_hint], which also
+       checks the result type) and elaborated ([extract_nat]), since the
+       prover leaves some of its checks to elaboration.
+   A user-written `ensures` on the `if` goes through the same checks. So a
+   wrong candidate is rejected, or skipped for the next one: an inference bug
+   can at worst make a program be rejected, or get a weaker postcondition than
+   it could have.
+   A candidate only fixes the result type and the postcondition. Its effect
+   annotation is a placeholder that nothing reads: [prove_post_hint] ignores
+   it, and [extract_nat] elaborates each branch at its own effect. The effect
+   of the conditional is computed from the elaborated branches by
+   [join_branch_effects]. *)
+let post_hint_of_candidate (g:env) (ret_ty:term) (post:term)
+: T.Tac (ph:post_hint_for_env g { ph.ret_ty == ret_ty /\ ph.effect_annot == EffectAnnotSTT })
+= let u = check_universe g ret_ty in
+  let x = fresh g in
+  let g' = push_binding g x ppname_default ret_ty in
+  check_slprop_with_core g' (open_term_nv post (ppname_default, x));
+  { g; effect_annot = EffectAnnotSTT; ret_ty; u; post }
+
+(* Does a joined postcondition still keep something under the branch
+   condition? `Pulse.JoinComp.join_post_candidate` with no pick leaves what the
+   branches do not agree on as `match b with true -> .. | false -> ..`, which
+   nothing later can take apart unless `b` is a variable that a later test
+   rewrites. *)
+let rec post_keeps_conditional (p:slprop) : T.Tac bool =
+  match inspect_term p with
+  | Tm_Star l r -> if post_keeps_conditional l then true else post_keeps_conditional r
+  | Tm_ExistsSL _ _ body -> post_keeps_conditional body
+  | Tm_WithPure _ _ body -> post_keeps_conditional body
+  | Tm_FStar t -> R.Tv_Match? (R.inspect_ln t)
+  | _ -> false
+
 let check
   (g:env)
   (pre:term)
@@ -132,26 +234,218 @@ let check
     J.infer_post' g g' u t x post
   in
 
+  (* Elaborate a branch and read back its natural effect. The trailing return
+     is elaborated against a neutral effect (atomic over no invariants), so
+     that it does not lift the branch: the postcondition proved of the branch
+     fixes its state, not its effect. *)
+  let extract_nat #g #pre (#ph:post_hint_for_env g) (r:checker_result_t g pre (PostHint ph))
+  : T.Tac (br:st_term { ~(hyp `Set.mem` freevars_st br) } &
+           c:comp_st { comp_pre c == pre /\ comp_res c == ph.ret_ty /\
+                       comp_u c == ph.u /\ comp_post c == ph.post })
+  = let neutral = { ph with effect_annot = EffectAnnotAtomicOrGhost { opens = tm_emp_inames } } in
+    let r = retype_checker_result_effect ph neutral r in
+    let (| br, c |) =
+      let ppname = mk_ppname_no_range "_if_br" in
+      apply_checker_result_k_nohint r ppname
+    in
+    assume not (hyp `Set.mem` freevars_st br);
+    (| br, c |)
+  in
+
   let then_ = check_branch tm_true e1 true in
   let else_ = check_branch tm_false e2 false in
   let joinable : (
-    ph:post_hint_for_env g & 
+    ph:post_hint_for_env g &
     checker_result_t (g_with_eq tm_true) pre (PostHint ph) &
-    checker_result_t (g_with_eq tm_false) pre (PostHint ph)
+    checker_result_t (g_with_eq tm_false) pre (PostHint ph) &
+    option (e1:st_term { ~(hyp `Set.mem` freevars_st e1) } &
+            c1:comp_st { comp_pre c1 == pre /\ comp_res c1 == ph.ret_ty /\
+                         comp_u c1 == ph.u /\ comp_post c1 == ph.post } &
+            e2:st_term { ~(hyp `Set.mem` freevars_st e2) } &
+            c2:comp_st { comp_pre c2 == pre /\ comp_res c2 == ph.ret_ty /\
+                         comp_u c2 == ph.u /\ comp_post c2 == ph.post })
   ) = match branch_hint with
-      | PostHint ph -> 
-        (| ph, then_, else_ |)
+      | PostHint ph ->
+        (| ph, then_, else_, None |)
       | _ ->
         let then_ : checker_result_t _ _ NoHint = retype_checker_result _ then_ in
         let else_ : checker_result_t _ _ NoHint = retype_checker_result _ else_ in
         let post_then = infer_post_branch then_ in
         let post_else = infer_post_branch else_ in
-        let post = Pulse.JoinComp.join_post #g #hyp #b post_then post_else in
-        let then_ = Pulse.Checker.Prover.prove_post_hint then_ (PostHint post) e1.range in
-        let else_ = Pulse.Checker.Prover.prove_post_hint else_ (PostHint post) e2.range in
-        (| post, then_, else_ |)
+        let ret_ty = post_then.ret_ty in
+        if not (T.term_eq (RU.deep_compress_safe ret_ty) (RU.deep_compress_safe post_else.ret_ty))
+        then
+          Pulse.Typing.Env.fail_doc g (Some (T.range_of_term ret_ty))
+            Pulse.PP.(
+              [text "The branches of a conditional must return the same type";
+               text (Printf.sprintf "The types %s and %s are not equal"
+                       (T.term_to_string ret_ty) (T.term_to_string post_else.ret_ty))]);
+        (* Untrusted: see [post_hint_of_candidate]. *)
+        let candidate (pick:option bool) (linked:bool) : T.Tac term =
+          J.join_post_candidate pick linked #g #hyp #b post_then post_else in
+        let post = post_hint_of_candidate g ret_ty (candidate None false) in
+        let prove_both (post:post_hint_for_env g) ()
+          : T.Tac (ph:post_hint_for_env g &
+                   checker_result_t (g_with_eq tm_true) pre (PostHint ph) &
+                   checker_result_t (g_with_eq tm_false) pre (PostHint ph)) =
+          let then_ = Pulse.Checker.Prover.prove_post_hint then_ (PostHint post) e1.range in
+          let else_ = Pulse.Checker.Prover.prove_post_hint else_ (PostHint post) e2.range in
+          (| post, then_, else_ |)
+        in
+        (* A candidate is only accepted once both branches have been
+           elaborated against it: the prover leaves some of its checks (e.g.
+           that two cells it matched hold the same value) to elaboration. *)
+        let prove_and_extract (post:post_hint_for_env g) ()
+          : T.Tac (ph:post_hint_for_env g &
+                   checker_result_t (g_with_eq tm_true) pre (PostHint ph) &
+                   checker_result_t (g_with_eq tm_false) pre (PostHint ph) &
+                   option (e1:st_term { ~(hyp `Set.mem` freevars_st e1) } &
+                           c1:comp_st { comp_pre c1 == pre /\ comp_res c1 == ph.ret_ty /\
+                                        comp_u c1 == ph.u /\ comp_post c1 == ph.post } &
+                           e2:st_term { ~(hyp `Set.mem` freevars_st e2) } &
+                           c2:comp_st { comp_pre c2 == pre /\ comp_res c2 == ph.ret_ty /\
+                                        comp_u c2 == ph.u /\ comp_post c2 == ph.post })) =
+          let (| post, then_, else_ |) = prove_both post () in
+          let (| e1, c1 |) = extract_nat then_ in
+          let (| e2, c2 |) = extract_nat else_ in
+          (| post, then_, else_, Some (| e1, c1, e2, c2 |) |)
+        in
+        (* Search for a useful common postcondition, not just an entailed one.
+           [post] is the default, unlinked join [candidate None false].
+           [linked_post = candidate None true] is only a shape probe: it shows
+           what would remain conditional if we refused to generalize a
+           witness shared by several conjuncts. We do not accept that term
+           merely because of its shape.
+
+           A no-pick join leaves unmatched resources under the condition.
+           Picking replaces only that leftover with one branch's version;
+           matched resources are still joined. The prover may establish the
+           picked version in the other branch using its automatic folds and
+           unfolds (`pulse_intro`).
+
+           For example, suppose [boxed r] abbreviates the folded resource
+           [exists* v. r |-> v], and the branches leave:
+
+             p_then = r |-> v ** flag |-> 1
+             p_else = boxed r ** flag |-> f
+
+           The no-pick join keeps:
+
+             (if b then r |-> v else boxed r) **
+             flag |-> (if b then 1 else f)
+
+           Picking the else leftover instead proposes:
+
+             boxed r ** flag |-> (if b then 1 else f)
+
+           Folding can prove this of the then-branch too. Taking the WHOLE
+           else postcondition would instead require [flag |-> f] in the
+           then-branch, which generally fails: that branch wrote [1].
+
+           Prefer linked picks, which keep a cell with other conjuncts naming
+           its existential witness. An unlinked join can be provable, and
+           contain no conditional, yet lose a connection needed by later code.
+           For example, for an opaque [P:int -> slprop] whose applications
+           match without requiring equal arguments:
+
+             p_then = exists* x. r |-> x ** P x
+             p_else = exists* y. r |-> y ** P y
+
+           [post] can generalize the two matched conjuncts independently:
+
+             exists* u v. r |-> u ** P v
+
+           But [linked_post] keeps [if b then p_then else p_else]. Picking
+           either linked leftover recovers [exists* x. r |-> x ** P x].
+           This is why testing only [post] for a conditional would miss useful
+           alternatives: the unlinked join already erased the connection.
+
+           Preferring linked candidates does not guarantee precision. For
+           example, let [Q] be another opaque predicate like [P], with a
+           distinct head, and suppose:
+
+             p_then = exists* x y. r |-> x ** P x ** Q y
+             p_else = exists* x y. r |-> x ** P y ** Q x
+
+           Here neither linked pick is generally provable of both branches:
+           the cell's value is tied to [P] in one branch and [Q] in the other.
+           The unlinked join instead forgets both connections:
+
+             exists* u v w. r |-> u ** P v ** Q w
+
+           It has no conditional, so the unlinked picks are skipped and this
+           weaker [post] is accepted as the fallback. A subsequent call whose
+           precondition is:
+
+             exists* u v w. r |-> u ** P v ** Q w **
+               pure (u == v \/ u == w)
+
+           would be justified by either original branch (the left equality
+           holds in the then-branch, the right in the else-branch), but cannot
+           in general be proved from the inferred postcondition. Thus a valid
+           join can cause verification to fail later in the continuation.
+           The same loss can occur in a picked unlinked candidate: picking
+           does not restore the connections already lost by generalization.
+           We search using only the two branches, not the continuation, and
+           do not retry alternatives if the continuation later fails. An
+           explicit [ensures] on the [if] can retain the common fact needed
+           downstream instead of relying on this inference heuristic.
+
+           The search order is:
+           (1) If [linked_post] keeps a conditional, try [Some false, true],
+               then [Some true, true] (arguments are [pick, linked]).
+           (2) If [post] keeps a conditional, try [Some false, false],
+               then [Some true, false], allowing witness links to be lost.
+           (3) If no pick succeeds, prove both branches against [post].
+           Else-first is just the order in which we try the two leftovers;
+           success still requires the candidate to work for BOTH branches.
+
+           [post_keeps_conditional] is a syntactic heuristic for a leftover:
+           it finds a match at slprop position under [**], [exists*], or
+           [with_pure], not a conditional value inside a resource such as
+           [flag |-> (if b then 1 else f)]. Without such a leftover in the
+           corresponding no-pick join, there is nothing extra to select by
+           picking. In particular, if [linked_post] has none, we skip only
+           (1), not the separate test in (2). If keeping links has blocked no
+           generalization, the two no-pick joins agree up to fresh binder names;
+           there is no reason to validate [linked_post] separately from [post].
+
+           These shape tests only schedule attempts; they prove no entailment
+           and do not guarantee that later code can use a candidate. Every
+           picked candidate is core-checked, proved of both branches, and
+           elaborated before acceptance. The fallback [post] is also checked
+           and proved, with elaboration below; if it fails, inference fails. *)
+        (* Only inspected, to decide which candidates to try. *)
+        let linked_post = candidate None true in
+        let with_leftover_of (linked then_:bool) () =
+          prove_and_extract (post_hint_of_candidate g ret_ty (candidate (Some then_) linked)) ()
+        in
+        let rec first (cs:list (bool & bool))
+          : T.Tac (ph:post_hint_for_env g &
+                   checker_result_t (g_with_eq tm_true) pre (PostHint ph) &
+                   checker_result_t (g_with_eq tm_false) pre (PostHint ph) &
+                   option (e1:st_term { ~(hyp `Set.mem` freevars_st e1) } &
+                           c1:comp_st { comp_pre c1 == pre /\ comp_res c1 == ph.ret_ty /\
+                                        comp_u c1 == ph.u /\ comp_post c1 == ph.post } &
+                           e2:st_term { ~(hyp `Set.mem` freevars_st e2) } &
+                           c2:comp_st { comp_pre c2 == pre /\ comp_res c2 == ph.ret_ty /\
+                                        comp_u c2 == ph.u /\ comp_post c2 == ph.post })) =
+          match cs with
+          | (linked, then_)::cs ->
+            (match RU.try_quietly (with_leftover_of linked then_) with
+             | Some r -> r
+             | None -> first cs)
+          | _ ->
+            let (| post, then_, else_ |) = prove_both post () in
+            (| post, then_, else_, None |)
+        in
+        let linked_cs =
+          if post_keeps_conditional linked_post then [(true, false); (true, true)] else [] in
+        let unlinked_cs =
+          if post_keeps_conditional post.post then [(false, false); (false, true)] else [] in
+        first (linked_cs @ unlinked_cs)
   in
-  let (| post_hint', then_, else_ |) = joinable in
+  let (| post_hint', then_, else_, extracted |) = joinable in
 
   let assemble (post_final:post_hint_for_env g {
                   PostHint? post_hint ==> PostHint?.v post_hint == post_final })
@@ -193,35 +487,23 @@ let check
 
   | _ ->
     //
-    // The postcondition was inferred (tentatively as stt). Read back the natural
-    // effect of each branch with a single check: if either branch is divergent,
-    // the whole conditional is divergent (issue #4366). This avoids re-checking
-    // any branch.
+    // The postcondition was inferred, or annotated without fixing the effect.
+    // Read back the natural effect of each branch, so that e.g. a divergent
+    // branch makes the whole conditional divergent (issue #4366), and a
+    // conditional whose branches are ghost stays ghost.
     //
-    let extract_nat #g #pre (#ph:post_hint_for_env g) (r:checker_result_t g pre (PostHint ph)) (is_then:bool)
-    : T.Tac (br:st_term { ~(hyp `Set.mem` freevars_st br) } &
-             c:comp_st { comp_pre c == pre /\ comp_res c == ph.ret_ty /\
-                         comp_u c == ph.u /\ comp_post c == ph.post })
-    = let (| br, c |) =
-        let ppname = mk_ppname_no_range "_if_br" in
-        apply_checker_result_k_nohint r ppname
-      in
-      assume not (hyp `Set.mem` freevars_st br);
-      (| br, c |)
+    let (| e1, c1, e2, c2 |) =
+      match extracted with
+      | Some r -> r
+      | None ->
+        let (| e1, c1 |) = extract_nat then_ in
+        let (| e2, c2 |) = extract_nat else_ in
+        (| e1, c1, e2, c2 |)
     in
-    let (| e1, c1 |) = extract_nat then_ true in
-    let (| e2, c2 |) = extract_nat else_ false in
     //
-    // Inferred branches produce only stt or stt_div; join by letting stt_div
-    // dominate.
+    // Join the natural effects of the branches (see [join_branch_effects]).
     //
-    let joined_eff : (ea:effect_annot { EffectAnnotSTT? ea \/ EffectAnnotSTTDiv? ea }) =
-      if EffectAnnotSTTDiv? (effect_annot_of_comp c1) || EffectAnnotSTTDiv? (effect_annot_of_comp c2)
-      then EffectAnnotSTTDiv
-      else EffectAnnotSTT
-    in
+    let (| joined_eff, c1, c2 |) = join_branch_effects g e1 e2 c1 c2 in
     let post_final = set_effect_annot post_hint' joined_eff in
-    let c1 = lift_branch_comp c1 joined_eff in
-    let c2 = lift_branch_comp c2 joined_eff in
     assemble post_final e1 c1 e2 c2
   #pop-options
