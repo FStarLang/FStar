@@ -50,3 +50,7 @@ val array_length (#a:Type) (arr:FStar.ImmutableArray.Base.t a) : t
 
 (* No bounds check: the index must be in range *)
 val array_index (#a:Type) (arr:FStar.ImmutableArray.Base.t a) (i:t) : a
+
+(* Three-way comparisons: negative, zero or positive. *)
+val int_compare : int -> int -> t
+val string_compare : string -> string -> t

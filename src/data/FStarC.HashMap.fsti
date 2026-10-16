@@ -8,7 +8,7 @@ open FStarC.Effect
 open FStarC.Class.Deq
 open FStarC.Class.Hashable
 
-val hashmap (k v : Type) : Type0
+val hashmap (k v : Type0) : Type0
 
 type t = hashmap
 
@@ -59,5 +59,5 @@ val fold (#k #v : _)
   (init:'a)
 : ML 'a
 
-val cached_fun (#a #b : Type) {| hashable a |} {| deq a |} (f : a -> ML b)
+val cached_fun (#a #b : Type0) {| hashable a |} {| deq a |} (f : a -> ML b)
   : ML ((a -> ML b) & (unit -> ML unit))

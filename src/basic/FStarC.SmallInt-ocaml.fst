@@ -87,3 +87,9 @@ let array_length _ = admit ()
 
 [@@custard_extern "Array.unsafe_get"]
 let array_index _ _ = admit ()
+
+[@@custard_extern "Z.compare"]
+let int_compare _ _ = admit ()
+
+[@@custard_extern "String.compare"]
+let string_compare _ _ = admit ()
