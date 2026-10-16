@@ -337,38 +337,86 @@ let getInteger (tm : Syntax.term) : ML _ =
     | Tm_constant (Const_int (n, _)) -> n
     | _ -> failwith "Expected an Integer term"
 
-(* We only want to encode a term as a bitvector term (not an uninterpreted function)
-   if there is a concrete/constant size argument given*)
+let is_lid_in (fv:S.fv) (lids:list Ident.lident) : ML bool =
+  List.existsb (S.fv_eq_lid fv) lids
+
+let binary_bv_primitives =
+  [Const.bv_and_lid;
+   Const.bv_xor_lid;
+   Const.bv_or_lid;
+   Const.bv_add_lid;
+   Const.bv_sub_lid;
+   Const.bv_shift_left_lid;
+   Const.bv_shift_right_lid;
+   Const.bv_udiv_lid;
+   Const.bv_mod_lid;
+   Const.bv_mul_lid;
+   Const.bv_shift_left'_lid;
+   Const.bv_shift_right'_lid;
+   Const.bv_rotate_left_lid;
+   Const.bv_rotate_right_lid;
+   Const.bv_rotate_left'_lid;
+   Const.bv_rotate_right'_lid;
+   Const.bv_udiv_unsafe_lid;
+   Const.bv_mod_unsafe_lid;
+   Const.bv_mul'_lid;
+   Const.bv_ult_lid;
+   Const.bv_ule_lid;
+   Const.bv_ugt_lid;
+   Const.bv_uge_lid;
+   Const.bv_slt_lid;
+   Const.bv_sle_lid;
+   Const.bv_sgt_lid;
+   Const.bv_sge_lid;
+   Const.bv_nand_lid;
+   Const.bv_nor_lid;
+   Const.bv_xnor_lid;
+   Const.bv_comp_lid;
+   Const.bv_sdiv_lid;
+   Const.bv_srem_lid;
+   Const.bv_smod_lid;
+   Const.bv_ashr_lid;
+   Const.bv_uaddo_lid;
+   Const.bv_saddo_lid;
+   Const.bv_umulo_lid;
+   Const.bv_smulo_lid;
+   Const.bv_usubo_lid;
+   Const.bv_ssubo_lid;
+   Const.bv_sdivo_lid]
+
+let indexed_bv_primitives =
+  [Const.bv_uext_lid;
+   Const.bv_sext_lid;
+   Const.bv_repeat_lid]
+
+let unary_bv_primitives =
+  [Const.nat_to_bv_lid;
+   Const.bv_not_lid;
+   Const.bv_neg_lid;
+   Const.bv_nego_lid;
+   Const.bv_to_nat_lid;
+   Const.sbv_to_int_lid]
+
+(* SMT bitvector widths, indices, and bounds must be concrete integers. *)
 let is_BitVector_primitive head args : ML bool =
     match head.n, args with
-    | Tm_fvar fv, [(sz_arg, _);_;_] ->
-      (S.fv_eq_lid fv Const.bv_and_lid
-      || S.fv_eq_lid fv Const.bv_xor_lid
-      || S.fv_eq_lid fv Const.bv_or_lid
-      || S.fv_eq_lid fv Const.bv_add_lid
-      || S.fv_eq_lid fv Const.bv_sub_lid
-      || S.fv_eq_lid fv Const.bv_shift_left_lid
-      || S.fv_eq_lid fv Const.bv_shift_right_lid
-      || S.fv_eq_lid fv Const.bv_udiv_lid
-      || S.fv_eq_lid fv Const.bv_mod_lid
-      || S.fv_eq_lid fv Const.bv_mul_lid
-      || S.fv_eq_lid fv Const.bv_shift_left'_lid
-      || S.fv_eq_lid fv Const.bv_shift_right'_lid
-      || S.fv_eq_lid fv Const.bv_rotate_left_lid
-      || S.fv_eq_lid fv Const.bv_rotate_right_lid
-      || S.fv_eq_lid fv Const.bv_rotate_left'_lid
-      || S.fv_eq_lid fv Const.bv_rotate_right'_lid
-      || S.fv_eq_lid fv Const.bv_udiv_unsafe_lid
-      || S.fv_eq_lid fv Const.bv_mod_unsafe_lid
-      || S.fv_eq_lid fv Const.bv_mul'_lid
-      || S.fv_eq_lid fv Const.bv_ult_lid
-      || S.fv_eq_lid fv Const.bv_uext_lid) &&
-      (isInteger sz_arg)
+    | Tm_fvar fv, [(sz_arg, _); (second_arg, _); (i_arg, _); (j_arg, _)] ->
+      (S.fv_eq_lid fv Const.bv_extract_lid &&
+      isInteger sz_arg &&
+      isInteger i_arg &&
+      isInteger j_arg)
+      ||
+      (S.fv_eq_lid fv Const.bv_concat_lid &&
+       isInteger sz_arg &&
+       isInteger second_arg)
+    | Tm_fvar fv, [(sz_arg, _); (index_arg, _); _] ->
+      (is_lid_in fv binary_bv_primitives && isInteger sz_arg)
+      ||
+      (is_lid_in fv indexed_bv_primitives &&
+       isInteger sz_arg &&
+       isInteger index_arg)
     | Tm_fvar fv, [(sz_arg, _); _] ->
-        (S.fv_eq_lid fv Const.nat_to_bv_lid
-         || S.fv_eq_lid fv Const.bv_not_lid
-         || S.fv_eq_lid fv Const.bv_to_nat_lid) &&
-        (isInteger sz_arg)
+        is_lid_in fv unary_bv_primitives && isInteger sz_arg
 
     | _ -> false
 
@@ -538,28 +586,36 @@ and encode_arith_term env head args_e : ML _ =
       in
       decls@mk_decls "" sz_key (t_decls@[typing_inversion]) []
     in
-    (* we need to treat the size argument for zero_extend specially*)
-    let arg_tms, ext_sz =
+    (* Widths, indexed arguments, and extract bounds are consumed as constants
+       rather than encoded as terms. *)
+    let arg_tms, result_sz, other_input_sz, indexed_arg, extract_bounds =
         match head.n, args_e with
         | Tm_fvar fv, [_;(sz_arg, _);_] when
-            (S.fv_eq_lid fv Const.bv_uext_lid &&
-                (isInteger sz_arg)) ->
-                (List.tail (List.tail args_e), Some (getInteger sz_arg))
-        | Tm_fvar fv, [_;(sz_arg, _);_] when
-            (S.fv_eq_lid fv Const.bv_uext_lid) ->
-            (*fail if extension size is not a constant*)
-            failwith (FStarC.Format.fmt1 "Not a constant bitvector extend size: %s"
-                            (show sz_arg))
-        | _  -> (List.tail args_e, None)
+            (is_lid_in fv indexed_bv_primitives &&
+             isInteger sz_arg) ->
+                let index = getInteger sz_arg in
+                let result_sz =
+                  if S.fv_eq_lid fv Const.bv_repeat_lid then sz * index else sz + index
+                in
+                (List.tail (List.tail args_e), result_sz, None, Some index, None)
+        | Tm_fvar fv, [_; arg; (i_arg, _); (j_arg, _)] when
+            S.fv_eq_lid fv Const.bv_extract_lid ->
+            let i, j = getInteger i_arg, getInteger j_arg in
+            ([arg], i - j + 1, None, None, Some (i, j))
+        | Tm_fvar fv, [_;(other_sz, _);a;b] when
+            S.fv_eq_lid fv Const.bv_concat_lid ->
+            let other_sz = getInteger other_sz in
+            ([a;b], sz + other_sz, Some other_sz, None, None)
+        | Tm_fvar fv, _ when S.fv_eq_lid fv Const.bv_comp_lid ->
+            (List.tail args_e, 1, None, None, None)
+        | _  -> (List.tail args_e, sz, None, None, None)
     in
-
-    (* The result of bv_uext has the extended size, so its boxing functions
-       must be declared too. *)
+    (* Some operations change the bitvector width, so their result boxing
+       functions must be declared too. *)
     let sz_decls =
       bv_size_decls sz
-      @ (match ext_sz with
-         | Some ext -> bv_size_decls (sz + ext)
-         | None -> [])
+      @ (match other_input_sz with | Some n -> bv_size_decls n | None -> [])
+      @ (if result_sz = sz then [] else bv_size_decls result_sz)
     in
     let arg_tms, decls = encode_args arg_tms env in
     let head_fv =
@@ -577,6 +633,11 @@ and encode_arith_term env head args_e : ML _ =
         Term.unboxBitVec sz (List.hd arg_tms),
         Term.unboxBitVec sz (List.hd (List.tl arg_tms))
     in
+    let binary_mixed arg_tms =
+        Term.unboxBitVec sz (List.hd arg_tms),
+        Term.unboxBitVec (match other_input_sz with | Some n -> n | None -> failwith "impossible")
+          (List.hd (List.tl arg_tms))
+    in
     let binary_arith arg_tms =
         Term.unboxBitVec sz (List.hd arg_tms),
         Term.unboxInt (List.hd (List.tl arg_tms))
@@ -588,6 +649,10 @@ and encode_arith_term env head args_e : ML _ =
     let bv_and  = mk_bv Util.mkBvAnd binary (Term.boxBitVec sz) in
     let bv_xor  = mk_bv Util.mkBvXor binary (Term.boxBitVec sz) in
     let bv_or   = mk_bv Util.mkBvOr binary (Term.boxBitVec sz) in
+    let bv_nand = mk_bv Util.mkBvNand binary (Term.boxBitVec sz) in
+    let bv_nor  = mk_bv Util.mkBvNor binary (Term.boxBitVec sz) in
+    let bv_xnor = mk_bv Util.mkBvXnor binary (Term.boxBitVec sz) in
+    let bv_comp = mk_bv Util.mkBvComp binary (Term.boxBitVec 1) in
     let bv_add  = mk_bv Util.mkBvAdd binary (Term.boxBitVec sz) in
     let bv_sub  = mk_bv Util.mkBvSub binary (Term.boxBitVec sz) in
     let bv_shl  = mk_bv (Util.mkBvShl sz) binary_arith (Term.boxBitVec sz) in
@@ -608,16 +673,50 @@ and encode_arith_term env head args_e : ML _ =
     let bv_mul' = mk_bv (Util.mkBvMul' sz) binary (Term.boxBitVec sz) in
 
     let bv_ult  = mk_bv Util.mkBvUlt binary Term.boxBool in
-    let bv_uext arg_tms =
-           mk_bv (Util.mkBvUext (match ext_sz with | Some x -> x | None -> failwith "impossible")) unary
-                         (Term.boxBitVec (sz +  (match ext_sz with | Some x -> x | None -> failwith "impossible"))) arg_tms in
+    let bv_ule  = mk_bv Util.mkBvUle binary Term.boxBool in
+    let bv_ugt  = mk_bv Util.mkBvUgt binary Term.boxBool in
+    let bv_uge  = mk_bv Util.mkBvUge binary Term.boxBool in
+    let bv_slt  = mk_bv Util.mkBvSlt binary Term.boxBool in
+    let bv_sle  = mk_bv Util.mkBvSle binary Term.boxBool in
+    let bv_sgt  = mk_bv Util.mkBvSgt binary Term.boxBool in
+    let bv_sge  = mk_bv Util.mkBvSge binary Term.boxBool in
+    let bv_sdiv = mk_bv Util.mkBvSdiv binary (Term.boxBitVec sz) in
+    let bv_srem = mk_bv Util.mkBvSrem binary (Term.boxBitVec sz) in
+    let bv_smod = mk_bv Util.mkBvSmod binary (Term.boxBitVec sz) in
+    let bv_ashr = mk_bv Util.mkBvAshr binary (Term.boxBitVec sz) in
+    let bv_nego = mk_bv Util.mkBvNego unary Term.boxBool in
+    let bv_uaddo = mk_bv Util.mkBvUaddo binary Term.boxBool in
+    let bv_saddo = mk_bv Util.mkBvSaddo binary Term.boxBool in
+    let bv_umulo = mk_bv Util.mkBvUmulo binary Term.boxBool in
+    let bv_smulo = mk_bv Util.mkBvSmulo binary Term.boxBool in
+    let bv_usubo = mk_bv Util.mkBvUsubo binary Term.boxBool in
+    let bv_ssubo = mk_bv Util.mkBvSsubo binary Term.boxBool in
+    let bv_sdivo = mk_bv Util.mkBvSdivo binary Term.boxBool in
+    let bv_concat = mk_bv Util.mkBvConcat binary_mixed (Term.boxBitVec result_sz) in
+    let indexed_unary op arg_tms =
+      let index = match indexed_arg with | Some x -> x | None -> failwith "impossible" in
+      mk_bv (op index) unary (Term.boxBitVec result_sz) arg_tms
+    in
+    let bv_repeat = indexed_unary Util.mkBvRepeat in
+    let bv_uext = indexed_unary Util.mkBvUext in
+    let bv_sext = indexed_unary Util.mkBvSext in
+    let bv_extract arg_tms =
+      let i, j = Some?.v extract_bounds in
+      mk_bv (Util.mkBvExtract i j) unary (Term.boxBitVec result_sz) arg_tms
+    in
     let bv_not  = mk_bv Util.mkBvNot unary (Term.boxBitVec sz) in
+    let bv_neg  = mk_bv Util.mkBvNeg unary (Term.boxBitVec sz) in
     let to_int  = mk_bv Util.mkBvToNat unary Term.boxInt in
+    let sbv_to_int = mk_bv Util.mkSBvToInt unary Term.boxInt in
     let bv_to   = mk_bv (Util.mkNatToBv sz) unary_arith (Term.boxBitVec sz) in
     let ops : list (Ident.lident & (list term -> ML term)) =
         [(Const.bv_and_lid, bv_and);
          (Const.bv_xor_lid, bv_xor);
          (Const.bv_or_lid, bv_or);
+         (Const.bv_nand_lid, bv_nand);
+         (Const.bv_nor_lid, bv_nor);
+         (Const.bv_xnor_lid, bv_xnor);
+         (Const.bv_comp_lid, bv_comp);
          (Const.bv_add_lid, bv_add);
          (Const.bv_sub_lid, bv_sub);
          (Const.bv_shift_left_lid, bv_shl);
@@ -635,9 +734,34 @@ and encode_arith_term env head args_e : ML _ =
          (Const.bv_mod_unsafe_lid, bv_mod_unsafe);
          (Const.bv_mul'_lid, bv_mul');
          (Const.bv_ult_lid, bv_ult);
+         (Const.bv_ule_lid, bv_ule);
+         (Const.bv_ugt_lid, bv_ugt);
+         (Const.bv_uge_lid, bv_uge);
+         (Const.bv_slt_lid, bv_slt);
+         (Const.bv_sle_lid, bv_sle);
+         (Const.bv_sgt_lid, bv_sgt);
+         (Const.bv_sge_lid, bv_sge);
+         (Const.bv_sdiv_lid, bv_sdiv);
+         (Const.bv_srem_lid, bv_srem);
+         (Const.bv_smod_lid, bv_smod);
+         (Const.bv_ashr_lid, bv_ashr);
+         (Const.bv_nego_lid, bv_nego);
+         (Const.bv_uaddo_lid, bv_uaddo);
+         (Const.bv_saddo_lid, bv_saddo);
+         (Const.bv_umulo_lid, bv_umulo);
+         (Const.bv_smulo_lid, bv_smulo);
+         (Const.bv_usubo_lid, bv_usubo);
+         (Const.bv_ssubo_lid, bv_ssubo);
+         (Const.bv_sdivo_lid, bv_sdivo);
+         (Const.bv_concat_lid, bv_concat);
+         (Const.bv_repeat_lid, bv_repeat);
          (Const.bv_not_lid, bv_not);
+         (Const.bv_neg_lid, bv_neg);
          (Const.bv_uext_lid, bv_uext);
+         (Const.bv_sext_lid, bv_sext);
+         (Const.bv_extract_lid, bv_extract);
          (Const.bv_to_nat_lid, to_int);
+         (Const.sbv_to_int_lid, sbv_to_int);
          (Const.nat_to_bv_lid, bv_to)]
     in
     let _, op =
