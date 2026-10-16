@@ -79,13 +79,12 @@ let fmt (fmt:string) (args:string list) =
   if BatList.length frags <> BatList.length args + 1 then
     failwith ("Not enough arguments to format string " ^fmt^ " : expected " ^ (Stdlib.string_of_int (BatList.length frags)) ^ " got [" ^ (BatString.concat ", " args) ^ "] frags are [" ^ (BatString.concat ", " frags) ^ "]")
   else
-    let open FStarC_StringBuffer in
-    let sbldr = create (Z.of_int 80) in
-    ignore (add (List.hd frags) sbldr);
+    let sbldr = Buffer.create 80 in
+    Buffer.add_string sbldr (List.hd frags);
     BatList.iter2
-        (fun frag arg -> sbldr |> add arg |> add frag |> ignore)
+        (fun frag arg -> Buffer.add_string sbldr arg; Buffer.add_string sbldr frag)
         (List.tl frags) args;
-    contents sbldr
+    Buffer.contents sbldr
 
 let fmt1 f a = fmt f [a]
 let fmt2 f a b = fmt f [a;b]
