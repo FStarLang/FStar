@@ -978,7 +978,8 @@ let sift_down_swap_heap_down_at #t {| total_order t |}
                     (parent > 0 ==> Seq.index s (parent_idx parent) <=? Seq.index s child) /\
                     i <> child)
           (ensures heap_down_at (swap_seq s parent child) i)
-  = let s' = swap_seq s parent child in
+  = assert (child > 0);
+    let s' = swap_seq s parent child in
     let v = Seq.index s child in
     let u = Seq.index s parent in
     swap_length s parent child;
