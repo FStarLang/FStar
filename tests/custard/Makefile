@@ -505,6 +505,12 @@ CNOGREP_KindStar = "void *"
 # checks its own answers, so .dcran is the real assertion; before the fix
 # this program returned 1 with no compiler diagnostic at all.
 C_TESTS += ShiftLit
+
+# Two static definitions that C spells the same way: the second is renamed to
+# the first free suffix, which skips a name the program already uses.
+C_TESTS += NameClash
+CGREP_NameClash = "NameClash_step_(uint32_t x)" "NameClash_step__1(uint32_t x)" \
+                  "NameClash_step__2(uint32_t x)"
 CGREP_ShiftLit = "((uint64_t)40ULL) << n" "return (40 + n);"
 CNOGREP_ShiftLit = "return (40 << n);"
 
@@ -2931,7 +2937,8 @@ NOEGREP_DevGShare += "please report"
 # declared foreign -- which no C compiler and no linker objects to.
 REJECT_TESTS += ExtOwn
 CODE_ExtOwn := 374
-FLAGS_ExtOwn := --codegen C --custard_entry ExtOwn.run
+# [helper] is public: a static one would just be renamed (NameClash).
+FLAGS_ExtOwn := --codegen C --custard_entry ExtOwn.run --custard_entry ExtOwn.helper
 EGREP_ExtOwn += "both named \`ExtOwn_helper'"
 EGREP_ExtOwn += "custard_extern"
 
