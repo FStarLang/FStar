@@ -1091,12 +1091,19 @@ and repeat_unit (n:int) : ML (list unit) =
    spells the first element of an array. *)
 and krml_index (env:kenv) (b:expr) (i:expr) : ML K.expr =
   match b.ty, i.e with
-  | TRef (_, _), EConst (CInt (0, _, w)) ->
-    (* karamel only accepts [UInt32] and [SizeT] indices. *)
-    K.EZeroForDeref (match w with
-                     | Some (Unsigned, WSizet) -> K.SizeT
-                     | _ -> K.UInt32)
+  | TRef (_, _), EConst (CInt (0, _, w)) -> zero_for_deref w
+  (* A plugin rule asks for the marker on a buffer with the bare name
+     [_zero_for_deref], typed at the index's own width. *)
+  | _, EQual ({ ns = []; id = "_zero_for_deref" }, []) ->
+    zero_for_deref (match i.ty with TInt sw -> Some sw | _ -> None)
   | _ -> krml_expr env i
+
+and zero_for_deref (w : option (signedness & iwidth)) : ML K.expr =
+  (* karamel only accepts [UInt32] and [SizeT] indices; a [size_t] narrowed
+     to [uint32_t] (section 95) is the former. *)
+  K.EZeroForDeref (match w with
+                   | Some (Unsigned, WSizet) when not (Options.custard_sizet_32 ()) -> K.SizeT
+                   | _ -> K.UInt32)
 
 (* -------------------------------------------------------------------- *)
 (* Declarations                                                         *)
