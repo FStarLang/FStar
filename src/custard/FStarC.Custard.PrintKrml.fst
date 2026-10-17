@@ -911,9 +911,9 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
     K.EBufCreate ((match l with LStack -> K.Stack | LHeap -> K.ManuallyManaged),
                   krml_expr env init, krml_expr env len)
   | EOp ({ po_op = BufRead }, [b; i]) ->
-    K.EBufRead (krml_expr env b, krml_expr env i)
+    K.EBufRead (krml_expr env b, krml_index env b i)
   | EOp ({ po_op = BufWrite }, [b; i; v]) ->
-    K.EBufWrite (krml_expr env b, krml_expr env i, krml_expr env v)
+    K.EBufWrite (krml_expr env b, krml_index env b i, krml_expr env v)
   | EOp ({ po_op = BufSub }, [b; i]) ->
     K.EBufSub (krml_expr env b, krml_expr env i)
   | EOp ({ po_op = BufFree }, [b]) -> K.EBufFree (krml_expr env b)
@@ -1066,6 +1066,18 @@ and string_match (env:kenv) (scrut:expr) (brs:list branch) : ML K.expr =
                      chain rest)
     | _ -> krml_reject "a string pattern" in
   K.ELet (b, krml_expr env scrut, chain brs)
+
+(* The index of a read or write.  Karamel prints [b[0]] as written and only
+   [b[_zero_for_deref]] as [*b], so an access through a reference uses the
+   marker, as [FStarC.Extraction.Krml] does for [!r].  A plugin rule can ask
+   for it on a buffer with the bare name [_zero_for_deref]. *)
+and krml_index (env:kenv) (b:expr) (i:expr) : ML K.expr =
+  let zero_for_deref = K.EQualified (["C"], "_zero_for_deref") in
+  if Options.custard_backend () <> "KrmlC" then krml_expr env i else
+  match b.ty, i.e with
+  | TRef _, EConst (CInt (0, _, _)) -> zero_for_deref
+  | _, EQual ({ ns = []; id = "_zero_for_deref" }, []) -> zero_for_deref
+  | _ -> krml_expr env i
 
 and krml_branch (env:kenv) (br:branch) : ML K.branch =
   let p, g, body = br in
