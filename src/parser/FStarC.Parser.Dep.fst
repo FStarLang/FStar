@@ -168,6 +168,17 @@ let check_and_strip_suffix (f: string): ML (option string) =
   | _ ->
       None
 
+(* Compilation targets.  A file [A.B-s2.qemu-c.fst] belongs to module [A.B]
+   and has the tag [s2.qemu-c]; [A.B.fst] is a common file.  See
+   [FStarC.Target] and doc/ref/targets.md. *)
+let split_target = FStarC.Target.split_target
+
+(* The key of module [key] in the file system map, in context [tgt]. *)
+let key_for_target (key:string) (tgt:option string) : string =
+  match tgt with
+  | None -> key
+  | Some t -> key ^ "-" ^ t
+
 (* In public interface *)
 let is_interface (f: string): ML bool =
   String.get f (String.length f - 1) = 'i'
@@ -226,7 +237,8 @@ let module_name_cache : HashTable.t string (option string) = HashTable.create 10
 let module_name_cache_epoch : ref int = mk_ref (-1)
 
 (* In public interface *)
-let maybe_module_name_of_file f =
+(* The file's stem: its module name followed by its target, if any. *)
+let maybe_module_key_of_file f =
   let epoch = Find.epoch () in
   if !module_name_cache_epoch <> epoch then (
     HashTable.clear module_name_cache;
@@ -243,8 +255,20 @@ let maybe_module_name_of_file f =
     HashTable.add module_name_cache f res;
     res
 
-let module_name_of_file f =
-    match maybe_module_name_of_file f with
+(* In public interface *)
+let maybe_module_name_of_file f =
+  match maybe_module_key_of_file f with
+  | Some stem -> Some (fst (split_target stem))
+  | None -> None
+
+(* In public interface *)
+let target_of_file f =
+  match maybe_module_key_of_file f with
+  | Some stem -> snd (split_target stem)
+  | None -> None
+
+let module_stem_of_file f =
+    match maybe_module_key_of_file f with
     | Some longname ->
       longname
     | None ->
@@ -262,7 +286,15 @@ let module_name_of_file f =
       )
 
 (* In public interface *)
+let module_name_of_file f = fst (split_target (module_stem_of_file f))
+
+(* In public interface *)
 let lowercase_module_name f = String.lowercase (module_name_of_file f)
+
+(* In public interface *)
+let module_key_of_file f =
+  let m, t = split_target (module_stem_of_file f) in
+  key_for_target (String.lowercase m) t
 
 let namespace_of_module f =
     let lid = Ident.lid_of_path (Ident.path_of_text f) Range.dummyRange in
@@ -377,13 +409,137 @@ let module_name_of_dep = function
     | UseImplementation m
     | FriendImplementation m -> m
 
-let resolve_module_name (file_system_map:files_for_module_name) (key:module_name)
-    : ML (option module_name)
-    = match HashTable.try_find file_system_map key with
-      | Some (Some fn, _)
-      | Some (_, Some fn) ->
-        Some (lowercase_module_name fn)
-      | _ -> None
+(* The files of each module, one entry per tag, as found by [build_map].
+   Keys are lowercase module names without tags. *)
+type variant = {
+  v_tag  : Target.tag;
+  v_intf : option file_name;
+  v_impl : option file_name;
+}
+let module_variants : ref (HashTable.t string (list variant)) = mk_ref (HashTable.create 0)
+let variants_of (m:string) : ML (list variant) =
+  match HashTable.try_find !module_variants m with
+  | Some vs -> vs
+  | None -> []
+
+type file_kind = | KIntf | KImpl
+let file_of_kind (k:file_kind) (v:variant) : option file_name =
+  match k with
+  | KIntf -> v.v_intf
+  | KImpl -> v.v_impl
+let string_of_kind (k:file_kind) : string =
+  match k with
+  | KIntf -> "interface"
+  | KImpl -> "implementation"
+
+(* The most specific file of kind [k] that applies in context [ctx], or the
+   maximal applicable ones if none of them is more specific than the others. *)
+let select_variant (vs:list variant) (k:file_kind) (ctx:Target.tag)
+  : ML (either (list variant) (option variant)) =
+  let app = vs |> List.filter (fun v -> Some? (file_of_kind k v) && Target.implies ctx v.v_tag) in
+  match app |> List.filter (fun v -> List.for_all (fun w -> Target.implies v.v_tag w.v_tag) app) with
+  | v :: _ -> Inr (Some v)
+  | [] ->
+    if Nil? app then Inr None
+    else Inl (app |> List.filter (fun v ->
+           not (List.existsb (fun w -> w.v_tag <> v.v_tag && Target.implies w.v_tag v.v_tag) app)))
+
+(* The name of module [m] as written in its files. *)
+let display_name (m:string) : ML string =
+  match variants_of m with
+  | { v_intf = Some fn } :: _
+  | { v_impl = Some fn } :: _ -> module_name_of_file fn
+  | _ -> m
+
+let fail_at (#a:Type) (rng:option Range.t) (msg:list Pprint.document) : ML a =
+  match rng with
+  | Some r -> raise_error r Errors.Fatal_ModuleOrFileNotFound msg
+  | None -> raise_error0 Errors.Fatal_ModuleOrFileNotFound msg
+
+let select_or_fail (rng:option Range.t) (m:string) (k:file_kind) (ctx:Target.tag)
+  : ML (option variant) =
+  match select_variant (variants_of m) k ctx with
+  | Inr r -> r
+  | Inl cands ->
+    fail_at rng [
+      text (Format.fmt3 "The %s of module %s is ambiguous in target %s." (string_of_kind k) (display_name m) (Target.show_tag ctx));
+      text (Format.fmt1 "Candidates: %s." (String.concat ", " (List.map (fun v -> Option.must (file_of_kind k v)) cands)));
+      text "Add a file whose tag combines theirs.";
+    ]
+
+(* A reference from context [ctx] to module [m] resolved to [sel].  Fail if a
+   more specific file could replace [sel] in some context extending [ctx]:
+   the reference would then be checked against a different file than the one
+   used for extraction. *)
+let check_stable (rng:option Range.t) (from:string) (m:string) (k:file_kind)
+                 (ctx:Target.tag) (sel:option variant) : ML unit =
+  let base (v:variant) = Filepath.basename (Option.must (file_of_kind k v)) in
+  let where =
+    match ctx with
+    | None -> "a common file"
+    | Some t -> "target " ^ t
+  in
+  variants_of m |> List.iter (fun g ->
+    let more_specific =
+      match sel with
+      | Some v -> g.v_tag <> v.v_tag && Target.implies g.v_tag v.v_tag
+      | None -> true
+    in
+    if Some? (file_of_kind k g) && more_specific && Target.compatible ctx g.v_tag then
+      fail_at rng [
+        (match sel with
+         | Some v ->
+           text (Format.fmt5 "%s (%s) uses the %s of module %s from %s, which is not fixed by its target."
+                   (Filepath.basename from) where (string_of_kind k) (display_name m) (base v))
+         | None ->
+           text (Format.fmt4 "%s (%s) uses the %s of module %s, but none applies to it."
+                   (Filepath.basename from) where (string_of_kind k) (display_name m)));
+        text (Format.fmt2 "%s would apply in target %s." (base g) (Target.show_tag (Target.join ctx g.v_tag)));
+        text (if k = KImpl
+              then "Depend on an interface that is fixed by the target instead, or give the file a more specific tag."
+              else "Give the file a more specific tag.");
+      ])
+
+(* Find the module (lowercase, without tag) that [key] names in [map], as
+   seen from context [ctx]. *)
+let module_of_key (map:files_for_module_name) (ctx:Target.tag) (key:string) : ML (option string) =
+  let probe (k:string) : ML (option string) =
+    match HashTable.try_find map k with
+    | Some (Some fn, _)
+    | Some (_, Some fn) -> Some (lowercase_module_name fn)
+    | _ -> None
+  in
+  let rec go (ts:list Target.tag) : ML (option string) =
+    match ts with
+    | [] -> None
+    | t :: ts ->
+      (match probe (key_for_target key t) with
+       | Some m -> Some m
+       | None -> go ts)
+  in
+  (* [applicable_tags] ends with the empty tag, so the plain key is tried
+     first separately: it is where opened namespaces and aliases put a
+     module's (short) name. *)
+  match probe key with
+  | Some m -> Some m
+  | None -> go (Target.applicable_tags ctx)
+
+(* The key of module [m] in context [ctx], adding the entry for this context
+   to [fs_map] if needed.  Common files are found under [m]. *)
+let key_in_context (fs_map:files_for_module_name) (rng:option Range.t) (m:string) (ctx:Target.tag)
+  : ML (option string) =
+  let i = select_or_fail rng m KIntf ctx in
+  let f = select_or_fail rng m KImpl ctx in
+  let tag_of (v:option variant) : Target.tag = match v with Some v -> v.v_tag | None -> None in
+  match i, f with
+  | None, None -> None
+  | _ ->
+    if None? (tag_of i) && None? (tag_of f) then Some m
+    else begin
+      let k = key_for_target m ctx in
+      HashTable.add fs_map k (Option.bind i (fun v -> v.v_intf), Option.bind f (fun v -> v.v_impl));
+      Some k
+    end
 
 let interface_of_internal (file_system_map:files_for_module_name) (key:module_name)
 : ML (option file_name)
@@ -412,6 +568,9 @@ let has_implementation (file_system_map:files_for_module_name) (key:module_name)
 let cache_file_name =
     let checked_file_and_exists_flag fn =
       let mname = fn |> module_name_of_file in
+      (* The checked file of a target-specific file keeps its target, e.g.
+         [A-ocaml.fst] -> [A-ocaml.fst.checked]. *)
+      let stem = fn |> module_stem_of_file in
       (* The checked file is named after the module's full (possibly namespaced)
          name rather than the flat basename of [fn]. For a flat source file this
          is a no-op (e.g. [FStar.List.Tot.fst] -> [FStar.List.Tot.fst.checked]),
@@ -436,7 +595,7 @@ let cache_file_name =
                     // already have raised Fatal_NotValidFStarFile if [bn]
                     // had no valid F* extension.
                     failwith (Format.fmt1 "Impossible: cache_file_name: file without a valid F* extension: %s" fn) in
-        let cache_bn = mname ^ ext ^ ".checked" in
+        let cache_bn = stem ^ ext ^ ".checked" in
         (* NB: guard on [bn = fn] instead of blindly joining, to avoid turning a
            bare [B.fst] into [./B.fst.checked], which would leak into make
            targets. *)
@@ -502,7 +661,7 @@ let file_of_dep_aux
     let cmd_line_has_impl key =
         all_cmd_line_files
         |> BU.for_some (fun fn ->
-           is_implementation fn && key = lowercase_module_name fn)
+           is_implementation fn && key = module_key_of_file fn)
     in
 
     let maybe_use_cache_of f = if use_checked_file then cache_file_name f else f in
@@ -611,7 +770,9 @@ let module_candidate_of_file (ns_prefix:list string) (path:string) (filename:str
   : ML (list (string & string)) =
   match check_and_strip_suffix filename with
   | None -> []
-  | Some modname -> [(String.concat "." (ns_prefix @ [modname]), path)]
+  | Some modname ->
+    let m, t = split_target modname in
+    [(String.concat "." (ns_prefix @ [key_for_target m t]), path)]
 
 (* A directory can only contribute module names if its name can appear as a
    namespace component, i.e. if it is a valid F* identifier: it must start with
@@ -738,6 +899,7 @@ let build_map fs_map valid_ns_map (filenames: list string): ML unit =
           HashTable.add fs_map key (None, Some full_path)
   in
   let add_ns_entry key full_path =
+    let key = fst (split_target key) in
     match namespace_of_module key with
     | None -> ()
     | Some ns ->
@@ -756,8 +918,33 @@ let build_map fs_map valid_ns_map (filenames: list string): ML unit =
   ) (build_inclusion_candidates_list ());
   (* All the files we've been given on the command-line must be valid FStar files. *)
   List.iter (fun f ->
-    add_entry (lowercase_module_name f) f
-  ) filenames
+    add_entry (module_key_of_file f) f
+  ) filenames;
+  (* Index the files of each module by tag, then complete the entry of each
+     tag [t] of a module [m] (under [m-t]) with the files selected in context
+     [t]: e.g. [a-ocaml] gets [A.fsti] and [A-ocaml.fst].  Contexts that are
+     not the tag of any file get their entries in [key_in_context]. *)
+  let idx : HashTable.t string (list variant) = HashTable.create 100 in
+  HashTable.iter fs_map (fun key (intf, impl) ->
+    let m, t = split_target key in
+    let cur = match HashTable.try_find idx m with Some l -> l | None -> [] in
+    HashTable.add idx m ({ v_tag = t; v_intf = intf; v_impl = impl } :: cur));
+  (* Sort by tag, so that error messages do not depend on hashing order. *)
+  HashTable.keys idx |> List.iter (fun m ->
+    let tag_str (v:variant) = match v.v_tag with Some t -> t | None -> "" in
+    HashTable.add idx m (List.sortWith (fun v1 v2 -> String.compare (tag_str v1) (tag_str v2))
+                           (Option.must (HashTable.try_find idx m))));
+  module_variants := idx;
+  HashTable.keys fs_map |> List.iter (fun key ->
+    match split_target key with
+    | _, None -> ()
+    | m, t ->
+      let pick k =
+        match select_variant (variants_of m) k t with
+        | Inr (Some v) -> file_of_kind k v
+        | _ -> None
+      in
+      HashTable.add fs_map key (pick KIntf, pick KImpl))
 
 let is_valid_namespace deps ns =
   let res = Some? (HashTable.try_find deps.valid_namespaces (String.lowercase (Ident.string_of_lid ns))) in
@@ -790,7 +977,7 @@ let namespace_of_lid l =
 
 let check_module_declaration_against_filename (lid: lident) (filename: string): ML unit =
   let k' = string_of_lid lid true in
-  if Option.must (check_and_strip_suffix (Filepath.basename filename)) <> k' then
+  if fst (split_target (Option.must (check_and_strip_suffix (Filepath.basename filename)))) <> k' then
     log_issue lid Errors.Error_ModuleFileNameMismatch [
         Errors.Msg.text (Format.fmt2 "The module declaration \"module %s\" \
           found in file %s does not match its filename." (string_of_lid lid true) filename);
@@ -900,7 +1087,12 @@ let enter_namespace
           text "Rename" ^/^ fquotes (doc_of_string str) ^/^ text "to avoid conflicts.";
        ]
      | _ -> ());
-    HashTable.add working_map e.ne_suffix e.ne_file
+    HashTable.add working_map e.ne_suffix e.ne_file;
+    (* Make a module that only has tagged files findable under its plain
+       short name too; see [module_of_key]. *)
+    (match split_target e.ne_suffix with
+     | plain, Some _ -> HashTable.add working_map plain e.ne_file
+     | _ -> ())
   );
   Cons? entries
 
@@ -957,7 +1149,7 @@ let collect_module_or_decls (filename:string) (m:either modul (list decl)) : ML 
     | Open (lid, _) ->
         add_to_parsing_data (P_open (false, lid))
     | Friend lid ->
-        add_to_parsing_data (P_dep (true, (lowercase_join_longident lid true |> Ident.lid_of_str)))
+        add_to_parsing_data (P_dep (true, Ident.set_lid_range (lowercase_join_longident lid true |> Ident.lid_of_str) (range_of_lid lid)))
     | ModuleAbbrev (ident, lid) ->
         add_to_parsing_data (P_alias (ident, lid))
     | TopLevelLet (_, patterms) ->
@@ -1328,7 +1520,7 @@ let collect_module_or_decls (filename:string) (m:either modul (list decl)) : ML 
   !pd
 
 let maybe_use_interface file_system_map file_name =
-   let module_name = lowercase_module_name file_name in
+   let module_name = module_key_of_file file_name in
     if is_implementation file_name
     && has_interface file_system_map module_name
     then [UseInterface module_name]
@@ -1347,7 +1539,18 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
   let deps     : ref (list dependence) = mk_ref [] in
   let has_inline_for_extraction = mk_ref false in
 
-  let mname = lowercase_module_name filename in
+  let mname = module_key_of_file filename in
+  let tgt = target_of_file filename in
+  let own_module = lowercase_module_name filename in
+  let file_range =
+    let r = Range.set_file_of_range Range.dummyRange filename in
+    Range.set_use_range r (Range.def_range r)
+  in
+  (* An implementation is checked against the interface selected for its own
+     tag, which must then be the one every context using it selects. *)
+  if is_implementation filename then
+    check_stable (Some file_range) filename own_module KIntf tgt
+      (select_or_fail (Some file_range) own_module KIntf tgt);
   let mo_roots =
     if is_interface filename
     && has_implementation original_map mname
@@ -1358,7 +1561,7 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
 
   let auto_open =
     let open_module_ns =
-      (match namespace_of_module mname with
+      (match namespace_of_module (lowercase_module_name filename) with
         | None -> []
         | Some ns -> [ P_implicit_open_module_or_namespace (Open_namespace, ns) ])
     in
@@ -1387,10 +1590,33 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
     else PreferInterface module_name
   in
 
+  (* Resolve [key] (naming a module in [map]) from this file's context,
+     checking that the files it depends on are fixed by its tag: always the
+     interface, and the implementation if it is befriended or stands in for
+     a missing interface. *)
+  let resolve_dep map lid key is_friend : ML (option module_name) =
+    match module_of_key map tgt key with
+    | None -> None
+    | Some m ->
+      let r = range_of_lid lid in
+      let has_range = Range.file_of_range r <> Range.file_of_range Range.dummyRange in
+      let rng = Some (if has_range then r else file_range) in
+      (* In fly-deps mode an interface also carries the friends of its
+         implementation; blame the file the dependence comes from. *)
+      let from = if has_range then Range.file_of_range r else filename in
+      if m <> own_module then begin
+        let i = select_or_fail rng m KIntf tgt in
+        check_stable rng from m KIntf tgt i;
+        if is_friend || None? i then
+          check_stable rng from m KImpl tgt (select_or_fail rng m KImpl tgt)
+      end;
+      key_in_context original_map rng m tgt
+  in
+
   let add_dependence_edge original_or_working_map lid is_friend =
     let key = lowercase_join_longident lid true in
     if !dbg then Format.print1 "Resolving %s ..\n" key;
-    match resolve_module_name original_or_working_map key with
+    match resolve_dep original_or_working_map lid key is_friend with
     | Some module_name ->
       if is_friend
       && fly_deps_enabled()
@@ -1459,16 +1685,16 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
 
   let record_module_alias ident lid =
     let key = String.lowercase (string_of_id ident) in
-    let alias = lowercase_join_longident lid true in
+    let full = lowercase_join_longident lid true in
     // Only fully qualified module aliases are allowed.
-    match HashTable.try_find original_map alias with
-    | Some deps_of_aliased_module ->
-      HashTable.add working_map key deps_of_aliased_module;
-      add_dep (dep_edge (lowercase_join_longident lid true) false);
+    match resolve_dep original_map lid full false with
+    | Some alias ->
+      HashTable.add working_map key (Option.must (HashTable.try_find original_map alias));
+      add_dep (dep_edge alias false);
       true
     | None ->
       log_issue lid Errors.Warning_ModuleOrFileNotFoundWarning
-        (Format.fmt1 "module not found in search path: %s" alias);
+        (Format.fmt1 "module not found in search path: %s" full);
       false
   in
 
@@ -1810,7 +2036,7 @@ let build_dep_graph_for_files
    * lowercased module names this file depends on. *)
   let interfaces_needing_inlining = mk_ref [] in
   let add_interface_for_inlining l =
-    let l = lowercase_module_name l in
+    let l = module_key_of_file l in
     interfaces_needing_inlining := l :: !interfaces_needing_inlining
   in
   (* discover: Do a graph traversal starting from file_name
@@ -1892,14 +2118,14 @@ let collect_deps_of_decl (deps:deps) (filename:string) (ds:list decl)
   let own_interface, own_friends =
     match ds with
     | {d=TopLevelModule _}::_ when is_implementation filename -> (
-      match interface_of_internal deps.file_system_map (lowercase_module_name filename) with
+      match interface_of_internal deps.file_system_map (module_key_of_file filename) with
       | None -> None, []
       | Some iface ->
         let ast, _ = Driver.parse_file filename in
         let friends =
           decls_of_modul ast |> List.collect (fun d ->
             match d.d with
-            | Friend lid -> [P_dep (true, (lowercase_join_longident lid true |> Ident.lid_of_str))]
+            | Friend lid -> [P_dep (true, Ident.set_lid_range (lowercase_join_longident lid true |> Ident.lid_of_str) (range_of_lid lid))]
             | _ -> [])
         in
         Some iface, friends
@@ -2094,7 +2320,7 @@ let collect (all_cmd_line_files: list file_name)
                   (fun impl -> if not (List.contains impl all_command_line_files)
                                then mo_files := impl::!mo_files
                                else ())
-                  (implementation_of_internal file_system_map (lowercase_module_name filename))
+                  (implementation_of_internal file_system_map (module_key_of_file filename))
             else ()
       in
       List.iter (aux []) all_command_line_files;
@@ -2162,7 +2388,7 @@ let topological_order (deps:deps) (normalize : module_name -> ML module_name)
         let ds =
           match deps_try_find deps.dep_graph f with
           | None -> []
-          | Some ({edges=es}) -> es |> List.map (fun d -> norm (module_name_of_dep d)) in
+          | Some ({edges=es}) -> es |> List.map (fun d -> norm (fst (split_target (module_name_of_dep d)))) in
         add (norm m) ds) in
   let order : ref (list module_name) = mk_ref [] in
   let visited = HashTable.create #string 41 in
@@ -2329,7 +2555,7 @@ let print_full (outc : out_channel) (deps:deps) : ML unit =
             let iface_fn, iface_deps =
                 if is_interface file_name
                 then None, None
-                else match interface_of deps (lowercase_module_name file_name) with
+                else match interface_of deps (module_key_of_file file_name) with
                      | None ->
                        None, None
                      | Some iface ->
@@ -2394,12 +2620,17 @@ let print_full (outc : out_channel) (deps:deps) : ML unit =
     all_fsti_files
     |> List.iter
       (fun fsti ->
-         let mn = lowercase_module_name fsti in
+         let mn = module_key_of_file fsti in
          let range_of_file fsti =
            let r = Range.set_file_of_range Range.dummyRange fsti in
            Range.set_use_range r (Range.def_range r)
          in
-         if not (has_implementation deps.file_system_map mn) then
+         (* An interface may be implemented only by files of other tags. *)
+         let has_target_implementation () =
+           variants_of (lowercase_module_name fsti) |> List.existsb (fun v -> Some? v.v_impl)
+         in
+         if not (has_implementation deps.file_system_map mn)
+            && not (has_target_implementation ()) then
            log_issue (range_of_file fsti) Warning_WarnOnUse
              (Format.fmt1 "Interface %s is admitted without an implementation" (module_name_of_file fsti)));
     print_all "ALL_FST_FILES" all_fst_files;
@@ -2516,7 +2747,7 @@ let print_dune (outc : out_channel) (deps:deps) : ML unit =
             let iface_fn, iface_deps =
                 if is_interface file_name
                 then None, None
-                else match interface_of deps (lowercase_module_name file_name) with
+                else match interface_of deps (module_key_of_file file_name) with
                      | None ->
                        None, None
                      | Some iface ->
@@ -2561,7 +2792,7 @@ let print_dune (outc : out_channel) (deps:deps) : ML unit =
                   else base
                 in
                 match check_and_strip_suffix src with
-                | Some mname -> not (Options.should_be_already_cached mname)
+                | Some mname -> not (Options.should_be_already_cached (fst (split_target mname)))
                 | None -> true (* keep non-module deps *)
               )
             in
@@ -2645,15 +2876,28 @@ let print deps =
   | None when Options.dep () = Some "graph" -> do_print_file deps "dep.graph"
   | None -> do_print_stdout deps
 
-(* In public interface *)
-let module_has_interface deps module_name =
-    has_interface deps.file_system_map (String.lowercase (Ident.string_of_lid module_name))
+let ensure_map deps : ML unit =
+  if Nil? (HashTable.keys deps.file_system_map)
+  then build_map deps.file_system_map deps.valid_namespaces deps.cmd_line_files
+
+let selects deps tgt module_name k : ML bool =
+  ensure_map deps;
+  match select_variant (variants_of (String.lowercase (Ident.string_of_lid module_name))) k tgt with
+  | Inr (Some _) -> true
+  | _ -> false
 
 (* In public interface *)
-let deps_has_implementation deps module_name =
-    let m = String.lowercase (Ident.string_of_lid module_name) in
-    RBSet.elems !deps.all_files |> BU.for_some (fun f ->
-        is_implementation f
-        && String.lowercase (module_name_of_file f) = m)
+let module_has_interface deps tgt module_name = selects deps tgt module_name KIntf
+
+(* In public interface *)
+let deps_has_implementation deps tgt module_name = selects deps tgt module_name KImpl
+
+(* In public interface *)
+let module_key_for_target deps tgt m =
+  ensure_map deps;
+  let m = String.lowercase m in
+  match key_in_context deps.file_system_map None m tgt with
+  | Some k -> k
+  | None -> m
 
 let all_files deps = RBSet.elems !deps.all_files

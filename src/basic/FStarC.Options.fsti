@@ -37,6 +37,8 @@ type codegen_t =
   | KrmlC
   | KrmlRust
   | C
+  (* C with reference counting (experimental, doc/ref/cherry.md). *)
+  | Cherry
 
 //let __test_norm_all = mk_ref false
 
@@ -217,6 +219,9 @@ val parse_codegen               : string  -> option codegen_t
 val codegen                     : unit    -> ML (option codegen_t)
 val codegen_krml                : unit    -> ML bool (* KrmlC or KrmlRust *)
 val codegen_name                : unit    -> ML string (* "" if unset *)
+(* The configuration extracted for: --target joined with the language of
+   --codegen, as a canonical tag (see [FStarC.Target]). *)
+val codegen_target              : unit    -> ML (option string)
 
 val custard_entries             : unit    -> ML (list string)
 val custard_entrypoint_files    : unit    -> ML (list string)
@@ -233,6 +238,9 @@ val custard_norm_budget         : unit    -> ML int
 val custard_monomorphize_types  : unit    -> ML bool
 val custard_int128              : unit    -> ML bool
 val custard_sizet_32            : unit    -> ML bool
+(* The direct-to-C backend or its reference-counting extension, Cherry. *)
+val codegen_c                   : unit    -> ML bool
+val custard_cherry              : unit    -> ML bool
 val custard_split               : unit    -> ML bool
 val custard_unit                : unit    -> ML (option string)
 val custard_links               : unit    -> ML (list string)

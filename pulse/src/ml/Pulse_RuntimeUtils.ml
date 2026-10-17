@@ -12,16 +12,95 @@ let ctxt_elt_as_string (s, r) =
 let rec print_context (c:context) : string utac =
   fun ps ->
     String.concat "\n>" (List.map ctxt_elt_as_string c)
-let rec with_context (c:context) (f: unit -> 'a utac) : 'a utac =
+let rec with_context_nested (c:context) (f: unit -> 'a utac) : 'a utac =
   fun ps ->
     match c with
     | [] -> f () ps
     | sr::tl ->
-      with_context tl (fun _ ps ->
+      with_context_nested tl (fun _ ps ->
       FStarC_Errors.with_ctx (ctxt_elt_as_string sr) (fun _ -> f () ps)) ps
+
+(* The rendered strings of a context, memoized per context list cell.
+   Contexts are immutable lists extended by consing (extend_context), and
+   the same (often very long) context is passed to with_context on every
+   call into the F* typechecker, so rendering every element on every call
+   (as with_context_nested does) is quadratic overall. The memo table is
+   keyed on the context (see equal below), with ephemeron keys so
+   that dead contexts can be collected; the cached strings are exactly
+   those computed by ctxt_elt_as_string, which is a pure function. *)
+module CtxMemo = Ephemeron.K1.Make (struct
+  type t = context
+  (* Structural equality (contexts are lists of strings and ranges, i.e.
+     plain data), so that structurally identical contexts rebuilt by
+     re-checking the same code share an entry. [compare] stops at
+     physically equal sublists, so shared tails are not traversed. *)
+  let equal (a:t) (b:t) = a == b || compare a b = 0
+  let hash (c:t) = Hashtbl.hash c
+end)
+let ctx_memo : string list CtxMemo.t = CtxMemo.create 1024
+let rec context_strings (c:context) : string list =
+  match c with
+  | [] -> []
+  | sr::tl ->
+    match CtxMemo.find_opt ctx_memo c with
+    | Some ss -> ss
+    | None ->
+      let ss = ctxt_elt_as_string sr :: context_strings tl in
+      CtxMemo.replace ctx_memo c ss;
+      ss
+
+(* Behaves exactly like with_context_nested, i.e. like nesting one
+   FStarC_Errors.with_ctx per element of c (innermost = head of c), but
+   without allocating a closure and an exception handler and querying
+   --trace_error once per element, and with the strings memoized. In
+   --trace_error mode we just use with_context_nested. *)
+let with_context (c:context) (f: unit -> 'a utac) : 'a utac =
+  fun ps ->
+    match c with
+    | [] -> f () ps
+    | _ when FStarC_Options.trace_error () -> with_context_nested c f ps
+    | _ ->
+      let ec = FStarC_Errors.error_context in
+      let ss = context_strings c in
+      (* the outermost with_ctx pushes the last element of c *)
+      List.iter ec.FStarC_Errors.push (List.rev ss);
+      let r = try Ok (f () ps) with ex -> Error ex in
+      (* Unwind the levels, innermost first, as each with_ctx would:
+         add the context to a Failure (a no-op without --error_contexts),
+         then pop (an exception from pop replaces the pending result). *)
+      let r =
+        List.fold_left (fun r _ ->
+          let r =
+            match r with
+            | Error (Failure msg) ->
+              Error (Failure (msg ^ FStarC_Errors_Msg.rendermsg
+                                      [FStarC_Errors.ctx_doc (ec.FStarC_Errors.get ())]))
+            | r -> r
+          in
+          match ec.FStarC_Errors.pop () with
+          | _ -> r
+          | exception ex -> Error ex)
+        r ss
+      in
+      match r with
+      | Ok x -> x
+      | Error ex -> raise ex
 let with_error_bound (r:FStarC_Range.range) (f: unit -> 'a utac) : 'a utac =
   fun ps ->
     FStarC_Errors.with_error_bound r (fun _ -> f () ps)
+exception Quiet_failure
+let try_quietly (f: unit -> 'a utac) : 'a option utac =
+  fun ps ->
+    let attempt : 'a utac = fun ps ->
+      let errs, rest, r =
+        FStarC_Errors.catch_errors_aux (fun () -> f () ps) in
+      match errs, r with
+      | [], Some x -> FStarC_Errors.add_issues rest; x
+      | _ -> raise Quiet_failure
+    in
+    match FStarC_Tactics_Monad.catch attempt ps with
+    | FStar_Pervasives.Inr x -> Some x
+    | FStar_Pervasives.Inl _ -> None
 let get_error_bound () : FStarC_Range.range option utac =
   fun _ps ->
     FStarC_Effect.op_Bang FStarC_Errors.error_range_bound

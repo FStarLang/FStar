@@ -26,6 +26,11 @@ type context = FStar.Sealed.Inhabited.sealed #(list (string & option range)) []
 val extend_context (tag:string) (r:option range) (ctx:context) : context
 val with_context (c:context) (f:unit -> T.Tac 'a) : T.Tac 'a
 val with_error_bound (r:range) (f:unit -> T.Tac 'a) : T.Tac 'a
+(* Run [f], returning [None] -- with the proof state and unifier rolled back
+   and every issue it raised or logged discarded -- if it fails or reports an
+   error. On success, the warnings it logged are kept. For trying one of
+   several candidates whose failure is expected. *)
+val try_quietly (f:unit -> T.Tac 'a) : T.Tac (option 'a)
 val get_error_bound (_:unit) : T.Tac (option range)
 val with_extv (k v : string) (f:unit -> T.Tac 'a) : T.Tac 'a
 val print_context (c:context) : T.Tac string

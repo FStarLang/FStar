@@ -198,6 +198,7 @@ let defaults = [
   ("custard_entry_module"                      , List []);
   ("custard_c_no_prefix"                       , List []);
   ("custard_main"                              , Unset);
+  ("target"                                    , Unset);
   ("custard_dump_ir"                           , Bool false);
   ("custard_dump_specializations"              , Bool false);
   ("custard_dump_layouts"                     , Bool false);
@@ -327,7 +328,7 @@ let defaults = [
   ("z3rlimit"                                  , Int 5);
   ("z3seed"                                    , Int 0);
   ("z3smtopt"                                  , List []);
-  ("z3version"                                 , String "5.1.0");
+  ("z3version"                                 , String "5.3.0");
 ]
 
 let init () =
@@ -468,6 +469,7 @@ let get_custard_entrypoints     ()      = lookup_opt "custard_entrypoints"      
 let get_custard_entry_module    ()      = lookup_opt "custard_entry_module"     (as_list as_string)
 let get_custard_c_no_prefix     ()      = lookup_opt "custard_c_no_prefix"      (as_list as_string)
 let get_custard_main            ()      = lookup_opt "custard_main"             (as_option as_string)
+let get_target                  ()      = lookup_opt "target"                   (as_option as_string)
 let get_custard_dump_ir         ()      = lookup_opt "custard_dump_ir"          as_bool
 let get_custard_dump_specializations () = lookup_opt "custard_dump_specializations" as_bool
 let get_custard_dump_layouts ()          = lookup_opt "custard_dump_layouts"          as_bool
@@ -838,7 +840,7 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
 
   ( noshort,
     "codegen",
-    EnumStr ["OCaml"; "FSharp"; "KrmlC"; "KrmlRust"; "C"; "Plugin"],
+    EnumStr ["OCaml"; "FSharp"; "KrmlC"; "KrmlRust"; "C"; "Cherry"; "Plugin"],
     text "Extract the program with Custard, to the given language: OCaml \
 source, F# source for .NET, karamel's AST for compilation to C or to Rust, or \
 self-contained C11 source. KrmlC and KrmlRust share a printer but not a \
@@ -847,6 +849,8 @@ for one target cannot be compiled for the other (section 20). FSharp targets \
 net10.0 and, unlike OCaml, compiles machine integers and floats to .NET's \
 own types rather than to a support library, so it accepts the programs the \
 C backend accepts rather than the ones the OCaml backend does (section 122). \
+Cherry is the C backend extended with reference-counted heap cells for \
+recursive inductive types (experimental, see doc/ref/cherry.md). \
 Plugin builds a compiler plugin: OCaml, with the plugin's own modules as \
 entry points, linked against the compiler's unit (section 13.6)");
 
@@ -895,10 +899,20 @@ extract -- a specification, a proof, an [inline_for_extraction] -- is passed \
 over rather than reported, unlike --custard_entry.");
 
   ( noshort,
+    "target",
+    SimpleStr "tag",
+    text "The configuration to extract for, as a '-'-separated list of atoms \
+such as s3.silicon or s2.qemu-debug (see doc/ref/targets.md). The language \
+of --codegen (c, rust, ocaml or fsharp) is added to it. Each module is \
+extracted from its most specific file whose tag the configuration implies.");
+
+  ( noshort,
     "custard_main",
     SimpleStr "long_name",
     text "The definition to invoke when the extracted program starts. It is \
-also a root of the extraction, so --custard_entry need not repeat it. Omit it \
+also a root of the extraction, so --custard_entry need not repeat it. A module \
+name may be given instead, and then the program is that module's top-level \
+effects, as for an OCaml executable. Omit it \
 to extract a program that is meant to be driven by a hand-written wrapper.");
 
   ( noshort,
@@ -1656,7 +1670,7 @@ and reads");
   ( noshort,
     "z3version",
     SimpleStr "version",
-    text "Set the version of Z3 that is to be used. Default: 5.1.0");
+    text "Set the version of Z3 that is to be used. Default: 5.3.0");
 
   ( noshort,
     "__no_positivity",
@@ -2004,6 +2018,7 @@ let desugar_plugin_codegen () : ML unit =
          only the source extension left the module called
          [CanonCommSemiring.fst.checked]. *)
       Filepath.basename f |> drop ".checked" |> drop ".fsti" |> drop ".fst"
+      |> Target.split_target |> fst
     in
     let mods = !file_list_ |> List.map module_name_of_file in
     set_option' ("codegen", String "OCaml");
@@ -2194,6 +2209,7 @@ let parse_codegen =
   | "KrmlC" -> Some KrmlC
   | "KrmlRust" -> Some KrmlRust
   | "C" -> Some C
+  | "Cherry" -> Some Cherry
   (* Desugared to OCaml by [desugar_plugin_codegen]. *)
   | "Plugin" -> Some OCaml
   | _ -> None
@@ -2205,6 +2221,7 @@ let print_codegen =
   | KrmlC -> "KrmlC"
   | KrmlRust -> "KrmlRust"
   | C -> "C"
+  | Cherry -> "Cherry"
 
 let codegen                      () =
     Option.map (fun s -> parse_codegen s |> Some?.v)
@@ -2219,6 +2236,27 @@ let codegen_name                 () =
   match codegen () with
   | Some c -> print_codegen c
   | None -> ""
+
+let codegen_target               () =
+  let lang =
+    match codegen () with
+    | Some C | Some KrmlC -> Some "c"
+    (* Cherry extends C, so it falls back to the C files. *)
+    | Some Cherry -> Some "c.cherry"
+    | Some KrmlRust -> Some "rust"
+    | Some OCaml -> Some "ocaml"
+    | Some FSharp -> Some "fsharp"
+    | None -> None
+  in
+  let user =
+    match get_target () with
+    | None -> None
+    | Some s ->
+      match Target.parse_tag s with
+      | Some t -> t
+      | None -> failwith ("--target: not a valid tag: " ^ s)
+  in
+  Target.join user lang
 
 let custard_entries              () = get_custard_entry ()
 let custard_entrypoint_files     () = get_custard_entrypoints ()
@@ -2235,6 +2273,10 @@ let custard_norm_budget          () = get_custard_norm_budget ()
 let custard_monomorphize_types   () = get_custard_monomorphize_types ()
 let custard_int128               () = get_custard_int128 ()
 let custard_sizet_32             () = get_custard_sizet_width () = "32"
+let codegen_c                    () = match codegen () with
+                                      | Some C | Some Cherry -> true
+                                      | _ -> false
+let custard_cherry               () = codegen () = Some Cherry
 let custard_split                () = get_custard_split ()
 let custard_unit                 () = get_custard_unit ()
 let custard_links                () = get_custard_link ()

@@ -3414,17 +3414,18 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : ML (env_t & sigelts) 
       raise_error d Errors.Fatal_FriendInterface [
         text "'friend' declarations are not allowed in interfaces.";
       ];
-    if not (FStarC.Parser.Dep.module_has_interface (Env.dep_graph env) (Env.current_module env)) then
+    let tgt = FStarC.Parser.Dep.target_of_file (Range.file_of_range d.drange) in
+    if not (FStarC.Parser.Dep.module_has_interface (Env.dep_graph env) tgt (Env.current_module env)) then
       raise_error d Errors.Fatal_FriendInterface [
         text "'friend' declarations are not allowed in modules that lack interfaces.";
         text "Suggestion: add an interface for module" ^/^ pp (Env.current_module env);
       ];
-    if not (FStarC.Parser.Dep.deps_has_implementation (Env.dep_graph env) lid) then
+    if not (FStarC.Parser.Dep.deps_has_implementation (Env.dep_graph env) tgt lid) then
       raise_error d Errors.Fatal_FriendInterface [
         text "'friend' module" ^/^ pp lid ^/^ text "not found";
         text "Suggestion: recompute dependences (C-c C-r) if in interactive mode.";
       ];
-    if not (FStarC.Parser.Dep.module_has_interface (Env.dep_graph env) lid) then
+    if not (FStarC.Parser.Dep.module_has_interface (Env.dep_graph env) tgt lid) then
       raise_error d Errors.Fatal_FriendInterface [
         text "'friend' declarations cannot refer to modules that lack interfaces.";
         text "Suggestion: add an interfce for module" ^/^ pp lid;

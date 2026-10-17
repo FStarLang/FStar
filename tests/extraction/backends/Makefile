@@ -25,13 +25,14 @@ TESTS := $(basename $(wildcard Ext*.fst))
 # --------------------------------------------------------------------------
 # Columns.
 #
-# Custard (doc/ref/custard.md) is the extractor; it has four code generators,
-# and so this directory has four columns:
+# Custard (doc/ref/custard.md) is the extractor; it has five code generators,
+# and so this directory has five columns:
 #
 #   custard-ocaml       --codegen OCaml    + ocamlfind ocamlopt
 #   custard-c           --codegen C        + cc      (no karamel at all)
 #   custard-krml-c      --codegen KrmlC    + krml    + cc
 #   custard-krml-rust   --codegen KrmlRust + krml -backend rust + rustc
+#   custard-cherry      --codegen Cherry   + cc -fsanitize=address,undefined
 #
 # Every module here has `main : unit -> Int32.t`, which is what
 # --custard_main wants: Custard calls it from the generated code and makes its
@@ -54,6 +55,10 @@ NO_CUSTARD_KRML_RUST := ExtPrimsInt ExtPrimsIntDiv ExtPrimsIntMul \
                         ExtPrimsIntBignum ExtBoolHigherOrder
 
 NO_CUSTARD_KRML_C := ExtBoolHigherOrder
+
+# Cherry (doc/ref/cherry.md) is direct C with reference counting, so it has
+# unbounded integers, closures and recursive datatypes, and runs everything.
+NO_CUSTARD_CHERRY :=
 
 # --- known bugs ----------------------------------------------------------
 
@@ -102,6 +107,7 @@ CUSTARD_OCAML_TESTS     := $(filter-out $(NO_CUSTARD_OCAML)     $(XFAIL_CUSTARD_
 CUSTARD_C_TESTS         := $(filter-out $(NO_CUSTARD_C)         $(XFAIL_CUSTARD_C),$(TESTS))
 CUSTARD_KRML_C_TESTS    := $(filter-out $(NO_CUSTARD_KRML_C)    $(XFAIL_CUSTARD_KRML_C),$(TESTS))
 CUSTARD_KRML_RUST_TESTS := $(filter-out $(NO_CUSTARD_KRML_RUST) $(XFAIL_CUSTARD_KRML_RUST),$(TESTS))
+CUSTARD_CHERRY_TESTS    := $(filter-out $(NO_CUSTARD_CHERRY)    $(XFAIL_CUSTARD_CHERRY),$(TESTS))
 
 # --------------------------------------------------------------------------
 # Which columns can we actually run?
@@ -165,12 +171,14 @@ KRML_C_FLAGS = -ccopt -I$(abspath $(KRMLLIB_DIR)) -add-include '"FStar_String.h"
 
 CC ?= cc
 
-all: custard-ocaml custard-c custard-krml-c custard-krml-rust
+all: custard-ocaml custard-c custard-krml-c custard-krml-rust custard-cherry
 
 custard-ocaml: $(patsubst %,$(OUTPUT_DIR)/cml/%.ok,$(CUSTARD_OCAML_TESTS))
 custard-ocaml: $(patsubst %,$(OUTPUT_DIR)/cml/%.xfail,$(XFAIL_CUSTARD_OCAML))
 custard-c: $(patsubst %,$(OUTPUT_DIR)/cc/%.ok,$(CUSTARD_C_TESTS))
 custard-c: $(patsubst %,$(OUTPUT_DIR)/cc/%.xfail,$(XFAIL_CUSTARD_C))
+custard-cherry: $(patsubst %,$(OUTPUT_DIR)/cch/%.ok,$(CUSTARD_CHERRY_TESTS))
+custard-cherry: $(patsubst %,$(OUTPUT_DIR)/cch/%.xfail,$(XFAIL_CUSTARD_CHERRY))
 ifeq ($(HAVE_KRML),1)
 custard-krml-c: $(patsubst %,$(OUTPUT_DIR)/ckc/%.ok,$(CUSTARD_KRML_C_TESTS))
 custard-krml-c: $(patsubst %,$(OUTPUT_DIR)/ckc/%.xfail,$(XFAIL_CUSTARD_KRML_C))
@@ -179,13 +187,14 @@ custard-krml-rust: $(patsubst %,$(OUTPUT_DIR)/ckr/%.ok,$(CUSTARD_KRML_RUST_TESTS
 custard-krml-rust: $(patsubst %,$(OUTPUT_DIR)/ckr/%.xfail,$(XFAIL_CUSTARD_KRML_RUST))
 endif
 endif
-.PHONY: all custard-ocaml custard-c custard-krml-c custard-krml-rust
+.PHONY: all custard-ocaml custard-c custard-krml-c custard-krml-rust custard-cherry
 
 # Convenience: `make ExtFoo.custard-ocaml`, and so on.
 %.custard-ocaml:     $(OUTPUT_DIR)/cml/%.ok ; @true
 %.custard-c:         $(OUTPUT_DIR)/cc/%.ok  ; @true
 %.custard-krml-c:    $(OUTPUT_DIR)/ckc/%.ok ; @true
 %.custard-krml-rust: $(OUTPUT_DIR)/ckr/%.ok ; @true
+%.custard-cherry:    $(OUTPUT_DIR)/cch/%.ok ; @true
 
 #############
 # krmllib   #
@@ -284,6 +293,31 @@ $(OUTPUT_DIR)/cc/%.ok: $(OUTPUT_DIR)/cc/%.exe
 	$(Q)./$< || { echo "FAIL [custard-c] $*: check #$$? (grep the module for that tag)"; exit 1; }
 	$(Q)touch $@
 
+# --- custard-cherry -------------------------------------------------------
+
+# Direct C with reference counting (doc/ref/cherry.md), against the runtime F*
+# installs.  Run under AddressSanitizer with leak detection, so a missing or
+# extra reference count operation fails the cell rather than going unseen.
+CHERRY_INC = $(shell $(FSTAR_EXE) --locate_lib)/ulib/c
+
+$(OUTPUT_DIR)/custard/%.cherry.c: $(CACHE_DIR)/%.fst.checked
+	$(call msg, "CUSTARD cherry", $*)
+	$(Q)mkdir -p $(dir $@)
+	$(Q)$(FSTAR) $< $(CUSTARD) --codegen Cherry \
+	    --custard_monomorphize_types true -o $@
+
+$(OUTPUT_DIR)/cch/%.exe: $(OUTPUT_DIR)/custard/%.cherry.c
+	$(call msg, "CC cherry", $*)
+	$(Q)mkdir -p $(dir $@)
+	$(Q)$(CC) $(CUSTARD_CFLAGS) -g -fsanitize=address,undefined \
+	    -fno-sanitize-recover=undefined -I$(CHERRY_INC) \
+	    -o $@ $< $(CHERRY_INC)/cherry.c
+
+$(OUTPUT_DIR)/cch/%.ok: $(OUTPUT_DIR)/cch/%.exe
+	$(call msg, "RUN custard-cherry", $*)
+	$(Q)ASAN_OPTIONS=detect_leaks=1 ./$< || { echo "FAIL [custard-cherry] $*: check #$$? (grep the module for that tag)"; exit 1; }
+	$(Q)touch $@
+
 # --- custard-krml-c -------------------------------------------------------
 
 # A whole-program krml file holds exactly one module, named Custard, so there
@@ -377,5 +411,6 @@ endef
 
 $(eval $(call custard_xfail_rule,cml,custard-ocaml,CUSTARD_OCAML))
 $(eval $(call custard_xfail_rule,cc,custard-c,CUSTARD_C))
+$(eval $(call custard_xfail_rule,cch,custard-cherry,CUSTARD_CHERRY))
 $(eval $(call custard_xfail_rule,ckc,custard-krml-c,CUSTARD_KRML_C))
 $(eval $(call custard_xfail_rule,ckr,custard-krml-rust,CUSTARD_KRML_RUST))

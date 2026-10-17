@@ -63,12 +63,15 @@ else.
 
 Otherwise, F\* requires specific versions of Z3 to work correctly,
 and will refuse to run if the version string does not match.
-You should have `z3-5.1.0` in your `$PATH`:
+You should have `z3-5.3.0` in your `$PATH`:
 
 ```
-❯ z3-5.1.0 --version
-Z3 version 5.1.0 - 64 bit
+❯ z3-5.3.0 --version
+Z3 version 5.3.0 - 64 bit
 ```
+
+On Linux x86_64, the installer uses the standalone binary from Z3's
+official manylinux wheel to retain compatibility with Ubuntu 22.04.
 
 On Linux you can install several Z3 versions usable with F* with the following command:
 ```bash

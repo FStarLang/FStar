@@ -31,11 +31,12 @@ release_url=(
   "Darwin-x86_64-4.15.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.15.3/z3-4.15.3-x64-osx-13.7.6.zip"
   "Darwin-aarch64-4.15.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.15.3/z3-4.15.3-arm64-osx-13.7.6.zip"
   "Windows-x86_64-4.15.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.15.3/z3-4.15.3-x64-win.zip"
-  "Linux-x86_64-5.1.0":"https://github.com/Z3Prover/z3/releases/download/z3-5.1.0/z3-5.1.0-x64-glibc-2.39.zip"
-  "Linux-aarch64-5.1.0":"https://github.com/Z3Prover/z3/releases/download/z3-5.1.0/z3-5.1.0-arm64-glibc-2.38.zip"
-  "Darwin-x86_64-5.1.0":"https://github.com/Z3Prover/z3/releases/download/z3-5.1.0/z3-5.1.0-x64-osx-13.3.zip"
-  "Darwin-aarch64-5.1.0":"https://github.com/Z3Prover/z3/releases/download/z3-5.1.0/z3-5.1.0-arm64-osx-13.3.zip"
-  "Windows-x86_64-5.1.0":"https://github.com/Z3Prover/z3/releases/download/z3-5.1.0/z3-5.1.0-x64-win.zip"
+  # The standalone binary in the official wheel also runs on Ubuntu 22.04.
+  "Linux-x86_64-5.3.0":"https://github.com/Z3Prover/z3/releases/download/z3-5.3.0/z3_solver-5.3.0.0-py3-none-manylinux_2_27_x86_64.whl"
+  "Linux-aarch64-5.3.0":"https://github.com/Z3Prover/z3/releases/download/z3-5.3.0/z3-5.3.0-arm64-glibc-2.38.zip"
+  "Darwin-x86_64-5.3.0":"https://github.com/Z3Prover/z3/releases/download/z3-5.3.0/z3-5.3.0-x64-osx-13.3.zip"
+  "Darwin-aarch64-5.3.0":"https://github.com/Z3Prover/z3/releases/download/z3-5.3.0/z3-5.3.0-arm64-osx-13.3.zip"
+  "Windows-x86_64-5.3.0":"https://github.com/Z3Prover/z3/releases/download/z3-5.3.0/z3-5.3.0-x64-win.zip"
 )
 
 get_url() {
@@ -71,7 +72,10 @@ download_z3() {
   echo ">>> Downloading Z3 $version from $url ..."
   base_name="$(basename "$url")"
 
-  z3_path="${base_name%.zip}/bin/z3"
+  case "$base_name" in
+    *.whl) z3_path="z3_solver-$version.0.data/data/bin/z3" ;;
+    *) z3_path="${base_name%.zip}/bin/z3" ;;
+  esac
   if [ "$kernel" = Windows ]; then z3_path="$z3_path.exe"; fi
 
   pushd "$tmp_dir" > /dev/null
@@ -84,7 +88,7 @@ download_z3() {
 }
 
 full_install_z3() {
-  local url version dest_dir base_name
+  local url version dest_dir base_name z3_path
 
   url="$1"
   version="$2"
@@ -97,9 +101,21 @@ full_install_z3() {
   base_name="$(basename "$url")"
   $CURL "$url" -o "$base_name"
 
-  unzip -q "$base_name"
-  mv "${base_name%.zip}"/* .
-  rmdir "${base_name%.zip}"
+  case "$base_name" in
+    *.whl)
+      z3_path="z3_solver-$version.0.data/data/bin/z3"
+      unzip -q "$base_name" "$z3_path"
+      mkdir -p bin
+      mv "$z3_path" bin/z3
+      rmdir -p "$(dirname "$z3_path")"
+      $CURL "https://raw.githubusercontent.com/Z3Prover/z3/z3-$version/LICENSE.txt" -o LICENSE.txt
+      ;;
+    *)
+      unzip -q "$base_name"
+      mv "${base_name%.zip}"/* .
+      rmdir "${base_name%.zip}"
+      ;;
+  esac
   rm "$base_name"
   popd > /dev/null
 }
@@ -155,7 +171,7 @@ fi
 
 mkdir -p "$dest_dir"
 
-for z3_ver in 4.8.5 4.13.3 4.15.3 5.1.0; do
+for z3_ver in 4.8.5 4.13.3 4.15.3 5.3.0; do
   destination_file_name="$dest_dir/z3-$z3_ver"
   if [ "$kernel" = Windows ]; then destination_file_name="$destination_file_name.exe"; fi
 

@@ -698,7 +698,8 @@ let beta (bs : list binder) (body:expr) (args:list expr) (at:expr) : ML expr =
   if List.length args < n then at
   else
     let given, extra = List.splitAt n args in
-    let r = inline_call bs body given at in
+    (* With a surplus, the inlined body has the body's type, not the call's. *)
+    let r = inline_call bs body given (if Nil? extra then at else { at with ty = body.ty }) in
     match extra with
     | [] -> r
     | _ -> { at with e = EApp (r, extra) }
@@ -998,7 +999,7 @@ let rec reduce (x:expr) : ML expr =
        definition uses it, and the copy that would fix that has not been
        propagated yet. *)
     let e2 = reduce e2 in
-    if Options.codegen () = Some Options.C
+    if Options.codegen_c ()
        && EFun? e1.e && count v e2 <= 1 && called_only v e2 then
       let sm : subst = HashTable.create 5 in
       HashTable.add sm v e1;
@@ -1068,7 +1069,7 @@ let rec inline_expr (tbl : HashTable.t string (list binder & expr)) (used : Hash
         function, so every use of it is applied to one argument too many. *)
      | Some (bs, body) when List.length bs <= List.length args ->
        let given, extra = List.splitAt (List.length bs) args in
-       let r = inline_call bs body given x in
+       let r = inline_call bs body given (if Nil? extra then x else { x with ty = body.ty }) in
        (match extra with
         | [] -> r
         | _ -> { x with e = EApp (r, extra) })
@@ -1503,7 +1504,7 @@ let rec cty_deps (c:cty) : ML (list string) =
   | TApp (n, args) -> string_of_name n :: List.collect cty_deps args
   | TArrow (a, _, b) -> cty_deps a @ cty_deps b
   | TTuple cs -> List.collect cty_deps cs
-  | TBuf c | TRef c | TInline c -> cty_deps c
+  | TBuf c | TRef (_, c) | TInline c -> cty_deps c
   | _ -> []
 
 let rec pat_deps (p:pat) : ML (list string) =
@@ -1747,7 +1748,7 @@ let rec spellable (c:cty) : ML bool =
   | TAny | TExn -> false
   | TApp (_, args) | TTuple args -> args |> List.for_all spellable
   | TArrow (a, _, b) -> spellable a && spellable b
-  | TBuf c | TRef c | TInline c -> spellable c
+  | TBuf c | TRef (_, c) | TInline c -> spellable c
   | _ -> true
 
 let revive_abbrevs (prog:program) (live : HashTable.t string bool) : ML unit =
@@ -3148,7 +3149,7 @@ let rec cty_mismatch (a b : cty) : ML bool =
   | TApp (n, xs), TApp (m, ys) ->
     string_of_name n = string_of_name m && ctys_mismatch xs ys
   | TBuf x, TBuf y
-  | TRef x, TRef y
+  | TRef (_, x), TRef (_, y)
   | TInline x, TInline y -> cty_mismatch x y
   | TTuple xs, TTuple ys -> ctys_mismatch xs ys
   | _ -> false
@@ -3287,7 +3288,7 @@ let coerce_prog (prog:program) : ML program =
     | TArrow (a, _, b) -> has_any a || has_any b
     | TApp (_, args) -> args |> List.existsb has_any
     | TTuple cs -> cs |> List.existsb has_any
-    | TBuf c | TRef c | TInline c -> has_any c
+    | TBuf c | TRef (_, c) | TInline c -> has_any c
     | TVar _ | TInt _ | TFloat _ | TUnit | TExn | TConst _ -> false in
   let trust (c:cty) : ML (option cty) = if has_any c then None else Some c in
   (* Does this term obviously have *some* representation, whatever it is?  When
@@ -3343,7 +3344,7 @@ let coerce_prog (prog:program) : ML program =
     | TTuple ps, TTuple qs ->
       if List.length ps = List.length qs then unify_ctys ps qs acc else acc
     | TBuf p1, TBuf a1
-    | TRef p1, TRef a1
+    | TRef (_, p1), TRef (_, a1)
     | TInline p1, TInline a1 -> unify_cty p1 a1 acc
     | _ -> acc
   and unify_ctys (ps qs : list cty) (acc:list (string & cty)) : ML (list (string & cty)) =
@@ -3786,7 +3787,7 @@ let narrow_rets (prog:program) : ML program =
     | TArrow (a, _, b) -> has_any a || has_any b
     | TApp (_, args) -> args |> List.existsb has_any
     | TTuple cs -> cs |> List.existsb has_any
-    | TBuf c | TRef c | TInline c -> has_any c
+    | TBuf c | TRef (_, c) | TInline c -> has_any c
     | TVar _ | TInt _ | TFloat _ | TUnit | TExn | TConst _ -> false in
   (* Name -> the whole type, arguments included, so that a use of a name in
      head position can be peeled the same way [coerce_prog] peels it. *)
@@ -4005,7 +4006,7 @@ let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
   (* Before [dce], which reads the final call graph and would otherwise drop
      every lifted function as unreachable, and before [scc], which orders
      them. *)
-  let prog = if Options.codegen () = Some Options.C
+  let prog = if Options.codegen_c ()
              then pass "lift_lambdas" lift_lambdas prog else prog in
   (* Section 76.  Before [dce], which is what removes the declaration a
      substituted constant made unreachable. *)
