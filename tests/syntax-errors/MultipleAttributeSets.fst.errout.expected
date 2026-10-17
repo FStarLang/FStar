@@ -1,0 +1,3 @@
+* Error 131 at MultipleAttributeSets.fst(5,0-5,23):
+  - At most one attribute set is allowed on declarations
+
