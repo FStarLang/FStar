@@ -12,9 +12,6 @@ FSTAR_ARGS += --warn_error +240
 # scope; --defensive error is what catches it if it is not.
 $(CACHE_DIR)/ImplicitArrowDefensive.fst.checked: FSTAR_ARGS += --defensive error
 
-$(CACHE_DIR)/BvBinaryOps.fst.checked: FSTAR_ARGS += --z3version 4.15.3
-$(CACHE_DIR)/BvModelAgreesWithZ3.fst.checked: FSTAR_ARGS += --z3version 4.15.3
-
 # `--ext freshen` restarts the solver before every top-level declaration.
 # ExtFreshen.fst is written so that each declaration depends on facts
 # introduced by the previous ones, so checking it with the option on tests

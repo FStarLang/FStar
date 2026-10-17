@@ -11,6 +11,13 @@ Guidelines for the changelog:
   possibly with details in the PR or links to sample fixes (for example, changes
   to F*'s test suite).
 
+## SMT solver
+
+  * The default Z3 version is now 5.3.0. Binary packages include this
+    version, and `.scripts/get_fstar_z3.sh` installs it for source builds.
+    Proofs may need additional hints when moving from an older solver;
+    `--z3version` can still select an installed older version explicitly.
+
 ## Compilation targets
 
   * A module can have tagged interfaces and implementations, written
