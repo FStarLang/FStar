@@ -654,8 +654,8 @@ let pow2_multiplication_division_lemma_2 a b c =
 
 let pow2_multiplication_modulo_lemma_1 a b c =
   pow2_plus (c - b) b;
+  assert (pow2 c == pow2 (c - b) * pow2 b);
   paren_mul_right a (pow2 (c - b)) (pow2 b);
-  paren_mul_left a (pow2 (c - b)) (pow2 b);
   multiple_modulo_lemma (a * pow2 (c - b)) (pow2 b)
 
 let pow2_multiplication_modulo_lemma_2 a b c =

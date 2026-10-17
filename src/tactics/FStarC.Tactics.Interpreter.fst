@@ -52,6 +52,7 @@ module SS      = FStarC.Syntax.Subst
 module TcComm  = FStarC.TypeChecker.Common
 module TcRel   = FStarC.TypeChecker.Rel
 module TcTerm  = FStarC.TypeChecker.TcTerm
+module CoreCheck = FStarC.TypeChecker.CoreCheck
 module U       = FStarC.Syntax.Util
 
 let dbg_Tac = Debug.get_toggle "Tac"
@@ -419,18 +420,24 @@ let run_tactic_on_ps'
 
     (* Do NOT use the returned tactic, the typechecker is not idempotent and
      * will mess up the monadic lifts. We're just making sure it's well-typed
-     * so it won't get stuck. c.f #1307 *)
-    let g =
-      if tactic_already_typed
-      then Env.trivial_guard
-      else let _, _, g = TcTerm.tc_tactic (type_of e_arg) (type_of e_res) env tactic in
-           g
-    in
+     * so it won't get stuck. c.f #1307
+     *
+     * With Core (see [CoreCheck]), the tactic is elaborated as in phase 1 and
+     * its elaboration is checked by Core. *)
+    let a = type_of e_arg in
+    let b = type_of e_res in
+    if not tactic_already_typed then
+      CoreCheck.phase2 env "this tactic"
+        (fun () ->
+          let tau, _ = CoreCheck.elaborate env (TcTerm.tc_tactic a b) tactic in
+          CoreCheck.check_term env "this tactic" tau (S.t_tac_of a b) true)
+        (fun () ->
+          let _, _, g = TcTerm.tc_tactic a b env tactic in
+          TcRel.force_trivial_guard env g);
 
     if !dbg_Tac then
         Format.print_string "}\n";
 
-    TcRel.force_trivial_guard env g;
     Err.stop_if_err ();
     let tau = unembed_tactic_1 e_arg e_res tactic FStarC.Syntax.Embeddings.id_norm_cb in
 

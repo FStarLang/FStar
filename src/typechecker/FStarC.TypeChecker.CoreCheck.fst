@@ -53,6 +53,15 @@ let phase2 (env:Env.env) (what:string) (core:unit -> ML 'a) (tcterm:unit -> ML '
     )
     else core ()
 
+let elaborate (env:Env.env) (tc:Env.env -> term -> ML (term & 'a & FStarC.TypeChecker.Common.guard_t)) (e:term)
+  : ML (term & 'a) =
+  let env1 = { env with phase1 = true; admit = true } in
+  Core.clear_memo_table ();
+  let e, x, g = tc env1 e in
+  Rel.force_trivial_guard env1 g;
+  Core.clear_memo_table ();
+  N.remove_uvar_solutions env e, x
+
 let raise_core_error #a (env:Env.env) (what:string) (err:Core.error) : ML a =
   let r = match Core.error_range err with Some r -> r | None -> Env.get_range env in
   match Core.error_code err with

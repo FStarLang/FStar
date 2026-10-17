@@ -983,17 +983,32 @@ let process_pragma (env:Env.env) (p:pragma) (r:Range.range) : ML unit =
     let env' = push_context env "#check" in
     let tx = UF.new_transaction () in
     BU.finally (fun () -> ignore (pop_context env' "#check"); UF.rollback tx) (fun () ->
-      let t, lc, g = tc_term { env with instantiate_imp = false } t0 in
-      let c = lc in
+      let env = { env with instantiate_imp = false } in
+      (* With Core (see [CoreCheck]), the term is elaborated as in phase 1,
+         and Core checks it at the computation type phase 1 inferred. As
+         with TcTerm, the guard is shown, not discharged. *)
+      let t, c, g =
+        CoreCheck.phase2 env "this term"
+          (fun () ->
+            let t, c = CoreCheck.elaborate env tc_term t0 in
+            let c =
+              N.normalize_comp [Env.DefaultUnivsToZero; Env.CheckNoUvars; Env.Beta;
+                                Env.DoNotUnfoldPureLets; Env.CompressUvars;
+                                Env.Exclude Env.Zeta; Env.Exclude Env.Iota;
+                                Env.NoFullNorm] env c in
+            match Core.check_term_at_comp env t c with
+            | Inl g -> t, c, Option.map (fun (g, _) -> pp g) g
+            | Inr err -> CoreCheck.raise_core_error env "this term" err)
+          (fun () ->
+            let t, c, g = tc_term env t0 in
+            t, c, (if is_trivial g then None else Some (pp g)))
+      in
       let open FStarC.Pprint in
       Options.with_saved_options (fun () ->
         ignore (Options.set_options "--print_effect_args");
         Errors.info r [
           text "Term" ^/^ pp t ^/^ text "has type" ^/^ pp c;
-          if not (is_trivial g) then
-            text "With guard: " ^/^ pp g
-          else
-            empty
+          (match g with Some g -> text "With guard: " ^/^ g | None -> empty)
         ]
       )
     )
@@ -1005,7 +1020,18 @@ let process_pragma (env:Env.env) (p:pragma) (r:Range.range) : ML unit =
       let t_elab, _, g1 = tc_term { env' with instantiate_imp = false; phase1 = true; admit=true } t0 in
       Format.print1 "Guard = %s\n" (Rel.guard_to_string env' g1);
       Rel.force_trivial_guard env' g1;
-      let t, lc, g = tc_term { env' with instantiate_imp = false } t_elab in
+      let env' = { env' with instantiate_imp = false } in
+      (* With Core (see [CoreCheck]), Core checks phase 1's elaboration.
+         As with TcTerm, the guard is not discharged. *)
+      let t =
+        CoreCheck.phase2 env' "this term"
+          (fun () ->
+            let t = N.remove_uvar_solutions env' t_elab in
+            match Core.compute_term_comp env' t None false with
+            | Inl _ -> t
+            | Inr err -> CoreCheck.raise_core_error env' "this term" err)
+          (fun () -> let t, _, _ = tc_term env' t_elab in t)
+      in
       let t = N.normalize [Env.Beta; Env.Iota; Env.Zeta; Env.Primops;
                             Env.UnfoldUntil S.delta_constant;
                             Env.Eager_unfolding; Env.Inlining;

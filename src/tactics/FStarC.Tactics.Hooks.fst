@@ -512,12 +512,7 @@ let splice
     let tau =
       CoreCheck.phase2 env "the tactic of this splice"
         (fun () ->
-          let env1 = { env with phase1 = true; admit = true } in
-          FStarC.TypeChecker.Core.clear_memo_table ();
-          let tau, _, g = tc env1 tau in
-          TcRel.force_trivial_guard env1 g;
-          FStarC.TypeChecker.Core.clear_memo_table ();
-          let tau = N.remove_uvar_solutions env tau in
+          let tau, _ = CoreCheck.elaborate env tc tau in
           let t = if is_typed then U.t_dsl_tac_typ else S.t_tac_of t_unit S.t_decls in
           CoreCheck.check_term env "the tactic of this splice" tau t true;
           tau)

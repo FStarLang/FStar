@@ -41,6 +41,14 @@ val enabled (env:Env.env) : ML bool
    and [tcterm] is used instead. *)
 val phase2 (env:Env.env) (what:string) (core:unit -> ML 'a) (tcterm:unit -> ML 'a) : ML 'a
 
+(* Elaborate [e] with [tc] as in phase 1 (in [env] with [phase1] and [admit]
+   set), solving its implicits, and return the elaborated term, without
+   unification variables, ready to be checked by Core, along with what else
+   [tc] returned. Core's memo table is cleared before and after, since the
+   guards of the elaboration are not proven. *)
+val elaborate (env:Env.env) (tc:Env.env -> term -> ML (term & 'a & FStarC.TypeChecker.Common.guard_t)) (e:term)
+  : ML (term & 'a)
+
 (* Report a structural failure of Core, with the error code TcTerm reports
    it with, if any. *)
 val raise_core_error (env:Env.env) (what:string) (err:Core.error) : ML 'a

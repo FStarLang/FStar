@@ -256,6 +256,9 @@ The common part lives in `FStarC.TypeChecker.CoreCheck`:
 | implementation vs. interface `val` | `check_subsumes_iface_val` asks Core whether the implementation's type is a subtype of the interface's. |
 | `[@@no_subtyping]` | Core checks the type with `use_eq_strict` set. In that mode, `Core.check_relation` checks `EQUALITY` where it would check `SUBTYPING`. TcTerm's `use_eq_strict` rejected nearly every lemma (`int : eqtype` vs `Type`). Core accepts these lemmas, and rejects actual subtyping, e.g. `nat` for `int`. |
 | `%splice` tactics (`Hooks.splice`) | The tactic is elaborated in phase 1. Core then checks it against `dsl_tac_t` (typed splices) or `unit -> Tac decls`. |
+| tactics run by the interpreter (`Interpreter.run_tactic_on_ps`) | When the tactic is not already typed, e.g. in `assert ... by`, `synth_by_tactic` or `postprocess_with`, it is elaborated as in phase 1 (`TcTerm.tc_tactic`), and Core checks it against `a -> Tac b`. |
+| `#check` | The term is elaborated as in phase 1, and Core checks it at the computation type phase 1 inferred (`Core.check_term_at_comp`). As before, Core's guard is shown, not discharged. |
+| `#eval` | Core computes the computation type of phase 1's elaboration (`Core.compute_term_comp`). As before, the guard is not discharged. |
 
 Core reports no SMT-pattern warnings (Warning 271: a pattern that misses a
 bound variable, or uses theory symbols). TcTerm emits these for each arrow
@@ -278,22 +281,19 @@ produced next, e.g. when Core opens an arrow with `U.arrow_formals_comp`,
 were Core's own. Core's indices now start at 2^40 (`Core.core_index_base`)
 (`tests/bug-reports/closed/Phase2CoreBinderNames.fst`).
 
-Some checks are deliberately *not* routed through Core, since they are not
-what justifies the soundness of a declaration:
+Some terms are deliberately *not* checked again, by Core or TcTerm, since they
+are justified otherwise:
 
-* The typing of a tactic run by the interpreter (`Interpreter.run_tactic_on_ps`)
-  is not routed. Its result is discarded, because the check only makes sure
-  the tactic won't get stuck. What a tactic produces is justified by the
-  goals it discharges (the terms `synth_by_tactic` produces are marked
-  `Tactic_synthesized`, and Core trusts them for that reason).
-* Postprocessing (`postprocess_with`, `postprocess_for_extraction_with`) is
-  not routed. The tactic's result is justified by the equality proof it
-  must produce.
+* What a tactic produces is not checked again. It is justified by the goals
+  the tactic discharges (the terms `synth_by_tactic` produces are marked
+  `Tactic_synthesized`, and Core trusts them for that reason). The tactic
+  itself is checked by Core (see above).
+* The result of postprocessing (`postprocess_with`,
+  `postprocess_for_extraction_with`) is not checked again. It is justified
+  by the equality proof the tactic must produce.
 * Typed splices that claim their result is already checked
   (`checked = true`, e.g. Pulse) are trusted. This rests on the type of
   the splice tactic, `dsl_tac_t`, and Core checks that type.
-* `#check` and `#eval`-like pragmas are not routed; they do not contribute
-  to verification.
 
 ## 3. What Core had to learn
 
