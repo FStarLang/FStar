@@ -19,8 +19,12 @@ module FStar.Issue
    type, so that issues can be passed between metaprograms and the compiler
    without conversion. *)
 
-friend FStar.Range
 module E = FStarC.Errors.Issue
+
+(* FStar.Range.range is the compiler's range (src/basic/FStar.Range.fst), but
+   abstract here. *)
+let co_range (#a #b : Type0) (r:option a) : option b =
+  FStar.Pervasives.coerce_eq (admit ()) r
 
 type issue = E.issue
 
@@ -35,7 +39,7 @@ let level_of_issue i =
 
 let number_of_issue i = i.issue_number
 
-let range_of_issue i = i.issue_range
+let range_of_issue i = co_range i.issue_range
 
 let context_of_issue i = i.issue_ctx
 
@@ -51,6 +55,6 @@ let render_issue _ = admit ()
 let mk_issue_doc i msg range number ctx =
   { E.issue_level = E.issue_level_of_string i;
     E.issue_msg = msg;
-    E.issue_range = range;
+    E.issue_range = co_range range;
     E.issue_number = number;
     E.issue_ctx = ctx }

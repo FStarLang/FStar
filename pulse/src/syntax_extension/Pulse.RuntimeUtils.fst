@@ -24,8 +24,6 @@ module Pulse.RuntimeUtils
    Likewise, the effects of the interface (Tot, Dv, Tac) are those the
    checker needs, while the compiler's functions are all in ML. *)
 
-friend FStar.Range
-
 open FStar.Tactics.V2
 module T = FStar.Tactics.V2
 module R = FStar.Reflection.V2
@@ -51,6 +49,11 @@ let co (#a #b : Type) (x:a) : b = FStar.Pervasives.coerce_eq #a #b () x
 (* Run an ML computation at another effect.  Every function of this
    module is impure in the compiler's sense, as is everything in the
    compiler; the interface only claims what the checker needs. *)
+(* FStar.Range.range is the compiler's range at runtime (src/basic/FStar.Range.fst),
+   but abstract here. *)
+let rr (r:range) : Range.range = co r
+let ur (r:Range.range) : range = co r
+
 let ml_tot (#a:Type) (f:unit -> ML a) : a = (co f <: unit -> Tot a) ()
 let ml_dv (#a:Type) (f:unit -> ML a) : Dv a = (co f <: unit -> Dv a) ()
 
@@ -100,7 +103,7 @@ let with_context (c:context) (f:unit -> T.Tac 'a) : T.Tac 'a =
     E.with_ctxs (context_strings (co c)) (fun _ -> run_tac f ps))
 
 let with_error_bound (r:range) (f:unit -> T.Tac 'a) : T.Tac 'a =
-  mk_tac (fun ps -> E.with_error_bound r (fun _ -> run_tac f ps))
+  mk_tac (fun ps -> E.with_error_bound (rr r) (fun _ -> run_tac f ps))
 
 exception Quiet_failure
 
@@ -118,7 +121,7 @@ let try_quietly (#a:Type) (f:unit -> T.Tac a) : T.Tac (option a) =
     | Inl _ -> None)
 
 let get_error_bound () : T.Tac (option range) =
-  mk_tac (fun _ -> !E.error_range_bound)
+  mk_tac (fun _ -> co !E.error_range_bound)
 
 let with_extv (k v : string) (f:unit -> T.Tac 'a) : T.Tac 'a =
   mk_tac (fun ps ->
@@ -150,36 +153,38 @@ let next_id () : Dv nat = ml_dv (fun () -> co (GenSym.next_id ()))
 let binder_set_range (x:R.binder) (r:range) : b:R.binder{b==x} =
   ml_tot (fun () ->
     let b : S.binder = co x in
-    co { b with S.binder_bv = S.set_range_of_bv b.binder_bv r })
+    co { b with S.binder_bv = S.set_range_of_bv b.binder_bv (rr r) })
 
 let binder_range (x:R.binder) : range =
-  S.range_of_bv (co x <: S.binder).binder_bv
+  ur (S.range_of_bv (co x <: S.binder).binder_bv)
 
-let range_of_term (t:T.term) : range = (co t <: S.term).pos
+let range_of_term (t:T.term) : range = ur (co t <: S.term).pos
 
 let start_of_range (r:range) : range =
-  Range.mk_range (Range.file_of_range r) (Range.start_of_range r) (Range.start_of_range r)
+  let r = rr r in
+  ur (Range.mk_range (Range.file_of_range r) (Range.start_of_range r) (Range.start_of_range r))
 
 let set_range (t:T.term) (r:range) : t':T.term{t == t'} =
-  co { (co t <: S.term) with S.pos = r }
+  co { (co t <: S.term) with S.pos = rr r }
 
 let set_use_range (t:T.term) (r:range) : t':T.term{t == t'} =
-  ml_tot (fun () -> co (FStarC.Syntax.Subst.set_use_range r (co t)))
+  ml_tot (fun () -> co (FStarC.Syntax.Subst.set_use_range (rr r) (co t)))
 
 let error_code_uninstantiated_variable () : int =
   ml_tot (fun () -> E.errno FStarC.Errors.Codes.Error_UninstantiatedUnificationVarInTactic)
 
 let is_range_zero (r:range) : Dv bool =
+  let r = rr r in
   Range.compare r Range.dummyRange = 0 &&
   Range.compare_use_range r Range.dummyRange = 0
 
 let union_ranges (r0 r1:range) : range =
-  ml_tot (fun () -> Range.union_ranges r0 r1)
+  ml_tot (fun () -> ur (Range.union_ranges (rr r0) (rr r1)))
 
-let env_get_range (g:env) : range = TcEnv.get_range (co g)
+let env_get_range (g:env) : range = ur (TcEnv.get_range (co g))
 
 let env_set_range (g:env) (r:range) : g':env{g==g'} =
-  co (TcEnv.set_range (co g) r)
+  co (TcEnv.set_range (co g) (rr r))
 
 let env_set_context (g:env) (ctx:context) : g':env{g==g'} = g
 
@@ -187,7 +192,7 @@ let env_set_context (g:env) (ctx:context) : g':env{g==g'} = g
    dyn. *)
 let embed_st_term_for_extraction (#a:Type) (d:a) (r:option range) : T.term =
   ml_tot (fun () ->
-    co (U.mk_lazy (FStar.Dyn.mkdyn d) S.tun (S.Lazy_extension "pulse_st_term") r))
+    co (U.mk_lazy (FStar.Dyn.mkdyn d) S.tun (S.Lazy_extension "pulse_st_term") (co r)))
 
 let unembed_st_term_for_extraction (#a:Type0) (d:T.term) : a =
   ml_tot (fun () ->
@@ -270,7 +275,7 @@ let phase1 (g:env) : TcEnv.env =
 
 let new_implicit_var (reason:string) (r:range) (g:env) (e:typ) (unrefine:bool) : Dv term =
   ml_dv (fun () ->
-    let uvar, _, _ = FStarC.TypeChecker.Util.new_implicit_var reason r (phase1 g) (co e) unrefine in
+    let uvar, _, _ = FStarC.TypeChecker.Util.new_implicit_var reason (rr r) (phase1 g) (co e) unrefine in
     co uvar)
 
 let try_solve_single_valued_implicits (g:env) (ts:list term) : Dv unit =
@@ -379,7 +384,7 @@ let profile (f:unit -> T.Tac 'b) (module_name:name) (component_name:string) : T.
 let mk_app_flat (head:T.term) (args:list T.argv) (r:range) : T.term =
   ml_tot (fun () ->
     let args = List.map (fun (x, q) -> co x, FStarC.Reflection.V2.Builtins.pack_aqual (co q)) args in
-    co (S.mk_Tm_app (co head) args r))
+    co (S.mk_Tm_app (co head) args (rr r)))
 
 let record_stats (key:string) (f:unit -> T.Tac 'a) : T.Tac 'a =
   mk_tac (fun ps -> FStarC.Stats.record key (fun () -> run_tac f ps))
