@@ -337,7 +337,11 @@ let dead_abbrevs : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
    agree with the file rather than adding a second rule.  Only declarations
    Custard actually emits a body for are in the table: an external or a
    modelled type resolves to a definition someone else wrote, and renaming it
-   would be renaming away from that definition rather than towards it. *)
+   would be renaming away from that definition rather than towards it.
+
+   Moved by lowercasing the namespace: [Prims.list] becomes [prims.list],
+   printed [prims_list].  An F* module name is capitalized, so no F* module
+   can be called that, and neither can karamel's own [Prims]. *)
 let shadowed : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
 
 let lident_of_name (n:name) : ML K.lident =
@@ -350,7 +354,7 @@ let lident_of_name (n:name) : ML K.lident =
            | None -> id
            | Some s -> id ^ "__" ^ s in
   let ns = if Some true = HashTable.try_find !shadowed (string_of_name n)
-           then "Custard" :: ns else ns in
+           then List.map String.lowercase ns else ns in
   (ns, id)
 
 (* The external types of the program being printed, by mangled name, mapped to
