@@ -56,6 +56,9 @@ CUSTARD_TESTS += RetArity
 CUSTARD_TESTS += Realized
 CUSTARD_TESTS += Patlift
 CUSTARD_TESTS += EraseAbbrev
+# An empty match becomes an [EUnreachable]; OCaml cannot spell one.
+CUSTARD_TESTS += EmptyMatch
+GREP_EmptyMatch += "empty match"
 
 # Section 31.4: [FStar.Attributes.rename_let] on a local [let] must reach the
 # emitted name.  The rename is applied to the [bv] rather than to the [ELet],
@@ -373,6 +376,8 @@ KRML_TESTS += KrmlPrims
 FS_TESTS += KrmlBasic Hello Literals LitBase LitStr Floats Exceptions Refs
 FS_TESTS += Recursion Mymon AnyCond AnyException UnitPtr Typeclass
 FS_TESTS += MachineInts Unroll ShortCircuit Union Wide128 Rotate
+# F# cannot spell an empty match either.
+FS_TESTS += EmptyMatch
 
 # Sections 122.14 and 135.  The unit-argument rule, from the side that only a
 # typed target can see: [j] takes a [unit] and a [UInt32.t], and the IR drops
