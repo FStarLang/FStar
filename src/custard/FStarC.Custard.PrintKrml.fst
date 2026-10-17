@@ -1471,8 +1471,7 @@ let print_split (fs : list (string & program)) : ML (list Krml.file) =
     [(m, ds)])
 
 let write_files (fn:string) (fs : list Krml.file) : ML unit =
-  let bin : Krml.binary_format = (Krml.current_version, fs) in
-  BU.save_value_to_file fn bin
+  FStarC.Custard.KrmlJson.write_file fn (Krml.current_version, fs)
 
 let write_program (fn:string) (p:program) : ML unit =
   write_files fn (print_program p)

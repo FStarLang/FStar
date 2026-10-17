@@ -281,7 +281,7 @@ let go_normal () : ML unit =
     (* --read_krml_file: read and print a krml file *)
     | Success when Some? (Options.read_krml_file ()) -> (
       let path = Some?.v <| Options.read_krml_file () in
-      match load_value_from_file path <: option Custard.KrmlAst.binary_format with
+      match Custard.KrmlJson.read_file path with
       | None ->
         let open FStarC.Pprint in
         Errors.raise_error0 Errors.Fatal_ModuleOrFileNotFound [

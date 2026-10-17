@@ -6365,9 +6365,9 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
    else has to say so with [@@@custard_inline_field] on the binder.
 
    [@@custard_boxed_fields] on the *type* withdraws the uninvited half: a type
-   whose representation is an ABI -- [FStarC.Extraction.KrmlAst], marshalled
-   to a file karamel reads back -- has to be laid out the way the ML
-   extraction lays it out, tuple field and all (section 5.7).  An explicit
+   whose representation is an ABI -- marshalled to a file another program
+   reads back -- has to be laid out the way the ML extraction lays it out,
+   tuple field and all (section 5.7).  An explicit
    request on a field still fires, since that one is the source's.
 
    The marker rides on the field's *type* so that it survives the passes that

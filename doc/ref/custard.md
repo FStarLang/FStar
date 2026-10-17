@@ -2169,14 +2169,15 @@ explicit `[@@@custard_inline_field]` on a field still fires, since that one is
 the source's own request.  Written once on a mutually recursive group, it
 holds for every type in it.
 
-There is one such type in this repository, and it is the reason the attribute
-exists: `FStarC.Extraction.KrmlAst`, which `save_value_to_file` writes and
-karamel's `InputAst` reads back into OCaml declarations that mirror the ML
-extraction's output field for field.  Before §12.15 there was no way to
-notice — an ML-built compiler wrote the file and a Custard-built one only
-existed in `stagec` — and afterwards the symptom is karamel reading garbage
-and dying in `InputAstToAst.mk_decl`, with nothing on either side saying why.
-`tests/custard/BoxedFields.fst` is the regression.
+The attribute was introduced for `FStarC.Custard.KrmlAst`, which used to be
+written with `save_value_to_file` and read back by karamel's `InputAst` into
+OCaml declarations that mirror the ML extraction's output field for field.
+Before §12.15 there was no way to notice — an ML-built compiler wrote the file
+and a Custard-built one only existed in `stagec` — and afterwards the symptom
+was karamel reading garbage and dying in `InputAstToAst.mk_decl`, with nothing
+on either side saying why.  `.krml` files are now JSON
+(`FStarC.Custard.KrmlJson`), so `KrmlAst`'s layout is private again and the
+attribute is off it.  `tests/custard/BoxedFields.fst` is the regression.
 
 ### 5.8 Other representation choices (to be pinned down)
 
@@ -2653,9 +2654,10 @@ Phase 4 passes, in order:
 Emission:
 
 - **Krml** (implemented, M5b): `FStarC.Custard.PrintKrml` targets the same
-  karamel AST as `src/extraction/FStarC.Extraction.Krml.fst`, writing the same
-  `(version, files)` binary via `save_value_to_file` (cf.
-  `Universal.fst:408`).  This is the first backend to build, because it gets us
+  karamel AST as `src/extraction/FStarC.Extraction.Krml.fst`, writing the
+  `(version, files)` pair as JSON in the encoding karamel's `InputAst` derives
+  with `ppx_deriving_yojson` (`FStarC.Custard.KrmlJson`; it used to be a
+  `Marshal` dump).  This is the first backend to build, because it gets us
   end-to-end C output with no new code generator.  Karamel's own
   monomorphization then has nothing left to do.  Select it with
   `--codegen KrmlC` (the default is `OCaml`); the output file defaults
