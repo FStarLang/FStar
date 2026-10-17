@@ -182,7 +182,7 @@ val lemma_repr_bytes_values:
           [SMTPat (repr_bytes n)]
 
 val repr_bytes_size:
-    k:nat
+    k:pos
   -> n:uint_k k
   -> Lemma (ensures (repr_bytes n <= k))
           [SMTPat (fits_in_k_bytes n k)]
@@ -197,13 +197,13 @@ val bytes_of_int:
   -> lbytes k
 
 val int_of_bytes_of_int:
-  #k:nat{k <= 32}
+  #k:pos{k <= 32}
   -> n:uint_k k
   -> Lemma (ensures (int_of_bytes (bytes_of_int k n) == n))
           [SMTPat (bytes_of_int k n)]
 
 val bytes_of_int_of_bytes:
-    b:bytes{length b <= 32}
+    b:bytes{0 < length b /\ length b <= 32}
   -> Lemma (ensures (bytes_of_int (length b) (int_of_bytes b) == b))
           [SMTPat (int_of_bytes b)]
 

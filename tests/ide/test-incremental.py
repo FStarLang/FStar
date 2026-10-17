@@ -205,7 +205,12 @@ def validate_response(response, file_contents):
             return False
         (i, last_fragment_end) = res
         num_successes += 1
-    remaining_lines = get_contents_in_range(file_lines, last_fragment_end, None)
+    if last_fragment_end == [0, 0]:
+        # Only the module header was checked (e.g. an empty -model.fst file):
+        # everything apart from the header must be comments.
+        remaining_lines = re.sub(r"^\s*(\[@@[^\]]*\]\s*)*module\s+\S+\s*$", "", "\n".join(file_lines), count=1, flags=re.M)
+    else:
+        remaining_lines = get_contents_in_range(file_lines, last_fragment_end, None)
     remaining_lines = remaining_lines.strip()
     if remaining_lines != "" and not (is_comment(remaining_lines)):
         print(f"Remaining lines are not empty: {remaining_lines}")
