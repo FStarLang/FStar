@@ -1253,6 +1253,15 @@ let lookup_lid_typ (st:state) (l:Ident.lident) : ML (option ((universes & typ) &
    comes up in one program. *)
 let unstub_lid (st:state) (l:Ident.lident) : ML Ident.lident =
   let ns = List.map Ident.string_of_id (Ident.ns_of_lid l) in
+  match Builtins.fstarc_mirror_of ns with
+  | Some ns' ->
+    (* The two spellings already share a name (see {!name_of_lid}); this makes
+       them share a key, so a linked compiler unit answers both. *)
+    let l' = Ident.lid_of_path (ns' @ [Ident.string_of_id (Ident.ident_of_lid l)])
+                               (Ident.range_of_lid l) in
+    ensure_lid_available st l';
+    if Some? (TcEnv.lookup_qname (tcenv st) l') then l' else l
+  | None ->
   if not (Builtins.is_stub_module ns) then l
   else
     (* A stub whose counterpart moved module is resolved from the table

@@ -3634,6 +3634,16 @@ realizations — `FStarC.Reflection.Types`, `FStarC.Tactics.Unseal` and
 (`FStarC.Tactics.Types`, `FStarC.Syntax.Syntax`, `FStarC.NormSteps`, …) are
 ordinary compiler modules that Custard compiles, and must not be.
 
+`FStarC.NormSteps` is the one case that runs the other way.  It is not a stub
+but a copy of `FStar.NormSteps`, which is what the compiler itself refers to,
+so the compiler unit exports `norm_step` and its values under the
+`FStar.NormSteps.*` keys.  A `--with_fstarc` plugin that writes
+`FStarC.NormSteps.Weak` would miss those keys and compile a second,
+incompatible `norm_step` (issue #4692), so `Extract.unstub_lid` asks for
+`FStarC.NormSteps.*` under the `FStar.NormSteps.*` key
+(`Builtins.fstarc_mirror_of`).  `src/custard/entrypoints.txt` names every
+`FStar.NormSteps` definition, so that a plugin never has to compile one.
+
 #### Types the target already has
 
 `Rule_realized` answers "what does the hand-written file call this?".  For a
@@ -4684,6 +4694,22 @@ specialization that lands there by the relocation rule.  None of that can go in
 the file the realization occupies, so it goes in `Custard_<Module>.ml`, under
 mangled names since nothing in it is at home.  Five such files survive in the
 compiler today.
+
+When the OCaml backend builds a named unit (`--custard_unit U`), the file is
+`U_<Module>.ml` instead (`PulseChecker_FStar_Order.ml`), and so is the file
+`Split.avoid` moves a declaration to when a linked unit already owns its
+module's name.  Such a file is named after somebody else's module, and two
+plugins may well both need one: a plugin is dynlinked into an `fstar.exe` that
+already contains the Pulse plugin, and OCaml refuses to load a second module
+of a name already loaded (issue #4692).  For the same reason a unit that links
+against another also gives this prefix to every module of F\*'s own library
+that it compiles itself -- one whose source lies under the library root, or
+under the compiler's installed sources with `--with_fstarc`
+(`Find.is_library_file`) -- so Pulse's copy of `FStar.Set` is
+`PulseChecker_FStar_Set.ml`.  The unit's own modules keep their names, which is
+what its hand-written realizations spell.  The karamel backends keep the plain
+`Custard_` prefix, since there the file name is the C symbols' prefix and
+consumers' `-bundle` flags name it.
 
 **What splitting does not do.**  It does not make Custard's data layout agree
 with ML extraction's.  A realization that only *names* a Custard type — which

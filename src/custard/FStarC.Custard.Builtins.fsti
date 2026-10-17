@@ -130,6 +130,13 @@ val is_stub_module : list string -> bool
    valued by the fully qualified lid, as a string. *)
 val stub_aliases : list (string & string)
 
+(* The reverse of {!no_fstar_stubs}, for the one compiler module that mirrors
+   a ulib module declaration for declaration: [FStarC.NormSteps] is the
+   [FStar.NormSteps] the compiler itself is extracted against, and the
+   compiler unit exports it under the ulib keys.  Takes and returns a
+   namespace. *)
+val fstarc_mirror_of : list string -> option (list string)
+
 (** Types that have no F* definition *and* none that Custard should emit,
     because a header outside F* already declares them: [FStar.Bytes.bytes] is
     a struct krmllib defines.  This is additive rather than a {!rule}: the
