@@ -5239,7 +5239,8 @@ what identifies it.
 in the other unit, does, and a call across a unit boundary is not a request
 Custard can see.  So they go in
 `pulse/src/syntax_extension/custard-entrypoints.txt` alongside the grammar's
-constructors, for exactly the reason §12.11 gives.
+constructors, for exactly the reason §12.11 gives.  (The plugin has since
+become a single unit, see §12.15, and that file is gone.)
 
 #### Loading it
 
@@ -5479,12 +5480,16 @@ whole of it, included by `mk/generic-0.mk` and `mk/generic-1.mk` and used by
   pick up.  (While the legacy extractor existed, the staged build extracted
   that one module with it instead, under the name `CUSTARD_REALIZED`.)
 
-The Pulse plugin is two units --- `checker` and `syntax_extension` ---
-chained in that order, each linked against the compiler's `.cui` and its
-predecessors'.  Chained rather than parallel because linking a unit against
-two that export the same specialization key is error 369 (§12.3), and the two
-share plenty.  (There used to be a third, `extraction`, holding Pulse's
-plugin for the legacy extractor.)
+The Pulse plugin is one unit, `Pulse` (`pulse/mk/plugin.mk`), linked
+against the compiler's `.cui`.  Like the compiler, it is lax-checked and
+extracted in a single invocation: `src/checker` (verified on its own by
+`pulse/mk/checker.mk`) together with `src/syntax_extension`, which holds the
+implementations of some of the checker's interfaces --- `Pulse.RuntimeUtils`,
+`Pulse.Extract.CompilerLib`, `PulseSyntaxExtension.ASTBuilder` --- just as
+`src/` implements interfaces of `ulib/`.  So no call crosses a unit boundary
+and the plugin needs no entry-point list of its own.  (It used to be two
+chained units, `checker` and `syntax_extension`, and before that three, with
+`extraction` holding Pulse's plugin for the legacy extractor.)
 
 #### The stage0 bump
 

@@ -266,8 +266,9 @@ native OCaml plugin. The build flow:
 
 1. **Stage 2** is installed with ulib checked files.
 2. **Pulse plugin source** is checked+extracted by the stage 2 compiler:
-   - `pulse/src/checker/` → `stage3/checker.ml/`
-   - `pulse/src/syntax_extension/` → `stage3/syntax_extension.ml/`
+   `pulse/src/checker/` is verified (`pulse/mk/checker.mk`), and together
+   with `pulse/src/syntax_extension/` lax-checked and extracted in a single
+   Custard unit (`pulse/mk/plugin.mk`) → `stage3/plugin.ml/`
 3. **Dune links** the extracted plugin OCaml with the stage 2
    compiler to produce `fstarc3_full.exe` (see
    `stage3/dune/fstarc-full/dune` and `stage3/dune/pulse-plugin/dune`).

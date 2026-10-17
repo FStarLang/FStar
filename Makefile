@@ -677,7 +677,7 @@ clean-3: .force
 	rm -rf stage3/ulib.ml
 	rm -rf stage3/ulib.pluginml
 	rm -rf pulse/build/checker.checked pulse/build/checker.ml
-	rm -rf pulse/build/syntax_extension.checked pulse/build/syntax_extension.ml
+	rm -rf pulse/build/plugin.checked pulse/build/plugin.ml
 	rm -rf pulse/build/lib.pulse.checked pulse/build/lib.pulse.ml
 	rm -rf pulse/build/lib.core.checked pulse/build/lib.core.ml
 	rm -rf pulse/build/lib.common.checked pulse/build/lib.common.ml

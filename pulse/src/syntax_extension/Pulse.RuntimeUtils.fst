@@ -46,14 +46,14 @@ open Pulse.RuntimeUtils.Types
 (* This unit is checked with --lax, so the equality proof is trivial. *)
 let co (#a #b : Type) (x:a) : b = FStar.Pervasives.coerce_eq #a #b () x
 
-(* Run an ML computation at another effect.  Every function of this
-   module is impure in the compiler's sense, as is everything in the
-   compiler; the interface only claims what the checker needs. *)
 (* FStar.Range.range is the compiler's range at runtime (src/basic/FStar.Range.fst),
    but abstract here. *)
 let rr (r:range) : Range.range = co r
 let ur (r:Range.range) : range = co r
 
+(* Run an ML computation at another effect.  Every function of this
+   module is impure in the compiler's sense, as is everything in the
+   compiler; the interface only claims what the checker needs. *)
 let ml_tot (#a:Type) (f:unit -> ML a) : a = (co f <: unit -> Tot a) ()
 let ml_dv (#a:Type) (f:unit -> ML a) : Dv a = (co f <: unit -> Dv a) ()
 
